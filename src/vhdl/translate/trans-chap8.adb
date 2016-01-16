@@ -4006,7 +4006,7 @@ package body Trans.Chap8 is
       Chap9.Destroy_Types (Target);
    end Translate_Direct_Signal_Assignment;
 
-   procedure Translate_Signal_Assignment_Statement (Stmt : Iir)
+   procedure Translate_Simple_Signal_Assignment_Statement (Stmt : Iir)
    is
       Target      : constant Iir := Get_Target (Stmt);
       Target_Type : constant Iir := Get_Type (Target);
@@ -4166,7 +4166,7 @@ package body Trans.Chap8 is
          Close_Temp;
       end;
       Chap9.Destroy_Types (Target);
-   end Translate_Signal_Assignment_Statement;
+   end Translate_Simple_Signal_Assignment_Statement;
 
    procedure Translate_Statement (Stmt : Iir)
    is
@@ -4194,10 +4194,28 @@ package body Trans.Chap8 is
             | Iir_Kind_Exit_Statement =>
             Translate_Exit_Next_Statement (Stmt);
 
-         when Iir_Kind_Signal_Assignment_Statement =>
-            Translate_Signal_Assignment_Statement (Stmt);
+         when Iir_Kind_Simple_Signal_Assignment_Statement =>
+            Translate_Simple_Signal_Assignment_Statement (Stmt);
          when Iir_Kind_Variable_Assignment_Statement =>
             Translate_Variable_Assignment_Statement (Stmt);
+         when Iir_Kind_Conditional_Variable_Assignment_Statement =>
+            declare
+               C_Stmt : Iir;
+            begin
+               C_Stmt :=
+                 Canon.Canon_Conditional_Variable_Assignment_Statement (Stmt);
+               Trans.Update_Node_Infos;
+               Translate_If_Statement (C_Stmt);
+            end;
+         when Iir_Kind_Conditional_Signal_Assignment_Statement =>
+            declare
+               C_Stmt : Iir;
+            begin
+               C_Stmt :=
+                 Canon.Canon_Conditional_Signal_Assignment_Statement (Stmt);
+               Trans.Update_Node_Infos;
+               Translate_If_Statement (C_Stmt);
+            end;
 
          when Iir_Kind_Null_Statement =>
             --  A null statement is translated to a NOP, so that the

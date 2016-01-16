@@ -125,6 +125,14 @@ package body Sem_Names is
       return Get_Kind (An_Iir) = Iir_Kind_Overload_List;
    end Is_Overload_List;
 
+   function Is_Defined_Type (Atype : Iir) return Boolean is
+   begin
+      return Atype /= Null_Iir
+        and then not Kind_In (Get_Kind (Atype),
+                              Iir_Kind_Overload_List,
+                              Iir_Kind_Wildcard_Type_Definition);
+   end Is_Defined_Type;
+
    --  From the list LIST of function or enumeration literal, extract the
    --  list of (return) types.
    --  If there is only one type, return it.

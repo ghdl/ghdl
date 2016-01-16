@@ -1772,14 +1772,45 @@ package body Disp_Vhdl is
       end case;
    end Disp_Delay_Mechanism;
 
-   procedure Disp_Signal_Assignment (Stmt: Iir) is
+   procedure Disp_Simple_Signal_Assignment (Stmt: Iir) is
    begin
       Disp_Expression (Get_Target (Stmt));
       Put (" <= ");
       Disp_Delay_Mechanism (Stmt);
       Disp_Waveform (Get_Waveform_Chain (Stmt));
       Put_Line (";");
-   end Disp_Signal_Assignment;
+   end Disp_Simple_Signal_Assignment;
+
+   procedure Disp_Conditional_Waveform (Chain : Iir)
+   is
+      Cond_Wf : Iir;
+      Indent : Count;
+      Expr : Iir;
+   begin
+      Indent := Col;
+      Set_Col (Indent);
+      Cond_Wf := Chain;
+      while Cond_Wf /= Null_Iir loop
+         Disp_Waveform (Get_Waveform_Chain (Cond_Wf));
+         Expr := Get_Condition (Cond_Wf);
+         if Expr /= Null_Iir then
+            Put (" when ");
+            Disp_Expression (Expr);
+            Put_Line (" else");
+            Set_Col (Indent);
+         end if;
+         Cond_Wf := Get_Chain (Cond_Wf);
+      end loop;
+   end Disp_Conditional_Waveform;
+
+   procedure Disp_Conditional_Signal_Assignment (Stmt: Iir) is
+   begin
+      Disp_Expression (Get_Target (Stmt));
+      Put (" <= ");
+      Disp_Delay_Mechanism (Stmt);
+      Disp_Conditional_Waveform (Get_Conditional_Waveform_Chain (Stmt));
+      Put_Line (";");
+   end Disp_Conditional_Signal_Assignment;
 
    procedure Disp_Variable_Assignment (Stmt: Iir) is
    begin
@@ -1788,6 +1819,33 @@ package body Disp_Vhdl is
       Disp_Expression (Get_Expression (Stmt));
       Put_Line (";");
    end Disp_Variable_Assignment;
+
+   procedure Disp_Conditional_Expression (Exprs : Iir)
+   is
+      Expr : Iir;
+      Cond : Iir;
+   begin
+      Expr := Exprs;
+      loop
+         Disp_Expression (Get_Expression (Expr));
+         Cond := Get_Condition (Expr);
+         if Cond /= Null_Iir then
+            Put (" when ");
+            Disp_Expression (Cond);
+         end if;
+         Expr := Get_Chain (Expr);
+         exit when Expr = Null_Iir;
+         Put (" else ");
+      end loop;
+   end Disp_Conditional_Expression;
+
+   procedure Disp_Conditional_Variable_Assignment (Stmt: Iir) is
+   begin
+      Disp_Expression (Get_Target (Stmt));
+      Put (" := ");
+      Disp_Conditional_Expression (Get_Conditional_Expression (Stmt));
+      Put_Line (";");
+   end Disp_Conditional_Variable_Assignment;
 
    procedure Disp_Label (Stmt : Iir)
    is
@@ -1805,6 +1863,25 @@ package body Disp_Vhdl is
          Put ("postponed ");
       end if;
    end Disp_Postponed;
+
+   procedure Disp_Concurrent_Simple_Signal_Assignment (Stmt: Iir)
+   is
+      Indent: Count;
+   begin
+      Disp_Label (Stmt);
+      Disp_Postponed (Stmt);
+      Disp_Expression (Get_Target (Stmt));
+      Put (" <= ");
+      if Get_Guard (Stmt) /= Null_Iir then
+         Put ("guarded ");
+      end if;
+      Disp_Delay_Mechanism (Stmt);
+      Indent := Col;
+      Set_Col (Indent);
+      Disp_Waveform (Get_Waveform_Chain (Stmt));
+
+      Put_Line (";");
+   end Disp_Concurrent_Simple_Signal_Assignment;
 
    procedure Disp_Concurrent_Selected_Signal_Assignment (Stmt: Iir)
    is
@@ -1838,11 +1915,7 @@ package body Disp_Vhdl is
       Put_Line (";");
    end Disp_Concurrent_Selected_Signal_Assignment;
 
-   procedure Disp_Concurrent_Conditional_Signal_Assignment (Stmt: Iir)
-   is
-      Indent: Count;
-      Cond_Wf : Iir_Conditional_Waveform;
-      Expr : Iir;
+   procedure Disp_Concurrent_Conditional_Signal_Assignment (Stmt: Iir) is
    begin
       Disp_Label (Stmt);
       Disp_Postponed (Stmt);
@@ -1852,21 +1925,7 @@ package body Disp_Vhdl is
          Put ("guarded ");
       end if;
       Disp_Delay_Mechanism (Stmt);
-      Indent := Col;
-      Set_Col (Indent);
-      Cond_Wf := Get_Conditional_Waveform_Chain (Stmt);
-      while Cond_Wf /= Null_Iir loop
-         Disp_Waveform (Get_Waveform_Chain (Cond_Wf));
-         Expr := Get_Condition (Cond_Wf);
-         if Expr /= Null_Iir then
-            Put (" when ");
-            Disp_Expression (Expr);
-            Put_Line (" else");
-            Set_Col (Indent);
-         end if;
-         Cond_Wf := Get_Chain (Cond_Wf);
-      end loop;
-
+      Disp_Conditional_Waveform (Get_Conditional_Waveform_Chain (Stmt));
       Put_Line (";");
    end Disp_Concurrent_Conditional_Signal_Assignment;
 
@@ -2057,7 +2116,7 @@ package body Disp_Vhdl is
       while Stmt /= Null_Iir loop
          Set_Col (Start);
          Disp_Label (Stmt);
-         case Get_Kind (Stmt) is
+         case Iir_Kinds_Sequential_Statement (Get_Kind (Stmt)) is
             when Iir_Kind_Null_Statement =>
                Put_Line ("null;");
             when Iir_Kind_If_Statement =>
@@ -2084,10 +2143,14 @@ package body Disp_Vhdl is
                  (Get_Sequential_Statement_Chain (Stmt));
                Set_Col (Start);
                Disp_End_Label (Stmt, "loop");
-            when Iir_Kind_Signal_Assignment_Statement =>
-               Disp_Signal_Assignment (Stmt);
+            when Iir_Kind_Simple_Signal_Assignment_Statement =>
+               Disp_Simple_Signal_Assignment (Stmt);
+            when Iir_Kind_Conditional_Signal_Assignment_Statement =>
+               Disp_Conditional_Signal_Assignment (Stmt);
             when Iir_Kind_Variable_Assignment_Statement =>
                Disp_Variable_Assignment (Stmt);
+            when Iir_Kind_Conditional_Variable_Assignment_Statement =>
+               Disp_Conditional_Variable_Assignment (Stmt);
             when Iir_Kind_Assertion_Statement =>
                Disp_Assertion_Statement (Stmt);
             when Iir_Kind_Report_Statement =>
@@ -2127,9 +2190,6 @@ package body Disp_Vhdl is
                   end if;
                   Put_Line (";");
                end;
-
-            when others =>
-               Error_Kind ("disp_sequential_statements", Stmt);
          end case;
          Stmt := Get_Chain (Stmt);
       end loop;
@@ -2985,6 +3045,8 @@ package body Disp_Vhdl is
    procedure Disp_Concurrent_Statement (Stmt: Iir) is
    begin
       case Get_Kind (Stmt) is
+         when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
+            Disp_Concurrent_Simple_Signal_Assignment (Stmt);
          when Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
             Disp_Concurrent_Conditional_Signal_Assignment (Stmt);
          when Iir_Kind_Concurrent_Selected_Signal_Assignment =>

@@ -65,6 +65,12 @@ package body Std_Package is
 
    procedure Create_First_Nodes
    is
+      procedure Create_Known_Iir (Kind : Iir_Kind; Val : Iir) is
+      begin
+         if Create_Std_Iir (Kind) /= Val then
+            raise Internal_Error;
+         end if;
+      end Create_Known_Iir;
    begin
       Std_Filename := Name_Table.Get_Identifier ("*std_standard*");
       Std_Location := Files_Map.Source_File_To_Location
@@ -75,29 +81,24 @@ package body Std_Package is
       end if;
       Set_Location (Error_Mark, Std_Location);
 
-      if Create_Std_Iir (Iir_Kind_Integer_Type_Definition)
-        /= Universal_Integer_Type_Definition
-      then
-         raise Internal_Error;
-      end if;
+      Create_Known_Iir (Iir_Kind_Integer_Type_Definition,
+                        Universal_Integer_Type_Definition);
+      Create_Known_Iir (Iir_Kind_Floating_Type_Definition,
+                        Universal_Real_Type_Definition);
 
-      if Create_Std_Iir (Iir_Kind_Floating_Type_Definition)
-        /= Universal_Real_Type_Definition
-      then
-         raise Internal_Error;
-      end if;
+      Create_Known_Iir (Iir_Kind_Integer_Type_Definition,
+                        Convertible_Integer_Type_Definition);
+      Create_Known_Iir (Iir_Kind_Floating_Type_Definition,
+                        Convertible_Real_Type_Definition);
 
-      if Create_Std_Iir (Iir_Kind_Integer_Type_Definition)
-        /= Convertible_Integer_Type_Definition
-      then
-         raise Internal_Error;
-      end if;
-
-      if Create_Std_Iir (Iir_Kind_Floating_Type_Definition)
-        /= Convertible_Real_Type_Definition
-      then
-         raise Internal_Error;
-      end if;
+      Create_Known_Iir (Iir_Kind_Wildcard_Type_Definition,
+                        Wildcard_Any_Type);
+      Create_Known_Iir (Iir_Kind_Wildcard_Type_Definition,
+                        Wildcard_Any_Aggregate_Type);
+      Create_Known_Iir (Iir_Kind_Wildcard_Type_Definition,
+                        Wildcard_Any_String_Type);
+      Create_Known_Iir (Iir_Kind_Wildcard_Type_Definition,
+                        Wildcard_Any_Access_Type);
    end Create_First_Nodes;
 
    procedure Create_Std_Standard_Package (Parent : Iir_Library_Declaration)
@@ -192,10 +193,7 @@ package body Std_Package is
          end loop;
       end Add_Implicit_Operations;
 
-      procedure Create_Std_Type (Decl : out Iir;
-                                 Def : Iir;
-                                 Name : Name_Id)
-      is
+      procedure Create_Std_Type (Decl : out Iir; Def : Iir; Name : Name_Id) is
       begin
          Decl := Create_Std_Decl (Iir_Kind_Type_Declaration);
          Set_Std_Identifier (Decl, Name);
@@ -342,6 +340,18 @@ package body Std_Package is
          Sem.Compute_Subprogram_Hash (Decl);
          Add_Decl (Decl);
       end Create_Edge_Function;
+
+      procedure Create_Wildcard_Type (Def : Iir; Name : String)
+      is
+         Decl : Iir;
+      begin
+         Decl := Create_Std_Decl (Iir_Kind_Type_Declaration);
+         Set_Identifier (Decl, Name_Table.Get_Identifier (Name));
+         Set_Base_Type (Def, Def);
+         Set_Type_Staticness (Def, None);
+         Set_Type_Definition (Decl, Def);
+         Set_Type_Declarator (Def, Decl);
+      end Create_Wildcard_Type;
 
    begin
       --  Create design file.
@@ -1194,5 +1204,15 @@ package body Std_Package is
                            Time_Subtype_Definition);
       end if;
 
+      --  Wilcard types.
+      --  Create the declaration and give them meaningful (and invalid) names
+      --  so that error messages are clear for the user.
+      Create_Wildcard_Type (Wildcard_Any_Type, "any type");
+      Create_Wildcard_Type (Wildcard_Any_Aggregate_Type, "any aggregate type");
+      Create_Wildcard_Type (Wildcard_Any_String_Type, "any string type");
+      Create_Wildcard_Type (Wildcard_Any_Access_Type, "any access type");
+
+      Error_Type := Iirs_Utils.Create_Error_Type (Wildcard_Any_Type);
+      Create_Wildcard_Type (Error_Type, "unknown type");
    end Create_Std_Standard_Package;
 end Std_Package;

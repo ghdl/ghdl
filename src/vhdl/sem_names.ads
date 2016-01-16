@@ -118,6 +118,10 @@ package Sem_Names is
    --  Before the first call, RES should be set to NULL_IIR.
    procedure Add_Result (Res : in out Iir; Decl : Iir);
 
+   --  Return TRUE if ATYPE is defined: not Null_Iir, not an overload list and
+   --  not a wildcard.
+   function Is_Defined_Type (Atype : Iir) return Boolean;
+
    --  Free a Parenthesis_Name.  This is a special case as in general the
    --  Association_Chain field must be freed too.
    procedure Free_Parenthesis_Name (Name : Iir; Res : Iir);

@@ -432,6 +432,8 @@ package body Trans.Chap7 is
    function Translate_String_Literal (Str : Iir; Res_Type : Iir) return O_Enode
    is
       Str_Type : constant Iir := Get_Type (Str);
+      Is_Static : Boolean;
+      Vtype : Iir;
       Var      : Var_Type;
       Info     : Type_Info_Acc;
       Res      : O_Cnode;
@@ -452,12 +454,24 @@ package body Trans.Chap7 is
             when others =>
                raise Internal_Error;
          end case;
-         Res := Translate_Static_Implicit_Conv (Res, Str_Type, Res_Type);
-         Info := Get_Info (Res_Type);
+         Is_Static :=
+           Get_Type_Staticness (Get_Index_Type (Res_Type, 0)) = Locally;
+
+         if Is_Static then
+            Res := Translate_Static_Implicit_Conv (Res, Str_Type, Res_Type);
+            Vtype := Res_Type;
+         else
+            Vtype := Str_Type;
+         end if;
+         Info := Get_Info (Vtype);
          Var := Create_Global_Const
            (Create_Uniq_Identifier, Info.Ortho_Type (Mode_Value),
             O_Storage_Private, Res);
          R := New_Address (Get_Var (Var), Info.Ortho_Ptr_Type (Mode_Value));
+         if not Is_Static then
+            R := Translate_Implicit_Conv
+              (R, Str_Type, Res_Type, Mode_Value, Str);
+         end if;
          return R;
       else
          return Translate_Implicit_Conv

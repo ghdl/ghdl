@@ -58,6 +58,14 @@ package Canon is
    --  Canon on expressions, mainly for function calls.
    procedure Canon_Expression (Expr: Iir);
 
+   --  Canon a conditional variable assignment into a conditional statement.
+   function Canon_Conditional_Variable_Assignment_Statement (Stmt : Iir)
+                                                            return Iir;
+
+   --  Canon a conditional signal assignment into a conditional statement.
+   function Canon_Conditional_Signal_Assignment_Statement (Stmt : Iir)
+                                                          return Iir;
+
    -- Compute the sensivity list of EXPR and add it to SENSIVITY_LIST.
    -- If IS_TARGET is true, the longuest static prefix of the signal name
    -- is not added to the sensitivity list, but other static prefix (such

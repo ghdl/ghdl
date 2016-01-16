@@ -93,6 +93,11 @@ package body Iirs is
       end loop;
    end Disp_Stats;
 
+   function Kind_In (K : Iir_Kind; K1, K2 : Iir_Kind) return Boolean is
+   begin
+      return K = K1 or K = K2;
+   end Kind_In;
+
    function Iir_Predefined_Shortcut_P (Func : Iir_Predefined_Functions)
      return Boolean is
    begin

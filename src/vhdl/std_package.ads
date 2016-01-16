@@ -79,9 +79,8 @@ package Std_Package is
    Integer_Subtype_Declaration : Iir_Subtype_Declaration;
    Integer_Subtype_Definition : Iir_Integer_Subtype_Definition;
 
-   --  Type used when a subtype indication cannot be semantized.
-   --  FIXME: To be improved.
-   Error_Type : Iir_Integer_Type_Definition renames Integer_Type_Definition;
+   --  Type used when the type of an expression is incorrect.
+   Error_Type : Iir;
 
    -- Predefined real type.
    Real_Type_Declaration : Iir_Anonymous_Type_Declaration;
@@ -160,6 +159,18 @@ package Std_Package is
 
    Convertible_Integer_Subtype_Definition : Iir_Integer_Subtype_Definition;
    Convertible_Integer_Subtype_Declaration : Iir_Subtype_Declaration;
+
+   --  Wilcard types.
+   --  Err, we break privacy for iir numbers, but this allow use of them in
+   --  case statements.
+   Wildcard_Any_Type : constant Iir := 7;
+   Wildcard_Any_Aggregate_Type : constant Iir := 8;
+   Wildcard_Any_String_Type : constant Iir := 9;
+   Wildcard_Any_Access_Type : constant Iir := 10;
+
+   --  Subtype for all wildcard types, so that missing choice can be detected
+   --  at compilation time.
+   subtype Iir_Wildcard_Types is Iir range 7 .. 10;
 
    --  Create the first well-known nodes.
    procedure Create_First_Nodes;

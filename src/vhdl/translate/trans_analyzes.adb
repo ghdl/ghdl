@@ -48,26 +48,41 @@ package body Trans_Analyzes is
       return Walk_Continue;
    end Extract_Driver_Target;
 
+   procedure Extract_Has_After (Wf : Iir) is
+   begin
+      if Wf /= Null_Iir
+        and then Get_Chain (Wf) = Null_Iir
+        and then Get_Time (Wf) = Null_Iir
+        and then Get_Kind (Get_We_Value (Wf)) /= Iir_Kind_Null_Literal
+      then
+         Has_After := False;
+      else
+         Has_After := True;
+      end if;
+   end Extract_Has_After;
+
    function Extract_Driver_Stmt (Stmt : Iir) return Walk_Status
    is
       Status : Walk_Status;
       pragma Unreferenced (Status);
-      We : Iir;
    begin
       case Get_Kind (Stmt) is
-         when Iir_Kind_Signal_Assignment_Statement =>
-            We := Get_Waveform_Chain (Stmt);
-            if We /= Null_Iir
-              and then Get_Chain (We) = Null_Iir
-              and then Get_Time (We) = Null_Iir
-              and then Get_Kind (Get_We_Value (We)) /= Iir_Kind_Null_Literal
-            then
-               Has_After := False;
-            else
-               Has_After := True;
-            end if;
+         when Iir_Kind_Simple_Signal_Assignment_Statement =>
+            Extract_Has_After (Get_Waveform_Chain (Stmt));
             Status := Walk_Assignment_Target
               (Get_Target (Stmt), Extract_Driver_Target'Access);
+         when Iir_Kind_Conditional_Signal_Assignment_Statement =>
+            declare
+               Cond_Wf : Iir;
+            begin
+               Cond_Wf := Get_Conditional_Waveform_Chain (Stmt);
+               while Cond_Wf /= Null_Iir loop
+                  Extract_Has_After (Get_Waveform_Chain (Cond_Wf));
+                  Cond_Wf := Get_Chain (Cond_Wf);
+               end loop;
+               Status := Walk_Assignment_Target
+                 (Get_Target (Stmt), Extract_Driver_Target'Access);
+            end;
          when Iir_Kind_Procedure_Call_Statement =>
             declare
                Call : constant Iir := Get_Procedure_Call (Stmt);
