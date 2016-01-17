@@ -3993,12 +3993,6 @@ package body Sem_Expr is
       end if;
 
       Lib := Get_Parent (Expr);
-      if Get_Kind (Lib) = Iir_Kind_Design_Unit then
-         Lib := Get_Library_Unit (Lib);
-         --  FIXME: the parent of the constant is the library unit or
-         --  the design unit ?
-         raise Internal_Error;
-      end if;
       Cur_Lib := Get_Library_Unit (Sem.Get_Current_Design_Unit);
       if (Get_Kind (Cur_Lib) = Iir_Kind_Package_Declaration
           and then Lib = Cur_Lib)

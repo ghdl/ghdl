@@ -1435,9 +1435,9 @@ package Iirs is
    --
    -- Only for Iir_Kind_Constant_Declaration:
    --  Summary:
-   --  | constant C1 : integer;          -- Deferred declaration (in a package)
-   --  |  constant C2 : integer := 4;     -- Declaration
-   --  |  constant C1 : integer := 3;     -- Full declaration (in a body)
+   --  |  constant C1 : integer;        -- Deferred declaration (in a package)
+   --  |  constant C2 : integer := 4;   -- Declaration
+   --  |  constant C1 : integer := 3;   -- Full declaration (in a body)
    --  | NAME   Deferred_declaration  Deferred_declaration_flag
    --  |  C1      Null_iir or C1' (*)     True
    --  |  C2      Null_Iir                False
@@ -5656,7 +5656,7 @@ package Iirs is
    --  declaration for a full constant declaration, or is null_iir for a
    --  usual or deferred constant declaration.
    --  Set only during sem.
-   --  Field: Field6
+   --  Field: Field6 Ref
    function Get_Deferred_Declaration (Target : Iir) return Iir;
    procedure Set_Deferred_Declaration (Target : Iir; Decl : Iir);
 

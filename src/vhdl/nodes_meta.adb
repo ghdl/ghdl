@@ -1646,7 +1646,7 @@ package body Nodes_Meta is
          when Field_Default_Value =>
             return Attr_Maybe_Ref;
          when Field_Deferred_Declaration =>
-            return Attr_None;
+            return Attr_Ref;
          when Field_Deferred_Declaration_Flag =>
             return Attr_None;
          when Field_Shared_Flag =>
@@ -2923,11 +2923,11 @@ package body Nodes_Meta is
       Field_Expr_Staticness,
       Field_Name_Staticness,
       Field_Chain,
-      Field_Deferred_Declaration,
       Field_Default_Value,
       Field_Subtype_Indication,
       Field_Parent,
       Field_Type,
+      Field_Deferred_Declaration,
       --  Iir_Kind_Iterator_Declaration
       Field_Identifier,
       Field_Has_Identifier_List,
