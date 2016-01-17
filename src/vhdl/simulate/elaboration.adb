@@ -2195,22 +2195,35 @@ package body Elaboration is
             Instance.Objects (Get_Info (Decl).Slot) :=
               Unshare (Val, Instance_Pool);
          when Iir_Kind_Constant_Declaration =>
-            --  Elaboration of an object declaration that declares an object
-            --  other then a file object proceeds as follows:
-            --  1.  The subtype indication is first elaborated.
-            --      This establishes the subtype of the object.
-            if Get_Deferred_Declaration_Flag (Decl) then
-               Create_Object (Instance, Decl);
-            else
-               Elaborate_Subtype_Indication_If_Anonymous
-                 (Instance, Get_Type (Decl));
-               Val := Elaborate_Default_Value (Instance, Decl);
-               if Get_Deferred_Declaration (Decl) = Null_Iir then
+            declare
+               Deferred_Decl : constant Iir := Get_Deferred_Declaration (Decl);
+               First_Decl : Iir;
+            begin
+               if Deferred_Decl = Null_Iir
+                 or else Get_Deferred_Declaration_Flag (Decl)
+               then
+                  --  Create the object (except for full declaration of a
+                  --  deferred constant).
+                  Elaborate_Subtype_Indication_If_Anonymous
+                    (Instance, Get_Type (Decl));
                   Create_Object (Instance, Decl);
                end if;
-               Instance.Objects (Get_Info (Decl).Slot) :=
-                 Unshare (Val, Instance_Pool);
-            end if;
+               --  Initialize the value (except for a deferred declaration).
+               if Deferred_Decl = Null_Iir then
+                  First_Decl := Decl;
+               elsif not Get_Deferred_Declaration_Flag (Decl) then
+                  First_Decl := Deferred_Decl;
+               else
+                  First_Decl := Null_Iir;
+               end if;
+               if First_Decl /= Null_Iir then
+                  Val := Execute_Expression_With_Type
+                    (Instance, Get_Default_Value (Decl),
+                     Get_Type (First_Decl));
+                  Instance.Objects (Get_Info (First_Decl).Slot) :=
+                    Unshare (Val, Instance_Pool);
+               end if;
+            end;
          when Iir_Kind_File_Declaration =>
             --  LRM93 12.3.1.4
             --  Elaboration of a file object declaration consists of the

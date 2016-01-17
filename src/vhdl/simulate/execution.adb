@@ -4782,7 +4782,7 @@ package body Execution is
             when Iir_Kind_If_Statement =>
                Execute_If_Statement (Proc, Stmt);
 
-            when Iir_Kind_Signal_Assignment_Statement =>
+            when Iir_Kind_Simple_Signal_Assignment_Statement =>
                Execute_Signal_Assignment (Instance, Stmt);
                Update_Next_Statement (Proc);
 
