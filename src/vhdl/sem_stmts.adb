@@ -272,7 +272,8 @@ package body Sem_Stmts is
                if Get_Kind (Ass) = Iir_Kind_Aggregate then
                   Check_Aggregate_Target (Stmt, Ass, Nbr);
                else
-                  if Get_Kind (Stmt) = Iir_Kind_Variable_Assignment_Statement
+                  if Get_Kind (Stmt) in
+                    Iir_Kinds_Variable_Assignment_Statement
                   then
                      Check_Simple_Variable_Target (Stmt, Ass, Locally);
                   else
@@ -847,6 +848,10 @@ package body Sem_Stmts is
          exit when Done;
          if not Is_Defined_Type (Stmt_Type) then
             Error_Msg_Sem ("cannot resolve type", Stmt);
+            if Get_Kind (Target) = Iir_Kind_Aggregate then
+               --  Try to give an advice.
+               Error_Msg_Sem ("use a qualified expression for the RHS", Stmt);
+            end if;
             exit;
          end if;
       end loop;
