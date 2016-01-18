@@ -1,3 +1,5 @@
+# GHDL
+
 This directory contains the sources of GHDL, the VHDL simulator.
 
 GHDL is not an interpreter: it generates machine code from your design,
@@ -21,8 +23,7 @@ terms; see the individual source files for details.
 
 Doc is available on http://ghdl.readthedocs.org/en/latest/index.html
 
-Building GHDL (Short instructions)
-**********************************
+## Building GHDL (Short instructions)
 
 If you aren't on linux, see below for full instructions.
 
@@ -32,8 +33,10 @@ libre.adacore.com, untar and run the doinstall script).  You also need
 zlib (for Debian or Ubuntu: install zlib1g-dev package).
 
 In the GHDL source directory, configure and build:
+```sh
 $ ./configure --prefix=/usr/local
 $ make
+```
 
 At that place, you can already use the 'ghdl_mcode' built in the directory.
 You can also install GHDL (the executable is installed as 'ghdl'):
@@ -41,7 +44,6 @@ $ make install
 
 That's all!
 
-Build GHDL (Long instructions)
-******************************
+## Build GHDL (Long instructions)
 
 See BUILD.txt
