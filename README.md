@@ -6,13 +6,14 @@ GHDL is not an interpreter: it generates machine code from your design,
 the only way for high speed simulation.
 
 Main features are:
+- available on Linux (x86 and x86-64), Windows and Mac OS x
+- fully support vhdl 1987, vhdl 1993 and many features of vhdl 2008
 - handle very large designs like leon3/grlib.
 - can write waveforms to a vcd or fst file.
-- available on Linux (x86 and x86-64), Windows and Mac OS x
 - partial support of PSL
 - support vunit (https://github.com/LarsAsplund/vunit)
-- support OSVVM (http://osvvm.org) through the VPI interface
-- support cocotb
+- support OSVVM (http://osvvm.org)
+- support cocotb (https://github.com/potentialventures/cocotb) through the VPI interface
 
 GHDL fully supports IEEE 1076-1987, IEEE 1076-1993, IEE 1076-2002 and
 partially the 1076-2008 version of VHDL.
@@ -40,7 +41,9 @@ $ make
 
 At that place, you can already use the 'ghdl_mcode' built in the directory.
 You can also install GHDL (the executable is installed as 'ghdl'):
+```sh
 $ make install
+```
 
 That's all!
 
