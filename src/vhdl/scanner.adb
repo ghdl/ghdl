@@ -417,6 +417,19 @@ package body Scanner is
 
          case Characters_Kind (C) is
             when Format_Effector =>
+               if Mark = '%' then
+                  --  No matching '%' has been found.  Consider '%' was used
+                  --  as the remainder operator, instead of 'rem'.  This will
+                  --  improve the error message.
+                  Error_Msg_Scan
+                    ("'%' is not a vhdl operator, use 'rem'",
+                     File_Pos_To_Location
+                       (Current_Context.Source_File,
+                        Current_Context.Token_Pos));
+                  Current_Token := Tok_Rem;
+                  Pos := Current_Context.Token_Pos + 1;
+                  return;
+               end if;
                Error_Msg_Scan ("format effector not allowed in a string");
                exit;
             when Invalid =>
@@ -468,17 +481,21 @@ package body Scanner is
       Base : constant Nat32 := 2 ** Nat4 (Base_Log);
 
       -- The quotation character (can be " or %).
-      Mark : constant Character := Source (Pos);
+      Orig_Pos : constant Source_Ptr := Pos;
+      Mark     : constant Character := Source (Orig_Pos);
       -- Current character.
       C : Character;
       --  Current length.
       Length : Nat32;
       --  Digit value.
       V, D : Nat8;
+      --  True if invalid character already found, to avoid duplicate message.
+      Has_Invalid : Boolean;
    begin
       pragma Assert (Mark = '"' or else Mark = '%');
       Pos := Pos + 1;
       Length := 0;
+      Has_Invalid := False;
       Current_Context.Str_Id := Str_Table.Create_String8;
       loop
          << Again >> null;
@@ -532,13 +549,26 @@ package body Scanner is
                   if Vhdl_Std >= Vhdl_08 then
                      V := Nat8'Last;
                   else
-                     Error_Msg_Scan ("invalid character in bit string");
+                     if not Has_Invalid then
+                        Error_Msg_Scan ("invalid character in bit string");
+                        Has_Invalid := True;
+                     end if;
                      --  Continue the bit string
                      V := 0;
                   end if;
                else
-                  Error_Msg_Scan ("bit string not terminated");
-                  Pos := Pos - 1;
+                  if Mark = '%' then
+                     Error_Msg_Scan
+                       ("'%' is not a vhdl operator, use 'rem'",
+                        File_Pos_To_Location
+                          (Current_Context.Source_File, Orig_Pos));
+                     Current_Token := Tok_Rem;
+                     Pos := Orig_Pos + 1;
+                     return;
+                  else
+                     Error_Msg_Scan ("bit string not terminated");
+                     Pos := Pos - 1;
+                  end if;
                   exit;
                end if;
          end case;
