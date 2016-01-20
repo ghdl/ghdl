@@ -57,7 +57,8 @@ package body Iirs_Walk is
       Chain : Iir;
    begin
       case Iir_Kinds_Sequential_Statement (Get_Kind (Stmt)) is
-         when Iir_Kind_Signal_Assignment_Statement
+         when Iir_Kind_Simple_Signal_Assignment_Statement
+           | Iir_Kind_Conditional_Signal_Assignment_Statement
            | Iir_Kind_Null_Statement
            | Iir_Kind_Assertion_Statement
            | Iir_Kind_Report_Statement
@@ -66,7 +67,8 @@ package body Iirs_Walk is
            | Iir_Kind_Procedure_Call_Statement
            | Iir_Kind_Next_Statement
            | Iir_Kind_Exit_Statement
-           | Iir_Kind_Variable_Assignment_Statement =>
+           | Iir_Kind_Variable_Assignment_Statement
+           | Iir_Kind_Conditional_Variable_Assignment_Statement =>
             null;
          when Iir_Kind_For_Loop_Statement
            | Iir_Kind_While_Loop_Statement =>

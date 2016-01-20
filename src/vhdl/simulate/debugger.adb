@@ -1426,7 +1426,7 @@ package body Debugger is
             Handler.all (N);
 
          when Iir_Kind_Variable_Assignment_Statement
-           | Iir_Kind_Signal_Assignment_Statement
+           | Iir_Kind_Simple_Signal_Assignment_Statement
            | Iir_Kind_Null_Statement
            | Iir_Kind_Assertion_Statement
            | Iir_Kind_Report_Statement

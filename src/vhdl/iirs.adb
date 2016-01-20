@@ -93,6 +93,11 @@ package body Iirs is
       end loop;
    end Disp_Stats;
 
+   function Kind_In (K : Iir_Kind; K1, K2 : Iir_Kind) return Boolean is
+   begin
+      return K = K1 or K = K2;
+   end Kind_In;
+
    function Iir_Predefined_Shortcut_P (Func : Iir_Predefined_Functions)
      return Boolean is
    begin
@@ -256,6 +261,7 @@ package body Iirs is
            | Iir_Kind_Overflow_Literal
            | Iir_Kind_Waveform_Element
            | Iir_Kind_Conditional_Waveform
+           | Iir_Kind_Conditional_Expression
            | Iir_Kind_Association_Element_By_Expression
            | Iir_Kind_Association_Element_By_Individual
            | Iir_Kind_Association_Element_Open
@@ -295,6 +301,7 @@ package body Iirs is
            | Iir_Kind_Physical_Type_Definition
            | Iir_Kind_Range_Expression
            | Iir_Kind_Protected_Type_Body
+           | Iir_Kind_Wildcard_Type_Definition
            | Iir_Kind_Overload_List
            | Iir_Kind_Type_Declaration
            | Iir_Kind_Anonymous_Type_Declaration
@@ -386,11 +393,13 @@ package body Iirs is
            | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Generate_Statement_Body
            | Iir_Kind_If_Generate_Else_Clause
-           | Iir_Kind_Signal_Assignment_Statement
+           | Iir_Kind_Simple_Signal_Assignment_Statement
+           | Iir_Kind_Conditional_Signal_Assignment_Statement
            | Iir_Kind_Null_Statement
            | Iir_Kind_Assertion_Statement
            | Iir_Kind_Report_Statement
            | Iir_Kind_Variable_Assignment_Statement
+           | Iir_Kind_Conditional_Variable_Assignment_Statement
            | Iir_Kind_Return_Statement
            | Iir_Kind_For_Loop_Statement
            | Iir_Kind_While_Loop_Statement
@@ -483,6 +492,7 @@ package body Iirs is
            | Iir_Kind_Interface_Package_Declaration
            | Iir_Kind_Sensitized_Process_Statement
            | Iir_Kind_Process_Statement
+           | Iir_Kind_Concurrent_Simple_Signal_Assignment
            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Psl_Assert_Statement
@@ -3576,6 +3586,22 @@ package body Iirs is
       Set_Field5 (Target, Expr);
    end Set_Expression;
 
+   function Get_Conditional_Expression (Target : Iir) return Iir is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Conditional_Expression (Get_Kind (Target)),
+                     "no field Conditional_Expression");
+      return Get_Field5 (Target);
+   end Get_Conditional_Expression;
+
+   procedure Set_Conditional_Expression (Target : Iir; Expr : Iir) is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Conditional_Expression (Get_Kind (Target)),
+                     "no field Conditional_Expression");
+      Set_Field5 (Target, Expr);
+   end Set_Conditional_Expression;
+
    function Get_Allocator_Designated_Type (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);
@@ -3613,7 +3639,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Conditional_Waveform_Chain (Get_Kind (Target)),
                      "no field Conditional_Waveform_Chain");
-      return Get_Field7 (Target);
+      return Get_Field5 (Target);
    end Get_Conditional_Waveform_Chain;
 
    procedure Set_Conditional_Waveform_Chain (Target : Iir; Chain : Iir) is
@@ -3621,7 +3647,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Conditional_Waveform_Chain (Get_Kind (Target)),
                      "no field Conditional_Waveform_Chain");
-      Set_Field7 (Target, Chain);
+      Set_Field5 (Target, Chain);
    end Set_Conditional_Waveform_Chain;
 
    function Get_Guard_Expression (Target : Iir) return Iir is

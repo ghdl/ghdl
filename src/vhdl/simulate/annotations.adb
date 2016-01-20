@@ -583,8 +583,6 @@ package body Annotations is
                Annotate_Anonymous_Type_Definition
                  (Block_Info, Get_Type (Decl));
                Create_Object_Info (Block_Info, Decl);
-            else
-               Set_Info (Decl, Get_Info (Get_Deferred_Declaration (Decl)));
             end if;
 
          when Iir_Kind_File_Declaration =>
@@ -716,7 +714,7 @@ package body Annotations is
                null;
             when Iir_Kind_Return_Statement =>
                null;
-            when Iir_Kind_Signal_Assignment_Statement
+            when Iir_Kind_Simple_Signal_Assignment_Statement
               | Iir_Kind_Variable_Assignment_Statement =>
                null;
             when Iir_Kind_Procedure_Call_Statement =>

@@ -250,6 +250,7 @@ package Nodes_Meta is
       Field_Default_Binding_Indication,
       Field_Default_Configuration_Declaration,
       Field_Expression,
+      Field_Conditional_Expression,
       Field_Allocator_Designated_Type,
       Field_Selected_Waveform_Chain,
       Field_Conditional_Waveform_Chain,
@@ -733,6 +734,7 @@ package Nodes_Meta is
    function Has_Default_Configuration_Declaration (K : Iir_Kind)
       return Boolean;
    function Has_Expression (K : Iir_Kind) return Boolean;
+   function Has_Conditional_Expression (K : Iir_Kind) return Boolean;
    function Has_Allocator_Designated_Type (K : Iir_Kind) return Boolean;
    function Has_Selected_Waveform_Chain (K : Iir_Kind) return Boolean;
    function Has_Conditional_Waveform_Chain (K : Iir_Kind) return Boolean;

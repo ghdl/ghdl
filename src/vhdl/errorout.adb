@@ -436,6 +436,8 @@ package body Errorout is
             return "waveform element";
          when Iir_Kind_Conditional_Waveform =>
             return "conditional waveform";
+         when Iir_Kind_Conditional_Expression =>
+            return "conditional expression";
          when Iir_Kind_Association_Element_Open =>
             return "open association element";
          when Iir_Kind_Association_Element_By_Individual =>
@@ -447,7 +449,8 @@ package body Errorout is
             return "overloaded name or expression";
 
          when Iir_Kind_Integer_Type_Definition
-           | Iir_Kind_Enumeration_Type_Definition =>
+           | Iir_Kind_Enumeration_Type_Definition
+           | Iir_Kind_Wildcard_Type_Definition =>
             return Image_Identifier (Get_Type_Declarator (Node));
          when Iir_Kind_Array_Type_Definition =>
             return Disp_Type (Node, "array type");
@@ -823,6 +826,9 @@ package body Errorout is
             return Disp_Label (Node, "block statement");
          when Iir_Kind_Block_Header =>
             return "block header";
+         when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
+            return Disp_Label
+              (Node, "concurrent simple signal assignment");
          when Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
             return Disp_Label
               (Node, "concurrent conditional signal assignment");
@@ -850,10 +856,16 @@ package body Errorout is
             return Disp_Label (Node, "case statement");
          when Iir_Kind_Return_Statement =>
             return Disp_Label (Node, "return statement");
-         when Iir_Kind_Signal_Assignment_Statement =>
+         when Iir_Kind_Simple_Signal_Assignment_Statement =>
             return Disp_Label (Node, "signal assignment statement");
+         when Iir_Kind_Conditional_Signal_Assignment_Statement =>
+            return Disp_Label
+              (Node, "conditional signal assignment statement");
          when Iir_Kind_Variable_Assignment_Statement =>
             return Disp_Label (Node, "variable assignment statement");
+         when Iir_Kind_Conditional_Variable_Assignment_Statement =>
+            return Disp_Label
+              (Node, "conditional variable assignment statement");
          when Iir_Kind_Null_Statement =>
             return Disp_Label (Node, "null statement");
          when Iir_Kind_Wait_Statement =>

@@ -272,7 +272,8 @@ package body Sem_Stmts is
                if Get_Kind (Ass) = Iir_Kind_Aggregate then
                   Check_Aggregate_Target (Stmt, Ass, Nbr);
                else
-                  if Get_Kind (Stmt) = Iir_Kind_Variable_Assignment_Statement
+                  if Get_Kind (Stmt) in
+                    Iir_Kinds_Variable_Assignment_Statement
                   then
                      Check_Simple_Variable_Target (Stmt, Ass, Locally);
                   else
@@ -408,68 +409,57 @@ package body Sem_Stmts is
          Check_Aggregate_Target (Stmt, Target, Nbr);
          Check_Uniq_Aggregate_Associated (Target, Nbr);
       else
-         if Get_Kind (Stmt) = Iir_Kind_Variable_Assignment_Statement then
-            Check_Simple_Variable_Target (Stmt, Target, None);
-         else
-            Check_Simple_Signal_Target (Stmt, Target, None);
-         end if;
+         case Get_Kind (Stmt) is
+            when Iir_Kind_Variable_Assignment_Statement
+              | Iir_Kind_Conditional_Variable_Assignment_Statement =>
+               Check_Simple_Variable_Target (Stmt, Target, None);
+            when others =>
+               Check_Simple_Signal_Target (Stmt, Target, None);
+         end case;
       end if;
    end Check_Target;
 
-   --  Return FALSE in case of error.
-   function Sem_Signal_Assignment_Target_And_Option (Stmt: Iir; Sig_Type : Iir)
-     return Boolean
+   type Resolve_Stages is (Resolve_Stage_1, Resolve_Stage_2);
+   pragma Unreferenced (Resolve_Stage_2);
+
+   procedure Sem_Signal_Assignment_Target_And_Option
+     (Stmt: Iir; Sig_Type : in out Iir)
    is
       --  The target of the assignment.
       Target: Iir;
       --  The value that will be assigned.
       Expr: Iir;
-      Ok : Boolean;
    begin
-      Ok := True;
-      -- Find the signal.
       Target := Get_Target (Stmt);
+      Target := Sem_Expression_Wildcard (Target, Sig_Type);
 
-      if Sig_Type = Null_Iir
-        and then Get_Kind (Target) = Iir_Kind_Aggregate
-      then
-         --  Do not try to analyze an aggregate if its type is unknown.
-         --  A target cannot be a qualified type and its type should be
-         --  determine by the context (LRM93 7.3.2 Aggregates).
-         Ok := False;
-      else
-         --  Analyze the target
-         Target := Sem_Expression (Target, Sig_Type);
-         if Target /= Null_Iir then
-            Set_Target (Stmt, Target);
+      if Target /= Null_Iir then
+         Set_Target (Stmt, Target);
+         if Is_Expr_Fully_Analyzed (Target) then
             Check_Target (Stmt, Target);
-            Sem_Types.Set_Type_Has_Signal (Get_Type (Target));
-         else
-            Ok := False;
+            Sig_Type := Get_Type (Target);
+            Sem_Types.Set_Type_Has_Signal (Sig_Type);
          end if;
       end if;
 
       Expr := Get_Reject_Time_Expression (Stmt);
-      if Expr /= Null_Iir then
+      if Expr /= Null_Iir
+        and then Is_Expr_Not_Analyzed (Expr)
+      then
          Expr := Sem_Expression (Expr, Time_Type_Definition);
          if Expr /= Null_Iir then
             Check_Read (Expr);
             Set_Reject_Time_Expression (Stmt, Expr);
-         else
-            Ok := False;
          end if;
       end if;
-      return Ok;
    end Sem_Signal_Assignment_Target_And_Option;
 
    -- Semantize a waveform_list WAVEFORM_LIST that is assigned via statement
    -- ASSIGN_STMT to a subelement or a slice of a signal SIGNAL_DECL.
    procedure Sem_Waveform_Chain
-     (Assign_Stmt: Iir;
-      Waveform_Chain : Iir_Waveform_Element;
+     (Waveform_Chain : Iir_Waveform_Element;
       Waveform_Type : in out Iir)
    is
-      pragma Unreferenced (Assign_Stmt);
       Expr: Iir;
       We: Iir_Waveform_Element;
       Time, Last_Time : Iir_Int64;
@@ -489,62 +479,62 @@ package body Sem_Stmts is
             --  sem_check_waveform_list.
             null;
          else
-            if Get_Kind (Expr) = Iir_Kind_Aggregate
-              and then Waveform_Type = Null_Iir
-            then
-               Error_Msg_Sem
-                 ("type of waveform is unknown, use qualified type", Expr);
-            else
-               Expr := Sem_Expression (Expr, Waveform_Type);
-               if Expr /= Null_Iir then
+            Expr := Sem_Expression_Wildcard (Expr, Waveform_Type);
+
+            if Expr /= Null_Iir then
+               if Is_Expr_Fully_Analyzed (Expr) then
                   Check_Read (Expr);
-                  Set_We_Value (We, Eval_Expr_If_Static (Expr));
-                  if Waveform_Type = Null_Iir then
-                     Waveform_Type := Get_Type (Expr);
-                  end if;
+                  Expr := Eval_Expr_If_Static (Expr);
                end if;
+               Set_We_Value (We, Expr);
+
+               Merge_Wildcard_Type (Expr, Waveform_Type);
             end if;
          end if;
 
+         --  Analyze time expression.
          if Get_Time (We) /= Null_Iir then
-            Expr := Sem_Expression (Get_Time (We), Time_Type_Definition);
-            if Expr /= Null_Iir then
-               Set_Time (We, Expr);
-               Check_Read (Expr);
+            Expr := Get_Time (We);
+            if Is_Expr_Not_Analyzed (Expr) then
+               Expr := Sem_Expression (Expr, Time_Type_Definition);
+               if Expr /= Null_Iir then
+                  Set_Time (We, Expr);
+                  Check_Read (Expr);
 
-               if Get_Expr_Staticness (Expr) = Locally
-                 or else (Get_Kind (Expr) = Iir_Kind_Physical_Int_Literal
-                          and then Flags.Flag_Time_64)
-               then
-                  --  LRM 8.4
-                  --  It is an error if the time expression in a waveform
-                  --  element evaluates to a negative value.
-                  --
-                  --  LRM 8.4.1
-                  --  It is an error if the sequence of new transactions is not
-                  --  in ascending order with repect to time.
-                  -- GHDL: this must be checked at run-time, but this is also
-                  --  checked now for static expressions.
-                  if Get_Expr_Staticness (Expr) = Locally then
-                     --  The expression is static, and therefore may be
-                     --  evaluated.
-                     Expr := Eval_Expr (Expr);
-                     Set_Time (We, Expr);
-                     Time := Get_Value (Expr);
-                  else
-                     --  The expression is a physical literal (common case).
-                     --  Extract its value.
-                     Time := Get_Physical_Value (Expr);
-                  end if;
-                  if Time < 0 then
-                     Error_Msg_Sem
-                       ("waveform time expression must be >= 0", Expr);
-                  elsif Time <= Last_Time then
-                     Error_Msg_Sem
-                       ("time must be greather than previous transaction",
-                        Expr);
-                  else
-                     Last_Time := Time;
+                  if Get_Expr_Staticness (Expr) = Locally
+                    or else (Get_Kind (Expr) = Iir_Kind_Physical_Int_Literal
+                               and then Flags.Flag_Time_64)
+                  then
+                     --  LRM 8.4
+                     --  It is an error if the time expression in a waveform
+                     --  element evaluates to a negative value.
+                     --
+                     --  LRM 8.4.1
+                     --  It is an error if the sequence of new transactions is
+                     --  not in ascending order with repect to time.
+                     -- GHDL: this must be checked at run-time, but this is
+                     --  also checked now for static expressions.
+                     if Get_Expr_Staticness (Expr) = Locally then
+                        --  The expression is static, and therefore may be
+                        --  evaluated.
+                        Expr := Eval_Expr (Expr);
+                        Set_Time (We, Expr);
+                        Time := Get_Value (Expr);
+                     else
+                        --  The expression is a physical literal (common case).
+                        --  Extract its value.
+                        Time := Get_Physical_Value (Expr);
+                     end if;
+                     if Time < 0 then
+                        Error_Msg_Sem
+                          ("waveform time expression must be >= 0", Expr);
+                     elsif Time <= Last_Time then
+                        Error_Msg_Sem
+                          ("time must be greather than previous transaction",
+                           Expr);
+                     else
+                        Last_Time := Time;
+                     end if;
                   end if;
                end if;
             end if;
@@ -555,9 +545,9 @@ package body Sem_Stmts is
             end if;
 
             --  LRM93 12.6.4
-            --  It is an error if the execution of any postponed process causes
-            --  a delta cycle to occur immediatly after the current simulation
-            --  cycle.
+            --  It is an error if the execution of any postponed process
+            --  causes a delta cycle to occur immediatly after the current
+            --  simulation cycle.
             --  GHDL: try to warn for such an error; note the context may be
             --   a procedure body.
             if Current_Concurrent_Statement /= Null_Iir then
@@ -569,7 +559,7 @@ package body Sem_Stmts is
                      if Get_Postponed_Flag (Current_Concurrent_Statement) then
                         Warning_Msg_Sem
                           ("waveform may cause a delta cycle in a " &
-                           "postponed process", We);
+                             "postponed process", We);
                      end if;
                   when others =>
                      --  Context is a subprogram.
@@ -579,9 +569,9 @@ package body Sem_Stmts is
 
             Last_Time := 0;
          end if;
+
          We := Get_Chain (We);
       end loop;
-      return;
    end Sem_Waveform_Chain;
 
    -- Semantize a waveform chain WAVEFORM_CHAIN that is assigned via statement
@@ -623,46 +613,183 @@ package body Sem_Stmts is
       end loop;
    end Sem_Check_Waveform_Chain;
 
+   procedure Sem_Guard (Stmt: Iir)
+   is
+      Guard: Iir;
+      Guard_Interpretation : Name_Interpretation_Type;
+   begin
+      Guard := Get_Guard (Stmt);
+      if Guard = Null_Iir then
+         --  This assignment is not guarded.
+
+         --  LRM93 9.5
+         --  It is an error if a concurrent signal assignment is not a guarded
+         --  assignment, and the target of the concurrent signal assignment
+         --  is a guarded target.
+         if Get_Guarded_Target_State (Stmt) = True then
+            Error_Msg_Sem
+              ("not a guarded assignment for a guarded target", Stmt);
+         end if;
+         return;
+      end if;
+      if Guard /= Stmt then
+         -- if set, guard must be equal to stmt here.
+         raise Internal_Error;
+      end if;
+      Guard_Interpretation := Get_Interpretation (Std_Names.Name_Guard);
+      if not Valid_Interpretation (Guard_Interpretation) then
+         Error_Msg_Sem ("no guard signals for this guarded assignment", Stmt);
+         return;
+      end if;
+
+      Guard := Get_Declaration (Guard_Interpretation);
+      -- LRM93 9.5:
+      -- The signal GUARD [...] an explicitly declared signal of type
+      -- BOOLEAN that is visible at the point of the concurrent signal
+      -- assignment statement
+      -- FIXME.
+      case Get_Kind (Guard) is
+         when Iir_Kind_Signal_Declaration
+           | Iir_Kind_Interface_Signal_Declaration
+           | Iir_Kind_Guard_Signal_Declaration =>
+            null;
+         when others =>
+            Error_Msg_Sem ("visible GUARD object is not a signal", Stmt);
+            Error_Msg_Sem ("GUARD object is " & Disp_Node (Guard), Stmt);
+            return;
+      end case;
+
+      if Get_Type (Guard) /= Boolean_Type_Definition then
+         Error_Msg_Sem ("GUARD is not of boolean type", Guard);
+      end if;
+      Set_Guard (Stmt, Guard);
+   end Sem_Guard;
+
    procedure Sem_Signal_Assignment (Stmt: Iir)
    is
-      Target : Iir;
-      Waveform_Type : Iir;
+      Cond_Wf : Iir_Conditional_Waveform;
+      Expr : Iir;
+      Wf_Chain : Iir_Waveform_Element;
+      Target_Type : Iir;
+      Done : Boolean;
    begin
-      Target := Get_Target (Stmt);
-      if Get_Kind (Target) /= Iir_Kind_Aggregate then
-         if not Sem_Signal_Assignment_Target_And_Option (Stmt, Null_Iir) then
-            return;
+      Target_Type := Wildcard_Any_Type;
+
+      Done := False;
+      for S in Resolve_Stages loop
+         Sem_Signal_Assignment_Target_And_Option (Stmt, Target_Type);
+         if Is_Defined_Type (Target_Type) then
+            Done := True;
          end if;
 
-         -- check the expression.
-         Waveform_Type := Get_Type (Get_Target (Stmt));
-         if Waveform_Type /= Null_Iir then
-            Sem_Waveform_Chain
-              (Stmt, Get_Waveform_Chain (Stmt), Waveform_Type);
-            Sem_Check_Waveform_Chain (Stmt, Get_Waveform_Chain (Stmt));
+         case Get_Kind (Stmt) is
+            when Iir_Kind_Concurrent_Simple_Signal_Assignment
+              | Iir_Kind_Simple_Signal_Assignment_Statement =>
+               Wf_Chain := Get_Waveform_Chain (Stmt);
+               Sem_Waveform_Chain (Wf_Chain, Target_Type);
+               if Done then
+                  Sem_Check_Waveform_Chain (Stmt, Wf_Chain);
+               end if;
+
+            when Iir_Kind_Concurrent_Conditional_Signal_Assignment
+              | Iir_Kind_Conditional_Signal_Assignment_Statement =>
+               Cond_Wf := Get_Conditional_Waveform_Chain (Stmt);
+               while Cond_Wf /= Null_Iir loop
+                  Wf_Chain := Get_Waveform_Chain (Cond_Wf);
+                  Sem_Waveform_Chain (Wf_Chain, Target_Type);
+                  if Done then
+                     Sem_Check_Waveform_Chain (Stmt, Wf_Chain);
+                  end if;
+                  if S = Resolve_Stage_1 then
+                     --  Must be analyzed only once.
+                     Expr := Get_Condition (Cond_Wf);
+                     if Expr /= Null_Iir then
+                        Expr := Sem_Condition (Expr);
+                        if Expr /= Null_Iir then
+                           Set_Condition (Cond_Wf, Expr);
+                        end if;
+                     end if;
+                  end if;
+                  Cond_Wf := Get_Chain (Cond_Wf);
+               end loop;
+
+            when Iir_Kind_Concurrent_Selected_Signal_Assignment =>
+               declare
+                  El : Iir;
+               begin
+                  El := Get_Selected_Waveform_Chain (Stmt);
+                  while El /= Null_Iir loop
+                     Wf_Chain := Get_Associated_Chain (El);
+                     Sem_Waveform_Chain (Wf_Chain, Target_Type);
+                     if Done then
+                        Sem_Check_Waveform_Chain (Stmt, Wf_Chain);
+                     end if;
+                     El := Get_Chain (El);
+                  end loop;
+               end;
+
+            when others =>
+               raise Internal_Error;
+         end case;
+
+         exit when Done;
+         if not Is_Defined_Type (Target_Type) then
+            Error_Msg_Sem ("cannot resolve type of waveform", Stmt);
+            exit;
          end if;
-      else
-         Waveform_Type := Null_Iir;
-         Sem_Waveform_Chain (Stmt, Get_Waveform_Chain (Stmt), Waveform_Type);
-         if Waveform_Type = Null_Iir
-           or else
-           not Sem_Signal_Assignment_Target_And_Option (Stmt, Waveform_Type)
-         then
-            return;
-         end if;
-         Sem_Check_Waveform_Chain (Stmt, Get_Waveform_Chain (Stmt));
-      end if;
+      end loop;
+
+      case Get_Kind (Stmt) is
+         when Iir_Kind_Concurrent_Simple_Signal_Assignment
+           | Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
+            Sem_Guard (Stmt);
+         when others =>
+            null;
+      end case;
    end Sem_Signal_Assignment;
 
-   procedure Sem_Variable_Assignment (Stmt: Iir) is
-      Target: Iir;
-      Expr: Iir;
-      Target_Type : Iir;
+   procedure Sem_Conditional_Expression (Cond_Expr : Iir; Atype : in out Iir)
+   is
+      El : Iir;
+      Expr : Iir;
+      Cond : Iir;
    begin
-      -- Find the variable.
-      Target := Get_Target (Stmt);
-      Expr := Get_Expression (Stmt);
+      El := Cond_Expr;
+      while El /= Null_Iir loop
+         Expr := Get_Expression (El);
+         Expr := Sem_Expression_Wildcard (Expr, Atype);
 
+         if Expr /= Null_Iir then
+            Set_Expression (El, Expr);
+
+            if Is_Expr_Fully_Analyzed (Expr) then
+               Check_Read (Expr);
+               Expr := Eval_Expr_If_Static (Expr);
+            end if;
+
+            Merge_Wildcard_Type (Expr, Atype);
+         end if;
+
+         Cond := Get_Condition (El);
+         exit when Cond = Null_Iir;
+
+         if Is_Expr_Not_Analyzed (Cond) then
+            Cond := Sem_Condition (Cond);
+            Set_Condition (El, Cond);
+         end if;
+
+         El := Get_Chain (El);
+      end loop;
+   end Sem_Conditional_Expression;
+
+   procedure Sem_Variable_Assignment (Stmt: Iir)
+   is
+      Target : Iir;
+      Expr : Iir;
+      Target_Type : Iir;
+      Stmt_Type : Iir;
+      Done : Boolean;
+   begin
       --  LRM93 8.5 Variable assignment statement
       --  If the target of the variable assignment statement is in the form of
       --  an aggregate, then the type of the aggregate must be determinable
@@ -673,51 +800,61 @@ package body Sem_Stmts is
       --
       --  GHDL: this means that the type can only be deduced from the
       --  expression (and not from the target).
-      if Get_Kind (Target) = Iir_Kind_Aggregate then
-         if Get_Kind (Expr) = Iir_Kind_Aggregate then
-            Error_Msg_Sem ("can't determine type, use type qualifier", Expr);
-            return;
+
+      Target := Get_Target (Stmt);
+      Stmt_Type := Wildcard_Any_Type;
+      for S in Resolve_Stages loop
+         Done := False;
+
+         Target := Sem_Expression_Wildcard (Target, Stmt_Type);
+         if Target = Null_Iir then
+            Target_Type := Stmt_Type;
+         else
+            Set_Target (Stmt, Target);
+            if Is_Expr_Fully_Analyzed (Target) then
+               Check_Target (Stmt, Target);
+               Done := True;
+            end if;
+            Target_Type := Get_Type (Target);
+            Stmt_Type := Target_Type;
          end if;
-         Expr := Sem_Composite_Expression (Get_Expression (Stmt));
-         if Expr = Null_Iir then
-            return;
+
+         case Iir_Kinds_Variable_Assignment_Statement (Get_Kind (Stmt)) is
+            when Iir_Kind_Variable_Assignment_Statement =>
+               Expr := Get_Expression (Stmt);
+               Expr := Sem_Expression_Wildcard (Expr, Stmt_Type);
+               if Expr /= Null_Iir then
+                  if Is_Expr_Fully_Analyzed (Expr) then
+                     Check_Read (Expr);
+                     Expr := Eval_Expr_If_Static (Expr);
+                  end if;
+                  Set_Expression (Stmt, Expr);
+                  Merge_Wildcard_Type (Expr, Stmt_Type);
+                  if Done
+                    and then not Check_Implicit_Conversion (Target_Type, Expr)
+                  then
+                     Warning_Msg_Sem
+                       ("expression length does not match target length",
+                        Stmt);
+                     Set_Expression (Stmt, Build_Overflow (Expr, Target_Type));
+                  end if;
+               end if;
+
+            when Iir_Kind_Conditional_Variable_Assignment_Statement =>
+               Expr := Get_Conditional_Expression (Stmt);
+               Sem_Conditional_Expression (Expr, Stmt_Type);
+         end case;
+
+         exit when Done;
+         if not Is_Defined_Type (Stmt_Type) then
+            Error_Msg_Sem ("cannot resolve type", Stmt);
+            if Get_Kind (Target) = Iir_Kind_Aggregate then
+               --  Try to give an advice.
+               Error_Msg_Sem ("use a qualified expression for the RHS", Stmt);
+            end if;
+            exit;
          end if;
-         Check_Read (Expr);
-         Set_Expression (Stmt, Expr);
-         Target_Type := Get_Type (Expr);
-
-         --  An aggregate cannot be analyzed without a type.
-         --  FIXME: partially analyze the aggregate ?
-         if Target_Type = Null_Iir then
-            return;
-         end if;
-
-         --  FIXME: check elements are identified at most once.
-      else
-         Target_Type := Null_Iir;
-      end if;
-
-      Target := Sem_Expression (Target, Target_Type);
-      if Target = Null_Iir then
-         return;
-      end if;
-      Set_Target (Stmt, Target);
-
-      Check_Target (Stmt, Target);
-
-      if Get_Kind (Target) /= Iir_Kind_Aggregate then
-         Expr := Sem_Expression (Expr, Get_Type (Target));
-         if Expr /= Null_Iir then
-            Check_Read (Expr);
-            Expr := Eval_Expr_If_Static (Expr);
-            Set_Expression (Stmt, Expr);
-         end if;
-      end if;
-      if not Check_Implicit_Conversion (Get_Type (Target), Expr) then
-         Warning_Msg_Sem
-           ("expression length does not match target length", Stmt);
-         Set_Expression (Stmt, Build_Overflow (Expr, Get_Type (Target)));
-      end if;
+      end loop;
    end Sem_Variable_Assignment;
 
    procedure Sem_Return_Statement (Stmt: Iir_Return_Statement) is
@@ -1217,7 +1354,8 @@ package body Sem_Stmts is
                   Sem_Sequential_Statements_Internal
                     (Get_Sequential_Statement_Chain (Stmt));
                end;
-            when Iir_Kind_Signal_Assignment_Statement =>
+            when Iir_Kind_Simple_Signal_Assignment_Statement
+              | Iir_Kind_Conditional_Signal_Assignment_Statement =>
                Sem_Signal_Assignment (Stmt);
                if Current_Concurrent_Statement /= Null_Iir and then
                  Get_Kind (Current_Concurrent_Statement)
@@ -1227,7 +1365,8 @@ package body Sem_Stmts is
                   Error_Msg_Sem
                     ("signal statement forbidden in passive process", Stmt);
                end if;
-            when Iir_Kind_Variable_Assignment_Statement =>
+            when Iir_Kind_Variable_Assignment_Statement
+              | Iir_Kind_Conditional_Variable_Assignment_Statement =>
                Sem_Variable_Assignment (Stmt);
             when Iir_Kind_Return_Statement =>
                Sem_Return_Statement (Stmt);
@@ -1648,164 +1787,23 @@ package body Sem_Stmts is
       Sem_Process_Statement (Proc);
    end Sem_Sensitized_Process_Statement;
 
-   procedure Sem_Guard (Stmt: Iir)
-   is
-      Guard: Iir;
-      Guard_Interpretation : Name_Interpretation_Type;
-   begin
-      Guard := Get_Guard (Stmt);
-      if Guard = Null_Iir then
-         --  This assignment is not guarded.
-
-         --  LRM93 9.5
-         --  It is an error if a concurrent signal assignment is not a guarded
-         --  assignment, and the target of the concurrent signal assignment
-         --  is a guarded target.
-         if Get_Guarded_Target_State (Stmt) = True then
-            Error_Msg_Sem
-              ("not a guarded assignment for a guarded target", Stmt);
-         end if;
-         return;
-      end if;
-      if Guard /= Stmt then
-         -- if set, guard must be equal to stmt here.
-         raise Internal_Error;
-      end if;
-      Guard_Interpretation := Get_Interpretation (Std_Names.Name_Guard);
-      if not Valid_Interpretation (Guard_Interpretation) then
-         Error_Msg_Sem ("no guard signals for this guarded assignment", Stmt);
-         return;
-      end if;
-
-      Guard := Get_Declaration (Guard_Interpretation);
-      -- LRM93 9.5:
-      -- The signal GUARD [...] an explicitly declared signal of type
-      -- BOOLEAN that is visible at the point of the concurrent signal
-      -- assignment statement
-      -- FIXME.
-      case Get_Kind (Guard) is
-         when Iir_Kind_Signal_Declaration
-           | Iir_Kind_Interface_Signal_Declaration
-           | Iir_Kind_Guard_Signal_Declaration =>
-            null;
-         when others =>
-            Error_Msg_Sem ("visible GUARD object is not a signal", Stmt);
-            Error_Msg_Sem ("GUARD object is " & Disp_Node (Guard), Stmt);
-            return;
-      end case;
-
-      if Get_Type (Guard) /= Boolean_Type_Definition then
-         Error_Msg_Sem ("GUARD is not of boolean type", Guard);
-      end if;
-      Set_Guard (Stmt, Guard);
-   end Sem_Guard;
-
-   procedure Sem_Concurrent_Conditional_Signal_Assignment
-     (Stmt: Iir_Concurrent_Conditional_Signal_Assignment)
-   is
-      Cond_Wf : Iir_Conditional_Waveform;
-      Expr : Iir;
-      Wf_Chain : Iir_Waveform_Element;
-      Target_Type : Iir;
-      Target : Iir;
-   begin
-      Target := Get_Target (Stmt);
-      if Get_Kind (Target) /= Iir_Kind_Aggregate then
-         if not Sem_Signal_Assignment_Target_And_Option (Stmt, Null_Iir) then
-            return;
-         end if;
-         Target := Get_Target (Stmt);
-         Target_Type := Get_Type (Target);
-      else
-         Target_Type := Null_Iir;
-      end if;
-
-      Cond_Wf := Get_Conditional_Waveform_Chain (Stmt);
-      while Cond_Wf /= Null_Iir loop
-         Wf_Chain := Get_Waveform_Chain (Cond_Wf);
-         Sem_Waveform_Chain (Stmt, Wf_Chain, Target_Type);
-         Sem_Check_Waveform_Chain (Stmt, Wf_Chain);
-         Expr := Get_Condition (Cond_Wf);
-         if Expr /= Null_Iir then
-            Expr := Sem_Condition (Expr);
-            if Expr /= Null_Iir then
-               Set_Condition (Cond_Wf, Expr);
-            end if;
-         end if;
-         Cond_Wf := Get_Chain (Cond_Wf);
-      end loop;
-      Sem_Guard (Stmt);
-      if Get_Kind (Target) = Iir_Kind_Aggregate then
-         if not Sem_Signal_Assignment_Target_And_Option (Stmt, Target_Type)
-         then
-            return;
-         end if;
-      end if;
-   end Sem_Concurrent_Conditional_Signal_Assignment;
-
    procedure Sem_Concurrent_Selected_Signal_Assignment (Stmt: Iir)
    is
       Expr: Iir;
       Chain : Iir;
-      El: Iir;
-      Waveform_Type : Iir;
-      Target : Iir;
-      Assoc_El : Iir;
    begin
-      Target := Get_Target (Stmt);
-      Chain := Get_Selected_Waveform_Chain (Stmt);
-      Waveform_Type := Null_Iir;
+      --  LRM 9.5  Concurrent Signal Assgnment Statements.
+      --  The process statement equivalent to a concurrent signal assignment
+      --  statement [...] is constructed as follows: [...]
+      --
+      --  LRM 9.5.2  Selected Signal Assignment
+      --  The characteristics of the selected expression, the waveforms and
+      --  the choices in the selected assignment statement must be such that
+      --  the case statement in the equivalent statement is a legal
+      --  statement
 
-      if Get_Kind (Target) = Iir_Kind_Aggregate then
-         --  LRM 9.5  Concurrent Signal Assgnment Statements.
-         --  The process statement equivalent to a concurrent signal assignment
-         --  statement [...] is constructed as follows: [...]
-         --
-         --  LRM 9.5.2  Selected Signa Assignment
-         --  The characteristics of the selected expression, the waveforms and
-         --  the choices in the selected assignment statement must be such that
-         --  the case statement in the equivalent statement is a legal
-         --  statement
-
-         --  Find the first waveform that will appear in the equivalent
-         --  process statement, and extract type from it.
-         Assoc_El := Null_Iir;
-         El := Chain;
-
-         while El /= Null_Iir loop
-            Assoc_El := Get_Associated_Expr (El);
-            exit when Assoc_El /= Null_Iir;
-            El := Get_Chain (El);
-         end loop;
-         if Assoc_El = Null_Iir then
-            Error_Msg_Sem
-              ("cannot determine type of the aggregate target", Target);
-         else
-            Sem_Waveform_Chain (Stmt, Assoc_El, Waveform_Type);
-         end if;
-         if Waveform_Type = Null_Iir then
-            --  Type of target still unknown.
-            --  Since the target is an aggregate, we won't be able to
-            --  semantize it.
-            --  Avoid a crash.
-            return;
-         end if;
-      end if;
-      if not Sem_Signal_Assignment_Target_And_Option (Stmt, Waveform_Type) then
-         return;
-      end if;
-      Waveform_Type := Get_Type (Get_Target (Stmt));
-
-      -- Sem on associated.
-      if Waveform_Type /= Null_Iir then
-         El := Chain;
-         while El /= Null_Iir loop
-            Sem_Waveform_Chain
-              (Stmt, Get_Associated_Chain (El), Waveform_Type);
-            Sem_Check_Waveform_Chain (Stmt, Get_Associated_Chain (El));
-            El := Get_Chain (El);
-         end loop;
-      end if;
+      --  Target and waveforms.
+      Sem_Signal_Assignment (Stmt);
 
       --  The choices.
       Expr := Sem_Case_Expression (Get_Expression (Stmt));
@@ -1814,6 +1812,7 @@ package body Sem_Stmts is
       end if;
       Check_Read (Expr);
       Set_Expression (Stmt, Expr);
+      Chain := Get_Selected_Waveform_Chain (Stmt);
       Sem_Case_Choices (Expr, Chain, Get_Location (Stmt));
       Set_Selected_Waveform_Chain (Stmt, Chain);
 
@@ -1875,11 +1874,12 @@ package body Sem_Stmts is
          Next_El := Get_Chain (El);
 
          case Get_Kind (El) is
-            when Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
+            when Iir_Kind_Concurrent_Simple_Signal_Assignment
+              | Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
                if Is_Passive then
                   Error_Msg_Sem ("signal assignment forbidden in entity", El);
                end if;
-               Sem_Concurrent_Conditional_Signal_Assignment (El);
+               Sem_Signal_Assignment (El);
             when Iir_Kind_Concurrent_Selected_Signal_Assignment =>
                if Is_Passive then
                   Error_Msg_Sem ("signal assignment forbidden in entity", El);

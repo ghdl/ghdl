@@ -66,6 +66,9 @@ package body Canon is
    procedure Canon_Subtype_Indication (Def : Iir);
    procedure Canon_Subtype_Indication_If_Anonymous (Def : Iir);
 
+   function Canon_Conditional_Signal_Assignment
+     (Conc_Stmt : Iir; Proc : Iir; Parent : Iir) return Iir;
+
    procedure Canon_Extract_Sensitivity_Aggregate
      (Aggr : Iir;
       Sensitivity_List : Iir_List;
@@ -341,7 +344,7 @@ package body Canon is
                --    the target, and construct the union of the resulting sets.
                Canon_Extract_Sensitivity (Get_Target (Stmt), List, True);
                Canon_Extract_Sensitivity (Get_Expression (Stmt), List, False);
-            when Iir_Kind_Signal_Assignment_Statement =>
+            when Iir_Kind_Simple_Signal_Assignment_Statement =>
                --  LRM08 11.3
                --  See variable assignment statement case.
                Canon_Extract_Sensitivity (Get_Target (Stmt), List, True);
@@ -998,6 +1001,60 @@ package body Canon is
 --       return Res;
 --    end Canon_Default_Map_Association_List;
 
+   function Canon_Conditional_Variable_Assignment_Statement (Stmt : Iir)
+                                                            return Iir
+   is
+      Target : constant Iir := Get_Target (Stmt);
+      Cond_Expr : Iir;
+      Expr : Iir;
+      Asgn : Iir;
+      Res : Iir;
+      El, N_El : Iir;
+   begin
+      Cond_Expr := Get_Conditional_Expression (Stmt);
+      Res := Create_Iir (Iir_Kind_If_Statement);
+      Set_Label (Res, Get_Label (Stmt));
+      Set_Suspend_Flag (Res, False);
+      El := Res;
+
+      loop
+         --  Fill if/elsif statement.
+         Set_Parent (El, Get_Parent (Stmt));
+         Location_Copy (El, Cond_Expr);
+         Set_Condition (El, Get_Condition (Cond_Expr));
+
+         --  Create simple variable assignment.
+         Asgn := Create_Iir (Iir_Kind_Variable_Assignment_Statement);
+         Location_Copy (Asgn, Cond_Expr);
+         Set_Parent (Asgn, El);
+         Set_Target (Asgn, Target);
+         Expr := Get_Expression (Cond_Expr);
+         if Canon_Flag_Expressions then
+            Canon_Expression (Expr);
+         end if;
+         Set_Expression (Asgn, Expr);
+
+         Set_Sequential_Statement_Chain (El, Asgn);
+
+         --  Next condition.
+         Cond_Expr := Get_Chain (Cond_Expr);
+         exit when Cond_Expr = Null_Iir;
+
+         N_El := Create_Iir (Iir_Kind_Elsif);
+         Set_Else_Clause (El, N_El);
+         El := N_El;
+      end loop;
+
+      return Res;
+   end Canon_Conditional_Variable_Assignment_Statement;
+
+   function Canon_Conditional_Signal_Assignment_Statement (Stmt : Iir)
+                                                         return Iir is
+   begin
+      return Canon_Conditional_Signal_Assignment
+        (Stmt, Null_Iir, Get_Parent (Stmt));
+   end Canon_Conditional_Signal_Assignment_Statement;
+
    --  Inner loop if any; used to canonicalize exit/next statement.
    Cur_Loop : Iir;
 
@@ -1026,7 +1083,7 @@ package body Canon is
                   end loop;
                end;
 
-            when Iir_Kind_Signal_Assignment_Statement =>
+            when Iir_Kind_Simple_Signal_Assignment_Statement =>
                Canon_Expression (Get_Target (Stmt));
                Canon_Waveform_Chain (Get_Waveform_Chain (Stmt), Null_Iir_List);
 
@@ -1207,7 +1264,8 @@ package body Canon is
                Else_Clause := Create_Iir (Iir_Kind_Elsif);
                Location_Copy (Else_Clause, Stmt);
                Set_Else_Clause (If_Stmt, Else_Clause);
-               Dis_Stmt := Create_Iir (Iir_Kind_Signal_Assignment_Statement);
+               Dis_Stmt :=
+                 Create_Iir (Iir_Kind_Simple_Signal_Assignment_Statement);
                Location_Copy (Dis_Stmt, Stmt);
                Set_Parent (Dis_Stmt, If_Stmt);
                Set_Target (Dis_Stmt, Target);
@@ -1329,6 +1387,7 @@ package body Canon is
      return Iir
    is
       Stmt : Iir;
+      Sensitivity_List : Iir_List;
    begin
       if Waveform_Chain = Null_Iir then
          --  LRM 9.5.1 Conditionnal Signal Assignment
@@ -1349,9 +1408,14 @@ package body Canon is
          --  of the form:
          --    target <= [ delay_mechanism ] waveform_element1,
          --       waveform_element2, ..., waveform_elementN;
-         Stmt := Create_Iir (Iir_Kind_Signal_Assignment_Statement);
+         Stmt := Create_Iir (Iir_Kind_Simple_Signal_Assignment_Statement);
          Set_Target (Stmt, Get_Target (Orig_Stmt));
-         Canon_Waveform_Chain (Waveform_Chain, Get_Sensitivity_List (Proc));
+         if Proc = Null_Iir then
+            Sensitivity_List := Null_Iir_List;
+         else
+            Sensitivity_List := Get_Sensitivity_List (Proc);
+         end if;
+         Canon_Waveform_Chain (Waveform_Chain, Sensitivity_List);
          Set_Waveform_Chain (Stmt, Waveform_Chain);
          Set_Delay_Mechanism (Stmt, Get_Delay_Mechanism (Orig_Stmt));
          Set_Reject_Time_Expression
@@ -1361,9 +1425,21 @@ package body Canon is
       return Stmt;
    end Canon_Wave_Transform;
 
-   --  Create signal_transform for a conditional concurrent signal assignment.
-   procedure Canon_Conditional_Concurrent_Signal_Assigment
+   --  Create signal_transform for a concurrent simple signal assignment.
+   procedure Canon_Concurrent_Simple_Signal_Assignment
      (Conc_Stmt : Iir; Proc : Iir; Parent : Iir)
+   is
+      Stmt : Iir;
+   begin
+      Stmt := Canon_Wave_Transform
+        (Conc_Stmt, Get_Waveform_Chain (Conc_Stmt), Proc);
+      Set_Parent (Stmt, Parent);
+      Set_Sequential_Statement_Chain (Parent, Stmt);
+   end Canon_Concurrent_Simple_Signal_Assignment;
+
+   --  Create signal_transform for a concurrent conditional signal assignment.
+   function Canon_Conditional_Signal_Assignment
+     (Conc_Stmt : Iir; Proc : Iir; Parent : Iir) return Iir
    is
       Expr : Iir;
       Stmt : Iir;
@@ -1380,8 +1456,8 @@ package body Canon is
 
       while Cond_Wf /= Null_Iir loop
          Expr := Get_Condition (Cond_Wf);
-         Wf := Canon_Wave_Transform
-           (Conc_Stmt, Get_Waveform_Chain (Cond_Wf), Proc);
+         Wf := Get_Waveform_Chain (Cond_Wf);
+         Wf := Canon_Wave_Transform (Conc_Stmt, Wf, Proc);
          Set_Parent (Wf, Parent);
          if Expr = Null_Iir and Cond_Wf = Cond_Wf_Chain then
             Res1 := Wf;
@@ -1390,8 +1466,10 @@ package body Canon is
                if Canon_Flag_Expressions then
                   Canon_Expression (Expr);
                end if;
-               Canon_Extract_Sensitivity
-                 (Expr, Get_Sensitivity_List (Proc), False);
+               if Proc /= Null_Iir then
+                  Canon_Extract_Sensitivity
+                    (Expr, Get_Sensitivity_List (Proc), False);
+               end if;
             end if;
             if Stmt = Null_Iir then
                Res1 := Create_Iir (Iir_Kind_If_Statement);
@@ -1411,10 +1489,20 @@ package body Canon is
          Last_Res := Res1;
          Cond_Wf := Get_Chain (Cond_Wf);
       end loop;
-      Set_Sequential_Statement_Chain (Parent, Stmt);
-   end Canon_Conditional_Concurrent_Signal_Assigment;
+      return Stmt;
+   end Canon_Conditional_Signal_Assignment;
 
-   procedure Canon_Selected_Concurrent_Signal_Assignment
+   --  Create signal_transform for a concurrent conditional signal assignment.
+   procedure Canon_Concurrent_Conditional_Signal_Assignment
+     (Conc_Stmt : Iir; Proc : Iir; Parent : Iir)
+   is
+      Stmt : Iir;
+   begin
+      Stmt := Canon_Conditional_Signal_Assignment (Conc_Stmt, Proc, Parent);
+      Set_Sequential_Statement_Chain (Parent, Stmt);
+   end Canon_Concurrent_Conditional_Signal_Assignment;
+
+   procedure Canon_Concurrent_Selected_Signal_Assignment
      (Conc_Stmt : Iir; Proc : Iir; Parent : Iir)
    is
       Selected_Waveform : Iir;
@@ -1446,7 +1534,7 @@ package body Canon is
          end if;
          Selected_Waveform := Get_Chain (Selected_Waveform);
       end loop;
-   end Canon_Selected_Concurrent_Signal_Assignment;
+   end Canon_Concurrent_Selected_Signal_Assignment;
 
    procedure Canon_Generate_Statement_Body
      (Top : Iir_Design_Unit; Bod : Iir) is
@@ -1505,10 +1593,18 @@ package body Canon is
          end if;
 
          case Get_Kind (El) is
+            when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
+               Canon_Concurrent_Signal_Assignment (El, Proc, Sub_Chain);
+
+               Canon_Concurrent_Simple_Signal_Assignment (El, Proc, Sub_Chain);
+
+               Replace_Stmt (Proc);
+               El := Proc;
+
             when Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
                Canon_Concurrent_Signal_Assignment (El, Proc, Sub_Chain);
 
-               Canon_Conditional_Concurrent_Signal_Assigment
+               Canon_Concurrent_Conditional_Signal_Assignment
                  (El, Proc, Sub_Chain);
 
                Replace_Stmt (Proc);
@@ -1517,7 +1613,7 @@ package body Canon is
             when Iir_Kind_Concurrent_Selected_Signal_Assignment =>
                Canon_Concurrent_Signal_Assignment (El, Proc, Sub_Chain);
 
-               Canon_Selected_Concurrent_Signal_Assignment
+               Canon_Concurrent_Selected_Signal_Assignment
                  (El, Proc, Sub_Chain);
 
                Replace_Stmt (Proc);

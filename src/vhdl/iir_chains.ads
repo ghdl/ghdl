@@ -68,10 +68,6 @@ package Iir_Chains is
      (Get_Chain_Start => Get_Entity_Class_Entry_Chain,
       Set_Chain_Start => Set_Entity_Class_Entry_Chain);
 
-   package Conditional_Waveform_Chain_Handling is new Iir_Chain_Handling
-     (Get_Chain_Start => Get_Conditional_Waveform_Chain,
-      Set_Chain_Start => Set_Conditional_Waveform_Chain);
-
    package Selected_Waveform_Chain_Handling is new Iir_Chain_Handling
      (Get_Chain_Start => Get_Selected_Waveform_Chain,
       Set_Chain_Start => Set_Selected_Waveform_Chain);

@@ -76,20 +76,8 @@ package body Sem_Specs is
            | Iir_Kind_Block_Statement
            | Iir_Kind_If_Generate_Statement
            | Iir_Kind_For_Generate_Statement
-           | Iir_Kind_If_Statement
-           | Iir_Kind_For_Loop_Statement
-           | Iir_Kind_While_Loop_Statement
-           | Iir_Kind_Next_Statement
-           | Iir_Kind_Exit_Statement
-           | Iir_Kind_Signal_Assignment_Statement
-           | Iir_Kind_Variable_Assignment_Statement
-           | Iir_Kind_Assertion_Statement
-           | Iir_Kind_Wait_Statement
-           | Iir_Kind_Return_Statement
-           | Iir_Kind_Case_Statement
-           | Iir_Kind_Procedure_Call_Statement
            | Iir_Kind_Concurrent_Procedure_Call_Statement
-           | Iir_Kind_Null_Statement =>
+           | Iir_Kinds_Sequential_Statement =>
             return Tok_Label;
          when Iir_Kind_Enumeration_Literal =>
             return Tok_Literal;

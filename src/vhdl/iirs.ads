@@ -443,6 +443,19 @@ package Iirs is
    --
    --   Get/Set_Chain (Field2)
 
+   -- Iir_Kind_Conditional_Expression (Short)
+   --  LRM08 10.5.3
+   --  conditional_expressions ::=
+   --      expression WHEN condition
+   --    { ELSE expression WHEN condition }
+   --    [ ELSE expression ]
+   --
+   --   Get/Set_Condition (Field1)
+   --
+   --   Get/Set_Expression (Field5)
+   --
+   --   Get/Set_Chain (Field2)
+
    -- Iir_Kind_Choice_By_Others (Short)
    -- Iir_Kind_Choice_By_None (Short)
    -- Iir_Kind_Choice_By_Range (Short)
@@ -1422,9 +1435,9 @@ package Iirs is
    --
    -- Only for Iir_Kind_Constant_Declaration:
    --  Summary:
-   --  | constant C1 : integer;          -- Deferred declaration (in a package)
-   --  |  constant C2 : integer := 4;     -- Declaration
-   --  |  constant C1 : integer := 3;     -- Full declaration (in a body)
+   --  |  constant C1 : integer;        -- Deferred declaration (in a package)
+   --  |  constant C2 : integer := 4;   -- Declaration
+   --  |  constant C1 : integer := 3;   -- Full declaration (in a body)
    --  | NAME   Deferred_declaration  Deferred_declaration_flag
    --  |  C1      Null_iir or C1' (*)     True
    --  |  C2      Null_Iir                False
@@ -2076,6 +2089,25 @@ package Iirs is
    --
    --   Get/Set_End_Has_Identifier (Flag9)
 
+   -- Iir_Kind_Wildcard_Type_Definition (Short)
+   --  A wildcard type doesn't correspond to a type defined by VHDL.  It
+   --  is used only during analysis to temporary set the type of an entity
+   --  when the type is not precisely known but restricted to some class of
+   --  types.  Eg: the type of an aggregate is not known before being
+   --  determined by the context, but can only be an array or a record.
+   --  Wildcard types are statically created by std_package and the set of
+   --  restrictions depends on the node.  See std_package.ads
+   --
+   --   Get/Set_Type_Declarator (Field3)
+   --
+   --   Get/Set_Base_Type (Field4)
+   --
+   --   Get/Set_Resolved_Flag (Flag1)
+   --
+   --   Get/Set_Signal_Type_Flag (Flag2)
+   --
+   --   Get/Set_Type_Staticness (State1)
+
    --------------------------
    --  subtype definitions --
    --------------------------
@@ -2349,6 +2381,7 @@ package Iirs is
 
    -- Iir_Kind_Concurrent_Conditional_Signal_Assignment (Medium)
    -- Iir_Kind_Concurrent_Selected_Signal_Assignment (Medium)
+   -- Iir_Kind_Concurrent_Simple_Signal_Assignment (Medium)
    --
    --   Get/Set_Parent (Field0)
    --
@@ -2361,11 +2394,14 @@ package Iirs is
    --
    --   Get/Set_Reject_Time_Expression (Field4)
    --
+   -- Only for Iir_Kind_Concurrent_Simple_Signal_Assignment:
+   --   Get/Set_Waveform_Chain (Field5)
+   --
    -- Only for Iir_Kind_Concurrent_Selected_Signal_Assignment:
    --   Get/Set_Expression (Field5)
    --
    -- Only for Iir_Kind_Concurrent_Conditional_Signal_Assignment:
-   --   Get/Set_Conditional_Waveform_Chain (Field7)
+   --   Get/Set_Conditional_Waveform_Chain (Field5)
    --
    -- Only for Iir_Kind_Concurrent_Selected_Signal_Assignment:
    --   Get/Set_Selected_Waveform_Chain (Field7)
@@ -2791,7 +2827,8 @@ package Iirs is
    --
    --   Get/Set_Visible_Flag (Flag4)
 
-   -- Iir_Kind_Signal_Assignment_Statement (Short)
+   -- Iir_Kind_Simple_Signal_Assignment_Statement (Short)
+   -- Iir_Kind_Conditional_Signal_Assignment_Statement (Short)
    --
    --   Get/Set_Parent (Field0)
    --
@@ -2804,11 +2841,15 @@ package Iirs is
    --
    --   Get/Set_Reject_Time_Expression (Field4)
    --
+   -- Only for Iir_Kind_Simple_Signal_Assignment_Statement:
    --  The waveform.
    --  If the waveform_chain is null_iir, then the signal assignment is a
    --  disconnection statement, ie TARGET <= null_iir after disconection_time,
    --  where disconnection_time is specified by a disconnection specification.
    --   Get/Set_Waveform_Chain (Field5)
+   --
+   -- Only for Iir_Kind_Conditional_Signal_Assignment_Statement:
+   --   Get/Set_Conditional_Waveform_Chain (Field5)
    --
    --   Get/Set_Delay_Mechanism (Flag1)
    --
@@ -2829,6 +2870,21 @@ package Iirs is
    --   Get/Set_Identifier (Alias Field3)
    --
    --   Get/Set_Expression (Field5)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
+
+   -- Iir_Kind_Conditional_Variable_Assignment_Statement (Short)
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Target (Field1)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Label (Field3)
+   --   Get/Set_Identifier (Alias Field3)
+   --
+   --   Get/Set_Conditional_Expression (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
 
@@ -3551,6 +3607,7 @@ package Iirs is
    -- Tuple,
       Iir_Kind_Waveform_Element,
       Iir_Kind_Conditional_Waveform,
+      Iir_Kind_Conditional_Expression,
       Iir_Kind_Association_Element_By_Expression,
       Iir_Kind_Association_Element_By_Individual,
       Iir_Kind_Association_Element_Open,
@@ -3603,6 +3660,7 @@ package Iirs is
       Iir_Kind_Physical_Type_Definition,         -- scalar
       Iir_Kind_Range_Expression,
       Iir_Kind_Protected_Type_Body,
+      Iir_Kind_Wildcard_Type_Definition,
       Iir_Kind_Subtype_Definition,  -- temporary (must not appear after sem).
 
    -- Nature definition
@@ -3720,6 +3778,7 @@ package Iirs is
    -- Concurrent statements.
       Iir_Kind_Sensitized_Process_Statement,
       Iir_Kind_Process_Statement,
+      Iir_Kind_Concurrent_Simple_Signal_Assignment,
       Iir_Kind_Concurrent_Conditional_Signal_Assignment,
       Iir_Kind_Concurrent_Selected_Signal_Assignment,
       Iir_Kind_Concurrent_Assertion_Statement,
@@ -3738,12 +3797,14 @@ package Iirs is
       Iir_Kind_If_Generate_Else_Clause,
 
    -- Iir_Kind_Sequential_Statement
-      Iir_Kind_Signal_Assignment_Statement,
+      Iir_Kind_Simple_Signal_Assignment_Statement,
+      Iir_Kind_Conditional_Signal_Assignment_Statement,
       Iir_Kind_Null_Statement,
       Iir_Kind_Assertion_Statement,
       Iir_Kind_Report_Statement,
       Iir_Kind_Wait_Statement,
       Iir_Kind_Variable_Assignment_Statement,
+      Iir_Kind_Conditional_Variable_Assignment_Statement,
       Iir_Kind_Return_Statement,
       Iir_Kind_For_Loop_Statement,
       Iir_Kind_While_Loop_Statement,
@@ -3814,6 +3875,10 @@ package Iirs is
 
       Iir_Kind_Attribute_Name
      );
+
+   --  Return TRUE iif K is K1 or K is K2.
+   function Kind_In (K : Iir_Kind; K1, K2 : Iir_Kind) return Boolean;
+   pragma Inline (Kind_In);
 
    type Iir_Signal_Kind is
       (
@@ -4605,6 +4670,7 @@ package Iirs is
    subtype Iir_Kinds_Concurrent_Statement is Iir_Kind range
      Iir_Kind_Sensitized_Process_Statement ..
    --Iir_Kind_Process_Statement
+   --Iir_Kind_Concurrent_Simple_Signal_Assignment
    --Iir_Kind_Concurrent_Conditional_Signal_Assignment
    --Iir_Kind_Concurrent_Selected_Signal_Assignment
    --Iir_Kind_Concurrent_Assertion_Statement
@@ -4618,16 +4684,19 @@ package Iirs is
      Iir_Kind_Component_Instantiation_Statement;
 
    subtype Iir_Kinds_Concurrent_Signal_Assignment is Iir_Kind range
-     Iir_Kind_Concurrent_Conditional_Signal_Assignment ..
+     Iir_Kind_Concurrent_Simple_Signal_Assignment ..
+   --Iir_Kind_Concurrent_Conditional_Signal_Assignment
      Iir_Kind_Concurrent_Selected_Signal_Assignment;
 
    subtype Iir_Kinds_Sequential_Statement is Iir_Kind range
-     Iir_Kind_Signal_Assignment_Statement ..
+     Iir_Kind_Simple_Signal_Assignment_Statement ..
+   --Iir_Kind_Conditional_Signal_Assignment_Statement
    --Iir_Kind_Null_Statement
    --Iir_Kind_Assertion_Statement
    --Iir_Kind_Report_Statement
    --Iir_Kind_Wait_Statement
    --Iir_Kind_Variable_Assignment_Statement
+   --Iir_Kind_Conditional_Variable_Assignment_Statement
    --Iir_Kind_Return_Statement
    --Iir_Kind_For_Loop_Statement
    --Iir_Kind_While_Loop_Statement
@@ -4636,6 +4705,10 @@ package Iirs is
    --Iir_Kind_Case_Statement
    --Iir_Kind_Procedure_Call_Statement
      Iir_Kind_If_Statement;
+
+   subtype Iir_Kinds_Variable_Assignment_Statement is Iir_Kind range
+     Iir_Kind_Variable_Assignment_Statement ..
+     Iir_Kind_Conditional_Variable_Assignment_Statement;
 
    subtype Iir_Kinds_Allocator is Iir_Kind range
      Iir_Kind_Allocator_By_Expression ..
@@ -5583,7 +5656,7 @@ package Iirs is
    --  declaration for a full constant declaration, or is null_iir for a
    --  usual or deferred constant declaration.
    --  Set only during sem.
-   --  Field: Field6
+   --  Field: Field6 Ref
    function Get_Deferred_Declaration (Target : Iir) return Iir;
    procedure Set_Deferred_Declaration (Target : Iir; Decl : Iir);
 
@@ -6041,6 +6114,12 @@ package Iirs is
    function Get_Expression (Target : Iir) return Iir;
    procedure Set_Expression (Target : Iir; Expr : Iir);
 
+   --  A conditional expression.
+   --  Node kind is a Iir_Kind_Conditional_Expression.
+   --  Field: Field5
+   function Get_Conditional_Expression (Target : Iir) return Iir;
+   procedure Set_Conditional_Expression (Target : Iir; Expr : Iir);
+
    --  Set to the designated type (either the type of the expression or the
    --  subtype) when the expression is analyzed.
    --  Field: Field2 Ref
@@ -6051,7 +6130,7 @@ package Iirs is
    function Get_Selected_Waveform_Chain (Target : Iir) return Iir;
    procedure Set_Selected_Waveform_Chain (Target : Iir; Chain : Iir);
 
-   --  Field: Field7 Chain
+   --  Field: Field5 Chain
    function Get_Conditional_Waveform_Chain (Target : Iir) return Iir;
    procedure Set_Conditional_Waveform_Chain (Target : Iir; Chain : Iir);
 

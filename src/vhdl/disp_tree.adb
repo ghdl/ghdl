@@ -346,6 +346,22 @@ package body Disp_Tree is
       Put (' ');
       Disp_Iir_Number (N);
 
+      --  Be nice: print type name for a type definition.
+      if K in Iir_Kinds_Type_And_Subtype_Definition
+        or K = Iir_Kind_Wildcard_Type_Definition
+      then
+         declare
+            Decl : constant Iir := Get_Type_Declarator (N);
+         begin
+            if Decl /= Null_Iir
+              and then Get_Identifier (Decl) /= Null_Identifier
+            then
+               Put (' ');
+               Put (Image_Name_Id (Get_Identifier (Decl)));
+            end if;
+         end;
+      end if;
+
       New_Line;
    end Disp_Header;
 

@@ -38,12 +38,12 @@ else
   echoc=
 fi
 
-# Read required gcc version from README file
-gcc_version=`grep '^gcc version' $srcdir/README |
+# Read required gcc version from BUILD.txt file
+gcc_version=`grep '^gcc version' $srcdir/BUILD.txt |
  sed -e 's/gcc version \([0-9.]*\) \[.*\]\.$/\1/'`
 
-# Read required llvm version from README file
-llvm_version=`grep '^llvm version' $srcdir/README |
+# Read required llvm version from BUILD.txt file
+llvm_version=`grep '^llvm version' $srcdir/BUILD.txt |
  sed -e 's/llvm version \([0-9.]*\) \[.*\]\.$/\1/'`
 
 # Check $1 is a prefix of $2

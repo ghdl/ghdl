@@ -32,6 +32,7 @@ with Sem_Assocs; use Sem_Assocs;
 with Xrefs; use Xrefs;
 
 package body Sem_Expr is
+
    procedure Not_Match (Expr: Iir; A_Type: Iir)
    is
       pragma Inline (Not_Match);
@@ -60,9 +61,12 @@ package body Sem_Expr is
    -- A_TYPE can't be an overload list.
    --
    -- This procedure can be called in the second pass, when the type is known.
-   procedure Replace_Type (Target: Iir; A_Type: Iir) is
+   procedure Replace_Type (Target: Iir; A_Type: Iir)
+   is
       Old_Type: Iir;
    begin
+      pragma Assert (not Is_Overload_List (A_Type));
+
       Old_Type := Get_Type (Target);
       if Old_Type /= Null_Iir then
          if Is_Overload_List (Old_Type) then
@@ -70,15 +74,12 @@ package body Sem_Expr is
          elsif Old_Type = A_Type then
             return;
          else
-            -- Cannot replace a type.
+            -- Cannot replace an existing type by another one.
             raise Internal_Error;
          end if;
       end if;
       if A_Type = Null_Iir then
          return;
-      end if;
-      if Is_Overload_List (A_Type) then
-         raise Internal_Error;
       end if;
       Set_Type (Target, A_Type);
    end Replace_Type;
@@ -91,11 +92,11 @@ package body Sem_Expr is
       return Expr_Type = Null_Iir or else Is_Overload_List (Expr_Type);
    end Is_Overloaded;
 
-   -- Return the common type of base types LEFT and RIGHT.
-   -- LEFT are RIGHT must be really base types (not subtypes).
-   -- Roughly speaking, it returns LEFT (= RIGHT) if LEFT = RIGHT (ie, same
-   -- type), null otherwise.
-   -- However, it handles implicite conversions of universal types.
+   --  Return the common type of base types LEFT and RIGHT.
+   --  LEFT are RIGHT must be really base types (not subtypes).
+   --  Roughly speaking, it returns LEFT (= RIGHT) if LEFT = RIGHT (ie, same
+   --  type), null otherwise.
+   --  However, it handles implicite conversions of universal types.
    function Get_Common_Basetype (Left: Iir; Right: Iir)
      return Iir is
    begin
@@ -220,11 +221,9 @@ package body Sem_Expr is
    function Compatibility_Nodes (Left : Iir; Right : Iir)
      return Compatibility_Level
    is
-      Left_Type, Right_Type : Iir;
+      Left_Type : constant Iir := Get_Base_Type (Get_Type (Left));
+      Right_Type : constant Iir := Get_Type (Right);
    begin
-      Left_Type := Get_Base_Type (Get_Type (Left));
-      Right_Type := Get_Type (Right);
-
       --  Check.
       case Get_Kind (Left_Type) is
          when Iir_Kind_Floating_Type_Definition
@@ -237,16 +236,13 @@ package body Sem_Expr is
            | Iir_Kind_Array_Type_Definition =>
             null;
          when others =>
-            Error_Kind ("are_node_compatible_ov", Left_Type);
+            Error_Kind ("compatibility_nodes", Left_Type);
       end case;
 
       return Compatibility_Types1 (Left_Type, Right_Type);
    end Compatibility_Nodes;
 
-   --  Return TRUE iff A_TYPE can be the type of string or bit string literal
-   --  EXPR.  EXPR is needed to distinguish between string and bit string
-   --  for VHDL87 rule about the type of a bit string.
-   function Is_String_Literal_Type (A_Type : Iir; Expr : Iir) return Boolean
+   function Is_String_Type (A_Type : Iir) return Boolean
    is
       Base_Type : constant Iir := Get_Base_Type (A_Type);
       El_Bt : Iir;
@@ -262,6 +258,21 @@ package body Sem_Expr is
       if Get_Kind (El_Bt) /= Iir_Kind_Enumeration_Type_Definition then
          return False;
       end if;
+      --  FIXME: character type
+      return True;
+   end Is_String_Type;
+
+   --  Return TRUE iff A_TYPE can be the type of string or bit string literal
+   --  EXPR.  EXPR is needed to distinguish between string and bit string
+   --  for VHDL87 rule about the type of a bit string.
+   function Is_String_Literal_Type (A_Type : Iir; Expr : Iir) return Boolean
+   is
+      El_Bt : Iir;
+   begin
+      if not Is_String_Type (A_Type) then
+         return False;
+      end if;
+      El_Bt := Get_Base_Type (Get_Element_Subtype (A_Type));
       --  LRM87 7.3.1
       --  ... (for string literals) or of type BIT (for bit string literals).
       if Flags.Vhdl_Std = Vhdl_87
@@ -3982,12 +3993,6 @@ package body Sem_Expr is
       end if;
 
       Lib := Get_Parent (Expr);
-      if Get_Kind (Lib) = Iir_Kind_Design_Unit then
-         Lib := Get_Library_Unit (Lib);
-         --  FIXME: the parent of the constant is the library unit or
-         --  the design unit ?
-         raise Internal_Error;
-      end if;
       Cur_Lib := Get_Library_Unit (Sem.Get_Current_Design_Unit);
       if (Get_Kind (Cur_Lib) = Iir_Kind_Package_Declaration
           and then Lib = Cur_Lib)
@@ -4203,6 +4208,317 @@ package body Sem_Expr is
             return Null_Iir;
       end case;
    end Sem_Expression_Ov;
+
+   function Is_Expr_Not_Analyzed (Expr : Iir) return Boolean is
+   begin
+      return Get_Type (Expr) = Null_Iir;
+   end Is_Expr_Not_Analyzed;
+
+   function Is_Expr_Fully_Analyzed (Expr : Iir) return Boolean is
+   begin
+      return Is_Defined_Type (Get_Type (Expr));
+   end Is_Expr_Fully_Analyzed;
+
+   function Get_Wildcard_Type (Wildcard : Iir; Atype : Iir) return Iir is
+   begin
+      if Atype in Iir_Wildcard_Types then
+         --  Special wildcard vs wildcard.
+         case Iir_Wildcard_Types (Wildcard) is
+            when Wildcard_Any_Type =>
+               return Atype;
+            when Wildcard_Any_Aggregate_Type =>
+               case Iir_Wildcard_Types (Atype) is
+                  when Wildcard_Any_Type
+                    | Wildcard_Any_Aggregate_Type =>
+                     return Wildcard_Any_Aggregate_Type;
+                  when Wildcard_Any_String_Type =>
+                     return Wildcard_Any_String_Type;
+                  when Wildcard_Any_Access_Type =>
+                     return Null_Iir;
+               end case;
+            when Wildcard_Any_String_Type =>
+               case Iir_Wildcard_Types (Atype) is
+                  when Wildcard_Any_Type
+                    | Wildcard_Any_Aggregate_Type
+                    | Wildcard_Any_String_Type =>
+                     return Wildcard_Any_String_Type;
+                  when Wildcard_Any_Access_Type =>
+                     return Null_Iir;
+               end case;
+            when Wildcard_Any_Access_Type =>
+               case Iir_Wildcard_Types (Atype) is
+                  when Wildcard_Any_Type
+                    | Wildcard_Any_Access_Type =>
+                     return Wildcard_Any_Access_Type;
+                  when Wildcard_Any_Aggregate_Type
+                    | Wildcard_Any_String_Type =>
+                     return Null_Iir;
+               end case;
+         end case;
+      else
+         case Iir_Wildcard_Types (Wildcard) is
+            when Wildcard_Any_Type =>
+               --  Match with any type.
+               return Atype;
+            when Wildcard_Any_Aggregate_Type =>
+               if Is_Aggregate_Type (Atype) then
+                  return Atype;
+               end if;
+            when Wildcard_Any_String_Type =>
+               if Is_String_Type (Atype) then
+                  return Atype;
+               end if;
+            when Wildcard_Any_Access_Type =>
+               if Get_Kind (Get_Base_Type (Atype))
+                 = Iir_Kind_Access_Type_Definition
+               then
+                  return Atype;
+               end if;
+         end case;
+         return Null_Iir;
+      end if;
+   end Get_Wildcard_Type;
+
+   function Compatible_Types_Intersect_Single (T1, T2 : Iir) return Iir is
+   begin
+      if T1 = T2 then
+         return T1;
+      end if;
+      if T1 in Iir_Wildcard_Types then
+         return Get_Wildcard_Type (T1, T2);
+      elsif T2 in Iir_Wildcard_Types then
+         return Get_Wildcard_Type (T2, T1);
+      else
+         return Get_Common_Basetype (Get_Base_Type (T1), Get_Base_Type (T2));
+      end if;
+   end Compatible_Types_Intersect_Single;
+
+   function Compatible_Types_Intersect_Single_List (A_Type, Types_List : Iir)
+                                                   return Iir
+   is
+      Types_List_List : Iir_List;
+      El: Iir;
+      Com : Iir;
+      Res : Iir;
+   begin
+      if not Is_Overload_List (Types_List) then
+         return Compatible_Types_Intersect_Single (A_Type, Types_List);
+      else
+         Types_List_List := Get_Overload_List (Types_List);
+         Res := Null_Iir;
+         for I in Natural loop
+            El := Get_Nth_Element (Types_List_List, I);
+            exit when El = Null_Iir;
+            Com := Compatible_Types_Intersect_Single (El, A_Type);
+            if Com /= Null_Iir then
+               Add_Result (Res, Com);
+            end if;
+         end loop;
+         return Res;
+      end if;
+   end Compatible_Types_Intersect_Single_List;
+
+   function Compatible_Types_Intersect (List1, List2 : Iir) return Iir
+   is
+      List1_List : Iir_List;
+      Res : Iir;
+      El : Iir;
+      Tmp : Iir;
+   begin
+      if List1 = Null_Iir or else List2 = Null_Iir then
+         return Null_Iir;
+      end if;
+
+      if Is_Overload_List (List1) then
+         List1_List := Get_Overload_List (List1);
+         Res := Null_Iir;
+         for I in Natural loop
+            El := Get_Nth_Element (List1_List, I);
+            exit when El = Null_Iir;
+            Tmp := Compatible_Types_Intersect_Single_List (El, List2);
+            if Tmp /= Null_Iir then
+               Add_Result (Res, Tmp);
+            end if;
+         end loop;
+         return Res;
+      else
+         return Compatible_Types_Intersect_Single_List (List1, List2);
+      end if;
+   end Compatible_Types_Intersect;
+
+   function Sem_Expression_Wildcard (Expr : Iir; Atype : Iir) return Iir
+   is
+      Expr_Type : constant Iir := Get_Type (Expr);
+      Atype_Defined : constant Boolean := Is_Defined_Type (Atype);
+      Expr_Type_Defined : constant Boolean := Is_Defined_Type (Expr_Type);
+   begin
+      if Expr_Type /= Null_Iir then
+         --  EXPR is at least partially analyzed.
+         if Expr_Type_Defined or else not Atype_Defined then
+            --  Nothing to do if:
+            --  - Expression is already fully analyzed: caller has to merge
+            --    types
+            --  - Expression is partially analyzed but ATYPE is not defined:
+            --    caller has to merge types.
+            return Expr;
+         end if;
+      end if;
+
+      case Get_Kind (Expr) is
+         when Iir_Kind_Aggregate =>
+            if Atype_Defined then
+               return Sem_Aggregate (Expr, Atype);
+            else
+               pragma Assert (Expr_Type = Null_Iir);
+               Set_Type (Expr, Wildcard_Any_Aggregate_Type);
+            end if;
+            return Expr;
+
+         when Iir_Kind_String_Literal8 =>
+            if Atype_Defined then
+               if not Is_String_Literal_Type (Atype, Expr) then
+                  Not_Match (Expr, Atype);
+                  Set_Type (Expr, Error_Type);
+               else
+                  Set_Type (Expr, Atype);
+                  Sem_String_Literal (Expr);
+               end if;
+            else
+               pragma Assert (Expr_Type = Null_Iir);
+               Set_Type (Expr, Wildcard_Any_String_Type);
+            end if;
+            return Expr;
+
+         when Iir_Kind_Null_Literal =>
+            if Atype_Defined then
+               if not Is_Null_Literal_Type (Atype) then
+                  Not_Match (Expr, Atype);
+                  Set_Type (Expr, Error_Type);
+               else
+                  Set_Type (Expr, Atype);
+                  Set_Expr_Staticness (Expr, Locally);
+               end if;
+            else
+               pragma Assert (Expr_Type = Null_Iir);
+               Set_Type (Expr, Wildcard_Any_Access_Type);
+            end if;
+            return Expr;
+
+         when Iir_Kind_Allocator_By_Expression
+           | Iir_Kind_Allocator_By_Subtype =>
+            if Atype_Defined then
+               if not Is_Null_Literal_Type (Atype) then
+                  Not_Match (Expr, Atype);
+                  Set_Type (Expr, Error_Type);
+               else
+                  return Sem_Allocator (Expr, Atype);
+               end if;
+            else
+               pragma Assert (Expr_Type = Null_Iir);
+               Set_Type (Expr, Wildcard_Any_Access_Type);
+            end if;
+            return Expr;
+
+         when Iir_Kind_Parenthesis_Expression =>
+            declare
+               Sub_Expr : Iir;
+               Ntype : Iir;
+            begin
+               Sub_Expr := Get_Expression (Expr);
+               if Atype_Defined then
+                  --  Very important: loose the subtype due to
+                  --  LRM93 7.3.2.2 Array aggregate.
+                  Ntype := Get_Base_Type (Atype);
+               else
+                  Ntype := Atype;
+               end if;
+               Sub_Expr := Sem_Expression_Wildcard (Sub_Expr, Ntype);
+               if Sub_Expr /= Null_Iir then
+                  Set_Expression (Expr, Sub_Expr);
+                  Set_Type (Expr, Get_Type (Sub_Expr));
+                  Set_Expr_Staticness (Expr, Get_Expr_Staticness (Sub_Expr));
+               else
+                  Set_Type (Expr, Error_Type);
+               end if;
+            end;
+            return Expr;
+
+         when others =>
+            if Atype_Defined then
+               return Sem_Expression_Ov (Expr, Get_Base_Type (Atype));
+            else
+               declare
+                  Res : Iir;
+                  Res_Type : Iir;
+                  Prev_Res_Type : Iir;
+               begin
+                  pragma Assert (Expr_Type = Null_Iir);
+                  if Atype in Iir_Wildcard_Types then
+                     --  Analyze without known type.
+                     Res := Sem_Expression_Ov (Expr, Null_Iir);
+                     if Res = Null_Iir then
+                        Set_Type (Expr, Error_Type);
+                        return Expr;
+                     end if;
+                     Prev_Res_Type := Get_Type (Res);
+
+                     --  Filter possible type.
+                     Res_Type := Compatible_Types_Intersect_Single_List
+                       (Atype, Prev_Res_Type);
+
+                     if Res_Type = Null_Iir then
+                        --  No matching type.  This is an error.
+                        Not_Match (Expr, Atype);
+                        Set_Type (Expr, Error_Type);
+                     elsif Is_Defined_Type (Res_Type) then
+                        --  Known and defined matching type.
+                        if Res_Type /= Prev_Res_Type then
+                           --  Need to refine analysis.
+                           Res := Sem_Expression_Ov (Expr, Res_Type);
+                        end if;
+                     else
+                        --  Matching but not defined type (overload).
+                        Set_Type (Expr, Res_Type);
+                     end if;
+                     if Is_Overload_List (Prev_Res_Type) then
+                        Free_Overload_List (Prev_Res_Type);
+                     end if;
+                     return Res;
+                  else
+                     pragma Assert (Atype = Null_Iir);
+                     return Sem_Expression_Ov (Expr, Atype);
+                  end if;
+               end;
+            end if;
+      end case;
+   end Sem_Expression_Wildcard;
+
+   procedure Merge_Wildcard_Type (Expr : Iir; Atype : in out Iir)
+   is
+      Result_Type : Iir;
+      Expr_Type : Iir;
+   begin
+      if Expr = Null_Iir then
+         return;
+      end if;
+      Expr_Type := Get_Type (Expr);
+      pragma Assert (Expr_Type /= Null_Iir);
+      Result_Type := Compatible_Types_Intersect (Atype, Expr_Type);
+      if Is_Overload_List (Atype) then
+         Free_Overload_List (Atype);
+      end if;
+      if Result_Type /= Null_Iir then
+         if Is_Defined_Type (Atype) then
+            --  If ATYPE was already defined, keep it.  So that subtypes
+            --  are kept (this is needed for aggregates and always helpful).
+            null;
+         else
+            Atype := Result_Type;
+         end if;
+      else
+         Atype := Result_Type;
+      end if;
+   end Merge_Wildcard_Type;
 
    -- If A_TYPE is not null, then EXPR must be of type A_TYPE.
    -- Return null in case of error.
@@ -4447,6 +4763,10 @@ package body Sem_Expr is
    is
       Res : Iir;
    begin
+      --  This function fully analyze COND, so it supposes COND is not yet
+      --  analyzed.
+      pragma Assert (Is_Expr_Not_Analyzed (Cond));
+
       if Vhdl_Std < Vhdl_08 then
          Res := Sem_Expression (Cond, Boolean_Type_Definition);
 

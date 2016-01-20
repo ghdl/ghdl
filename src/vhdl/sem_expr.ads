@@ -63,7 +63,7 @@ package Sem_Expr is
    --  (Handle specific overloading rules).
    function Sem_Case_Expression (Expr : Iir) return Iir;
 
-   --  Sem COND as a condition.
+   --  Sem COND as a condition.  COND must have not been analyzed.
    --  In VHDL08, this follows 9.2.9 Condition operator.
    --  In VHDL87 and 93, type of COND must be a boolean.
    --  A check is made that COND can be read.
@@ -204,4 +204,33 @@ package Sem_Expr is
    --  Return THE type which is compatible with LIST1 are LIST2.
    --  Return null_iir if there is no such type or if there are several types.
    function Search_Compatible_Type (List1, List2 : Iir) return Iir;
+
+   --  Return the intersection of LIST1 and LIST2.
+   --  This function accept wildcard types.
+   function Compatible_Types_Intersect (List1, List2 : Iir) return Iir;
+
+   --  Return True if an expression is not analyzed (its type is not set).
+   --  All expressions from the parser are not analyzed.
+   function Is_Expr_Not_Analyzed (Expr : Iir) return Boolean;
+   pragma Inline (Is_Expr_Not_Analyzed);
+
+   --  Return True if an expression is fully analyzed: its type is set to
+   --  either a type definition, or to an error type.
+   --  Some expressions can be partially analyzed: either set to an overload
+   --  list or to a wildcard type.
+   function Is_Expr_Fully_Analyzed (Expr : Iir) return Boolean;
+   pragma Inline (Is_Expr_Fully_Analyzed);
+
+   --  Analyze EXPR using ATYPE.
+   --  If EXPR is not analyzed, EXPR is analyzed using type constraints from
+   --   ATYPE.
+   --  If ATYPE is a defined type (neither an overload list nor a wildcard
+   --  type), EXPR will be fully analyzed (possibly with an error).
+   --  If EXPR is partially or fully analyzed, ATYPE must not be null_iir and
+   --  it is checked with the types of EXPR.  EXPR may become fully analyzed.
+   function Sem_Expression_Wildcard (Expr : Iir; Atype : Iir) return Iir;
+
+   --  To be used after Sem_Expression_Wildcard to update list ATYPE of
+   --  possible types.
+   procedure Merge_Wildcard_Type (Expr : Iir; Atype : in out Iir);
 end Sem_Expr;

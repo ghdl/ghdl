@@ -3042,11 +3042,6 @@ package body Sem_Decls is
                   if Get_Deferred_Declaration (El) = Null_Iir then
                      Error_Msg_Sem ("missing value for constant declared at "
                                     & Disp_Location (El), Decl);
-                  else
-                     --  Remove from visibility the full declaration of the
-                     --  constant.
-                     --  FIXME: this is not a check!
-                     Set_Deferred_Declaration (El, Null_Iir);
                   end if;
                end if;
             when Iir_Kind_Function_Declaration

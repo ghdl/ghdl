@@ -1,7 +1,19 @@
 language: c
-sudo: false
-addons:
-  apt:
-    packages:
-      - gnat
-script: ./dist/travis-ci.sh
+matrix:
+  include:
+    - os: linux
+      sudo: required
+      dist: trusty
+      env: BLD=llvm
+      before_install:
+        - sudo apt-get update -qq
+        - sudo apt-get install -y gnat-4.8 zlib1g-dev
+        - sudo apt-get install -y llvm-3.5-dev llvm-3.5-tools libedit-dev
+    - os: linux
+      sudo: false
+      env: BLD=mcode
+      addons:
+        apt:
+          packages:
+          - gnat
+script: ./dist/travis-ci.sh $BLD

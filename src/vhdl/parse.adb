@@ -4935,7 +4935,7 @@ package body Parse is
    --  precond : next token
    --  postcond: next token
    --
-   --  [ §9.5 ]
+   --  [ LRM93 9.5 ]
    --  options ::= [ GUARDED ] [ delay_mechanism ]
    procedure Parse_Options (Stmt : Iir) is
    begin
@@ -4947,26 +4947,75 @@ package body Parse is
    end Parse_Options;
 
    --  precond : next tkoen
-   --  postcond: ';'
+   --  postcond: next token (';')
    --
-   --  [ §9.5.1 ]
-   --  conditional_signal_assignment ::=
-   --      target <= options conditional_waveforms ;
-   --
-   --  [ §9.5.1 ]
+   --  [ LRM93 9.5.1 ]
    --  conditional_waveforms ::=
    --      { waveform WHEN condition ELSE }
    --      waveform [ WHEN condition ]
-   function Parse_Conditional_Signal_Assignment (Target: Iir) return Iir
+   function Parse_Conditional_Waveforms return Iir
    is
-      use Iir_Chains.Conditional_Waveform_Chain_Handling;
-      Res: Iir;
-      Cond_Wf, Last_Cond_Wf : Iir_Conditional_Waveform;
+      Wf : Iir;
+      Res : Iir;
+      Cond_Wf, N_Cond_Wf : Iir_Conditional_Waveform;
    begin
-      Res := Create_Iir (Iir_Kind_Concurrent_Conditional_Signal_Assignment);
-      Set_Target (Res, Target);
-      Location_Copy (Res, Get_Target (Res));
+      Wf := Parse_Waveform;
+      if Current_Token /= Tok_When then
+         return Wf;
+      else
+         Res := Create_Iir (Iir_Kind_Conditional_Waveform);
+         Set_Location (Res);
+         Set_Waveform_Chain (Res, Wf);
 
+         Cond_Wf := Res;
+         loop
+            --  Eat 'when'
+            Scan;
+
+            Set_Condition (Cond_Wf, Parse_Expression);
+
+            if Current_Token /= Tok_Else then
+               if Flags.Vhdl_Std = Vhdl_87 then
+                  Error_Msg_Parse ("else missing in vhdl 87");
+               end if;
+               exit;
+            end if;
+
+            N_Cond_Wf := Create_Iir (Iir_Kind_Conditional_Waveform);
+            Set_Location (N_Cond_Wf);
+            Set_Chain (Cond_Wf, N_Cond_Wf);
+            Cond_Wf := N_Cond_Wf;
+
+            --  Eat 'else'
+            Scan;
+
+            Set_Waveform_Chain (Cond_Wf, Parse_Waveform);
+
+            exit when Current_Token /= Tok_When;
+         end loop;
+         return Res;
+      end if;
+   end Parse_Conditional_Waveforms;
+
+   --  precond : '<=' (or ':=')
+   --  postcond: ';'
+   --
+   --  [ LRM93 9.5.1 ]
+   --  concurrent_conditional_signal_assignment ::=
+   --      target <= [ GUARDED ] [ delay_mechanism ] conditional_waveforms ;
+   --
+   --  [ LRM08 10.5.2.1 ]
+   --  concurrent_simple_waveform_assignment ::=
+   --      target <= [ GUARDED ] [ delay_mechanism ] waveform ;
+   function Parse_Concurrent_Conditional_Signal_Assignment (Target: Iir)
+                                                           return Iir
+   is
+      Res: Iir;
+      Loc : Location_Type;
+      N_Res : Iir;
+      Wf : Iir;
+   begin
+      Loc := Get_Token_Location;
       case Current_Token is
          when Tok_Less_Equal =>
             null;
@@ -4976,30 +5025,34 @@ package body Parse is
          when others =>
             Expect (Tok_Less_Equal);
       end case;
+
+      --  Eat '<='.
       Scan;
 
+      --  Assume simple signal assignment.
+      Res := Create_Iir (Iir_Kind_Concurrent_Simple_Signal_Assignment);
       Parse_Options (Res);
 
-      Build_Init (Last_Cond_Wf);
-      loop
-         Cond_Wf := Create_Iir (Iir_Kind_Conditional_Waveform);
-         Append (Last_Cond_Wf, Res, Cond_Wf);
-         Set_Location (Cond_Wf);
-         Set_Waveform_Chain (Cond_Wf, Parse_Waveform);
-         exit when Current_Token /= Tok_When;
-         Scan;
-         Set_Condition (Cond_Wf, Parse_Expression);
-         if Current_Token /= Tok_Else then
-            if Flags.Vhdl_Std = Vhdl_87 then
-               Error_Msg_Parse ("else missing in vhdl 87");
-            end if;
-            exit;
+      Wf := Parse_Conditional_Waveforms;
+      if Get_Kind (Wf) = Iir_Kind_Conditional_Waveform then
+         N_Res :=
+           Create_Iir (Iir_Kind_Concurrent_Conditional_Signal_Assignment);
+         if Get_Guard (Res) /= Null_Iir then
+            Set_Guard (N_Res, N_Res);
          end if;
-         Scan;
-      end loop;
+         Set_Delay_Mechanism (N_Res, Get_Delay_Mechanism (Res));
+         Set_Reject_Time_Expression (N_Res, Get_Reject_Time_Expression (Res));
+         Free_Iir (Res);
+         Res := N_Res;
+         Set_Conditional_Waveform_Chain (Res, Wf);
+      else
+         Set_Waveform_Chain (Res, Wf);
+      end if;
+      Set_Location (Res, Loc);
+      Set_Target (Res, Target);
       Expect (Tok_Semi_Colon);
       return Res;
-   end Parse_Conditional_Signal_Assignment;
+   end Parse_Concurrent_Conditional_Signal_Assignment;
 
    --  precond : WITH
    --  postcond: ';'
@@ -5336,53 +5389,145 @@ package body Parse is
    --  precond:  '<='
    --  postcond: next token
    --
-   --  [ §8.4 ]
+   --  [ LRM93 8.4 ]
    --  signal_assignment_statement ::=
    --      [ label : ] target <= [ delay_mechanism ] waveform ;
+   --
+   --  [ LRM08 10.5 Signal assignment statement ]
+   --  signal_assignement_statement ::=
+   --      [ label : ] simple_signal_assignement
+   --    | [ label : ] conditional_signal_assignement
+   --    | [ label : ] selected_signal_assignement (TODO)
    function Parse_Signal_Assignment_Statement (Target : Iir) return Iir
    is
       Stmt : Iir;
-      Wave_Chain : Iir_Waveform_Element;
+      N_Stmt : Iir;
+      Wave_Chain : Iir;
    begin
-      Stmt := Create_Iir (Iir_Kind_Signal_Assignment_Statement);
-      Location_Copy (Stmt, Target);
+      Stmt := Create_Iir (Iir_Kind_Simple_Signal_Assignment_Statement);
+      Set_Location (Stmt);
       Set_Target (Stmt, Target);
+
+      --  Eat '<='.
       Scan;
+
       Parse_Delay_Mechanism (Stmt);
-      Wave_Chain := Parse_Waveform;
+
+      Wave_Chain := Parse_Conditional_Waveforms;
+
       --  LRM 8.4 Signal assignment statement
       --  It is an error is the reserved word UNAFFECTED appears as a
-      --  waveform in a (sequential) signa assignment statement.
+      --  waveform in a (sequential) signal assignment statement.
       if Wave_Chain = Null_Iir then
          Error_Msg_Parse
            ("'unaffected' is not allowed in a sequential statement");
+      elsif Get_Kind (Wave_Chain) = Iir_Kind_Conditional_Waveform then
+         if Flags.Vhdl_Std < Vhdl_08 then
+            Error_Msg_Parse
+              ("conditional signal assignment not allowed in before vhdl08");
+         end if;
+         N_Stmt :=
+           Create_Iir (Iir_Kind_Conditional_Signal_Assignment_Statement);
+         Location_Copy (N_Stmt, Stmt);
+         Set_Target (N_Stmt, Target);
+         Set_Delay_Mechanism (N_Stmt, Get_Delay_Mechanism (Stmt));
+         Set_Reject_Time_Expression
+           (N_Stmt, Get_Reject_Time_Expression (Stmt));
+         Set_Conditional_Waveform_Chain (N_Stmt, Wave_Chain);
+         Free_Iir (Stmt);
+         Stmt := N_Stmt;
+      else
+         Set_Waveform_Chain (Stmt, Wave_Chain);
       end if;
-      Set_Waveform_Chain (Stmt, Wave_Chain);
+
       return Stmt;
    end Parse_Signal_Assignment_Statement;
+
+   --  precond:  WHEN
+   --  postcond: next token
+   --
+   --  [ LRM08 10.5.3 Conditional signal assignments ]
+   --  conditional_expressions ::=
+   --      expression WHEN condition
+   --    { ELSE expression WHEN condition }
+   --    [ ELSE expression ]
+   function Parse_Conditional_Expression (Expr : Iir) return Iir
+   is
+      Res : Iir;
+      El, N_El : Iir;
+   begin
+      Res := Create_Iir (Iir_Kind_Conditional_Expression);
+      Set_Location (Res);
+      Set_Expression (Res, Expr);
+      El := Res;
+
+      loop
+         --  Eat 'when'
+         Scan;
+
+         Set_Condition (El, Parse_Expression);
+
+         exit when Current_Token /= Tok_Else;
+
+         N_El := Create_Iir (Iir_Kind_Conditional_Expression);
+         Set_Location (N_El);
+         Set_Chain (El, N_El);
+         El := N_El;
+
+         --  Eat 'else'
+         Scan;
+
+         Set_Expression (N_El, Parse_Expression);
+
+         exit when Current_Token /= Tok_When;
+      end loop;
+
+      return Res;
+   end Parse_Conditional_Expression;
 
    --  precond:  ':='
    --  postcond: next token
    --
-   --  [ §8.5 ]
+   --  [ LRM93 8.5 ]
    --  variable_assignment_statement ::=
    --      [ label : ] target := expression ;
    function Parse_Variable_Assignment_Statement (Target : Iir) return Iir
    is
       Stmt : Iir;
+      Loc : Location_Type;
+      Expr : Iir;
    begin
-      Stmt := Create_Iir (Iir_Kind_Variable_Assignment_Statement);
-      Location_Copy (Stmt, Target);
-      Set_Target (Stmt, Target);
+      Loc := Get_Token_Location;
+
+      --  Eat ':='
       Scan;
-      Set_Expression (Stmt, Parse_Expression);
+
+      Expr := Parse_Expression;
+
+      if Current_Token = Tok_When then
+         if Flags.Vhdl_Std < Vhdl_08 then
+            Error_Msg_Parse
+              ("conditional variable assignment not allowed before vhdl08");
+         end if;
+         Stmt :=
+           Create_Iir (Iir_Kind_Conditional_Variable_Assignment_Statement);
+         Set_Location (Stmt, Loc);
+         Set_Target (Stmt, Target);
+         Set_Conditional_Expression
+           (Stmt, Parse_Conditional_Expression (Expr));
+      else
+         Stmt := Create_Iir (Iir_Kind_Variable_Assignment_Statement);
+         Set_Location (Stmt, Loc);
+         Set_Target (Stmt, Target);
+         Set_Expression (Stmt, Expr);
+      end if;
       return Stmt;
    end Parse_Variable_Assignment_Statement;
 
    --  precond:  next token
    --  postcond: next token
    --
-   --  [ 8 ]
+   --  [ LRM93 8 ]
    --  sequence_of_statement ::= { sequential_statement }
    --
    --  [ 8 ]
@@ -5995,6 +6140,26 @@ package body Parse is
       return Res;
    end Parse_Process_Statement;
 
+   procedure Check_Formal_Form (Formal : Iir) is
+   begin
+      if Formal = Null_Iir then
+         return;
+      end if;
+
+      case Get_Kind (Formal) is
+         when Iir_Kind_Simple_Name
+           | Iir_Kind_Slice_Name
+           | Iir_Kind_Selected_Name =>
+            null;
+         when Iir_Kind_Parenthesis_Name =>
+            --  Could be an indexed name, so nothing to check within the
+            --  parenthesis.
+            null;
+         when others =>
+            Error_Msg_Parse ("incorrect formal name", Formal);
+      end case;
+   end Check_Formal_Form;
+
    -- precond : NEXT_TOKEN
    -- postcond: NEXT_TOKEN
    --
@@ -6070,6 +6235,9 @@ package body Parse is
 
                when Tok_Double_Arrow =>
                   Formal := Actual;
+
+                  --  Check that FORMAL is a name and not an expression.
+                  Check_Formal_Form (Formal);
 
                   --  Skip '=>'
                   Scan;
@@ -6641,7 +6809,7 @@ package body Parse is
    --  precond : first token
    --  postcond: END
    --
-   --  [ §9 ]
+   --  [ LRM93 9 ]
    --  concurrent_statement ::= block_statement
    --                         | process_statement
    --                         | concurrent_procedure_call_statement
@@ -6650,15 +6818,15 @@ package body Parse is
    --                         | component_instantiation_statement
    --                         | generate_statement
    --
-   --  [ §9.4 ]
+   --  [ LRM93 9.4 ]
    --  concurrent_assertion_statement ::=
    --      [ label : ] [ POSTPONED ] assertion ;
    --
-   --  [ §9.3 ]
+   --  [ LRM93 9.3 ]
    --  concurrent_procedure_call_statement ::=
    --      [ label : ] [ POSTPONED ] procedure_call ;
    --
-   --  [ §9.5 ]
+   --  [ LRM93 9.5 ]
    --  concurrent_signal_assignment_statement ::=
    --      [ label : ] [ POSTPONED ] conditional_signal_assignment
    --    | [ label : ] [ POSTPONED ] selected_signal_assignment
@@ -6671,7 +6839,7 @@ package body Parse is
            | Tok_Assign =>
             -- This is a conditional signal assignment.
             -- Error for ':=' is handled by the subprogram.
-            return Parse_Conditional_Signal_Assignment (Target);
+            return Parse_Concurrent_Conditional_Signal_Assignment (Target);
          when Tok_Semi_Colon =>
             -- a procedure call or a component instantiation.
             -- Parse it as a procedure call, may be revert to a
@@ -6698,7 +6866,7 @@ package body Parse is
                Expect (Tok_Semi_Colon);
                return Res;
             else
-               return Parse_Conditional_Signal_Assignment
+               return Parse_Concurrent_Conditional_Signal_Assignment
                  (Parse_Simple_Expression (Target));
             end if;
       end case;
@@ -6878,7 +7046,7 @@ package body Parse is
                Id := Parse_Aggregate;
                if Current_Token = Tok_Less_Equal then
                   -- This is a conditional signal assignment.
-                  Stmt := Parse_Conditional_Signal_Assignment (Id);
+                  Stmt := Parse_Concurrent_Conditional_Signal_Assignment (Id);
                else
                   Error_Msg_Parse ("'<=' expected after aggregate");
                   Eat_Tokens_Until_Semi_Colon;
