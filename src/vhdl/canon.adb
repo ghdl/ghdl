@@ -2319,7 +2319,7 @@ package body Canon is
                Index : Iir;
             begin
                for I in Natural loop
-                  Index := Get_Nth_Element (Indexes, I);
+                  Index := Get_Index_Type (Indexes, I);
                   exit when Index = Null_Iir;
                   Canon_Subtype_Indication_If_Anonymous (Index);
                end loop;

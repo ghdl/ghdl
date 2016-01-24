@@ -25,7 +25,6 @@ with Iirs_Utils; use Iirs_Utils;
 with Libraries;
 with Name_Table;
 with File_Operation;
-with Debugger; use Debugger;
 with Iir_Chains; use Iir_Chains;
 with Grt.Types; use Grt.Types;
 with Simulation.AMS; use Simulation.AMS;
@@ -236,7 +235,7 @@ package body Elaboration is
       Instance.Objects (Info.Slot) := Sig;
 
       Init := Execute_Signal_Init_Value (Instance, Get_Prefix (Signal));
-      Init := Unshare_Bounds (Init, Global_Pool'Access);
+      Init := Unshare (Init, Global_Pool'Access); --  Create a full copy.
       Instance.Objects (Info.Slot + 1) := Init;
 
       Signals_Table.Append ((Kind => Implicit_Delayed,
@@ -307,6 +306,9 @@ package body Elaboration is
       Library_Unit: Iir;
    begin
       Depend_List := Get_Dependence_List (Design_Unit);
+      if Depend_List = Null_Iir_List then
+         return;
+      end if;
 
       for I in Natural loop
          Design := Get_Nth_Element (Depend_List, I);
@@ -315,7 +317,12 @@ package body Elaboration is
             --  During Sem, the architecture may be still unknown, and the
             --  dependency is therefore the aspect.
             Library_Unit := Get_Architecture (Design);
-            Design := Get_Design_Unit (Library_Unit);
+            if Get_Kind (Library_Unit) in Iir_Kinds_Denoting_Name then
+               Design := Get_Named_Entity (Library_Unit);
+               Library_Unit := Get_Library_Unit (Design);
+            else
+               Design := Get_Design_Unit (Library_Unit);
+            end if;
          else
             Library_Unit := Get_Library_Unit (Design);
          end if;
@@ -432,7 +439,7 @@ package body Elaboration is
    --  Create an value_literal for DECL (defined in BLOCK) and set it with
    --  its default values. Nodes are shared.
    function Create_Value_For_Type
-     (Block: Block_Instance_Acc; Decl: Iir; Default : Boolean)
+     (Block: Block_Instance_Acc; Decl: Iir; Init : Init_Value_Kind)
       return Iir_Value_Literal_Acc
    is
       Res : Iir_Value_Literal_Acc;
@@ -447,35 +454,37 @@ package body Elaboration is
            | Iir_Kind_Floating_Type_Definition
            | Iir_Kind_Physical_Subtype_Definition
            | Iir_Kind_Physical_Type_Definition =>
-            if Default then
-               Bounds := Execute_Bounds (Block, Decl);
-               Res := Bounds.Left;
-            else
-               case Get_Info (Get_Base_Type (Decl)).Scalar_Mode is
-                  when Iir_Value_B1 =>
-                     Res := Create_B1_Value (False);
-                  when Iir_Value_E32 =>
-                     Res := Create_E32_Value (0);
-                  when Iir_Value_I64 =>
-                     Res := Create_I64_Value (0);
-                  when Iir_Value_F64 =>
-                     Res := Create_F64_Value (0.0);
-                  when others =>
-                     raise Internal_Error;
-               end case;
-            end if;
+            case Init is
+               when Init_Value_Default =>
+                  Bounds := Execute_Bounds (Block, Decl);
+                  Res := Bounds.Left;
+               when Init_Value_Any =>
+                  case Get_Info (Get_Base_Type (Decl)).Scalar_Mode is
+                     when Iir_Value_B1 =>
+                        Res := Create_B1_Value (False);
+                     when Iir_Value_E32 =>
+                        Res := Create_E32_Value (0);
+                     when Iir_Value_I64 =>
+                        Res := Create_I64_Value (0);
+                     when Iir_Value_F64 =>
+                        Res := Create_F64_Value (0.0);
+                     when others =>
+                        raise Internal_Error;
+                  end case;
+            end case;
 
          when Iir_Kind_Array_Subtype_Definition =>
             Res := Create_Array_Bounds_From_Type (Block, Decl, True);
             declare
-               El : Iir_Value_Literal_Acc;
+               El_Type : constant Iir := Get_Element_Subtype (Decl);
+               El_Val : Iir_Value_Literal_Acc;
             begin
                if Res.Val_Array.Len > 0 then
-                  El := Create_Value_For_Type
-                    (Block, Get_Element_Subtype (Decl), Default);
-                  Res.Val_Array.V (1) := El;
-                  for I in 2 .. Res.Val_Array.Len loop
-                     Res.Val_Array.V (I) := El;
+                  --  Aliases the elements, for speed.  If modified, the
+                  --  value will first be copied which will unalias it.
+                  El_Val := Create_Value_For_Type (Block, El_Type, Init);
+                  for I in 1 .. Res.Val_Array.Len loop
+                     Res.Val_Array.V (I) := El_Val;
                   end loop;
                end if;
             end;
@@ -493,7 +502,7 @@ package body Elaboration is
                   El := Get_Nth_Element (List, I);
                   exit when El = Null_Iir;
                   Res.Val_Record.V (1 + Get_Element_Position (El)) :=
-                    Create_Value_For_Type (Block, Get_Type (El), Default);
+                    Create_Value_For_Type (Block, Get_Type (El), Init);
                end loop;
             end;
          when Iir_Kind_Access_Type_Definition
@@ -632,21 +641,6 @@ package body Elaboration is
       return Res;
    end Create_Quantity;
 
-   function Elaborate_Bound_Constraint
-     (Instance : Block_Instance_Acc; Bound: Iir)
-      return Iir_Value_Literal_Acc
-   is
-      Value : Iir_Value_Literal_Acc;
-      Ref : constant Iir := Get_Type (Bound);
-      Res : Iir_Value_Literal_Acc;
-   begin
-      Res := Create_Value_For_Type (Instance, Ref, False);
-      Res := Unshare (Res, Instance_Pool);
-      Value := Execute_Expression (Instance, Bound);
-      Assign_Value_To_Object (Instance, Res, Ref, Value, Bound);
-      return Res;
-   end Elaborate_Bound_Constraint;
-
    procedure Elaborate_Range_Expression
      (Instance : Block_Instance_Acc; Rc: Iir_Range_Expression)
    is
@@ -673,15 +667,19 @@ package body Elaboration is
       end if;
       Create_Object (Instance, Rc);
       Val := Create_Range_Value
-        (Elaborate_Bound_Constraint (Instance, Get_Left_Limit (Rc)),
-         Elaborate_Bound_Constraint (Instance, Get_Right_Limit (Rc)),
+        (Execute_Expression (Instance, Get_Left_Limit (Rc)),
+         Execute_Expression (Instance, Get_Right_Limit (Rc)),
          Get_Direction (Rc));
+      --  Check constraints.
+      if not Is_Null_Range (Val) then
+         Check_Constraints (Instance, Val.Left, Get_Type (Rc), Rc);
+         Check_Constraints (Instance, Val.Right, Get_Type (Rc), Rc);
+      end if;
       Instance.Objects (Range_Info.Slot) := Unshare (Val, Instance_Pool);
    end Elaborate_Range_Expression;
 
    procedure Elaborate_Range_Constraint
-     (Instance : Block_Instance_Acc; Rc: Iir)
-   is
+     (Instance : Block_Instance_Acc; Rc: Iir) is
    begin
       case Get_Kind (Rc) is
          when Iir_Kind_Range_Expression =>
@@ -957,17 +955,19 @@ package body Elaboration is
                --  element is the default expression appearing in the
                --  declaration of that generic constant.
                Value := Get_Default_Value (Inter);
-               if Value = Null_Iir then
-                  Error_Msg_Exec ("no default value", Inter);
-                  return;
+               if Value /= Null_Iir then
+                  Val := Execute_Expression (Target_Instance, Value);
+               else
+                  Val := Create_Value_For_Type
+                    (Target_Instance, Get_Type (Inter),
+                     Init_Value_Default);
                end if;
-               Val := Execute_Expression (Target_Instance, Value);
             when Iir_Kind_Association_Element_By_Expression =>
                Value := Get_Actual (Assoc);
                Val := Execute_Expression (Local_Instance, Value);
             when Iir_Kind_Association_Element_By_Individual =>
                Val := Create_Value_For_Type
-                 (Local_Instance, Get_Actual_Type (Assoc), False);
+                 (Local_Instance, Get_Actual_Type (Assoc), Init_Value_Any);
 
                Last_Individual := Unshare (Val, Instance_Pool);
                Target_Instance.Objects (Get_Info (Inter).Slot) :=
@@ -1134,6 +1134,9 @@ package body Elaboration is
                if Get_Whole_Association_Flag (Assoc)
                  and then Get_Collapse_Signal_Flag (Assoc)
                then
+                  pragma Assert (Get_In_Conversion (Assoc) = Null_Iir);
+                  pragma Assert (Get_Out_Conversion (Assoc) = Null_Iir);
+                  pragma Assert (Is_Signal_Name (Get_Actual (Assoc)));
                   declare
                      Slot : constant Object_Slot_Type :=
                        Get_Info (Inter).Slot;
@@ -1147,6 +1150,12 @@ package body Elaboration is
                      Formal_Instance.Objects (Slot) := Unshare_Bounds
                        (Actual_Sig, Global_Pool'Access);
                      Formal_Instance.Objects (Slot + 1) := Init_Expr;
+                     if Get_Mode (Inter) = Iir_Out_Mode then
+                        Assign_Value_To_Object
+                          (Formal_Instance, Init_Expr, Get_Type (Inter),
+                           Elaborate_Default_Value (Formal_Instance, Inter),
+                           Assoc);
+                     end if;
                   end;
                else
                   if Get_Whole_Association_Flag (Assoc) then
@@ -1169,7 +1178,7 @@ package body Elaboration is
 
             when Iir_Kind_Association_Element_By_Individual =>
                Init_Expr := Create_Value_For_Type
-                 (Formal_Instance, Get_Actual_Type (Assoc), False);
+                 (Formal_Instance, Get_Actual_Type (Assoc), Init_Value_Any);
                Elaborate_Signal (Formal_Instance, Inter, Init_Expr);
 
             when others =>
@@ -1518,7 +1527,6 @@ package body Elaboration is
       if not Is_In_Range (Index, Bound) then
          --  Well, this instance should have never been built.
          --  Should be destroyed ??
-         raise Internal_Error;
          return;
       end if;
 
@@ -1613,7 +1621,8 @@ package body Elaboration is
          Val := Execute_Expression_With_Type
            (Instance, Default_Value, Get_Type (Decl));
       else
-         Val := Create_Value_For_Type (Instance, Get_Type (Decl), True);
+         Val := Create_Value_For_Type
+           (Instance, Get_Type (Decl), Init_Value_Default);
       end if;
       return Val;
    end Elaborate_Default_Value;
@@ -2177,7 +2186,8 @@ package body Elaboration is
          when Iir_Kind_Iterator_Declaration =>
             Elaborate_Subtype_Indication_If_Anonymous
               (Instance, Get_Type (Decl));
-            Val := Create_Value_For_Type (Instance, Get_Type (Decl), True);
+            Val := Create_Value_For_Type
+              (Instance, Get_Type (Decl), Init_Value_Default);
             Create_Object (Instance, Decl);
             Instance.Objects (Get_Info (Decl).Slot) :=
               Unshare (Val, Instance_Pool);

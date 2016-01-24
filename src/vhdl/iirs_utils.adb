@@ -850,6 +850,11 @@ package body Iirs_Utils is
       return Get_Index_Type (Get_Index_Subtype_List (Array_Type), Idx);
    end Get_Index_Type;
 
+   function Get_Nbr_Dimensions (Array_Type : Iir) return Natural is
+   begin
+      return Get_Nbr_Elements (Get_Index_Subtype_List (Array_Type));
+   end Get_Nbr_Dimensions;
+
    function Get_Denoted_Type_Mark (Subtyp : Iir) return Iir
    is
       Type_Mark_Name : constant Iir := Get_Subtype_Type_Mark (Subtyp);

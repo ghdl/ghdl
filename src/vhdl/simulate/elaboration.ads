@@ -105,9 +105,17 @@ package Elaboration is
    procedure Destroy_Iterator_Declaration
      (Instance : Block_Instance_Acc; Decl : Iir);
 
-   --  Create a value for type DECL.  Initialize it if DEFAULT is true.
+   --  How are created scalar values for Create_Value_For_Type.
+   type Init_Value_Kind is
+     (--  Use the default value for the type (lefmost value).
+      Init_Value_Default,
+
+      --  Undefined.  The caller doesn't care as it will overwrite the value.
+      Init_Value_Any);
+
+   --  Create a value for type DECL.
    function Create_Value_For_Type
-     (Block: Block_Instance_Acc; Decl: Iir; Default : Boolean)
+     (Block: Block_Instance_Acc; Decl: Iir; Init : Init_Value_Kind)
      return Iir_Value_Literal_Acc;
 
    --  LRM93 §12.3.1.3  Subtype Declarations

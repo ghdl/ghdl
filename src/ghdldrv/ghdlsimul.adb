@@ -180,7 +180,7 @@ package body Ghdlsimul is
    function Decode_Option (Option : String) return Boolean
    is
    begin
-      if Option = "--debug" then
+      if Option = "--debug" or Option = "-g" then
          Simulation.Flag_Debugger := True;
       else
          return False;

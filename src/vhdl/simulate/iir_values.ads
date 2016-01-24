@@ -263,8 +263,8 @@ package Iir_Values is
    -- Value or sub-value must not be indirect.
    function Is_Equal (Left, Right: Iir_Value_Literal_Acc) return Boolean;
 
-   --  Return TRUE iif ARANGE is a nul range.
-   function Is_Nul_Range (Arange : Iir_Value_Literal_Acc) return Boolean;
+   --  Return TRUE iif ARANGE is a null range.
+   function Is_Null_Range (Arange : Iir_Value_Literal_Acc) return Boolean;
 
    -- Get order of LEFT with RIGHT.
    -- Must be discrete kind (enum, int, fp, physical) or array (uni dim).
@@ -352,4 +352,3 @@ package Iir_Values is
    -- Disp a value_literal in readable form.
    procedure Disp_Iir_Value (Value: Iir_Value_Literal_Acc; A_Type: Iir);
 end Iir_Values;
-

@@ -187,7 +187,7 @@ package body Iir_Values is
       end case;
    end Compare_Value;
 
-   function Is_Nul_Range (Arange : Iir_Value_Literal_Acc) return Boolean
+   function Is_Null_Range (Arange : Iir_Value_Literal_Acc) return Boolean
    is
       Cmp : Order;
    begin
@@ -198,7 +198,7 @@ package body Iir_Values is
          when Iir_Downto =>
             return Cmp = Less;
       end case;
-   end Is_Nul_Range;
+   end Is_Null_Range;
 
    procedure Increment (Val : Iir_Value_Literal_Acc) is
    begin

@@ -190,7 +190,8 @@ package body Debugger is
            | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Component_Instantiation_Statement
            | Iir_Kind_Procedure_Declaration
-           | Iir_Kinds_Process_Statement =>
+           | Iir_Kinds_Process_Statement
+           | Iir_Kind_Package_Declaration =>
             return Image_Identifier (Name);
          when Iir_Kind_Iterator_Declaration =>
             return Image_Identifier (Get_Parent (Name)) & '('
@@ -444,7 +445,10 @@ package body Debugger is
             Disp_Instance_Signals_Of_Chain
               (Instance, Get_Declaration_Chain (Blk));
          when Iir_Kind_Component_Instantiation_Statement =>
-            null;
+            Disp_Instance_Name (Instance);
+            Put_Line (" [component]:");
+            Disp_Instance_Signals_Of_Chain
+              (Instance, Get_Port_Chain (Instance.Stmt));
          when Iir_Kinds_Process_Statement =>
             null;
          when Iir_Kind_Iterator_Declaration =>
@@ -469,35 +473,51 @@ package body Debugger is
       Disp_Instance_Signals (Top_Instance);
    end Disp_Signals_Value;
 
-   procedure Disp_Objects_Value is
-   begin
-      null;
---       -- Disp the results.
---       for I in 0 .. Variables.Last loop
---          Put (Get_String (Variables.Table (I).Name.all));
---          Put (" = ");
---          Put (Get_Str_Value
---               (Get_Literal (variables.Table (I).Value.all),
---                Get_Type (variables.Table (I).Value.all)));
---          if I = variables.Last then
---             Put_Line (";");
---          else
---             Put (", ");
---          end if;
---       end loop;
-   end Disp_Objects_Value;
-
    procedure Disp_Label (Process : Iir)
    is
       Label : Name_Id;
    begin
-         Label := Get_Label (Process);
-         if Label = Null_Identifier then
-            Put ("<unlabeled>");
-         else
-            Put (Name_Table.Image (Label));
-         end if;
+      Label := Get_Label (Process);
+      if Label = Null_Identifier then
+         Put ("<unlabeled>");
+      else
+         Put (Name_Table.Image (Label));
+      end if;
    end Disp_Label;
+
+   procedure Disp_Declaration_Object
+     (Instance : Block_Instance_Acc; Decl : Iir) is
+   begin
+      case Get_Kind (Decl) is
+         when Iir_Kind_Constant_Declaration
+           | Iir_Kind_Variable_Declaration
+           | Iir_Kind_Interface_Variable_Declaration
+           | Iir_Kind_Interface_Constant_Declaration
+           | Iir_Kind_Interface_File_Declaration
+           | Iir_Kind_Object_Alias_Declaration =>
+            Put (Disp_Node (Decl));
+            Put (" = ");
+            Disp_Value_Tab (Instance.Objects (Get_Info (Decl).Slot), 3);
+         when Iir_Kind_Interface_Signal_Declaration
+           | Iir_Kind_Signal_Declaration =>
+            declare
+               Sig : Iir_Value_Literal_Acc;
+            begin
+               Sig := Instance.Objects (Get_Info (Decl).Slot);
+               Put (Disp_Node (Decl));
+               Put (" = ");
+               Disp_Signal (Sig, Get_Type (Decl));
+               New_Line;
+            end;
+         when Iir_Kind_Type_Declaration
+           | Iir_Kind_Anonymous_Type_Declaration
+           | Iir_Kind_Subtype_Declaration =>
+            --  FIXME: disp ranges
+            null;
+         when others =>
+            Error_Kind ("disp_declaration_object", Decl);
+      end case;
+   end Disp_Declaration_Object;
 
    procedure Disp_Declaration_Objects
      (Instance : Block_Instance_Acc; Decl_Chain : Iir)
@@ -506,34 +526,7 @@ package body Debugger is
    begin
       El := Decl_Chain;
       while El /= Null_Iir loop
-         case Get_Kind (El) is
-            when Iir_Kind_Constant_Declaration
-              | Iir_Kind_Variable_Declaration
-              | Iir_Kind_Interface_Variable_Declaration
-              | Iir_Kind_Interface_Constant_Declaration
-              | Iir_Kind_Interface_File_Declaration
-              | Iir_Kind_Object_Alias_Declaration =>
-               Put (Disp_Node (El));
-               Put (" = ");
-               Disp_Value_Tab (Instance.Objects (Get_Info (El).Slot), 3);
-            when Iir_Kind_Interface_Signal_Declaration =>
-               declare
-                  Sig : Iir_Value_Literal_Acc;
-               begin
-                  Sig := Instance.Objects (Get_Info (El).Slot);
-                  Put (Disp_Node (El));
-                  Put (" = ");
-                  Disp_Signal (Sig, Get_Type (El));
-                  New_Line;
-               end;
-            when Iir_Kind_Type_Declaration
-              | Iir_Kind_Anonymous_Type_Declaration
-              | Iir_Kind_Subtype_Declaration =>
-               --  FIXME: disp ranges
-               null;
-            when others =>
-               Error_Kind ("disp_declaration_objects", El);
-         end case;
+         Disp_Declaration_Object (Instance, El);
          El := Get_Chain (El);
       end loop;
    end Disp_Declaration_Objects;
@@ -1129,6 +1122,7 @@ package body Debugger is
       Exec_State := Exec_Single_Step;
       Flag_Need_Debug := True;
       Command_Status := Status_Quit;
+      Cmd_Repeat := Step_Proc'Access;
    end Step_Proc;
 
    Break_Id : Name_Id;
@@ -1396,9 +1390,29 @@ package body Debugger is
    procedure Info_Signals_Proc (Line : String) is
       pragma Unreferenced (Line);
    begin
-      Check_Current_Process;
-      Disp_Declared_Signals
-        (Current_Process.Proc, Current_Process.Top_Instance);
+      if False then
+         Check_Current_Process;
+         Disp_Declared_Signals
+           (Current_Process.Proc, Current_Process.Top_Instance);
+      elsif True then
+         for I in Signals_Table.First .. Signals_Table.Last loop
+            declare
+               S : Signal_Entry renames Signals_Table.Table (I);
+            begin
+               Disp_Instance_Name (S.Instance, False);
+               Put ('.');
+               if S.Kind = User_Signal then
+                  Put (Name_Table.Image (Get_Identifier (S.Decl)));
+                  Disp_Value (S.Sig);
+                  Disp_Value (S.Val);
+               else
+                  Disp_Declaration_Object (S.Instance, S.Decl);
+               end if;
+            end;
+         end loop;
+      else
+         Disp_Signals_Value;
+      end if;
    end Info_Signals_Proc;
 
    type Handle_Scope_Type is access procedure (N : Iir);
@@ -1502,9 +1516,17 @@ package body Debugger is
             Open_Declarative_Region;
             Add_Name (Get_Parameter_Specification (N));
          when Iir_Kind_Block_Statement =>
-            Open_Declarative_Region;
-            Add_Declarations (Get_Declaration_Chain (N), False);
-            Add_Declarations_Of_Concurrent_Statement (N);
+            declare
+               Header : constant Iir := Get_Block_Header (N);
+            begin
+               Open_Declarative_Region;
+               if Header /= Null_Iir then
+                  Add_Declarations (Get_Generic_Chain (Header), False);
+                  Add_Declarations (Get_Port_Chain (Header), False);
+               end if;
+               Add_Declarations (Get_Declaration_Chain (N), False);
+               Add_Declarations_Of_Concurrent_Statement (N);
+            end;
          when Iir_Kind_Generate_Statement_Body =>
             Open_Declarative_Region;
             Add_Declarations (Get_Declaration_Chain (N), False);
@@ -1574,6 +1596,7 @@ package body Debugger is
       Res : Iir_Value_Literal_Acc;
       P : Natural;
       Opt_Value : Boolean := False;
+      Opt_Name : Boolean := False;
       Marker : Mark_Type;
    begin
       --  Decode options: /v
@@ -1582,6 +1605,9 @@ package body Debugger is
          P := Skip_Blanks (Line (P .. Line'Last));
          if P + 2 < Line'Last and then Line (P .. P + 1) = "/v" then
             Opt_Value := True;
+            P := P + 2;
+         elsif P + 2 < Line'Last and then Line (P .. P + 1) = "/n" then
+            Opt_Name := True;
             P := P + 2;
          else
             exit;
@@ -1626,7 +1652,20 @@ package body Debugger is
 
       Mark (Marker, Expr_Pool);
 
-      Res := Execute_Expression (Dbg_Cur_Frame, Expr);
+      if Opt_Name then
+         case Get_Kind (Expr) is
+            when Iir_Kind_Simple_Name =>
+               null;
+            when others =>
+               Put_Line ("expression is not a name");
+               Opt_Name := False;
+         end case;
+      end if;
+      if Opt_Name then
+         Res := Execute_Name (Dbg_Cur_Frame, Expr, True);
+      else
+         Res := Execute_Expression (Dbg_Cur_Frame, Expr);
+      end if;
       if Opt_Value then
          Disp_Value (Res);
       else
