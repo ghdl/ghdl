@@ -104,6 +104,10 @@ package body Parse is
          if Msg'Length > 0 then
             Error_Msg_Parse (Msg);
             Error_Msg_Parse ("(found: " & Image (Current_Token) & ")");
+         elsif Current_Token = Tok_Identifier then
+            Error_Msg_Parse
+              (''' & Image(Token) & "' is expected instead of '"
+                 & Name_Table.Image (Current_Identifier) & ''');
          else
             Error_Msg_Parse
               (''' & Image(Token) & "' is expected instead of '"
