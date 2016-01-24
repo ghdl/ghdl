@@ -516,6 +516,56 @@ package body Elaboration is
       return Res;
    end Create_Value_For_Type;
 
+   procedure Init_To_Default
+     (Targ : Iir_Value_Literal_Acc; Block: Block_Instance_Acc; Atype : Iir) is
+   begin
+      case Get_Kind (Atype) is
+         when Iir_Kind_Integer_Subtype_Definition
+           | Iir_Kind_Integer_Type_Definition
+           | Iir_Kind_Enumeration_Type_Definition
+           | Iir_Kind_Enumeration_Subtype_Definition
+           | Iir_Kind_Floating_Subtype_Definition
+           | Iir_Kind_Floating_Type_Definition
+           | Iir_Kind_Physical_Subtype_Definition
+           | Iir_Kind_Physical_Type_Definition =>
+            declare
+               Bounds : Iir_Value_Literal_Acc;
+            begin
+               Bounds := Execute_Bounds (Block, Atype);
+               Store (Targ, Bounds.Left);
+            end;
+
+         when Iir_Kind_Array_Subtype_Definition
+           | Iir_Kind_Array_Type_Definition =>
+            declare
+               El_Type : constant Iir := Get_Element_Subtype (Atype);
+            begin
+               for I in 1 .. Targ.Val_Array.Len loop
+                  Init_To_Default (Targ.Val_Array.V (I), Block, El_Type);
+               end loop;
+            end;
+         when Iir_Kind_Record_Type_Definition
+           | Iir_Kind_Record_Subtype_Definition =>
+            declare
+               El : Iir_Element_Declaration;
+               List : constant Iir_List :=
+                 Get_Elements_Declaration_List (Get_Base_Type (Atype));
+            begin
+               for I in Natural loop
+                  El := Get_Nth_Element (List, I);
+                  exit when El = Null_Iir;
+                  Init_To_Default (Targ.Val_Record.V (1 + Iir_Index32 (I)),
+                                   Block, Get_Type (El));
+               end loop;
+            end;
+         when Iir_Kind_Access_Type_Definition
+           | Iir_Kind_Access_Subtype_Definition =>
+            Store (Targ, Null_Lit);
+         when others =>
+            Error_Kind ("Init_To_Default", Atype);
+      end case;
+   end Init_To_Default;
+
    procedure Create_Object (Instance : Block_Instance_Acc; Decl : Iir)
    is
       Slot : constant Object_Slot_Type := Get_Info (Decl).Slot;
@@ -1141,6 +1191,8 @@ package body Elaboration is
                      Slot : constant Object_Slot_Type :=
                        Get_Info (Inter).Slot;
                      Actual_Sig : Iir_Value_Literal_Acc;
+                     Default_Value : Iir;
+                     Val : Iir_Value_Literal_Acc;
                   begin
                      Actual_Sig :=
                        Execute_Name (Actual_Instance, Actual, True);
@@ -1151,10 +1203,17 @@ package body Elaboration is
                        (Actual_Sig, Global_Pool'Access);
                      Formal_Instance.Objects (Slot + 1) := Init_Expr;
                      if Get_Mode (Inter) = Iir_Out_Mode then
-                        Assign_Value_To_Object
-                          (Formal_Instance, Init_Expr, Get_Type (Inter),
-                           Elaborate_Default_Value (Formal_Instance, Inter),
-                           Assoc);
+                        Default_Value := Get_Default_Value (Inter);
+                        if Default_Value /= Null_Iir then
+                           Val := Execute_Expression_With_Type
+                             (Formal_Instance, Default_Value,
+                              Get_Type (Inter));
+                           Store (Formal_Instance.Objects (Slot + 1), Val);
+                        else
+                           Init_To_Default
+                             (Formal_Instance.Objects (Slot + 1),
+                              Formal_Instance, Get_Type (Inter));
+                        end if;
                      end if;
                   end;
                else

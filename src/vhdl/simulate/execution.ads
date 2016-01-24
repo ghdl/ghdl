@@ -114,15 +114,6 @@ package Execution is
    function Get_Instance_For_Slot (Instance: Block_Instance_Acc; Decl: Iir)
                                    return Block_Instance_Acc;
 
-   --  Store VALUE to TARGET.
-   --  Note: VALUE is not freed.
-   procedure Assign_Value_To_Object
-     (Instance: Block_Instance_Acc;
-      Target: Iir_Value_Literal_Acc;
-      Target_Type: Iir;
-      Value: Iir_Value_Literal_Acc;
-      Stmt: Iir);
-
    -- Check VALUE follows the constraints of DEF.
    -- INSTANCE,DEF is the definition of a subtype.
    -- EXPR is just used in case of error to display the location
