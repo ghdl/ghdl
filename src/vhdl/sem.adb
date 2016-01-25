@@ -1412,12 +1412,15 @@ package body Sem is
                                     Get_Literal_Origin (Right));
          when Iir_Kind_Physical_Fp_Literal =>
             if Get_Fp_Value (Left) /= Get_Fp_Value (Right)
-              or else Get_Unit_Name (Left) /= Get_Unit_Name (Right)
+              or else not Are_Trees_Equal (Get_Unit_Name (Left),
+                                           Get_Unit_Name (Right))
             then
                return False;
             end if;
             return Are_Trees_Equal (Get_Literal_Origin (Left),
                                     Get_Literal_Origin (Right));
+         when Iir_Kind_Unit_Declaration =>
+            return Left = Right;
          when Iir_Kind_Floating_Point_Literal =>
             if Get_Fp_Value (Left) /= Get_Fp_Value (Right) then
                return False;
