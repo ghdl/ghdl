@@ -274,6 +274,10 @@ package body Grt.Rtis_Addr is
                   Align (Ghdl_Range_I32'Alignment);
                   Res (I) := To_Ghdl_Range_Ptr (Bounds);
                   Update (Ghdl_Range_I32'Size);
+               when Ghdl_Rtik_Type_B1 =>
+                  Align (Ghdl_Range_B1'Alignment);
+                  Res (I) := To_Ghdl_Range_Ptr (Bounds);
+                  Update (Ghdl_Range_B1'Size);
                when Ghdl_Rtik_Type_E8 =>
                   Align (Ghdl_Range_E8'Alignment);
                   Res (I) := To_Ghdl_Range_Ptr (Bounds);
