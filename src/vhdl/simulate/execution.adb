@@ -1760,7 +1760,7 @@ package body Execution is
          High, Low : Iir_Value_Literal_Acc;
       begin
          A_Range := Execute_Bounds (Block, Expr);
-         if Is_Nul_Range (A_Range) then
+         if Is_Null_Range (A_Range) then
             return;
          end if;
          if A_Range.Dir = Iir_To then
@@ -2358,19 +2358,89 @@ package body Execution is
    function Execute_Signal_Init_Value (Block : Block_Instance_Acc; Expr : Iir)
                                       return Iir_Value_Literal_Acc
    is
-      Base : constant Iir := Get_Object_Prefix (Expr);
+      Base : constant Iir := Get_Object_Prefix (Expr, False);
       Info : constant Sim_Info_Acc := Get_Info (Base);
       Bblk : Block_Instance_Acc;
       Base_Val : Iir_Value_Literal_Acc;
       Res : Iir_Value_Literal_Acc;
       Is_Sig : Boolean;
    begin
-      Bblk := Get_Instance_By_Scope (Block, Info.Obj_Scope);
-      Base_Val := Bblk.Objects (Info.Slot + 1);
+      if Get_Kind (Base) = Iir_Kind_Object_Alias_Declaration then
+         Bblk := Get_Instance_By_Scope (Block, Info.Obj_Scope);
+         Base_Val := Execute_Signal_Init_Value (Bblk, Get_Name (Base));
+      else
+         Bblk := Get_Instance_By_Scope (Block, Info.Obj_Scope);
+         Base_Val := Bblk.Objects (Info.Slot + 1);
+      end if;
       Execute_Name_With_Base (Block, Expr, Base_Val, Res, Is_Sig);
       pragma Assert (Is_Sig);
       return Res;
    end Execute_Signal_Init_Value;
+
+   --  Indexed element will be at Pfx.Val_Array.V (Pos + 1)
+   procedure Execute_Indexed_Name (Block: Block_Instance_Acc;
+                                   Expr: Iir;
+                                   Pfx : Iir_Value_Literal_Acc;
+                                   Pos : out Iir_Index32)
+   is
+      pragma Assert (Get_Kind (Expr) = Iir_Kind_Indexed_Name);
+      Index_List : constant Iir_List := Get_Index_List (Expr);
+      Nbr_Dimensions : constant Iir_Index32 :=
+        Iir_Index32 (Get_Nbr_Elements (Index_List));
+      Index: Iir;
+      Value: Iir_Value_Literal_Acc;
+      Off : Iir_Index32;
+   begin
+      for I in 1 .. Nbr_Dimensions loop
+         Index := Get_Nth_Element (Index_List, Natural (I - 1));
+         Value := Execute_Expression (Block, Index);
+         Off := Get_Index_Offset (Value, Pfx.Bounds.D (I), Expr);
+         if I = 1 then
+            Pos := Off;
+         else
+            Pos := Pos * Pfx.Bounds.D (I).Length + Off;
+         end if;
+      end loop;
+   end Execute_Indexed_Name;
+
+   --  Indexed element will be at Pfx.Val_Array.V (Pos)
+   procedure Execute_Slice_Name (Prefix_Array: Iir_Value_Literal_Acc;
+                                 Srange : Iir_Value_Literal_Acc;
+                                 Low : out Iir_Index32;
+                                 High : out Iir_Index32;
+                                 Loc : Iir)
+   is
+      Index_Order : Order;
+      -- Lower and upper bounds of the slice.
+   begin
+      pragma Assert (Prefix_Array /= null);
+
+      --  LRM93 6.5
+      --  It is an error if the direction of the discrete range is not
+      --  the same as that of the index range of the array denoted by
+      --  the prefix of the slice name.
+      if Srange.Dir /= Prefix_Array.Bounds.D (1).Dir then
+         Error_Msg_Exec ("slice direction mismatch", Loc);
+      end if;
+
+      --  LRM93 6.5
+      --  It is an error if either of the bounds of the
+      --  discrete range does not belong to the index range of the
+      --  prefixing array, unless the slice is a null slice.
+      Index_Order := Compare_Value (Srange.Left, Srange.Right);
+      if (Srange.Dir = Iir_To and Index_Order = Greater)
+        or (Srange.Dir = Iir_Downto and Index_Order = Less)
+      then
+         --  Null slice.
+         Low := 1;
+         High := 0;
+      else
+         Low := Get_Index_Offset
+           (Srange.Left, Prefix_Array.Bounds.D (1), Loc);
+         High := Get_Index_Offset
+           (Srange.Right, Prefix_Array.Bounds.D (1), Loc);
+      end if;
+   end Execute_Slice_Name;
 
    procedure Execute_Name_With_Base (Block: Block_Instance_Acc;
                                      Expr: Iir;
@@ -2400,18 +2470,14 @@ package body Execution is
             end if;
 
          when Iir_Kind_Object_Alias_Declaration =>
-            pragma Assert (Base = null);
             --  FIXME: add a flag ?
-            case Get_Kind (Get_Object_Prefix (Expr)) is
-               when Iir_Kind_Signal_Declaration
-                 | Iir_Kind_Interface_Signal_Declaration
-                 | Iir_Kind_Guard_Signal_Declaration =>
-                  Is_Sig := True;
-               when others =>
-                  Is_Sig := False;
-            end case;
-            Slot_Block := Get_Instance_For_Slot (Block, Expr);
-            Res := Slot_Block.Objects (Get_Info (Expr).Slot);
+            Is_Sig := Is_Signal_Object (Expr);
+            if Base /= null then
+               Res := Base;
+            else
+               Slot_Block := Get_Instance_For_Slot (Block, Expr);
+               Res := Slot_Block.Objects (Get_Info (Expr).Slot);
+            end if;
 
          when Iir_Kind_Interface_Constant_Declaration
            | Iir_Kind_Constant_Declaration
@@ -2436,77 +2502,27 @@ package body Execution is
 
          when Iir_Kind_Indexed_Name =>
             declare
-               Prefix: Iir;
-               Index_List: Iir_List;
-               Index: Iir;
-               Nbr_Dimensions: Iir_Index32;
-               Value: Iir_Value_Literal_Acc;
-               Pfx: Iir_Value_Literal_Acc;
-               Pos, Off : Iir_Index32;
+               Pfx : Iir_Value_Literal_Acc;
+               Pos : Iir_Index32;
             begin
-               Prefix := Get_Prefix (Expr);
-               Index_List := Get_Index_List (Expr);
-               Nbr_Dimensions := Iir_Index32 (Get_Nbr_Elements (Index_List));
-               Execute_Name_With_Base (Block, Prefix, Base, Pfx, Is_Sig);
-               for I in 1 .. Nbr_Dimensions loop
-                  Index := Get_Nth_Element (Index_List, Natural (I - 1));
-                  Value := Execute_Expression (Block, Index);
-                  Off := Get_Index_Offset (Value, Pfx.Bounds.D (I), Expr);
-                  if I = 1 then
-                     Pos := Off;
-                  else
-                     Pos := Pos * Pfx.Bounds.D (I).Length + Off;
-                  end if;
-               end loop;
-               Res := Pfx.Val_Array.V (1 + Pos);
-               --  FIXME: free PFX.
+               Execute_Name_With_Base
+                 (Block, Get_Prefix (Expr), Base, Pfx, Is_Sig);
+               Execute_Indexed_Name (Block, Expr, Pfx, Pos);
+               Res := Pfx.Val_Array.V (Pos + 1);
             end;
 
          when Iir_Kind_Slice_Name =>
             declare
-               Prefix: Iir;
                Prefix_Array: Iir_Value_Literal_Acc;
-
                Srange : Iir_Value_Literal_Acc;
-               Index_Order : Order;
-               -- Lower and upper bounds of the slice.
                Low, High: Iir_Index32;
             begin
-               Srange := Execute_Bounds (Block, Get_Suffix (Expr));
-
-               Prefix := Get_Prefix (Expr);
-
                Execute_Name_With_Base
-                 (Block, Prefix, Base, Prefix_Array, Is_Sig);
-               if Prefix_Array = null then
-                  raise Internal_Error;
-               end if;
+                 (Block, Get_Prefix (Expr), Base, Prefix_Array, Is_Sig);
 
-               --  LRM93 6.5
-               --  It is an error if the direction of the discrete range is not
-               --  the same as that of the index range of the array denoted by
-               --  the prefix of the slice name.
-               if Srange.Dir /= Prefix_Array.Bounds.D (1).Dir then
-                  Error_Msg_Exec ("slice direction mismatch", Expr);
-               end if;
+               Srange := Execute_Bounds (Block, Get_Suffix (Expr));
+               Execute_Slice_Name (Prefix_Array, Srange, Low, High, Expr);
 
-               --  LRM93 6.5
-               --  It is an error if either of the bounds of the
-               --  discrete range does not belong to the index range of the
-               --  prefixing array, unless the slice is a null slice.
-               Index_Order := Compare_Value (Srange.Left, Srange.Right);
-               if (Srange.Dir = Iir_To and Index_Order = Greater)
-                 or (Srange.Dir = Iir_Downto and Index_Order = Less)
-               then
-                  --  Null slice.
-                  Low := 1;
-                  High := 0;
-               else
-                  Low := Get_Index_Offset
-                    (Srange.Left, Prefix_Array.Bounds.D (1), Expr);
-                  High := Get_Index_Offset
-                    (Srange.Right, Prefix_Array.Bounds.D (1), Expr);
-               end if;
                Res := Create_Array_Value (High - Low + 1, 1);
                Res.Bounds.D (1) := Srange;
                for I in Low .. High loop
@@ -2992,7 +3008,7 @@ package body Execution is
             Res := Create_Value_For_Type
               (Block,
                Get_Type_Of_Subtype_Indication (Get_Subtype_Indication (Expr)),
-               True);
+               Init_Value_Default);
             Res := Unshare_Heap (Res);
             return Create_Access_Value (Res);
 
@@ -3360,6 +3376,34 @@ package body Execution is
       end case;
    end Execute_Assoc_Conversion;
 
+   procedure Associate_By_Reference (Block : Block_Instance_Acc;
+                                     Formal : Iir;
+                                     Formal_Base : Iir_Value_Literal_Acc;
+                                     Actual : Iir_Value_Literal_Acc)
+   is
+      Prefix : constant Iir := Strip_Denoting_Name (Get_Prefix (Formal));
+      Is_Sig : Boolean;
+      Pfx : Iir_Value_Literal_Acc;
+      Pos : Iir_Index32;
+   begin
+      if Get_Kind (Prefix) = Iir_Kind_Slice_Name then
+         --  That case is not handled correctly.
+         raise Program_Error;
+      end if;
+      Execute_Name_With_Base (Block, Prefix, Formal_Base, Pfx, Is_Sig);
+
+      case Get_Kind (Formal) is
+         when Iir_Kind_Indexed_Name =>
+            Execute_Indexed_Name (Block, Formal, Pfx, Pos);
+            Store (Pfx.Val_Array.V (Pos + 1), Actual);
+         when Iir_Kind_Selected_Element =>
+            Pos := Get_Element_Position (Get_Selected_Element (Formal));
+            Store (Pfx.Val_Record.V (Pos + 1), Actual);
+         when others =>
+            Error_Kind ("associate_by_reference", Formal);
+      end case;
+   end Associate_By_Reference;
+
    --  Establish correspondance for association list ASSOC_LIST from block
    --  instance OUT_BLOCK for subprogram of block SUBPRG_BLOCK.
    procedure Execute_Association
@@ -3398,13 +3442,12 @@ package body Execution is
             when Iir_Kind_Association_Element_By_Expression =>
                Actual := Get_Actual (Assoc);
             when Iir_Kind_Association_Element_By_Individual =>
-               --  FIXME: signals ?
-               pragma Assert
-                 (Get_Kind (Inter) /= Iir_Kind_Interface_Signal_Declaration);
+               --  Directly create the whole value on the instance pool, as its
+               --  life is longer than the statement.
                Last_Individual := Create_Value_For_Type
-                 (Out_Block, Get_Actual_Type (Assoc), False);
-               Last_Individual := Unshare (Last_Individual, Instance_Pool);
-
+                 (Out_Block, Get_Actual_Type (Assoc), Init_Value_Any);
+               Last_Individual :=
+                 Unshare (Last_Individual, Instance_Pool);
                Elaboration.Create_Object (Subprg_Block, Inter);
                Subprg_Block.Objects (Get_Info (Inter).Slot) := Last_Individual;
                goto Continue;
@@ -3464,13 +3507,13 @@ package body Execution is
                      --  For an OUT variable using an out conversion, don't
                      --  associate with the actual, create a temporary value.
                      Val := Create_Value_For_Type
-                       (Out_Block, Get_Type (Formal), True);
+                       (Out_Block, Get_Type (Formal), Init_Value_Default);
                   elsif Get_Kind (Get_Type (Formal)) in
                     Iir_Kinds_Scalar_Type_Definition
                   then
                      --  These are passed by value.  Must be reset.
                      Val := Create_Value_For_Type
-                       (Out_Block, Get_Type (Formal), True);
+                       (Out_Block, Get_Type (Formal), Init_Value_Default);
                   end if;
                else
                   if Get_Kind (Assoc) =
@@ -3510,14 +3553,8 @@ package body Execution is
                   Error_Kind ("execute_association", Inter);
             end case;
          else
-            declare
-               Targ : Iir_Value_Literal_Acc;
-               Is_Sig : Boolean;
-            begin
-               Execute_Name_With_Base
-                 (Subprg_Block, Formal, Last_Individual, Targ, Is_Sig);
-               Store (Targ, Val);
-            end;
+            Associate_By_Reference
+              (Subprg_Block, Formal, Last_Individual, Val);
          end if;
 
          << Continue >> null;
@@ -4001,117 +4038,6 @@ package body Execution is
       Release (Marker, Expr_Pool);
    end Execute_Signal_Assignment;
 
-   procedure Assign_Simple_Value_To_Object
-     (Instance: Block_Instance_Acc;
-      Dest: Iir_Value_Literal_Acc;
-      Dest_Type: Iir;
-      Value: Iir_Value_Literal_Acc;
-      Stmt: Iir)
-   is
-   begin
-      if Dest.Kind /= Value.Kind then
-         raise Internal_Error; -- literal kind mismatch.
-      end if;
-
-      Check_Constraints (Instance, Value, Dest_Type, Stmt);
-
-      Store (Dest, Value);
-   end Assign_Simple_Value_To_Object;
-
-   procedure Assign_Array_Value_To_Object
-     (Instance: Block_Instance_Acc;
-      Target: Iir_Value_Literal_Acc;
-      Target_Type: Iir;
-      Depth: Natural;
-      Value: Iir_Value_Literal_Acc;
-      Stmt: Iir)
-   is
-      Element_Type: Iir;
-   begin
-      if Target.Val_Array.Len /= Value.Val_Array.Len then
-         -- Dimension mismatch.
-         raise Program_Error;
-      end if;
-      if Depth = Get_Nbr_Elements (Get_Index_List (Target_Type)) then
-         Element_Type := Get_Element_Subtype (Target_Type);
-         for I in Target.Val_Array.V'Range loop
-            Assign_Value_To_Object (Instance,
-                                    Target.Val_Array.V (I),
-                                    Element_Type,
-                                    Value.Val_Array.V (I),
-                                    Stmt);
-         end loop;
-      else
-         for I in Target.Val_Array.V'Range loop
-            Assign_Array_Value_To_Object (Instance,
-                                          Target.Val_Array.V (I),
-                                          Target_Type,
-                                          Depth + 1,
-                                          Value.Val_Array.V (I),
-                                          Stmt);
-         end loop;
-      end if;
-   end Assign_Array_Value_To_Object;
-
-   procedure Assign_Record_Value_To_Object
-     (Instance: Block_Instance_Acc;
-      Target: Iir_Value_Literal_Acc;
-      Target_Type: Iir;
-      Value: Iir_Value_Literal_Acc;
-      Stmt: Iir)
-   is
-      Element_Type: Iir;
-      List : Iir_List;
-      Element: Iir_Element_Declaration;
-      Pos : Iir_Index32;
-   begin
-      if Target.Val_Record.Len /= Value.Val_Record.Len then
-         -- Dimension mismatch.
-         raise Program_Error;
-      end if;
-      List := Get_Elements_Declaration_List (Target_Type);
-      for I in Natural loop
-         Element := Get_Nth_Element (List, I);
-         exit when Element = Null_Iir;
-         Element_Type := Get_Type (Element);
-         Pos := Get_Element_Position (Element);
-         Assign_Value_To_Object (Instance,
-                                 Target.Val_Record.V (1 + Pos),
-                                 Element_Type,
-                                 Value.Val_Record.V (1 + Pos),
-                                 Stmt);
-      end loop;
-   end Assign_Record_Value_To_Object;
-
-   procedure Assign_Value_To_Object
-     (Instance: Block_Instance_Acc;
-      Target: Iir_Value_Literal_Acc;
-      Target_Type: Iir;
-      Value: Iir_Value_Literal_Acc;
-      Stmt: Iir)
-   is
-   begin
-      case Target.Kind is
-         when Iir_Value_Array =>
-            Assign_Array_Value_To_Object
-              (Instance, Target, Target_Type, 1, Value, Stmt);
-         when Iir_Value_Record =>
-            Assign_Record_Value_To_Object
-              (Instance, Target, Target_Type, Value, Stmt);
-         when Iir_Value_Scalars
-           | Iir_Value_Access =>
-            Assign_Simple_Value_To_Object
-              (Instance, Target, Target_Type, Value, Stmt);
-         when Iir_Value_File
-           | Iir_Value_Signal
-           | Iir_Value_Protected
-           | Iir_Value_Range
-           | Iir_Value_Quantity
-           | Iir_Value_Terminal =>
-            raise Internal_Error;
-      end case;
-   end Assign_Value_To_Object;
-
    -- Display a message when an assertion has failed.
    -- REPORT is the value (string) to display, or null to use default message.
    -- SEVERITY is the severity or null to use default (error).
@@ -4338,7 +4264,7 @@ package body Execution is
       Bounds := Execute_Bounds (Instance, Get_Type (Iterator));
       Index := Instance.Objects (Get_Info (Iterator).Slot);
       Store (Index, Bounds.Left);
-      Is_Nul := Is_Nul_Range (Bounds);
+      Is_Nul := Is_Null_Range (Bounds);
       Release (Marker, Expr_Pool);
 
       if Is_Nul then

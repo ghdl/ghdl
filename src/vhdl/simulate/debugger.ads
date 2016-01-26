@@ -54,8 +54,6 @@ package Debugger is
    --  Disp all signals name and values.
    procedure Disp_Signals_Value;
 
-   procedure Disp_Objects_Value;
-
    --  Disp stats about the design (number of process, number of signals...)
    procedure Disp_Design_Stats;
 

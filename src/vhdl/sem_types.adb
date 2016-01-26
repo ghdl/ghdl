@@ -334,18 +334,24 @@ package body Sem_Types is
       case Get_Kind (Range_Expr) is
          when Iir_Kind_Range_Expression =>
             Range_Expr1 := Sem_Type_Range_Expression (Range_Expr, True);
+         when Iir_Kind_Attribute_Name =>
+            Sem_Name (Range_Expr);
+            Range_Expr1 := Name_To_Range (Range_Expr);
          when others =>
             Error_Kind ("sem_physical_type_definition", Range_Expr);
       end case;
-      if Range_Expr1 /= Null_Iir then
-         if Get_Expr_Staticness (Range_Expr1) /= Locally then
-            Error_Msg_Sem
-              ("range constraint for a physical type must be static",
-               Range_Expr1);
-            Range_Expr1 := Null_Iir;
-         else
-            Range_Expr1 := Eval_Range_If_Static (Range_Expr1);
-         end if;
+      if Range_Expr1 = Null_Iir or else Is_Error (Range_Expr1) then
+         --  Avoid cascading errors.
+         Range_Expr1 :=
+           Get_Range_Constraint (Universal_Integer_Subtype_Definition);
+      end if;
+      if Get_Expr_Staticness (Range_Expr1) /= Locally then
+         Error_Msg_Sem ("range constraint for a physical type must be static",
+                        Range_Expr1);
+         Range_Expr1 :=
+           Get_Range_Constraint (Universal_Integer_Subtype_Definition);
+      else
+         Range_Expr1 := Eval_Range_If_Static (Range_Expr1);
       end if;
 
       --  Create the subtype.
@@ -368,47 +374,45 @@ package body Sem_Types is
       Set_Visible_Flag (Unit, True);
       Xref_Decl (Unit);
 
-      if Range_Expr1 /= Null_Iir then
-         declare
-            --  Convert an integer literal to a physical literal.
-            --  This is used to convert bounds.
-            function Lit_To_Phys_Lit (Lim : Iir_Integer_Literal)
-              return Iir_Physical_Int_Literal
-            is
-               Res : Iir_Physical_Int_Literal;
-            begin
-               Res := Create_Iir (Iir_Kind_Physical_Int_Literal);
-               Location_Copy (Res, Lim);
-               Set_Type (Res, Def);
-               Set_Value (Res, Get_Value (Lim));
-               Set_Unit_Name (Res, Get_Primary_Unit_Name (Def));
-               Set_Expr_Staticness (Res, Locally);
-               Set_Literal_Origin (Res, Lim);
-               return Res;
-            end Lit_To_Phys_Lit;
-
-            Phys_Range : Iir_Range_Expression;
+      declare
+         --  Convert an integer literal to a physical literal.
+         --  This is used to convert bounds.
+         function Lit_To_Phys_Lit (Lim : Iir_Integer_Literal)
+                                  return Iir_Physical_Int_Literal
+         is
+            Res : Iir_Physical_Int_Literal;
          begin
-            --  Create the physical range.
-            Phys_Range := Create_Iir (Iir_Kind_Range_Expression);
-            Location_Copy (Phys_Range, Range_Expr1);
-            Set_Type (Phys_Range, Def);
-            Set_Direction (Phys_Range, Get_Direction (Range_Expr1));
-            Set_Left_Limit
-              (Phys_Range, Lit_To_Phys_Lit (Get_Left_Limit (Range_Expr1)));
-            Set_Right_Limit
-              (Phys_Range, Lit_To_Phys_Lit (Get_Right_Limit (Range_Expr1)));
-            Set_Expr_Staticness
-              (Phys_Range, Get_Expr_Staticness (Range_Expr1));
+            Res := Create_Iir (Iir_Kind_Physical_Int_Literal);
+            Location_Copy (Res, Lim);
+            Set_Type (Res, Def);
+            Set_Value (Res, Get_Value (Lim));
+            Set_Unit_Name (Res, Get_Primary_Unit_Name (Def));
+            Set_Expr_Staticness (Res, Locally);
+            Set_Literal_Origin (Res, Lim);
+            return Res;
+         end Lit_To_Phys_Lit;
 
-            Set_Range_Constraint (Sub_Type, Phys_Range);
-            --  This must be locally...
-            Set_Type_Staticness (Sub_Type, Get_Expr_Staticness (Range_Expr1));
+         Phys_Range : Iir_Range_Expression;
+      begin
+         --  Create the physical range.
+         Phys_Range := Create_Iir (Iir_Kind_Range_Expression);
+         Location_Copy (Phys_Range, Range_Expr1);
+         Set_Type (Phys_Range, Def);
+         Set_Direction (Phys_Range, Get_Direction (Range_Expr1));
+         Set_Left_Limit
+           (Phys_Range, Lit_To_Phys_Lit (Get_Left_Limit (Range_Expr1)));
+         Set_Right_Limit
+           (Phys_Range, Lit_To_Phys_Lit (Get_Right_Limit (Range_Expr1)));
+         Set_Expr_Staticness
+           (Phys_Range, Get_Expr_Staticness (Range_Expr1));
 
-            --  FIXME: the original range is not used.  Reuse it ?
-            Free_Iir (Range_Expr);
-         end;
-      end if;
+         Set_Range_Constraint (Sub_Type, Phys_Range);
+         --  This must be locally...
+         Set_Type_Staticness (Sub_Type, Get_Expr_Staticness (Range_Expr1));
+
+         --  FIXME: the original range is not used.  Reuse it ?
+         Free_Iir (Range_Expr);
+      end;
       Set_Resolved_Flag (Sub_Type, False);
 
       --  Analyze secondary units.

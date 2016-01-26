@@ -3319,6 +3319,7 @@ package body Sem_Expr is
               (Info.Index_Subtype, Index_Subtype_Constraint);
             Set_Type_Staticness (Info.Index_Subtype, Choice_Staticness);
             Set_Expr_Staticness (Index_Subtype_Constraint, Choice_Staticness);
+            Set_Type (Index_Subtype_Constraint, Index_Type);
 
             --  LRM93 7.3.2.2
             --  For an aggregate that has named associations, the leftmost and

@@ -267,6 +267,14 @@ package body Simulation is
                                                  Kind));
             end loop;
             return Res;
+         when Iir_Value_Record =>
+            Res := Ghdl_I64'First;
+            for I in Indirect.Val_Record.V'Range loop
+               Res := Ghdl_I64'Max
+                 (Res, Execute_Read_Signal_Last (Indirect.Val_Record.V (I),
+                                                 Kind));
+            end loop;
+            return Res;
          when Iir_Value_Signal =>
             case Kind is
                when Read_Last_Event =>
@@ -1433,23 +1441,36 @@ package body Simulation is
                                     Pfx : Iir_Value_Literal_Acc;
                                     Time : Std_Time)
    is
+      Val_Ptr : Ghdl_Value_Ptr;
    begin
       case Pfx.Kind is
-            when Iir_Value_Array =>
-               for I in Sig.Val_Array.V'Range loop
-                  Create_Delayed_Signal
-                    (Sig.Val_Array.V (I), Val.Val_Array.V (I),
-                     Pfx.Val_Array.V (I), Time);
+         when Iir_Value_Array =>
+            for I in Sig.Val_Array.V'Range loop
+               Create_Delayed_Signal
+                 (Sig.Val_Array.V (I), Val.Val_Array.V (I),
+                  Pfx.Val_Array.V (I), Time);
                end loop;
-            when Iir_Value_Record =>
-               for I in Pfx.Val_Record.V'Range loop
-                  Create_Delayed_Signal
-                    (Sig.Val_Record.V (I), Val.Val_Record.V (I),
-                     Pfx.Val_Array.V (I), Time);
-               end loop;
+         when Iir_Value_Record =>
+            for I in Pfx.Val_Record.V'Range loop
+               Create_Delayed_Signal
+                 (Sig.Val_Record.V (I), Val.Val_Record.V (I),
+                  Pfx.Val_Array.V (I), Time);
+            end loop;
          when Iir_Value_Signal =>
+            case Val.Kind is
+               when Iir_Value_I64 =>
+                  Val_Ptr := To_Ghdl_Value_Ptr (Val.I64'Address);
+               when Iir_Value_E32 =>
+                  Val_Ptr := To_Ghdl_Value_Ptr (Val.E32'Address);
+               when Iir_Value_F64 =>
+                  Val_Ptr := To_Ghdl_Value_Ptr (Val.F64'Address);
+               when Iir_Value_B1 =>
+                  Val_Ptr := To_Ghdl_Value_Ptr (Val.B1'Address);
+               when others =>
+                  raise Internal_Error;
+            end case;
             Sig.Sig := Grt.Signals.Ghdl_Create_Delayed_Signal
-              (Pfx.Sig, To_Ghdl_Value_Ptr (Val.B1'Address), Time);
+              (Pfx.Sig, Val_Ptr, Time);
          when others =>
             raise Internal_Error;
       end case;

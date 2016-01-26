@@ -175,6 +175,9 @@ package Iirs_Utils is
    --  Likewise but for array type or subtype ARRAY_TYPE.
    function Get_Index_Type (Array_Type : Iir; Idx : Natural) return Iir;
 
+   --  Number of dimensions (1..n) for ARRAY_TYPE.
+   function Get_Nbr_Dimensions (Array_Type : Iir) return Natural;
+
    --  Return the type or subtype definition of the SUBTYP type mark.
    function Get_Denoted_Type_Mark (Subtyp : Iir) return Iir;
 

@@ -527,8 +527,13 @@ package body Grt.Disp_Signals is
 
       Res_Status : Traverse_Result;
       pragma Unreferenced (Res_Status);
+
+      Top : constant Rti_Context := Get_Top_Context;
    begin
-      Res_Status := Foreach_Block (Get_Top_Context);
+      if Top /= Null_Context then
+         Res_Status := Foreach_Block (Top);
+      end if;
+
       if not Found then
          Put (Stream, "(unknown signal)");
       end if;
