@@ -634,6 +634,8 @@ package body Annotations is
             begin
                Value := Get_Attribute_Value_Spec_Chain (Decl);
                while Value /= Null_Iir loop
+                  Annotate_Anonymous_Type_Definition
+                    (Block_Info, Get_Type (Value));
                   Create_Object_Info (Block_Info, Value);
                   Value := Get_Spec_Chain (Value);
                end loop;

@@ -471,6 +471,8 @@ package body Elaboration is
                      when others =>
                         raise Internal_Error;
                   end case;
+               when Init_Value_Signal =>
+                  Res := Create_Signal_Value (null);
             end case;
 
          when Iir_Kind_Array_Subtype_Definition =>
@@ -2367,6 +2369,8 @@ package body Elaboration is
             begin
                Value := Get_Attribute_Value_Spec_Chain (Decl);
                while Value /= Null_Iir loop
+                  Elaborate_Subtype_Indication_If_Anonymous
+                    (Instance, Get_Type (Value));
                   --  2. The expression is evaluated to determine the value
                   --     of the attribute.
                   --     It is an error if the value of the expression does not

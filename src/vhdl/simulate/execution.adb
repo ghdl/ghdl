@@ -1647,9 +1647,8 @@ package body Execution is
       Array_Type: constant Iir := Get_Type (Str);
       Index_Types : constant Iir_List := Get_Index_Subtype_List (Array_Type);
    begin
-      if Get_Nbr_Elements (Index_Types) /= 1 then
-         raise Internal_Error; -- array must be unidimensional
-      end if;
+      --  Array must be unidimensional.
+      pragma Assert (Get_Nbr_Elements (Index_Types) = 1);
 
       Res := String_To_Enumeration_Array_1
         (Str, Get_Element_Subtype (Array_Type));
@@ -2255,7 +2254,15 @@ package body Execution is
             end case;
          when Iir_Kind_Enumeration_Type_Definition
            | Iir_Kind_Enumeration_Subtype_Definition =>
-            -- must be same type.
+            --  Must be same type.
+            null;
+         when Iir_Kind_Physical_Type_Definition
+           | Iir_Kind_Physical_Subtype_Definition =>
+            --  Same type.
+            null;
+         when Iir_Kind_Record_Type_Definition
+           | Iir_Kind_Record_Subtype_Definition =>
+            --  Same type.
             null;
          when Iir_Kind_Array_Type_Definition =>
             --  LRM93 7.3.5
@@ -3444,8 +3451,13 @@ package body Execution is
             when Iir_Kind_Association_Element_By_Individual =>
                --  Directly create the whole value on the instance pool, as its
                --  life is longer than the statement.
-               Last_Individual := Create_Value_For_Type
-                 (Out_Block, Get_Actual_Type (Assoc), Init_Value_Any);
+               if Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration then
+                  Last_Individual := Create_Value_For_Type
+                    (Out_Block, Get_Actual_Type (Assoc), Init_Value_Signal);
+               else
+                  Last_Individual := Create_Value_For_Type
+                    (Out_Block, Get_Actual_Type (Assoc), Init_Value_Any);
+               end if;
                Last_Individual :=
                  Unshare (Last_Individual, Instance_Pool);
                Elaboration.Create_Object (Subprg_Block, Inter);

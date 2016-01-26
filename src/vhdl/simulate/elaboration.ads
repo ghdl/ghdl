@@ -111,7 +111,10 @@ package Elaboration is
       Init_Value_Default,
 
       --  Undefined.  The caller doesn't care as it will overwrite the value.
-      Init_Value_Any);
+      Init_Value_Any,
+
+      --  Create signal placeholder.  Only for individual associations.
+      Init_Value_Signal);
 
    --  Create a value for type DECL.
    function Create_Value_For_Type

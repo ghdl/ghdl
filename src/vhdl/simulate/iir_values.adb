@@ -262,8 +262,10 @@ package body Iir_Values is
             Dest.File := Src.File;
          when Iir_Value_Protected =>
             Dest.Prot := Src.Prot;
-         when Iir_Value_Signal
-           | Iir_Value_Range
+         when Iir_Value_Signal =>
+            pragma Assert (Dest.Sig = null);
+            Dest.Sig := Src.Sig;
+         when Iir_Value_Range
            | Iir_Value_Quantity
            | Iir_Value_Terminal =>
             raise Internal_Error;
@@ -637,8 +639,11 @@ package body Iir_Values is
          when Iir_Value_Protected =>
             return Create_Protected_Value (Src.Prot);
 
-         when Iir_Value_Signal
-           | Iir_Value_Quantity
+         when Iir_Value_Signal =>
+            pragma Assert (Src.Sig = null);
+            return Create_Signal_Value (Src.Sig);
+
+         when Iir_Value_Quantity
            | Iir_Value_Terminal =>
             raise Internal_Error;
       end case;
