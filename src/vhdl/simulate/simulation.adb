@@ -470,7 +470,8 @@ package body Simulation is
            | Iir_Value_Access
            | Iir_Value_Protected
            | Iir_Value_Quantity
-           | Iir_Value_Terminal =>
+           | Iir_Value_Terminal
+           | Iir_Value_Environment =>
             raise Internal_Error;
       end case;
    end Assign_Value_To_Signal;
@@ -1095,29 +1096,16 @@ package body Simulation is
             end loop;
             return;
          when Iir_Value_Signal =>
-            case Port.Kind is
-               when Iir_Value_Signal =>
-                  -- Here, SIG and PORT are simple signals (not composite).
-                  -- PORT is a source for SIG.
-                  case Mode is
-                     when Connect_Source =>
-                        Grt.Signals.Ghdl_Signal_Add_Source
-                          (Sig.Sig, Port.Sig);
-                     when Connect_Effective =>
-                        Grt.Signals.Ghdl_Signal_Effective_Value
-                          (Port.Sig, Sig.Sig);
-                  end case;
-               when Iir_Value_Access
-                 | Iir_Value_File
-                 | Iir_Value_Range
-                 | Iir_Value_Scalars --  FIXME: by value
-                 | Iir_Value_Record
-                 | Iir_Value_Array
-                 | Iir_Value_Protected
-                 | Iir_Value_Quantity
-                 | Iir_Value_Terminal =>
-                  --  These cannot be driving value for a signal.
-                  raise Internal_Error;
+            pragma Assert (Port.Kind = Iir_Value_Signal);
+            -- Here, SIG and PORT are simple signals (not composite).
+            -- PORT is a source for SIG.
+            case Mode is
+               when Connect_Source =>
+                  Grt.Signals.Ghdl_Signal_Add_Source
+                    (Sig.Sig, Port.Sig);
+               when Connect_Effective =>
+                  Grt.Signals.Ghdl_Signal_Effective_Value
+                    (Port.Sig, Sig.Sig);
             end case;
          when Iir_Value_E32 =>
             if Mode = Connect_Source then
@@ -1246,7 +1234,8 @@ package body Simulation is
            | Iir_Value_Protected
            | Iir_Value_Terminal
            | Iir_Value_Quantity
-           | Iir_Value_File =>
+           | Iir_Value_File
+           | Iir_Value_Environment =>
             raise Internal_Error;
       end case;
    end Create_Shadow_Signal;
@@ -1562,7 +1551,8 @@ package body Simulation is
               | Iir_Value_Access
               | Iir_Value_Protected
               | Iir_Value_Quantity
-              | Iir_Value_Terminal =>
+              | Iir_Value_Terminal
+              | Iir_Value_Environment =>
                raise Internal_Error;
          end case;
       end Create_Signal;

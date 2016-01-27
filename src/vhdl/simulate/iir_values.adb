@@ -84,7 +84,8 @@ package body Iir_Values is
          when Iir_Value_Signal
            | Iir_Value_Protected
            | Iir_Value_Quantity
-           | Iir_Value_Terminal =>
+           | Iir_Value_Terminal
+           | Iir_Value_Environment =>
             raise Internal_Error;
       end case;
    end Is_Equal;
@@ -182,7 +183,8 @@ package body Iir_Values is
            | Iir_Value_File
            | Iir_Value_Protected
            | Iir_Value_Quantity
-           | Iir_Value_Terminal =>
+           | Iir_Value_Terminal
+           | Iir_Value_Environment =>
             raise Internal_Error;
       end case;
    end Compare_Value;
@@ -222,7 +224,8 @@ package body Iir_Values is
            | Iir_Value_Signal
            | Iir_Value_Protected
            | Iir_Value_Quantity
-           | Iir_Value_Terminal =>
+           | Iir_Value_Terminal
+           | Iir_Value_Environment =>
             raise Internal_Error;
       end case;
    end Increment;
@@ -267,7 +270,8 @@ package body Iir_Values is
             Dest.Sig := Src.Sig;
          when Iir_Value_Range
            | Iir_Value_Quantity
-           | Iir_Value_Terminal =>
+           | Iir_Value_Terminal
+           | Iir_Value_Environment =>
             raise Internal_Error;
       end case;
    end Store;
@@ -299,11 +303,7 @@ package body Iir_Values is
                Check_Bounds (Dest.Val_Record.V (I), Src.Val_Record.V (I), Loc);
             end loop;
          when Iir_Value_Access
-           | Iir_Value_File
-           | Iir_Value_Range
-           | Iir_Value_Protected
-           | Iir_Value_Quantity
-           | Iir_Value_Terminal =>
+           | Iir_Value_File =>
             if Src.Kind /= Dest.Kind then
                raise Internal_Error;
             end if;
@@ -313,6 +313,12 @@ package body Iir_Values is
            | Iir_Value_F64
            | Iir_Value_Signal =>
             return;
+         when Iir_Value_Range
+           | Iir_Value_Protected
+           | Iir_Value_Quantity
+           | Iir_Value_Terminal
+           | Iir_Value_Environment =>
+            raise Internal_Error;
       end case;
    end Check_Bounds;
 
@@ -461,7 +467,7 @@ package body Iir_Values is
             High := Left;
       end case;
 
-      case (Low.Kind) is
+      case Iir_Value_Scalars (Low.Kind) is
          when Iir_Value_B1 =>
             if High.B1 >= Low.B1 then
                Len := Ghdl_B1'Pos (High.B1) - Ghdl_B1'Pos (Low.B1) + 1;
@@ -500,16 +506,6 @@ package body Iir_Values is
             end;
          when Iir_Value_F64 =>
             Len := 0;
-         when Iir_Value_Array
-           | Iir_Value_Record
-           | Iir_Value_Access
-           | Iir_Value_File
-           | Iir_Value_Range
-           | Iir_Value_Signal
-           | Iir_Value_Protected
-           | Iir_Value_Quantity
-           | Iir_Value_Terminal =>
-            raise Internal_Error;
       end case;
       return Create_Range_Value (Left, Right, Dir, Len);
    end Create_Range_Value;
@@ -644,7 +640,8 @@ package body Iir_Values is
             return Create_Signal_Value (Src.Sig);
 
          when Iir_Value_Quantity
-           | Iir_Value_Terminal =>
+           | Iir_Value_Terminal
+           | Iir_Value_Environment =>
             raise Internal_Error;
       end case;
    end Copy;
@@ -743,7 +740,8 @@ package body Iir_Values is
            | Iir_Value_Range
            | Iir_Value_Protected
            | Iir_Value_Terminal
-           | Iir_Value_Quantity =>
+           | Iir_Value_Quantity
+           | Iir_Value_Environment =>
             raise Internal_Error;
       end case;
    end Get_Nbr_Of_Scalars;
@@ -863,6 +861,8 @@ package body Iir_Values is
             Put_Line ("quantity");
          when Iir_Value_Terminal =>
             Put_Line ("terminal");
+         when Iir_Value_Environment =>
+            Put_Line ("environment");
       end case;
    end Disp_Value_Tab;
 
@@ -880,7 +880,8 @@ package body Iir_Values is
            | Iir_Value_File
            | Iir_Value_Protected
            | Iir_Value_Quantity
-           | Iir_Value_Terminal =>
+           | Iir_Value_Terminal
+           | Iir_Value_Environment =>
             return False;
          when Iir_Value_Range =>
             return Is_Indirect (Value.Left)
@@ -1065,6 +1066,8 @@ package body Iir_Values is
             Put ("[signal]");
          when Iir_Value_Protected =>
             Put ("[protected]");
+         when Iir_Value_Environment =>
+            Put ("[environment]");
       end case;
    end Disp_Iir_Value;
 end Iir_Values;

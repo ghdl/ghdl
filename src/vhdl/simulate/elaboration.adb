@@ -95,7 +95,8 @@ package body Elaboration is
               | Iir_Value_Access
               | Iir_Value_Protected
               | Iir_Value_Quantity
-              | Iir_Value_Terminal =>
+              | Iir_Value_Terminal
+              | Iir_Value_Environment =>
                raise Internal_Error;
          end case;
          return Res;
