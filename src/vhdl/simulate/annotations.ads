@@ -88,10 +88,10 @@ package Annotations is
             --  Slot number in the parent (for blocks).
             Inst_Slot : Instance_Slot_Type;
 
-            -- scope level for this frame.
+            --  Scope level for this frame.
             Frame_Scope : Scope_Type;
 
-            -- Number of objects/signals.
+            --  Number of objects/signals.
             Nbr_Objects : Object_Slot_Type;
 
             --  Number of children (blocks, generate, instantiation).
