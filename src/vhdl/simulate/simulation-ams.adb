@@ -99,12 +99,11 @@ package body Simulation.AMS is
 
    procedure Compute_Dependencies (Idx : Characteristic_Expressions_Index)
    is
-      package Quantity_Table is new GNAT.Table
+      package Quantity_Table is new Tables
         (Table_Component_Type => Quantity_Index_Type,
          Table_Index_Type => Natural,
          Table_Low_Bound => 1,
-         Table_Initial => 16,
-         Table_Increment => 100);
+         Table_Initial => 16);
 
       El : Characteristic_Expr renames Characteristic_Expressions.Table (Idx);
       Res : Quantity_Dependency_Acc := null;
@@ -198,4 +197,3 @@ package body Simulation.AMS is
       end loop;
    end Create_Tables;
 end Simulation.AMS;
-

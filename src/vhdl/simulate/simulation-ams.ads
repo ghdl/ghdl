@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with GNAT.Table;
+with Tables;
 
 package Simulation.AMS is
    --  AMS expressions
@@ -133,12 +133,11 @@ private
       Dependencies : Quantity_Dependency_Acc;
    end record;
 
-   package Characteristic_Expressions is new Gnat.Table
+   package Characteristic_Expressions is new Tables
      (Table_Index_Type => Characteristic_Expressions_Index,
       Table_Component_Type => Characteristic_Expr,
       Table_Low_Bound => 1,
-      Table_Initial => 128,
-      Table_Increment => 100);
+      Table_Initial => 128);
 
    type Scalar_Quantity (Kind : Quantity_Kind := Quantity_Reference) is record
       Value : Ghdl_F64;
@@ -156,10 +155,9 @@ private
       end case;
    end record;
 
-   package Scalar_Quantities is new Gnat.Table
+   package Scalar_Quantities is new Tables
      (Table_Index_Type => Quantity_Index_Type,
       Table_Component_Type => Scalar_Quantity,
       Table_Low_Bound => 1,
-      Table_Initial => 128,
-      Table_Increment => 100);
+      Table_Initial => 128);
 end Simulation.AMS;

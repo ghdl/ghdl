@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with GNAT.Table;
+with Tables;
 with Ada.Text_IO;
 with Std_Package;
 with Errorout; use Errorout;
@@ -1095,12 +1095,11 @@ package body Annotations is
       Current_Scope := (Kind => Scope_Kind_None);
    end Annotate_Configuration_Declaration;
 
-   package Info_Node is new GNAT.Table
+   package Info_Node is new Tables
      (Table_Component_Type => Sim_Info_Acc,
       Table_Index_Type => Iir,
       Table_Low_Bound => 2,
-      Table_Initial => 1024,
-      Table_Increment => 100);
+      Table_Initial => 1024);
 
    procedure Annotate_Expand_Table
    is

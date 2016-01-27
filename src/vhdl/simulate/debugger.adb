@@ -18,7 +18,7 @@
 
 with System;
 with Ada.Text_IO; use Ada.Text_IO;
-with GNAT.Table;
+with Tables;
 with Types; use Types;
 with Iir_Values; use Iir_Values;
 with Name_Table;
@@ -91,12 +91,11 @@ package body Debugger is
       Stmt : Iir;
    end record;
 
-   package Breakpoints is new GNAT.Table
+   package Breakpoints is new Tables
      (Table_Index_Type => Natural,
       Table_Component_Type => Breakpoint_Entry,
       Table_Low_Bound => 1,
-      Table_Initial => 16,
-      Table_Increment => 100);
+      Table_Initial => 16);
 
    --  Current execution state, or reason to stop execution (set by the
    --  last debugger command).
