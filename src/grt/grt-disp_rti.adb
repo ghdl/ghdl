@@ -448,10 +448,9 @@ package body Grt.Disp_Rti is
      (Def : Ghdl_Rti_Access; Ctxt : Rti_Context; Obj : Address);
 
    procedure Disp_Range
-     (Stream : FILEs; Kind : Ghdl_Rtik; Rng : Ghdl_Range_Ptr)
-   is
+     (Stream : FILEs; Def : Ghdl_Rti_Access; Rng : Ghdl_Range_Ptr) is
    begin
-      case Kind is
+      case Def.Kind is
          when Ghdl_Rtik_Type_I32
            | Ghdl_Rtik_Type_P32 =>
             Put_I32 (Stream, Rng.I32.Left);
@@ -465,6 +464,24 @@ package body Grt.Disp_Rti is
             Put_I64 (Stream, Rng.P64.Left);
             Put_Dir (Stream, Rng.P64.Dir);
             Put_I64 (Stream, Rng.P64.Right);
+         when Ghdl_Rtik_Type_B1 =>
+            declare
+               Enum : constant Ghdl_Rtin_Type_Enum_Acc :=
+                 To_Ghdl_Rtin_Type_Enum_Acc (Def);
+            begin
+               Disp_Name (Enum.Names (Ghdl_B1'Pos (Rng.B1.Left)));
+               Put_Dir (Stream, Rng.B1.Dir);
+               Disp_Name (Enum.Names (Ghdl_B1'Pos (Rng.B1.Right)));
+            end;
+         when Ghdl_Rtik_Type_E8 =>
+            declare
+               Enum : constant Ghdl_Rtin_Type_Enum_Acc :=
+                 To_Ghdl_Rtin_Type_Enum_Acc (Def);
+            begin
+               Disp_Name (Enum.Names (Ghdl_E8'Pos (Rng.E8.Left)));
+               Put_Dir (Stream, Rng.E8.Dir);
+               Disp_Name (Enum.Names (Ghdl_E8'Pos (Rng.E8.Right)));
+            end;
          when others =>
             Put ("?Scal");
       end case;
@@ -526,8 +543,16 @@ package body Grt.Disp_Rti is
             case Ndef.Kind is
                when Ghdl_Rtik_Type_I32 =>
                   Align (Ghdl_Range_I32'Alignment);
-                  Disp_Range (stdout, Ndef.Kind, To_Ghdl_Range_Ptr (Bounds));
+                  Disp_Range (stdout, Ndef, To_Ghdl_Range_Ptr (Bounds));
                   Update (Ghdl_Range_I32'Size);
+               when Ghdl_Rtik_Type_B1 =>
+                  Align (Ghdl_Range_B1'Alignment);
+                  Disp_Range (stdout, Ndef, To_Ghdl_Range_Ptr (Bounds));
+                  Update (Ghdl_Range_B1'Size);
+               when Ghdl_Rtik_Type_E8 =>
+                  Align (Ghdl_Range_E8'Alignment);
+                  Disp_Range (stdout, Ndef, To_Ghdl_Range_Ptr (Bounds));
+                  Update (Ghdl_Range_E8'Size);
                when others =>
                   Disp_Kind (Ndef.Kind);
                   --  Bounds are not known anymore.
@@ -562,7 +587,7 @@ package body Grt.Disp_Rti is
       Range_Addr := Loc_To_Addr (Def.Common.Depth,
                                  Def.Range_Loc, Ctxt);
       Rng := To_Ghdl_Range_Ptr (Range_Addr);
-      Disp_Range (Stream, Def.Basetype.Kind, Rng);
+      Disp_Range (Stream, Def.Basetype, Rng);
    end Disp_Subtype_Scalar_Range;
 
    procedure Disp_Subtype_Indication
