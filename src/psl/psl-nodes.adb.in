@@ -1,6 +1,23 @@
---  This is in fact -*- Ada -*-
+--  PSL - Nodes definition.  This is in fact -*- Ada -*-
+--  Copyright (C) 2002-2016 Tristan Gingold
+--
+--  GHDL is free software; you can redistribute it and/or modify it under
+--  the terms of the GNU General Public License as published by the Free
+--  Software Foundation; either version 2, or (at your option) any later
+--  version.
+--
+--  GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
+--  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+--  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+--  for more details.
+--
+--  You should have received a copy of the GNU General Public License
+--  along with GHDL; see the file COPYING.  If not, write to the Free
+--  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+--  02111-1307, USA.
+
 with Ada.Unchecked_Conversion;
-with GNAT.Table;
+with Tables;
 with PSL.Errors;
 with PSL.Hash;
 with PSL.Nodes_Meta; use PSL.Nodes_Meta;
@@ -78,12 +95,11 @@ package body PSL.Nodes is
    pragma Pack (Node_Record);
    for Node_Record'Size use 8 * 32;
 
-   package Nodet is new GNAT.Table
+   package Nodet is new Tables
      (Table_Component_Type => Node_Record,
       Table_Index_Type => Node,
       Table_Low_Bound => 1,
-      Table_Initial => 1024,
-      Table_Increment => 100);
+      Table_Initial => 1024);
 
    Init_Node : constant Node_Record := (Kind => N_Error,
                                         Flag1 => False,
@@ -385,4 +401,3 @@ package body PSL.Nodes is
    --  Subprograms
 
 end PSL.Nodes;
-
