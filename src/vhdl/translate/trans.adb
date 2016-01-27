@@ -18,7 +18,7 @@
 
 with Name_Table; -- use Name_Table;
 with Nodes;
-with GNAT.Table;
+with Tables;
 with Trans_Decls; use Trans_Decls;
 
 package body Trans is
@@ -1244,12 +1244,11 @@ package body Trans is
          Res_Ptr);
    end Add_Pointer;
 
-   package Node_Infos is new GNAT.Table
+   package Node_Infos is new Tables
      (Table_Component_Type => Ortho_Info_Acc,
       Table_Index_Type => Iir,
       Table_Low_Bound => 0,
-      Table_Initial => 1024,
-      Table_Increment => 100);
+      Table_Initial => 1024);
 
    procedure Init_Node_Infos is
    begin
