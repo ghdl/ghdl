@@ -129,6 +129,7 @@ struct ghw_range_f64
 union ghw_range
 {
   enum ghdl_rtik kind : 8;
+  struct ghw_range_b2 b2;
   struct ghw_range_e8 e8;
   struct ghw_range_i32 i32;
   struct ghw_range_i64 i64;
