@@ -388,6 +388,8 @@ package body Sem_Inst is
             when Iir_Kind_Function_Declaration
               | Iir_Kind_Procedure_Declaration =>
                --  Subprogram body is a forward declaration.
+               --  Clear Subprogram_Body so that the node is seen as a
+               --  declaration and not a specification of a body.
                Set_Subprogram_Body (Res, Null_Iir);
             when others =>
                --  TODO: other forward references:
