@@ -46,6 +46,13 @@ package body Elaboration is
      (Instance : Block_Instance_Acc; Decl : Iir)
      return Iir_Value_Literal_Acc;
 
+   procedure Elaborate_Generic_Clause
+     (Instance : Block_Instance_Acc; Generic_Chain : Iir);
+   procedure Elaborate_Generic_Map_Aspect
+     (Target_Instance : Block_Instance_Acc;
+      Local_Instance : Block_Instance_Acc;
+      Map : Iir);
+
    --  CONF is the block_configuration for components of ARCH.
    function Elaborate_Architecture (Arch : Iir_Architecture_Body;
                                     Conf : Iir_Block_Configuration;
@@ -299,6 +306,12 @@ package body Elaboration is
          Ada.Text_IO.Put_Line ("elaborating " & Disp_Node (Decl));
       end if;
 
+      if Get_Kind (Decl) = Iir_Kind_Package_Instantiation_Declaration then
+         Elaborate_Generic_Clause (Instance, Get_Generic_Chain (Decl));
+         Elaborate_Generic_Map_Aspect
+           (Instance, Instance, Get_Generic_Map_Aspect_Chain (Decl));
+      end if;
+
       -- Elaborate objects declarations.
       Elaborate_Declarative_Part (Instance, Get_Declaration_Chain (Decl));
    end Elaborate_Package;
@@ -378,6 +391,7 @@ package body Elaboration is
                   Body_Design: Iir_Design_Unit;
                begin
                   if Package_Instances (Info.Frame_Scope.Pkg_Index) = null
+                    and then not Is_Uninstantiated_Package (Library_Unit)
                   then
                      --  Package not yet elaborated.
 
@@ -408,10 +422,28 @@ package body Elaboration is
                      end if;
                   end if;
                end;
+            when Iir_Kind_Package_Instantiation_Declaration =>
+               declare
+                  Info : constant Sim_Info_Acc := Get_Info (Library_Unit);
+               begin
+                  if Package_Instances (Info.Frame_Scope.Pkg_Index) = null
+                  then
+                     --  Package not yet elaborated.
+
+                     --  First the packages on which DESIGN depends.
+                     Elaborate_Dependence (Design);
+
+                     --  Then the declaration.
+                     Elaborate_Package (Library_Unit);
+                  end if;
+               end;
             when Iir_Kind_Entity_Declaration
               | Iir_Kind_Configuration_Declaration
               | Iir_Kind_Architecture_Body =>
                Elaborate_Dependence (Design);
+            when Iir_Kind_Package_Body =>
+               --  For package instantiation.
+               null;
             when others =>
                Error_Kind ("elaborate_dependence", Library_Unit);
          end case;
@@ -933,7 +965,7 @@ package body Elaboration is
       end case;
    end Elaborate_Nature_Definition;
 
-   --  LRM93 §12.2.1  The Generic Clause
+   --  LRM93 12.2.1  The Generic Clause
    procedure Elaborate_Generic_Clause
      (Instance : Block_Instance_Acc; Generic_Chain : Iir)
    is
@@ -989,6 +1021,7 @@ package body Elaboration is
       Value : Iir;
       Val : Iir_Value_Literal_Acc;
       Last_Individual : Iir_Value_Literal_Acc;
+      Marker : Mark_Type;
    begin
       --  Elaboration of a generic map aspect consists of elaborating the
       --  generic association list.
@@ -997,6 +1030,7 @@ package body Elaboration is
       --  elaboration of each generic association element in the
       --  association list.
       Assoc := Map;
+      Mark (Marker, Expr_Pool);
       while Assoc /= Null_Iir loop
          --  Elaboration of a generic association element consists of the
          --  elaboration of the formal part and the evaluation of the actual
@@ -1067,6 +1101,7 @@ package body Elaboration is
          end if;
 
          <<Continue>> null;
+         Release (Marker, Expr_Pool);
          Assoc := Get_Chain (Assoc);
       end loop;
    end Elaborate_Generic_Map_Aspect;
@@ -2601,6 +2636,8 @@ package body Elaboration is
       --  Use a 'fake' process to execute code during elaboration.
       Current_Process := No_Process;
 
+      pragma Assert (Is_Empty (Expr_Pool));
+
       --  Find architecture and configuration for the top unit
       case Get_Kind (Unit) is
          when Iir_Kind_Architecture_Body =>
@@ -2619,12 +2656,12 @@ package body Elaboration is
       Arch_Unit := Get_Design_Unit (Arch);
       Entity := Get_Entity (Arch);
 
+      pragma Assert (Is_Empty (Expr_Pool));
+
       Elaborate_Dependence (Arch_Unit);
 
       --  Sanity check: memory area for expressions must be empty.
-      if not Is_Empty (Expr_Pool) then
-         raise Internal_Error;
-      end if;
+      pragma Assert (Is_Empty (Expr_Pool));
 
       --  Use default values for top entity generics and ports.
       Generic_Map := Create_Default_Association

@@ -93,7 +93,16 @@ package body Annotations is
             Info := new Sim_Info_Type'(Kind => Kind_Quantity,
                                        Obj_Scope => Current_Scope,
                                        Slot => Block_Info.Nbr_Objects);
-         when others =>
+         when Kind_Environment =>
+            Info := new Sim_Info_Type'(Kind => Kind_Environment,
+                                       Obj_Scope => Current_Scope,
+                                       Slot => Block_Info.Nbr_Objects);
+         when Kind_Block
+           | Kind_Process
+           | Kind_Frame
+           | Kind_Range
+           | Kind_Scalar_Type
+           | Kind_File_Type =>
             raise Internal_Error;
       end case;
       Set_Info (Obj, Info);
@@ -667,6 +676,9 @@ package body Annotations is
          when Iir_Kind_Nature_Declaration =>
             null;
 
+         when Iir_Kind_Package_Instantiation_Declaration =>
+            Create_Object_Info (Block_Info, Decl, Kind_Environment);
+
          when others =>
             Error_Kind ("annotate_declaration", Decl);
       end case;
@@ -999,7 +1011,9 @@ package body Annotations is
 
    procedure Annotate_Package (Decl: Iir_Package_Declaration)
    is
+      Prev_Scope : constant Scope_Type := Current_Scope;
       Package_Info: Sim_Info_Acc;
+      Header : Iir;
    begin
       pragma Assert (Current_Scope.Kind = Scope_Kind_None);
 
@@ -1015,10 +1029,20 @@ package body Annotations is
 
       Set_Info (Decl, Package_Info);
 
+      if Get_Kind (Decl) = Iir_Kind_Package_Instantiation_Declaration then
+         Annotate_Create_Interface_List
+           (Package_Info, Get_Generic_Chain (Decl), True);
+      else
+         Header := Get_Package_Header (Decl);
+         if Header /= Null_Iir then
+            Annotate_Create_Interface_List
+              (Package_Info, Get_Generic_Chain (Header), True);
+         end if;
+      end if;
       -- declarations
       Annotate_Declaration_List (Package_Info, Get_Declaration_Chain (Decl));
 
-      Current_Scope := (Kind => Scope_Kind_None);
+      Current_Scope := Prev_Scope;
    end Annotate_Package;
 
    procedure Annotate_Package_Body (Decl: Iir)
@@ -1147,6 +1171,8 @@ package body Annotations is
             Annotate_Package_Body (El);
          when Iir_Kind_Configuration_Declaration =>
             Annotate_Configuration_Declaration (El);
+         when Iir_Kind_Package_Instantiation_Declaration =>
+            Annotate_Package (El);
          when others =>
             Error_Kind ("annotate2", El);
       end case;
@@ -1188,7 +1214,9 @@ package body Annotations is
               ("-- nbr objects:" & Object_Slot_Type'Image (Info.Nbr_Objects));
 
          when Kind_Object | Kind_Signal | Kind_File
-           | Kind_Terminal | Kind_Quantity =>
+           | Kind_Terminal
+           | Kind_Quantity
+           | Kind_Environment =>
             Put_Line ("-- slot:" & Object_Slot_Type'Image (Info.Slot)
                       & ", scope:" & Image (Info.Obj_Scope));
          when Kind_Scalar_Type
@@ -1225,7 +1253,7 @@ package body Annotations is
             Put_Line ("nbr instance:"
                       & Instance_Slot_Type'Image (Info.Nbr_Instances));
          when Kind_Object | Kind_Signal | Kind_File
-           | Kind_Terminal | Kind_Quantity =>
+           | Kind_Terminal | Kind_Quantity | Kind_Environment =>
             Put_Line ("slot:" & Object_Slot_Type'Image (Info.Slot)
                       & ", scope:" & Image (Info.Obj_Scope));
          when Kind_Range =>

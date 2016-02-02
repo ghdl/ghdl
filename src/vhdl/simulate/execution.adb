@@ -42,6 +42,7 @@ with Grt_Interface;
 with Grt.Values;
 with Grt.Errors;
 with Grt.Std_Logic_1164;
+with Sem_Inst;
 
 package body Execution is
 
@@ -3274,9 +3275,15 @@ package body Execution is
    function Execute_Function_Body (Instance : Block_Instance_Acc; Func : Iir)
                                   return Iir_Value_Literal_Acc
    is
-      Subprg_Body : constant Iir := Get_Subprogram_Body (Func);
+      Subprg_Body : Iir;
       Res : Iir_Value_Literal_Acc;
    begin
+      Subprg_Body := Get_Subprogram_Body (Func);
+      if Subprg_Body = Null_Iir then
+         pragma Assert (Sem_Inst.Get_Origin (Func) /= Null_Iir);
+         Subprg_Body := Get_Subprogram_Body (Sem_Inst.Get_Origin (Func));
+      end if;
+
       Current_Process.Instance := Instance;
 
       Elaborate_Declarative_Part
