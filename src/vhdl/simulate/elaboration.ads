@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 
 with Ada.Unchecked_Deallocation;
-with GNAT.Table;
+with Tables;
 with Iirs; use Iirs;
 with Iir_Values; use Iir_Values;
 with Grt.Types;
@@ -137,7 +137,6 @@ package Elaboration is
 
    type Block_Instance_Acc_Array is array (Instance_Slot_Type range <>) of
      Block_Instance_Acc;
-   type Block_Instance_Acc_Array_Acc is access Block_Instance_Acc_Array;
 
    type Package_Instances_Array is array (Pkg_Index_Type range <>) of
      Block_Instance_Acc;
@@ -151,12 +150,11 @@ package Elaboration is
       Time : Iir_Value_Time;
    end record;
 
-   package Disconnection_Table is new GNAT.Table
+   package Disconnection_Table is new Tables
      (Table_Component_Type => Disconnection_Entry,
       Table_Index_Type => Integer,
       Table_Low_Bound => 0,
-      Table_Initial => 16,
-      Table_Increment => 100);
+      Table_Initial => 16);
 
    --  Connections.  For each associations (block/component/entry), the
    --  elaborator adds an entry in that table.
@@ -168,12 +166,11 @@ package Elaboration is
       Assoc : Iir;
    end record;
 
-   package Connect_Table is new GNAT.Table
+   package Connect_Table is new Tables
      (Table_Component_Type => Connect_Entry,
       Table_Index_Type => Integer,
       Table_Low_Bound => 0,
-      Table_Initial => 32,
-      Table_Increment => 100);
+      Table_Initial => 32);
 
    --  Signals.
    type Signal_Type_Kind is
@@ -199,26 +196,23 @@ package Elaboration is
       end case;
    end record;
 
-   package Signals_Table is new GNAT.Table
+   package Signals_Table is new Tables
      (Table_Component_Type => Signal_Entry,
       Table_Index_Type => Integer,
       Table_Low_Bound => 0,
-      Table_Initial => 128,
-      Table_Increment => 100);
+      Table_Initial => 128);
 
    type Process_Index_Type is new Natural;
 
-   package Processes_Table is new GNAT.Table
+   package Processes_Table is new Tables
      (Table_Component_Type => Block_Instance_Acc,
       Table_Index_Type => Process_Index_Type,
       Table_Low_Bound => 1,
-      Table_Initial => 128,
-      Table_Increment => 100);
+      Table_Initial => 128);
 
-   package Protected_Table is new GNAT.Table
+   package Protected_Table is new Tables
      (Table_Component_Type => Block_Instance_Acc,
       Table_Index_Type => Protected_Index_Type,
       Table_Low_Bound => 1,
-      Table_Initial => 2,
-      Table_Increment => 100);
+      Table_Initial => 2);
 end Elaboration;

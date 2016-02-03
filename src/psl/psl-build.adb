@@ -1,4 +1,22 @@
-with GNAT.Table;
+--  PSL - NFA builder.
+--  Copyright (C) 2002-2016 Tristan Gingold
+--
+--  GHDL is free software; you can redistribute it and/or modify it under
+--  the terms of the GNU General Public License as published by the Free
+--  Software Foundation; either version 2, or (at your option) any later
+--  version.
+--
+--  GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
+--  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+--  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+--  for more details.
+--
+--  You should have received a copy of the GNU General Public License
+--  along with GHDL; see the file COPYING.  If not, write to the Free
+--  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+--  02111-1307, USA.
+
+with Tables;
 with Ada.Text_IO; use Ada.Text_IO;
 with Types; use Types;
 with PSL.Errors; use PSL.Errors;
@@ -12,7 +30,6 @@ with PSL.NFAs; use PSL.NFAs;
 
 package body PSL.Build is
    function Build_SERE_FA (N : Node) return NFA;
-
 
    package Intersection is
       function Build_Inter (L, R : NFA; Match_Len : Boolean) return NFA;
@@ -28,12 +45,11 @@ package body PSL.Build is
          Next_Unhandled : Stack_Entry_Id;
       end record;
 
-      package Stackt is new GNAT.Table
+      package Stackt is new Tables
         (Table_Component_Type => Stack_Entry,
          Table_Index_Type => Stack_Entry_Id,
          Table_Low_Bound => 1,
-         Table_Initial => 128,
-         Table_Increment => 100);
+         Table_Initial => 128);
 
       First_Unhandled : Stack_Entry_Id;
 
@@ -598,12 +614,11 @@ package body PSL.Build is
          --  + value ?
       end record;
 
-      package Detert is new GNAT.Table
+      package Detert is new Tables
         (Table_Component_Type => Deter_Tree_Entry,
          Table_Index_Type => Deter_Tree_Id,
          Table_Low_Bound => 1,
-         Table_Initial => 128,
-         Table_Increment => 100);
+         Table_Initial => 128);
 
       type Bool_Vector is array (Natural range <>) of Boolean;
       pragma Pack (Bool_Vector);

@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with GNAT.Table;
+with Tables;
 with Ada.Text_IO;
 with Std_Package;
 with Errorout; use Errorout;
@@ -100,10 +100,10 @@ package body Annotations is
    end Create_Object_Info;
 
    -- Add an annotation to SIGNAL.
-   procedure Add_Signal_Info (Block_Info: Sim_Info_Acc; Signal: Iir) is
+   procedure Create_Signal_Info (Block_Info: Sim_Info_Acc; Signal: Iir) is
    begin
       Create_Object_Info (Block_Info, Signal, Kind_Signal);
-   end Add_Signal_Info;
+   end Create_Signal_Info;
 
    procedure Add_Terminal_Info (Block_Info: Sim_Info_Acc; Terminal : Iir) is
    begin
@@ -428,9 +428,8 @@ package body Annotations is
       El := Decl_Chain;
       while El /= Null_Iir loop
          case Get_Kind (El) is
-            when Iir_Kind_Interface_Signal_Declaration =>
-               Annotate_Anonymous_Type_Definition (Block_Info, Get_Type (El));
-            when Iir_Kind_Interface_Variable_Declaration
+            when Iir_Kind_Interface_Signal_Declaration
+              | Iir_Kind_Interface_Variable_Declaration
               | Iir_Kind_Interface_Constant_Declaration
               | Iir_Kind_Interface_File_Declaration =>
                Annotate_Anonymous_Type_Definition (Block_Info, Get_Type (El));
@@ -454,7 +453,7 @@ package body Annotations is
          end if;
          case Get_Kind (Decl) is
             when Iir_Kind_Interface_Signal_Declaration =>
-               Add_Signal_Info (Block_Info, Decl);
+               Create_Signal_Info (Block_Info, Decl);
             when Iir_Kind_Interface_Variable_Declaration
               | Iir_Kind_Interface_Constant_Declaration
               | Iir_Kind_Interface_File_Declaration =>
@@ -567,7 +566,7 @@ package body Annotations is
            | Iir_Kind_Transaction_Attribute
            | Iir_Kind_Signal_Declaration =>
             Annotate_Anonymous_Type_Definition (Block_Info, Get_Type (Decl));
-            Add_Signal_Info (Block_Info, Decl);
+            Create_Signal_Info (Block_Info, Decl);
 
          when Iir_Kind_Variable_Declaration
            | Iir_Kind_Iterator_Declaration =>
@@ -796,7 +795,7 @@ package body Annotations is
 
       Guard := Get_Guard_Decl (Block);
       if Guard /= Null_Iir then
-         Add_Signal_Info (Info, Guard);
+         Create_Signal_Info (Info, Guard);
       end if;
       Header := Get_Block_Header (Block);
       if Header /= Null_Iir then
@@ -1077,7 +1076,9 @@ package body Annotations is
       Config_Info: Sim_Info_Acc;
    begin
       pragma Assert (Current_Scope.Kind = Scope_Kind_None);
-      Increment_Current_Scope;
+
+      Nbr_Packages := Nbr_Packages + 1;
+      Current_Scope := (Scope_Kind_Package, Nbr_Packages);
 
       Config_Info := new Sim_Info_Type'
         (Kind => Kind_Block,
@@ -1086,18 +1087,19 @@ package body Annotations is
          Nbr_Objects => 0,
          Nbr_Instances => 0);
 
+      Set_Info (Decl, Config_Info);
+
       Annotate_Declaration_List (Config_Info, Get_Declaration_Chain (Decl));
       Annotate_Block_Configuration (Get_Block_Configuration (Decl));
 
       Current_Scope := (Kind => Scope_Kind_None);
    end Annotate_Configuration_Declaration;
 
-   package Info_Node is new GNAT.Table
+   package Info_Node is new Tables
      (Table_Component_Type => Sim_Info_Acc,
       Table_Index_Type => Iir,
       Table_Low_Bound => 2,
-      Table_Initial => 1024,
-      Table_Increment => 100);
+      Table_Initial => 1024);
 
    procedure Annotate_Expand_Table
    is

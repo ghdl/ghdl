@@ -111,16 +111,22 @@ package Iir_Values is
       Iir_Value_Protected,
       Iir_Value_Signal,
       Iir_Value_Terminal,
-      Iir_Value_Quantity);
+      Iir_Value_Quantity,
+      Iir_Value_Environment);
 
    type Protected_Index_Type is new Natural;
 
    type Quantity_Index_Type is new Natural;
    type Terminal_Index_Type is new Natural;
+   type Environment_Index_Type is new Natural;
 
    --  Scalar values.  Only these ones can be signals.
    subtype Iir_Value_Scalars is
      Iir_Value_Kind range Iir_Value_B1 .. Iir_Value_F64;
+
+   --  Abstrace numeric types.
+   subtype Iir_Value_Numerics is
+     Iir_Value_Kind range Iir_Value_I64 .. Iir_Value_F64;
 
    type Iir_Value_Literal (Kind: Iir_Value_Kind);
 
@@ -172,6 +178,8 @@ package Iir_Values is
             Quantity : Quantity_Index_Type;
          when Iir_Value_Terminal =>
             Terminal : Terminal_Index_Type;
+         when Iir_Value_Environment =>
+            Environment : Environment_Index_Type;
          when Iir_Value_Range =>
             Dir: Iir_Direction;
             Length : Iir_Index32;

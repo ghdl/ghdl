@@ -88,6 +88,7 @@ Building with the llvm backend
 
 You need to build and install
 llvm version 3.5 [do not modify this line as this is read by scripts].
+(Usually llvm also depends on libedit).
 
 First configure ghdl with '--with-llvm-config'
 $ ./configure --with-llvm-config

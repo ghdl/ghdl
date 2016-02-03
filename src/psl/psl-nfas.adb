@@ -1,4 +1,22 @@
-with GNAT.Table;
+--  PSL - NFA definition
+--  Copyright (C) 2002-2016 Tristan Gingold
+--
+--  GHDL is free software; you can redistribute it and/or modify it under
+--  the terms of the GNU General Public License as published by the Free
+--  Software Foundation; either version 2, or (at your option) any later
+--  version.
+--
+--  GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
+--  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+--  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+--  for more details.
+--
+--  You should have received a copy of the GNU General Public License
+--  along with GHDL; see the file COPYING.  If not, write to the Free
+--  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+--  02111-1307, USA.
+
+with Tables;
 
 package body PSL.NFAs is
    --  Record that describes an NFA.
@@ -46,34 +64,31 @@ package body PSL.NFAs is
    end record;
 
    --  Table of NFA.
-   package Nfat is new GNAT.Table
+   package Nfat is new Tables
      (Table_Component_Type => NFA_Node,
       Table_Index_Type => NFA,
       Table_Low_Bound => 1,
-      Table_Initial => 128,
-      Table_Increment => 100);
+      Table_Initial => 128);
 
    --  List of free nodes.
    Free_Nfas : NFA := No_NFA;
 
    --  Table of States.
-   package Statet is new GNAT.Table
+   package Statet is new Tables
      (Table_Component_Type => NFA_State_Node,
       Table_Index_Type => NFA_State,
       Table_Low_Bound => 1,
-      Table_Initial => 128,
-      Table_Increment => 100);
+      Table_Initial => 128);
 
    --  List of free states.
    Free_States : NFA_State := No_State;
 
    --  Table of edges.
-   package Transt is new GNAT.Table
+   package Transt is new Tables
      (Table_Component_Type => NFA_Edge_Node,
       Table_Index_Type => NFA_Edge,
       Table_Low_Bound => 1,
-      Table_Initial => 128,
-      Table_Increment => 100);
+      Table_Initial => 128);
 
    --  List of free edges.
    Free_Edges : NFA_Edge := No_Edge;

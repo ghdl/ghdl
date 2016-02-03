@@ -48,4 +48,4 @@ That's all!
 
 ## Build GHDL (Long instructions)
 
-See BUILD.txt
+See [BUILD.txt](https://github.com/tgingold/ghdl/blob/master/BUILD.txt)

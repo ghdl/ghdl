@@ -426,6 +426,16 @@ get_range_length (union ghw_range *rng)
 	return (rng->i32.left - rng->i32.right + 1);
       else
 	return (rng->i32.right - rng->i32.left + 1);
+    case ghdl_rtik_type_b2:
+      if (rng->b2.dir)
+	return (rng->b2.left - rng->b2.right + 1);
+      else
+	return (rng->b2.right - rng->b2.left + 1);
+    case ghdl_rtik_type_e8:
+      if (rng->e8.dir)
+	return (rng->e8.left - rng->e8.right + 1);
+      else
+	return (rng->e8.right - rng->e8.left + 1);
     default:
       fprintf (stderr, "get_range_length: unhandled kind %d\n", rng->kind);
       abort ();
@@ -1601,6 +1611,10 @@ ghw_disp_range (union ghw_type *type, union ghw_range *rng)
 {
   switch (rng->kind)
     {
+    case ghdl_rtik_type_b2:
+      printf ("%s %s %s", ghw_get_lit (type, rng->b2.left),
+	      ghw_get_dir (rng->b2.dir), ghw_get_lit (type, rng->b2.right));
+      break;
     case ghdl_rtik_type_e8:
       printf ("%s %s %s", ghw_get_lit (type, rng->e8.left),
 	      ghw_get_dir (rng->e8.dir), ghw_get_lit (type, rng->e8.right));
@@ -1711,7 +1725,7 @@ ghw_disp_type (struct ghw_handler *h, union ghw_type *t)
 	  {
 	    if (i != 0)
 	      printf (", ");
-	    ghw_disp_range ((union ghw_type *)a->base, a->rngs[i]);
+	    ghw_disp_range (a->base->dims[i], a->rngs[i]);
 	  }
 	printf (");\n");
       }

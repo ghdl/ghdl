@@ -95,7 +95,8 @@ package body Elaboration is
               | Iir_Value_Access
               | Iir_Value_Protected
               | Iir_Value_Quantity
-              | Iir_Value_Terminal =>
+              | Iir_Value_Terminal
+              | Iir_Value_Environment =>
                raise Internal_Error;
          end case;
          return Res;
@@ -247,18 +248,27 @@ package body Elaboration is
                              Prefix => Prefix));
    end Elaborate_Delayed_Signal;
 
-   procedure Elaborate_Package (Decl: Iir)
+   --  Create a block instance to instantiate OBJ (block, component,
+   --  architecture, generate) in FATHER.  STMT is the statement/declaration
+   --  at the origin of the instantiation (it is generally the same as OBJ,
+   --  except for component where STMT is the component instantation
+   --  statement).
+   function Create_Block_Instance
+     (Father : Block_Instance_Acc;
+      Obj : Iir;
+      Stmt : Iir)
+      return Block_Instance_Acc
    is
-      Package_Info : constant Sim_Info_Acc := Get_Info (Decl);
-      Instance : Block_Instance_Acc;
+      Obj_Info : constant Sim_Info_Acc := Get_Info (Obj);
+      Res : Block_Instance_Acc;
    begin
-      Instance := new Block_Instance_Type'
-        (Max_Objs => Package_Info.Nbr_Objects,
-         Block_Scope => Package_Info.Frame_Scope,
-         Up_Block => null,
-         Label => Decl,
-         Stmt => Null_Iir,
-         Parent => null,
+      Res := new Block_Instance_Type'
+        (Max_Objs => Obj_Info.Nbr_Objects,
+         Block_Scope => Obj_Info.Frame_Scope,
+         Up_Block => Father,
+         Label => Stmt,
+         Stmt => Obj,
+         Parent => Father,
          Children => null,
          Brother => null,
          Marker => Empty_Marker,
@@ -267,6 +277,21 @@ package body Elaboration is
          In_Wait_Flag => False,
          Actuals_Ref => null,
          Result => null);
+
+      if Father /= null then
+         Res.Brother := Father.Children;
+         Father.Children := Res;
+      end if;
+
+      return Res;
+   end Create_Block_Instance;
+
+   procedure Elaborate_Package (Decl: Iir)
+   is
+      Package_Info : constant Sim_Info_Acc := Get_Info (Decl);
+      Instance : Block_Instance_Acc;
+   begin
+      Instance := Create_Block_Instance (null, Decl, Decl);
 
       Package_Instances (Package_Info.Frame_Scope.Pkg_Index) := Instance;
 
@@ -292,6 +317,25 @@ package body Elaboration is
       -- Elaborate objects declarations.
       Elaborate_Declarative_Part (Instance, Get_Declaration_Chain (Decl));
    end Elaborate_Package_Body;
+
+   procedure Elaborate_Configuration_Declaration (Decl : Iir)
+   is
+      Config_Info : constant Sim_Info_Acc := Get_Info (Decl);
+      Instance : Block_Instance_Acc;
+   begin
+      if Config_Info = null then
+         --  Not a user defined configuration.  No objects.
+         pragma Assert (Get_Identifier (Decl) = Null_Identifier);
+         return;
+      end if;
+
+      Instance := Create_Block_Instance (null, Decl, Decl);
+
+      Package_Instances (Config_Info.Frame_Scope.Pkg_Index) := Instance;
+
+      -- Elaborate objects declarations.
+      Elaborate_Declarative_Part (Instance, Get_Declaration_Chain (Decl));
+   end Elaborate_Configuration_Declaration;
 
    -- Elaborate all packages which DESIGN_UNIT depends on.
    -- The packages are elaborated only once.  The body, if the package needs
@@ -373,44 +417,6 @@ package body Elaboration is
          end case;
       end loop;
    end Elaborate_Dependence;
-
-   --  Create a block instance to instantiate OBJ (block, component,
-   --  architecture, generate) in FATHER.  STMT is the statement/declaration
-   --  at the origin of the instantiation (it is generally the same as OBJ,
-   --  except for component where STMT is the component instantation
-   --  statement).
-   function Create_Block_Instance
-     (Father : Block_Instance_Acc;
-      Obj : Iir;
-      Stmt : Iir)
-      return Block_Instance_Acc
-   is
-      Obj_Info : constant Sim_Info_Acc := Get_Info (Obj);
-      Res : Block_Instance_Acc;
-   begin
-      Res := new Block_Instance_Type'
-        (Max_Objs => Obj_Info.Nbr_Objects,
-         Block_Scope => Obj_Info.Frame_Scope,
-         Up_Block => Father,
-         Label => Stmt,
-         Stmt => Obj,
-         Parent => Father,
-         Children => null,
-         Brother => null,
-         Marker => Empty_Marker,
-         Objects => (others => null),
-         Elab_Objects => 0,
-         In_Wait_Flag => False,
-         Actuals_Ref => null,
-         Result => null);
-
-      if Father /= null then
-         Res.Brother := Father.Children;
-         Father.Children := Res;
-      end if;
-
-      return Res;
-   end Create_Block_Instance;
 
    function Create_Protected_Object (Block: Block_Instance_Acc; Decl: Iir)
                                     return Iir_Value_Literal_Acc
@@ -2605,6 +2611,7 @@ package body Elaboration is
             Arch := Get_Named_Entity
               (Get_Block_Specification (Get_Block_Configuration (Unit)));
             Elaborate_Dependence (Design);
+            Elaborate_Configuration_Declaration (Unit);
          when others =>
             Error_Kind ("elaborate_design", Unit);
       end case;

@@ -2207,7 +2207,7 @@ package body Execution is
       case Get_Kind (Target_Type) is
          when Iir_Kind_Integer_Type_Definition
            | Iir_Kind_Integer_Subtype_Definition =>
-            case Res.Kind is
+            case Iir_Value_Numerics (Res.Kind) is
                when Iir_Value_I64 =>
                   null;
                when Iir_Value_F64 =>
@@ -2217,40 +2217,14 @@ package body Execution is
                      Error_Msg_Constraint (Conv);
                   end if;
                   Res := Create_I64_Value (Ghdl_I64 (Res.F64));
-               when Iir_Value_B1
-                 | Iir_Value_E32
-                 | Iir_Value_Range
-                 | Iir_Value_Array
-                 | Iir_Value_Signal
-                 | Iir_Value_Record
-                 | Iir_Value_Access
-                 | Iir_Value_File
-                 | Iir_Value_Protected
-                 | Iir_Value_Quantity
-                 | Iir_Value_Terminal =>
-                  --  These values are not of abstract numeric type.
-                  raise Internal_Error;
             end case;
          when Iir_Kind_Floating_Type_Definition
            | Iir_Kind_Floating_Subtype_Definition =>
-            case Res.Kind is
+            case Iir_Value_Numerics (Res.Kind) is
                when Iir_Value_F64 =>
                   null;
                when Iir_Value_I64 =>
                   Res := Create_F64_Value (Ghdl_F64 (Res.I64));
-               when Iir_Value_B1
-                 | Iir_Value_E32
-                 | Iir_Value_Range
-                 | Iir_Value_Array
-                 | Iir_Value_Signal
-                 | Iir_Value_Record
-                 | Iir_Value_Access
-                 | Iir_Value_File
-                 | Iir_Value_Protected
-                 | Iir_Value_Quantity
-                 | Iir_Value_Terminal =>
-                  --  These values are not of abstract numeric type.
-                  raise Internal_Error;
             end case;
          when Iir_Kind_Enumeration_Type_Definition
            | Iir_Kind_Enumeration_Subtype_Definition =>
