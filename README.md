@@ -13,7 +13,7 @@ Main features are:
 - handle very large designs like leon3/grlib.
 - can write waveforms to a vcd or fst file.
 - partial support of PSL
-- support vunit (https://github.com/LarsAsplund/vunit)
+- support vunit (https://vunit.github.io)
 - support OSVVM (http://osvvm.org)
 - support cocotb (https://github.com/potentialventures/cocotb) through the VPI interface
 
