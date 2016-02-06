@@ -192,6 +192,9 @@ package body Debugger is
            | Iir_Kinds_Process_Statement
            | Iir_Kind_Package_Declaration =>
             return Image_Identifier (Name);
+         when Iir_Kind_Generate_Statement_Body =>
+            return Image_Identifier (Get_Parent (Name))
+              & '(' & Image_Identifier (Name) & ')';
          when Iir_Kind_Iterator_Declaration =>
             return Image_Identifier (Get_Parent (Name)) & '('
               & Execute_Image_Attribute
@@ -248,7 +251,8 @@ package body Debugger is
          when Iir_Kind_Block_Statement =>
             Put ("[block]");
          when Iir_Kind_If_Generate_Statement
-           | Iir_Kind_For_Generate_Statement =>
+           | Iir_Kind_For_Generate_Statement
+           | Iir_Kind_Generate_Statement_Body =>
             Put ("[generate]");
          when Iir_Kind_Iterator_Declaration =>
             Put ("[iterator]");

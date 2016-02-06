@@ -202,13 +202,13 @@ package Iir_Values is
    Instance_Pool : Areapool_Acc;
 
    function Create_Signal_Value (Sig : Ghdl_Signal_Ptr)
-     return Iir_Value_Literal_Acc;
-
+                                return Iir_Value_Literal_Acc;
    function Create_Terminal_Value (Terminal : Terminal_Index_Type)
                                   return Iir_Value_Literal_Acc;
-
    function Create_Quantity_Value (Quantity : Quantity_Index_Type)
                                   return Iir_Value_Literal_Acc;
+   function Create_Environment_Value (Env : Environment_Index_Type)
+                                     return Iir_Value_Literal_Acc;
 
    function Create_B1_Value (Val : Ghdl_B1) return Iir_Value_Literal_Acc;
 

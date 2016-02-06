@@ -20,6 +20,7 @@ with Types; use Types;
 with Iirs; use Iirs;
 with Iir_Values; use Iir_Values;
 with Elaboration; use Elaboration;
+with Annotations;
 with Areapools; use Areapools;
 
 package Execution is
@@ -111,6 +112,10 @@ package Execution is
    function Execute_Low_Limit (Bounds : Iir_Value_Literal_Acc)
                               return Iir_Value_Literal_Acc;
 
+   function Get_Instance_By_Scope
+     (Instance: Block_Instance_Acc; Scope: Annotations.Scope_Type)
+     return Block_Instance_Acc;
+
    function Get_Instance_For_Slot (Instance: Block_Instance_Acc; Decl: Iir)
                                    return Block_Instance_Acc;
 
@@ -166,9 +171,6 @@ package Execution is
    function Create_Subprogram_Instance (Instance : Block_Instance_Acc;
                                         Imp : Iir)
                                        return Block_Instance_Acc;
-
-   function Execute_Function_Body (Instance : Block_Instance_Acc; Func : Iir)
-                                  return Iir_Value_Literal_Acc;
 
    function Execute_Image_Attribute (Val : Iir_Value_Literal_Acc;
                                      Expr_Type : Iir)

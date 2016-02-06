@@ -215,4 +215,10 @@ package Elaboration is
       Table_Index_Type => Protected_Index_Type,
       Table_Low_Bound => 1,
       Table_Initial => 2);
+
+   package Environment_Table is new Tables
+     (Table_Component_Type => Block_Instance_Acc,
+      Table_Index_Type => Environment_Index_Type,
+      Table_Low_Bound => 1,
+      Table_Initial => 2);
 end Elaboration;

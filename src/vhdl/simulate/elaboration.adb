@@ -285,7 +285,7 @@ package body Elaboration is
          Actuals_Ref => null,
          Result => null);
 
-      if Father /= null then
+      if Father /= null and then Obj_Info.Kind = Kind_Block then
          Res.Brother := Father.Children;
          Father.Children := Res;
       end if;
@@ -314,6 +314,17 @@ package body Elaboration is
 
       -- Elaborate objects declarations.
       Elaborate_Declarative_Part (Instance, Get_Declaration_Chain (Decl));
+
+      if Get_Kind (Decl) = Iir_Kind_Package_Instantiation_Declaration then
+         --  Elaborate the body now.
+         declare
+            Uninst : constant Iir :=
+              Get_Named_Entity (Get_Uninstantiated_Package_Name (Decl));
+         begin
+            Elaborate_Declarative_Part
+              (Instance, Get_Declaration_Chain (Get_Package_Body (Uninst)));
+         end;
+      end if;
    end Elaborate_Package;
 
    procedure Elaborate_Package_Body (Decl: Iir)
@@ -390,8 +401,9 @@ package body Elaboration is
                   Info : constant Sim_Info_Acc := Get_Info (Library_Unit);
                   Body_Design: Iir_Design_Unit;
                begin
-                  if Package_Instances (Info.Frame_Scope.Pkg_Index) = null
-                    and then not Is_Uninstantiated_Package (Library_Unit)
+                  if not Is_Uninstantiated_Package (Library_Unit)
+                    and then
+                    Package_Instances (Info.Frame_Scope.Pkg_Index) = null
                   then
                      --  Package not yet elaborated.
 
@@ -443,7 +455,9 @@ package body Elaboration is
                Elaborate_Dependence (Design);
             when Iir_Kind_Package_Body =>
                --  For package instantiation.
-               null;
+               Elaborate_Dependence (Design);
+            when Iir_Kind_Context_Declaration =>
+               Elaborate_Dependence (Design);
             when others =>
                Error_Kind ("elaborate_dependence", Library_Unit);
          end case;
@@ -606,9 +620,8 @@ package body Elaboration is
       end case;
    end Init_To_Default;
 
-   procedure Create_Object (Instance : Block_Instance_Acc; Decl : Iir)
-   is
-      Slot : constant Object_Slot_Type := Get_Info (Decl).Slot;
+   procedure Create_Object
+     (Instance : Block_Instance_Acc; Slot : Object_Slot_Type) is
    begin
       --  Check elaboration order.
       --  Note: this is not done for package since objects from package are
@@ -621,6 +634,13 @@ package body Elaboration is
          raise Internal_Error;
       end if;
       Instance.Elab_Objects := Slot;
+   end Create_Object;
+
+   procedure Create_Object (Instance : Block_Instance_Acc; Decl : Iir)
+   is
+      Slot : constant Object_Slot_Type := Get_Info (Decl).Slot;
+   begin
+      Create_Object (Instance, Slot);
    end Create_Object;
 
    procedure Destroy_Object (Instance : Block_Instance_Acc; Decl : Iir)
@@ -966,26 +986,37 @@ package body Elaboration is
    end Elaborate_Nature_Definition;
 
    --  LRM93 12.2.1  The Generic Clause
+   --  LRM08 14.3.2  Generic clause
    procedure Elaborate_Generic_Clause
      (Instance : Block_Instance_Acc; Generic_Chain : Iir)
    is
       Decl : Iir_Interface_Constant_Declaration;
    begin
+      --  LRM08 14.3.2 Generic clause
       --  Elaboration of a generic clause consists of the elaboration of each
       --  of the equivalent single generic declarations contained in the
       --  clause, in the order given.
       Decl := Generic_Chain;
       while Decl /= Null_Iir loop
-         --  The elaboration of a generic declaration consists of elaborating
-         --  the subtype indication and then creating a generic constant of
-         --  that subtype.
-         Elaborate_Subtype_Indication_If_Anonymous (Instance, Get_Type (Decl));
-         Create_Object (Instance, Decl);
-         --  The value of a generic constant is not defined until a subsequent
-         --  generic map aspect is evaluated, or in the absence of a generic
-         --  map aspect, until the default expression associated with the
-         --  generic constant is evaluated to determine the value of the
-         --  constant.
+         case Get_Kind (Decl) is
+            when Iir_Kind_Interface_Constant_Declaration =>
+               --  LRM93 12.2.2 The generic clause
+               --  The elaboration of a generic declaration consists of
+               --  elaborating the subtype indication and then creating a
+               --  generic constant of that subtype.
+               Elaborate_Subtype_Indication_If_Anonymous
+                 (Instance, Get_Type (Decl));
+               Create_Object (Instance, Decl);
+               --  The value of a generic constant is not defined until a
+               --  subsequent generic map aspect is evaluated, or in the
+               --  absence of a generic map aspect, until the default
+               --  expression associated with the generic constant is evaluated
+               --  to determine the value of the constant.
+            when Iir_Kind_Interface_Package_Declaration =>
+               Create_Object (Instance, Get_Info (Decl).Env_Slot);
+            when others =>
+               Error_Kind ("elaborate_generic_clause", Decl);
+         end case;
          Decl := Get_Chain (Decl);
       end loop;
    end Elaborate_Generic_Clause;
@@ -1064,6 +1095,22 @@ package body Elaboration is
                Last_Individual := Unshare (Val, Instance_Pool);
                Target_Instance.Objects (Get_Info (Inter).Slot) :=
                  Last_Individual;
+               goto Continue;
+            when Iir_Kind_Association_Element_Package =>
+               declare
+                  Actual : constant Iir :=
+                    Strip_Denoting_Name (Get_Actual (Assoc));
+                  Info : constant Sim_Info_Acc := Get_Info (Actual);
+                  Pkg_Block : Block_Instance_Acc;
+               begin
+                  Pkg_Block := Get_Instance_By_Scope
+                    (Local_Instance, Info.Frame_Scope);
+                  Environment_Table.Append (Pkg_Block);
+                  Val := Create_Environment_Value (Environment_Table.Last);
+                  Target_Instance.Objects (Get_Info (Inter).Env_Slot) :=
+                    Unshare (Val, Instance_Pool);
+               end;
+
                goto Continue;
             when others =>
                Error_Kind ("elaborate_generic_map_aspect", Assoc);

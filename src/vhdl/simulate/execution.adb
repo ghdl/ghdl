@@ -63,19 +63,30 @@ package body Execution is
 
    function Get_Instance_By_Scope
      (Instance: Block_Instance_Acc; Scope: Scope_Type)
-      return Block_Instance_Acc
-   is
-      Current: Block_Instance_Acc := Instance;
+     return Block_Instance_Acc is
    begin
       case Scope.Kind is
          when Scope_Kind_Frame =>
-            while Current /= null loop
-               if Current.Block_Scope = Scope then
-                  return Current;
+            declare
+               Current : Block_Instance_Acc;
+               Last : Block_Instance_Acc;
+            begin
+               Current := Instance;
+               while Current /= null loop
+                  if Current.Block_Scope = Scope then
+                     return Current;
+                  end if;
+                  Last := Current;
+                  Current := Current.Up_Block;
+               end loop;
+               if Scope.Depth = 0
+                 and then Last.Block_Scope.Kind = Scope_Kind_Package
+               then
+                  --  For instantiated packages.
+                  return Last;
                end if;
-               Current := Current.Up_Block;
-            end loop;
-            raise Internal_Error;
+               raise Internal_Error;
+            end;
          when Scope_Kind_Package =>
             --  Global scope (packages)
             return Package_Instances (Scope.Pkg_Index);
@@ -3223,9 +3234,8 @@ package body Execution is
    end Execute_Monadic_Association;
 
    --  Create a block instance for subprogram IMP.
-   function Create_Subprogram_Instance (Instance : Block_Instance_Acc;
-                                        Imp : Iir)
-                                       return Block_Instance_Acc
+   function Create_Subprogram_Instance
+     (Instance : Block_Instance_Acc; Imp : Iir) return Block_Instance_Acc
    is
       Func_Info : constant Sim_Info_Acc := Get_Info (Imp);
 
@@ -3236,20 +3246,36 @@ package body Execution is
         Alloc_On_Pool_Addr (Block_Type);
 
       Up_Block: Block_Instance_Acc;
+      Up_Info : Sim_Info_Acc;
       Res : Block_Instance_Acc;
+
+      Origin : Iir;
+      Label : Iir;
    begin
       pragma Assert (Get_Kind (Imp) in Iir_Kinds_Subprogram_Declaration
-                    or else Get_Kind (Imp) = Iir_Kind_Protected_Type_Body);
-      Up_Block := Get_Instance_By_Scope
-        (Instance, Get_Info (Get_Parent (Imp)).Frame_Scope);
+                       or else Get_Kind (Imp) = Iir_Kind_Protected_Type_Body);
+
+      Up_Info := Get_Info (Get_Parent (Imp));
+      Up_Block := Get_Instance_By_Scope (Instance, Up_Info.Frame_Scope);
+
+      Origin := Sem_Inst.Get_Origin (Imp);
+      if Origin /= Null_Iir then
+         Label := Origin;
+         if Up_Info.Kind = Kind_Environment then
+            Up_Block := Environment_Table.Table
+              (Up_Block.Objects (Up_Info.Env_Slot).Environment);
+         end if;
+      else
+         Label := Imp;
+      end if;
 
       Res := To_Block_Instance_Acc
         (Alloc_Block_Instance
            (Instance_Pool,
             Block_Instance_Type'(Max_Objs => Func_Info.Nbr_Objects,
-                                 Block_Scope => Func_Info.Frame_Scope,
+                                 Block_Scope => Get_Info (Label).Frame_Scope,
                                  Up_Block => Up_Block,
-                                 Label => Imp,
+                                 Label => Label,
                                  Stmt => Null_Iir,
                                  Parent => Instance,
                                  Children => null,
@@ -3272,18 +3298,12 @@ package body Execution is
         (Instance, Get_Declaration_Chain (Subprg_Body));
    end Execute_Subprogram_Call_Final;
 
-   function Execute_Function_Body (Instance : Block_Instance_Acc; Func : Iir)
+   function Execute_Function_Body (Instance : Block_Instance_Acc)
                                   return Iir_Value_Literal_Acc
    is
-      Subprg_Body : Iir;
+      Subprg_Body : constant Iir := Get_Subprogram_Body (Instance.Label);
       Res : Iir_Value_Literal_Acc;
    begin
-      Subprg_Body := Get_Subprogram_Body (Func);
-      if Subprg_Body = Null_Iir then
-         pragma Assert (Sem_Inst.Get_Origin (Func) /= Null_Iir);
-         Subprg_Body := Get_Subprogram_Body (Sem_Inst.Get_Origin (Func));
-      end if;
-
       Current_Process.Instance := Instance;
 
       Elaborate_Declarative_Part
@@ -3296,7 +3316,8 @@ package body Execution is
 
       if Instance.Result = null then
          Error_Msg_Exec
-           ("function scope exited without a return statement", Func);
+           ("function scope exited without a return statement",
+            Instance.Label);
       end if;
 
       -- Free variables, slots...
@@ -3329,7 +3350,7 @@ package body Execution is
       --  FIXME: implicit conversion
       Instance.Objects (Get_Info (Inter).Slot) := Val;
 
-      Res := Execute_Function_Body (Instance, Func);
+      Res := Execute_Function_Body (Instance);
       Res := Unshare (Res, Expr_Pool'Access);
       Release (Marker, Instance_Pool.all);
       return Res;
@@ -3691,7 +3712,7 @@ package body Execution is
       if Get_Foreign_Flag (Imp) then
          Res := Execute_Foreign_Function_Call (Subprg_Block, Expr, Imp);
       else
-         Res := Execute_Function_Body (Subprg_Block, Imp);
+         Res := Execute_Function_Body (Subprg_Block);
       end if;
 
       --  Unfortunately, we don't know where the result has been allocated,
@@ -3902,7 +3923,7 @@ package body Execution is
       Elaboration.Create_Object (Instance, Inter);
       Instance.Objects (Get_Info (Inter).Slot) := Arr;
 
-      return Execute_Function_Body (Instance, Imp);
+      return Execute_Function_Body (Instance);
    end Execute_Resolution_Function;
 
    procedure Execute_Signal_Assignment

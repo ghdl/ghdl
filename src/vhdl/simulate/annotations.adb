@@ -39,6 +39,8 @@ package body Annotations is
      (Block_Info : Sim_Info_Acc; Subprg: Iir);
    procedure Annotate_Subprogram_Specification
      (Block_Info : Sim_Info_Acc; Subprg: Iir);
+   procedure Annotate_Interface_List
+     (Block_Info: Sim_Info_Acc; Decl_Chain: Iir; With_Types : Boolean);
 
    procedure Annotate_Type_Definition (Block_Info: Sim_Info_Acc; Def: Iir);
 
@@ -95,8 +97,9 @@ package body Annotations is
                                        Slot => Block_Info.Nbr_Objects);
          when Kind_Environment =>
             Info := new Sim_Info_Type'(Kind => Kind_Environment,
-                                       Obj_Scope => Current_Scope,
-                                       Slot => Block_Info.Nbr_Objects);
+                                       Env_Slot => Block_Info.Nbr_Objects,
+                                       Frame_Scope => Current_Scope,
+                                       Nbr_Objects => 0);
          when Kind_Block
            | Kind_Process
            | Kind_Frame
@@ -248,10 +251,8 @@ package body Annotations is
 
       Prot_Info :=
         new Sim_Info_Type'(Kind => Kind_Frame,
-                           Inst_Slot => Invalid_Instance_Slot,
                            Frame_Scope => Current_Scope,
-                           Nbr_Objects => 0,
-                           Nbr_Instances => 0);
+                           Nbr_Objects => 0);
       Set_Info (Prot, Prot_Info);
 
       Decl := Get_Declaration_Chain (Prot);
@@ -449,15 +450,36 @@ package body Annotations is
       end loop;
    end Annotate_Interface_List_Subtype;
 
-   procedure Annotate_Create_Interface_List
+   procedure Annotate_Interface_Package_Declaration
+     (Block_Info: Sim_Info_Acc; Inter : Iir)
+   is
+      Prev_Scope : constant Scope_Type := Current_Scope;
+      Package_Info : Sim_Info_Acc;
+   begin
+      Create_Object_Info (Block_Info, Inter, Kind_Environment);
+      Package_Info := Get_Info (Inter);
+
+      Current_Scope := (Kind => Scope_Kind_Pkg_Inst,
+                        Pkg_Param => 0,
+                        Pkg_Parent => Package_Info);
+
+      Annotate_Interface_List
+        (Package_Info, Get_Generic_Chain (Inter), True);
+      Annotate_Declaration_List (Package_Info, Get_Declaration_Chain (Inter));
+
+      Current_Scope := Prev_Scope;
+   end Annotate_Interface_Package_Declaration;
+
+   procedure Annotate_Interface_List
      (Block_Info: Sim_Info_Acc; Decl_Chain: Iir; With_Types : Boolean)
    is
       Decl : Iir;
-      N : Object_Slot_Type;
    begin
       Decl := Decl_Chain;
       while Decl /= Null_Iir loop
-         if With_Types then
+         if With_Types
+           and then Get_Kind (Decl) in Iir_Kinds_Interface_Object_Declaration
+         then
             Annotate_Anonymous_Type_Definition (Block_Info, Get_Type (Decl));
          end if;
          case Get_Kind (Decl) is
@@ -467,18 +489,14 @@ package body Annotations is
               | Iir_Kind_Interface_Constant_Declaration
               | Iir_Kind_Interface_File_Declaration =>
                Create_Object_Info (Block_Info, Decl);
+            when Iir_Kind_Interface_Package_Declaration =>
+               Annotate_Interface_Package_Declaration (Block_Info, Decl);
             when others =>
-               Error_Kind ("annotate_create_interface_list", Decl);
+               Error_Kind ("annotate_interface_list", Decl);
          end case;
-         N := Block_Info.Nbr_Objects;
-         --  Annotation of the default value must not create objects.
-         --  FIXME: Is it true ???
-         if Block_Info.Nbr_Objects /= N then
-            raise Internal_Error;
-         end if;
          Decl := Get_Chain (Decl);
       end loop;
-   end Annotate_Create_Interface_List;
+   end Annotate_Interface_List;
 
    procedure Annotate_Subprogram_Interfaces_Type
      (Block_Info : Sim_Info_Acc; Subprg: Iir)
@@ -508,13 +526,11 @@ package body Annotations is
 
       Subprg_Info :=
         new Sim_Info_Type'(Kind => Kind_Frame,
-                           Inst_Slot => Invalid_Instance_Slot,
                            Frame_Scope => Current_Scope,
-                           Nbr_Objects => 0,
-                           Nbr_Instances => 0);
+                           Nbr_Objects => 0);
       Set_Info (Subprg, Subprg_Info);
 
-      Annotate_Create_Interface_List (Subprg_Info, Interfaces, False);
+      Annotate_Interface_List (Subprg_Info, Interfaces, False);
 
       Current_Scope := Prev_Scope;
    end Annotate_Subprogram_Specification;
@@ -553,15 +569,15 @@ package body Annotations is
    begin
       Current_Scope := (Kind => Scope_Kind_Component);
 
-      Info := new Sim_Info_Type'(Kind => Kind_Frame,
-                                 Inst_Slot => Invalid_Instance_Slot,
+      Info := new Sim_Info_Type'(Kind => Kind_Block,
                                  Frame_Scope => Current_Scope,
+                                 Inst_Slot => Invalid_Instance_Slot,
                                  Nbr_Objects => 0,
                                  Nbr_Instances => 1); --  For the instance.
       Set_Info (Comp, Info);
 
-      Annotate_Create_Interface_List (Info, Get_Generic_Chain (Comp), True);
-      Annotate_Create_Interface_List (Info, Get_Port_Chain (Comp), True);
+      Annotate_Interface_List (Info, Get_Generic_Chain (Comp), True);
+      Annotate_Interface_List (Info, Get_Port_Chain (Comp), True);
 
       Current_Scope := Prev_Scope;
    end Annotate_Component_Declaration;
@@ -675,9 +691,6 @@ package body Annotations is
 
          when Iir_Kind_Nature_Declaration =>
             null;
-
-         when Iir_Kind_Package_Instantiation_Declaration =>
-            Create_Object_Info (Block_Info, Decl, Kind_Environment);
 
          when others =>
             Error_Kind ("annotate_declaration", Decl);
@@ -811,10 +824,8 @@ package body Annotations is
       end if;
       Header := Get_Block_Header (Block);
       if Header /= Null_Iir then
-         Annotate_Create_Interface_List
-           (Info, Get_Generic_Chain (Header), True);
-         Annotate_Create_Interface_List
-           (Info, Get_Port_Chain (Header), True);
+         Annotate_Interface_List (Info, Get_Generic_Chain (Header), True);
+         Annotate_Interface_List (Info, Get_Port_Chain (Header), True);
       end if;
       Annotate_Declaration_List (Info, Get_Declaration_Chain (Block));
       Annotate_Concurrent_Statements_List
@@ -901,10 +912,8 @@ package body Annotations is
       Increment_Current_Scope;
 
       Info := new Sim_Info_Type'(Kind => Kind_Process,
-                                 Inst_Slot => Invalid_Instance_Slot,
                                  Frame_Scope => Current_Scope,
-                                 Nbr_Objects => 0,
-                                 Nbr_Instances => 0);
+                                 Nbr_Objects => 0);
       Set_Info (Stmt, Info);
 
       Annotate_Declaration_List
@@ -964,12 +973,10 @@ package body Annotations is
       Set_Info (Decl, Entity_Info);
 
       -- generic list.
-      Annotate_Create_Interface_List
-        (Entity_Info, Get_Generic_Chain (Decl), True);
+      Annotate_Interface_List (Entity_Info, Get_Generic_Chain (Decl), True);
 
       -- Port list.
-      Annotate_Create_Interface_List
-        (Entity_Info, Get_Port_Chain (Decl), True);
+      Annotate_Interface_List (Entity_Info, Get_Port_Chain (Decl), True);
 
       -- declarations
       Annotate_Declaration_List (Entity_Info, Get_Declaration_Chain (Decl));
@@ -988,6 +995,9 @@ package body Annotations is
    begin
       pragma Assert (Current_Scope.Kind = Scope_Kind_None);
       Current_Scope := Entity_Info.Frame_Scope;
+
+      --  No blocks nor instantiation in entities.
+      pragma Assert (Entity_Info.Nbr_Instances = 0);
 
       Arch_Info := new Sim_Info_Type'
         (Kind => Kind_Block,
@@ -1017,8 +1027,14 @@ package body Annotations is
    begin
       pragma Assert (Current_Scope.Kind = Scope_Kind_None);
 
-      Nbr_Packages := Nbr_Packages + 1;
-      Current_Scope := (Scope_Kind_Package, Nbr_Packages);
+      if Get_Kind (Decl) = Iir_Kind_Package_Instantiation_Declaration
+        or else not Is_Uninstantiated_Package (Decl)
+      then
+         Nbr_Packages := Nbr_Packages + 1;
+         Current_Scope := (Scope_Kind_Package, Nbr_Packages);
+      else
+         Increment_Current_Scope;
+      end if;
 
       Package_Info := new Sim_Info_Type'
         (Kind => Kind_Block,
@@ -1030,17 +1046,29 @@ package body Annotations is
       Set_Info (Decl, Package_Info);
 
       if Get_Kind (Decl) = Iir_Kind_Package_Instantiation_Declaration then
-         Annotate_Create_Interface_List
+         Annotate_Interface_List
            (Package_Info, Get_Generic_Chain (Decl), True);
       else
          Header := Get_Package_Header (Decl);
          if Header /= Null_Iir then
-            Annotate_Create_Interface_List
+            Annotate_Interface_List
               (Package_Info, Get_Generic_Chain (Header), True);
          end if;
       end if;
       -- declarations
       Annotate_Declaration_List (Package_Info, Get_Declaration_Chain (Decl));
+
+      if Get_Kind (Decl) = Iir_Kind_Package_Instantiation_Declaration then
+         declare
+            Uninst : constant Iir :=
+              Get_Named_Entity (Get_Uninstantiated_Package_Name (Decl));
+            Uninst_Info : constant Sim_Info_Acc := Get_Info (Uninst);
+         begin
+            --  There is not corresponding body for an instantiation, so
+            --  also add objects for the shared body.
+            Package_Info.Nbr_Objects := Uninst_Info.Nbr_Objects;
+         end;
+      end if;
 
       Current_Scope := Prev_Scope;
    end Annotate_Package;
@@ -1173,6 +1201,8 @@ package body Annotations is
             Annotate_Configuration_Declaration (El);
          when Iir_Kind_Package_Instantiation_Declaration =>
             Annotate_Package (El);
+         when Iir_Kind_Context_Declaration =>
+            null;
          when others =>
             Error_Kind ("annotate2", El);
       end case;
@@ -1190,7 +1220,7 @@ package body Annotations is
          when Scope_Kind_Package =>
             return "package" & Pkg_Index_Type'Image (Scope.Pkg_Index);
          when Scope_Kind_Pkg_Inst =>
-            return "pkg inst" & Parameter_Slot_Type'Image (Scope.Pkg_Inst);
+            return "pkg inst" & Parameter_Slot_Type'Image (Scope.Pkg_Param);
       end case;
    end Image;
 

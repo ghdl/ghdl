@@ -1026,7 +1026,7 @@ package body Canon is
          --  Create simple variable assignment.
          Asgn := Create_Iir (Iir_Kind_Variable_Assignment_Statement);
          Location_Copy (Asgn, Cond_Expr);
-         Set_Parent (Asgn, El);
+         Set_Parent (Asgn, Res);
          Set_Target (Asgn, Target);
          Expr := Get_Expression (Cond_Expr);
          if Canon_Flag_Expressions then
@@ -1058,27 +1058,36 @@ package body Canon is
    --  Inner loop if any; used to canonicalize exit/next statement.
    Cur_Loop : Iir;
 
-   procedure Canon_Sequential_Stmts (First : Iir)
+   function Canon_Sequential_Stmts (First : Iir) return Iir
    is
       Stmt: Iir;
-      Expr: Iir;
-      Prev_Loop : Iir;
+      N_Stmt : Iir;
+      Res, Last : Iir;
    begin
+      Sub_Chain_Init (Res, Last);
+
       Stmt := First;
       while Stmt /= Null_Iir loop
+
+         --  Keep the same statement by default.
+         N_Stmt := Stmt;
+
          case Get_Kind (Stmt) is
             when Iir_Kind_If_Statement =>
                declare
                   Cond: Iir;
-                  Clause: Iir := Stmt;
+                  Clause: Iir;
+                  Stmts : Iir;
                begin
+                  Clause := Stmt;
                   while Clause /= Null_Iir loop
                      Cond := Get_Condition (Clause);
                      if Cond /= Null_Iir then
                         Canon_Expression (Cond);
                      end if;
-                     Canon_Sequential_Stmts
-                       (Get_Sequential_Statement_Chain (Clause));
+                     Stmts := Get_Sequential_Statement_Chain (Clause);
+                     Stmts := Canon_Sequential_Stmts (Stmts);
+                     Set_Sequential_Statement_Chain (Clause, Stmts);
                      Clause := Get_Else_Clause (Clause);
                   end loop;
                end;
@@ -1087,9 +1096,16 @@ package body Canon is
                Canon_Expression (Get_Target (Stmt));
                Canon_Waveform_Chain (Get_Waveform_Chain (Stmt), Null_Iir_List);
 
+            when Iir_Kind_Conditional_Signal_Assignment_Statement =>
+               N_Stmt := Canon_Conditional_Signal_Assignment_Statement (Stmt);
+
             when Iir_Kind_Variable_Assignment_Statement =>
                Canon_Expression (Get_Target (Stmt));
                Canon_Expression (Get_Expression (Stmt));
+
+            when Iir_Kind_Conditional_Variable_Assignment_Statement =>
+               N_Stmt :=
+                 Canon_Conditional_Variable_Assignment_Statement (Stmt);
 
             when Iir_Kind_Wait_Statement =>
                declare
@@ -1116,54 +1132,76 @@ package body Canon is
                Canon_Expression (Get_Expression (Stmt));
                declare
                   Choice: Iir;
+                  Stmts : Iir;
                begin
                   Choice := Get_Case_Statement_Alternative_Chain (Stmt);
                   while Choice /= Null_Iir loop
                      -- FIXME: canon choice expr.
-                     Canon_Sequential_Stmts (Get_Associated_Chain (Choice));
+                     Stmts := Get_Associated_Chain (Choice);
+                     Stmts := Canon_Sequential_Stmts (Stmts);
+                     Set_Associated_Chain (Choice, Stmts);
                      Choice := Get_Chain (Choice);
                   end loop;
                end;
 
             when Iir_Kind_Assertion_Statement
               | Iir_Kind_Report_Statement =>
-               if Get_Kind (Stmt) = Iir_Kind_Assertion_Statement then
-                  Canon_Expression (Get_Assertion_Condition (Stmt));
-               end if;
-               Expr := Get_Report_Expression (Stmt);
-               if Expr /= Null_Iir then
-                  Canon_Expression (Expr);
-               end if;
-               Expr := Get_Severity_Expression (Stmt);
-               if Expr /= Null_Iir then
-                  Canon_Expression (Expr);
-               end if;
+               declare
+                  Expr: Iir;
+               begin
+                  if Get_Kind (Stmt) = Iir_Kind_Assertion_Statement then
+                     Canon_Expression (Get_Assertion_Condition (Stmt));
+                  end if;
+                  Expr := Get_Report_Expression (Stmt);
+                  if Expr /= Null_Iir then
+                     Canon_Expression (Expr);
+                  end if;
+                  Expr := Get_Severity_Expression (Stmt);
+                  if Expr /= Null_Iir then
+                     Canon_Expression (Expr);
+                  end if;
+               end;
 
             when Iir_Kind_For_Loop_Statement =>
-               -- FIXME: decl.
-               Prev_Loop := Cur_Loop;
-               Cur_Loop := Stmt;
-               if Canon_Flag_Expressions then
-                  Canon_Discrete_Range
-                    (Get_Type (Get_Parameter_Specification (Stmt)));
-               end if;
-               Canon_Sequential_Stmts (Get_Sequential_Statement_Chain (Stmt));
-               Cur_Loop := Prev_Loop;
+               declare
+                  Prev_Loop : constant Iir := Cur_Loop;
+                  Stmts : Iir;
+               begin
+                  -- FIXME: decl.
+                  Cur_Loop := Stmt;
+                  if Canon_Flag_Expressions then
+                     Canon_Discrete_Range
+                       (Get_Type (Get_Parameter_Specification (Stmt)));
+                  end if;
+                  Stmts := Get_Sequential_Statement_Chain (Stmt);
+                  Stmts := Canon_Sequential_Stmts (Stmts);
+                  Set_Sequential_Statement_Chain (Stmt, Stmts);
+                  Cur_Loop := Prev_Loop;
+               end;
 
             when Iir_Kind_While_Loop_Statement =>
-               Expr := Get_Condition (Stmt);
-               if Expr /= Null_Iir then
-                  Canon_Expression (Expr);
-               end if;
-               Prev_Loop := Cur_Loop;
-               Cur_Loop := Stmt;
-               Canon_Sequential_Stmts (Get_Sequential_Statement_Chain (Stmt));
-               Cur_Loop := Prev_Loop;
+               declare
+                  Expr : Iir;
+                  Stmts : Iir;
+                  Prev_Loop : Iir;
+               begin
+                  Expr := Get_Condition (Stmt);
+                  if Expr /= Null_Iir then
+                     Canon_Expression (Expr);
+                  end if;
+                  Prev_Loop := Cur_Loop;
+                  Cur_Loop := Stmt;
+                  Stmts := Get_Sequential_Statement_Chain (Stmt);
+                  Stmts := Canon_Sequential_Stmts (Stmts);
+                  Set_Sequential_Statement_Chain (Stmt, Stmts);
+                  Cur_Loop := Prev_Loop;
+               end;
 
             when Iir_Kind_Next_Statement
               | Iir_Kind_Exit_Statement =>
                declare
                   Loop_Label : Iir;
+                  Expr: Iir;
                begin
                   Expr := Get_Condition (Stmt);
                   if Expr /= Null_Iir then
@@ -1187,8 +1225,13 @@ package body Canon is
             when others =>
                Error_Kind ("canon_sequential_stmts", Stmt);
          end case;
+
+         Sub_Chain_Append (Res, Last, N_Stmt);
+
          Stmt := Get_Chain (Stmt);
       end loop;
+
+      return Res;
    end Canon_Sequential_Stmts;
 
    -- Create a statement transform from concurrent_signal_assignment
@@ -1456,12 +1499,23 @@ package body Canon is
 
       while Cond_Wf /= Null_Iir loop
          Expr := Get_Condition (Cond_Wf);
+
+         --  Canon waveform.
          Wf := Get_Waveform_Chain (Cond_Wf);
          Wf := Canon_Wave_Transform (Conc_Stmt, Wf, Proc);
-         Set_Parent (Wf, Parent);
+
          if Expr = Null_Iir and Cond_Wf = Cond_Wf_Chain then
+            --  A conditional assignment that is in fact a simple one.  Usual
+            --  case for concurrent signal assignment in vhdl 93.
+            pragma Assert (Get_Chain (Cond_Wf) = Null_Iir);
+
+            Set_Parent (Wf, Parent);
             Res1 := Wf;
+            Stmt := Res1;
          else
+            --  A real conditional signal assignment.
+
+            --  Canon condition (if any).
             if Expr /= Null_Iir then
                if Canon_Flag_Expressions then
                   Canon_Expression (Expr);
@@ -1474,19 +1528,17 @@ package body Canon is
             if Stmt = Null_Iir then
                Res1 := Create_Iir (Iir_Kind_If_Statement);
                Set_Parent (Res1, Parent);
+               Stmt := Res1;
             else
                Res1 := Create_Iir (Iir_Kind_Elsif);
+               Set_Else_Clause (Last_Res, Res1);
             end if;
             Location_Copy (Res1, Cond_Wf);
             Set_Condition (Res1, Expr);
             Set_Sequential_Statement_Chain (Res1, Wf);
+            Set_Parent (Wf, Stmt);
+            Last_Res := Res1;
          end if;
-         if Stmt = Null_Iir then
-            Stmt := Res1;
-         else
-            Set_Else_Clause (Last_Res, Res1);
-         end if;
-         Last_Res := Res1;
          Cond_Wf := Get_Chain (Cond_Wf);
       end loop;
       return Stmt;
@@ -1679,7 +1731,13 @@ package body Canon is
               | Iir_Kind_Process_Statement =>
                Canon_Declarations (Top, El, Null_Iir);
                if Canon_Flag_Sequentials_Stmts then
-                  Canon_Sequential_Stmts (Get_Sequential_Statement_Chain (El));
+                  declare
+                     Stmts : Iir;
+                  begin
+                     Stmts := Get_Sequential_Statement_Chain (El);
+                     Stmts := Canon_Sequential_Stmts (Stmts);
+                     Set_Sequential_Statement_Chain (El, Stmts);
+                  end;
                end if;
                if Canon_Flag_All_Sensitivity
                  and then Canon_Flag_Sequentials_Stmts
@@ -2357,13 +2415,16 @@ package body Canon is
                                 Parent : Iir;
                                 Decl_Parent : Iir)
    is
+      Stmts : Iir;
    begin
       case Get_Kind (Decl) is
          when Iir_Kind_Procedure_Body
            | Iir_Kind_Function_Body =>
             Canon_Declarations (Top, Decl, Null_Iir);
             if Canon_Flag_Sequentials_Stmts then
-               Canon_Sequential_Stmts (Get_Sequential_Statement_Chain (Decl));
+               Stmts := Get_Sequential_Statement_Chain (Decl);
+               Stmts := Canon_Sequential_Stmts (Stmts);
+               Set_Sequential_Statement_Chain (Decl, Stmts);
             end if;
 
          when Iir_Kind_Procedure_Declaration

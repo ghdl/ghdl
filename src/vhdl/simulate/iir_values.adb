@@ -362,6 +362,17 @@ package body Iir_Values is
                 (Kind => Iir_Value_Quantity, Quantity => Quantity)));
    end Create_Quantity_Value;
 
+   function Create_Environment_Value (Env : Environment_Index_Type)
+                                     return Iir_Value_Literal_Acc
+   is
+      subtype Environment_Value is Iir_Value_Literal (Iir_Value_Environment);
+      function Alloc is new Alloc_On_Pool_Addr (Environment_Value);
+   begin
+      return To_Iir_Value_Literal_Acc
+        (Alloc (Global_Pool'Access,
+                (Kind => Iir_Value_Environment, Environment => Env)));
+   end Create_Environment_Value;
+
    function Create_Protected_Value (Prot : Protected_Index_Type)
                                   return Iir_Value_Literal_Acc
    is
@@ -639,9 +650,11 @@ package body Iir_Values is
             pragma Assert (Src.Sig = null);
             return Create_Signal_Value (Src.Sig);
 
+         when Iir_Value_Environment =>
+            return Create_Environment_Value (Src.Environment);
+
          when Iir_Value_Quantity
-           | Iir_Value_Terminal
-           | Iir_Value_Environment =>
+           | Iir_Value_Terminal =>
             raise Internal_Error;
       end case;
    end Copy;

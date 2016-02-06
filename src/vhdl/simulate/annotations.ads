@@ -39,6 +39,18 @@ package Annotations is
    -- Annotations are used to collect informations for elaboration and to
    -- locate iir_value_literal for signals, variables or constants.
 
+   -- The annotation depends on the kind of the node.
+   type Sim_Info_Kind is
+     (Kind_Block, Kind_Process, Kind_Frame,
+      Kind_Scalar_Type, Kind_File_Type,
+      Kind_Object, Kind_Signal, Kind_Range,
+      Kind_File,
+      Kind_Terminal, Kind_Quantity,
+      Kind_Environment);
+
+   type Sim_Info_Type (Kind: Sim_Info_Kind);
+   type Sim_Info_Acc is access all Sim_Info_Type;
+
    -- Scope corresponding to an object.
    type Scope_Kind_Type is
      (
@@ -59,7 +71,8 @@ package Annotations is
          when Scope_Kind_Frame =>
             Depth : Scope_Depth_Type;
          when Scope_Kind_Pkg_Inst =>
-            Pkg_Inst : Parameter_Slot_Type;
+            Pkg_Param : Parameter_Slot_Type;
+            Pkg_Parent : Sim_Info_Acc;
          when Scope_Kind_None =>
             null;
       end case;
@@ -68,43 +81,40 @@ package Annotations is
    type Instance_Slot_Type is new Integer;
    Invalid_Instance_Slot : constant Instance_Slot_Type := -1;
 
-   -- The annotation depends on the kind of the node.
-   type Sim_Info_Kind is
-     (Kind_Block, Kind_Process, Kind_Frame,
-      Kind_Scalar_Type, Kind_File_Type,
-      Kind_Object, Kind_Signal, Kind_Range,
-      Kind_File,
-      Kind_Terminal, Kind_Quantity,
-      Kind_Environment);
-
-   type Sim_Info_Type (Kind: Sim_Info_Kind);
-   type Sim_Info_Acc is access all Sim_Info_Type;
-
    -- Annotation for an iir node in order to be able to simulate it.
    type Sim_Info_Type (Kind: Sim_Info_Kind) is record
       case Kind is
          when Kind_Block
            | Kind_Frame
-           | Kind_Process =>
-            --  Slot number in the parent (for blocks).
-            Inst_Slot : Instance_Slot_Type;
-
+           | Kind_Process
+           | Kind_Environment =>
             --  Scope level for this frame.
             Frame_Scope : Scope_Type;
 
             --  Number of objects/signals.
             Nbr_Objects : Object_Slot_Type;
 
-            --  Number of children (blocks, generate, instantiation).
-            Nbr_Instances : Instance_Slot_Type;
+            case Kind is
+               when Kind_Block =>
+                  --  Slot number in the parent (for blocks).
+                  Inst_Slot : Instance_Slot_Type;
+
+                  --  Number of children (blocks, generate, instantiation).
+                  Nbr_Instances : Instance_Slot_Type;
+
+               when Kind_Environment =>
+                  Env_Slot : Object_Slot_Type;
+
+               when others =>
+                  null;
+            end case;
 
          when Kind_Object
            | Kind_Signal
            | Kind_Range
            | Kind_File
            | Kind_Terminal
-           | Kind_Quantity
-           | Kind_Environment =>
+           | Kind_Quantity =>
             --  Block in which this object is declared in.
             Obj_Scope : Scope_Type;
 
