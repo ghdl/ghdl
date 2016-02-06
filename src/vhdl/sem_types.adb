@@ -1569,6 +1569,9 @@ package body Sem_Types is
             Set_Resolution_Indication (Res, Resolv_Ind);
          end if;
          Set_Resolved_Flag (Res, Get_Resolved_Flag (Type_Mark));
+      else
+         pragma Assert (Get_Kind (Type_Mark) = Iir_Kind_Array_Type_Definition);
+         Set_Resolved_Flag (Res, Get_Resolved_Flag (Type_Mark));
       end if;
 
       return Res;
