@@ -619,9 +619,8 @@ package body Canon is
             declare
                Suffix : Iir;
             begin
-               Suffix := Get_Suffix (Expr);
-               if Get_Kind (Suffix) not in Iir_Kinds_Discrete_Type_Definition
-               then
+               Suffix := Strip_Denoting_Name (Get_Suffix (Expr));
+               if Get_Kind (Suffix) /= Iir_Kind_Subtype_Declaration then
                   Canon_Expression (Suffix);
                end if;
                Canon_Expression (Get_Prefix (Expr));
@@ -2793,6 +2792,7 @@ package body Canon is
       if Canon_Flag_Expressions then
          Inter := Chain;
          while Inter /= Null_Iir loop
+            Canon_Subtype_Indication_If_Anonymous (Get_Type (Inter));
             Canon_Expression (Get_Default_Value (Inter));
             Inter := Get_Chain (Inter);
          end loop;
