@@ -290,15 +290,15 @@ package body Disp_Tree is
       return Iir_Predefined_Functions'Image (F);
    end Image_Iir_Predefined_Functions;
 
-   procedure Disp_PSL_Node (N : PSL_Node; Indent : Natural) is
+   procedure Disp_PSL_NFA (N : PSL_NFA; Indent : Natural)
+   is
+      pragma Unreferenced (Indent);
    begin
-      Put_Indent (Indent);
-      PSL.Dump_Tree.Dump_Tree (N, True);
-   end Disp_PSL_Node;
-
-   procedure Disp_PSL_NFA (N : PSL_NFA; Indent : Natural) is
-   begin
-      null;
+      if N = 0 then
+         Put_Line ("*null*");
+      else
+         Put_Line ("*??*");
+      end if;
    end Disp_PSL_NFA;
 
    function Image_Location_Type (Loc : Location_Type) return String is
@@ -421,7 +421,8 @@ package body Disp_Tree is
                when Type_String8_Id =>
                   Put_Line ("<string8>");
                when Type_PSL_Node =>
-                  Disp_PSL_Node (Get_PSL_Node (N, F), Sub_Indent);
+                  PSL.Dump_Tree.Disp_Tree
+                    (Get_PSL_Node (N, F), Sub_Indent, Depth - 1);
                when Type_Source_Ptr =>
                   Put_Line (Source_Ptr'Image (Get_Source_Ptr (N, F)));
                when Type_Date_Type =>
@@ -491,9 +492,10 @@ package body Disp_Tree is
       end;
    end Disp_Iir;
 
-   procedure Disp_Tree_For_Psl (N : Int32) is
+   procedure Disp_Tree_For_Psl
+     (N : Int32; Indent : Natural; Depth : Natural) is
    begin
-      Disp_Iir (Iir (N), 1, 0);
+      Disp_Iir (Iir (N), Indent, Depth);
    end Disp_Tree_For_Psl;
 
    procedure Disp_Tree (Tree : Iir;

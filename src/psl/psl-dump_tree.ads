@@ -19,9 +19,10 @@
 with PSL.Nodes; use PSL.Nodes;
 
 package PSL.Dump_Tree is
-   procedure Dump_Tree (N : Node; Full : Boolean := False);
+   procedure Disp_Tree (N : Node; Indent : Natural; Depth : Natural);
 
    --  Procedure to dump an HDL node.
-   type Dump_Hdl_Node_Acc is access procedure (N : HDL_Node);
+   type Dump_Hdl_Node_Acc is
+     access procedure (N : HDL_Node; Indent : Natural; Depth : Natural);
    Dump_Hdl_Node : Dump_Hdl_Node_Acc := null;
 end PSL.Dump_Tree;
