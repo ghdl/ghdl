@@ -45,6 +45,7 @@ with Grt.Vpi;
 pragma Unreferenced (Grt.Vpi);
 with Grt.Types;
 with Grt.Options;
+with Grt.Errors;
 with Grtlink;
 
 package body Ghdlsimul is
@@ -160,7 +161,7 @@ package body Ghdlsimul is
                when Decode_Option_Last =>
                   exit;
                when Decode_Option_Stop =>
-                  exit;
+                  Grt.Options.Flag_No_Run := True;
                when Decode_Option_Ok =>
                   null;
             end case;
@@ -170,8 +171,16 @@ package body Ghdlsimul is
       end loop;
    end Set_Run_Options;
 
-   procedure Run is
+   procedure Run
+   is
+      use Ada.Command_Line;
    begin
+      if Grt.Options.Flag_No_Run then
+         --  Some options like --has-feature set the exit status.
+         Set_Exit_Status (Exit_Status (Grt.Errors.Exit_Status));
+         return;
+      end if;
+
       Grtlink.Flag_String := Flags.Flag_String;
 
       Simulation.Simulation_Entity (Top_Conf);
