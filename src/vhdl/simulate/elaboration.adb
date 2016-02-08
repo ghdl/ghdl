@@ -1211,6 +1211,7 @@ package body Elaboration is
       Actual_Expr : Iir_Value_Literal_Acc;
       Init_Expr : Iir_Value_Literal_Acc;
       Actual : Iir;
+      Formal : Iir;
    begin
       if Ports = Null_Iir then
          return;
@@ -1243,12 +1244,13 @@ package body Elaboration is
                  and then Get_Out_Conversion (Assoc) = Null_Iir
                then
                   Actual := Get_Actual (Assoc);
+                  Formal := Get_Formal (Assoc);
                   if Is_Signal_Name (Actual) then
                      --  Association with a signal
                      Init_Expr := Execute_Signal_Init_Value
                        (Actual_Instance, Actual);
                      Implicit_Array_Conversion
-                       (Formal_Instance, Init_Expr, Get_Type (Inter), Actual);
+                       (Formal_Instance, Init_Expr, Get_Type (Formal), Actual);
                      Init_Expr := Unshare_Bounds
                        (Init_Expr, Global_Pool'Access);
                      Actual_Expr := null;
@@ -1257,8 +1259,7 @@ package body Elaboration is
                      Init_Expr := Execute_Expression
                        (Actual_Instance, Actual);
                      Implicit_Array_Conversion
-                       (Formal_Instance, Init_Expr,
-                        Get_Type (Inter), Actual);
+                       (Formal_Instance, Init_Expr, Get_Type (Formal), Actual);
                      Init_Expr := Unshare (Init_Expr, Global_Pool'Access);
                      Actual_Expr := Init_Expr;
                   end if;
