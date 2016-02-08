@@ -443,15 +443,21 @@ package body Execution is
       return String_To_Iir_Value (Str);
    end Execute_Bit_Vector_To_String;
 
-   procedure Check_Std_Ulogic_Dc
-     (Loc : Iir; V : Grt.Std_Logic_1164.Std_Ulogic)
+   procedure Assert_Std_Ulogic_Dc (Loc : Iir)
+   is
+      use Grt.Std_Logic_1164;
+   begin
+      Execute_Failed_Assertion
+        ("STD_LOGIC_1164: '-' operand for matching ordering operator",
+         2, Loc);
+   end Assert_Std_Ulogic_Dc;
+
+   procedure Check_Std_Ulogic_Dc (Loc : Iir; V : Grt.Std_Logic_1164.Std_Ulogic)
    is
       use Grt.Std_Logic_1164;
    begin
       if V = '-' then
-         Execute_Failed_Assertion
-           ("STD_LOGIC_1164: '-' operand for matching ordering operator",
-            2, Loc);
+         Assert_Std_Ulogic_Dc (Loc);
       end if;
    end Check_Std_Ulogic_Dc;
 
@@ -1373,14 +1379,19 @@ package body Execution is
             declare
                use Grt.Std_Logic_1164;
                Res : Std_Ulogic := '1';
+               Le, Re : Std_Ulogic;
+               Has_Match_Err : Boolean;
             begin
                Result := Create_E32_Value (Std_Ulogic'Pos ('1'));
+               Has_Match_Err := False;
                for I in Left.Val_Array.V'Range loop
-                  Res := And_Table
-                    (Res,
-                     Match_Eq_Table
-                       (Std_Ulogic'Val (Left.Val_Array.V (I).E32),
-                        Std_Ulogic'Val (Right.Val_Array.V (I).E32)));
+                  Le := Std_Ulogic'Val (Left.Val_Array.V (I).E32);
+                  Re := Std_Ulogic'Val (Right.Val_Array.V (I).E32);
+                  if (Le = '-' or Re = '-') and then not Has_Match_Err then
+                     Assert_Std_Ulogic_Dc (Expr);
+                     Has_Match_Err := True;
+                  end if;
+                  Res := And_Table (Res, Match_Eq_Table (Le, Re));
                end loop;
                if Func = Iir_Predefined_Std_Ulogic_Array_Match_Inequality then
                   Res := Not_Table (Res);
