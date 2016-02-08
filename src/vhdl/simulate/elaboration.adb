@@ -157,6 +157,7 @@ package body Elaboration is
          T := Execute_Time_Attribute (Instance, Signal);
          Init := Create_B1_Value (False);
       end if;
+      Create_Signal (Instance, Signal);
       Sig := Create_Signal_Value (null);
       Init := Unshare (Init, Global_Pool'Access);
       Instance.Objects (Info.Slot) := Sig;
