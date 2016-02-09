@@ -3468,6 +3468,17 @@ package body Execution is
          when Iir_Kind_Indexed_Name =>
             Execute_Indexed_Name (Block, Formal, Pfx, Pos);
             Store (Pfx.Val_Array.V (Pos + 1), Actual);
+         when Iir_Kind_Slice_Name =>
+            declare
+               Low, High : Iir_Index32;
+               Srange : Iir_Value_Literal_Acc;
+            begin
+               Srange := Execute_Bounds (Block, Get_Suffix (Formal));
+               Execute_Slice_Name (Pfx, Srange, Low, High, Formal);
+               for I in 1 .. High - Low + 1 loop
+                  Store (Pfx.Val_Array.V (Low + I), Actual.Val_Array.V (I));
+               end loop;
+            end;
          when Iir_Kind_Selected_Element =>
             Pos := Get_Element_Position (Get_Selected_Element (Formal));
             Store (Pfx.Val_Record.V (Pos + 1), Actual);
