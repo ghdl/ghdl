@@ -2342,11 +2342,11 @@ package body Execution is
 
    -- Perform type conversion as desribed in LRM93 7.3.5
    function Execute_Type_Conversion (Block: Block_Instance_Acc;
-                                     Conv : Iir_Type_Conversion;
-                                     Val : Iir_Value_Literal_Acc)
+                                     Val : Iir_Value_Literal_Acc;
+                                     Target_Type : Iir;
+                                     Loc : Iir)
                                     return Iir_Value_Literal_Acc
    is
-      Target_Type : constant Iir := Get_Type (Conv);
       Res: Iir_Value_Literal_Acc;
    begin
       Res := Val;
@@ -2360,7 +2360,7 @@ package body Execution is
                   if Res.F64 > Ghdl_F64 (Iir_Int64'Last) or
                     Res.F64 < Ghdl_F64 (Iir_Int64'First)
                   then
-                     Error_Msg_Constraint (Conv);
+                     Error_Msg_Constraint (Loc);
                   end if;
                   Res := Create_I64_Value (Ghdl_I64 (Res.F64));
             end case;
@@ -2384,23 +2384,43 @@ package body Execution is
            | Iir_Kind_Record_Subtype_Definition =>
             --  Same type.
             null;
-         when Iir_Kind_Array_Type_Definition =>
+         when Iir_Kind_Array_Subtype_Definition
+           | Iir_Kind_Array_Type_Definition =>
             --  LRM93 7.3.5
             --  if the type mark denotes an unconstrained array type and the
             --  operand is not a null array, then for each index position, the
             --  bounds of the result are obtained by converting the bounds of
             --  the operand to the corresponding index type of the target type.
-            -- FIXME: what is bound conversion ??
-            null;
-         when Iir_Kind_Array_Subtype_Definition =>
+            --
             --  LRM93 7.3.5
             --  If the type mark denotes a constrained array subtype, then the
             --  bounds of the result are those imposed by the type mark.
-            Implicit_Array_Conversion (Block, Res, Target_Type, Conv);
+            if Get_Constraint_State (Target_Type) = Fully_Constrained then
+               Implicit_Array_Conversion (Block, Res, Target_Type, Loc);
+            else
+               declare
+                  Idx_List : constant Iir_List :=
+                    Get_Index_Subtype_List (Target_Type);
+                  Idx_Type : Iir;
+               begin
+                  Res := Create_Array_Value (Val.Bounds.Nbr_Dims);
+                  Res.Val_Array := Val.Val_Array;
+                  for I in Val.Bounds.D'Range loop
+                     Idx_Type := Get_Index_Type (Idx_List, Natural (I - 1));
+                     Res.Bounds.D (I) := Create_Range_Value
+                       (Left => Execute_Type_Conversion
+                          (Block, Val.Bounds.D (I).Left, Idx_Type, Loc),
+                        Right => Execute_Type_Conversion
+                          (Block, Val.Bounds.D (I).Right, Idx_Type, Loc),
+                        Dir => Val.Bounds.D (I).Dir,
+                        Length => Val.Bounds.D (I).Length);
+                  end loop;
+               end;
+               end if;
          when others =>
             Error_Kind ("execute_type_conversion", Target_Type);
       end case;
-      Check_Constraints (Block, Res, Target_Type, Conv);
+      Check_Constraints (Block, Res, Target_Type, Loc);
       return Res;
    end Execute_Type_Conversion;
 
@@ -3026,8 +3046,8 @@ package body Execution is
 
          when Iir_Kind_Type_Conversion =>
             return Execute_Type_Conversion
-              (Block, Expr,
-               Execute_Expression (Block, Get_Expression (Expr)));
+              (Block, Execute_Expression (Block, Get_Expression (Expr)),
+               Get_Type (Expr), Expr);
 
          when Iir_Kind_Qualified_Expression =>
             Res := Execute_Expression_With_Type
@@ -3411,14 +3431,15 @@ package body Execution is
               (Block, Get_Implementation (Conv), Val);
          when Iir_Kind_Type_Conversion =>
             --  FIXME: shouldn't CONV always be a denoting_name ?
-            return Execute_Type_Conversion (Block, Conv, Val);
+            return Execute_Type_Conversion (Block, Val, Get_Type (Conv), Conv);
          when Iir_Kinds_Denoting_Name
            | Iir_Kind_Function_Declaration =>
             Ent := Strip_Denoting_Name (Conv);
             if Get_Kind (Ent) = Iir_Kind_Function_Declaration then
                return Execute_Assoc_Function_Conversion (Block, Ent, Val);
             elsif Get_Kind (Ent) in Iir_Kinds_Type_Declaration then
-               return Execute_Type_Conversion (Block, Ent, Val);
+               return Execute_Type_Conversion
+                 (Block, Val, Get_Type (Ent), Ent);
             else
                Error_Kind ("execute_assoc_conversion(1)", Ent);
             end if;
