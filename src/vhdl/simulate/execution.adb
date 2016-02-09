@@ -306,6 +306,104 @@ package body Execution is
       end case;
    end Execute_Image_Attribute;
 
+   function Execute_Image_Attribute (Block: Block_Instance_Acc; Expr: Iir)
+                                    return Iir_Value_Literal_Acc
+   is
+      Val : Iir_Value_Literal_Acc;
+      Attr_Type : constant Iir := Get_Type (Get_Prefix (Expr));
+   begin
+      Val := Execute_Expression (Block, Get_Parameter (Expr));
+      return String_To_Iir_Value
+        (Execute_Image_Attribute (Val, Attr_Type));
+   end Execute_Image_Attribute;
+
+   function Execute_Path_Instance_Name_Attribute
+     (Block : Block_Instance_Acc; Attr : Iir) return Iir_Value_Literal_Acc
+   is
+      use Evaluation;
+      use Grt.Vstrings;
+      use Name_Table;
+
+      Name : constant Path_Instance_Name_Type :=
+        Get_Path_Instance_Name_Suffix (Attr);
+      Instance : Block_Instance_Acc;
+      Rstr : Rstring;
+      Is_Instance : constant Boolean :=
+        Get_Kind (Attr) = Iir_Kind_Instance_Name_Attribute;
+   begin
+      if Name.Path_Instance = Null_Iir then
+         return String_To_Iir_Value (Name.Suffix);
+      end if;
+
+      Instance := Get_Instance_By_Scope
+        (Block, Get_Info (Name.Path_Instance).Frame_Scope);
+
+      loop
+         case Get_Kind (Instance.Label) is
+            when Iir_Kind_Entity_Declaration =>
+               if Instance.Parent = null then
+                  Prepend (Rstr, Image (Get_Identifier (Instance.Label)));
+                  exit;
+               end if;
+            when Iir_Kind_Architecture_Body =>
+               if Is_Instance then
+                  Prepend (Rstr, ')');
+                  Prepend (Rstr, Image (Get_Identifier (Instance.Label)));
+                  Prepend (Rstr, '(');
+               end if;
+
+               if Is_Instance or else Instance.Parent = null then
+                  Prepend
+                    (Rstr,
+                     Image (Get_Identifier (Get_Entity (Instance.Label))));
+               end if;
+               if Instance.Parent = null then
+                  Prepend (Rstr, ':');
+                  exit;
+               else
+                  Instance := Instance.Parent;
+               end if;
+            when Iir_Kind_Block_Statement =>
+               Prepend (Rstr, Image (Get_Label (Instance.Label)));
+               Prepend (Rstr, ':');
+               Instance := Instance.Parent;
+            when Iir_Kind_Iterator_Declaration =>
+               declare
+                  Val : Iir_Value_Literal_Acc;
+               begin
+                  Val := Execute_Name (Instance, Instance.Label);
+                  Prepend (Rstr, ')');
+                  Prepend (Rstr, Execute_Image_Attribute
+                             (Val, Get_Type (Instance.Label)));
+                  Prepend (Rstr, '(');
+               end;
+               Instance := Instance.Parent;
+            when Iir_Kind_Generate_Statement_Body =>
+               Prepend (Rstr, Image (Get_Label (Get_Parent (Instance.Label))));
+               Prepend (Rstr, ':');
+               Instance := Instance.Parent;
+            when Iir_Kind_Component_Instantiation_Statement =>
+               if Is_Instance then
+                  Prepend (Rstr, '@');
+               end if;
+               Prepend (Rstr, Image (Get_Label (Instance.Label)));
+               Prepend (Rstr, ':');
+               Instance := Instance.Parent;
+            when others =>
+               Error_Kind ("Execute_Path_Instance_Name_Attribute",
+                           Instance.Label);
+         end case;
+      end loop;
+      declare
+         Str1 : String (1 .. Length (Rstr));
+         Len1 : Natural;
+      begin
+         Copy (Rstr, Str1, Len1);
+         Free (Rstr);
+         return String_To_Iir_Value (Str1 & ':' & Name.Suffix);
+      end;
+   end Execute_Path_Instance_Name_Attribute;
+
    function Execute_Shift_Operator (Left : Iir_Value_Literal_Acc;
                                     Count : Ghdl_I64;
                                     Expr : Iir)
@@ -1247,7 +1345,32 @@ package body Execution is
                   if Is_Character (Id) then
                      Result := String_To_Iir_Value ((1 => Get_Character (Id)));
                   else
-                     Result := String_To_Iir_Value (Image (Id));
+                     Image (Id);
+                     if Nam_Buffer (1) = '\' then
+                        --  Reformat extended identifiers for to_image.
+                        pragma Assert (Nam_Buffer (Nam_Length) = '\');
+                        declare
+                           Npos : Natural;
+                           K : Natural;
+                           C : Character;
+                        begin
+                           Npos := 1;
+                           K := 2;
+                           while K < Nam_Length loop
+                              C := Nam_Buffer (K);
+                              Nam_Buffer (Npos) := C;
+                              Npos := Npos + 1;
+                              if C = '\' then
+                                 K := K + 2;
+                              else
+                                 K := K + 1;
+                              end if;
+                           end loop;
+                           Nam_Length := Npos - 1;
+                        end;
+                     end if;
+                     Result :=
+                       String_To_Iir_Value (Nam_Buffer (1 .. Nam_Length));
                   end if;
                end if;
             end;
@@ -2574,6 +2697,13 @@ package body Execution is
             Res := Execute_Name_Aggregate (Block, Expr, Get_Type (Expr));
             --  FIXME: is_sig ?
 
+         when Iir_Kind_Image_Attribute =>
+            Res := Execute_Image_Attribute (Block, Expr);
+
+         when Iir_Kind_Path_Name_Attribute
+           | Iir_Kind_Instance_Name_Attribute =>
+            Res := Execute_Path_Instance_Name_Attribute (Block, Expr);
+
          when others =>
             Error_Kind ("execute_name_with_base", Expr);
       end case;
@@ -2594,17 +2724,6 @@ package body Execution is
          return Execute_Signal_Value (Res);
       end if;
    end Execute_Name;
-
-   function Execute_Image_Attribute (Block: Block_Instance_Acc; Expr: Iir)
-                                    return Iir_Value_Literal_Acc
-   is
-      Val : Iir_Value_Literal_Acc;
-      Attr_Type : constant Iir := Get_Type (Get_Prefix (Expr));
-   begin
-      Val := Execute_Expression (Block, Get_Parameter (Expr));
-      return String_To_Iir_Value
-        (Execute_Image_Attribute (Val, Attr_Type));
-   end Execute_Image_Attribute;
 
    function Execute_Value_Attribute (Block: Block_Instance_Acc;
                                      Str_Val : Iir_Value_Literal_Acc;
@@ -2752,94 +2871,6 @@ package body Execution is
       end case;
       return Res;
    end Execute_Value_Attribute;
-
-   function Execute_Path_Instance_Name_Attribute
-     (Block : Block_Instance_Acc; Attr : Iir)
-     return Iir_Value_Literal_Acc
-   is
-      use Evaluation;
-      use Grt.Vstrings;
-      use Name_Table;
-
-      Name : constant Path_Instance_Name_Type :=
-        Get_Path_Instance_Name_Suffix (Attr);
-      Instance : Block_Instance_Acc;
-      Rstr : Rstring;
-      Is_Instance : constant Boolean :=
-        Get_Kind (Attr) = Iir_Kind_Instance_Name_Attribute;
-   begin
-      if Name.Path_Instance = Null_Iir then
-         return String_To_Iir_Value (Name.Suffix);
-      end if;
-
-      Instance := Get_Instance_By_Scope
-        (Block, Get_Info (Name.Path_Instance).Frame_Scope);
-
-      loop
-         case Get_Kind (Instance.Label) is
-            when Iir_Kind_Entity_Declaration =>
-               if Instance.Parent = null then
-                  Prepend (Rstr, Image (Get_Identifier (Instance.Label)));
-                  exit;
-               end if;
-            when Iir_Kind_Architecture_Body =>
-               if Is_Instance then
-                  Prepend (Rstr, ')');
-                  Prepend (Rstr, Image (Get_Identifier (Instance.Label)));
-                  Prepend (Rstr, '(');
-               end if;
-
-               if Is_Instance or else Instance.Parent = null then
-                  Prepend
-                    (Rstr,
-                     Image (Get_Identifier (Get_Entity (Instance.Label))));
-               end if;
-               if Instance.Parent = null then
-                  Prepend (Rstr, ':');
-                  exit;
-               else
-                  Instance := Instance.Parent;
-               end if;
-            when Iir_Kind_Block_Statement =>
-               Prepend (Rstr, Image (Get_Label (Instance.Label)));
-               Prepend (Rstr, ':');
-               Instance := Instance.Parent;
-            when Iir_Kind_Iterator_Declaration =>
-               declare
-                  Val : Iir_Value_Literal_Acc;
-               begin
-                  Val := Execute_Name (Instance, Instance.Label);
-                  Prepend (Rstr, ')');
-                  Prepend (Rstr, Execute_Image_Attribute
-                             (Val, Get_Type (Instance.Label)));
-                  Prepend (Rstr, '(');
-               end;
-               Instance := Instance.Parent;
-            when Iir_Kind_Generate_Statement_Body =>
-               Prepend (Rstr, Image (Get_Label (Get_Parent (Instance.Label))));
-               Prepend (Rstr, ':');
-               Instance := Instance.Parent;
-            when Iir_Kind_Component_Instantiation_Statement =>
-               if Is_Instance then
-                  Prepend (Rstr, '@');
-               end if;
-               Prepend (Rstr, Image (Get_Label (Instance.Label)));
-               Prepend (Rstr, ':');
-               Instance := Instance.Parent;
-            when others =>
-               Error_Kind ("Execute_Path_Instance_Name_Attribute",
-                           Instance.Label);
-         end case;
-      end loop;
-      declare
-         Str1 : String (1 .. Length (Rstr));
-         Len1 : Natural;
-      begin
-         Copy (Rstr, Str1, Len1);
-         Free (Rstr);
-         return String_To_Iir_Value (Str1 & ':' & Name.Suffix);
-      end;
-   end Execute_Path_Instance_Name_Attribute;
 
    --  For 'Last_Event and 'Last_Active: convert the absolute last time to
    --  a relative delay.
