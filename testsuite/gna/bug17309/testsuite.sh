@@ -3,7 +3,13 @@
 . ../../testenv.sh
 
 analyze polyamplib.vhdl master_testbench3.vhdl
-elab_simulate master_testbench3 --stop-time=1ms
+if ghdl_is_interpretation; then
+    stop=10us
+else
+    stop=1ms
+fi
+
+elab_simulate master_testbench3 --stop-time=$stop
 
 clean
 

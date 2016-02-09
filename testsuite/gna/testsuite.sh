@@ -36,6 +36,9 @@ for i in $dirs; do
   echo "GNA dir $i:"
   cd $i
   if ! ./testsuite.sh; then
+    echo "#################################################################"
+    echo "######### FAILURE: $i"
+    echo "#################################################################"
     if [ $full = "y" ]; then
       failures="$failures $i"
     else

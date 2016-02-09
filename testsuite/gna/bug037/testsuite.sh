@@ -3,7 +3,9 @@
 . ../../testenv.sh
 
 analyze repro.vhdl
-elab_simulate repro --dump-rti
+if ghdl_has_feature repro dump-rti; then
+    elab_simulate repro --dump-rti
+fi
 
 clean
 
