@@ -186,7 +186,7 @@ package body Annotations is
                                  Res : in out String;
                                  Off : in out Natural)
    is
-      Scalar_Map : constant array (Iir_Value_Scalars) of Character := "bEIF";
+      Scalar_Map : constant array (Iir_Value_Scalars) of Character := "beEIF";
    begin
       case Get_Kind (Def) is
          when Iir_Kinds_Scalar_Type_Definition =>
@@ -301,18 +301,25 @@ package body Annotations is
 
       case Get_Kind (Def) is
          when Iir_Kind_Enumeration_Type_Definition =>
-            if Def = Std_Package.Boolean_Type_Definition
-              or else Def = Std_Package.Bit_Type_Definition
-            then
-               Set_Info (Def,
-                         new Sim_Info_Type'(Kind => Kind_Scalar_Type,
-                                            Scalar_Mode => Iir_Value_B1));
-            else
-               Set_Info (Def,
-                         new Sim_Info_Type'(Kind => Kind_Scalar_Type,
-                                            Scalar_Mode => Iir_Value_E32));
-            end if;
-            Annotate_Range_Expression (Block_Info, Get_Range_Constraint (Def));
+            declare
+               Mode : Iir_Value_Kind;
+            begin
+               if Def = Std_Package.Boolean_Type_Definition
+                 or else Def = Std_Package.Bit_Type_Definition
+               then
+                  Mode := Iir_Value_B1;
+               elsif (Get_Nbr_Elements (Get_Enumeration_Literal_List (Def))
+                        <= 256)
+               then
+                  Mode := Iir_Value_E8;
+               else
+                  Mode := Iir_Value_E32;
+               end if;
+               Set_Info (Def, new Sim_Info_Type'(Kind => Kind_Scalar_Type,
+                                                 Scalar_Mode => Mode));
+               Annotate_Range_Expression
+                 (Block_Info, Get_Range_Constraint (Def));
+            end;
 
          when Iir_Kind_Integer_Subtype_Definition
            | Iir_Kind_Floating_Subtype_Definition

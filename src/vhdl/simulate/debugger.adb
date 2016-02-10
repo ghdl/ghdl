@@ -362,10 +362,7 @@ package body Debugger is
          return;
       end if;
       case Value.Kind is
-         when Iir_Value_I64
-           | Iir_Value_F64
-           | Iir_Value_E32
-           | Iir_Value_B1
+         when Iir_Value_Scalars
            | Iir_Value_Access =>
             Disp_Iir_Value (Value, A_Type);
          when Iir_Value_Array =>

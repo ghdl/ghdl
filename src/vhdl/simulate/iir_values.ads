@@ -102,7 +102,7 @@ package Iir_Values is
    --  not done within the context of a process).
 
    type Iir_Value_Kind is
-     (Iir_Value_B1, Iir_Value_E32,
+     (Iir_Value_B1, Iir_Value_E8, Iir_Value_E32,
       Iir_Value_I64, Iir_Value_F64,
       Iir_Value_Access,
       Iir_Value_File,
@@ -123,6 +123,12 @@ package Iir_Values is
    --  Scalar values.  Only these ones can be signals.
    subtype Iir_Value_Scalars is
      Iir_Value_Kind range Iir_Value_B1 .. Iir_Value_F64;
+
+   subtype Iir_Value_Discrete is
+     Iir_Value_Kind range Iir_Value_B1 .. Iir_Value_I64;
+
+   subtype Iir_Value_Enums is
+     Iir_Value_Kind range Iir_Value_B1 .. Iir_Value_E32;
 
    --  Abstrace numeric types.
    subtype Iir_Value_Numerics is
@@ -155,6 +161,8 @@ package Iir_Values is
       case Kind is
          when Iir_Value_B1 =>
             B1 : Ghdl_B1;
+         when Iir_Value_E8 =>
+            E8 : Ghdl_E8;
          when Iir_Value_E32 =>
             E32 : Ghdl_E32;
          when Iir_Value_I64 =>
@@ -211,7 +219,7 @@ package Iir_Values is
                                      return Iir_Value_Literal_Acc;
 
    function Create_B1_Value (Val : Ghdl_B1) return Iir_Value_Literal_Acc;
-
+   function Create_E8_Value (Val : Ghdl_E8) return Iir_Value_Literal_Acc;
    function Create_E32_Value (Val : Ghdl_E32) return Iir_Value_Literal_Acc;
 
    -- Return an iir_value_literal_acc (iir_value_int64).

@@ -93,10 +93,7 @@ package body Elaboration is
                   Res.Val_Record.V (I) := Create_Signal (Lit.Val_Record.V (I));
                end loop;
 
-            when Iir_Value_I64
-              | Iir_Value_F64
-              | Iir_Value_B1
-              | Iir_Value_E32 =>
+            when Iir_Value_Scalars =>
                Res := Create_Signal_Value (null);
 
             when Iir_Value_Signal
@@ -515,17 +512,19 @@ package body Elaboration is
                   Bounds := Execute_Bounds (Block, Decl);
                   Res := Bounds.Left;
                when Init_Value_Any =>
-                  case Get_Info (Get_Base_Type (Decl)).Scalar_Mode is
+                  case Iir_Value_Scalars
+                    (Get_Info (Get_Base_Type (Decl)).Scalar_Mode)
+                     is
                      when Iir_Value_B1 =>
                         Res := Create_B1_Value (False);
+                     when Iir_Value_E8 =>
+                        Res := Create_E8_Value (0);
                      when Iir_Value_E32 =>
                         Res := Create_E32_Value (0);
                      when Iir_Value_I64 =>
                         Res := Create_I64_Value (0);
                      when Iir_Value_F64 =>
                         Res := Create_F64_Value (0.0);
-                     when others =>
-                        raise Internal_Error;
                   end case;
                when Init_Value_Signal =>
                   Res := Create_Signal_Value (null);
@@ -670,7 +669,7 @@ package body Elaboration is
       if Slot /= Instance.Elab_Objects + 1
         or else Instance.Objects (Slot) /= null
       then
-         Error_Msg_Elab ("bad elaboration order");
+         Error_Msg_Elab ("bad elaboration order", Decl);
          raise Internal_Error;
       end if;
       --  One slot is reserved for default value
@@ -2830,9 +2829,7 @@ package body Elaboration is
       end if;
 
       --  Sanity check: memory area for expressions must be empty.
-      if not Is_Empty (Expr_Pool) then
-         raise Internal_Error;
-      end if;
+      pragma Assert (Is_Empty (Expr_Pool));
    end Elaborate_Design;
 
 end Elaboration;

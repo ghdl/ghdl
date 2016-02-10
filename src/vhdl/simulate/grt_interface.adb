@@ -38,7 +38,7 @@ package body Grt_Interface is
    begin
       for I in Val.Val_Array.V'Range loop
          Str.Base (Ghdl_Index_Type (I - 1)) :=
-           Character'Val (Val.Val_Array.V (I).E32);
+           Character'Val (Val.Val_Array.V (I).E8);
       end loop;
    end Set_Std_String_From_Iir_Value;
 end Grt_Interface;

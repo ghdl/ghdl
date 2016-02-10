@@ -46,7 +46,7 @@ package body File_Operation is
       -- Convert the string to an Ada string.
       for I in External_Name.Val_Array.V'Range loop
          Name_Str (Name_Str'First + Ghdl_Index_Type (I - 1)) :=
-           Character'Val (External_Name.Val_Array.V (I).E32);
+           Character'Val (External_Name.Val_Array.V (I).E8);
       end loop;
 
       if Is_Text then
@@ -77,7 +77,7 @@ package body File_Operation is
    is
       pragma Unreferenced (Stmt);
       Is_Text : constant Boolean := Get_Text_File_Flag (Get_Type (File_Decl));
-      File_Mode : constant Ghdl_I32 := Ghdl_I32 (Mode.E32);
+      File_Mode : constant Ghdl_I32 := Ghdl_I32 (Mode.E8);
       Status : Ghdl_I32;
    begin
       File_Open (Status, File, Name, File_Mode, Is_Text, False);
@@ -95,11 +95,11 @@ package body File_Operation is
    is
       pragma Unreferenced (Stmt);
       Is_Text : constant Boolean := Get_Text_File_Flag (Get_Type (File_Decl));
-      File_Mode : constant Ghdl_I32 := Ghdl_I32 (Mode.E32);
+      File_Mode : constant Ghdl_I32 := Ghdl_I32 (Mode.E8);
       R_Status : Ghdl_I32;
    begin
       File_Open (R_Status, File, Name, File_Mode, Is_Text, True);
-      Status.E32 := Ghdl_E32 (R_Status);
+      Status.E8 := Ghdl_E8 (R_Status);
    end File_Open_Status;
 
    function Elaborate_File_Declaration
@@ -144,7 +144,7 @@ package body File_Operation is
       File_Name := Execute_Expression (Instance, External_Name);
       if Get_File_Open_Kind (Decl) /= Null_Iir then
          Mode := Execute_Expression (Instance, Get_File_Open_Kind (Decl));
-         File_Mode := Ghdl_I32 (Mode.E32);
+         File_Mode := Ghdl_I32 (Mode.E8);
       else
          case Get_Mode (Decl) is
             when Iir_In_Mode =>
@@ -190,6 +190,8 @@ package body File_Operation is
             Ghdl_Write_Scalar (File.File, Ghdl_Ptr (Value.B1'Address), 1);
          when Iir_Value_I64 =>
             Ghdl_Write_Scalar (File.File, Ghdl_Ptr (Value.I64'Address), 8);
+         when Iir_Value_E8 =>
+            Ghdl_Write_Scalar (File.File, Ghdl_Ptr (Value.E8'Address), 1);
          when Iir_Value_E32 =>
             Ghdl_Write_Scalar (File.File, Ghdl_Ptr (Value.E32'Address), 4);
          when Iir_Value_F64 =>
@@ -224,7 +226,7 @@ package body File_Operation is
       -- Convert the string to an Ada string.
       for I in Value.Val_Array.V'Range loop
          Val_Str (Val_Str'First + Ghdl_Index_Type (I - 1)) :=
-           Character'Val (Value.Val_Array.V (I).E32);
+           Character'Val (Value.Val_Array.V (I).E8);
       end loop;
 
       Ghdl_Text_Write (File.File, Val'Unrestricted_Access);
@@ -252,7 +254,7 @@ package body File_Operation is
    begin
       Len := Ghdl_Text_Read_Length (File.File, Val'Unrestricted_Access);
       for I in 1 .. Len loop
-         Value.Val_Array.V (Iir_Index32 (I)).E32 :=
+         Value.Val_Array.V (Iir_Index32 (I)).E8 :=
            Character'Pos (Val_Str (Ghdl_Index_Type (I)));
       end loop;
       Length.I64 := Ghdl_I64 (Len);
@@ -273,7 +275,7 @@ package body File_Operation is
       Ghdl_Untruncated_Text_Read
         (File.File, Val'Unrestricted_Access, Len'Unrestricted_Access);
       for I in 1 .. Len loop
-         Str.Val_Array.V (Iir_Index32 (I)).E32 :=
+         Str.Val_Array.V (Iir_Index32 (I)).E8 :=
            Character'Pos (Val_Str (Ghdl_Index_Type (I)));
       end loop;
       Length.I64 := Ghdl_I64 (Len);
@@ -288,6 +290,8 @@ package body File_Operation is
             Ghdl_Read_Scalar (File.File, Ghdl_Ptr (Value.B1'Address), 1);
          when Iir_Value_I64 =>
             Ghdl_Read_Scalar (File.File, Ghdl_Ptr (Value.I64'Address), 8);
+         when Iir_Value_E8 =>
+            Ghdl_Read_Scalar (File.File, Ghdl_Ptr (Value.E8'Address), 1);
          when Iir_Value_E32 =>
             Ghdl_Read_Scalar (File.File, Ghdl_Ptr (Value.E32'Address), 4);
          when Iir_Value_F64 =>

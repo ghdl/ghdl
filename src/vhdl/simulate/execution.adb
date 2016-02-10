@@ -222,13 +222,13 @@ package body Execution is
       Mode : constant Iir_Value_Kind :=
         Get_Info (Base_Type).Scalar_Mode;
    begin
-      case Mode is
+      case Iir_Value_Enums (Mode) is
+         when Iir_Value_E8 =>
+            return Create_E8_Value (Ghdl_E8 (Pos));
          when Iir_Value_E32 =>
             return Create_E32_Value (Ghdl_E32 (Pos));
          when Iir_Value_B1 =>
             return Create_B1_Value (Ghdl_B1'Val (Pos));
-         when others =>
-            raise Internal_Error;
       end case;
    end Create_Enum_Value;
 
@@ -243,7 +243,7 @@ package body Execution is
          Iir_To);
       for I in Str'Range loop
          Res.Val_Array.V (1 + Iir_Index32 (I - Str'First)) :=
-           Create_E32_Value (Character'Pos (Str (I)));
+           Create_E8_Value (Character'Pos (Str (I)));
       end loop;
       return Res;
    end String_To_Iir_Value;
@@ -279,13 +279,13 @@ package body Execution is
                  Get_Enumeration_Literal_List (Get_Base_Type (Expr_Type));
                Pos : Natural;
             begin
-               case Val.Kind is
+               case Iir_Value_Enums (Val.Kind) is
                   when Iir_Value_B1 =>
                      Pos := Ghdl_B1'Pos (Val.B1);
+                  when Iir_Value_E8 =>
+                     Pos := Ghdl_E8'Pos (Val.E8);
                   when Iir_Value_E32 =>
                      Pos := Ghdl_E32'Pos (Val.E32);
-                  when others =>
-                     raise Internal_Error;
                end case;
                return Name_Table.Image
                  (Get_Identifier (Get_Nth_Element (Lits, Pos)));
@@ -805,81 +805,25 @@ package body Execution is
             Eval_Right;
             Result := Boolean_To_Lit (not Is_Equal (Left, Right));
          when Iir_Predefined_Integer_Less
-           | Iir_Predefined_Physical_Less =>
+           | Iir_Predefined_Physical_Less
+           | Iir_Predefined_Enum_Less =>
             Eval_Right;
-            case Left.Kind is
-               when Iir_Value_I64 =>
-                  Result := Boolean_To_Lit (Left.I64 < Right.I64);
-               when others =>
-                  raise Internal_Error;
-            end case;
+            Result := Boolean_To_Lit (Compare_Value (Left, Right) < Equal);
          when Iir_Predefined_Integer_Greater
-           | Iir_Predefined_Physical_Greater =>
+           | Iir_Predefined_Physical_Greater
+           | Iir_Predefined_Enum_Greater =>
             Eval_Right;
-            case Left.Kind is
-               when Iir_Value_I64 =>
-                  Result := Boolean_To_Lit (Left.I64 > Right.I64);
-               when others =>
-                  raise Internal_Error;
-            end case;
+            Result := Boolean_To_Lit (Compare_Value (Left, Right) > Equal);
          when Iir_Predefined_Integer_Less_Equal
-           | Iir_Predefined_Physical_Less_Equal =>
+           | Iir_Predefined_Physical_Less_Equal
+           | Iir_Predefined_Enum_Less_Equal =>
             Eval_Right;
-            case Left.Kind is
-               when Iir_Value_I64 =>
-                  Result := Boolean_To_Lit (Left.I64 <= Right.I64);
-               when others =>
-                  raise Internal_Error;
-            end case;
+            Result := Boolean_To_Lit (Compare_Value (Left, Right) <= Equal);
          when Iir_Predefined_Integer_Greater_Equal
-           | Iir_Predefined_Physical_Greater_Equal =>
+           | Iir_Predefined_Physical_Greater_Equal
+           | Iir_Predefined_Enum_Greater_Equal =>
             Eval_Right;
-            case Left.Kind is
-               when Iir_Value_I64 =>
-                  Result := Boolean_To_Lit (Left.I64 >= Right.I64);
-               when others =>
-                  raise Internal_Error;
-            end case;
-         when Iir_Predefined_Enum_Less =>
-            Eval_Right;
-            case Left.Kind is
-               when Iir_Value_B1 =>
-                  Result := Boolean_To_Lit (Left.B1 < Right.B1);
-               when Iir_Value_E32 =>
-                  Result := Boolean_To_Lit (Left.E32 < Right.E32);
-               when others =>
-                  raise Internal_Error;
-            end case;
-         when Iir_Predefined_Enum_Greater =>
-            Eval_Right;
-            case Left.Kind is
-               when Iir_Value_B1 =>
-                  Result := Boolean_To_Lit (Left.B1 > Right.B1);
-               when Iir_Value_E32 =>
-                  Result := Boolean_To_Lit (Left.E32 > Right.E32);
-               when others =>
-                  raise Internal_Error;
-            end case;
-         when Iir_Predefined_Enum_Less_Equal =>
-            Eval_Right;
-            case Left.Kind is
-               when Iir_Value_B1 =>
-                  Result := Boolean_To_Lit (Left.B1 <= Right.B1);
-               when Iir_Value_E32 =>
-                  Result := Boolean_To_Lit (Left.E32 <= Right.E32);
-               when others =>
-                  raise Internal_Error;
-            end case;
-         when Iir_Predefined_Enum_Greater_Equal =>
-            Eval_Right;
-            case Left.Kind is
-               when Iir_Value_B1 =>
-                  Result := Boolean_To_Lit (Left.B1 >= Right.B1);
-               when Iir_Value_E32 =>
-                  Result := Boolean_To_Lit (Left.E32 >= Right.E32);
-               when others =>
-                  raise Internal_Error;
-            end case;
+            Result := Boolean_To_Lit (Compare_Value (Left, Right) >= Equal);
 
          when Iir_Predefined_Enum_Minimum
            | Iir_Predefined_Physical_Minimum =>
@@ -1639,7 +1583,7 @@ package body Execution is
       if Index.Kind /= Left_Pos.Kind or else Index.Kind /= Right_Pos.Kind then
          raise Internal_Error;
       end if;
-      case Index.Kind is
+      case Iir_Value_Discrete (Index.Kind) is
          when Iir_Value_B1 =>
             case Bounds.Dir is
                when Iir_To =>
@@ -1655,6 +1599,23 @@ package body Execution is
                   then
                      -- downto
                      return Ghdl_B1'Pos (Left_Pos.B1) - Ghdl_B1'Pos (Index.B1);
+                  end if;
+            end case;
+         when Iir_Value_E8 =>
+            case Bounds.Dir is
+               when Iir_To =>
+                  if Index.E8 >= Left_Pos.E8 and then
+                    Index.E8 <= Right_Pos.E8
+                  then
+                     -- to
+                     return Iir_Index32 (Index.E8 - Left_Pos.E8);
+                  end if;
+               when Iir_Downto =>
+                  if Index.E8 <= Left_Pos.E8 and then
+                    Index.E8 >= Right_Pos.E8
+                  then
+                     -- downto
+                     return Iir_Index32 (Left_Pos.E8 - Index.E8);
                   end if;
             end case;
          when Iir_Value_E32 =>
@@ -1691,8 +1652,6 @@ package body Execution is
                      return Iir_Index32 (Left_Pos.I64 - Index.I64);
                   end if;
             end case;
-         when others =>
-            raise Internal_Error;
       end case;
       Error_Msg_Constraint (Expr);
       return 0;
@@ -1774,6 +1733,8 @@ package body Execution is
          case Element_Mode is
             when Iir_Value_B1 =>
                El := Create_B1_Value (Ghdl_B1'Val (Pos));
+            when Iir_Value_E8 =>
+               El := Create_E8_Value (Ghdl_E8'Val (Pos));
             when Iir_Value_E32 =>
                El := Create_E32_Value (Ghdl_E32'Val (Pos));
             when others =>
@@ -2431,12 +2392,17 @@ package body Execution is
    is
       Res : Iir_Value_Literal_Acc;
    begin
-      case Val.Kind is
+      case Iir_Value_Discrete (Val.Kind) is
          when Iir_Value_B1 =>
             if Val.B1 = False then
                Error_Msg_Constraint (Expr);
             end if;
             Res := Create_B1_Value (False);
+         when Iir_Value_E8 =>
+            if Val.E8 = 0 then
+               Error_Msg_Constraint (Expr);
+            end if;
+            Res := Create_E8_Value (Val.E8 - 1);
          when Iir_Value_E32 =>
             if Val.E32 = 0 then
                Error_Msg_Constraint (Expr);
@@ -2447,8 +2413,6 @@ package body Execution is
                Error_Msg_Constraint (Expr);
             end if;
             Res := Create_I64_Value (Val.I64 - 1);
-         when others =>
-            raise Internal_Error;
       end case;
       return Res;
    end Execute_Dec;
@@ -2460,7 +2424,7 @@ package body Execution is
    is
       Res : Iir_Value_Literal_Acc;
    begin
-      case Val.Kind is
+      case Iir_Value_Discrete (Val.Kind) is
          when Iir_Value_B1 =>
             if Val.B1 = True then
                Error_Msg_Constraint (Expr);
@@ -2471,13 +2435,16 @@ package body Execution is
                Error_Msg_Constraint (Expr);
             end if;
             Res := Create_E32_Value (Val.E32 + 1);
+         when Iir_Value_E8 =>
+            if Val.E8 = Ghdl_E8'Last then
+               Error_Msg_Constraint (Expr);
+            end if;
+            Res := Create_E8_Value (Val.E8 + 1);
          when Iir_Value_I64 =>
             if Val.I64 = Ghdl_I64'Last then
                Error_Msg_Constraint (Expr);
             end if;
             Res := Create_I64_Value (Val.I64 + 1);
-         when others =>
-            raise Internal_Error;
       end case;
       return Res;
    end Execute_Inc;
@@ -3018,6 +2985,8 @@ package body Execution is
                case Get_Info (Lit_Type).Scalar_Mode is
                   when Iir_Value_B1 =>
                      return Create_B1_Value (Ghdl_B1'Val (Lit));
+                  when Iir_Value_E8 =>
+                     return Create_E8_Value (Ghdl_E8'Val (Lit));
                   when Iir_Value_E32 =>
                      return Create_E32_Value (Ghdl_E32 (Lit));
                   when others =>
@@ -3149,16 +3118,15 @@ package body Execution is
                  Get_Info (Base_Type).Scalar_Mode;
             begin
                Res := Execute_Expression (Block, Get_Parameter (Expr));
-               case Mode is
+               case Iir_Value_Discrete (Mode) is
                   when Iir_Value_I64 =>
                      null;
+                  when Iir_Value_E8 =>
+                     Res := Create_E8_Value (Ghdl_E8 (Res.I64));
                   when Iir_Value_E32 =>
                      Res := Create_E32_Value (Ghdl_E32 (Res.I64));
                   when Iir_Value_B1 =>
                      Res := Create_B1_Value (Ghdl_B1'Val (Res.I64));
-                  when others =>
-                     Error_Kind ("execute_expression(val attribute)",
-                                 Prefix_Type);
                end case;
                Check_Constraints (Block, Res, Prefix_Type, Expr);
                return Res;
@@ -3173,18 +3141,18 @@ package body Execution is
                  Get_Info (Base_Type).Scalar_Mode;
             begin
                Res := Execute_Expression (Block, Get_Parameter (Expr));
-               case Mode is
+               case Iir_Value_Discrete (Mode) is
                   when Iir_Value_I64 =>
                      null;
                   when Iir_Value_B1 =>
                      N_Res := Create_I64_Value (Ghdl_B1'Pos (Res.B1));
                      Res := N_Res;
+                  when Iir_Value_E8 =>
+                     N_Res := Create_I64_Value (Ghdl_I64 (Res.E8));
+                     Res := N_Res;
                   when Iir_Value_E32 =>
                      N_Res := Create_I64_Value (Ghdl_I64 (Res.E32));
                      Res := N_Res;
-                  when others =>
-                     Error_Kind ("execute_expression(pos attribute)",
-                                 Base_Type);
                end case;
                Check_Constraints (Block, Res, Get_Type (Expr), Expr);
                return Res;
@@ -3924,9 +3892,13 @@ package body Execution is
                High := Bound.Left;
                Low := Bound.Right;
             end if;
-            case Get_Info (Base_Type).Scalar_Mode is
+            case Iir_Value_Scalars (Get_Info (Base_Type).Scalar_Mode) is
                when Iir_Value_I64 =>
                   if Value.I64 in Low.I64 .. High.I64 then
+                     return;
+                  end if;
+               when Iir_Value_E8 =>
+                  if Value.E8 in Low.E8 .. High.E8 then
                      return;
                   end if;
                when Iir_Value_E32 =>
@@ -3941,8 +3913,6 @@ package body Execution is
                   if Value.B1 in Low.B1 .. High.B1 then
                      return;
                   end if;
-               when others =>
-                  raise Internal_Error;
             end case;
          when Iir_Kind_Array_Subtype_Definition
            | Iir_Kind_Array_Type_Definition =>
@@ -4182,7 +4152,7 @@ package body Execution is
          begin
             for I in Report.Val_Array.V'Range loop
                Msg (Positive (I)) :=
-                 Character'Val (Report.Val_Array.V (I).E32);
+                 Character'Val (Report.Val_Array.V (I).E8);
             end loop;
             Execute_Failed_Assertion (Msg, Severity, Stmt);
          end;
@@ -4212,7 +4182,7 @@ package body Execution is
       Expr := Get_Severity_Expression (Stmt);
       if Expr /= Null_Iir then
          Severity_Lit := Execute_Expression (Instance, Expr);
-         Severity := Natural'Val (Severity_Lit.E32);
+         Severity := Natural'Val (Severity_Lit.E8);
       else
          Severity := Default_Severity;
       end if;
@@ -4270,16 +4240,15 @@ package body Execution is
             Max := Bounds.Left;
       end case;
 
-      case Val.Kind is
+      case Iir_Value_Discrete (Val.Kind) is
+         when Iir_Value_E8 =>
+            return Val.E8 >= Min.E8 and Val.E8 <= Max.E8;
          when Iir_Value_E32 =>
             return Val.E32 >= Min.E32 and Val.E32 <= Max.E32;
          when Iir_Value_B1 =>
             return Val.B1 >= Min.B1 and Val.B1 <= Max.B1;
          when Iir_Value_I64 =>
             return Val.I64 >= Min.I64 and Val.I64 <= Max.I64;
-         when others =>
-            raise Internal_Error;
-            return False;
       end case;
    end Is_In_Range;
 
@@ -4289,7 +4258,14 @@ package body Execution is
                                 Bounds : Iir_Value_Literal_Acc)
    is
    begin
-      case Val.Kind is
+      case Iir_Value_Discrete (Val.Kind) is
+         when Iir_Value_E8 =>
+            case Bounds.Dir is
+               when Iir_To =>
+                  Val.E8 := Val.E8 + 1;
+               when Iir_Downto =>
+                  Val.E8 := Val.E8 - 1;
+            end case;
          when Iir_Value_E32 =>
             case Bounds.Dir is
                when Iir_To =>
@@ -4311,8 +4287,6 @@ package body Execution is
                when Iir_Downto =>
                   Val.I64 := Val.I64 - 1;
             end case;
-         when others =>
-            raise Internal_Error;
       end case;
    end Update_Loop_Index;
 
