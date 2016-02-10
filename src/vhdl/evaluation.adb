@@ -1641,20 +1641,30 @@ package body Evaluation is
 
    function Build_Enumeration_Value (Val : String; Enum, Expr : Iir) return Iir
    is
-      Value : String (Val'range);
       List  : constant Iir_List := Get_Enumeration_Literal_List (Enum);
+      Value : String (Val'range);
+      Id : Name_Id;
+      Res : Iir;
    begin
-      for I in Val'range loop
-         Value (I) := Ada.Characters.Handling.To_Lower (Val (I));
-      end loop;
-      for I in 0 .. Get_Nbr_Elements (List) - 1 loop
-         if Value = Image_Identifier (Get_Nth_Element (List, I)) then
-            return Build_Enumeration (Iir_Index32 (I), Expr);
-         end if;
-      end loop;
-      Warning_Msg_Sem ("value """ & Value & """ not in enumeration "
-                         & Disp_Node (Enum), Expr);
-      return Build_Overflow (Expr);
+      if Val'Length = 3
+        and then Val (Val'First) = ''' and then Val (Val'Last) = '''
+      then
+         --  A single character.
+         Id := Get_Identifier (Val (Val'First + 1));
+      else
+         for I in Val'range loop
+            Value (I) := Ada.Characters.Handling.To_Lower (Val (I));
+         end loop;
+         Id := Get_Identifier (Value);
+      end if;
+      Res := Find_Name_In_List (List, Id);
+      if Res /= Null_Iir then
+         return Build_Constant (Res, Expr);
+      else
+         Warning_Msg_Sem ("value """ & Value & """ not in enumeration "
+                            & Disp_Node (Enum), Expr);
+         return Build_Overflow (Expr);
+      end if;
    end Build_Enumeration_Value;
 
    function Eval_Physical_Image (Phys, Expr: Iir) return Iir
