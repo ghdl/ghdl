@@ -513,7 +513,7 @@ package body Iir_Values is
             end if;
          when Iir_Value_E8 =>
             if High.E8 >= Low.E8 then
-               Len := Iir_Index32 (High.E8 - Low.E8 + 1);
+               Len := Ghdl_E8'Pos (High.E8) - Ghdl_E8'Pos (Low.E8) + 1;
             else
                Len := 0;
             end if;

@@ -2766,6 +2766,27 @@ package body Elaboration is
       end loop;
    end Override_Generics;
 
+   procedure Check_No_Unconstrained (Map : Iir)
+   is
+      Assoc : Iir;
+      Formal : Iir;
+   begin
+      Assoc := Map;
+      while Assoc /= Null_Iir loop
+         if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open then
+            Formal := Get_Association_Interface (Assoc);
+            if Get_Default_Value (Formal) = Null_Iir
+              and then not Is_Fully_Constrained_Type (Get_Type (Formal))
+            then
+               Error_Msg_Elab
+                 ("top-level " & Disp_Node (Formal) & " must have a value",
+                  Formal);
+            end if;
+         end if;
+         Assoc := Get_Chain (Assoc);
+      end loop;
+   end Check_No_Unconstrained;
+
    -- Elaborate a design.
    procedure Elaborate_Design (Design: Iir_Design_Unit)
    is
@@ -2816,6 +2837,14 @@ package body Elaboration is
       Port_Map := Create_Default_Association
         (Get_Port_Chain (Entity), Null_Iir, Entity);
       Override_Generics (Generic_Map, Grt.Options.First_Generic_Override);
+
+      Check_No_Unconstrained (Generic_Map);
+      Check_No_Unconstrained (Port_Map);
+
+      --  Stop now in case of errors.
+      if Nbr_Errors /= 0 then
+         Grt.Errors.Fatal_Error;
+      end if;
 
       --  Elaborate from the top configuration.
       Conf := Get_Block_Configuration (Get_Library_Unit (Conf_Unit));
