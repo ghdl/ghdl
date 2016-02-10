@@ -18,7 +18,9 @@
 
 with Ada.Text_IO;
 with Types; use Types;
+with Str_Table;
 with Errorout; use Errorout;
+with Evaluation;
 with Execution; use Execution;
 with Simulation; use Simulation;
 with Iirs_Utils; use Iirs_Utils;
@@ -30,6 +32,7 @@ with Grt.Types; use Grt.Types;
 with Simulation.AMS; use Simulation.AMS;
 with Areapools; use Areapools;
 with Grt.Errors;
+with Grt.Options;
 
 package body Elaboration is
 
@@ -2668,6 +2671,101 @@ package body Elaboration is
       return Instance;
    end Elaborate_Architecture;
 
+   function Override_Generic (Formal : Iir; Str : String) return Iir
+   is
+      use Evaluation;
+      Formal_Type : constant Iir := Get_Type (Formal);
+      Formal_Btype : constant Iir := Get_Base_Type (Formal_Type);
+      Res : Iir;
+   begin
+      case Get_Kind (Formal_Btype) is
+         when Iir_Kind_Integer_Type_Definition
+           | Iir_Kind_Enumeration_Type_Definition =>
+            Res := Eval_Value_Attribute (Str, Formal_Type, Formal);
+            if not Eval_Is_In_Bound (Res, Formal_Type) then
+               Error_Msg_Elab
+                 ("override for " & Disp_Node (Formal) & " is out of bounds");
+               return Null_Iir;
+            end if;
+            return Res;
+         when Iir_Kind_Array_Type_Definition =>
+            if Is_One_Dimensional_Array_Type (Formal_Btype) then
+               declare
+                  use Str_Table;
+                  Str8 : String8_Id;
+                  Ntype : Iir;
+               begin
+                  Str8 := Create_String8;
+                  Append_String8_String (Str);
+                  Res := Create_Iir (Iir_Kind_String_Literal8);
+                  Set_String8_Id (Res, Str8);
+                  --  FIXME: check characters are in the type.
+                  Set_String_Length (Res, Str'Length);
+                  Set_Expr_Staticness (Res, Locally);
+                  Ntype := Create_Unidim_Array_By_Length
+                    (Get_Base_Type (Formal_Type), Str'Length, Res);
+                  Set_Type (Res, Ntype);
+                  Set_Literal_Subtype (Res, Ntype);
+                  return Res;
+               end;
+            end if;
+         when others =>
+            null;
+      end case;
+      Error_Msg_Elab ("unhandled override for " & Disp_Node (Formal));
+      return Null_Iir;
+   end Override_Generic;
+
+   procedure Override_Generics
+     (Map : in out Iir; First : Grt.Options.Generic_Override_Acc)
+   is
+      use Grt.Options;
+      Over : Generic_Override_Acc;
+      Id : Name_Id;
+      Gen : Iir;
+      Prev : Iir;
+      Val : Iir;
+      Assoc : Iir;
+   begin
+      Over := First;
+      Prev := Null_Iir;
+      while Over /= null loop
+         Id := Name_Table.Get_Identifier (Over.Name.all);
+
+         --  Find existing association in map.  There should be one association
+         --  for each generic.
+         Gen := Map;
+         while Gen /= Null_Iir loop
+            exit when Get_Identifier (Get_Formal (Map)) = Id;
+            Prev := Gen;
+            Gen := Get_Chain (Gen);
+         end loop;
+
+         if Gen = Null_Iir then
+            Error_Msg_Elab
+              ("no generic '" & Name_Table.Image (Id) & "' for -g");
+         else
+            --  Replace the association with one for the override value.
+            Val := Override_Generic (Get_Formal (Map), Over.Value.all);
+            if Val /= Null_Iir then
+               Assoc :=
+                 Create_Iir (Iir_Kind_Association_Element_By_Expression);
+               Set_Actual (Assoc, Val);
+               Set_Whole_Association_Flag (Assoc, True);
+               Set_Formal (Assoc, Get_Formal (Map));
+
+               Set_Chain (Assoc, Get_Chain (Gen));
+               if Prev = Null_Iir then
+                  Map := Assoc;
+               else
+                  Set_Chain (Prev, Assoc);
+               end if;
+            end if;
+         end if;
+         Over := Over.Next;
+      end loop;
+   end Override_Generics;
+
    -- Elaborate a design.
    procedure Elaborate_Design (Design: Iir_Design_Unit)
    is
@@ -2717,6 +2815,7 @@ package body Elaboration is
         (Get_Generic_Chain (Entity), Null_Iir, Entity);
       Port_Map := Create_Default_Association
         (Get_Port_Chain (Entity), Null_Iir, Entity);
+      Override_Generics (Generic_Map, Grt.Options.First_Generic_Override);
 
       --  Elaborate from the top configuration.
       Conf := Get_Block_Configuration (Get_Library_Unit (Conf_Unit));

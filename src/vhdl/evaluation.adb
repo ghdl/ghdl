@@ -2177,7 +2177,6 @@ package body Evaluation is
          when Iir_Kind_Value_Attribute =>
             declare
                Param : Iir;
-               Param_Type : Iir;
             begin
                Param := Get_Parameter (Expr);
                Param := Eval_Static_Expr (Param);
@@ -2187,25 +2186,8 @@ package body Evaluation is
                   Warning_Msg_Sem ("'value argument not a string", Expr);
                   return Build_Overflow (Expr);
                else
-                  -- what type are we converting the string to?
-                  Param_Type := Get_Base_Type (Get_Type (Expr));
-                  declare
-                     Value : constant String := Image_String_Lit (Param);
-                  begin
-                     case Get_Kind (Param_Type) is
-                     when Iir_Kind_Integer_Type_Definition =>
-                        return Build_Discrete (Iir_Int64'Value (Value), Expr);
-                     when Iir_Kind_Enumeration_Type_Definition =>
-                        return Build_Enumeration_Value (Value, Param_Type,
-                                                        Expr);
-                     when Iir_Kind_Floating_Type_Definition =>
-                        return Build_Floating (Iir_Fp64'value (Value), Expr);
-                     when Iir_Kind_Physical_Type_Definition =>
-                        return Build_Physical_Value (Value, Param_Type, Expr);
-                     when others =>
-                        Error_Kind ("eval_static_expr('value)", Param);
-                     end case;
-                  end;
+                  return Eval_Value_Attribute
+                    (Image_String_Lit (Param), Get_Type (Expr), Expr);
                end if;
             end;
 

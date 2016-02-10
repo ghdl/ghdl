@@ -142,6 +142,11 @@ package Evaluation is
      (A_Type : Iir; Len : Iir_Int64; Loc : Location_Type)
      return Iir;
 
+   --  Compute ATYPE'value (VALUE) using origin ORIG, but without checking
+   --  bounds.
+   function Eval_Value_Attribute
+     (Value : String; Atype : Iir; Orig : Iir) return Iir;
+
    --  Store into NAME_BUFFER, NAME_LENGTH the simple name, character literal
    --  or operator sumbol of ID, using the same format as SIMPLE_NAME
    --  attribute.
