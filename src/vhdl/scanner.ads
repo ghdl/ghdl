@@ -121,4 +121,8 @@ package Scanner is
    --  Also, Vhdl_Std should be set.
    procedure Convert_Identifier;
 
+   --  Return TRUE iff C is a whitespace.
+   --  LRM93 13.2 Lexical elements, separators, and delimiters
+   --  A space character (SPACE or NBSP) ...
+   function Is_Whitespace (C : Character) return Boolean;
 end Scanner;
