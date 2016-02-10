@@ -241,6 +241,7 @@ package body Elaboration is
       T := Execute_Time_Attribute (Instance, Signal);
 
       Sig := Create_Delayed_Signal (Prefix);
+      Create_Signal (Instance, Signal);
       Instance.Objects (Info.Slot) := Sig;
 
       Init := Execute_Signal_Init_Value (Instance, Get_Prefix (Signal));
