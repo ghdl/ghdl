@@ -42,6 +42,7 @@ with Grt_Interface;
 with Grt.Values;
 with Grt.Errors;
 with Grt.Std_Logic_1164;
+with Grt.Lib;
 with Sem_Inst;
 
 package body Execution is
@@ -1560,8 +1561,9 @@ package body Execution is
             File_Operation.Untruncated_Text_Read
               (Args (0), Args (1), Args (2));
          when Std_Names.Name_Control_Simulation =>
-            Put_Line (Standard_Error, "simulation finished");
-            raise Simulation_Finished;
+            Grt.Lib.Ghdl_Control_Simulation
+              (Args (0).B1, Args (1).B1, Std_Integer (Args (2).I64));
+            --  Do not return.
          when others =>
             Error_Msg_Exec ("unsupported foreign procedure call", Stmt);
       end case;

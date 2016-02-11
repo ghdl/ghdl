@@ -184,6 +184,8 @@ package body Ghdlsimul is
       Grtlink.Flag_String := Flags.Flag_String;
 
       Simulation.Simulation_Entity (Top_Conf);
+
+      Set_Exit_Status (Exit_Status (Grt.Errors.Exit_Status));
    end Run;
 
    function Decode_Option (Option : String) return Boolean
