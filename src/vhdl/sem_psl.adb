@@ -478,6 +478,45 @@ package body Sem_Psl is
       Close_Declarative_Region;
    end Sem_Psl_Declaration;
 
+   function Rewrite_As_Boolean_Expression (Prop : Node) return Iir
+   is
+      function Rewrite_Dyadic_Operator
+        (Expr : Node; Kind : Iir_Kind) return Iir
+      is
+         Res : Iir;
+      begin
+         Res := Create_Iir (Kind);
+         Set_Location (Res, Get_Location (Expr));
+         Set_Left (Res, Rewrite_As_Boolean_Expression (Get_Left (Expr)));
+         Set_Right (Res, Rewrite_As_Boolean_Expression (Get_Right (Expr)));
+         return Res;
+      end Rewrite_Dyadic_Operator;
+
+      function Rewrite_Monadic_Operator
+        (Expr : Node; Kind : Iir_Kind) return Iir
+      is
+         Res : Iir;
+      begin
+         Res := Create_Iir (Kind);
+         Set_Location (Res, Get_Location (Expr));
+         Set_Operand (Res, Rewrite_As_Boolean_Expression (Get_Boolean (Expr)));
+         return Res;
+      end Rewrite_Monadic_Operator;
+   begin
+      case Get_Kind (Prop) is
+         when N_HDL_Expr =>
+            return Get_HDL_Node (Prop);
+         when N_And_Bool =>
+            return Rewrite_Dyadic_Operator (Prop, Iir_Kind_And_Operator);
+         when N_Or_Bool =>
+            return Rewrite_Dyadic_Operator (Prop, Iir_Kind_Or_Operator);
+         when N_Not_Bool =>
+            return Rewrite_Monadic_Operator (Prop, Iir_Kind_Not_Operator);
+         when others =>
+            Error_Kind ("rewrite_as_boolean_expression", Prop);
+      end case;
+   end Rewrite_As_Boolean_Expression;
+
    function Rewrite_As_Concurrent_Assertion (Stmt : Iir) return Iir
    is
       Res : Iir;
@@ -485,8 +524,14 @@ package body Sem_Psl is
    begin
       Res := Create_Iir (Iir_Kind_Concurrent_Assertion_Statement);
       Set_Location (Res, Get_Location (Stmt));
-      Cond := Get_HDL_Node (Get_Psl_Property (Stmt));
-      Cond := Sem_Expr.Maybe_Insert_Condition_Operator (Cond);
+      Cond := Rewrite_As_Boolean_Expression (Get_Psl_Property (Stmt));
+      if Get_Type (Cond) = Null_Iir then
+         Cond := Sem_Expr.Sem_Condition (Cond);
+      elsif Get_Base_Type (Get_Type (Cond))
+        /= Std_Package.Boolean_Type_Definition
+      then
+         Cond := Sem_Expr.Insert_Condition_Operator (Cond);
+      end if;
       Set_Assertion_Condition (Res, Cond);
       Set_Label (Res, Get_Label (Stmt));
       Set_Severity_Expression (Res, Get_Severity_Expression (Stmt));
@@ -495,21 +540,33 @@ package body Sem_Psl is
       return Res;
    end Rewrite_As_Concurrent_Assertion;
 
+   --  Return True iff EXPR is a boolean expression.
+   function Is_Boolean_Assertion (Expr : Node) return Boolean is
+   begin
+      case Get_Kind (Expr) is
+         when N_HDL_Expr =>
+            return True;
+         when N_And_Bool | N_Or_Bool =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Is_Boolean_Assertion;
+
    function Sem_Psl_Assert_Statement (Stmt : Iir) return Iir
    is
       Prop : Node;
       Clk : Node;
       Res : Iir;
    begin
+      --  Sem report and severity expressions.
+      Sem_Report_Statement (Stmt);
       Prop := Get_Psl_Property (Stmt);
       Prop := Sem_Property (Prop, True);
       Set_Psl_Property (Stmt, Prop);
 
-      --  Sem report and severity expressions.
-      Sem_Report_Statement (Stmt);
-
-      if Get_Kind (Prop) = N_HDL_Expr
-        and then Get_Kind (Stmt) = Iir_Kind_Psl_Assert_Statement
+      if Get_Kind (Stmt) = Iir_Kind_Psl_Assert_Statement
+        and then Is_Boolean_Assertion (Prop)
       then
          --  This is a simple assertion.  Convert to a non-PSL statement, as
          --  the handling is simpler (and the assertion doesn't need a clock).

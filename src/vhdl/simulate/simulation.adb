@@ -39,6 +39,8 @@ package body Simulation is
       case Mode is
          when Mode_B1 =>
             return Create_B1_Value (Val.B1);
+         when Mode_E8 =>
+            return Create_E8_Value (Val.E8);
          when Mode_E32 =>
             return Create_E32_Value (Val.E32);
          when Mode_I64 =>
@@ -53,17 +55,17 @@ package body Simulation is
    procedure Iir_Value_To_Value (Src : Iir_Value_Literal_Acc;
                                  Dst : out Value_Union) is
    begin
-      case Src.Kind is
+      case Iir_Value_Scalars (Src.Kind) is
          when Iir_Value_B1 =>
             Dst.B1 := Src.B1;
+         when Iir_Value_E8 =>
+            Dst.E8 := Src.E8;
          when Iir_Value_E32 =>
             Dst.E32 := Src.E32;
          when Iir_Value_I64 =>
             Dst.I64 := Src.I64;
          when Iir_Value_F64 =>
             Dst.F64 := Src.F64;
-         when others =>
-            raise Internal_Error;  -- FIXME
       end case;
    end Iir_Value_To_Value;
 
@@ -414,6 +416,9 @@ package body Simulation is
             when Iir_Value_B1 =>
                Ghdl_Signal_Start_Assign_B1
                  (Target.Sig, Transactions.Reject, El.Value.B1, El.After);
+            when Iir_Value_E8 =>
+               Ghdl_Signal_Start_Assign_E8
+                 (Target.Sig, Transactions.Reject, El.Value.E8, El.After);
             when Iir_Value_E32 =>
                Ghdl_Signal_Start_Assign_E32
                  (Target.Sig, Transactions.Reject, El.Value.E32, El.After);
@@ -434,6 +439,9 @@ package body Simulation is
                when Iir_Value_B1 =>
                   Ghdl_Signal_Next_Assign_B1
                     (Target.Sig, El.Value.B1, El.After);
+               when Iir_Value_E8 =>
+                  Ghdl_Signal_Next_Assign_E8
+                    (Target.Sig, El.Value.E8, El.After);
                when Iir_Value_E32 =>
                   Ghdl_Signal_Next_Assign_E32
                     (Target.Sig, El.Value.E32, El.After);
@@ -1191,6 +1199,11 @@ package body Simulation is
                   return Create_Signal_Value
                     (Grt.Signals.Ghdl_Create_Signal_B1
                        (Val, null, System.Null_Address));
+               when Mode_E8 =>
+                  Val.E8 := 0;
+                  return Create_Signal_Value
+                    (Grt.Signals.Ghdl_Create_Signal_E8
+                       (Val, null, System.Null_Address));
                when Mode_E32 =>
                   Val.E32 := 0;
                   return Create_Signal_Value
@@ -1201,8 +1214,7 @@ package body Simulation is
                   return Create_Signal_Value
                     (Grt.Signals.Ghdl_Create_Signal_F64
                        (Val, null, System.Null_Address));
-               when Mode_E8
-                 | Mode_I32 =>
+               when Mode_I32 =>
                   raise Internal_Error;
             end case;
          when Iir_Value_Array =>
@@ -1535,6 +1547,10 @@ package body Simulation is
             when Iir_Value_B1 =>
                Sig.Sig := Grt.Signals.Ghdl_Create_Signal_B1
                  (To_Ghdl_Value_Ptr (Val.B1'Address),
+                  null, System.Null_Address);
+            when Iir_Value_E8 =>
+               Sig.Sig := Grt.Signals.Ghdl_Create_Signal_E8
+                 (To_Ghdl_Value_Ptr (Val.E8'Address),
                   null, System.Null_Address);
             when Iir_Value_E32 =>
                Sig.Sig := Grt.Signals.Ghdl_Create_Signal_E32

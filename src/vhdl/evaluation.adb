@@ -16,6 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Ada.Unchecked_Deallocation;
+with Scanner;
 with Errorout; use Errorout;
 with Name_Table; use Name_Table;
 with Str_Table;
@@ -1641,20 +1642,30 @@ package body Evaluation is
 
    function Build_Enumeration_Value (Val : String; Enum, Expr : Iir) return Iir
    is
-      Value : String (Val'range);
       List  : constant Iir_List := Get_Enumeration_Literal_List (Enum);
+      Value : String (Val'range);
+      Id : Name_Id;
+      Res : Iir;
    begin
-      for I in Val'range loop
-         Value (I) := Ada.Characters.Handling.To_Lower (Val (I));
-      end loop;
-      for I in 0 .. Get_Nbr_Elements (List) - 1 loop
-         if Value = Image_Identifier (Get_Nth_Element (List, I)) then
-            return Build_Enumeration (Iir_Index32 (I), Expr);
-         end if;
-      end loop;
-      Warning_Msg_Sem ("value """ & Value & """ not in enumeration "
-                         & Disp_Node (Enum), Expr);
-      return Build_Overflow (Expr);
+      if Val'Length = 3
+        and then Val (Val'First) = ''' and then Val (Val'Last) = '''
+      then
+         --  A single character.
+         Id := Get_Identifier (Val (Val'First + 1));
+      else
+         for I in Val'range loop
+            Value (I) := Ada.Characters.Handling.To_Lower (Val (I));
+         end loop;
+         Id := Get_Identifier (Value);
+      end if;
+      Res := Find_Name_In_List (List, Id);
+      if Res /= Null_Iir then
+         return Build_Constant (Res, Expr);
+      else
+         Warning_Msg_Sem ("value """ & Value & """ not in enumeration "
+                            & Disp_Node (Enum), Expr);
+         return Build_Overflow (Expr);
+      end if;
    end Build_Enumeration_Value;
 
    function Eval_Physical_Image (Phys, Expr: Iir) return Iir
@@ -1970,6 +1981,43 @@ package body Evaluation is
       return Build_Physical (Get_Physical_Value (Val), Expr);
    end Eval_Physical_Literal;
 
+   function Eval_Value_Attribute
+     (Value : String; Atype : Iir; Orig : Iir) return Iir
+   is
+      Base_Type : constant Iir := Get_Base_Type (Atype);
+      First, Last : Positive;
+   begin
+      --  LRM93 14.1 Predefined attributes.
+      --  Leading and trailing whitespace are ignored.
+      First := Value'First;
+      Last := Value'Last;
+      while First <= Last loop
+         exit when not Scanner.Is_Whitespace (Value (First));
+         First := First + 1;
+      end loop;
+      while Last >= First loop
+         exit when not Scanner.Is_Whitespace (Value (Last));
+         Last := Last - 1;
+      end loop;
+
+      declare
+         Value1 : String renames Value (First .. Last);
+      begin
+         case Get_Kind (Base_Type) is
+            when Iir_Kind_Integer_Type_Definition =>
+               return Build_Discrete (Iir_Int64'Value (Value1), Orig);
+            when Iir_Kind_Enumeration_Type_Definition =>
+               return Build_Enumeration_Value (Value1, Base_Type, Orig);
+            when Iir_Kind_Floating_Type_Definition =>
+               return Build_Floating (Iir_Fp64'value (Value1), Orig);
+            when Iir_Kind_Physical_Type_Definition =>
+               return Build_Physical_Value (Value1, Base_Type, Orig);
+            when others =>
+               Error_Kind ("eval_value_attribute", Base_Type);
+         end case;
+      end;
+   end Eval_Value_Attribute;
+
    function Eval_Static_Expr (Expr: Iir) return Iir
    is
       Res : Iir;
@@ -2129,7 +2177,6 @@ package body Evaluation is
          when Iir_Kind_Value_Attribute =>
             declare
                Param : Iir;
-               Param_Type : Iir;
             begin
                Param := Get_Parameter (Expr);
                Param := Eval_Static_Expr (Param);
@@ -2139,25 +2186,8 @@ package body Evaluation is
                   Warning_Msg_Sem ("'value argument not a string", Expr);
                   return Build_Overflow (Expr);
                else
-                  -- what type are we converting the string to?
-                  Param_Type := Get_Base_Type (Get_Type (Expr));
-                  declare
-                     Value : constant String := Image_String_Lit (Param);
-                  begin
-                     case Get_Kind (Param_Type) is
-                     when Iir_Kind_Integer_Type_Definition =>
-                        return Build_Discrete (Iir_Int64'Value (Value), Expr);
-                     when Iir_Kind_Enumeration_Type_Definition =>
-                        return Build_Enumeration_Value (Value, Param_Type,
-                                                        Expr);
-                     when Iir_Kind_Floating_Type_Definition =>
-                        return Build_Floating (Iir_Fp64'value (Value), Expr);
-                     when Iir_Kind_Physical_Type_Definition =>
-                        return Build_Physical_Value (Value, Param_Type, Expr);
-                     when others =>
-                        Error_Kind ("eval_static_expr('value)", Param);
-                     end case;
-                  end;
+                  return Eval_Value_Attribute
+                    (Image_String_Lit (Param), Get_Type (Expr), Expr);
                end if;
             end;
 

@@ -18,7 +18,9 @@
 
 with Ada.Text_IO;
 with Types; use Types;
+with Str_Table;
 with Errorout; use Errorout;
+with Evaluation;
 with Execution; use Execution;
 with Simulation; use Simulation;
 with Iirs_Utils; use Iirs_Utils;
@@ -30,6 +32,7 @@ with Grt.Types; use Grt.Types;
 with Simulation.AMS; use Simulation.AMS;
 with Areapools; use Areapools;
 with Grt.Errors;
+with Grt.Options;
 
 package body Elaboration is
 
@@ -45,6 +48,13 @@ package body Elaboration is
    function Elaborate_Default_Value
      (Instance : Block_Instance_Acc; Decl : Iir)
      return Iir_Value_Literal_Acc;
+
+   procedure Elaborate_Generic_Clause
+     (Instance : Block_Instance_Acc; Generic_Chain : Iir);
+   procedure Elaborate_Generic_Map_Aspect
+     (Target_Instance : Block_Instance_Acc;
+      Local_Instance : Block_Instance_Acc;
+      Map : Iir);
 
    --  CONF is the block_configuration for components of ARCH.
    function Elaborate_Architecture (Arch : Iir_Architecture_Body;
@@ -83,10 +93,7 @@ package body Elaboration is
                   Res.Val_Record.V (I) := Create_Signal (Lit.Val_Record.V (I));
                end loop;
 
-            when Iir_Value_I64
-              | Iir_Value_F64
-              | Iir_Value_B1
-              | Iir_Value_E32 =>
+            when Iir_Value_Scalars =>
                Res := Create_Signal_Value (null);
 
             when Iir_Value_Signal
@@ -150,6 +157,7 @@ package body Elaboration is
          T := Execute_Time_Attribute (Instance, Signal);
          Init := Create_B1_Value (False);
       end if;
+      Create_Signal (Instance, Signal);
       Sig := Create_Signal_Value (null);
       Init := Unshare (Init, Global_Pool'Access);
       Instance.Objects (Info.Slot) := Sig;
@@ -233,6 +241,7 @@ package body Elaboration is
       T := Execute_Time_Attribute (Instance, Signal);
 
       Sig := Create_Delayed_Signal (Prefix);
+      Create_Signal (Instance, Signal);
       Instance.Objects (Info.Slot) := Sig;
 
       Init := Execute_Signal_Init_Value (Instance, Get_Prefix (Signal));
@@ -278,7 +287,7 @@ package body Elaboration is
          Actuals_Ref => null,
          Result => null);
 
-      if Father /= null then
+      if Father /= null and then Obj_Info.Kind = Kind_Block then
          Res.Brother := Father.Children;
          Father.Children := Res;
       end if;
@@ -299,8 +308,25 @@ package body Elaboration is
          Ada.Text_IO.Put_Line ("elaborating " & Disp_Node (Decl));
       end if;
 
+      if Get_Kind (Decl) = Iir_Kind_Package_Instantiation_Declaration then
+         Elaborate_Generic_Clause (Instance, Get_Generic_Chain (Decl));
+         Elaborate_Generic_Map_Aspect
+           (Instance, Instance, Get_Generic_Map_Aspect_Chain (Decl));
+      end if;
+
       -- Elaborate objects declarations.
       Elaborate_Declarative_Part (Instance, Get_Declaration_Chain (Decl));
+
+      if Get_Kind (Decl) = Iir_Kind_Package_Instantiation_Declaration then
+         --  Elaborate the body now.
+         declare
+            Uninst : constant Iir :=
+              Get_Named_Entity (Get_Uninstantiated_Package_Name (Decl));
+         begin
+            Elaborate_Declarative_Part
+              (Instance, Get_Declaration_Chain (Get_Package_Body (Uninst)));
+         end;
+      end if;
    end Elaborate_Package;
 
    procedure Elaborate_Package_Body (Decl: Iir)
@@ -377,7 +403,9 @@ package body Elaboration is
                   Info : constant Sim_Info_Acc := Get_Info (Library_Unit);
                   Body_Design: Iir_Design_Unit;
                begin
-                  if Package_Instances (Info.Frame_Scope.Pkg_Index) = null
+                  if not Is_Uninstantiated_Package (Library_Unit)
+                    and then
+                    Package_Instances (Info.Frame_Scope.Pkg_Index) = null
                   then
                      --  Package not yet elaborated.
 
@@ -408,9 +436,29 @@ package body Elaboration is
                      end if;
                   end if;
                end;
+            when Iir_Kind_Package_Instantiation_Declaration =>
+               declare
+                  Info : constant Sim_Info_Acc := Get_Info (Library_Unit);
+               begin
+                  if Package_Instances (Info.Frame_Scope.Pkg_Index) = null
+                  then
+                     --  Package not yet elaborated.
+
+                     --  First the packages on which DESIGN depends.
+                     Elaborate_Dependence (Design);
+
+                     --  Then the declaration.
+                     Elaborate_Package (Library_Unit);
+                  end if;
+               end;
             when Iir_Kind_Entity_Declaration
               | Iir_Kind_Configuration_Declaration
               | Iir_Kind_Architecture_Body =>
+               Elaborate_Dependence (Design);
+            when Iir_Kind_Package_Body =>
+               --  For package instantiation.
+               Elaborate_Dependence (Design);
+            when Iir_Kind_Context_Declaration =>
                Elaborate_Dependence (Design);
             when others =>
                Error_Kind ("elaborate_dependence", Library_Unit);
@@ -465,17 +513,19 @@ package body Elaboration is
                   Bounds := Execute_Bounds (Block, Decl);
                   Res := Bounds.Left;
                when Init_Value_Any =>
-                  case Get_Info (Get_Base_Type (Decl)).Scalar_Mode is
+                  case Iir_Value_Scalars
+                    (Get_Info (Get_Base_Type (Decl)).Scalar_Mode)
+                     is
                      when Iir_Value_B1 =>
                         Res := Create_B1_Value (False);
+                     when Iir_Value_E8 =>
+                        Res := Create_E8_Value (0);
                      when Iir_Value_E32 =>
                         Res := Create_E32_Value (0);
                      when Iir_Value_I64 =>
                         Res := Create_I64_Value (0);
                      when Iir_Value_F64 =>
                         Res := Create_F64_Value (0.0);
-                     when others =>
-                        raise Internal_Error;
                   end case;
                when Init_Value_Signal =>
                   Res := Create_Signal_Value (null);
@@ -574,9 +624,8 @@ package body Elaboration is
       end case;
    end Init_To_Default;
 
-   procedure Create_Object (Instance : Block_Instance_Acc; Decl : Iir)
-   is
-      Slot : constant Object_Slot_Type := Get_Info (Decl).Slot;
+   procedure Create_Object
+     (Instance : Block_Instance_Acc; Slot : Object_Slot_Type) is
    begin
       --  Check elaboration order.
       --  Note: this is not done for package since objects from package are
@@ -589,6 +638,13 @@ package body Elaboration is
          raise Internal_Error;
       end if;
       Instance.Elab_Objects := Slot;
+   end Create_Object;
+
+   procedure Create_Object (Instance : Block_Instance_Acc; Decl : Iir)
+   is
+      Slot : constant Object_Slot_Type := Get_Info (Decl).Slot;
+   begin
+      Create_Object (Instance, Slot);
    end Create_Object;
 
    procedure Destroy_Object (Instance : Block_Instance_Acc; Decl : Iir)
@@ -614,7 +670,7 @@ package body Elaboration is
       if Slot /= Instance.Elab_Objects + 1
         or else Instance.Objects (Slot) /= null
       then
-         Error_Msg_Elab ("bad elaboration order");
+         Error_Msg_Elab ("bad elaboration order", Decl);
          raise Internal_Error;
       end if;
       --  One slot is reserved for default value
@@ -933,27 +989,38 @@ package body Elaboration is
       end case;
    end Elaborate_Nature_Definition;
 
-   --  LRM93 §12.2.1  The Generic Clause
+   --  LRM93 12.2.1  The Generic Clause
+   --  LRM08 14.3.2  Generic clause
    procedure Elaborate_Generic_Clause
      (Instance : Block_Instance_Acc; Generic_Chain : Iir)
    is
       Decl : Iir_Interface_Constant_Declaration;
    begin
+      --  LRM08 14.3.2 Generic clause
       --  Elaboration of a generic clause consists of the elaboration of each
       --  of the equivalent single generic declarations contained in the
       --  clause, in the order given.
       Decl := Generic_Chain;
       while Decl /= Null_Iir loop
-         --  The elaboration of a generic declaration consists of elaborating
-         --  the subtype indication and then creating a generic constant of
-         --  that subtype.
-         Elaborate_Subtype_Indication_If_Anonymous (Instance, Get_Type (Decl));
-         Create_Object (Instance, Decl);
-         --  The value of a generic constant is not defined until a subsequent
-         --  generic map aspect is evaluated, or in the absence of a generic
-         --  map aspect, until the default expression associated with the
-         --  generic constant is evaluated to determine the value of the
-         --  constant.
+         case Get_Kind (Decl) is
+            when Iir_Kind_Interface_Constant_Declaration =>
+               --  LRM93 12.2.2 The generic clause
+               --  The elaboration of a generic declaration consists of
+               --  elaborating the subtype indication and then creating a
+               --  generic constant of that subtype.
+               Elaborate_Subtype_Indication_If_Anonymous
+                 (Instance, Get_Type (Decl));
+               Create_Object (Instance, Decl);
+               --  The value of a generic constant is not defined until a
+               --  subsequent generic map aspect is evaluated, or in the
+               --  absence of a generic map aspect, until the default
+               --  expression associated with the generic constant is evaluated
+               --  to determine the value of the constant.
+            when Iir_Kind_Interface_Package_Declaration =>
+               Create_Object (Instance, Get_Info (Decl).Env_Slot);
+            when others =>
+               Error_Kind ("elaborate_generic_clause", Decl);
+         end case;
          Decl := Get_Chain (Decl);
       end loop;
    end Elaborate_Generic_Clause;
@@ -989,6 +1056,7 @@ package body Elaboration is
       Value : Iir;
       Val : Iir_Value_Literal_Acc;
       Last_Individual : Iir_Value_Literal_Acc;
+      Marker : Mark_Type;
    begin
       --  Elaboration of a generic map aspect consists of elaborating the
       --  generic association list.
@@ -997,6 +1065,7 @@ package body Elaboration is
       --  elaboration of each generic association element in the
       --  association list.
       Assoc := Map;
+      Mark (Marker, Expr_Pool);
       while Assoc /= Null_Iir loop
          --  Elaboration of a generic association element consists of the
          --  elaboration of the formal part and the evaluation of the actual
@@ -1030,6 +1099,22 @@ package body Elaboration is
                Last_Individual := Unshare (Val, Instance_Pool);
                Target_Instance.Objects (Get_Info (Inter).Slot) :=
                  Last_Individual;
+               goto Continue;
+            when Iir_Kind_Association_Element_Package =>
+               declare
+                  Actual : constant Iir :=
+                    Strip_Denoting_Name (Get_Actual (Assoc));
+                  Info : constant Sim_Info_Acc := Get_Info (Actual);
+                  Pkg_Block : Block_Instance_Acc;
+               begin
+                  Pkg_Block := Get_Instance_By_Scope
+                    (Local_Instance, Info.Frame_Scope);
+                  Environment_Table.Append (Pkg_Block);
+                  Val := Create_Environment_Value (Environment_Table.Last);
+                  Target_Instance.Objects (Get_Info (Inter).Env_Slot) :=
+                    Unshare (Val, Instance_Pool);
+               end;
+
                goto Continue;
             when others =>
                Error_Kind ("elaborate_generic_map_aspect", Assoc);
@@ -1067,6 +1152,7 @@ package body Elaboration is
          end if;
 
          <<Continue>> null;
+         Release (Marker, Expr_Pool);
          Assoc := Get_Chain (Assoc);
       end loop;
    end Elaborate_Generic_Map_Aspect;
@@ -1129,6 +1215,7 @@ package body Elaboration is
       Actual_Expr : Iir_Value_Literal_Acc;
       Init_Expr : Iir_Value_Literal_Acc;
       Actual : Iir;
+      Formal : Iir;
    begin
       if Ports = Null_Iir then
          return;
@@ -1161,12 +1248,13 @@ package body Elaboration is
                  and then Get_Out_Conversion (Assoc) = Null_Iir
                then
                   Actual := Get_Actual (Assoc);
+                  Formal := Get_Formal (Assoc);
                   if Is_Signal_Name (Actual) then
                      --  Association with a signal
                      Init_Expr := Execute_Signal_Init_Value
                        (Actual_Instance, Actual);
                      Implicit_Array_Conversion
-                       (Formal_Instance, Init_Expr, Get_Type (Inter), Actual);
+                       (Formal_Instance, Init_Expr, Get_Type (Formal), Actual);
                      Init_Expr := Unshare_Bounds
                        (Init_Expr, Global_Pool'Access);
                      Actual_Expr := null;
@@ -1175,8 +1263,7 @@ package body Elaboration is
                      Init_Expr := Execute_Expression
                        (Actual_Instance, Actual);
                      Implicit_Array_Conversion
-                       (Formal_Instance, Init_Expr,
-                        Get_Type (Inter), Actual);
+                       (Formal_Instance, Init_Expr, Get_Type (Formal), Actual);
                      Init_Expr := Unshare (Init_Expr, Global_Pool'Access);
                      Actual_Expr := Init_Expr;
                   end if;
@@ -2584,6 +2671,101 @@ package body Elaboration is
       return Instance;
    end Elaborate_Architecture;
 
+   function Override_Generic (Formal : Iir; Str : String) return Iir
+   is
+      use Evaluation;
+      Formal_Type : constant Iir := Get_Type (Formal);
+      Formal_Btype : constant Iir := Get_Base_Type (Formal_Type);
+      Res : Iir;
+   begin
+      case Get_Kind (Formal_Btype) is
+         when Iir_Kind_Integer_Type_Definition
+           | Iir_Kind_Enumeration_Type_Definition =>
+            Res := Eval_Value_Attribute (Str, Formal_Type, Formal);
+            if not Eval_Is_In_Bound (Res, Formal_Type) then
+               Error_Msg_Elab
+                 ("override for " & Disp_Node (Formal) & " is out of bounds");
+               return Null_Iir;
+            end if;
+            return Res;
+         when Iir_Kind_Array_Type_Definition =>
+            if Is_One_Dimensional_Array_Type (Formal_Btype) then
+               declare
+                  use Str_Table;
+                  Str8 : String8_Id;
+                  Ntype : Iir;
+               begin
+                  Str8 := Create_String8;
+                  Append_String8_String (Str);
+                  Res := Create_Iir (Iir_Kind_String_Literal8);
+                  Set_String8_Id (Res, Str8);
+                  --  FIXME: check characters are in the type.
+                  Set_String_Length (Res, Str'Length);
+                  Set_Expr_Staticness (Res, Locally);
+                  Ntype := Create_Unidim_Array_By_Length
+                    (Get_Base_Type (Formal_Type), Str'Length, Res);
+                  Set_Type (Res, Ntype);
+                  Set_Literal_Subtype (Res, Ntype);
+                  return Res;
+               end;
+            end if;
+         when others =>
+            null;
+      end case;
+      Error_Msg_Elab ("unhandled override for " & Disp_Node (Formal));
+      return Null_Iir;
+   end Override_Generic;
+
+   procedure Override_Generics
+     (Map : in out Iir; First : Grt.Options.Generic_Override_Acc)
+   is
+      use Grt.Options;
+      Over : Generic_Override_Acc;
+      Id : Name_Id;
+      Gen : Iir;
+      Prev : Iir;
+      Val : Iir;
+      Assoc : Iir;
+   begin
+      Over := First;
+      Prev := Null_Iir;
+      while Over /= null loop
+         Id := Name_Table.Get_Identifier (Over.Name.all);
+
+         --  Find existing association in map.  There should be one association
+         --  for each generic.
+         Gen := Map;
+         while Gen /= Null_Iir loop
+            exit when Get_Identifier (Get_Formal (Map)) = Id;
+            Prev := Gen;
+            Gen := Get_Chain (Gen);
+         end loop;
+
+         if Gen = Null_Iir then
+            Error_Msg_Elab
+              ("no generic '" & Name_Table.Image (Id) & "' for -g");
+         else
+            --  Replace the association with one for the override value.
+            Val := Override_Generic (Get_Formal (Map), Over.Value.all);
+            if Val /= Null_Iir then
+               Assoc :=
+                 Create_Iir (Iir_Kind_Association_Element_By_Expression);
+               Set_Actual (Assoc, Val);
+               Set_Whole_Association_Flag (Assoc, True);
+               Set_Formal (Assoc, Get_Formal (Map));
+
+               Set_Chain (Assoc, Get_Chain (Gen));
+               if Prev = Null_Iir then
+                  Map := Assoc;
+               else
+                  Set_Chain (Prev, Assoc);
+               end if;
+            end if;
+         end if;
+         Over := Over.Next;
+      end loop;
+   end Override_Generics;
+
    -- Elaborate a design.
    procedure Elaborate_Design (Design: Iir_Design_Unit)
    is
@@ -2600,6 +2782,8 @@ package body Elaboration is
 
       --  Use a 'fake' process to execute code during elaboration.
       Current_Process := No_Process;
+
+      pragma Assert (Is_Empty (Expr_Pool));
 
       --  Find architecture and configuration for the top unit
       case Get_Kind (Unit) is
@@ -2619,18 +2803,19 @@ package body Elaboration is
       Arch_Unit := Get_Design_Unit (Arch);
       Entity := Get_Entity (Arch);
 
+      pragma Assert (Is_Empty (Expr_Pool));
+
       Elaborate_Dependence (Arch_Unit);
 
       --  Sanity check: memory area for expressions must be empty.
-      if not Is_Empty (Expr_Pool) then
-         raise Internal_Error;
-      end if;
+      pragma Assert (Is_Empty (Expr_Pool));
 
       --  Use default values for top entity generics and ports.
       Generic_Map := Create_Default_Association
         (Get_Generic_Chain (Entity), Null_Iir, Entity);
       Port_Map := Create_Default_Association
         (Get_Port_Chain (Entity), Null_Iir, Entity);
+      Override_Generics (Generic_Map, Grt.Options.First_Generic_Override);
 
       --  Elaborate from the top configuration.
       Conf := Get_Block_Configuration (Get_Library_Unit (Conf_Unit));
@@ -2645,9 +2830,7 @@ package body Elaboration is
       end if;
 
       --  Sanity check: memory area for expressions must be empty.
-      if not Is_Empty (Expr_Pool) then
-         raise Internal_Error;
-      end if;
+      pragma Assert (Is_Empty (Expr_Pool));
    end Elaborate_Design;
 
 end Elaboration;

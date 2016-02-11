@@ -33,6 +33,8 @@ package body Iir_Values is
       case Left.Kind is
          when Iir_Value_B1 =>
             return Left.B1 = Right.B1;
+         when Iir_Value_E8 =>
+            return Left.E8 = Right.E8;
          when Iir_Value_E32 =>
             return Left.E32 = Right.E32;
          when Iir_Value_I64 =>
@@ -101,6 +103,14 @@ package body Iir_Values is
             if Left.B1 < Right.B1 then
                return Less;
             elsif Left.B1 = Right.B1 then
+               return Equal;
+            else
+               return Greater;
+            end if;
+         when Iir_Value_E8 =>
+            if Left.E8 < Right.E8 then
+               return Less;
+            elsif Left.E8 = Right.E8 then
                return Equal;
             else
                return Greater;
@@ -211,6 +221,8 @@ package body Iir_Values is
             else
                raise Constraint_Error;
             end if;
+         when Iir_Value_E8 =>
+            Val.E8 := Val.E8 + 1;
          when Iir_Value_E32 =>
             Val.E32 := Val.E32 + 1;
          when Iir_Value_I64 =>
@@ -253,6 +265,8 @@ package body Iir_Values is
             end loop;
          when Iir_Value_B1 =>
             Dest.B1 := Src.B1;
+         when Iir_Value_E8 =>
+            Dest.E8 := Src.E8;
          when Iir_Value_E32 =>
             Dest.E32 := Src.E32;
          when Iir_Value_I64 =>
@@ -307,10 +321,7 @@ package body Iir_Values is
             if Src.Kind /= Dest.Kind then
                raise Internal_Error;
             end if;
-         when Iir_Value_B1
-           | Iir_Value_E32
-           | Iir_Value_I64
-           | Iir_Value_F64
+         when Iir_Value_Scalars
            | Iir_Value_Signal =>
             return;
          when Iir_Value_Range
@@ -362,6 +373,17 @@ package body Iir_Values is
                 (Kind => Iir_Value_Quantity, Quantity => Quantity)));
    end Create_Quantity_Value;
 
+   function Create_Environment_Value (Env : Environment_Index_Type)
+                                     return Iir_Value_Literal_Acc
+   is
+      subtype Environment_Value is Iir_Value_Literal (Iir_Value_Environment);
+      function Alloc is new Alloc_On_Pool_Addr (Environment_Value);
+   begin
+      return To_Iir_Value_Literal_Acc
+        (Alloc (Global_Pool'Access,
+                (Kind => Iir_Value_Environment, Environment => Env)));
+   end Create_Environment_Value;
+
    function Create_Protected_Value (Prot : Protected_Index_Type)
                                   return Iir_Value_Literal_Acc
    is
@@ -381,6 +403,15 @@ package body Iir_Values is
       return To_Iir_Value_Literal_Acc
         (Alloc (Current_Pool, (Kind => Iir_Value_B1, B1 => Val)));
    end Create_B1_Value;
+
+   function Create_E8_Value (Val : Ghdl_E8) return Iir_Value_Literal_Acc
+   is
+      subtype E8_Value is Iir_Value_Literal (Iir_Value_E8);
+      function Alloc is new Alloc_On_Pool_Addr (E8_Value);
+   begin
+      return To_Iir_Value_Literal_Acc
+        (Alloc (Current_Pool, (Kind => Iir_Value_E8, E8 => Val)));
+   end Create_E8_Value;
 
    function Create_E32_Value (Val : Ghdl_E32) return Iir_Value_Literal_Acc
    is
@@ -477,6 +508,12 @@ package body Iir_Values is
          when Iir_Value_E32 =>
             if High.E32 >= Low.E32 then
                Len := Iir_Index32 (High.E32 - Low.E32 + 1);
+            else
+               Len := 0;
+            end if;
+         when Iir_Value_E8 =>
+            if High.E8 >= Low.E8 then
+               Len := Iir_Index32 (High.E8 - Low.E8 + 1);
             else
                Len := 0;
             end if;
@@ -599,14 +636,16 @@ package body Iir_Values is
       Res: Iir_Value_Literal_Acc;
    begin
       case Src.Kind is
+         when Iir_Value_B1 =>
+            return Create_B1_Value (Src.B1);
          when Iir_Value_E32 =>
             return Create_E32_Value (Src.E32);
+         when Iir_Value_E8 =>
+            return Create_E8_Value (Src.E8);
          when Iir_Value_I64 =>
             return Create_I64_Value (Src.I64);
          when Iir_Value_F64 =>
             return Create_F64_Value (Src.F64);
-         when Iir_Value_B1 =>
-            return Create_B1_Value (Src.B1);
          when Iir_Value_Access =>
             return Create_Access_Value (Src.Val_Access);
          when Iir_Value_Array =>
@@ -639,9 +678,11 @@ package body Iir_Values is
             pragma Assert (Src.Sig = null);
             return Create_Signal_Value (Src.Sig);
 
+         when Iir_Value_Environment =>
+            return Create_Environment_Value (Src.Environment);
+
          when Iir_Value_Quantity
-           | Iir_Value_Terminal
-           | Iir_Value_Environment =>
+           | Iir_Value_Terminal =>
             raise Internal_Error;
       end case;
    end Copy;
@@ -749,6 +790,8 @@ package body Iir_Values is
    function Get_Enum_Pos (Val : Iir_Value_Literal_Acc) return Natural is
    begin
       case Val.Kind is
+         when Iir_Value_E8 =>
+            return Ghdl_E8'Pos (Val.E8);
          when Iir_Value_E32 =>
             return Ghdl_E32'Pos (Val.E32);
          when Iir_Value_B1 =>
@@ -777,6 +820,8 @@ package body Iir_Values is
       case Value.Kind is
          when Iir_Value_B1 =>
             Put_Line ("b1:" & Ghdl_B1'Image (Value.B1));
+         when Iir_Value_E8 =>
+            Put_Line ("E8:" & Ghdl_E8'Image (Value.E8));
          when Iir_Value_E32 =>
             Put_Line ("e32:" & Ghdl_E32'Image (Value.E32));
          when Iir_Value_I64 =>
@@ -1008,6 +1053,16 @@ package body Iir_Values is
       Put (")");
    end Disp_Iir_Value_Record;
 
+   procedure Disp_Iir_Value_Enum (Pos : Natural; A_Type : Iir)
+   is
+      Bt : constant Iir := Get_Base_Type (A_Type);
+      Id : Name_Id;
+   begin
+      Id := Get_Identifier
+        (Get_Nth_Element (Get_Enumeration_Literal_List (Bt), Pos));
+      Ada.Text_IO.Put (Name_Table.Image (Id));
+   end Disp_Iir_Value_Enum;
+
    procedure Disp_Iir_Value (Value: Iir_Value_Literal_Acc; A_Type: Iir) is
       use Ada.Text_IO;
    begin
@@ -1020,22 +1075,12 @@ package body Iir_Values is
             Put (Ghdl_I64'Image (Value.I64));
          when Iir_Value_F64 =>
             Put (Ghdl_F64'Image (Value.F64));
-         when Iir_Value_E32
-           | Iir_Value_B1 =>
-            declare
-               Bt : constant Iir := Get_Base_Type (A_Type);
-               Id : Name_Id;
-               Pos : Integer;
-            begin
-               if Value.Kind = Iir_Value_E32 then
-                  Pos := Ghdl_E32'Pos (Value.E32);
-               else
-                  Pos := Ghdl_B1'Pos (Value.B1);
-               end if;
-               Id := Get_Identifier
-                 (Get_Nth_Element (Get_Enumeration_Literal_List (Bt), Pos));
-               Put (Name_Table.Image (Id));
-            end;
+         when Iir_Value_E32 =>
+            Disp_Iir_Value_Enum (Ghdl_E32'Pos (Value.E32), A_Type);
+         when Iir_Value_E8 =>
+            Disp_Iir_Value_Enum (Ghdl_E8'Pos (Value.E8), A_Type);
+         when Iir_Value_B1 =>
+            Disp_Iir_Value_Enum (Ghdl_B1'Pos (Value.B1), A_Type);
          when Iir_Value_Access =>
             if Value.Val_Access = null then
                Put ("null");

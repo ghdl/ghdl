@@ -9,10 +9,12 @@ fi
 
 "$GHDL" -i lib_numeric_tb.vhd
 "$GHDL" -m numeric_tb
-simulate numeric_tb --stop-time=10ns --wave=numeric_tb.ghw \
- --sdf=typ==lib_numeric_tb.sdf
+if ghdl_has_feature numeric_tb ghw; then
+  simulate numeric_tb --stop-time=10ns --wave=numeric_tb.ghw \
+   --sdf=typ==lib_numeric_tb.sdf
+fi
 
 clean
-rm numeric_tb.ghw
+rm -f numeric_tb.ghw
 
 echo "Test successful"

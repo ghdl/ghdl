@@ -192,6 +192,9 @@ package body Debugger is
            | Iir_Kinds_Process_Statement
            | Iir_Kind_Package_Declaration =>
             return Image_Identifier (Name);
+         when Iir_Kind_Generate_Statement_Body =>
+            return Image_Identifier (Get_Parent (Name))
+              & '(' & Image_Identifier (Name) & ')';
          when Iir_Kind_Iterator_Declaration =>
             return Image_Identifier (Get_Parent (Name)) & '('
               & Execute_Image_Attribute
@@ -248,7 +251,8 @@ package body Debugger is
          when Iir_Kind_Block_Statement =>
             Put ("[block]");
          when Iir_Kind_If_Generate_Statement
-           | Iir_Kind_For_Generate_Statement =>
+           | Iir_Kind_For_Generate_Statement
+           | Iir_Kind_Generate_Statement_Body =>
             Put ("[generate]");
          when Iir_Kind_Iterator_Declaration =>
             Put ("[iterator]");
@@ -358,10 +362,7 @@ package body Debugger is
          return;
       end if;
       case Value.Kind is
-         when Iir_Value_I64
-           | Iir_Value_F64
-           | Iir_Value_E32
-           | Iir_Value_B1
+         when Iir_Value_Scalars
            | Iir_Value_Access =>
             Disp_Iir_Value (Value, A_Type);
          when Iir_Value_Array =>
@@ -509,6 +510,9 @@ package body Debugger is
                Disp_Signal (Sig, Get_Type (Decl));
                New_Line;
             end;
+         when Iir_Kinds_Signal_Attribute =>
+            --  FIXME: todo ?
+            null;
          when Iir_Kind_Type_Declaration
            | Iir_Kind_Anonymous_Type_Declaration
            | Iir_Kind_Subtype_Declaration =>
@@ -778,7 +782,7 @@ package body Debugger is
       begin
          while Stmt /= Null_Iir loop
             case Get_Kind (Stmt) is
-               when Iir_Kind_Process_Statement =>
+               when Iir_Kinds_Process_Statement =>
                   if Walk_Decl_Chain (Get_Declaration_Chain (Stmt))
                     = Walk_Abort
                   then
@@ -1212,6 +1216,10 @@ package body Debugger is
       Params : Iir;
    begin
       Check_Current_Process;
+      if Dbg_Cur_Frame = null then
+         Put_Line ("not in a subprogram");
+         return;
+      end if;
       Decl := Dbg_Cur_Frame.Label;
       if Decl = Null_Iir
         or else Get_Kind (Decl) not in Iir_Kinds_Subprogram_Declaration
@@ -1263,7 +1271,8 @@ package body Debugger is
             Put ("architecture ");
             Put (Name_Table.Image (Get_Identifier (El)));
             Put (" of ");
-            Put_Line (Name_Table.Image (Get_Identifier (Get_Entity (El))));
+            Put_Line (Name_Table.Image (Get_Identifier
+                                          (Get_Entity_Name (El))));
          when Iir_Kind_Configuration_Declaration =>
             Put ("configuration ");
             Put_Line (Name_Table.Image (Get_Identifier (El)));

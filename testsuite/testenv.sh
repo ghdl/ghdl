@@ -100,6 +100,11 @@ ghdl_has_feature ()
   "$GHDL" -r $GHDL_STD_FLAGS $GHDL_FLAGS $1 --has-feature=$2
 }
 
+ghdl_is_interpretation ()
+{
+  "$GHDL" --version | grep -q interpretation
+}
+
 # Run a program
 run ()
 {

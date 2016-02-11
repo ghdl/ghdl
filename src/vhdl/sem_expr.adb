@@ -4751,15 +4751,6 @@ package body Sem_Expr is
       return Res;
    end Insert_Condition_Operator;
 
-   function Maybe_Insert_Condition_Operator (Expr : Iir) return Iir is
-   begin
-      if Get_Base_Type (Get_Type (Expr)) = Boolean_Type_Definition then
-         return Expr;
-      else
-         return Insert_Condition_Operator (Expr);
-      end if;
-   end Maybe_Insert_Condition_Operator;
-
    function Sem_Condition (Cond : Iir) return Iir
    is
       Res : Iir;

@@ -1,0 +1,191 @@
+# 
+# Bug report created by PoC
+# 
+# Assemble files for the bug report....
+# execute these lines in PowerShell to gather all needed files
+# 
+mkdir H:\Austausch\PoC\temp\bugreport | cd
+cp H:\Austausch\PoC\tb\common\my_config_ML505.vhdl .
+cp H:\Austausch\PoC\tb\common\my_project.vhdl .
+cp H:\Austausch\PoC\src\common\utils.vhdl .
+cp H:\Austausch\PoC\src\common\config.vhdl .
+cp H:\Austausch\PoC\src\common\strings.vhdl .
+cp H:\Austausch\PoC\src\common\vectors.vhdl .
+cp H:\Austausch\PoC\src\common\physical.vhdl .
+cp H:\Austausch\PoC\src\sim\sim_types.vhdl .
+cp H:\Austausch\PoC\src\sim\sim_protected.v08.vhdl .
+cp H:\Austausch\PoC\src\sim\sim_global.v08.vhdl .
+cp H:\Austausch\PoC\src\sim\sim_simulation.v08.vhdl .
+cp H:\Austausch\PoC\src\arith\arith.pkg.vhdl .
+cp H:\Austausch\PoC\src\arith\arith_addw.vhdl .
+cp H:\Austausch\PoC\tb\arith\arith_addw_tb.vhdl .
+
+
+#
+# ATTENATION: This test requires Xilinx ISE unisim compiled into the folder ./xilinx
+#
+ghdl.exe -a -fexplicit -frelaxed-rules --warn-binding --no-vital-checks --mb-comments --syn-binding -fpsl -v -Pxilinx --ieee=standard --std=08 --work=poc ./my_config_ML505.vhdl
+ghdl.exe -a -fexplicit -frelaxed-rules --warn-binding --no-vital-checks --mb-comments --syn-binding -fpsl -v -Pxilinx --ieee=standard --std=08 --work=poc ./my_project.vhdl
+ghdl.exe -a -fexplicit -frelaxed-rules --warn-binding --no-vital-checks --mb-comments --syn-binding -fpsl -v -Pxilinx --ieee=standard --std=08 --work=poc ./utils.vhdl
+ghdl.exe -a -fexplicit -frelaxed-rules --warn-binding --no-vital-checks --mb-comments --syn-binding -fpsl -v -Pxilinx --ieee=standard --std=08 --work=poc ./config.vhdl
+ghdl.exe -a -fexplicit -frelaxed-rules --warn-binding --no-vital-checks --mb-comments --syn-binding -fpsl -v -Pxilinx --ieee=standard --std=08 --work=poc ./strings.vhdl
+ghdl.exe -a -fexplicit -frelaxed-rules --warn-binding --no-vital-checks --mb-comments --syn-binding -fpsl -v -Pxilinx --ieee=standard --std=08 --work=poc ./vectors.vhdl
+ghdl.exe -a -fexplicit -frelaxed-rules --warn-binding --no-vital-checks --mb-comments --syn-binding -fpsl -v -Pxilinx --ieee=standard --std=08 --work=poc ./physical.vhdl
+ghdl.exe -a -fexplicit -frelaxed-rules --warn-binding --no-vital-checks --mb-comments --syn-binding -fpsl -v -Pxilinx --ieee=standard --std=08 --work=poc ./sim_types.vhdl
+ghdl.exe -a -fexplicit -frelaxed-rules --warn-binding --no-vital-checks --mb-comments --syn-binding -fpsl -v -Pxilinx --ieee=standard --std=08 --work=poc ./sim_protected.v08.vhdl
+ghdl.exe -a -fexplicit -frelaxed-rules --warn-binding --no-vital-checks --mb-comments --syn-binding -fpsl -v -Pxilinx --ieee=standard --std=08 --work=poc ./sim_global.v08.vhdl
+ghdl.exe -a -fexplicit -frelaxed-rules --warn-binding --no-vital-checks --mb-comments --syn-binding -fpsl -v -Pxilinx --ieee=standard --std=08 --work=poc ./sim_simulation.v08.vhdl
+ghdl.exe -a -fexplicit -frelaxed-rules --warn-binding --no-vital-checks --mb-comments --syn-binding -fpsl -v -Pxilinx --ieee=standard --std=08 --work=poc ./arith.pkg.vhdl
+ghdl.exe -a -fexplicit -frelaxed-rules --warn-binding --no-vital-checks --mb-comments --syn-binding -fpsl -v -Pxilinx --ieee=standard --std=08 --work=poc ./arith_addw.vhdl
+ghdl.exe -a -fexplicit -frelaxed-rules --warn-binding --no-vital-checks --mb-comments --syn-binding -fpsl -v -Pxilinx --ieee=standard --std=08 --work=test ./arith_addw_tb.vhdl
+
+# excepted runtime circa 2 minutes
+ghdl.exe -r --syn-binding -fpsl -v -Pxilinx --std=08 --work=test arith_addw_tb --ieee-asserts=disable-at-0 --wave=H:\Austausch\PoC\temp\ghdl\arith_addw_tb.ghw
+
+# Generated output
+--------------------------------------------------------------------------------
+Linking in memory
+Starting simulation
+Implementing 9-bit wide adder: ARCH=aam, BLOCKING=asc[5,4], SKIPPING=plain
+Implementing 9-bit wide adder: ARCH=aam, BLOCKING=asc[5,4], SKIPPING=plain
+Implementing 9-bit wide adder: ARCH=aam, BLOCKING=asc[5,4], SKIPPING=ccc
+Implementing 9-bit wide adder: ARCH=aam, BLOCKING=asc[5,4], SKIPPING=ccc
+Implementing 9-bit wide adder: ARCH=aam, BLOCKING=asc[5,4], SKIPPING=ppn_ks
+Implementing 9-bit wide adder: ARCH=aam, BLOCKING=asc[5,4], SKIPPING=ppn_ks
+Implementing 9-bit wide adder: ARCH=aam, BLOCKING=asc[5,4], SKIPPING=ppn_bk
+Implementing 9-bit wide adder: ARCH=aam, BLOCKING=asc[5,4], SKIPPING=ppn_bk
+Implementing 9-bit wide adder: ARCH=cai, BLOCKING=desc[4,5], SKIPPING=plain
+Implementing 9-bit wide adder: ARCH=cai, BLOCKING=desc[4,5], SKIPPING=plain
+Implementing 9-bit wide adder: ARCH=cai, BLOCKING=desc[4,5], SKIPPING=ccc
+Implementing 9-bit wide adder: ARCH=cai, BLOCKING=desc[4,5], SKIPPING=ccc
+Implementing 9-bit wide adder: ARCH=cai, BLOCKING=desc[4,5], SKIPPING=ppn_ks
+Implementing 9-bit wide adder: ARCH=cai, BLOCKING=desc[4,5], SKIPPING=ppn_ks
+Implementing 9-bit wide adder: ARCH=cai, BLOCKING=desc[4,5], SKIPPING=ppn_bk
+Implementing 9-bit wide adder: ARCH=cai, BLOCKING=desc[4,5], SKIPPING=ppn_bk
+Implementing 9-bit wide adder: ARCH=cca, BLOCKING=desc[4,5], SKIPPING=plain
+Implementing 9-bit wide adder: ARCH=cca, BLOCKING=desc[4,5], SKIPPING=plain
+Implementing 9-bit wide adder: ARCH=cca, BLOCKING=desc[4,5], SKIPPING=ccc
+Implementing 9-bit wide adder: ARCH=cca, BLOCKING=desc[4,5], SKIPPING=ccc
+Implementing 9-bit wide adder: ARCH=cca, BLOCKING=desc[4,5], SKIPPING=ppn_ks
+Implementing 9-bit wide adder: ARCH=cca, BLOCKING=desc[4,5], SKIPPING=ppn_ks
+Implementing 9-bit wide adder: ARCH=cca, BLOCKING=desc[4,5], SKIPPING=ppn_bk
+Implementing 9-bit wide adder: ARCH=cca, BLOCKING=desc[4,5], SKIPPING=ppn_bk
+Implementing 9-bit wide adder: ARCH=pai, BLOCKING=desc[4,5], SKIPPING=plain
+Implementing 9-bit wide adder: ARCH=pai, BLOCKING=desc[4,5], SKIPPING=plain
+Implementing 9-bit wide adder: ARCH=pai, BLOCKING=desc[4,5], SKIPPING=ccc
+Implementing 9-bit wide adder: ARCH=pai, BLOCKING=desc[4,5], SKIPPING=ccc
+Implementing 9-bit wide adder: ARCH=pai, BLOCKING=desc[4,5], SKIPPING=ppn_ks
+Implementing 9-bit wide adder: ARCH=pai, BLOCKING=desc[4,5], SKIPPING=ppn_ks
+Implementing 9-bit wide adder: ARCH=pai, BLOCKING=desc[4,5], SKIPPING=ppn_bk
+Implementing 9-bit wide adder: ARCH=pai, BLOCKING=desc[4,5], SKIPPING=ppn_bk
+
+******************** GHDL Bug occured ****************************
+Please report this bug on https://github.com/tgingold/ghdl/issues
+GHDL release: GHDL 0.34dev (commit: 2016-01-20;  git branch: paebbels/llvm';  hash: 3a8fd5b) [Dunoon edition]
+Compiled with GNAT Version: GPL 2015 (20150428-49)
+In directory: H:\Austausch\PoC\temp\ghdl\
+Command line:
+C:\Tools\GHDL.new\bin\ghdl.exe -r --syn-binding -fpsl -v -Pxilinx --std=08 --work=test arith_addw_tb --ieee-asserts=disable-at-0 --wave=H:\Austausch\PoC\temp\ghdl\arith_addw_tb.ghw
+Exception CONSTRAINT_ERROR raised
+Exception information:
+Exception name: CONSTRAINT_ERROR
+Message: grt-waves.adb:1245 access check failed
+******************************************************************
+
+--------------------------------------------------------------------------------
+#
+#
+# Expected Output
+#
+
+--------------------------------------------------------------------------------
+Linking in memory
+Starting simulation
+Implementing 9-bit wide adder: ARCH=aam, BLOCKING=asc[5,4], SKIPPING=plain
+Implementing 9-bit wide adder: ARCH=aam, BLOCKING=asc[5,4], SKIPPING=plain
+Implementing 9-bit wide adder: ARCH=aam, BLOCKING=asc[5,4], SKIPPING=ccc
+Implementing 9-bit wide adder: ARCH=aam, BLOCKING=asc[5,4], SKIPPING=ccc
+Implementing 9-bit wide adder: ARCH=aam, BLOCKING=asc[5,4], SKIPPING=ppn_ks
+Implementing 9-bit wide adder: ARCH=aam, BLOCKING=asc[5,4], SKIPPING=ppn_ks
+Implementing 9-bit wide adder: ARCH=aam, BLOCKING=asc[5,4], SKIPPING=ppn_bk
+Implementing 9-bit wide adder: ARCH=aam, BLOCKING=asc[5,4], SKIPPING=ppn_bk
+Implementing 9-bit wide adder: ARCH=cai, BLOCKING=desc[4,5], SKIPPING=plain
+Implementing 9-bit wide adder: ARCH=cai, BLOCKING=desc[4,5], SKIPPING=plain
+Implementing 9-bit wide adder: ARCH=cai, BLOCKING=desc[4,5], SKIPPING=ccc
+Implementing 9-bit wide adder: ARCH=cai, BLOCKING=desc[4,5], SKIPPING=ccc
+Implementing 9-bit wide adder: ARCH=cai, BLOCKING=desc[4,5], SKIPPING=ppn_ks
+Implementing 9-bit wide adder: ARCH=cai, BLOCKING=desc[4,5], SKIPPING=ppn_ks
+Implementing 9-bit wide adder: ARCH=cai, BLOCKING=desc[4,5], SKIPPING=ppn_bk
+Implementing 9-bit wide adder: ARCH=cai, BLOCKING=desc[4,5], SKIPPING=ppn_bk
+Implementing 9-bit wide adder: ARCH=cca, BLOCKING=desc[4,5], SKIPPING=plain
+Implementing 9-bit wide adder: ARCH=cca, BLOCKING=desc[4,5], SKIPPING=plain
+Implementing 9-bit wide adder: ARCH=cca, BLOCKING=desc[4,5], SKIPPING=ccc
+Implementing 9-bit wide adder: ARCH=cca, BLOCKING=desc[4,5], SKIPPING=ccc
+Implementing 9-bit wide adder: ARCH=cca, BLOCKING=desc[4,5], SKIPPING=ppn_ks
+Implementing 9-bit wide adder: ARCH=cca, BLOCKING=desc[4,5], SKIPPING=ppn_ks
+Implementing 9-bit wide adder: ARCH=cca, BLOCKING=desc[4,5], SKIPPING=ppn_bk
+Implementing 9-bit wide adder: ARCH=cca, BLOCKING=desc[4,5], SKIPPING=ppn_bk
+Implementing 9-bit wide adder: ARCH=pai, BLOCKING=desc[4,5], SKIPPING=plain
+Implementing 9-bit wide adder: ARCH=pai, BLOCKING=desc[4,5], SKIPPING=plain
+Implementing 9-bit wide adder: ARCH=pai, BLOCKING=desc[4,5], SKIPPING=ccc
+Implementing 9-bit wide adder: ARCH=pai, BLOCKING=desc[4,5], SKIPPING=ccc
+Implementing 9-bit wide adder: ARCH=pai, BLOCKING=desc[4,5], SKIPPING=ppn_ks
+Implementing 9-bit wide adder: ARCH=pai, BLOCKING=desc[4,5], SKIPPING=ppn_ks
+Implementing 9-bit wide adder: ARCH=pai, BLOCKING=desc[4,5], SKIPPING=ppn_bk
+Implementing 9-bit wide adder: ARCH=pai, BLOCKING=desc[4,5], SKIPPING=ppn_bk
+H:\Austausch\PoC\src\sim\sim_simulation.v08.vhdl:232:16:@0ms:(report note): simGenerateClock: (Instance: ':poc:simulation:simgenerateclock[std_logic,time,t_phase,t_dutycycle,t_wander]:clock')
+Period: 10000000 fs
+Phase: 0 second
+DutyCycle: 500000000 ppb
+PhaseAsFactor: 0.0
+WanderAsFactor: 0.0
+DutyCycleAsFactor: 5.0e-1
+Delay: 0 fs
+TimeHigh: 5000000 fs
+TimeLow: 5000000 fs
+
+========================================
+POC TESTBENCH REPORT
+========================================
+Assertions   16777216
+  failed     0
+Processes    1
+  active     0
+Tests        32
+     0: Test setup: ARCH=aam  SKIPPING=plain   P_INCLUSIVE=false
+     1: Test setup: ARCH=aam  SKIPPING=plain   P_INCLUSIVE=true
+     2: Test setup: ARCH=aam  SKIPPING=ccc     P_INCLUSIVE=false
+     3: Test setup: ARCH=aam  SKIPPING=ccc     P_INCLUSIVE=true
+     4: Test setup: ARCH=aam  SKIPPING=ppn_ks  P_INCLUSIVE=false
+     5: Test setup: ARCH=aam  SKIPPING=ppn_ks  P_INCLUSIVE=true
+     6: Test setup: ARCH=aam  SKIPPING=ppn_bk  P_INCLUSIVE=false
+     7: Test setup: ARCH=aam  SKIPPING=ppn_bk  P_INCLUSIVE=true
+     8: Test setup: ARCH=cai  SKIPPING=plain   P_INCLUSIVE=false
+     9: Test setup: ARCH=cai  SKIPPING=plain   P_INCLUSIVE=true
+    10: Test setup: ARCH=cai  SKIPPING=ccc     P_INCLUSIVE=false
+    11: Test setup: ARCH=cai  SKIPPING=ccc     P_INCLUSIVE=true
+    12: Test setup: ARCH=cai  SKIPPING=ppn_ks  P_INCLUSIVE=false
+    13: Test setup: ARCH=cai  SKIPPING=ppn_ks  P_INCLUSIVE=true
+    14: Test setup: ARCH=cai  SKIPPING=ppn_bk  P_INCLUSIVE=false
+    15: Test setup: ARCH=cai  SKIPPING=ppn_bk  P_INCLUSIVE=true
+    16: Test setup: ARCH=cca  SKIPPING=plain   P_INCLUSIVE=false
+    17: Test setup: ARCH=cca  SKIPPING=plain   P_INCLUSIVE=true
+    18: Test setup: ARCH=cca  SKIPPING=ccc     P_INCLUSIVE=false
+    19: Test setup: ARCH=cca  SKIPPING=ccc     P_INCLUSIVE=true
+    20: Test setup: ARCH=cca  SKIPPING=ppn_ks  P_INCLUSIVE=false
+    21: Test setup: ARCH=cca  SKIPPING=ppn_ks  P_INCLUSIVE=true
+    22: Test setup: ARCH=cca  SKIPPING=ppn_bk  P_INCLUSIVE=false
+    23: Test setup: ARCH=cca  SKIPPING=ppn_bk  P_INCLUSIVE=true
+    24: Test setup: ARCH=pai  SKIPPING=plain   P_INCLUSIVE=false
+    25: Test setup: ARCH=pai  SKIPPING=plain   P_INCLUSIVE=true
+    26: Test setup: ARCH=pai  SKIPPING=ccc     P_INCLUSIVE=false
+    27: Test setup: ARCH=pai  SKIPPING=ccc     P_INCLUSIVE=true
+    28: Test setup: ARCH=pai  SKIPPING=ppn_ks  P_INCLUSIVE=false
+    29: Test setup: ARCH=pai  SKIPPING=ppn_ks  P_INCLUSIVE=true
+    30: Test setup: ARCH=pai  SKIPPING=ppn_bk  P_INCLUSIVE=false
+    31: Test setup: ARCH=pai  SKIPPING=ppn_bk  P_INCLUSIVE=true
+========================================
+SIMULATION RESULT = PASSED
+========================================
+
+--------------------------------------------------------------------------------

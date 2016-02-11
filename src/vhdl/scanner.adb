@@ -84,7 +84,7 @@ package body Scanner is
         | '_' | '|' | '*' => Special_Character,
 
       -- 4. the space characters
-      ' ' | No_Break_Space => Space_Character,
+      ' ' | NBSP => Space_Character,
 
       -- 5. lower case letters
       'a' .. 'z' | LC_German_Sharp_S .. LC_O_Diaeresis |
@@ -1901,4 +1901,15 @@ package body Scanner is
       return File_Pos_To_Location
         (Current_Context.Source_File, Current_Context.Token_Pos);
    end Get_Token_Location;
+
+   function Is_Whitespace (C : Character) return Boolean is
+   begin
+      if C = ' ' then
+         return True;
+      elsif Vhdl_Std > Vhdl_87 and C = NBSP then
+         return True;
+      else
+         return False;
+      end if;
+   end Is_Whitespace;
 end Scanner;

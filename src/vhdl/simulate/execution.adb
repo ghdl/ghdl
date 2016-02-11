@@ -42,6 +42,7 @@ with Grt_Interface;
 with Grt.Values;
 with Grt.Errors;
 with Grt.Std_Logic_1164;
+with Sem_Inst;
 
 package body Execution is
 
@@ -62,19 +63,30 @@ package body Execution is
 
    function Get_Instance_By_Scope
      (Instance: Block_Instance_Acc; Scope: Scope_Type)
-      return Block_Instance_Acc
-   is
-      Current: Block_Instance_Acc := Instance;
+     return Block_Instance_Acc is
    begin
       case Scope.Kind is
          when Scope_Kind_Frame =>
-            while Current /= null loop
-               if Current.Block_Scope = Scope then
-                  return Current;
+            declare
+               Current : Block_Instance_Acc;
+               Last : Block_Instance_Acc;
+            begin
+               Current := Instance;
+               while Current /= null loop
+                  if Current.Block_Scope = Scope then
+                     return Current;
+                  end if;
+                  Last := Current;
+                  Current := Current.Up_Block;
+               end loop;
+               if Scope.Depth = 0
+                 and then Last.Block_Scope.Kind = Scope_Kind_Package
+               then
+                  --  For instantiated packages.
+                  return Last;
                end if;
-               Current := Current.Up_Block;
-            end loop;
-            raise Internal_Error;
+               raise Internal_Error;
+            end;
          when Scope_Kind_Package =>
             --  Global scope (packages)
             return Package_Instances (Scope.Pkg_Index);
@@ -210,13 +222,13 @@ package body Execution is
       Mode : constant Iir_Value_Kind :=
         Get_Info (Base_Type).Scalar_Mode;
    begin
-      case Mode is
+      case Iir_Value_Enums (Mode) is
+         when Iir_Value_E8 =>
+            return Create_E8_Value (Ghdl_E8 (Pos));
          when Iir_Value_E32 =>
             return Create_E32_Value (Ghdl_E32 (Pos));
          when Iir_Value_B1 =>
             return Create_B1_Value (Ghdl_B1'Val (Pos));
-         when others =>
-            raise Internal_Error;
       end case;
    end Create_Enum_Value;
 
@@ -231,7 +243,7 @@ package body Execution is
          Iir_To);
       for I in Str'Range loop
          Res.Val_Array.V (1 + Iir_Index32 (I - Str'First)) :=
-           Create_E32_Value (Character'Pos (Str (I)));
+           Create_E8_Value (Character'Pos (Str (I)));
       end loop;
       return Res;
    end String_To_Iir_Value;
@@ -267,13 +279,13 @@ package body Execution is
                  Get_Enumeration_Literal_List (Get_Base_Type (Expr_Type));
                Pos : Natural;
             begin
-               case Val.Kind is
+               case Iir_Value_Enums (Val.Kind) is
                   when Iir_Value_B1 =>
                      Pos := Ghdl_B1'Pos (Val.B1);
+                  when Iir_Value_E8 =>
+                     Pos := Ghdl_E8'Pos (Val.E8);
                   when Iir_Value_E32 =>
                      Pos := Ghdl_E32'Pos (Val.E32);
-                  when others =>
-                     raise Internal_Error;
                end case;
                return Name_Table.Image
                  (Get_Identifier (Get_Nth_Element (Lits, Pos)));
@@ -293,6 +305,104 @@ package body Execution is
             Error_Kind ("execute_image_attribute", Expr_Type);
       end case;
    end Execute_Image_Attribute;
+
+   function Execute_Image_Attribute (Block: Block_Instance_Acc; Expr: Iir)
+                                    return Iir_Value_Literal_Acc
+   is
+      Val : Iir_Value_Literal_Acc;
+      Attr_Type : constant Iir := Get_Type (Get_Prefix (Expr));
+   begin
+      Val := Execute_Expression (Block, Get_Parameter (Expr));
+      return String_To_Iir_Value
+        (Execute_Image_Attribute (Val, Attr_Type));
+   end Execute_Image_Attribute;
+
+   function Execute_Path_Instance_Name_Attribute
+     (Block : Block_Instance_Acc; Attr : Iir) return Iir_Value_Literal_Acc
+   is
+      use Evaluation;
+      use Grt.Vstrings;
+      use Name_Table;
+
+      Name : constant Path_Instance_Name_Type :=
+        Get_Path_Instance_Name_Suffix (Attr);
+      Instance : Block_Instance_Acc;
+      Rstr : Rstring;
+      Is_Instance : constant Boolean :=
+        Get_Kind (Attr) = Iir_Kind_Instance_Name_Attribute;
+   begin
+      if Name.Path_Instance = Null_Iir then
+         return String_To_Iir_Value (Name.Suffix);
+      end if;
+
+      Instance := Get_Instance_By_Scope
+        (Block, Get_Info (Name.Path_Instance).Frame_Scope);
+
+      loop
+         case Get_Kind (Instance.Label) is
+            when Iir_Kind_Entity_Declaration =>
+               if Instance.Parent = null then
+                  Prepend (Rstr, Image (Get_Identifier (Instance.Label)));
+                  exit;
+               end if;
+            when Iir_Kind_Architecture_Body =>
+               if Is_Instance then
+                  Prepend (Rstr, ')');
+                  Prepend (Rstr, Image (Get_Identifier (Instance.Label)));
+                  Prepend (Rstr, '(');
+               end if;
+
+               if Is_Instance or else Instance.Parent = null then
+                  Prepend
+                    (Rstr,
+                     Image (Get_Identifier (Get_Entity (Instance.Label))));
+               end if;
+               if Instance.Parent = null then
+                  Prepend (Rstr, ':');
+                  exit;
+               else
+                  Instance := Instance.Parent;
+               end if;
+            when Iir_Kind_Block_Statement =>
+               Prepend (Rstr, Image (Get_Label (Instance.Label)));
+               Prepend (Rstr, ':');
+               Instance := Instance.Parent;
+            when Iir_Kind_Iterator_Declaration =>
+               declare
+                  Val : Iir_Value_Literal_Acc;
+               begin
+                  Val := Execute_Name (Instance, Instance.Label);
+                  Prepend (Rstr, ')');
+                  Prepend (Rstr, Execute_Image_Attribute
+                             (Val, Get_Type (Instance.Label)));
+                  Prepend (Rstr, '(');
+               end;
+               Instance := Instance.Parent;
+            when Iir_Kind_Generate_Statement_Body =>
+               Prepend (Rstr, Image (Get_Label (Get_Parent (Instance.Label))));
+               Prepend (Rstr, ':');
+               Instance := Instance.Parent;
+            when Iir_Kind_Component_Instantiation_Statement =>
+               if Is_Instance then
+                  Prepend (Rstr, '@');
+               end if;
+               Prepend (Rstr, Image (Get_Label (Instance.Label)));
+               Prepend (Rstr, ':');
+               Instance := Instance.Parent;
+            when others =>
+               Error_Kind ("Execute_Path_Instance_Name_Attribute",
+                           Instance.Label);
+         end case;
+      end loop;
+      declare
+         Str1 : String (1 .. Length (Rstr));
+         Len1 : Natural;
+      begin
+         Copy (Rstr, Str1, Len1);
+         Free (Rstr);
+         return String_To_Iir_Value (Str1 & ':' & Name.Suffix);
+      end;
+   end Execute_Path_Instance_Name_Attribute;
 
    function Execute_Shift_Operator (Left : Iir_Value_Literal_Acc;
                                     Count : Ghdl_I64;
@@ -431,15 +541,21 @@ package body Execution is
       return String_To_Iir_Value (Str);
    end Execute_Bit_Vector_To_String;
 
-   procedure Check_Std_Ulogic_Dc
-     (Loc : Iir; V : Grt.Std_Logic_1164.Std_Ulogic)
+   procedure Assert_Std_Ulogic_Dc (Loc : Iir)
+   is
+      use Grt.Std_Logic_1164;
+   begin
+      Execute_Failed_Assertion
+        ("STD_LOGIC_1164: '-' operand for matching ordering operator",
+         2, Loc);
+   end Assert_Std_Ulogic_Dc;
+
+   procedure Check_Std_Ulogic_Dc (Loc : Iir; V : Grt.Std_Logic_1164.Std_Ulogic)
    is
       use Grt.Std_Logic_1164;
    begin
       if V = '-' then
-         Execute_Failed_Assertion
-           ("STD_LOGIC_1164: '-' operand for matching ordering operator",
-            2, Loc);
+         Assert_Std_Ulogic_Dc (Loc);
       end if;
    end Check_Std_Ulogic_Dc;
 
@@ -689,81 +805,25 @@ package body Execution is
             Eval_Right;
             Result := Boolean_To_Lit (not Is_Equal (Left, Right));
          when Iir_Predefined_Integer_Less
-           | Iir_Predefined_Physical_Less =>
+           | Iir_Predefined_Physical_Less
+           | Iir_Predefined_Enum_Less =>
             Eval_Right;
-            case Left.Kind is
-               when Iir_Value_I64 =>
-                  Result := Boolean_To_Lit (Left.I64 < Right.I64);
-               when others =>
-                  raise Internal_Error;
-            end case;
+            Result := Boolean_To_Lit (Compare_Value (Left, Right) < Equal);
          when Iir_Predefined_Integer_Greater
-           | Iir_Predefined_Physical_Greater =>
+           | Iir_Predefined_Physical_Greater
+           | Iir_Predefined_Enum_Greater =>
             Eval_Right;
-            case Left.Kind is
-               when Iir_Value_I64 =>
-                  Result := Boolean_To_Lit (Left.I64 > Right.I64);
-               when others =>
-                  raise Internal_Error;
-            end case;
+            Result := Boolean_To_Lit (Compare_Value (Left, Right) > Equal);
          when Iir_Predefined_Integer_Less_Equal
-           | Iir_Predefined_Physical_Less_Equal =>
+           | Iir_Predefined_Physical_Less_Equal
+           | Iir_Predefined_Enum_Less_Equal =>
             Eval_Right;
-            case Left.Kind is
-               when Iir_Value_I64 =>
-                  Result := Boolean_To_Lit (Left.I64 <= Right.I64);
-               when others =>
-                  raise Internal_Error;
-            end case;
+            Result := Boolean_To_Lit (Compare_Value (Left, Right) <= Equal);
          when Iir_Predefined_Integer_Greater_Equal
-           | Iir_Predefined_Physical_Greater_Equal =>
+           | Iir_Predefined_Physical_Greater_Equal
+           | Iir_Predefined_Enum_Greater_Equal =>
             Eval_Right;
-            case Left.Kind is
-               when Iir_Value_I64 =>
-                  Result := Boolean_To_Lit (Left.I64 >= Right.I64);
-               when others =>
-                  raise Internal_Error;
-            end case;
-         when Iir_Predefined_Enum_Less =>
-            Eval_Right;
-            case Left.Kind is
-               when Iir_Value_B1 =>
-                  Result := Boolean_To_Lit (Left.B1 < Right.B1);
-               when Iir_Value_E32 =>
-                  Result := Boolean_To_Lit (Left.E32 < Right.E32);
-               when others =>
-                  raise Internal_Error;
-            end case;
-         when Iir_Predefined_Enum_Greater =>
-            Eval_Right;
-            case Left.Kind is
-               when Iir_Value_B1 =>
-                  Result := Boolean_To_Lit (Left.B1 > Right.B1);
-               when Iir_Value_E32 =>
-                  Result := Boolean_To_Lit (Left.E32 > Right.E32);
-               when others =>
-                  raise Internal_Error;
-            end case;
-         when Iir_Predefined_Enum_Less_Equal =>
-            Eval_Right;
-            case Left.Kind is
-               when Iir_Value_B1 =>
-                  Result := Boolean_To_Lit (Left.B1 <= Right.B1);
-               when Iir_Value_E32 =>
-                  Result := Boolean_To_Lit (Left.E32 <= Right.E32);
-               when others =>
-                  raise Internal_Error;
-            end case;
-         when Iir_Predefined_Enum_Greater_Equal =>
-            Eval_Right;
-            case Left.Kind is
-               when Iir_Value_B1 =>
-                  Result := Boolean_To_Lit (Left.B1 >= Right.B1);
-               when Iir_Value_E32 =>
-                  Result := Boolean_To_Lit (Left.E32 >= Right.E32);
-               when others =>
-                  raise Internal_Error;
-            end case;
+            Result := Boolean_To_Lit (Compare_Value (Left, Right) >= Equal);
 
          when Iir_Predefined_Enum_Minimum
            | Iir_Predefined_Physical_Minimum =>
@@ -1229,7 +1289,32 @@ package body Execution is
                   if Is_Character (Id) then
                      Result := String_To_Iir_Value ((1 => Get_Character (Id)));
                   else
-                     Result := String_To_Iir_Value (Image (Id));
+                     Image (Id);
+                     if Nam_Buffer (1) = '\' then
+                        --  Reformat extended identifiers for to_image.
+                        pragma Assert (Nam_Buffer (Nam_Length) = '\');
+                        declare
+                           Npos : Natural;
+                           K : Natural;
+                           C : Character;
+                        begin
+                           Npos := 1;
+                           K := 2;
+                           while K < Nam_Length loop
+                              C := Nam_Buffer (K);
+                              Nam_Buffer (Npos) := C;
+                              Npos := Npos + 1;
+                              if C = '\' then
+                                 K := K + 2;
+                              else
+                                 K := K + 1;
+                              end if;
+                           end loop;
+                           Nam_Length := Npos - 1;
+                        end;
+                     end if;
+                     Result :=
+                       String_To_Iir_Value (Nam_Buffer (1 .. Nam_Length));
                   end if;
                end if;
             end;
@@ -1361,14 +1446,19 @@ package body Execution is
             declare
                use Grt.Std_Logic_1164;
                Res : Std_Ulogic := '1';
+               Le, Re : Std_Ulogic;
+               Has_Match_Err : Boolean;
             begin
                Result := Create_E32_Value (Std_Ulogic'Pos ('1'));
+               Has_Match_Err := False;
                for I in Left.Val_Array.V'Range loop
-                  Res := And_Table
-                    (Res,
-                     Match_Eq_Table
-                       (Std_Ulogic'Val (Left.Val_Array.V (I).E32),
-                        Std_Ulogic'Val (Right.Val_Array.V (I).E32)));
+                  Le := Std_Ulogic'Val (Left.Val_Array.V (I).E32);
+                  Re := Std_Ulogic'Val (Right.Val_Array.V (I).E32);
+                  if (Le = '-' or Re = '-') and then not Has_Match_Err then
+                     Assert_Std_Ulogic_Dc (Expr);
+                     Has_Match_Err := True;
+                  end if;
+                  Res := And_Table (Res, Match_Eq_Table (Le, Re));
                end loop;
                if Func = Iir_Predefined_Std_Ulogic_Array_Match_Inequality then
                   Res := Not_Table (Res);
@@ -1493,7 +1583,7 @@ package body Execution is
       if Index.Kind /= Left_Pos.Kind or else Index.Kind /= Right_Pos.Kind then
          raise Internal_Error;
       end if;
-      case Index.Kind is
+      case Iir_Value_Discrete (Index.Kind) is
          when Iir_Value_B1 =>
             case Bounds.Dir is
                when Iir_To =>
@@ -1509,6 +1599,23 @@ package body Execution is
                   then
                      -- downto
                      return Ghdl_B1'Pos (Left_Pos.B1) - Ghdl_B1'Pos (Index.B1);
+                  end if;
+            end case;
+         when Iir_Value_E8 =>
+            case Bounds.Dir is
+               when Iir_To =>
+                  if Index.E8 >= Left_Pos.E8 and then
+                    Index.E8 <= Right_Pos.E8
+                  then
+                     -- to
+                     return Iir_Index32 (Index.E8 - Left_Pos.E8);
+                  end if;
+               when Iir_Downto =>
+                  if Index.E8 <= Left_Pos.E8 and then
+                    Index.E8 >= Right_Pos.E8
+                  then
+                     -- downto
+                     return Iir_Index32 (Left_Pos.E8 - Index.E8);
                   end if;
             end case;
          when Iir_Value_E32 =>
@@ -1545,8 +1652,6 @@ package body Execution is
                      return Iir_Index32 (Left_Pos.I64 - Index.I64);
                   end if;
             end case;
-         when others =>
-            raise Internal_Error;
       end case;
       Error_Msg_Constraint (Expr);
       return 0;
@@ -1628,6 +1733,8 @@ package body Execution is
          case Element_Mode is
             when Iir_Value_B1 =>
                El := Create_B1_Value (Ghdl_B1'Val (Pos));
+            when Iir_Value_E8 =>
+               El := Create_E8_Value (Ghdl_E8'Val (Pos));
             when Iir_Value_E32 =>
                El := Create_E32_Value (Ghdl_E32'Val (Pos));
             when others =>
@@ -2196,11 +2303,11 @@ package body Execution is
 
    -- Perform type conversion as desribed in LRM93 7.3.5
    function Execute_Type_Conversion (Block: Block_Instance_Acc;
-                                     Conv : Iir_Type_Conversion;
-                                     Val : Iir_Value_Literal_Acc)
+                                     Val : Iir_Value_Literal_Acc;
+                                     Target_Type : Iir;
+                                     Loc : Iir)
                                     return Iir_Value_Literal_Acc
    is
-      Target_Type : constant Iir := Get_Type (Conv);
       Res: Iir_Value_Literal_Acc;
    begin
       Res := Val;
@@ -2214,7 +2321,7 @@ package body Execution is
                   if Res.F64 > Ghdl_F64 (Iir_Int64'Last) or
                     Res.F64 < Ghdl_F64 (Iir_Int64'First)
                   then
-                     Error_Msg_Constraint (Conv);
+                     Error_Msg_Constraint (Loc);
                   end if;
                   Res := Create_I64_Value (Ghdl_I64 (Res.F64));
             end case;
@@ -2238,23 +2345,43 @@ package body Execution is
            | Iir_Kind_Record_Subtype_Definition =>
             --  Same type.
             null;
-         when Iir_Kind_Array_Type_Definition =>
+         when Iir_Kind_Array_Subtype_Definition
+           | Iir_Kind_Array_Type_Definition =>
             --  LRM93 7.3.5
             --  if the type mark denotes an unconstrained array type and the
             --  operand is not a null array, then for each index position, the
             --  bounds of the result are obtained by converting the bounds of
             --  the operand to the corresponding index type of the target type.
-            -- FIXME: what is bound conversion ??
-            null;
-         when Iir_Kind_Array_Subtype_Definition =>
+            --
             --  LRM93 7.3.5
             --  If the type mark denotes a constrained array subtype, then the
             --  bounds of the result are those imposed by the type mark.
-            Implicit_Array_Conversion (Block, Res, Target_Type, Conv);
+            if Get_Constraint_State (Target_Type) = Fully_Constrained then
+               Implicit_Array_Conversion (Block, Res, Target_Type, Loc);
+            else
+               declare
+                  Idx_List : constant Iir_List :=
+                    Get_Index_Subtype_List (Target_Type);
+                  Idx_Type : Iir;
+               begin
+                  Res := Create_Array_Value (Val.Bounds.Nbr_Dims);
+                  Res.Val_Array := Val.Val_Array;
+                  for I in Val.Bounds.D'Range loop
+                     Idx_Type := Get_Index_Type (Idx_List, Natural (I - 1));
+                     Res.Bounds.D (I) := Create_Range_Value
+                       (Left => Execute_Type_Conversion
+                          (Block, Val.Bounds.D (I).Left, Idx_Type, Loc),
+                        Right => Execute_Type_Conversion
+                          (Block, Val.Bounds.D (I).Right, Idx_Type, Loc),
+                        Dir => Val.Bounds.D (I).Dir,
+                        Length => Val.Bounds.D (I).Length);
+                  end loop;
+               end;
+               end if;
          when others =>
             Error_Kind ("execute_type_conversion", Target_Type);
       end case;
-      Check_Constraints (Block, Res, Target_Type, Conv);
+      Check_Constraints (Block, Res, Target_Type, Loc);
       return Res;
    end Execute_Type_Conversion;
 
@@ -2265,12 +2392,17 @@ package body Execution is
    is
       Res : Iir_Value_Literal_Acc;
    begin
-      case Val.Kind is
+      case Iir_Value_Discrete (Val.Kind) is
          when Iir_Value_B1 =>
             if Val.B1 = False then
                Error_Msg_Constraint (Expr);
             end if;
             Res := Create_B1_Value (False);
+         when Iir_Value_E8 =>
+            if Val.E8 = 0 then
+               Error_Msg_Constraint (Expr);
+            end if;
+            Res := Create_E8_Value (Val.E8 - 1);
          when Iir_Value_E32 =>
             if Val.E32 = 0 then
                Error_Msg_Constraint (Expr);
@@ -2281,8 +2413,6 @@ package body Execution is
                Error_Msg_Constraint (Expr);
             end if;
             Res := Create_I64_Value (Val.I64 - 1);
-         when others =>
-            raise Internal_Error;
       end case;
       return Res;
    end Execute_Dec;
@@ -2294,7 +2424,7 @@ package body Execution is
    is
       Res : Iir_Value_Literal_Acc;
    begin
-      case Val.Kind is
+      case Iir_Value_Discrete (Val.Kind) is
          when Iir_Value_B1 =>
             if Val.B1 = True then
                Error_Msg_Constraint (Expr);
@@ -2305,13 +2435,16 @@ package body Execution is
                Error_Msg_Constraint (Expr);
             end if;
             Res := Create_E32_Value (Val.E32 + 1);
+         when Iir_Value_E8 =>
+            if Val.E8 = Ghdl_E8'Last then
+               Error_Msg_Constraint (Expr);
+            end if;
+            Res := Create_E8_Value (Val.E8 + 1);
          when Iir_Value_I64 =>
             if Val.I64 = Ghdl_I64'Last then
                Error_Msg_Constraint (Expr);
             end if;
             Res := Create_I64_Value (Val.I64 + 1);
-         when others =>
-            raise Internal_Error;
       end case;
       return Res;
    end Execute_Inc;
@@ -2551,6 +2684,13 @@ package body Execution is
             Res := Execute_Name_Aggregate (Block, Expr, Get_Type (Expr));
             --  FIXME: is_sig ?
 
+         when Iir_Kind_Image_Attribute =>
+            Res := Execute_Image_Attribute (Block, Expr);
+
+         when Iir_Kind_Path_Name_Attribute
+           | Iir_Kind_Instance_Name_Attribute =>
+            Res := Execute_Path_Instance_Name_Attribute (Block, Expr);
+
          when others =>
             Error_Kind ("execute_name_with_base", Expr);
       end case;
@@ -2571,17 +2711,6 @@ package body Execution is
          return Execute_Signal_Value (Res);
       end if;
    end Execute_Name;
-
-   function Execute_Image_Attribute (Block: Block_Instance_Acc; Expr: Iir)
-                                    return Iir_Value_Literal_Acc
-   is
-      Val : Iir_Value_Literal_Acc;
-      Attr_Type : constant Iir := Get_Type (Get_Prefix (Expr));
-   begin
-      Val := Execute_Expression (Block, Get_Parameter (Expr));
-      return String_To_Iir_Value
-        (Execute_Image_Attribute (Val, Attr_Type));
-   end Execute_Image_Attribute;
 
    function Execute_Value_Attribute (Block: Block_Instance_Acc;
                                      Str_Val : Iir_Value_Literal_Acc;
@@ -2730,94 +2859,6 @@ package body Execution is
       return Res;
    end Execute_Value_Attribute;
 
-   function Execute_Path_Instance_Name_Attribute
-     (Block : Block_Instance_Acc; Attr : Iir)
-     return Iir_Value_Literal_Acc
-   is
-      use Evaluation;
-      use Grt.Vstrings;
-      use Name_Table;
-
-      Name : constant Path_Instance_Name_Type :=
-        Get_Path_Instance_Name_Suffix (Attr);
-      Instance : Block_Instance_Acc;
-      Rstr : Rstring;
-      Is_Instance : constant Boolean :=
-        Get_Kind (Attr) = Iir_Kind_Instance_Name_Attribute;
-   begin
-      if Name.Path_Instance = Null_Iir then
-         return String_To_Iir_Value (Name.Suffix);
-      end if;
-
-      Instance := Get_Instance_By_Scope
-        (Block, Get_Info (Name.Path_Instance).Frame_Scope);
-
-      loop
-         case Get_Kind (Instance.Label) is
-            when Iir_Kind_Entity_Declaration =>
-               if Instance.Parent = null then
-                  Prepend (Rstr, Image (Get_Identifier (Instance.Label)));
-                  exit;
-               end if;
-            when Iir_Kind_Architecture_Body =>
-               if Is_Instance then
-                  Prepend (Rstr, ')');
-                  Prepend (Rstr, Image (Get_Identifier (Instance.Label)));
-                  Prepend (Rstr, '(');
-               end if;
-
-               if Is_Instance or else Instance.Parent = null then
-                  Prepend
-                    (Rstr,
-                     Image (Get_Identifier (Get_Entity (Instance.Label))));
-               end if;
-               if Instance.Parent = null then
-                  Prepend (Rstr, ':');
-                  exit;
-               else
-                  Instance := Instance.Parent;
-               end if;
-            when Iir_Kind_Block_Statement =>
-               Prepend (Rstr, Image (Get_Label (Instance.Label)));
-               Prepend (Rstr, ':');
-               Instance := Instance.Parent;
-            when Iir_Kind_Iterator_Declaration =>
-               declare
-                  Val : Iir_Value_Literal_Acc;
-               begin
-                  Val := Execute_Name (Instance, Instance.Label);
-                  Prepend (Rstr, ')');
-                  Prepend (Rstr, Execute_Image_Attribute
-                             (Val, Get_Type (Instance.Label)));
-                  Prepend (Rstr, '(');
-               end;
-               Instance := Instance.Parent;
-            when Iir_Kind_Generate_Statement_Body =>
-               Prepend (Rstr, Image (Get_Label (Get_Parent (Instance.Label))));
-               Prepend (Rstr, ':');
-               Instance := Instance.Parent;
-            when Iir_Kind_Component_Instantiation_Statement =>
-               if Is_Instance then
-                  Prepend (Rstr, '@');
-               end if;
-               Prepend (Rstr, Image (Get_Label (Instance.Label)));
-               Prepend (Rstr, ':');
-               Instance := Instance.Parent;
-            when others =>
-               Error_Kind ("Execute_Path_Instance_Name_Attribute",
-                           Instance.Label);
-         end case;
-      end loop;
-      declare
-         Str1 : String (1 .. Length (Rstr));
-         Len1 : Natural;
-      begin
-         Copy (Rstr, Str1, Len1);
-         Free (Rstr);
-         return String_To_Iir_Value (Str1 & ':' & Name.Suffix);
-      end;
-   end Execute_Path_Instance_Name_Attribute;
-
    --  For 'Last_Event and 'Last_Active: convert the absolute last time to
    --  a relative delay.
    function To_Relative_Time (T : Ghdl_I64) return Iir_Value_Literal_Acc is
@@ -2944,6 +2985,8 @@ package body Execution is
                case Get_Info (Lit_Type).Scalar_Mode is
                   when Iir_Value_B1 =>
                      return Create_B1_Value (Ghdl_B1'Val (Lit));
+                  when Iir_Value_E8 =>
+                     return Create_E8_Value (Ghdl_E8'Val (Lit));
                   when Iir_Value_E32 =>
                      return Create_E32_Value (Ghdl_E32 (Lit));
                   when others =>
@@ -2972,8 +3015,8 @@ package body Execution is
 
          when Iir_Kind_Type_Conversion =>
             return Execute_Type_Conversion
-              (Block, Expr,
-               Execute_Expression (Block, Get_Expression (Expr)));
+              (Block, Execute_Expression (Block, Get_Expression (Expr)),
+               Get_Type (Expr), Expr);
 
          when Iir_Kind_Qualified_Expression =>
             Res := Execute_Expression_With_Type
@@ -3075,16 +3118,15 @@ package body Execution is
                  Get_Info (Base_Type).Scalar_Mode;
             begin
                Res := Execute_Expression (Block, Get_Parameter (Expr));
-               case Mode is
+               case Iir_Value_Discrete (Mode) is
                   when Iir_Value_I64 =>
                      null;
+                  when Iir_Value_E8 =>
+                     Res := Create_E8_Value (Ghdl_E8 (Res.I64));
                   when Iir_Value_E32 =>
                      Res := Create_E32_Value (Ghdl_E32 (Res.I64));
                   when Iir_Value_B1 =>
                      Res := Create_B1_Value (Ghdl_B1'Val (Res.I64));
-                  when others =>
-                     Error_Kind ("execute_expression(val attribute)",
-                                 Prefix_Type);
                end case;
                Check_Constraints (Block, Res, Prefix_Type, Expr);
                return Res;
@@ -3099,18 +3141,18 @@ package body Execution is
                  Get_Info (Base_Type).Scalar_Mode;
             begin
                Res := Execute_Expression (Block, Get_Parameter (Expr));
-               case Mode is
+               case Iir_Value_Discrete (Mode) is
                   when Iir_Value_I64 =>
                      null;
                   when Iir_Value_B1 =>
                      N_Res := Create_I64_Value (Ghdl_B1'Pos (Res.B1));
                      Res := N_Res;
+                  when Iir_Value_E8 =>
+                     N_Res := Create_I64_Value (Ghdl_I64 (Res.E8));
+                     Res := N_Res;
                   when Iir_Value_E32 =>
                      N_Res := Create_I64_Value (Ghdl_I64 (Res.E32));
                      Res := N_Res;
-                  when others =>
-                     Error_Kind ("execute_expression(pos attribute)",
-                                 Base_Type);
                end case;
                Check_Constraints (Block, Res, Get_Type (Expr), Expr);
                return Res;
@@ -3222,9 +3264,8 @@ package body Execution is
    end Execute_Monadic_Association;
 
    --  Create a block instance for subprogram IMP.
-   function Create_Subprogram_Instance (Instance : Block_Instance_Acc;
-                                        Imp : Iir)
-                                       return Block_Instance_Acc
+   function Create_Subprogram_Instance
+     (Instance : Block_Instance_Acc; Imp : Iir) return Block_Instance_Acc
    is
       Func_Info : constant Sim_Info_Acc := Get_Info (Imp);
 
@@ -3235,20 +3276,36 @@ package body Execution is
         Alloc_On_Pool_Addr (Block_Type);
 
       Up_Block: Block_Instance_Acc;
+      Up_Info : Sim_Info_Acc;
       Res : Block_Instance_Acc;
+
+      Origin : Iir;
+      Label : Iir;
    begin
       pragma Assert (Get_Kind (Imp) in Iir_Kinds_Subprogram_Declaration
-                    or else Get_Kind (Imp) = Iir_Kind_Protected_Type_Body);
-      Up_Block := Get_Instance_By_Scope
-        (Instance, Get_Info (Get_Parent (Imp)).Frame_Scope);
+                       or else Get_Kind (Imp) = Iir_Kind_Protected_Type_Body);
+
+      Up_Info := Get_Info (Get_Parent (Imp));
+      Up_Block := Get_Instance_By_Scope (Instance, Up_Info.Frame_Scope);
+
+      Origin := Sem_Inst.Get_Origin (Imp);
+      if Origin /= Null_Iir then
+         Label := Origin;
+         if Up_Info.Kind = Kind_Environment then
+            Up_Block := Environment_Table.Table
+              (Up_Block.Objects (Up_Info.Env_Slot).Environment);
+         end if;
+      else
+         Label := Imp;
+      end if;
 
       Res := To_Block_Instance_Acc
         (Alloc_Block_Instance
            (Instance_Pool,
             Block_Instance_Type'(Max_Objs => Func_Info.Nbr_Objects,
-                                 Block_Scope => Func_Info.Frame_Scope,
+                                 Block_Scope => Get_Info (Label).Frame_Scope,
                                  Up_Block => Up_Block,
-                                 Label => Imp,
+                                 Label => Label,
                                  Stmt => Null_Iir,
                                  Parent => Instance,
                                  Children => null,
@@ -3271,10 +3328,10 @@ package body Execution is
         (Instance, Get_Declaration_Chain (Subprg_Body));
    end Execute_Subprogram_Call_Final;
 
-   function Execute_Function_Body (Instance : Block_Instance_Acc; Func : Iir)
+   function Execute_Function_Body (Instance : Block_Instance_Acc)
                                   return Iir_Value_Literal_Acc
    is
-      Subprg_Body : constant Iir := Get_Subprogram_Body (Func);
+      Subprg_Body : constant Iir := Get_Subprogram_Body (Instance.Label);
       Res : Iir_Value_Literal_Acc;
    begin
       Current_Process.Instance := Instance;
@@ -3289,7 +3346,8 @@ package body Execution is
 
       if Instance.Result = null then
          Error_Msg_Exec
-           ("function scope exited without a return statement", Func);
+           ("function scope exited without a return statement",
+            Instance.Label);
       end if;
 
       -- Free variables, slots...
@@ -3322,7 +3380,7 @@ package body Execution is
       --  FIXME: implicit conversion
       Instance.Objects (Get_Info (Inter).Slot) := Val;
 
-      Res := Execute_Function_Body (Instance, Func);
+      Res := Execute_Function_Body (Instance);
       Res := Unshare (Res, Expr_Pool'Access);
       Release (Marker, Instance_Pool.all);
       return Res;
@@ -3341,14 +3399,15 @@ package body Execution is
               (Block, Get_Implementation (Conv), Val);
          when Iir_Kind_Type_Conversion =>
             --  FIXME: shouldn't CONV always be a denoting_name ?
-            return Execute_Type_Conversion (Block, Conv, Val);
+            return Execute_Type_Conversion (Block, Val, Get_Type (Conv), Conv);
          when Iir_Kinds_Denoting_Name
            | Iir_Kind_Function_Declaration =>
             Ent := Strip_Denoting_Name (Conv);
             if Get_Kind (Ent) = Iir_Kind_Function_Declaration then
                return Execute_Assoc_Function_Conversion (Block, Ent, Val);
             elsif Get_Kind (Ent) in Iir_Kinds_Type_Declaration then
-               return Execute_Type_Conversion (Block, Ent, Val);
+               return Execute_Type_Conversion
+                 (Block, Val, Get_Type (Ent), Ent);
             else
                Error_Kind ("execute_assoc_conversion(1)", Ent);
             end if;
@@ -3377,6 +3436,17 @@ package body Execution is
          when Iir_Kind_Indexed_Name =>
             Execute_Indexed_Name (Block, Formal, Pfx, Pos);
             Store (Pfx.Val_Array.V (Pos + 1), Actual);
+         when Iir_Kind_Slice_Name =>
+            declare
+               Low, High : Iir_Index32;
+               Srange : Iir_Value_Literal_Acc;
+            begin
+               Srange := Execute_Bounds (Block, Get_Suffix (Formal));
+               Execute_Slice_Name (Pfx, Srange, Low, High, Formal);
+               for I in 1 .. High - Low + 1 loop
+                  Store (Pfx.Val_Array.V (Low + I), Actual.Val_Array.V (I));
+               end loop;
+            end;
          when Iir_Kind_Selected_Element =>
             Pos := Get_Element_Position (Get_Selected_Element (Formal));
             Store (Pfx.Val_Record.V (Pos + 1), Actual);
@@ -3684,7 +3754,7 @@ package body Execution is
       if Get_Foreign_Flag (Imp) then
          Res := Execute_Foreign_Function_Call (Subprg_Block, Expr, Imp);
       else
-         Res := Execute_Function_Body (Subprg_Block, Imp);
+         Res := Execute_Function_Body (Subprg_Block);
       end if;
 
       --  Unfortunately, we don't know where the result has been allocated,
@@ -3822,9 +3892,13 @@ package body Execution is
                High := Bound.Left;
                Low := Bound.Right;
             end if;
-            case Get_Info (Base_Type).Scalar_Mode is
+            case Iir_Value_Scalars (Get_Info (Base_Type).Scalar_Mode) is
                when Iir_Value_I64 =>
                   if Value.I64 in Low.I64 .. High.I64 then
+                     return;
+                  end if;
+               when Iir_Value_E8 =>
+                  if Value.E8 in Low.E8 .. High.E8 then
                      return;
                   end if;
                when Iir_Value_E32 =>
@@ -3839,8 +3913,6 @@ package body Execution is
                   if Value.B1 in Low.B1 .. High.B1 then
                      return;
                   end if;
-               when others =>
-                  raise Internal_Error;
             end case;
          when Iir_Kind_Array_Subtype_Definition
            | Iir_Kind_Array_Type_Definition =>
@@ -3895,7 +3967,7 @@ package body Execution is
       Elaboration.Create_Object (Instance, Inter);
       Instance.Objects (Get_Info (Inter).Slot) := Arr;
 
-      return Execute_Function_Body (Instance, Imp);
+      return Execute_Function_Body (Instance);
    end Execute_Resolution_Function;
 
    procedure Execute_Signal_Assignment
@@ -4080,7 +4152,7 @@ package body Execution is
          begin
             for I in Report.Val_Array.V'Range loop
                Msg (Positive (I)) :=
-                 Character'Val (Report.Val_Array.V (I).E32);
+                 Character'Val (Report.Val_Array.V (I).E8);
             end loop;
             Execute_Failed_Assertion (Msg, Severity, Stmt);
          end;
@@ -4110,7 +4182,7 @@ package body Execution is
       Expr := Get_Severity_Expression (Stmt);
       if Expr /= Null_Iir then
          Severity_Lit := Execute_Expression (Instance, Expr);
-         Severity := Natural'Val (Severity_Lit.E32);
+         Severity := Natural'Val (Severity_Lit.E8);
       else
          Severity := Default_Severity;
       end if;
@@ -4168,16 +4240,15 @@ package body Execution is
             Max := Bounds.Left;
       end case;
 
-      case Val.Kind is
+      case Iir_Value_Discrete (Val.Kind) is
+         when Iir_Value_E8 =>
+            return Val.E8 >= Min.E8 and Val.E8 <= Max.E8;
          when Iir_Value_E32 =>
             return Val.E32 >= Min.E32 and Val.E32 <= Max.E32;
          when Iir_Value_B1 =>
             return Val.B1 >= Min.B1 and Val.B1 <= Max.B1;
          when Iir_Value_I64 =>
             return Val.I64 >= Min.I64 and Val.I64 <= Max.I64;
-         when others =>
-            raise Internal_Error;
-            return False;
       end case;
    end Is_In_Range;
 
@@ -4187,7 +4258,14 @@ package body Execution is
                                 Bounds : Iir_Value_Literal_Acc)
    is
    begin
-      case Val.Kind is
+      case Iir_Value_Discrete (Val.Kind) is
+         when Iir_Value_E8 =>
+            case Bounds.Dir is
+               when Iir_To =>
+                  Val.E8 := Val.E8 + 1;
+               when Iir_Downto =>
+                  Val.E8 := Val.E8 - 1;
+            end case;
          when Iir_Value_E32 =>
             case Bounds.Dir is
                when Iir_To =>
@@ -4209,8 +4287,6 @@ package body Execution is
                when Iir_Downto =>
                   Val.I64 := Val.I64 - 1;
             end case;
-         when others =>
-            raise Internal_Error;
       end case;
    end Update_Loop_Index;
 

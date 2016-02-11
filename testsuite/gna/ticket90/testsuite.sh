@@ -9,6 +9,7 @@ clean
 GHDL_STD_FLAGS=--std=08
 
 analyze test.vhdl
+analyze test2.vhdl
 clean
 
 echo "Test successful"

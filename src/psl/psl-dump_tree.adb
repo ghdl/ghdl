@@ -65,13 +65,14 @@ package body PSL.Dump_Tree is
       end if;
    end Image_Boolean;
 
-   procedure Disp_HDL_Node (Val : HDL_Node)
-   is
+   procedure Disp_HDL_Node
+     (Val : HDL_Node; Indent : Natural; Depth : Natural) is
    begin
       if Dump_Hdl_Node /= null then
-         Dump_Hdl_Node.all (Val);
+         Dump_Hdl_Node.all (Val, Indent, Depth);
       else
          Disp_Int32 (Val);
+         New_Line;
       end if;
    end Disp_HDL_Node;
 
@@ -143,8 +144,6 @@ package body PSL.Dump_Tree is
       New_Line;
    end Disp_Header;
 
-   procedure Disp_Tree (N : Node; Indent : Natural; Depth : Natural);
-
    procedure Disp_Chain (Tree_Chain: Node; Indent: Natural; Depth : Natural)
    is
       El: Node;
@@ -206,8 +205,7 @@ package body PSL.Dump_Tree is
                when Type_Name_Id =>
                   Put_Line (Name_Table.Image (Get_Name_Id (N, F)));
                when Type_HDL_Node =>
-                  Disp_HDL_Node (Get_HDL_Node (N, F));
-                  New_Line;
+                  Disp_HDL_Node (Get_HDL_Node (N, F), Sub_Indent, Depth - 1);
                when Type_NFA =>
                   Disp_NFA (Get_NFA (N, F));
                   New_Line;
@@ -218,14 +216,5 @@ package body PSL.Dump_Tree is
          end loop;
       end;
    end Disp_Tree;
-
-   procedure Dump_Tree (N : Node; Full : Boolean := False) is
-   begin
-      if Full then
-         Disp_Tree (N, 0, 20);
-      else
-         Disp_Tree (N, 0, 0);
-      end if;
-   end Dump_Tree;
 
 end PSL.Dump_Tree;

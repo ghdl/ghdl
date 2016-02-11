@@ -3,7 +3,9 @@
 . ../../testenv.sh
 
 analyze test.vhd
-elab_simulate test --wave=test.ghw
+if ghdl_has_feature test ghw; then
+  elab_simulate test --wave=test.ghw
+fi
 
 clean
 
