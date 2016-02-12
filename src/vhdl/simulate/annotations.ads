@@ -46,7 +46,8 @@ package Annotations is
       Kind_Object, Kind_Signal, Kind_Range,
       Kind_File,
       Kind_Terminal, Kind_Quantity,
-      Kind_Environment);
+      Kind_Environment,
+      Kind_PSL);
 
    type Sim_Info_Type (Kind: Sim_Info_Kind);
    type Sim_Info_Acc is access all Sim_Info_Type;
@@ -114,7 +115,8 @@ package Annotations is
            | Kind_Range
            | Kind_File
            | Kind_Terminal
-           | Kind_Quantity =>
+           | Kind_Quantity
+           | Kind_PSL =>
             --  Block in which this object is declared in.
             Obj_Scope : Scope_Type;
 

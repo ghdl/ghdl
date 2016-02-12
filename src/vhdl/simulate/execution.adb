@@ -58,7 +58,8 @@ package body Execution is
    procedure Update_Next_Statement (Proc : Process_State_Acc);
 
    -- Display a message when an assertion has failed.
-   procedure Execute_Failed_Assertion (Report : String;
+   procedure Execute_Failed_Assertion (Msg : String;
+                                       Report : String;
                                        Severity : Natural;
                                        Stmt: Iir);
 
@@ -547,7 +548,8 @@ package body Execution is
       use Grt.Std_Logic_1164;
    begin
       Execute_Failed_Assertion
-        ("STD_LOGIC_1164: '-' operand for matching ordering operator",
+        ("assertion",
+         "STD_LOGIC_1164: '-' operand for matching ordering operator",
          2, Loc);
    end Assert_Std_Ulogic_Dc;
 
@@ -4102,7 +4104,8 @@ package body Execution is
    -- REPORT is the value (string) to display, or null to use default message.
    -- SEVERITY is the severity or null to use default (error).
    -- STMT is used to display location.
-   procedure Execute_Failed_Assertion (Report : String;
+   procedure Execute_Failed_Assertion (Msg : String;
+                                       Report : String;
                                        Severity : Natural;
                                        Stmt: Iir) is
    begin
@@ -4113,7 +4116,9 @@ package body Execution is
       Put (Standard_Error, Disp_Location (Stmt));
 
       -- 1: an indication that this message is from an assertion.
-      Put (Standard_Error, "(assertion ");
+      Put (Standard_Error, '(');
+      Put (Standard_Error, Msg);
+      Put (Standard_Error, ' ');
 
       -- 2: the value of the severity level.
       case Severity is
@@ -4144,30 +4149,12 @@ package body Execution is
       end if;
    end Execute_Failed_Assertion;
 
-   procedure Execute_Failed_Assertion (Report : Iir_Value_Literal_Acc;
-                                       Severity : Natural;
-                                       Stmt: Iir) is
-   begin
-      if Report /= null then
-         declare
-            Msg : String (1 .. Natural (Report.Val_Array.Len));
-         begin
-            for I in Report.Val_Array.V'Range loop
-               Msg (Positive (I)) :=
-                 Character'Val (Report.Val_Array.V (I).E8);
-            end loop;
-            Execute_Failed_Assertion (Msg, Severity, Stmt);
-         end;
-      else
-         -- The default value for the message string is:
-         -- "Assertion violation.".
-         -- Does the message string include quotes ?
-         Execute_Failed_Assertion ("Assertion violation.", Severity, Stmt);
-      end if;
-   end Execute_Failed_Assertion;
-
-   procedure Execute_Report_Statement
-     (Instance: Block_Instance_Acc; Stmt: Iir; Default_Severity : Natural)
+   procedure Execute_Failed_Assertion
+     (Instance: Block_Instance_Acc;
+      Label : String;
+      Stmt : Iir;
+      Default_Msg : String;
+      Default_Severity : Natural)
    is
       Expr: Iir;
       Report, Severity_Lit: Iir_Value_Literal_Acc;
@@ -4188,9 +4175,21 @@ package body Execution is
       else
          Severity := Default_Severity;
       end if;
-      Execute_Failed_Assertion (Report, Severity, Stmt);
+      if Report /= null then
+         declare
+            Msg : String (1 .. Natural (Report.Val_Array.Len));
+         begin
+            for I in Report.Val_Array.V'Range loop
+               Msg (Positive (I)) :=
+                 Character'Val (Report.Val_Array.V (I).E8);
+            end loop;
+            Execute_Failed_Assertion (Label, Msg, Severity, Stmt);
+         end;
+      else
+         Execute_Failed_Assertion (Label, Default_Msg, Severity, Stmt);
+      end if;
       Release (Marker, Expr_Pool);
-   end Execute_Report_Statement;
+   end Execute_Failed_Assertion;
 
    function Is_In_Choice
      (Instance: Block_Instance_Acc;
@@ -4783,13 +4782,15 @@ package body Execution is
                   Res := Execute_Condition
                     (Instance, Get_Assertion_Condition (Stmt));
                   if not Res then
-                     Execute_Report_Statement (Instance, Stmt, 2);
+                     Execute_Failed_Assertion (Instance, "assertion", Stmt,
+                                               "Assertion violation.", 2);
                   end if;
                end;
                Update_Next_Statement (Proc);
 
             when Iir_Kind_Report_Statement =>
-               Execute_Report_Statement (Instance, Stmt, 0);
+               Execute_Failed_Assertion (Instance, "report", Stmt,
+                                         "Assertion violation.", 0);
                Update_Next_Statement (Proc);
 
             when Iir_Kind_Variable_Assignment_Statement =>

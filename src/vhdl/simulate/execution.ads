@@ -88,6 +88,13 @@ package Execution is
       Expr_Type : Iir)
      return Iir_Value_Literal_Acc;
 
+   procedure Execute_Failed_Assertion
+     (Instance: Block_Instance_Acc;
+      Label : String;
+      Stmt : Iir;
+      Default_Msg : String;
+      Default_Severity : Natural);
+
    function Execute_Resolution_Function
      (Block: Block_Instance_Acc; Imp : Iir; Arr : Iir_Value_Literal_Acc)
       return Iir_Value_Literal_Acc;
