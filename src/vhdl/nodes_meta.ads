@@ -356,7 +356,10 @@ package Nodes_Meta is
       Field_Psl_Expression,
       Field_Psl_Boolean,
       Field_PSL_Clock,
-      Field_PSL_NFA
+      Field_PSL_NFA,
+      Field_PSL_Nbr_States,
+      Field_PSL_Clock_Sensitivity,
+      Field_PSL_EOS_Flag
      );
    pragma Discard_Names (Fields_Enum);
 
@@ -844,4 +847,7 @@ package Nodes_Meta is
    function Has_Psl_Boolean (K : Iir_Kind) return Boolean;
    function Has_PSL_Clock (K : Iir_Kind) return Boolean;
    function Has_PSL_NFA (K : Iir_Kind) return Boolean;
+   function Has_PSL_Nbr_States (K : Iir_Kind) return Boolean;
+   function Has_PSL_Clock_Sensitivity (K : Iir_Kind) return Boolean;
+   function Has_PSL_EOS_Flag (K : Iir_Kind) return Boolean;
 end Nodes_Meta;

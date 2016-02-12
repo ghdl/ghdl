@@ -2517,9 +2517,18 @@ package Iirs is
    --
    --   Get/Set_Report_Expression (Field5)
    --
+   --  The following fields are set by canon.
    --   Get/Set_PSL_Clock (Field7)
    --
    --   Get/Set_PSL_NFA (Field8)
+   --
+   --  Number of states in the NFA.
+   --   Get/Set_PSL_Nbr_States (Field9)
+   --
+   --   Get/Set_PSL_Clock_Sensitivity (Field10)
+   --
+   --  True if at least one of the NFA edge has the EOS flag.
+   --   Get/Set_PSL_EOS_Flag (Flag1)
    --
    --   Get/Set_Visible_Flag (Flag4)
 
@@ -6655,4 +6664,17 @@ package Iirs is
    --  Field: Field8 (uc)
    function Get_PSL_NFA (N : Iir) return PSL_NFA;
    procedure Set_PSL_NFA (N : Iir; Fa : PSL_NFA);
+
+   --  Field: Field9 (uc)
+   function Get_PSL_Nbr_States (N : Iir) return Int32;
+   procedure Set_PSL_Nbr_States (N : Iir; Nbr : Int32);
+
+   --  Field: Field10 (uc)
+   function Get_PSL_Clock_Sensitivity (N : Iir) return Iir_List;
+   procedure Set_PSL_Clock_Sensitivity (N : Iir; List : Iir_List);
+
+   --  Field: Flag1
+   function Get_PSL_EOS_Flag (N : Iir) return Boolean;
+   procedure Set_PSL_EOS_Flag (N : Iir; Flag : Boolean);
+
 end Iirs;

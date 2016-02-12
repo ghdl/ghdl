@@ -22,7 +22,6 @@ with Std_Package; use Std_Package;
 with Flags;
 with Libraries;
 with Canon;
-with Canon_PSL;
 with Trans_Analyzes;
 with Nodes_Meta;
 with PSL.Nodes;
@@ -299,8 +298,6 @@ package body Trans.Chap9 is
       use PSL.Nodes;
       use PSL.NFAs;
 
-      N : constant NFA := Get_PSL_NFA (Stmt);
-
       Mark : Id_Mark_Type;
       Info : Ortho_Info_Acc;
    begin
@@ -310,12 +307,14 @@ package body Trans.Chap9 is
       Push_Identifier_Prefix (Mark, Get_Identifier (Stmt));
       Push_Instance_Factory (Info.Psl_Scope'Access);
 
-      Labelize_States (N, Info.Psl_Vect_Len);
+      --  Create the state vector type.
       Info.Psl_Vect_Type := New_Constrained_Array_Type
         (Std_Boolean_Array_Type,
          New_Unsigned_Literal (Ghdl_Index_Type,
-           Unsigned_64 (Info.Psl_Vect_Len)));
+                               Unsigned_64 (Get_PSL_Nbr_States (Stmt))));
       New_Type_Decl (Create_Identifier ("VECTTYPE"), Info.Psl_Vect_Type);
+
+      --  Create the variables.
       Info.Psl_Vect_Var := Create_Var
         (Create_Var_Identifier ("VECT"), Info.Psl_Vect_Type);
 
@@ -387,25 +386,6 @@ package body Trans.Chap9 is
       end case;
    end Translate_Psl_Expr;
 
-   --  Return TRUE iff NFA has an edge with an EOS.
-   --  If so, we need to create a finalizer.
-   function Psl_Need_Finalizer (Nfa : PSL_NFA) return Boolean
-   is
-      use PSL.NFAs;
-      S : NFA_State;
-      E : NFA_Edge;
-   begin
-      S := Get_Final_State (Nfa);
-      E := Get_First_Dest_Edge (S);
-      while E /= No_Edge loop
-         if PSL.NFAs.Utils.Has_EOS (Get_Edge_Expr (E)) then
-            return True;
-         end if;
-         E := Get_Next_Dest_Edge (E);
-      end loop;
-      return False;
-   end Psl_Need_Finalizer;
-
    procedure Create_Psl_Final_Proc
      (Stmt : Iir; Base : Block_Info_Acc; Instance : out O_Dnode)
    is
@@ -474,19 +454,19 @@ package body Trans.Chap9 is
       Gen_Exit_When
         (Label,
          New_Compare_Op (ON_Ge,
-           New_Obj_Value (Var_I),
-           New_Lit (New_Unsigned_Literal
-             (Ghdl_Index_Type,
-                Unsigned_64 (Info.Psl_Vect_Len))),
-           Ghdl_Bool_Type));
+                         New_Obj_Value (Var_I),
+                         New_Lit (New_Unsigned_Literal
+                                    (Ghdl_Index_Type,
+                                     Unsigned_64 (Get_PSL_Nbr_States (Stmt)))),
+                         Ghdl_Bool_Type));
       New_Assign_Stmt (New_Indexed_Element (New_Obj (Var_Nvec),
-                       New_Obj_Value (Var_I)),
+                                            New_Obj_Value (Var_I)),
                        New_Lit (Std_Boolean_False_Node));
       Inc_Var (Var_I);
       Finish_Loop_Stmt (Label);
       Finish_Declare_Stmt;
 
-      --  Global if statement for the clock.
+      --  Global 'if' statement for the clock.
       Open_Temp;
       Start_If_Stmt (Clk_Blk,
                      Translate_Psl_Expr (Get_PSL_Clock (Stmt), False));
@@ -535,7 +515,7 @@ package body Trans.Chap9 is
       --  Check fail state.
       S := Get_Final_State (NFA);
       S_Num := Get_State_Label (S);
-      pragma Assert (Integer (S_Num) = Info.Psl_Vect_Len - 1);
+      pragma Assert (S_Num = Get_PSL_Nbr_States (Stmt) - 1);
       Start_If_Stmt
         (S_Blk,
          New_Value (New_Indexed_Element (New_Obj (Var_Nvec),
@@ -565,16 +545,16 @@ package body Trans.Chap9 is
       Gen_Exit_When
         (Label,
          New_Compare_Op (ON_Ge,
-           New_Obj_Value (Var_I),
-           New_Lit (New_Unsigned_Literal
-             (Ghdl_Index_Type,
-                Unsigned_64 (Info.Psl_Vect_Len))),
-           Ghdl_Bool_Type));
+                         New_Obj_Value (Var_I),
+                         New_Lit (New_Unsigned_Literal
+                                    (Ghdl_Index_Type,
+                                     Unsigned_64 (Get_PSL_Nbr_States (Stmt)))),
+                         Ghdl_Bool_Type));
       New_Assign_Stmt
         (New_Indexed_Element (Get_Var (Info.Psl_Vect_Var),
          New_Obj_Value (Var_I)),
          New_Value (New_Indexed_Element (New_Obj (Var_Nvec),
-           New_Obj_Value (Var_I))));
+                                         New_Obj_Value (Var_I))));
       Inc_Var (Var_I);
       Finish_Loop_Stmt (Label);
       Finish_Declare_Stmt;
@@ -589,7 +569,7 @@ package body Trans.Chap9 is
       --  The finalizer.
       case Get_Kind (Stmt) is
          when Iir_Kind_Psl_Assert_Statement =>
-            if Psl_Need_Finalizer (NFA) then
+            if Get_PSL_EOS_Flag (Stmt) then
                Create_Psl_Final_Proc (Stmt, Base, Instance);
 
                Start_Subprogram_Body (Info.Psl_Proc_Final_Subprg);
@@ -644,7 +624,7 @@ package body Trans.Chap9 is
             Start_If_Stmt
               (S_Blk,
                New_Monadic_Op (ON_Not,
-                 New_Value (Get_Var (Info.Psl_Bool_Var))));
+                               New_Value (Get_Var (Info.Psl_Bool_Var))));
             Chap8.Translate_Report
               (Stmt, Ghdl_Psl_Cover_Failed, Severity_Level_Error);
             Finish_If_Stmt (S_Blk);
@@ -1352,7 +1332,6 @@ package body Trans.Chap9 is
       Info   : constant Psl_Info_Acc := Get_Info (Stmt);
       Constr : O_Assoc_List;
       List   : Iir_List;
-      Clk    : PSL_Node;
       Var_I  : O_Dnode;
       Label  : O_Snode;
    begin
@@ -1371,12 +1350,9 @@ package body Trans.Chap9 is
       New_Procedure_Call (Constr);
 
       --  Register clock sensitivity.
-      Clk := Get_PSL_Clock (Stmt);
-      List := Create_Iir_List;
-      Canon_PSL.Canon_Extract_Sensitivity (Clk, List);
+      List := Get_PSL_Clock_Sensitivity (Stmt);
       Destroy_Types_In_List (List);
       Register_Signal_List (List, Ghdl_Process_Add_Sensitivity);
-      Destroy_Iir_List (List);
 
       --  Register finalizer (if any).
       if Info.Psl_Proc_Final_Subprg /= O_Dnode_Null then
@@ -1403,11 +1379,11 @@ package body Trans.Chap9 is
       Gen_Exit_When
         (Label,
          New_Compare_Op (ON_Ge,
-           New_Obj_Value (Var_I),
-           New_Lit (New_Unsigned_Literal
-             (Ghdl_Index_Type,
-                Unsigned_64 (Info.Psl_Vect_Len))),
-           Ghdl_Bool_Type));
+                         New_Obj_Value (Var_I),
+                         New_Lit (New_Unsigned_Literal
+                                    (Ghdl_Index_Type,
+                                     Unsigned_64 (Get_PSL_Nbr_States (Stmt)))),
+                         Ghdl_Bool_Type));
       New_Assign_Stmt (New_Indexed_Element (Get_Var (Info.Psl_Vect_Var),
                        New_Obj_Value (Var_I)),
                        New_Lit (Std_Boolean_False_Node));
