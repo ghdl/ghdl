@@ -1364,7 +1364,7 @@ package body Execution is
             begin
                for I in Right.Val_Array.V'Range loop
                   Format (Positive (I)) :=
-                    Character'Val (Right.Val_Array.V (I).E32);
+                    Character'Val (Right.Val_Array.V (I).E8);
                end loop;
                Format (Format'Last) := ASCII.NUL;
                Grt.Vstrings.To_String
@@ -1399,27 +1399,27 @@ package body Execution is
             declare
                use Grt.Std_Logic_1164;
             begin
-               Result := Create_E32_Value
+               Result := Create_E8_Value
                  (Std_Ulogic'Pos
-                    (Match_Eq_Table (Std_Ulogic'Val (Left.E32),
-                                     Std_Ulogic'Val (Right.E32))));
+                    (Match_Eq_Table (Std_Ulogic'Val (Left.E8),
+                                     Std_Ulogic'Val (Right.E8))));
             end;
          when Iir_Predefined_Std_Ulogic_Match_Inequality =>
             Eval_Right;
             declare
                use Grt.Std_Logic_1164;
             begin
-               Result := Create_E32_Value
+               Result := Create_E8_Value
                  (Std_Ulogic'Pos
-                    (Not_Table (Match_Eq_Table (Std_Ulogic'Val (Left.E32),
-                                                Std_Ulogic'Val (Right.E32)))));
+                    (Not_Table (Match_Eq_Table (Std_Ulogic'Val (Left.E8),
+                                                Std_Ulogic'Val (Right.E8)))));
             end;
          when Iir_Predefined_Std_Ulogic_Match_Ordering_Functions =>
             Eval_Right;
             declare
                use Grt.Std_Logic_1164;
-               L : constant Std_Ulogic := Std_Ulogic'Val (Left.E32);
-               R : constant Std_Ulogic := Std_Ulogic'Val (Right.E32);
+               L : constant Std_Ulogic := Std_Ulogic'Val (Left.E8);
+               R : constant Std_Ulogic := Std_Ulogic'Val (Right.E8);
                Res : Std_Ulogic;
             begin
                Check_Std_Ulogic_Dc (Expr, L);
@@ -1437,7 +1437,7 @@ package body Execution is
                   when Iir_Predefined_Std_Ulogic_Match_Greater_Equal =>
                      Res := Not_Table (Match_Lt_Table (L, R));
                end case;
-               Result := Create_E32_Value (Std_Ulogic'Pos (Res));
+               Result := Create_E8_Value (Std_Ulogic'Pos (Res));
             end;
 
          when Iir_Predefined_Std_Ulogic_Array_Match_Equality
@@ -1452,11 +1452,10 @@ package body Execution is
                Le, Re : Std_Ulogic;
                Has_Match_Err : Boolean;
             begin
-               Result := Create_E32_Value (Std_Ulogic'Pos ('1'));
                Has_Match_Err := False;
                for I in Left.Val_Array.V'Range loop
-                  Le := Std_Ulogic'Val (Left.Val_Array.V (I).E32);
-                  Re := Std_Ulogic'Val (Right.Val_Array.V (I).E32);
+                  Le := Std_Ulogic'Val (Left.Val_Array.V (I).E8);
+                  Re := Std_Ulogic'Val (Right.Val_Array.V (I).E8);
                   if (Le = '-' or Re = '-') and then not Has_Match_Err then
                      Assert_Std_Ulogic_Dc (Expr);
                      Has_Match_Err := True;
@@ -1466,7 +1465,7 @@ package body Execution is
                if Func = Iir_Predefined_Std_Ulogic_Array_Match_Inequality then
                   Res := Not_Table (Res);
                end if;
-               Result := Create_E32_Value (Std_Ulogic'Pos (Res));
+               Result := Create_E8_Value (Std_Ulogic'Pos (Res));
             end;
 
          when others =>

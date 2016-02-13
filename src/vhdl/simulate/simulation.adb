@@ -1294,6 +1294,11 @@ package body Simulation is
                raise Internal_Error;
             end if;
             Grt.Signals.Ghdl_Signal_Associate_B1 (Port.Sig, Sig.B1);
+         when Iir_Value_E8 =>
+            if Mode = Connect_Source then
+               raise Internal_Error;
+            end if;
+            Grt.Signals.Ghdl_Signal_Associate_E8 (Port.Sig, Sig.E8);
          when others =>
             raise Internal_Error;
       end case;
@@ -1622,7 +1627,7 @@ package body Simulation is
                   Pfx.Val_Array.V (I), Time);
             end loop;
          when Iir_Value_Signal =>
-            case Val.Kind is
+            case Iir_Value_Scalars (Val.Kind) is
                when Iir_Value_I64 =>
                   Val_Ptr := To_Ghdl_Value_Ptr (Val.I64'Address);
                when Iir_Value_E32 =>
@@ -1631,8 +1636,8 @@ package body Simulation is
                   Val_Ptr := To_Ghdl_Value_Ptr (Val.F64'Address);
                when Iir_Value_B1 =>
                   Val_Ptr := To_Ghdl_Value_Ptr (Val.B1'Address);
-               when others =>
-                  raise Internal_Error;
+               when Iir_Value_E8 =>
+                  Val_Ptr := To_Ghdl_Value_Ptr (Val.E8'Address);
             end case;
             Sig.Sig := Grt.Signals.Ghdl_Create_Delayed_Signal
               (Pfx.Sig, Val_Ptr, Time);
