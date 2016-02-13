@@ -1927,8 +1927,6 @@ package body Canon is
                   use PSL.Nodes;
                   Prop : PSL_Node;
                   Fa : PSL_NFA;
-                  Num : Natural;
-                  List : Iir_List;
                begin
                   Prop := Get_Psl_Property (El);
                   Prop := PSL.Rewrites.Rewrite_Property (Prop);
