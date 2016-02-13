@@ -5229,6 +5229,22 @@ package body Iirs is
       Set_Field1 (Decl, PSL_Node_To_Iir (Prop));
    end Set_Psl_Property;
 
+   function Get_Psl_Sequence (Decl : Iir) return PSL_Node is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Psl_Sequence (Get_Kind (Decl)),
+                     "no field Psl_Sequence");
+      return Iir_To_PSL_Node (Get_Field1 (Decl));
+   end Get_Psl_Sequence;
+
+   procedure Set_Psl_Sequence (Decl : Iir; Prop : PSL_Node) is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Psl_Sequence (Get_Kind (Decl)),
+                     "no field Psl_Sequence");
+      Set_Field1 (Decl, PSL_Node_To_Iir (Prop));
+   end Set_Psl_Sequence;
+
    function Get_Psl_Declaration (Decl : Iir) return PSL_Node is
    begin
       pragma Assert (Decl /= Null_Iir);

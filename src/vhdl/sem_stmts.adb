@@ -1913,9 +1913,10 @@ package body Sem_Stmts is
                  (El, Is_Passive);
             when Iir_Kind_Psl_Declaration =>
                Sem_Psl.Sem_Psl_Declaration (El);
-            when Iir_Kind_Psl_Assert_Statement
-              | Iir_Kind_Psl_Cover_Statement =>
+            when Iir_Kind_Psl_Assert_Statement =>
                New_El := Sem_Psl.Sem_Psl_Assert_Statement (El);
+            when Iir_Kind_Psl_Cover_Statement =>
+               Sem_Psl.Sem_Psl_Cover_Statement (El);
             when Iir_Kind_Psl_Default_Clock =>
                Sem_Psl.Sem_Psl_Default_Clock (El);
             when Iir_Kind_Simple_Simultaneous_Statement =>

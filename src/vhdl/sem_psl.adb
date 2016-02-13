@@ -150,11 +150,7 @@ package body Sem_Psl is
          Expr := Finish_Sem_Name (Expr);
          Set_HDL_Node (N, Expr);
 
-         if Get_Kind (Expr) in Iir_Kinds_Denoting_Name then
-            Name := Get_Named_Entity (Expr);
-         else
-            Name := Expr;
-         end if;
+         Name := Strip_Denoting_Name (Expr);
 
          case Get_Kind (Name) is
             when Iir_Kind_Error =>
@@ -290,7 +286,20 @@ package body Sem_Psl is
            | N_Not_Bool =>
             return Sem_Boolean (Seq);
          when N_HDL_Expr =>
-            return Sem_Hdl_Expr (Seq);
+            Res := Sem_Hdl_Expr (Seq);
+            case Get_Kind (Res) is
+               when N_Sequence_Instance
+                 | N_Endpoint_Instance
+                 | N_Boolean_Parameter
+                 | N_Booleans =>
+                  null;
+               when N_Property_Instance =>
+                  Error_Msg_Sem
+                    ("property instance not allowed in PSL sequence", Res);
+               when others =>
+                  Error_Kind ("psl.sem_sequence.hdl", Res);
+            end case;
+            return Res;
          when others =>
             Error_Kind ("psl.sem_sequence", Seq);
       end case;
@@ -553,14 +562,30 @@ package body Sem_Psl is
       end case;
    end Is_Boolean_Assertion;
 
+   procedure Sem_Psl_Directive_Clock (Stmt : Iir; Prop : in out Node)
+   is
+      Clk : Node;
+   begin
+      Extract_Clock (Prop, Clk);
+      if Clk = Null_Node then
+         if Current_Psl_Default_Clock = Null_Iir then
+            Error_Msg_Sem ("no clock for PSL directive", Stmt);
+            Clk := Null_Node;
+         else
+            Clk := Get_Psl_Boolean (Current_Psl_Default_Clock);
+         end if;
+      end if;
+      Set_PSL_Clock (Stmt, Clk);
+   end Sem_Psl_Directive_Clock;
+
    function Sem_Psl_Assert_Statement (Stmt : Iir) return Iir
    is
       Prop : Node;
-      Clk : Node;
       Res : Iir;
    begin
       --  Sem report and severity expressions.
       Sem_Report_Statement (Stmt);
+
       Prop := Get_Psl_Property (Stmt);
       Prop := Sem_Property (Prop, True);
       Set_Psl_Property (Stmt, Prop);
@@ -576,16 +601,7 @@ package body Sem_Psl is
       end if;
 
       --  Properties must be clocked.
-      Extract_Clock (Prop, Clk);
-      if Clk = Null_Node then
-         if Current_Psl_Default_Clock = Null_Iir then
-            Error_Msg_Sem ("no clock for PSL assert", Stmt);
-            Clk := Null_Node;
-         else
-            Clk := Get_Psl_Boolean (Current_Psl_Default_Clock);
-         end if;
-      end if;
-      Set_PSL_Clock (Stmt, Clk);
+      Sem_Psl_Directive_Clock (Stmt, Prop);
       Set_Psl_Property (Stmt, Prop);
 
       --  Check simple subset restrictions.
@@ -593,6 +609,24 @@ package body Sem_Psl is
 
       return Stmt;
    end Sem_Psl_Assert_Statement;
+
+   procedure Sem_Psl_Cover_Statement (Stmt : Iir)
+   is
+      Seq : Node;
+   begin
+      --  Sem report and severity expressions.
+      Sem_Report_Statement (Stmt);
+
+      Seq := Get_Psl_Sequence (Stmt);
+      Seq := Sem_Sequence (Seq);
+
+      --  Properties must be clocked.
+      Sem_Psl_Directive_Clock (Stmt, Seq);
+      Set_Psl_Sequence (Stmt, Seq);
+
+      --  Check simple subset restrictions.
+      PSL.Subsets.Check_Simple (Seq);
+   end Sem_Psl_Cover_Statement;
 
    procedure Sem_Psl_Default_Clock (Stmt : Iir)
    is

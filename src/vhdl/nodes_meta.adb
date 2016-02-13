@@ -312,6 +312,7 @@ package body Nodes_Meta is
       Field_Suspend_Flag => Type_Boolean,
       Field_Is_Ref => Type_Boolean,
       Field_Psl_Property => Type_PSL_Node,
+      Field_Psl_Sequence => Type_PSL_Node,
       Field_Psl_Declaration => Type_PSL_Node,
       Field_Psl_Expression => Type_PSL_Node,
       Field_Psl_Boolean => Type_PSL_Node,
@@ -916,6 +917,8 @@ package body Nodes_Meta is
             return "is_ref";
          when Field_Psl_Property =>
             return "psl_property";
+         when Field_Psl_Sequence =>
+            return "psl_sequence";
          when Field_Psl_Declaration =>
             return "psl_declaration";
          when Field_Psl_Expression =>
@@ -2037,6 +2040,8 @@ package body Nodes_Meta is
          when Field_Is_Ref =>
             return Attr_None;
          when Field_Psl_Property =>
+            return Attr_None;
+         when Field_Psl_Sequence =>
             return Attr_None;
          when Field_Psl_Declaration =>
             return Attr_None;
@@ -3473,7 +3478,7 @@ package body Nodes_Meta is
       Field_Report_Expression,
       Field_Parent,
       --  Iir_Kind_Psl_Cover_Statement
-      Field_Psl_Property,
+      Field_Psl_Sequence,
       Field_Label,
       Field_PSL_Clock,
       Field_PSL_NFA,
@@ -5960,6 +5965,8 @@ package body Nodes_Meta is
       case F is
          when Field_Psl_Property =>
             return Get_Psl_Property (N);
+         when Field_Psl_Sequence =>
+            return Get_Psl_Sequence (N);
          when Field_Psl_Declaration =>
             return Get_Psl_Declaration (N);
          when Field_Psl_Expression =>
@@ -5980,6 +5987,8 @@ package body Nodes_Meta is
       case F is
          when Field_Psl_Property =>
             Set_Psl_Property (N, V);
+         when Field_Psl_Sequence =>
+            Set_Psl_Sequence (N, V);
          when Field_Psl_Declaration =>
             Set_Psl_Declaration (N, V);
          when Field_Psl_Expression =>
@@ -9762,14 +9771,13 @@ package body Nodes_Meta is
 
    function Has_Psl_Property (K : Iir_Kind) return Boolean is
    begin
-      case K is
-         when Iir_Kind_Psl_Assert_Statement
-           | Iir_Kind_Psl_Cover_Statement =>
-            return True;
-         when others =>
-            return False;
-      end case;
+      return K = Iir_Kind_Psl_Assert_Statement;
    end Has_Psl_Property;
+
+   function Has_Psl_Sequence (K : Iir_Kind) return Boolean is
+   begin
+      return K = Iir_Kind_Psl_Cover_Statement;
+   end Has_Psl_Sequence;
 
    function Has_Psl_Declaration (K : Iir_Kind) return Boolean is
    begin

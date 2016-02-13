@@ -1298,6 +1298,42 @@ package body Debugger is
       return Walk_Continue;
    end Cb_Disp_File;
 
+   procedure Info_PSL_Proc (Line : String)
+   is
+      pragma Unreferenced (Line);
+   begin
+      if PSL_Table.Last < PSL_Table.First then
+         Put_Line ("no PSL directive");
+         return;
+      end if;
+
+      for I in PSL_Table.First .. PSL_Table.Last loop
+         declare
+            E : PSL_Entry renames PSL_Table.Table (I);
+         begin
+            Disp_Instance_Name (E.Instance);
+            Put ('.');
+            Put (Name_Table.Image (Get_Identifier (E.Stmt)));
+            New_Line;
+            Disp_Vhdl.Disp_PSL_NFA (Get_PSL_NFA (E.Stmt));
+            Put ("    01234567890123456789012345678901234567890123456789");
+            for I in E.States'Range loop
+               if I mod 50 = 0 then
+                  New_Line;
+                  Put (Int32'Image (I / 10));
+                  Put (": ");
+               end if;
+               if E.States (I) then
+                  Put ('*');
+               else
+                  Put ('.');
+               end if;
+            end loop;
+            New_Line;
+         end;
+      end loop;
+   end Info_PSL_Proc;
+
    procedure Info_Stats_Proc (Line : String) is
       P : Natural := Line'First;
       E : Natural;
@@ -1324,7 +1360,8 @@ package body Debugger is
       end if;
    end Info_Stats_Proc;
 
-   procedure Info_Files_Proc (Line : String) is
+   procedure Info_Files_Proc (Line : String)
+   is
       pragma Unreferenced (Line);
       Status : Walk_Status;
    begin
@@ -1706,10 +1743,16 @@ package body Debugger is
       end loop;
    end Cont_Proc;
 
+   Menu_Info_Psl : aliased Menu_Entry :=
+     (Kind => Menu_Command,
+      Name => new String'("psl"),
+      Next => null,
+      Proc => Info_PSL_Proc'Access);
+
    Menu_Info_Stats : aliased Menu_Entry :=
      (Kind => Menu_Command,
       Name => new String'("stats"),
-      Next => null,
+      Next => Menu_Info_Psl'Access,
       Proc => Info_Stats_Proc'Access);
 
    Menu_Info_Tree : aliased Menu_Entry :=

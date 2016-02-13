@@ -24,6 +24,8 @@ package Disp_Vhdl is
    -- the node.
    procedure Disp_Vhdl (An_Iir: Iir);
 
+   procedure Disp_PSL_NFA (N : PSL_NFA);
+
    procedure Disp_Expression (Expr: Iir);
    --  Display an expression.
 

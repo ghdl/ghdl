@@ -77,17 +77,18 @@ package body Parse_Psl is
 
    function Vhdl_To_Psl (N : Iirs.Iir) return Node
    is
+      use Iirs;
       Res : Node;
    begin
       Res := Create_Node_Loc (N_HDL_Expr);
-      Set_Location (Res, Iirs.Get_Location (N));
-      Set_HDL_Node (Res, Int32 (N));
+      if N /= Null_Iir then
+         Set_Location (Res, Get_Location (N));
+         Set_HDL_Node (Res, Int32 (N));
+      end if;
       return Res;
    end Vhdl_To_Psl;
 
    function Parse_FL_Property (Prio : Priority) return Node;
-   function Parse_Sequence return Node;
-
    function Parse_Parenthesis_Boolean return Node;
    function Parse_Boolean (Parent_Prio : Priority) return Node;
 
@@ -161,7 +162,7 @@ package body Parse_Psl is
       Kind : Nkind;
       Op_Prio : Priority;
    begin
-      Left := Parse_Sequence; --  FIXME: allow boolean;
+      Left := Parse_Psl_Sequence; --  FIXME: allow boolean;
       loop
          case Current_Token is
             when Tok_Semi_Colon =>
@@ -282,7 +283,7 @@ package body Parse_Psl is
       end if;
    end Parse_Bracket_Number;
 
-   function Parse_Sequence return Node is
+   function Parse_Psl_Sequence return Node is
       Res, N : Node;
    begin
       case Current_Token is
@@ -331,7 +332,7 @@ package body Parse_Psl is
                return Res;
          end case;
       end loop;
-   end Parse_Sequence;
+   end Parse_Psl_Sequence;
 
    --  precond:  '('
    --  postcond: next token
@@ -430,7 +431,7 @@ package body Parse_Psl is
          when Tok_Left_Paren =>
             return Parse_Parenthesis_FL_Property;
          when Tok_Left_Curly =>
-            Res := Parse_Sequence;
+            Res := Parse_Psl_Sequence;
             if Get_Kind (Res) = N_Braced_SERE
               and then Current_Token = Tok_Left_Paren
             then
@@ -442,7 +443,7 @@ package body Parse_Psl is
                Res := Tmp;
             end if;
          when others =>
-            Res := Parse_Sequence;
+            Res := Parse_Psl_Sequence;
       end case;
       return Res;
    end Parse_FL_Property_1;
@@ -663,7 +664,7 @@ package body Parse_Psl is
             Set_Property (Res, Parse_Psl_Property);
          when N_Sequence_Declaration
            | N_Endpoint_Declaration =>
-            Set_Sequence (Res, Parse_Sequence);
+            Set_Sequence (Res, Parse_Psl_Sequence);
          when others =>
             raise Internal_Error;
       end case;

@@ -21,8 +21,10 @@ with PSL.Priorities; use PSL.Priorities;
 
 package PSL.Prints is
    procedure Print_Unit (Unit : Node);
-   procedure Print_Property (Prop : Node;
-                             Parent_Prio : Priority := Prio_Lowest);
+   procedure Print_Sequence
+     (Seq : Node; Parent_Prio : Priority := Prio_Lowest);
+   procedure Print_Property
+     (Prop : Node; Parent_Prio : Priority := Prio_Lowest);
    procedure Print_Expr (N : Node; Parent_Prio : Priority := Prio_Lowest);
 
    --  Procedure to display HDL_Expr nodes.

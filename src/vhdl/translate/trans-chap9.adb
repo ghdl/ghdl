@@ -450,6 +450,12 @@ package body Trans.Chap9 is
       Start_Declare_Stmt;
       New_Var_Decl (Var_I, Wki_I, O_Storage_Local, Ghdl_Index_Type);
       Init_Var (Var_I);
+      if Get_Kind (Stmt) = Iir_Kind_Psl_Cover_Statement then
+         New_Assign_Stmt (New_Indexed_Element (Get_Var (Info.Psl_Vect_Var),
+                                               New_Obj_Value (Var_I)),
+                          New_Lit (Std_Boolean_True_Node));
+         Inc_Var (Var_I);
+      end if;
       Start_Loop_Stmt (Label);
       Gen_Exit_When
         (Label,
@@ -1372,7 +1378,7 @@ package body Trans.Chap9 is
       Start_Declare_Stmt;
       New_Var_Decl (Var_I, Wki_I, O_Storage_Local, Ghdl_Index_Type);
       New_Assign_Stmt (New_Indexed_Element (Get_Var (Info.Psl_Vect_Var),
-                       New_Lit (Ghdl_Index_0)),
+                                            New_Lit (Ghdl_Index_0)),
                        New_Lit (Std_Boolean_True_Node));
       New_Assign_Stmt (New_Obj (Var_I), New_Lit (Ghdl_Index_1));
       Start_Loop_Stmt (Label);

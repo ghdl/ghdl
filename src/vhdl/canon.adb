@@ -1636,6 +1636,31 @@ package body Canon is
       return False;
    end Psl_Need_Finalizer;
 
+   procedure Canon_Psl_Directive (Stmt : Iir)
+   is
+      use PSL.Nodes;
+      Fa : PSL_NFA;
+      Num : Natural;
+      List : Iir_List;
+   begin
+      Fa := Get_PSL_NFA (Stmt);
+
+      PSL.NFAs.Labelize_States (Fa, Num);
+      Set_PSL_Nbr_States (Stmt, Int32 (Num));
+
+      Set_PSL_EOS_Flag (Stmt, Psl_Need_Finalizer (Fa));
+
+      List := Create_Iir_List;
+      Canon_PSL.Canon_Extract_Sensitivity (Get_PSL_Clock (Stmt), List);
+      Set_PSL_Clock_Sensitivity (Stmt, List);
+
+      if Canon_Flag_Expressions then
+         Canon_PSL_Expression (Get_PSL_Clock (Stmt));
+         Canon_Expression (Get_Severity_Expression (Stmt));
+         Canon_Expression (Get_Report_Expression (Stmt));
+      end if;
+   end Canon_Psl_Directive;
+
    procedure Canon_Concurrent_Stmts (Top : Iir_Design_Unit; Parent : Iir)
    is
       --  Current element in the chain of concurrent statements.
@@ -1897,37 +1922,38 @@ package body Canon is
                Canon_Generate_Statement_Body
                  (Top, Get_Generate_Statement_Body (El));
 
-            when Iir_Kind_Psl_Assert_Statement
-              | Iir_Kind_Psl_Cover_Statement =>
+            when Iir_Kind_Psl_Assert_Statement =>
                declare
                   use PSL.Nodes;
                   Prop : PSL_Node;
                   Fa : PSL_NFA;
-                  Num : Natural;
-                  List : Iir_List;
                begin
                   Prop := Get_Psl_Property (El);
                   Prop := PSL.Rewrites.Rewrite_Property (Prop);
                   Set_Psl_Property (El, Prop);
+
                   --  Generate the NFA.
                   Fa := PSL.Build.Build_FA (Prop);
                   Set_PSL_NFA (El, Fa);
 
-                  PSL.NFAs.Labelize_States (Fa, Num);
-                  Set_PSL_Nbr_States (El, Int32 (Num));
+                  Canon_Psl_Directive (El);
+               end;
 
-                  Set_PSL_EOS_Flag (El, Psl_Need_Finalizer (Fa));
+            when Iir_Kind_Psl_Cover_Statement =>
+               declare
+                  use PSL.Nodes;
+                  Seq : PSL_Node;
+                  Fa : PSL_NFA;
+               begin
+                  Seq := Get_Psl_Sequence (El);
+                  Seq := PSL.Rewrites.Rewrite_SERE (Seq);
+                  Set_Psl_Sequence (El, Seq);
 
-                  List := Create_Iir_List;
-                  Canon_PSL.Canon_Extract_Sensitivity
-                    (Get_PSL_Clock (El), List);
-                  Set_PSL_Clock_Sensitivity (El, List);
+                  --  Generate the NFA.
+                  Fa := PSL.Build.Build_SERE_FA (Seq);
+                  Set_PSL_NFA (El, Fa);
 
-                  if Canon_Flag_Expressions then
-                     Canon_PSL_Expression (Get_PSL_Clock (El));
-                     Canon_Expression (Get_Severity_Expression (El));
-                     Canon_Expression (Get_Report_Expression (El));
-                  end if;
+                  Canon_Psl_Directive (El);
                end;
 
             when Iir_Kind_Psl_Default_Clock =>

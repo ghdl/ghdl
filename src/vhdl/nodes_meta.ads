@@ -352,6 +352,7 @@ package Nodes_Meta is
       Field_Suspend_Flag,
       Field_Is_Ref,
       Field_Psl_Property,
+      Field_Psl_Sequence,
       Field_Psl_Declaration,
       Field_Psl_Expression,
       Field_Psl_Boolean,
@@ -842,6 +843,7 @@ package Nodes_Meta is
    function Has_Suspend_Flag (K : Iir_Kind) return Boolean;
    function Has_Is_Ref (K : Iir_Kind) return Boolean;
    function Has_Psl_Property (K : Iir_Kind) return Boolean;
+   function Has_Psl_Sequence (K : Iir_Kind) return Boolean;
    function Has_Psl_Declaration (K : Iir_Kind) return Boolean;
    function Has_Psl_Expression (K : Iir_Kind) return Boolean;
    function Has_Psl_Boolean (K : Iir_Kind) return Boolean;

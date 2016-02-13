@@ -1112,6 +1112,9 @@ package body Simulation is
       Release (Marker, Expr_Pool);
       if V then
          Nvec := (others => False);
+         if Get_Kind (E.Stmt) = Iir_Kind_Psl_Cover_Statement then
+            Nvec (0) := True;
+         end if;
 
          --  For each state: if set, evaluate all outgoing edges.
          NFA := Get_PSL_NFA (E.Stmt);

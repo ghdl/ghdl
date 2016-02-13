@@ -6917,18 +6917,31 @@ package body Parse is
       return Res;
    end Parse_Psl_Declaration;
 
+   --  Parse end of PSL assert/cover statement.
+   procedure Parse_Psl_Assert_Report_Severity (Stmt : Iir) is
+   begin
+      if Current_Token = Tok_Report then
+         --  Skip 'report'
+         Scan;
+
+         Set_Report_Expression (Stmt, Parse_Expression);
+      end if;
+
+      if Current_Token = Tok_Severity then
+         --  Skip 'severity'
+         Scan;
+
+         Set_Severity_Expression (Stmt, Parse_Expression);
+      end if;
+
+      Expect (Tok_Semi_Colon);
+   end Parse_Psl_Assert_Report_Severity;
+
    function Parse_Psl_Assert_Statement return Iir
    is
       Res : Iir;
    begin
-      case Current_Token is
-         when Tok_Assert =>
-            Res := Create_Iir (Iir_Kind_Psl_Assert_Statement);
-         when Tok_Psl_Cover =>
-            Res := Create_Iir (Iir_Kind_Psl_Cover_Statement);
-         when others =>
-            raise Internal_Error;
-      end case;
+      Res := Create_Iir (Iir_Kind_Psl_Assert_Statement);
 
       --  Skip 'assert'
       Scan;
@@ -6938,24 +6951,31 @@ package body Parse is
       --  No more PSL tokens after the property.
       Scanner.Flag_Psl := False;
 
-      if Current_Token = Tok_Report then
-         --  Skip 'report'
-         Scan;
+      Parse_Psl_Assert_Report_Severity (Res);
 
-         Set_Report_Expression (Res, Parse_Expression);
-      end if;
-
-      if Current_Token = Tok_Severity then
-         --  Skip 'severity'
-         Scan;
-
-         Set_Severity_Expression (Res, Parse_Expression);
-      end if;
-
-      Expect (Tok_Semi_Colon);
       Scanner.Flag_Scan_In_Comment := False;
       return Res;
    end Parse_Psl_Assert_Statement;
+
+   function Parse_Psl_Cover_Statement return Iir
+   is
+      Res : Iir;
+   begin
+      Res := Create_Iir (Iir_Kind_Psl_Cover_Statement);
+
+      --  Skip 'cover'
+      Scan;
+
+      Set_Psl_Sequence (Res, Parse_Psl.Parse_Psl_Sequence);
+
+      --  No more PSL tokens after the property.
+      Scanner.Flag_Psl := False;
+
+      Parse_Psl_Assert_Report_Severity (Res);
+
+      Scanner.Flag_Scan_In_Comment := False;
+      return Res;
+   end Parse_Psl_Cover_Statement;
 
    procedure Parse_Concurrent_Statements (Parent : Iir)
    is
@@ -7103,7 +7123,7 @@ package body Parse is
                Stmt := Parse_Psl_Declaration;
             when Tok_Psl_Cover =>
                Postponed_Not_Allowed;
-               Stmt := Parse_Psl_Assert_Statement;
+               Stmt := Parse_Psl_Cover_Statement;
             when others =>
                --  FIXME: improve message:
                --  instead of 'unexpected token 'signal' in conc stmt list'

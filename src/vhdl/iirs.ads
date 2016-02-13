@@ -2506,7 +2506,11 @@ package Iirs is
    --
    --   Get/Set_Parent (Field0)
    --
+   -- Only for Iir_Kind_Psl_Assert_Statement:
    --   Get/Set_Psl_Property (Field1)
+   --
+   -- Only for Iir_Kind_Psl_Cover_Statement:
+   --   Get/Set_Psl_Sequence (Field1)
    --
    --   Get/Set_Chain (Field2)
    --
@@ -6644,6 +6648,10 @@ package Iirs is
    --  Field: Field1 (uc)
    function Get_Psl_Property (Decl : Iir) return PSL_Node;
    procedure Set_Psl_Property (Decl : Iir; Prop : PSL_Node);
+
+   --  Field: Field1 (uc)
+   function Get_Psl_Sequence (Decl : Iir) return PSL_Node;
+   procedure Set_Psl_Sequence (Decl : Iir; Prop : PSL_Node);
 
    --  Field: Field1 (uc)
    function Get_Psl_Declaration (Decl : Iir) return PSL_Node;
