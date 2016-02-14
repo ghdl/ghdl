@@ -176,6 +176,7 @@ package Execution is
 
    --  Create a block instance for subprogram IMP.
    function Create_Subprogram_Instance (Instance : Block_Instance_Acc;
+                                        Prot_Obj : Block_Instance_Acc;
                                         Imp : Iir)
                                        return Block_Instance_Acc;
 

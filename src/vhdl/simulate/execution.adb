@@ -550,7 +550,7 @@ package body Execution is
       Execute_Failed_Assertion
         ("assertion",
          "STD_LOGIC_1164: '-' operand for matching ordering operator",
-         2, Loc);
+         1, Loc);
    end Assert_Std_Ulogic_Dc;
 
    procedure Check_Std_Ulogic_Dc (Loc : Iir; V : Grt.Std_Logic_1164.Std_Ulogic)
@@ -3267,8 +3267,10 @@ package body Execution is
    end Execute_Monadic_Association;
 
    --  Create a block instance for subprogram IMP.
-   function Create_Subprogram_Instance
-     (Instance : Block_Instance_Acc; Imp : Iir) return Block_Instance_Acc
+   function Create_Subprogram_Instance (Instance : Block_Instance_Acc;
+                                        Prot_Obj : Block_Instance_Acc;
+                                        Imp : Iir)
+                                       return Block_Instance_Acc
    is
       Func_Info : constant Sim_Info_Acc := Get_Info (Imp);
 
@@ -3288,18 +3290,30 @@ package body Execution is
       pragma Assert (Get_Kind (Imp) in Iir_Kinds_Subprogram_Declaration
                        or else Get_Kind (Imp) = Iir_Kind_Protected_Type_Body);
 
-      Up_Info := Get_Info (Get_Parent (Imp));
-      Up_Block := Get_Instance_By_Scope (Instance, Up_Info.Frame_Scope);
-
-      Origin := Sem_Inst.Get_Origin (Imp);
-      if Origin /= Null_Iir then
-         Label := Origin;
-         if Up_Info.Kind = Kind_Environment then
-            Up_Block := Environment_Table.Table
-              (Up_Block.Objects (Up_Info.Env_Slot).Environment);
-         end if;
-      else
+      if Prot_Obj /= null then
+         Up_Block := Prot_Obj;
          Label := Imp;
+      else
+         Up_Info := Get_Info (Get_Parent (Imp));
+         Up_Block := Get_Instance_By_Scope (Instance, Up_Info.Frame_Scope);
+
+         Origin := Sem_Inst.Get_Origin (Imp);
+         if Origin /= Null_Iir then
+            --  Call to a subprogram of an instantiated package.
+            --  For a generic package, only the spec is instantiated, the body
+            --  is shared by all the instances.
+
+            --  Execute code of the 'shared' body
+            Label := Origin;
+
+            --  Get the real instance for package interface.
+            if Up_Info.Kind = Kind_Environment then
+               Up_Block := Environment_Table.Table
+                 (Up_Block.Objects (Up_Info.Env_Slot).Environment);
+            end if;
+         else
+            Label := Imp;
+         end if;
       end if;
 
       Res := To_Block_Instance_Acc
@@ -3376,7 +3390,7 @@ package body Execution is
       Mark (Marker, Instance_Pool.all);
 
       -- Create an instance for this function.
-      Instance := Create_Subprogram_Instance (Block, Func);
+      Instance := Create_Subprogram_Instance (Block, null, Func);
 
       Inter := Get_Interface_Declaration_Chain (Func);
       Elaboration.Create_Object (Instance, Inter);
@@ -3626,13 +3640,12 @@ package body Execution is
 
    procedure Execute_Back_Association (Instance : Block_Instance_Acc)
    is
-      Proc : Iir;
+      Proc : constant Iir := Get_Procedure_Call (Instance.Parent.Stmt);
       Assoc: Iir;
       Inter: Iir;
       Formal : Iir;
       Assoc_Idx : Iir_Index32;
    begin
-      Proc := Get_Procedure_Call (Instance.Parent.Stmt);
       Assoc := Get_Parameter_Association_Chain (Proc);
       Assoc_Idx := 1;
       while Assoc /= Null_Iir loop
@@ -3687,24 +3700,19 @@ package body Execution is
       end loop;
    end Execute_Back_Association;
 
-   --  When a subprogram of a protected type is called, a link to the object
-   --  must be passed. This procedure modifies the up_link of SUBPRG_BLOCK to
-   --  point to the block of the object (extracted from CALL and BLOCK).
-   --  This change doesn't modify the parent (so that the activation chain is
-   --  not changed).
-   procedure Adjust_Up_Link_For_Protected_Object
-     (Block: Block_Instance_Acc; Call: Iir; Subprg_Block : Block_Instance_Acc)
+   function Get_Protected_Object_Instance
+     (Block : Block_Instance_Acc; Call : Iir) return Block_Instance_Acc
    is
       Meth_Obj : constant Iir := Get_Method_Object (Call);
       Obj : Iir_Value_Literal_Acc;
-      Obj_Block : Block_Instance_Acc;
    begin
-      if Meth_Obj /= Null_Iir then
+      if Meth_Obj = Null_Iir then
+         return null;
+      else
          Obj := Execute_Name (Block, Meth_Obj, True);
-         Obj_Block := Protected_Table.Table (Obj.Prot);
-         Subprg_Block.Up_Block := Obj_Block;
+         return Protected_Table.Table (Obj.Prot);
       end if;
-   end Adjust_Up_Link_For_Protected_Object;
+   end Get_Protected_Object_Instance;
 
    function Execute_Foreign_Function_Call
      (Block: Block_Instance_Acc; Expr : Iir; Imp : Iir)
@@ -3730,24 +3738,27 @@ package body Execution is
    is
       Inter_Chain : constant Iir := Get_Interface_Declaration_Chain (Imp);
       Subprg_Block: Block_Instance_Acc;
+      Prot_Block : Block_Instance_Acc;
       Assoc_Chain: Iir;
       Res : Iir_Value_Literal_Acc;
    begin
       Mark (Block.Marker, Instance_Pool.all);
 
-      Subprg_Block := Create_Subprogram_Instance (Block, Imp);
-
       case Get_Kind (Expr) is
          when Iir_Kind_Function_Call =>
-            Adjust_Up_Link_For_Protected_Object (Block, Expr, Subprg_Block);
+            Prot_Block := Get_Protected_Object_Instance (Block, Expr);
+            Subprg_Block :=
+              Create_Subprogram_Instance (Block, Prot_Block, Imp);
             Assoc_Chain := Get_Parameter_Association_Chain (Expr);
             Execute_Association (Block, Subprg_Block, Assoc_Chain);
             --  No out/inout interface for functions.
             pragma Assert (Subprg_Block.Actuals_Ref = null);
          when Iir_Kinds_Dyadic_Operator =>
+            Subprg_Block := Create_Subprogram_Instance (Block, null, Imp);
             Execute_Dyadic_Association
               (Block, Subprg_Block, Expr, Inter_Chain);
          when Iir_Kinds_Monadic_Operator =>
+            Subprg_Block := Create_Subprogram_Instance (Block, null, Imp);
             Execute_Monadic_Association
               (Block, Subprg_Block, Expr, Inter_Chain);
          when others =>
@@ -3964,7 +3975,7 @@ package body Execution is
       Instance : Block_Instance_Acc;
    begin
       -- Create a frame for this function.
-      Instance := Create_Subprogram_Instance (Block, Imp);
+      Instance := Create_Subprogram_Instance (Block, null, Imp);
 
       Inter := Get_Interface_Declaration_Chain (Imp);
       Elaboration.Create_Object (Instance, Inter);
@@ -4535,6 +4546,7 @@ package body Execution is
       Call : constant Iir := Get_Procedure_Call (Stmt);
       Imp  : constant Iir := Get_Implementation (Call);
       Subprg_Instance : Block_Instance_Acc;
+      Prot_Block : Block_Instance_Acc;
       Assoc_Chain: Iir;
       Subprg_Body : Iir;
    begin
@@ -4546,9 +4558,9 @@ package body Execution is
          Update_Next_Statement (Proc);
       else
          Mark (Instance.Marker, Instance_Pool.all);
-         Subprg_Instance := Create_Subprogram_Instance (Instance, Imp);
-         Adjust_Up_Link_For_Protected_Object
-           (Instance, Call, Subprg_Instance);
+         Prot_Block := Get_Protected_Object_Instance (Instance, Call);
+         Subprg_Instance :=
+           Create_Subprogram_Instance (Instance, Prot_Block, Imp);
          Assoc_Chain := Get_Parameter_Association_Chain (Call);
          Execute_Association (Instance, Subprg_Instance, Assoc_Chain);
 

@@ -523,7 +523,7 @@ package body Elaboration is
       Protected_Table.Increment_Last;
       Res := Create_Protected_Value (Protected_Table.Last);
 
-      Inst := Create_Subprogram_Instance (Block, Bod);
+      Inst := Create_Subprogram_Instance (Block, null, Bod);
       Protected_Table.Table (Res.Prot) := Inst;
 
       --  Temporary put the instancce on the stack in case of function calls
@@ -1693,8 +1693,8 @@ package body Elaboration is
          Elaborate_Statement_Part
            (Sub_Instance, Get_Concurrent_Statement_Chain (Bod));
 
+         exit when Is_Equal (Index, Bound.Right);
          Update_Loop_Index (Index, Bound);
-         exit when not Is_In_Range (Index, Bound);
       end loop;
       --  FIXME: destroy index ?
    end Elaborate_For_Generate_Statement;
