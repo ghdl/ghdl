@@ -942,7 +942,11 @@ package body Ghdlprint is
             --  Disp line.
             if Eptr > Ptr then
                --  Avoid constraint error on conversion of nul array.
-               Put (String (Buf (Ptr .. Eptr - 1)));
+               declare
+                  subtype Conv_Subtype is String (1 .. Natural (Eptr - Ptr));
+               begin
+                  Put (Conv_Subtype (Buf (Ptr .. Eptr - 1)));
+               end;
             end if;
             New_Line;
          end loop;
