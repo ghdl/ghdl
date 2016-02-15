@@ -20,7 +20,10 @@ with Ortho_Code.Abi;
 package Ortho_Code.Decls is
    --  Kind of a declaration.
    type OD_Kind is (OD_Type,
-                    OD_Const, OD_Const_Val,
+                    OD_Const,
+
+                    --  Value of constant, initial value of variable.
+                    OD_Init_Val,
 
                     --  Global and local variables.
                     OD_Var, OD_Local,
@@ -55,7 +58,8 @@ package Ortho_Code.Decls is
    procedure Set_Decl_Reg (Decl : O_Dnode; Reg : O_Reg);
 
    --  Return the next decl (in the same scope) after DECL.
-   --  This skips declarations in an inner block.
+   --  This skips declarations in an inner block, but returns interfaces for
+   --  a subprogram.
    function Get_Decl_Chain (Decl : O_Dnode) return O_Dnode;
 
    --  Get the last declaration.
@@ -187,6 +191,9 @@ package Ortho_Code.Decls is
    type Mark_Type is limited private;
    procedure Mark (M : out Mark_Type);
    procedure Release (M : Mark_Type);
+
+   --  Allocate non explicitly initialized variables.
+   procedure Alloc_Zero;
 
    procedure Finish;
 private

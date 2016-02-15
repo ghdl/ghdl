@@ -68,7 +68,7 @@ package body Ortho_Code.Decls is
             Dtype : O_Tnode;
             --  Symbol or offset.
             Ref : Int32;
-            --  For const: the value.
+            --  For const, val: the value.
             --  For subprg: size of pushed arguments.
             Info2 : Int32;
          when OD_Subprg_Ext =>
@@ -91,7 +91,7 @@ package body Ortho_Code.Decls is
             --  Parent (as a body) of this body or null if at top level.
             Body_Parent : O_Dnode;
             Body_Info : Int32;
-         when OD_Const_Val =>
+         when OD_Init_Val =>
             --  Corresponding declaration.
             Val_Decl : O_Dnode;
             --  Value.
@@ -161,6 +161,7 @@ package body Ortho_Code.Decls is
             return Get_Block_Last (Decl + 1) + 1;
          when OD_Function
            | OD_Procedure =>
+            --  Return the first interface.
             if Use_Subprg_Ext then
                return Decl + 2;
             else
@@ -337,24 +338,35 @@ package body Ortho_Code.Decls is
       end if;
    end New_Const_Decl;
 
-   procedure New_Const_Value (Cst : O_Dnode; Val : O_Cnode) is
+   function Get_Init_Value (Decl : O_Dnode) return O_Cnode is
    begin
-      if Dnodes.Table (Cst).Info2 /= 0 then
+      return O_Cnode (Dnodes.Table (Decl).Info2);
+   end Get_Init_Value;
+
+   procedure New_Init_Value (Decl : O_Dnode; Val : O_Cnode) is
+   begin
+      if Get_Init_Value (Decl) /= O_Cnode_Null then
          --  Value was already set.
          raise Syntax_Error;
       end if;
-      Dnodes.Table (Cst).Info2 := Int32 (Val);
+      Dnodes.Table (Decl).Info2 := Int32 (Val);
       if Flag_Debug_Hli then
-         Dnodes.Append (Dnode_Common'(Kind => OD_Const_Val,
+         Dnodes.Append (Dnode_Common'(Kind => OD_Init_Val,
                                       Storage => O_Storage_Private,
                                       Depth => Cur_Depth,
                                       Reg => R_Nil,
-                                      Val_Decl => Cst,
+                                      Val_Decl => Decl,
                                       Val_Val => Val,
                                       others => False));
       else
-         Expand_Const_Value (Cst, Val);
+         Expand_Init_Value (Decl, Val);
       end if;
+   end New_Init_Value;
+
+   procedure New_Const_Value (Cst : O_Dnode; Val : O_Cnode) is
+   begin
+      pragma Assert (Get_Decl_Kind (Cst) = OD_Const);
+      New_Init_Value (Cst, Val);
    end New_Const_Value;
 
    procedure New_Var_Decl
@@ -679,7 +691,7 @@ package body Ortho_Code.Decls is
             Disp_Decl_Name (Decl);
             Put (": ");
             Disp_Decl_Type (Decl);
-         when OD_Const_Val =>
+         when OD_Init_Val =>
             Put ("constant ");
             Disp_Decl_Name (Get_Val_Decl (Decl));
             Put (": ");
@@ -786,6 +798,36 @@ package body Ortho_Code.Decls is
       Dnodes.Set_Last (M.Dnode);
       TDnodes.Set_Last (M.TDnode);
    end Release;
+
+   procedure Alloc_Zero is
+   begin
+      if not Flag_Debug_Hli then
+         --  Expand not explicitly initialized variables.
+         declare
+            N : O_Dnode;
+            Init : O_Cnode;
+         begin
+            N := Dnodes.First;
+            while N <= Dnodes.Last loop
+               if Get_Decl_Kind (N) = OD_Var then
+                  case Get_Decl_Storage (N) is
+                     when O_Storage_Private
+                       | O_Storage_Public =>
+                        Init := Get_Init_Value (N);
+                        if Init = O_Cnode_Null then
+                           Expand_Var_Zero (N);
+                        end if;
+                     when O_Storage_External =>
+                        null;
+                     when O_Storage_Local =>
+                        raise Program_Error;
+                  end case;
+               end if;
+               N := Get_Decl_Chain (N);
+            end loop;
+         end;
+      end if;
+   end Alloc_Zero;
 
    procedure Finish is
    begin

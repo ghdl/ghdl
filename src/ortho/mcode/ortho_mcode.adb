@@ -715,6 +715,7 @@ package body Ortho_Mcode is
          Ortho_Code.Decls.Disp_All_Decls;
          --Ortho_Code.Exprs.Disp_All_Enode;
       end if;
+      Ortho_Code.Decls.Alloc_Zero;
       Ortho_Code.Abi.Finish;
       if Debug.Flag_Debug_Stat then
          Ada.Text_IO.Put_Line ("Statistics:");

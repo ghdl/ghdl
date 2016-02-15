@@ -3074,27 +3074,27 @@ package body Ortho_Code.X86.Emits is
       use Decls;
       use Types;
       Sym : Symbol;
-      Storage : O_Storage;
-      Dtype : O_Tnode;
    begin
-      Set_Current_Section (Sect_Bss);
       Sym := Create_Symbol (Get_Decl_Ident (Decl), False);
       Set_Decl_Info (Decl, To_Int32 (Uns32 (Sym)));
-      Storage := Get_Decl_Storage (Decl);
-      Dtype := Get_Decl_Type (Decl);
-      case Storage is
-         when O_Storage_External =>
-            null;
-         when O_Storage_Public
-           | O_Storage_Private =>
-            Gen_Pow_Align (Get_Type_Align (Dtype));
-            Set_Symbol_Pc (Sym, Storage = O_Storage_Public);
-            Gen_Space (Integer_32 (Get_Type_Size (Dtype)));
-         when O_Storage_Local =>
-            raise Program_Error;
-      end case;
-      Set_Current_Section (Sect_Text);
    end Emit_Var_Decl;
+
+   procedure Emit_Var_Zero (Decl : O_Dnode)
+   is
+      use Decls;
+      use Types;
+      Sym : constant Symbol := Symbol (To_Uns32 (Get_Decl_Info (Decl)));
+      Storage : constant O_Storage := Get_Decl_Storage (Decl);
+      Dtype : constant O_Tnode := Get_Decl_Type (Decl);
+   begin
+      Set_Current_Section (Sect_Bss);
+      pragma Assert (Storage = O_Storage_Public
+                       or Storage = O_Storage_Private);
+      Gen_Pow_Align (Get_Type_Align (Dtype));
+      Set_Symbol_Pc (Sym, Storage = O_Storage_Public);
+      Gen_Space (Integer_32 (Get_Type_Size (Dtype)));
+      Set_Current_Section (Sect_Text);
+   end Emit_Var_Zero;
 
    procedure Emit_Const_Decl (Decl : O_Dnode)
    is
@@ -3164,14 +3164,21 @@ package body Ortho_Code.X86.Emits is
       end case;
    end Emit_Const;
 
-   procedure Emit_Const_Value (Decl : O_Dnode; Val : O_Cnode)
+   procedure Emit_Init_Value (Decl : O_Dnode; Val : O_Cnode)
    is
       use Decls;
       use Types;
       Sym : constant Symbol := Get_Decl_Symbol (Decl);
       Dtype : constant O_Tnode := Get_Decl_Type (Decl);
    begin
-      Set_Current_Section (Sect_Rodata);
+      case Get_Decl_Kind (Decl) is
+         when OD_Const =>
+            Set_Current_Section (Sect_Rodata);
+         when OD_Var =>
+            Set_Current_Section (Sect_Rodata);
+         when others =>
+            raise Syntax_Error;
+      end case;
 
       Gen_Pow_Align (Get_Type_Align (Dtype));
       Set_Symbol_Pc (Sym, Get_Decl_Storage (Decl) = O_Storage_Public);
@@ -3179,7 +3186,7 @@ package body Ortho_Code.X86.Emits is
       Emit_Const (Val);
 
       Set_Current_Section (Sect_Text);
-   end Emit_Const_Value;
+   end Emit_Init_Value;
 
    procedure Init
    is
