@@ -1834,8 +1834,8 @@ package body Simulation is
       end loop;
 
       if In_Signals /= 0 then
-         Error_Msg_Elab ("top entity should not have inputs signals", Entity);
-         -- raise Simulation_Error;
+         Warning_Msg_Elab
+           ("top entity should not have inputs signals", Entity);
       end if;
 
       if Disp_Stats then
