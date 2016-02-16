@@ -1277,6 +1277,7 @@ package body Trans.Chap9 is
             for I in Info.Process_Drivers.all'Range loop
                Sig := Info.Process_Drivers (I).Sig;
                Open_Temp;
+               Chap9.Destroy_Types (Sig);
                Base := Get_Object_Prefix (Sig);
                if Info.Process_Drivers (I).Var /= Null_Var then
                   --  Elaborate direct driver.  Done only once.
@@ -1292,7 +1293,6 @@ package body Trans.Chap9 is
                                    Get_Type (Sig),
                                    Ghdl_Process_Add_Driver);
                end if;
-               Chap9.Destroy_Types (Sig);
                Close_Temp;
             end loop;
          end;
