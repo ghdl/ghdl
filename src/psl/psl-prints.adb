@@ -67,7 +67,9 @@ package body PSL.Prints is
            | N_True
            | N_False
            | N_EOS
-           | N_HDL_Expr =>
+           | N_HDL_Expr
+           | N_Property_Instance
+           | N_Sequence_Instance =>
             return Prio_HDL;
          when N_Or_Bool =>
             return Prio_Seq_Or;
@@ -184,8 +186,6 @@ package body PSL.Prints is
       end if;
    end Print_Expr;
 
-   procedure Print_Sequence (Seq : Node; Parent_Prio : Priority);
-
    procedure Print_Count (N : Node) is
       B : Node;
    begin
@@ -222,7 +222,7 @@ package body PSL.Prints is
       Put ("]");
    end Print_Repeat_Sequence;
 
-   procedure Print_Sequence (Seq : Node; Parent_Prio : Priority)
+   procedure Print_Sequence (Seq : Node; Parent_Prio : Priority := Prio_Lowest)
    is
       Prio : constant Priority := Get_Priority (Seq);
       Add_Paren : constant Boolean := Prio < Parent_Prio
@@ -260,6 +260,8 @@ package body PSL.Prints is
          when N_Booleans
            | N_Name_Decl =>
             Print_Expr (Seq);
+         when N_Sequence_Instance =>
+            Put (Image (Get_Identifier (Get_Declaration (Seq))));
          when others =>
             Error_Kind ("print_sequence", Seq);
       end case;
@@ -387,6 +389,10 @@ package body PSL.Prints is
             Print_Expr (Prop);
          when N_Sequences =>
             Print_Sequence (Prop, Parent_Prio);
+         when N_Property_Instance =>
+            Put (Image (Get_Identifier (Get_Declaration (Prop))));
+         when N_EOS =>
+            Put ("EOS");
          when others =>
             Error_Kind ("print_property", Prop);
       end case;

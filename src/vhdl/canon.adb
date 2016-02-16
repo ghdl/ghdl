@@ -25,6 +25,9 @@ with Iir_Chains; use Iir_Chains;
 with PSL.Nodes;
 with PSL.Rewrites;
 with PSL.Build;
+with PSL.NFAs;
+with PSL.NFAs.Utils;
+with Canon_PSL;
 
 package body Canon is
    --  Canonicalize a list of declarations.  LIST can be null.
@@ -758,6 +761,26 @@ package body Canon is
             null;
       end case;
    end Canon_Expression;
+
+   procedure Canon_PSL_Expression (Expr : PSL_Node)
+   is
+      use PSL.Nodes;
+   begin
+      case Get_Kind (Expr) is
+         when N_HDL_Expr =>
+            Canon_Expression (Get_HDL_Node (Expr));
+         when N_True | N_EOS =>
+            null;
+         when N_Not_Bool =>
+            Canon_PSL_Expression (Get_Boolean (Expr));
+         when N_And_Bool
+           | N_Or_Bool =>
+            Canon_PSL_Expression (Get_Left (Expr));
+            Canon_PSL_Expression (Get_Right (Expr));
+         when others =>
+            Error_Kind ("canon_psl_expression", Expr);
+      end case;
+   end Canon_PSL_Expression;
 
    procedure Canon_Discrete_Range (Rng : Iir) is
    begin
@@ -1594,6 +1617,50 @@ package body Canon is
       Canon_Concurrent_Stmts (Top, Bod);
    end Canon_Generate_Statement_Body;
 
+   --  Return TRUE iff NFA has an edge with an EOS.
+   --  If so, we need to create a finalizer.
+   function Psl_Need_Finalizer (Nfa : PSL_NFA) return Boolean
+   is
+      use PSL.NFAs;
+      S : NFA_State;
+      E : NFA_Edge;
+   begin
+      S := Get_Final_State (Nfa);
+      E := Get_First_Dest_Edge (S);
+      while E /= No_Edge loop
+         if PSL.NFAs.Utils.Has_EOS (Get_Edge_Expr (E)) then
+            return True;
+         end if;
+         E := Get_Next_Dest_Edge (E);
+      end loop;
+      return False;
+   end Psl_Need_Finalizer;
+
+   procedure Canon_Psl_Directive (Stmt : Iir)
+   is
+      use PSL.Nodes;
+      Fa : PSL_NFA;
+      Num : Natural;
+      List : Iir_List;
+   begin
+      Fa := Get_PSL_NFA (Stmt);
+
+      PSL.NFAs.Labelize_States (Fa, Num);
+      Set_PSL_Nbr_States (Stmt, Int32 (Num));
+
+      Set_PSL_EOS_Flag (Stmt, Psl_Need_Finalizer (Fa));
+
+      List := Create_Iir_List;
+      Canon_PSL.Canon_Extract_Sensitivity (Get_PSL_Clock (Stmt), List);
+      Set_PSL_Clock_Sensitivity (Stmt, List);
+
+      if Canon_Flag_Expressions then
+         Canon_PSL_Expression (Get_PSL_Clock (Stmt));
+         Canon_Expression (Get_Severity_Expression (Stmt));
+         Canon_Expression (Get_Report_Expression (Stmt));
+      end if;
+   end Canon_Psl_Directive;
+
    procedure Canon_Concurrent_Stmts (Top : Iir_Design_Unit; Parent : Iir)
    is
       --  Current element in the chain of concurrent statements.
@@ -1855,8 +1922,7 @@ package body Canon is
                Canon_Generate_Statement_Body
                  (Top, Get_Generate_Statement_Body (El));
 
-            when Iir_Kind_Psl_Assert_Statement
-              | Iir_Kind_Psl_Cover_Statement =>
+            when Iir_Kind_Psl_Assert_Statement =>
                declare
                   use PSL.Nodes;
                   Prop : PSL_Node;
@@ -1865,11 +1931,29 @@ package body Canon is
                   Prop := Get_Psl_Property (El);
                   Prop := PSL.Rewrites.Rewrite_Property (Prop);
                   Set_Psl_Property (El, Prop);
+
                   --  Generate the NFA.
                   Fa := PSL.Build.Build_FA (Prop);
                   Set_PSL_NFA (El, Fa);
 
-                  --  FIXME: report/severity.
+                  Canon_Psl_Directive (El);
+               end;
+
+            when Iir_Kind_Psl_Cover_Statement =>
+               declare
+                  use PSL.Nodes;
+                  Seq : PSL_Node;
+                  Fa : PSL_NFA;
+               begin
+                  Seq := Get_Psl_Sequence (El);
+                  Seq := PSL.Rewrites.Rewrite_SERE (Seq);
+                  Set_Psl_Sequence (El, Seq);
+
+                  --  Generate the NFA.
+                  Fa := PSL.Build.Build_SERE_FA (Seq);
+                  Set_PSL_NFA (El, Fa);
+
+                  Canon_Psl_Directive (El);
                end;
 
             when Iir_Kind_Psl_Default_Clock =>

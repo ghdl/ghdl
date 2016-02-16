@@ -2835,6 +2835,12 @@ package body Disp_Vhdl is
       PSL.Prints.Print_Property (Expr);
    end Disp_Psl_Expression;
 
+   procedure Disp_Psl_Sequence (Expr : PSL_Node) is
+   begin
+      PSL.Prints.HDL_Expr_Printer := Disp_PSL_HDL_Expr'Access;
+      PSL.Prints.Print_Sequence (Expr);
+   end Disp_Psl_Sequence;
+
    procedure Disp_Block_Header (Header : Iir_Block_Header; Indent: Count)
    is
       Chain : Iir;
@@ -2979,6 +2985,29 @@ package body Disp_Vhdl is
       Put_Line (";");
    end Disp_Psl_Default_Clock;
 
+   procedure Disp_Psl_Declaration (Stmt : Iir)
+   is
+      use PSL.Nodes;
+      Decl : constant PSL_Node := Get_Psl_Declaration (Stmt);
+   begin
+      Put ("--psl ");
+      case Get_Kind (Decl) is
+         when N_Property_Declaration =>
+            Put ("property ");
+            Disp_Ident (Get_Identifier (Decl));
+            Put (" is ");
+            Disp_Psl_Expression (Get_Property (Decl));
+         when N_Sequence_Declaration =>
+            Put ("sequence ");
+            Disp_Ident (Get_Identifier (Decl));
+            Put (" is ");
+            Disp_Psl_Sequence (Get_Sequence (Decl));
+         when others =>
+            Error_Kind ("disp_psl_declaration", Decl);
+      end case;
+      Put_Line (";");
+   end Disp_Psl_Declaration;
+
    procedure Disp_PSL_NFA (N : PSL.Nodes.NFA)
    is
       use PSL.NFAs;
@@ -2994,6 +3023,12 @@ package body Disp_Vhdl is
       E : NFA_Edge;
    begin
       if N /= No_NFA then
+         Put ("-- start: ");
+         Disp_State (Get_Start_State (N));
+         Put (", final: ");
+         Disp_State (Get_Final_State (N));
+         New_Line;
+
          S := Get_First_State (N);
          while S /= No_State loop
             E := Get_First_Src_Edge (S);
@@ -3027,7 +3062,7 @@ package body Disp_Vhdl is
       Put ("--psl ");
       Disp_Label (Stmt);
       Put ("cover ");
-      Disp_Psl_Expression (Get_Psl_Property (Stmt));
+      Disp_Psl_Sequence (Get_Psl_Sequence (Stmt));
       Put_Line (";");
       Disp_PSL_NFA (Get_PSL_NFA (Stmt));
    end Disp_Psl_Cover_Statement;
@@ -3070,6 +3105,8 @@ package body Disp_Vhdl is
             Disp_For_Generate_Statement (Stmt);
          when Iir_Kind_Psl_Default_Clock =>
             Disp_Psl_Default_Clock (Stmt);
+         when Iir_Kind_Psl_Declaration =>
+            Disp_Psl_Declaration (Stmt);
          when Iir_Kind_Psl_Assert_Statement =>
             Disp_Psl_Assert_Statement (Stmt);
          when Iir_Kind_Psl_Cover_Statement =>
@@ -3340,6 +3377,8 @@ package body Disp_Vhdl is
            | Iir_Kind_Indexed_Name
            | Iir_Kind_Slice_Name =>
             Disp_Expression (An_Iir);
+         when Iir_Kind_Psl_Cover_Statement =>
+            Disp_Psl_Cover_Statement (An_Iir);
          when others =>
             Error_Kind ("disp", An_Iir);
       end case;

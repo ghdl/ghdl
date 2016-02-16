@@ -54,7 +54,7 @@ begin
   -- psl default clock is rising_edge(s_clk);
 
   -- cover directive seems not supported (ignored by GHDL)
-  -- psl cover always (s_write -> not(s_read));
+  -- psl cover {s_write ; not(s_read)};
 
 
 end architecture test;

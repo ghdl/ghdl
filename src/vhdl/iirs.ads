@@ -2506,7 +2506,11 @@ package Iirs is
    --
    --   Get/Set_Parent (Field0)
    --
+   -- Only for Iir_Kind_Psl_Assert_Statement:
    --   Get/Set_Psl_Property (Field1)
+   --
+   -- Only for Iir_Kind_Psl_Cover_Statement:
+   --   Get/Set_Psl_Sequence (Field1)
    --
    --   Get/Set_Chain (Field2)
    --
@@ -2517,9 +2521,18 @@ package Iirs is
    --
    --   Get/Set_Report_Expression (Field5)
    --
+   --  The following fields are set by canon.
    --   Get/Set_PSL_Clock (Field7)
    --
    --   Get/Set_PSL_NFA (Field8)
+   --
+   --  Number of states in the NFA.
+   --   Get/Set_PSL_Nbr_States (Field9)
+   --
+   --   Get/Set_PSL_Clock_Sensitivity (Field10)
+   --
+   --  True if at least one of the NFA edge has the EOS flag.
+   --   Get/Set_PSL_EOS_Flag (Flag1)
    --
    --   Get/Set_Visible_Flag (Flag4)
 
@@ -6637,6 +6650,10 @@ package Iirs is
    procedure Set_Psl_Property (Decl : Iir; Prop : PSL_Node);
 
    --  Field: Field1 (uc)
+   function Get_Psl_Sequence (Decl : Iir) return PSL_Node;
+   procedure Set_Psl_Sequence (Decl : Iir; Prop : PSL_Node);
+
+   --  Field: Field1 (uc)
    function Get_Psl_Declaration (Decl : Iir) return PSL_Node;
    procedure Set_Psl_Declaration (Decl : Iir; Prop : PSL_Node);
 
@@ -6655,4 +6672,17 @@ package Iirs is
    --  Field: Field8 (uc)
    function Get_PSL_NFA (N : Iir) return PSL_NFA;
    procedure Set_PSL_NFA (N : Iir; Fa : PSL_NFA);
+
+   --  Field: Field9 (uc)
+   function Get_PSL_Nbr_States (N : Iir) return Int32;
+   procedure Set_PSL_Nbr_States (N : Iir; Nbr : Int32);
+
+   --  Field: Field10 (uc)
+   function Get_PSL_Clock_Sensitivity (N : Iir) return Iir_List;
+   procedure Set_PSL_Clock_Sensitivity (N : Iir; List : Iir_List);
+
+   --  Field: Flag1
+   function Get_PSL_EOS_Flag (N : Iir) return Boolean;
+   procedure Set_PSL_EOS_Flag (N : Iir; Flag : Boolean);
+
 end Iirs;

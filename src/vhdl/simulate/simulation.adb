@@ -20,8 +20,12 @@ with Ada.Unchecked_Conversion;
 with Ada.Text_IO; use Ada.Text_IO;
 with Errorout; use Errorout;
 with Iirs_Utils; use Iirs_Utils;
+with PSL.Nodes;
+with PSL.NFAs;
 with Trans_Analyzes;
 with Types; use Types;
+with Std_Package;
+with Ieee.Std_Logic_1164;
 with Debugger; use Debugger;
 with Simulation.AMS.Debugger;
 with Areapools; use Areapools;
@@ -921,6 +925,21 @@ package body Simulation is
       end case;
    end Process_Add_Sensitivity;
 
+   procedure Register_Sensitivity
+     (Instance : Block_Instance_Acc; List : Iir_List)
+   is
+      Sig : Iir;
+      Marker : Mark_Type;
+   begin
+      for J in Natural loop
+         Sig := Get_Nth_Element (List, J);
+         exit when Sig = Null_Iir;
+         Mark (Marker, Expr_Pool);
+         Process_Add_Sensitivity (Execute_Name (Instance, Sig, True));
+         Release (Marker, Expr_Pool);
+      end loop;
+   end Register_Sensitivity;
+
    procedure Create_Processes
    is
       use Grt.Processes;
@@ -958,21 +977,7 @@ package body Simulation is
                end if;
 
                --  Register sensitivity.
-               declare
-                  Sig_List : Iir_List;
-                  Sig : Iir;
-                  Marker : Mark_Type;
-               begin
-                  Sig_List := Get_Sensitivity_List (El);
-                  for J in Natural loop
-                     Sig := Get_Nth_Element (Sig_List, J);
-                     exit when Sig = Null_Iir;
-                     Mark (Marker, Expr_Pool);
-                     Process_Add_Sensitivity
-                       (Execute_Name (Instance, Sig, True));
-                     Release (Marker, Expr_Pool);
-                  end loop;
-               end;
+               Register_Sensitivity (Instance, Get_Sensitivity_List (El));
 
             when Iir_Kind_Process_Statement =>
                if Get_Postponed_Flag (El) then
@@ -1030,6 +1035,165 @@ package body Simulation is
          Disp_Signals_Value;
       end if;
    end Create_Processes;
+
+   procedure PSL_Process_Executer (Self : Grt.Processes.Instance_Acc);
+   pragma Convention (C, PSL_Process_Executer);
+
+   function Execute_Psl_Expr (Instance : Block_Instance_Acc;
+                              Expr : PSL_Node;
+                              Eos : Boolean)
+                             return Boolean
+   is
+      use PSL.Nodes;
+   begin
+      case Get_Kind (Expr) is
+         when N_HDL_Expr =>
+            declare
+               E : constant Iir := Get_HDL_Node (Expr);
+               Rtype : constant Iir := Get_Base_Type (Get_Type (E));
+               Res   : Iir_Value_Literal_Acc;
+            begin
+               Res := Execute_Expression (Instance, E);
+               if Rtype = Std_Package.Boolean_Type_Definition then
+                  return Res.B1 = True;
+               elsif Rtype = Ieee.Std_Logic_1164.Std_Ulogic_Type then
+                  return Res.E8 = 3 or Res.E8 = 7; --  1 or H
+               else
+                  Error_Kind ("execute_psl_expr", Expr);
+               end if;
+            end;
+         when N_True =>
+            return True;
+         when N_EOS =>
+            return Eos;
+         when N_Not_Bool =>
+            return not Execute_Psl_Expr (Instance, Get_Boolean (Expr), Eos);
+         when N_And_Bool =>
+            return Execute_Psl_Expr (Instance, Get_Left (Expr), Eos)
+              and Execute_Psl_Expr (Instance, Get_Right (Expr), Eos);
+         when N_Or_Bool =>
+            return Execute_Psl_Expr (Instance, Get_Left (Expr), Eos)
+              or Execute_Psl_Expr (Instance, Get_Right (Expr), Eos);
+         when others =>
+            Error_Kind ("execute_psl_expr", Expr);
+      end case;
+   end Execute_Psl_Expr;
+
+   procedure PSL_Process_Executer (Self : Grt.Processes.Instance_Acc)
+   is
+      type PSL_Entry_Acc is access all PSL_Entry;
+      function To_PSL_Entry_Acc is new Ada.Unchecked_Conversion
+        (Grt.Processes.Instance_Acc, PSL_Entry_Acc);
+
+      use PSL.NFAs;
+
+      E : constant PSL_Entry_Acc := To_PSL_Entry_Acc (Self);
+      Nvec : Boolean_Vector (E.States.all'Range);
+      Marker : Mark_Type;
+      V : Boolean;
+
+      NFA : PSL_NFA;
+      S : NFA_State;
+      S_Num : Nat32;
+      Ed : NFA_Edge;
+      Sd : NFA_State;
+      Sd_Num : Nat32;
+   begin
+      --  Exit now if already covered (never set for assertion).
+      if E.Done then
+         return;
+      end if;
+
+      Instance_Pool := Global_Pool'Access;
+      Current_Process := No_Process;
+
+      Mark (Marker, Expr_Pool);
+      V := Execute_Psl_Expr (E.Instance, Get_PSL_Clock (E.Stmt), False);
+      Release (Marker, Expr_Pool);
+      if V then
+         Nvec := (others => False);
+         if Get_Kind (E.Stmt) = Iir_Kind_Psl_Cover_Statement then
+            Nvec (0) := True;
+         end if;
+
+         --  For each state: if set, evaluate all outgoing edges.
+         NFA := Get_PSL_NFA (E.Stmt);
+         S := Get_First_State (NFA);
+         while S /= No_State loop
+            S_Num := Get_State_Label (S);
+
+            if E.States (S_Num) then
+               Ed := Get_First_Src_Edge (S);
+               while Ed /= No_Edge loop
+                  Sd := Get_Edge_Dest (Ed);
+                  Sd_Num := Get_State_Label (Sd);
+
+                  if not Nvec (Sd_Num) then
+                     Mark (Marker, Expr_Pool);
+                     V := Execute_Psl_Expr
+                       (E.Instance, Get_Edge_Expr (Ed), False);
+                     Release (Marker, Expr_Pool);
+                     if V then
+                        Nvec (Sd_Num) := True;
+                     end if;
+                  end if;
+
+                  Ed := Get_Next_Src_Edge (Ed);
+               end loop;
+            end if;
+
+            S := Get_Next_State (S);
+         end loop;
+
+         --  Check fail state.
+         S := Get_Final_State (NFA);
+         S_Num := Get_State_Label (S);
+         pragma Assert (S_Num = Get_PSL_Nbr_States (E.Stmt) - 1);
+         if Nvec (S_Num) then
+            case Get_Kind (E.Stmt) is
+               when Iir_Kind_Psl_Assert_Statement =>
+                  Execute_Failed_Assertion
+                    (E.Instance, "psl assertion", E.Stmt,
+                     "assertion violation", 2);
+               when Iir_Kind_Psl_Cover_Statement =>
+                  Execute_Failed_Assertion
+                    (E.Instance, "psl cover", E.Stmt,
+                     "sequence covered", 0);
+                  E.Done := True;
+               when others =>
+                  Error_Kind ("PSL_Process_Executer", E.Stmt);
+            end case;
+         end if;
+
+         E.States.all := Nvec;
+      end if;
+
+      Instance_Pool := null;
+      Current_Process := null;
+   end PSL_Process_Executer;
+
+   procedure Create_PSL is
+   begin
+      for I in PSL_Table.First .. PSL_Table.Last loop
+         declare
+            E : PSL_Entry renames PSL_Table.Table (I);
+         begin
+            --  Create the vector.
+            E.States := new Boolean_Vector'
+              (0 .. Get_PSL_Nbr_States (E.Stmt) - 1 => False);
+            E.States (0) := True;
+
+            Grt.Processes.Ghdl_Process_Register
+              (To_Instance_Acc (E'Address), PSL_Process_Executer'Access,
+               null, System.Null_Address);
+
+            Register_Sensitivity
+              (E.Instance, Get_PSL_Clock_Sensitivity (E.Stmt));
+         end;
+      end loop;
+
+      --  Finalizer ?
+   end Create_PSL;
 
    --  Configuration for the whole design
    Top_Config : Iir_Design_Unit;
@@ -1130,6 +1294,11 @@ package body Simulation is
                raise Internal_Error;
             end if;
             Grt.Signals.Ghdl_Signal_Associate_B1 (Port.Sig, Sig.B1);
+         when Iir_Value_E8 =>
+            if Mode = Connect_Source then
+               raise Internal_Error;
+            end if;
+            Grt.Signals.Ghdl_Signal_Associate_E8 (Port.Sig, Sig.E8);
          when others =>
             raise Internal_Error;
       end case;
@@ -1458,7 +1627,7 @@ package body Simulation is
                   Pfx.Val_Array.V (I), Time);
             end loop;
          when Iir_Value_Signal =>
-            case Val.Kind is
+            case Iir_Value_Scalars (Val.Kind) is
                when Iir_Value_I64 =>
                   Val_Ptr := To_Ghdl_Value_Ptr (Val.I64'Address);
                when Iir_Value_E32 =>
@@ -1467,8 +1636,8 @@ package body Simulation is
                   Val_Ptr := To_Ghdl_Value_Ptr (Val.F64'Address);
                when Iir_Value_B1 =>
                   Val_Ptr := To_Ghdl_Value_Ptr (Val.B1'Address);
-               when others =>
-                  raise Internal_Error;
+               when Iir_Value_E8 =>
+                  Val_Ptr := To_Ghdl_Value_Ptr (Val.E8'Address);
             end case;
             Sig.Sig := Grt.Signals.Ghdl_Create_Delayed_Signal
               (Pfx.Sig, Val_Ptr, Time);
@@ -1690,6 +1859,7 @@ package body Simulation is
       Create_Connects;
       Create_Disconnections;
       Create_Processes;
+      Create_PSL;
 
       if Disp_Tree then
          Debugger.Disp_Instances_Tree;

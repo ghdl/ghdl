@@ -29,8 +29,6 @@ with PSL.Prints;
 with PSL.NFAs; use PSL.NFAs;
 
 package body PSL.Build is
-   function Build_SERE_FA (N : Node) return NFA;
-
    package Intersection is
       function Build_Inter (L, R : NFA; Match_Len : Boolean) return NFA;
    end Intersection;

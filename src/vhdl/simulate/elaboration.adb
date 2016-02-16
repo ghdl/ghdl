@@ -17,7 +17,6 @@
 --  02111-1307, USA.
 
 with Ada.Text_IO;
-with Types; use Types;
 with Str_Table;
 with Errorout; use Errorout;
 with Evaluation;
@@ -64,6 +63,54 @@ package body Elaboration is
                                     Generic_Map : Iir;
                                     Port_Map : Iir)
      return Block_Instance_Acc;
+
+   procedure Create_Object
+     (Instance : Block_Instance_Acc;
+      Slot : Object_Slot_Type;
+      Num : Object_Slot_Type := 1) is
+   begin
+      --  Check elaboration order.
+      --  Note: this is not done for package since objects from package are
+      --  commons (same scope), and package annotation order can be different
+      --  from package elaboration order (eg: body).
+      if Slot /= Instance.Elab_Objects + 1
+        or else Instance.Objects (Slot) /= null
+      then
+         Error_Msg_Elab ("bad elaboration order");
+         raise Internal_Error;
+      end if;
+      Instance.Elab_Objects := Slot + Num - 1;
+   end Create_Object;
+
+   procedure Create_Object (Instance : Block_Instance_Acc; Decl : Iir)
+   is
+      Slot : constant Object_Slot_Type := Get_Info (Decl).Slot;
+   begin
+      Create_Object (Instance, Slot, 1);
+   end Create_Object;
+
+   procedure Destroy_Object (Instance : Block_Instance_Acc; Decl : Iir)
+   is
+      Info : constant Sim_Info_Acc := Get_Info (Decl);
+      Slot : constant Object_Slot_Type := Info.Slot;
+   begin
+      if Slot /= Instance.Elab_Objects
+        or else Info.Obj_Scope /= Instance.Block_Scope
+      then
+         Error_Msg_Elab ("bad destroy order");
+         raise Internal_Error;
+      end if;
+      --  Clear the slot (this is necessary for ranges).
+      Instance.Objects (Slot) := null;
+      Instance.Elab_Objects := Slot - 1;
+   end Destroy_Object;
+
+   procedure Create_Signal (Instance : Block_Instance_Acc; Decl : Iir)
+   is
+      Slot : constant Object_Slot_Type := Get_Info (Decl).Slot;
+   begin
+      Create_Object (Instance, Slot, 2);
+   end Create_Signal;
 
    -- Create a new signal, using DEFAULT as initial value.
    -- Set its number.
@@ -476,7 +523,7 @@ package body Elaboration is
       Protected_Table.Increment_Last;
       Res := Create_Protected_Value (Protected_Table.Last);
 
-      Inst := Create_Subprogram_Instance (Block, Bod);
+      Inst := Create_Subprogram_Instance (Block, null, Bod);
       Protected_Table.Table (Res.Prot) := Inst;
 
       --  Temporary put the instancce on the stack in case of function calls
@@ -623,59 +670,6 @@ package body Elaboration is
             Error_Kind ("Init_To_Default", Atype);
       end case;
    end Init_To_Default;
-
-   procedure Create_Object
-     (Instance : Block_Instance_Acc; Slot : Object_Slot_Type) is
-   begin
-      --  Check elaboration order.
-      --  Note: this is not done for package since objects from package are
-      --  commons (same scope), and package annotation order can be different
-      --  from package elaboration order (eg: body).
-      if Slot /= Instance.Elab_Objects + 1
-        or else Instance.Objects (Slot) /= null
-      then
-         Error_Msg_Elab ("bad elaboration order");
-         raise Internal_Error;
-      end if;
-      Instance.Elab_Objects := Slot;
-   end Create_Object;
-
-   procedure Create_Object (Instance : Block_Instance_Acc; Decl : Iir)
-   is
-      Slot : constant Object_Slot_Type := Get_Info (Decl).Slot;
-   begin
-      Create_Object (Instance, Slot);
-   end Create_Object;
-
-   procedure Destroy_Object (Instance : Block_Instance_Acc; Decl : Iir)
-   is
-      Info : constant Sim_Info_Acc := Get_Info (Decl);
-      Slot : constant Object_Slot_Type := Info.Slot;
-   begin
-      if Slot /= Instance.Elab_Objects
-        or else Info.Obj_Scope /= Instance.Block_Scope
-      then
-         Error_Msg_Elab ("bad destroy order");
-         raise Internal_Error;
-      end if;
-      --  Clear the slot (this is necessary for ranges).
-      Instance.Objects (Slot) := null;
-      Instance.Elab_Objects := Slot - 1;
-   end Destroy_Object;
-
-   procedure Create_Signal (Instance : Block_Instance_Acc; Decl : Iir)
-   is
-      Slot : constant Object_Slot_Type := Get_Info (Decl).Slot;
-   begin
-      if Slot /= Instance.Elab_Objects + 1
-        or else Instance.Objects (Slot) /= null
-      then
-         Error_Msg_Elab ("bad elaboration order", Decl);
-         raise Internal_Error;
-      end if;
-      --  One slot is reserved for default value
-      Instance.Elab_Objects := Slot + 1;
-   end Create_Signal;
 
    function Create_Terminal_Object (Block: Block_Instance_Acc;
                                     Decl : Iir;
@@ -1699,8 +1693,8 @@ package body Elaboration is
          Elaborate_Statement_Part
            (Sub_Instance, Get_Concurrent_Statement_Chain (Bod));
 
+         exit when Is_Equal (Index, Bound.Right);
          Update_Loop_Index (Index, Bound);
-         exit when not Is_In_Range (Index, Bound);
       end loop;
       --  FIXME: destroy index ?
    end Elaborate_For_Generate_Statement;
@@ -1717,6 +1711,17 @@ package body Elaboration is
       --  Processes aren't elaborated here.  They are elaborated
       --  just before simulation.
    end Elaborate_Process_Statement;
+
+   procedure Elaborate_Psl_Directive
+     (Instance : Block_Instance_Acc; Stmt : Iir)
+   is
+   begin
+      --  Create the state vector (and initialize it).
+      --  Create the bool flag (for cover)
+      --  Create the process
+      --  Create the finalizer
+      PSL_Table.Append (PSL_Entry'(Instance, Stmt, null, False));
+   end Elaborate_Psl_Directive;
 
    --  LRM93 §12.4  Elaboration of a Statement Part.
    procedure Elaborate_Statement_Part
@@ -1754,6 +1759,14 @@ package body Elaboration is
                          Instance, Get_Simultaneous_Right (Stmt),
                          Build (Op_Minus,
                                 Instance, Get_Simultaneous_Left (Stmt))));
+
+            when Iir_Kind_Psl_Default_Clock
+              | Iir_Kind_Psl_Declaration =>
+               null;
+
+            when Iir_Kind_Psl_Cover_Statement
+              | Iir_Kind_Psl_Assert_Statement =>
+               Elaborate_Psl_Directive (Instance, Stmt);
 
             when others =>
                Error_Kind ("elaborate_statement_part", Stmt);
@@ -2766,6 +2779,27 @@ package body Elaboration is
       end loop;
    end Override_Generics;
 
+   procedure Check_No_Unconstrained (Map : Iir)
+   is
+      Assoc : Iir;
+      Formal : Iir;
+   begin
+      Assoc := Map;
+      while Assoc /= Null_Iir loop
+         if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open then
+            Formal := Get_Association_Interface (Assoc);
+            if Get_Default_Value (Formal) = Null_Iir
+              and then not Is_Fully_Constrained_Type (Get_Type (Formal))
+            then
+               Error_Msg_Elab
+                 ("top-level " & Disp_Node (Formal) & " must have a value",
+                  Formal);
+            end if;
+         end if;
+         Assoc := Get_Chain (Assoc);
+      end loop;
+   end Check_No_Unconstrained;
+
    -- Elaborate a design.
    procedure Elaborate_Design (Design: Iir_Design_Unit)
    is
@@ -2816,6 +2850,14 @@ package body Elaboration is
       Port_Map := Create_Default_Association
         (Get_Port_Chain (Entity), Null_Iir, Entity);
       Override_Generics (Generic_Map, Grt.Options.First_Generic_Override);
+
+      Check_No_Unconstrained (Generic_Map);
+      Check_No_Unconstrained (Port_Map);
+
+      --  Stop now in case of errors.
+      if Nbr_Errors /= 0 then
+         Grt.Errors.Fatal_Error;
+      end if;
 
       --  Elaborate from the top configuration.
       Conf := Get_Block_Configuration (Get_Library_Unit (Conf_Unit));

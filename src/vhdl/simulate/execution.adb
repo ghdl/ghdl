@@ -42,6 +42,7 @@ with Grt_Interface;
 with Grt.Values;
 with Grt.Errors;
 with Grt.Std_Logic_1164;
+with Grt.Lib;
 with Sem_Inst;
 
 package body Execution is
@@ -57,7 +58,8 @@ package body Execution is
    procedure Update_Next_Statement (Proc : Process_State_Acc);
 
    -- Display a message when an assertion has failed.
-   procedure Execute_Failed_Assertion (Report : String;
+   procedure Execute_Failed_Assertion (Msg : String;
+                                       Report : String;
                                        Severity : Natural;
                                        Stmt: Iir);
 
@@ -546,8 +548,9 @@ package body Execution is
       use Grt.Std_Logic_1164;
    begin
       Execute_Failed_Assertion
-        ("STD_LOGIC_1164: '-' operand for matching ordering operator",
-         2, Loc);
+        ("assertion",
+         "STD_LOGIC_1164: '-' operand for matching ordering operator",
+         1, Loc);
    end Assert_Std_Ulogic_Dc;
 
    procedure Check_Std_Ulogic_Dc (Loc : Iir; V : Grt.Std_Logic_1164.Std_Ulogic)
@@ -1361,7 +1364,7 @@ package body Execution is
             begin
                for I in Right.Val_Array.V'Range loop
                   Format (Positive (I)) :=
-                    Character'Val (Right.Val_Array.V (I).E32);
+                    Character'Val (Right.Val_Array.V (I).E8);
                end loop;
                Format (Format'Last) := ASCII.NUL;
                Grt.Vstrings.To_String
@@ -1396,27 +1399,27 @@ package body Execution is
             declare
                use Grt.Std_Logic_1164;
             begin
-               Result := Create_E32_Value
+               Result := Create_E8_Value
                  (Std_Ulogic'Pos
-                    (Match_Eq_Table (Std_Ulogic'Val (Left.E32),
-                                     Std_Ulogic'Val (Right.E32))));
+                    (Match_Eq_Table (Std_Ulogic'Val (Left.E8),
+                                     Std_Ulogic'Val (Right.E8))));
             end;
          when Iir_Predefined_Std_Ulogic_Match_Inequality =>
             Eval_Right;
             declare
                use Grt.Std_Logic_1164;
             begin
-               Result := Create_E32_Value
+               Result := Create_E8_Value
                  (Std_Ulogic'Pos
-                    (Not_Table (Match_Eq_Table (Std_Ulogic'Val (Left.E32),
-                                                Std_Ulogic'Val (Right.E32)))));
+                    (Not_Table (Match_Eq_Table (Std_Ulogic'Val (Left.E8),
+                                                Std_Ulogic'Val (Right.E8)))));
             end;
          when Iir_Predefined_Std_Ulogic_Match_Ordering_Functions =>
             Eval_Right;
             declare
                use Grt.Std_Logic_1164;
-               L : constant Std_Ulogic := Std_Ulogic'Val (Left.E32);
-               R : constant Std_Ulogic := Std_Ulogic'Val (Right.E32);
+               L : constant Std_Ulogic := Std_Ulogic'Val (Left.E8);
+               R : constant Std_Ulogic := Std_Ulogic'Val (Right.E8);
                Res : Std_Ulogic;
             begin
                Check_Std_Ulogic_Dc (Expr, L);
@@ -1434,7 +1437,7 @@ package body Execution is
                   when Iir_Predefined_Std_Ulogic_Match_Greater_Equal =>
                      Res := Not_Table (Match_Lt_Table (L, R));
                end case;
-               Result := Create_E32_Value (Std_Ulogic'Pos (Res));
+               Result := Create_E8_Value (Std_Ulogic'Pos (Res));
             end;
 
          when Iir_Predefined_Std_Ulogic_Array_Match_Equality
@@ -1449,11 +1452,10 @@ package body Execution is
                Le, Re : Std_Ulogic;
                Has_Match_Err : Boolean;
             begin
-               Result := Create_E32_Value (Std_Ulogic'Pos ('1'));
                Has_Match_Err := False;
                for I in Left.Val_Array.V'Range loop
-                  Le := Std_Ulogic'Val (Left.Val_Array.V (I).E32);
-                  Re := Std_Ulogic'Val (Right.Val_Array.V (I).E32);
+                  Le := Std_Ulogic'Val (Left.Val_Array.V (I).E8);
+                  Re := Std_Ulogic'Val (Right.Val_Array.V (I).E8);
                   if (Le = '-' or Re = '-') and then not Has_Match_Err then
                      Assert_Std_Ulogic_Dc (Expr);
                      Has_Match_Err := True;
@@ -1463,7 +1465,7 @@ package body Execution is
                if Func = Iir_Predefined_Std_Ulogic_Array_Match_Inequality then
                   Res := Not_Table (Res);
                end if;
-               Result := Create_E32_Value (Std_Ulogic'Pos (Res));
+               Result := Create_E8_Value (Std_Ulogic'Pos (Res));
             end;
 
          when others =>
@@ -1560,8 +1562,9 @@ package body Execution is
             File_Operation.Untruncated_Text_Read
               (Args (0), Args (1), Args (2));
          when Std_Names.Name_Control_Simulation =>
-            Put_Line (Standard_Error, "simulation finished");
-            raise Simulation_Finished;
+            Grt.Lib.Ghdl_Control_Simulation
+              (Args (0).B1, Args (1).B1, Std_Integer (Args (2).I64));
+            --  Do not return.
          when others =>
             Error_Msg_Exec ("unsupported foreign procedure call", Stmt);
       end case;
@@ -3264,8 +3267,10 @@ package body Execution is
    end Execute_Monadic_Association;
 
    --  Create a block instance for subprogram IMP.
-   function Create_Subprogram_Instance
-     (Instance : Block_Instance_Acc; Imp : Iir) return Block_Instance_Acc
+   function Create_Subprogram_Instance (Instance : Block_Instance_Acc;
+                                        Prot_Obj : Block_Instance_Acc;
+                                        Imp : Iir)
+                                       return Block_Instance_Acc
    is
       Func_Info : constant Sim_Info_Acc := Get_Info (Imp);
 
@@ -3285,18 +3290,30 @@ package body Execution is
       pragma Assert (Get_Kind (Imp) in Iir_Kinds_Subprogram_Declaration
                        or else Get_Kind (Imp) = Iir_Kind_Protected_Type_Body);
 
-      Up_Info := Get_Info (Get_Parent (Imp));
-      Up_Block := Get_Instance_By_Scope (Instance, Up_Info.Frame_Scope);
-
-      Origin := Sem_Inst.Get_Origin (Imp);
-      if Origin /= Null_Iir then
-         Label := Origin;
-         if Up_Info.Kind = Kind_Environment then
-            Up_Block := Environment_Table.Table
-              (Up_Block.Objects (Up_Info.Env_Slot).Environment);
-         end if;
-      else
+      if Prot_Obj /= null then
+         Up_Block := Prot_Obj;
          Label := Imp;
+      else
+         Up_Info := Get_Info (Get_Parent (Imp));
+         Up_Block := Get_Instance_By_Scope (Instance, Up_Info.Frame_Scope);
+
+         Origin := Sem_Inst.Get_Origin (Imp);
+         if Origin /= Null_Iir then
+            --  Call to a subprogram of an instantiated package.
+            --  For a generic package, only the spec is instantiated, the body
+            --  is shared by all the instances.
+
+            --  Execute code of the 'shared' body
+            Label := Origin;
+
+            --  Get the real instance for package interface.
+            if Up_Info.Kind = Kind_Environment then
+               Up_Block := Environment_Table.Table
+                 (Up_Block.Objects (Up_Info.Env_Slot).Environment);
+            end if;
+         else
+            Label := Imp;
+         end if;
       end if;
 
       Res := To_Block_Instance_Acc
@@ -3373,7 +3390,7 @@ package body Execution is
       Mark (Marker, Instance_Pool.all);
 
       -- Create an instance for this function.
-      Instance := Create_Subprogram_Instance (Block, Func);
+      Instance := Create_Subprogram_Instance (Block, null, Func);
 
       Inter := Get_Interface_Declaration_Chain (Func);
       Elaboration.Create_Object (Instance, Inter);
@@ -3623,13 +3640,12 @@ package body Execution is
 
    procedure Execute_Back_Association (Instance : Block_Instance_Acc)
    is
-      Proc : Iir;
+      Proc : constant Iir := Get_Procedure_Call (Instance.Parent.Stmt);
       Assoc: Iir;
       Inter: Iir;
       Formal : Iir;
       Assoc_Idx : Iir_Index32;
    begin
-      Proc := Get_Procedure_Call (Instance.Parent.Stmt);
       Assoc := Get_Parameter_Association_Chain (Proc);
       Assoc_Idx := 1;
       while Assoc /= Null_Iir loop
@@ -3684,24 +3700,19 @@ package body Execution is
       end loop;
    end Execute_Back_Association;
 
-   --  When a subprogram of a protected type is called, a link to the object
-   --  must be passed. This procedure modifies the up_link of SUBPRG_BLOCK to
-   --  point to the block of the object (extracted from CALL and BLOCK).
-   --  This change doesn't modify the parent (so that the activation chain is
-   --  not changed).
-   procedure Adjust_Up_Link_For_Protected_Object
-     (Block: Block_Instance_Acc; Call: Iir; Subprg_Block : Block_Instance_Acc)
+   function Get_Protected_Object_Instance
+     (Block : Block_Instance_Acc; Call : Iir) return Block_Instance_Acc
    is
       Meth_Obj : constant Iir := Get_Method_Object (Call);
       Obj : Iir_Value_Literal_Acc;
-      Obj_Block : Block_Instance_Acc;
    begin
-      if Meth_Obj /= Null_Iir then
+      if Meth_Obj = Null_Iir then
+         return null;
+      else
          Obj := Execute_Name (Block, Meth_Obj, True);
-         Obj_Block := Protected_Table.Table (Obj.Prot);
-         Subprg_Block.Up_Block := Obj_Block;
+         return Protected_Table.Table (Obj.Prot);
       end if;
-   end Adjust_Up_Link_For_Protected_Object;
+   end Get_Protected_Object_Instance;
 
    function Execute_Foreign_Function_Call
      (Block: Block_Instance_Acc; Expr : Iir; Imp : Iir)
@@ -3727,24 +3738,27 @@ package body Execution is
    is
       Inter_Chain : constant Iir := Get_Interface_Declaration_Chain (Imp);
       Subprg_Block: Block_Instance_Acc;
+      Prot_Block : Block_Instance_Acc;
       Assoc_Chain: Iir;
       Res : Iir_Value_Literal_Acc;
    begin
       Mark (Block.Marker, Instance_Pool.all);
 
-      Subprg_Block := Create_Subprogram_Instance (Block, Imp);
-
       case Get_Kind (Expr) is
          when Iir_Kind_Function_Call =>
-            Adjust_Up_Link_For_Protected_Object (Block, Expr, Subprg_Block);
+            Prot_Block := Get_Protected_Object_Instance (Block, Expr);
+            Subprg_Block :=
+              Create_Subprogram_Instance (Block, Prot_Block, Imp);
             Assoc_Chain := Get_Parameter_Association_Chain (Expr);
             Execute_Association (Block, Subprg_Block, Assoc_Chain);
             --  No out/inout interface for functions.
             pragma Assert (Subprg_Block.Actuals_Ref = null);
          when Iir_Kinds_Dyadic_Operator =>
+            Subprg_Block := Create_Subprogram_Instance (Block, null, Imp);
             Execute_Dyadic_Association
               (Block, Subprg_Block, Expr, Inter_Chain);
          when Iir_Kinds_Monadic_Operator =>
+            Subprg_Block := Create_Subprogram_Instance (Block, null, Imp);
             Execute_Monadic_Association
               (Block, Subprg_Block, Expr, Inter_Chain);
          when others =>
@@ -3961,7 +3975,7 @@ package body Execution is
       Instance : Block_Instance_Acc;
    begin
       -- Create a frame for this function.
-      Instance := Create_Subprogram_Instance (Block, Imp);
+      Instance := Create_Subprogram_Instance (Block, null, Imp);
 
       Inter := Get_Interface_Declaration_Chain (Imp);
       Elaboration.Create_Object (Instance, Inter);
@@ -4100,7 +4114,8 @@ package body Execution is
    -- REPORT is the value (string) to display, or null to use default message.
    -- SEVERITY is the severity or null to use default (error).
    -- STMT is used to display location.
-   procedure Execute_Failed_Assertion (Report : String;
+   procedure Execute_Failed_Assertion (Msg : String;
+                                       Report : String;
                                        Severity : Natural;
                                        Stmt: Iir) is
    begin
@@ -4111,7 +4126,9 @@ package body Execution is
       Put (Standard_Error, Disp_Location (Stmt));
 
       -- 1: an indication that this message is from an assertion.
-      Put (Standard_Error, "(assertion ");
+      Put (Standard_Error, '(');
+      Put (Standard_Error, Msg);
+      Put (Standard_Error, ' ');
 
       -- 2: the value of the severity level.
       case Severity is
@@ -4142,30 +4159,12 @@ package body Execution is
       end if;
    end Execute_Failed_Assertion;
 
-   procedure Execute_Failed_Assertion (Report : Iir_Value_Literal_Acc;
-                                       Severity : Natural;
-                                       Stmt: Iir) is
-   begin
-      if Report /= null then
-         declare
-            Msg : String (1 .. Natural (Report.Val_Array.Len));
-         begin
-            for I in Report.Val_Array.V'Range loop
-               Msg (Positive (I)) :=
-                 Character'Val (Report.Val_Array.V (I).E8);
-            end loop;
-            Execute_Failed_Assertion (Msg, Severity, Stmt);
-         end;
-      else
-         -- The default value for the message string is:
-         -- "Assertion violation.".
-         -- Does the message string include quotes ?
-         Execute_Failed_Assertion ("Assertion violation.", Severity, Stmt);
-      end if;
-   end Execute_Failed_Assertion;
-
-   procedure Execute_Report_Statement
-     (Instance: Block_Instance_Acc; Stmt: Iir; Default_Severity : Natural)
+   procedure Execute_Failed_Assertion
+     (Instance: Block_Instance_Acc;
+      Label : String;
+      Stmt : Iir;
+      Default_Msg : String;
+      Default_Severity : Natural)
    is
       Expr: Iir;
       Report, Severity_Lit: Iir_Value_Literal_Acc;
@@ -4186,9 +4185,21 @@ package body Execution is
       else
          Severity := Default_Severity;
       end if;
-      Execute_Failed_Assertion (Report, Severity, Stmt);
+      if Report /= null then
+         declare
+            Msg : String (1 .. Natural (Report.Val_Array.Len));
+         begin
+            for I in Report.Val_Array.V'Range loop
+               Msg (Positive (I)) :=
+                 Character'Val (Report.Val_Array.V (I).E8);
+            end loop;
+            Execute_Failed_Assertion (Label, Msg, Severity, Stmt);
+         end;
+      else
+         Execute_Failed_Assertion (Label, Default_Msg, Severity, Stmt);
+      end if;
       Release (Marker, Expr_Pool);
-   end Execute_Report_Statement;
+   end Execute_Failed_Assertion;
 
    function Is_In_Choice
      (Instance: Block_Instance_Acc;
@@ -4535,6 +4546,7 @@ package body Execution is
       Call : constant Iir := Get_Procedure_Call (Stmt);
       Imp  : constant Iir := Get_Implementation (Call);
       Subprg_Instance : Block_Instance_Acc;
+      Prot_Block : Block_Instance_Acc;
       Assoc_Chain: Iir;
       Subprg_Body : Iir;
    begin
@@ -4546,9 +4558,9 @@ package body Execution is
          Update_Next_Statement (Proc);
       else
          Mark (Instance.Marker, Instance_Pool.all);
-         Subprg_Instance := Create_Subprogram_Instance (Instance, Imp);
-         Adjust_Up_Link_For_Protected_Object
-           (Instance, Call, Subprg_Instance);
+         Prot_Block := Get_Protected_Object_Instance (Instance, Call);
+         Subprg_Instance :=
+           Create_Subprogram_Instance (Instance, Prot_Block, Imp);
          Assoc_Chain := Get_Parameter_Association_Chain (Call);
          Execute_Association (Instance, Subprg_Instance, Assoc_Chain);
 
@@ -4781,13 +4793,15 @@ package body Execution is
                   Res := Execute_Condition
                     (Instance, Get_Assertion_Condition (Stmt));
                   if not Res then
-                     Execute_Report_Statement (Instance, Stmt, 2);
+                     Execute_Failed_Assertion (Instance, "assertion", Stmt,
+                                               "Assertion violation.", 2);
                   end if;
                end;
                Update_Next_Statement (Proc);
 
             when Iir_Kind_Report_Statement =>
-               Execute_Report_Statement (Instance, Stmt, 0);
+               Execute_Failed_Assertion (Instance, "report", Stmt,
+                                         "Assertion violation.", 0);
                Update_Next_Statement (Proc);
 
             when Iir_Kind_Variable_Assignment_Statement =>

@@ -83,13 +83,21 @@ package body Ghdllocal is
          raise Compilation_Error;
       end if;
 
-      if Flags.Flag_Elaborate then
+      if Flags.Flag_Elaborate
+        or else ((Main or Flags.List_All) and then Flags.List_Canon)
+      then
          if Flags.Verbose then
             Put_Line ("canonicalize " & Disp_Node (Get_Library_Unit (Unit)));
          end if;
 
          Canon.Canonicalize (Unit);
 
+         if (Main or Flags.List_All) and then Flags.List_Canon then
+            Disp_Vhdl.Disp_Vhdl (Unit);
+         end if;
+      end if;
+
+      if Flags.Flag_Elaborate then
          if Flag_Create_Default_Config then
             Lib := Get_Library_Unit (Unit);
             if Get_Kind (Lib) = Iir_Kind_Architecture_Body then

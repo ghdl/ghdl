@@ -312,11 +312,15 @@ package body Nodes_Meta is
       Field_Suspend_Flag => Type_Boolean,
       Field_Is_Ref => Type_Boolean,
       Field_Psl_Property => Type_PSL_Node,
+      Field_Psl_Sequence => Type_PSL_Node,
       Field_Psl_Declaration => Type_PSL_Node,
       Field_Psl_Expression => Type_PSL_Node,
       Field_Psl_Boolean => Type_PSL_Node,
       Field_PSL_Clock => Type_PSL_Node,
-      Field_PSL_NFA => Type_PSL_NFA
+      Field_PSL_NFA => Type_PSL_NFA,
+      Field_PSL_Nbr_States => Type_Int32,
+      Field_PSL_Clock_Sensitivity => Type_Iir_List,
+      Field_PSL_EOS_Flag => Type_Boolean
      );
 
    function Get_Field_Type (F : Fields_Enum) return Types_Enum is
@@ -913,6 +917,8 @@ package body Nodes_Meta is
             return "is_ref";
          when Field_Psl_Property =>
             return "psl_property";
+         when Field_Psl_Sequence =>
+            return "psl_sequence";
          when Field_Psl_Declaration =>
             return "psl_declaration";
          when Field_Psl_Expression =>
@@ -923,6 +929,12 @@ package body Nodes_Meta is
             return "psl_clock";
          when Field_PSL_NFA =>
             return "psl_nfa";
+         when Field_PSL_Nbr_States =>
+            return "psl_nbr_states";
+         when Field_PSL_Clock_Sensitivity =>
+            return "psl_clock_sensitivity";
+         when Field_PSL_EOS_Flag =>
+            return "psl_eos_flag";
       end case;
    end Get_Field_Image;
 
@@ -2029,6 +2041,8 @@ package body Nodes_Meta is
             return Attr_None;
          when Field_Psl_Property =>
             return Attr_None;
+         when Field_Psl_Sequence =>
+            return Attr_None;
          when Field_Psl_Declaration =>
             return Attr_None;
          when Field_Psl_Expression =>
@@ -2038,6 +2052,12 @@ package body Nodes_Meta is
          when Field_PSL_Clock =>
             return Attr_None;
          when Field_PSL_NFA =>
+            return Attr_None;
+         when Field_PSL_Nbr_States =>
+            return Attr_None;
+         when Field_PSL_Clock_Sensitivity =>
+            return Attr_None;
+         when Field_PSL_EOS_Flag =>
             return Attr_None;
       end case;
    end Get_Field_Attribute;
@@ -3449,17 +3469,23 @@ package body Nodes_Meta is
       Field_Label,
       Field_PSL_Clock,
       Field_PSL_NFA,
+      Field_PSL_Nbr_States,
+      Field_PSL_EOS_Flag,
       Field_Visible_Flag,
+      Field_PSL_Clock_Sensitivity,
       Field_Chain,
       Field_Severity_Expression,
       Field_Report_Expression,
       Field_Parent,
       --  Iir_Kind_Psl_Cover_Statement
-      Field_Psl_Property,
+      Field_Psl_Sequence,
       Field_Label,
       Field_PSL_Clock,
       Field_PSL_NFA,
+      Field_PSL_Nbr_States,
+      Field_PSL_EOS_Flag,
       Field_Visible_Flag,
+      Field_PSL_Clock_Sensitivity,
       Field_Chain,
       Field_Severity_Expression,
       Field_Report_Expression,
@@ -4197,85 +4223,85 @@ package body Nodes_Meta is
       Iir_Kind_Concurrent_Selected_Signal_Assignment => 1212,
       Iir_Kind_Concurrent_Assertion_Statement => 1220,
       Iir_Kind_Psl_Default_Clock => 1224,
-      Iir_Kind_Psl_Assert_Statement => 1233,
-      Iir_Kind_Psl_Cover_Statement => 1242,
-      Iir_Kind_Concurrent_Procedure_Call_Statement => 1249,
-      Iir_Kind_Block_Statement => 1262,
-      Iir_Kind_If_Generate_Statement => 1272,
-      Iir_Kind_For_Generate_Statement => 1281,
-      Iir_Kind_Component_Instantiation_Statement => 1291,
-      Iir_Kind_Simple_Simultaneous_Statement => 1298,
-      Iir_Kind_Generate_Statement_Body => 1309,
-      Iir_Kind_If_Generate_Else_Clause => 1314,
-      Iir_Kind_Simple_Signal_Assignment_Statement => 1323,
-      Iir_Kind_Conditional_Signal_Assignment_Statement => 1332,
-      Iir_Kind_Null_Statement => 1336,
-      Iir_Kind_Assertion_Statement => 1343,
-      Iir_Kind_Report_Statement => 1349,
-      Iir_Kind_Wait_Statement => 1356,
-      Iir_Kind_Variable_Assignment_Statement => 1362,
-      Iir_Kind_Conditional_Variable_Assignment_Statement => 1368,
-      Iir_Kind_Return_Statement => 1374,
-      Iir_Kind_For_Loop_Statement => 1383,
-      Iir_Kind_While_Loop_Statement => 1391,
-      Iir_Kind_Next_Statement => 1397,
-      Iir_Kind_Exit_Statement => 1403,
-      Iir_Kind_Case_Statement => 1411,
-      Iir_Kind_Procedure_Call_Statement => 1417,
-      Iir_Kind_If_Statement => 1426,
-      Iir_Kind_Elsif => 1431,
-      Iir_Kind_Character_Literal => 1438,
-      Iir_Kind_Simple_Name => 1445,
-      Iir_Kind_Selected_Name => 1453,
-      Iir_Kind_Operator_Symbol => 1458,
-      Iir_Kind_Selected_By_All_Name => 1463,
-      Iir_Kind_Parenthesis_Name => 1467,
-      Iir_Kind_External_Constant_Name => 1476,
-      Iir_Kind_External_Signal_Name => 1485,
-      Iir_Kind_External_Variable_Name => 1494,
-      Iir_Kind_Package_Pathname => 1497,
-      Iir_Kind_Absolute_Pathname => 1498,
-      Iir_Kind_Relative_Pathname => 1499,
-      Iir_Kind_Pathname_Element => 1503,
-      Iir_Kind_Base_Attribute => 1505,
-      Iir_Kind_Left_Type_Attribute => 1510,
-      Iir_Kind_Right_Type_Attribute => 1515,
-      Iir_Kind_High_Type_Attribute => 1520,
-      Iir_Kind_Low_Type_Attribute => 1525,
-      Iir_Kind_Ascending_Type_Attribute => 1530,
-      Iir_Kind_Image_Attribute => 1536,
-      Iir_Kind_Value_Attribute => 1542,
-      Iir_Kind_Pos_Attribute => 1548,
-      Iir_Kind_Val_Attribute => 1554,
-      Iir_Kind_Succ_Attribute => 1560,
-      Iir_Kind_Pred_Attribute => 1566,
-      Iir_Kind_Leftof_Attribute => 1572,
-      Iir_Kind_Rightof_Attribute => 1578,
-      Iir_Kind_Delayed_Attribute => 1586,
-      Iir_Kind_Stable_Attribute => 1594,
-      Iir_Kind_Quiet_Attribute => 1602,
-      Iir_Kind_Transaction_Attribute => 1610,
-      Iir_Kind_Event_Attribute => 1614,
-      Iir_Kind_Active_Attribute => 1618,
-      Iir_Kind_Last_Event_Attribute => 1622,
-      Iir_Kind_Last_Active_Attribute => 1626,
-      Iir_Kind_Last_Value_Attribute => 1630,
-      Iir_Kind_Driving_Attribute => 1634,
-      Iir_Kind_Driving_Value_Attribute => 1638,
-      Iir_Kind_Behavior_Attribute => 1638,
-      Iir_Kind_Structure_Attribute => 1638,
-      Iir_Kind_Simple_Name_Attribute => 1645,
-      Iir_Kind_Instance_Name_Attribute => 1650,
-      Iir_Kind_Path_Name_Attribute => 1655,
-      Iir_Kind_Left_Array_Attribute => 1662,
-      Iir_Kind_Right_Array_Attribute => 1669,
-      Iir_Kind_High_Array_Attribute => 1676,
-      Iir_Kind_Low_Array_Attribute => 1683,
-      Iir_Kind_Length_Array_Attribute => 1690,
-      Iir_Kind_Ascending_Array_Attribute => 1697,
-      Iir_Kind_Range_Array_Attribute => 1704,
-      Iir_Kind_Reverse_Range_Array_Attribute => 1711,
-      Iir_Kind_Attribute_Name => 1719
+      Iir_Kind_Psl_Assert_Statement => 1236,
+      Iir_Kind_Psl_Cover_Statement => 1248,
+      Iir_Kind_Concurrent_Procedure_Call_Statement => 1255,
+      Iir_Kind_Block_Statement => 1268,
+      Iir_Kind_If_Generate_Statement => 1278,
+      Iir_Kind_For_Generate_Statement => 1287,
+      Iir_Kind_Component_Instantiation_Statement => 1297,
+      Iir_Kind_Simple_Simultaneous_Statement => 1304,
+      Iir_Kind_Generate_Statement_Body => 1315,
+      Iir_Kind_If_Generate_Else_Clause => 1320,
+      Iir_Kind_Simple_Signal_Assignment_Statement => 1329,
+      Iir_Kind_Conditional_Signal_Assignment_Statement => 1338,
+      Iir_Kind_Null_Statement => 1342,
+      Iir_Kind_Assertion_Statement => 1349,
+      Iir_Kind_Report_Statement => 1355,
+      Iir_Kind_Wait_Statement => 1362,
+      Iir_Kind_Variable_Assignment_Statement => 1368,
+      Iir_Kind_Conditional_Variable_Assignment_Statement => 1374,
+      Iir_Kind_Return_Statement => 1380,
+      Iir_Kind_For_Loop_Statement => 1389,
+      Iir_Kind_While_Loop_Statement => 1397,
+      Iir_Kind_Next_Statement => 1403,
+      Iir_Kind_Exit_Statement => 1409,
+      Iir_Kind_Case_Statement => 1417,
+      Iir_Kind_Procedure_Call_Statement => 1423,
+      Iir_Kind_If_Statement => 1432,
+      Iir_Kind_Elsif => 1437,
+      Iir_Kind_Character_Literal => 1444,
+      Iir_Kind_Simple_Name => 1451,
+      Iir_Kind_Selected_Name => 1459,
+      Iir_Kind_Operator_Symbol => 1464,
+      Iir_Kind_Selected_By_All_Name => 1469,
+      Iir_Kind_Parenthesis_Name => 1473,
+      Iir_Kind_External_Constant_Name => 1482,
+      Iir_Kind_External_Signal_Name => 1491,
+      Iir_Kind_External_Variable_Name => 1500,
+      Iir_Kind_Package_Pathname => 1503,
+      Iir_Kind_Absolute_Pathname => 1504,
+      Iir_Kind_Relative_Pathname => 1505,
+      Iir_Kind_Pathname_Element => 1509,
+      Iir_Kind_Base_Attribute => 1511,
+      Iir_Kind_Left_Type_Attribute => 1516,
+      Iir_Kind_Right_Type_Attribute => 1521,
+      Iir_Kind_High_Type_Attribute => 1526,
+      Iir_Kind_Low_Type_Attribute => 1531,
+      Iir_Kind_Ascending_Type_Attribute => 1536,
+      Iir_Kind_Image_Attribute => 1542,
+      Iir_Kind_Value_Attribute => 1548,
+      Iir_Kind_Pos_Attribute => 1554,
+      Iir_Kind_Val_Attribute => 1560,
+      Iir_Kind_Succ_Attribute => 1566,
+      Iir_Kind_Pred_Attribute => 1572,
+      Iir_Kind_Leftof_Attribute => 1578,
+      Iir_Kind_Rightof_Attribute => 1584,
+      Iir_Kind_Delayed_Attribute => 1592,
+      Iir_Kind_Stable_Attribute => 1600,
+      Iir_Kind_Quiet_Attribute => 1608,
+      Iir_Kind_Transaction_Attribute => 1616,
+      Iir_Kind_Event_Attribute => 1620,
+      Iir_Kind_Active_Attribute => 1624,
+      Iir_Kind_Last_Event_Attribute => 1628,
+      Iir_Kind_Last_Active_Attribute => 1632,
+      Iir_Kind_Last_Value_Attribute => 1636,
+      Iir_Kind_Driving_Attribute => 1640,
+      Iir_Kind_Driving_Value_Attribute => 1644,
+      Iir_Kind_Behavior_Attribute => 1644,
+      Iir_Kind_Structure_Attribute => 1644,
+      Iir_Kind_Simple_Name_Attribute => 1651,
+      Iir_Kind_Instance_Name_Attribute => 1656,
+      Iir_Kind_Path_Name_Attribute => 1661,
+      Iir_Kind_Left_Array_Attribute => 1668,
+      Iir_Kind_Right_Array_Attribute => 1675,
+      Iir_Kind_High_Array_Attribute => 1682,
+      Iir_Kind_Low_Array_Attribute => 1689,
+      Iir_Kind_Length_Array_Attribute => 1696,
+      Iir_Kind_Ascending_Array_Attribute => 1703,
+      Iir_Kind_Range_Array_Attribute => 1710,
+      Iir_Kind_Reverse_Range_Array_Attribute => 1717,
+      Iir_Kind_Attribute_Name => 1725
      );
 
    function Get_Fields (K : Iir_Kind) return Fields_Array
@@ -4419,6 +4445,8 @@ package body Nodes_Meta is
             return Get_Suspend_Flag (N);
          when Field_Is_Ref =>
             return Get_Is_Ref (N);
+         when Field_PSL_EOS_Flag =>
+            return Get_PSL_EOS_Flag (N);
          when others =>
             raise Internal_Error;
       end case;
@@ -4527,6 +4555,8 @@ package body Nodes_Meta is
             Set_Suspend_Flag (N, V);
          when Field_Is_Ref =>
             Set_Is_Ref (N, V);
+         when Field_PSL_EOS_Flag =>
+            Set_PSL_EOS_Flag (N, V);
          when others =>
             raise Internal_Error;
       end case;
@@ -5601,6 +5631,8 @@ package body Nodes_Meta is
             return Get_Type_Marks_List (N);
          when Field_Overload_List =>
             return Get_Overload_List (N);
+         when Field_PSL_Clock_Sensitivity =>
+            return Get_PSL_Clock_Sensitivity (N);
          when others =>
             raise Internal_Error;
       end case;
@@ -5651,6 +5683,8 @@ package body Nodes_Meta is
             Set_Type_Marks_List (N, V);
          when Field_Overload_List =>
             Set_Overload_List (N, V);
+         when Field_PSL_Clock_Sensitivity =>
+            Set_PSL_Clock_Sensitivity (N, V);
          when others =>
             raise Internal_Error;
       end case;
@@ -5803,6 +5837,8 @@ package body Nodes_Meta is
             return Get_Design_Unit_Source_Col (N);
          when Field_String_Length =>
             return Get_String_Length (N);
+         when Field_PSL_Nbr_States =>
+            return Get_PSL_Nbr_States (N);
          when others =>
             raise Internal_Error;
       end case;
@@ -5819,6 +5855,8 @@ package body Nodes_Meta is
             Set_Design_Unit_Source_Col (N, V);
          when Field_String_Length =>
             Set_String_Length (N, V);
+         when Field_PSL_Nbr_States =>
+            Set_PSL_Nbr_States (N, V);
          when others =>
             raise Internal_Error;
       end case;
@@ -5927,6 +5965,8 @@ package body Nodes_Meta is
       case F is
          when Field_Psl_Property =>
             return Get_Psl_Property (N);
+         when Field_Psl_Sequence =>
+            return Get_Psl_Sequence (N);
          when Field_Psl_Declaration =>
             return Get_Psl_Declaration (N);
          when Field_Psl_Expression =>
@@ -5947,6 +5987,8 @@ package body Nodes_Meta is
       case F is
          when Field_Psl_Property =>
             Set_Psl_Property (N, V);
+         when Field_Psl_Sequence =>
+            Set_Psl_Sequence (N, V);
          when Field_Psl_Declaration =>
             Set_Psl_Declaration (N, V);
          when Field_Psl_Expression =>
@@ -9729,14 +9771,13 @@ package body Nodes_Meta is
 
    function Has_Psl_Property (K : Iir_Kind) return Boolean is
    begin
-      case K is
-         when Iir_Kind_Psl_Assert_Statement
-           | Iir_Kind_Psl_Cover_Statement =>
-            return True;
-         when others =>
-            return False;
-      end case;
+      return K = Iir_Kind_Psl_Assert_Statement;
    end Has_Psl_Property;
+
+   function Has_Psl_Sequence (K : Iir_Kind) return Boolean is
+   begin
+      return K = Iir_Kind_Psl_Cover_Statement;
+   end Has_Psl_Sequence;
 
    function Has_Psl_Declaration (K : Iir_Kind) return Boolean is
    begin
@@ -9776,5 +9817,38 @@ package body Nodes_Meta is
             return False;
       end case;
    end Has_PSL_NFA;
+
+   function Has_PSL_Nbr_States (K : Iir_Kind) return Boolean is
+   begin
+      case K is
+         when Iir_Kind_Psl_Assert_Statement
+           | Iir_Kind_Psl_Cover_Statement =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Has_PSL_Nbr_States;
+
+   function Has_PSL_Clock_Sensitivity (K : Iir_Kind) return Boolean is
+   begin
+      case K is
+         when Iir_Kind_Psl_Assert_Statement
+           | Iir_Kind_Psl_Cover_Statement =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Has_PSL_Clock_Sensitivity;
+
+   function Has_PSL_EOS_Flag (K : Iir_Kind) return Boolean is
+   begin
+      case K is
+         when Iir_Kind_Psl_Assert_Statement
+           | Iir_Kind_Psl_Cover_Statement =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Has_PSL_EOS_Flag;
 
 end Nodes_Meta;

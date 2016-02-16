@@ -95,6 +95,10 @@ package body Annotations is
             Info := new Sim_Info_Type'(Kind => Kind_Quantity,
                                        Obj_Scope => Current_Scope,
                                        Slot => Block_Info.Nbr_Objects);
+         when Kind_PSL =>
+            Info := new Sim_Info_Type'(Kind => Kind_PSL,
+                                       Obj_Scope => Current_Scope,
+                                       Slot => Block_Info.Nbr_Objects);
          when Kind_Environment =>
             Info := new Sim_Info_Type'(Kind => Kind_Environment,
                                        Env_Slot => Block_Info.Nbr_Objects,
@@ -954,6 +958,14 @@ package body Annotations is
             when Iir_Kind_For_Generate_Statement =>
                Annotate_For_Generate_Statement (Block_Info, El);
 
+            when Iir_Kind_Psl_Default_Clock
+              | Iir_Kind_Psl_Declaration =>
+               null;
+
+            when Iir_Kind_Psl_Cover_Statement
+              | Iir_Kind_Psl_Assert_Statement =>
+               Create_Object_Info (Block_Info, El, Kind_PSL);
+
             when Iir_Kind_Simple_Simultaneous_Statement =>
                null;
 
@@ -1253,7 +1265,8 @@ package body Annotations is
          when Kind_Object | Kind_Signal | Kind_File
            | Kind_Terminal
            | Kind_Quantity
-           | Kind_Environment =>
+           | Kind_Environment
+           | Kind_PSL =>
             Put_Line ("-- slot:" & Object_Slot_Type'Image (Info.Slot)
                       & ", scope:" & Image (Info.Obj_Scope));
          when Kind_Scalar_Type
@@ -1290,7 +1303,8 @@ package body Annotations is
             Put_Line ("nbr instance:"
                       & Instance_Slot_Type'Image (Info.Nbr_Instances));
          when Kind_Object | Kind_Signal | Kind_File
-           | Kind_Terminal | Kind_Quantity | Kind_Environment =>
+           | Kind_Terminal | Kind_Quantity | Kind_Environment
+           | Kind_PSL =>
             Put_Line ("slot:" & Object_Slot_Type'Image (Info.Slot)
                       & ", scope:" & Image (Info.Obj_Scope));
          when Kind_Range =>

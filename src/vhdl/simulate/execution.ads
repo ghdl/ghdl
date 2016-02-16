@@ -88,6 +88,13 @@ package Execution is
       Expr_Type : Iir)
      return Iir_Value_Literal_Acc;
 
+   procedure Execute_Failed_Assertion
+     (Instance: Block_Instance_Acc;
+      Label : String;
+      Stmt : Iir;
+      Default_Msg : String;
+      Default_Severity : Natural);
+
    function Execute_Resolution_Function
      (Block: Block_Instance_Acc; Imp : Iir; Arr : Iir_Value_Literal_Acc)
       return Iir_Value_Literal_Acc;
@@ -169,6 +176,7 @@ package Execution is
 
    --  Create a block instance for subprogram IMP.
    function Create_Subprogram_Instance (Instance : Block_Instance_Acc;
+                                        Prot_Obj : Block_Instance_Acc;
                                         Imp : Iir)
                                        return Block_Instance_Acc;
 

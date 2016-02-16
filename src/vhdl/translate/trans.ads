@@ -1305,9 +1305,6 @@ package Trans is
             --  Procedure for finalization.  Handles EOS.
             Psl_Proc_Final_Subprg : O_Dnode;
 
-            --  Length of the state vector.
-            Psl_Vect_Len : Natural;
-
             --  Type of the state vector.
             Psl_Vect_Type : O_Tnode;
 

@@ -5229,6 +5229,22 @@ package body Iirs is
       Set_Field1 (Decl, PSL_Node_To_Iir (Prop));
    end Set_Psl_Property;
 
+   function Get_Psl_Sequence (Decl : Iir) return PSL_Node is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Psl_Sequence (Get_Kind (Decl)),
+                     "no field Psl_Sequence");
+      return Iir_To_PSL_Node (Get_Field1 (Decl));
+   end Get_Psl_Sequence;
+
+   procedure Set_Psl_Sequence (Decl : Iir; Prop : PSL_Node) is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Psl_Sequence (Get_Kind (Decl)),
+                     "no field Psl_Sequence");
+      Set_Field1 (Decl, PSL_Node_To_Iir (Prop));
+   end Set_Psl_Sequence;
+
    function Get_Psl_Declaration (Decl : Iir) return PSL_Node is
    begin
       pragma Assert (Decl /= Null_Iir);
@@ -5308,5 +5324,53 @@ package body Iirs is
                      "no field PSL_NFA");
       Set_Field8 (N, PSL_NFA_To_Iir (Fa));
    end Set_PSL_NFA;
+
+   function Get_PSL_Nbr_States (N : Iir) return Int32 is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_PSL_Nbr_States (Get_Kind (N)),
+                     "no field PSL_Nbr_States");
+      return Iir_To_Int32 (Get_Field9 (N));
+   end Get_PSL_Nbr_States;
+
+   procedure Set_PSL_Nbr_States (N : Iir; Nbr : Int32) is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_PSL_Nbr_States (Get_Kind (N)),
+                     "no field PSL_Nbr_States");
+      Set_Field9 (N, Int32_To_Iir (Nbr));
+   end Set_PSL_Nbr_States;
+
+   function Get_PSL_Clock_Sensitivity (N : Iir) return Iir_List is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_PSL_Clock_Sensitivity (Get_Kind (N)),
+                     "no field PSL_Clock_Sensitivity");
+      return Iir_To_Iir_List (Get_Field10 (N));
+   end Get_PSL_Clock_Sensitivity;
+
+   procedure Set_PSL_Clock_Sensitivity (N : Iir; List : Iir_List) is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_PSL_Clock_Sensitivity (Get_Kind (N)),
+                     "no field PSL_Clock_Sensitivity");
+      Set_Field10 (N, Iir_List_To_Iir (List));
+   end Set_PSL_Clock_Sensitivity;
+
+   function Get_PSL_EOS_Flag (N : Iir) return Boolean is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_PSL_EOS_Flag (Get_Kind (N)),
+                     "no field PSL_EOS_Flag");
+      return Get_Flag1 (N);
+   end Get_PSL_EOS_Flag;
+
+   procedure Set_PSL_EOS_Flag (N : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_PSL_EOS_Flag (Get_Kind (N)),
+                     "no field PSL_EOS_Flag");
+      Set_Flag1 (N, Flag);
+   end Set_PSL_EOS_Flag;
 
 end Iirs;

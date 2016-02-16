@@ -18,6 +18,7 @@
 
 with Ada.Unchecked_Deallocation;
 with Tables;
+with Types; use Types;
 with Iirs; use Iirs;
 with Iir_Values; use Iir_Values;
 with Grt.Types;
@@ -219,6 +220,24 @@ package Elaboration is
    package Environment_Table is new Tables
      (Table_Component_Type => Block_Instance_Acc,
       Table_Index_Type => Environment_Index_Type,
+      Table_Low_Bound => 1,
+      Table_Initial => 2);
+
+   type Boolean_Vector is array (Nat32 range <>) of Boolean;
+   type Boolean_Vector_Acc is access Boolean_Vector;
+
+   type PSL_Entry is record
+      Instance : Block_Instance_Acc;
+      Stmt : Iir;
+      States : Boolean_Vector_Acc;
+      Done : Boolean;
+   end record;
+
+   type PSL_Index_Type is new Natural;
+
+   package PSL_Table is new Tables
+     (Table_Component_Type => PSL_Entry,
+      Table_Index_Type => PSL_Index_Type,
       Table_Low_Bound => 1,
       Table_Initial => 2);
 end Elaboration;
