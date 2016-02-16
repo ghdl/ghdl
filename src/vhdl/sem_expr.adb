@@ -390,7 +390,8 @@ package body Sem_Expr is
            | Iir_Kind_Reverse_Range_Array_Attribute
            | Iir_Kind_Element_Declaration
            | Iir_Kind_Attribute_Declaration
-           | Iir_Kind_Psl_Declaration =>
+           | Iir_Kind_Psl_Declaration
+           | Iir_Kind_Signature =>
             Error_Msg_Sem (Disp_Node (Expr)
                            & " not allowed in an expression", Loc);
             return Null_Iir;
