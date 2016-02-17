@@ -2139,7 +2139,14 @@ package body Parse is
       Parse_Declarative_Part (Res);
 
       Expect (Tok_End);
-      Scan_Expect (Tok_Protected);
+      --  Eat 'end'.
+      Scan;
+      if Flags.Vhdl_Std >= Vhdl_00 then
+         Expect (Tok_Protected);
+      else
+         --  Avoid weird message: 'protected' expected instead of 'protected'.
+         Expect (Tok_Identifier);
+      end if;
       Set_End_Has_Reserved_Id (Res, True);
       if Get_Kind (Res) = Iir_Kind_Protected_Type_Body then
          Scan_Expect (Tok_Body);
