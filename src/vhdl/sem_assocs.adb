@@ -1438,7 +1438,7 @@ package body Sem_Assocs is
    begin
       Formal := Get_Formal (Assoc);
 
-      --  Pre-semantize formal and extract out conversion.
+      --  Pre-analyze formal and extract out conversion.
       if Formal /= Null_Iir then
          Assoc_Kind := Sem_Formal (Formal, Inter);
          if Assoc_Kind = None then
@@ -1457,6 +1457,7 @@ package body Sem_Assocs is
       Formal_Type := Get_Type (Formal);
 
       --  Extract conversion from actual.
+      --  LRM08 6.5.7.1 Association lists
       Actual := Get_Actual (Assoc);
       In_Conv := Null_Iir;
       if Get_Kind (Inter) /= Iir_Kind_Interface_Constant_Declaration then
@@ -1542,7 +1543,7 @@ package body Sem_Assocs is
          return;
       end if;
 
-      --  Semantize formal.
+      --  Analyze formal.
       if Get_Formal (Assoc) /= Null_Iir then
          Set_Type (Formal, Null_Iir);
          Sem_Name (Formal);
@@ -1582,6 +1583,40 @@ package body Sem_Assocs is
            ("can't use an in conversion for an out/buffer interface", Assoc);
       end if;
 
+      --  LRM08 5.3.2.2 Index constraints and discrete ranges
+      --  e) [...]
+      --    3) [...]
+      --      -- For an interface object or subelement whose mode is IN, INOUT
+      --         or LINKAGE, if the actual part includes a conversion function
+      --         or a type conversion, then the result type of that function
+      --         or the type mark of the type conversion shall define a
+      --         constraint for the index range corresponding to the index
+      --         range of the objet, [...]
+      --      -- For an interface object or subelement whose mode is OUT,
+      --         BUFFER, INOUT or LINKAGE, if the formal part includes a
+      --         conversion function or a type conversion, then the parameter
+      --         subtype of that function or the type mark of the type
+      --         conversion shall define a constraint for the index range
+      --         corresponding to the index range of the object, [...]
+      if not Is_Fully_Constrained_Type (Formal_Type) then
+         if (Get_Mode (Inter) in Iir_In_Modes
+               or else Get_Mode (Inter) = Iir_Linkage_Mode)
+           and then In_Conv /= Null_Iir
+           and then not Is_Fully_Constrained_Type (Get_Type (In_Conv))
+         then
+            Error_Msg_Sem
+              ("type of actual conversion must be fully constrained", Assoc);
+         end if;
+         if (Get_Mode (Inter) in Iir_Out_Modes
+               or else Get_Mode (Inter) = Iir_Linkage_Mode)
+           and then Out_Conv /= Null_Iir
+           and then not Is_Fully_Constrained_Type (Get_Type (Out_Conv))
+         then
+            Error_Msg_Sem
+              ("type of formal conversion must be fully constrained", Assoc);
+         end if;
+      end if;
+
       --  FIXME: LRM refs
       --  This is somewhat wrong.  A missing conversion is not an error but
       --  may result in a type mismatch.
@@ -1596,7 +1631,7 @@ package body Sem_Assocs is
       end if;
       Set_Actual (Assoc, Actual);
 
-      --  Semantize actual.
+      --  Analyze actual.
       Expr := Sem_Expression (Actual, Res_Type);
       if Expr /= Null_Iir then
          Expr := Eval_Expr_Check_If_Static (Expr, Res_Type);
