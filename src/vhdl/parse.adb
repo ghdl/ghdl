@@ -4407,7 +4407,14 @@ package body Parse is
 
          when Tok_Identifier
            | Tok_Double_Less =>
-            return Parse_Name (Allow_Indexes => True);
+            Res := Parse_Name (Allow_Indexes => True);
+            if Get_Kind (Res) = Iir_Kind_Signature then
+               Error_Msg_Parse ("signature not allowed in expression", Res);
+               return Get_Signature_Prefix (Res);
+            else
+               return Res;
+            end if;
+
          when Tok_Character =>
             Res := Current_Text;
             Scan;
