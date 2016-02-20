@@ -546,8 +546,6 @@ package body Trans.Chap12 is
       use Name_Table;
       use Configuration;
 
-      Primary_Id : Name_Id;
-      Secondary_Id : Name_Id;
       Unit : Iir_Design_Unit;
       Lib_Unit : Iir;
       Config : Iir_Design_Unit;
@@ -558,13 +556,7 @@ package body Trans.Chap12 is
       Last_Design_Unit : Natural;
       Nbr_Pkgs : Natural;
    begin
-      Primary_Id := Get_Identifier (Primary);
-      if Secondary /= "" then
-         Secondary_Id := Get_Identifier (Secondary);
-      else
-         Secondary_Id := Null_Identifier;
-      end if;
-      Config := Configure (Primary_Id, Secondary_Id);
+      Config := Configure (Primary, Secondary);
       if Config = Null_Iir then
          return;
       end if;
