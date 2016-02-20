@@ -38,7 +38,7 @@ with Iirs_Utils; use Iirs_Utils;
 with Errorout; use Errorout;
 with Disp_Vhdl;
 with Execution; use Execution;
-with Simulation; use Simulation;
+--with Simulation; use Simulation;
 with Iirs_Walk; use Iirs_Walk;
 with Areapools; use Areapools;
 with Grt.Disp;

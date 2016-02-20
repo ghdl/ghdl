@@ -21,15 +21,12 @@ with Grt.Types; use Grt.Types;
 with Iirs; use Iirs;
 with Iir_Values; use Iir_Values;
 with Elaboration; use Elaboration;
-with Execution; use Execution;
 
 package Simulation is
    Trace_Simulation : Boolean := False;
    Disp_Tree : Boolean := False;
    Disp_Stats : Boolean := False;
    Disp_Ams : Boolean := False;
-   Flag_Debugger : Boolean := False;
-   Flag_Interractive : Boolean := False;
 
    type Resolv_Instance_Type is record
       Func : Iir;
@@ -56,16 +53,6 @@ package Simulation is
 
    function Guard_Func (Data : System.Address) return Ghdl_B1;
    pragma Convention (C, Guard_Func);
-
-   --  The entry point of the simulator.
-   procedure Simulation_Entity (Top_Conf : Iir_Design_Unit);
-
-   type Process_State_Array is
-      array (Process_Index_Type range <>) of aliased Process_State_Type;
-   type Process_State_Array_Acc is access Process_State_Array;
-
-   --  Array containing all processes.
-   Processes_State: Process_State_Array_Acc;
 
    function Execute_Signal_Value (Indirect: Iir_Value_Literal_Acc)
                                  return Iir_Value_Literal_Acc;
@@ -125,4 +112,26 @@ package Simulation is
    function Execute_Wait_Statement (Instance : Block_Instance_Acc;
                                     Stmt: Iir_Wait_Statement)
                                    return Boolean;
+private
+   type Read_Signal_Value_Enum is
+     (Read_Signal_Last_Value,
+
+      --  For conversion functions.
+      Read_Signal_Driving_Value,
+      Read_Signal_Effective_Value,
+
+      --  'Driving_Value
+      Read_Signal_Driver_Value);
+
+   function Execute_Read_Signal_Value (Sig: Iir_Value_Literal_Acc;
+                                       Attr : Read_Signal_Value_Enum)
+                                      return Iir_Value_Literal_Acc;
+
+   type Write_Signal_Enum is
+     (Write_Signal_Driving_Value,
+      Write_Signal_Effective_Value);
+
+   procedure Execute_Write_Signal (Sig: Iir_Value_Literal_Acc;
+                                   Val : Iir_Value_Literal_Acc;
+                                   Attr : Write_Signal_Enum);
 end Simulation;

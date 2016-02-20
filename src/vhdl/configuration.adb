@@ -604,6 +604,20 @@ package body Configuration is
       return Top;
    end Configure;
 
+   function Configure (Primary : String; Secondary : String) return Iir
+   is
+      Primary_Id : Name_Id;
+      Secondary_Id : Name_Id;
+   begin
+      Primary_Id := Get_Identifier (Primary);
+      if Secondary /= "" then
+         Secondary_Id := Get_Identifier (Secondary);
+      else
+         Secondary_Id := Null_Identifier;
+      end if;
+      return Configure (Primary_Id, Secondary_Id);
+   end Configure;
+
    procedure Check_Entity_Declaration_Top (Entity : Iir_Entity_Declaration)
    is
       Has_Error : Boolean := False;

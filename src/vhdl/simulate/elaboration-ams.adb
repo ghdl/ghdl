@@ -17,11 +17,11 @@
 --  02111-1307, USA.
 
 with Errorout; use Errorout;
+with Execution;
 
-package body Simulation.AMS is
+package body Elaboration.AMS is
    function Create_Characteristic_Expression
-     (Kind : Characteristic_Expr_Kind)
-     return Characteristic_Expressions_Index
+     (Kind : Characteristic_Expr_Kind) return Characteristic_Expressions_Index
    is
    begin
       case Kind is
@@ -114,7 +114,7 @@ package body Simulation.AMS is
       begin
          case Get_Kind (N) is
             when Iir_Kinds_Branch_Quantity_Declaration =>
-               Q := Execute_Name (Block, N, True);
+               Q := Execution.Execute_Name (Block, N, True);
                Quantity_Table.Append (Q.Quantity);
             when Iir_Kind_Simple_Name =>
                Add_Dependency (Block, Get_Named_Entity (N));
@@ -196,4 +196,4 @@ package body Simulation.AMS is
          Compute_Dependencies (I);
       end loop;
    end Create_Tables;
-end Simulation.AMS;
+end Elaboration.AMS;

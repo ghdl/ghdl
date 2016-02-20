@@ -45,6 +45,13 @@ package Execution is
    end record;
    type Process_State_Acc is access all Process_State_Type;
 
+   type Process_State_Array is
+      array (Process_Index_Type range <>) of aliased Process_State_Type;
+   type Process_State_Array_Acc is access Process_State_Array;
+
+   --  Array containing all processes.
+   Processes_State: Process_State_Array_Acc;
+
    Simulation_Finished : exception;
 
    --  Current process being executed.  This is only for the debugger.
