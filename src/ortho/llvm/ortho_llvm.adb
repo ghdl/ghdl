@@ -946,9 +946,15 @@ package body Ortho_LLVM is
      (List : in out O_Record_Aggr_List;
       Res : out O_Cnode)
    is
+      V : ValueRef;
    begin
-      Res := (LLVM => ConstStruct (List.Vals.all, List.Len, 0),
-              Ctype => List.Atype);
+      if List.Atype.Kind = ON_Incomplete_Record_Type then
+         V := ConstNamedStruct (Get_LLVM_Type (List.Atype),
+                                List.Vals.all, List.Len);
+      else
+         V := ConstStruct (List.Vals.all, List.Len, 0);
+      end if;
+      Res := (LLVM => V, Ctype => List.Atype);
       Free (List.Vals);
    end Finish_Record_Aggr;
 
@@ -1027,6 +1033,16 @@ package body Ortho_LLVM is
                          Ctype => Atype);
       end if;
    end New_Union_Aggr;
+
+   -----------------------
+   -- New_Default_Value --
+   -----------------------
+
+   function New_Default_Value (Ltype : O_Tnode) return O_Cnode is
+   begin
+      return O_Cnode'(LLVM => ConstNull (Ltype.LLVM),
+                      Ctype => Ltype);
+   end New_Default_Value;
 
    ----------------
    -- New_Sizeof --

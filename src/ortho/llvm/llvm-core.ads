@@ -318,6 +318,9 @@ package LLVM.Core is
    function VoidType return TypeRef;
    function LabelType return TypeRef;
 
+   -- See Module::dump.
+   procedure DumpType(T : TypeRef);
+
    -- Values ------------------------------------------------------------
    -- The bulk of LLVM's object model consists of values, which comprise a very
    -- rich type hierarchy.
@@ -998,6 +1001,7 @@ private
 
    pragma Import (C, VoidType, "LLVMVoidType");
    pragma Import (C, LabelType, "LLVMLabelType");
+   pragma Import (C, DumpType, "LLVMDumpType");
 
    pragma Import (C, TypeOf, "LLVMTypeOf");
    pragma Import (C, GetValueName, "LLVMGetValueName");

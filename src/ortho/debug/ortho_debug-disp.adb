@@ -480,6 +480,12 @@ package body Ortho_Debug.Disp is
             Put ("'[");
             Put_Keyword ("null");
             Put (']');
+         when OC_Default_Lit =>
+            --  Always disp the type of default literals.
+            Disp_Tnode_Name (C.Ctype);
+            Put ("'[");
+            Put_Keyword ("default");
+            Put (']');
          when OC_Enum_Lit =>
             --  Always disp the type of enum literals.
             Disp_Lit (C.Ctype, False, Get_String (C.E_Name));

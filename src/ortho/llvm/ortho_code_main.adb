@@ -72,19 +72,6 @@ procedure Ortho_Code_Main is
    Features : constant Cstring := Empty_Cstring;
    Reloc : constant RelocMode := RelocDefault;
 
-   procedure Dump_Llvm
-   is
-      use LLVM.Analysis;
-      Msg : aliased Cstring;
-   begin
-      DumpModule (Module);
-      if LLVM.Analysis.VerifyModule
-        (Module, PrintMessageAction, Msg'Access) /= 0
-      then
-         null;
-      end if;
-   end Dump_Llvm;
-
    function To_String (C : Cstring) return String is
       function Strlen (C : Cstring) return Natural;
       pragma Import (C, Strlen);
@@ -296,7 +283,7 @@ begin
    --  Ortho_Mcode.Finish;
 
    if Flag_Dump_Llvm then
-      Dump_Llvm;
+      DumpModule (Module);
    end if;
 
    --  Verify module.
@@ -391,7 +378,7 @@ begin
 
       end;
    else
-      Dump_Llvm;
+      DumpModule (Module);
    end if;
 
    Set_Exit_Status (Success);

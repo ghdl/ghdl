@@ -1376,7 +1376,6 @@ finish_array_aggr (struct o_array_aggr_list *list, tree *res)
   *res = build_constructor (list->atype, list->elts);
 }
 
-
 tree
 new_union_aggr (tree atype, tree field, tree value)
 {
@@ -1385,6 +1384,12 @@ new_union_aggr (tree atype, tree field, tree value)
   res = build_constructor_single (atype, field, value);
   TREE_CONSTANT (res) = 1;
   return res;
+}
+
+tree
+new_default_value (tree atype)
+{
+  return build_constructor (atype, NULL);
 }
 
 tree
