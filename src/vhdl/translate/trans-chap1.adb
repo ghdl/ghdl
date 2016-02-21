@@ -303,7 +303,6 @@ package body Trans.Chap1 is
       Chap2.Elab_Dependence (Get_Design_Unit (Arch));
 
       Chap9.Elab_Block_Declarations (Arch, Arch);
-      --Chap6.Leave_Simple_Name (Ghdl_Leave_Architecture);
 
       Pop_Architecture_Scope (Arch);
 

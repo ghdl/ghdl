@@ -331,10 +331,6 @@ package Grt.Signals is
       --  this signal.
       Event_List : Action_List_Acc;
 
-      --  Path of the signal (with its name) in the design hierarchy.
-      --  Used to get the type of the signal.
-      Rti : Ghdl_Rtin_Object_Acc;
-
       --  For user signals: the sources of a signals are drivers
       --  and connected ports.
       --  For implicit signals: PORTS is used as dependence list.
