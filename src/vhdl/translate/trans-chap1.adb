@@ -232,8 +232,8 @@ package body Trans.Chap1 is
         (Info.Block_Instance_Size, Create_Identifier ("INSTSIZE"),
          Global_Storage, Ghdl_Index_Type);
       if Global_Storage /= O_Storage_External then
-         Start_Const_Value (Info.Block_Instance_Size);
-         Finish_Const_Value
+         Start_Init_Value (Info.Block_Instance_Size);
+         Finish_Init_Value
            (Info.Block_Instance_Size, Get_Scope_Size (Info.Block_Scope));
       end if;
 

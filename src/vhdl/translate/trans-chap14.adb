@@ -912,8 +912,8 @@ package body Trans.Chap14 is
       Str_Cst := Create_String_Len (Name.Suffix, Create_Uniq_Identifier);
       New_Const_Decl (Name_Cst, Create_Uniq_Identifier, O_Storage_Private,
                       Ghdl_Str_Len_Type_Node);
-      Start_Const_Value (Name_Cst);
-      Finish_Const_Value (Name_Cst, Str_Cst);
+      Start_Init_Value (Name_Cst);
+      Finish_Init_Value (Name_Cst, Str_Cst);
       if Is_Instance then
          Start_Association (Constr, Ghdl_Get_Instance_Name);
       else

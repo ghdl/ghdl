@@ -207,8 +207,8 @@ package body Trans.Chap12 is
       New_Const_Decl
         (Const, Create_Identifier ("INSTSIZE"), O_Storage_Public,
          Ghdl_Index_Type);
-      Start_Const_Value (Const);
-      Finish_Const_Value (Const, Get_Scope_Size (Arch_Info.Block_Scope));
+      Start_Init_Value (Const);
+      Finish_Init_Value (Const, Get_Scope_Size (Arch_Info.Block_Scope));
 
       --  Elaborator.
       Start_Procedure_Decl
@@ -306,8 +306,8 @@ package body Trans.Chap12 is
       New_Const_Decl
         (Const, Create_Identifier ("INSTSIZE"), O_Storage_Public,
          Ghdl_Index_Type);
-      Start_Const_Value (Const);
-      Finish_Const_Value (Const, Ghdl_Index_0);
+      Start_Init_Value (Const);
+      Finish_Init_Value (Const, Ghdl_Index_0);
 
       --  Elaborator.
       Start_Procedure_Decl

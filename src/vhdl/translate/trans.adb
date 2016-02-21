@@ -432,16 +432,16 @@ package body Trans is
          if Storage /= O_Storage_External
            and then Initial_Value /= O_Cnode_Null
          then
-            Start_Const_Value (Res);
-            Finish_Const_Value (Res, Initial_Value);
+            Start_Init_Value (Res);
+            Finish_Init_Value (Res, Initial_Value);
          end if;
          return Var_Type'(Kind => Var_Global, E => Res);
       end Create_Global_Const;
 
       procedure Define_Global_Const (Const : in out Var_Type; Val : O_Cnode) is
       begin
-         Start_Const_Value (Const.E);
-         Finish_Const_Value (Const.E, Val);
+         Start_Init_Value (Const.E);
+         Finish_Init_Value (Const.E, Val);
       end Define_Global_Const;
 
       function Create_Var

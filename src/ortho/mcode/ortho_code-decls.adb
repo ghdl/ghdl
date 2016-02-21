@@ -345,6 +345,8 @@ package body Ortho_Code.Decls is
 
    procedure New_Init_Value (Decl : O_Dnode; Val : O_Cnode) is
    begin
+      pragma Assert (Get_Decl_Kind (Decl) = OD_Const
+                       or else Get_Decl_Kind (Decl) = OD_Var);
       if Get_Init_Value (Decl) /= O_Cnode_Null then
          --  Value was already set.
          raise Syntax_Error;
@@ -363,18 +365,10 @@ package body Ortho_Code.Decls is
       end if;
    end New_Init_Value;
 
-   procedure New_Const_Value (Cst : O_Dnode; Val : O_Cnode) is
-   begin
-      pragma Assert (Get_Decl_Kind (Cst) = OD_Const);
-      New_Init_Value (Cst, Val);
-   end New_Const_Value;
-
-   procedure New_Var_Decl
-     (Res : out O_Dnode;
-      Ident : O_Ident;
-      Storage : O_Storage;
-      Atype : O_Tnode)
-   is
+   procedure New_Var_Decl (Res : out O_Dnode;
+                           Ident : O_Ident;
+                           Storage : O_Storage;
+                           Atype : O_Tnode) is
    begin
       if Storage = O_Storage_Local then
          Dnodes.Append (Dnode_Common'(Kind => OD_Local,

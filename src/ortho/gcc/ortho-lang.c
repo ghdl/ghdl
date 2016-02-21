@@ -1623,17 +1623,17 @@ new_const_decl (tree *res, tree ident, enum o_storage storage, tree atype)
 }
 
 void
-start_const_value (tree *cst ATTRIBUTE_UNUSED)
+start_init_value (tree *decl ATTRIBUTE_UNUSED)
 {
 }
 
 void
-finish_const_value (tree *cst, tree val)
+finish_init_value (tree *decl, tree val)
 {
-  DECL_INITIAL (*cst) = val;
+  DECL_INITIAL (*decl) = val;
   TREE_CONSTANT (val) = 1;
-  TREE_STATIC (*cst) = 1;
-  rest_of_decl_compilation (*cst, current_function_decl == NULL_TREE, 0);
+  TREE_STATIC (*decl) = 1;
+  rest_of_decl_compilation (*decl, current_function_decl == NULL_TREE, 0);
 }
 
 void

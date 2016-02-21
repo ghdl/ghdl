@@ -132,8 +132,8 @@ package Ortho_Code.Decls is
       Storage : O_Storage;
       Atype : O_Tnode);
 
-   --  Set the value to CST.
-   procedure New_Const_Value (Cst : O_Dnode; Val : O_Cnode);
+   --  Set the value to DECL.
+   procedure New_Init_Value (Decl : O_Dnode; Val : O_Cnode);
 
    --  Create a variable declaration.
    --  A variable can be local only inside a function.

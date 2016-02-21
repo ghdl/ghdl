@@ -885,7 +885,7 @@ package body Ortho_Debug.Disp is
             Put (" : ");
             Disp_Tnode_Name (Decl.Dtype);
             Put_Line (";");
-         when ON_Const_Value =>
+         when ON_Init_Value =>
             Put_Keyword ("constant");
             Put (" ");
             Disp_Ident (Decl.Name);
