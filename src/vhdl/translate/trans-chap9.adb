@@ -1759,10 +1759,10 @@ package body Trans.Chap9 is
          Gen_Alloc
            (Alloc_System,
             New_Dyadic_Op (ON_Mul_Ov,
-              New_Value_Selected_Acc_Value
-                (New_Obj (Range_Ptr),
-                 Iter_Type_Info.T.Range_Length),
-              New_Lit (Get_Scope_Size (Info.Block_Scope))),
+                           New_Value_Selected_Acc_Value
+                             (New_Obj (Range_Ptr),
+                              Iter_Type_Info.T.Range_Length),
+                           New_Lit (Get_Scope_Size (Info.Block_Scope))),
             Info.Block_Decls_Array_Ptr_Type));
 
       --  Add a link to child in parent.
@@ -1777,31 +1777,27 @@ package body Trans.Chap9 is
       Gen_Exit_When
         (Label,
          New_Compare_Op (ON_Eq,
-           New_Obj_Value (Var_I),
-           New_Value_Selected_Acc_Value
-             (New_Obj (Range_Ptr),
-              Iter_Type_Info.T.Range_Length),
-           Ghdl_Bool_Type));
+                         New_Obj_Value (Var_I),
+                         New_Value_Selected_Acc_Value
+                           (New_Obj (Range_Ptr),
+                            Iter_Type_Info.T.Range_Length),
+                         Ghdl_Bool_Type));
 
       Var := Create_Temp_Ptr
         (Info.Block_Decls_Ptr_Type,
          New_Indexed_Element (New_Acc_Value (New_Obj (Var_Inst)),
-           New_Obj_Value (Var_I)));
+                              New_Obj_Value (Var_I)));
       --  Add a link to parent in child.
       New_Assign_Stmt
         (New_Selected_Acc_Value (New_Obj (Var), Info.Block_Origin_Field),
          Get_Instance_Access (Base_Block));
       --  Mark the block as not (yet) configured.
       New_Assign_Stmt
-        (New_Selected_Acc_Value (New_Obj (Var),
-         Info.Block_Configured_Field),
+        (New_Selected_Acc_Value (New_Obj (Var), Info.Block_Configured_Field),
          New_Lit (Ghdl_Bool_False_Node));
 
       --  Elaborate block
       Set_Scope_Via_Param_Ptr (Info.Block_Scope, Var);
-      --  Set_Scope_Via_Field_Ptr (Base_Info.Block_Scope,
-      --                            Info.Block_Origin_Field,
-      --                            Info.Block_Scope'Access);
 
       --  Set iterator value.
       --  FIXME: this could be slighly optimized...
@@ -1813,17 +1809,17 @@ package body Trans.Chap9 is
          Start_If_Stmt
            (If_Blk,
             New_Compare_Op (ON_Eq,
-              New_Value_Selected_Acc_Value
-                (New_Obj (Range_Ptr),
-                 Iter_Type_Info.T.Range_Dir),
-              New_Lit (Ghdl_Dir_To_Node),
-              Ghdl_Bool_Type));
+                            New_Value_Selected_Acc_Value
+                              (New_Obj (Range_Ptr),
+                               Iter_Type_Info.T.Range_Dir),
+                            New_Lit (Ghdl_Dir_To_Node),
+                            Ghdl_Bool_Type));
          New_Assign_Stmt (New_Obj (Val), New_Value_Selected_Acc_Value
-                          (New_Obj (Range_Ptr),
+                            (New_Obj (Range_Ptr),
                              Iter_Type_Info.T.Range_Left));
          New_Else_Stmt (If_Blk);
          New_Assign_Stmt (New_Obj (Val), New_Value_Selected_Acc_Value
-                          (New_Obj (Range_Ptr),
+                            (New_Obj (Range_Ptr),
                              Iter_Type_Info.T.Range_Right));
          Finish_If_Stmt (If_Blk);
 
@@ -1833,13 +1829,12 @@ package body Trans.Chap9 is
               (ON_Add_Ov,
                New_Obj_Value (Val),
                New_Convert_Ov (New_Obj_Value (Var_I),
-                 Iter_Type_Info.Ortho_Type (Mode_Value))));
+                               Iter_Type_Info.Ortho_Type (Mode_Value))));
       end;
 
       --  Elaboration.
       Elab_Block_Declarations (Bod, Bod);
 
-      --         Clear_Scope (Base_Info.Block_Scope);
       Clear_Scope (Info.Block_Scope);
 
       Inc_Var (Var_I);
