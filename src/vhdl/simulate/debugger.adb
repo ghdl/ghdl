@@ -190,7 +190,8 @@ package body Debugger is
            | Iir_Kind_Component_Instantiation_Statement
            | Iir_Kind_Procedure_Declaration
            | Iir_Kinds_Process_Statement
-           | Iir_Kind_Package_Declaration =>
+           | Iir_Kind_Package_Declaration
+           | Iir_Kind_Configuration_Declaration =>
             return Image_Identifier (Name);
          when Iir_Kind_Generate_Statement_Body =>
             return Image_Identifier (Get_Parent (Name))
@@ -262,8 +263,12 @@ package body Debugger is
             Put ("[process]");
          when Iir_Kind_Architecture_Body =>
             Put ("[entity]");
+         when Iir_Kind_Package_Declaration =>
+            Put ("[package]");
+         when Iir_Kind_Configuration_Declaration =>
+            Put ("[configuration]");
          when others =>
-            Error_Kind ("disp_instances_tree1", Inst.Label);
+            Error_Kind ("disp_instances_tree_name", Inst.Label);
       end case;
       New_Line;
    end Disp_Instances_Tree_Name;
@@ -296,6 +301,11 @@ package body Debugger is
 
    procedure Disp_Instances_Tree is
    begin
+      for I in Package_Instances'Range loop
+         if Package_Instances (I) /= null then
+            Disp_Instances_Tree_Name (Package_Instances (I));
+         end if;
+      end loop;
       Disp_Instances_Tree_Name (Top_Instance);
       Disp_Instances_Tree1 (Top_Instance, "");
    end Disp_Instances_Tree;
