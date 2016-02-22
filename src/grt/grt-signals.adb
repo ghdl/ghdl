@@ -335,7 +335,7 @@ package body Grt.Signals is
             --  LRM 4.3.1.2 Signal Declaration
             --  It is an error if, after the elaboration of a description, a
             --  signal has multiple sources and it is not a resolved signal.
-            Put ("for signal: ");
+            Put (stderr, "for signal: ");
             Disp_Signals.Put_Signal_Name (stderr, Sig);
             New_Line (stderr);
             Error ("several sources for unresolved signal");

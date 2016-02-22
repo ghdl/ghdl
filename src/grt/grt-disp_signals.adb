@@ -247,26 +247,28 @@ package body Grt.Disp_Signals is
 
    procedure Disp_Signal_Name (Stream : FILEs;
                                Ctxt : Rti_Context;
-                               Sig : Ghdl_Rtin_Object_Acc) is
+                               Sig : Ghdl_Rtin_Object_Acc)
+   is
+      procedure Disp_Prefix (Stream : FILEs; Ctxt : Rti_Context) is
+      begin
+         Put (Stream, Ctxt);
+         Put (Stream, ".");
+      end Disp_Prefix;
    begin
       case Sig.Common.Kind is
          when Ghdl_Rtik_Signal
            | Ghdl_Rtik_Port
            | Ghdl_Rtik_Guard =>
-            Put (stdout, Ctxt);
-            Put (".");
+            Disp_Prefix (Stream, Ctxt);
             Put (Stream, Sig.Name);
          when Ghdl_Rtik_Attribute_Quiet =>
-            Put (stdout, Ctxt);
-            Put (".");
+            Disp_Prefix (Stream, Ctxt);
             Put (Stream, " 'quiet");
          when Ghdl_Rtik_Attribute_Stable =>
-            Put (stdout, Ctxt);
-            Put (".");
+            Disp_Prefix (Stream, Ctxt);
             Put (Stream, " 'stable");
          when Ghdl_Rtik_Attribute_Transaction =>
-            Put (stdout, Ctxt);
-            Put (".");
+            Disp_Prefix (Stream, Ctxt);
             Put (Stream, " 'transaction");
          when others =>
             null;
