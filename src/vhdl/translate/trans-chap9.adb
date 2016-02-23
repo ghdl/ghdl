@@ -849,13 +849,13 @@ package body Trans.Chap9 is
       Instance   : O_Dnode;
    begin
       --  Create the elaborator for the instantiation.
-      Start_Procedure_Decl (Inter_List, Create_Identifier ("ELAB"),
+      Start_Procedure_Decl (Inter_List, Create_Identifier ("COMP_ELAB"),
                             O_Storage_Private);
       New_Interface_Decl (Inter_List, Instance, Wki_Instance,
                           Base.Block_Decls_Ptr_Type);
-      Finish_Subprogram_Decl (Inter_List, Info.Block_Elab_Subprg);
+      Finish_Subprogram_Decl (Inter_List, Info.Block_Elab_Subprg (Elab_Decls));
 
-      Start_Subprogram_Body (Info.Block_Elab_Subprg);
+      Start_Subprogram_Body (Info.Block_Elab_Subprg (Elab_Decls));
       Push_Local_Factory;
       Set_Scope_Via_Param_Ptr (Base.Block_Scope, Instance);
 
@@ -1444,7 +1444,7 @@ package body Trans.Chap9 is
       Arch_Info   : Block_Info_Acc;
 
       Instance_Size    : O_Dnode;
-      Arch_Elab        : O_Dnode;
+      Arch_Elab        : O_Dnode_Elab;
       Arch_Config      : O_Dnode;
       Arch_Config_Type : O_Tnode;
 
@@ -1514,18 +1514,25 @@ package body Trans.Chap9 is
               & Get_Arch_Name & "__";
             Sub_Inter : O_Inter_List;
             Arg       : O_Dnode;
+            Id : O_Ident;
          begin
             if Arch_Info = null then
                New_Const_Decl
                  (Instance_Size, Get_Identifier (Str & "INSTSIZE"),
                   O_Storage_External, Ghdl_Index_Type);
 
-               Start_Procedure_Decl
-                 (Sub_Inter, Get_Identifier (Str & "ELAB"),
-                  O_Storage_External);
-               New_Interface_Decl (Sub_Inter, Arg, Wki_Instance,
-                                   Entity_Info.Block_Decls_Ptr_Type);
-               Finish_Subprogram_Decl (Sub_Inter, Arch_Elab);
+               for K in Elab_Kind loop
+                  case K is
+                     when Elab_Decls =>
+                        Id := Get_Identifier (Str & "DECL_ELAB");
+                     when Elab_Stmts =>
+                        Id := Get_Identifier (Str & "STMT_ELAB");
+                  end case;
+                  Start_Procedure_Decl (Sub_Inter, Id, O_Storage_External);
+                  New_Interface_Decl (Sub_Inter, Arg, Wki_Instance,
+                                      Entity_Info.Block_Decls_Ptr_Type);
+                  Finish_Subprogram_Decl (Sub_Inter, Arch_Elab (K));
+               end loop;
             end if;
 
             if Config = Null_Iir then
@@ -1632,9 +1639,11 @@ package body Trans.Chap9 is
       declare
          Assoc : O_Assoc_List;
       begin
-         Start_Association (Assoc, Arch_Elab);
-         New_Association (Assoc, New_Obj_Value (Var_Sub));
-         New_Procedure_Call (Assoc);
+         for K in Elab_Kind loop
+            Start_Association (Assoc, Arch_Elab (K));
+            New_Association (Assoc, New_Obj_Value (Var_Sub));
+            New_Procedure_Call (Assoc);
+         end loop;
       end;
 
       --  5) Configure
@@ -1648,7 +1657,7 @@ package body Trans.Chap9 is
       end;
    end Translate_Entity_Instantiation;
 
-   procedure Elab_If_Generate_Statement
+   procedure Elab_Decl_If_Generate_Statement
      (Stmt : Iir_Generate_Statement; Parent : Iir; Base_Block : Iir)
    is
       Parent_Info : constant Block_Info_Acc := Get_Info (Parent);
@@ -1723,9 +1732,60 @@ package body Trans.Chap9 is
       end Elab_If_Clause;
    begin
       Elab_If_Clause (Stmt);
-   end Elab_If_Generate_Statement;
+   end Elab_Decl_If_Generate_Statement;
 
-   procedure Elab_For_Generate_Statement
+   procedure Elab_Stmt_If_Generate_Statement
+     (Stmt : Iir_Generate_Statement; Parent : Iir)
+   is
+      Parent_Info : constant Block_Info_Acc := Get_Info (Parent);
+
+      --  Used to get Block_Parent_Field, set in the first generate statement
+      --  body.
+      Stmt_Info : constant Generate_Info_Acc := Get_Info (Stmt);
+
+      Case_Blk : O_Case_Block;
+      Clause : Iir;
+      Var : O_Dnode;
+   begin
+      Start_Case_Stmt
+        (Case_Blk, New_Value (New_Selected_Element
+                                (Get_Instance_Ref (Parent_Info.Block_Scope),
+                                 Stmt_Info.Generate_Body_Id)));
+
+      Clause := Stmt;
+      while Clause /= Null_Iir loop
+         declare
+            Bod  : constant Iir := Get_Generate_Statement_Body (Clause);
+            Info : constant Block_Info_Acc := Get_Info (Bod);
+         begin
+            Start_Choice (Case_Blk);
+            New_Expr_Choice
+              (Case_Blk, New_Index_Lit (Unsigned_64 (Info.Block_Id)));
+            Finish_Choice (Case_Blk);
+
+            Open_Temp;
+            Var := Create_Temp_Init
+              (Info.Block_Decls_Ptr_Type,
+               New_Convert_Ov
+                 (New_Value (New_Selected_Element
+                               (Get_Instance_Ref (Parent_Info.Block_Scope),
+                                Stmt_Info.Generate_Parent_Field)),
+                  Info.Block_Decls_Ptr_Type));
+
+            Set_Scope_Via_Param_Ptr (Info.Block_Scope, Var);
+            Elab_Block_Statements (Bod, Bod);
+            Clear_Scope (Info.Block_Scope);
+            Close_Temp;
+         end;
+         Clause := Get_Generate_Else_Clause (Clause);
+      end loop;
+      Start_Choice (Case_Blk);
+      New_Default_Choice (Case_Blk);
+      Finish_Choice (Case_Blk);
+      Finish_Case_Stmt (Case_Blk);
+   end Elab_Stmt_If_Generate_Statement;
+
+   procedure Elab_Decl_For_Generate_Statement
      (Stmt : Iir_Generate_Statement; Parent : Iir; Base_Block : Iir)
    is
       Iter           : constant Iir := Get_Parameter_Specification (Stmt);
@@ -1840,7 +1900,68 @@ package body Trans.Chap9 is
       Inc_Var (Var_I);
       Finish_Loop_Stmt (Label);
       Close_Temp;
-   end Elab_For_Generate_Statement;
+   end Elab_Decl_For_Generate_Statement;
+
+   procedure Elab_Stmt_For_Generate_Statement
+     (Stmt : Iir_Generate_Statement; Parent : Iir)
+   is
+      Iter           : constant Iir := Get_Parameter_Specification (Stmt);
+      Iter_Type      : constant Iir := Get_Type (Iter);
+      Iter_Base_Type : constant Iir := Get_Base_Type (Iter_Type);
+      Iter_Type_Info : constant Type_Info_Acc := Get_Info (Iter_Base_Type);
+      Bod            : constant Iir := Get_Generate_Statement_Body (Stmt);
+      Info           : constant Block_Info_Acc := Get_Info (Bod);
+      Parent_Info    : constant Block_Info_Acc := Get_Info (Parent);
+      Var_Inst       : O_Dnode;
+      Var_I          : O_Dnode;
+      Label          : O_Snode;
+      Var            : O_Dnode;
+      Var_Len        : O_Dnode;
+   begin
+      Open_Temp;
+
+      --  Evaluate iterator range.
+      Chap3.Elab_Object_Subtype (Iter_Type);
+
+      --  Allocate instances.
+      Var_Inst := Create_Temp_Init
+        (Info.Block_Decls_Array_Ptr_Type,
+         New_Value (New_Selected_Element
+                      (Get_Instance_Ref (Parent_Info.Block_Scope),
+                       Info.Block_Parent_Field)));
+      Var_Len := Create_Temp_Init
+        (Ghdl_Index_Type,
+         New_Value (New_Selected_Element
+                      (Get_Var (Get_Info (Iter_Type).T.Range_Var),
+                       Iter_Type_Info.T.Range_Length)));
+
+      --  Start loop.
+      Var_I := Create_Temp (Ghdl_Index_Type);
+      Init_Var (Var_I);
+      Start_Loop_Stmt (Label);
+      Gen_Exit_When
+        (Label, New_Compare_Op (ON_Eq,
+                                New_Obj_Value (Var_I),
+                                New_Obj_Value (Var_Len),
+                                Ghdl_Bool_Type));
+
+      Var := Create_Temp_Ptr
+        (Info.Block_Decls_Ptr_Type,
+         New_Indexed_Element (New_Acc_Value (New_Obj (Var_Inst)),
+                              New_Obj_Value (Var_I)));
+
+      --  Elaborate block
+      Set_Scope_Via_Param_Ptr (Info.Block_Scope, Var);
+
+      --  Elaboration.
+      Elab_Block_Statements (Bod, Bod);
+
+      Clear_Scope (Info.Block_Scope);
+
+      Inc_Var (Var_I);
+      Finish_Loop_Stmt (Label);
+      Close_Temp;
+   end Elab_Stmt_For_Generate_Statement;
 
    type Merge_Signals_Data is record
       Sig      : Iir;
@@ -2082,20 +2203,21 @@ package body Trans.Chap9 is
          case Get_Kind (Stmt) is
             when Iir_Kind_Process_Statement
                | Iir_Kind_Sensitized_Process_Statement =>
-               Elab_Process (Stmt, Base_Info);
+               null;
             when Iir_Kind_Psl_Default_Clock =>
                null;
             when Iir_Kind_Psl_Declaration =>
                null;
             when Iir_Kind_Psl_Assert_Statement
                | Iir_Kind_Psl_Cover_Statement =>
-               Elab_Psl_Directive (Stmt, Base_Info);
+               null;
             when Iir_Kind_Component_Instantiation_Statement =>
                declare
                   Info   : constant Block_Info_Acc := Get_Info (Stmt);
                   Constr : O_Assoc_List;
                begin
-                  Start_Association (Constr, Info.Block_Elab_Subprg);
+                  Start_Association
+                    (Constr, Info.Block_Elab_Subprg (Elab_Decls));
                   New_Association
                     (Constr, Get_Instance_Access (Base_Block));
                   New_Procedure_Call (Constr);
@@ -2113,7 +2235,7 @@ package body Trans.Chap9 is
                   Mark : Id_Mark_Type;
                begin
                   Push_Identifier_Prefix (Mark, Get_Identifier (Stmt));
-                  Elab_If_Generate_Statement (Stmt, Block, Base_Block);
+                  Elab_Decl_If_Generate_Statement (Stmt, Block, Base_Block);
                   Pop_Identifier_Prefix (Mark);
                end;
             when Iir_Kind_For_Generate_Statement =>
@@ -2121,7 +2243,7 @@ package body Trans.Chap9 is
                   Mark : Id_Mark_Type;
                begin
                   Push_Identifier_Prefix (Mark, Get_Identifier (Stmt));
-                  Elab_For_Generate_Statement (Stmt, Block, Base_Block);
+                  Elab_Decl_For_Generate_Statement (Stmt, Block, Base_Block);
                   Pop_Identifier_Prefix (Mark);
                end;
             when others =>
@@ -2130,4 +2252,55 @@ package body Trans.Chap9 is
          Stmt := Get_Chain (Stmt);
       end loop;
    end Elab_Block_Declarations;
+
+   procedure Elab_Block_Statements (Block : Iir; Base_Block : Iir)
+   is
+      Base_Info : constant Block_Info_Acc := Get_Info (Base_Block);
+      Stmt      : Iir;
+   begin
+      Stmt := Get_Concurrent_Statement_Chain (Block);
+      while Stmt /= Null_Iir loop
+         case Get_Kind (Stmt) is
+            when Iir_Kind_Process_Statement
+               | Iir_Kind_Sensitized_Process_Statement =>
+               Elab_Process (Stmt, Base_Info);
+            when Iir_Kind_Psl_Default_Clock =>
+               null;
+            when Iir_Kind_Psl_Declaration =>
+               null;
+            when Iir_Kind_Psl_Assert_Statement
+              | Iir_Kind_Psl_Cover_Statement =>
+               Elab_Psl_Directive (Stmt, Base_Info);
+            when Iir_Kind_Component_Instantiation_Statement =>
+               null;
+            when Iir_Kind_Block_Statement =>
+               declare
+                  Mark : Id_Mark_Type;
+               begin
+                  Push_Identifier_Prefix (Mark, Get_Identifier (Stmt));
+                  Elab_Block_Statements (Stmt, Base_Block);
+                  Pop_Identifier_Prefix (Mark);
+               end;
+            when Iir_Kind_If_Generate_Statement =>
+               declare
+                  Mark : Id_Mark_Type;
+               begin
+                  Push_Identifier_Prefix (Mark, Get_Identifier (Stmt));
+                  Elab_Stmt_If_Generate_Statement (Stmt, Block);
+                  Pop_Identifier_Prefix (Mark);
+               end;
+            when Iir_Kind_For_Generate_Statement =>
+               declare
+                  Mark : Id_Mark_Type;
+               begin
+                  Push_Identifier_Prefix (Mark, Get_Identifier (Stmt));
+                  Elab_Stmt_For_Generate_Statement (Stmt, Block);
+                  Pop_Identifier_Prefix (Mark);
+               end;
+            when others =>
+               Error_Kind ("elab_block_statements", Stmt);
+         end case;
+         Stmt := Get_Chain (Stmt);
+      end loop;
+   end Elab_Block_Statements;
 end Trans.Chap9;

@@ -192,6 +192,9 @@ package Trans is
    function Add_Pointer
      (Ptr : O_Enode; Offset : O_Enode; Res_Ptr : O_Tnode) return O_Enode;
 
+   type Elab_Kind is (Elab_Decls, Elab_Stmts);
+   type O_Dnode_Elab is array (Elab_Kind) of O_Dnode;
+
    package Chap10 is
       --  There are three data storage kind: global, local or instance.
       --  For example, a constant can have:
@@ -348,6 +351,9 @@ package Trans is
                                   return O_Ident;
       --  Create a prefixed identifier from a string.
       function Create_Identifier (Str : String) return O_Ident;
+
+      --  Create an identifier for an elaboration procedure.
+      function Create_Elab_Identifier (Kind : Elab_Kind) return O_Ident;
 
       --  Create an identifier for a variable.
       --  IE, if the variable is global, prepend the prefix,
@@ -1380,7 +1386,8 @@ package Trans is
             Block_Id : Nat32;
 
             --  Subprogram which elaborates the block (for entity or arch).
-            Block_Elab_Subprg   : O_Dnode;
+            Block_Elab_Subprg   : O_Dnode_Elab;
+
             --  Size of the block instance.
             Block_Instance_Size : O_Dnode;
 

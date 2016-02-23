@@ -889,6 +889,16 @@ package body Trans is
          return Get_Identifier (Identifier_Buffer (1 .. Identifier_Len - 2));
       end Create_Identifier;
 
+      function Create_Elab_Identifier (Kind : Elab_Kind) return O_Ident is
+      begin
+         case Kind is
+            when Elab_Decls =>
+               return Create_Identifier ("DECL_ELAB");
+            when Elab_Stmts =>
+               return Create_Identifier ("STMT_ELAB");
+         end case;
+      end Create_Elab_Identifier;
+
       function Create_Var_Identifier_From_Buffer (L : Natural)
                                                   return Var_Ident_Type
       is
