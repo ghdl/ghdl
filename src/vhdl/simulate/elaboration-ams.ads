@@ -16,9 +16,10 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
+with Grt.Types; use Grt.Types;
 with Tables;
 
-package Simulation.AMS is
+package Elaboration.AMS is
    --  AMS expressions
    --
    --  At many places during elaboration, the LRM defines characteristic
@@ -41,7 +42,7 @@ package Simulation.AMS is
    --  Op_Vhdl_Expr: an expression from the design. This expression may contain
    --   quantities
 
-   type Ams_Term (<>) is private;
+   type Ams_Term;
    type Ams_Term_Acc is access Ams_Term;
    --  A term of a characteristic expression
 
@@ -102,7 +103,7 @@ package Simulation.AMS is
    --  Append an expression to the contribution of a terminal
 
    procedure Create_Tables;
-private
+
    type Quantity_Index_Array is array (Positive range <>)
      of Quantity_Index_Type;
 
@@ -160,4 +161,4 @@ private
       Table_Component_Type => Scalar_Quantity,
       Table_Low_Bound => 1,
       Table_Initial => 128);
-end Simulation.AMS;
+end Elaboration.AMS;

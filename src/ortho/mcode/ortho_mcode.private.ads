@@ -106,8 +106,8 @@ private
    pragma Inline (New_Type_Decl);
    pragma Inline (New_Const_Decl);
 
-   pragma Inline (Start_Const_Value);
-   pragma Inline (Finish_Const_Value);
+   pragma Inline (Start_Init_Value);
+   pragma Inline (Finish_Init_Value);
    pragma Inline (New_Var_Decl);
 
    pragma Inline (New_Obj);

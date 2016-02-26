@@ -225,8 +225,8 @@ private
    pragma Import (C, New_Const_Decl);
    pragma Import (C, New_Var_Decl);
 
-   pragma Import (C, Start_Const_Value);
-   pragma Import (C, Finish_Const_Value);
+   pragma Import (C, Start_Init_Value);
+   pragma Import (C, Finish_Init_Value);
 
    pragma Import (C, Start_Function_Decl);
    pragma Import (C, Start_Procedure_Decl);

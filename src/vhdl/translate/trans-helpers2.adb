@@ -50,7 +50,7 @@ package body Trans.Helpers2 is
       Res  : O_Cnode;
       List : O_Array_Aggr_List;
    begin
-      Start_Const_Value (Const);
+      Start_Init_Value (Const);
       Start_Array_Aggr (List, Const_Type);
       for I in Str'Range loop
          New_Array_Aggr_El
@@ -59,7 +59,7 @@ package body Trans.Helpers2 is
       end loop;
       New_Array_Aggr_El (List, New_Unsigned_Literal (Char_Type_Node, 0));
       Finish_Array_Aggr (List, Res);
-      Finish_Const_Value (Const, Res);
+      Finish_Init_Value (Const, Res);
    end Create_String_Value;
 
    function Create_String (Str : String; Id : O_Ident) return O_Dnode

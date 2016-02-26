@@ -139,9 +139,11 @@ package body Trans.Chap12 is
       Chap1.Translate_Entity_Init_Ports (Entity);
 
       --  Elab instance.
-      Start_Association (Assoc, Arch_Info.Block_Elab_Subprg);
-      New_Association (Assoc, New_Obj_Value (Instance));
-      New_Procedure_Call (Assoc);
+      for K in Elab_Kind loop
+         Start_Association (Assoc, Arch_Info.Block_Elab_Subprg (K));
+         New_Association (Assoc, New_Obj_Value (Instance));
+         New_Procedure_Call (Assoc);
+      end loop;
 
       --  Configure instance.
       Start_Association (Assoc, Config_Subprg);
@@ -207,22 +209,24 @@ package body Trans.Chap12 is
       New_Const_Decl
         (Const, Create_Identifier ("INSTSIZE"), O_Storage_Public,
          Ghdl_Index_Type);
-      Start_Const_Value (Const);
-      Finish_Const_Value (Const, Get_Scope_Size (Arch_Info.Block_Scope));
+      Start_Init_Value (Const);
+      Finish_Init_Value (Const, Get_Scope_Size (Arch_Info.Block_Scope));
 
       --  Elaborator.
-      Start_Procedure_Decl
-        (Inter_List, Create_Identifier ("ELAB"), O_Storage_Public);
-      New_Interface_Decl
-        (Inter_List, Instance, Wki_Instance,
-         Entity_Info.Block_Decls_Ptr_Type);
-      Finish_Subprogram_Decl (Inter_List, Subprg);
+      for K in Elab_Kind loop
+         Start_Procedure_Decl
+           (Inter_List, Create_Elab_Identifier (K), O_Storage_Public);
+         New_Interface_Decl
+           (Inter_List, Instance, Wki_Instance,
+            Entity_Info.Block_Decls_Ptr_Type);
+         Finish_Subprogram_Decl (Inter_List, Subprg);
 
-      Start_Subprogram_Body (Subprg);
-      Start_Association (Constr, Arch_Info.Block_Elab_Subprg);
-      New_Association (Constr, New_Obj_Value (Instance));
-      New_Procedure_Call (Constr);
-      Finish_Subprogram_Body;
+         Start_Subprogram_Body (Subprg);
+         Start_Association (Constr, Arch_Info.Block_Elab_Subprg (K));
+         New_Association (Constr, New_Obj_Value (Instance));
+         New_Procedure_Call (Constr);
+         Finish_Subprogram_Body;
+      end loop;
 
       --  Default config.
       Config := Get_Library_Unit
@@ -306,17 +310,20 @@ package body Trans.Chap12 is
       New_Const_Decl
         (Const, Create_Identifier ("INSTSIZE"), O_Storage_Public,
          Ghdl_Index_Type);
-      Start_Const_Value (Const);
-      Finish_Const_Value (Const, Ghdl_Index_0);
+      Start_Init_Value (Const);
+      Finish_Init_Value (Const, Ghdl_Index_0);
 
       --  Elaborator.
-      Start_Procedure_Decl
-        (Inter_List, Create_Identifier ("ELAB"), O_Storage_Public);
-      New_Interface_Decl (Inter_List, Instance, Wki_Instance, Ghdl_Ptr_Type);
-      Finish_Subprogram_Decl (Inter_List, Subprg);
+      for K in Elab_Kind loop
+         Start_Procedure_Decl
+           (Inter_List, Create_Elab_Identifier (K), O_Storage_Public);
+         New_Interface_Decl
+           (Inter_List, Instance, Wki_Instance, Ghdl_Ptr_Type);
+         Finish_Subprogram_Decl (Inter_List, Subprg);
 
-      Start_Subprogram_Body (Subprg);
-      Finish_Subprogram_Body;
+         Start_Subprogram_Body (Subprg);
+         Finish_Subprogram_Body;
+      end loop;
 
       --  Default config.
       Start_Procedure_Decl
@@ -546,8 +553,6 @@ package body Trans.Chap12 is
       use Name_Table;
       use Configuration;
 
-      Primary_Id : Name_Id;
-      Secondary_Id : Name_Id;
       Unit : Iir_Design_Unit;
       Lib_Unit : Iir;
       Config : Iir_Design_Unit;
@@ -558,13 +563,7 @@ package body Trans.Chap12 is
       Last_Design_Unit : Natural;
       Nbr_Pkgs : Natural;
    begin
-      Primary_Id := Get_Identifier (Primary);
-      if Secondary /= "" then
-         Secondary_Id := Get_Identifier (Secondary);
-      else
-         Secondary_Id := Null_Identifier;
-      end if;
-      Config := Configure (Primary_Id, Secondary_Id);
+      Config := Configure (Primary, Secondary);
       if Config = Null_Iir then
          return;
       end if;

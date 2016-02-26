@@ -2,7 +2,9 @@
 
 . ../../testenv.sh
 
-analyze_failure bug.vhdl
-clean
+analyze repro2.vhdl
+elab_simulate test_tb
+
+clean test
 
 echo "Test successful"

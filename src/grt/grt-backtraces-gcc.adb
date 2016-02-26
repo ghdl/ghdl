@@ -92,7 +92,9 @@ package body Grt.Backtraces.Gcc is
                 Filename : System.Address;
                 Lineno : Integer;
                 Function_Name : System.Address)
-               return Integer is
+               return Integer
+   is
+      pragma Unreferenced (Data, Pc);
    begin
       if Res_Filename = Null_Address then
          Res_Filename := Filename;
@@ -108,6 +110,7 @@ package body Grt.Backtraces.Gcc is
                          Subprg : out System.Address)
    is
       Res : Integer;
+      pragma Unreferenced (Res);
    begin
       if not Initialized then
          Initialized := True;

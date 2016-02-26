@@ -2021,22 +2021,22 @@ package body Ortho_LLVM is
    end New_Const_Decl;
 
    -----------------------
-   -- Start_Const_Value --
+   -- Start_Init_Value --
    -----------------------
 
-   procedure Start_Const_Value (Const : in out O_Dnode) is
+   procedure Start_Init_Value (Decl : in out O_Dnode) is
    begin
       null;
-   end Start_Const_Value;
+   end Start_Init_Value;
 
    ------------------------
-   -- Finish_Const_Value --
+   -- Finish_Init_Value --
    ------------------------
 
-   procedure Finish_Const_Value (Const : in out O_Dnode; Val : O_Cnode) is
+   procedure Finish_Init_Value (Decl : in out O_Dnode; Val : O_Cnode) is
    begin
-      SetInitializer (Const.LLVM, Val.LLVM);
-   end Finish_Const_Value;
+      SetInitializer (Decl.LLVM, Val.LLVM);
+   end Finish_Init_Value;
 
    ------------------
    -- New_Var_Decl --

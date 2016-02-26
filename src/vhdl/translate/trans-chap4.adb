@@ -2954,7 +2954,7 @@ package body Trans.Chap4 is
 
       New_Const_Decl (C, Create_Uniq_Identifier, O_Storage_Private,
                       Ghdl_Location_Type_Node);
-      Start_Const_Value (C);
+      Start_Init_Value (C);
       Start_Record_Aggr (Constr, Ghdl_Location_Type_Node);
       New_Record_Aggr_El
         (Constr, New_Global_Address (Current_Filename_Node, Char_Ptr_Type));
@@ -2963,7 +2963,7 @@ package body Trans.Chap4 is
       New_Record_Aggr_El (Constr, New_Signed_Literal (Ghdl_I32_Type,
                           Integer_64 (Col)));
       Finish_Record_Aggr (Constr, Aggr);
-      Finish_Const_Value (C, Aggr);
+      Finish_Init_Value (C, Aggr);
 
       return C;
       --return New_Global_Address (C, Ghdl_Location_Ptr_Node);

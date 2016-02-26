@@ -1340,7 +1340,7 @@ package body Trans.Chap8 is
       New_Type_Decl (Create_Uniq_Identifier, Table_Type);
       New_Const_Decl (Table, Create_Uniq_Identifier, O_Storage_Private,
                       Table_Type);
-      Start_Const_Value (Table);
+      Start_Init_Value (Table);
       Start_Array_Aggr (List, Table_Type);
 
       El := First;
@@ -1350,7 +1350,7 @@ package body Trans.Chap8 is
          El := Choices_Info (El).Choice_Chain;
       end loop;
       Finish_Array_Aggr (List, Table_Cst);
-      Finish_Const_Value (Table, Table_Cst);
+      Finish_Init_Value (Table, Table_Cst);
 
       --  Generate table from choice to statements block.
       Assoc_Table_Base_Type :=
@@ -1362,7 +1362,7 @@ package body Trans.Chap8 is
       New_Type_Decl (Create_Uniq_Identifier, Assoc_Table_Type);
       New_Const_Decl (Assoc_Table, Create_Uniq_Identifier,
                       O_Storage_Private, Assoc_Table_Type);
-      Start_Const_Value (Assoc_Table);
+      Start_Init_Value (Assoc_Table);
       Start_Array_Aggr (List, Assoc_Table_Type);
       El := First;
       while El /= No_Choice_Id loop
@@ -1373,7 +1373,7 @@ package body Trans.Chap8 is
          El := Choices_Info (El).Choice_Chain;
       end loop;
       Finish_Array_Aggr (List, Table_Cst);
-      Finish_Const_Value (Assoc_Table, Table_Cst);
+      Finish_Init_Value (Assoc_Table, Table_Cst);
 
       --  Generate dichotomy code.
       declare

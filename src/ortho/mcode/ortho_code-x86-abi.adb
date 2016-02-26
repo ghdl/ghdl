@@ -202,10 +202,15 @@ package body Ortho_Code.X86.Abi is
       Emits.Emit_Var_Decl (Decl);
    end Expand_Var_Decl;
 
-   procedure Expand_Const_Value (Decl : O_Dnode; Val : O_Cnode) is
+   procedure Expand_Var_Zero (Decl : O_Dnode) is
    begin
-      Emits.Emit_Const_Value (Decl, Val);
-   end Expand_Const_Value;
+      Emits.Emit_Var_Zero (Decl);
+   end Expand_Var_Zero;
+
+   procedure Expand_Init_Value (Decl : O_Dnode; Val : O_Cnode) is
+   begin
+      Emits.Emit_Init_Value (Decl, Val);
+   end Expand_Init_Value;
 
    procedure Disp_Label (Label : O_Enode)
    is

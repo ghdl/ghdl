@@ -36,7 +36,8 @@ with Iirs_Utils;
 with Annotations;
 with Elaboration;
 with Sim_Be;
-with Simulation;
+with Simulation.Main;
+with Debugger;
 with Execution;
 
 with Ghdlcomp;
@@ -153,8 +154,8 @@ package body Ghdlsimul is
          elsif Arg.all = "--stats" then
             Simulation.Disp_Stats := True;
          elsif Arg.all = "-i" then
-            Simulation.Flag_Debugger := True;
-            Simulation.Flag_Interractive := True;
+            Debugger.Flag_Debugger := True;
+            Debugger.Flag_Interractive := True;
          else
             Decode_Option (Arg.all, Status);
             case Status is
@@ -183,7 +184,7 @@ package body Ghdlsimul is
 
       Grtlink.Flag_String := Flags.Flag_String;
 
-      Simulation.Simulation_Entity (Top_Conf);
+      Simulation.Main.Simulation_Entity (Top_Conf);
 
       Set_Exit_Status (Exit_Status (Grt.Errors.Exit_Status));
    end Run;
@@ -192,7 +193,7 @@ package body Ghdlsimul is
    is
    begin
       if Option = "--debug" or Option = "-g" then
-         Simulation.Flag_Debugger := True;
+         Debugger.Flag_Debugger := True;
       else
          return False;
       end if;

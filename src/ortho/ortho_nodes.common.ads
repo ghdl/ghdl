@@ -344,9 +344,9 @@ package ORTHO_NODES is
       Storage : O_Storage;
       Atype : O_Tnode);
 
-   --  Set the value of a non-external constant.
-   procedure Start_Const_Value (Const : in out O_Dnode);
-   procedure Finish_Const_Value (Const : in out O_Dnode; Val : O_Cnode);
+   --  Set the value of a non-external constant or variable.
+   procedure Start_Init_Value (Decl : in out O_Dnode);
+   procedure Finish_Init_Value (Decl : in out O_Dnode; Val : O_Cnode);
 
    --  Create a variable declaration.
    --  A variable can be local only inside a function.

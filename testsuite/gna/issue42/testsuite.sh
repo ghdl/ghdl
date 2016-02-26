@@ -2,7 +2,8 @@
 
 . ../../testenv.sh
 
-analyze_failure bug.vhdl
+analyze_failure bugreport_attribute.vhdl
+
 clean
 
 echo "Test successful"

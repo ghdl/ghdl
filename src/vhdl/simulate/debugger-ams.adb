@@ -16,12 +16,11 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Debugger; use Debugger;
 with Iirs_Utils; use Iirs_Utils;
 with Ada.Text_IO; use Ada.Text_IO;
 with Disp_Vhdl;
 
-package body Simulation.AMS.Debugger is
+package body Debugger.AMS is
    procedure Disp_Quantity_Name (Quantity : Quantity_Index_Type)
    is
       Obj : Scalar_Quantity renames Scalar_Quantities.Table (Quantity);
@@ -83,5 +82,4 @@ package body Simulation.AMS.Debugger is
          Disp_Characteristic_Expression (I);
       end loop;
    end Disp_Characteristic_Expressions;
-end Simulation.AMS.Debugger;
-
+end Debugger.AMS;

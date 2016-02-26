@@ -350,9 +350,9 @@ package Ortho_Gcc is
       Storage : O_Storage;
       Atype : O_Tnode);
 
-   --  Set the value of a non-external constant.
-   procedure Start_Const_Value (Const : in out O_Dnode);
-   procedure Finish_Const_Value (Const : in out O_Dnode; Val : O_Cnode);
+   --  Set the value of a non-external constant or variable.
+   procedure Start_Init_Value (Decl : in out O_Dnode);
+   procedure Finish_Init_Value (Decl : in out O_Dnode; Val : O_Cnode);
 
    --  Create a variable declaration.
    --  A variable can be local only inside a function.
@@ -657,8 +657,8 @@ private
    pragma Import (C, New_Const_Decl);
    pragma Import (C, New_Var_Decl);
 
-   pragma Import (C, Start_Const_Value);
-   pragma Import (C, Finish_Const_Value);
+   pragma Import (C, Start_Init_Value);
+   pragma Import (C, Finish_Init_Value);
 
    pragma Import (C, Start_Function_Decl);
    pragma Import (C, Start_Procedure_Decl);

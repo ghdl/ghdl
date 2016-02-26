@@ -38,6 +38,9 @@ package Configuration is
    function Configure (Primary_Id : Name_Id; Secondary_Id : Name_Id)
      return Iir;
 
+   --  Likewise but directly from strings.
+   function Configure (Primary : String; Secondary : String) return Iir;
+
    --  Add design unit UNIT (with its dependences) in the design_units table.
    procedure Add_Design_Unit (Unit : Iir_Design_Unit; From : Iir);
 

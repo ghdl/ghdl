@@ -172,7 +172,7 @@ package body Ortho_Code.X86.Insns is
                end if;
             when OD_Type
               | OD_Const
-              | OD_Const_Val
+              | OD_Init_Val
               | OD_Var
               | OD_Function
               | OD_Procedure

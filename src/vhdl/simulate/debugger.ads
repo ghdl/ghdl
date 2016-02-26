@@ -20,6 +20,9 @@ with Elaboration; use Elaboration;
 with Iirs; use Iirs;
 
 package Debugger is
+   Flag_Debugger : Boolean := False;
+   Flag_Interractive : Boolean := False;
+
    Flag_Need_Debug : Boolean := False;
 
    -- Disp a message for a constraint error.

@@ -38,7 +38,7 @@ with Iirs_Utils; use Iirs_Utils;
 with Errorout; use Errorout;
 with Disp_Vhdl;
 with Execution; use Execution;
-with Simulation; use Simulation;
+--with Simulation; use Simulation;
 with Iirs_Walk; use Iirs_Walk;
 with Areapools; use Areapools;
 with Grt.Disp;
@@ -1259,6 +1259,43 @@ package body Debugger is
       end if;
    end Info_Tree_Proc;
 
+   procedure Info_Instances_Proc (Line : String)
+   is
+      pragma Unreferenced (Line);
+      procedure Disp_Instances (Inst : Block_Instance_Acc)
+      is
+         Child : Block_Instance_Acc;
+      begin
+         case Get_Kind (Inst.Label) is
+            when Iir_Kind_Architecture_Body =>
+               Disp_Instances_Tree_Name (Inst);
+            when others =>
+               null;
+         end case;
+
+         Child := Inst.Children;
+         while Child /= null loop
+            if Get_Kind (Child.Label) not in Iir_Kinds_Process_Statement then
+               Disp_Instances (Child);
+            end if;
+            Child := Child.Brother;
+         end loop;
+
+      end Disp_Instances;
+   begin
+      if Top_Instance = null then
+         Put_Line ("design not yet fully elaborated");
+         return;
+      end if;
+      for I in Package_Instances'Range loop
+         if Package_Instances (I) /= null then
+            Put (Get_Instance_Local_Name (Package_Instances (I)));
+            Put_Line (" [package]");
+         end if;
+      end loop;
+      Disp_Instances (Top_Instance);
+   end Info_Instances_Proc;
+
    procedure Info_Params_Proc (Line : String)
    is
       pragma Unreferenced (Line);
@@ -1793,10 +1830,16 @@ package body Debugger is
       end loop;
    end Cont_Proc;
 
+   Menu_Info_Instances : aliased Menu_Entry :=
+     (Kind => Menu_Command,
+      Name => new String'("instances"),
+      Next => null,
+      Proc => Info_Instances_Proc'Access);
+
    Menu_Info_Psl : aliased Menu_Entry :=
      (Kind => Menu_Command,
       Name => new String'("psl"),
-      Next => null,
+      Next => Menu_Info_Instances'Access,
       Proc => Info_PSL_Proc'Access);
 
    Menu_Info_Stats : aliased Menu_Entry :=

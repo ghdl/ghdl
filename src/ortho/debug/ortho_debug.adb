@@ -1265,58 +1265,57 @@ package body Ortho_Debug is
                                 Storage => Storage,
                                 Scope => Current_Decl_Scope.Parent,
                                 Lineno => 0,
-                                Const_Value => O_Dnode_Null);
+                                Value_Decl => O_Dnode_Null);
       Add_Decl (Res);
    end New_Const_Decl;
 
-   procedure Start_Const_Value (Const : in out O_Dnode)
+   procedure Start_Init_Value (Decl : in out O_Dnode)
    is
-      subtype O_Dnode_Const_Value is O_Dnode_Type (ON_Const_Value);
+      subtype O_Dnode_Init_Value is O_Dnode_Type (ON_Init_Value);
       N : O_Dnode;
    begin
-      if Const.Const_Value /= O_Dnode_Null then
+      if Decl.Value_Decl /= O_Dnode_Null then
          --  Constant already has a value.
          raise Syntax_Error;
       end if;
 
-      if Const.Storage = O_Storage_External then
-         --  An external constant must not have a value.
+      if Decl.Storage = O_Storage_External then
+         --  An external variable/constant cannot have a value.
          raise Syntax_Error;
       end if;
 
       --  FIXME: check scope is the same.
 
-      N := new O_Dnode_Const_Value'(Kind => ON_Const_Value,
-                                    Name => Const.Name,
-                                    Next => null,
-                                    Dtype => Const.Dtype,
-                                    Storage => Const.Storage,
-                                    Scope => Current_Decl_Scope.Parent,
-                                    Lineno => 0,
-                                    Const_Decl => Const,
-                                    Value => O_Cnode_Null);
-      Const.Const_Value := N;
+      N := new O_Dnode_Init_Value'(Kind => ON_Init_Value,
+                                   Name => Decl.Name,
+                                   Next => null,
+                                   Dtype => Decl.Dtype,
+                                   Storage => Decl.Storage,
+                                   Scope => Current_Decl_Scope.Parent,
+                                   Lineno => 0,
+                                   Init_Decl => Decl,
+                                   Value => O_Cnode_Null);
+      Decl.Value_Decl := N;
       Add_Decl (N, False);
-   end Start_Const_Value;
+   end Start_Init_Value;
 
-   procedure Finish_Const_Value (Const : in out O_Dnode; Val : O_Cnode)
-   is
+   procedure Finish_Init_Value (Decl : in out O_Dnode; Val : O_Cnode) is
    begin
-      if Const.Const_Value = O_Dnode_Null then
-         --  Start_Const_Value not called.
+      if Decl.Value_Decl = O_Dnode_Null then
+         --  Start_Init_Value not called.
          raise Syntax_Error;
       end if;
-      if Const.Const_Value.Value /= O_Cnode_Null then
-         --  Finish_Const_Value already called.
+      if Decl.Value_Decl.Value /= O_Cnode_Null then
+         --  Finish_Init_Value already called.
          raise Syntax_Error;
       end if;
       if Val = O_Cnode_Null then
          --  No value or bad type.
          raise Type_Error;
       end if;
-      Check_Type (Val.Ctype, Const.Dtype);
-      Const.Const_Value.Value := Val;
-   end Finish_Const_Value;
+      Check_Type (Val.Ctype, Decl.Dtype);
+      Decl.Value_Decl.Value := Val;
+   end Finish_Init_Value;
 
    procedure New_Var_Decl
      (Res : out O_Dnode;
@@ -1334,7 +1333,8 @@ package body Ortho_Debug is
                               Dtype => Atype,
                               Storage => Storage,
                               Lineno => 0,
-                              Scope => Current_Decl_Scope.Parent);
+                              Scope => Current_Decl_Scope.Parent,
+                              Value_Decl => O_Dnode_Null);
       Add_Decl (Res);
    end New_Var_Decl;
 

@@ -867,7 +867,7 @@ package body Trans.Rtis is
             New_Unsigned_Literal (Ghdl_Index_Type,
                                   Unsigned_64 (Cur_Block.Nbr + 1)));
          New_Const_Decl (Res, Id, O_Storage_Private, Arr_Type);
-         Start_Const_Value (Res);
+         Start_Init_Value (Res);
          Start_Array_Aggr (List, Arr_Type);
          Nbr := Cur_Block.Nbr;
 
@@ -896,7 +896,7 @@ package body Trans.Rtis is
          New_Array_Aggr_El (List, New_Null_Access (Ghdl_Rti_Access));
 
          Finish_Array_Aggr (List, Val);
-         Finish_Const_Value (Res, Val);
+         Finish_Init_Value (Res, Val);
          return Res;
       end Generate_Rti_Array;
 
@@ -1094,18 +1094,18 @@ package body Trans.Rtis is
               Unsigned_64 (Nbr_Lit)));
          New_Const_Decl (Name_Arr, Create_Identifier ("RTINAMES"),
                          O_Storage_Private, Name_Arr_Type);
-         Start_Const_Value (Name_Arr);
+         Start_Init_Value (Name_Arr);
          Start_Array_Aggr (Arr_Aggr, Name_Arr_Type);
          for I in Name_Lits'Range loop
             New_Array_Aggr_El
               (Arr_Aggr, New_Global_Address (Name_Lits (I), Char_Ptr_Type));
          end loop;
          Finish_Array_Aggr (Arr_Aggr, Val);
-         Finish_Const_Value (Name_Arr, Val);
+         Finish_Init_Value (Name_Arr, Val);
 
          Name := Generate_Type_Name (Atype);
 
-         Start_Const_Value (Info.Type_Rti);
+         Start_Init_Value (Info.Type_Rti);
          case Info.Type_Mode is
             when Type_Mode_B1 =>
                Kind := Ghdl_Rtik_Type_B1;
@@ -1126,7 +1126,7 @@ package body Trans.Rtis is
            (Rec_Aggr,
             New_Global_Address (Name_Arr, Char_Ptr_Array_Ptr_Type));
          Finish_Record_Aggr (Rec_Aggr, Val);
-         Finish_Const_Value (Info.Type_Rti, Val);
+         Finish_Init_Value (Info.Type_Rti, Val);
       end;
    end Generate_Enumeration_Type_Definition;
 
@@ -1146,7 +1146,7 @@ package body Trans.Rtis is
          return;
       end if;
 
-      Start_Const_Value (Info.Type_Rti);
+      Start_Init_Value (Info.Type_Rti);
       case Info.Type_Mode is
          when Type_Mode_I32 =>
             Kind := Ghdl_Rtik_Type_I32;
@@ -1163,7 +1163,7 @@ package body Trans.Rtis is
       New_Record_Aggr_El (List, Generate_Common_Type (Kind, 0, 0));
       New_Record_Aggr_El (List, New_Name_Address (Name));
       Finish_Record_Aggr (List, Val);
-      Finish_Const_Value (Info.Type_Rti, Val);
+      Finish_Init_Value (Info.Type_Rti, Val);
    end Generate_Scalar_Type_Definition;
 
    procedure Generate_Unit_Declaration (Unit : Iir_Unit_Declaration)
@@ -1190,7 +1190,7 @@ package body Trans.Rtis is
       end if;
       New_Const_Decl (Const, Create_Identifier ("RTI"),
                       Global_Storage, Rti_Type);
-      Start_Const_Value (Const);
+      Start_Init_Value (Const);
       Start_Record_Aggr (Aggr, Rti_Type);
       New_Record_Aggr_El (Aggr, Generate_Common (Rtik));
       New_Record_Aggr_El (Aggr, New_Name_Address (Name));
@@ -1204,7 +1204,7 @@ package body Trans.Rtis is
       end if;
       New_Record_Aggr_El (Aggr, Val);
       Finish_Record_Aggr (Aggr, Val);
-      Finish_Const_Value (Const, Val);
+      Finish_Init_Value (Const, Val);
       Add_Rti_Node (Const);
       Pop_Identifier_Prefix (Mark);
    end Generate_Unit_Declaration;
@@ -1239,7 +1239,7 @@ package body Trans.Rtis is
       Unit_Arr := Generate_Rti_Array (Create_Identifier ("RTIARRAY"));
       Pop_Rti_Node (Prev);
 
-      Start_Const_Value (Info.Type_Rti);
+      Start_Init_Value (Info.Type_Rti);
       Start_Record_Aggr (List, Ghdl_Rtin_Type_Physical);
       case Info.Type_Mode is
          when Type_Mode_P64 =>
@@ -1258,7 +1258,7 @@ package body Trans.Rtis is
       New_Record_Aggr_El
         (List, New_Global_Address (Unit_Arr, Ghdl_Rti_Arr_Acc));
       Finish_Record_Aggr (List, Val);
-      Finish_Const_Value (Info.Type_Rti, Val);
+      Finish_Init_Value (Info.Type_Rti, Val);
    end Generate_Physical_Type_Definition;
 
    procedure Generate_Scalar_Subtype_Definition (Atype : Iir)
@@ -1302,7 +1302,7 @@ package body Trans.Rtis is
          return;
       end if;
 
-      Start_Const_Value (Info.Type_Rti);
+      Start_Init_Value (Info.Type_Rti);
       Start_Record_Aggr (Aggr, Ghdl_Rtin_Subtype_Scalar);
       New_Record_Aggr_El
         (Aggr, Generate_Common_Type (Ghdl_Rtik_Subtype_Scalar,
@@ -1313,7 +1313,7 @@ package body Trans.Rtis is
       New_Record_Aggr_El (Aggr, New_Rti_Address (Base_Info.Type_Rti));
       New_Record_Aggr_El (Aggr, Var_Acc_To_Loc (Info.T.Range_Var));
       Finish_Record_Aggr (Aggr, Val);
-      Finish_Const_Value (Info.Type_Rti, Val);
+      Finish_Init_Value (Info.Type_Rti, Val);
    end Generate_Scalar_Subtype_Definition;
 
    procedure Generate_Fileacc_Type_Definition (Atype : Iir)
@@ -1373,14 +1373,14 @@ package body Trans.Rtis is
       end if;
       Name := Generate_Type_Name (Atype);
 
-      Start_Const_Value (Info.Type_Rti);
+      Start_Init_Value (Info.Type_Rti);
       Start_Record_Aggr (List, Ghdl_Rtin_Type_Fileacc);
       New_Record_Aggr_El
         (List, Generate_Common_Type (Kind, 0, Info.T.Rti_Max_Depth));
       New_Record_Aggr_El (List, New_Name_Address (Name));
       New_Record_Aggr_El (List, New_Rti_Address (Base));
       Finish_Record_Aggr (List, Val);
-      Finish_Const_Value (Info.Type_Rti, Val);
+      Finish_Init_Value (Info.Type_Rti, Val);
    end Generate_Fileacc_Type_Definition;
 
    procedure Generate_Array_Type_Indexes
@@ -1412,7 +1412,7 @@ package body Trans.Rtis is
          New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (Nbr_Indexes)));
       New_Const_Decl (Res, Create_Identifier ("RTIINDEXES"),
                       Global_Storage, Arr_Type);
-      Start_Const_Value (Res);
+      Start_Init_Value (Res);
 
       Start_Array_Aggr (Arr_Aggr, Arr_Type);
       for I in 1 .. Nbr_Indexes loop
@@ -1421,7 +1421,7 @@ package body Trans.Rtis is
            (Arr_Aggr, New_Rti_Address (Generate_Type_Definition (Index)));
       end loop;
       Finish_Array_Aggr (Arr_Aggr, Val);
-      Finish_Const_Value (Res, Val);
+      Finish_Init_Value (Res, Val);
    end Generate_Array_Type_Indexes;
 
    function Type_To_Mode (Atype : Iir) return Natural is
@@ -1481,7 +1481,7 @@ package body Trans.Rtis is
       List := Get_Index_Subtype_List (Atype);
 
       --  Generate node.
-      Start_Const_Value (Info.Type_Rti);
+      Start_Init_Value (Info.Type_Rti);
       Start_Record_Aggr (Aggr, Ghdl_Rtin_Type_Array);
       New_Record_Aggr_El
         (Aggr,
@@ -1495,7 +1495,7 @@ package body Trans.Rtis is
            Unsigned_64 (Get_Nbr_Elements (List))));
       New_Record_Aggr_El (Aggr, New_Global_Address (Arr, Ghdl_Rti_Arr_Acc));
       Finish_Record_Aggr (Aggr, Val);
-      Finish_Const_Value (Info.Type_Rti, Val);
+      Finish_Init_Value (Info.Type_Rti, Val);
    end Generate_Array_Type_Definition;
 
    procedure Generate_Array_Subtype_Definition
@@ -1543,7 +1543,7 @@ package body Trans.Rtis is
 
       Name := Generate_Type_Name (Atype);
 
-      Start_Const_Value (Info.Type_Rti);
+      Start_Init_Value (Info.Type_Rti);
       Start_Record_Aggr (Aggr, Ghdl_Rtin_Subtype_Array);
       case Info.Type_Mode is
          when Type_Mode_Array =>
@@ -1588,7 +1588,7 @@ package body Trans.Rtis is
       end loop;
 
       Finish_Record_Aggr (Aggr, Val);
-      Finish_Const_Value (Info.Type_Rti, Val);
+      Finish_Init_Value (Info.Type_Rti, Val);
    end Generate_Array_Subtype_Definition;
 
    procedure Generate_Record_Type_Definition (Atype : Iir)
@@ -1634,7 +1634,7 @@ package body Trans.Rtis is
             El_Name := Generate_Name (El);
             New_Const_Decl (El_Const, Create_Identifier ("RTIEL"),
                             Global_Storage, Ghdl_Rtin_Element);
-            Start_Const_Value (El_Const);
+            Start_Init_Value (El_Const);
             Start_Record_Aggr (Aggr, Ghdl_Rtin_Element);
             New_Record_Aggr_El (Aggr,
                                 Generate_Common (Ghdl_Rtik_Element));
@@ -1651,7 +1651,7 @@ package body Trans.Rtis is
                New_Record_Aggr_El (Aggr, Val);
             end loop;
             Finish_Record_Aggr (Aggr, Val);
-            Finish_Const_Value (El_Const, Val);
+            Finish_Init_Value (El_Const, Val);
             Add_Rti_Node (El_Const);
 
             Pop_Identifier_Prefix (Mark);
@@ -1668,7 +1668,7 @@ package body Trans.Rtis is
       begin
          Name := Generate_Type_Name (Atype);
 
-         Start_Const_Value (Info.Type_Rti);
+         Start_Init_Value (Info.Type_Rti);
          Start_Record_Aggr (Aggr, Ghdl_Rtin_Type_Record);
          New_Record_Aggr_El
            (Aggr,
@@ -1681,7 +1681,7 @@ package body Trans.Rtis is
          New_Record_Aggr_El (Aggr,
                              New_Global_Address (El_Arr, Ghdl_Rti_Arr_Acc));
          Finish_Record_Aggr (Aggr, Res);
-         Finish_Const_Value (Info.Type_Rti, Res);
+         Finish_Init_Value (Info.Type_Rti, Res);
       end;
    end Generate_Record_Type_Definition;
 
@@ -1699,7 +1699,7 @@ package body Trans.Rtis is
       end if;
 
       Name := Generate_Type_Name (Atype);
-      Start_Const_Value (Info.Type_Rti);
+      Start_Init_Value (Info.Type_Rti);
       Start_Record_Aggr (List, Ghdl_Rtin_Type_Scalar);
       New_Record_Aggr_El
         (List,
@@ -1707,7 +1707,7 @@ package body Trans.Rtis is
            Type_To_Mode (Atype)));
       New_Record_Aggr_El (List, New_Name_Address (Name));
       Finish_Record_Aggr (List, Val);
-      Finish_Const_Value (Info.Type_Rti, Val);
+      Finish_Init_Value (Info.Type_Rti, Val);
    end Generate_Protected_Type_Declaration;
 
    --  If FORCE is true, force the creation of the type RTI.
@@ -1886,7 +1886,7 @@ package body Trans.Rtis is
 
          Info := Get_Info (Decl);
 
-         Start_Const_Value (Rti);
+         Start_Init_Value (Rti);
          Start_Record_Aggr (List, Ghdl_Rtin_Object);
          Mode := 0;
          case Get_Kind (Decl) is
@@ -1973,7 +1973,7 @@ package body Trans.Rtis is
          New_Record_Aggr_El (List, New_Rti_Address (Type_Info.Type_Rti));
          New_Record_Aggr_El (List, Generate_Linecol (Decl));
          Finish_Record_Aggr (List, Val);
-         Finish_Const_Value (Rti, Val);
+         Finish_Init_Value (Rti, Val);
       end if;
       Pop_Identifier_Prefix (Mark);
    end Generate_Object;
@@ -2009,7 +2009,7 @@ package body Trans.Rtis is
 
          Arr := Generate_Rti_Array (Create_Identifier ("RTIARRAY"));
 
-         Start_Const_Value (Info.Comp_Rti_Const);
+         Start_Init_Value (Info.Comp_Rti_Const);
          Start_Record_Aggr (List, Ghdl_Rtin_Component);
          New_Record_Aggr_El (List, Generate_Common (Ghdl_Rtik_Component));
          New_Record_Aggr_El (List,
@@ -2020,7 +2020,7 @@ package body Trans.Rtis is
          New_Record_Aggr_El (List,
                              New_Global_Address (Arr, Ghdl_Rti_Arr_Acc));
          Finish_Record_Aggr (List, Res);
-         Finish_Const_Value (Info.Comp_Rti_Const, Res);
+         Finish_Init_Value (Info.Comp_Rti_Const, Res);
          Pop_Rti_Node (Prev);
       end if;
 
@@ -2121,7 +2121,7 @@ package body Trans.Rtis is
       New_Const_Decl (Info.Block_Rti_Const, Create_Identifier ("RTI"),
                       Global_Storage, Ghdl_Rtin_Instance);
 
-      Start_Const_Value (Info.Block_Rti_Const);
+      Start_Init_Value (Info.Block_Rti_Const);
       Start_Record_Aggr (List, Ghdl_Rtin_Instance);
       New_Record_Aggr_El (List, Generate_Common (Ghdl_Rtik_Instance));
       New_Record_Aggr_El (List, New_Global_Address (Name, Char_Ptr_Type));
@@ -2145,7 +2145,7 @@ package body Trans.Rtis is
 
       New_Record_Aggr_El (List, Val);
       Finish_Record_Aggr (List, Val);
-      Finish_Const_Value (Info.Block_Rti_Const, Val);
+      Finish_Init_Value (Info.Block_Rti_Const, Val);
       Add_Rti_Node (Info.Block_Rti_Const);
    end Generate_Instance;
 
@@ -2165,12 +2165,12 @@ package body Trans.Rtis is
       New_Const_Decl (Rti, Create_Identifier ("RTI"),
                       O_Storage_Public, Ghdl_Rtin_Type_Scalar);
 
-      Start_Const_Value (Rti);
+      Start_Init_Value (Rti);
       Start_Record_Aggr (List, Ghdl_Rtin_Type_Scalar);
       New_Record_Aggr_El (List, Generate_Common (Ghdl_Rtik_Psl_Assert));
       New_Record_Aggr_El (List, New_Global_Address (Name, Char_Ptr_Type));
       Finish_Record_Aggr (List, Res);
-      Finish_Const_Value (Rti, Res);
+      Finish_Init_Value (Rti, Res);
       Info.Psl_Rti_Const := Rti;
       Pop_Identifier_Prefix (Mark);
    end Generate_Psl_Directive;
@@ -2362,7 +2362,7 @@ package body Trans.Rtis is
 
       Arr := Generate_Rti_Array (Create_Identifier ("RTIARRAY"));
 
-      Start_Const_Value (Rti);
+      Start_Init_Value (Rti);
 
       Start_Record_Aggr (List, Ghdl_Rtin_Block);
       New_Record_Aggr_El (List, Generate_Common (Ghdl_Rtik_If_Generate));
@@ -2385,7 +2385,7 @@ package body Trans.Rtis is
       New_Record_Aggr_El (List, New_Global_Address (Arr, Ghdl_Rti_Arr_Acc));
       Finish_Record_Aggr (List, Res);
 
-      Finish_Const_Value (Rti, Res);
+      Finish_Init_Value (Rti, Res);
 
       Pop_Rti_Node (Prev);
 
@@ -2424,7 +2424,7 @@ package body Trans.Rtis is
 
       Name := Generate_Name (Blk);
 
-      Start_Const_Value (Rti);
+      Start_Init_Value (Rti);
 
       Start_Record_Aggr (List, Ghdl_Rtin_Generate);
       New_Record_Aggr_El (List, Generate_Common (Ghdl_Rtik_For_Generate));
@@ -2453,7 +2453,7 @@ package body Trans.Rtis is
 
       Finish_Record_Aggr (List, Res);
 
-      Finish_Const_Value (Rti, Res);
+      Finish_Init_Value (Rti, Res);
 
       Pop_Rti_Node (Prev);
 
@@ -2574,7 +2574,7 @@ package body Trans.Rtis is
 
       Arr := Generate_Rti_Array (Create_Identifier ("RTIARRAY"));
 
-      Start_Const_Value (Rti);
+      Start_Init_Value (Rti);
 
       if Rti_Type = Ghdl_Rtin_Block_File then
          Start_Record_Aggr (List_File, Rti_Type);
@@ -2614,7 +2614,7 @@ package body Trans.Rtis is
          Finish_Record_Aggr (List_File, Res);
       end if;
 
-      Finish_Const_Value (Rti, Res);
+      Finish_Init_Value (Rti, Res);
 
       Pop_Rti_Node (Prev);
 
@@ -2688,12 +2688,12 @@ package body Trans.Rtis is
          Name := Create_String
            (Nam_Buffer (1 .. Nam_Length),
             Create_Identifier_Without_Prefix (Id, "__RTISTR"));
-         Start_Const_Value (Info.Library_Rti_Const);
+         Start_Init_Value (Info.Library_Rti_Const);
          Start_Record_Aggr (Aggr, Ghdl_Rtin_Type_Scalar);
          New_Record_Aggr_El (Aggr, Generate_Common (Ghdl_Rtik_Library));
          New_Record_Aggr_El (Aggr, New_Name_Address (Name));
          Finish_Record_Aggr (Aggr, Val);
-         Finish_Const_Value (Info.Library_Rti_Const, Val);
+         Finish_Init_Value (Info.Library_Rti_Const, Val);
       end if;
    end Generate_Library;
 

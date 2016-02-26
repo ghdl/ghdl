@@ -563,7 +563,7 @@ package body Ortho_Code.Disps is
             Put (" : ");
             Disp_Type (Get_Decl_Type (Decl));
             Put_Line (";");
-         when OD_Const_Val =>
+         when OD_Init_Val =>
             Put ("constant ");
             Disp_Decl_Name (Get_Val_Decl (Decl));
             Put (" := ");

@@ -48,7 +48,7 @@ private
      (ON_Type_Decl, ON_Completed_Type_Decl,
       ON_Const_Decl, ON_Var_Decl, ON_Interface_Decl,
       ON_Function_Decl, ON_Function_Body,
-      ON_Const_Value,
+      ON_Init_Value,
       ON_Debug_Line_Decl, ON_Debug_Comment_Decl, ON_Debug_Filename_Decl);
 
    type O_Dnode_Type (<>);
@@ -70,13 +70,14 @@ private
             null;
          when ON_Completed_Type_Decl =>
             null;
-         when ON_Const_Decl =>
-            Const_Value : O_Dnode;
-         when ON_Const_Value =>
-            Const_Decl : O_Dnode;
+         when ON_Const_Decl
+           | ON_Var_Decl =>
+            --  Corresponding declaration for initial value (if any).
+            Value_Decl : O_Dnode;
+         when ON_Init_Value =>
+            --  Corresponding declaration of the object.
+            Init_Decl : O_Dnode;
             Value : O_Cnode;
-         when ON_Var_Decl =>
-            null;
          when ON_Function_Decl =>
             Interfaces : O_Dnode;
             Func_Body : O_Dnode;

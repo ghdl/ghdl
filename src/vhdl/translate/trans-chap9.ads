@@ -19,7 +19,9 @@
 package Trans.Chap9 is
    procedure Translate_Block_Declarations (Block : Iir; Origin : Iir);
    procedure Translate_Block_Subprograms (Block : Iir; Base_Block : Iir);
+
    procedure Elab_Block_Declarations (Block : Iir; Base_Block : Iir);
+   procedure Elab_Block_Statements (Block : Iir; Base_Block : Iir);
 
    --  Generate code to instantiate an entity.
    --  ASPECT must be an entity_aspect.
@@ -39,4 +41,3 @@ package Trans.Chap9 is
    procedure Destroy_Types (N : Iir);
    procedure Destroy_Types_In_List (L : Iir_List);
 end Trans.Chap9;
-

@@ -104,7 +104,9 @@ package body Trans.Chap1 is
    is
       Info                 : Block_Info_Acc;
       Interface_List       : O_Inter_List;
-      Instance             : Subprgs.Subprg_Instance_Type;
+      type Subprg_Instance_Array is
+        array (Elab_Kind) of Subprgs.Subprg_Instance_Type;
+      Instance             : Subprg_Instance_Array;
       Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
    begin
       Info := Add_Info (Entity, Kind_Block);
@@ -129,10 +131,12 @@ package body Trans.Chap1 is
                                     Prev_Subprg_Instance);
 
       --  Entity elaborator.
-      Start_Procedure_Decl (Interface_List, Create_Identifier ("ELAB"),
-                            Global_Storage);
-      Subprgs.Add_Subprg_Instance_Interfaces (Interface_List, Instance);
-      Finish_Subprogram_Decl (Interface_List, Info.Block_Elab_Subprg);
+      for K in Elab_Kind loop
+         Start_Procedure_Decl
+           (Interface_List, Create_Elab_Identifier (K), Global_Storage);
+         Subprgs.Add_Subprg_Instance_Interfaces (Interface_List, Instance (K));
+         Finish_Subprogram_Decl (Interface_List, Info.Block_Elab_Subprg (K));
+      end loop;
 
       --  Entity dependences elaborator.
       Start_Procedure_Decl (Interface_List, Create_Identifier ("PKG_ELAB"),
@@ -160,15 +164,22 @@ package body Trans.Chap1 is
          Finish_Subprogram_Body;
 
          --  Elaborator Body.
-         Start_Subprogram_Body (Info.Block_Elab_Subprg);
-         Push_Local_Factory;
-         Subprgs.Start_Subprg_Instance_Use (Instance);
-         New_Debug_Line_Stmt (Get_Line_Number (Entity));
+         for K in Elab_Kind loop
+            Start_Subprogram_Body (Info.Block_Elab_Subprg (K));
+            Push_Local_Factory;
+            Subprgs.Start_Subprg_Instance_Use (Instance (K));
+            New_Debug_Line_Stmt (Get_Line_Number (Entity));
 
-         Chap9.Elab_Block_Declarations (Entity, Entity);
-         Subprgs.Finish_Subprg_Instance_Use (Instance);
-         Pop_Local_Factory;
-         Finish_Subprogram_Body;
+            case K is
+               when Elab_Decls =>
+                  Chap9.Elab_Block_Declarations (Entity, Entity);
+               when Elab_Stmts =>
+                  Chap9.Elab_Block_Statements (Entity, Entity);
+            end case;
+            Subprgs.Finish_Subprg_Instance_Use (Instance (K));
+            Pop_Local_Factory;
+            Finish_Subprogram_Body;
+         end loop;
       end if;
       Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
    end Translate_Entity_Declaration;
@@ -205,7 +216,7 @@ package body Trans.Chap1 is
       Info                 : Block_Info_Acc;
       Interface_List       : O_Inter_List;
       Constr               : O_Assoc_List;
-      Instance             : O_Dnode;
+      Instance             : O_Dnode_Elab;
       Var_Arch_Instance    : O_Dnode;
       Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
    begin
@@ -232,18 +243,20 @@ package body Trans.Chap1 is
         (Info.Block_Instance_Size, Create_Identifier ("INSTSIZE"),
          Global_Storage, Ghdl_Index_Type);
       if Global_Storage /= O_Storage_External then
-         Start_Const_Value (Info.Block_Instance_Size);
-         Finish_Const_Value
+         Start_Init_Value (Info.Block_Instance_Size);
+         Finish_Init_Value
            (Info.Block_Instance_Size, Get_Scope_Size (Info.Block_Scope));
       end if;
 
       --  Elaborator.
-      Start_Procedure_Decl
-        (Interface_List, Create_Identifier ("ELAB"), Global_Storage);
-      New_Interface_Decl
-        (Interface_List, Instance, Wki_Instance,
-         Entity_Info.Block_Decls_Ptr_Type);
-      Finish_Subprogram_Decl (Interface_List, Info.Block_Elab_Subprg);
+      for K in Elab_Kind loop
+         Start_Procedure_Decl
+           (Interface_List, Create_Elab_Identifier (K), Global_Storage);
+         New_Interface_Decl
+           (Interface_List, Instance (K), Wki_Instance,
+            Entity_Info.Block_Decls_Ptr_Type);
+         Finish_Subprogram_Decl (Interface_List, Info.Block_Elab_Subprg (K));
+      end loop;
 
       --  Generate RTI.
       if Flag_Rti then
@@ -269,46 +282,57 @@ package body Trans.Chap1 is
       Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
 
       --  Elaborator body.
-      Start_Subprogram_Body (Info.Block_Elab_Subprg);
-      Push_Local_Factory;
+      for K in Elab_Kind loop
+         Start_Subprogram_Body (Info.Block_Elab_Subprg (K));
+         Push_Local_Factory;
 
-      --  Create a variable for the architecture instance (with the right
-      --  type, instead of the entity instance type).
-      New_Var_Decl (Var_Arch_Instance, Wki_Arch_Instance,
-                    O_Storage_Local, Info.Block_Decls_Ptr_Type);
-      New_Assign_Stmt
-        (New_Obj (Var_Arch_Instance),
-         New_Convert_Ov (New_Value (New_Obj (Instance)),
-           Info.Block_Decls_Ptr_Type));
-
-      --  Set RTI.
-      if Flag_Rti then
+         --  Create a variable for the architecture instance (with the right
+         --  type, instead of the entity instance type).
+         New_Var_Decl (Var_Arch_Instance, Wki_Arch_Instance,
+                       O_Storage_Local, Info.Block_Decls_Ptr_Type);
          New_Assign_Stmt
-           (New_Selected_Element
-              (New_Selected_Acc_Value (New_Obj (Instance),
-               Entity_Info.Block_Link_Field),
-               Rtis.Ghdl_Entity_Link_Rti),
-            New_Unchecked_Address (New_Obj (Info.Block_Rti_Const),
-              Rtis.Ghdl_Rti_Access));
-      end if;
+           (New_Obj (Var_Arch_Instance),
+            New_Convert_Ov (New_Value (New_Obj (Instance (K))),
+                            Info.Block_Decls_Ptr_Type));
 
-      --  Call entity elaborators.
-      Start_Association (Constr, Entity_Info.Block_Elab_Subprg);
-      New_Association (Constr, New_Value (New_Obj (Instance)));
-      New_Procedure_Call (Constr);
+         case K is
+            when Elab_Decls =>
+               --  Set RTI.
+               if Flag_Rti then
+                  New_Assign_Stmt
+                    (New_Selected_Element
+                       (New_Selected_Acc_Value (New_Obj (Instance (K)),
+                                                Entity_Info.Block_Link_Field),
+                        Rtis.Ghdl_Entity_Link_Rti),
+                     New_Unchecked_Address (New_Obj (Info.Block_Rti_Const),
+                                            Rtis.Ghdl_Rti_Access));
+               end if;
+            when Elab_Stmts =>
+               null;
+         end case;
 
-      Push_Architecture_Scope (Arch, Var_Arch_Instance);
+         --  Call entity elaborators.
+         Start_Association (Constr, Entity_Info.Block_Elab_Subprg (K));
+         New_Association (Constr, New_Value (New_Obj (Instance (K))));
+         New_Procedure_Call (Constr);
 
-      New_Debug_Line_Stmt (Get_Line_Number (Arch));
-      Chap2.Elab_Dependence (Get_Design_Unit (Arch));
+         Push_Architecture_Scope (Arch, Var_Arch_Instance);
 
-      Chap9.Elab_Block_Declarations (Arch, Arch);
-      --Chap6.Leave_Simple_Name (Ghdl_Leave_Architecture);
+         New_Debug_Line_Stmt (Get_Line_Number (Arch));
 
-      Pop_Architecture_Scope (Arch);
+         case K is
+            when Elab_Decls =>
+               Chap2.Elab_Dependence (Get_Design_Unit (Arch));
+               Chap9.Elab_Block_Declarations (Arch, Arch);
+            when Elab_Stmts =>
+               Chap9.Elab_Block_Statements (Arch, Arch);
+         end case;
 
-      Pop_Local_Factory;
-      Finish_Subprogram_Body;
+         Pop_Architecture_Scope (Arch);
+
+         Pop_Local_Factory;
+         Finish_Subprogram_Body;
+      end loop;
    end Translate_Architecture_Body;
 
    procedure Translate_Component_Configuration_Decl

@@ -51,7 +51,7 @@ package Sem_Assocs is
    procedure Check_Subprogram_Associations
      (Inter_Chain : Iir; Assoc_Chain : Iir);
 
-   --  Check for restrictions in §1.1.1.2
+   --  Check for restrictions in LRM93 1.1.1.2
    --  Return FALSE in case of error.
    function Check_Port_Association_Restriction
      (Formal : Iir_Interface_Signal_Declaration;

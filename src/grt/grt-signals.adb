@@ -29,7 +29,6 @@ with Ada.Unchecked_Deallocation;
 with Grt.Errors; use Grt.Errors;
 with Grt.Processes; use Grt.Processes;
 with Grt.Options; use Grt.Options;
-with Grt.Rtis_Types; use Grt.Rtis_Types;
 with Grt.Disp_Signals;
 with Grt.Astdio;
 with Grt.Stdio;
@@ -47,9 +46,6 @@ package body Grt.Signals is
       Free (Ntrans);
    end Free_In;
    pragma Inline (Free_In);
-
-   --  RTI for the current signal.
-   Sig_Rti : Ghdl_Rtin_Object_Acc;
 
    --  Signal mode (and flags) for the current signal.
    Sig_Mode : Mode_Signal_Type;
@@ -152,8 +148,9 @@ package body Grt.Signals is
    is
       pragma Unreferenced (Ctxt);
       pragma Unreferenced (Addr);
+
+      Sig_Rti : constant Ghdl_Rtin_Object_Acc := To_Ghdl_Rtin_Object_Acc (Sig);
    begin
-      Sig_Rti := To_Ghdl_Rtin_Object_Acc (Sig);
       Sig_Mode := Mode_Signal_Type'Val
         (Sig.Mode and Ghdl_Rti_Signal_Mode_Mask);
       Sig_Kind := Kind_Signal_Type'Val
@@ -167,7 +164,6 @@ package body Grt.Signals is
                                    Kind : Kind_Signal_Type;
                                    Has_Active : Boolean) is
    begin
-      Sig_Rti := null;
       Sig_Mode := Mode;
       Sig_Kind := Kind;
       Sig_Has_Active := Has_Active;
@@ -266,7 +262,6 @@ package body Grt.Signals is
                               Flink => null,
 
                               Event_List => null,
-                              Rti => Sig_Rti,
 
                               Nbr_Ports => 0,
                               Ports => null,
@@ -340,11 +335,9 @@ package body Grt.Signals is
             --  LRM 4.3.1.2 Signal Declaration
             --  It is an error if, after the elaboration of a description, a
             --  signal has multiple sources and it is not a resolved signal.
-            if Sig.Rti /= null then
-               Put ("for signal: ");
-               Disp_Signals.Put_Signal_Name (stderr, Sig);
-               New_Line (stderr);
-            end if;
+            Put (stderr, "for signal: ");
+            Disp_Signals.Put_Signal_Name (stderr, Sig);
+            New_Line (stderr);
             Error ("several sources for unresolved signal");
          elsif Sig.S.Mode_Sig = Mode_Buffer and False then
             --  LRM 1.1.1.2  Ports
@@ -1425,47 +1418,15 @@ package body Grt.Signals is
       Targ.S.Effective := Src;
    end Ghdl_Signal_Effective_Value;
 
-   Bit_Signal_Rti : aliased Ghdl_Rtin_Object :=
-     (Common => (Kind => Ghdl_Rtik_Signal,
-                 Depth => 0,
-                 Mode => Ghdl_Rti_Signal_Mode_None,
-                 Max_Depth => 0),
-      Linecol => 0,
-      Name => null,
-      Loc => Null_Rti_Loc,
-      Obj_Type => null);
-
-   Boolean_Signal_Rti : aliased Ghdl_Rtin_Object :=
-     (Common => (Kind => Ghdl_Rtik_Signal,
-                 Depth => 0,
-                 Mode => Ghdl_Rti_Signal_Mode_None,
-                 Max_Depth => 0),
-      Linecol => 0,
-      Name => null,
-      Loc => Null_Rti_Loc,
-      Obj_Type => null);
-
    function Ghdl_Create_Signal_Attribute
      (Val_Ptr : Ghdl_Value_Ptr; Mode : Mode_Signal_Type; Time : Std_Time)
      return Ghdl_Signal_Ptr
    is
       Res : Ghdl_Signal_Ptr;
    begin
-      case Mode is
-         when Mode_Transaction =>
-            Sig_Rti := To_Ghdl_Rtin_Object_Acc
-              (To_Ghdl_Rti_Access (Bit_Signal_Rti'Address));
-         when Mode_Quiet
-           | Mode_Stable =>
-            Sig_Rti := To_Ghdl_Rtin_Object_Acc
-              (To_Ghdl_Rti_Access (Boolean_Signal_Rti'Address));
-         when others =>
-            Internal_Error ("ghdl_create_signal_attribute");
-      end case;
       --  Note: bit and boolean are both mode_b1.
       Val_Ptr.B1 := True;
       Res := Create_Signal (Mode_B1, Val_Ptr, Mode, null, Null_Address);
-      Sig_Rti := null;
       Last_Implicit_Signal := Res;
 
       if Mode /= Mode_Transaction then
@@ -1510,33 +1471,14 @@ package body Grt.Signals is
       Add_Port (Last_Implicit_Signal, Sig);
    end Ghdl_Signal_Attribute_Register_Prefix;
 
-   --Guard_String : constant String := "guard";
-   --Guard_Name : constant Ghdl_Str_Len_Address_Type :=
-   --  (Len => 5, Str => Guard_String'Address);
-   --function To_Ghdl_Str_Len_Ptr is new Ada.Unchecked_Conversion
-   --  (Source => System.Address, Target => Ghdl_Str_Len_Ptr);
-
-   Guard_Rti : aliased constant Ghdl_Rtin_Object :=
-     (Common => (Kind => Ghdl_Rtik_Signal,
-                 Depth => 0,
-                 Mode => Ghdl_Rti_Signal_Mode_None,
-                 Max_Depth => 0),
-      Linecol => 0,
-      Name => null,
-      Loc => Null_Rti_Loc,
-      Obj_Type => Std_Standard_Boolean_RTI_Ptr);
-
    function Ghdl_Signal_Create_Guard
      (Val_Ptr : Ghdl_Value_Ptr; This : System.Address; Proc : Guard_Func_Acc)
      return Ghdl_Signal_Ptr
    is
       Res : Ghdl_Signal_Ptr;
    begin
-      Sig_Rti := To_Ghdl_Rtin_Object_Acc
-        (To_Ghdl_Rti_Access (Guard_Rti'Address));
       Val_Ptr.B1 := Proc.all (This);
       Res := Create_Signal (Mode_B1, Val_Ptr, Mode_Guard, null, Null_Address);
-      Sig_Rti := null;
       Res.S.Guard_Func := Proc;
       Res.S.Guard_Instance := This;
       Last_Implicit_Signal := Res;
@@ -3594,7 +3536,6 @@ package body Grt.Signals is
                                      Flink => null,
 
                                      Event_List => null,
-                                     Rti => null,
 
                                      Nbr_Ports => 0,
                                      Ports => null,
@@ -3605,9 +3546,6 @@ package body Grt.Signals is
       Ghdl_Implicit_Signal_Active_Chain := Signal_End;
       Future_List := Signal_End;
       Next_Signal_Active_Chain := Signal_End;
-
-      Boolean_Signal_Rti.Obj_Type := Std_Standard_Boolean_RTI_Ptr;
-      Bit_Signal_Rti.Obj_Type := Std_Standard_Bit_RTI_Ptr;
    end Init;
 
 end Grt.Signals;

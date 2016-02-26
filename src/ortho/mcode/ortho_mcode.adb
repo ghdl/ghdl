@@ -29,12 +29,12 @@ package body Ortho_Mcode is
       null;
    end New_Debug_Comment_Stmt;
 
-   procedure Start_Const_Value (Const : in out O_Dnode)
+   procedure Start_Init_Value (Decl : in out O_Dnode)
    is
-      pragma Unreferenced (Const);
+      pragma Unreferenced (Decl);
    begin
       null;
-   end Start_Const_Value;
+   end Start_Init_Value;
 
    procedure Start_Record_Type (Elements : out O_Element_List) is
    begin
@@ -112,12 +112,12 @@ package body Ortho_Mcode is
                                            Ortho_Code.O_Tnode (Dtype));
    end Finish_Access_Type;
 
-   procedure Finish_Const_Value (Const : in out O_Dnode; Val : O_Cnode)
+   procedure Finish_Init_Value (Decl : in out O_Dnode; Val : O_Cnode)
    is
-      pragma Warnings (Off, Const);
+      pragma Warnings (Off, Decl);
    begin
-      New_Const_Value (Ortho_Code.O_Dnode (Const), Ortho_Code.O_Cnode (Val));
-   end Finish_Const_Value;
+      New_Init_Value (Ortho_Code.O_Dnode (Decl), Ortho_Code.O_Cnode (Val));
+   end Finish_Init_Value;
 
    function New_Array_Type (El_Type : O_Tnode; Index_Type : O_Tnode)
                            return O_Tnode is
@@ -715,6 +715,7 @@ package body Ortho_Mcode is
          Ortho_Code.Decls.Disp_All_Decls;
          --Ortho_Code.Exprs.Disp_All_Enode;
       end if;
+      Ortho_Code.Decls.Alloc_Zero;
       Ortho_Code.Abi.Finish;
       if Debug.Flag_Debug_Stat then
          Ada.Text_IO.Put_Line ("Statistics:");

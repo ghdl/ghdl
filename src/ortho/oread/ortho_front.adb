@@ -2500,9 +2500,9 @@ package body Ortho_Front is
          N.Decl_Defined := True;
          Next_Token;
 
-         Start_Const_Value (N.Obj_Node);
+         Start_Init_Value (N.Obj_Node);
          Val := Parse_Constant_Value (N.Decl_Dtype);
-         Finish_Const_Value (N.Obj_Node, Val);
+         Finish_Init_Value (N.Obj_Node, Val);
       end if;
    end Parse_Constant_Declaration;
 
@@ -2528,9 +2528,9 @@ package body Ortho_Front is
       --         should check the object has no value.
       Next_Expect (Tok_Assign);
       Next_Token;
-      Start_Const_Value (N.Obj_Node);
+      Start_Init_Value (N.Obj_Node);
       Val := Parse_Constant_Value (N.Decl_Dtype);
-      Finish_Const_Value (N.Obj_Node, Val);
+      Finish_Init_Value (N.Obj_Node, Val);
    end Parse_Constant_Value_Declaration;
 
    procedure Parse_Var_Declaration (Storage : O_Storage)

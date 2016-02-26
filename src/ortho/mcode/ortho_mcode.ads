@@ -297,8 +297,8 @@ package Ortho_Mcode is
    function New_Slice (Arr : O_Lnode; Res_Type : O_Tnode; Index : O_Enode)
      return O_Lnode;
 
-   --  Get an element of a record.
-   --  Type of REC must be a record type.
+   --  Get an element of a record or a union.
+   --  Type of REC must be a record or a union type.
    function New_Selected_Element (Rec : O_Lnode; El : O_Fnode)
      return O_Lnode;
 
@@ -357,9 +357,9 @@ package Ortho_Mcode is
       Storage : O_Storage;
       Atype : O_Tnode);
 
-   --  Set the value of a non-external constant.
-   procedure Start_Const_Value (Const : in out O_Dnode);
-   procedure Finish_Const_Value (Const : in out O_Dnode; Val : O_Cnode);
+   --  Set the value of a non-external constant or variable.
+   procedure Start_Init_Value (Decl : in out O_Dnode);
+   procedure Finish_Init_Value (Decl : in out O_Dnode; Val : O_Cnode);
 
    --  Create a variable declaration.
    --  A variable can be local only inside a function.
@@ -538,8 +538,8 @@ private
    pragma Inline (New_Type_Decl);
    pragma Inline (New_Const_Decl);
 
-   pragma Inline (Start_Const_Value);
-   pragma Inline (Finish_Const_Value);
+   pragma Inline (Start_Init_Value);
+   pragma Inline (Finish_Init_Value);
    pragma Inline (New_Var_Decl);
 
    pragma Inline (New_Obj);

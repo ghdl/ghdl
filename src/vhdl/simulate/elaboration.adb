@@ -21,14 +21,14 @@ with Str_Table;
 with Errorout; use Errorout;
 with Evaluation;
 with Execution; use Execution;
-with Simulation; use Simulation;
+--with Simulation; use Simulation;
 with Iirs_Utils; use Iirs_Utils;
 with Libraries;
 with Name_Table;
 with File_Operation;
 with Iir_Chains; use Iir_Chains;
 with Grt.Types; use Grt.Types;
-with Simulation.AMS; use Simulation.AMS;
+with Elaboration.AMS; use Elaboration.AMS;
 with Areapools; use Areapools;
 with Grt.Errors;
 with Grt.Options;
@@ -2817,6 +2817,8 @@ package body Elaboration is
       --  Use a 'fake' process to execute code during elaboration.
       Current_Process := No_Process;
 
+      Instance_Pool := Global_Pool'Access;
+
       pragma Assert (Is_Empty (Expr_Pool));
 
       --  Find architecture and configuration for the top unit
@@ -2865,6 +2867,8 @@ package body Elaboration is
         (Arch, Conf, null, Arch, Generic_Map, Port_Map);
 
       Current_Process := null;
+
+      Instance_Pool := null;
 
       --  Stop now in case of errors.
       if Nbr_Errors /= 0 then

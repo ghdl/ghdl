@@ -432,16 +432,16 @@ package body Trans is
          if Storage /= O_Storage_External
            and then Initial_Value /= O_Cnode_Null
          then
-            Start_Const_Value (Res);
-            Finish_Const_Value (Res, Initial_Value);
+            Start_Init_Value (Res);
+            Finish_Init_Value (Res, Initial_Value);
          end if;
          return Var_Type'(Kind => Var_Global, E => Res);
       end Create_Global_Const;
 
       procedure Define_Global_Const (Const : in out Var_Type; Val : O_Cnode) is
       begin
-         Start_Const_Value (Const.E);
-         Finish_Const_Value (Const.E, Val);
+         Start_Init_Value (Const.E);
+         Finish_Init_Value (Const.E, Val);
       end Define_Global_Const;
 
       function Create_Var
@@ -888,6 +888,16 @@ package body Trans is
       begin
          return Get_Identifier (Identifier_Buffer (1 .. Identifier_Len - 2));
       end Create_Identifier;
+
+      function Create_Elab_Identifier (Kind : Elab_Kind) return O_Ident is
+      begin
+         case Kind is
+            when Elab_Decls =>
+               return Create_Identifier ("DECL_ELAB");
+            when Elab_Stmts =>
+               return Create_Identifier ("STMT_ELAB");
+         end case;
+      end Create_Elab_Identifier;
 
       function Create_Var_Identifier_From_Buffer (L : Natural)
                                                   return Var_Ident_Type

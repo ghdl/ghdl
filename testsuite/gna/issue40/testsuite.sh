@@ -1,8 +1,9 @@
 #! /bin/sh
 
 . ../../testenv.sh
+analyze_failure test.vhdl
+analyze_failure test2.vhdl
 
-analyze_failure bug.vhdl
 clean
 
 echo "Test successful"
