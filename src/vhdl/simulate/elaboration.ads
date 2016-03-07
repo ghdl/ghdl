@@ -39,12 +39,20 @@ package Elaboration is
    type Objects_Array is array (Object_Slot_Type range <>) of
      Iir_Value_Literal_Acc;
 
+   type Block_Instance_Id is new Natural;
+   No_Block_Instance_Id : constant Block_Instance_Id := 0;
+
+   --  Number of block instances and also Id of the last one.
+   Nbr_Block_Instances : Block_Instance_Id := 0;
+
    -- A block instance with its architecture/entity declaration is an
    -- instancied entity.
 
    type Block_Instance_Type (Max_Objs : Object_Slot_Type) is record
       --  Flag for wait statement: true if not yet executed.
       In_Wait_Flag : Boolean;
+
+      Id : Block_Instance_Id;
 
       -- Useful informations for a dynamic block (ie, a frame).
       -- The scope level and an access to the block of upper scope level.
@@ -142,6 +150,7 @@ package Elaboration is
    type Package_Instances_Array is array (Pkg_Index_Type range <>) of
      Block_Instance_Acc;
    type Package_Instances_Array_Acc is access Package_Instances_Array;
+
    Package_Instances : Package_Instances_Array_Acc;
 
    --  Disconnections.  For each disconnection specification, the elaborator

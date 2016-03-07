@@ -21,7 +21,6 @@ with Str_Table;
 with Errorout; use Errorout;
 with Evaluation;
 with Execution; use Execution;
---with Simulation; use Simulation;
 with Iirs_Utils; use Iirs_Utils;
 with Libraries;
 with Name_Table;
@@ -318,8 +317,11 @@ package body Elaboration is
       Obj_Info : constant Sim_Info_Acc := Get_Info (Obj);
       Res : Block_Instance_Acc;
    begin
+      Nbr_Block_Instances := Nbr_Block_Instances + 1;
+
       Res := new Block_Instance_Type'
         (Max_Objs => Obj_Info.Nbr_Objects,
+         Id => Nbr_Block_Instances,
          Block_Scope => Obj_Info.Frame_Scope,
          Up_Block => Father,
          Label => Stmt,
