@@ -183,6 +183,7 @@ package Elaboration is
       Table_Initial => 32);
 
    --  Signals.
+   --  FIXME: use Mode_Signal_Type instead ?
    type Signal_Type_Kind is
      (User_Signal,
       Implicit_Quiet, Implicit_Stable, Implicit_Delayed,
@@ -199,7 +200,7 @@ package Elaboration is
             null;
          when Implicit_Quiet | Implicit_Stable | Implicit_Delayed
            | Implicit_Transaction =>
-            Time : Grt.Types.Ghdl_I64;
+            Time : Grt.Types.Std_Time;
             Prefix : Iir_Value_Literal_Acc;
          when Guard_Signal =>
             null;

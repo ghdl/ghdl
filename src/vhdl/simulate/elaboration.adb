@@ -218,7 +218,7 @@ package body Elaboration is
                                    Sig => Sig,
                                    Val => Init,
                                    Instance => Instance,
-                                   Time => T,
+                                   Time => Std_Time (T),
                                    Prefix => Prefix));
          when Implicit_Quiet =>
             Signals_Table.Append ((Kind => Implicit_Quiet,
@@ -226,7 +226,7 @@ package body Elaboration is
                                    Sig => Sig,
                                    Val => Init,
                                    Instance => Instance,
-                                   Time => T,
+                                   Time => Std_Time (T),
                                    Prefix => Prefix));
          when Implicit_Transaction =>
             Signals_Table.Append ((Kind => Implicit_Transaction,
@@ -299,7 +299,7 @@ package body Elaboration is
                              Sig => Sig,
                              Val => Init,
                              Instance => Instance,
-                             Time => T,
+                             Time => Std_Time (T),
                              Prefix => Prefix));
    end Elaborate_Delayed_Signal;
 

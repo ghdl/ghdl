@@ -849,7 +849,7 @@ package body Simulation.Main is
 
    procedure Create_Implicit_Signal (Sig : Iir_Value_Literal_Acc;
                                      Val : Iir_Value_Literal_Acc;
-                                     Time : Ghdl_I64;
+                                     Time : Std_Time;
                                      Prefix : Iir_Value_Literal_Acc;
                                      Kind : Signal_Type_Kind)
    is
@@ -874,10 +874,10 @@ package body Simulation.Main is
       case Kind is
          when Implicit_Stable =>
             Sig.Sig := Grt.Signals.Ghdl_Create_Stable_Signal
-              (To_Ghdl_Value_Ptr (Val.B1'Address), Std_Time (Time));
+              (To_Ghdl_Value_Ptr (Val.B1'Address), Time);
          when Implicit_Quiet =>
             Sig.Sig := Grt.Signals.Ghdl_Create_Quiet_Signal
-              (To_Ghdl_Value_Ptr (Val.B1'Address), Std_Time (Time));
+              (To_Ghdl_Value_Ptr (Val.B1'Address), Time);
          when Implicit_Transaction =>
             Sig.Sig := Grt.Signals.Ghdl_Create_Transaction_Signal
               (To_Ghdl_Value_Ptr (Val.B1'Address));
@@ -1076,8 +1076,7 @@ package body Simulation.Main is
                   Create_Implicit_Signal
                     (E.Sig, E.Val, E.Time, E.Prefix, E.Kind);
                when Implicit_Delayed =>
-                  Create_Delayed_Signal (E.Sig, E.Val,
-                                         E.Prefix, Std_Time (E.Time));
+                  Create_Delayed_Signal (E.Sig, E.Val, E.Prefix, E.Time);
                when User_Signal =>
                   Create_User_Signal (E.Instance, E.Decl, E.Sig, E.Val);
             end case;
