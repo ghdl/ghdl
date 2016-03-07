@@ -41,6 +41,7 @@ with Execution; use Execution;
 --with Simulation; use Simulation;
 with Iirs_Walk; use Iirs_Walk;
 with Areapools; use Areapools;
+with Grt.Types;
 with Grt.Disp;
 with Grt.Readline;
 with Grt.Errors;
@@ -640,34 +641,37 @@ package body Debugger is
 
    procedure Disp_Signals_Stats
    is
-      type Counters_Type is array (Signal_Type_Kind) of Natural;
+      use Grt.Types;
+      type Counters_Type is array (Mode_Signal_Type) of Natural;
       Counters : Counters_Type := (others => 0);
+      Nbr_User_Signals : Natural := 0;
       Nbr_Signal_Elements : Natural := 0;
    begin
       for I in Signals_Table.First .. Signals_Table.Last loop
          declare
             Ent : Signal_Entry renames Signals_Table.Table (I);
          begin
-            if Ent.Kind = User_Signal then
+            if Ent.Kind in Mode_Signal_User then
+               Nbr_User_Signals := Nbr_User_Signals + 1;
                Nbr_Signal_Elements := Nbr_Signal_Elements +
                  Get_Nbr_Of_Scalars (Signals_Table.Table (I).Sig);
             end if;
             Counters (Ent.Kind) := Counters (Ent.Kind) + 1;
          end;
       end loop;
-      Put (Integer'Image (Counters (User_Signal)));
+      Put (Integer'Image (Nbr_User_Signals));
       Put_Line (" declared user signals or ports");
       Put (Integer'Image (Nbr_Signal_Elements));
       Put_Line (" user signals sub-elements");
-      Put (Integer'Image (Counters (Implicit_Quiet)));
+      Put (Integer'Image (Counters (Mode_Quiet)));
       Put_Line (" 'quiet implicit signals");
-      Put (Integer'Image (Counters (Implicit_Stable)));
+      Put (Integer'Image (Counters (Mode_Stable)));
       Put_Line (" 'stable implicit signals");
-      Put (Integer'Image (Counters (Implicit_Delayed)));
+      Put (Integer'Image (Counters (Mode_Delayed)));
       Put_Line (" 'delayed implicit signals");
-      Put (Integer'Image (Counters (Implicit_Transaction)));
+      Put (Integer'Image (Counters (Mode_Transaction)));
       Put_Line (" 'transaction implicit signals");
-      Put (Integer'Image (Counters (Guard_Signal)));
+      Put (Integer'Image (Counters (Mode_Guard)));
       Put_Line (" guard signals");
    end Disp_Signals_Stats;
 
@@ -1544,7 +1548,7 @@ package body Debugger is
             begin
                Disp_Instance_Name (S.Instance, False);
                Put ('.');
-               if S.Kind = User_Signal then
+               if S.Kind in Grt.Types.Mode_Signal_User then
                   Put (Name_Table.Image (Get_Identifier (S.Decl)));
                   Disp_Value (S.Sig);
                   Disp_Value (S.Val);

@@ -21,7 +21,7 @@ with Tables;
 with Types; use Types;
 with Iirs; use Iirs;
 with Iir_Values; use Iir_Values;
-with Grt.Types;
+with Grt.Types; use Grt.Types;
 with Annotations; use Annotations;
 with Areapools;
 
@@ -183,26 +183,23 @@ package Elaboration is
       Table_Initial => 32);
 
    --  Signals.
-   --  FIXME: use Mode_Signal_Type instead ?
-   type Signal_Type_Kind is
-     (User_Signal,
-      Implicit_Quiet, Implicit_Stable, Implicit_Delayed,
-      Implicit_Transaction,
-      Guard_Signal);
 
-   type Signal_Entry (Kind : Signal_Type_Kind := User_Signal) is record
+   type Signal_Entry (Kind : Mode_Signal_Type := Mode_Signal) is record
       Decl : Iir;
       Sig : Iir_Value_Literal_Acc;
       Val : Iir_Value_Literal_Acc;
       Instance : Block_Instance_Acc;
       case Kind is
-         when User_Signal =>
+         when Mode_Signal_User =>
             null;
-         when Implicit_Quiet | Implicit_Stable | Implicit_Delayed
-           | Implicit_Transaction =>
-            Time : Grt.Types.Std_Time;
+         when Mode_Quiet | Mode_Stable | Mode_Delayed
+           | Mode_Transaction =>
+            Time : Std_Time;
             Prefix : Iir_Value_Literal_Acc;
-         when Guard_Signal =>
+         when Mode_Guard =>
+            null;
+         when Mode_Conv_In | Mode_Conv_Out | Mode_End =>
+            --  Unused.
             null;
       end case;
    end record;
