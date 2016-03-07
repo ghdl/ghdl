@@ -36,38 +36,86 @@ with Translation; use Translation;
 with Trans_Decls; use Trans_Decls;
 
 package body Trans.Chap12 is
-   --  Create __ghdl_ELABORATE
-   procedure Gen_Main (Entity : Iir_Entity_Declaration;
-                       Arch : Iir_Architecture_Body;
-                       Config_Subprg : O_Dnode;
-                       Nbr_Pkgs : Natural)
+   Elab_Nbr_Pkgs : Natural;
+   Pkgs_Arr : O_Dnode;
+
+   --  Declare top RTIARRAY and ghdl_ELABORATE.
+   procedure Gen_Elab_Decls
    is
-      Entity_Info : constant Block_Info_Acc := Get_Info (Entity);
-      Arch_Info : constant Block_Info_Acc := Get_Info (Arch);
       Inter_List : O_Inter_List;
-      Assoc : O_Assoc_List;
-      Instance : O_Dnode;
-      Arch_Instance : O_Dnode;
-      Mark : Id_Mark_Type;
       Arr_Type : O_Tnode;
-      Arr : O_Dnode;
    begin
       --  We need to create code.
       Set_Global_Storage (O_Storage_Private);
+
+      Rtis.Generate_Top (Elab_Nbr_Pkgs);
+
+      declare
+         Cst : O_Dnode;
+         pragma Unreferenced (Cst);
+      begin
+         Cst := Create_String (Flags.Flag_String,
+                               Get_Identifier ("__ghdl_flag_string"),
+                               O_Storage_Public);
+      end;
 
       --  Create the array of RTIs for packages (as a variable, initialized
       --  during elaboration).
       Arr_Type := New_Constrained_Array_Type
         (Rtis.Ghdl_Rti_Array,
-         New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (Nbr_Pkgs)));
-      New_Var_Decl (Arr, Get_Identifier ("__ghdl_top_RTIARRAY"),
+         New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (Elab_Nbr_Pkgs)));
+      New_Var_Decl (Pkgs_Arr, Get_Identifier ("__ghdl_top_RTIARRAY"),
                     O_Storage_Private, Arr_Type);
 
       --  The elaboration entry point.
       Start_Procedure_Decl (Inter_List, Get_Identifier ("__ghdl_ELABORATE"),
                             O_Storage_Public);
       Finish_Subprogram_Decl (Inter_List, Ghdl_Elaborate);
+   end Gen_Elab_Decls;
 
+   procedure Call_Elab_Decls (Arch : Iir; Arch_Instance : O_Enode)
+   is
+      Assoc : O_Assoc_List;
+   begin
+      --  Set top instances and RTI.
+      --  Do it before the elaboration code, since it may be used to
+      --  diagnose errors.
+      --  Call ghdl_rti_add_top
+      Start_Association (Assoc, Ghdl_Rti_Add_Top);
+      New_Association
+        (Assoc, New_Lit (New_Unsigned_Literal (Ghdl_Index_Type,
+                                               Unsigned_64 (Elab_Nbr_Pkgs))));
+      New_Association
+        (Assoc, New_Lit (New_Global_Address
+                           (Pkgs_Arr, Rtis.Ghdl_Rti_Arr_Acc)));
+      New_Association
+        (Assoc,
+         New_Lit (Rtis.New_Rti_Address (Get_Info (Arch).Block_Rti_Const)));
+      New_Association
+        (Assoc, New_Convert_Ov (Arch_Instance, Ghdl_Ptr_Type));
+      New_Procedure_Call (Assoc);
+
+      --  Add std.standard rti
+      Start_Association (Assoc, Ghdl_Rti_Add_Package);
+      New_Association
+        (Assoc,
+         New_Lit (Rtis.New_Rti_Address
+                    (Get_Info (Standard_Package).Package_Rti_Const)));
+      New_Procedure_Call (Assoc);
+   end Call_Elab_Decls;
+
+   --  Create __ghdl_ELABORATE
+   procedure Gen_Main (Entity : Iir_Entity_Declaration;
+                       Arch : Iir_Architecture_Body;
+                       Config_Subprg : O_Dnode)
+   is
+      Entity_Info : constant Block_Info_Acc := Get_Info (Entity);
+      Arch_Info : constant Block_Info_Acc := Get_Info (Arch);
+      Assoc : O_Assoc_List;
+      Instance : O_Dnode;
+      Arch_Instance : O_Dnode;
+      Mark : Id_Mark_Type;
+   begin
       Start_Subprogram_Body (Ghdl_Elaborate);
       New_Var_Decl (Arch_Instance, Wki_Arch_Instance,
                     O_Storage_Local, Arch_Info.Block_Decls_Ptr_Type);
@@ -97,30 +145,7 @@ package body Trans.Chap12 is
             Rtis.Ghdl_Entity_Link_Parent),
          New_Lit (New_Null_Access (Rtis.Ghdl_Component_Link_Acc)));
 
-      --  Set top instances and RTI.
-      --  Do it before the elaboration code, since it may be used to
-      --  diagnose errors.
-      --  Call ghdl_rti_add_top
-      Start_Association (Assoc, Ghdl_Rti_Add_Top);
-      New_Association
-        (Assoc, New_Lit (New_Unsigned_Literal (Ghdl_Index_Type,
-                                               Unsigned_64 (Nbr_Pkgs))));
-      New_Association
-        (Assoc, New_Lit (New_Global_Address (Arr, Rtis.Ghdl_Rti_Arr_Acc)));
-      New_Association
-        (Assoc,
-         New_Lit (Rtis.New_Rti_Address (Get_Info (Arch).Block_Rti_Const)));
-      New_Association
-        (Assoc, New_Convert_Ov (New_Obj_Value (Arch_Instance), Ghdl_Ptr_Type));
-      New_Procedure_Call (Assoc);
-
-      --  Add std.standard rti
-      Start_Association (Assoc, Ghdl_Rti_Add_Package);
-      New_Association
-        (Assoc,
-         New_Lit (Rtis.New_Rti_Address
-                    (Get_Info (Standard_Package).Package_Rti_Const)));
-      New_Procedure_Call (Assoc);
+      Call_Elab_Decls (Arch, New_Obj_Value (Arch_Instance));
 
       Gen_Filename (Get_Design_File (Get_Design_Unit (Entity)));
 
@@ -156,16 +181,6 @@ package body Trans.Chap12 is
 
       Current_Filename_Node := O_Dnode_Null;
    end Gen_Main;
-
-   procedure Gen_Setup_Info
-   is
-      Cst : O_Dnode;
-      pragma Unreferenced (Cst);
-   begin
-      Cst := Create_String (Flags.Flag_String,
-                            Get_Identifier ("__ghdl_flag_string"),
-                            O_Storage_Public);
-   end Gen_Setup_Info;
 
    procedure Gen_Last_Arch (Entity : Iir_Entity_Declaration)
    is
@@ -561,7 +576,6 @@ package body Trans.Chap12 is
       Arch : Iir_Architecture_Body;
       Conf_Info : Config_Info_Acc;
       Last_Design_Unit : Natural;
-      Nbr_Pkgs : Natural;
    begin
       Config := Configure (Primary, Secondary);
       if Config = Null_Iir then
@@ -679,13 +693,11 @@ package body Trans.Chap12 is
          end case;
       end loop;
 
-      Rtis.Generate_Top (Nbr_Pkgs);
+      Gen_Elab_Decls;
 
       --  Create main code.
       Conf_Info := Get_Info (Config_Lib);
-      Gen_Main (Entity, Arch, Conf_Info.Config_Subprg, Nbr_Pkgs);
-
-      Gen_Setup_Info;
+      Gen_Main (Entity, Arch, Conf_Info.Config_Subprg);
 
       --  Index of the last design unit, required by the design.
       Last_Design_Unit := Design_Units.Last;

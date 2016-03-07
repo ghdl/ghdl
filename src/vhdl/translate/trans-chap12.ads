@@ -17,6 +17,11 @@
 --  02111-1307, USA.
 
 package Trans.Chap12 is
+   --  Generate ortho declarations for elaboration.
+   procedure Gen_Elab_Decls;
+
+   procedure Call_Elab_Decls (Arch : Iir; Arch_Instance : O_Enode);
+
    --  Primary unit + secondary unit (architecture name which may be null)
    --  to elaborate.
    procedure Elaborate (Primary : String;
