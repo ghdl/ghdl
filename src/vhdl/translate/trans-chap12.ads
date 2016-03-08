@@ -20,7 +20,11 @@ package Trans.Chap12 is
    --  Generate ortho declarations for elaboration.
    procedure Gen_Elab_Decls;
 
+   --  Generate ortho code to elaborate declaration of the top unit.
    procedure Call_Elab_Decls (Arch : Iir; Arch_Instance : O_Enode);
+
+   --  Write to file FILELIST all the files that are needed to link the design.
+   procedure Write_File_List (Filelist : String);
 
    --  Primary unit + secondary unit (architecture name which may be null)
    --  to elaborate.

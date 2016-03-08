@@ -422,7 +422,7 @@ package body Trans.Chap12 is
    end Gen_Dummy_Package_Declaration;
 
    --  Write to file FILELIST all the files that are needed to link the design.
-   procedure Write_File_List (Filelist : String)
+   procedure Gen_Stubs
    is
       use Interfaces.C_Streams;
       use System;
@@ -505,24 +505,10 @@ package body Trans.Chap12 is
          end loop;
       end Add_File_Units;
 
-      Nul : constant Character := Character'Val (0);
-      Fname : String := Filelist & Nul;
-      Mode : constant String := "wt" & Nul;
-      F : FILEs;
-      R : int;
-      S : size_t;
-      pragma Unreferenced (R, S); -- FIXME
-      Id : Name_Id;
-      Lib : Iir_Library_Declaration;
       File : Iir_Design_File;
       Unit : Iir_Design_Unit;
       J : Natural;
    begin
-      F := fopen (Fname'Address, Mode'Address);
-      if F = NULL_Stream then
-         Error_Msg_Elab ("cannot open " & Filelist);
-      end if;
-
       --  Set elab flags on units, and remove it on design files.
       for I in Design_Units.First .. Design_Units.Last loop
          Unit := Design_Units.Table (I);
@@ -541,6 +527,48 @@ package body Trans.Chap12 is
             --  Add dependences of unused design units, otherwise the object
             --  link case failed.
             Add_File_Units (File);
+         end if;
+         J := J + 1;
+      end loop;
+   end Gen_Stubs;
+
+   --  Write to file FILELIST all the files that are needed to link the design.
+   procedure Write_File_List (Filelist : String)
+   is
+      use Interfaces.C_Streams;
+      use System;
+      use Configuration;
+      use Name_Table;
+
+      Nul : constant Character := Character'Val (0);
+      Fname : String := Filelist & Nul;
+      Mode : constant String := "wt" & Nul;
+      F : FILEs;
+      R : int;
+      S : size_t;
+      pragma Unreferenced (R, S); -- FIXME
+      Id : Name_Id;
+      Lib : Iir_Library_Declaration;
+      File : Iir_Design_File;
+      Unit : Iir_Design_Unit;
+   begin
+      F := fopen (Fname'Address, Mode'Address);
+      if F = NULL_Stream then
+         Error_Msg_Elab ("cannot open " & Filelist);
+      end if;
+
+      --  Clear elab flags on design files.
+      for I in Design_Units.First .. Design_Units.Last loop
+         Unit := Design_Units.Table (I);
+         File := Get_Design_File (Unit);
+         Set_Elab_Flag (File, False);
+      end loop;
+
+      for J in Design_Units.First .. Design_Units.Last loop
+         Unit := Design_Units.Table (J);
+         File := Get_Design_File (Unit);
+         if not Get_Elab_Flag (File) then
+            Set_Elab_Flag (File, True);
 
             --  Write '>LIBRARY_DIRECTORY'.
             Lib := Get_Library (File);
@@ -556,8 +584,9 @@ package body Trans.Chap12 is
                          size_t (Get_Name_Length (Id)), 1, F);
             R := fputc (10, F);
          end if;
-         J := J + 1;
       end loop;
+
+      R := fclose (F);
    end Write_File_List;
 
    procedure Elaborate (Primary : String;
@@ -702,12 +731,20 @@ package body Trans.Chap12 is
       --  Index of the last design unit, required by the design.
       Last_Design_Unit := Design_Units.Last;
 
-      --  Disp list of files needed.
-      --  FIXME: extract the link completion part of WRITE_FILE_LIST.
+      --  A design file may contain unused units that depends on other files.
+      --  In order to have all symbols resolved, also add unused packages and
+      --  generate stubs for referenced (but unused) entities and
+      --  configurations.
+      if not Whole then
+         Gen_Stubs;
+      end if;
+
+      --  Write the file containing the list of object files.
       if Filelist /= "" then
          Write_File_List (Filelist);
       end if;
 
+      --  Disp list of files needed.
       if Flags.Verbose then
          Ada.Text_IO.Put_Line ("List of units not used:");
          for I in Last_Design_Unit + 1 .. Design_Units.Last loop
