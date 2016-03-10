@@ -51,10 +51,10 @@ Then, you have to build an executable file.
   $ ghdl -e hello_world
 
 The :option:`-e` option means :dfn:`elaborate`.  With this option, `GHDL`
-creates code in order to elaborate a design, with the :samp:`hello`
+creates code in order to elaborate a design, with the :samp:`hello_world`
 entity at the top of the hierarchy.
 
-On GNU/Linux, the result is an executable program called :file:`hello`
+On GNU/Linux, the result is an executable program called :file:`hello_world`
 which can be run:
 
 .. code-block:: shell
