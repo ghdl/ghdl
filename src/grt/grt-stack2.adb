@@ -57,26 +57,24 @@ package body Grt.Stack2 is
 
    function Mark (S : Stack2_Ptr) return Mark_Id
    is
-      S2 : Stack2_Acc;
+      S2 : constant Stack2_Acc := To_Acc (S);
    begin
-      S2 := To_Acc (S);
       return S2.Top;
    end Mark;
 
    procedure Release (S : Stack2_Ptr; Mark : Mark_Id)
    is
-      S2 : Stack2_Acc;
+      S2 : constant Stack2_Acc := To_Acc (S);
    begin
-      S2 := To_Acc (S);
       S2.Top := Mark;
    end Release;
 
    function Allocate (S : Stack2_Ptr; Size : Ghdl_Index_Type)
-     return System.Address
+                     return System.Address
    is
       pragma Suppress (All_Checks);
 
-      S2 : Stack2_Acc;
+      S2 : constant Stack2_Acc := To_Acc (S);
       Chunk : Chunk_Acc;
       N_Chunk : Chunk_Acc;
 
@@ -86,8 +84,6 @@ package body Grt.Stack2 is
 
       Res : System.Address;
    begin
-      S2 := To_Acc (S);
-
       --  Find the chunk to which S2.TOP belong.
       Chunk := S2.First_Chunk;
       loop
@@ -98,7 +94,7 @@ package body Grt.Stack2 is
 
       if Chunk /= null then
          --  If there is enough place in it, allocate from the chunk.
-         if S2.Top + Max_Size <= Chunk.Last then
+         if Max_Size <= Chunk.Last - S2.Top + 1 then
             Res := Chunk.Mem (S2.Top)'Address;
             S2.Top := S2.Top + Max_Size;
             return Res;
