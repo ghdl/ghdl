@@ -277,7 +277,7 @@ package body Grt.Backtraces is
    is
       F : constant Natural := Opt'First;
    begin
-      if Opt'Length < 10 or else Opt (F .. F + 10) /= "--backtrace" then
+      if Opt'Length < 11 or else Opt (F .. F + 10) /= "--backtrace" then
          return False;
       end if;
       if Opt'Length = 16 and then Opt (F + 11 .. F + 15) = "-addr" then
