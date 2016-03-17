@@ -31,6 +31,7 @@ package Grt.Astdio is
 
    --  Procedures to disp on STREAM.
    procedure Put (Stream : FILEs; Str : String);
+   procedure Put_Line (Stream : FILEs; Str : String);
    procedure Put_I32 (Stream : FILEs; I32 : Ghdl_I32);
    procedure Put_U32 (Stream : FILEs; U32 : Ghdl_U32);
    procedure Put_I64 (Stream : FILEs; I64 : Ghdl_I64);

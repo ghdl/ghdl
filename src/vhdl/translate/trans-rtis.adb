@@ -309,6 +309,9 @@ package body Trans.Rtis is
          New_Enum_Literal
            (Constr, Get_Identifier ("__ghdl_rtik_psl_assert"),
             Ghdl_Rtik_Psl_Assert);
+         New_Enum_Literal
+           (Constr, Get_Identifier ("__ghdl_rtik_psl_cover"),
+            Ghdl_Rtik_Psl_Cover);
 
          New_Enum_Literal (Constr, Get_Identifier ("__ghdl_rtik_error"),
                            Ghdl_Rtik_Error);
@@ -1970,13 +1973,58 @@ package body Trans.Rtis is
             Val := Var_Acc_To_Loc (Var);
          end if;
          New_Record_Aggr_El (List, Val);
-         New_Record_Aggr_El (List, New_Rti_Address (Type_Info.Type_Rti));
+         Val := New_Rti_Address (Type_Info.Type_Rti);
+         New_Record_Aggr_El (List, Val);
          New_Record_Aggr_El (List, Generate_Linecol (Decl));
          Finish_Record_Aggr (List, Val);
          Finish_Init_Value (Rti, Val);
       end if;
       Pop_Identifier_Prefix (Mark);
    end Generate_Object;
+
+   procedure Generate_Psl_Directive (Decl : Iir)
+   is
+      Info : constant Psl_Info_Acc := Get_Info (Decl);
+      Name : O_Dnode;
+      Kind : O_Cnode;
+      Val  : O_Cnode;
+      List : O_Record_Aggr_List;
+      Mark : Id_Mark_Type;
+      Field_Off : O_Cnode;
+   begin
+      pragma Assert (Global_Storage /= O_Storage_External);
+
+      Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
+
+      New_Const_Decl (Info.Psl_Rti_Const, Create_Identifier ("RTI"),
+                      Global_Storage, Ghdl_Rtin_Object);
+
+      Name := Generate_Name (Decl);
+
+      Start_Init_Value (Info.Psl_Rti_Const);
+      Start_Record_Aggr (List, Ghdl_Rtin_Object);
+      case Get_Kind (Decl) is
+         when Iir_Kind_Psl_Cover_Statement =>
+            Kind := Ghdl_Rtik_Psl_Cover;
+         when Iir_Kind_Psl_Assert_Statement =>
+            Kind := Ghdl_Rtik_Psl_Assert;
+         when others =>
+            Error_Kind ("rti.generate_psl_directive", Decl);
+      end case;
+      New_Record_Aggr_El (List, Generate_Common (Kind));
+      New_Record_Aggr_El (List, New_Name_Address (Name));
+
+      Field_Off := Get_Scope_Offset (Info.Psl_Scope, Ghdl_Ptr_Type);
+      New_Record_Aggr_El (List, Field_Off);
+      New_Record_Aggr_El (List, New_Null_Access (Ghdl_Rti_Access));
+      New_Record_Aggr_El (List, Generate_Linecol (Decl));
+      Finish_Record_Aggr (List, Val);
+      Finish_Init_Value (Info.Psl_Rti_Const, Val);
+
+      Pop_Identifier_Prefix (Mark);
+
+      Add_Rti_Node (Info.Psl_Rti_Const);
+   end Generate_Psl_Directive;
 
    procedure Generate_Block (Blk : Iir; Parent_Rti : O_Dnode);
    procedure Generate_If_Generate_Statement (Blk : Iir; Parent_Rti : O_Dnode);
@@ -2149,32 +2197,6 @@ package body Trans.Rtis is
       Add_Rti_Node (Info.Block_Rti_Const);
    end Generate_Instance;
 
-   procedure Generate_Psl_Directive (Stmt : Iir)
-   is
-      Name : O_Dnode;
-      List : O_Record_Aggr_List;
-
-      Rti  : O_Dnode;
-      Res  : O_Cnode;
-      Info : constant Psl_Info_Acc := Get_Info (Stmt);
-      Mark : Id_Mark_Type;
-   begin
-      Push_Identifier_Prefix (Mark, Get_Identifier (Stmt));
-      Name := Generate_Name (Stmt);
-
-      New_Const_Decl (Rti, Create_Identifier ("RTI"),
-                      O_Storage_Public, Ghdl_Rtin_Type_Scalar);
-
-      Start_Init_Value (Rti);
-      Start_Record_Aggr (List, Ghdl_Rtin_Type_Scalar);
-      New_Record_Aggr_El (List, Generate_Common (Ghdl_Rtik_Psl_Assert));
-      New_Record_Aggr_El (List, New_Global_Address (Name, Char_Ptr_Type));
-      Finish_Record_Aggr (List, Res);
-      Finish_Init_Value (Rti, Res);
-      Info.Psl_Rti_Const := Rti;
-      Pop_Identifier_Prefix (Mark);
-   end Generate_Psl_Directive;
-
    procedure Generate_Declaration_Chain (Chain : Iir)
    is
       Decl : Iir;
@@ -2312,9 +2334,8 @@ package body Trans.Rtis is
                null;
             when Iir_Kind_Psl_Declaration =>
                null;
-            when Iir_Kind_Psl_Assert_Statement =>
-               Generate_Psl_Directive (Stmt);
-            when Iir_Kind_Psl_Cover_Statement =>
+            when Iir_Kind_Psl_Assert_Statement
+              | Iir_Kind_Psl_Cover_Statement =>
                Generate_Psl_Directive (Stmt);
             when others =>
                Error_Kind ("rti.generate_concurrent_statement_chain", Stmt);

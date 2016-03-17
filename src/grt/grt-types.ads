@@ -279,6 +279,12 @@ package Grt.Types is
 
    type Ghdl_Range_Array is array (Ghdl_Index_Type range <>) of Ghdl_Range_Ptr;
 
+   --  For PSL counters.
+   type Ghdl_Index_Ptr is access all Ghdl_Index_Type;
+
+   function To_Ghdl_Index_Ptr is new Ada.Unchecked_Conversion
+     (Source => Address, Target => Ghdl_Index_Ptr);
+
    --  Mode of a signal.
    type Mode_Signal_Type is
      (Mode_Signal,

@@ -1317,8 +1317,8 @@ package Trans is
             --  State vector variable.
             Psl_Vect_Var : Var_Type;
 
-            --  Boolean variable (for cover)
-            Psl_Bool_Var : Var_Type;
+            --  Counter variable (nbr of failures or coverage)
+            Psl_Count_Var : Var_Type;
 
             --  RTI for the process.
             Psl_Rti_Const : O_Dnode := O_Dnode_Null;

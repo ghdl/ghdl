@@ -55,7 +55,7 @@ package Grt.Rtis is
       Ghdl_Rtik_Generic,
       Ghdl_Rtik_Alias,
 
-      Ghdl_Rtik_Guard,
+      Ghdl_Rtik_Guard,          -- 20
       Ghdl_Rtik_Component,
       Ghdl_Rtik_Attribute,
       Ghdl_Rtik_Type_B1,        --  Enum
@@ -67,7 +67,7 @@ package Grt.Rtis is
       Ghdl_Rtik_Type_F64,
       Ghdl_Rtik_Type_P32,
 
-      Ghdl_Rtik_Type_P64,
+      Ghdl_Rtik_Type_P64,       -- 30
       Ghdl_Rtik_Type_Access,
       Ghdl_Rtik_Type_Array,
       Ghdl_Rtik_Type_Record,
@@ -79,7 +79,7 @@ package Grt.Rtis is
       Ghdl_Rtik_Subtype_Record,
       Ghdl_Rtik_Subtype_Access,
 
-      Ghdl_Rtik_Type_Protected,
+      Ghdl_Rtik_Type_Protected, -- 40
       Ghdl_Rtik_Element,
       Ghdl_Rtik_Unit64,
       Ghdl_Rtik_Unitptr,
@@ -87,8 +87,13 @@ package Grt.Rtis is
 
       Ghdl_Rtik_Attribute_Quiet,
       Ghdl_Rtik_Attribute_Stable,
+      Ghdl_Rtik_Psl_Assert,
+      Ghdl_Rtik_Psl_Cover,
       Ghdl_Rtik_Error);
    for Ghdl_Rtik'Size use 8;
+
+   subtype Ghdl_Rtiks_Psl is
+     Ghdl_Rtik range Ghdl_Rtik_Psl_Assert .. Ghdl_Rtik_Psl_Cover;
 
    type Ghdl_Rti_Depth is range 0 .. 255;
    for Ghdl_Rti_Depth'Size use 8;

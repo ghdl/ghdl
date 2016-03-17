@@ -315,13 +315,11 @@ package body Trans.Chap9 is
       New_Type_Decl (Create_Identifier ("VECTTYPE"), Info.Psl_Vect_Type);
 
       --  Create the variables.
+      Info.Psl_Count_Var := Create_Var
+        (Create_Var_Identifier ("COUNT"), Ghdl_Index_Type);
+
       Info.Psl_Vect_Var := Create_Var
         (Create_Var_Identifier ("VECT"), Info.Psl_Vect_Type);
-
-      if Get_Kind (Stmt) = Iir_Kind_Psl_Cover_Statement then
-         Info.Psl_Bool_Var := Create_Var
-           (Create_Var_Identifier ("BOOL"), Ghdl_Bool_Type);
-      end if;
 
       Pop_Instance_Factory (Info.Psl_Scope'Access);
       New_Type_Decl (Create_Identifier ("INSTTYPE"),
@@ -438,18 +436,6 @@ package body Trans.Chap9 is
       --  New state vector.
       New_Var_Decl (Var_Nvec, Wki_Res, O_Storage_Local, Info.Psl_Vect_Type);
 
-      --  For cover directive, return now if already covered.
-      case Get_Kind (Stmt) is
-         when Iir_Kind_Psl_Assert_Statement =>
-            null;
-         when Iir_Kind_Psl_Cover_Statement =>
-            Start_If_Stmt (S_Blk, New_Value (Get_Var (Info.Psl_Bool_Var)));
-            New_Return_Stmt;
-            Finish_If_Stmt (S_Blk);
-         when others =>
-            Error_Kind ("Translate_Psl_Directive_Statement(1)", Stmt);
-      end case;
-
       --  Initialize the new state vector.
       Start_Declare_Stmt;
       New_Var_Decl (Var_I, Wki_I, O_Storage_Local, Ghdl_Index_Type);
@@ -539,11 +525,13 @@ package body Trans.Chap9 is
          when Iir_Kind_Psl_Cover_Statement =>
             Chap8.Translate_Report
               (Stmt, Ghdl_Psl_Cover, Severity_Level_Note);
-            New_Assign_Stmt (Get_Var (Info.Psl_Bool_Var),
-                             New_Lit (Ghdl_Bool_True_Node));
          when others =>
             Error_Kind ("Translate_Psl_Directive_Statement", Stmt);
       end case;
+      New_Assign_Stmt (Get_Var (Info.Psl_Count_Var),
+                       New_Dyadic_Op (ON_Add_Ov,
+                                      New_Value (Get_Var (Info.Psl_Count_Var)),
+                                      New_Lit (Ghdl_Index_1)));
       Close_Temp;
       Finish_If_Stmt (S_Blk);
 
@@ -633,8 +621,10 @@ package body Trans.Chap9 is
 
             Start_If_Stmt
               (S_Blk,
-               New_Monadic_Op (ON_Not,
-                               New_Value (Get_Var (Info.Psl_Bool_Var))));
+               New_Compare_Op (ON_Eq,
+                               New_Value (Get_Var (Info.Psl_Count_Var)),
+                               New_Lit (Ghdl_Index_0),
+                               Ghdl_Bool_Type));
             Chap8.Translate_Report
               (Stmt, Ghdl_Psl_Cover_Failed, Severity_Level_Error);
             Finish_If_Stmt (S_Blk);
@@ -1401,10 +1391,7 @@ package body Trans.Chap9 is
       Finish_Loop_Stmt (Label);
       Finish_Declare_Stmt;
 
-      if Info.Psl_Bool_Var /= Null_Var then
-         New_Assign_Stmt (Get_Var (Info.Psl_Bool_Var),
-                          New_Lit (Ghdl_Bool_False_Node));
-      end if;
+      New_Assign_Stmt (Get_Var (Info.Psl_Count_Var), New_Lit (Ghdl_Index_0));
    end Elab_Psl_Directive;
 
    procedure Elab_Implicit_Guard_Signal

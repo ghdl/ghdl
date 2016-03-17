@@ -99,15 +99,8 @@ package body Grt.Rtis_Utils is
                  | Ghdl_Rtik_Entity
                  | Ghdl_Rtik_Architecture =>
                   Internal_Error ("traverse_blocks");
-               when Ghdl_Rtik_Port
-                 | Ghdl_Rtik_Signal
-                 | Ghdl_Rtik_Guard
-                 | Ghdl_Rtik_Attribute_Quiet
-                 | Ghdl_Rtik_Attribute_Stable
-                 | Ghdl_Rtik_Attribute_Transaction =>
-                  Res := Process (Ctxt, Child);
                when others =>
-                  null;
+                  Res := Process (Ctxt, Child);
             end case;
             exit when Res = Traverse_Stop;
          end loop;
@@ -652,4 +645,36 @@ package body Grt.Rtis_Utils is
       Free (Rstr);
    end Put;
 
+   function Get_Linecol_Line (Linecol : Ghdl_Index_Type) return Ghdl_U32 is
+   begin
+      return Ghdl_U32 (Linecol / 256);
+   end Get_Linecol_Line;
+
+   function Get_Linecol_Col (Linecol : Ghdl_Index_Type) return Ghdl_U32 is
+   begin
+      return Ghdl_U32 (Linecol mod 256);
+   end Get_Linecol_Col;
+
+   function Get_Filename (Ctxt : Rti_Context) return Ghdl_C_String
+   is
+      C : Rti_Context;
+   begin
+      C := Ctxt;
+      loop
+         case C.Block.Kind is
+            when Ghdl_Rtik_Package
+              | Ghdl_Rtik_Package_Body
+              | Ghdl_Rtik_Architecture
+              | Ghdl_Rtik_Entity =>
+               declare
+                  Blk : constant Ghdl_Rtin_Block_Filename_Acc :=
+                    To_Ghdl_Rtin_Block_Filename_Acc (C.Block);
+               begin
+                  return Blk.Filename;
+               end;
+            when others =>
+               C := Get_Parent_Context (C);
+         end case;
+      end loop;
+   end Get_Filename;
 end Grt.Rtis_Utils;

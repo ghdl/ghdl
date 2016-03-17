@@ -22,6 +22,7 @@
 --  covered by the GNU General Public License. This exception does not
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
+
 with Grt.Astdio; use Grt.Astdio;
 with Grt.Errors; use Grt.Errors;
 with Grt.Hooks; use Grt.Hooks;
@@ -422,6 +423,11 @@ package body Grt.Disp_Rti is
          when Ghdl_Rtik_Unitptr =>
             Put ("ghdl_rtik_unitptr");
 
+         when Ghdl_Rtik_Psl_Assert =>
+            Put ("ghdl_rtik_psl_assert");
+         when Ghdl_Rtik_Psl_Cover =>
+            Put ("ghdl_rtik_psl_cover");
+
          when others =>
             Put ("ghdl_rtik_#");
             Put_I32 (stdout, Ghdl_Rtik'Pos (Kind));
@@ -656,15 +662,12 @@ package body Grt.Disp_Rti is
       end case;
    end Disp_Subtype_Indication;
 
-   procedure Disp_Linecol (Linecol : Ghdl_Index_Type)
-   is
-      Line : constant Ghdl_U32 := Ghdl_U32 (Linecol / 256);
-      Col : constant Ghdl_U32 := Ghdl_U32 (Linecol mod 256);
+   procedure Disp_Linecol (Linecol : Ghdl_Index_Type) is
    begin
       Put ("sloc=");
-      Put_U32 (stdout, Line);
+      Put_U32 (stdout, Get_Linecol_Line (Linecol));
       Put (":");
-      Put_U32 (stdout, Col);
+      Put_U32 (stdout, Get_Linecol_Col (Linecol));
    end Disp_Linecol;
 
    procedure Disp_Rti (Rti : Ghdl_Rti_Access;
@@ -801,6 +804,25 @@ package body Grt.Disp_Rti is
       Disp_Value (stdout, Obj_Type, Ctxt, Addr, Is_Sig);
       New_Line;
    end Disp_Object;
+
+   procedure Disp_Psl_Directive (Obj : Ghdl_Rtin_Object_Acc;
+                                 Ctxt : Rti_Context;
+                                 Indent : Natural)
+   is
+      Addr : Address;
+   begin
+      Disp_Indent (Indent);
+      Disp_Kind (Obj.Common.Kind);
+      Disp_Depth (Obj.Common.Depth);
+      Put (", ");
+      Disp_Linecol (Obj.Linecol);
+      Put ("; ");
+      Disp_Name (Obj.Name);
+      Put (": count = ");
+      Addr := Loc_To_Addr (Obj.Common.Depth, Obj.Loc, Ctxt);
+      Put_U32 (stdout, Ghdl_U32 (To_Ghdl_Index_Ptr (Addr).all));
+      New_Line;
+   end Disp_Psl_Directive;
 
    procedure Disp_Attribute (Obj : Ghdl_Rtin_Object_Acc;
                              Ctxt : Rti_Context;
@@ -1155,6 +1177,9 @@ package body Grt.Disp_Rti is
          when Ghdl_Rtik_Type_Protected =>
             Disp_Type_Protected
               (To_Ghdl_Rtin_Type_Scalar_Acc (Rti), Ctxt, Indent);
+         when Ghdl_Rtik_Psl_Cover
+           | Ghdl_Rtik_Psl_Assert =>
+            Disp_Psl_Directive (To_Ghdl_Rtin_Object_Acc (Rti), Ctxt, Indent);
          when others =>
             Disp_Indent (Indent);
             Disp_Kind (Rti.Kind);
