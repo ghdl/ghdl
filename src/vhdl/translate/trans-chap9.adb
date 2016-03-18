@@ -341,15 +341,19 @@ package body Trans.Chap9 is
       case Get_Kind (Expr) is
          when N_HDL_Expr =>
             declare
-               E     : Iir;
-               Rtype : Iir;
+               E     : constant Iir := Get_HDL_Node (Expr);
+               Rtype : constant Iir := Get_Base_Type (Get_Type (E));
                Res   : O_Enode;
             begin
-               E := Get_HDL_Node (Expr);
-               Rtype := Get_Base_Type (Get_Type (E));
                Res := Chap7.Translate_Expression (E);
                if Rtype = Boolean_Type_Definition then
                   return Res;
+               elsif Rtype = Bit_Type_Definition then
+                  return New_Compare_Op
+                    (ON_Eq,
+                     Res,
+                     New_Lit (Get_Ortho_Expr (Bit_1)),
+                     Get_Ortho_Type (Boolean_Type_Definition, Mode_Value));
                elsif Rtype = Ieee.Std_Logic_1164.Std_Ulogic_Type then
                   return New_Value
                     (New_Indexed_Element
