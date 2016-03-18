@@ -187,6 +187,13 @@ all options available, including the debugging one.
   Contrary to VCD files, any VHDL type can be dumped into a GHW file.
 
 
+.. option:: --psl-report=<FILENAME>
+
+  Write a report for PSL assertions and coverage at the end of
+  simulation.  The file is written using the JSON format, but still
+  being human readable.
+
+
 .. option:: --sdf=<PATH>=<FILENAME>
 
   Do VITAL annotation on `PATH` with SDF file :file:`FILENAME`.

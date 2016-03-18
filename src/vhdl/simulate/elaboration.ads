@@ -21,7 +21,7 @@ with Tables;
 with Types; use Types;
 with Iirs; use Iirs;
 with Iir_Values; use Iir_Values;
-with Grt.Types;
+with Grt.Types; use Grt.Types;
 with Annotations; use Annotations;
 with Areapools;
 
@@ -39,12 +39,20 @@ package Elaboration is
    type Objects_Array is array (Object_Slot_Type range <>) of
      Iir_Value_Literal_Acc;
 
+   type Block_Instance_Id is new Natural;
+   No_Block_Instance_Id : constant Block_Instance_Id := 0;
+
+   --  Number of block instances and also Id of the last one.
+   Nbr_Block_Instances : Block_Instance_Id := 0;
+
    -- A block instance with its architecture/entity declaration is an
    -- instancied entity.
 
    type Block_Instance_Type (Max_Objs : Object_Slot_Type) is record
       --  Flag for wait statement: true if not yet executed.
       In_Wait_Flag : Boolean;
+
+      Id : Block_Instance_Id;
 
       -- Useful informations for a dynamic block (ie, a frame).
       -- The scope level and an access to the block of upper scope level.
@@ -142,6 +150,7 @@ package Elaboration is
    type Package_Instances_Array is array (Pkg_Index_Type range <>) of
      Block_Instance_Acc;
    type Package_Instances_Array_Acc is access Package_Instances_Array;
+
    Package_Instances : Package_Instances_Array_Acc;
 
    --  Disconnections.  For each disconnection specification, the elaborator
@@ -174,25 +183,23 @@ package Elaboration is
       Table_Initial => 32);
 
    --  Signals.
-   type Signal_Type_Kind is
-     (User_Signal,
-      Implicit_Quiet, Implicit_Stable, Implicit_Delayed,
-      Implicit_Transaction,
-      Guard_Signal);
 
-   type Signal_Entry (Kind : Signal_Type_Kind := User_Signal) is record
+   type Signal_Entry (Kind : Mode_Signal_Type := Mode_Signal) is record
       Decl : Iir;
       Sig : Iir_Value_Literal_Acc;
       Val : Iir_Value_Literal_Acc;
       Instance : Block_Instance_Acc;
       case Kind is
-         when User_Signal =>
+         when Mode_Signal_User =>
             null;
-         when Implicit_Quiet | Implicit_Stable | Implicit_Delayed
-           | Implicit_Transaction =>
-            Time : Grt.Types.Ghdl_I64;
+         when Mode_Quiet | Mode_Stable | Mode_Delayed
+           | Mode_Transaction =>
+            Time : Std_Time;
             Prefix : Iir_Value_Literal_Acc;
-         when Guard_Signal =>
+         when Mode_Guard =>
+            null;
+         when Mode_Conv_In | Mode_Conv_Out | Mode_End =>
+            --  Unused.
             null;
       end case;
    end record;

@@ -21,13 +21,11 @@ with Str_Table;
 with Errorout; use Errorout;
 with Evaluation;
 with Execution; use Execution;
---with Simulation; use Simulation;
 with Iirs_Utils; use Iirs_Utils;
 with Libraries;
 with Name_Table;
 with File_Operation;
 with Iir_Chains; use Iir_Chains;
-with Grt.Types; use Grt.Types;
 with Elaboration.AMS; use Elaboration.AMS;
 with Areapools; use Areapools;
 with Grt.Errors;
@@ -165,11 +163,32 @@ package body Elaboration is
       Block.Objects (Slot) := Sig;
       Block.Objects (Slot + 1) := Def;
 
-      Signals_Table.Append ((Kind => User_Signal,
-                             Decl => Signal,
-                             Sig => Sig,
-                             Val => Def,
-                             Instance => Block));
+      case Get_Kind (Signal) is
+         when Iir_Kind_Interface_Signal_Declaration =>
+            case Get_Mode (Signal) is
+               when Iir_Unknown_Mode =>
+                  raise Internal_Error;
+               when Iir_Linkage_Mode =>
+                  Signals_Table.Append ((Mode_Linkage,
+                                         Signal, Sig, Def, Block));
+               when Iir_Buffer_Mode =>
+                  Signals_Table.Append ((Mode_Buffer,
+                                         Signal, Sig, Def, Block));
+               when Iir_Out_Mode =>
+                  Signals_Table.Append ((Mode_Out,
+                                         Signal, Sig, Def, Block));
+               when Iir_Inout_Mode =>
+                  Signals_Table.Append ((Mode_Inout,
+                                         Signal, Sig, Def, Block));
+               when Iir_In_Mode =>
+                  Signals_Table.Append ((Mode_In,
+                                         Signal, Sig, Def, Block));
+            end case;
+         when Iir_Kind_Signal_Declaration =>
+            Signals_Table.Append ((Mode_Signal, Signal, Sig, Def, Block));
+         when others =>
+            Error_Kind ("elaborate_signal", Signal);
+      end case;
    end Elaborate_Signal;
 
    function Execute_Time_Attribute (Instance : Block_Instance_Acc; Attr : Iir)
@@ -189,7 +208,7 @@ package body Elaboration is
    end Execute_Time_Attribute;
 
    procedure Elaborate_Implicit_Signal
-     (Instance: Block_Instance_Acc; Signal: Iir; Kind : Signal_Type_Kind)
+     (Instance: Block_Instance_Acc; Signal: Iir; Kind : Mode_Signal_Type)
    is
       Info : constant Sim_Info_Acc := Get_Info (Signal);
       Prefix : Iir_Value_Literal_Acc;
@@ -197,7 +216,7 @@ package body Elaboration is
       Sig : Iir_Value_Literal_Acc;
       Init : Iir_Value_Literal_Acc;
    begin
-      if Kind = Implicit_Transaction then
+      if Kind = Mode_Transaction then
          T := 0;
          Init := Create_B1_Value (False);
       else
@@ -213,24 +232,24 @@ package body Elaboration is
       Prefix := Execute_Name (Instance, Get_Prefix (Signal), True);
       Prefix := Unshare_Bounds (Prefix, Global_Pool'Access);
       case Kind is
-         when Implicit_Stable =>
-            Signals_Table.Append ((Kind => Implicit_Stable,
+         when Mode_Stable =>
+            Signals_Table.Append ((Kind => Mode_Stable,
                                    Decl => Signal,
                                    Sig => Sig,
                                    Val => Init,
                                    Instance => Instance,
-                                   Time => T,
+                                   Time => Std_Time (T),
                                    Prefix => Prefix));
-         when Implicit_Quiet =>
-            Signals_Table.Append ((Kind => Implicit_Quiet,
+         when Mode_Quiet =>
+            Signals_Table.Append ((Kind => Mode_Quiet,
                                    Decl => Signal,
                                    Sig => Sig,
                                    Val => Init,
                                    Instance => Instance,
-                                   Time => T,
+                                   Time => Std_Time (T),
                                    Prefix => Prefix));
-         when Implicit_Transaction =>
-            Signals_Table.Append ((Kind => Implicit_Transaction,
+         when Mode_Transaction =>
+            Signals_Table.Append ((Kind => Mode_Transaction,
                                    Decl => Signal,
                                    Sig => Sig,
                                    Val => Init,
@@ -295,12 +314,12 @@ package body Elaboration is
       Init := Unshare (Init, Global_Pool'Access); --  Create a full copy.
       Instance.Objects (Info.Slot + 1) := Init;
 
-      Signals_Table.Append ((Kind => Implicit_Delayed,
+      Signals_Table.Append ((Kind => Mode_Delayed,
                              Decl => Signal,
                              Sig => Sig,
                              Val => Init,
                              Instance => Instance,
-                             Time => T,
+                             Time => Std_Time (T),
                              Prefix => Prefix));
    end Elaborate_Delayed_Signal;
 
@@ -318,8 +337,11 @@ package body Elaboration is
       Obj_Info : constant Sim_Info_Acc := Get_Info (Obj);
       Res : Block_Instance_Acc;
    begin
+      Nbr_Block_Instances := Nbr_Block_Instances + 1;
+
       Res := new Block_Instance_Type'
         (Max_Objs => Obj_Info.Nbr_Objects,
+         Id => Nbr_Block_Instances,
          Block_Scope => Obj_Info.Frame_Scope,
          Up_Block => Father,
          Label => Stmt,
@@ -1366,7 +1388,7 @@ package body Elaboration is
       Instance.Objects (Info.Slot) := Sig;
       Instance.Objects (Info.Slot + 1) := Val;
 
-      Signals_Table.Append ((Kind => Guard_Signal,
+      Signals_Table.Append ((Kind => Mode_Guard,
                              Decl => Guard,
                              Sig => Sig,
                              Val => Val,
@@ -2510,11 +2532,11 @@ package body Elaboration is
          when Iir_Kind_Delayed_Attribute =>
             Elaborate_Delayed_Signal (Instance, Decl);
          when Iir_Kind_Stable_Attribute =>
-            Elaborate_Implicit_Signal (Instance, Decl, Implicit_Stable);
+            Elaborate_Implicit_Signal (Instance, Decl, Mode_Stable);
          when Iir_Kind_Quiet_Attribute =>
-            Elaborate_Implicit_Signal (Instance, Decl, Implicit_Quiet);
+            Elaborate_Implicit_Signal (Instance, Decl, Mode_Quiet);
          when Iir_Kind_Transaction_Attribute =>
-            Elaborate_Implicit_Signal (Instance, Decl, Implicit_Transaction);
+            Elaborate_Implicit_Signal (Instance, Decl, Mode_Transaction);
 
          when Iir_Kind_Non_Object_Alias_Declaration =>
             null;

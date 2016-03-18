@@ -399,10 +399,19 @@ package body Ortho_Debug is
       if Ltype.Kind /= ON_Access_Type then
          raise Type_Error;
       end if;
-      return  new O_Cnode_Null_Lit_Type'(Kind => OC_Null_Lit,
+      return new O_Cnode_Null_Lit_Type'(Kind => OC_Null_Lit,
                                          Ctype => Ltype,
                                          Ref => False);
    end New_Null_Access;
+
+   function New_Default_Value (Ltype : O_Tnode) return O_Cnode
+   is
+      subtype O_Cnode_Default_Lit_Type is O_Cnode_Type (OC_Default_Lit);
+   begin
+      return new O_Cnode_Default_Lit_Type'(Kind => OC_Default_Lit,
+                                           Ctype => Ltype,
+                                           Ref => False);
+   end New_Default_Value;
 
    function New_Sizeof (Atype : O_Tnode; Rtype : O_Tnode) return O_Cnode
    is

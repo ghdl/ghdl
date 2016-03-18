@@ -56,6 +56,12 @@ package body Grt.Astdio is
       Put (Stream, Nl);
    end New_Line;
 
+   procedure Put_Line (Stream : FILEs; Str : String) is
+   begin
+      Put (Stream, Str);
+      New_Line (Stream);
+   end Put_Line;
+
    procedure Put (Str : String)
    is
       S : size_t;

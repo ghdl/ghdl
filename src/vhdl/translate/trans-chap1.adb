@@ -90,7 +90,7 @@ package body Trans.Chap1 is
             end if;
             Chap5.Elab_Unconstrained_Port_Bounds (El, Default);
          end if;
-         Chap4.Elab_Signal_Declaration_Storage (El);
+         Chap4.Elab_Signal_Declaration_Storage (El, False);
          Chap4.Elab_Signal_Declaration_Object (El, Entity, False);
          Close_Temp;
 

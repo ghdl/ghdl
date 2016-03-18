@@ -138,6 +138,10 @@ package Ortho_Gcc is
    --  Create a null access literal.
    function New_Null_Access (Ltype : O_Tnode) return O_Cnode;
 
+   --  Create a literal with default (null) values.  Can only be used to
+   --  define the initial value of a static decalaration.
+   function New_Default_Value (Ltype : O_Tnode) return O_Cnode;
+
    --  Build a record/array aggregate.
    --  The aggregate is constant, and therefore can be only used to initialize
    --  constant declaration.
@@ -634,6 +638,7 @@ private
    pragma Import (C, New_Array_Aggr_El);
    pragma Import (C, Finish_Array_Aggr);
    pragma Import (C, New_Union_Aggr);
+   pragma Import (C, New_Default_Value);
 
    pragma Import (C, New_Indexed_Element);
    pragma Import (C, New_Slice);

@@ -1417,6 +1417,8 @@ package body Ortho_Front is
             end;
          when Tok_Null =>
             Res := New_Null_Access (Atype.Type_Onode);
+         when Tok_Default =>
+            Res := New_Default_Value (Atype.Type_Onode);
          when others =>
             Parse_Error ("bad primary expression: " & Token_Type'Image (Tok));
             return O_Cnode_Null;
@@ -2422,6 +2424,11 @@ package body Ortho_Front is
             --return Parse_Primary_Expression (Atype);
             return Parse_Typed_Literal (Atype);
          when Type_Record =>
+            if Tok = Tok_Ident then
+               --  Default value ?
+               return Parse_Typed_Literal (Atype);
+            end if;
+
             declare
                Constr : O_Record_Aggr_List;
                Field : Node_Acc;
@@ -2452,7 +2459,12 @@ package body Ortho_Front is
                Next_Token;
                return Res;
             end;
+
          when Type_Union =>
+            if Tok = Tok_Ident then
+               --  Default value ?
+               return Parse_Typed_Literal (Atype);
+            end if;
             declare
                Field : Node_Acc;
             begin

@@ -1006,7 +1006,7 @@ package body Trans.Chap4 is
       Finish_Data_Record => Elab_Signal_Finish_Composite);
 
    --  Elaborate signal subtypes and allocate the storage for the object.
-   procedure Elab_Signal_Declaration_Storage (Decl : Iir)
+   procedure Elab_Signal_Declaration_Storage (Decl : Iir; Has_Copy : Boolean)
    is
       Sig_Type  : constant Iir := Get_Type (Decl);
       Type_Info : Type_Info_Acc;
@@ -1023,23 +1023,37 @@ package body Trans.Chap4 is
       if Type_Info.Type_Mode = Type_Mode_Fat_Array then
          --  Unbounded types are only allowed for ports; in that case the
          --  bounds have already been set.
-         Chap6.Translate_Signal_Name (Decl, Name_Sig, Name_Val);
+         if Has_Copy then
+            Name_Sig := Chap6.Translate_Name (Decl, Mode_Signal);
+         else
+            Chap6.Translate_Signal_Name (Decl, Name_Sig, Name_Val);
+         end if;
          Name_Sig := Stabilize (Name_Sig);
          Chap3.Allocate_Fat_Array_Base (Alloc_System, Name_Sig, Sig_Type);
-         Name_Val := Stabilize (Name_Val);
-         Chap3.Allocate_Fat_Array_Base (Alloc_System, Name_Val, Sig_Type);
+         if not Has_Copy then
+            Name_Val := Stabilize (Name_Val);
+            Chap3.Allocate_Fat_Array_Base (Alloc_System, Name_Val, Sig_Type);
+         end if;
       elsif Is_Complex_Type (Type_Info) then
-         Chap6.Translate_Signal_Name (Decl, Name_Sig, Name_Val);
+         if Has_Copy then
+            Name_Sig := Chap6.Translate_Name (Decl, Mode_Signal);
+         else
+            Chap6.Translate_Signal_Name (Decl, Name_Sig, Name_Val);
+         end if;
          Allocate_Complex_Object (Sig_Type, Alloc_System, Name_Sig);
-         Allocate_Complex_Object (Sig_Type, Alloc_System, Name_Val);
+         if not Has_Copy then
+            Allocate_Complex_Object (Sig_Type, Alloc_System, Name_Val);
+         end if;
       elsif Get_Kind (Decl) = Iir_Kind_Interface_Signal_Declaration then
-         --  A port that isn't collapsed.  Allocate value.
-         Name_Val := Chap6.Translate_Name (Decl, Mode_Value);
-         New_Assign_Stmt
-           (M2Lp (Name_Val),
-            Gen_Alloc (Alloc_System,
-                       Chap3.Get_Object_Size (Name_Val, Sig_Type),
-                       Type_Info.Ortho_Ptr_Type (Mode_Value)));
+         if not Has_Copy then
+            --  A port that isn't collapsed.  Allocate value.
+            Name_Val := Chap6.Translate_Name (Decl, Mode_Value);
+            New_Assign_Stmt
+              (M2Lp (Name_Val),
+               Gen_Alloc (Alloc_System,
+                          Chap3.Get_Object_Size (Name_Val, Sig_Type),
+                          Type_Info.Ortho_Ptr_Type (Mode_Value)));
+         end if;
       end if;
 
       Close_Temp;
@@ -1153,7 +1167,7 @@ package body Trans.Chap4 is
      (Decl : Iir; Parent : Iir; Check_Null : Boolean)
    is
    begin
-      Elab_Signal_Declaration_Storage (Decl);
+      Elab_Signal_Declaration_Storage (Decl, False);
       Elab_Signal_Declaration_Object (Decl, Parent, Check_Null);
    end Elab_Signal_Declaration;
 

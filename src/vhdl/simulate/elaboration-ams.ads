@@ -16,7 +16,6 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Grt.Types; use Grt.Types;
 with Tables;
 
 package Elaboration.AMS is

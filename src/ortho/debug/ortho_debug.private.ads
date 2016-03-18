@@ -134,6 +134,7 @@ private
       OC_Sizeof_Lit,
       OC_Alignof_Lit,
       OC_Offsetof_Lit,
+      OC_Default_Lit,
       OC_Aggregate,
       OC_Aggr_Element,
       OC_Union_Aggr,
@@ -161,6 +162,8 @@ private
             E_Next : O_Cnode;
             E_Name : O_Ident;
          when OC_Null_Lit =>
+            null;
+         when OC_Default_Lit =>
             null;
          when OC_Sizeof_Lit
            | OC_Alignof_Lit =>

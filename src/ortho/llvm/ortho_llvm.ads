@@ -161,6 +161,10 @@ package Ortho_LLVM is
    --  Create a null access literal.
    function New_Null_Access (Ltype : O_Tnode) return O_Cnode;
 
+   --  Create a literal with default (null) values.  Can only be used to
+   --  define the initial value of a static decalaration.
+   function New_Default_Value (Ltype : O_Tnode) return O_Cnode;
+
    --  Build a record/array aggregate.
    --  The aggregate is constant, and therefore can be only used to initialize
    --  constant declaration.

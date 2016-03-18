@@ -202,6 +202,7 @@ private
    pragma Import (C, New_Array_Aggr_El);
    pragma Import (C, Finish_Array_Aggr);
    pragma Import (C, New_Union_Aggr);
+   pragma Import (C, New_Default_Value);
 
    pragma Import (C, New_Indexed_Element);
    pragma Import (C, New_Slice);

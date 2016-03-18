@@ -68,7 +68,10 @@ package Trans.Chap4 is
    procedure Translate_Generic_Chain (Parent : Iir);
 
    --  Elaborate signal subtypes and allocate the storage for the object.
-   procedure Elab_Signal_Declaration_Storage (Decl : Iir);
+   --  If HAS_COPY is true, do not allocate storage for values, as the values
+   --  will be directly referenced from the association.
+   procedure Elab_Signal_Declaration_Storage
+     (Decl : Iir; Has_Copy : Boolean);
 
    --  Create signal object.
    --  Note: SIG can be a signal sub-element (used when signals are

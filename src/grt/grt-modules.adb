@@ -32,6 +32,7 @@ with Grt.Waves;
 with Grt.Vital_Annotate;
 with Grt.Disp_Tree;
 with Grt.Disp_Rti;
+with Grt.Psl;
 with Grt.Backtraces;
 
 package body Grt.Modules is
@@ -46,6 +47,7 @@ package body Grt.Modules is
       Grt.Vpi.Register;
       Grt.Vital_Annotate.Register;
       Grt.Disp_Rti.Register;
+      Grt.Psl.Register;
       Grt.Backtraces.Register;
    end Register_Modules;
 end Grt.Modules;

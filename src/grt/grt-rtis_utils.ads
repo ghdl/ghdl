@@ -89,4 +89,11 @@ package Grt.Rtis_Utils is
 
    --  Disp a context as a path.
    procedure Put (Stream : FILEs; Ctxt : Rti_Context);
+
+   --  Extract line and column from a linecol.
+   function Get_Linecol_Line (Linecol : Ghdl_Index_Type) return Ghdl_U32;
+   function Get_Linecol_Col (Linecol : Ghdl_Index_Type) return Ghdl_U32;
+
+   --  Return the filename in which CTXT is defined.  Used to report locations.
+   function Get_Filename (Ctxt : Rti_Context) return Ghdl_C_String;
 end Grt.Rtis_Utils;

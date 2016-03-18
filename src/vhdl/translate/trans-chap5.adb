@@ -723,10 +723,11 @@ package body Trans.Chap5 is
                when Iir_Kind_Association_Element_By_Individual
                  | Iir_Kind_Association_Element_Open =>
                   pragma Assert (Get_Whole_Association_Flag (Assoc));
-                  Chap4.Elab_Signal_Declaration_Storage (Formal);
+                  Chap4.Elab_Signal_Declaration_Storage (Formal, False);
                when Iir_Kind_Association_Element_By_Expression =>
                   if Get_Whole_Association_Flag (Assoc) then
-                     Chap4.Elab_Signal_Declaration_Storage (Formal);
+                     Chap4.Elab_Signal_Declaration_Storage
+                       (Formal, Get_Collapse_Signal_Flag (Assoc));
                   end if;
             end case;
             Close_Temp;

@@ -849,9 +849,9 @@ package body Simulation.Main is
 
    procedure Create_Implicit_Signal (Sig : Iir_Value_Literal_Acc;
                                      Val : Iir_Value_Literal_Acc;
-                                     Time : Ghdl_I64;
+                                     Time : Std_Time;
                                      Prefix : Iir_Value_Literal_Acc;
-                                     Kind : Signal_Type_Kind)
+                                     Kind : Mode_Signal_Type)
    is
       procedure Register_Prefix (Pfx : Iir_Value_Literal_Acc) is
       begin
@@ -872,13 +872,13 @@ package body Simulation.Main is
       end Register_Prefix;
    begin
       case Kind is
-         when Implicit_Stable =>
+         when Mode_Stable =>
             Sig.Sig := Grt.Signals.Ghdl_Create_Stable_Signal
-              (To_Ghdl_Value_Ptr (Val.B1'Address), Std_Time (Time));
-         when Implicit_Quiet =>
+              (To_Ghdl_Value_Ptr (Val.B1'Address), Time);
+         when Mode_Quiet =>
             Sig.Sig := Grt.Signals.Ghdl_Create_Quiet_Signal
-              (To_Ghdl_Value_Ptr (Val.B1'Address), Std_Time (Time));
-         when Implicit_Transaction =>
+              (To_Ghdl_Value_Ptr (Val.B1'Address), Time);
+         when Mode_Transaction =>
             Sig.Sig := Grt.Signals.Ghdl_Create_Transaction_Signal
               (To_Ghdl_Value_Ptr (Val.B1'Address));
          when others =>
@@ -930,6 +930,7 @@ package body Simulation.Main is
    -- Create a new signal, using DEFAULT as initial value.
    -- Set its number.
    procedure Create_User_Signal (Block: Block_Instance_Acc;
+                                 Mode : Mode_Signal_Type;
                                  Signal: Iir;
                                  Sig : Iir_Value_Literal_Acc;
                                  Val : Iir_Value_Literal_Acc)
@@ -1024,18 +1025,7 @@ package body Simulation.Main is
       end Create_Signal;
 
       Sig_Type: constant Iir := Get_Type (Signal);
-      Mode : Mode_Signal_Type;
       Kind : Kind_Signal_Type;
-
-      type Iir_Mode_To_Mode_Signal_Type is
-        array (Iir_Mode) of Mode_Signal_Type;
-      Iir_Mode_To_Mode_Signal : constant Iir_Mode_To_Mode_Signal_Type :=
-        (Iir_Unknown_Mode => Mode_Signal,
-         Iir_Linkage_Mode => Mode_Linkage,
-         Iir_Buffer_Mode => Mode_Buffer,
-         Iir_Out_Mode => Mode_Out,
-         Iir_Inout_Mode => Mode_Inout,
-         Iir_In_Mode => Mode_In);
 
       type Iir_Kind_To_Kind_Signal_Type is
         array (Iir_Signal_Kind) of Kind_Signal_Type;
@@ -1043,15 +1033,6 @@ package body Simulation.Main is
         (Iir_Register_Kind  => Kind_Signal_Register,
          Iir_Bus_Kind       => Kind_Signal_Bus);
    begin
-      case Get_Kind (Signal) is
-         when Iir_Kind_Interface_Signal_Declaration =>
-            Mode := Iir_Mode_To_Mode_Signal (Get_Mode (Signal));
-         when Iir_Kind_Signal_Declaration =>
-            Mode := Mode_Signal;
-         when others =>
-            Error_Kind ("elaborate_signal", Signal);
-      end case;
-
       if Get_Guarded_Signal_Flag (Signal) then
          Kind := Iir_Kind_To_Kind_Signal (Get_Signal_Kind (Signal));
       else
@@ -1070,16 +1051,18 @@ package body Simulation.Main is
             E : Signal_Entry renames Signals_Table.Table (I);
          begin
             case E.Kind is
-               when Guard_Signal =>
+               when Mode_Guard =>
                   Create_Guard_Signal (E.Instance, E.Sig, E.Val, E.Decl);
-               when Implicit_Stable | Implicit_Quiet | Implicit_Transaction =>
+               when Mode_Stable | Mode_Quiet | Mode_Transaction =>
                   Create_Implicit_Signal
                     (E.Sig, E.Val, E.Time, E.Prefix, E.Kind);
-               when Implicit_Delayed =>
-                  Create_Delayed_Signal (E.Sig, E.Val,
-                                         E.Prefix, Std_Time (E.Time));
-               when User_Signal =>
-                  Create_User_Signal (E.Instance, E.Decl, E.Sig, E.Val);
+               when Mode_Delayed =>
+                  Create_Delayed_Signal (E.Sig, E.Val, E.Prefix, E.Time);
+               when Mode_Signal_User =>
+                  Create_User_Signal
+                    (E.Instance, E.Kind, E.Decl, E.Sig, E.Val);
+               when Mode_Conv_In | Mode_Conv_Out | Mode_End =>
+                  raise Internal_Error;
             end case;
          end;
       end loop;

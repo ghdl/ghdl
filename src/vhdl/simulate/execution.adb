@@ -3320,6 +3320,7 @@ package body Execution is
         (Alloc_Block_Instance
            (Instance_Pool,
             Block_Instance_Type'(Max_Objs => Func_Info.Nbr_Objects,
+                                 Id => No_Block_Instance_Id,
                                  Block_Scope => Get_Info (Label).Frame_Scope,
                                  Up_Block => Up_Block,
                                  Label => Label,

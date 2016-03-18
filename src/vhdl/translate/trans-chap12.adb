@@ -36,38 +36,86 @@ with Translation; use Translation;
 with Trans_Decls; use Trans_Decls;
 
 package body Trans.Chap12 is
-   --  Create __ghdl_ELABORATE
-   procedure Gen_Main (Entity : Iir_Entity_Declaration;
-                       Arch : Iir_Architecture_Body;
-                       Config_Subprg : O_Dnode;
-                       Nbr_Pkgs : Natural)
+   Elab_Nbr_Pkgs : Natural;
+   Pkgs_Arr : O_Dnode;
+
+   --  Declare top RTIARRAY and ghdl_ELABORATE.
+   procedure Gen_Elab_Decls
    is
-      Entity_Info : constant Block_Info_Acc := Get_Info (Entity);
-      Arch_Info : constant Block_Info_Acc := Get_Info (Arch);
       Inter_List : O_Inter_List;
-      Assoc : O_Assoc_List;
-      Instance : O_Dnode;
-      Arch_Instance : O_Dnode;
-      Mark : Id_Mark_Type;
       Arr_Type : O_Tnode;
-      Arr : O_Dnode;
    begin
       --  We need to create code.
       Set_Global_Storage (O_Storage_Private);
+
+      Rtis.Generate_Top (Elab_Nbr_Pkgs);
+
+      declare
+         Cst : O_Dnode;
+         pragma Unreferenced (Cst);
+      begin
+         Cst := Create_String (Flags.Flag_String,
+                               Get_Identifier ("__ghdl_flag_string"),
+                               O_Storage_Public);
+      end;
 
       --  Create the array of RTIs for packages (as a variable, initialized
       --  during elaboration).
       Arr_Type := New_Constrained_Array_Type
         (Rtis.Ghdl_Rti_Array,
-         New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (Nbr_Pkgs)));
-      New_Var_Decl (Arr, Get_Identifier ("__ghdl_top_RTIARRAY"),
+         New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (Elab_Nbr_Pkgs)));
+      New_Var_Decl (Pkgs_Arr, Get_Identifier ("__ghdl_top_RTIARRAY"),
                     O_Storage_Private, Arr_Type);
 
       --  The elaboration entry point.
       Start_Procedure_Decl (Inter_List, Get_Identifier ("__ghdl_ELABORATE"),
                             O_Storage_Public);
       Finish_Subprogram_Decl (Inter_List, Ghdl_Elaborate);
+   end Gen_Elab_Decls;
 
+   procedure Call_Elab_Decls (Arch : Iir; Arch_Instance : O_Enode)
+   is
+      Assoc : O_Assoc_List;
+   begin
+      --  Set top instances and RTI.
+      --  Do it before the elaboration code, since it may be used to
+      --  diagnose errors.
+      --  Call ghdl_rti_add_top
+      Start_Association (Assoc, Ghdl_Rti_Add_Top);
+      New_Association
+        (Assoc, New_Lit (New_Unsigned_Literal (Ghdl_Index_Type,
+                                               Unsigned_64 (Elab_Nbr_Pkgs))));
+      New_Association
+        (Assoc, New_Lit (New_Global_Address
+                           (Pkgs_Arr, Rtis.Ghdl_Rti_Arr_Acc)));
+      New_Association
+        (Assoc,
+         New_Lit (Rtis.New_Rti_Address (Get_Info (Arch).Block_Rti_Const)));
+      New_Association
+        (Assoc, New_Convert_Ov (Arch_Instance, Ghdl_Ptr_Type));
+      New_Procedure_Call (Assoc);
+
+      --  Add std.standard rti
+      Start_Association (Assoc, Ghdl_Rti_Add_Package);
+      New_Association
+        (Assoc,
+         New_Lit (Rtis.New_Rti_Address
+                    (Get_Info (Standard_Package).Package_Rti_Const)));
+      New_Procedure_Call (Assoc);
+   end Call_Elab_Decls;
+
+   --  Create __ghdl_ELABORATE
+   procedure Gen_Main (Entity : Iir_Entity_Declaration;
+                       Arch : Iir_Architecture_Body;
+                       Config_Subprg : O_Dnode)
+   is
+      Entity_Info : constant Block_Info_Acc := Get_Info (Entity);
+      Arch_Info : constant Block_Info_Acc := Get_Info (Arch);
+      Assoc : O_Assoc_List;
+      Instance : O_Dnode;
+      Arch_Instance : O_Dnode;
+      Mark : Id_Mark_Type;
+   begin
       Start_Subprogram_Body (Ghdl_Elaborate);
       New_Var_Decl (Arch_Instance, Wki_Arch_Instance,
                     O_Storage_Local, Arch_Info.Block_Decls_Ptr_Type);
@@ -97,30 +145,7 @@ package body Trans.Chap12 is
             Rtis.Ghdl_Entity_Link_Parent),
          New_Lit (New_Null_Access (Rtis.Ghdl_Component_Link_Acc)));
 
-      --  Set top instances and RTI.
-      --  Do it before the elaboration code, since it may be used to
-      --  diagnose errors.
-      --  Call ghdl_rti_add_top
-      Start_Association (Assoc, Ghdl_Rti_Add_Top);
-      New_Association
-        (Assoc, New_Lit (New_Unsigned_Literal (Ghdl_Index_Type,
-                                               Unsigned_64 (Nbr_Pkgs))));
-      New_Association
-        (Assoc, New_Lit (New_Global_Address (Arr, Rtis.Ghdl_Rti_Arr_Acc)));
-      New_Association
-        (Assoc,
-         New_Lit (Rtis.New_Rti_Address (Get_Info (Arch).Block_Rti_Const)));
-      New_Association
-        (Assoc, New_Convert_Ov (New_Obj_Value (Arch_Instance), Ghdl_Ptr_Type));
-      New_Procedure_Call (Assoc);
-
-      --  Add std.standard rti
-      Start_Association (Assoc, Ghdl_Rti_Add_Package);
-      New_Association
-        (Assoc,
-         New_Lit (Rtis.New_Rti_Address
-                    (Get_Info (Standard_Package).Package_Rti_Const)));
-      New_Procedure_Call (Assoc);
+      Call_Elab_Decls (Arch, New_Obj_Value (Arch_Instance));
 
       Gen_Filename (Get_Design_File (Get_Design_Unit (Entity)));
 
@@ -156,16 +181,6 @@ package body Trans.Chap12 is
 
       Current_Filename_Node := O_Dnode_Null;
    end Gen_Main;
-
-   procedure Gen_Setup_Info
-   is
-      Cst : O_Dnode;
-      pragma Unreferenced (Cst);
-   begin
-      Cst := Create_String (Flags.Flag_String,
-                            Get_Identifier ("__ghdl_flag_string"),
-                            O_Storage_Public);
-   end Gen_Setup_Info;
 
    procedure Gen_Last_Arch (Entity : Iir_Entity_Declaration)
    is
@@ -407,7 +422,7 @@ package body Trans.Chap12 is
    end Gen_Dummy_Package_Declaration;
 
    --  Write to file FILELIST all the files that are needed to link the design.
-   procedure Write_File_List (Filelist : String)
+   procedure Gen_Stubs
    is
       use Interfaces.C_Streams;
       use System;
@@ -490,24 +505,10 @@ package body Trans.Chap12 is
          end loop;
       end Add_File_Units;
 
-      Nul : constant Character := Character'Val (0);
-      Fname : String := Filelist & Nul;
-      Mode : constant String := "wt" & Nul;
-      F : FILEs;
-      R : int;
-      S : size_t;
-      pragma Unreferenced (R, S); -- FIXME
-      Id : Name_Id;
-      Lib : Iir_Library_Declaration;
       File : Iir_Design_File;
       Unit : Iir_Design_Unit;
       J : Natural;
    begin
-      F := fopen (Fname'Address, Mode'Address);
-      if F = NULL_Stream then
-         Error_Msg_Elab ("cannot open " & Filelist);
-      end if;
-
       --  Set elab flags on units, and remove it on design files.
       for I in Design_Units.First .. Design_Units.Last loop
          Unit := Design_Units.Table (I);
@@ -526,6 +527,48 @@ package body Trans.Chap12 is
             --  Add dependences of unused design units, otherwise the object
             --  link case failed.
             Add_File_Units (File);
+         end if;
+         J := J + 1;
+      end loop;
+   end Gen_Stubs;
+
+   --  Write to file FILELIST all the files that are needed to link the design.
+   procedure Write_File_List (Filelist : String)
+   is
+      use Interfaces.C_Streams;
+      use System;
+      use Configuration;
+      use Name_Table;
+
+      Nul : constant Character := Character'Val (0);
+      Fname : String := Filelist & Nul;
+      Mode : constant String := "wt" & Nul;
+      F : FILEs;
+      R : int;
+      S : size_t;
+      pragma Unreferenced (R, S); -- FIXME
+      Id : Name_Id;
+      Lib : Iir_Library_Declaration;
+      File : Iir_Design_File;
+      Unit : Iir_Design_Unit;
+   begin
+      F := fopen (Fname'Address, Mode'Address);
+      if F = NULL_Stream then
+         Error_Msg_Elab ("cannot open " & Filelist);
+      end if;
+
+      --  Clear elab flags on design files.
+      for I in Design_Units.First .. Design_Units.Last loop
+         Unit := Design_Units.Table (I);
+         File := Get_Design_File (Unit);
+         Set_Elab_Flag (File, False);
+      end loop;
+
+      for J in Design_Units.First .. Design_Units.Last loop
+         Unit := Design_Units.Table (J);
+         File := Get_Design_File (Unit);
+         if not Get_Elab_Flag (File) then
+            Set_Elab_Flag (File, True);
 
             --  Write '>LIBRARY_DIRECTORY'.
             Lib := Get_Library (File);
@@ -541,8 +584,9 @@ package body Trans.Chap12 is
                          size_t (Get_Name_Length (Id)), 1, F);
             R := fputc (10, F);
          end if;
-         J := J + 1;
       end loop;
+
+      R := fclose (F);
    end Write_File_List;
 
    procedure Elaborate (Primary : String;
@@ -561,7 +605,6 @@ package body Trans.Chap12 is
       Arch : Iir_Architecture_Body;
       Conf_Info : Config_Info_Acc;
       Last_Design_Unit : Natural;
-      Nbr_Pkgs : Natural;
    begin
       Config := Configure (Primary, Secondary);
       if Config = Null_Iir then
@@ -679,23 +722,29 @@ package body Trans.Chap12 is
          end case;
       end loop;
 
-      Rtis.Generate_Top (Nbr_Pkgs);
+      Gen_Elab_Decls;
 
       --  Create main code.
       Conf_Info := Get_Info (Config_Lib);
-      Gen_Main (Entity, Arch, Conf_Info.Config_Subprg, Nbr_Pkgs);
-
-      Gen_Setup_Info;
+      Gen_Main (Entity, Arch, Conf_Info.Config_Subprg);
 
       --  Index of the last design unit, required by the design.
       Last_Design_Unit := Design_Units.Last;
 
-      --  Disp list of files needed.
-      --  FIXME: extract the link completion part of WRITE_FILE_LIST.
+      --  A design file may contain unused units that depends on other files.
+      --  In order to have all symbols resolved, also add unused packages and
+      --  generate stubs for referenced (but unused) entities and
+      --  configurations.
+      if not Whole then
+         Gen_Stubs;
+      end if;
+
+      --  Write the file containing the list of object files.
       if Filelist /= "" then
          Write_File_List (Filelist);
       end if;
 
+      --  Disp list of files needed.
       if Flags.Verbose then
          Ada.Text_IO.Put_Line ("List of units not used:");
          for I in Last_Design_Unit + 1 .. Design_Units.Last loop
