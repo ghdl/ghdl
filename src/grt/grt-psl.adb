@@ -27,7 +27,6 @@ with System;
 with Grt.Types; use Grt.Types;
 with Grt.Stdio; use Grt.Stdio;
 with Grt.Errors; use Grt.Errors;
-with Grt.Signals; use Grt.Signals;
 with Grt.Astdio; use Grt.Astdio;
 with Grt.Hooks; use Grt.Hooks;
 with Grt.Rtis; use Grt.Rtis;
