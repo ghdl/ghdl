@@ -1,0 +1,27 @@
+{ "details" : [
+ { "directive": "assertion",
+   "name": ".psl(behav).a1",
+   "file": "psl.vhdl",
+   "line": 27,
+   "count": 0,
+   "status": "passed"},
+ { "directive": "assertion",
+   "name": ".psl(behav).a2",
+   "file": "psl.vhdl",
+   "line": 28,
+   "count": 0,
+   "status": "passed"},
+ { "directive": "cover",
+   "name": ".psl(behav).c1",
+   "file": "psl.vhdl",
+   "line": 29,
+   "count": 3,
+   "status": "covered"}],
+ "summary" : {
+  "assert": 2,
+  "assert-failure": 0,
+  "assert-pass": 2,
+  "cover": 1,
+  "cover-failure": 0,
+  "cover-pass": 1}
+}
