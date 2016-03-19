@@ -10,6 +10,19 @@ if ! cmp psl.out psl.ref; then
     exit 1
 fi
 
+rm -f psl.out
+clean
+
+# Using vhdl 08
+GHDL_STD_FLAGS="-fpsl --std=08"
+analyze psl.vhdl
+elab_simulate psl --psl-report=psl.out
+
+cmp -s psl.out psl.ref
+
+rm -f psl.out
+clean
+
 # Usage example (python 2.7):
 #
 # import json
@@ -17,8 +30,5 @@ fi
 # print d['summary']
 #  {u'assert-pass': 2, u'cover': 1, ... }
 # print d['summary']['assert']
-
-rm -f psl.out
-clean
 
 echo "Test successful"
