@@ -109,6 +109,8 @@ package body Grt.Main is
       use Grt.Errors;
       Stop : Boolean;
       Status : Integer;
+      Status1 : Integer;
+      pragma Unreferenced (Status1);
    begin
       --  Register modules.
       --  They may insert hooks.
@@ -172,6 +174,9 @@ package body Grt.Main is
 
          --  Do the simulation.
          Status := Run_Through_Longjump (Grt.Processes.Simulation'Access);
+
+         Status1 := Run_Through_Longjump
+           (Grt.Processes.Finalize_Simulation'Access);
       end if;
 
       if Flag_Stats then

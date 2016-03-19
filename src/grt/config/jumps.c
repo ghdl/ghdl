@@ -56,7 +56,7 @@
 #ifdef USE_BUILTIN_SJLJ
 typedef void *JMP_BUF[5];
 static int sjlj_val;
-# define SETJMP(BUF) (__builtin_setjmp (BUF), sjlj_val)
+# define SETJMP(BUF) (sjlj_val = 0, __builtin_setjmp (BUF), sjlj_val)
 # define LONGJMP(BUF, VAL) \
   do { sjlj_val = (VAL); __builtin_longjmp (BUF, 1); } while (0)
 #else
