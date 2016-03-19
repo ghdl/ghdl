@@ -1119,6 +1119,8 @@ package body Grt.Processes is
       if Nbr_Threads /= 1 then
          Threads.Finish;
       end if;
+
+      Call_Finalizers;
    end Simulation_Finish;
 
    function Simulation return Integer
@@ -1133,14 +1135,4 @@ package body Grt.Processes is
 
       return Status;
    end Simulation;
-
-   function Finalize_Simulation return Integer is
-   begin
-      Call_Finalizers;
-
-      Grt.Hooks.Call_Finish_Hooks;
-
-      return Run_Finished;
-   end Finalize_Simulation;
-
 end Grt.Processes;

@@ -43,9 +43,6 @@ package Grt.Processes is
    --  < 0 in case of failure or stop request.
    function Simulation return Integer;
 
-   --  To be called after Simulation to run finalizer and end hooks.
-   function Finalize_Simulation return Integer;
-
    --  Number of delta cycles.
    Nbr_Delta_Cycles : Integer;
    --  Number of non-delta cycles.
