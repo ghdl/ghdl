@@ -164,7 +164,9 @@ package body Sem_Psl is
                   when N_Sequence_Declaration =>
                      Res := Create_Node (N_Sequence_Instance);
                   when N_Endpoint_Declaration =>
-                     Res := Create_Node (N_Endpoint_Instance);
+                     --  Endpoints are considered as boolean variables.
+                     Free_Node (N);
+                     return Convert_Bool (Name);
                   when N_Property_Declaration =>
                      Res := Create_Node (N_Property_Instance);
                   when N_Boolean_Parameter

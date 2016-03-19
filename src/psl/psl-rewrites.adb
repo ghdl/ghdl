@@ -313,9 +313,10 @@ package body PSL.Rewrites is
             return Rewrite_Boolean (N);
          when N_Name =>
             return Get_Decl (N);
-         when N_Sequence_Instance
-           | N_Endpoint_Instance =>
+         when N_Sequence_Instance =>
             Rewrite_Instance (N);
+            return N;
+         when N_Endpoint_Instance =>
             return N;
          when N_Boolean_Parameter
            | N_Sequence_Parameter
