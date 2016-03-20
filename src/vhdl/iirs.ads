@@ -1641,15 +1641,39 @@ package Iirs is
    --
    --   Get/Set_Use_Flag (Flag6)
 
-   -- Iir_Kind_Psl_Declaration (Medium)
+   -- Iir_Kind_Psl_Endpoint_Declaration (Medium)
    --
    --   Get/Set_Parent (Field0)
    --
-   --   Get/Set_Psl_Declaration (Field1)
+   --  Always boolean.
+   --   Get/Set_Type (Field1)
    --
    --   Get/Set_Chain (Field2)
    --
    --   Get/Set_Identifier (Field3)
+   --
+   --   Get/Set_Psl_Declaration (Field6)
+   --
+   --   Get/Set_PSL_Clock (Field7)
+   --
+   --   Get/Set_PSL_NFA (Field8)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Use_Flag (Flag6)
+   --
+   --   Get/Set_Expr_Staticness (State1)
+
+   -- Iir_Kind_Psl_Declaration (Medium)
+   --  A psl sequence or property declaration.
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Identifier (Field3)
+   --
+   --   Get/Set_Psl_Declaration (Field6)
    --
    --  Valid only for property declaration.
    --   Get/Set_PSL_Clock (Field7)
@@ -3706,6 +3730,7 @@ package Iirs is
       Iir_Kind_Non_Object_Alias_Declaration,
 
       Iir_Kind_Psl_Declaration,
+      Iir_Kind_Psl_Endpoint_Declaration,
       Iir_Kind_Terminal_Declaration,
       Iir_Kind_Free_Quantity_Declaration,
       Iir_Kind_Across_Quantity_Declaration,
@@ -6653,7 +6678,7 @@ package Iirs is
    function Get_Psl_Sequence (Decl : Iir) return PSL_Node;
    procedure Set_Psl_Sequence (Decl : Iir; Prop : PSL_Node);
 
-   --  Field: Field1 (uc)
+   --  Field: Field6 (uc)
    function Get_Psl_Declaration (Decl : Iir) return PSL_Node;
    procedure Set_Psl_Declaration (Decl : Iir; Prop : PSL_Node);
 

@@ -724,6 +724,8 @@ package body Errorout is
 
          when Iir_Kind_Psl_Declaration =>
             return Disp_Identifier (Node, "PSL declaration");
+         when Iir_Kind_Psl_Endpoint_Declaration =>
+            return Disp_Identifier (Node, "PSL endpoint declaration");
 
          when Iir_Kind_Terminal_Declaration =>
             return Disp_Identifier (Node, "terminal declaration");

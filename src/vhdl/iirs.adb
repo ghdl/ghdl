@@ -480,6 +480,7 @@ package body Iirs is
            | Iir_Kind_Package_Header
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Psl_Declaration
+           | Iir_Kind_Psl_Endpoint_Declaration
            | Iir_Kind_Across_Quantity_Declaration
            | Iir_Kind_Through_Quantity_Declaration
            | Iir_Kind_Function_Declaration
@@ -5250,7 +5251,7 @@ package body Iirs is
       pragma Assert (Decl /= Null_Iir);
       pragma Assert (Has_Psl_Declaration (Get_Kind (Decl)),
                      "no field Psl_Declaration");
-      return Iir_To_PSL_Node (Get_Field1 (Decl));
+      return Iir_To_PSL_Node (Get_Field6 (Decl));
    end Get_Psl_Declaration;
 
    procedure Set_Psl_Declaration (Decl : Iir; Prop : PSL_Node) is
@@ -5258,7 +5259,7 @@ package body Iirs is
       pragma Assert (Decl /= Null_Iir);
       pragma Assert (Has_Psl_Declaration (Get_Kind (Decl)),
                      "no field Psl_Declaration");
-      Set_Field1 (Decl, PSL_Node_To_Iir (Prop));
+      Set_Field6 (Decl, PSL_Node_To_Iir (Prop));
    end Set_Psl_Declaration;
 
    function Get_Psl_Expression (Decl : Iir) return PSL_Node is
