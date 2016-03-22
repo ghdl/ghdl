@@ -89,6 +89,8 @@ package Grt.Rtis is
       Ghdl_Rtik_Attribute_Stable,
       Ghdl_Rtik_Psl_Assert,
       Ghdl_Rtik_Psl_Cover,
+      Ghdl_Rtik_Psl_Endpoint,
+
       Ghdl_Rtik_Error);
    for Ghdl_Rtik'Size use 8;
 

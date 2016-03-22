@@ -171,7 +171,7 @@ package body Grt.Psl is
 
       Report_Stream := F;
       Status := Psl_Traverse_Blocks (Get_Top_Context);
-      pragma Assert (Status = Traverse_Ok);
+      pragma Assert (Status = Traverse_Ok or Status = Traverse_Skip);
 
       Put_Line (F, "],");
       Put_Line (F, " ""summary"" : {");

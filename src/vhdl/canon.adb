@@ -235,6 +235,18 @@ package body Canon is
                Add_Element (Sensitivity_List, Expr);
             end if;
 
+         when Iir_Kind_Psl_Endpoint_Declaration =>
+            declare
+               List : constant Iir_List := Get_PSL_Clock_Sensitivity (Expr);
+               El : Iir;
+            begin
+               for I in Natural loop
+                  El := Get_Nth_Element (List, I);
+                  exit when El = Null_Iir;
+                  Add_Element (Sensitivity_List, El);
+               end loop;
+            end;
+
          when Iir_Kind_Object_Alias_Declaration =>
             Canon_Extract_Sensitivity
               (Get_Name (Expr), Sensitivity_List, Is_Target);
@@ -1636,15 +1648,14 @@ package body Canon is
       return False;
    end Psl_Need_Finalizer;
 
-   procedure Canon_Psl_Directive (Stmt : Iir)
+   --  Size the NFA and extract clock sensitivity.
+   procedure Canon_Psl_Clocked_NFA (Stmt : Iir)
    is
       use PSL.Nodes;
-      Fa : PSL_NFA;
+      Fa : constant PSL_NFA := Get_PSL_NFA (Stmt);
       Num : Natural;
       List : Iir_List;
    begin
-      Fa := Get_PSL_NFA (Stmt);
-
       PSL.NFAs.Labelize_States (Fa, Num);
       Set_PSL_Nbr_States (Stmt, Int32 (Num));
 
@@ -1653,6 +1664,11 @@ package body Canon is
       List := Create_Iir_List;
       Canon_PSL.Canon_Extract_Sensitivity (Get_PSL_Clock (Stmt), List);
       Set_PSL_Clock_Sensitivity (Stmt, List);
+   end Canon_Psl_Clocked_NFA;
+
+   procedure Canon_Psl_Directive (Stmt : Iir) is
+   begin
+      Canon_Psl_Clocked_NFA (Stmt);
 
       if Canon_Flag_Expressions then
          Canon_PSL_Expression (Get_PSL_Clock (Stmt));
@@ -1693,7 +1709,8 @@ package body Canon is
          --  Add a label if required.
          if Canon_Flag_Add_Labels then
             case Get_Kind (El) is
-               when Iir_Kind_Psl_Declaration =>
+               when Iir_Kind_Psl_Declaration
+                 | Iir_Kind_Psl_Endpoint_Declaration =>
                   null;
                when others =>
                   if Get_Label (El) = Null_Identifier then
@@ -1961,11 +1978,10 @@ package body Canon is
             when Iir_Kind_Psl_Declaration =>
                declare
                   use PSL.Nodes;
-                  Decl : PSL_Node;
+                  Decl : constant PSL_Node := Get_Psl_Declaration (El);
                   Prop : PSL_Node;
                   Fa : PSL_NFA;
                begin
-                  Decl := Get_Psl_Declaration (El);
                   case Get_Kind (Decl) is
                      when N_Property_Declaration =>
                         Prop := Get_Property (Decl);
@@ -1984,6 +2000,22 @@ package body Canon is
                      when others =>
                         Error_Kind ("canon psl_declaration", Decl);
                   end case;
+               end;
+            when Iir_Kind_Psl_Endpoint_Declaration =>
+               declare
+                  use PSL.Nodes;
+                  Decl : constant PSL_Node := Get_Psl_Declaration (El);
+                  Seq : PSL_Node;
+                  Fa : PSL_NFA;
+               begin
+                  pragma Assert (Get_Parameter_List (Decl) = Null_Node);
+                  Seq := Get_Sequence (Decl);
+                  Seq := PSL.Rewrites.Rewrite_SERE (Seq);
+                  Set_Sequence (Decl, Seq);
+                  --  Generate the NFA.
+                  Fa := PSL.Build.Build_SERE_FA (Seq);
+                  Set_PSL_NFA (El, Fa);
+                  Canon_Psl_Clocked_NFA (El);
                end;
 
             when Iir_Kind_Simple_Simultaneous_Statement =>
@@ -2845,6 +2877,7 @@ package body Canon is
               | Iir_Kind_Psl_Cover_Statement
               | Iir_Kind_Psl_Default_Clock
               | Iir_Kind_Psl_Declaration
+              | Iir_Kind_Psl_Endpoint_Declaration
               | Iir_Kind_Simple_Simultaneous_Statement =>
                null;
 

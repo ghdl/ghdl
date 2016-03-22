@@ -427,6 +427,8 @@ package body Grt.Disp_Rti is
             Put ("ghdl_rtik_psl_assert");
          when Ghdl_Rtik_Psl_Cover =>
             Put ("ghdl_rtik_psl_cover");
+         when Ghdl_Rtik_Psl_Endpoint =>
+            Put ("ghdl_rtik_psl_endpoint");
 
          when others =>
             Put ("ghdl_rtik_#");
@@ -773,13 +775,7 @@ package body Grt.Disp_Rti is
       end loop;
    end Disp_For_Generate;
 
-   procedure Disp_Object (Obj : Ghdl_Rtin_Object_Acc;
-                          Is_Sig : Boolean;
-                          Ctxt : Rti_Context;
-                          Indent : Natural)
-   is
-      Addr : Address;
-      Obj_Type : Ghdl_Rti_Access;
+   procedure Disp_Obj_Header (Obj : Ghdl_Rtin_Object_Acc; Indent : Natural) is
    begin
       Disp_Indent (Indent);
       Disp_Kind (Obj.Common.Kind);
@@ -789,6 +785,18 @@ package body Grt.Disp_Rti is
       Put ("; ");
       Disp_Name (Obj.Name);
       Put (": ");
+   end Disp_Obj_Header;
+
+   procedure Disp_Object (Obj : Ghdl_Rtin_Object_Acc;
+                          Is_Sig : Boolean;
+                          Ctxt : Rti_Context;
+                          Indent : Natural)
+   is
+      Addr : Address;
+      Obj_Type : Ghdl_Rti_Access;
+   begin
+      Disp_Obj_Header (Obj, Indent);
+
       Addr := Loc_To_Addr (Obj.Common.Depth, Obj.Loc, Ctxt);
       Obj_Type := Obj.Obj_Type;
       Disp_Subtype_Indication (Obj_Type, Ctxt, Addr);
@@ -811,18 +819,31 @@ package body Grt.Disp_Rti is
    is
       Addr : Address;
    begin
-      Disp_Indent (Indent);
-      Disp_Kind (Obj.Common.Kind);
-      Disp_Depth (Obj.Common.Depth);
-      Put (", ");
-      Disp_Linecol (Obj.Linecol);
-      Put ("; ");
-      Disp_Name (Obj.Name);
-      Put (": count = ");
+      Disp_Obj_Header (Obj, Indent);
+      Put ("count = ");
       Addr := Loc_To_Addr (Obj.Common.Depth, Obj.Loc, Ctxt);
       Put_U32 (stdout, Ghdl_U32 (To_Ghdl_Index_Ptr (Addr).all));
       New_Line;
    end Disp_Psl_Directive;
+
+   procedure Disp_Psl_Endpoint_Directive (Obj : Ghdl_Rtin_Object_Acc;
+                                          Ctxt : Rti_Context;
+                                          Indent : Natural)
+   is
+      Addr : Address;
+      C : Character;
+   begin
+      Disp_Obj_Header (Obj, Indent);
+      Put ("endpoint = ");
+      Addr := Loc_To_Addr (Obj.Common.Depth, Obj.Loc, Ctxt);
+      if To_Ghdl_Value_Ptr (Addr).B1 then
+         C := 'T';
+      else
+         C := 'F';
+      end if;
+      Put (stdout, C);
+      New_Line;
+   end Disp_Psl_Endpoint_Directive;
 
    procedure Disp_Attribute (Obj : Ghdl_Rtin_Object_Acc;
                              Ctxt : Rti_Context;
@@ -1180,6 +1201,9 @@ package body Grt.Disp_Rti is
          when Ghdl_Rtik_Psl_Cover
            | Ghdl_Rtik_Psl_Assert =>
             Disp_Psl_Directive (To_Ghdl_Rtin_Object_Acc (Rti), Ctxt, Indent);
+         when Ghdl_Rtik_Psl_Endpoint =>
+            Disp_Psl_Endpoint_Directive
+              (To_Ghdl_Rtin_Object_Acc (Rti), Ctxt, Indent);
          when others =>
             Disp_Indent (Indent);
             Disp_Kind (Rti.Kind);

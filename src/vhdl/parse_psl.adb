@@ -289,6 +289,16 @@ package body Parse_Psl is
       case Current_Token is
          when Tok_Left_Curly =>
             Res := Parse_Braced_SERE;
+            if Current_Token = Tok_Arobase then
+               N := Create_Node_Loc (N_Clocked_SERE);
+               Set_SERE (N, Res);
+
+               --  Skip '@'
+               Scan;
+
+               Set_Boolean (N, Parse_Psl_Boolean);
+               Res := N;
+            end if;
          when Tok_Brack_Star =>
             return Parse_Maybe_Count (N_Star_Repeat_Seq, Null_Node);
          when Tok_Left_Paren =>
@@ -313,6 +323,8 @@ package body Parse_Psl is
             when Tok_Brack_Plus_Brack =>
                N := Create_Node_Loc (N_Plus_Repeat_Seq);
                Set_Sequence (N, Res);
+
+               --  Skip '[+]'
                Scan;
                Res := N;
             when Tok_Brack_Arrow =>
@@ -320,6 +332,8 @@ package body Parse_Psl is
             when Tok_Brack_Equal =>
                N := Create_Node_Loc (N_Equal_Repeat_Seq);
                Set_Sequence (N, Res);
+
+               --  Skip '[='
                Scan;
                Parse_Count (N);
                if Current_Token /= Tok_Right_Bracket then
@@ -670,4 +684,9 @@ package body Parse_Psl is
       end case;
       return Res;
    end Parse_Psl_Declaration;
+
+   function Is_Instantiated_Declaration (N : PSL_Node) return Boolean is
+   begin
+      return Get_Parameter_List (N) = Null_Node;
+   end Is_Instantiated_Declaration;
 end Parse_Psl;

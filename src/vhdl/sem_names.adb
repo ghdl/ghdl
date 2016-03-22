@@ -1598,7 +1598,8 @@ package body Sem_Names is
             return Res;
          when Iir_Kind_Psl_Expression =>
             return Res;
-         when Iir_Kind_Psl_Declaration =>
+         when Iir_Kind_Psl_Declaration
+           | Iir_Kind_Psl_Endpoint_Declaration =>
             return Name;
          when Iir_Kind_Element_Declaration
            | Iir_Kind_Error =>
@@ -2512,7 +2513,8 @@ package body Sem_Names is
               (Disp_Node (Prefix) & " cannot be indexed or sliced", Name);
             Res := Null_Iir;
 
-         when Iir_Kind_Psl_Declaration =>
+         when Iir_Kind_Psl_Declaration
+           | Iir_Kind_Psl_Endpoint_Declaration =>
             Res := Sem_Psl.Sem_Psl_Name (Name);
 
          when Iir_Kinds_Library_Unit_Declaration =>

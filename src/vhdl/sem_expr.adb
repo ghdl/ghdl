@@ -429,6 +429,8 @@ package body Sem_Expr is
            | Iir_Kind_Type_Conversion
            | Iir_Kind_Function_Call =>
             return Expr;
+         when Iir_Kind_Psl_Endpoint_Declaration =>
+            return Expr;
          when Iir_Kind_Simple_Name
            | Iir_Kind_Parenthesis_Name
            | Iir_Kind_Attribute_Name
@@ -3893,6 +3895,8 @@ package body Sem_Expr is
             when Iir_Kinds_Quantity_Declaration =>
                return;
             when Iir_Kinds_External_Name =>
+               return;
+            when Iir_Kind_Psl_Endpoint_Declaration =>
                return;
             when Iir_Kind_File_Declaration
               | Iir_Kind_Interface_File_Declaration =>

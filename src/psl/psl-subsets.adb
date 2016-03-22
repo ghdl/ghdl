@@ -120,7 +120,8 @@ package body PSL.Subsets is
            | N_Eventually
            | N_Strong =>
             Check_Simple (Get_Property (N));
-         when N_Braced_SERE =>
+         when N_Braced_SERE
+           | N_Clocked_SERE =>
             Check_Simple (Get_SERE (N));
          when N_Concat_SERE
            | N_Fusion_SERE

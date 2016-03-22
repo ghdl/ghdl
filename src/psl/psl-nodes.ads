@@ -72,6 +72,7 @@ package PSL.Nodes is
       N_Concat_SERE,
       N_Fusion_SERE,
       N_Within_SERE,
+      N_Clocked_SERE,
 
       N_Match_And_Seq,  --  &&
       N_And_Seq,
@@ -253,6 +254,12 @@ package PSL.Nodes is
    -- N_Braced_SERE (Short)
    --
    --   Get/Set_SERE (Field1)
+
+   -- N_Clocked_SERE (Short)
+   --
+   --   Get/Set_SERE (Field1)
+   --
+   --   Get/Set_Boolean (Field3)
 
    -- N_Concat_SERE (Short)
    -- N_Fusion_SERE (Short)

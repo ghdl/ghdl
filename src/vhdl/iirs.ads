@@ -1658,6 +1658,14 @@ package Iirs is
    --
    --   Get/Set_PSL_NFA (Field8)
    --
+   --  Number of states in the NFA.
+   --   Get/Set_PSL_Nbr_States (Field9)
+   --
+   --   Get/Set_PSL_Clock_Sensitivity (Field10)
+   --
+   --  True if at least one of the NFA edge has the EOS flag.
+   --   Get/Set_PSL_EOS_Flag (Flag1)
+   --
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Use_Flag (Flag6)

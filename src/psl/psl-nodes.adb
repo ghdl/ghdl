@@ -346,6 +346,7 @@ package body PSL.Nodes is
            | N_Concat_SERE
            | N_Fusion_SERE
            | N_Within_SERE
+           | N_Clocked_SERE
            | N_Overlap_Imp_Seq
            | N_Imp_Seq
            | N_And_Seq
@@ -442,6 +443,7 @@ package body PSL.Nodes is
            | N_Concat_SERE
            | N_Fusion_SERE
            | N_Within_SERE
+           | N_Clocked_SERE
            | N_Match_And_Seq
            | N_And_Seq
            | N_Or_Seq

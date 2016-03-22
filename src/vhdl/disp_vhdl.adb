@@ -1142,7 +1142,8 @@ package body Disp_Vhdl is
       Disp_Interface_Chain (Get_Generic_Chain (Parent), ";");
    end Disp_Generics;
 
-   procedure Disp_Entity_Declaration (Decl: Iir_Entity_Declaration) is
+   procedure Disp_Entity_Declaration (Decl: Iir_Entity_Declaration)
+   is
       Start: constant Count := Col;
    begin
       Put ("entity ");
@@ -2997,15 +2998,23 @@ package body Disp_Vhdl is
             Disp_Ident (Get_Identifier (Decl));
             Put (" is ");
             Disp_Psl_Expression (Get_Property (Decl));
+            Put_Line (";");
          when N_Sequence_Declaration =>
             Put ("sequence ");
             Disp_Ident (Get_Identifier (Decl));
             Put (" is ");
             Disp_Psl_Sequence (Get_Sequence (Decl));
+            Put_Line (";");
+         when N_Endpoint_Declaration =>
+            Put ("endpoint ");
+            Disp_Ident (Get_Identifier (Decl));
+            Put (" is ");
+            Disp_Psl_Sequence (Get_Sequence (Decl));
+            Put_Line (";");
+            Disp_PSL_NFA (Get_PSL_NFA (Stmt));
          when others =>
             Error_Kind ("disp_psl_declaration", Decl);
       end case;
-      Put_Line (";");
    end Disp_Psl_Declaration;
 
    procedure Disp_PSL_NFA (N : PSL.Nodes.NFA)
@@ -3105,7 +3114,8 @@ package body Disp_Vhdl is
             Disp_For_Generate_Statement (Stmt);
          when Iir_Kind_Psl_Default_Clock =>
             Disp_Psl_Default_Clock (Stmt);
-         when Iir_Kind_Psl_Declaration =>
+         when Iir_Kind_Psl_Declaration
+           | Iir_Kind_Psl_Endpoint_Declaration =>
             Disp_Psl_Declaration (Stmt);
          when Iir_Kind_Psl_Assert_Statement =>
             Disp_Psl_Assert_Statement (Stmt);

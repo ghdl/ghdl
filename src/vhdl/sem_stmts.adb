@@ -1913,6 +1913,8 @@ package body Sem_Stmts is
                  (El, Is_Passive);
             when Iir_Kind_Psl_Declaration =>
                Sem_Psl.Sem_Psl_Declaration (El);
+            when Iir_Kind_Psl_Endpoint_Declaration =>
+               Sem_Psl.Sem_Psl_Endpoint_Declaration (El);
             when Iir_Kind_Psl_Assert_Statement =>
                New_El := Sem_Psl.Sem_Psl_Assert_Statement (El);
             when Iir_Kind_Psl_Cover_Statement =>
@@ -1957,7 +1959,8 @@ package body Sem_Stmts is
       while Stmt /= Null_Iir loop
 
          case Get_Kind (Stmt) is
-            when Iir_Kind_Psl_Declaration =>
+            when Iir_Kind_Psl_Declaration
+              | Iir_Kind_Psl_Endpoint_Declaration =>
                --  Special case for in-lined PSL declarations.
                null;
             when others =>
