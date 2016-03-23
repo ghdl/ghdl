@@ -1671,6 +1671,8 @@ package Iirs is
    --   Get/Set_Use_Flag (Flag6)
    --
    --   Get/Set_Expr_Staticness (State1)
+   --
+   --   Get/Set_Name_Staticness (State2)
 
    -- Iir_Kind_Psl_Declaration (Medium)
    --  A psl sequence or property declaration.

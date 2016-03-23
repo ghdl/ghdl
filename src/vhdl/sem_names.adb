@@ -1488,7 +1488,8 @@ package body Sem_Names is
          when Iir_Kinds_Object_Declaration
            | Iir_Kinds_Quantity_Declaration
            | Iir_Kind_Enumeration_Literal
-           | Iir_Kind_Unit_Declaration =>
+           | Iir_Kind_Unit_Declaration
+           | Iir_Kind_Psl_Endpoint_Declaration =>
             Name_Res := Finish_Sem_Denoting_Name (Name, Res);
             Set_Base_Name (Name_Res, Res);
             Set_Name_Staticness (Name_Res, Get_Name_Staticness (Res));
@@ -1598,8 +1599,7 @@ package body Sem_Names is
             return Res;
          when Iir_Kind_Psl_Expression =>
             return Res;
-         when Iir_Kind_Psl_Declaration
-           | Iir_Kind_Psl_Endpoint_Declaration =>
+         when Iir_Kind_Psl_Declaration =>
             return Name;
          when Iir_Kind_Element_Declaration
            | Iir_Kind_Error =>
