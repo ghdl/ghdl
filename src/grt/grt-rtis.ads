@@ -181,8 +181,15 @@ package Grt.Rtis is
    type Ghdl_Rtin_Object is record
       Common : Ghdl_Rti_Common;
       Name : Ghdl_C_String;
+
+      --  Address of the object.  For a signal, this is the address of the
+      --  signal, the value is just after the signal.
       Loc : Ghdl_Rti_Loc;
+
+      --  Type of the object.
       Obj_Type : Ghdl_Rti_Access;
+
+      --  Line and column of the declaration.
       Linecol : Ghdl_Index_Type;
    end record;
    type Ghdl_Rtin_Object_Acc is access Ghdl_Rtin_Object;
