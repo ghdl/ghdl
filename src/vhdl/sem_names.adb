@@ -46,6 +46,10 @@ package body Sem_Names is
 
    procedure Error_Overload (Expr: Iir) is
    begin
+      if Is_Error (Expr) then
+         --  Avoid error storm.
+         return;
+      end if;
       Error_Msg_Sem ("can't resolve overload for " & Disp_Node (Expr), Expr);
    end Error_Overload;
 
@@ -3610,7 +3614,7 @@ package body Sem_Names is
 
    --  Convert name EXPR to an expression (ie, create function call).
    --  A_TYPE is the expected type of the expression.
-   --  Returns NULL_IIR in case of error.
+   --  Returns an Error node in case of error.
    function Name_To_Expression (Name : Iir; A_Type : Iir) return Iir
    is
       Ret_Type : Iir;
@@ -3623,10 +3627,10 @@ package body Sem_Names is
    begin
       Expr := Get_Named_Entity (Name);
       if Get_Kind (Expr) = Iir_Kind_Error then
-         return Null_Iir;
+         return Expr;
       end if;
       if Check_Is_Expression (Expr, Name) = Null_Iir then
-         return Null_Iir;
+         return Create_Error_Expr (Name, A_Type);
       end if;
 
       --  Note: EXPR may contain procedure names...
@@ -3635,7 +3639,7 @@ package body Sem_Names is
       if Expr = Null_Iir then
          Error_Msg_Sem ("procedure name " & Disp_Node (Name)
                         & " cannot be used as expression", Name);
-         return Null_Iir;
+         return Create_Error_Expr (Name, A_Type);
       end if;
 
       if not Is_Overload_List (Expr) then
@@ -3644,13 +3648,13 @@ package body Sem_Names is
          if A_Type /= Null_Iir then
             Res_Type := Get_Type (Res);
             if Res_Type = Null_Iir then
-               return Null_Iir;
+               return Create_Error_Expr (Res, A_Type);
             end if;
             if Are_Basetypes_Compatible (Get_Base_Type (Res_Type), A_Type)
               = Not_Compatible
             then
-               Error_Not_Match (Res, A_Type, Name);
-               return Null_Iir;
+               Error_Not_Match (Res, A_Type);
+               return Create_Error_Expr (Res, A_Type);
             end if;
             --  Fall through.
          end if;
@@ -3672,8 +3676,8 @@ package body Sem_Names is
                end if;
             end loop;
             if Res = Null_Iir then
-               Error_Not_Match (Name, A_Type, Name);
-               return Null_Iir;
+               Error_Not_Match (Name, A_Type);
+               return Create_Error_Expr (Name, A_Type);
             elsif Is_Overload_List (Res) then
                Res1 := Extract_Call_Without_Implicit_Conversion (Res);
                if Res1 /= Null_Iir then
@@ -3683,7 +3687,7 @@ package body Sem_Names is
                   Error_Overload (Name);
                   Disp_Overload_List (Get_Overload_List (Res), Name);
                   Free_Iir (Res);
-                  return Null_Iir;
+                  return Create_Error_Expr (Name, A_Type);
                end if;
             end if;
 
@@ -3711,7 +3715,7 @@ package body Sem_Names is
                   Error_Overload (Name);
                   Disp_Overload_List (Expr_List, Name);
                   --Free_Iir (Ret_Type);
-                  return Null_Iir;
+                  return Create_Error_Expr (Name, A_Type);
                end if;
             else
                Set_Type (Name, Ret_Type);

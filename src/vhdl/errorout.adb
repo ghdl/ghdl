@@ -1100,14 +1100,11 @@ package body Errorout is
         (Origin, "(" & Disp_Node (Callee) & " is defined here)", Callee);
    end Error_Pure;
 
-   procedure Error_Not_Match (Expr: Iir; A_Type: Iir; Loc : Iir)
+   procedure Error_Not_Match (Expr: Iir; A_Type: Iir)
    is
    begin
       Error_Msg_Sem ("can't match " & Disp_Node (Expr) & " with type "
-                     & Disp_Node (A_Type), Loc);
-      if Loc /= Expr then
-         Error_Msg_Sem ("(location of " & Disp_Node (Expr) & ")", Expr);
-      end if;
+                     & Disp_Node (A_Type), Expr);
    end Error_Not_Match;
 
    function Get_Mode_Name (Mode : Iir_Mode) return String is
