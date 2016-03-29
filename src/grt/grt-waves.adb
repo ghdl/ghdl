@@ -43,6 +43,7 @@ with Grt.Rtis_Types;
 with Grt.Signals; use Grt.Signals;
 with System; use System;
 with Grt.Vstrings; use Grt.Vstrings;
+with Grt.Ghw; use Grt.Ghw;
 
 pragma Elaborate_All (Grt.Rtis_Utils);
 pragma Elaborate_All (Grt.Table);
@@ -52,42 +53,6 @@ package body Grt.Waves is
    Wave_Filename : String_Access := null;
    --  Stream corresponding to the GHW filename.
    Wave_Stream : FILEs;
-
-   Ghw_Hie_Design       : constant Unsigned_8 := 1;
-   Ghw_Hie_Block        : constant Unsigned_8 := 3;
-   Ghw_Hie_Generate_If  : constant Unsigned_8 := 4;
-   Ghw_Hie_Generate_For : constant Unsigned_8 := 5;
-   Ghw_Hie_Instance     : constant Unsigned_8 := 6;
-   Ghw_Hie_Package      : constant Unsigned_8 := 7;
-   Ghw_Hie_Process      : constant Unsigned_8 := 13;
-   Ghw_Hie_Generic      : constant Unsigned_8 := 14;
-   Ghw_Hie_Eos          : constant Unsigned_8 := 15; --  End of scope.
-   Ghw_Hie_Signal       : constant Unsigned_8 := 16; --  Signal.
-   Ghw_Hie_Port_In      : constant Unsigned_8 := 17; --  Port
-   Ghw_Hie_Port_Out     : constant Unsigned_8 := 18; --  Port
-   Ghw_Hie_Port_Inout   : constant Unsigned_8 := 19; --  Port
-   Ghw_Hie_Port_Buffer  : constant Unsigned_8 := 20; --  Port
-   Ghw_Hie_Port_Linkage : constant Unsigned_8 := 21; --  Port
-
-   pragma Unreferenced (Ghw_Hie_Design);
-   pragma Unreferenced (Ghw_Hie_Generic);
-
-   --  Type kind was initially ghdl_rtik, but to avoid coupling, we are now
-   --  using Ghw_Rtik (with old values).
-   type Ghw_Rtik is new Unsigned_8;
-   Ghw_Rtik_Error : constant Ghw_Rtik := 0;
-   Ghw_Rtik_Type_B2  : constant Ghw_Rtik := 22;
-   Ghw_Rtik_Type_E8  : constant Ghw_Rtik := 23;
-   --  Ghw_Rtik_Type_E32 : constant Ghw_Rtik := 24;  --  Not used
-   Ghw_Rtik_Type_I32 : constant Ghw_Rtik := 25;
-   Ghw_Rtik_Type_I64 : constant Ghw_Rtik := 26;
-   Ghw_Rtik_Type_F64 : constant Ghw_Rtik := 27;
-   Ghw_Rtik_Type_P32 : constant Ghw_Rtik := 28;
-   Ghw_Rtik_Type_P64 : constant Ghw_Rtik := 29;
-   Ghw_Rtik_Type_Array     : constant Ghw_Rtik := 31;
-   Ghw_Rtik_Type_Record    : constant Ghw_Rtik := 32;
-   Ghw_Rtik_Subtype_Scalar : constant Ghw_Rtik := 34;
-   Ghw_Rtik_Subtype_Array  : constant Ghw_Rtik := 35;
 
    --  Return TRUE if OPT is an option for wave.
    function Wave_Option (Opt : String) return Boolean
@@ -1661,7 +1626,7 @@ package body Grt.Waves is
          Wave_Close_Cyc;
       end if;
       Wave_Write_Directory;
-      fflush (Wave_Stream);
+      fclose (Wave_Stream);
    end Wave_End;
 
    Wave_Hooks : aliased constant Hooks_Type :=
