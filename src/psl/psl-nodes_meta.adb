@@ -211,6 +211,8 @@ package body PSL.Nodes_Meta is
             return "fusion_sere";
          when N_Within_SERE =>
             return "within_sere";
+         when N_Clocked_SERE =>
+            return "clocked_sere";
          when N_Match_And_Seq =>
             return "match_and_seq";
          when N_And_Seq =>
@@ -473,6 +475,9 @@ package body PSL.Nodes_Meta is
       --  N_Within_SERE
       Field_Left,
       Field_Right,
+      --  N_Clocked_SERE
+      Field_SERE,
+      Field_Boolean,
       --  N_Match_And_Seq
       Field_Left,
       Field_Right,
@@ -583,24 +588,25 @@ package body PSL.Nodes_Meta is
       N_Concat_SERE => 106,
       N_Fusion_SERE => 108,
       N_Within_SERE => 110,
-      N_Match_And_Seq => 112,
-      N_And_Seq => 114,
-      N_Or_Seq => 116,
-      N_Star_Repeat_Seq => 119,
-      N_Goto_Repeat_Seq => 122,
-      N_Plus_Repeat_Seq => 123,
-      N_Equal_Repeat_Seq => 126,
-      N_Not_Bool => 130,
-      N_And_Bool => 135,
-      N_Or_Bool => 140,
-      N_Imp_Bool => 145,
-      N_HDL_Expr => 150,
-      N_False => 150,
-      N_True => 150,
-      N_EOS => 153,
-      N_Name => 155,
-      N_Name_Decl => 157,
-      N_Number => 158
+      N_Clocked_SERE => 112,
+      N_Match_And_Seq => 114,
+      N_And_Seq => 116,
+      N_Or_Seq => 118,
+      N_Star_Repeat_Seq => 121,
+      N_Goto_Repeat_Seq => 124,
+      N_Plus_Repeat_Seq => 125,
+      N_Equal_Repeat_Seq => 128,
+      N_Not_Bool => 132,
+      N_And_Bool => 137,
+      N_Or_Bool => 142,
+      N_Imp_Bool => 147,
+      N_HDL_Expr => 152,
+      N_False => 152,
+      N_True => 152,
+      N_EOS => 155,
+      N_Name => 157,
+      N_Name_Decl => 159,
+      N_Number => 160
      );
 
    function Get_Fields (K : Nkind) return Fields_Array
@@ -1015,7 +1021,13 @@ package body PSL.Nodes_Meta is
 
    function Has_SERE (K : Nkind) return Boolean is
    begin
-      return K = N_Braced_SERE;
+      case K is
+         when N_Braced_SERE
+           | N_Clocked_SERE =>
+            return True;
+         when others =>
+            return False;
+      end case;
    end Has_SERE;
 
    function Has_Left (K : Nkind) return Boolean is
@@ -1165,6 +1177,7 @@ package body PSL.Nodes_Meta is
            | N_Next_Event_A
            | N_Next_Event_E
            | N_Abort
+           | N_Clocked_SERE
            | N_Not_Bool =>
             return True;
          when others =>

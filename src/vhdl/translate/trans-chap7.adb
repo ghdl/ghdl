@@ -4037,6 +4037,13 @@ package body Trans.Chap7 is
             | Iir_Kind_Selected_Name =>
             return Translate_Expression (Get_Named_Entity (Expr), Rtype);
 
+         when Iir_Kind_Psl_Endpoint_Declaration =>
+            declare
+               Info : constant Psl_Info_Acc := Get_Info (Expr);
+            begin
+               return New_Value (Get_Var (Info.Psl_Count_Var));
+            end;
+
          when others =>
             Error_Kind ("translate_expression", Expr);
       end case;

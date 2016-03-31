@@ -33,6 +33,8 @@ with Errorout; use Errorout;
 with Xrefs; use Xrefs;
 
 package body Sem_Psl is
+   procedure Sem_Psl_Directive_Clock (Stmt : Iir; Prop : in out Node);
+
    --  Return TRUE iff Atype is a PSL boolean type.
    --  See PSL1.1 5.1.2  Boolean expressions
    function Is_Psl_Bool_Type (Atype : Iir) return Boolean
@@ -163,8 +165,6 @@ package body Sem_Psl is
                case Get_Kind (Decl) is
                   when N_Sequence_Declaration =>
                      Res := Create_Node (N_Sequence_Instance);
-                  when N_Endpoint_Declaration =>
-                     Res := Create_Node (N_Endpoint_Instance);
                   when N_Property_Declaration =>
                      Res := Create_Node (N_Property_Instance);
                   when N_Boolean_Parameter
@@ -254,6 +254,12 @@ package body Sem_Psl is
          when N_Braced_SERE =>
             Res := Sem_Sequence (Get_SERE (Seq));
             Set_SERE (Seq, Res);
+            return Seq;
+         when N_Clocked_SERE =>
+            Res := Sem_Sequence (Get_SERE (Seq));
+            Set_SERE (Seq, Res);
+            Res := Sem_Boolean (Get_Boolean (Seq));
+            Set_Boolean (Seq, Res);
             return Seq;
          when N_Concat_SERE
            | N_Fusion_SERE
@@ -415,6 +421,9 @@ package body Sem_Psl is
          when N_Clock_Event =>
             Clk := Get_Boolean (Prop);
             Prop := Get_Property (Prop);
+         when N_Clocked_SERE =>
+            Clk := Get_Boolean (Prop);
+            Prop := Get_SERE (Prop);
          when N_Always
            | N_Never =>
             Child := Get_Property (Prop);
@@ -434,7 +443,7 @@ package body Sem_Psl is
    procedure Sem_Psl_Declaration (Stmt : Iir)
    is
       use Sem_Scopes;
-      Decl : Node;
+      Decl : constant Node := Get_Psl_Declaration (Stmt);
       Prop : Node;
       Clk : Node;
       Formal : Node;
@@ -442,8 +451,6 @@ package body Sem_Psl is
    begin
       Sem_Scopes.Add_Name (Stmt);
       Xref_Decl (Stmt);
-
-      Decl := Get_Psl_Declaration (Stmt);
 
       Open_Declarative_Region;
 
@@ -486,6 +493,33 @@ package body Sem_Psl is
 
       Close_Declarative_Region;
    end Sem_Psl_Declaration;
+
+   procedure Sem_Psl_Endpoint_Declaration (Stmt : Iir)
+   is
+      use Sem_Scopes;
+      Decl : constant Node := Get_Psl_Declaration (Stmt);
+      Prop : Node;
+   begin
+      Sem_Scopes.Add_Name (Stmt);
+      Xref_Decl (Stmt);
+
+      pragma Assert (Get_Parameter_List (Decl) = Null_Node);
+      pragma Assert (Get_Kind (Decl) = N_Endpoint_Declaration);
+
+      Prop := Get_Sequence (Decl);
+      Prop := Sem_Sequence (Prop);
+      Sem_Psl_Directive_Clock (Stmt, Prop);
+      Set_Sequence (Decl, Prop);
+
+      PSL.Subsets.Check_Simple (Prop);
+
+      --  Endpoints are considered as an HDL declaration and must have a
+      --  type.
+      Set_Type (Stmt, Std_Package.Boolean_Type_Definition);
+      Set_Expr_Staticness (Stmt, None);
+
+      Set_Visible_Flag (Stmt, True);
+   end Sem_Psl_Endpoint_Declaration;
 
    function Rewrite_As_Boolean_Expression (Prop : Node) return Iir
    is
@@ -647,9 +681,9 @@ package body Sem_Psl is
 
    function Sem_Psl_Instance_Name (Name : Iir) return Iir
    is
-      Prefix : Iir;
-      Ent : Iir;
-      Decl : Node;
+      Prefix : constant Iir := Get_Prefix (Name);
+      Ent : constant Iir := Get_Named_Entity (Prefix);
+      Decl : constant Node := Get_Psl_Declaration (Ent);
       Formal : Node;
       Assoc : Iir;
       Res : Node;
@@ -659,10 +693,8 @@ package body Sem_Psl is
       Psl_Actual : Node;
       Res2 : Iir;
    begin
-      Prefix := Get_Prefix (Name);
-      Ent := Get_Named_Entity (Prefix);
-      pragma Assert (Get_Kind (Ent) = Iir_Kind_Psl_Declaration);
-      Decl := Get_Psl_Declaration (Ent);
+      pragma Assert (Get_Kind (Ent) = Iir_Kind_Psl_Declaration
+                       or Get_Kind (Ent) = Iir_Kind_Psl_Endpoint_Declaration);
       case Get_Kind (Decl) is
          when N_Property_Declaration =>
             Res := Create_Node (N_Property_Instance);

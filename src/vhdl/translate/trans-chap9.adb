@@ -315,8 +315,17 @@ package body Trans.Chap9 is
       New_Type_Decl (Create_Identifier ("VECTTYPE"), Info.Psl_Vect_Type);
 
       --  Create the variables.
-      Info.Psl_Count_Var := Create_Var
-        (Create_Var_Identifier ("COUNT"), Ghdl_Index_Type);
+      if Get_Kind (Stmt) = Iir_Kind_Psl_Endpoint_Declaration then
+         --  FIXME: endpoint is a variable (and not a signal). This is required
+         --  to have the right value for the current cycle, but as a
+         --  consequence, this process must be evaluated before using the
+         --  endpoint.
+         Info.Psl_Count_Var := Create_Var
+           (Create_Var_Identifier ("ENDPOINT"), Std_Boolean_Type_Node);
+      else
+         Info.Psl_Count_Var := Create_Var
+           (Create_Var_Identifier ("COUNT"), Ghdl_Index_Type);
+      end if;
 
       Info.Psl_Vect_Var := Create_Var
         (Create_Var_Identifier ("VECT"), Info.Psl_Vect_Type);
@@ -440,12 +449,18 @@ package body Trans.Chap9 is
       Start_Declare_Stmt;
       New_Var_Decl (Var_I, Wki_I, O_Storage_Local, Ghdl_Index_Type);
       Init_Var (Var_I);
-      if Get_Kind (Stmt) = Iir_Kind_Psl_Cover_Statement then
-         New_Assign_Stmt (New_Indexed_Element (Get_Var (Info.Psl_Vect_Var),
-                                               New_Obj_Value (Var_I)),
-                          New_Lit (Std_Boolean_True_Node));
-         Inc_Var (Var_I);
-      end if;
+      case Get_Kind (Stmt) is
+         when Iir_Kind_Psl_Cover_Statement
+           | Iir_Kind_Psl_Endpoint_Declaration =>
+            --  Sequences for cover or endpoints are detected on every cycle,
+            --  so the start state is always active.
+            New_Assign_Stmt (New_Indexed_Element (Get_Var (Info.Psl_Vect_Var),
+                                                  New_Obj_Value (Var_I)),
+                             New_Lit (Std_Boolean_True_Node));
+            Inc_Var (Var_I);
+         when others =>
+            null;
+      end case;
       Start_Loop_Stmt (Label);
       Gen_Exit_When
         (Label,
@@ -512,28 +527,34 @@ package body Trans.Chap9 is
       S := Get_Final_State (NFA);
       S_Num := Get_State_Label (S);
       pragma Assert (S_Num = Get_PSL_Nbr_States (Stmt) - 1);
-      Start_If_Stmt
-        (S_Blk,
-         New_Value (New_Indexed_Element (New_Obj (Var_Nvec),
-                                         New_Lit (New_Index_Lit
-                                                    (Unsigned_64 (S_Num))))));
-      Open_Temp;
-      case Get_Kind (Stmt) is
-         when Iir_Kind_Psl_Assert_Statement =>
-            Chap8.Translate_Report
-              (Stmt, Ghdl_Psl_Assert_Failed, Severity_Level_Error);
-         when Iir_Kind_Psl_Cover_Statement =>
-            Chap8.Translate_Report
-              (Stmt, Ghdl_Psl_Cover, Severity_Level_Note);
-         when others =>
-            Error_Kind ("Translate_Psl_Directive_Statement", Stmt);
-      end case;
-      New_Assign_Stmt (Get_Var (Info.Psl_Count_Var),
-                       New_Dyadic_Op (ON_Add_Ov,
-                                      New_Value (Get_Var (Info.Psl_Count_Var)),
-                                      New_Lit (Ghdl_Index_1)));
-      Close_Temp;
-      Finish_If_Stmt (S_Blk);
+      Cond := New_Value
+        (New_Indexed_Element (New_Obj (Var_Nvec),
+                              New_Lit (New_Index_Lit
+                                         (Unsigned_64 (S_Num)))));
+
+      if Get_Kind (Stmt) = Iir_Kind_Psl_Endpoint_Declaration then
+         New_Assign_Stmt (Get_Var (Info.Psl_Count_Var), Cond);
+      else
+         Start_If_Stmt (S_Blk, Cond);
+         Open_Temp;
+         case Get_Kind (Stmt) is
+            when Iir_Kind_Psl_Assert_Statement =>
+               Chap8.Translate_Report
+                 (Stmt, Ghdl_Psl_Assert_Failed, Severity_Level_Error);
+            when Iir_Kind_Psl_Cover_Statement =>
+               Chap8.Translate_Report
+                 (Stmt, Ghdl_Psl_Cover, Severity_Level_Note);
+            when others =>
+               Error_Kind ("Translate_Psl_Directive_Statement", Stmt);
+         end case;
+         New_Assign_Stmt
+           (Get_Var (Info.Psl_Count_Var),
+            New_Dyadic_Op (ON_Add_Ov,
+                           New_Value (Get_Var (Info.Psl_Count_Var)),
+                           New_Lit (Ghdl_Index_1)));
+         Close_Temp;
+         Finish_If_Stmt (S_Blk);
+      end if;
 
       --  Assign state vector.
       Start_Declare_Stmt;
@@ -632,6 +653,9 @@ package body Trans.Chap9 is
             Clear_Scope (Base.Block_Scope);
             Pop_Local_Factory;
             Finish_Subprogram_Body;
+
+         when Iir_Kind_Psl_Endpoint_Declaration =>
+            Info.Psl_Proc_Final_Subprg := O_Dnode_Null;
 
          when others =>
             Error_Kind ("Translate_Psl_Directive_Statement(3)", Stmt);
@@ -800,7 +824,8 @@ package body Trans.Chap9 is
             when Iir_Kind_Psl_Declaration =>
                null;
             when Iir_Kind_Psl_Assert_Statement
-               | Iir_Kind_Psl_Cover_Statement =>
+              | Iir_Kind_Psl_Cover_Statement
+              | Iir_Kind_Psl_Endpoint_Declaration =>
                Translate_Psl_Directive_Declarations (El);
             when Iir_Kind_Component_Instantiation_Statement =>
                Translate_Component_Instantiation_Statement (El);
@@ -942,7 +967,8 @@ package body Trans.Chap9 is
             when Iir_Kind_Psl_Declaration =>
                null;
             when Iir_Kind_Psl_Assert_Statement
-               | Iir_Kind_Psl_Cover_Statement =>
+              | Iir_Kind_Psl_Cover_Statement
+              | Iir_Kind_Psl_Endpoint_Declaration =>
                Translate_Psl_Directive_Statement (Stmt, Base_Info);
             when Iir_Kind_Component_Instantiation_Statement =>
                Chap4.Translate_Association_Subprograms
@@ -1334,6 +1360,7 @@ package body Trans.Chap9 is
       List   : Iir_List;
       Var_I  : O_Dnode;
       Label  : O_Snode;
+      Init   : O_Cnode;
    begin
       New_Debug_Line_Stmt (Get_Line_Number (Stmt));
 
@@ -1391,7 +1418,12 @@ package body Trans.Chap9 is
       Finish_Loop_Stmt (Label);
       Finish_Declare_Stmt;
 
-      New_Assign_Stmt (Get_Var (Info.Psl_Count_Var), New_Lit (Ghdl_Index_0));
+      if Get_Kind (Stmt) = Iir_Kind_Psl_Endpoint_Declaration then
+         Init := Std_Boolean_False_Node;
+      else
+         Init := Ghdl_Index_0;
+      end if;
+      New_Assign_Stmt (Get_Var (Info.Psl_Count_Var), New_Lit (Init));
    end Elab_Psl_Directive;
 
    procedure Elab_Implicit_Guard_Signal
@@ -2197,7 +2229,8 @@ package body Trans.Chap9 is
                null;
             when Iir_Kind_Psl_Default_Clock =>
                null;
-            when Iir_Kind_Psl_Declaration =>
+            when Iir_Kind_Psl_Declaration
+              | Iir_Kind_Psl_Endpoint_Declaration =>
                null;
             when Iir_Kind_Psl_Assert_Statement
                | Iir_Kind_Psl_Cover_Statement =>
@@ -2260,7 +2293,8 @@ package body Trans.Chap9 is
             when Iir_Kind_Psl_Declaration =>
                null;
             when Iir_Kind_Psl_Assert_Statement
-              | Iir_Kind_Psl_Cover_Statement =>
+              | Iir_Kind_Psl_Cover_Statement
+              | Iir_Kind_Psl_Endpoint_Declaration =>
                Elab_Psl_Directive (Stmt, Base_Info);
             when Iir_Kind_Component_Instantiation_Statement =>
                null;

@@ -6909,24 +6909,40 @@ package body Parse is
    function Parse_Psl_Declaration return Iir
    is
       Tok : constant Token_Type := Current_Token;
+      Loc : constant Location_Type := Get_Token_Location;
       Res : Iir;
+      Decl : PSL_Node;
+      Id : Name_Id;
    begin
-      Res := Create_Iir (Iir_Kind_Psl_Declaration);
-
       --  Skip 'property', 'sequence' or 'endpoint'.
       Scan;
 
       if Current_Token /= Tok_Identifier then
-         Error_Msg_Parse ("property name expected here");
+         Error_Msg_Parse ("declaration name expected here");
+         Id := Null_Identifier;
       else
-         Set_Identifier (Res, Current_Identifier);
+         Id := Current_Identifier;
       end if;
 
+      --  Parse PSL declaration.
       Scanner.Flag_Psl := True;
-      Set_Psl_Declaration (Res, Parse_Psl.Parse_Psl_Declaration (Tok));
+      Decl := Parse_Psl.Parse_Psl_Declaration (Tok);
       Expect (Tok_Semi_Colon);
       Scanner.Flag_Scan_In_Comment := False;
       Scanner.Flag_Psl := False;
+
+      if Tok = Tok_Psl_Endpoint
+        and then Parse_Psl.Is_Instantiated_Declaration (Decl)
+      then
+         --  Instantiated endpoint: make it visible from VHDL.
+         Res := Create_Iir (Iir_Kind_Psl_Endpoint_Declaration);
+      else
+         --  Otherwise, it will be visible only from PSL.
+         Res := Create_Iir (Iir_Kind_Psl_Declaration);
+      end if;
+      Set_Location (Res, Loc);
+      Set_Identifier (Res, Id);
+      Set_Psl_Declaration (Res, Decl);
 
       return Res;
    end Parse_Psl_Declaration;

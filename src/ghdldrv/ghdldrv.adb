@@ -624,7 +624,13 @@ package body Ghdldrv is
          Add_Argument (Compiler_Args, new String'("--mb-comments"));
          Res := Option_Ok;
       elsif Options.Parse_Option (Opt) then
-         Add_Argument (Compiler_Args, new String'(Opt));
+         if Opt'Length > 2 and then Opt (1 .. 2) = "-P" then
+            --  Discard -Pxxx switches, as they are already added to
+            --  compiler_args.
+            null;
+         else
+            Add_Argument (Compiler_Args, new String'(Opt));
+         end if;
          Res := Option_Ok;
       elsif Opt'Length >= 2
         and then (Opt (2) = 'O' or Opt (2) = 'f')

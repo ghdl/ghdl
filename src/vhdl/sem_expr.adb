@@ -33,28 +33,6 @@ with Xrefs; use Xrefs;
 
 package body Sem_Expr is
 
-   procedure Not_Match (Expr: Iir; A_Type: Iir)
-   is
-      pragma Inline (Not_Match);
-   begin
-      Error_Not_Match (Expr, A_Type, Expr);
-   end Not_Match;
-
---    procedure Not_Match (Expr: Iir; Type1: Iir; Type2: Iir) is
---    begin
---       Error_Msg_Sem
---         ("can't match '" & Disp_Node (Expr) & "' with type '"
---          & Disp_Node (Type1) & "' or type '" & Disp_Node (Type2) & "'",
---          Expr);
---    end Not_Match;
-
---    procedure Overloaded (Expr: Iir) is
---    begin
---       Error_Msg_Sem
---         ("cant resolve overloaded identifier '" & Get_String (Expr) & "'",
---          Expr);
---    end Overloaded;
-
    -- Replace type of TARGET by A_TYPE.
    -- If TARGET has already a type, it must be an overload list, and in this
    -- case, this list is freed, or it must be A_TYPE.
@@ -429,6 +407,8 @@ package body Sem_Expr is
            | Iir_Kind_Type_Conversion
            | Iir_Kind_Function_Call =>
             return Expr;
+         when Iir_Kind_Psl_Endpoint_Declaration =>
+            return Expr;
          when Iir_Kind_Simple_Name
            | Iir_Kind_Parenthesis_Name
            | Iir_Kind_Attribute_Name
@@ -758,7 +738,7 @@ package body Sem_Expr is
             if A_Type /= Null_Iir
               and then Get_Base_Type (Res_Type) /= Get_Base_Type (A_Type)
             then
-               Not_Match (Expr, A_Type);
+               Error_Not_Match (Expr, A_Type);
                return Null_Iir;
             end if;
 
@@ -1480,7 +1460,7 @@ package body Sem_Expr is
          end if;
       end if;
       if Res = Null_Iir then
-         Not_Match (Expr, A_Type);
+         Error_Not_Match (Expr, A_Type);
          return Null_Iir;
       end if;
 
@@ -2629,7 +2609,7 @@ package body Sem_Expr is
          Name1 : Iir;
       begin
          if Are_Types_Compatible (Range_Type, Sub_Type) = Not_Compatible then
-            Not_Match (Name, Sub_Type);
+            Error_Not_Match (Name, Sub_Type);
             return False;
          end if;
 
@@ -3739,7 +3719,7 @@ package body Sem_Expr is
                   Error_Msg_Sem ("expected type is not an access type", Expr);
                end if;
             else
-               Not_Match (Expr, A_Type);
+               Error_Not_Match (Expr, A_Type);
             end if;
             return Null_Iir;
          end if;
@@ -3760,7 +3740,7 @@ package body Sem_Expr is
       if A_Type /= Null_Iir
         and then Are_Types_Compatible (A_Type, N_Type) = Not_Compatible
       then
-         Not_Match (Expr, A_Type);
+         Error_Not_Match (Expr, A_Type);
          return Null_Iir;
       end if;
       Res := Sem_Expression (Get_Expression (Expr), N_Type);
@@ -3893,6 +3873,8 @@ package body Sem_Expr is
             when Iir_Kinds_Quantity_Declaration =>
                return;
             when Iir_Kinds_External_Name =>
+               return;
+            when Iir_Kind_Psl_Endpoint_Declaration =>
                return;
             when Iir_Kind_File_Declaration
               | Iir_Kind_Interface_File_Declaration =>
@@ -4086,7 +4068,7 @@ package body Sem_Expr is
               and then Are_Basetypes_Compatible
               (A_Type, Get_Base_Type (Get_Type (Expr))) = Not_Compatible
             then
-               Not_Match (Expr, A_Type);
+               Error_Not_Match (Expr, A_Type);
                return Null_Iir;
             end if;
             return Expr;
@@ -4100,7 +4082,7 @@ package body Sem_Expr is
                Set_Type (Expr, A_Type);
                return Expr;
             else
-               Not_Match (Expr, A_Type);
+               Error_Not_Match (Expr, A_Type);
                return Null_Iir;
             end if;
 
@@ -4113,7 +4095,7 @@ package body Sem_Expr is
                Set_Type (Expr, A_Type);
                return Expr;
             else
-               Not_Match (Expr, A_Type);
+               Error_Not_Match (Expr, A_Type);
                return Null_Iir;
             end if;
 
@@ -4128,7 +4110,7 @@ package body Sem_Expr is
                   return Null_Iir;
                end if;
                if A_Type /= Null_Iir and then Get_Type (Res) /= A_Type then
-                  Not_Match (Res, A_Type);
+                  Error_Not_Match (Res, A_Type);
                   return Null_Iir;
                end if;
                return Res;
@@ -4144,7 +4126,7 @@ package body Sem_Expr is
             end if;
 
             if not Is_String_Literal_Type (A_Type, Expr) then
-               Not_Match (Expr, A_Type);
+               Error_Not_Match (Expr, A_Type);
                return Null_Iir;
             else
                Replace_Type (Expr, A_Type);
@@ -4204,6 +4186,10 @@ package body Sem_Expr is
             Error_Msg_Sem
               (Disp_Node (Expr) & " cannot be used as an expression", Expr);
             return Null_Iir;
+
+         when Iir_Kind_Error =>
+            -- Always ok.
+            return Expr;
 
          when others =>
             Error_Kind ("sem_expression_ov", Expr);
@@ -4379,7 +4365,7 @@ package body Sem_Expr is
          when Iir_Kind_String_Literal8 =>
             if Atype_Defined then
                if not Is_String_Literal_Type (Atype, Expr) then
-                  Not_Match (Expr, Atype);
+                  Error_Not_Match (Expr, Atype);
                   Set_Type (Expr, Error_Type);
                else
                   Set_Type (Expr, Atype);
@@ -4394,7 +4380,7 @@ package body Sem_Expr is
          when Iir_Kind_Null_Literal =>
             if Atype_Defined then
                if not Is_Null_Literal_Type (Atype) then
-                  Not_Match (Expr, Atype);
+                  Error_Not_Match (Expr, Atype);
                   Set_Type (Expr, Error_Type);
                else
                   Set_Type (Expr, Atype);
@@ -4410,7 +4396,7 @@ package body Sem_Expr is
            | Iir_Kind_Allocator_By_Subtype =>
             if Atype_Defined then
                if not Is_Null_Literal_Type (Atype) then
-                  Not_Match (Expr, Atype);
+                  Error_Not_Match (Expr, Atype);
                   Set_Type (Expr, Error_Type);
                else
                   return Sem_Allocator (Expr, Atype);
@@ -4458,7 +4444,7 @@ package body Sem_Expr is
                   if Atype in Iir_Wildcard_Types then
                      --  Analyze without known type.
                      Res := Sem_Expression_Ov (Expr, Null_Iir);
-                     if Res = Null_Iir then
+                     if Res = Null_Iir or else Is_Error (Res) then
                         Set_Type (Expr, Error_Type);
                         return Expr;
                      end if;
@@ -4470,7 +4456,7 @@ package body Sem_Expr is
 
                      if Res_Type = Null_Iir then
                         --  No matching type.  This is an error.
-                        Not_Match (Expr, Atype);
+                        Error_Not_Match (Expr, Atype);
                         Set_Type (Expr, Error_Type);
                      elsif Is_Defined_Type (Res_Type) then
                         --  Known and defined matching type.
@@ -4544,7 +4530,7 @@ package body Sem_Expr is
          if A_Type /= Null_Iir
            and then Are_Types_Compatible (Expr_Type, A_Type) = Not_Compatible
          then
-            Not_Match (Expr, A_Type);
+            Error_Not_Match (Expr, A_Type);
             return Null_Iir;
          end if;
          return Expr;
@@ -4565,7 +4551,7 @@ package body Sem_Expr is
                Res := Sem_Expression_Ov (Expr, Null_Iir);
             else
                if not Is_String_Literal_Type (A_Type, Expr) then
-                  Not_Match (Expr, A_Type);
+                  Error_Not_Match (Expr, A_Type);
                   return Null_Iir;
                end if;
                Set_Type (Expr, A_Type);

@@ -244,6 +244,7 @@ package body Configuration is
               | Iir_Kind_Psl_Cover_Statement
               | Iir_Kind_Psl_Default_Clock
               | Iir_Kind_Psl_Declaration
+              | Iir_Kind_Psl_Endpoint_Declaration
               | Iir_Kind_Simple_Simultaneous_Statement =>
                null;
             when others =>

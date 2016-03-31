@@ -312,6 +312,9 @@ package body Trans.Rtis is
          New_Enum_Literal
            (Constr, Get_Identifier ("__ghdl_rtik_psl_cover"),
             Ghdl_Rtik_Psl_Cover);
+         New_Enum_Literal
+           (Constr, Get_Identifier ("__ghdl_rtik_psl_endpoint"),
+            Ghdl_Rtik_Psl_Endpoint);
 
          New_Enum_Literal (Constr, Get_Identifier ("__ghdl_rtik_error"),
                            Ghdl_Rtik_Error);
@@ -2008,6 +2011,8 @@ package body Trans.Rtis is
             Kind := Ghdl_Rtik_Psl_Cover;
          when Iir_Kind_Psl_Assert_Statement =>
             Kind := Ghdl_Rtik_Psl_Assert;
+         when Iir_Kind_Psl_Endpoint_Declaration =>
+            Kind := Ghdl_Rtik_Psl_Endpoint;
          when others =>
             Error_Kind ("rti.generate_psl_directive", Decl);
       end case;
@@ -2335,7 +2340,8 @@ package body Trans.Rtis is
             when Iir_Kind_Psl_Declaration =>
                null;
             when Iir_Kind_Psl_Assert_Statement
-              | Iir_Kind_Psl_Cover_Statement =>
+              | Iir_Kind_Psl_Cover_Statement
+              | Iir_Kind_Psl_Endpoint_Declaration =>
                Generate_Psl_Directive (Stmt);
             when others =>
                Error_Kind ("rti.generate_concurrent_statement_chain", Stmt);
@@ -2860,7 +2866,8 @@ package body Trans.Rtis is
             | Iir_Kind_Sensitized_Process_Statement =>
             Rti_Const := Node_Info.Process_Rti_Const;
          when Iir_Kind_Psl_Assert_Statement
-            | Iir_Kind_Psl_Cover_Statement =>
+           | Iir_Kind_Psl_Cover_Statement
+           | Iir_Kind_Psl_Endpoint_Declaration =>
             Rti_Const := Node_Info.Psl_Rti_Const;
          when others =>
             Error_Kind ("get_context_rti", Node);
@@ -2896,7 +2903,8 @@ package body Trans.Rtis is
             | Iir_Kind_Sensitized_Process_Statement =>
             Ref := Get_Instance_Ref (Node_Info.Process_Scope);
          when Iir_Kind_Psl_Assert_Statement
-            | Iir_Kind_Psl_Cover_Statement =>
+           | Iir_Kind_Psl_Cover_Statement
+           | Iir_Kind_Psl_Endpoint_Declaration =>
             Ref := Get_Instance_Ref (Node_Info.Psl_Scope);
          when others =>
             Error_Kind ("get_context_addr", Node);

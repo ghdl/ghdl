@@ -1121,8 +1121,6 @@ package body Grt.Processes is
       end if;
 
       Call_Finalizers;
-
-      Grt.Hooks.Call_Finish_Hooks;
    end Simulation_Finish;
 
    function Simulation return Integer
@@ -1137,5 +1135,4 @@ package body Grt.Processes is
 
       return Status;
    end Simulation;
-
 end Grt.Processes;

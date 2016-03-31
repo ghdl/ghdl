@@ -107,7 +107,6 @@ package body Annotations is
          when Kind_Block
            | Kind_Process
            | Kind_Frame
-           | Kind_Range
            | Kind_Scalar_Type
            | Kind_File_Type =>
             raise Internal_Error;
@@ -1272,10 +1271,6 @@ package body Annotations is
          when Kind_Scalar_Type
            | Kind_File_Type =>
             null;
-         when Kind_Range =>
-            Put ("${");
-            Put (Object_Slot_Type'Image (Info.Slot));
-            Put ("}");
       end case;
    end Disp_Vhdl_Info;
 
@@ -1307,8 +1302,6 @@ package body Annotations is
            | Kind_PSL =>
             Put_Line ("slot:" & Object_Slot_Type'Image (Info.Slot)
                       & ", scope:" & Image (Info.Obj_Scope));
-         when Kind_Range =>
-            Put_Line ("range slot:" & Object_Slot_Type'Image (Info.Slot));
          when Kind_Scalar_Type =>
             Put_Line ("scalar type: "
                         & Iir_Value_Kind'Image (Info.Scalar_Mode));

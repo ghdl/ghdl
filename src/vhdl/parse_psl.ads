@@ -24,4 +24,7 @@ package Parse_Psl is
    function Parse_Psl_Property return PSL_Node;
    function Parse_Psl_Boolean return PSL_Node;
    function Parse_Psl_Declaration (Tok : Token_Type) return PSL_Node;
+
+   --  True if endpoint declaration N is instantiated (ie has no parameters).
+   function Is_Instantiated_Declaration (N : PSL_Node) return Boolean;
 end Parse_Psl;

@@ -174,6 +174,8 @@ package body Grt.Main is
          Status := Run_Through_Longjump (Grt.Processes.Simulation'Access);
       end if;
 
+      Grt.Hooks.Call_Finish_Hooks;
+
       if Flag_Stats then
          Disp_Stats_Hook (0);
       end if;

@@ -68,6 +68,7 @@ package Trans.Rtis is
    Ghdl_Rtik_Attribute_Stable            : O_Cnode;
    Ghdl_Rtik_Psl_Assert                  : O_Cnode;
    Ghdl_Rtik_Psl_Cover                   : O_Cnode;
+   Ghdl_Rtik_Psl_Endpoint                : O_Cnode;
    Ghdl_Rtik_Error                       : O_Cnode;
 
    --  RTI types.

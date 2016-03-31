@@ -20,6 +20,7 @@ with Iirs; use Iirs;
 
 package Sem_Psl is
    procedure Sem_Psl_Declaration (Stmt : Iir);
+   procedure Sem_Psl_Endpoint_Declaration (Stmt : Iir);
 
    --  May return a non-psl concurrent assertion statement.
    function Sem_Psl_Assert_Statement (Stmt : Iir) return Iir;

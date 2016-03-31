@@ -109,7 +109,7 @@ package body Sem_Stmts is
    end Sem_Sequential_Labels;
 
    procedure Fill_Array_From_Aggregate_Associated
-     (Chain : Iir; Nbr : in out Natural; Arr : Iir_Array_Acc)
+     (Chain : Iir; Nbr : in out Natural; Arr : in out Iir_Array)
    is
       El : Iir;
       Ass : Iir;
@@ -121,9 +121,7 @@ package body Sem_Stmts is
             Fill_Array_From_Aggregate_Associated
               (Get_Association_Choices_Chain (Ass), Nbr, Arr);
          else
-            if Arr /= null then
-               Arr (Nbr) := Ass;
-            end if;
+            Arr (Nbr) := Ass;
             Nbr := Nbr + 1;
          end if;
          El := Get_Chain (El);
@@ -177,42 +175,43 @@ package body Sem_Stmts is
    procedure Check_Uniq_Aggregate_Associated
      (Aggr : Iir_Aggregate; Nbr : Natural)
    is
+      Chain : constant Iir := Get_Association_Choices_Chain (Aggr);
+      subtype El_Array_Type is Iir_Array (0 .. Nbr - 1);
+      Name_Arr, Obj_Arr : El_Array_Type;
       Index : Natural;
-      Arr : Iir_Array_Acc;
-      Chain : Iir;
-      V_I, V_J : Iir;
+      El : Iir;
    begin
-      Chain := Get_Association_Choices_Chain (Aggr);
-      --  Count number of associated values, and create the array.
-      --  Already done: use nbr.
-      -- Fill_Array_From_Aggregate_Associated (List, Nbr, null);
-      Arr := new Iir_Array (0 .. Nbr - 1);
       --  Fill the array.
       Index := 0;
-      Fill_Array_From_Aggregate_Associated (Chain, Index, Arr);
-      if Index /= Nbr then
-         --  Should be the same.
-         raise Internal_Error;
-      end if;
-      --  Check each element is uniq.
-      for I in Arr.all'Range loop
-         V_I := Name_To_Object (Arr (I));
-         if Get_Name_Staticness (V_I) = Locally then
-            for J in 0 .. I - 1 loop
-               V_J := Name_To_Object (Arr (J));
-               if Get_Name_Staticness (V_J) = Locally
-                 and then not Is_Disjoint (V_I, V_J)
-               then
-                  Error_Msg_Sem ("target is assigned more than once", Arr (I));
-                  Error_Msg_Sem (" (previous assignment is here)", Arr (J));
-                  Free (Arr);
-                  return;
-               end if;
-            end loop;
+      Fill_Array_From_Aggregate_Associated (Chain, Index, Name_Arr);
+      --  Should be the same.
+      pragma Assert (Index = Nbr);
+
+      --  Replace name with object.  Return now in case of error (not an
+      --  object or not a static name).
+      for I in Name_Arr'Range loop
+         El := Name_To_Object (Name_Arr (I));
+         if El = Null_Iir
+           or else Get_Name_Staticness (El) /= Locally
+         then
+            --  Error...
+            return;
          end if;
+         Obj_Arr (I) := El;
       end loop;
-      Free (Arr);
-      return;
+
+      --  Check each element is uniq.
+      for I in Name_Arr'Range loop
+         for J in 0 .. I - 1 loop
+            if not Is_Disjoint (Obj_Arr (I), Obj_Arr (J)) then
+               Error_Msg_Sem
+                 ("target is assigned more than once", Name_Arr (I));
+               Error_Msg_Sem
+                 (" (previous assignment is here)", Name_Arr (J));
+               return;
+            end if;
+         end loop;
+      end loop;
    end Check_Uniq_Aggregate_Associated;
 
    --  Do checks for the target of an assignment.
@@ -1913,6 +1912,8 @@ package body Sem_Stmts is
                  (El, Is_Passive);
             when Iir_Kind_Psl_Declaration =>
                Sem_Psl.Sem_Psl_Declaration (El);
+            when Iir_Kind_Psl_Endpoint_Declaration =>
+               Sem_Psl.Sem_Psl_Endpoint_Declaration (El);
             when Iir_Kind_Psl_Assert_Statement =>
                New_El := Sem_Psl.Sem_Psl_Assert_Statement (El);
             when Iir_Kind_Psl_Cover_Statement =>
@@ -1957,7 +1958,8 @@ package body Sem_Stmts is
       while Stmt /= Null_Iir loop
 
          case Get_Kind (Stmt) is
-            when Iir_Kind_Psl_Declaration =>
+            when Iir_Kind_Psl_Declaration
+              | Iir_Kind_Psl_Endpoint_Declaration =>
                --  Special case for in-lined PSL declarations.
                null;
             when others =>

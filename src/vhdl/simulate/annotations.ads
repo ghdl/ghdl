@@ -43,7 +43,7 @@ package Annotations is
    type Sim_Info_Kind is
      (Kind_Block, Kind_Process, Kind_Frame,
       Kind_Scalar_Type, Kind_File_Type,
-      Kind_Object, Kind_Signal, Kind_Range,
+      Kind_Object, Kind_Signal,
       Kind_File,
       Kind_Terminal, Kind_Quantity,
       Kind_Environment,
@@ -112,7 +112,6 @@ package Annotations is
 
          when Kind_Object
            | Kind_Signal
-           | Kind_Range
            | Kind_File
            | Kind_Terminal
            | Kind_Quantity

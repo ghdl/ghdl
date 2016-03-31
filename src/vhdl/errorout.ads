@@ -125,8 +125,8 @@ package Errorout is
      (Origin : Report_Origin; Caller : Iir; Callee : Iir; Loc : Iir);
 
    --  Report an error message as type of EXPR does not match A_TYPE.
-   --  Location is LOC.
-   procedure Error_Not_Match (Expr: Iir; A_Type: Iir; Loc : Iir);
+   --  Location is EXPR.
+   procedure Error_Not_Match (Expr: Iir; A_Type: Iir);
 
    --  Disp interface mode MODE.
    function Get_Mode_Name (Mode : Iir_Mode) return String;
