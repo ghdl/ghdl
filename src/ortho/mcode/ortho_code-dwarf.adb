@@ -351,6 +351,7 @@ package body Ortho_Code.Dwarf is
 
       --  Emit header.
       Set_Current_Section (Line_Sect);
+      Prealloc (32);
 
       --  Unit_Length (to be patched).
       Gen_32 (0);
@@ -394,6 +395,7 @@ package body Ortho_Code.Dwarf is
             Gen_String_Nul (D.Name.all);
             D := D.Next;
          end loop;
+         Prealloc (1);
          Gen_8 (0); -- last entry.
       end;
 
@@ -404,6 +406,7 @@ package body Ortho_Code.Dwarf is
          F := Files;
          while F /= null loop
             Gen_String_Nul (F.Name.all);
+            Prealloc (8);
             Gen_Uleb128 (Unsigned_32 (F.Dir));
             Gen_8 (0);  --  time
             Gen_8 (0);  --  length
@@ -416,6 +419,7 @@ package body Ortho_Code.Dwarf is
       Patch_32 (6, Unsigned_32 (Get_Current_Pc - 6));
 
       Merge_Section (Line_Sect, Line1_Sect);
+      Prealloc (4);
 
       --  Emit end of sequence.
       Gen_8 (0); -- extended opcode
@@ -427,6 +431,7 @@ package body Ortho_Code.Dwarf is
 
       --  Info.
       Set_Current_Section (Info_Sect);
+      Prealloc (8);
       --  Finish child.
       Gen_Uleb128 (0);
       --  Set total length.
@@ -437,6 +442,7 @@ package body Ortho_Code.Dwarf is
       Set_Section_Info (Aranges_Sect, null, 0, 0);
       Set_Current_Section (Aranges_Sect);
 
+      Prealloc (32);
       Gen_32 (24 + Pc_Type_Sizeof);  --  Length.
       Gen_16 (2);  --  version
       Gen_Ua_32 (Info_Sym); --  info offset
