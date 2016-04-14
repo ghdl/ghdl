@@ -128,15 +128,6 @@ package body Trans.Helpers2 is
       New_Procedure_Call (Constr);
    end Gen_Memcpy;
 
-   --  function Gen_Malloc (Length : O_Enode; Ptype : O_Tnode) return O_Enode
-   --  is
-   --     Constr : O_Assoc_List;
-   --  begin
-   --     Start_Association (Constr, Ghdl_Malloc);
-   --     New_Association (Constr, Length);
-   --     return New_Convert_Ov (New_Function_Call (Constr), Ptype);
-   --  end Gen_Malloc;
-
    function Gen_Alloc
      (Kind : Allocation_Kind; Size : O_Enode; Ptype : O_Tnode)
          return O_Enode
