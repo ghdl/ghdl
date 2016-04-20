@@ -1,19 +1,43 @@
 language: c
 matrix:
   include:
-    - os: linux
-      sudo: required
-      dist: trusty
-      env: BLD=llvm
-      before_install:
-        - sudo apt-get update -qq
-        - sudo apt-get install -y gnat-4.8 zlib1g-dev
-        - sudo apt-get install -y llvm-3.5-dev llvm-3.5-tools libedit-dev
-    - os: linux
-      sudo: false
-      env: BLD=mcode
-      addons:
-        apt:
-          packages:
-          - gnat
-script: ./dist/travis-ci.sh $BLD
+  - os: linux
+    sudo: required
+    dist: trusty
+    env:
+    - BLD=llvm
+    - LATEST_TAG_HASH=$(git rev-list --tags --max-count=1)
+    - LATEST_TAG_NAME=$(git describe --tags $LATEST_TAG_HASH)
+    before_install:
+    - sudo apt-get update -qq
+    - sudo apt-get install -y gnat-4.8 zlib1g-dev
+    - sudo apt-get install -y llvm-3.5-dev llvm-3.5-tools libedit-dev
+  - os: linux
+    sudo: false
+    env: BLD=mcode
+    addons:
+      apt:
+        packages:
+        - gnat
+script:
+- "./dist/travis-ci.sh $BLD"
+- "./dist/deploy.tarball.sh $BLD $LATEST_TAG_NAME"
+deploy:
+  provider: releases
+  skip_cleanup: true
+  api_key:
+    # Put your secret (encrypted credentials) or OAuth here
+    secure: 
+  before_deploy:
+  - echo $LATEST_TAG_NAME
+# I never got the following line to work...
+#  - "./dist/deploy.tarball.sh $BLD $LATEST_TAG_NAME"
+  file:
+  - "./install-llvm/ghdl-llvm-0.34dev.tar.gz"
+#  after_deploy:
+#  - 
+  on:
+    tags: true
+    repo: tgingold/ghdl
+#    branch: master
+#    condition: "$BLD = llvm"

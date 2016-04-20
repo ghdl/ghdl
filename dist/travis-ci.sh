@@ -35,5 +35,6 @@ cd ..
 export GHDL="$CDIR/install-$1/bin/ghdl"
 cd testsuite
 gnatmake get_entities
-./testsuite.sh
+echo -e "\e[0;31mPatrick Lehmann: disabled testsuite to reduce the log while testing deployment to GitHub releases.\e[0m"
+# ./testsuite.sh
 cd ..
