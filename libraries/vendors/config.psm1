@@ -43,8 +43,8 @@ $InstallationDirectory = @{
 
 $DestinationDirectory = @{
 	"Altera" =					"altera";
-	"XilinxISE" =				"xilinx";
-	"XilinxVivado" =		"vivado";
+	"XilinxISE" =				"xilinx-ise";
+	"XilinxVivado" =		"xilinx-vivado";
 	"OSVVM" =						"osvvm";
 	"VUnit" =						"vunit"
 }

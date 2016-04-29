@@ -40,8 +40,8 @@ InstallationDirectory[VUnit]="/home/paebbels/git/PoC/lib/vunit"
 
 declare -A DestinationDirectory
 DestinationDirectory[AlteraQuartusII]="altera"
-DestinationDirectory[XilinxISE]="xilinx"
-DestinationDirectory[XilinxVivado]="vivado"
+DestinationDirectory[XilinxISE]="xilinx-ise"
+DestinationDirectory[XilinxVivado]="xilinx-vivado"
 DestinationDirectory[OSVVM]="osvvm"
 DestinationDirectory[VUnit]="vuint"
 
