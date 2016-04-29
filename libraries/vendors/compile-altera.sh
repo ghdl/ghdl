@@ -488,7 +488,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$ARRIA" == "TRUE" ]; then
 	)
 	for File in ${Files[@]}; do
 		FileName=$(basename "$File")
-		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
+		if [ "$SKIP_LARGE_FILES" == "TRUE" ]; then
+			echo -e "${ANSI_CYAN}Skipping large file '$File'${ANSI_RESET}"
+		elif [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -e "${ANSI_CYAN}Skipping file '$File'${ANSI_RESET}"
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
@@ -600,7 +602,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$ARRIA" == "TRUE" ]; then
 	)
 	for File in ${Files[@]}; do
 		FileName=$(basename "$File")
-		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
+		if [ "$SKIP_LARGE_FILES" == "TRUE" ]; then
+			echo -e "${ANSI_CYAN}Skipping large file '$File'${ANSI_RESET}"
+		elif [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -e "${ANSI_CYAN}Skipping file '$File'${ANSI_RESET}"
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
@@ -655,7 +659,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$CYCLONE" == "TRUE" ]; then
 	)
 	for File in ${Files[@]}; do
 		FileName=$(basename "$File")
-		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
+		if [ "$SKIP_LARGE_FILES" == "TRUE" ]; then
+			echo -e "${ANSI_CYAN}Skipping large file '$File'${ANSI_RESET}"
+		elif [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -e "${ANSI_CYAN}Skipping file '$File'${ANSI_RESET}"
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
@@ -766,7 +772,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$STRATIX" == "TRUE" ]; then
 	)
 	for File in ${Files[@]}; do
 		FileName=$(basename "$File")
-		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
+		if [ "$SKIP_LARGE_FILES" == "TRUE" ]; then
+			echo -e "${ANSI_CYAN}Skipping large file '$File'${ANSI_RESET}"
+		elif [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -e "${ANSI_CYAN}Skipping file '$File'${ANSI_RESET}"
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
@@ -821,7 +829,9 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$STRATIX" == "TRUE" ]; then
 	)
 	for File in ${Files[@]}; do
 		FileName=$(basename "$File")
-		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
+		if [ "$SKIP_LARGE_FILES" == "TRUE" ]; then
+			echo -e "${ANSI_CYAN}Skipping large file '$File'${ANSI_RESET}"
+		elif [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -e "${ANSI_CYAN}Skipping file '$File'${ANSI_RESET}"
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
