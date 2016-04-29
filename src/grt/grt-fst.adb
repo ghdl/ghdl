@@ -24,13 +24,10 @@
 --  covered by the GNU Public License.
 with Interfaces; use Interfaces;
 with Interfaces.C;
-with System; use System;
 with Grt.Types; use Grt.Types;
 with Grt.Fst_Api; use Grt.Fst_Api;
 with Grt.Vcd; use Grt.Vcd;
 with Grt.Avhpi; use Grt.Avhpi;
-with System.Storage_Elements; --  Work around GNAT bug.
-pragma Unreferenced (System.Storage_Elements);
 with Grt.Errors; use Grt.Errors;
 with Grt.Signals; use Grt.Signals;
 with Grt.Table;
