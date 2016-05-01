@@ -35,6 +35,7 @@ declare -A InstallationDirectory
 InstallationDirectory[AlteraQuartusII]="/opt/Altera/15.0"
 InstallationDirectory[XilinxISE]="/opt/Xilinx/14.7"
 InstallationDirectory[XilinxVivado]="/opt/Xilinx/Vivado/2014.4"
+InstallationDirectory[LatticeDiamond]="/usr/local/diamond/3.6_x64"
 InstallationDirectory[OSVVM]="/home/paebbels/git/PoC/lib/osvvm"
 InstallationDirectory[VUnit]="/home/paebbels/git/PoC/lib/vunit"
 
@@ -42,6 +43,7 @@ declare -A DestinationDirectory
 DestinationDirectory[AlteraQuartusII]="altera"
 DestinationDirectory[XilinxISE]="xilinx"
 DestinationDirectory[XilinxVivado]="vivado"
+DestinationDirectory[LatticeDiamond]="lattice"
 DestinationDirectory[OSVVM]="osvvm"
 DestinationDirectory[VUnit]="vuint"
 
