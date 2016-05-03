@@ -40,7 +40,9 @@ if [ "$TRAVIS_TAG" = "x" ]; then
 else
     PKG_TAG=$TRAVIS_TAG
 fi
-tar -zcvf ghdl-$PKG_VER-$BLD-$PKG_TAG.tgz -C $prefix .
+PKG_FILE=ghdl-$PKG_VER-$BLD-$PKG_TAG.tgz
+echo "creating $PKG_FILE"
+tar -zcvf $PKG_FILE -C $prefix .
 
 # Test
 export GHDL="$CDIR/install-$1/bin/ghdl"
