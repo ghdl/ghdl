@@ -7,6 +7,10 @@ set -e
 CDIR=$PWD
 BLD=$1
 
+# Display environment
+echo "Environment:"
+env
+
 # Prepare
 prefix="$CDIR/install-$BLD"
 mkdir "$prefix"
@@ -35,7 +39,7 @@ cd ..
 # Package
 PKG_VER=`grep Ghdl_Ver src/version.ads | sed -e 's/.*"\(.*\)";/\1/'`
 
-if [ "$TRAVIS_TAG" = "x" ]; then
+if [ "$TRAVIS_TAG" = "" ]; then
     PKG_TAG=`date -u +%Y%m%d`
 else
     PKG_TAG=$TRAVIS_TAG
