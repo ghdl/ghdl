@@ -17,3 +17,13 @@ matrix:
           packages:
           - gnat
 script: ./dist/travis-ci.sh $BLD
+deploy:
+  provider: releases
+  skip_cleanup: true
+  api_key:
+    secure: k1Idw3l/35mms1mESpO+5TmA2Kmf0UlMsxjgQiWikYu6va6icJjTzCHv6d3YjF6tzkouZZa74Gep22gg46uDWU6wtcBYq5X2IxEX1U3iRxi5CNXL77ZaYdj9Nn69cNImjGPqigJMJLOuIPi31ENlxgO83U07VYE1cV603+spvxw3a1TynrBIjdugiVMIFctrmt/zTIt/jBG1oQNLPdVTRFavnjpsFlnIcO5DvHvKxoDEpF3WwPcDr6h/bmnFZSfr8Sr2pptQU1S6qtHaLJPwg8w1f93nxr1LEK2MR8eVfS5XSEVC8nBZJHksdlwx/iiGyWEqEeXLXpoaHAO3aqkhjsMA1+mKbwtHjT7WBNWorKfmQP3ZTShhksPa+oBFitC33gXGCNCFMWSVdXrTIKIN8m//KSc3VTbxHL10afO9lCD955bZi1cpFZiE471BBXDxpN9Nv+1tV7RO7e6gm+94n9CYYkdCHcFK4hj0gGXDOQlUEEmZj4vAiwaDWfByfHxDNClT3rJ8tAm9BFjdDOI54NlA15/nyx+00Kw0FEZqvIemeMsCpz4Ril2bL8BZtwYm8e5sygqgdGODtRT5Q0hbHO2fuMpth4gvGGHraGlmH1Rez5BSnUsWVSQxV4Z+9/VZtQOK6HdfbbB8dd9SlOuEN1M9EqqEHBxdvHBkoMZy1uk=
+  file_glob: true
+  file: "ghdl-*-$BLD-*.tgz"
+  on:
+    tags: true
+    all_branches: true

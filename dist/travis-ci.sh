@@ -5,15 +5,20 @@
 set -e
 
 CDIR=$PWD
+BLD=$1
+
+# Display environment
+echo "Environment:"
+env
 
 # Prepare
-prefix="$CDIR/install-$1"
+prefix="$CDIR/install-$BLD"
 mkdir "$prefix"
-mkdir build-$1
-cd build-$1
+mkdir build-$BLD
+cd build-$BLD
 
 # Configure
-case "$1" in
+case "$BLD" in
   mcode)
     ../configure --prefix="$prefix" ;;
 
@@ -21,7 +26,7 @@ case "$1" in
     ../configure --prefix="$prefix" --with-llvm-config=llvm-config-3.5 ;;
 
   *)
-    echo "unknown build $1"
+    echo "unknown build $BLD"
     exit 1
     ;;
 esac
@@ -30,6 +35,18 @@ esac
 make
 make install
 cd ..
+
+# Package
+PKG_VER=`grep Ghdl_Ver src/version.ads | sed -e 's/.*"\(.*\)";/\1/'`
+
+if [ "$TRAVIS_TAG" = "" ]; then
+    PKG_TAG=`date -u +%Y%m%d`
+else
+    PKG_TAG=$TRAVIS_TAG
+fi
+PKG_FILE=ghdl-$PKG_VER-$BLD-$PKG_TAG.tgz
+echo "creating $PKG_FILE"
+tar -zcvf $PKG_FILE -C $prefix .
 
 # Test
 export GHDL="$CDIR/install-$1/bin/ghdl"

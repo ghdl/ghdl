@@ -1,5 +1,7 @@
 {
   global:
+vpi_chk_error;
+vpi_control;
 vpi_free_object;
 vpi_get;
 vpi_get_str;
@@ -8,6 +10,7 @@ vpi_get_value;
 vpi_get_vlog_info;
 vpi_handle;
 vpi_handle_by_index;
+vpi_handle_by_name;
 vpi_iterate;
 vpi_mcd_close;
 vpi_mcd_name;
