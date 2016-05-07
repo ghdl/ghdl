@@ -64,4 +64,11 @@ package Ghdlcomp is
 
    --  Register commands.
    procedure Register_Commands;
+
+   --  Functionnal interface.
+   --  Must be first initialized by Compile_Init
+   procedure Compile_Analyze_Init (Load_Work : Boolean := True);
+   procedure Compile_Analyze_File (File : String);
+   procedure Compile_Elaborate (Unit_Name : String_Access);
+   procedure Compile_Run;
 end Ghdlcomp;

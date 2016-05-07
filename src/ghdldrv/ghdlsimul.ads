@@ -17,4 +17,7 @@
 --  02111-1307, USA.
 package Ghdlsimul is
    procedure Register_Commands;
+
+   --  Functional interface.
+   procedure Compile_Init;
 end Ghdlsimul;

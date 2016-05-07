@@ -20,9 +20,12 @@ with Ghdlmain; use Ghdlmain;
 with Iirs; use Iirs;
 
 package Ghdllocal is
+   --  Init procedure for the functionnal interface.
+   procedure Compile_Init;
+
    type Command_Lib is abstract new Command_Type with null record;
 
-   --  Setup GHDL.
+   --  Setup GHDL.  Same as Compile_Init.
    procedure Init (Cmd : in out Command_Lib);
 
    --  Handle:

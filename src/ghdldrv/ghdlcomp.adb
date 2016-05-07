@@ -172,6 +172,60 @@ package body Ghdlcomp is
       end if;
    end Decode_Option;
 
+   procedure Compile_Analyze_Init (Load_Work : Boolean := True) is
+   begin
+      Hooks.Compile_Init.all (False);
+
+      Flags.Flag_Elaborate_With_Outdated := True;
+      Flags.Flag_Only_Elab_Warnings := False;
+
+      if Load_Work then
+         Libraries.Load_Work_Library (False);
+         --  Also, load all libraries and files, so that every design unit
+         --  is known.
+         Load_All_Libraries_And_Files;
+      else
+         Libraries.Load_Work_Library (True);
+      end if;
+   end Compile_Analyze_Init;
+
+   procedure Compile_Analyze_File (File : String)
+   is
+      Res : Iir_Design_File;
+      Design : Iir;
+      Next_Design : Iir;
+   begin
+      Res := Libraries.Load_File (Name_Table.Get_Identifier (File));
+      if Errorout.Nbr_Errors > 0 then
+         raise Compilation_Error;
+      end if;
+
+      --  Put units into library.
+      Design := Get_First_Design_Unit (Res);
+      while not Is_Null (Design) loop
+         Next_Design := Get_Chain (Design);
+         Set_Chain (Design, Null_Iir);
+         Libraries.Add_Design_Unit_Into_Library (Design);
+         Design := Next_Design;
+      end loop;
+   end Compile_Analyze_File;
+
+   procedure Compile_Elaborate (Unit_Name : String_Access)
+   is
+      Run_Arg : Natural;
+   begin
+      Hooks.Compile_Elab.all ("-c", (1 => Unit_Name), Run_Arg);
+      pragma Unreferenced (Run_Arg);
+   end Compile_Elaborate;
+
+   procedure Compile_Run
+   is
+      No_Arg : constant Argument_List := (1 .. 0 => null);
+   begin
+      Hooks.Set_Run_Options (No_Arg);
+      Hooks.Run.all;
+   end Compile_Run;
+
    procedure Perform_Action (Cmd : in out Command_Compile;
                              Args : Argument_List)
    is
@@ -188,44 +242,29 @@ package body Ghdlcomp is
          if Args'Length > 1 and then
            (Args (Args'First).all = "-r" or else Args (Args'First).all = "-e")
          then
-            --  If there is no files, then load the work library.
-            Libraries.Load_Work_Library (False);
-            --  Also, load all libraries and files, so that every design unit
-            --  is known.
-            Load_All_Libraries_And_Files;
+            --  If there is no files, then load the work library, all the
+            --  libraries referenced and all the files.
+            Compile_Analyze_Init (True);
             Elab_Arg := Args'First + 1;
          else
             --  If there is at least one file, do not load the work library.
-            Libraries.Load_Work_Library (True);
+            Compile_Analyze_Init (False);
             Elab_Arg := Natural'Last;
             for I in Args'Range loop
                declare
                   Arg : constant String := Args (I).all;
-                  Res : Iir_Design_File;
-                  Design : Iir;
-                  Next_Design : Iir;
                begin
                   if Arg = "-r" or else Arg = "-e" then
                      Elab_Arg := I + 1;
                      exit;
                   else
-                     Res := Libraries.Load_File
-                       (Name_Table.Get_Identifier (Arg));
-                     if Errorout.Nbr_Errors > 0 then
-                        raise Compilation_Error;
-                     end if;
-
-                     --  Put units into library.
-                     Design := Get_First_Design_Unit (Res);
-                     while not Is_Null (Design) loop
-                        Next_Design := Get_Chain (Design);
-                        Set_Chain (Design, Null_Iir);
-                        Libraries.Add_Design_Unit_Into_Library (Design);
-                        Design := Next_Design;
-                     end loop;
+                     Compile_Analyze_File (Arg);
                   end if;
                end;
             end loop;
+
+            --  Save the library (and do not elaborate) if there is neither
+            --  '-e' nor '-r'.
             if Elab_Arg = Natural'Last then
                Libraries.Save_Work_Library;
                return;

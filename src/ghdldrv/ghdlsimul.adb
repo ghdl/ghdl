@@ -42,8 +42,6 @@ with Execution;
 
 with Ghdlcomp;
 
-with Grt.Vpi;
-pragma Unreferenced (Grt.Vpi);
 with Grt.Types;
 with Grt.Options;
 with Grt.Errors;
@@ -207,8 +205,7 @@ package body Ghdlsimul is
       Put_Line (" --debug        Run with debugger");
    end Disp_Long_Help;
 
-   procedure Register_Commands
-   is
+   procedure Set_Hooks is
    begin
       Ghdlcomp.Hooks := (Compile_Init'Access,
                          Compile_Elab'Access,
@@ -216,6 +213,17 @@ package body Ghdlsimul is
                          Run'Access,
                          Decode_Option'Access,
                          Disp_Long_Help'Access);
+   end Set_Hooks;
+
+   procedure Register_Commands is
+   begin
+      Set_Hooks;
       Ghdlcomp.Register_Commands;
    end Register_Commands;
+
+   procedure Compile_Init is
+   begin
+      Ghdllocal.Compile_Init;
+      Set_Hooks;
+   end Compile_Init;
 end Ghdlsimul;

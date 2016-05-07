@@ -108,14 +108,19 @@ package body Ghdllocal is
       end if;
    end Finish_Compilation;
 
-   procedure Init (Cmd : in out Command_Lib)
-   is
-      pragma Unreferenced (Cmd);
+   procedure Compile_Init is
    begin
       Options.Initialize;
       Flag_Ieee := Lib_Standard;
       Back_End.Finish_Compilation := Finish_Compilation'Access;
       Flag_Verbose := False;
+   end Compile_Init;
+
+   procedure Init (Cmd : in out Command_Lib)
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      Compile_Init;
    end Init;
 
    procedure Decode_Option (Cmd : in out Command_Lib;
