@@ -234,11 +234,6 @@ package body Ghdlcomp is
       Run_Arg : Natural;
    begin
       begin
-         Hooks.Compile_Init.all (False);
-
-         Flags.Flag_Elaborate_With_Outdated := True;
-         Flags.Flag_Only_Elab_Warnings := False;
-
          if Args'Length > 1 and then
            (Args (Args'First).all = "-r" or else Args (Args'First).all = "-e")
          then

@@ -361,7 +361,9 @@ manual for details.
 .. option:: -P<DIRECTORY>
 
   Add `DIRECTORY` to the end of the list of directories to be searched for
-  library files.
+  library files.  A library is searched in `DIRECTORY` and also in
+  `DIRECTORY/LIB/vVV` (where `LIB` is the name of the library and `VV`
+  the vhdl standard).
 
   The `WORK` library is always searched in the path specified by the
   :option:`--workdir=` option, or in the current directory if the latter

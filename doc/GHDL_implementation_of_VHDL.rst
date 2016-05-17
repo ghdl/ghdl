@@ -29,6 +29,8 @@ VHDL standards
 
 .. index:: v02
 
+.. index:: v08
+
 This is very unfortunate, but there are many versions of the VHDL
 language, and they aren't backward compatible.
 
@@ -64,6 +66,9 @@ Minors corrections were added by the 2002 revision of the VHDL standard.  This
 revision is not fully backward compatible with VHDL-00 since, for example,
 the value of the `'instance_name` attribute has slightly changed.
 
+The latest version is 2008.  Many features have been added, and GHDL
+doesn't implement all of them.
+
 You can select the VHDL standard expected by GHDL with the
 :samp:`--std=VER` option, where :samp:`VER` is one of the left column of the
 table below:
@@ -94,8 +99,9 @@ table below:
 08
   Select VHDL-2008 standard (partially implemented).
 
-You cannot mix VHDL-87 and VHDL-93 units.  A design hierarchy must have been
-completely analyzed using either the 87 or the 93 version of the VHDL standard.
+The 93, 93c, 00 and 02 standards are considered as compatible: you can
+elaborate a design mixing these standards.  However, 87, 93 and 08 are
+not compatible.
 
 .. _psl_implementation:
 
@@ -173,8 +179,8 @@ changed with the :option:`--work=NAME` option of GHDL.
 
 To keep the list of design units in a design library, GHDL creates
 library files.  The name of these files is :file:`NAME-objVER.cf`, where
-`NAME` is the name of the library, and `VER` the VHDL version (87
-or 93) used to analyze the design units.
+`NAME` is the name of the library, and `VER` the VHDL version (87,
+93 or 08) used to analyze the design units.
 
 You don't have to know how to read a library file.  You can display it
 using the *-d* of `ghdl`.  The file contains the name of the
