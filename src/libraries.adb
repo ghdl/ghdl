@@ -64,8 +64,10 @@ package body Libraries is
    procedure Init_Pathes
    is
    begin
+      --  Always look in current directory first.
       Name_Nil := Get_Identifier ("");
       Pathes.Append (Name_Nil);
+
       Local_Directory := Name_Nil;
       Work_Directory := Name_Nil;
    end Init_Pathes;
@@ -100,11 +102,61 @@ package body Libraries is
 
    function Get_Path (N : Natural) return Name_Id is
    begin
-      if N > Pathes.Last or N < Pathes.First then
+      if N not in Pathes.First .. Pathes.Last then
          raise Constraint_Error;
       end if;
+
       return Pathes.Table (N);
    end Get_Path;
+
+   --  Search LIBRARY in the library path.
+   procedure Search_Library_In_Path (Library : Iir)
+   is
+      use Flags;
+      File_Name : constant String := Back_End.Library_To_File_Name (Library);
+      Library_Id : constant Name_Id := Get_Identifier (Library);
+      Id_Len : constant Natural := Get_Name_Length (Library_Id);
+      L : Natural;
+      Path_Len : Natural;
+   begin
+      for I in Pathes.First .. Pathes.Last loop
+         Image (Pathes.Table (I));
+         Path_Len := Nam_Length;
+
+         --  Try PATH/LIBxxx.cf
+         L := Path_Len + File_Name'Length;
+         Nam_Buffer (Path_Len + 1 .. L) := File_Name;
+         Nam_Buffer (L + 1) := Character'Val (0);
+         if GNAT.OS_Lib.Is_Regular_File (Nam_Buffer'Address) then
+            Set_Library_Directory (Library, Pathes.Table (I));
+            exit;
+         end if;
+
+         --  Try PATH/LIB/vNN/LIBxxx.cf
+         L := Path_Len + Id_Len;
+         Nam_Buffer (Path_Len + 1 .. L) := Image (Library_Id);
+         Nam_Buffer (L + 1) := GNAT.OS_Lib.Directory_Separator;
+         case Vhdl_Std is
+            when Vhdl_87 =>
+               Nam_Buffer (L + 2 .. L + 4) := "v87";
+            when Vhdl_93c | Vhdl_93 | Vhdl_00 | Vhdl_02 =>
+               Nam_Buffer (L + 2 .. L + 4) := "v93";
+            when Vhdl_08 =>
+               Nam_Buffer (L + 2 .. L + 4) := "v08";
+         end case;
+         L := L + 5;
+         Nam_Buffer (L) := GNAT.OS_Lib.Directory_Separator;
+         Nam_Buffer (L + 1 .. L + File_Name'Length) := File_Name;
+         Nam_Buffer (L + File_Name'Length + 1) := Character'Val (0);
+         if GNAT.OS_Lib.Is_Regular_File (Nam_Buffer'Address) then
+            --  For Get_Identifier: keep only the path part (including the
+            --  trailing path separator).
+            Nam_Length := L;
+            Set_Library_Directory (Library, Get_Identifier);
+            exit;
+         end if;
+      end loop;
+   end Search_Library_In_Path;
 
    --  Set PATH as the path of the work library.
    procedure Set_Work_Library_Path (Path : String) is
@@ -368,24 +420,8 @@ package body Libraries is
       -- Try to open the library file map.
       Dir := Get_Library_Directory (Library);
       if Dir = Null_Identifier then
-         --  Search in the library path.
-         declare
-            File_Name : constant String :=
-              Back_End.Library_To_File_Name (Library);
-            L : Natural;
-         begin
-            for I in Pathes.First .. Pathes.Last loop
-               Image (Pathes.Table (I));
-               L := Nam_Length + File_Name'Length;
-               Nam_Buffer (Nam_Length + 1 .. L) := File_Name;
-               Nam_Buffer (L + 1) := Character'Val (0);
-               if GNAT.OS_Lib.Is_Regular_File (Nam_Buffer'Address) then
-                  Dir := Pathes.Table (I);
-                  Set_Library_Directory (Library, Dir);
-                  exit;
-               end if;
-            end loop;
-         end;
+         Search_Library_In_Path (Library);
+         Dir := Get_Library_Directory (Library);
       end if;
       if Dir = Null_Identifier
         or else not Set_Library_File_Name (Dir, Library)

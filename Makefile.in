@@ -249,6 +249,18 @@ ghdl_simul: $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) force
 libs.vhdl.simul: ghdl_simul
 	$(MAKE) GHDL=ghdl_simul vhdl.libs.all
 
+################ mhdlsim (library for the vhdl part) ####################
+
+GHDL_MHDLSIM_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/mhdlsim -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/vhdl/simulate -aI$(srcdir)/src/grt
+
+libmhdlsimvhdl.a:  $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) force
+	$(GNATMAKE) -c mhdlsim $(GNATFLAGS) $(GHDL_MHDLSIM_INCFLAGS)
+	gnatbind -Lmhdlsim_vhdl_ mhdlsim.ali -O > mhdlsim.files
+	gnatbind -Lmhdlsim_vhdl_ mhdlsim.ali -K -Z > mhdlsim.link
+	$(GNATMAKE) -c b~mhdlsim.adb
+	rm -f $@
+	ar rc $@ b~mhdlsim.o `cat mhdlsim.files` $(GRT_ADD_OBJS)
+
 ################ ghwdump #################################################
 
 GHWDUMP_OBJS=ghwdump.o ghwlib.o
