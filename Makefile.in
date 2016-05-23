@@ -64,6 +64,8 @@ endif
 GNATFLAGS=-gnaty3befhkmr -gnatwae -aO. -gnatf -gnat05 $(OPT_FLAGS) $(ADA_FLAGS)
 GRT_FLAGS=$(OPT_FLAGS)
 
+WARN_CFLAGS=-Wall
+
 GNAT_BARGS=-bargs -E
 
 target=$(build)
@@ -269,10 +271,10 @@ ghwdump: $(GHWDUMP_OBJS)
 	$(CC) -o $@ $(GHWDUMP_OBJS)
 
 ghwdump.o: $(srcdir)/src/grt/ghwdump.c $(srcdir)/src/grt/ghwlib.h
-	$(CC) -c -o $@ $< $(OPT_FLAGS)
+	$(CC) -c -o $@ $< $(OPT_FLAGS) $(WARN_CFLAGS)
 
 ghwlib.o: $(srcdir)/src/grt/ghwlib.c $(srcdir)/src/grt/ghwlib.h
-	$(CC) -c -o $@ $< $(OPT_FLAGS)
+	$(CC) -c -o $@ $< $(OPT_FLAGS) $(WARN_CFLAGS)
 
 ################ Libraries ###############################################
 
