@@ -305,7 +305,7 @@ stop when an assertion above or equal a certain severity level occurs:
 
 .. code-block:: shell
 
-  $ ghdl -r dlx_test_behaviour --assert-level=note
+  $ ghdl -r --workdir=work dlx_test_behaviour --assert-level=note
 
 
 With this option, the program stops just after the previous message::
