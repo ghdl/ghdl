@@ -286,7 +286,7 @@ And you can run the test suite:
 
 .. code-block:: shell
 
-  $ ghdl -r dlx_test_behaviour
+  $ ghdl -r --workdir=work dlx_test_behaviour
 
 
 The test bench monitors the bus and displays each instruction executed.
