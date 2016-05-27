@@ -2741,6 +2741,12 @@ package body Trans.Chap8 is
             end case;
             Actual_Type := Get_Type (Act);
 
+            --  For individual associations, be sure the type is translated.
+            --  That's required for slices in case of array conversion.
+            if Formal /= Base_Formal then
+               Chap3.Translate_Anonymous_Type_Definition (Formal_Type);
+            end if;
+
             --  Evaluate the actual.
             Param_Type := Actual_Type;
             case Get_Kind (Base_Formal) is
