@@ -268,6 +268,8 @@ enum ghw_hie_kind {
   ghw_hie_port_linkage = 21
 };
 
+#define GHW_NO_SIG 0
+
 struct ghw_hie
 {
   enum ghw_hie_kind kind;
@@ -286,7 +288,7 @@ struct ghw_hie
     {
       union ghw_type *type;
       /* Array of signal elements.
-	 Last element is 0.  */
+	 Last element is GHW_NO_SIG (0).  */
       unsigned int *sigs;
     } sig;
   } u;
@@ -390,6 +392,8 @@ int ghw_read_section (struct ghw_handler *h);
 void ghw_close (struct ghw_handler *h);
 
 const char *ghw_get_dir (int is_downto);
+
+void ghw_disp_subtype_indication (struct ghw_handler *h, union ghw_type *t);
 
 /* Note: TYPE must be a base type (used only to display literals).  */
 void ghw_disp_range (union ghw_type *type, union ghw_range *rng);

@@ -834,7 +834,14 @@ package body Grt.Avhpi is
                   Res := (Kind => VhpiArchBodyK,
                           Ctxt => Null_Context);
                   Get_Instance_Context (Ref.Inst, Ref.Ctxt, Res.Ctxt);
-                  pragma Assert (Ref.Ctxt.Block.Kind = Ghdl_Rtik_Architecture);
+                  if Res.Ctxt = Null_Context then
+                     --  Component is not bound.
+                     Res := Null_Handle;
+                  else
+                     pragma Assert
+                       (Ref.Ctxt.Block.Kind = Ghdl_Rtik_Architecture);
+                     null;
+                  end if;
                   Error := AvhpiErrorOk;
                   return;
                when others =>

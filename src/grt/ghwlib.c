@@ -21,6 +21,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <assert.h>
 
 #include "ghwlib.h"
 
@@ -670,7 +671,8 @@ ghw_disp_typename (struct ghw_handler *h, union ghw_type *t)
   printf ("%s", t->common.name);
 }
 
-/* Read a signal composed of severals elements.  */
+/* Read a signal composed of severals elements.
+   Return 0 for success.  */
 int
 ghw_read_signal (struct ghw_handler *h, unsigned int *sigs, union ghw_type *t)
 {
@@ -686,7 +688,7 @@ ghw_read_signal (struct ghw_handler *h, unsigned int *sigs, union ghw_type *t)
 	if (ghw_read_uleb128 (h, &sig_el) < 0)
 	  return -1;
 	*sigs = sig_el;
-	if (sig_el >= h->nbr_sigs)
+	if (sig_el == 0 || sig_el >= h->nbr_sigs)
 	  abort ();
 	if (h->sigs[sig_el].type == NULL)
 	  h->sigs[sig_el].type = ghw_get_base_type (t);
@@ -711,7 +713,7 @@ ghw_read_signal (struct ghw_handler *h, unsigned int *sigs, union ghw_type *t)
       {
 	int i;
 	int off;
-	
+
 	off = 0;
 	for (i = 0; i < t->rec.nbr_fields; i++)
 	  {
@@ -994,7 +996,7 @@ ghw_disp_hie (struct ghw_handler *h, struct ghw_hie *top)
 
   hie = top;
   indent = 0;
-  
+
   while (1)
     {
       for (i = 0; i < indent; i++)
@@ -1034,12 +1036,28 @@ ghw_disp_hie (struct ghw_handler *h, struct ghw_hie *top)
 	case ghw_hie_port_buffer:
 	case ghw_hie_port_linkage:
 	  {
-	    unsigned int *sigs;
+	    unsigned int *sigs = hie->u.sig.sigs;
+	    unsigned int k, num;
 
 	    printf (" %s: ", hie->name);
-	    ghw_disp_typename (h, hie->u.sig.type);
-	    for (sigs = hie->u.sig.sigs; *sigs != 0; sigs++)
-	      printf (" #%u", *sigs);
+	    ghw_disp_subtype_indication (h, hie->u.sig.type);
+	    printf (":");
+	    k = 0;
+	    assert (sigs[0] != GHW_NO_SIG);
+	    while (1)
+	      {
+		/* First signal of the range.  */
+		printf (" #%u", sigs[k]);
+		for (num = 1; sigs[k + num] != GHW_NO_SIG; num++)
+		  if (sigs[k + num] != sigs[k + num - 1] + 1)
+		    break;
+		if (num > 1)
+		  printf ("-#%u", sigs[k + num - 1]);
+		k += num;
+		/* End of signals ? */
+		if (sigs[k] == GHW_NO_SIG)
+		  break;
+	      }
 	    n = hie->brother;
 	  }
 	  break;
@@ -1168,7 +1186,7 @@ ghw_read_cycle_cont (struct ghw_handler *h, int *list)
   while (1)
     {
       uint32_t d;
-      
+
       /* Read delta to next signal.  */
       if (ghw_read_uleb128 (h, &d) < 0)
 	return -1;
@@ -1185,13 +1203,13 @@ ghw_read_cycle_cont (struct ghw_handler *h, int *list)
 	  if (h->sigs[i].type != NULL)
 	    d--;
 	}
-      
+
       if (ghw_read_signal_value (h, &h->sigs[i]) < 0)
 	return -1;
       if (list_p)
 	*list_p++ = i;
     }
-  
+
   if (list_p)
     *list_p = 0;
   return 0;
@@ -1338,7 +1356,7 @@ ghw_read_directory (struct ghw_handler *h)
     return -1;
 
   nbr_entries = ghw_get_i32 (h, &hdr[4]);
-  
+
   if (h->flag_verbose)
     printf ("Directory (%d entries):\n", nbr_entries);
 
@@ -1372,7 +1390,7 @@ ghw_read_tailer (struct ghw_handler *h)
     return -1;
 
   pos = ghw_get_i32 (h, &hdr[4]);
-  
+
   if (h->flag_verbose)
     printf ("Tailer: directory at %d\n", pos);
   return 0;
@@ -1406,7 +1424,7 @@ ghw_read_sm_hdr (struct ghw_handler *h, int *list)
       res = ghw_read_cycle_cont (h, list);
       if (res < 0)
 	return res;
-      
+
       return ghw_res_cycle;
     }
   else if (memcmp (hdr, "DIR", 4) == 0)
@@ -1417,7 +1435,7 @@ ghw_read_sm_hdr (struct ghw_handler *h, int *list)
     {
       res = ghw_read_tailer (h);
     }
-  else 
+  else
     {
       fprintf (stderr, "unknown GHW section %c%c%c%c\n",
 	       hdr[0], hdr[1], hdr[2], hdr[3]);
@@ -1460,7 +1478,7 @@ ghw_read_sm (struct ghw_handler *h, enum ghw_sm_type *sm)
 	    printf ("Time is %lld fs\n", h->snap_time);
 	  if (0)
 	    ghw_disp_values (h);
-	  
+
 	  res = ghw_read_cycle_next (h);
 	  if (res < 0)
 	    return res;
@@ -1493,13 +1511,13 @@ ghw_read_cycle (struct ghw_handler *h)
       res = ghw_read_cycle_cont (h, NULL);
       if (res < 0)
 	return res;
-      
+
       if (0)
 	printf ("Time is %lld fs\n", h->snap_time);
       if (0)
 	ghw_disp_values (h);
-      
-	      
+
+
       res = ghw_read_cycle_next (h);
       if (res < 0)
 	return res;
@@ -1543,7 +1561,7 @@ ghw_read_dump (struct ghw_handler *h)
 	{
 	  res = ghw_read_tailer (h);
 	}
-      else 
+      else
 	{
 	  fprintf (stderr, "unknown GHW section %c%c%c%c\n",
 		   hdr[0], hdr[1], hdr[2], hdr[3]);
@@ -1580,7 +1598,7 @@ ghw_read_section (struct ghw_handler *h)
       else
 	return -1;
     }
-  
+
   for (i = 1; i < sizeof (ghw_sections) / sizeof (*ghw_sections); i++)
     if (memcmp (hdr, ghw_sections[i].name, 4) == 0)
       return i;
@@ -1638,6 +1656,60 @@ ghw_disp_range (union ghw_type *type, union ghw_range *rng)
     }
 }
 
+static void
+ghw_disp_subtype_definition (struct ghw_handler *h, union ghw_type *t)
+{
+  switch (t->kind)
+    {
+    case ghdl_rtik_subtype_scalar:
+      {
+	struct ghw_subtype_scalar *s = &t->ss;
+	ghw_disp_typename (h, s->base);
+	printf (" range ");
+	ghw_disp_range (s->base, s->rng);
+      }
+      break;
+    case ghdl_rtik_subtype_array:
+    case ghdl_rtik_subtype_array_ptr:
+      {
+	struct ghw_subtype_array *a = &t->sa;
+	int i;
+
+	ghw_disp_typename (h, (union ghw_type *)a->base);
+	printf (" (");
+	for (i = 0; i < a->base->nbr_dim; i++)
+	  {
+	    if (i != 0)
+	      printf (", ");
+	    ghw_disp_range (a->base->dims[i], a->rngs[i]);
+	  }
+	printf (")");
+      }
+      break;
+    default:
+      printf ("ghw_disp_subtype_definition: unhandled type kind %d\n",
+	      t->kind);
+    }
+}
+
+static int
+ghw_is_anonymous_type (struct ghw_handler *h, union ghw_type *t)
+{
+  return t->common.name == h->str_table[0];
+}
+
+void
+ghw_disp_subtype_indication (struct ghw_handler *h, union ghw_type *t)
+{
+  if (ghw_is_anonymous_type (h, t))
+    {
+      /* Anonymous subtype.  */
+      ghw_disp_subtype_definition (h, t);
+    }
+  else
+    ghw_disp_typename (h, t);
+}
+
 void
 ghw_disp_type (struct ghw_handler *h, union ghw_type *t)
 {
@@ -1684,16 +1756,6 @@ ghw_disp_type (struct ghw_handler *h, union ghw_type *t)
 	printf ("end units\n");
       }
       break;
-    case ghdl_rtik_subtype_scalar:
-      {
-	struct ghw_subtype_scalar *s = &t->ss;
-	printf ("subtype %s is ", s->name);
-	ghw_disp_typename (h, s->base);
-	printf (" range ");
-	ghw_disp_range (s->base, s->rng);
-	printf (";\n");
-      }
-      break;
     case ghdl_rtik_type_array:
       {
 	struct ghw_type_array *a = &t->ar;
@@ -1708,26 +1770,8 @@ ghw_disp_type (struct ghw_handler *h, union ghw_type *t)
 	    printf (" range <>");
 	  }
 	printf (") of ");
-	ghw_disp_typename (h, a->el);
+	ghw_disp_subtype_indication (h, a->el);
 	printf (";\n");
-      }
-      break;
-    case ghdl_rtik_subtype_array:
-    case ghdl_rtik_subtype_array_ptr:
-      {
-	struct ghw_subtype_array *a = &t->sa;
-	int i;
-
-	printf ("subtype %s is ", a->name);
-	ghw_disp_typename (h, (union ghw_type *)a->base);
-	printf (" (");
-	for (i = 0; i < a->base->nbr_dim; i++)
-	  {
-	    if (i != 0)
-	      printf (", ");
-	    ghw_disp_range (a->base->dims[i], a->rngs[i]);
-	  }
-	printf (");\n");
       }
       break;
     case ghdl_rtik_type_record:
@@ -1739,10 +1783,20 @@ ghw_disp_type (struct ghw_handler *h, union ghw_type *t)
 	for (i = 0; i < r->nbr_fields; i++)
 	  {
 	    printf ("  %s: ", r->el[i].name);
-	    ghw_disp_typename (h, r->el[i].type);
-	    printf ("\n");
+	    ghw_disp_subtype_indication (h, r->el[i].type);
+	    printf (";\n");
 	  }
 	printf ("end record;\n");
+      }
+      break;
+    case ghdl_rtik_subtype_array:
+    case ghdl_rtik_subtype_array_ptr:
+    case ghdl_rtik_subtype_scalar:
+      {
+	struct ghw_type_common *c = &t->common;
+	printf ("subtype %s is ", c->name);
+	ghw_disp_subtype_definition (h, t);
+	printf (";\n");
       }
       break;
     default:
@@ -1756,5 +1810,6 @@ ghw_disp_types (struct ghw_handler *h)
   int i;
 
   for (i = 0; i < h->nbr_types; i++)
-    ghw_disp_type (h, h->types[i]);
+    if (h->flag_verbose || !ghw_is_anonymous_type (h, h->types[i]))
+      ghw_disp_type (h, h->types[i]);
 }

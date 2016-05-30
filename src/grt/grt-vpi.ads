@@ -35,6 +35,7 @@ package Grt.Vpi is
    vpiType:          constant integer :=  1;
    vpiName:          constant integer :=  2;
    vpiFullName:      constant integer :=  3;
+   vpiSize:          constant integer :=  4;
    vpiTimePrecision: constant integer := 12;
 
    -- object codes, see vpi_user.h
