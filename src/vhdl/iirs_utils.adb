@@ -945,6 +945,27 @@ package body Iirs_Utils is
       return True;
    end Is_Same_Profile;
 
+   function Is_Operation_For_Type (Subprg : Iir; Atype : Iir) return Boolean
+   is
+      pragma Assert (Get_Kind (Subprg) in Iir_Kinds_Subprogram_Declaration);
+      Base_Type : constant Iir := Get_Base_Type (Atype);
+      Inter : Iir;
+   begin
+      Inter := Get_Interface_Declaration_Chain (Subprg);
+      while Inter /= Null_Iir loop
+         if Get_Base_Type (Get_Type (Inter)) = Base_Type then
+            return True;
+         end if;
+         Inter := Get_Chain (Inter);
+      end loop;
+      if Get_Kind (Subprg) = Iir_Kind_Function_Declaration
+        and then Get_Base_Type (Get_Return_Type (Subprg)) = Base_Type
+      then
+         return True;
+      end if;
+      return False;
+   end Is_Operation_For_Type;
+
    -- From a block_specification, returns the block.
    function Get_Block_From_Block_Specification (Block_Spec : Iir)
      return Iir

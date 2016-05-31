@@ -238,6 +238,7 @@ package Nodes_Meta is
       Field_Purity_State,
       Field_Elab_Flag,
       Field_Index_Constraint_Flag,
+      Field_Hide_Implicit_Flag,
       Field_Assertion_Condition,
       Field_Report_Expression,
       Field_Severity_Expression,
@@ -725,6 +726,7 @@ package Nodes_Meta is
    function Has_Purity_State (K : Iir_Kind) return Boolean;
    function Has_Elab_Flag (K : Iir_Kind) return Boolean;
    function Has_Index_Constraint_Flag (K : Iir_Kind) return Boolean;
+   function Has_Hide_Implicit_Flag (K : Iir_Kind) return Boolean;
    function Has_Assertion_Condition (K : Iir_Kind) return Boolean;
    function Has_Report_Expression (K : Iir_Kind) return Boolean;
    function Has_Severity_Expression (K : Iir_Kind) return Boolean;

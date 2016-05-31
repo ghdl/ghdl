@@ -22,7 +22,7 @@ begin  -- architecture rtl
   process (clk) is
   begin  -- process
     if clk'event and clk = '1' then  -- rising clock edge
-      if input = one then
+      if input = work.issue_pkg.one then
         output <= '1';
       else
         output <= '0';

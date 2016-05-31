@@ -3394,6 +3394,22 @@ package body Iirs is
       Set_Flag4 (Atype, Flag);
    end Set_Index_Constraint_Flag;
 
+   function Get_Hide_Implicit_Flag (Subprg : Iir) return Boolean is
+   begin
+      pragma Assert (Subprg /= Null_Iir);
+      pragma Assert (Has_Hide_Implicit_Flag (Get_Kind (Subprg)),
+                     "no field Hide_Implicit_Flag");
+      return Get_Flag12 (Subprg);
+   end Get_Hide_Implicit_Flag;
+
+   procedure Set_Hide_Implicit_Flag (Subprg : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Subprg /= Null_Iir);
+      pragma Assert (Has_Hide_Implicit_Flag (Get_Kind (Subprg)),
+                     "no field Hide_Implicit_Flag");
+      Set_Flag12 (Subprg, Flag);
+   end Set_Hide_Implicit_Flag;
+
    function Get_Assertion_Condition (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);

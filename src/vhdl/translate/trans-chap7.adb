@@ -5705,25 +5705,6 @@ package body Trans.Chap7 is
                end if;
             end;
 
-         when Iir_Predefined_Attribute_Image
-            | Iir_Predefined_Attribute_Value
-            | Iir_Predefined_Attribute_Pos
-            | Iir_Predefined_Attribute_Val
-            | Iir_Predefined_Attribute_Succ
-            | Iir_Predefined_Attribute_Pred
-            | Iir_Predefined_Attribute_Leftof
-            | Iir_Predefined_Attribute_Rightof
-            | Iir_Predefined_Attribute_Left
-            | Iir_Predefined_Attribute_Right
-            | Iir_Predefined_Attribute_Event
-            | Iir_Predefined_Attribute_Active
-            | Iir_Predefined_Attribute_Last_Event
-            | Iir_Predefined_Attribute_Last_Active
-            | Iir_Predefined_Attribute_Last_Value
-            | Iir_Predefined_Attribute_Driving
-            | Iir_Predefined_Attribute_Driving_Value =>
-            raise Internal_Error;
-
          when Iir_Predefined_Array_Char_To_String
             | Iir_Predefined_Bit_Vector_To_Ostring
             | Iir_Predefined_Bit_Vector_To_Hstring

@@ -185,6 +185,15 @@ package Iirs_Utils is
    --  L and R must be subprograms specification (or spec_body).
    function Is_Same_Profile (L, R: Iir) return Boolean;
 
+   --  Return true iff FUNC is an operation for ATYPE.
+   --
+   --  LRM08 5.1 Types
+   --  The set of operations of a type includes the explicitely declared
+   --  subprograms that have a parameter or result of the type. The remaining
+   --  operations of a type are the base operations and the predefined
+   --  operations.
+   function Is_Operation_For_Type (Subprg : Iir; Atype : Iir) return Boolean;
+
    --  From a block_specification, returns the block.
    --  Roughly speaking, this get prefix of indexed and sliced name.
    function Get_Block_From_Block_Specification (Block_Spec : Iir)

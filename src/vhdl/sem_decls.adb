@@ -2320,9 +2320,9 @@ package body Sem_Decls is
          --      declaration for the enumeration type; [...]
          --
          --  LRM08 6.6.3 Nonobject aliases
-         --  c)  If the name denotes an enumeration type of a subtype of an
+         --  c)  If the name denotes an enumeration type or a subtype of an
          --      enumeration type, then one implicit alias declaration for each
-         --      of the litereals of the base type immediately follows the
+         --      of the literals of the base type immediately follows the
          --      alias declaration for the enumeration type; [...]
          Enum_List := Get_Enumeration_Literal_List (Def);
          for I in Natural loop
@@ -2399,7 +2399,7 @@ package body Sem_Decls is
       El := Get_Chain (Type_Decl);
       while El /= Null_Iir loop
          if Is_Implicit_Subprogram (El)
-           and then Get_Type_Reference (El) = Type_Decl
+           and then Is_Operation_For_Type (El, Def)
          then
             Add_Implicit_Alias (El);
             El := Get_Chain (El);

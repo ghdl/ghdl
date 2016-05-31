@@ -765,8 +765,13 @@ package body Sem_Scopes is
                            --  within the entire scope of the other declaration
                            --  (regardless of which declaration occurs first);
                            --  the implicit declaration is visible neither by
-                           --  selected nor directly.
+                           --  selection nor directly.
                            Set_Visible_Flag (Current_Decl, False);
+                           if Get_Kind (Decl)
+                             in Iir_Kinds_Subprogram_Declaration
+                           then
+                              Set_Hide_Implicit_Flag (Decl, True);
+                           end if;
                         end if;
                      end;
                   else
@@ -957,12 +962,10 @@ package body Sem_Scopes is
             end if;
          when Iir_Kind_Type_Declaration =>
             declare
-               Def : Iir;
+               Def : constant Iir := Get_Type_Definition (Decl);
                List : Iir_List;
                El : Iir;
             begin
-               Def := Get_Type_Definition (Decl);
-
                -- Handle incomplete type declaration.
                if Get_Kind (Def) = Iir_Kind_Incomplete_Type_Definition then
                   return;
@@ -983,11 +986,9 @@ package body Sem_Scopes is
             Handle_Decl (Decl, Arg);
 
             declare
-               Def : Iir;
+               Def : constant Iir := Get_Type_Definition (Decl);
                El : Iir;
             begin
-               Def := Get_Type_Definition (Decl);
-
                if Get_Kind (Def) = Iir_Kind_Physical_Type_Definition then
                   El := Get_Unit_Chain (Def);
                   while El /= Null_Iir loop
@@ -1257,6 +1258,109 @@ package body Sem_Scopes is
       end loop;
    end Use_Library_All;
 
+   procedure Potentially_Add_Name (Name : Iir) is
+   begin
+      Add_Name (Name, Get_Identifier (Name), True);
+   end Potentially_Add_Name;
+
+   --  LRM08 12.4 Use clauses
+   --  Moreover, the following declarations, if any, that occurs immediately
+   --  within the package denoted by the prefix of the selected name, are also
+   --  identifier:
+   procedure Use_Selected_Type_Name (Name : Iir)
+   is
+      Type_Def : constant Iir := Get_Type (Name);
+      Base_Type : constant Iir := Get_Base_Type (Type_Def);
+   begin
+      case Get_Kind (Base_Type) is
+         when Iir_Kind_Enumeration_Type_Definition =>
+            --  LRM08 12.4 Use clauses
+            --  - If the type mark denotes an enumeration type of a subtype of
+            --    an enumeration type, the enumeration literals of the base
+            --    type
+            declare
+               List : constant Iir_List :=
+                 Get_Enumeration_Literal_List (Base_Type);
+               El : Iir;
+            begin
+               for I in Natural loop
+                  El := Get_Nth_Element (List, I);
+                  exit when El = Null_Iir;
+                  Potentially_Add_Name (El);
+               end loop;
+            end;
+         when Iir_Kind_Physical_Type_Definition =>
+            --  LRM08 12.4 Use clauses
+            --  - If the type mark denotes a subtype of a physical type, the
+            --    units of the base type
+            declare
+               El : Iir;
+            begin
+               El := Get_Unit_Chain (Base_Type);
+               while El /= Null_Iir loop
+                  Potentially_Add_Name (El);
+                  El := Get_Chain (El);
+               end loop;
+            end;
+         when others =>
+            null;
+      end case;
+
+      --  LRM08 12.4 Use clauses
+      --  - The implicit declarations of predefined operations for the type
+      --    that are not hidden by homographs explicitely declared immediately
+      --    within the package denoted by the prefix of the selected name
+      --  - The declarations of homographs, explicitely declared immediately
+      --    within the package denotes by the prefix of the selected name,
+      --    that hide implicit declarations of predefined operations for the
+      --    type
+      declare
+         Type_Decl : constant Iir := Get_Type_Declarator (Base_Type);
+         El : Iir;
+         Has_Override : Boolean;
+      begin
+         Has_Override := False;
+         El := Get_Chain (Type_Decl);
+         while El /= Null_Iir loop
+            if Is_Implicit_Subprogram (El)
+              and then Is_Operation_For_Type (El, Base_Type)
+            then
+               if Get_Visible_Flag (El) then
+                  --  Implicit declaration EL was overriden by a user
+                  --  declaration.  Don't make it visible.
+                  Potentially_Add_Name (El);
+               else
+                  Has_Override := True;
+               end if;
+               El := Get_Chain (El);
+            else
+               exit;
+            end if;
+         end loop;
+
+         --  Explicitely declared homograph.
+         if Has_Override then
+            while El /= Null_Iir loop
+               if Get_Kind (El) in Iir_Kinds_Subprogram_Declaration
+                 and then Get_Hide_Implicit_Flag (El)
+                 and then Is_Operation_For_Type (El, Base_Type)
+               then
+                  Potentially_Add_Name (El);
+               end if;
+               El := Get_Chain (El);
+            end loop;
+         end if;
+      end;
+   end Use_Selected_Type_Name;
+
+   --  LRM02 10.4 Use clauses
+   --  Each selected name in a use clause identifiers one or more declarations
+   --  that will potentially become directly visible. If the suffix of the
+   --  selected name is a simple name, a character literal, or operator
+   --  symbol, then the selected name identifiers only the declarations(s) of
+   --  that simple name, character literal, or operator symbol contained
+   --  within the package or library denoted by the prefix of the selected
+   --  name.
    procedure Use_Selected_Name (Name : Iir) is
    begin
       case Get_Kind (Name) is
@@ -1265,10 +1369,24 @@ package body Sem_Scopes is
          when Iir_Kind_Error =>
             null;
          when others =>
-            Add_Declaration (Name, True);
+            Potentially_Add_Name (Name);
+
+            --  LRM08 12.4 Use clauses
+            --  If the suffix of the selected name is a type mark, then the
+            --  declaration of the type or subtype denoted by the type mark
+            --  is identified. Moreover [...]
+            if (Vhdl_Std >= Vhdl_08 or else Flag_Relaxed_Rules)
+              and then Get_Kind (Name) in Iir_Kinds_Type_Declaration
+            then
+               Use_Selected_Type_Name (Name);
+            end if;
       end case;
    end Use_Selected_Name;
 
+   --  LRM93 10.4 Use clauses
+   --  If the suffix is the reserved word ALL, then all the selected name
+   --  identifies all declaration that are contained within the package or
+   --  library denotes by te prefix of the selected name.
    procedure Use_All_Names (Name: Iir) is
    begin
       case Get_Kind (Name) is
