@@ -1583,6 +1583,9 @@ package body Sem_Expr is
    --  type and the other not, return the primitive of the universal type.
    --  This implements implicit type conversions rules.
    --  Cf Sem_Names.Extract_Call_Without_Implicit_Conversion
+   --
+   --  The typical case is the use of comparison operator with literals or
+   --  attributes, like: s'length = 0
    function Get_Non_Implicit_Subprogram (List : Iir_List) return Iir
    is
       El : Iir;
@@ -1596,15 +1599,17 @@ package body Sem_Expr is
       for I in Natural loop
          El := Get_Nth_Element (List, I);
          exit when El = Null_Iir;
+
+         --  Only comparison operators need this special handling.
          if Get_Base_Type (Get_Return_Type (El)) /= Boolean_Type_Definition
          then
             return Null_Iir;
          end if;
 
          if Is_Implicit_Subprogram (El) then
-            Ref_Type := Get_Type_Reference (El);
-            if Ref_Type = Universal_Integer_Type_Declaration
-              or Ref_Type = Universal_Real_Type_Declaration
+            Ref_Type := Get_Type (Get_Interface_Declaration_Chain (El));
+            if Ref_Type = Universal_Integer_Type_Definition
+              or Ref_Type = Universal_Real_Type_Definition
             then
                if Res = Null_Iir then
                   Res := El;

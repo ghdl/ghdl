@@ -2110,22 +2110,6 @@ package body Iirs is
       Set_Field7 (D, Iir_Predefined_Functions'Pos (Def));
    end Set_Implicit_Definition;
 
-   function Get_Type_Reference (Target : Iir) return Iir is
-   begin
-      pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_Type_Reference (Get_Kind (Target)),
-                     "no field Type_Reference");
-      return Get_Field11 (Target);
-   end Get_Type_Reference;
-
-   procedure Set_Type_Reference (Target : Iir; Decl : Iir) is
-   begin
-      pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_Type_Reference (Get_Kind (Target)),
-                     "no field Type_Reference");
-      Set_Field11 (Target, Decl);
-   end Set_Type_Reference;
-
    function Get_Default_Value (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);

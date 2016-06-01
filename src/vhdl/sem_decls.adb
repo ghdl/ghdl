@@ -474,7 +474,6 @@ package body Sem_Decls is
             Set_Location (Proc, Loc);
             Set_Parent (Proc, Get_Parent (Decl));
             Set_Identifier (Proc, Std_Names.Name_File_Open);
-            Set_Type_Reference (Proc, Decl);
             Set_Visible_Flag (Proc, True);
             Set_Wait_State (Proc, False);
             Build_Init (Last_Interface);
@@ -528,7 +527,6 @@ package body Sem_Decls is
          Set_Location (Proc, Loc);
          Set_Parent (Proc, Get_Parent (Decl));
          Set_Implicit_Definition (Proc, Iir_Predefined_File_Close);
-         Set_Type_Reference (Proc, Decl);
          Set_Visible_Flag (Proc, True);
          Set_Wait_State (Proc, False);
          Build_Init (Last_Interface);
@@ -554,7 +552,6 @@ package body Sem_Decls is
       Set_Identifier (Proc, Std_Names.Name_Read);
       Set_Location (Proc, Loc);
       Set_Parent (Proc, Get_Parent (Decl));
-      Set_Type_Reference (Proc, Decl);
       Set_Visible_Flag (Proc, True);
       Set_Wait_State (Proc, False);
       Build_Init (Last_Interface);
@@ -593,7 +590,6 @@ package body Sem_Decls is
       Set_Identifier (Proc, Std_Names.Name_Write);
       Set_Location (Proc, Loc);
       Set_Parent (Proc, Get_Parent (Decl));
-      Set_Type_Reference (Proc, Decl);
       Set_Visible_Flag (Proc, True);
       Set_Wait_State (Proc, False);
       Build_Init (Last_Interface);
@@ -623,7 +619,6 @@ package body Sem_Decls is
          Set_Identifier (Proc, Std_Names.Name_Flush);
          Set_Location (Proc, Loc);
          Set_Parent (Proc, Get_Parent (Decl));
-         Set_Type_Reference (Proc, Decl);
          Set_Visible_Flag (Proc, True);
          Set_Wait_State (Proc, False);
          Build_Init (Last_Interface);
@@ -644,7 +639,6 @@ package body Sem_Decls is
       Set_Identifier (Func, Std_Names.Name_Endfile);
       Set_Location (Func, Loc);
       Set_Parent (Func, Get_Parent (Decl));
-      Set_Type_Reference (Func, Decl);
       Set_Visible_Flag (Func, True);
       Build_Init (Last_Interface);
       Inter := Create_Iir (File_Interface_Kind);
@@ -693,7 +687,6 @@ package body Sem_Decls is
          Location_Copy (Operation, Decl);
          Set_Parent (Operation, Get_Parent (Decl));
          Set_Interface_Declaration_Chain (Operation, Interface_Chain);
-         Set_Type_Reference (Operation, Decl);
          Set_Return_Type (Operation, Return_Type);
          Set_Implicit_Definition (Operation, Def);
          Set_Identifier (Operation, Name);
@@ -1097,7 +1090,6 @@ package body Sem_Decls is
                Set_Mode (Var_Interface, Iir_Inout_Mode);
                --Set_Purity_State (Deallocate_Proc, Impure);
                Set_Wait_State (Deallocate_Proc, False);
-               Set_Type_Reference (Deallocate_Proc, Decl);
                Set_Visible_Flag (Deallocate_Proc, True);
 
                Set_Interface_Declaration_Chain

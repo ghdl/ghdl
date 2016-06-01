@@ -1262,8 +1262,6 @@ package Iirs is
    --
    --   Get/Set_Subprogram_Depth (Field10)
    --
-   --   Get/Set_Type_Reference (Field11)
-   --
    --   Get/Set_Overload_Number (Field12)
    --
    --   Get/Set_Seen_Flag (Flag1)
@@ -5741,12 +5739,6 @@ package Iirs is
    --  Field: Field7 (pos)
    function Get_Implicit_Definition (D : Iir) return Iir_Predefined_Functions;
    procedure Set_Implicit_Definition (D : Iir; Def : Iir_Predefined_Functions);
-
-   --  For an implicit subprogram, the type_reference is the type declaration
-   --  for which the implicit subprogram was defined.
-   --  Field: Field11 Ref
-   function Get_Type_Reference (Target : Iir) return Iir;
-   procedure Set_Type_Reference (Target : Iir; Decl : Iir);
 
    --  Get the default value of an object declaration.
    --  Null_iir if no default value.

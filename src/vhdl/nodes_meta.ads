@@ -158,7 +158,6 @@ package Nodes_Meta is
       Field_Impure_Depth,
       Field_Return_Type,
       Field_Implicit_Definition,
-      Field_Type_Reference,
       Field_Default_Value,
       Field_Deferred_Declaration,
       Field_Deferred_Declaration_Flag,
@@ -643,7 +642,6 @@ package Nodes_Meta is
    function Has_Impure_Depth (K : Iir_Kind) return Boolean;
    function Has_Return_Type (K : Iir_Kind) return Boolean;
    function Has_Implicit_Definition (K : Iir_Kind) return Boolean;
-   function Has_Type_Reference (K : Iir_Kind) return Boolean;
    function Has_Default_Value (K : Iir_Kind) return Boolean;
    function Has_Deferred_Declaration (K : Iir_Kind) return Boolean;
    function Has_Deferred_Declaration_Flag (K : Iir_Kind) return Boolean;
