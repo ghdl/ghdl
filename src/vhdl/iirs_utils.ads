@@ -253,6 +253,11 @@ package Iirs_Utils is
    --  Return the protected type for method SPEC.
    function Get_Method_Type (Spec : Iir) return Iir;
 
+   --  For Association_Element_By_Expression: return the actual.
+   --  For Association_Element_Open: return the default value of the
+   --    interface.
+   function Get_Actual_Or_Default (Assoc : Iir) return Iir;
+
    --  Create an error node for node ORIG.
    function Create_Error (Orig : Iir) return Iir;
 

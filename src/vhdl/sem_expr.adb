@@ -1611,11 +1611,9 @@ package body Sem_Expr is
             if Ref_Type = Universal_Integer_Type_Definition
               or Ref_Type = Universal_Real_Type_Definition
             then
-               if Res = Null_Iir then
-                  Res := El;
-               else
-                  return Null_Iir;
-               end if;
+               --  There could be only one such subprogram.
+               pragma Assert (Res = Null_Iir);
+               Res := El;
             end if;
          end if;
       end loop;

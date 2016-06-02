@@ -1187,6 +1187,18 @@ package body Iirs_Utils is
       end case;
    end Get_Method_Type;
 
+   function Get_Actual_Or_Default (Assoc : Iir) return Iir is
+   begin
+      case Get_Kind (Assoc) is
+         when Iir_Kind_Association_Element_By_Expression =>
+            return Get_Actual (Assoc);
+         when Iir_Kind_Association_Element_Open =>
+            return Get_Default_Value (Get_Formal (Assoc));
+         when others =>
+            Error_Kind ("get_actual_or_default", Assoc);
+      end case;
+   end Get_Actual_Or_Default;
+
    function Create_Error (Orig : Iir) return Iir
    is
       Res : Iir;

@@ -245,15 +245,18 @@ package body Grt.Files is
      (File : Ghdl_File_Index; Mode : Ghdl_I32; Str : Std_String_Ptr)
    is
       Res : Ghdl_I32;
+      Bt : Backtrace_Addrs;
    begin
       Check_File_Mode (File, True);
 
       Res := File_Open (File, Mode, Str);
 
       if Res /= Open_Ok then
-         Error_C ("open: cannot open text file ");
+         Save_Backtrace (Bt, 1);
+         Error_C ("cannot open text file """);
          Error_C_Std (Str.Base (0 .. Str.Bounds.Dim_1.Length - 1));
-         Error_E;
+         Error_C ("""");
+         Error_E_Call_Stack (Bt);
       end if;
    end Ghdl_Text_File_Open;
 
@@ -261,15 +264,18 @@ package body Grt.Files is
      (File : Ghdl_File_Index; Mode : Ghdl_I32; Str : Std_String_Ptr)
    is
       Res : Ghdl_I32;
+      Bt : Backtrace_Addrs;
    begin
       Check_File_Mode (File, False);
 
       Res := File_Open (File, Mode, Str);
 
       if Res /= Open_Ok then
-         Error_C ("open: cannot open file ");
+         Save_Backtrace (Bt, 1);
+         Error_C ("cannot open file """);
          Error_C_Std (Str.Base (0 .. Str.Bounds.Dim_1.Length - 1));
-         Error_E;
+         Error_C ("""");
+         Error_E_Call_Stack (Bt);
       end if;
    end Ghdl_File_Open;
 
