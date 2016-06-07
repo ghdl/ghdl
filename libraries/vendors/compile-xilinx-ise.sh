@@ -170,11 +170,10 @@ else
 fi
 
 # extract data from configuration
-InstallDir=${InstallationDirectory[XilinxISE]}
-SourceDir="$InstallDir/ISE_DS/ISE/vhdl/src"
+SourceDir=${SourceDirectory[XilinxISE]}
 DestinationDir=${DestinationDirectory[XilinxISE]}
 
-if [ -z $InstallDir ] || [ -z $DestinationDir ]; then
+if [ -z $DestinationDir ]; then
 	echo -e "${COLORED_ERROR} Xilinx ISE is not configured in '$ScriptDir/config.sh'${ANSI_RESET}"
 	exit -1
 elif [ ! -d $SourceDir ]; then

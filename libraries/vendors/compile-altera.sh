@@ -181,12 +181,11 @@ else
 fi
 
 # extract data from configuration
-InstallDir=${InstallationDirectory[AlteraQuartusII]}
-SourceDir="$InstallDir/quartus/eda/sim_lib"
-DestinationDir=${DestinationDirectory[AlteraQuartusII]}
+SourceDir=${SourceDirectory[AlteraQuartus]}
+DestinationDir=${DestinationDirectory[AlteraQuartus]}
 
-if [ -z $InstallDir ] || [ -z $DestinationDir ]; then
-	echo -e "${COLORED_ERROR} Altera Quartus-II is not configured in '$ScriptDir/config.sh'${ANSI_RESET}"
+if [ -z $DestinationDir ]; then
+	echo -e "${COLORED_ERROR} Altera Quartus is not configured in '$ScriptDir/config.sh'${ANSI_RESET}"
 	exit -1
 elif [ ! -d $SourceDir ]; then
 	echo -e "${COLORED_ERROR} Path '$SourceDir' does not exist.${ANSI_RESET}"

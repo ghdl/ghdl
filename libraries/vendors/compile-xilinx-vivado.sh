@@ -164,11 +164,10 @@ else
 fi
 
 # extract data from configuration
-InstallDir=${InstallationDirectory[XilinxVivado]}
-SourceDir="$InstallDir/data/vhdl/src"
+SourceDir=${SourceDirectory[XilinxVivado]}
 DestinationDir=${DestinationDirectory[XilinxVivado]}
 
-if [ -z $InstallDir ] || [ -z $DestinationDir ]; then
+if [ -z $DestinationDir ]; then
 	echo -e "${COLORED_ERROR} Xilinx Vivado is not configured in '$ScriptDir/config.sh'${ANSI_RESET}"
 	exit -1
 elif [ ! -d $SourceDir ]; then

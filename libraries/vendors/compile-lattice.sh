@@ -132,11 +132,10 @@ elif [ "$HELP" == "TRUE" ]; then
 fi
 
 # extract data from configuration
-InstallDir=${InstallationDirectory[LatticeDiamond]}
-SourceDir="$InstallDir/cae_library/simulation/vhdl"
+SourceDir=${SourceDirectory[LatticeDiamond]}
 DestinationDir=${DestinationDirectory[LatticeDiamond]}
 
-if [ -z $InstallDir ] || [ -z $DestinationDir ]; then
+if [ -z $DestinationDir ]; then
 	echo -e "${COLORED_ERROR} Lattice Diamond is not configured in '$ScriptDir/config.sh'${ANSI_RESET}"
 	exit -1
 elif [ ! -d $SourceDir ]; then

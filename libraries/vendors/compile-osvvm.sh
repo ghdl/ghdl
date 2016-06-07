@@ -45,7 +45,7 @@ source $ScriptDir/shared.sh
 
 # command line argument processing
 NO_COMMAND=TRUE
-BinDir=""
+GHDLBinDir=""
 DestDir=""
 SrcDir=""
 while [[ $# > 0 ]]; do
@@ -77,7 +77,7 @@ while [[ $# > 0 ]]; do
 		NO_COMMAND=FALSE
 		;;
 		--ghdl)
-		BinDir="$2"
+		GHDLBinDir="$2"
 		shift						# past argument
 		;;
 		--src)
@@ -144,35 +144,35 @@ if [ "$COMPILE_ALL" == "TRUE" ]; then
 	COMPILE_OSVVM=TRUE
 fi
 
-SourceDirectory=${InstallationDirectory[OSVVM]}
+SourceDirectory=${SourceDirectory[OSVVM]}
 DestinationDir=${DestinationDirectory[OSVVM]}
 
 # OSVVM source directory
 # ----------------------
 # If a command line argument ('--src') was passed in, use it, else use the default value
 # from config.sh
-if [ -n $SrcDir ]; then
+if [ ! -z "$SrcDir" ]; then
 	SourceDirectory=$SrcDir
 fi
 # OSVVM output directory
 # ----------------------
 # If a command line argument ('--out') was passed in, use it, else use the default value
 # from config.sh
-if [ -n $DestDir ]; then
+if [ ! -z "$DestDir" ]; then
 	DestinationDir=$DestDir
 fi
+
 # Use GHDL binary directory from command line argument, if set
-if [ -n $BinDir ]; then
-	GHDLBinary=$BinDir/ghdl
-	if [[ -x "$GHDLBinary" ]]; then
+if [ ! -z "$GHDLBinDir" ]; then
+	GHDLBinary=$GHDLBinDir/ghdl
+	if [[ ! -x "$GHDLBinary" ]]; then
 		echo -e "${COLORED_ERROR} GHDL not found or is not executable.${ANSI_RESET}"
 		exit -1
 	fi
-else
-	# fall back to GHDL found via PATH
+else	# fall back to GHDL found via PATH
 	GHDLBinary=$(which ghdl)
 	if [ $? -ne 0 ]; then
-		echo -e "${COLORED_ERROR} No GHDL found.${ANSI_RESET}"
+		echo -e "${COLORED_ERROR} GHDL not found in PATH.${ANSI_RESET}"
 		echo -e "  Use adv. options '--ghdl' to set the GHDL binary directory."
 		exit -1
 	fi
@@ -232,19 +232,21 @@ if [ "$COMPILE_OSVVM" == "TRUE" ]; then
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
 	GHDL_PARAMS+=(--std=08)
 	Files=(
-		$SourceDir/NamePkg.vhd
-		$SourceDir/OsvvmGlobalPkg.vhd
-		$SourceDir/TextUtilPkg.vhd
-		$SourceDir/TranscriptPkg.vhd
-		$SourceDir/AlertLogPkg.vhd
-		$SourceDir/MemoryPkg.vhd
-		$SourceDir/MessagePkg.vhd
-		$SourceDir/SortListPkg_int.vhd
-		$SourceDir/RandomBasePkg.vhd
-		$SourceDir/RandomPkg.vhd
-		$SourceDir/CoveragePkg.vhd
-		$SourceDir/OsvvmContext.vhd
+		NamePkg.vhd
+		OsvvmGlobalPkg.vhd
+		TextUtilPkg.vhd
+		TranscriptPkg.vhd
+		AlertLogPkg.vhd
+		MemoryPkg.vhd
+		MessagePkg.vhd
+		SortListPkg_int.vhd
+		RandomBasePkg.vhd
+		RandomPkg.vhd
+		CoveragePkg.vhd
+		OsvvmContext.vhd
 	)
+
+	echo $GHDLBinary
 
 	ERRORCOUNT=0
 	for File in ${Files[@]}; do
@@ -253,7 +255,7 @@ if [ "$COMPILE_OSVVM" == "TRUE" ]; then
 			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
 		else
 			echo -e "${ANSI_CYAN}Analyzing package '$File'${ANSI_RESET}"
-			ghdl -a ${GHDL_PARAMS[@]} --work=osvvm "$File" 2>&1 | $GRC_COMMAND
+			$GHDLBinary -a ${GHDL_PARAMS[@]} --work=osvvm "$SourceDirectory/$File" 2>&1 | $GRC_COMMAND
 			if [ $? -ne 0 ]; then
 				let ERRORCOUNT++
 				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
