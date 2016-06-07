@@ -34,17 +34,17 @@
 # Configure your tools here. Use absolute paths, without trailing directory
 #	delimiter. Empty strings indicate not installed tools
 $InstallationDirectory = @{
-	"AlteraQuartusII" =	"C:\Altera\15.0";
+	"AlteraQuartusII" =	"C:\Altera\15.1";
 	"XilinxISE" =				"C:\Xilinx\14.7";
-	"XilinxVivado" =		"C:\Xilinx\Vivado\2015.3";
+	"XilinxVivado" =		"C:\Xilinx\Vivado\2016.1";
 	"OSVVM" =						"D:\git\PoC\lib\osvvm";
 	"VUnit" =						"D:\git\PoC\lib\vunit"
 }
 
 $DestinationDirectory = @{
 	"Altera" =					"altera";
-	"XilinxISE" =				"xilinx";
-	"XilinxVivado" =		"vivado";
+	"XilinxISE" =				"xilinx-ise";
+	"XilinxVivado" =		"xilinx-vivado";
 	"OSVVM" =						"osvvm";
 	"VUnit" =						"vunit"
 }

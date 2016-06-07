@@ -47,25 +47,32 @@
 [CmdletBinding()]
 param(
 	# Compile all libraries and packages.
-	[switch]$All =			$null,
+	[switch]$All =							$false,
 	
 	# Compile the Xilinx simulation library.
-	[switch]$Unisim =		$false,
+	[switch]$Unisim =						$false,
 	
 	# Compile the Xilinx macro library.
-	[switch]$Unimacro =	$false,
+	[switch]$Unimacro =					$false,
 	
 	# Compile the Xilinx post-map simulation library.
-	[switch]$Simprim =	$false,
+	[switch]$Simprim =					$false,
 	
 	# Compile the Xilinx secureip library.
-	[switch]$SecureIP =	$false,
+	[switch]$SecureIP =					$false,
+	
+	# Set VHDL Standard to '93
+	[switch]$VHDL93 =						$false,
+	# Set VHDL Standard to '08
+	[switch]$VHDL2008 =					$false,
 	
 	# Clean up directory before analyzing.
-	[switch]$Clean =		$false,
+	[switch]$Clean =						$false,
 	
 	# Skip warning messages. (Show errors only.)
 	[switch]$SuppressWarnings = $false,
+	# Halt on errors
+	[switch]$HaltOnError =			$false,
 	
 	# Show the embedded help page(s)
 	[switch]$Help =							$false
@@ -96,8 +103,27 @@ elseif ($All -eq $true)
 	$Unimacro =	$true
 	$SecureIP =	$true
 }
-$StopCompiling = $false
 
+if ($VHDL93 -eq $true)
+{	$VHDLStandard =			"93c"
+	$VHDLFlavor =				"synopsys"
+	$DestinationDir +=	".v93"
+}
+elseif ($VHDL2008 -eq $true)
+{	$VHDLStandard =			"08"
+	$VHDLFlavor =				"standard"
+	$DestinationDir +=	".v08"
+	Write-Host "Not all Xilinx primitives are VHDL-2008 compatible! Setting HaltOnError to FALSE." -ForegroundColor Red
+	$HaltOnError =			$false
+}
+else
+{	$VHDLStandard =			"93c"
+	$VHDLFlavor =				"synopsys"
+	$DestinationDir +=	".v93"
+}
+
+$StopCompiling =	$false
+$ErrorCount =			0
 
 # define global GHDL Options
 $GlobalOptions = ("-a", "-fexplicit", "-frelaxed-rules", "--no-vital-checks", "--warn-binding", "--mb-comments")
@@ -120,8 +146,8 @@ if ($Clean)
 if ((-not $StopCompiling) -and $Unisim)
 {	Write-Host "Compiling library 'unisim' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
-	$Options += "--ieee=synopsys"
-	$Options += "--std=93c"
+	$Options += "--ieee=$VHDLFlavor"
+	$Options += "--std=$VHDLStandard"
 	$Files = (
 		"$SourceDir\unisims\unisim_VPKG.vhd",
 		"$SourceDir\unisims\unisim_VCOMP.vhd")
@@ -129,23 +155,33 @@ if ((-not $StopCompiling) -and $Unisim)
 	{	Write-Host "Analyzing package '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=unisim " + $File + " 2>&1"
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		$StopCompiling = ($LastExitCode -ne 0)
-		if ($StopCompiling)	{ break }
+		if ($LastExitCode -ne 0)
+		{	$ErrorCount += 1
+			if ($HaltOnError)
+			{	$StopCompiling = $true
+				break
+			}
+		}
 	}
 }
 
 # compile unisim primitives
 if ((-not $StopCompiling) -and $Unisim)
 {	$Options = $GlobalOptions
-	$Options += "--ieee=synopsys"
-	$Options += "--std=93c"
+	$Options += "--ieee=$VHDLFlavor"
+	$Options += "--std=$VHDLStandard"
 	$Files = dir "$SourceDir\unisims\primitive\*.vhd*"
 	foreach ($File in $Files)
 	{	Write-Host "Analyzing primitive '$($File.FullName)'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=unisim " + $File.FullName + " 2>&1"
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		$StopCompiling = ($LastExitCode -ne 0)
-		if ($StopCompiling)	{ break }
+		if ($LastExitCode -ne 0)
+		{	$ErrorCount += 1
+			if ($HaltOnError)
+			{	$StopCompiling = $true
+				break
+			}
+		}
 	}
 }
 
@@ -153,15 +189,20 @@ if ((-not $StopCompiling) -and $Unisim)
 if ((-not $StopCompiling) -and $Unisim -and $SecureIP)
 {	Write-Host "Compiling library secureip primitives ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
-	$Options += "--ieee=synopsys"
-	$Options += "--std=93c"
+	$Options += "--ieee=$VHDLFlavor"
+	$Options += "--std=$VHDLStandard"
 	$Files = dir "$SourceDir\unisims\secureip\*.vhd*"
 	foreach ($File in $Files)
 	{	Write-Host "Analyzing primitive '$($File.FullName)'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=secureip " + $File.FullName + " 2>&1"
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		$StopCompiling = ($LastExitCode -ne 0)
-		#if ($StopCompiling)	{ break }
+		if ($LastExitCode -ne 0)
+		{	$ErrorCount += 1
+			if ($HaltOnError)
+			{	$StopCompiling = $true
+				# break
+			}
+		}
 	}
 }
 
@@ -171,31 +212,41 @@ if ((-not $StopCompiling) -and $Unisim -and $SecureIP)
 if ((-not $StopCompiling) -and $Unimacro)
 {	Write-Host "Compiling library 'unimacro' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
-	$Options += "--ieee=synopsys"
-	$Options += "--std=93c"
+	$Options += "--ieee=$VHDLFlavor"
+	$Options += "--std=$VHDLStandard"
 	$Files = @(
 		"$SourceDir\unimacro\unimacro_VCOMP.vhd")
 	foreach ($File in $Files)
 	{	Write-Host "Analyzing package '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=unimacro " + $File + " 2>&1"
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		$StopCompiling = ($LastExitCode -ne 0)
-		if ($StopCompiling)	{ break }
+		if ($LastExitCode -ne 0)
+		{	$ErrorCount += 1
+			if ($HaltOnError)
+			{	$StopCompiling = $true
+				break
+			}
+		}
 	}
 }
 
 # compile unimacro macros
 if ((-not $StopCompiling) -and $Unimacro)
 {	$Options = $GlobalOptions
-	$Options += "--ieee=synopsys"
-	$Options += "--std=93c"
+	$Options += "--ieee=$VHDLFlavor"
+	$Options += "--std=$VHDLStandard"
 	$Files = dir "$SourceDir\unimacro\*_MACRO.vhd*"
 	foreach ($File in $Files)
 	{	Write-Host "Analyzing primitive '$($File.FullName)'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=unimacro " + $File.FullName + " 2>&1"
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		$StopCompiling = ($LastExitCode -ne 0)
-		if ($StopCompiling)	{ break }
+		if ($LastExitCode -ne 0)
+		{	$ErrorCount += 1
+			if ($HaltOnError)
+			{	$StopCompiling = $true
+				break
+			}
+		}
 	}
 }
 
@@ -205,8 +256,8 @@ if ((-not $StopCompiling) -and $Unimacro)
 if ((-not $StopCompiling) -and $Simprim)
 {	Write-Host "Compiling library 'simprim' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
-	$Options += "--ieee=synopsys"
-	$Options += "--std=93c"
+	$Options += "--ieee=$VHDLFlavor"
+	$Options += "--std=$VHDLStandard"
 	$Files = (
 		"$SourceDir\simprims\simprim_Vpackage.vhd",
 		"$SourceDir\simprims\simprim_Vcomponents.vhd")
@@ -214,8 +265,13 @@ if ((-not $StopCompiling) -and $Simprim)
 	{	Write-Host "Analyzing package '$File'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=simprim " + $File + " 2>&1"
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		$StopCompiling = ($LastExitCode -ne 0)
-		if ($StopCompiling)	{ break }
+		if ($LastExitCode -ne 0)
+		{	$ErrorCount += 1
+			if ($HaltOnError)
+			{	$StopCompiling = $true
+				break
+			}
+		}
 	}
 }
 
@@ -223,15 +279,20 @@ if ((-not $StopCompiling) -and $Simprim)
 if ((-not $StopCompiling) -and $Simprim)
 {	Write-Host "Compiling library 'simprim' ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
-	$Options += "--ieee=synopsys"
-	$Options += "--std=93c"
+	$Options += "--ieee=$VHDLFlavor"
+	$Options += "--std=$VHDLStandard"
 	$Files = dir "$SourceDir\simprims\primitive\other\*.vhd*"
 	foreach ($File in $Files)
 	{	Write-Host "Analyzing primitive '$($File.FullName)'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=simprim " + $File.FullName + " 2>&1"
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		$StopCompiling = ($LastExitCode -ne 0)
-		#if ($StopCompiling)	{ break }
+		if ($LastExitCode -ne 0)
+		{	$ErrorCount += 1
+			if ($HaltOnError)
+			{	$StopCompiling = $true
+				# break
+			}
+		}
 	}
 }
 
@@ -239,21 +300,26 @@ if ((-not $StopCompiling) -and $Simprim)
 if ((-not $StopCompiling) -and $Simprim -and $SecureIP)
 {	Write-Host "Compiling secureip primitives ..." -ForegroundColor Yellow
 	$Options = $GlobalOptions
-	$Options += "--ieee=synopsys"
-	$Options += "--std=93c"
+	$Options += "--ieee=$VHDLFlavor"
+	$Options += "--std=$VHDLStandard"
 	$Files = dir "$SourceDir\simprims\secureip\other\*.vhd*"
 	foreach ($File in $Files)
 	{	Write-Host "Analyzing primitive '$($File.FullName)'" -ForegroundColor Cyan
 		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=simprim " + $File.FullName + " 2>&1"
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		$StopCompiling = ($LastExitCode -ne 0)
-		#if ($StopCompiling)	{ break }
+		if ($LastExitCode -ne 0)
+		{	$ErrorCount += 1
+			if ($HaltOnError)
+			{	$StopCompiling = $true
+				# break
+			}
+		}
 	}
 }
 
 Write-Host "--------------------------------------------------------------------------------"
 Write-Host "Compiling Xilinx ISE libraries " -NoNewline
-if ($StopCompiling)
+if ($ErrorCount -gt 0)
 {	Write-Host "[FAILED]" -ForegroundColor Red				}
 else
 {	Write-Host "[SUCCESSFUL]" -ForegroundColor Green	}

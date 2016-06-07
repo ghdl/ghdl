@@ -93,18 +93,20 @@ $Script_WorkingDir =		Get-Location
 $GHDLRootDir_AbsPath =	Convert-Path (Resolve-Path ($PSScriptRoot + "\" + $Script_RelPathToRoot))
 
 # configure some variables: paths, executables, directory names, ...
-$WindowsDirName =				"dist\mcode\windows"
-$BuildDirName =					"dist\mcode\build"
-$LibraryDirName =				"dist\mcode\lib"
-$ZipPackageDirName =		"dist\mcode\zip"
-$ZipPackageFileName =		"dist\mcode\ghdl-install.zip"
+$WindowsDirName =					"dist\mcode\windows"
+$BuildDirName =						"dist\mcode\build"
+$CompiledLibraryDirName =	"dist\mcode\lib"
+$ZipPackageDirName =			"dist\mcode\zip"
+$ZipPackageFileName =			"dist\mcode\ghdl-install.zip"
+$VendorLibraryDirName =		"libraries\vendors"
 
 # construct directories
-$GHDLWindowsDir =			$GHDLRootDir_AbsPath + "\" + $WindowsDirName
-$GHDLBuildDir =				$GHDLRootDir_AbsPath + "\" + $BuildDirName
-$GHDLLibraryDir =			$GHDLRootDir_AbsPath + "\" + $LibraryDirName
-$GHDLZipPackageDir =	$GHDLRootDir_AbsPath + "\" + $ZipPackageDirName
-$GHDLZipPackageFile =	$GHDLRootDir_AbsPath + "\" + $ZipPackageFileName
+$GHDLWindowsDir =						$GHDLRootDir_AbsPath + "\" + $WindowsDirName
+$GHDLBuildDir =							$GHDLRootDir_AbsPath + "\" + $BuildDirName
+$GHDLCompiledLibraryDir =		$GHDLRootDir_AbsPath + "\" + $CompiledLibraryDirName
+$GHDLZipPackageDir =				$GHDLRootDir_AbsPath + "\" + $ZipPackageDirName
+$GHDLZipPackageFile =				$GHDLRootDir_AbsPath + "\" + $ZipPackageFileName
+$GHDLVendorLibraryDirName =	$GHDLRootDir_AbsPath + "\" + $VendorLibraryDirName
 
 # set default values
 $Script_ExitCode = 			0
@@ -282,7 +284,7 @@ else
 				if ($Script_ExitCode -eq 0)
 					{	$Script_Path = 				$GHDLWindowsDir + "\compile.ps1"
 						$Script_Parameters =	@()
-						$Script_Parameters +=	'-Compile'
+						$Script_Parameters +=	'-All'
 						if ($Script_EnableVerbose -eq $true)	{	$Script_Parameters += '-Verbose'	}
 						if ($Script_EnableDebug -eq $true)		{	$Script_Parameters += '-Debug'		}
 						
@@ -357,13 +359,15 @@ else
 						Remove-Item $GHDLZipPackageDir -Force -Recurse -ErrorAction SilentlyContinue
 					
 						Write-Host "  Creating directory '$GHDLZipPackageDir'."
-						[void](New-Item -ItemType directory -Path $GHDLZipPackageDir				-ErrorAction SilentlyContinue)
-						[void](New-Item -ItemType directory -Path "$GHDLZipPackageDir\bin"	-ErrorAction SilentlyContinue)
+						[void](New-Item -ItemType directory -Path "$GHDLZipPackageDir"					-ErrorAction SilentlyContinue)
+						[void](New-Item -ItemType directory -Path "$GHDLZipPackageDir\bin"			-ErrorAction SilentlyContinue)
+						[void](New-Item -ItemType directory -Path "$GHDLZipPackageDir\scripts"	-ErrorAction SilentlyContinue)
 					
 						Copy-Item "$GHDLBuildDir\ghdl.exe"				"$GHDLZipPackageDir\bin\ghdl.exe"				-ErrorAction SilentlyContinue
 						Copy-Item "$GHDLBuildDir\ghdlfilter.exe"	"$GHDLZipPackageDir\bin\ghdlfilter.exe"	-ErrorAction SilentlyContinue
 
-						Copy-Item $GHDLLibraryDir -Recurse				$GHDLZipPackageDir -ErrorAction SilentlyContinue
+						Copy-Item $GHDLCompiledLibraryDir		-Recurse	"$GHDLZipPackageDir"					-ErrorAction SilentlyContinue
+						Copy-Item $GHDLVendorLibraryDirName	-Recurse	"$GHDLZipPackageDir\scripts"	-ErrorAction SilentlyContinue
 
 						Write-Host "  Compressing files into '$GHDLZipPackageFile'"
 						$file = Get-ChildItem $GHDLZipPackageDir -Recurse | Write-Zip -IncludeEmptyDirectories -EntryPathRoot $GHDLZipPackageDir -OutputPath $GHDLZipPackageFile
@@ -420,18 +424,21 @@ else
 					{	Write-Host "  Install directory: $InstallPath"
 					
 						Write-Host "  Creating directory '$InstallPath'."
-						[void](New-Item -ItemType directory -Path $InstallPath				-ErrorAction SilentlyContinue)
-						[void](New-Item -ItemType directory -Path "$InstallPath\bin"	-ErrorAction SilentlyContinue)
-					
+						[void](New-Item -ItemType directory -Path "$InstallPath"					-ErrorAction SilentlyContinue)
+						[void](New-Item -ItemType directory -Path "$InstallPath\bin"			-ErrorAction SilentlyContinue)
+						[void](New-Item -ItemType directory -Path "$InstallPath\scripts"	-ErrorAction SilentlyContinue)
+						
 						Copy-Item "$GHDLBuildDir\ghdl.exe"				"$InstallPath\bin\ghdl.exe"				-ErrorAction SilentlyContinue
 						Copy-Item "$GHDLBuildDir\ghdlfilter.exe"	"$InstallPath\bin\ghdlfilter.exe"	-ErrorAction SilentlyContinue
 
-						Copy-Item $GHDLLibraryDir -Recurse				$InstallPath -ErrorAction SilentlyContinue
+						Copy-Item $GHDLCompiledLibraryDir					-Recurse	"$InstallPath"					-ErrorAction SilentlyContinue
+						Copy-Item "$GHDLVendorLibraryDirName\*.*"	-Recurse	"$InstallPath\scripts"	-ErrorAction SilentlyContinue
 					}
 				
 				if ($Script_ExitCode -eq 0)
-					{	Write-Host "  Registering installation directory in system PATH"
-						Add-Path "$InstallPath\bin"
+					{	Write-Host "  Registering installation directory in system PATH" -NoNewline
+						Write-Host "  [DISABLED]" -ForegroundColor Red
+						#Add-Path "$InstallPath\bin"
 					}
 				
 				if ($Script_ExitCode -eq 0)

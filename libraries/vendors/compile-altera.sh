@@ -101,6 +101,12 @@ while [[ $# > 0 ]]; do
 		NANOMETER=TRUE
 		NO_COMMAND=FALSE
 		;;
+		--vhdl93)
+		VHDL93=TRUE
+		;;
+		--vhdl2008)
+		VHDL2008=TRUE
+		;;
 		*)		# unknown option
 		UNKNOWN_OPTION=TRUE
 		;;
@@ -141,6 +147,8 @@ elif [ "$HELP" == "TRUE" ]; then
 	echo "     --nanometer        Unknown device library."
 	echo ""
 	echo "Library compile options:"
+	echo "     --vhdl93           Compile the libraries with VHDL-93."
+	echo "     --vhdl2008         Compile the libraries with VHDL-2008."
 	echo "  -s --skip-existing    Skip already compiled files (an *.o file exists)."
 	echo "  -S --skip-largefiles  Don't compile large entities like DSP and PCIe primitives."
 	echo "  -H --halt-on-error    Halt on error(s)."
@@ -161,13 +169,23 @@ if [ "$ALL" == "TRUE" ]; then
 	NANOMETER=TRUE
 fi
 
-# extract data from configuration
-InstallDir=${InstallationDirectory[AlteraQuartusII]}
-SourceDir="$InstallDir/quartus/eda/sim_lib"
-DestinationDir=${DestinationDirectory[AlteraQuartusII]}
+if [ "$VHDL93" == "TRUE" ]; then
+	VHDLStandard="93c"
+	VHDLFlavor="synopsys"
+elif [ "$VHDL2008" == "TRUE" ]; then
+	VHDLStandard="08"
+	VHDLFlavor="standard"
+else
+	VHDLStandard="93c"
+	VHDLFlavor="synopsys"
+fi
 
-if [ -z $InstallDir ] || [ -z $DestinationDir ]; then
-	echo -e "${COLORED_ERROR} Altera Quartus-II is not configured in '$ScriptDir/config.sh'${ANSI_RESET}"
+# extract data from configuration
+SourceDir=${SourceDirectory[AlteraQuartus]}
+DestinationDir=${DestinationDirectory[AlteraQuartus]}
+
+if [ -z $DestinationDir ]; then
+	echo -e "${COLORED_ERROR} Altera Quartus is not configured in '$ScriptDir/config.sh'${ANSI_RESET}"
 	exit -1
 elif [ ! -d $SourceDir ]; then
 	echo -e "${COLORED_ERROR} Path '$SourceDir' does not exist.${ANSI_RESET}"
@@ -201,6 +219,7 @@ else
 fi
 
 STOPCOMPILING=FALSE
+ERRORCOUNT=0
 
 # Cleanup directory
 # ==============================================================================
@@ -215,7 +234,7 @@ fi
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$ALTERA" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Compiling library 'lpm' ...${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
+	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
 	Files=(
 		$SourceDir/220pack.vhd
 		$SourceDir/220model.vhd
@@ -227,9 +246,12 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$ALTERA" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=lpm "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
+			if [ $? -ne 0 ]; then
+				let ERRORCOUNT++
+				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
+					STOPCOMPILING=TRUE
+					break
+				fi
 			fi
 		fi
 	done
@@ -239,7 +261,7 @@ fi
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$ALTERA" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Compiling library 'sgate' ...${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
+	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
 	Files=(
 		$SourceDir/sgate_pack.vhd
 		$SourceDir/sgate.vhd
@@ -251,9 +273,12 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$ALTERA" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=sgate "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
+			if [ $? -ne 0 ]; then
+				let ERRORCOUNT++
+				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
+					STOPCOMPILING=TRUE
+					break
+				fi
 			fi
 		fi
 	done
@@ -263,7 +288,7 @@ fi
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$ALTERA" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Compiling library 'altera' ...${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
+	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
 	Files=(
 		$SourceDir/altera_europa_support_lib.vhd
 		$SourceDir/altera_primitives_components.vhd
@@ -279,9 +304,12 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$ALTERA" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=altera "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
+			if [ $? -ne 0 ]; then
+				let ERRORCOUNT++
+				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
+					STOPCOMPILING=TRUE
+					break
+				fi
 			fi
 		fi
 	done
@@ -291,7 +319,7 @@ fi
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$ALTERA" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Compiling library 'altera_mf' ...${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
+	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
 	Files=(
 		$SourceDir/altera_mf_components.vhd
 		$SourceDir/altera_mf.vhd
@@ -303,9 +331,12 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$ALTERA" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=altera_mf "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
+			if [ $? -ne 0 ]; then
+				let ERRORCOUNT++
+				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
+					STOPCOMPILING=TRUE
+					break
+				fi
 			fi
 		fi
 	done
@@ -315,7 +346,7 @@ fi
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$ALTERA" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Compiling library 'altera_lnsim' ...${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
+	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
 	Files=(
 		$SourceDir/altera_lnsim_components.vhd
 	)
@@ -340,7 +371,7 @@ fi
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$MAX" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Compiling library 'max' ...${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
+	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
 	Files=(
 		$SourceDir/max_atoms.vhd
 		$SourceDir/max_components.vhd
@@ -352,9 +383,12 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$MAX" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=max "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
+			if [ $? -ne 0 ]; then
+				let ERRORCOUNT++
+				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
+					STOPCOMPILING=TRUE
+					break
+				fi
 			fi
 		fi
 	done
@@ -364,7 +398,7 @@ fi
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$MAX" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Compiling library 'maxii' ...${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
+	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
 	Files=(
 		$SourceDir/maxii_atoms.vhd
 		$SourceDir/maxii_components.vhd
@@ -376,9 +410,12 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$MAX" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=maxii "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
+			if [ $? -ne 0 ]; then
+				let ERRORCOUNT++
+				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
+					STOPCOMPILING=TRUE
+					break
+				fi
 			fi
 		fi
 	done
@@ -388,7 +425,7 @@ fi
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$MAX" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Compiling library 'maxv' ...${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
+	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
 	Files=(
 		$SourceDir/maxv_atoms.vhd
 		$SourceDir/maxv_components.vhd
@@ -400,9 +437,12 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$MAX" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=maxv "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
+			if [ $? -ne 0 ]; then
+				let ERRORCOUNT++
+				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
+					STOPCOMPILING=TRUE
+					break
+				fi
 			fi
 		fi
 	done
@@ -412,7 +452,7 @@ fi
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$ARRIA" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Compiling library 'arriaii' ...${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
+	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
 	Files=(
 		$SourceDir/arriaii_atoms.vhd
 		$SourceDir/arriaii_components.vhd
@@ -426,9 +466,12 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$ARRIA" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=arriaii "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
+			if [ $? -ne 0 ]; then
+				let ERRORCOUNT++
+				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
+					STOPCOMPILING=TRUE
+					break
+				fi
 			fi
 		fi
 	done
@@ -437,21 +480,26 @@ fi
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$ARRIA" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Compiling library 'arriaii_pcie_hip' ...${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
+	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
 	Files=(
 		$SourceDir/arriaii_pcie_hip_components.vhd
 		$SourceDir/arriaii_pcie_hip_atoms.vhd
 	)
 	for File in ${Files[@]}; do
 		FileName=$(basename "$File")
-		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
+		if [ "$SKIP_LARGE_FILES" == "TRUE" ]; then
+			echo -e "${ANSI_CYAN}Skipping large file '$File'${ANSI_RESET}"
+		elif [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -e "${ANSI_CYAN}Skipping file '$File'${ANSI_RESET}"
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=arriaii_pcie_hip "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
+			if [ $? -ne 0 ]; then
+				let ERRORCOUNT++
+				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
+					STOPCOMPILING=TRUE
+					break
+				fi
 			fi
 		fi
 	done
@@ -461,7 +509,7 @@ fi
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$ARRIA" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Compiling library 'arriaiigz' ...${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
+	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
 	Files=(
 		$SourceDir/arriaiigz_atoms.vhd
 		$SourceDir/arriaiigz_components.vhd
@@ -474,9 +522,12 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$ARRIA" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=arriaiigz "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
+			if [ $? -ne 0 ]; then
+				let ERRORCOUNT++
+				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
+					STOPCOMPILING=TRUE
+					break
+				fi
 			fi
 		fi
 	done
@@ -486,7 +537,7 @@ fi
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$ARRIA" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Compiling library 'arriav' ...${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
+	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
 	Files=(
 		$SourceDir/arriav_atoms.vhd
 		$SourceDir/arriav_components.vhd
@@ -500,9 +551,12 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$ARRIA" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=arriav "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
+			if [ $? -ne 0 ]; then
+				let ERRORCOUNT++
+				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
+					STOPCOMPILING=TRUE
+					break
+				fi
 			fi
 		fi
 	done
@@ -512,7 +566,7 @@ fi
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$ARRIA" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Compiling library 'arriavgz' ...${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
+	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
 	Files=(
 		$SourceDir/arriavgz_atoms.vhd
 		$SourceDir/arriavgz_components.vhd
@@ -526,9 +580,12 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$ARRIA" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=arriavgz "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
+			if [ $? -ne 0 ]; then
+				let ERRORCOUNT++
+				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
+					STOPCOMPILING=TRUE
+					break
+				fi
 			fi
 		fi
 	done
@@ -537,21 +594,26 @@ fi
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$ARRIA" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Compiling library 'arriavgz_pcie_hip' ...${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
+	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
 	Files=(
 		$SourceDir/arriavgz_pcie_hip_components.vhd
 		$SourceDir/arriavgz_pcie_hip_atoms.vhd
 	)
 	for File in ${Files[@]}; do
 		FileName=$(basename "$File")
-		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
+		if [ "$SKIP_LARGE_FILES" == "TRUE" ]; then
+			echo -e "${ANSI_CYAN}Skipping large file '$File'${ANSI_RESET}"
+		elif [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -e "${ANSI_CYAN}Skipping file '$File'${ANSI_RESET}"
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=arriavgz_pcie_hip "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
+			if [ $? -ne 0 ]; then
+				let ERRORCOUNT++
+				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
+					STOPCOMPILING=TRUE
+					break
+				fi
 			fi
 		fi
 	done
@@ -561,7 +623,7 @@ fi
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$CYCLONE" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Compiling library 'cycloneiv' ...${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
+	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
 	Files=(
 		$SourceDir/cycloneiv_atoms.vhd
 		$SourceDir/cycloneiv_components.vhd
@@ -575,9 +637,12 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$CYCLONE" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=cycloneiv "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
+			if [ $? -ne 0 ]; then
+				let ERRORCOUNT++
+				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
+					STOPCOMPILING=TRUE
+					break
+				fi
 			fi
 		fi
 	done
@@ -586,21 +651,26 @@ fi
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$CYCLONE" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Compiling library 'cycloneiv_pcie_hip' ...${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
+	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
 	Files=(
 		$SourceDir/cycloneiv_pcie_hip_components.vhd
 		$SourceDir/cycloneiv_pcie_hip_atoms.vhd
 	)
 	for File in ${Files[@]}; do
 		FileName=$(basename "$File")
-		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
+		if [ "$SKIP_LARGE_FILES" == "TRUE" ]; then
+			echo -e "${ANSI_CYAN}Skipping large file '$File'${ANSI_RESET}"
+		elif [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -e "${ANSI_CYAN}Skipping file '$File'${ANSI_RESET}"
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=cycloneiv_pcie_hip "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
+			if [ $? -ne 0 ]; then
+				let ERRORCOUNT++
+				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
+					STOPCOMPILING=TRUE
+					break
+				fi
 			fi
 		fi
 	done
@@ -610,7 +680,7 @@ fi
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$CYCLONE" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Compiling library 'cycloneive' ...${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
+	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
 	Files=(
 		$SourceDir/cycloneive_atoms.vhd
 		$SourceDir/cycloneive_components.vhd
@@ -622,9 +692,12 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$CYCLONE" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=cycloneive "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
+			if [ $? -ne 0 ]; then
+				let ERRORCOUNT++
+				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
+					STOPCOMPILING=TRUE
+					break
+				fi
 			fi
 		fi
 	done
@@ -634,7 +707,7 @@ fi
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$CYCLONE" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Compiling library 'cyclonev' ...${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
+	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
 	Files=(
 		$SourceDir/cyclonev_atoms.vhd
 		$SourceDir/cyclonev_components.vhd
@@ -648,9 +721,12 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$CYCLONE" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=cyclonev "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
+			if [ $? -ne 0 ]; then
+				let ERRORCOUNT++
+				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
+					STOPCOMPILING=TRUE
+					break
+				fi
 			fi
 		fi
 	done
@@ -660,7 +736,7 @@ fi
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$STRATIX" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Compiling library 'stratixiv' ...${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
+	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
 	Files=(
 		$SourceDir/stratixiv_atoms.vhd
 		$SourceDir/stratixiv_components.vhd
@@ -674,9 +750,12 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$STRATIX" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=stratixiv "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
+			if [ $? -ne 0 ]; then
+				let ERRORCOUNT++
+				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
+					STOPCOMPILING=TRUE
+					break
+				fi
 			fi
 		fi
 	done
@@ -685,21 +764,26 @@ fi
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$STRATIX" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Compiling library 'stratixiv_pcie_hip' ...${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
+	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
 	Files=(
 		$SourceDir/stratixiv_pcie_hip_components.vhd
 		$SourceDir/stratixiv_pcie_hip_atoms.vhd
 	)
 	for File in ${Files[@]}; do
 		FileName=$(basename "$File")
-		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
+		if [ "$SKIP_LARGE_FILES" == "TRUE" ]; then
+			echo -e "${ANSI_CYAN}Skipping large file '$File'${ANSI_RESET}"
+		elif [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -e "${ANSI_CYAN}Skipping file '$File'${ANSI_RESET}"
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=stratixiv_pcie_hip "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
+			if [ $? -ne 0 ]; then
+				let ERRORCOUNT++
+				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
+					STOPCOMPILING=TRUE
+					break
+				fi
 			fi
 		fi
 	done
@@ -709,7 +793,7 @@ fi
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$STRATIX" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Compiling library 'stratixv' ...${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
+	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
 	Files=(
 		$SourceDir/stratixv_atoms.vhd
 		$SourceDir/stratixv_components.vhd
@@ -723,9 +807,12 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$STRATIX" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=stratixv "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
+			if [ $? -ne 0 ]; then
+				let ERRORCOUNT++
+				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
+					STOPCOMPILING=TRUE
+					break
+				fi
 			fi
 		fi
 	done
@@ -734,21 +821,26 @@ fi
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$STRATIX" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Compiling library 'stratixv_pcie_hip' ...${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
+	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
 	Files=(
 		$SourceDir/stratixv_pcie_hip_components.vhd
 		$SourceDir/stratixv_pcie_hip_atoms.vhd
 	)
 	for File in ${Files[@]}; do
 		FileName=$(basename "$File")
-		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
+		if [ "$SKIP_LARGE_FILES" == "TRUE" ]; then
+			echo -e "${ANSI_CYAN}Skipping large file '$File'${ANSI_RESET}"
+		elif [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
 			echo -e "${ANSI_CYAN}Skipping file '$File'${ANSI_RESET}"
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=stratixv_pcie_hip "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
+			if [ $? -ne 0 ]; then
+				let ERRORCOUNT++
+				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
+					STOPCOMPILING=TRUE
+					break
+				fi
 			fi
 		fi
 	done
@@ -758,7 +850,7 @@ fi
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$NANOMETER" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Compiling library 'fiftyfivenm' ...${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
+	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
 	Files=(
 		$SourceDir/fiftyfivenm_atoms.vhd
 		$SourceDir/fiftyfivenm_components.vhd
@@ -770,9 +862,12 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$NANOMETER" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=fiftyfivenm "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
+			if [ $? -ne 0 ]; then
+				let ERRORCOUNT++
+				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
+					STOPCOMPILING=TRUE
+					break
+				fi
 			fi
 		fi
 	done
@@ -782,7 +877,7 @@ fi
 if [ "$STOPCOMPILING" == "FALSE" ] && [ "$NANOMETER" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Compiling library 'twentynm' ...${ANSI_RESET}"
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=synopsys --std=93c)
+	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
 	Files=(
 		$SourceDir/twentynm_atoms.vhd
 		$SourceDir/twentynm_components.vhd
@@ -798,9 +893,12 @@ if [ "$STOPCOMPILING" == "FALSE" ] && [ "$NANOMETER" == "TRUE" ]; then
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
 			ghdl -a ${GHDL_PARAMS[@]} --work=twentynm "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				STOPCOMPILING=TRUE
-				break
+			if [ $? -ne 0 ]; then
+				let ERRORCOUNT++
+				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
+					STOPCOMPILING=TRUE
+					break
+				fi
 			fi
 		fi
 	done
@@ -808,7 +906,7 @@ fi
 
 echo "--------------------------------------------------------------------------------"
 echo -n "Compiling Altera Quartus-II libraries "
-if [ "$STOPCOMPILING" == "TRUE" ]; then
+if [ $ERRORCOUNT -gt 0 ]; then
 	echo -e $COLORED_FAILED
 else
 	echo -e $COLORED_SUCCESSFUL

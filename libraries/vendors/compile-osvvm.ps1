@@ -46,10 +46,12 @@ param(
 	[switch]$All =							$true,
 	
 	# Clean up directory before analyzing.
-	[switch]$Clean =		$false,
+	[switch]$Clean =						$false,
 	
 	# Skip warning messages. (Show errors only.)
 	[switch]$SuppressWarnings = $false,
+	# Halt on errors
+	[switch]$HaltOnError =			$false,
 	
 	# Show the embedded help page(s)
 	[switch]$Help =							$false
@@ -72,14 +74,11 @@ Import-Module $PSScriptRoot\shared.psm1
 $SourceDir =			$InstallationDirectory["OSVVM"]
 $DestinationDir = $DestinationDirectory["OSVVM"]
 
-if (-not $All)
-{	$All =				$false	}
-elseif ($All -eq $true)
+if ($All -eq $true)
 {	# nothing to configure
 }
 
-$StopCompiling = $false
-
+$ErrorCount =			0
 
 # define global GHDL Options
 $GlobalOptions = ("-a", "-fexplicit", "-frelaxed-rules", "--mb-comments", "--warn-binding", "--no-vital-checks", "--std=08")
@@ -97,34 +96,35 @@ if ($Clean)
 }
 
 # compile osvvm library
-if (-not $StopCompiling)
-{	Write-Host "Compiling library 'osvvm' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Files = (
-		"$SourceDir\NamePkg.vhd",
-		"$SourceDir\OsvvmGlobalPkg.vhd",
-		"$SourceDir\TextUtilPkg.vhd",
-		"$SourceDir\TranscriptPkg.vhd",
-		"$SourceDir\AlertLogPkg.vhd",
-		"$SourceDir\MemoryPkg.vhd",
-		"$SourceDir\MessagePkg.vhd",
-		"$SourceDir\SortListPkg_int.vhd",
-		"$SourceDir\RandomBasePkg.vhd",
-		"$SourceDir\RandomPkg.vhd",
-		"$SourceDir\CoveragePkg.vhd",
-		"$SourceDir\OsvvmContext.vhd")
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing package '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=osvvm " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		$StopCompiling = ($LastExitCode -ne 0)
-		if ($StopCompiling)	{ break }
+Write-Host "Compiling library 'osvvm' ..." -ForegroundColor Yellow
+$Options = $GlobalOptions
+$Files = (
+	"$SourceDir\NamePkg.vhd",
+	"$SourceDir\OsvvmGlobalPkg.vhd",
+	"$SourceDir\TextUtilPkg.vhd",
+	"$SourceDir\TranscriptPkg.vhd",
+	"$SourceDir\AlertLogPkg.vhd",
+	"$SourceDir\MemoryPkg.vhd",
+	"$SourceDir\MessagePkg.vhd",
+	"$SourceDir\SortListPkg_int.vhd",
+	"$SourceDir\RandomBasePkg.vhd",
+	"$SourceDir\RandomPkg.vhd",
+	"$SourceDir\CoveragePkg.vhd",
+	"$SourceDir\OsvvmContext.vhd")
+foreach ($File in $Files)
+{	Write-Host "Analyzing package '$File'" -ForegroundColor Cyan
+	$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=osvvm " + $File + " 2>&1"
+	$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
+	if ($LastExitCode -ne 0)
+	{	$ErrorCount += 1
+		if ($HaltOnError)
+		{	break		}
 	}
 }
 
 Write-Host "--------------------------------------------------------------------------------"
 Write-Host "Compiling OSVVM library " -NoNewline
-if ($StopCompiling)
+if ($ErrorCount -gt 0)
 {	Write-Host "[FAILED]" -ForegroundColor Red				}
 else
 {	Write-Host "[SUCCESSFUL]" -ForegroundColor Green	}
