@@ -41,13 +41,13 @@ UNLABELLED:
     process
     begin
         wait for 1 ns;
-        a <= 'X';
+        a <= ieee.std_logic_1164.'X';
         wait for 1 ns;
-        b <= '1';
+        b <= ieee.std_logic_1164.'1';
         wait for 1 ns;
-        a <= '0';
+        a <= ieee.std_logic_1164.'0';
         wait for 1 ns;
-        b <= '0';
+        b <= ieee.std_logic_1164.'0';
         wait;
     end process;
     

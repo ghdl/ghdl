@@ -945,6 +945,27 @@ package body Iirs_Utils is
       return True;
    end Is_Same_Profile;
 
+   function Is_Operation_For_Type (Subprg : Iir; Atype : Iir) return Boolean
+   is
+      pragma Assert (Get_Kind (Subprg) in Iir_Kinds_Subprogram_Declaration);
+      Base_Type : constant Iir := Get_Base_Type (Atype);
+      Inter : Iir;
+   begin
+      Inter := Get_Interface_Declaration_Chain (Subprg);
+      while Inter /= Null_Iir loop
+         if Get_Base_Type (Get_Type (Inter)) = Base_Type then
+            return True;
+         end if;
+         Inter := Get_Chain (Inter);
+      end loop;
+      if Get_Kind (Subprg) = Iir_Kind_Function_Declaration
+        and then Get_Base_Type (Get_Return_Type (Subprg)) = Base_Type
+      then
+         return True;
+      end if;
+      return False;
+   end Is_Operation_For_Type;
+
    -- From a block_specification, returns the block.
    function Get_Block_From_Block_Specification (Block_Spec : Iir)
      return Iir
@@ -1165,6 +1186,18 @@ package body Iirs_Utils is
             return Null_Iir;
       end case;
    end Get_Method_Type;
+
+   function Get_Actual_Or_Default (Assoc : Iir) return Iir is
+   begin
+      case Get_Kind (Assoc) is
+         when Iir_Kind_Association_Element_By_Expression =>
+            return Get_Actual (Assoc);
+         when Iir_Kind_Association_Element_Open =>
+            return Get_Default_Value (Get_Formal (Assoc));
+         when others =>
+            Error_Kind ("get_actual_or_default", Assoc);
+      end case;
+   end Get_Actual_Or_Default;
 
    function Create_Error (Orig : Iir) return Iir
    is

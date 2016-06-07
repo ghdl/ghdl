@@ -118,7 +118,6 @@ package body Nodes_Meta is
       Field_Impure_Depth => Type_Iir_Int32,
       Field_Return_Type => Type_Iir,
       Field_Implicit_Definition => Type_Iir_Predefined_Functions,
-      Field_Type_Reference => Type_Iir,
       Field_Default_Value => Type_Iir,
       Field_Deferred_Declaration => Type_Iir,
       Field_Deferred_Declaration_Flag => Type_Boolean,
@@ -198,6 +197,7 @@ package body Nodes_Meta is
       Field_Purity_State => Type_Iir_Pure_State,
       Field_Elab_Flag => Type_Boolean,
       Field_Index_Constraint_Flag => Type_Boolean,
+      Field_Hide_Implicit_Flag => Type_Boolean,
       Field_Assertion_Condition => Type_Iir,
       Field_Report_Expression => Type_Iir,
       Field_Severity_Expression => Type_Iir,
@@ -529,8 +529,6 @@ package body Nodes_Meta is
             return "return_type";
          when Field_Implicit_Definition =>
             return "implicit_definition";
-         when Field_Type_Reference =>
-            return "type_reference";
          when Field_Default_Value =>
             return "default_value";
          when Field_Deferred_Declaration =>
@@ -689,6 +687,8 @@ package body Nodes_Meta is
             return "elab_flag";
          when Field_Index_Constraint_Flag =>
             return "index_constraint_flag";
+         when Field_Hide_Implicit_Flag =>
+            return "hide_implicit_flag";
          when Field_Assertion_Condition =>
             return "assertion_condition";
          when Field_Report_Expression =>
@@ -1655,8 +1655,6 @@ package body Nodes_Meta is
             return Attr_Ref;
          when Field_Implicit_Definition =>
             return Attr_None;
-         when Field_Type_Reference =>
-            return Attr_Ref;
          when Field_Default_Value =>
             return Attr_Maybe_Ref;
          when Field_Deferred_Declaration =>
@@ -1814,6 +1812,8 @@ package body Nodes_Meta is
          when Field_Elab_Flag =>
             return Attr_None;
          when Field_Index_Constraint_Flag =>
+            return Attr_None;
+         when Field_Hide_Implicit_Flag =>
             return Attr_None;
          when Field_Assertion_Condition =>
             return Attr_None;
@@ -2810,6 +2810,7 @@ package body Nodes_Meta is
       Field_Subprogram_Hash,
       Field_Implicit_Definition,
       Field_Seen_Flag,
+      Field_Hide_Implicit_Flag,
       Field_Pure_Flag,
       Field_Foreign_Flag,
       Field_Visible_Flag,
@@ -2826,7 +2827,6 @@ package body Nodes_Meta is
       Field_Return_Type_Mark,
       Field_Parent,
       Field_Return_Type,
-      Field_Type_Reference,
       Field_Subprogram_Body,
       --  Iir_Kind_Procedure_Declaration
       Field_Subprogram_Depth,
@@ -2836,6 +2836,7 @@ package body Nodes_Meta is
       Field_Implicit_Definition,
       Field_Seen_Flag,
       Field_Suspend_Flag,
+      Field_Hide_Implicit_Flag,
       Field_Passive_Flag,
       Field_Foreign_Flag,
       Field_Visible_Flag,
@@ -2850,7 +2851,6 @@ package body Nodes_Meta is
       Field_Generic_Chain,
       Field_Return_Type_Mark,
       Field_Parent,
-      Field_Type_Reference,
       Field_Subprogram_Body,
       --  Iir_Kind_Function_Body
       Field_Impure_Depth,
@@ -4419,6 +4419,8 @@ package body Nodes_Meta is
             return Get_Elab_Flag (N);
          when Field_Index_Constraint_Flag =>
             return Get_Index_Constraint_Flag (N);
+         when Field_Hide_Implicit_Flag =>
+            return Get_Hide_Implicit_Flag (N);
          when Field_Aggr_Dynamic_Flag =>
             return Get_Aggr_Dynamic_Flag (N);
          when Field_Aggr_Others_Flag =>
@@ -4529,6 +4531,8 @@ package body Nodes_Meta is
             Set_Elab_Flag (N, V);
          when Field_Index_Constraint_Flag =>
             Set_Index_Constraint_Flag (N, V);
+         when Field_Hide_Implicit_Flag =>
+            Set_Hide_Implicit_Flag (N, V);
          when Field_Aggr_Dynamic_Flag =>
             Set_Aggr_Dynamic_Flag (N, V);
          when Field_Aggr_Others_Flag =>
@@ -4771,8 +4775,6 @@ package body Nodes_Meta is
             return Get_Subprogram_Body (N);
          when Field_Return_Type =>
             return Get_Return_Type (N);
-         when Field_Type_Reference =>
-            return Get_Type_Reference (N);
          when Field_Default_Value =>
             return Get_Default_Value (N);
          when Field_Deferred_Declaration =>
@@ -5141,8 +5143,6 @@ package body Nodes_Meta is
             Set_Subprogram_Body (N, V);
          when Field_Return_Type =>
             Set_Return_Type (N, V);
-         when Field_Type_Reference =>
-            Set_Type_Reference (N, V);
          when Field_Default_Value =>
             Set_Default_Value (N, V);
          when Field_Deferred_Declaration =>
@@ -7239,17 +7239,6 @@ package body Nodes_Meta is
       end case;
    end Has_Implicit_Definition;
 
-   function Has_Type_Reference (K : Iir_Kind) return Boolean is
-   begin
-      case K is
-         when Iir_Kind_Function_Declaration
-           | Iir_Kind_Procedure_Declaration =>
-            return True;
-         when others =>
-            return False;
-      end case;
-   end Has_Type_Reference;
-
    function Has_Default_Value (K : Iir_Kind) return Boolean is
    begin
       case K is
@@ -8253,6 +8242,17 @@ package body Nodes_Meta is
             return False;
       end case;
    end Has_Index_Constraint_Flag;
+
+   function Has_Hide_Implicit_Flag (K : Iir_Kind) return Boolean is
+   begin
+      case K is
+         when Iir_Kind_Function_Declaration
+           | Iir_Kind_Procedure_Declaration =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Has_Hide_Implicit_Flag;
 
    function Has_Assertion_Condition (K : Iir_Kind) return Boolean is
    begin

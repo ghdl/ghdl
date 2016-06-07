@@ -2023,7 +2023,7 @@ package body Trans.Chap8 is
                N_Param := Get_Chain (Param_Chain);
                Name_Param := Get_Actual (N_Param);
                N_Param := Get_Chain (N_Param);
-               Kind_Param := Get_Actual (N_Param);
+               Kind_Param := Get_Actual_Or_Default (N_Param);
                if Get_Text_File_Flag (Get_Type (File_Param)) then
                   Start_Association (Constr, Ghdl_Text_File_Open);
                else
@@ -2060,7 +2060,7 @@ package body Trans.Chap8 is
                N_Param := Get_Chain (N_Param);
                Name_Param := Get_Actual (N_Param);
                N_Param := Get_Chain (N_Param);
-               Kind_Param := Get_Actual (N_Param);
+               Kind_Param := Get_Actual_Or_Default (N_Param);
                if Get_Text_File_Flag (Get_Type (File_Param)) then
                   Start_Association (Constr, Ghdl_Text_File_Open_Status);
                else
