@@ -105,18 +105,21 @@ elseif ($All -eq $true)
 }
 
 if ($VHDL93 -eq $true)
-{	$VHDLStandard =	"93c"
-	$VHDLFlavor =		"synopsys"
+{	$VHDLStandard =			"93c"
+	$VHDLFlavor =				"synopsys"
+	$DestinationDir +=	".v93"
 }
 elseif ($VHDL2008 -eq $true)
-{	$VHDLStandard = "08"
-	$VHDLFlavor =		"standard"
+{	$VHDLStandard =			"08"
+	$VHDLFlavor =				"standard"
+	$DestinationDir +=	".v08"
 	Write-Host "Not all Xilinx primitives are VHDL-2008 compatible! Setting HaltOnError to FALSE." -ForegroundColor Red
-	$HaltOnError =	$false
+	$HaltOnError =			$false
 }
 else
-{	$VHDLStandard = "93c"
-	$VHDLFlavor =		"synopsys"
+{	$VHDLStandard =			"93c"
+	$VHDLFlavor =				"synopsys"
+	$DestinationDir +=	".v93"
 }
 
 $StopCompiling =	$false
