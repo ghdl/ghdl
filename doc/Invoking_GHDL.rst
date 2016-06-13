@@ -629,6 +629,10 @@ all outdated files.  A file may be outdated because it has been modified
 the file depends on a unit which is outdated.  This rule is of course
 recursive.
 
+With the @code{-b} (bind only) option, GHDL will stop before the final linking
+step. This is useful when the main entry point is not GHDL and you're linking
+GHDL object files into a foreign program.
+
 With the :option:`-f` (force) option, GHDL analyzes all the units of the
 work library needed to create the design hierarchy.  Not outdated units
 are recompiled.  This is useful if you want to compile a design hierarchy
