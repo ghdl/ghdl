@@ -66,6 +66,8 @@ package body Grt.Vpi is
 
    --  If true, emit traces
    Flag_Trace : Boolean := False;
+   Trace_File : FILEs;
+   Trace_Indent : Natural := 0;
 
 -------------------------------------------------------------------------------
 -- * * *   h e l p e r s   * * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -132,9 +134,146 @@ package body Grt.Vpi is
    procedure Vpi_Trace (Msg : String) is
    begin
       if Flag_Trace then
-         Put_Line (Msg);
+         Put_Line (Trace_File, Msg);
       end if;
    end Vpi_Trace;
+
+   procedure Trace_Start (Msg : String) is
+   begin
+      for I in 1 .. Trace_Indent loop
+         Put (Trace_File, ' ');
+      end loop;
+      Put (Trace_File, Msg);
+   end Trace_Start;
+
+   procedure Trace (Msg : String) is
+   begin
+      Put (Trace_File, Msg);
+   end Trace;
+
+   procedure Trace (V : Integer) is
+   begin
+      Put_I32 (Trace_File, Ghdl_I32 (V));
+   end Trace;
+
+   procedure Trace_Cb_Reason (V : Integer) is
+   begin
+      case V is
+         when cbValueChange =>
+            Trace ("cbValueChange");
+         when cbReadWriteSynch =>
+            Trace ("cbReadWriteSynch");
+         when cbReadOnlySynch =>
+            Trace ("cbReadOnlySynch");
+         when cbNextSimTime =>
+            Trace ("cbNextSimTime");
+         when cbAfterDelay =>
+            Trace ("cbAfterDelay");
+         when cbEndOfCompile =>
+            Trace ("cbEndOfCompile");
+         when cbStartOfSimulation =>
+            Trace ("cbStartOfSimulation");
+         when cbEndOfSimulation =>
+            Trace ("cbEndOfSimulation");
+         when others =>
+            Trace (V);
+      end case;
+   end Trace_Cb_Reason;
+
+   procedure Trace_Property (V : Integer) is
+   begin
+      case V is
+         when vpiUndefined =>
+            Trace ("vpiUndefined");
+         when vpiType =>
+            Trace ("vpiType");
+         when vpiName =>
+            Trace ("vpiName");
+         when vpiFullName =>
+            Trace ("vpiFullName");
+         when vpiSize =>
+            Trace ("vpiSize");
+         when vpiTimePrecision =>
+            Trace ("vpiTimePrecision");
+         when vpiScalar =>
+            Trace ("vpiScalar");
+         when vpiVector =>
+            Trace ("vpiVector");
+
+         when vpiModule =>
+            Trace ("vpiModule");
+         when vpiNet =>
+            Trace ("vpiNet");
+         when vpiScope =>
+            Trace ("vpiScope");
+         when vpiInternalScope =>
+            Trace ("vpiInternalScope");
+         when vpiLeftRange =>
+            Trace ("vpiLeftRange");
+         when vpiRightRange =>
+            Trace ("vpiRightRange");
+
+         when others =>
+            Trace (V);
+      end case;
+   end Trace_Property;
+
+   procedure Trace_Time_Tag (V : Integer) is
+   begin
+      case V is
+         when vpiSimTime =>
+            Trace ("vpiSimTime");
+         when others =>
+            Trace (V);
+      end case;
+   end Trace_Time_Tag;
+
+   procedure Trace (H : vpiHandle)
+   is
+      function To_Address is
+         new Ada.Unchecked_Conversion (vpiHandle, System.Address);
+   begin
+      Put (Trace_File, To_Address (H));
+   end Trace;
+
+   procedure Trace (Str : Ghdl_C_String) is
+   begin
+      Put (Trace_File, '"');
+      Put (Trace_File, Str);
+      Put (Trace_File, '"');
+   end Trace;
+
+   procedure Trace_Time (V : Std_Time) is
+   begin
+      Put_Time (Trace_File, V);
+   end Trace_Time;
+
+   procedure Trace_Value (V : p_vpi_value) is
+   begin
+      case V.Format is
+         when vpiBinStrVal
+           | vpiOctStrVal
+           | vpiDecStrVal
+           | vpiHexStrVal
+           | vpiStringVal =>
+            Trace (V.Str);
+         when vpiScalarVal =>
+            Trace (V.Scalar);
+         when vpiIntVal =>
+            Trace (V.Integer_m);
+            --when vpiRealVal=>     null; -- what is the equivalent to double?
+            --when vpiTimeVal=>     mTime:     p_vpi_time;
+            --when vpiVectorVal=>   mVector:   p_vpi_vecval;
+            --when vpiStrengthVal=> mStrength: p_vpi_strengthval;
+         when others =>
+            null;
+      end case;
+   end Trace_Value;
+
+   procedure Trace_Newline is
+   begin
+      New_Line (Trace_File);
+   end Trace_Newline;
 
    function Vpi_Time_To_Time (V : s_vpi_time) return Std_Time is
       Res : Std_Time;
@@ -154,16 +293,13 @@ package body Grt.Vpi is
    -- vpiHandle  vpi_iterate(int type, vpiHandle ref)
    -- Obtain an iterator handle to objects with a one-to-many relationship.
    -- see IEEE 1364-2001, page 685
-   function vpi_iterate (aType: integer; Ref: vpiHandle) return vpiHandle
+   function Vpi_Iterate_Internal
+     (aType: integer; Ref: vpiHandle) return vpiHandle
    is
       Res : vpiHandle;
       Rel : VhpiOneToManyT;
       Error : AvhpiErrorT;
    begin
-      Vpi_Trace ("vpi_iterate");
-
-      Reset_Error;
-
       case aType is
          when vpiNet =>
             Rel := VhpiDecls;
@@ -183,15 +319,38 @@ package body Grt.Vpi is
 
       -- find the proper start object for our scan
       if Ref = null then
-         return null;
+         Res := null;
+      else
+         Res := new struct_vpiHandle (aType);
+         Vhpi_Iterator (Rel, Ref.Ref, Res.Ref, Error);
+
+         if Error /= AvhpiErrorOk then
+            Free (Res);
+         end if;
       end if;
 
-      Res := new struct_vpiHandle (aType);
-      Vhpi_Iterator (Rel, Ref.Ref, Res.Ref, Error);
+      return Res;
+   end Vpi_Iterate_Internal;
 
-      if Error /= AvhpiErrorOk then
-         Free (Res);
+   function vpi_iterate (aType: integer; Ref: vpiHandle) return vpiHandle
+   is
+      Res : vpiHandle;
+   begin
+      if Flag_Trace then
+         Trace_Start ("vpi_iterate (");
+         Trace_Property (aType);
+         Trace (", ");
+         Trace (Ref);
+         Trace (") = ");
       end if;
+
+      Res := Vpi_Iterate_Internal (aType, Ref);
+
+      if Flag_Trace then
+         Trace (Res);
+         Trace_Newline;
+      end if;
+
       return Res;
    end vpi_iterate;
 
@@ -217,19 +376,75 @@ package body Grt.Vpi is
 --       end case;
 --    end ii_vpi_get_type;
 
-   function vpi_get (Property: integer; Ref: vpiHandle) return Integer is
+   function Vpi_Get_Size (Ref : vpiHandle) return Integer
+   is
+      Info : Verilog_Wire_Info;
    begin
-      Vpi_Trace ("vpi_get");
+      Get_Verilog_Wire (Ref.Ref, Info);
+      if Info.Kind /= Vcd_Bad then
+         return Natural (Get_Wire_Length (Info));
+      else
+         return 0;
+      end if;
+   end Vpi_Get_Size;
+
+   function Vpi_Get_Vector (Ref : vpiHandle) return Boolean
+   is
+      Info : Verilog_Wire_Info;
+   begin
+      Get_Verilog_Wire (Ref.Ref, Info);
+      case Info.Kind is
+         when Vcd_Bool
+           | Vcd_Integer32
+           | Vcd_Float64
+           | Vcd_Bit
+           | Vcd_Stdlogic =>
+            return False;
+         when Vcd_Bitvector
+           | Vcd_Stdlogic_Vector =>
+            return True;
+         when Vcd_Bad =>
+            return False;
+      end case;
+   end Vpi_Get_Vector;
+
+   function vpi_get (Property: integer; Ref: vpiHandle) return Integer
+   is
+      Res : Integer;
+   begin
+      if Flag_Trace then
+         Trace_Start ("vpi_get (");
+         Trace_Property (Property);
+         Trace (", ");
+         Trace (Ref);
+         Trace (") = ");
+      end if;
 
       case Property is
-         when vpiType=>
-            return Ref.mType;
-         when vpiTimePrecision=>
-            return -9; -- is this nano-seconds?
+         when vpiType =>
+            Res := Ref.mType;
+         when vpiTimePrecision =>
+            Res := -9; -- is this nano-seconds?
+         when vpiSize =>
+            Res := Vpi_Get_Size (Ref);
+         when vpiVector =>
+            Res := Boolean'Pos (Vpi_Get_Vector (Ref));
          when others=>
             dbgPut_Line ("vpi_get: unknown property");
-            return 0;
+            Res := 0;
       end case;
+
+      if Flag_Trace then
+         case Property is
+            when vpiType =>
+               Trace_Property (Res);
+            when others =>
+               Trace (Res);
+         end case;
+         Trace_Newline;
+      end if;
+
+      return Res;
    end vpi_get;
 
    function Vhpi_Handle_To_Vpi_Prop (Res : VhpiHandleT) return Integer is
@@ -278,15 +493,13 @@ package body Grt.Vpi is
    -- Scan the Verilog HDL hierarchy for objects with a one-to-many
    -- relationship.
    -- see IEEE 1364-2001, chapter 27.36, page 709
-   function vpi_scan (Iter: vpiHandle) return vpiHandle
+   function Vpi_Scan_Internal (Iter: vpiHandle) return vpiHandle
    is
       Res : VhpiHandleT;
       Error : AvhpiErrorT;
       R : vpiHandle;
       Kind, Expected_Kind : Integer;
    begin
-      Vpi_Trace ("vpi_scan");
-
       if Iter = null then
          return null;
       end if;
@@ -327,20 +540,39 @@ package body Grt.Vpi is
          end if;
       end loop;
       return null;
+   end Vpi_Scan_Internal;
+
+   function vpi_scan (Iter: vpiHandle) return vpiHandle
+   is
+      Res : vpiHandle;
+   begin
+      if Flag_Trace then
+         Trace_Start ("vpi_scan (");
+         Trace (Iter);
+         Trace (") = ");
+      end if;
+
+      Res := Vpi_Scan_Internal (Iter);
+
+      if Flag_Trace then
+         Trace (Res);
+         Trace_Newline;
+      end if;
+
+      return Res;
    end vpi_scan;
 
    ------------------------------------------------------------------------
    -- char *vpi_get_str(int property, vpiHandle ref)
    -- see IEEE 1364-2001, page xxx
    Tmpstring2 : String (1 .. 1024);
-   function vpi_get_str (Property : Integer; Ref : vpiHandle)
-                        return Ghdl_C_String
+   function Vpi_Get_Str_Internal (Property : Integer; Ref : vpiHandle)
+                                 return Ghdl_C_String
    is
       Prop : VhpiStrPropertyT;
       Len : Natural;
+      Res : Ghdl_C_String;
    begin
-      Vpi_Trace ("vpi_get_str");
-
       if Ref = null then
          return null;
       end if;
@@ -363,22 +595,45 @@ package body Grt.Vpi is
             end if;
          end loop;
          --  Remove the initial '.'.
-         return To_Ghdl_C_String (Tmpstring2 (2)'Address);
+         Res := To_Ghdl_C_String (Tmpstring2 (2)'Address);
       else
-         return To_Ghdl_C_String (Tmpstring2'Address);
+         Res := To_Ghdl_C_String (Tmpstring2'Address);
       end if;
-   end vpi_get_str;
 
+      return Res;
+   end Vpi_Get_Str_Internal;
+
+   function vpi_get_str (Property : Integer; Ref : vpiHandle)
+                        return Ghdl_C_String
+   is
+      Res : Ghdl_C_String;
+   begin
+      if Flag_Trace then
+         Trace_Start ("vpi_get_str (");
+         Trace_Property (Property);
+         Trace (", ");
+         Trace (Ref);
+         Trace (") = ");
+      end if;
+
+      Res := Vpi_Get_Str_Internal (Property, Ref);
+
+      if Flag_Trace then
+         Trace (Res);
+         Trace_Newline;
+      end if;
+
+      return Res;
+   end vpi_get_str;
    ------------------------------------------------------------------------
    -- vpiHandle  vpi_handle(int type, vpiHandle ref)
    -- Obtain a handle to an object with a one-to-one relationship.
    -- see IEEE 1364-2001, chapter 27.16, page 682
-   function vpi_handle (aType : Integer; Ref : vpiHandle) return vpiHandle
+   function Vpi_Handle_Internal
+     (aType : Integer; Ref : vpiHandle) return vpiHandle
    is
       Res : vpiHandle;
    begin
-      Vpi_Trace ("vpi_handle");
-
       if Ref = null then
          return null;
       end if;
@@ -406,6 +661,28 @@ package body Grt.Vpi is
          when others =>
             return null;
       end case;
+   end Vpi_Handle_Internal;
+
+   function vpi_handle (aType : Integer; Ref : vpiHandle) return vpiHandle
+   is
+      Res : vpiHandle;
+   begin
+      if Flag_Trace then
+         Trace_Start ("vpi_handle (");
+         Trace_Property (aType);
+         Trace (", ");
+         Trace (Ref);
+         Trace (") = ");
+      end if;
+
+      Res := Vpi_Handle_Internal (aType, Ref);
+
+      if Flag_Trace then
+         Trace (Res);
+         Trace_Newline;
+      end if;
+
+      return Res;
    end vpi_handle;
 
    ------------------------------------------------------------------------
@@ -513,7 +790,13 @@ package body Grt.Vpi is
 
    procedure vpi_get_value (Expr : vpiHandle; Value : p_vpi_value) is
    begin
-      Vpi_Trace ("vpi_get_value");
+      if Flag_Trace then
+         Trace_Start ("vpi_get_value (");
+         Trace (Expr);
+         Trace (", {format=");
+         Trace (Value.Format);
+         Trace ("}) = ");
+      end if;
 
       case Value.Format is
          when vpiObjTypeVal=>
@@ -563,6 +846,11 @@ package body Grt.Vpi is
          when vpiStrengthVal=> dbgPut_Line("vpi_get_value: vpiStrengthVal");
          when others=>         dbgPut_Line("vpi_get_value: unknown mFormat");
       end case;
+
+      if Flag_Trace then
+         Trace_Value (Value);
+         Trace_Newline;
+      end if;
    end vpi_get_value;
 
    ------------------------------------------------------------------------
@@ -683,7 +971,15 @@ package body Grt.Vpi is
       Info : Verilog_Wire_Info;
       Len  : Ghdl_Index_Type;
    begin
-      Vpi_Trace ("vpi_put_value");
+      if Flag_Trace then
+         Trace_Start ("vpi_put_value (");
+         Trace (aObj);
+         Trace (", ");
+         Trace_Value (aValue);
+         Trace (")");
+         Trace_Newline;
+      end if;
+
       Reset_Error;
 
       -- A very simple write procedure for VPI.
@@ -778,11 +1074,18 @@ package body Grt.Vpi is
    -- see IEEE 1364-2001, page xxx
    procedure vpi_get_time (Obj: vpiHandle; Time: p_vpi_time)
    is
-      function To_Unsigned_64 is new Ada.Unchecked_Conversion
-        (Std_Time, Unsigned_64);
+      function To_Unsigned_64 is
+         new Ada.Unchecked_Conversion (Std_Time, Unsigned_64);
+      Res : Std_Time;
       V : Unsigned_64;
    begin
-      Vpi_Trace ("vpi_get_time");
+      if Flag_Trace then
+         Trace_Start ("vpi_get_time (");
+         Trace (Obj);
+         Trace (", {mtype=");
+         Trace_Time_Tag (Time.mType);
+         Trace ("}) = ");
+      end if;
 
       if Obj /= null
         or else Time.mType /= vpiSimTime
@@ -791,10 +1094,17 @@ package body Grt.Vpi is
          return;
       end if;
 
-      V := To_Unsigned_64 (Current_Time) / 1000;
+      Res := Current_Time;
+
+      V := To_Unsigned_64 (Res) / 1000;
       Time.mHigh := Unsigned_32 (V / 2 ** 32);
       Time.mLow  := Unsigned_32 (V mod 2 ** 32);
       Time.mReal := 0.0;
+
+      if Flag_Trace then
+         Trace_Time (Res);
+         Trace_Newline;
+      end if;
    end vpi_get_time;
 
    ------------------------------------------------------------------------
@@ -851,8 +1161,21 @@ package body Grt.Vpi is
    is
       Hand : constant vpiHandle := To_vpiHandle (Arg);
    begin
-      Vpi_Trace ("vpi: call callback");
+      if Flag_Trace then
+         Trace_Start ("vpi call callback ");
+         Trace_Cb_Reason (Hand.Cb.Reason);
+         Trace (" ");
+         Trace (Hand);
+         Trace_Newline;
+         Trace_Indent := Trace_Indent + 1;
+      end if;
       Execute_Callback (Hand);
+      if Flag_Trace then
+         Trace_Indent := Trace_Indent - 1;
+         Trace_Start ("vpi end callback ");
+         Trace (Hand);
+         Trace_Newline;
+      end if;
    end Call_Callback;
 
    procedure Call_Valuechange_Callback (Arg : System.Address)
@@ -863,8 +1186,7 @@ package body Grt.Vpi is
          --  Note: the call may remove H from the list, or even
          --  destroy it.
          --  However, we assume it doesn't remove the next callback...
-         Vpi_Trace ("vpi: call valuechange cb");
-         Execute_Callback (Hand);
+         Call_Callback (Arg);
       end if;
    end Call_Valuechange_Callback;
 
@@ -891,7 +1213,20 @@ package body Grt.Vpi is
       Res : vpiHandle;
       T : Std_Time;
    begin
-      Vpi_Trace ("vpi_register_cb");
+      if Flag_Trace then
+         Trace_Start ("vpi_register_cb ({reason=");
+         Trace_Cb_Reason (Data.Reason);
+         Trace (", obj=");
+         Trace (Data.Obj);
+         case Data.Reason is
+            when cbAfterDelay =>
+               Trace (", time=");
+               Trace_Time (Vpi_Time_To_Time (Data.Time.all));
+            when others =>
+               null;
+         end case;
+         Trace ("}) = ");
+      end if;
 
       Res := new struct_vpiHandle (vpiCallback);
       Res.Cb := Data.all;
@@ -930,8 +1265,13 @@ package body Grt.Vpi is
          when others =>
             dbgPut_Line ("vpi_register_cb: unknown reason");
             Free (Res);
-            return null;
       end case;
+
+      if Flag_Trace then
+         Trace (Res);
+         Trace_Newline;
+      end if;
+
       return Res;
    end vpi_register_cb;
 
@@ -1017,16 +1357,15 @@ package body Grt.Vpi is
       end loop;
    end Find_By_Name;
 
-   function vpi_handle_by_name (Name : Ghdl_C_String; Scope : vpiHandle)
-                               return vpiHandle
+   function Vpi_Handle_By_Name_Internal
+     (Name : Ghdl_C_String; Scope : vpiHandle) return vpiHandle
    is
       B, E : Natural;
       Base, El : VhpiHandleT;
       Err : AvhpiErrorT;
       Prop : Integer;
+      Res : vpiHandle;
    begin
-      Vpi_Trace ("vpi_handle_by_name");
-
       --  Extract the start point.
       if Scope = null then
          Get_Root_Scope (Base);
@@ -1075,10 +1414,35 @@ package body Grt.Vpi is
 
       Prop := Vhpi_Handle_To_Vpi_Prop (Base);
       if Prop /= vpiUndefined then
-         return Build_vpiHandle (Base, Prop);
+         Res := Build_vpiHandle (Base, Prop);
       else
-         return null;
+         Res := null;
       end if;
+
+      return Res;
+   end Vpi_Handle_By_Name_Internal;
+
+   function vpi_handle_by_name (Name : Ghdl_C_String; Scope : vpiHandle)
+                               return vpiHandle
+   is
+      Res : vpiHandle;
+   begin
+      if Flag_Trace then
+         Trace_Start ("vpi_handle_by_name (");
+         Trace (Name);
+         Trace (", ");
+         Trace (Scope);
+         Trace (") = ");
+      end if;
+
+      Res := Vpi_Handle_By_Name_Internal (Name, Scope);
+
+      if Flag_Trace then
+         Trace (Res);
+         Trace_Newline;
+      end if;
+
+      return Res;
    end vpi_handle_by_name;
 
    -- unsigned int vpi_mcd_close(unsigned int mcd)
@@ -1117,9 +1481,16 @@ package body Grt.Vpi is
    function vpi_remove_cb (Ref : vpiHandle) return Integer
    is
       Ref_Copy : vpiHandle;
+      Res : Integer;
    begin
-      Vpi_Trace ("vpi_remove_cb");
+      if Flag_Trace then
+         Trace_Start ("vpi_remove_cb (");
+         Trace (Ref);
+         Trace (") = ");
+      end if;
 
+      Res := 1;
+      Ref_Copy := Ref;
       case Ref.Cb.Reason is
          when cbValueChange =>
             Delete_Callback (Ref.Cb_Handle);
@@ -1127,11 +1498,17 @@ package body Grt.Vpi is
            | cbReadOnlySynch =>
             Delete_Callback (Ref.Cb_Handle);
          when others =>
-            return 0;
+            Res := 0;
+            Ref_Copy := null;
       end case;
-      Ref_Copy := Ref;
       Free (Ref_Copy);
-      return 1;
+
+      if Flag_Trace then
+         Trace (Res);
+         Trace_Newline;
+      end if;
+
+      return Res;
    end vpi_remove_cb;
 
    -- void vpi_vprintf(const char*fmt, va_list ap)
@@ -1221,7 +1598,30 @@ package body Grt.Vpi is
          Vpi_Filename (1 .. Opt'Length - 6) := Opt (F + 6 .. Opt'Last);
          Vpi_Filename (Vpi_Filename'Last) := NUL;
          return True;
-      elsif Opt = "--vpi-trace" then
+      elsif Opt'Length >= 11 and then Opt (F + 5 .. F + 10) = "-trace" then
+         if Opt'Length > 11 and then Opt (F + 11) = '=' then
+            declare
+               Filename : String (1 .. Opt'Length - 11);
+               Mode : constant String := "wt" & NUL;
+            begin
+               Filename (1 .. Filename'Last - 1) := Opt (F + 12 .. Opt'Last);
+               Filename (Filename'Last) := NUL;
+               Trace_File := fopen (Filename'Address, Mode'Address);
+               if Trace_File = NULL_Stream then
+                  Error_C ("cannot open vpi trace file '");
+                  Error_C (Opt (F + 12 .. Opt'Last));
+                  Error_E ("'");
+                  return False;
+               end if;
+            end;
+         elsif Opt'Length = 11 then
+            Trace_File := stdout;
+         else
+            Error_C ("incorrect option '");
+            Error_C (Opt);
+            Error_E ("'");
+            return False;
+         end if;
          Flag_Trace := True;
          return True;
       else
@@ -1233,6 +1633,7 @@ package body Grt.Vpi is
    procedure Vpi_Help is
    begin
       Put_Line (" --vpi=FILENAME     load VPI module");
+      Put_Line (" --vpi-trace[=FILE] trace vpi calls to FILE");
    end Vpi_Help;
 
    ------------------------------------------------------------------------

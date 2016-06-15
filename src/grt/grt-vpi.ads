@@ -38,6 +38,9 @@ package Grt.Vpi is
    vpiSize:          constant integer :=  4;
    vpiTimePrecision: constant integer := 12;
 
+   vpiScalar:        constant integer := 17;
+   vpiVector:        constant integer := 18;
+
    -- object codes, see vpi_user.h
    vpiModule:        constant integer := 32;
    vpiNet:           constant integer := 36;
