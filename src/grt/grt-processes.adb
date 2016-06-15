@@ -1016,7 +1016,10 @@ package body Grt.Processes is
             end if;
          end if;
 
-         Call_Callbacks (Hooks.Cb_End_Of_Time_Step);
+         if Has_Callbacks (Hooks.Cb_End_Of_Time_Step) then
+            Call_Callbacks (Hooks.Cb_End_Of_Time_Step);
+            Tn := Compute_Next_Time;
+         end if;
 
          Update_Active_Chain;
          Next_Time := Tn;

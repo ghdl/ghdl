@@ -582,6 +582,9 @@ package body Grt.Vpi is
             Prop := VhpiFullNameP;
          when vpiName=>
             Prop := VhpiNameP;
+         when vpiType =>
+            Tmpstring2 (1 .. 4) := "???" & NUL;
+            return To_Ghdl_C_String (Tmpstring2'Address);
          when others=>
             dbgPut_Line ("vpi_get_str: undefined property");
             return null;
