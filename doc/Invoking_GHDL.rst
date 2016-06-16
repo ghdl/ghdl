@@ -55,10 +55,11 @@ Elaborate a design::
   ghdl -e [options..] primary_unit [secondary_unit]
 
 
-On GNU/Linux the elaboration command creates an executable
-containing the code of the `VHDL` sources, the elaboration code
-and simulation code to execute a design hierarchy. On Windows this
-command elaborates the design but does not generate anything.
+On GNU/Linux, if the GCC backend was enabled during the compilation of `GHDL`,
+the elaboration command creates an executable containing the code of the `VHDL`
+sources, the elaboration code and simulation code to execute a design hierarchy.
+On Windows or if the GCC backend was not enabled, this command elaborates the design
+but does not generate anything.
 
 The elaboration command is selected with :option:`-e` switch, and must be
 followed by either:

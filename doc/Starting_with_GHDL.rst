@@ -54,8 +54,8 @@ The :option:`-e` option means :dfn:`elaborate`.  With this option, `GHDL`
 creates code in order to elaborate a design, with the :samp:`hello_world`
 entity at the top of the hierarchy.
 
-On GNU/Linux, the result is an executable program called :file:`hello_world`
-which can be run:
+On GNU/Linux, if you have enabled the GCC backend during the compilation of `GHDL`,
+an executable program called :file:`hello_world` which can be run is generated:
 
 .. code-block:: shell
 
@@ -68,7 +68,8 @@ or directly:
   $ ./hello_world
 
 
-On Windows, no file is created.  The simulation is launched using this command:
+On Windows or if the GCC backend was not enabled, no file is created.
+The simulation is launched using this command:
 
 .. code-block:: shell
 
