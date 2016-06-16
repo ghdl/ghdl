@@ -132,6 +132,8 @@ package Grt.Types is
 
    function To_Ghdl_C_String is new Ada.Unchecked_Conversion
      (Source => Address, Target => Ghdl_C_String);
+   function To_Address is new Ada.Unchecked_Conversion
+     (Source => Ghdl_C_String, Target => Address);
 
    --  Str_len.
    type String_Ptr is access String (1 .. Natural'Last);

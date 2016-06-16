@@ -33,6 +33,7 @@ with Grt.Signals; use Grt.Signals;
 with Grt.Table;
 with Grt.Astdio; use Grt.Astdio;
 with Grt.Hooks; use Grt.Hooks;
+with Grt.Rtis; use Grt.Rtis;
 with Grt.Rtis_Types; use Grt.Rtis_Types;
 with Grt.Vstrings;
 with Ada.Unchecked_Deallocation;
@@ -216,6 +217,10 @@ package body Grt.Fst is
          when Vcd_Bad =>
             --  Not handled.
             return;
+         when Vcd_Enum8 =>
+            Vt := FST_VT_GEN_STRING;
+            Len := 1;
+            Sdt := FST_SDT_NONE;
          when Vcd_Bool =>
             Vt := FST_VT_VCD_REG;
             Len := 1;
@@ -331,7 +336,7 @@ package body Grt.Fst is
       --  Extract name (avoid truncation, append verilog range for arrays).
       Vhpi_Get_Str (VhpiNameP, Sig, Name, Name_Len);
       if Name_Len >= Name'Length
-        or else Vcd_El.Irange /= null
+        or else Vcd_El.Kind in Vcd_Var_Vectors
       then
          declare
             Name2 : String (1 .. Name_Len + 3 + 2 * 11 + 1);
@@ -517,6 +522,18 @@ package body Grt.Fst is
       fstWriterEmitValueChange (Context, Hand, Str'Address);
    end Fst_Put_Integer32;
 
+   procedure Fst_Put_Enum8
+     (Hand : fstHandle; V : Ghdl_E8; Rti : Ghdl_Rti_Access)
+   is
+      Enum_Rti : constant Ghdl_Rtin_Type_Enum_Acc :=
+        To_Ghdl_Rtin_Type_Enum_Acc (Rti);
+      Str : constant Ghdl_C_String := Enum_Rti.Names (Ghdl_Index_Type (V));
+   begin
+      fstWriterEmitVariableLengthValueChange
+        (Context, Hand, To_Address (Str),
+         Interfaces.C.unsigned (strlen (Str)));
+   end Fst_Put_Enum8;
+
    procedure Fst_Put_Var (I : Fst_Index_Type)
    is
       From_Bit : constant array (Ghdl_B1) of Character := "01";
@@ -527,7 +544,7 @@ package body Grt.Fst is
       Hand : constant fstHandle := V.Hand;
       Sig : constant Signal_Arr_Ptr := V.Wire.Sigs;
    begin
-      if V.Wire.Irange = null then
+      if V.Wire.Kind not in Vcd_Var_Vectors then
          Len := 1;
       else
          Len := V.Wire.Irange.I32.Len;
@@ -560,6 +577,8 @@ package body Grt.Fst is
                   Fst_Put_Integer32 (Hand, Sig (0).Value_Ptr.E32);
                when Vcd_Float64 =>
                   null;
+               when Vcd_Enum8 =>
+                  Fst_Put_Enum8 (Hand, Sig (0).Value_Ptr.E8, V.Wire.Rti);
                when Vcd_Bad =>
                   null;
             end case;
@@ -590,6 +609,8 @@ package body Grt.Fst is
                   Fst_Put_Integer32 (Hand, Sig (0).Driving_Value.E32);
                when Vcd_Float64 =>
                   null;
+               when Vcd_Enum8 =>
+                  Fst_Put_Enum8 (Hand, Sig (0).Driving_Value.E8, V.Wire.Rti);
                when Vcd_Bad =>
                   null;
             end case;

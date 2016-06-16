@@ -398,7 +398,8 @@ package body Grt.Vpi is
            | Vcd_Integer32
            | Vcd_Float64
            | Vcd_Bit
-           | Vcd_Stdlogic =>
+           | Vcd_Stdlogic
+           | Vcd_Enum8 =>
             return False;
          when Vcd_Bitvector
            | Vcd_Stdlogic_Vector =>
@@ -739,11 +740,7 @@ package body Grt.Vpi is
          return null;
       end if;
 
-      if Info.Irange = null then
-         Len := 1;
-      else
-         Len := Info.Irange.I32.Len;
-      end if;
+      Len := Get_Wire_Length (Info);
 
       Tmpstring3idx := 1; -- reset string buffer
 
@@ -751,6 +748,7 @@ package body Grt.Vpi is
          when Vcd_Effective =>
             case Info.Kind is
                when Vcd_Bad
+                 | Vcd_Enum8
                  | Vcd_Integer32
                  | Vcd_Float64 =>
                   return null;
@@ -769,6 +767,7 @@ package body Grt.Vpi is
          when Vcd_Driving =>
             case Info.Kind is
                when Vcd_Bad
+                 | Vcd_Enum8
                  | Vcd_Integer32
                  | Vcd_Float64 =>
                   return null;
@@ -900,6 +899,8 @@ package body Grt.Vpi is
                   end case;
                end;
             end loop;
+         when Vcd_Enum8 =>
+            null;
          when Vcd_Integer32
            | Vcd_Float64 =>
             null;
@@ -1012,14 +1013,10 @@ package body Grt.Vpi is
          return null;
       end if;
 
-      if Info.Irange = null then
-         Len := 1;
-      else
-         Len := Info.Irange.I32.Len;
-         if Len = 0 then
-            --  No signal.
-            return null;
-         end if;
+      Len := Get_Wire_Length (Info);
+      if Len = 0 then
+         --  No signal.
+         return null;
       end if;
 
       -- Step 1: convert vpi object to internal format.

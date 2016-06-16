@@ -25,6 +25,7 @@
 
 with Grt.Types; use Grt.Types;
 with Grt.Avhpi; use Grt.Avhpi;
+with Grt.Rtis;
 with Grt.Signals;
 
 package Grt.Vcd is
@@ -37,23 +38,53 @@ package Grt.Vcd is
    Vcd_Putc : Vcd_Putc_Acc;
    Vcd_Close : Vcd_Close_Acc;
 
-   type Vcd_Var_Kind is (Vcd_Bad,
-                         Vcd_Bool,
-                         Vcd_Integer32,
-                         Vcd_Float64,
-                         Vcd_Bit, Vcd_Stdlogic,
-                         Vcd_Bitvector, Vcd_Stdlogic_Vector);
+   --  VCD type of an object
+   type Vcd_Var_Kind is
+     (
+      --  Incompatible vcd type
+      Vcd_Bad,
+
+      --  A user-defined enumerated type (other than bit or boolean)
+      Vcd_Enum8,
+
+      --  Boolean
+      Vcd_Bool,
+
+      --  32bit integer
+      Vcd_Integer32,
+
+      --  64bit float
+      Vcd_Float64,
+
+      --  A bit type
+      Vcd_Bit, Vcd_Stdlogic,
+
+      --  A bit vector type
+      Vcd_Bitvector, Vcd_Stdlogic_Vector
+     );
+
+   subtype Vcd_Var_Vectors is Vcd_Var_Kind
+     range Vcd_Bitvector .. Vcd_Stdlogic_Vector;
 
    --  Which value to be displayed: effective or driving (for out signals).
    type Vcd_Value_Kind is (Vcd_Effective, Vcd_Driving);
 
-   type Verilog_Wire_Info is record
+   type Verilog_Wire_Info (Kind : Vcd_Var_Kind := Vcd_Bad) is record
+      Val : Vcd_Value_Kind;
+
       --  Access to an array of signals.
       Sigs : Grt.Signals.Signal_Arr_Ptr;
 
-      Irange : Ghdl_Range_Ptr;
-      Kind : Vcd_Var_Kind;
-      Val : Vcd_Value_Kind;
+      case Kind is
+         when Vcd_Var_Vectors =>
+            --  Vector bounds.
+            Irange : Ghdl_Range_Ptr;
+         when Vcd_Enum8 =>
+            --  Base type.
+            Rti : Rtis.Ghdl_Rti_Access;
+         when others =>
+            null;
+      end case;
    end record;
 
    procedure Get_Verilog_Wire (Sig : VhpiHandleT;

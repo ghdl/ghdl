@@ -62,11 +62,10 @@ package body Grt.Images is
    procedure Return_Enum
      (Res : Std_String_Ptr; Rti : Ghdl_Rti_Access; Index : Ghdl_Index_Type)
    is
-      Enum_Rti : Ghdl_Rtin_Type_Enum_Acc;
-      Str : Ghdl_C_String;
+      Enum_Rti : constant Ghdl_Rtin_Type_Enum_Acc :=
+        To_Ghdl_Rtin_Type_Enum_Acc (Rti);
+      Str : constant Ghdl_C_String := Enum_Rti.Names (Index);
    begin
-      Enum_Rti := To_Ghdl_Rtin_Type_Enum_Acc (Rti);
-      Str := Enum_Rti.Names (Index);
       Return_String (Res, Str (1 .. strlen (Str)));
    end Return_Enum;
 
