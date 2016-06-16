@@ -12,7 +12,7 @@ Here is a short comparaison:
 
 * gcc:
 + generated code is faster (particularly with -O or -O2)
-+ generated code can be debugger (with -g)
++ generated code can be debugged (with -g)
 + the output is an executable
 + ported to many platforms (x86, x86_64, powerpc, sparc)
 - analyze can takes time (particularly for big units)
