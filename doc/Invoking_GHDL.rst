@@ -24,7 +24,7 @@ Analysis command
 
 .. index:: -a command
 
-Analyze one or severals files::
+Analyze one or several files::
 
   ghdl -a [options...] file...
 
