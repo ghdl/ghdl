@@ -4,10 +4,11 @@
 # kate: tab-width 2; replace-tabs off; indent-width 2;
 # 
 # ==============================================================================
+#	Authors:						Markus Koch
+#											Patrick Lehmann
+# 
 #	Bash Script:				Script to compile the simulation libraries from Lattice
 #											Diamond for GHDL on Linux
-# 
-#	Authors:						Patrick Lehmann and Markus Koch
 # 
 # Description:
 # ------------------------------------
@@ -16,7 +17,7 @@
 #		- compiles all Lattice Diamond simulation libraries and packages
 #
 # ==============================================================================
-#	Copyright (C) 2015 Patrick Lehmann and Markus Koch
+#	Copyright (C) 2015-2016 Patrick Lehmann and Markus Koch
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -38,54 +39,77 @@
 # save working directory
 WorkingDir=$(pwd)
 ScriptDir="$(dirname $0)"
-ScriptDir="$(realpath $ScriptDir)"
+ScriptDir="$(readlink -f $ScriptDir)"
 
-deviceList="ec ecp ecp2 ecp3 ecp5u lptm lptm2 machxo machxo2 machxo3l sc scm xp xp2"
+DeviceList="ec ecp ecp2 ecp3 ecp5u lptm lptm2 machxo machxo2 machxo3l sc scm xp xp2"
 
 # source configuration file from GHDL's 'vendors' library directory
 source $ScriptDir/config.sh
 source $ScriptDir/shared.sh
 
-NO_COMMAND=TRUE
-
 # command line argument processing
+NO_COMMAND=1
+SKIP_EXISTING_FILES=0
+SUPPRESS_WARNINGS=0
+HALT_ON_ERROR=0
+VHDLStandard=93
+GHDLBinDir=""
+DestDir=""
+SrcDir=""
 while [[ $# > 0 ]]; do
 	key="$1"
 	case $key in
 		-c|--clean)
 		CLEAN=TRUE
-		NO_COMMAND=FALSE
+		NO_COMMAND=0
 		;;
 		-a|--all)
 	  # All does not change the deviceList -> all selected
-		NO_COMMAND=FALSE
-		;;
-		-s|--skip-existing)
-		SKIP_EXISTING_FILES=TRUE
-		;;
-		-S|--skip-largefiles)
-		SKIP_LARGE_FILES=TRUE
-		;;
-		-n|--no-warnings)
-		SUPPRESS_WARNINGS=TRUE
-		;;
-		-H|--halt-on-error)
-		HALT_ON_ERROR=TRUE
-		;;
-#		-v|--verbose)
-#		VERBOSE=TRUE
-#		;;
-		-h|--help)
-		HELP=TRUE
-		NO_COMMAND=FALSE
+		NO_COMMAND=0
 		;;
 		-d|--device)
+		DeviceList="$2"
 		shift
-		deviceList="$1"
-		NO_COMMAND=FALSE
+		NO_COMMAND=0
+		;;
+		-h|--help)
+		HELP=TRUE
+		NO_COMMAND=0
+		;;
+		-s|--skip-existing)
+		SKIP_EXISTING_FILES=1
+		;;
+		-n|--no-warnings)
+		SUPPRESS_WARNINGS=1
+		;;
+		-H|--halt-on-error)
+		HALT_ON_ERROR=1
+		;;
+		--vhdl93)
+		VHDLStandard=93
+		;;
+		--vhdl2008)
+		VHDLStandard=2008
+		echo 1>&2 -e "${COLORED_ERROR} VHDL-2008 is not yet supported by Lattice.${ANSI_RESET}"
+		# echo 1>&2 -e "${ANSI_YELLOW}Possible workaround: ${ANSI_RESET}"
+		# echo 1>&2 -e "${ANSI_YELLOW}  Compile 'std_logic_arith' and 'std_logic_unsigned' into library IEEE.${ANSI_RESET}"
+		exit -1
+		;;
+		--ghdl)
+		GHDLBinDir="$2"
+		shift						# skip argument
+		;;
+		--src)
+		SrcDir="$2"
+		shift						# skip argument
+		;;
+		--out)
+		DestDir="$2"
+		shift						# skip argument
 		;;
 		*)		# unknown option
-		UNKNOWN_OPTION=TRUE
+		echo 1>&2 -e "${COLORED_ERROR} Unknown command line option.${ANSI_RESET}"
+		exit -1
 		;;
 	esac
 	shift # past argument or value
@@ -95,20 +119,16 @@ if [ "$NO_COMMAND" == "TRUE" ]; then
 	HELP=TRUE
 fi
 
-if [ "$UNKNOWN_OPTION" == "TRUE" ]; then
-	echo -e $COLORED_ERROR "Unknown command line option.${ANSI_RESET}"
-	exit -1
-elif [ "$HELP" == "TRUE" ]; then
-	if [ "$NO_COMMAND" == "TRUE" ]; then
-		echo -e $COLORED_ERROR " No command selected."
-	fi
+if [ "$HELP" == "TRUE" ]; then
+	test "$NO_COMMAND" == "TRUE" && echo 1>&2 -e "${COLORED_ERROR} No command selected."
 	echo ""
 	echo "Synopsis:"
-	echo "  Script to compile the simulation libraries from Lattice Diamond 3.6 for GHDL on Linux"
+	echo "  A script to compile the Lattice Diamond simulation libraries for GHDL on Linux."
+	echo "  One library folder 'lib/v??' per VHDL library will be created relative to the current"
+	echo "  working directory."
 	echo ""
 	echo "Usage:"
-	echo "  $0 <common command>|<library> [<options>]"
-#         [-v] [-c] [--unisim] [--unimacro] [--simprim] [--secureip] [-s|--skip-existing] [-S|--skip-largefiles] [-n|--no-warnings]
+	echo "  compile-lattice.sh <common command>|<library> [<options>] [<adv. options>]"
 	echo ""
 	echo "Common commands:"
 	echo "  -h --help             Print this help page"
@@ -120,115 +140,120 @@ elif [ "$HELP" == "TRUE" ]; then
   echo "                        \"$deviceList\""
 	echo ""
 	echo "Library compile options:"
+	echo "     --vhdl93            Compile the libraries with VHDL-93."
+	echo "     --vhdl2008          Compile the libraries with VHDL-2008."
 	echo "  -s --skip-existing    Skip already compiled files (an *.o file exists)."
-	echo "  -S --skip-largefiles  Don't compile large entities like DSP and PCIe primitives."
 	echo "  -H --halt-on-error    Halt on error(s)."
 	echo ""
+	echo "Advanced options:"
+	echo "  --ghdl <GHDL BinDir>   Path to GHDL binary directory e.g. /usr/bin."
+	echo "  --out <dir name>       Name of the output directory."
+	echo "  --src <Path to OSVVM>  Name of the output directory."
+	echo ""
 	echo "Verbosity:"
-#	echo "  -v --verbose          Print more messages"
 	echo "  -n --no-warnings      Suppress all warnings. Show only error messages."
 	echo ""
 	exit 0
 fi
 
-# extract data from configuration
-SourceDir=${SourceDirectory[LatticeDiamond]}
-DestinationDir=${DestinationDirectory[LatticeDiamond]}
 
-if [ -z $DestinationDir ]; then
-	echo -e "${COLORED_ERROR} Lattice Diamond is not configured in '$ScriptDir/config.sh'${ANSI_RESET}"
-	exit -1
-elif [ ! -d $SourceDir ]; then
-	echo -e "${COLORED_ERROR} Path '$SourceDir' does not exist.${ANSI_RESET}"
-	exit -1
-fi
+# -> $SourceDirectories
+# -> $DestinationDirectories
+# -> $SrcDir
+# -> $DestDir
+# -> $GHDLBinDir
+# <= $SourceDirectory
+# <= $DestinationDirectory
+# <= $GHDLBinary
+SetupDirectories LatticeDiamond "Lattice Diamond"
 
-# set bash options
-set -o pipefail
+# create "lattice" directory and change to it
+# => $DestinationDirectory
+CreateDestinationDirectory
+cd $DestinationDirectory
+
+
+# => $SUPPRESS_WARNINGS
+# <= $GRC_COMMAND
+SetupGRCat
+
+
+# -> $VHDLStandard
+# <= $VHDLVersion
+# <= $VHDLStandard
+# <= $VHDLFlavor
+GHDLSetup
+
 
 # define global GHDL Options
 GHDL_OPTIONS=(-fexplicit -frelaxed-rules --no-vital-checks --warn-binding --mb-comments)
 
-# create "lattice" directory and change to it
-if [[ -d "$DestinationDir" ]]; then
-	echo -e "${ANSI_YELLOW}Vendor directory '$DestinationDir' already exists.${ANSI_RESET}"
-else
-	echo -e "${ANSI_YELLOW}Creating vendor directory: '$DestinationDir'${ANSI_RESET}"
-	mkdir "$DestinationDir"
-fi
-cd $DestinationDir
 
-if [ -z "$(which grcat)" ]; then
-	# if grcat (generic colourizer) is not installed, use a dummy pipe command like 'cat'
-	GRC_COMMAND="cat"
-else
-	if [ "$SUPPRESS_WARNINGS" == "TRUE" ]; then
-		GRC_COMMAND="grcat $ScriptDir/ghdl.skipwarning.grcrules"
-	else
-		GRC_COMMAND="grcat $ScriptDir/ghdl.grcrules"
-	fi
-fi
+GHDL_PARAMS=(${GHDL_OPTIONS[@]})
+GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard -P$DestinationDirectory)
 
-STOPCOMPILING=FALSE
+
+STOPCOMPILING=0
+ERRORCOUNT=0
 
 # Cleanup directory
 # ==============================================================================
 if [ "$CLEAN" == "TRUE" ]; then
+	echo 1>&2 -e "${COLORED_ERROR} '--clean' is not implemented!"
+	exit -1
 	echo -e "${ANSI_YELLOW}Cleaning up vendor directory ...${ANSI_RESET}"
 	rm *.o 2> /dev/null
+	rm *.cf 2> /dev/null
 fi
 
 # Lattice device libraries
 # ==============================================================================
 # Excluded: pmi
-declare -A FileList
-FileList[ec]="ORCA_CMB.vhd ORCA_SEQ.vhd ORCACOMP.vhd ORCA_LUT.vhd ORCA_MISC.vhd ORCA_CNT.vhd ORCA_IO.vhd ORCA_MEM.vhd"
-FileList[ecp]="ORCA_CMB.vhd ORCA_SEQ.vhd ORCACOMP.vhd ORCA_LUT.vhd ORCA_MISC.vhd ORCA_CNT.vhd ORCA_IO.vhd ORCA_MEM.vhd"
-FileList[ecp2]="ECP2_CMB.vhd ECP2_SEQ.vhd ECP2COMP.vhd ECP2_CNT.vhd ECP2_IO.vhd ECP2_LUT.vhd ECP2_MEM.vhd ECP2_MISC.vhd ECP2_MULT.vhd ECP2_SL.vhd"
-FileList[ecp3]="ECP3_CMB.vhd ECP3_SEQ.vhd ECP3COMP.vhd ECP3_CNT.vhd ECP3_IO.vhd ECP3_LUT.vhd ECP3_MEM.vhd ECP3_MISC.vhd ECP3_MULT.vhd ECP3_SL.vhd"
-FileList[ecp5u]="ECP5U_CMB.vhd ECP5U_SEQ.vhd ECP5UCOMP.vhd ECP5U_IO.vhd ECP5U_LUT.vhd ECP5U_MEM.vhd ECP5U_MISC.vhd ECP5U_SL.vhd gsr_pur_assign.vhd"
-FileList[lptm]="MACHXO_CMB.vhd MACHXO_SEQ.vhd MACHXOCOMP.vhd MACHXO_CNT.vhd MACHXO_IO.vhd MACHXO_LUT.vhd MACHXO_MEM.vhd MACHXO_MISC.vhd"
-FileList[lptm2]="MACHXO2_CMB.vhd MACHXO2_SEQ.vhd MACHXO2COMP.vhd gsr_pur_assign.vhd MACHXO2_CNT.vhd MACHXO2_IO.vhd MACHXO2_LUT.vhd MACHXO2_MEM.vhd MACHXO2_MISC.vhd"
-FileList[machxo]="MACHXO_CMB.vhd MACHXO_SEQ.vhd MACHXOCOMP.vhd MACHXO_CNT.vhd MACHXO_IO.vhd MACHXO_LUT.vhd MACHXO_MEM.vhd MACHXO_MISC.vhd"
-FileList[machxo2]="MACHXO2_CMB.vhd MACHXO2_SEQ.vhd MACHXO2COMP.vhd MACHXO2_CNT.vhd gsr_pur_assign.vhd MACHXO2_IO.vhd MACHXO2_LUT.vhd MACHXO2_MEM.vhd MACHXO2_MISC.vhd"
-FileList[machxo3l]="MACHXO3L_CMB.vhd MACHXO3L_SEQ.vhd MACHXO3LCOMP.vhd gsr_pur_assign.vhd MACHXO3L_CNT.vhd MACHXO3L_IO.vhd MACHXO3L_LUT.vhd MACHXO3L_MEM.vhd MACHXO3L_MISC.vhd"
-FileList[sc]="ORCA_CMB.vhd ORCA_SEQ.vhd ORCACOMP.vhd ORCA_CNT.vhd ORCA_IO.vhd ORCA_MEM.vhd ORCA_MIS.vhd ORCA_SL.vhd"
-FileList[scm]="ORCA_CMB.vhd ORCA_SEQ.vhd ORCACOMP.vhd ORCA_CNT.vhd ORCA_IO.vhd ORCA_MEM.vhd ORCA_MIS.vhd ORCA_SL.vhd"
-FileList[xp]="ORCA_CMB.vhd ORCA_SEQ.vhd ORCACOMP.vhd ORCA_LUT.vhd ORCA_MISC.vhd ORCA_CNT.vhd ORCA_IO.vhd ORCA_MEM.vhd"
-FileList[xp2]="XP2_CMB.vhd XP2_SEQ.vhd XP2COMP.vhd XP2_CNT.vhd XP2_IO.vhd XP2_LUT.vhd XP2_MEM.vhd XP2_MISC.vhd XP2_MULT.vhd XP2_SL.vhd"
+declare -A FileLists
+FileLists[ec]="ORCA_CMB.vhd ORCA_SEQ.vhd ORCACOMP.vhd ORCA_LUT.vhd ORCA_MISC.vhd ORCA_CNT.vhd ORCA_IO.vhd ORCA_MEM.vhd"
+FileLists[ecp]="ORCA_CMB.vhd ORCA_SEQ.vhd ORCACOMP.vhd ORCA_LUT.vhd ORCA_MISC.vhd ORCA_CNT.vhd ORCA_IO.vhd ORCA_MEM.vhd"
+FileLists[ecp2]="ECP2_CMB.vhd ECP2_SEQ.vhd ECP2COMP.vhd ECP2_CNT.vhd ECP2_IO.vhd ECP2_LUT.vhd ECP2_MEM.vhd ECP2_MISC.vhd ECP2_MULT.vhd ECP2_SL.vhd"
+FileLists[ecp3]="ECP3_CMB.vhd ECP3_SEQ.vhd ECP3COMP.vhd ECP3_CNT.vhd ECP3_IO.vhd ECP3_LUT.vhd ECP3_MEM.vhd ECP3_MISC.vhd ECP3_MULT.vhd ECP3_SL.vhd"
+FileLists[ecp5u]="ECP5U_CMB.vhd ECP5U_SEQ.vhd ECP5UCOMP.vhd ECP5U_IO.vhd ECP5U_LUT.vhd ECP5U_MEM.vhd ECP5U_MISC.vhd ECP5U_SL.vhd gsr_pur_assign.vhd"
+FileLists[lptm]="MACHXO_CMB.vhd MACHXO_SEQ.vhd MACHXOCOMP.vhd MACHXO_CNT.vhd MACHXO_IO.vhd MACHXO_LUT.vhd MACHXO_MEM.vhd MACHXO_MISC.vhd"
+FileLists[lptm2]="MACHXO2_CMB.vhd MACHXO2_SEQ.vhd MACHXO2COMP.vhd gsr_pur_assign.vhd MACHXO2_CNT.vhd MACHXO2_IO.vhd MACHXO2_LUT.vhd MACHXO2_MEM.vhd MACHXO2_MISC.vhd"
+FileLists[machxo]="MACHXO_CMB.vhd MACHXO_SEQ.vhd MACHXOCOMP.vhd MACHXO_CNT.vhd MACHXO_IO.vhd MACHXO_LUT.vhd MACHXO_MEM.vhd MACHXO_MISC.vhd"
+FileLists[machxo2]="MACHXO2_CMB.vhd MACHXO2_SEQ.vhd MACHXO2COMP.vhd MACHXO2_CNT.vhd gsr_pur_assign.vhd MACHXO2_IO.vhd MACHXO2_LUT.vhd MACHXO2_MEM.vhd MACHXO2_MISC.vhd"
+FileLists[machxo3l]="MACHXO3L_CMB.vhd MACHXO3L_SEQ.vhd MACHXO3LCOMP.vhd gsr_pur_assign.vhd MACHXO3L_CNT.vhd MACHXO3L_IO.vhd MACHXO3L_LUT.vhd MACHXO3L_MEM.vhd MACHXO3L_MISC.vhd"
+FileLists[sc]="ORCA_CMB.vhd ORCA_SEQ.vhd ORCACOMP.vhd ORCA_CNT.vhd ORCA_IO.vhd ORCA_MEM.vhd ORCA_MIS.vhd ORCA_SL.vhd"
+FileLists[scm]="ORCA_CMB.vhd ORCA_SEQ.vhd ORCACOMP.vhd ORCA_CNT.vhd ORCA_IO.vhd ORCA_MEM.vhd ORCA_MIS.vhd ORCA_SL.vhd"
+FileLists[xp]="ORCA_CMB.vhd ORCA_SEQ.vhd ORCACOMP.vhd ORCA_LUT.vhd ORCA_MISC.vhd ORCA_CNT.vhd ORCA_IO.vhd ORCA_MEM.vhd"
+FileLists[xp2]="XP2_CMB.vhd XP2_SEQ.vhd XP2COMP.vhd XP2_CNT.vhd XP2_IO.vhd XP2_LUT.vhd XP2_MEM.vhd XP2_MISC.vhd XP2_MULT.vhd XP2_SL.vhd"
 
-for device in $deviceList; do
-	if [ "$STOPCOMPILING" == "FALSE" ]; then
-		echo -e "${ANSI_YELLOW}Compiling library '$device' ...${ANSI_RESET}"
-		GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-		GHDL_PARAMS+=(--ieee=synopsys --std=93c)
-		currentPath="$SourceDir/$device/src"
-		Files=(${FileList[$device]})
-		#Files+=`find $currentPath/*.vhd`
-		for File_a in ${Files[@]}; do
-			File="$currentPath/$File_a"
-			FileName=$(basename "$File")
-			FileName="${device}_$FileName"
-			if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
-				echo -e "${ANSI_CYAN}Skipping file '$File'${ANSI_RESET}"
-			else
-				echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
-				ghdl -a ${GHDL_PARAMS[@]} --work=$device -o "${FileName%.*}.o" "$File" 2>&1 | $GRC_COMMAND
-				if [ $? -ne 0 ] && [ "$HALT_ON_ERROR" == "TRUE" ]; then
-					STOPCOMPILING=TRUE
-					break
-				fi
+for device in $DeviceList; do
+	Library=$device
+	LibraryDirectory=$DestinationDirectory/$Library/$VHDLVersion
+	mkdir -p $LibraryDirectory
+	cd $LibraryDirectory
+	echo -e "${ANSI_YELLOW}Compiling library '$Library'...${ANSI_RESET}"
+
+	DeviceSourceDirectory="$SourceDirectory/$device/src"
+	for File in ${FileLists[$device]}; do
+		File="$DeviceSourceDirectory/$File"
+		FileName=$(basename "$File")
+		FileName="${device}_$FileName"
+		if [ $SKIP_EXISTING_FILES -eq 1 ] && [ -e "${FileName%.*}.o" ]; then
+			echo -e "${ANSI_CYAN}Skipping file '$File'${ANSI_RESET}"
+		else
+			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
+			ghdl -a ${GHDL_PARAMS[@]} --work=$Library -o "${FileName%.*}.o" "$File" 2>&1 | $GRC_COMMAND
+			if [ $? -ne 0 ]; then
+				let ERRORCOUNT++
+				test $HALT_ON_ERROR -eq 1 && break 2
 			fi
-		done
-	fi
+		fi
+	done
 done
 
 echo "--------------------------------------------------------------------------------"
 echo -n "Compiling Lattice Diamond libraries "
-if [ "$STOPCOMPILING" == "TRUE" ]; then
+if [ $ERRORCOUNT -gt 0 ]; then
 	echo -e $COLORED_FAILED
 else
 	echo -e $COLORED_SUCCESSFUL
 fi
-
-cd $WorkingDir

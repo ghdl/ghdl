@@ -4,10 +4,10 @@
 # kate: tab-width 2; replace-tabs off; indent-width 2;
 # 
 # ==============================================================================
+#	Authors:						Patrick Lehmann
+# 
 #	Bash Script:				Script to compile the simulation libraries from Xilinx Vivado
 #											for GHDL on Linux
-# 
-#	Authors:						Patrick Lehmann
 # 
 # Description:
 # ------------------------------------
@@ -16,7 +16,7 @@
 #		- compiles all Xilinx Vivado simulation libraries and packages
 #
 # ==============================================================================
-#	Copyright (C) 2015 Patrick Lehmann
+#	Copyright (C) 2015-2016 Patrick Lehmann
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -38,64 +38,81 @@
 # save working directory
 WorkingDir=$(pwd)
 ScriptDir="$(dirname $0)"
-ScriptDir="$(realpath $ScriptDir)"
+ScriptDir="$(readlink -f $ScriptDir)"
 
 # source configuration file from GHDL's 'vendors' library directory
 source $ScriptDir/config.sh
 source $ScriptDir/shared.sh
 
-NO_COMMAND=TRUE
-
 # command line argument processing
+NO_COMMAND=1
+SKIP_EXISTING_FILES=0
+SKIP_LARGE_FILES=0
+SUPPRESS_WARNINGS=0
+HALT_ON_ERROR=0
+VHDLStandard=93
+GHDLBinDir=""
+DestDir=""
+SrcDir=""
 while [[ $# > 0 ]]; do
 	key="$1"
 	case $key in
 		-c|--clean)
 		CLEAN=TRUE
-		NO_COMMAND=FALSE
+		NO_COMMAND=0
 		;;
 		-a|--all)
-		ALL=TRUE
-		NO_COMMAND=FALSE
-		;;
-		-s|--skip-existing)
-		SKIP_EXISTING_FILES=TRUE
-		;;
-		-S|--skip-largefiles)
-		SKIP_LARGE_FILES=TRUE
-		;;
-		-n|--no-warnings)
-		SUPPRESS_WARNINGS=TRUE
-		;;
-		-H|--halt-on-error)
-		HALT_ON_ERROR=TRUE
-		;;
-#		-v|--verbose)
-#		VERBOSE=TRUE
-#		;;
-		-h|--help)
-		HELP=TRUE
+		COMPILE_ALL=TRUE
 		NO_COMMAND=FALSE
 		;;
 		--unisim)
-		UNISIM=TRUE
-		NO_COMMAND=FALSE
+		COMPILE_UNISIM=TRUE
+		NO_COMMAND=0
 		;;
 		--unimacro)
-		UNIMACRO=TRUE
-		NO_COMMAND=FALSE
+		COMPILE_UNIMACRO=TRUE
+		NO_COMMAND=0
 		;;
 		--secureip)
-		SECUREIP=TRUE
+		COMPILE_SECUREIP=TRUE
+		;;
+		-h|--help)
+		HELP=TRUE
+		NO_COMMAND=0
+		;;
+		-s|--skip-existing)
+		SKIP_EXISTING_FILES=1
+		;;
+		-S|--skip-largefiles)
+		SKIP_LARGE_FILES=1
+		;;
+		-n|--no-warnings)
+		SUPPRESS_WARNINGS=1
+		;;
+		-H|--halt-on-error)
+		HALT_ON_ERROR=1
 		;;
 		--vhdl93)
-		VHDL93=TRUE
+		VHDLStandard=93
 		;;
 		--vhdl2008)
-		VHDL2008=TRUE
+		VHDLStandard=2008
+		;;
+		--ghdl)
+		GHDLBinDir="$2"
+		shift						# skip argument
+		;;
+		--src)
+		SrcDir="$2"
+		shift						# skip argument
+		;;
+		--out)
+		DestDir="$2"
+		shift						# skip argument
 		;;
 		*)		# unknown option
-		UNKNOWN_OPTION=TRUE
+		echo 1>&2 -e "${COLORED_ERROR} Unknown command line option.${ANSI_RESET}"
+		exit -1
 		;;
 	esac
 	shift # past argument or value
@@ -105,20 +122,16 @@ if [ "$NO_COMMAND" == "TRUE" ]; then
 	HELP=TRUE
 fi
 
-if [ "$UNKNOWN_OPTION" == "TRUE" ]; then
-	echo -e $COLORED_ERROR "Unknown command line option.${ANSI_RESET}"
-	exit -1
-elif [ "$HELP" == "TRUE" ]; then
-	if [ "$NO_COMMAND" == "TRUE" ]; then
-		echo -e $COLORED_ERROR " No command selected."
-	fi
+if [ "$HELP" == "TRUE" ]; then
+	test "$NO_COMMAND" == "TRUE" && echo 1>&2 -e "${COLORED_ERROR} No command selected."
 	echo ""
 	echo "Synopsis:"
-	echo "  Script to compile the simulation libraries from Xilinx Vivado for GHDL on Linux"
+	echo "  A script to compile the Xilinx Vivado simulation libraries for GHDL on Linux."
+	echo "  One library folder 'lib/v??' per VHDL library will be created relative to the current"
+	echo "  working directory."
 	echo ""
 	echo "Usage:"
-	echo "  compile-xilinx-vivado.sh <common command>|<library> [<options>]"
-#         [-v] [-c] [--unisim] [--unimacro] [--simprim] [--secureip] [-s|--skip-existing] [-S|--skip-largefiles] [-n|--no-warnings]
+	echo "  compile-xilinx-vivado.sh <common command>|<library> [<options>] [<adv. options>]"
 	echo ""
 	echo "Common commands:"
 	echo "  -h --help             Print this help page"
@@ -137,243 +150,145 @@ elif [ "$HELP" == "TRUE" ]; then
 	echo "  -S --skip-largefiles  Don't compile large entities like DSP and PCIe primitives."
 	echo "  -H --halt-on-error    Halt on error(s)."
 	echo ""
+	echo "Advanced options:"
+	echo "  --ghdl <GHDL BinDir>   Path to GHDL binary directory e.g. /usr/bin."
+	echo "  --out <dir name>       Name of the output directory."
+	echo "  --src <Path to OSVVM>  Name of the output directory."
+	echo ""
 	echo "Verbosity:"
-#	echo "  -v --verbose          Print more messages"
 	echo "  -n --no-warnings      Suppress all warnings. Show only error messages."
 	echo ""
 	exit 0
 fi
 
-if [ "$ALL" == "TRUE" ]; then
-	UNISIM=TRUE
-	UNIMACRO=TRUE
-	SECUREIP=TRUE
+if [ "$COMPILE_ALL" == "TRUE" ]; then
+	COMPILE_UNISIM=TRUE
+	COMPILE_UNIMACRO=TRUE
+	COMPILE_SECUREIP=TRUE
 fi
 
-if [ "$VHDL93" == "TRUE" ]; then
-	VHDLStandard="93c"
-	VHDLFlavor="synopsys"
-elif [ "$VHDL2008" == "TRUE" ]; then
-	VHDLStandard="08"
-	VHDLFlavor="standard"
+if [ $VHDLStandard -eq 2008 ]; then
 	echo -e "${ANSI_RED}Not all Xilinx primitives are VHDL-2008 compatible! Setting HALT_ON_ERROR to FALSE.${ANSI_RESET}"
 	HALT_ON_ERROR=FALSE
-else
-	VHDLStandard="93c"
-	VHDLFlavor="synopsys"
 fi
 
-# extract data from configuration
-SourceDir=${SourceDirectory[XilinxVivado]}
-DestinationDir=${DestinationDirectory[XilinxVivado]}
 
-if [ -z $DestinationDir ]; then
-	echo -e "${COLORED_ERROR} Xilinx Vivado is not configured in '$ScriptDir/config.sh'${ANSI_RESET}"
-	exit -1
-elif [ ! -d $SourceDir ]; then
-	echo -e "${COLORED_ERROR} Path '$SourceDir' does not exist.${ANSI_RESET}"
-	exit -1
-fi
+# -> $SourceDirectories
+# -> $DestinationDirectories
+# -> $SrcDir
+# -> $DestDir
+# -> $GHDLBinDir
+# <= $SourceDirectory
+# <= $DestinationDirectory
+# <= $GHDLBinary
+SetupDirectories XilinxVivado "Xilinx Vivado"
 
-# set bash options
-set -o pipefail
+# create "xilinx-vivado" directory and change to it
+# => $DestinationDirectory
+CreateDestinationDirectory
+cd $DestinationDirectory
+
+
+# => $SUPPRESS_WARNINGS
+# <= $GRC_COMMAND
+SetupGRCat
+
+
+# -> $VHDLStandard
+# <= $VHDLVersion
+# <= $VHDLStandard
+# <= $VHDLFlavor
+GHDLSetup
+
 
 # define global GHDL Options
 GHDL_OPTIONS=(-fexplicit -frelaxed-rules --no-vital-checks --warn-binding --mb-comments)
 
-# create "vivado" directory and change to it
-if [[ -d "$DestinationDir" ]]; then
-	echo -e "${ANSI_YELLOW}Vendor directory '$DestinationDir' already exists.${ANSI_RESET}"
-else
-	echo -e "${ANSI_YELLOW}Creating vendor directory: '$DestinationDir'${ANSI_RESET}"
-	mkdir "$DestinationDir"
-fi
-cd $DestinationDir
 
-if [ -z "$(which grcat)" ]; then
-	# if grcat (generic colourizer) is not installed, use a dummy pipe command like 'cat'
-	GRC_COMMAND="cat"
-else
-	if [ "$SUPPRESS_WARNINGS" == "TRUE" ]; then
-		GRC_COMMAND="grcat $ScriptDir/ghdl.skipwarning.grcrules"
-	else
-		GRC_COMMAND="grcat $ScriptDir/ghdl.grcrules"
-	fi
-fi
+GHDL_PARAMS=(${GHDL_OPTIONS[@]})
+GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard -P$DestinationDirectory)
 
-STOPCOMPILING=FALSE
+
+STOPCOMPILING=0
 ERRORCOUNT=0
 
 # Cleanup directory
 # ==============================================================================
 if [ "$CLEAN" == "TRUE" ]; then
+	echo 1>&2 -e "${COLORED_ERROR} '--clean' is not implemented!"
+	exit -1
 	echo -e "${ANSI_YELLOW}Cleaning up vendor directory ...${ANSI_RESET}"
 	rm *.o 2> /dev/null
+	rm *.cf 2> /dev/null
 fi
 
 # Library unisim
 # ==============================================================================
 # compile unisim packages
-if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNISIM" == "TRUE" ]; then
-	echo -e "${ANSI_YELLOW}Compiling library 'unisim' ...${ANSI_RESET}"
-	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
+if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_UNISIM" == "TRUE" ]; then
+	Library="unisim"
 	Files=(
-		$SourceDir/unisims/unisim_VPKG.vhd
-		$SourceDir/unisims/unisim_VCOMP.vhd
-		$SourceDir/unisims/retarget_VCOMP.vhd
-		$SourceDir/unisims/unisim_retarget_VCOMP.vhd
+		${Library}s/unisim_VPKG.vhd
+		${Library}s/unisim_VCOMP.vhd
+		${Library}s/retarget_VCOMP.vhd
+		${Library}s/unisim_retarget_VCOMP.vhd
 	)
+	# append absolute source path
+	SourceFiles=()
 	for File in ${Files[@]}; do
-		FileName=$(basename "$File")
-		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
-			echo -n ""
-			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
-		else
-			echo -e "${ANSI_CYAN}Analyzing package '$File'${ANSI_RESET}"
-			ghdl -a ${GHDL_PARAMS[@]} --work=unisim "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
-				let ERRORCOUNT++
-				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
-					STOPCOMPILING=TRUE
-					break
-				fi
-			fi
-		fi
+		SourceFiles+=("$SourceDirectory/$File")
 	done
+
+	GHDLCompilePackages
 fi
 
 # compile unisim primitives
-if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNISIM" == "TRUE" ]; then
-	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
-	Files="$(LC_COLLATE=C ls $SourceDir/unisims/primitive/*.vhd)"
-	for File in $Files; do
-		FileName=$(basename "$File")
-		FileSize=($(wc -c $File))
-		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
-			echo -n ""
-#			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
-		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ ${FileSize[0]} -gt $LARGE_FILESIZE ]; then
-			echo -e "${ANSI_CYAN}Skipping large '$File'${ANSI_RESET}"
-		else
-			echo -e "${ANSI_CYAN}Analyzing primitive '$File'${ANSI_RESET}"
-			ghdl -a ${GHDL_PARAMS[@]} --work=unisim "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
-				let ERRORCOUNT++
-				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
-					STOPCOMPILING=TRUE
-					break
-				fi
-			fi
-		fi
-	done
+if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_UNISIM" == "TRUE" ]; then
+	Library="unisim"
+	SourceFiles="$(LC_COLLATE=C ls $SourceDirectory/${Library}s/primitive/*.vhd)"
+
+	GHDLCompileLibrary
 fi
 
 # compile unisim retarget primitives
-if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNISIM" == "TRUE" ]; then
-	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
-	Files="$(LC_COLLATE=C ls $SourceDir/unisims/retarget/*.vhd)"
-	for File in $Files; do
-		FileName=$(basename "$File")
-		FileSize=($(wc -c $File))
-		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
-			echo -n ""
-#			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
-		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ ${FileSize[0]} -gt $LARGE_FILESIZE ]; then
-			echo -e "${ANSI_CYAN}Skipping large '$File'${ANSI_RESET}"
-		else
-			echo -e "${ANSI_CYAN}Analyzing primitive '$File'${ANSI_RESET}"
-			ghdl -a ${GHDL_PARAMS[@]} --work=unisim "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
-				let ERRORCOUNT++
-				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
-					STOPCOMPILING=TRUE
-					break
-				fi
-			fi
-		fi
-	done
+if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_UNISIM" == "TRUE" ]; then
+	Library="unisim"
+	SourceFiles="$(LC_COLLATE=C ls $SourceDirectory/${Library}s/retarget/*.vhd)"
+
+	GHDLCompileLibrary
 fi
 
 # compile unisim secureip primitives
-if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNISIM" == "TRUE" ] && [ "$SECUREIP" == "TRUE" ]; then
-	echo -e "${ANSI_YELLOW}Compiling library secureip primitives${ANSI_RESET}"
-	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
-	Files="$(LC_COLLATE=C ls $SourceDir/unisims/secureip/*.vhd)"
-	for File in $Files; do
-		FileName=$(basename "$File")
-		FileSize=($(wc -c $File))
-		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
-			echo -n ""
-#			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
-		elif [ "$SKIP_LARGE_FILES" == "TRUE" ] && [ ${FileSize[0]} -gt $LARGE_FILESIZE ]; then
-			echo -e "${ANSI_CYAN}Skipping large '$File'${ANSI_RESET}"
-		else
-			echo -e "${ANSI_CYAN}Analyzing primitive '$File'${ANSI_RESET}"
-			ghdl -a ${GHDL_PARAMS[@]} --work=secureip "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
-				let ERRORCOUNT++
-				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
-					STOPCOMPILING=TRUE
-					break
-				fi
-			fi
-		fi
-	done
+if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_UNISIM" == "TRUE" ] && [ "$COMPILE_SECUREIP" == "TRUE" ]; then
+	Library="secureip"
+	SourceFiles="$(LC_COLLATE=C ls $SourceDirectory/unisims/$Library/*.vhd)"
+
+	GHDLCompileLibrary
 fi
 
 # Library unimacro
 # ==============================================================================
 # compile unimacro packages
-if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNIMACRO" == "TRUE" ]; then
-	echo -e "${ANSI_YELLOW}Compiling library 'unimacro' ...${ANSI_RESET}"
-	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
+if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_UNIMACRO" == "TRUE" ]; then
+	Library="unimacro"
 	Files=(
-		$SourceDir/unimacro/unimacro_VCOMP.vhd
+		$Library/unimacro_VCOMP.vhd
 	)
+	# append absolute source path
+	SourceFiles=()
 	for File in ${Files[@]}; do
-		FileName=$(basename "$File")
-		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
-			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
-		else
-			echo -e "${ANSI_CYAN}Analyzing package '$File'${ANSI_RESET}"
-			ghdl -a ${GHDL_PARAMS[@]} --work=unimacro "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
-				let ERRORCOUNT++
-				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
-					STOPCOMPILING=TRUE
-					break
-				fi
-			fi
-		fi
+		SourceFiles+=("$SourceDirectory/$File")
 	done
+
+	GHDLCompilePackages
 fi
 	
 # compile unimacro macros
-if [ "$STOPCOMPILING" == "FALSE" ] && [ "$UNIMACRO" == "TRUE" ]; then
-	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard)
-	Files="$(LC_COLLATE=C ls $SourceDir/unimacro/*_MACRO.vhd)"
-	for File in $Files; do
-		FileName=$(basename "$File")
-		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
-			echo -e "${ANSI_CYAN}Skipping macro '$File'${ANSI_RESET}"
-		else
-			echo -e "${ANSI_CYAN}Analyzing macro '$File'${ANSI_RESET}"
-			ghdl -a ${GHDL_PARAMS[@]} --work=unimacro "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
-				let ERRORCOUNT++
-				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
-					STOPCOMPILING=TRUE
-					break
-				fi
-			fi
-		fi
-	done
+if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_UNIMACRO" == "TRUE" ]; then
+	Library="unimacro"
+	SourceFiles="$(LC_COLLATE=C ls $SourceDirectory/$Library/*_MACRO.vhd)"
+
+	GHDLCompileLibrary
 fi
 
 # Library UNIFAST
@@ -387,5 +302,3 @@ if [ $ERRORCOUNT -gt 0 ]; then
 else
 	echo -e $COLORED_SUCCESSFUL
 fi
-
-cd $WorkingDir

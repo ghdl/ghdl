@@ -4,9 +4,9 @@
 # kate: tab-width 2; replace-tabs off; indent-width 2;
 # 
 # ==============================================================================
-#	Bash Script:				Script to compile the VUnit library for GHDL on Linux
-# 
 #	Authors:						Patrick Lehmann
+# 
+#	Bash Script:				Script to compile the VUnit library for GHDL on Linux
 # 
 # Description:
 # ------------------------------------
@@ -15,7 +15,7 @@
 #		- compiles all VUnit packages 
 #
 # ==============================================================================
-#	Copyright (C) 2015 Patrick Lehmann
+#	Copyright (C) 2015-2016 Patrick Lehmann
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -37,205 +37,206 @@
 # save working directory
 WorkingDir=$(pwd)
 ScriptDir="$(dirname $0)"
-ScriptDir="$(realpath $ScriptDir)"
+ScriptDir="$(readlink -f $ScriptDir)"
 
 # source configuration file from GHDL's 'vendors' library directory
 source $ScriptDir/config.sh
 source $ScriptDir/shared.sh
 
-NO_COMMAND=TRUE
-
 # command line argument processing
+NO_COMMAND=1
+SUPPRESS_WARNINGS=0
+HALT_ON_ERROR=0
+GHDLBinDir=""
+DestDir=""
+SrcDir=""
 while [[ $# > 0 ]]; do
 	key="$1"
 	case $key in
 		-c|--clean)
 		CLEAN=TRUE
-		NO_COMMAND=FALSE
+		NO_COMMAND=0
 		;;
 		-a|--all)
-		ALL=TRUE
-		NO_COMMAND=FALSE
+		COMPILE_ALL=TRUE
+		NO_COMMAND=0
 		;;
-		-s|--skip-existing)
-		SKIP_EXISTING_FILES=TRUE
+		--vunit)
+		COMPILE_VUNIT=TRUE
+		NO_COMMAND=0
 		;;
-		-n|--no-warnings)
-		SUPPRESS_WARNINGS=TRUE
-		;;
-		-H|--halt-on-error)
-		HALT_ON_ERROR=TRUE
-		;;
-#		-v|--verbose)
-#		VERBOSE=TRUE
-#		;;
 		-h|--help)
 		HELP=TRUE
-		NO_COMMAND=FALSE
+		NO_COMMAND=0
+		;;
+		-n|--no-warnings)
+		SUPPRESS_WARNINGS=1
+		;;
+		-H|--halt-on-error)
+		HALT_ON_ERROR=1
+		;;
+		--ghdl)
+		GHDLBinDir="$2"
+		shift						# skip argument
+		;;
+		--src)
+		SrcDir="$2"
+		shift						# skip argument
+		;;
+		--out)
+		DestDir="$2"
+		shift						# skip argument
 		;;
 		*)		# unknown option
-		UNKNOWN_OPTION=TRUE
+		echo 1>&2 -e "${COLORED_ERROR} Unknown command line option.${ANSI_RESET}"
+		exit -1
 		;;
 	esac
 	shift # past argument or value
 done
 
+# makes no sense to enable it for VUnit
+SKIP_EXISTING_FILES=0
+
 if [ "$NO_COMMAND" == "TRUE" ]; then
 	HELP=TRUE
 fi
 
-if [ "$UNKNOWN_OPTION" == "TRUE" ]; then
-	echo -e $COLORED_ERROR "Unknown command line option.${ANSI_RESET}"
-	exit -1
-elif [ "$HELP" == "TRUE" ]; then
-	if [ "$NO_COMMAND" == "TRUE" ]; then
-		echo -e $COLORED_ERROR " No command selected."
-	fi
+if [ "$HELP" == "TRUE" ]; then
+	test "$NO_COMMAND" == "TRUE" && echo 1>&2 -e "${COLORED_ERROR} No command selected."
 	echo ""
 	echo "Synopsis:"
-	echo "  Script to compile the simulation library VUnit for GHDL on Linux"
+	echo "  A script to compile the simulation library 'vunit_lib' for GHDL on Linux."
+	echo "  A library folder 'vunit/v08' will be created relative to the current"
+	echo "  working directory."
 	echo ""
 	echo "Usage:"
-	echo "  compile-vunit.sh <common command>|<library> [<options>]"
-#         [-v] [-c] [--all] [-s|--skip-existing] [-n|--no-warnings]
+	echo "  compile-vunit.sh <common command>|<library> [<options>] [<adv. options>]"
 	echo ""
 	echo "Common commands:"
 	echo "  -h --help             Print this help page"
 	echo "  -c --clean            Remove all generated files"
 	echo ""
 	echo "Libraries:"
-	echo "  -a --all              Compile all packages."
+	echo "  -a --all               Compile all libraries."
+	echo "     --vunit             Compile library vunit_lib."
 	echo ""
 	echo "Library compile options:"
-	echo "  -s --skip-existing    Skip already compiled files (an *.o file exists)."
 	echo "  -H --halt-on-error    Halt on error(s)."
 	echo ""
+	echo "Advanced options:"
+	echo "  --ghdl <GHDL BinDir>   Path to GHDL binary directory e.g. /usr/bin."
+	echo "  --out <dir name>       Name of the output directory."
+	echo "  --src <Path to OSVVM>  Name of the output directory."
+	echo ""
 	echo "Verbosity:"
-#	echo "  -v --verbose          Print more messages"
 	echo "  -n --no-warnings      Suppress all warnings. Show only error messages."
 	echo ""
 	exit 0
 fi
 
-if [ "$ALL" == "TRUE" ]; then
+if [ "$COMPILE_ALL" == "TRUE" ]; then
 	COMPILE_VUNIT=TRUE
 fi
 
-# extract data from configuration
-SourceDir=${SourceDirectory[VUnit]}
-DestinationDir=${DestinationDirectory[VUnit]}
+# -> $SourceDirectories
+# -> $DestinationDirectories
+# -> $SrcDir
+# -> $DestDir
+# -> $GHDLBinDir
+# <= $SourceDirectory
+# <= $DestinationDirectory
+# <= $GHDLBinary
+SetupDirectories VUnit "VUnit"
 
-if [ -z $DestinationDir ]; then
-	echo -e "${COLORED_ERROR} VUnit is not configured in '$ScriptDir/config.sh'${ANSI_RESET}"
-	exit -1
-elif [ ! -d $SourceDir ]; then
-	echo -e "${COLORED_ERROR} Path '$SourceDir' does not exist.${ANSI_RESET}"
-	exit -1
-fi
+# create "vunit_lib" directory and change to it
+# => $DestinationDirectory
+CreateDestinationDirectory
+cd $DestinationDirectory
 
-# set bash options
-set -o pipefail
+
+# => $SUPPRESS_WARNINGS
+# <= $GRC_COMMAND
+SetupGRCat
+
 
 # define global GHDL Options
 GHDL_OPTIONS=(-fexplicit -frelaxed-rules --no-vital-checks --warn-binding --mb-comments)
 
-# create "vunit" directory and change to it
-if [[ -d "$DestinationDir" ]]; then
-	echo -e "${ANSI_YELLOW}Vendor directory '$DestinationDir' already exists.${ANSI_RESET}"
-else
-	echo -e "${ANSI_YELLOW}Creating vendor directory: '$DestinationDir'${ANSI_RESET}"
-	mkdir "$DestinationDir"
-fi
-cd $DestinationDir
-
-if [ -z "$(which grcat)" ]; then
-	# if grcat (generic colourizer) is not installed, use a dummy pipe command like 'cat'
-	GRC_COMMAND="cat"
-else
-	if [ "$SUPPRESS_WARNINGS" == "TRUE" ]; then
-		GRC_COMMAND="grcat $ScriptDir/ghdl.skipwarning.grcrules"
-	else
-		GRC_COMMAND="grcat $ScriptDir/ghdl.grcrules"
-	fi
-fi
-
-ERRORCOUNT=0
 
 # Cleanup directory
 # ==============================================================================
 if [ "$CLEAN" == "TRUE" ]; then
 	echo -e "${ANSI_YELLOW}Cleaning up vendor directory ...${ANSI_RESET}"
 	rm *.o 2> /dev/null
+	rm *.cf 2> /dev/null
 fi
 
 # Library vunit_lib
 # ==============================================================================
-# compile vunit packages
-echo -e "${ANSI_YELLOW}Compiling library 'vunit_lib' ...${ANSI_RESET}"
-GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-GHDL_PARAMS+=(--std=08)
-Files=(
-	$SourceDir/run/src/stop_api.vhd
-	$SourceDir/vhdl/src/lib/std/textio.vhd
-	$SourceDir/vhdl/src/lang/lang.vhd
-	$SourceDir/com/src/com_types.vhd
-	$SourceDir/run/src/stop_body_2008.vhd
-	$SourceDir/com/src/com_api.vhd
-	$SourceDir/string_ops/src/string_ops.vhd
-	$SourceDir/path/src/path.vhd
-	$SourceDir/logging/src/log_types.vhd
-	$SourceDir/logging/src/log_formatting.vhd
-	$SourceDir/logging/src/log_special_types200x.vhd
-	$SourceDir/array/src/array_pkg.vhd
-	$SourceDir/logging/src/log_base_api.vhd
-	$SourceDir/logging/src/log_base.vhd
-	$SourceDir/logging/src/log_api.vhd
-	$SourceDir/logging/src/log.vhd
-	$SourceDir/check/src/check_types.vhd
-	$SourceDir/check/src/check_special_types200x.vhd
-	$SourceDir/check/src/check_base_api.vhd
-	$SourceDir/check/src/check_base.vhd
-	$SourceDir/check/src/check_api.vhd
-	$SourceDir/check/src/check.vhd
-	$SourceDir/dictionary/src/dictionary.vhd
-	$SourceDir/run/src/run_types.vhd
-	$SourceDir/run/src/run_special_types200x.vhd
-	$SourceDir/run/src/run_base_api.vhd
-	$SourceDir/run/src/run_base.vhd
-	$SourceDir/run/src/run_api.vhd
-	$SourceDir/run/src/run.vhd
-	$SourceDir/vunit_run_context.vhd
-	$SourceDir/vunit_context.vhd
-	$SourceDir/com/src/com_std_codec_builder.vhd
-	$SourceDir/com/src/com_debug_codec_builder.vhd
-	$SourceDir/com/src/com_string.vhd
-	$SourceDir/com/src/com_codec_api.vhd
-	$SourceDir/com/src/com_codec.vhd
-	$SourceDir/com/src/com.vhd
-	$SourceDir/com/src/com_context.vhd
-)
-for File in ${Files[@]}; do
-	FileName=$(basename "$File")
-	if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
-		echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
-	else
-		echo -e "${ANSI_CYAN}Analyzing package '$File'${ANSI_RESET}"
-		ghdl -a ${GHDL_PARAMS[@]} --work=vunit_lib "$File" 2>&1 | $GRC_COMMAND
-		if [ $? -ne 0 ]; then
-			let ERRORCOUNT++
-			if [ "$HALT_ON_ERROR" == "TRUE" ]; then
-				break
-			fi
-		fi
-	fi
-done
+# compile vunit packages	
+ERRORCOUNT=0
+if [ "$COMPILE_VUNIT" == "TRUE" ]; then
+	Library="vunit_lib"
+	VHDLVersion="v08"
+	Files=(
+		run/src/stop_api.vhd
+		vhdl/src/lib/std/textio.vhd
+		vhdl/src/lang/lang.vhd
+		com/src/com_types.vhd
+		run/src/stop_body_2008.vhd
+		com/src/com_api.vhd
+		string_ops/src/string_ops.vhd
+		path/src/path.vhd
+		logging/src/log_types.vhd
+		logging/src/log_formatting.vhd
+		logging/src/log_special_types200x.vhd
+		array/src/array_pkg.vhd
+		logging/src/log_base_api.vhd
+		logging/src/log_base.vhd
+		logging/src/log_api.vhd
+		logging/src/log.vhd
+		check/src/check_types.vhd
+		check/src/check_special_types200x.vhd
+		check/src/check_base_api.vhd
+		check/src/check_base.vhd
+		check/src/check_api.vhd
+		check/src/check.vhd
+		dictionary/src/dictionary.vhd
+		run/src/run_types.vhd
+		run/src/run_special_types200x.vhd
+		run/src/run_base_api.vhd
+		run/src/run_base.vhd
+		run/src/run_api.vhd
+		run/src/run.vhd
+		vunit_run_context.vhd
+		vunit_context.vhd
+		com/src/com_std_codec_builder.vhd
+		com/src/com_debug_codec_builder.vhd
+		com/src/com_string.vhd
+		com/src/com_codec_api.vhd
+		com/src/com_codec.vhd
+		com/src/com.vhd
+		com/src/com_context.vhd
+	)
+
+	# append absolute source path
+	SourceFiles=()
+	for File in ${Files[@]}; do
+		SourceFiles+=("$SourceDirectory/$File")
+	done
+
+	# create local set of GHDL parameters
+	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
+	GHDL_PARAMS+=(--std=08)
+	
+	GHDLCompilePackages
+fi
 	
 echo "--------------------------------------------------------------------------------"
-echo -n "Compiling VUnit library "
+echo -n "Compiling VUnit packages "
 if [ $ERRORCOUNT -gt 0 ]; then
 	echo -e $COLORED_FAILED
 else
 	echo -e $COLORED_SUCCESSFUL
 fi
-
-cd $WorkingDir

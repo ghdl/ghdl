@@ -1,10 +1,16 @@
 ## Compile Scripts for Vendor VHDL Libraries
 
-Vendors like Altera and Xilinx have there own simulation libraries, especially for primitives, soft or hard macros. These libraries can not be shipped with GHDL, but we offer prepared compile scripts to pre-compile a vendor library, if the vendor tool is present on the computer.
+Vendors like Altera and Xilinx have there own simulation libraries, especially
+for primitives, soft or hard macros. These libraries can not be shipped with
+GHDL, but we offer prepared compile scripts to pre-compile a vendor library,
+if the vendor tool is present on the computer.
 
-There are also popular simulation and verification libraries like [OSVVM][osvvm] and [VUnit][vunit], which can be pre-compile.
+There are also popular simulation and verification libraries like [OSVVM][osvvm]
+and [VUnit][vunit], which can be pre-compile.
 
-The compilation scripts are writen in shell languages: PowerShell for Windows and Bash for Linux. The compile scripts can colorize the GHDL warning and error lines with the help of grc ([generic colourizer][grc]).
+The compilation scripts are writen in shell languages: PowerShell for Windows
+and Bash for Linux. The compile scripts can colorize the GHDL warning and error
+lines with the help of grc ([generic colourizer][grc]).
 
  [osvvm]: http://osvvm.org/
  [vunit]: https://github.com/LarsAsplund/vunit
@@ -12,7 +18,7 @@ The compilation scripts are writen in shell languages: PowerShell for Windows an
 
 ##### Supported Vendors Libraries
 
- - Altera Quartus-II (15.x):
+ - Altera Quartus (13.x):
      - lpm, sgate
      - altera, altera_mf, altera_lnsim
      - arriaii, arriaii_pcie_hip, arriaiigz
@@ -126,9 +132,9 @@ The compilation scripts are writen in shell languages: PowerShell for Windows an
     ----           -------------       ------ ----
     d----    20.11.2015    19:33        <DIR> altera
     d----    20.11.2015    19:38        <DIR> osvvm
-    d----    20.11.2015    19:40        <DIR> vivado
-    d----    20.11.2015    19:45        <DIR> vunit
-    d----    20.11.2015    19:06        <DIR> xilinx
+    d----    20.11.2015    19:45        <DIR> vunit_lib
+    d----    20.11.2015    19:06        <DIR> xilinx-ise
+    d----    20.11.2015    19:40        <DIR> xilinx-vivado
     ```
 
 ### Selectable Options for the Bash Scripts:
