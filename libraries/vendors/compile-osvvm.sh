@@ -44,7 +44,9 @@ source $ScriptDir/config.sh
 source $ScriptDir/shared.sh
 
 # command line argument processing
-NO_COMMAND=TRUE
+NO_COMMAND=1
+SUPPRESS_WARNINGS=0
+HALT_ON_ERROR=0
 GHDLBinDir=""
 DestDir=""
 SrcDir=""
@@ -53,59 +55,55 @@ while [[ $# > 0 ]]; do
 	case $key in
 		-c|--clean)
 		CLEAN=TRUE
-		NO_COMMAND=FALSE
+		NO_COMMAND=0
 		;;
 		-a|--all)
 		COMPILE_ALL=TRUE
-		NO_COMMAND=FALSE
+		NO_COMMAND=0
 		;;
-		-o|--osvvm)
+		--osvvm)
 		COMPILE_OSVVM=TRUE
-		NO_COMMAND=FALSE
-		;;
-		-s|--skip-existing)
-		SKIP_EXISTING_FILES=TRUE
-		;;
-		-n|--no-warnings)
-		SUPPRESS_WARNINGS=TRUE
-		;;
-		-H|--halt-on-error)
-		HALT_ON_ERROR=TRUE
+		NO_COMMAND=0
 		;;
 		-h|--help)
 		HELP=TRUE
-		NO_COMMAND=FALSE
+		NO_COMMAND=0
+		;;
+		-n|--no-warnings)
+		SUPPRESS_WARNINGS=1
+		;;
+		-H|--halt-on-error)
+		HALT_ON_ERROR=1
 		;;
 		--ghdl)
 		GHDLBinDir="$2"
-		shift						# past argument
+		shift						# skip argument
 		;;
 		--src)
 		SrcDir="$2"
-		shift						# past argument
+		shift						# skip argument
 		;;
 		--out)
 		DestDir="$2"
-		shift						# past argument
+		shift						# skip argument
 		;;
 		*)		# unknown option
-		UNKNOWN_OPTION=TRUE
+		echo 1>&2 -e "${COLORED_ERROR} Unknown command line option.${ANSI_RESET}"
+		exit -1
 		;;
 	esac
-	shift # past argument or value
+	shift # skip argument or value
 done
+
+# makes no sense to enable it for OSVVM
+SKIP_EXISTING_FILES=0
 
 if [ "$NO_COMMAND" == "TRUE" ]; then
 	HELP=TRUE
 fi
 
-if [ "$UNKNOWN_OPTION" == "TRUE" ]; then
-	echo -e $COLORED_ERROR "Unknown command line option.${ANSI_RESET}"
-	exit -1
-elif [ "$HELP" == "TRUE" ]; then
-	if [ "$NO_COMMAND" == "TRUE" ]; then
-		echo -e $COLORED_ERROR " No command selected."
-	fi
+if [ "$HELP" == "TRUE" ]; then
+	test "$NO_COMMAND" == "TRUE" && echo 1>&2 -e "${COLORED_ERROR} No command selected."
 	echo ""
 	echo "Synopsis:"
 	echo "  A script to compile the simulation library 'OSVVM' for GHDL on Linux."
@@ -122,11 +120,10 @@ elif [ "$HELP" == "TRUE" ]; then
 	echo "  -c --clean             Remove all generated files"
 	echo ""
 	echo "Libraries:"
-	echo "  -a --all               Compile all packages (default)."
-	echo "  -o --osvvm             Compile package osvvm."
+	echo "  -a --all               Compile all libraries."
+	echo "     --osvvm             Compile library osvvm."
 	echo ""
 	echo "Library compile options:"
-	echo "  -s --skip-existing     Skip already compiled files (an *.o file exists)."
 	echo "  -H --halt-on-error     Halt on error(s)."
 	echo ""
 	echo "Advanced options:"
@@ -144,77 +141,31 @@ if [ "$COMPILE_ALL" == "TRUE" ]; then
 	COMPILE_OSVVM=TRUE
 fi
 
-SourceDirectory=${SourceDirectory[OSVVM]}
-DestinationDir=${DestinationDirectory[OSVVM]}
 
-# OSVVM source directory
-# ----------------------
-# If a command line argument ('--src') was passed in, use it, else use the default value
-# from config.sh
-if [ ! -z "$SrcDir" ]; then
-	SourceDirectory=$SrcDir
-fi
-# OSVVM output directory
-# ----------------------
-# If a command line argument ('--out') was passed in, use it, else use the default value
-# from config.sh
-if [ ! -z "$DestDir" ]; then
-	DestinationDir=$DestDir
-fi
+# -> $SourceDirectories
+# -> $DestinationDirectories
+# -> $SrcDir
+# -> $DestDir
+# -> $GHDLBinDir
+# <= $SourceDirectory
+# <= $DestinationDirectory
+# <= $GHDLBinary
+SetupDirectories OSVVM "OSVVM"
 
-# Use GHDL binary directory from command line argument, if set
-if [ ! -z "$GHDLBinDir" ]; then
-	GHDLBinary=$GHDLBinDir/ghdl
-	if [[ ! -x "$GHDLBinary" ]]; then
-		echo -e "${COLORED_ERROR} GHDL not found or is not executable.${ANSI_RESET}"
-		exit -1
-	fi
-else	# fall back to GHDL found via PATH
-	GHDLBinary=$(which ghdl)
-	if [ $? -ne 0 ]; then
-		echo -e "${COLORED_ERROR} GHDL not found in PATH.${ANSI_RESET}"
-		echo -e "  Use adv. options '--ghdl' to set the GHDL binary directory."
-		exit -1
-	fi
-fi
+# create "osvvm" directory and change to it
+# => $DestinationDirectory
+CreateDestinationDirectory
+cd $DestinationDirectory
 
-if [ -z $SourceDirectory ] || [ -z $DestinationDir ]; then
-	echo -e "${COLORED_ERROR} OSVVM is not configured in '$ScriptDir/config.sh'${ANSI_RESET}"
-	echo -e "  Use adv. options '--src' and '--out' or configure 'config.sh'."
-	exit -1
-elif [ ! -d $SourceDirectory ]; then
-	echo -e "${COLORED_ERROR} Path '$SourceDir' does not exist.${ANSI_RESET}"
-	exit -1
-fi
 
-# append VHDL version folder
-DestinationDir=$DestinationDir/v08
+# => $SUPPRESS_WARNINGS
+# <= $GRC_COMMAND
+SetupGRCat
 
-# set bash options
-set -o pipefail
 
 # define global GHDL Options
 GHDL_OPTIONS=(-fexplicit -frelaxed-rules --no-vital-checks --warn-binding --mb-comments)
 
-# create "osvvm" directory and change to it
-if [[ -d "$DestinationDir" ]]; then
-	echo -e "${ANSI_YELLOW}Vendor directory '$DestinationDir' already exists.${ANSI_RESET}"
-else
-	echo -e "${ANSI_YELLOW}Creating vendor directory: '$DestinationDir'${ANSI_RESET}"
-	mkdir -p "$DestinationDir"
-fi
-cd $DestinationDir
-
-if [ -z "$(which grcat)" ]; then
-	# if grcat (generic colourizer) is not installed, use a dummy pipe command like 'cat'
-	GRC_COMMAND="cat"
-else
-	if [ "$SUPPRESS_WARNINGS" == "TRUE" ]; then
-		GRC_COMMAND="grcat $ScriptDir/ghdl.skipwarning.grcrules"
-	else
-		GRC_COMMAND="grcat $ScriptDir/ghdl.grcrules"
-	fi
-fi
 
 # Cleanup directory
 # ==============================================================================
@@ -224,13 +175,18 @@ if [ "$CLEAN" == "TRUE" ]; then
 	rm *.cf 2> /dev/null
 fi
 
+
+# create local set of GHDL parameters
+GHDL_PARAMS=(${GHDL_OPTIONS[@]})
+GHDL_PARAMS+=(--std=08)
+VHDLVersion="v08"
+
 # Library osvvm
 # ==============================================================================
 # compile osvvm packages
+ERRORCOUNT=0
 if [ "$COMPILE_OSVVM" == "TRUE" ]; then
-	echo -e "${ANSI_YELLOW}Compiling library 'osvvm' ...${ANSI_RESET}"
-	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--std=08)
+	Library="osvvm"
 	Files=(
 		NamePkg.vhd
 		OsvvmGlobalPkg.vhd
@@ -246,30 +202,19 @@ if [ "$COMPILE_OSVVM" == "TRUE" ]; then
 		OsvvmContext.vhd
 	)
 
-	echo $GHDLBinary
-
-	ERRORCOUNT=0
+	# append absolute source path
+	SourceFiles=()
 	for File in ${Files[@]}; do
-		FileName=$(basename "$File")
-		if [ "$SKIP_EXISTING_FILES" == "TRUE" ] && [ -e "${FileName%.*}.o" ]; then
-			echo -e "${ANSI_CYAN}Skipping package '$File'${ANSI_RESET}"
-		else
-			echo -e "${ANSI_CYAN}Analyzing package '$File'${ANSI_RESET}"
-			$GHDLBinary -a ${GHDL_PARAMS[@]} --work=osvvm "$SourceDirectory/$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
-				let ERRORCOUNT++
-				if [ "$HALT_ON_ERROR" == "TRUE" ]; then
-					break
-				fi
-			fi
-		fi
+		SourceFiles+=("$SourceDirectory/$File")
 	done
-		
-	echo "--------------------------------------------------------------------------------"
-	echo -n "Compiling OSVVM library "
-	if [ $ERRORCOUNT -gt 0 ]; then
-		echo -e $COLORED_FAILED
-	else
-		echo -e $COLORED_SUCCESSFUL
-	fi
+
+	GHDLCompilePackages
+fi
+
+echo "--------------------------------------------------------------------------------"
+echo -n "Compiling OSVVM packages "
+if [ $ERRORCOUNT -gt 0 ]; then
+	echo -e $COLORED_FAILED
+else
+	echo -e $COLORED_SUCCESSFUL
 fi

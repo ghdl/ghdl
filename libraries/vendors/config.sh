@@ -39,31 +39,31 @@
 # 
 # These values are used if no command line argument (--src) is passed to a
 # compile script. Empty strings means not configured.
-declare -A InstallationDirectory
-InstallationDirectory[AlteraQuartus]="/opt/Altera/15.1"
-InstallationDirectory[XilinxISE]="/opt/Xilinx/14.7"
-InstallationDirectory[XilinxVivado]="/opt/Xilinx/Vivado/2016.1"
-InstallationDirectory[LatticeDiamond]="/usr/local/diamond/3.7_x64"
-InstallationDirectory[OSVVM]="/home/paebbels/git/PoC/lib/osvvm"
-InstallationDirectory[VUnit]="/home/paebbels/git/PoC/lib/vunit"
+declare -A InstallationDirectories
+InstallationDirectories[AlteraQuartus]="/opt/altera/16.0"
+InstallationDirectories[XilinxISE]="/opt/Xilinx/14.7"
+InstallationDirectories[XilinxVivado]="/opt/Xilinx/Vivado/2016.2"
+InstallationDirectories[LatticeDiamond]="/usr/local/diamond/3.7_x64"
+InstallationDirectories[OSVVM]="/home/paebbels/git/PoC/lib/osvvm"
+InstallationDirectories[VUnit]="/home/paebbels/git/PoC/lib/vunit"
 
 # Configure preferred output directories for each library set:
-declare -A DestinationDirectory
-DestinationDirectory[AlteraQuartus]="altera"
-DestinationDirectory[XilinxISE]="xilinx-ise"
-DestinationDirectory[XilinxVivado]="xilinx-vivado"
-DestinationDirectory[LatticeDiamond]="lattice"
-DestinationDirectory[OSVVM]="osvvm"
-DestinationDirectory[VUnit]="vuint"
+declare -A DestinationDirectories
+DestinationDirectories[AlteraQuartus]="altera"
+DestinationDirectories[XilinxISE]="xilinx-ise"
+DestinationDirectories[XilinxVivado]="xilinx-vivado"
+DestinationDirectories[LatticeDiamond]="lattice"
+DestinationDirectories[OSVVM]="."		# "osvvm"
+DestinationDirectories[VUnit]="."		# "vunit_lib"
 
 # Declare source directories depending on the installation paths:
-declare -A SourceDirectory
-SourceDirectory[AlteraQuartus]="${InstallationDirectory[AlteraQuartus]}/quartus/eda/sim_lib"
-SourceDirectory[XilinxISE]="${InstallationDirectory[XilinxISE]}/ISE_DS/ISE/vhdl/src"
-SourceDirectory[XilinxVivado]="${InstallationDirectory[XilinxVivado]}/data/vhdl/src"
-SourceDirectory[LatticeDiamond]="${InstallationDirectory[LatticeDiamond]}/cae_library/simulation/vhdl"
-SourceDirectory[OSVVM]="${InstallationDirectory[OSVVM]}"
-SourceDirectory[VUnit]="${InstallationDirectory[VUnit]}/vunit/vhdl"
+declare -A SourceDirectories
+SourceDirectories[AlteraQuartus]="${InstallationDirectories[AlteraQuartus]}/quartus/eda/sim_lib"
+SourceDirectories[XilinxISE]="${InstallationDirectories[XilinxISE]}/ISE_DS/ISE/vhdl/src"
+SourceDirectories[XilinxVivado]="${InstallationDirectories[XilinxVivado]}/data/vhdl/src"
+SourceDirectories[LatticeDiamond]="${InstallationDirectories[LatticeDiamond]}/cae_library/simulation/vhdl"
+SourceDirectories[OSVVM]="${InstallationDirectories[OSVVM]}"
+SourceDirectories[VUnit]="${InstallationDirectories[VUnit]}/vunit/vhdl"
 
 # input files greater than $LARGE_FILESIZE are skipped if '--skip-largefiles' is set
 LARGE_FILESIZE=125000
