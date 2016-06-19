@@ -122,12 +122,12 @@ while [[ $# > 0 ]]; do
 	shift # past argument or value
 done
 
-if [ "$NO_COMMAND" == "TRUE" ]; then
+if [ $NO_COMMAND -eq 1 ]; then
 	HELP=TRUE
 fi
 
 if [ "$HELP" == "TRUE" ]; then
-	test "$NO_COMMAND" == "TRUE" && echo 1>&2 -e "${COLORED_ERROR} No command selected."
+	test $NO_COMMAND -eq 1 && echo 1>&2 -e "\n${COLORED_ERROR} No command selected."
 	echo ""
 	echo "Synopsis:"
 	echo "  A script to compile the Xilinx ISE simulation libraries for GHDL on Linux."
@@ -156,9 +156,9 @@ if [ "$HELP" == "TRUE" ]; then
 	echo "  -H --halt-on-error    Halt on error(s)."
 	echo ""
 	echo "Advanced options:"
-	echo "  --ghdl <GHDL BinDir>   Path to GHDL binary directory e.g. /usr/bin."
+	echo "  --ghdl <GHDL Binary>   Path to GHDL's binary e.g. /usr/local/bin/ghdl."
 	echo "  --out <dir name>       Name of the output directory."
-	echo "  --src <Path to OSVVM>  Name of the output directory."
+	echo "  --src <Path to OSVVM>  Path to the source directory."
 	echo ""
 	echo "Verbosity:"
 	echo "  -n --no-warnings      Suppress all warnings. Show only error messages."
@@ -175,13 +175,31 @@ fi
 
 if [ $VHDLStandard -eq 2008 ]; then
 	echo -e "${ANSI_RED}Not all Xilinx primitives are VHDL-2008 compatible! Setting HALT_ON_ERROR to FALSE.${ANSI_RESET}"
-	HALT_ON_ERROR=FALSE
+	HALT_ON_ERROR=0
 fi
 
+
+DefaultDirectories=("/opt/Xilinx" "/opt/xilinx")
+if [ ! -z $XILINX ]; then
+	EnvSourceDir=$XILINX/vhdl/src
+else
+	for DefaultDir in ${DefaultDirectories[@]}; do
+		for Major in 14 13; do
+			for Minor in 7 6 5 4 3 2 1 0; do
+				Dir=$DefaultDir/${Major}.${Minor}/ISE_DS/ISE
+				if [ -d $Dir ]; then
+					EnvSourceDir=$Dir/vhdl/src
+					break 3
+				fi
+			done
+		done
+	done
+fi
 
 # -> $SourceDirectories
 # -> $DestinationDirectories
 # -> $SrcDir
+# -> $EnvSourceDir
 # -> $DestDir
 # -> $GHDLBinDir
 # <= $SourceDirectory
@@ -195,7 +213,7 @@ CreateDestinationDirectory
 cd $DestinationDirectory
 
 
-# => $SUPPRESS_WARNINGS
+# -> $SUPPRESS_WARNINGS
 # <= $GRC_COMMAND
 SetupGRCat
 
@@ -206,10 +224,8 @@ SetupGRCat
 # <= $VHDLFlavor
 GHDLSetup
 
-
 # define global GHDL Options
 GHDL_OPTIONS=(-fexplicit -frelaxed-rules --no-vital-checks --warn-binding --mb-comments)
-
 
 GHDL_PARAMS=(${GHDL_OPTIONS[@]})
 GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard -P$DestinationDirectory)

@@ -40,12 +40,12 @@
 # These values are used if no command line argument (--src) is passed to a
 # compile script. Empty strings means not configured.
 declare -A InstallationDirectories
-InstallationDirectories[AlteraQuartus]="/opt/altera/16.0"
-InstallationDirectories[XilinxISE]="/opt/Xilinx/14.7"
-InstallationDirectories[XilinxVivado]="/opt/Xilinx/Vivado/2016.2"
-InstallationDirectories[LatticeDiamond]="/usr/local/diamond/3.7_x64"
-InstallationDirectories[OSVVM]="/home/paebbels/git/PoC/lib/osvvm"
-InstallationDirectories[VUnit]="/home/paebbels/git/PoC/lib/vunit"
+InstallationDirectories[AlteraQuartus]=""     # "/opt/altera/16.0/quartus"
+InstallationDirectories[XilinxISE]=""	      # "/opt/Xilinx/14.7/ISE_DS/ISE"
+InstallationDirectories[XilinxVivado]=""      # "/opt/Xilinx/Vivado/2016.2"
+InstallationDirectories[LatticeDiamond]=""    # "/usr/local/diamond/3.7_x64"
+InstallationDirectories[OSVVM]=""	      # "~/git/github/osvvm"
+InstallationDirectories[VUnit]=""	      # "~/git/github/vunit"
 
 # Configure preferred output directories for each library set:
 declare -A DestinationDirectories
@@ -58,12 +58,12 @@ DestinationDirectories[VUnit]="."		# "vunit_lib"
 
 # Declare source directories depending on the installation paths:
 declare -A SourceDirectories
-SourceDirectories[AlteraQuartus]="${InstallationDirectories[AlteraQuartus]}/quartus/eda/sim_lib"
-SourceDirectories[XilinxISE]="${InstallationDirectories[XilinxISE]}/ISE_DS/ISE/vhdl/src"
-SourceDirectories[XilinxVivado]="${InstallationDirectories[XilinxVivado]}/data/vhdl/src"
-SourceDirectories[LatticeDiamond]="${InstallationDirectories[LatticeDiamond]}/cae_library/simulation/vhdl"
-SourceDirectories[OSVVM]="${InstallationDirectories[OSVVM]}"
-SourceDirectories[VUnit]="${InstallationDirectories[VUnit]}/vunit/vhdl"
+SourceDirectories[AlteraQuartus]="eda/sim_lib"
+SourceDirectories[XilinxISE]="vhdl/src"
+SourceDirectories[XilinxVivado]="data/vhdl/src"
+SourceDirectories[LatticeDiamond]="cae_library/simulation/vhdl"
+SourceDirectories[OSVVM]="."
+SourceDirectories[VUnit]="vunit/vhdl"
 
 # input files greater than $LARGE_FILESIZE are skipped if '--skip-largefiles' is set
 LARGE_FILESIZE=125000

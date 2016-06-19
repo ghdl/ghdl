@@ -115,12 +115,12 @@ while [[ $# > 0 ]]; do
 	shift # past argument or value
 done
 
-if [ "$NO_COMMAND" == "TRUE" ]; then
+if [ $NO_COMMAND -eq 1 ]; then
 	HELP=TRUE
 fi
 
 if [ "$HELP" == "TRUE" ]; then
-	test "$NO_COMMAND" == "TRUE" && echo 1>&2 -e "${COLORED_ERROR} No command selected."
+	test $NO_COMMAND -eq 1 && echo 1>&2 -e "\n${COLORED_ERROR} No command selected."
 	echo ""
 	echo "Synopsis:"
 	echo "  A script to compile the Lattice Diamond simulation libraries for GHDL on Linux."
@@ -146,9 +146,9 @@ if [ "$HELP" == "TRUE" ]; then
 	echo "  -H --halt-on-error    Halt on error(s)."
 	echo ""
 	echo "Advanced options:"
-	echo "  --ghdl <GHDL BinDir>   Path to GHDL binary directory e.g. /usr/bin."
+	echo "  --ghdl <GHDL Binary>   Path to GHDL's binary e.g. /usr/local/bin/ghdl."
 	echo "  --out <dir name>       Name of the output directory."
-	echo "  --src <Path to OSVVM>  Name of the output directory."
+	echo "  --src <Path to OSVVM>  Path to the source directory."
 	echo ""
 	echo "Verbosity:"
 	echo "  -n --no-warnings      Suppress all warnings. Show only error messages."
@@ -157,9 +157,27 @@ if [ "$HELP" == "TRUE" ]; then
 fi
 
 
+DefaultDirectories=("/usr/local/diamond" "/opt/Diamond" "/opt/diamond")
+if [ ! -z $LSC_DIAMOND ]; then
+	EnvSourceDir=$FOUNDRY/../cae_library/simulation/vhdl
+else
+	for DefaultDir in ${DefaultDirectories[@]}; do
+		for Major in 3; do
+			for Minor in 8 7 6 5; do
+				Dir=$DefaultDir/${Major}.${Minor}_x64
+				if [ -d $Dir ]; then
+					EnvSourceDir=$Dir/cae_library/simulation/vhdl
+					break 3
+				fi
+			done
+		done
+	done
+fi
+
 # -> $SourceDirectories
 # -> $DestinationDirectories
 # -> $SrcDir
+# -> $EnvSourceDir
 # -> $DestDir
 # -> $GHDLBinDir
 # <= $SourceDirectory
@@ -241,7 +259,7 @@ for device in $DeviceList; do
 			echo -e "${ANSI_CYAN}Skipping file '$File'${ANSI_RESET}"
 		else
 			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
-			ghdl -a ${GHDL_PARAMS[@]} --work=$Library -o "${FileName%.*}.o" "$File" 2>&1 | $GRC_COMMAND
+			$GHDLBinary -a ${GHDL_PARAMS[@]} --work=$Library "$File" 2>&1 | $GRC_COMMAND
 			if [ $? -ne 0 ]; then
 				let ERRORCOUNT++
 				test $HALT_ON_ERROR -eq 1 && break 2
