@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /usr/bin/env bash
 # EMACS settings: -*-	tab-width: 2; indent-tabs-mode: t -*-
 # vim: tabstop=2:shiftwidth=2:noexpandtab
 # kate: tab-width 2; replace-tabs off; indent-width 2;
@@ -35,10 +35,13 @@
 # ==============================================================================
 
 # ---------------------------------------------
+# work around for Darwin (Mac OS)
+READLINK=readlink; if [[ $(uname) == "Darwin" ]]; then READLINK=greadlink; fi
+
 # save working directory
 WorkingDir=$(pwd)
 ScriptDir="$(dirname $0)"
-ScriptDir="$(readlink -f $ScriptDir)"
+ScriptDir="$($READLINK -f $ScriptDir)"
 
 # source configuration file from GHDL's 'vendors' library directory
 source $ScriptDir/config.sh
@@ -110,9 +113,9 @@ while [[ $# > 0 ]]; do
 		;;
 		--vhdl2008)
 		VHDLStandard=2008
-		echo 1>&2 -e "${COLORED_ERROR} VHDL-2008 is not yet supported by Altera.${ANSI_RESET}"
-		echo 1>&2 -e "${ANSI_YELLOW}Possible workaround: ${ANSI_RESET}"
-		echo 1>&2 -e "${ANSI_YELLOW}  Compile 'std_logic_arith' and 'std_logic_unsigned' into library IEEE.${ANSI_RESET}"
+		echo 1>&2 -e "${COLORED_ERROR} VHDL-2008 is not yet supported by Altera.${ANSI_NOCOLOR}"
+		echo 1>&2 -e "${ANSI_YELLOW}Possible workaround: ${ANSI_NOCOLOR}"
+		echo 1>&2 -e "${ANSI_YELLOW}  Compile 'std_logic_arith' and 'std_logic_unsigned' into library IEEE.${ANSI_NOCOLOR}"
 		exit -1
 		;;
 		--ghdl)
@@ -128,7 +131,7 @@ while [[ $# > 0 ]]; do
 		shift						# skip argument
 		;;
 		*)		# unknown option
-		echo 1>&2 -e "${COLORED_ERROR} Unknown command line option.${ANSI_RESET}"
+		echo 1>&2 -e "${COLORED_ERROR} Unknown command line option '$key'.${ANSI_NOCOLOR}"
 		exit -1
 		;;
 	esac
@@ -249,7 +252,7 @@ ERRORCOUNT=0
 if [ "$CLEAN" == "TRUE" ]; then
 	echo 1>&2 -e "${COLORED_ERROR} '--clean' is not implemented!"
 	exit -1
-	echo -e "${ANSI_YELLOW}Cleaning up vendor directory ...${ANSI_RESET}"
+	echo -e "${ANSI_YELLOW}Cleaning up vendor directory ...${ANSI_NOCOLOR}"
 	rm *.o 2> /dev/null
 	rm *.cf 2> /dev/null
 fi

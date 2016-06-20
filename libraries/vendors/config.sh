@@ -41,20 +41,20 @@
 # compile script. Empty strings means not configured.
 declare -A InstallationDirectories
 InstallationDirectories[AlteraQuartus]=""     # "/opt/altera/16.0/quartus"
-InstallationDirectories[XilinxISE]=""	      # "/opt/Xilinx/14.7/ISE_DS/ISE"
-InstallationDirectories[XilinxVivado]=""      # "/opt/Xilinx/Vivado/2016.2"
 InstallationDirectories[LatticeDiamond]=""    # "/usr/local/diamond/3.7_x64"
-InstallationDirectories[OSVVM]=""	      # "~/git/github/osvvm"
-InstallationDirectories[VUnit]=""	      # "~/git/github/vunit"
+InstallationDirectories[OSVVM]=""	   					# "~/git/github/osvvm"
+InstallationDirectories[VUnit]=""	   					# "~/git/github/vunit"
+InstallationDirectories[XilinxISE]=""	  		  # "/opt/Xilinx/14.7/ISE_DS/ISE"
+InstallationDirectories[XilinxVivado]=""      # "/opt/Xilinx/Vivado/2016.2"
 
 # Configure preferred output directories for each library set:
 declare -A DestinationDirectories
 DestinationDirectories[AlteraQuartus]="altera"
+DestinationDirectories[LatticeDiamond]="lattice"
+DestinationDirectories[OSVVM]="."										# "osvvm"
+DestinationDirectories[VUnit]="."										# "vunit_lib"
 DestinationDirectories[XilinxISE]="xilinx-ise"
 DestinationDirectories[XilinxVivado]="xilinx-vivado"
-DestinationDirectories[LatticeDiamond]="lattice"
-DestinationDirectories[OSVVM]="."		# "osvvm"
-DestinationDirectories[VUnit]="."		# "vunit_lib"
 
 # Declare source directories depending on the installation paths:
 declare -A SourceDirectories
