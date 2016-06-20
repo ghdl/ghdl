@@ -1,4 +1,3 @@
-#! /bin/bash
 # EMACS settings: -*-	tab-width: 2; indent-tabs-mode: t -*-
 # vim: tabstop=2:shiftwidth=2:noexpandtab
 # kate: tab-width 2; replace-tabs off; indent-width 2;
@@ -54,22 +53,25 @@ SetupDirectories() {
 	Index=$1
 	Name=$2
 
-	SourceDirectory=${SourceDirectories[$Index]}
-	DestinationDirectory=${DestinationDirectories[$Index]}
-
 	# source directory
 	# ----------------------
 	# If a command line argument ('--src') was passed in, use it, else use the default value
 	# from config.sh
 	if [ ! -z "$SrcDir" ]; then
-		SourceDirectory=$SrcDir
+		SourceDirectory=${SrcDir%/}										# remove trailing slashes
+	elif [ ! -z "$EnvSourceDir" ]; then
+		SourceDirectory=$EnvSourceDir									# fall back to environment variable
+	elif [ ! -z "${InstallationDirectories[$Index]}" ]; then
+		SourceDirectory=${InstallationDirectories[$Index]}/${SourceDirectories[$Index]}	# fall back to value from config.sh
 	fi
 	# output directory
 	# ----------------------
 	# If a command line argument ('--out') was passed in, use it, else use the default value
 	# from config.sh
 	if [ ! -z "$DestDir" ]; then
-		DestinationDirectory=$DestDir
+		DestinationDirectory=${DestDir%/}												# remove trailing slashes
+	else
+		DestinationDirectory=${DestinationDirectories[$Index]}	# fall back to value from config.sh
 	fi
 
 	if [ -z $SourceDirectory ] || [ -z $DestinationDirectory ]; then
@@ -87,11 +89,17 @@ SetupDirectories() {
 
 	# Use GHDL binary directory from command line argument, if set
 	if [ ! -z "$GHDLBinDir" ]; then
-		GHDLBinary=$GHDLBinDir/ghdl
+		GHDLBinary=${GHDLBinDir%/}/ghdl		# remove trailing slashes
 		if [[ ! -x "$GHDLBinary" ]]; then
 			echo 1>&2 -e "${COLORED_ERROR} GHDL not found or is not executable.${ANSI_RESET}"
 			exit -1
 		fi
+	elif [ ! -z "$GHDL" ]; then
+		if [[ ! -x "$GHDL" ]]; then
+			echo 1>&2 -e "${COLORED_ERROR} Found GHDL1 environment variable, but GHDL is not executable.${ANSI_RESET}"
+			exit -1
+		fi
+		GHDLBinary=$GHDL
 	else	# fall back to GHDL found via PATH
 		GHDLBinary=$(which ghdl 2>/dev/null)
 		if [ $? -ne 0 ]; then

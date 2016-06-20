@@ -98,12 +98,12 @@ done
 # makes no sense to enable it for VUnit
 SKIP_EXISTING_FILES=0
 
-if [ "$NO_COMMAND" == "TRUE" ]; then
+if [ $NO_COMMAND -eq 1 ]; then
 	HELP=TRUE
 fi
 
 if [ "$HELP" == "TRUE" ]; then
-	test "$NO_COMMAND" == "TRUE" && echo 1>&2 -e "${COLORED_ERROR} No command selected."
+	test $NO_COMMAND -eq 1 && echo 1>&2 -e "\n${COLORED_ERROR} No command selected."
 	echo ""
 	echo "Synopsis:"
 	echo "  A script to compile the simulation library 'vunit_lib' for GHDL on Linux."
@@ -125,9 +125,9 @@ if [ "$HELP" == "TRUE" ]; then
 	echo "  -H --halt-on-error    Halt on error(s)."
 	echo ""
 	echo "Advanced options:"
-	echo "  --ghdl <GHDL BinDir>   Path to GHDL binary directory e.g. /usr/bin."
+	echo "  --ghdl <GHDL Binary>   Path to GHDL's binary e.g. /usr/local/bin/ghdl."
 	echo "  --out <dir name>       Name of the output directory."
-	echo "  --src <Path to OSVVM>  Name of the output directory."
+	echo "  --src <Path to OSVVM>  Path to the source directory."
 	echo ""
 	echo "Verbosity:"
 	echo "  -n --no-warnings      Suppress all warnings. Show only error messages."

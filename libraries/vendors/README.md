@@ -10,7 +10,7 @@ and [VUnit][vunit], which can be pre-compile.
 
 The compilation scripts are writen in shell languages: PowerShell for Windows
 and Bash for Linux. The compile scripts can colorize the GHDL warning and error
-lines with the help of grc ([generic colourizer][grc]).
+lines with the help of grc/grcat ([generic colourizer][grc]).
 
  [osvvm]: http://osvvm.org/
  [vunit]: https://github.com/LarsAsplund/vunit
@@ -18,7 +18,7 @@ lines with the help of grc ([generic colourizer][grc]).
 
 ##### Supported Vendors Libraries
 
- - Altera Quartus (13.x):
+ - Altera Quartus (&ge;13.0):
      - lpm, sgate
      - altera, altera_mf, altera_lnsim
      - arriaii, arriaii_pcie_hip, arriaiigz
@@ -29,11 +29,18 @@ lines with the help of grc ([generic colourizer][grc]).
      - stratixiv, stratixiv_pcie_hip
      - stratixv, stratixv_pcie_hip
      - fiftyfivenm, twentynm
- - Xilinx ISE (14.7):
+ - Lattice (&ge;3.6):
+     - ec
+     - ecp, ecp2, ecp3, ecp5u
+     - lptm, lptm2
+     - machxo, machxo2, machxo3l
+     - sc, scm
+     - xp, xp2
+ - Xilinx ISE (&ge;14.0):
      - unisim (incl. secureip)
      - unimacro
      - simprim (incl. secureip)
- - Xilinx Vivado (2015.x):
+ - Xilinx Vivado (&ge;2014.1):
      - unisim (incl. secureip)
      - unimacro
 
