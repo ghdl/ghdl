@@ -1,4 +1,4 @@
-#! /bin/bash
+#! /usr/bin/env bash
 # EMACS settings: -*-	tab-width: 2; indent-tabs-mode: t -*-
 # vim: tabstop=2:shiftwidth=2:noexpandtab
 # kate: tab-width 2; replace-tabs off; indent-width 2;
@@ -35,10 +35,13 @@
 # ==============================================================================
 
 # ---------------------------------------------
+# work around for Darwin (Mac OS)
+READLINK=readlink; if [[ $(uname) == "Darwin" ]]; then READLINK=greadlink; fi
+
 # save working directory
 WorkingDir=$(pwd)
 ScriptDir="$(dirname $0)"
-ScriptDir="$(readlink -f $ScriptDir)"
+ScriptDir="$($READLINK -f $ScriptDir)"
 
 # source configuration file from GHDL's 'vendors' library directory
 source $ScriptDir/config.sh
@@ -115,7 +118,7 @@ while [[ $# > 0 ]]; do
 		shift						# skip argument
 		;;
 		*)		# unknown option
-		echo 1>&2 -e "${COLORED_ERROR} Unknown command line option.${ANSI_RESET}"
+		echo 1>&2 -e "${COLORED_ERROR} Unknown command line option '$key'.${ANSI_NOCOLOR}"
 		exit -1
 		;;
 	esac
@@ -174,21 +177,21 @@ if [ "$COMPILE_ALL" == "TRUE" ]; then
 fi
 
 if [ $VHDLStandard -eq 2008 ]; then
-	echo -e "${ANSI_RED}Not all Xilinx primitives are VHDL-2008 compatible! Setting HALT_ON_ERROR to FALSE.${ANSI_RESET}"
+	echo -e "${ANSI_RED}Not all Xilinx primitives are VHDL-2008 compatible! Setting HALT_ON_ERROR to FALSE.${ANSI_NOCOLOR}"
 	HALT_ON_ERROR=0
 fi
 
 
 DefaultDirectories=("/opt/Xilinx" "/opt/xilinx")
 if [ ! -z $XILINX ]; then
-	EnvSourceDir=$XILINX/vhdl/src
+	EnvSourceDir=$XILINX/${SourceDirectories[XilinxISE]}
 else
 	for DefaultDir in ${DefaultDirectories[@]}; do
 		for Major in 14 13; do
 			for Minor in 7 6 5 4 3 2 1 0; do
 				Dir=$DefaultDir/${Major}.${Minor}/ISE_DS/ISE
 				if [ -d $Dir ]; then
-					EnvSourceDir=$Dir/vhdl/src
+					EnvSourceDir=$Dir/${SourceDirectories[XilinxISE]}
 					break 3
 				fi
 			done
@@ -239,7 +242,7 @@ ERRORCOUNT=0
 if [ "$CLEAN" == "TRUE" ]; then
 	echo 1>&2 -e "${COLORED_ERROR} '--clean' is not implemented!"
 	exit -1
-	echo -e "${ANSI_YELLOW}Cleaning up vendor directory ...${ANSI_RESET}"
+	echo -e "${ANSI_YELLOW}Cleaning up vendor directory ...${ANSI_NOCOLOR}"
 	rm *.o 2> /dev/null
 	rm *.cf 2> /dev/null
 fi

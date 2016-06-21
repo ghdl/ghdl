@@ -36,15 +36,15 @@ ANSI_YELLOW="\e[33m"
 ANSI_BLUE="\e[34m"
 ANSI_MAGENTA="\e[35m"
 ANSI_CYAN="\e[36;1m"
-ANSI_RESET="\e[0m"
+ANSI_NOCOLOR="\e[0m"
 
 # red texts
-COLORED_ERROR="$ANSI_RED[ERROR]$ANSI_RESET"
-COLORED_FAILED="$ANSI_RED[FAILED]$ANSI_RESET"
+COLORED_ERROR="$ANSI_RED[ERROR]$ANSI_NOCOLOR"
+COLORED_FAILED="$ANSI_RED[FAILED]$ANSI_NOCOLOR"
 
 # green texts
-COLORED_DONE="$ANSI_GREEN[DONE]$ANSI_RESET"
-COLORED_SUCCESSFUL="$ANSI_GREEN[SUCCESSFUL]$ANSI_RESET"
+COLORED_DONE="$ANSI_GREEN[DONE]$ANSI_NOCOLOR"
+COLORED_SUCCESSFUL="$ANSI_GREEN[SUCCESSFUL]$ANSI_NOCOLOR"
 
 # set bash options
 set -o pipefail
@@ -75,35 +75,37 @@ SetupDirectories() {
 	fi
 
 	if [ -z $SourceDirectory ] || [ -z $DestinationDirectory ]; then
-		echo 1>&2 -e "${COLORED_ERROR} $Name is not configured in '$ScriptDir/config.sh'${ANSI_RESET}"
+		echo 1>&2 -e "${COLORED_ERROR} $Name is not configured in '$ScriptDir/config.sh'${ANSI_NOCOLOR}"
 		echo 1>&2 -e "  Use adv. options '--src' and '--out' or configure 'config.sh'."
 		exit -1
 	elif [ ! -d $SourceDirectory ]; then
-		echo 1>&2 -e "${COLORED_ERROR} Path '$SourceDirectory' does not exist.${ANSI_RESET}"
+		echo 1>&2 -e "${COLORED_ERROR} Path '$SourceDirectory' does not exist.${ANSI_NOCOLOR}"
 		exit -1
 	fi
 
 	# Resolve paths to an absolute paths
 	SourceDirectory=$(readlink -f $SourceDirectory)
-	DestinationDirectory=$(readlink -f $DestinationDirectory)
+	if [[ ! "$DestinationDirectory" = /* ]]; then
+		DestinationDirectory=$WorkingDir/$DestinationDirectory
+	fi
 
 	# Use GHDL binary directory from command line argument, if set
 	if [ ! -z "$GHDLBinDir" ]; then
 		GHDLBinary=${GHDLBinDir%/}/ghdl		# remove trailing slashes
 		if [[ ! -x "$GHDLBinary" ]]; then
-			echo 1>&2 -e "${COLORED_ERROR} GHDL not found or is not executable.${ANSI_RESET}"
+			echo 1>&2 -e "${COLORED_ERROR} GHDL not found or is not executable.${ANSI_NOCOLOR}"
 			exit -1
 		fi
 	elif [ ! -z "$GHDL" ]; then
-		if [[ ! -x "$GHDL" ]]; then
-			echo 1>&2 -e "${COLORED_ERROR} Found GHDL1 environment variable, but GHDL is not executable.${ANSI_RESET}"
+		if [ ! \( -f "$GHDL" -a -x "$GHDL" \) ]; then
+			echo 1>&2 -e "${COLORED_ERROR} Found GHDL environment variable, but '$GHDL' is not executable.${ANSI_NOCOLOR}"
 			exit -1
 		fi
 		GHDLBinary=$GHDL
 	else	# fall back to GHDL found via PATH
 		GHDLBinary=$(which ghdl 2>/dev/null)
 		if [ $? -ne 0 ]; then
-			echo 1>&2 -e "${COLORED_ERROR} GHDL not found in PATH.${ANSI_RESET}"
+			echo 1>&2 -e "${COLORED_ERROR} GHDL not found in PATH.${ANSI_NOCOLOR}"
 			echo 1>&2 -e "  Use adv. options '--ghdl' to set the GHDL binary directory."
 			exit -1
 		fi
@@ -122,10 +124,13 @@ SetupGRCat() {
 }
 
 CreateDestinationDirectory() {
-	if [[ -d "$DestinationDirectory" ]]; then
-		echo -e "${ANSI_YELLOW}Vendor directory '$DestinationDirectory' already exists.${ANSI_RESET}"
+	if [ -d "$DestinationDirectory" ]; then
+		echo -e "${ANSI_YELLOW}Vendor directory '$DestinationDirectory' already exists.${ANSI_NOCOLOR}"
+	elif [ -f "$DestinationDirectory" ]; then
+		echo 1>&2 -e "${COLORED_ERROR} Vendor directory '$DestinationDirectory' already exists as a file.${ANSI_NOCOLOR}"
+		exit -1
 	else
-		echo -e "${ANSI_YELLOW}Creating vendor directory: '$DestinationDirectory'${ANSI_RESET}"
+		echo -e "${ANSI_YELLOW}Creating vendor directory: '$DestinationDirectory'${ANSI_NOCOLOR}"
 		mkdir -p "$DestinationDirectory"
 	fi
 }
@@ -147,17 +152,17 @@ GHDLCompileLibrary() {
 	LibraryDirectory=$DestinationDirectory/$Library/$VHDLVersion
 	mkdir -p $LibraryDirectory
 	cd $LibraryDirectory
-	echo -e "${ANSI_YELLOW}Compiling library '$Library'...${ANSI_RESET}"
+	echo -e "${ANSI_YELLOW}Compiling library '$Library'...${ANSI_NOCOLOR}"
 
 	for File in ${SourceFiles[@]}; do
 		FileName=$(basename "$File")
 		FileSize=($(wc -c $File))
 		if [ $SKIP_EXISTING_FILES -eq 1 ] && [ -e "${FileName%.*}.o" ]; then
-			echo -e "${ANSI_CYAN}Skipping existing file '$File'${ANSI_RESET}"
+			echo -e "${ANSI_CYAN}Skipping existing file '$File'${ANSI_NOCOLOR}"
 		elif [ $SKIP_LARGE_FILES -eq 1 ] && [ ${FileSize[0]} -gt $LARGE_FILESIZE ]; then
-			echo -e "${ANSI_CYAN}Skipping large file '$File'${ANSI_RESET}"
+			echo -e "${ANSI_CYAN}Skipping large file '$File'${ANSI_NOCOLOR}"
 		else
-			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_RESET}"
+			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_NOCOLOR}"
 			$GHDLBinary -a ${GHDL_PARAMS[@]} --work=$Library "$File" 2>&1 | $GRC_COMMAND
 			if [ $? -ne 0 ]; then
 				let ERRORCOUNT++
@@ -173,14 +178,14 @@ GHDLCompilePackages() {
 	LibraryDirectory=$DestinationDirectory/$Library/$VHDLVersion
 	mkdir -p $LibraryDirectory
 	cd $LibraryDirectory
-	echo -e "${ANSI_YELLOW}Compiling library '$Library'...${ANSI_RESET}"
+	echo -e "${ANSI_YELLOW}Compiling library '$Library'...${ANSI_NOCOLOR}"
 
 	for File in ${SourceFiles[@]}; do
 		FileName=$(basename "$File")
 		if [ $SKIP_EXISTING_FILES -eq 1 ] && [ -e "${FileName%.*}.o" ]; then
-			echo -e "${ANSI_CYAN}Skipping existing package '$File'${ANSI_RESET}"
+			echo -e "${ANSI_CYAN}Skipping existing package '$File'${ANSI_NOCOLOR}"
 		else
-			echo -e "${ANSI_CYAN}Analyzing package '$File'${ANSI_RESET}"
+			echo -e "${ANSI_CYAN}Analyzing package '$File'${ANSI_NOCOLOR}"
 			$GHDLBinary -a ${GHDL_PARAMS[@]} --work=$Library "$File" 2>&1 | $GRC_COMMAND
 			if [ $? -ne 0 ]; then
 				let ERRORCOUNT++
