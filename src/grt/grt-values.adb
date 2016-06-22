@@ -1,5 +1,5 @@
 --  GHDL Run Time (GRT) - 'value subprograms.
---  Copyright (C) 2002 - 2014 Tristan Gingold
+--  Copyright (C) 2002 - 2016 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -24,17 +24,12 @@
 --  covered by the GNU Public License.
 with Grt.Errors; use Grt.Errors;
 with Grt.Rtis_Utils;
+with Grt.Strings; use Grt.Strings;
 
 package body Grt.Values is
 
    NBSP : constant Character := Character'Val (160);
    HT : constant Character := Character'Val (9);
-
-   --  Return True IFF C is a whitespace character (as defined in LRM93 14.3)
-   function Is_Whitespace (C : in Character) return Boolean is
-   begin
-      return C = ' ' or C = NBSP or C = HT;
-   end Is_Whitespace;
 
    --  Increase POS to skip leading whitespace characters, decrease LEN to
    --  skip trailing whitespaces in string S.
@@ -58,17 +53,6 @@ package body Grt.Values is
       end if;
    end Remove_Whitespaces;
 
-   --  Convert C to lowercase.
-   function To_LC (C : in Character) return Character is
-   begin
-      if C in 'A' .. 'Z' then
-         return Character'Val
-           (Character'Pos (C) + Character'Pos ('a') - Character'Pos ('A'));
-      else
-         return C;
-      end if;
-   end To_LC;
-
    --  Return TRUE iff user string S (POS .. LEN - 1) is equal to REF.
    --  Comparaison is case insensitive, but REF must be lowercase (REF is
    --  supposed to come from an RTI).
@@ -90,7 +74,7 @@ package body Grt.Values is
          end if;
          C_S := S (Pos + P);
          if not Is_Char then
-            C_S := To_LC (C_S);
+            C_S := To_Lower (C_S);
          end if;
          if C_S /= C_Ref or else C_Ref = ASCII.NUL then
             return False;

@@ -26,12 +26,6 @@ with Grt.Types; use Grt.Types;
 with Grt.Rtis; use Grt.Rtis;
 
 package Grt.Values is
-   --  Return True IFF C is a whitespace character (as defined in LRM93 14.3)
-   function Is_Whitespace (C : in Character) return Boolean;
-
-   --  Convert C to lowercase.
-   function To_LC (C : in Character) return Character;
-
    --  Extract position of numeric literal and unit in string STR.
    --  Set IS_REAL if the unit is a real number (presence of '.').
    --  Set UNIT_POS to the position of the first character of the unit name.

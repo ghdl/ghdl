@@ -23,6 +23,7 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 with Interfaces; use Interfaces;
+with Grt.Strings; use Grt.Strings;
 with Grt.Errors; use Grt.Errors;
 with Grt.Astdio;
 with Grt.Hooks;
@@ -209,15 +210,6 @@ package body Grt.Options is
          Pos := Pos + 1;
       end loop;
    end Extract_Integer;
-
-   function To_Lower (C : Character) return Character is
-   begin
-      if C in 'A' .. 'Z' then
-         return Character'Val (Character'Pos (C) + 32);
-      else
-         return C;
-      end if;
-   end To_Lower;
 
    procedure Decode_Option
      (Option : String; Status : out Decode_Option_Status)

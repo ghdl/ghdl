@@ -45,6 +45,7 @@ with Grt.Stdio; use Grt.Stdio;
 with Grt.C; use Grt.C;
 with Grt.Signals; use Grt.Signals;
 with Grt.Astdio; use Grt.Astdio;
+with Grt.Strings; use Grt.Strings;
 with Grt.Hooks; use Grt.Hooks;
 with Grt.Options;
 with Grt.Vcd; use Grt.Vcd;
@@ -1323,7 +1324,7 @@ package body Grt.Vpi is
             --  NUL not allowed in L.
             return False;
          end if;
-         if L (I) /= R (I - L'First + 1) then
+         if To_Lower (L (I)) /= R (I - L'First + 1) then
             return False;
          end if;
       end loop;
@@ -1353,7 +1354,7 @@ package body Grt.Vpi is
          exit when Err /= AvhpiErrorOk;
 
          El_Name := Avhpi_Get_Base_Name (Res);
-         exit when Strcmp (Name , El_Name);
+         exit when Strcmp (Name, El_Name);
       end loop;
    end Find_By_Name;
 
@@ -1561,11 +1562,17 @@ package body Grt.Vpi is
       return Err_Status;
    end vpi_chk_error;
 
-   function vpi_control (Op : Integer; Status : Integer) return Integer
-   is
-      pragma Unreferenced (Status);
+   function vpi_control (Op : Integer; Status : Integer) return Integer is
    begin
-      Vpi_Trace ("vpi_control");
+      if Flag_Trace then
+         Trace_Start ("vpi_control (");
+         Trace (Op);
+         Trace (", ");
+         Trace (Status);
+         Trace (")");
+         Trace_Newline;
+      end if;
+
       case Op is
          when vpiFinish
            | vpiStop =>
