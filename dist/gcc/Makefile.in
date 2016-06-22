@@ -223,5 +223,7 @@ install-ghdllib:
 	  $(DESTDIR)$(VHDL_LIB_DIR)/v08/std/std_standard.o
 # Install vendors scripts.
 	$(MKDIR) -p $(DESTDIR)$(VHDL_LIB_DIR)/vendors
-	  $(INSTALL_DATA) -p \
-	    $(LIBSRC_DIR)/vendors/* $(DESTDIR)$(VHDL_LIB_DIR)/vendors/
+	$(INSTALL_DATA) -p \
+	  $(LIBSRC_DIR)/vendors/* $(DESTDIR)$(VHDL_LIB_DIR)/vendors/
+	$(INSTALL_PROGRAM) -p \
+	  $(LIBSRC_DIR)/vendors/*.sh $(DESTDIR)$(VHDL_LIB_DIR)/vendors/
