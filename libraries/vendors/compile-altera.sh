@@ -7,7 +7,7 @@
 #	Authors:						Patrick Lehmann
 # 
 #	Bash Script:				Script to compile the simulation libraries from Altera
-#											Quartus-II for GHDL on Linux
+#											Quartus for GHDL on Linux
 # 
 # Description:
 # ------------------------------------
@@ -247,7 +247,7 @@ GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard -P$DestinationDirectory)
 STOPCOMPILING=0
 ERRORCOUNT=0
 
-# Cleanup directory
+# Cleanup directories
 # ==============================================================================
 if [ "$CLEAN" == "TRUE" ]; then
 	echo 1>&2 -e "${COLORED_ERROR} '--clean' is not implemented!"

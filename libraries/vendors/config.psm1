@@ -3,9 +3,9 @@
 # kate: tab-width 2; replace-tabs off; indent-width 2;
 # 
 # ==============================================================================
-#	PowerShell Module:	Configurable directories to local installed tools
-# 
 #	Authors:						Patrick Lehmann
+# 
+#	PowerShell Module:	Configurable directories to local installed tools
 # 
 # Description:
 # ------------------------------------
@@ -13,7 +13,7 @@
 #	environment.
 #
 # ==============================================================================
-#	Copyright (C) 2015 Patrick Lehmann
+#	Copyright (C) 2015-2016 Patrick Lehmann
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -31,23 +31,76 @@
 #	02111-1307, USA.
 # ==============================================================================
 #
+[CmdletBinding()]
+param(
+	[Parameter(Mandatory=$true)][string]$VendorToolName
+)
+
+$Module_VendorToolName = $VendorToolName
+
 # Configure your tools here. Use absolute paths, without trailing directory
 #	delimiter. Empty strings indicate not installed tools
-$InstallationDirectory = @{
-	"AlteraQuartusII" =	"C:\Altera\15.1";
-	"XilinxISE" =				"C:\Xilinx\14.7";
-	"XilinxVivado" =		"C:\Xilinx\Vivado\2016.1";
-	"OSVVM" =						"D:\git\PoC\lib\osvvm";
-	"VUnit" =						"D:\git\PoC\lib\vunit"
+$InstallationDirectories = @{
+	"AlteraQuartus" =		""		# "C:\Altera\15.1\quartus";
+	"LatticeDiamond" =	""		# "C:\Lattice\Diamond\3.7_x64"
+	"XilinxISE" =				""		# "C:\Xilinx\14.7\ISE_DS";
+	"XilinxVivado" =		""		# "C:\Xilinx\Vivado\2016.1";
+	"OSVVM" =						""		# "C:\git\GitHub\osvvm";
+	"VUnit" =						""		# "C:\git\GitHub\vunit"
 }
 
-$DestinationDirectory = @{
-	"Altera" =					"altera";
+$SourceDirectories = @{
+	"AlteraQuartus" =		"eda\sim_lib";
+	"LatticeDiamond" =	"cae_library\simulation\vhdl"
+	"XilinxISE" =				"ISE\vhdl\src";
+	"XilinxVivado" =		"data\vhdl\src";
+	"OSVVM" =						".";
+	"VUnit" =						"vunit\vhdl"
+}
+
+$DestinationDirectories = @{
+	"AlteraQuartus" =		"altera";
+	"LatticeDiamond" =	"lattice";
 	"XilinxISE" =				"xilinx-ise";
 	"XilinxVivado" =		"xilinx-vivado";
-	"OSVVM" =						"osvvm";
-	"VUnit" =						"vunit"
+	"OSVVM" =						".";
+	"VUnit" =						"."
 }
 
-Export-ModuleMember -Variable 'InstallationDirectory'
-Export-ModuleMember -Variable 'DestinationDirectory'
+
+function Get-VendorToolInstallationDirectory
+{	<#
+		.SYNOPSIS
+		Undocumented
+		
+		.DESCRIPTION
+		Undocumented
+	#>
+	return $InstallationDirectories[$Module_VendorToolName]
+}
+
+function Get-VendorToolSourceDirectory
+{	<#
+		.SYNOPSIS
+		Undocumented
+		
+		.DESCRIPTION
+		Undocumented
+	#>
+	return $SourceDirectories[$Module_VendorToolName]
+}
+
+function Get-VendorToolDestinationDirectory
+{	<#
+		.SYNOPSIS
+		Undocumented
+		
+		.DESCRIPTION
+		Undocumented
+	#>
+	return $DestinationDirectories[$Module_VendorToolName]
+}
+
+Export-ModuleMember -Function 'Get-VendorToolInstallationDirectory'
+Export-ModuleMember -Function 'Get-VendorToolSourceDirectory'
+Export-ModuleMember -Function 'Get-VendorToolDestinationDirectory'
