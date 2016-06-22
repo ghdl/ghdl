@@ -75,7 +75,7 @@ SetupDirectories() {
 	fi
 
 	if [ -z $SourceDirectory ] || [ -z $DestinationDirectory ]; then
-		echo 1>&2 -e "${COLORED_ERROR} $Name is not configured in '$ScriptDir/config.sh'${ANSI_NOCOLOR}"
+		echo 1>&2 -e "${COLORED_ERROR} $Name is not configured in '$ScriptDir/config.sh'.${ANSI_NOCOLOR}"
 		echo 1>&2 -e "  Use adv. options '--src' and '--out' or configure 'config.sh'."
 		exit -1
 	elif [ ! -d $SourceDirectory ]; then
@@ -130,7 +130,7 @@ CreateDestinationDirectory() {
 		echo 1>&2 -e "${COLORED_ERROR} Vendor directory '$DestinationDirectory' already exists as a file.${ANSI_NOCOLOR}"
 		exit -1
 	else
-		echo -e "${ANSI_YELLOW}Creating vendor directory: '$DestinationDirectory'${ANSI_NOCOLOR}"
+		echo -e "${ANSI_YELLOW}Creating vendor directory: '$DestinationDirectory'.${ANSI_NOCOLOR}"
 		mkdir -p "$DestinationDirectory"
 	fi
 }

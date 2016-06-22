@@ -3,9 +3,9 @@
 # kate: tab-width 2; replace-tabs off; indent-width 2;
 # 
 # ==============================================================================
-#	PowerShell Script:	Script to compile the OSVVM library for GHDL on Windows
-# 
 #	Authors:						Patrick Lehmann
+# 
+#	PowerShell Script:	Script to compile the OSVVM library for GHDL on Windows
 # 
 # Description:
 # ------------------------------------
@@ -14,7 +14,7 @@
 #		- compiles all OSVVM packages 
 #
 # ==============================================================================
-#	Copyright (C) 2015 Patrick Lehmann
+#	Copyright (C) 2015-2016 Patrick Lehmann
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -42,8 +42,14 @@
 # 
 [CmdletBinding()]
 param(
+	# Show the embedded help page(s)
+	[switch]$Help =							$false,
+	
 	# Compile all libraries and packages.
 	[switch]$All =							$true,
+	
+	# Compile all OSVVM packages.
+	[switch]$OSVVM =						$true,
 	
 	# Clean up directory before analyzing.
 	[switch]$Clean =						$false,
@@ -53,85 +59,95 @@ param(
 	# Halt on errors
 	[switch]$HaltOnError =			$false,
 	
-	# Show the embedded help page(s)
-	[switch]$Help =							$false
+	# Set vendor library source directory
+	[string]$Source =						"",
+	# Set output directory name
+	[string]$Output =						"",
+	# Set GHDL executable
+	[string]$GHDL =							""
 )
-
-if ($Help)
-{	Get-Help $MYINVOCATION.InvocationName -Detailed
-	return
-}
 
 # ---------------------------------------------
 # save working directory
-$WorkingDir = Get-Location
+$WorkingDir =		Get-Location
 
 # load modules from GHDL's 'vendors' library directory
-Import-Module $PSScriptRoot\config.psm1
-Import-Module $PSScriptRoot\shared.psm1
+Import-Module $PSScriptRoot\config.psm1 -ArgumentList "OSVVM"
+Import-Module $PSScriptRoot\shared.psm1 -ArgumentList @("OSVVM", "$WorkingDir")
+
+# Display help if no command was selected
+$Help = $Help -or (-not ($All -or $OSVVM))
+
+if ($Help)
+{	Get-Help $MYINVOCATION.InvocationName -Detailed
+	Exit-CompileScript
+}
+if ($All)
+{	$OSVVM =			$true
+}
+
+				
+$SourceDirectory =			Get-SourceDirectory $Source ""
+$DestinationDirectory =	Get-DestinationDirectory $Output
+$GHDLBinary =						Get-GHDLBinary $GHDL
+
+# create "Altera" directory and change to it
+New-DestinationDirectory $DestinationDirectory
+cd $DestinationDirectory
+
+
+$VHDLVersion,$VHDLStandard,$VHDLFlavor = Get-VHDLVariables
+
+# define global GHDL Options
+$GHDLOptions = @("-a", "-fexplicit", "-frelaxed-rules", "--mb-comments", "--warn-binding", "--ieee=$VHDLFlavor", "--no-vital-checks", "--std=$VHDLStandard", "-P$DestinationDirectory")
 
 # extract data from configuration
-$SourceDir =			$InstallationDirectory["OSVVM"]
-$DestinationDir = $DestinationDirectory["OSVVM"]
-
-if ($All -eq $true)
-{	# nothing to configure
-}
+# $SourceDir =			$InstallationDirectory["AlteraQuartus"] + "\quartus\eda\sim_lib"
 
 $ErrorCount =			0
 
-# define global GHDL Options
-$GlobalOptions = ("-a", "-fexplicit", "-frelaxed-rules", "--mb-comments", "--warn-binding", "--no-vital-checks", "--std=08")
-
-# create "osvvm" directory and change to it
-Write-Host "Creating vendor directory: '$DestinationDir'" -ForegroundColor Yellow
-mkdir $DestinationDir -ErrorAction SilentlyContinue | Out-Null
-cd $DestinationDir
-
-# Cleanup
+# Cleanup directories
 # ==============================================================================
 if ($Clean)
-{	Write-Host "Cleaning up vendor directory ..." -ForegroundColor Yellow
+{	Write-Host "[ERROR]: '-Clean' is not implemented!"
+	Exit-CompileScript -1
+	
+	Write-Host "Cleaning up vendor directory ..." -ForegroundColor Yellow
 	rm *.cf
 }
 
+
+# OSVVM packages
+# ==============================================================================
 # compile osvvm library
-Write-Host "Compiling library 'osvvm' ..." -ForegroundColor Yellow
-$Options = $GlobalOptions
-$Files = (
-	"$SourceDir\NamePkg.vhd",
-	"$SourceDir\OsvvmGlobalPkg.vhd",
-	"$SourceDir\TextUtilPkg.vhd",
-	"$SourceDir\TranscriptPkg.vhd",
-	"$SourceDir\AlertLogPkg.vhd",
-	"$SourceDir\MemoryPkg.vhd",
-	"$SourceDir\MessagePkg.vhd",
-	"$SourceDir\SortListPkg_int.vhd",
-	"$SourceDir\RandomBasePkg.vhd",
-	"$SourceDir\RandomPkg.vhd",
-	"$SourceDir\CoveragePkg.vhd",
-	"$SourceDir\OsvvmContext.vhd")
-foreach ($File in $Files)
-{	Write-Host "Analyzing package '$File'" -ForegroundColor Cyan
-	$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=osvvm " + $File + " 2>&1"
-	$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-	if ($LastExitCode -ne 0)
-	{	$ErrorCount += 1
-		if ($HaltOnError)
-		{	break		}
-	}
+if ((-not $StopCompiling) -and $OSVVM)
+{	$Library = "osvvm"
+	$Files = @(
+		"NamePkg.vhd",
+		"OsvvmGlobalPkg.vhd",
+		"TextUtilPkg.vhd",
+		"TranscriptPkg.vhd",
+		"AlertLogPkg.vhd",
+		"MemoryPkg.vhd",
+		"MessagePkg.vhd",
+		"SortListPkg_int.vhd",
+		"RandomBasePkg.vhd",
+		"RandomPkg.vhd",
+		"CoveragePkg.vhd",
+		"OsvvmContext.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 Write-Host "--------------------------------------------------------------------------------"
-Write-Host "Compiling OSVVM library " -NoNewline
+Write-Host "Compiling OSVVM packages " -NoNewline
 if ($ErrorCount -gt 0)
 {	Write-Host "[FAILED]" -ForegroundColor Red				}
 else
 {	Write-Host "[SUCCESSFUL]" -ForegroundColor Green	}
 
-# unload PowerShell modules
-Remove-Module shared
-Remove-Module config
-
-# restore working directory
-cd $WorkingDir
+Exit-CompileScript
