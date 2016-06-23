@@ -113,10 +113,6 @@ while [[ $# > 0 ]]; do
 		;;
 		--vhdl2008)
 		VHDLStandard=2008
-		echo 1>&2 -e "${COLORED_ERROR} VHDL-2008 is not yet supported by Altera.${ANSI_NOCOLOR}"
-		echo 1>&2 -e "${ANSI_YELLOW}Possible workaround: ${ANSI_NOCOLOR}"
-		echo 1>&2 -e "${ANSI_YELLOW}  Compile 'std_logic_arith' and 'std_logic_unsigned' into library IEEE.${ANSI_NOCOLOR}"
-		exit -1
 		;;
 		--ghdl)
 		GHDLBinDir="$2"
@@ -191,6 +187,11 @@ if [ "$COMPILE_ALL" == "TRUE" ]; then
 	COMPILE_ARRIA=TRUE
 	COMPILE_STRATIX=TRUE
 	COMPILE_NM=TRUE
+fi
+
+if [ $VHDLStandard -eq 2008 ]; then
+	echo -e "${ANSI_RED}Not all Altera packages are VHDL-2008 compatible! Setting HALT_ON_ERROR to FALSE.${ANSI_NOCOLOR}"
+	HALT_ON_ERROR=0
 fi
 
 DefaultDirectories=("/opt/Altera" "/opt/altera")
@@ -660,7 +661,7 @@ if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_STRATIX" == "TRUE" ] && [ $SKIP_LARGE
 fi
 
 # compile fiftyfivenm library
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_NANOMETER" == "TRUE" ]; then
+if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_NM" == "TRUE" ]; then
 	Library="fiftyfivenm"
 	Files=(
 		fiftyfivenm_atoms.vhd
@@ -676,7 +677,7 @@ if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_NANOMETER" == "TRUE" ]; then
 fi
 
 # compile twentynm library
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_NANOMETER" == "TRUE" ]; then
+if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_NM" == "TRUE" ]; then
 	Library="twentynm"
 	Files=(
 		twentynm_atoms.vhd

@@ -12,7 +12,7 @@
 # ------------------------------------
 #	This is a PowerShell script (executable) which:
 #		- creates a subdirectory in the current working directory
-#		- compiles all Altera Quartus-II simulation libraries and packages
+#		- compiles all Altera Quartus simulation libraries and packages
 #
 # ==============================================================================
 #	Copyright (C) 2015-2016 Patrick Lehmann
@@ -39,7 +39,7 @@
 # .DESCRIPTION
 # This CmdLet:
 #   (1) creates a subdirectory in the current working directory
-#   (2) compiles all Altera Quartus-II simulation libraries and packages
+#   (2) compiles all Altera Quartus simulation libraries and packages
 #       o Altera standard libraries: lpm, sgate, altera, altera_mf, altera_lnsim
 #       o Altera device libraries:
 #         - arriaii, arriaii_pcie_hip, arriaiigz

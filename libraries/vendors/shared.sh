@@ -143,7 +143,7 @@ GHDLSetup() {
 	elif [ $VHDLStandard -eq 2008 ]; then
 		VHDLVersion="v08"
 		VHDLStandard="08"
-		VHDLFlavor="standard"
+		VHDLFlavor="synopsys"
 	fi
 }
 
