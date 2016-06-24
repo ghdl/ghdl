@@ -3,9 +3,9 @@
 # kate: tab-width 2; replace-tabs off; indent-width 2;
 # 
 # ==============================================================================
-#	PowerShell Module:	The module provides build targets for GHDL.
-# 
 #	Authors:						Patrick Lehmann
+# 
+#	PowerShell Module:	The module provides build targets for GHDL.
 # 
 # Description:
 # ------------------------------------
@@ -271,7 +271,7 @@ function Invoke-CompileCFiles
 		
 		Write-Host ("  compiling: " + $SourceFile.File)
 		Write-Debug	"    call: $InvokeExpr"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGCCLine -Indent "    "
 		if ($LastExitCode -ne 0)
 		{	return $true		}
 	}
@@ -342,7 +342,7 @@ function Invoke-CompileGHDLAdaFiles
 	
 	Write-Host "  compiling with GNAT"
 	Write-Debug "    call: $InvokeExpr"
-	$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine
+	$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGCCLine -Indent "    "
 	return ($LastExitCode -ne 0)
 }	# Invoke-CompileGHDLAdaFiles
 
@@ -388,7 +388,7 @@ function Invoke-CompileFilterAdaFiles
 	
 	Write-Host "  compiling with GNAT"
 	Write-Debug "    call: $InvokeExpr"
-	$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine
+	$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGCCLine -Indent "    "
 	return ($LastExitCode -ne 0)
 }	# Invoke-CompileFilterAdaFiles
 
@@ -445,9 +445,9 @@ function Test-GHDLVersion
 	
 	Write-Host "  executing '$GHDLExecutableName'"
 	Write-Host "    call: $InvokeExpr"
-	Write-Host "----------------------------------------"
-	Invoke-Expression $InvokeExpr | Restore-NativeCommandStream
-	Write-Host "----------------------------------------"
+	Write-Host "    ----------------------------------------"
+	Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-HostExtended "    "
+	Write-Host "    ----------------------------------------"
 	return ($LastExitCode -ne 0)
 }	# Test-GHDLVersion
 

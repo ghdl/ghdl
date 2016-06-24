@@ -3,9 +3,9 @@
 # kate: tab-width 2; replace-tabs off; indent-width 2;
 # 
 # ==============================================================================
-#	PowerShell Module:	The module provides common CmdLets for ...
-# 
 #	Authors:						Patrick Lehmann
+# 
+#	PowerShell Module:	The module provides common CmdLets for ...
 # 
 # Description:
 # ------------------------------------
@@ -29,6 +29,129 @@
 #	Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #	02111-1307, USA.
 # ==============================================================================
+
+[CmdletBinding()]
+param(
+	[Parameter(Mandatory=$true)][string]$WorkingDir
+)
+
+$Module_WorkingDir =			$WorkingDir
+
+function Exit-CompileScript
+{		<#
+		.SYNOPSIS
+		Undocumented
+		
+		.DESCRIPTION
+		Undocumented
+		
+		.PARAMETER ExitCode
+		ExitCode of this script run
+	#>
+	[CmdletBinding()]
+	param(
+		[int]$ExitCode = 0
+	)
+	
+	cd $Module_WorkingDir
+	
+	# unload modules
+	Remove-Module shared
+	
+	exit $ExitCode
+}
+
+function New-LibraryDirectory
+{	<#
+		.SYNOPSIS
+		Undocumented
+		
+		.DESCRIPTION
+		Undocumented
+		
+		.PARAMETER Directory
+		Undocumented
+	#>
+	[CmdletBinding()]
+	param(
+		[Parameter(Mandatory=$true)][string]$Directory	#,
+		# [Parameter(Mandatory=$true)][bool]$EnableVerbose
+	)
+	$EnableVerbose = $false
+	if (Test-Path -Path $Directory)
+	{	$EnableVerbose -and (Write-Host "    Directory '$Directory' already exists."	) | Out-Null	}
+	else
+	{	Write-Host "    Creating directory '$Directory'."
+		New-Item -ItemType directory -Path $Directory -ErrorAction SilentlyContinue | Out-Null
+	}
+}
+
+function Format-VHDLSourceFile
+{	<#
+		.SYNOPSIS
+		Undocumented
+		
+		.DESCRIPTION
+		Undocumented
+		
+		.PARAMETER Version
+		Undocumented
+		.PARAMETER InputObject
+		A object stream is required as an input.
+	#>
+	[CmdletBinding()]
+	param(
+		[Parameter(Mandatory=$true)][string]$Version,
+		[Parameter(ValueFromPipeline=$true)]$InputObject
+	)
+	
+	begin
+	{	$State = 1
+		$Version = switch ($Version)
+								{	"87"	{	87	}
+									"93"	{	93	}
+									"02"	{	2		}
+									"08"	{	8		}
+								}
+	}
+	
+	process
+	{	if ($InputObject -is [String])
+		{	$Line = $InputObject.ToString()
+			if ($Line.StartsWith("--START-V"))
+			{	$State = switch ($Line.Substring(9, 2))
+									{	"87"	{	87	}
+										"93"	{	93	}
+										"02"	{	2		}
+										"08"	{	8		}
+									}
+			}
+			elseif ($Line.StartsWith("--START-!V"))
+			{	if ($Line.Substring(10, 2) -eq $Version)
+				{	$State = 2	}
+			}
+			elseif ($Line.StartsWith("--END-V") -or $Line.StartsWith("--END-!V"))
+			{	$State = 1		}
+			else
+			{	if ($State -eq 1)
+				{	if ($Line.EndsWith("--V$Version"))
+					{	Write-Output $Line		}
+					elseif (-not (($Line -like "*--V??") -or ($Line.EndsWith("--!V$Version"))))
+					{	Write-Output $Line		}
+				}
+				elseif ($State -eq $Version)
+				{	Write-Output $Line			}
+			}
+		}
+		else
+		{	Write-Host "Unknown pipeline object type." -ForegroundColor Red		}
+	}
+	
+	end
+	{	
+	}
+}
+
 function Restore-NativeCommandStream
 {	<#
 		.SYNOPSIS
@@ -38,9 +161,10 @@ function Restore-NativeCommandStream
 		.DESCRIPTION
 		This CmdLet collects multiple ErrorRecord objects and emits one String
 		object per line.
-		
 		.PARAMETER InputObject
 		A object stream is required as an input.
+		.PARAMETER Indent
+		Indentation string.
 	#>
 	[CmdletBinding()]
 	param(
@@ -52,9 +176,7 @@ function Restore-NativeCommandStream
 	{	$LineRemainer = ""	}
 
 	process
-	{	if (-not $InputObject)
-		{	Write-Host "Empty pipeline!"	}
-		elseif ($InputObject -is [System.Management.Automation.ErrorRecord])
+	{	if ($InputObject -is [System.Management.Automation.ErrorRecord])
 		{	if ($InputObject.FullyQualifiedErrorId -eq "NativeCommandError")
 			{	Write-Output $InputObject.ToString()		}
 			elseif ($InputObject.FullyQualifiedErrorId -eq "NativeCommandErrorMessage")
@@ -78,6 +200,60 @@ function Restore-NativeCommandStream
 	}
 }
 
+function Write-ColoredGCCLine
+{	<#
+		.SYNOPSIS
+		This CmdLet colors GHDL output lines.
+		
+		.DESCRIPTION
+		This CmdLet colors GHDL output lines. Warnings are prefixed with 'WARNING: '
+		in yellow and errors are prefixed with 'ERROR: ' in red.
+		
+		.PARAMETER InputObject
+		A object stream is required as an input.
+		.PARAMETER SuppressWarnings
+		Skip warning messages. (Show errors only.)
+		.PARAMETER Indent
+		Indentation string.
+	#>
+	[CmdletBinding()]
+	param(
+		[Parameter(ValueFromPipeline=$true)]
+		$InputObject,
+		
+		[Parameter(Position=1)]
+		[switch]$SuppressWarnings = $false,
+		[Parameter(Position=2)]
+		[string]$Indent = ""
+	)
+
+	begin
+	{	$ErrorRecordFound = $false	}
+	
+	process
+	{	if ($InputObject -is [String])
+		{	if ($InputObject -match ":\d+:\d+:\swarning:\s")
+			{	if (-not $SuppressWarnings)
+				{	Write-Host "${Indent}WARNING: "	-NoNewline -ForegroundColor Yellow
+					Write-Host $InputObject
+				}
+			}
+			elseif ($InputObject -match ":\d+:\d+:\s")
+			{	$ErrorRecordFound	= $true
+				Write-Host "${Indent}ERROR: "		-NoNewline -ForegroundColor Red
+				Write-Host $InputObject
+			}
+			else
+			{	Write-Host "${Indent}$InputObject"		}
+		}
+		else
+		{	Write-Host "Unsupported object in pipeline stream"		}
+	}
+
+	end
+	{	$ErrorRecordFound		}
+}
+
 function Write-ColoredGHDLLine
 {	<#
 		.SYNOPSIS
@@ -99,29 +275,29 @@ function Write-ColoredGHDLLine
 		$InputObject,
 		
 		[Parameter(Position=1)]
-		[switch]$SuppressWarnings = $false
+		[switch]$SuppressWarnings = $false,
+		[Parameter(Position=2)]
+		[string]$Indent = ""
 	)
 
 	begin
 	{	$ErrorRecordFound = $false	}
 	
 	process
-	{	if (-not $InputObject)
-		{	Write-Host "Empty pipeline!"	}
-		elseif ($InputObject -is [String])
-		{	if ($InputObject -match ":\d+:\d+:\swarning:")
+	{	if ($InputObject -is [String])
+		{	if ($InputObject -match ":\d+:\d+:warning:\s")
 			{	if (-not $SuppressWarnings)
-				{	Write-Host "WARNING: "	-NoNewline -ForegroundColor Yellow
+				{	Write-Host "${Indent}WARNING: "	-NoNewline -ForegroundColor Yellow
 					Write-Host $InputObject
 				}
 			}
 			elseif ($InputObject -match ":\d+:\d+:\s")
 			{	$ErrorRecordFound	= $true
-				Write-Host "ERROR: "		-NoNewline -ForegroundColor Red
+				Write-Host "${Indent}ERROR: "		-NoNewline -ForegroundColor Red
 				Write-Host $InputObject
 			}
 			else
-			{	Write-Host $InputObject		}
+			{	Write-Host "${Indent}$InputObject"		}
 		}
 		else
 		{	Write-Host "Unsupported object in pipeline stream"		}
@@ -129,6 +305,43 @@ function Write-ColoredGHDLLine
 
 	end
 	{	$ErrorRecordFound		}
+}
+
+function Write-HostExtended
+{	<#
+		.SYNOPSIS
+		This CmdLet colors GHDL output lines.
+		
+		.DESCRIPTION
+		This CmdLet colors GHDL output lines. Warnings are prefixed with 'WARNING: '
+		in yellow and errors are prefixed with 'ERROR: ' in red.
+		
+		.PARAMETER InputObject
+		A object stream is required as an input.
+		.PARAMETER Indent
+		Indentation string.
+	#>
+	[CmdletBinding()]
+	param(
+		[Parameter(ValueFromPipeline=$true)]
+		$InputObject,
+		
+		[Parameter(Position=1)]
+		[string]$Indent = ""
+	)
+
+	begin
+	{		}
+	
+	process
+	{	if ($InputObject -is [String])
+		{	Write-Host "${Indent}$InputObject"									}
+		else
+		{	Write-Host "Unsupported object in pipeline stream"	}
+	}
+
+	end
+	{		}
 }
 
 function Test-GitRepository
@@ -142,6 +355,14 @@ function Test-GitRepository
 }
 
 # export functions
+Export-ModuleMember -Function 'Exit-CompileScript'
+
+Export-ModuleMember -Function 'New-LibraryDirectory'
+Export-ModuleMember -Function 'Format-VHDLSourceFile'
+
 Export-ModuleMember -Function 'Restore-NativeCommandStream'
+Export-ModuleMember -Function 'Write-ColoredGCCLine'
 Export-ModuleMember -Function 'Write-ColoredGHDLLine'
+Export-ModuleMember -Function 'Write-HostExtended'
+
 Export-ModuleMember -Function 'Test-GitRepository'

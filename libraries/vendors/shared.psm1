@@ -400,9 +400,10 @@ function Write-ColoredGHDLLine
 		
 		.PARAMETER InputObject
 		A object stream is required as an input.
-		
 		.PARAMETER SuppressWarnings
 		Skip warning messages. (Show errors only.)
+		.PARAMETER Indent
+		Indentation string.
 	#>
 	[CmdletBinding()]
 	param(
@@ -410,27 +411,29 @@ function Write-ColoredGHDLLine
 		$InputObject,
 		
 		[Parameter(Position=1)]
-		[switch]$SuppressWarnings = $false
+		[switch]$SuppressWarnings = $false,
+		[Parameter(Position=2)]
+		[string]$Indent = ""
 	)
 
 	begin
 	{	$ErrorRecordFound = $false	}
 	
 	process
-	{	if (-not $InputObject)
-		{	Write-Host "Empty pipeline!"	}
-		elseif ($InputObject -is [String])
-		{	if ($InputObject.Contains("warning"))
+	{	if ($InputObject -is [String])
+		{	if ($InputObject -match ":\d+:\d+:warning:\s")
 			{	if (-not $SuppressWarnings)
-				{	Write-Host "WARNING: "	-NoNewline -ForegroundColor Yellow
+				{	Write-Host "${Indent}WARNING: "	-NoNewline -ForegroundColor Yellow
 					Write-Host $InputObject
 				}
 			}
-			else
+			elseif ($InputObject -match ":\d+:\d+:\s")
 			{	$ErrorRecordFound	= $true
-				Write-Host "ERROR: "		-NoNewline -ForegroundColor Red
+				Write-Host "${Indent}ERROR: "		-NoNewline -ForegroundColor Red
 				Write-Host $InputObject
 			}
+			else
+			{	Write-Host "${Indent}$InputObject"		}
 		}
 		else
 		{	Write-Host "Unsupported object in pipeline stream"		}
