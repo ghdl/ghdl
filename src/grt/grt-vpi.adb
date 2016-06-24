@@ -132,13 +132,6 @@ package body Grt.Vpi is
    --  Clear error status.
    procedure Reset_Error;
 
-   procedure Vpi_Trace (Msg : String) is
-   begin
-      if Flag_Trace then
-         Put_Line (Trace_File, Msg);
-      end if;
-   end Vpi_Trace;
-
    procedure Trace_Start (Msg : String) is
    begin
       for I in 1 .. Trace_Indent loop
@@ -214,10 +207,52 @@ package body Grt.Vpi is
          when vpiRightRange =>
             Trace ("vpiRightRange");
 
+         when vpiStop =>
+            Trace ("vpiStop");
+         when vpiFinish =>
+            Trace ("vpiFinish");
+         when vpiReset =>
+            Trace ("vpiReset");
+
          when others =>
             Trace (V);
       end case;
    end Trace_Property;
+
+   procedure Trace_Format (F : Integer) is
+   begin
+      case F is
+         when vpiBinStrVal =>
+            Trace ("BinStr");
+         when vpiOctStrVal =>
+            Trace ("OctStr");
+         when vpiDecStrVal =>
+            Trace ("DecStr");
+         when vpiHexStrVal =>
+            Trace ("HexStr");
+         when vpiScalarVal =>
+            Trace ("Scalar");
+         when vpiIntVal =>
+            Trace ("Int");
+         when vpiRealVal =>
+            Trace ("Real");
+         when vpiStringVal =>
+            Trace ("String");
+         when vpiVectorVal =>
+            Trace ("Vector");
+         when vpiStrengthVal =>
+            Trace ("Strength");
+         when vpiTimeVal =>
+            Trace ("Time");
+         when vpiObjTypeVal =>
+            Trace ("ObjType");
+         when vpiSuppressVal =>
+            Trace ("Suppress");
+
+         when others =>
+            Trace (F);
+      end case;
+   end Trace_Format;
 
    procedure Trace_Time_Tag (V : Integer) is
    begin
@@ -797,7 +832,7 @@ package body Grt.Vpi is
          Trace_Start ("vpi_get_value (");
          Trace (Expr);
          Trace (", {format=");
-         Trace (Value.Format);
+         Trace_Format (Value.Format);
          Trace ("}) = ");
       end if;
 
@@ -1131,7 +1166,21 @@ package body Grt.Vpi is
       Res : Integer;
       pragma Unreferenced (Res);
    begin
+      if Flag_Trace then
+         Trace_Start ("vpi call callback ");
+         Trace_Cb_Reason (Hand.Cb.Reason);
+         Trace (" ");
+         Trace (Hand);
+         Trace_Newline;
+         Trace_Indent := Trace_Indent + 1;
+      end if;
       Res := Hand.Cb.Cb_Rtn (Hand.Cb'Access);
+      if Flag_Trace then
+         Trace_Indent := Trace_Indent - 1;
+         Trace_Start ("vpi end callback ");
+         Trace (Hand);
+         Trace_Newline;
+      end if;
    end Execute_Callback;
 
    procedure Execute_Callback_List (List : Callback_List)
@@ -1158,25 +1207,12 @@ package body Grt.Vpi is
    function To_vpiHandle is new Ada.Unchecked_Conversion
      (System.Address, vpiHandle);
 
+   --  Wrapper
    procedure Call_Callback (Arg : System.Address)
    is
       Hand : constant vpiHandle := To_vpiHandle (Arg);
    begin
-      if Flag_Trace then
-         Trace_Start ("vpi call callback ");
-         Trace_Cb_Reason (Hand.Cb.Reason);
-         Trace (" ");
-         Trace (Hand);
-         Trace_Newline;
-         Trace_Indent := Trace_Indent + 1;
-      end if;
       Execute_Callback (Hand);
-      if Flag_Trace then
-         Trace_Indent := Trace_Indent - 1;
-         Trace_Start ("vpi end callback ");
-         Trace (Hand);
-         Trace_Newline;
-      end if;
    end Call_Callback;
 
    procedure Call_Valuechange_Callback (Arg : System.Address)
@@ -1291,7 +1327,10 @@ package body Grt.Vpi is
    -- int vpi_get_vlog_info(p_vpi_vlog_info vlog_info_p)
    function vpi_get_vlog_info (info : p_vpi_vlog_info) return integer is
    begin
-      Vpi_Trace ("vpi_get_vlog_info");
+      if Flag_Trace then
+         Trace_Start ("vpi_get_vlog_info");
+         Trace_Newline;
+      end if;
 
       info.all := (Argc => 0,
                    Argv => Null_Address,
@@ -1307,6 +1346,11 @@ package body Grt.Vpi is
       pragma Unreferenced (aRef);
       pragma Unreferenced (aIndex);
    begin
+      if Flag_Trace then
+         Trace_Start ("vpi_handle_by_index UNIMPLEMENTED!");
+         Trace_Newline;
+      end if;
+
       return null;
    end vpi_handle_by_index;
 
@@ -1475,7 +1519,10 @@ package body Grt.Vpi is
    is
       pragma Unreferenced (aSs);
    begin
-      Vpi_Trace ("vpi_register_systf");
+      if Flag_Trace then
+         Trace_Start ("vpi_register_systf");
+         Trace_Newline;
+      end if;
    end vpi_register_systf;
 
    -- int vpi_remove_cb(vpiHandle ref)
@@ -1566,7 +1613,7 @@ package body Grt.Vpi is
    begin
       if Flag_Trace then
          Trace_Start ("vpi_control (");
-         Trace (Op);
+         Trace_Property (Op);
          Trace (", ");
          Trace (Status);
          Trace (")");
