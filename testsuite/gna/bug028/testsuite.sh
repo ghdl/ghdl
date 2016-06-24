@@ -3,7 +3,7 @@
 . ../../testenv.sh
 
 GHDL_STD_FLAGS=--std=08
-GHDL_FLAGS=--ieee=synopsys
+GHDL_FLAGS=--ieee=mentor
 analyze simple.vhdl 2>&1 | grep ignored
 clean
 
