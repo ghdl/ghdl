@@ -1,14 +1,14 @@
 ## Compile Scripts for Vendor VHDL Libraries
 
-Vendors like Altera and Xilinx have there own simulation libraries, especially
-for primitives, soft or hard macros. These libraries can not be shipped with
-GHDL, but we offer prepared compile scripts to pre-compile a vendor library,
-if the vendor tool is present on the computer.
+Vendors like Altera, Lattice and Xilinx have their own simulation libraries,
+especially for FPGA primitives, soft and hard macros. These libraries can not be
+shipped with GHDL, but we offer prepared compile scripts to pre-compile the
+vendor libraries, if the vendor tool is present on the computer.
 
 There are also popular simulation and verification libraries like [OSVVM][osvvm]
-and [VUnit][vunit], which can be pre-compile.
+and [VUnit][vunit], which can be pre-compile, too.
 
-The compilation scripts are writen in shell languages: PowerShell for Windows
+The compilation scripts are writen in the shell languages: PowerShell for Windows
 and Bash for Linux. The compile scripts can colorize the GHDL warning and error
 lines with the help of grc/grcat ([generic colourizer][grc]).
 
@@ -52,84 +52,91 @@ lines with the help of grc/grcat ([generic colourizer][grc]).
      - vunit_lib
 
 ---------------------------------------------------------------------
+### Script Configuration
+
+The vendor library compile scripts need to know where the used / latest vendor
+tool chain is installed. Therefore, the script implement a default installation
+directory search as well as environment variable checks. If a vendor tool could
+not be detected or the script choses the wrong vendor library source directory,
+then it's possible to provide the path via `--source` or `-Source`.
+
+The generated output is stored relative to the current working directory. The
+scripts create a sub-directory for each vendor. The default output directory can
+be overwritten by the parameter `--output` or `-Output`.
+
+To compile all source files with GHDL, the simulator executable is searched in
+`PATH`. The found default GHDL executable can be overwritten by setting the
+environment variable `GHDL` or by passing the parameter `--ghdl` or `-GHDL` to
+the scripts.
+
+If the vendor library compilation is used very often, we recommend to configure
+these parameters in `config.sh` or `config.psm1`, so the command line can be
+shortened to the essential parts.
+
+---------------------------------------------------------------------
 ### Compiling on Linux
 
- - **Step 1 - Configure the scripts**
-    Please open the `config.sh` file and set the dictionary entries for the installed
-    vendor tools to the appropriate directory to your tool's installation folder.
+ - **Step 0 - Configure the scripts (optional)**
+    See next section for how to configure `config.sh`.
 
-    `config.sh`:
-    ```Bash
-    declare -A InstallationDirectory
-    InstallationDirectory[AlteraQuartusII]="/opt/Altera/15.0"
-    InstallationDirectory[XilinxISE]="/opt/Xilinx/14.7"
-    InstallationDirectory[XilinxVivado]="/opt/Xilinx/Vivado/2015.2"
-    InstallationDirectory[OSVVM]="/home/<user>/git/GitHub/osvvm"
-    InstallationDirectory[VUnit]="/home/<user>/git/GitHub/vunit"
-    ```
-
- - **Step 2 - Browse to your simulation working directory**
+ - **Step 1 - Browse to your simulation working directory**
     ```Bash
     $ cd <MySimulationFolder>
     ```
 
- - **Step 3 - Start the compilation script(s)**
+ - **Step 2 - Start the compilation script(s)**
     ```Bash
-    $ <GHDL>\libraries\vendors\compile-altera.sh --all
-    $ <GHDL>\libraries\vendors\compile-xilinx-ise.sh --all
-    $ <GHDL>\libraries\vendors\compile-xilinx-vivado.sh --all
-    $ <GHDL>\libraries\vendors\compile-osvvm.sh --all
-    $ <GHDL>\libraries\vendors\compile-vunit.sh --all
+    $ /usr/local/lib/ghdl/vendors/compile-altera.sh --all
+    $ /usr/local/lib/ghdl/vendors/compile-lattice.sh --all
+    $ /usr/local/lib/ghdl/vendors/compile-xilinx-ise.sh --all
+    $ /usr/local/lib/ghdl/vendors/compile-xilinx-vivado.sh --all
+    $ /usr/local/lib/ghdl/vendors/compile-osvvm.sh --all
+    $ /usr/local/lib/ghdl/vendors/compile-vunit.sh --all
     ```
+    
+    In most cases GHDL is installed into `/usr/local/`. The scripts are
+    installed into the `lib` directory.
 
- - **Step 4 - Viewing the result**
-    This creates vendor directories in your current working directory and compiles the vendor files into them.
+ - **Step 3 - Viewing the result**
+    This creates vendor directories in your current working directory and
+    compiles the vendor files into them.
 
     ```Bash
     $ ls -ahl
     ...
     drwxr-xr-x  2 <user> <group>  56K Nov 30 17:41 altera
+    drwxr-xr-x  2 <user> <group>  56K Nov 30 17:42 lattice
     drwxr-xr-x  2 <user> <group>  56K Nov 30 17:48 osvvm
-    drwxr-xr-x  2 <user> <group>  56K Nov 30 17:48 vivado
     drwxr-xr-x  2 <user> <group>  56K Nov 30 17:58 vunit
-    drwxr-xr-x  2 <user> <group>  56K Nov 30 17:58 xilinx
+    drwxr-xr-x  2 <user> <group>  56K Nov 30 17:58 xilinx-ise
+    drwxr-xr-x  2 <user> <group>  56K Nov 30 17:48 xilinx-vivado
     ```
+
 
 ---------------------------------------------------------------------
 ### Compiling on Windows
 
- - **Step 1 - Configure the scripts**
-    Please open the `config.psm1` file and set the dictionary entries for the installed
-    vendor tools to the appropriate directory to your tool's installation folder. Use an
-    empty string `""` for not installed tools. 
+ - **Step 0 - Configure the scripts (optional)**
+    See next section for how to configure `config.psm1`.
 
-    `config.psm1`:
-    ```PowerShell
-    $InstallationDirectory = @{
-      "AlteraQuartusII" = "C:\Altera\15.0";
-      "XilinxISE" =       "C:\Xilinx\14.7";
-      "XilinxVivado" =    "C:\Xilinx\Vivado\2015.4";
-      "OSVVM" =           "D:\git\GitHub\osvvm";
-      "VUnit" =           "D:\git\GitHub\vunit"
-    }
-    ```
-
- - **Step 2 - Browse to your simulation working directory**
+ - **Step 1 - Browse to your simulation working directory**
     ```PowerShell
     PS> cd <MySimulationFolder>
     ```
 
- - **Step 3 - Start the compilation script(s)**
+ - **Step 2 - Start the compilation script(s)**
     ```PowerShell
     PS> <GHDL>\libraries\vendors\compile-altera.ps1 -All
+    PS> <GHDL>\libraries\vendors\compile-lattice.ps1 -All
     PS> <GHDL>\libraries\vendors\compile-xilinx-ise.ps1 -All
     PS> <GHDL>\libraries\vendors\compile-xilinx-vivado.ps1 -All
     PS> <GHDL>\libraries\vendors\compile-osvvm.ps1 -All
     PS> <GHDL>\libraries\vendors\compile-vunit.ps1 -All
     ```
 
- - **Step 4 - Viewing the result**
-    This creates vendor directories in your current working directory and compiles the vendor files into them.
+ - **Step 3 - Viewing the result**
+    This creates vendor directories in your current working directory and
+    compiles the vendor files into them.
 
     ```PowerShell
     PS> dir
@@ -138,21 +145,60 @@ lines with the help of grc/grcat ([generic colourizer][grc]).
     Mode           LastWriteTime       Length Name
     ----           -------------       ------ ----
     d----    20.11.2015    19:33        <DIR> altera
+    d----    20.11.2015    19:38        <DIR> lattice
     d----    20.11.2015    19:38        <DIR> osvvm
     d----    20.11.2015    19:45        <DIR> vunit_lib
     d----    20.11.2015    19:06        <DIR> xilinx-ise
     d----    20.11.2015    19:40        <DIR> xilinx-vivado
     ```
 
+---------------------------------------------------------------------
+### Configuration Files
+
+#### For Linux: `config.sh`
+
+Please open the `config.sh` file and set the dictionary entries for the
+installed vendor tools to the appropriate directory to your tool's installation
+directories. Use an empty string `""` for not installed tools.
+
+`config.sh`:
+```Bash
+declare -A InstallationDirectory
+InstallationDirectory[AlteraQuartus]="/opt/Altera/15.0"
+InstallationDirectory[LatticeDiamond]="/opt/Diamond/3.7_x64"
+InstallationDirectory[OSVVM]="/home/<user>/git/GitHub/osvvm"
+InstallationDirectory[VUnit]="/home/<user>/git/GitHub/vunit"
+InstallationDirectory[XilinxISE]="/opt/Xilinx/14.7"
+InstallationDirectory[XilinxVivado]="/opt/Xilinx/Vivado/2015.2"
+```
+
+#### For Windows: `config.psm1`
+
+Please open the `config.psm1` file and set the dictionary entries for the
+installed vendor tools to the appropriate directory to your tool's installation
+folder. Use an empty string `""` for not installed tools.
+
+`config.psm1`:
+```PowerShell
+$InstallationDirectory = @{
+  "AlteraQuartus" =   "C:\Altera\16.0";
+  "LatticeDiamond" =  "C:\Lattice\Diamond\3.7_x64";
+  "XilinxISE" =       "C:\Xilinx\14.7\ISE_DS";
+  "XilinxVivado" =    "C:\Xilinx\Vivado\2016.2";
+  "OSVVM" =           "D:\git\GitHub\osvvm";
+  "VUnit" =           "D:\git\GitHub\vunit"
+}
+```
+
 ### Selectable Options for the Bash Scripts:
 
 *First I should translate the scripts before writing the docu...*
 
- - Common parameters to all scripts:
+ - Common parameters to most scripts:
 
         -h --help             Print the embedded help page(s).
         -c --clean            Cleanup directory before analyzing.
-        -n --no-warnings	  Don't show warnings. Report errors only.
+        -n --no-warnings	    Don't show warnings. Report errors only.
         -s --skip-existing    Skip already compiled files (an *.o file exists).
         -S --skip-largefiles  Don't compile large entities like DSP and PCIe primitives.
         -H --halt-on-error    Stop compiling if an error occured.
@@ -196,10 +242,12 @@ lines with the help of grc/grcat ([generic colourizer][grc]).
     Selectable libraries:
 
         -a --all              Compile all.
+           --osvvm            Compile the OSVVM library.
  - `compile-vunit.sh`
     Selectable libraries:
 
         -a --all              Compile all.
+           --osvvm            Compile the VUnit library.
 
 ### Selectable Options for the PowerShell Scripts:
 
@@ -248,10 +296,12 @@ lines with the help of grc/grcat ([generic colourizer][grc]).
     Selectable libraries:
 
         -All                  Compile all.
+        -OSVVM  		          Compile the OSVVM library.
  - `compile-vunit.ps1`
     Selectable libraries:
 
         -All                  Compile all.
+        -VUnit  		          Compile the VUnit library.
 
 ------------------------
-Author: Patrick Lehmann (30.11.2015)
+Author: Patrick Lehmann (22.06.2016)
