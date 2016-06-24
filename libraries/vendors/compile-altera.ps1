@@ -3,19 +3,19 @@
 # kate: tab-width 2; replace-tabs off; indent-width 2;
 # 
 # ==============================================================================
-#	PowerShell Script:	Script to compile the simulation libraries from Altera
-#											Quartus-II for GHDL on Windows
-# 
 #	Authors:						Patrick Lehmann
+# 
+#	PowerShell Script:	Script to compile the simulation libraries from Altera
+#											Quartus for GHDL on Windows
 # 
 # Description:
 # ------------------------------------
 #	This is a PowerShell script (executable) which:
 #		- creates a subdirectory in the current working directory
-#		- compiles all Altera Quartus-II simulation libraries and packages
+#		- compiles all Altera Quartus simulation libraries and packages
 #
 # ==============================================================================
-#	Copyright (C) 2015 Patrick Lehmann
+#	Copyright (C) 2015-2016 Patrick Lehmann
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -39,7 +39,7 @@
 # .DESCRIPTION
 # This CmdLet:
 #   (1) creates a subdirectory in the current working directory
-#   (2) compiles all Altera Quartus-II simulation libraries and packages
+#   (2) compiles all Altera Quartus simulation libraries and packages
 #       o Altera standard libraries: lpm, sgate, altera, altera_mf, altera_lnsim
 #       o Altera device libraries:
 #         - arriaii, arriaii_pcie_hip, arriaiigz
@@ -53,6 +53,9 @@
 # 
 [CmdletBinding()]
 param(
+	# Show the embedded help page(s)
+	[switch]$Help =				$false,
+	
 	# Compile all libraries and packages.
 	[switch]$All =				$false,
 	
@@ -74,41 +77,43 @@ param(
 	# Unknown device library
 	[switch]$Nanometer =	$false,
 	
+	# Clean up directory before analyzing.
+	[switch]$Clean =			$false,
+	
 	# Set VHDL Standard to '93
 	[switch]$VHDL93 =			$false,
 	# Set VHDL Standard to '08
 	[switch]$VHDL2008 =		$false,
-	
-	# Clean up directory before analyzing.
-	[switch]$Clean =			$false,
 	
 	# Skip warning messages. (Show errors only.)
 	[switch]$SuppressWarnings = $false,
 	# Halt on errors
 	[switch]$HaltOnError =			$false,
 	
-	# Show the embedded help page(s)
-	[switch]$Help =							$false
+	# Set vendor library source directory
+	[string]$Source =			"",
+	# Set output directory name
+	[string]$Output =			"",
+	# Set GHDL executable
+	[string]$GHDL =				""
 )
-
-if ($Help)
-{	Get-Help $MYINVOCATION.InvocationName -Detailed
-	return
-}
 
 # ---------------------------------------------
 # save working directory
-$WorkingDir = Get-Location
+$WorkingDir =		Get-Location
 
 # load modules from GHDL's 'vendors' library directory
-Import-Module $PSScriptRoot\config.psm1
-Import-Module $PSScriptRoot\shared.psm1
+Import-Module $PSScriptRoot\config.psm1 -ArgumentList "AlteraQuartus"
+Import-Module $PSScriptRoot\shared.psm1 -ArgumentList @("Altera Quartus", "$WorkingDir")
 
-# extract data from configuration
-$SourceDir =			$InstallationDirectory["AlteraQuartusII"] + "\quartus\eda\sim_lib"
-$DestinationDir = $DestinationDirectory["Altera"]
+# Display help if no command was selected
+$Help = $Help -or (-not ($All -or $Altera -or $Max -or $Cyclone -or $Arria -or $Stratix -or $Nanometer))
 
-if ($All -eq $true)
+if ($Help)
+{	Get-Help $MYINVOCATION.InvocationName -Detailed
+	Exit-CompileScript
+}
+if ($All)
 {	$Altera =			$true
 	$Max =				$true
 	$Cyclone =		$true
@@ -117,564 +122,419 @@ if ($All -eq $true)
 	$Nanometer =	$true
 }
 
-if ($VHDL93 -eq $true)
-{	$VHDLStandard =	"93c"
-	$VHDLFlavor =		"synopsys"
+function Get-AlteraQuartusDirectory
+{	if (Test-Path env:QUARTUS_ROOTDIR)
+	{	return $QUARTUS_ROOTDIR + "\" + (Get-VendorToolSourceDirectory)		}
+	else
+	{	$EnvSourceDir = ""
+		foreach ($Drive in Get-DriveInfo)
+		{	$Path = $Drive.Name + "Altera"
+			if (Test-Path $Path -PathType Container)
+			{	foreach ($Major in 17..13)
+				{	foreach ($Minor in 3..0)
+					{	$Dir = $Path + "\" + $Major + "." + $Minor + "\quartus"
+						if (Test-Path $Dir -PathType Container)
+						{	$EnvSourceDir = $Dir + "\" + (Get-VendorToolSourceDirectory)
+							return $EnvSourceDir
+						}
+					}
+				}
+			}
+		}
+	}
 }
-elseif ($VHDL2008 -eq $true)
-{	$VHDLStandard = "08"
-	$VHDLFlavor =		"standard"
-}
-else
-{	$VHDLStandard = "93c"
-	$VHDLFlavor =		"synopsys"
-}
+				
+$SourceDirectory =			Get-SourceDirectory $Source (Get-AlteraQuartusDirectory)
+$DestinationDirectory =	Get-DestinationDirectory $Output
+$GHDLBinary =						Get-GHDLBinary $GHDL
+
+# create "Altera" directory and change to it
+New-DestinationDirectory $DestinationDirectory
+cd $DestinationDirectory
+
+
+$VHDLVersion,$VHDLStandard,$VHDLFlavor = Get-VHDLVariables $VHDL93 $VHDL2008
+
+# define global GHDL Options
+$GHDLOptions = @("-a", "-fexplicit", "-frelaxed-rules", "--mb-comments", "--warn-binding", "--ieee=$VHDLFlavor", "--no-vital-checks", "--std=$VHDLStandard", "-P$DestinationDirectory")
+
+# extract data from configuration
+# $SourceDir =			$InstallationDirectory["AlteraQuartus"] + "\quartus\eda\sim_lib"
 
 $StopCompiling =	$false
 $ErrorCount =			0
 
-# define global GHDL Options
-$GlobalOptions = ("-a", "-fexplicit", "-frelaxed-rules", "--mb-comments", "--warn-binding", "--ieee=$VHDLFlavor", "--no-vital-checks", "--std=$VHDLStandard")
-
-# create "Altera" directory and change to it
-Write-Host "Creating vendor directory: '$DestinationDir'" -ForegroundColor Yellow
-mkdir $DestinationDir -ErrorAction SilentlyContinue | Out-Null
-cd $DestinationDir
-
-# Cleanup
+# Cleanup directories
 # ==============================================================================
 if ($Clean)
-{	Write-Host "Cleaning up vendor directory ..." -ForegroundColor Yellow
+{	Write-Host "[ERROR]: '-Clean' is not implemented!"
+	Exit-CompileScript -1
+	
+	Write-Host "Cleaning up vendor directory ..." -ForegroundColor Yellow
 	rm *.cf
 }
+
 
 # Altera standard libraries
 # ==============================================================================
 # compile lpm library
 if ((-not $StopCompiling) -and $Altera)
-{	Write-Host "Compiling library 'lpm' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Files = (
-		"$SourceDir\220pack.vhd",
-		"$SourceDir\220model.vhd")
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing file '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=lpm " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	$StopCompiling = $true
-				break
-			}
-		}
-	}
+{	$Library = "lpm"
+	$Files = @(
+		"220pack.vhd",
+		"220model.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 # compile sgate library
 if ((-not $StopCompiling) -and $Altera)
-{	Write-Host "Compiling library 'sgate' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Files = (
-		"$SourceDir\sgate_pack.vhd",
-		"$SourceDir\sgate.vhd")
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing file '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=sgate " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	$StopCompiling = $true
-				break
-			}
-		}
-	}
+{	$Library = "sgate"
+	$Files = @(
+		"sgate_pack.vhd",
+		"sgate.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 # compile altera library
 if ((-not $StopCompiling) -and $Altera)
-{	Write-Host "Compiling library 'altera' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Files = (
-		"$SourceDir\altera_europa_support_lib.vhd",
-		"$SourceDir\altera_primitives_components.vhd",
-		"$SourceDir\altera_primitives.vhd",
-		"$SourceDir\altera_standard_functions.vhd",
-		"$SourceDir\altera_syn_attributes.vhd",
-		"$SourceDir\alt_dspbuilder_package.vhd")
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing file '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=altera " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	$StopCompiling = $true
-				break
-			}
-		}
-	}
+{	$Library = "altera"
+	$Files = @(
+		"altera_europa_support_lib.vhd",
+		"altera_primitives_components.vhd",
+		"altera_primitives.vhd",
+		"altera_standard_functions.vhd",
+		"altera_syn_attributes.vhd",
+		"alt_dspbuilder_package.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 # compile altera_mf library
 if ((-not $StopCompiling) -and $Altera)
-{	Write-Host "Compiling library 'altera_mf' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Files = (
-		"$SourceDir\altera_mf_components.vhd",
-		"$SourceDir\altera_mf.vhd")
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing file '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=altera_mf " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	$StopCompiling = $true
-				break
-			}
-		}
-	}
+{	$Library = "altera_mf"
+	$Files = @(
+		"altera_mf_components.vhd",
+		"altera_mf.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 # compile altera_lnsim library
 if ((-not $StopCompiling) -and $Altera)
-{	Write-Host "Compiling library 'altera_lnsim' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	& ghdl.exe $OPTIONS --work=altera_lnsim $SourceDir\altera_lnsim_components.vhd
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing file '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=altera_lnsim " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	$StopCompiling = $true
-				break
-			}
-		}
-	}
+{	$Library = "altera_lnsim"
+	$Files = @(
+		"altera_lnsim_components.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 # Altera device libraries
 # ==============================================================================
 # compile max library
 if ((-not $StopCompiling) -and $Max)
-{	Write-Host "Compiling library 'max' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Files = (
-		"$SourceDir\max_atoms.vhd",
-		"$SourceDir\max_components.vhd")
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing file '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=max " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	$StopCompiling = $true
-				break
-			}
-		}
-	}
+{	$Library = "max"
+	$Files = @(
+		"max_atoms.vhd",
+		"max_components.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 # compile maxii library
 if ((-not $StopCompiling) -and $Max)
-{	Write-Host "Compiling library 'maxii' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Files = (
-		"$SourceDir\maxii_atoms.vhd",
-		"$SourceDir\maxii_components.vhd")
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing file '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=maxii " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	$StopCompiling = $true
-				break
-			}
-		}
-	}
+{	$Library = "maxii"
+	$Files = @(
+		"maxii_atoms.vhd",
+		"maxii_components.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 # compile maxv library
 if ((-not $StopCompiling) -and $Max)
-{	Write-Host "Compiling library 'maxv' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Files = (
-		"$SourceDir\maxv_atoms.vhd",
-		"$SourceDir\maxv_components.vhd")
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing file '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=maxv " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	$StopCompiling = $true
-				break
-			}
-		}
-	}
+{	$Library = "maxv"
+	$Files = @(
+		"maxv_atoms.vhd",
+		"maxv_components.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 # compile arriaii library
 if ((-not $StopCompiling) -and $Arria)
-{	Write-Host "Compiling library 'arriaii' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Files = (
-		"$SourceDir\arriaii_atoms.vhd",
-		"$SourceDir\arriaii_components.vhd",
-		"$SourceDir\arriaii_hssi_components.vhd",
-		"$SourceDir\arriaii_hssi_atoms.vhd")
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing file '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=arriaii " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	$StopCompiling = $true
-				break
-			}
-		}
-	}
+{	$Library = "arriaii"
+	$Files = @(
+		"arriaii_atoms.vhd",
+		"arriaii_components.vhd",
+		"arriaii_hssi_components.vhd",
+		"arriaii_hssi_atoms.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 # compile arriaii_pcie_hip library
 if ((-not $StopCompiling) -and $Arria)
-{	Write-Host "Compiling library 'arriaii_pcie_hip' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Files = (
-		"$SourceDir\arriaii_pcie_hip_components.vhd",
-		"$SourceDir\arriaii_pcie_hip_atoms.vhd")
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing file '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=arriaii_pcie_hip " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	$StopCompiling = $true
-				break
-			}
-		}
-	}
+{	$Library = "arriaii_pcie_hip"
+	$Files = @(
+		"arriaii_pcie_hip_components.vhd",
+		"arriaii_pcie_hip_atoms.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 # compile arriaiigz library
 if ((-not $StopCompiling) -and $Arria)
-{	Write-Host "Compiling library 'arriaiigz' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Files = (
-		"$SourceDir\arriaiigz_atoms.vhd",
-		"$SourceDir\arriaiigz_components.vhd",
-		"$SourceDir\arriaiigz_hssi_components.vhd")
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing file '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=arriaiigz " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	$StopCompiling = $true
-				break
-			}
-		}
-	}
+{	$Library = "arriaiigz"
+	$Files = @(
+		"arriaiigz_atoms.vhd",
+		"arriaiigz_components.vhd",
+		"arriaiigz_hssi_components.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 # compile arriav library
 if ((-not $StopCompiling) -and $Arria)
-{	Write-Host "Compiling library 'arriav' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Files = (
-		"$SourceDir\arriav_atoms.vhd",
-		"$SourceDir\arriav_components.vhd",
-		"$SourceDir\arriav_hssi_components.vhd",
-		"$SourceDir\arriav_hssi_atoms.vhd")
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing file '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=arriav " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	$StopCompiling = $true
-				break
-			}
-		}
-	}
+{	$Library = "arriav"
+	$Files = @(
+		"arriav_atoms.vhd",
+		"arriav_components.vhd",
+		"arriav_hssi_components.vhd",
+		"arriav_hssi_atoms.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 # compile arriavgz library
 if ((-not $StopCompiling) -and $Arria)
-{	Write-Host "Compiling library 'arriavgz' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Files = (
-		"$SourceDir\arriavgz_atoms.vhd",
-		"$SourceDir\arriavgz_components.vhd",
-		"$SourceDir\arriavgz_hssi_components.vhd",
-		"$SourceDir\arriavgz_hssi_atoms.vhd")
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing file '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=arriavgz " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	$StopCompiling = $true
-				break
-			}
-		}
-	}
+{	$Library = "arriavgz"
+	$Files = @(
+		"arriavgz_atoms.vhd",
+		"arriavgz_components.vhd",
+		"arriavgz_hssi_components.vhd",
+		"arriavgz_hssi_atoms.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 # compile arriavgz_pcie_hip library
 if ((-not $StopCompiling) -and $Arria)
-{	Write-Host "Compiling library 'arriavgz_pcie_hip' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Files = (
-		"$SourceDir\arriavgz_pcie_hip_components.vhd",
-		"$SourceDir\arriavgz_pcie_hip_atoms.vhd")
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing file '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=arriavgz_pcie_hip " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	$StopCompiling = $true
-				break
-			}
-		}
-	}
+{	$Library = "arriavgz_pcie_hip"
+	$Files = @(
+		"arriavgz_pcie_hip_components.vhd",
+		"arriavgz_pcie_hip_atoms.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 # compile cycloneiv library
 if ((-not $StopCompiling) -and $Cyclone)
-{	Write-Host "Compiling library 'cycloneiv' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Files = (
-		"$SourceDir\cycloneiv_atoms.vhd",
-		"$SourceDir\cycloneiv_components.vhd",
-		"$SourceDir\cycloneiv_hssi_components.vhd",
-		"$SourceDir\cycloneiv_hssi_atoms.vhd")
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing file '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=cycloneiv " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	$StopCompiling = $true
-				break
-			}
-		}
-	}
+{	$Library = "cycloneiv"
+	$Files = @(
+		"cycloneiv_atoms.vhd",
+		"cycloneiv_components.vhd",
+		"cycloneiv_hssi_components.vhd",
+		"cycloneiv_hssi_atoms.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 # compile cycloneiv_pcie_hip library
 if ((-not $StopCompiling) -and $Cyclone)
-{	Write-Host "Compiling library 'cycloneiv_pcie_hip' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Files = (
-		"$SourceDir\cycloneiv_pcie_hip_components.vhd",
-		"$SourceDir\cycloneiv_pcie_hip_atoms.vhd")
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing file '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=cycloneiv_pcie_hip " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	$StopCompiling = $true
-				break
-			}
-		}
-	}
+{	$Library = "cycloneiv_pcie_hip"
+	$Files = @(
+		"cycloneiv_pcie_hip_components.vhd",
+		"cycloneiv_pcie_hip_atoms.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 # compile cycloneive library
 if ((-not $StopCompiling) -and $Cyclone)
-{	Write-Host "Compiling library 'cycloneive' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Files = (
-		"$SourceDir\cycloneive_atoms.vhd",
-		"$SourceDir\cycloneive_components.vhd")
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing file '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=cycloneive " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	$StopCompiling = $true
-				break
-			}
-		}
-	}
+{	$Library = "cycloneive"
+	$Files = @(
+		"cycloneive_atoms.vhd",
+		"cycloneive_components.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 # compile cyclonev library
 if ((-not $StopCompiling) -and $Cyclone)
-{	Write-Host "Compiling library 'cyclonev' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Files = (
-		"$SourceDir\cyclonev_atoms.vhd",
-		"$SourceDir\cyclonev_components.vhd",
-		"$SourceDir\cyclonev_hssi_components.vhd",
-		"$SourceDir\cyclonev_hssi_atoms.vhd")
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing file '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=cyclonev " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	$StopCompiling = $true
-				break
-			}
-		}
-	}
+{	$Library = "cyclonev"
+	$Files = @(
+		"cyclonev_atoms.vhd",
+		"cyclonev_components.vhd",
+		"cyclonev_hssi_components.vhd",
+		"cyclonev_hssi_atoms.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 # compile stratixiv library
 if ((-not $StopCompiling) -and $Stratix)
-{	Write-Host "Compiling library 'stratixiv' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Files = (
-		"$SourceDir\stratixiv_atoms.vhd",
-		"$SourceDir\stratixiv_components.vhd",
-		"$SourceDir\stratixiv_hssi_components.vhd",
-		"$SourceDir\stratixiv_hssi_atoms.vhd")
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing file '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=stratixiv " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	$StopCompiling = $true
-				break
-			}
-		}
-	}
+{	$Library = "stratixiv"
+	$Files = @(
+		"stratixiv_atoms.vhd",
+		"stratixiv_components.vhd",
+		"stratixiv_hssi_components.vhd",
+		"stratixiv_hssi_atoms.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 # compile stratixiv_pcie_hip library
 if ((-not $StopCompiling) -and $Stratix)
-{	Write-Host "Compiling library 'stratixiv_pcie_hip' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Files = (
-		"$SourceDir\stratixiv_pcie_hip_components.vhd",
-		"$SourceDir\stratixiv_pcie_hip_atoms.vhd")
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing file '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=stratixiv_pcie_hip " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	$StopCompiling = $true
-				break
-			}
-		}
-	}
+{	$Library = "stratixiv_pcie_hip"
+	$Files = @(
+		"stratixiv_pcie_hip_components.vhd",
+		"stratixiv_pcie_hip_atoms.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 # compile stratixv library
 if ((-not $StopCompiling) -and $Stratix)
-{	Write-Host "Compiling library 'stratixv' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Files = (
-		"$SourceDir\stratixv_atoms.vhd",
-		"$SourceDir\stratixv_components.vhd",
-		"$SourceDir\stratixv_hssi_components.vhd",
-		"$SourceDir\stratixv_hssi_atoms.vhd")
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing file '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=stratixv " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	$StopCompiling = $true
-				break
-			}
-		}
-	}
+{	$Library = "stratixv"
+	$Files = @(
+		"stratixv_atoms.vhd",
+		"stratixv_components.vhd",
+		"stratixv_hssi_components.vhd",
+		"stratixv_hssi_atoms.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 # compile stratixv_pcie_hip library
 if ((-not $StopCompiling) -and $Stratix)
-{	Write-Host "Compiling library 'stratixv_pcie_hip' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Files = (
-		"$SourceDir\stratixv_pcie_hip_components.vhd",
-		"$SourceDir\stratixv_pcie_hip_atoms.vhd")
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing file '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=stratixv_pcie_hip " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	$StopCompiling = $true
-				break
-			}
-		}
-	}
+{	$Library = "stratixv_pcie_hip"
+	$Files = @(
+		"stratixv_pcie_hip_components.vhd",
+		"stratixv_pcie_hip_atoms.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 # compile fiftyfivenm library
 if ((-not $StopCompiling) -and $Nanometer)
-{	Write-Host "Compiling library 'fiftyfivenm' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Files = (
-		"$SourceDir\fiftyfivenm_atoms.vhd",
-		"$SourceDir\fiftyfivenm_components.vhd")
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing file '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=fiftyfivenm " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	$StopCompiling = $true
-				break
-			}
-		}
-	}
+{	$Library = "fiftyfivenm"
+	$Files = @(
+		"fiftyfivenm_atoms.vhd",
+		"fiftyfivenm_components.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 # compile twentynm library
 if ((-not $StopCompiling) -and $Nanometer)
-{	Write-Host "Compiling library 'twentynm' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Files = (
-		"$SourceDir\twentynm_atoms.vhd",
-		"$SourceDir\twentynm_components.vhd",
-		"$SourceDir\twentynm_hip_components.vhd",
-		"$SourceDir\twentynm_hip_atoms.vhd",
-		"$SourceDir\twentynm_hssi_components.vhd",
-		"$SourceDir\twentynm_hssi_atoms.vhd")
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing file '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=twentynm " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	$StopCompiling = $true
-				break
-			}
-		}
-	}
+{	$Library = "twentynm"
+	$Files = @(
+		"twentynm_atoms.vhd",
+		"twentynm_components.vhd",
+		"twentynm_hip_components.vhd",
+		"twentynm_hip_atoms.vhd",
+		"twentynm_hssi_components.vhd",
+		"twentynm_hssi_atoms.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 Write-Host "--------------------------------------------------------------------------------"
@@ -684,10 +544,4 @@ if ($ErrorCount -gt 0)
 else
 {	Write-Host "[SUCCESSFUL]" -ForegroundColor Green	}
 
-# unload PowerShell modules
-Remove-Module shared
-Remove-Module config
-
-# restore working directory
-cd $WorkingDir
-
+Exit-CompileScript

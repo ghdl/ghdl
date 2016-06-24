@@ -333,6 +333,12 @@ install.vhdllib: install.dirs
 	  $(INSTALL_DATA) -p \
 	    $(LIBDST_DIR)/$$d/* $(DESTDIR)$(VHDL_LIB_DIR)/$$d; \
 	done
+        # Vendors scripts
+	$(MKDIR) -p $(DESTDIR)$(VHDL_LIB_DIR)/vendors
+	$(INSTALL_DATA) -p \
+	    $(LIBSRC_DIR)/vendors/* $(DESTDIR)$(VHDL_LIB_DIR)/vendors/
+	$(INSTALL_PROGRAM) -p \
+	    $(LIBSRC_DIR)/vendors/*.sh $(DESTDIR)$(VHDL_LIB_DIR)/vendors/
 
 ####################### clean ############################################
 

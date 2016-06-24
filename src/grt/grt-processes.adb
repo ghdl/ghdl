@@ -842,6 +842,13 @@ package body Grt.Processes is
       --    of step f of the simulation cycle, below.
       Next_Time := Compute_Next_Time;
       if Next_Time /= 0 then
+         if Has_Callbacks (Hooks.Cb_Last_Known_Delta) then
+            Call_Callbacks (Hooks.Cb_Last_Known_Delta);
+            Flush_Active_Chain;
+            Next_Time := Compute_Next_Time;
+         end if;
+      end if;
+      if Next_Time /= 0 then
          Update_Active_Chain;
       end if;
 

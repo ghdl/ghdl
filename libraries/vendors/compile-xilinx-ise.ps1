@@ -3,10 +3,10 @@
 # kate: tab-width 2; replace-tabs off; indent-width 2;
 # 
 # ==============================================================================
+#	Authors:						Patrick Lehmann
+# 
 #	PowerShell Script:	Script to compile the simulation libraries from Xilinx ISE
 #											for GHDL on Windows
-# 
-#	Authors:						Patrick Lehmann
 # 
 # Description:
 # ------------------------------------
@@ -15,7 +15,7 @@
 #		- compiles all Xilinx ISE simulation libraries and packages
 #
 # ==============================================================================
-#	Copyright (C) 2015 Patrick Lehmann
+#	Copyright (C) 2015-2016 Patrick Lehmann
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -46,6 +46,9 @@
 #
 [CmdletBinding()]
 param(
+	# Show the embedded help page(s)
+	[switch]$Help =							$false,
+	
 	# Compile all libraries and packages.
 	[switch]$All =							$false,
 	
@@ -61,21 +64,25 @@ param(
 	# Compile the Xilinx secureip library.
 	[switch]$SecureIP =					$false,
 	
+	# Clean up directory before analyzing.
+	[switch]$Clean =						$false,
+	
 	# Set VHDL Standard to '93
 	[switch]$VHDL93 =						$false,
 	# Set VHDL Standard to '08
 	[switch]$VHDL2008 =					$false,
-	
-	# Clean up directory before analyzing.
-	[switch]$Clean =						$false,
 	
 	# Skip warning messages. (Show errors only.)
 	[switch]$SuppressWarnings = $false,
 	# Halt on errors
 	[switch]$HaltOnError =			$false,
 	
-	# Show the embedded help page(s)
-	[switch]$Help =							$false
+	# Set vendor library source directory
+	[string]$Source =			"",
+	# Set output directory name
+	[string]$Output =			"",
+	# Set GHDL executable
+	[string]$GHDL =				""
 )
 
 if ($Help)
@@ -85,236 +92,178 @@ if ($Help)
 
 # ---------------------------------------------
 # save working directory
-$WorkingDir = Get-Location
+$WorkingDir =		Get-Location
 
 # load modules from GHDL's 'vendors' library directory
-Import-Module $PSScriptRoot\config.psm1
-Import-Module $PSScriptRoot\shared.psm1
+Import-Module $PSScriptRoot\config.psm1 -ArgumentList "XilinxISE"
+Import-Module $PSScriptRoot\shared.psm1 -ArgumentList @("Xilinx ISE", "$WorkingDir")
 
-# extract data from configuration
-$SourceDir =			$InstallationDirectory["XilinxISE"] + "\ISE_DS\ISE\vhdl\src"
-$DestinationDir = $DestinationDirectory["XilinxISE"]
+# Display help if no command was selected
+$Help = $Help -or (-not ($All -or $Unisim -or $Simprim -or $Unimacro))
 
-if (-not $All)
-{	$All =			$false	}
-elseif ($All -eq $true)
+if ($Help)
+{	Get-Help $MYINVOCATION.InvocationName -Detailed
+	Exit-CompileScript
+}
+if ($All)
 {	$Unisim =		$true
 	$Simprim =	$true
 	$Unimacro =	$true
 	$SecureIP =	$true
 }
 
-if ($VHDL93 -eq $true)
-{	$VHDLStandard =			"93c"
-	$VHDLFlavor =				"synopsys"
-	$DestinationDir +=	".v93"
+function Get-XilinxISEDirectory
+{	if (Test-Path env:XILINX)
+	{	return $XILINX + "\" + (Get-VendorToolSourceDirectory)		}
+	else
+	{	$EnvSourceDir = ""
+		foreach ($Drive in Get-DriveInfo)
+		{	$Path = $Drive.Name + "Xilinx"
+			if (Test-Path $Path -PathType Container)
+			{	foreach ($Major in 14..12)
+				{	foreach ($Minor in 7..1)
+					{	$Dir = $Path + "\" + $Major + "." + $Minor + "\ISE_DS"
+						if (Test-Path $Dir -PathType Container)
+						{	$EnvSourceDir = $Dir + "\" + (Get-VendorToolSourceDirectory)
+							return $EnvSourceDir
+						}
+					}
+				}
+			}
+		}
+	}
 }
-elseif ($VHDL2008 -eq $true)
-{	$VHDLStandard =			"08"
-	$VHDLFlavor =				"standard"
-	$DestinationDir +=	".v08"
-	Write-Host "Not all Xilinx primitives are VHDL-2008 compatible! Setting HaltOnError to FALSE." -ForegroundColor Red
+				
+$SourceDirectory =			Get-SourceDirectory $Source (Get-XilinxISEDirectory)
+$DestinationDirectory =	Get-DestinationDirectory $Output
+$GHDLBinary =						Get-GHDLBinary $GHDL
+
+# create "Altera" directory and change to it
+New-DestinationDirectory $DestinationDirectory
+cd $DestinationDirectory
+
+if ($VHDL2008)
+{	Write-Host "Not all Xilinx primitives are VHDL-2008 compatible! Setting HaltOnError to FALSE." -ForegroundColor Red
 	$HaltOnError =			$false
 }
-else
-{	$VHDLStandard =			"93c"
-	$VHDLFlavor =				"synopsys"
-	$DestinationDir +=	".v93"
-}
+$VHDLVersion,$VHDLStandard,$VHDLFlavor = Get-VHDLVariables $VHDL93 $VHDL2008
+
+# define global GHDL Options
+$GHDLOptions = @("-a", "-fexplicit", "-frelaxed-rules", "--mb-comments", "--warn-binding", "--ieee=$VHDLFlavor", "--no-vital-checks", "--std=$VHDLStandard", "-P$DestinationDirectory")
+
+# extract data from configuration
+# $SourceDir =			$InstallationDirectory["AlteraQuartus"] + "\quartus\eda\sim_lib"
 
 $StopCompiling =	$false
 $ErrorCount =			0
 
-# define global GHDL Options
-$GlobalOptions = ("-a", "-fexplicit", "-frelaxed-rules", "--no-vital-checks", "--warn-binding", "--mb-comments")
 
-# create "Xilinx" directory and change to it
-Write-Host "Creating vendor directory: '$DestinationDir'" -ForegroundColor Yellow
-mkdir $DestinationDir -ErrorAction SilentlyContinue | Out-Null
-cd $DestinationDir
-
-# Cleanup
+# Cleanup directories
 # ==============================================================================
 if ($Clean)
-{	Write-Host "Cleaning up vendor directory ..." -ForegroundColor Yellow
+{	Write-Host "[ERROR]: '-Clean' is not implemented!"
+	Exit-CompileScript -1
+	
+	Write-Host "Cleaning up vendor directory ..." -ForegroundColor Yellow
 	rm *.cf
 }
 
-# Library UNISIM
+
+# Library UniSim
 # ==============================================================================
 # compile unisim packages
 if ((-not $StopCompiling) -and $Unisim)
-{	Write-Host "Compiling library 'unisim' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Options += "--ieee=$VHDLFlavor"
-	$Options += "--std=$VHDLStandard"
-	$Files = (
-		"$SourceDir\unisims\unisim_VPKG.vhd",
-		"$SourceDir\unisims\unisim_VCOMP.vhd")
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing package '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=unisim " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	$StopCompiling = $true
-				break
-			}
-		}
-	}
+{	$Library = "unisim"
+	$Files = @(
+		"unisims\unisim_VPKG.vhd",
+		"unisims\unisim_VCOMP.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 # compile unisim primitives
 if ((-not $StopCompiling) -and $Unisim)
-{	$Options = $GlobalOptions
-	$Options += "--ieee=$VHDLFlavor"
-	$Options += "--std=$VHDLStandard"
-	$Files = dir "$SourceDir\unisims\primitive\*.vhd*"
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing primitive '$($File.FullName)'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=unisim " + $File.FullName + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	$StopCompiling = $true
-				break
-			}
-		}
-	}
+{	$Library = "unisim"
+	$SourceFiles = dir "$SourceDirectory\unisims\primitive\*.vhd*"
+	
+	$ErrorCount += 0
+	Start-PrimitiveCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 # compile unisim secureip primitives
 if ((-not $StopCompiling) -and $Unisim -and $SecureIP)
-{	Write-Host "Compiling library secureip primitives ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Options += "--ieee=$VHDLFlavor"
-	$Options += "--std=$VHDLStandard"
-	$Files = dir "$SourceDir\unisims\secureip\*.vhd*"
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing primitive '$($File.FullName)'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=secureip " + $File.FullName + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	$StopCompiling = $true
-				# break
-			}
-		}
-	}
+{	$Library = "secureip"
+	$SourceFiles = dir "$SourceDirectory\unisims\secureip\*.vhd*"
+	
+	$ErrorCount += 0
+	Start-PrimitiveCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 # Library UNIMACRO
 # ==============================================================================
 # compile unimacro packages
 if ((-not $StopCompiling) -and $Unimacro)
-{	Write-Host "Compiling library 'unimacro' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Options += "--ieee=$VHDLFlavor"
-	$Options += "--std=$VHDLStandard"
+{	$Library = "unimacro"
 	$Files = @(
-		"$SourceDir\unimacro\unimacro_VCOMP.vhd")
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing package '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=unimacro " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	$StopCompiling = $true
-				break
-			}
-		}
-	}
+		"unimacro\unimacro_VCOMP.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 # compile unimacro macros
 if ((-not $StopCompiling) -and $Unimacro)
-{	$Options = $GlobalOptions
-	$Options += "--ieee=$VHDLFlavor"
-	$Options += "--std=$VHDLStandard"
-	$Files = dir "$SourceDir\unimacro\*_MACRO.vhd*"
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing primitive '$($File.FullName)'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=unimacro " + $File.FullName + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	$StopCompiling = $true
-				break
-			}
-		}
-	}
+{	$Library = "unimacro"
+	$SourceFiles = dir "$SourceDirectory\unimacro\*_MACRO.vhd*"
+	
+	$ErrorCount += 0
+	Start-PrimitiveCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 # Library SIMPRIM
 # ==============================================================================
 # compile simprim packages
 if ((-not $StopCompiling) -and $Simprim)
-{	Write-Host "Compiling library 'simprim' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Options += "--ieee=$VHDLFlavor"
-	$Options += "--std=$VHDLStandard"
+{	$Library = "simprim"
 	$Files = (
-		"$SourceDir\simprims\simprim_Vpackage.vhd",
-		"$SourceDir\simprims\simprim_Vcomponents.vhd")
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing package '$File'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=simprim " + $File + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	$StopCompiling = $true
-				break
-			}
-		}
-	}
+		"simprims\simprim_Vpackage.vhd",
+		"simprims\simprim_Vcomponents.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 # compile simprim primitives
 if ((-not $StopCompiling) -and $Simprim)
-{	Write-Host "Compiling library 'simprim' ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Options += "--ieee=$VHDLFlavor"
-	$Options += "--std=$VHDLStandard"
-	$Files = dir "$SourceDir\simprims\primitive\other\*.vhd*"
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing primitive '$($File.FullName)'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=simprim " + $File.FullName + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	$StopCompiling = $true
-				# break
-			}
-		}
-	}
+{	$Library = "simprim"
+	$SourceFiles = dir "$SourceDirectory\simprims\primitive\other\*.vhd*"
+	
+	$ErrorCount += 0
+	Start-PrimitiveCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 # compile simprim secureip primitives
 if ((-not $StopCompiling) -and $Simprim -and $SecureIP)
-{	Write-Host "Compiling secureip primitives ..." -ForegroundColor Yellow
-	$Options = $GlobalOptions
-	$Options += "--ieee=$VHDLFlavor"
-	$Options += "--std=$VHDLStandard"
-	$Files = dir "$SourceDir\simprims\secureip\other\*.vhd*"
-	foreach ($File in $Files)
-	{	Write-Host "Analyzing primitive '$($File.FullName)'" -ForegroundColor Cyan
-		$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=simprim " + $File.FullName + " 2>&1"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	$StopCompiling = $true
-				# break
-			}
-		}
-	}
+{	$Library = "secureip"
+	$SourceFiles = dir "$SourceDirectory\simprims\secureip\other\*.vhd*"
+	
+	$ErrorCount += 0
+	Start-PrimitiveCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 Write-Host "--------------------------------------------------------------------------------"
@@ -324,9 +273,4 @@ if ($ErrorCount -gt 0)
 else
 {	Write-Host "[SUCCESSFUL]" -ForegroundColor Green	}
 
-# unload PowerShell modules
-Remove-Module shared
-Remove-Module config
-
-# restore working directory
-cd $WorkingDir
+Exit-CompileScript

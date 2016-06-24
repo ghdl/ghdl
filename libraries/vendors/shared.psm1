@@ -14,7 +14,7 @@
 #	output streams (stdout and stderr).
 #
 # ==============================================================================
-#	Copyright (C) 2015 Patrick Lehmann
+#	Copyright (C) 2015-2016 Patrick Lehmann
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -31,6 +31,315 @@
 #	Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #	02111-1307, USA.
 # ==============================================================================
+
+[CmdletBinding()]
+param(
+	[Parameter(Mandatory=$true)][string]$VendorToolName,
+	[Parameter(Mandatory=$true)][string]$WorkingDir
+)
+
+$Module_VendorToolName =	$VendorToolName
+$Module_WorkingDir =			$WorkingDir
+
+function Exit-CompileScript
+{		<#
+		.SYNOPSIS
+		Undocumented
+		
+		.DESCRIPTION
+		Undocumented
+		
+		.PARAMETER ExitCode
+		ExitCode of this script run
+	#>
+	[CmdletBinding()]
+	param(
+		[int]$ExitCode = 0
+	)
+	
+	cd $Module_WorkingDir
+	
+	# unload modules
+	Remove-Module config
+	Remove-Module shared
+	
+	if ($ExitCode -eq 0)
+	{	exit 0	}
+	else
+	{	Write-Host "[DEBUG]: HARD EXIT" -ForegroundColor Cyan
+		exit $ExitCode
+	}
+}
+
+function Get-SourceDirectory
+{	<#
+		.SYNOPSIS
+		Undocumented
+		
+		.DESCRIPTION
+		Undocumented
+		
+		.PARAMETER Source
+		Undocumented
+		.PARAMETER EnvSource
+		Undocumented
+	#>
+	[CmdletBinding()]
+	param(
+		[string]$Source,
+		[string]$EnvSource
+	)
+
+	if ($Source -ne "")
+	{	$SourceDirectory = $Source			}										# TODO: remove trailing backslashes
+	elseif ($EnvSource -ne "")
+	{	$SourceDirectory = $EnvSource		}
+	else
+	{	$SourceDirectory = (Get-VendorToolInstallationDirectory) + "\" + (Get-VendorToolSourceDirectory)	}
+	
+	if ($SourceDirectory -eq "")
+	{	Write-Host "[ERROR]: $Module_VendorToolName is not configured in '$ScriptDir\config.psm1'." -ForegroundColor Red
+		Write-Host "  Use adv. options '-Source' and '-Output' or configure 'config.psm1'." -ForegroundColor Red
+		Exit-CompileScript -1
+	}
+	elseif (-not (Test-Path $SourceDirectory -PathType Container))
+	{	Write-Host "[ERROR]: Path '$SourceDirectory' does not exist." -ForegroundColor Red
+		Exit-CompileScript -1
+	}
+	
+	return Convert-Path (Resolve-Path $SourceDirectory)
+}
+
+function Get-DestinationDirectory
+{	<#
+		.SYNOPSIS
+		Undocumented
+		
+		.DESCRIPTION
+		Undocumented
+		
+		.PARAMETER Output
+		Undocumented
+	#>
+	[CmdletBinding()]
+	param(
+		[string]$Output
+	)
+	if ($Output -ne "")
+	{	$DestinationDirectory = $Output		}										# TODO: remove trailing backslashes
+	else
+	{	$DestinationDirectory = Get-VendorToolDestinationDirectory	}
+	
+	if ($DestinationDirectory -eq "")
+	{	Write-Host "[ERROR]: $Module_VendorToolName is not configured in '$ScriptDir\config.psm1'." -ForegroundColor Red
+		Write-Host "  Use adv. options '-Source' and '-Output' or configure 'config.psm1'." -ForegroundColor Red
+		Exit-CompileScript -1
+	}
+	
+	# if ($DestinationDirectory.IsAbsolute())
+	# {	$DestinationDirectory = "$Module_WorkingDir\$DestinationDirectory"		}
+	
+	return $DestinationDirectory
+}
+
+function Get-GHDLBinary
+{	<#
+		.SYNOPSIS
+		Undocumented
+		
+		.DESCRIPTION
+		Undocumented
+		
+		.PARAMETER GHDL
+		Undocumented
+	#>
+	[CmdletBinding()]
+	param(
+		[string]$GHDL
+	)
+
+	if ($GHDL -ne "")
+	{	$GHDLBinary = $GHDL				}
+	elseif (Test-Path env:GHDL)
+	{	$GHDLBinary = $env:GHDL		}
+	else
+	{	$GHDLBinary = "ghdl.exe"	}
+	
+	if (-not (Test-Path $GHDLBinary -PathType Leaf))
+	{	Write-Host "Use adv. options '-GHDL' to set the GHDL executable." -ForegroundColor Red
+		Exit-CompileScript -1
+	}
+	
+	return $GHDLBinary
+}
+
+
+function Get-VHDLVariables
+{	<#
+		.SYNOPSIS
+		Undocumented
+		
+		.DESCRIPTION
+		Undocumented
+		
+		.PARAMETER VHDL93
+		Undocumented
+		.PARAMETER VHDL2008
+		Undocumented
+	#>
+	[CmdletBinding()]
+	param(
+		[bool]$VHDL93 =		$false,
+		[bool]$VHDL2008 = $true
+	)
+	
+	if ($VHDL93)
+	{	$VHDLVersion =	"v93"
+		$VHDLStandard =	"93c"
+		$VHDLFlavor =		"synopsys"
+	}
+	elseif ($VHDL2008)
+	{	$VHDLVersion =	"v08"
+		$VHDLStandard = "08"
+		$VHDLFlavor =		"standard"
+	}
+	else
+	{	$VHDLVersion =	"v93"
+		$VHDLStandard = "93c"
+		$VHDLFlavor =		"synopsys"
+	}
+	return $VHDLVersion,$VHDLStandard,$VHDLFlavor
+}
+
+function New-DestinationDirectory
+{	<#
+		.SYNOPSIS
+		Undocumented
+		
+		.DESCRIPTION
+		Undocumented
+		
+		.PARAMETER DestinationDirectory
+		Undocumented
+	#>
+	[CmdletBinding()]
+	param(
+		[Parameter(Mandatory=$true)][string]$DestinationDirectory
+	)
+
+	if (Test-Path $DestinationDirectory -PathType Container)
+	{	Write-Host "Vendor directory '$DestinationDirectory' already exists." -ForegroundColor Yellow		}
+	elseif (Test-Path $DestinationDirectory -PathType Leaf)
+	{	Write-Host "[ERROR]: Vendor directory '$DestinationDirectory' already exists as a file." -ForegroundColor Red
+		Exit-CompileScript -1
+	}
+	else
+	{	Write-Host "Creating vendor directory: '$DestinationDirectory'." -ForegroundColor Yellow
+		mkdir "$DestinationDirectory" -ErrorAction SilentlyContinue | Out-Null
+	}
+}
+
+function Start-PackageCompilation
+{	<#
+		.SYNOPSIS
+		Undocumented
+		
+		.DESCRIPTION
+		Undocumented
+		
+		.PARAMETER GHDLBinary
+		Undocumented
+		.PARAMETER GHDLOptions
+		Undocumented
+		.PARAMETER Library
+		Undocumented
+		.PARAMETER SourceFiles
+		Undocumented
+		.PARAMETER HaltOnError
+		Undocumented
+	#>
+	[CmdletBinding()]
+	param(
+		[Parameter(Mandatory=$true)][string]$GHDLBinary,
+		[Parameter(Mandatory=$true)][string[]]$GHDLOptions,
+		[Parameter(Mandatory=$true)][string]$DestinationDirectory,
+		[Parameter(Mandatory=$true)][string]$Library,
+		[Parameter(Mandatory=$true)][string]$VHDLVersion,
+		[Parameter(Mandatory=$true)][string[]]$SourceFiles,
+		[Parameter(Mandatory=$true)][bool]$HaltOnError
+	)
+	$LibraryDirectory="$DestinationDirectory/$Library/$VHDLVersion"
+	mkdir $LibraryDirectory -ErrorAction SilentlyContinue | Out-Null
+	echo $LibraryDirectory
+	cd $LibraryDirectory
+	Write-Host "Compiling library '$Library' ..." -ForegroundColor Yellow
+	$ErrorCount = 0
+	foreach ($File in $SourceFiles)
+	{	Write-Host "Analyzing package file '$File'" -ForegroundColor Cyan
+		$InvokeExpr = "$GHDLBinary " + ($GHDLOptions -join " ") + " --work=$Library " + $File + " 2>&1"
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
+		if ($LastExitCode -ne 0)
+		{	$ErrorCount += 1
+			if ($HaltOnError)
+			{	break		}
+		}
+	}
+	
+	cd $DestinationDirectory
+	# return $ErrorCount
+}
+
+function Start-PrimitiveCompilation
+{	<#
+		.SYNOPSIS
+		Undocumented
+		
+		.DESCRIPTION
+		Undocumented
+		
+		.PARAMETER GHDLBinary
+		Undocumented
+		.PARAMETER GHDLOptions
+		Undocumented
+		.PARAMETER Library
+		Undocumented
+		.PARAMETER SourceFiles
+		Undocumented
+		.PARAMETER HaltOnError
+		Undocumented
+	#>
+	[CmdletBinding()]
+	param(
+		[Parameter(Mandatory=$true)][string]$GHDLBinary,
+		[Parameter(Mandatory=$true)][string[]]$GHDLOptions,
+		[Parameter(Mandatory=$true)][string]$DestinationDirectory,
+		[Parameter(Mandatory=$true)][string]$Library,
+		[Parameter(Mandatory=$true)][string]$VHDLVersion,
+		[Parameter(Mandatory=$true)][string[]]$SourceFiles,
+		[Parameter(Mandatory=$true)][bool]$HaltOnError
+	)
+	$LibraryDirectory="$DestinationDirectory/$Library/$VHDLVersion"
+	mkdir $LibraryDirectory -ErrorAction SilentlyContinue | Out-Null
+	echo $LibraryDirectory
+	cd $LibraryDirectory
+	Write-Host "Compiling library '$Library' ..." -ForegroundColor Yellow
+	$ErrorCount = 0
+	foreach ($File in $SourceFiles)
+	{	Write-Host "Analyzing primitive file '$File'" -ForegroundColor Cyan
+		$InvokeExpr = "$GHDLBinary " + ($GHDLOptions -join " ") + " --work=$Library " + $File + " 2>&1"
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
+		if ($LastExitCode -ne 0)
+		{	$ErrorCount += 1
+			if ($HaltOnError)
+			{	break		}
+		}
+	}
+	
+	cd $DestinationDirectory
+	# return $ErrorCount
+}
+
+
 function Restore-NativeCommandStream
 {	<#
 		.SYNOPSIS
@@ -91,9 +400,10 @@ function Write-ColoredGHDLLine
 		
 		.PARAMETER InputObject
 		A object stream is required as an input.
-		
 		.PARAMETER SuppressWarnings
 		Skip warning messages. (Show errors only.)
+		.PARAMETER Indent
+		Indentation string.
 	#>
 	[CmdletBinding()]
 	param(
@@ -101,27 +411,29 @@ function Write-ColoredGHDLLine
 		$InputObject,
 		
 		[Parameter(Position=1)]
-		[switch]$SuppressWarnings = $false
+		[switch]$SuppressWarnings = $false,
+		[Parameter(Position=2)]
+		[string]$Indent = ""
 	)
 
 	begin
 	{	$ErrorRecordFound = $false	}
 	
 	process
-	{	if (-not $InputObject)
-		{	Write-Host "Empty pipeline!"	}
-		elseif ($InputObject -is [String])
-		{	if ($InputObject.Contains("warning"))
+	{	if ($InputObject -is [String])
+		{	if ($InputObject -match ":\d+:\d+:warning:\s")
 			{	if (-not $SuppressWarnings)
-				{	Write-Host "WARNING: "	-NoNewline -ForegroundColor Yellow
+				{	Write-Host "${Indent}WARNING: "	-NoNewline -ForegroundColor Yellow
 					Write-Host $InputObject
 				}
 			}
-			else
+			elseif ($InputObject -match ":\d+:\d+:\s")
 			{	$ErrorRecordFound	= $true
-				Write-Host "ERROR: "		-NoNewline -ForegroundColor Red
+				Write-Host "${Indent}ERROR: "		-NoNewline -ForegroundColor Red
 				Write-Host $InputObject
 			}
+			else
+			{	Write-Host "${Indent}$InputObject"		}
 		}
 		else
 		{	Write-Host "Unsupported object in pipeline stream"		}
@@ -130,6 +442,19 @@ function Write-ColoredGHDLLine
 	end
 	{	$ErrorRecordFound		}
 }
+
+Export-ModuleMember -Function 'Exit-CompileScript'
+
+Export-ModuleMember -Function 'Get-SourceDirectory'
+Export-ModuleMember -Function 'Get-DestinationDirectory'
+Export-ModuleMember -Function 'Get-GHDLBinary'
+
+Export-ModuleMember -Function 'Get-VHDLVariables'
+
+Export-ModuleMember -Function 'New-DestinationDirectory'
+Export-ModuleMember -Function 'Start-PackageCompilation'
+Export-ModuleMember -Function 'Start-PrimitiveCompilation'
+
 
 Export-ModuleMember -Function 'Restore-NativeCommandStream'
 Export-ModuleMember -Function 'Write-ColoredGHDLLine'

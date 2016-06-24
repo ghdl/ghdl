@@ -1,5 +1,5 @@
 --  GHDL Run Time (GRT) - SDF parser.
---  Copyright (C) 2002 - 2014 Tristan Gingold
+--  Copyright (C) 2002 - 2016 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -22,17 +22,16 @@
 --  covered by the GNU General Public License. This exception does not
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
-with System.Storage_Elements; --  Work around GNAT bug.
-pragma Unreferenced (System.Storage_Elements);
+
 with Grt.Stdio; use Grt.Stdio;
 with Grt.C; use Grt.C;
+with Grt.Strings; use Grt.Strings;
 with Grt.Errors; use Grt.Errors;
-with Ada.Characters.Latin_1;
 with Ada.Unchecked_Deallocation;
 with Grt.Vital_Annotate;
 
 package body Grt.Sdf is
-   EOT : constant Character := Character'Val (4);
+   use ASCII;
 
    type Sdf_Token_Type is
      (
@@ -71,10 +70,10 @@ package body Grt.Sdf is
    function Open_Sdf (Filename : String) return Boolean
    is
       N_Filename : String (1 .. Filename'Length + 1);
-      Mode : constant String := "rt" & NUL;
+      Mode : constant String := "rt" & ASCII.NUL;
    begin
       N_Filename (1 .. Filename'Length) := Filename;
-      N_Filename (N_Filename'Last) := NUL;
+      N_Filename (N_Filename'Last) := ASCII.NUL;
       Sdf_Stream := fopen (N_Filename'Address, Mode'Address);
       if Sdf_Stream = NULL_Stream then
          Error_C ("cannot open SDF file '");
@@ -212,7 +211,7 @@ package body Grt.Sdf is
                --  Continue to read.
                Read_Append;
                Pos := Pos - 1;
-            when NUL .. Character'Val (3)
+            when ASCII.NUL .. Character'Val (3)
               | Character'Val (5) .. Character'Val (31)
               | Character'Val (127) .. Character'Val (255) =>
                Error_Bad_Character;
@@ -295,9 +294,7 @@ package body Grt.Sdf is
       Pos := 1;
    end Refill_Buf;
 
-   procedure Skip_Spaces
-   is
-      use Ada.Characters.Latin_1;
+   procedure Skip_Spaces is
    begin
       --  Fast blanks skipping.
       while Buf (Pos) = ' ' loop
@@ -359,9 +356,7 @@ package body Grt.Sdf is
       end loop;
    end Skip_Spaces;
 
-   function Get_Token return Sdf_Token_Type
-   is
-      use Ada.Characters.Latin_1;
+   function Get_Token return Sdf_Token_Type is
    begin
       Skip_Spaces;
 
@@ -410,9 +405,7 @@ package body Grt.Sdf is
       end case;
    end Get_Token;
 
-   function Is_White_Space (C : Character) return Boolean
-   is
-      use Ada.Characters.Latin_1;
+   function Is_White_Space (C : Character) return Boolean is
    begin
       case C is
          when ' '
@@ -425,9 +418,7 @@ package body Grt.Sdf is
       end case;
    end Is_White_Space;
 
-   function Get_Edge_Token return Edge_Type
-   is
-      use Ada.Characters.Latin_1;
+   function Get_Edge_Token return Edge_Type is
    begin
       Skip_Spaces;
 
@@ -663,16 +654,6 @@ package body Grt.Sdf is
       end if;
       return True;
    end Expect_Rexpr_Cp_Op_Ident;
-
-   function To_Lower (C : Character) return Character is
-   begin
-      if C >= 'A' and C <= 'Z' then
-         return Character'Val (Character'Pos (C)
-                               - Character'Pos ('A') + Character'Pos ('a'));
-      else
-         return C;
-      end if;
-   end To_Lower;
 
    function Parse_Port_Path1 (Tok : Sdf_Token_Type) return Boolean
    is

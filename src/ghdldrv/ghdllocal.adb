@@ -442,11 +442,7 @@ package body Ghdllocal is
             when Lib_Standard =>
                Add_Library_Path ("ieee");
             when Lib_Synopsys =>
-               if Vhdl_Std >= Vhdl_08 then
-                  Warning ("--ieee=synopsys is ignored for --std=08");
-               else
-                  Add_Library_Path ("synopsys");
-               end if;
+               Add_Library_Path ("synopsys");
             when Lib_Mentor =>
                if Vhdl_Std >= Vhdl_08 then
                   Warning ("--ieee=mentor is ignored for --std=08");

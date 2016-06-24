@@ -3,9 +3,9 @@
 # kate: tab-width 2; replace-tabs off; indent-width 2;
 # 
 # ==============================================================================
-#	PowerShell Script:	Script to compile the VUnit library for GHDL on Windows
-# 
 #	Authors:						Patrick Lehmann
+# 
+#	PowerShell Script:	Script to compile the VUnit library for GHDL on Windows
 # 
 # Description:
 # ------------------------------------
@@ -14,7 +14,7 @@
 #		- compiles all VUnit packages 
 #
 # ==============================================================================
-#	Copyright (C) 2015 Patrick Lehmann
+#	Copyright (C) 2015-2016 Patrick Lehmann
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -42,8 +42,14 @@
 #
 [CmdletBinding()]
 param(
+	# Show the embedded help page(s)
+	[switch]$Help =							$false,
+	
 	# Compile all packages.
 	[switch]$All =							$true,
+	
+	# Compile all VUnit packages.
+	[switch]$VUnit =						$true,
 	
 	# Clean up directory before analyzing.
 	[switch]$Clean =						$false,
@@ -53,112 +59,121 @@ param(
 	# Halt on errors
 	[switch]$HaltOnError =			$false,
 	
-	# Show the embedded help page(s)
-	[switch]$Help =							$false
+	# Set vendor library source directory
+	[string]$Source =						"",
+	# Set output directory name
+	[string]$Output =						"",
+	# Set GHDL executable
+	[string]$GHDL =							""
 )
-
-if ($Help)
-{	Get-Help $MYINVOCATION.InvocationName -Detailed
-	return
-}
 
 # ---------------------------------------------
 # save working directory
-$WorkingDir = Get-Location
+$WorkingDir =		Get-Location
 
 # load modules from GHDL's 'vendors' library directory
-Import-Module $PSScriptRoot\config.psm1
-Import-Module $PSScriptRoot\shared.psm1
+Import-Module $PSScriptRoot\config.psm1 -ArgumentList "VUnit"
+Import-Module $PSScriptRoot\shared.psm1 -ArgumentList @("VUnit", "$WorkingDir")
+
+# Display help if no command was selected
+$Help = $Help -or (-not ($All -or $VUnit))
+
+if ($Help)
+{	Get-Help $MYINVOCATION.InvocationName -Detailed
+	Exit-CompileScript
+}
+if ($All)
+{	$VUnit =			$true
+}
+
+				
+$SourceDirectory =			Get-SourceDirectory $Source ""
+$DestinationDirectory =	Get-DestinationDirectory $Output
+$GHDLBinary =						Get-GHDLBinary $GHDL
+
+# create "Altera" directory and change to it
+New-DestinationDirectory $DestinationDirectory
+cd $DestinationDirectory
+
+
+$VHDLVersion,$VHDLStandard,$VHDLFlavor = Get-VHDLVariables
+
+# define global GHDL Options
+$GHDLOptions = @("-a", "-fexplicit", "-frelaxed-rules", "--mb-comments", "--warn-binding", "--ieee=$VHDLFlavor", "--no-vital-checks", "--std=$VHDLStandard", "-P$DestinationDirectory")
 
 # extract data from configuration
-$SourceDir =			$InstallationDirectory["VUnit"]
-$DestinationDir = $DestinationDirectory["VUnit"]
-
-if ($All -eq $true)
-{	# nothing to configure
-}
+# $SourceDir =			$InstallationDirectory["AlteraQuartus"] + "\quartus\eda\sim_lib"
 
 $ErrorCount =			0
 
-# define global GHDL Options
-$GlobalOptions = ("-a", "-fexplicit", "-frelaxed-rules", "--mb-comments", "--warn-binding", "--no-vital-checks", "--std=08")
-
-# create "vunit" directory and change to it
-Write-Host "Creating vendor directory: '$DestinationDir'" -ForegroundColor Yellow
-mkdir $DestinationDir -ErrorAction SilentlyContinue | Out-Null
-cd $DestinationDir
-
-# Cleanup
+# Cleanup directories
 # ==============================================================================
 if ($Clean)
-{	Write-Host "Cleaning up vendor directory ..." -ForegroundColor Yellow
+{	Write-Host "[ERROR]: '-Clean' is not implemented!"
+	Exit-CompileScript -1
+	
+	Write-Host "Cleaning up vendor directory ..." -ForegroundColor Yellow
 	rm *.cf
 }
 
+
+# VUnit packages
+# ==============================================================================
 # compile vunit_lib library
-Write-Host "Compiling library 'vunit_lib' ..." -ForegroundColor Yellow
-$Options = $GlobalOptions
-$Files = (
-	"$SourceDir\vunit\vhdl\run\src\stop_api.vhd",
-	"$SourceDir\vunit\vhdl\vhdl\src\lib\std\textio.vhd",
-	"$SourceDir\vunit\vhdl\vhdl\src\lang\lang.vhd",
-	"$SourceDir\vunit\vhdl\com\src\com_types.vhd",
-	"$SourceDir\vunit\vhdl\run\src\stop_body_2008.vhd",
-	"$SourceDir\vunit\vhdl\com\src\com_api.vhd",
-	"$SourceDir\vunit\vhdl\string_ops\src\string_ops.vhd",
-	"$SourceDir\vunit\vhdl\path\src\path.vhd",
-	"$SourceDir\vunit\vhdl\logging\src\log_types.vhd",
-	"$SourceDir\vunit\vhdl\logging\src\log_formatting.vhd",
-	"$SourceDir\vunit\vhdl\logging\src\log_special_types200x.vhd",
-	"$SourceDir\vunit\vhdl\array\src\array_pkg.vhd",
-	"$SourceDir\vunit\vhdl\logging\src\log_base_api.vhd",
-	"$SourceDir\vunit\vhdl\logging\src\log_base.vhd",
-	"$SourceDir\vunit\vhdl\logging\src\log_api.vhd",
-	"$SourceDir\vunit\vhdl\logging\src\log.vhd",
-	"$SourceDir\vunit\vhdl\check\src\check_types.vhd",
-	"$SourceDir\vunit\vhdl\check\src\check_special_types200x.vhd",
-	"$SourceDir\vunit\vhdl\check\src\check_base_api.vhd",
-	"$SourceDir\vunit\vhdl\check\src\check_base.vhd",
-	"$SourceDir\vunit\vhdl\check\src\check_api.vhd",
-	"$SourceDir\vunit\vhdl\check\src\check.vhd",
-	"$SourceDir\vunit\vhdl\dictionary\src\dictionary.vhd",
-	"$SourceDir\vunit\vhdl\run\src\run_types.vhd",
-	"$SourceDir\vunit\vhdl\run\src\run_special_types200x.vhd",
-	"$SourceDir\vunit\vhdl\run\src\run_base_api.vhd",
-	"$SourceDir\vunit\vhdl\run\src\run_base.vhd",
-	"$SourceDir\vunit\vhdl\run\src\run_api.vhd",
-	"$SourceDir\vunit\vhdl\run\src\run.vhd",
-	"$SourceDir\vunit\vhdl\vunit_run_context.vhd",
-	"$SourceDir\vunit\vhdl\vunit_context.vhd",
-	"$SourceDir\vunit\vhdl\com\src\com_std_codec_builder.vhd",
-	"$SourceDir\vunit\vhdl\com\src\com_debug_codec_builder.vhd",
-	"$SourceDir\vunit\vhdl\com\src\com_string.vhd",
-	"$SourceDir\vunit\vhdl\com\src\com_codec_api.vhd",
-	"$SourceDir\vunit\vhdl\com\src\com_codec.vhd",
-	"$SourceDir\vunit\vhdl\com\src\com.vhd",
-	"$SourceDir\vunit\vhdl\com\src\com_context.vhd")
-foreach ($File in $Files)
-{	Write-Host "Analyzing package '$File'" -ForegroundColor Cyan
-	$InvokeExpr = "ghdl.exe " + ($Options -join " ") + " --work=vunit_lib " + $File + " 2>&1"
-	$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
-	if ($LastExitCode -ne 0)
-	{	$ErrorCount += 1
-		if ($HaltOnError)
-		{	break		}
-	}
+if ((-not $StopCompiling) -and $VUnit)
+{	$Library = "vunit_lib"
+	$Files = @(
+		"run\src\stop_api.vhd",
+		"vhdl\src\lib\std\textio.vhd",
+		"vhdl\src\lang\lang.vhd",
+		"com\src\com_types.vhd",
+		"run\src\stop_body_2008.vhd",
+		"com\src\com_api.vhd",
+		"string_ops\src\string_ops.vhd",
+		"path\src\path.vhd",
+		"logging\src\log_types.vhd",
+		"logging\src\log_formatting.vhd",
+		"logging\src\log_special_types200x.vhd",
+		"array\src\array_pkg.vhd",
+		"logging\src\log_base_api.vhd",
+		"logging\src\log_base.vhd",
+		"logging\src\log_api.vhd",
+		"logging\src\log.vhd",
+		"check\src\check_types.vhd",
+		"check\src\check_special_types200x.vhd",
+		"check\src\check_base_api.vhd",
+		"check\src\check_base.vhd",
+		"check\src\check_api.vhd",
+		"check\src\check.vhd",
+		"dictionary\src\dictionary.vhd",
+		"run\src\run_types.vhd",
+		"run\src\run_special_types200x.vhd",
+		"run\src\run_base_api.vhd",
+		"run\src\run_base.vhd",
+		"run\src\run_api.vhd",
+		"run\src\run.vhd",
+		"vunit_run_context.vhd",
+		"vunit_context.vhd",
+		"com\src\com_std_codec_builder.vhd",
+		"com\src\com_debug_codec_builder.vhd",
+		"com\src\com_string.vhd",
+		"com\src\com_codec_api.vhd",
+		"com\src\com_codec.vhd",
+		"com\src\com.vhd",
+		"com\src\com_context.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 Write-Host "--------------------------------------------------------------------------------"
-Write-Host "Compiling VUnit library " -NoNewline
+Write-Host "Compiling VUnit packages " -NoNewline
 if ($ErrorCount -gt 0)
 {	Write-Host "[FAILED]" -ForegroundColor Red				}
 else
 {	Write-Host "[SUCCESSFUL]" -ForegroundColor Green	}
 
-# unload PowerShell modules
-Remove-Module shared
-Remove-Module config
-
-# restore working directory
-cd $WorkingDir
-
+Exit-CompileScript

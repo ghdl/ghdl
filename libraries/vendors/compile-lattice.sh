@@ -93,10 +93,6 @@ while [[ $# > 0 ]]; do
 		;;
 		--vhdl2008)
 		VHDLStandard=2008
-		echo 1>&2 -e "${COLORED_ERROR} VHDL-2008 is not yet supported by Lattice.${ANSI_NOCOLOR}"
-		# echo 1>&2 -e "${ANSI_YELLOW}Possible workaround: ${ANSI_NOCOLOR}"
-		# echo 1>&2 -e "${ANSI_YELLOW}  Compile 'std_logic_arith' and 'std_logic_unsigned' into library IEEE.${ANSI_NOCOLOR}"
-		exit -1
 		;;
 		--ghdl)
 		GHDLBinDir="$2"
@@ -175,6 +171,11 @@ else
 			done
 		done
 	done
+fi
+
+if [ $VHDLStandard -eq 2008 ]; then
+	echo -e "${ANSI_RED}Not all Lattice packages are VHDL-2008 compatible! Setting HALT_ON_ERROR to FALSE.${ANSI_NOCOLOR}"
+	HALT_ON_ERROR=0
 fi
 
 # -> $SourceDirectories
