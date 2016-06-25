@@ -80,7 +80,7 @@ function Invoke-Clean
 	return $false
 }	# Invoke-Clean
 
-function Invoke-CreateBuildDirectory
+function New-BuildDirectory
 {	<#
 		.SYNOPSIS
 		This CommandLet creates a build directory if not existent, yet.
@@ -95,20 +95,17 @@ function Invoke-CreateBuildDirectory
 		[switch]	$Quiet = $false
 	)
 	
-	Write-Host "Executing build target 'CreateBuildDirectory' ..." -ForegroundColor Yellow
-	if (Test-Path -Path $BuildDirectory)
-	{	if ($Quiet -eq $false)
-		{	Write-Host "  Directory '$BuildDirectory' already exists."		}
-	}
+	Write-Host "Executing build target 'BuildDirectory' ..." -ForegroundColor Yellow
+	if (Test-Path -Path $BuildDirectory -PathType Container)
+	{	-not $Quiet -and (Write-Host "  Directory '$BuildDirectory' already exists."	) 	| Out-Null	}
 	else
-	{	if ($Quiet -eq $false)
-		{	Write-Host "  Creating new directory '$BuildDirectory'."		}
-		
-		[void](New-Item -ItemType directory -Path $BuildDirectory -ErrorAction SilentlyContinue)
+	{	-not $Quiet -and (Write-Host "  Creating new directory '$BuildDirectory'."		) 	| Out-Null
+		New-Item -ItemType Directory -Path $BuildDirectory -ErrorAction SilentlyContinue	| Out-Null
+		return ($LastExitCode -ne 0)
 	}
 	
 	return $false
-}	# Invoke-CreateBuildDirectory
+}	# New-BuildDirectory
 
 function Get-GHDLVersion
 {	<#
@@ -455,7 +452,7 @@ function Test-GHDLVersion
 # export functions
 Export-ModuleMember -Function 'Get-GHDLVersion'
 Export-ModuleMember -Function 'Invoke-Clean'
-Export-ModuleMember -Function 'Invoke-CreateBuildDirectory'
+Export-ModuleMember -Function 'New-BuildDirectory'
 Export-ModuleMember -Function 'Invoke-PatchVersionFile'
 Export-ModuleMember -Function 'Restore-PatchedVersionFile'
 Export-ModuleMember -Function 'Invoke-CompileCFiles'
