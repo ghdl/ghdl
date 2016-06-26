@@ -25,6 +25,7 @@
 with Interfaces; use Interfaces;
 with Grt.Strings; use Grt.Strings;
 with Grt.Errors; use Grt.Errors;
+with Grt.Stdio; use Grt.Stdio;
 with Grt.Astdio;
 with Grt.Hooks;
 
@@ -214,8 +215,6 @@ package body Grt.Options is
    procedure Decode_Option
      (Option : String; Status : out Decode_Option_Status)
    is
-      procedure Disable_stdouterr_Buffering;
-      pragma Import (C, Disable_stdouterr_Buffering, "__ghdl_disable_stdouterr_buffering");
       pragma Assert (Option'First = 1);
       Len : constant Natural := Option'Last;
    begin
@@ -481,7 +480,8 @@ package body Grt.Options is
          end;
       elsif Option = "--unbuffered" then
          Unbuffered_Writes := True;
-         Disable_stdouterr_Buffering;
+         setbuf (stdout, NULL_voids);
+         setbuf (stderr, NULL_voids);
       elsif not Grt.Hooks.Call_Option_Hooks (Option) then
          Error_C ("unknown option '");
          Error_C (Option);
