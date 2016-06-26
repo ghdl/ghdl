@@ -26,6 +26,7 @@ with Grt.Errors; use Grt.Errors;
 with Grt.Stdio; use Grt.Stdio;
 with Grt.C; use Grt.C;
 with Grt.Table;
+with Grt.Options;
 with System; use System;
 pragma Elaborate_All (Grt.Table);
 
@@ -144,6 +145,9 @@ package body Grt.Files is
                        Str : Std_String_Ptr)
      return Ghdl_I32
    is
+      procedure Disable_Stream_Buffering (Stream : C_Files);
+      pragma Import (C, Disable_Stream_Buffering, "__ghdl_disable_stream_buffering");
+
       Name : String (1 .. Integer (Str.Bounds.Dim_1.Length) + 1);
       Str_Mode : String (1 .. 3);
       F : C_Files;
@@ -194,6 +198,9 @@ package body Grt.Files is
          F := fopen (Name'Address, Str_Mode'Address);
          if F = NULL_Stream then
             return Name_Error;
+         end if;
+         if Grt.Options.Unbuffered_Writes and Mode /= Read_Mode then
+            Disable_Stream_Buffering (F);
          end if;
       end if;
       Sig := Files_Table.Table (File).Signature;
