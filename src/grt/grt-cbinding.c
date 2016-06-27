@@ -20,12 +20,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-void
-__ghdl_disable_stream_buffering (FILE *stream)
-{
-  setbuf (stream, NULL);
-}
-
 FILE *
 __ghdl_get_stdout (void)
 {
