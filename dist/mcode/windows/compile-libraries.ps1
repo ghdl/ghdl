@@ -223,7 +223,7 @@ if ($VHDL87 -or $VHDL93 -or $VHDL2008)
 	else
 	{	Write-Host "  Creating directory '$VHDLDestinationLibraryDirectory'."
 		New-Item -ItemType Directory -Path $VHDLDestinationLibraryDirectory -ErrorAction SilentlyContinue | Out-Null
-		if ($LastExitCode -ne 0)
+		if (-not $?)
 		{	Write-Host "[ERROR]: Cannot create destination directory '$VHDLDestinationLibraryDirectory'." -ForegroundColor Red
 			Exit-CompileScript -1
 		}
@@ -272,7 +272,7 @@ if ($VHDL87)
 		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
 		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
-		if ($LastExitCode -ne 0)
+		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
 			if ($HaltOnError)
 			{	Exit-CompileScript -1		}
@@ -304,7 +304,7 @@ if ($VHDL87)
 		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
 		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
-		if ($LastExitCode -ne 0)
+		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
 			if ($HaltOnError)
 			{	Exit-CompileScript -1		}
@@ -336,7 +336,7 @@ if ($VHDL87)
 		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
 		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
-		if ($LastExitCode -ne 0)
+		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
 			if ($HaltOnError)
 			{	Exit-CompileScript -1		}
@@ -356,7 +356,7 @@ if ($VHDL87)
 		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
 		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
-		if ($LastExitCode -ne 0)
+		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
 			if ($HaltOnError)
 			{	Exit-CompileScript -1		}
@@ -377,7 +377,7 @@ if ($VHDL87)
 		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
 		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
-		if ($LastExitCode -ne 0)
+		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
 			if ($HaltOnError)
 			{	Exit-CompileScript -1		}
@@ -416,7 +416,7 @@ if ($VHDL93)
 		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
 		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
-		if ($LastExitCode -ne 0)
+		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
 			if ($HaltOnError)
 			{	Exit-CompileScript -1		}
@@ -448,7 +448,7 @@ if ($VHDL93)
 		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
 		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
-		if ($LastExitCode -ne 0)
+		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
 			if ($HaltOnError)
 			{	Exit-CompileScript -1		}
@@ -469,7 +469,7 @@ if ($VHDL93)
 		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
 		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
-		if ($LastExitCode -ne 0)
+		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
 			if ($HaltOnError)
 			{	Exit-CompileScript -1		}
@@ -501,7 +501,7 @@ if ($VHDL93)
 		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
 		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
-		if ($LastExitCode -ne 0)
+		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
 			if ($HaltOnError)
 			{	Exit-CompileScript -1		}
@@ -521,7 +521,7 @@ if ($VHDL93)
 		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
 		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
-		if ($LastExitCode -ne 0)
+		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
 			if ($HaltOnError)
 			{	Exit-CompileScript -1		}
@@ -542,7 +542,7 @@ if ($VHDL93)
 		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
 		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
-		if ($LastExitCode -ne 0)
+		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
 			if ($HaltOnError)
 			{	Exit-CompileScript -1		}
@@ -574,7 +574,7 @@ if ($VHDL93)
 		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
 		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
-		if ($LastExitCode -ne 0)
+		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
 			if ($HaltOnError)
 			{	Exit-CompileScript -1		}
@@ -594,7 +594,7 @@ if ($VHDL93)
 		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
 		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
-		if ($LastExitCode -ne 0)
+		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
 			if ($HaltOnError)
 			{	Exit-CompileScript -1		}
@@ -615,7 +615,7 @@ if ($VHDL93)
 		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
 		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
-		if ($LastExitCode -ne 0)
+		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
 			if ($HaltOnError)
 			{	Exit-CompileScript -1		}
@@ -654,7 +654,7 @@ if ($VHDL2008)
 		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
 		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
-		if ($LastExitCode -ne 0)
+		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
 			if ($HaltOnError)
 			{	Exit-CompileScript -1		}
@@ -686,7 +686,7 @@ if ($VHDL2008)
 		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
 		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
-		if ($LastExitCode -ne 0)
+		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
 			if ($HaltOnError)
 			{	Exit-CompileScript -1		}
@@ -707,7 +707,7 @@ if ($VHDL2008)
 		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
 		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
-		if ($LastExitCode -ne 0)
+		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
 			if ($HaltOnError)
 			{	Exit-CompileScript -1		}
@@ -739,7 +739,7 @@ if ($VHDL2008)
 		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
 		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
-		if ($LastExitCode -ne 0)
+		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
 			if ($HaltOnError)
 			{	Exit-CompileScript -1		}
@@ -759,7 +759,7 @@ if ($VHDL2008)
 		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
 		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
-		if ($LastExitCode -ne 0)
+		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
 			if ($HaltOnError)
 			{	Exit-CompileScript -1		}
@@ -780,7 +780,7 @@ if ($VHDL2008)
 		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
 		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
-		if ($LastExitCode -ne 0)
+		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
 			if ($HaltOnError)
 			{	Exit-CompileScript -1		}

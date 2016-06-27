@@ -67,6 +67,8 @@ param(
 	# Set the back-end
 	[string]$Backend =	"mcode",
 	
+	# Reduced messages
+	[switch]$Quiet =						$false,
 	# Skip warning messages. (Show errors only.)
 	[switch]$SuppressWarnings = $false,
 	# Halt on errors
@@ -87,9 +89,13 @@ $GHDLRootDir =				Convert-Path (Resolve-Path ($PSScriptRoot + "\" + $Script_RelP
 $EnableVerbose =	$PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent
 $EnableDebug =		$PSCmdlet.MyInvocation.BoundParameters["Debug"].IsPresent
 
+Write-Host ("--> " + $Verbose + " value: " +$PSCmdlet.MyInvocation.BoundParameters["Verbose"] + " IsPresent: " + $PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent)
+Write-Host ("--> " + $PSCommandPath + "  " + $PSBoundParameters + "  " + $PSCmdlet + "  " + $PSDefaultParameterValues)
+
+
 # load modules from GHDL's 'libraries' directory
-Import-Module $PSScriptRoot\shared.psm1 -ArgumentList "$Script_WorkingDir"
-Import-Module $PSScriptRoot\targets.psm1
+Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -ArgumentList "$Script_WorkingDir"
+Import-Module $PSScriptRoot\targets.psm1 -Verbose:$false
 
 # Display help if no command was selected
 $Help = $Help -or (-not ($All -or $Compile -or $GHDL -or $Test -or $Clean))
@@ -138,7 +144,7 @@ $Git_IsGitRepo =						Test-GitRepository
 # gather git information
 if ($Git_IsGitRepo)
 {	$Git_Branch_Name =				& git rev-parse --abbrev-ref HEAD
-	$Git_Commit_DataString =	& git log -1 --format=%cd --date=short
+	$Git_Commit_DateString =	& git log -1 --format=%cd --date=short
 	$Git_Commit_ShortHash =		& git rev-parse --short HEAD
 
 	Write-Host "  Git branch: $Git_Branch_Name"
@@ -170,7 +176,7 @@ function Write-TargetResult($error)
 # Main Target: Clean
 # ==============================================================================
 if ($Clean)
-{	$error = Invoke-Clean $BuildDirectory
+{	$error = Invoke-Clean $BuildDirectory -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug
 	Write-TargetResult $error
 }	# Clean
 
@@ -182,9 +188,31 @@ if ($GHDL)
 {	# create a build directory
 	$error = New-BuildDirectory $BuildDirectory
 	Write-TargetResult $error
+	
 
+	# patch the version file if it's no release build
+	if (-not $Release -and $Git_IsGitRepo)
+	{	$error = Invoke-PatchVersionFile $GHDLRootDir $Git_Branch_Name $Git_Commit_DateString $Git_Commit_ShortHash
+		Write-TargetResult $error
+	}
 	
+	# build C source files
+	$error = Invoke-CompileCFiles $GHDLRootDir $BinaryDestinationDirectory
+	Write-TargetResult $error
 	
+	# build Ada source files
+	$error = Invoke-CompileGHDLAdaFiles $GHDLRootDir $BinaryDestinationDirectory
+	Write-TargetResult $error
+	
+	# strip result
+	$error = Invoke-StripGHDLExecutable $BinaryDestinationDirectory
+	Write-TargetResult $error
+	
+	# restore the version file if it was patched
+	if (-not $Release -and $Git_IsGitRepo)
+	{	$error = Restore-PatchedVersionFile $GHDLRootDir
+		Write-TargetResult $error
+	}
 	
 	
 	

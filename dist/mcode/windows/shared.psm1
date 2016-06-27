@@ -57,6 +57,7 @@ function Exit-CompileScript
 	
 	# unload modules
 	Remove-Module shared
+	Remove-Module targets
 	
 	exit $ExitCode
 }

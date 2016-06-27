@@ -70,11 +70,12 @@ function Invoke-Clean
 		[switch]	$Quiet = $false
 	)
 	
-	Write-Host "Executing build target 'Clean' ..." -ForegroundColor Yellow
-	if ($Quiet -eq $false)
-	{	Write-Host "  Removing all created files and directories..."
-		Write-Host "    rmdir $BuildDirectory"
-	}
+	$EnableDebug =		-not $Quiet -and (									$PSCmdlet.MyInvocation.BoundParameters["Debug"])
+	$EnableVerbose =	-not $Quiet -and ($EnableDebug	-or $PSCmdlet.MyInvocation.BoundParameters["Verbose"])
+	
+	-not $Quiet			-and (Write-Host "Executing build target 'Clean' ..." -ForegroundColor Yellow) | Out-Null
+	$EnableVerbose	-and (Write-Host "  Removing all created files and directories..."						) | Out-Null
+	$EnableDebug		-and (Write-Host "    rmdir $BuildDirectory"																	) | Out-Null
 	Remove-Item $BuildDirectory -Force -Recurse -ErrorAction SilentlyContinue
 	
 	return $false
@@ -101,7 +102,8 @@ function New-BuildDirectory
 	else
 	{	-not $Quiet -and (Write-Host "  Creating new directory '$BuildDirectory'."		) 	| Out-Null
 		New-Item -ItemType Directory -Path $BuildDirectory -ErrorAction SilentlyContinue	| Out-Null
-		return ($LastExitCode -ne 0)
+		if ($? -ne 0)
+		{	Exit-CompileScript -1		}
 	}
 	
 	return $false
