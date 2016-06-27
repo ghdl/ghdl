@@ -140,7 +140,8 @@ package Grt.Options is
    --  CPUs.
    Nbr_Threads : Natural := 1;
 
-   -- If true, writes are made without buffering on a file opened in write_mode or append_mode (TEXTIO)
+   -- If true, writes are made without buffering on a file opened in write_mode
+   -- or append_mode (TEXTIO)
    Unbuffered_Writes : Boolean := False;
 
    --  Set the time resolution.
