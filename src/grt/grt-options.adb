@@ -25,6 +25,7 @@
 with Interfaces; use Interfaces;
 with Grt.Strings; use Grt.Strings;
 with Grt.Errors; use Grt.Errors;
+with Grt.Stdio; use Grt.Stdio;
 with Grt.Astdio;
 with Grt.Hooks;
 
@@ -477,6 +478,10 @@ package body Grt.Options is
             end if;
             Last_Generic_Override := Over;
          end;
+      elsif Option = "--unbuffered" then
+         Unbuffered_Writes := True;
+         setbuf (stdout, NULL_voids);
+         setbuf (stderr, NULL_voids);
       elsif not Grt.Hooks.Call_Option_Hooks (Option) then
          Error_C ("unknown option '");
          Error_C (Option);

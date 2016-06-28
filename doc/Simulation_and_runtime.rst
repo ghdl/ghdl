@@ -113,6 +113,11 @@ all options available, including the debugging one.
   design.
 
 
+.. option:: --unbuffered
+
+  Disable buffering on stdout, stderr and files opened in write or append mode (TEXTIO).
+
+
 .. option:: --vcd=<FILENAME>
 
 .. option:: --vcdgz=<FILENAME>
