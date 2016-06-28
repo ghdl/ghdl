@@ -53,6 +53,7 @@ with Grt.Errors; use Grt.Errors;
 with Grt.Rtis_Types;
 with Grt.Std_Logic_1164; use Grt.Std_Logic_1164;
 with Grt.Callbacks; use Grt.Callbacks;
+with Grt.Vstrings; use Grt.Vstrings;
 
 package body Grt.Vpi is
    --  The VPI interface requires libdl (dlopen, dlsym) to be linked in.
@@ -729,36 +730,26 @@ package body Grt.Vpi is
    -- void  vpi_get_value(vpiHandle expr, p_vpi_value value);
    -- Retrieve the simulation value of an object.
    -- see IEEE 1364-2001, chapter 27.14, page 675
-   Tmpstring3idx : integer;
-   Tmpstring3 : String (1 .. 1024);
-   procedure ii_vpi_get_value_bin_str_B1 (Val : Ghdl_B1)
-   is
-   begin
-      case Val is
-         when True =>
-            Tmpstring3 (Tmpstring3idx) := '1';
-         when False =>
-            Tmpstring3 (Tmpstring3idx) := '0';
-      end case;
-      Tmpstring3idx := Tmpstring3idx + 1;
-   end ii_vpi_get_value_bin_str_B1;
+   Buf_Value : Vstring;
 
-   procedure ii_vpi_get_value_bin_str_E8 (Val : Ghdl_E8)
-   is
-      type Map_Type_E8 is array (Ghdl_E8 range 0..8) of character;
-      Map_Std_E8: constant Map_Type_E8 := "UX01ZWLH-";
-   begin
-      if Val not in Map_Type_E8'range then
-         Tmpstring3 (Tmpstring3idx) := '?';
-      else
-         Tmpstring3 (Tmpstring3idx) := Map_Std_E8(Val);
-      end if;
-      Tmpstring3idx := Tmpstring3idx + 1;
-   end ii_vpi_get_value_bin_str_E8;
+   type Map_Type_E8 is array (Ghdl_E8 range 0..8) of character;
+   Map_Std_E8: constant Map_Type_E8 := "UX01ZWLH-";
+
+   type Map_Type_B1 is array (Ghdl_B1) of character;
+   Map_Std_B1: constant Map_Type_B1 := "01";
 
    function ii_vpi_get_value_bin_str (Obj : VhpiHandleT)
                                      return Ghdl_C_String
    is
+      function E8_To_Char (Val : Ghdl_E8) return Character is
+      begin
+         if Val not in Map_Type_E8'range then
+            return '?';
+         else
+            return Map_Std_E8 (Val);
+         end if;
+      end E8_To_Char;
+
       Info : Verilog_Wire_Info;
       Len : Ghdl_Index_Type;
    begin
@@ -778,7 +769,7 @@ package body Grt.Vpi is
 
       Len := Get_Wire_Length (Info);
 
-      Tmpstring3idx := 1; -- reset string buffer
+      Reset (Buf_Value); -- reset string buffer
 
       case Info.Val is
          when Vcd_Effective =>
@@ -792,12 +783,14 @@ package body Grt.Vpi is
                  | Vcd_Bool
                  | Vcd_Bitvector =>
                   for J in 0 .. Len - 1 loop
-                     ii_vpi_get_value_bin_str_B1 (Info.Sigs (J).Value_Ptr.B1);
+                     Append (Buf_Value,
+                             Map_Std_B1 (Info.Sigs (J).Value_Ptr.B1));
                   end loop;
                when Vcd_Stdlogic
                  | Vcd_Stdlogic_Vector =>
                   for J in 0 .. Len - 1 loop
-                     ii_vpi_get_value_bin_str_E8 (Info.Sigs (J).Value_Ptr.E8);
+                     Append (Buf_Value,
+                             E8_To_Char (Info.Sigs (J).Value_Ptr.E8));
                   end loop;
             end case;
          when Vcd_Driving =>
@@ -811,19 +804,19 @@ package body Grt.Vpi is
                  | Vcd_Bool
                  | Vcd_Bitvector =>
                   for J in 0 .. Len - 1 loop
-                     ii_vpi_get_value_bin_str_B1
-                       (Info.Sigs (J).Driving_Value.B1);
+                     Append (Buf_Value,
+                             Map_Std_B1 (Info.Sigs (J).Driving_Value.B1));
                   end loop;
                when Vcd_Stdlogic
                  | Vcd_Stdlogic_Vector =>
                   for J in 0 .. Len - 1 loop
-                     ii_vpi_get_value_bin_str_E8
-                       (Info.Sigs (J).Driving_Value.E8);
+                     Append (Buf_Value,
+                             E8_To_Char (Info.Sigs (J).Driving_Value.E8));
                   end loop;
             end case;
       end case;
-      Tmpstring3 (Tmpstring3idx) := NUL;
-      return To_Ghdl_C_String (Tmpstring3'Address);
+      Append (Buf_Value, NUL);
+      return Get_C_String (Buf_Value);
    end ii_vpi_get_value_bin_str;
 
    procedure vpi_get_value (Expr : vpiHandle; Value : p_vpi_value) is
@@ -1731,6 +1724,7 @@ package body Grt.Vpi is
       pragma Unreferenced (Res);
    begin
       Execute_Callback_List (g_cbEndOfSimulation);
+      Free (Buf_Value);
    end Vpi_End;
 
    Vpi_Hooks : aliased constant Hooks_Type :=
