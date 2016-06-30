@@ -52,9 +52,14 @@ package body Configuration is
 
       --  If already in the table, then nothing to do.
       if Get_Configuration_Mark_Flag (Unit) then
-         if not Get_Configuration_Done_Flag (Unit) then
-            raise Internal_Error;
-         end if;
+         --  There might be some direct recursions:
+         --  * the default configuration might be implicitly referenced by
+         --    a direct entity instantiation
+         --  * a configuration may be referenced by itself for a recursive
+         --    instantiation
+         pragma Assert (Get_Configuration_Done_Flag (Unit)
+                          or else (Get_Kind (Get_Library_Unit (Unit))
+                                     = Iir_Kind_Configuration_Declaration));
          return;
       end if;
       Set_Configuration_Mark_Flag (Unit, True);

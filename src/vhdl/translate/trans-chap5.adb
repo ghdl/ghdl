@@ -36,7 +36,10 @@ package body Trans.Chap5 is
               Scope => Scope_Ptr.all);
    end Save_Map_Env;
 
-   procedure Set_Map_Env (Env : Map_Env) is
+   procedure Set_Map_Env (Env : Map_Env)
+   is
+      --  Avoid potential compiler bug with discriminant check.
+      pragma Suppress (Discriminant_Check);
    begin
       Env.Scope_Ptr.all := Env.Scope;
    end Set_Map_Env;
@@ -421,9 +424,10 @@ package body Trans.Chap5 is
             end if;
 
          else
-            Set_Map_Env (Actual_Env);
-            Actual_En := Chap7.Translate_Expression (Actual, Formal_Type);
+            --  Association by value.  The formal cannot be referenced in the
+            --  actual.
             Set_Map_Env (Formal_Env);
+            Actual_En := Chap7.Translate_Expression (Actual, Formal_Type);
             Actual_Sig := E2M (Actual_En, Get_Info (Formal_Type), Mode_Value);
             Chap6.Translate_Signal_Name (Formal, Formal_Sig, Formal_Val);
             Mode := Connect_Value;
@@ -449,12 +453,12 @@ package body Trans.Chap5 is
             Chap4.Elab_In_Conversion (Assoc, Actual_Sig);
             Set_Map_Env (Formal_Env);
             Formal_Sig := Chap6.Translate_Name (Formal, Mode_Signal);
-            Set_Map_Env (Actual_Env);
             Data := (Actual_Sig => Actual_Sig,
                      Actual_Type => Formal_Type,
                      Mode => Connect_Effective,
                      By_Copy => False);
             Connect (Formal_Sig, Formal_Type, Data);
+            Set_Map_Env (Actual_Env);
          end if;
          if Get_Out_Conversion (Assoc) /= Null_Iir then
             --  flow: FORMAL to ACTUAL
@@ -639,7 +643,9 @@ package body Trans.Chap5 is
          begin
             Set_Map_Env (Formal_Env);
             --  Set bounds of unconstrained ports.
-            if Fbt_Info.Type_Mode = Type_Mode_Fat_Array then
+            if Get_Whole_Association_Flag (Assoc)
+              and then Fbt_Info.Type_Mode = Type_Mode_Fat_Array
+            then
                Open_Temp;
                Elab_Unconstrained_Port_Bounds (Formal, Assoc);
                Close_Temp;
