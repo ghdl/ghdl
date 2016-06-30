@@ -3362,6 +3362,38 @@ package body Iirs is
       Set_Flag3 (Design, Flag);
    end Set_Elab_Flag;
 
+   function Get_Configuration_Mark_Flag (Design : Iir) return Boolean is
+   begin
+      pragma Assert (Design /= Null_Iir);
+      pragma Assert (Has_Configuration_Mark_Flag (Get_Kind (Design)),
+                     "no field Configuration_Mark_Flag");
+      return Get_Flag4 (Design);
+   end Get_Configuration_Mark_Flag;
+
+   procedure Set_Configuration_Mark_Flag (Design : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Design /= Null_Iir);
+      pragma Assert (Has_Configuration_Mark_Flag (Get_Kind (Design)),
+                     "no field Configuration_Mark_Flag");
+      Set_Flag4 (Design, Flag);
+   end Set_Configuration_Mark_Flag;
+
+   function Get_Configuration_Done_Flag (Design : Iir) return Boolean is
+   begin
+      pragma Assert (Design /= Null_Iir);
+      pragma Assert (Has_Configuration_Done_Flag (Get_Kind (Design)),
+                     "no field Configuration_Done_Flag");
+      return Get_Flag5 (Design);
+   end Get_Configuration_Done_Flag;
+
+   procedure Set_Configuration_Done_Flag (Design : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Design /= Null_Iir);
+      pragma Assert (Has_Configuration_Done_Flag (Get_Kind (Design)),
+                     "no field Configuration_Done_Flag");
+      Set_Flag5 (Design, Flag);
+   end Set_Configuration_Done_Flag;
+
    function Get_Index_Constraint_Flag (Atype : Iir) return Boolean is
    begin
       pragma Assert (Atype /= Null_Iir);

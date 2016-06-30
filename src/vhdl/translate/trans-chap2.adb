@@ -1296,22 +1296,22 @@ package body Trans.Chap2 is
 
       Set_Scope_Via_Decl (Pkg_Info.Package_Body_Scope,
                           Get_Var_Label (Info.Package_Instance_Body_Var));
+
       Set_Scope_Via_Field (Pkg_Info.Package_Spec_Scope,
                            Pkg_Info.Package_Spec_Field,
                            Pkg_Info.Package_Body_Scope'Access);
-      Chap5.Elab_Generic_Map_Aspect (Inst);
+      Chap5.Elab_Generic_Map_Aspect (Inst, (Pkg_Info.Package_Body_Scope'Access,
+                                            Pkg_Info.Package_Body_Scope));
       Clear_Scope (Pkg_Info.Package_Spec_Scope);
-      Clear_Scope (Pkg_Info.Package_Body_Scope);
 
       --  Call the elaborator of the generic.  The generic must be
       --  temporary associated with the instance variable.
       Start_Association (Constr, Pkg_Info.Package_Elab_Body_Subprg);
-      Set_Scope_Via_Decl (Pkg_Info.Package_Body_Scope,
-                          Get_Var_Label (Info.Package_Instance_Body_Var));
       Add_Subprg_Instance_Assoc
         (Constr, Pkg_Info.Package_Elab_Body_Instance);
-      Clear_Scope (Pkg_Info.Package_Body_Scope);
       New_Procedure_Call (Constr);
+
+      Clear_Scope (Pkg_Info.Package_Body_Scope);
 
       --  Chap2.Finish_Subprg_Instance_Use
       --    (Info.Package_Instance_Elab_Instance);

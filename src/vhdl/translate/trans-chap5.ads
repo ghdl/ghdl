@@ -30,7 +30,22 @@ package Trans.Chap5 is
    --  Elab an unconstrained port.
    procedure Elab_Unconstrained_Port_Bounds (Port : Iir; Assoc : Iir);
 
-   procedure Elab_Generic_Map_Aspect (Mapping : Iir);
+   --  Describe how to set the environment to access to formal in a map.  This
+   --  is really useful only for recursive instantiation where the formal is
+   --  the same as the actual, but their environment differs.
+   type Map_Env is record
+      --  The scope that has to be modified.
+      Scope_Ptr : Var_Scope_Acc;
+
+      --  The value for the scope.
+      Scope : Var_Scope_Type;
+   end record;
+
+   --  Save and restore the map environment defined by ENV.
+   procedure Save_Map_Env (Env : out Map_Env; Scope_Ptr : Var_Scope_Acc);
+   procedure Set_Map_Env (Env : Map_Env);
+
+   procedure Elab_Generic_Map_Aspect (Mapping : Iir; Formal_Env : Map_Env);
 
    --  There are 4 cases of generic/port map:
    --  1) component instantiation
@@ -40,5 +55,7 @@ package Trans.Chap5 is
    --  4) direct (entity + architecture or configuration) instantiation
    --
    --  MAPPING is the node containing the generic/port map aspects.
-   procedure Elab_Map_Aspect (Mapping : Iir; Block_Parent : Iir);
+
+   procedure Elab_Map_Aspect
+     (Mapping : Iir; Block_Parent : Iir; Formal_Env : Map_Env);
 end Trans.Chap5;

@@ -239,6 +239,10 @@ package Iirs is
    --
    --  Flag used during elaboration.  Set when the file was already seen.
    --   Get/Set_Elab_Flag (Flag3)
+   --
+   --  Flags used during configuration
+   --   Get/Set_Configuration_Mark_Flag (Flag4)
+   --   Get/Set_Configuration_Done_Flag (Flag5)
 
    -- Iir_Kind_Library_Clause (Short)
    --
@@ -6143,6 +6147,18 @@ package Iirs is
    --  Field: Flag3
    function Get_Elab_Flag (Design : Iir) return Boolean;
    procedure Set_Elab_Flag (Design : Iir; Flag : Boolean);
+
+   --  Used only by configuration to mark a design unit as already inserted in
+   --  the list of units.  Used to avoid double insertion.
+   --  Field: Flag4
+   function Get_Configuration_Mark_Flag (Design : Iir) return Boolean;
+   procedure Set_Configuration_Mark_Flag (Design : Iir; Flag : Boolean);
+
+   --  Used only by configuration to flag units completely handled.  Used to
+   --  detect recursion.
+   --  Field: Flag5
+   function Get_Configuration_Done_Flag (Design : Iir) return Boolean;
+   procedure Set_Configuration_Done_Flag (Design : Iir; Flag : Boolean);
 
    --  Set on an array_subtype if there is an index constraint.
    --  If not set, the subtype is unconstrained.

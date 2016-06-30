@@ -905,7 +905,8 @@ package body Trans.Chap9 is
          --  instantiation statement.
          Set_Component_Link (Comp_Info.Comp_Scope, Comp_Info.Comp_Link);
 
-         Chap5.Elab_Map_Aspect (Stmt, Comp);
+         Chap5.Elab_Map_Aspect (Stmt, Comp, (Comp_Info.Comp_Scope'Access,
+                                             Comp_Info.Comp_Scope));
 
          Clear_Scope (Comp_Info.Comp_Scope);
       end if;
@@ -1654,9 +1655,15 @@ package body Trans.Chap9 is
       end;
 
       --  Elab map aspects.
-      Set_Scope_Via_Param_Ptr (Entity_Info.Block_Scope, Var_Sub);
-      Chap5.Elab_Map_Aspect (Mapping, Entity);
-      Clear_Scope (Entity_Info.Block_Scope);
+      declare
+         use Chap5;
+         Entity_Map : Map_Env;
+      begin
+         Entity_Map.Scope_Ptr := Entity_Info.Block_Scope'Access;
+         Set_Scope_Via_Param_Ptr (Entity_Map.Scope, Var_Sub);
+         Chap5.Elab_Map_Aspect (Mapping, Entity, Entity_Map);
+         Clear_Scope (Entity_Map.Scope);
+      end;
 
       --  3) Elab instance.
       declare
@@ -2200,6 +2207,8 @@ package body Trans.Chap9 is
                Header : constant Iir_Block_Header :=
                  Get_Block_Header (Block);
                Guard  : constant Iir := Get_Guard_Decl (Block);
+               Block_Env : Chap5.Map_Env;
+               Block_Info : Block_Info_Acc;
             begin
                if Guard /= Null_Iir then
                   New_Debug_Line_Stmt (Get_Line_Number (Guard));
@@ -2207,7 +2216,10 @@ package body Trans.Chap9 is
                end if;
                if Header /= Null_Iir then
                   New_Debug_Line_Stmt (Get_Line_Number (Header));
-                  Chap5.Elab_Map_Aspect (Header, Block);
+                  Block_Info := Get_Info (Block);
+                  Block_Env := (Block_Info.Block_Scope'Access,
+                                Block_Info.Block_Scope);
+                  Chap5.Elab_Map_Aspect (Header, Block, Block_Env);
                   Merge_Signals_Rti_Of_Port_Chain (Get_Port_Chain (Header));
                end if;
             end;
