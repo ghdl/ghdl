@@ -234,7 +234,7 @@ build_compliant_test ch_05_ch_05_17.vhd
 build_compliant_test ch_05_ch_05_18.vhd
 build_compliant_test ch_05_ch_05_19.vhd
 build_compliant_test ch_05_ch_05_20.vhd
-build_compliant_test ch_05_ch_05_21.vhd
+run_compliant_test ch_05_ch_05_21.vhd
 build_compliant_test ch_05_ch_05_22.vhd
 build_compliant_test ch_05_ch_05_23.vhd
 build_compliant_test ch_05_ch_05_24.vhd
