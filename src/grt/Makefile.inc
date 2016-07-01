@@ -178,7 +178,7 @@ grt-files: run-bind.adb
 # Also remove -lgnat and its associated -L flags.  This appears to be required
 #  with GNAT GPL 2005.
 grt-files.in: grt-files
-	sed -e "\!^./!d" -e "/-shared/d" -e "/-static/d" -e "/-lgnat/d" \
+	sed -e "\!^.[/\\]!d" -e "/-shared/d" -e "/-static/d" -e "/-lgnat/d" \
 	  -e "\X-L/Xd" < $< > $@
 
 grt.lst: grt-files.in
