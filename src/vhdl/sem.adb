@@ -2670,10 +2670,12 @@ package body Sem is
 
       --  FIXME: unless the parent is a package declaration library unit, the
       --  design unit depends on the body.
-      Bod := Libraries.Load_Secondary_Unit
-        (Get_Design_Unit (Pkg), Null_Identifier, Decl);
-      if Bod /= Null_Iir then
-         Add_Dependence (Bod);
+      if Get_Need_Body (Pkg) then
+         Bod := Libraries.Load_Secondary_Unit
+           (Get_Design_Unit (Pkg), Null_Identifier, Decl);
+         if Bod /= Null_Iir then
+            Add_Dependence (Bod);
+         end if;
       end if;
    end Sem_Package_Instantiation_Declaration;
 
