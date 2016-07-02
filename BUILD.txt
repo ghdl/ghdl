@@ -72,10 +72,13 @@ $ ../mpc-0.8.1/configure --prefix=/usr/local --disable-shared \
   --with-gmp=/usr/local
 $ make; make install
 
-Then configure gcc:
+Then configure gcc.  The list of --disable configure options could be
+adjusted for your needs.  GHDL don't require all these optional
+libraries and disabling them speed-up the build.
 $ mkdir gcc-objs; cd gcc-objs
 $ ../gcc-4.9.3/configure --prefix=/usr/local --enable-languages=c,vhdl \
-  --disable-bootstrap --with-gmp=/usr/local --disable-lto --disable-multilib
+  --disable-bootstrap --with-gmp=/usr/local --disable-lto --disable-multilib \
+  --disable-libssp --disable-libgomp --disable-libquadmath
 $ make -j2
 
 Finally install:
