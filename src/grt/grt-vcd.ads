@@ -39,7 +39,7 @@ package Grt.Vcd is
    Vcd_Close : Vcd_Close_Acc;
 
    --  VCD type of an object
-   type Vcd_Var_Kind is
+   type Vcd_Var_Type is
      (
       --  Incompatible vcd type
       Vcd_Bad,
@@ -63,19 +63,19 @@ package Grt.Vcd is
       Vcd_Bitvector, Vcd_Stdlogic_Vector
      );
 
-   subtype Vcd_Var_Vectors is Vcd_Var_Kind
+   subtype Vcd_Var_Vectors is Vcd_Var_Type
      range Vcd_Bitvector .. Vcd_Stdlogic_Vector;
 
    --  Which value to be displayed: effective or driving (for out signals).
    type Vcd_Value_Kind is (Vcd_Effective, Vcd_Driving);
 
-   type Verilog_Wire_Info (Kind : Vcd_Var_Kind := Vcd_Bad) is record
+   type Verilog_Wire_Info (Vtype : Vcd_Var_Type := Vcd_Bad) is record
       Val : Vcd_Value_Kind;
 
       --  Access to an array of signals.
       Sigs : Grt.Signals.Signal_Arr_Ptr;
 
-      case Kind is
+      case Vtype is
          when Vcd_Var_Vectors =>
             --  Vector bounds.
             Irange : Ghdl_Range_Ptr;

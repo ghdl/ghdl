@@ -244,7 +244,7 @@ package body Grt.Vcd is
       null;
    end Avhpi_Error;
 
-   function Rti_To_Vcd_Kind (Rti : Ghdl_Rti_Access) return Vcd_Var_Kind is
+   function Rti_To_Vcd_Kind (Rti : Ghdl_Rti_Access) return Vcd_Var_Type is
    begin
       case Rti.Kind is
          when Ghdl_Rtik_Subtype_Scalar =>
@@ -274,7 +274,7 @@ package body Grt.Vcd is
    end Rti_To_Vcd_Kind;
 
    function Rti_To_Vcd_Kind (Rti : Ghdl_Rtin_Type_Array_Acc)
-                            return Vcd_Var_Kind
+                            return Vcd_Var_Type
    is
       It : Ghdl_Rti_Access;
    begin
@@ -313,7 +313,7 @@ package body Grt.Vcd is
       Error : AvhpiErrorT;
       Sig_Addr : Address;
 
-      Kind : Vcd_Var_Kind;
+      Kind : Vcd_Var_Type;
       Sigs : Grt.Signals.Signal_Arr_Ptr;
       Irange : Ghdl_Range_Ptr;
       Val : Vcd_Value_Kind;
@@ -365,7 +365,7 @@ package body Grt.Vcd is
 
       --  Do not allow null-array.
       if Irange /= null and then Irange.I32.Len = 0 then
-         Info := (Kind => Vcd_Bad, Val => Vcd_Effective, Sigs => null);
+         Info := (Vtype => Vcd_Bad, Val => Vcd_Effective, Sigs => null);
          return;
       end if;
 
@@ -410,7 +410,7 @@ package body Grt.Vcd is
    function Get_Wire_Length (Info : Verilog_Wire_Info)
                             return Ghdl_Index_Type is
    begin
-      if Info.Kind in Vcd_Var_Vectors then
+      if Info.Vtype in Vcd_Var_Vectors then
          return Info.Irange.I32.Len;
       else
          return 1;
@@ -424,8 +424,8 @@ package body Grt.Vcd is
    begin
       Get_Verilog_Wire (Sig, Vcd_El);
 
-      if Vcd_El.Kind = Vcd_Bad
-        or else Vcd_El.Kind = Vcd_Enum8
+      if Vcd_El.Vtype = Vcd_Bad
+        or else Vcd_El.Vtype = Vcd_Enum8
       then
          Vcd_Put ("$comment ");
          Vcd_Put_Name (Sig);
@@ -440,7 +440,7 @@ package body Grt.Vcd is
 
          Vcd_Table.Table (N) := Vcd_El;
          Vcd_Put ("$var ");
-         case Vcd_El.Kind is
+         case Vcd_El.Vtype is
             when Vcd_Integer32 =>
                Vcd_Put ("integer 32");
             when Vcd_Float64 =>
@@ -461,7 +461,7 @@ package body Grt.Vcd is
          Vcd_Put_Idcode (N);
          Vcd_Putc (' ');
          Vcd_Put_Name (Sig);
-         if Vcd_El.Kind in Vcd_Var_Vectors then
+         if Vcd_El.Vtype in Vcd_Var_Vectors then
             Vcd_Putc ('[');
             Vcd_Put_I32 (Vcd_El.Irange.I32.Left);
             Vcd_Putc (':');
@@ -687,7 +687,7 @@ package body Grt.Vcd is
    begin
       case V.Val is
          when Vcd_Effective =>
-            case V.Kind is
+            case V.Vtype is
                when Vcd_Bit
                  | Vcd_Bool =>
                   Vcd_Put_Bit (V.Sigs (0).Value_Ptr.B1);
@@ -718,7 +718,7 @@ package body Grt.Vcd is
                   null;
             end case;
          when Vcd_Driving =>
-            case V.Kind is
+            case V.Vtype is
                when Vcd_Bit
                  | Vcd_Bool =>
                   Vcd_Put_Bit (V.Sigs (0).Driving_Value.B1);
@@ -760,7 +760,7 @@ package body Grt.Vcd is
    begin
       case Info.Val is
          when Vcd_Effective =>
-            case Info.Kind is
+            case Info.Vtype is
                when Vcd_Bit
                  | Vcd_Bool
                  | Vcd_Enum8
@@ -778,7 +778,7 @@ package body Grt.Vcd is
                   null;
             end case;
          when Vcd_Driving =>
-            case Info.Kind is
+            case Info.Vtype is
                when Vcd_Bit
                  | Vcd_Bool
                  | Vcd_Enum8
@@ -803,7 +803,7 @@ package body Grt.Vcd is
    is
       Len : constant Ghdl_Index_Type := Get_Wire_Length (Info);
    begin
-      case Info.Kind is
+      case Info.Vtype is
          when Vcd_Bit
            | Vcd_Bool
            | Vcd_Enum8

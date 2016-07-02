@@ -123,7 +123,7 @@ package body Grt.Fst is
    is
       Len : Ghdl_Index_Type;
    begin
-      if Left.Kind /= Right.Kind
+      if Left.Vtype /= Right.Vtype
         or else Left.Val /= Right.Val
       then
          return False;
@@ -150,7 +150,7 @@ package body Grt.Fst is
       Res : Ghdl_Index_Type;
       Iaddr : Integer_Address;
    begin
-      Res := Vcd_Var_Kind'Pos (El.Kind) * 2 + Vcd_Value_Kind'Pos (El.Val);
+      Res := Vcd_Var_Type'Pos (El.Vtype) * 2 + Vcd_Value_Kind'Pos (El.Val);
       Res := Res + Len * 29;
       for I in 1 .. Len loop
          Iaddr := To_Integer (El.Sigs (I - 1).all'Address);
@@ -213,7 +213,7 @@ package body Grt.Fst is
    begin
       Get_Verilog_Wire (Sig, Vcd_El);
 
-      case Vcd_El.Kind is
+      case Vcd_El.Vtype is
          when Vcd_Bad =>
             --  Not handled.
             return;
@@ -336,7 +336,7 @@ package body Grt.Fst is
       --  Extract name (avoid truncation, append verilog range for arrays).
       Vhpi_Get_Str (VhpiNameP, Sig, Name, Name_Len);
       if Name_Len >= Name'Length
-        or else Vcd_El.Kind in Vcd_Var_Vectors
+        or else Vcd_El.Vtype in Vcd_Var_Vectors
       then
          declare
             Name2 : String (1 .. Name_Len + 3 + 2 * 11 + 1);
@@ -540,18 +540,13 @@ package body Grt.Fst is
       type Map_Type is array (Ghdl_E8 range 0 .. 8) of Character;
       From_Std : constant Map_Type := "UX01ZWLH-";
       V : Fst_Sig_Info renames Fst_Table.Table (I);
-      Len : Ghdl_Index_Type;
+      Len : constant Ghdl_Index_Type := Get_Wire_Length (V.Wire);
       Hand : constant fstHandle := V.Hand;
       Sig : constant Signal_Arr_Ptr := V.Wire.Sigs;
    begin
-      if V.Wire.Kind not in Vcd_Var_Vectors then
-         Len := 1;
-      else
-         Len := V.Wire.Irange.I32.Len;
-      end if;
       case V.Wire.Val is
          when Vcd_Effective =>
-            case V.Wire.Kind is
+            case V.Wire.Vtype is
                when Vcd_Bit
                  | Vcd_Bool
                  | Vcd_Bitvector =>
@@ -583,7 +578,7 @@ package body Grt.Fst is
                   null;
             end case;
          when Vcd_Driving =>
-            case V.Wire.Kind is
+            case V.Wire.Vtype is
                when Vcd_Bit
                  | Vcd_Bool
                  | Vcd_Bitvector =>

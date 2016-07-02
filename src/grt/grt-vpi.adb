@@ -418,7 +418,7 @@ package body Grt.Vpi is
       Info : Verilog_Wire_Info;
    begin
       Get_Verilog_Wire (Ref.Ref, Info);
-      if Info.Kind /= Vcd_Bad then
+      if Info.Vtype /= Vcd_Bad then
          return Natural (Get_Wire_Length (Info));
       else
          return 0;
@@ -430,7 +430,7 @@ package body Grt.Vpi is
       Info : Verilog_Wire_Info;
    begin
       Get_Verilog_Wire (Ref.Ref, Info);
-      case Info.Kind is
+      case Info.Vtype is
          when Vcd_Bool
            | Vcd_Integer32
            | Vcd_Float64
@@ -763,7 +763,7 @@ package body Grt.Vpi is
 
       --  Get verilog compat info.
       Get_Verilog_Wire (Obj, Info);
-      if Info.Kind = Vcd_Bad then
+      if Info.Vtype = Vcd_Bad then
          return null;
       end if;
 
@@ -773,7 +773,7 @@ package body Grt.Vpi is
 
       case Info.Val is
          when Vcd_Effective =>
-            case Info.Kind is
+            case Info.Vtype is
                when Vcd_Bad
                  | Vcd_Enum8
                  | Vcd_Integer32
@@ -794,7 +794,7 @@ package body Grt.Vpi is
                   end loop;
             end case;
          when Vcd_Driving =>
-            case Info.Kind is
+            case Info.Vtype is
                when Vcd_Bad
                  | Vcd_Enum8
                  | Vcd_Integer32
@@ -895,7 +895,7 @@ package body Grt.Vpi is
    procedure Ii_Vpi_Put_Value (Info : Verilog_Wire_Info;
                                Vec : Std_Ulogic_Array) is
    begin
-      case Info.Kind is
+      case Info.Vtype is
          when Vcd_Bad =>
             return;
          when Vcd_Bit
@@ -1038,7 +1038,7 @@ package body Grt.Vpi is
       -- ii_vpi_get_value function.
       --  Get verilog compat info.
       Get_Verilog_Wire (aObj.Ref, Info);
-      if Info.Kind = Vcd_Bad then
+      if Info.Vtype = Vcd_Bad then
          return null;
       end if;
 
