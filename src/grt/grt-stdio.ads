@@ -38,6 +38,9 @@ package Grt.Stdio is
    --  NULL for a stream.
    NULL_Stream : constant FILEs;
 
+   -- NULL for a void pointer
+   NULL_voids : constant voids;
+
    --  Predefined streams.
    function stdout return FILEs;
    function stderr return FILEs;
@@ -46,6 +49,8 @@ package Grt.Stdio is
    --  The following subprograms are translation of the C prototypes.
 
    function fopen (path: chars; mode : chars) return FILEs;
+
+   procedure setbuf (stream : FILEs; buffer : voids);
 
    function fwrite
      (buffer : voids; size : size_t; count : size_t; stream : FILEs)
@@ -79,8 +84,10 @@ private
    --  of System).
    --  I am pretty sure the C definition of NULL is 0.
    NULL_Stream : constant FILEs := FILEs (System'To_Address (0));
+   NULL_voids : constant voids := voids (System'To_Address (0));
 
    pragma Import (C, fopen);
+   pragma Import (C, setbuf);
 
    pragma Import (C, fwrite);
    pragma Import (C, fread);

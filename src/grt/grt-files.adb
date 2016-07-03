@@ -26,6 +26,7 @@ with Grt.Errors; use Grt.Errors;
 with Grt.Stdio; use Grt.Stdio;
 with Grt.C; use Grt.C;
 with Grt.Table;
+with Grt.Options;
 with System; use System;
 pragma Elaborate_All (Grt.Table);
 
@@ -194,6 +195,9 @@ package body Grt.Files is
          F := fopen (Name'Address, Str_Mode'Address);
          if F = NULL_Stream then
             return Name_Error;
+         end if;
+         if Grt.Options.Unbuffered_Writes and Mode /= Read_Mode then
+            setbuf (F, NULL_voids);
          end if;
       end if;
       Sig := Files_Table.Table (File).Signature;
