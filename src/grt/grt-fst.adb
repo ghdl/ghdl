@@ -137,7 +137,9 @@ package body Grt.Fst is
 
       --  Compare signals.
       for I in 1 .. Len loop
-         if Left.Sigs (I - 1) /= Right.Sigs (I - 1) then
+         if To_Signal_Arr_Ptr (Left.Ptr)(I - 1)
+           /= To_Signal_Arr_Ptr (Right.Ptr)(I - 1)
+         then
             return False;
          end if;
       end loop;
@@ -153,7 +155,7 @@ package body Grt.Fst is
       Res := Vcd_Var_Type'Pos (El.Vtype) * 2 + Vcd_Value_Kind'Pos (El.Val);
       Res := Res + Len * 29;
       for I in 1 .. Len loop
-         Iaddr := To_Integer (El.Sigs (I - 1).all'Address);
+         Iaddr := To_Integer (To_Signal_Arr_Ptr (El.Ptr)(I - 1).all'Address);
          Res := Res +
            Ghdl_Index_Type (Iaddr mod Integer_Address (Ghdl_Index_Type'Last));
       end loop;
@@ -542,73 +544,37 @@ package body Grt.Fst is
       V : Fst_Sig_Info renames Fst_Table.Table (I);
       Len : constant Ghdl_Index_Type := Get_Wire_Length (V.Wire);
       Hand : constant fstHandle := V.Hand;
-      Sig : constant Signal_Arr_Ptr := V.Wire.Sigs;
    begin
-      case V.Wire.Val is
-         when Vcd_Effective =>
-            case V.Wire.Vtype is
-               when Vcd_Bit
-                 | Vcd_Bool
-                 | Vcd_Bitvector =>
-                  declare
-                     Str : Std_String_Uncons (0 .. Len - 1);
-                  begin
-                     for I in Str'Range loop
-                        Str (I) := From_Bit (Sig (I).Value_Ptr.B1);
-                     end loop;
-                     fstWriterEmitValueChange (Context, Hand, Str'Address);
-                  end;
-               when Vcd_Stdlogic
-                 | Vcd_Stdlogic_Vector =>
-                  declare
-                     Str : Std_String_Uncons (0 .. Len - 1);
-                  begin
-                     for I in Str'Range loop
-                        Str (I) := From_Std (Sig (I).Value_Ptr.E8);
-                     end loop;
-                     fstWriterEmitValueChange (Context, Hand, Str'Address);
-                  end;
-               when Vcd_Integer32 =>
-                  Fst_Put_Integer32 (Hand, Sig (0).Value_Ptr.E32);
-               when Vcd_Float64 =>
-                  null;
-               when Vcd_Enum8 =>
-                  Fst_Put_Enum8 (Hand, Sig (0).Value_Ptr.E8, V.Wire.Rti);
-               when Vcd_Bad =>
-                  null;
-            end case;
-         when Vcd_Driving =>
-            case V.Wire.Vtype is
-               when Vcd_Bit
-                 | Vcd_Bool
-                 | Vcd_Bitvector =>
-                  declare
-                     Str : Std_String_Uncons (0 .. Len - 1);
-                  begin
-                     for I in Str'Range loop
-                        Str (I) := From_Bit (Sig (I).Driving_Value.B1);
-                     end loop;
-                     fstWriterEmitValueChange (Context, Hand, Str'Address);
-                  end;
-               when Vcd_Stdlogic
-                 | Vcd_Stdlogic_Vector =>
-                  declare
-                     Str : Std_String_Uncons (0 .. Len - 1);
-                  begin
-                     for I in Str'Range loop
-                        Str (I) := From_Std (Sig (I).Driving_Value.E8);
-                     end loop;
-                     fstWriterEmitValueChange (Context, Hand, Str'Address);
-                  end;
-               when Vcd_Integer32 =>
-                  Fst_Put_Integer32 (Hand, Sig (0).Driving_Value.E32);
-               when Vcd_Float64 =>
-                  null;
-               when Vcd_Enum8 =>
-                  Fst_Put_Enum8 (Hand, Sig (0).Driving_Value.E8, V.Wire.Rti);
-               when Vcd_Bad =>
-                  null;
-            end case;
+      case V.Wire.Vtype is
+         when Vcd_Bit
+           | Vcd_Bool
+           | Vcd_Bitvector =>
+            declare
+               Str : Std_String_Uncons (0 .. Len - 1);
+            begin
+               for I in Str'Range loop
+                  Str (I) := From_Bit (Verilog_Wire_Val (V.Wire, I).B1);
+               end loop;
+               fstWriterEmitValueChange (Context, Hand, Str'Address);
+            end;
+         when Vcd_Stdlogic
+           | Vcd_Stdlogic_Vector =>
+            declare
+               Str : Std_String_Uncons (0 .. Len - 1);
+            begin
+               for I in Str'Range loop
+                  Str (I) := From_Std (Verilog_Wire_Val (V.Wire, I).E8);
+               end loop;
+               fstWriterEmitValueChange (Context, Hand, Str'Address);
+            end;
+         when Vcd_Integer32 =>
+            Fst_Put_Integer32 (Hand, Verilog_Wire_Val (V.Wire).E32);
+         when Vcd_Float64 =>
+            null;
+         when Vcd_Enum8 =>
+            Fst_Put_Enum8 (Hand, Verilog_Wire_Val (V.Wire).E8, V.Wire.Rti);
+         when Vcd_Bad =>
+            null;
       end case;
    end Fst_Put_Var;
 

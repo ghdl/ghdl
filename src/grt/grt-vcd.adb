@@ -26,8 +26,6 @@
 with System; use System;
 with Interfaces;
 with Grt.Stdio; use Grt.Stdio;
-with System.Storage_Elements; --  Work around GNAT bug.
-pragma Unreferenced (System.Storage_Elements);
 with Grt.Errors; use Grt.Errors;
 with Grt.Signals; use Grt.Signals;
 with Grt.Table;
@@ -314,7 +312,6 @@ package body Grt.Vcd is
       Sig_Addr : Address;
 
       Kind : Vcd_Var_Type;
-      Sigs : Grt.Signals.Signal_Arr_Ptr;
       Irange : Ghdl_Range_Ptr;
       Val : Vcd_Value_Kind;
    begin
@@ -338,14 +335,12 @@ package body Grt.Vcd is
            | Ghdl_Rtik_Type_E8
            | Ghdl_Rtik_Subtype_Scalar =>
             Kind := Rti_To_Vcd_Kind (Rti);
-            Sigs := To_Signal_Arr_Ptr (Sig_Addr);
          when Ghdl_Rtik_Subtype_Array =>
             declare
                St : Ghdl_Rtin_Subtype_Array_Acc;
             begin
                St := To_Ghdl_Rtin_Subtype_Array_Acc (Rti);
                Kind := Rti_To_Vcd_Kind (St.Basetype);
-               Sigs := To_Signal_Arr_Ptr (Sig_Addr);
                Irange := To_Ghdl_Range_Ptr
                  (Loc_To_Addr (St.Common.Depth, St.Bounds,
                                Avhpi_Get_Context (Sig)));
@@ -356,7 +351,7 @@ package body Grt.Vcd is
             begin
                Kind := Rti_To_Vcd_Kind (To_Ghdl_Rtin_Type_Array_Acc (Rti));
                Uc := To_Ghdl_Uc_Array_Acc (Sig_Addr);
-               Sigs := To_Signal_Arr_Ptr (Uc.Base);
+               Sig_Addr := Uc.Base;
                Irange := To_Ghdl_Range_Ptr (Uc.Bounds);
             end;
          when others =>
@@ -365,45 +360,52 @@ package body Grt.Vcd is
 
       --  Do not allow null-array.
       if Irange /= null and then Irange.I32.Len = 0 then
-         Info := (Vtype => Vcd_Bad, Val => Vcd_Effective, Sigs => null);
+         Info := (Vtype => Vcd_Bad, Val => Vcd_Effective, Ptr => Null_Address);
          return;
       end if;
 
-      if Vhpi_Get_Kind (Sig) = VhpiPortDeclK then
-         case Vhpi_Get_Mode (Sig) is
-            when VhpiInMode
-              | VhpiInoutMode
-              | VhpiBufferMode
-              | VhpiLinkageMode =>
-               Val := Vcd_Effective;
-            when VhpiOutMode =>
-               Val := Vcd_Driving;
-            when VhpiErrorMode =>
-               Kind := Vcd_Bad;
-         end case;
-      else
-         Val := Vcd_Effective;
-      end if;
+      case Vhpi_Get_Kind (Sig) is
+         when VhpiPortDeclK =>
+            case Vhpi_Get_Mode (Sig) is
+               when VhpiInMode
+                 | VhpiInoutMode
+                 | VhpiBufferMode
+                 | VhpiLinkageMode =>
+                  Val := Vcd_Effective;
+               when VhpiOutMode =>
+                  Val := Vcd_Driving;
+               when VhpiErrorMode =>
+                  Kind := Vcd_Bad;
+            end case;
+         when VhpiSigDeclK =>
+            Val := Vcd_Effective;
+         when VhpiGenericDeclK =>
+            Val := Vcd_Variable;
+         when others =>
+            Info := (Vtype => Vcd_Bad,
+                     Val => Vcd_Effective, Ptr => Null_Address);
+            return;
+      end case;
 
       case Kind is
          when Vcd_Bad =>
-            Info := (Vcd_Bad, Vcd_Effective, null);
+            Info := (Vcd_Bad, Vcd_Effective, Null_Address);
          when Vcd_Enum8 =>
-            Info := (Vcd_Enum8, Val, Sigs, Rti);
+            Info := (Vcd_Enum8, Val, Sig_Addr, Rti);
          when Vcd_Bool =>
-            Info := (Vcd_Bool, Val, Sigs);
+            Info := (Vcd_Bool, Val, Sig_Addr);
          when Vcd_Integer32 =>
-            Info := (Vcd_Integer32, Val, Sigs);
+            Info := (Vcd_Integer32, Val, Sig_Addr);
          when Vcd_Float64 =>
-            Info := (Vcd_Float64, Val, Sigs);
+            Info := (Vcd_Float64, Val, Sig_Addr);
          when Vcd_Bit =>
-            Info := (Vcd_Bit, Val, Sigs);
+            Info := (Vcd_Bit, Val, Sig_Addr);
          when Vcd_Stdlogic =>
-            Info := (Vcd_Stdlogic, Val, Sigs);
+            Info := (Vcd_Stdlogic, Val, Sig_Addr);
          when Vcd_Bitvector =>
-            Info := (Vcd_Bitvector, Val, Sigs, Irange);
+            Info := (Vcd_Bitvector, Val, Sig_Addr, Irange);
          when Vcd_Stdlogic_Vector =>
-            Info := (Vcd_Stdlogic_Vector, Val, Sigs, Irange);
+            Info := (Vcd_Stdlogic_Vector, Val, Sig_Addr, Irange);
       end case;
    end Get_Verilog_Wire;
 
@@ -416,6 +418,33 @@ package body Grt.Vcd is
          return 1;
       end if;
    end Get_Wire_Length;
+
+   function Verilog_Wire_Val (Info : Verilog_Wire_Info)
+                             return Ghdl_Value_Ptr is
+   begin
+      case Info.Val is
+         when Vcd_Effective =>
+            return To_Signal_Arr_Ptr (Info.Ptr)(0).Value_Ptr;
+         when Vcd_Driving =>
+            return To_Signal_Arr_Ptr (Info.Ptr)(0).Driving_Value'Access;
+         when Vcd_Variable =>
+            return To_Ghdl_Value_Ptr (Info.Ptr);
+      end case;
+   end Verilog_Wire_Val;
+
+   function Verilog_Wire_Val (Info : Verilog_Wire_Info; Idx : Ghdl_Index_Type)
+                             return Ghdl_Value_Ptr is
+   begin
+      case Info.Val is
+         when Vcd_Effective =>
+            return To_Signal_Arr_Ptr (Info.Ptr)(Idx).Value_Ptr;
+         when Vcd_Driving =>
+            return To_Signal_Arr_Ptr (Info.Ptr)(Idx).Driving_Value'Access;
+         when Vcd_Variable =>
+            --  TODO
+            Internal_Error ("verilog_wire_val");
+      end case;
+   end Verilog_Wire_Val;
 
    procedure Add_Signal (Sig : VhpiHandleT)
    is
@@ -479,6 +508,8 @@ package body Grt.Vcd is
                   Vcd_Put ("effective ");
                when Vcd_Driving =>
                   Vcd_Put ("driving ");
+               when Vcd_Variable =>
+                  Vcd_Put ("variable ");
             end case;
             Vcd_Put_End;
          end if;
@@ -685,92 +716,59 @@ package body Grt.Vcd is
       V : Verilog_Wire_Info renames Vcd_Table.Table (I);
       Len : constant Ghdl_Index_Type := Get_Wire_Length (V);
    begin
-      case V.Val is
-         when Vcd_Effective =>
-            case V.Vtype is
-               when Vcd_Bit
-                 | Vcd_Bool =>
-                  Vcd_Put_Bit (V.Sigs (0).Value_Ptr.B1);
-               when Vcd_Stdlogic =>
-                  Vcd_Put_Stdlogic (V.Sigs (0).Value_Ptr.E8);
-               when Vcd_Integer32 =>
-                  Vcd_Putc ('b');
-                  Vcd_Put_Integer32 (V.Sigs (0).Value_Ptr.E32);
-                  Vcd_Putc (' ');
-               when Vcd_Float64 =>
-                  Vcd_Putc ('r');
-                  Vcd_Put_Float64 (V.Sigs (0).Value_Ptr.F64);
-                  Vcd_Putc (' ');
-               when Vcd_Bitvector =>
-                  Vcd_Putc ('b');
-                  for J in 0 .. Len - 1 loop
-                     Vcd_Put_Bit (V.Sigs (J).Value_Ptr.B1);
-                  end loop;
-                  Vcd_Putc (' ');
-               when Vcd_Stdlogic_Vector =>
-                  Vcd_Putc ('b');
-                  for J in 0 .. Len - 1 loop
-                     Vcd_Put_Stdlogic (V.Sigs (J).Value_Ptr.E8);
-                  end loop;
-                  Vcd_Putc (' ');
-               when Vcd_Bad
-                 | Vcd_Enum8 =>
-                  null;
-            end case;
-         when Vcd_Driving =>
-            case V.Vtype is
-               when Vcd_Bit
-                 | Vcd_Bool =>
-                  Vcd_Put_Bit (V.Sigs (0).Driving_Value.B1);
-               when Vcd_Stdlogic =>
-                  Vcd_Put_Stdlogic (V.Sigs (0).Driving_Value.E8);
-               when Vcd_Integer32 =>
-                  Vcd_Putc ('b');
-                  Vcd_Put_Integer32 (V.Sigs (0).Driving_Value.E32);
-                  Vcd_Putc (' ');
-               when Vcd_Float64 =>
-                  Vcd_Putc ('r');
-                  Vcd_Put_Float64 (V.Sigs (0).Driving_Value.F64);
-                  Vcd_Putc (' ');
-               when Vcd_Bitvector =>
-                  Vcd_Putc ('b');
-                  for J in 0 .. Len - 1 loop
-                     Vcd_Put_Bit (V.Sigs (J).Driving_Value.B1);
-                  end loop;
-                  Vcd_Putc (' ');
-               when Vcd_Stdlogic_Vector =>
-                  Vcd_Putc ('b');
-                  for J in 0 .. Len - 1 loop
-                     Vcd_Put_Stdlogic (V.Sigs (J).Driving_Value.E8);
-                  end loop;
-                  Vcd_Putc (' ');
-               when Vcd_Bad
-                 | Vcd_Enum8 =>
-                  null;
-            end case;
+      case V.Vtype is
+         when Vcd_Bit
+           | Vcd_Bool =>
+            Vcd_Put_Bit (Verilog_Wire_Val (V).B1);
+         when Vcd_Stdlogic =>
+            Vcd_Put_Stdlogic (Verilog_Wire_Val (V).E8);
+         when Vcd_Integer32 =>
+            Vcd_Putc ('b');
+            Vcd_Put_Integer32 (Verilog_Wire_Val (V).E32);
+            Vcd_Putc (' ');
+         when Vcd_Float64 =>
+            Vcd_Putc ('r');
+            Vcd_Put_Float64 (Verilog_Wire_Val (V).F64);
+            Vcd_Putc (' ');
+         when Vcd_Bitvector =>
+            Vcd_Putc ('b');
+            for J in 0 .. Len - 1 loop
+               Vcd_Put_Bit (Verilog_Wire_Val (V, J).B1);
+            end loop;
+            Vcd_Putc (' ');
+         when Vcd_Stdlogic_Vector =>
+            Vcd_Putc ('b');
+            for J in 0 .. Len - 1 loop
+               Vcd_Put_Stdlogic (Verilog_Wire_Val (V, J).E8);
+            end loop;
+            Vcd_Putc (' ');
+         when Vcd_Bad
+           | Vcd_Enum8 =>
+            null;
       end case;
       Vcd_Put_Idcode (I);
       Vcd_Newline;
    end Vcd_Put_Var;
 
    function Verilog_Wire_Changed (Info : Verilog_Wire_Info; Last : Std_Time)
-                                 return Boolean
-   is
-      Len : constant Ghdl_Index_Type := Get_Wire_Length (Info);
+                                 return Boolean is
    begin
-      case Info.Val is
+      case Vcd_Value_Signals (Info.Val) is
          when Vcd_Effective =>
             case Info.Vtype is
                when Vcd_Bit
                  | Vcd_Bool
                  | Vcd_Enum8
                  | Vcd_Stdlogic
-                 | Vcd_Bitvector
-                 | Vcd_Stdlogic_Vector
                  | Vcd_Integer32
                  | Vcd_Float64 =>
-                  for J in 0 .. Len - 1 loop
-                     if Info.Sigs (J).Last_Event = Last then
+                  if To_Signal_Arr_Ptr (Info.Ptr)(0).Last_Event = Last then
+                     return True;
+                  end if;
+               when Vcd_Bitvector
+                 | Vcd_Stdlogic_Vector =>
+                  for J in 0 .. Info.Irange.I32.Len - 1 loop
+                     if To_Signal_Arr_Ptr (Info.Ptr)(J).Last_Event = Last then
                         return True;
                      end if;
                   end loop;
@@ -783,12 +781,15 @@ package body Grt.Vcd is
                  | Vcd_Bool
                  | Vcd_Enum8
                  | Vcd_Stdlogic
-                 | Vcd_Bitvector
-                 | Vcd_Stdlogic_Vector
                  | Vcd_Integer32
                  | Vcd_Float64 =>
-                  for J in 0 .. Len - 1 loop
-                     if Info.Sigs (J).Last_Active = Last then
+                  if To_Signal_Arr_Ptr (Info.Ptr)(0).Last_Active = Last then
+                     return True;
+                  end if;
+               when Vcd_Bitvector
+                 | Vcd_Stdlogic_Vector =>
+                  for J in 0 .. Info.Irange.I32.Len - 1 loop
+                     if To_Signal_Arr_Ptr (Info.Ptr)(J).Last_Active = Last then
                         return True;
                      end if;
                   end loop;
@@ -799,21 +800,22 @@ package body Grt.Vcd is
       return False;
    end Verilog_Wire_Changed;
 
-   function Verilog_Wire_Event (Info : Verilog_Wire_Info) return Boolean
-   is
-      Len : constant Ghdl_Index_Type := Get_Wire_Length (Info);
+   function Verilog_Wire_Event (Info : Verilog_Wire_Info) return Boolean is
    begin
       case Info.Vtype is
          when Vcd_Bit
            | Vcd_Bool
            | Vcd_Enum8
            | Vcd_Stdlogic
-           | Vcd_Bitvector
-           | Vcd_Stdlogic_Vector
            | Vcd_Integer32
            | Vcd_Float64 =>
-            for J in 0 .. Len - 1 loop
-               if Info.Sigs (J).Event then
+            if To_Signal_Arr_Ptr (Info.Ptr)(0).Event then
+               return True;
+            end if;
+         when Vcd_Bitvector
+           | Vcd_Stdlogic_Vector =>
+            for J in 0 .. Info.Irange.I32.Len - 1 loop
+               if To_Signal_Arr_Ptr (Info.Ptr)(J).Event then
                   return True;
                end if;
             end loop;
