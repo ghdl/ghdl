@@ -162,6 +162,8 @@ package body Grt.Options is
       P (" --stop-delta=X    stop the simulation cycle after X delta");
       P (" --expect-failure  invert exit status");
       P (" --no-run          do not simulate, only elaborate");
+      P (" --unbuffered      disable buffering on stdout, stderr and");
+      P ("                   files opened in write or append mode (TEXTIO).");
       --  P (" --threads=N       use N threads for simulation");
       P ("Additional features:");
       P (" --has-feature=X   test presence of feature X");
