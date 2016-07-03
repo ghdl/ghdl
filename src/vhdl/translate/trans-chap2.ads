@@ -32,7 +32,7 @@ package Trans.Chap2 is
    procedure Push_Subprg_Identifier (Spec : Iir; Mark : out Id_Mark_Type);
 
    procedure Translate_Package_Declaration (Decl : Iir_Package_Declaration);
-   procedure Translate_Package_Body (Decl : Iir_Package_Body);
+   procedure Translate_Package_Body (Bod : Iir_Package_Body);
    procedure Translate_Package_Instantiation_Declaration (Inst : Iir);
 
    procedure Elab_Package_Body (Spec : Iir_Package_Declaration; Bod : Iir);

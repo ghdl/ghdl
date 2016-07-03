@@ -47,8 +47,9 @@ endif
 GRT_ELF_OPTS:=-Wl,--version-script=@/grt.ver -Wl,--export-dynamic
 
 # Set target files.
-ifeq ($(filter-out mingw32,$(osys)),)
-  GRT_TARGET_OBJS=jumps.o math.o clock.o
+ifeq ($(filter-out mingw32 mingw64,$(osys)),)
+  GRT_TARGET_OBJS=win32.o clock.o
+  GRT_EXTRA_LIB=-ldbghelp
 else
   GRT_TARGET_OBJS=jumps.o times.o
   ifeq ($(filter-out linux,$(osys)),)
@@ -177,7 +178,7 @@ grt-files: run-bind.adb
 # Also remove -lgnat and its associated -L flags.  This appears to be required
 #  with GNAT GPL 2005.
 grt-files.in: grt-files
-	sed -e "\!^./!d" -e "/-shared/d" -e "/-static/d" -e "/-lgnat/d" \
+	sed -e "\!^.[/\\]!d" -e "/-shared/d" -e "/-static/d" -e "/-lgnat/d" \
 	  -e "\X-L/Xd" < $< > $@
 
 grt.lst: grt-files.in

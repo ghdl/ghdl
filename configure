@@ -17,11 +17,13 @@ llvm_config=
 backtrace_lib=
 build=
 build_mode=
+EXEEXT=
+LIBEXT=.so
 
 show_help=no
 progname=$0
 
-subst_vars="CC GNATMAKE CFLAGS LDFLAGS build srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config backtrace_lib build_mode"
+subst_vars="CC GNATMAKE CFLAGS LDFLAGS build srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config backtrace_lib build_mode EXEEXT LIBEXT"
 
 # Find srcdir
 srcdir=`dirname $progname`
@@ -169,6 +171,12 @@ if test $backend = llvm; then
     esac
 fi
 
+# Define default file extensions for Windows or Linux-like systems
+case "$build" in
+  *mingw*) LIBEXT=".dll"; EXEEXT=".exe";;
+  *)       LIBEXT=".so";  EXEEXT="";;
+esac
+
 # Generate config.status
 rm -f config.status
 {
@@ -211,7 +219,7 @@ fi
 if test $backend = mcode; then
     case "$build" in
 	*darwin*) ortho_flags="Flags_Macosx${mcode64}" ;;
-	*mingw32*) ortho_flags="Flags_Windows" ;;
+	*mingw32*) ortho_flags="Flags_Windows${mcode64}" ;;
 	*linux*) ortho_flags="Flags_Linux${mcode64}" ;;
 	*) echo "Unsupported $build build for mcode"; exit 1;;
     esac
@@ -230,10 +238,10 @@ fi
 # Generate default_pathes.ads
 echo "Generate default_pathes.ads"
 curdir=`pwd`
-sed -e "s%@COMPILER_GCC@%ghdl1-gcc%" \
-    -e "s%@COMPILER_DEBUG@%ghdl1-debug%" \
-    -e "s%@COMPILER_MCODE@%ghdl1-mcode%" \
-    -e "s%@COMPILER_LLVM@%bin/ghdl1-llvm%" \
+sed -e "s%@COMPILER_GCC@%ghdl1-gcc$EXEEXT%" \
+    -e "s%@COMPILER_DEBUG@%ghdl1-debug$EXEEXT%" \
+    -e "s%@COMPILER_MCODE@%ghdl1-mcode$EXEEXT%" \
+    -e "s%@COMPILER_LLVM@%bin/ghdl1-llvm$EXEEXT%" \
     -e "s%@POST_PROCESSOR@%oread-$backend%" \
     -e "s%@INSTALL_PREFIX@%$prefix%" \
     -e "s%@LIB_PREFIX@%$libdirsuffix%" \

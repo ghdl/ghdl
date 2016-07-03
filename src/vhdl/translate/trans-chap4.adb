@@ -841,8 +841,8 @@ package body Trans.Chap4 is
       New_Assign_Stmt (M2Lv (Value), Init_Val);
 
       --  Create the signal.
-      case Type_Info.Type_Mode is
-         when Type_Mode_B1 =>
+      case Type_Mode_Scalar (Type_Info.Type_Mode) is
+         when Type_Mode_Scalar (Type_Mode_B1) =>
             Create_Subprg := Ghdl_Create_Signal_B1;
          when Type_Mode_E8 =>
             Create_Subprg := Ghdl_Create_Signal_E8;
@@ -856,8 +856,6 @@ package body Trans.Chap4 is
             Create_Subprg := Ghdl_Create_Signal_I64;
          when Type_Mode_F64 =>
             Create_Subprg := Ghdl_Create_Signal_F64;
-         when others =>
-            Error_Kind ("elab_signal_non_composite", Targ_Type);
       end case;
 
       Start_Association (Assoc, Create_Subprg);

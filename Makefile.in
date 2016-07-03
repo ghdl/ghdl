@@ -23,6 +23,8 @@ prefix=@prefix@
 backend=@backend@
 libdirsuffix=@libdirsuffix@
 libdirreverse=@libdirreverse@
+EXEEXT=@EXEEXT@
+LIBEXT=@LIBEXT@
 gcc_src_dir=@gcc_src_dir@
 LLVM_CONFIG=@llvm_config@
 LDFLAGS=@LDFLAGS@
@@ -211,8 +213,8 @@ libs.vhdl.llvmjit: ghdl_llvm_jit
 	$(MAKE) GHDL=ghdl_llvm_jit vhdl.libs.all
 
 libs.vhdl.llvm: ghdl_llvm ghdl1-llvm
-	$(MAKE) GHDL=ghdl_llvm ANALYZE_OPTS="--GHDL1=ghdl1-llvm" vhdl.libs.all
-	$(MAKE) GHDL1=./ghdl1-llvm libs.vhdl.standard
+	$(MAKE) GHDL=ghdl_llvm ANALYZE_OPTS="--GHDL1=ghdl1-llvm$(EXEEXT)" vhdl.libs.all
+	$(MAKE) GHDL1=./ghdl1-llvm$(EXEEXT) libs.vhdl.standard
 
 ghdl_llvm: force
 	$(GNATMAKE) $(GHDL_LLVM_INCFLAGS) -aI$(srcdir)/src/ghdldrv $(GNATFLAGS)\
@@ -236,8 +238,8 @@ install.grt.llvm: libgrt.a grt.lst install.dirs
 	$(INSTALL_DATA) $(GRTSRCDIR)/grt.ver $(DESTDIR)$(VHDL_LIB_DIR)/grt.ver
 
 install.llvm.program: install.dirs ghdl1-llvm ghdl_llvm
-	$(INSTALL_PROGRAM) ghdl_llvm $(DESTDIR)$(bindir)/ghdl
-	$(INSTALL_PROGRAM) ghdl1-llvm $(DESTDIR)$(bindir)/ghdl1-llvm
+	$(INSTALL_PROGRAM) ghdl_llvm$(EXEEXT) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
+	$(INSTALL_PROGRAM) ghdl1-llvm$(EXEEXT) $(DESTDIR)$(bindir)/ghdl1-llvm$(EXEEXT)
 
 install.llvm: install.llvm.program install.vhdllib install.grt.llvm
 
@@ -344,8 +346,8 @@ install.vhdllib: install.dirs
 
 clean: force
 	$(RM) -f *.o *.ali b~*.ad? *~ *.d b__*.ad? *.a *.deps *.bexch
-	$(RM) -f ghdl_gcc ghdl_mcode ghdl ghdl_llvm ghdl_llvm_jit ghdl_simul
-	$(RM) -f ghdl1-gcc ghdl1-llvm ghdl1-debug
+	$(RM) -f ghdl_gcc$(EXEEXT) ghdl_mcode$(EXEEXT) ghdl$(EXEEXT) ghdl_llvm$(EXEEXT) ghdl_llvm_jit$(EXEEXT) ghdl_simul$(EXEEXT)
+	$(RM) -f ghdl1-gcc$(EXEEXT) ghdl1-llvm$(EXEEXT) ghdl1-debug$(EXEEXT)
 	$(RM) -f run-bind.ad? grt.lst grt-files grt-files.in
 	$(RM) -rf lib
 
