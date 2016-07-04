@@ -3011,7 +3011,7 @@ package Iirs is
    --
    --   Get/Set_Parent (Field0)
    --
-   --  Chain is compose of Iir_Kind_Choice_By_XXX.
+   --  Chain is composed of Iir_Kind_Choice_By_XXX.
    --   Get/Set_Case_Statement_Alternative_Chain (Field1)
    --
    --   Get/Set_Chain (Field2)
