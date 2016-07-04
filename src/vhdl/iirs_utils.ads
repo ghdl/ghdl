@@ -235,7 +235,7 @@ package Iirs_Utils is
    --  Return TRUE iff type/subtype definition A_TYPE is an undim array.
    function Is_One_Dimensional_Array_Type (A_Type : Iir) return Boolean;
 
-   --  Return TRUE iff unsemantized EXPR is a range attribute.
+   --  Return TRUE iff unanalyzed EXPR is a range attribute.
    function Is_Range_Attribute_Name (Expr : Iir) return Boolean;
 
    --  Create an array subtype from array_type or array_subtype ARR_TYPE.

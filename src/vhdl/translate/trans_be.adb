@@ -32,22 +32,15 @@ package body Trans_Be is
      (Unit : Iir_Design_Unit; Main : Boolean := False)
    is
       use Ada.Text_IO;
-      Lib : Iir;
+      Lib : constant Iir := Get_Library_Unit (Unit);
    begin
-      --  No need to semantize during elaboration.
-      --if Flags.Will_Elaborate then
-      --   return;
-      --end if;
-
-      Lib := Get_Library_Unit (Unit);
-
       if (Main or Flags.Dump_All) and then Flags.Dump_Parse then
          Disp_Tree.Disp_Tree (Unit);
       end if;
 
       --  Semantic analysis.
       if Flags.Verbose then
-         Put_Line ("semantize " & Disp_Node (Lib));
+         Put_Line ("analyze " & Disp_Node (Lib));
       end if;
       Sem.Semantic (Unit);
 

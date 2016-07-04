@@ -57,7 +57,7 @@ package Sem is
    --  aliases are checked.
    procedure Check_Operator_Requirements (Id : Name_Id; Subprg : Iir);
 
-   --  Semantize an use clause.
+   --  Analyze an use clause.
    --  This may adds use clauses to the chain.
    procedure Sem_Use_Clause (Clauses : Iir_Use_Clause);
 

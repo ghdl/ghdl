@@ -3567,7 +3567,7 @@ package body Sem_Expr is
       return Aggr;
    end Sem_Array_Aggregate_Type;
 
-   --  Semantize aggregate EXPR whose type is expected to be A_TYPE.
+   --  Analyze aggregate EXPR whose type is expected to be A_TYPE.
    --  A_TYPE cannot be null_iir (this case is handled in sem_expression_ov)
    function Sem_Aggregate (Expr: Iir_Aggregate; A_Type: Iir)
                           return Iir_Aggregate is
@@ -3598,7 +3598,7 @@ package body Sem_Expr is
    end Sem_Aggregate;
 
    -- Transform LIT into a physical_literal.
-   -- LIT can be either a not semantized physical literal or
+   -- LIT can be either a not analyzed physical literal or
    --  a simple name that is a physical unit.  In the later case, a physical
    --  literal is created.
    function Sem_Physical_Literal (Lit: Iir) return Iir
@@ -3646,7 +3646,7 @@ package body Sem_Expr is
       return Res;
    end Sem_Physical_Literal;
 
-   --  Semantize an allocator by expression or an allocator by subtype.
+   --  Analyze an allocator by expression or an allocator by subtype.
    function Sem_Allocator (Expr : Iir; A_Type : Iir) return Iir
    is
       Arg: Iir;
@@ -4001,10 +4001,10 @@ package body Sem_Expr is
    is
       A_Type: Iir;
    begin
---     -- Avoid to run sem_expression_ov when a node was already semantized
+--     -- Avoid to run sem_expression_ov when a node was already analyzed
 --     -- except to resolve overload.
 --     if Get_Type (Expr) /= Null_Iir then
---        --  EXPR was already semantized.
+--        --  EXPR was already analyzed.
 --        if A_Type1 = null or else not Is_Overload_List (Get_Type (Expr)) then
 --           --  This call to sem_expression_ov do not add any informations.
 --           Check_Restrictions (Expr, Restriction);
@@ -4523,7 +4523,7 @@ package body Sem_Expr is
          return Null_Iir;
       end if;
 
-      -- Can't try to run sem_expression_ov when a node was already semantized
+      --  Can't try to run sem_expression_ov when a node was already analyzed
       Expr_Type := Get_Type (Expr);
       if Expr_Type /= Null_Iir and then not Is_Overload_List (Expr_Type) then
          --  Checks types.

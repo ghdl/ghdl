@@ -1906,7 +1906,7 @@ package body Sem is
 
       Compute_Subprogram_Hash (Subprg);
 
-      --  The specification has been semantized, close the declarative region
+      --  The specification has been analyzed, close the declarative region
       --  now.
       Close_Declarative_Region;
 

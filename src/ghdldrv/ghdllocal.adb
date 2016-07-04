@@ -60,7 +60,7 @@ package body Ghdllocal is
       end if;
 
       if Flags.Verbose then
-         Put_Line ("semantize " & Disp_Node (Get_Library_Unit (Unit)));
+         Put_Line ("analyze " & Disp_Node (Get_Library_Unit (Unit)));
       end if;
 
       Sem.Semantic (Unit);

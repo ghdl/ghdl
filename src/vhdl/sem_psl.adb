@@ -135,7 +135,7 @@ package body Sem_Psl is
       return PSL.Hash.Get_PSL_Node (HDL_Node (Expr));
    end Convert_Bool;
 
-   --  Semantize an HDL expression.  This may mostly a wrapper except in the
+   --  Analyze an HDL expression.  This may mostly a wrapper except in the
    --  case when the expression is in fact a PSL expression.
    function Sem_Hdl_Expr (N : Node) return Node
    is
@@ -756,7 +756,7 @@ package body Sem_Psl is
       return Res2;
    end Sem_Psl_Instance_Name;
 
-   --  Called by sem_names to semantize a psl name.
+   --  Called by sem_names to analyze a psl name.
    function Sem_Psl_Name (Name : Iir) return Iir is
    begin
       case Get_Kind (Name) is

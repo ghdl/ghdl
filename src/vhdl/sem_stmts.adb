@@ -453,11 +453,10 @@ package body Sem_Stmts is
       end if;
    end Sem_Signal_Assignment_Target_And_Option;
 
-   -- Semantize a waveform_list WAVEFORM_LIST that is assigned via statement
-   -- ASSIGN_STMT to a subelement or a slice of a signal SIGNAL_DECL.
-   procedure Sem_Waveform_Chain
-     (Waveform_Chain : Iir_Waveform_Element;
-      Waveform_Type : in out Iir)
+   --  Analyze a waveform_list WAVEFORM_LIST that is assigned via statement
+   --  ASSIGN_STMT to a subelement or a slice of a signal SIGNAL_DECL.
+   procedure Sem_Waveform_Chain (Waveform_Chain : Iir_Waveform_Element;
+                                 Waveform_Type : in out Iir)
    is
       Expr: Iir;
       We: Iir_Waveform_Element;
@@ -573,8 +572,8 @@ package body Sem_Stmts is
       end loop;
    end Sem_Waveform_Chain;
 
-   -- Semantize a waveform chain WAVEFORM_CHAIN that is assigned via statement
-   -- ASSIGN_STMT to a subelement or a slice of a signal SIGNAL_DECL.
+   --  Analyze a waveform chain WAVEFORM_CHAIN that is assigned via statement
+   --  ASSIGN_STMT to a subelement or a slice of a signal SIGNAL_DECL.
    procedure Sem_Check_Waveform_Chain
      (Assign_Stmt: Iir; Waveform_Chain: Iir_Waveform_Element)
    is
@@ -924,7 +923,7 @@ package body Sem_Stmts is
       Sem_Report_Statement (Stmt);
    end Sem_Assertion_Statement;
 
-   --  Semantize a list of case choice LIST, and check for correct CHOICE type.
+   --  Analyze a list of case choice LIST, and check for correct CHOICE type.
    procedure Sem_Case_Choices
      (Choice : Iir; Chain : in out Iir; Loc : Location_Type)
    is
@@ -1443,7 +1442,7 @@ package body Sem_Stmts is
       if Get_Kind (Inst) in Iir_Kinds_Denoting_Name then
          Comp := Get_Named_Entity (Inst);
          if Comp /= Null_Iir then
-            --  Already semantized before, while trying to separate
+            --  Already analyzed before, while trying to separate
             --  concurrent procedure calls from instantiation stmts.
             pragma Assert (Get_Kind (Comp) = Iir_Kind_Component_Declaration);
             return Comp;
@@ -1629,7 +1628,7 @@ package body Sem_Stmts is
       if Guard /= Null_Iir then
          --  LRM93 9.1
          --  The type of the guard expression must be type BOOLEAN.
-         --  GHDL: guard expression must be semantized before creating the
+         --  GHDL: guard expression must be analyzed before creating the
          --   implicit GUARD signal, since the expression may reference GUARD.
          Set_Expr_Staticness (Guard, None);
          Set_Name_Staticness (Guard, Locally);

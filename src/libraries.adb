@@ -1429,7 +1429,7 @@ package body Libraries is
 
    -- parse a file.
    -- Return a design_file without putting it into the library
-   -- (because it was not semantized).
+   -- (because it was not analyzed).
    function Load_File (File_Name: Name_Id) return Iir_Design_File
    is
       Fe : Source_File_Entry;
@@ -1578,7 +1578,7 @@ package body Libraries is
       Free_Iir (Res);
    end Load_Parse_Design_Unit;
 
-   -- Load, parse, semantize, back-end a design_unit if necessary.
+   -- Load, parse, analyze, back-end a design_unit if necessary.
    procedure Load_Design_Unit (Design_Unit: Iir_Design_Unit; Loc : Iir) is
    begin
       if Get_Date_State (Design_Unit) = Date_Disk then

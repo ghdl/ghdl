@@ -98,7 +98,7 @@ package Libraries is
    function Load_File (File_Name: Name_Id) return Iir_Design_File;
    function Load_File (File : Source_File_Entry) return Iir_Design_File;
 
-   --  Load, parse, semantize, back-end a design_unit if necessary.
+   --  Load, parse, analyze, back-end a design_unit if necessary.
    --  Check Design_Unit is not obsolete.
    --  LOC is the location where the design unit was needed, in case of error.
    procedure Load_Design_Unit (Design_Unit: Iir_Design_Unit; Loc : Iir);

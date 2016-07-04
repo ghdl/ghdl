@@ -493,7 +493,7 @@ package body Sem_Types is
       end case;
    end Check_No_File_Type;
 
-   --  Semantize the array_element type of array type DEF.
+   --  Analyze the array_element type of array type DEF.
    --  Set resolved_flag of DEF.
    procedure Sem_Array_Element (Def : Iir)
    is
@@ -823,7 +823,7 @@ package body Sem_Types is
 
    function Sem_Record_Type_Definition (Def: Iir) return Iir
    is
-      --  Semantized type of previous element
+      --  Analyzed type of previous element
       Last_Type : Iir;
 
       El_List : constant Iir_List := Get_Elements_Declaration_List (Def);
@@ -2107,7 +2107,7 @@ package body Sem_Types is
          return Type_Mark;
       end if;
 
-      --  Semantize the type mark.
+      --  Analyze the type mark.
       Type_Mark_Name := Get_Subtype_Type_Mark (Def);
       Type_Mark_Name := Sem_Type_Mark (Type_Mark_Name);
       Set_Subtype_Type_Mark (Def, Type_Mark_Name);

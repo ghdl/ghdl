@@ -1,5 +1,5 @@
---  Global checks after semantization pass.
---  Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
+--  Global checks after analyze pass.
+--  Copyright (C) 2002 - 2016 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -74,4 +74,3 @@ package body Post_Sems is
       end if;
    end Post_Sem_Checks;
 end Post_Sems;
-

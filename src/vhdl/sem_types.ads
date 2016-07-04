@@ -18,9 +18,9 @@
 with Iirs; use Iirs;
 
 package Sem_Types is
-   --  Semantization of types (LRM93 3 / LRM08 5)
+   --  Analyze of types (LRM93 3 / LRM08 5)
 
-   --  Semantize subtype indication DEF.
+   --  Analyze subtype indication DEF.
    --  If INCOMPLETE is TRUE, then DEF may designate an incomplete type
    --  definition.  Return either a name (denoting a type) or an anonymous
    --  subtype definition.

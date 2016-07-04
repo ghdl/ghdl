@@ -1,5 +1,5 @@
---  Global checks after semantization pass.
---  Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
+--  Global checks after analyze pass.
+--  Copyright (C) 2002 - 2016 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -18,7 +18,7 @@
 with Iirs; use Iirs;
 
 package Post_Sems is
-   --  Do post semantization checks, such as VITAL checks.
+   --  Do post analyze checks, such as VITAL checks.
    --  This procedure is also used to extract declarations from ieee
    --  packages.
    procedure Post_Sem_Checks (Unit : Iir_Design_Unit);

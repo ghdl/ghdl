@@ -1055,7 +1055,7 @@ package Iirs is
    --  point).
    --  The parser set this field to null_iir for an incomplete type
    --  declaration.  This field is set to an incomplete_type_definition node
-   --  when first semantized.
+   --  when first analyzed.
    --   Get/Set_Type_Definition (Field1)
    --   Get/Set_Type (Alias Field1)
    --
@@ -2079,8 +2079,8 @@ package Iirs is
    --
    --   Get/Set_Incomplete_Type_List (Field2)
    --
-   --  Set to the incomplete type declaration when semantized, and set to the
-   --  complete type declaration when the latter one is semantized.
+   --  Set to the incomplete type declaration when analyzed, and set to the
+   --  complete type declaration when the latter one is analyzed.
    --   Get/Set_Type_Declarator (Field3)
    --
    --   Get/Set_Base_Type (Field4)
