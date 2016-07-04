@@ -716,6 +716,8 @@ package body Errorout is
          when Iir_Kind_If_Generate_Statement
            | Iir_Kind_If_Generate_Else_Clause =>
             return "if generate statement";
+         when Iir_Kind_Case_Generate_Statement =>
+            return "case generate statement";
          when Iir_Kind_Generate_Statement_Body =>
             return "generate statement";
 

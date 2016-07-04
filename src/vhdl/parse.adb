@@ -6541,6 +6541,10 @@ package body Parse is
                if Get_Kind (Parent) = Iir_Kind_If_Generate_Statement then
                   return True;
                end if;
+            when Tok_When =>
+               if Get_Kind (Parent) = Iir_Kind_Case_Generate_Statement then
+                  return True;
+               end if;
             when others =>
                null;
          end case;
@@ -6863,6 +6867,133 @@ package body Parse is
       return Res;
    end Parse_If_Generate_Statement;
 
+   --  precond : WHEN
+   --  postcond: ?
+   --
+   --  [ LRM08 11.8 ]
+   --  case_generate_alternative ::=
+   --     WHEN [ /alternative/_label : ] choices =>
+   --        generate_statement_body
+   function Parse_Case_Generate_Alternative (Parent : Iir) return Iir
+   is
+      Loc : Location_Type;
+      Alt_Label : Name_Id;
+      Assoc : Iir;
+      Expr : Iir;
+   begin
+      Loc := Get_Token_Location;
+
+      --  Eat 'when'
+      Expect (Tok_When);
+      Scan;
+
+      Alt_Label := Null_Identifier;
+      if Current_Token = Tok_Double_Arrow then
+         Error_Msg_Parse ("missing expression in alternative");
+         Assoc := Create_Iir (Iir_Kind_Choice_By_Expression);
+         Set_Location (Assoc);
+      elsif Current_Token = Tok_Others then
+         --  'others' is not an expression!
+         Assoc := Parse_Choices (Null_Iir);
+      else
+         Expr := Parse_Expression;
+
+         if Current_Token = Tok_Colon then
+            if Get_Kind (Expr) = Iir_Kind_Simple_Name then
+               --  In fact the parsed condition was an alternate label.
+               Alt_Label := Get_Identifier (Expr);
+               Loc := Get_Location (Expr);
+               Free_Iir (Expr);
+            else
+               Error_Msg_Parse ("alternative label must be an identifier");
+               Free_Iir (Expr);
+            end if;
+
+            Expr := Null_Iir;
+
+            --  Skip ':'
+            Scan;
+         end if;
+
+         Assoc := Parse_Choices (Expr);
+      end if;
+
+      --  Set location of label (if any, for xref) or location of 'when'.
+      Set_Location (Assoc, Loc);
+
+      --  Eat '=>'
+      Expect (Tok_Double_Arrow);
+      Scan;
+
+      Set_Associated_Chain
+        (Assoc, Parse_Generate_Statement_Body (Parent, Alt_Label));
+
+      return Assoc;
+   end Parse_Case_Generate_Alternative;
+
+   --  precond : CASE
+   --  postcond: ';'
+   --
+   --  [ LRM08 11.8 ]
+   --  case_generate_statement ::=
+   --     /generate/_label :
+   --     CASE expression GENERATE
+   --        case_generate_alternative
+   --      { case_generate_alternative }
+   --     END GENERATE [ /generate/_label ] ;
+   function Parse_Case_Generate_Statement
+     (Label : Name_Id; Loc : Location_Type) return Iir
+   is
+      Res : Iir;
+      Alt : Iir;
+      Last_Alt : Iir;
+   begin
+      if Label = Null_Identifier then
+         Error_Msg_Parse ("a generate statement must have a label");
+      end if;
+      Res := Create_Iir (Iir_Kind_Case_Generate_Statement);
+      Set_Location (Res, Loc);
+      Set_Label (Res, Label);
+
+      --  Skip 'case'.
+      Scan;
+
+      Set_Expression (Res, Parse_Expression);
+
+      Expect (Tok_Generate);
+
+      --  Skip 'generate'
+      Scan;
+
+      if Current_Token = Tok_End then
+         Error_Msg_Parse ("no generate alternative");
+      end if;
+
+      Last_Alt := Null_Iir;
+      while Current_Token = Tok_When loop
+         Alt := Parse_Case_Generate_Alternative (Res);
+         if Last_Alt = Null_Iir then
+            Set_Case_Statement_Alternative_Chain (Res, Alt);
+         else
+            Set_Chain (Last_Alt, Alt);
+         end if;
+         Last_Alt := Alt;
+      end loop;
+
+      Expect (Tok_Generate);
+      Set_End_Has_Reserved_Id (Res, True);
+
+      --  Skip 'generate'
+      Scan;
+
+      --  LRM93 9.7
+      --  If a label appears at the end of a generate statement, it must repeat
+      --  the generate label.
+      Check_End_Name (Res);
+      Expect (Tok_Semi_Colon);
+      return Res;
+   end Parse_Case_Generate_Statement;
+
    --  precond : first token
    --  postcond: END
    --
@@ -7161,12 +7292,15 @@ package body Parse is
             when Tok_Block =>
                Postponed_Not_Allowed;
                Stmt := Parse_Block_Statement (Label, Loc);
-            when Tok_If =>
-               Postponed_Not_Allowed;
-               Stmt := Parse_If_Generate_Statement (Label, Loc);
             when Tok_For =>
                Postponed_Not_Allowed;
                Stmt := Parse_For_Generate_Statement (Label, Loc);
+            when Tok_If =>
+               Postponed_Not_Allowed;
+               Stmt := Parse_If_Generate_Statement (Label, Loc);
+            when Tok_Case =>
+               Postponed_Not_Allowed;
+               Stmt := Parse_Case_Generate_Statement (Label, Loc);
             when Tok_Eof =>
                Error_Msg_Parse ("unexpected end of file, 'END;' expected");
                return;

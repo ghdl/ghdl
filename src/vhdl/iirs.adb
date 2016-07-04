@@ -391,6 +391,7 @@ package body Iirs is
            | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_If_Generate_Statement
            | Iir_Kind_For_Generate_Statement
+           | Iir_Kind_Case_Generate_Statement
            | Iir_Kind_Generate_Statement_Body
            | Iir_Kind_If_Generate_Else_Clause
            | Iir_Kind_Simple_Signal_Assignment_Statement

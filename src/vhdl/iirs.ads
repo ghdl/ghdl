@@ -2746,6 +2746,28 @@ package Iirs is
    --
    --   Get/Set_End_Has_Identifier (Flag9)
 
+   -- Iir_Kind_Case_Generate_Statement (Short)
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --  Chain is composed of Iir_Kind_Choice_By_XXX.
+   --   Get/Set_Case_Statement_Alternative_Chain (Field1)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Label (Field3)
+   --   Get/Set_Identifier (Alias Field3)
+   --
+   --   Get/Set_Expression (Field5)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Is_Within_Flag (Flag5)
+   --
+   --   Get/Set_End_Has_Reserved_Id (Flag8)
+   --
+   --   Get/Set_End_Has_Identifier (Flag9)
+
    -- Iir_Kind_Simple_Simultaneous_Statement (Medium)
    --
    --   Get/Set_Parent (Field0)
@@ -3843,6 +3865,7 @@ package Iirs is
       Iir_Kind_Block_Statement,
       Iir_Kind_If_Generate_Statement,
       Iir_Kind_For_Generate_Statement,
+      Iir_Kind_Case_Generate_Statement,
       Iir_Kind_Component_Instantiation_Statement,
 
       Iir_Kind_Simple_Simultaneous_Statement,
@@ -4788,6 +4811,7 @@ package Iirs is
    --Iir_Kind_Block_Statement
    --Iir_Kind_If_Generate_Statement
    --Iir_Kind_For_Generate_Statement
+   --Iir_Kind_Case_Generate_Statement
      Iir_Kind_Component_Instantiation_Statement;
 
    subtype Iir_Kinds_Concurrent_Signal_Assignment is Iir_Kind range

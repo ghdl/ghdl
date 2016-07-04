@@ -137,8 +137,9 @@ package Sem_Expr is
    --  literal is created.
    function Sem_Physical_Literal (Lit: Iir) return Iir;
 
-   --  CHOICES_LIST is a list of choices (none, expression, range, list or
-   --    others).
+   --  CHOICES_CHAIN is a chain of choices (none, expression, range or
+   --    others).  It is an in-out as it may be mutated (from expression to
+   --    range).
    --  If IS_SUB_RANGE is true, then SUB_TYPE may not be fully convered,
    --    otherwise, SUB_TYPE must be fully covered.
    --    This is used when the subtype of an aggregate must be determined.
