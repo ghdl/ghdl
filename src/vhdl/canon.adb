@@ -1677,6 +1677,27 @@ package body Canon is
       end if;
    end Canon_Psl_Directive;
 
+   procedure Canon_If_Case_Generate_Statement_Body
+     (Bod : Iir; Alt_Num : in out Natural; Top : Iir_Design_Unit) is
+   begin
+      if Canon_Flag_Add_Labels
+        and then Get_Alternative_Label (Bod) = Null_Identifier
+      then
+         declare
+            Str : String := Natural'Image (Alt_Num);
+         begin
+            --  Note: the label starts with a capitalized
+            --  letter, to avoid any clash with user's
+            --  identifiers.
+            Str (1) := 'B';
+            Set_Alternative_Label (Bod, Name_Table.Get_Identifier (Str));
+         end;
+      end if;
+
+      Canon_Generate_Statement_Body (Top, Bod);
+      Alt_Num := Alt_Num + 1;
+   end Canon_If_Case_Generate_Statement_Body;
+
    procedure Canon_Concurrent_Stmts (Top : Iir_Design_Unit; Parent : Iir)
    is
       --  Current element in the chain of concurrent statements.
@@ -1898,38 +1919,43 @@ package body Canon is
             when Iir_Kind_If_Generate_Statement =>
                declare
                   Clause : Iir;
-                  Bod : Iir;
                   Cond : Iir;
                   Alt_Num : Natural;
                begin
                   Clause := El;
                   Alt_Num := 1;
                   while Clause /= Null_Iir loop
-                     Bod := Get_Generate_Statement_Body (Clause);
-                     if Canon_Flag_Add_Labels
-                       and then Get_Alternative_Label (Bod) = Null_Identifier
-                     then
-                        declare
-                           Str : String := Natural'Image (Alt_Num);
-                        begin
-                           --  Note: the label starts with a capitalized
-                           --  letter, to avoid any clash with user's
-                           --  identifiers.
-                           Str (1) := 'B';
-                           Set_Alternative_Label
-                             (Bod, Name_Table.Get_Identifier (Str));
-                        end;
-                     end if;
-
                      if Canon_Flag_Expressions then
                         Cond := Get_Condition (El);
                         if Cond /= Null_Iir then
                            Canon_Expression (Cond);
                         end if;
                      end if;
-                     Canon_Generate_Statement_Body (Top, Bod);
+
+                     Canon_If_Case_Generate_Statement_Body
+                       (Get_Generate_Statement_Body (Clause), Alt_Num, Top);
+
                      Clause := Get_Generate_Else_Clause (Clause);
-                     Alt_Num := Alt_Num + 1;
+                  end loop;
+               end;
+
+            when Iir_Kind_Case_Generate_Statement =>
+               declare
+                  Alt : Iir;
+                  Alt_Num : Natural;
+               begin
+                  Alt_Num := 1;
+                  if Canon_Flag_Expressions then
+                     Canon_Expression (Get_Expression (El));
+                  end if;
+                  Alt := Get_Case_Statement_Alternative_Chain (El);
+                  while Alt /= Null_Iir loop
+                     if not Get_Same_Alternative_Flag (Alt) then
+                        Canon_If_Case_Generate_Statement_Body
+                          (Get_Associated_Block (Alt), Alt_Num, Top);
+                     end if;
+
+                     Alt := Get_Chain (Alt);
                   end loop;
                end;
 
@@ -2837,6 +2863,24 @@ package body Canon is
                         Create_Default_Block_Configuration (Bod);
                      end if;
                      Clause := Get_Generate_Else_Clause (Clause);
+                  end loop;
+               end;
+            when Iir_Kind_Case_Generate_Statement =>
+               declare
+                  Alt : Iir;
+                  Bod : Iir;
+                  Blk_Config : Iir_Block_Configuration;
+               begin
+                  Alt := Get_Case_Statement_Alternative_Chain (El);
+                  while Alt /= Null_Iir loop
+                     if not Get_Same_Alternative_Flag (Alt) then
+                        Bod := Get_Associated_Block (Alt);
+                        Blk_Config := Get_Generate_Block_Configuration (Bod);
+                        if Blk_Config = Null_Iir then
+                           Create_Default_Block_Configuration (Bod);
+                        end if;
+                     end if;
+                     Alt := Get_Chain (Alt);
                   end loop;
                end;
             when Iir_Kind_For_Generate_Statement =>

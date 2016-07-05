@@ -1158,8 +1158,7 @@ package body Trans.Chap8 is
          if not Get_Same_Alternative_Flag (Choice) then
             Choice_State := Choice_State + 1;
             State_Start (Choice_State);
-            Translate_Statements_Chain
-              (Get_Associated_Chain (Choice));
+            Translate_Statements_Chain (Get_Associated_Chain (Choice));
             State_Jump (Next_State);
          end if;
          Choice := Get_Chain (Choice);

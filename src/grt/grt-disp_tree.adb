@@ -61,6 +61,7 @@ package body Grt.Disp_Tree is
               | Ghdl_Rtik_Block
               | Ghdl_Rtik_For_Generate
               | Ghdl_Rtik_If_Generate
+              | Ghdl_Rtik_Case_Generate
               | Ghdl_Rtik_Instance =>
                return;
             when Ghdl_Rtik_Signal
@@ -88,7 +89,8 @@ package body Grt.Disp_Tree is
            | Ghdl_Rtik_Process
            | Ghdl_Rtik_Architecture
            | Ghdl_Rtik_Block
-           | Ghdl_Rtik_If_Generate =>
+           | Ghdl_Rtik_If_Generate
+           | Ghdl_Rtik_Case_Generate =>
             declare
                Blk : constant Ghdl_Rtin_Block_Acc :=
                  To_Ghdl_Rtin_Block_Acc (Rti);
@@ -159,6 +161,8 @@ package body Grt.Disp_Tree is
                Put ("true");
             end if;
             Put ("]");
+         when Ghdl_Rtik_Case_Generate =>
+            Put (" [case-generate]");
          when Ghdl_Rtik_Signal =>
             Put (" [signal]");
          when Ghdl_Rtik_Port =>
@@ -281,10 +285,11 @@ package body Grt.Disp_Tree is
                   end loop;
                   Child2 := Old_Child2;
                end;
-            when Ghdl_Rtik_If_Generate =>
+            when Ghdl_Rtik_If_Generate
+              | Ghdl_Rtik_Case_Generate =>
                declare
                   Nctxt : constant Rti_Context :=
-                    Get_If_Generate_Child (Ctxt, Child);
+                    Get_If_Case_Generate_Child (Ctxt, Child);
                begin
                   Disp_Header (Nctxt);
                   if Nctxt.Base /= Null_Address then

@@ -12,6 +12,9 @@ elab_simulate ent
 analyze ent2.vhdl
 elab_simulate ent
 
+analyze case1.vhdl
+elab_simulate ent
+
 clean
 
 echo "Test successful"

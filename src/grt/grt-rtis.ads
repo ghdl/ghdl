@@ -41,54 +41,56 @@ package Grt.Rtis is
       Ghdl_Rtik_Process,
       Ghdl_Rtik_Block,
       Ghdl_Rtik_If_Generate,
-      Ghdl_Rtik_For_Generate,
+      Ghdl_Rtik_Case_Generate,
 
-      Ghdl_Rtik_Generate_Body, -- 10
+      Ghdl_Rtik_For_Generate, -- 10
+      Ghdl_Rtik_Generate_Body,
       Ghdl_Rtik_Instance,
       Ghdl_Rtik_Constant,
       Ghdl_Rtik_Iterator,
-      Ghdl_Rtik_Variable,
 
+      Ghdl_Rtik_Variable,
       Ghdl_Rtik_Signal,
       Ghdl_Rtik_File,
       Ghdl_Rtik_Port,
       Ghdl_Rtik_Generic,
-      Ghdl_Rtik_Alias,
 
-      Ghdl_Rtik_Guard,          -- 20
+      Ghdl_Rtik_Alias,        -- 20
+      Ghdl_Rtik_Guard,
       Ghdl_Rtik_Component,
       Ghdl_Rtik_Attribute,
       Ghdl_Rtik_Type_B1,        --  Enum
-      Ghdl_Rtik_Type_E8,
 
+      Ghdl_Rtik_Type_E8,
       Ghdl_Rtik_Type_E32,
       Ghdl_Rtik_Type_I32,       --  Scalar
       Ghdl_Rtik_Type_I64,
       Ghdl_Rtik_Type_F64,
-      Ghdl_Rtik_Type_P32,
 
-      Ghdl_Rtik_Type_P64,       -- 30
+      Ghdl_Rtik_Type_P32,      -- 30
+      Ghdl_Rtik_Type_P64,
       Ghdl_Rtik_Type_Access,
       Ghdl_Rtik_Type_Array,
       Ghdl_Rtik_Type_Record,
-      Ghdl_Rtik_Type_File,
 
+      Ghdl_Rtik_Type_File,
       Ghdl_Rtik_Subtype_Scalar,
       Ghdl_Rtik_Subtype_Array,
       Ghdl_Rtik_Subtype_Unconstrained_Array,
       Ghdl_Rtik_Subtype_Record,
-      Ghdl_Rtik_Subtype_Access,
 
-      Ghdl_Rtik_Type_Protected, -- 40
+      Ghdl_Rtik_Subtype_Access, -- 40
+      Ghdl_Rtik_Type_Protected,
       Ghdl_Rtik_Element,
       Ghdl_Rtik_Unit64,
       Ghdl_Rtik_Unitptr,
-      Ghdl_Rtik_Attribute_Transaction,
 
+      Ghdl_Rtik_Attribute_Transaction,
       Ghdl_Rtik_Attribute_Quiet,
       Ghdl_Rtik_Attribute_Stable,
       Ghdl_Rtik_Psl_Assert,
       Ghdl_Rtik_Psl_Cover,
+
       Ghdl_Rtik_Psl_Endpoint,
 
       Ghdl_Rtik_Error);

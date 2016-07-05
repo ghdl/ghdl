@@ -76,8 +76,9 @@ package body Grt.Rtis_Utils is
                         Nctxt.Base := Nctxt.Base + Gen.Size;
                      end loop;
                   end;
-               when Ghdl_Rtik_If_Generate =>
-                  Nctxt := Get_If_Generate_Child (Ctxt, Child);
+               when Ghdl_Rtik_If_Generate
+                 | Ghdl_Rtik_Case_Generate =>
+                  Nctxt := Get_If_Case_Generate_Child (Ctxt, Child);
                   if Nctxt.Base /= Null_Address then
                      Res := Traverse_Blocks_1 (Nctxt);
                   end if;

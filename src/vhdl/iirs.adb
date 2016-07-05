@@ -390,8 +390,8 @@ package body Iirs is
            | Iir_Kind_Psl_Default_Clock
            | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_If_Generate_Statement
-           | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Case_Generate_Statement
+           | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Generate_Statement_Body
            | Iir_Kind_If_Generate_Else_Clause
            | Iir_Kind_Simple_Signal_Assignment_Statement
@@ -1451,6 +1451,22 @@ package body Iirs is
                      "no field Associated_Expr");
       Set_Field3 (Target, Associated);
    end Set_Associated_Expr;
+
+   function Get_Associated_Block (Target : Iir) return Iir is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Associated_Block (Get_Kind (Target)),
+                     "no field Associated_Block");
+      return Get_Field3 (Target);
+   end Get_Associated_Block;
+
+   procedure Set_Associated_Block (Target : Iir; Associated : Iir) is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Associated_Block (Get_Kind (Target)),
+                     "no field Associated_Block");
+      Set_Field3 (Target, Associated);
+   end Set_Associated_Block;
 
    function Get_Associated_Chain (Target : Iir) return Iir is
    begin

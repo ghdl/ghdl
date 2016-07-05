@@ -478,13 +478,16 @@ package Iirs is
    --
    --  Get/Set what is associated with the choice.  There are two different
    --  nodes, one for simple association and the other for chain association.
-   --  This simplifies walkers.  But both nodes are never used at the same
-   --  time.
+   --  They don't have the same properties (normal vs chain), so the right
+   --  field must be selected according to the property to have working
+   --  walkers. Both fields are never used at the same time.
    --
    --  For:
    --  * an expression for an aggregate
    --  * an individual association
+   --  * a generate_statement_body chain for a case_generate_statement
    --   Get/Set_Associated_Expr (Field3)
+   --   Get/Set_Associated_Block (Alias Field3)
    --
    --  For
    --  * a waveform_chain for a concurrent_select_signal_assignment,
@@ -3864,8 +3867,8 @@ package Iirs is
       Iir_Kind_Concurrent_Procedure_Call_Statement,
       Iir_Kind_Block_Statement,
       Iir_Kind_If_Generate_Statement,
-      Iir_Kind_For_Generate_Statement,
       Iir_Kind_Case_Generate_Statement,
+      Iir_Kind_For_Generate_Statement,
       Iir_Kind_Component_Instantiation_Statement,
 
       Iir_Kind_Simple_Simultaneous_Statement,
@@ -4810,14 +4813,18 @@ package Iirs is
    --Iir_Kind_Concurrent_Procedure_Call_Statement
    --Iir_Kind_Block_Statement
    --Iir_Kind_If_Generate_Statement
-   --Iir_Kind_For_Generate_Statement
    --Iir_Kind_Case_Generate_Statement
+   --Iir_Kind_For_Generate_Statement
      Iir_Kind_Component_Instantiation_Statement;
 
    subtype Iir_Kinds_Concurrent_Signal_Assignment is Iir_Kind range
      Iir_Kind_Concurrent_Simple_Signal_Assignment ..
    --Iir_Kind_Concurrent_Conditional_Signal_Assignment
      Iir_Kind_Concurrent_Selected_Signal_Assignment;
+
+   subtype Iir_Kinds_If_Case_Generate_Statement is Iir_Kind range
+     Iir_Kind_If_Generate_Statement ..
+     Iir_Kind_Case_Generate_Statement;
 
    subtype Iir_Kinds_Sequential_Statement is Iir_Kind range
      Iir_Kind_Simple_Signal_Assignment_Statement ..
@@ -5552,6 +5559,11 @@ package Iirs is
    --  Field: Field3
    function Get_Associated_Expr (Target : Iir) return Iir;
    procedure Set_Associated_Expr (Target : Iir; Associated : Iir);
+
+   --  Node associated with a choice.
+   --  Field: Field3
+   function Get_Associated_Block (Target : Iir) return Iir;
+   procedure Set_Associated_Block (Target : Iir; Associated : Iir);
 
    --  Chain associated with a choice.
    --  Field: Field4 Chain

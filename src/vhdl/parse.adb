@@ -6925,7 +6925,7 @@ package body Parse is
       Expect (Tok_Double_Arrow);
       Scan;
 
-      Set_Associated_Chain
+      Set_Associated_Block
         (Assoc, Parse_Generate_Statement_Body (Parent, Alt_Label));
 
       return Assoc;
@@ -6977,7 +6977,13 @@ package body Parse is
          else
             Set_Chain (Last_Alt, Alt);
          end if;
-         Last_Alt := Alt;
+
+         --  Skip until last choice of the choices list.
+         loop
+            Last_Alt := Alt;
+            Alt := Get_Chain (Alt);
+            exit when Alt = Null_Iir;
+         end loop;
       end loop;
 
       Expect (Tok_Generate);

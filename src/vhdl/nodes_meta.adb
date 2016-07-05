@@ -77,6 +77,7 @@ package body Nodes_Meta is
       Field_We_Value => Type_Iir,
       Field_Time => Type_Iir,
       Field_Associated_Expr => Type_Iir,
+      Field_Associated_Block => Type_Iir,
       Field_Associated_Chain => Type_Iir,
       Field_Choice_Name => Type_Iir,
       Field_Choice_Expression => Type_Iir,
@@ -449,6 +450,8 @@ package body Nodes_Meta is
             return "time";
          when Field_Associated_Expr =>
             return "associated_expr";
+         when Field_Associated_Block =>
+            return "associated_block";
          when Field_Associated_Chain =>
             return "associated_chain";
          when Field_Choice_Name =>
@@ -1309,10 +1312,10 @@ package body Nodes_Meta is
             return "block_statement";
          when Iir_Kind_If_Generate_Statement =>
             return "if_generate_statement";
-         when Iir_Kind_For_Generate_Statement =>
-            return "for_generate_statement";
          when Iir_Kind_Case_Generate_Statement =>
             return "case_generate_statement";
+         when Iir_Kind_For_Generate_Statement =>
+            return "for_generate_statement";
          when Iir_Kind_Component_Instantiation_Statement =>
             return "component_instantiation_statement";
          when Iir_Kind_Simple_Simultaneous_Statement =>
@@ -1580,6 +1583,8 @@ package body Nodes_Meta is
          when Field_Time =>
             return Attr_None;
          when Field_Associated_Expr =>
+            return Attr_None;
+         when Field_Associated_Block =>
             return Attr_None;
          when Field_Associated_Chain =>
             return Attr_Chain;
@@ -3554,16 +3559,6 @@ package body Nodes_Meta is
       Field_Generate_Statement_Body,
       Field_Generate_Else_Clause,
       Field_Parent,
-      --  Iir_Kind_For_Generate_Statement
-      Field_Label,
-      Field_Visible_Flag,
-      Field_Is_Within_Flag,
-      Field_End_Has_Reserved_Id,
-      Field_End_Has_Identifier,
-      Field_Parameter_Specification,
-      Field_Chain,
-      Field_Generate_Statement_Body,
-      Field_Parent,
       --  Iir_Kind_Case_Generate_Statement
       Field_Label,
       Field_Visible_Flag,
@@ -3573,6 +3568,16 @@ package body Nodes_Meta is
       Field_Case_Statement_Alternative_Chain,
       Field_Chain,
       Field_Expression,
+      Field_Parent,
+      --  Iir_Kind_For_Generate_Statement
+      Field_Label,
+      Field_Visible_Flag,
+      Field_Is_Within_Flag,
+      Field_End_Has_Reserved_Id,
+      Field_End_Has_Identifier,
+      Field_Parameter_Specification,
+      Field_Chain,
+      Field_Generate_Statement_Body,
       Field_Parent,
       --  Iir_Kind_Component_Instantiation_Statement
       Field_Label,
@@ -4270,8 +4275,8 @@ package body Nodes_Meta is
       Iir_Kind_Concurrent_Procedure_Call_Statement => 1271,
       Iir_Kind_Block_Statement => 1284,
       Iir_Kind_If_Generate_Statement => 1294,
-      Iir_Kind_For_Generate_Statement => 1303,
-      Iir_Kind_Case_Generate_Statement => 1312,
+      Iir_Kind_Case_Generate_Statement => 1303,
+      Iir_Kind_For_Generate_Statement => 1312,
       Iir_Kind_Component_Instantiation_Statement => 1322,
       Iir_Kind_Simple_Simultaneous_Statement => 1329,
       Iir_Kind_Generate_Statement_Body => 1340,
@@ -4746,6 +4751,8 @@ package body Nodes_Meta is
             return Get_Time (N);
          when Field_Associated_Expr =>
             return Get_Associated_Expr (N);
+         when Field_Associated_Block =>
+            return Get_Associated_Block (N);
          when Field_Associated_Chain =>
             return Get_Associated_Chain (N);
          when Field_Choice_Name =>
@@ -5114,6 +5121,8 @@ package body Nodes_Meta is
             Set_Time (N, V);
          when Field_Associated_Expr =>
             Set_Associated_Expr (N, V);
+         when Field_Associated_Block =>
+            Set_Associated_Block (N, V);
          when Field_Associated_Chain =>
             Set_Associated_Chain (N, V);
          when Field_Choice_Name =>
@@ -6575,6 +6584,20 @@ package body Nodes_Meta is
       end case;
    end Has_Associated_Expr;
 
+   function Has_Associated_Block (K : Iir_Kind) return Boolean is
+   begin
+      case K is
+         when Iir_Kind_Choice_By_Others
+           | Iir_Kind_Choice_By_Expression
+           | Iir_Kind_Choice_By_Range
+           | Iir_Kind_Choice_By_None
+           | Iir_Kind_Choice_By_Name =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Has_Associated_Block;
+
    function Has_Associated_Chain (K : Iir_Kind) return Boolean is
    begin
       case K is
@@ -6801,8 +6824,8 @@ package body Nodes_Meta is
            | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_If_Generate_Statement
-           | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Case_Generate_Statement
+           | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Component_Instantiation_Statement
            | Iir_Kind_Simple_Simultaneous_Statement
            | Iir_Kind_Simple_Signal_Assignment_Statement
@@ -7533,8 +7556,8 @@ package body Nodes_Meta is
            | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_If_Generate_Statement
-           | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Case_Generate_Statement
+           | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Component_Instantiation_Statement
            | Iir_Kind_Simple_Simultaneous_Statement
            | Iir_Kind_Generate_Statement_Body
@@ -7582,8 +7605,8 @@ package body Nodes_Meta is
            | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_If_Generate_Statement
-           | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Case_Generate_Statement
+           | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Component_Instantiation_Statement
            | Iir_Kind_Simple_Simultaneous_Statement
            | Iir_Kind_Simple_Signal_Assignment_Statement
@@ -7662,8 +7685,8 @@ package body Nodes_Meta is
            | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_If_Generate_Statement
-           | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Case_Generate_Statement
+           | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Component_Instantiation_Statement
            | Iir_Kind_Simple_Simultaneous_Statement
            | Iir_Kind_If_Generate_Else_Clause
@@ -8638,8 +8661,8 @@ package body Nodes_Meta is
            | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_If_Generate_Statement
-           | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Case_Generate_Statement
+           | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Component_Instantiation_Statement
            | Iir_Kind_Simple_Simultaneous_Statement
            | Iir_Kind_Generate_Statement_Body
@@ -9535,8 +9558,8 @@ package body Nodes_Meta is
            | Iir_Kind_Process_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_If_Generate_Statement
-           | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Case_Generate_Statement
+           | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Generate_Statement_Body
            | Iir_Kind_For_Loop_Statement =>
             return True;
@@ -9653,8 +9676,8 @@ package body Nodes_Meta is
            | Iir_Kind_Process_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_If_Generate_Statement
-           | Iir_Kind_For_Generate_Statement
-           | Iir_Kind_Case_Generate_Statement =>
+           | Iir_Kind_Case_Generate_Statement
+           | Iir_Kind_For_Generate_Statement =>
             return True;
          when others =>
             return False;
@@ -9682,8 +9705,8 @@ package body Nodes_Meta is
            | Iir_Kind_Process_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_If_Generate_Statement
-           | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Case_Generate_Statement
+           | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Generate_Statement_Body
            | Iir_Kind_For_Loop_Statement
            | Iir_Kind_While_Loop_Statement

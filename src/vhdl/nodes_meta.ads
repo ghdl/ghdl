@@ -117,6 +117,7 @@ package Nodes_Meta is
       Field_We_Value,
       Field_Time,
       Field_Associated_Expr,
+      Field_Associated_Block,
       Field_Associated_Chain,
       Field_Choice_Name,
       Field_Choice_Expression,
@@ -603,6 +604,7 @@ package Nodes_Meta is
    function Has_We_Value (K : Iir_Kind) return Boolean;
    function Has_Time (K : Iir_Kind) return Boolean;
    function Has_Associated_Expr (K : Iir_Kind) return Boolean;
+   function Has_Associated_Block (K : Iir_Kind) return Boolean;
    function Has_Associated_Chain (K : Iir_Kind) return Boolean;
    function Has_Choice_Name (K : Iir_Kind) return Boolean;
    function Has_Choice_Expression (K : Iir_Kind) return Boolean;

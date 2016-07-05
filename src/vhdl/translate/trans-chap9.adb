@@ -662,55 +662,94 @@ package body Trans.Chap9 is
       end case;
    end Translate_Psl_Directive_Statement;
 
-   procedure Translate_If_Generate_Statement (Stmt : Iir; Origin : Iir)
+   procedure Translate_If_Case_Generate_Statement_Body
+     (Bod : Iir; Num : Int32; Origin : Iir)
    is
-      Clause : Iir;
-      Bod : Iir;
       Info : Block_Info_Acc;
-      Stmt_Info : Ortho_Info_Acc;
-      Mark : Id_Mark_Type;
       Mark2 : Id_Mark_Type;
-      Num : Int32;
    begin
-      Push_Identifier_Prefix (Mark, Get_Identifier (Stmt));
+      Info := Add_Info (Bod, Kind_Block);
 
+      Push_Identifier_Prefix (Mark2, Get_Alternative_Label (Bod));
+
+      Chap1.Start_Block_Decl (Bod);
+      Push_Instance_Factory (Info.Block_Scope'Access);
+
+      --  Add a parent field in the current instance.
+      Info.Block_Origin_Field := Add_Instance_Factory_Field
+        (Get_Identifier ("ORIGIN"),
+         Get_Info (Origin).Block_Decls_Ptr_Type);
+
+      Info.Block_Id := Num;
+
+      Chap9.Translate_Block_Declarations (Bod, Bod);
+
+      Pop_Instance_Factory (Info.Block_Scope'Access);
+
+      Pop_Identifier_Prefix (Mark2);
+   end Translate_If_Case_Generate_Statement_Body;
+
+   procedure Translate_If_Case_Generate_Statement (Stmt : Iir)
+   is
+      Stmt_Info : Ortho_Info_Acc;
+   begin
       Stmt_Info := Add_Info (Stmt, Kind_Generate);
       Stmt_Info.Generate_Parent_Field := Add_Instance_Factory_Field
         (Create_Identifier_Without_Prefix (Stmt), Ghdl_Ptr_Type);
       Stmt_Info.Generate_Body_Id := Add_Instance_Factory_Field
         (Create_Identifier_Without_Prefix (Get_Identifier (Stmt), "_ID"),
          Ghdl_Index_Type);
+   end Translate_If_Case_Generate_Statement;
+
+   procedure Translate_If_Generate_Statement (Stmt : Iir; Origin : Iir)
+   is
+      Clause : Iir;
+      Bod : Iir;
+      Mark : Id_Mark_Type;
+      Num : Int32;
+   begin
+      Push_Identifier_Prefix (Mark, Get_Identifier (Stmt));
+
+      Translate_If_Case_Generate_Statement (Stmt);
 
       --  Translate generate statement body.
       Num := 0;
       Clause := Stmt;
       while Clause /= Null_Iir loop
          Bod := Get_Generate_Statement_Body (Clause);
-         Info := Add_Info (Bod, Kind_Block);
-
-         Push_Identifier_Prefix (Mark2, Get_Alternative_Label (Bod));
-
-         Chap1.Start_Block_Decl (Bod);
-         Push_Instance_Factory (Info.Block_Scope'Access);
-
-         --  Add a parent field in the current instance.
-         Info.Block_Origin_Field := Add_Instance_Factory_Field
-           (Get_Identifier ("ORIGIN"),
-            Get_Info (Origin).Block_Decls_Ptr_Type);
-
-         Info.Block_Id := Num;
-
-         Chap9.Translate_Block_Declarations (Bod, Bod);
-
-         Pop_Instance_Factory (Info.Block_Scope'Access);
-
-         Pop_Identifier_Prefix (Mark2);
+         Translate_If_Case_Generate_Statement_Body (Bod, Num, Origin);
          Clause := Get_Generate_Else_Clause (Clause);
          Num := Num + 1;
       end loop;
 
       Pop_Identifier_Prefix (Mark);
    end Translate_If_Generate_Statement;
+
+   procedure Translate_Case_Generate_Statement (Stmt : Iir; Origin : Iir)
+   is
+      Alt : Iir;
+      Bod : Iir;
+      Mark : Id_Mark_Type;
+      Num : Int32;
+   begin
+      Push_Identifier_Prefix (Mark, Get_Identifier (Stmt));
+
+      Translate_If_Case_Generate_Statement (Stmt);
+
+      --  Translate generate statement body.
+      Num := 0;
+      Alt := Get_Case_Statement_Alternative_Chain (Stmt);
+      while Alt /= Null_Iir loop
+         if not Get_Same_Alternative_Flag (Alt) then
+            Bod := Get_Associated_Block (Alt);
+            Translate_If_Case_Generate_Statement_Body (Bod, Num, Origin);
+            Num := Num + 1;
+         end if;
+         Alt := Get_Chain (Alt);
+      end loop;
+
+      Pop_Identifier_Prefix (Mark);
+   end Translate_Case_Generate_Statement;
 
    procedure Translate_For_Generate_Statement (Stmt : Iir; Origin : Iir)
    is
@@ -835,6 +874,8 @@ package body Trans.Chap9 is
                Translate_For_Generate_Statement (El, Origin);
             when Iir_Kind_If_Generate_Statement =>
                Translate_If_Generate_Statement (El, Origin);
+            when Iir_Kind_Case_Generate_Statement =>
+               Translate_Case_Generate_Statement (El, Origin);
             when others =>
                Error_Kind ("translate_block_declarations", El);
          end case;
@@ -1010,6 +1051,25 @@ package body Trans.Chap9 is
                        (Bod, Base_Info);
                      Pop_Identifier_Prefix (Mark2);
                      Clause := Get_Generate_Else_Clause (Clause);
+                  end loop;
+               end;
+            when Iir_Kind_Case_Generate_Statement =>
+               declare
+                  Alt : Iir;
+                  Bod : Iir;
+                  Mark2 : Id_Mark_Type;
+               begin
+                  Alt := Get_Case_Statement_Alternative_Chain (Stmt);
+                  while Alt /= Null_Iir loop
+                     if not Get_Same_Alternative_Flag (Alt) then
+                        Bod := Get_Associated_Block (Alt);
+                        Push_Identifier_Prefix
+                          (Mark2, Get_Alternative_Label (Bod));
+                        Translate_Generate_Statement_Body_Subprograms
+                          (Bod, Base_Info);
+                        Pop_Identifier_Prefix (Mark2);
+                     end if;
+                     Alt := Get_Chain (Alt);
                   end loop;
                end;
             when others =>
@@ -1687,14 +1747,17 @@ package body Trans.Chap9 is
       end;
    end Translate_Entity_Instantiation;
 
-   procedure Elab_Decl_If_Generate_Statement
-     (Stmt : Iir_Generate_Statement; Parent : Iir; Base_Block : Iir)
+   procedure Elab_Decl_If_Case_Generate_Statement
+     (Stmt : Iir; Parent : Iir; Base_Block : Iir)
    is
+      Kind : constant Iir_Kinds_If_Case_Generate_Statement := Get_Kind (Stmt);
       Parent_Info : constant Block_Info_Acc := Get_Info (Parent);
 
       --  Used to get Block_Parent_Field, set in the first generate statement
       --  body.
       Stmt_Info : constant Generate_Info_Acc := Get_Info (Stmt);
+
+      Label : O_Snode;
 
       --  Set the instance field in the parent.
       procedure Set_Parent_Field (Val : O_Enode; Num : Nat32)
@@ -1710,21 +1773,13 @@ package body Trans.Chap9 is
          New_Assign_Stmt (V, New_Lit (New_Index_Lit (Unsigned_64 (Num))));
       end Set_Parent_Field;
 
-      procedure Elab_If_Clause (Clause : Iir)
+      procedure Elab_Decl_If_Case_Generate_Body (Bod : Iir)
       is
-         Condition   : constant Iir := Get_Condition (Clause);
-         Bod         : constant Iir := Get_Generate_Statement_Body (Clause);
          Info        : constant Block_Info_Acc := Get_Info (Bod);
          Var         : O_Dnode;
-         Blk         : O_If_Block;
-         N_Clause : Iir;
       begin
-         Open_Temp;
-
          Var := Create_Temp (Info.Block_Decls_Ptr_Type);
-         if Condition /= Null_Iir then
-            Start_If_Stmt (Blk, Chap7.Translate_Expression (Condition));
-         end if;
+
          New_Assign_Stmt
            (New_Obj (Var),
             Gen_Alloc (Alloc_System,
@@ -1741,31 +1796,186 @@ package body Trans.Chap9 is
          New_Assign_Stmt
            (New_Selected_Acc_Value (New_Obj (Var), Info.Block_Origin_Field),
             Get_Instance_Access (Base_Block));
-         --  Elaborate block
+            --  Elaborate block
          Set_Scope_Via_Param_Ptr (Info.Block_Scope, Var);
          Elab_Block_Declarations (Bod, Bod);
          Clear_Scope (Info.Block_Scope);
-
-         if Condition /= Null_Iir then
-            New_Else_Stmt (Blk);
-            N_Clause := Get_Generate_Else_Clause (Clause);
-            if N_Clause /= Null_Iir then
-               Elab_If_Clause (N_Clause);
-            else
-               Set_Parent_Field
-                 (New_Lit (New_Null_Access (Ghdl_Ptr_Type)),
-                  Info.Block_Id + 1);
-            end if;
-            Finish_If_Stmt (Blk);
-         end if;
-         Close_Temp;
-      end Elab_If_Clause;
+      end Elab_Decl_If_Case_Generate_Body;
    begin
-      Elab_If_Clause (Stmt);
-   end Elab_Decl_If_Generate_Statement;
+      Start_Loop_Stmt (Label);
 
-   procedure Elab_Stmt_If_Generate_Statement
-     (Stmt : Iir_Generate_Statement; Parent : Iir)
+      case Kind is
+         when Iir_Kind_If_Generate_Statement =>
+            declare
+               Clause    : Iir;
+               Condition : Iir;
+               Blk       : O_If_Block;
+               Num       : Nat32;
+            begin
+               Clause := Stmt;
+               Num := 0;
+               loop
+                  Condition := Get_Condition (Clause);
+                  Open_Temp;
+
+                  if Condition /= Null_Iir then
+                     Start_If_Stmt
+                       (Blk, Chap7.Translate_Expression (Condition));
+                  end if;
+
+                  Open_Temp;
+                  Elab_Decl_If_Case_Generate_Body
+                    (Get_Generate_Statement_Body (Clause));
+                  Close_Temp;
+
+                  Num := Num + 1;
+
+                  New_Exit_Stmt (Label);
+
+                  if Condition /= Null_Iir then
+                     Finish_If_Stmt (Blk);
+                  end if;
+
+                  Close_Temp;
+
+                  exit when Condition = Null_Iir;
+
+                  Clause := Get_Generate_Else_Clause (Clause);
+                  if Clause = Null_Iir then
+                     --  No block.
+                     Set_Parent_Field
+                       (New_Lit (New_Null_Access (Ghdl_Ptr_Type)), Num);
+                     New_Exit_Stmt (Label);
+                     exit;
+                  end if;
+               end loop;
+            end;
+         when Iir_Kind_Case_Generate_Statement =>
+            --  FIXME: handle one-dimensional expressions.
+            declare
+               Expr : constant Iir := Get_Expression (Stmt);
+               Expr_Type : constant Iir := Get_Type (Expr);
+               Base_Type : constant Iir := Get_Base_Type (Expr_Type);
+               Tinfo : constant Type_Info_Acc := Get_Info (Base_Type);
+               E : O_Dnode;
+               Alt : Iir;
+               Cur_Alt : Iir;
+               Cond : O_Enode;
+               Sub_Cond : O_Enode;
+               Var_Rng : O_Dnode;
+               Rng : Mnode;
+               C1, C2 : O_Enode;
+               Blk       : O_If_Block;
+            begin
+               Open_Temp;
+               Alt := Get_Case_Statement_Alternative_Chain (Stmt);
+               E := Create_Temp_Init
+                 (Tinfo.Ortho_Type (Mode_Value),
+                  Chap7.Translate_Expression (Expr, Base_Type));
+
+               loop
+                  Open_Temp;
+
+                  Cur_Alt := Alt;
+                  Cond := O_Enode_Null;
+                  loop
+                     case Get_Kind (Alt) is
+                        when Iir_Kind_Choice_By_Others =>
+                           pragma Assert (Cond = O_Enode_Null);
+                           pragma Assert (Get_Chain (Alt) = Null_Iir);
+                           Sub_Cond := O_Enode_Null;
+                        when Iir_Kind_Choice_By_Expression =>
+                           Sub_Cond := New_Compare_Op
+                             (ON_Eq,
+                              New_Obj_Value (E),
+                              Chap7.Translate_Expression
+                                (Get_Choice_Expression (Alt), Base_Type),
+                              Ghdl_Bool_Type);
+                        when Iir_Kind_Choice_By_Range =>
+                           Var_Rng := Create_Temp (Tinfo.T.Range_Type);
+                           Rng := Dv2M (Var_Rng, Tinfo, Mode_Value,
+                                        Tinfo.T.Range_Type,
+                                        Tinfo.T.Range_Ptr_Type);
+                           Chap7.Translate_Discrete_Range
+                             (Rng, Get_Choice_Range (Alt));
+                           C1 := New_Dyadic_Op
+                             (ON_And,
+                              New_Compare_Op
+                                (ON_Eq,
+                                 M2E (Chap3.Range_To_Dir (Rng)),
+                                 New_Lit (Ghdl_Dir_To_Node),
+                                 Ghdl_Bool_Type),
+                              New_Dyadic_Op
+                                (ON_And,
+                                 New_Compare_Op
+                                   (ON_Ge,
+                                    New_Obj_Value (E),
+                                    M2E (Chap3.Range_To_Left (Rng)),
+                                    Ghdl_Bool_Type),
+                                 New_Compare_Op
+                                   (ON_Le,
+                                    New_Obj_Value (E),
+                                    M2E (Chap3.Range_To_Right (Rng)),
+                                    Ghdl_Bool_Type)));
+                           C2 := New_Dyadic_Op
+                             (ON_And,
+                              New_Compare_Op
+                                (ON_Eq,
+                                 M2E (Chap3.Range_To_Dir (Rng)),
+                                 New_Lit (Ghdl_Dir_Downto_Node),
+                                 Ghdl_Bool_Type),
+                              New_Dyadic_Op
+                                (ON_And,
+                                 New_Compare_Op
+                                   (ON_Le,
+                                    New_Obj_Value (E),
+                                    M2E (Chap3.Range_To_Left (Rng)),
+                                    Ghdl_Bool_Type),
+                                 New_Compare_Op
+                                   (ON_Ge,
+                                    New_Obj_Value (E),
+                                    M2E (Chap3.Range_To_Right (Rng)),
+                                    Ghdl_Bool_Type)));
+                           Sub_Cond := New_Dyadic_Op (ON_Or, C1, C2);
+                        when others =>
+                           Error_Kind
+                             ("Elab_Decl_If_Case_Generate_Statement", Alt);
+                     end case;
+                     if Cond = O_Enode_Null then
+                        Cond := Sub_Cond;
+                     else
+                        Cond := New_Dyadic_Op (ON_Or, Cond, Sub_Cond);
+                     end if;
+                     Alt := Get_Chain (Alt);
+                     exit when Alt = Null_Iir;
+                     exit when not Get_Same_Alternative_Flag (Alt);
+                  end loop;
+
+                  if Cond /= O_Enode_Null then
+                     Start_If_Stmt (Blk, Cond);
+                  end if;
+
+                  Open_Temp;
+                  Elab_Decl_If_Case_Generate_Body
+                    (Get_Associated_Block (Cur_Alt));
+                  Close_Temp;
+
+                  New_Exit_Stmt (Label);
+
+                  if Cond /= O_Enode_Null then
+                     Finish_If_Stmt (Blk);
+                  end if;
+
+                  Close_Temp;
+                  exit when Alt = Null_Iir;
+               end loop;
+               Close_Temp;
+            end;
+      end case;
+      Finish_Loop_Stmt (Label);
+   end Elab_Decl_If_Case_Generate_Statement;
+
+   procedure Elab_Stmt_If_Case_Generate_Statement (Stmt : Iir; Parent : Iir)
    is
       Parent_Info : constant Block_Info_Acc := Get_Info (Parent);
 
@@ -1774,46 +1984,68 @@ package body Trans.Chap9 is
       Stmt_Info : constant Generate_Info_Acc := Get_Info (Stmt);
 
       Case_Blk : O_Case_Block;
-      Clause : Iir;
-      Var : O_Dnode;
+
+      procedure Elab_Stmt_If_Case_Generate_Statement_Body (Bod : Iir)
+      is
+         Info : constant Block_Info_Acc := Get_Info (Bod);
+         Var : O_Dnode;
+      begin
+         Start_Choice (Case_Blk);
+         New_Expr_Choice
+           (Case_Blk, New_Index_Lit (Unsigned_64 (Info.Block_Id)));
+         Finish_Choice (Case_Blk);
+
+         Open_Temp;
+         Var := Create_Temp_Init
+           (Info.Block_Decls_Ptr_Type,
+            New_Convert_Ov
+              (New_Value (New_Selected_Element
+                            (Get_Instance_Ref (Parent_Info.Block_Scope),
+                             Stmt_Info.Generate_Parent_Field)),
+               Info.Block_Decls_Ptr_Type));
+
+         Set_Scope_Via_Param_Ptr (Info.Block_Scope, Var);
+         Elab_Block_Statements (Bod, Bod);
+         Clear_Scope (Info.Block_Scope);
+         Close_Temp;
+      end Elab_Stmt_If_Case_Generate_Statement_Body;
    begin
       Start_Case_Stmt
         (Case_Blk, New_Value (New_Selected_Element
                                 (Get_Instance_Ref (Parent_Info.Block_Scope),
                                  Stmt_Info.Generate_Body_Id)));
 
-      Clause := Stmt;
-      while Clause /= Null_Iir loop
-         declare
-            Bod  : constant Iir := Get_Generate_Statement_Body (Clause);
-            Info : constant Block_Info_Acc := Get_Info (Bod);
-         begin
-            Start_Choice (Case_Blk);
-            New_Expr_Choice
-              (Case_Blk, New_Index_Lit (Unsigned_64 (Info.Block_Id)));
-            Finish_Choice (Case_Blk);
-
-            Open_Temp;
-            Var := Create_Temp_Init
-              (Info.Block_Decls_Ptr_Type,
-               New_Convert_Ov
-                 (New_Value (New_Selected_Element
-                               (Get_Instance_Ref (Parent_Info.Block_Scope),
-                                Stmt_Info.Generate_Parent_Field)),
-                  Info.Block_Decls_Ptr_Type));
-
-            Set_Scope_Via_Param_Ptr (Info.Block_Scope, Var);
-            Elab_Block_Statements (Bod, Bod);
-            Clear_Scope (Info.Block_Scope);
-            Close_Temp;
-         end;
-         Clause := Get_Generate_Else_Clause (Clause);
-      end loop;
+      case Iir_Kinds_If_Case_Generate_Statement (Get_Kind (Stmt)) is
+         when Iir_Kind_If_Generate_Statement =>
+            declare
+               Clause : Iir;
+            begin
+               Clause := Stmt;
+               while Clause /= Null_Iir loop
+                  Elab_Stmt_If_Case_Generate_Statement_Body
+                    (Get_Generate_Statement_Body (Clause));
+                  Clause := Get_Generate_Else_Clause (Clause);
+               end loop;
+            end;
+         when Iir_Kind_Case_Generate_Statement =>
+            declare
+               Alt : Iir;
+            begin
+               Alt := Get_Case_Statement_Alternative_Chain (Stmt);
+               while Alt /= Null_Iir loop
+                  if not Get_Same_Alternative_Flag (Alt) then
+                     Elab_Stmt_If_Case_Generate_Statement_Body
+                       (Get_Associated_Block (Alt));
+                  end if;
+                  Alt := Get_Chain (Alt);
+               end loop;
+            end;
+      end case;
       Start_Choice (Case_Blk);
       New_Default_Choice (Case_Blk);
       Finish_Choice (Case_Blk);
       Finish_Case_Stmt (Case_Blk);
-   end Elab_Stmt_If_Generate_Statement;
+   end Elab_Stmt_If_Case_Generate_Statement;
 
    procedure Elab_Decl_For_Generate_Statement
      (Stmt : Iir_Generate_Statement; Parent : Iir; Base_Block : Iir)
@@ -2266,12 +2498,14 @@ package body Trans.Chap9 is
                   Elab_Block_Declarations (Stmt, Base_Block);
                   Pop_Identifier_Prefix (Mark);
                end;
-            when Iir_Kind_If_Generate_Statement =>
+            when Iir_Kind_If_Generate_Statement
+              | Iir_Kind_Case_Generate_Statement =>
                declare
                   Mark : Id_Mark_Type;
                begin
                   Push_Identifier_Prefix (Mark, Get_Identifier (Stmt));
-                  Elab_Decl_If_Generate_Statement (Stmt, Block, Base_Block);
+                  Elab_Decl_If_Case_Generate_Statement
+                    (Stmt, Block, Base_Block);
                   Pop_Identifier_Prefix (Mark);
                end;
             when Iir_Kind_For_Generate_Statement =>
@@ -2318,12 +2552,13 @@ package body Trans.Chap9 is
                   Elab_Block_Statements (Stmt, Base_Block);
                   Pop_Identifier_Prefix (Mark);
                end;
-            when Iir_Kind_If_Generate_Statement =>
+            when Iir_Kind_If_Generate_Statement
+              | Iir_Kind_Case_Generate_Statement =>
                declare
                   Mark : Id_Mark_Type;
                begin
                   Push_Identifier_Prefix (Mark, Get_Identifier (Stmt));
-                  Elab_Stmt_If_Generate_Statement (Stmt, Block);
+                  Elab_Stmt_If_Case_Generate_Statement (Stmt, Block);
                   Pop_Identifier_Prefix (Mark);
                end;
             when Iir_Kind_For_Generate_Statement =>

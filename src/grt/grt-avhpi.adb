@@ -312,7 +312,7 @@ package body Grt.Avhpi is
                return;
             when Ghdl_Rtik_If_Generate =>
                Res := (Kind => VhpiIfGenerateK,
-                       Ctxt => Get_If_Generate_Child (Iterator.Ctxt, Ch));
+                       Ctxt => Get_If_Case_Generate_Child (Iterator.Ctxt, Ch));
                --  Return only if the condition is true.
                if Res.Ctxt.Base /= Null_Address then
                   Error := AvhpiErrorOk;

@@ -224,6 +224,7 @@ package body Disp_Vhdl is
             Disp_Identifier (Decl);
          when Iir_Kind_Block_Statement
            | Iir_Kind_If_Generate_Statement
+           | Iir_Kind_Case_Generate_Statement
            | Iir_Kind_For_Generate_Statement =>
             declare
                Ident : constant Name_Id := Get_Label (Decl);
@@ -2979,6 +2980,34 @@ package body Disp_Vhdl is
       Disp_End (Stmt, "generate");
    end Disp_If_Generate_Statement;
 
+   procedure Disp_Case_Generate_Statement (Stmt : Iir)
+   is
+      Indent : constant Count := Col;
+      Bod : Iir;
+      Assoc : Iir;
+   begin
+      Disp_Label (Stmt);
+      Put ("case ");
+      Disp_Expression (Get_Expression (Stmt));
+      Put_Line (" generate");
+      Assoc := Get_Case_Statement_Alternative_Chain (Stmt);
+      while Assoc /= Null_Iir loop
+         Set_Col (Indent + Indentation);
+         Put ("when ");
+         Bod := Get_Associated_Block (Assoc);
+         if Get_Has_Label (Bod) then
+            Disp_Ident (Get_Alternative_Label (Bod));
+            Put (": ");
+         end if;
+         Disp_Choice (Assoc);
+         Put (" ");
+         Put_Line ("=>");
+         Disp_Generate_Statement_Body (Bod, Indent + 2 * Indentation);
+      end loop;
+      Set_Col (Indent);
+      Disp_End (Stmt, "generate");
+   end Disp_Case_Generate_Statement;
+
    procedure Disp_Psl_Default_Clock (Stmt : Iir) is
    begin
       Put ("--psl default clock is ");
@@ -3110,6 +3139,8 @@ package body Disp_Vhdl is
             Disp_Block_Statement (Stmt);
          when Iir_Kind_If_Generate_Statement =>
             Disp_If_Generate_Statement (Stmt);
+         when Iir_Kind_Case_Generate_Statement =>
+            Disp_Case_Generate_Statement (Stmt);
          when Iir_Kind_For_Generate_Statement =>
             Disp_For_Generate_Statement (Stmt);
          when Iir_Kind_Psl_Default_Clock =>

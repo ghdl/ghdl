@@ -1070,17 +1070,17 @@ package body Sem_Stmts is
       El: Iir;
    begin
       Expr := Get_Expression (Stmt);
+      Chain := Get_Case_Statement_Alternative_Chain (Stmt);
       -- FIXME: overload.
       Expr := Sem_Case_Expression (Expr);
-      if Expr = Null_Iir then
-         return;
+      if Expr /= Null_Iir then
+         Check_Read (Expr);
+         Set_Expression (Stmt, Expr);
+
+         Sem_Case_Choices (Expr, Chain, Get_Location (Stmt));
+         Set_Case_Statement_Alternative_Chain (Stmt, Chain);
       end if;
-      Check_Read (Expr);
-      Set_Expression (Stmt, Expr);
-      Chain := Get_Case_Statement_Alternative_Chain (Stmt);
-      Sem_Case_Choices (Expr, Chain, Get_Location (Stmt));
-      Set_Case_Statement_Alternative_Chain (Stmt, Chain);
-      -- Sem on associated.
+
       El := Chain;
       while El /= Null_Iir loop
          Sem_Sequential_Statements_Internal (Get_Associated_Chain (El));
@@ -1695,12 +1695,30 @@ package body Sem_Stmts is
       Close_Declarative_Region;
    end Sem_For_Generate_Statement;
 
+   procedure Sem_If_Case_Generate_Statement_Body (Bod : Iir)
+   is
+      Alt_Label : Name_Id;
+   begin
+      Alt_Label := Get_Alternative_Label (Bod);
+      if Alt_Label /= Null_Identifier then
+         --  Declare label.  This doesn't appear in the LRM (bug ?), but
+         --  used here to detect duplicated labels.
+         Sem_Scopes.Add_Name (Bod);
+         Xref_Decl (Bod);
+      end if;
+
+      --  Contrary to the LRM, a new declarative region is declared.  This
+      --  is required so that declarations in a generate statement body are
+      --  not in the scope of the following generate bodies.
+      Open_Declarative_Region;
+      Sem_Generate_Statement_Body (Bod);
+      Close_Declarative_Region;
+   end Sem_If_Case_Generate_Statement_Body;
+
    procedure Sem_If_Generate_Statement (Stmt : Iir)
    is
       Clause : Iir;
-      Bod : Iir;
       Condition : Iir;
-      Alt_Label : Name_Id;
    begin
       --  LRM93 10.1 Declarative region.
       --  12. A generate statement.
@@ -1730,21 +1748,8 @@ package body Sem_Stmts is
             null;
          end if;
 
-         Bod := Get_Generate_Statement_Body (Clause);
-         Alt_Label := Get_Alternative_Label (Bod);
-         if Alt_Label /= Null_Identifier then
-            --  Declare label.  This doesn't appear in the LRM (bug ?), but
-            --  used here to detect duplicated labels.
-            Sem_Scopes.Add_Name (Bod);
-            Xref_Decl (Bod);
-         end if;
-
-         --  Contrary to the LRM, a new declarative region is declared.  This
-         --  is required so that declarations in a generate statement body are
-         --  not in the scope of the following generate bodies.
-         Open_Declarative_Region;
-         Sem_Generate_Statement_Body (Bod);
-         Close_Declarative_Region;
+         Sem_If_Case_Generate_Statement_Body
+           (Get_Generate_Statement_Body (Clause));
 
          Clause := Get_Generate_Else_Clause (Clause);
       end loop;
@@ -1752,6 +1757,46 @@ package body Sem_Stmts is
       Set_Is_Within_Flag (Stmt, False);
       Close_Declarative_Region;
    end Sem_If_Generate_Statement;
+
+   procedure Sem_Case_Generate_Statement (Stmt : Iir)
+   is
+      Expr : Iir;
+      Chain : Iir;
+      El : Iir;
+   begin
+      --  LRM93 10.1 Declarative region.
+      --  12. A generate statement.
+      Open_Declarative_Region;
+      Set_Is_Within_Flag (Stmt, True);
+
+      Expr := Get_Expression (Stmt);
+      Chain := Get_Case_Statement_Alternative_Chain (Stmt);
+      -- FIXME: overload.
+      Expr := Sem_Case_Expression (Expr);
+      if Expr /= Null_Iir then
+         Check_Read (Expr);
+         Set_Expression (Stmt, Expr);
+
+         if Get_Expr_Staticness (Expr) < Globally then
+            Error_Msg_Sem
+              ("case expression must be a static expression", Expr);
+         end if;
+
+         Sem_Case_Choices (Expr, Chain, Get_Location (Stmt));
+         Set_Case_Statement_Alternative_Chain (Stmt, Chain);
+      end if;
+
+      El := Chain;
+      while El /= Null_Iir loop
+         if not Get_Same_Alternative_Flag (El) then
+            Sem_If_Case_Generate_Statement_Body (Get_Associated_Block (El));
+         end if;
+         El := Get_Chain (El);
+      end loop;
+
+      Set_Is_Within_Flag (Stmt, False);
+      Close_Declarative_Region;
+   end Sem_Case_Generate_Statement;
 
    procedure Sem_Process_Statement (Proc: Iir) is
    begin
@@ -1804,15 +1849,14 @@ package body Sem_Stmts is
       Sem_Signal_Assignment (Stmt);
 
       --  The choices.
-      Expr := Sem_Case_Expression (Get_Expression (Stmt));
-      if Expr = Null_Iir then
-         return;
-      end if;
-      Check_Read (Expr);
-      Set_Expression (Stmt, Expr);
       Chain := Get_Selected_Waveform_Chain (Stmt);
-      Sem_Case_Choices (Expr, Chain, Get_Location (Stmt));
-      Set_Selected_Waveform_Chain (Stmt, Chain);
+      Expr := Sem_Case_Expression (Get_Expression (Stmt));
+      if Expr /= Null_Iir then
+         Check_Read (Expr);
+         Set_Expression (Stmt, Expr);
+         Sem_Case_Choices (Expr, Chain, Get_Location (Stmt));
+         Set_Selected_Waveform_Chain (Stmt, Chain);
+      end if;
 
       Sem_Guard (Stmt);
    end Sem_Concurrent_Selected_Signal_Assignment;
@@ -1906,6 +1950,9 @@ package body Sem_Stmts is
             when Iir_Kind_For_Generate_Statement =>
                No_Generate_Statement;
                Sem_For_Generate_Statement (El);
+            when Iir_Kind_Case_Generate_Statement =>
+               No_Generate_Statement;
+               Sem_Case_Generate_Statement (El);
             when Iir_Kind_Concurrent_Procedure_Call_Statement =>
                New_El := Sem_Concurrent_Procedure_Call_Statement
                  (El, Is_Passive);
