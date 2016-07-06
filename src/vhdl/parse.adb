@@ -6878,6 +6878,7 @@ package body Parse is
    is
       Loc : Location_Type;
       Alt_Label : Name_Id;
+      Bod : Iir;
       Assoc : Iir;
       Expr : Iir;
    begin
@@ -6925,8 +6926,12 @@ package body Parse is
       Expect (Tok_Double_Arrow);
       Scan;
 
-      Set_Associated_Block
-        (Assoc, Parse_Generate_Statement_Body (Parent, Alt_Label));
+      Bod := Parse_Generate_Statement_Body (Parent, Alt_Label);
+      Set_Associated_Block (Assoc, Bod);
+      if Alt_Label /= Null_Identifier then
+         --  Set location on the label, for xrefs.
+         Set_Location (Bod, Loc);
+      end if;
 
       return Assoc;
    end Parse_Case_Generate_Alternative;
@@ -8252,10 +8257,11 @@ package body Parse is
 
       if Current_Token = Tok_Is then
          Res := Create_Iir (Iir_Kind_Context_Declaration);
-         Set_Location (Res, Loc);
          if Get_Kind (Name) = Iir_Kind_Simple_Name then
+            Location_Copy (Res, Name);
             Set_Identifier (Res, Get_Identifier (Name));
          else
+            Set_Location (Res, Loc);
             Error_Msg_Parse ("identifier for context expected", Name);
          end if;
          Free_Iir (Name);
