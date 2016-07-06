@@ -173,6 +173,8 @@ package body Disp_Vhdl is
          when Iir_Kind_Component_Declaration
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Architecture_Body
+           | Iir_Kind_Configuration_Declaration
+           | Iir_Kind_Context_Declaration
            | Iir_Kind_Interface_Constant_Declaration
            | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Interface_Variable_Declaration
@@ -181,7 +183,6 @@ package body Disp_Vhdl is
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Guard_Signal_Declaration
            | Iir_Kind_Variable_Declaration
-           | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Type_Declaration
            | Iir_Kind_File_Declaration
            | Iir_Kind_Subtype_Declaration
@@ -3313,8 +3314,7 @@ package body Disp_Vhdl is
    end Disp_Block_Configuration;
 
    procedure Disp_Configuration_Declaration
-     (Decl: Iir_Configuration_Declaration)
-   is
+     (Decl: Iir_Configuration_Declaration) is
    begin
       Put ("configuration ");
       Disp_Name_Of (Decl);
@@ -3327,13 +3327,12 @@ package body Disp_Vhdl is
       Disp_End (Decl, "configuration");
    end Disp_Configuration_Declaration;
 
-   procedure Disp_Design_Unit (Unit: Iir_Design_Unit)
+   procedure Disp_Context_Items (First : Iir; Indent : Count)
    is
-      Indent: constant Count := Col;
       Decl: Iir;
       Next_Decl : Iir;
    begin
-      Decl := Get_Context_Items (Unit);
+      Decl := First;
       while Decl /= Null_Iir loop
          Next_Decl := Get_Chain (Decl);
 
@@ -3351,11 +3350,42 @@ package body Disp_Vhdl is
                   Disp_Identifier (Decl);
                end loop;
                Put_Line (";");
+            when Iir_Kind_Context_Reference =>
+               Put ("context ");
+               declare
+                  Ref : Iir;
+               begin
+                  Ref := Decl;
+                  loop
+                     Disp_Name (Get_Selected_Name (Ref));
+                     Ref := Get_Context_Reference_Chain (Ref);
+                     exit when Ref = Null_Iir;
+                     Put (", ");
+                  end loop;
+                  Put_Line (";");
+               end;
             when others =>
-               Error_Kind ("disp_design_unit1", Decl);
+               Error_Kind ("disp_context_items", Decl);
          end case;
          Decl := Next_Decl;
       end loop;
+   end Disp_Context_Items;
+
+   procedure Disp_Context_Declaration (Decl: Iir) is
+   begin
+      Put ("context ");
+      Disp_Name_Of (Decl);
+      Put_Line (" is");
+      Disp_Context_Items (Get_Context_Items (Decl), Col + Indentation);
+      Disp_End (Decl, "context");
+   end Disp_Context_Declaration;
+
+   procedure Disp_Design_Unit (Unit: Iir_Design_Unit)
+   is
+      Indent: constant Count := Col;
+      Decl: Iir;
+   begin
+      Disp_Context_Items (Get_Context_Items (Unit), Indent);
 
       Decl := Get_Library_Unit (Unit);
       Set_Col (Indent);
@@ -3372,6 +3402,8 @@ package body Disp_Vhdl is
             Disp_Package_Instantiation_Declaration (Decl);
          when Iir_Kind_Configuration_Declaration =>
             Disp_Configuration_Declaration (Decl);
+         when Iir_Kind_Context_Declaration =>
+            Disp_Context_Declaration (Decl);
          when others =>
             Error_Kind ("disp_design_unit2", Decl);
       end case;
