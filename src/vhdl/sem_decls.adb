@@ -1632,7 +1632,7 @@ package body Sem_Decls is
          Xref_Ref (Decl, Deferred_Const);
       end if;
 
-      --  Semantize type and default value:
+      --  Analyze type and default value:
       Atype := Get_Subtype_Indication (Decl);
       if Atype /= Null_Iir then
          Atype := Sem_Subtype_Indication (Atype);

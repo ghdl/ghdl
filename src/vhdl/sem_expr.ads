@@ -26,29 +26,29 @@ package Sem_Expr is
 
    Deferred_Constant_Allowed : Boolean := False;
 
-   -- Semantize an expression (other than a range) with a possible overloading.
-   -- Sem_expression_ov (and therefore sem_expression) must be called *once*
-   -- for each expression node with A_TYPE1 not null and at most *once* with
-   -- A_TYPE1 null.
+   --  Analyze an expression (other than a range) with a possible overloading.
+   --  Sem_expression_ov (and therefore sem_expression) must be called *once*
+   --  for each expression node with A_TYPE1 not null and at most *once* with
+   --  A_TYPE1 null.
    --
-   -- When A_TYPE1 is null, sem_expression_ov find all possible types
-   -- of the expression.  If there is only one possible type (ie, overloading
-   -- is non-existant or solved), then the type of the expression is set,
-   -- and the node is completly semantized.  Sem_expression_ov must not
-   -- be called for such a node.
-   -- If there is several possible types (ie overloaded), then the type is
-   -- set with a list of overload.  To finishes the semantisation,
-   -- sem_expression_ov must be called again with A_TYPE1 set to the
-   -- expected type.
+   --  When A_TYPE1 is null, sem_expression_ov find all possible types
+   --  of the expression.  If there is only one possible type (ie, overloading
+   --  is non-existant or solved), then the type of the expression is set,
+   --  and the node is completly analyzed.  Sem_expression_ov must not
+   --  be called for such a node.
+   --  If there is several possible types (ie overloaded), then the type is
+   --  set with a list of overload.  To finishes the semantisation,
+   --  sem_expression_ov must be called again with A_TYPE1 set to the
+   --  expected type.
    --
-   -- If A_TYPE1 is set, sem_expression_ov must finishes the semantisation
-   -- of the expression, and set its type, which is not necessary a base type.
-   -- A_TYPE1 must be a base type.
+   --  If A_TYPE1 is set, sem_expression_ov must finishes the analyze of the
+   --  expression, and set its type, which is not necessary a base type.
+   --  A_TYPE1 must be a base type.
    --
-   -- In case of error, it displays a message and return null.
-   -- In case of success, it returns the semantized expression, which can
-   -- be different from EXPR (eg, a character literal is transformed into an
-   -- enumeration literal).
+   --  In case of error, it displays a message and return null.
+   --  In case of success, it returns the analyzed expression, which can
+   --  be different from EXPR (eg, a character literal is transformed into an
+   --  enumeration literal).
    function Sem_Expression_Ov (Expr: Iir; A_Type1: Iir) return Iir;
 
    -- If A_TYPE is not null, then EXPR must be of type A_TYPE.
@@ -107,7 +107,7 @@ package Sem_Expr is
    --  If EXPR is NULL_IIR, NULL_IIR is silently returned.
    function Check_Is_Expression (Expr : Iir; Loc : Iir) return Iir;
 
-   --  Semantize a procedure_call or a concurrent_procedure_call_statement.
+   --  Analyze a procedure_call or a concurrent_procedure_call_statement.
    --  A procedure call is not an expression but because most of the code
    --  for procedure call is common with function call, procedure calls are
    --  handled in this package.
@@ -127,12 +127,12 @@ package Sem_Expr is
    function Sem_Discrete_Range_Expression
      (Expr: Iir; A_Type: Iir; Any_Dir: Boolean) return Iir;
 
-   --  Semantize a discrete range and convert to integer if both bounds are
+   --  Analyze a discrete range and convert to integer if both bounds are
    --  universal integer types, according to rules of LRM 3.2.1.1
    function Sem_Discrete_Range_Integer (Expr: Iir) return Iir;
 
    --  Transform LIT into a physical_literal.
-   --  LIT can be either a not semantized physical literal or
+   --  LIT can be either a not analyzed physical literal or
    --  a simple name that is a physical unit.  In the later case, a physical
    --  literal is created.
    function Sem_Physical_Literal (Lit: Iir) return Iir;
@@ -180,7 +180,7 @@ package Sem_Expr is
       Low : out Iir;
       High : out Iir);
 
-   --  Semantize CHOICE_LIST when the choice expression SEL is of a
+   --  Analyze CHOICE_LIST when the choice expression SEL is of a
    --  one-dimensional character array type.
    procedure Sem_String_Choices_Range (Choice_Chain : Iir; Sel : Iir);
 

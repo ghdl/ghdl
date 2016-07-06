@@ -1426,6 +1426,7 @@ package Trans is
          when Kind_Config =>
             --  Subprogram that configure the block.
             Config_Subprg : O_Dnode;
+            Config_Instance : O_Dnode;
 
          when Kind_Field =>
             --  Node for a record element declaration.

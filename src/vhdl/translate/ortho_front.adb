@@ -363,7 +363,7 @@ package body Ortho_Front is
                raise Compilation_Error;
             end if;
 
-            -- Semantize all design units.
+            --  Analyze all design units.
             --  FIXME: outdate the design file?
             New_Design_File := Null_Iir;
             Design := Get_First_Design_Unit (Res);

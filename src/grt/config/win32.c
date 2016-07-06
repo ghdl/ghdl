@@ -79,9 +79,9 @@ get_bt_from_context (struct backtrace_addrs *bt, CONTEXT *ctxt, int skip)
 
   frame.AddrPC.Offset = ctxt->Rip;
   frame.AddrPC.Mode = AddrModeFlat;
-  frame.AddrFrame.Offset = ctx->Rsp;
+  frame.AddrFrame.Offset = ctxt->Rsp;
   frame.AddrFrame.Mode = AddrModeFlat;
-  frame.AddrStack.Offset = ctx->Rsp;
+  frame.AddrStack.Offset = ctxt->Rsp;
   frame.AddrStack.Mode = AddrModeFlat;
 
 #else

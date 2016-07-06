@@ -34,6 +34,9 @@ package Grt.Vstrings is
    --  Deallocate all storage internally allocated.
    procedure Free (Vstr : in out Vstring);
 
+   --  Reset VSTR to an empty string.
+   procedure Reset (Vstr : in out Vstring);
+
    --  Append a character.
    procedure Append (Vstr : in out Vstring; C : Character);
 
@@ -53,6 +56,8 @@ package Grt.Vstrings is
    --  Display VSTR.
    procedure Put (Stream : FILEs; Vstr : Vstring);
 
+   --  Get VSTR as a C String.  The NUL character must have been added.
+   function Get_C_String (Vstr : Vstring) return Ghdl_C_String;
 
    --  A Rstring is link a Vstring but characters can only be prepended.
    type Rstring is limited private;

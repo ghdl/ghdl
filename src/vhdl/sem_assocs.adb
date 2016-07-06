@@ -116,7 +116,7 @@ package body Sem_Assocs is
       end loop;
    end Extract_Non_Object_Association;
 
-   --  Semantize all arguments of ASSOC_CHAIN
+   --  Analyze all arguments of ASSOC_CHAIN
    --  Return TRUE if no error.
    function Sem_Actual_Of_Association_Chain (Assoc_Chain : Iir)
      return Boolean
@@ -127,9 +127,9 @@ package body Sem_Assocs is
       Res : Iir;
       Formal : Iir;
    begin
-      -- Semantize all arguments
-      -- OK is false if there is an error during semantic of one of the
-      -- argument, but continue semantisation.
+      --  Analyze all arguments.
+      --  OK is false if there is an error during semantic of one of the
+      --  argument, but continue analyze.
       Has_Named := False;
       Ok := True;
       Assoc := Assoc_Chain;
@@ -781,7 +781,7 @@ package body Sem_Assocs is
       Set_Actual_Type (Assoc, Atype);
    end Finish_Individual_Assoc_Record;
 
-   --  Called by sem_individual_association to finish the semantization of
+   --  Called by sem_individual_association to finish the analyze of
    --  individual association ASSOC: compute bounds, detect missing elements.
    procedure Finish_Individual_Association (Assoc : Iir)
    is
@@ -953,7 +953,7 @@ package body Sem_Assocs is
       end if;
    end Extract_Type_Of_Conversions;
 
-   --  ASSOC is an association element not semantized and whose formal is a
+   --  ASSOC is an association element not analyzed and whose formal is a
    --  parenthesis name.  Try to extract a conversion function/type.  In case
    --  of success, return a new association element.  In case of failure,
    --  return NULL_IIR.
@@ -1008,7 +1008,7 @@ package body Sem_Assocs is
 
    --  NAME is the formal name of an association, without any conversion
    --  function or type.
-   --  Try to semantize NAME with INTERFACE.
+   --  Try to analyze NAME with INTERFACE.
    --  In case of success, set PREFIX to the most prefix of NAME and NAME_TYPE
    --  to the type of NAME.
    --  In case of failure, set NAME_TYPE to NULL_IIR.
@@ -1107,7 +1107,7 @@ package body Sem_Assocs is
    --  * FORMAL is a function call, whose only argument is an
    --    association_element_by_expression, whose actual is a name
    --    whose prefix is the same identifier as INTERFACE (note, since FORMAL
-   --    is not semantized, this is parenthesis name), CONV_TYPE is set to
+   --    is not analyzed, this is parenthesis name), CONV_TYPE is set to
    --    the type or list of type of return type of conversion functions and
    --    FORMAL_TYPE is set to the type of the name.
    --  * otherwise, FORMAL cannot match INTERFACE and both FORMAL_TYPE and

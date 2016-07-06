@@ -18,20 +18,20 @@
 with Iirs; use Iirs;
 
 package Sem_Stmts is
-   --  Semantize declarations and concurrent statements of BLK, which is
+   --  Analyze declarations and concurrent statements of BLK, which is
    --  either an architecture_declaration, and entity_declaration or
    --  a block_statement.
-   --  If SEM_DECLS is true, then semantize the declarations of BLK.
+   --  If SEM_DECLS is true, then analyze the declarations of BLK.
    procedure Sem_Block (Blk: Iir; Sem_Decls : Boolean);
 
    --  Analyze the concurrent statements of PARENT.
    procedure Sem_Concurrent_Statement_Chain (Parent : Iir);
 
-   --  Semantize declaration chain and sequential statement chain
+   --  Analyze declaration chain and sequential statement chain
    --  of BODY_PARENT.
    --  DECL is the declaration for these chains (DECL is the declaration, which
    --   is different from the bodies).
-   --  This is used by processes and subprograms semantization.
+   --  This is used by processes and subprograms analyze.
    procedure Sem_Sequential_Statements (Decl : Iir; Body_Parent : Iir);
 
    --  Sem for concurrent and sequential assertion statements.

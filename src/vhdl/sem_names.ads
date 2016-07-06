@@ -72,7 +72,7 @@ package Sem_Names is
 
    --  Remove every named_entity of NAME.
    --  If NAME is Null_Iir then this is no op.
-   --  To be used only for names (weakly) semantized by sem_name_soft.
+   --  To be used only for names (weakly) analyzed by sem_name_soft.
    procedure Sem_Name_Clean (Name : Iir);
 
    --  If NAME is a selected name whose prefix is a protected variable, set

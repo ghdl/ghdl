@@ -47,6 +47,11 @@ package body Grt.Vstrings is
                Len => 0);
    end Free;
 
+   procedure Reset (Vstr : in out Vstring) is
+   begin
+      Vstr.Len := 0;
+   end Reset;
+
    procedure Grow (Vstr : in out Vstring; Sum : Natural)
    is
       Nlen : constant Natural := Vstr.Len + Sum;
@@ -117,6 +122,11 @@ package body Grt.Vstrings is
          S := fwrite (Vstr.Str (1)'Address, S, 1, Stream);
       end if;
    end Put;
+
+   function Get_C_String (Vstr : Vstring) return Ghdl_C_String is
+   begin
+      return To_Ghdl_C_String (Vstr.Str.all'Address);
+   end Get_C_String;
 
    procedure Free (Rstr : in out Rstring) is
    begin

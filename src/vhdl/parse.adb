@@ -6516,6 +6516,20 @@ package body Parse is
    function Parse_Generate_Statement_Body (Parent : Iir; Label : Name_Id)
                                           return Iir
    is
+      function Is_Early_End return Boolean is
+      begin
+         case Current_Token is
+            when Tok_Elsif
+              | Tok_Else =>
+               if Get_Kind (Parent) = Iir_Kind_If_Generate_Statement then
+                  return True;
+               end if;
+            when others =>
+               null;
+         end case;
+         return False;
+      end Is_Early_End;
+
       Bod : Iir;
    begin
       Bod := Create_Iir (Iir_Kind_Generate_Statement_Body);
@@ -6579,15 +6593,10 @@ package body Parse is
 
       Parse_Concurrent_Statements (Bod);
 
-      case Current_Token is
-         when Tok_Elsif
-           | Tok_Else =>
-            if Get_Kind (Parent) = Iir_Kind_If_Generate_Statement then
-               return Bod;
-            end if;
-         when others =>
-            null;
-      end case;
+      --  Return now if no 'end' (and not expected).
+      if Is_Early_End then
+         return Bod;
+      end if;
 
       Expect (Tok_End);
 
@@ -6599,6 +6608,11 @@ package body Parse is
          Set_Has_End (Bod, True);
          Check_End_Name (Label, Bod);
          Scan_Semi_Colon ("generate statement body");
+
+         --  Return now if no 'end' (and not expected).
+         if Is_Early_End then
+            return Bod;
+         end if;
 
          Expect (Tok_End);
 
@@ -6761,12 +6775,20 @@ package body Parse is
 
          Set_Generate_Statement_Body (Clause, Bod);
 
+         --  Append clause to the generate statement.
          if Last /= Null_Iir then
             Set_Generate_Else_Clause (Last, Clause);
          end if;
          Last := Clause;
 
          exit when Current_Token /= Tok_Elsif;
+
+         --  Create new alternative.
+         Clause := Create_Iir (Iir_Kind_If_Generate_Statement);
+         Set_Location (Clause, Loc);
+
+         --  Skip 'elsif'
+         Scan;
       end loop;
 
       if Current_Token = Tok_Else then

@@ -37,8 +37,8 @@ with Sem_Psl;
 with Xrefs; use Xrefs;
 
 package body Sem_Names is
-   --  Finish the semantization of NAME using RES as named entity.
-   --  This is called when the semantization is finished and an uniq
+   --  Finish the analyze of NAME using RES as named entity.
+   --  This is called when the analyze is finished and an uniq
    --  interpretation has been determined (RES).
    --
    --  Error messages are emitted here.
@@ -1714,7 +1714,7 @@ package body Sem_Names is
                end if;
                --  Even if a named entity was found, return an error_mark.
                --  Indeed, the named entity found is certainly the one being
-               --  semantized, and the semantization may be uncomplete.
+               --  analyzed, and the analyze may be uncomplete.
                Res := Error_Mark;
             end if;
          end if;
@@ -1771,7 +1771,7 @@ package body Sem_Names is
       Prefix: Iir;
       Res : Iir;
 
-      --  Semantize SUB_NAME.NAME as an expanded name (ie, NAME is declared
+      --  Analyze SUB_NAME.NAME as an expanded name (ie, NAME is declared
       --  within SUB_NAME).  This is possible only if the expanded name is
       --  analyzed within the context of SUB_NAME.
       procedure Sem_As_Expanded_Name (Sub_Name : Iir)
@@ -1792,7 +1792,7 @@ package body Sem_Names is
       --  record object or value.  The prefix must be appropriate for the
       --  type of this object or value.
       --
-      --  Semantize SUB_NAME.NAME as a selected element.
+      --  Analyze SUB_NAME.NAME as a selected element.
       procedure Sem_As_Selected_Element (Sub_Name : Iir)
       is
          Base_Type : Iir;
@@ -2141,7 +2141,7 @@ package body Sem_Names is
            | Iir_Kind_Selected_Name =>
             Sem_Name (Actual);
             Kind := Slice_Or_Index (Get_Named_Entity (Actual));
-            --  FIXME: semantization to be finished.
+            --  FIXME: analyze to be finished.
             --Maybe_Finish_Sem_Name (Actual);
          when others =>
             Kind := Slice_Or_Index (Actual);
@@ -3490,7 +3490,7 @@ package body Sem_Names is
    --  LRM93 §6
    procedure Sem_Name (Name : Iir; Keep_Alias : Boolean := False) is
    begin
-      --  Exit now if NAME was already semantized.
+      --  Exit now if NAME was already analyzed.
       if Get_Named_Entity (Name) /= Null_Iir then
          return;
       end if;
@@ -3517,7 +3517,7 @@ package body Sem_Names is
    procedure Sem_Name_Soft (Name : Iir)
    is
    begin
-      --  Exit now if NAME was already semantized.
+      --  Exit now if NAME was already analyzed.
       if Get_Named_Entity (Name) /= Null_Iir then
          return;
       end if;

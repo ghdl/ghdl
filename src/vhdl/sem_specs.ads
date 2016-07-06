@@ -55,11 +55,11 @@ package Sem_Specs is
                                      Parent : Iir;
                                      Primary_Entity_Aspect : Iir);
 
-   --  Semantize entity aspect ASPECT and return the entity declaration.
+   --  Analyze entity aspect ASPECT and return the entity declaration.
    --  Return NULL_IIR if not found.
    function Sem_Entity_Aspect (Aspect : Iir) return Iir;
 
-   --  Semantize component_configuration or configuration_specification SPEC.
+   --  Analyze component_configuration or configuration_specification SPEC.
    --  STMTS is the concurrent statement list related to SPEC.
    procedure Sem_Component_Specification
      (Parent_Stmts : Iir; Spec : Iir; Primary_Entity_Aspect : out Iir);

@@ -24,12 +24,12 @@ package Sem_Assocs is
    function Extract_Non_Object_Association
      (Assoc_Chain : Iir; Inter_Chain : Iir) return Iir;
 
-   --  Semantize actuals of ASSOC_CHAIN.
+   --  Analyze actuals of ASSOC_CHAIN.
    --  Check all named associations are after positionnal one.
    --  Return TRUE if no error.
    function Sem_Actual_Of_Association_Chain (Assoc_Chain : Iir) return Boolean;
 
-   --  Semantize association chain ASSOC_CHAIN with interfaces from
+   --  Analyze association chain ASSOC_CHAIN with interfaces from
    --  INTERFACE_CHAIN.
    --  Return the level of compatibility between the two chains in LEVEL.
    --  If FINISH is true, then ASSOC_CHAIN may be modifies (individual assoc

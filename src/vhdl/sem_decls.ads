@@ -26,7 +26,7 @@ package Sem_Decls is
    procedure Create_Implicit_Operations
      (Decl : Iir; Is_Std_Standard : Boolean := False);
 
-   --  Semantize declarations of PARENT.
+   --  Analyze declarations of PARENT.
    procedure Sem_Declaration_Chain (Parent : Iir);
 
    --  Check all declarations of DECLS_PARENT are complete

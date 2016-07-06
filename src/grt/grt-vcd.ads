@@ -23,10 +23,10 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 
+with System;
 with Grt.Types; use Grt.Types;
 with Grt.Avhpi; use Grt.Avhpi;
 with Grt.Rtis;
-with Grt.Signals;
 
 package Grt.Vcd is
    --  Abstract type for IO.
@@ -39,7 +39,7 @@ package Grt.Vcd is
    Vcd_Close : Vcd_Close_Acc;
 
    --  VCD type of an object
-   type Vcd_Var_Kind is
+   type Vcd_Var_Type is
      (
       --  Incompatible vcd type
       Vcd_Bad,
@@ -63,19 +63,23 @@ package Grt.Vcd is
       Vcd_Bitvector, Vcd_Stdlogic_Vector
      );
 
-   subtype Vcd_Var_Vectors is Vcd_Var_Kind
+   subtype Vcd_Var_Vectors is Vcd_Var_Type
      range Vcd_Bitvector .. Vcd_Stdlogic_Vector;
 
    --  Which value to be displayed: effective or driving (for out signals).
-   type Vcd_Value_Kind is (Vcd_Effective, Vcd_Driving);
+   type Vcd_Value_Kind is (Vcd_Effective, Vcd_Driving, Vcd_Variable);
 
-   type Verilog_Wire_Info (Kind : Vcd_Var_Kind := Vcd_Bad) is record
+   --  For signals.
+   subtype Vcd_Value_Signals is Vcd_Value_Kind
+     range Vcd_Effective .. Vcd_Driving;
+
+   type Verilog_Wire_Info (Vtype : Vcd_Var_Type := Vcd_Bad) is record
       Val : Vcd_Value_Kind;
 
-      --  Access to an array of signals.
-      Sigs : Grt.Signals.Signal_Arr_Ptr;
+      --  Access to an array of signals or access to the value.
+      Ptr : System.Address;
 
-      case Kind is
+      case Vtype is
          when Vcd_Var_Vectors =>
             --  Vector bounds.
             Irange : Ghdl_Range_Ptr;
@@ -101,6 +105,11 @@ package Grt.Vcd is
 
    --  Return TRUE if there is an event on the wire, for the current cycle.
    function Verilog_Wire_Event (Info : Verilog_Wire_Info) return Boolean;
+
+   --  Return a pointer to the value of a wire.
+   function Verilog_Wire_Val (Info : Verilog_Wire_Info) return Ghdl_Value_Ptr;
+   function Verilog_Wire_Val (Info : Verilog_Wire_Info; Idx : Ghdl_Index_Type)
+                             return Ghdl_Value_Ptr;
 
    procedure Register;
 end Grt.Vcd;

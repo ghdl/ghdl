@@ -298,6 +298,7 @@ package body Translation is
          when Iir_Kind_Configuration_Declaration =>
             New_Debug_Comment_Decl ("configuration " & Image_Identifier (El));
             if Id = Null_Identifier then
+               --  Default configuration.
                declare
                   Mark : Id_Mark_Type;
                   Mark_Entity : Id_Mark_Type;
@@ -315,14 +316,15 @@ package body Translation is
                   Push_Identifier_Prefix (Mark_Arch, Get_Identifier (Arch));
                   Push_Identifier_Prefix
                     (Mark, Name_Table.Get_Identifier ("DEFAULT_CONFIG"));
-                  Chap1.Translate_Configuration_Declaration (El);
+                  Chap1.Translate_Configuration_Declaration_Body (El);
                   Pop_Identifier_Prefix (Mark);
                   Pop_Identifier_Prefix (Mark_Arch);
                   Pop_Identifier_Prefix (Mark_Sep);
                   Pop_Identifier_Prefix (Mark_Entity);
                end;
             else
-               Chap1.Translate_Configuration_Declaration (El);
+               Chap1.Translate_Configuration_Declaration_Decl (El);
+               Chap1.Translate_Configuration_Declaration_Body (El);
             end if;
          when Iir_Kind_Context_Declaration =>
             New_Debug_Comment_Decl ("context " & Image_Identifier (El));

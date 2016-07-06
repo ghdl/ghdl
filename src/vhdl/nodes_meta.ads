@@ -236,6 +236,8 @@ package Nodes_Meta is
       Field_Has_Signal_Flag,
       Field_Purity_State,
       Field_Elab_Flag,
+      Field_Configuration_Mark_Flag,
+      Field_Configuration_Done_Flag,
       Field_Index_Constraint_Flag,
       Field_Hide_Implicit_Flag,
       Field_Assertion_Condition,
@@ -723,6 +725,8 @@ package Nodes_Meta is
    function Has_Has_Signal_Flag (K : Iir_Kind) return Boolean;
    function Has_Purity_State (K : Iir_Kind) return Boolean;
    function Has_Elab_Flag (K : Iir_Kind) return Boolean;
+   function Has_Configuration_Mark_Flag (K : Iir_Kind) return Boolean;
+   function Has_Configuration_Done_Flag (K : Iir_Kind) return Boolean;
    function Has_Index_Constraint_Flag (K : Iir_Kind) return Boolean;
    function Has_Hide_Implicit_Flag (K : Iir_Kind) return Boolean;
    function Has_Assertion_Condition (K : Iir_Kind) return Boolean;

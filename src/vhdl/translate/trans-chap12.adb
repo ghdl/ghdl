@@ -658,6 +658,10 @@ package body Trans.Chap12 is
       Rtis.Generate_Library (Libraries.Std_Library, True);
       Translate_Standard (Whole);
 
+      --  Std.Standard has no body and is always in the closure.  Exclude it
+      --  from the stub and filelist generation.
+      Set_Elab_Flag (Std_Standard_Unit, True);
+
       --  Translate all configurations needed.
       --  Also, set the ELAB_FLAG on package with body.
       for I in Design_Units.First .. Design_Units.Last loop

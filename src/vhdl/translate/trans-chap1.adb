@@ -27,6 +27,7 @@ with Trans.Chap7;
 with Trans.Chap9;
 with Trans.Rtis;
 with Trans.Helpers2; use Trans.Helpers2;
+with Name_Table;
 
 package body Trans.Chap1 is
    use Trans.Helpers;
@@ -263,6 +264,28 @@ package body Trans.Chap1 is
          Rtis.Generate_Unit (Arch);
       end if;
 
+      --  Default configuration
+      declare
+         Default_Config : constant Iir :=
+           Get_Default_Configuration_Declaration (Arch);
+         Config_Mark : Id_Mark_Type;
+      begin
+         --  In case of direct and recursive instantiation, the default
+         --  configuration may be needed while translating the architecture.
+         --  So translate the declarations of the default configuration before
+         --  translating the architecture.
+         if Default_Config /= Null_Iir
+           and then Get_Configuration_Done_Flag (Default_Config)
+         then
+            Push_Identifier_Prefix
+              (Config_Mark, Name_Table.Get_Identifier ("DEFAULT_CONFIG"));
+            Translate_Configuration_Declaration_Decl
+              (Get_Library_Unit
+                 (Get_Default_Configuration_Declaration (Arch)));
+            Pop_Identifier_Prefix (Config_Mark);
+         end if;
+      end;
+
       if Global_Storage = O_Storage_External then
          return;
       end if;
@@ -384,7 +407,8 @@ package body Trans.Chap1 is
 
       if Block /= Null_Iir then
          Push_Identifier_Prefix (Mark2, "CONFIG");
-         Translate_Configuration_Declaration (Cfg);
+         Translate_Configuration_Declaration_Decl (Cfg);
+         Translate_Configuration_Declaration_Body (Cfg);
          Pop_Identifier_Prefix (Mark2);
          Conf_Override := Cfg;
          Conf_Info := Get_Info (Cfg);
@@ -853,7 +877,7 @@ package body Trans.Chap1 is
       end loop;
    end Translate_Block_Configuration_Calls;
 
-   procedure Translate_Configuration_Declaration (Config : Iir)
+   procedure Translate_Configuration_Declaration_Decl (Config : Iir)
    is
       Block_Config   : constant Iir_Block_Configuration :=
         Get_Block_Configuration (Config);
@@ -862,25 +886,34 @@ package body Trans.Chap1 is
       Arch_Info      : constant Block_Info_Acc := Get_Info (Arch);
       Interface_List : O_Inter_List;
       Config_Info    : Config_Info_Acc;
-      Instance       : O_Dnode;
-      Num            : Iir_Int32;
-      Final          : Boolean;
    begin
-      if Get_Kind (Config) = Iir_Kind_Configuration_Declaration then
-         Chap4.Translate_Declaration_Chain (Config);
-      end if;
-
       Config_Info := Add_Info (Config, Kind_Config);
 
       --  Configurator.
       Start_Procedure_Decl
         (Interface_List, Create_Identifier, Global_Storage);
-      New_Interface_Decl (Interface_List, Instance, Wki_Instance,
-                          Arch_Info.Block_Decls_Ptr_Type);
+      New_Interface_Decl (Interface_List, Config_Info.Config_Instance,
+                          Wki_Instance, Arch_Info.Block_Decls_Ptr_Type);
       Finish_Subprogram_Decl (Interface_List, Config_Info.Config_Subprg);
+   end Translate_Configuration_Declaration_Decl;
 
+   procedure Translate_Configuration_Declaration_Body (Config : Iir)
+   is
+      Block_Config   : constant Iir_Block_Configuration :=
+        Get_Block_Configuration (Config);
+      Arch           : constant Iir_Architecture_Body :=
+        Strip_Denoting_Name (Get_Block_Specification (Block_Config));
+      Arch_Info      : constant Block_Info_Acc := Get_Info (Arch);
+      Config_Info    : constant Config_Info_Acc := Get_Info (Config);
+      Num            : Iir_Int32;
+      Final          : Boolean;
+   begin
       if Global_Storage = O_Storage_External then
          return;
+      end if;
+
+      if Get_Kind (Config) = Iir_Kind_Configuration_Declaration then
+         Chap4.Translate_Declaration_Chain (Config);
       end if;
 
       --  Declare subprograms for configuration.
@@ -891,7 +924,7 @@ package body Trans.Chap1 is
       Start_Subprogram_Body (Config_Info.Config_Subprg);
       Push_Local_Factory;
 
-      Push_Architecture_Scope (Arch, Instance);
+      Push_Architecture_Scope (Arch, Config_Info.Config_Instance);
 
       if Get_Kind (Config) = Iir_Kind_Configuration_Declaration then
          Open_Temp;
@@ -907,5 +940,5 @@ package body Trans.Chap1 is
       Pop_Architecture_Scope (Arch);
       Pop_Local_Factory;
       Finish_Subprogram_Body;
-   end Translate_Configuration_Declaration;
+   end Translate_Configuration_Declaration_Body;
 end Trans.Chap1;

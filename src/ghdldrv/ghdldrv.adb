@@ -1023,13 +1023,16 @@ package body Ghdldrv is
    procedure Perform_Action (Cmd : in out Command_Run; Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
+      Suffix : constant String_Access := Get_Executable_Suffix;
       Opt_Arg : Natural;
    begin
       Extract_Elab_Unit ("-r", Args, Opt_Arg);
       if Sec_Name = null then
-         Base_Name := Prim_Name;
+         Base_Name := new String'
+           (Prim_Name.all & Suffix.all);
       else
-         Base_Name := new String'(Prim_Name.all & '-' & Sec_Name.all);
+         Base_Name := new String'
+           (Prim_Name.all & '-' & Sec_Name.all & Suffix.all);
       end if;
       if not Is_Regular_File (Base_Name.all & Nul) then
          Error ("file '" & Base_Name.all & "' does not exists");

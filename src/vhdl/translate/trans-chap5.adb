@@ -30,6 +30,20 @@ with Trans.Foreach_Non_Composite;
 package body Trans.Chap5 is
    use Trans.Helpers;
 
+   procedure Save_Map_Env (Env : out Map_Env; Scope_Ptr : Var_Scope_Acc) is
+   begin
+      Env := (Scope_Ptr => Scope_Ptr,
+              Scope => Scope_Ptr.all);
+   end Save_Map_Env;
+
+   procedure Set_Map_Env (Env : Map_Env)
+   is
+      --  Avoid potential compiler bug with discriminant check.
+      pragma Suppress (Discriminant_Check);
+   begin
+      Env.Scope_Ptr.all := Env.Scope;
+   end Set_Map_Env;
+
    procedure Translate_Attribute_Specification
      (Spec : Iir_Attribute_Specification)
    is
@@ -330,7 +344,10 @@ package body Trans.Chap5 is
       Update_Data_Record => Connect_Update_Data_Record,
       Finish_Data_Record => Connect_Finish_Data_Composite);
 
-   procedure Elab_Port_Map_Aspect_Assoc (Assoc : Iir; By_Copy : Boolean)
+   procedure Elab_Port_Map_Aspect_Assoc (Assoc : Iir;
+                                         By_Copy : Boolean;
+                                         Formal_Env : Map_Env;
+                                         Actual_Env : Map_Env)
    is
       Formal      : constant Iir := Get_Formal (Assoc);
       Actual      : constant Iir := Get_Actual (Assoc);
@@ -341,6 +358,7 @@ package body Trans.Chap5 is
       Formal_Val  : Mnode;
       Actual_Sig  : Mnode;
       Actual_Val  : Mnode;
+      Actual_En   : O_Enode;
       Data        : Connect_Data;
       Mode        : Connect_Mode;
    begin
@@ -384,13 +402,11 @@ package body Trans.Chap5 is
                   raise Internal_Error;
             end case;
 
-            --  translate actual (abort if not a signal).
-            Chap6.Translate_Signal_Name (Formal, Formal_Sig, Formal_Val);
-            Actual_Sig := Chap6.Translate_Name (Actual, Mode_Signal);
-
             if By_Copy then
-               Chap6.Translate_Signal_Name (Formal, Formal_Sig, Formal_Val);
+               Set_Map_Env (Actual_Env);
                Chap6.Translate_Signal_Name (Actual, Actual_Sig, Actual_Val);
+               Set_Map_Env (Formal_Env);
+               Chap6.Translate_Signal_Name (Formal, Formal_Sig, Formal_Val);
 
                --  Copy pointer to the values.
                if Get_Info (Formal_Type).Type_Mode in Type_Mode_Arrays then
@@ -401,15 +417,19 @@ package body Trans.Chap5 is
                   New_Assign_Stmt (M2Lp (Formal_Val), M2Addr (Actual_Val));
                end if;
             else
-               Formal_Sig := Chap6.Translate_Name (Formal, Mode_Signal);
+               Set_Map_Env (Actual_Env);
                Actual_Sig := Chap6.Translate_Name (Actual, Mode_Signal);
+               Set_Map_Env (Formal_Env);
+               Formal_Sig := Chap6.Translate_Name (Formal, Mode_Signal);
             end if;
 
          else
+            --  Association by value.  The formal cannot be referenced in the
+            --  actual.
+            Set_Map_Env (Formal_Env);
+            Actual_En := Chap7.Translate_Expression (Actual, Formal_Type);
+            Actual_Sig := E2M (Actual_En, Get_Info (Formal_Type), Mode_Value);
             Chap6.Translate_Signal_Name (Formal, Formal_Sig, Formal_Val);
-            Actual_Sig :=
-              E2M (Chap7.Translate_Expression (Actual, Formal_Type),
-                   Get_Info (Formal_Type), Mode_Value);
             Mode := Connect_Value;
 --            raise Internal_Error;
          end if;
@@ -431,21 +451,25 @@ package body Trans.Chap5 is
       else
          if Get_In_Conversion (Assoc) /= Null_Iir then
             Chap4.Elab_In_Conversion (Assoc, Actual_Sig);
+            Set_Map_Env (Formal_Env);
             Formal_Sig := Chap6.Translate_Name (Formal, Mode_Signal);
             Data := (Actual_Sig => Actual_Sig,
                      Actual_Type => Formal_Type,
                      Mode => Connect_Effective,
                      By_Copy => False);
             Connect (Formal_Sig, Formal_Type, Data);
+            Set_Map_Env (Actual_Env);
          end if;
          if Get_Out_Conversion (Assoc) /= Null_Iir then
             --  flow: FORMAL to ACTUAL
             Chap4.Elab_Out_Conversion (Assoc, Formal_Sig);
+            Set_Map_Env (Actual_Env);
             Actual_Sig := Chap6.Translate_Name (Actual, Mode_Signal);
             Data := (Actual_Sig => Actual_Sig,
                      Actual_Type => Actual_Type,
                      Mode => Connect_Source,
                      By_Copy => False);
+            Set_Map_Env (Formal_Env);
             Connect (Formal_Sig, Actual_Type, Data);
          end if;
       end if;
@@ -453,102 +477,7 @@ package body Trans.Chap5 is
       Close_Temp;
    end Elab_Port_Map_Aspect_Assoc;
 
-   procedure Elab_Generic_Map_Aspect (Mapping : Iir)
-   is
-      Assoc  : Iir;
-      Formal : Iir;
-   begin
-      --  Elab generics, and associate.
-      Assoc := Get_Generic_Map_Aspect_Chain (Mapping);
-      while Assoc /= Null_Iir loop
-         Open_Temp;
-         Formal := Strip_Denoting_Name (Get_Formal (Assoc));
-         case Get_Kind (Assoc) is
-            when Iir_Kind_Association_Element_By_Expression =>
-               declare
-                  Targ : Mnode;
-               begin
-                  if Get_Whole_Association_Flag (Assoc) then
-                     Chap4.Elab_Object_Storage (Formal);
-                     Targ := Chap6.Translate_Name (Formal, Mode_Value);
-                     Chap4.Elab_Object_Init
-                       (Targ, Formal, Get_Actual (Assoc));
-                  else
-                     Targ := Chap6.Translate_Name (Formal, Mode_Value);
-                     Chap7.Translate_Assign
-                       (Targ, Get_Actual (Assoc), Get_Type (Formal));
-                  end if;
-               end;
-            when Iir_Kind_Association_Element_Open =>
-               declare
-                  Value : constant Iir := Get_Default_Value (Formal);
-               begin
-                  Chap4.Elab_Object_Value (Formal, Value);
-                  Chap9.Destroy_Types (Value);
-               end;
-            when Iir_Kind_Association_Element_By_Individual =>
-               --  Create the object.
-               declare
-                  Formal_Type : constant Iir := Get_Type (Formal);
-                  Obj_Info    : constant Object_Info_Acc := Get_Info (Formal);
-                  Obj_Type    : constant Iir := Get_Actual_Type (Assoc);
-                  Formal_Node : Mnode;
-                  Type_Info   : Type_Info_Acc;
-                  Bounds      : Mnode;
-               begin
-                  Chap3.Elab_Object_Subtype (Formal_Type);
-                  Type_Info := Get_Info (Formal_Type);
-                  Formal_Node := Get_Var
-                    (Obj_Info.Object_Var, Type_Info, Mode_Value);
-                  Stabilize (Formal_Node);
-                  if Obj_Type = Null_Iir then
-                     Chap4.Allocate_Complex_Object
-                       (Formal_Type, Alloc_System, Formal_Node);
-                  else
-                     Chap3.Create_Array_Subtype (Obj_Type);
-                     Bounds := Chap3.Get_Array_Type_Bounds (Obj_Type);
-                     Chap3.Translate_Object_Allocation
-                       (Formal_Node, Alloc_System, Formal_Type, Bounds);
-                  end if;
-               end;
-            when Iir_Kind_Association_Element_Package =>
-               pragma Assert (Get_Kind (Formal) =
-                                Iir_Kind_Interface_Package_Declaration);
-               declare
-                  Uninst_Pkg  : constant Iir := Get_Named_Entity
-                    (Get_Uninstantiated_Package_Name (Formal));
-                  Uninst_Info : constant Ortho_Info_Acc :=
-                    Get_Info (Uninst_Pkg);
-                  Formal_Info : constant Ortho_Info_Acc :=
-                    Get_Info (Formal);
-                  Actual      : constant Iir := Get_Named_Entity
-                    (Get_Actual (Assoc));
-                  Actual_Info : constant Ortho_Info_Acc :=
-                    Get_Info (Actual);
-               begin
-                  New_Assign_Stmt
-                    (Get_Var (Formal_Info.Package_Instance_Spec_Var),
-                     New_Address
-                       (Get_Instance_Ref
-                            (Actual_Info.Package_Instance_Spec_Scope),
-                        Uninst_Info.Package_Spec_Ptr_Type));
-                  New_Assign_Stmt
-                    (Get_Var (Formal_Info.Package_Instance_Body_Var),
-                     New_Address
-                       (Get_Instance_Ref
-                            (Actual_Info.Package_Instance_Body_Scope),
-                        Uninst_Info.Package_Body_Ptr_Type));
-               end;
-            when others =>
-               Error_Kind ("elab_generic_map_aspect(1)", Assoc);
-         end case;
-         Close_Temp;
-         Assoc := Get_Chain (Assoc);
-      end loop;
-   end Elab_Generic_Map_Aspect;
-
-   function Alloc_Bounds (Atype : Iir; Alloc : Allocation_Kind)
-                        return Mnode
+   function Alloc_Bounds (Atype : Iir; Alloc : Allocation_Kind) return Mnode
    is
       Tinfo : constant Type_Info_Acc := Get_Info (Atype);
       Var : O_Dnode;
@@ -663,9 +592,7 @@ package body Trans.Chap5 is
       Open_Temp;
       case Iir_Kinds_Association_Element (Get_Kind (Assoc)) is
          when Iir_Kind_Association_Element_By_Expression =>
-            if not Get_Whole_Association_Flag (Assoc) then
-               return;
-            end if;
+            pragma Assert (Get_Whole_Association_Flag (Assoc));
             Bounds := Get_Unconstrained_Port_Bounds (Assoc);
          when Iir_Kind_Association_Element_Open =>
             declare
@@ -697,10 +624,14 @@ package body Trans.Chap5 is
       Close_Temp;
    end Elab_Unconstrained_Port_Bounds;
 
-   procedure Elab_Port_Map_Aspect (Mapping : Iir; Block_Parent : Iir)
+   procedure Elab_Port_Map_Aspect
+     (Mapping : Iir; Block_Parent : Iir; Formal_Env : Map_Env)
    is
+      Actual_Env : Map_Env;
       Assoc : Iir;
    begin
+      Save_Map_Env (Actual_Env, Formal_Env.Scope_Ptr);
+
       --  Ports.
       Assoc := Get_Port_Map_Aspect_Chain (Mapping);
       while Assoc /= Null_Iir loop
@@ -710,8 +641,11 @@ package body Trans.Chap5 is
             Fb_Type : constant Iir := Get_Type (Formal_Base);
             Fbt_Info : constant Type_Info_Acc := Get_Info (Fb_Type);
          begin
+            Set_Map_Env (Formal_Env);
             --  Set bounds of unconstrained ports.
-            if Fbt_Info.Type_Mode = Type_Mode_Fat_Array then
+            if Get_Whole_Association_Flag (Assoc)
+              and then Fbt_Info.Type_Mode = Type_Mode_Fat_Array
+            then
                Open_Temp;
                Elab_Unconstrained_Port_Bounds (Formal, Assoc);
                Close_Temp;
@@ -739,20 +673,23 @@ package body Trans.Chap5 is
                   if Get_Whole_Association_Flag (Assoc) then
                      if Get_Collapse_Signal_Flag (Assoc) then
                         --  For collapsed association, copy signals.
-                        Elab_Port_Map_Aspect_Assoc (Assoc, True);
+                        Elab_Port_Map_Aspect_Assoc
+                          (Assoc, True, Formal_Env, Actual_Env);
                      else
                         --  Create non-collapsed signals.
                         Chap4.Elab_Signal_Declaration_Object
                           (Formal, Block_Parent, False);
                         --  And associate.
-                        Elab_Port_Map_Aspect_Assoc (Assoc, False);
+                        Elab_Port_Map_Aspect_Assoc
+                          (Assoc, False, Formal_Env, Actual_Env);
                      end if;
                   else
                      --  By sub-element.
                      --  Either the whole signal is collapsed or it was already
                      --  created.
                      --  And associate.
-                     Elab_Port_Map_Aspect_Assoc (Assoc, False);
+                     Elab_Port_Map_Aspect_Assoc
+                       (Assoc, False, Formal_Env, Actual_Env);
                   end if;
                when Iir_Kind_Association_Element_Open
                  | Iir_Kind_Association_Element_By_Individual =>
@@ -765,14 +702,127 @@ package body Trans.Chap5 is
          end;
          Assoc := Get_Chain (Assoc);
       end loop;
+      Set_Map_Env (Actual_Env);
    end Elab_Port_Map_Aspect;
 
-   procedure Elab_Map_Aspect (Mapping : Iir; Block_Parent : Iir) is
+   procedure Elab_Generic_Map_Aspect (Mapping : Iir; Formal_Env : Map_Env)
+   is
+      Actual_Env : Map_Env;
+      Assoc  : Iir;
+      Formal : Iir;
    begin
+      Save_Map_Env (Actual_Env, Formal_Env.Scope_Ptr);
+
+      --  Elab generics, and associate.
+      Assoc := Get_Generic_Map_Aspect_Chain (Mapping);
+      while Assoc /= Null_Iir loop
+         Open_Temp;
+         Formal := Strip_Denoting_Name (Get_Formal (Assoc));
+         case Get_Kind (Assoc) is
+            when Iir_Kind_Association_Element_By_Expression =>
+               declare
+                  Targ : Mnode;
+               begin
+                  if Get_Whole_Association_Flag (Assoc) then
+                     Set_Map_Env (Formal_Env);
+                     Chap4.Elab_Object_Storage (Formal);
+                     Targ := Chap6.Translate_Name (Formal, Mode_Value);
+                     Set_Map_Env (Actual_Env);
+                     Chap4.Elab_Object_Init
+                       (Targ, Formal, Get_Actual (Assoc));
+                  else
+                     Set_Map_Env (Formal_Env);
+                     Targ := Chap6.Translate_Name (Formal, Mode_Value);
+                     Set_Map_Env (Actual_Env);
+                     Chap7.Translate_Assign
+                       (Targ, Get_Actual (Assoc), Get_Type (Formal));
+                  end if;
+               end;
+            when Iir_Kind_Association_Element_Open =>
+               declare
+                  Value : constant Iir := Get_Default_Value (Formal);
+               begin
+                  Set_Map_Env (Formal_Env);
+                  Chap4.Elab_Object_Value (Formal, Value);
+                  Chap9.Destroy_Types (Value);
+                  Set_Map_Env (Actual_Env);
+               end;
+            when Iir_Kind_Association_Element_By_Individual =>
+               --  Create the object.
+               declare
+                  Formal_Type : constant Iir := Get_Type (Formal);
+                  Obj_Info    : constant Object_Info_Acc := Get_Info (Formal);
+                  Obj_Type    : constant Iir := Get_Actual_Type (Assoc);
+                  Formal_Node : Mnode;
+                  Type_Info   : Type_Info_Acc;
+                  Bounds      : Mnode;
+               begin
+                  Set_Map_Env (Formal_Env);
+                  Chap3.Elab_Object_Subtype (Formal_Type);
+                  Type_Info := Get_Info (Formal_Type);
+                  Formal_Node := Get_Var
+                    (Obj_Info.Object_Var, Type_Info, Mode_Value);
+                  Stabilize (Formal_Node);
+                  if Obj_Type = Null_Iir then
+                     Chap4.Allocate_Complex_Object
+                       (Formal_Type, Alloc_System, Formal_Node);
+                  else
+                     Chap3.Create_Array_Subtype (Obj_Type);
+                     Bounds := Chap3.Get_Array_Type_Bounds (Obj_Type);
+                     Chap3.Translate_Object_Allocation
+                       (Formal_Node, Alloc_System, Formal_Type, Bounds);
+                  end if;
+                  Set_Map_Env (Actual_Env);
+               end;
+            when Iir_Kind_Association_Element_Package =>
+               pragma Assert (Get_Kind (Formal) =
+                                Iir_Kind_Interface_Package_Declaration);
+               declare
+                  Uninst_Pkg  : constant Iir := Get_Named_Entity
+                    (Get_Uninstantiated_Package_Name (Formal));
+                  Uninst_Info : constant Ortho_Info_Acc :=
+                    Get_Info (Uninst_Pkg);
+                  Formal_Info : constant Ortho_Info_Acc :=
+                    Get_Info (Formal);
+                  Actual      : constant Iir := Get_Named_Entity
+                    (Get_Actual (Assoc));
+                  Actual_Info : constant Ortho_Info_Acc :=
+                    Get_Info (Actual);
+               begin
+                  New_Assign_Stmt
+                    (Get_Var (Formal_Info.Package_Instance_Spec_Var),
+                     New_Address
+                       (Get_Instance_Ref
+                            (Actual_Info.Package_Instance_Spec_Scope),
+                        Uninst_Info.Package_Spec_Ptr_Type));
+                  New_Assign_Stmt
+                    (Get_Var (Formal_Info.Package_Instance_Body_Var),
+                     New_Address
+                       (Get_Instance_Ref
+                            (Actual_Info.Package_Instance_Body_Scope),
+                        Uninst_Info.Package_Body_Ptr_Type));
+               end;
+            when others =>
+               Error_Kind ("elab_generic_map_aspect(1)", Assoc);
+         end case;
+         Close_Temp;
+         Assoc := Get_Chain (Assoc);
+      end loop;
+   end Elab_Generic_Map_Aspect;
+
+   procedure Elab_Map_Aspect
+     (Mapping : Iir; Block_Parent : Iir; Formal_Env : Map_Env) is
+   begin
+      --  The use of FORMAL_ENV (and then later ACTUAL_ENV) is rather fragile
+      --  as in some cases both the formal and the actual are referenced in the
+      --  same time (like Check_Array_Match).  But the env are different only
+      --  in case of direct recursive instantation (rare).  To stay on the safe
+      --  side, FORMAL_ENV must be active/set.
+
       --  The generic map must be done before the elaboration of
       --  the ports, since a port subtype may depend on a generic.
-      Elab_Generic_Map_Aspect (Mapping);
+      Elab_Generic_Map_Aspect (Mapping, Formal_Env);
 
-      Elab_Port_Map_Aspect (Mapping, Block_Parent);
+      Elab_Port_Map_Aspect (Mapping, Block_Parent, Formal_Env);
    end Elab_Map_Aspect;
 end Trans.Chap5;

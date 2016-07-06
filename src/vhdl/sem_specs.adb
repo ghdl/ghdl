@@ -1029,7 +1029,7 @@ package body Sem_Specs is
       end if;
    end Sem_Disconnection_Specification;
 
-   --  Semantize entity aspect ASPECT and return the entity declaration.
+   --  Analyze entity aspect ASPECT and return the entity declaration.
    --  Return NULL_IIR if not found.
    function Sem_Entity_Aspect (Aspect : Iir) return Iir is
    begin
@@ -1266,7 +1266,7 @@ package body Sem_Specs is
       Set_Component_Configuration (Comp, Spec);
    end Apply_Configuration_Specification;
 
-   --  Semantize component_configuration or configuration_specification SPEC.
+   --  Analyze component_configuration or configuration_specification SPEC.
    --  STMTS is the concurrent statement list related to SPEC.
    procedure Sem_Component_Specification
      (Parent_Stmts : Iir; Spec : Iir; Primary_Entity_Aspect : out Iir)

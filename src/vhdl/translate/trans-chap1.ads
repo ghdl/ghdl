@@ -35,5 +35,6 @@ package Trans.Chap1  is
    --  CONFIG may be one of:
    --  * configuration_declaration
    --  * component_configuration
-   procedure Translate_Configuration_Declaration (Config : Iir);
+   procedure Translate_Configuration_Declaration_Decl (Config : Iir);
+   procedure Translate_Configuration_Declaration_Body (Config : Iir);
 end Trans.Chap1;

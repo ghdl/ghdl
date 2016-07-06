@@ -734,6 +734,23 @@ package body Trans.Chap2 is
       Pop_Identifier_Prefix (Mark);
    end Translate_Subprogram_Body;
 
+   procedure Push_Package_Instance_Factory (Spec : Iir)
+   is
+      Info : constant Ortho_Info_Acc := Get_Info (Spec);
+   begin
+      Push_Instance_Factory (Info.Package_Body_Scope'Access);
+      Info.Package_Spec_Field := Add_Instance_Factory_Field
+        (Get_Identifier ("SPEC"),
+         Get_Scope_Type (Info.Package_Spec_Scope));
+   end Push_Package_Instance_Factory;
+
+   procedure Pop_Package_Instance_Factory (Spec : Iir)
+   is
+      Info : constant Ortho_Info_Acc := Get_Info (Spec);
+   begin
+      Pop_Instance_Factory (Info.Package_Body_Scope'Access);
+   end Pop_Package_Instance_Factory;
+
    procedure Translate_Package_Declaration (Decl : Iir_Package_Declaration)
    is
       Header               : constant Iir := Get_Package_Header (Decl);
@@ -815,26 +832,33 @@ package body Trans.Chap2 is
          Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
       end if;
       Save_Local_Identifier (Info.Package_Local_Id);
+
+      if Is_Uninstantiated_Package (Decl)
+        and then not Get_Need_Body (Decl)
+        and then Get_Package_Body (Decl) = Null_Iir
+      then
+         --  Generic package without a body.
+         --  Create an empty body instance.
+         Push_Package_Instance_Factory (Decl);
+         Pop_Package_Instance_Factory (Decl);
+      end if;
    end Translate_Package_Declaration;
 
-   procedure Translate_Package_Body (Decl : Iir_Package_Body)
+   procedure Translate_Package_Body (Bod : Iir_Package_Body)
    is
-      Spec : constant Iir_Package_Declaration := Get_Package (Decl);
+      Spec : constant Iir_Package_Declaration := Get_Package (Bod);
       Info : constant Ortho_Info_Acc := Get_Info (Spec);
       Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
       Prev_Storage : constant O_Storage := Global_Storage;
    begin
       --  Translate declarations.
       if Is_Uninstantiated_Package (Spec) then
-         Push_Instance_Factory (Info.Package_Body_Scope'Access);
-         Info.Package_Spec_Field := Add_Instance_Factory_Field
-           (Get_Identifier ("SPEC"),
-            Get_Scope_Type (Info.Package_Spec_Scope));
+         Push_Package_Instance_Factory (Spec);
 
          --  Translate the specifications.
-         Chap4.Translate_Declaration_Chain (Decl);
+         Chap4.Translate_Declaration_Chain (Bod);
 
-         Pop_Instance_Factory (Info.Package_Body_Scope'Access);
+         Pop_Package_Instance_Factory (Spec);
 
          if Global_Storage = O_Storage_External then
             return;
@@ -845,15 +869,15 @@ package body Trans.Chap2 is
             return;
          end if;
 
-         Restore_Local_Identifier (Get_Info (Spec).Package_Local_Id);
+         Restore_Local_Identifier (Info.Package_Local_Id);
 
-         Chap4.Translate_Declaration_Chain (Decl);
+         Chap4.Translate_Declaration_Chain (Bod);
       end if;
 
       Global_Storage := O_Storage_Private;
 
       if Flag_Rti then
-         Rtis.Generate_Unit (Decl);
+         Rtis.Generate_Unit (Bod);
       end if;
 
       if Is_Uninstantiated_Package (Spec) then
@@ -866,14 +890,14 @@ package body Trans.Chap2 is
                               Info.Package_Body_Scope'Access);
       end if;
 
-      Chap4.Translate_Declaration_Chain_Subprograms (Decl);
+      Chap4.Translate_Declaration_Chain_Subprograms (Bod);
 
       if Is_Uninstantiated_Package (Spec) then
          Clear_Scope (Info.Package_Spec_Scope);
          Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
       end if;
 
-      Elab_Package_Body (Spec, Decl);
+      Elab_Package_Body (Spec, Bod);
 
       Global_Storage := Prev_Storage;
    end Translate_Package_Body;
@@ -1272,22 +1296,22 @@ package body Trans.Chap2 is
 
       Set_Scope_Via_Decl (Pkg_Info.Package_Body_Scope,
                           Get_Var_Label (Info.Package_Instance_Body_Var));
+
       Set_Scope_Via_Field (Pkg_Info.Package_Spec_Scope,
                            Pkg_Info.Package_Spec_Field,
                            Pkg_Info.Package_Body_Scope'Access);
-      Chap5.Elab_Generic_Map_Aspect (Inst);
+      Chap5.Elab_Generic_Map_Aspect (Inst, (Pkg_Info.Package_Body_Scope'Access,
+                                            Pkg_Info.Package_Body_Scope));
       Clear_Scope (Pkg_Info.Package_Spec_Scope);
-      Clear_Scope (Pkg_Info.Package_Body_Scope);
 
       --  Call the elaborator of the generic.  The generic must be
       --  temporary associated with the instance variable.
       Start_Association (Constr, Pkg_Info.Package_Elab_Body_Subprg);
-      Set_Scope_Via_Decl (Pkg_Info.Package_Body_Scope,
-                          Get_Var_Label (Info.Package_Instance_Body_Var));
       Add_Subprg_Instance_Assoc
         (Constr, Pkg_Info.Package_Elab_Body_Instance);
-      Clear_Scope (Pkg_Info.Package_Body_Scope);
       New_Procedure_Call (Constr);
+
+      Clear_Scope (Pkg_Info.Package_Body_Scope);
 
       --  Chap2.Finish_Subprg_Instance_Use
       --    (Info.Package_Instance_Elab_Instance);

@@ -51,10 +51,18 @@ package body Configuration is
       end if;
 
       --  If already in the table, then nothing to do.
-      if Get_Elab_Flag (Unit) then
+      if Get_Configuration_Mark_Flag (Unit) then
+         --  There might be some direct recursions:
+         --  * the default configuration might be implicitly referenced by
+         --    a direct entity instantiation
+         --  * a configuration may be referenced by itself for a recursive
+         --    instantiation
+         pragma Assert (Get_Configuration_Done_Flag (Unit)
+                          or else (Get_Kind (Get_Library_Unit (Unit))
+                                     = Iir_Kind_Configuration_Declaration));
          return;
       end if;
-      Set_Elab_Flag (Unit, True);
+      Set_Configuration_Mark_Flag (Unit, True);
 
       --  May be enabled to debug dependency construction.
       if False then
@@ -166,6 +174,8 @@ package body Configuration is
 
       --  Add it in the table, after the dependencies.
       Design_Units.Append (Unit);
+
+      Set_Configuration_Done_Flag (Unit, True);
 
       --  Restore now the file dependence.
       --  Indeed, we may add a package body when we are in a package
@@ -312,7 +322,14 @@ package body Configuration is
                Config := Get_Default_Configuration_Declaration
                  (Get_Library_Unit (Arch));
                if Config /= Null_Iir then
-                  Add_Design_Unit (Config, Aspect);
+                  if Get_Configuration_Mark_Flag (Config)
+                    and then not Get_Configuration_Done_Flag (Config)
+                  then
+                     --  Recursive instantiation.
+                     return;
+                  else
+                     Add_Design_Unit (Config, Aspect);
+                  end if;
                end if;
             end if;
 
@@ -599,7 +616,8 @@ package body Configuration is
             return Null_Iir;
       end case;
 
-      Set_Elab_Flag (Std_Package.Std_Standard_Unit, True);
+      Set_Configuration_Mark_Flag (Std_Package.Std_Standard_Unit, True);
+      Set_Configuration_Done_Flag (Std_Package.Std_Standard_Unit, True);
 
       Add_Design_Unit (Top, Null_Iir);
       return Top;

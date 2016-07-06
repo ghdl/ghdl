@@ -44,10 +44,11 @@ package Grt.Vpi is
    -- object codes, see vpi_user.h
    vpiModule:        constant integer := 32;
    vpiNet:           constant integer := 36;
-   vpiScope:         constant integer := 84;
-   vpiInternalScope: constant integer := 92;
+   vpiParameter:     constant integer := 41;
    vpiLeftRange:     constant integer := 79;
    vpiRightRange:    constant integer := 83;
+   vpiScope:         constant integer := 84;
+   vpiInternalScope: constant integer := 92;
 
    vpiStop   : constant := 66;
    vpiFinish : constant := 67;

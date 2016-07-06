@@ -43,6 +43,7 @@ with Grt.Values;
 with Grt.Errors;
 with Grt.Std_Logic_1164;
 with Grt.Lib;
+with Grt.Strings;
 with Sem_Inst;
 
 package body Execution is
@@ -2762,9 +2763,9 @@ package body Execution is
                Unit_Len := 0;
                Unit_Pos := Unit_Pos + 1;   --  From 0 based to 1 based
                for I in Unit_Pos .. Str_Bnd.Dim_1.Length loop
-                  exit when Grt.Values.Is_Whitespace (Str_Str (I));
+                  exit when Grt.Strings.Is_Whitespace (Str_Str (I));
                   Unit_Len := Unit_Len + 1;
-                  Str_Str (I) := Grt.Values.To_LC (Str_Str (I));
+                  Str_Str (I) := Grt.Strings.To_Lower (Str_Str (I));
                end loop;
 
                Unit := Get_Primary_Unit (Expr_Type);
@@ -2806,13 +2807,13 @@ package body Execution is
             begin
                --  Remove leading and trailing blanks
                for I in Str_Str'Range loop
-                  if not Grt.Values.Is_Whitespace (Str_Str (I)) then
+                  if not Grt.Strings.Is_Whitespace (Str_Str (I)) then
                      Lit_Start := I;
                      exit;
                   end if;
                end loop;
                for I in reverse Lit_Start .. Str_Str'Last loop
-                  if not Grt.Values.Is_Whitespace (Str_Str (I)) then
+                  if not Grt.Strings.Is_Whitespace (Str_Str (I)) then
                      Lit_End := I;
                      exit;
                   end if;
@@ -2834,7 +2835,7 @@ package body Execution is
                   --  Literal identifier.
                   --  Convert to lower case.
                   for I in Lit_Start .. Lit_End loop
-                     Str_Str (I) := Grt.Values.To_LC (Str_Str (I));
+                     Str_Str (I) := Grt.Strings.To_Lower (Str_Str (I));
                   end loop;
 
                   for I in Natural loop

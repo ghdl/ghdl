@@ -60,7 +60,7 @@ package body Ghdllocal is
       end if;
 
       if Flags.Verbose then
-         Put_Line ("semantize " & Disp_Node (Get_Library_Unit (Unit)));
+         Put_Line ("analyze " & Disp_Node (Get_Library_Unit (Unit)));
       end if;
 
       Sem.Semantic (Unit);
@@ -572,7 +572,7 @@ package body Ghdllocal is
       for I in Filename'Range loop
          if Filename (I) = '.' then
             Last := I - 1;
-         elsif Remove_Dir and then Filename (I) = Directory_Separator then
+         elsif Remove_Dir and then Is_Directory_Separator (Filename (I)) then
             First := I + 1;
             Last := Filename'Last;
          end if;

@@ -30,12 +30,12 @@ package body Sim_Be is
    procedure Finish_Compilation (Unit: Iir_Design_Unit; Main: Boolean := False)
    is
       use Ada.Text_IO;
-      Lib_Unit : Iir;
+      Lib_Unit : constant Iir := Get_Library_Unit (Unit);
    begin
-      Lib_Unit := Get_Library_Unit (Unit);
       -- Semantic analysis.
+
       if Flags.Verbose then
-         Put_Line ("semantize " & Disp_Node (Lib_Unit));
+         Put_Line ("analyze " & Disp_Node (Lib_Unit));
       end if;
       Sem.Semantic (Unit);
 

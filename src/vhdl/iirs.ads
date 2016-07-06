@@ -239,6 +239,10 @@ package Iirs is
    --
    --  Flag used during elaboration.  Set when the file was already seen.
    --   Get/Set_Elab_Flag (Flag3)
+   --
+   --  Flags used during configuration
+   --   Get/Set_Configuration_Mark_Flag (Flag4)
+   --   Get/Set_Configuration_Done_Flag (Flag5)
 
    -- Iir_Kind_Library_Clause (Short)
    --
@@ -1051,7 +1055,7 @@ package Iirs is
    --  point).
    --  The parser set this field to null_iir for an incomplete type
    --  declaration.  This field is set to an incomplete_type_definition node
-   --  when first semantized.
+   --  when first analyzed.
    --   Get/Set_Type_Definition (Field1)
    --   Get/Set_Type (Alias Field1)
    --
@@ -2075,8 +2079,8 @@ package Iirs is
    --
    --   Get/Set_Incomplete_Type_List (Field2)
    --
-   --  Set to the incomplete type declaration when semantized, and set to the
-   --  complete type declaration when the latter one is semantized.
+   --  Set to the incomplete type declaration when analyzed, and set to the
+   --  complete type declaration when the latter one is analyzed.
    --   Get/Set_Type_Declarator (Field3)
    --
    --   Get/Set_Base_Type (Field4)
@@ -6143,6 +6147,18 @@ package Iirs is
    --  Field: Flag3
    function Get_Elab_Flag (Design : Iir) return Boolean;
    procedure Set_Elab_Flag (Design : Iir; Flag : Boolean);
+
+   --  Used only by configuration to mark a design unit as already inserted in
+   --  the list of units.  Used to avoid double insertion.
+   --  Field: Flag4
+   function Get_Configuration_Mark_Flag (Design : Iir) return Boolean;
+   procedure Set_Configuration_Mark_Flag (Design : Iir; Flag : Boolean);
+
+   --  Used only by configuration to flag units completely handled.  Used to
+   --  detect recursion.
+   --  Field: Flag5
+   function Get_Configuration_Done_Flag (Design : Iir) return Boolean;
+   procedure Set_Configuration_Done_Flag (Design : Iir; Flag : Boolean);
 
    --  Set on an array_subtype if there is an index constraint.
    --  If not set, the subtype is unconstrained.
