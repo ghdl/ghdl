@@ -7,7 +7,7 @@ New in 0.34 (XXXX-XX-XX)
 * Mode backend ported to x86_64
 * Support cocotb (https://github.com/potentialventures/cocotb)
 * Main repository is now on github: https://github.com/tgingold/ghdl
-* Docs available on rtd: http://ghdl.readthedocs.org/en/latest/
+* Docs available on rtd: https://ghdl.readthedocs.org/en/latest/
 * Speed improved.
 * New option --psl-report, to report status of psl assert and cover.
 
