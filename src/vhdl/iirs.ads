@@ -25,7 +25,7 @@ package Iirs is
    --  This package defines the semantic tree and functions to handle it.
    --  The tree is roughly based on IIR (Internal Intermediate Representation),
    --  [AIRE/CE Advanced Intermediate Representation with Extensibility,
-   --   Common Environment.  http://www.vhdl.org/aire/index.html ]
+   --   Common Environment.  http://www.vhdl.org/aire/index.html [DEAD LINK] ]
    --  but oriented object features are not used, and sometimes, functions
    --  or fields have changed.
 
