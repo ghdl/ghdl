@@ -1577,15 +1577,6 @@ package body Grt.Vpi is
       return Res;
    end vpi_remove_cb;
 
-   -- void vpi_vprintf(const char*fmt, va_list ap)
-   procedure vpi_vprintf (Fmt : Address; Ap : Address)
-   is
-      pragma Unreferenced (Fmt);
-      pragma Unreferenced (Ap);
-   begin
-      null;
-   end vpi_vprintf;
-
    -- missing here, see grt-cvpi.c:
    --    vpi_mcd_open_x
    --    vpi_mcd_vprintf

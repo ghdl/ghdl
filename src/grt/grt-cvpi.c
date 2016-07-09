@@ -255,6 +255,12 @@ loadVpiModule (const char* modulename)
 }
 
 void
+vpi_vprintf (const char*fmt, va_list ap)
+{
+  vprintf (fmt, ap);
+}
+
+void
 vpi_printf (const char *fmt, ...)
 {
   va_list params;

@@ -277,10 +277,6 @@ package Grt.Vpi is
    function vpi_remove_cb (Ref : vpiHandle) return integer;
    pragma Export (C, vpi_remove_cb, "vpi_remove_cb");
 
-   -- void vpi_vprintf(const char*fmt, va_list ap)
-   procedure vpi_vprintf (Fmt: Address; Ap: Address);
-   pragma Export (C, vpi_vprintf, "vpi_vprintf");
-
    --  typedef struct t_vpi_error_info
    --  {
    --      int32_t state;
