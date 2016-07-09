@@ -229,6 +229,7 @@ ghdl1-llvm: force
 oread-llvm: force
 	$(MAKE) -f $(srcdir)/src/ortho/llvm/Makefile \
 	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
+	 GNATMAKE="$(GNATMAKE)" \
 	 GNAT_FLAGS="-aI$(srcdir)/src/ortho/oread $(GNATFLAGS)" \
 	 LLVM_CONFIG="$(LLVM_CONFIG)"
 
