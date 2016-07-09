@@ -226,8 +226,13 @@ package body Ortho_Front is
 
    --  The symbol table.
    type Syment_Acc_Array is array (Hash_Type range <>) of Syment_Acc;
+   type Syment_Acc_Map (Max : Hash_Type) is record
+      Map : Syment_Acc_Array (0 .. Max);
+   end record;
+   --  type Syment_Acc_Map_Acc is access Syment_Acc_Map;
+
    Hash_Max : constant Hash_Type := 511;
-   Symtable : Syment_Acc_Array (0 .. Hash_Max - 1) := (others => null);
+   Symtable : Syment_Acc_Map (Hash_Max - 1);
 
    type Node_Kind is (Decl_Keyword, Decl_Type, Decl_Param,
                       Node_Function, Node_Procedure, Node_Object, Node_Field,
@@ -240,6 +245,14 @@ package body Ortho_Front is
 
    type Node (<>);
    type Node_Acc is access Node;
+
+   type Node_Array is array (Natural range <>) of Node_Acc;
+
+   type Node_Map (Len : Natural) is record
+      Map : Node_Array (1 .. Len);
+   end record;
+   type Node_Map_Acc is access Node_Map;
+
    type Node (Kind : Node_Kind) is record
       case Kind is
          when Decl_Keyword =>
@@ -299,6 +312,8 @@ package body Ortho_Front is
             Field_Fnode : O_Fnode;
             Field_Type : Node_Acc;
             Field_Next : Node_Acc;
+            --  Next entry in the field map (if the map exists).
+            Field_Hash_Next : Node_Acc;
          when Type_Signed
            | Type_Unsigned
            | Type_Float
@@ -322,7 +337,11 @@ package body Ortho_Front is
                   Access_Dtype : Node_Acc;
                when Type_Record
                  | Type_Union =>
+                  --  Simply linked list of fields.  Works well unless the
+                  --  number of fields is too high.
                   Record_Union_Fields : Node_Acc;
+                  --  Hash map of fields (the key is the hash of the ident).
+                  Record_Union_Map : Node_Map_Acc;
                when Type_Enum
                  | Type_Boolean =>
                   Enum_Lits : Node_Acc;
@@ -513,6 +532,42 @@ package body Ortho_Front is
       Unget_Char;
    end Scan_Comment;
 
+   function Get_Ident_Token return Token_Type
+   is
+      H : Hash_Type;
+      S : Syment_Acc;
+      N : Node_Acc;
+   begin
+      H := Token_Hash mod Hash_Max;
+      S := Symtable.Map (H);
+      while S /= null loop
+         if S.Hash = Token_Hash
+           and then Is_Equal (S.Ident, Token_Ident (1 .. Token_Idlen))
+         then
+            --  This identifier is known.
+            Token_Sym := S;
+
+            --  It may be a keyword.
+            if S.Name /= null then
+               N := Get_Decl (S);
+               if N.Kind = Decl_Keyword then
+                  return N.Keyword;
+               end if;
+            end if;
+
+            return Tok_Ident;
+         end if;
+         S := S.Next;
+      end loop;
+      Symtable.Map (H) := new Syment_Type'
+        (Hash => Token_Hash,
+         Ident => Get_Identifier (Token_Ident (1 .. Token_Idlen)),
+         Next => Symtable.Map (H),
+         Name => null);
+      Token_Sym := Symtable.Map (H);
+      return Tok_Ident;
+   end Get_Ident_Token;
+
    --  Get the next token.
    function Get_Token return Token_Type
    is
@@ -674,41 +729,7 @@ package body Ortho_Front is
                     and (C /= '_');
                end loop;
                Unget_Char;
-               declare
-                  H : Hash_Type;
-                  S : Syment_Acc;
-                  N : Node_Acc;
-               begin
-                  H := Token_Hash mod Hash_Max;
-                  S := Symtable (H);
-                  while S /= null loop
-                     if S.Hash = Token_Hash
-                       and then Is_Equal (S.Ident,
-                                          Token_Ident (1 .. Token_Idlen))
-                     then
-                        --  This identifier is known.
-                        Token_Sym := S;
-
-                        --  It may be a keyword.
-                        if S.Name /= null then
-                           N := Get_Decl (S);
-                           if N.Kind = Decl_Keyword then
-                              return N.Keyword;
-                           end if;
-                        end if;
-
-                        return Tok_Ident;
-                     end if;
-                     S := S.Next;
-                  end loop;
-                  Symtable (H) := new Syment_Type'
-                    (Hash => Token_Hash,
-                     Ident => Get_Identifier (Token_Ident (1 .. Token_Idlen)),
-                     Next => Symtable (H),
-                     Name => null);
-                  Token_Sym := Symtable (H);
-                  return Tok_Ident;
-               end;
+               return Get_Ident_Token;
             when others =>
                Scan_Error ("Bad character:"
                            & Integer'Image (Character'Pos (C))
@@ -844,8 +865,8 @@ package body Ortho_Front is
                               Next => null,
                               Name => null);
       H := Ent.Hash mod Hash_Max;
-      Ent.Next := Symtable (H);
-      Symtable (H) := Ent;
+      Ent.Next := Symtable.Map (H);
+      Symtable.Map (H) := Ent;
       return Ent;
    end New_Symbol;
 
@@ -920,6 +941,16 @@ package body Ortho_Front is
 
    function Parse_Type return Node_Acc;
 
+   --  Return the index of FIELD in map MAP.
+   function Field_Map_Index (Map : Node_Map_Acc; Sym : Syment_Acc)
+                            return Natural is
+   begin
+      return 1 + Natural (Sym.Hash mod Hash_Type (Map.Len));
+   end Field_Map_Index;
+
+   --  Grammar:
+   --      { ident : type ; }
+   --    end
    procedure Parse_Fields (Aggr_Type : Node_Acc;
                            Constr : in out O_Element_List)
    is
@@ -927,8 +958,10 @@ package body Ortho_Front is
       F : Syment_Acc;
       Last_Field : Node_Acc;
       Field : Node_Acc;
+      Num : Natural;
    begin
       Last_Field := null;
+      Num := 0;
       loop
          exit when Tok = Tok_End;
 
@@ -943,7 +976,8 @@ package body Ortho_Front is
                             Field_Ident => F,
                             Field_Fnode => O_Fnode_Null,
                             Field_Type => F_Type,
-                            Field_Next => null);
+                            Field_Next => null,
+                            Field_Hash_Next => null);
          case Aggr_Type.Kind is
             when Type_Record =>
                New_Record_Field (Constr, Field.Field_Fnode, F.Ident,
@@ -954,15 +988,39 @@ package body Ortho_Front is
             when others =>
                raise Program_Error;
          end case;
+
+         --  Append field
          if Last_Field = null then
             Aggr_Type.Record_Union_Fields := Field;
          else
             Last_Field.Field_Next := Field;
          end if;
          Last_Field := Field;
+
+         Num := Num + 1;
+
          Expect (Tok_Semicolon, "';' expected");
          Next_Token;
       end loop;
+
+      --  Create a map if there are a lot of fields.
+      if Num > 16 then
+         declare
+            Map : Node_Map_Acc;
+            Idx : Natural;
+         begin
+            Map := new Node_Map'(Len => Num / 3, Map => (others => null));
+            Aggr_Type.Record_Union_Map := Map;
+            Field := Aggr_Type.Record_Union_Fields;
+            while Field /= null loop
+               Idx := Field_Map_Index (Map, Field.Field_Ident);
+               Field.Field_Hash_Next := Map.Map (Idx);
+               Map.Map (Idx) := Field;
+
+               Field := Field.Field_Next;
+            end loop;
+         end;
+      end if;
    end Parse_Fields;
 
    procedure Parse_Record_Type (Def : Node_Acc)
@@ -1101,20 +1159,23 @@ package body Ortho_Front is
                --  Uncomplete record type.
                Res := new Node'(Kind => Type_Record,
                                 Type_Onode => O_Tnode_Null,
-                                Record_Union_Fields => null);
+                                Record_Union_Fields => null,
+                                Record_Union_Map => null);
                New_Uncomplete_Record_Type (Res.Type_Onode);
                return Res;
             end if;
 
             Res := new Node'(Kind => Type_Record,
                              Type_Onode => O_Tnode_Null,
-                             Record_Union_Fields => null);
+                             Record_Union_Fields => null,
+                             Record_Union_Map => null);
             Parse_Record_Type (Res);
          when Tok_Union =>
             Next_Token;
             Res := new Node'(Kind => Type_Union,
                              Type_Onode => O_Tnode_Null,
-                             Record_Union_Fields => null);
+                             Record_Union_Fields => null,
+                             Record_Union_Map => null);
             Parse_Union_Type (Res);
 
          when Tok_Boolean =>
@@ -1244,13 +1305,25 @@ package body Ortho_Front is
 
    function Find_Field_By_Name (Aggr_Type : Node_Acc) return Node_Acc
    is
+      Map : constant Node_Map_Acc := Aggr_Type.Record_Union_Map;
       Field : Node_Acc;
    begin
-      Field := Aggr_Type.Record_Union_Fields;
-      while Field /= null loop
-         exit when Field.Field_Ident = Token_Sym;
-         Field := Field.Field_Next;
-      end loop;
+      if Map /= null then
+         --  Look in the hash map if it is present.
+         Field := Map.Map (Field_Map_Index (Map, Token_Sym));
+         while Field /= null loop
+            exit when Field.Field_Ident = Token_Sym;
+            Field := Field.Field_Hash_Next;
+         end loop;
+      else
+         --  Linear look.
+         Field := Aggr_Type.Record_Union_Fields;
+         while Field /= null loop
+            exit when Field.Field_Ident = Token_Sym;
+            Field := Field.Field_Next;
+         end loop;
+      end if;
+
       if Field = null then
          Parse_Error ("no such field name");
       end if;
