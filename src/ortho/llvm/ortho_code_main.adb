@@ -287,11 +287,13 @@ begin
    end if;
 
    --  Verify module.
-   if LLVM.Analysis.VerifyModule
-     (Module, LLVM.Analysis.PrintMessageAction, Msg'Access) /= 0
-   then
-      DisposeMessage (Msg);
-      raise Program_Error;
+   if False then
+      if LLVM.Analysis.VerifyModule
+        (Module, LLVM.Analysis.PrintMessageAction, Msg'Access) /= 0
+      then
+         DisposeMessage (Msg);
+         raise Program_Error;
+      end if;
    end if;
 
    if Optimization > CodeGenLevelNone then
