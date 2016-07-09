@@ -7,7 +7,7 @@
 # bug0XX is for bugs not reported.
 # bug[1-9]XXX is for bugs reported on https://gna.org/bugs/?group=ghdl
 # srXXX is for support reported on https://gna.org/support/?group=ghdl
-# debXX is for bugs report on http://bugs.debian.org/
+# debXX is for bugs report on https://www.debian.org/Bugs/
 # ticketXX is from https://sourceforge.net/p/ghdl-updates/tickets/
 # issueXXX is from https://github.com/tgingold/ghdl/issues
 

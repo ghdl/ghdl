@@ -113,7 +113,7 @@ if ($PSCmdlet.MyInvocation.BoundParameters["Debug"].IsPresent) 		{	$Script_Enabl
 if ($PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent)	{	$Script_EnableVerbose =	$true	}
 
 # Author:	Ed Wilson
-# Source:	http://blogs.technet.com/b/heyscriptingguy/archive/2011/07/23/use-powershell-to-modify-your-environmental-path.aspx
+# Source:	https://blogs.technet.com/b/heyscriptingguy/archive/2011/07/23/use-powershell-to-modify-your-environmental-path.aspx
 function Add-Path
 	(	[parameter(Mandatory=$True,ValueFromPipeline=$True,Position=0)]
 		[string]$AddedFolder
@@ -141,7 +141,7 @@ function Add-Path
 	}
 
 # Author:	Ed Wilson
-# Source:	http://blogs.technet.com/b/heyscriptingguy/archive/2011/07/23/use-powershell-to-modify-your-environmental-path.aspx
+# Source:	https://blogs.technet.com/b/heyscriptingguy/archive/2011/07/23/use-powershell-to-modify-your-environmental-path.aspx
 function Remove-Path
 	(	[parameter(Mandatory=$True,ValueFromPipeline=$True,Position=0)]
 		[string]$RemovedFolder
