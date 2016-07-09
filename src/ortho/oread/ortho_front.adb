@@ -229,10 +229,24 @@ package body Ortho_Front is
    type Syment_Acc_Map (Max : Hash_Type) is record
       Map : Syment_Acc_Array (0 .. Max);
    end record;
-   --  type Syment_Acc_Map_Acc is access Syment_Acc_Map;
+   type Syment_Acc_Map_Acc is access Syment_Acc_Map;
 
-   Hash_Max : constant Hash_Type := 511;
-   Symtable : Syment_Acc_Map (Hash_Max - 1);
+   --  Prime numbers for the number of buckets in the hash map.
+   Hash_Primes : constant array (Natural range <>) of Hash_Type :=
+     (389, 769, 1543, 3079, 6151, 12289, 24593, 49157, 98317, 196613,
+      393241, 786433, 1572869, 3145739, 6291469, 12582917, 25165843,
+      50331653, 100663319, 201326611, 402653189, 805306457, 1610612741);
+
+   --  Number of entries in the hash table.
+   Nbr_Syment : Natural := 0;
+
+   --  Maximum number of entries before resizing the hash table.
+   Max_Syment : Natural := 512;  --  Could be less or more.
+
+   --  Current prime number in Hash_Primes.
+   Cur_Prime_Idx : Natural := 0;
+
+   Symtable : Syment_Acc_Map_Acc;
 
    type Node_Kind is (Decl_Keyword, Decl_Type, Decl_Param,
                       Node_Function, Node_Procedure, Node_Object, Node_Field,
@@ -538,7 +552,7 @@ package body Ortho_Front is
       S : Syment_Acc;
       N : Node_Acc;
    begin
-      H := Token_Hash mod Hash_Max;
+      H := Token_Hash mod Symtable.Max;
       S := Symtable.Map (H);
       while S /= null loop
          if S.Hash = Token_Hash
@@ -559,6 +573,47 @@ package body Ortho_Front is
          end if;
          S := S.Next;
       end loop;
+
+      Nbr_Syment := Nbr_Syment + 1;
+      if Nbr_Syment >= Max_Syment
+        and then Cur_Prime_Idx < Hash_Primes'Last
+      then
+         --  Resize.
+         Cur_Prime_Idx := Cur_Prime_Idx + 1;
+         Max_Syment := Max_Syment * 2;
+
+         declare
+            procedure Free is new Ada.Unchecked_Deallocation
+              (Syment_Acc_Map, Syment_Acc_Map_Acc);
+            New_Table : Syment_Acc_Map_Acc;
+            Ns, Next_Ns : Syment_Acc;
+            Nh : Hash_Type;
+         begin
+            New_Table := new Syment_Acc_Map (Hash_Primes (Cur_Prime_Idx));
+
+            --  Fill the new hash table.
+            for I in Symtable.Map'Range loop
+               Ns := Symtable.Map (I);
+               while Ns /= null loop
+                  Next_Ns := Ns.Next;
+
+                  Nh := Ns.Hash mod New_Table.Max;
+                  Ns.Next := New_Table.Map (Nh);
+                  New_Table.Map (Nh) := Ns;
+
+                  Ns := Next_Ns;
+               end loop;
+            end loop;
+
+            --  Replace the old one with the new one.
+            Free (Symtable);
+            Symtable := New_Table;
+         end;
+
+         --  Recompute H
+         H := Token_Hash mod Symtable.Max;
+      end if;
+
       Symtable.Map (H) := new Syment_Type'
         (Hash => Token_Hash,
          Ident => Get_Identifier (Token_Ident (1 .. Token_Idlen)),
@@ -864,9 +919,17 @@ package body Ortho_Front is
                               Ident => Get_Identifier (Str),
                               Next => null,
                               Name => null);
-      H := Ent.Hash mod Hash_Max;
+      H := Ent.Hash mod Symtable.Max;
       Ent.Next := Symtable.Map (H);
       Symtable.Map (H) := Ent;
+
+      Nbr_Syment := Nbr_Syment + 1;
+
+      --  This function doesn't handle resizing, as it is called only for
+      --  keywords during initialization.  Be sure to use a big enough initial
+      --  size for the hash table.
+      pragma Assert (Nbr_Syment < Max_Syment);
+
       return Ent;
    end New_Symbol;
 
@@ -2718,9 +2781,11 @@ package body Ortho_Front is
 --       L := Write (Standout, Str'Address, Str'Length);
 --    end Put;
 
-   function Parse (Filename : String_Acc) return Boolean
-   is
+   function Parse (Filename : String_Acc) return Boolean is
    begin
+      --  Create the symbol hash table.
+      Symtable := new Syment_Acc_Map (Hash_Primes (Cur_Prime_Idx));
+
       --  Initialize symbol table.
       Add_Keyword ("type", Tok_Type);
       Add_Keyword ("return", Tok_Return);
