@@ -130,18 +130,19 @@ module_error (void)
 }
 #endif
 
+#if defined (__APPLE__)
+/* On Darwin: look in rpath.  */
+#define LIBNAME "@rpath/libghdlvpi" DSO_EXT
+#else
+#define LIBNAME "libghdlvpi" DSO_EXT
+#endif
+
+static const char libghdlvpi_name[] = LIBNAME;
+
 int
 loadVpiModule (const char* modulename)
 {
-  static const char libghdlvpi_name[] = "@executable_path/libghdlvpi" DSO_EXT;
   static void *libghdlvpi_mod;
-
-  static const char * const vpitablenames[] =
-    {
-      "_vlog_startup_routines", // with leading underscore: MacOSX
-      "vlog_startup_routines"   // w/o  leading underscore: Linux
-    };
-
   int i;
   void *vpimod;
 
@@ -161,6 +162,10 @@ loadVpiModule (const char* modulename)
      No need to load the library several times.  */
   if (libghdlvpi_mod == NULL)
     {
+      /* TODO: on windows, use SetDllDirectory with:
+	 - install dir (libdir) => add -DLIBDIR=xxx
+	 - exec path\lib => see windows_default_path
+      */
       libghdlvpi_mod = module_open (libghdlvpi_name);
       if (libghdlvpi_mod != NULL)
 	{

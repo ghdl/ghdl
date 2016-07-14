@@ -24,7 +24,7 @@ backend=@backend@
 libdirsuffix=@libdirsuffix@
 libdirreverse=@libdirreverse@
 EXEEXT=@EXEEXT@
-LIBEXT=@LIBEXT@
+SOEXT=@SOEXT@
 gcc_src_dir=@gcc_src_dir@
 LLVM_CONFIG=@llvm_config@
 LDFLAGS=@LDFLAGS@
@@ -35,6 +35,8 @@ INSTALL_PROGRAM=install -m 755
 INSTALL_DATA=install -m 644
 DESTDIR=
 bindir=$(prefix)/bin
+libdir=$(prefix)/lib
+incdir=$(prefix)/include
 MKDIR=mkdir
 LN=ln -s
 CP=cp
@@ -279,6 +281,25 @@ ghwdump.o: $(srcdir)/src/grt/ghwdump.c $(srcdir)/src/grt/ghwlib.h
 ghwlib.o: $(srcdir)/src/grt/ghwlib.c $(srcdir)/src/grt/ghwlib.h
 	$(CC) -c -o $@ $< $(OPT_FLAGS) $(WARN_CFLAGS)
 
+################ VPI #####################################################
+
+vpi_thunk.o: $(GRTSRCDIR)/vpi_thunk.c $(GRTSRCDIR)/vpi_thunk.h
+	$(CC) -c -o $@ $< -fPIC $(OPT_FLAGS) $(WARN_CFLAGS)
+
+libghdlvpi.so: vpi_thunk.o
+	$(CC) -o $@ $< -shared -Wl,-soname,libghdlvpi.so
+
+libghdlvpi.dll: vpi_thunk.o
+	$(CC) -o $@ $< -shared
+
+libghdlvpi.dylib: vpi_thunk.o
+#       Allow the use of -rpath in executable
+	$(CC) -o $@ $< -shared -Wl,-install_name,@rpath/libghdlvpi.dylib
+
+install.vpi: libghdlvpi$(SOEXT) install.dirs
+	$(INSTALL_DATA) -p libghdlvpi$(SOEXT) $(DESTDIR)$(libdir)/
+	$(INSTALL_DATA) -p $(GRTSRCDIR)/vpi_user.h $(DESTDIR)$(incdir)/
+
 ################ Libraries ###############################################
 
 LIBSRC_DIR:=$(srcdir)/libraries
@@ -329,6 +350,8 @@ libs.vhdl.standard: $(LIB93_DIR)/std/std_standard.o \
 install.dirs:
 	[ -d $(DESTDIR)$(prefix) ] || $(MKDIR) -p $(DESTDIR)$(prefix)
 	[ -d $(DESTDIR)$(bindir) ] || $(MKDIR) -p $(DESTDIR)$(bindir)
+	[ -d $(DESTDIR)$(libdir) ] || $(MKDIR) -p $(DESTDIR)$(libdir)
+	[ -d $(DESTDIR)$(incdir) ] || $(MKDIR) -p $(DESTDIR)$(incdir)
 
 install.vhdllib: install.dirs
 	for d in $(VHDLLIB_SUBDIRS); do \
