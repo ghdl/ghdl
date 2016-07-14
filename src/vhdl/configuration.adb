@@ -248,6 +248,19 @@ package body Configuration is
                      Clause := Get_Generate_Else_Clause (Clause);
                   end loop;
                end;
+            when Iir_Kind_Case_Generate_Statement =>
+               declare
+                  Alt : Iir;
+               begin
+                  Alt := Get_Case_Statement_Alternative_Chain (Stmt);
+                  while Alt /= Null_Iir loop
+                     if not Get_Same_Alternative_Flag (Alt) then
+                        Add_Design_Concurrent_Stmts
+                          (Get_Associated_Block (Alt));
+                     end if;
+                     Alt := Get_Chain (Alt);
+                  end loop;
+               end;
             when Iir_Kind_Process_Statement
               | Iir_Kind_Sensitized_Process_Statement
               | Iir_Kind_Psl_Assert_Statement

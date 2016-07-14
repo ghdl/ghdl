@@ -160,7 +160,7 @@ use ieee.numeric_std.all;
 use ieee_proposed.math_utility_pkg.all;
 use ieee_proposed.fixed_pkg.all;
 See fixed point package documentation
-http://www.vhdl.org/vhdl-200x/vhdl-200x-ft/packages/Fixed_ug.pdf
+http://www.vhdl.org/vhdl-200x/vhdl-200x-ft/packages/Fixed_ug.pdf [DEAD LINK]
 
 G) For floating point package:
 use model:
@@ -170,4 +170,4 @@ use ieee_proposed.math_utility_pkg.all;
 use ieee_proposed.fixed_pkg.all;
 use ieee_proposed.float_pkg.all;
 See floating point package documentation
-http://www.vhdl.org/vhdl-200x/vhdl-200x-ft/packages/Float_ug.pdf
+http://www.vhdl.org/vhdl-200x/vhdl-200x-ft/packages/Float_ug.pdf [DEAD LINK]

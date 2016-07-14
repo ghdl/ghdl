@@ -466,8 +466,8 @@ package body Ghdlprint is
       end case;
       --Put_Line ("<?xml version=""1.0"" encoding=""utf-8"" ?>");
       --Put_Line("<!DOCTYPE html PUBLIC ""-//W3C//DTD XHTML 1.0 Strict//EN""");
-      --Put_Line ("""http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"">");
-      --Put_Line ("<html xmlns=""http://www.w3.org/1999/xhtml"""
+      --Put_Line ("""https://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"">");
+      --Put_Line ("<html xmlns=""https://www.w3.org/1999/xhtml"""
       --         & " xml:lang=""en"">");
       --Put_Line ("<head>");
    end Put_Html_Header;

@@ -306,8 +306,7 @@ package body Trans.Chap3 is
       end if;
    end Get_Type_Precision;
 
-   procedure Translate_Integer_Type
-     (Def : Iir_Integer_Type_Definition)
+   procedure Translate_Integer_Type (Def : Iir_Integer_Type_Definition)
    is
       Info : Type_Info_Acc;
    begin
@@ -2284,9 +2283,8 @@ package body Trans.Chap3 is
 
    function Range_To_Dir (R : Mnode) return Mnode
    is
-      Tinfo : Type_Info_Acc;
+      Tinfo : constant Type_Info_Acc := Get_Type_Info (R);
    begin
-      Tinfo := Get_Type_Info (R);
       return Lv2M (New_Selected_Element (M2Lv (R),
                    Tinfo.T.Range_Dir),
                    Tinfo,

@@ -777,7 +777,7 @@ package body Trans.Chap1 is
       end case;
    end Translate_For_Generate_Block_Configuration_Calls;
 
-   procedure Translate_If_Generate_Block_Configuration_Calls
+   procedure Translate_If_Case_Generate_Block_Configuration_Calls
      (Block_Config : Iir_Block_Configuration;
       Parent_Info  : Block_Info_Acc)
    is
@@ -815,13 +815,52 @@ package body Trans.Chap1 is
       Close_Temp;
 
       Finish_If_Stmt (If_Blk);
-   end Translate_If_Generate_Block_Configuration_Calls;
+   end Translate_If_Case_Generate_Block_Configuration_Calls;
 
    procedure Translate_Block_Configuration_Calls
      (Block_Config : Iir_Block_Configuration;
       Base_Block   : Iir;
       Base_Info    : Block_Info_Acc)
    is
+      procedure Translate_Block_Block_Configuration_Calls (Item : Iir)
+      is
+         Block : Iir;
+      begin
+         Block := Get_Block_Specification (Item);
+         case Get_Kind (Block) is
+            when Iir_Kind_Indexed_Name
+              | Iir_Kind_Slice_Name =>
+               Block := Get_Named_Entity (Get_Prefix (Block));
+            when Iir_Kinds_Denoting_Name
+              | Iir_Kind_Parenthesis_Name =>
+               Block := Get_Named_Entity (Block);
+            when others =>
+               null;
+         end case;
+
+         case Get_Kind (Block) is
+            when Iir_Kind_Block_Statement =>
+               Translate_Block_Configuration_Calls
+                 (Item, Base_Block, Get_Info (Block));
+            when Iir_Kind_Generate_Statement_Body =>
+               case Get_Kind (Get_Parent (Block)) is
+                  when Iir_Kind_If_Generate_Statement
+                    | Iir_Kind_If_Generate_Else_Clause
+                    | Iir_Kind_Case_Generate_Statement => --  FIXME
+                     Translate_If_Case_Generate_Block_Configuration_Calls
+                       (Item, Base_Info);
+                  when Iir_Kind_For_Generate_Statement =>
+                     Translate_For_Generate_Block_Configuration_Calls
+                       (Item, Base_Info);
+                  when others =>
+                     Error_Kind ("translate_block_configuration_calls(3)",
+                                 Get_Parent (Block));
+               end case;
+            when others =>
+               Error_Kind ("translate_block_configuration_calls(4)", Block);
+         end case;
+      end Translate_Block_Block_Configuration_Calls;
+
       El : Iir;
    begin
       El := Get_Configuration_Item_Chain (Block_Config);
@@ -832,44 +871,7 @@ package body Trans.Chap1 is
                Translate_Component_Configuration_Call
                  (El, Base_Block, Base_Info);
             when Iir_Kind_Block_Configuration =>
-               declare
-                  Block : Iir;
-               begin
-                  Block := Get_Block_Specification (El);
-                  case Get_Kind (Block) is
-                     when Iir_Kind_Indexed_Name
-                       | Iir_Kind_Slice_Name =>
-                        Block := Get_Named_Entity (Get_Prefix (Block));
-                     when Iir_Kinds_Denoting_Name
-                       | Iir_Kind_Parenthesis_Name =>
-                        Block := Get_Named_Entity (Block);
-                     when others =>
-                        null;
-                  end case;
-
-                  case Get_Kind (Block) is
-                     when Iir_Kind_Block_Statement =>
-                        Translate_Block_Configuration_Calls
-                          (El, Base_Block, Get_Info (Block));
-                     when Iir_Kind_Generate_Statement_Body =>
-                        case Get_Kind (Get_Parent (Block)) is
-                           when Iir_Kind_If_Generate_Statement
-                             | Iir_Kind_If_Generate_Else_Clause =>
-                              Translate_If_Generate_Block_Configuration_Calls
-                                (El, Base_Info);
-                           when Iir_Kind_For_Generate_Statement =>
-                              Translate_For_Generate_Block_Configuration_Calls
-                                (El, Base_Info);
-                           when others =>
-                              Error_Kind
-                                ("translate_block_configuration_calls(3)",
-                                 Get_Parent (Block));
-                        end case;
-                     when others =>
-                        Error_Kind
-                          ("translate_block_configuration_calls(4)", Block);
-                  end case;
-               end;
+               Translate_Block_Block_Configuration_Calls (El);
             when others =>
                Error_Kind ("translate_block_configuration_calls(2)", El);
          end case;

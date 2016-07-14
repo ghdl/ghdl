@@ -198,6 +198,11 @@ package body Ghdllocal is
       return Pathname'First - 1;
    end Get_Basename_Pos;
 
+   function Is_Basename (Pathname : String) return Boolean is
+   begin
+      return Get_Basename_Pos (Pathname) < Pathname'First;
+   end Is_Basename;
+
    --  Simple lower case conversion, used to compare with "bin".
    function To_Lower (S : String) return String
    is
@@ -336,7 +341,7 @@ package body Ghdllocal is
 
       --  If the command name is a relative path, deduce prefix from it
       --  and current path.
-      if Get_Basename_Pos (Prog_Path) >= Prog_Path'First then
+      if not Is_Basename (Prog_Path) then
          if Is_Executable_File (Prog_Path) then
             Set_Prefix_From_Program_Path
               (Get_Current_Dir & Directory_Separator & Prog_Path);

@@ -4292,7 +4292,7 @@ package body Trans.Chap7 is
             | Iir_Kind_Range_Expression =>
             Translate_Range (Res, Arange, Get_Type (Arange));
          when others =>
-            Error_Kind ("translate_discrete_range_ptr", Arange);
+            Error_Kind ("translate_discrete_range", Arange);
       end case;
    end Translate_Discrete_Range;
 

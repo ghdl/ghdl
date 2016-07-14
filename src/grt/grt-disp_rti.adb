@@ -383,6 +383,8 @@ package body Grt.Disp_Rti is
             Put ("ghdl_rtik_block");
          when Ghdl_Rtik_If_Generate =>
             Put ("ghdl_rtik_if_generate");
+         when Ghdl_Rtik_Case_Generate =>
+            Put ("ghdl_rtik_case_generate");
          when Ghdl_Rtik_For_Generate =>
             Put ("ghdl_rtik_for_generate");
          when Ghdl_Rtik_Generate_Body =>
@@ -737,8 +739,10 @@ package body Grt.Disp_Rti is
          when Ghdl_Rtik_Generate_Body =>
             Disp_Rti_Arr (Blk.Nbr_Child, Blk.Children,
                           Ctxt, Indent + 1);
-         when Ghdl_Rtik_If_Generate =>
-            Nctxt := Get_If_Generate_Child (Ctxt, To_Ghdl_Rti_Access (Blk));
+         when Ghdl_Rtik_If_Generate
+           | Ghdl_Rtik_Case_Generate =>
+            Nctxt := Get_If_Case_Generate_Child
+              (Ctxt, To_Ghdl_Rti_Access (Blk));
             if Nctxt /= Null_Context then
                --  There might be no blocks.
                Disp_Block
@@ -1149,7 +1153,8 @@ package body Grt.Disp_Rti is
            | Ghdl_Rtik_Process
            | Ghdl_Rtik_Block =>
             Disp_Block (To_Ghdl_Rtin_Block_Acc (Rti), Ctxt, Indent);
-         when Ghdl_Rtik_If_Generate =>
+         when Ghdl_Rtik_If_Generate
+           | Ghdl_Rtik_Case_Generate =>
             Disp_Block (To_Ghdl_Rtin_Block_Acc (Rti), Ctxt, Indent);
          when Ghdl_Rtik_For_Generate =>
             Disp_For_Generate (To_Ghdl_Rtin_Generate_Acc (Rti), Ctxt, Indent);

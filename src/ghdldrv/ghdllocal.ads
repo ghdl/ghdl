@@ -78,6 +78,11 @@ package Ghdllocal is
    --  if none.
    function Get_Basename_Pos (Pathname : String) return Natural;
 
+   --  Return TRUE iff PATHNAME is a command name: a path name without path
+   --  component.  Usually these command names must be search on the command
+   --  path (PATH).
+   function Is_Basename (Pathname : String) return Boolean;
+
    --  Build a filename based on FILE. If IN_WORK is true, the result is
    --  the concatenation of the workdir, the basename of FILE and SUFFIX.
    --  If IN_WORK is false, the result is the concatenation of FILE and SUFFIX.
@@ -103,6 +108,9 @@ package Ghdllocal is
 
    --  Setup standard libaries path.  If LOAD is true, then load them now.
    procedure Setup_Libraries (Load : Boolean);
+
+   --  Set Exec_Prefix from program name.  Called by Setup_Libraries.
+   procedure Set_Exec_Prefix;
 
    --  Setup library, analyze FILES, and if SAVE_LIBRARY is set save the
    --  work library only

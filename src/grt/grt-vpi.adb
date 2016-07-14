@@ -1532,8 +1532,7 @@ package body Grt.Vpi is
       return 0;
    end vpi_mcd_open;
 
-   -- void vpi_register_systf(const struct t_vpi_systf_data*ss)
-   procedure vpi_register_systf(aSs: System.Address)
+   function vpi_register_systf (aSs: System.Address) return vpiHandle
    is
       pragma Unreferenced (aSs);
    begin
@@ -1541,6 +1540,7 @@ package body Grt.Vpi is
          Trace_Start ("vpi_register_systf");
          Trace_Newline;
       end if;
+      return null;
    end vpi_register_systf;
 
    -- int vpi_remove_cb(vpiHandle ref)
@@ -1576,15 +1576,6 @@ package body Grt.Vpi is
 
       return Res;
    end vpi_remove_cb;
-
-   -- void vpi_vprintf(const char*fmt, va_list ap)
-   procedure vpi_vprintf (Fmt : Address; Ap : Address)
-   is
-      pragma Unreferenced (Fmt);
-      pragma Unreferenced (Ap);
-   begin
-      null;
-   end vpi_vprintf;
 
    -- missing here, see grt-cvpi.c:
    --    vpi_mcd_open_x
@@ -1627,7 +1618,7 @@ package body Grt.Vpi is
       return Err_Status;
    end vpi_chk_error;
 
-   function vpi_control (Op : Integer; Status : Integer) return Integer is
+   function vpi_control_np (Op : Integer; Status : Integer) return Integer is
    begin
       if Flag_Trace then
          Trace_Start ("vpi_control (");
@@ -1646,7 +1637,7 @@ package body Grt.Vpi is
          when others =>
             return 0;
       end case;
-   end vpi_control;
+   end vpi_control_np;
 
 ------------------------------------------------------------------------------
 -- * * *   G H D L   h o o k s   * * * * * * * * * * * * * * * * * * * * * * *

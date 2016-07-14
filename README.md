@@ -21,7 +21,7 @@ GHDL is free software.  See the file COPYING for copying permission.
 The manuals, and some of the runtime libraries, are under different
 terms; see the individual source files for details.
 
-Doc is available on http://ghdl.readthedocs.org/en/latest/index.html
+Doc is available on https://ghdl.readthedocs.org/en/latest/index.html
 
 ## Building GHDL (Short instructions)
 

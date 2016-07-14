@@ -1,5 +1,5 @@
---  GHDL driver pathes  -*- ada -*-.
---  Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
+--  GHDL driver - compile and link wrappers for VPI.
+--  Copyright (C) 2016 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -15,28 +15,6 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-
-package Default_Pathes is
-
-   --  Accept long lines.
-   pragma Style_Checks ("M999");
-
-   Install_Prefix : constant String :=
-     "@INSTALL_PREFIX@";
-   Lib_Prefix : constant String :=
-     "@LIB_PREFIX@";
-
-   Compiler_Gcc : constant String :=
-     "@COMPILER_GCC@";
-   Compiler_Mcode : constant String :=
-     "@COMPILER_MCODE@";
-   Compiler_Llvm : constant String :=
-     "@COMPILER_LLVM@";
-   Compiler_Debug : constant String :=
-     "@COMPILER_DEBUG@";
-   Post_Processor : constant String :=
-     "@POST_PROCESSOR@";
-
-   Shared_Library_Extension : constant String :=
-     "@SOEXT@";
-end Default_Pathes;
+package Ghdlvpi is
+   procedure Register_Commands;
+end Ghdlvpi;

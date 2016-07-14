@@ -19,6 +19,7 @@ with Ghdlmain;
 with Ghdllocal;
 with Ghdlprint;
 with Ghdlrun;
+with Ghdlvpi;
 with Ortho_Jit;
 
 procedure Ghdl_Jit is
@@ -28,6 +29,7 @@ begin
    Ghdlmain.Version_String :=
      new String'(Ortho_Jit.Get_Jit_Name & " code generator");
    Ghdlrun.Register_Commands;
+   Ghdlvpi.Register_Commands;
    Ghdllocal.Register_Commands;
    Ghdlprint.Register_Commands;
    Ghdlmain.Register_Commands;

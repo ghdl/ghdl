@@ -269,17 +269,13 @@ package Grt.Vpi is
                           return vpiHandle;
    pragma Export (C, vpi_put_value, "vpi_put_value");
 
-   -- void vpi_register_systf(const struct t_vpi_systf_data*ss)
-   procedure vpi_register_systf (aSs : Address);
+   -- vpiHandle vpi_register_systf(const struct t_vpi_systf_data*ss)
+   function vpi_register_systf (aSs : Address) return vpiHandle;
    pragma Export (C, vpi_register_systf, "vpi_register_systf");
 
    -- int vpi_remove_cb(vpiHandle ref)
    function vpi_remove_cb (Ref : vpiHandle) return integer;
    pragma Export (C, vpi_remove_cb, "vpi_remove_cb");
-
-   -- void vpi_vprintf(const char*fmt, va_list ap)
-   procedure vpi_vprintf (Fmt: Address; Ap: Address);
-   pragma Export (C, vpi_vprintf, "vpi_vprintf");
 
    --  typedef struct t_vpi_error_info
    --  {
@@ -305,8 +301,8 @@ package Grt.Vpi is
    function vpi_chk_error (Info : p_vpi_error_info) return Integer;
    pragma Export (C, vpi_chk_error);
 
-   function vpi_control (Op : Integer; Status : Integer) return Integer;
-   pragma Export (C, vpi_control);
+   function vpi_control_np (Op : Integer; Status : Integer) return Integer;
+   pragma Export (C, vpi_control_np);
 
 -------------------------------------------------------------------------------
 -- * * *   G H D L   h o o k s   * * * * * * * * * * * * * * * * * * * * * * *

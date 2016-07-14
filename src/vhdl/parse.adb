@@ -5542,6 +5542,101 @@ package body Parse is
       return Stmt;
    end Parse_Variable_Assignment_Statement;
 
+   --  precond:  '<=', ':=' or ';'
+   --  postcond: next token
+   function Parse_Sequential_Assignment_Statement (Target : Iir) return Iir
+   is
+      Stmt : Iir;
+      Call : Iir;
+   begin
+      if Current_Token = Tok_Less_Equal then
+         return Parse_Signal_Assignment_Statement (Target);
+      elsif Current_Token = Tok_Assign then
+         return Parse_Variable_Assignment_Statement (Target);
+      elsif Current_Token = Tok_Semi_Colon then
+         return Parenthesis_Name_To_Procedure_Call
+           (Target, Iir_Kind_Procedure_Call_Statement);
+      else
+         Error_Msg_Parse ("""<="" or "":="" expected instead of "
+                          & Image (Current_Token));
+         Stmt := Create_Iir (Iir_Kind_Procedure_Call_Statement);
+         Call := Create_Iir (Iir_Kind_Procedure_Call);
+         Set_Prefix (Call, Target);
+         Set_Procedure_Call (Stmt, Call);
+         Set_Location (Call);
+         Eat_Tokens_Until_Semi_Colon;
+         return Stmt;
+      end if;
+   end Parse_Sequential_Assignment_Statement;
+
+   --  precond:  CASE
+   --  postcond: ';'
+   --
+   --  [ 8.8 ]
+   --  case_statement ::=
+   --      [ CASE_label : ]
+   --          CASE expression IS
+   --              case_statement_alternative
+   --              { case_statement_alternative }
+   --          END CASE [ CASE_label ] ;
+   --
+   --  [ 8.8 ]
+   --  case_statement_alternative ::= WHEN choices => sequence_of_statements
+   function Parse_Case_Statement (Label : Name_Id) return Iir
+   is
+      use Iir_Chains.Case_Statement_Alternative_Chain_Handling;
+      Stmt : Iir;
+      Assoc: Iir;
+      Last_Assoc : Iir;
+   begin
+      Stmt := Create_Iir (Iir_Kind_Case_Statement);
+      Set_Label (Stmt, Label);
+      Set_Location (Stmt);
+
+      --  Skip 'case'.
+      Scan;
+
+      Set_Expression (Stmt, Parse_Expression);
+
+      --  Skip 'is'.
+      Expect (Tok_Is);
+      Scan;
+      if Current_Token = Tok_End then
+         Error_Msg_Parse ("missing alternative in case statement");
+      end if;
+      Build_Init (Last_Assoc);
+      while Current_Token /= Tok_End loop
+         --  Eat 'when'
+         Expect (Tok_When);
+         Scan;
+
+         if Current_Token = Tok_Double_Arrow then
+            Error_Msg_Parse ("missing expression in alternative");
+            Assoc := Create_Iir (Iir_Kind_Choice_By_Expression);
+            Set_Location (Assoc);
+         else
+            Assoc := Parse_Choices (Null_Iir);
+         end if;
+
+         --  Eat '=>'
+         Expect (Tok_Double_Arrow);
+         Scan;
+
+         Set_Associated_Chain (Assoc, Parse_Sequential_Statements (Stmt));
+         Append_Subchain (Last_Assoc, Stmt, Assoc);
+      end loop;
+
+      --  Eat 'end', 'case'
+      Scan_Expect (Tok_Case);
+      Scan;
+
+      if Flags.Vhdl_Std >= Vhdl_93c then
+         Check_End_Name (Stmt);
+      end if;
+
+      return Stmt;
+   end Parse_Case_Statement;
+
    --  precond:  next token
    --  postcond: next token
    --
@@ -5586,47 +5681,11 @@ package body Parse is
    --  iteration_scheme ::= WHILE condition
    --                     | FOR LOOP_parameter_specification
    --
-   --  [ 8.8 ]
-   --  case_statement ::=
-   --      [ CASE_label : ]
-   --          CASE expression IS
-   --              case_statement_alternative
-   --              { case_statement_alternative }
-   --          END CASE [ CASE_label ] ;
-   --
-   --  [ 8.8 ]
-   --  case_statement_alternative ::= WHEN choices => sequence_of_statements
-   --
    --  [ 8.2 ]
    --  assertion_statement ::= [ label : ] assertion ;
    --
    --  [ 8.3 ]
    --  report_statement ::= [ label : ] REPORT expression SEVERITY expression ;
-   function Parse_Sequential_Assignment_Statement (Target : Iir) return Iir
-   is
-      Stmt : Iir;
-      Call : Iir;
-   begin
-      if Current_Token = Tok_Less_Equal then
-         return Parse_Signal_Assignment_Statement (Target);
-      elsif Current_Token = Tok_Assign then
-         return Parse_Variable_Assignment_Statement (Target);
-      elsif Current_Token = Tok_Semi_Colon then
-         return Parenthesis_Name_To_Procedure_Call
-           (Target, Iir_Kind_Procedure_Call_Statement);
-      else
-         Error_Msg_Parse ("""<="" or "":="" expected instead of "
-                          & Image (Current_Token));
-         Stmt := Create_Iir (Iir_Kind_Procedure_Call_Statement);
-         Call := Create_Iir (Iir_Kind_Procedure_Call);
-         Set_Prefix (Call, Target);
-         Set_Procedure_Call (Stmt, Call);
-         Set_Location (Call);
-         Eat_Tokens_Until_Semi_Colon;
-         return Stmt;
-      end if;
-   end Parse_Sequential_Assignment_Statement;
-
    function Parse_Sequential_Statements (Parent : Iir)
      return Iir
    is
@@ -5663,7 +5722,10 @@ package body Parse is
          case Current_Token is
             when Tok_Null =>
                Stmt := Create_Iir (Iir_Kind_Null_Statement);
+
+               --  Skip 'null'.
                Scan;
+
             when Tok_Assert =>
                Stmt := Create_Iir (Iir_Kind_Assertion_Statement);
                Parse_Assertion (Stmt);
@@ -5676,6 +5738,8 @@ package body Parse is
                if Flags.Vhdl_Std >= Vhdl_93c then
                   Check_End_Name (Stmt);
                end if;
+            when Tok_Case =>
+               Stmt := Parse_Case_Statement (Label);
             when Tok_Identifier
               | Tok_String =>
                --  String for an expanded name with operator_symbol prefix.
@@ -5773,53 +5837,6 @@ package body Parse is
                   Set_Condition (Stmt, Parse_Expression);
                end if;
 
-            when Tok_Case =>
-               declare
-                  use Iir_Chains.Case_Statement_Alternative_Chain_Handling;
-                  Assoc: Iir;
-                  Last_Assoc : Iir;
-               begin
-                  Stmt := Create_Iir (Iir_Kind_Case_Statement);
-                  Set_Location (Stmt);
-                  Set_Label (Stmt, Label);
-                  Scan;
-                  Set_Expression (Stmt, Parse_Expression);
-                  Expect (Tok_Is);
-                  Scan;
-                  if Current_Token = Tok_End then
-                     Error_Msg_Parse ("missing alternative in case statement");
-                  end if;
-                  Build_Init (Last_Assoc);
-                  while Current_Token /= Tok_End loop
-                     --  Eat 'when'
-                     Expect (Tok_When);
-                     Scan;
-
-                     if Current_Token = Tok_Double_Arrow then
-                        Error_Msg_Parse ("missing expression in alternative");
-                        Assoc := Create_Iir (Iir_Kind_Choice_By_Expression);
-                        Set_Location (Assoc);
-                     else
-                        Assoc := Parse_Choices (Null_Iir);
-                     end if;
-
-                     --  Eat '=>'
-                     Expect (Tok_Double_Arrow);
-                     Scan;
-
-                     Set_Associated_Chain
-                       (Assoc, Parse_Sequential_Statements (Stmt));
-                     Append_Subchain (Last_Assoc, Stmt, Assoc);
-                  end loop;
-
-                  --  Eat 'end', 'case'
-                  Scan_Expect (Tok_Case);
-                  Scan;
-
-                  if Flags.Vhdl_Std >= Vhdl_93c then
-                     Check_End_Name (Stmt);
-                  end if;
-               end;
             when Tok_Wait =>
                Stmt := Parse_Wait_Statement;
             when others =>
@@ -6524,6 +6541,10 @@ package body Parse is
                if Get_Kind (Parent) = Iir_Kind_If_Generate_Statement then
                   return True;
                end if;
+            when Tok_When =>
+               if Get_Kind (Parent) = Iir_Kind_Case_Generate_Statement then
+                  return True;
+               end if;
             when others =>
                null;
          end case;
@@ -6846,6 +6867,144 @@ package body Parse is
       return Res;
    end Parse_If_Generate_Statement;
 
+   --  precond : WHEN
+   --  postcond: ?
+   --
+   --  [ LRM08 11.8 ]
+   --  case_generate_alternative ::=
+   --     WHEN [ /alternative/_label : ] choices =>
+   --        generate_statement_body
+   function Parse_Case_Generate_Alternative (Parent : Iir) return Iir
+   is
+      Loc : Location_Type;
+      Alt_Label : Name_Id;
+      Bod : Iir;
+      Assoc : Iir;
+      Expr : Iir;
+   begin
+      Loc := Get_Token_Location;
+
+      --  Eat 'when'
+      Expect (Tok_When);
+      Scan;
+
+      Alt_Label := Null_Identifier;
+      if Current_Token = Tok_Double_Arrow then
+         Error_Msg_Parse ("missing expression in alternative");
+         Assoc := Create_Iir (Iir_Kind_Choice_By_Expression);
+         Set_Location (Assoc);
+      elsif Current_Token = Tok_Others then
+         --  'others' is not an expression!
+         Assoc := Parse_Choices (Null_Iir);
+      else
+         Expr := Parse_Expression;
+
+         if Current_Token = Tok_Colon then
+            if Get_Kind (Expr) = Iir_Kind_Simple_Name then
+               --  In fact the parsed condition was an alternate label.
+               Alt_Label := Get_Identifier (Expr);
+               Loc := Get_Location (Expr);
+               Free_Iir (Expr);
+            else
+               Error_Msg_Parse ("alternative label must be an identifier");
+               Free_Iir (Expr);
+            end if;
+
+            Expr := Null_Iir;
+
+            --  Skip ':'
+            Scan;
+         end if;
+
+         Assoc := Parse_Choices (Expr);
+      end if;
+
+      --  Set location of label (if any, for xref) or location of 'when'.
+      Set_Location (Assoc, Loc);
+
+      --  Eat '=>'
+      Expect (Tok_Double_Arrow);
+      Scan;
+
+      Bod := Parse_Generate_Statement_Body (Parent, Alt_Label);
+      Set_Associated_Block (Assoc, Bod);
+      if Alt_Label /= Null_Identifier then
+         --  Set location on the label, for xrefs.
+         Set_Location (Bod, Loc);
+      end if;
+
+      return Assoc;
+   end Parse_Case_Generate_Alternative;
+
+   --  precond : CASE
+   --  postcond: ';'
+   --
+   --  [ LRM08 11.8 ]
+   --  case_generate_statement ::=
+   --     /generate/_label :
+   --     CASE expression GENERATE
+   --        case_generate_alternative
+   --      { case_generate_alternative }
+   --     END GENERATE [ /generate/_label ] ;
+   function Parse_Case_Generate_Statement
+     (Label : Name_Id; Loc : Location_Type) return Iir
+   is
+      Res : Iir;
+      Alt : Iir;
+      Last_Alt : Iir;
+   begin
+      if Label = Null_Identifier then
+         Error_Msg_Parse ("a generate statement must have a label");
+      end if;
+      Res := Create_Iir (Iir_Kind_Case_Generate_Statement);
+      Set_Location (Res, Loc);
+      Set_Label (Res, Label);
+
+      --  Skip 'case'.
+      Scan;
+
+      Set_Expression (Res, Parse_Expression);
+
+      Expect (Tok_Generate);
+
+      --  Skip 'generate'
+      Scan;
+
+      if Current_Token = Tok_End then
+         Error_Msg_Parse ("no generate alternative");
+      end if;
+
+      Last_Alt := Null_Iir;
+      while Current_Token = Tok_When loop
+         Alt := Parse_Case_Generate_Alternative (Res);
+         if Last_Alt = Null_Iir then
+            Set_Case_Statement_Alternative_Chain (Res, Alt);
+         else
+            Set_Chain (Last_Alt, Alt);
+         end if;
+
+         --  Skip until last choice of the choices list.
+         loop
+            Last_Alt := Alt;
+            Alt := Get_Chain (Alt);
+            exit when Alt = Null_Iir;
+         end loop;
+      end loop;
+
+      Expect (Tok_Generate);
+      Set_End_Has_Reserved_Id (Res, True);
+
+      --  Skip 'generate'
+      Scan;
+
+      --  LRM93 9.7
+      --  If a label appears at the end of a generate statement, it must repeat
+      --  the generate label.
+      Check_End_Name (Res);
+      Expect (Tok_Semi_Colon);
+      return Res;
+   end Parse_Case_Generate_Statement;
+
    --  precond : first token
    --  postcond: END
    --
@@ -7144,12 +7303,15 @@ package body Parse is
             when Tok_Block =>
                Postponed_Not_Allowed;
                Stmt := Parse_Block_Statement (Label, Loc);
-            when Tok_If =>
-               Postponed_Not_Allowed;
-               Stmt := Parse_If_Generate_Statement (Label, Loc);
             when Tok_For =>
                Postponed_Not_Allowed;
                Stmt := Parse_For_Generate_Statement (Label, Loc);
+            when Tok_If =>
+               Postponed_Not_Allowed;
+               Stmt := Parse_If_Generate_Statement (Label, Loc);
+            when Tok_Case =>
+               Postponed_Not_Allowed;
+               Stmt := Parse_Case_Generate_Statement (Label, Loc);
             when Tok_Eof =>
                Error_Msg_Parse ("unexpected end of file, 'END;' expected");
                return;
@@ -8095,10 +8257,11 @@ package body Parse is
 
       if Current_Token = Tok_Is then
          Res := Create_Iir (Iir_Kind_Context_Declaration);
-         Set_Location (Res, Loc);
          if Get_Kind (Name) = Iir_Kind_Simple_Name then
+            Location_Copy (Res, Name);
             Set_Identifier (Res, Get_Identifier (Name));
          else
+            Set_Location (Res, Loc);
             Error_Msg_Parse ("identifier for context expected", Name);
          end if;
          Free_Iir (Name);

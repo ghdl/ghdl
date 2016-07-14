@@ -190,6 +190,9 @@ package body Trans.Rtis is
            (Constr, Get_Identifier ("__ghdl_rtik_if_generate"),
             Ghdl_Rtik_If_Generate);
          New_Enum_Literal
+           (Constr, Get_Identifier ("__ghdl_rtik_case_generate"),
+            Ghdl_Rtik_Case_Generate);
+         New_Enum_Literal
            (Constr, Get_Identifier ("__ghdl_rtik_for_generate"),
             Ghdl_Rtik_For_Generate);
          New_Enum_Literal
@@ -2032,7 +2035,8 @@ package body Trans.Rtis is
    end Generate_Psl_Directive;
 
    procedure Generate_Block (Blk : Iir; Parent_Rti : O_Dnode);
-   procedure Generate_If_Generate_Statement (Blk : Iir; Parent_Rti : O_Dnode);
+   procedure Generate_If_Case_Generate_Statement
+     (Blk : Iir; Parent_Rti : O_Dnode);
    procedure Generate_For_Generate_Statement (Blk : Iir; Parent_Rti : O_Dnode);
    procedure Generate_Declaration_Chain (Chain : Iir);
 
@@ -2305,9 +2309,10 @@ package body Trans.Rtis is
                Push_Identifier_Prefix (Mark, Get_Identifier (Stmt));
                Generate_Block (Stmt, Parent_Rti);
                Pop_Identifier_Prefix (Mark);
-            when Iir_Kind_If_Generate_Statement =>
+            when Iir_Kind_If_Generate_Statement
+              | Iir_Kind_Case_Generate_Statement =>
                Push_Identifier_Prefix (Mark, Get_Identifier (Stmt));
-               Generate_If_Generate_Statement (Stmt, Parent_Rti);
+               Generate_If_Case_Generate_Statement (Stmt, Parent_Rti);
                Pop_Identifier_Prefix (Mark);
             when Iir_Kind_For_Generate_Statement =>
                Push_Identifier_Prefix (Mark, Get_Identifier (Stmt));
@@ -2350,10 +2355,10 @@ package body Trans.Rtis is
       end loop;
    end Generate_Concurrent_Statement_Chain;
 
-   procedure Generate_If_Generate_Statement (Blk : Iir; Parent_Rti : O_Dnode)
+   procedure Generate_If_Case_Generate_Statement
+     (Blk : Iir; Parent_Rti : O_Dnode)
    is
       Info : constant Generate_Info_Acc := Get_Info (Blk);
-      Clause : Iir;
       Bod : Iir;
 
       Name : O_Dnode;
@@ -2361,6 +2366,7 @@ package body Trans.Rtis is
       Num : Natural;
 
       Rti : O_Dnode;
+      Rtik : O_Cnode;
       Arr       : O_Dnode;
 
       Prev : Rti_Block;
@@ -2374,16 +2380,43 @@ package body Trans.Rtis is
                       O_Storage_Public, Ghdl_Rtin_Block);
       Push_Rti_Node (Prev);
 
-      Clause := Blk;
       Num := 0;
-      while Clause /= Null_Iir loop
-         Bod := Get_Generate_Statement_Body (Clause);
-         Push_Identifier_Prefix (Mark, Get_Identifier (Bod));
-         Generate_Block (Bod, Rti);
-         Pop_Identifier_Prefix (Mark);
-         Clause := Get_Generate_Else_Clause (Clause);
-         Num := Num + 1;
-      end loop;
+      case Get_Kind (Blk) is
+         when Iir_Kind_If_Generate_Statement =>
+            declare
+               Clause : Iir;
+            begin
+               Clause := Blk;
+               while Clause /= Null_Iir loop
+                  Bod := Get_Generate_Statement_Body (Clause);
+                  Push_Identifier_Prefix (Mark, Get_Identifier (Bod));
+                  Generate_Block (Bod, Rti);
+                  Pop_Identifier_Prefix (Mark);
+                  Clause := Get_Generate_Else_Clause (Clause);
+                  Num := Num + 1;
+               end loop;
+               Rtik := Ghdl_Rtik_If_Generate;
+            end;
+         when Iir_Kind_Case_Generate_Statement =>
+            declare
+               Alt : Iir;
+            begin
+               Alt := Get_Case_Statement_Alternative_Chain (Blk);
+               while Alt /= Null_Iir loop
+                  if not Get_Same_Alternative_Flag (Alt) then
+                     Bod := Get_Associated_Block (Alt);
+                     Push_Identifier_Prefix (Mark, Get_Identifier (Bod));
+                     Generate_Block (Bod, Rti);
+                     Pop_Identifier_Prefix (Mark);
+                     Num := Num + 1;
+                  end if;
+                  Alt := Get_Chain (Alt);
+               end loop;
+               Rtik := Ghdl_Rtik_Case_Generate;
+            end;
+         when others =>
+            raise Internal_Error;
+      end case;
 
       Name := Generate_Name (Blk);
 
@@ -2392,7 +2425,7 @@ package body Trans.Rtis is
       Start_Init_Value (Rti);
 
       Start_Record_Aggr (List, Ghdl_Rtin_Block);
-      New_Record_Aggr_El (List, Generate_Common (Ghdl_Rtik_If_Generate));
+      New_Record_Aggr_El (List, Generate_Common (Rtik));
       New_Record_Aggr_El (List, New_Global_Address (Name, Char_Ptr_Type));
 
       --  Field Loc: offset in the instance of the entity.
@@ -2421,7 +2454,7 @@ package body Trans.Rtis is
 
       --  Store the RTI.
       Info.Generate_Rti_Const := Rti;
-   end Generate_If_Generate_Statement;
+   end Generate_If_Case_Generate_Statement;
 
    procedure Generate_For_Generate_Statement (Blk : Iir; Parent_Rti : O_Dnode)
    is

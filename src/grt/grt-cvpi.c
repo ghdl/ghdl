@@ -25,103 +25,53 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-//-----------------------------------------------------------------------------
-// VPI callback functions
-typedef void *vpiHandle, *p_vpi_time, *p_vpi_value;
-typedef struct t_cb_data s_cb_data, *p_cb_data;
+/* Define PLI_PROTOTYPES so that vpi_user.h do not import functions.  */
+#define PLI_PROTOTYPES
+#define PROTO_PARAMS(params) params
+#define XXTERN extern
 
-//-----------------------------------------------------------------------------
-// vpi thunking a la Icarus Verilog
-#include <stdarg.h>
-typedef void *s_vpi_time, *p_vpi_vlog_info, *p_vpi_error_info;
-#define VPI_THUNK_MAGIC  (0x87836BA5)
-struct t_vpi_systf_data;
-void         vpi_register_systf  (const struct t_vpi_systf_data*ss);
-void         vpi_vprintf         (const char*fmt, va_list ap);
-unsigned int vpi_mcd_close       (unsigned int mcd);
-char *       vpi_mcd_name        (unsigned int mcd);
-unsigned int vpi_mcd_open        (char *name);
-unsigned int vpi_mcd_open_x      (char *name, char *mode);
-int          vpi_mcd_vprintf     (unsigned int mcd, const char*fmt, va_list ap);
-int          vpi_mcd_fputc       (unsigned int mcd, unsigned char x);
-int          vpi_mcd_fgetc       (unsigned int mcd);
-vpiHandle    vpi_register_cb     (p_cb_data data);
-int          vpi_remove_cb       (vpiHandle ref);
-void         vpi_sim_vcontrol    (int operation, va_list ap);
-vpiHandle    vpi_handle          (int type, vpiHandle ref);
-vpiHandle    vpi_iterate         (int type, vpiHandle ref);
-vpiHandle    vpi_scan            (vpiHandle iter);
-vpiHandle    vpi_handle_by_index (vpiHandle ref, int index);
-void         vpi_get_time        (vpiHandle obj, s_vpi_time*t);
-int          vpi_get             (int property, vpiHandle ref);
-char*        vpi_get_str         (int property, vpiHandle ref);
-void         vpi_get_value       (vpiHandle expr, p_vpi_value value);
-vpiHandle    vpi_put_value       (vpiHandle obj, p_vpi_value value,
-                                  p_vpi_time when, int flags);
-int          vpi_free_object     (vpiHandle ref);
-int          vpi_get_vlog_info   (p_vpi_vlog_info vlog_info_p);
-int          vpi_chk_error       (p_vpi_error_info info);
-vpiHandle    vpi_handle_by_name  (char *name, vpiHandle scope);
+#include "vpi_user.h"
+#include "vpi_thunk.h"
 
-typedef struct {
-	int magic;
-	void         (*vpi_register_systf) (const struct t_vpi_systf_data*ss);
-	void         (*vpi_vprintf)        (const char*fmt, va_list ap);
-	unsigned int (*vpi_mcd_close)      (unsigned int mcd);
-	char*        (*vpi_mcd_name)       (unsigned int mcd);
-	unsigned int (*vpi_mcd_open)       (char *name);
-	unsigned int (*vpi_mcd_open_x)     (char *name, char *mode);
-	int          (*vpi_mcd_vprintf)    (unsigned int mcd, const char*fmt, va_list ap);
-	int          (*vpi_mcd_fputc)      (unsigned int mcd, unsigned char x);
-	int          (*vpi_mcd_fgetc)      (unsigned int mcd);
-	vpiHandle    (*vpi_register_cb)    (p_cb_data data);
-	int          (*vpi_remove_cb)      (vpiHandle ref);
-	void         (*vpi_sim_vcontrol)   (int operation, va_list ap);
-	vpiHandle    (*vpi_handle)         (int type, vpiHandle ref);
-	vpiHandle    (*vpi_iterate)        (int type, vpiHandle ref);
-	vpiHandle    (*vpi_scan)           (vpiHandle iter);
-	vpiHandle    (*vpi_handle_by_index)(vpiHandle ref, int index);
-	void         (*vpi_get_time)       (vpiHandle obj, s_vpi_time*t);
-	int          (*vpi_get)            (int property, vpiHandle ref);
-	char*        (*vpi_get_str)        (int property, vpiHandle ref);
-	void         (*vpi_get_value)      (vpiHandle expr, p_vpi_value value);
-	vpiHandle    (*vpi_put_value)      (vpiHandle obj, p_vpi_value value,
-	                                    p_vpi_time when, int flags);
-	int          (*vpi_free_object)    (vpiHandle ref);
-	int          (*vpi_get_vlog_info)  (p_vpi_vlog_info vlog_info_p);
-	int          (*vpi_chk_error)      (p_vpi_error_info info);
-	vpiHandle    (*vpi_handle_by_name) (char *name, vpiHandle scope);
-} vpi_thunk, *p_vpi_thunk;
+/* Extension of a shared library.  */
+#if defined (WINNT)
+#define DSO_EXT ".dll"
+#elif defined (__APPLE__)
+#define DSO_EXT ".dylib"
+#else
+#define DSO_EXT ".so"
+#endif
 
-int vpi_register_sim(p_vpi_thunk tp);
+extern PLI_INT32 vpi_control_np (int op, int status);
 
-static vpi_thunk thunkTable =
-{	VPI_THUNK_MAGIC,
-	vpi_register_systf,
-	vpi_vprintf,
-	vpi_mcd_close,
-	vpi_mcd_name,
-	vpi_mcd_open,
-	0, //vpi_mcd_open_x,
-	0, //vpi_mcd_vprintf,
-	0, //vpi_mcd_fputc,
-	0, //vpi_mcd_fgetc,
-	vpi_register_cb,
-	vpi_remove_cb,
-	0, //vpi_sim_vcontrol,
-	vpi_handle,
-	vpi_iterate,
-	vpi_scan,
-	vpi_handle_by_index,
-	vpi_get_time,
-	vpi_get,
-	vpi_get_str,
-	vpi_get_value,
-	vpi_put_value,
-	vpi_free_object,
-	vpi_get_vlog_info,
-	vpi_chk_error,
-	vpi_handle_by_name
+static vpi_thunk __ghdl_vpi_thunk_v1 =
+{
+  vpi_register_systf,
+  vpi_vprintf,
+  vpi_mcd_close,
+  vpi_mcd_name,
+  vpi_mcd_open,
+  0, //vpi_mcd_open_x,
+  0, //vpi_mcd_vprintf,
+  0, //vpi_mcd_fputc,
+  0, //vpi_mcd_fgetc,
+  vpi_register_cb,
+  vpi_remove_cb,
+  0, //vpi_sim_vcontrol,
+  vpi_handle,
+  vpi_iterate,
+  vpi_scan,
+  vpi_handle_by_index,
+  vpi_get_time,
+  vpi_get,
+  vpi_get_str,
+  vpi_get_value,
+  vpi_put_value,
+  vpi_free_object,
+  vpi_get_vlog_info,
+  vpi_chk_error,
+  vpi_handle_by_name,
+  vpi_control_np
 };
 
 //-----------------------------------------------------------------------------
@@ -180,22 +130,21 @@ module_error (void)
 }
 #endif
 
+#if defined (__APPLE__)
+/* On Darwin: look in rpath.  */
+#define LIBNAME "@rpath/libghdlvpi" DSO_EXT
+#else
+#define LIBNAME "libghdlvpi" DSO_EXT
+#endif
+
+static const char libghdlvpi_name[] = LIBNAME;
+
 int
 loadVpiModule (const char* modulename)
 {
-  static const char * const vpitablenames[] =
-    {
-      "_vlog_startup_routines", // with leading underscore: MacOSX
-      "vlog_startup_routines"   // w/o  leading underscore: Linux
-    };
-  static const char * const vpithunknames[] =
-    {
-      "_vpi_register_sim",      // with leading underscore: MacOSX
-      "vpi_register_sim"        // w/o  leading underscore: Linux
-    };
-
+  static void *libghdlvpi_mod;
   int i;
-  void* vpimod;
+  void *vpimod;
 
   fprintf (stderr, "loading VPI module '%s'\n", modulename);
 
@@ -203,48 +152,54 @@ loadVpiModule (const char* modulename)
 
   if (vpimod == NULL)
     {
-      const char *msg;
-
-      msg = module_error ();
+      const char *msg = module_error ();
 
       fprintf (stderr, "%s\n", msg == NULL ? "unknown dlopen error" : msg);
       return -1;
     }
 
+  /* Try to load the libghdlvpi library and set the thunk.
+     No need to load the library several times.  */
+  if (libghdlvpi_mod == NULL)
+    {
+      /* TODO: on windows, use SetDllDirectory with:
+	 - install dir (libdir) => add -DLIBDIR=xxx
+	 - exec path\lib => see windows_default_path
+      */
+      libghdlvpi_mod = module_open (libghdlvpi_name);
+      if (libghdlvpi_mod != NULL)
+	{
+	  vpi_thunk **vpi_thunk_ptr;
+
+	  for (i = 0; i < 2; i++)
+	    {
+	      vpi_thunk_ptr = module_symbol (libghdlvpi_mod, &"_VPI_THUNK"[i]);
+
+	      if (vpi_thunk_ptr != NULL)
+		{
+		  *vpi_thunk_ptr = &__ghdl_vpi_thunk_v1;
+		  break;
+		}
+	    }
+	  if (vpi_thunk_ptr == NULL)
+	    fprintf (stderr, "warning: VPI_THUNK not found in %s\n",
+		     libghdlvpi_name);
+	}
+    }
+
   for (i = 0; i < 2; i++) // try with and w/o leading underscores
     {
-      void* vpithunk;
-      void* vpitable;
-
-      vpitable = module_symbol (vpimod, vpitablenames[i]);
-      vpithunk = module_symbol (vpimod, vpithunknames[i]);
-
-      if (vpithunk)
-	{
-	  typedef int (*funT)(p_vpi_thunk tp);
-	  funT regsim;
-
-	  regsim = (funT)vpithunk;
-	  regsim (&thunkTable);
-	}
-      else
-	{
-	  // this is not an error, as the register-mechanism
-	  // is not standardized
-	}
+      void *vpitable = module_symbol (vpimod, &"_vlog_startup_routines"[i]);
 
       if (vpitable)
 	{
-	  unsigned int tmp;
-	  //extern void (*vlog_startup_routines[])();
+	  unsigned int j;
 	  typedef void (*vlog_startup_routines_t)(void);
 	  vlog_startup_routines_t *vpifuns;
 
 	  vpifuns = (vlog_startup_routines_t*)vpitable;
-	  for (tmp = 0; vpifuns[tmp]; tmp++)
-	    {
-	      vpifuns[tmp]();
-	    }
+	  for (j = 0; vpifuns[j]; j++)
+	    vpifuns[j]();
 
 	  fprintf (stderr, "VPI module loaded!\n");
 	  return 0; // successfully registered VPI module
@@ -254,15 +209,36 @@ loadVpiModule (const char* modulename)
   return -1; // failed to register VPI module
 }
 
-void
-vpi_printf (const char *fmt, ...)
+PLI_INT32
+vpi_vprintf (char *fmt, va_list ap)
 {
-  va_list params;
-
-  va_start (params, fmt);
-  vprintf (fmt, params);
-  va_end (params);
+  return vprintf (fmt, ap);
 }
 
-//-----------------------------------------------------------------------------
-// end of file
+PLI_INT32
+vpi_printf (char *fmt, ...)
+{
+  va_list params;
+  PLI_INT32 res;
+
+  va_start (params, fmt);
+  res = vprintf (fmt, params);
+  va_end (params);
+
+  return res;
+}
+
+PLI_INT32
+vpi_control (int op, ...)
+{
+  va_list params;
+  int status;
+  PLI_INT32 res;
+
+  va_start (params, op);
+  status = va_arg (params, int);
+  res = vpi_control_np (op, status);
+  va_end (params);
+
+  return res;
+}

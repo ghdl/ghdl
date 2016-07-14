@@ -173,6 +173,8 @@ package body Disp_Vhdl is
          when Iir_Kind_Component_Declaration
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Architecture_Body
+           | Iir_Kind_Configuration_Declaration
+           | Iir_Kind_Context_Declaration
            | Iir_Kind_Interface_Constant_Declaration
            | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Interface_Variable_Declaration
@@ -181,7 +183,6 @@ package body Disp_Vhdl is
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Guard_Signal_Declaration
            | Iir_Kind_Variable_Declaration
-           | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Type_Declaration
            | Iir_Kind_File_Declaration
            | Iir_Kind_Subtype_Declaration
@@ -224,6 +225,7 @@ package body Disp_Vhdl is
             Disp_Identifier (Decl);
          when Iir_Kind_Block_Statement
            | Iir_Kind_If_Generate_Statement
+           | Iir_Kind_Case_Generate_Statement
            | Iir_Kind_For_Generate_Statement =>
             declare
                Ident : constant Name_Id := Get_Label (Decl);
@@ -2979,6 +2981,34 @@ package body Disp_Vhdl is
       Disp_End (Stmt, "generate");
    end Disp_If_Generate_Statement;
 
+   procedure Disp_Case_Generate_Statement (Stmt : Iir)
+   is
+      Indent : constant Count := Col;
+      Bod : Iir;
+      Assoc : Iir;
+   begin
+      Disp_Label (Stmt);
+      Put ("case ");
+      Disp_Expression (Get_Expression (Stmt));
+      Put_Line (" generate");
+      Assoc := Get_Case_Statement_Alternative_Chain (Stmt);
+      while Assoc /= Null_Iir loop
+         Set_Col (Indent + Indentation);
+         Put ("when ");
+         Bod := Get_Associated_Block (Assoc);
+         if Get_Has_Label (Bod) then
+            Disp_Ident (Get_Alternative_Label (Bod));
+            Put (": ");
+         end if;
+         Disp_Choice (Assoc);
+         Put (" ");
+         Put_Line ("=>");
+         Disp_Generate_Statement_Body (Bod, Indent + 2 * Indentation);
+      end loop;
+      Set_Col (Indent);
+      Disp_End (Stmt, "generate");
+   end Disp_Case_Generate_Statement;
+
    procedure Disp_Psl_Default_Clock (Stmt : Iir) is
    begin
       Put ("--psl default clock is ");
@@ -3110,6 +3140,8 @@ package body Disp_Vhdl is
             Disp_Block_Statement (Stmt);
          when Iir_Kind_If_Generate_Statement =>
             Disp_If_Generate_Statement (Stmt);
+         when Iir_Kind_Case_Generate_Statement =>
+            Disp_Case_Generate_Statement (Stmt);
          when Iir_Kind_For_Generate_Statement =>
             Disp_For_Generate_Statement (Stmt);
          when Iir_Kind_Psl_Default_Clock =>
@@ -3282,8 +3314,7 @@ package body Disp_Vhdl is
    end Disp_Block_Configuration;
 
    procedure Disp_Configuration_Declaration
-     (Decl: Iir_Configuration_Declaration)
-   is
+     (Decl: Iir_Configuration_Declaration) is
    begin
       Put ("configuration ");
       Disp_Name_Of (Decl);
@@ -3296,13 +3327,12 @@ package body Disp_Vhdl is
       Disp_End (Decl, "configuration");
    end Disp_Configuration_Declaration;
 
-   procedure Disp_Design_Unit (Unit: Iir_Design_Unit)
+   procedure Disp_Context_Items (First : Iir; Indent : Count)
    is
-      Indent: constant Count := Col;
       Decl: Iir;
       Next_Decl : Iir;
    begin
-      Decl := Get_Context_Items (Unit);
+      Decl := First;
       while Decl /= Null_Iir loop
          Next_Decl := Get_Chain (Decl);
 
@@ -3320,11 +3350,42 @@ package body Disp_Vhdl is
                   Disp_Identifier (Decl);
                end loop;
                Put_Line (";");
+            when Iir_Kind_Context_Reference =>
+               Put ("context ");
+               declare
+                  Ref : Iir;
+               begin
+                  Ref := Decl;
+                  loop
+                     Disp_Name (Get_Selected_Name (Ref));
+                     Ref := Get_Context_Reference_Chain (Ref);
+                     exit when Ref = Null_Iir;
+                     Put (", ");
+                  end loop;
+                  Put_Line (";");
+               end;
             when others =>
-               Error_Kind ("disp_design_unit1", Decl);
+               Error_Kind ("disp_context_items", Decl);
          end case;
          Decl := Next_Decl;
       end loop;
+   end Disp_Context_Items;
+
+   procedure Disp_Context_Declaration (Decl: Iir) is
+   begin
+      Put ("context ");
+      Disp_Name_Of (Decl);
+      Put_Line (" is");
+      Disp_Context_Items (Get_Context_Items (Decl), Col + Indentation);
+      Disp_End (Decl, "context");
+   end Disp_Context_Declaration;
+
+   procedure Disp_Design_Unit (Unit: Iir_Design_Unit)
+   is
+      Indent: constant Count := Col;
+      Decl: Iir;
+   begin
+      Disp_Context_Items (Get_Context_Items (Unit), Indent);
 
       Decl := Get_Library_Unit (Unit);
       Set_Col (Indent);
@@ -3341,6 +3402,8 @@ package body Disp_Vhdl is
             Disp_Package_Instantiation_Declaration (Decl);
          when Iir_Kind_Configuration_Declaration =>
             Disp_Configuration_Declaration (Decl);
+         when Iir_Kind_Context_Declaration =>
+            Disp_Context_Declaration (Decl);
          when others =>
             Error_Kind ("disp_design_unit2", Decl);
       end case;
