@@ -955,6 +955,109 @@ Display the `GHDL` version and exit::
   ghdl --version
 
 
+VPI build commands
+==============
+
+These commands simplify the compile and the link of a user vpi
+module. They are all wrapper: the arguments are in fact a whole
+command line that is executed with additional switches.  Currently a
+unix-like compiler (like `cc`, `gcc` or `clang`) is expected: the additional
+switches use their syntax.  The only option is `-v` which displays the
+command before its execution.
+
+.. _VPI_compile_command:
+
+VPI compile command
+-----------------
+
+.. index:: --vpi-compile command
+
+Add include path to the command and execute it::
+
+  ghdl --vpi-compile command
+
+This will execute::
+
+  command -Ixxx/include
+
+For example::
+
+  ghdl --vpi-compile gcc -c vpi1.c
+
+executes::
+
+  gcc -c vpi1.c -fPIC -Ixxx/include
+
+.. _VPI_link_command:
+
+VPI link command
+--------------
+
+.. index:: --vpi-link command
+
+Add library path and name to the command and execute it::
+
+  ghdl --vpi-link command
+
+This will execute::
+
+  command -Lxxx/lib -lghdlvpi
+
+For example::
+
+  ghdl --vpi-link gcc -o vpi1.vpi vpi1.o
+
+executes::
+
+  gcc -o vpi1.vpi vpi1.o --shared -Lxxx/lib -lghdlvpi
+
+
+.. _VPI_cflags_command:
+
+VPI cflags command
+----------------
+
+.. index:: --vpi-cflags command
+
+Display flags added by :option:`--vpi-compile`::
+
+  ghdl --vpi-cflags
+
+
+.. _VPI_ldflags_command:
+
+VPI ldflags command
+-----------------
+
+.. index:: --vpi-ldflags command
+
+Display flags added by :option:`--vpi-link`::
+
+  ghdl --vpi-ldflags
+
+.. _VPI_include_dir_command:
+
+VPI include dir command
+--------------------
+
+.. index:: --vpi-include-dir command
+
+Display the include directory added by the compile flags::
+
+  ghdl --vpi-include-dir
+
+.. _VPI_library_dir_command:
+
+VPI library dir command
+-------------------
+
+.. index:: --vpi-library-dir command
+
+Display the library directory added by the link flags::
+
+  ghdl --vpi-library-dir
+
+
 Installation Directory
 ======================
 

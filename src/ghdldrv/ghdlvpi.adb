@@ -25,31 +25,6 @@ with Default_Pathes;
 
 package body Ghdlvpi is
 
-   --  A command that accepts '-v'.
-   type Command_Flag_Type is abstract new Command_Type with record
-      Flag_Verbose : Boolean := False;
-   end record;
-
-   procedure Decode_Option (Cmd : in out Command_Flag_Type;
-                            Option : String;
-                            Arg : String;
-                            Res : out Option_Res);
-
-   procedure Decode_Option (Cmd : in out Command_Flag_Type;
-                            Option : String;
-                            Arg : String;
-                            Res : out Option_Res)
-   is
-      pragma Unreferenced (Arg);
-   begin
-      if Option = "-v" then
-         Cmd.Flag_Verbose := True;
-         Res := Option_Ok;
-      else
-         Res := Option_Bad;
-      end if;
-   end Decode_Option;
-
    --  Return the include directory.
    function Get_Vpi_Include_Dir return String is
    begin
@@ -69,6 +44,49 @@ package body Ghdlvpi is
 
       return Ghdllocal.Exec_Prefix.all & Directory_Separator & "lib";
    end Get_Vpi_Lib_Dir;
+
+   function Get_Vpi_Cflags return Argument_List
+   is
+      Extra_Args : Argument_List (1 .. 2);
+   begin
+      Extra_Args (1) := new String'("-fPIC");
+      Extra_Args (2) := new String'("-I" & Get_Vpi_Include_Dir);
+      return Extra_Args;
+   end Get_Vpi_Cflags;
+
+   function Get_Vpi_Ldflags return Argument_List
+   is
+      use Default_Pathes;
+      Is_Unix : constant Boolean := Shared_Library_Extension = ".so";
+      Is_Darwin : constant Boolean := Shared_Library_Extension = ".dylib";
+      Extra_Args : Argument_List (1 .. 4);
+      Nbr : Natural;
+   begin
+      Extra_Args (1) := new String'("--shared");
+      Extra_Args (2) := new String'("-L" & Get_Vpi_Lib_Dir);
+      Extra_Args (3) := new String'("-lghdlvpi");
+      Nbr := 3;
+
+      if Is_Unix or Is_Darwin then
+         --  On linux/unix, add rpath.
+         Nbr := Nbr + 1;
+         Extra_Args (Nbr) := new String'
+           ("-Wl,-rpath," & Get_Vpi_Lib_Dir);
+      end if;
+
+      return Extra_Args (1 .. Nbr);
+   end Get_Vpi_Ldflags;
+
+   --  Display ARGS on a single line.
+   procedure Disp (Args : Argument_List) is
+   begin
+      for I in Args'Range loop
+         if I /= Args'First then
+            Put (' ');
+         end if;
+         Put (Args (I).all);
+      end loop;
+   end Disp;
 
    procedure Spawn_Compile (User_Args : Argument_List;
                             Extra_Args : Argument_List;
@@ -123,89 +141,147 @@ package body Ghdlvpi is
       Set_Exit_Status (Exit_Status (Status));
    end Spawn_Compile;
 
-   --  Command --vpi-compile
-   type Command_Vpi_Compile is new Command_Flag_Type with null record;
-   function Decode_Command (Cmd : Command_Vpi_Compile; Name : String)
-                           return Boolean;
-   function Get_Short_Help (Cmd : Command_Vpi_Compile) return String;
-   procedure Perform_Action (Cmd : in out Command_Vpi_Compile;
-                             Args : Argument_List);
+   --  A command that accepts command and help strings.
+   type Command_Str_Type is abstract new Command_Type with record
+      Cmd_Str : String_Access;
+      Help_Str : String_Access;
+   end record;
 
-   function Decode_Command (Cmd : Command_Vpi_Compile; Name : String)
-                           return Boolean
-   is
-      pragma Unreferenced (Cmd);
+   function Get_Short_Help (Cmd : Command_Str_Type) return String;
+
+   function Decode_Command (Cmd : Command_Str_Type; Name : String)
+                           return Boolean is
    begin
-      return Name = "--vpi-compile";
+      return Name = Cmd.Cmd_Str.all;
    end Decode_Command;
 
-   function Get_Short_Help (Cmd : Command_Vpi_Compile) return String
-   is
-      pragma Unreferenced (Cmd);
+   function Get_Short_Help (Cmd : Command_Str_Type) return String is
    begin
-      return "--vpi-compile CMD ARGS     Compile with VPI include path";
+      return Cmd.Help_Str.all;
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : in out Command_Vpi_Compile;
-                             Args : Argument_List)
-   is
-      Extra_Args : Argument_List (1 .. 1);
-   begin
-      Extra_Args (1) := new String'("-I" & Get_Vpi_Include_Dir);
+   --  A command that spawn with extra_args
+   type Extra_Args_Func is access function return Argument_List;
+   type Command_Spawn_Type is new Command_Str_Type with record
+      Flag_Verbose : Boolean := False;
+      Extra_Args : Extra_Args_Func;
+   end record;
 
-      Spawn_Compile (Args, Extra_Args, Cmd.Flag_Verbose);
+   procedure Perform_Action (Cmd : in out Command_Spawn_Type;
+                             Args : Argument_List);
+   procedure Decode_Option (Cmd : in out Command_Spawn_Type;
+                            Option : String;
+                            Arg : String;
+                            Res : out Option_Res);
+
+
+   procedure Decode_Option (Cmd : in out Command_Spawn_Type;
+                            Option : String;
+                            Arg : String;
+                            Res : out Option_Res)
+   is
+      pragma Unreferenced (Arg);
+   begin
+      if Option = "-v" then
+         Cmd.Flag_Verbose := True;
+         Res := Option_Ok;
+      else
+         Res := Option_Bad;
+      end if;
+   end Decode_Option;
+
+   procedure Perform_Action (Cmd : in out Command_Spawn_Type;
+                             Args : Argument_List) is
+   begin
+      Spawn_Compile (Args, Cmd.Extra_Args.all, Cmd.Flag_Verbose);
    end Perform_Action;
 
-   --  Command --vpi-link
-   type Command_Vpi_Link is new Command_Flag_Type with null record;
-   function Decode_Command (Cmd : Command_Vpi_Link; Name : String)
-                           return Boolean;
-   function Get_Short_Help (Cmd : Command_Vpi_Link) return String;
-   procedure Perform_Action (Cmd : in out Command_Vpi_Link;
+
+   --  A command that display flags.
+   type Command_Vpi_Flags is new Command_Str_Type with record
+      Flags : Extra_Args_Func;
+   end record;
+   procedure Perform_Action (Cmd : in out Command_Vpi_Flags;
                              Args : Argument_List);
 
-   function Decode_Command (Cmd : Command_Vpi_Link; Name : String)
-                           return Boolean
-   is
-      pragma Unreferenced (Cmd);
-   begin
-      return Name = "--vpi-link";
-   end Decode_Command;
-
-   function Get_Short_Help (Cmd : Command_Vpi_Link) return String
-   is
-      pragma Unreferenced (Cmd);
-   begin
-      return "--vpi-link CMD ARGS     Link with VPI library";
-   end Get_Short_Help;
-
-   procedure Perform_Action (Cmd : in out Command_Vpi_Link;
+   procedure Perform_Action (Cmd : in out Command_Vpi_Flags;
                              Args : Argument_List)
    is
-      use Default_Pathes;
-      Is_Unix : constant Boolean := Shared_Library_Extension = ".so";
-      Is_Darwin : constant Boolean := Shared_Library_Extension = ".dylib";
-      Extra_Args : Argument_List (1 .. 4);
-      Nbr : Natural;
+      pragma Unreferenced (Args);
    begin
-      Extra_Args (1) := new String'("--shared");
-      Extra_Args (2) := new String'("-L" & Get_Vpi_Lib_Dir);
-      Extra_Args (3) := new String'("-lghdlvpi");
-      Nbr := 3;
+      Disp (Cmd.Flags.all);
+   end Perform_Action;
 
-      if Is_Unix or Is_Darwin then
-         --  On linux/unix, add rpath.
-         Nbr := Nbr + 1;
-         Extra_Args (Nbr) := new String'
-           ("-Wl,-rpath," & Get_Vpi_Lib_Dir);
-      end if;
+   --  A command that display a string.
+   type String_Func is access function return String;
+   type Command_Vpi_Disp is new Command_Str_Type with record
+      Disp : String_Func;
+   end record;
+   procedure Perform_Action (Cmd : in out Command_Vpi_Disp;
+                             Args : Argument_List);
 
-      Spawn_Compile (Args, Extra_Args (1 .. Nbr), Cmd.Flag_Verbose);
+   procedure Perform_Action (Cmd : in out Command_Vpi_Disp;
+                             Args : Argument_List)
+   is
+      pragma Unreferenced (Args);
+   begin
+      Put_Line (Cmd.Disp.all);
    end Perform_Action;
 
    procedure Register_Commands is
    begin
-      Register_Command (new Command_Vpi_Compile);
-      Register_Command (new Command_Vpi_Link);
+      Register_Command
+        (new Command_Spawn_Type'
+           (Command_Type with
+            Flag_Verbose => False,
+            Cmd_Str => new String'
+              ("--vpi-compile"),
+            Help_Str => new String'
+              ("--vpi-compile CMD ARGS    Compile with VPI include path"),
+            Extra_Args => Get_Vpi_Cflags'Access));
+      Register_Command
+        (new Command_Spawn_Type'
+           (Command_Type with
+            Flag_Verbose => False,
+            Cmd_Str => new String'
+              ("--vpi-link"),
+            Help_Str => new String'
+              ("--vpi-link CMD ARGS       Link with VPI library"),
+            Extra_Args => Get_Vpi_Ldflags'Access));
+
+      Register_Command
+        (new Command_Vpi_Flags'
+           (Command_Type with
+            Cmd_Str => new String'
+              ("--vpi-cflags"),
+            Help_Str => new String'
+              ("--vpi-cflags       Display VPI compile flags"),
+            Flags => Get_Vpi_Cflags'Access));
+      Register_Command
+        (new Command_Vpi_Flags'
+           (Command_Type with
+            Cmd_Str => new String'
+              ("--vpi-ldflags"),
+            Help_Str => new String'
+              ("--vpi-ldflags      Display VPI link flags"),
+            Flags => Get_Vpi_Ldflags'Access));
+
+      Register_Command
+        (new Command_Vpi_Disp'
+           (Command_Type with
+            Cmd_Str => new String'
+              ("--vpi-include-dir"),
+            Help_Str => new String'
+              ("--vpi-include-dir  Display VPI include directory"),
+            Disp => Get_Vpi_Include_Dir'Access));
+      Register_Command
+        (new Command_Vpi_Disp'
+           (Command_Type with
+            Cmd_Str => new String'
+              ("--vpi-library-dir"),
+            Help_Str => new String'
+              ("--vpi-library-dir  Display VPI library directory"),
+            Disp => Get_Vpi_Lib_Dir'Access));
+
    end Register_Commands;
 end Ghdlvpi;
