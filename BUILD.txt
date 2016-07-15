@@ -52,8 +52,9 @@ Building with the gcc backend
 You need to download and untar the sources of
 gcc version 4.9 [do not modify this line as this is read by scripts].
 
-First configure ghdl and specify gcc source dir:
-$ ./configure --with-gcc=/path/to/gcc/source/dir
+First configure ghdl, specify gcc source dir and prefix.
+(replace /usr/local by your prefix directory):
+$ ./configure --with-gcc=/path/to/gcc/source/dir --prefix=/usr/local
 
 Then invoke make to copy ghdl sources in the source dir:
 $ make copy-sources
@@ -74,17 +75,23 @@ $ make; make install
 
 Then configure gcc.  The list of --disable configure options could be
 adjusted for your needs.  GHDL don't require all these optional
-libraries and disabling them speed-up the build.
+libraries and disabling them speed-up the build. Note the prefix
+directory must be the same as the one used to configure ghdl.
 $ mkdir gcc-objs; cd gcc-objs
 $ ../gcc-4.9.3/configure --prefix=/usr/local --enable-languages=c,vhdl \
   --disable-bootstrap --with-gmp=/usr/local --disable-lto --disable-multilib \
   --disable-libssp --disable-libgomp --disable-libquadmath
 $ make -j2
 
-Finally install:
+Install gcc:
 $ make install
 or if you don't want to install makeinfo:
 $ make install MAKEINFO=true
+
+Build and install vhdl libraries:
+$ cd ..
+$ make ghdllib
+$ make install
 
 Building with the llvm backend
 ******************************
@@ -114,7 +121,7 @@ Once gcc (with ghdl) has been built once, it is possible to work on ghdl
 sources tree without copying them in gcc tree. Commands are:
 $ make ghdl1-gcc     	     # To build the compiler
 $ make ghdl_gcc		     # To build the driver
-$ make libs.vhdl.gcc	     # To compile the vhdl libraries
+$ make libs.vhdl.local_gcc   # To compile the vhdl libraries
 $ make grt-all		     # To build the ghdl runtime
 $ make grt.links	     # To locally install the ghdl runtime
 TODO: gcc object dir

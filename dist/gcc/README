@@ -1,6 +1,7 @@
 This is the README from the source distribution of GHDL.
 
-To get the binary distribution or more information, go to http://ghdl.free.fr
+To get the binary distribution or more information, go to:
+ https://github.com/tgingold/ghdl
 
 Copyright:
 **********
@@ -26,42 +27,7 @@ Boston, MA 02111-1307, USA.
 Building GHDL from sources:
 ***************************
 
-Required:
-* the sources of @GCCVERSION@ (at least the core part).
-  Note: other versions of gcc sources have not been tested.
-* the Ada95 GNAT compiler (GNAT GPL 2008 are known to work;
-  Ada compilers in most Linux distributions are more or less buggy)
-* GNU/Linux for ix86 (pc systems) (porting is necessary for other systems)
-
-Procedure:
-* Check your Ada compiler.  On some systems (or with some distribution), the
-  GNAT compiler seems broken.  Try this very simple example, using file
-  example.adb
-<<<<<<<<<<<<<<<<<<
-procedure Example is
-begin
-   null;
-end Example;
-<<<<<<<<<<<<<<<<<<
-  Compile with
-  $ gnatmake example
-  It should create an executable, 'example'.
-  If this doesn't work, your GNAT installation is broken.  It may be a PATH
-  problem or something else.
-* untar the gcc tarball
-* untar the ghdl tarball (this sould have been done, since you are reading a
-  file from it).
-* move or copy the vhdl directory of ghdl into the gcc subdirectory of
-  the gcc distribution.
-  You should have a @GCCVERSION@/gcc/vhdl directory.
-* configure gcc with the --enable-languages=vhdl option.  You may of course
-  add other languages.  Also you'd better to disable bootstraping using
-  --disable-bootstrap.
-  Refer to the gcc installation documentation.
-* compile gcc.
-  'make CFLAGS="-O"' is OK
-* install gcc.  This installs the ghdl driver too.
-  'make install' is OK.
+See BUILD.txt
 
 There is a mailing list for any questions.  You can subscribe via:
   https://mail.gna.org/listinfo/ghdl-discuss/

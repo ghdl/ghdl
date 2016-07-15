@@ -149,6 +149,10 @@ if test $backend = gcc; then
 	echo "Need gcc version $gcc_version"
 	exit 1
     fi
+    if test "x$backtrace_lib" = x ; then
+	# Automatically use libbacktrace from gcc.
+	backtrace_lib="$prefix/$libdirsuffix/libbacktrace.a"
+    fi
 fi
 
 # For llvm backend, check llvm-config
