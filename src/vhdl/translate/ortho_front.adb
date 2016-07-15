@@ -336,7 +336,9 @@ package body Ortho_Front is
                raise Compilation_Error;
             end if;
          when Action_Compile_Std_Package =>
-            if Filename /= null then
+            if Filename /= null
+              and then Filename.all /= "std_standard.vhdl"
+            then
                Error_Msg_Option
                  ("--compile-standard is not compatible with a filename");
                return False;

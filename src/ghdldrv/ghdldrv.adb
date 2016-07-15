@@ -28,7 +28,6 @@ with Types; use Types;
 with Iirs; use Iirs;
 with Files_Map;
 with Configuration;
---with Disp_Tree;
 with Default_Pathes;
 with Interfaces.C_Streams;
 with System;
@@ -133,7 +132,7 @@ package body Ghdldrv is
       end if;
    end My_Spawn;
 
-   --  Compile FILE with additional argument OPTS.
+   --  Compile FILE with additional argument OPTIONSS.
    procedure Do_Compile
      (Options : Argument_List; File : String; In_Work : Boolean)
    is
@@ -691,7 +690,7 @@ package body Ghdldrv is
       pragma Unreferenced (Cmd);
    begin
       if Args'Length /= 0 then
-         Error ("--dispconfig does not accept any argument");
+         Error ("--disp-config does not accept any argument");
          raise Option_Error;
       end if;
 
@@ -744,6 +743,47 @@ package body Ghdldrv is
          Put (' ');
          Put_Line (Image (Get_Path (I)));
       end loop;
+   end Perform_Action;
+
+   --  Command Bootstrap-standard
+   type Command_Bootstrap is new Command_Comp with null record;
+   function Decode_Command (Cmd : Command_Bootstrap; Name : String)
+                           return Boolean;
+   function Get_Short_Help (Cmd : Command_Bootstrap) return String;
+   procedure Perform_Action (Cmd : in out Command_Bootstrap;
+                             Args : Argument_List);
+
+   function Decode_Command (Cmd : Command_Bootstrap; Name : String)
+                           return Boolean
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      return Name = "--bootstrap-standard";
+   end Decode_Command;
+
+   function Get_Short_Help (Cmd : Command_Bootstrap) return String
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      return "--bootstrap-standard  (Internal) compile std.standard";
+   end Get_Short_Help;
+
+   procedure Perform_Action (Cmd : in out Command_Bootstrap;
+                             Args : Argument_List)
+   is
+      pragma Unreferenced (Cmd);
+      Opt : Argument_List (1 .. 1);
+   begin
+      if Args'Length /= 0 then
+         Error ("no file allowed for --bootstrap-standard");
+         raise Option_Error;
+      end if;
+
+      Set_Tools_Name;
+      Locate_Tools;
+
+      Opt (1) := new String'("--compile-standard");
+      Do_Compile (Opt, "std_standard.vhdl", True);
    end Perform_Action;
 
    --  Command Analyze.
@@ -1754,5 +1794,6 @@ package body Ghdldrv is
       Register_Command (new Command_Make);
       Register_Command (new Command_Gen_Makefile);
       Register_Command (new Command_Dispconfig);
+      Register_Command (new Command_Bootstrap);
    end Register_Commands;
 end Ghdldrv;
