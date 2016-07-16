@@ -1,5 +1,5 @@
---  GHDL Run Time (GRT) - Misc subprograms for characters and strings
---  Copyright (C) 2016 Tristan Gingold
+--  GHDL Run Time (GRT) - mono-thread version.
+--  Copyright (C) 2005 - 2014 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -23,25 +23,27 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 
-package Grt.Strings is
-   pragma Pure;
+with Grt.Types; use Grt.Types;
 
-   NBSP : constant Character := Character'Val (160);
+package Grt.Wave_Options.Read is
+   pragma Preelaborate;
 
-   --  Return True IFF C is a whitespace character (as defined in LRM93 14.3)
-   function Is_Whitespace (C : in Character) return Boolean;
-   function First_Non_Whitespace_Pos (Str : String) return Integer;
-   function Last_Non_Whitespace_Pos (Str : String) return Integer;
-   function New_Line_Pos (Line : String) return Integer;
-   function Find (Str : String; Char : Character) return Integer;
-   function Find (Str : String; Char : Character; Start : Positive)
-            return Integer;
+   function Get_Top_Cursor (Name : Ghdl_C_String; Index : Tree_Index_Type)
+            return Elem_Acc;
+   function Get_Cursor (Name : Ghdl_C_String; Parent : Elem_Acc;
+            Is_Signal : Boolean := False) return Elem_Acc;
+   function Is_Displayed (Cursor : Elem_Acc) return Boolean;
 
-   --  Convert C/S to lowercase.
-   function To_Lower (C : Character) return Character;
-   procedure To_Lower (S : in out String);
+   procedure Check_If_All_Found;
 
-   -- Str/Char : image of a natural number/digit
-   function Value (Str : String) return Integer;
-   function Value (Char : Character) return Integer;
-end Grt.Strings;
+private
+
+   function Find_Cursor (Name : Ghdl_C_String; First : Elem_Acc;
+            Is_Signal : Boolean := False) return Elem_Acc;
+
+   procedure Check_If_Found (Previous_Cursor : Elem_Acc;
+                             Sep : Character; Level : Positive);
+
+   function Display_All_Signals return Boolean;
+
+end Grt.Wave_Options.Read;

@@ -27,6 +27,7 @@ with Grt.Types; use Grt.Types;
 with System; use System;
 
 package Grt.Vstrings is
+   pragma Preelaborate;
    --  A Vstring (Variable string) is an object which contains an unbounded
    --  string.
    type Vstring is limited private;

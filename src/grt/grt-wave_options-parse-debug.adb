@@ -1,5 +1,5 @@
---  GHDL Run Time (GRT) - Misc subprograms for characters and strings
---  Copyright (C) 2016 Tristan Gingold
+--  GHDL Run Time (GRT) - mono-thread version.
+--  Copyright (C) 2005 - 2014 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -23,25 +23,36 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 
-package Grt.Strings is
-   pragma Pure;
+with Grt.Astdio; use Grt.Astdio;
 
-   NBSP : constant Character := Character'Val (160);
+package body Grt.Wave_Options.Parse.Debug is
 
-   --  Return True IFF C is a whitespace character (as defined in LRM93 14.3)
-   function Is_Whitespace (C : in Character) return Boolean;
-   function First_Non_Whitespace_Pos (Str : String) return Integer;
-   function Last_Non_Whitespace_Pos (Str : String) return Integer;
-   function New_Line_Pos (Line : String) return Integer;
-   function Find (Str : String; Char : Character) return Integer;
-   function Find (Str : String; Char : Character; Start : Positive)
-            return Integer;
+   procedure Dump_Tree is
+   begin
+      for Index in Tree_Index_Type'Range loop
+         New_Line; New_Line; Put ("----------------------------"); New_Line;
+         if Index = Pkg then
+            Put ("Packages : ");
+         else
+            Put ("Instances : ");
+         end if;
+         New_Line;
+         Dump_Sub_Tree (Trees (Index), 1);
+      end loop;
+      Put ("----------- END -----------------"); New_Line;
+   end Dump_Tree;
 
-   --  Convert C/S to lowercase.
-   function To_Lower (C : Character) return Character;
-   procedure To_Lower (S : in out String);
+   procedure Dump_Sub_Tree (Previous_Cursor : Elem_Acc; Level : Positive) is
+      Current_Cursor : Elem_Acc := Previous_Cursor;
+   begin
+      while Current_Cursor /= null loop
+         for i in 2 .. Level loop
+            Put ("   ");
+         end loop;
+         Put ('/'); Put (Current_Cursor.Name.all); New_Line;
+         Dump_Sub_Tree (Current_Cursor.Next_Child, Level + 1);
+         Current_Cursor := Current_Cursor.Next_Sibling;
+      end loop;
+   end Dump_Sub_Tree;
 
-   -- Str/Char : image of a natural number/digit
-   function Value (Str : String) return Integer;
-   function Value (Char : Character) return Integer;
-end Grt.Strings;
+end Grt.Wave_Options.Parse.Debug;
