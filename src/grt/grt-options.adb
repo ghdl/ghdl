@@ -28,6 +28,7 @@ with Grt.Errors; use Grt.Errors;
 with Grt.Stdio; use Grt.Stdio;
 with Grt.Astdio;
 with Grt.Hooks;
+with Grt.Wave_Options.Parse;
 
 package body Grt.Options is
 
@@ -480,6 +481,9 @@ package body Grt.Options is
             end if;
             Last_Generic_Override := Over;
          end;
+      elsif Option'Length >= 18 and then
+            Option (1 .. 19) = "--wave-option-file=" then
+         Wave_Options.Parse.Start (Option (20 .. Option'Last));
       elsif Option = "--unbuffered" then
          Unbuffered_Writes := True;
          setbuf (stdout, NULL_voids);
