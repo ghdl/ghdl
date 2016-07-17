@@ -313,11 +313,16 @@ ANALYZE_OPTS:=
 ANALYZE:=$(GHDL) -a $(ANALYZE_OPTS) $(LIB_CFLAGS)
 ANALYZE_DEP:=$(GHDL)
 
+# TODO?: don't include, make it separate
 include $(srcdir)/libraries/Makefile.inc
 
+# TODO?: move std_standard in libraries/Makefile
 ifeq "$(backend)" "gcc"
+  # ghdl with gcc backend is already installed, no need to specify ghdl1
+  # (and we don't know where it is).
   STD_GHDL_FLAGS=
 else
+  # Specify ghdl1 path, as it is spawned by ghdl.
   STD_GHDL_FLAGS=--GHDL1=$(PWD)/ghdl1-$(backend)
 endif
 
