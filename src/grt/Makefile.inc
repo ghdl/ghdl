@@ -88,7 +88,8 @@ ifneq ($(LIBBACKTRACE),)
 endif
 
 # Configuration pragmas.
-GRT_PRAGMA_FLAG=-gnatec$(GRTSRCDIR)/grt.adc -gnat05
+# -gnatdY is required to force the use of __gnat_last_chance_handler.
+GRT_PRAGMA_FLAG=-gnatec$(GRTSRCDIR)/grt.adc -gnat05 -gnatdY
 
 # Rule to compile an Ada file.
 GRT_ADACOMPILE=$(ADAC) -c $(GRT_FLAGS) $(GRT_PRAGMA_FLAG) -o $@ $<
@@ -104,6 +105,9 @@ libgrt.a: $(GRT_ADD_OBJS) run-bind.o main.o grt-files
 run-bind.adb: $(GRT_SRC_DEPS) grt-force
 	gnatmake -c -aI$(GRTSRCDIR) $(GRT_PRAGMA_FLAG) \
 	  ghdl_main $(GRT_ADAFLAGS) -cargs $(GRT_FLAGS)
+# 	Set No Run-Time flag to suppress references to standard gnat library.
+	sed -e '/^P /s/P /P NR /' < ghdl_main.ali > ghdl_main-tmp.ali
+	mv ghdl_main-tmp.ali ghdl_main.ali
 	gnatbind -Lgrt_ -o run-bind.adb -n ghdl_main.ali
 
 #system.ads:
