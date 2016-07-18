@@ -1887,6 +1887,28 @@ package body Sem_Names is
            ("no method " & Name_Table.Image (Suffix) & " in "
               & Disp_Node (Prot_Type), Name);
       end Error_Protected_Item;
+
+      --  Emit an error message if unit is not found in library LIB.
+      procedure Error_Unit_Not_Found (Lib : Iir)
+      is
+         use Std_Names;
+      begin
+         Error_Msg_Sem
+           ("unit """ & Name_Table.Image (Suffix)
+              & """ not found in " & Disp_Node (Lib), Name);
+
+         --  Give an advice for common synopsys packages.
+         if Get_Identifier (Lib) = Name_Ieee then
+            if Suffix = Name_Std_Logic_Arith
+              or else Suffix = Name_Std_Logic_Signed
+              or else Suffix = Name_Std_Logic_Unsigned
+            then
+               Error_Msg_Sem
+                 (" (use --ieee=synopsys for non-standard synopsys packages)",
+                  Name);
+            end if;
+         end if;
+      end Error_Unit_Not_Found;
    begin
       --  Analyze prefix.
       Sem_Name (Prefix_Name);
@@ -1954,9 +1976,7 @@ package body Sem_Names is
             --  GHDL: FIXME: error message more explicit
             Res := Libraries.Load_Primary_Unit (Prefix, Suffix, Name);
             if Res = Null_Iir then
-               Error_Msg_Sem
-                 ("primary unit """ & Name_Table.Image (Suffix)
-                  & """ not found in " & Disp_Node (Prefix), Name);
+               Error_Unit_Not_Found (Prefix);
             else
                Sem.Add_Dependence (Res);
                Res := Get_Library_Unit (Res);

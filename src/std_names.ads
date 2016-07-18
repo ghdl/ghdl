@@ -469,19 +469,22 @@ package Std_Names is
    Name_Control_Simulation :    constant Name_Id := Name_First_Misc + 026;
    Name_Last_Misc :      constant Name_Id := Name_Control_Simulation;
 
-   Name_First_Ieee :     constant Name_Id := Name_Last_Misc + 1;
-   Name_Ieee :           constant Name_Id := Name_First_Ieee + 000;
-   Name_Std_Logic_1164 : constant Name_Id := Name_First_Ieee + 001;
-   Name_Std_Ulogic :     constant Name_Id := Name_First_Ieee + 002;
-   Name_Std_Ulogic_Vector : constant Name_Id := Name_First_Ieee + 003;
-   Name_Std_Logic :      constant Name_Id := Name_First_Ieee + 004;
-   Name_Std_Logic_Vector : constant Name_Id := Name_First_Ieee + 005;
-   Name_Rising_Edge :    constant Name_Id := Name_First_Ieee + 006;
-   Name_Falling_Edge :   constant Name_Id := Name_First_Ieee + 007;
-   Name_VITAL_Timing :   constant Name_Id := Name_First_Ieee + 008;
-   Name_VITAL_Level0 :   constant Name_Id := Name_First_Ieee + 009;
-   Name_VITAL_Level1 :   constant Name_Id := Name_First_Ieee + 010;
-   Name_Last_Ieee :      constant Name_Id := Name_VITAL_Level1;
+   Name_First_Ieee         : constant Name_Id := Name_Last_Misc + 1;
+   Name_Ieee               : constant Name_Id := Name_First_Ieee + 000;
+   Name_Std_Logic_1164     : constant Name_Id := Name_First_Ieee + 001;
+   Name_Std_Ulogic         : constant Name_Id := Name_First_Ieee + 002;
+   Name_Std_Ulogic_Vector  : constant Name_Id := Name_First_Ieee + 003;
+   Name_Std_Logic          : constant Name_Id := Name_First_Ieee + 004;
+   Name_Std_Logic_Vector   : constant Name_Id := Name_First_Ieee + 005;
+   Name_Rising_Edge        : constant Name_Id := Name_First_Ieee + 006;
+   Name_Falling_Edge       : constant Name_Id := Name_First_Ieee + 007;
+   Name_VITAL_Timing       : constant Name_Id := Name_First_Ieee + 008;
+   Name_VITAL_Level0       : constant Name_Id := Name_First_Ieee + 009;
+   Name_VITAL_Level1       : constant Name_Id := Name_First_Ieee + 010;
+   Name_Std_Logic_Arith    : constant Name_Id := Name_First_Ieee + 011;
+   Name_Std_Logic_Signed   : constant Name_Id := Name_First_Ieee + 012;
+   Name_Std_Logic_Unsigned : constant Name_Id := Name_First_Ieee + 013;
+   Name_Last_Ieee          : constant Name_Id := Name_Std_Logic_Unsigned;
 
    --  Verilog keywords.
    Name_First_Verilog :  constant Name_Id := Name_Last_Ieee + 1;

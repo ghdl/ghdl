@@ -400,17 +400,20 @@ package body Std_Names is
       Def ("get_resolution_limit",  Name_Get_Resolution_Limit);
       Def ("control_simulation",    Name_Control_Simulation);
 
-      Def ("ieee",              Name_Ieee);
-      Def ("std_logic_1164",    Name_Std_Logic_1164);
-      Def ("std_ulogic",        Name_Std_Ulogic);
-      Def ("std_ulogic_vector", Name_Std_Ulogic_Vector);
-      Def ("std_logic",         Name_Std_Logic);
-      Def ("std_logic_vector",  Name_Std_Logic_Vector);
-      Def ("rising_edge",       Name_Rising_Edge);
-      Def ("falling_edge",      Name_Falling_Edge);
-      Def ("vital_timing",      Name_VITAL_Timing);
-      Def ("vital_level0",      Name_VITAL_Level0);
-      Def ("vital_level1",      Name_VITAL_Level1);
+      Def ("ieee",               Name_Ieee);
+      Def ("std_logic_1164",     Name_Std_Logic_1164);
+      Def ("std_ulogic",         Name_Std_Ulogic);
+      Def ("std_ulogic_vector",  Name_Std_Ulogic_Vector);
+      Def ("std_logic",          Name_Std_Logic);
+      Def ("std_logic_vector",   Name_Std_Logic_Vector);
+      Def ("rising_edge",        Name_Rising_Edge);
+      Def ("falling_edge",       Name_Falling_Edge);
+      Def ("vital_timing",       Name_VITAL_Timing);
+      Def ("vital_level0",       Name_VITAL_Level0);
+      Def ("vital_level1",       Name_VITAL_Level1);
+      Def ("std_logic_arith",    Name_Std_Logic_Arith);
+      Def ("std_logic_signed",   Name_Std_Logic_Signed);
+      Def ("std_logic_unsigned", Name_Std_Logic_Unsigned);
 
       --  Verilog keywords
       Def ("always",       Name_Always);
