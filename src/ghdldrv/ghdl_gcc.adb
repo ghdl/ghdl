@@ -19,6 +19,7 @@ with Ghdlmain;
 with Ghdllocal;
 with Ghdldrv;
 with Ghdlprint;
+with Ghdlvpi;
 
 procedure Ghdl_Gcc is
 begin
@@ -27,6 +28,7 @@ begin
    Ghdlmain.Version_String := new String'("GCC back-end code generator");
    Ghdldrv.Backend := Ghdldrv.Backend_Gcc;
    Ghdldrv.Register_Commands;
+   Ghdlvpi.Register_Commands;
    Ghdllocal.Register_Commands;
    Ghdlprint.Register_Commands;
    Ghdlmain.Register_Commands;

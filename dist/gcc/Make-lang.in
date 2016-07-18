@@ -39,41 +39,17 @@
 MV = mv
 RM = rm -f
 
-GHDLLIB_CFLAGS=-O2 -g
-GHDLLIB_AFLAGS=-gnatpn
 
 # Extra flags to pass to recursive makes.
 GHDL_ADAFLAGS= -Wall -gnata
-VHDL_LIB_DIR=$(libsubdir)/vhdl
 GNATBIND = gnatbind
 GNATMAKE = gnatmake
-VHDL_FLAGS_TO_PASS = \
-	"GHDL_ADAFLAGS=$(GHDL_ADAFLAGS)" \
-	"GRT_FLAGS=$(GHDLLIB_CFLAGS)" \
-	"GRT_ADAFLAGS=$(GHDLLIB_AFLAGS)" \
-	"LIB_CFLAGS=$(GHDLLIB_CFLAGS)" \
-	"GNATMAKE=$(GNATMAKE)" \
-	"GNATBIND=$(GNATBIND)" \
-	"CFLAGS=$(CFLAGS)" \
-	"VHDL_LIB_DIR=$(VHDL_LIB_DIR)" \
-	"INSTALL_DATA=$(INSTALL_DATA)" \
-	"INSTALL_PROGRAM=$(INSTALL_PROGRAM)" \
-        "libexecsubdir=$(libexecsubdir)"
-
-# Command to run the Makefile in vhdl subdir.  Don't forget the dependency on
-#  vhdl/Makefile
-MAKE_IN_VHDL=$(MAKE) -C vhdl $(FLAGS_TO_PASS) $(VHDL_FLAGS_TO_PASS) ADAC="$(CC)" CC="$(CC)"
 
 # Define the names for selecting vhdl in LANGUAGES.
-vhdl VHDL: ghdl1$(exeext) ghdl$(exeext) vhdl/libgrt.a ghdllib
+vhdl VHDL: ghdl1$(exeext) ghdl$(exeext)
 
 # Tell GNU Make to ignore these, if they exist.
-.PHONY: vhdl VHDL ghdllib
-
-#ortho-lang.o: $(agcc_srcdir)/ortho-lang.c \
-# $(AGCC_GCCOBJ_DIR)gcc/gtype-vhdl.h \
-# $(AGCC_GCCOBJ_DIR)gcc/gt-vhdl-ortho-lang.h
-#	$(COMPILER) -c -o $@ $< $(AGCC_CFLAGS) $(INCLUDES)
+.PHONY: vhdl VHDL
 
 GHDL1_OBJS = attribs.o vhdl/ortho-lang.o
 
@@ -94,7 +70,23 @@ ghdl1$(exeext): force $(GHDL1_OBJS) $(BACKEND) $(LIBDEPS)
 	 -bargs -E -cargs $(CFLAGS) $(GHDL_ADAFLAGS) \
 	 -largs --LINK=$(LLINKER) $(ALL_LINKERFLAGS) $(LDFLAGS) $(GHDL1_OBJS) \
 	 $(filter-out main.o,$(BACKEND)) $(LIBS) $(BACKENDLIBS)
-	if test $@ -nt s-ghdllib; then $(RM) -f s-ghdllib; fi
+
+vhdl_target1:=$(subst -gnu,,$(target))
+vhdl_targ:=$(subst -, ,$(vhdl_target1))
+ifeq ($(words $(vhdl_targ)),2)
+  vhdl_osys:=$(word 2,$(vhdl_targ))
+else
+  vhdl_osys:=$(word 3,$(vhdl_targ))
+endif
+
+# Set target files.
+ifeq ($(filter-out mingw32 mingw64,$(vhdl_osys)),)
+  VHDL_SOEXT=.dll
+else ifeq ($(filter-out darwin%,$(vhdl_osys)),)
+  VHDL_SOEXT=.dylib
+else
+  VHDL_SOEXT=.so
+endif
 
 vhdl/default_pathes.ads: Makefile
 	echo "--  DO NOT EDIT" > tmp-dpathes.ads
@@ -113,7 +105,9 @@ vhdl/default_pathes.ads: Makefile
 	echo "   Compiler_Llvm  : constant String := \"\";" >> tmp-dpathes.ads
 	echo "   Post_Processor : constant String := \"\";" >> tmp-dpathes.ads
 	echo "   Lib_Prefix     : constant String :=">> tmp-dpathes.ads
-	echo "     \"lib/gcc/$(target_noncanonical)/$(version)/vhdl/\";" >> tmp-dpathes.ads
+	echo "     \"lib/ghdl\";" >> tmp-dpathes.ads
+	echo "   Shared_Library_Extension : constant String :=">> tmp-dpathes.ads
+	echo "     \"$(VHDL_SOEXT)\";" >> tmp-dpathes.ads
 	echo "end Default_Pathes;" >> tmp-dpathes.ads
 	$(srcdir)/../move-if-change tmp-dpathes.ads $@
 
@@ -122,21 +116,6 @@ ghdl$(exeext): ghdl1$(exeext) vhdl/default_pathes.ads force
 	$(GNATMAKE) -o $@ -aI$(srcdir)/vhdl -aI$(srcdir)/vhdl/ghdldrv \
 	 -aIvhdl -aOvhdl ghdl_gcc \
 	 -bargs -E -cargs $(ADA_CFLAGS) $(GHDL_ADAFLAGS) -largs $(LIBS)
-	if test $@ -nt s-ghdllib; then $(RM) -f s-ghdllib; fi
-
-# Ghdl libraries. Also depends on xgcc to build std_standard.o
-s-ghdllib: ghdl$(exeext) ghdl1$(exeext) $(GCC_PASSES)
-	$(MAKE_IN_VHDL) ghdllib
-	touch $@
-
-ghdllib: s-ghdllib
-
-vhdl/libgrt.a: vhdl/Makefile force
-	$(MAKE_IN_VHDL) libgrt.a grt.lst
-
-vhdl/Makefile: config.status $(srcdir)/vhdl/Makefile.in
-	CONFIG_HEADERS= CONFIG_LINKS= CONFIG_COMMANDS= \
-	CONFIG_FILES=vhdl/Makefile $(SHELL) config.status
 
 # Build hooks:
 
@@ -173,19 +152,17 @@ vhdl.install-normal:
 vhdl.install-plugin:
 
 # Install the driver program as ghdl.
-vhdl.install-common: ghdl$(exeext) s-ghdllib vhdl/Makefile
+vhdl.install-common: ghdl$(exeext) ghdl1$(exeext)
 	-mkdir $(DESTDIR)$(bindir)
 	-$(RM) $(DESTDIR)$(bindir)/ghdl$(exeext)
 	$(INSTALL_PROGRAM) ghdl$(exeext) $(DESTDIR)$(bindir)/ghdl$(exeext)
-# Install the library
-	$(MAKE_IN_VHDL) install-ghdllib
+	-mkdir $(DESTDIR)$(libdir)
+	-mkdir $(DESTDIR)$(libdir)/ghdl
+	$(INSTALL_DATA) ../libbacktrace/.libs/libbacktrace.a $(DESTDIR)$(libdir)/ghdl
 
 install-info:: $(DESTDIR)$(infodir)/ghdl.info
 
 vhdl.install-info: $(DESTDIR)$(infodir)/ghdl.info
-
-install-ghdllib: ghdl$(exeext) ghdl1$(exeext) vhdl/Makefile s-ghdllib
-	$(MAKE_IN_VHDL) install-ghdllib
 
 vhdl.install-man: $(DESTDIR)$(man1dir)/ghdl$(man1ext)
 

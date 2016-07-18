@@ -148,6 +148,11 @@ loadVpiModule (const char* modulename)
 
   fprintf (stderr, "loading VPI module '%s'\n", modulename);
 
+  /* TODO: on windows, use SetDllDirectory with:
+     - install dir (libdir) => add -DLIBDIR=xxx
+     - exec path\lib => see windows_default_path
+  */
+
   vpimod = module_open (modulename);
 
   if (vpimod == NULL)
@@ -162,10 +167,6 @@ loadVpiModule (const char* modulename)
      No need to load the library several times.  */
   if (libghdlvpi_mod == NULL)
     {
-      /* TODO: on windows, use SetDllDirectory with:
-	 - install dir (libdir) => add -DLIBDIR=xxx
-	 - exec path\lib => see windows_default_path
-      */
       libghdlvpi_mod = module_open (libghdlvpi_name);
       if (libghdlvpi_mod != NULL)
 	{

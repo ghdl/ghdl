@@ -19,6 +19,7 @@ with Ghdlmain;
 with Ghdllocal;
 with Ghdlprint;
 with Ghdldrv;
+with Ghdlvpi;
 
 procedure Ghdl_Llvm is
 begin
@@ -27,6 +28,7 @@ begin
    Ghdlmain.Version_String := new String'("llvm code generator");
    Ghdldrv.Backend := Ghdldrv.Backend_Llvm;
    Ghdldrv.Register_Commands;
+   Ghdlvpi.Register_Commands;
    Ghdllocal.Register_Commands;
    Ghdlprint.Register_Commands;
    Ghdlmain.Register_Commands;

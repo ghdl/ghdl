@@ -33,6 +33,4 @@ compilers="ghdl1\$(exeext)"
 
 stagestuff="ghdl\$(exeext) ghdl1\$(exeext)"
 
-outputs=vhdl/Makefile
-
 gtfiles="\$(srcdir)/vhdl/ortho-lang.c"
