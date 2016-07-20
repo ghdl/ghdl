@@ -323,7 +323,7 @@ ifeq "$(backend)" "gcc"
   STD_GHDL_FLAGS=
 else
   # Specify ghdl1 path, as it is spawned by ghdl.
-  STD_GHDL_FLAGS=--GHDL1=$(PWD)/ghdl1-$(backend)
+  STD_GHDL_FLAGS=--GHDL1=$(PWD)/ghdl1-$(backend)$(EXEEXT)
 endif
 
 $(LIB93_DIR)/std/std_standard.o: $(GHDL)
