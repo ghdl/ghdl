@@ -25,6 +25,7 @@ libdirsuffix=@libdirsuffix@
 libdirreverse=@libdirreverse@
 EXEEXT=@EXEEXT@
 SOEXT=@SOEXT@
+PIC_FLAGS=@PIC_FLAGS@
 gcc_src_dir=@gcc_src_dir@
 LLVM_CONFIG=@llvm_config@
 LDFLAGS=@LDFLAGS@
@@ -285,7 +286,7 @@ install.grt: libgrt.a grt.lst install.dirs
 
 vpi_thunk.o: $(GRTSRCDIR)/vpi_thunk.c $(GRTSRCDIR)/vpi_thunk.h
 #	Do not use OPT_FLAGS (do not enable coverage)
-	$(CC) -c -o $@ $< -fPIC -O $(WARN_CFLAGS)
+	$(CC) -c -o $@ $< $(PIC_FLAGS) -O $(WARN_CFLAGS)
 
 libghdlvpi.so: vpi_thunk.o
 	$(CC) -o $@ $< -shared -Wl,-soname,libghdlvpi.so
