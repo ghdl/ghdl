@@ -25,6 +25,7 @@ libdirsuffix=@libdirsuffix@
 libdirreverse=@libdirreverse@
 EXEEXT=@EXEEXT@
 SOEXT=@SOEXT@
+PIC_FLAGS=@PIC_FLAGS@
 gcc_src_dir=@gcc_src_dir@
 LLVM_CONFIG=@llvm_config@
 LDFLAGS=@LDFLAGS@
@@ -285,7 +286,7 @@ install.grt: libgrt.a grt.lst install.dirs
 
 vpi_thunk.o: $(GRTSRCDIR)/vpi_thunk.c $(GRTSRCDIR)/vpi_thunk.h
 #	Do not use OPT_FLAGS (do not enable coverage)
-	$(CC) -c -o $@ $< -fPIC -O $(WARN_CFLAGS)
+	$(CC) -c -o $@ $< $(PIC_FLAGS) -O $(WARN_CFLAGS)
 
 libghdlvpi.so: vpi_thunk.o
 	$(CC) -o $@ $< -shared -Wl,-soname,libghdlvpi.so
@@ -313,12 +314,17 @@ ANALYZE_OPTS:=
 ANALYZE:=$(GHDL) -a $(ANALYZE_OPTS) $(LIB_CFLAGS)
 ANALYZE_DEP:=$(GHDL)
 
+# TODO?: don't include, make it separate
 include $(srcdir)/libraries/Makefile.inc
 
+# TODO?: move std_standard in libraries/Makefile
 ifeq "$(backend)" "gcc"
+  # ghdl with gcc backend is already installed, no need to specify ghdl1
+  # (and we don't know where it is).
   STD_GHDL_FLAGS=
 else
-  STD_GHDL_FLAGS=--GHDL1=$(PWD)/ghdl1-$(backend)
+  # Specify ghdl1 path, as it is spawned by ghdl.
+  STD_GHDL_FLAGS=--GHDL1=$(PWD)/ghdl1-$(backend)$(EXEEXT)
 endif
 
 $(LIB93_DIR)/std/std_standard.o: $(GHDL)

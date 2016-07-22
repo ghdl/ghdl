@@ -21,9 +21,17 @@ with GNAT.OS_Lib; use GNAT.OS_Lib;
 with Ada.Command_Line; use Ada.Command_Line;
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal;
-with Default_Pathes;
+with Default_Pathes; use Default_Pathes;
 
 package body Ghdlvpi is
+
+   --  Useful flags for target dependent operations.
+   --  So, we only support unix, darwin and windows.  Might need a little bit
+   --  of tuning for another OS.
+   Is_Unix : constant Boolean := Shared_Library_Extension = ".so";
+   Is_Darwin : constant Boolean := Shared_Library_Extension = ".dylib";
+   Is_Windows : constant Boolean := Shared_Library_Extension = ".dll";
+   pragma Unreferenced (Is_Windows);
 
    --  Return the include directory.
    function Get_Vpi_Include_Dir return String is
@@ -48,17 +56,21 @@ package body Ghdlvpi is
    function Get_Vpi_Cflags return Argument_List
    is
       Extra_Args : Argument_List (1 .. 2);
+      Nbr : Natural;
    begin
-      Extra_Args (1) := new String'("-fPIC");
-      Extra_Args (2) := new String'("-I" & Get_Vpi_Include_Dir);
-      return Extra_Args;
+      Extra_Args (1) := new String'("-I" & Get_Vpi_Include_Dir);
+      Nbr := 1;
+
+      if Is_Unix then
+         --  PIC is the default on Darwin and Windows.
+         Nbr := Nbr + 1;
+         Extra_Args (Nbr) := new String'("-fPIC");
+      end if;
+      return Extra_Args (1 .. Nbr);
    end Get_Vpi_Cflags;
 
    function Get_Vpi_Ldflags return Argument_List
    is
-      use Default_Pathes;
-      Is_Unix : constant Boolean := Shared_Library_Extension = ".so";
-      Is_Darwin : constant Boolean := Shared_Library_Extension = ".dylib";
       Extra_Args : Argument_List (1 .. 4);
       Nbr : Natural;
    begin
@@ -69,6 +81,7 @@ package body Ghdlvpi is
 
       if Is_Unix or Is_Darwin then
          --  On linux/unix, add rpath.
+         --  No such concept on windows.
          Nbr := Nbr + 1;
          Extra_Args (Nbr) := new String'
            ("-Wl,-rpath," & Get_Vpi_Lib_Dir);

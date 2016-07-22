@@ -33,13 +33,14 @@ package Grt.C is
    --  Type void * and char *.
    subtype voids is System.Address;
    subtype chars is System.Address;
-   subtype long is Long_Integer;
 
    --  Type size_t.
    type size_t is mod 2 ** Standard'Address_Size;
 
    --  Type int.  It is an alias on Integer for simplicity.
    subtype int is Integer;
+   subtype long is Long_Integer;
+   type unsigned is mod 2 ** Integer'Size;
 
    --  Low level memory management.
    procedure Free (Addr : System.Address);

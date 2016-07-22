@@ -799,14 +799,66 @@ package body Sem is
                   Xref_Ref (Gen_Spec, Res);
                   Set_Prefix (Block_Spec, Block_Name);
                   Set_Block_Specification (Block_Conf, Block_Spec);
+
                when others =>
                   raise Internal_Error;
             end case;
 
             Set_Named_Entity (Block_Name, Res);
             Prev := Get_Generate_Block_Configuration (Res);
+
+         when Iir_Kind_Case_Generate_Statement =>
+            case Get_Kind (Block_Spec) is
+               when Iir_Kind_Simple_Name =>
+                  --  LRM08 3.4.2 Block configuration
+                  --  If no generate specification appears in such a block
+                  --  configuration, [...]
+                  --  GHDL: doesn't apply to case generate statement
+                  Error_Msg_Sem
+                    ("missing alternative label for a case-generate",
+                     Block_Spec);
+                  return Null_Iir;
+               when Iir_Kind_Parenthesis_Name =>
+                  Assoc := Get_Association_Chain (Block_Spec);
+                  pragma Assert
+                    (Get_Kind (Assoc)
+                       = Iir_Kind_Association_Element_By_Expression);
+                  Gen_Spec := Get_Actual (Assoc);
+                  if Get_Kind (Gen_Spec) /= Iir_Kind_Simple_Name then
+                     Error_Msg_Sem
+                       ("alternative label expected for case-generate",
+                        Gen_Spec);
+                     return Null_Iir;
+                  end if;
+                  --  Search label.
+                  Clause := Get_Case_Statement_Alternative_Chain (Block);
+                  while Clause /= Null_Iir loop
+                     Res := Get_Associated_Block (Clause);
+                     exit when Get_Alternative_Label (Res)
+                       = Get_Identifier (Gen_Spec);
+                     Clause := Get_Chain (Clause);
+                  end loop;
+                  if Clause = Null_Iir then
+                     Error_Msg_Sem
+                       ("alternative label " & Image_Identifier (Gen_Spec)
+                          & " not found for case-generate", Gen_Spec);
+                     return Null_Iir;
+                  end if;
+                  Set_Named_Entity (Block_Spec, Res);
+                  Xref_Ref (Gen_Spec, Res);
+                  Set_Prefix (Block_Spec, Block_Name);
+                  Set_Block_Specification (Block_Conf, Block_Spec);
+
+               when others =>
+                  raise Internal_Error;
+            end case;
+
+            Set_Named_Entity (Block_Name, Res);
+            Prev := Get_Generate_Block_Configuration (Res);
+
          when others =>
-            Error_Msg_Sem ("block statement label expected", Block_Conf);
+            Error_Msg_Sem ("block or generate statement label expected",
+                           Block_Conf);
             return Null_Iir;
       end case;
 
@@ -836,7 +888,8 @@ package body Sem is
             end if;
             Set_Block_Block_Configuration (Res, Block_Conf);
 
-         when Iir_Kind_If_Generate_Statement =>
+         when Iir_Kind_If_Generate_Statement
+           | Iir_Kind_Case_Generate_Statement =>
             --  LRM93 1.3
             --  It is an error if, in a given block configuration, more than
             --  one configuration item is defined for the same block [or

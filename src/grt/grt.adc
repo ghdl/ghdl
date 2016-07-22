@@ -35,9 +35,8 @@
 --  This files is *not* names gnat.adc, in order to ease the possibility of
 --  not using it.
 pragma Restrictions (No_Exception_Handlers);
---pragma restrictions (No_Exceptions);
+pragma Restrictions (No_Exception_Propagation);
 pragma Restrictions (No_Secondary_Stack);
---pragma Restrictions (No_Elaboration_Code);
 pragma Restrictions (No_Dispatch);
 pragma Restrictions (No_Io);
 pragma Restrictions (No_Finalization);
@@ -46,5 +45,14 @@ pragma restrictions (no_dependence => GNAT);
 pragma Restrictions (Max_Tasks => 0);
 pragma Restrictions (No_Task_Hierarchy);
 pragma Restrictions (No_Implicit_Heap_Allocations);
+pragma Restrictions (No_Initialize_Scalars);
 pragma Suppress (Overflow_Check);
-pragma No_Run_Time;
+
+--  Too strong:
+-- pragma Restrictions (No_Elaboration_Code);
+
+--  Would be nice, but not allowed.
+-- pragma Restrictions (No_Multiple_Elaboration);
+
+--  Not supported by crippled gnat.
+-- pragma No_Run_Time;
