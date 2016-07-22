@@ -66,44 +66,44 @@ ortho_code-x86-flags.ads:
 
 ghdl_mcode: GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
 ghdl_mcode: default_pathes.ads $(GRT_ADD_OBJS) $(ORTHO_DEPS) memsegs_c.o chkstk.o force
-	$(GNATMAKE) -o $@ -aI../../ortho/mcode -aI../../ortho $(GNATFLAGS) ghdl_jit.adb $(GNAT_BARGS) -largs memsegs_c.o chkstk.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
+	$(GNATMAKE) -o $@$(EXEEXT) -aI../../ortho/mcode -aI../../ortho $(GNATFLAGS) ghdl_jit.adb $(GNAT_BARGS) -largs memsegs_c.o chkstk.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
 
 memsegs_c.o: ../../ortho/mcode/memsegs_c.c
 	$(CC) -c -g -o $@ $<
 
 ghdl_llvm_jit: GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
 ghdl_llvm_jit: default_pathes.ads $(GRT_ADD_OBJS) $(ORTHO_DEPS) llvm-cbindings.o force
-	$(GNATMAKE) -o $@ -aI../../ortho/llvm -aI../../ortho $(GNATFLAGS) ghdl_jit.adb $(GNAT_BARGS) -largs llvm-cbindings.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB)) `$(LLVM_CONFIG) --ldflags --libs --system-libs` -lc++
+	$(GNATMAKE) -o $@$(EXEEXT) -aI../../ortho/llvm -aI../../ortho $(GNATFLAGS) ghdl_jit.adb $(GNAT_BARGS) -largs llvm-cbindings.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB)) `$(LLVM_CONFIG) --ldflags --libs --system-libs` -lc++
 
 llvm-cbindings.o: ../../ortho/llvm/llvm-cbindings.cpp
 	$(CXX) -c -m64 `$(LLVM_CONFIG) --includedir --cxxflags` -g -o $@ $<
 
 ghdl_simul: default_pathes.ads $(GRT_ADD_OBJS) force
-	$(GNATMAKE) -aI../../simulate $(GNATFLAGS) ghdl_simul $(GNAT_BARGS) -largs $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
+	$(GNATMAKE) -aI../../simulate $(GNATFLAGS) ghdl_simul$(EXEEXT) $(GNAT_BARGS) -largs $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
 
 ghdl_gcc: default_pathes.ads force
-	$(GNATMAKE) $(GNATFLAGS) ghdl_gcc $(GNAT_BARGS) -largs $(GNAT_LARGS)
+	$(GNATMAKE) $(GNATFLAGS) ghdl_gcc$(EXEEXT) $(GNAT_BARGS) -largs $(GNAT_LARGS)
 
 ghdl_llvm: default_pathes.ads force
-	$(GNATMAKE) $(GNATFLAGS) ghdl_llvm $(GNAT_BARGS) -largs $(GNAT_LARGS)
+	$(GNATMAKE) $(GNATFLAGS) ghdl_llvm$(EXEEXT) $(GNAT_BARGS) -largs $(GNAT_LARGS)
 
 default_pathes.ads: default_pathes.ads.in Makefile
 	curdir=`cd ..; pwd`; \
-	sed -e "s%@COMPILER_GCC@%$$curdir/ghdl1-gcc%" \
-	 -e "s%@COMPILER_DEBUG@%$$curdir/ghdl1-debug%" \
-	 -e "s%@COMPILER_MCODE@%$$curdir/ghdl1-mcode%" \
-	 -e "s%@COMPILER_LLVM@%$$curdir/ghdl1-llvm%" \
-	 -e "s%@POST_PROCESSOR@%$$curdir/../ortho/oread/oread-gcc%" \
+	sed -e "s%@COMPILER_GCC@%$$curdir/ghdl1-gcc$(EXEEXT)%" \
+	 -e "s%@COMPILER_DEBUG@%$$curdir/ghdl1-debug$(EXEEXT)%" \
+	 -e "s%@COMPILER_MCODE@%$$curdir/ghdl1-mcode$(EXEEXT)%" \
+	 -e "s%@COMPILER_LLVM@%$$curdir/ghdl1-llvm$(EXEEXT)%" \
+	 -e "s%@POST_PROCESSOR@%$$curdir/../ortho/oread/oread-gcc$(EXEEXT)%" \
 	 -e "s%@INSTALL_PREFIX@%%" \
 	 -e "s%@LIB_PREFIX@%$$curdir/lib/%" < $< > $@
 
 bootstrap.old: force
 	$(RM) ../../libraries/std-obj87.cf
 	$(MAKE) -C ../../libraries EXT=obj \
-	  ANALYSE="$(PWD)/ghdl -a -g" std-obj87.cf
+	  ANALYSE="$(PWD)/ghdl$(EXEEXT) -a -g" std-obj87.cf
 	$(RM) ../../libraries/std-obj93.cf
 	$(MAKE) -C ../../libraries EXT=obj \
-	  ANALYSE="$(PWD)/ghdl -a -g" std-obj93.cf
+	  ANALYSE="$(PWD)/ghdl$(EXEEXT) -a -g" std-obj93.cf
 
 LIB87_DIR:=../lib/v87
 LIB93_DIR:=../lib/v93
@@ -111,7 +111,7 @@ LIB08_DIR:=../lib/v08
 
 LIBSRC_DIR:=../../libraries
 REL_DIR:=../..
-GHDL=ghdl
+GHDL=ghdl$(EXEEXT)
 ANALYZE:=../../../ghdldrv/$(GHDL) -a $(LIB_CFLAGS)
 LN=ln -s
 CP=cp
@@ -122,9 +122,9 @@ $(LIB87_DIR) $(LIB93_DIR) $(LIB08_DIR):
 
 include ../../libraries/Makefile.inc
 
-GHDL1=../ghdl1-gcc
+GHDL1=../ghdl1-gcc$(EXEEXT)
 $(LIB93_DIR)/std/std_standard.o: $(GHDL1)
-ifeq ($(GHDL),ghdl_llvm)
+ifeq ($(GHDL),ghdl_llvm$(EXEEXT))
 	$(GHDL1) --std=93 -quiet $(LIB_CFLAGS)  -c -o $@ --compile-standard
 else
 	$(GHDL1) --std=93 -quiet $(LIB_CFLAGS)  -o std_standard.s \
@@ -134,7 +134,7 @@ else
 endif
 
 $(LIB87_DIR)/std/std_standard.o: $(GHDL1)
-ifeq ($(GHDL),ghdl_llvm)
+ifeq ($(GHDL),ghdl_llvm$(EXEEXT))
 	$(GHDL1) --std=87 -quiet $(LIB_CFLAGS)  -c -o $@ --compile-standard
 else
 	$(GHDL1) --std=87 -quiet $(LIB_CFLAGS) -o std_standard.s \
@@ -144,7 +144,7 @@ else
 endif
 
 $(LIB08_DIR)/std/std_standard.o: $(GHDL1)
-ifeq ($(GHDL),ghdl_llvm)
+ifeq ($(GHDL),ghdl_llvm$(EXEEXT))
 	$(GHDL1) --std=08 -quiet $(LIB_CFLAGS)  -c -o $@ --compile-standard
 else
 	$(GHDL1) --std=08 -quiet $(LIB_CFLAGS) -o std_standard.s \
@@ -167,22 +167,22 @@ grt.links:
 install.all: install.v87 install.v93 install.v08
 
 install.gcc:
-	$(MAKE) GHDL=ghdl_gcc install.all
-	$(MAKE) GHDL1=../ghdl1-gcc install.standard
+	$(MAKE) GHDL=ghdl_gcc$(EXEEXT) install.all
+	$(MAKE) GHDL1=../ghdl1-gcc$(EXEEXT) install.standard
 
 install.mcode:
-	$(MAKE) GHDL=ghdl_mcode install.all
+	$(MAKE) GHDL=ghdl_mcode$(EXEEXT) install.all
 
 install.simul:
-	$(MAKE) GHDL=ghdl_simul install.all
+	$(MAKE) GHDL=ghdl_simul$(EXEEXT) install.all
 
 install.llvm:
-	$(MAKE) GHDL=ghdl_llvm install.all
-	$(MAKE) GHDL1=../ghdl1-llvm install.standard
+	$(MAKE) GHDL=ghdl_llvm$(EXEEXT) install.all
+	$(MAKE) GHDL1=../ghdl1-llvm$(EXEEXT) install.standard
 
 clean: force
-	$(RM) -f *.o *.ali ghdl_gcc ghdl_mcode ghdl_llvm ghdl_llvm_jit
-	$(RM) -f b~*.ad? *~ default_pathes.ads ghdl_simul
+	$(RM) -f *.o *.ali ghdl_gcc$(EXEEXT) ghdl_mcode$(EXEEXT) ghdl_llvm$(EXEEXT) ghdl_llvm_jit$(EXEEXT)
+	$(RM) -f b~*.ad? *~ default_pathes.ads ghdl_simul$(EXEEXT)
 	$(RM) -rf ../lib
 
 clean-c: force
