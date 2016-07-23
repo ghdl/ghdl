@@ -80,7 +80,7 @@ package body Grt.Wave_Options.Parse is
          Report_C ("warning: version wasn't set at the beginning of the" &
                    " file; currently supported version is ");
          Print_Version (Current_Version);
-         Report_E;
+         Report_E ("");
       end if;
 
       if Trees = Tree_Array'(others => null) then
