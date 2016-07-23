@@ -58,7 +58,7 @@ package body Grt.Wave_Options.Read is
       end loop;
    end Check_If_All_Found;
 
--- private ---------------------------------------------------------------------
+-- private --------------------------------------------------------------------
 
    function Find_Cursor (Name : Ghdl_C_String; First : Elem_Acc;
             Is_Signal : Boolean := False) return Elem_Acc is

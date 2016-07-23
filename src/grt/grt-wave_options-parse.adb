@@ -29,12 +29,12 @@ with Grt.Strings; use Grt.Strings;
 with Grt.Vstrings; use Grt.Vstrings;
 with Grt.Errors; use Grt.Errors;
 
-with Grt.Wave_Options.Parse.Debug;
+--~ with Grt.Wave_Options.Parse.Debug;
 
 package body Grt.Wave_Options.Parse is
 
    procedure Start (Option_File : String) is
-      Stream : FILEs := File_Open (Option_File);
+      Stream : constant FILEs := File_Open (Option_File);
       First, Last : Integer;
       Line : String (1 .. Buf_Size);
       Lineno : Natural;
@@ -58,7 +58,8 @@ package body Grt.Wave_Options.Parse is
 
          Last := Last_Non_Whitespace_Pos (Line (First .. Last));
          declare
-            Line_Str : String (1 .. Last + 1 - First) := Line (First .. Last);
+            Line_Str : constant String (1 .. Last + 1 - First) :=
+                       Line (First .. Last);
          begin
             Line_Context :=
                new Line_Context_Type'(Str => new String'(Line_Str),
@@ -76,22 +77,22 @@ package body Grt.Wave_Options.Parse is
       end loop;
 
       if Version.Major = -1 then
-         Report_C ("warning: version wasn't set at the beginning of the file;" &
-                   " currently supported version is ");
+         Report_C ("warning: version wasn't set at the beginning of the" &
+                   " file; currently supported version is ");
          Print_Version (Current_Version);
          Newline_Err;
       end if;
 
       if Trees = Tree_Array'(others => null) then
          Report_E ("No signal path was found in the wave option file," &
-                   "then every signals will be displayed.");
+                   " then every signals will be displayed.");
       end if;
 
       --~ Debug.Dump_Tree;
 
    end Start;
 
--- private ---------------------------------------------------------------------
+-- private --------------------------------------------------------------------
 
    procedure Parse_Version (Line : String_Acc) is
       Msg_Invalid_Format : constant String := "invalid version format";
@@ -112,7 +113,7 @@ package body Grt.Wave_Options.Parse is
       end if;
 
       First := First + 7;
-      if not Is_Whitespace (Line (First)) then --catch "version\n", "version1.0"
+      if not Is_Whitespace (Line (First)) then --catch "version\n","version1.0"
          Error_Context (Msg_Invalid_Format);
       end if;
 
