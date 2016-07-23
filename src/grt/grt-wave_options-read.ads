@@ -29,20 +29,22 @@ package Grt.Wave_Options.Read is
    pragma Preelaborate;
 
    function Get_Top_Cursor (Name : Ghdl_C_String; Index : Tree_Index_Type)
-            return Elem_Acc;
-   function Get_Cursor (Name : Ghdl_C_String; Parent : Elem_Acc;
-            Is_Signal : Boolean := False) return Elem_Acc;
+                           return Elem_Acc;
+   function Get_Cursor
+     (Name : Ghdl_C_String; Parent : Elem_Acc; Is_Signal : Boolean := False)
+     return Elem_Acc;
    function Is_Displayed (Cursor : Elem_Acc) return Boolean;
 
    procedure Check_If_All_Found;
 
 private
 
-   function Find_Cursor (Name : Ghdl_C_String; First : Elem_Acc;
-            Is_Signal : Boolean := False) return Elem_Acc;
+   function Find_Cursor
+     (Name : Ghdl_C_String; First : Elem_Acc; Is_Signal : Boolean := False)
+     return Elem_Acc;
 
-   procedure Check_If_Found (Previous_Cursor : Elem_Acc;
-                             Sep : Character; Level : Positive);
+   procedure Check_If_Found
+     (Previous_Cursor : Elem_Acc; Sep : Character; Level : Positive);
 
    function Display_All_Signals return Boolean;
 

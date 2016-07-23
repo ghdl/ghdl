@@ -65,7 +65,7 @@ package body Grt.Strings is
       return -1;
    end Find;
    function Find (Str : String; Char : Character; Start : Positive)
-            return Integer is
+                 return Integer is
    begin
       return Find (Str (Start .. Str'Last), Char);
    end Find;
@@ -86,7 +86,8 @@ package body Grt.Strings is
       end loop;
    end To_Lower;
 
-   function Value (Str : String) return Integer is
+   function Value (Str : String) return Integer
+   is
       Decimal : Positive := 1;
       Value_Tmp : Natural := 0;
       Digit : Integer;
@@ -105,10 +106,10 @@ package body Grt.Strings is
    function Value (Char : Character) return Integer is
    begin
       case Char is
-      when '0' .. '9' =>
-         return Character'Pos (Char) - Character'Pos ('0');
-      when others =>
-         return -1;
+         when '0' .. '9' =>
+            return Character'Pos (Char) - Character'Pos ('0');
+         when others =>
+            return -1;
       end case;
    end Value;
 end Grt.Strings;

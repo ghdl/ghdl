@@ -33,7 +33,8 @@ with Grt.Errors; use Grt.Errors;
 
 package body Grt.Wave_Options.Parse is
 
-   procedure Start (Option_File : String) is
+   procedure Start (Option_File : String)
+   is
       Stream : constant FILEs := File_Open (Option_File);
       First, Last : Integer;
       Line : String (1 .. Buf_Size);
@@ -94,7 +95,8 @@ package body Grt.Wave_Options.Parse is
 
 -- private --------------------------------------------------------------------
 
-   procedure Parse_Version (Line : String_Acc) is
+   procedure Parse_Version (Line : String_Acc)
+   is
       Msg_Invalid_Format : constant String := "invalid version format";
       First, Dot_Index, Num : Integer;
    begin
@@ -160,7 +162,8 @@ package body Grt.Wave_Options.Parse is
 
    end Parse_Version;
 
-   procedure Print_Version (Version : Version_Type) is
+   procedure Print_Version (Version : Version_Type)
+   is
       Num_Str : String (1 .. Value_String_Size);
       First : Positive;
    begin
@@ -173,7 +176,8 @@ package body Grt.Wave_Options.Parse is
 
    --------------------------------------------------------------------------
 
-   procedure Parse_Path (Line : String_Acc) is
+   procedure Parse_Path (Line : String_Acc)
+   is
       First, Last : Positive;
       Tree_Updated : Boolean;
       Tree_Index : Tree_Index_Type;
@@ -226,7 +230,8 @@ package body Grt.Wave_Options.Parse is
    end Parse_Path;
 
    function Update_Tree (Elem_Name : String; Tree_Index : Tree_Index_Type)
-            return Boolean is
+                        return Boolean
+   is
       Sibling_Cursor : Elem_Acc := Tree_Cursor;
       Previous_Sibling_Cursor : Elem_Acc := null;
       Elem : Elem_Acc;
@@ -272,23 +277,23 @@ package body Grt.Wave_Options.Parse is
       end if;
       for Index in Elem_Name'Range loop
          case Elem_Name (Index) is
-         when 'A' .. 'Z' | 'a' .. 'z' =>
-            null;
-         when '0' .. '9' =>
-            if Index = Elem_Name'First then
+            when 'A' .. 'Z' | 'a' .. 'z' =>
+               null;
+            when '0' .. '9' =>
+               if Index = Elem_Name'First then
+                  Validity_Error (Elem_Name);
+               end if;
+            when '_' =>
+               if Index = Elem_Name'First
+                 or else Index = Elem_Name'Last
+                 or else Elem_Name (Index - 1) = '_'
+               then
+                  Validity_Error (Elem_Name);
+               end if;
+            when '.' | '/' =>
+               Error_Context ("invalid signal path");
+            when others =>
                Validity_Error (Elem_Name);
-            end if;
-         when '_' =>
-            if Index = Elem_Name'First
-              or else Index = Elem_Name'Last
-              or else Elem_Name (Index - 1) = '_'
-            then
-               Validity_Error (Elem_Name);
-            end if;
-         when '.' | '/' =>
-            Error_Context ("invalid signal path");
-         when others =>
-            Validity_Error (Elem_Name);
          end case;
       end loop;
    end Check_Validity;
@@ -313,7 +318,8 @@ package body Grt.Wave_Options.Parse is
       Error_Context (Msg, Line_Context, Severity);
    end Error_Context;
 
-   function File_Open (Option_File : String) return FILEs is
+   function File_Open (Option_File : String) return FILEs
+   is
       Mode : constant String := "rt" & ASCII.Nul;
       Stream : FILEs;
    begin

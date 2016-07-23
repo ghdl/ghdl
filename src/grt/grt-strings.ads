@@ -31,18 +31,23 @@ package Grt.Strings is
    --  Return True IFF C is a whitespace character (as defined in LRM93 14.3)
    function Is_Whitespace (C : in Character) return Boolean;
 
-   -- The following functions return -1 in case there is no match in string
+   -- The following functions return -1 in case there is no match in string ---
+
    -- Return the index of the first non whitespace character in string
    function First_Non_Whitespace_Pos (Str : String) return Integer;
+
    -- Return the index of the last non whitespace character in string
    function Last_Non_Whitespace_Pos (Str : String) return Integer;
+
    -- Return the index of the new line character (ASCII.LF) in string
    function New_Line_Pos (Line : String) return Integer;
+
    -- Return the index of the first character that matches Char in string
    function Find (Str : String; Char : Character) return Integer;
    function Find (Str : String; Char : Character; Start : Positive)
-            return Integer;
-   --
+                 return Integer;
+
+   ----------------------------------------------------------------------------
 
    --  Convert C/S to lowercase.
    function To_Lower (C : Character) return Character;

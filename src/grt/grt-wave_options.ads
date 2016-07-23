@@ -58,9 +58,10 @@ package Grt.Wave_Options is
 
    type Severity_Type is (Error, Warning);
 
-   procedure Print_Context (Line_Context : Line_Context_Acc;
-                            Severity : Severity_Type);
-   procedure Error_Context (Msg : String; Line_Context : Line_Context_Acc;
+   procedure Print_Context
+     (Line_Context : Line_Context_Acc; Severity : Severity_Type);
+   procedure Error_Context (Msg : String;
+                            Line_Context : Line_Context_Acc;
                             Severity : Severity_Type := Error);
 
 end Grt.Wave_Options;

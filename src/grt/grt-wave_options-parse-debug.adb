@@ -46,7 +46,8 @@ package body Grt.Wave_Options.Parse.Debug is
       New_Line;
    end Dump_Tree;
 
-   procedure Dump_Sub_Tree (Previous_Cursor : Elem_Acc; Level : Positive) is
+   procedure Dump_Sub_Tree (Previous_Cursor : Elem_Acc; Level : Positive)
+   is
       Current_Cursor : Elem_Acc := Previous_Cursor;
    begin
       while Current_Cursor /= null loop

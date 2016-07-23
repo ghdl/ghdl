@@ -29,16 +29,17 @@ with Grt.Errors; use Grt.Errors;
 
 package body Grt.Wave_Options is
 
-   procedure Print_Context (Line_Context : Line_Context_Acc;
-                            Severity : Severity_Type) is
+   procedure Print_Context
+     (Line_Context : Line_Context_Acc; Severity : Severity_Type)
+   is
       Lineno_Str : String (1 .. Value_String_Size);
       First : Natural;
    begin
       case Severity is
-      when Error =>
-         Error_C ("");
-      when Warning =>
-         Report_C ("warning: ");
+         when Error =>
+            Error_C ("");
+         when Warning =>
+            Report_C ("warning: ");
       end case;
       Report_C ("in file '");
       Report_C (File_Path.all);
@@ -50,15 +51,16 @@ package body Grt.Wave_Options is
       Report_C (" : ");
    end Print_Context;
 
-   procedure Error_Context (Msg : String; Line_Context : Line_Context_Acc;
+   procedure Error_Context (Msg : String;
+                            Line_Context : Line_Context_Acc;
                             Severity : Severity_Type := Error) is
    begin
       Print_Context (Line_Context, Severity);
       case Severity is
-      when Error =>
-         Error_E (Msg);
-      when Warning =>
-         Report_E (Msg);
+         when Error =>
+            Error_E (Msg);
+         when Warning =>
+            Report_E (Msg);
       end case;
    end Error_Context;
 

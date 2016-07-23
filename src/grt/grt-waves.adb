@@ -913,10 +913,12 @@ package body Grt.Waves is
    end Write_Hierarchy_El;
 
    --  Create a hierarchy block.
-   procedure Wave_Put_Hierarchy_Block (Inst : VhpiHandleT; Step : Step_Type;
+   procedure Wave_Put_Hierarchy_Block (Inst : VhpiHandleT;
+                                       Step : Step_Type;
                                        Wave_Elem : Grt.Wave_Options.Elem_Acc);
 
-   procedure Wave_Put_Hierarchy_1 (Inst : VhpiHandleT; Step : Step_Type;
+   procedure Wave_Put_Hierarchy_1 (Inst : VhpiHandleT;
+                                   Step : Step_Type;
                                    Wave_Elem : Grt.Wave_Options.Elem_Acc)
    is
       Decl_It : VhpiHandleT;
@@ -1008,9 +1010,10 @@ package body Grt.Waves is
       end loop;
    end Wave_Put_Hierarchy_1;
 
-   procedure Wave_Put_Hierarchy_Block (Inst : VhpiHandleT; Step : Step_Type;
-                                       Wave_Elem : Grt.Wave_Options.Elem_Acc)
-   is
+   procedure Wave_Put_Hierarchy_Block
+     (Inst : VhpiHandleT;
+      Step : Step_Type;
+      Wave_Elem : Grt.Wave_Options.Elem_Acc) is
    begin
       case Step is
          when Step_Name =>

@@ -29,13 +29,14 @@ with Grt.Errors; use Grt.Errors;
 package body Grt.Wave_Options.Read is
 
    function Get_Top_Cursor (Name : Ghdl_C_String; Index : Tree_Index_Type)
-            return Elem_Acc is
+                           return Elem_Acc is
    begin
       return Find_Cursor (Name, Trees (Index));
    end Get_Top_Cursor;
 
-   function Get_Cursor (Name : Ghdl_C_String; Parent : Elem_Acc;
-            Is_Signal : Boolean := False) return Elem_Acc is
+   function Get_Cursor
+     (Name : Ghdl_C_String; Parent : Elem_Acc; Is_Signal : Boolean := False)
+     return Elem_Acc is
    begin
       if Display_All_Signals then
          return null;
@@ -60,8 +61,10 @@ package body Grt.Wave_Options.Read is
 
 -- private --------------------------------------------------------------------
 
-   function Find_Cursor (Name : Ghdl_C_String; First : Elem_Acc;
-            Is_Signal : Boolean := False) return Elem_Acc is
+   function Find_Cursor
+     (Name : Ghdl_C_String; First : Elem_Acc; Is_Signal : Boolean := False)
+     return Elem_Acc
+   is
       Len : constant Natural := strlen (Name);
       Cursor : Elem_Acc := First;
    begin
@@ -80,8 +83,9 @@ package body Grt.Wave_Options.Read is
       end loop;
    end Find_Cursor;
 
-   procedure Check_If_Found (Previous_Cursor : Elem_Acc;
-                             Sep : Character; Level : Positive) is
+   procedure Check_If_Found
+     (Previous_Cursor : Elem_Acc; Sep : Character; Level : Positive)
+   is
       Cursor : Elem_Acc := Previous_Cursor;
       Index : Positive;
    begin

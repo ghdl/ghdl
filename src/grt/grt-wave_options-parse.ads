@@ -53,7 +53,7 @@ private
 
    procedure Parse_Path (Line : String_Acc);
    function Update_Tree (Elem_Name : String; Tree_Index : Tree_Index_Type)
-            return Boolean;
+                        return Boolean;
    procedure Check_Validity (Elem_Name : String);
    procedure Validity_Error (Elem_Name : String);
 
