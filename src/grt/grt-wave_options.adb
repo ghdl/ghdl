@@ -24,7 +24,6 @@
 --  covered by the GNU Public License.
 
 with Grt.Types; use Grt.Types;
-with Grt.Strings; use Grt.Strings;
 with Grt.Vstrings; use Grt.Vstrings;
 with Grt.Errors; use Grt.Errors;
 
