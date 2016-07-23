@@ -192,7 +192,8 @@ package body Grt.Wave_Options.Parse is
       loop
          First := Last;
 
-         loop -- Find next identifier
+         -- Find next identifier
+         loop
             if Line (Last) = Sep (Tree_Index) then
                Last := Last - 1;
                exit;
@@ -213,8 +214,10 @@ package body Grt.Wave_Options.Parse is
             return;
          end if;
 
-         Last := Last + 2; -- Skip the separator
-         if Last > Line'Last then -- catch signal paths ending with /
+         -- Skip the separator
+         Last := Last + 2;
+         -- Catch signal paths ending with /
+         if Last > Line'Last then
             Error_Context ("invalid signal path");
          end if;
 
@@ -236,8 +239,10 @@ package body Grt.Wave_Options.Parse is
                                    Line_Context => Line_Context,
                                    Kind => Not_Found,
                                    Next_Sibling | Next_Child => null);
-            if Previous_Sibling_Cursor = null then -- First element of level ?
-               if Previous_Tree_Cursor = null then -- Is a top_level ?
+            -- First element of level ?
+            if Previous_Sibling_Cursor = null then
+               -- Is a top level ?
+               if Previous_Tree_Cursor = null then
                   Trees (Tree_Index) := Elem;
                else
                   Previous_Tree_Cursor.Next_Child := Elem;
@@ -246,7 +251,8 @@ package body Grt.Wave_Options.Parse is
                Previous_Sibling_Cursor.Next_Sibling := Elem;
             end if;
             Previous_Tree_Cursor := Elem;
-            Tree_Cursor := null; -- Point to Elem.Next_Child which is null
+            -- Point to Elem.Next_Child which is null
+            Tree_Cursor := null;
             return True;
          -- Identifier was found in the tree ? Then move to its first child
          elsif Elem_Name = Sibling_Cursor.Name.all then
