@@ -91,7 +91,7 @@ package body Grt.Wave_Options.Read is
             Report_C ("no VHDL object in design matches ");
             -- Display the path of the first unfound vhdl object in signal path
             if Level > 1 then
-               Index := 1;
+               Index := Cursor.Line_Context.Str'First;
                for I in 2 .. Level loop
                   Index := Find (Cursor.Line_Context.Str.all, Sep, Index + 1);
                end loop;

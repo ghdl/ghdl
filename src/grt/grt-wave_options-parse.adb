@@ -42,30 +42,30 @@ package body Grt.Wave_Options.Parse is
       File_Path := new String'(Option_File);
       Lineno := 0;
 
-      loop -- Reads line after line
+      -- Processes line after line.
+      loop
          exit when fgets (Line'Address, Line'Length, Stream) = Null_Address;
          Lineno := Lineno + 1;
 
+         -- Determine end of line.
          Last := New_Line_Pos (Line) - 1;
          if Last < 0 then
             Last := Line'Last;
          end if;
 
+         -- Skips empty lines and comments.
          First := First_Non_Whitespace_Pos (Line (Line'First .. Last));
          if First = -1 or else Line (First) = '#' then
             goto Continue;
          end if;
 
+         -- Create a line string without beginning and ending whitespaces
          Last := Last_Non_Whitespace_Pos (Line (First .. Last));
-         declare
-            Line_Str : constant String (1 .. Last + 1 - First) :=
-                       Line (First .. Last);
-         begin
-            Line_Context :=
-               new Line_Context_Type'(Str => new String'(Line_Str),
-                                      Num => Lineno,
-                                      Max_Level => 0);
-         end;
+         Line_Context := new Line_Context_Type'(
+                                Str => new String'(Line (First .. Last)),
+                                Num => Lineno,
+                                Max_Level => 0);
+
 
          if Line (First) = '$' then
             Parse_Version (Line_Context.Str);
@@ -80,7 +80,7 @@ package body Grt.Wave_Options.Parse is
          Report_C ("warning: version wasn't set at the beginning of the" &
                    " file; currently supported version is ");
          Print_Version (Current_Version);
-         Newline_Err;
+         Report_E;
       end if;
 
       if Trees = Tree_Array'(others => null) then
@@ -112,29 +112,34 @@ package body Grt.Wave_Options.Parse is
          Error_Context (Msg_Invalid_Format);
       end if;
 
+      -- Catch "version\n", "version1.0"
       First := First + 7;
-      if not Is_Whitespace (Line (First)) then --catch "version\n","version1.0"
+      if not Is_Whitespace (Line (First)) then
          Error_Context (Msg_Invalid_Format);
       end if;
 
+      -- Catch "version \n", "version  \n", etc
       First := First_Non_Whitespace_Pos (Line (First + 1 .. Line'Last));
-      if First = -1 then -- catch "version \n", "version  \n", etc
+      if First = -1 then
          Error_Context (Msg_Invalid_Format);
       end if;
 
+      -- Catch the absence of "." or "version ."
       Dot_Index := Find (Line (First + 1 .. Line'Last), '.');
-      if Dot_Index = -1 then -- catch the absence of "." or "version ."
+      if Dot_Index = -1 then
          Error_Context (Msg_Invalid_Format);
       end if;
 
+      -- Catch version a.2
       Num := Value (Line (First .. Dot_Index - 1));
-      if Num = -1 then -- catch version a.2
+      if Num = -1 then
          Error_Context (Msg_Invalid_Format);
       end if;
       Version.Major := Num;
 
+      -- Catch version 1.a
       Num := Value (Line (Dot_Index + 1 .. Line'Last));
-      if Num = -1 then -- catch version 1.a
+      if Num = -1 then
          Error_Context (Msg_Invalid_Format);
       end if;
       Version.Minor := Num;

@@ -30,7 +30,10 @@ package body Grt.Wave_Options.Parse.Debug is
    procedure Dump_Tree is
    begin
       for Index in Tree_Index_Type'Range loop
-         New_Line; New_Line; Put ("----------------------------"); New_Line;
+         New_Line;
+         New_Line;
+         Put ("----------------------------");
+         New_Line;
          if Index = Pkg then
             Put ("Packages : ");
          else
@@ -39,16 +42,15 @@ package body Grt.Wave_Options.Parse.Debug is
          New_Line;
          Dump_Sub_Tree (Trees (Index), 1);
       end loop;
-      Put ("----------- END -----------------"); New_Line;
+      Put ("----------- END -----------------");
+      New_Line;
    end Dump_Tree;
 
    procedure Dump_Sub_Tree (Previous_Cursor : Elem_Acc; Level : Positive) is
       Current_Cursor : Elem_Acc := Previous_Cursor;
    begin
       while Current_Cursor /= null loop
-         for i in 2 .. Level loop
-            Put ("   ");
-         end loop;
+         Put ((3 .. 2 * Level => ' '));
          Put ('/'); Put (Current_Cursor.Name.all); New_Line;
          Dump_Sub_Tree (Current_Cursor.Next_Child, Level + 1);
          Current_Cursor := Current_Cursor.Next_Sibling;

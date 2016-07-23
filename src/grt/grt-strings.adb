@@ -32,9 +32,9 @@ package body Grt.Strings is
 
    function First_Non_Whitespace_Pos (Str : String) return Integer is
    begin
-      for Index in Str'Range loop
-         if not Is_Whitespace (Str (Index)) then
-            return Index;
+      for I in Str'Range loop
+         if not Is_Whitespace (Str (I)) then
+            return I;
          end if;
       end loop;
       return -1;
