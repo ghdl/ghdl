@@ -1,5 +1,5 @@
---  GHDL Run Time (GRT) - mono-thread version.
---  Copyright (C) 2005 - 2014 Tristan Gingold
+--  GHDL Run Time (GRT) - Wave option file top package.
+--  Copyright (C) 2016 Jonas Baggett
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -23,17 +23,23 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 
-package Grt.Wave_Options is
+-- Description: Wave option file top package.
+--              Allows to select signals to be displayed on the waveform (with
+--              the help of it's child units)
+--              Contains common stuff for it's child units
+
+with Grt.Types; use Grt.Types;
+
+package Grt.Wave_Opt_File is
    pragma Preelaborate;
 
-   type String_Acc is access String;
    type String_Cst is access constant String;
    Value_String_Size : constant := 10;
 
    File_Path : String_Cst;
 
    type Line_Context_Type is record
-      Str : String_Acc;
+      Str : String_Access;
       Num : Natural;
       Max_Level : Natural;
    end record;
@@ -64,4 +70,4 @@ package Grt.Wave_Options is
                             Line_Context : Line_Context_Acc;
                             Severity : Severity_Type := Error);
 
-end Grt.Wave_Options;
+end Grt.Wave_Opt_File;

@@ -1,5 +1,5 @@
---  GHDL Run Time (GRT) - mono-thread version.
---  Copyright (C) 2005 - 2014 Tristan Gingold
+--  GHDL Run Time (GRT) - Wave option file package for debugging.
+--  Copyright (C) 2016 Jonas Baggett
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -23,9 +23,11 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 
+-- Description: See package specifications
+
 with Grt.Astdio; use Grt.Astdio;
 
-package body Grt.Wave_Options.Parse.Debug is
+package body Grt.Wave_Opt_File.Parse.Debug is
 
    procedure Dump_Tree is
    begin
@@ -48,8 +50,9 @@ package body Grt.Wave_Options.Parse.Debug is
 
    procedure Dump_Sub_Tree (Previous_Cursor : Elem_Acc; Level : Positive)
    is
-      Current_Cursor : Elem_Acc := Previous_Cursor;
+      Current_Cursor : Elem_Acc;
    begin
+      Current_Cursor := Previous_Cursor;
       while Current_Cursor /= null loop
          Put ((3 .. 2 * Level => ' '));
          Put ('/'); Put (Current_Cursor.Name.all); New_Line;
@@ -58,4 +61,4 @@ package body Grt.Wave_Options.Parse.Debug is
       end loop;
    end Dump_Sub_Tree;
 
-end Grt.Wave_Options.Parse.Debug;
+end Grt.Wave_Opt_File.Parse.Debug;

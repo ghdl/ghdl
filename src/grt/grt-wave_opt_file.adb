@@ -1,5 +1,5 @@
---  GHDL Run Time (GRT) -  command line options.
---  Copyright (C) 2002 - 2014 Tristan Gingold
+--  GHDL Run Time (GRT) - Wave option file top package.
+--  Copyright (C) 2016 Jonas Baggett
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -23,11 +23,13 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 
+-- Description: See package specifications
+
 with Grt.Types; use Grt.Types;
 with Grt.Vstrings; use Grt.Vstrings;
 with Grt.Errors; use Grt.Errors;
 
-package body Grt.Wave_Options is
+package body Grt.Wave_Opt_File is
 
    procedure Print_Context
      (Line_Context : Line_Context_Acc; Severity : Severity_Type)
@@ -64,4 +66,4 @@ package body Grt.Wave_Options is
       end case;
    end Error_Context;
 
-end Grt.Wave_Options;
+end Grt.Wave_Opt_File;

@@ -1,5 +1,5 @@
---  GHDL Run Time (GRT) - mono-thread version.
---  Copyright (C) 2005 - 2014 Tristan Gingold
+--  GHDL Run Time (GRT) - Wave option file package for parsing.
+--  Copyright (C) 2016 Jonas Baggett
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -23,9 +23,14 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 
+-- Description: Wave option file child package for parsing.
+--              Parse a wave option file provided in the command line and
+--              create a tree with the path of the signals to be displayed on
+--              the waveform
+
 with Grt.Stdio; use Grt.Stdio;
 
-package Grt.Wave_Options.Parse is
+package Grt.Wave_Opt_File.Parse is
    pragma Preelaborate;
 
    procedure Start (Option_File : String);
@@ -48,17 +53,15 @@ private
    type Sep_Array is array (Tree_Index_Type) of Character;
    Sep : constant Sep_Array := (Pkg => '.', Entity => '/');
 
-   procedure Parse_Version (Line : String_Acc);
+   procedure Parse_Version (Line : String_Access);
    procedure Print_Version (Version : Version_Type);
 
-   procedure Parse_Path (Line : String_Acc);
+   procedure Parse_Path (Line : String_Access);
    function Update_Tree (Elem_Name : String; Tree_Index : Tree_Index_Type)
                         return Boolean;
-   procedure Check_Validity (Elem_Name : String);
-   procedure Validity_Error (Elem_Name : String);
 
    procedure Print_Context (Severity : Severity_Type);
    procedure Error_Context (Msg : String; Severity : Severity_Type := Error);
    function File_Open (Option_File : String) return FILEs;
 
-end Grt.Wave_Options.Parse;
+end Grt.Wave_Opt_File.Parse;

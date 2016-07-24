@@ -1,5 +1,5 @@
---  GHDL Run Time (GRT) -  command line options.
---  Copyright (C) 2002 - 2014 Tristan Gingold
+--  GHDL Run Time (GRT) - Wave option file package for parsing.
+--  Copyright (C) 2016 Jonas Baggett
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -23,15 +23,17 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 
+-- Description: See package specifications
+
 with System; use System;
 with Grt.Types; use Grt.Types;
 with Grt.Strings; use Grt.Strings;
 with Grt.Vstrings; use Grt.Vstrings;
 with Grt.Errors; use Grt.Errors;
 
---~ with Grt.Wave_Options.Parse.Debug;
+--~ with Grt.Wave_Opt_File.Parse.Debug;
 
-package body Grt.Wave_Options.Parse is
+package body Grt.Wave_Opt_File.Parse is
 
    procedure Start (Option_File : String)
    is
@@ -95,7 +97,7 @@ package body Grt.Wave_Options.Parse is
 
 -- private --------------------------------------------------------------------
 
-   procedure Parse_Version (Line : String_Acc)
+   procedure Parse_Version (Line : String_Access)
    is
       Msg_Invalid_Format : constant String := "invalid version format";
       First, Dot_Index, Num : Integer;
@@ -176,9 +178,10 @@ package body Grt.Wave_Options.Parse is
 
    --------------------------------------------------------------------------
 
-   procedure Parse_Path (Line : String_Acc)
+   procedure Parse_Path (Line : String_Access)
    is
-      First, Last : Positive;
+      -- Can equal to 0 in case of error (like '.' as a full path)
+      First, Last : Natural;
       Tree_Updated : Boolean;
       Tree_Index : Tree_Index_Type;
    begin
@@ -187,7 +190,17 @@ package body Grt.Wave_Options.Parse is
       if Line (Line'First) = '/' then
          Tree_Index := Entity;
          Last := Last + 1;
+         -- Catch '/' as a full path
+         if Last > Line'Length then
+            Error_Context ("invalid signal path");
+         end if;
       else
+         -- '/' not allowed for package signal paths in a.  Catch also the
+         -- absence a first slash in entity signal paths, which misleads the
+         -- code to believe it's inside a package
+         if Find (Line.all, '/') > 0 then
+            Error_Context ("invalid signal path");
+         end if;
          Tree_Index := Pkg;
       end if;
       Tree_Cursor := Trees (Tree_Index);
@@ -207,7 +220,6 @@ package body Grt.Wave_Options.Parse is
             Last := Last + 1;
          end loop;
 
-         Check_Validity (Line (First .. Last));
          Tree_Updated := Update_Tree (Line (First .. Last), Tree_Index);
          Line_Context.Max_Level := Line_Context.Max_Level + 1;
 
@@ -220,7 +232,7 @@ package body Grt.Wave_Options.Parse is
 
          -- Skip the separator
          Last := Last + 2;
-         -- Catch signal paths ending with /
+         -- Catch signal paths ending with / or .
          if Last > Line'Last then
             Error_Context ("invalid signal path");
          end if;
@@ -232,10 +244,12 @@ package body Grt.Wave_Options.Parse is
    function Update_Tree (Elem_Name : String; Tree_Index : Tree_Index_Type)
                         return Boolean
    is
-      Sibling_Cursor : Elem_Acc := Tree_Cursor;
-      Previous_Sibling_Cursor : Elem_Acc := null;
+      Sibling_Cursor, Previous_Sibling_Cursor : Elem_Acc;
       Elem : Elem_Acc;
    begin
+      Sibling_Cursor := Tree_Cursor;
+      Previous_Sibling_Cursor := null;
+
       loop
          -- Already reached the last sibling and current identifier corresponds
          -- to no existing element ? Then we will create an element
@@ -270,42 +284,6 @@ package body Grt.Wave_Options.Parse is
       end loop;
    end Update_Tree;
 
-   procedure Check_Validity (Elem_Name : String) is
-   begin
-      if Elem_Name'Length = 0 then
-         Error_Context ("invalid signal path");
-      end if;
-      for Index in Elem_Name'Range loop
-         case Elem_Name (Index) is
-            when 'A' .. 'Z' | 'a' .. 'z' =>
-               null;
-            when '0' .. '9' =>
-               if Index = Elem_Name'First then
-                  Validity_Error (Elem_Name);
-               end if;
-            when '_' =>
-               if Index = Elem_Name'First
-                 or else Index = Elem_Name'Last
-                 or else Elem_Name (Index - 1) = '_'
-               then
-                  Validity_Error (Elem_Name);
-               end if;
-            when '.' | '/' =>
-               Error_Context ("invalid signal path");
-            when others =>
-               Validity_Error (Elem_Name);
-         end case;
-      end loop;
-   end Check_Validity;
-
-   procedure Validity_Error (Elem_Name : String) is
-   begin
-      Print_Context (Error);
-      Error_C ("object name '");
-      Error_C (Elem_Name);
-      Error_E ("' is not a valid VHDL name");
-   end Validity_Error;
-
    --------------------------------------------------------------------------
 
    procedure Print_Context (Severity : Severity_Type) is
@@ -332,4 +310,4 @@ package body Grt.Wave_Options.Parse is
       return Stream;
    end File_Open;
 
-end Grt.Wave_Options.Parse;
+end Grt.Wave_Opt_File.Parse;

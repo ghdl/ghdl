@@ -1,5 +1,5 @@
---  GHDL Run Time (GRT) -  command line options.
---  Copyright (C) 2002 - 2014 Tristan Gingold
+--  GHDL Run Time (GRT) - Wave option file package for reading the tree.
+--  Copyright (C) 2016 Jonas Baggett
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -23,10 +23,12 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 
+-- Description: See package specifications
+
 with Grt.Strings; use Grt.Strings;
 with Grt.Errors; use Grt.Errors;
 
-package body Grt.Wave_Options.Read is
+package body Grt.Wave_Opt_File.Tree_Reading is
 
    function Get_Top_Cursor (Name : Ghdl_C_String; Index : Tree_Index_Type)
                            return Elem_Acc is
@@ -66,8 +68,9 @@ package body Grt.Wave_Options.Read is
      return Elem_Acc
    is
       Len : constant Natural := strlen (Name);
-      Cursor : Elem_Acc := First;
+      Cursor : Elem_Acc;
    begin
+      Cursor := First;
       loop
          if Cursor = null then
             return null;
@@ -86,9 +89,10 @@ package body Grt.Wave_Options.Read is
    procedure Check_If_Found
      (Previous_Cursor : Elem_Acc; Sep : Character; Level : Positive)
    is
-      Cursor : Elem_Acc := Previous_Cursor;
+      Cursor : Elem_Acc;
       Index : Positive;
    begin
+      Cursor := Previous_Cursor;
       while Cursor /= null loop
          if Cursor.Kind = Not_Found then
             Print_Context (Cursor.Line_Context, Warning);
@@ -119,11 +123,8 @@ package body Grt.Wave_Options.Read is
 
    function Display_All_Signals return Boolean is
    begin
-      if Trees = Tree_Array'(others => null) then
-         return True;
-      end if;
-      return False;
+      return Trees = Tree_Array'(others => null);
    end Display_All_Signals;
 
 
-end Grt.Wave_Options.Read;
+end Grt.Wave_Opt_File.Tree_Reading;

@@ -88,10 +88,13 @@ package body Grt.Strings is
 
    function Value (Str : String) return Integer
    is
-      Decimal : Positive := 1;
-      Value_Tmp : Natural := 0;
+      Decimal : Positive;
+      Value_Tmp : Natural;
       Digit : Integer;
    begin
+      Decimal := 1;
+      Value_Tmp := 0;
+
       for Index in reverse Str'Range loop
          Digit := Value (Str (Index));
          if Digit = -1 then

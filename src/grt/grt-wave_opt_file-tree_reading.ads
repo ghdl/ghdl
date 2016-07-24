@@ -1,5 +1,5 @@
---  GHDL Run Time (GRT) - mono-thread version.
---  Copyright (C) 2005 - 2014 Tristan Gingold
+--  GHDL Run Time (GRT) - Wave option file package for reading the tree.
+--  Copyright (C) 2016 Jonas Baggett
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -23,9 +23,13 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 
+-- Description: Wave option file child package for reading the tree created
+--              after parsing the wave option file. It provides functions to
+--              find in the tree which signals are to be displayed or not
+
 with Grt.Types; use Grt.Types;
 
-package Grt.Wave_Options.Read is
+package Grt.Wave_Opt_File.Tree_Reading is
    pragma Preelaborate;
 
    function Get_Top_Cursor (Name : Ghdl_C_String; Index : Tree_Index_Type)
@@ -48,4 +52,4 @@ private
 
    function Display_All_Signals return Boolean;
 
-end Grt.Wave_Options.Read;
+end Grt.Wave_Opt_File.Tree_Reading;
