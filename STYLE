@@ -7,10 +7,16 @@ Allowed Ada93 features: the standard library, child packages.
 Use assertions.
 
 We try to follow the 'GNU Coding Standards' when possible: comments before
-declarations, two spaces end of sentences...
+declarations, two spaces at end of sentences, finish sentences with a dot.
 But: 3 spaces for indentation.
 
 No trailing spaces, not TAB (HT).
+
+Subprograms must have a comment before to describe it, like:
+   --  Analyze the concurrent statements of PARENT.
+   procedure Sem_Concurrent_Statement_Chain (Parent : Iir);
+The line before the comment must be a blank line (unless this is the first
+declaration).  Don't repeat the comment before the subprogram body.
 
 * For subprograms:
 1) Declare on one line when possible:
