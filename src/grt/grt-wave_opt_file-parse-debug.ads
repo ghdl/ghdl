@@ -33,6 +33,6 @@ private package Grt.Wave_Opt_File.Parse.Debug is
    procedure Dump_Tree;
 
    -- Dump recursively an element of the tree.  Called by Dump_Tree
-   procedure Dump_Sub_Tree (Cursor : Elem_Acc; Level : Positive);
+   procedure Dump_Sub_Tree (Cursor : Elem_Acc);
 
 end Grt.Wave_Opt_File.Parse.Debug;

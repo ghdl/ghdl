@@ -59,28 +59,28 @@ package body Grt.Wave_Opt_File.Parse is
                         return Boolean;
 
    -- Parse the line where the version is set
-   procedure Parse_Version (Line : String_Access);
+   procedure Parse_Version (Line : String; Line_Pos : Positive);
 
    -- Print the version variable given as parameter
    procedure Print_Version (Version : Version_Type);
 
    -- Parse a line where a signal path is set
-   procedure Parse_Path (Line : String_Access);
+   procedure Parse_Path (Line : in out String);
 
    procedure Start (Option_File : String)
    is
       Stream : constant FILEs := File_Open (Option_File);
       First, Last : Integer;
       Line : String (1 .. Buf_Size);
-      Lineno : Natural;
+      Line_Pos : Natural;
    begin
       File_Path := new String'(Option_File);
-      Lineno := 0;
+      Line_Pos := 0;
 
       -- Processes line after line.
       loop
          exit when fgets (Line'Address, Line'Length, Stream) = Null_Address;
-         Lineno := Lineno + 1;
+         Line_Pos := Line_Pos + 1;
 
          -- Determine end of line.
          Last := New_Line_Pos (Line) - 1;
@@ -96,18 +96,14 @@ package body Grt.Wave_Opt_File.Parse is
 
          -- Create a line string without beginning and ending whitespaces
          Last := Last_Non_Whitespace_Pos (Line (First .. Last));
-         Line_Context := new Line_Context_Type'(
-                                Str => new String'(Line (First .. Last)),
-                                Num => Lineno,
-                                Max_Level => 0);
 
 
          if Line (First) = '$' then
-            Parse_Version (Line_Context.Str);
-            -- TODO : Line_Context should be deallocated here but the memory
-            --        gain shouldn't be significative
+            Parse_Version (Line (First .. Last), Line_Pos);
          else
-            Parse_Path (Line_Context.Str);
+            Path_Context := new Path_Context_Type'(Line_Pos => Line_Pos,
+                                                   Max_Level => 0);
+            Parse_Path (Line (First .. Last));
          end if;
 
          <<Continue>> null;
@@ -131,68 +127,62 @@ package body Grt.Wave_Opt_File.Parse is
 
 -------------------------------------------------------------------------------
 
-   -- An error/warning message start with the context or the error/warning.
-   -- This procedure print this context
-   procedure Print_Context (Severity : Severity_Type);
-
-   -- Print an error/warning with it's context
-   procedure Error_Context (Msg : String; Severity : Severity_Type := Error);
-
-   procedure Parse_Version (Line : String_Access)
+   procedure Parse_Version (Line : String; Line_Pos : Positive)
    is
       Msg_Invalid_Format : constant String := "invalid version format";
       First, Dot_Index, Num : Integer;
    begin
 
       if Version /= (others => -1) then
-         Error_Context ("version is set more than once");
+         Error_Context ("version is set more than once", Line_Pos, Line'First);
       end if;
 
       if Trees /= Tree_Array'(others => null) then
-         Error_Context ("version cannot be set after signal paths");
+         Error_Context
+           ("version cannot be set after signal paths", Line_Pos, Line'First);
       end if;
 
       First := First_Non_Whitespace_Pos (Line (Line'First + 1 .. Line'Last));
       if Line (First .. First + 6) /= "version" then
-         Error_Context (Msg_Invalid_Format);
+         Error_Context (Msg_Invalid_Format, Line_Pos, Line'First);
       end if;
 
       -- Catch "version\n", "version1.0"
       First := First + 7;
       if not Is_Whitespace (Line (First)) then
-         Error_Context (Msg_Invalid_Format);
+         Error_Context (Msg_Invalid_Format, Line_Pos, Line'First);
       end if;
 
       -- Catch "version \n", "version  \n", etc
       First := First_Non_Whitespace_Pos (Line (First + 1 .. Line'Last));
       if First = -1 then
-         Error_Context (Msg_Invalid_Format);
+         Error_Context (Msg_Invalid_Format, Line_Pos, Line'First);
       end if;
 
       -- Catch the absence of "." or "version ."
       Dot_Index := Find (Line (First + 1 .. Line'Last), '.');
       if Dot_Index = -1 then
-         Error_Context (Msg_Invalid_Format);
+         Error_Context (Msg_Invalid_Format, Line_Pos, Line'First);
       end if;
 
       -- Catch version a.2
       Num := Value (Line (First .. Dot_Index - 1));
       if Num = -1 then
-         Error_Context (Msg_Invalid_Format);
+         Error_Context (Msg_Invalid_Format, Line_Pos, Line'First);
       end if;
       Version.Major := Num;
 
       -- Catch version 1.a
       Num := Value (Line (Dot_Index + 1 .. Line'Last));
       if Num = -1 then
-         Error_Context (Msg_Invalid_Format);
+         Error_Context (Msg_Invalid_Format, Line_Pos, Line'First);
       end if;
       Version.Minor := Num;
 
       if Version.Major /= Current_Version.Major
         or else Version.Minor > Current_Version.Minor
       then
-         Print_Context (Error);
+         Print_Context (Line'First, Line_Pos, Error);
          Error_C ("unsupported format version; it must be ");
          if Current_Version.Minor /= 0 then
             Error_C ("between ");
@@ -219,28 +209,30 @@ package body Grt.Wave_Opt_File.Parse is
 
    --------------------------------------------------------------------------
 
-   procedure Parse_Path (Line : String_Access)
+   procedure Parse_Path (Line : in out String)
    is
       -- Can equal to 0 in case of error (like '.' as a full path)
       First, Last : Natural;
       Tree_Updated : Boolean;
       Tree_Index : Tree_Index_Type;
    begin
-      To_Lower (Line_Context.Str.all);
+      To_Lower (Line);
       Last := Line'First;
       if Line (Line'First) = '/' then
          Tree_Index := Entity;
          Last := Last + 1;
          -- Catch '/' as a full path
          if Last > Line'Length then
-            Error_Context ("invalid signal path");
+            Error_Context
+              ("invalid signal path", Path_Context.Line_Pos, Line'First);
          end if;
       else
          -- '/' not allowed for package signal paths in a.  Catch also the
          -- absence a first slash in entity signal paths, which misleads the
          -- code to believe it's inside a package
-         if Find (Line.all, '/') > 0 then
-            Error_Context ("invalid signal path");
+         if Find (Line, '/') > 0 then
+            Error_Context
+              ("invalid signal path", Path_Context.Line_Pos, Line'First);
          end if;
          Tree_Index := Pkg;
       end if;
@@ -261,12 +253,15 @@ package body Grt.Wave_Opt_File.Parse is
             Last := Last + 1;
          end loop;
 
+         Path_Context.Max_Level := Path_Context.Max_Level + 1;
          Tree_Updated := Update_Tree (Line (First .. Last), Tree_Index);
-         Line_Context.Max_Level := Line_Context.Max_Level + 1;
 
          if Last = Line'Last then
             if not Tree_Updated then
-               Error_Context ("ignored already known signal path", Warning);
+               Error_Context ("ignored already known signal path",
+                              Path_Context.Line_Pos,
+                              Line'First,
+                              Warning);
             end if;
             return;
          end if;
@@ -275,7 +270,8 @@ package body Grt.Wave_Opt_File.Parse is
          Last := Last + 2;
          -- Catch signal paths ending with / or .
          if Last > Line'Last then
-            Error_Context ("invalid signal path");
+            Error_Context
+              ("invalid signal path", Path_Context.Line_Pos, Line'First);
          end if;
 
       end loop;
@@ -296,7 +292,9 @@ package body Grt.Wave_Opt_File.Parse is
          -- to no existing element ? Then we will create an element
          if Sibling_Cursor = null then
             Elem := new Elem_Type'(Name => new String'(Elem_Name),
-                                   Line_Context => Line_Context,
+                                   Path_Context => Path_Context,
+                                   Column_Pos => Elem_Name'First,
+                                   Level => Path_Context.Max_Level,
                                    Kind => Not_Found,
                                    Next_Sibling | Next_Child => null);
             -- First element of level ?
@@ -326,16 +324,6 @@ package body Grt.Wave_Opt_File.Parse is
    end Update_Tree;
 
    --------------------------------------------------------------------------
-
-   procedure Print_Context (Severity : Severity_Type) is
-   begin
-      Print_Context (Line_Context, Severity);
-   end Print_Context;
-
-   procedure Error_Context (Msg : String; Severity : Severity_Type := Error) is
-   begin
-      Error_Context (Msg, Line_Context, Severity);
-   end Error_Context;
 
    function File_Open (Option_File : String) return FILEs
    is
