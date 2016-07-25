@@ -29,6 +29,16 @@ with Grt.Strings; use Grt.Strings;
 with Grt.Errors; use Grt.Errors;
 
 package body Grt.Wave_Opt_File.Tree_Reading is
+   -- Returns true is all signals are displayed.  This is the case when no
+   -- wave option file was provided or the one provided contains no paths
+   function All_Signals_Displayed return Boolean;
+
+   -- Find the element that matches the name given. Starts with the element
+   -- given, then go thru all its siblings
+   function Find_Cursor (Name : Ghdl_C_String;
+                         First_Sibling : Elem_Acc;
+                         Is_Signal : Boolean := False)
+                        return Elem_Acc;
 
    function Get_Top_Cursor (Name : Ghdl_C_String; Index : Tree_Index_Type)
                            return Elem_Acc is
@@ -40,7 +50,7 @@ package body Grt.Wave_Opt_File.Tree_Reading is
      (Name : Ghdl_C_String; Parent : Elem_Acc; Is_Signal : Boolean := False)
      return Elem_Acc is
    begin
-      if Display_All_Signals then
+      if All_Signals_Displayed then
          return null;
       end if;
       return Find_Cursor (Name, Parent.Next_Child, Is_Signal);
@@ -48,29 +58,35 @@ package body Grt.Wave_Opt_File.Tree_Reading is
 
    function Is_Displayed (Cursor : Elem_Acc) return Boolean is
    begin
-      if Display_All_Signals or else Cursor /= null then
+      if All_Signals_Displayed or else Cursor /= null then
          return True;
       end if;
       return False;
    end Is_Displayed;
 
+   -- Read the whole sub tree given and check if every element was found in
+   -- design.  Called by Check_If_All_Found
+   procedure Check_Sub_Tree_If_All_Found
+     (Previous_Cursor : Elem_Acc; Sep : Character; Level : Positive);
+
    procedure Check_If_All_Found is
    begin
       for Index in Tree_Index_Type'Range loop
-         Check_If_Found (Trees (Index), Seps (Index), 1);
+         Check_Sub_Tree_If_All_Found (Trees (Index), Seps (Index), 1);
       end loop;
    end Check_If_All_Found;
 
--- private --------------------------------------------------------------------
+-------------------------------------------------------------------------------
 
-   function Find_Cursor
-     (Name : Ghdl_C_String; First : Elem_Acc; Is_Signal : Boolean := False)
-     return Elem_Acc
+   function Find_Cursor (Name : Ghdl_C_String;
+                         First_Sibling : Elem_Acc;
+                         Is_Signal : Boolean := False)
+                        return Elem_Acc
    is
       Len : constant Natural := strlen (Name);
       Cursor : Elem_Acc;
    begin
-      Cursor := First;
+      Cursor := First_Sibling;
       loop
          if Cursor = null then
             return null;
@@ -86,7 +102,7 @@ package body Grt.Wave_Opt_File.Tree_Reading is
       end loop;
    end Find_Cursor;
 
-   procedure Check_If_Found
+   procedure Check_Sub_Tree_If_All_Found
      (Previous_Cursor : Elem_Acc; Sep : Character; Level : Positive)
    is
       Cursor : Elem_Acc;
@@ -114,17 +130,17 @@ package body Grt.Wave_Opt_File.Tree_Reading is
          then
             Error_Context ("not a signal", Cursor.Line_Context, Warning);
          else
-            Check_If_Found (Cursor.Next_Child, Sep, Level + 1);
+            Check_Sub_Tree_If_All_Found (Cursor.Next_Child, Sep, Level + 1);
          end if;
          Cursor := Cursor.Next_Sibling;
       end loop;
 
-   end Check_If_Found;
+   end Check_Sub_Tree_If_All_Found;
 
-   function Display_All_Signals return Boolean is
+   function All_Signals_Displayed return Boolean is
    begin
       return Trees = Tree_Array'(others => null);
-   end Display_All_Signals;
+   end All_Signals_Displayed;
 
 
 end Grt.Wave_Opt_File.Tree_Reading;

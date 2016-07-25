@@ -25,6 +25,22 @@
 
 -- Description: See package specifications
 
+-------------------------------------------------------------------------------
+
+-- TODO:
+-- * Currently the elements of the paths parsed are converted to lowercase.
+--   This is fine now, but maybe on day Verilog and/or System-C will be
+--   supported by GHDL and they are case-sensitive languages. In this case, we
+--   will need to find a different approach. Here are 2 possibilities :
+--   1) Create 2 trees when parsing : one case sensitive and one case
+--      insensitive, then latter when we have more informations, prune VHDL
+--      paths from the case sensitive tree and prune verilog / system-C paths
+--      from the case insensitive tree (maybe it's not really needed). Then use
+--      the right tree while looking for signals to be displayed in the design.
+--   2) Create only 1 case sensitive tree then latter when we have more
+--      informations, look for VHDL paths in the tree and merge elements who
+--      have the same name after lowering their characters.
+
 with System; use System;
 with Grt.Strings; use Grt.Strings;
 with Grt.Vstrings; use Grt.Vstrings;
@@ -33,6 +49,22 @@ with Grt.Errors; use Grt.Errors;
 --~ with Grt.Wave_Opt_File.Parse.Debug;
 
 package body Grt.Wave_Opt_File.Parse is
+   -- Open the wave option file
+   function File_Open (Option_File : String) return FILEs;
+
+   -- Update the tree with the current VHDL element parsed from the current
+   -- path. Returns True if the tree was actually updated.
+   function Update_Tree (Elem_Name : String; Tree_Index : Tree_Index_Type)
+                        return Boolean;
+
+   -- Parse the line where the version is set
+   procedure Parse_Version (Line : String_Access);
+
+   -- Print the version variable given as parameter
+   procedure Print_Version (Version : Version_Type);
+
+   -- Parse a line where a signal path is set
+   procedure Parse_Path (Line : String_Access);
 
    procedure Start (Option_File : String)
    is
@@ -71,6 +103,8 @@ package body Grt.Wave_Opt_File.Parse is
 
          if Line (First) = '$' then
             Parse_Version (Line_Context.Str);
+            -- TODO : Line_Context should be deallocated here but the memory
+            --        gain shouldn't be significative
          else
             Parse_Path (Line_Context.Str);
          end if;
@@ -94,7 +128,14 @@ package body Grt.Wave_Opt_File.Parse is
 
    end Start;
 
--- private --------------------------------------------------------------------
+-------------------------------------------------------------------------------
+
+   -- An error/warning message start with the context or the error/warning.
+   -- This procedure print this context
+   procedure Print_Context (Severity : Severity_Type);
+
+   -- Print an error/warning with it's context
+   procedure Error_Context (Msg : String; Severity : Severity_Type := Error);
 
    procedure Parse_Version (Line : String_Access)
    is
@@ -210,7 +251,7 @@ package body Grt.Wave_Opt_File.Parse is
 
          -- Find next identifier
          loop
-            if Line (Last) = Sep (Tree_Index) then
+            if Line (Last) = Seps (Tree_Index) then
                Last := Last - 1;
                exit;
             elsif Last = Line'Last then

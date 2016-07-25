@@ -30,24 +30,22 @@
 package Grt.Wave_Opt_File.Tree_Reading is
    pragma Preelaborate;
 
+   -- Returns the top element of the tree corresponding to the index given, but
+   -- only if the name given matches with it.  Otherwise returns null
    function Get_Top_Cursor (Name : Ghdl_C_String; Index : Tree_Index_Type)
                            return Elem_Acc;
+
+   -- If there is an element in the parent element given that match the name
+   -- given, returns it, otherwise returns null
    function Get_Cursor
      (Name : Ghdl_C_String; Parent : Elem_Acc; Is_Signal : Boolean := False)
      return Elem_Acc;
+
+   -- Returns true if the element given is not null, which means it exists in
+   -- the tree of the VHDL elements to be displayed
    function Is_Displayed (Cursor : Elem_Acc) return Boolean;
 
+   -- Read the whole tree and check if every element was found in design
    procedure Check_If_All_Found;
-
-private
-
-   function Find_Cursor
-     (Name : Ghdl_C_String; First : Elem_Acc; Is_Signal : Boolean := False)
-     return Elem_Acc;
-
-   procedure Check_If_Found
-     (Previous_Cursor : Elem_Acc; Sep : Character; Level : Positive);
-
-   function Display_All_Signals return Boolean;
 
 end Grt.Wave_Opt_File.Tree_Reading;

@@ -64,8 +64,13 @@ package Grt.Wave_Opt_File is
 
    type Severity_Type is (Error, Warning);
 
+private
+   -- An error/warning message start with the context or the error/warning.
+   -- This procedure print this context
    procedure Print_Context
      (Line_Context : Line_Context_Acc; Severity : Severity_Type);
+
+   -- Print an error/warning with it's context
    procedure Error_Context (Msg : String;
                             Line_Context : Line_Context_Acc;
                             Severity : Severity_Type := Error);

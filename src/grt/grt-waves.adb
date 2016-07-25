@@ -1578,6 +1578,8 @@ package body Grt.Waves is
       Wave_Put_Hierarchy (Root, Step_Name);
 
       Wave_Opt_File.Tree_Reading.Check_If_All_Found;
+      -- TODO : The tree of the wave option file should be deallocated here,
+      --        but the memory gain shouldn't be significative
 
       if Str_Table.Last > 0 then
          Freeze_Strings;

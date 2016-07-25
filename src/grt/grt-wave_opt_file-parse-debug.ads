@@ -29,7 +29,10 @@
 private package Grt.Wave_Opt_File.Parse.Debug is
    pragma Preelaborate;
 
+   -- Dump all the tree
    procedure Dump_Tree;
-   procedure Dump_Sub_Tree (Previous_Cursor : Elem_Acc; Level : Positive);
+
+   -- Dump recursively an element of the tree.  Called by Dump_Tree
+   procedure Dump_Sub_Tree (Cursor : Elem_Acc; Level : Positive);
 
 end Grt.Wave_Opt_File.Parse.Debug;

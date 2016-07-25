@@ -33,6 +33,7 @@ with Grt.Stdio; use Grt.Stdio;
 package Grt.Wave_Opt_File.Parse is
    pragma Preelaborate;
 
+   -- Parse the wave option file given as parameter
    procedure Start (Option_File : String);
 
 private
@@ -51,17 +52,5 @@ private
    Current_Version : constant Version_Type := (Major => 1, Minor => 0);
 
    type Sep_Array is array (Tree_Index_Type) of Character;
-   Sep : constant Sep_Array := (Pkg => '.', Entity => '/');
-
-   procedure Parse_Version (Line : String_Access);
-   procedure Print_Version (Version : Version_Type);
-
-   procedure Parse_Path (Line : String_Access);
-   function Update_Tree (Elem_Name : String; Tree_Index : Tree_Index_Type)
-                        return Boolean;
-
-   procedure Print_Context (Severity : Severity_Type);
-   procedure Error_Context (Msg : String; Severity : Severity_Type := Error);
-   function File_Open (Option_File : String) return FILEs;
 
 end Grt.Wave_Opt_File.Parse;
