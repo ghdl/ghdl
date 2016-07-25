@@ -42,6 +42,7 @@
 --      have the same name after lowering their characters.
 
 with System; use System;
+with Grt.Stdio; use Grt.Stdio;
 with Grt.Strings; use Grt.Strings;
 with Grt.Vstrings; use Grt.Vstrings;
 with Grt.Errors; use Grt.Errors;

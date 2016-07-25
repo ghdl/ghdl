@@ -28,8 +28,6 @@
 --              create a tree with the path of the signals to be displayed on
 --              the waveform
 
-with Grt.Stdio; use Grt.Stdio;
-
 package Grt.Wave_Opt_File.Parse is
    pragma Preelaborate;
 
