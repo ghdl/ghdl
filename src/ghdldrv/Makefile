@@ -37,7 +37,7 @@ GNAT_BARGS=-bargs -E
 LLVM_CONFIG=llvm-config
 
 #GNAT_LARGS= -static
-all: ghdl_mcode
+all: ghdl_mcode$(EXEEXT)
 
 target=i686-pc-linux-gnu
 #target=x86_64-pc-linux-gnu
@@ -64,28 +64,28 @@ ortho_code-x86-flags.ads:
 	echo "with Ortho_Code.X86.$(ORTHO_X86_FLAGS);" > $@
 	echo "package Ortho_Code.X86.Flags renames Ortho_Code.X86.$(ORTHO_X86_FLAGS);" >> $@
 
-ghdl_mcode: GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
-ghdl_mcode: default_pathes.ads $(GRT_ADD_OBJS) $(ORTHO_DEPS) memsegs_c.o chkstk.o force
-	$(GNATMAKE) -o $@$(EXEEXT) -aI../../ortho/mcode -aI../../ortho $(GNATFLAGS) ghdl_jit.adb $(GNAT_BARGS) -largs memsegs_c.o chkstk.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
+ghdl_mcode$(EXEEXT): GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
+ghdl_mcode$(EXEEXT): default_pathes.ads $(GRT_ADD_OBJS) $(ORTHO_DEPS) memsegs_c.o chkstk.o force
+	$(GNATMAKE) -o $@ -aI../../ortho/mcode -aI../../ortho $(GNATFLAGS) ghdl_jit.adb $(GNAT_BARGS) -largs memsegs_c.o chkstk.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
 
 memsegs_c.o: ../../ortho/mcode/memsegs_c.c
 	$(CC) -c -g -o $@ $<
 
-ghdl_llvm_jit: GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
-ghdl_llvm_jit: default_pathes.ads $(GRT_ADD_OBJS) $(ORTHO_DEPS) llvm-cbindings.o force
-	$(GNATMAKE) -o $@$(EXEEXT) -aI../../ortho/llvm -aI../../ortho $(GNATFLAGS) ghdl_jit.adb $(GNAT_BARGS) -largs llvm-cbindings.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB)) `$(LLVM_CONFIG) --ldflags --libs --system-libs` -lc++
+ghdl_llvm_jit$(EXEEXT): GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
+ghdl_llvm_jit$(EXEEXT): default_pathes.ads $(GRT_ADD_OBJS) $(ORTHO_DEPS) llvm-cbindings.o force
+	$(GNATMAKE) -o $@ -aI../../ortho/llvm -aI../../ortho $(GNATFLAGS) ghdl_jit.adb $(GNAT_BARGS) -largs llvm-cbindings.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB)) `$(LLVM_CONFIG) --ldflags --libs --system-libs` -lc++
 
 llvm-cbindings.o: ../../ortho/llvm/llvm-cbindings.cpp
 	$(CXX) -c -m64 `$(LLVM_CONFIG) --includedir --cxxflags` -g -o $@ $<
 
-ghdl_simul: default_pathes.ads $(GRT_ADD_OBJS) force
+ghdl_simul$(EXEEXT): default_pathes.ads $(GRT_ADD_OBJS) force
 	$(GNATMAKE) -aI../../simulate $(GNATFLAGS) ghdl_simul$(EXEEXT) $(GNAT_BARGS) -largs $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
 
-ghdl_gcc: default_pathes.ads force
-	$(GNATMAKE) $(GNATFLAGS) ghdl_gcc$(EXEEXT) $(GNAT_BARGS) -largs $(GNAT_LARGS)
+ghdl_gcc$(EXEEXT): default_pathes.ads force
+	$(GNATMAKE) $(GNATFLAGS) ghdl_gcc $(GNAT_BARGS) -largs $(GNAT_LARGS)
 
-ghdl_llvm: default_pathes.ads force
-	$(GNATMAKE) $(GNATFLAGS) ghdl_llvm$(EXEEXT) $(GNAT_BARGS) -largs $(GNAT_LARGS)
+ghdl_llvm$(EXEEXT): default_pathes.ads force
+	$(GNATMAKE) $(GNATFLAGS) ghdl_llvm $(GNAT_BARGS) -largs $(GNAT_LARGS)
 
 default_pathes.ads: default_pathes.ads.in Makefile
 	curdir=`cd ..; pwd`; \
