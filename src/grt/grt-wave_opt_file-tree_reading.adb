@@ -115,7 +115,9 @@ package body Grt.Wave_Opt_File.Tree_Reading is
          elsif Cursor.Level = Cursor.Path_Context.Max_Level
            and then Cursor.Kind = Pkg_Entity
          then
-            Error_Context ("not a signal", Cursor, Warning);
+            Print_Context (Cursor, Warning);
+            Report_C (Cursor.Name.all);
+            Report_E (" is not a signal");
          else
             Check_Sub_Tree_If_All_Found (Cursor.Next_Child, Sep);
          end if;
