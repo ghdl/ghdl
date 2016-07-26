@@ -21,7 +21,7 @@ GRT_ADAFLAGS=-gnatn
 ADAC=gcc
 CC=gcc
 GNATFLAGS=$(CFLAGS) -gnatf -gnaty3befhkmr -gnatwlu
-GHDL1=../ghdl1-gcc
+GHDL1=../ghdl1-gcc$(EXEEXT)
 GRTSRCDIR=.
 GRT_RANLIB=ranlib
 
