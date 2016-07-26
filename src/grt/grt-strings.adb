@@ -30,6 +30,46 @@ package body Grt.Strings is
       return C = ' ' or C = NBSP or C = HT;
    end Is_Whitespace;
 
+   function First_Non_Whitespace_Pos (Str : String) return Integer is
+   begin
+      for I in Str'Range loop
+         if not Is_Whitespace (Str (I)) then
+            return I;
+         end if;
+      end loop;
+      return -1;
+   end First_Non_Whitespace_Pos;
+
+   function Last_Non_Whitespace_Pos (Str : String) return Integer is
+   begin
+      for Index in reverse Str'Range loop
+         if not Is_Whitespace (Str (Index)) then
+            return Index;
+         end if;
+      end loop;
+      return -1;
+   end Last_Non_Whitespace_Pos;
+
+   function New_Line_Pos (Line : String) return Integer is
+   begin
+      return Find (Line, ASCII.LF);
+   end New_Line_Pos;
+
+   function Find (Str : String; Char : Character) return Integer is
+   begin
+      for Index in Str'Range loop
+         if Str (Index) = Char then
+            return Index;
+         end if;
+      end loop;
+      return -1;
+   end Find;
+   function Find (Str : String; Char : Character; Start : Positive)
+                 return Integer is
+   begin
+      return Find (Str (Start .. Str'Last), Char);
+   end Find;
+
    function To_Lower (C : Character) return Character is
    begin
       if C in 'A' .. 'Z' then
@@ -38,4 +78,41 @@ package body Grt.Strings is
          return C;
       end if;
    end To_Lower;
+
+   procedure To_Lower (S : in out String) is
+   begin
+      for I in S'Range loop
+         S (I) := To_Lower (S (I));
+      end loop;
+   end To_Lower;
+
+   function Value (Str : String) return Integer
+   is
+      Decimal : Positive;
+      Value_Tmp : Natural;
+      Digit : Integer;
+   begin
+      Decimal := 1;
+      Value_Tmp := 0;
+
+      for Index in reverse Str'Range loop
+         Digit := Value (Str (Index));
+         if Digit = -1 then
+            return -1;
+         end if;
+         Value_Tmp := Value_Tmp + Digit * Decimal;
+         Decimal := Decimal * 10;
+      end loop;
+      return Value_Tmp;
+   end Value;
+
+   function Value (Char : Character) return Integer is
+   begin
+      case Char is
+         when '0' .. '9' =>
+            return Character'Pos (Char) - Character'Pos ('0');
+         when others =>
+            return -1;
+      end case;
+   end Value;
 end Grt.Strings;
