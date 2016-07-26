@@ -25,7 +25,6 @@
 
 -- Description: See package specifications
 
-with Grt.Strings; use Grt.Strings;
 with Grt.Errors; use Grt.Errors;
 
 package body Grt.Wave_Opt_File.Tree_Reading is
