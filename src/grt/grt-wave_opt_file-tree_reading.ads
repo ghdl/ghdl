@@ -27,6 +27,8 @@
 --              after parsing the wave option file. It provides functions to
 --              find in the tree which signals are to be displayed or not
 
+with Grt.Types; use Grt.Types;
+
 package Grt.Wave_Opt_File.Tree_Reading is
    pragma Preelaborate;
 

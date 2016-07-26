@@ -25,6 +25,7 @@
 
 -- Description: See package specifications
 
+with Grt.Types; use Grt.Types;
 with Grt.Vstrings; use Grt.Vstrings;
 with Grt.Errors; use Grt.Errors;
 

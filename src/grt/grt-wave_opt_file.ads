@@ -28,8 +28,6 @@
 --              the help of it's child units)
 --              Contains common stuff for it's child units
 
-with Grt.Types; use Grt.Types;
-
 package Grt.Wave_Opt_File is
    pragma Preelaborate;
 
