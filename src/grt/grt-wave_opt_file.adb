@@ -25,17 +25,12 @@
 
 -- Description: See package specifications
 
-with Grt.Types; use Grt.Types;
-with Grt.Vstrings; use Grt.Vstrings;
 with Grt.Errors; use Grt.Errors;
 
 package body Grt.Wave_Opt_File is
 
    procedure Print_Context
-     (Line_Pos, Column_Pos : Positive; Severity : Severity_Type)
-   is
-      Value_Str : String (1 .. Value_String_Size);
-      First : Natural;
+     (Line_Pos, Column_Pos : Positive; Severity : Severity_Type) is
    begin
       case Severity is
          when Error =>
@@ -45,11 +40,9 @@ package body Grt.Wave_Opt_File is
       end case;
       Report_C (File_Path.all);
       Report_C (":");
-      To_String (Value_Str, First, Ghdl_I32 (Line_Pos));
-      Report_C (Value_Str (First .. Value_Str'Last));
+      Report_C (Line_Pos);
       Report_C (":");
-      To_String (Value_Str, First, Ghdl_I32 (Column_Pos));
-      Report_C (Value_Str (First .. Value_Str'Last));
+      Report_C (Column_Pos);
       Report_C (": ");
    end Print_Context;
 

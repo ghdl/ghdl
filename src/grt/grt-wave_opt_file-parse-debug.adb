@@ -29,6 +29,9 @@ with Grt.Astdio; use Grt.Astdio;
 
 package body Grt.Wave_Opt_File.Parse.Debug is
 
+   -- Dump recursively an element of the tree.
+   procedure Dump_Sub_Tree (Cursor : Elem_Acc);
+
    procedure Dump_Tree is
    begin
       New_Line;
@@ -44,6 +47,8 @@ package body Grt.Wave_Opt_File.Parse.Debug is
       Put_Line ("----------- END -----------------");
       New_Line;
    end Dump_Tree;
+
+-------------------------------------------------------------------------------
 
    procedure Dump_Sub_Tree (Cursor : Elem_Acc)
    is
