@@ -38,7 +38,7 @@ private
 
    Buf_Size : constant := 1024;
 
-   Line_Context : Line_Context_Acc;
+   Path_Context : Path_Context_Acc;
 
    Tree_Cursor, Previous_Tree_Cursor : Elem_Acc;
 

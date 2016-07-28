@@ -25,16 +25,12 @@
 
 -- Description: See package specifications
 
-with Grt.Vstrings; use Grt.Vstrings;
 with Grt.Errors; use Grt.Errors;
 
 package body Grt.Wave_Opt_File is
 
    procedure Print_Context
-     (Line_Context : Line_Context_Acc; Severity : Severity_Type)
-   is
-      Lineno_Str : String (1 .. Value_String_Size);
-      First : Natural;
+     (Line_Pos, Column_Pos : Positive; Severity : Severity_Type) is
    begin
       case Severity is
          when Error =>
@@ -42,27 +38,38 @@ package body Grt.Wave_Opt_File is
          when Warning =>
             Report_C ("warning: ");
       end case;
-      Report_C ("in file '");
       Report_C (File_Path.all);
-      Report_C ("' at line ");
-      To_String (Lineno_Str, First, Ghdl_I32 (Line_Context.Num));
-      Report_C (Lineno_Str (First .. Lineno_Str'Last));
-      Report_C (" - ");
-      Report_C (Line_Context.Str.all);
-      Report_C (" : ");
+      Report_C (":");
+      Report_C (Line_Pos);
+      Report_C (":");
+      Report_C (Column_Pos);
+      Report_C (": ");
+   end Print_Context;
+
+   procedure Print_Context (Element : Elem_Acc; Severity : Severity_Type) is
+   begin
+      Print_Context
+        (Element.Path_Context.Line_Pos, Element.Column_Pos, Severity);
    end Print_Context;
 
    procedure Error_Context (Msg : String;
-                            Line_Context : Line_Context_Acc;
+                            Line_Pos, Column_Pos : Positive;
                             Severity : Severity_Type := Error) is
    begin
-      Print_Context (Line_Context, Severity);
+      Print_Context (Line_Pos, Column_Pos, Severity);
       case Severity is
          when Error =>
             Error_E (Msg);
          when Warning =>
             Report_E (Msg);
       end case;
+   end Error_Context;
+
+   procedure Error_Context
+     (Msg : String; Element : Elem_Acc; Severity : Severity_Type := Error) is
+   begin
+      Error_Context
+        (Msg, Element.Path_Context.Line_Pos, Element.Column_Pos, Severity);
    end Error_Context;
 
 end Grt.Wave_Opt_File;
