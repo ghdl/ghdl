@@ -1782,9 +1782,7 @@ package body Sem_Expr is
             Decl := Get_Non_Alias_Declaration (Interpretation);
 
             --  It is compatible with operand types ?
-            if Get_Kind (Decl) /= Iir_Kind_Function_Declaration then
-               raise Internal_Error;
-            end if;
+            pragma Assert (Get_Kind (Decl) = Iir_Kind_Function_Declaration);
 
             --  LRM08 12.3 Visibility
             --  [...] or all visible declarations denote the same named entity.
@@ -1955,7 +1953,7 @@ package body Sem_Expr is
       begin
          Inter := Get_Interpretation (Id);
          while Valid_Interpretation (Inter) loop
-            Decl := Get_Declaration (Inter);
+            Decl := Get_Non_Alias_Declaration (Inter);
             if Get_Kind (Decl) = Iir_Kind_Enumeration_Literal
               and then Get_Type (Decl) = Etype
             then
