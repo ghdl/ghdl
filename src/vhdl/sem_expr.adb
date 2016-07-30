@@ -3339,11 +3339,10 @@ package body Sem_Expr is
             else
                --  Dynamic aggregate.
                declare
-                  Expr : Iir;
-                  Choice : Iir;
-               begin
                   --  There is only one choice.
-                  Choice := Assoc_Chain;
+                  Choice : constant Iir := Assoc_Chain;
+                  Expr : Iir;
+               begin
                   case Get_Kind (Choice) is
                      when Iir_Kind_Choice_By_Expression =>
                         Expr := Get_Choice_Expression (Choice);
