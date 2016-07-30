@@ -71,10 +71,12 @@ If the parametere line is too long with the 'is', put in on a separate line:
 1) 'then' on the same line:
       if Get_Expr_Staticness (Decl) = Locally then
 
-2) If not possible, 'then' aligned with the 'if':
+2) If not possible, 'then' is alone on its line aligned with the 'if':
       if Expr = Null_Iir
         or else Get_Kind (Expr) = Iir_Kind_Overflow_Literal
       then
+
+3) For a multiline condition, 'or else' and 'and then' should start lines.
 
 * 'Local' variable declaration:
 Do not initialize variables, constants must be declared before variables:
