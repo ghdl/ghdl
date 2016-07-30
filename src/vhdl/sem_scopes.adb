@@ -563,7 +563,7 @@ package body Sem_Scopes is
             --  Each of two declarations is said to be a /homograph/ of the
             --  other if both declarations have the same identifier, operator
             --  symbol, or character literal, and if overloading is allowed for
-            --  at mist one of the two.
+            --  at most one of the two.
             --
             --  LRM08 12.3 Visibility
             --  Each of two declarations is said to be a /homograph/ of the
@@ -576,6 +576,12 @@ package body Sem_Scopes is
             --  GHDL: here we are in the case when both declarations are
             --  overloadable.  Also, always follow the LRM08 rules as they fix
             --  issues.
+            --  GHDL: Special case for a second declaration with the same
+            --  designator and that denotes the same named entity than a
+            --  previous one (that would be an alias): according to the LRM,
+            --  they are both visible and there are no ambiguity as they
+            --  denotes the same named entity.  In GHDL, the new one hides the
+            --  previous one.  The behaviour should be the same.
 
             --  Find an homograph of this declaration (and also keep the
             --  interpretation just before it in the chain).
