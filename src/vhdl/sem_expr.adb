@@ -3134,6 +3134,7 @@ package body Sem_Expr is
 
       Index_Subtype_Constraint : Iir_Range_Expression;
       Index_Constraint : Iir_Range_Expression; -- FIXME: 'range.
+      Dir : Iir_Direction;
       Choice_Staticness : Iir_Staticness;
 
       Info : Array_Aggr_Info renames Infos (Dim);
@@ -3302,6 +3303,16 @@ package body Sem_Expr is
             Set_Type_Staticness (Info.Index_Subtype, Choice_Staticness);
             Set_Expr_Staticness (Index_Subtype_Constraint, Choice_Staticness);
             Set_Type (Index_Subtype_Constraint, Index_Type);
+            if Get_Kind (Index_Constraint) = Iir_Kind_Range_Expression then
+               Dir := Get_Direction (Index_Constraint);
+            else
+               --  This is not correct, as the direction must be the one of
+               --  the corresponding constraint.  But it may not be determined
+               --  at analysis time (if 'Range), and it doesn't really matter
+               --  because of implicit subtype conversion.  So choose one
+               --  arbitrary direction.
+               Dir := Iir_To;
+            end if;
 
             --  LRM93 7.3.2.2
             --  For an aggregate that has named associations, the leftmost and
@@ -3315,9 +3326,8 @@ package body Sem_Expr is
                                         Get_Range_Constraint (Index_Type));
                   Free_Iir (Index_Subtype_Constraint);
                else
-                  Set_Direction (Index_Subtype_Constraint,
-                                 Get_Direction (Index_Constraint));
-                  case Get_Direction (Index_Constraint) is
+                  Set_Direction (Index_Subtype_Constraint, Dir);
+                  case Dir is
                      when Iir_To =>
                         Set_Left_Limit (Index_Subtype_Constraint, Low);
                         Set_Right_Limit (Index_Subtype_Constraint, High);
@@ -3332,12 +3342,12 @@ package body Sem_Expr is
                   Expr : Iir;
                   Choice : Iir;
                begin
+                  --  There is only one choice.
                   Choice := Assoc_Chain;
                   case Get_Kind (Choice) is
                      when Iir_Kind_Choice_By_Expression =>
                         Expr := Get_Choice_Expression (Choice);
-                        Set_Direction (Index_Subtype_Constraint,
-                                       Get_Direction (Index_Constraint));
+                        Set_Direction (Index_Subtype_Constraint, Dir);
                         Set_Left_Limit (Index_Subtype_Constraint, Expr);
                         Set_Right_Limit (Index_Subtype_Constraint, Expr);
                      when Iir_Kind_Choice_By_Range =>
