@@ -237,16 +237,12 @@ package body Options is
       P ("  --syn-binding      use synthesis default binding rule");
       P ("  -fpsl              parse psl in comments");
       P ("Compilation list:");
-      P ("  -ls                after semantics");
-      P ("  -lc                after canon");
-      P ("  -la                after annotation");
+      P ("  -l[sca]            after semantics, canon or annotation");
       P ("  --lall             -lX options apply to all files");
       P ("  -lv                verbose list");
       P ("  -v                 disp compilation stages");
       P ("Compilation dump:");
-      P ("  -dp                dump tree after parsing");
-      P ("  -ds                dump tree after semantics");
-      P ("  -da                dump tree after annotate");
+      P ("  -d[psa]            dump tree after parse, semantics or annotate");
       P ("  --dall             -dX options apply to all files");
       if Back_End.Disp_Option /= null then
          Back_End.Disp_Option.all;
