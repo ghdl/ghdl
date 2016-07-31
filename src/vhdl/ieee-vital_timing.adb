@@ -27,7 +27,6 @@ with Sem_Specs;
 with Evaluation;
 with Sem;
 with Iirs_Utils;
-with Flags;
 
 package body Ieee.Vital_Timing is
    --  This package is based on IEEE 1076.4 1995.
@@ -189,7 +188,11 @@ package body Ieee.Vital_Timing is
    procedure Error_Vital (Msg : String; Loc : Iir) renames Error_Msg_Sem;
    procedure Error_Vital (Msg : String; Loc : Location_Type)
      renames Error_Msg_Sem;
-   procedure Warning_Vital (Msg : String; Loc : Iir) renames Warning_Msg_Sem;
+
+   procedure Warning_Vital (Msg : String; Loc : Iir) is
+   begin
+      Warning_Msg_Sem (Msg, Loc, Warnid_Vital_Generic);
+   end Warning_Vital;
 
    --  Check DECL is the VITAL level 0 attribute specification.
    procedure Check_Level0_Attribute_Specification (Decl : Iir)
@@ -1255,7 +1258,7 @@ package body Ieee.Vital_Timing is
          return;
       end if;
 
-      if Flags.Warn_Vital_Generic then
+      if Is_Warning_Enabled (Warnid_Vital_Generic) then
          Warning_Vital (Disp_Node (Decl) & " is not a VITAL generic", Decl);
       end if;
    end Check_Entity_Generic_Declaration;

@@ -2995,7 +2995,7 @@ package body Sem_Decls is
 
       --  Set Check_Unused.
       Check_Unused := False;
-      if Flags.Warn_Unused then
+      if Is_Warning_Enabled (Warnid_Unused) then
          case Get_Kind (Decl) is
             when Iir_Kind_Entity_Declaration =>
                --  May be used in architecture.
@@ -3079,7 +3079,8 @@ package body Sem_Decls is
                     and then not Is_Second_Subprogram_Specification (El)
                   then
                      Warning_Msg_Sem
-                       (Disp_Node (El) & " is never referenced", El);
+                       (Disp_Node (El) & " is never referenced", El,
+                       Warnid_Unused);
                   end if;
                when others =>
                   null;

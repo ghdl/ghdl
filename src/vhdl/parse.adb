@@ -4072,7 +4072,8 @@ package body Parse is
                   --  Parenthesis around aggregate is useless and change the
                   --  context for array aggregate.
                   Warning_Msg_Sem
-                    ("suspicious parenthesis around aggregate", Expr);
+                    ("suspicious parenthesis around aggregate",
+                     Expr, Warnid_Parenthesis);
                elsif not Flag_Parse_Parenthesis then
                   return Expr;
                end if;

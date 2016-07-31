@@ -67,10 +67,11 @@ package body Configuration is
       --  May be enabled to debug dependency construction.
       if False then
          if From = Null_Iir then
-            Warning_Msg_Elab (Disp_Node (Unit) & " added", Unit);
+            Report_Msg (Msgid_Note, Elaboration, Get_Location (Unit),
+                        Disp_Node (Unit) & " added");
          else
-            Warning_Msg_Elab
-              (Disp_Node (Unit) & " added by " & Disp_Node (From), From);
+            Report_Msg (Msgid_Note, Elaboration, Get_Location (From),
+                        Disp_Node (Unit) & " added by " & Disp_Node (From));
          end if;
       end if;
 
@@ -424,13 +425,15 @@ package body Configuration is
          if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open then
             Formal := Get_Association_Interface (Assoc);
             Err := Err or Check_Open_Port (Formal, Assoc);
-            if Flags.Warn_Binding and then not Get_Artificial_Flag (Assoc) then
+            if Is_Warning_Enabled (Warnid_Binding)
+              and then not Get_Artificial_Flag (Assoc)
+            then
                Warning_Msg_Elab
                  (Disp_Node (Formal) & " of " & Disp_Node (Get_Parent (Formal))
-                  & " is not bound", Assoc);
+                  & " is not bound", Assoc, Warnid_Binding);
                Warning_Msg_Elab
                  ("(in " & Disp_Node (Current_Configuration) & ")",
-                  Current_Configuration);
+                  Current_Configuration, Warnid_Binding);
             end if;
          end if;
          Assoc := Get_Chain (Assoc);
@@ -516,13 +519,13 @@ package body Configuration is
       Inst : Iir;
    begin
       if Bind = Null_Iir then
-         if Flags.Warn_Binding then
+         if Is_Warning_Enabled (Warnid_Binding) then
             Inst := Get_First_Element (Get_Instantiation_List (Conf));
             Warning_Msg_Elab
-              (Disp_Node (Inst) & " is not bound", Conf);
+              (Disp_Node (Inst) & " is not bound", Conf, Warnid_Binding);
             Warning_Msg_Elab
               ("(in " & Disp_Node (Current_Configuration) & ")",
-               Current_Configuration);
+               Current_Configuration, Warnid_Binding);
          end if;
          return;
       end if;

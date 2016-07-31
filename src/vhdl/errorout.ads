@@ -33,14 +33,90 @@ package Errorout is
    -- The number of errors (ie, number of calls to error_msg*).
    Nbr_Errors: Natural := 0;
 
-   type Report_Level is (Note, Warning, Error, Fatal);
+   type Msgid_Type is
+     (--  Any note
+      Msgid_Note,
+
+      --  Any warning
+      Msgid_Warning,
+
+      --  Specific warnings
+
+      --  Design unit redefines another design unit.
+      Warnid_Library,
+
+      --  Missing Xref in pretty print.
+      Warnid_Missing_Xref,
+
+      --  No default binding for a component instantiation.
+      Warnid_Default_Binding,
+
+      --  Unbound component.
+      Warnid_Binding,
+
+      --  Vhdl93 reserved word is used as a vhdl87 identifier.
+      Warnid_Reserved_Word,
+
+      --  Start of block comment ('/*') appears in a block comment.
+      Warnid_Nested_Comment,
+
+      --  Weird use of parenthesis.
+      Warnid_Parenthesis,
+
+      --  Generic of a vital entity is not a vital name.
+      Warnid_Vital_Generic,
+
+      --  Delayed checks (checks performed at elaboration time).
+      Warnid_Delayed_Checks,
+
+      --  Package body is not required but is analyzed.
+      Warnid_Body,
+
+      --  An all/others specification does not apply, because there is no such
+      --  named entities.
+      Warnid_Specs,
+
+      --  Incorrect use of universal value.
+      Warnid_Universal,
+
+      --  Runtime error detected at analysis time.
+      Warnid_Runtime_Error,
+
+      --  Signal assignment creates a delta cycle in a postponed process.
+      Warnid_Delta_Cycle,
+
+      --  Emit a warning when a declaration is never used.
+      --  FIXME: currently only subprograms are handled.
+      Warnid_Unused,
+
+      --  Any error
+      Msgid_Error,
+
+      --  Any fatal error
+      Msgid_Fatal);
+
+   --  All specific warning messages.
+   subtype Msgid_Warnings is Msgid_Type
+     range Warnid_Library .. Warnid_Unused;
+
+   --  Get the image of a warning.  This correspond the the identifier of ID,
+   --  in lower case, without the Msgid_Warn_ prefix and with '_' replaced
+   --  by '-'.
+   function Warning_Image (Id : Msgid_Warnings) return String;
+
+   --  Enable or disable a warning.
+   procedure Enable_Warning (Id : Msgid_Warnings; Enable : Boolean);
+
+   --  Get enable status of a warning.
+   function Is_Warning_Enabled (Id : Msgid_Warnings) return Boolean;
+
    type Report_Origin is
      (Option, Library, Scan, Parse, Semantic, Elaboration);
 
    --  Generic report message.  LOC maybe No_Location.
    --  If ORIGIN is Option or Library, LOC must be No_Location and the program
    --  name is displayed.
-   procedure Report_Msg (Level : Report_Level;
+   procedure Report_Msg (Id : Msgid_Type;
                          Origin : Report_Origin;
                          Loc : Location_Type;
                          Msg : String);
@@ -55,14 +131,15 @@ package Errorout is
    procedure Error_Msg_Option_NR (Msg: String);
 
    -- Disp a warning.
-   procedure Warning_Msg_Sem (Msg: String; Loc : Iir);
-   procedure Warning_Msg_Sem (Msg: String; Loc : Location_Type);
+   procedure Warning_Msg_Sem (Msg: String; Loc : Iir; Id : Msgid_Warnings);
+   procedure Warning_Msg_Sem
+     (Msg: String; Loc : Location_Type; Id : Msgid_Warnings);
 
    -- Disp a message during scan.
    -- The current location is automatically displayed before the message.
    procedure Error_Msg_Scan (Msg: String);
    procedure Error_Msg_Scan (Msg: String; Loc : Location_Type);
-   procedure Warning_Msg_Scan (Msg: String);
+   procedure Warning_Msg_Scan (Msg: String; Id : Msgid_Warnings);
 
    -- Disp a message during parse
    -- The location of the current token is automatically displayed before
@@ -85,7 +162,7 @@ package Errorout is
    procedure Error_Msg_Elab (Msg: String; Loc: Iir);
 
    --  Disp a warning durig elaboration (or configuration).
-   procedure Warning_Msg_Elab (Msg: String; Loc : Iir);
+   procedure Warning_Msg_Elab (Msg: String; Loc : Iir; Id : Msgid_Warnings);
 
    -- Disp a bug message.
    procedure Error_Internal (Expr: Iir; Msg: String := "");

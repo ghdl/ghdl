@@ -557,7 +557,7 @@ package body Sem_Stmts is
                      if Get_Postponed_Flag (Current_Concurrent_Statement) then
                         Warning_Msg_Sem
                           ("waveform may cause a delta cycle in a " &
-                             "postponed process", We);
+                             "postponed process", We, Warnid_Delta_Cycle);
                      end if;
                   when others =>
                      --  Context is a subprogram.
@@ -833,7 +833,7 @@ package body Sem_Stmts is
                   then
                      Warning_Msg_Sem
                        ("expression length does not match target length",
-                        Stmt);
+                        Stmt, Warnid_Runtime_Error);
                      Set_Expression (Stmt, Build_Overflow (Expr, Target_Type));
                   end if;
                end if;
@@ -1499,11 +1499,12 @@ package body Sem_Stmts is
       then
          Entity_Unit := Get_Visible_Entity_Declaration (Decl);
          if Entity_Unit = Null_Iir then
-            if Flags.Warn_Default_Binding
+            if Is_Warning_Enabled (Warnid_Default_Binding)
               and then not Flags.Flag_Elaborate
             then
-               Warning_Msg_Sem ("no default binding for instantiation of "
-                                & Disp_Node (Decl), Stmt);
+               Warning_Msg_Sem
+                 ("no default binding for instantiation of "
+                    & Disp_Node (Decl), Stmt, Warnid_Default_Binding);
                Explain_No_Visible_Entity (Decl);
             end if;
          elsif Flags.Flag_Elaborate

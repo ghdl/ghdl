@@ -391,7 +391,7 @@ package body Ortho_Front is
             Design := Get_First_Design_Unit (New_Design_File);
             while not Is_Null (Design) loop
                Sem.Sem_Analysis_Checks_List
-                 (Design, Flags.Warn_Delayed_Checks);
+                 (Design, Is_Warning_Enabled (Warnid_Delayed_Checks));
                Design := Get_Chain (Design);
             end loop;
 

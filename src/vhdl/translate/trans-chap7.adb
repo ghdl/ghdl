@@ -3784,7 +3784,8 @@ package body Trans.Chap7 is
                return New_Lit (New_Signed_Literal (Otype, Integer_64 (Val)));
             exception
                when Constraint_Error =>
-                  Warning_Msg_Elab ("physical literal out of range", Expr);
+                  Warning_Msg_Elab ("physical literal out of range",
+                                    Expr, Warnid_Runtime_Error);
                   return Translate_Overflow_Literal (Expr);
             end;
 

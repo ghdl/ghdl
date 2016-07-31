@@ -50,13 +50,13 @@ package body Libraries is
    --  Report an error message.
    procedure Error_Lib_Msg (Msg : String) is
    begin
-      Report_Msg (Error, Library, No_Location, Msg);
+      Report_Msg (Msgid_Error, Library, No_Location, Msg);
    end Error_Lib_Msg;
 
    --  Report a warning message.
    procedure Warning_Lib_Msg (Msg : String) is
    begin
-      Report_Msg (Warning, Library, No_Location, Msg);
+      Report_Msg (Msgid_Warning, Library, No_Location, Msg);
    end Warning_Lib_Msg;
 
    --  Initialize pathes table.
@@ -1005,14 +1005,14 @@ package body Libraries is
                --  In the same file.
                if Get_Date_State (Design_Unit) = Date_Analyze then
                   --  Warns only if we are not re-analyzing the file.
-                  if Flags.Warn_Library then
+                  if Is_Warning_Enabled (Warnid_Library) then
                      Warning_Msg_Sem
                        ("redefinition of a library unit in "
-                        & "same design file:", Unit);
+                        & "same design file:", Unit, Warnid_Library);
                      Warning_Msg_Sem
                        (Disp_Node (Library_Unit) & " defined at "
                         & Disp_Location (Library_Unit) & " is now "
-                        & Disp_Node (New_Library_Unit), Unit);
+                        & Disp_Node (New_Library_Unit), Unit, Warnid_Library);
                   end if;
                else
                   --  Free the stub.
@@ -1024,7 +1024,7 @@ package body Libraries is
                --  Note: the current design unit should not be freed if
                --  in use; unfortunatly, this is not obvious to check.
             else
-               if Flags.Warn_Library then
+               if Is_Warning_Enabled (Warnid_Library) then
                   if Get_Kind (Library_Unit) /= Get_Kind (New_Library_Unit)
                   then
                      Warning_Lib_Msg

@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 with Ada.Text_IO; use Ada.Text_IO;
 with Name_Table;
-with Errorout;
+with Errorout; use Errorout;
 with Libraries;
 with Std_Names;
 with PSL.Nodes;
@@ -38,32 +38,28 @@ package body Options is
 
    function Option_Warning (Opt: String; Val : Boolean) return Boolean is
    begin
---      if Opt = "undriven" then
---         Warn_Undriven := True;
-      if Opt = "library" then
-         Warn_Library := Val;
-      elsif Opt = "default-binding" then
-         Warn_Default_Binding := Val;
-      elsif Opt = "binding" then
-         Warn_Binding := Val;
-      elsif Opt = "reserved" then
-         Warn_Reserved_Word := Val;
-      elsif Opt = "vital-generic" then
-         Warn_Vital_Generic := Val;
-      elsif Opt = "delayed-checks" then
-         Warn_Delayed_Checks := Val;
-      elsif Opt = "body" then
-         Warn_Body := Val;
-      elsif Opt = "specs" then
-         Warn_Specs := Val;
-      elsif Opt = "unused" then
-         Warn_Unused := Val;
-      elsif Opt = "error" then
+      --  Handle -Werror.
+      if Opt = "error" then
          Warn_Error := Val;
-      else
-         return False;
+         return True;
       end if;
-      return True;
+
+      --  Normal warnings.
+      for I in Msgid_Warnings loop
+         if Warning_Image (I) = Opt then
+            Enable_Warning (I, Val);
+            return True;
+         end if;
+      end loop;
+
+      --  -Wreserved is an alias for -Wreserved-word.
+      if Opt = "reserved" then
+         Enable_Warning (Warnid_Reserved_Word, Val);
+         return True;
+      end if;
+
+      --  Unknown warning.
+      return False;
    end Option_Warning;
 
    function Parse_Option (Option : String) return Boolean
@@ -95,12 +91,12 @@ package body Options is
          AMS_Vhdl := True;
       elsif Opt'Length >= 2 and then Opt (1 .. 2) = "-P" then
          if Opt'Last = 2 then
-            Errorout.Error_Msg_Option ("missing directory after -P");
+            Error_Msg_Option ("missing directory after -P");
             return True;
          end if;
          if Opt (3) = '=' then
             if Opt'Last = 3 then
-               Errorout.Error_Msg_Option ("missing directory after -P=");
+               Error_Msg_Option ("missing directory after -P=");
                return True;
             end if;
             Libraries.Add_Library_Path (Opt (4 .. Opt'Last));

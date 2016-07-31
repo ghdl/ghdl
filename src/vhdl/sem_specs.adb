@@ -770,9 +770,10 @@ package body Sem_Specs is
          --  class that are declared in the immediatly enclosing
          --  declarative part.
          Res := Sem_Named_Entities (Scope, Null_Iir, Spec, False, True);
-         if Res = False and then Flags.Warn_Specs then
+         if Res = False and then Is_Warning_Enabled (Warnid_Specs) then
             Warning_Msg_Sem
-              ("attribute specification apply to no named entity", Spec);
+              ("attribute specification apply to no named entity",
+               Spec, Warnid_Specs);
          end if;
       elsif List = Iir_List_Others then
          --  o If the reserved word OTHERS is supplied, then the attribute
@@ -782,9 +783,10 @@ package body Sem_Specs is
          --  in the entity name list of a previous attribute specification
          --  for the given attribute.
          Res := Sem_Named_Entities (Scope, Null_Iir, Spec, False, False);
-         if Res = False and then Flags.Warn_Specs then
+         if Res = False and then Is_Warning_Enabled (Warnid_Specs) then
             Warning_Msg_Sem
-              ("attribute specification apply to no named entity", Spec);
+              ("attribute specification apply to no named entity",
+               Spec, Warnid_Specs);
          end if;
       else
          --  o If a list of entity designators is supplied, then the
@@ -1337,10 +1339,10 @@ package body Sem_Specs is
          --    statements whose corresponding instantiated units name
          --    component.
          if not Apply_Component_Specification (Parent_Stmts, False)
-           and then Flags.Warn_Specs
+           and then Is_Warning_Enabled (Warnid_Specs)
          then
-            Warning_Msg_Sem
-              ("component specification applies to no instance", Spec);
+            Warning_Msg_Sem ("component specification applies to no instance",
+                             Spec, Warnid_Specs);
          end if;
       elsif List = Iir_List_Others then
          --  LRM93 5.2
@@ -1355,10 +1357,10 @@ package body Sem_Specs is
          --    statements whose corresponding instantiated units name
          --    components.
          if not Apply_Component_Specification (Parent_Stmts, True)
-           and then Flags.Warn_Specs
+           and then Is_Warning_Enabled (Warnid_Specs)
          then
-            Warning_Msg_Sem
-              ("component specification applies to no instance", Spec);
+            Warning_Msg_Sem ("component specification applies to no instance",
+                             Spec, Warnid_Specs);
          end if;
       else
          --  LRM93 5.2
@@ -1787,7 +1789,8 @@ package body Sem_Specs is
          --     (see 10.3),
          Decl := Get_Declaration (Inter);
          Warning_Msg_Elab ("visible declaration for " & Name_Table.Image (Name)
-                           & " is " & Disp_Node (Decl), Decl);
+                             & " is " & Disp_Node (Decl),
+                           Decl, Warnid_Default_Binding);
 
          --  b)  An entity declaration that has the same simple name that of
          --      the instantiated component and that would be directly
@@ -1798,8 +1801,9 @@ package body Sem_Specs is
             Inter := Get_Under_Interpretation (Name);
             if Valid_Interpretation (Inter) then
                Decl := Get_Declaration (Inter);
-               Warning_Msg_Elab ("interpretation behind the component is "
-                                 & Disp_Node (Decl), Comp);
+               Warning_Msg_Elab
+                 ("interpretation behind the component is " & Disp_Node (Decl),
+                  Comp, Warnid_Default_Binding);
             end if;
          end if;
       end if;
@@ -1819,7 +1823,7 @@ package body Sem_Specs is
          end loop;
 
          Warning_Msg_Elab ("no entity """ & Name_Table.Image (Name) & """ in "
-                           & Disp_Node (Decl), Comp);
+                           & Disp_Node (Decl), Comp, Warnid_Default_Binding);
       end if;
    end Explain_No_Visible_Entity;
 

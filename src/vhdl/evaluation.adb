@@ -560,7 +560,8 @@ package body Evaluation is
    exception
       when Constraint_Error =>
          --  Can happen for absolute.
-         Warning_Msg_Sem ("arithmetic overflow in static expression", Orig);
+         Warning_Msg_Sem ("arithmetic overflow in static expression",
+                          Orig, Warnid_Runtime_Error);
          return Build_Overflow (Orig);
    end Eval_Monadic_Operator;
 
@@ -579,7 +580,8 @@ package body Evaluation is
    begin
       Len := Get_String_Length (Left);
       if Len /= Get_String_Length (Right) then
-         Warning_Msg_Sem ("length of left and right operands mismatch", Expr);
+         Warning_Msg_Sem ("length of left and right operands mismatch",
+                          Expr, Warnid_Runtime_Error);
          return Build_Overflow (Expr);
       else
          Id := Create_String8;
@@ -678,7 +680,7 @@ package body Evaluation is
    is
    begin
       if Get_Value (Val) = 0 then
-         Warning_Msg_Sem ("division by 0", Expr);
+         Warning_Msg_Sem ("division by 0", Expr, Warnid_Runtime_Error);
          return False;
       else
          return True;
@@ -1125,7 +1127,8 @@ package body Evaluation is
               (Get_Fp_Value (Left) * Get_Fp_Value (Right), Orig);
          when Iir_Predefined_Floating_Div =>
             if Get_Fp_Value (Right) = 0.0 then
-               Warning_Msg_Sem ("right operand of division is 0", Orig);
+               Warning_Msg_Sem ("right operand of division is 0",
+                                Orig, Warnid_Runtime_Error);
                return Build_Overflow (Orig);
             else
                return Build_Floating
@@ -1452,7 +1455,8 @@ package body Evaluation is
       end case;
    exception
       when Constraint_Error =>
-         Warning_Msg_Sem ("arithmetic overflow in static expression", Orig);
+         Warning_Msg_Sem ("arithmetic overflow in static expression",
+                          Orig, Warnid_Runtime_Error);
          return Build_Overflow (Orig);
    end Eval_Dyadic_Operator;
 
@@ -1646,7 +1650,7 @@ package body Evaluation is
          return Build_Constant (Res, Expr);
       else
          Warning_Msg_Sem ("value """ & Value & """ not in enumeration "
-                            & Disp_Node (Enum), Expr);
+                            & Disp_Node (Enum), Expr, Warnid_Runtime_Error);
          return Build_Overflow (Expr);
       end if;
    end Build_Enumeration_Value;
@@ -1720,7 +1724,8 @@ package body Evaluation is
       end loop;
       if Unit = Null_Iir then
          Warning_Msg_Sem ("Unit """ & UnitName (Sep + 1 .. UnitName'Last)
-                         & """ not in physical type", Expr);
+                            & """ not in physical type",
+                          Expr, Warnid_Runtime_Error);
          return Build_Overflow (Expr);
       end if;
 
@@ -1803,7 +1808,8 @@ package body Evaluation is
                             (Get_Enumeration_Literal_List
                                (Get_Base_Type (Get_Type (Expr))))))
             then
-               Warning_Msg_Sem ("static constant violates bounds", Expr);
+               Warning_Msg_Sem ("static constant violates bounds",
+                                Expr, Warnid_Runtime_Error);
                return Build_Overflow (Origin);
             else
                return Build_Enumeration (Iir_Index32 (P), Origin);
@@ -1861,8 +1867,8 @@ package body Evaluation is
       if Get_Constraint_State (Conv_Type) = Fully_Constrained then
          Set_Type (Res, Conv_Type);
          if not Eval_Is_In_Bound (Val, Conv_Type) then
-            Warning_Msg_Sem
-              ("non matching length in type conversion", Conv);
+            Warning_Msg_Sem ("non matching length in type conversion",
+                             Conv, Warnid_Runtime_Error);
             return Build_Overflow (Conv);
          end if;
          return Res;
@@ -1931,7 +1937,8 @@ package body Evaluation is
       end if;
       if not Eval_Is_In_Bound (Res, Get_Type (Expr)) then
          if Get_Kind (Res) /= Iir_Kind_Overflow_Literal then
-            Warning_Msg_Sem ("result of conversion out of bounds", Expr);
+            Warning_Msg_Sem ("result of conversion out of bounds",
+                             Expr, Warnid_Runtime_Error);
             Res := Build_Overflow (Res);
          end if;
       end if;
@@ -2117,8 +2124,8 @@ package body Evaluation is
                  and then
                  not Eval_Int_In_Range (Val, Get_Range_Constraint (Expr_Type))
                then
-                  Warning_Msg_Sem
-                    ("static argument out of the type range", Expr);
+                  Warning_Msg_Sem ("static argument out of the type range",
+                                   Expr, Warnid_Runtime_Error);
                   return Build_Overflow (Expr);
                end if;
                if Get_Kind (Get_Base_Type (Get_Type (Expr)))
@@ -2166,7 +2173,8 @@ package body Evaluation is
                Set_Parameter (Expr, Param);
                if Get_Kind (Param) /= Iir_Kind_String_Literal8 then
                   --  FIXME: Isn't it an implementation restriction.
-                  Warning_Msg_Sem ("'value argument not a string", Expr);
+                  Warning_Msg_Sem ("'value argument not a string",
+                                   Expr, Warnid_Runtime_Error);
                   return Build_Overflow (Expr);
                else
                   return Eval_Value_Attribute

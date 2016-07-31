@@ -735,7 +735,8 @@ package body Sem_Names is
          if False and then Flags.Vhdl_Std = Vhdl_87 then
             -- emit a warning for a null slice.
             Warning_Msg_Sem
-              ("direction mismatch results in a null slice", Name);
+              ("direction mismatch results in a null slice",
+               Name, Warnid_Runtime_Error);
          end if;
          Error_Msg_Sem ("direction of the range mismatch", Name);
       end if;

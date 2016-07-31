@@ -931,39 +931,44 @@ package body Scanner is
          case Current_Identifier is
             when Std_Names.Name_Id_AMS_Reserved_Words =>
                if not AMS_Vhdl then
-                  if Flags.Warn_Reserved_Word then
+                  if Is_Warning_Enabled (Warnid_Reserved_Word) then
                      Warning_Msg_Scan
                        ("using """ & Nam_Buffer (1 .. Nam_Length)
-                          & """ AMS-VHDL reserved word as an identifier");
+                          & """ AMS-VHDL reserved word as an identifier",
+                       Warnid_Reserved_Word);
                   end if;
                   Current_Token := Tok_Identifier;
                end if;
             when Std_Names.Name_Id_Vhdl08_Reserved_Words =>
                if Vhdl_Std < Vhdl_08 then
-                  if Flags.Warn_Reserved_Word then
+                  if Is_Warning_Enabled (Warnid_Reserved_Word) then
                      Warning_Msg_Scan
                        ("using """ & Nam_Buffer (1 .. Nam_Length)
-                          & """ vhdl-2008 reserved word as an identifier");
+                          & """ vhdl-2008 reserved word as an identifier",
+                       Warnid_Reserved_Word);
                   end if;
                   Current_Token := Tok_Identifier;
                end if;
             when Std_Names.Name_Id_Vhdl00_Reserved_Words =>
                if Vhdl_Std < Vhdl_00 then
-                  if Flags.Warn_Reserved_Word then
+                  if Is_Warning_Enabled (Warnid_Reserved_Word) then
                      Warning_Msg_Scan
                        ("using """ & Nam_Buffer (1 .. Nam_Length)
-                          & """ vhdl00 reserved word as an identifier");
+                          & """ vhdl00 reserved word as an identifier",
+                        Warnid_Reserved_Word);
                   end if;
                   Current_Token := Tok_Identifier;
                end if;
             when Std_Names.Name_Id_Vhdl93_Reserved_Words =>
                if Vhdl_Std = Vhdl_87 then
-                  if Flags.Warn_Reserved_Word then
+                  if Is_Warning_Enabled (Warnid_Reserved_Word) then
                      Warning_Msg_Scan
                        ("using """ & Nam_Buffer (1 .. Nam_Length)
-                          & """ vhdl93 reserved word as a vhdl87 identifier");
+                          & """ vhdl93 reserved word as a vhdl87 identifier",
+                        Warnid_Reserved_Word);
                      Warning_Msg_Scan
-                       ("(use option --std=93 to compile as vhdl93)");
+                       ("(use option --std=93 to compile as vhdl93)",
+                        Warnid_Reserved_Word);
                   end if;
                   Current_Token := Tok_Identifier;
                end if;
@@ -1464,7 +1469,8 @@ package body Scanner is
                         --  the start of a nested delimited comment.
                         if Source (Pos + 1) = '*' then
                            Warning_Msg_Scan
-                             ("'/*' found within a block comment");
+                             ("'/*' found within a block comment",
+                             Warnid_Nested_Comment);
                         end if;
                         Pos := Pos + 1;
                      when '*' =>

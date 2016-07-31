@@ -2463,14 +2463,15 @@ package body Sem is
                      Warning_Msg_Sem
                        ("can't assert that all calls in " & Disp_Node (El)
                         & " are pure or have not wait; "
-                        & "will be checked at elaboration", El);
+                          & "will be checked at elaboration", El,
+                        Warnid_Delayed_Checks);
                      Callee := Get_Nth_Element (Callees, 0);
                      --  FIXME: could improve this message by displaying the
                      --  chain of calls until the first subprograms in
                      --  unknown state.
                      Warning_Msg_Sem
                        ("(first such call is to " & Disp_Node (Callee) & ")",
-                        Callee);
+                        Callee, Warnid_Delayed_Checks);
                   end if;
                end if;
             when Iir_Kind_Sensitized_Process_Statement =>
@@ -2479,7 +2480,8 @@ package body Sem is
                   if Emit_Warnings then
                      Warning_Msg_Sem
                        ("can't assert that " & Disp_Node (El)
-                        & " has not wait; will be checked at elaboration", El);
+                          & " has not wait; will be checked at elaboration",
+                        El, Warnid_Delayed_Checks);
                   end if;
                end if;
             when others =>
@@ -2633,7 +2635,8 @@ package body Sem is
       --  Emit a warning is a body is not necessary.
       if not Get_Need_Body (Package_Decl) then
          Warning_Msg_Sem
-           (Disp_Node (Package_Decl) & " does not require a body", Decl);
+           (Disp_Node (Package_Decl) & " does not require a body",
+            Decl, Warnid_Body);
       end if;
 
       Set_Package (Decl, Package_Decl);

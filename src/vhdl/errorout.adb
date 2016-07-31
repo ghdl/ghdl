@@ -30,6 +30,51 @@ package body Errorout is
    --  If True, disp original source line and a caret indicating the column.
    Flag_Show_Caret : constant Boolean := False;
 
+   type Warning_Control_Type is record
+      Enabled : Boolean;
+      Error : Boolean;
+   end record;
+
+   type Warnings_Array is array (Msgid_Warnings) of Warning_Control_Type;
+
+   Warnings_Control : Warnings_Array :=
+     (Warnid_Binding => (Enabled => True, Error => False),
+      others         => (Enabled => False, Error => False));
+
+   procedure Enable_Warning (Id : Msgid_Warnings; Enable : Boolean) is
+   begin
+      Warnings_Control (Id).Enabled := Enable;
+   end Enable_Warning;
+
+   function Is_Warning_Enabled (Id : Msgid_Warnings) return Boolean is
+   begin
+      return Warnings_Control (Id).Enabled;
+   end Is_Warning_Enabled;
+
+   function Warning_Image (Id : Msgid_Warnings) return String
+   is
+      Img : constant String := Msgid_Warnings'Image (Id);
+      Prefix : constant String := "WARNID_";
+      pragma Assert (Img'Length > Prefix'Length);
+      pragma Assert (Img (1 .. Prefix'Length) = Prefix);
+      Res : String (1 .. Img'Last - Prefix'Length);
+      C : Character;
+   begin
+      for I in Res'Range loop
+         C := Img (Prefix'Length + I);
+         case C is
+            when '_' =>
+               C := '-';
+            when 'A' .. 'Z' =>
+               C := Character'Val (Character'Pos (C) + 32);
+            when others =>
+               raise Internal_Error;
+         end case;
+         Res (I) := C;
+      end loop;
+      return Res;
+   end Warning_Image;
+
    procedure Put (Str : String)
    is
       use Ada.Text_IO;
@@ -98,7 +143,7 @@ package body Errorout is
       Put (':');
    end Disp_Program_Name;
 
-   procedure Report_Msg (Level : Report_Level;
+   procedure Report_Msg (Id : Msgid_Type;
                          Origin : Report_Origin;
                          Loc : Location_Type;
                          Msg : String)
@@ -173,18 +218,18 @@ package body Errorout is
          Put ("??:??:??:");
       end if;
 
-      case Level is
-         when Note =>
+      case Id is
+         when Msgid_Note =>
             Put ("note:");
-         when Warning =>
+         when Msgid_Warning | Msgid_Warnings =>
             if Flags.Warn_Error then
                Nbr_Errors := Nbr_Errors + 1;
             else
                Put ("warning:");
             end if;
-         when Error =>
+         when Msgid_Error =>
             Nbr_Errors := Nbr_Errors + 1;
-         when Fatal =>
+         when Msgid_Fatal =>
             Put ("fatal:");
       end case;
 
@@ -215,7 +260,7 @@ package body Errorout is
 
    procedure Error_Msg_Option_NR (Msg: String) is
    begin
-      Report_Msg (Error, Option, No_Location, Msg);
+      Report_Msg (Msgid_Error, Option, No_Location, Msg);
    end Error_Msg_Option_NR;
 
    procedure Error_Msg_Option (Msg: String) is
@@ -233,67 +278,69 @@ package body Errorout is
       end if;
    end Get_Location_Safe;
 
-   procedure Warning_Msg_Sem (Msg: String; Loc : Location_Type) is
+   procedure Warning_Msg_Sem
+     (Msg: String; Loc : Location_Type; Id : Msgid_Warnings) is
    begin
       if Flags.Flag_Only_Elab_Warnings then
          return;
       end if;
-      Report_Msg (Warning, Semantic, Loc, Msg);
+      Report_Msg (Id, Semantic, Loc, Msg);
    end Warning_Msg_Sem;
 
-   procedure Warning_Msg_Sem (Msg: String; Loc : Iir) is
+   procedure Warning_Msg_Sem (Msg: String; Loc : Iir; Id : Msgid_Warnings) is
    begin
-      Warning_Msg_Sem (Msg, Get_Location_Safe (Loc));
+      Warning_Msg_Sem (Msg, Get_Location_Safe (Loc), Id);
    end Warning_Msg_Sem;
 
-   procedure Warning_Msg_Elab (Msg: String; Loc : Location_Type) is
+   procedure Warning_Msg_Elab
+     (Msg: String; Loc : Location_Type; Id : Msgid_Warnings) is
    begin
-      Report_Msg (Warning, Elaboration, Loc, Msg);
+      Report_Msg (Id, Elaboration, Loc, Msg);
    end Warning_Msg_Elab;
 
-   procedure Warning_Msg_Elab (Msg: String; Loc : Iir) is
+   procedure Warning_Msg_Elab (Msg: String; Loc : Iir; Id : Msgid_Warnings) is
    begin
-      Warning_Msg_Elab (Msg, Get_Location_Safe (Loc));
+      Warning_Msg_Elab (Msg, Get_Location_Safe (Loc), Id);
    end Warning_Msg_Elab;
 
    -- Disp a message during scan.
    procedure Error_Msg_Scan (Msg: String) is
    begin
-      Report_Msg (Error, Scan, No_Location, Msg);
+      Report_Msg (Msgid_Error, Scan, No_Location, Msg);
    end Error_Msg_Scan;
 
    procedure Error_Msg_Scan (Msg: String; Loc : Location_Type) is
    begin
-      Report_Msg (Error, Scan, Loc, Msg);
+      Report_Msg (Msgid_Error, Scan, Loc, Msg);
    end Error_Msg_Scan;
 
    -- Disp a message during scan.
-   procedure Warning_Msg_Scan (Msg: String) is
+   procedure Warning_Msg_Scan (Msg: String; Id : Msgid_Warnings) is
    begin
-      Report_Msg (Warning, Scan, No_Location, Msg);
+      Report_Msg (Id, Scan, No_Location, Msg);
    end Warning_Msg_Scan;
 
    -- Disp a message during scan.
    procedure Error_Msg_Parse (Msg: String) is
    begin
-      Report_Msg (Error, Parse, No_Location, Msg);
+      Report_Msg (Msgid_Error, Parse, No_Location, Msg);
    end Error_Msg_Parse;
 
    procedure Error_Msg_Parse (Msg: String; Loc : Iir) is
    begin
-      Report_Msg (Error, Parse, Get_Location_Safe (Loc), Msg);
+      Report_Msg (Msgid_Error, Parse, Get_Location_Safe (Loc), Msg);
    end Error_Msg_Parse;
 
    procedure Error_Msg_Parse (Msg: String; Loc : Location_Type) is
    begin
-      Report_Msg (Error, Parse, Loc, Msg);
+      Report_Msg (Msgid_Error, Parse, Loc, Msg);
    end Error_Msg_Parse;
 
    -- Disp a message during semantic analysis.
    -- LOC is used for location and current token.
    procedure Error_Msg_Sem (Msg: String; Loc: in Iir) is
    begin
-      Report_Msg (Error, Semantic, Get_Location_Safe (Loc), Msg);
+      Report_Msg (Msgid_Error, Semantic, Get_Location_Safe (Loc), Msg);
    end Error_Msg_Sem;
 
    procedure Error_Msg_Sem (Msg: String; Loc: PSL_Node)
@@ -306,24 +353,24 @@ package body Errorout is
       else
          L := PSL.Nodes.Get_Location (Loc);
       end if;
-      Report_Msg (Error, Semantic, L, Msg);
+      Report_Msg (Msgid_Error, Semantic, L, Msg);
    end Error_Msg_Sem;
 
    procedure Error_Msg_Sem (Msg: String; Loc : Location_Type) is
    begin
-      Report_Msg (Error, Semantic, Loc, Msg);
+      Report_Msg (Msgid_Error, Semantic, Loc, Msg);
    end Error_Msg_Sem;
 
    procedure Error_Msg_Relaxed
      (Origin : Report_Origin; Msg : String; Loc : Iir)
    is
       use Flags;
-      Level : Report_Level;
+      Level : Msgid_Type;
    begin
       if Flag_Relaxed_Rules or Vhdl_Std = Vhdl_93c then
-         Level := Warning;
+         Level := Msgid_Warning;
       else
-         Level := Error;
+         Level := Msgid_Error;
       end if;
       Report_Msg (Level, Origin, Get_Location_Safe (Loc), Msg);
    end Error_Msg_Relaxed;
@@ -336,12 +383,12 @@ package body Errorout is
    -- Disp a message during elaboration.
    procedure Error_Msg_Elab (Msg: String) is
    begin
-      Report_Msg (Error, Elaboration, No_Location, Msg);
+      Report_Msg (Msgid_Error, Elaboration, No_Location, Msg);
    end Error_Msg_Elab;
 
    procedure Error_Msg_Elab (Msg: String; Loc : Iir) is
    begin
-      Report_Msg (Error, Elaboration, Get_Location_Safe (Loc), Msg);
+      Report_Msg (Msgid_Error, Elaboration, Get_Location_Safe (Loc), Msg);
    end Error_Msg_Elab;
 
    -- Disp a bug message.
