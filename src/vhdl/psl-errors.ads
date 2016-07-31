@@ -10,7 +10,7 @@ package PSL.Errors is
      Errorout.Error_Kind;
 
    procedure Error_Msg_Parse (Msg: String)
-     renames Errorout.Error_Msg_Parse;
+     renames Errorout.Error_Msg_Parse_1;
    procedure Error_Msg_Sem (Msg: String; Loc: PSL_Node)
      renames Errorout.Error_Msg_Sem;
 end PSL.Errors;

@@ -1823,8 +1823,8 @@ package body Sem_Decls is
                   --  shared variable declaration must be a protected type.
                   if Get_Shared_Flag (Decl) and not Is_Protected then
                      Error_Msg_Sem_Relaxed
-                       ("type of a shared variable must be a protected type",
-                        Decl);
+                       (Decl,
+                        "type of a shared variable must be a protected type");
                   end if;
 
                   --  LRM00 4.3.1.3  Variable declarations
@@ -1973,7 +1973,7 @@ package body Sem_Decls is
                Spec := Get_Subprogram_Specification (Parent);
                if Get_Pure_Flag (Spec) then
                   Error_Msg_Sem_Relaxed
-                    ("cannot declare a file in a pure function", Decl);
+                    (Decl, "cannot declare a file in a pure function");
                end if;
             when Iir_Kind_Procedure_Body =>
                Spec := Get_Subprogram_Specification (Parent);
@@ -3078,9 +3078,8 @@ package body Sem_Decls is
                     and then not Is_Implicit_Subprogram (El)
                     and then not Is_Second_Subprogram_Specification (El)
                   then
-                     Warning_Msg_Sem
-                       (Disp_Node (El) & " is never referenced", El,
-                       Warnid_Unused);
+                     Warning_Msg_Sem (Warnid_Unused, +El,
+                                      Disp_Node (El) & " is never referenced");
                   end if;
                when others =>
                   null;

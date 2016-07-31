@@ -1892,7 +1892,7 @@ package body Elaboration is
       --  such a design entity.
       if not Is_Fully_Bound (Conf) then
          Warning_Msg_Elab
-           (Disp_Node (Stmt) & " not bound", Stmt, Warnid_Binding);
+           (Warnid_Binding, Stmt, Disp_Node (Stmt) & " not bound");
          return;
       end if;
 
@@ -1950,16 +1950,17 @@ package body Elaboration is
          if Arch_Name = Null_Identifier then
             Arch := Libraries.Get_Latest_Architecture (Entity);
             if Arch = Null_Iir then
-               Error_Msg_Elab ("no architecture analysed for "
-                                 & Disp_Node (Entity), Stmt);
+               Error_Msg_Elab (Stmt, "no architecture analysed for "
+                                 & Disp_Node (Entity));
             end if;
             Arch_Name := Get_Identifier (Arch);
          end if;
          Arch_Design := Libraries.Load_Secondary_Unit
            (Get_Design_Unit (Entity), Arch_Name, Stmt);
          if Arch_Design = Null_Iir then
-            Error_Msg_Elab ("no architecture `" & Name_Table.Image (Arch_Name)
-                              & "' for " & Disp_Node (Entity), Stmt);
+            Error_Msg_Elab (Stmt,
+                            "no architecture `" & Name_Table.Image (Arch_Name)
+                              & "' for " & Disp_Node (Entity));
          end if;
          Arch := Get_Library_Unit (Arch_Design);
       end if;
@@ -2815,8 +2816,8 @@ package body Elaboration is
               and then not Is_Fully_Constrained_Type (Get_Type (Formal))
             then
                Error_Msg_Elab
-                 ("top-level " & Disp_Node (Formal) & " must have a value",
-                  Formal);
+                 (Formal,
+                  "top-level " & Disp_Node (Formal) & " must have a value");
             end if;
          end if;
          Assoc := Get_Chain (Assoc);

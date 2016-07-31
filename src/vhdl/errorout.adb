@@ -75,6 +75,42 @@ package body Errorout is
       return Res;
    end Warning_Image;
 
+   function "+" (V : Iir) return Earg_Type is
+   begin
+      return (Kind => Earg_Iir, Val_Iir => V);
+   end "+";
+
+   function "+" (V : Location_Type) return Earg_Type is
+   begin
+      return (Kind => Earg_Location, Val_Loc => V);
+   end "+";
+
+   function "+" (V : Name_Id) return Earg_Type is
+   begin
+      return (Kind => Earg_Id, Val_Id => V);
+   end "+";
+
+   function "+" (V : Tokens.Token_Type) return Earg_Type is
+   begin
+      return (Kind => Earg_Token, Val_Tok => V);
+   end "+";
+
+   function "+" (V : Character) return Earg_Type is
+   begin
+      return (Kind => Earg_Char, Val_Char => V);
+   end "+";
+
+   function Get_Location_Safe (N : Iir) return Location_Type is
+   begin
+      if N = Null_Iir then
+         return Location_Nil;
+      else
+         return Get_Location (N);
+      end if;
+   end Get_Location_Safe;
+
+   function "+" (L : Iir) return Location_Type renames Get_Location_Safe;
+
    procedure Put (Str : String)
    is
       use Ada.Text_IO;
@@ -146,8 +182,11 @@ package body Errorout is
    procedure Report_Msg (Id : Msgid_Type;
                          Origin : Report_Origin;
                          Loc : Location_Type;
-                         Msg : String)
+                         Msg : String;
+                         Args : Earg_Arr := No_Eargs;
+                         Cont : Boolean := False)
    is
+      pragma Unreferenced (Cont);
       procedure Location_To_Position (Location : Location_Type;
                                       File : out Source_File_Entry;
                                       Line : out Natural;
@@ -234,7 +273,127 @@ package body Errorout is
       end case;
 
       Put (' ');
-      Put_Line (Msg);
+
+      --  Display message.
+      declare
+         First, N : Positive;
+         Argn : Integer;
+      begin
+         N := Msg'First;
+         First := N;
+         Argn := Args'First;
+         while N <= Msg'Last loop
+            if Msg (N) = '%' then
+               Put (Msg (First .. N - 1));
+               First := N + 2;
+               pragma Assert (N < Msg'Last);
+               N := N + 1;
+               case Msg (N) is
+                  when '%' =>
+                     Put ('%');
+                     Argn := Argn - 1;
+                  when 'i' =>
+                     --  Identifier.
+                     declare
+                        Arg : Earg_Type renames Args (Argn);
+                        Id : Name_Id;
+                     begin
+                        Put ('"');
+                        case Arg.Kind is
+                           when Earg_Iir =>
+                              Id := Get_Identifier (Arg.Val_Iir);
+                           when Earg_Id =>
+                              Id := Arg.Val_Id;
+                           when others =>
+                              --  Invalid conversion to identifier.
+                              raise Internal_Error;
+                        end case;
+                        Put (Name_Table.Image (Id));
+                        Put ('"');
+                     end;
+                  when 'c' =>
+                     --  Character
+                     declare
+                        Arg : Earg_Type renames Args (Argn);
+                     begin
+                        Put (''');
+                        case Arg.Kind is
+                           when Earg_Char =>
+                              Put (Arg.Val_Char);
+                           when others =>
+                              --  Invalid conversion to character.
+                              raise Internal_Error;
+                        end case;
+                        Put (''');
+                     end;
+                  when 't' =>
+                     --  A token
+                     declare
+                        use Tokens;
+                        Arg : Earg_Type renames Args (Argn);
+                        Tok : Token_Type;
+                     begin
+                        case Arg.Kind is
+                           when Earg_Token =>
+                              Tok := Arg.Val_Tok;
+                           when others =>
+                              --  Invalid conversion to character.
+                              raise Internal_Error;
+                        end case;
+                        if Tok = Tok_Identifier then
+                           Put ("an identifier");
+                        else
+                           Put (''');
+                           Put (Image (Tok));
+                           Put (''');
+                        end if;
+                     end;
+                  when 'l' =>
+                     --  Location
+                     declare
+                        Arg : Earg_Type renames Args (Argn);
+                        Arg_Loc : Location_Type;
+                        Arg_File : Source_File_Entry;
+                        Arg_Line : Natural;
+                        Arg_Col : Natural;
+                     begin
+                        pragma Assert (not Progname);
+                        case Arg.Kind is
+                           when Earg_Location =>
+                              Arg_Loc := Arg.Val_Loc;
+                           when Earg_Iir =>
+                              Arg_Loc := Get_Location (Arg.Val_Iir);
+                           when others =>
+                              raise Internal_Error;
+                        end case;
+                        Location_To_Position
+                          (Arg_Loc, Arg_File, Arg_Line, Arg_Col);
+
+                        --  Do not print the filename if in the same file as
+                        --  the error location.
+                        if Arg_File = File then
+                           Put ("line ");
+                        else
+                           Put (Name_Table.Image (Get_File_Name (Arg_File)));
+                           Put (':');
+                        end if;
+                        Disp_Natural (Arg_Line);
+                        Put (':');
+                        Disp_Natural (Arg_Col);
+                     end;
+                  when others =>
+                     --  Unknown format.
+                     raise Internal_Error;
+               end case;
+               Argn := Argn + 1;
+            end if;
+            N := N + 1;
+         end loop;
+         Put_Line (Msg (First .. N - 1));
+
+         --  Are all arguments displayed ?
+         pragma Assert (Argn > Args'Last);
+      end;
 
       if Flag_Show_Caret
         and then (File /= No_Source_File_Entry and Line /= 0)
@@ -269,17 +428,8 @@ package body Errorout is
       raise Option_Error;
    end Error_Msg_Option;
 
-   function Get_Location_Safe (N : Iir) return Location_Type is
-   begin
-      if N = Null_Iir then
-         return Location_Nil;
-      else
-         return Get_Location (N);
-      end if;
-   end Get_Location_Safe;
-
    procedure Warning_Msg_Sem
-     (Msg: String; Loc : Location_Type; Id : Msgid_Warnings) is
+     (Id : Msgid_Warnings; Loc : Location_Type; Msg: String) is
    begin
       if Flags.Flag_Only_Elab_Warnings then
          return;
@@ -287,20 +437,10 @@ package body Errorout is
       Report_Msg (Id, Semantic, Loc, Msg);
    end Warning_Msg_Sem;
 
-   procedure Warning_Msg_Sem (Msg: String; Loc : Iir; Id : Msgid_Warnings) is
-   begin
-      Warning_Msg_Sem (Msg, Get_Location_Safe (Loc), Id);
-   end Warning_Msg_Sem;
-
    procedure Warning_Msg_Elab
-     (Msg: String; Loc : Location_Type; Id : Msgid_Warnings) is
+     (Id : Msgid_Warnings; Loc : Iir; Msg: String; Cont : Boolean := False) is
    begin
-      Report_Msg (Id, Elaboration, Loc, Msg);
-   end Warning_Msg_Elab;
-
-   procedure Warning_Msg_Elab (Msg: String; Loc : Iir; Id : Msgid_Warnings) is
-   begin
-      Warning_Msg_Elab (Msg, Get_Location_Safe (Loc), Id);
+      Report_Msg (Id, Elaboration, Get_Location_Safe (Loc), Msg, Cont => Cont);
    end Warning_Msg_Elab;
 
    -- Disp a message during scan.
@@ -309,29 +449,47 @@ package body Errorout is
       Report_Msg (Msgid_Error, Scan, No_Location, Msg);
    end Error_Msg_Scan;
 
-   procedure Error_Msg_Scan (Msg: String; Loc : Location_Type) is
+   procedure Error_Msg_Scan (Loc : Location_Type; Msg: String) is
    begin
       Report_Msg (Msgid_Error, Scan, Loc, Msg);
    end Error_Msg_Scan;
 
+   procedure Error_Msg_Scan (Msg: String; Arg1 : Earg_Type) is
+   begin
+      Report_Msg (Msgid_Error, Scan, No_Location, Msg, (1 => Arg1));
+   end Error_Msg_Scan;
+
    -- Disp a message during scan.
-   procedure Warning_Msg_Scan (Msg: String; Id : Msgid_Warnings) is
+   procedure Warning_Msg_Scan (Id : Msgid_Warnings; Msg: String) is
    begin
       Report_Msg (Id, Scan, No_Location, Msg);
    end Warning_Msg_Scan;
 
-   -- Disp a message during scan.
-   procedure Error_Msg_Parse (Msg: String) is
+   procedure Warning_Msg_Scan (Id : Msgid_Warnings;
+                               Msg: String;
+                               Arg1 : Earg_Type;
+                               Cont : Boolean := False) is
+   begin
+      Report_Msg (Id, Scan, No_Location, Msg, (1 => Arg1), Cont);
+   end Warning_Msg_Scan;
+
+   procedure Error_Msg_Parse (Msg: String; Arg1 : Earg_Type) is
+   begin
+      Report_Msg (Msgid_Error, Parse, No_Location, Msg, (1 => Arg1));
+   end Error_Msg_Parse;
+
+   procedure Error_Msg_Parse
+     (Msg: String; Args : Earg_Arr := No_Eargs; Cont : Boolean := False) is
+   begin
+      Report_Msg (Msgid_Error, Parse, No_Location, Msg, Args, Cont);
+   end Error_Msg_Parse;
+
+   procedure Error_Msg_Parse_1 (Msg: String) is
    begin
       Report_Msg (Msgid_Error, Parse, No_Location, Msg);
-   end Error_Msg_Parse;
+   end Error_Msg_Parse_1;
 
-   procedure Error_Msg_Parse (Msg: String; Loc : Iir) is
-   begin
-      Report_Msg (Msgid_Error, Parse, Get_Location_Safe (Loc), Msg);
-   end Error_Msg_Parse;
-
-   procedure Error_Msg_Parse (Msg: String; Loc : Location_Type) is
+   procedure Error_Msg_Parse (Loc : Location_Type; Msg: String) is
    begin
       Report_Msg (Msgid_Error, Parse, Loc, Msg);
    end Error_Msg_Parse;
@@ -375,7 +533,7 @@ package body Errorout is
       Report_Msg (Level, Origin, Get_Location_Safe (Loc), Msg);
    end Error_Msg_Relaxed;
 
-   procedure Error_Msg_Sem_Relaxed (Msg : String; Loc : Iir) is
+   procedure Error_Msg_Sem_Relaxed (Loc : Iir; Msg : String) is
    begin
       Error_Msg_Relaxed (Semantic, Msg, Loc);
    end Error_Msg_Sem_Relaxed;
@@ -386,7 +544,7 @@ package body Errorout is
       Report_Msg (Msgid_Error, Elaboration, No_Location, Msg);
    end Error_Msg_Elab;
 
-   procedure Error_Msg_Elab (Msg: String; Loc : Iir) is
+   procedure Error_Msg_Elab (Loc : Iir; Msg: String) is
    begin
       Report_Msg (Msgid_Error, Elaboration, Get_Location_Safe (Loc), Msg);
    end Error_Msg_Elab;

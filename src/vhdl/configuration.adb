@@ -197,8 +197,9 @@ package body Configuration is
                if not Flags.Flag_Elaborate_With_Outdated then
                   --  LIB_UNIT requires a body.
                   if Bod = Null_Iir then
-                     Error_Msg_Elab ("body of " & Disp_Node (Lib_Unit)
-                                     & " was never analyzed", Lib_Unit);
+                     Error_Msg_Elab
+                       (Lib_Unit, "body of " & Disp_Node (Lib_Unit)
+                          & " was never analyzed");
                   elsif Get_Date (Bod) < Get_Date (Unit) then
                      Error_Msg_Elab (Disp_Node (Bod) & " is outdated");
                      Bod := Null_Iir;
@@ -321,8 +322,8 @@ package body Configuration is
             else
                Arch := Get_Latest_Architecture (Entity_Lib);
                if Arch = Null_Iir then
-                  Error_Msg_Elab ("no architecture in library for "
-                                  & Disp_Node (Entity_Lib), Aspect);
+                  Error_Msg_Elab (Aspect, "no architecture in library for "
+                                  & Disp_Node (Entity_Lib));
                   return;
                end if;
                Arch := Get_Design_Unit (Arch);
@@ -372,7 +373,7 @@ package body Configuration is
             if Get_Default_Value (Port) = Null_Iir then
                if Loc /= Null_Iir then
                   Error_Msg_Elab
-                    ("IN " & Disp_Node (Port) & " must be connected", Loc);
+                    (Loc, "IN " & Disp_Node (Port) & " must be connected");
                end if;
                return True;
             end if;
@@ -389,8 +390,8 @@ package body Configuration is
                           /= Fully_Constrained)
             then
                if Loc /= Null_Iir then
-                  Error_Msg_Elab ("unconstrained " & Disp_Node (Port)
-                                  & " must be connected", Loc);
+                  Error_Msg_Elab (Loc, "unconstrained " & Disp_Node (Port)
+                                  & " must be connected");
                end if;
                return True;
             end if;
@@ -429,11 +430,12 @@ package body Configuration is
               and then not Get_Artificial_Flag (Assoc)
             then
                Warning_Msg_Elab
-                 (Disp_Node (Formal) & " of " & Disp_Node (Get_Parent (Formal))
-                  & " is not bound", Assoc, Warnid_Binding);
+                 (Warnid_Binding, Assoc,
+                  Disp_Node (Formal) & " of " & Disp_Node (Get_Parent (Formal))
+                    & " is not bound", Cont => True);
                Warning_Msg_Elab
-                 ("(in " & Disp_Node (Current_Configuration) & ")",
-                  Current_Configuration, Warnid_Binding);
+                 (Warnid_Binding, Current_Configuration,
+                  "(in " & Disp_Node (Current_Configuration) & ")");
             end if;
          end if;
          Assoc := Get_Chain (Assoc);
@@ -522,10 +524,11 @@ package body Configuration is
          if Is_Warning_Enabled (Warnid_Binding) then
             Inst := Get_First_Element (Get_Instantiation_List (Conf));
             Warning_Msg_Elab
-              (Disp_Node (Inst) & " is not bound", Conf, Warnid_Binding);
+              (Warnid_Binding, Conf,
+               Disp_Node (Inst) & " is not bound", Cont => True);
             Warning_Msg_Elab
-              ("(in " & Disp_Node (Current_Configuration) & ")",
-               Current_Configuration, Warnid_Binding);
+              (Warnid_Binding, Current_Configuration,
+               "(in " & Disp_Node (Current_Configuration) & ")");
          end if;
          return;
       end if;
@@ -707,7 +710,7 @@ package body Configuration is
               (Disp_Node (Entity) & " cannot be at the top of a design");
             Has_Error := True;
          end if;
-         Error_Msg_Elab (Msg, Loc);
+         Error_Msg_Elab (Loc, Msg);
       end Error;
 
       El : Iir;

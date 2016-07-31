@@ -1906,8 +1906,9 @@ package body Sem is
                     and then Get_Pure_Flag (Subprg)
                   then
                      Error_Msg_Sem_Relaxed
-                       ("result subtype of a pure function cannot denote an"
-                          & " access type", Subprg);
+                       (Subprg,
+                        "result subtype of a pure function cannot denote an"
+                          & " access type");
                   end if;
                when others =>
                   if  Vhdl_Std >= Vhdl_08
@@ -1915,8 +1916,8 @@ package body Sem is
                     and then Get_Pure_Flag (Subprg)
                   then
                      Error_Msg_Sem_Relaxed
-                       ("result subtype of a pure function cannot have"
-                          & " access subelements", Subprg);
+                       (Subprg, "result subtype of a pure function cannot have"
+                          & " access subelements");
                   end if;
             end case;
 
@@ -2461,17 +2462,17 @@ package body Sem is
                      Callees := Get_Callees_List (El);
                      pragma Assert (Callees /= Null_Iir_List);
                      Warning_Msg_Sem
-                       ("can't assert that all calls in " & Disp_Node (El)
-                        & " are pure or have not wait; "
-                          & "will be checked at elaboration", El,
-                        Warnid_Delayed_Checks);
+                       (Warnid_Delayed_Checks, +El,
+                        "can't assert that all calls in " & Disp_Node (El)
+                          & " are pure or have not wait; "
+                          & "will be checked at elaboration");
                      Callee := Get_Nth_Element (Callees, 0);
                      --  FIXME: could improve this message by displaying the
                      --  chain of calls until the first subprograms in
                      --  unknown state.
                      Warning_Msg_Sem
-                       ("(first such call is to " & Disp_Node (Callee) & ")",
-                        Callee, Warnid_Delayed_Checks);
+                       (Warnid_Delayed_Checks, +Callee,
+                        "(first such call is to " & Disp_Node (Callee) & ")");
                   end if;
                end if;
             when Iir_Kind_Sensitized_Process_Statement =>
@@ -2479,9 +2480,9 @@ package body Sem is
                   Keep := True;
                   if Emit_Warnings then
                      Warning_Msg_Sem
-                       ("can't assert that " & Disp_Node (El)
-                          & " has not wait; will be checked at elaboration",
-                        El, Warnid_Delayed_Checks);
+                       (Warnid_Delayed_Checks, +El,
+                        "can't assert that " & Disp_Node (El)
+                          & " has not wait; will be checked at elaboration");
                   end if;
                end if;
             when others =>
@@ -2635,8 +2636,8 @@ package body Sem is
       --  Emit a warning is a body is not necessary.
       if not Get_Need_Body (Package_Decl) then
          Warning_Msg_Sem
-           (Disp_Node (Package_Decl) & " does not require a body",
-            Decl, Warnid_Body);
+           (Warnid_Body, +Decl,
+            Disp_Node (Package_Decl) & " does not require a body");
       end if;
 
       Set_Package (Decl, Package_Decl);

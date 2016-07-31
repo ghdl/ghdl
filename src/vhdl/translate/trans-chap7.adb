@@ -516,7 +516,7 @@ package body Trans.Chap7 is
    exception
       when Constraint_Error =>
          --  Can be raised by Get_Physical_Value.
-         Error_Msg_Elab ("numeric literal not in range", Expr);
+         Error_Msg_Elab (Expr, "numeric literal not in range");
          return New_Signed_Literal (Res_Type, 0);
    end Translate_Numeric_Literal;
 
@@ -3784,8 +3784,8 @@ package body Trans.Chap7 is
                return New_Lit (New_Signed_Literal (Otype, Integer_64 (Val)));
             exception
                when Constraint_Error =>
-                  Warning_Msg_Elab ("physical literal out of range",
-                                    Expr, Warnid_Runtime_Error);
+                  Warning_Msg_Elab (Warnid_Runtime_Error, Expr,
+                                    "physical literal out of range");
                   return Translate_Overflow_Literal (Expr);
             end;
 

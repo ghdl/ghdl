@@ -191,7 +191,7 @@ package body Ieee.Vital_Timing is
 
    procedure Warning_Vital (Msg : String; Loc : Iir) is
    begin
-      Warning_Msg_Sem (Msg, Loc, Warnid_Vital_Generic);
+      Warning_Msg_Sem (Warnid_Vital_Generic, +Loc, Msg);
    end Warning_Vital;
 
    --  Check DECL is the VITAL level 0 attribute specification.

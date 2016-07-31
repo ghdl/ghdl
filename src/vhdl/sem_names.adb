@@ -734,9 +734,9 @@ package body Sem_Names is
       then
          if False and then Flags.Vhdl_Std = Vhdl_87 then
             -- emit a warning for a null slice.
-            Warning_Msg_Sem
-              ("direction mismatch results in a null slice",
-               Name, Warnid_Runtime_Error);
+            Warning_Msg_Sem (Warnid_Runtime_Error, +Name,
+                             "direction mismatch results in a null slice");
+
          end if;
          Error_Msg_Sem ("direction of the range mismatch", Name);
       end if;
@@ -1310,8 +1310,8 @@ package body Sem_Names is
       is
       begin
          Error_Msg_Sem_Relaxed
-           ("reference to " & Disp_Node (Obj) & " violate pure rule for "
-            & Disp_Node (Subprg), Loc);
+           (Loc, "reference to " & Disp_Node (Obj) & " violate pure rule for "
+              & Disp_Node (Subprg));
       end Error_Pure;
 
       Subprg : constant Iir := Sem_Stmts.Get_Current_Subprogram;

@@ -862,8 +862,9 @@ package body Sem_Expr is
             --  eg: for i in -1 to 1 loop
 
             --  Be tolerant.
-            Warning_Msg_Sem ("universal integer bound must be numeric literal "
-                               & "or attribute", Res, Warnid_Universal);
+            Warning_Msg_Sem (Warnid_Universal, +Res,
+                             "universal integer bound must be numeric literal "
+                               & "or attribute");
          else
             Error_Msg_Sem ("universal integer bound must be numeric literal "
                              & "or attribute", Res);
@@ -3431,9 +3432,8 @@ package body Sem_Expr is
                      if not Eval_Is_In_Bound (Expr, Element_Type)
                      then
                         Info.Has_Bound_Error := True;
-                        Warning_Msg_Sem
-                          ("element is out of the bounds", Expr,
-                           Warnid_Runtime_Error);
+                        Warning_Msg_Sem (Warnid_Runtime_Error, +Expr,
+                                         "element is out of the bounds");
                      end if;
 
                      --  FIXME: handle name/others in translate.

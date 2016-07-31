@@ -772,8 +772,8 @@ package body Sem_Specs is
          Res := Sem_Named_Entities (Scope, Null_Iir, Spec, False, True);
          if Res = False and then Is_Warning_Enabled (Warnid_Specs) then
             Warning_Msg_Sem
-              ("attribute specification apply to no named entity",
-               Spec, Warnid_Specs);
+              (Warnid_Specs, +Spec,
+               "attribute specification apply to no named entity");
          end if;
       elsif List = Iir_List_Others then
          --  o If the reserved word OTHERS is supplied, then the attribute
@@ -785,8 +785,8 @@ package body Sem_Specs is
          Res := Sem_Named_Entities (Scope, Null_Iir, Spec, False, False);
          if Res = False and then Is_Warning_Enabled (Warnid_Specs) then
             Warning_Msg_Sem
-              ("attribute specification apply to no named entity",
-               Spec, Warnid_Specs);
+              (Warnid_Specs, +Spec,
+               "attribute specification apply to no named entity");
          end if;
       else
          --  o If a list of entity designators is supplied, then the
@@ -1341,8 +1341,8 @@ package body Sem_Specs is
          if not Apply_Component_Specification (Parent_Stmts, False)
            and then Is_Warning_Enabled (Warnid_Specs)
          then
-            Warning_Msg_Sem ("component specification applies to no instance",
-                             Spec, Warnid_Specs);
+            Warning_Msg_Sem (Warnid_Specs, +Spec,
+                             "component specification applies to no instance");
          end if;
       elsif List = Iir_List_Others then
          --  LRM93 5.2
@@ -1359,8 +1359,8 @@ package body Sem_Specs is
          if not Apply_Component_Specification (Parent_Stmts, True)
            and then Is_Warning_Enabled (Warnid_Specs)
          then
-            Warning_Msg_Sem ("component specification applies to no instance",
-                             Spec, Warnid_Specs);
+            Warning_Msg_Sem (Warnid_Specs, +Spec,
+                             "component specification applies to no instance");
          end if;
       else
          --  LRM93 5.2
@@ -1788,9 +1788,9 @@ package body Sem_Specs is
          --     the instantiated component and that is directly visible
          --     (see 10.3),
          Decl := Get_Declaration (Inter);
-         Warning_Msg_Elab ("visible declaration for " & Name_Table.Image (Name)
-                             & " is " & Disp_Node (Decl),
-                           Decl, Warnid_Default_Binding);
+         Warning_Msg_Elab
+           (Warnid_Default_Binding, Decl,
+            "visible declaration for " & Name_Table.Image (Name));
 
          --  b)  An entity declaration that has the same simple name that of
          --      the instantiated component and that would be directly
@@ -1801,9 +1801,9 @@ package body Sem_Specs is
             Inter := Get_Under_Interpretation (Name);
             if Valid_Interpretation (Inter) then
                Decl := Get_Declaration (Inter);
-               Warning_Msg_Elab
-                 ("interpretation behind the component is " & Disp_Node (Decl),
-                  Comp, Warnid_Default_Binding);
+               Warning_Msg_Elab (Warnid_Default_Binding, Comp,
+                                 "interpretation behind the component is "
+                                   & Disp_Node (Decl));
             end if;
          end if;
       end if;
@@ -1822,8 +1822,9 @@ package body Sem_Specs is
             Decl := Get_Parent (Decl);
          end loop;
 
-         Warning_Msg_Elab ("no entity """ & Name_Table.Image (Name) & """ in "
-                           & Disp_Node (Decl), Comp, Warnid_Default_Binding);
+         Warning_Msg_Elab (Warnid_Default_Binding, Comp,
+                           "no entity """ & Name_Table.Image (Name) & """ in "
+                             & Disp_Node (Decl));
       end if;
    end Explain_No_Visible_Entity;
 

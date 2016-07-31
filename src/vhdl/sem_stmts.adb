@@ -556,8 +556,9 @@ package body Sem_Stmts is
                     | Iir_Kind_Concurrent_Selected_Signal_Assignment =>
                      if Get_Postponed_Flag (Current_Concurrent_Statement) then
                         Warning_Msg_Sem
-                          ("waveform may cause a delta cycle in a " &
-                             "postponed process", We, Warnid_Delta_Cycle);
+                          (Warnid_Delta_Cycle, +We,
+                           "waveform may cause a delta cycle in a " &
+                             "postponed process");
                      end if;
                   when others =>
                      --  Context is a subprogram.
@@ -832,8 +833,8 @@ package body Sem_Stmts is
                     and then not Check_Implicit_Conversion (Target_Type, Expr)
                   then
                      Warning_Msg_Sem
-                       ("expression length does not match target length",
-                        Stmt, Warnid_Runtime_Error);
+                       (Warnid_Runtime_Error, +Stmt,
+                        "expression length does not match target length");
                      Set_Expression (Stmt, Build_Overflow (Expr, Target_Type));
                   end if;
                end if;
@@ -1502,9 +1503,9 @@ package body Sem_Stmts is
             if Is_Warning_Enabled (Warnid_Default_Binding)
               and then not Flags.Flag_Elaborate
             then
-               Warning_Msg_Sem
-                 ("no default binding for instantiation of "
-                    & Disp_Node (Decl), Stmt, Warnid_Default_Binding);
+               Warning_Msg_Sem (Warnid_Default_Binding, +Stmt,
+                                "no default binding for instantiation of "
+                                  & Disp_Node (Decl));
                Explain_No_Visible_Entity (Decl);
             end if;
          elsif Flags.Flag_Elaborate

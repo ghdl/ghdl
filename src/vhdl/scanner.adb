@@ -422,10 +422,8 @@ package body Scanner is
                   --  as the remainder operator, instead of 'rem'.  This will
                   --  improve the error message.
                   Error_Msg_Scan
-                    ("'%' is not a vhdl operator, use 'rem'",
-                     File_Pos_To_Location
-                       (Current_Context.Source_File,
-                        Current_Context.Token_Pos));
+                    (Get_Token_Location,
+                     "'%%' is not a vhdl operator, use 'rem'");
                   Current_Token := Tok_Rem;
                   Pos := Current_Context.Token_Pos + 1;
                   return;
@@ -448,7 +446,7 @@ package body Scanner is
             --  that the enclosed sequence of characters constains no quotation
             --  marks, and provided that both string brackets are replaced.
             Error_Msg_Scan
-              ("'""' cannot be used in a string delimited with '%'");
+              ("'""' cannot be used in a string delimited with '%%'");
          end if;
 
          Length := Length + 1;
@@ -537,12 +535,12 @@ package body Scanner is
             when '"' =>
                pragma Assert (Mark = '%');
                Error_Msg_Scan
-                 ("'""' cannot close a bit string opened by '%'");
+                 ("'""' cannot close a bit string opened by '%%'");
                exit;
             when '%' =>
                pragma Assert (Mark = '"');
                Error_Msg_Scan
-                 ("'%' cannot close a bit string opened by '""'");
+                 ("'%%' cannot close a bit string opened by '""'");
                exit;
             when others =>
                if Characters_Kind (C) in Graphic_Character then
@@ -559,9 +557,9 @@ package body Scanner is
                else
                   if Mark = '%' then
                      Error_Msg_Scan
-                       ("'%' is not a vhdl operator, use 'rem'",
-                        File_Pos_To_Location
-                          (Current_Context.Source_File, Orig_Pos));
+                       (File_Pos_To_Location
+                          (Current_Context.Source_File, Orig_Pos),
+                        "'%%' is not a vhdl operator, use 'rem'");
                      Current_Token := Tok_Rem;
                      Pos := Orig_Pos + 1;
                      return;
@@ -857,7 +855,7 @@ package body Scanner is
          when Other_Special_Character | Special_Character =>
             if (C = '"' or C = '%') and then Len <= 2 then
                if C = '%' and Vhdl_Std >= Vhdl_08 then
-                  Error_Msg_Scan ("'%' not allowed in vhdl 2008 "
+                  Error_Msg_Scan ("'%%' not allowed in vhdl 2008 "
                                     & "(was replacement character)");
                   --  Continue as a bit string.
                end if;
@@ -933,9 +931,9 @@ package body Scanner is
                if not AMS_Vhdl then
                   if Is_Warning_Enabled (Warnid_Reserved_Word) then
                      Warning_Msg_Scan
-                       ("using """ & Nam_Buffer (1 .. Nam_Length)
-                          & """ AMS-VHDL reserved word as an identifier",
-                       Warnid_Reserved_Word);
+                       (Warnid_Reserved_Word,
+                        "using %i AMS-VHDL reserved word as an identifier",
+                        +Current_Identifier);
                   end if;
                   Current_Token := Tok_Identifier;
                end if;
@@ -943,9 +941,9 @@ package body Scanner is
                if Vhdl_Std < Vhdl_08 then
                   if Is_Warning_Enabled (Warnid_Reserved_Word) then
                      Warning_Msg_Scan
-                       ("using """ & Nam_Buffer (1 .. Nam_Length)
-                          & """ vhdl-2008 reserved word as an identifier",
-                       Warnid_Reserved_Word);
+                       (Warnid_Reserved_Word,
+                        "using %i vhdl-2008 reserved word as an identifier",
+                        +Current_Identifier);
                   end if;
                   Current_Token := Tok_Identifier;
                end if;
@@ -953,9 +951,9 @@ package body Scanner is
                if Vhdl_Std < Vhdl_00 then
                   if Is_Warning_Enabled (Warnid_Reserved_Word) then
                      Warning_Msg_Scan
-                       ("using """ & Nam_Buffer (1 .. Nam_Length)
-                          & """ vhdl00 reserved word as an identifier",
-                        Warnid_Reserved_Word);
+                       (Warnid_Reserved_Word,
+                        "using %i vhdl-2000 reserved word as an identifier",
+                        +Current_Identifier);
                   end if;
                   Current_Token := Tok_Identifier;
                end if;
@@ -963,12 +961,12 @@ package body Scanner is
                if Vhdl_Std = Vhdl_87 then
                   if Is_Warning_Enabled (Warnid_Reserved_Word) then
                      Warning_Msg_Scan
-                       ("using """ & Nam_Buffer (1 .. Nam_Length)
-                          & """ vhdl93 reserved word as a vhdl87 identifier",
-                        Warnid_Reserved_Word);
+                       (Warnid_Reserved_Word,
+                        "using %i vhdl93 reserved word as a vhdl87 identifier",
+                        +Current_Identifier, True);
                      Warning_Msg_Scan
-                       ("(use option --std=93 to compile as vhdl93)",
-                        Warnid_Reserved_Word);
+                       (Warnid_Reserved_Word,
+                        "(use option --std=93 to compile as vhdl93)");
                   end if;
                   Current_Token := Tok_Identifier;
                end if;
@@ -1155,7 +1153,7 @@ package body Scanner is
                        or else I = Nam_Length - 1
                      then
                         Error_Msg_Option ("anti-slash must be doubled "
-                                          & "in extended identifier");
+                                            & "in extended identifier");
                         return;
                      end if;
                   end if;
@@ -1469,8 +1467,8 @@ package body Scanner is
                         --  the start of a nested delimited comment.
                         if Source (Pos + 1) = '*' then
                            Warning_Msg_Scan
-                             ("'/*' found within a block comment",
-                             Warnid_Nested_Comment);
+                             (Warnid_Nested_Comment,
+                              "'/*' found within a block comment");
                         end if;
                         Pos := Pos + 1;
                      when '*' =>
@@ -1488,10 +1486,8 @@ package body Scanner is
                         if Pos >= Current_Context.File_Len then
                            --  Point at the start of the comment.
                            Error_Msg_Scan
-                             ("block comment not terminated at end of file",
-                              File_Pos_To_Location
-                                (Current_Context.Source_File,
-                                 Current_Context.Token_Pos));
+                             (Get_Token_Location,
+                              "block comment not terminated at end of file");
                            exit;
                         end if;
                         Pos := Pos + 1;
@@ -1713,7 +1709,7 @@ package body Scanner is
          when '%' =>
             if Vhdl_Std >= Vhdl_08 then
                Error_Msg_Scan
-                 ("'%' not allowed in vhdl 2008 (was replacement character)");
+                 ("'%%' not allowed in vhdl 2008 (was replacement character)");
                --  Continue as a string.
             end if;
             Scan_String;
@@ -1843,8 +1839,9 @@ package body Scanner is
          when '$' | '`'
            | Inverted_Exclamation .. Inverted_Question
            | Multiplication_Sign | Division_Sign =>
-            Error_Msg_Scan ("character """ & Source (Pos)
-                            & """ can only be used in strings or comments");
+            Error_Msg_Scan
+              ("character %c can only be used in strings or comments",
+               +Source (Pos));
             Pos := Pos + 1;
             goto Again;
          when '@' =>
@@ -1854,8 +1851,8 @@ package body Scanner is
                return;
             else
                Error_Msg_Scan
-                 ("character """ & Source (Pos)
-                    & """ can only be used in strings or comments");
+                 ("character %c can only be used in strings or comments",
+                  +Source (Pos));
                Pos := Pos + 1;
                goto Again;
             end if;

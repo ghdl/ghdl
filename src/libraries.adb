@@ -1007,12 +1007,14 @@ package body Libraries is
                   --  Warns only if we are not re-analyzing the file.
                   if Is_Warning_Enabled (Warnid_Library) then
                      Warning_Msg_Sem
-                       ("redefinition of a library unit in "
-                        & "same design file:", Unit, Warnid_Library);
+                       (Warnid_Library, +Unit,
+                        "redefinition of a library unit in "
+                          & "same design file:");
                      Warning_Msg_Sem
-                       (Disp_Node (Library_Unit) & " defined at "
-                        & Disp_Location (Library_Unit) & " is now "
-                        & Disp_Node (New_Library_Unit), Unit, Warnid_Library);
+                       (Warnid_Library, +Unit,
+                        Disp_Node (Library_Unit) & " defined at "
+                          & Disp_Location (Library_Unit) & " is now "
+                          & Disp_Node (New_Library_Unit));
                   end if;
                else
                   --  Free the stub.
