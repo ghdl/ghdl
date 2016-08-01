@@ -28,8 +28,6 @@
 --              the help of it's child units)
 --              Contains common stuff for it's child units
 
-with Grt.Types; use Grt.Types;
-
 package Grt.Wave_Opt_File is
    pragma Preelaborate;
 
@@ -38,19 +36,20 @@ package Grt.Wave_Opt_File is
 
    File_Path : String_Cst;
 
-   type Line_Context_Type is record
-      Str : String_Access;
-      Num : Natural;
+   type Path_Context_Type is record
+      Line_Pos : Natural;
       Max_Level : Natural;
    end record;
-   type Line_Context_Acc is access Line_Context_Type;
+   type Path_Context_Acc is access Path_Context_Type;
 
    type Elem_Kind_Type is (Not_Found, Pkg_Entity, Signal);
    type Elem_Type;
    type Elem_Acc is access Elem_Type;
    type Elem_Type is record
       Name : String_Cst;
-      Line_Context : Line_Context_Acc;
+      Path_Context : Path_Context_Acc;
+      Column_Pos : Positive;
+      Level : Positive;
       Kind : Elem_Kind_Type;
       Next_Sibling : Elem_Acc;
       Next_Child : Elem_Acc;
@@ -68,11 +67,14 @@ private
    -- An error/warning message start with the context or the error/warning.
    -- This procedure print this context
    procedure Print_Context
-     (Line_Context : Line_Context_Acc; Severity : Severity_Type);
+     (Line_Pos, Column_Pos : Positive; Severity : Severity_Type);
+   procedure Print_Context (Element : Elem_Acc; Severity : Severity_Type);
 
    -- Print an error/warning with it's context
    procedure Error_Context (Msg : String;
-                            Line_Context : Line_Context_Acc;
+                            Line_Pos, Column_Pos : Positive;
                             Severity : Severity_Type := Error);
+   procedure Error_Context
+     (Msg : String; Element : Elem_Acc; Severity : Severity_Type := Error);
 
 end Grt.Wave_Opt_File;

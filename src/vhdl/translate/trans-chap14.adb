@@ -290,6 +290,8 @@ package body Trans.Chap14 is
    is
       Expr_Type : constant Iir := Get_Type (Attr);
       Tinfo     : constant Type_Info_Acc := Get_Info (Expr_Type);
+      Prefix_Type : constant Iir :=
+        Get_Type (Get_Named_Entity (Get_Prefix (Attr)));
       Ttype     : O_Tnode;
       Expr      : O_Enode;
       Is_Inc    : Boolean;
@@ -305,10 +307,10 @@ package body Trans.Chap14 is
             Is_Inc := False;
          when Iir_Kind_Leftof_Attribute =>
             Is_Inc :=
-              Get_Direction (Get_Range_Constraint (Expr_Type)) = Iir_Downto;
+              Get_Direction (Get_Range_Constraint (Prefix_Type)) = Iir_Downto;
          when Iir_Kind_Rightof_Attribute =>
             Is_Inc :=
-              Get_Direction (Get_Range_Constraint (Expr_Type)) = Iir_To;
+              Get_Direction (Get_Range_Constraint (Prefix_Type)) = Iir_To;
          when others =>
             Error_Kind ("translate_succ_pred_attribute", Attr);
       end case;

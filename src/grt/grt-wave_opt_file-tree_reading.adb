@@ -25,7 +25,6 @@
 
 -- Description: See package specifications
 
-with Grt.Strings; use Grt.Strings;
 with Grt.Errors; use Grt.Errors;
 
 package body Grt.Wave_Opt_File.Tree_Reading is
@@ -67,12 +66,12 @@ package body Grt.Wave_Opt_File.Tree_Reading is
    -- Read the whole sub tree given and check if every element was found in
    -- design.  Called by Check_If_All_Found
    procedure Check_Sub_Tree_If_All_Found
-     (Previous_Cursor : Elem_Acc; Sep : Character; Level : Positive);
+     (Previous_Cursor : Elem_Acc; Sep : Character);
 
    procedure Check_If_All_Found is
    begin
       for Index in Tree_Index_Type'Range loop
-         Check_Sub_Tree_If_All_Found (Trees (Index), Seps (Index), 1);
+         Check_Sub_Tree_If_All_Found (Trees (Index), Seps (Index));
       end loop;
    end Check_If_All_Found;
 
@@ -103,34 +102,24 @@ package body Grt.Wave_Opt_File.Tree_Reading is
    end Find_Cursor;
 
    procedure Check_Sub_Tree_If_All_Found
-     (Previous_Cursor : Elem_Acc; Sep : Character; Level : Positive)
+     (Previous_Cursor : Elem_Acc; Sep : Character)
    is
       Cursor : Elem_Acc;
-      Index : Positive;
    begin
       Cursor := Previous_Cursor;
       while Cursor /= null loop
          if Cursor.Kind = Not_Found then
-            Print_Context (Cursor.Line_Context, Warning);
+            Print_Context (Cursor, Warning);
             Report_C ("no VHDL object in design matches ");
-            -- Display the path of the first unfound vhdl object in signal path
-            if Level > 1 then
-               Index := Cursor.Line_Context.Str'First;
-               for I in 2 .. Level loop
-                  Index := Find (Cursor.Line_Context.Str.all, Sep, Index + 1);
-               end loop;
-               Report_C (Cursor.Line_Context.Str (Cursor.Line_Context.Str'First
-                                                  .. Index));
-            elsif Sep = '/' then
-               Report_C ("/");
-            end if;
             Report_E (Cursor.Name.all);
-         elsif Level = Cursor.Line_Context.Max_Level
+         elsif Cursor.Level = Cursor.Path_Context.Max_Level
            and then Cursor.Kind = Pkg_Entity
          then
-            Error_Context ("not a signal", Cursor.Line_Context, Warning);
+            Print_Context (Cursor, Warning);
+            Report_C (Cursor.Name.all);
+            Report_E (" is not a signal");
          else
-            Check_Sub_Tree_If_All_Found (Cursor.Next_Child, Sep, Level + 1);
+            Check_Sub_Tree_If_All_Found (Cursor.Next_Child, Sep);
          end if;
          Cursor := Cursor.Next_Sibling;
       end loop;

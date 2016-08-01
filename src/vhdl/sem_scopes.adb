@@ -559,8 +559,26 @@ package body Sem_Scopes is
             --  The hash must have been computed.
             pragma Assert (Decl_Hash /= 0);
 
+            --  LRM02 10.3 Visibility
+            --  Each of two declarations is said to be a /homograph/ of the
+            --  other if both declarations have the same identifier, operator
+            --  symbol, or character literal, and if overloading is allowed for
+            --  at mist one of the two.
+            --
+            --  LRM08 12.3 Visibility
+            --  Each of two declarations is said to be a /homograph/ of the
+            --  other if and only if both declarations have the same
+            --  designator, and they denote different named entities, and
+            --  either overloading is allows for at most one of the two, or
+            --  overloading is allowed for both declarations and they have the
+            --  same parameter and result type profile.
+
+            --  GHDL: here we are in the case when both declarations are
+            --  overloadable.  Also, always follow the LRM08 rules as they fix
+            --  issues.
+
             --  Find an homograph of this declaration (and also keep the
-            --  interpretation just before it in the chain),
+            --  interpretation just before it in the chain).
             Homograph := Current_Inter;
             Prev_Homograph := No_Name_Interpretation;
             while Homograph /= No_Name_Interpretation loop
@@ -578,7 +596,7 @@ package body Sem_Scopes is
                return;
             end if;
 
-            --  There is an homograph.
+            --  There is an homograph (or the named entity is the same).
             if Potentially then
                --  Added DECL would be made potentially visible.
 
