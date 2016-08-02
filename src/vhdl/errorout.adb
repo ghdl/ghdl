@@ -111,6 +111,17 @@ package body Errorout is
 
    function "+" (L : Iir) return Location_Type renames Get_Location_Safe;
 
+   function "+" (L : PSL_Node) return Location_Type
+   is
+      use PSL.Nodes;
+   begin
+      if L = Null_Node then
+         return No_Location;
+      else
+         return PSL.Nodes.Get_Location (L);
+      end if;
+   end "+";
+
    procedure Put (Str : String)
    is
       use Ada.Text_IO;
@@ -381,6 +392,21 @@ package body Errorout is
                         Put (':');
                         Disp_Natural (Arg_Col);
                      end;
+                  when 'n' =>
+                     --  Node
+                     declare
+                        Arg : Earg_Type renames Args (Argn);
+                     begin
+                        Put (''');
+                        case Arg.Kind is
+                           when Earg_Iir =>
+                              Put (Disp_Node (Arg.Val_Iir));
+                           when others =>
+                              --  Invalid conversion to node.
+                              raise Internal_Error;
+                        end case;
+                        Put (''');
+                     end;
                   when others =>
                      --  Unknown format.
                      raise Internal_Error;
@@ -501,26 +527,29 @@ package body Errorout is
       Report_Msg (Msgid_Error, Semantic, Get_Location_Safe (Loc), Msg);
    end Error_Msg_Sem;
 
-   procedure Error_Msg_Sem (Msg: String; Loc: PSL_Node)
-   is
-      use PSL.Nodes;
-      L : Location_Type;
+   procedure Error_Msg_Sem (Loc: Location_Type;
+                            Msg: String;
+                            Args : Earg_Arr := No_Eargs;
+                            Cont : Boolean := False) is
    begin
-      if Loc = Null_Node then
-         L := No_Location;
-      else
-         L := PSL.Nodes.Get_Location (Loc);
-      end if;
-      Report_Msg (Msgid_Error, Semantic, L, Msg);
+      Report_Msg (Msgid_Error, Semantic, Loc, Msg, Args, Cont);
    end Error_Msg_Sem;
 
-   procedure Error_Msg_Sem (Msg: String; Loc : Location_Type) is
+   procedure Error_Msg_Sem
+     (Loc: Location_Type; Msg: String; Arg1 : Earg_Type) is
    begin
-      Report_Msg (Msgid_Error, Semantic, Loc, Msg);
+      Report_Msg (Msgid_Error, Semantic, Loc, Msg, (1 => Arg1));
    end Error_Msg_Sem;
 
-   procedure Error_Msg_Relaxed
-     (Origin : Report_Origin; Msg : String; Loc : Iir)
+   procedure Error_Msg_Sem_1 (Msg: String; Loc : PSL_Node) is
+   begin
+      Error_Msg_Sem (+Loc, Msg);
+   end Error_Msg_Sem_1;
+
+   procedure Error_Msg_Relaxed (Origin : Report_Origin;
+                                Msg : String;
+                                Loc : Iir;
+                                Args : Earg_Arr := No_Eargs)
    is
       use Flags;
       Level : Msgid_Type;
@@ -530,12 +559,14 @@ package body Errorout is
       else
          Level := Msgid_Error;
       end if;
-      Report_Msg (Level, Origin, Get_Location_Safe (Loc), Msg);
+      Report_Msg (Level, Origin, Get_Location_Safe (Loc), Msg, Args);
    end Error_Msg_Relaxed;
 
-   procedure Error_Msg_Sem_Relaxed (Loc : Iir; Msg : String) is
+   procedure Error_Msg_Sem_Relaxed (Loc : Iir;
+                                    Msg : String;
+                                    Args : Earg_Arr := No_Eargs) is
    begin
-      Error_Msg_Relaxed (Semantic, Msg, Loc);
+      Error_Msg_Relaxed (Semantic, Msg, Loc, Args);
    end Error_Msg_Sem_Relaxed;
 
    -- Disp a message during elaboration.

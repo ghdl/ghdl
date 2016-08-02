@@ -24,7 +24,6 @@ with Std_Package; use Std_Package;
 with Ieee.Std_Logic_1164;
 with Iir_Chains;
 with Evaluation; use Evaluation;
-with Name_Table;
 with Iirs_Utils; use Iirs_Utils;
 with Sem; use Sem;
 with Sem_Expr; use Sem_Expr;
@@ -86,8 +85,7 @@ package body Sem_Decls is
    begin
       Decl_Type := Get_Type (Decl);
       if Get_Signal_Type_Flag (Decl_Type) = False then
-         Error_Msg_Sem ("type of " & Disp_Node (Decl)
-                        & " cannot be " & Disp_Node (Decl_Type), Decl);
+         Error_Msg_Sem (+Decl, "type of %n cannot be %n", (+Decl, +Decl_Type));
          case Get_Kind (Decl_Type) is
             when Iir_Kind_File_Type_Definition =>
                null;
@@ -99,8 +97,8 @@ package body Sem_Decls is
             when Iir_Kinds_Array_Type_Definition
               | Iir_Kind_Record_Type_Definition
               | Iir_Kind_Record_Subtype_Definition =>
-               Error_Msg_Sem ("(" & Disp_Node (Decl_Type)
-                              & " has an access subelement)", Decl);
+               Error_Msg_Sem
+                 (+Decl, "(%n has an access subelement)", +Decl_Type);
             when others =>
                Error_Kind ("check_signal_type", Decl_Type);
          end case;
@@ -173,8 +171,8 @@ package body Sem_Decls is
                      --  a resolved signal.
                      if not Get_Resolved_Flag (A_Type) then
                         Error_Msg_Sem
-                          (Disp_Node (A_Type) & " of guarded "
-                             & Disp_Node (Inter) & " is not resolved", Inter);
+                          (+Inter, "%n of guarded %n is not resolved",
+                           (+A_Type, +Inter));
                      end if;
 
                      --  LRM 2.1.1.2  Signal parameter
@@ -184,13 +182,13 @@ package body Sem_Decls is
                        and then Interface_Kind in Parameter_Interface_List
                      then
                         Error_Msg_Sem
-                          ("signal parameter can't be of kind bus", Inter);
+                          (+Inter, "signal parameter can't be of kind bus");
                      end if;
                   when Iir_Register_Kind =>
                      --  LRM93 4.3.2 Interface declarations
                      --  Grammar for interface_signal_declaration.
                      Error_Msg_Sem
-                       ("interface signal can't be of kind register", Inter);
+                       (+Inter, "interface signal can't be of kind register");
                end case;
             end if;
             Set_Type_Has_Signal (A_Type);
@@ -211,8 +209,9 @@ package body Sem_Decls is
                case Get_Kind (Get_Base_Type (A_Type)) is
                   when Iir_Kind_File_Type_Definition =>
                      if Flags.Vhdl_Std >= Vhdl_93 then
-                        Error_Msg_Sem ("variable formal type can't be a "
-                                         & "file type (vhdl 93)", Inter);
+                        Error_Msg_Sem
+                          (+Inter,
+                           "variable formal can't be a file (vhdl 93)");
                      end if;
                   when Iir_Kind_Protected_Type_Declaration =>
                      --  LRM 2.1.1.1  Constant and variable parameters
@@ -220,7 +219,8 @@ package body Sem_Decls is
                      --  other that INOUT.
                      if Get_Mode (Inter) /= Iir_Inout_Mode then
                         Error_Msg_Sem
-                          ("parameter of protected type must be inout", Inter);
+                          (+Inter,
+                           "parameter of protected type must be inout");
                      end if;
                   when others =>
                      null;
@@ -230,7 +230,7 @@ package body Sem_Decls is
                  /= Iir_Kind_File_Type_Definition
                then
                   Error_Msg_Sem
-                    ("file formal type must be a file type", Inter);
+                    (+Inter, "file formal type must be a file type");
                end if;
             when others =>
                --  Inter is not an interface.
@@ -256,22 +256,23 @@ package body Sem_Decls is
                when Iir_Kind_Interface_Signal_Declaration =>
                   if Get_Mode (Inter) = Iir_Linkage_Mode then
                      Error_Msg_Sem
-                       ("default expression not allowed for linkage port",
-                        Inter);
+                       (+Inter,
+                        "default expression not allowed for linkage port");
                   elsif Interface_Kind in Parameter_Interface_List then
-                     Error_Msg_Sem ("default expression not allowed"
-                                      & " for signal parameter", Inter);
+                     Error_Msg_Sem
+                       (+Inter,
+                        "default expression not allowed for signal parameter");
                   end if;
                when Iir_Kind_Interface_Variable_Declaration =>
                   if Get_Mode (Inter) /= Iir_In_Mode then
                      Error_Msg_Sem
-                       ("default expression not allowed for"
-                          & " out or inout variable parameter", Inter);
+                       (+Inter, "default expression not allowed for"
+                          & " out or inout variable parameter");
                   elsif Get_Kind (A_Type) = Iir_Kind_Protected_Type_Declaration
                   then
                      Error_Msg_Sem
-                       ("default expression not allowed for"
-                          & " variable parameter of protected type", Inter);
+                       (+Inter, "default expression not allowed for"
+                          & " variable parameter of protected type");
                   end if;
                when Iir_Kind_Interface_File_Declaration =>
                   raise Internal_Error;
@@ -296,9 +297,7 @@ package body Sem_Decls is
             --  generic constants whose values may be determined by the
             --  environment.
             if Get_Kind (Inter) /= Iir_Kind_Interface_Constant_Declaration then
-               Error_Msg_Sem
-                 ("generic " & Disp_Node (Inter) & " must be a constant",
-                  Inter);
+               Error_Msg_Sem (+Inter, "generic %n must be a constant", +Inter);
             else
                --   LRM93 7.4.2 (Globally static primaries)
                --   3. a generic constant.
@@ -314,16 +313,14 @@ package body Sem_Decls is
             end if;
          when Port_Interface_List =>
             if Get_Kind (Inter) /= Iir_Kind_Interface_Signal_Declaration then
-               Error_Msg_Sem
-                 ("port " & Disp_Node (Inter) & " must be a signal", Inter);
+               Error_Msg_Sem (+Inter, "port %n must be a signal", +Inter);
             end if;
          when Parameter_Interface_List =>
             if Get_Kind (Inter) = Iir_Kind_Interface_Variable_Declaration
               and then Interface_Kind = Function_Parameter_Interface_List
             then
-               Error_Msg_Sem ("variable interface parameter are not "
-                                & "allowed for a function (use a constant)",
-                              Inter);
+               Error_Msg_Sem (+Inter, "variable interface parameter are not "
+                                & "allowed for a function (use a constant)");
             end if;
 
             --  By default, we suppose a subprogram read the activity of
@@ -346,13 +343,15 @@ package body Sem_Decls is
                     and then
                     Get_Kind (Inter) /= Iir_Kind_Interface_File_Declaration
                   then
-                     Error_Msg_Sem ("mode of a function parameter cannot "
-                                      & "be inout or out", Inter);
+                     Error_Msg_Sem
+                       (+Inter,
+                        "mode of a function parameter cannot be inout or out");
                   end if;
                when Iir_Buffer_Mode
                  | Iir_Linkage_Mode =>
-                  Error_Msg_Sem ("buffer or linkage mode is not allowed "
-                                   & "for a subprogram parameter", Inter);
+                  Error_Msg_Sem
+                    (+Inter, "buffer or linkage mode is not allowed "
+                       & "for a subprogram parameter");
             end case;
       end case;
    end Sem_Interface_Object_Declaration;
@@ -1594,7 +1593,7 @@ package body Sem_Decls is
         /= Iir_Kind_Package_Body
       then
          Error_Msg_Sem
-           ("full constant declaration must appear in package body", Decl);
+           (+Decl, "full constant declaration must appear in package body");
       end if;
       return Deferred_Const;
    end Get_Deferred_Constant;
@@ -1671,8 +1670,8 @@ package body Sem_Decls is
                                       Get_Type (Deferred_Const))
       then
          Error_Msg_Sem
-           ("subtype indication doesn't conform with the deferred constant",
-            Decl);
+           (+Decl,
+            "subtype indication doesn't conform with the deferred constant");
       end if;
 
       --  LRM93 4.3.1.3
@@ -1689,7 +1688,7 @@ package body Sem_Decls is
       --  a file type [or an access type].
       case Get_Kind (Atype) is
          when Iir_Kind_File_Type_Definition =>
-            Error_Msg_Sem (Disp_Node (Decl) & " cannot be of type file", Decl);
+            Error_Msg_Sem (+Decl, "%n cannot be of type file", +Decl);
          when others =>
             if Get_Kind (Decl) /= Iir_Kind_Variable_Declaration then
                Check_Signal_Type (Decl);
@@ -1698,7 +1697,7 @@ package body Sem_Decls is
 
       if not Check_Implicit_Conversion (Atype, Default_Value) then
          Error_Msg_Sem
-           ("default value length does not match object type length", Decl);
+           (+Decl, "default value length does not match object type length");
       end if;
 
       case Get_Kind (Decl) is
@@ -1716,13 +1715,14 @@ package body Sem_Decls is
             if Default_Value = Null_Iir then
                if Deferred_Const /= Null_Iir then
                   Error_Msg_Sem
-                    ("full constant declaration must have a default value",
-                     Decl);
+                    (+Decl,
+                     "full constant declaration must have a default value");
                else
                   Set_Deferred_Declaration_Flag (Decl, True);
                end if;
                if Get_Kind (Parent) /= Iir_Kind_Package_Declaration then
-                  Error_Msg_Sem ("a constant must have a default value", Decl);
+                  Error_Msg_Sem
+                    (+Decl, "a constant must have a default value");
                end if;
                Set_Expr_Staticness (Decl, Globally);
             else
@@ -1759,8 +1759,7 @@ package body Sem_Decls is
             if Get_Guarded_Signal_Flag (Decl)
               and then not Get_Resolved_Flag (Atype)
             then
-               Error_Msg_Sem
-                 ("guarded " & Disp_Node (Decl) & " must be resolved", Decl);
+               Error_Msg_Sem (+Decl, "guarded %n must be resolved", +Decl);
             end if;
             Set_Expr_Staticness (Decl, None);
             Set_Has_Disconnect_Flag (Decl, False);
@@ -1785,21 +1784,22 @@ package body Sem_Decls is
                  | Iir_Kind_Generate_Statement_Body =>
                   if not Get_Shared_Flag (Decl) then
                      Error_Msg_Sem
-                       ("non shared variable declaration not allowed here",
-                        Decl);
+                       (+Decl,
+                        "non shared variable declaration not allowed here");
                   end if;
                when Iir_Kinds_Process_Statement
                  | Iir_Kind_Function_Body
                  | Iir_Kind_Procedure_Body =>
                   if Get_Shared_Flag (Decl) then
                      Error_Msg_Sem
-                       ("shared variable declaration not allowed here", Decl);
+                       (+Decl,
+                        "shared variable declaration not allowed here");
                   end if;
                when Iir_Kind_Protected_Type_Body =>
                   if Get_Shared_Flag (Decl) then
                      Error_Msg_Sem
-                       ("variable of protected type body must not be shared",
-                        Decl);
+                       (+Decl,
+                        "variable of protected type body must not be shared");
                   end if;
                when Iir_Kind_Protected_Type_Declaration =>
                   --  This is not allowed, but caught
@@ -1839,9 +1839,8 @@ package body Sem_Decls is
                     and then Base_Type
                     = Get_Protected_Type_Declaration (Parent)
                   then
-                     Error_Msg_Sem
-                       ("variable type must not be of the protected type body",
-                        Decl);
+                     Error_Msg_Sem (+Decl, "variable type must not be of the "
+                                      & "protected type body");
                   end if;
                end;
             end if;
@@ -1869,11 +1868,11 @@ package body Sem_Decls is
             --  must define a constrained array subtype.
             if not Is_Fully_Constrained_Type (Atype) then
                Error_Msg_Sem
-                 ("declaration of " & Disp_Node (Decl)
-                  & " with unconstrained " & Disp_Node (Atype)
-                  & " is not allowed", Decl);
+                 (+Decl,
+                  "declaration of %n with unconstrained %n is not allowed",
+                  (+Decl, +Atype));
                if Default_Value /= Null_Iir then
-                  Error_Msg_Sem ("(even with a default value)", Decl);
+                  Error_Msg_Sem (+Decl, "(even with a default value)");
                end if;
             end if;
 
@@ -1910,7 +1909,7 @@ package body Sem_Decls is
       --  The subtype indication of a file declaration must define a file
       --  subtype.
       if Get_Kind (Atype) /= Iir_Kind_File_Type_Definition then
-         Error_Msg_Sem ("file subtype expected for a file declaration", Decl);
+         Error_Msg_Sem (+Decl, "file subtype expected for a file declaration");
          return;
       end if;
 
@@ -2002,8 +2001,7 @@ package body Sem_Decls is
         or else (Flags.Vhdl_Std > Vhdl_87
                  and then Ident in Std_Names.Name_Id_Vhdl93_Attributes)
       then
-         Error_Msg_Sem ("predefined attribute """ & Name_Table.Image (Ident)
-                        & """ overriden", Decl);
+         Error_Msg_Sem (+Decl, "predefined attribute %i overriden", +Decl);
       end if;
       Sem_Scopes.Add_Name (Decl);
       Xref_Decl (Decl);
@@ -2054,7 +2052,7 @@ package body Sem_Decls is
       --
       --  2. The name must be a static name that denotes an object.
       if Get_Name_Staticness (N_Name) < Globally then
-         Error_Msg_Sem ("aliased name must be a static name", Alias);
+         Error_Msg_Sem (+Alias, "aliased name must be a static name");
       end if;
 
       --  LRM93 4.3.3.1
@@ -2074,8 +2072,8 @@ package body Sem_Decls is
          if N_Type /= Null_Iir then
             Set_Type (Alias, N_Type);
             if Get_Base_Type (N_Type) /= Get_Base_Type (Name_Type) then
-               Error_Msg_Sem ("base type of aliased name and name mismatch",
-                              Alias);
+               Error_Msg_Sem
+                 (+Alias, "base type of aliased name and name mismatch");
             end if;
          end if;
       end if;
@@ -2085,8 +2083,8 @@ package body Sem_Decls is
       if Get_Kind (N_Type) in Iir_Kinds_Array_Type_Definition then
          if not Is_One_Dimensional_Array_Type (N_Type) then
             Error_Msg_Sem
-              ("aliased name must not be a multi-dimensional array type",
-               Alias);
+              (+Alias,
+               "aliased name must not be a multi-dimensional array type");
          end if;
          if Get_Type_Staticness (N_Type) = Locally
            and then Get_Type_Staticness (Name_Type) = Locally
@@ -2096,7 +2094,7 @@ package body Sem_Decls is
            (Get_Nth_Element (Get_Index_Subtype_List (Name_Type), 0))
          then
             Error_Msg_Sem
-              ("number of elements not matching in type and name", Alias);
+              (+Alias, "number of elements not matching in type and name");
          end if;
       end if;
 
@@ -2229,12 +2227,13 @@ package body Sem_Decls is
                else
                   Error := True;
                   Error_Msg_Sem
-                    ("cannot resolve signature, many matching subprograms:",
-                     Sig);
-                  Error_Msg_Sem ("found: " & Disp_Node (Res), Res);
+                    (+Sig,
+                     "cannot resolve signature, many matching subprograms:",
+                     Cont => True);
+                  Error_Msg_Sem (+Res, "found: %n", (1 => +Res), Cont => True);
                end if;
                if Error then
-                  Error_Msg_Sem ("found: " & Disp_Node (El), El);
+                  Error_Msg_Sem (+El, "found: %n", +El);
                end if;
             end if;
          end loop;
@@ -2258,7 +2257,7 @@ package body Sem_Decls is
       end if;
       if Res = Null_Iir then
          Error_Msg_Sem
-           ("cannot resolve signature, no matching subprogram", Sig);
+           (+Sig, "cannot resolve signature, no matching subprogram");
       end if;
 
       return Res;
@@ -2415,12 +2414,12 @@ package body Sem_Decls is
             --  2.  A signature is required if the name denotes a subprogram
             --      (including an operator) or enumeration literal.
             if Get_Alias_Signature (Alias) = Null_Iir then
-               Error_Msg_Sem ("signature required for subprogram", Alias);
+               Error_Msg_Sem (+Alias, "signature required for subprogram");
             end if;
          when Iir_Kind_Enumeration_Literal =>
             if Get_Alias_Signature (Alias) = Null_Iir then
-               Error_Msg_Sem ("signature required for enumeration literal",
-                              Alias);
+               Error_Msg_Sem
+                 (+Alias, "signature required for enumeration literal");
             end if;
          when Iir_Kind_Type_Declaration =>
             Add_Aliases_For_Type_Alias (Alias);
@@ -2438,7 +2437,7 @@ package body Sem_Decls is
          when Iir_Kind_Terminal_Declaration =>
             null;
          when Iir_Kind_Base_Attribute =>
-            Error_Msg_Sem ("base attribute not allowed in alias", Alias);
+            Error_Msg_Sem (+Alias, "base attribute not allowed in alias");
             return;
          when others =>
             Error_Kind ("sem_non_object_alias_declaration", N_Entity);
@@ -2453,8 +2452,8 @@ package body Sem_Decls is
             --  name must denote an enumeration literal.
             if Get_Kind (N_Entity) /= Iir_Kind_Enumeration_Literal then
                Error_Msg_Sem
-                 ("alias of a character must denote an enumeration literal",
-                  Alias);
+                 (+Alias,
+                  "alias of a character must denote an enumeration literal");
                return;
             end if;
          when Name_Id_Operators
@@ -2468,7 +2467,7 @@ package body Sem_Decls is
             --  requirements of 2.3.1.
             if Get_Kind (N_Entity) /= Iir_Kind_Function_Declaration then
                Error_Msg_Sem
-                 ("alias of an operator must denote a function", Alias);
+                 (+Alias, "alias of an operator must denote a function");
                return;
             end if;
             Check_Operator_Requirements (Id, N_Entity);
@@ -2506,7 +2505,7 @@ package body Sem_Decls is
       if Is_Overload_List (N_Entity) then
          if Sig = Null_Iir then
             Error_Msg_Sem
-              ("signature required for alias of a subprogram", Alias);
+              (+Alias, "signature required for alias of a subprogram");
             return Alias;
          end if;
       end if;
@@ -2529,7 +2528,7 @@ package body Sem_Decls is
          Name_Visible (Alias);
 
          if Sig /= Null_Iir then
-            Error_Msg_Sem ("signature not allowed for object alias", Sig);
+            Error_Msg_Sem (+Sig, "signature not allowed for object alias");
          end if;
          Sem_Object_Alias_Declaration (Alias);
          return Alias;
@@ -2538,8 +2537,8 @@ package body Sem_Decls is
 
          if Get_Subtype_Indication (Alias) /= Null_Iir then
             Error_Msg_Sem
-              ("subtype indication shall not appear in a nonobject alias",
-               Alias);
+              (+Alias,
+               "subtype indication shall not appear in a nonobject alias");
          end if;
 
          Res := Create_Iir (Iir_Kind_Non_Object_Alias_Declaration);
@@ -2559,7 +2558,7 @@ package body Sem_Decls is
             Sem_Non_Object_Alias_Declaration (Res);
          else
             Error_Msg_Sem
-              ("name of nonobject alias is not a declaration", Name);
+              (+Name, "name of nonobject alias is not a declaration");
 
             --  Create a simple name to an error node.
             N_Entity := Create_Error (Name);
@@ -2617,7 +2616,7 @@ package body Sem_Decls is
 
          if El_Entity = Null_Iir then
             Error_Msg_Sem
-              ("too many elements in group constituent list", Group);
+              (+Group, "too many elements in group constituent list");
             exit;
          end if;
 
@@ -2649,9 +2648,7 @@ package body Sem_Decls is
             --  by the corresponding entity class entry in the entity class
             --  entry list of the group template.
             if Get_Entity_Class_Kind (El_Name) /= Class then
-               Error_Msg_Sem
-                 ("constituent not of class '" & Tokens.Image (Class) & ''',
-                  El);
+               Error_Msg_Sem (+El, "constituent not of class %t", +Class);
             end if;
          end if;
       end loop;
@@ -2661,7 +2658,7 @@ package body Sem_Decls is
               or else Get_Entity_Class (El_Entity) = Tok_Box)
       then
          Error_Msg_Sem
-           ("not enough elements in group constituent list", Group);
+           (+Group, "not enough elements in group constituent list");
       end if;
       Set_Visible_Flag (Group, True);
    end Sem_Group_Declaration;
@@ -2684,7 +2681,7 @@ package body Sem_Decls is
               | Iir_Kind_Floating_Type_Definition =>
                return Res;
             when others =>
-               Error_Msg_Sem (Name & "type must be a floating point type", T);
+               Error_Msg_Sem (+T, Name & "type must be a floating point type");
                return Real_Type_Definition;
          end case;
       end Sem_Scalar_Nature_Typemark;
@@ -3032,8 +3029,9 @@ package body Sem_Decls is
             when Iir_Kind_Constant_Declaration =>
                if Get_Deferred_Declaration_Flag (El) then
                   if Get_Deferred_Declaration (El) = Null_Iir then
-                     Error_Msg_Sem ("missing value for constant declared at "
-                                    & Disp_Location (El), Decl);
+                     Error_Msg_Sem
+                       (+Decl,
+                        "missing value for constant declared at %l", +El);
                   end if;
                end if;
             when Iir_Kind_Function_Declaration
@@ -3041,9 +3039,8 @@ package body Sem_Decls is
                if not Is_Implicit_Subprogram (El)
                  and then Get_Subprogram_Body (El) = Null_Iir
                then
-                  Error_Msg_Sem ("missing body for " & Disp_Node (El)
-                                 & " declared at "
-                                 & Disp_Location (El), Decl);
+                  Error_Msg_Sem
+                    (+Decl, "missing body for %n declared at %l", (+El, +El));
                end if;
             when Iir_Kind_Type_Declaration =>
                declare
@@ -3053,13 +3050,13 @@ package body Sem_Decls is
                   if Get_Kind (Def) = Iir_Kind_Incomplete_Type_Definition
                     and then Get_Type_Declarator (Def) = El
                   then
-                     Error_Msg_Sem ("missing full type declaration for "
-                                    & Disp_Node (El), El);
+                     Error_Msg_Sem
+                       (+El, "missing full type declaration for %n", +El);
                   elsif Get_Kind (Def) = Iir_Kind_Protected_Type_Declaration
                     and then Get_Protected_Type_Body (Def) = Null_Iir
                   then
-                     Error_Msg_Sem ("missing protected type body for "
-                                    & Disp_Node (El), El);
+                     Error_Msg_Sem
+                       (+El, "missing protected type body for %n", +El);
                   end if;
                end;
             when others =>

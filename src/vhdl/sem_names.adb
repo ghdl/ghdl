@@ -50,26 +50,26 @@ package body Sem_Names is
          --  Avoid error storm.
          return;
       end if;
-      Error_Msg_Sem ("can't resolve overload for " & Disp_Node (Expr), Expr);
+      Error_Msg_Sem (+Expr, "can't resolve overload for %n", +Expr);
    end Error_Overload;
 
    procedure Disp_Overload_List (List : Iir_List; Loc : Iir)
    is
       El : Iir;
    begin
-      Error_Msg_Sem ("possible interpretations are:", Loc);
+      Error_Msg_Sem (+Loc, "possible interpretations are:", Cont => True);
       for I in Natural loop
          El := Get_Nth_Element (List, I);
          exit when El = Null_Iir;
          case Get_Kind (El) is
             when Iir_Kind_Function_Declaration
               | Iir_Kind_Procedure_Declaration =>
-               Error_Msg_Sem (Disp_Subprg (El), El);
+               Error_Msg_Sem (+El, Disp_Subprg (El));
             when Iir_Kind_Function_Call =>
                El := Get_Implementation (El);
-               Error_Msg_Sem (Disp_Subprg (El), El);
+               Error_Msg_Sem (+El, Disp_Subprg (El));
             when others =>
-               Error_Msg_Sem (Disp_Node (El), El);
+               Error_Msg_Sem (+El, "%n", +El);
          end case;
       end loop;
    end Disp_Overload_List;
@@ -534,8 +534,8 @@ package body Sem_Names is
       then
          if Get_Kind (Get_Type (Obj)) /= Iir_Kind_Protected_Type_Declaration
          then
-            Error_Msg_Sem ("type of the prefix should be a protected type",
-                           Prefix);
+            Error_Msg_Sem
+              (+Prefix, "type of the prefix should be a protected type");
             return;
          end if;
          Set_Method_Object (Call, Obj);
@@ -685,7 +685,7 @@ package body Sem_Names is
       --  LRM93 §6.5: the prefix of an indexed name must be appropriate
       --  for an array type.
       if Get_Kind (Prefix_Bt) /= Iir_Kind_Array_Type_Definition then
-         Error_Msg_Sem ("slice can only be applied to an array", Name);
+         Error_Msg_Sem (+Name, "slice can only be applied to an array");
          return;
       end if;
 
@@ -694,7 +694,7 @@ package body Sem_Names is
       -- one-dimensionnal array object.
       Index_List := Get_Index_Subtype_List (Prefix_Type);
       if Get_Nbr_Elements (Index_List) /= 1 then
-         Error_Msg_Sem ("slice prefix must be an unidimensional array", Name);
+         Error_Msg_Sem (+Name, "slice prefix must be an unidimensional array");
          return;
       end if;
 
@@ -738,7 +738,7 @@ package body Sem_Names is
                              "direction mismatch results in a null slice");
 
          end if;
-         Error_Msg_Sem ("direction of the range mismatch", Name);
+         Error_Msg_Sem (+Name, "direction of the range mismatch");
       end if;
 
       --  LRM93 §7.4.1
@@ -842,7 +842,7 @@ package body Sem_Names is
          Finish_Sem_Function_Call (Expr, Name);
          return Expr;
       else
-         Error_Msg_Sem (Disp_Node (Expr) & " requires parameters", Name);
+         Error_Msg_Sem (+Name, "%n requires parameters", +Expr);
          Set_Type (Name, Get_Type (Expr));
          Set_Expr_Staticness (Name, None);
          Set_Named_Entity (Name, Create_Error_Expr (Expr, Get_Type (Expr)));
@@ -874,14 +874,14 @@ package body Sem_Names is
             Atype := Get_Type (Atype);
          else
             Error_Msg_Sem
-              ("a type mark must denote a type or a subtype", Name);
+              (+Name, "a type mark must denote a type or a subtype");
             Atype := Create_Error_Type (Atype);
             Set_Named_Entity (Res, Atype);
          end if;
       else
          if Get_Kind (Res) /= Iir_Kind_Error then
             Error_Msg_Sem
-              ("a type mark must be a simple or expanded name", Name);
+              (+Name, "a type mark must be a simple or expanded name");
          end if;
          Res := Name;
          Atype := Create_Error_Type (Name);
@@ -891,7 +891,7 @@ package body Sem_Names is
       if not Incomplete then
          if Get_Kind (Atype) = Iir_Kind_Incomplete_Type_Definition then
             Error_Msg_Sem
-              ("invalid use of an incomplete type definition", Name);
+              (+Name, "invalid use of an incomplete type definition");
             Atype := Create_Error_Type (Name);
             Set_Named_Entity (Res, Atype);
          end if;
@@ -924,7 +924,7 @@ package body Sem_Names is
             Parameter := Universal_Integer_One;
          else
             if Get_Expr_Staticness (Parameter) /= Locally then
-               Error_Msg_Sem ("parameter must be locally static", Parameter);
+               Error_Msg_Sem (+Parameter, "parameter must be locally static");
                Parameter := Universal_Integer_One;
             end if;
          end if;
@@ -952,7 +952,7 @@ package body Sem_Names is
          Dim := Get_Value (Parameter);
          if Dim < 1 or else Dim > Iir_Int64 (Get_Nbr_Elements (Indexes_List))
          then
-            Error_Msg_Sem ("parameter value out of bound", Attr);
+            Error_Msg_Sem (+Attr, "parameter value out of bound");
             Parameter := Universal_Integer_One;
             Dim := 1;
          end if;
@@ -1024,7 +1024,7 @@ package body Sem_Names is
       Param_Type : Iir;
    begin
       if Param = Null_Iir then
-         Error_Msg_Sem (Disp_Node (Attr) & " requires a parameter", Attr);
+         Error_Msg_Sem (+Attr, "%n requires a parameter", +Attr);
          return;
       end if;
 
@@ -1057,7 +1057,7 @@ package body Sem_Names is
                if Get_Kind (Get_Base_Type (Param_Type))
                  /= Iir_Kind_Integer_Type_Definition
                then
-                  Error_Msg_Sem ("parameter must be an integer", Attr);
+                  Error_Msg_Sem (+Attr, "parameter must be an integer");
                   return;
                end if;
                Parameter := Param;
@@ -1109,7 +1109,7 @@ package body Sem_Names is
          return;
       end if;
       if Get_Kind (Attr) = Iir_Kind_Transaction_Attribute then
-         Error_Msg_Sem ("'transaction does not allow a parameter", Attr);
+         Error_Msg_Sem (+Attr, "'transaction does not allow a parameter");
       else
          Param := Sem_Expression (Parameter, Time_Subtype_Definition);
          if Param /= Null_Iir then
@@ -1118,7 +1118,7 @@ package body Sem_Names is
             --  to a nonnegative value.]
             if Get_Expr_Staticness (Param) = None then
                Error_Msg_Sem
-                 ("parameter of signal attribute must be static", Param);
+                 (+Param, "parameter of signal attribute must be static");
             end if;
             Set_Parameter (Attr, Param);
          end if;
@@ -1227,8 +1227,7 @@ package body Sem_Names is
            | Iir_Kind_Aggregate
            | Iir_Kind_String_Literal8 =>
             Error_Msg_Sem
-              (Disp_Node (Actual) & " cannot be a type conversion operand",
-               Actual);
+              (+Actual, "%n cannot be a type conversion operand", +Actual);
             return Conv;
          when others =>
             -- LRM93 7.3.5
@@ -1241,8 +1240,7 @@ package body Sem_Names is
             end if;
             if Get_Kind (Expr) in Iir_Kinds_Allocator then
                Error_Msg_Sem
-                 (Disp_Node (Expr) & " cannot be a type conversion operand",
-                  Expr);
+                 (+Expr, "%n cannot be a type conversion operand", +Expr);
             end if;
             Set_Expression (Conv, Expr);
       end case;
@@ -1276,8 +1274,8 @@ package body Sem_Names is
          then
             --  FIXME: should explain why the types are not closely related.
             Error_Msg_Sem
-              ("conversion not allowed between not closely related types",
-               Conv);
+              (+Conv,
+               "conversion not allowed between not closely related types");
             --  Avoid error storm in evaluation.
             Set_Expr_Staticness (Conv, None);
          else
@@ -1310,8 +1308,7 @@ package body Sem_Names is
       is
       begin
          Error_Msg_Sem_Relaxed
-           (Loc, "reference to " & Disp_Node (Obj) & " violate pure rule for "
-              & Disp_Node (Subprg));
+           (Loc, "reference to %n violate pure rule for %n", (+Obj, +Subprg));
       end Error_Pure;
 
       Subprg : constant Iir := Sem_Stmts.Get_Current_Subprogram;
@@ -1684,8 +1681,7 @@ package body Sem_Names is
       if not Valid_Interpretation (Interpretation) then
          --  Unknown name.
          if not Soft then
-            Error_Msg_Sem
-              ("no declaration for """ & Image_Identifier (Name) & """", Name);
+            Error_Msg_Sem (+Name, "no declaration for %i", +Name);
          end if;
          Res := Error_Mark;
       elsif not Valid_Interpretation (Get_Next_Interpretation (Interpretation))
@@ -1710,8 +1706,7 @@ package body Sem_Names is
                Res := Get_Declaration (Get_Under_Interpretation (Id));
             else
                if not Soft then
-                  Error_Msg_Sem
-                    (Disp_Node (Res) & " is not visible here", Name);
+                  Error_Msg_Sem (+Name, "%n is not visible here", +Res);
                end if;
                --  Even if a named entity was found, return an error_mark.
                --  Indeed, the named entity found is certainly the one being
@@ -1847,11 +1842,10 @@ package body Sem_Names is
          end if;
          if Get_Kind (Base_Type) /= Iir_Kind_Record_Type_Definition then
             Error_Msg_Sem
-              (Disp_Node (Prefix) & " does not designate a record", Name);
+              (+Name, "%n does not designate a record", +Prefix);
          else
             Error_Msg_Sem
-              ("no element """ & Name_Table.Image (Suffix)
-               & """ in " & Disp_Node (Base_Type), Name);
+              (+Name, "no element %i in %n", (+Suffix, +Base_Type));
          end if;
       end Error_Selected_Element;
 
@@ -1884,9 +1878,7 @@ package body Sem_Names is
 
       procedure Error_Protected_Item (Prot_Type : Iir) is
       begin
-         Error_Msg_Sem
-           ("no method " & Name_Table.Image (Suffix) & " in "
-              & Disp_Node (Prot_Type), Name);
+         Error_Msg_Sem (+Name, "no method %i in %n", (+Suffix, +Prot_Type));
       end Error_Protected_Item;
 
       --  Emit an error message if unit is not found in library LIB.
@@ -1894,9 +1886,7 @@ package body Sem_Names is
       is
          use Std_Names;
       begin
-         Error_Msg_Sem
-           ("unit """ & Name_Table.Image (Suffix)
-              & """ not found in " & Disp_Node (Lib), Name);
+         Error_Msg_Sem (+Name, "unit %i not found in %n", (+Suffix, +Lib));
 
          --  Give an advice for common synopsys packages.
          if Get_Identifier (Lib) = Name_Ieee then
@@ -1905,8 +1895,8 @@ package body Sem_Names is
               or else Suffix = Name_Std_Logic_Unsigned
             then
                Error_Msg_Sem
-                 (" (use --ieee=synopsys for non-standard synopsys packages)",
-                  Name);
+                 (+Name,
+                  " (use --ieee=synopsys for non-standard synopsys packages)");
             end if;
          end if;
       end Error_Unit_Not_Found;
@@ -1963,8 +1953,8 @@ package body Sem_Names is
                end if;
             end;
             if Res = Null_Iir then
-               Error_Msg_Sem ("no suffix """ & Name_Table.Image (Suffix)
-                              & """ for overloaded selected name", Name);
+               Error_Msg_Sem
+                 (+Name, "no suffix %i for overloaded selected name", +Suffix);
             end if;
          when Iir_Kind_Library_Declaration =>
             --  LRM93 6.3
@@ -2015,8 +2005,7 @@ package body Sem_Names is
 
             if Res = Null_Iir then
                Error_Msg_Sem
-                 ("no declaration for """ & Name_Table.Image (Suffix)
-                  & """ in " & Disp_Node (Prefix), Name);
+                 (+Name, "no declaration for %i in %n", (+Suffix, +Prefix));
             else
                --  LRM93 §6.3
                --  This form of expanded name is only allowed within the
@@ -2027,8 +2016,8 @@ package body Sem_Names is
                  and then not Get_Is_Within_Flag (Prefix)
                then
                   Error_Msg_Sem
-                    ("this expanded name is only allowed within the construct",
-                     Prefix_Loc);
+                    (+Prefix_Loc,
+                     "an expanded name is only allowed within the construct");
                   --  Hum, keep res.
                end if;
             end if;
@@ -2066,7 +2055,7 @@ package body Sem_Names is
            | Iir_Kind_Component_Instantiation_Statement
            | Iir_Kind_Slice_Name =>
             Error_Msg_Sem
-              (Disp_Node (Prefix) & " cannot be selected by name", Prefix_Loc);
+              (+Prefix_Loc, "%n cannot be selected by name", +Prefix);
 
          when others =>
             Error_Kind ("sem_selected_name(2)", Prefix);
@@ -2154,7 +2143,7 @@ package body Sem_Names is
 
       Actual := Get_One_Actual (Get_Association_Chain (Name));
       if Actual = Null_Iir then
-         Error_Msg_Sem ("only one index specification is allowed", Name);
+         Error_Msg_Sem (+Name, "only one index specification is allowed");
          return Null_Iir;
       end if;
       case Get_Kind (Actual) is
@@ -2178,7 +2167,7 @@ package body Sem_Names is
             end if;
             Check_Read (Actual);
             if Get_Expr_Staticness (Actual) < Globally then
-               Error_Msg_Sem ("index must be a static expression", Name);
+               Error_Msg_Sem (+Name, "index must be a static expression");
             end if;
             Set_Index_List (Res, Create_Iir_List);
             Append_Element (Get_Index_List (Res), Actual);
@@ -2188,7 +2177,7 @@ package body Sem_Names is
                return Null_Iir;
             end if;
             if Get_Expr_Staticness (Actual) < Globally then
-               Error_Msg_Sem ("index must be a static expression", Name);
+               Error_Msg_Sem (+Name, "index must be a static expression");
             end if;
             Set_Suffix (Res, Actual);
          when others =>
@@ -2218,7 +2207,7 @@ package body Sem_Names is
       begin
          if Slice_Index_Kind = Iir_Kind_Error then
             if Finish then
-               Error_Msg_Sem ("prefix is not a function name", Name);
+               Error_Msg_Sem (+Name, "prefix is not a function name");
             end if;
             --  No way.
             return Null_Iir;
@@ -2230,8 +2219,8 @@ package body Sem_Names is
            and then Get_Kind (Sub_Name) /= Iir_Kind_Function_Declaration
          then
             if Finish then
-               Error_Msg_Sem ("prefix is not an array value (found "
-                              & Disp_Node (Sub_Name) & ")", Name);
+               Error_Msg_Sem
+                 (+Name, "prefix is not an array value (found %n)", +Sub_Name);
             end if;
             return Null_Iir;
          end if;
@@ -2247,7 +2236,7 @@ package body Sem_Names is
 
          if Get_Kind (Base_Type) /= Iir_Kind_Array_Type_Definition then
             if Finish then
-               Error_Msg_Sem ("type of prefix is not an array", Name);
+               Error_Msg_Sem (+Name, "type of prefix is not an array");
             end if;
             return Null_Iir;
          end if;
@@ -2256,7 +2245,7 @@ package body Sem_Names is
          then
             if Finish then
                Error_Msg_Sem
-                 ("number of indexes mismatches array dimension", Name);
+                 (+Name, "number of indexes mismatches array dimension");
             end if;
             return Null_Iir;
          end if;
@@ -2294,7 +2283,7 @@ package body Sem_Names is
 
          if not Maybe_Function_Call (Sub_Name) then
             if Finish then
-               Error_Msg_Sem ("missing parameters for function call", Name);
+               Error_Msg_Sem (+Name, "missing parameters for function call");
             end if;
             return Null_Iir;
          end if;
@@ -2370,8 +2359,7 @@ package body Sem_Names is
       is
          Match : Compatibility_Level;
       begin
-         Error_Msg_Sem
-           ("cannot match " & Disp_Node (Prefix) & " with actuals", Name);
+         Error_Msg_Sem (+Name, "cannot match %n with actuals", +Prefix);
          --  Display error message.
          Sem_Association_Chain
            (Get_Interface_Declaration_Chain (Spec),
@@ -2402,7 +2390,7 @@ package body Sem_Names is
          if Actual = Null_Iir then
             --  More than one actual.  Keep only the first.
             Error_Msg_Sem
-              ("type conversion allows only one expression", Name);
+              (+Name, "type conversion allows only one expression");
          end if;
 
          --  This is certainly the easiest case: the prefix is not overloaded,
@@ -2463,8 +2451,8 @@ package body Sem_Names is
             end;
             if Res = Null_Iir then
                Error_Msg_Sem
-                 ("no overloaded function found matching "
-                    & Disp_Node (Prefix_Name), Name);
+                 (+Name, "no overloaded function found matching %n",
+                  +Prefix_Name);
             end if;
          when Iir_Kind_Function_Declaration =>
             Sem_Parenthesis_Function (Prefix);
@@ -2488,7 +2476,7 @@ package body Sem_Names is
                Finish_Sem_Array_Attribute (Prefix_Name, Prefix, Actual);
                Set_Named_Entity (Name, Prefix);
             else
-               Error_Msg_Sem ("bad attribute parameter", Name);
+               Error_Msg_Sem (+Name, "bad attribute parameter");
                Set_Named_Entity (Name, Error_Mark);
             end if;
             return;
@@ -2506,7 +2494,7 @@ package body Sem_Names is
                Set_Named_Entity (Name, Prefix);
                return;
             else
-               Error_Msg_Sem ("bad attribute parameter", Name);
+               Error_Msg_Sem (+Name, "bad attribute parameter");
                Set_Named_Entity (Name, Error_Mark);
                return;
             end if;
@@ -2514,7 +2502,7 @@ package body Sem_Names is
          when Iir_Kind_Type_Declaration
            | Iir_Kind_Subtype_Declaration =>
             Error_Msg_Sem
-              ("subprogram name is a type mark (missing apostrophe)", Name);
+              (+Name, "subprogram name is a type mark (missing apostrophe)");
 
          when Iir_Kind_Stable_Attribute
            | Iir_Kind_Quiet_Attribute
@@ -2523,19 +2511,18 @@ package body Sem_Names is
                Finish_Sem_Signal_Attribute (Prefix_Name, Prefix, Actual);
                Set_Named_Entity (Name, Prefix);
             else
-               Error_Msg_Sem ("bad attribute parameter", Name);
+               Error_Msg_Sem (+Name, "bad attribute parameter");
                Set_Named_Entity (Name, Error_Mark);
             end if;
             return;
 
          when Iir_Kind_Procedure_Declaration =>
-            Error_Msg_Sem ("function name is a procedure", Name);
+            Error_Msg_Sem (+Name, "function name is a procedure");
 
          when Iir_Kinds_Process_Statement
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Type_Conversion =>
-            Error_Msg_Sem
-              (Disp_Node (Prefix) & " cannot be indexed or sliced", Name);
+            Error_Msg_Sem (+Name, "%n cannot be indexed or sliced", +Prefix);
             Res := Null_Iir;
 
          when Iir_Kind_Psl_Declaration
@@ -2543,7 +2530,7 @@ package body Sem_Names is
             Res := Sem_Psl.Sem_Psl_Name (Name);
 
          when Iir_Kinds_Library_Unit_Declaration =>
-            Error_Msg_Sem ("function name is a design unit", Name);
+            Error_Msg_Sem (+Name, "function name is a design unit");
 
          when Iir_Kind_Error =>
             --  Continue with the error.
@@ -2630,7 +2617,7 @@ package body Sem_Names is
             Error_Kind ("sem_selected_by_all_name", Prefix);
       end case;
       if Res = Null_Iir then
-         Error_Msg_Sem ("prefix type is not an access type", Name);
+         Error_Msg_Sem (+Name, "prefix type is not an access type");
          Res := Error_Mark;
       end if;
       Set_Named_Entity (Name, Res);
@@ -2659,7 +2646,7 @@ package body Sem_Names is
             end if;
          when others =>
             Error_Msg_Sem
-              ("prefix of 'base attribute must be a type or a subtype", Attr);
+              (+Attr, "prefix of 'base attribute must be a type or a subtype");
             return Error_Mark;
       end case;
       Res := Create_Iir (Iir_Kind_Base_Attribute);
@@ -2695,12 +2682,12 @@ package body Sem_Names is
            | Iir_Kind_Selected_Name
            | Iir_Kind_Indexed_Name
            | Iir_Kind_Slice_Name =>
-            Error_Msg_Sem ("prefix of user defined attribute cannot be an "
-                           & "object subelement", Attr);
+            Error_Msg_Sem (+Attr, "prefix of user defined attribute cannot be "
+                             & "an object subelement");
             return Error_Mark;
          when Iir_Kind_Dereference =>
-            Error_Msg_Sem ("prefix of user defined attribute cannot be an "
-                           & "anonymous object", Attr);
+            Error_Msg_Sem (+Attr, "prefix of user defined attribute cannot be "
+                             & "an anonymous object");
             return Error_Mark;
          when Iir_Kinds_Object_Declaration
            | Iir_Kind_Type_Declaration
@@ -2722,14 +2709,13 @@ package body Sem_Names is
       Attr_Id := Get_Identifier (Attr);
       Value := Sem_Specs.Find_Attribute_Value (Prefix, Attr_Id);
       if Value = Null_Iir then
-         Error_Msg_Sem
-           (Disp_Node (Prefix) & " was not annotated with attribute '"
-            & Name_Table.Image (Attr_Id) & ''', Attr);
+         Error_Msg_Sem (+Attr, "%n was not annotated with attribute %i",
+                        (+Prefix, +Attr_Id));
          if Attr_Id = Std_Names.Name_First or Attr_Id = Std_Names.Name_Last
          then
             --  Nice (?) message for Ada users.
             Error_Msg_Sem
-              ("(you may use 'high, 'low, 'left or 'right attribute)", Attr);
+              (+Attr, "(you may use 'high, 'low, 'left or 'right attribute)");
          end if;
          return Error_Mark;
       end if;
@@ -2764,8 +2750,8 @@ package body Sem_Names is
          when Iir_Kind_Base_Attribute =>
             Prefix_Type := Get_Type (Prefix);
          when others =>
-            Error_Msg_Sem ("prefix of '" & Name_Table.Image (Id)
-                           & " attribute must be a type", Attr);
+            Error_Msg_Sem
+              (+Attr, "prefix of %i attribute must be a type", +Id);
             return Error_Mark;
       end case;
 
@@ -2775,11 +2761,11 @@ package body Sem_Names is
             if Get_Kind (Prefix_Type) not in Iir_Kinds_Scalar_Type_Definition
             then
                Error_Msg_Sem
-                 ("prefix of '" & Name_Table.Image (Id)
-                  & " attribute must be a scalar type", Attr);
+                 (+Attr, "prefix of %i attribute must be a scalar type",
+                  (1 => +Id), Cont => True);
                Error_Msg_Sem
-                 ("found " & Disp_Node (Prefix_Type)
-                  & " defined at " & Disp_Location (Prefix_Type), Attr);
+                 (+Attr, "found %n defined at %l",
+                  (+Prefix_Type, +Prefix_Type));
                return Error_Mark;
             end if;
          when others =>
@@ -2790,11 +2776,12 @@ package body Sem_Names is
                   null;
                when others =>
                   Error_Msg_Sem
-                    ("prefix of '" & Name_Table.Image (Id)
-                     & " attribute must be discrete or physical type", Attr);
+                    (+Attr, "prefix of %i"
+                       & " attribute must be discrete or physical type",
+                     (1 => +Id), Cont => True);
                   Error_Msg_Sem
-                    ("found " & Disp_Node (Prefix_Type)
-                     & " defined at " & Disp_Location (Prefix_Type), Attr);
+                    (+Attr, "found %n defined at %l",
+                     (+Prefix_Type, +Prefix_Type));
                   return Error_Mark;
             end case;
       end case;
@@ -2880,12 +2867,11 @@ package body Sem_Names is
          when Name_Range
            | Name_Reverse_Range =>
             Error_Msg_Sem
-              ("prefix of range attribute must be an array type or object",
-               Attr);
+              (+Attr,
+               "prefix of range attribute must be an array type or object");
             return Error_Mark;
          when others =>
-            Error_Msg_Sem ("Attribute '" & Name_Table.Image (Id)
-                             & " not valid on this type", Attr);
+            Error_Msg_Sem (+Attr, "attribute %i not valid on this type", +Id);
             return Error_Mark;
       end case;
       Location_Copy (Res, Attr);
@@ -2982,7 +2968,7 @@ package body Sem_Names is
                when Iir_Kinds_Array_Type_Definition =>
                   null;
                when others =>
-                  Error_Msg_Sem ("object prefix must be an array", Attr);
+                  Error_Msg_Sem (+Attr, "object prefix must be an array");
                   return Error_Mark;
             end case;
          when Iir_Kind_Subtype_Declaration
@@ -2990,7 +2976,7 @@ package body Sem_Names is
            | Iir_Kind_Base_Attribute =>
             Prefix_Type := Get_Type (Prefix);
             if not Is_Fully_Constrained_Type (Prefix_Type) then
-               Error_Msg_Sem ("prefix type is not constrained", Attr);
+               Error_Msg_Sem (+Attr, "prefix type is not constrained");
                --  We continue using the unconstrained array type.
                --  At least, this type is valid; and even if the array was
                --  constrained, the base type would be the same.
@@ -3002,13 +2988,12 @@ package body Sem_Names is
             Prefix_Type := Get_Type (Prefix);
          when Iir_Kind_Process_Statement =>
             Error_Msg_Sem
-              (Disp_Node (Prefix) & " is not an appropriate prefix for '"
-               & Name_Table.Image (Get_Identifier (Attr))
-               & " attribute",
-               Attr);
+              (+Attr, "%n is not an appropriate prefix for %i attribute",
+               (+Prefix, +Attr));
             return Error_Mark;
          when others =>
-            Error_Msg_Sem ("prefix must denote an array object or type", Attr);
+            Error_Msg_Sem
+              (+Attr, "prefix must denote an array object or type");
             return Error_Mark;
       end case;
 
@@ -3019,11 +3004,8 @@ package body Sem_Names is
          when Iir_Kinds_Array_Type_Definition =>
             null;
          when others =>
-            Error_Msg_Sem
-              ("prefix of '"
-               & Name_Table.Image (Get_Identifier (Attr))
-               & " attribute must denote a constrained array subtype",
-               Attr);
+            Error_Msg_Sem (+Attr, "prefix of %i attribute must denote a "
+                             & "constrained array subtype", +Attr);
             return Error_Mark;
       end case;
 
@@ -3091,8 +3073,7 @@ package body Sem_Names is
             when Iir_Kind_Function_Declaration
               | Iir_Kind_Procedure_Declaration =>
                Error_Msg_Sem
-                 ("'" & Name_Table.Image (Get_Identifier (Attr)) &
-                  " is not allowed for a signal parameter", Attr);
+                 (+Attr, "%i is not allowed for a signal parameter", +Attr);
             when others =>
                null;
          end case;
@@ -3118,9 +3099,7 @@ package body Sem_Names is
             null;
          when others =>
             Error_Msg_Sem
-              ("prefix of '"
-               & Name_Table.Image (Get_Identifier (Attr))
-               & " attribute must denote a signal", Attr);
+              (+Attr, "prefix of %i attribute must denote a signal", +Attr);
             return Error_Mark;
       end case;
       case Get_Identifier (Attr) is
@@ -3202,8 +3181,8 @@ package body Sem_Names is
             --  FIXME: complete checks.
             if Get_Current_Concurrent_Statement = Null_Iir then
                Error_Msg_Sem
-                 ("'driving or 'driving_value is available only within a "
-                  & "concurrent statement", Attr);
+                 (+Attr, "'driving or 'driving_value is available only "
+                    & "within a concurrent statement");
             else
                case Get_Kind (Get_Current_Concurrent_Statement) is
                   when Iir_Kinds_Process_Statement
@@ -3213,8 +3192,8 @@ package body Sem_Names is
                      null;
                   when others =>
                      Error_Msg_Sem
-                       ("'driving or 'driving_value not available within "
-                        & "this concurrent statement", Attr);
+                       (+Attr, "'driving or 'driving_value not available "
+                          & "within this concurrent statement");
                end case;
             end if;
 
@@ -3229,12 +3208,12 @@ package body Sem_Names is
                         null;
                      when others =>
                         Error_Msg_Sem
-                          ("mode of 'driving or 'driving_value prefix must "
-                           & "be out, inout or buffer", Attr);
+                          (+Attr, "mode of 'driving or 'driving_value prefix "
+                             & "must be out, inout or buffer");
                   end case;
                when others =>
                   Error_Msg_Sem
-                    ("bad prefix for 'driving or 'driving_value", Attr);
+                    (+Attr, "bad prefix for 'driving or 'driving_value");
             end case;
          when others =>
             null;
@@ -3333,12 +3312,11 @@ package body Sem_Names is
               = Iir_Kind_Component_Declaration
             then
                Error_Msg_Sem
-                 ("local ports or generics of a component cannot be a prefix",
-                  Attr);
+                 (+Attr,
+                  "local ports or generics of a component cannot be a prefix");
             end if;
          when others =>
-            Error_Msg_Sem (Disp_Node (Prefix) & " is not a named entity",
-                           Attr);
+            Error_Msg_Sem (+Attr, "%n is not a named entity", +Prefix);
       end case;
 
       case Get_Identifier (Attr) is
@@ -3428,7 +3406,7 @@ package body Sem_Names is
 
       if Get_Kind (Prefix) = Iir_Kind_Overload_List then
          --  FIXME: this should be allowed.
-         Error_Msg_Sem ("prefix of attribute is overloaded", Attr);
+         Error_Msg_Sem (+Attr, "prefix of attribute is overloaded");
          Set_Named_Entity (Attr, Error_Mark);
          return;
       end if;
@@ -3658,8 +3636,7 @@ package body Sem_Names is
       Expr := Remove_Procedures_From_List (Expr);
       Set_Named_Entity (Name, Expr);
       if Expr = Null_Iir then
-         Error_Msg_Sem ("procedure name " & Disp_Node (Name)
-                        & " cannot be used as expression", Name);
+         Error_Msg_Sem (+Name, "%n cannot be used as expression", +Name);
          return Create_Error_Expr (Name, A_Type);
       end if;
 
@@ -3825,8 +3802,7 @@ package body Sem_Names is
             end if;
             return Expr;
          when others =>
-            Error_Msg_Sem ("name " & Disp_Node (Name)
-                             & " doesn't denote a range", Name);
+            Error_Msg_Sem (+Name, "%n doesn't denote a range", +Name);
             return Error_Mark;
       end case;
    end Name_To_Range;
@@ -3926,11 +3902,10 @@ package body Sem_Names is
       Ent : constant Iir := Get_Named_Entity (Name);
    begin
       if Is_Error (Ent) then
-         Error_Msg_Sem (Class_Name & " name expected", Name);
+         Error_Msg_Sem (+Name, Class_Name & " name expected");
       else
-         Error_Msg_Sem
-           (Class_Name & " name expected, found "
-              & Disp_Node (Get_Named_Entity (Name)), Name);
+         Error_Msg_Sem (+Name, Class_Name & " name expected, found %n",
+                        +Get_Named_Entity (Name));
       end if;
    end Error_Class_Match;
 end Sem_Names;

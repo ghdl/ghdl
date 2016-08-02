@@ -370,8 +370,7 @@ package body Sem_Expr is
            | Iir_Kind_Attribute_Declaration
            | Iir_Kind_Psl_Declaration
            | Iir_Kind_Signature =>
-            Error_Msg_Sem (Disp_Node (Expr)
-                           & " not allowed in an expression", Loc);
+            Error_Msg_Sem (+Loc, "%n not allowed in an expression", +Expr);
             return Null_Iir;
          when Iir_Kind_Function_Declaration =>
             return Expr;
@@ -580,11 +579,11 @@ package body Sem_Expr is
          --  Check for string or aggregate literals
          --  FIXME: improve error message
          if Left_Type = Null_Iir then
-            Error_Msg_Sem ("bad expression for a scalar", Left);
+            Error_Msg_Sem (+Left, "bad expression for a scalar");
             return Null_Iir;
          end if;
          if Right_Type = Null_Iir then
-            Error_Msg_Sem ("bad expression for a scalar", Right);
+            Error_Msg_Sem (+Right, "bad expression for a scalar");
             return Null_Iir;
          end if;
 
@@ -617,8 +616,8 @@ package body Sem_Expr is
                else
                   --  FIXME: handle overload
                   Error_Msg_Sem
-                    ("left and right expressions of range are not compatible",
-                     Expr);
+                    (+Expr,
+                     "left and right expressions of range are not compatible");
                   return Null_Iir;
                end if;
             end if;
@@ -632,8 +631,8 @@ package body Sem_Expr is
                                               Get_Base_Type (Right_Type));
             if Expr_Type = Null_Iir then
                Error_Msg_Sem
-                 ("left and right expressions of range are not compatible",
-                  Expr);
+                 (+Expr,
+                  "left and right expressions of range are not compatible");
                return Null_Iir;
             end if;
          end if;
@@ -650,7 +649,7 @@ package body Sem_Expr is
          else
             if Are_Types_Compatible (Expr_Type, A_Type) = Not_Compatible then
                Error_Msg_Sem
-                 ("type of range doesn't match expected type", Expr);
+                 (+Expr, "type of range doesn't match expected type");
                return Null_Iir;
             end if;
 
@@ -668,7 +667,7 @@ package body Sem_Expr is
       if A_Type /= Null_Iir
         and then Are_Types_Compatible (Expr_Type, A_Type) = Not_Compatible
       then
-         Error_Msg_Sem ("type of range doesn't match expected type", Expr);
+         Error_Msg_Sem (+Expr, "type of range doesn't match expected type");
          return Null_Iir;
       end if;
 
@@ -676,7 +675,7 @@ package body Sem_Expr is
       if Get_Kind (Get_Base_Type (Expr_Type))
         not in Iir_Kinds_Scalar_Type_Definition
       then
-         Error_Msg_Sem ("type of range is not a scalar type", Expr);
+         Error_Msg_Sem (+Expr, "type of range is not a scalar type");
          return Null_Iir;
       end if;
 
@@ -732,7 +731,7 @@ package body Sem_Expr is
                  | Iir_Kind_Reverse_Range_Array_Attribute =>
                   Res_Type := Get_Type (Res);
                when others =>
-                  Error_Msg_Sem ("name must denote a range", Expr);
+                  Error_Msg_Sem (+Expr, "name must denote a range");
                   return Null_Iir;
             end case;
             if A_Type /= Null_Iir
@@ -743,12 +742,12 @@ package body Sem_Expr is
             end if;
 
          when others =>
-            Error_Msg_Sem ("range expression required", Expr);
+            Error_Msg_Sem (+Expr, "range expression required");
             return Null_Iir;
       end case;
 
       if Get_Kind (Res_Type) not in Iir_Kinds_Scalar_Type_Definition then
-         Error_Msg_Sem (Disp_Node (Res) & " is not a range type", Expr);
+         Error_Msg_Sem (+Expr, "%n is not a range type", +Res);
          return Null_Iir;
       end if;
 
@@ -786,9 +785,8 @@ package body Sem_Expr is
          then
             --  A_TYPE is known when analyzing an index_constraint within
             --  a subtype indication.
-            Error_Msg_Sem ("subtype " & Disp_Node (Res)
-                             & " doesn't match expected type "
-                             & Disp_Node (A_Type), Expr);
+            Error_Msg_Sem (+Expr, "subtype %n doesn't match expected type %n",
+                           (+Res, +A_Type));
             --  FIXME: override type of RES ?
          end if;
       else
@@ -806,10 +804,10 @@ package body Sem_Expr is
          if Get_Kind (Res_Type) /= Iir_Kind_Error then
             --  FIXME: avoid that test with error.
             if Get_Kind (Res) not in Iir_Kinds_Denoting_Name then
-               Error_Msg_Sem ("range is not discrete", Res);
+               Error_Msg_Sem (+Res, "range is not discrete");
             else
                Error_Msg_Sem
-                 (Disp_Node (Res) & " is not a discrete range type", Expr);
+                 (+Expr, "%n is not a discrete range type", +Res);
             end if;
          end if;
          return Null_Iir;
@@ -866,8 +864,8 @@ package body Sem_Expr is
                              "universal integer bound must be numeric literal "
                                & "or attribute");
          else
-            Error_Msg_Sem ("universal integer bound must be numeric literal "
-                             & "or attribute", Res);
+            Error_Msg_Sem (+Res, "universal integer bound must be numeric "
+                             & "literal or attribute");
          end if;
          Set_Type (Res, Integer_Type_Definition);
       end if;
@@ -1053,11 +1051,10 @@ package body Sem_Expr is
       procedure Error_Wait is
       begin
          Error_Msg_Sem
-           (Disp_Node (Subprg) & " must not contain wait statement, but calls",
-            Loc);
+           (+Loc, "%n must not contain wait statement, but calls",
+            (1 => +Subprg), Cont => True);
          Error_Msg_Sem
-           (Disp_Node (Callee) & " which has (indirectly) a wait statement",
-            Callee);
+           (+Callee, "%n which has (indirectly) a wait statement", +Callee);
          --Error_Msg_Sem
          --  ("(indirect) wait statement not allowed in " & Where, Loc);
       end Error_Wait;
@@ -1142,12 +1139,11 @@ package body Sem_Expr is
                      --  signal whose explicit ancestor is not a formal signal
                      --  parameter or member of a formal parameter of
                      --  the subprogram or of any of its parents.
+                     Error_Msg_Sem (+Loc, "all-sensitized %n can't call %n",
+                                    (+Subprg, +Callee), Cont => True);
                      Error_Msg_Sem
-                       ("all-sensitized " & Disp_Node (Subprg)
-                          & " can't call " & Disp_Node (Callee), Loc);
-                     Error_Msg_Sem
-                       (" (as this subprogram reads (indirectly) a signal)",
-                        Loc);
+                       (+Loc,
+                        " (as this subprogram reads (indirectly) a signal)");
                   end if;
                when Iir_Kind_Process_Statement =>
                   return;
@@ -1211,9 +1207,8 @@ package body Sem_Expr is
                   when Iir_Kinds_Process_Statement =>
                      if Get_Passive_Flag (Subprg) then
                         Error_Msg_Sem
-                          (Disp_Node (Subprg)
-                           & " is passive, but calls non-passive "
-                           & Disp_Node (Imp), Expr);
+                          (+Expr, "%n is passive, but calls non-passive %n",
+                           (+Subprg, +Imp));
                      end if;
                   when others =>
                      null;
@@ -1298,7 +1293,7 @@ package body Sem_Expr is
          when 0 =>
             --  FIXME: display subprogram name.
             Error_Msg_Sem
-              ("cannot resolve overloading for subprogram call", Expr);
+              (+Expr, "cannot resolve overloading for subprogram call");
             return Null_Iir;
 
          when 1 =>
@@ -1390,12 +1385,12 @@ package body Sem_Expr is
             --  Only one interpretation for the subprogram name.
             if Is_Func then
                if Get_Kind (Inter_List) /= Iir_Kind_Function_Declaration then
-                  Error_Msg_Sem ("name does not designate a function", Expr);
+                  Error_Msg_Sem (+Expr, "name does not designate a function");
                   return Null_Iir;
                end if;
             else
                if Get_Kind (Inter_List) /= Iir_Kind_Procedure_Declaration then
-                  Error_Msg_Sem ("name does not designate a procedure", Expr);
+                  Error_Msg_Sem (+Expr, "name does not designate a procedure");
                   return Null_Iir;
                end if;
             end if;
@@ -1735,8 +1730,7 @@ package body Sem_Expr is
       --  Note: operator and implementation node of expr must be set.
       procedure Error_Operator_Overload (List : Iir_List) is
       begin
-         Error_Msg_Sem ("operator """ & Name_Table.Image (Operator)
-                        & """ is overloaded", Expr);
+         Error_Msg_Sem (+Expr, "operator ""%i"" is overloaded", +Operator);
          Disp_Overload_List (List, Expr);
       end Error_Operator_Overload;
 
@@ -1850,8 +1844,7 @@ package body Sem_Expr is
          --  The list of possible implementations was computed.
          case Get_Nbr_Elements (Overload_List) is
             when 0 =>
-               Error_Msg_Sem
-                 ("no function declarations for " & Disp_Node (Expr), Expr);
+               Error_Msg_Sem (+Expr, "no function declarations for %n", +Expr);
                Destroy_Iir_List (Overload_List);
                return Null_Iir;
 
@@ -1904,7 +1897,7 @@ package body Sem_Expr is
                   Decl := Get_Explicit_Subprogram (Overload_List);
                   if Decl /= Null_Iir then
                      Error_Msg_Sem
-                       ("(you may want to use the -fexplicit option)", Expr);
+                       (+Expr, "(you may want to use the -fexplicit option)");
                      Explicit_Advice_Given := True;
                   end if;
                end if;
@@ -1974,12 +1967,11 @@ package body Sem_Expr is
          then
             --  ... because it is not defined.
             Error_Msg_Sem
-              ("type " & Disp_Node (Etype) & " does not define character '"
-               & C & "'", Str);
+              (+Str, "type %n does not define character %c", (+Etype, +C));
          else
             --  ... because it is not visible.
-            Error_Msg_Sem ("character '" & C & "' of type "
-                           & Disp_Node (Etype) & " is not visible", Str);
+            Error_Msg_Sem (+Str, "character %c of type %n is not visible",
+                           (+C, +Etype));
          end if;
          return Null_Iir;
       end Find_Literal;
@@ -2040,8 +2032,8 @@ package body Sem_Expr is
          Index_Type := Get_Index_Type (Lit_Type, 0);
          if Get_Type_Staticness (Index_Type) = Locally then
             if Eval_Discrete_Type_Length (Index_Type) /= Iir_Int64 (Len) then
-               Error_Msg_Sem ("string length does not match that of "
-                                & Disp_Node (Index_Type), Lit);
+               Error_Msg_Sem (+Lit, "string length does not match that of %n",
+                              +Index_Type);
             end if;
          else
             --  FIXME: emit a warning because of dubious construct (the type
@@ -2179,7 +2171,7 @@ package body Sem_Expr is
          end if;
          Set_Choice_Expression (Choice, Expr);
          if Get_Expr_Staticness (Expr) < Locally then
-            Error_Msg_Sem ("choice must be locally static expression", Expr);
+            Error_Msg_Sem (+Expr, "choice must be locally static expression");
             Has_Length_Error := True;
             return;
          end if;
@@ -2187,14 +2179,14 @@ package body Sem_Expr is
          Set_Choice_Expression (Choice, Expr);
          if Get_Kind (Expr) = Iir_Kind_Overflow_Literal then
             Error_Msg_Sem
-              ("bound error during evaluation of choice expression", Expr);
+              (+Expr, "bound error during evaluation of choice expression");
             Has_Length_Error := True;
          elsif Eval_Discrete_Type_Length
            (Get_String_Type_Bound_Type (Get_Type (Expr))) /= Sel_Length
          then
             Has_Length_Error := True;
             Error_Msg_Sem
-              ("value not of the same length of the case expression", Expr);
+              (+Expr, "value not of the same length of the case expression");
             return;
          end if;
       end Sem_Simple_Choice;
@@ -2206,11 +2198,12 @@ package body Sem_Expr is
       Sel_Type := Get_Type (Sel);
       if not Is_One_Dimensional_Array_Type (Sel_Type) then
          Error_Msg_Sem
-           ("expression must be discrete or one-dimension array subtype", Sel);
+           (+Sel,
+            "expression must be discrete or one-dimension array subtype");
          return;
       end if;
       if Get_Type_Staticness (Sel_Type) /= Locally then
-         Error_Msg_Sem ("array type must be locally static", Sel);
+         Error_Msg_Sem (+Sel, "array type must be locally static");
          return;
       end if;
       Sel_Length := Eval_Discrete_Type_Length
@@ -2227,16 +2220,16 @@ package body Sem_Expr is
                raise Internal_Error;
             when Iir_Kind_Choice_By_Range =>
                Error_Msg_Sem
-                 ("range choice are not allowed for non-discrete type", El);
+                 (+El, "range choice are not allowed for non-discrete type");
             when Iir_Kind_Choice_By_Expression =>
                Nbr_Choices := Nbr_Choices + 1;
                Sem_Simple_Choice (El);
             when Iir_Kind_Choice_By_Others =>
                if Has_Others then
-                  Error_Msg_Sem ("duplicate others choice", El);
+                  Error_Msg_Sem (+El, "duplicate others choice");
                elsif Get_Chain (El) /= Null_Iir then
                   Error_Msg_Sem
-                    ("choice others must be the last alternative", El);
+                    (+El, "choice others must be the last alternative");
                end if;
                Has_Others := True;
             when others =>
@@ -2278,9 +2271,8 @@ package body Sem_Expr is
       -- 3. Check for duplicate choices
       for I in 1 .. Nbr_Choices - 1 loop
          if Eq (I, I + 1) then
-            Error_Msg_Sem ("duplicate choice with choice at " &
-                             Disp_Location (Arr (I + 1)),
-                           Arr (I));
+            Error_Msg_Sem
+              (+Arr (I), "duplicate choice with choice at %l", +Arr (I + 1));
             exit;
          end if;
       end loop;
@@ -2298,7 +2290,7 @@ package body Sem_Expr is
             for I in 1 .. Sel_Length loop
                Nbr := Nbr / Sel_El_Length;
                if Nbr = 0 then
-                  Error_Msg_Sem ("missing choice(s)", Choice_Chain);
+                  Error_Msg_Sem (+Choice_Chain, "missing choice(s)");
                   exit;
                end if;
             end loop;
@@ -2455,8 +2447,7 @@ package body Sem_Expr is
                   end if;
                end if;
                if not Ok then
-                  Error_Msg_Sem
-                    (Disp_Node (Expr) & " out of index range", Choice);
+                  Error_Msg_Sem (+Choice, "%n out of index range", +Expr);
                end if;
             end if;
             if Ok then
@@ -2504,11 +2495,11 @@ package body Sem_Expr is
          is
          begin
             if L = H then
-               Error_Msg_Sem ("no choice for " & Disp_Discrete (Bt, L), Loc);
+               Error_Msg_Sem (+Loc, "no choice for " & Disp_Discrete (Bt, L));
             else
                Error_Msg_Sem
-                 ("no choices for " & Disp_Discrete (Bt, L)
-                     & " to " & Disp_Discrete (Bt, H), Loc);
+                 (+Loc, "no choices for " & Disp_Discrete (Bt, L)
+                    & " to " & Disp_Discrete (Bt, H));
             end if;
          end Error_No_Choice;
 
@@ -2556,12 +2547,13 @@ package body Sem_Expr is
             elsif Pos > E_Pos then
                if Pos = E_Pos + 1 then
                   Error_Msg_Sem
-                    ("duplicate choice for " & Disp_Discrete (Bt, E_Pos),
-                     Arr (I));
+                    (+Arr (I),
+                     "duplicate choice for " & Disp_Discrete (Bt, E_Pos));
                else
                   Error_Msg_Sem
-                    ("duplicate choices for " & Disp_Discrete (Bt, E_Pos)
-                     & " to " & Disp_Discrete (Bt, Pos), Arr (I));
+                    (+Arr (I), "duplicate choices for "
+                       & Disp_Discrete (Bt, E_Pos)
+                       & " to " & Disp_Discrete (Bt, Pos));
                end if;
             end if;
             Pos := Eval_Pos (Get_High (Arr (I))) + 1;
@@ -2723,7 +2715,7 @@ package body Sem_Expr is
                     and then Is_Case_Stmt
                   then
                      --  FIXME: explain why
-                     Error_Msg_Sem ("choice is not locally static", El);
+                     Error_Msg_Sem (+El, "choice is not locally static");
                   end if;
                else
                   Has_Error := True;
@@ -2736,10 +2728,10 @@ package body Sem_Expr is
                raise Internal_Error;
             when Iir_Kind_Choice_By_Others =>
                if Has_Others then
-                  Error_Msg_Sem ("duplicate others choice", El);
+                  Error_Msg_Sem (+El, "duplicate others choice");
                elsif Get_Chain (El) /= Null_Iir then
                   Error_Msg_Sem
-                    ("choice others should be the last alternative", El);
+                    (+El, "choice others should be the last alternative");
                end if;
                Has_Others := True;
             when others =>
@@ -2759,7 +2751,7 @@ package body Sem_Expr is
          --  rest (if any) of the element associations of an array aggregate
          --  must be either all positionnal or all named.
          Error_Msg_Sem
-           ("element associations must be all positional or all named", Loc);
+           (+Loc, "element associations must be all positional or all named");
          return;
       end if;
 
@@ -2773,9 +2765,9 @@ package body Sem_Expr is
          if (not Has_Others and not Is_Sub_Range)
            and then Nbr_Pos < Pos_Max
          then
-            Error_Msg_Sem ("not enough elements associated", Loc);
+            Error_Msg_Sem (+Loc, "not enough elements associated");
          elsif Nbr_Pos > Pos_Max then
-            Error_Msg_Sem ("too many elements associated", Loc);
+            Error_Msg_Sem (+Loc, "too many elements associated");
          end if;
          return;
       end if;
@@ -2798,7 +2790,7 @@ package body Sem_Expr is
             --  element association and the element association has a single
             --  choice.
             if Nbr_Named > 1 or Has_Others then
-               Error_Msg_Sem ("not static choice exclude others choice", Loc);
+               Error_Msg_Sem (+Loc, "not static choice exclude others choice");
             end if;
          end if;
          return;
@@ -2909,8 +2901,7 @@ package body Sem_Expr is
          Pos : constant Natural := Natural (Get_Element_Position (Rec_El));
       begin
          if Matches (Pos) /= Null_Iir then
-            Error_Msg_Sem
-              (Disp_Node (Matches (Pos)) & " was already associated", El);
+            Error_Msg_Sem (+El, "%n was already associated", +Matches (Pos));
             Ok := False;
             return;
          end if;
@@ -2923,7 +2914,7 @@ package body Sem_Expr is
          if El_Type = Null_Iir then
             El_Type := Ass_Type;
          elsif Are_Types_Compatible (El_Type, Ass_Type) = Not_Compatible then
-            Error_Msg_Sem ("elements are not of the same type", El);
+            Error_Msg_Sem (+El, "elements are not of the same type");
             Ok := False;
          end if;
       end Add_Match;
@@ -2939,15 +2930,14 @@ package body Sem_Expr is
       begin
          Expr := Get_Choice_Expression (Ass);
          if Get_Kind (Expr) /= Iir_Kind_Simple_Name then
-            Error_Msg_Sem ("element association must be a simple name", Ass);
+            Error_Msg_Sem (+Ass, "element association must be a simple name");
             Ok := False;
             return Ass;
          end if;
          Aggr_El := Find_Name_In_List
            (Get_Elements_Declaration_List (Base_Type), Get_Identifier (Expr));
          if Aggr_El = Null_Iir then
-            Error_Msg_Sem
-              ("record has no such element " & Disp_Node (Ass), Ass);
+            Error_Msg_Sem (+Ass, "record has no such element %n", +Ass);
             Ok := False;
             return Ass;
          end if;
@@ -2996,10 +2986,11 @@ package body Sem_Expr is
          case Get_Kind (El) is
             when Iir_Kind_Choice_By_None =>
                if Has_Named then
-                  Error_Msg_Sem ("positional association after named one", El);
+                  Error_Msg_Sem
+                    (+El, "positional association after named one");
                   Ok := False;
                elsif Rec_El_Index > Matches'Last then
-                  Error_Msg_Sem ("too many elements", El);
+                  Error_Msg_Sem (+El, "too many elements");
                   exit;
                else
                   Add_Match (El, Get_Nth_Element (El_List, Rec_El_Index));
@@ -3019,7 +3010,7 @@ package body Sem_Expr is
                Has_Named := True;
                if Get_Chain (El) /= Null_Iir then
                   Error_Msg_Sem
-                    ("choice others must be the last alternative", El);
+                    (+El, "choice others must be the last alternative");
                end if;
                declare
                   Found : Boolean := False;
@@ -3031,7 +3022,7 @@ package body Sem_Expr is
                      end if;
                   end loop;
                   if not Found then
-                     Error_Msg_Sem ("no element for choice others", El);
+                     Error_Msg_Sem (+El, "no element for choice others");
                      Ok := False;
                   end if;
                end;
@@ -3066,8 +3057,7 @@ package body Sem_Expr is
       for I in Matches'Range loop
          if Matches (I) = Null_Iir then
             Error_Msg_Sem
-              ("no value for " & Disp_Node (Get_Nth_Element (El_List, I)),
-               Aggr);
+              (+Aggr, "no value for %n", +Get_Nth_Element (El_List, I));
             Ok := False;
          end if;
       end loop;
@@ -3185,8 +3175,8 @@ package body Sem_Expr is
                      Len := Len + 1;
                   when Iir_Kind_Choice_By_Others =>
                      if not Constrained then
-                        Error_Msg_Sem ("'others' choice not allowed for an "
-                                       & "aggregate in this context", Aggr);
+                        Error_Msg_Sem (+Aggr, "'others' choice not allowed "
+                                         & "for an aggregate in this context");
                         Infos (Dim).Error := True;
                         return;
                      end if;
@@ -3253,8 +3243,8 @@ package body Sem_Expr is
            (Get_Kind (Choice) /= Iir_Kind_Choice_By_Expression
             and then Get_Kind (Choice) /= Iir_Kind_Choice_By_Range)
          then
-            Error_Msg_Sem ("non-locally static choice for an aggregate is "
-                           & "allowed only if only choice", Aggr);
+            Error_Msg_Sem (+Aggr, "non-locally static choice for an aggregate "
+                             & "is allowed only if only choice");
             Infos (Dim).Error := True;
             return;
          end if;
@@ -3373,12 +3363,12 @@ package body Sem_Expr is
               /= Eval_Pos (Eval_Discrete_Range_Left (Get_Range_Constraint
                                                      (Index_Type)))
             then
-               Error_Msg_Sem ("subaggregate bounds mismatch", Aggr);
+               Error_Msg_Sem (+Aggr, "subaggregate bounds mismatch");
             else
                if Eval_Discrete_Type_Length (Info.Index_Subtype)
                  /= Iir_Int64 (Len)
                then
-                  Error_Msg_Sem ("subaggregate length mismatch", Aggr);
+                  Error_Msg_Sem (+Aggr, "subaggregate length mismatch");
                end if;
             end if;
          else
@@ -3390,7 +3380,7 @@ package body Sem_Expr is
                if Eval_Pos (L) /= Eval_Pos (Low)
                  or else Eval_Pos (H) /= Eval_Pos (H)
                then
-                  Error_Msg_Sem ("subagregate bounds mismatch", Aggr);
+                  Error_Msg_Sem (+Aggr, "subagregate bounds mismatch");
                end if;
             end;
          end if;
@@ -3474,11 +3464,11 @@ package body Sem_Expr is
                           (Assoc, A_Type, Infos, Constrained, Dim + 1);
                      else
                         Error_Msg_Sem
-                          ("string literal not allowed here", Assoc);
+                          (+Assoc, "string literal not allowed here");
                         Infos (Dim + 1).Error := True;
                      end if;
                   when others =>
-                     Error_Msg_Sem ("sub-aggregate expected", Assoc);
+                     Error_Msg_Sem (+Assoc, "sub-aggregate expected");
                      Infos (Dim + 1).Error := True;
                end case;
                Choice := Get_Chain (Choice);
@@ -3600,8 +3590,7 @@ package body Sem_Expr is
             end if;
             return Expr;
          when others =>
-            Error_Msg_Sem ("type " & Disp_Node (A_Type) & " is not composite",
-                           Expr);
+            Error_Msg_Sem (+Expr, "type %n is not composite", +A_Type);
             return Null_Iir;
       end case;
    end Sem_Aggregate;
@@ -3699,8 +3688,8 @@ package body Sem_Expr is
                --  subtype or include an explicit index constraint.
                if not Is_Fully_Constrained_Type (Arg) then
                   Error_Msg_Sem
-                    ("allocator of unconstrained " &
-                       Disp_Node (Arg) & " is not allowed", Expr);
+                    (+Expr, "allocator of unconstrained %n is not allowed",
+                     +Arg);
                end if;
                --  LRM93 7.3.6
                --  A subtype indication that is part of an allocator must
@@ -3708,8 +3697,8 @@ package body Sem_Expr is
                if Is_Anonymous_Type_Definition (Arg)
                  and then Get_Resolution_Indication (Arg) /= Null_Iir
                then
-                  Error_Msg_Sem ("subtype indication must not include"
-                                   & " a resolution function", Expr);
+                  Error_Msg_Sem (+Expr, "subtype indication must not include"
+                                   & " a resolution function");
                end if;
                Arg_Type := Arg;
          end case;
@@ -3728,7 +3717,7 @@ package body Sem_Expr is
          if not Is_Allocator_Type (A_Type, Expr) then
             if Get_Kind (A_Type) /= Iir_Kind_Access_Type_Definition then
                if Get_Kind (A_Type) /= Iir_Kind_Error then
-                  Error_Msg_Sem ("expected type is not an access type", Expr);
+                  Error_Msg_Sem (+Expr, "expected type is not an access type");
                end if;
             else
                Error_Not_Match (Expr, A_Type);
@@ -3900,7 +3889,7 @@ package body Sem_Expr is
             when Iir_Kind_Interface_Signal_Declaration
               | Iir_Kind_Interface_Variable_Declaration =>
                if not Can_Interface_Be_Read (Obj) then
-                  Error_Msg_Sem (Disp_Node (Obj) & " cannot be read", Expr);
+                  Error_Msg_Sem (+Expr, "%n cannot be read", +Obj);
                end if;
                return;
             when Iir_Kind_Enumeration_Literal
@@ -3995,7 +3984,7 @@ package body Sem_Expr is
         or else (Get_Kind (Cur_Lib) = Iir_Kind_Package_Body
                  and then Get_Package (Cur_Lib) = Lib)
       then
-         Error_Msg_Sem ("invalid use of a deferred constant", Loc);
+         Error_Msg_Sem (+Loc, "invalid use of a deferred constant");
       end if;
    end Check_Constant_Restriction;
 
@@ -4154,7 +4143,7 @@ package body Sem_Expr is
                return Expr;
             end if;
             if not Is_Null_Literal_Type (A_Type) then
-               Error_Msg_Sem ("null literal can only be access type", Expr);
+               Error_Msg_Sem (+Expr, "null literal can only be access type");
                return Null_Iir;
             else
                Set_Type (Expr, A_Type);
@@ -4195,8 +4184,7 @@ package body Sem_Expr is
             return Sem_Allocator (Expr, A_Type);
 
          when Iir_Kind_Procedure_Declaration =>
-            Error_Msg_Sem
-              (Disp_Node (Expr) & " cannot be used as an expression", Expr);
+            Error_Msg_Sem (+Expr, "%n cannot be used as an expression", +Expr);
             return Null_Iir;
 
          when Iir_Kind_Error =>
@@ -4642,7 +4630,7 @@ package body Sem_Expr is
       Expr_Type := Get_Type (Expr1);
       if Expr_Type = Null_Iir then
          --  FIXME: improve message
-         Error_Msg_Sem ("bad expression for a scalar", Expr);
+         Error_Msg_Sem (+Expr, "bad expression for a scalar");
          return Null_Iir;
       end if;
       if not Is_Overload_List (Expr_Type) then
@@ -4693,10 +4681,10 @@ package body Sem_Expr is
          --  Possible only if the type cannot be determined without the
          --  context (aggregate or string literal).
          Error_Msg_Sem
-           ("cannot determine the type of choice expression", Expr);
+           (+Expr, "cannot determine the type of choice expression");
          if Get_Kind (Expr1) = Iir_Kind_Aggregate then
             Error_Msg_Sem
-              ("(use a qualified expression of the form T'(xxx).)", Expr);
+              (+Expr, "(use a qualified expression of the form T'(xxx).)");
          end if;
          return Null_Iir;
       end if;

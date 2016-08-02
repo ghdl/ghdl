@@ -323,7 +323,7 @@ package body Evaluation is
       if Len > 0
         and then not Eval_Int_In_Range (Pos, Get_Range_Constraint (A_Type))
       then
-         Error_Msg_Sem ("range length is beyond subtype length", A_Range);
+         Error_Msg_Sem (+A_Range, "range length is beyond subtype length");
          Right := Left;
       else
          -- FIXME: what about nul range?
@@ -2361,7 +2361,7 @@ package body Evaluation is
    function Eval_Expr (Expr: Iir) return Iir is
    begin
       if Get_Expr_Staticness (Expr) /= Locally then
-         Error_Msg_Sem ("expression must be locally static", Expr);
+         Error_Msg_Sem (+Expr, "expression must be locally static");
          return Expr;
       else
          return Eval_Expr_Keep_Orig (Expr, False);
@@ -2619,7 +2619,7 @@ package body Evaluation is
       end if;
 
       if not Eval_Is_In_Bound (Expr, Sub_Type) then
-         Error_Msg_Sem ("static constant violates bounds", Expr);
+         Error_Msg_Sem (+Expr, "static constant violates bounds");
       end if;
    end Eval_Check_Bound;
 
@@ -2695,7 +2695,7 @@ package body Evaluation is
    is
    begin
       if not Eval_Is_Range_In_Bound (A_Range, Sub_Type, Any_Dir) then
-         Error_Msg_Sem ("static range violates bounds", A_Range);
+         Error_Msg_Sem (+A_Range, "static range violates bounds");
       end if;
    end Eval_Check_Range;
 

@@ -751,8 +751,7 @@ package body Libraries is
       Set_Library_Directory (Library, Null_Identifier);
       Set_Identifier (Library, Ident);
       if Load_Library (Library) = False then
-         Error_Msg_Sem ("cannot find resource library """
-                        & Name_Table.Image (Ident) & """", Loc);
+         Error_Msg_Sem (+Loc, "cannot find resource library %i", +Ident);
       end if;
       Set_Visible_Flag (Library, True);
 
@@ -1469,13 +1468,24 @@ package body Libraries is
    function Is_Obsolete (Design_Unit : Iir_Design_Unit; Loc : Iir)
      return Boolean
    is
-      procedure Error_Obsolete (Msg : String) is
+      procedure Error_Obsolete (Msg : String; Arg1 : Earg_Type) is
       begin
          if not Flags.Flag_Elaborate_With_Outdated then
             if Loc = Null_Iir then
-               Error_Msg_Sem (Msg, Command_Line_Location);
+               Error_Msg_Sem (Command_Line_Location, Msg, Arg1);
             else
-               Error_Msg_Sem (Msg, Loc);
+               Error_Msg_Sem (+Loc, Msg, Arg1);
+            end if;
+         end if;
+      end Error_Obsolete;
+
+      procedure Error_Obsolete (Msg : String; Args : Earg_Arr) is
+      begin
+         if not Flags.Flag_Elaborate_With_Outdated then
+            if Loc = Null_Iir then
+               Error_Msg_Sem (Command_Line_Location, Msg, Args);
+            else
+               Error_Msg_Sem (+Loc, Msg, Args);
             end if;
          end if;
       end Error_Obsolete;
@@ -1487,7 +1497,7 @@ package body Libraries is
       Du_Ts : Time_Stamp_Id;
    begin
       if Get_Date (Design_Unit) = Date_Obsolete then
-         Error_Obsolete (Disp_Node (Design_Unit) & " is obsolete");
+         Error_Obsolete ("%n is obsolete", +Design_Unit);
          return True;
       end if;
       List := Get_Dependence_List (Design_Unit);
@@ -1502,13 +1512,10 @@ package body Libraries is
          if Unit /= Null_Iir then
             U_Ts := Get_Analysis_Time_Stamp (Get_Design_File (Unit));
             if Files_Map.Is_Gt (U_Ts, Du_Ts) then
-               Error_Obsolete
-                 (Disp_Node (Design_Unit) & " is obsoleted by " &
-                  Disp_Node (Unit));
+               Error_Obsolete ("%n is obsoleted by %n", (+Design_Unit, +Unit));
                return True;
             elsif Is_Obsolete (Unit, Loc) then
-               Error_Obsolete
-                 (Disp_Node (Design_Unit) & " depends on obsolete unit");
+               Error_Obsolete ("%n depends on obsolete unit", +Design_Unit);
                return True;
             end if;
          end if;
@@ -1544,15 +1551,12 @@ package body Libraries is
         (Files_Map.Get_File_Checksum (Get_Current_Source_File),
          Get_File_Checksum (Design_File))
       then
-         Error_Msg_Sem
-           ("file " & Image (Get_Design_File_Filename (Design_File))
-            & " has changed and must be reanalysed", Loc);
+         Error_Msg_Sem (+Loc, "file %i has changed and must be reanalysed",
+                        +Get_Design_File_Filename (Design_File));
          raise Compilation_Error;
       elsif Get_Date (Design_Unit) = Date_Obsolete then
-         Error_Msg_Sem
-           (''' & Disp_Node (Get_Library_Unit (Design_Unit))
-            & "' is not anymore in the file",
-            Design_Unit);
+         Error_Msg_Sem (+Design_Unit, "%n is not anymore its source file",
+                        +Get_Library_Unit (Design_Unit));
          raise Compilation_Error;
       end if;
       Pos := Get_Design_Unit_Source_Pos (Design_Unit);
@@ -1619,7 +1623,7 @@ package body Libraries is
             null;
          when Date_Obsolete =>
             if not Flags.Flag_Elaborate_With_Outdated then
-               Error_Msg_Sem (Disp_Node (Design_Unit) & " is obsolete", Loc);
+               Error_Msg_Sem (+Loc, "%n is obsolete", +Design_Unit);
                return;
             end if;
          when others =>

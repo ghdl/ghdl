@@ -136,12 +136,12 @@ package body Sem_Types is
       --  Emit error message for overflow and replace with a value to avoid
       --  error storm.
       if Get_Kind (Left) = Iir_Kind_Overflow_Literal then
-         Error_Msg_Sem ("overflow in left bound", Left);
+         Error_Msg_Sem (+Left, "overflow in left bound");
          Left := Build_Extreme_Value
            (Get_Direction (Expr) = Iir_Downto, Left);
       end if;
       if Get_Kind (Right) = Iir_Kind_Overflow_Literal then
-         Error_Msg_Sem ("overflow in right bound", Right);
+         Error_Msg_Sem (+Right, "overflow in right bound");
          Right := Build_Extreme_Value
            (Get_Direction (Expr) = Iir_To, Right);
       end if;
@@ -158,25 +158,26 @@ package body Sem_Types is
          if Bt_L_Kind /= Iir_Kind_Integer_Type_Definition
            and then Bt_R_Kind = Iir_Kind_Integer_Type_Definition
          then
-            Error_Msg_Sem ("left bound must be an integer expression", Left);
+            Error_Msg_Sem (+Left, "left bound must be an integer expression");
             return Null_Iir;
          end if;
          if Bt_R_Kind /= Iir_Kind_Integer_Type_Definition
            and then Bt_L_Kind = Iir_Kind_Integer_Type_Definition
          then
-            Error_Msg_Sem ("right bound must be an integer expression", Left);
+            Error_Msg_Sem
+              (+Right, "right bound must be an integer expression");
             return Null_Iir;
          end if;
          if Bt_R_Kind /= Iir_Kind_Integer_Type_Definition
            and then Bt_L_Kind /= Iir_Kind_Integer_Type_Definition
          then
-            Error_Msg_Sem ("each bound must be an integer expression", Expr);
+            Error_Msg_Sem (+Expr, "each bound must be an integer expression");
             return Null_Iir;
          end if;
       else
          if Bt_L_Kind /= Bt_R_Kind then
             Error_Msg_Sem
-              ("left and right bounds must be of the same type class", Expr);
+              (+Expr, "left and right bounds must be of the same type class");
             return Null_Iir;
          end if;
          case Bt_L_Kind is
@@ -186,7 +187,7 @@ package body Sem_Types is
          when others =>
             --  Enumeration range are not allowed to define a new type.
             Error_Msg_Sem
-              ("bad range type, only integer or float is allowed", Expr);
+              (+Expr, "bad range type, only integer or float is allowed");
             return Null_Iir;
          end case;
       end if;
@@ -215,8 +216,8 @@ package body Sem_Types is
       Set_Resolved_Flag (Ntype, False);
       Set_Signal_Type_Flag (Ntype, True);
       if Get_Type_Staticness (Ntype) /= Locally then
-         Error_Msg_Sem ("range constraint of type must be locally static",
-                        Decl);
+         Error_Msg_Sem
+           (+Decl, "range constraint of type must be locally static");
       end if;
       return Ntype;
    end Create_Integer_Type;
@@ -346,8 +347,8 @@ package body Sem_Types is
            Get_Range_Constraint (Universal_Integer_Subtype_Definition);
       end if;
       if Get_Expr_Staticness (Range_Expr1) /= Locally then
-         Error_Msg_Sem ("range constraint for a physical type must be static",
-                        Range_Expr1);
+         Error_Msg_Sem (+Range_Expr1,
+                        "range constraint for a physical type must be static");
          Range_Expr1 :=
            Get_Range_Constraint (Universal_Integer_Subtype_Definition);
       else
@@ -435,7 +436,7 @@ package body Sem_Types is
             then
                if not Eval_Int_In_Range (Get_Value (Unit), Range_Expr1) then
                   Error_Msg_Sem
-                    ("physical literal does not lie within the range", Unit);
+                    (+Unit, "physical literal does not lie within the range");
                end if;
             end if;
          else
@@ -484,10 +485,10 @@ package body Sem_Types is
       case Get_Kind (El_Type) is
          when Iir_Kind_File_Type_Definition =>
             Error_Msg_Sem
-              ("file type element not allowed in a composite type", Loc);
+              (+Loc, "file type element not allowed in a composite type");
          when Iir_Kind_Protected_Type_Declaration =>
             Error_Msg_Sem
-              ("protected type element not allowed in a composite type", Loc);
+              (+Loc, "protected type element not allowed in a composite type");
          when others =>
             null;
       end case;
@@ -521,8 +522,9 @@ package body Sem_Types is
       if Vhdl_Std < Vhdl_08
         and then not Is_Fully_Constrained_Type (El_Type)
       then
-         Error_Msg_Sem ("array element of unconstrained "
-                        & Disp_Node (El_Type) & " is not allowed", Def);
+         Error_Msg_Sem
+           (+Def, "array element of unconstrained %n is not allowed",
+            +El_Type);
       end if;
       Set_Resolved_Flag (Def, Get_Resolved_Flag (El_Type));
    end Sem_Array_Element;
@@ -572,8 +574,8 @@ package body Sem_Types is
                        /= Iir_Kind_Protected_Type_Declaration
                      then
                         Error_Msg_Sem
-                          ("formal parameter method must not be "
-                           & "access or file type", Inter);
+                          (+Inter, "formal parameter method must not be "
+                           & "access or file type");
                      end if;
                      Inter := Get_Chain (Inter);
                   end loop;
@@ -583,15 +585,15 @@ package body Sem_Types is
                        and then Get_Signal_Type_Flag (Inter_Type) = False
                      then
                         Error_Msg_Sem
-                          ("method return type must not be access of file",
-                           El);
+                          (+El,
+                           "method return type must not be access of file");
                      end if;
                   end if;
                end;
             when others =>
                Error_Msg_Sem
-                 (Disp_Node (El)
-                  & " are not allowed in protected type declaration", El);
+                 (+El, "%n are not allowed in protected type declaration",
+                  +El);
          end case;
          El := Get_Chain (El);
       end loop;
@@ -636,27 +638,27 @@ package body Sem_Types is
          Set_Protected_Type_Declaration (Bod, Decl);
          if Get_Protected_Type_Body (Decl) /= Null_Iir then
             Error_Msg_Sem
-              ("protected type body already declared for "
-               & Disp_Node (Decl), Bod);
+              (+Bod, "protected type body already declared for %n",
+               (1 => +Decl), Cont => True);
             Error_Msg_Sem
-              ("(previous body)", Get_Protected_Type_Body (Decl));
+              (+Get_Protected_Type_Body (Decl), "(previous body)");
             Decl := Null_Iir;
          elsif not Get_Visible_Flag (Type_Decl) then
             --  Can this happen ?
             Error_Msg_Sem
-              ("protected type declaration not yet visible", Bod);
+              (+Bod, "protected type declaration not yet visible",
+               Cont => True);
             Error_Msg_Sem
-              ("(location of protected type declaration)", Decl);
+              (+Decl, "(location of protected type declaration)");
             Decl := Null_Iir;
          else
             Set_Protected_Type_Body (Decl, Bod);
          end if;
       else
          Error_Msg_Sem
-           ("no protected type declaration for this body", Bod);
+           (+Bod, "no protected type declaration for this body");
          if Decl /= Null_Iir then
-            Error_Msg_Sem
-              ("(found " & Disp_Node (Decl) & " declared here)", Decl);
+            Error_Msg_Sem (+Decl, "(found %n declared here)", +Decl);
             Decl := Null_Iir;
          end if;
       end if;
@@ -701,8 +703,7 @@ package body Sem_Types is
                null;
             when others =>
                Error_Msg_Sem
-                 (Disp_Node (El) & " not allowed in a protected type body",
-                  El);
+                 (+El, "%n not allowed in a protected type body", +El);
          end case;
          El := Get_Chain (El);
       end loop;
@@ -873,8 +874,9 @@ package body Sem_Types is
               and then not Is_Fully_Constrained_Type (El_Type)
             then
                Error_Msg_Sem
-                 ("element declaration of unconstrained "
-                    & Disp_Node (El_Type) & " is not allowed", El);
+                 (+El,
+                  "element declaration of unconstrained %n is not allowed",
+                  +El_Type);
             end if;
             Resolved_Flag :=
               Resolved_Flag and Get_Resolved_Flag (El_Type);
@@ -915,8 +917,9 @@ package body Sem_Types is
          Index_Type := Get_Type (Index_Type);
          if Get_Kind (Index_Type) not in Iir_Kinds_Discrete_Type_Definition
          then
-            Error_Msg_Sem ("an index type of an array must be a discrete type",
-                           Index_Type);
+            Error_Msg_Sem
+              (+Index_Type,
+               "an index type of an array must be a discrete type");
             --  FIXME: disp type Index_Type ?
          end if;
       end loop;
@@ -1080,12 +1083,12 @@ package body Sem_Types is
             when Iir_Kind_File_Type_Definition =>
                --  LRM 3.3
                --  The designated type must not be a file type.
-               Error_Msg_Sem ("designated type must not be a file type", Def);
+               Error_Msg_Sem (+Def, "designated type must not be a file type");
             when Iir_Kind_Protected_Type_Declaration =>
                --  LRM02 3.3
                --  [..] or a protected type.
                Error_Msg_Sem
-                 ("designated type must not be a protected type", Def);
+                 (+Def, "designated type must not be a protected type");
             when others =>
                null;
          end case;
@@ -1115,16 +1118,14 @@ package body Sem_Types is
          --  or an access type.
          --  If the base type is a composite type, it must not
          --  contain a subelement of an access type.
-         Error_Msg_Sem
-           (Disp_Node (Type_Mark) & " cannot be a file type", Def);
+         Error_Msg_Sem (+Def, "%n cannot be a file type", +Type_Mark);
       elsif Get_Kind (Type_Mark) in Iir_Kinds_Array_Type_Definition then
          --  LRM 3.4
          --  If the base type is an array type, it must be a one
          --  dimensional array type.
          if not Is_One_Dimensional_Array_Type (Type_Mark) then
             Error_Msg_Sem
-              ("multi-dimensional " & Disp_Node (Type_Mark)
-                 & " cannot be a file type", Def);
+              (+Def, "multi-dimensional %n cannot be a file type", +Type_Mark);
          end if;
       end if;
 
@@ -1285,8 +1286,7 @@ package body Sem_Types is
       --  A resolution function must be a [pure] function;
       if Flags.Vhdl_Std >= Vhdl_93 and then Get_Pure_Flag (Func) = False then
          if Atype /= Null_Iir then
-            Error_Msg_Sem
-              ("resolution " & Disp_Node (Func) & " must be pure", Atype);
+            Error_Msg_Sem (+Atype, "resolution %n must be pure", +Func);
          end if;
          return False;
       end if;
@@ -1323,12 +1323,13 @@ package body Sem_Types is
                   if not Has_Error then
                      Has_Error := True;
                      Error_Msg_Sem
-                       ("can't resolve overload for resolution function",
-                        Atype);
-                     Error_Msg_Sem ("candidate functions are:", Atype);
-                     Error_Msg_Sem (" " & Disp_Subprg (Func), Func);
+                       (+Atype,
+                        "can't resolve overload for resolution function",
+                        Cont => True);
+                     Error_Msg_Sem (+Atype, "candidate functions are:");
+                     Error_Msg_Sem (+Func, " " & Disp_Subprg (Func));
                   end if;
-                  Error_Msg_Sem (" " & Disp_Subprg (El), El);
+                  Error_Msg_Sem (+El, " " & Disp_Subprg (El));
                else
                   Res := El;
                end if;
@@ -1346,8 +1347,8 @@ package body Sem_Types is
       end if;
 
       if Res = Null_Iir then
-         Error_Msg_Sem ("no matching resolution function for "
-                        & Disp_Node (Name), Atype);
+         Error_Msg_Sem
+           (+Atype, "no matching resolution function for %n", +Name);
       else
          Name1 := Finish_Sem_Name (Name);
          Mark_Subprogram_Used (Res);
@@ -1390,8 +1391,8 @@ package body Sem_Types is
                Resolv_El := Get_Resolution_Indication (Resolution);
             when Iir_Kind_Record_Resolution =>
                Error_Msg_Sem
-                 ("record resolution not allowed for array subtype",
-                  Resolution);
+                 (+Resolution,
+                  "record resolution not allowed for array subtype");
             when others =>
                Error_Kind ("sem_array_constraint(resolution)", Resolution);
          end case;
@@ -1408,7 +1409,7 @@ package body Sem_Types is
                -- def must be a constrained array.
                if Get_Range_Constraint (Def) /= Null_Iir then
                   Error_Msg_Sem
-                    ("cannot use a range constraint for array types", Def);
+                    (+Def, "cannot use a range constraint for array types");
                   return Copy_Subtype_Indication (Type_Mark);
                end if;
 
@@ -1453,8 +1454,8 @@ package body Sem_Types is
                if Get_Kind (Type_Mark) = Iir_Kind_Array_Subtype_Definition
                  and then Get_Index_Constraint_Flag (Type_Mark)
                then
-                  Error_Msg_Sem ("constrained array cannot be re-constrained",
-                                 Def);
+                  Error_Msg_Sem
+                    (+Def, "constrained array cannot be re-constrained");
                end if;
                if Subtype_Index_List = Null_Iir_List then
                   --  Array is not constrained.
@@ -1469,10 +1470,9 @@ package body Sem_Types is
 
                      if Type_Index = Null_Iir then
                         Error_Msg_Sem
-                          ("subtype has more indexes than "
-                             & Disp_Node (Type_Mark)
-                             & " defined at " & Disp_Location (Type_Mark),
-                           Subtype_Index);
+                          (+Subtype_Index,
+                           "subtype has more indexes than %n defined at %l",
+                           (+Type_Mark, +Type_Mark));
                         --  Forget extra indexes.
                         Set_Nbr_Elements (Subtype_Index_List, I);
                         exit;
@@ -1480,10 +1480,9 @@ package body Sem_Types is
                      if Subtype_Index = Null_Iir then
                         if not Error_Seen then
                            Error_Msg_Sem
-                             ("subtype has less indexes than "
-                                & Disp_Node (Type_Mark)
-                                & " defined at "
-                                & Disp_Location (Type_Mark), Def);
+                             (+Def,
+                              "subtype has less indexes than %n defined at %l",
+                              (+Type_Mark, +Type_Mark));
                            Error_Seen := True;
                         end if;
                      else
@@ -1528,11 +1527,11 @@ package body Sem_Types is
                --  type, or an access type whose designated type is such
                --  an array type.
                Error_Msg_Sem
-                 ("only unconstrained array type may be contrained "
-                    &"by index", Def);
+                 (+Def,
+                  "only unconstrained array type may be contrained by index",
+                  Cont => True);
                Error_Msg_Sem
-                 (" (type mark is " & Disp_Node (Type_Mark) & ")",
-                  Type_Mark);
+                 (+Type_Mark, " (type mark is %n)", +Type_Mark);
                return Type_Mark;
          end case;
       end if;
@@ -1584,7 +1583,7 @@ package body Sem_Types is
       El : Iir;
    begin
       if Get_Kind (Name) /= Iir_Kind_Parenthesis_Name then
-         Error_Msg_Sem ("record element constraint expected", Name);
+         Error_Msg_Sem (+Name, "record element constraint expected");
          return Null_Iir;
       else
          Prefix := Get_Prefix (Name);
@@ -1594,8 +1593,8 @@ package body Sem_Types is
             Prefix := Get_Prefix (Prefix);
          end loop;
          if Get_Kind (Prefix) /= Iir_Kind_Simple_Name then
-            Error_Msg_Sem ("record element name must be a simple name",
-                           Prefix);
+            Error_Msg_Sem
+              (+Prefix, "record element name must be a simple name");
             return Null_Iir;
          else
             El := Create_Iir (Iir_Kind_Record_Element_Constraint);
@@ -1628,7 +1627,7 @@ package body Sem_Types is
          if Get_Kind (Chain) /= Iir_Kind_Association_Element_By_Expression
            or else Get_Formal (Chain) /= Null_Iir
          then
-            Error_Msg_Sem ("badly formed record constraint", Chain);
+            Error_Msg_Sem (+Chain, "badly formed record constraint");
          else
             El := Reparse_As_Record_Element_Constraint (Get_Actual (Chain));
             if El /= Null_Iir then
@@ -1669,7 +1668,7 @@ package body Sem_Types is
       Chain := Get_Association_Chain (Name);
       if Get_Kind (Chain) = Iir_Kind_Association_Element_Open then
          if Get_Chain (Chain) /= Null_Iir then
-            Error_Msg_Sem ("'open' must be alone", Chain);
+            Error_Msg_Sem (+Chain, "'open' must be alone");
          end if;
       else
          El_List := Create_Iir_List;
@@ -1678,7 +1677,7 @@ package body Sem_Types is
             if Get_Kind (Chain) /= Iir_Kind_Association_Element_By_Expression
               or else Get_Formal (Chain) /= Null_Iir
             then
-               Error_Msg_Sem ("bad form of array constraint", Chain);
+               Error_Msg_Sem (+Chain, "bad form of array constraint");
             else
                Append_Element (El_List, Get_Actual (Chain));
             end if;
@@ -1764,8 +1763,8 @@ package body Sem_Types is
                Res_List := Get_Elements_Declaration_List (Resolution);
             when Iir_Kind_Array_Subtype_Definition =>
                Error_Msg_Sem
-                 ("resolution indication must be an array element resolution",
-                  Resolution);
+                 (+Resolution,
+                  "resolution indication must be an array element resolution");
             when others =>
                Error_Kind ("sem_record_constraint(resolution)", Resolution);
          end case;
@@ -1787,16 +1786,16 @@ package body Sem_Types is
                   exit when El = Null_Iir;
                   Tm_El := Find_Name_In_List (Tm_El_List, Get_Identifier (El));
                   if Tm_El = Null_Iir then
-                     Error_Msg_Sem (Disp_Node (Type_Mark)
-                                      & "has no " & Disp_Node (El), El);
+                     Error_Msg_Sem (+El, "%n has no %n", (+Type_Mark, +El));
                   else
                      Set_Element_Declaration (El, Tm_El);
                      Pos := Natural (Get_Element_Position (Tm_El));
                      if Els (Pos) /= Null_Iir then
                         Error_Msg_Sem
-                          (Disp_Node (El) & " was already constrained", El);
+                          (+El, "%n was already constrained",
+                           (1 => +El), Cont => True);
                         Error_Msg_Sem
-                          (" (location of previous constrained)", Els (Pos));
+                          (+Els (Pos), " (location of previous constrained)");
                      else
                         Els (Pos) := El;
                         Set_Parent (El, Res);
@@ -1814,8 +1813,8 @@ package body Sem_Types is
                                 (El_Type);
                            when others =>
                               Error_Msg_Sem
-                                ("only composite types may be constrained",
-                                 El_Type);
+                                (+El_Type,
+                                 "only composite types may be constrained");
                         end case;
                      end if;
                      Set_Type (El, El_Type);
@@ -1831,15 +1830,14 @@ package body Sem_Types is
                   exit when El = Null_Iir;
                   Tm_El := Find_Name_In_List (Tm_El_List, Get_Identifier (El));
                   if Tm_El = Null_Iir then
-                     Error_Msg_Sem (Disp_Node (Type_Mark)
-                                      & "has no " & Disp_Node (El), El);
+                     Error_Msg_Sem (+El, "%n has no %n", (+Type_Mark, +El));
                   else
                      Pos := Natural (Get_Element_Position (Tm_El));
                      if Res_Els (Pos) /= Null_Iir then
+                        Error_Msg_Sem (+El, "%n was already resolved",
+                                       (1 => +El), Cont => True);
                         Error_Msg_Sem
-                          (Disp_Node (El) & " was already resolved", El);
-                        Error_Msg_Sem
-                          (" (location of previous constrained)", Els (Pos));
+                          (+Els (Pos), " (location of previous constrained)");
                      else
                         Res_Els (Pos) := Get_Element_Declaration (El);
                      end if;
@@ -1910,9 +1908,11 @@ package body Sem_Types is
          --  FIXME: find the correct sentence from LRM
          --  GHDL: subtype_definition may also be used just to add
          --    a resolution function.
-         Error_Msg_Sem ("only scalar types may be constrained by range", Def);
-         Error_Msg_Sem (" (type mark is " & Disp_Node (Type_Mark) & ")",
-                        Type_Mark);
+         Error_Msg_Sem
+           (+Def, "only scalar types may be constrained by range",
+            Cont => True);
+         Error_Msg_Sem
+           (+Type_Mark, " (type mark is %n)", +Type_Mark);
          Res := Copy_Subtype_Indication (Type_Mark);
       else
          Tolerance := Get_Tolerance (Def);
@@ -1956,8 +1956,8 @@ package body Sem_Types is
             --
             --  FIXME: should be moved into sem_subtype_indication
             if Get_Kind (Res) /= Iir_Kind_Floating_Subtype_Definition then
-               Error_Msg_Sem ("tolerance allowed only for floating subtype",
-                              Tolerance);
+               Error_Msg_Sem
+                 (+Tolerance, "tolerance allowed only for floating subtype");
             else
                --  LRM93 4.2 Subtype declarations
                --  If the subtype indication includes a tolerance aspect, then
@@ -1966,8 +1966,8 @@ package body Sem_Types is
                if Tolerance /= Null_Iir
                  and then Get_Expr_Staticness (Tolerance) /= Locally
                then
-                  Error_Msg_Sem ("tolerance must be a static string",
-                                 Tolerance);
+                  Error_Msg_Sem
+                    (+Tolerance, "tolerance must be a static string");
                end if;
                Set_Tolerance (Res, Tolerance);
             end if;
@@ -1977,8 +1977,8 @@ package body Sem_Types is
       if Resolution /= Null_Iir then
          --  LRM08 6.3  Subtype declarations.
          if Get_Kind (Resolution) not in Iir_Kinds_Denoting_Name then
-            Error_Msg_Sem ("resolution indication must be a function name",
-                           Resolution);
+            Error_Msg_Sem
+              (+Resolution, "resolution indication must be a function name");
          else
             Sem_Resolution_Function (Resolution, Res);
          end if;
@@ -2010,7 +2010,7 @@ package body Sem_Types is
             --  may not contain a resolution function.
             if Resolution /= Null_Iir then
                Error_Msg_Sem
-                 ("resolution function not allowed for an access type", Def);
+                 (+Def, "resolution function not allowed for an access type");
             end if;
 
             case Get_Kind (Def) is
@@ -2048,7 +2048,7 @@ package body Sem_Types is
             if Get_Kind (Def) /= Iir_Kind_Subtype_Definition
               or else Get_Range_Constraint (Def) /= Null_Iir
             then
-               Error_Msg_Sem ("file types can't be constrained", Def);
+               Error_Msg_Sem (+Def, "file types can't be constrained");
                return Type_Mark;
             end if;
 
@@ -2057,7 +2057,7 @@ package body Sem_Types is
             --  may not contain a resolution function.
             if Resolution /= Null_Iir then
                Error_Msg_Sem
-                 ("resolution function not allowed for file types", Def);
+                 (+Def, "resolution function not allowed for file types");
                return Type_Mark;
             end if;
             Free_Name (Def);
@@ -2070,7 +2070,7 @@ package body Sem_Types is
             if Get_Kind (Def) /= Iir_Kind_Subtype_Definition
               or else Get_Range_Constraint (Def) /= Null_Iir
             then
-               Error_Msg_Sem ("protected types can't be constrained", Def);
+               Error_Msg_Sem (+Def, "protected types can't be constrained");
                return Type_Mark;
             end if;
 
@@ -2079,7 +2079,7 @@ package body Sem_Types is
             --  not contain a resolution function.
             if Resolution /= Null_Iir then
                Error_Msg_Sem
-                 ("resolution function not allowed for file types", Def);
+                 (+Def, "resolution function not allowed for file types");
                return Type_Mark;
             end if;
             Free_Name (Def);

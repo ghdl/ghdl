@@ -129,7 +129,7 @@ package body Trans_Be is
    begin
       case Get_Kind (Decl) is
          when Iir_Kind_Architecture_Body =>
-            Error_Msg_Sem ("FOREIGN architectures are not yet handled", Decl);
+            Error_Msg_Sem (+Decl, "FOREIGN architectures are not yet handled");
          when Iir_Kind_Procedure_Declaration
            | Iir_Kind_Function_Declaration =>
             null;

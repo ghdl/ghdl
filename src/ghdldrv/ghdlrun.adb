@@ -175,8 +175,8 @@ package body Ghdlrun is
                if Res /= Null_Address then
                   Def (Ortho, Res);
                else
-                  Error_Msg_Sem ("unknown foreign VHPIDIRECT '" & Name & "'",
-                                 Decl);
+                  Error_Msg_Sem
+                    (+Decl, "unknown foreign VHPIDIRECT '" & Name & "'");
                end if;
             end;
          when Foreign_Intrinsic =>
@@ -192,8 +192,8 @@ package body Ghdlrun is
                elsif Name = "get_resolution_limit" then
                   Def (Ortho, Grt.Lib.Ghdl_Get_Resolution_Limit'Address);
                else
-                  Error_Msg_Sem ("unknown foreign intrinsic '" & Name & "'",
-                                 Decl);
+                  Error_Msg_Sem
+                    (+Decl, "unknown foreign intrinsic %i", +Decl);
                end if;
             end;
          when Foreign_Unknown =>

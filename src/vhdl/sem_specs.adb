@@ -201,9 +201,8 @@ package body Sem_Specs is
       --  denoted by the entity class.
       if Get_Entity_Class_Kind (Decl) /= Get_Entity_Class (Attr) then
          if Check_Class then
-            Error_Msg_Sem (Disp_Node (Decl) & " is not of class '"
-                           & Tokens.Image (Get_Entity_Class (Attr)) & ''',
-                           Attr);
+            Error_Msg_Sem (+Attr, "%n is not of class %t",
+                           (+Decl, +Get_Entity_Class (Attr)));
             if Get_Kind (Decl) = Iir_Kind_Subtype_Declaration
               and then Get_Entity_Class (Attr) = Tok_Type
               and then Get_Type (Decl) /= Null_Iir
@@ -215,9 +214,9 @@ package body Sem_Specs is
                --  The type declaration declares an anonymous type
                --  and a named subtype.
                Error_Msg_Sem
-                 ("'" & Image_Identifier (Decl)
-                  & "' declares both an anonymous type and a named subtype",
-                  Decl);
+                 (+Decl,
+                  "%i declares both an anonymous type and a named subtype",
+                  +Decl);
             end if;
          end if;
          return;
@@ -234,8 +233,8 @@ package body Sem_Specs is
            | Tok_Configuration
            | Tok_Package =>
             if Get_Design_Unit (Decl) /= Get_Current_Design_Unit then
-               Error_Msg_Sem (Disp_Node (Attr) & " must appear immediatly "
-                              & "within " & Disp_Node (Decl), Attr);
+               Error_Msg_Sem (+Attr, "%n must appear immediatly within %n",
+                              (+Attr, +Decl));
                return;
             end if;
          when others =>
@@ -273,18 +272,17 @@ package body Sem_Specs is
                   end if;
                   if Check_Defined then
                      Error_Msg_Sem
-                       (Disp_Node (Decl) & " has already " & Disp_Node (Attr),
-                        Attr);
-                     Error_Msg_Sem ("previous attribute specification at "
-                                      & Disp_Location (El), Attr);
+                       (+Attr, "%n has already %n", (+Decl, +Attr),
+                        Cont => True);
+                     Error_Msg_Sem
+                       (+Attr, "previous attribute specification at %l", +El);
                   end if;
                   return;
                elsif Get_Identifier (El_Attr) = Get_Identifier (Attr_Decl) then
+                  Error_Msg_Sem (+Attr, "%n is already decorated with an %n",
+                                 (+Decl, +El_Attr), Cont => True);
                   Error_Msg_Sem
-                    (Disp_Node (Decl) & " is already decorated with an "
-                       & Disp_Node (El_Attr), Attr);
-                  Error_Msg_Sem
-                    ("(previous attribute specification was here)", El);
+                    (+El, "(previous attribute specification was here)");
                   return;
                end if;
             end;
@@ -344,8 +342,8 @@ package body Sem_Specs is
 
             when others =>
                Error_Msg_Sem
-                 ("'FOREIGN allowed only for architectures and subprograms",
-                  Attr);
+                 (+Attr,
+                  "'FOREIGN allowed only for architectures and subprograms");
                return;
          end case;
 
@@ -393,8 +391,7 @@ package body Sem_Specs is
                Xref_Ref (Name, Ent);
             end if;
             if Get_Visible_Flag (Ent) = False then
-               Error_Msg_Sem
-                 (Disp_Node (Ent) & " is not yet visible", Attr);
+               Error_Msg_Sem (+Attr, "%n is not yet visible", +Ent);
             else
                Attribute_A_Decl (Decl, Attr, Is_Designators, Check_Defined);
                return True;
@@ -439,8 +436,7 @@ package body Sem_Specs is
                     and then Base /= Strip_Denoting_Name (Decl)
                   then
                      Error_Msg_Sem
-                       (Disp_Node (Ent) & " does not denote the entire object",
-                        Attr);
+                       (+Attr, "%n does not denote the entire object", +Ent);
                   end if;
                   Res := Res or Applied;
                end;
@@ -676,7 +672,7 @@ package body Sem_Specs is
                   Append_Element (List, Name);
                when others =>
                   Error_Msg_Sem
-                    ("entity tag must denote a subprogram or a literal", Sig);
+                    (+Sig, "entity tag must denote a subprogram or a literal");
             end case;
          end if;
          Inter := Get_Next_Interpretation (Inter);
@@ -740,9 +736,9 @@ package body Sem_Specs is
               | Tok_Configuration =>
                if Get_Expr_Staticness (Expr) /= Locally then
                   Error_Msg_Sem
-                    ("attribute expression for "
-                     & Image (Get_Entity_Class (Spec))
-                     & " must be locally static", Spec);
+                    (+Spec,
+                     "attribute expression for %t must be locally static",
+                     +Get_Entity_Class (Spec));
                end if;
             when others =>
                null;
@@ -806,8 +802,7 @@ package body Sem_Specs is
                   --  same as that denoted by entity class.
                   if not Sem_Named_Entities (Scope, El, Spec, True, True) then
                      Error_Msg_Sem
-                       ("no named entities '" & Image_Identifier (El)
-                        & "' in declarative part", El);
+                       (+El, "no named entities %i in declarative part", +El);
                   end if;
                end if;
             end loop;
@@ -887,8 +882,8 @@ package body Sem_Specs is
                  = Get_Identifier (Get_Attribute_Designator (Spec))
                then
                   Error_Msg_Sem
-                    ("no attribute specification may follow an "
-                       & "all/others spec", Decl);
+                    (+Decl, "no attribute specification may follow an "
+                       & "all/others spec", Cont => True);
                   Has_Error := True;
                end if;
             else
@@ -897,14 +892,14 @@ package body Sem_Specs is
                --  class is declared in a given declarative part following such
                --  an attribute specification.
                Error_Msg_Sem
-                 ("no named entity may follow an all/others attribute "
-                    & "specification", Decl);
+                 (+Decl, "no named entity may follow an all/others attribute "
+                    & "specification", Cont => True);
                Has_Error := True;
             end if;
             if Has_Error then
                Error_Msg_Sem
-                 ("(previous all/others specification for the given "
-                    &"entity class)", Spec);
+                 (+Spec, "(previous all/others specification for the given "
+                    &"entity class)");
             end if;
          end if;
          Spec := Get_Attribute_Specification_Chain (Spec);
@@ -958,7 +953,7 @@ package body Sem_Specs is
          Check_Read (Time_Expr);
          Set_Expression (Dis, Time_Expr);
          if Get_Expr_Staticness (Time_Expr) < Globally then
-            Error_Msg_Sem ("time expression must be static", Time_Expr);
+            Error_Msg_Sem (+Time_Expr, "time expression must be static");
          end if;
       end if;
 
@@ -989,14 +984,14 @@ package body Sem_Specs is
                     | Iir_Kind_Interface_Signal_Declaration =>
                      null;
                   when others =>
-                     Error_Msg_Sem ("object must be a signal", El);
+                     Error_Msg_Sem (+El, "object must be a signal");
                      return;
                end case;
                if Get_Name_Staticness (Sig) /= Locally then
-                  Error_Msg_Sem ("signal name must be locally static", El);
+                  Error_Msg_Sem (+El, "signal name must be locally static");
                end if;
                if not Get_Guarded_Signal_Flag (Prefix) then
-                  Error_Msg_Sem ("signal must be a guarded signal", El);
+                  Error_Msg_Sem (+El, "signal must be a guarded signal");
                end if;
                Set_Has_Disconnect_Flag (Prefix, True);
 
@@ -1017,7 +1012,7 @@ package body Sem_Specs is
                -- FIXME: to be checked: the expression type (as set by
                --  sem_expression) may be a base type instead of a type mark.
                if not Is_Same_Type_Mark (Get_Type (Sig), Atype) then
-                  Error_Msg_Sem ("type mark and signal type mismatch", El);
+                  Error_Msg_Sem (+El, "type mark and signal type mismatch");
                end if;
 
                --  LRM93 5.3
@@ -1025,7 +1020,7 @@ package body Sem_Specs is
                --  enclosing the disconnection specification.
                --  FIXME: todo.
             elsif Get_Designated_Entity (El) /= Error_Mark then
-               Error_Msg_Sem ("name must designate a signal", El);
+               Error_Msg_Sem (+El, "name must designate a signal");
             end if;
          end loop;
       end if;
@@ -1120,7 +1115,7 @@ package body Sem_Specs is
          --  An incremental binding indication must not have an entity aspect.
          if Primary_Entity_Aspect /= Null_Iir then
             Error_Msg_Sem
-              ("entity aspect not allowed for incremental binding", Bind);
+              (+Bind, "entity aspect not allowed for incremental binding");
          end if;
 
          --  Return now in case of error.
@@ -1146,8 +1141,8 @@ package body Sem_Specs is
                end if;
             when Iir_Kind_Configuration_Specification =>
                Error_Msg_Sem
-                 ("entity aspect required in a configuration specification",
-                  Bind);
+                 (+Bind,
+                  "entity aspect required in a configuration specification");
                return;
             when others =>
                raise Internal_Error;
@@ -1167,7 +1162,7 @@ package body Sem_Specs is
            or else Get_Port_Map_Aspect_Chain (Bind) /= Null_Iir
          then
             Error_Msg_Sem
-              ("map aspect not allowed for open entity aspect", Bind);
+              (+Bind, "map aspect not allowed for open entity aspect");
             return;
          end if;
       else
@@ -1207,10 +1202,9 @@ package body Sem_Specs is
       procedure Prev_Spec_Error is
       begin
          Error_Msg_Sem
-           (Disp_Node (Comp)
-            & " is alreay bound by a configuration specification", Spec);
-         Error_Msg_Sem
-           ("(previous is " & Disp_Node (Prev_Spec) & ")", Prev_Spec);
+           (+Spec, "%n is alreay bound by a configuration specification",
+            (1 => +Comp), Cont => True);
+         Error_Msg_Sem (+Prev_Spec, "(previous is %n)", +Prev_Spec);
       end Prev_Spec_Error;
 
       Prev_Binding : Iir_Binding_Indication;
@@ -1226,7 +1220,7 @@ package body Sem_Specs is
                if Flags.Vhdl_Std = Vhdl_87 then
                   Prev_Spec_Error;
                   Error_Msg_Sem
-                    ("(incremental binding is not allowed in vhdl87)", Spec);
+                    (+Spec, "(incremental binding is not allowed in vhdl87)");
                   return;
                end if;
                --  Incremental binding.
@@ -1252,11 +1246,9 @@ package body Sem_Specs is
                raise Internal_Error;
             when Iir_Kind_Component_Configuration =>
                Error_Msg_Sem
-                 (Disp_Node (Comp)
-                  & " is already bound by a component configuration",
-                  Spec);
-               Error_Msg_Sem
-                 ("(previous is " & Disp_Node (Prev_Conf) & ")", Prev_Conf);
+                 (+Spec, "%n is already bound by a component configuration",
+                  (1 => +Comp), Cont => True);
+               Error_Msg_Sem (+Prev_Conf, "(previous is %n)", +Prev_Conf);
                return;
             when others =>
                Error_Kind ("apply_configuration_specification(2)", Spec);
@@ -1381,16 +1373,17 @@ package body Sem_Specs is
             exit when El = Null_Iir;
             Inter := Sem_Scopes.Get_Interpretation (Get_Identifier (El));
             if not Valid_Interpretation (Inter) then
-               Error_Msg_Sem ("no component instantation with label '"
-                              & Image_Identifier (El) & ''', El);
+               Error_Msg_Sem
+                 (+El, "no component instantation with label %i", +El);
             elsif not Is_In_Current_Declarative_Region (Inter) then
                --  FIXME.
-               Error_Msg_Sem ("label not in block declarative part", El);
+               Error_Msg_Sem (+El, "label not in block declarative part");
             else
                Inst := Get_Declaration (Inter);
                if Get_Kind (Inst) /= Iir_Kind_Component_Instantiation_Statement
                then
-                  Error_Msg_Sem ("label does not denote an instantiation", El);
+                  Error_Msg_Sem
+                    (+El, "label does not denote an instantiation");
                else
                   Inst_Unit := Get_Instantiated_Unit (Inst);
                   if Is_Entity_Instantiation (Inst)
@@ -1398,10 +1391,10 @@ package body Sem_Specs is
                                /= Iir_Kind_Component_Declaration)
                   then
                      Error_Msg_Sem
-                       ("specification does not apply to direct instantiation",
-                        El);
+                       (+El, "specification does not apply to "
+                          & "direct instantiation");
                   elsif Get_Named_Entity (Inst_Unit) /= Comp then
-                     Error_Msg_Sem ("component names mismatch", El);
+                     Error_Msg_Sem (+El, "component names mismatch");
                   else
                      Apply_Configuration_Specification
                        (Inst, Spec, Primary_Entity_Aspect);
@@ -1605,34 +1598,31 @@ package body Sem_Specs is
             if Are_Nodes_Compatible (Comp_El, Ent_El) = Not_Compatible then
                if not Error then
                   Error_Msg_Sem
-                    ("for default port binding of " & Disp_Node (Parent)
-                       & ":", Parent);
+                    (+Parent, "for default port binding of %n:",
+                     (1 => +Parent), Cont => True);
                end if;
                Error_Msg_Sem
-                 ("type of " & Disp_Node (Comp_El)
-                    & " declarared at " & Disp_Location (Comp_El), Parent);
+                 (+Parent, "type of %n declarared at %l",
+                  (+Comp_El, +Comp_El), Cont => True);
                Error_Msg_Sem
-                 ("not compatible with type of " & Disp_Node (Ent_El)
-                    & " declarared at " & Disp_Location (Ent_El), Parent);
+                 (+Parent, "not compatible with type of %n declarared at %l",
+                  (+Ent_El, +Ent_El));
                Error := True;
             elsif Kind = Map_Port
               and then not Check_Port_Association_Restriction
               (Ent_El, Comp_El, Null_Iir)
             then
                if not Error then
-                  Error_Msg_Sem
-                    ("for default port binding of " & Disp_Node (Parent)
-                       & ":", Parent);
+                  Error_Msg_Sem (+Parent, "for default port binding of %n",
+                                 (1 => +Parent), Cont => True);
                end if;
-               Error_Msg_Sem
-                 ("cannot associate "
-                    & Get_Mode_Name (Get_Mode (Ent_El))
-                    & " " & Disp_Node (Ent_El)
-                    & " declarared at " & Disp_Location (Ent_El), Parent);
-               Error_Msg_Sem
-                 ("with actual port of mode "
-                    & Get_Mode_Name (Get_Mode (Comp_El))
-                    & " declared at " & Disp_Location (Comp_El), Parent);
+               Error_Msg_Sem (+Parent, "cannot associate "
+                                & Get_Mode_Name (Get_Mode (Ent_El))
+                                & " %n declarared at %l",
+                              (+Ent_El, +Ent_El), Cont => True);
+               Error_Msg_Sem (+Parent, "with actual port of mode "
+                                & Get_Mode_Name (Get_Mode (Comp_El))
+                                & " declared at %l", +Comp_El);
                Error := True;
             end if;
             Assoc := Create_Iir (Iir_Kind_Association_Element_By_Expression);
@@ -1661,8 +1651,8 @@ package body Sem_Specs is
          while Comp_El /= Null_Iir loop
             Ent_El := Find_Name_In_Chain (Ent_Chain, Get_Identifier (Comp_El));
             if Ent_El = Null_Iir then
-               Error_Msg_Sem (Disp_Node (Comp_El) & " has no association in "
-                              & Disp_Node (Entity), Parent);
+               Error_Msg_Sem (+Parent, "%n has no association in %n",
+                              (+Comp_El, +Entity));
             end if;
             Comp_El := Get_Chain (Comp_El);
          end loop;

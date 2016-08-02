@@ -20,7 +20,6 @@ with Errorout; use Errorout;
 with Std_Package; use Std_Package;
 with Ieee.Std_Logic_1164;
 with Libraries;
-with Files_Map;
 with Std_Names;
 with Sem_Scopes; use Sem_Scopes;
 with Sem_Expr; use Sem_Expr;
@@ -31,7 +30,6 @@ with Sem_Assocs; use Sem_Assocs;
 with Sem_Inst;
 with Iirs_Utils; use Iirs_Utils;
 with Flags; use Flags;
-with Name_Table;
 with Str_Table;
 with Sem_Stmts; use Sem_Stmts;
 with Iir_Chains;
@@ -114,8 +112,7 @@ package body Sem is
          Entity := Libraries.Load_Primary_Unit
            (Library, Get_Identifier (Name), Library_Unit);
          if Entity = Null_Iir then
-            Error_Msg_Sem ("entity " & Disp_Node (Name) & " was not analysed",
-                           Library_Unit);
+            Error_Msg_Sem (+Library_Unit, "entity %n was not analysed", +Name);
             return Null_Iir;
          end if;
          Entity := Get_Library_Unit (Entity);
@@ -144,8 +141,7 @@ package body Sem is
       if Get_Library (Get_Design_File (Get_Design_Unit (Entity))) /= Library
       then
          Error_Msg_Sem
-           (Disp_Node (Entity) & " does not reside in "
-              & Disp_Node (Library), Library_Unit);
+           (+Library_Unit, "%n does not reside in %n", (+Entity, +Library));
          return Null_Iir;
       end if;
 
@@ -555,7 +551,7 @@ package body Sem is
                   Set_Collapse_Signal_Flag
                     (El, Can_Collapse_Signals (El, Formal));
                   if Get_Name_Staticness (Object) < Globally then
-                     Error_Msg_Sem ("actual must be a static name", Actual);
+                     Error_Msg_Sem (+Actual, "actual must be a static name");
                   end if;
                   if Get_Kind (Prefix) = Iir_Kind_Interface_Signal_Declaration
                   then
@@ -592,8 +588,9 @@ package body Sem is
                      --  with constant driving values; such ports must be
                      --  of mode in.
                      if Get_Mode (Formal_Base) /= Iir_In_Mode then
-                        Error_Msg_Sem ("only 'in' ports may be associated "
-                                       & "with expression", El);
+                        Error_Msg_Sem
+                          (+El, "only 'in' ports may be associated with "
+                             & "expression");
                      end if;
 
                      --  LRM93 1.1.1.2 Ports
@@ -601,13 +598,13 @@ package body Sem is
                      --  static expression.
                      if Get_Expr_Staticness (Actual) < Globally then
                         Error_Msg_Sem
-                          ("actual expression must be globally static",
-                           Actual);
+                          (+Actual,
+                           "actual expression must be globally static");
                      end if;
                   else
                      Error_Msg_Sem
-                       ("cannot associate ports with expression in vhdl87",
-                        El);
+                       (+El,
+                        "cannot associate ports with expression in vhdl87");
                   end if;
             end case;
          end if;
@@ -698,7 +695,7 @@ package body Sem is
            | Iir_Kind_Slice_Name =>
             Block_Name := Get_Prefix (Block_Spec);
          when others =>
-            Error_Msg_Sem ("label expected", Block_Spec);
+            Error_Msg_Sem (+Block_Spec, "label expected");
             return Null_Iir;
       end case;
 
@@ -708,8 +705,8 @@ package body Sem is
       case Get_Kind (Block) is
          when Iir_Kind_Block_Statement =>
             if Get_Kind (Block_Spec) /= Iir_Kind_Simple_Name then
-               Error_Msg_Sem ("label does not denote a generate statement",
-                              Block_Spec);
+               Error_Msg_Sem (+Block_Spec,
+                              "label does not denote a generate statement");
             end if;
             Set_Block_Specification (Block_Conf, Block_Name);
             Prev := Get_Block_Block_Configuration (Block);
@@ -758,16 +755,17 @@ package body Sem is
                   --  specification that is an alternative label.
                   if Get_Has_Label (Res) then
                      Error_Msg_Sem
-                       ("alternative label required in block specification",
-                        Block_Spec);
+                       (+Block_Spec,
+                        "alternative label required in block specification");
                   end if;
 
                   Set_Block_Specification (Block_Conf, Block_Name);
 
                when Iir_Kind_Parenthesis_Name =>
                   if Vhdl_Std < Vhdl_08 then
-                     Error_Msg_Sem ("alternative label only allowed by vhdl08",
-                                    Block_Spec);
+                     Error_Msg_Sem
+                       (+Block_Spec,
+                        "alternative label only allowed by vhdl08");
                      return Null_Iir;
                   end if;
                   Assoc := Get_Association_Chain (Block_Spec);
@@ -777,8 +775,8 @@ package body Sem is
                   Gen_Spec := Get_Actual (Assoc);
                   if Get_Kind (Gen_Spec) /= Iir_Kind_Simple_Name then
                      Error_Msg_Sem
-                       ("alternative label expected for if-generate",
-                        Gen_Spec);
+                       (+Gen_Spec,
+                        "alternative label expected for if-generate");
                      return Null_Iir;
                   end if;
                   --  Search label.
@@ -791,8 +789,9 @@ package body Sem is
                   end loop;
                   if Clause = Null_Iir then
                      Error_Msg_Sem
-                       ("alternative label " & Image_Identifier (Gen_Spec)
-                          & " not found for if-generate", Gen_Spec);
+                       (+Gen_Spec,
+                        "alternative label %i not found for if-generate",
+                        +Gen_Spec);
                      return Null_Iir;
                   end if;
                   Set_Named_Entity (Block_Spec, Res);
@@ -815,8 +814,8 @@ package body Sem is
                   --  configuration, [...]
                   --  GHDL: doesn't apply to case generate statement
                   Error_Msg_Sem
-                    ("missing alternative label for a case-generate",
-                     Block_Spec);
+                    (+Block_Spec,
+                     "missing alternative label for a case-generate");
                   return Null_Iir;
                when Iir_Kind_Parenthesis_Name =>
                   Assoc := Get_Association_Chain (Block_Spec);
@@ -826,8 +825,8 @@ package body Sem is
                   Gen_Spec := Get_Actual (Assoc);
                   if Get_Kind (Gen_Spec) /= Iir_Kind_Simple_Name then
                      Error_Msg_Sem
-                       ("alternative label expected for case-generate",
-                        Gen_Spec);
+                       (+Gen_Spec,
+                        "alternative label expected for case-generate");
                      return Null_Iir;
                   end if;
                   --  Search label.
@@ -840,8 +839,9 @@ package body Sem is
                   end loop;
                   if Clause = Null_Iir then
                      Error_Msg_Sem
-                       ("alternative label " & Image_Identifier (Gen_Spec)
-                          & " not found for case-generate", Gen_Spec);
+                       (+Gen_Spec,
+                        "alternative label %i not found for case-generate",
+                        +Gen_Spec);
                      return Null_Iir;
                   end if;
                   Set_Named_Entity (Block_Spec, Res);
@@ -857,8 +857,8 @@ package body Sem is
             Prev := Get_Generate_Block_Configuration (Res);
 
          when others =>
-            Error_Msg_Sem ("block or generate statement label expected",
-                           Block_Conf);
+            Error_Msg_Sem (+Block_Conf,
+                           "block or generate statement label expected");
             return Null_Iir;
       end case;
 
@@ -870,8 +870,8 @@ package body Sem is
         (Get_Block_From_Block_Specification
            (Get_Block_Specification (Father)));
       if not Is_In_Chain (Block_Stmts, Block) then
-         Error_Msg_Sem ("label does not denotes an inner block statement",
-                        Block_Conf);
+         Error_Msg_Sem (+Block_Conf,
+                        "label does not denotes an inner block statement");
          return Null_Iir;
       end if;
 
@@ -882,8 +882,9 @@ package body Sem is
             --  one configuration item is defined for the same block [or
             --  component instance].
             if Prev /= Null_Iir then
-               Error_Msg_Sem (Disp_Node (Block) & " was already configured at "
-                                & Disp_Location (Prev), Block_Conf);
+               Error_Msg_Sem
+                 (+Block_Conf,
+                  "%n was already configured at %l", (+Block, +Prev));
                return Null_Iir;
             end if;
             Set_Block_Block_Configuration (Res, Block_Conf);
@@ -895,8 +896,9 @@ package body Sem is
             --  one configuration item is defined for the same block [or
             --  component instance].
             if Prev /= Null_Iir then
-               Error_Msg_Sem (Disp_Node (Block) & " was already configured at "
-                                & Disp_Location (Prev), Block_Conf);
+               Error_Msg_Sem
+                 (+Block_Conf,
+                  "%n was already configured at %l", (+Block, +Prev));
                return Null_Iir;
             end if;
             Set_Generate_Block_Configuration (Res, Block_Conf);
@@ -945,7 +947,7 @@ package body Sem is
                Block_Spec := Get_Block_Specification (Block_Conf);
                --  FIXME: handle selected name.
                if Get_Kind (Block_Spec) /= Iir_Kind_Simple_Name then
-                  Error_Msg_Sem ("architecture name expected", Block_Spec);
+                  Error_Msg_Sem (+Block_Spec, "architecture name expected");
                   return;
                end if;
                --  LRM 10.3 rule b)
@@ -959,8 +961,7 @@ package body Sem is
                   Block_Conf);
                if Design = Null_Iir then
                   Error_Msg_Sem
-                    ("no architecture '" & Image_Identifier (Block_Spec) & "'",
-                     Block_Conf);
+                    (+Block_Conf, "no architecture %i", +Block_Spec);
                   return;
                end if;
                Arch := Get_Library_Unit (Design);
@@ -991,14 +992,14 @@ package body Sem is
                if Entity_Aspect = Null_Iir or else
                  Get_Kind (Entity_Aspect) /= Iir_Kind_Entity_Aspect_Entity
                then
-                  Error_Msg_Sem ("corresponding component not fully bound",
-                                 Block_Conf);
+                  Error_Msg_Sem
+                    (+Block_Conf, "corresponding component not fully bound");
                end if;
 
                Block_Spec := Get_Block_Specification (Block_Conf);
                --  FIXME: handle selected name.
                if Get_Kind (Block_Spec) /= Iir_Kind_Simple_Name then
-                  Error_Msg_Sem ("architecture name expected", Block_Spec);
+                  Error_Msg_Sem (+Block_Spec, "architecture name expected");
                   return;
                end if;
 
@@ -1010,8 +1011,8 @@ package body Sem is
                   if Get_Identifier (Comp_Arch) /= Get_Identifier (Block_Spec)
                   then
                      Error_Msg_Sem
-                       ("block specification name is different from "
-                        & "component architecture name", Block_Spec);
+                       (+Block_Spec, "block specification name is different "
+                          & "from component architecture name");
                      return;
                   end if;
                end if;
@@ -1027,8 +1028,7 @@ package body Sem is
                   Block_Conf);
                if Design = Null_Iir then
                   Error_Msg_Sem
-                    ("no architecture '" & Image_Identifier (Block_Spec) & "'",
-                     Block_Conf);
+                    (+Block_Conf, "no architecture %i", +Block_Spec);
                   return;
                end if;
                Arch := Get_Library_Unit (Design);
@@ -1208,9 +1208,9 @@ package body Sem is
                           /= Iir_Kind_Association_Element_Open
                         then
                            Error_Msg_Sem
-                             (Disp_Node (Formal)
-                              & " already associated in primary binding",
-                              S_El);
+                             (+S_El,
+                              "%n already associated in primary binding",
+                              +Formal);
                         end if;
                         S_El := Get_Chain (S_El);
                      end loop;
@@ -1603,9 +1603,9 @@ package body Sem is
    begin
       if not Are_Trees_Equal (Subprg, Spec) then
          --  FIXME: should explain why it does not conform ?
-         Error_Msg_Sem ("body of " & Disp_Node (Subprg)
-                          & " does not conform with specification at "
-                          & Disp_Location (Spec), Subprg);
+         Error_Msg_Sem
+           (+Subprg, "body of %n does not conform with specification at %l",
+            (+Subprg, +Spec));
       end if;
    end Check_Conformance_Rules;
 
@@ -1738,8 +1738,8 @@ package body Sem is
             if Nbr_Interfaces = 1 then
                return;
             end if;
-            Error_Msg_Sem ("unary operator must have a single parameter",
-                           Subprg);
+            Error_Msg_Sem
+              (+Subprg, "unary operator must have a single parameter");
          when Name_Mod
            | Name_Rem
            | Name_Op_Mul
@@ -1760,7 +1760,7 @@ package body Sem is
                return;
             end if;
             Error_Msg_Sem
-              ("binary operators must have two parameters", Subprg);
+              (+Subprg, "binary operators must have two parameters");
          when Name_Logical_Operators
            | Name_Xnor =>
             --  LRM08 4.5.2 Operator overloading
@@ -1775,11 +1775,11 @@ package body Sem is
                   return;
                end if;
                Error_Msg_Sem
-                 ("logical operators must have two parameters before vhdl08",
-                  Subprg);
+                 (+Subprg,
+                  "logical operators must have two parameters before vhdl08");
             else
                Error_Msg_Sem
-                 ("logical operators must have two parameters", Subprg);
+                 (+Subprg, "logical operators must have two parameters");
             end if;
          when Name_Op_Plus
            | Name_Op_Minus =>
@@ -1790,15 +1790,15 @@ package body Sem is
                return;
             end if;
             Error_Msg_Sem
-              ("""+"" and ""-"" operators must have 1 or 2 parameters",
-               Subprg);
+              (+Subprg,
+               """+"" and ""-"" operators must have 1 or 2 parameters");
          when others =>
             return;
       end case;
       if Is_Method then
          Error_Msg_Sem
-           (" (the protected object is an implicit parameter of methods)",
-            Subprg);
+           (+Subprg,
+            " (the protected object is an implicit parameter of methods)");
       end if;
    end Check_Operator_Requirements;
 
@@ -1896,10 +1896,10 @@ package body Sem is
             case Get_Kind (Return_Type) is
                when Iir_Kind_File_Type_Definition =>
                   Error_Msg_Sem
-                    ("result subtype cannot denote a file type", Subprg);
+                    (+Subprg, "result subtype cannot denote a file type");
                when Iir_Kind_Protected_Type_Declaration =>
                   Error_Msg_Sem
-                    ("result subtype cannot denote a protected type", Subprg);
+                    (+Subprg, "result subtype cannot denote a protected type");
                when Iir_Kind_Access_Type_Definition
                  | Iir_Kind_Access_Subtype_Definition =>
                   if Vhdl_Std >= Vhdl_08
@@ -1978,10 +1978,8 @@ package body Sem is
       if Spec /= Null_Iir then
          -- SUBPRG is the body of the specification SPEC.
          if Get_Subprogram_Body (Spec) /= Null_Iir then
-            Error_Msg_Sem
-              (Disp_Node (Spec) & " body already defined at "
-                 & Files_Map.Image (Get_Location (Get_Subprogram_Body (Spec))),
-               Subprg);
+            Error_Msg_Sem (+Subprg, "%n body already defined at %l",
+                           (+Spec, +Get_Subprogram_Body (Spec)));
             --  Kill warning.
             Set_Use_Flag (Subprg, True);
          else
@@ -2048,7 +2046,7 @@ package body Sem is
             then
                --  Incoherence: procedures declared in std library are not
                --  expected to suspend.  This is an internal check.
-               Error_Msg_Sem ("unexpected suspendable procedure", Subprg);
+               Error_Msg_Sem (+Subprg, "unexpected suspendable procedure");
             end if;
 
             --  Update purity state of procedure if there are no callees.
@@ -2147,11 +2145,10 @@ package body Sem is
       procedure Error_Wait (Caller : Iir; Callee : Iir) is
       begin
          Error_Msg_Sem
-           (Disp_Node (Caller) & " must not contain wait statement, but calls",
-            Caller);
+           (+Caller, "%n must not contain wait statement, but calls",
+            (1 => +Caller), Cont => True);
          Error_Msg_Sem
-           (Disp_Node (Callee) & " which has (indirectly) a wait statement",
-            Callee);
+           (+Callee, "%n which has (indirectly) a wait statement", +Callee);
       end Error_Wait;
 
       --  Kind of subprg.
@@ -2342,11 +2339,11 @@ package body Sem is
                      --  parameter or member of a formal parameter of
                      --  the subprogram or of any of its parents.
                      Error_Msg_Sem
-                       ("all-sensitized " & Disp_Node (Subprg)
-                          & " can't call " & Disp_Node (Callee), Subprg);
+                       (+Subprg, "all-sensitized %n can't call %n",
+                        (+Subprg, +Callee), Cont => True);
                      Error_Msg_Sem
-                       (" (as this subprogram reads (indirectly) a signal)",
-                        Subprg);
+                       (+Subprg,
+                        " (as this subprogram reads (indirectly) a signal)");
                end case;
             end if;
 
@@ -2620,16 +2617,13 @@ package body Sem is
         (Get_Library (Get_Design_File (Get_Current_Design_Unit)),
          Package_Ident, Decl);
       if Design_Unit = Null_Iir then
-         Error_Msg_Sem ("package '" & Name_Table.Image (Package_Ident)
-                        & "' was not analysed",
-                        Decl);
+         Error_Msg_Sem (+Decl, "package %i was not analysed", +Package_Ident);
          return;
       end if;
       Package_Decl := Get_Library_Unit (Design_Unit);
       if Get_Kind (Package_Decl) /= Iir_Kind_Package_Declaration then
          Error_Msg_Sem
-           ("primary unit '" & Name_Table.Image (Package_Ident)
-            & "' is not a package", Decl);
+           (+Decl, "primary unit %i is not a package", +Package_Ident);
          return;
       end if;
 
@@ -2678,8 +2672,7 @@ package body Sem is
          --  What could be done ?
          return Null_Iir;
       elsif not Is_Uninstantiated_Package (Pkg) then
-         Error_Msg_Sem
-           (Disp_Node (Pkg) & " is not an uninstantiated package", Name);
+         Error_Msg_Sem (+Name, "%n is not an uninstantiated package", +Pkg);
 
          --  What could be done ?
          return Null_Iir;
@@ -2758,7 +2751,7 @@ package body Sem is
               | Iir_Kind_Selected_Name =>
                Name_Prefix := Get_Prefix (Name);
             when others =>
-               Error_Msg_Sem ("use clause allows only selected name", Name);
+               Error_Msg_Sem (+Name, "use clause allows only selected name");
                return;
          end case;
 
@@ -2794,13 +2787,13 @@ package body Sem is
                --  clause denotes an uninstantiated package.
                if Is_Uninstantiated_Package (Prefix) then
                   Error_Msg_Sem
-                    ("use of uninstantiated package is not allowed",
-                     Name_Prefix);
+                    (+Name_Prefix,
+                     "use of uninstantiated package is not allowed");
                   return;
                end if;
             when others =>
                Error_Msg_Sem
-                 ("prefix must designate a package or a library", Prefix);
+                 (+Prefix, "prefix must designate a package or a library");
                return;
          end case;
 
@@ -2846,8 +2839,7 @@ package body Sem is
       Ident := Get_Identifier (Decl);
       Lib := Libraries.Get_Library (Ident, Get_Location (Decl));
       if Lib = Null_Iir then
-         Error_Msg_Sem
-           ("no resource library """ & Name_Table.Image (Ident) & """", Decl);
+         Error_Msg_Sem (+Decl, "no resource library %i", +Ident);
       else
          Set_Library_Declaration (Decl, Lib);
          Sem_Scopes.Add_Name (Lib, Ident, False);
@@ -2865,7 +2857,7 @@ package body Sem is
       Name := Get_Selected_Name (Ref);
       if Get_Kind (Name) /= Iir_Kind_Selected_Name then
          Error_Msg_Sem
-           ("context reference only allows selected names", Name);
+           (+Name, "context reference only allows selected names");
          return;
       end if;
 
@@ -2880,7 +2872,7 @@ package body Sem is
       --  It is an error if a selected name in a context reference does not
       --  denote a context declaration.
       if Get_Kind (Ent) /= Iir_Kind_Context_Declaration then
-         Error_Msg_Sem ("name must denote a context declaration", Name);
+         Error_Msg_Sem (+Name, "name must denote a context declaration");
          Set_Named_Entity (Name, Null_Iir);
          return;
       end if;
@@ -2946,7 +2938,7 @@ package body Sem is
       procedure Error_Work_Prefix (Loc : Iir) is
       begin
          Error_Msg_Sem
-           ("'work' not allowed as prefix in context declaration", Loc);
+           (+Loc, "'work' not allowed as prefix in context declaration");
       end Error_Work_Prefix;
 
       El : Iir;
@@ -2966,7 +2958,7 @@ package body Sem is
                --  defines the library logical name WORK, [...]
                if Get_Identifier (El) = Std_Names.Name_Work then
                   Error_Msg_Sem
-                    ("'library work' not allowed in context declaration", El);
+                    (+El, "'library work' not allowed in context declaration");
                end if;
             when Iir_Kind_Use_Clause =>
                --  LRM08 13.3 Context declarations

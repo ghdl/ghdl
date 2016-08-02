@@ -1463,7 +1463,7 @@ package body Elaboration is
       --  the design entity implied by the entity aspect contains formal ports.
       if Formal_Chain = Null_Iir then
          if Local_Chain /= Null_Iir then
-            Error_Msg_Sem ("cannot create default map aspect", Node);
+            Error_Msg_Sem (+Node, "cannot create default map aspect");
          end if;
          return Null_Iir;
       end if;
@@ -1495,8 +1495,7 @@ package body Elaboration is
                --  its mode and type are not appropriate for such an
                --  association.
                --  FIXME: mode/type check.
-               Error_Msg_Sem
-                 ("cannot associate local " & Disp_Node (Local), Node);
+               Error_Msg_Sem (+Node, "cannot associate local %n", +Local);
                exit;
             end if;
             if Assoc_List (Pos) /= Null_Iir then
@@ -2279,7 +2278,7 @@ package body Elaboration is
       --  and must evaluate to a non-negative value.
 
       if Time < 0 then
-         Error_Msg_Sem ("time must be non-negative", Decl);
+         Error_Msg_Sem (+Decl, "time must be non-negative");
       end if;
 
       --  LRM93 §12.3.2.3

@@ -169,7 +169,7 @@ package body Ieee.Vital_Timing is
 
       exception
          when Ill_Formed =>
-            Error_Msg_Sem ("package ieee.vital_timing is ill-formed", Pkg);
+            Error_Msg_Sem (+Pkg, "package ieee.vital_timing is ill-formed");
 
             Vital_Level0_Attribute := Null_Iir;
             Vital_Level1_Attribute := Null_Iir;
@@ -185,11 +185,12 @@ package body Ieee.Vital_Timing is
             VitalDelayArrayType01ZX := Null_Iir;
    end Extract_Declarations;
 
-   procedure Error_Vital (Msg : String; Loc : Iir) renames Error_Msg_Sem;
-   procedure Error_Vital (Msg : String; Loc : Location_Type)
-     renames Error_Msg_Sem;
+   procedure Error_Vital (Loc : Location_Type; Msg : String) is
+   begin
+      Error_Msg_Sem (Loc, Msg);
+   end Error_Vital;
 
-   procedure Warning_Vital (Msg : String; Loc : Iir) is
+   procedure Warning_Vital (Loc : Iir; Msg : String) is
    begin
       Warning_Msg_Sem (Warnid_Vital_Generic, +Loc, Msg);
    end Warning_Vital;
@@ -204,8 +205,8 @@ package body Ieee.Vital_Timing is
                    /= Vital_Level0_Attribute)
       then
          Error_Vital
-           ("first declaration must be the VITAL attribute specification",
-            Decl);
+           (+Decl,
+            "first declaration must be the VITAL attribute specification");
          return;
       end if;
 
@@ -217,8 +218,8 @@ package body Ieee.Vital_Timing is
         or else Get_Named_Entity (Expr) /= Boolean_True
       then
          Error_Vital
-           ("the expression in the VITAL_Level0 attribute specification shall "
-            & "be the Boolean literal TRUE", Decl);
+           (+Decl, "the expression in the VITAL_Level0 attribute "
+              & "specification shall be the Boolean literal TRUE");
       end if;
 
       --  IEEE 1076.4 4.1
@@ -230,8 +231,8 @@ package body Ieee.Vital_Timing is
            | Tok_Architecture =>
             null;
          when others =>
-            Error_Vital ("VITAL attribute specification does not decorate the "
-                         & "enclosing entity or architecture", Decl);
+            Error_Vital (+Decl, "VITAL attribute specification does not "
+                           & "decorate the enclosing entity or architecture");
       end case;
    end Check_Level0_Attribute_Specification;
 
@@ -249,13 +250,13 @@ package body Ieee.Vital_Timing is
       --  underscore characters.
       Image (Get_Identifier (Decl));
       if Nam_Buffer (1) = '/' then
-         Error_Vital ("VITAL entity port shall not be an extended identifier",
-                      Decl);
+         Error_Vital
+           (+Decl, "VITAL entity port shall not be an extended identifier");
       end if;
       for I in 1 .. Nam_Length loop
          if Nam_Buffer (I) = '_' then
             Error_Vital
-              ("VITAL entity port shall not contain underscore", Decl);
+              (+Decl, "VITAL entity port shall not contain underscore");
             exit;
          end if;
       end loop;
@@ -264,7 +265,7 @@ package body Ieee.Vital_Timing is
       --  A port that is declared in an entity port declaration shall not be
       --  of mode LINKAGE.
       if Get_Mode (Decl) = Iir_Linkage_Mode then
-         Error_Vital ("VITAL entity port shall not be of mode LINKAGE", Decl);
+         Error_Vital (+Decl, "VITAL entity port shall not be of mode LINKAGE");
       end if;
 
       --  IEEE 1076.4 4.3.1
@@ -279,8 +280,8 @@ package body Ieee.Vital_Timing is
       if Base_Type = Std_Logic_Vector_Type then
          if Get_Resolution_Indication (Atype) /= Null_Iir then
             Error_Vital
-              ("VITAL array port type cannot override resolution function",
-               Decl);
+              (+Decl,
+               "VITAL array port type cannot override resolution function");
          end if;
          --  FIXME: is an unconstrained array port allowed ?
          --  FIXME: what about staticness of the index_constraint ?
@@ -289,16 +290,16 @@ package body Ieee.Vital_Timing is
            or else Get_Parent (Type_Decl) /= Std_Logic_1164_Pkg
          then
             Error_Vital
-              ("VITAL entity port type mark shall be one of Std_Logic_1164",
-               Decl);
+              (+Decl,
+               "VITAL entity port type mark shall be one of Std_Logic_1164");
          end if;
       else
-         Error_Vital ("VITAL port type must be Std_Logic_Vector or Std_Ulogic",
-                      Decl);
+         Error_Vital
+           (+Decl, "VITAL port type must be Std_Logic_Vector or Std_Ulogic");
       end if;
 
       if Get_Guarded_Signal_Flag (Decl) then
-         Error_Vital ("VITAL entity port cannot be guarded", Decl);
+         Error_Vital (+Decl, "VITAL entity port cannot be guarded");
       end if;
    end Check_Entity_Port_Declaration;
 
@@ -318,7 +319,7 @@ package body Ieee.Vital_Timing is
       Loc : Location_Type;
    begin
       Loc := Get_Location (Gen_Decl);
-      Error_Vital (Str, Loc + Location_Type (Gen_Name_Pos - 1));
+      Error_Vital (Loc + Location_Type (Gen_Name_Pos - 1), Str);
    end Error_Vital_Name;
 
    --  Check the next sub-string in the generic name is a port.
@@ -356,9 +357,8 @@ package body Ieee.Vital_Timing is
          end if;
       end if;
       if Res = Null_Iir then
-         Warning_Vital ("'" & Nam_Buffer (1 .. Nam_Length)
-                        & "' is not a port name (in VITAL generic name)",
-                        Gen_Decl);
+         Warning_Vital (Gen_Decl, "'" & Nam_Buffer (1 .. Nam_Length)
+                          & "' is not a port name (in VITAL generic name)");
       end if;
       return Res;
    end Check_Port;
@@ -379,8 +379,8 @@ package body Ieee.Vital_Timing is
               | Iir_Inout_Mode =>
                null;
             when others =>
-               Error_Vital ("'" & Nam_Buffer (1 .. Nam_Length)
-                            & "' must be an input port", Gen_Decl);
+               Error_Vital (+Gen_Decl, "'" & Nam_Buffer (1 .. Nam_Length)
+                            & "' must be an input port");
          end case;
       end if;
       return Res;
@@ -403,8 +403,8 @@ package body Ieee.Vital_Timing is
               | Iir_Buffer_Mode =>
                null;
             when others =>
-               Error_Vital ("'" & Nam_Buffer (1 .. Nam_Length)
-                            & "' must be an output port", Gen_Decl);
+               Error_Vital (+Gen_Decl, "'" & Nam_Buffer (1 .. Nam_Length)
+                            & "' must be an output port");
          end case;
       end if;
       return Res;
@@ -645,8 +645,8 @@ package body Ieee.Vital_Timing is
          when others =>
             null;
       end case;
-      Error_Vital ("type of timing generic is not a VITAL delay type",
-                   Gen_Decl);
+      Error_Vital (+Gen_Decl,
+                   "type of timing generic is not a VITAL delay type");
       return Timing_Type_Bad;
    end Get_Timing_Generic_Type_Kind;
 
@@ -691,16 +691,16 @@ package body Ieee.Vital_Timing is
             when Timing_Type_Trans_Scalar =>
                if Is_Simple then
                   Error_Vital
-                    ("VITAL simple scalar timing type expected", Gen_Decl);
+                    (+Gen_Decl, "VITAL simple scalar timing type expected");
                   return;
                end if;
             when others =>
-               Error_Vital ("VITAL scalar timing type expected", Gen_Decl);
+               Error_Vital (+Gen_Decl, "VITAL scalar timing type expected");
                return;
          end case;
       elsif Len >= Port_Length_Unknown then
          if Is_Scalar then
-            Error_Vital ("VITAL scalar timing type expected", Gen_Decl);
+            Error_Vital (+Gen_Decl, "VITAL scalar timing type expected");
             return;
          end if;
 
@@ -710,17 +710,17 @@ package body Ieee.Vital_Timing is
             when Timing_Type_Trans_Vector =>
                if Is_Simple then
                   Error_Vital
-                    ("VITAL simple vector timing type expected", Gen_Decl);
+                    (+Gen_Decl, "VITAL simple vector timing type expected");
                   return;
                end if;
             when others =>
-               Error_Vital ("VITAL vector timing type expected", Gen_Decl);
+               Error_Vital (+Gen_Decl, "VITAL vector timing type expected");
                return;
          end case;
          Len1 := Get_Timing_Generic_Type_Length;
          if Len1 /= Len then
-            Error_Vital ("length of port and VITAL vector timing subtype "
-                         & "does not match", Gen_Decl);
+            Error_Vital (+Gen_Decl, "length of port and VITAL vector timing "
+                           & "subtype does not match");
          end if;
       end if;
    end Check_Vital_Delay_Type;
@@ -757,16 +757,16 @@ package body Ieee.Vital_Timing is
             when Timing_Type_Trans_Scalar =>
                if Is_Simple then
                   Error_Vital
-                    ("VITAL simple scalar timing type expected", Gen_Decl);
+                    (+Gen_Decl, "VITAL simple scalar timing type expected");
                   return;
                end if;
             when others =>
-               Error_Vital ("VITAL scalar timing type expected", Gen_Decl);
+               Error_Vital (+Gen_Decl, "VITAL scalar timing type expected");
                return;
          end case;
       elsif Len1 >= Port_Length_Unknown or Len2 >= Port_Length_Unknown then
          if Is_Scalar then
-            Error_Vital ("VITAL scalar timing type expected", Gen_Decl);
+            Error_Vital (+Gen_Decl, "VITAL scalar timing type expected");
             return;
          end if;
          case Kind is
@@ -775,11 +775,11 @@ package body Ieee.Vital_Timing is
             when Timing_Type_Trans_Vector =>
                if Is_Simple then
                   Error_Vital
-                    ("VITAL simple vector timing type expected", Gen_Decl);
+                    (+Gen_Decl, "VITAL simple vector timing type expected");
                   return;
                end if;
             when others =>
-               Error_Vital ("VITAL vector timing type expected", Gen_Decl);
+               Error_Vital (+Gen_Decl, "VITAL vector timing type expected");
                return;
          end case;
          if Len1 = Port_Length_Scalar then
@@ -794,8 +794,8 @@ package body Ieee.Vital_Timing is
          end if;
          Lenp := Get_Timing_Generic_Type_Length;
          if Lenp /= Len1 * Len2 then
-            Error_Vital ("length of port and VITAL vector timing subtype "
-                         & "does not match", Gen_Decl);
+            Error_Vital (+Gen_Decl, "length of port and VITAL vector timing "
+                           & "subtype does not match");
          end if;
       end if;
    end Check_Vital_Delay_Type;
@@ -810,7 +810,7 @@ package body Ieee.Vital_Timing is
       --  It is an error for a model to use a timing generic prefix to begin
       --  the simple name of an entity generic that is not a timing generic.
       if Nam_Length < Length or Nam_Buffer (Length) /= '_' then
-         Error_Vital ("invalid use of a VITAL timing generic prefix", Decl);
+         Error_Vital (+Decl, "invalid use of a VITAL timing generic prefix");
          return False;
       end if;
       Gen_Name_Pos := Length + 1;
@@ -1067,8 +1067,8 @@ package body Ieee.Vital_Timing is
 
          if Tpd_Decl = Null_Iir then
             Error_Vital
-              ("no matching 'tpd' generic for VITAL 'tbpd' timing generic",
-               Decl);
+              (+Decl,
+               "no matching 'tpd' generic for VITAL 'tbpd' timing generic");
          else
             --  IEEE 1076.4  4.3.2.1.3.14  Biased propagation delay
             --  Furthermore, the type of the biased propagation generic shall
@@ -1076,10 +1076,10 @@ package body Ieee.Vital_Timing is
             if not Sem.Are_Trees_Equal (Get_Type (Decl), Get_Type (Tpd_Decl))
             then
                Error_Vital
-                 ("type of VITAL 'tbpd' generic mismatch type of "
-                  & "'tpd' generic", Decl);
+                 (+Decl, "type of VITAL 'tbpd' generic mismatch type of "
+                  & "'tpd' generic");
                Error_Vital
-                 ("(corresponding 'tpd' timing generic)", Tpd_Decl);
+                 (+Tpd_Decl, "(corresponding 'tpd' timing generic)");
             end if;
          end if;
       end;
@@ -1135,8 +1135,9 @@ package body Ieee.Vital_Timing is
             if Offset - S = Port'Length
               and then Nam_Buffer (S .. Offset - 1) = Port
             then
-               Error_Vital ("clock port name of 'ticd' VITAL generic must not"
-                            & " appear here", El);
+               Error_Vital
+                 (+El, "clock port name of 'ticd' VITAL generic must not"
+                    & " appear here");
             end if;
          end Check_Not_Clock;
       begin
@@ -1244,7 +1245,7 @@ package body Ieee.Vital_Timing is
       if Id = InstancePath_Id then
          if Get_Base_Type (Get_Type (Decl)) /= String_Type_Definition then
             Error_Vital
-              ("InstancePath VITAL generic must be of type String", Decl);
+              (+Decl, "InstancePath VITAL generic must be of type String");
          end if;
          return;
       elsif Id = TimingChecksOn_Id
@@ -1253,13 +1254,13 @@ package body Ieee.Vital_Timing is
       then
          if Get_Type (Decl) /= Boolean_Type_Definition then
             Error_Vital
-              (Image (Id) & " VITAL generic must be of type Boolean", Decl);
+              (+Decl, Image (Id) & " VITAL generic must be of type Boolean");
          end if;
          return;
       end if;
 
       if Is_Warning_Enabled (Warnid_Vital_Generic) then
-         Warning_Vital (Disp_Node (Decl) & " is not a VITAL generic", Decl);
+         Warning_Vital (Decl, Disp_Node (Decl) & " is not a VITAL generic");
       end if;
    end Check_Entity_Generic_Declaration;
 
@@ -1280,15 +1281,16 @@ package body Ieee.Vital_Timing is
       Check_Level0_Attribute_Specification (Decl);
       Decl := Get_Chain (Decl);
       if Decl /= Null_Iir then
-         Error_Vital ("VITAL entity declarative part must only contain the "
-                      & "attribute specification", Decl);
+         Error_Vital (+Decl, "VITAL entity declarative part must only contain "
+                      & "the attribute specification");
       end if;
 
       --  IEEE 1076.4 4.3.1
       --  No statements are allowed in the entity statement part.
       Decl := Get_Concurrent_Statement_Chain (Ent);
       if Decl /= Null_Iir then
-         Error_Vital ("VITAL entity must not have concurrent statement", Decl);
+         Error_Vital
+           (+Decl, "VITAL entity must not have concurrent statement");
       end if;
 
       --  Check ports.
@@ -1336,8 +1338,8 @@ package body Ieee.Vital_Timing is
       --  The entity associated with a Level 0 architecture shall be a VITAL
       --  Level 0 entity.
       if not Is_Vital_Level0 (Iirs_Utils.Get_Entity (Arch)) then
-         Error_Vital ("entity associated with a VITAL level 0 architecture "
-                      & "shall be a VITAL level 0 entity", Arch);
+         Error_Vital (+Arch, "entity associated with a VITAL level 0 "
+                        & "architecture shall be a VITAL level 0 entity");
       end if;
 
       --  VITAL_Level_0_architecture_declarative_part ::=
@@ -1359,7 +1361,7 @@ package body Ieee.Vital_Timing is
             Check_Vital_Level0_Architecture (Lib_Unit);
          when others =>
             Error_Vital
-              ("only entity or architecture can be VITAL_Level0", Lib_Unit);
+              (+Lib_Unit, "only entity or architecture can be VITAL_Level0");
       end case;
    end Check_Vital_Level0;
 
@@ -1369,7 +1371,7 @@ package body Ieee.Vital_Timing is
    begin
       Arch := Get_Library_Unit (Unit);
       if Get_Kind (Arch) /= Iir_Kind_Architecture_Body then
-         Error_Vital ("only architecture can be VITAL_Level1", Arch);
+         Error_Vital (+Arch, "only architecture can be VITAL_Level1");
          return;
       end if;
       --  FIXME: todo

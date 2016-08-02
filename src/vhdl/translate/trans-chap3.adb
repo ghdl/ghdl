@@ -298,8 +298,7 @@ package body Trans.Chap3 is
       else
          if Translation.Flag_Only_32b then
             Error_Msg_Sem
-              ("range of " & Disp_Node (Get_Type_Declarator (St))
-               & " is too large", St);
+              (+St, "range of %n is too large", +Get_Type_Declarator (St));
             return Precision_32;
          end if;
          return Precision_64;

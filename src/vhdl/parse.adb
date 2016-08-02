@@ -5845,7 +5845,7 @@ package body Parse is
          if Label /= Null_Identifier then
             if Flags.Vhdl_Std = Vhdl_87 then
                Error_Msg_Sem
-                 ("this statement can't have a label in vhdl 87", Stmt);
+                 (+Stmt, "this statement can't have a label in vhdl 87");
             else
                Set_Label (Stmt, Label);
             end if;
@@ -8147,8 +8147,9 @@ package body Parse is
                   --  unit that is a context declaration is not empty.
                   if Get_Context_Items (Unit) /= Null_Iir then
                      Error_Msg_Sem
-                       ("context declaration does not allow context "
-                          & "clauses before it", Get_Context_Items (Unit));
+                       (+Get_Context_Items (Unit),
+                        "context declaration does not allow context "
+                          & "clauses before it");
                   end if;
 
                   return;

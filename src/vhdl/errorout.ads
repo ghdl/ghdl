@@ -123,6 +123,8 @@ package Errorout is
    --  %c: character
    --  %t: token
    --  %l: location
+   --  %n: node name
+   --  TODO: %m: mode, %y: type of, %s: disp_subprg
    function "+" (V : Iir) return Earg_Type;
    function "+" (V : Location_Type) return Earg_Type;
    function "+" (V : Name_Id) return Earg_Type;
@@ -131,6 +133,7 @@ package Errorout is
 
    --  Convert location.
    function "+" (L : Iir) return Location_Type;
+   function "+" (L : PSL_Node) return Location_Type;
 
    --  Pass that detected the error.
    type Report_Origin is
@@ -179,12 +182,18 @@ package Errorout is
    procedure Warning_Msg_Sem
      (Id : Msgid_Warnings; Loc : Location_Type; Msg: String);
 
-   procedure Error_Msg_Sem (Msg: String; Loc: Iir);
-   procedure Error_Msg_Sem (Msg: String; Loc: PSL_Node);
-   procedure Error_Msg_Sem (Msg: String; Loc: Location_Type);
+   procedure Error_Msg_Sem (Loc: Location_Type;
+                            Msg: String;
+                            Args : Earg_Arr := No_Eargs;
+                            Cont : Boolean := False);
+   procedure Error_Msg_Sem
+     (Loc: Location_Type; Msg: String; Arg1 : Earg_Type);
+   procedure Error_Msg_Sem_1 (Msg: String; Loc : PSL_Node);
 
    --  Like Error_Msg_Sem, but a warning if -frelaxed or --std=93c.
-   procedure Error_Msg_Sem_Relaxed (Loc : Iir; Msg : String);
+   procedure Error_Msg_Sem_Relaxed (Loc : Iir;
+                                    Msg : String;
+                                    Args : Earg_Arr := No_Eargs);
 
    -- Disp a message during elaboration (or configuration).
    procedure Error_Msg_Elab (Msg: String);
