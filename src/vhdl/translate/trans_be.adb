@@ -15,6 +15,7 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+with Types; use Types;
 with Iirs; use Iirs;
 with Disp_Tree;
 with Disp_Vhdl;
@@ -40,7 +41,8 @@ package body Trans_Be is
 
       --  Semantic analysis.
       if Flags.Verbose then
-         Put_Line ("analyze " & Disp_Node (Lib));
+         Report_Msg (Msgid_Note, Semantic, No_Location,
+                     "analyse %n", (1 => +Lib));
       end if;
       Sem.Semantic (Unit);
 
@@ -68,7 +70,8 @@ package body Trans_Be is
       --  Canonalisation.
       ------------------
       if Flags.Verbose then
-         Put_Line ("canonicalize " & Disp_Node (Lib));
+         Report_Msg (Msgid_Note, Semantic, No_Location,
+                     "canonicalize %n", (1 => +Lib));
       end if;
 
       Canon.Canonicalize (Unit);

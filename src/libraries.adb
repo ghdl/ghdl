@@ -53,10 +53,15 @@ package body Libraries is
       Report_Msg (Msgid_Error, Library, No_Location, Msg);
    end Error_Lib_Msg;
 
-   --  Report a warning message.
-   procedure Warning_Lib_Msg (Msg : String) is
+   procedure Error_Lib_Msg (Msg : String; Arg1 : Earg_Type) is
    begin
-      Report_Msg (Msgid_Warning, Library, No_Location, Msg);
+      Report_Msg (Msgid_Error, Library, No_Location, Msg, (1 => Arg1));
+   end Error_Lib_Msg;
+
+   --  Report a warning message.
+   procedure Warning_Lib_Msg (Msg : String; Args : Earg_Arr := No_Eargs) is
+   begin
+      Report_Msg (Msgid_Warning, Library, No_Location, Msg, Args);
    end Warning_Lib_Msg;
 
    --  Initialize pathes table.
@@ -1010,10 +1015,8 @@ package body Libraries is
                         "redefinition of a library unit in "
                           & "same design file:");
                      Warning_Msg_Sem
-                       (Warnid_Library, +Unit,
-                        Disp_Node (Library_Unit) & " defined at "
-                          & Disp_Location (Library_Unit) & " is now "
-                          & Disp_Node (New_Library_Unit));
+                       (Warnid_Library, +Unit, "%n defined at %l is now %n",
+                        (+Library_Unit, +Library_Unit, +New_Library_Unit));
                   end if;
                else
                   --  Free the stub.
@@ -1030,15 +1033,12 @@ package body Libraries is
                   then
                      Warning_Lib_Msg
                        ("changing definition of a library unit:");
-                     Warning_Lib_Msg (Disp_Node (Library_Unit) & " is now "
-                                        & Disp_Node (New_Library_Unit));
+                     Warning_Lib_Msg
+                       ("%n is now %n", (+Library_Unit, +New_Library_Unit));
                   end if;
                   Warning_Lib_Msg
-                    ("library unit '"
-                     & Iirs_Utils.Image_Identifier (Library_Unit)
-                     & "' was also defined in file '"
-                     & Image (Get_Design_File_Filename (Design_File))
-                     & ''');
+                    ("library unit %i was also defined in file %i",
+                     (+Library_Unit, +Get_Design_File_Filename (Design_File)));
                end if;
             end if;
             exit;
@@ -1541,8 +1541,7 @@ package body Libraries is
         (Get_Design_File_Directory (Design_File),
          Get_Design_File_Filename (Design_File));
       if Fe = No_Source_File_Entry then
-         Error_Lib_Msg
-           ("cannot load " & Disp_Node (Get_Library_Unit (Design_Unit)));
+         Error_Lib_Msg ("cannot load %n", +Get_Library_Unit (Design_Unit));
          raise Compilation_Error;
       end if;
       Set_File (Fe);

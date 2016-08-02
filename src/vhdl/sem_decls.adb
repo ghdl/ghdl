@@ -3076,7 +3076,7 @@ package body Sem_Decls is
                     and then not Is_Second_Subprogram_Specification (El)
                   then
                      Warning_Msg_Sem (Warnid_Unused, +El,
-                                      Disp_Node (El) & " is never referenced");
+                                      "%n is never referenced", +El);
                   end if;
                when others =>
                   null;

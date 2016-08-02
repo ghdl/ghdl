@@ -18,7 +18,6 @@
 with Ortho_Nodes; use Ortho_Nodes;
 with Ortho_Ident; use Ortho_Ident;
 with Flags; use Flags;
-with Ada.Text_IO;
 with Types; use Types;
 with Errorout; use Errorout;
 with Name_Table; -- use Name_Table;
@@ -229,11 +228,13 @@ package body Translation is
 
       El := Get_Library_Unit (Unit);
       if Flags.Verbose then
-         Ada.Text_IO.Put ("translating ");
          if Main then
-            Ada.Text_IO.Put ("(with code generation) ");
+            Report_Msg (Msgid_Note, Semantic, No_Location,
+                        "translating (with code generation) %n", (1 => +El));
+         else
+            Report_Msg (Msgid_Note, Semantic, No_Location,
+                        "translating %n", (1 => +El));
          end if;
-         Ada.Text_IO.Put_Line (Disp_Node (El));
       end if;
 
       --  Create the prefix for identifiers.

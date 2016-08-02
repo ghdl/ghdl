@@ -2460,16 +2460,17 @@ package body Sem is
                      pragma Assert (Callees /= Null_Iir_List);
                      Warning_Msg_Sem
                        (Warnid_Delayed_Checks, +El,
-                        "can't assert that all calls in " & Disp_Node (El)
-                          & " are pure or have not wait; "
-                          & "will be checked at elaboration");
+                        "can't assert that all calls in %n"
+                          & " are pure or have not wait;"
+                          & " will be checked at elaboration",
+                        +El, Cont => True);
                      Callee := Get_Nth_Element (Callees, 0);
                      --  FIXME: could improve this message by displaying the
                      --  chain of calls until the first subprograms in
                      --  unknown state.
                      Warning_Msg_Sem
                        (Warnid_Delayed_Checks, +Callee,
-                        "(first such call is to " & Disp_Node (Callee) & ")");
+                        "(first such call is to %n)", +Callee);
                   end if;
                end if;
             when Iir_Kind_Sensitized_Process_Statement =>
@@ -2478,8 +2479,8 @@ package body Sem is
                   if Emit_Warnings then
                      Warning_Msg_Sem
                        (Warnid_Delayed_Checks, +El,
-                        "can't assert that " & Disp_Node (El)
-                          & " has not wait; will be checked at elaboration");
+                        "can't assert that %n has not wait; "
+                          & "will be checked at elaboration", +El);
                   end if;
                end if;
             when others =>
@@ -2629,9 +2630,8 @@ package body Sem is
 
       --  Emit a warning is a body is not necessary.
       if not Get_Need_Body (Package_Decl) then
-         Warning_Msg_Sem
-           (Warnid_Body, +Decl,
-            Disp_Node (Package_Decl) & " does not require a body");
+         Warning_Msg_Sem (Warnid_Body, +Decl,
+                          "%n does not require a body", +Package_Decl);
       end if;
 
       Set_Package (Decl, Package_Decl);

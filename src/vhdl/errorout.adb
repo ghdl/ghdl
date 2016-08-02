@@ -454,19 +454,43 @@ package body Errorout is
       raise Option_Error;
    end Error_Msg_Option;
 
-   procedure Warning_Msg_Sem
-     (Id : Msgid_Warnings; Loc : Location_Type; Msg: String) is
+   procedure Warning_Msg_Sem (Id : Msgid_Warnings;
+                              Loc : Location_Type;
+                              Msg: String;
+                              Args : Earg_Arr := No_Eargs;
+                              Cont : Boolean := False) is
    begin
       if Flags.Flag_Only_Elab_Warnings then
          return;
       end if;
-      Report_Msg (Id, Semantic, Loc, Msg);
+      Report_Msg (Id, Semantic, Loc, Msg, Args, Cont);
    end Warning_Msg_Sem;
 
-   procedure Warning_Msg_Elab
-     (Id : Msgid_Warnings; Loc : Iir; Msg: String; Cont : Boolean := False) is
+   procedure Warning_Msg_Sem (Id : Msgid_Warnings;
+                              Loc : Location_Type;
+                              Msg: String;
+                              Arg1 : Earg_Type;
+                              Cont : Boolean := False) is
    begin
-      Report_Msg (Id, Elaboration, Get_Location_Safe (Loc), Msg, Cont => Cont);
+      Warning_Msg_Sem (Id, Loc, Msg, Earg_Arr'(1 => Arg1), Cont);
+   end Warning_Msg_Sem;
+
+   procedure Warning_Msg_Elab (Id : Msgid_Warnings;
+                               Loc : Iir;
+                               Msg: String;
+                               Arg1 : Earg_Type;
+                               Cont : Boolean := False) is
+   begin
+      Report_Msg (Id, Elaboration, +Loc, Msg, Earg_Arr'(1 => Arg1), Cont);
+   end Warning_Msg_Elab;
+
+   procedure Warning_Msg_Elab (Id : Msgid_Warnings;
+                               Loc : Iir;
+                               Msg: String;
+                               Args : Earg_Arr := No_Eargs;
+                               Cont : Boolean := False) is
+   begin
+      Report_Msg (Id, Elaboration, +Loc, Msg, Args, Cont);
    end Warning_Msg_Elab;
 
    -- Disp a message during scan.
@@ -570,14 +594,28 @@ package body Errorout is
    end Error_Msg_Sem_Relaxed;
 
    -- Disp a message during elaboration.
-   procedure Error_Msg_Elab (Msg: String) is
+   procedure Error_Msg_Elab
+     (Msg: String; Args : Earg_Arr := No_Eargs) is
    begin
-      Report_Msg (Msgid_Error, Elaboration, No_Location, Msg);
+      Report_Msg (Msgid_Error, Elaboration, No_Location, Msg, Args);
    end Error_Msg_Elab;
 
-   procedure Error_Msg_Elab (Loc : Iir; Msg: String) is
+   procedure Error_Msg_Elab
+     (Msg: String; Arg1 : Earg_Type) is
    begin
-      Report_Msg (Msgid_Error, Elaboration, Get_Location_Safe (Loc), Msg);
+      Error_Msg_Elab (Msg, Earg_Arr'(1 => Arg1));
+   end Error_Msg_Elab;
+
+   procedure Error_Msg_Elab
+     (Loc: Iir; Msg: String; Args : Earg_Arr := No_Eargs) is
+   begin
+      Report_Msg (Msgid_Error, Elaboration, +Loc, Msg, Args);
+   end Error_Msg_Elab;
+
+   procedure Error_Msg_Elab
+     (Loc: Iir; Msg: String; Arg1 : Earg_Type) is
+   begin
+      Error_Msg_Elab (Loc, Msg, Earg_Arr'(1 => Arg1));
    end Error_Msg_Elab;
 
    -- Disp a bug message.

@@ -1506,9 +1506,9 @@ package body Sem_Stmts is
             if Is_Warning_Enabled (Warnid_Default_Binding)
               and then not Flags.Flag_Elaborate
             then
-               Warning_Msg_Sem (Warnid_Default_Binding, +Stmt,
-                                "no default binding for instantiation of "
-                                  & Disp_Node (Decl));
+               Warning_Msg_Sem
+                 (Warnid_Default_Binding, +Stmt,
+                  "no default binding for instantiation of %n", +Decl);
                Explain_No_Visible_Entity (Decl);
             end if;
          elsif Flags.Flag_Elaborate

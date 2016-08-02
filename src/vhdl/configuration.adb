@@ -67,11 +67,11 @@ package body Configuration is
       --  May be enabled to debug dependency construction.
       if False then
          if From = Null_Iir then
-            Report_Msg (Msgid_Note, Elaboration, Get_Location (Unit),
-                        Disp_Node (Unit) & " added");
+            Report_Msg (Msgid_Note, Elaboration, +Unit,
+                        "%n added", (1 => +Unit));
          else
-            Report_Msg (Msgid_Note, Elaboration, Get_Location (From),
-                        Disp_Node (Unit) & " added by " & Disp_Node (From));
+            Report_Msg (Msgid_Note, Elaboration, +From,
+                        "%n added by %n", (+Unit, +From));
          end if;
       end if;
 
@@ -198,10 +198,9 @@ package body Configuration is
                   --  LIB_UNIT requires a body.
                   if Bod = Null_Iir then
                      Error_Msg_Elab
-                       (Lib_Unit, "body of " & Disp_Node (Lib_Unit)
-                          & " was never analyzed");
+                       (Lib_Unit, "body of %n was never analyzed", +Lib_Unit);
                   elsif Get_Date (Bod) < Get_Date (Unit) then
-                     Error_Msg_Elab (Disp_Node (Bod) & " is outdated");
+                     Error_Msg_Elab (Bod, "%n is outdated", +Bod);
                      Bod := Null_Iir;
                   end if;
                end if;
@@ -307,9 +306,8 @@ package body Configuration is
                      Id := Get_Identifier (Arch);
                      Arch := Load_Secondary_Unit (Entity, Id, Aspect);
                      if Arch = Null_Iir then
-                        Error_Msg_Elab
-                          ("cannot find architecture " & Name_Table.Image (Id)
-                           & " of " & Disp_Node (Entity_Lib));
+                        Error_Msg_Elab ("cannot find architecture %i of %n",
+                                        (+Id, +Entity_Lib));
                         return;
                      else
                         Set_Architecture (Aspect, Get_Library_Unit (Arch));
@@ -322,8 +320,8 @@ package body Configuration is
             else
                Arch := Get_Latest_Architecture (Entity_Lib);
                if Arch = Null_Iir then
-                  Error_Msg_Elab (Aspect, "no architecture in library for "
-                                  & Disp_Node (Entity_Lib));
+                  Error_Msg_Elab (Aspect, "no architecture in library for %n",
+                                  +Entity_Lib);
                   return;
                end if;
                Arch := Get_Design_Unit (Arch);
@@ -372,8 +370,7 @@ package body Configuration is
             --  its declaration includes a default expression.
             if Get_Default_Value (Port) = Null_Iir then
                if Loc /= Null_Iir then
-                  Error_Msg_Elab
-                    (Loc, "IN " & Disp_Node (Port) & " must be connected");
+                  Error_Msg_Elab (Loc, "IN %n must be connected", +Port);
                end if;
                return True;
             end if;
@@ -390,8 +387,8 @@ package body Configuration is
                           /= Fully_Constrained)
             then
                if Loc /= Null_Iir then
-                  Error_Msg_Elab (Loc, "unconstrained " & Disp_Node (Port)
-                                  & " must be connected");
+                  Error_Msg_Elab
+                    (Loc, "unconstrained %n must be connected", +Port);
                end if;
                return True;
             end if;
@@ -430,12 +427,11 @@ package body Configuration is
               and then not Get_Artificial_Flag (Assoc)
             then
                Warning_Msg_Elab
-                 (Warnid_Binding, Assoc,
-                  Disp_Node (Formal) & " of " & Disp_Node (Get_Parent (Formal))
-                    & " is not bound", Cont => True);
+                 (Warnid_Binding, Assoc, "%n of %n is not bound",
+                  (+Formal, +Get_Parent (Formal)), Cont => True);
                Warning_Msg_Elab
                  (Warnid_Binding, Current_Configuration,
-                  "(in " & Disp_Node (Current_Configuration) & ")");
+                  "(in %n)", +Current_Configuration);
             end if;
          end if;
          Assoc := Get_Chain (Assoc);
@@ -525,10 +521,10 @@ package body Configuration is
             Inst := Get_First_Element (Get_Instantiation_List (Conf));
             Warning_Msg_Elab
               (Warnid_Binding, Conf,
-               Disp_Node (Inst) & " is not bound", Cont => True);
+               "%n is not bound", +Inst, Cont => True);
             Warning_Msg_Elab
               (Warnid_Binding, Current_Configuration,
-               "(in " & Disp_Node (Current_Configuration) & ")");
+               "(in %n)", +Current_Configuration);
          end if;
          return;
       end if;
@@ -596,10 +592,8 @@ package body Configuration is
             if Secondary_Id /= Null_Identifier then
                Unit := Find_Secondary_Unit (Unit, Secondary_Id);
                if Unit = Null_Iir then
-                  Error_Msg_Elab
-                    ("cannot find architecture "
-                     & Name_Table.Image (Secondary_Id)
-                     & " of " & Disp_Node (Lib_Unit));
+                  Error_Msg_Elab ("cannot find architecture %i of %n",
+                                  (+Secondary_Id, +Lib_Unit));
                   return Null_Iir;
                end if;
             else
@@ -609,9 +603,8 @@ package body Configuration is
                   Arch_Unit := Get_Latest_Architecture (Lib_Unit);
                   if Arch_Unit = Null_Iir then
                      Error_Msg_Elab
-                       (Disp_Node (Lib_Unit)
-                        & " has no architecture in library "
-                        & Name_Table.Image (Get_Identifier (Work_Library)));
+                       ("%n has no architecture in library %i",
+                        (+Lib_Unit, +Work_Library));
                      return Null_Iir;
                   end if;
                   Unit := Get_Design_Unit (Arch_Unit);
@@ -703,14 +696,13 @@ package body Configuration is
          end case;
       end Allow_Generic_Override;
 
-      procedure Error (Msg : String; Loc : Iir) is
+      procedure Error (Loc : Iir; Msg : String; Arg1 : Earg_Type) is
       begin
          if not Has_Error then
-            Error_Msg_Elab
-              (Disp_Node (Entity) & " cannot be at the top of a design");
+            Error_Msg_Elab ("%n cannot be at the top of a design", +Entity);
             Has_Error := True;
          end if;
-         Error_Msg_Elab (Loc, Msg);
+         Error_Msg_Elab (Loc, Msg, Arg1);
       end Error;
 
       El : Iir;
@@ -720,7 +712,7 @@ package body Configuration is
       while El /= Null_Iir loop
          if Get_Default_Value (El) = Null_Iir then
             if not Allow_Generic_Override (El) then
-               Error ("(" & Disp_Node (El) & " has no default value)", El);
+               Error (El, "(%n has no default value)", +El);
             end if;
          end if;
          El := Get_Chain (El);
@@ -732,8 +724,7 @@ package body Configuration is
          if not Is_Fully_Constrained_Type (Get_Type (El))
            and then Get_Default_Value (El) = Null_Iir
          then
-            Error ("(" & Disp_Node (El)
-                     & " is unconstrained and has no default value)", El);
+            Error (El, "(%n is unconstrained and has no default value)", +El);
          end if;
          El := Get_Chain (El);
       end loop;

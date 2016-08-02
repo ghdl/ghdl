@@ -1649,9 +1649,9 @@ package body Evaluation is
       if Res /= Null_Iir then
          return Build_Constant (Res, Expr);
       else
-         Warning_Msg_Sem (Warnid_Runtime_Error, +Expr,
-                          "value """ & Value & """ not in enumeration "
-                            & Disp_Node (Enum));
+         Warning_Msg_Sem
+           (Warnid_Runtime_Error, +Expr,
+            "value """ & Value & """ not in enumeration %n", +Enum);
          return Build_Overflow (Expr);
       end if;
    end Build_Enumeration_Value;

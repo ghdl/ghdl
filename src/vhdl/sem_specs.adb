@@ -27,7 +27,6 @@ with Sem_Assocs; use Sem_Assocs;
 with Libraries;
 with Iir_Chains; use Iir_Chains;
 with Flags; use Flags;
-with Name_Table;
 with Std_Names;
 with Sem_Decls;
 with Xrefs; use Xrefs;
@@ -1779,8 +1778,7 @@ package body Sem_Specs is
          --     (see 10.3),
          Decl := Get_Declaration (Inter);
          Warning_Msg_Elab
-           (Warnid_Default_Binding, Decl,
-            "visible declaration for " & Name_Table.Image (Name));
+           (Warnid_Default_Binding, Decl, "visible declaration for %i", +Name);
 
          --  b)  An entity declaration that has the same simple name that of
          --      the instantiated component and that would be directly
@@ -1792,8 +1790,8 @@ package body Sem_Specs is
             if Valid_Interpretation (Inter) then
                Decl := Get_Declaration (Inter);
                Warning_Msg_Elab (Warnid_Default_Binding, Comp,
-                                 "interpretation behind the component is "
-                                   & Disp_Node (Decl));
+                                 "interpretation behind the component is %n",
+                                 +Decl);
             end if;
          end if;
       end if;
@@ -1813,8 +1811,7 @@ package body Sem_Specs is
          end loop;
 
          Warning_Msg_Elab (Warnid_Default_Binding, Comp,
-                           "no entity """ & Name_Table.Image (Name) & """ in "
-                             & Disp_Node (Decl));
+                           "no entity %i in %n", (+Name, +Decl));
       end if;
    end Explain_No_Visible_Entity;
 

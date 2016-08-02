@@ -190,9 +190,10 @@ package body Ieee.Vital_Timing is
       Error_Msg_Sem (Loc, Msg);
    end Error_Vital;
 
-   procedure Warning_Vital (Loc : Iir; Msg : String) is
+   procedure Warning_Vital
+     (Loc : Iir; Msg : String; Args : Earg_Arr := No_Eargs) is
    begin
-      Warning_Msg_Sem (Warnid_Vital_Generic, +Loc, Msg);
+      Warning_Msg_Sem (Warnid_Vital_Generic, +Loc, Msg, Args);
    end Warning_Vital;
 
    --  Check DECL is the VITAL level 0 attribute specification.
@@ -1260,7 +1261,7 @@ package body Ieee.Vital_Timing is
       end if;
 
       if Is_Warning_Enabled (Warnid_Vital_Generic) then
-         Warning_Vital (Decl, Disp_Node (Decl) & " is not a VITAL generic");
+         Warning_Vital (Decl, "%n is not a VITAL generic", (1 => +Decl));
       end if;
    end Check_Entity_Generic_Declaration;
 

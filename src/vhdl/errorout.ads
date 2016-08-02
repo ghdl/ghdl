@@ -179,8 +179,16 @@ package Errorout is
    procedure Error_Msg_Parse (Loc : Location_Type; Msg: String);
 
    -- Disp a message during semantic analysis.
-   procedure Warning_Msg_Sem
-     (Id : Msgid_Warnings; Loc : Location_Type; Msg: String);
+   procedure Warning_Msg_Sem (Id : Msgid_Warnings;
+                              Loc : Location_Type;
+                              Msg: String;
+                              Args : Earg_Arr := No_Eargs;
+                              Cont : Boolean := False);
+   procedure Warning_Msg_Sem (Id : Msgid_Warnings;
+                              Loc : Location_Type;
+                              Msg: String;
+                              Arg1 : Earg_Type;
+                              Cont : Boolean := False);
 
    procedure Error_Msg_Sem (Loc: Location_Type;
                             Msg: String;
@@ -196,12 +204,26 @@ package Errorout is
                                     Args : Earg_Arr := No_Eargs);
 
    -- Disp a message during elaboration (or configuration).
-   procedure Error_Msg_Elab (Msg: String);
-   procedure Error_Msg_Elab (Loc: Iir; Msg: String);
+   procedure Error_Msg_Elab
+     (Msg: String; Args : Earg_Arr := No_Eargs);
+   procedure Error_Msg_Elab
+     (Msg: String; Arg1 : Earg_Type);
+   procedure Error_Msg_Elab
+     (Loc: Iir; Msg: String; Args : Earg_Arr := No_Eargs);
+   procedure Error_Msg_Elab
+     (Loc: Iir; Msg: String; Arg1 : Earg_Type);
 
    --  Disp a warning durig elaboration (or configuration).
-   procedure Warning_Msg_Elab
-     (Id : Msgid_Warnings; Loc : Iir; Msg: String; Cont : Boolean := False);
+   procedure Warning_Msg_Elab (Id : Msgid_Warnings;
+                               Loc : Iir;
+                               Msg: String;
+                               Arg1 : Earg_Type;
+                               Cont : Boolean := False);
+   procedure Warning_Msg_Elab (Id : Msgid_Warnings;
+                               Loc : Iir;
+                               Msg: String;
+                               Args : Earg_Arr := No_Eargs;
+                               Cont : Boolean := False);
 
    -- Disp a bug message.
    procedure Error_Internal (Expr: Iir; Msg: String := "");
