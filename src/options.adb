@@ -17,6 +17,7 @@
 --  02111-1307, USA.
 with Ada.Text_IO; use Ada.Text_IO;
 with Name_Table;
+with Errorout; use Errorout;
 with Libraries;
 with Std_Names;
 with PSL.Nodes;
@@ -37,74 +38,83 @@ package body Options is
 
    function Option_Warning (Opt: String; Val : Boolean) return Boolean is
    begin
---      if Opt = "undriven" then
---         Warn_Undriven := True;
-      if Opt = "library" then
-         Warn_Library := Val;
-      elsif Opt = "default-binding" then
-         Warn_Default_Binding := Val;
-      elsif Opt = "binding" then
-         Warn_Binding := Val;
-      elsif Opt = "reserved" then
-         Warn_Reserved_Word := Val;
-      elsif Opt = "vital-generic" then
-         Warn_Vital_Generic := Val;
-      elsif Opt = "delayed-checks" then
-         Warn_Delayed_Checks := Val;
-      elsif Opt = "body" then
-         Warn_Body := Val;
-      elsif Opt = "specs" then
-         Warn_Specs := Val;
-      elsif Opt = "unused" then
-         Warn_Unused := Val;
-      elsif Opt = "error" then
+      --  Handle -Werror.
+      if Opt = "error" then
          Warn_Error := Val;
-      else
-         return False;
+         return True;
       end if;
-      return True;
+
+      --  Normal warnings.
+      for I in Msgid_Warnings loop
+         if Warning_Image (I) = Opt then
+            Enable_Warning (I, Val);
+            return True;
+         end if;
+      end loop;
+
+      --  -Wreserved is an alias for -Wreserved-word.
+      if Opt = "reserved" then
+         Enable_Warning (Warnid_Reserved_Word, Val);
+         return True;
+      end if;
+
+      --  Unknown warning.
+      return False;
    end Option_Warning;
 
-   function Parse_Option (Opt: String) return Boolean
+   function Parse_Option (Option : String) return Boolean
    is
-      Beg: constant Integer := Opt'First;
+      subtype Option_String is String (1 .. Option'Length);
+      Opt : Option_String renames Option;
    begin
-      if Opt'Length > 5 and then Opt (Beg .. Beg + 5) = "--std=" then
+      if Opt'Last > 5 and then Opt (1 .. 6) = "--std=" then
          if Opt'Length = 8 then
-            if Opt (Beg + 6 .. Beg + 7) = "87" then
+            if Opt (7 .. 8) = "87" then
                Vhdl_Std := Vhdl_87;
-            elsif Opt (Beg + 6 .. Beg + 7) = "93" then
+            elsif Opt (7 .. 8) = "93" then
                Vhdl_Std := Vhdl_93;
-            elsif Opt (Beg + 6 .. Beg + 7) = "00" then
+            elsif Opt (7 .. 8) = "00" then
                Vhdl_Std := Vhdl_00;
-            elsif Opt (Beg + 6 .. Beg + 7) = "02" then
+            elsif Opt (7 .. 8) = "02" then
                Vhdl_Std := Vhdl_02;
-            elsif Opt (Beg + 6 .. Beg + 7) = "08" then
+            elsif Opt (7 .. 8) = "08" then
                Vhdl_Std := Vhdl_08;
             else
                return False;
             end if;
-         elsif Opt'Length = 9 and then Opt (Beg + 6 .. Beg + 8) = "93c" then
+         elsif Opt'Length = 9 and then Opt (7 .. 9) = "93c" then
             Vhdl_Std := Vhdl_93c;
          else
             return False;
          end if;
-      elsif Opt'Length = 5 and then Opt (Beg .. Beg + 4) = "--ams" then
+      elsif Opt'Length = 5 and then Opt (1 .. 5) = "--ams" then
          AMS_Vhdl := True;
-      elsif Opt'Length > 2 and then Opt (Beg .. Beg + 1) = "-P" then
-         Libraries.Add_Library_Path (Opt (Beg + 2 .. Opt'Last));
-      elsif Opt'Length > 10 and then Opt (Beg .. Beg + 9) = "--workdir=" then
-         Libraries.Set_Work_Library_Path (Opt (Beg + 10 .. Opt'Last));
-      elsif Opt'Length > 10 and then Opt (Beg .. Beg + 9) = "--warn-no-" then
-         return Option_Warning (Opt (Beg + 10 .. Opt'Last), False);
-      elsif Opt'Length > 7 and then Opt (Beg .. Beg + 6) = "--warn-" then
-         return Option_Warning (Opt (Beg + 7 .. Opt'Last), True);
-      elsif Opt'Length > 7 and then Opt (Beg .. Beg + 6) = "--work=" then
+      elsif Opt'Length >= 2 and then Opt (1 .. 2) = "-P" then
+         if Opt'Last = 2 then
+            Error_Msg_Option ("missing directory after -P");
+            return True;
+         end if;
+         if Opt (3) = '=' then
+            if Opt'Last = 3 then
+               Error_Msg_Option ("missing directory after -P=");
+               return True;
+            end if;
+            Libraries.Add_Library_Path (Opt (4 .. Opt'Last));
+         else
+            Libraries.Add_Library_Path (Opt (3 .. Opt'Last));
+         end if;
+      elsif Opt'Length > 10 and then Opt (1 .. 10) = "--workdir=" then
+         Libraries.Set_Work_Library_Path (Opt (11 .. Opt'Last));
+      elsif Opt'Length > 10 and then Opt (1 .. 10) = "--warn-no-" then
+         return Option_Warning (Opt (11 .. Opt'Last), False);
+      elsif Opt'Length > 7 and then Opt (1 .. 7) = "--warn-" then
+         return Option_Warning (Opt (8 .. Opt'Last), True);
+      elsif Opt'Length > 7 and then Opt (1 .. 7) = "--work=" then
          declare
             use Name_Table;
          begin
-            Nam_Length := Opt'Last - (Beg + 7) + 1;
-            Nam_Buffer (1 .. Nam_Length) := Opt (Beg + 7 .. Opt'Last);
+            Nam_Length := Opt'Last - 8 + 1;
+            Nam_Buffer (1 .. Nam_Length) := Opt (8 .. Opt'Last);
             Scanner.Convert_Identifier;
             Libraries.Work_Library_Name := Get_Identifier;
          end;
@@ -223,16 +233,12 @@ package body Options is
       P ("  --syn-binding      use synthesis default binding rule");
       P ("  -fpsl              parse psl in comments");
       P ("Compilation list:");
-      P ("  -ls                after semantics");
-      P ("  -lc                after canon");
-      P ("  -la                after annotation");
+      P ("  -l[sca]            after semantics, canon or annotation");
       P ("  --lall             -lX options apply to all files");
       P ("  -lv                verbose list");
       P ("  -v                 disp compilation stages");
       P ("Compilation dump:");
-      P ("  -dp                dump tree after parsing");
-      P ("  -ds                dump tree after semantics");
-      P ("  -da                dump tree after annotate");
+      P ("  -d[psa]            dump tree after parse, semantics or annotate");
       P ("  --dall             -dX options apply to all files");
       if Back_End.Disp_Option /= null then
          Back_End.Disp_Option.all;

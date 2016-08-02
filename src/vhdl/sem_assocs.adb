@@ -140,7 +140,7 @@ package body Sem_Assocs is
             --  FIXME: check FORMAL is well composed.
          elsif Has_Named then
             --  FIXME: do the check in parser.
-            Error_Msg_Sem ("positional argument after named argument", Assoc);
+            Error_Msg_Sem (+Assoc, "positional argument after named argument");
             Ok := False;
          end if;
          if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression then
@@ -178,9 +178,9 @@ package body Sem_Assocs is
             Error_Kind ("check_parameter_association_restriction", Inter);
       end case;
       Error_Msg_Sem
-        ("cannot associate an " & Get_Mode_Name (Get_Mode (Base_Actual))
-         & " object with " & Get_Mode_Name (Get_Mode (Inter)) & " "
-         & Disp_Node (Inter), Loc);
+        (+Loc, "cannot associate an " & Get_Mode_Name (Get_Mode (Base_Actual))
+           & " object with " & Get_Mode_Name (Get_Mode (Inter)) & " %n",
+         +Inter);
    end Check_Parameter_Association_Restriction;
 
    procedure Check_Subprogram_Associations
@@ -211,7 +211,7 @@ package body Sem_Assocs is
             when Iir_Kind_Association_Element_Open =>
                if Get_Default_Value (Formal_Inter) = Null_Iir then
                   Error_Msg_Sem
-                    ("no parameter for " & Disp_Node (Formal_Inter), Assoc);
+                    (+Assoc, "no parameter for %n", +Formal_Inter);
                end if;
             when Iir_Kind_Association_Element_By_Expression =>
                Actual := Get_Actual (Assoc);
@@ -239,8 +239,8 @@ package body Sem_Assocs is
                            --  must be denoted by a static signal name.
                            if Get_Name_Staticness (Object) < Globally then
                               Error_Msg_Sem
-                                ("actual signal must be a static name",
-                                 Actual);
+                                (+Actual,
+                                 "actual signal must be a static name");
                            else
                               --  Inherit has_active_flag.
                               Set_Has_Active_Flag
@@ -248,8 +248,8 @@ package body Sem_Assocs is
                            end if;
                         when others =>
                            Error_Msg_Sem
-                             ("signal parameter requires a signal expression",
-                              Assoc);
+                             (+Assoc,
+                              "signal parameter requires a signal expression");
                      end case;
 
                      case Get_Kind (Prefix) is
@@ -259,16 +259,18 @@ package body Sem_Assocs is
                         when Iir_Kind_Guard_Signal_Declaration =>
                            if Get_Mode (Formal_Inter) /= Iir_In_Mode then
                               Error_Msg_Sem
-                                ("cannot associate a guard signal with "
+                                (+Assoc,
+                                 "cannot associate a guard signal with "
                                  & Get_Mode_Name (Get_Mode (Formal_Inter))
-                                 & " " & Disp_Node (Formal_Inter), Assoc);
+                                 & " %n", +Formal_Inter);
                            end if;
                         when Iir_Kinds_Signal_Attribute =>
                            if Get_Mode (Formal_Inter) /= Iir_In_Mode then
                               Error_Msg_Sem
-                                ("cannot associate a signal attribute with "
+                                (+Assoc,
+                                 "cannot associate a signal attribute with "
                                  & Get_Mode_Name (Get_Mode (Formal_Inter))
-                                 & " " & Disp_Node (Formal_Inter), Assoc);
+                                 & " %n", +Formal_Inter);
                            end if;
                         when others =>
                            null;
@@ -282,8 +284,9 @@ package body Sem_Assocs is
                      if Get_In_Conversion (Assoc) /= Null_Iir
                        or Get_Out_Conversion (Assoc) /= Null_Iir
                      then
-                        Error_Msg_Sem ("conversion are not allowed for "
-                                       & "signal parameters", Assoc);
+                        Error_Msg_Sem
+                          (+Assoc,
+                           "conversion are not allowed for signal parameters");
                      end if;
                   when Iir_Kind_Interface_Variable_Declaration =>
                      --  LRM93 2.1.1
@@ -303,12 +306,13 @@ package body Sem_Assocs is
                            --  Such an object is a member of the variable
                            --  class of objects;
                            if Flags.Vhdl_Std >= Vhdl_93 then
-                              Error_Msg_Sem ("in vhdl93, variable parameter "
-                                             & "cannot be a file", Assoc);
+                              Error_Msg_Sem
+                                (+Assoc, "variable parameter cannot be a "
+                                   & "file (vhdl93)");
                            end if;
                         when others =>
                            Error_Msg_Sem
-                             ("variable parameter must be a variable", Assoc);
+                             (+Assoc, "variable parameter must be a variable");
                      end case;
                   when Iir_Kind_Interface_File_Declaration =>
                      --  LRM93 2.1.1
@@ -321,12 +325,12 @@ package body Sem_Assocs is
                         when Iir_Kind_Variable_Declaration
                           | Iir_Kind_Interface_Variable_Declaration =>
                            if Flags.Vhdl_Std >= Vhdl_93 then
-                              Error_Msg_Sem ("in vhdl93, file parameter "
-                                             & "must be a file", Assoc);
+                              Error_Msg_Sem (+Assoc, "file parameter "
+                                               & "must be a file (vhdl93)");
                            end if;
                         when others =>
                            Error_Msg_Sem
-                             ("file parameter must be a file", Assoc);
+                             (+Assoc, "file parameter must be a file");
                      end case;
 
                      --  LRM 2.1.1.3  File parameters
@@ -337,8 +341,8 @@ package body Sem_Assocs is
                      if Get_In_Conversion (Assoc) /= Null_Iir
                        or Get_Out_Conversion (Assoc) /= Null_Iir
                      then
-                        Error_Msg_Sem ("conversion are not allowed for "
-                                       & "file parameters", Assoc);
+                        Error_Msg_Sem (+Assoc, "conversion are not allowed "
+                                         & "for file parameters");
                      end if;
                   when Iir_Kind_Interface_Constant_Declaration =>
                      --  LRM93 2.1.1
@@ -412,9 +416,9 @@ package body Sem_Assocs is
 
       if Assoc /= Null_Iir then
          Error_Msg_Sem
-           ("cannot associate " & Get_Mode_Name (Fmode) & " "
-              & Disp_Node (Formal) & " with actual port of mode "
-              & Get_Mode_Name (Amode), Assoc);
+           (+Assoc, "cannot associate " & Get_Mode_Name (Fmode) & " %n"
+              & " with actual port of mode "
+              & Get_Mode_Name (Amode), +Formal);
       end if;
       return False;
    end Check_Port_Association_Restriction;
@@ -447,7 +451,7 @@ package body Sem_Assocs is
             Index := Eval_Expr (Index);
             Replace_Nth_Element (Index_List, I, Index);
          else
-            Error_Msg_Sem ("index expression must be locally static", Index);
+            Error_Msg_Sem (+Index, "index expression must be locally static");
             Set_Choice_Staticness (Base_Assoc, None);
          end if;
 
@@ -527,7 +531,7 @@ package body Sem_Assocs is
          Index := Eval_Range (Index);
          Set_Suffix (Formal, Index);
       else
-         Error_Msg_Sem ("range expression must be locally static", Index);
+         Error_Msg_Sem (+Index, "range expression must be locally static");
          Set_Choice_Staticness (Sub_Assoc, None);
       end if;
 
@@ -594,10 +598,9 @@ package body Sem_Assocs is
                      Iassoc := Sub;
                   when others =>
                      Error_Msg_Sem
-                       ("individual association of "
-                        & Disp_Node (Get_Association_Interface (Iassoc))
-                        & " conflicts with that at " & Disp_Location (Sub),
-                        Formal);
+                       (+Formal, "individual association of %n"
+                          & " conflicts with that at %l",
+                        (+Get_Association_Interface (Iassoc), +Sub));
                      return;
                end case;
             end if;
@@ -636,10 +639,9 @@ package body Sem_Assocs is
 
       Prev := Get_Associated_Expr (Res_Iass);
       if Prev /= Null_Iir then
-         Error_Msg_Sem ("individual association of "
-                        & Disp_Node (Get_Association_Interface (Assoc))
-                        & " conflicts with that at " & Disp_Location (Prev),
-                        Assoc);
+         Error_Msg_Sem
+           (+Assoc, "individual association of %n conflicts with that at %l",
+            (+Get_Association_Interface (Assoc), +Prev));
       else
          Set_Associated_Expr (Res_Iass, Assoc);
       end if;
@@ -742,8 +744,8 @@ package body Sem_Assocs is
             if Eval_Pos (Act_Low) /= Eval_Pos (Low)
               or Eval_Pos (Act_High) /= Eval_Pos (High)
             then
-               Error_Msg_Sem ("indexes of individual association mismatch",
-                              Assoc);
+               Error_Msg_Sem
+                 (+Assoc, "indexes of individual association mismatch");
             end if;
          end;
       end if;
@@ -764,9 +766,8 @@ package body Sem_Assocs is
          Rec_El := Get_Choice_Name (Ch);
          Pos := Natural (Get_Element_Position (Rec_El));
          if Matches (Pos) /= Null_Iir then
-            Error_Msg_Sem ("individual " & Disp_Node (Rec_El)
-                           & " already associated at "
-                           & Disp_Location (Matches (Pos)), Ch);
+            Error_Msg_Sem (+Ch, "individual %n already associated at %l",
+                           (+Rec_El, +Matches (Pos)));
          else
             Matches (Pos) := Ch;
          end if;
@@ -775,7 +776,7 @@ package body Sem_Assocs is
       for I in Matches'Range loop
          Rec_El := Get_Nth_Element (El_List, I);
          if Matches (I) = Null_Iir then
-            Error_Msg_Sem (Disp_Node (Rec_El) & " not associated", Assoc);
+            Error_Msg_Sem (+Assoc, "%n not associated", +Rec_El);
          end if;
       end loop;
       Set_Actual_Type (Assoc, Atype);
@@ -1227,7 +1228,7 @@ package body Sem_Assocs is
             Res := Conv;
          else
             Res := Null_Iir;
-            Error_Msg_Sem ("conversion function or type does not match", Loc);
+            Error_Msg_Sem (+Loc, "conversion function or type does not match");
          end if;
       end if;
       return Res;
@@ -1330,8 +1331,8 @@ package body Sem_Assocs is
             --  It is an error if an actual of open is associated with a
             --  formal that is associated individually.
             if Assoc_Kind = Individual then
-               Error_Msg_Sem ("cannot associate individually with open",
-                              Assoc);
+               Error_Msg_Sem
+                 (+Assoc, "cannot associate individually with open");
             end if;
          end if;
       else
@@ -1389,7 +1390,7 @@ package body Sem_Assocs is
       --  package declaration [...]
       if Get_Kind (Actual) /= Iir_Kind_Package_Instantiation_Declaration then
          Error_Msg_Sem
-           ("actual of association is not a package instantiation", Assoc);
+           (+Assoc, "actual of association is not a package instantiation");
          return;
       end if;
 
@@ -1399,8 +1400,8 @@ package body Sem_Assocs is
         /= Package_Inter
       then
          Error_Msg_Sem
-           ("actual package name is not an instance of interface package",
-            Assoc);
+           (+Assoc,
+            "actual package name is not an instance of interface package");
          return;
       end if;
 
@@ -1499,15 +1500,13 @@ package body Sem_Assocs is
 
       if Match = Not_Compatible then
          if Finish then
+            Error_Msg_Sem (+Assoc, "can't associate %n with %n",
+                           (+Actual, +Inter), Cont => True);
             Error_Msg_Sem
-              ("can't associate " & Disp_Node (Actual) & " with "
-               & Disp_Node (Inter), Assoc);
+              (+Assoc, "(type of %n is " & Disp_Type_Of (Actual) & ")",
+               (1 => +Actual), Cont => True);
             Error_Msg_Sem
-              ("(type of " & Disp_Node (Actual) & " is "
-               & Disp_Type_Of (Actual) & ")", Assoc);
-            Error_Msg_Sem
-              ("(type of " & Disp_Node (Inter) & " is "
-               & Disp_Type_Of (Inter) & ")", Inter);
+              (+Inter, "(type of %n is " & Disp_Type_Of (Inter) & ")", +Inter);
          end if;
          return;
       end if;
@@ -1568,7 +1567,7 @@ package body Sem_Assocs is
         and then Get_Mode (Inter) = Iir_In_Mode
       then
          Error_Msg_Sem
-           ("can't use an out conversion for an in interface", Assoc);
+           (+Assoc, "can't use an out conversion for an in interface");
       end if;
 
       --  LRM08 6.5.7 Association lists
@@ -1580,7 +1579,7 @@ package body Sem_Assocs is
         and then Get_Mode (Inter) in Iir_Buffer_Mode .. Iir_Out_Mode
       then
          Error_Msg_Sem
-           ("can't use an in conversion for an out/buffer interface", Assoc);
+           (+Assoc, "can't use an in conversion for an out/buffer interface");
       end if;
 
       --  LRM08 5.3.2.2 Index constraints and discrete ranges
@@ -1605,7 +1604,7 @@ package body Sem_Assocs is
            and then not Is_Fully_Constrained_Type (Get_Type (In_Conv))
          then
             Error_Msg_Sem
-              ("type of actual conversion must be fully constrained", Assoc);
+              (+Assoc, "type of actual conversion must be fully constrained");
          end if;
          if (Get_Mode (Inter) in Iir_Out_Modes
                or else Get_Mode (Inter) = Iir_Linkage_Mode)
@@ -1613,7 +1612,7 @@ package body Sem_Assocs is
            and then not Is_Fully_Constrained_Type (Get_Type (Out_Conv))
          then
             Error_Msg_Sem
-              ("type of formal conversion must be fully constrained", Assoc);
+              (+Assoc, "type of formal conversion must be fully constrained");
          end if;
       end if;
 
@@ -1623,10 +1622,10 @@ package body Sem_Assocs is
       if Get_Mode (Inter) = Iir_Inout_Mode then
          if In_Conv = Null_Iir and then Out_Conv /= Null_Iir then
             Error_Msg_Sem
-              ("out conversion without corresponding in conversion", Assoc);
+              (+Assoc, "out conversion without corresponding in conversion");
          elsif In_Conv /= Null_Iir and then Out_Conv = Null_Iir then
             Error_Msg_Sem
-              ("in conversion without corresponding out conversion", Assoc);
+              (+Assoc, "in conversion without corresponding out conversion");
          end if;
       end if;
       Set_Actual (Assoc, Actual);
@@ -1638,8 +1637,8 @@ package body Sem_Assocs is
          Set_Actual (Assoc, Expr);
          if In_Conv = Null_Iir and then Out_Conv = Null_Iir then
             if not Check_Implicit_Conversion (Formal_Type, Expr) then
-               Error_Msg_Sem ("actual length does not match formal length",
-                              Assoc);
+               Error_Msg_Sem
+                 (+Assoc, "actual length does not match formal length");
             end if;
          end if;
       end if;
@@ -1737,8 +1736,7 @@ package body Sem_Assocs is
             -- Try to match actual of ASSOC with the interface.
             if Inter = Null_Iir then
                if Finish then
-                  Error_Msg_Sem
-                    ("too many actuals for " & Disp_Node (Loc), Assoc);
+                  Error_Msg_Sem (+Assoc, "too many actuals for %n", +Loc);
                end if;
                Match := Not_Compatible;
                return;
@@ -1813,7 +1811,7 @@ package body Sem_Assocs is
                   else
                      if Finish then
                         Error_Msg_Sem
-                          (Disp_Node (Inter) & " already associated", Assoc);
+                          (+Assoc, "%n already associated", +Inter);
                      end if;
                      Match := Not_Compatible;
                      return;
@@ -1827,8 +1825,9 @@ package body Sem_Assocs is
                        and then Last_Individual /= Inter
                      then
                         Error_Msg_Sem
-                          ("non consecutive individual association for "
-                           & Disp_Node (Inter), Assoc);
+                          (+Assoc,
+                           "non consecutive individual association for %n",
+                           +Inter);
                         Match := Not_Compatible;
                         return;
                      end if;
@@ -1837,7 +1836,7 @@ package body Sem_Assocs is
                   else
                      if Finish then
                         Error_Msg_Sem
-                          (Disp_Node (Inter) & " already associated", Assoc);
+                          (+Assoc, "%n already associated", +Inter);
                         Match := Not_Compatible;
                         return;
                      end if;
@@ -1852,9 +1851,8 @@ package body Sem_Assocs is
                if Finish then
                   --  FIXME: display the name of subprg or component/entity.
                   --  FIXME: fetch the interface (for parenthesis_name).
-                  Error_Msg_Sem
-                    ("no interface for " & Disp_Node (Get_Formal (Assoc))
-                     & " in association", Assoc);
+                  Error_Msg_Sem (+Assoc, "no interface for %n in association",
+                                 +Get_Formal (Assoc));
                end if;
                Match := Not_Compatible;
                return;
@@ -1909,8 +1907,7 @@ package body Sem_Assocs is
                         when Missing_Parameter
                           | Missing_Generic =>
                            if Finish then
-                              Error_Msg_Sem
-                                ("no actual for " & Disp_Node (Inter), Loc);
+                              Error_Msg_Sem (+Loc, "no actual for %n", +Inter);
                            end if;
                            Match := Not_Compatible;
                            return;
@@ -1921,8 +1918,8 @@ package body Sem_Assocs is
                                     raise Internal_Error;
                                  end if;
                                  Error_Msg_Sem
-                                   (Disp_Node (Inter)
-                                      & " of mode IN must be connected", Loc);
+                                   (+Loc,
+                                    "%n of mode IN must be connected", +Inter);
                                  Match := Not_Compatible;
                                  return;
                               when Iir_Out_Mode
@@ -1936,8 +1933,9 @@ package body Sem_Assocs is
                                    (Get_Type (Inter))
                                  then
                                     Error_Msg_Sem
-                                      ("unconstrained " & Disp_Node (Inter)
-                                         & " must be connected", Loc);
+                                      (+Loc,
+                                       "unconstrained %n must be connected",
+                                       +Inter);
                                     Match := Not_Compatible;
                                     return;
                                  end if;
@@ -1949,8 +1947,7 @@ package body Sem_Assocs is
                      end case;
                   end if;
                when Iir_Kind_Interface_Package_Declaration =>
-                  Error_Msg_Sem
-                    (Disp_Node (Inter) & " must be associated", Loc);
+                  Error_Msg_Sem (+Loc, "%n must be associated", +Inter);
                   Match := Not_Compatible;
                when others =>
                   Error_Kind ("sem_association_chain", Inter);

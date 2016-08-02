@@ -181,7 +181,7 @@ package body Sem_Psl is
                Set_Location (Res, Get_Location (N));
                Set_Declaration (Res, Decl);
                if Get_Parameter_List (Decl) /= Null_Node then
-                  Error_Msg_Sem ("no actual for instantiation", Res);
+                  Error_Msg_Sem (+Res, "no actual for instantiation");
                end if;
                Free_Node (N);
                Free_Iir (Expr);
@@ -208,7 +208,7 @@ package body Sem_Psl is
       end if;
       Free_Node (N);
       if not Is_Psl_Bool_Expr (Expr) then
-         Error_Msg_Sem ("type of expression must be boolean", Expr);
+         Error_Msg_Sem (+Expr, "type of expression must be boolean");
          return PSL.Hash.Get_PSL_Node (HDL_Node (Expr));
       else
          return Convert_Bool (Expr);
@@ -301,7 +301,7 @@ package body Sem_Psl is
                   null;
                when N_Property_Instance =>
                   Error_Msg_Sem
-                    ("property instance not allowed in PSL sequence", Res);
+                    (+Res, "property instance not allowed in PSL sequence");
                when others =>
                   Error_Kind ("psl.sem_sequence.hdl", Res);
             end case;
@@ -336,7 +336,7 @@ package body Sem_Psl is
             Res := Sem_Boolean (Get_Boolean (Prop));
             Set_Boolean (Prop, Res);
             if not Top then
-               Error_Msg_Sem ("inner clock event not supported", Prop);
+               Error_Msg_Sem (+Prop, "inner clock event not supported");
             end if;
             return Prop;
          when N_Abort =>
@@ -400,8 +400,8 @@ package body Sem_Psl is
                   if Decl /= Null_Node
                     and then Get_Global_Clock (Decl) /= Null_Node
                   then
-                     Error_Msg_Sem ("property instance already has a clock",
-                                    Prop);
+                     Error_Msg_Sem
+                       (+Prop, "property instance already has a clock");
                   end if;
                end;
             end if;
@@ -603,7 +603,7 @@ package body Sem_Psl is
       Extract_Clock (Prop, Clk);
       if Clk = Null_Node then
          if Current_Psl_Default_Clock = Null_Iir then
-            Error_Msg_Sem ("no clock for PSL directive", Stmt);
+            Error_Msg_Sem (+Stmt, "no clock for PSL directive");
             Clk := Null_Node;
          else
             Clk := Get_Psl_Boolean (Current_Psl_Default_Clock);
@@ -670,9 +670,11 @@ package body Sem_Psl is
         and then Get_Parent (Current_Psl_Default_Clock) = Get_Parent (Stmt)
       then
          Error_Msg_Sem
-           ("redeclaration of PSL default clock in the same region", Stmt);
-         Error_Msg_Sem (" (previous default clock declaration)",
-                        Current_Psl_Default_Clock);
+           (+Stmt, "redeclaration of PSL default clock in the same region",
+            Cont => True);
+         Error_Msg_Sem
+           (+Current_Psl_Default_Clock,
+            " (previous default clock declaration)");
       end if;
       Expr := Sem_Boolean (Get_Psl_Boolean (Stmt));
       Set_Psl_Boolean (Stmt, Expr);
@@ -703,7 +705,7 @@ package body Sem_Psl is
          when N_Endpoint_Declaration =>
             Res := Create_Node (N_Endpoint_Instance);
          when others =>
-            Error_Msg_Sem ("can only instantiate a psl declaration", Name);
+            Error_Msg_Sem (+Name, "can only instantiate a psl declaration");
             return Null_Iir;
       end case;
       Set_Declaration (Res, Decl);
@@ -714,14 +716,14 @@ package body Sem_Psl is
 
       while Formal /= Null_Node loop
          if Assoc = Null_Iir then
-            Error_Msg_Sem ("not enough association", Name);
+            Error_Msg_Sem (+Name, "not enough association");
             exit;
          end if;
          if Get_Kind (Assoc) /= Iir_Kind_Association_Element_By_Expression then
             Error_Msg_Sem
-              ("open or individual association not allowed", Assoc);
+              (+Assoc, "open or individual association not allowed");
          elsif Get_Formal (Assoc) /= Null_Iir then
-            Error_Msg_Sem ("named association not allowed in psl", Assoc);
+            Error_Msg_Sem (+Assoc, "named association not allowed in psl");
          else
             Actual := Get_Actual (Assoc);
             --  FIXME: currently only boolean are parsed.
@@ -747,7 +749,7 @@ package body Sem_Psl is
          Assoc := Get_Chain (Assoc);
       end loop;
       if Assoc /= Null_Iir then
-         Error_Msg_Sem ("too many association", Name);
+         Error_Msg_Sem (+Name, "too many association");
       end if;
 
       Res2 := Create_Iir (Iir_Kind_Psl_Expression);

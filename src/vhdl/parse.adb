@@ -25,7 +25,6 @@ with Flags; use Flags;
 with Parse_Psl;
 with Name_Table;
 with Str_Table;
-with Files_Map; use Files_Map;
 with Xrefs;
 
 --  Recursive descendant parser.
@@ -87,7 +86,7 @@ package body Parse is
    procedure Unexpected (Where: String) is
    begin
       Error_Msg_Parse
-        ("unexpected token '" & Image (Current_Token) & "' in a " & Where);
+        ("unexpected token %t in a " & Where, +Current_Token);
    end Unexpected;
 
 --   procedure Unexpected_Eof is
@@ -102,16 +101,14 @@ package body Parse is
    begin
       if Current_Token /= Token then
          if Msg'Length > 0 then
-            Error_Msg_Parse (Msg);
-            Error_Msg_Parse ("(found: " & Image (Current_Token) & ")");
+            Error_Msg_Parse (Msg, Args => No_Eargs, Cont => True);
+            Error_Msg_Parse ("(found: %t)", +Current_Token);
          elsif Current_Token = Tok_Identifier then
             Error_Msg_Parse
-              (''' & Image(Token) & "' is expected instead of '"
-                 & Name_Table.Image (Current_Identifier) & ''');
+              ("%t is expected instead of %i", (+Token, +Current_Identifier));
          else
             Error_Msg_Parse
-              (''' & Image(Token) & "' is expected instead of '"
-               & Image (Current_Token) & ''');
+              ("%t is expected instead of %t", (+Token, + Current_Token));
          end if;
          raise Expect_Error;
       end if;
@@ -142,8 +139,7 @@ package body Parse is
            ("end label for an unlabeled declaration or statement");
       else
          if Current_Identifier /= Name then
-            Error_Msg_Parse
-              ("mispelling, """ & Name_Table.Image (Name) & """ expected");
+            Error_Msg_Parse ("mispelling, %i expected", +Name);
          else
             Set_End_Has_Identifier (Decl, True);
             Xrefs.Xref_End (Get_Token_Location, Decl);
@@ -168,8 +164,7 @@ package body Parse is
       else
          Scan;
          if Current_Token /= Tok then
-            Error_Msg_Parse
-              ("""end"" must be followed by """ & Image (Tok) & """");
+            Error_Msg_Parse ("""end"" must be followed by %t", +Tok);
          else
             Set_End_Has_Reserved_Id (Decl, True);
             Scan;
@@ -434,15 +429,15 @@ package body Parse is
 
       procedure Bad_Operator_Symbol is
       begin
-         Error_Msg_Parse ("""" & Str_Table.String_String8 (Str_Id, Len)
-                          & """ is not an operator symbol", Loc);
+         Error_Msg_Parse (Loc, """" & Str_Table.String_String8 (Str_Id, Len)
+                          & """ is not an operator symbol");
       end Bad_Operator_Symbol;
 
       procedure Check_Vhdl93 is
       begin
          if Flags.Vhdl_Std = Vhdl_87 then
-            Error_Msg_Parse ("""" & Str_Table.String_String8 (Str_Id, Len)
-                             & """ is not a vhdl87 operator symbol", Loc);
+            Error_Msg_Parse (Loc, """" & Str_Table.String_String8 (Str_Id, Len)
+                             & """ is not a vhdl87 operator symbol");
          end if;
       end Check_Vhdl93;
 
@@ -1015,7 +1010,7 @@ package body Parse is
             Scan;
          when others =>
             Error_Msg_Parse
-              ("constant, signal or variable expected after <<");
+              ("constant, signal or variable expected after '<<'");
             Kind := Iir_Kind_External_Signal_Name;
       end case;
 
@@ -1099,7 +1094,7 @@ package body Parse is
            | Iir_Kind_Selected_Name =>
             null;
          when others =>
-            Error_Msg_Parse ("type mark must be a name of a type", Mark);
+            Error_Msg_Parse (+Mark, "type mark must be a name of a type");
       end case;
    end Check_Type_Mark;
 
@@ -1505,10 +1500,10 @@ package body Parse is
             when Tok_Right_Paren =>
                if Res = Null_Iir then
                   Error_Msg_Parse
-                    ("empty interface list not allowed", Prev_Loc);
+                    (Prev_Loc, "empty interface list not allowed");
                else
                   Error_Msg_Parse
-                    ("extra ';' at end of interface list", Prev_Loc);
+                    (Prev_Loc, "extra ';' at end of interface list");
                end if;
                exit;
             when others =>
@@ -1578,7 +1573,7 @@ package body Parse is
       El := Res;
       while El /= Null_Iir loop
          if Get_Kind (El) /= Iir_Kind_Interface_Signal_Declaration then
-            Error_Msg_Parse ("port must be a signal", El);
+            Error_Msg_Parse (+El, "port must be a signal");
          end if;
          El := Get_Chain (El);
       end loop;
@@ -2284,8 +2279,8 @@ package body Parse is
                Error_Msg_Parse ("protected type not allowed in vhdl87/93");
                Decl := Parse_Protected_Type_Definition (Ident, Loc);
             else
-               Error_Msg_Parse ("type '" & Name_Table.Image (Ident) &
-                                "' cannot be defined from another type");
+               Error_Msg_Parse ("type %i cannot be defined from another type",
+                                (1 => +Ident), Cont => True);
                Error_Msg_Parse ("(you should declare a subtype)");
                Decl := Create_Iir (Iir_Kind_Type_Declaration);
                Eat_Tokens_Until_Semi_Colon;
@@ -2376,7 +2371,7 @@ package body Parse is
                if Get_Kind (Ind) = Iir_Kind_Simple_Name then
                   Id := Get_Identifier (Ind);
                else
-                  Error_Msg_Parse ("element name expected", Ind);
+                  Error_Msg_Parse (+Ind, "element name expected");
                   Id := Null_Identifier;
                end if;
                Free_Iir (Ind);
@@ -3411,8 +3406,7 @@ package body Parse is
            | Tok_File =>
             null;
          when others =>
-            Error_Msg_Parse
-              (''' & Tokens.Image (Current_Token) & "' is not a entity class");
+            Error_Msg_Parse ("%t is not a entity class", +Current_Token);
       end case;
       Res := Current_Token;
       Scan;
@@ -3770,8 +3764,8 @@ package body Parse is
                then
                   case Get_Kind (Parent) is
                      when Iir_Kind_Package_Declaration =>
-                        Error_Msg_Parse ("protected type body not allowed "
-                                         & "in package declaration", Decl);
+                        Error_Msg_Parse (+Decl, "protected type body not "
+                                           & "allowed in package declaration");
                      when others =>
                         null;
                   end case;
@@ -3939,7 +3933,7 @@ package body Parse is
       Scan;
       if Current_Token = Tok_Entity then
          if Flags.Vhdl_Std = Vhdl_87 then
-            Error_Msg_Parse ("""entity"" keyword not allowed here by vhdl 87");
+            Error_Msg_Parse ("'entity' keyword not allowed here by vhdl 87");
          end if;
          Set_End_Has_Reserved_Id (Res, True);
          Scan;
@@ -4072,7 +4066,8 @@ package body Parse is
                   --  Parenthesis around aggregate is useless and change the
                   --  context for array aggregate.
                   Warning_Msg_Sem
-                    ("suspicious parenthesis around aggregate", Expr);
+                    (Warnid_Parenthesis, +Expr,
+                     "suspicious parenthesis around aggregate");
                elsif not Flag_Parse_Parenthesis then
                   return Expr;
                end if;
@@ -4087,8 +4082,8 @@ package body Parse is
                --  Surely a missing parenthesis.
                --  FIXME: in case of multiple missing parenthesises, several
                --    messages will be displayed
-               Error_Msg_Parse ("missing ')' for opening parenthesis at "
-                                & Image (Loc, Filename => False));
+               Error_Msg_Parse
+                 ("missing ')' for opening parenthesis at %l", +Loc);
                return Expr;
             when others =>
                --  Surely a parse error...
@@ -4250,7 +4245,7 @@ package body Parse is
          if Is_Signed then
             if Old_Len = 0 then
                Error_Msg_Parse
-                 ("cannot expand an empty signed bit string", Lit);
+                 (+Lit, "cannot expand an empty signed bit string");
                C := Character'Pos ('0');
             else
                C := Element_String8 (Id, 1);
@@ -4296,7 +4291,7 @@ package body Parse is
          for I in 1 .. Old_Len - Nlen loop
             if Element_String8 (Id, I) /= C then
                Error_Msg_Parse
-                 ("truncation of bit string changes the value", Lit);
+                 (+Lit, "truncation of bit string changes the value");
                --  Avoid error storm.
                exit;
             end if;
@@ -4409,7 +4404,7 @@ package body Parse is
            | Tok_Double_Less =>
             Res := Parse_Name (Allow_Indexes => True);
             if Get_Kind (Res) = Iir_Kind_Signature then
-               Error_Msg_Parse ("signature not allowed in expression", Res);
+               Error_Msg_Parse (+Res, "signature not allowed in expression");
                return Get_Signature_Prefix (Res);
             else
                return Res;
@@ -4457,8 +4452,8 @@ package body Parse is
                Resize_Bit_String (Res, Nat32 (Int));
             else
                Error_Msg_Parse
-                 ("space is required between number and unit name",
-                  Get_Token_Location);
+                 (Get_Token_Location,
+                  "space is required between number and unit name");
                Res := Parse_Integer_Literal (Int);
             end if;
             Set_Location (Res, Loc);
@@ -4824,8 +4819,10 @@ package body Parse is
             --  operator...
             --  TODO: avoid repetition of this message ?
             if Op_Token = Tok_Nand or Op_Token = Tok_Nor then
-               Error_Msg_Parse ("sequence of 'nor' or 'nand' not allowed");
-               Error_Msg_Parse ("('nor' and 'nand' are not associative)");
+               Error_Msg_Parse
+                 ("sequence of 'nor' or 'nand' not allowed", Cont => True);
+               Error_Msg_Parse
+                 ("('nor' and 'nand' are not associative)");
             end if;
             if Op_Token /= Current_Token then
                --  Expression is a sequence of relations, with the same
@@ -4841,7 +4838,7 @@ package body Parse is
          --  Catch errors for Ada programmers.
          if Current_Token = Tok_Then or Current_Token = Tok_Else then
             Error_Msg_Parse ("""or else"" and ""and then"" sequences "
-                             & "are not allowed in vhdl");
+                             & "are not allowed in vhdl", Cont => True);
             Error_Msg_Parse ("""and"" and ""or"" are short-circuit "
                              & "operators for BIT and BOOLEAN types");
             Scan;
@@ -5557,8 +5554,8 @@ package body Parse is
          return Parenthesis_Name_To_Procedure_Call
            (Target, Iir_Kind_Procedure_Call_Statement);
       else
-         Error_Msg_Parse ("""<="" or "":="" expected instead of "
-                          & Image (Current_Token));
+         Error_Msg_Parse
+           ("""<="" or "":="" expected instead of %t", +Current_Token);
          Stmt := Create_Iir (Iir_Kind_Procedure_Call_Statement);
          Call := Create_Iir (Iir_Kind_Procedure_Call);
          Set_Prefix (Call, Target);
@@ -5848,7 +5845,7 @@ package body Parse is
          if Label /= Null_Identifier then
             if Flags.Vhdl_Std = Vhdl_87 then
                Error_Msg_Sem
-                 ("this statement can't have a label in vhdl 87", Stmt);
+                 (+Stmt, "this statement can't have a label in vhdl 87");
             else
                Set_Label (Stmt, Label);
             end if;
@@ -5979,8 +5976,10 @@ package body Parse is
 
       if Current_Token = Tok_Return then
          if Kind = Iir_Kind_Procedure_Declaration then
-            Error_Msg_Parse ("'return' not allowed for a procedure");
-            Error_Msg_Parse ("(remove return part or define a function)");
+            Error_Msg_Parse
+              ("'return' not allowed for a procedure", Cont => True);
+            Error_Msg_Parse
+              ("(remove return part or declare a function)");
 
             --  Skip 'return'
             Scan;
@@ -6191,7 +6190,7 @@ package body Parse is
             --  parenthesis.
             null;
          when others =>
-            Error_Msg_Parse ("incorrect formal name", Formal);
+            Error_Msg_Parse (+Formal, "incorrect formal name");
       end case;
    end Check_Formal_Form;
 
@@ -6369,7 +6368,8 @@ package body Parse is
    begin
       if Flags.Vhdl_Std = Vhdl_87 then
          Error_Msg_Parse
-           ("component instantiation using keyword 'component', 'entity',");
+           ("component instantiation using keyword 'component', 'entity',",
+           Cont => True);
          Error_Msg_Parse (" or 'configuration' is not allowed in vhdl87");
       end if;
 
@@ -8147,8 +8147,9 @@ package body Parse is
                   --  unit that is a context declaration is not empty.
                   if Get_Context_Items (Unit) /= Null_Iir then
                      Error_Msg_Sem
-                       ("context declaration does not allow context "
-                          & "clauses before it", Get_Context_Items (Unit));
+                       (+Get_Context_Items (Unit),
+                        "context declaration does not allow context "
+                          & "clauses before it");
                   end if;
 
                   return;
@@ -8262,7 +8263,7 @@ package body Parse is
             Set_Identifier (Res, Get_Identifier (Name));
          else
             Set_Location (Res, Loc);
-            Error_Msg_Parse ("identifier for context expected", Name);
+            Error_Msg_Parse (+Name, "identifier for context expected");
          end if;
          Free_Iir (Name);
 

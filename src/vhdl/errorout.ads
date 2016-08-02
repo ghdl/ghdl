@@ -17,6 +17,7 @@
 --  02111-1307, USA.
 with Types; use Types;
 with Iirs; use Iirs;
+with Tokens;
 
 package Errorout is
    Option_Error: exception;
@@ -33,17 +34,120 @@ package Errorout is
    -- The number of errors (ie, number of calls to error_msg*).
    Nbr_Errors: Natural := 0;
 
-   type Report_Level is (Note, Warning, Error, Fatal);
+   type Msgid_Type is
+     (--  Any note
+      Msgid_Note,
+
+      --  Any warning
+      Msgid_Warning,
+
+      --  Specific warnings
+
+      --  Design unit redefines another design unit.
+      Warnid_Library,
+
+      --  Missing Xref in pretty print.
+      Warnid_Missing_Xref,
+
+      --  No default binding for a component instantiation.
+      Warnid_Default_Binding,
+
+      --  Unbound component.
+      Warnid_Binding,
+
+      --  Vhdl93 reserved word is used as a vhdl87 identifier.
+      Warnid_Reserved_Word,
+
+      --  Start of block comment ('/*') appears in a block comment.
+      Warnid_Nested_Comment,
+
+      --  Weird use of parenthesis.
+      Warnid_Parenthesis,
+
+      --  Generic of a vital entity is not a vital name.
+      Warnid_Vital_Generic,
+
+      --  Delayed checks (checks performed at elaboration time).
+      Warnid_Delayed_Checks,
+
+      --  Package body is not required but is analyzed.
+      Warnid_Body,
+
+      --  An all/others specification does not apply, because there is no such
+      --  named entities.
+      Warnid_Specs,
+
+      --  Incorrect use of universal value.
+      Warnid_Universal,
+
+      --  Runtime error detected at analysis time.
+      Warnid_Runtime_Error,
+
+      --  Signal assignment creates a delta cycle in a postponed process.
+      Warnid_Delta_Cycle,
+
+      --  Emit a warning when a declaration is never used.
+      --  FIXME: currently only subprograms are handled.
+      Warnid_Unused,
+
+      --  Any error
+      Msgid_Error,
+
+      --  Any fatal error
+      Msgid_Fatal);
+
+   --  All specific warning messages.
+   subtype Msgid_Warnings is Msgid_Type
+     range Warnid_Library .. Warnid_Unused;
+
+   --  Get the image of a warning.  This correspond the the identifier of ID,
+   --  in lower case, without the Msgid_Warn_ prefix and with '_' replaced
+   --  by '-'.
+   function Warning_Image (Id : Msgid_Warnings) return String;
+
+   --  Enable or disable a warning.
+   procedure Enable_Warning (Id : Msgid_Warnings; Enable : Boolean);
+
+   --  Get enable status of a warning.
+   function Is_Warning_Enabled (Id : Msgid_Warnings) return Boolean;
+
+   type Earg_Type is private;
+   type Earg_Arr is array (Natural range <>) of Earg_Type;
+
+   --  An empty array (for no arguments).
+   No_Eargs : constant Earg_Arr;
+
+   --  Report display:
+   --  %%: %
+   --  %i: identifier
+   --  %c: character
+   --  %t: token
+   --  %l: location
+   --  %n: node name
+   --  TODO: %m: mode, %y: type of, %s: disp_subprg
+   function "+" (V : Iir) return Earg_Type;
+   function "+" (V : Location_Type) return Earg_Type;
+   function "+" (V : Name_Id) return Earg_Type;
+   function "+" (V : Tokens.Token_Type) return Earg_Type;
+   function "+" (V : Character) return Earg_Type;
+
+   --  Convert location.
+   function "+" (L : Iir) return Location_Type;
+   function "+" (L : PSL_Node) return Location_Type;
+
+   --  Pass that detected the error.
    type Report_Origin is
      (Option, Library, Scan, Parse, Semantic, Elaboration);
 
    --  Generic report message.  LOC maybe No_Location.
    --  If ORIGIN is Option or Library, LOC must be No_Location and the program
    --  name is displayed.
-   procedure Report_Msg (Level : Report_Level;
+   procedure Report_Msg (Id : Msgid_Type;
                          Origin : Report_Origin;
                          Loc : Location_Type;
-                         Msg : String);
+                         Msg : String;
+                         Args : Earg_Arr := No_Eargs;
+                         Cont : Boolean := False);
 
    --  Disp an error, prepended with program name, and raise option_error.
    --  This is used for errors before initialisation, such as bad option or
@@ -54,38 +158,72 @@ package Errorout is
    --  Same as Error_Msg_Option but do not raise Option_Error.
    procedure Error_Msg_Option_NR (Msg: String);
 
-   -- Disp a warning.
-   procedure Warning_Msg_Sem (Msg: String; Loc : Iir);
-   procedure Warning_Msg_Sem (Msg: String; Loc : Location_Type);
-
    -- Disp a message during scan.
    -- The current location is automatically displayed before the message.
    procedure Error_Msg_Scan (Msg: String);
-   procedure Error_Msg_Scan (Msg: String; Loc : Location_Type);
-   procedure Warning_Msg_Scan (Msg: String);
+   procedure Error_Msg_Scan (Msg: String; Arg1 : Earg_Type);
+   procedure Error_Msg_Scan (Loc : Location_Type; Msg: String);
+   procedure Warning_Msg_Scan (Id : Msgid_Warnings; Msg: String);
+   procedure Warning_Msg_Scan (Id : Msgid_Warnings;
+                               Msg: String;
+                               Arg1 : Earg_Type;
+                               Cont : Boolean := False);
 
    -- Disp a message during parse
    -- The location of the current token is automatically displayed before
    -- the message.
-   procedure Error_Msg_Parse (Msg: String);
-   procedure Error_Msg_Parse (Msg: String; Loc : Iir);
-   procedure Error_Msg_Parse (Msg: String; Loc : Location_Type);
+   procedure Error_Msg_Parse_1 (Msg: String);
+   procedure Error_Msg_Parse (Msg: String; Arg1 : Earg_Type);
+   procedure Error_Msg_Parse
+     (Msg: String; Args : Earg_Arr := No_Eargs; Cont : Boolean := False);
+   procedure Error_Msg_Parse (Loc : Location_Type; Msg: String);
 
    -- Disp a message during semantic analysis.
-   -- an_iir is used for location and current token.
-   procedure Error_Msg_Sem (Msg: String; Loc: Iir);
-   procedure Error_Msg_Sem (Msg: String; Loc: PSL_Node);
-   procedure Error_Msg_Sem (Msg: String; Loc: Location_Type);
+   procedure Warning_Msg_Sem (Id : Msgid_Warnings;
+                              Loc : Location_Type;
+                              Msg: String;
+                              Args : Earg_Arr := No_Eargs;
+                              Cont : Boolean := False);
+   procedure Warning_Msg_Sem (Id : Msgid_Warnings;
+                              Loc : Location_Type;
+                              Msg: String;
+                              Arg1 : Earg_Type;
+                              Cont : Boolean := False);
+
+   procedure Error_Msg_Sem (Loc: Location_Type;
+                            Msg: String;
+                            Args : Earg_Arr := No_Eargs;
+                            Cont : Boolean := False);
+   procedure Error_Msg_Sem
+     (Loc: Location_Type; Msg: String; Arg1 : Earg_Type);
+   procedure Error_Msg_Sem_1 (Msg: String; Loc : PSL_Node);
 
    --  Like Error_Msg_Sem, but a warning if -frelaxed or --std=93c.
-   procedure Error_Msg_Sem_Relaxed (Msg : String; Loc : Iir);
+   procedure Error_Msg_Sem_Relaxed (Loc : Iir;
+                                    Msg : String;
+                                    Args : Earg_Arr := No_Eargs);
 
    -- Disp a message during elaboration (or configuration).
-   procedure Error_Msg_Elab (Msg: String);
-   procedure Error_Msg_Elab (Msg: String; Loc: Iir);
+   procedure Error_Msg_Elab
+     (Msg: String; Args : Earg_Arr := No_Eargs);
+   procedure Error_Msg_Elab
+     (Msg: String; Arg1 : Earg_Type);
+   procedure Error_Msg_Elab
+     (Loc: Iir; Msg: String; Args : Earg_Arr := No_Eargs);
+   procedure Error_Msg_Elab
+     (Loc: Iir; Msg: String; Arg1 : Earg_Type);
 
    --  Disp a warning durig elaboration (or configuration).
-   procedure Warning_Msg_Elab (Msg: String; Loc : Iir);
+   procedure Warning_Msg_Elab (Id : Msgid_Warnings;
+                               Loc : Iir;
+                               Msg: String;
+                               Arg1 : Earg_Type;
+                               Cont : Boolean := False);
+   procedure Warning_Msg_Elab (Id : Msgid_Warnings;
+                               Loc : Iir;
+                               Msg: String;
+                               Args : Earg_Arr := No_Eargs;
+                               Cont : Boolean := False);
 
    -- Disp a bug message.
    procedure Error_Internal (Expr: Iir; Msg: String := "");
@@ -130,4 +268,28 @@ package Errorout is
 
    --  Disp interface mode MODE.
    function Get_Mode_Name (Mode : Iir_Mode) return String;
+
+private
+   type Earg_Kind is
+     (Earg_None,
+      Earg_Iir, Earg_Location, Earg_Id, Earg_Char, Earg_Token);
+
+   type Earg_Type (Kind : Earg_Kind := Earg_None) is record
+      case Kind is
+         when Earg_None =>
+            null;
+         when Earg_Iir =>
+            Val_Iir : Iir;
+         when Earg_Location =>
+            Val_Loc : Location_Type;
+         when Earg_Id =>
+            Val_Id : Name_Id;
+         when Earg_Char =>
+            Val_Char : Character;
+         when Earg_Token =>
+            Val_Tok : Tokens.Token_Type;
+      end case;
+   end record;
+
+   No_Eargs : constant Earg_Arr := (1 .. 0 => (Kind => Earg_None));
 end Errorout;

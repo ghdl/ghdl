@@ -563,7 +563,7 @@ package body Sem_Scopes is
             --  Each of two declarations is said to be a /homograph/ of the
             --  other if both declarations have the same identifier, operator
             --  symbol, or character literal, and if overloading is allowed for
-            --  at mist one of the two.
+            --  at most one of the two.
             --
             --  LRM08 12.3 Visibility
             --  Each of two declarations is said to be a /homograph/ of the
@@ -576,6 +576,12 @@ package body Sem_Scopes is
             --  GHDL: here we are in the case when both declarations are
             --  overloadable.  Also, always follow the LRM08 rules as they fix
             --  issues.
+            --  GHDL: Special case for a second declaration with the same
+            --  designator and that denotes the same named entity than a
+            --  previous one (that would be an alias): according to the LRM,
+            --  they are both visible and there are no ambiguity as they
+            --  denotes the same named entity.  In GHDL, the new one hides the
+            --  previous one.  The behaviour should be the same.
 
             --  Find an homograph of this declaration (and also keep the
             --  interpretation just before it in the chain).
@@ -765,9 +771,8 @@ package body Sem_Scopes is
                         if not (Is_Decl_Implicit xor Is_Current_Decl_Implicit)
                         then
                            Error_Msg_Sem
-                             ("redeclaration of " & Disp_Node (Current_Decl) &
-                                " defined at " & Disp_Location (Current_Decl),
-                              Decl);
+                             (+Decl, "redeclaration of %n defined at %l",
+                              (+Current_Decl, +Current_Decl));
                            return;
                         end if;
 
@@ -894,12 +899,11 @@ package body Sem_Scopes is
                --  declarative region must not be homographs,
                -- FIXME: unless one of them is the implicit declaration of a
                --  predefined operation.
-               Error_Msg_Sem ("identifier '" & Name_Table.Image (Ident)
-                              & "' already used for a declaration",
-                              Decl);
                Error_Msg_Sem
-                 ("previous declaration: " & Disp_Node (Current_Decl),
-                  Current_Decl);
+                 (+Decl, "identifier %i already used for a declaration",
+                  (1 => +Ident), Cont => True);
+               Error_Msg_Sem
+                 (+Current_Decl, "previous declaration: %n", +Current_Decl);
                return;
             end if;
          end if;

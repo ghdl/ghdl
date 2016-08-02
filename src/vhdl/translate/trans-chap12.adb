@@ -19,7 +19,6 @@
 with System;
 with Configuration;
 with Interfaces.C_Streams;
-with Ada.Text_IO;
 with Errorout; use Errorout;
 with Std_Package; use Std_Package;
 with Iirs_Utils; use Iirs_Utils;
@@ -203,7 +202,7 @@ package body Trans.Chap12 is
    begin
       Arch := Libraries.Get_Latest_Architecture (Entity);
       if Arch = Null_Iir then
-         Error_Msg_Elab ("no architecture for " & Disp_Node (Entity));
+         Error_Msg_Elab ("no architecture for %n", +Entity);
       end if;
       Arch_Info := Get_Info (Arch);
       if Arch_Info = null then
@@ -480,8 +479,7 @@ package body Trans.Chap12 is
             exit when Dep = Null_Iir;
             Dep_Unit := Libraries.Find_Design_Unit (Dep);
             if Dep_Unit = Null_Iir then
-               Error_Msg_Elab
-                 ("could not find design unit " & Disp_Node (Dep));
+               Error_Msg_Elab ("could not find design unit %n", +Dep);
             elsif not Get_Elab_Flag (Dep_Unit) then
                Add_Unit_Dependences (Dep_Unit);
             end if;
@@ -636,11 +634,13 @@ package body Trans.Chap12 is
       end if;
 
       if Flags.Verbose then
-         Ada.Text_IO.Put_Line ("List of units in the hierarchy design:");
+         Report_Msg (Msgid_Note, Elaboration, No_Location,
+                     "List of units in the hierarchy design:");
          for I in Design_Units.First .. Design_Units.Last loop
             Unit := Design_Units.Table (I);
             Lib_Unit := Get_Library_Unit (Unit);
-            Ada.Text_IO.Put_Line (' ' & Disp_Node (Lib_Unit));
+            Report_Msg (Msgid_Note, Elaboration, No_Location,
+                        " %n", (1 => +Lib_Unit));
          end loop;
       end if;
 
@@ -750,11 +750,13 @@ package body Trans.Chap12 is
 
       --  Disp list of files needed.
       if Flags.Verbose then
-         Ada.Text_IO.Put_Line ("List of units not used:");
+         Report_Msg (Msgid_Note, Elaboration, No_Location,
+                     "List of units not used:");
          for I in Last_Design_Unit + 1 .. Design_Units.Last loop
             Unit := Design_Units.Table (I);
             Lib_Unit := Get_Library_Unit (Unit);
-            Ada.Text_IO.Put_Line (' ' & Disp_Node (Lib_Unit));
+            Report_Msg (Msgid_Note, Elaboration, No_Location,
+                        " %n", (1 => +Lib_Unit));
          end loop;
       end if;
    end Elaborate;

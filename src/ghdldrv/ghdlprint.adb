@@ -240,7 +240,7 @@ package body Ghdlprint is
             Ref := Find (Loc);
             if Ref = Bad_Xref then
                Disp_Text;
-               Warning_Msg_Sem ("cannot find xref", Loc);
+               Warning_Msg_Sem (Warnid_Missing_Xref, Loc, "cannot find xref");
                Missing_Xref := True;
                return;
             end if;
