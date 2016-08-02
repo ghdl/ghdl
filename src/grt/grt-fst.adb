@@ -649,7 +649,7 @@ package body Grt.Fst is
          end if;
          Wave_Elem := Get_Top_Cursor (Avhpi_Get_Base_Name (Pack), Pkg);
          if Is_Displayed (Wave_Elem) then
-            FST_Put_Hierarchy (Pack, Wave_Elem);
+            Fst_Put_Hierarchy (Pack, Wave_Elem);
          end if;
       end loop;
 
