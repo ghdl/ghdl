@@ -18,7 +18,6 @@
 with Ortho_Nodes; use Ortho_Nodes;
 with Ortho_Ident; use Ortho_Ident;
 with Flags; use Flags;
-with Ada.Text_IO;
 with Types; use Types;
 with Errorout; use Errorout;
 with Name_Table; -- use Name_Table;
@@ -107,7 +106,7 @@ package body Translation is
          when others =>
             if Get_Expr_Staticness (Expr) /= Locally then
                Error_Msg_Sem
-                 ("value of FOREIGN attribute must be locally static", Expr);
+                 (+Expr, "value of FOREIGN attribute must be locally static");
                Nam_Length := 0;
             else
                raise Internal_Error;
@@ -135,7 +134,7 @@ package body Translation is
             end loop;
             if P > Nam_Length then
                Error_Msg_Sem
-                 ("missing subprogram/library name after VHPIDIRECT", Spec);
+                 (+Spec, "missing subprogram/library name after VHPIDIRECT");
             end if;
             --  Extract library.
             Lf := P;
@@ -154,7 +153,7 @@ package body Translation is
             end loop;
             Sl := P;
             if P < Nam_Length then
-               Error_Msg_Sem ("garbage at end of VHPIDIRECT", Spec);
+               Error_Msg_Sem (+Spec, "garbage at end of VHPIDIRECT");
             end if;
 
             --  Accept empty library.
@@ -178,8 +177,8 @@ package body Translation is
          return Foreign_Info_Type'(Kind => Foreign_Intrinsic);
       else
          Error_Msg_Sem
-           ("value of 'FOREIGN attribute does not begin with VHPIDIRECT",
-            Spec);
+           (+Spec,
+            "value of 'FOREIGN attribute does not begin with VHPIDIRECT");
          return Foreign_Bad;
       end if;
    end Translate_Foreign_Id;
@@ -229,11 +228,13 @@ package body Translation is
 
       El := Get_Library_Unit (Unit);
       if Flags.Verbose then
-         Ada.Text_IO.Put ("translating ");
          if Main then
-            Ada.Text_IO.Put ("(with code generation) ");
+            Report_Msg (Msgid_Note, Semantic, No_Location,
+                        "translating (with code generation) %n", (1 => +El));
+         else
+            Report_Msg (Msgid_Note, Semantic, No_Location,
+                        "translating %n", (1 => +El));
          end if;
-         Ada.Text_IO.Put_Line (Disp_Node (El));
       end if;
 
       --  Create the prefix for identifiers.

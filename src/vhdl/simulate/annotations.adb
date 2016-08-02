@@ -1193,7 +1193,8 @@ package body Annotations is
 
       El := Get_Library_Unit (Tree);
       if Trace_Annotation then
-         Ada.Text_IO.Put_Line ("annotating " & Disp_Node (El));
+         Report_Msg (Msgid_Note, Semantic, No_Location,
+                     "annotating %n", (1 => +El));
       end if;
       case Get_Kind (El) is
          when Iir_Kind_Entity_Declaration =>

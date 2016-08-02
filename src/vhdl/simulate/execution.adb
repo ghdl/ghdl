@@ -1470,8 +1470,8 @@ package body Execution is
             end;
 
          when others =>
-            Error_Msg_Elab ("execute_implicit_function: unimplemented " &
-                              Iir_Predefined_Functions'Image (Func), Expr);
+            Error_Msg_Elab (Expr, "execute_implicit_function: unimplemented " &
+                              Iir_Predefined_Functions'Image (Func));
             raise Internal_Error;
       end case;
       return Result;

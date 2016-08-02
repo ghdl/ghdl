@@ -481,8 +481,9 @@ package body Grt.Options is
             end if;
             Last_Generic_Override := Over;
          end;
-      elsif Option'Length >= 18 and then
-            Option (1 .. 19) = "--wave-option-file=" then
+      elsif Option'Length >= 19
+        and then Option (1 .. 19) = "--wave-option-file="
+      then
          Wave_Opt_File.Parse.Start (Option (20 .. Option'Last));
       elsif Option = "--unbuffered" then
          Unbuffered_Writes := True;

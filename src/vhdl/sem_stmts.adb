@@ -205,9 +205,10 @@ package body Sem_Stmts is
          for J in 0 .. I - 1 loop
             if not Is_Disjoint (Obj_Arr (I), Obj_Arr (J)) then
                Error_Msg_Sem
-                 ("target is assigned more than once", Name_Arr (I));
+                 (+Name_Arr (I), "target is assigned more than once",
+                  Cont => True);
                Error_Msg_Sem
-                 (" (previous assignment is here)", Name_Arr (J));
+                 (+Name_Arr (J), " (previous assignment is here)");
                return;
             end if;
          end loop;
@@ -253,14 +254,15 @@ package body Sem_Stmts is
                --  It is an error if an element association in such an
                --  aggregate contains an OTHERS choice or a choice that is
                --  a discrete range.
-               Error_Msg_Sem ("discrete range choice not allowed for target",
-                              Choice);
+               Error_Msg_Sem
+                 (+Choice, "discrete range choice not allowed for target");
             when Iir_Kind_Choice_By_Others =>
                --  LRM93 8.4
                --  It is an error if an element association in such an
                --  aggregate contains an OTHERS choice or a choice that is
                --  a discrete range.
-               Error_Msg_Sem ("others choice not allowed for target", Choice);
+               Error_Msg_Sem
+                 (+Choice, "others choice not allowed for target");
             when Iir_Kind_Choice_By_Expression
               | Iir_Kind_Choice_By_Name
               | Iir_Kind_Choice_By_None =>
@@ -297,7 +299,7 @@ package body Sem_Stmts is
    begin
       Target_Object := Name_To_Object (Target);
       if Target_Object = Null_Iir then
-         Error_Msg_Sem ("target is not a signal name", Target);
+         Error_Msg_Sem (+Target, "target is not a signal name");
          return;
       end if;
 
@@ -307,22 +309,22 @@ package body Sem_Stmts is
          when Iir_Kind_Interface_Signal_Declaration =>
             if not Iir_Mode_Writable (Get_Mode (Target_Prefix)) then
                Error_Msg_Sem
-                 (Disp_Node (Target_Prefix) & " can't be assigned", Target);
+                 (+Target, "%n can't be assigned", +Target_Prefix);
             else
                Sem_Add_Driver (Target_Object, Stmt);
             end if;
          when Iir_Kind_Signal_Declaration =>
             Sem_Add_Driver (Target_Object, Stmt);
          when Iir_Kind_Guard_Signal_Declaration =>
-            Error_Msg_Sem ("implicit GUARD signal cannot be assigned", Stmt);
+            Error_Msg_Sem (+Stmt, "implicit GUARD signal cannot be assigned");
             return;
          when others =>
-            Error_Msg_Sem ("target (" & Disp_Node (Get_Base_Name (Target))
-                           & ") is not a signal", Stmt);
+            Error_Msg_Sem
+              (+Stmt, "target (%n) is not a signal", +Get_Base_Name (Target));
             return;
       end case;
       if Get_Name_Staticness (Target_Object) < Staticness then
-         Error_Msg_Sem ("signal name must be static", Stmt);
+         Error_Msg_Sem (+Stmt, "signal name must be static");
       end if;
 
       --  LRM93 2.1.1.2
@@ -356,7 +358,7 @@ package body Sem_Stmts is
                --  It is an error if the target of a concurrent signal
                --  assignment is neither a guarded target nor an
                --  unguarded target.
-               Error_Msg_Sem ("guarded and unguarded target", Target);
+               Error_Msg_Sem (+Target, "guarded and unguarded target");
             end if;
       end case;
    end Check_Simple_Signal_Target;
@@ -369,15 +371,15 @@ package body Sem_Stmts is
    begin
       Target_Object := Name_To_Object (Target);
       if Target_Object = Null_Iir then
-         Error_Msg_Sem ("target is not a variable name", Stmt);
+         Error_Msg_Sem (+Stmt, "target is not a variable name");
          return;
       end if;
       Target_Prefix := Get_Object_Prefix (Target_Object);
       case Get_Kind (Target_Prefix) is
          when Iir_Kind_Interface_Variable_Declaration =>
             if not Iir_Mode_Writable (Get_Mode (Target_Prefix)) then
-               Error_Msg_Sem (Disp_Node (Target_Prefix)
-                              & " cannot be written (bad mode)", Target);
+               Error_Msg_Sem (+Target, "%n cannot be written (bad mode)",
+                              +Target_Prefix);
                return;
             end if;
          when Iir_Kind_Variable_Declaration =>
@@ -389,13 +391,13 @@ package body Sem_Stmts is
             --  class variable.
             null;
          when others =>
-            Error_Msg_Sem (Disp_Node (Target_Prefix)
-                           & " is not a variable to be assigned", Stmt);
+            Error_Msg_Sem (+Stmt, "%n is not a variable to be assigned",
+                           +Target_Prefix);
             return;
       end case;
       if Get_Name_Staticness (Target_Object) < Staticness then
          Error_Msg_Sem
-           ("element of aggregate of variables must be a static name", Target);
+           (+Target, "element of a target aggregate must be a static name");
       end if;
    end Check_Simple_Variable_Target;
 
@@ -525,11 +527,11 @@ package body Sem_Stmts is
                      end if;
                      if Time < 0 then
                         Error_Msg_Sem
-                          ("waveform time expression must be >= 0", Expr);
+                          (+Expr, "waveform time expression must be >= 0");
                      elsif Time <= Last_Time then
                         Error_Msg_Sem
-                          ("time must be greather than previous transaction",
-                           Expr);
+                          (+Expr,
+                           "time must be greather than previous transaction");
                      else
                         Last_Time := Time;
                      end if;
@@ -539,7 +541,7 @@ package body Sem_Stmts is
          else
             if We /= Waveform_Chain then
                --  Time expression must be in ascending order.
-               Error_Msg_Sem ("time expression required here", We);
+               Error_Msg_Sem (+We, "time expression required here");
             end if;
 
             --  LRM93 12.6.4
@@ -556,8 +558,9 @@ package body Sem_Stmts is
                     | Iir_Kind_Concurrent_Selected_Signal_Assignment =>
                      if Get_Postponed_Flag (Current_Concurrent_Statement) then
                         Warning_Msg_Sem
-                          ("waveform may cause a delta cycle in a " &
-                             "postponed process", We);
+                          (Warnid_Delta_Cycle, +We,
+                           "waveform may cause a delta cycle in a " &
+                             "postponed process");
                      end if;
                   when others =>
                      --  Context is a subprogram.
@@ -598,13 +601,13 @@ package body Sem_Stmts is
             --  aggregate of guarded signals.
             if Get_Guarded_Target_State (Assign_Stmt) = False then
                Error_Msg_Sem
-                 ("null transactions can be assigned only to guarded signals",
-                  Assign_Stmt);
+                 (+Assign_Stmt,
+                  "null transactions can be assigned only to guarded signals");
             end if;
          else
             if not Check_Implicit_Conversion (Targ_Type, Expr) then
                Error_Msg_Sem
-                 ("length of value does not match length of target", We);
+                 (+We, "length of value does not match length of target");
             end if;
          end if;
          We := Get_Chain (We);
@@ -626,7 +629,7 @@ package body Sem_Stmts is
          --  is a guarded target.
          if Get_Guarded_Target_State (Stmt) = True then
             Error_Msg_Sem
-              ("not a guarded assignment for a guarded target", Stmt);
+              (+Stmt, "not a guarded assignment for a guarded target");
          end if;
          return;
       end if;
@@ -636,7 +639,7 @@ package body Sem_Stmts is
       end if;
       Guard_Interpretation := Get_Interpretation (Std_Names.Name_Guard);
       if not Valid_Interpretation (Guard_Interpretation) then
-         Error_Msg_Sem ("no guard signals for this guarded assignment", Stmt);
+         Error_Msg_Sem (+Stmt, "no guard signals for this guarded assignment");
          return;
       end if;
 
@@ -652,13 +655,14 @@ package body Sem_Stmts is
            | Iir_Kind_Guard_Signal_Declaration =>
             null;
          when others =>
-            Error_Msg_Sem ("visible GUARD object is not a signal", Stmt);
-            Error_Msg_Sem ("GUARD object is " & Disp_Node (Guard), Stmt);
+            Error_Msg_Sem (+Stmt, "visible GUARD object is not a signal",
+                          Cont => True);
+            Error_Msg_Sem (+Stmt, "GUARD object is %n", +Guard);
             return;
       end case;
 
       if Get_Type (Guard) /= Boolean_Type_Definition then
-         Error_Msg_Sem ("GUARD is not of boolean type", Guard);
+         Error_Msg_Sem (+Guard, "GUARD is not of boolean type");
       end if;
       Set_Guard (Stmt, Guard);
    end Sem_Guard;
@@ -732,7 +736,7 @@ package body Sem_Stmts is
 
          exit when Done;
          if not Is_Defined_Type (Target_Type) then
-            Error_Msg_Sem ("cannot resolve type of waveform", Stmt);
+            Error_Msg_Sem (+Stmt, "cannot resolve type of waveform");
             exit;
          end if;
       end loop;
@@ -832,8 +836,8 @@ package body Sem_Stmts is
                     and then not Check_Implicit_Conversion (Target_Type, Expr)
                   then
                      Warning_Msg_Sem
-                       ("expression length does not match target length",
-                        Stmt);
+                       (Warnid_Runtime_Error, +Stmt,
+                        "expression length does not match target length");
                      Set_Expression (Stmt, Build_Overflow (Expr, Target_Type));
                   end if;
                end if;
@@ -845,10 +849,10 @@ package body Sem_Stmts is
 
          exit when Done;
          if not Is_Defined_Type (Stmt_Type) then
-            Error_Msg_Sem ("cannot resolve type", Stmt);
+            Error_Msg_Sem (+Stmt, "cannot resolve type");
             if Get_Kind (Target) = Iir_Kind_Aggregate then
                --  Try to give an advice.
-               Error_Msg_Sem ("use a qualified expression for the RHS", Stmt);
+               Error_Msg_Sem (+Stmt, "use a qualified expression for the RHS");
             end if;
             exit;
          end if;
@@ -859,7 +863,7 @@ package body Sem_Stmts is
       Expr: Iir;
    begin
       if Current_Subprogram = Null_Iir then
-         Error_Msg_Sem ("return statement not in a subprogram body", Stmt);
+         Error_Msg_Sem (+Stmt, "return statement not in a subprogram body");
          return;
       end if;
       Expr := Get_Expression (Stmt);
@@ -867,17 +871,17 @@ package body Sem_Stmts is
          when Iir_Kind_Procedure_Declaration =>
             if Expr /= Null_Iir then
                Error_Msg_Sem
-                 ("return in a procedure can't have an expression", Stmt);
+                 (+Stmt, "return in a procedure can't have an expression");
             end if;
             return;
          when Iir_Kind_Function_Declaration =>
             if Expr = Null_Iir then
                Error_Msg_Sem
-                 ("return in a function must have an expression", Stmt);
+                 (+Stmt, "return in a function must have an expression");
                return;
             end if;
          when Iir_Kinds_Process_Statement =>
-            Error_Msg_Sem ("return statement not allowed in a process", Stmt);
+            Error_Msg_Sem (+Stmt, "return statement not allowed in a process");
             return;
          when others =>
             Error_Kind ("sem_return_statement", Stmt);
@@ -943,8 +947,8 @@ package body Sem_Stmts is
                --  FIXME: complete the list.
                --  * the name of an object whose subtype is locally static.
                if Get_Type_Staticness (Expr_Type) /= Locally then
-                  Error_Msg_Sem ("object subtype is not locally static",
-                                 Choice);
+                  Error_Msg_Sem
+                    (+Choice, "object subtype is not locally static");
                   return False;
                end if;
             when Iir_Kind_Indexed_Name =>
@@ -953,8 +957,8 @@ package body Sem_Stmts is
                --    this list and whose indexing expressions are locally
                --    static expression.
                if Flags.Vhdl_Std = Vhdl_87 then
-                  Error_Msg_Sem ("indexed name not allowed here in vhdl87",
-                                 Expr);
+                  Error_Msg_Sem
+                    (+Expr, "indexed name not allowed here in vhdl87");
                   return False;
                end if;
                if not Check_Odcat_Expression (Get_Prefix (Expr)) then
@@ -967,8 +971,8 @@ package body Sem_Stmts is
                  Get_Expr_Staticness (Get_First_Element
                                       (Get_Index_List (Expr))) /= Locally
                then
-                  Error_Msg_Sem ("indexing expression must be locally static",
-                                 Expr);
+                  Error_Msg_Sem
+                    (+Expr, "indexing expression must be locally static");
                   return False;
                end if;
             when Iir_Kind_Slice_Name =>
@@ -982,15 +986,15 @@ package body Sem_Stmts is
                --  discrete range is locally static, or ..
                if False and Flags.Vhdl_Std = Vhdl_87 then
                   Error_Msg_Sem
-                    ("slice not allowed as case expression in vhdl87", Expr);
+                    (+Expr, "slice not allowed as case expression in vhdl87");
                   return False;
                end if;
                if not Check_Odcat_Expression (Get_Prefix (Expr)) then
                   return False;
                end if;
                if Get_Type_Staticness (Expr_Type) /= Locally then
-                  Error_Msg_Sem ("slice discrete range must be locally static",
-                                 Expr);
+                  Error_Msg_Sem
+                    (+Expr, "slice discrete range must be locally static");
                   return False;
                end if;
             when Iir_Kind_Function_Call =>
@@ -998,29 +1002,29 @@ package body Sem_Stmts is
                --  * a function call whose return type mark denotes a
                --    locally static subtype.
                if Flags.Vhdl_Std = Vhdl_87 then
-                  Error_Msg_Sem ("function call not allowed here in vhdl87",
-                                 Expr);
+                  Error_Msg_Sem
+                    (+Expr, "function call not allowed here in vhdl87");
                   return False;
                end if;
                if Get_Type_Staticness (Expr_Type) /= Locally then
-                  Error_Msg_Sem ("function call type is not locally static",
-                                 Expr);
+                  Error_Msg_Sem
+                    (+Expr, "function call type is not locally static");
                end if;
             when Iir_Kind_Qualified_Expression
               | Iir_Kind_Type_Conversion =>
                --  * a qualified expression or type conversion whose type mark
                --    denotes a locally static subtype.
                if Get_Type_Staticness (Expr_Type) /= Locally then
-                  Error_Msg_Sem ("type mark is not a locally static subtype",
-                                 Expr);
+                  Error_Msg_Sem
+                    (+Expr, "type mark is not a locally static subtype");
                   return False;
                end if;
             when Iir_Kind_Simple_Name
               | Iir_Kind_Selected_Name =>
                return Check_Odcat_Expression (Get_Named_Entity (Expr));
             when others =>
-               Error_Msg_Sem ("bad form of case expression (refer to LRM 8.8)",
-                              Choice);
+               Error_Msg_Sem
+                 (+Choice, "bad form of case expression (refer to LRM 8.8)");
                return False;
          end case;
          return True;
@@ -1042,16 +1046,16 @@ package body Sem_Stmts is
            | Iir_Kind_Array_Type_Definition =>
             if not Is_One_Dimensional_Array_Type (Choice_Type) then
                Error_Msg_Sem
-                 ("expression must be of a one-dimensional array type",
-                  Choice);
+                 (+Choice,
+                  "expression must be of a one-dimensional array type");
                return;
             end if;
             El_Type := Get_Base_Type (Get_Element_Subtype (Choice_Type));
             if Get_Kind (El_Type) /= Iir_Kind_Enumeration_Type_Definition then
                --  FIXME: check character.
                Error_Msg_Sem
-                 ("element type of the expression must be a character type",
-                  Choice);
+                 (+Choice,
+                  "element type of the expression must be a character type");
                return;
             end if;
             if not Check_Odcat_Expression (Choice) then
@@ -1059,7 +1063,7 @@ package body Sem_Stmts is
             end if;
             Sem_String_Choices_Range (Chain, Choice);
          when others =>
-            Error_Msg_Sem ("type of expression must be discrete", Choice);
+            Error_Msg_Sem (+Choice, "type of expression must be discrete");
       end case;
    end Sem_Case_Choices;
 
@@ -1110,7 +1114,7 @@ package body Sem_Stmts is
          if Res = Error_Mark then
             null;
          elsif Is_Overload_List (Res) or else not Is_Object_Name (Res) then
-            Error_Msg_Sem ("a sensitivity element must be a signal name", El);
+            Error_Msg_Sem (+El, "a sensitivity element must be a signal name");
          else
             Res := Finish_Sem_Name (El);
             Prefix := Get_Object_Prefix (Res);
@@ -1122,12 +1126,12 @@ package body Sem_Stmts is
                when Iir_Kind_Interface_Signal_Declaration =>
                   if not Iir_Mode_Readable (Get_Mode (Prefix)) then
                      Error_Msg_Sem
-                       (Disp_Node (Res) & " of mode out"
-                        & " can't be in a sensivity list", El);
+                       (+El,
+                        "%n of mode out can't be in a sensivity list", +Res);
                   end if;
                when others =>
-                  Error_Msg_Sem (Disp_Node (Res)
-                                 & " is neither a signal nor a port", El);
+                  Error_Msg_Sem (+El,
+                                 "%n is neither a signal nor a port", +Res);
             end case;
             --  LRM 9.2
             --  Only static signal names (see section 6.1) for which reading
@@ -1139,8 +1143,8 @@ package body Sem_Stmts is
             --  signal name, and each name must denote a signal for which
             --  reading is permitted.
             if Get_Name_Staticness (Res) < Globally then
-               Error_Msg_Sem ("sensitivity element " & Disp_Node (Res)
-                              & " must be a static name", El);
+               Error_Msg_Sem
+                 (+El, "sensitivity element %n must be a static name", +Res);
             end if;
 
             Replace_Nth_Element (List, I, Res);
@@ -1189,7 +1193,7 @@ package body Sem_Stmts is
             --  It is an error if a wait statement appears in a function
             --  subprogram [...]
             Error_Msg_Sem
-              ("wait statement not allowed in a function subprogram", Stmt);
+              (+Stmt, "wait statement not allowed in a function subprogram");
             return;
          when Iir_Kind_Procedure_Declaration =>
             --  LRM93 8.2
@@ -1207,7 +1211,7 @@ package body Sem_Stmts is
             --  explicit process statement that includes a sensitivity list,
             --  [...]
             Error_Msg_Sem
-              ("wait statement not allowed in a sensitized process", Stmt);
+              (+Stmt, "wait statement not allowed in a sensitized process");
             return;
          when others =>
             raise Internal_Error;
@@ -1234,7 +1238,7 @@ package body Sem_Stmts is
             if Get_Expr_Staticness (Expr) = Locally
               and then Get_Value (Expr) < 0
             then
-               Error_Msg_Sem ("timeout value must be positive", Stmt);
+               Error_Msg_Sem (+Stmt, "timeout value must be positive");
             end if;
          end if;
       end if;
@@ -1288,7 +1292,7 @@ package body Sem_Stmts is
                null;
             when others =>
                --  FIXME: should emit a message for label mismatch.
-               Error_Msg_Sem ("exit/next must be inside a loop", Stmt);
+               Error_Msg_Sem (+Stmt, "exit/next must be inside a loop");
                exit;
          end case;
       end loop;
@@ -1361,7 +1365,7 @@ package body Sem_Stmts is
                  and then Get_Passive_Flag (Current_Concurrent_Statement)
                then
                   Error_Msg_Sem
-                    ("signal statement forbidden in passive process", Stmt);
+                    (+Stmt, "signal statement forbidden in passive process");
                end if;
             when Iir_Kind_Variable_Assignment_Statement
               | Iir_Kind_Conditional_Variable_Assignment_Statement =>
@@ -1470,14 +1474,14 @@ package body Sem_Stmts is
    begin
       --  FIXME: move this check in parse ?
       if Is_Passive then
-         Error_Msg_Sem ("component instantiation forbidden in entity", Stmt);
+         Error_Msg_Sem (+Stmt, "component instantiation forbidden in entity");
       end if;
 
       -- Check for label.
       --  This cannot be moved in parse since a procedure_call may be revert
       --  into a component instantiation.
       if Get_Label (Stmt) = Null_Identifier then
-         Error_Msg_Sem ("component instantiation requires a label", Stmt);
+         Error_Msg_Sem (+Stmt, "component instantiation requires a label");
       end if;
 
       --  Look for the component.
@@ -1499,11 +1503,12 @@ package body Sem_Stmts is
       then
          Entity_Unit := Get_Visible_Entity_Declaration (Decl);
          if Entity_Unit = Null_Iir then
-            if Flags.Warn_Default_Binding
+            if Is_Warning_Enabled (Warnid_Default_Binding)
               and then not Flags.Flag_Elaborate
             then
-               Warning_Msg_Sem ("no default binding for instantiation of "
-                                & Disp_Node (Decl), Stmt);
+               Warning_Msg_Sem
+                 (Warnid_Default_Binding, +Stmt,
+                  "no default binding for instantiation of %n", +Decl);
                Explain_No_Visible_Entity (Decl);
             end if;
          elsif Flags.Flag_Elaborate
@@ -1570,7 +1575,7 @@ package body Sem_Stmts is
             Decl := Get_Interface_Declaration_Chain (Imp);
             while Decl /= Null_Iir loop
                if Get_Mode (Decl) in Iir_Out_Modes then
-                  Error_Msg_Sem (Disp_Node (Imp) & " is not passive", Stmt);
+                  Error_Msg_Sem (+Stmt, "%n is not passive", +Imp);
                   exit;
                end if;
                Decl := Get_Chain (Decl);
@@ -1685,7 +1690,7 @@ package body Sem_Stmts is
       if Get_Type (Param) /= Null_Iir
         and then Get_Type_Staticness (Get_Type (Param)) < Globally
       then
-         Error_Msg_Sem ("range must be a static discrete range", Stmt);
+         Error_Msg_Sem (+Stmt, "range must be a static discrete range");
       end if;
 
       --  In the same declarative region.
@@ -1738,7 +1743,7 @@ package body Sem_Stmts is
               and then Get_Expr_Staticness (Condition) < Globally
             then
                Error_Msg_Sem
-                 ("condition must be a static expression", Condition);
+                 (+Condition, "condition must be a static expression");
             else
                Set_Condition (Clause, Condition);
             end if;
@@ -1779,7 +1784,7 @@ package body Sem_Stmts is
 
          if Get_Expr_Staticness (Expr) < Globally then
             Error_Msg_Sem
-              ("case expression must be a static expression", Expr);
+              (+Expr, "case expression must be a static expression");
          end if;
 
          Sem_Case_Choices (Expr, Chain, Get_Location (Stmt));
@@ -1878,8 +1883,8 @@ package body Sem_Stmts is
 
       Res_Type := Search_Compatible_Type (Get_Type (Left), Get_Type (Right));
       if Res_Type = Null_Iir then
-         Error_Msg_Sem ("types of left and right expressions are incompatible",
-                        Stmt);
+         Error_Msg_Sem
+           (+Stmt, "types of left and right expressions are incompatible");
          return;
       end if;
 
@@ -1897,7 +1902,7 @@ package body Sem_Stmts is
       procedure No_Generate_Statement is
       begin
          if Is_Passive then
-            Error_Msg_Sem ("generate statement forbidden in entity", El);
+            Error_Msg_Sem (+El, "generate statement forbidden in entity");
          end if;
       end No_Generate_Statement;
 
@@ -1919,12 +1924,12 @@ package body Sem_Stmts is
             when Iir_Kind_Concurrent_Simple_Signal_Assignment
               | Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
                if Is_Passive then
-                  Error_Msg_Sem ("signal assignment forbidden in entity", El);
+                  Error_Msg_Sem (+El, "signal assignment forbidden in entity");
                end if;
                Sem_Signal_Assignment (El);
             when Iir_Kind_Concurrent_Selected_Signal_Assignment =>
                if Is_Passive then
-                  Error_Msg_Sem ("signal assignment forbidden in entity", El);
+                  Error_Msg_Sem (+El, "signal assignment forbidden in entity");
                end if;
                Sem_Concurrent_Selected_Signal_Assignment (El);
             when Iir_Kind_Sensitized_Process_Statement =>
@@ -1941,7 +1946,7 @@ package body Sem_Stmts is
                Sem_Assertion_Statement (El);
             when Iir_Kind_Block_Statement =>
                if Is_Passive then
-                  Error_Msg_Sem ("block forbidden in entity", El);
+                  Error_Msg_Sem (+El, "block forbidden in entity");
                end if;
                Sem_Block_Statement (El);
             when Iir_Kind_If_Generate_Statement =>
@@ -2091,10 +2096,8 @@ package body Sem_Stmts is
          if Get_Signal_Driver (Sig_Object) /= Null_Iir and then
            Get_Signal_Driver (Sig_Object) /= Current_Concurrent_Statement
          then
-            Error_Msg_Sem ("unresolved " & Disp_Node (Sig_Object)
-                           & " has already a driver at "
-                           & Disp_Location (Get_Signal_Driver (Sig_Object)),
-                           Stmt);
+            Error_Msg_Sem (+Stmt, "unresolved %n has already a driver at %l",
+                           (+Sig_Object, +Get_Signal_Driver (Sig_Object)));
          else
             Set_Signal_Driver (Sig_Object, Current_Concurrent_Statement);
          end if;
@@ -2128,8 +2131,7 @@ package body Sem_Stmts is
            or else (Get_Kind (Get_Parent (Sig_Object))
                     /= Iir_Kind_Procedure_Declaration)
          then
-            Error_Msg_Sem
-              (Disp_Node (Sig_Object) & " is not a formal parameter", Stmt);
+            Error_Msg_Sem (+Stmt, "%n is not a formal parameter", +Sig_Object);
          end if;
       end if;
    end Sem_Add_Driver;

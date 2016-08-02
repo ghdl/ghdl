@@ -222,7 +222,7 @@ package body Trans.Chap1 is
       Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
    begin
       if Get_Foreign_Flag (Arch) then
-         Error_Msg_Sem ("FOREIGN architectures are not yet handled", Arch);
+         Error_Msg_Sem (+Arch, "FOREIGN architectures are not yet handled");
       end if;
 
       Info := Add_Info (Arch, Kind_Block);

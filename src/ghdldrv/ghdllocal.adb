@@ -60,7 +60,8 @@ package body Ghdllocal is
       end if;
 
       if Flags.Verbose then
-         Put_Line ("analyze " & Disp_Node (Get_Library_Unit (Unit)));
+         Report_Msg (Msgid_Note, Semantic, No_Location,
+                     "analyze %n", (1 => +Get_Library_Unit (Unit)));
       end if;
 
       Sem.Semantic (Unit);
@@ -87,7 +88,8 @@ package body Ghdllocal is
         or else ((Main or Flags.List_All) and then Flags.List_Canon)
       then
          if Flags.Verbose then
-            Put_Line ("canonicalize " & Disp_Node (Get_Library_Unit (Unit)));
+            Report_Msg (Msgid_Note, Semantic, No_Location,
+                        "canonicalize %n", (1 => +Get_Library_Unit (Unit)));
          end if;
 
          Canon.Canonicalize (Unit);

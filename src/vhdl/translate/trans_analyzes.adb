@@ -179,8 +179,10 @@ package body Trans_Analyzes is
       use Errorout;
       El : Iir;
    begin
-      Put_Line ("List of drivers for " & Disp_Node (Proc) & ":");
-      Put_Line (" (declared at " & Disp_Location (Proc) & ")");
+      Report_Msg (Msgid_Note, Semantic, +Proc,
+                  "List of drivers for %n:", (1 => +Proc));
+      Report_Msg (Msgid_Note, Semantic, +Proc,
+                  " (declared at %l)", (1 => +Proc));
       for I in Natural loop
          El := Get_Nth_Element (List, I);
          exit when El = Null_Iir;

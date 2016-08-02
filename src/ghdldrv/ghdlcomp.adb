@@ -363,7 +363,8 @@ package body Ghdlcomp is
             --  Do late analysis checks.
             Unit := Get_First_Design_Unit (New_Design_File);
             while Unit /= Null_Iir loop
-               Sem.Sem_Analysis_Checks_List (Unit, Flags.Warn_Delayed_Checks);
+               Sem.Sem_Analysis_Checks_List
+                 (Unit, Is_Warning_Enabled (Warnid_Delayed_Checks));
                Unit := Get_Chain (Unit);
             end loop;
 

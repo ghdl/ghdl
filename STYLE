@@ -7,10 +7,16 @@ Allowed Ada93 features: the standard library, child packages.
 Use assertions.
 
 We try to follow the 'GNU Coding Standards' when possible: comments before
-declarations, two spaces end of sentences...
+declarations, two spaces at end of sentences, finish sentences with a dot.
 But: 3 spaces for indentation.
 
 No trailing spaces, not TAB (HT).
+
+Subprograms must have a comment before to describe it, like:
+   --  Analyze the concurrent statements of PARENT.
+   procedure Sem_Concurrent_Statement_Chain (Parent : Iir);
+The line before the comment must be a blank line (unless this is the first
+declaration).  Don't repeat the comment before the subprogram body.
 
 * For subprograms:
 1) Declare on one line when possible:
@@ -65,10 +71,12 @@ If the parametere line is too long with the 'is', put in on a separate line:
 1) 'then' on the same line:
       if Get_Expr_Staticness (Decl) = Locally then
 
-2) If not possible, 'then' aligned with the 'if':
+2) If not possible, 'then' is alone on its line aligned with the 'if':
       if Expr = Null_Iir
         or else Get_Kind (Expr) = Iir_Kind_Overflow_Literal
       then
+
+3) For a multiline condition, 'or else' and 'and then' should start lines.
 
 * 'Local' variable declaration:
 Do not initialize variables, constants must be declared before variables:

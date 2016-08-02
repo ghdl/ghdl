@@ -307,7 +307,7 @@ package body Ieee.Std_Logic_1164 is
 
    exception
       when Error =>
-         Error_Msg_Sem ("package ieee.std_logic_1164 is ill-formed", Pkg);
+         Error_Msg_Sem (+Pkg, "package ieee.std_logic_1164 is ill-formed");
 
          --  Clear all definitions.
          Std_Logic_1164_Pkg := Null_Iir;

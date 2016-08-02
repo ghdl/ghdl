@@ -374,7 +374,8 @@ package body Elaboration is
       Package_Instances (Package_Info.Frame_Scope.Pkg_Index) := Instance;
 
       if Trace_Elaboration then
-         Ada.Text_IO.Put_Line ("elaborating " & Disp_Node (Decl));
+         Report_Msg (Msgid_Note, Errorout.Elaboration, No_Location,
+                     "elaborating %n", (1 => +Decl));
       end if;
 
       if Get_Kind (Decl) = Iir_Kind_Package_Instantiation_Declaration then
@@ -406,7 +407,8 @@ package body Elaboration is
       Instance := Package_Instances (Package_Info.Frame_Scope.Pkg_Index);
 
       if Trace_Elaboration then
-         Ada.Text_IO.Put_Line ("elaborating " & Disp_Node (Decl));
+         Report_Msg (Msgid_Note, Errorout.Elaboration, No_Location,
+                     "elaborating %n", (1 => +Decl));
       end if;
 
       -- Elaborate objects declarations.
@@ -1463,7 +1465,7 @@ package body Elaboration is
       --  the design entity implied by the entity aspect contains formal ports.
       if Formal_Chain = Null_Iir then
          if Local_Chain /= Null_Iir then
-            Error_Msg_Sem ("cannot create default map aspect", Node);
+            Error_Msg_Sem (+Node, "cannot create default map aspect");
          end if;
          return Null_Iir;
       end if;
@@ -1495,8 +1497,7 @@ package body Elaboration is
                --  its mode and type are not appropriate for such an
                --  association.
                --  FIXME: mode/type check.
-               Error_Msg_Sem
-                 ("cannot associate local " & Disp_Node (Local), Node);
+               Error_Msg_Sem (+Node, "cannot associate local %n", +Local);
                exit;
             end if;
             if Assoc_List (Pos) /= Null_Iir then
@@ -1891,7 +1892,8 @@ package body Elaboration is
       --  declaration and architecture body or is bound to a configuration of
       --  such a design entity.
       if not Is_Fully_Bound (Conf) then
-         Warning_Msg_Elab (Disp_Node (Stmt) & " not bound", Stmt);
+         Warning_Msg_Elab
+           (Warnid_Binding, Stmt, "%n not bound", +Stmt);
          return;
       end if;
 
@@ -1949,16 +1951,16 @@ package body Elaboration is
          if Arch_Name = Null_Identifier then
             Arch := Libraries.Get_Latest_Architecture (Entity);
             if Arch = Null_Iir then
-               Error_Msg_Elab ("no architecture analysed for "
-                                 & Disp_Node (Entity), Stmt);
+               Error_Msg_Elab
+                 (Stmt, "no architecture analysed for %n", +Entity);
             end if;
             Arch_Name := Get_Identifier (Arch);
          end if;
          Arch_Design := Libraries.Load_Secondary_Unit
            (Get_Design_Unit (Entity), Arch_Name, Stmt);
          if Arch_Design = Null_Iir then
-            Error_Msg_Elab ("no architecture `" & Name_Table.Image (Arch_Name)
-                              & "' for " & Disp_Node (Entity), Stmt);
+            Error_Msg_Elab
+              (Stmt, "no architecture %i for %n", (+Arch_Name, +Entity));
          end if;
          Arch := Get_Library_Unit (Arch_Design);
       end if;
@@ -2277,7 +2279,7 @@ package body Elaboration is
       --  and must evaluate to a non-negative value.
 
       if Time < 0 then
-         Error_Msg_Sem ("time must be non-negative", Decl);
+         Error_Msg_Sem (+Decl, "time must be non-negative");
       end if;
 
       --  LRM93 §12.3.2.3
@@ -2719,7 +2721,7 @@ package body Elaboration is
             Res := Eval_Value_Attribute (Str, Formal_Type, Formal);
             if not Eval_Is_In_Bound (Res, Formal_Type) then
                Error_Msg_Elab
-                 ("override for " & Disp_Node (Formal) & " is out of bounds");
+                 ("override for %n is out of bounds", +Formal);
                return Null_Iir;
             end if;
             return Res;
@@ -2747,7 +2749,7 @@ package body Elaboration is
          when others =>
             null;
       end case;
-      Error_Msg_Elab ("unhandled override for " & Disp_Node (Formal));
+      Error_Msg_Elab ("unhandled override for %n", +Formal);
       return Null_Iir;
    end Override_Generic;
 
@@ -2814,8 +2816,7 @@ package body Elaboration is
               and then not Is_Fully_Constrained_Type (Get_Type (Formal))
             then
                Error_Msg_Elab
-                 ("top-level " & Disp_Node (Formal) & " must have a value",
-                  Formal);
+                 (Formal, "top-level %n must have a value", +Formal);
             end if;
          end if;
          Assoc := Get_Chain (Assoc);
