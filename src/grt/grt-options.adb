@@ -165,6 +165,7 @@ package body Grt.Options is
       P (" --no-run          do not simulate, only elaborate");
       P (" --unbuffered      disable buffering on stdout, stderr and");
       P ("                   files opened in write or append mode (TEXTIO).");
+      P (" --wave-opt-file=FILENAME  read a wave option file");
       --  P (" --threads=N       use N threads for simulation");
       P ("Additional features:");
       P (" --has-feature=X   test presence of feature X");
@@ -481,14 +482,13 @@ package body Grt.Options is
             end if;
             Last_Generic_Override := Over;
          end;
-      elsif Option'Length >= 19
-        and then Option (1 .. 19) = "--wave-option-file="
-      then
-         Wave_Opt_File.Parse.Start (Option (20 .. Option'Last));
       elsif Option = "--unbuffered" then
          Unbuffered_Writes := True;
          setbuf (stdout, NULL_voids);
          setbuf (stderr, NULL_voids);
+      elsif Option'Length >= 16 and then Option (1 .. 16) = "--wave-opt-file="
+      then
+         Wave_Opt_File.Parse.Start (Option (17 .. Option'Last));
       elsif not Grt.Hooks.Call_Option_Hooks (Option) then
          Error_C ("unknown option '");
          Error_C (Option);
