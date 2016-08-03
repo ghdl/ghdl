@@ -330,11 +330,14 @@ package body Grt.Wave_Opt_File.Parse is
    is
       Mode : constant String := "rt" & ASCII.Nul;
       Stream : FILEs;
+      Option_File_C : String (1 .. Option_File'Length + 1);
    begin
-      Stream := fopen (Option_File'Address, Mode'Address);
+      Option_File_C (1 .. Option_File'Length) := Option_File;
+      Option_File_C (Option_File_C'Last) := ASCII.Nul;
+      Stream := fopen (Option_File_C'Address, Mode'Address);
       if Stream = NULL_Stream then
          Error_C ("cannot open '");
-         Error_C (Option_File (Option_File'First .. Option_File'Last - 1));
+         Error_C (Option_File);
          Error_E ("'");
       end if;
       return Stream;
