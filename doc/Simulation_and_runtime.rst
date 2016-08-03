@@ -69,7 +69,7 @@ all options available, including the debugging one.
 
     $ ./my_design --stop-time=10ns
     $ ./my_design --stop-time=ps
-    
+
 
 .. option:: --stop-delta=<N>
 
@@ -116,6 +116,12 @@ all options available, including the debugging one.
 .. option:: --unbuffered
 
   Disable buffering on stdout, stderr and files opened in write or append mode (TEXTIO).
+
+
+.. option:: --wave-opt-file=<FILENAME>
+
+  Filter signals to be dumped to the wave file according to the wave option
+  file provided.
 
 
 .. option:: --vcd=<FILENAME>
@@ -208,7 +214,7 @@ all options available, including the debugging one.
   generate labels or block labels.  Currently, you cannot use an indexed name.
 
   Specifying a delay::
-    
+
    --sdf=min=<PATH>=<FILENAME>
    --sdf=typ=<PATH>=<FILENAME>
    --sdf=max=<PATH>=<FILENAME>
@@ -222,7 +228,7 @@ all options available, including the debugging one.
 
 
 .. option:: --help
-   
+
   Display a short description of the options accepted by the runtime library.
 
 Debugging VHDL programs
@@ -246,6 +252,6 @@ an array beyond its bounds.  All error check subprograms call the
 a breakpoint like this:
 
   (gdb) break __ghdl_fatal
-  
+
 When the breakpoint is hit, use the `where` or `bt` command to
 display the stack frames.
