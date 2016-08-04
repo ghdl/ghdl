@@ -23,45 +23,13 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 
--- Description: See package specifications
+-- Description: Wave option file child package for debugging purpose.
+--              Prints the tree created after parsing.
 
-with Grt.Astdio; use Grt.Astdio;
+private package Grt.Wave_Opt.File.Debug is
+   pragma Preelaborate;
 
-package body Grt.Wave_Opt_File.Parse.Debug is
+   -- Dump all the tree
+   procedure Dump_Tree;
 
-   -- Dump recursively an element of the tree.
-   procedure Dump_Sub_Tree (Cursor : Elem_Acc);
-
-   procedure Dump_Tree is
-   begin
-      New_Line;
-      for Index in Tree_Index_Type'Range loop
-         Put_Line ("----------------------------");
-         if Index = Pkg then
-            Put_Line ("Packages : ");
-         else
-            Put_Line ("Instances : ");
-         end if;
-         Dump_Sub_Tree (Trees (Index));
-      end loop;
-      Put_Line ("----------- END -----------------");
-      New_Line;
-   end Dump_Tree;
-
--------------------------------------------------------------------------------
-
-   procedure Dump_Sub_Tree (Cursor : Elem_Acc)
-   is
-      Sibling_Cursor : Elem_Acc;
-   begin
-      Sibling_Cursor := Cursor;
-      while Sibling_Cursor /= null loop
-         Put ((3 .. 2 * Sibling_Cursor.Level => ' '));
-         Put ('/');
-         Put_Line (Sibling_Cursor.Name.all);
-         Dump_Sub_Tree (Sibling_Cursor.Next_Child);
-         Sibling_Cursor := Sibling_Cursor.Next_Sibling;
-      end loop;
-   end Dump_Sub_Tree;
-
-end Grt.Wave_Opt_File.Parse.Debug;
+end Grt.Wave_Opt.File.Debug;

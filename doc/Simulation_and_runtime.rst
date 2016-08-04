@@ -121,7 +121,18 @@ all options available, including the debugging one.
 .. option:: --wave-opt-file=<FILENAME>
 
   Filter signals to be dumped to the wave file according to the wave option
-  file provided.
+  file provided. If the file doesn't exist, creates it with all the signals of
+  the design.
+
+  Here is a description of the wave option file format :
+
+     $ version = 1.0  # Optional
+
+     # Signals in packages :
+     my_pkg.global_signal_a
+
+     # Signals in entities :
+     /top/sub/clk
 
 
 .. option:: --vcd=<FILENAME>

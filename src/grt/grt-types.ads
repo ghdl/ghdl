@@ -49,6 +49,7 @@ package Grt.Types is
 
    --  Access to an unconstrained string.
    type String_Access is access String;
+   type String_Cst is access constant String;
    procedure Unchecked_Deallocation is new Ada.Unchecked_Deallocation
      (Name => String_Access, Object => String);
 

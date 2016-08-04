@@ -43,45 +43,54 @@
 
 with System; use System;
 with Grt.Types; use Grt.Types;
-with Grt.Stdio; use Grt.Stdio;
 with Grt.Strings; use Grt.Strings;
-with Grt.Vstrings; use Grt.Vstrings;
+with Grt.Astdio; use Grt.Astdio;
 with Grt.Errors; use Grt.Errors;
+--~ with Grt.Wave_Opt.File.Debug;
 
---~ with Grt.Wave_Opt_File.Parse.Debug;
+package body Grt.Wave_Opt.File is
 
-package body Grt.Wave_Opt_File.Parse is
    -- Open the wave option file
-   function File_Open (Option_File : String) return FILEs;
+   function Open (Option_File : String) return FILEs;
 
-   -- Update the tree with the current VHDL element parsed from the current
-   -- path. Returns True if the tree was actually updated.
-   function Update_Tree (Elem_Name : String; Tree_Index : Tree_Index_Type)
-                        return Boolean;
+   -- Parse the wave option file
+   procedure Parse_File (Stream : FILEs);
 
    -- Parse the line where the version is set
-   procedure Parse_Version (Line : String; Line_Pos : Positive);
+   procedure Parse_Version (Line : String; Lineno : Positive);
 
    -- Print the version variable given as parameter
    procedure Print_Version (Version : Version_Type);
 
    -- Parse a line where a signal path is set
-   procedure Parse_Path (Line : in out String);
+   procedure Parse_Path (Line : in out String; Lineno : Positive);
 
-   procedure Start (Option_File : String)
-   is
-      Stream : constant FILEs := File_Open (Option_File);
-      First, Last : Integer;
-      Line : String (1 .. Buf_Size);
-      Line_Pos : Natural;
+   procedure Start (Option_File : String) is
+      Stream : FILEs;
    begin
       File_Path := new String'(Option_File);
-      Line_Pos := 0;
+      Stream := Open (Option_File);
+
+      if State = Display_Tree then
+         Parse_File (Stream);
+      -- State = Write_File
+      else
+         Write_Stream := Stream;
+      end if;
+   end Start;
+
+   procedure Parse_File (Stream : FILEs)
+   is
+      First, Last : Integer;
+      Line : String (1 .. Buf_Size);
+      Lineno : Natural;
+   begin
+      Lineno := 0;
 
       -- Processes line after line.
       loop
          exit when fgets (Line'Address, Line'Length, Stream) = Null_Address;
-         Line_Pos := Line_Pos + 1;
+         Lineno := Lineno + 1;
 
          -- Determine end of line.
          Last := New_Line_Pos (Line) - 1;
@@ -98,13 +107,10 @@ package body Grt.Wave_Opt_File.Parse is
          -- Create a line string without beginning and ending whitespaces
          Last := Last_Non_Whitespace_Pos (Line (First .. Last));
 
-
          if Line (First) = '$' then
-            Parse_Version (Line (First .. Last), Line_Pos);
+            Parse_Version (Line (First .. Last), Lineno);
          else
-            Path_Context := new Path_Context_Type'(Line_Pos => Line_Pos,
-                                                   Max_Level => 0);
-            Parse_Path (Line (First .. Last));
+            Parse_Path (Line (First .. Last), Lineno);
          end if;
 
          <<Continue>> null;
@@ -122,68 +128,67 @@ package body Grt.Wave_Opt_File.Parse is
                    " then every signals will be displayed.");
       end if;
 
+      fclose (Stream);
       --~ Debug.Dump_Tree;
 
-   end Start;
+   end Parse_File;
 
--------------------------------------------------------------------------------
-
-   procedure Parse_Version (Line : String; Line_Pos : Positive)
+   procedure Parse_Version (Line : String; Lineno : Positive)
    is
       Msg_Invalid_Format : constant String := "invalid version format";
       First, Dot_Index, Num : Integer;
    begin
 
       if Version /= (others => -1) then
-         Error_Context ("version is set more than once", Line_Pos, Line'First);
+         Error_Context ("version is set more than once", Lineno, Line'First);
       end if;
 
       if Trees /= Tree_Array'(others => null) then
          Error_Context
-           ("version cannot be set after signal paths", Line_Pos, Line'First);
+           ("version cannot be set after signal paths", Lineno, Line'First);
       end if;
 
       First := First_Non_Whitespace_Pos (Line (Line'First + 1 .. Line'Last));
       if Line (First .. First + 6) /= "version" then
-         Error_Context (Msg_Invalid_Format, Line_Pos, Line'First);
+         Error_Context (Msg_Invalid_Format, Lineno, Line'First);
       end if;
 
       -- Catch "version\n", "version1.0"
       First := First + 7;
       if not Is_Whitespace (Line (First)) then
-         Error_Context (Msg_Invalid_Format, Line_Pos, Line'First);
+         Error_Context (Msg_Invalid_Format, Lineno, Line'First);
       end if;
 
       -- Catch "version \n", "version  \n", etc
       First := First_Non_Whitespace_Pos (Line (First + 1 .. Line'Last));
       if First = -1 then
-         Error_Context (Msg_Invalid_Format, Line_Pos, Line'First);
+         Error_Context (Msg_Invalid_Format, Lineno, Line'First);
       end if;
 
       -- Catch the absence of "." or "version ."
       Dot_Index := Find (Line (First + 1 .. Line'Last), '.');
       if Dot_Index = -1 then
-         Error_Context (Msg_Invalid_Format, Line_Pos, Line'First);
+         Error_Context (Msg_Invalid_Format, Lineno, Line'First);
       end if;
 
       -- Catch version a.2
       Num := Value (Line (First .. Dot_Index - 1));
       if Num = -1 then
-         Error_Context (Msg_Invalid_Format, Line_Pos, Line'First);
+         Error_Context (Msg_Invalid_Format, Lineno, Line'First);
       end if;
       Version.Major := Num;
 
       -- Catch version 1.a
       Num := Value (Line (Dot_Index + 1 .. Line'Last));
       if Num = -1 then
-         Error_Context (Msg_Invalid_Format, Line_Pos, Line'First);
+         Error_Context (Msg_Invalid_Format, Lineno, Line'First);
       end if;
       Version.Minor := Num;
 
       if Version.Major /= Current_Version.Major
         or else Version.Minor > Current_Version.Minor
       then
-         Print_Context (Line'First, Line_Pos, Error);
+         Print_Context (Line'First, Lineno, Error);
          Error_C ("unsupported format version; it must be ");
          if Current_Version.Minor /= 0 then
             Error_C ("between ");
@@ -196,27 +201,24 @@ package body Grt.Wave_Opt_File.Parse is
 
    end Parse_Version;
 
-   procedure Print_Version (Version : Version_Type)
-   is
-      Num_Str : String (1 .. Value_String_Size);
-      First : Positive;
+   procedure Print_Version (Version : Version_Type) is
    begin
-      To_String (Num_Str, First, Ghdl_I32 (Version.Major));
-      Report_C (Num_Str (First .. Num_Str'Last));
+      Report_C (Version.Major);
       Report_C (".");
-      To_String (Num_Str, First, Ghdl_I32 (Version.Minor));
-      Report_C (Num_Str (First .. Num_Str'Last));
+      Report_C (Version.Minor);
    end Print_Version;
 
-   --------------------------------------------------------------------------
-
-   procedure Parse_Path (Line : in out String)
+   procedure Parse_Path (Line : in out String; Lineno : Positive)
    is
       -- Can equal to 0 in case of error (like '.' as a full path)
       First, Last : Natural;
-      Tree_Updated : Boolean;
+      Path_Context : Path_Context_Acc;
       Tree_Index : Tree_Index_Type;
+      Tree_Cursor, Previous_Tree_Cursor : Elem_Acc;
+      Created_Elem : Elem_Acc;
    begin
+      Path_Context := new Path_Context_Type'(Lineno => Lineno,
+                                             Max_Level => 0);
       To_Lower (Line);
       Last := Line'First;
       if Line (Line'First) = '/' then
@@ -225,7 +227,7 @@ package body Grt.Wave_Opt_File.Parse is
          -- Catch '/' as a full path
          if Last > Line'Length then
             Error_Context
-              ("invalid signal path", Path_Context.Line_Pos, Line'First);
+              ("invalid signal path", Path_Context.Lineno, Line'First);
          end if;
       else
          -- '/' not allowed for package signal paths in a.  Catch also the
@@ -233,7 +235,7 @@ package body Grt.Wave_Opt_File.Parse is
          -- code to believe it's inside a package
          if Find (Line, '/') > 0 then
             Error_Context
-              ("invalid signal path", Path_Context.Line_Pos, Line'First);
+              ("invalid signal path", Path_Context.Lineno, Line'First);
          end if;
          Tree_Index := Pkg;
       end if;
@@ -255,12 +257,18 @@ package body Grt.Wave_Opt_File.Parse is
          end loop;
 
          Path_Context.Max_Level := Path_Context.Max_Level + 1;
-         Tree_Updated := Update_Tree (Line (First .. Last), Tree_Index);
+         Update_Tree (Created_Elem => Created_Elem,
+                      Tree_Cursor => Tree_Cursor,
+                      Previous_Tree_Cursor => Previous_Tree_Cursor,
+                      Tree_Index => Tree_Index,
+                      Elem_Name => Line (First .. Last),
+                      Level => Path_Context.Max_Level,
+                      Path_Context => Path_Context);
 
          if Last = Line'Last then
-            if not Tree_Updated then
+            if Created_Elem = null then
                Error_Context ("ignored already known signal path",
-                              Path_Context.Line_Pos,
+                              Path_Context.Lineno,
                               Line'First,
                               Warning);
             end if;
@@ -272,75 +280,144 @@ package body Grt.Wave_Opt_File.Parse is
          -- Catch signal paths ending with / or .
          if Last > Line'Last then
             Error_Context
-              ("invalid signal path", Path_Context.Line_Pos, Line'First);
+              ("invalid signal path", Path_Context.Lineno, Line'First);
          end if;
 
       end loop;
 
    end Parse_Path;
 
-   function Update_Tree (Elem_Name : String; Tree_Index : Tree_Index_Type)
-                        return Boolean
+   procedure Update_Tree (Created_Elem : out Elem_Acc;
+                          Tree_Cursor : in out Elem_Acc;
+                          Previous_Tree_Cursor : in out Elem_Acc;
+                          Tree_Index : Tree_Index_Type;
+                          Elem_Name : String;
+                          Level : Positive;
+                          Path_Context : Path_Context_Acc := null)
    is
       Sibling_Cursor, Previous_Sibling_Cursor : Elem_Acc;
-      Elem : Elem_Acc;
    begin
       Sibling_Cursor := Tree_Cursor;
       Previous_Sibling_Cursor := null;
+      Created_Elem := null;
 
       loop
          -- Already reached the last sibling and current identifier corresponds
          -- to no existing element ? Then we will create an element
          if Sibling_Cursor = null then
-            Elem := new Elem_Type'(Name => new String'(Elem_Name),
-                                   Path_Context => Path_Context,
-                                   Column_Pos => Elem_Name'First,
-                                   Level => Path_Context.Max_Level,
-                                   Kind => Not_Found,
-                                   Next_Sibling | Next_Child => null);
+            Created_Elem := new Elem_Type'(Name => new String'(Elem_Name),
+                                           Path_Context => Path_Context,
+                                           Column => Elem_Name'First,
+                                           Level => Level,
+                                           Kind => Not_Found,
+                                           Parent => Previous_Tree_Cursor,
+                                           Next_Sibling | Next_Child => null);
             -- First element of level ?
             if Previous_Sibling_Cursor = null then
                -- Is a top level ?
                if Previous_Tree_Cursor = null then
-                  Trees (Tree_Index) := Elem;
+                  Trees (Tree_Index) := Created_Elem;
                else
-                  Previous_Tree_Cursor.Next_Child := Elem;
+                  Previous_Tree_Cursor.Next_Child := Created_Elem;
                end if;
             else
-               Previous_Sibling_Cursor.Next_Sibling := Elem;
+               Previous_Sibling_Cursor.Next_Sibling := Created_Elem;
             end if;
-            Previous_Tree_Cursor := Elem;
+            Previous_Tree_Cursor := Created_Elem;
             -- Point to Elem.Next_Child which is null
             Tree_Cursor := null;
-            return True;
+            return;
          -- Identifier was found in the tree ? Then move to its first child
          elsif Elem_Name = Sibling_Cursor.Name.all then
             Previous_Tree_Cursor := Sibling_Cursor;
             Tree_Cursor := Sibling_Cursor.Next_Child;
-            return False;
+            return;
          end if;
          Previous_Sibling_Cursor := Sibling_Cursor;
          Sibling_Cursor := Sibling_Cursor.Next_Sibling;
       end loop;
    end Update_Tree;
 
-   --------------------------------------------------------------------------
+   procedure Write_Version (Stream : FILEs) is
+   begin
+         Put (Stream, "$ version ");
+         Put_I32 (Stream, Ghdl_I32 (Current_Version.Major));
+         Put (Stream, '.');
+         Put_I32 (Stream, Ghdl_I32 (Current_Version.Minor));
+         New_Line (Stream);
+   end Write_Version;
 
-   function File_Open (Option_File : String) return FILEs
+   function Open (Option_File : String) return FILEs
    is
-      Mode : constant String := "rt" & ASCII.Nul;
+      Read_Mode : constant String := "rt" & ASCII.Nul;
+      Write_Mode : constant String := "wt" & ASCII.Nul;
       Stream : FILEs;
       Option_File_C : String (1 .. Option_File'Length + 1);
    begin
       Option_File_C (1 .. Option_File'Length) := Option_File;
       Option_File_C (Option_File_C'Last) := ASCII.Nul;
-      Stream := fopen (Option_File_C'Address, Mode'Address);
+      State := Display_Tree;
+      Stream := fopen (Option_File_C'Address, Read_Mode'Address);
       if Stream = NULL_Stream then
-         Error_C ("cannot open '");
-         Error_C (Option_File);
-         Error_E ("'");
+         Report_C (Option_File);
+         Report_E (" does not exist, so it will be created");
+         State := Write_File;
+         Stream := fopen (Option_File_C'Address, Write_Mode'Address);
+         if Stream = NULL_Stream then
+            Error_C ("cannot create '");
+            Error_C (Option_File);
+            Error_E ("'");
+         end if;
+         Write_Version (Stream);
       end if;
       return Stream;
-   end File_Open;
+   end Open;
 
-end Grt.Wave_Opt_File.Parse;
+   procedure Write_Tree_Comment (Tree_Index : Tree_Index_Type) is
+   begin
+      New_Line (Write_Stream);
+      if Tree_Index = Pkg then
+         Put_Line (Write_Stream, "# Signals in packages :");
+      else
+         Put_Line (Write_Stream, "# Signals in entities :");
+      end if;
+   end Write_Tree_Comment;
+
+   procedure Write_Signal_Path (Signal : Elem_Acc) is
+      type Elem_Array is array (Positive range <>) of Elem_Acc;
+      Signal_Path : Elem_Array (1 .. Signal.Level - 1);
+      Cursor : Elem_Acc;
+      Sep : Character;
+   begin
+      Cursor := Signal.Parent;
+      for I in reverse Signal_Path'Range loop
+         Signal_Path (I) := Cursor;
+         Cursor := Cursor.Parent;
+      end loop;
+      if Signal_Path (1) = Trees (Pkg) then
+         Sep := '.';
+      else
+         Sep := '/';
+         Put (Write_Stream, Sep);
+      end if;
+      for I in Signal_Path'Range loop
+         Put (Write_Stream, Signal_Path (I).Name.all);
+         Put (Write_Stream, Sep);
+      end loop;
+      Put_Line (Write_Stream, Signal.Name.all);
+   end Write_Signal_Path;
+
+   procedure Close_Write_Stream is
+   begin
+      fclose (Write_Stream);
+   end Close_Write_Stream;
+
+   procedure Finalize is
+   begin
+      if State = Write_File then
+         File.Close_Write_Stream;
+         State := Display_All;
+      end if;
+   end Finalize;
+
+end Grt.Wave_Opt.File;
