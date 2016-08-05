@@ -42,7 +42,7 @@ package body Grt.Wave_Opt.File.Debug is
          else
             Put_Line ("Instances : ");
          end if;
-         Dump_Sub_Tree (Trees (Index));
+         Dump_Sub_Tree (Trees (Index).Next_Child);
       end loop;
       Put_Line ("----------- END -----------------");
       New_Line;

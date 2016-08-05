@@ -657,7 +657,7 @@ package body Grt.Fst is
       if Is_Displayed (Wave_Elem) then
          Fst_Put_Hierarchy (Root, Wave_Elem);
       end if;
-      Wave_Opt.Design.Check_If_All_Found;
+      Wave_Opt.Design.Last_Checks;
 
       if Flag_Aliases then
          Free_Hash_Tab;

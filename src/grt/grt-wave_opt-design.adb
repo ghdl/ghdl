@@ -32,7 +32,7 @@ package body Grt.Wave_Opt.Design is
 
    -- Find the element that matches the name given. Starts with the element
    -- given, then go thru all its siblings
-   function Find_Cursor (Name : Ghdl_C_String;
+   function Find_Cursor (Name : String;
                          First_Sibling : Elem_Acc;
                          Is_Signal : Boolean := False)
                         return Elem_Acc;
@@ -40,69 +40,53 @@ package body Grt.Wave_Opt.Design is
    function Get_Top_Cursor (Tree_Index : Tree_Index_Type; Name : Ghdl_C_String)
                            return Elem_Acc
    is
-      Dummy_Cursor : Elem_Acc := null;
-      Cursor : Elem_Acc;
+      Root : Elem_Acc;
    begin
-      if State = Write_File and then Trees (Tree_Index) = null then
+      Root := Trees (Tree_Index);
+      if State = Write_File and then Root.Next_Child = null then
          Write_Tree_Comment (Tree_Index);
       end if;
-      case State is
-         when Write_File =>
-            Update_Tree (Created_Elem => Cursor,
-                         Tree_Cursor => Dummy_Cursor,
-                         Previous_Tree_Cursor => Dummy_Cursor,
-                         Tree_Index => Tree_Index,
-                         Elem_Name => Name (1 .. strlen (Name)),
-                         Level => 1);
-            return Cursor;
-         when Display_Tree =>
-            return Find_Cursor (Name, Trees (Tree_Index));
-         when Display_All =>
-            return null;
-      end case;
+      return Get_Cursor (Root, Name);
    end Get_Top_Cursor;
 
    function Get_Cursor (Parent : Elem_Acc;
                         Name : Ghdl_C_String;
                         Is_Signal : Boolean := False) return Elem_Acc
    is
-      Cursor, Parent_Copy : Elem_Acc;
-      Dummy_Cursor : Elem_Acc := null;
-      Dummy_Tree_Index : constant Tree_Index_Type := Tree_Index_Type'First;
+      Cursor : Elem_Acc;
+      Dummy_Bool : Boolean;
+      Str_Name : constant String := Name (1 .. strlen (Name));
    begin
       case State is
          when Write_File =>
-            Parent_Copy := Parent;
-            Update_Tree (Created_Elem => Cursor,
-                         Tree_Cursor => Dummy_Cursor,
-                         Previous_Tree_Cursor => Parent_Copy,
-                         Tree_Index => Dummy_Tree_Index,
-                         Elem_Name => Name (1 .. strlen (Name)),
+            Cursor := Parent;
+            Update_Tree (Cursor => Cursor,
+                         Updated => Dummy_Bool,
+                         Elem_Name => Str_Name,
                          Level => Parent.Level + 1);
             if Is_Signal then
                Write_Signal_Path (Cursor);
             end if;
             return Cursor;
          when Display_Tree =>
-            return Find_Cursor (Name, Parent.Next_Child, Is_Signal);
+            return Find_Cursor (Str_Name, Parent.Next_Child, Is_Signal);
          when Display_All =>
             return null;
       end case;
    end Get_Cursor;
 
-   function Find_Cursor (Name : Ghdl_C_String;
+   function Find_Cursor (Name : String;
                          First_Sibling : Elem_Acc;
                          Is_Signal : Boolean := False)
                         return Elem_Acc
    is
-      Len : constant Natural := strlen (Name);
       Cursor : Elem_Acc;
    begin
       Cursor := First_Sibling;
       loop
          if Cursor = null then
             return null;
-         elsif Cursor.Name.all = Name (1 .. Len) then
+         elsif Cursor.Name.all = Name then
             if Is_Signal then
                Cursor.Kind := Signal;
             else
@@ -123,21 +107,19 @@ package body Grt.Wave_Opt.Design is
    end Is_Displayed;
 
    -- Read the whole sub tree given and check if every element was found in
-   -- design.  Called by Check_If_All_Found
-   procedure Check_Sub_Tree_If_All_Found
-     (Previous_Cursor : Elem_Acc; Sep : Character);
+   -- design.  Called by Last_Checks
+   procedure Check_Sub_Tree_If_All_Found (Previous_Cursor : Elem_Acc);
 
-   procedure Check_If_All_Found is
+   procedure Last_Checks is
    begin
-      for Index in Tree_Index_Type'Range loop
-         Check_Sub_Tree_If_All_Found (Trees (Index), Seps (Index));
-      end loop;
-   end Check_If_All_Found;
+      if Wave_Opt.State = Display_Tree then
+         for Index in Tree_Index_Type'Range loop
+            Check_Sub_Tree_If_All_Found (Trees (Index).Next_Child);
+         end loop;
+      end if;
+   end Last_Checks;
 
-
-
-   procedure Check_Sub_Tree_If_All_Found
-     (Previous_Cursor : Elem_Acc; Sep : Character)
+   procedure Check_Sub_Tree_If_All_Found (Previous_Cursor : Elem_Acc)
    is
       Cursor : Elem_Acc;
    begin
@@ -146,7 +128,7 @@ package body Grt.Wave_Opt.Design is
          if Cursor.Kind = Not_Found then
             Print_Context (Cursor, Warning);
             Report_C (Cursor.Name.all);
-            Report_C (" : first element of the path not found in design");
+            Report_E (" : first element of the path not found in design");
          elsif Cursor.Level = Cursor.Path_Context.Max_Level
            and then Cursor.Kind = Pkg_Entity
          then
@@ -154,7 +136,7 @@ package body Grt.Wave_Opt.Design is
             Report_C (Cursor.Name.all);
             Report_E (" is not a signal");
          else
-            Check_Sub_Tree_If_All_Found (Cursor.Next_Child, Sep);
+            Check_Sub_Tree_If_All_Found (Cursor.Next_Child);
          end if;
          Cursor := Cursor.Next_Sibling;
       end loop;

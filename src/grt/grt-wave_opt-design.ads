@@ -53,7 +53,8 @@ package Grt.Wave_Opt.Design is
    -- the tree of the VHDL elements to be displayed
    function Is_Displayed (Cursor : Elem_Acc) return Boolean;
 
-   -- Read the whole tree and check if every element was found in design
-   procedure Check_If_All_Found;
+   -- If relevent, read the whole tree and check if every element was found in
+   -- design
+   procedure Last_Checks;
 
 end Grt.Wave_Opt.Design;

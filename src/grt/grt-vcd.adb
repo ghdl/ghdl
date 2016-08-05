@@ -902,7 +902,7 @@ package body Grt.Vcd is
       if Is_Displayed (Wave_Elem) then
          Vcd_Put_Hierarchy (Root, Wave_Elem);
       end if;
-      Wave_Opt.Design.Check_If_All_Found;
+      Wave_Opt.Design.Last_Checks;
 
       --  End of header.
       Vcd_Put ("$enddefinitions ");

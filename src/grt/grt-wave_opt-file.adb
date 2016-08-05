@@ -53,6 +53,12 @@ package body Grt.Wave_Opt.File is
    -- Open the wave option file
    function Open (Option_File : String) return FILEs;
 
+   -- Initialize the root of the tree
+   procedure Initialize_Tree;
+
+   -- Tell if the tree is empty (beside the root)
+   function Tree_Is_Empty return Boolean;
+
    -- Parse the wave option file
    procedure Parse_File (Stream : FILEs);
 
@@ -123,7 +129,7 @@ package body Grt.Wave_Opt.File is
          Report_E ("");
       end if;
 
-      if Trees = Tree_Array'(others => null) then
+      if Tree_Is_Empty then
          Report_E ("No signal path was found in the wave option file," &
                    " then every signals will be displayed.");
       end if;
@@ -143,7 +149,7 @@ package body Grt.Wave_Opt.File is
          Error_Context ("version is set more than once", Lineno, Line'First);
       end if;
 
-      if Trees /= Tree_Array'(others => null) then
+      if not Tree_Is_Empty then
          Error_Context
            ("version cannot be set after signal paths", Lineno, Line'First);
       end if;
@@ -208,14 +214,29 @@ package body Grt.Wave_Opt.File is
       Report_C (Version.Minor);
    end Print_Version;
 
+   procedure Initialize_Tree is
+   begin
+      for I in Tree_Index_Type'Range loop
+         Trees (I) := new Elem_Type;
+         Trees (I).Name := new String'(1 => Seps (I));
+         Trees (I).Level := 0;
+      end loop;
+   end Initialize_Tree;
+
+   function Tree_Is_Empty return Boolean is
+   begin
+      return Trees (Pkg).Next_Child = null
+             and Trees (Entity).Next_Child = null;
+   end Tree_Is_Empty;
+
    procedure Parse_Path (Line : in out String; Lineno : Positive)
    is
       -- Can equal to 0 in case of error (like '.' as a full path)
       First, Last : Natural;
       Path_Context : Path_Context_Acc;
       Tree_Index : Tree_Index_Type;
-      Tree_Cursor, Previous_Tree_Cursor : Elem_Acc;
-      Created_Elem : Elem_Acc;
+      Tree_Cursor : Elem_Acc;
+      Tree_Updated : Boolean;
    begin
       Path_Context := new Path_Context_Type'(Lineno => Lineno,
                                              Max_Level => 0);
@@ -240,7 +261,6 @@ package body Grt.Wave_Opt.File is
          Tree_Index := Pkg;
       end if;
       Tree_Cursor := Trees (Tree_Index);
-      Previous_Tree_Cursor := null;
 
       loop
          First := Last;
@@ -257,16 +277,14 @@ package body Grt.Wave_Opt.File is
          end loop;
 
          Path_Context.Max_Level := Path_Context.Max_Level + 1;
-         Update_Tree (Created_Elem => Created_Elem,
-                      Tree_Cursor => Tree_Cursor,
-                      Previous_Tree_Cursor => Previous_Tree_Cursor,
-                      Tree_Index => Tree_Index,
+         Update_Tree (Cursor => Tree_Cursor,
+                      Updated => Tree_Updated,
                       Elem_Name => Line (First .. Last),
                       Level => Path_Context.Max_Level,
                       Path_Context => Path_Context);
 
          if Last = Line'Last then
-            if Created_Elem = null then
+            if not Tree_Updated then
                Error_Context ("ignored already known signal path",
                               Path_Context.Lineno,
                               Line'First,
@@ -287,50 +305,40 @@ package body Grt.Wave_Opt.File is
 
    end Parse_Path;
 
-   procedure Update_Tree (Created_Elem : out Elem_Acc;
-                          Tree_Cursor : in out Elem_Acc;
-                          Previous_Tree_Cursor : in out Elem_Acc;
-                          Tree_Index : Tree_Index_Type;
+   procedure Update_Tree (Cursor : in out Elem_Acc;
+                          Updated : out Boolean;
                           Elem_Name : String;
-                          Level : Positive;
+                          Level : Natural;
                           Path_Context : Path_Context_Acc := null)
    is
       Sibling_Cursor, Previous_Sibling_Cursor : Elem_Acc;
+      Created_Elem : Elem_Acc;
    begin
-      Sibling_Cursor := Tree_Cursor;
       Previous_Sibling_Cursor := null;
-      Created_Elem := null;
-
+      Sibling_Cursor := Cursor.Next_Child;
       loop
          -- Already reached the last sibling and current identifier corresponds
          -- to no existing element ? Then we will create an element
          if Sibling_Cursor = null then
-            Created_Elem := new Elem_Type'(Name => new String'(Elem_Name),
-                                           Path_Context => Path_Context,
-                                           Column => Elem_Name'First,
-                                           Level => Level,
-                                           Kind => Not_Found,
-                                           Parent => Previous_Tree_Cursor,
-                                           Next_Sibling | Next_Child => null);
+            Created_Elem := new Elem_Type;
+            Created_Elem.Name := new String'(Elem_Name);
+            Created_Elem.Path_Context := Path_Context;
+            Created_Elem.Column := Elem_Name'First;
+            Created_Elem.Level := Level;
+            Created_Elem.Parent := Cursor;
             -- First element of level ?
             if Previous_Sibling_Cursor = null then
-               -- Is a top level ?
-               if Previous_Tree_Cursor = null then
-                  Trees (Tree_Index) := Created_Elem;
-               else
-                  Previous_Tree_Cursor.Next_Child := Created_Elem;
-               end if;
+               Cursor.Next_Child := Created_Elem;
             else
                Previous_Sibling_Cursor.Next_Sibling := Created_Elem;
             end if;
-            Previous_Tree_Cursor := Created_Elem;
-            -- Point to Elem.Next_Child which is null
-            Tree_Cursor := null;
+            Cursor := Created_Elem;
+            Updated := True;
             return;
          -- Identifier was found in the tree ? Then move to its first child
          elsif Elem_Name = Sibling_Cursor.Name.all then
-            Previous_Tree_Cursor := Sibling_Cursor;
-            Tree_Cursor := Sibling_Cursor.Next_Child;
+            Cursor := Sibling_Cursor;
+            Updated := False;
             return;
          end if;
          Previous_Sibling_Cursor := Sibling_Cursor;
@@ -357,10 +365,12 @@ package body Grt.Wave_Opt.File is
       Option_File_C (1 .. Option_File'Length) := Option_File;
       Option_File_C (Option_File_C'Last) := ASCII.Nul;
       State := Display_Tree;
+
       Stream := fopen (Option_File_C'Address, Read_Mode'Address);
       if Stream = NULL_Stream then
          Report_C (Option_File);
          Report_E (" does not exist, so it will be created");
+
          State := Write_File;
          Stream := fopen (Option_File_C'Address, Write_Mode'Address);
          if Stream = NULL_Stream then
@@ -368,8 +378,12 @@ package body Grt.Wave_Opt.File is
             Error_C (Option_File);
             Error_E ("'");
          end if;
+
          Write_Version (Stream);
       end if;
+
+      Initialize_Tree;
+
       return Stream;
    end Open;
 
@@ -394,11 +408,11 @@ package body Grt.Wave_Opt.File is
          Signal_Path (I) := Cursor;
          Cursor := Cursor.Parent;
       end loop;
-      if Signal_Path (1) = Trees (Pkg) then
-         Sep := '.';
-      else
+      if Signal_Path (1).Parent.Name.all = "/" then
          Sep := '/';
          Put (Write_Stream, Sep);
+      else
+         Sep := '.';
       end if;
       for I in Signal_Path'Range loop
          Put (Write_Stream, Signal_Path (I).Name.all);
@@ -407,15 +421,10 @@ package body Grt.Wave_Opt.File is
       Put_Line (Write_Stream, Signal.Name.all);
    end Write_Signal_Path;
 
-   procedure Close_Write_Stream is
-   begin
-      fclose (Write_Stream);
-   end Close_Write_Stream;
-
    procedure Finalize is
    begin
       if State = Write_File then
-         File.Close_Write_Stream;
+         fclose (Write_Stream);
          State := Display_All;
       end if;
    end Finalize;

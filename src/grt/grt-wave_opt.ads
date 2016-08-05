@@ -56,13 +56,12 @@ package Grt.Wave_Opt is
    type Elem_Acc is access Elem_Type;
    type Elem_Type is record
       Name : String_Cst;
-      Path_Context : Path_Context_Acc;
-      Column : Positive;
-      Level : Positive;
-      Kind : Elem_Kind_Type;
-      Parent : Elem_Acc;
-      Next_Sibling : Elem_Acc;
-      Next_Child : Elem_Acc;
+      Path_Context : Path_Context_Acc := null;
+      Column : Natural := 0;
+      Level : Natural;
+      Kind : Elem_Kind_Type := Not_Found;
+      Parent : Elem_Acc := null;
+      Next_Sibling, Next_Child : Elem_Acc := null;
    end record;
 
    type Tree_Index_Type is (Pkg, Entity);

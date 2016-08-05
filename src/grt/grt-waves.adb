@@ -1590,9 +1590,8 @@ package body Grt.Waves is
       Write_Known_Types;
       Write_Hierarchy (Root);
 
-      if Wave_Opt.State = Display_Tree then
-         Wave_Opt.Design.Check_If_All_Found;
-      end if;
+      Wave_Opt.Design.Last_Checks;
+
       -- TODO : The tree of the wave option file should be deallocated here,
       --        but the memory gain shouldn't be significative
 

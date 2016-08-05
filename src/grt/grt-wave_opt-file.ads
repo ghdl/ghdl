@@ -46,20 +46,16 @@ package Grt.Wave_Opt.File is
    -- tree or of the entities tree is ever written
    procedure Write_Tree_Comment (Tree_Index : Tree_Index_Type);
 
-   -- Close the option file opened for writing
-   procedure Close_Write_Stream;
-
    -- Update_Tree : Update the tree with the current VHDL element read from
    -- the current path.
    -- Called when the option file is read or when the option file is created
    -- while reading the design hierarchy.
-   procedure Update_Tree (Created_Elem : out Elem_Acc;
-                          Tree_Cursor : in out Elem_Acc;
-                          Previous_Tree_Cursor : in out Elem_Acc;
-                          Tree_Index : Tree_Index_Type;
+   procedure Update_Tree (Cursor : in out Elem_Acc;
+                          Updated : out Boolean;
                           Elem_Name : String;
-                          Level : Positive;
+                          Level : Natural;
                           Path_Context : Path_Context_Acc := null);
+
    -- Destructor
    procedure Finalize;
 
