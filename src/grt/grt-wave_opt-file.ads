@@ -51,10 +51,10 @@ package Grt.Wave_Opt.File is
    -- Called when the option file is read or when the option file is created
    -- while reading the design hierarchy.
    procedure Update_Tree (Cursor : in out Elem_Acc;
-                          Updated : out Boolean;
-                          Elem_Name : String;
+                          Last_Updated : in out Boolean;
+                          Elem_Expr : String;
                           Level : Natural;
-                          Path_Context : Path_Context_Acc := null);
+                          Lineno : Natural := 0);
 
    -- Destructor
    procedure Finalize;
@@ -70,7 +70,7 @@ private
       Minor : Integer;
    end record;
    Version : Version_Type := (others => -1);
-   Current_Version : constant Version_Type := (Major => 1, Minor => 0);
+   Current_Version : constant Version_Type := (Major => 1, Minor => 1);
 
    type Sep_Array is array (Tree_Index_Type) of Character;
 

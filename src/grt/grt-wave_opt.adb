@@ -49,7 +49,7 @@ package body Grt.Wave_Opt is
    procedure Print_Context (Element : Elem_Acc; Severity : Severity_Type) is
    begin
       Print_Context
-        (Element.Path_Context.Lineno, Element.Column, Severity);
+        (Element.Lineno, Element.Column, Severity);
    end Print_Context;
 
    procedure Error_Context (Msg : String;
@@ -69,7 +69,7 @@ package body Grt.Wave_Opt is
      (Msg : String; Element : Elem_Acc; Severity : Severity_Type := Error) is
    begin
       Error_Context
-        (Msg, Element.Path_Context.Lineno, Element.Column, Severity);
+        (Msg, Element.Lineno, Element.Column, Severity);
    end Error_Context;
 
 end Grt.Wave_Opt;

@@ -45,19 +45,13 @@ package Grt.Wave_Opt is
 
    File_Path : String_Cst;
 
-   type Path_Context_Type is record
-      Lineno : Natural;
-      Max_Level : Natural;
-   end record;
-   type Path_Context_Acc is access Path_Context_Type;
-
-   type Elem_Kind_Type is (Not_Found, Pkg_Entity, Signal);
+   type Elem_Kind_Type is (Not_Found, Pkg_Entity, Signal, Recursion);
    type Elem_Type;
    type Elem_Acc is access Elem_Type;
    type Elem_Type is record
-      Name : String_Cst;
-      Path_Context : Path_Context_Acc := null;
-      Column : Natural := 0;
+      Expr : String_Cst;
+      Lineno : Natural;
+      Column : Natural;
       Level : Natural;
       Kind : Elem_Kind_Type := Not_Found;
       Parent : Elem_Acc := null;

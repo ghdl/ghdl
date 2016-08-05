@@ -31,7 +31,7 @@
 --      visible on the tree view (SST) of gtkwave, but both of them are visible
 --      when no item is selected in the tree view and are mixed together.
 --      (Same issue with VCD waves.)
---    + After calling FST_Put_Hierarchy (Pack, Wave_Elem), Avhpi_Error is
+--    + After calling FST_Put_Hierarchy (Pack, Match_List), Avhpi_Error is
 --      raised several times when no signal paths are provided in a wave option
 --      file. It has no consequences other than a printed message.
 --      (Same issue with VCD waves.)
@@ -413,10 +413,10 @@ package body Grt.Fst is
    end Fst_Add_Signal;
 
    procedure Fst_Put_Hierarchy
-     (Inst : VhpiHandleT; Wave_Elem : Wave_Opt.Elem_Acc);
+     (Inst : VhpiHandleT; Match_List : Design.Match_List);
 
    procedure Fst_Put_Scope
-     (Scope : fstScopeType; Decl : VhpiHandleT; Wave_Elem : Wave_Opt.Elem_Acc)
+     (Scope : fstScopeType; Decl : VhpiHandleT; Match_List : Design.Match_List)
    is
       Name : String (1 .. 128);
       Name_Len : Integer;
@@ -467,17 +467,17 @@ package body Grt.Fst is
 
       fstWriterSetScope
         (Context, Scope, To_Ghdl_C_String (Name'Address), null);
-      Fst_Put_Hierarchy (Decl, Wave_Elem);
+      Fst_Put_Hierarchy (Decl, Match_List);
       fstWriterSetUpscope (Context);
    end Fst_Put_Scope;
 
    procedure Fst_Put_Hierarchy
-     (Inst : VhpiHandleT; Wave_Elem : Wave_Opt.Elem_Acc)
+     (Inst : VhpiHandleT; Match_List : Design.Match_List)
    is
       Decl_It : VhpiHandleT;
       Decl : VhpiHandleT;
       Error : AvhpiErrorT;
-      Wave_Elem_Child : Wave_Opt.Elem_Acc;
+      Match_List_Child : Design.Match_List;
    begin
       Vhpi_Iterator (VhpiDecls, Inst, Decl_It, Error);
       if Error /= AvhpiErrorOk then
@@ -497,9 +497,9 @@ package body Grt.Fst is
          case Vhpi_Get_Kind (Decl) is
             when VhpiPortDeclK
               | VhpiSigDeclK =>
-               Wave_Elem_Child := Get_Cursor
-                 (Wave_Elem, Avhpi_Get_Base_Name (Decl), Is_Signal => True);
-               if Is_Displayed (Wave_Elem_Child) then
+               Match_List_Child := Get_Cursor
+                 (Match_List, Avhpi_Get_Base_Name (Decl), Is_Signal => True);
+               if Is_Displayed (Match_List_Child) then
                   Fst_Add_Signal (Decl);
                end if;
             when others =>
@@ -527,20 +527,21 @@ package body Grt.Fst is
             return;
          end if;
 
-         Wave_Elem_Child := Get_Cursor (Wave_Elem, Avhpi_Get_Base_Name (Decl));
-         if Is_Displayed (Wave_Elem_Child) then
+         Match_List_Child := Get_Cursor
+           (Match_List, Avhpi_Get_Base_Name (Decl));
+         if Is_Displayed (Match_List_Child) then
             case Vhpi_Get_Kind (Decl) is
                when VhpiIfGenerateK =>
                   Fst_Put_Scope
-                    (FST_ST_VHDL_IF_GENERATE, Decl, Wave_Elem_Child);
+                    (FST_ST_VHDL_IF_GENERATE, Decl, Match_List_Child);
                when VhpiForGenerateK =>
                   Fst_Put_Scope
-                    (FST_ST_VHDL_FOR_GENERATE, Decl, Wave_Elem_Child);
+                    (FST_ST_VHDL_FOR_GENERATE, Decl, Match_List_Child);
                when  VhpiBlockStmtK =>
-                  Fst_Put_Scope (FST_ST_VHDL_BLOCK, Decl, Wave_Elem_Child);
+                  Fst_Put_Scope (FST_ST_VHDL_BLOCK, Decl, Match_List_Child);
                when VhpiCompInstStmtK =>
                   Fst_Put_Scope
-                    (FST_ST_VHDL_ARCHITECTURE, Decl, Wave_Elem_Child);
+                    (FST_ST_VHDL_ARCHITECTURE, Decl, Match_List_Child);
                when others =>
                   null;
             end case;
@@ -624,7 +625,7 @@ package body Grt.Fst is
       Pack : VhpiHandleT;
       Error : AvhpiErrorT;
       Root : VhpiHandleT;
-      Wave_Elem : Wave_Opt.Elem_Acc;
+      Match_List : Design.Match_List;
    begin
       --  Do nothing if there is no VCD file to generate.
       if Context = Null_fstContext then
@@ -650,17 +651,17 @@ package body Grt.Fst is
             Avhpi_Error (Error);
             return;
          end if;
-         Wave_Elem := Get_Top_Cursor (Pkg, Avhpi_Get_Base_Name (Pack));
-         if Is_Displayed (Wave_Elem) then
-            Fst_Put_Hierarchy (Pack, Wave_Elem);
+         Match_List := Get_Top_Cursor (Pkg, Avhpi_Get_Base_Name (Pack));
+         if Is_Displayed (Match_List) then
+            Fst_Put_Hierarchy (Pack, Match_List);
          end if;
       end loop;
 
       --  Then top entity.
       Get_Root_Inst (Root);
-      Wave_Elem := Get_Top_Cursor (Entity, Avhpi_Get_Base_Name (Root));
-      if Is_Displayed (Wave_Elem) then
-         Fst_Put_Hierarchy (Root, Wave_Elem);
+      Match_List := Get_Top_Cursor (Entity, Avhpi_Get_Base_Name (Root));
+      if Is_Displayed (Match_List) then
+         Fst_Put_Hierarchy (Root, Match_List);
       end if;
       Wave_Opt.Design.Last_Checks;
 
