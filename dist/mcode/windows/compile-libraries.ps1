@@ -196,9 +196,9 @@ if (-not $Hosted)
 
 if ($Clean)
 {	Write-Host "Removing all created files and directories..."
-	Write-Host "  rmdir $VHDLDestinationLibraryDirectory"
 	if (Test-Path -Path $VHDLDestinationLibraryDirectory)
-	{	Remove-Item $VHDLDestinationLibraryDirectory -Force -Recurse -ErrorAction SilentlyContinue
+	{	Write-Host "  rmdir $VHDLDestinationLibraryDirectory"
+		Remove-Item $VHDLDestinationLibraryDirectory -Force -Recurse -ErrorAction SilentlyContinue
 		if ($? -eq $false)
 		{	Write-Host "[ERROR]: Cannot remove '$VHDLDestinationLibraryDirectory'." -ForegroundColor Red
 			Exit-CompileScript -1
@@ -278,7 +278,7 @@ if ($VHDL87)
 	$VHDLSourcesIndex = "std"
 	foreach ($SourceFile in $SourceFiles[$VHDLSourcesIndex])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "        Patching file for $VHDLVersion"							) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -286,8 +286,8 @@ if ($VHDL87)
 		
 		# Analyze file
 		$InvokeExpr = "$GHDLExecutable -a -C --bootstrap --std=$VHDLVersion --work=$VHDLLibrary $SourceFile.v$VHDLVersion 2>&1"
-		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
-		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
+		$EnableDebug -and		(Write-Host "        $InvokeExpr" -ForegroundColor DarkGray				) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
 		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
@@ -310,7 +310,7 @@ if ($VHDL87)
 	$VHDLSourcesIndex = "ieee"
 	foreach ($SourceFile in $SourceFiles[$VHDLSourcesIndex])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "        Patching file for $VHDLVersion"							) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -318,8 +318,8 @@ if ($VHDL87)
 		
 		# Analyze file
 		$InvokeExpr = "$GHDLExecutable -a -C `"-P../std`" --std=$VHDLVersion --work=$VHDLLibrary $SourceFile.v$VHDLVersion 2>&1"
-		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
-		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
+		$EnableDebug -and		(Write-Host "        $InvokeExpr" -ForegroundColor DarkGray				) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
 		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
@@ -342,7 +342,7 @@ if ($VHDL87)
 	$VHDLSourcesIndex = "ieee"
 	foreach ($SourceFile in $SourceFiles[$VHDLSourcesIndex])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "        Patching file for $VHDLVersion"							) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -350,8 +350,8 @@ if ($VHDL87)
 		
 		# Analyze file
 		$InvokeExpr = "$GHDLExecutable -a -C `"-P../std`" --std=$VHDLVersion --work=$VHDLLibrary $SourceFile.v$VHDLVersion 2>&1"
-		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
-		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
+		$EnableDebug -and		(Write-Host "        $InvokeExpr" -ForegroundColor DarkGray				) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
 		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
@@ -362,7 +362,7 @@ if ($VHDL87)
 	
 	foreach ($SourceFile in $SourceFiles["synopsys"] + $SourceFiles["synopsys8793"])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "        Patching file for $VHDLVersion"							) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLFlavor\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -370,8 +370,8 @@ if ($VHDL87)
 		
 		# Analyze file
 		$InvokeExpr = "$GHDLExecutable -a -C `"-P../std`" --std=$VHDLVersion --work=$VHDLLibrary $SourceFile.v$VHDLVersion 2>&1"
-		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
-		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
+		$EnableDebug -and		(Write-Host "        $InvokeExpr" -ForegroundColor DarkGray				) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
 		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
@@ -383,7 +383,7 @@ if ($VHDL87)
 	$VHDLSourcesIndex = "vital95"
 	foreach ($SourceFile in $SourceFiles[$VHDLSourcesIndex])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "        Patching file for $VHDLVersion"							) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -391,8 +391,8 @@ if ($VHDL87)
 		
 		# Analyze file
 		$InvokeExpr = "$GHDLExecutable -a -C `"-P../std`" --std=$VHDLVersion --work=$VHDLLibrary $SourceFile.v$VHDLVersion 2>&1"
-		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
-		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
+		$EnableDebug -and		(Write-Host "        $InvokeExpr" -ForegroundColor DarkGray				) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
 		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
@@ -422,7 +422,7 @@ if ($VHDL93)
 	$VHDLSourcesIndex = "std"
 	foreach ($SourceFile in $SourceFiles[$VHDLSourcesIndex])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "        Patching file for $VHDLVersion"							) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -430,8 +430,8 @@ if ($VHDL93)
 		
 		# Analyze file
 		$InvokeExpr = "$GHDLExecutable -a -C --bootstrap --std=$VHDLVersion --work=$VHDLLibrary $SourceFile.v$VHDLVersion 2>&1"
-		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
-		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
+		$EnableDebug -and		(Write-Host "        $InvokeExpr" -ForegroundColor DarkGray				) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
 		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
@@ -454,7 +454,7 @@ if ($VHDL93)
 	$VHDLSourcesIndex = "ieee"
 	foreach ($SourceFile in $SourceFiles[$VHDLSourcesIndex] + $SourceFiles["math"])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "        Patching file for $VHDLVersion"							) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -462,8 +462,8 @@ if ($VHDL93)
 		
 		# Analyze file
 		$InvokeExpr = "$GHDLExecutable -a -C `"-P../std`" --std=$VHDLVersion --work=$VHDLLibrary $SourceFile.v$VHDLVersion 2>&1"
-		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
-		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
+		$EnableDebug -and		(Write-Host "        $InvokeExpr" -ForegroundColor DarkGray				) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
 		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
@@ -475,7 +475,7 @@ if ($VHDL93)
 	$VHDLSourcesIndex = "vital2000"
 	foreach ($SourceFile in $SourceFiles[$VHDLSourcesIndex])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "        Patching file for $VHDLVersion"							) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -483,8 +483,8 @@ if ($VHDL93)
 		
 		# Analyze file
 		$InvokeExpr = "$GHDLExecutable -a -C `"-P../std`" --std=$VHDLVersion --work=$VHDLLibrary $SourceFile.v$VHDLVersion 2>&1"
-		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
-		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
+		$EnableDebug -and		(Write-Host "        $InvokeExpr" -ForegroundColor DarkGray				) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
 		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
@@ -507,7 +507,7 @@ if ($VHDL93)
 	$VHDLSourcesIndex = "ieee"
 	foreach ($SourceFile in $SourceFiles[$VHDLSourcesIndex] + $SourceFiles["math"])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "        Patching file for $VHDLVersion"							) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -515,8 +515,8 @@ if ($VHDL93)
 		
 		# Analyze file
 		$InvokeExpr = "$GHDLExecutable -a -C `"-P../std`" --std=$VHDLVersion --work=$VHDLLibrary $SourceFile.v$VHDLVersion 2>&1"
-		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
-		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
+		$EnableDebug -and		(Write-Host "        $InvokeExpr" -ForegroundColor DarkGray				) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
 		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
@@ -527,7 +527,7 @@ if ($VHDL93)
 	
 	foreach ($SourceFile in $SourceFiles[$VHDLFlavor] + $SourceFiles["synopsys8793"])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "        Patching file for $VHDLVersion"							) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLFlavor\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -535,8 +535,8 @@ if ($VHDL93)
 		
 		# Analyze file
 		$InvokeExpr = "$GHDLExecutable -a -C `"-P../std`" --std=$VHDLVersion --work=$VHDLLibrary $SourceFile.v$VHDLVersion 2>&1"
-		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
-		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
+		$EnableDebug -and		(Write-Host "        $InvokeExpr" -ForegroundColor DarkGray				) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
 		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
@@ -548,7 +548,7 @@ if ($VHDL93)
 	$VHDLSourcesIndex = "vital2000"
 	foreach ($SourceFile in $SourceFiles[$VHDLSourcesIndex])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "        Patching file for $VHDLVersion"							) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -556,8 +556,8 @@ if ($VHDL93)
 		
 		# Analyze file
 		$InvokeExpr = "$GHDLExecutable -a -C `"-P../std`" --std=$VHDLVersion --work=$VHDLLibrary $SourceFile.v$VHDLVersion 2>&1"
-		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
-		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
+		$EnableDebug -and		(Write-Host "        $InvokeExpr" -ForegroundColor DarkGray				) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
 		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
@@ -580,7 +580,7 @@ if ($VHDL93)
 	$VHDLSourcesIndex = "ieee"
 	foreach ($SourceFile in $SourceFiles[$VHDLSourcesIndex] + $SourceFiles["math"])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "        Patching file for $VHDLVersion"							) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -588,8 +588,8 @@ if ($VHDL93)
 		
 		# Analyze file
 		$InvokeExpr = "$GHDLExecutable -a -C `"-P../std`" --std=$VHDLVersion --work=$VHDLLibrary $SourceFile.v$VHDLVersion 2>&1"
-		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
-		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
+		$EnableDebug -and		(Write-Host "        $InvokeExpr" -ForegroundColor DarkGray				) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
 		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
@@ -600,7 +600,7 @@ if ($VHDL93)
 	
 	foreach ($SourceFile in $SourceFiles[$VHDLFlavor])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "        Patching file for $VHDLVersion"							) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLFlavor\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -608,8 +608,8 @@ if ($VHDL93)
 		
 		# Analyze file
 		$InvokeExpr = "$GHDLExecutable -a -C `"-P../std`" --std=$VHDLVersion --work=$VHDLLibrary $SourceFile.v$VHDLVersion 2>&1"
-		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
-		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
+		$EnableDebug -and		(Write-Host "        $InvokeExpr" -ForegroundColor DarkGray				) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
 		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
@@ -621,7 +621,7 @@ if ($VHDL93)
 	$VHDLSourcesIndex = "vital2000"
 	foreach ($SourceFile in $SourceFiles[$VHDLSourcesIndex])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "        Patching file for $VHDLVersion"							) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -629,8 +629,8 @@ if ($VHDL93)
 		
 		# Analyze file
 		$InvokeExpr = "$GHDLExecutable -a -C `"-P../std`" --std=$VHDLVersion --work=$VHDLLibrary $SourceFile.v$VHDLVersion 2>&1"
-		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
-		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
+		$EnableDebug -and		(Write-Host "        $InvokeExpr" -ForegroundColor DarkGray				) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
 		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
@@ -660,7 +660,7 @@ if ($VHDL2008)
 	$VHDLSourcesIndex = "std08"
 	foreach ($SourceFile in $SourceFiles[$VHDLSourcesIndex])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "        Patching file for $VHDLVersion"							) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLLibrary\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -668,8 +668,8 @@ if ($VHDL2008)
 		
 		# Analyze file
 		$InvokeExpr = "$GHDLExecutable -a -C --bootstrap --std=$VHDLVersion --work=$VHDLLibrary $SourceFile.v$VHDLVersion 2>&1"
-		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
-		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
+		$EnableDebug -and		(Write-Host "        $InvokeExpr" -ForegroundColor DarkGray				) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
 		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
@@ -692,7 +692,7 @@ if ($VHDL2008)
 	$VHDLSourcesIndex = "ieee2008"
 	foreach ($SourceFile in $SourceFiles[$VHDLSourcesIndex])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "        Patching file for $VHDLVersion"							) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -700,8 +700,8 @@ if ($VHDL2008)
 		
 		# Analyze file
 		$InvokeExpr = "$GHDLExecutable -a -C `"-P../std`" --std=$VHDLVersion --work=$VHDLLibrary $SourceFile.v$VHDLVersion 2>&1"
-		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
-		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
+		$EnableDebug -and		(Write-Host "        $InvokeExpr" -ForegroundColor DarkGray				) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
 		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
@@ -713,7 +713,7 @@ if ($VHDL2008)
 	$VHDLSourcesIndex = "vital2000"
 	foreach ($SourceFile in $SourceFiles[$VHDLSourcesIndex])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "        Patching file for $VHDLVersion"							) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -721,8 +721,8 @@ if ($VHDL2008)
 		
 		# Analyze file
 		$InvokeExpr = "$GHDLExecutable -a -C `"-P../std`" -frelaxed-rules --std=$VHDLVersion --work=$VHDLLibrary $SourceFile.v$VHDLVersion 2>&1"
-		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
-		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
+		$EnableDebug -and		(Write-Host "        $InvokeExpr" -ForegroundColor DarkGray				) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
 		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
@@ -745,7 +745,7 @@ if ($VHDL2008)
 	$VHDLSourcesIndex = "ieee2008"
 	foreach ($SourceFile in $SourceFiles[$VHDLSourcesIndex])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "        Patching file for $VHDLVersion"							) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -753,8 +753,8 @@ if ($VHDL2008)
 		
 		# Analyze file
 		$InvokeExpr = "$GHDLExecutable -a -C `"-P../std`" --std=$VHDLVersion --work=$VHDLLibrary $SourceFile.v$VHDLVersion 2>&1"
-		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
-		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
+		$EnableDebug -and		(Write-Host "        $InvokeExpr" -ForegroundColor DarkGray				) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
 		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
@@ -765,7 +765,7 @@ if ($VHDL2008)
 	
 	foreach ($SourceFile in $SourceFiles[$VHDLFlavor])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "        Patching file for $VHDLVersion"							) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLFlavor\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -773,8 +773,8 @@ if ($VHDL2008)
 		
 		# Analyze file
 		$InvokeExpr = "$GHDLExecutable -a -C `"-P../std`" --std=$VHDLVersion --work=$VHDLLibrary $SourceFile.v$VHDLVersion 2>&1"
-		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
-		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
+		$EnableDebug -and		(Write-Host "        $InvokeExpr" -ForegroundColor DarkGray				) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
 		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1
@@ -786,7 +786,7 @@ if ($VHDL2008)
 	$VHDLSourcesIndex = "vital2000"
 	foreach ($SourceFile in $SourceFiles[$VHDLSourcesIndex])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "        Patching file for $VHDLVersion"							) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -794,8 +794,8 @@ if ($VHDL2008)
 		
 		# Analyze file
 		$InvokeExpr = "$GHDLExecutable -a -C `"-P../std`" -frelaxed-rules --std=$VHDLVersion --work=$VHDLLibrary $SourceFile.v$VHDLVersion 2>&1"
-		$EnableVerbose -and	(Write-Host "       Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
-		$EnableDebug -and		(Write-Host "         $InvokeExpr"																) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Analyzing file '$SourceFile.v$VHDLVersion'"		) | Out-Null
+		$EnableDebug -and		(Write-Host "        $InvokeExpr" -ForegroundColor DarkGray				) | Out-Null
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "      "
 		if (($LastExitCode -ne 0) -or -not $?)
 		{	$ErrorCount += 1

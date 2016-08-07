@@ -71,12 +71,9 @@ Param(
 		[switch]$Zip,
 	
 	# install all files into a directory (xcopy deployment)
-	[switch]$Install,
-		# Installation directory
-		[string]$InstallPath,
-		# update files
-		[switch]$Update,
-	
+	[string]$Install = "",
+	# update files
+	[switch]$Update,
 	# uninstall all files from a directory
 	[switch]$Uninstall,
 	
@@ -101,14 +98,15 @@ $EnableDebug =				$PSCmdlet.MyInvocation.BoundParameters["Debug"].IsPresent
 
 # load modules from GHDL's 'libraries' directory
 Import-Module $PSScriptRoot\windows\shared.psm1 -Verbose:$false -ArgumentList "$Script_WorkingDir"
-# Import-Module $PSScriptRoot\windows\targets.psm1 -Verbose:$false
+Import-Module $PSScriptRoot\windows\targets.psm1 -Verbose:$false
 
 # Display help if no command was selected
 $Help = $Help -or (-not (
 					$All -or 
 					$Clean -or $Clean_GHDL -or $Clean_Libraries -or $Clean_Package_Zip -or
 					$Compile -or $Compile_GHDL -or $Compile_Libraries -or
-					$CreatePackage
+					$CreatePackage -or
+					$Install -or $Update -or $Uninstall
 				))
 
 Write-Host "================================================================================" -ForegroundColor Magenta
@@ -135,44 +133,32 @@ if ($Compile)
 	$Compile_Libraries =	$true
 }
 
-
 # configure some variables: paths, executables, directory names, ...
-$WindowsDirName =					"dist\mcode\windows"
-$BuildDirName =						"dist\mcode\build"
-$CompiledLibraryDirName =	"dist\mcode\lib"
-$ZipPackageDirName =			"dist\mcode\zip"
-$ZipPackageFileName =			"dist\mcode\ghdl-install.zip"
-$VendorLibraryDirName =		"libraries\vendors"
+$GHDLVersion =								Get-GHDLVersion $GHDLRootDir
+$Backend =										"mcode"
+$WindowsDirName =							"dist\$Backend\windows"
+$BuildDirectoryName =					"build\$Backend"
+$VHDLLibrariesDirectoryName =	"lib"
+$PackageDirectoryName =				"build\zip\$Backend"
+$ZipPackageFileName =					"ghdl-$Backend-$GHDLVersion.zip"
 
 # construct directories
-$GHDLWindowsDir =						$GHDLRootDir + "\" + $WindowsDirName
-$GHDLBuildDir =							$GHDLRootDir + "\" + $BuildDirName
-$GHDLCompiledLibraryDir =		$GHDLRootDir + "\" + $CompiledLibraryDirName
-$GHDLZipPackageDir =				$GHDLRootDir + "\" + $ZipPackageDirName
-$GHDLZipPackageFile =				$GHDLRootDir + "\" + $ZipPackageFileName
-$GHDLVendorLibraryDirName =	$GHDLRootDir + "\" + $VendorLibraryDirName
+$GHDLWindowsDir =							"$GHDLRootDir\$WindowsDirName"
+$GHDLBuildDir =								"$GHDLRootDir\$BuildDirectoryName"
+$GHDLVendorLibraryDir =				"$GHDLRootDir\libraries\vendors"
+$GHDLCompiledLibraryDir =			"$GHDLRootDir\$BuildDirectoryName\$VHDLLibrariesDirectoryName"
+$GHDLZipPackageDir =					"$GHDLRootDir\$PackageDirectoryName"
+$GHDLZipPackageFile =					"$GHDLZipPackageDir\$ZipPackageFileName"
 
 function Exit-Script
-{	<#
-		.SYNOPSIS
-		Undocumented
-		
-		.DESCRIPTION
-		Undocumented
-		
-		.PARAMETER ExitCode
-		ExitCode of this script run
-	#>
-	[CmdletBinding()]
+{	[CmdletBinding()]
 	param(
 		[int]$ExitCode = 0
 	)
-	
 	cd $Script_WorkingDir
-	
 	# unload modules
 	Remove-Module shared
-	
+	Remove-Module targets
 	exit $ExitCode
 }
 
@@ -222,58 +208,16 @@ function Remove-Path
 	}
 	
 
-# if ($Help)
-	# {	Write-Host "Usage:"
-		# Write-Host "  compile.ps1 [-Verbose] [-Debug] (-Help|-Compile|-Clean|-CreatePackage|-Install|-Uninstall)" -ForegroundColor Gray
-		# Write-Host
-		# Write-Host "Options:"
-		# Write-Host "  -Verbose    enable detailed messages"
-		# Write-Host "  -Debug      enable debug messages"
-		# Write-Host
-		# Write-Host "Commands:"
-		# Write-Host "  -Help             display this help"
-		# Write-Host "  -Compile          compile all library files"
-		# Write-Host "  -Clean            clean up all files and directories"
-		# Write-Host "  -CreatePackage    create an installer package"
-		# Write-Host "  -Install          install all files into a directory (xcopy deployment)"
-		# Write-Host "  -Uninstall        uninstall all files from a directory"
-		# Write-Host
-		# Write-Host "Options for -CreatePackage:"
-		# Write-Host "  -Zip              creates a zip-file for xcopy deployment"
-		# Write-Host
-		# Write-Host "Options for -Install:"
-		# Write-Host "  -InstallPath <dir>  directory into which GHDL will be installed"
-		# Write-Host
-		# Write-Host "Examples:"
-		# Write-Host "  # Normal flow"
-		# Write-Host "  PS>.\winbuild.ps1 -Clean" -ForegroundColor Gray
-		# Write-Host "  PS>.\winbuild.ps1 -Compile" -ForegroundColor Gray
-		# Write-Host "  PS>.\winbuild.ps1 -Install -InstallPath `"C:\Tools\GHDL`"" -ForegroundColor Gray
-		# Write-Host
-		# Write-Host "  # Create a zip-file"
-		# Write-Host "  PS>.\winbuild.ps1 -CreatePackage -Zip" -ForegroundColor Gray
-		# Write-Host
-		# Write-Host "  # combine all commands in a single call"
-		# Write-Host "  PS>.\winbuild.ps1 -Clean -Compile -Install -InstallPath `"C:\Tools\GHDL`"" -ForegroundColor Gray
-		# Write-Host
-	# }
-# else
-if ($Install)
-{	Write-Host "Installing GHDL $GHDLVersion for Windows..."
-
-	Write-Host "This command is not implemented." -ForegroundColor Red
-	Exit-Script -1
-}	# Install
-elseif ($Update)
+if ($Update)
 {	Write-Host "Updating GHDL $GHDLVersion for Windows..."
 
-	Write-Host "This command is not implemented." -ForegroundColor Red
+	Write-Host "[ERROR]: This command is not implemented." -ForegroundColor Red
 	Exit-Script -1
 }	# Update
 elseif ($Uninstall)
 {	Write-Host "Uninstalling GHDL $GHDLVersion for Windows..."
 
-	Write-Host "This command is not implemented." -ForegroundColor Red
+	Write-Host "[ERROR]: This command is not implemented." -ForegroundColor Red
 	Exit-Script -1
 }	# Uninstall
 else
@@ -344,7 +288,6 @@ else
 			}
 		}
 		
-		Write-Host "  $GHDLZipPackageFile"
 		if (Test-Path -Path $GHDLZipPackageFile)
 		{	Write-Host "  rm $GHDLZipPackageFile"
 			Remove-Item $GHDLZipPackageFile -Force -Recurse -ErrorAction SilentlyContinue
@@ -396,7 +339,7 @@ else
 		$Script_Path = 				$GHDLWindowsDir + "\compile-libraries.ps1"
 		$Script_Parameters =	@()
 		$Script_Parameters =	@(
-			'-All',
+			'-Compile',
 			'-Verbose:$EnableVerbose',
 			'-Debug:$EnableDebug'
 		)
@@ -404,7 +347,7 @@ else
 		$env:GHDL = "$GHDLBuildDir\ghdl.exe"
 		Write-Host "env:GHDL --" + $env:GHDL + "--"
 		
-		Write-Host "Running compile-libraries.ps1 -All ..." -ForegroundColor DarkCyan
+		Write-Host "Running compile-libraries.ps1 -Compile ..." -ForegroundColor DarkCyan
 		Write-Host "--------------------------------------------------------------------------------" -ForegroundColor DarkCyan
 		$InvokeExpr = "$Script_Path " + ($Script_Parameters -join " ")
 		Invoke-Expression $InvokeExpr
@@ -421,131 +364,130 @@ else
 		}
 	}	# Compile_GHDL
 	
+	# ============================================================================
+	# Package tasks
+	# ============================================================================
+	if ($CreatePackage)
+	{	Write-Host "Creating an installation package for GHDL $GHDLVersion for Windows"
 	
+		if ($Zip)
+		{	Write-Host "Loading PowerShell Community Extensions (PSCX) " -NoNewline
+			if ((Get-Module -ListAvailable | Where {$_.Name -like "PSCX"}).Version -ge "3.1.0.0")
+			{	Import-Module Pscx -Verbose:$false
+				Write-Host "[Done]" -ForegroundColor Green
+			}
+			else
+			{	Write-Host "[FAILED]" -ForegroundColor RED	
+				Exit-Script -1
+			}
+			
+			Write-Host "Output format: zip-file"
+			Write-Host "  Removing old directory '$GHDLZipPackageDir'."
+			if (Test-Path -Path $GHDLZipPackageDir)
+			{	Remove-Item $GHDLZipPackageDir -Force -Recurse -ErrorAction SilentlyContinue
+				if ($? -eq $false)
+				{	Write-Host "[ERROR]: While deleting '$GHDLZipPackageDir'." -ForegroundColor Red
+					Exit-Script -1
+				}
+			}
+			if (Test-Path -Path $GHDLZipPackageFile)
+			{	Remove-Item $GHDLZipPackageFile -Force -Recurse -ErrorAction SilentlyContinue
+				if ($? -eq $false)
+				{	Write-Host "[ERROR]: While deleting '$GHDLZipPackageFile'." -ForegroundColor Red
+					Exit-Script -1
+				}
+			}
+		
+			Write-Host "  Creating directory '$GHDLZipPackageDir' and sub-directories..."
+			New-Item -ItemType directory -Path "$GHDLZipPackageDir"						-ErrorAction SilentlyContinue	| Out-Null
+			New-Item -ItemType directory -Path "$GHDLZipPackageDir\bin"				-ErrorAction SilentlyContinue	| Out-Null
+			New-Item -ItemType directory -Path "$GHDLZipPackageDir\include"		-ErrorAction SilentlyContinue	| Out-Null
+			New-Item -ItemType directory -Path "$GHDLZipPackageDir\lib"				-ErrorAction SilentlyContinue	| Out-Null
+			
+			Write-Host "  Gathering files..."
+			# executables
+			Copy-Item "$GHDLBuildDir\ghdl.exe"						"$GHDLZipPackageDir\bin\ghdl.exe"	-ErrorAction SilentlyContinue
+			# include files
+			Copy-Item "$GHDLRootDir\src\grt\vpi_user.h"		"$GHDLZipPackageDir\include"			-ErrorAction SilentlyContinue
+			# pre-compile scripts
+			Copy-Item $GHDLVendorLibraryDir -Recurse			"$GHDLZipPackageDir\lib\vendors"	-ErrorAction SilentlyContinue
+			# pre-compiled libraries
+			Copy-Item $GHDLCompiledLibraryDir	-Recurse		"$GHDLZipPackageDir"							-ErrorAction SilentlyContinue
+
+			Write-Host "  Compressing all files into '$GHDLZipPackageFile'..."
+			$file = Get-ChildItem $GHDLZipPackageDir -Recurse | Write-Zip -IncludeEmptyDirectories -EntryPathRoot $GHDLZipPackageDir -OutputPath $GHDLZipPackageFile
+			Write-Host "  $([math]::round(($file.Length / 1MB), 3)) MiB written to disk"
+ 			
+ 			Write-Host
+			Write-Host "Creating package " -NoNewline
+			Write-Host "[SUCCESSFUL]" -ForegroundColor Green
+			Write-Host
+		}
+		else
+		{	Write-Host "[ERROR]: No package format selected." -ForegroundColor Red
+			Write-Host "Possible formats:"
+			Write-Host "  - Zip-file (-Zip)"
+			Write-Host
+		}
+	}
+	# ============================================================================
+	# Compile tasks
+	# ============================================================================
+	if ($Install)
+	{	Write-Host "Installing GHDL $GHDLVersion for Windows..."
+		if ($Install -eq $true)
+		{	$InstallPath = "C:\Program Files (x86)\GHDL"		}
+		elseif ($Install -eq "")
+		{	$InstallPath = "C:\Program Files (x86)\GHDL"		}
+		else
+		{	$InstallPath = $Install													}
+		
+		if ($Zip)
+		{	Write-Host "Loading PowerShell Community Extensions (PSCX) " -NoNewline
+			if ((Get-Module -ListAvailable | Where {$_.Name -like "PSCX"}).Version -ge "3.1.0.0")
+			{	Import-Module Pscx -Verbose:$false
+				Write-Host "[Done]" -ForegroundColor Green
+			}
+			else
+			{	Write-Host "[FAILED]" -ForegroundColor RED	
+				Exit-Script -1
+			}
+			
+			Write-Host "  Installing from Zip-file..."
+			
+			Write-Host "[ERROR]: This command is not implemented." -ForegroundColor Red
+		}
+		else
+		{	if (Test-Path -Path $InstallPath)
+			{	Write-Host "[ERROR]: Directory '$InstallPath' already exists." -ForegroundColor Red
+				Exit-Script -1
+			}
+			Write-Host "  Install directory: $InstallPath"
+			Write-Host "  Creating directory '$InstallPath' and sub-directories..."
+			New-Item -ItemType directory -Path "$InstallPath"						-ErrorAction SilentlyContinue	| Out-Null
+			New-Item -ItemType directory -Path "$InstallPath\bin"				-ErrorAction SilentlyContinue	| Out-Null
+			New-Item -ItemType directory -Path "$InstallPath\include"		-ErrorAction SilentlyContinue	| Out-Null
+			New-Item -ItemType directory -Path "$InstallPath\lib"				-ErrorAction SilentlyContinue	| Out-Null
+			
+			Write-Host "  Copying files..."
+			# executables
+			Copy-Item "$GHDLBuildDir\ghdl.exe"						"$InstallPath\bin\ghdl.exe"	-ErrorAction SilentlyContinue
+			# include files
+			Copy-Item "$GHDLRootDir\src\grt\vpi_user.h"		"$InstallPath\include"			-ErrorAction SilentlyContinue
+			# pre-compile scripts
+			Copy-Item $GHDLVendorLibraryDir -Recurse			"$InstallPath\lib\vendors"	-ErrorAction SilentlyContinue
+			# pre-compiled libraries
+			Copy-Item $GHDLCompiledLibraryDir	-Recurse		"$InstallPath"							-ErrorAction SilentlyContinue
+
+			Write-Host
+			Write-Host "Installing files " -NoNewline
+			Write-Host "[SUCCESSFUL]" -ForegroundColor Green
+			Write-Host
+			
+			Exit-Script
+		}	# Zip
+	}	# Install
 	
 }	# Clean
 	
-	
-# 		
-# 	if ($CreatePackage)
-# 		{	$Script_ExitCode = 0
-# 			Write-Host "Creating an installation package for GHDL $GHDLVersion for Windows"
-# 
-# 			if ($Zip)
-# 				{	if ((Get-Module -ListAvailable | Where {$_.Name -like "PSCX"}).Version -ge "3.1.0.0")
-# 						{	Write-Host "Loading PowerShell Community Extensions (PSCX) " -NoNewline
-# 							Import-Module Pscx
-# 							Write-Host "[Done]" -ForegroundColor Green
-# 						}
-# 					else
-# 						{	$Script_ExitCode = 1
-# 							Write-Host "[FAILED]" -ForegroundColor RED	
-# 						}
-# 				}
-# 			
-# 			# create zip-file
-# 			if (($Script_ExitCode -eq 0) -and $Zip)
-# 				{	Write-Host "Output format: zip-file"
-# 				
-# 					Write-Host "  Removing old directory '$GHDLZipPackageDir'."
-# 					Remove-Item $GHDLZipPackageDir -Force -Recurse -ErrorAction SilentlyContinue
-# 				
-# 					Write-Host "  Creating directory '$GHDLZipPackageDir'."
-# 					[void](New-Item -ItemType directory -Path "$GHDLZipPackageDir"					-ErrorAction SilentlyContinue)
-# 					[void](New-Item -ItemType directory -Path "$GHDLZipPackageDir\bin"			-ErrorAction SilentlyContinue)
-# 					[void](New-Item -ItemType directory -Path "$GHDLZipPackageDir\scripts"	-ErrorAction SilentlyContinue)
-# 				
-# 					Copy-Item "$GHDLBuildDir\ghdl.exe"				"$GHDLZipPackageDir\bin\ghdl.exe"				-ErrorAction SilentlyContinue
-# 					Copy-Item "$GHDLBuildDir\ghdlfilter.exe"	"$GHDLZipPackageDir\bin\ghdlfilter.exe"	-ErrorAction SilentlyContinue
-# 
-# 					Copy-Item $GHDLCompiledLibraryDir		-Recurse	"$GHDLZipPackageDir"					-ErrorAction SilentlyContinue
-# 					Copy-Item $GHDLVendorLibraryDirName	-Recurse	"$GHDLZipPackageDir\scripts"	-ErrorAction SilentlyContinue
-# 
-# 					Write-Host "  Compressing files into '$GHDLZipPackageFile'"
-# 					$file = Get-ChildItem $GHDLZipPackageDir -Recurse | Write-Zip -IncludeEmptyDirectories -EntryPathRoot $GHDLZipPackageDir -OutputPath $GHDLZipPackageFile
-# 					Write-Host "  $([math]::round(($file.Length / 1MB), 3)) MiB written to disk"
-# 				}
-# 			else
-# 				{	$Script_ExitCode = 1
-# 					Write-Host "No package format selected." -ForegroundColor Red
-# 					Write-Host "Possible formats:"
-# 					Write-Host "  - zip-file (-Zip)"
-# 					Write-Host
-# 				}
-# 			
-# 			if ($Script_ExitCode -eq 0)
-# 				{	Write-Host
-# 					Write-Host "Create Package " -NoNewline
-# 					Write-Host "[SUCCESSFUL]" -ForegroundColor Green
-# 					Write-Host
-# 				}
-# 		}	# CreatePackage
-# 		
-# 	if ($Install)
-# 		{	$Script_ExitCode = 0
-# 			Write-Host "Installing GHDL $GHDLVersion for Windows"
-# 
-# 			if ($InstallPath -eq "")
-# 				{	$Script_ExitCode = 1
-# 					Write-Host "Missing argument -InstallPath" -ForegroundColor Red
-# 				}
-# 			else
-# 				{	if (Test-Path -Path $InstallPath)
-# 						{	if ($Update)
-# 								{	Remove-Item	-Path "$InstallPath\*" -Recurse -Force	}
-# 							else
-# 								{	Write-Host "  Directory '$InstallPath' already exists." -ForegroundColor Red
-# 									Write-Host
-# 									$Script_ExitCode = 1
-# 								}
-# 						}
-# 					elseif ($Update)
-# 						{	Write-Host "  Directory '$InstallPath' does not exists." -ForegroundColor Red
-# 							Write-Host
-# 							$Script_ExitCode = 1
-# 						}
-# 				}
-# 				
-# 			if ($Script_ExitCode -eq 0)
-# 				{	Write-Host "  Install directory: $InstallPath"
-# 				
-# 					Write-Host "  Creating directory '$InstallPath'."
-# 					[void](New-Item -ItemType directory -Path "$InstallPath"					-ErrorAction SilentlyContinue)
-# 					[void](New-Item -ItemType directory -Path "$InstallPath\bin"			-ErrorAction SilentlyContinue)
-# 					[void](New-Item -ItemType directory -Path "$InstallPath\scripts"	-ErrorAction SilentlyContinue)
-# 					
-# 					Copy-Item "$GHDLBuildDir\ghdl.exe"				"$InstallPath\bin\ghdl.exe"				-ErrorAction SilentlyContinue
-# 					Copy-Item "$GHDLBuildDir\ghdlfilter.exe"	"$InstallPath\bin\ghdlfilter.exe"	-ErrorAction SilentlyContinue
-# 
-# 					Copy-Item $GHDLCompiledLibraryDir					-Recurse	"$InstallPath"					-ErrorAction SilentlyContinue
-# 					Copy-Item "$GHDLVendorLibraryDirName\*.*"	-Recurse	"$InstallPath\scripts"	-ErrorAction SilentlyContinue
-# 				}
-# 			
-# 			if ($Script_ExitCode -eq 0)
-# 				{	Write-Host "  Registering installation directory in system PATH" -NoNewline
-# 					Write-Host "  [DISABLED]" -ForegroundColor Red
-# 					#Add-Path "$InstallPath\bin"
-# 				}
-# 			
-# 			if ($Script_ExitCode -eq 0)
-# 				{	Write-Host
-# 					Write-Host "Install " -NoNewline
-# 					Write-Host "[SUCCESSFUL]" -ForegroundColor Green
-# 					Write-Host
-# 				}
-# 		}	# Install
-# 
-# 	if ($Script_ExitCode -eq -1)
-# 		{	Write-Host "ERROR: missing argument(s)" -ForegroundColor Red
-# 			Write-Host
-# 			Write-Host "Usage:"
-# 			Write-Host "  winbuild.ps1 [-Verbose] [-Debug] (-Help|-Compile|-Clean|-CreatePackage|-Install|-Uninstall)" -ForegroundColor Gray
-# 			Write-Host
-# 		}	# Unknown
-# }
-
-# restore working directory if changed
-Set-Location $Script_WorkingDir
-
-# return exit status
-exit $Script_ExitCode
+Exit-Script
