@@ -36,20 +36,17 @@
 #		- program version
 
 # configure compiler tools
-$GCCExecutable =					"gcc.exe"
-$GNATMakeExecutable =			"gnatmake.exe"
-$StripExecutable =				"strip.exe"
+$Prog_GCC =								"gcc.exe"
+$Prog_GNATMake =					"gnatmake.exe"
+$Prog_Strip =							"strip.exe"
 
 # configure output file
-$GHDLExecutableName =			"ghdl.exe"
-$FilterExecutable =				"filter.exe"
+$GHDL_Mcode_Name =				"ghdl.exe"
 
 # configure directory structure
 $CommonSourceDirName =		"src"
 $WinMcodeSourceDirName =	"dist\mcode\windows"
 # $WinLLVMSourceDirName =		"dist\llvm\windows"
-$WinMcodeBuildDirName =		"dist\mcode\build"
-# $WinLLVMBuildDirName =		"dist\llvm\build"
 
 # construct file paths
 $VersionFileName =				"version.ads"
@@ -73,11 +70,16 @@ function Invoke-Clean
 	$EnableDebug =		-not $Quiet -and (									$PSCmdlet.MyInvocation.BoundParameters["Debug"])
 	$EnableVerbose =	-not $Quiet -and ($EnableDebug	-or $PSCmdlet.MyInvocation.BoundParameters["Verbose"])
 	
-	-not $Quiet			-and (Write-Host "Executing build target 'Clean' ..." -ForegroundColor Yellow) | Out-Null
-	$EnableVerbose	-and (Write-Host "  Removing all created files and directories..."						) | Out-Null
-	$EnableDebug		-and (Write-Host "    rmdir $BuildDirectory"																	) | Out-Null
-	Remove-Item $BuildDirectory -Force -Recurse -ErrorAction SilentlyContinue
-	
+	-not $Quiet			-and (Write-Host "Executing build target 'Clean' ..." -ForegroundColor Yellow)	| Out-Null
+	$EnableVerbose	-and (Write-Host "  Removing all created files and directories..."						)	| Out-Null
+	if (Test-Path -Path $BuildDirectory)
+	{	$EnableDebug		-and (Write-Host "    rmdir $BuildDirectory"																	)	| Out-Null
+		Remove-Item $BuildDirectory -Force -Recurse -ErrorAction SilentlyContinue
+		if ($? -eq $false)
+		{	Write-Host "[ERROR]: Cannot remove '$BuildDirectory'." -ForegroundColor Red
+			return $true
+		}
+	}
 	return $false
 }	# Invoke-Clean
 
@@ -102,8 +104,10 @@ function New-BuildDirectory
 	else
 	{	-not $Quiet -and (Write-Host "  Creating new directory '$BuildDirectory'."		) 	| Out-Null
 		New-Item -ItemType Directory -Path $BuildDirectory -ErrorAction SilentlyContinue	| Out-Null
-		if ($? -ne 0)
-		{	Exit-CompileScript -1		}
+		if ($? -eq $false)
+		{	Write-Host "[ERROR]: Cannot create '$BuildDirectory'." -ForegroundColor Red
+			return $true
+		}
 	}
 	
 	return $false
@@ -122,20 +126,20 @@ function Get-GHDLVersion
 	)
 	# construct DirectoryPaths
 	$SourceDirectory =		$GHDLRootDir + "\" + $CommonSourceDirName
-	# construct FilePaths
 	$VersionFilePath =		$SourceDirectory + "\" + $VersionFileName
 	
-	if (-not (Test-Path -Path $VersionFilePath))
-	{	Write-Host "  Version file '$VersionFilePath' does not exists." -ForegroundColor Red
-		return ""
+	if (-not (Test-Path -Path $VersionFilePath -PathType Leaf))
+	{	Write-Host "[ERROR]: Version file '$VersionFilePath' does not exists." -ForegroundColor Red
+		return $true
 	}
 	$FileContent = Get-Content -Path $VersionFilePath
 	foreach ($Line in $FileContent)
 	{	if ($Line -match 'Ghdl_Ver(.+?)\"(.+?)\";')
 		{ return $Matches[2]	}
 	}
-	return ""
-}
+	Write-Host "[ERROR]: RegExp didn't match in '$VersionFilePath'." -ForegroundColor Red
+	return $true
+}	# Get-GHDLVersion
 
 function Invoke-PatchVersionFile
 {	<#
@@ -155,30 +159,36 @@ function Invoke-PatchVersionFile
 	[CmdletBinding()]
 	param(
 		[string]	$GHDLRootDir,
-		[string]	$GitBranchName = "unknown",
-		[string]	$GitCommitDataString = "unknown",
-		[string]	$GitCommitHash = "........",
-		[switch]	$Quiet = $false
+		[string]	$GitBranchName =				"unknown",
+		[string]	$GitCommitDataString =	"unknown",
+		[string]	$GitCommitHash =				"........",
+		[switch]	$Quiet =								$false
 	)
 	# construct DirectoryPaths
 	$SourceDirectory =					$GHDLRootDir + "\" + $CommonSourceDirName
-	# construct FilePaths
 	$CurrentVersionFilePath =		$SourceDirectory + "\" + $VersionFileName
 	$OriginalVersionFilePath =	$SourceDirectory + "\" + $VersionFileName + ".bak"
 	
 	Write-Host "Executing build target 'PatchVersionFile' ..." -ForegroundColor Yellow
 	
-	if (-not (Test-Path -Path $CurrentVersionFilePath))
-	{	Write-Host "  Version file '$CurrentVersionFilePath' does not exists." -ForegroundColor Red
+	if (-not (Test-Path -Path $CurrentVersionFilePath -PathType Leaf))
+	{	Write-Host "[ERROR]: Version file '$CurrentVersionFilePath' does not exists." -ForegroundColor Red
 		return $true
 	}
-	if ($Quiet -eq $false)
-	{	Write-Host "  Patching '$CurrentVersionFilePath'."		}
+	-not $Quiet -and (Write-Host "  Patching '$CurrentVersionFilePath'.") | Out-Null
 	$FileContent = Get-Content -Path $CurrentVersionFilePath -Encoding Ascii
+	if ($? -eq $false)
+	{	Write-Host "[ERROR]: While opening '$CurrentVersionFilePath'." -ForegroundColor Red
+		return $true
+	}
 	$FileContent = $FileContent -Replace "\s\(\d+\)\s", " (commit: $GitCommitDataString;  git branch: $GitBranchName';  hash: $GitCommitHash) "
 	
 	Move-Item $CurrentVersionFilePath $OriginalVersionFilePath -Force
 	$FileContent | Out-File $CurrentVersionFilePath -Encoding Ascii
+	if ($? -eq $false)
+	{	Write-Host "[ERROR]: While writing to '$CurrentVersionFilePath'." -ForegroundColor Red
+		return $true
+	}
 	
 	return $false
 }	# Invoke-PatchVersionFile
@@ -199,19 +209,22 @@ function Restore-PatchedVersionFile
 	)
 	# construct DirectoryPaths
 	$SourceDirectory =					$GHDLRootDir + "\" + $CommonSourceDirName
-	# construct FilePaths
 	$CurrentVersionFilePath =		$SourceDirectory + "\" + $VersionFileName
 	$OriginalVersionFilePath =	$SourceDirectory + "\" + $VersionFileName + ".bak"
 	
 	Write-Host "Executing build target 'PatchedVersionFile' ..." -ForegroundColor Yellow
 	
-	if (-not (Test-Path -Path "$CurrentVersionFilePath"))
-	{	Write-Host "  Version file '$CurrentVersionFilePath' does not exists." -ForegroundColor Red
+	if (-not (Test-Path -Path "$OriginalVersionFilePath" -PathType Leaf))
+	{	Write-Host "[ERROR]: Original version file '$OriginalVersionFilePath' does not exists." -ForegroundColor Red
 		return $true
 	}
-	if ($Quiet -eq $false)
-	{	Write-Host "  Restoring '$CurrentVersionFilePath'."		}
+	-not $Quiet -and (Write-Host "  Restoring '$CurrentVersionFilePath'.") | Out-Null
 	Move-Item $OriginalVersionFilePath $CurrentVersionFilePath -Force
+	if ($? -eq $false)
+	{	Write-Host "[ERROR]: While moving '$OriginalVersionFilePath' to '$CurrentVersionFilePath'." -ForegroundColor Red
+		return $true
+	}
+	
 	return $false
 }	# Restore-PatchedVersionFile
 
@@ -266,13 +279,15 @@ function Invoke-CompileCFiles
 		$Parameters += $SourceDirectory + "\" + $SourceFile.File
 		
 		# call C compiler
-		$InvokeExpr = "$GCCExecutable " + ($Parameters -join " ") + " 2>&1"
+		$InvokeExpr = "$Prog_GCC " + ($Parameters -join " ") + " 2>&1"
 		
 		Write-Host ("  compiling: " + $SourceFile.File)
 		Write-Debug	"    call: $InvokeExpr"
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGCCLine -Indent "    "
 		if ($LastExitCode -ne 0)
-		{	return $true		}
+		{	Write-Host ("[ERROR]: While compiling '{0}'." -f $SourceFile.File) -ForegroundColor Red
+			return $true
+		}
 	}
 	
 	return $false
@@ -323,7 +338,7 @@ function Invoke-CompileGHDLAdaFiles
 
 	# add output filename
 	$Parameters += '-o'
-	$Parameters += $GHDLExecutableName
+	$Parameters += $GHDL_Mcode_Name
 
 	# append linker parameters
 	$Parameters += '-largs'
@@ -337,59 +352,18 @@ function Invoke-CompileGHDLAdaFiles
 	# $Parameters += '-Wl,--stack,8404992'
 
 	# call Ada compiler (GNAT)
-	$InvokeExpr = "$GNATMakeExecutable " + ($Parameters -join " ") + " 2>&1"
+	$InvokeExpr = "$Prog_GNATMake " + ($Parameters -join " ") + " 2>&1"
 	
 	Write-Host "  compiling with GNAT"
 	Write-Debug "    call: $InvokeExpr"
 	$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGCCLine -Indent "    "
-	return ($LastExitCode -ne 0)
+	if ($LastExitCode -ne 0)
+	{	Write-Host "[ERROR]: While compiling '$GHDL_Mcode_Name'." -ForegroundColor Red
+		return $true
+	}
+	return $false
 }	# Invoke-CompileGHDLAdaFiles
 
-function Invoke-CompileFilterAdaFiles
-{	<#
-		.SYNOPSIS
-		This CommandLet compiles all Ada files with GNAT.
-		.PARAMETER SourceDirectory
-		The directory where all source files are located.
-		.PARAMETER BuildDirectory
-		The directory where all generated files are stored.
-		.PARAMETER Quiet
-		Disable outputs to the host console
-	#>
-	[CmdletBinding()]
-	param(
-		[string]	$GHDLRootDir,
-		[string]	$BuildDirectory,
-		[switch]	$Quiet = $false
-	)
-	# construct DirectoryPaths
-	$SourceDirectory =					$GHDLRootDir + "\" + $CommonSourceDirName
-	
-	Set-Location $BuildDirectory
-	Write-Host "Executing build target 'CompileFilterAdaFiles' ..." -ForegroundColor Yellow
-	
-	$Parameters = @()
-	$Parameters += Get-CFlags								# append common CFlags
-	$Parameters += '-gnatn'
-
-	# append all source paths
-	$Parameters += '-aI' + $SourceDirectory + '\..\dist\mcode\windows'
-	
-	# top level
-	$Parameters += 'ghdlfilter'
-
-	# add output filename
-	$Parameters += '-o'
-	$Parameters += $FilterExecutable
-
-	# call Ada compiler (GNAT)
-	$InvokeExpr = "$GNATMakeExecutable " + ($Parameters -join " ") + " 2>&1"
-	
-	Write-Host "  compiling with GNAT"
-	Write-Debug "    call: $InvokeExpr"
-	$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGCCLine -Indent "    "
-	return ($LastExitCode -ne 0)
-}	# Invoke-CompileFilterAdaFiles
 
 function Invoke-StripGHDLExecutable
 {	<#
@@ -410,10 +384,14 @@ function Invoke-StripGHDLExecutable
 	Write-Host "Executing build target 'StripGHDLExecutable' ..." -ForegroundColor Yellow
 	
 	# call striping tool (strip)
-	Write-Host "  stripping '$GHDLExecutableName'"
-	Write-Debug "    call: $StripExecutable $GHDLExecutableName"
-	& $StripExecutable $GHDLExecutableName
-	return ($LastExitCode -ne 0)
+	Write-Host "  stripping '$GHDL_Mcode_Name'"
+	Write-Debug "    call: $Prog_Strip $GHDL_Mcode_Name"
+	& $Prog_Strip $GHDL_Mcode_Name
+	if ($LastExitCode -ne 0)
+	{	Write-Host "[ERROR]: While stripping '$GHDL_Mcode_Name'." -ForegroundColor Red
+		return $true
+	}
+	return $false
 }	# Invoke-StripGHDLExecutable
 
 function Test-GHDLVersion
@@ -434,20 +412,24 @@ function Test-GHDLVersion
 	Set-Location $BuildDirectory
 	Write-Host "Executing build target 'GHDLVersion' ..." -ForegroundColor Yellow
 	
-	if (-not (Test-Path -Path $GHDLExecutableName))
-	{	Write-Host "  GHDL executable '$GHDLExecutableName' does not exists." -ForegroundColor Red
+	if (-not (Test-Path -Path $GHDL_Mcode_Name -PathType Leaf))
+	{	Write-Host "  GHDL executable '$GHDL_Mcode_Name' does not exists." -ForegroundColor Red
 		return $true
 	}
 	
 	# call ghdl
-	$InvokeExpr = "$GHDLExecutableName --version 2>&1"
+	$InvokeExpr = "$GHDL_Mcode_Name --version 2>&1"
 	
-	Write-Host "  executing '$GHDLExecutableName'"
+	Write-Host "  executing '$GHDL_Mcode_Name'"
 	Write-Host "    call: $InvokeExpr"
 	Write-Host "    ----------------------------------------"
 	Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-HostExtended "    "
 	Write-Host "    ----------------------------------------"
-	return ($LastExitCode -ne 0)
+	if ($LastExitCode -ne 0)
+	{	Write-Host "[ERROR]: While executing '$GHDL_Mcode_Name'." -ForegroundColor Red
+		return $true
+	}
+	return $false
 }	# Test-GHDLVersion
 
 
@@ -459,6 +441,5 @@ Export-ModuleMember -Function 'Invoke-PatchVersionFile'
 Export-ModuleMember -Function 'Restore-PatchedVersionFile'
 Export-ModuleMember -Function 'Invoke-CompileCFiles'
 Export-ModuleMember -Function 'Invoke-CompileGHDLAdaFiles'
-Export-ModuleMember -Function 'Invoke-CompileFilterAdaFiles'
 Export-ModuleMember -Function 'Invoke-StripGHDLExecutable'
 Export-ModuleMember -Function 'Test-GHDLVersion'
