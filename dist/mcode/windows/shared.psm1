@@ -56,7 +56,8 @@ function Exit-CompileScript
 	cd $Module_WorkingDir
 	
 	# unload modules
-	Remove-Module shared
+	Remove-Module shared -Verbose:$false
+	Remove-Module targets -Verbose:$false
 	
 	exit $ExitCode
 }
