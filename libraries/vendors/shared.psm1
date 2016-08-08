@@ -3,10 +3,10 @@
 # kate: tab-width 2; replace-tabs off; indent-width 2;
 # 
 # ==============================================================================
+#	Authors:						Patrick Lehmann
+# 
 #	PowerShell Module:	The module provides common CmdLets for the library
 #											pre-compilation process.
-# 
-#	Authors:						Patrick Lehmann
 # 
 # Description:
 # ------------------------------------
@@ -60,8 +60,8 @@ function Exit-CompileScript
 	cd $Module_WorkingDir
 	
 	# unload modules
-	Remove-Module config
-	Remove-Module shared
+	Remove-Module config -Verbose:$false
+	Remove-Module shared -Verbose:$false
 	
 	if ($ExitCode -eq 0)
 	{	exit 0	}
@@ -201,7 +201,7 @@ function Get-VHDLVariables
 	elseif ($VHDL2008)
 	{	$VHDLVersion =	"v08"
 		$VHDLStandard = "08"
-		$VHDLFlavor =		"standard"
+		$VHDLFlavor =		"synopsys"
 	}
 	else
 	{	$VHDLVersion =	"v93"
@@ -275,8 +275,9 @@ function Start-PackageCompilation
 	Write-Host "Compiling library '$Library' ..." -ForegroundColor Yellow
 	$ErrorCount = 0
 	foreach ($File in $SourceFiles)
-	{	Write-Host "Analyzing package file '$File'" -ForegroundColor Cyan
+	{	Write-Host "Analyzing package file '$File'" -ForegroundColor DarkCyan
 		$InvokeExpr = "$GHDLBinary " + ($GHDLOptions -join " ") + " --work=$Library " + $File + " 2>&1"
+		# Write-Host "  $InvokeExpr" -ForegroundColor DarkGray
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		if ($LastExitCode -ne 0)
 		{	$ErrorCount += 1
@@ -325,8 +326,9 @@ function Start-PrimitiveCompilation
 	Write-Host "Compiling library '$Library' ..." -ForegroundColor Yellow
 	$ErrorCount = 0
 	foreach ($File in $SourceFiles)
-	{	Write-Host "Analyzing primitive file '$File'" -ForegroundColor Cyan
+	{	Write-Host "Analyzing primitive file '$File'" -ForegroundColor DarkCyan
 		$InvokeExpr = "$GHDLBinary " + ($GHDLOptions -join " ") + " --work=$Library " + $File + " 2>&1"
+		# Write-Host "  $InvokeExpr" -ForegroundColor DarkGray
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
 		if ($LastExitCode -ne 0)
 		{	$ErrorCount += 1

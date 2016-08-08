@@ -72,8 +72,8 @@ param(
 $WorkingDir =		Get-Location
 
 # load modules from GHDL's 'vendors' library directory
-Import-Module $PSScriptRoot\config.psm1 -ArgumentList "OSVVM"
-Import-Module $PSScriptRoot\shared.psm1 -ArgumentList @("OSVVM", "$WorkingDir")
+Import-Module $PSScriptRoot\config.psm1 -Verbose:$false -ArgumentList "OSVVM"
+Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -ArgumentList @("OSVVM", "$WorkingDir")
 
 # Display help if no command was selected
 $Help = $Help -or (-not ($All -or $OSVVM))
