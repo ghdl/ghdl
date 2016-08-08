@@ -95,8 +95,8 @@ if ($Help)
 $WorkingDir =		Get-Location
 
 # load modules from GHDL's 'vendors' library directory
-Import-Module $PSScriptRoot\config.psm1 -ArgumentList "XilinxISE"
-Import-Module $PSScriptRoot\shared.psm1 -ArgumentList @("Xilinx ISE", "$WorkingDir")
+Import-Module $PSScriptRoot\config.psm1 -Verbose:$false -ArgumentList "XilinxISE"
+Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -ArgumentList @("Xilinx ISE", "$WorkingDir")
 
 # Display help if no command was selected
 $Help = $Help -or (-not ($All -or $Unisim -or $Simprim -or $Unimacro))

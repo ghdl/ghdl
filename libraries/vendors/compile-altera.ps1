@@ -103,8 +103,8 @@ param(
 $WorkingDir =		Get-Location
 
 # load modules from GHDL's 'vendors' library directory
-Import-Module $PSScriptRoot\config.psm1 -ArgumentList "AlteraQuartus"
-Import-Module $PSScriptRoot\shared.psm1 -ArgumentList @("Altera Quartus", "$WorkingDir")
+Import-Module $PSScriptRoot\config.psm1 -Verbose:$false -ArgumentList "AlteraQuartus"
+Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -ArgumentList @("Altera Quartus", "$WorkingDir")
 
 # Display help if no command was selected
 $Help = $Help -or (-not ($All -or $Altera -or $Max -or $Cyclone -or $Arria -or $Stratix -or $Nanometer))
