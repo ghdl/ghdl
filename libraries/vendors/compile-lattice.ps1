@@ -114,8 +114,8 @@ param(
 $WorkingDir =		Get-Location
 
 # load modules from GHDL's 'vendors' library directory
-Import-Module $PSScriptRoot\config.psm1 -ArgumentList "LatticeDiamond"
-Import-Module $PSScriptRoot\shared.psm1 -ArgumentList @("Lattice Diamond", "$WorkingDir")
+Import-Module $PSScriptRoot\config.psm1 -Verbose:$false -ArgumentList "LatticeDiamond"
+Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -ArgumentList @("Lattice Diamond", "$WorkingDir")
 
 # Display help if no command was selected
 $Help = $Help -or (-not ($All -or 

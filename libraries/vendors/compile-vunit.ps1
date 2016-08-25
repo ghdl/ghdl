@@ -72,8 +72,8 @@ param(
 $WorkingDir =		Get-Location
 
 # load modules from GHDL's 'vendors' library directory
-Import-Module $PSScriptRoot\config.psm1 -ArgumentList "VUnit"
-Import-Module $PSScriptRoot\shared.psm1 -ArgumentList @("VUnit", "$WorkingDir")
+Import-Module $PSScriptRoot\config.psm1 -Verbose:$false -ArgumentList "VUnit"
+Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -ArgumentList @("VUnit", "$WorkingDir")
 
 # Display help if no command was selected
 $Help = $Help -or (-not ($All -or $VUnit))
