@@ -589,7 +589,7 @@ package body Sem_Psl is
       case Get_Kind (Expr) is
          when N_HDL_Expr =>
             return True;
-         when N_And_Bool | N_Or_Bool =>
+         when N_And_Bool | N_Or_Bool | N_Not_Bool =>
             return True;
          when others =>
             return False;
