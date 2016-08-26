@@ -6407,7 +6407,8 @@ package body Parse is
    --      INSTANTIATION_label :
    --          instantiated_unit [ generic_map_aspect ] [ port_map_aspect ] ;
    function Parse_Component_Instantiation (Name: Iir)
-      return Iir_Component_Instantiation_Statement is
+      return Iir_Component_Instantiation_Statement
+   is
       Res: Iir_Component_Instantiation_Statement;
    begin
       Res := Create_Iir (Iir_Kind_Component_Instantiation_Statement);

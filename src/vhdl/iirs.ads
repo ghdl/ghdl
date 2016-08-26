@@ -4689,6 +4689,11 @@ package Iirs is
    --Iir_Kind_Choice_By_None
      Iir_Kind_Choice_By_Name;
 
+   subtype Iir_Kinds_Entity_Aspect is Iir_Kind range
+     Iir_Kind_Entity_Aspect_Entity ..
+   --Iir_Kind_Entity_Aspect_Configuration
+     Iir_Kind_Entity_Aspect_Open;
+
    subtype Iir_Kinds_Denoting_Name is Iir_Kind range
      Iir_Kind_Character_Literal ..
    --Iir_Kind_Simple_Name
