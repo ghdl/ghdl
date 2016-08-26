@@ -2053,7 +2053,8 @@ package body Sem_Names is
            | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Component_Instantiation_Statement
-           | Iir_Kind_Slice_Name =>
+           | Iir_Kind_Slice_Name
+           | Iir_Kind_Procedure_Call_Statement =>
             Error_Msg_Sem
               (+Prefix_Loc, "%n cannot be selected by name", +Prefix);
 

@@ -1385,12 +1385,18 @@ package body Sem_Expr is
             --  Only one interpretation for the subprogram name.
             if Is_Func then
                if Get_Kind (Inter_List) /= Iir_Kind_Function_Declaration then
-                  Error_Msg_Sem (+Expr, "name does not designate a function");
+                  Error_Msg_Sem (+Expr, "name does not designate a function",
+                                 Cont => True);
+                  Error_Msg_Sem (+Expr, "name is %n defined at %l",
+                                 (+Inter_List, +Inter_List));
                   return Null_Iir;
                end if;
             else
                if Get_Kind (Inter_List) /= Iir_Kind_Procedure_Declaration then
-                  Error_Msg_Sem (+Expr, "name does not designate a procedure");
+                  Error_Msg_Sem (+Expr, "name does not designate a procedure",
+                                Cont => True);
+                  Error_Msg_Sem (+Expr, "name is %n defined at %l",
+                                 (+Inter_List, +Inter_List));
                   return Null_Iir;
                end if;
             end if;
