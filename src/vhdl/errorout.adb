@@ -397,7 +397,6 @@ package body Errorout is
                      declare
                         Arg : Earg_Type renames Args (Argn);
                      begin
-                        Put (''');
                         case Arg.Kind is
                            when Earg_Iir =>
                               Put (Disp_Node (Arg.Val_Iir));
@@ -405,7 +404,6 @@ package body Errorout is
                               --  Invalid conversion to node.
                               raise Internal_Error;
                         end case;
-                        Put (''');
                      end;
                   when others =>
                      --  Unknown format.
