@@ -7155,6 +7155,11 @@ package body Parse is
    begin
       Res := Create_Iir (Iir_Kind_Psl_Assert_Statement);
 
+      --  Accept PSL tokens
+      if Flags.Vhdl_Std >= Vhdl_08 then
+         Scanner.Flag_Psl := True;
+      end if;
+
       --  Skip 'assert'
       Scan;
 

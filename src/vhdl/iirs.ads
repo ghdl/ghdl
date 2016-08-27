@@ -2577,6 +2577,8 @@ package Iirs is
    --  True if at least one of the NFA edge has the EOS flag.
    --   Get/Set_PSL_EOS_Flag (Flag1)
    --
+   --   Get/Set_Postponed_Flag (Flag3)
+   --
    --   Get/Set_Visible_Flag (Flag4)
 
    -- Iir_Kind_Component_Instantiation_Statement (Medium)
