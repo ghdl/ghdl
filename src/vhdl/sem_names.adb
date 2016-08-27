@@ -1897,6 +1897,10 @@ package body Sem_Names is
                Error_Msg_Sem
                  (+Name,
                   " (use --ieee=synopsys for non-standard synopsys packages)");
+            elsif Suffix = Name_Std_Logic_Textio then
+               Error_Msg_Sem
+                 (+Name, " (use --ieee=synopsys or --std=08 for "
+                    & "this non-standard synopsys package)");
             end if;
          end if;
       end Error_Unit_Not_Found;

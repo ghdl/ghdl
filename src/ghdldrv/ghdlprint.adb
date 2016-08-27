@@ -1327,7 +1327,6 @@ package body Ghdlprint is
       if Cmd.Output_Dir /= null
         and then not Is_Directory (Cmd.Output_Dir.all)
       then
-         declare
          begin
             Make_Dir (Cmd.Output_Dir.all);
          exception
@@ -1368,6 +1367,7 @@ package body Ghdlprint is
       Xrefs.Sort_By_Location;
 
       if False then
+         --  Dump locations
          for I in 1 .. Xrefs.Get_Last_Xref loop
             declare
                use Xrefs;

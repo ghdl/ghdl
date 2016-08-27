@@ -413,6 +413,7 @@ package body Std_Names is
       Def ("vital_level1",       Name_VITAL_Level1);
       Def ("std_logic_arith",    Name_Std_Logic_Arith);
       Def ("std_logic_signed",   Name_Std_Logic_Signed);
+      Def ("std_logic_textio",   Name_Std_Logic_Textio);
       Def ("std_logic_unsigned", Name_Std_Logic_Unsigned);
 
       --  Verilog keywords
