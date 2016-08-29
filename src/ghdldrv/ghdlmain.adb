@@ -17,6 +17,7 @@
 --  02111-1307, USA.
 with Ada.Text_IO;
 with Ada.Command_Line;
+with Ada.Command_Line.Response_File;
 with Version;
 with Bug;
 with Options;
@@ -260,30 +261,76 @@ package body Ghdlmain is
    is
       use Ada.Command_Line;
       Cmd : Command_Acc;
+      Cmd_Name : String_Access;
+      Args : String_List_Access;
       Arg_Index : Natural;
       First_Arg : Natural;
-
    begin
+      --  Handle case of no argument
       if Argument_Count = 0 then
          Error ("missing command, try " & Command_Name & " --help");
          raise Option_Error;
       end if;
 
-      Cmd := Find_Command (Argument (1));
+      Args := new String_List (1 .. Argument_Count);
+      for I in Args'Range loop
+         Args (I) := new String'(Argument (I));
+         pragma Assert (Args (I)'First = 1);
+      end loop;
+
+      --  Expand response files
+      Arg_Index := 1;
+      while Arg_Index <= Args'Last loop
+         if Args (Arg_Index).all (1) = '@' then
+            declare
+               Rsp_Arg : constant String_Access := Args (Arg_Index);
+               Rsp_File : constant String := Rsp_Arg (2 .. Rsp_Arg'Last);
+            begin
+               declare
+                  Exp_Args : constant GNAT.OS_Lib.Argument_List :=
+                    Response_File.Arguments_From (Rsp_File);
+                  Exp_Length : constant Natural := Exp_Args'Length;
+                  New_Args : String_List_Access;
+               begin
+                  New_Args :=
+                    new String_List (1 .. Args'Last + Exp_Length - 1);
+                  New_Args (1 .. Arg_Index - 1) := Args (1 .. Arg_Index - 1);
+                  New_Args (Arg_Index .. Arg_Index + Exp_Length - 1) :=
+                    Exp_Args;
+                  New_Args (Arg_Index + Exp_Length .. New_Args'Last) :=
+                    Args (Arg_Index + 1 .. Args'Last);
+                  Free (Args);
+                  Args := New_Args;
+                  Arg_Index := Arg_Index + Exp_Length;
+               end;
+            exception
+               when Response_File.File_Does_Not_Exist =>
+                  Error ("cannot open response file '" & Rsp_File & "'");
+                  raise Option_Error;
+            end;
+         else
+            Arg_Index := Arg_Index + 1;
+         end if;
+      end loop;
+
+      --  Decode command.
+
+      Cmd_Name := Args (1);
+      Cmd := Find_Command (Cmd_Name.all);
       if Cmd = null then
-         Error ("unknown command '" & Argument (1) & "', try --help");
+         Error ("unknown command '" & Cmd_Name.all & "', try --help");
          raise Option_Error;
       end if;
 
       Init (Cmd.all);
 
-      --  decode options.
+      --  Decode options.
 
       First_Arg := 0;
       Arg_Index := 2;
-      while Arg_Index <= Argument_Count loop
+      while Arg_Index <= Args'Last loop
          declare
-            Arg : constant String := Argument (Arg_Index);
+            Arg : constant String_Access := Args (Arg_Index);
             Res : Option_Res;
          begin
             if Arg (1) = '-' then
@@ -294,21 +341,22 @@ package body Ghdlmain is
                   raise Option_Error;
                end if;
 
-               Decode_Option (Cmd.all, Arg, "", Res);
+               Decode_Option (Cmd.all, Arg.all, "", Res);
                case Res is
                   when Option_Bad =>
-                     Error ("unknown option '" & Arg & "' for command '"
-                            & Argument (1) & "'");
+                     Error ("unknown option '" & Arg.all & "' for command '"
+                            & Cmd_Name.all & "'");
                      raise Option_Error;
                   when Option_Ok =>
                      Arg_Index := Arg_Index + 1;
                   when Option_Arg_Req =>
                      if Arg_Index + 1 > Argument_Count then
-                        Error ("option '" & Arg & "' requires an argument");
+                        Error
+                          ("option '" & Arg.all & "' requires an argument");
                         raise Option_Error;
                      end if;
                      Decode_Option
-                       (Cmd.all, Arg, Argument (Arg_Index + 1), Res);
+                       (Cmd.all, Arg.all, Args (Arg_Index + 1).all, Res);
                      if Res /= Option_Arg then
                         raise Program_Error;
                      end if;
@@ -334,16 +382,19 @@ package body Ghdlmain is
       Set_Exit_Status (Success);
 
       declare
-         Args : Argument_List (1 .. Argument_Count - First_Arg + 1);
+         Cmd_Args : Argument_List (1 .. Args'Last - First_Arg + 1);
       begin
-         for I in Args'Range loop
-            Args (I) := new String'(Argument (First_Arg + I - 1));
+         for I in Cmd_Args'Range loop
+            Cmd_Args (I) := Args (First_Arg + I - 1);
          end loop;
-         Perform_Action (Cmd.all, Args);
-         for I in Args'Range loop
-            Free (Args (I));
-         end loop;
+         Perform_Action (Cmd.all, Cmd_Args);
       end;
+
+      for I in Args'Range loop
+         Free (Args (I));
+      end loop;
+      Free (Args);
+
       --if Flags.Dump_Stats then
       --   Name_Table.Disp_Stats;
       --   Iirs.Disp_Stats;
