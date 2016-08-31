@@ -1497,6 +1497,22 @@ package body Parse is
                     ("package interface not allowed before vhdl 08");
                end if;
                Inters := Parse_Interface_Package_Declaration;
+            when Tok_Type =>
+               if Ctxt /= Generic_Interface_List then
+                  Error_Msg_Parse
+                    ("type interface only allowed in generic interface");
+               elsif Flags.Vhdl_Std < Vhdl_08 then
+                  Error_Msg_Parse
+                    ("type interface not allowed before vhdl 08");
+               end if;
+               Inters := Create_Iir (Iir_Kind_Interface_Type_Declaration);
+               Scan_Expect (Tok_Identifier,
+                            "am identifier is expected after 'type'");
+               Set_Identifier (Inters, Current_Identifier);
+               Set_Location (Inters);
+
+               --  Skip identifier
+               Scan;
             when Tok_Right_Paren =>
                if Res = Null_Iir then
                   Error_Msg_Parse

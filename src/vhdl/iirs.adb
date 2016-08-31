@@ -288,6 +288,7 @@ package body Iirs is
            | Iir_Kind_Configuration_Specification
            | Iir_Kind_Access_Type_Definition
            | Iir_Kind_Incomplete_Type_Definition
+           | Iir_Kind_Interface_Type_Definition
            | Iir_Kind_File_Type_Definition
            | Iir_Kind_Protected_Type_Declaration
            | Iir_Kind_Record_Type_Definition
@@ -330,6 +331,7 @@ package body Iirs is
            | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Interface_File_Declaration
+           | Iir_Kind_Interface_Type_Declaration
            | Iir_Kind_Identity_Operator
            | Iir_Kind_Negation_Operator
            | Iir_Kind_Absolute_Operator
@@ -1884,6 +1886,22 @@ package body Iirs is
                      "no field Subtype_Definition");
       Set_Field4 (Target, Def);
    end Set_Subtype_Definition;
+
+   function Get_Interface_Type_Subprograms (Target : Iir) return Iir is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Interface_Type_Subprograms (Get_Kind (Target)),
+                     "no field Interface_Type_Subprograms");
+      return Get_Field4 (Target);
+   end Get_Interface_Type_Subprograms;
+
+   procedure Set_Interface_Type_Subprograms (Target : Iir; Subprg : Iir) is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Interface_Type_Subprograms (Get_Kind (Target)),
+                     "no field Interface_Type_Subprograms");
+      Set_Field4 (Target, Subprg);
+   end Set_Interface_Type_Subprograms;
 
    function Get_Nature (Target : Iir) return Iir is
    begin

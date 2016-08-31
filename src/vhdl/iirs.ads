@@ -1180,6 +1180,28 @@ package Iirs is
    --
    --   Get/Set_Name_Staticness (State2)
 
+   -- Iir_Kind_Interface_Type_Declaration (Short)
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Type (Field1)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Identifier (Field3)
+   --
+   --   Get/Set_Interface_Type_Subprograms (Field4)
+   --
+   --   Get/Set_Has_Identifier_List (Flag3)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Use_Flag (Flag6)
+   --
+   --   Get/Set_Is_Ref (Flag7)
+   --
+   --   Get/Set_Name_Staticness (State2)
+
    -- Iir_Kind_Interface_Package_Declaration (Medium)
    --
    --  LRM08 6.5.5 Interface package declarations
@@ -2084,6 +2106,22 @@ package Iirs is
    --
    --  Set to the incomplete type declaration when analyzed, and set to the
    --  complete type declaration when the latter one is analyzed.
+   --   Get/Set_Type_Declarator (Field3)
+   --
+   --   Get/Set_Base_Type (Field4)
+   --
+   --   Get/Set_Type_Staticness (State1)
+   --
+   --   Get/Set_Resolved_Flag (Flag1)
+   --
+   --   Get/Set_Signal_Type_Flag (Flag2)
+   --
+   --   Get/Set_Has_Signal_Flag (Flag3)
+
+   -- Iir_Kind_Interface_Type_Definition (Short)
+   --  Type definition for an interface type.
+   --
+   --  Set to interface type declaration.
    --   Get/Set_Type_Declarator (Field3)
    --
    --   Get/Set_Base_Type (Field4)
@@ -3723,6 +3761,7 @@ package Iirs is
    -- kinds: disc: discrete, st: subtype.
       Iir_Kind_Access_Type_Definition,
       Iir_Kind_Incomplete_Type_Definition,
+      Iir_Kind_Interface_Type_Definition,
       Iir_Kind_File_Type_Definition,
       Iir_Kind_Protected_Type_Declaration,
       Iir_Kind_Record_Type_Definition,           -- composite
@@ -3796,6 +3835,7 @@ package Iirs is
       Iir_Kind_Interface_Variable_Declaration, -- object, interface
       Iir_Kind_Interface_Signal_Declaration,   -- object, interface
       Iir_Kind_Interface_File_Declaration,     -- object, interface
+      Iir_Kind_Interface_Type_Declaration,
       Iir_Kind_Interface_Package_Declaration,
 
    -- Expressions.
@@ -4288,6 +4328,10 @@ package Iirs is
        Iir_Predefined_Std_Ulogic_Array_Match_Equality,
        Iir_Predefined_Std_Ulogic_Array_Match_Inequality,
 
+       --  For interface type
+       Iir_Predefined_Interface_Type_Equality,
+       Iir_Predefined_Interface_Type_Inequality,
+
        --  --  Predefined attribute functions.
        --  Iir_Predefined_Attribute_Image,
        --  Iir_Predefined_Attribute_Value,
@@ -4507,6 +4551,7 @@ package Iirs is
    subtype Iir_Kinds_Type_And_Subtype_Definition is Iir_Kind range
      Iir_Kind_Access_Type_Definition ..
    --Iir_Kind_Incomplete_Type_Definition
+   --Iir_Kind_Interface_Type_Definition
    --Iir_Kind_File_Type_Definition
    --Iir_Kind_Protected_Type_Declaration
    --Iir_Kind_Record_Type_Definition
@@ -4644,6 +4689,14 @@ package Iirs is
    --Iir_Kind_Interface_Variable_Declaration
    --Iir_Kind_Interface_Signal_Declaration
      Iir_Kind_Interface_File_Declaration;
+
+   subtype Iir_Kinds_Interface_Declaration is Iir_Kind range
+     Iir_Kind_Interface_Constant_Declaration ..
+   --Iir_Kind_Interface_Variable_Declaration
+   --Iir_Kind_Interface_Signal_Declaration
+   --Iir_Kind_Interface_File_Declaration
+   --Iir_Kind_Interface_Type_Declaration
+     Iir_Kind_Interface_Package_Declaration;
 
    subtype Iir_Kinds_Object_Declaration is Iir_Kind range
      Iir_Kind_Object_Alias_Declaration ..
@@ -5702,6 +5755,11 @@ package Iirs is
    --  Field: Field4
    function Get_Subtype_Definition (Target : Iir) return Iir;
    procedure Set_Subtype_Definition (Target : Iir; Def : Iir);
+
+   --  Implicit operations of an interface type declaration.
+   --  Field: Field4
+   function Get_Interface_Type_Subprograms (Target : Iir) return Iir;
+   procedure Set_Interface_Type_Subprograms (Target : Iir; Subprg : Iir);
 
    --  Field: Field1
    function Get_Nature (Target : Iir) return Iir;

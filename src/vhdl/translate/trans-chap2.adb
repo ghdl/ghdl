@@ -384,7 +384,8 @@ package body Trans.Chap2 is
                   when Iir_Kinds_Composite_Type_Definition =>
                      --  At least for "=".
                      return True;
-                  when Iir_Kind_Incomplete_Type_Definition =>
+                  when Iir_Kind_Incomplete_Type_Definition
+                    | Iir_Kind_Interface_Type_Definition =>
                      null;
                end case;
             when others =>

@@ -751,6 +751,8 @@ package body Errorout is
             return Disp_Type (Node, "floating type");
          when Iir_Kind_Incomplete_Type_Definition =>
             return Disp_Type (Node, "incomplete type");
+         when Iir_Kind_Interface_Type_Definition =>
+            return Disp_Type (Node, "interface type");
          when Iir_Kind_Protected_Type_Declaration =>
             return Disp_Type (Node, "protected type");
          when Iir_Kind_Protected_Type_Body =>
@@ -877,6 +879,8 @@ package body Errorout is
             return Disp_Identifier (Node, "file interface");
          when Iir_Kind_Interface_Package_Declaration =>
             return Disp_Identifier (Node, "package interface");
+         when Iir_Kind_Interface_Type_Declaration =>
+            return Disp_Identifier (Node, "type interface");
          when Iir_Kind_Signal_Declaration =>
             return Disp_Identifier (Node, "signal");
          when Iir_Kind_Variable_Declaration =>
