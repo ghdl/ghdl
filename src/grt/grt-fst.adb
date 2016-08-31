@@ -22,6 +22,22 @@
 --  covered by the GNU General Public License. This exception does not
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
+
+-------------------------------------------------------------------------------
+
+-- TODO:
+-- * Fix the following issues :
+--    + Currently both the top level signals and signals in packages aren't
+--      visible on the tree view (SST) of gtkwave, but both of them are visible
+--      when no item is selected in the tree view and are mixed together.
+--      (Same issue with VCD waves.)
+--    + After calling FST_Put_Hierarchy (Pack, Wave_Elem), Avhpi_Error is
+--      raised several times when no signal paths are provided in a wave option
+--      file. It has no consequences other than a printed message.
+--      (Same issue with VCD waves.)
+--    + Integer signals aren't displayed correctly but only their lowest bit is
+--      shown.
+
 with Interfaces; use Interfaces;
 with Interfaces.C;
 with Grt.Types; use Grt.Types;
@@ -36,6 +52,8 @@ with Grt.Hooks; use Grt.Hooks;
 with Grt.Rtis; use Grt.Rtis;
 with Grt.Rtis_Types; use Grt.Rtis_Types;
 with Grt.Vstrings;
+with Grt.Wave_Opt_File; use Grt.Wave_Opt_File;
+with Grt.Wave_Opt_File.Tree_Reading; use Grt.Wave_Opt_File.Tree_Reading;
 with Ada.Unchecked_Deallocation;
 pragma Elaborate_All (Grt.Table);
 
@@ -394,9 +412,12 @@ package body Grt.Fst is
       end if;
    end Fst_Add_Signal;
 
-   procedure Fst_Put_Hierarchy (Inst : VhpiHandleT);
+   procedure Fst_Put_Hierarchy
+     (Inst : VhpiHandleT; Wave_Elem : Wave_Opt_File.Elem_Acc);
 
-   procedure Fst_Put_Scope (Scope : fstScopeType; Decl : VhpiHandleT)
+   procedure Fst_Put_Scope (Scope : fstScopeType;
+                            Decl : VhpiHandleT;
+                            Wave_Elem : Wave_Opt_File.Elem_Acc)
    is
       Name : String (1 .. 128);
       Name_Len : Integer;
@@ -447,15 +468,17 @@ package body Grt.Fst is
 
       fstWriterSetScope
         (Context, Scope, To_Ghdl_C_String (Name'Address), null);
-      Fst_Put_Hierarchy (Decl);
+      Fst_Put_Hierarchy (Decl, Wave_Elem);
       fstWriterSetUpscope (Context);
    end Fst_Put_Scope;
 
-   procedure Fst_Put_Hierarchy (Inst : VhpiHandleT)
+   procedure Fst_Put_Hierarchy
+     (Inst : VhpiHandleT; Wave_Elem : Wave_Opt_File.Elem_Acc)
    is
       Decl_It : VhpiHandleT;
       Decl : VhpiHandleT;
       Error : AvhpiErrorT;
+      Wave_Elem_Child : Wave_Opt_File.Elem_Acc;
    begin
       Vhpi_Iterator (VhpiDecls, Inst, Decl_It, Error);
       if Error /= AvhpiErrorOk then
@@ -472,13 +495,18 @@ package body Grt.Fst is
             return;
          end if;
 
-         case Vhpi_Get_Kind (Decl) is
-            when VhpiPortDeclK
-              | VhpiSigDeclK =>
-               Fst_Add_Signal (Decl);
-            when others =>
-               null;
-         end case;
+
+         Wave_Elem_Child := Get_Cursor
+           (Avhpi_Get_Base_Name (Decl), Wave_Elem, Is_Signal => True);
+         if Is_Displayed (Wave_Elem_Child) then
+            case Vhpi_Get_Kind (Decl) is
+               when VhpiPortDeclK
+                 | VhpiSigDeclK =>
+                  Fst_Add_Signal (Decl);
+               when others =>
+                  null;
+            end case;
+         end if;
       end loop;
 
       --  Extract sub-scopes.
@@ -496,18 +524,24 @@ package body Grt.Fst is
             return;
          end if;
 
-         case Vhpi_Get_Kind (Decl) is
-            when VhpiIfGenerateK =>
-               Fst_Put_Scope (FST_ST_VHDL_IF_GENERATE, Decl);
-            when VhpiForGenerateK =>
-               Fst_Put_Scope (FST_ST_VHDL_FOR_GENERATE, Decl);
-            when  VhpiBlockStmtK =>
-               Fst_Put_Scope (FST_ST_VHDL_BLOCK, Decl);
-            when VhpiCompInstStmtK =>
-               Fst_Put_Scope (FST_ST_VHDL_ARCHITECTURE, Decl);
-            when others =>
-               null;
-         end case;
+         Wave_Elem_Child := Get_Cursor (Avhpi_Get_Base_Name (Decl), Wave_Elem);
+         if Is_Displayed (Wave_Elem_Child) then
+            case Vhpi_Get_Kind (Decl) is
+               when VhpiIfGenerateK =>
+                  Fst_Put_Scope
+                    (FST_ST_VHDL_IF_GENERATE, Decl, Wave_Elem_Child);
+               when VhpiForGenerateK =>
+                  Fst_Put_Scope
+                    (FST_ST_VHDL_FOR_GENERATE, Decl, Wave_Elem_Child);
+               when  VhpiBlockStmtK =>
+                  Fst_Put_Scope (FST_ST_VHDL_BLOCK, Decl, Wave_Elem_Child);
+               when VhpiCompInstStmtK =>
+                  Fst_Put_Scope
+                    (FST_ST_VHDL_ARCHITECTURE, Decl, Wave_Elem_Child);
+               when others =>
+                  null;
+            end case;
+         end if;
       end loop;
    end Fst_Put_Hierarchy;
 
@@ -583,7 +617,11 @@ package body Grt.Fst is
    --  Called after elaboration.
    procedure Fst_Start
    is
+      Pack_It : VhpiHandleT;
+      Pack : VhpiHandleT;
+      Error : AvhpiErrorT;
       Root : VhpiHandleT;
+      Wave_Elem : Wave_Opt_File.Elem_Acc;
    begin
       --  Do nothing if there is no VCD file to generate.
       if Context = Null_fstContext then
@@ -599,8 +637,29 @@ package body Grt.Fst is
       end if;
 
       --  Put hierarchy.
+
+      --  First packages.
+      Get_Package_Inst (Pack_It);
+      loop
+         Vhpi_Scan (Pack_It, Pack, Error);
+         exit when Error = AvhpiErrorIteratorEnd;
+         if Error /= AvhpiErrorOk then
+            Avhpi_Error (Error);
+            return;
+         end if;
+         Wave_Elem := Get_Top_Cursor (Avhpi_Get_Base_Name (Pack), Pkg);
+         if Is_Displayed (Wave_Elem) then
+            Fst_Put_Hierarchy (Pack, Wave_Elem);
+         end if;
+      end loop;
+
+      --  Then top entity.
       Get_Root_Inst (Root);
-      Fst_Put_Hierarchy (Root);
+      Wave_Elem := Get_Top_Cursor (Avhpi_Get_Base_Name (Root), Entity);
+      if Is_Displayed (Wave_Elem) then
+         Fst_Put_Hierarchy (Root, Wave_Elem);
+      end if;
+      Wave_Opt_File.Tree_Reading.Check_If_All_Found;
 
       if Flag_Aliases then
          Free_Hash_Tab;

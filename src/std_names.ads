@@ -483,7 +483,8 @@ package Std_Names is
    Name_VITAL_Level1       : constant Name_Id := Name_First_Ieee + 010;
    Name_Std_Logic_Arith    : constant Name_Id := Name_First_Ieee + 011;
    Name_Std_Logic_Signed   : constant Name_Id := Name_First_Ieee + 012;
-   Name_Std_Logic_Unsigned : constant Name_Id := Name_First_Ieee + 013;
+   Name_Std_Logic_Textio   : constant Name_Id := Name_First_Ieee + 013;
+   Name_Std_Logic_Unsigned : constant Name_Id := Name_First_Ieee + 014;
    Name_Last_Ieee          : constant Name_Id := Name_Std_Logic_Unsigned;
 
    --  Verilog keywords.

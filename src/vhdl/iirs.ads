@@ -2577,6 +2577,8 @@ package Iirs is
    --  True if at least one of the NFA edge has the EOS flag.
    --   Get/Set_PSL_EOS_Flag (Flag1)
    --
+   --   Get/Set_Postponed_Flag (Flag3)
+   --
    --   Get/Set_Visible_Flag (Flag4)
 
    -- Iir_Kind_Component_Instantiation_Statement (Medium)
@@ -4688,6 +4690,11 @@ package Iirs is
    --Iir_Kind_Choice_By_Range
    --Iir_Kind_Choice_By_None
      Iir_Kind_Choice_By_Name;
+
+   subtype Iir_Kinds_Entity_Aspect is Iir_Kind range
+     Iir_Kind_Entity_Aspect_Entity ..
+   --Iir_Kind_Entity_Aspect_Configuration
+     Iir_Kind_Entity_Aspect_Open;
 
    subtype Iir_Kinds_Denoting_Name is Iir_Kind range
      Iir_Kind_Character_Literal ..

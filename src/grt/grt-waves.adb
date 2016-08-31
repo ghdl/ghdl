@@ -940,8 +940,8 @@ package body Grt.Waves is
             return;
          end if;
 
-         Wave_Elem_Child := Get_Cursor (Avhpi_Get_Base_Name (Decl), Wave_Elem,
-                                        Is_Signal => True);
+         Wave_Elem_Child := Get_Cursor
+           (Avhpi_Get_Base_Name (Decl), Wave_Elem, Is_Signal => True);
          if Is_Displayed (Wave_Elem_Child) then
             case Vhpi_Get_Kind (Decl) is
                when VhpiPortDeclK

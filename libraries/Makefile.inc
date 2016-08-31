@@ -296,7 +296,7 @@ synopsys.v08: $(ANALYZE_DEP) $(LIB08_DIR) $(SYNOPSYS08_SRCS) ieee.v08 force
 	cd $(SYN08_DIR); \
 	$(CP) ../ieee/ieee-obj08.cf .; \
 	test x$(VHDLLIBS_COPY_OBJS) = "xno" || \
-	for i in $(IEEE_SRCS) $(MATH_SRCS) $(VITAL2000_SRCS); do \
+	for i in $(IEEE08_SRCS) $(VITAL2000_SRCS); do \
 	  b=`basename $$i .vhdl`; \
 	  if [ -f ../ieee/$$b.o ]; then \
 	    $(LN) ../ieee/$$b.o $$b.o || exit 1; \

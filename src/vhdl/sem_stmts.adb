@@ -1443,7 +1443,9 @@ package body Sem_Stmts is
       Comp_Name : Iir;
       Comp : Iir;
    begin
-      if Get_Kind (Inst) in Iir_Kinds_Denoting_Name then
+      if Get_Kind (Inst) in Iir_Kinds_Entity_Aspect then
+         return Sem_Entity_Aspect (Inst);
+      else
          Comp := Get_Named_Entity (Inst);
          if Comp /= Null_Iir then
             --  Already analyzed before, while trying to separate
@@ -1451,6 +1453,13 @@ package body Sem_Stmts is
             pragma Assert (Get_Kind (Comp) = Iir_Kind_Component_Declaration);
             return Comp;
          end if;
+
+         --  Needs a denoting name
+         if Get_Kind (Inst) not in Iir_Kinds_Denoting_Name then
+            Error_Msg_Sem (+Inst, "name for a component expected");
+            return Null_Iir;
+         end if;
+
          --  The component may be an entity or a configuration.
          Comp_Name := Sem_Denoting_Name (Inst);
          Set_Instantiated_Unit (Stmt, Comp_Name);
@@ -1459,9 +1468,8 @@ package body Sem_Stmts is
             Error_Class_Match (Comp_Name, "component");
             return Null_Iir;
          end if;
+
          return Comp;
-      else
-         return Sem_Entity_Aspect (Inst);
       end if;
    end Sem_Instantiated_Unit;
 
@@ -1477,7 +1485,7 @@ package body Sem_Stmts is
          Error_Msg_Sem (+Stmt, "component instantiation forbidden in entity");
       end if;
 
-      -- Check for label.
+      --  Check for label.
       --  This cannot be moved in parse since a procedure_call may be revert
       --  into a component instantiation.
       if Get_Label (Stmt) = Null_Identifier then
@@ -1490,7 +1498,7 @@ package body Sem_Stmts is
          return;
       end if;
 
-      -- The association
+      --  The association
       Sem_Generic_Port_Association_Chain (Decl, Stmt);
 
       --  FIXME: add sources for signals, in order to detect multiple sources

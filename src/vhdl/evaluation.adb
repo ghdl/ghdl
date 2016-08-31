@@ -1649,9 +1649,8 @@ package body Evaluation is
       if Res /= Null_Iir then
          return Build_Constant (Res, Expr);
       else
-         Warning_Msg_Sem
-           (Warnid_Runtime_Error, +Expr,
-            "value """ & Value & """ not in enumeration %n", +Enum);
+         Warning_Msg_Sem (Warnid_Runtime_Error, +Expr,
+                          "value %i not in enumeration %n", (+Id, +Enum));
          return Build_Overflow (Expr);
       end if;
    end Build_Enumeration_Value;
@@ -1684,24 +1683,17 @@ package body Evaluation is
 
    function Build_Physical_Value (Val: String; Phys_Type, Expr: Iir) return Iir
    is
-      function White (C : in Character) return Boolean is
-         NBSP : constant Character := Character'Val (160);
-         HT   : constant Character := Character'Val (9);
-      begin
-         return C = ' ' or C = NBSP or C = HT;
-      end White;
-
       UnitName : String (Val'range);
       Mult : Iir_Int64;
       Sep : Natural;
       Found_Unit : Boolean := false;
       Found_Real : Boolean := false;
-      Unit : Iir := Get_Primary_Unit (Phys_Type);
+      Unit : Iir;
    begin
       -- Separate string into numeric value and make lowercase unit.
       for I in reverse Val'range loop
          UnitName (I) := Ada.Characters.Handling.To_Lower (Val (I));
-         if White (Val (I)) and Found_Unit then
+         if Scanner.Is_Whitespace (Val (I)) and Found_Unit then
             Sep := I;
             exit;
          else
