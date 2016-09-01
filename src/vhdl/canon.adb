@@ -887,7 +887,8 @@ package body Canon is
                      end if;
                   when Iir_Kind_Association_Element_By_Individual =>
                      Found := True;
-                  when Iir_Kind_Association_Element_Package =>
+                  when Iir_Kind_Association_Element_Package
+                    | Iir_Kind_Association_Element_Type =>
                      goto Done;
                   when others =>
                      Error_Kind ("canon_association_chain", Assoc_El);
@@ -2551,6 +2552,19 @@ package body Canon is
       end if;
    end Canon_Subtype_Indication_If_Anonymous;
 
+   procedure Canon_Package_Instantiation_Declaration (Decl : Iir)
+   is
+      Pkg : constant Iir :=
+        Get_Named_Entity (Get_Uninstantiated_Package_Name (Decl));
+      Hdr : constant Iir := Get_Package_Header (Pkg);
+   begin
+      Set_Generic_Map_Aspect_Chain
+        (Decl,
+         Canon_Association_Chain_And_Actuals
+           (Get_Generic_Chain (Hdr),
+            Get_Generic_Map_Aspect_Chain (Decl), Decl));
+   end Canon_Package_Instantiation_Declaration;
+
    procedure Canon_Declaration (Top : Iir_Design_Unit;
                                 Decl : Iir;
                                 Parent : Iir;
@@ -2632,6 +2646,10 @@ package body Canon is
          when Iir_Kind_Configuration_Specification =>
             Canon_Component_Specification (Decl, Parent);
             Canon_Component_Configuration (Top, Decl);
+
+         when Iir_Kind_Package_Instantiation_Declaration =>
+            Canon_Package_Instantiation_Declaration (Decl);
+
 --             declare
 --                List : Iir_List;
 --                Binding : Iir_Binding_Indication;
@@ -3000,17 +3018,7 @@ package body Canon is
             Canon_Declarations (Unit, El, Null_Iir);
             Canon_Block_Configuration (Unit, Get_Block_Configuration (El));
          when Iir_Kind_Package_Instantiation_Declaration =>
-            declare
-               Pkg : constant Iir :=
-                 Get_Named_Entity (Get_Uninstantiated_Package_Name (El));
-               Hdr : constant Iir := Get_Package_Header (Pkg);
-            begin
-               Set_Generic_Map_Aspect_Chain
-                 (El,
-                  Canon_Association_Chain_And_Actuals
-                    (Get_Generic_Chain (Hdr),
-                     Get_Generic_Map_Aspect_Chain (El), El));
-            end;
+            Canon_Package_Instantiation_Declaration (El);
          when Iir_Kind_Context_Declaration =>
             null;
          when others =>

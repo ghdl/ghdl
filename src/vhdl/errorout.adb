@@ -715,7 +715,8 @@ package body Errorout is
          when Iir_Kind_Association_Element_By_Individual =>
             return "individual association element";
          when Iir_Kind_Association_Element_By_Expression
-           | Iir_Kind_Association_Element_Package =>
+           | Iir_Kind_Association_Element_Package
+           | Iir_Kind_Association_Element_Type =>
             return "association element";
          when Iir_Kind_Overload_List =>
             return "overloaded name or expression";

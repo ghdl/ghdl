@@ -390,6 +390,7 @@ package Iirs is
    -- Iir_Kind_Association_Element_Open (Short)
    -- Iir_Kind_Association_Element_By_Individual (Short)
    -- Iir_Kind_Association_Element_Package (Short)
+   -- Iir_Kind_Association_Element_Type (Short)
    --  These are used for association element of an association list with
    --  an interface (ie subprogram call, port map, generic map).
    --
@@ -399,25 +400,24 @@ package Iirs is
    --
    -- Only for Iir_Kind_Association_Element_By_Expression:
    -- Only for Iir_Kind_Association_Element_Package:
+   -- Only for Iir_Kind_Association_Element_Type:
    --   Get/Set_Actual (Field3)
-   --
-   -- Only for Iir_Kind_Association_Element_By_Individual:
-   --   Get/Set_Actual_Type (Field3)
-   --
-   -- Only for Iir_Kind_Association_Element_By_Individual:
-   --  Must be Locally unless there is an error on one choice.
-   --   Get/Set_Choice_Staticness (State2)
    --
    -- Only for Iir_Kind_Association_Element_By_Individual:
    --   Get/Set_Individual_Association_Chain (Field4)
    --
    -- Only for Iir_Kind_Association_Element_Package:
+   -- Only for Iir_Kind_Association_Element_Type:
    --   Get/Set_Associated_Interface (Field4)
    --
    --  A function call or a type conversion for the association.
    --  FIXME: should be a name ?
    -- Only for Iir_Kind_Association_Element_By_Expression:
    --   Get/Set_In_Conversion (Field4)
+   --
+   -- Only for Iir_Kind_Association_Element_By_Individual:
+   -- Only for Iir_Kind_Association_Element_Type:
+   --   Get/Set_Actual_Type (Field5)
    --
    -- Only for Iir_Kind_Association_Element_By_Expression:
    --   Get/Set_Out_Conversion (Field5)
@@ -430,6 +430,10 @@ package Iirs is
    --
    -- Only for Iir_Kind_Association_Element_Open:
    --   Get/Set_Artificial_Flag (Flag3)
+   --
+   -- Only for Iir_Kind_Association_Element_By_Individual:
+   --  Must be Locally unless there is an error on one choice.
+   --   Get/Set_Choice_Staticness (State2)
 
    -- Iir_Kind_Waveform_Element (Short)
    --
@@ -825,20 +829,23 @@ package Iirs is
    --
    --   Get/Set_Generic_Map_Aspect_Chain (Field8)
 
-   -- Iir_Kind_Package_Declaration (Short)
+   -- Iir_Kind_Package_Declaration (Medium)
    --
    --   Get/Set_Parent (Field0)
    --   Get/Set_Design_Unit (Alias Field0)
    --
    --   Get/Set_Declaration_Chain (Field1)
    --
-   --   Get/Set_Package_Body (Field2)
+   --  For nested packages
+   --   Get/Set_Chain (Field2)
    --
    --   Get/Set_Identifier (Field3)
    --
    --   Get/Set_Attribute_Value_Chain (Field4)
    --
-   --   Get/Set_Package_Header (Field5)
+   --   Get/Set_Package_Body (Field5)
+   --
+   --   Get/Set_Package_Header (Field6)
    --
    --   Get/Set_Need_Body (Flag1)
    --
@@ -856,6 +863,9 @@ package Iirs is
    --   Get/Set_Design_Unit (Alias Field0)
    --
    --   Get/Set_Declaration_Chain (Field1)
+   --
+   --  For nested packages.
+   --   Get/Set_Chain (Field2)
    --
    --   Get/Set_Identifier (Field3)
    --
@@ -875,15 +885,18 @@ package Iirs is
    --
    --   Get/Set_Declaration_Chain (Field1)
    --
-   --   Get/Set_Package_Body (Field2)
+   --  For nested packages
+   --   Get/Set_Chain (Field2)
    --
    --   Get/Set_Identifier (Field3)
    --
    --   Get/Set_Attribute_Value_Chain (Field4)
    --
-   --   Get/Set_Uninstantiated_Package_Name (Field5)
+   --   Get/Set_Package_Body (Field5)
    --
    --   Get/Set_Generic_Chain (Field6)
+   --
+   --   Get/Set_Uninstantiated_Package_Name (Field7)
    --
    --   Get/Set_Generic_Map_Aspect_Chain (Field8)
    --
@@ -1225,9 +1238,9 @@ package Iirs is
    --
    --   Get/Set_Attribute_Value_Chain (Field4)
    --
-   --   Get/Set_Uninstantiated_Package_Name (Field5)
-   --
    --   Get/Set_Generic_Chain (Field6)
+   --
+   --   Get/Set_Uninstantiated_Package_Name (Field7)
    --
    --   Get/Set_Generic_Map_Aspect_Chain (Field8)
    --
@@ -3730,6 +3743,7 @@ package Iirs is
       Iir_Kind_Association_Element_By_Individual,
       Iir_Kind_Association_Element_Open,
       Iir_Kind_Association_Element_Package,
+      Iir_Kind_Association_Element_Type,
       Iir_Kind_Choice_By_Others,
       Iir_Kind_Choice_By_Expression,
       Iir_Kind_Choice_By_Range,
@@ -5701,7 +5715,7 @@ package Iirs is
    procedure Set_Package (Package_Body : Iir; Decl : Iir);
 
    --  The package body corresponding to the package declaration.
-   --  Field: Field2 Ref
+   --  Field: Field5 Ref
    function Get_Package_Body (Pkg : Iir) return Iir;
    procedure Set_Package_Body (Pkg : Iir; Decl : Iir);
 
@@ -6373,7 +6387,7 @@ package Iirs is
    function Get_Block_Block_Configuration (Block : Iir) return Iir;
    procedure Set_Block_Block_Configuration (Block : Iir; Conf : Iir);
 
-   --  Field: Field5
+   --  Field: Field6
    function Get_Package_Header (Pkg : Iir) return Iir;
    procedure Set_Package_Header (Pkg : Iir; Header : Iir);
 
@@ -6381,7 +6395,7 @@ package Iirs is
    function Get_Block_Header (Target : Iir) return Iir;
    procedure Set_Block_Header (Target : Iir; Header : Iir);
 
-   --  Field: Field5
+   --  Field: Field7
    function Get_Uninstantiated_Package_Name (Inst : Iir) return Iir;
    procedure Set_Uninstantiated_Package_Name (Inst : Iir; Name : Iir);
 
@@ -6558,9 +6572,10 @@ package Iirs is
    procedure Set_Parameter (Target : Iir; Param : Iir);
 
    --  Type of the actual for an association by individual.
-   --  Unless the formal is an unconstrained array type, this is the same as
-   --  the formal type.
-   --  Field: Field3
+   --    Unless the formal is an unconstrained array type, this is the same as
+   --    the formal type.
+   --  Subtype indiciation for a type association.
+   --  Field: Field5
    function Get_Actual_Type (Target : Iir) return Iir;
    procedure Set_Actual_Type (Target : Iir; Atype : Iir);
 

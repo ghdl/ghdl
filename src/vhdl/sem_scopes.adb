@@ -969,6 +969,7 @@ package body Sem_Scopes is
            | Iir_Kind_Terminal_Declaration
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Package_Declaration
+           | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Context_Declaration
            | Iir_Kinds_Concurrent_Statement

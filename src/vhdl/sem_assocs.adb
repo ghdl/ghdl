@@ -21,6 +21,7 @@ with Flags; use Flags;
 with Types; use Types;
 with Iirs_Utils; use Iirs_Utils;
 with Sem_Names; use Sem_Names;
+with Sem_Types;
 with Iir_Chains; use Iir_Chains;
 with Xrefs;
 
@@ -33,6 +34,8 @@ package body Sem_Assocs is
       case Get_Kind (Inter) is
          when Iir_Kind_Interface_Package_Declaration =>
             N_Assoc := Create_Iir (Iir_Kind_Association_Element_Package);
+         when Iir_Kind_Interface_Type_Declaration =>
+            N_Assoc := Create_Iir (Iir_Kind_Association_Element_Type);
          when others =>
             Error_Kind ("rewrite_non_object_association", Inter);
       end case;
@@ -1341,29 +1344,26 @@ package body Sem_Assocs is
       Match := Fully_Compatible;
    end Sem_Association_Open;
 
-   procedure Sem_Association_Package
+   procedure Sem_Association_Package_Type_Not_Finish
      (Assoc : Iir;
       Inter : Iir;
-      Finish : Boolean;
-      Match : out Compatibility_Level)
+      Match : out Compatibility_Level) is
+   begin
+      --  Can be associated only once
+      if Get_Associated_Interface (Assoc) = Inter then
+         Match := Fully_Compatible;
+      else
+         Match := Not_Compatible;
+      end if;
+   end Sem_Association_Package_Type_Not_Finish;
+
+   procedure Sem_Association_Package_Type_Finish (Assoc : Iir; Inter : Iir)
    is
       Formal : constant Iir := Get_Formal (Assoc);
-      Actual : Iir;
-      Package_Inter : Iir;
    begin
-      if not Finish then
-         if Get_Associated_Interface (Assoc) = Inter then
-            Match := Fully_Compatible;
-         else
-            Match := Not_Compatible;
-         end if;
-         return;
-      end if;
-
       --  Always match (as this is a generic association, there is no
       --  need to resolve overload).
       pragma Assert (Get_Associated_Interface (Assoc) = Inter);
-      Match := Fully_Compatible;
 
       if Formal /= Null_Iir then
          pragma Assert (Get_Kind (Formal) = Iir_Kind_Simple_Name);
@@ -1372,6 +1372,24 @@ package body Sem_Assocs is
          Set_Base_Name (Formal, Inter);
          Xrefs.Xref_Ref (Formal, Inter);
       end if;
+   end Sem_Association_Package_Type_Finish;
+
+   procedure Sem_Association_Package
+     (Assoc : Iir;
+      Inter : Iir;
+      Finish : Boolean;
+      Match : out Compatibility_Level)
+   is
+      Actual : Iir;
+      Package_Inter : Iir;
+   begin
+      if not Finish then
+         Sem_Association_Package_Type_Not_Finish (Assoc, Inter, Match);
+         return;
+      end if;
+
+      Match := Fully_Compatible;
+      Sem_Association_Package_Type_Finish (Assoc, Inter);
 
       --  Analyze actual.
       Actual := Get_Actual (Assoc);
@@ -1420,6 +1438,31 @@ package body Sem_Assocs is
 
       return;
    end Sem_Association_Package;
+
+   procedure Sem_Association_Type
+     (Assoc : Iir;
+      Inter : Iir;
+      Finish : Boolean;
+      Match : out Compatibility_Level)
+   is
+      Actual : Iir;
+   begin
+      if not Finish then
+         Sem_Association_Package_Type_Not_Finish (Assoc, Inter, Match);
+         return;
+      end if;
+
+      Match := Fully_Compatible;
+      Sem_Association_Package_Type_Finish (Assoc, Inter);
+      Actual := Get_Actual (Assoc);
+
+      --  LRM08 6.5.7.2 Generic map aspects
+      --  An actual associated with a formal generic type must be a subtype
+      --  indication.
+      --  FIXME: ghdl only supports type_mark!
+      Actual := Sem_Types.Sem_Subtype_Indication (Actual);
+      Set_Actual_Type (Assoc, Get_Type (Actual));
+   end Sem_Association_Type;
 
    --  Associate ASSOC with interface INTERFACE
    --  This sets MATCH.
@@ -1657,6 +1700,9 @@ package body Sem_Assocs is
 
          when Iir_Kind_Association_Element_Package =>
             Sem_Association_Package (Assoc, Inter, Finish, Match);
+
+         when Iir_Kind_Association_Element_Type =>
+            Sem_Association_Type (Assoc, Inter, Finish, Match);
 
          when Iir_Kind_Association_Element_By_Expression =>
             Sem_Association_By_Expression (Assoc, Inter, Finish, Match);

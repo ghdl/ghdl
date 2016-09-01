@@ -2973,6 +2973,14 @@ package body Sem_Decls is
                null;
             when Iir_Kind_Protected_Type_Body =>
                Sem_Protected_Type_Body (Decl);
+
+            when Iir_Kind_Package_Declaration =>
+               Sem_Package_Declaration (Decl);
+            when Iir_Kind_Package_Body =>
+               Sem_Package_Body (Decl);
+            when Iir_Kind_Package_Instantiation_Declaration =>
+               Sem_Package_Instantiation_Declaration (Decl);
+
             when Iir_Kind_Nature_Declaration =>
                Sem_Nature_Declaration (Decl);
             when Iir_Kind_Terminal_Declaration =>

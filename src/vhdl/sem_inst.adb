@@ -439,6 +439,8 @@ package body Sem_Inst is
             when Iir_Kind_Interface_Package_Declaration =>
                Set_Uninstantiated_Package_Name
                  (Res, Get_Uninstantiated_Package_Name (Inter));
+            when Iir_Kind_Interface_Type_Declaration =>
+               Set_Type (Res, Get_Type (Inter));
             when others =>
                Error_Kind ("instantiate_generic_chain", Res);
          end case;
@@ -603,6 +605,16 @@ package body Sem_Inst is
                                          Get_Generic_Chain (Sub_Inst));
                   Set_Instance_On_Chain (Get_Declaration_Chain (Sub_Pkg),
                                         Get_Declaration_Chain (Sub_Inst));
+               end;
+            when Iir_Kind_Association_Element_Type =>
+               --  Replace the incomplete interface type by the actual subtype
+               --  indication.
+               declare
+                  Inter_Type_Def : constant Iir :=
+                    Get_Type (Get_Associated_Interface (Assoc));
+                  Actual_Type : constant Iir := Get_Actual_Type (Assoc);
+               begin
+                  Set_Instance (Inter_Type_Def, Actual_Type);
                end;
             when others =>
                Error_Kind ("instantiate_generic_map_chain", Assoc);
