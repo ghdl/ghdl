@@ -762,8 +762,6 @@ package body Ghdlprint is
                   raise Internal_Error;
                end if;
 
-               Location_To_File_Pos
-                 (Get_End_Location (Unit), File_Entry, Lend);
                --  Find the ';'.
                while Buffer (Lend) /= ';' loop
                   Lend := Lend + 1;
