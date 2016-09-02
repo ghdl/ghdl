@@ -273,6 +273,11 @@ package Iirs_Utils is
    --        if ASPECT is open, return Null_Iir;
    function Get_Entity_From_Entity_Aspect (Aspect : Iir) return Iir;
 
+   --  Definition from LRM08 4.8 Package bodies
+   --  True if PKG (a package declaration or a package body) is not a library
+   --  unit.  Can be true only for vhdl08.
+   function Is_Nested_Package (Pkg : Iir) return Boolean;
+
    --  Definitions from LRM08 4.7 Package declarations.
    --  PKG must denote a package declaration.
    function Is_Simple_Package (Pkg : Iir) return Boolean;

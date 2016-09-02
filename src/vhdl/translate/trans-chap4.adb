@@ -1728,6 +1728,11 @@ package body Trans.Chap4 is
          when Iir_Kind_Guard_Signal_Declaration =>
             Create_Signal (Decl);
 
+         when Iir_Kind_Package_Declaration =>
+            Chap2.Translate_Package_Declaration (Decl);
+         when Iir_Kind_Package_Body =>
+            Chap2.Translate_Package_Body (Decl);
+
          when Iir_Kind_Group_Template_Declaration =>
             null;
          when Iir_Kind_Group_Declaration =>
@@ -2447,6 +2452,14 @@ package body Trans.Chap4 is
             when Iir_Kind_Group_Template_Declaration
                | Iir_Kind_Group_Declaration =>
                null;
+
+            when Iir_Kind_Package_Declaration =>
+               declare
+                  Nested_Final : Boolean;
+               begin
+                  Elab_Declaration_Chain (Decl, Nested_Final);
+                  Need_Final := Need_Final or Nested_Final;
+               end;
 
             when others =>
                Error_Kind ("elab_declaration_chain", Decl);
