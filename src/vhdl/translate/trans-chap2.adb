@@ -865,8 +865,9 @@ package body Trans.Chap2 is
 
    procedure Translate_Package_Body (Bod : Iir_Package_Body)
    is
-      Spec : constant Iir_Package_Declaration := Get_Package (Bod);
-      Info : constant Ortho_Info_Acc := Get_Info (Spec);
+      Is_Nested : constant Boolean := Is_Nested_Package (Bod);
+      Spec      : constant Iir_Package_Declaration := Get_Package (Bod);
+      Info      : constant Ortho_Info_Acc := Get_Info (Spec);
       Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
       Prev_Storage : constant O_Storage := Global_Storage;
    begin
@@ -916,7 +917,9 @@ package body Trans.Chap2 is
          Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
       end if;
 
-      Elab_Package_Body (Spec, Bod);
+      if not Is_Nested then
+         Elab_Package_Body (Spec, Bod);
+      end if;
 
       Global_Storage := Prev_Storage;
    end Translate_Package_Body;

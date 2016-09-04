@@ -3133,6 +3133,12 @@ package body Sem_Decls is
                        (+El, "missing protected type body for %n", +El);
                   end if;
                end;
+            when Iir_Kind_Package_Declaration =>
+               if Get_Need_Body (El)
+                 and then Get_Package_Body (El) = Null_Iir
+               then
+                  Error_Msg_Sem (+El, "missing package body for %n", +El);
+               end if;
             when others =>
                null;
          end case;

@@ -2555,7 +2555,9 @@ package body Sem is
                --  immediately within the same declarative region as the
                --  corresponding package declaration and textually subsequent
                --  to that package declaration.
-               return True;
+               if Get_Need_Body (El) then
+                  return True;
+               end if;
             when Iir_Kind_Package_Body =>
                null;
             when Iir_Kind_Package_Instantiation_Declaration =>
@@ -2618,26 +2620,63 @@ package body Sem is
    end Sem_Package_Declaration;
 
    --  LRM 2.6  Package Bodies.
-   procedure Sem_Package_Body (Decl: Iir)
+   procedure Sem_Package_Body (Decl : Iir)
    is
-      Package_Ident: Name_Id;
-      Design_Unit: Iir_Design_Unit;
-      Package_Decl: Iir;
+      Package_Ident : constant Name_Id := Get_Identifier (Decl);
+      Package_Decl : Iir;
    begin
       -- First, find the package declaration.
-      Package_Ident := Get_Identifier (Decl);
-      Design_Unit := Libraries.Load_Primary_Unit
-        (Get_Library (Get_Design_File (Get_Current_Design_Unit)),
-         Package_Ident, Decl);
-      if Design_Unit = Null_Iir then
-         Error_Msg_Sem (+Decl, "package %i was not analysed", +Package_Ident);
-         return;
-      end if;
-      Package_Decl := Get_Library_Unit (Design_Unit);
-      if Get_Kind (Package_Decl) /= Iir_Kind_Package_Declaration then
-         Error_Msg_Sem
-           (+Decl, "primary unit %i is not a package", +Package_Ident);
-         return;
+      if not Is_Nested_Package (Decl) then
+         declare
+            Design_Unit: Iir_Design_Unit;
+         begin
+            Design_Unit := Libraries.Load_Primary_Unit
+              (Get_Library (Get_Design_File (Get_Current_Design_Unit)),
+               Package_Ident, Decl);
+            if Design_Unit = Null_Iir then
+               Error_Msg_Sem
+                 (+Decl, "package %i was not analysed", +Package_Ident);
+               return;
+            end if;
+
+            Package_Decl := Get_Library_Unit (Design_Unit);
+            if Get_Kind (Package_Decl) /= Iir_Kind_Package_Declaration then
+               Error_Msg_Sem
+                 (+Decl, "primary unit %i is not a package", +Package_Ident);
+               return;
+            end if;
+
+            --  LRM08 13.5 Order of analysis
+            --  In each case, the second unit depends on the first unit
+            Add_Dependence (Design_Unit);
+
+            Add_Name (Design_Unit);
+
+            --  Add the context clauses from the primary unit.
+            Add_Context_Clauses (Design_Unit);
+         end;
+      else
+         declare
+            Interp : Name_Interpretation_Type;
+         begin
+            Interp := Get_Interpretation (Get_Identifier (Decl));
+            if not Valid_Interpretation (Interp)
+              or else not Is_In_Current_Declarative_Region (Interp)
+              or else Is_Potentially_Visible (Interp)
+            then
+               Error_Msg_Sem
+                 (+Decl, "no corresponding package declaration for %i",
+                  +Package_Ident);
+               return;
+            end if;
+
+            Package_Decl := Get_Declaration (Interp);
+            if Get_Kind (Package_Decl) /= Iir_Kind_Package_Declaration then
+               Error_Msg_Sem
+                 (+Decl, "declaration %i is not a package", +Package_Ident);
+               return;
+            end if;
+         end;
       end if;
 
       --  Emit a warning is a body is not necessary.
@@ -2649,12 +2688,6 @@ package body Sem is
       Set_Package (Decl, Package_Decl);
       Xref_Body (Decl, Package_Decl);
       Set_Package_Body (Package_Decl, Decl);
-      Add_Dependence (Design_Unit);
-
-      Add_Name (Design_Unit);
-
-      --  Add the context clauses from the primary unit.
-      Add_Context_Clauses (Design_Unit);
 
       --  LRM93 10.1 Declarative Region
       --  4. A package declaration, together with the corresponding

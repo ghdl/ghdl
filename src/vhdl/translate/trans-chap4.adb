@@ -2453,7 +2453,8 @@ package body Trans.Chap4 is
                | Iir_Kind_Group_Declaration =>
                null;
 
-            when Iir_Kind_Package_Declaration =>
+            when Iir_Kind_Package_Declaration
+              | Iir_Kind_Package_Body =>
                declare
                   Nested_Final : Boolean;
                begin

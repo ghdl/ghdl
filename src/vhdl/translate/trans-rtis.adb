@@ -2298,6 +2298,17 @@ package body Trans.Rtis is
                   Generate_Block (Decl, Parent_Rti);
                   Pop_Identifier_Prefix (Mark);
                end;
+            when Iir_Kind_Package_Body =>
+               declare
+                  Mark : Id_Mark_Type;
+                  Mark1 : Id_Mark_Type;
+               begin
+                  Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
+                  Push_Identifier_Prefix (Mark1, "BODY");
+                  Generate_Block (Decl, Parent_Rti);
+                  Pop_Identifier_Prefix (Mark1);
+                  Pop_Identifier_Prefix (Mark);
+               end;
 
             when others =>
                Error_Kind ("rti.generate_declaration_chain", Decl);
