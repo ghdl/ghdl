@@ -384,7 +384,8 @@ package body Trans.Chap2 is
                   when Iir_Kinds_Composite_Type_Definition =>
                      --  At least for "=".
                      return True;
-                  when Iir_Kind_Incomplete_Type_Definition =>
+                  when Iir_Kind_Incomplete_Type_Definition
+                    | Iir_Kind_Interface_Type_Definition =>
                      null;
                end case;
             when others =>
@@ -753,12 +754,18 @@ package body Trans.Chap2 is
 
    procedure Translate_Package_Declaration (Decl : Iir_Package_Declaration)
    is
-      Header               : constant Iir := Get_Package_Header (Decl);
+      Is_Nested            : constant Boolean := Is_Nested_Package (Decl);
+      Header               : constant Iir     := Get_Package_Header (Decl);
+      Mark                 : Id_Mark_Type;
       Info                 : Ortho_Info_Acc;
       Interface_List       : O_Inter_List;
       Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
    begin
       Info := Add_Info (Decl, Kind_Package);
+
+      if Is_Nested then
+         Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
+      end if;
 
       --  Translate declarations.
       if Is_Uninstantiated_Package (Decl) then
@@ -787,20 +794,24 @@ package body Trans.Chap2 is
             Wki_Instance, Prev_Subprg_Instance);
       else
          Chap4.Translate_Declaration_Chain (Decl);
-         Info.Package_Elab_Var := Create_Var
-           (Create_Var_Identifier ("ELABORATED"), Ghdl_Bool_Type);
+         if not Is_Nested then
+            Info.Package_Elab_Var := Create_Var
+              (Create_Var_Identifier ("ELABORATED"), Ghdl_Bool_Type);
+         end if;
       end if;
 
       --  Translate subprograms declarations.
       Chap4.Translate_Declaration_Chain_Subprograms (Decl);
 
       --  Declare elaborator for the body.
-      Start_Procedure_Decl
-        (Interface_List, Create_Identifier ("ELAB_BODY"), Global_Storage);
-      Subprgs.Add_Subprg_Instance_Interfaces
-        (Interface_List, Info.Package_Elab_Body_Instance);
-      Finish_Subprogram_Decl
-        (Interface_List, Info.Package_Elab_Body_Subprg);
+      if not Is_Nested then
+         Start_Procedure_Decl
+           (Interface_List, Create_Identifier ("ELAB_BODY"), Global_Storage);
+         Subprgs.Add_Subprg_Instance_Interfaces
+           (Interface_List, Info.Package_Elab_Body_Instance);
+         Finish_Subprogram_Decl
+           (Interface_List, Info.Package_Elab_Body_Subprg);
+      end if;
 
       if Is_Uninstantiated_Package (Decl) then
          Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
@@ -811,21 +822,24 @@ package body Trans.Chap2 is
             Wki_Instance, Prev_Subprg_Instance);
       end if;
 
-      Start_Procedure_Decl
-        (Interface_List, Create_Identifier ("ELAB_SPEC"), Global_Storage);
-      Subprgs.Add_Subprg_Instance_Interfaces
-        (Interface_List, Info.Package_Elab_Spec_Instance);
-      Finish_Subprogram_Decl
-        (Interface_List, Info.Package_Elab_Spec_Subprg);
+      --  Declare elaborator for the spec.
+      if not Is_Nested then
+         Start_Procedure_Decl
+           (Interface_List, Create_Identifier ("ELAB_SPEC"), Global_Storage);
+         Subprgs.Add_Subprg_Instance_Interfaces
+           (Interface_List, Info.Package_Elab_Spec_Instance);
+         Finish_Subprogram_Decl
+           (Interface_List, Info.Package_Elab_Spec_Subprg);
 
-      if Flag_Rti then
-         --  Generate RTI.
-         Rtis.Generate_Unit (Decl);
-      end if;
+         if Flag_Rti then
+            --  Generate RTI.
+            Rtis.Generate_Unit (Decl);
+         end if;
 
-      if Global_Storage = O_Storage_Public then
-         --  Create elaboration procedure for the spec
-         Elab_Package (Decl);
+         if Global_Storage = O_Storage_Public then
+            --  Create elaboration procedure for the spec
+            Elab_Package (Decl);
+         end if;
       end if;
 
       if Is_Uninstantiated_Package (Decl) then
@@ -842,6 +856,11 @@ package body Trans.Chap2 is
          Push_Package_Instance_Factory (Decl);
          Pop_Package_Instance_Factory (Decl);
       end if;
+
+      if Is_Nested then
+         Pop_Identifier_Prefix (Mark);
+      end if;
+
    end Translate_Package_Declaration;
 
    procedure Translate_Package_Body (Bod : Iir_Package_Body)

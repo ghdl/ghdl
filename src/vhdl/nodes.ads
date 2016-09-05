@@ -28,7 +28,7 @@ package Nodes is
    type Bit2_Type is range 0 .. 2 ** 2 - 1;
    type Bit3_Type is range 0 .. 2 ** 3 - 1;
 
-   type Kind_Type is range 0 .. 255;
+   type Kind_Type is range 0 .. 2 ** 9 - 1;
 
    --  Format of a node.
    type Format_Type is
@@ -38,14 +38,6 @@ package Nodes is
       Format_Fp,
       Format_Int
      );
-
-   --  Current layout:    (rem)
-   --   Format: 2 bits    30
-   --   Flags: 6*1 bits   24
-   --   Nkind:  8 bits    16 (vhdl: 216 nodes)
-   --   State: 2*2 bits   12
-   --   Flags: 6*1 bits    6
-   --   Odigit: 2*3 bits   0
 
    -- Common fields are:
    --   Flag1 : Boolean
@@ -292,18 +284,6 @@ private
       Flag4 : Boolean := False;
       Flag5 : Boolean := False;
       Flag6 : Boolean := False;
-
-      --  Kind field use 8 bits.
-      --  So, on 32 bits systems, there are 24 bits left.
-      --  + 8 (8 * 1)
-      --  + 10 (5 * 2)
-      --  + 6 (2 * 3)
-      --  = 24
-
-      Kind : Kind_Type;
-
-      State1 : Bit2_Type := 0;
-      State2 : Bit2_Type := 0;
       Flag7 : Boolean := False;
       Flag8 : Boolean := False;
       Flag9 : Boolean := False;
@@ -311,8 +291,16 @@ private
 
       Flag11 : Boolean := False;
       Flag12 : Boolean := False;
+      Flag13 : Boolean := False;
+      Flag14 : Boolean := False;
+
+      --  2*2 + 1*3 = 7 bits
+      State1 : Bit2_Type := 0;
+      State2 : Bit2_Type := 0;
       Odigit1 : Bit3_Type := 0;
-      Unused_Odigit2 : Bit3_Type := 0;
+
+      --  9 bits
+      Kind : Kind_Type;
 
       -- Location.
       Location: Location_Type := Location_Nil;

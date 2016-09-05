@@ -23,6 +23,7 @@ with Iirs_Utils; use Iirs_Utils;
 with Configuration;
 with Libraries;
 with Trans.Chap7;
+with Trans; use Trans.Helpers;
 with Trans.Helpers2; use Trans.Helpers2;
 
 package body Trans.Rtis is
@@ -2038,7 +2039,7 @@ package body Trans.Rtis is
    procedure Generate_If_Case_Generate_Statement
      (Blk : Iir; Parent_Rti : O_Dnode);
    procedure Generate_For_Generate_Statement (Blk : Iir; Parent_Rti : O_Dnode);
-   procedure Generate_Declaration_Chain (Chain : Iir);
+   procedure Generate_Declaration_Chain (Chain : Iir; Parent_Rti : O_Dnode);
 
    procedure Generate_Component_Declaration (Comp : Iir)
    is
@@ -2059,8 +2060,10 @@ package body Trans.Rtis is
       if Global_Storage /= O_Storage_External then
          Push_Rti_Node (Prev);
 
-         Generate_Declaration_Chain (Get_Generic_Chain (Comp));
-         Generate_Declaration_Chain (Get_Port_Chain (Comp));
+         Generate_Declaration_Chain
+           (Get_Generic_Chain (Comp), Info.Comp_Rti_Const);
+         Generate_Declaration_Chain
+           (Get_Port_Chain (Comp), Info.Comp_Rti_Const);
 
          Name := Generate_Name (Comp);
 
@@ -2206,7 +2209,7 @@ package body Trans.Rtis is
       Add_Rti_Node (Info.Block_Rti_Const);
    end Generate_Instance;
 
-   procedure Generate_Declaration_Chain (Chain : Iir)
+   procedure Generate_Declaration_Chain (Chain : Iir; Parent_Rti : O_Dnode)
    is
       Decl : Iir;
    begin
@@ -2287,6 +2290,15 @@ package body Trans.Rtis is
             when Iir_Kind_Group_Template_Declaration
                | Iir_Kind_Group_Declaration =>
                null;
+            when Iir_Kind_Package_Declaration =>
+               declare
+                  Mark : Id_Mark_Type;
+               begin
+                  Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
+                  Generate_Block (Decl, Parent_Rti);
+                  Pop_Identifier_Prefix (Mark);
+               end;
+
             when others =>
                Error_Kind ("rti.generate_declaration_chain", Decl);
          end case;
@@ -2546,29 +2558,32 @@ package body Trans.Rtis is
 
       Field_Off : O_Cnode;
    begin
-      if Get_Kind (Get_Parent (Blk)) = Iir_Kind_Design_Unit then
-         --  Also include filename for units.
-         Rti_Type := Ghdl_Rtin_Block_File;
-      else
-         Rti_Type := Ghdl_Rtin_Block;
+      if Global_Storage /= O_Storage_External then
+         if Get_Kind (Get_Parent (Blk)) = Iir_Kind_Design_Unit then
+            --  Also include filename for units.
+            Rti_Type := Ghdl_Rtin_Block_File;
+         else
+            Rti_Type := Ghdl_Rtin_Block;
+         end if;
+
+         New_Const_Decl (Rti, Create_Identifier ("RTI"),
+                         Global_Storage, Rti_Type);
       end if;
 
-      New_Const_Decl (Rti, Create_Identifier ("RTI"),
-                      O_Storage_Public, Rti_Type);
       Push_Rti_Node (Prev);
 
       Field_Off := O_Cnode_Null;
       case Get_Kind (Blk) is
          when Iir_Kind_Package_Declaration =>
             Kind := Ghdl_Rtik_Package;
-            Generate_Declaration_Chain (Get_Declaration_Chain (Blk));
+            Generate_Declaration_Chain (Get_Declaration_Chain (Blk), Rti);
          when Iir_Kind_Package_Body =>
             Kind := Ghdl_Rtik_Package_Body;
             --  Required at least for 'image
-            Generate_Declaration_Chain (Get_Declaration_Chain (Blk));
+            Generate_Declaration_Chain (Get_Declaration_Chain (Blk), Rti);
          when Iir_Kind_Architecture_Body =>
             Kind := Ghdl_Rtik_Architecture;
-            Generate_Declaration_Chain (Get_Declaration_Chain (Blk));
+            Generate_Declaration_Chain (Get_Declaration_Chain (Blk), Rti);
             Generate_Concurrent_Statement_Chain
               (Get_Concurrent_Statement_Chain (Blk), Rti);
             Field_Off := New_Offsetof
@@ -2576,15 +2591,15 @@ package body Trans.Rtis is
                Info.Block_Parent_Field, Ghdl_Ptr_Type);
          when Iir_Kind_Entity_Declaration =>
             Kind := Ghdl_Rtik_Entity;
-            Generate_Declaration_Chain (Get_Generic_Chain (Blk));
-            Generate_Declaration_Chain (Get_Port_Chain (Blk));
-            Generate_Declaration_Chain (Get_Declaration_Chain (Blk));
+            Generate_Declaration_Chain (Get_Generic_Chain (Blk), Rti);
+            Generate_Declaration_Chain (Get_Port_Chain (Blk), Rti);
+            Generate_Declaration_Chain (Get_Declaration_Chain (Blk), Rti);
             Generate_Concurrent_Statement_Chain
               (Get_Concurrent_Statement_Chain (Blk), Rti);
          when Iir_Kind_Process_Statement
             | Iir_Kind_Sensitized_Process_Statement =>
             Kind := Ghdl_Rtik_Process;
-            Generate_Declaration_Chain (Get_Declaration_Chain (Blk));
+            Generate_Declaration_Chain (Get_Declaration_Chain (Blk), Rti);
             Field_Off :=
               Get_Scope_Offset (Info.Process_Scope, Ghdl_Ptr_Type);
          when Iir_Kind_Block_Statement =>
@@ -2600,11 +2615,11 @@ package body Trans.Rtis is
                   Add_Rti_Node (Guard_Info.Signal_Rti);
                end if;
                if Header /= Null_Iir then
-                  Generate_Declaration_Chain (Get_Generic_Chain (Header));
-                  Generate_Declaration_Chain (Get_Port_Chain (Header));
+                  Generate_Declaration_Chain (Get_Generic_Chain (Header), Rti);
+                  Generate_Declaration_Chain (Get_Port_Chain (Header), Rti);
                end if;
             end;
-            Generate_Declaration_Chain (Get_Declaration_Chain (Blk));
+            Generate_Declaration_Chain (Get_Declaration_Chain (Blk), Rti);
             Generate_Concurrent_Statement_Chain
               (Get_Concurrent_Statement_Chain (Blk), Rti);
             Field_Off := Get_Scope_Offset (Info.Block_Scope, Ghdl_Ptr_Type);
@@ -2623,58 +2638,59 @@ package body Trans.Rtis is
                   Add_Rti_Node (Param_Rti);
                end if;
             end;
-            Generate_Declaration_Chain (Get_Declaration_Chain (Blk));
+            Generate_Declaration_Chain (Get_Declaration_Chain (Blk), Rti);
             Generate_Concurrent_Statement_Chain
               (Get_Concurrent_Statement_Chain (Blk), Rti);
          when others =>
             Error_Kind ("rti.generate_block", Blk);
       end case;
 
-      Name := Generate_Name (Blk);
+      if Global_Storage /= O_Storage_External then
+         Name := Generate_Name (Blk);
 
-      Arr := Generate_Rti_Array (Create_Identifier ("RTIARRAY"));
+         Arr := Generate_Rti_Array (Create_Identifier ("RTIARRAY"));
 
-      Start_Init_Value (Rti);
+         Start_Init_Value (Rti);
 
-      if Rti_Type = Ghdl_Rtin_Block_File then
-         Start_Record_Aggr (List_File, Rti_Type);
-      end if;
+         if Rti_Type = Ghdl_Rtin_Block_File then
+            Start_Record_Aggr (List_File, Rti_Type);
+         end if;
 
-      Start_Record_Aggr (List, Ghdl_Rtin_Block);
-      New_Record_Aggr_El (List, Generate_Common (Kind));
-      New_Record_Aggr_El (List, New_Global_Address (Name, Char_Ptr_Type));
+         Start_Record_Aggr (List, Ghdl_Rtin_Block);
+         New_Record_Aggr_El (List, Generate_Common (Kind));
+         New_Record_Aggr_El (List, New_Global_Address (Name, Char_Ptr_Type));
 
-      --  Field Loc: offset in the instance of the entity.
-      if Field_Off = O_Cnode_Null then
-         Field_Off := Get_Null_Loc;
-      end if;
-      New_Record_Aggr_El (List, Field_Off);
+         --  Field Loc: offset in the instance of the entity.
+         if Field_Off = O_Cnode_Null then
+            Field_Off := Get_Null_Loc;
+         end if;
+         New_Record_Aggr_El (List, Field_Off);
 
-      New_Record_Aggr_El (List, Generate_Linecol (Blk));
+         New_Record_Aggr_El (List, Generate_Linecol (Blk));
 
       --  Field Parent: RTI of the parent.
-      if Parent_Rti = O_Dnode_Null then
-         Res := New_Null_Access (Ghdl_Rti_Access);
-      else
-         Res := New_Rti_Address (Parent_Rti);
+         if Parent_Rti = O_Dnode_Null then
+            Res := New_Null_Access (Ghdl_Rti_Access);
+         else
+            Res := New_Rti_Address (Parent_Rti);
+         end if;
+         New_Record_Aggr_El (List, Res);
+
+         --  Fields Nbr_Child and Children.
+         New_Record_Aggr_El (List, New_Index_Lit (Get_Rti_Array_Length));
+         New_Record_Aggr_El (List, New_Global_Address (Arr, Ghdl_Rti_Arr_Acc));
+         Finish_Record_Aggr (List, Res);
+
+         if Rti_Type = Ghdl_Rtin_Block_File then
+            New_Record_Aggr_El (List_File, Res);
+            New_Record_Aggr_El (List_File,
+                                New_Global_Address (Current_Filename_Node,
+                                                    Char_Ptr_Type));
+            Finish_Record_Aggr (List_File, Res);
+         end if;
+
+         Finish_Init_Value (Rti, Res);
       end if;
-      New_Record_Aggr_El (List, Res);
-
-      --  Fields Nbr_Child and Children.
-      New_Record_Aggr_El
-        (List, New_Unsigned_Literal (Ghdl_Index_Type, Get_Rti_Array_Length));
-      New_Record_Aggr_El (List, New_Global_Address (Arr, Ghdl_Rti_Arr_Acc));
-      Finish_Record_Aggr (List, Res);
-
-      if Rti_Type = Ghdl_Rtin_Block_File then
-         New_Record_Aggr_El (List_File, Res);
-         New_Record_Aggr_El (List_File,
-                             New_Global_Address (Current_Filename_Node,
-                                                 Char_Ptr_Type));
-         Finish_Record_Aggr (List_File, Res);
-      end if;
-
-      Finish_Init_Value (Rti, Res);
 
       Pop_Rti_Node (Prev);
 
@@ -2781,15 +2797,17 @@ package body Trans.Rtis is
       if Global_Storage = O_Storage_External then
          New_Const_Decl (Rti, Create_Identifier ("RTI"),
                          O_Storage_External, Ghdl_Rtin_Block);
+         --  Declare inner declarations of entities and packages as they can
+         --  be referenced from architectures and package bodies.
          case Get_Kind (Lib_Unit) is
             when Iir_Kind_Entity_Declaration
-               | Iir_Kind_Package_Declaration =>
+              | Iir_Kind_Package_Declaration =>
                declare
                   Prev : Rti_Block;
                begin
                   Push_Rti_Node (Prev);
                   Generate_Declaration_Chain
-                    (Get_Declaration_Chain (Lib_Unit));
+                    (Get_Declaration_Chain (Lib_Unit), Rti);
                   Pop_Rti_Node (Prev);
                end;
             when others =>

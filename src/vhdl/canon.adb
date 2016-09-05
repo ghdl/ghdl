@@ -30,9 +30,9 @@ with PSL.NFAs.Utils;
 with Canon_PSL;
 
 package body Canon is
-   --  Canonicalize a list of declarations.  LIST can be null.
-   --  PARENT must be the parent of the current statements chain for LIST,
-   --  or NULL_IIR if LIST has no corresponding current statments.
+   --  Canonicalize the chain of declarations in Declaration_Chain of
+   --  DECL_PARENT. PARENT must be the parent of the current statements chain,
+   --  or NULL_IIR if DECL_PARENT has no corresponding current statments.
    procedure Canon_Declarations (Top : Iir_Design_Unit;
                                  Decl_Parent : Iir;
                                  Parent : Iir);
@@ -887,7 +887,8 @@ package body Canon is
                      end if;
                   when Iir_Kind_Association_Element_By_Individual =>
                      Found := True;
-                  when Iir_Kind_Association_Element_Package =>
+                  when Iir_Kind_Association_Element_Package
+                    | Iir_Kind_Association_Element_Type =>
                      goto Done;
                   when others =>
                      Error_Kind ("canon_association_chain", Assoc_El);
@@ -2551,6 +2552,19 @@ package body Canon is
       end if;
    end Canon_Subtype_Indication_If_Anonymous;
 
+   procedure Canon_Package_Instantiation_Declaration (Decl : Iir)
+   is
+      Pkg : constant Iir :=
+        Get_Named_Entity (Get_Uninstantiated_Package_Name (Decl));
+      Hdr : constant Iir := Get_Package_Header (Pkg);
+   begin
+      Set_Generic_Map_Aspect_Chain
+        (Decl,
+         Canon_Association_Chain_And_Actuals
+           (Get_Generic_Chain (Hdr),
+            Get_Generic_Map_Aspect_Chain (Decl), Decl));
+   end Canon_Package_Instantiation_Declaration;
+
    procedure Canon_Declaration (Top : Iir_Design_Unit;
                                 Decl : Iir;
                                 Parent : Iir;
@@ -2632,40 +2646,14 @@ package body Canon is
          when Iir_Kind_Configuration_Specification =>
             Canon_Component_Specification (Decl, Parent);
             Canon_Component_Configuration (Top, Decl);
---             declare
---                List : Iir_List;
---                Binding : Iir_Binding_Indication;
---                Component : Iir_Component_Declaration;
---                Aspect : Iir;
---                Entity : Iir;
---             begin
---                Binding := Get_Binding_Indication (Decl);
---                Component := Get_Component_Name (Decl);
---                Aspect := Get_Entity_Aspect (Binding);
---                case Get_Kind (Aspect) is
---                   when Iir_Kind_Entity_Aspect_Entity =>
---                      Entity := Get_Entity (Aspect);
---                   when others =>
---                      Error_Kind ("configuration_specification", Aspect);
---                end case;
---                Entity := Get_Library_Unit (Entity);
---                List := Get_Generic_Map_Aspect_List (Binding);
---                if List = Null_Iir_List then
---                   Set_Generic_Map_Aspect_List
---                     (Binding,
---                      Canon_Default_Map_Association_List
---                    (Get_Generic_List (Entity), Get_Generic_List (Component),
---                       Get_Location (Decl)));
---                end if;
---                List := Get_Port_Map_Aspect_List (Binding);
---                if List = Null_Iir_List then
---                   Set_Port_Map_Aspect_List
---                     (Binding,
---                      Canon_Default_Map_Association_List
---                      (Get_Port_List (Entity), Get_Port_List (Component),
---                       Get_Location (Decl)));
---                end if;
---             end;
+
+         when Iir_Kind_Package_Declaration =>
+            Canon_Declarations (Top, Decl, Parent);
+         when Iir_Kind_Package_Body =>
+            Canon_Declarations (Top, Decl, Parent);
+
+         when Iir_Kind_Package_Instantiation_Declaration =>
+            Canon_Package_Instantiation_Declaration (Decl);
 
          when Iir_Kinds_Signal_Attribute =>
             null;
@@ -3000,17 +2988,7 @@ package body Canon is
             Canon_Declarations (Unit, El, Null_Iir);
             Canon_Block_Configuration (Unit, Get_Block_Configuration (El));
          when Iir_Kind_Package_Instantiation_Declaration =>
-            declare
-               Pkg : constant Iir :=
-                 Get_Named_Entity (Get_Uninstantiated_Package_Name (El));
-               Hdr : constant Iir := Get_Package_Header (Pkg);
-            begin
-               Set_Generic_Map_Aspect_Chain
-                 (El,
-                  Canon_Association_Chain_And_Actuals
-                    (Get_Generic_Chain (Hdr),
-                     Get_Generic_Map_Aspect_Chain (El), El));
-            end;
+            Canon_Package_Instantiation_Declaration (El);
          when Iir_Kind_Context_Declaration =>
             null;
          when others =>

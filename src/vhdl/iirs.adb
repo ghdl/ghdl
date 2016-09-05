@@ -266,6 +266,7 @@ package body Iirs is
            | Iir_Kind_Association_Element_By_Individual
            | Iir_Kind_Association_Element_Open
            | Iir_Kind_Association_Element_Package
+           | Iir_Kind_Association_Element_Type
            | Iir_Kind_Choice_By_Others
            | Iir_Kind_Choice_By_Expression
            | Iir_Kind_Choice_By_Range
@@ -288,6 +289,7 @@ package body Iirs is
            | Iir_Kind_Configuration_Specification
            | Iir_Kind_Access_Type_Definition
            | Iir_Kind_Incomplete_Type_Definition
+           | Iir_Kind_Interface_Type_Definition
            | Iir_Kind_File_Type_Definition
            | Iir_Kind_Protected_Type_Declaration
            | Iir_Kind_Record_Type_Definition
@@ -308,7 +310,6 @@ package body Iirs is
            | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Nature_Declaration
            | Iir_Kind_Subnature_Declaration
-           | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Body
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Context_Declaration
@@ -330,6 +331,7 @@ package body Iirs is
            | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Interface_File_Declaration
+           | Iir_Kind_Interface_Type_Declaration
            | Iir_Kind_Identity_Operator
            | Iir_Kind_Negation_Operator
            | Iir_Kind_Absolute_Operator
@@ -475,6 +477,7 @@ package body Iirs is
            | Iir_Kind_Floating_Subtype_Definition
            | Iir_Kind_Subtype_Definition
            | Iir_Kind_Scalar_Nature_Definition
+           | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Architecture_Body
@@ -1698,7 +1701,7 @@ package body Iirs is
       pragma Assert (Pkg /= Null_Iir);
       pragma Assert (Has_Package_Body (Get_Kind (Pkg)),
                      "no field Package_Body");
-      return Get_Field2 (Pkg);
+      return Get_Field5 (Pkg);
    end Get_Package_Body;
 
    procedure Set_Package_Body (Pkg : Iir; Decl : Iir) is
@@ -1706,7 +1709,7 @@ package body Iirs is
       pragma Assert (Pkg /= Null_Iir);
       pragma Assert (Has_Package_Body (Get_Kind (Pkg)),
                      "no field Package_Body");
-      Set_Field2 (Pkg, Decl);
+      Set_Field5 (Pkg, Decl);
    end Set_Package_Body;
 
    function Get_Need_Body (Decl : Iir_Package_Declaration) return Boolean is
@@ -1884,6 +1887,22 @@ package body Iirs is
                      "no field Subtype_Definition");
       Set_Field4 (Target, Def);
    end Set_Subtype_Definition;
+
+   function Get_Interface_Type_Subprograms (Target : Iir) return Iir is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Interface_Type_Subprograms (Get_Kind (Target)),
+                     "no field Interface_Type_Subprograms");
+      return Get_Field4 (Target);
+   end Get_Interface_Type_Subprograms;
+
+   procedure Set_Interface_Type_Subprograms (Target : Iir; Subprg : Iir) is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Interface_Type_Subprograms (Get_Kind (Target)),
+                     "no field Interface_Type_Subprograms");
+      Set_Field4 (Target, Subprg);
+   end Set_Interface_Type_Subprograms;
 
    function Get_Nature (Target : Iir) return Iir is
    begin
@@ -3769,7 +3788,7 @@ package body Iirs is
       pragma Assert (Pkg /= Null_Iir);
       pragma Assert (Has_Package_Header (Get_Kind (Pkg)),
                      "no field Package_Header");
-      return Get_Field5 (Pkg);
+      return Get_Field6 (Pkg);
    end Get_Package_Header;
 
    procedure Set_Package_Header (Pkg : Iir; Header : Iir) is
@@ -3777,7 +3796,7 @@ package body Iirs is
       pragma Assert (Pkg /= Null_Iir);
       pragma Assert (Has_Package_Header (Get_Kind (Pkg)),
                      "no field Package_Header");
-      Set_Field5 (Pkg, Header);
+      Set_Field6 (Pkg, Header);
    end Set_Package_Header;
 
    function Get_Block_Header (Target : Iir) return Iir is
@@ -3801,7 +3820,7 @@ package body Iirs is
       pragma Assert (Inst /= Null_Iir);
       pragma Assert (Has_Uninstantiated_Package_Name (Get_Kind (Inst)),
                      "no field Uninstantiated_Package_Name");
-      return Get_Field5 (Inst);
+      return Get_Field7 (Inst);
    end Get_Uninstantiated_Package_Name;
 
    procedure Set_Uninstantiated_Package_Name (Inst : Iir; Name : Iir) is
@@ -3809,7 +3828,7 @@ package body Iirs is
       pragma Assert (Inst /= Null_Iir);
       pragma Assert (Has_Uninstantiated_Package_Name (Get_Kind (Inst)),
                      "no field Uninstantiated_Package_Name");
-      Set_Field5 (Inst, Name);
+      Set_Field7 (Inst, Name);
    end Set_Uninstantiated_Package_Name;
 
    function Get_Generate_Block_Configuration (Target : Iir) return Iir is
@@ -4395,7 +4414,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Actual_Type (Get_Kind (Target)),
                      "no field Actual_Type");
-      return Get_Field3 (Target);
+      return Get_Field5 (Target);
    end Get_Actual_Type;
 
    procedure Set_Actual_Type (Target : Iir; Atype : Iir) is
@@ -4403,7 +4422,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Actual_Type (Get_Kind (Target)),
                      "no field Actual_Type");
-      Set_Field3 (Target, Atype);
+      Set_Field5 (Target, Atype);
    end Set_Actual_Type;
 
    function Get_Associated_Interface (Assoc : Iir) return Iir is

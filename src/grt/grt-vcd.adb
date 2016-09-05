@@ -568,6 +568,10 @@ package body Grt.Vcd is
       end loop;
 
       --  Extract sub-scopes.
+      if Vhpi_Get_Kind (Inst) = VhpiPackInstK then
+         --  Except for packages
+         return;
+      end if;
       Vhpi_Iterator (VhpiInternalRegions, Inst, Decl_It, Error);
       if Error /= AvhpiErrorOk then
          Avhpi_Error (Error);

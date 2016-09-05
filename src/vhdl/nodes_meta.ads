@@ -144,6 +144,7 @@ package Nodes_Meta is
       Field_Discrete_Range,
       Field_Type_Definition,
       Field_Subtype_Definition,
+      Field_Interface_Type_Subprograms,
       Field_Nature,
       Field_Mode,
       Field_Guarded_Signal_Flag,
@@ -631,6 +632,7 @@ package Nodes_Meta is
    function Has_Discrete_Range (K : Iir_Kind) return Boolean;
    function Has_Type_Definition (K : Iir_Kind) return Boolean;
    function Has_Subtype_Definition (K : Iir_Kind) return Boolean;
+   function Has_Interface_Type_Subprograms (K : Iir_Kind) return Boolean;
    function Has_Nature (K : Iir_Kind) return Boolean;
    function Has_Mode (K : Iir_Kind) return Boolean;
    function Has_Guarded_Signal_Flag (K : Iir_Kind) return Boolean;

@@ -715,7 +715,8 @@ package body Errorout is
          when Iir_Kind_Association_Element_By_Individual =>
             return "individual association element";
          when Iir_Kind_Association_Element_By_Expression
-           | Iir_Kind_Association_Element_Package =>
+           | Iir_Kind_Association_Element_Package
+           | Iir_Kind_Association_Element_Type =>
             return "association element";
          when Iir_Kind_Overload_List =>
             return "overloaded name or expression";
@@ -751,6 +752,8 @@ package body Errorout is
             return Disp_Type (Node, "floating type");
          when Iir_Kind_Incomplete_Type_Definition =>
             return Disp_Type (Node, "incomplete type");
+         when Iir_Kind_Interface_Type_Definition =>
+            return Disp_Type (Node, "interface type");
          when Iir_Kind_Protected_Type_Declaration =>
             return Disp_Type (Node, "protected type");
          when Iir_Kind_Protected_Type_Body =>
@@ -877,6 +880,8 @@ package body Errorout is
             return Disp_Identifier (Node, "file interface");
          when Iir_Kind_Interface_Package_Declaration =>
             return Disp_Identifier (Node, "package interface");
+         when Iir_Kind_Interface_Type_Declaration =>
+            return Disp_Identifier (Node, "type interface");
          when Iir_Kind_Signal_Declaration =>
             return Disp_Identifier (Node, "signal");
          when Iir_Kind_Variable_Declaration =>

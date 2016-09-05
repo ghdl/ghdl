@@ -110,6 +110,8 @@ package body Sem_Types is
          when Iir_Kind_Incomplete_Type_Definition =>
             --  No need to copy the flag.
             null;
+         when Iir_Kind_Interface_Type_Definition =>
+            null;
          when others =>
             Error_Kind ("set_type_has_signal(2)", Atype);
       end case;

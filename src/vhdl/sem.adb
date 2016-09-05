@@ -429,10 +429,11 @@ package body Sem is
                Check_Read (Get_Actual (El));
             when Iir_Kind_Association_Element_Open
               | Iir_Kind_Association_Element_By_Individual
-              | Iir_Kind_Association_Element_Package =>
+              | Iir_Kind_Association_Element_Package
+              | Iir_Kind_Association_Element_Type =>
                null;
             when others =>
-               Error_Kind ("sem_generic_map_association_chain(1)", El);
+               Error_Kind ("sem_generic_association_chain(1)", El);
          end case;
          El := Get_Chain (El);
       end loop;
@@ -2547,6 +2548,17 @@ package body Sem is
             when Iir_Kind_Component_Declaration =>
                null;
             when Iir_Kind_Protected_Type_Body =>
+               null;
+            when Iir_Kind_Package_Declaration =>
+               --  LRM08 4.8 Package bodies
+               --  A package body that is not a library unit shall appear
+               --  immediately within the same declarative region as the
+               --  corresponding package declaration and textually subsequent
+               --  to that package declaration.
+               return True;
+            when Iir_Kind_Package_Body =>
+               null;
+            when Iir_Kind_Package_Instantiation_Declaration =>
                null;
             when Iir_Kind_Nature_Declaration
               | Iir_Kind_Subnature_Declaration =>

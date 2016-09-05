@@ -870,7 +870,9 @@ package body Sem_Names is
          Atype := Get_Named_Entity (Res);
          if Get_Kind (Atype) = Iir_Kind_Type_Declaration then
             Atype := Get_Type_Definition (Atype);
-         elsif Get_Kind (Atype) = Iir_Kind_Subtype_Declaration then
+         elsif Get_Kind (Atype) = Iir_Kind_Subtype_Declaration
+           or else Get_Kind (Atype) = Iir_Kind_Interface_Type_Declaration
+         then
             Atype := Get_Type (Atype);
          else
             Error_Msg_Sem
@@ -1517,7 +1519,8 @@ package body Sem_Names is
            | Iir_Kind_Attribute_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
            | Iir_Kind_Library_Declaration
-           | Iir_Kind_Interface_Package_Declaration =>
+           | Iir_Kind_Interface_Package_Declaration
+           | Iir_Kind_Interface_Type_Declaration =>
             Name_Res := Finish_Sem_Denoting_Name (Name, Res);
             Set_Base_Name (Name_Res, Res);
             return Name_Res;

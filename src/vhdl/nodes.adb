@@ -88,7 +88,6 @@ package body Nodes is
                   Kind => 0,
                   State1 | State2 => 0,
                   Odigit1 => 0,
-                  Unused_Odigit2 => 0,
                   Location => Location_Nil,
                   Field0 | Field1 | Field2 | Field3  => Null_Node,
                   Field4 | Field5 => Null_Node,

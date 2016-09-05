@@ -36,6 +36,15 @@ with Xrefs; use Xrefs;
 use Iir_Chains;
 
 package body Sem_Decls is
+   function Create_Anonymous_Interface
+     (Atype : Iir) return Iir_Interface_Constant_Declaration;
+   function Create_Implicit_Function (Name : Name_Id;
+                                      Decl : Iir;
+                                      Def : Iir_Predefined_Functions;
+                                      Interface_Chain : Iir;
+                                      Return_Type : Iir)
+                                     return Iir;
+
    --  Region that can declare signals.  Used to add implicit declarations.
    Current_Signals_Region : Implicit_Signal_Declaration_Type :=
      (Null_Iir, False, Null_Iir, Null_Iir);
@@ -90,6 +99,8 @@ package body Sem_Decls is
             when Iir_Kind_File_Type_Definition =>
                null;
             when Iir_Kind_Protected_Type_Declaration =>
+               null;
+            when Iir_Kind_Interface_Type_Definition =>
                null;
             when Iir_Kind_Access_Type_Definition
               | Iir_Kind_Access_Subtype_Definition =>
@@ -379,6 +390,46 @@ package body Sem_Decls is
       Xref_Decl (Inter);
    end Sem_Interface_Package_Declaration;
 
+   procedure Sem_Interface_Type_Declaration (Inter : Iir)
+   is
+      Def : Iir;
+      Finters : Iir;
+      Op_Eq, Op_Neq : Iir;
+   begin
+      --  Create type definition.
+      Def := Create_Iir (Iir_Kind_Interface_Type_Definition);
+      Set_Location (Def, Get_Location (Inter));
+      Set_Type_Declarator (Def, Inter);
+      Set_Type (Inter, Def);
+      Set_Base_Type (Def, Def);
+      Set_Type_Staticness (Def, None);
+      Set_Resolved_Flag (Def, False);
+      Set_Signal_Type_Flag (Def, True);
+      Set_Has_Signal_Flag (Def, False);
+
+      --  Create operations for the interface type.
+      Finters := Create_Anonymous_Interface (Def);
+      Set_Chain (Finters, Create_Anonymous_Interface (Def));
+
+      Op_Eq := Create_Implicit_Function
+        (Std_Names.Name_Op_Equality,
+         Inter, Iir_Predefined_Interface_Type_Equality,
+         Finters, Std_Package.Boolean_Type_Definition);
+
+      Op_Neq := Create_Implicit_Function
+        (Std_Names.Name_Op_Inequality,
+         Inter, Iir_Predefined_Interface_Type_Inequality,
+         Finters, Std_Package.Boolean_Type_Definition);
+
+      Set_Interface_Type_Subprograms (Inter, Op_Eq);
+      Set_Chain (Op_Eq, Op_Neq);
+
+      Sem_Scopes.Add_Name (Inter);
+      Sem_Scopes.Add_Name (Op_Eq);
+      Sem_Scopes.Add_Name (Op_Neq);
+      Xref_Decl (Inter);
+   end Sem_Interface_Type_Declaration;
+
    procedure Sem_Interface_Chain (Interface_Chain: Iir;
                                   Interface_Kind : Interface_Kind_Type)
    is
@@ -393,14 +444,14 @@ package body Sem_Decls is
 
       Inter := Interface_Chain;
       while Inter /= Null_Iir loop
-         case Get_Kind (Inter) is
+         case Iir_Kinds_Interface_Declaration (Get_Kind (Inter)) is
             when Iir_Kinds_Interface_Object_Declaration =>
                Sem_Interface_Object_Declaration (Inter, Last, Interface_Kind);
                Last := Inter;
             when Iir_Kind_Interface_Package_Declaration =>
                Sem_Interface_Package_Declaration (Inter);
-            when others =>
-               raise Internal_Error;
+            when Iir_Kind_Interface_Type_Declaration =>
+               Sem_Interface_Type_Declaration (Inter);
          end case;
          Inter := Get_Chain (Inter);
       end loop;
@@ -666,6 +717,28 @@ package body Sem_Decls is
       return Inter;
    end Create_Anonymous_Interface;
 
+   --  Create an implicit/predefined function for DECL.
+   function Create_Implicit_Function (Name : Name_Id;
+                                      Decl : Iir;
+                                      Def : Iir_Predefined_Functions;
+                                      Interface_Chain : Iir;
+                                      Return_Type : Iir)
+                                     return Iir
+   is
+      Operation : Iir_Function_Declaration;
+   begin
+      Operation := Create_Iir (Iir_Kind_Function_Declaration);
+      Location_Copy (Operation, Decl);
+      Set_Parent (Operation, Get_Parent (Decl));
+      Set_Interface_Declaration_Chain (Operation, Interface_Chain);
+      Set_Return_Type (Operation, Return_Type);
+      Set_Implicit_Definition (Operation, Def);
+      Set_Identifier (Operation, Name);
+      Set_Visible_Flag (Operation, True);
+      Compute_Subprogram_Hash (Operation);
+      return Operation;
+   end Create_Implicit_Function;
+
    procedure Create_Implicit_Operations
      (Decl : Iir; Is_Std_Standard : Boolean := False)
    is
@@ -682,15 +755,8 @@ package body Sem_Decls is
       is
          Operation : Iir_Function_Declaration;
       begin
-         Operation := Create_Iir (Iir_Kind_Function_Declaration);
-         Location_Copy (Operation, Decl);
-         Set_Parent (Operation, Get_Parent (Decl));
-         Set_Interface_Declaration_Chain (Operation, Interface_Chain);
-         Set_Return_Type (Operation, Return_Type);
-         Set_Implicit_Definition (Operation, Def);
-         Set_Identifier (Operation, Name);
-         Set_Visible_Flag (Operation, True);
-         Compute_Subprogram_Hash (Operation);
+         Operation := Create_Implicit_Function
+           (Name, Decl, Def, Interface_Chain, Return_Type);
          Insert_Incr (Last, Operation);
       end Add_Operation;
 
@@ -2907,6 +2973,14 @@ package body Sem_Decls is
                null;
             when Iir_Kind_Protected_Type_Body =>
                Sem_Protected_Type_Body (Decl);
+
+            when Iir_Kind_Package_Declaration =>
+               Sem_Package_Declaration (Decl);
+            when Iir_Kind_Package_Body =>
+               Sem_Package_Body (Decl);
+            when Iir_Kind_Package_Instantiation_Declaration =>
+               Sem_Package_Instantiation_Declaration (Decl);
+
             when Iir_Kind_Nature_Declaration =>
                Sem_Nature_Declaration (Decl);
             when Iir_Kind_Terminal_Declaration =>

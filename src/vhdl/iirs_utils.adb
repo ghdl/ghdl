@@ -1258,6 +1258,11 @@ package body Iirs_Utils is
       end case;
    end Get_Entity_From_Entity_Aspect;
 
+   function Is_Nested_Package (Pkg : Iir) return Boolean is
+   begin
+      return Get_Kind (Get_Parent (Pkg)) /= Iir_Kind_Design_Unit;
+   end Is_Nested_Package;
+
    --  LRM08 4.7 Package declarations
    --  If the package header is empty, the package declared by a package
    --  declaration is called a simple package.

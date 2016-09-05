@@ -69,6 +69,7 @@ package body Parse is
    function Parse_Signature return Iir_Signature;
    procedure Parse_Declarative_Part (Parent : Iir);
    function Parse_Tolerance_Aspect_Opt return Iir;
+   function Parse_Package (Parent : Iir) return Iir;
 
    Expect_Error: exception;
 
@@ -80,7 +81,9 @@ package body Parse is
 
    procedure Set_End_Location (Node : Iir) is
    begin
-      Set_End_Location (Node, Get_Token_Location);
+      if Get_Kind (Node) = Iir_Kind_Design_Unit then
+         Set_End_Location (Node, Get_Token_Location);
+      end if;
    end Set_End_Location;
 
    procedure Unexpected (Where: String) is
@@ -1497,6 +1500,22 @@ package body Parse is
                     ("package interface not allowed before vhdl 08");
                end if;
                Inters := Parse_Interface_Package_Declaration;
+            when Tok_Type =>
+               if Ctxt /= Generic_Interface_List then
+                  Error_Msg_Parse
+                    ("type interface only allowed in generic interface");
+               elsif Flags.Vhdl_Std < Vhdl_08 then
+                  Error_Msg_Parse
+                    ("type interface not allowed before vhdl 08");
+               end if;
+               Inters := Create_Iir (Iir_Kind_Interface_Type_Declaration);
+               Scan_Expect (Tok_Identifier,
+                            "am identifier is expected after 'type'");
+               Set_Identifier (Inters, Current_Identifier);
+               Set_Location (Inters);
+
+               --  Skip identifier
+               Scan;
             when Tok_Right_Paren =>
                if Res = Null_Iir then
                   Error_Msg_Parse
@@ -3863,6 +3882,12 @@ package body Parse is
                Decl := Parse_Use_Clause;
             when Tok_Group =>
                Decl := Parse_Group;
+            when Tok_Package =>
+               if Vhdl_Std < Vhdl_08 then
+                  Error_Msg_Parse
+                    ("nested package not allowed before vhdl 2008");
+               end if;
+               Decl := Parse_Package (Parent);
 
             when Tok_Identifier =>
                Error_Msg_Parse
@@ -7953,8 +7978,9 @@ package body Parse is
    --          package_header           -- LRM08
    --          package_declarative_part
    --      END [ PACKAGE ] [ PACKAGE_simple_name ] ;
-   procedure Parse_Package_Declaration
+   function Parse_Package_Declaration
      (Unit : Iir_Design_Unit; Id : Name_Id; Loc : Location_Type)
+     return Iir
    is
       Res: Iir_Package_Declaration;
    begin
@@ -7989,7 +8015,7 @@ package body Parse is
 
       Check_End_Name (Res);
       Expect (Tok_Semi_Colon);
-      Set_Library_Unit (Unit, Res);
+      return Res;
    end Parse_Package_Declaration;
 
    --  precond : BODY
@@ -8000,7 +8026,7 @@ package body Parse is
    --      PACKAGE BODY PACKAGE_simple_name IS
    --          package_body_declarative_part
    --      END [ PACKAGE BODY ] [ PACKAGE_simple_name ] ;
-   procedure Parse_Package_Body (Unit : Iir_Design_Unit)
+   function Parse_Package_Body (Unit : Iir_Design_Unit) return Iir
    is
       Res: Iir;
    begin
@@ -8040,7 +8066,7 @@ package body Parse is
 
       Check_End_Name (Res);
       Expect (Tok_Semi_Colon);
-      Set_Library_Unit (Unit, Res);
+      return Res;
    end Parse_Package_Body;
 
    --  precond : NEW
@@ -8080,10 +8106,11 @@ package body Parse is
    --    package_declaration
    --  | package_body
    --  | package_instantiation_declaration
-   procedure Parse_Package (Unit : Iir_Design_Unit)
+   function Parse_Package (Parent : Iir) return Iir
    is
       Loc : Location_Type;
       Id : Name_Id;
+      Res : Iir;
    begin
       --  Skip 'package'
       Scan;
@@ -8092,7 +8119,7 @@ package body Parse is
          --  Skip 'body'
          Scan;
 
-         Parse_Package_Body (Unit);
+         return Parse_Package_Body (Parent);
       else
          Expect (Tok_Identifier);
          Id := Current_Identifier;
@@ -8106,13 +8133,12 @@ package body Parse is
          Scan;
 
          if Current_Token = Tok_New then
-            Set_Library_Unit
-              (Unit,
-               Parse_Package_Instantiation_Declaration (Id, Loc));
+            Res := Parse_Package_Instantiation_Declaration (Id, Loc);
             --  Note: there is no 'end' in instantiation.
-            Set_End_Location (Unit, Get_Token_Location);
+            Set_End_Location (Parent);
+            return Res;
          else
-            Parse_Package_Declaration (Unit, Id, Loc);
+            return Parse_Package_Declaration (Parent, Id, Loc);
          end if;
       end if;
    end Parse_Package;
@@ -8315,7 +8341,7 @@ package body Parse is
             when Tok_Architecture =>
                Parse_Architecture_Body (Res);
             when Tok_Package =>
-               Parse_Package (Res);
+               Set_Library_Unit (Res, Parse_Package (Res));
             when Tok_Configuration =>
                Parse_Configuration_Declaration (Res);
             when others =>
