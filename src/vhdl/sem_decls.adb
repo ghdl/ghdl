@@ -1832,49 +1832,8 @@ package body Sem_Decls is
             Set_Type_Has_Signal (Atype);
 
          when Iir_Kind_Variable_Declaration =>
-            --  LRM93 4.3.1.3  Variable declarations
-            --  Variable declared immediatly within entity declarations,
-            --  architectures bodies, packages, packages bodies, and blocks
-            --  must be shared variable.
-            --  Variables declared immediatly within subprograms and
-            --  processes must not be shared variables.
-            --  Variables may appear in proteted type bodies; such
-            --  variables, which must not be shared variables, represent
-            --  shared data.
-            case Get_Kind (Parent) is
-               when Iir_Kind_Entity_Declaration
-                 | Iir_Kind_Architecture_Body
-                 | Iir_Kind_Package_Declaration
-                 | Iir_Kind_Package_Body
-                 | Iir_Kind_Block_Statement
-                 | Iir_Kind_Generate_Statement_Body =>
-                  if not Get_Shared_Flag (Decl) then
-                     Error_Msg_Sem
-                       (+Decl,
-                        "non shared variable declaration not allowed here");
-                  end if;
-               when Iir_Kinds_Process_Statement
-                 | Iir_Kind_Function_Body
-                 | Iir_Kind_Procedure_Body =>
-                  if Get_Shared_Flag (Decl) then
-                     Error_Msg_Sem
-                       (+Decl,
-                        "shared variable declaration not allowed here");
-                  end if;
-               when Iir_Kind_Protected_Type_Body =>
-                  if Get_Shared_Flag (Decl) then
-                     Error_Msg_Sem
-                       (+Decl,
-                        "variable of protected type body must not be shared");
-                  end if;
-               when Iir_Kind_Protected_Type_Declaration =>
-                  --  This is not allowed, but caught
-                  --  in sem_protected_type_declaration.
-                  null;
-               when others =>
-                  Error_Kind ("sem_object_declaration(2)", Parent);
-            end case;
-
+            --  GHDL: restriction for shared variables are checked during
+            --  parse.
             if Flags.Vhdl_Std >= Vhdl_00 then
                declare
                   Base_Type : Iir;

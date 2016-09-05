@@ -2115,21 +2115,6 @@ package body Parse is
    --
    --  protected_type_body_declarative_part ::=
    --      { protected_type_body_declarative_item }
-   --
-   --  protected_type_body_declarative_item ::=
-   --        subprogram_declaration
-   --      | subprogram_body
-   --      | type_declaration
-   --      | subtype_declaration
-   --      | constant_declaration
-   --      | variable_declaration
-   --      | file_declaration
-   --      | alias_declaration
-   --      | attribute_declaration
-   --      | attribute_specification
-   --      | use_clause
-   --      | group_template_declaration
-   --      | group_declaration
    function Parse_Protected_Type_Definition
      (Ident : Name_Id; Loc : Location_Type) return Iir
    is
@@ -3741,29 +3726,237 @@ package body Parse is
       return Res;
    end Parse_Disconnection_Specification;
 
+   --  Return the parent of a nested package.  Used to check if some
+   --  declarations are allowed in a package.
+   function Get_Package_Parent (Decl : Iir) return Iir
+   is
+      Res : Iir;
+      Parent : Iir;
+   begin
+      Res := Decl;
+      loop
+         case Get_Kind (Res) is
+            when Iir_Kind_Package_Declaration
+              | Iir_Kind_Package_Body =>
+               Parent := Get_Parent (Res);
+               if Get_Kind (Parent) = Iir_Kind_Design_Unit then
+                  return Res;
+               else
+                  Res := Parent;
+               end if;
+            when others =>
+               return Res;
+         end case;
+      end loop;
+   end Get_Package_Parent;
+
    --  precond : next token
    --  postcond: next token
    --
-   --  [ LRM93 4 ]
-   --  declaration ::= type_declaration
-   --                | subtype_declaration
-   --                | object_declaration
-   --                | interface_declaration
-   --                | alias_declaration
-   --                | attribute_declaration
-   --                | component_declaration
-   --                | group_template_declaration
-   --                | group_declaration
-   --                | entity_declaration
-   --                | configuration_declaration
-   --                | subprogram_declaration
-   --                | package_declaration
+   --  [ LRM08 3.2.3 Entity declarative part ]
+   --  entity_declarative_item ::=
+   --       subprogram_declaration
+   --     | subprogram_body
+   --     | subprogram_instantiation_declaration
+   --     | package_declaration
+   --     | package_body
+   --     | package_instantiation_declaration
+   --     | type_declaration
+   --     | subtype_declaration
+   --     | constant_declaration
+   --     | signal_declaration
+   --     | shared_variable_declaration
+   --     | file_declaration
+   --     | alias_declaration
+   --     | attribute_declaration
+   --     | attribute_specification
+   --     | disconnection_specification
+   --     | use_clause
+   --     | group_template_declaration
+   --     | group_declaration
+   --     | PSL_property_declaration
+   --     | PSL_sequence_declaration
+   --     | PSL_clock_declaration
+   --
+   --  [ LRM08 3.3.2 Architecture declarative part ]
+   --  block_declarative_item ::=
+   --       subprogram_declaration
+   --     | subprogram_body
+   --     | subprogram_instantiation_declaration
+   --     | package_declaration
+   --     | package_body
+   --     | package_instantiation_declaration
+   --     | type_declaration
+   --     | subtype_declaration
+   --     | constant_declaration
+   --     | signal_declaration
+   --     | shared_variable_declaration
+   --     | file_declaration
+   --     | alias_declaration
+   --     | component_declaration
+   --     | attribute_declaration
+   --     | attribute_specification
+   --     | configuration_specification
+   --     | disconnection_specification
+   --     | use_clause
+   --     | group_template_declaration
+   --     | group_declaration
+   --     | PSL_property_declaration
+   --     | PSL_sequence_declaration
+   --     | PSL_clock_declaration
+   --
+   --  [ LRM08 4.3 Subprogram bodies ]
+   --  subprogram_declarative_item ::=
+   --       subprogram_declaration
+   --     | subprogram_body
+   --     | subprogram_instantiation_declaration
+   --     | package_declaration
+   --     | package_body
+   --     | package_instantiation_declaration
+   --     | type_declaration
+   --     | subtype_declaration
+   --     | constant_declaration
+   --     | variable_declaration
+   --     | file_declaration
+   --     | alias_declaration
+   --     | attribute_declaration
+   --     | attribute_specification
+   --     | use_clause
+   --     | group_template_declaration
+   --     | group_declaration
+   --
+   --  [ LRM08 4.7 Package declarations ]
+   --  package_declarative_item ::=
+   --       subprogram_declaration
+   --     | subprogram_instantiation_declaration
+   --     | package_declaration
+   --     | package_instantiation_declaration
+   --     | type_declaration
+   --     | subtype_declaration
+   --     | constant_declaration
+   --     | signal_declaration
+   --     | variable_declaration
+   --     | file_declaraton
+   --     | alias_declaration
+   --     | component_declaration
+   --     | attribute_declaration
+   --     | attribute_specification
+   --     | disconnection_specification
+   --     | use_clause
+   --     | group_template_declaration
+   --     | group_declaration
+   --     | PSL_property_declaration
+   --     | PSL_sequence_declaration
+   --
+   --  [ LRM08 4.8 Package bodies ]
+   --  package_body_declarative_item ::=
+   --       subprogram_declaration
+   --     | subprogram_body
+   --     | subprogram_instantiation_declaration
+   --     | package_declaration
+   --     | package_body
+   --     | package_instantiation_declaration
+   --     | type_declaration
+   --     | subtype_declaration
+   --     | constant_declaration
+   --     | variable_declaration
+   --     | file_declaration
+   --     | alias_declaration
+   --     | attribute_declaration
+   --     | attribute_specification
+   --     | use_clause
+   --     | group_template_declaration
+   --     | group_declaration
+   --
+   --  [ LRM08 5.6.2 Protected type declarations ]
+   --  protected_type_declarative_item ::=
+   --       subprogram_declaration
+   --     | subprogram_instantiation_declaration
+   --     | attribute_specification
+   --     | use_clause
+   --
+   --  [ LRM08 5.6.3 Protected type bodies ]
+   --  protected_type_body_declarative_item ::=
+   --       subprogram_declaration
+   --     | subprogram_body
+   --     | subprogram_instantiation_declaration
+   --     | package_declaration
+   --     | package_body
+   --     | package_instantiation_declaration
+   --     | type_declaration
+   --     | subtype_declaration
+   --     | constant_declaration
+   --     | variable_declaration
+   --     | file_declaration
+   --     | alias_declaration
+   --     | attribute_declaration
+   --     | attribute_specification
+   --     | use_clause
+   --     | group_template_declaration
+   --     | group_declaration
+   --
+   --  [ LRM08 11.3 Process statement ]
+   --  process_declarative_item ::=
+   --       subprogram_declaration
+   --     | subprogram_body
+   --     | subprogram_instantiation_declaration
+   --     | package_declaration
+   --     | package_body
+   --     | package_instantiation_declaration
+   --     | type_declaration
+   --     | subtype_declaration
+   --     | constant_declaration
+   --     | variable_declaration
+   --     | file_declaration
+   --     | alias_declaration
+   --     | attribute_declaration
+   --     | attribute_specification
+   --     | use_clause
+   --     | group_template_declaration
+   --     | group_declaration
+   --
+   --  Some declarations are not allowed in every declarative part:
+   --  - subprogram_body, package_body:
+   --    not in package_declaration
+   --  - signal_declaration, disconnection_specification:
+   --    not in process, protected_type_body, package_body, subprogram
+   --  - variable_declaration:
+   --    shared in entity, block (*)
+   --    not shared in subprogram, protected_type_body, process
+   --    depends on parent for package and package_body
+   --  - component_declaration:
+   --    not in entity, subprogram, package_body, protected_type_body,
+   --       process
+   --    depends on parent for package
+   --  - configuration_specification:
+   --    not in entity, subprogram, package, package_body, protected_type_body,
+   --       process
+   --  - PSL_property_declaration, PSL_sequence_declaration:
+   --    in entity and block (*)
+   --    depends on parent for package
+   --  - PSL_clock_declaration:
+   --    in block (*)
+   --
+   --  Declarations for protected_type_declaration are handled in sem.
+   --
+   --  (*: block means block_declarative_item, ie: block_statement,
+   --      architecture_body and generate_statement)
    procedure Parse_Declarative_Part (Parent : Iir)
    is
       use Declaration_Chain_Handling;
       Last_Decl : Iir;
       Decl : Iir;
+      Package_Parent_Cache : Iir;
+
+      function Package_Parent return Iir is
+      begin
+         if Package_Parent_Cache = Null_Iir then
+            Package_Parent_Cache := Get_Package_Parent (Parent);
+         end if;
+         return Package_Parent_Cache;
+      end Package_Parent;
    begin
+      Package_Parent_Cache := Null_Iir;
       Build_Init (Last_Decl);
       loop
          Decl := Null_Iir;
@@ -3798,7 +3991,13 @@ package body Parse is
             when Tok_Quantity =>
                Decl := Parse_Quantity_Declaration (Parent);
             when Tok_Signal =>
-               case Get_Kind (Parent) is
+               --  LRM08 4.7 Package declarations
+               --  For package declaration that appears in a subprogram body,
+               --  a process statement, or a protected type body, [...]
+               --  Moreover, it is an eror if [...] a signal declaration [...]
+               --  appears as a package declarative item of such a package
+               --  declaration.
+               case Get_Kind (Package_Parent) is
                   when Iir_Kind_Function_Body
                     | Iir_Kind_Procedure_Body =>
                      Error_Msg_Parse
@@ -3806,31 +4005,99 @@ package body Parse is
                   when Iir_Kinds_Process_Statement =>
                      Error_Msg_Parse
                        ("signal declaration not allowed in process");
-                  when others =>
+                  when Iir_Kind_Protected_Type_Body
+                    | Iir_Kind_Protected_Type_Declaration =>
+                     Error_Msg_Parse
+                       ("signal declaration not allowed in protected type");
+                  when Iir_Kind_Package_Body =>
+                     Error_Msg_Parse
+                       ("signal declaration not allowed in package body");
+                  when Iir_Kind_Entity_Declaration
+                    | Iir_Kind_Architecture_Body
+                    | Iir_Kind_Block_Statement
+                    | Iir_Kind_Generate_Statement_Body
+                    | Iir_Kind_Package_Declaration =>
                      null;
+                  when others =>
+                     Error_Kind ("parse_declarative_part", Package_Parent);
                end case;
                Decl := Parse_Object_Declaration (Parent);
             when Tok_Constant =>
                Decl := Parse_Object_Declaration (Parent);
             when Tok_Variable =>
-               --  FIXME: remove this message (already checked during sem).
-               case Get_Kind (Parent) is
+               --  LRM93 4.3.1.3  Variable declarations
+               --  Variable declared immediatly within entity declarations,
+               --  architectures bodies, packages, packages bodies, and blocks
+               --  must be shared variable.
+               --  Variables declared immediatly within subprograms and
+               --  processes must not be shared variables.
+               --  Variables may appear in protected type bodies; such
+               --  variables, which must not be shared variables, represent
+               --  shared data.
+               case Get_Kind (Package_Parent) is
                   when Iir_Kind_Entity_Declaration
                     | Iir_Kind_Architecture_Body
                     | Iir_Kind_Block_Statement
+                    | Iir_Kind_Generate_Statement_Body
                     | Iir_Kind_Package_Declaration
-                    | Iir_Kind_Package_Body =>
+                    | Iir_Kind_Package_Body
+                    | Iir_Kind_Protected_Type_Declaration =>
                      --  FIXME: replace HERE with the kind of declaration
                      --  ie: "not allowed in a package" rather than "here".
-                     Error_Msg_Parse ("variable declaration not allowed here");
-                  when others =>
+                     Error_Msg_Parse
+                       ("non-shared variable declaration not allowed here");
+                  when Iir_Kind_Function_Body
+                    | Iir_Kind_Procedure_Body
+                    | Iir_Kinds_Process_Statement
+                    | Iir_Kind_Protected_Type_Body =>
                      null;
+                  when others =>
+                     Error_Kind ("parse_declarative_part", Package_Parent);
                end case;
                Decl := Parse_Object_Declaration (Parent);
             when Tok_Shared =>
                if Flags.Vhdl_Std <= Vhdl_87 then
                   Error_Msg_Parse ("shared variable not allowed in vhdl 87");
                end if;
+               --  LRM08 4.7 Package declarations
+               --  For package declaration that appears in a subprogram body,
+               --  a process statement, or a protected type body, it is an
+               --  error if a variable declaration in the package declaratie
+               --  part of the package declaration declares a shared variable.
+
+               --  LRM08 4.8 Package bodies
+               --  For a package body that appears in a subprogram body, a
+               --  process statement or a protected type body, it is an error
+               --  if a variable declaration in the package body declarative
+               --  part of the package body declares a shared variable.
+
+               --  LRM93 4.3.1.3  Variable declarations
+               --  Variable declared immediatly within entity declarations,
+               --  architectures bodies, packages, packages bodies, and blocks
+               --  must be shared variable.
+               --  Variables declared immediatly within subprograms and
+               --  processes must not be shared variables.
+               --  Variables may appear in proteted type bodies; such
+               --  variables, which must not be shared variables, represent
+               --  shared data.
+               case Get_Kind (Package_Parent) is
+                  when Iir_Kind_Entity_Declaration
+                    | Iir_Kind_Architecture_Body
+                    | Iir_Kind_Block_Statement
+                    | Iir_Kind_Generate_Statement_Body
+                    | Iir_Kind_Package_Declaration
+                    | Iir_Kind_Package_Body
+                    | Iir_Kind_Protected_Type_Declaration =>
+                     null;
+                  when Iir_Kind_Function_Body
+                    | Iir_Kind_Procedure_Body
+                    | Iir_Kinds_Process_Statement
+                    | Iir_Kind_Protected_Type_Body =>
+                     Error_Msg_Parse
+                       ("shared variable declaration not allowed here");
+                  when others =>
+                     Error_Kind ("parse_declarative_part", Package_Parent);
+               end case;
                Decl := Parse_Object_Declaration (Parent);
             when Tok_File =>
                Decl := Parse_Object_Declaration (Parent);
@@ -3839,6 +4106,14 @@ package body Parse is
               | Tok_Pure
               | Tok_Impure =>
                Decl := Parse_Subprogram_Declaration (Parent);
+               if Decl /= Null_Iir
+                 and then Get_Subprogram_Body (Decl) /= Null_Iir
+               then
+                  if Get_Kind (Parent) = Iir_Kind_Package_Declaration then
+                     Error_Msg_Parse
+                       (+Decl, "subprogram body not allowed in a package");
+                  end if;
+               end if;
             when Tok_Alias =>
                Decl := Parse_Alias_Declaration;
             when Tok_Component =>
@@ -3846,11 +4121,19 @@ package body Parse is
                   when Iir_Kind_Entity_Declaration
                     | Iir_Kind_Procedure_Body
                     | Iir_Kind_Function_Body
-                    | Iir_Kinds_Process_Statement =>
+                    | Iir_Kinds_Process_Statement
+                    | Iir_Kind_Package_Body
+                    | Iir_Kind_Protected_Type_Body
+                    | Iir_Kind_Protected_Type_Declaration =>
                      Error_Msg_Parse
                        ("component declaration are not allowed here");
-                  when others =>
+                  when Iir_Kind_Architecture_Body
+                    | Iir_Kind_Block_Statement
+                    | Iir_Kind_Generate_Statement_Body
+                    | Iir_Kind_Package_Declaration =>
                      null;
+                  when others =>
+                     Error_Kind ("parse_declarative_part", Package_Parent);
                end case;
                Decl := Parse_Component_Declaration;
             when Tok_For =>
@@ -3858,24 +4141,47 @@ package body Parse is
                   when Iir_Kind_Entity_Declaration
                     | Iir_Kind_Function_Body
                     | Iir_Kind_Procedure_Body
-                    | Iir_Kinds_Process_Statement =>
+                    | Iir_Kinds_Process_Statement
+                    | Iir_Kind_Package_Declaration
+                    | Iir_Kind_Package_Body
+                    | Iir_Kind_Protected_Type_Body
+                    | Iir_Kind_Protected_Type_Declaration =>
                      Error_Msg_Parse
                        ("configuration specification not allowed here");
-                  when others =>
+                  when Iir_Kind_Architecture_Body
+                    | Iir_Kind_Block_Statement
+                    | Iir_Kind_Generate_Statement_Body =>
                      null;
+                  when others =>
+                     Error_Kind ("parse_declarative_part", Package_Parent);
                end case;
                Decl := Parse_Configuration_Specification;
             when Tok_Attribute =>
                Decl := Parse_Attribute;
             when Tok_Disconnect =>
+               --  LRM08 4.7 Package declarations
+               --  For package declaration that appears in a subprogram body,
+               --  a process statement, or a protected type body, [...]
+               --  Moreover, it is an eror if [...] a disconnection
+               --  specification [...] appears as a package declarative item
+               --  of such a package declaration.
                case Get_Kind (Parent) is
                   when Iir_Kind_Function_Body
                     | Iir_Kind_Procedure_Body
-                    | Iir_Kinds_Process_Statement =>
+                    | Iir_Kinds_Process_Statement
+                    | Iir_Kind_Protected_Type_Body
+                    | Iir_Kind_Package_Body
+                    | Iir_Kind_Protected_Type_Declaration =>
                      Error_Msg_Parse
                        ("disconnect specification not allowed here");
-                  when others =>
+                  when Iir_Kind_Entity_Declaration
+                    | Iir_Kind_Architecture_Body
+                    | Iir_Kind_Block_Statement
+                    | Iir_Kind_Generate_Statement_Body
+                    | Iir_Kind_Package_Declaration =>
                      null;
+                  when others =>
+                     Error_Kind ("parse_declarative_part", Package_Parent);
                end case;
                Decl := Parse_Disconnection_Specification;
             when Tok_Use =>
@@ -3888,7 +4194,14 @@ package body Parse is
                     ("nested package not allowed before vhdl 2008");
                end if;
                Decl := Parse_Package (Parent);
-
+               if Decl /= Null_Iir
+                 and then Get_Kind (Decl) = Iir_Kind_Package_Body
+               then
+                  if Get_Kind (Parent) = Iir_Kind_Package_Declaration then
+                     Error_Msg_Parse
+                       (+Decl, "package body not allowed in a package");
+                  end if;
+               end if;
             when Tok_Identifier =>
                Error_Msg_Parse
                  ("object class keyword such as 'variable' is expected");
@@ -7979,7 +8292,7 @@ package body Parse is
    --          package_declarative_part
    --      END [ PACKAGE ] [ PACKAGE_simple_name ] ;
    function Parse_Package_Declaration
-     (Unit : Iir_Design_Unit; Id : Name_Id; Loc : Location_Type)
+     (Parent : Iir; Id : Name_Id; Loc : Location_Type)
      return Iir
    is
       Res: Iir_Package_Declaration;
@@ -7987,6 +8300,7 @@ package body Parse is
       Res := Create_Iir (Iir_Kind_Package_Declaration);
       Set_Location (Res, Loc);
       Set_Identifier (Res, Id);
+      Set_Parent (Res, Parent);
 
       if Current_Token = Tok_Generic then
          if Vhdl_Std < Vhdl_08 then
@@ -7998,7 +8312,7 @@ package body Parse is
       Parse_Declarative_Part (Res);
 
       Expect (Tok_End);
-      Set_End_Location (Unit);
+      Set_End_Location (Parent);
 
       --  Skip 'end'
       Scan;
@@ -8026,12 +8340,13 @@ package body Parse is
    --      PACKAGE BODY PACKAGE_simple_name IS
    --          package_body_declarative_part
    --      END [ PACKAGE BODY ] [ PACKAGE_simple_name ] ;
-   function Parse_Package_Body (Unit : Iir_Design_Unit) return Iir
+   function Parse_Package_Body (Parent : Iir) return Iir
    is
       Res: Iir;
    begin
       Res := Create_Iir (Iir_Kind_Package_Body);
       Set_Location (Res);
+      Set_Parent (Res, Parent);
 
       -- Get identifier.
       Expect (Tok_Identifier);
@@ -8042,7 +8357,7 @@ package body Parse is
       Parse_Declarative_Part (Res);
 
       Expect (Tok_End);
-      Set_End_Location (Unit);
+      Set_End_Location (Parent);
 
       --  Skip 'end'
       Scan;
@@ -8077,14 +8392,14 @@ package body Parse is
    --      PACKAGE identifier IS NEW uninstantiated_package_name
    --         [ generic_map_aspect ] ;
    function Parse_Package_Instantiation_Declaration
-     (Id : Name_Id; Loc : Location_Type)
-     return Iir
+     (Parent : Iir; Id : Name_Id; Loc : Location_Type) return Iir
    is
       Res: Iir;
    begin
       Res := Create_Iir (Iir_Kind_Package_Instantiation_Declaration);
       Set_Location (Res, Loc);
       Set_Identifier (Res, Id);
+      Set_Parent (Res, Parent);
 
       --  Skip 'new'
       Scan;
@@ -8133,7 +8448,7 @@ package body Parse is
          Scan;
 
          if Current_Token = Tok_New then
-            Res := Parse_Package_Instantiation_Declaration (Id, Loc);
+            Res := Parse_Package_Instantiation_Declaration (Parent, Id, Loc);
             --  Note: there is no 'end' in instantiation.
             Set_End_Location (Parent);
             return Res;
