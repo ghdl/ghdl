@@ -60,7 +60,7 @@ package body Ghdllocal is
       end if;
 
       if Flags.Verbose then
-         Report_Msg (Msgid_Note, Semantic, No_Location,
+         Report_Msg (Msgid_Note, Semantic, +Unit,
                      "analyze %n", (1 => +Get_Library_Unit (Unit)));
       end if;
 
