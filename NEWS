@@ -10,6 +10,7 @@ New in 0.34 (XXXX-XX-XX)
 * Docs available on rtd: https://ghdl.readthedocs.org/en/latest/
 * Speed improved.
 * New option --psl-report, to report status of psl assert and cover.
+* vhdl 2008: support nested packages
 
 New in 0.33 (2015-10-04)
 * Improve support of vhdl 2008
