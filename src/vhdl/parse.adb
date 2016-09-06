@@ -61,7 +61,7 @@ package body Parse is
    function Parse_Configuration_Item return Iir;
    function Parse_Block_Configuration return Iir_Block_Configuration;
    procedure Parse_Concurrent_Statements (Parent : Iir);
-   function Parse_Subprogram_Declaration (Parent : Iir) return Iir;
+   function Parse_Subprogram_Declaration return Iir;
    function Parse_Subtype_Indication (Name : Iir := Null_Iir) return Iir;
    procedure Parse_Component_Specification (Res : Iir);
    function Parse_Binding_Indication return Iir_Binding_Indication;
@@ -142,14 +142,14 @@ package body Parse is
            ("end label for an unlabeled declaration or statement");
       else
          if Current_Identifier /= Name then
-            Error_Msg_Parse ("mispelling, %i expected", +Name);
+            Error_Msg_Parse ("misspelling, %i expected", +Name);
          else
             Set_End_Has_Identifier (Decl, True);
             Xrefs.Xref_End (Get_Token_Location, Decl);
          end if;
       end if;
 
-      --  Skip identifier (the label).
+      --  Skip identifier.
       Scan;
    end Check_End_Name;
 
@@ -4105,7 +4105,7 @@ package body Parse is
               | Tok_Procedure
               | Tok_Pure
               | Tok_Impure =>
-               Decl := Parse_Subprogram_Declaration (Parent);
+               Decl := Parse_Subprogram_Declaration;
                if Decl /= Null_Iir
                  and then Get_Subprogram_Body (Decl) /= Null_Iir
                then
@@ -4810,13 +4810,15 @@ package body Parse is
             Error_Msg_Parse
               ("'-' and '+' are not allowed in primary, use parenthesis");
             return Parse_Simple_Expression;
+
          when Tok_Comma
            | Tok_Semi_Colon
            | Tok_Eof
            | Tok_End =>
             --  Token not to be skipped
-            Unexpected ("primary");
+            Error_Msg_Parse ("primary expression expected");
             return Null_Iir;
+
          when others =>
             Unexpected ("primary");
             Scan;
@@ -6225,7 +6227,7 @@ package body Parse is
    --
    --  [ §2.1 ]
    --  operator_symbol ::= string_literal
-   function Parse_Subprogram_Declaration (Parent : Iir) return Iir
+   function Parse_Subprogram_Declaration return Iir
    is
       Kind : Iir_Kind;
       Inters : Iir;
@@ -6353,16 +6355,20 @@ package body Parse is
       Set_Subprogram_Specification (Subprg_Body, Subprg);
       Set_Chain (Subprg, Subprg_Body);
 
-      if Get_Kind (Parent) = Iir_Kind_Package_Declaration then
-         Error_Msg_Parse ("subprogram body not allowed in package spec");
-      end if;
+      --  Skip 'is'.
       Expect (Tok_Is);
       Scan;
+
       Parse_Declarative_Part (Subprg_Body);
+
+      --  Skip 'begin'.
       Expect (Tok_Begin);
       Scan;
+
       Set_Sequential_Statement_Chain
         (Subprg_Body, Parse_Sequential_Statements (Subprg_Body));
+
+      --  Skip 'end'.
       Expect (Tok_End);
       Scan;
 
@@ -6375,7 +6381,10 @@ package body Parse is
                Error_Msg_Parse ("'procedure' expected instead of 'function'");
             end if;
             Set_End_Has_Reserved_Id (Subprg_Body, True);
+
+            --  Skip 'function'.
             Scan;
+
          when Tok_Procedure =>
             if Flags.Vhdl_Std = Vhdl_87 then
                Error_Msg_Parse ("'procedure' not allowed here by vhdl 87");
@@ -6384,7 +6393,10 @@ package body Parse is
                Error_Msg_Parse ("'function' expected instead of 'procedure'");
             end if;
             Set_End_Has_Reserved_Id (Subprg_Body, True);
+
+            --  Skip 'procedure'
             Scan;
+
          when others =>
             null;
       end case;
@@ -6395,12 +6407,13 @@ package body Parse is
             if Scan_To_Operator_Name (Get_Token_Location)
               /= Get_Identifier (Subprg)
             then
-               Error_Msg_Parse
-                 ("mispelling, 'end """ & Image_Identifier (Subprg)
-                  & """;' expected");
+               Error_Msg_Parse ("misspelling, %i expected", +Subprg);
             end if;
             Set_End_Has_Identifier (Subprg_Body, True);
+
+            --  Skip string.
             Scan;
+
          when others =>
             null;
       end case;

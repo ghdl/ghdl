@@ -229,10 +229,10 @@ package body Translation is
       El := Get_Library_Unit (Unit);
       if Flags.Verbose then
          if Main then
-            Report_Msg (Msgid_Note, Semantic, No_Location,
+            Report_Msg (Msgid_Note, Semantic, +Unit,
                         "translating (with code generation) %n", (1 => +El));
          else
-            Report_Msg (Msgid_Note, Semantic, No_Location,
+            Report_Msg (Msgid_Note, Semantic, +Unit,
                         "translating %n", (1 => +El));
          end if;
       end if;
