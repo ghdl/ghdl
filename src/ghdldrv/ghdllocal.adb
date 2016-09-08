@@ -1009,7 +1009,7 @@ package body Ghdllocal is
       end if;
       Perform_Action (Command_Clean (Cmd), Args);
       Delete (Image (Libraries.Work_Directory)
-              & Back_End.Library_To_File_Name (Libraries.Work_Library)
+              & Libraries.Library_To_File_Name (Libraries.Work_Library)
               & Nul);
    end Perform_Action;
 

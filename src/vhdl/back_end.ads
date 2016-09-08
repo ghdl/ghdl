@@ -18,17 +18,6 @@
 with Iirs; use Iirs;
 
 package Back_End is
-   --  Return the name of the library file for LIBRARY.
-   --  The library file describe the contents of LIBRARY.
-   function Default_Library_To_File_Name (Library : Iir_Library_Declaration)
-                                         return String;
-
-   type Library_To_File_Name_Acc is
-     access function (Library : Iir_Library_Declaration) return String;
-
-   Library_To_File_Name : Library_To_File_Name_Acc :=
-     Default_Library_To_File_Name'Access;
-
    --  Back-end options.
    type Parse_Option_Acc is access function (Opt : String) return Boolean;
    Parse_Option : Parse_Option_Acc := null;
