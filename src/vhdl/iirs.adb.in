@@ -32,6 +32,11 @@ package body Iirs is
       return Node = Null_Iir_List;
    end Is_Null_List;
 
+   function Is_Valid (Node : Iir) return Boolean is
+   begin
+      return Node /= Null_Iir;
+   end Is_Valid;
+
    ---------------------------------------------------
    -- General subprograms that operate on every iir --
    ---------------------------------------------------

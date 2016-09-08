@@ -32,6 +32,11 @@ package body Iirs is
       return Node = Null_Iir_List;
    end Is_Null_List;
 
+   function Is_Valid (Node : Iir) return Boolean is
+   begin
+      return Node /= Null_Iir;
+   end Is_Valid;
+
    ---------------------------------------------------
    -- General subprograms that operate on every iir --
    ---------------------------------------------------
@@ -389,11 +394,11 @@ package body Iirs is
            | Iir_Kind_Indexed_Name
            | Iir_Kind_Psl_Expression
            | Iir_Kind_Concurrent_Assertion_Statement
-           | Iir_Kind_Psl_Default_Clock
            | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_If_Generate_Statement
            | Iir_Kind_Case_Generate_Statement
            | Iir_Kind_For_Generate_Statement
+           | Iir_Kind_Psl_Default_Clock
            | Iir_Kind_Generate_Statement_Body
            | Iir_Kind_If_Generate_Else_Clause
            | Iir_Kind_Simple_Signal_Assignment_Statement

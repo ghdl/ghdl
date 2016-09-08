@@ -1309,14 +1309,12 @@ package body Nodes_Meta is
             return "concurrent_selected_signal_assignment";
          when Iir_Kind_Concurrent_Assertion_Statement =>
             return "concurrent_assertion_statement";
-         when Iir_Kind_Psl_Default_Clock =>
-            return "psl_default_clock";
+         when Iir_Kind_Concurrent_Procedure_Call_Statement =>
+            return "concurrent_procedure_call_statement";
          when Iir_Kind_Psl_Assert_Statement =>
             return "psl_assert_statement";
          when Iir_Kind_Psl_Cover_Statement =>
             return "psl_cover_statement";
-         when Iir_Kind_Concurrent_Procedure_Call_Statement =>
-            return "concurrent_procedure_call_statement";
          when Iir_Kind_Block_Statement =>
             return "block_statement";
          when Iir_Kind_If_Generate_Statement =>
@@ -1327,6 +1325,8 @@ package body Nodes_Meta is
             return "for_generate_statement";
          when Iir_Kind_Component_Instantiation_Statement =>
             return "component_instantiation_statement";
+         when Iir_Kind_Psl_Default_Clock =>
+            return "psl_default_clock";
          when Iir_Kind_Simple_Simultaneous_Statement =>
             return "simple_simultaneous_statement";
          when Iir_Kind_Generate_Statement_Body =>
@@ -3535,9 +3535,12 @@ package body Nodes_Meta is
       Field_Severity_Expression,
       Field_Report_Expression,
       Field_Parent,
-      --  Iir_Kind_Psl_Default_Clock
-      Field_Psl_Boolean,
+      --  Iir_Kind_Concurrent_Procedure_Call_Statement
       Field_Label,
+      Field_Suspend_Flag,
+      Field_Postponed_Flag,
+      Field_Visible_Flag,
+      Field_Procedure_Call,
       Field_Chain,
       Field_Parent,
       --  Iir_Kind_Psl_Assert_Statement
@@ -3567,14 +3570,6 @@ package body Nodes_Meta is
       Field_Chain,
       Field_Severity_Expression,
       Field_Report_Expression,
-      Field_Parent,
-      --  Iir_Kind_Concurrent_Procedure_Call_Statement
-      Field_Label,
-      Field_Suspend_Flag,
-      Field_Postponed_Flag,
-      Field_Visible_Flag,
-      Field_Procedure_Call,
-      Field_Chain,
       Field_Parent,
       --  Iir_Kind_Block_Statement
       Field_Label,
@@ -3631,6 +3626,11 @@ package body Nodes_Meta is
       Field_Configuration_Specification,
       Field_Generic_Map_Aspect_Chain,
       Field_Port_Map_Aspect_Chain,
+      Field_Parent,
+      --  Iir_Kind_Psl_Default_Clock
+      Field_Psl_Boolean,
+      Field_Label,
+      Field_Chain,
       Field_Parent,
       --  Iir_Kind_Simple_Simultaneous_Statement
       Field_Label,
@@ -4314,15 +4314,15 @@ package body Nodes_Meta is
       Iir_Kind_Concurrent_Conditional_Signal_Assignment => 1242,
       Iir_Kind_Concurrent_Selected_Signal_Assignment => 1254,
       Iir_Kind_Concurrent_Assertion_Statement => 1262,
-      Iir_Kind_Psl_Default_Clock => 1266,
-      Iir_Kind_Psl_Assert_Statement => 1279,
-      Iir_Kind_Psl_Cover_Statement => 1292,
-      Iir_Kind_Concurrent_Procedure_Call_Statement => 1299,
-      Iir_Kind_Block_Statement => 1312,
-      Iir_Kind_If_Generate_Statement => 1322,
-      Iir_Kind_Case_Generate_Statement => 1331,
-      Iir_Kind_For_Generate_Statement => 1340,
-      Iir_Kind_Component_Instantiation_Statement => 1350,
+      Iir_Kind_Concurrent_Procedure_Call_Statement => 1269,
+      Iir_Kind_Psl_Assert_Statement => 1282,
+      Iir_Kind_Psl_Cover_Statement => 1295,
+      Iir_Kind_Block_Statement => 1308,
+      Iir_Kind_If_Generate_Statement => 1318,
+      Iir_Kind_Case_Generate_Statement => 1327,
+      Iir_Kind_For_Generate_Statement => 1336,
+      Iir_Kind_Component_Instantiation_Statement => 1346,
+      Iir_Kind_Psl_Default_Clock => 1350,
       Iir_Kind_Simple_Simultaneous_Statement => 1357,
       Iir_Kind_Generate_Statement_Body => 1368,
       Iir_Kind_If_Generate_Else_Clause => 1373,
@@ -6876,15 +6876,15 @@ package body Nodes_Meta is
            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Concurrent_Assertion_Statement
-           | Iir_Kind_Psl_Default_Clock
+           | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Psl_Assert_Statement
            | Iir_Kind_Psl_Cover_Statement
-           | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_If_Generate_Statement
            | Iir_Kind_Case_Generate_Statement
            | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Component_Instantiation_Statement
+           | Iir_Kind_Psl_Default_Clock
            | Iir_Kind_Simple_Simultaneous_Statement
            | Iir_Kind_Simple_Signal_Assignment_Statement
            | Iir_Kind_Conditional_Signal_Assignment_Statement
@@ -7616,15 +7616,15 @@ package body Nodes_Meta is
            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Concurrent_Assertion_Statement
-           | Iir_Kind_Psl_Default_Clock
+           | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Psl_Assert_Statement
            | Iir_Kind_Psl_Cover_Statement
-           | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_If_Generate_Statement
            | Iir_Kind_Case_Generate_Statement
            | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Component_Instantiation_Statement
+           | Iir_Kind_Psl_Default_Clock
            | Iir_Kind_Simple_Simultaneous_Statement
            | Iir_Kind_Generate_Statement_Body
            | Iir_Kind_Simple_Signal_Assignment_Statement
@@ -7665,15 +7665,15 @@ package body Nodes_Meta is
            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Concurrent_Assertion_Statement
-           | Iir_Kind_Psl_Default_Clock
+           | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Psl_Assert_Statement
            | Iir_Kind_Psl_Cover_Statement
-           | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_If_Generate_Statement
            | Iir_Kind_Case_Generate_Statement
            | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Component_Instantiation_Statement
+           | Iir_Kind_Psl_Default_Clock
            | Iir_Kind_Simple_Simultaneous_Statement
            | Iir_Kind_Simple_Signal_Assignment_Statement
            | Iir_Kind_Conditional_Signal_Assignment_Statement
@@ -7747,9 +7747,9 @@ package body Nodes_Meta is
            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Concurrent_Assertion_Statement
+           | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Psl_Assert_Statement
            | Iir_Kind_Psl_Cover_Statement
-           | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_If_Generate_Statement
            | Iir_Kind_Case_Generate_Statement
@@ -8173,9 +8173,9 @@ package body Nodes_Meta is
            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Concurrent_Assertion_Statement
+           | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Psl_Assert_Statement
-           | Iir_Kind_Psl_Cover_Statement
-           | Iir_Kind_Concurrent_Procedure_Call_Statement =>
+           | Iir_Kind_Psl_Cover_Statement =>
             return True;
          when others =>
             return False;
@@ -8730,15 +8730,15 @@ package body Nodes_Meta is
            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Concurrent_Assertion_Statement
-           | Iir_Kind_Psl_Default_Clock
+           | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Psl_Assert_Statement
            | Iir_Kind_Psl_Cover_Statement
-           | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_If_Generate_Statement
            | Iir_Kind_Case_Generate_Statement
            | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Component_Instantiation_Statement
+           | Iir_Kind_Psl_Default_Clock
            | Iir_Kind_Simple_Simultaneous_Statement
            | Iir_Kind_Generate_Statement_Body
            | Iir_Kind_If_Generate_Else_Clause
