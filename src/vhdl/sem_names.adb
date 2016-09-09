@@ -387,7 +387,8 @@ package body Sem_Names is
             null;
          when Iir_Kind_Package_Declaration =>
             null;
-         when Iir_Kind_Package_Instantiation_Declaration =>
+         when Iir_Kind_Package_Instantiation_Declaration
+           | Iir_Kind_Interface_Package_Declaration =>
             Iterator_Decl_Chain (Get_Generic_Chain (Decl), Id);
          when Iir_Kind_Block_Statement =>
             declare
@@ -450,7 +451,8 @@ package body Sem_Names is
                end loop;
             end;
          when Iir_Kind_Package_Declaration
-           | Iir_Kind_Package_Instantiation_Declaration =>
+           | Iir_Kind_Package_Instantiation_Declaration
+           | Iir_Kind_Interface_Package_Declaration =>
             Iterator_Decl_Chain (Get_Declaration_Chain (Decl), Id);
          when Iir_Kind_Process_Statement
            | Iir_Kind_Sensitized_Process_Statement =>
@@ -1986,6 +1988,7 @@ package body Sem_Names is
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Instantiation_Declaration
+           | Iir_Kind_Interface_Package_Declaration
            | Iir_Kind_If_Generate_Statement
            | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Block_Statement

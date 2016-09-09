@@ -387,6 +387,7 @@ package body Sem_Decls is
       end if;
 
       Sem_Scopes.Add_Name (Inter);
+      Set_Is_Within_Flag (Inter, True);
       Xref_Decl (Inter);
    end Sem_Interface_Package_Declaration;
 

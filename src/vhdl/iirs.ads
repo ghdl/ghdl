@@ -1245,6 +1245,8 @@ package Iirs is
    --   Get/Set_Generic_Map_Aspect_Chain (Field8)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Is_Within_Flag (Flag5)
 
    -- Iir_Kind_Function_Declaration (Medium)
    -- Iir_Kind_Procedure_Declaration (Medium)
