@@ -159,6 +159,8 @@ ghdllib: libs.vhdl.gcc libgrt.a
 
 install.gcc: install.vhdllib install.grt install.vpi
 
+#################### For gcc backend - development only (local build) ####
+
 GHDL_GCC_INCFLAGS=$(GHDL_COMMON_INCFLAGS)
 
 ghdl1-gcc$(EXEEXT): force
@@ -179,7 +181,8 @@ grt.links:
 	  ln -sf $(libdirreverse)/libbacktrace.a .; \
 	fi
 
-libs.vhdl.local_gcc: ghdl_gcc$(EXEEXT) ghdl1-gcc$(EXEEXT) vhdl.libs.all libs.vhdl.standard
+libs.vhdl.local_gcc: ghdl_gcc$(EXEEXT) ghdl1-gcc$(EXEEXT)
+	$(MAKE) GHDL=$(PWD)/ghdl_gcc$(EXEEXT) ANALYZE_OPTS="--GHDL1=ghdl1-gcc$(EXEEXT)" STD_GHDL_FLAGS="--GHDL1=$(PWD)/ghdl1-gcc$(EXEEXT)" vhdl.libs.all libs.vhdl.standard
 
 ghdl1-debug$(EXEEXT): force
 	$(MAKE) -f $(srcdir)/src/ortho/debug/Makefile \
