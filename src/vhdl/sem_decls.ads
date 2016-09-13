@@ -39,7 +39,7 @@ package Sem_Decls is
    --  type bodies.
    --
    --  Also, report unused declarations if DECL = DECLS_PARENT.
-   --  As a consequence, Check_Full_Declaration must be called after sem
+   --  As a consequence, Check_Full_Declaration must be called after analyze
    --  of statements, if any.
    procedure Check_Full_Declaration (Decls_Parent : Iir; Decl: Iir);
 

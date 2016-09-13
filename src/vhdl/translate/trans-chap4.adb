@@ -1732,6 +1732,8 @@ package body Trans.Chap4 is
             Chap2.Translate_Package_Declaration (Decl);
          when Iir_Kind_Package_Body =>
             Chap2.Translate_Package_Body (Decl);
+         when Iir_Kind_Package_Instantiation_Declaration =>
+            Chap2.Translate_Package_Instantiation_Declaration (Decl);
 
          when Iir_Kind_Group_Template_Declaration =>
             null;
@@ -2367,6 +2369,9 @@ package body Trans.Chap4 is
             when Iir_Kind_Protected_Type_Body =>
                Chap3.Translate_Protected_Type_Body (El);
                Chap3.Translate_Protected_Type_Body_Subprograms (El);
+            when Iir_Kind_Package_Declaration
+              | Iir_Kind_Package_Body =>
+               Translate_Declaration_Chain_Subprograms (El);
             when others =>
                null;
          end case;
@@ -2453,7 +2458,8 @@ package body Trans.Chap4 is
                | Iir_Kind_Group_Declaration =>
                null;
 
-            when Iir_Kind_Package_Declaration =>
+            when Iir_Kind_Package_Declaration
+              | Iir_Kind_Package_Body =>
                declare
                   Nested_Final : Boolean;
                begin

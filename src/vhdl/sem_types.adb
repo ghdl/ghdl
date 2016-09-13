@@ -608,7 +608,6 @@ package body Sem_Types is
       Inter : Name_Interpretation_Type;
       Type_Decl : Iir;
       Decl : Iir;
-      El : Iir;
    begin
       --  LRM 3.5 Protected types.
       --  Each protected type declaration appearing immediatly within a given
@@ -677,38 +676,6 @@ package body Sem_Types is
 
       Sem_Decls.Sem_Declaration_Chain (Bod);
 
-      El := Get_Declaration_Chain (Bod);
-      while El /= Null_Iir loop
-         case Get_Kind (El) is
-            when Iir_Kind_Procedure_Declaration
-              | Iir_Kind_Function_Declaration =>
-               null;
-            when Iir_Kind_Procedure_Body
-              | Iir_Kind_Function_Body =>
-               null;
-            when Iir_Kind_Type_Declaration
-              | Iir_Kind_Anonymous_Type_Declaration =>
-               null;
-            when Iir_Kind_Subtype_Declaration
-              | Iir_Kind_Constant_Declaration
-              | Iir_Kind_Variable_Declaration
-              | Iir_Kind_File_Declaration =>
-               null;
-            when Iir_Kind_Object_Alias_Declaration
-              | Iir_Kind_Non_Object_Alias_Declaration =>
-               null;
-            when Iir_Kind_Attribute_Declaration
-              | Iir_Kind_Attribute_Specification
-              | Iir_Kind_Use_Clause
-              | Iir_Kind_Group_Template_Declaration
-              | Iir_Kind_Group_Declaration =>
-               null;
-            when others =>
-               Error_Msg_Sem
-                 (+El, "%n not allowed in a protected type body", +El);
-         end case;
-         El := Get_Chain (El);
-      end loop;
       Sem_Decls.Check_Full_Declaration (Bod, Bod);
 
       --  LRM 3.5.2 Protected type bodies

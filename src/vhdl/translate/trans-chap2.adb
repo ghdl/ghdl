@@ -388,6 +388,11 @@ package body Trans.Chap2 is
                     | Iir_Kind_Interface_Type_Definition =>
                      null;
                end case;
+            when Iir_Kind_Package_Declaration
+              | Iir_Kind_Package_Body =>
+               if Has_Nested_Subprograms (Decl) then
+                  return True;
+               end if;
             when others =>
                null;
          end case;
@@ -801,7 +806,11 @@ package body Trans.Chap2 is
       end if;
 
       --  Translate subprograms declarations.
-      Chap4.Translate_Declaration_Chain_Subprograms (Decl);
+      if not Is_Nested then
+         --  For nested package, this will be translated when translating
+         --  subprograms.
+         Chap4.Translate_Declaration_Chain_Subprograms (Decl);
+      end if;
 
       --  Declare elaborator for the body.
       if not Is_Nested then
@@ -860,16 +869,21 @@ package body Trans.Chap2 is
       if Is_Nested then
          Pop_Identifier_Prefix (Mark);
       end if;
-
    end Translate_Package_Declaration;
 
    procedure Translate_Package_Body (Bod : Iir_Package_Body)
    is
-      Spec : constant Iir_Package_Declaration := Get_Package (Bod);
-      Info : constant Ortho_Info_Acc := Get_Info (Spec);
-      Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
+      Is_Nested : constant Boolean := Is_Nested_Package (Bod);
+      Spec      : constant Iir_Package_Declaration := Get_Package (Bod);
+      Info      : constant Ortho_Info_Acc := Get_Info (Spec);
       Prev_Storage : constant O_Storage := Global_Storage;
+      Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
+      Mark                 : Id_Mark_Type;
    begin
+      if Is_Nested then
+         Push_Identifier_Prefix (Mark, Get_Identifier (Spec));
+      end if;
+
       --  Translate declarations.
       if Is_Uninstantiated_Package (Spec) then
          Push_Package_Instance_Factory (Spec);
@@ -878,16 +892,17 @@ package body Trans.Chap2 is
          Chap4.Translate_Declaration_Chain (Bod);
 
          Pop_Package_Instance_Factory (Spec);
+      end if;
 
-         if Global_Storage = O_Storage_External then
-            return;
+      --  May be called during elaboration to generate RTI.
+      if Global_Storage = O_Storage_External then
+         if Is_Nested then
+            Pop_Identifier_Prefix (Mark);
          end if;
-      else
-         --  May be called during elaboration to generate RTI.
-         if Global_Storage = O_Storage_External then
-            return;
-         end if;
+         return;
+      end if;
 
+      if not Is_Uninstantiated_Package (Spec) then
          Restore_Local_Identifier (Info.Package_Local_Id);
 
          Chap4.Translate_Declaration_Chain (Bod);
@@ -895,7 +910,9 @@ package body Trans.Chap2 is
 
       Global_Storage := O_Storage_Private;
 
-      if Flag_Rti then
+      --  Generate RTI, but not for nested packages (RTI will be generated as
+      --  a declaration by the parent).
+      if not Is_Nested and then Flag_Rti then
          Rtis.Generate_Unit (Bod);
       end if;
 
@@ -909,16 +926,26 @@ package body Trans.Chap2 is
                               Info.Package_Body_Scope'Access);
       end if;
 
-      Chap4.Translate_Declaration_Chain_Subprograms (Bod);
+      if not Is_Nested then
+         --  Translate subprograms.  For nested package, this has to be called
+         --  when translating subprograms.
+         Chap4.Translate_Declaration_Chain_Subprograms (Bod);
+      end if;
 
       if Is_Uninstantiated_Package (Spec) then
          Clear_Scope (Info.Package_Spec_Scope);
          Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
       end if;
 
-      Elab_Package_Body (Spec, Bod);
+      if not Is_Nested then
+         Elab_Package_Body (Spec, Bod);
+      end if;
 
       Global_Storage := Prev_Storage;
+
+      if Is_Nested then
+         Pop_Identifier_Prefix (Mark);
+      end if;
    end Translate_Package_Body;
 
    procedure Elab_Package (Spec : Iir_Package_Declaration)
@@ -1285,6 +1312,10 @@ package body Trans.Chap2 is
       Info.Package_Instance_Body_Var := Create_Var
         (Create_Var_Identifier (Inst),
          Get_Scope_Type (Pkg_Info.Package_Body_Scope));
+
+      if Is_Nested_Package (Inst) then
+         return;
+      end if;
 
       --  FIXME: this is correct only for global instantiation, and only if
       --  there is only one.

@@ -1043,6 +1043,9 @@ package body Sem_Scopes is
            | Iir_Kind_Function_Body =>
             null;
 
+         when Iir_Kind_Package_Body =>
+            null;
+
          when Iir_Kind_Attribute_Specification
            | Iir_Kind_Configuration_Specification
            | Iir_Kind_Disconnection_Specification =>

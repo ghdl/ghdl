@@ -2088,7 +2088,7 @@ package body Trans.Rtis is
       Add_Rti_Node (Info.Comp_Rti_Const);
    end Generate_Component_Declaration;
 
-   --  Generate RTIs only for types.
+   --  Generate RTIs only for types.  This is needed for 'image/'value
    procedure Generate_Declaration_Chain_Depleted (Chain : Iir)
    is
       Decl : Iir;
@@ -2147,6 +2147,9 @@ package body Trans.Rtis is
                null;
             when Iir_Kind_Group_Template_Declaration
                | Iir_Kind_Group_Declaration =>
+               null;
+            when Iir_Kind_Package_Declaration
+              | Iir_Kind_Package_Body =>
                null;
             when others =>
                Error_Kind ("rti.generate_declaration_chain_depleted", Decl);
@@ -2298,6 +2301,21 @@ package body Trans.Rtis is
                   Generate_Block (Decl, Parent_Rti);
                   Pop_Identifier_Prefix (Mark);
                end;
+            when Iir_Kind_Package_Body =>
+               declare
+                  Mark : Id_Mark_Type;
+                  Mark1 : Id_Mark_Type;
+               begin
+                  Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
+                  Push_Identifier_Prefix (Mark1, "BODY");
+                  Generate_Block (Decl, Parent_Rti);
+                  Pop_Identifier_Prefix (Mark1);
+                  Pop_Identifier_Prefix (Mark);
+               end;
+
+            when Iir_Kind_Package_Instantiation_Declaration =>
+               --  FIXME: todo
+               null;
 
             when others =>
                Error_Kind ("rti.generate_declaration_chain", Decl);
