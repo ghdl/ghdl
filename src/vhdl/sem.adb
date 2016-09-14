@@ -2768,7 +2768,9 @@ package body Sem is
       if Get_Need_Body (Pkg) then
          Bod := Libraries.Load_Secondary_Unit
            (Get_Design_Unit (Pkg), Null_Identifier, Decl);
-         if Bod /= Null_Iir then
+         if Is_Null (Bod) then
+            Error_Msg_Sem (+Decl, "cannot find package body of %n", +Pkg);
+         else
             Add_Dependence (Bod);
          end if;
       end if;

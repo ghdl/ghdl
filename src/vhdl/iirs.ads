@@ -1245,6 +1245,8 @@ package Iirs is
    --   Get/Set_Generic_Map_Aspect_Chain (Field8)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Is_Within_Flag (Flag5)
 
    -- Iir_Kind_Function_Declaration (Medium)
    -- Iir_Kind_Procedure_Declaration (Medium)
@@ -3917,15 +3919,16 @@ package Iirs is
       Iir_Kind_Concurrent_Conditional_Signal_Assignment,
       Iir_Kind_Concurrent_Selected_Signal_Assignment,
       Iir_Kind_Concurrent_Assertion_Statement,
-      Iir_Kind_Psl_Default_Clock,
+      Iir_Kind_Concurrent_Procedure_Call_Statement,
       Iir_Kind_Psl_Assert_Statement,
       Iir_Kind_Psl_Cover_Statement,
-      Iir_Kind_Concurrent_Procedure_Call_Statement,
       Iir_Kind_Block_Statement,
       Iir_Kind_If_Generate_Statement,
       Iir_Kind_Case_Generate_Statement,
       Iir_Kind_For_Generate_Statement,
       Iir_Kind_Component_Instantiation_Statement,
+
+      Iir_Kind_Psl_Default_Clock,
 
       Iir_Kind_Simple_Simultaneous_Statement,
 
@@ -4881,15 +4884,26 @@ package Iirs is
    --Iir_Kind_Concurrent_Conditional_Signal_Assignment
    --Iir_Kind_Concurrent_Selected_Signal_Assignment
    --Iir_Kind_Concurrent_Assertion_Statement
-   --Iir_Kind_Psl_Default_Clock
+   --Iir_Kind_Concurrent_Procedure_Call_Statement
    --Iir_Kind_Psl_Assert_Statement
    --Iir_Kind_Psl_Cover_Statement
-   --Iir_Kind_Concurrent_Procedure_Call_Statement
    --Iir_Kind_Block_Statement
    --Iir_Kind_If_Generate_Statement
    --Iir_Kind_Case_Generate_Statement
    --Iir_Kind_For_Generate_Statement
-     Iir_Kind_Component_Instantiation_Statement;
+   --Iir_Kind_Component_Instantiation_Statement
+     Iir_Kind_Psl_Default_Clock;
+
+   subtype Iir_Kinds_Simple_Concurrent_Statement is Iir_Kind range
+     Iir_Kind_Sensitized_Process_Statement ..
+   --Iir_Kind_Process_Statement
+   --Iir_Kind_Concurrent_Simple_Signal_Assignment
+   --Iir_Kind_Concurrent_Conditional_Signal_Assignment
+   --Iir_Kind_Concurrent_Selected_Signal_Assignment
+   --Iir_Kind_Concurrent_Assertion_Statement
+   --Iir_Kind_Concurrent_Procedure_Call_Statement
+   --Iir_Kind_Psl_Assert_Statement
+     Iir_Kind_Psl_Cover_Statement;
 
    subtype Iir_Kinds_Concurrent_Signal_Assignment is Iir_Kind range
      Iir_Kind_Concurrent_Simple_Signal_Assignment ..
@@ -4951,8 +4965,13 @@ package Iirs is
 
    Null_Iir : constant Iir := Nodes.Null_Node;
 
+   --  Return True iff Node is null / not set.
    function Is_Null (Node : Iir) return Boolean;
    pragma Inline (Is_Null);
+
+   --  Return True iff Node is not null / set.
+   function Is_Valid (Node : Iir) return Boolean;
+   pragma Inline (Is_Valid);
 
    function Is_Null_List (Node : Iir_List) return Boolean;
    pragma Inline (Is_Null_List);

@@ -15,6 +15,7 @@ gcc_src_dir=
 gcc_version=unknown
 llvm_config=
 backtrace_lib=
+llvm_be=llvm
 build=
 build_mode=
 EXEEXT=
@@ -24,7 +25,7 @@ PIC_FLAGS=-fPIC
 show_help=no
 progname=$0
 
-subst_vars="CC GNATMAKE CFLAGS LDFLAGS build srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config backtrace_lib build_mode EXEEXT SOEXT PIC_FLAGS"
+subst_vars="CC GNATMAKE CFLAGS LDFLAGS build srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config llvm_be backtrace_lib build_mode EXEEXT SOEXT PIC_FLAGS"
 
 # Find srcdir
 srcdir=`dirname $progname`
@@ -165,8 +166,8 @@ if test $backend = llvm; then
     fi
     if ! check_version $llvm_version $llvm_ver; then
 	echo "Mismatch llvm version $llvm_ver from $llvm_config"
-	echo "Need llvm version $llvm_version"
-	exit 1
+	echo "Debugging is not enabled"
+	llvm_be=llvm-nodebug
     fi
     # For llvm, the c++ compiler is used for linking so that the standard c++
     # library is included.  However, the linker needs the no_compact_unwind

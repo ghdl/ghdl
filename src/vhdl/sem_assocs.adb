@@ -1388,7 +1388,7 @@ package body Sem_Assocs is
          return;
       end if;
 
-      Match := Fully_Compatible;
+      Match := Not_Compatible;
       Sem_Association_Package_Type_Finish (Assoc, Inter);
 
       --  Analyze actual.
@@ -1435,6 +1435,8 @@ package body Sem_Assocs is
          --  Other cases not yet handled.
          raise Internal_Error;
       end if;
+
+      Match := Fully_Compatible;
 
       return;
    end Sem_Association_Package;

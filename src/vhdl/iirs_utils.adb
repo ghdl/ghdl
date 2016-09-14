@@ -378,7 +378,7 @@ package body Iirs_Utils is
          case Get_Kind (Formal) is
             when Iir_Kind_Simple_Name =>
                return Get_Named_Entity (Formal);
-            when Iir_Kinds_Interface_Object_Declaration =>
+            when Iir_Kinds_Interface_Declaration =>
                return Formal;
             when Iir_Kind_Slice_Name
               | Iir_Kind_Indexed_Name
