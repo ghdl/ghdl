@@ -1302,7 +1302,6 @@ package body Trans.Chap2 is
       Pkg_Info       : constant Ortho_Info_Acc := Get_Info (Spec);
       Info           : Ortho_Info_Acc;
       Interface_List : O_Inter_List;
-      Constr         : O_Assoc_List;
    begin
       Instantiate_Info_Package (Inst);
       Info := Get_Info (Inst);
@@ -1313,17 +1312,17 @@ package body Trans.Chap2 is
         (Create_Var_Identifier (Inst),
          Get_Scope_Type (Pkg_Info.Package_Body_Scope));
 
-      if Is_Nested_Package (Inst) then
-         return;
-      end if;
-
       --  FIXME: this is correct only for global instantiation, and only if
       --  there is only one.
-      Set_Scope_Via_Decl (Info.Package_Instance_Body_Scope,
-                          Get_Var_Label (Info.Package_Instance_Body_Var));
+      Set_Scope_Via_Var (Info.Package_Instance_Body_Scope,
+                         Info.Package_Instance_Body_Var);
       Set_Scope_Via_Field (Info.Package_Instance_Spec_Scope,
                            Pkg_Info.Package_Spec_Field,
                            Info.Package_Instance_Body_Scope'Access);
+
+      if Is_Nested_Package (Inst) then
+         return;
+      end if;
 
       --  Declare elaboration procedure
       Start_Procedure_Decl
@@ -1344,8 +1343,23 @@ package body Trans.Chap2 is
 
       Elab_Dependence (Get_Design_Unit (Inst));
 
-      Set_Scope_Via_Decl (Pkg_Info.Package_Body_Scope,
-                          Get_Var_Label (Info.Package_Instance_Body_Var));
+      Elab_Package_Instantiation_Declaration (Inst);
+
+      --  Chap2.Finish_Subprg_Instance_Use
+      --    (Info.Package_Instance_Elab_Instance);
+      Finish_Subprogram_Body;
+   end Translate_Package_Instantiation_Declaration;
+
+   procedure Elab_Package_Instantiation_Declaration (Inst : Iir)
+   is
+      Spec           : constant Iir :=
+        Get_Named_Entity (Get_Uninstantiated_Package_Name (Inst));
+      Pkg_Info       : constant Ortho_Info_Acc := Get_Info (Spec);
+      Info           : constant Ortho_Info_Acc := Get_Info (Inst);
+      Constr         : O_Assoc_List;
+   begin
+      Set_Scope_Via_Var (Pkg_Info.Package_Body_Scope,
+                         Info.Package_Instance_Body_Var);
 
       Set_Scope_Via_Field (Pkg_Info.Package_Spec_Scope,
                            Pkg_Info.Package_Spec_Field,
@@ -1362,11 +1376,7 @@ package body Trans.Chap2 is
       New_Procedure_Call (Constr);
 
       Clear_Scope (Pkg_Info.Package_Body_Scope);
-
-      --  Chap2.Finish_Subprg_Instance_Use
-      --    (Info.Package_Instance_Elab_Instance);
-      Finish_Subprogram_Body;
-   end Translate_Package_Instantiation_Declaration;
+   end Elab_Package_Instantiation_Declaration;
 
    procedure Elab_Dependence_Package (Pkg : Iir_Package_Declaration)
    is

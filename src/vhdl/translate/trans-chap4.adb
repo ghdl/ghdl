@@ -2467,6 +2467,10 @@ package body Trans.Chap4 is
                   Need_Final := Need_Final or Nested_Final;
                end;
 
+            when Iir_Kind_Package_Instantiation_Declaration =>
+               --  FIXME: finalizers ?
+               Chap2.Elab_Package_Instantiation_Declaration (Decl);
+
             when others =>
                Error_Kind ("elab_declaration_chain", Decl);
          end case;

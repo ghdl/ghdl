@@ -37,6 +37,8 @@ package Trans.Chap2 is
 
    procedure Elab_Package_Body (Spec : Iir_Package_Declaration; Bod : Iir);
 
+   procedure Elab_Package_Instantiation_Declaration (Inst : Iir);
+
    --  Add info for an interface_package_declaration or a
    --  package_instantiation_declaration
    procedure Instantiate_Info_Package (Inst : Iir);

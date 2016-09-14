@@ -306,6 +306,10 @@ package Trans is
       procedure Set_Scope_Via_Var_Ptr
         (Scope : in out Var_Scope_Type; Var : Var_Type);
 
+      --  Variables/scopes defined in SCOPE can be accesses through VAR.
+      procedure Set_Scope_Via_Var
+        (Scope : in out Var_Scope_Type; Var : Var_Type);
+
       --  No more accesses to SCOPE_TYPE are allowed.  Scopes must be cleared
       --  before being set.
       procedure Clear_Scope (Scope : in out Var_Scope_Type);
