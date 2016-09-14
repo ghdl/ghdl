@@ -992,50 +992,6 @@ package body Canon is
       return Res;
    end Canon_Default_Association_Chain;
 
---    function Canon_Default_Map_Association_List
---      (Formal_List, Actual_List : Iir_List; Loc : Location_Type)
---      return Iir_Association_List
---    is
---       Res : Iir_Association_List;
---       Formal, Actual : Iir;
---       Assoc : Iir;
---       Nbr_Assoc : Natural;
---    begin
---       --  formal is the entity port/generic.
---       if Formal_List = Null_Iir_List then
---          if Actual_List /= Null_Iir_List then
---             raise Internal_Error;
---          end if;
---          return Null_Iir_List;
---       end if;
-
---       Res := Create_Iir (Iir_Kind_Association_List);
---       Set_Location (Res, Loc);
---       Nbr_Assoc := 0;
---       for I in Natural loop
---          Formal := Get_Nth_Element (Formal_List, I);
---          exit when Formal = Null_Iir;
---          Actual := Find_Name_In_List (Actual_List, Get_Identifier (Formal));
---          if Actual /= Null_Iir then
---            Assoc := Create_Iir (Iir_Kind_Association_Element_By_Expression);
---             Set_Whole_Association_Flag (Assoc, True);
---             Set_Actual (Assoc, Actual);
---             Nbr_Assoc := Nbr_Assoc + 1;
---          else
---             Assoc := Create_Iir (Iir_Kind_Association_Element_Open);
---          end if;
---          Set_Location (Assoc, Loc);
---          Set_Formal (Assoc, Formal);
---          Set_Associated_Formal (Assoc, Formal);
---          Append_Element (Res, Assoc);
---       end loop;
---       if Nbr_Assoc /= Get_Nbr_Elements (Actual_List) then
---          --  There is non-associated actuals.
---          raise Internal_Error;
---       end if;
---       return Res;
---    end Canon_Default_Map_Association_List;
-
    function Canon_Conditional_Variable_Assignment_Statement (Stmt : Iir)
                                                             return Iir
    is
@@ -1269,13 +1225,13 @@ package body Canon is
       return Res;
    end Canon_Sequential_Stmts;
 
-   -- Create a statement transform from concurrent_signal_assignment
-   -- statement STMT (either selected or conditional).
-   -- waveform transformation is not done.
-   -- PROC is the process created.
-   -- PARENT is the place where signal assignment must be placed.  This may
-   --  be PROC, or an 'if' statement if the assignment is guarded.
-   -- See LRM93 9.5
+   --  Create a statement transform from concurrent_signal_assignment
+   --  statement STMT (either selected or conditional).
+   --  waveform transformation is not done.
+   --  PROC is the process created.
+   --  PARENT is the place where signal assignment must be placed.  This may
+   --   be PROC, or an 'if' statement if the assignment is guarded.
+   --  See LRM93 9.5
    procedure Canon_Concurrent_Signal_Assignment
      (Stmt: Iir;
       Proc: out Iir_Sensitized_Process_Statement;
@@ -1309,19 +1265,23 @@ package body Canon is
       end if;
 
       if Get_Guard (Stmt) /= Null_Iir then
-         -- LRM93 9.1
-         -- If the option guarded appears in the concurrent signal assignment
-         -- statement, then the concurrent signal assignment is called a
-         -- guarded assignment.
-         -- If the concurrent signal assignement statement is a guarded
-         -- assignment and the target of the concurrent signal assignment is
-         -- a guarded target, then the statement transform is as follow:
-         --   if GUARD then signal_transform else disconnect_statements end if;
-         -- Otherwise, if the concurrent signal assignment statement is a
-         -- guarded assignement, but the target if the concurrent signal
-         -- assignment is not a guarded target, the then statement transform
-         -- is as follows:
-         --  if GUARD then signal_transform end if;
+         --  LRM93 9.1
+         --  If the option guarded appears in the concurrent signal assignment
+         --  statement, then the concurrent signal assignment is called a
+         --  guarded assignment.
+         --  If the concurrent signal assignement statement is a guarded
+         --  assignment and the target of the concurrent signal assignment is
+         --  a guarded target, then the statement transform is as follow:
+         --    if GUARD then
+         --       signal_transform
+         --    else
+         --       disconnect_statements
+         --    end if;
+         --  Otherwise, if the concurrent signal assignment statement is a
+         --  guarded assignement, but the target if the concurrent signal
+         --  assignment is not a guarded target, the then statement transform
+         --  is as follows:
+         --   if GUARD then signal_transform end if;
          If_Stmt := Create_Iir (Iir_Kind_If_Statement);
          Set_Parent (If_Stmt, Proc);
          Set_Sequential_Statement_Chain (Proc, If_Stmt);
@@ -1353,12 +1313,12 @@ package body Canon is
             end if;
          end;
       else
-         -- LRM93 9.1
-         -- Finally, if the concurrent signal assignment statement is not a
-         -- guarded assignment, and the traget of the concurrent signal
-         -- assignment is not a guarded target, then the statement transform
-         -- is as follows:
-         --    signal_transform
+         --  LRM93 9.1
+         --  Finally, if the concurrent signal assignment statement is not a
+         --  guarded assignment, and the traget of the concurrent signal
+         --  assignment is not a guarded target, then the statement transform
+         --  is as follows:
+         --     signal_transform
          Chain := Proc;
       end if;
    end Canon_Concurrent_Signal_Assignment;
@@ -2127,10 +2087,9 @@ package body Canon is
             --  designator_all and designator_others must have been replaced
             --  by a list during canon.
             raise Internal_Error;
-         else
-            Bind := Get_Default_Binding_Indication
-              (Get_Named_Entity (Get_First_Element (Instances)));
          end if;
+         Bind := Get_Default_Binding_Indication
+           (Get_Named_Entity (Get_First_Element (Instances)));
          if Bind = Null_Iir then
             --  Component is not bound.
             return;
@@ -2178,9 +2137,8 @@ package body Canon is
                     and then Get_Architecture (Entity_Aspect) = Null_Iir
                   then
                      Entity := Get_Entity (Entity_Aspect);
-                     if Get_Kind (Entity) /= Iir_Kind_Entity_Declaration then
-                        raise Internal_Error;
-                     end if;
+                     pragma Assert
+                       (Get_Kind (Entity) = Iir_Kind_Entity_Declaration);
                      Set_Architecture
                        (Entity_Aspect, Get_Block_Specification (Block));
                   end if;
@@ -2240,8 +2198,7 @@ package body Canon is
             end loop;
          end Copy_Association;
 
-         procedure Advance (Assoc : in out Iir; Inter : Iir)
-         is
+         procedure Advance (Assoc : in out Iir; Inter : Iir) is
          begin
             loop
                Assoc := Get_Chain (Assoc);
@@ -2386,40 +2343,36 @@ package body Canon is
    begin
       El := Get_Concurrent_Statement_Chain (Parent);
       while El /= Null_Iir loop
-         case Get_Kind (El) is
-            when Iir_Kind_Component_Instantiation_Statement =>
-               if Is_Component_Instantiation (El)
-                 and then Get_Named_Entity (Get_Instantiated_Unit (El)) = Comp
+         --  Handle only component instantiation of COMP.
+         if Get_Kind (El) = Iir_Kind_Component_Instantiation_Statement
+           and then Is_Component_Instantiation (El)
+           and then Get_Named_Entity (Get_Instantiated_Unit (El)) = Comp
+         then
+            Comp_Conf := Get_Component_Configuration (El);
+            if Comp_Conf = Null_Iir then
+               --  The component is not yet configured.
+               Append_Element (List, Build_Simple_Name (El, El));
+               Set_Component_Configuration (El, Conf);
+            else
+               --  The component is already configured.
+               --  Handle incremental configuration.
+               if Get_Kind (Comp_Conf) = Iir_Kind_Configuration_Specification
+                 and then Spec = Iir_List_All
                then
-                  Comp_Conf := Get_Component_Configuration (El);
-                  if Comp_Conf = Null_Iir then
-                     --  The component is not yet configured.
-                     Append_Element (List, Build_Simple_Name (El, El));
-                     Set_Component_Configuration (El, Conf);
-                  else
-                     --  The component is already configured.
-                     --  Handle incremental configuration.
-                     if (Get_Kind (Comp_Conf)
-                         = Iir_Kind_Configuration_Specification)
-                       and then Spec = Iir_List_All
-                     then
-                        --  FIXME: handle incremental configuration.
-                        raise Internal_Error;
-                     end if;
-                     if Spec = Iir_List_All then
-                        --  Several component configuration for an instance.
-                        --  Must have been caught by sem.
-                        raise Internal_Error;
-                     elsif Spec = Iir_List_Others then
-                        null;
-                     else
-                        raise Internal_Error;
-                     end if;
-                  end if;
+                  --  FIXME: handle incremental configuration.
+                  raise Internal_Error;
                end if;
-            when others =>
-               null;
-         end case;
+               if Spec = Iir_List_All then
+                  --  Several component configuration for an instance.
+                  --  Must have been caught by sem.
+                  raise Internal_Error;
+               elsif Spec = Iir_List_Others then
+                  null;
+               else
+                  raise Internal_Error;
+               end if;
+            end if;
+         end if;
          El := Get_Chain (El);
       end loop;
    end Canon_Component_Specification_All_Others;
@@ -2903,10 +2856,7 @@ package body Canon is
                   end if;
                end;
 
-            when Iir_Kind_Sensitized_Process_Statement
-              | Iir_Kind_Process_Statement
-              | Iir_Kind_Psl_Assert_Statement
-              | Iir_Kind_Psl_Cover_Statement
+            when Iir_Kinds_Simple_Concurrent_Statement
               | Iir_Kind_Psl_Default_Clock
               | Iir_Kind_Psl_Declaration
               | Iir_Kind_Psl_Endpoint_Declaration

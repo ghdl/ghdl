@@ -262,10 +262,7 @@ package body Configuration is
                      Alt := Get_Chain (Alt);
                   end loop;
                end;
-            when Iir_Kind_Process_Statement
-              | Iir_Kind_Sensitized_Process_Statement
-              | Iir_Kind_Psl_Assert_Statement
-              | Iir_Kind_Psl_Cover_Statement
+            when Iir_Kinds_Simple_Concurrent_Statement
               | Iir_Kind_Psl_Default_Clock
               | Iir_Kind_Psl_Declaration
               | Iir_Kind_Psl_Endpoint_Declaration
@@ -400,10 +397,10 @@ package body Configuration is
 
    procedure Check_Binding_Indication (Conf : Iir)
    is
+      Bind : constant Iir_Binding_Indication := Get_Binding_Indication (Conf);
+      Conf_Chain : constant Iir := Get_Port_Map_Aspect_Chain (Bind);
       Assoc : Iir;
-      Conf_Chain : Iir;
       Inst_Chain : Iir;
-      Bind : Iir_Binding_Indication;
       Err : Boolean;
       Inst : Iir;
       Inst_List : Iir_List;
@@ -411,9 +408,6 @@ package body Configuration is
       Assoc_1 : Iir;
       Actual : Iir;
    begin
-      Bind := Get_Binding_Indication (Conf);
-      Conf_Chain := Get_Port_Map_Aspect_Chain (Bind);
-
       Err := False;
       --  Note: the assoc chain is already canonicalized.
 
@@ -628,6 +622,7 @@ package body Configuration is
             return Null_Iir;
       end case;
 
+      --  Exclude std.standard
       Set_Configuration_Mark_Flag (Std_Package.Std_Standard_Unit, True);
       Set_Configuration_Done_Flag (Std_Package.Std_Standard_Unit, True);
 

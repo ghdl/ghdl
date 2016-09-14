@@ -43,8 +43,6 @@ package body Ghdllocal is
    type Ieee_Lib_Kind is (Lib_Standard, Lib_None, Lib_Synopsys, Lib_Mentor);
    Flag_Ieee : Ieee_Lib_Kind;
 
-   Flag_Create_Default_Config : constant Boolean := True;
-
    --  If TRUE, generate 32bits code on 64bits machines.
    Flag_32bit : Boolean := False;
 
@@ -100,12 +98,10 @@ package body Ghdllocal is
       end if;
 
       if Flags.Flag_Elaborate then
-         if Flag_Create_Default_Config then
-            Lib := Get_Library_Unit (Unit);
-            if Get_Kind (Lib) = Iir_Kind_Architecture_Body then
-               Config := Canon.Create_Default_Configuration_Declaration (Lib);
-               Set_Default_Configuration_Declaration (Lib, Config);
-            end if;
+         Lib := Get_Library_Unit (Unit);
+         if Get_Kind (Lib) = Iir_Kind_Architecture_Body then
+            Config := Canon.Create_Default_Configuration_Declaration (Lib);
+            Set_Default_Configuration_Declaration (Lib, Config);
          end if;
       end if;
    end Finish_Compilation;
