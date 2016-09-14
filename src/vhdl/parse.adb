@@ -8286,6 +8286,7 @@ package body Parse is
       Res : Iir;
    begin
       Res := Create_Iir (Iir_Kind_Package_Header);
+      Set_Location (Res);
       Parse_Generic_Clause (Res);
 
       if Current_Token = Tok_Generic then

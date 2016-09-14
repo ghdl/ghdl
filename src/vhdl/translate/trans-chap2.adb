@@ -37,8 +37,6 @@ package body Trans.Chap2 is
    use Trans.Subprgs;
    use Trans.Helpers;
 
-   procedure Elab_Package (Spec : Iir_Package_Declaration);
-
    type Name_String_Xlat_Array is array (Name_Id range <>) of String (1 .. 4);
 
    --  Ortho function names are only composed of [A-Za-z0-9_].  For VHDL
@@ -798,6 +796,9 @@ package body Trans.Chap2 is
            (Info.Package_Body_Scope'Access, Info.Package_Body_Ptr_Type,
             Wki_Instance, Prev_Subprg_Instance);
       else
+         if Header /= Null_Iir then
+            Chap4.Translate_Generic_Chain (Header);
+         end if;
          Chap4.Translate_Declaration_Chain (Decl);
          if not Is_Nested then
             Info.Package_Elab_Var := Create_Var
@@ -950,38 +951,50 @@ package body Trans.Chap2 is
 
    procedure Elab_Package (Spec : Iir_Package_Declaration)
    is
+      Is_Nested : constant Boolean := Is_Nested_Package (Spec);
       Info   : constant Ortho_Info_Acc := Get_Info (Spec);
       Final  : Boolean;
       Constr : O_Assoc_List;
       pragma Unreferenced (Final);
    begin
-      Start_Subprogram_Body (Info.Package_Elab_Spec_Subprg);
-      Push_Local_Factory;
-      Subprgs.Start_Subprg_Instance_Use (Info.Package_Elab_Spec_Instance);
+      if not Is_Nested then
+         Start_Subprogram_Body (Info.Package_Elab_Spec_Subprg);
+         Push_Local_Factory;
+         Subprgs.Start_Subprg_Instance_Use (Info.Package_Elab_Spec_Instance);
 
-      Elab_Dependence (Get_Design_Unit (Spec));
+         Elab_Dependence (Get_Design_Unit (Spec));
 
-      if not Is_Uninstantiated_Package (Spec)
-        and then Get_Kind (Get_Parent (Spec)) = Iir_Kind_Design_Unit
-      then
-         --  Register the top level package.  This is done dynamically, as
-         --  we know only during elaboration that the design depends on a
-         --  package (a package maybe referenced by an entity which is never
-         --  instantiated due to generate statements).
-         Start_Association (Constr, Ghdl_Rti_Add_Package);
-         New_Association
-           (Constr,
-            New_Lit (Rtis.New_Rti_Address (Info.Package_Rti_Const)));
-         New_Procedure_Call (Constr);
+         if not Is_Uninstantiated_Package (Spec)
+           and then Get_Kind (Get_Parent (Spec)) = Iir_Kind_Design_Unit
+         then
+            --  Register the top level package.  This is done dynamically, as
+            --  we know only during elaboration that the design depends on a
+            --  package (a package maybe referenced by an entity which is never
+            --  instantiated due to generate statements).
+            Start_Association (Constr, Ghdl_Rti_Add_Package);
+            New_Association
+              (Constr,
+               New_Lit (Rtis.New_Rti_Address (Info.Package_Rti_Const)));
+            New_Procedure_Call (Constr);
+         end if;
+
+         Open_Temp;
       end if;
 
-      Open_Temp;
+      if Is_Generic_Mapped_Package (Spec) then
+         Chap5.Elab_Generic_Map_Aspect
+           (Get_Package_Header (Spec), (Info.Package_Spec_Scope'Access,
+                                        Info.Package_Spec_Scope));
+      end if;
       Chap4.Elab_Declaration_Chain (Spec, Final);
-      Close_Temp;
 
-      Subprgs.Finish_Subprg_Instance_Use (Info.Package_Elab_Spec_Instance);
-      Pop_Local_Factory;
-      Finish_Subprogram_Body;
+      if not Is_Nested then
+         Close_Temp;
+
+         Subprgs.Finish_Subprg_Instance_Use (Info.Package_Elab_Spec_Instance);
+         Pop_Local_Factory;
+         Finish_Subprogram_Body;
+      end if;
    end Elab_Package;
 
    procedure Elab_Package_Body (Spec : Iir_Package_Declaration; Bod : Iir)

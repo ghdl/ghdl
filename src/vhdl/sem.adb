@@ -390,7 +390,8 @@ package body Sem is
             Miss := Missing_Allowed;
          when Iir_Kind_Block_Header =>
             Miss := Missing_Generic;
-         when Iir_Kind_Package_Instantiation_Declaration =>
+         when Iir_Kind_Package_Instantiation_Declaration
+           | Iir_Kind_Package_Header =>
             --  LRM08 4.9
             --  Each formal generic (or member thereof) shall be associated
             --  at most once.
@@ -2606,8 +2607,9 @@ package body Sem is
          Sem_Interface_Chain
            (Get_Generic_Chain (Header), Generic_Interface_List);
          if Get_Generic_Map_Aspect_Chain (Header) /= Null_Iir then
-            --  FIXME: todo
-            raise Internal_Error;
+            if not Sem_Generic_Association_Chain (Header, Header) then
+               null;
+            end if;
          end if;
       end if;
 
