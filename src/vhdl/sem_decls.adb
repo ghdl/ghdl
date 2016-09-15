@@ -434,6 +434,10 @@ package body Sem_Decls is
    procedure Sem_Interface_Chain (Interface_Chain: Iir;
                                   Interface_Kind : Interface_Kind_Type)
    is
+      Immediately_Visible : constant Boolean :=
+        Interface_Kind = Generic_Interface_List
+        and then Flags.Vhdl_Std >= Vhdl_08;
+
       Inter : Iir;
 
       --  LAST is the last interface declaration that has a type.  This is
@@ -454,6 +458,15 @@ package body Sem_Decls is
             when Iir_Kind_Interface_Type_Declaration =>
                Sem_Interface_Type_Declaration (Inter);
          end case;
+
+         --  LRM08 6.5.6 Interface lists
+         --  A name that denotes an interface declaration in a generic
+         --  interface list may appear in an interface declaration within the
+         --  interface list containing the denoted interface declaration.
+         if Immediately_Visible then
+            Name_Visible (Inter);
+         end if;
+
          Inter := Get_Chain (Inter);
       end loop;
 
@@ -468,11 +481,13 @@ package body Sem_Decls is
 
       --  GHDL: this is achieved by making the interface object visible after
       --   having analyzed the interface list.
-      Inter := Interface_Chain;
-      while Inter /= Null_Iir loop
-         Name_Visible (Inter);
-         Inter := Get_Chain (Inter);
-      end loop;
+      if not Immediately_Visible then
+         Inter := Interface_Chain;
+         while Inter /= Null_Iir loop
+            Name_Visible (Inter);
+            Inter := Get_Chain (Inter);
+         end loop;
+      end if;
    end Sem_Interface_Chain;
 
    --  LRM93 7.2.2
