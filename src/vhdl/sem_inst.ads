@@ -23,4 +23,8 @@ package Sem_Inst is
 
    --  Create declaration chain and generic declarations for INST from PKG.
    procedure Instantiate_Package_Declaration (Inst : Iir; Pkg : Iir);
+
+   --  In CHAIN, substitute all references to E by REP.
+   procedure Substitute_On_Chain (Chain : Iir; E : Iir; Rep : Iir);
+
 end Sem_Inst;

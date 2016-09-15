@@ -2604,13 +2604,28 @@ package body Sem is
       Push_Signals_Declarative_Part (Implicit, Decl);
 
       if Header /= Null_Iir then
-         Sem_Interface_Chain
-           (Get_Generic_Chain (Header), Generic_Interface_List);
-         if Get_Generic_Map_Aspect_Chain (Header) /= Null_Iir then
-            if not Sem_Generic_Association_Chain (Header, Header) then
-               null;
+         declare
+            Generic_Chain : constant Iir := Get_Generic_Chain (Header);
+            Generic_Map : constant Iir :=
+              Get_Generic_Map_Aspect_Chain (Header);
+            El : Iir;
+         begin
+            Sem_Interface_Chain (Generic_Chain, Generic_Interface_List);
+            if Generic_Map /= Null_Iir then
+               if Sem_Generic_Association_Chain (Header, Header) then
+                  El := Get_Generic_Map_Aspect_Chain (Header);
+                  while Is_Valid (El) loop
+                     if Get_Kind (El) = Iir_Kind_Association_Element_Type then
+                        Sem_Inst.Substitute_On_Chain
+                          (Generic_Chain,
+                           Get_Type (Get_Associated_Interface (El)),
+                           Get_Type (Get_Named_Entity (Get_Actual (El))));
+                     end if;
+                     El := Get_Chain (El);
+                  end loop;
+               end if;
             end if;
-         end if;
+         end;
       end if;
 
       Sem_Declaration_Chain (Decl);

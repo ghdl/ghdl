@@ -648,4 +648,106 @@ package body Sem_Inst is
       Instantiate_Loc := Prev_Loc;
       Restore_Origin (Mark);
    end Instantiate_Package_Declaration;
+
+   procedure Substitute_On_Iir_List (L : Iir_List; E : Iir; Rep : Iir);
+
+   procedure Substitute_On_Iir (N : Iir; E : Iir; Rep : Iir) is
+   begin
+      if N = Null_Iir then
+         return;
+      end if;
+
+      pragma Assert (N /= E);
+
+      declare
+         use Nodes_Meta;
+         Kind : constant Iir_Kind := Get_Kind (N);
+         Fields : constant Fields_Array := Get_Fields (Kind);
+         F : Fields_Enum;
+      begin
+         for I in Fields'Range loop
+            F := Fields (I);
+
+            case Get_Field_Type (F) is
+               when Type_Iir =>
+                  declare
+                     S : constant Iir := Get_Iir (N, F);
+                  begin
+                     if S = E then
+                        --  Substitute
+                        Set_Iir (N, F, Rep);
+                        pragma Assert (Get_Field_Attribute (F) = Attr_Ref);
+                     else
+                        case Get_Field_Attribute (F) is
+                           when Attr_None =>
+                              Substitute_On_Iir (S, E, Rep);
+                           when Attr_Ref =>
+                              null;
+                           when Attr_Maybe_Ref =>
+                              if not Get_Is_Ref (N) then
+                                 Substitute_On_Iir (S, E, Rep);
+                              end if;
+                           when Attr_Chain =>
+                              Substitute_On_Chain (S, E, Rep);
+                           when Attr_Chain_Next =>
+                              null;
+                           when Attr_Of_Ref =>
+                              --  Can only appear in list.
+                              raise Internal_Error;
+                        end case;
+                     end if;
+                  end;
+               when Type_Iir_List =>
+                  declare
+                     S : constant Iir_List := Get_Iir_List (N, F);
+                  begin
+                     case Get_Field_Attribute (F) is
+                        when Attr_None =>
+                           Substitute_On_Iir_List (S, E, Rep);
+                        when Attr_Of_Ref
+                          | Attr_Ref =>
+                           null;
+                        when others =>
+                           --  Ref is specially handled in Instantiate_Iir.
+                           --  Others cannot appear for lists.
+                           raise Internal_Error;
+                     end case;
+                  end;
+               when others =>
+                  null;
+            end case;
+         end loop;
+      end;
+   end Substitute_On_Iir;
+
+   procedure Substitute_On_Iir_List (L : Iir_List; E : Iir; Rep : Iir)
+   is
+      El : Iir;
+   begin
+      case L is
+         when Null_Iir_List
+           | Iir_List_All
+           | Iir_List_Others =>
+            return;
+         when others =>
+            for I in Natural loop
+               El := Get_Nth_Element (L, I);
+               exit when El = Null_Iir;
+
+               Substitute_On_Iir (El, E, Rep);
+            end loop;
+      end case;
+   end Substitute_On_Iir_List;
+
+   procedure Substitute_On_Chain (Chain : Iir; E : Iir; Rep : Iir)
+   is
+      El : Iir;
+   begin
+      El := Chain;
+      while Is_Valid (El) loop
+         Substitute_On_Iir (El, E, Rep);
+         El := Get_Chain (El);
+      end loop;
+   end Substitute_On_Chain;
+
 end Sem_Inst;
