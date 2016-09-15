@@ -1596,9 +1596,9 @@ package body Sem_Stmts is
 
    procedure Sem_Block_Statement (Stmt: Iir_Block_Statement)
    is
+      Header : constant Iir_Block_Header := Get_Block_Header (Stmt);
+      Guard : constant Iir_Guard_Signal_Declaration := Get_Guard_Decl (Stmt);
       Expr: Iir;
-      Guard : Iir_Guard_Signal_Declaration;
-      Header : Iir_Block_Header;
       Generic_Chain : Iir;
       Port_Chain : Iir;
    begin
@@ -1608,7 +1608,6 @@ package body Sem_Stmts is
 
       Set_Is_Within_Flag (Stmt, True);
 
-      Header := Get_Block_Header (Stmt);
       if Header /= Null_Iir then
          Generic_Chain := Get_Generic_Chain (Header);
          Sem_Interface_Chain (Generic_Chain, Generic_Interface_List);
@@ -1637,7 +1636,6 @@ package body Sem_Stmts is
       --  implicitly declared at the beginning of the declarative part of the
       --  block, and the guard expression defined the value of that signal at
       --  any given time.
-      Guard := Get_Guard_Decl (Stmt);
       if Guard /= Null_Iir then
          --  LRM93 9.1
          --  The type of the guard expression must be type BOOLEAN.
