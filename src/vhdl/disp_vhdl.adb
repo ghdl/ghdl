@@ -84,6 +84,9 @@ package body Disp_Vhdl is
    procedure Disp_Subtype_Indication (Def : Iir; Full_Decl : Boolean := False);
    procedure Disp_Parametered_Attribute (Name : String; Expr : Iir);
    procedure Disp_String_Literal (Str : Iir; El_Type : Iir);
+   procedure Disp_Package_Declaration (Decl: Iir_Package_Declaration);
+   procedure Disp_Package_Instantiation_Declaration (Decl: Iir);
+   procedure Disp_Package_Body (Decl: Iir);
 
    procedure Put (Str : String)
    is
@@ -175,10 +178,8 @@ package body Disp_Vhdl is
            | Iir_Kind_Architecture_Body
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Context_Declaration
-           | Iir_Kind_Interface_Constant_Declaration
-           | Iir_Kind_Interface_Signal_Declaration
-           | Iir_Kind_Interface_Variable_Declaration
-           | Iir_Kind_Interface_File_Declaration
+           | Iir_Kinds_Interface_Object_Declaration
+           | Iir_Kind_Interface_Type_Declaration
            | Iir_Kind_Constant_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Guard_Signal_Declaration
@@ -1110,6 +1111,9 @@ package body Disp_Vhdl is
                      Disp_Association_Chain (Assoc_Chain);
                   end if;
                end;
+            when Iir_Kind_Interface_Type_Declaration =>
+               Put ("type ");
+               Disp_Identifier (Inter);
             when others =>
                Error_Kind ("disp_interface_chain", Inter);
          end case;
@@ -1728,6 +1732,12 @@ package body Disp_Vhdl is
                Disp_Group_Template_Declaration (Decl);
             when Iir_Kind_Group_Declaration =>
                Disp_Group_Declaration (Decl);
+            when Iir_Kind_Package_Declaration =>
+               Disp_Package_Declaration (Decl);
+            when Iir_Kind_Package_Body =>
+               Disp_Package_Body (Decl);
+            when Iir_Kind_Package_Instantiation_Declaration =>
+               Disp_Package_Instantiation_Declaration (Decl);
             when others =>
                Error_Kind ("disp_declaration_chain", Decl);
          end case;
@@ -2282,7 +2292,8 @@ package body Disp_Vhdl is
             case Get_Kind (El) is
                when Iir_Kind_Association_Element_Open =>
                   Put ("open");
-               when Iir_Kind_Association_Element_Package =>
+               when Iir_Kind_Association_Element_Package
+                 | Iir_Kind_Association_Element_Type =>
                   Disp_Name (Get_Actual (El));
                when others =>
                   Conv := Get_In_Conversion (El);
