@@ -1733,6 +1733,22 @@ package body Iirs is
       Set_Flag1 (Decl, Flag);
    end Set_Need_Body;
 
+   function Get_Macro_Expanded_Flag (Decl : Iir) return Boolean is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Macro_Expanded_Flag (Get_Kind (Decl)),
+                     "no field Macro_Expanded_Flag");
+      return Get_Flag2 (Decl);
+   end Get_Macro_Expanded_Flag;
+
+   procedure Set_Macro_Expanded_Flag (Decl : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Macro_Expanded_Flag (Get_Kind (Decl)),
+                     "no field Macro_Expanded_Flag");
+      Set_Flag2 (Decl, Flag);
+   end Set_Macro_Expanded_Flag;
+
    function Get_Block_Configuration (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);
@@ -3145,6 +3161,22 @@ package body Iirs is
                      "no field Process_Origin");
       Set_Field8 (Proc, Orig);
    end Set_Process_Origin;
+
+   function Get_Package_Origin (Pkg : Iir) return Iir is
+   begin
+      pragma Assert (Pkg /= Null_Iir);
+      pragma Assert (Has_Package_Origin (Get_Kind (Pkg)),
+                     "no field Package_Origin");
+      return Get_Field7 (Pkg);
+   end Get_Package_Origin;
+
+   procedure Set_Package_Origin (Pkg : Iir; Orig : Iir) is
+   begin
+      pragma Assert (Pkg /= Null_Iir);
+      pragma Assert (Has_Package_Origin (Get_Kind (Pkg)),
+                     "no field Package_Origin");
+      Set_Field7 (Pkg, Orig);
+   end Set_Package_Origin;
 
    function Get_Condition_Clause (Wait : Iir_Wait_Statement) return Iir is
    begin

@@ -764,6 +764,11 @@ package body Trans.Chap2 is
       Interface_List       : O_Inter_List;
       Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
    begin
+      --  Skip uninstantiated package that have to be macro-expanded.
+      if Get_Macro_Expanded_Flag (Decl) then
+         return;
+      end if;
+
       Info := Add_Info (Decl, Kind_Package);
 
       if Is_Nested then
@@ -881,6 +886,10 @@ package body Trans.Chap2 is
       Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
       Mark                 : Id_Mark_Type;
    begin
+      if Get_Macro_Expanded_Flag (Spec) then
+         return;
+      end if;
+
       if Is_Nested then
          Push_Identifier_Prefix (Mark, Get_Identifier (Spec));
       end if;
@@ -1139,6 +1148,16 @@ package body Trans.Chap2 is
          when Kind_Expr =>
             Dest.all := (Kind => Kind_Expr,
                          Expr_Node => Src.Expr_Node);
+         when Kind_Package_Instance =>
+            Dest.all :=
+              (Kind => Kind_Package_Instance,
+               Package_Instance_Spec_Var => Src.Package_Instance_Spec_Var,
+               Package_Instance_Body_Var => Src.Package_Instance_Body_Var,
+               Package_Instance_Elab_Subprg =>
+                 Src.Package_Instance_Elab_Subprg,
+               Package_Instance_Spec_Scope => Src.Package_Instance_Spec_Scope,
+               Package_Instance_Body_Scope => Src.Package_Instance_Body_Scope);
+
          when others =>
             raise Internal_Error;
       end case;
@@ -1264,15 +1283,13 @@ package body Trans.Chap2 is
       Inter := Chain;
       while Inter /= Null_Iir loop
          case Get_Kind (Inter) is
-            when Iir_Kind_Interface_Constant_Declaration =>
+            when Iir_Kind_Interface_Constant_Declaration
+              | Iir_Kind_Interface_Package_Declaration =>
                Orig := Sem_Inst.Get_Origin (Inter);
                Orig_Info := Get_Info (Orig);
 
                Info := Add_Info (Inter, Orig_Info.Kind);
                Copy_Info (Info, Orig_Info);
-
-            when Iir_Kind_Interface_Package_Declaration =>
-               null;
 
             when others =>
                raise Internal_Error;
@@ -1316,6 +1333,9 @@ package body Trans.Chap2 is
       Info           : Ortho_Info_Acc;
       Interface_List : O_Inter_List;
    begin
+      --  Canon must have replaced instatiation by generic-mapped packages.
+      pragma Assert (not Get_Macro_Expanded_Flag (Spec));
+
       Instantiate_Info_Package (Inst);
       Info := Get_Info (Inst);
 

@@ -589,6 +589,30 @@ package body Sem_Inst is
    begin
       Assoc := Get_Generic_Map_Aspect_Chain (Inst);
       while Assoc /= Null_Iir loop
+         --  Replace formal reference to the instance.
+         --  Cf Get_association_Interface
+         declare
+            Formal : Iir;
+         begin
+            Formal := Get_Formal (Assoc);
+            if Is_Valid (Formal) then
+               loop
+                  case Get_Kind (Formal) is
+                     when Iir_Kind_Simple_Name =>
+                        Set_Named_Entity
+                          (Formal, Get_Instance (Get_Named_Entity (Formal)));
+                        exit;
+                     when Iir_Kind_Slice_Name
+                       | Iir_Kind_Indexed_Name
+                       | Iir_Kind_Selected_Element =>
+                        Formal := Get_Prefix (Formal);
+                     when others =>
+                        Error_Kind ("instantiate_generic_map_chain", Formal);
+                  end case;
+               end loop;
+            end if;
+         end;
+
          case Get_Kind (Assoc) is
             when Iir_Kind_Association_Element_By_Expression
               | Iir_Kind_Association_Element_By_Individual

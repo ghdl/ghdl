@@ -847,7 +847,11 @@ package Iirs is
    --
    --   Get/Set_Package_Header (Field6)
    --
+   --   Get/Set_Package_Origin (Field7)
+   --
    --   Get/Set_Need_Body (Flag1)
+   --
+   --   Get/Set_Macro_Expanded_Flag (Flag2)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -5743,6 +5747,14 @@ package Iirs is
    function Get_Need_Body (Decl : Iir_Package_Declaration) return Boolean;
    procedure Set_Need_Body (Decl : Iir_Package_Declaration; Flag : Boolean);
 
+   --  True for uninstantiated package that will be macro-expanded for
+   --  simulation.  The macro-expansion is done by canon, so controlled by
+   --  back-end.  The reason of macro-expansion is presence of interface
+   --  type.
+   --  Field: Flag2
+   function Get_Macro_Expanded_Flag (Decl : Iir) return Boolean;
+   procedure Set_Macro_Expanded_Flag (Decl : Iir; Flag : Boolean);
+
    --  Field: Field5
    function Get_Block_Configuration (Target : Iir) return Iir;
    procedure Set_Block_Configuration (Target : Iir; Block : Iir);
@@ -6173,6 +6185,10 @@ package Iirs is
    --  Field: Field8
    function Get_Process_Origin (Proc : Iir) return Iir;
    procedure Set_Process_Origin (Proc : Iir; Orig : Iir);
+
+   --  Field: Field7
+   function Get_Package_Origin (Pkg : Iir) return Iir;
+   procedure Set_Package_Origin (Pkg : Iir; Orig : Iir);
 
    --  Field: Field5
    function Get_Condition_Clause (Wait : Iir_Wait_Statement) return Iir;

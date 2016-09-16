@@ -36,10 +36,11 @@ package body Canon is
    procedure Canon_Declarations (Top : Iir_Design_Unit;
                                  Decl_Parent : Iir;
                                  Parent : Iir);
-   procedure Canon_Declaration (Top : Iir_Design_Unit;
-                                Decl : Iir;
-                                Parent : Iir;
-                                Decl_Parent : Iir);
+   function Canon_Declaration (Top : Iir_Design_Unit;
+                               Decl : Iir;
+                               Parent : Iir;
+                               Decl_Parent : Iir)
+                              return Iir;
 
    procedure Canon_Concurrent_Stmts (Top : Iir_Design_Unit; Parent : Iir);
 
@@ -1921,10 +1922,17 @@ package body Canon is
                end;
 
             when Iir_Kind_For_Generate_Statement =>
-               Canon_Declaration
-                 (Top, Get_Parameter_Specification (El), Null_Iir, Null_Iir);
-               Canon_Generate_Statement_Body
-                 (Top, Get_Generate_Statement_Body (El));
+               declare
+                  Decl : constant Iir := Get_Parameter_Specification (El);
+                  New_Decl : Iir;
+               begin
+                  New_Decl := Canon_Declaration
+                    (Top, Decl, Null_Iir, Null_Iir);
+                  pragma Assert (New_Decl = Decl);
+
+                  Canon_Generate_Statement_Body
+                    (Top, Get_Generate_Statement_Body (El));
+               end;
 
             when Iir_Kind_Psl_Assert_Statement =>
                declare
@@ -2505,23 +2513,61 @@ package body Canon is
       end if;
    end Canon_Subtype_Indication_If_Anonymous;
 
-   procedure Canon_Package_Instantiation_Declaration (Decl : Iir)
+   --  Return the new package declaration (if any).
+   function Canon_Package_Instantiation_Declaration (Decl : Iir) return Iir
    is
       Pkg : constant Iir :=
         Get_Named_Entity (Get_Uninstantiated_Package_Name (Decl));
-      Hdr : constant Iir := Get_Package_Header (Pkg);
    begin
+      --  Canon map aspect.
       Set_Generic_Map_Aspect_Chain
         (Decl,
          Canon_Association_Chain_And_Actuals
-           (Get_Generic_Chain (Hdr),
+           (Get_Generic_Chain (Decl),
             Get_Generic_Map_Aspect_Chain (Decl), Decl));
+
+      if Get_Macro_Expanded_Flag (Pkg) then
+         declare
+            New_Decl : Iir;
+            New_Hdr : Iir;
+         begin
+            --  Replace package instantiation by the macro-expanded
+            --  generic-mapped package.
+            --  Use move semantics.
+            --  FIXME: adjust Parent.
+            New_Decl := Create_Iir (Iir_Kind_Package_Declaration);
+            Location_Copy (New_Decl, Decl);
+            Set_Parent (New_Decl, Get_Parent (Decl));
+            Set_Identifier (New_Decl, Get_Identifier (Decl));
+            Set_Need_Body (New_Decl, Get_Need_Body (Pkg));
+
+            New_Hdr := Create_Iir (Iir_Kind_Package_Header);
+            Set_Package_Header (New_Decl, New_Hdr);
+            Location_Copy (New_Hdr, Get_Package_Header (Pkg));
+            Set_Generic_Chain (New_Hdr, Get_Generic_Chain (Decl));
+            Set_Generic_Map_Aspect_Chain
+              (New_Hdr, Get_Generic_Map_Aspect_Chain (Decl));
+            Set_Generic_Chain (Decl, Null_Iir);
+            Set_Generic_Map_Aspect_Chain (Decl, Null_Iir);
+
+            Set_Declaration_Chain (New_Decl, Get_Declaration_Chain (Decl));
+            Set_Declaration_Chain (Decl, Null_Iir);
+            Set_Chain (New_Decl, Get_Chain (Decl));
+            Set_Chain (Decl, Null_Iir);
+
+            Set_Package_Origin (New_Decl, Decl);
+            return New_Decl;
+         end;
+      else
+         return Decl;
+      end if;
    end Canon_Package_Instantiation_Declaration;
 
-   procedure Canon_Declaration (Top : Iir_Design_Unit;
-                                Decl : Iir;
-                                Parent : Iir;
-                                Decl_Parent : Iir)
+   function Canon_Declaration (Top : Iir_Design_Unit;
+                               Decl : Iir;
+                               Parent : Iir;
+                               Decl_Parent : Iir)
+                              return Iir
    is
       Stmts : Iir;
    begin
@@ -2606,7 +2652,7 @@ package body Canon is
             Canon_Declarations (Top, Decl, Parent);
 
          when Iir_Kind_Package_Instantiation_Declaration =>
-            Canon_Package_Instantiation_Declaration (Decl);
+            return Canon_Package_Instantiation_Declaration (Decl);
 
          when Iir_Kinds_Signal_Attribute =>
             null;
@@ -2620,6 +2666,7 @@ package body Canon is
          when others =>
             Error_Kind ("canon_declaration", Decl);
       end case;
+      return Decl;
    end Canon_Declaration;
 
    procedure Canon_Declarations (Top : Iir_Design_Unit;
@@ -2627,14 +2674,29 @@ package body Canon is
                                  Parent : Iir)
    is
       Decl : Iir;
+      Prev_Decl : Iir;
+      New_Decl : Iir;
    begin
       if Parent /= Null_Iir then
          Clear_Instantiation_Configuration (Parent, True);
       end if;
+
       Decl := Get_Declaration_Chain (Decl_Parent);
+      Prev_Decl := Null_Iir;
       while Decl /= Null_Iir loop
-         Canon_Declaration (Top, Decl, Parent, Decl_Parent);
-         Decl := Get_Chain (Decl);
+         New_Decl := Canon_Declaration (Top, Decl, Parent, Decl_Parent);
+
+         if New_Decl /= Decl then
+            --  Replace declaration
+            if Prev_Decl = Null_Iir then
+               Set_Declaration_Chain (Decl_Parent, New_Decl);
+            else
+               Set_Chain (Prev_Decl, New_Decl);
+            end if;
+         end if;
+
+         Prev_Decl := New_Decl;
+         Decl := Get_Chain (New_Decl);
       end loop;
    end Canon_Declarations;
 
@@ -2938,7 +3000,8 @@ package body Canon is
             Canon_Declarations (Unit, El, Null_Iir);
             Canon_Block_Configuration (Unit, Get_Block_Configuration (El));
          when Iir_Kind_Package_Instantiation_Declaration =>
-            Canon_Package_Instantiation_Declaration (El);
+            El := Canon_Package_Instantiation_Declaration (El);
+            Set_Library_Unit (Unit, El);
          when Iir_Kind_Context_Declaration =>
             null;
          when others =>

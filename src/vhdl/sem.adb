@@ -2576,6 +2576,36 @@ package body Sem is
       return False;
    end Package_Need_Body_P;
 
+   --  Return true if uninstantiated pckage DECL must be macro-expanded (at
+   --  least one interface type).
+   function Is_Package_Macro_Expanded
+     (Decl : Iir_Package_Declaration) return Boolean
+   is
+      Header : constant Iir := Get_Package_Header (Decl);
+      Inter : Iir;
+   begin
+      Inter := Get_Generic_Chain (Header);
+      while Is_Valid (Inter) loop
+         case Iir_Kinds_Interface_Declaration (Get_Kind (Inter)) is
+            when Iir_Kinds_Interface_Object_Declaration =>
+               null;
+            when Iir_Kind_Interface_Type_Declaration =>
+               return True;
+            when Iir_Kind_Interface_Package_Declaration =>
+               declare
+                  Pkg : constant Iir := Get_Named_Entity
+                    (Get_Uninstantiated_Package_Name (Inter));
+               begin
+                  if Get_Macro_Expanded_Flag (Pkg) then
+                     return True;
+                  end if;
+               end;
+         end case;
+         Inter := Get_Chain (Inter);
+      end loop;
+      return False;
+   end Is_Package_Macro_Expanded;
+
    --  LRM 2.5  Package Declarations.
    procedure Sem_Package_Declaration (Decl: Iir_Package_Declaration)
    is
@@ -2611,8 +2641,14 @@ package body Sem is
             El : Iir;
          begin
             Sem_Interface_Chain (Generic_Chain, Generic_Interface_List);
+
             if Generic_Map /= Null_Iir then
+               --  Generic-mapped packages are not macro-expanded.
+               Set_Macro_Expanded_Flag (Decl, False);
+
                if Sem_Generic_Association_Chain (Header, Header) then
+                  --  For generic-mapped packages, use the actual type for
+                  --  interface type.
                   El := Get_Generic_Map_Aspect_Chain (Header);
                   while Is_Valid (El) loop
                      if Get_Kind (El) = Iir_Kind_Association_Element_Type then
@@ -2624,8 +2660,15 @@ package body Sem is
                      El := Get_Chain (El);
                   end loop;
                end if;
+            else
+               --  Uninstantiated package.  Maybe macro expanded.
+               Set_Macro_Expanded_Flag
+                 (Decl, Is_Package_Macro_Expanded (Decl));
             end if;
          end;
+      else
+         --  Simple packages are never expanded.
+         Set_Macro_Expanded_Flag (Decl, False);
       end if;
 
       Sem_Declaration_Chain (Decl);
