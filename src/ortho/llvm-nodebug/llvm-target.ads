@@ -56,6 +56,13 @@ package LLVM.Target is
    function CreateTargetData (StringRep : Cstring) return TargetDataRef;
    pragma Import (C, CreateTargetData, "LLVMCreateTargetData");
 
+   --  Removed in LLVM 3.9 !!
+   --  Adds target data information to a pass manager. This does not take
+   --  ownership of the target data.
+   --  See the method llvm::PassManagerBase::add.
+   procedure AddTargetData(TD : TargetDataRef; PM : PassManagerRef);
+   pragma Import (C, AddTargetData, "LLVMAddTargetData");
+
    --  Converts target data to a target layout string. The string must be
    --  disposed with LLVMDisposeMessage.
    --  See the constructor llvm::DataLayout::DataLayout. */

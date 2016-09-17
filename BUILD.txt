@@ -96,8 +96,8 @@ $ make install
 Building with the llvm backend
 ******************************
 
-You need to build and install
-llvm version 3.5 [do not modify this line as this is read by scripts].
+You need to build and install llvm.  The supported versions are 3.5
+till 3.9, but only debugging is only supported with llvm 3.5
 (Usually llvm also depends on libedit).
 
 First configure ghdl with '--with-llvm-config'
