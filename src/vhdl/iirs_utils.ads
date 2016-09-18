@@ -80,6 +80,15 @@ package Iirs_Utils is
    --  an interface, even if the formal is a name.
    function Get_Association_Interface (Assoc : Iir) return Iir;
 
+   --  Get the corresponding interface of an association while walking on
+   --  associations.  ASSOC and INTER are the current association and
+   --  interface (initialized to the association chain and interface chain).
+   --  The function Get_Association_Interface return the interface associated
+   --  to ASSOC,and Next_Association_Interface updates ASSOC and INTER.
+   function Get_Association_Interface (Assoc : Iir; Inter : Iir) return Iir;
+   procedure Next_Association_Interface
+     (Assoc : in out Iir; Inter : in out Iir);
+
    --  Duplicate enumeration literal LIT.
    function Copy_Enumeration_Literal (Lit : Iir) return Iir;
 

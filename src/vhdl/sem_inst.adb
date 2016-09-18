@@ -48,9 +48,8 @@ package body Sem_Inst is
    is
       use Nodes;
       Last : constant Iir := Iirs.Get_Last_Node;
-      El: Iir;
+      El : constant Iir := Origin_Table.Last;
    begin
-      El := Origin_Table.Last;
       if El < Last then
          Origin_Table.Set_Last (Last);
          Origin_Table.Table (El + 1 .. Last) := (others => Null_Iir);
@@ -102,7 +101,7 @@ package body Sem_Inst is
 
    --  Table of previous values in Origin_Table.  The first purpose of this
    --  table is to be able to revert the calls to Set_Instance, so that a unit
-   --  can be instantiated several times.  Keep the nodes that have been
+   --  can be instantiated several times.  Keeping the nodes that have been
    --  instantiated is cheaper than walking the tree a second time.
    --  The second purpose of this table is not yet implemented: being able to
    --  have uninstantiated packages in instantiated packages.  In that case,
@@ -114,6 +113,9 @@ package body Sem_Inst is
       Table_Low_Bound => 1,
       Table_Initial => 256);
 
+   --  The instance of ORIG is now N.  So during instantiation, a reference
+   --  to ORIG will be replaced by a reference to N.  The previous instance
+   --  of ORIG is saved.
    procedure Set_Instance (Orig : Iir; N : Iir)
    is
       use Nodes;
@@ -586,9 +588,11 @@ package body Sem_Inst is
    is
       pragma Unreferenced (Pkg);
       Assoc : Iir;
+      Inter : Iir;
    begin
       Assoc := Get_Generic_Map_Aspect_Chain (Inst);
-      while Assoc /= Null_Iir loop
+      Inter := Get_Generic_Chain (Inst);
+      while Is_Valid (Assoc) loop
          --  Replace formal reference to the instance.
          --  Cf Get_association_Interface
          declare
@@ -622,8 +626,12 @@ package body Sem_Inst is
                declare
                   Sub_Inst : constant Iir :=
                     Get_Named_Entity (Get_Actual (Assoc));
-                  Sub_Pkg : constant Iir := Get_Associated_Interface (Assoc);
+                  Sub_Pkg_Inter : constant Iir :=
+                    Get_Association_Interface (Assoc, Inter);
+                  Sub_Pkg : constant Iir := Get_Origin (Sub_Pkg_Inter);
                begin
+                  --  Replace references of interface package to references
+                  --  to the actual package.
                   Set_Instance (Sub_Pkg, Sub_Inst);
                   Set_Instance_On_Chain (Get_Generic_Chain (Sub_Pkg),
                                          Get_Generic_Chain (Sub_Inst));
@@ -635,7 +643,7 @@ package body Sem_Inst is
                --  indication.
                declare
                   Inter_Type_Def : constant Iir :=
-                    Get_Type (Get_Associated_Interface (Assoc));
+                    Get_Type (Get_Association_Interface (Assoc, Inter));
                   Actual_Type : constant Iir := Get_Actual_Type (Assoc);
                begin
                   Set_Instance (Inter_Type_Def, Actual_Type);
@@ -643,7 +651,7 @@ package body Sem_Inst is
             when others =>
                Error_Kind ("instantiate_generic_map_chain", Assoc);
          end case;
-         Assoc := Get_Chain (Assoc);
+         Next_Association_Interface (Assoc, Inter);
       end loop;
    end Instantiate_Generic_Map_Chain;
 
@@ -672,6 +680,39 @@ package body Sem_Inst is
       Instantiate_Loc := Prev_Loc;
       Restore_Origin (Mark);
    end Instantiate_Package_Declaration;
+
+   function Instantiate_Package_Body (Inst : Iir) return Iir
+   is
+      Inst_Decl : constant Iir := Get_Package_Origin (Inst);
+      Pkg : constant Iir :=
+        Get_Named_Entity (Get_Uninstantiated_Package_Name (Inst_Decl));
+      Prev_Loc : constant Location_Type := Instantiate_Loc;
+      Mark : constant Instance_Index_Type := Prev_Instance_Table.Last;
+      Res : Iir;
+   begin
+      Instantiate_Loc := Get_Location (Inst);
+
+      --  Be sure Get_Origin_Priv can be called on existing nodes.
+      Expand_Origin_Table;
+
+      --  References to package specification (and its declarations) will
+      --  be redirected to the package instantiation.
+      Set_Instance (Pkg, Inst);
+      Set_Instance_On_Chain
+        (Get_Generic_Chain (Get_Package_Header (Pkg)),
+         Get_Generic_Chain (Get_Package_Header (Inst)));
+      Set_Instance_On_Chain
+        (Get_Declaration_Chain (Pkg), Get_Declaration_Chain (Inst));
+
+      --  Instantiate the body.
+      Res := Instantiate_Iir (Get_Package_Body (Pkg), False);
+
+      --  Restore.
+      Instantiate_Loc := Prev_Loc;
+      Restore_Origin (Mark);
+
+      return Res;
+   end Instantiate_Package_Body;
 
    procedure Substitute_On_Iir_List (L : Iir_List; E : Iir; Rep : Iir);
 

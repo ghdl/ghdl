@@ -21,6 +21,7 @@ with Types; use Types;
 with Flags;
 with Name_Table;
 with Sem;
+with Sem_Inst;
 with Iir_Chains; use Iir_Chains;
 with PSL.Nodes;
 with PSL.Rewrites;
@@ -2562,6 +2563,36 @@ package body Canon is
          return Decl;
       end if;
    end Canon_Package_Instantiation_Declaration;
+
+   function Create_Instantiation_Bodies (Decl : Iir_Package_Declaration)
+                                        return Iir
+   is
+      First, Last : Iir;
+      El : Iir;
+      Bod : Iir;
+   begin
+      First := Null_Iir;
+      Last := Null_Iir;  --  Kill the warning
+      El := Get_Declaration_Chain (Decl);
+      while Is_Valid (El) loop
+         if Get_Kind (El) = Iir_Kind_Package_Declaration
+           and then Get_Need_Body (El)
+           and then Get_Package_Origin (El) /= Null_Iir
+         then
+            Bod := Sem_Inst.Instantiate_Package_Body (El);
+
+            --  Append.
+            if First = Null_Iir then
+               First := Bod;
+            else
+               Set_Chain (Last, Bod);
+            end if;
+            Last := Bod;
+         end if;
+         El := Get_Chain (El);
+      end loop;
+      return First;
+   end Create_Instantiation_Bodies;
 
    function Canon_Declaration (Top : Iir_Design_Unit;
                                Decl : Iir;

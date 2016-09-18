@@ -24,6 +24,10 @@ package Sem_Inst is
    --  Create declaration chain and generic declarations for INST from PKG.
    procedure Instantiate_Package_Declaration (Inst : Iir; Pkg : Iir);
 
+   --  Return the instantiation of the body for INST, ie macro-expand the
+   --  body.  INST has the form of a generic-mapped package.
+   function Instantiate_Package_Body (Inst : Iir) return Iir;
+
    --  In CHAIN, substitute all references to E by REP.
    procedure Substitute_On_Chain (Chain : Iir; E : Iir; Rep : Iir);
 

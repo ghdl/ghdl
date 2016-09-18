@@ -406,10 +406,6 @@ package Iirs is
    -- Only for Iir_Kind_Association_Element_By_Individual:
    --   Get/Set_Individual_Association_Chain (Field4)
    --
-   -- Only for Iir_Kind_Association_Element_Package:
-   -- Only for Iir_Kind_Association_Element_Type:
-   --   Get/Set_Associated_Interface (Field4)
-   --
    --  A function call or a type conversion for the association.
    --  FIXME: should be a name ?
    -- Only for Iir_Kind_Association_Element_By_Expression:
@@ -849,9 +845,24 @@ package Iirs is
    --
    --   Get/Set_Package_Origin (Field7)
    --
+   --  Chain of bodies for package instantiation.  Present only in certain
+   --  conditions.
+   --   Get/Set_Package_Instantiation_Bodies_Chain (Field8)
+   --
+   --  If true, the package need a body.
    --   Get/Set_Need_Body (Flag1)
    --
+   --  True for uninstantiated package that will be macro-expanded for
+   --  simulation.  The macro-expansion is done by canon, so controlled by
+   --  back-end.  The reason of macro-expansion is presence of interface
+   --  type.
    --   Get/Set_Macro_Expanded_Flag (Flag2)
+   --
+   --  True if the package declaration has the package has at least one
+   --  package instantiation declaration whose uninstantiated declaration
+   --  needs both a body and macro-expansion.  In that case, the instantiation
+   --  needs macro-expansion of their body.
+   --   Get/Set_Need_Instance_Bodies (Flag3)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -5742,18 +5753,21 @@ package Iirs is
    function Get_Package_Body (Pkg : Iir) return Iir;
    procedure Set_Package_Body (Pkg : Iir; Decl : Iir);
 
-   --  If true, the package need a body.
+   --  Field: Field8 Chain
+   function Get_Package_Instantiation_Bodies_Chain (Pkg : Iir) return Iir;
+   procedure Set_Package_Instantiation_Bodies_Chain (Pkg : Iir; Chain : Iir);
+
    --  Field: Flag1
    function Get_Need_Body (Decl : Iir_Package_Declaration) return Boolean;
    procedure Set_Need_Body (Decl : Iir_Package_Declaration; Flag : Boolean);
 
-   --  True for uninstantiated package that will be macro-expanded for
-   --  simulation.  The macro-expansion is done by canon, so controlled by
-   --  back-end.  The reason of macro-expansion is presence of interface
-   --  type.
    --  Field: Flag2
    function Get_Macro_Expanded_Flag (Decl : Iir) return Boolean;
    procedure Set_Macro_Expanded_Flag (Decl : Iir; Flag : Boolean);
+
+   --  Field: Flag3
+   function Get_Need_Instance_Bodies (Decl : Iir) return Boolean;
+   procedure Set_Need_Instance_Bodies (Decl : Iir; Flag : Boolean);
 
    --  Field: Field5
    function Get_Block_Configuration (Target : Iir) return Iir;
@@ -6613,11 +6627,6 @@ package Iirs is
    --  Field: Field5
    function Get_Actual_Type (Target : Iir) return Iir;
    procedure Set_Actual_Type (Target : Iir; Atype : Iir);
-
-   --  Interface for a package association.
-   --  Field: Field4 Ref
-   function Get_Associated_Interface (Assoc : Iir) return Iir;
-   procedure Set_Associated_Interface (Assoc : Iir; Inter : Iir);
 
    --  List of individual associations for association_element_by_individual.
    --  Associations for parenthesis_name.

@@ -390,6 +390,28 @@ package body Iirs_Utils is
       end loop;
    end Get_Association_Interface;
 
+   function Get_Association_Interface (Assoc : Iir; Inter : Iir) return Iir is
+   begin
+      if Get_Formal (Assoc) /= Null_Iir then
+         return Get_Association_Interface (Assoc);
+      else
+         return Inter;
+      end if;
+   end Get_Association_Interface;
+
+   procedure Next_Association_Interface
+     (Assoc : in out Iir; Inter : in out Iir) is
+   begin
+      if Get_Formal (Assoc) /= Null_Iir then
+         --  Association by name.  Next one will also be associated by name
+         --  so no need to track interface.
+         Inter := Null_Iir;
+      else
+         Inter := Get_Chain (Inter);
+      end if;
+      Assoc := Get_Chain (Assoc);
+   end Next_Association_Interface;
+
    function Find_Name_In_List (List: Iir_List; Lit: Name_Id) return Iir is
       El: Iir;
       Ident: Name_Id;

@@ -2501,8 +2501,8 @@ package body Sem is
       end if;
    end Sem_Analysis_Checks_List;
 
-   -- Return true if package declaration DECL needs a body.
-   -- Ie, it contains subprogram specification or deferred constants.
+   --  Return true if package declaration DECL needs a body.
+   --  Ie, it contains subprogram specification or deferred constants.
    function Package_Need_Body_P (Decl: Iir_Package_Declaration)
      return Boolean
    is
@@ -2576,6 +2576,33 @@ package body Sem is
       return False;
    end Package_Need_Body_P;
 
+   --  Return true if package declaration DECL contains at least one package
+   --  instantiation that needs a body.
+   function Package_Need_Instance_Bodies_P (Decl: Iir_Package_Declaration)
+                                           return Boolean
+   is
+      El: Iir;
+   begin
+      El := Get_Declaration_Chain (Decl);
+      while El /= Null_Iir loop
+         case Get_Kind (El) is
+            when Iir_Kind_Package_Instantiation_Declaration =>
+               declare
+                  Pkg : constant Iir :=
+                    Get_Named_Entity (Get_Uninstantiated_Package_Name (El));
+               begin
+                  if Get_Need_Body (Pkg) then
+                     return True;
+                  end if;
+               end;
+            when others =>
+               null;
+         end case;
+         El := Get_Chain (El);
+      end loop;
+      return False;
+   end Package_Need_Instance_Bodies_P;
+
    --  Return true if uninstantiated pckage DECL must be macro-expanded (at
    --  least one interface type).
    function Is_Package_Macro_Expanded
@@ -2638,7 +2665,9 @@ package body Sem is
             Generic_Chain : constant Iir := Get_Generic_Chain (Header);
             Generic_Map : constant Iir :=
               Get_Generic_Map_Aspect_Chain (Header);
-            El : Iir;
+            Assoc_El : Iir;
+            Inter_El : Iir;
+            Inter : Iir;
          begin
             Sem_Interface_Chain (Generic_Chain, Generic_Interface_List);
 
@@ -2649,15 +2678,20 @@ package body Sem is
                if Sem_Generic_Association_Chain (Header, Header) then
                   --  For generic-mapped packages, use the actual type for
                   --  interface type.
-                  El := Get_Generic_Map_Aspect_Chain (Header);
-                  while Is_Valid (El) loop
-                     if Get_Kind (El) = Iir_Kind_Association_Element_Type then
+                  Assoc_El := Get_Generic_Map_Aspect_Chain (Header);
+                  Inter_El := Generic_Chain;
+                  while Is_Valid (Assoc_El) loop
+                     if Get_Kind (Assoc_El) = Iir_Kind_Association_Element_Type
+                     then
+                        Inter :=
+                          Get_Association_Interface (Assoc_El, Inter_El);
                         Sem_Inst.Substitute_On_Chain
                           (Generic_Chain,
-                           Get_Type (Get_Associated_Interface (El)),
-                           Get_Type (Get_Named_Entity (Get_Actual (El))));
+                           Get_Type (Inter),
+                           Get_Type (Get_Named_Entity
+                                       (Get_Actual (Assoc_El))));
                      end if;
-                     El := Get_Chain (El);
+                     Next_Association_Interface (Assoc_El, Inter_El);
                   end loop;
                end if;
             else
@@ -2677,6 +2711,10 @@ package body Sem is
       Pop_Signals_Declarative_Part (Implicit);
       Close_Declarative_Region;
       Set_Need_Body (Decl, Package_Need_Body_P (Decl));
+      if Vhdl_Std >= Vhdl_08 then
+         Set_Need_Instance_Bodies
+           (Decl, Package_Need_Instance_Bodies_P (Decl));
+      end if;
    end Sem_Package_Declaration;
 
    --  LRM 2.6  Package Bodies.
