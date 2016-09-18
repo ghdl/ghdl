@@ -50,8 +50,8 @@ package body Ghdllocal is
      (Unit : Iir_Design_Unit; Main : Boolean := False)
    is
       use Errorout;
+      Lib_Unit : constant Iir := Get_Library_Unit (Unit);
       Config : Iir_Design_Unit;
-      Lib : Iir;
    begin
       if (Main or Flags.Dump_All) and then Flags.Dump_Parse then
          Disp_Tree.Disp_Tree (Unit);
@@ -59,7 +59,7 @@ package body Ghdllocal is
 
       if Flags.Verbose then
          Report_Msg (Msgid_Note, Semantic, +Unit,
-                     "analyze %n", (1 => +Get_Library_Unit (Unit)));
+                     "analyze %n", (1 => +Lib_Unit));
       end if;
 
       Sem.Semantic (Unit);
@@ -87,7 +87,7 @@ package body Ghdllocal is
       then
          if Flags.Verbose then
             Report_Msg (Msgid_Note, Semantic, No_Location,
-                        "canonicalize %n", (1 => +Get_Library_Unit (Unit)));
+                        "canonicalize %n", (1 => +Lib_Unit));
          end if;
 
          Canon.Canonicalize (Unit);
@@ -98,10 +98,10 @@ package body Ghdllocal is
       end if;
 
       if Flags.Flag_Elaborate then
-         Lib := Get_Library_Unit (Unit);
-         if Get_Kind (Lib) = Iir_Kind_Architecture_Body then
-            Config := Canon.Create_Default_Configuration_Declaration (Lib);
-            Set_Default_Configuration_Declaration (Lib, Config);
+         if Get_Kind (Lib_Unit) = Iir_Kind_Architecture_Body then
+            Config :=
+              Canon.Create_Default_Configuration_Declaration (Lib_Unit);
+            Set_Default_Configuration_Declaration (Lib_Unit, Config);
          end if;
       end if;
    end Finish_Compilation;
