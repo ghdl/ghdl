@@ -17,7 +17,6 @@
 --  02111-1307, USA.
 with System;
 with Interfaces.C;
-with Ada.Characters.Latin_1;
 with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Unchecked_Deallocation;
 with Tables;
@@ -31,9 +30,10 @@ with Ada.Calendar.Time_Zones;
 
 package body Files_Map is
 
-   -- Check validity of FILE.
-   -- Raise an exception in case of error.
+   --  Check validity of FILE.
+   --  Raise an exception in case of error.
    procedure Check_File (File: in Source_File_Entry);
+   pragma Inline (Check_File);
 
    type Lines_Table_Type is array (Positive) of Source_Ptr;
    type Lines_Table_Ptr is access all Lines_Table_Type;
@@ -44,27 +44,29 @@ package body Files_Map is
       First_Location : Location_Type;
       Last_Location : Location_Type;
 
-      -- The name_id that identify this file.
-      -- FIXME: what about file aliasing (links) ?
-      File_Name: Name_Id;
+      --  The name_id that identify this file.
+      --  FIXME: what about file aliasing (links) ?
+      File_Name : Name_Id;
 
       Directory : Name_Id;
 
-      -- The buffer containing the file.
-      Source: File_Buffer_Acc;
+      --  The buffer containing the file.
+      Source : File_Buffer_Acc;
 
-      -- Length of the file, which is also the length of the buffer.
-      File_Length: Natural;
+      --  Length of the file, which is also the length of the buffer.
+      File_Length : Natural;
 
       Checksum : File_Checksum_Id;
 
-      --  Current number of line in Lines_Table.
-      Nbr_Lines: Natural;
+      --  Line table
 
-      Lines_Table: Lines_Table_Ptr;
+      --  Current number of line in Lines_Table.
+      Nbr_Lines : Natural;
+
+      Lines_Table : Lines_Table_Ptr;
 
       --  Current size of Lines_Table.
-      Lines_Table_Max: Natural;
+      Lines_Table_Max : Natural;
 
       --  Cache.
       Cache_Line : Natural;
@@ -121,8 +123,7 @@ package body Files_Map is
    end Location_To_File_Pos;
 
    function File_Pos_To_Location (File : Source_File_Entry; Pos : Source_Ptr)
-     return Location_Type
-   is
+                                 return Location_Type is
    begin
       if Source_Files.Table (File).Source = null then
          raise Internal_Error;
@@ -174,58 +175,56 @@ package body Files_Map is
       end if;
    end Reallocate_Lines_Table;
 
-   -- Add a new entry in the lines_table.
-   -- The new entry must be the next one after the last entry.
+   --  Add a new entry in the lines_table.
+   --  The new entry must be the next one after the last entry.
    procedure File_Add_Line_Number
-     (File: Source_File_Entry; Line: Natural; Pos: Source_Ptr) is
+     (File: Source_File_Entry; Line: Natural; Pos: Source_Ptr)
+   is
+      -- Just check File is not out of bounds.
+      pragma Assert (File <= Source_Files.Last);
+
       Source_File: Source_File_Record renames Source_Files.Table (File);
    begin
-      -- Just check File is not out of bounds.
-      if File > Source_Files.Last then
-         raise Internal_Error;
-      end if;
-
-      if Line = 1 then
-         -- The position of the first line is well-known.
-         if Pos /= Source_Ptr_Org then
-            raise Internal_Error;
-         end if;
-      else
-         -- The position of a non first line is not the well-known value.
-         if Pos <= Source_Ptr_Org then
-            raise Internal_Error;
-         end if;
-         -- Take care of scan backtracking.
-         if Line <= Source_File.Nbr_Lines then
-            if Source_File.Lines_Table (Line) = Source_Ptr_Bad then
-               Source_File.Lines_Table (Line) := Pos;
-            elsif Pos /= Source_File.Lines_Table (Line) then
-               Put_Line ("file" & Source_File_Entry'Image (File)
-                         & " for line" & Natural'Image (Line)
-                         & " pos =" & Source_Ptr'Image (Pos)
-                         & ", lines_table = "
-                         & Source_Ptr'Image (Source_File.Lines_Table (Line)));
-               raise Internal_Error;
-            end if;
-            return;
-         end if;
-         -- The new entry must just follow the last entry.
---          if Line /= Source_File.Nbr_Lines + 1 then
---             raise Internal_Error;
---          end if;
-      end if;
-      if Line > Source_File.Lines_Table_Max then
-         Reallocate_Lines_Table (Source_File, (Line / 128 + 1) * 128);
-      end if;
-      Source_File.Lines_Table (Line) := Pos;
-      if Line > Source_File.Nbr_Lines then
-         Source_File.Nbr_Lines := Line;
-      end if;
-      -- Source_File.Nbr_Lines := Source_File.Nbr_Lines + 1;
+      --  Debug trace.
       if False then
          Put_Line ("file" & Source_File_Entry'Image (File)
                    & " line" & Natural'Image (Line)
                    & " at position" & Source_Ptr'Image (Pos));
+      end if;
+
+      --  The position of the first line is well-known.
+      pragma Assert (Line = 1 xor Pos /= Source_Ptr_Org);
+
+      if Line > Source_File.Lines_Table_Max then
+         Reallocate_Lines_Table (Source_File, (Line / 128 + 1) * 128);
+      end if;
+
+      --  Lines are in increasing order.
+      pragma Assert
+        (Line = 1
+           or else Source_File.Lines_Table (Line - 1) = Source_Ptr_Bad
+           or else Source_File.Lines_Table (Line - 1) < Pos);
+      pragma Assert
+        (Line = Source_File.Lines_Table_Max
+           or else Source_File.Lines_Table (Line + 1) = Source_Ptr_Bad
+           or else Source_File.Lines_Table (Line + 1) > Pos);
+
+      if Source_File.Lines_Table (Line) = Source_Ptr_Bad then
+         Source_File.Lines_Table (Line) := Pos;
+      else
+         --  If the line position is already known, it must be the same.
+         if Pos /= Source_File.Lines_Table (Line) then
+            Put_Line ("file" & Source_File_Entry'Image (File)
+                        & " for line" & Natural'Image (Line)
+                        & " pos =" & Source_Ptr'Image (Pos)
+                        & ", lines_table = "
+                        & Source_Ptr'Image (Source_File.Lines_Table (Line)));
+            raise Internal_Error;
+         end if;
+      end if;
+
+      if Line > Source_File.Nbr_Lines then
+         Source_File.Nbr_Lines := Line;
       end if;
    end File_Add_Line_Number;
 
@@ -245,14 +244,18 @@ package body Files_Map is
       Res : Positive := 1;
    begin
       Name := Source_File.File_Name;
-      for I in Line_Pos .. Line_Pos + Source_Ptr (Offset) - 1 loop
-         if Source_File.Source (I) = Ada.Characters.Latin_1.HT then
-            Res := Res + 8 - Res mod 8;
-         else
-            Res := Res + 1;
-         end if;
-      end loop;
-      Col := Res;
+      if Offset = 0 then
+         Col := Res;
+      else
+         for I in Line_Pos .. Line_Pos + Source_Ptr (Offset) - 1 loop
+            if Source_File.Source (I) = ASCII.HT then
+               Res := Res + 8 - Res mod 8;
+            else
+               Res := Res + 1;
+            end if;
+         end loop;
+         Col := Res;
+      end if;
    end Coord_To_Position;
 
    --  Should only be called by Location_To_Coord.
@@ -260,9 +263,9 @@ package body Files_Map is
      (Source_File : Source_File_Record; Pos : Source_Ptr)
      return Natural
    is
+      Lines_Table : constant Lines_Table_Ptr := Source_File.Lines_Table;
       Low, Hi, Mid : Natural;
       Mid1 : Natural;
-      Lines_Table : constant Lines_Table_Ptr := Source_File.Lines_Table;
    begin
       --  Look in the cache.
       if Pos >= Source_File.Cache_Pos then
@@ -324,9 +327,14 @@ package body Files_Map is
             end if;
             Mid := Mid1;
          end if;
+
+         --  Mid is on a known line.
+         pragma Assert (Lines_Table (Mid) /= Source_Ptr_Bad);
+
          if Pos >= Lines_Table (Mid) then
             if Mid = Source_File.Nbr_Lines
-              or else Pos < Lines_Table (Mid + 1)
+              or else (Lines_Table (Mid + 1) /= Source_Ptr_Bad
+                         and then Pos < Lines_Table (Mid + 1))
               or else Pos = Lines_Table (Mid)
               or else (Hi <= Mid + 1
                        and Lines_Table (Mid + 1) = Source_Ptr_Bad)
@@ -369,7 +377,7 @@ package body Files_Map is
          then
             for I in 1 .. Line_Threshold loop
                Line_P := Source_File.Lines_Table (Low + I);
-               if Line_P > Pos then
+               if Line_P > Pos and Line_P /= Source_Ptr_Bad then
                   Line := Low + I - 1;
                   goto Found;
                else
@@ -548,18 +556,18 @@ package body Files_Map is
       return No_Source_File_Entry;
    end Find_Source_File;
 
-   -- Return an entry for a filename.
-   -- The file is not loaded.
+   --  Return an entry for a filename.
+   --  The file is not loaded.
    function Create_Source_File_Entry (Directory : Name_Id; Name: Name_Id)
      return Source_File_Entry
    is
       Res: Source_File_Entry;
    begin
-      if Find_Source_File (Directory, Name) /= No_Source_File_Entry then
-         raise Internal_Error;
-      end if;
+      --  File must not already exist.
+      pragma Assert
+        (Find_Source_File (Directory, Name) = No_Source_File_Entry);
 
-      -- Create a new entry.
+      --  Create a new entry.
       Res := Source_Files.Allocate;
       Source_Files.Table (Res) := (First_Location => Next_Location,
                                    Last_Location => Next_Location,
@@ -580,17 +588,19 @@ package body Files_Map is
    function Create_Source_File_From_String (Name: Name_Id; Content : String)
                                            return Source_File_Entry
    is
+      Len : constant Source_Ptr := Source_Ptr (Content'Length);
       Res : Source_File_Entry;
       Buffer: File_Buffer_Acc;
-      Len : constant Source_Ptr := Source_Ptr (Content'Length);
    begin
       Res := Create_Source_File_Entry (Null_Identifier, Name);
 
       Buffer := new File_Buffer
         (Source_Ptr_Org .. Source_Ptr_Org + Len + 1);
 
-      Buffer (Source_Ptr_Org .. Source_Ptr_Org + Len - 1) :=
-        File_Buffer (Content);
+      if Len /= 0 then
+         Buffer (Source_Ptr_Org .. Source_Ptr_Org + Len - 1) :=
+           File_Buffer (Content);
+      end if;
       Buffer (Source_Ptr_Org + Len) := EOT;
       Buffer (Source_Ptr_Org + Len + 1) := EOT;
 
@@ -604,19 +614,18 @@ package body Files_Map is
    end Create_Source_File_From_String;
 
    function Create_Virtual_Source_File (Name: Name_Id)
-                                       return Source_File_Entry
-   is
+                                       return Source_File_Entry is
    begin
       return Create_Source_File_From_String (Name, "");
    end Create_Virtual_Source_File;
 
-   -- Return an entry for a filename.
-   -- Load the filename if necessary.
+   --  Return an entry for a filename.
+   --  Load the filename if necessary.
    function Load_Source_File (Directory : Name_Id; Name: Name_Id)
                               return Source_File_Entry
    is
       use GNAT.OS_Lib;
-      Fd: File_Descriptor;
+      Fd : File_Descriptor;
 
       Res: Source_File_Entry;
 
@@ -626,9 +635,7 @@ package body Files_Map is
       --  If the file is already loaded, nothing to do!
       Res := Find_Source_File (Directory, Name);
       if Res /= No_Source_File_Entry then
-         if Source_Files.Table (Res).Source = null then
-            raise Internal_Error;
-         end if;
+         pragma Assert (Source_Files.Table (Res).Source /= null);
          return Res;
       end if;
 
@@ -660,11 +667,10 @@ package body Files_Map is
       end if;
       Buffer (Source_Ptr_Org + Length) := EOT;
       Buffer (Source_Ptr_Org + Length + 1) := EOT;
+      Close (Fd);
 
-      if Source_Files.Table (Res).First_Location /= Next_Location then
-         --  Load_Source_File call must follow its Create_Source_File.
-         raise Internal_Error;
-      end if;
+      --  Load_Source_File call must follow its Create_Source_File.
+      pragma Assert (Source_Files.Table (Res).First_Location = Next_Location);
 
       declare
          use GNAT.SHA1;
@@ -688,21 +694,18 @@ package body Files_Map is
       Source_Files.Table (Res).Source := Buffer;
       Source_Files.Table (Res).File_Length := Integer (Length);
 
-      Close (Fd);
-
       return Res;
    end Load_Source_File;
 
-   -- Check validity of FILE.
-   -- Raise an exception in case of error.
+   --  Check validity of FILE.
+   --  Raise an exception in case of error.
    procedure Check_File (File: in Source_File_Entry) is
    begin
-      if File > Source_Files.Last then
-         raise Internal_Error;
-      end if;
+      pragma Assert (File <= Source_Files.Last);
+      null;
    end Check_File;
 
-   -- Return a buffer (access to the contents of the file) for a file entry.
+   --  Return a buffer (access to the contents of the file) for a file entry.
    function Get_File_Source (File: Source_File_Entry)
                              return File_Buffer_Acc is
    begin
@@ -710,14 +713,14 @@ package body Files_Map is
       return Source_Files.Table (File).Source;
    end Get_File_Source;
 
-   -- Return the length of the file (which is the size of the file buffer).
+   --  Return the length of the file (which is the size of the file buffer).
    function Get_File_Length (File: Source_File_Entry) return Source_Ptr is
    begin
       Check_File (File);
       return Source_Ptr (Source_Files.Table (File).File_Length);
    end Get_File_Length;
 
-   -- Return the name of the file.
+   --  Return the name of the file.
    function Get_File_Name (File: Source_File_Entry) return Name_Id is
    begin
       Check_File (File);
@@ -777,7 +780,6 @@ package body Files_Map is
       end loop;
       return True;
    end Is_Eq;
-
 
    function Is_Gt (L : Time_Stamp_Id; R : Time_Stamp_Id) return Boolean
    is
