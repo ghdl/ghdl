@@ -910,11 +910,15 @@ package body Errorout is
 
          when Iir_Kind_Procedure_Declaration =>
             return Disp_Identifier (Node, "procedure");
+         when Iir_Kind_Function_Declaration =>
+            return Disp_Identifier (Node, "function");
+         when Iir_Kind_Interface_Procedure_Declaration =>
+            return Disp_Identifier (Node, "interface procedure");
+         when Iir_Kind_Interface_Function_Declaration =>
+            return Disp_Identifier (Node, "interface function");
          when Iir_Kind_Procedure_Body
            | Iir_Kind_Function_Body =>
             return "subprogram body";
-         when Iir_Kind_Function_Declaration =>
-            return Disp_Identifier (Node, "function");
 
          when Iir_Kind_Package_Declaration =>
             return Disp_Identifier (Node, "package");

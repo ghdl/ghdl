@@ -698,9 +698,45 @@ package body Sem_Inst is
       --  References to package specification (and its declarations) will
       --  be redirected to the package instantiation.
       Set_Instance (Pkg, Inst);
-      Set_Instance_On_Chain
-        (Get_Generic_Chain (Get_Package_Header (Pkg)),
-         Get_Generic_Chain (Get_Package_Header (Inst)));
+      declare
+         Pkg_Hdr : constant Iir := Get_Package_Header (Pkg);
+         Inst_Hdr : constant Iir := Get_Package_Header (Inst);
+         Pkg_El : Iir;
+         Inst_El : Iir;
+         Inter_El : Iir;
+         Inter : Iir;
+      begin
+         --  In the body, references to interface object are redirected to the
+         --  instantiated interface objects.
+         Pkg_El := Get_Generic_Chain (Pkg_Hdr);
+         Inst_El := Get_Generic_Chain (Inst_Hdr);
+         while Is_Valid (Pkg_El) loop
+            if Get_Kind (Pkg_El) in Iir_Kinds_Interface_Object_Declaration then
+               Set_Instance (Pkg_El, Inst_El);
+            end if;
+            Pkg_El := Get_Chain (Pkg_El);
+            Inst_El := Get_Chain (Inst_El);
+         end loop;
+
+         --  In the body, references to interface type are substitued to the
+         --  mapped type.
+         Inst_El := Get_Generic_Map_Aspect_Chain (Inst_Hdr);
+         Inter_El := Get_Generic_Chain (Inst_Hdr);
+         while Is_Valid (Inst_El) loop
+            case Get_Kind (Inst_El) is
+               when Iir_Kind_Association_Element_Type =>
+                  Inter := Get_Association_Interface (Inst_El, Inter_El);
+                  Set_Instance (Get_Type (Get_Origin (Inter)),
+                                Get_Type (Get_Actual (Inst_El)));
+               when Iir_Kind_Association_Element_Package =>
+                  --  TODO.
+                  raise Internal_Error;
+               when others =>
+                  null;
+            end case;
+            Next_Association_Interface (Inst_El, Inter_El);
+         end loop;
+      end;
       Set_Instance_On_Chain
         (Get_Declaration_Chain (Pkg), Get_Declaration_Chain (Inst));
 

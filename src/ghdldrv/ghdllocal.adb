@@ -92,6 +92,16 @@ package body Ghdllocal is
 
          Canon.Canonicalize (Unit);
 
+         --  FIXME: for Main only ?
+         if Get_Kind (Lib_Unit) = Iir_Kind_Package_Declaration
+           and then not Get_Need_Body (Lib_Unit)
+           and then Get_Need_Instance_Bodies (Lib_Unit)
+         then
+            --  Create the bodies for instances
+            Set_Package_Instantiation_Bodies_Chain
+              (Lib_Unit, Canon.Create_Instantiation_Bodies (Lib_Unit));
+         end if;
+
          if (Main or Flags.List_All) and then Flags.List_Canon then
             Disp_Vhdl.Disp_Vhdl (Unit);
          end if;

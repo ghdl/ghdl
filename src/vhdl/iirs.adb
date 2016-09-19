@@ -500,6 +500,8 @@ package body Iirs is
            | Iir_Kind_Constant_Declaration
            | Iir_Kind_Iterator_Declaration
            | Iir_Kind_Interface_Package_Declaration
+           | Iir_Kind_Interface_Function_Declaration
+           | Iir_Kind_Interface_Procedure_Declaration
            | Iir_Kind_Sensitized_Process_Statement
            | Iir_Kind_Process_Statement
            | Iir_Kind_Concurrent_Simple_Signal_Assignment

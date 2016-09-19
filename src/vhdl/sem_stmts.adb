@@ -1327,14 +1327,14 @@ package body Sem_Stmts is
                end;
             when Iir_Kind_For_Loop_Statement =>
                declare
-                  Iterator: Iir;
+                  Iterator : constant Iir :=
+                    Get_Parameter_Specification (Stmt);
                begin
                   --  LRM 10.1 Declarative region
                   --  9. A loop statement.
                   Open_Declarative_Region;
 
                   Set_Is_Within_Flag (Stmt, True);
-                  Iterator := Get_Parameter_Specification (Stmt);
                   Sem_Scopes.Add_Name (Iterator);
                   Sem_Iterator (Iterator, None);
                   Set_Visible_Flag (Iterator, True);
@@ -1677,19 +1677,20 @@ package body Sem_Stmts is
 
    procedure Sem_For_Generate_Statement (Stmt : Iir)
    is
-      Param : Iir;
+      Param : constant Iir := Get_Parameter_Specification (Stmt);
    begin
       --  LRM93 10.1 Declarative region.
       --  12. A generate statement.
       Open_Declarative_Region;
       Set_Is_Within_Flag (Stmt, True);
 
-      Param := Get_Parameter_Specification (Stmt);
       Sem_Scopes.Add_Name (Param);
+
       --  LRM93 7.4.2 (Globally Static Primaries)
       --   4. a generate parameter;
       Sem_Iterator (Param, Globally);
       Set_Visible_Flag (Param, True);
+
       --  LRM93 9.7
       --  The discrete range in a generation scheme of the first form must
       --  be a static discrete range;

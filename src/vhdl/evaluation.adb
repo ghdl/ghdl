@@ -1450,10 +1450,6 @@ package body Evaluation is
             --  TODO
             raise Internal_Error;
 
-         when Iir_Predefined_Interface_Type_Equality
-           | Iir_Predefined_Interface_Type_Inequality =>
-            raise Internal_Error;
-
          when Iir_Predefined_Explicit =>
             raise Internal_Error;
       end case;

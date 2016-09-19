@@ -763,6 +763,7 @@ package body Trans.Chap2 is
       Info                 : Ortho_Info_Acc;
       Interface_List       : O_Inter_List;
       Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
+      Bod                  : Iir;
    begin
       --  Skip uninstantiated package that have to be macro-expanded.
       if Get_Macro_Expanded_Flag (Decl) then
@@ -805,6 +806,10 @@ package body Trans.Chap2 is
             Chap4.Translate_Generic_Chain (Header);
          end if;
          Chap4.Translate_Declaration_Chain (Decl);
+         Bod := Get_Package_Instantiation_Bodies_Chain (Decl);
+         if Is_Valid (Bod) then
+            Chap4.Translate_Declaration_Chain (Bod);
+         end if;
          if not Is_Nested then
             Info.Package_Elab_Var := Create_Var
               (Create_Var_Identifier ("ELABORATED"), Ghdl_Bool_Type);
@@ -816,6 +821,10 @@ package body Trans.Chap2 is
          --  For nested package, this will be translated when translating
          --  subprograms.
          Chap4.Translate_Declaration_Chain_Subprograms (Decl);
+         Bod := Get_Package_Instantiation_Bodies_Chain (Decl);
+         if Is_Valid (Bod) then
+            Chap4.Translate_Declaration_Chain_Subprograms (Bod);
+         end if;
       end if;
 
       --  Declare elaborator for the body.
@@ -837,8 +846,8 @@ package body Trans.Chap2 is
             Wki_Instance, Prev_Subprg_Instance);
       end if;
 
-      --  Declare elaborator for the spec.
       if not Is_Nested then
+         --  Declare elaborator for the spec.
          Start_Procedure_Decl
            (Interface_List, Create_Identifier ("ELAB_SPEC"), Global_Storage);
          Subprgs.Add_Subprg_Instance_Interfaces

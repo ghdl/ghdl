@@ -5459,9 +5459,6 @@ package body Trans.Chap7 is
          when Iir_Predefined_Error
            | Iir_Predefined_Explicit =>
             raise Internal_Error;
-         when Iir_Predefined_Interface_Type_Equality
-           | Iir_Predefined_Interface_Type_Inequality =>
-            raise Internal_Error;
          when Iir_Predefined_Boolean_And
             | Iir_Predefined_Boolean_Or
             | Iir_Predefined_Boolean_Xor

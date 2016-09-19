@@ -391,6 +391,25 @@ package body Sem_Decls is
       Xref_Decl (Inter);
    end Sem_Interface_Package_Declaration;
 
+   function Create_Implicit_Interface_Function (Name : Name_Id;
+                                                Decl : Iir;
+                                                Interface_Chain : Iir;
+                                                Return_Type : Iir)
+                                               return Iir
+   is
+      Operation : Iir_Function_Declaration;
+   begin
+      Operation := Create_Iir (Iir_Kind_Interface_Function_Declaration);
+      Location_Copy (Operation, Decl);
+      Set_Parent (Operation, Get_Parent (Decl));
+      Set_Interface_Declaration_Chain (Operation, Interface_Chain);
+      Set_Return_Type (Operation, Return_Type);
+      Set_Identifier (Operation, Name);
+      Set_Visible_Flag (Operation, True);
+      Compute_Subprogram_Hash (Operation);
+      return Operation;
+   end Create_Implicit_Interface_Function;
+
    procedure Sem_Interface_Type_Declaration (Inter : Iir)
    is
       Def : Iir;
@@ -412,15 +431,13 @@ package body Sem_Decls is
       Finters := Create_Anonymous_Interface (Def);
       Set_Chain (Finters, Create_Anonymous_Interface (Def));
 
-      Op_Eq := Create_Implicit_Function
+      Op_Eq := Create_Implicit_Interface_Function
         (Std_Names.Name_Op_Equality,
-         Inter, Iir_Predefined_Interface_Type_Equality,
-         Finters, Std_Package.Boolean_Type_Definition);
+         Inter, Finters, Std_Package.Boolean_Type_Definition);
 
-      Op_Neq := Create_Implicit_Function
+      Op_Neq := Create_Implicit_Interface_Function
         (Std_Names.Name_Op_Inequality,
-         Inter, Iir_Predefined_Interface_Type_Inequality,
-         Finters, Std_Package.Boolean_Type_Definition);
+         Inter, Finters, Std_Package.Boolean_Type_Definition);
 
       Set_Interface_Type_Subprograms (Inter, Op_Eq);
       Set_Chain (Op_Eq, Op_Neq);
