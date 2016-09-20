@@ -272,6 +272,7 @@ package body Iirs is
            | Iir_Kind_Association_Element_Open
            | Iir_Kind_Association_Element_Package
            | Iir_Kind_Association_Element_Type
+           | Iir_Kind_Association_Element_Subprogram
            | Iir_Kind_Choice_By_Others
            | Iir_Kind_Choice_By_Expression
            | Iir_Kind_Choice_By_Range

@@ -391,6 +391,7 @@ package Iirs is
    -- Iir_Kind_Association_Element_By_Individual (Short)
    -- Iir_Kind_Association_Element_Package (Short)
    -- Iir_Kind_Association_Element_Type (Short)
+   -- Iir_Kind_Association_Element_Subprogram (Short)
    --  These are used for association element of an association list with
    --  an interface (ie subprogram call, port map, generic map).
    --
@@ -401,6 +402,7 @@ package Iirs is
    -- Only for Iir_Kind_Association_Element_By_Expression:
    -- Only for Iir_Kind_Association_Element_Package:
    -- Only for Iir_Kind_Association_Element_Type:
+   -- Only for Iir_Kind_Association_Element_Subprogram:
    --   Get/Set_Actual (Field3)
    --
    -- Only for Iir_Kind_Association_Element_By_Individual:
@@ -1447,6 +1449,8 @@ package Iirs is
    --
    -- Only for Iir_Kind_Interface_Function_Declaration:
    --   Get/Set_Pure_Flag (Flag2)
+   --
+   --   Get/Set_Foreign_Flag (Flag3)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -3817,6 +3821,7 @@ package Iirs is
       Iir_Kind_Association_Element_Open,
       Iir_Kind_Association_Element_Package,
       Iir_Kind_Association_Element_Type,
+      Iir_Kind_Association_Element_Subprogram,
       Iir_Kind_Choice_By_Others,
       Iir_Kind_Choice_By_Expression,
       Iir_Kind_Choice_By_Range,
