@@ -2854,11 +2854,9 @@ package body Sem is
       --  the actuals are associated with the instantiated formal.
       --  FIXME: do it in Instantiate_Package_Declaration ?
       Hdr := Get_Package_Header (Pkg);
-      if Sem_Generic_Association_Chain (Hdr, Decl) then
-         Sem_Inst.Instantiate_Package_Declaration (Decl, Pkg);
-      else
+      if not Sem_Generic_Association_Chain (Hdr, Decl) then
          --  FIXME: stop analysis here ?
-         null;
+         return;
       end if;
 
       --  FIXME: unless the parent is a package declaration library unit, the
@@ -2872,6 +2870,10 @@ package body Sem is
             Add_Dependence (Bod);
          end if;
       end if;
+
+      --  Instantiate the declaration after analyse of the body.  So that
+      --  the use_flag on the declaration can be propagated to the instance.
+      Sem_Inst.Instantiate_Package_Declaration (Decl, Pkg);
    end Sem_Package_Instantiation_Declaration;
 
    --  LRM 10.4  Use Clauses.

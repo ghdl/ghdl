@@ -38,8 +38,22 @@ package body Files_Map is
    type Lines_Table_Type is array (Positive) of Source_Ptr;
    type Lines_Table_Ptr is access all Lines_Table_Type;
 
+   --  There are several kinds of source file.
+   type Source_File_Kind is
+     (
+      --  A *real* source file, read from the filesystem.
+      Source_File_File,
+
+      --  A virtual source file, created from a string.
+      Source_File_String,
+
+      --  A duplicated source file (there is no copy however), created by
+      --  an instantiation.
+      Source_File_Instance);
+
    --  Data associed with a file.
-   type Source_File_Record is record
+   type Source_File_Record (Kind : Source_File_Kind := Source_File_File) is
+      record
       --  All location between first and last belong to this file.
       First_Location : Location_Type;
       Last_Location : Location_Type;
@@ -58,19 +72,34 @@ package body Files_Map is
 
       Checksum : File_Checksum_Id;
 
-      --  Line table
+      case Kind is
+         when Source_File_File =>
+            --  Line table
 
-      --  Current number of line in Lines_Table.
-      Nbr_Lines : Natural;
+            --  Current number of line in Lines_Table.
+            Nbr_Lines : Natural;
 
-      Lines_Table : Lines_Table_Ptr;
+            Lines_Table : Lines_Table_Ptr;
 
-      --  Current size of Lines_Table.
-      Lines_Table_Max : Natural;
+            --  Current size of Lines_Table.
+            Lines_Table_Max : Natural;
 
-      --  Cache.
-      Cache_Line : Natural;
-      Cache_Pos : Source_Ptr;
+            --  Cache for line table.
+            Cache_Line : Natural;
+            Cache_Pos : Source_Ptr;
+
+         when Source_File_String =>
+            --  There is only one line.
+            null;
+
+         when Source_File_Instance =>
+            --  The instance was created from REF.
+            Ref : Source_File_Entry;
+            --  The ultimate non-instance is BASE.
+            Base : Source_File_Entry;
+
+            Instance_Loc : Location_Type;
+      end case;
    end record;
 
    --  Next location to use.
@@ -100,8 +129,7 @@ package body Files_Map is
 
    procedure Location_To_File_Pos (Location : Location_Type;
                                    File : out Source_File_Entry;
-                                   Pos : out Source_Ptr)
-   is
+                                   Pos : out Source_Ptr) is
    begin
       --  FIXME: use a cache
       --  FIXME: dicotomy
@@ -123,18 +151,17 @@ package body Files_Map is
    end Location_To_File_Pos;
 
    function File_Pos_To_Location (File : Source_File_Entry; Pos : Source_Ptr)
-                                 return Location_Type is
+                                 return Location_Type
+   is
+      pragma Assert (File <= Source_Files.Last);
    begin
-      if Source_Files.Table (File).Source = null then
-         raise Internal_Error;
-      else
-         return Source_Files.Table (File).First_Location + Location_Type (Pos);
-      end if;
+      return Source_Files.Table (File).First_Location + Location_Type (Pos);
    end File_Pos_To_Location;
 
    function Source_File_To_Location (File : Source_File_Entry)
-     return Location_Type
+                                    return Location_Type
    is
+      pragma Assert (File <= Source_Files.Last);
    begin
       return Source_Files.Table (File).First_Location;
    end Source_File_To_Location;
@@ -185,6 +212,9 @@ package body Files_Map is
 
       Source_File: Source_File_Record renames Source_Files.Table (File);
    begin
+      --  Can only add line number to a real file.
+      pragma Assert (Source_File.Kind = Source_File_File);
+
       --  Debug trace.
       if False then
          Put_Line ("file" & Source_File_Entry'Image (File)
@@ -233,12 +263,11 @@ package body Files_Map is
    --  A logical column is the position of the character when displayed.
    --  A HT (tabulation) moves the cursor to the next position multiple of 8.
    --  The first character is at position 1 and at offset 0.
-   procedure Coord_To_Position
-     (File : Source_File_Entry;
-      Line_Pos : Source_Ptr;
-      Offset : Natural;
-      Name : out Name_Id;
-      Col : out Natural)
+   procedure Coord_To_Position (File : Source_File_Entry;
+                                Line_Pos : Source_Ptr;
+                                Offset : Natural;
+                                Name : out Name_Id;
+                                Col : out Natural)
    is
       Source_File: Source_File_Record renames Source_Files.Table (File);
       Res : Positive := 1;
@@ -260,8 +289,7 @@ package body Files_Map is
 
    --  Should only be called by Location_To_Coord.
    function Location_To_Line
-     (Source_File : Source_File_Record; Pos : Source_Ptr)
-     return Natural
+     (Source_File : Source_File_Record; Pos : Source_Ptr) return Natural
    is
       Lines_Table : constant Lines_Table_Ptr := Source_File.Lines_Table;
       Low, Hi, Mid : Natural;
@@ -354,12 +382,12 @@ package body Files_Map is
       end loop;
    end Location_To_Line;
 
-   procedure Location_To_Coord
-     (Source_File : in out Source_File_Record;
-      Pos : Source_Ptr;
-      Line_Pos : out Source_Ptr;
-      Line : out Natural;
-      Offset : out Natural)
+   --  Internal procedure
+   procedure Location_To_Coord (Source_File : in out Source_File_Record;
+                                Pos : Source_Ptr;
+                                Line_Pos : out Source_Ptr;
+                                Line : out Natural;
+                                Offset : out Natural)
    is
       Line_P : Source_Ptr;
       Line_Threshold : constant Natural := 4;
@@ -399,11 +427,10 @@ package body Files_Map is
       Source_File.Cache_Line := Line;
    end Location_To_Coord;
 
-   procedure Location_To_Position
-     (Location : Location_Type;
-      Name : out Name_Id;
-      Line : out Natural;
-      Col : out Natural)
+   procedure Location_To_Position (Location : Location_Type;
+                                   Name : out Name_Id;
+                                   Line : out Natural;
+                                   Col : out Natural)
    is
       File : Source_File_Entry;
       Line_Pos : Source_Ptr;
@@ -413,18 +440,34 @@ package body Files_Map is
       Coord_To_Position (File, Line_Pos, Offset, Name, Col);
    end Location_To_Position;
 
-   procedure Location_To_Coord
-     (Location : Location_Type;
-      File : out Source_File_Entry;
-      Line_Pos : out Source_Ptr;
-      Line : out Natural;
-      Offset : out Natural)
+   procedure Location_To_Coord (Location : Location_Type;
+                                File : out Source_File_Entry;
+                                Line_Pos : out Source_Ptr;
+                                Line : out Natural;
+                                Offset : out Natural)
    is
       Pos : Source_Ptr;
    begin
+      --  Get FILE and position POS in the file.
       Location_To_File_Pos (Location, File, Pos);
-      Location_To_Coord (Source_Files.Table (File), Pos,
-                         Line_Pos, Line, Offset);
+
+      case Source_Files.Table (File).Kind is
+         when Source_File_File =>
+            Location_To_Coord (Source_Files.Table (File), Pos,
+                               Line_Pos, Line, Offset);
+         when Source_File_String =>
+            Line_Pos := Source_Ptr_Org;
+            Line := 1;
+            Offset := Natural (Pos - Source_Ptr_Org);
+         when Source_File_Instance =>
+            declare
+               Base : constant Source_File_Entry :=
+                 Source_Files.Table (File).Base;
+            begin
+               Location_To_Coord (Source_Files.Table (Base), Pos,
+                                  Line_Pos, Line, Offset);
+            end;
+      end case;
    end Location_To_Coord;
 
    -- Convert the first digit of VAL into a character (base 10).
@@ -569,7 +612,8 @@ package body Files_Map is
 
       --  Create a new entry.
       Res := Source_Files.Allocate;
-      Source_Files.Table (Res) := (First_Location => Next_Location,
+      Source_Files.Table (Res) := (Kind => Source_File_File,
+                                   First_Location => Next_Location,
                                    Last_Location => Next_Location,
                                    File_Name => Name,
                                    Directory => Directory,
@@ -592,8 +636,7 @@ package body Files_Map is
       Res : Source_File_Entry;
       Buffer: File_Buffer_Acc;
    begin
-      Res := Create_Source_File_Entry (Null_Identifier, Name);
-
+      --  Fill buffer.
       Buffer := new File_Buffer
         (Source_Ptr_Org .. Source_Ptr_Org + Len + 1);
 
@@ -604,11 +647,19 @@ package body Files_Map is
       Buffer (Source_Ptr_Org + Len) := EOT;
       Buffer (Source_Ptr_Org + Len + 1) := EOT;
 
-      Source_Files.Table (Res).Last_Location :=
-        Next_Location + Location_Type (Len) + 1;
+      --  Create entry.
+      Res := Source_Files.Allocate;
+      Source_Files.Table (Res) :=
+        (Kind => Source_File_String,
+         First_Location => Next_Location,
+         Last_Location => Next_Location + Location_Type (Len) + 1,
+         File_Name => Name,
+         Directory => Null_Identifier,
+         Checksum => No_File_Checksum_Id,
+         Source => Buffer,
+         File_Length => Natural (Len));
+
       Next_Location := Source_Files.Table (Res).Last_Location + 1;
-      Source_Files.Table (Res).Source := Buffer;
-      Source_Files.Table (Res).File_Length := Natural (Len);
 
       return Res;
    end Create_Source_File_From_String;
@@ -618,6 +669,79 @@ package body Files_Map is
    begin
       return Create_Source_File_From_String (Name, "");
    end Create_Virtual_Source_File;
+
+   function Create_Instance_Source_File
+     (Ref : Source_File_Entry; Loc : Location_Type; Inst : Nodes.Node_Type)
+     return Source_File_Entry
+   is
+      pragma Unreferenced (Inst);
+      Base : Source_File_Entry;
+      Res : Source_File_Entry;
+   begin
+      if Source_Files.Table (Ref).Kind = Source_File_Instance then
+         Base := Source_Files.Table (Ref).Base;
+      else
+         Base := Ref;
+      end if;
+
+      --  Create entry.
+      Res := Source_Files.Allocate;
+
+      declare
+         F : Source_File_Record renames Source_Files.Table (Base);
+      begin
+         Source_Files.Table (Res) :=
+           (Kind => Source_File_Instance,
+            First_Location => Next_Location,
+            Last_Location => Next_Location + Location_Type (F.File_Length) + 1,
+            File_Name => F.File_Name,
+            Directory => F.Directory,
+            Checksum => F.Checksum,
+            Source => F.Source,
+            File_Length => F.File_Length,
+            Ref => Ref,
+            Base => Base,
+            Instance_Loc => Loc);
+
+         Next_Location := Source_Files.Table (Res).Last_Location + 1;
+      end;
+
+      return Res;
+   end Create_Instance_Source_File;
+
+   function Instance_Relocate
+     (Inst_File : Source_File_Entry; Loc : Location_Type)
+     return Location_Type
+   is
+      pragma Assert (Inst_File <= Source_Files.Last);
+      F : Source_File_Record renames Source_Files.Table (Inst_File);
+      pragma Assert (F.Kind = Source_File_Instance);
+      R : Source_File_Record renames Source_Files.Table (F.Ref);
+   begin
+      if Loc >= R.First_Location and Loc <= R.Last_Location then
+         return F.First_Location + (Loc - R.First_Location);
+      else
+         return Loc;
+      end if;
+   end Instance_Relocate;
+
+   function Location_Instance_To_Location
+     (Loc : Location_Type) return Location_Type
+   is
+      File : Source_File_Entry;
+      Pos :  Source_Ptr;
+   begin
+      if Loc = No_Location then
+         return No_Location;
+      end if;
+
+      Location_To_File_Pos (Loc, File, Pos);
+      if Source_Files.Table (File).Kind = Source_File_Instance then
+         return Source_Files.Table (File).Instance_Loc;
+      else
+         return No_Location;
+      end if;
+   end Location_Instance_To_Location;
 
    --  Return an entry for a filename.
    --  Load the filename if necessary.
@@ -744,13 +868,25 @@ package body Files_Map is
    function Line_To_Position (File : Source_File_Entry; Line : Natural)
                              return Source_Ptr
    is
+      pragma Assert (File <= Source_Files.Last);
+      Source_File: Source_File_Record renames Source_Files.Table (File);
    begin
-      Check_File (File);
-      if Line > Source_Files.Table (File).Nbr_Lines then
-         return Source_Ptr_Bad;
-      else
-         return Source_Files.Table (File).Lines_Table (Line);
-      end if;
+      case Source_File.Kind is
+         when Source_File_File =>
+            if Line > Source_File.Nbr_Lines then
+               return Source_Ptr_Bad;
+            else
+               return Source_File.Lines_Table (Line);
+            end if;
+         when Source_File_String =>
+            if Line /= 1 then
+               return Source_Ptr_Bad;
+            else
+               return Source_Ptr_Org;
+            end if;
+         when Source_File_Instance =>
+            return Line_To_Position (Source_File.Base, Line);
+      end case;
    end Line_To_Position;
 
    function Is_Eq (L : Time_Stamp_Id; R : Time_Stamp_Id) return Boolean
@@ -828,22 +964,22 @@ package body Files_Map is
       if Loc = Location_Nil then
          --  Avoid a crash.
          return "??:??:??";
-      else
-         Location_To_Position (Loc, Name, Line, Col);
-         declare
-            Line_Str : constant String := Natural'Image (Line);
-            Col_Str : constant String := Natural'Image (Col);
-         begin
-            if Filename then
-               return Name_Table.Image (Name)
-                 & ':' & Line_Str (Line_Str'First + 1 .. Line_Str'Last)
-                 & ':' & Col_Str (Col_Str'First + 1 .. Col_Str'Last);
-            else
-               return Line_Str (Line_Str'First + 1 .. Line_Str'Last)
-                 & ':' & Col_Str (Col_Str'First + 1 .. Col_Str'Last);
-            end if;
-         end;
       end if;
+
+      Location_To_Position (Loc, Name, Line, Col);
+      declare
+         Line_Str : constant String := Natural'Image (Line);
+         Col_Str : constant String := Natural'Image (Col);
+      begin
+         if Filename then
+            return Name_Table.Image (Name)
+              & ':' & Line_Str (Line_Str'First + 1 .. Line_Str'Last)
+              & ':' & Col_Str (Col_Str'First + 1 .. Col_Str'Last);
+         else
+            return Line_Str (Line_Str'First + 1 .. Line_Str'Last)
+              & ':' & Col_Str (Col_Str'First + 1 .. Col_Str'Last);
+         end if;
+      end;
    end Image;
 
    -- Debug procedures.
@@ -894,8 +1030,19 @@ package body Files_Map is
         (File_Buffer, File_Buffer_Acc);
    begin
       for I in Source_Files.First .. Source_Files.Last loop
-         free (Source_Files.Table (I).Lines_Table);
-         Free (Source_Files.Table (I).Source);
+         declare
+            F : Source_File_Record renames Source_Files.Table (I);
+         begin
+            case F.Kind is
+               when Source_File_File =>
+                  free (F.Lines_Table);
+                  Free (F.Source);
+               when Source_File_String =>
+                  Free (F.Source);
+               when Source_File_Instance =>
+                  null;
+            end case;
+         end;
       end loop;
       Source_Files.Free;
       Source_Files.Init;

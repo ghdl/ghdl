@@ -1178,11 +1178,14 @@ package body Sem_Decls is
             begin
                Deallocate_Proc :=
                  Create_Iir (Iir_Kind_Procedure_Declaration);
+               Location_Copy (Deallocate_Proc, Decl);
                Set_Identifier (Deallocate_Proc, Std_Names.Name_Deallocate);
                Set_Implicit_Definition
                  (Deallocate_Proc, Iir_Predefined_Deallocate);
+
                Var_Interface :=
                  Create_Iir (Iir_Kind_Interface_Variable_Declaration);
+               Location_Copy (Var_Interface, Decl);
                Set_Identifier (Var_Interface, Std_Names.Name_P);
                Set_Type (Var_Interface, Type_Definition);
                Set_Mode (Var_Interface, Iir_Inout_Mode);

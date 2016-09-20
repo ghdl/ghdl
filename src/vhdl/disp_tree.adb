@@ -29,9 +29,6 @@ with Nodes_Meta;
 --  trees, which is annoying while debugging.
 
 package body Disp_Tree is
-   --  function Is_Anonymous_Type_Definition (Def : Iir) return Boolean
-   --    renames Iirs_Utils.Is_Anonymous_Type_Definition;
-
    --  Max depth for Disp_Iir.  Can be modified from a debugger.
    pragma Warnings (Off);
    Max_Depth : Natural := 10;
@@ -377,7 +374,18 @@ package body Disp_Tree is
       end if;
 
       Header ("location", Indent);
-      Put_Line (Image_Location_Type (Get_Location (N)));
+      declare
+         L : Location_Type;
+      begin
+         L := Get_Location (N);
+         loop
+            Put (Image_Location_Type (L));
+            L := Files_Map.Location_Instance_To_Location (L);
+            exit when L = No_Location;
+            Put (" instantiated at ");
+         end loop;
+         New_Line;
+      end;
 
       declare
          use Nodes_Meta;

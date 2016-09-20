@@ -18,6 +18,7 @@ with Tables;
 with Nodes;
 with Nodes_Meta;
 with Types; use Types;
+with Files_Map; use Files_Map;
 with Iirs_Utils; use Iirs_Utils;
 with Errorout; use Errorout;
 
@@ -143,8 +144,8 @@ package body Sem_Inst is
       Prev_Instance_Table.Set_Last (Mark);
    end Restore_Origin;
 
-   --  The location to be used while instantiated nodes.
-   Instantiate_Loc : Location_Type;
+   --  The virtual file for the instance.
+   Instance_File : Source_File_Entry;
 
    function Instantiate_Iir (N : Iir; Is_Ref : Boolean) return Iir;
 
@@ -286,7 +287,9 @@ package body Sem_Inst is
          when Type_Iir_Direction =>
             Set_Iir_Direction (Res, F, Get_Iir_Direction (N, F));
          when Type_Location_Type =>
-            Set_Location_Type (Res, F, Instantiate_Loc);
+            Set_Location_Type
+              (Res, F, Instance_Relocate (Instance_File,
+                                          Get_Location_Type (N, F)));
          when Type_Iir_Int32 =>
             Set_Iir_Int32 (Res, F, Get_Iir_Int32 (N, F));
          when Type_Int32 =>
@@ -349,7 +352,8 @@ package body Sem_Inst is
          --  And the instance of N is RES.
          Set_Instance (N, Res);
 
-         Set_Location (Res, Instantiate_Loc);
+         Set_Location
+           (Res, Instance_Relocate (Instance_File, Get_Location (N)));
 
          for I in Fields'Range loop
             F := Fields (I);
@@ -420,7 +424,9 @@ package body Sem_Inst is
       while Inter /= Null_Iir loop
          --  Create a copy of the interface.  FIXME: is it really needed ?
          Res := Create_Iir (Get_Kind (Inter));
-         Set_Location (Res, Instantiate_Loc);
+         Set_Location
+           (Res, Instance_Relocate (Instance_File, Get_Location (Inter)));
+
          Set_Parent (Res, Inst);
          Set_Identifier (Res, Get_Identifier (Inter));
          Set_Visible_Flag (Res, Get_Visible_Flag (Inter));
@@ -655,13 +661,23 @@ package body Sem_Inst is
       end loop;
    end Instantiate_Generic_Map_Chain;
 
+   procedure Create_Relocation (Inst : Iir; Orig : Iir)
+   is
+      Orig_File : Source_File_Entry;
+      Pos : Source_Ptr;
+   begin
+      Location_To_File_Pos (Get_Location (Orig), Orig_File, Pos);
+      Instance_File := Create_Instance_Source_File
+        (Orig_File, Get_Location (Inst), Inst);
+   end Create_Relocation;
+
    procedure Instantiate_Package_Declaration (Inst : Iir; Pkg : Iir)
    is
       Header : constant Iir := Get_Package_Header (Pkg);
-      Prev_Loc : constant Location_Type := Instantiate_Loc;
+      Prev_Instance_File : constant Source_File_Entry := Instance_File;
       Mark : constant Instance_Index_Type := Prev_Instance_Table.Last;
    begin
-      Instantiate_Loc := Get_Location (Inst);
+      Create_Relocation (Inst, Pkg);
 
       --  Be sure Get_Origin_Priv can be called on existing nodes.
       Expand_Origin_Table;
@@ -677,7 +693,7 @@ package body Sem_Inst is
 
       Set_Origin (Pkg, Null_Iir);
 
-      Instantiate_Loc := Prev_Loc;
+      Instance_File := Prev_Instance_File;
       Restore_Origin (Mark);
    end Instantiate_Package_Declaration;
 
@@ -686,11 +702,11 @@ package body Sem_Inst is
       Inst_Decl : constant Iir := Get_Package_Origin (Inst);
       Pkg : constant Iir :=
         Get_Named_Entity (Get_Uninstantiated_Package_Name (Inst_Decl));
-      Prev_Loc : constant Location_Type := Instantiate_Loc;
+      Prev_Instance_File : constant Source_File_Entry := Instance_File;
       Mark : constant Instance_Index_Type := Prev_Instance_Table.Last;
       Res : Iir;
    begin
-      Instantiate_Loc := Get_Location (Inst);
+      Create_Relocation (Inst, Pkg);
 
       --  Be sure Get_Origin_Priv can be called on existing nodes.
       Expand_Origin_Table;
@@ -742,9 +758,10 @@ package body Sem_Inst is
 
       --  Instantiate the body.
       Res := Instantiate_Iir (Get_Package_Body (Pkg), False);
+      Set_Identifier (Res, Get_Identifier (Inst));
 
       --  Restore.
-      Instantiate_Loc := Prev_Loc;
+      Instance_File := Prev_Instance_File;
       Restore_Origin (Mark);
 
       return Res;
