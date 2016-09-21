@@ -915,20 +915,27 @@ package body Sem_Expr is
       end case;
 
       --  Staticness.
-      case Get_Implicit_Definition (Imp) is
-         when Iir_Predefined_Error =>
-            raise Internal_Error;
-         when Iir_Predefined_Pure_Functions =>
-            null;
-         when Iir_Predefined_Impure_Functions =>
-            --  Predefined functions such as Now, Endfile are not static.
+      case Get_Kind (Imp) is
+         when Iir_Kind_Function_Declaration =>
+            case Get_Implicit_Definition (Imp) is
+               when Iir_Predefined_Error =>
+                  raise Internal_Error;
+               when Iir_Predefined_Pure_Functions =>
+                  null;
+               when Iir_Predefined_Impure_Functions =>
+                  --  Predefined functions such as Now, Endfile are not static.
+                  Staticness := None;
+               when Iir_Predefined_Explicit =>
+                  if Get_Pure_Flag (Imp) then
+                     Staticness := Min (Staticness, Globally);
+                  else
+                     Staticness := None;
+                  end if;
+            end case;
+         when Iir_Kind_Interface_Function_Declaration =>
             Staticness := None;
-         when Iir_Predefined_Explicit =>
-            if Get_Pure_Flag (Imp) then
-               Staticness := Min (Staticness, Globally);
-            else
-               Staticness := None;
-            end if;
+         when others =>
+            Error_Kind ("set_function_call_staticness", Imp);
       end case;
       Set_Expr_Staticness (Expr, Staticness);
    end Set_Function_Call_Staticness;
@@ -1116,6 +1123,10 @@ package body Sem_Expr is
             if Get_Purity_State (Callee) = Pure then
                return;
             end if;
+         when Iir_Kind_Interface_Function_Declaration
+           | Iir_Kind_Interface_Procedure_Declaration =>
+            --  FIXME: how to compute sensitivity ?  Recurse ?
+            return;
          when others =>
             Error_Kind ("sem_call_all_sensitized_check", Callee);
       end case;
@@ -1783,7 +1794,8 @@ package body Sem_Expr is
             Decl := Get_Non_Alias_Declaration (Interpretation);
 
             --  It is compatible with operand types ?
-            pragma Assert (Get_Kind (Decl) = Iir_Kind_Function_Declaration);
+            pragma Assert (Kind_In (Decl, Iir_Kind_Function_Declaration,
+                                    Iir_Kind_Interface_Function_Declaration));
 
             --  LRM08 12.3 Visibility
             --  [...] or all visible declarations denote the same named entity.
@@ -3685,6 +3697,9 @@ package body Sem_Expr is
                end if;
                if Is_Anonymous_Type_Definition (Arg) then
                   Set_Allocator_Subtype (Expr, Get_Subtype_Indication (Expr));
+                  Set_Is_Ref (Expr, True);
+               else
+                  Set_Is_Ref (Expr, False);
                end if;
 
                --  LRM93 7.3.6

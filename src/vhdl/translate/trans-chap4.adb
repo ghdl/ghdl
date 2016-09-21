@@ -1631,6 +1631,8 @@ package body Trans.Chap4 is
                Create_Object (Decl);
             when Iir_Kind_Interface_Package_Declaration =>
                Create_Package_Interface (Decl);
+            when Iir_Kind_Interface_Type_Declaration =>
+               null;
             when others =>
                Error_Kind ("translate_generic_chain", Decl);
          end case;
@@ -2458,14 +2460,20 @@ package body Trans.Chap4 is
                | Iir_Kind_Group_Declaration =>
                null;
 
-            when Iir_Kind_Package_Declaration
-              | Iir_Kind_Package_Body =>
+            when Iir_Kind_Package_Declaration =>
+               Chap2.Elab_Package (Decl);
+               --  FIXME: finalizer
+            when Iir_Kind_Package_Body =>
                declare
                   Nested_Final : Boolean;
                begin
                   Elab_Declaration_Chain (Decl, Nested_Final);
                   Need_Final := Need_Final or Nested_Final;
                end;
+
+            when Iir_Kind_Package_Instantiation_Declaration =>
+               --  FIXME: finalizers ?
+               Chap2.Elab_Package_Instantiation_Declaration (Decl);
 
             when others =>
                Error_Kind ("elab_declaration_chain", Decl);

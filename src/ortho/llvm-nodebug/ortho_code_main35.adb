@@ -32,7 +32,7 @@ with Ortho_LLVM; use Ortho_LLVM;
 with Interfaces;
 with Interfaces.C; use Interfaces.C;
 
-procedure Ortho_Code_Main is
+procedure Ortho_Code_Main35 is
    --  Name of the output filename (given by option '-o').
    Output : String_Acc := null;
 
@@ -313,4 +313,4 @@ exception
    when others =>
       Set_Exit_Status (2);
       raise;
-end Ortho_Code_Main;
+end Ortho_Code_Main35;

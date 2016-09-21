@@ -43,7 +43,6 @@ package body Sem_Assocs is
       Set_Formal (N_Assoc, Get_Formal (Assoc));
       Set_Actual (N_Assoc, Get_Actual (Assoc));
       Set_Chain (N_Assoc, Get_Chain (Assoc));
-      Set_Associated_Interface (N_Assoc, Inter);
       Set_Whole_Association_Flag (N_Assoc, True);
       Free_Iir (Assoc);
       return N_Assoc;
@@ -1347,13 +1346,21 @@ package body Sem_Assocs is
    procedure Sem_Association_Package_Type_Not_Finish
      (Assoc : Iir;
       Inter : Iir;
-      Match : out Compatibility_Level) is
+      Match : out Compatibility_Level)
+   is
+      Formal : constant Iir := Get_Formal (Assoc);
    begin
-      --  Can be associated only once
-      if Get_Associated_Interface (Assoc) = Inter then
+      if Formal = Null_Iir then
+         --  Can be associated only once
          Match := Fully_Compatible;
       else
-         Match := Not_Compatible;
+         if Get_Kind (Formal) = Iir_Kind_Simple_Name
+           and then Get_Identifier (Formal) = Get_Identifier (Inter)
+         then
+            Match := Fully_Compatible;
+         else
+            Match := Not_Compatible;
+         end if;
       end if;
    end Sem_Association_Package_Type_Not_Finish;
 
@@ -1361,10 +1368,6 @@ package body Sem_Assocs is
    is
       Formal : constant Iir := Get_Formal (Assoc);
    begin
-      --  Always match (as this is a generic association, there is no
-      --  need to resolve overload).
-      pragma Assert (Get_Associated_Interface (Assoc) = Inter);
-
       if Formal /= Null_Iir then
          pragma Assert (Get_Kind (Formal) = Iir_Kind_Simple_Name);
          pragma Assert (Get_Identifier (Formal) = Get_Identifier (Inter));

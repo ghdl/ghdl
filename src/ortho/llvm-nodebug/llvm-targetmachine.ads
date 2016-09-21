@@ -99,6 +99,10 @@ package LLVM.TargetMachine is
                                return TargetMachineRef;
    pragma Import (C, CreateTargetMachine, "LLVMCreateTargetMachine");
 
+   --  Create a DataLayout based on the targetMachine.
+   function CreateTargetDataLayout (T : TargetMachineRef) return TargetDataRef;
+   pragma Import (C, CreateTargetDataLayout, "LLVMCreateTargetDataLayout");
+
    -- Returns the llvm::DataLayout used for this llvm:TargetMachine.
    function GetTargetMachineData(T : TargetMachineRef) return TargetDataRef;
    pragma Import (C, GetTargetMachineData, "LLVMGetTargetMachineData");

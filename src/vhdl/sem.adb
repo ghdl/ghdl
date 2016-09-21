@@ -390,7 +390,8 @@ package body Sem is
             Miss := Missing_Allowed;
          when Iir_Kind_Block_Header =>
             Miss := Missing_Generic;
-         when Iir_Kind_Package_Instantiation_Declaration =>
+         when Iir_Kind_Package_Instantiation_Declaration
+           | Iir_Kind_Package_Header =>
             --  LRM08 4.9
             --  Each formal generic (or member thereof) shall be associated
             --  at most once.
@@ -2500,8 +2501,8 @@ package body Sem is
       end if;
    end Sem_Analysis_Checks_List;
 
-   -- Return true if package declaration DECL needs a body.
-   -- Ie, it contains subprogram specification or deferred constants.
+   --  Return true if package declaration DECL needs a body.
+   --  Ie, it contains subprogram specification or deferred constants.
    function Package_Need_Body_P (Decl: Iir_Package_Declaration)
      return Boolean
    is
@@ -2575,6 +2576,63 @@ package body Sem is
       return False;
    end Package_Need_Body_P;
 
+   --  Return true if package declaration DECL contains at least one package
+   --  instantiation that needs a body.
+   function Package_Need_Instance_Bodies_P (Decl: Iir_Package_Declaration)
+                                           return Boolean
+   is
+      El: Iir;
+   begin
+      El := Get_Declaration_Chain (Decl);
+      while El /= Null_Iir loop
+         case Get_Kind (El) is
+            when Iir_Kind_Package_Instantiation_Declaration =>
+               declare
+                  Pkg : constant Iir :=
+                    Get_Named_Entity (Get_Uninstantiated_Package_Name (El));
+               begin
+                  if Get_Need_Body (Pkg) then
+                     return True;
+                  end if;
+               end;
+            when others =>
+               null;
+         end case;
+         El := Get_Chain (El);
+      end loop;
+      return False;
+   end Package_Need_Instance_Bodies_P;
+
+   --  Return true if uninstantiated pckage DECL must be macro-expanded (at
+   --  least one interface type).
+   function Is_Package_Macro_Expanded
+     (Decl : Iir_Package_Declaration) return Boolean
+   is
+      Header : constant Iir := Get_Package_Header (Decl);
+      Inter : Iir;
+   begin
+      Inter := Get_Generic_Chain (Header);
+      while Is_Valid (Inter) loop
+         case Iir_Kinds_Interface_Declaration (Get_Kind (Inter)) is
+            when Iir_Kinds_Interface_Object_Declaration =>
+               null;
+            when Iir_Kind_Interface_Type_Declaration =>
+               return True;
+            when Iir_Kind_Interface_Package_Declaration =>
+               declare
+                  Pkg : constant Iir := Get_Named_Entity
+                    (Get_Uninstantiated_Package_Name (Inter));
+               begin
+                  if Get_Macro_Expanded_Flag (Pkg) then
+                     return True;
+                  end if;
+               end;
+         end case;
+         Inter := Get_Chain (Inter);
+      end loop;
+      return False;
+   end Is_Package_Macro_Expanded;
+
    --  LRM 2.5  Package Declarations.
    procedure Sem_Package_Declaration (Decl: Iir_Package_Declaration)
    is
@@ -2603,12 +2661,48 @@ package body Sem is
       Push_Signals_Declarative_Part (Implicit, Decl);
 
       if Header /= Null_Iir then
-         Sem_Interface_Chain
-           (Get_Generic_Chain (Header), Generic_Interface_List);
-         if Get_Generic_Map_Aspect_Chain (Header) /= Null_Iir then
-            --  FIXME: todo
-            raise Internal_Error;
-         end if;
+         declare
+            Generic_Chain : constant Iir := Get_Generic_Chain (Header);
+            Generic_Map : constant Iir :=
+              Get_Generic_Map_Aspect_Chain (Header);
+            Assoc_El : Iir;
+            Inter_El : Iir;
+            Inter : Iir;
+         begin
+            Sem_Interface_Chain (Generic_Chain, Generic_Interface_List);
+
+            if Generic_Map /= Null_Iir then
+               --  Generic-mapped packages are not macro-expanded.
+               Set_Macro_Expanded_Flag (Decl, False);
+
+               if Sem_Generic_Association_Chain (Header, Header) then
+                  --  For generic-mapped packages, use the actual type for
+                  --  interface type.
+                  Assoc_El := Get_Generic_Map_Aspect_Chain (Header);
+                  Inter_El := Generic_Chain;
+                  while Is_Valid (Assoc_El) loop
+                     if Get_Kind (Assoc_El) = Iir_Kind_Association_Element_Type
+                     then
+                        Inter :=
+                          Get_Association_Interface (Assoc_El, Inter_El);
+                        Sem_Inst.Substitute_On_Chain
+                          (Generic_Chain,
+                           Get_Type (Inter),
+                           Get_Type (Get_Named_Entity
+                                       (Get_Actual (Assoc_El))));
+                     end if;
+                     Next_Association_Interface (Assoc_El, Inter_El);
+                  end loop;
+               end if;
+            else
+               --  Uninstantiated package.  Maybe macro expanded.
+               Set_Macro_Expanded_Flag
+                 (Decl, Is_Package_Macro_Expanded (Decl));
+            end if;
+         end;
+      else
+         --  Simple packages are never expanded.
+         Set_Macro_Expanded_Flag (Decl, False);
       end if;
 
       Sem_Declaration_Chain (Decl);
@@ -2617,6 +2711,10 @@ package body Sem is
       Pop_Signals_Declarative_Part (Implicit);
       Close_Declarative_Region;
       Set_Need_Body (Decl, Package_Need_Body_P (Decl));
+      if Vhdl_Std >= Vhdl_08 then
+         Set_Need_Instance_Bodies
+           (Decl, Package_Need_Instance_Bodies_P (Decl));
+      end if;
    end Sem_Package_Declaration;
 
    --  LRM 2.6  Package Bodies.
@@ -2756,11 +2854,9 @@ package body Sem is
       --  the actuals are associated with the instantiated formal.
       --  FIXME: do it in Instantiate_Package_Declaration ?
       Hdr := Get_Package_Header (Pkg);
-      if Sem_Generic_Association_Chain (Hdr, Decl) then
-         Sem_Inst.Instantiate_Package_Declaration (Decl, Pkg);
-      else
+      if not Sem_Generic_Association_Chain (Hdr, Decl) then
          --  FIXME: stop analysis here ?
-         null;
+         return;
       end if;
 
       --  FIXME: unless the parent is a package declaration library unit, the
@@ -2774,6 +2870,10 @@ package body Sem is
             Add_Dependence (Bod);
          end if;
       end if;
+
+      --  Instantiate the declaration after analyse of the body.  So that
+      --  the use_flag on the declaration can be propagated to the instance.
+      Sem_Inst.Instantiate_Package_Declaration (Decl, Pkg);
    end Sem_Package_Instantiation_Declaration;
 
    --  LRM 10.4  Use Clauses.

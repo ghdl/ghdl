@@ -203,7 +203,7 @@ package body Translation is
    procedure Translate (Unit : Iir_Design_Unit; Main : Boolean)
    is
       Design_File : constant Iir_Design_File := Get_Design_File (Unit);
-      El : Iir;
+      Lib_Unit : constant Iir := Get_Library_Unit (Unit);
       Lib : Iir_Library_Declaration;
       Lib_Mark, Ent_Mark, Sep_Mark, Unit_Mark : Id_Mark_Type;
       Id : Name_Id;
@@ -212,28 +212,32 @@ package body Translation is
 
       if False then
          --  No translation for context items.
-         El := Get_Context_Items (Unit);
-         while El /= Null_Iir loop
-            case Get_Kind (El) is
-               when Iir_Kind_Use_Clause =>
-                  null;
-               when Iir_Kind_Library_Clause =>
-                  null;
-               when others =>
-                  Error_Kind ("translate1", El);
-            end case;
-            El := Get_Chain (El);
-         end loop;
+         declare
+            El : Iir;
+         begin
+            El := Get_Context_Items (Unit);
+            while El /= Null_Iir loop
+               case Get_Kind (El) is
+                  when Iir_Kind_Use_Clause =>
+                     null;
+                  when Iir_Kind_Library_Clause =>
+                     null;
+                  when others =>
+                     Error_Kind ("translate1", El);
+               end case;
+               El := Get_Chain (El);
+            end loop;
+         end;
       end if;
 
-      El := Get_Library_Unit (Unit);
       if Flags.Verbose then
          if Main then
             Report_Msg (Msgid_Note, Semantic, +Unit,
-                        "translating (with code generation) %n", (1 => +El));
+                        "translating (with code generation) %n",
+                        (1 => +Lib_Unit));
          else
             Report_Msg (Msgid_Note, Semantic, +Unit,
-                        "translating %n", (1 => +El));
+                        "translating %n", (1 => +Lib_Unit));
          end if;
       end if;
 
@@ -247,14 +251,15 @@ package body Translation is
       end if;
       Push_Identifier_Prefix (Lib_Mark, Id);
 
-      if Get_Kind (El) = Iir_Kind_Architecture_Body then
+      if Get_Kind (Lib_Unit) = Iir_Kind_Architecture_Body then
          --  Put 'ARCH' between the entity name and the architecture name, to
          --  avoid a name clash with names from entity (eg an entity port with
          --  the same name as an architecture).
-         Push_Identifier_Prefix (Ent_Mark, Get_Identifier (Get_Entity (El)));
+         Push_Identifier_Prefix (Ent_Mark,
+                                 Get_Identifier (Get_Entity (Lib_Unit)));
          Push_Identifier_Prefix (Sep_Mark, "ARCH");
       end if;
-      Id := Get_Identifier (El);
+      Id := Get_Identifier (Lib_Unit);
       if Id /= Null_Identifier then
          Push_Identifier_Prefix (Unit_Mark, Id);
       end if;
@@ -276,28 +281,31 @@ package body Translation is
          New_Debug_Filename_Decl (Pathname);
       end;
 
-      Current_Library_Unit := El;
+      Current_Library_Unit := Lib_Unit;
 
-      case Get_Kind (El) is
+      case Get_Kind (Lib_Unit) is
          when Iir_Kind_Package_Declaration =>
             New_Debug_Comment_Decl
-              ("package declaration " & Image_Identifier (El));
-            Chap2.Translate_Package_Declaration (El);
+              ("package declaration " & Image_Identifier (Lib_Unit));
+            Chap2.Translate_Package_Declaration (Lib_Unit);
          when Iir_Kind_Package_Body =>
-            New_Debug_Comment_Decl ("package body " & Image_Identifier (El));
-            Chap2.Translate_Package_Body (El);
+            New_Debug_Comment_Decl
+              ("package body " & Image_Identifier (Lib_Unit));
+            Chap2.Translate_Package_Body (Lib_Unit);
          when Iir_Kind_Package_Instantiation_Declaration =>
             New_Debug_Comment_Decl
-              ("package instantiation " & Image_Identifier (El));
-            Chap2.Translate_Package_Instantiation_Declaration (El);
+              ("package instantiation " & Image_Identifier (Lib_Unit));
+            Chap2.Translate_Package_Instantiation_Declaration (Lib_Unit);
          when Iir_Kind_Entity_Declaration =>
-            New_Debug_Comment_Decl ("entity " & Image_Identifier (El));
-            Chap1.Translate_Entity_Declaration (El);
+            New_Debug_Comment_Decl ("entity " & Image_Identifier (Lib_Unit));
+            Chap1.Translate_Entity_Declaration (Lib_Unit);
          when Iir_Kind_Architecture_Body =>
-            New_Debug_Comment_Decl ("architecture " & Image_Identifier (El));
-            Chap1.Translate_Architecture_Body (El);
+            New_Debug_Comment_Decl
+              ("architecture " & Image_Identifier (Lib_Unit));
+            Chap1.Translate_Architecture_Body (Lib_Unit);
          when Iir_Kind_Configuration_Declaration =>
-            New_Debug_Comment_Decl ("configuration " & Image_Identifier (El));
+            New_Debug_Comment_Decl
+              ("configuration " & Image_Identifier (Lib_Unit));
             if Id = Null_Identifier then
                --  Default configuration.
                declare
@@ -306,32 +314,32 @@ package body Translation is
                   Mark_Arch : Id_Mark_Type;
                   Mark_Sep : Id_Mark_Type;
                   Arch : Iir;
-                  Entity : constant Iir := Get_Entity (El);
+                  Entity : constant Iir := Get_Entity (Lib_Unit);
                begin
                   --  Note: this is done inside the architecture identifier.
                   Push_Identifier_Prefix
                     (Mark_Entity, Get_Identifier (Entity));
                   Arch := Get_Block_Specification
-                    (Get_Block_Configuration (El));
+                    (Get_Block_Configuration (Lib_Unit));
                   Push_Identifier_Prefix (Mark_Sep, "ARCH");
                   Push_Identifier_Prefix (Mark_Arch, Get_Identifier (Arch));
                   Push_Identifier_Prefix
                     (Mark, Name_Table.Get_Identifier ("DEFAULT_CONFIG"));
-                  Chap1.Translate_Configuration_Declaration_Body (El);
+                  Chap1.Translate_Configuration_Declaration_Body (Lib_Unit);
                   Pop_Identifier_Prefix (Mark);
                   Pop_Identifier_Prefix (Mark_Arch);
                   Pop_Identifier_Prefix (Mark_Sep);
                   Pop_Identifier_Prefix (Mark_Entity);
                end;
             else
-               Chap1.Translate_Configuration_Declaration_Decl (El);
-               Chap1.Translate_Configuration_Declaration_Body (El);
+               Chap1.Translate_Configuration_Declaration_Decl (Lib_Unit);
+               Chap1.Translate_Configuration_Declaration_Body (Lib_Unit);
             end if;
          when Iir_Kind_Context_Declaration =>
-            New_Debug_Comment_Decl ("context " & Image_Identifier (El));
+            New_Debug_Comment_Decl ("context " & Image_Identifier (Lib_Unit));
             null;
          when others =>
-            Error_Kind ("translate", El);
+            Error_Kind ("translate", Lib_Unit);
       end case;
 
       Current_Filename_Node := O_Dnode_Null;
@@ -340,7 +348,7 @@ package body Translation is
       if Id /= Null_Identifier then
          Pop_Identifier_Prefix (Unit_Mark);
       end if;
-      if Get_Kind (El) = Iir_Kind_Architecture_Body then
+      if Get_Kind (Lib_Unit) = Iir_Kind_Architecture_Body then
          Pop_Identifier_Prefix (Sep_Mark);
          Pop_Identifier_Prefix (Ent_Mark);
       end if;

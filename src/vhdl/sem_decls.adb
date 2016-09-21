@@ -391,6 +391,25 @@ package body Sem_Decls is
       Xref_Decl (Inter);
    end Sem_Interface_Package_Declaration;
 
+   function Create_Implicit_Interface_Function (Name : Name_Id;
+                                                Decl : Iir;
+                                                Interface_Chain : Iir;
+                                                Return_Type : Iir)
+                                               return Iir
+   is
+      Operation : Iir_Function_Declaration;
+   begin
+      Operation := Create_Iir (Iir_Kind_Interface_Function_Declaration);
+      Location_Copy (Operation, Decl);
+      Set_Parent (Operation, Get_Parent (Decl));
+      Set_Interface_Declaration_Chain (Operation, Interface_Chain);
+      Set_Return_Type (Operation, Return_Type);
+      Set_Identifier (Operation, Name);
+      Set_Visible_Flag (Operation, True);
+      Compute_Subprogram_Hash (Operation);
+      return Operation;
+   end Create_Implicit_Interface_Function;
+
    procedure Sem_Interface_Type_Declaration (Inter : Iir)
    is
       Def : Iir;
@@ -412,15 +431,13 @@ package body Sem_Decls is
       Finters := Create_Anonymous_Interface (Def);
       Set_Chain (Finters, Create_Anonymous_Interface (Def));
 
-      Op_Eq := Create_Implicit_Function
+      Op_Eq := Create_Implicit_Interface_Function
         (Std_Names.Name_Op_Equality,
-         Inter, Iir_Predefined_Interface_Type_Equality,
-         Finters, Std_Package.Boolean_Type_Definition);
+         Inter, Finters, Std_Package.Boolean_Type_Definition);
 
-      Op_Neq := Create_Implicit_Function
+      Op_Neq := Create_Implicit_Interface_Function
         (Std_Names.Name_Op_Inequality,
-         Inter, Iir_Predefined_Interface_Type_Inequality,
-         Finters, Std_Package.Boolean_Type_Definition);
+         Inter, Finters, Std_Package.Boolean_Type_Definition);
 
       Set_Interface_Type_Subprograms (Inter, Op_Eq);
       Set_Chain (Op_Eq, Op_Neq);
@@ -434,6 +451,10 @@ package body Sem_Decls is
    procedure Sem_Interface_Chain (Interface_Chain: Iir;
                                   Interface_Kind : Interface_Kind_Type)
    is
+      Immediately_Visible : constant Boolean :=
+        Interface_Kind = Generic_Interface_List
+        and then Flags.Vhdl_Std >= Vhdl_08;
+
       Inter : Iir;
 
       --  LAST is the last interface declaration that has a type.  This is
@@ -454,6 +475,15 @@ package body Sem_Decls is
             when Iir_Kind_Interface_Type_Declaration =>
                Sem_Interface_Type_Declaration (Inter);
          end case;
+
+         --  LRM08 6.5.6 Interface lists
+         --  A name that denotes an interface declaration in a generic
+         --  interface list may appear in an interface declaration within the
+         --  interface list containing the denoted interface declaration.
+         if Immediately_Visible then
+            Name_Visible (Inter);
+         end if;
+
          Inter := Get_Chain (Inter);
       end loop;
 
@@ -468,11 +498,13 @@ package body Sem_Decls is
 
       --  GHDL: this is achieved by making the interface object visible after
       --   having analyzed the interface list.
-      Inter := Interface_Chain;
-      while Inter /= Null_Iir loop
-         Name_Visible (Inter);
-         Inter := Get_Chain (Inter);
-      end loop;
+      if not Immediately_Visible then
+         Inter := Interface_Chain;
+         while Inter /= Null_Iir loop
+            Name_Visible (Inter);
+            Inter := Get_Chain (Inter);
+         end loop;
+      end if;
    end Sem_Interface_Chain;
 
    --  LRM93 7.2.2
@@ -1146,11 +1178,14 @@ package body Sem_Decls is
             begin
                Deallocate_Proc :=
                  Create_Iir (Iir_Kind_Procedure_Declaration);
+               Location_Copy (Deallocate_Proc, Decl);
                Set_Identifier (Deallocate_Proc, Std_Names.Name_Deallocate);
                Set_Implicit_Definition
                  (Deallocate_Proc, Iir_Predefined_Deallocate);
+
                Var_Interface :=
                  Create_Iir (Iir_Kind_Interface_Variable_Declaration);
+               Location_Copy (Var_Interface, Decl);
                Set_Identifier (Var_Interface, Std_Names.Name_P);
                Set_Type (Var_Interface, Type_Definition);
                Set_Mode (Var_Interface, Iir_Inout_Mode);

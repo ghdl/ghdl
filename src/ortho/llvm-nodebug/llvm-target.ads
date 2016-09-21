@@ -39,11 +39,24 @@ package LLVM.Target is
    pragma Import (C, InitializeNativeAsmPrinter,
                   "LLVMInitializeNativeAsmPrinter_noinline");
 
+   --  Target Data
+
+   --  Obtain the data layout for a module.
+   --  see Module::getDataLayout()
+   function GetModuleDataLayout (M : ModuleRef) return TargetDataRef;
+   pragma Import (C, GetModuleDataLayout, "LLVMGetModuleDataLayout");
+
+   --  Set the data layout for a module.
+   --  see Module::setDataLayout()
+   procedure SetModuleDataLayout (M : ModuleRef; DL : TargetDataRef);
+   pragma Import (C, SetModuleDataLayout, "LLVMSetModuleDataLayout");
+
    --  Creates target data from a target layout string.
    --  See the constructor llvm::DataLayout::DataLayout.
    function CreateTargetData (StringRep : Cstring) return TargetDataRef;
    pragma Import (C, CreateTargetData, "LLVMCreateTargetData");
 
+   --  Removed in LLVM 3.9 !!
    --  Adds target data information to a pass manager. This does not take
    --  ownership of the target data.
    --  See the method llvm::PassManagerBase::add.

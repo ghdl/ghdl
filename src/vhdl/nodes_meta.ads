@@ -133,7 +133,10 @@ package Nodes_Meta is
       Field_Entity_Name,
       Field_Package,
       Field_Package_Body,
+      Field_Package_Instantiation_Bodies_Chain,
       Field_Need_Body,
+      Field_Macro_Expanded_Flag,
+      Field_Need_Instance_Bodies,
       Field_Block_Configuration,
       Field_Concurrent_Statement_Chain,
       Field_Chain,
@@ -222,6 +225,7 @@ package Nodes_Meta is
       Field_Reject_Time_Expression,
       Field_Sensitivity_List,
       Field_Process_Origin,
+      Field_Package_Origin,
       Field_Condition_Clause,
       Field_Timeout_Clause,
       Field_Postponed_Flag,
@@ -302,7 +306,6 @@ package Nodes_Meta is
       Field_Index_Subtype,
       Field_Parameter,
       Field_Actual_Type,
-      Field_Associated_Interface,
       Field_Association_Chain,
       Field_Individual_Association_Chain,
       Field_Aggregate_Info,
@@ -621,7 +624,11 @@ package Nodes_Meta is
    function Has_Entity_Name (K : Iir_Kind) return Boolean;
    function Has_Package (K : Iir_Kind) return Boolean;
    function Has_Package_Body (K : Iir_Kind) return Boolean;
+   function Has_Package_Instantiation_Bodies_Chain (K : Iir_Kind)
+      return Boolean;
    function Has_Need_Body (K : Iir_Kind) return Boolean;
+   function Has_Macro_Expanded_Flag (K : Iir_Kind) return Boolean;
+   function Has_Need_Instance_Bodies (K : Iir_Kind) return Boolean;
    function Has_Block_Configuration (K : Iir_Kind) return Boolean;
    function Has_Concurrent_Statement_Chain (K : Iir_Kind) return Boolean;
    function Has_Chain (K : Iir_Kind) return Boolean;
@@ -713,6 +720,7 @@ package Nodes_Meta is
    function Has_Reject_Time_Expression (K : Iir_Kind) return Boolean;
    function Has_Sensitivity_List (K : Iir_Kind) return Boolean;
    function Has_Process_Origin (K : Iir_Kind) return Boolean;
+   function Has_Package_Origin (K : Iir_Kind) return Boolean;
    function Has_Condition_Clause (K : Iir_Kind) return Boolean;
    function Has_Timeout_Clause (K : Iir_Kind) return Boolean;
    function Has_Postponed_Flag (K : Iir_Kind) return Boolean;
@@ -796,7 +804,6 @@ package Nodes_Meta is
    function Has_Index_Subtype (K : Iir_Kind) return Boolean;
    function Has_Parameter (K : Iir_Kind) return Boolean;
    function Has_Actual_Type (K : Iir_Kind) return Boolean;
-   function Has_Associated_Interface (K : Iir_Kind) return Boolean;
    function Has_Association_Chain (K : Iir_Kind) return Boolean;
    function Has_Individual_Association_Chain (K : Iir_Kind) return Boolean;
    function Has_Aggregate_Info (K : Iir_Kind) return Boolean;

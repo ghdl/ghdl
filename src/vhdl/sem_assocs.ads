@@ -19,8 +19,10 @@ with Iirs; use Iirs;
 with Sem_Expr; use Sem_Expr;
 
 package Sem_Assocs is
-   --  Change the kind of association corresponding to non-object interfaces.
-   --  Such an association mustn't be handled an like association for object.
+   --  Rewrite the association chain by changing the kind of assocation
+   --  corresponding to non-object interfaces.  Such an association mustn't be
+   --  handled an like association for object as the actual is not an
+   --  expression.
    function Extract_Non_Object_Association
      (Assoc_Chain : Iir; Inter_Chain : Iir) return Iir;
 

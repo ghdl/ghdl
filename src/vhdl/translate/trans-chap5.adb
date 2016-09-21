@@ -802,6 +802,8 @@ package body Trans.Chap5 is
                             (Actual_Info.Package_Instance_Body_Scope),
                         Uninst_Info.Package_Body_Ptr_Type));
                end;
+            when Iir_Kind_Association_Element_Type =>
+               null;
             when others =>
                Error_Kind ("elab_generic_map_aspect(1)", Assoc);
          end case;

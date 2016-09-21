@@ -78,6 +78,12 @@ package Libraries is
    --  Set PATH as the path of the work library.
    procedure Set_Work_Library_Path (Path : String);
 
+   -- Transform a library identifier into a file name.
+   -- Very simple mechanism: just add '-objVV.cf' extension, where VV
+   -- is the version.
+   function Library_To_File_Name (Library: Iir_Library_Declaration)
+                                 return String;
+
    --  Set the name of the work library, load the work library.
    --  Note: the scanner shouldn't be in use, since this function uses it.
    --  If EMPTY is set, the work library is just created and not loaded.

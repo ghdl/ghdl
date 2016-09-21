@@ -114,11 +114,29 @@ package body Libraries is
       return Pathes.Table (N);
    end Get_Path;
 
+   -- Transform a library identifier into a file name.
+   -- Very simple mechanism: just add '-objVV.cf' extension, where VV
+   -- is the version.
+   function Library_To_File_Name (Library: Iir_Library_Declaration)
+                                 return String
+   is
+      use Flags;
+   begin
+      case Vhdl_Std is
+         when Vhdl_87 =>
+            return Image_Identifier (Library) & "-obj87.cf";
+         when Vhdl_93c | Vhdl_93 | Vhdl_00 | Vhdl_02 =>
+            return Image_Identifier (Library) & "-obj93.cf";
+         when Vhdl_08 =>
+            return Image_Identifier (Library) & "-obj08.cf";
+      end case;
+   end Library_To_File_Name;
+
    --  Search LIBRARY in the library path.
    procedure Search_Library_In_Path (Library : Iir)
    is
       use Flags;
-      File_Name : constant String := Back_End.Library_To_File_Name (Library);
+      File_Name : constant String := Library_To_File_Name (Library);
       Library_Id : constant Name_Id := Get_Identifier (Library);
       Id_Len : constant Natural := Get_Name_Length (Library_Id);
       L : Natural;
@@ -181,7 +199,7 @@ package body Libraries is
                                    Library: Iir_Library_Declaration)
      return Boolean
    is
-      File_Name : constant String := Back_End.Library_To_File_Name (Library);
+      File_Name : constant String := Library_To_File_Name (Library);
       Fe : Source_File_Entry;
    begin
       Fe := Files_Map.Load_Source_File (Dir, Get_Identifier (File_Name));
@@ -1165,7 +1183,7 @@ package body Libraries is
       use Interfaces.C_Streams;
       use GNAT.OS_Lib;
       Temp_Name: constant String := Image (Work_Directory)
-        & '_' & Back_End.Library_To_File_Name (Library) & ASCII.NUL;
+        & '_' & Library_To_File_Name (Library) & ASCII.NUL;
       Mode : constant String := 'w' & ASCII.NUL;
       Stream : FILEs;
       Success : Boolean;
@@ -1338,7 +1356,7 @@ package body Libraries is
       declare
          use Files_Map;
          File_Name: constant String := Image (Work_Directory)
-           & Back_End.Library_To_File_Name (Library) & ASCII.NUL;
+           & Library_To_File_Name (Library) & ASCII.NUL;
          Delete_Success : Boolean;
       begin
          --  For windows: renames doesn't overwrite destination; so first

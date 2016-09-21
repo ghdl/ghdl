@@ -406,10 +406,6 @@ package Iirs is
    -- Only for Iir_Kind_Association_Element_By_Individual:
    --   Get/Set_Individual_Association_Chain (Field4)
    --
-   -- Only for Iir_Kind_Association_Element_Package:
-   -- Only for Iir_Kind_Association_Element_Type:
-   --   Get/Set_Associated_Interface (Field4)
-   --
    --  A function call or a type conversion for the association.
    --  FIXME: should be a name ?
    -- Only for Iir_Kind_Association_Element_By_Expression:
@@ -847,7 +843,26 @@ package Iirs is
    --
    --   Get/Set_Package_Header (Field6)
    --
+   --   Get/Set_Package_Origin (Field7)
+   --
+   --  Chain of bodies for package instantiation.  Present only in certain
+   --  conditions.
+   --   Get/Set_Package_Instantiation_Bodies_Chain (Field8)
+   --
+   --  If true, the package need a body.
    --   Get/Set_Need_Body (Flag1)
+   --
+   --  True for uninstantiated package that will be macro-expanded for
+   --  simulation.  The macro-expansion is done by canon, so controlled by
+   --  back-end.  The reason of macro-expansion is presence of interface
+   --  type.
+   --   Get/Set_Macro_Expanded_Flag (Flag2)
+   --
+   --  True if the package declaration has the package has at least one
+   --  package instantiation declaration whose uninstantiated declaration
+   --  needs both a body and macro-expansion.  In that case, the instantiation
+   --  needs macro-expansion of their body.
+   --   Get/Set_Need_Instance_Bodies (Flag3)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -1386,6 +1401,62 @@ package Iirs is
    --
    -- Only for Iir_Kind_Procedure_Body:
    --   Get/Set_Suspend_Flag (Flag11)
+
+   -- Iir_Kind_Interface_Function_Declaration (Medium)
+   -- Iir_Kind_Interface_Procedure_Declaration (Medium)
+   --
+   --  LRM08 6.5.4 Interface subprogram declarations
+   --
+   --  interface_subprogram_declaration ::=
+   --     interface_subprogram_specification
+   --       [ IS interface_subprogram_default ]
+   --
+   --  interface_subprogram_specification ::=
+   --     interface_procedure_specification | interface_function_specification
+   --
+   --  interface_procedure_specification ::=
+   --     PROCEDURE designator
+   --        [ [ PARAMETER ] ( formal_parameter_list ) ]
+   --
+   --  interface_function_specification ::=
+   --     [ PURE | IMPURE ] FUNCTION designator
+   --        [ [ PARAMETER ] ( formal_parameter_list ) ] return type_mark
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   -- Only for Iir_Kind_Interface_Function_Declaration:
+   --   Get/Set_Return_Type (Field1)
+   --
+   -- Only for Iir_Kind_Interface_Function_Declaration:
+   --   Get/Set_Type (Alias Field1)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   -- For string, the identifier is the corresponding reserved word.
+   --   Get/Set_Identifier (Field3)
+   --
+   --   Get/Set_Subprogram_Hash (Field4)
+   --
+   --   Get/Set_Interface_Declaration_Chain (Field5)
+   --
+   --   Get/Set_Return_Type_Mark (Field8)
+   --
+   --   Get/Set_Subprogram_Depth (Field10)
+   --
+   --   Get/Set_Seen_Flag (Flag1)
+   --
+   -- Only for Iir_Kind_Interface_Function_Declaration:
+   --   Get/Set_Pure_Flag (Flag2)
+   --
+   --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Use_Flag (Flag6)
+   --
+   -- Only for Iir_Kind_Interface_Function_Declaration:
+   --   Get/Set_Resolution_Function_Flag (Flag7)
+   --
+   -- Only for Iir_Kind_Interface_Function_Declaration:
+   --   Get/Set_Has_Pure (Flag8)
 
    -- Iir_Kind_Signal_Declaration (Short)
    --
@@ -3853,6 +3924,8 @@ package Iirs is
       Iir_Kind_Interface_File_Declaration,     -- object, interface
       Iir_Kind_Interface_Type_Declaration,
       Iir_Kind_Interface_Package_Declaration,
+      Iir_Kind_Interface_Function_Declaration,
+      Iir_Kind_Interface_Procedure_Declaration,
 
    -- Expressions.
       Iir_Kind_Identity_Operator,
@@ -4344,10 +4417,6 @@ package Iirs is
        --  LRM08 9.2.3 Relational Operators
        Iir_Predefined_Std_Ulogic_Array_Match_Equality,
        Iir_Predefined_Std_Ulogic_Array_Match_Inequality,
-
-       --  For interface type
-       Iir_Predefined_Interface_Type_Equality,
-       Iir_Predefined_Interface_Type_Inequality,
 
        --  --  Predefined attribute functions.
        --  Iir_Predefined_Attribute_Image,
@@ -5738,10 +5807,21 @@ package Iirs is
    function Get_Package_Body (Pkg : Iir) return Iir;
    procedure Set_Package_Body (Pkg : Iir; Decl : Iir);
 
-   --  If true, the package need a body.
+   --  Field: Field8 Chain
+   function Get_Package_Instantiation_Bodies_Chain (Pkg : Iir) return Iir;
+   procedure Set_Package_Instantiation_Bodies_Chain (Pkg : Iir; Chain : Iir);
+
    --  Field: Flag1
    function Get_Need_Body (Decl : Iir_Package_Declaration) return Boolean;
    procedure Set_Need_Body (Decl : Iir_Package_Declaration; Flag : Boolean);
+
+   --  Field: Flag2
+   function Get_Macro_Expanded_Flag (Decl : Iir) return Boolean;
+   procedure Set_Macro_Expanded_Flag (Decl : Iir; Flag : Boolean);
+
+   --  Field: Flag3
+   function Get_Need_Instance_Bodies (Decl : Iir) return Boolean;
+   procedure Set_Need_Instance_Bodies (Decl : Iir; Flag : Boolean);
 
    --  Field: Field5
    function Get_Block_Configuration (Target : Iir) return Iir;
@@ -5776,7 +5856,9 @@ package Iirs is
    function Get_Subtype_Indication (Target : Iir) return Iir;
    procedure Set_Subtype_Indication (Target : Iir; Atype : Iir);
 
-   --  Field: Field6
+   --  Discrete range of an iterator.  During analysis, a subtype indiciation
+   --  is created from this range.
+   --  Field: Field6 Ref
    function Get_Discrete_Range (Target : Iir) return Iir;
    procedure Set_Discrete_Range (Target : Iir; Rng : Iir);
 
@@ -6173,6 +6255,10 @@ package Iirs is
    --  Field: Field8
    function Get_Process_Origin (Proc : Iir) return Iir;
    procedure Set_Process_Origin (Proc : Iir; Orig : Iir);
+
+   --  Field: Field7
+   function Get_Package_Origin (Pkg : Iir) return Iir;
+   procedure Set_Package_Origin (Pkg : Iir; Orig : Iir);
 
    --  Field: Field5
    function Get_Condition_Clause (Wait : Iir_Wait_Statement) return Iir;
@@ -6598,11 +6684,6 @@ package Iirs is
    function Get_Actual_Type (Target : Iir) return Iir;
    procedure Set_Actual_Type (Target : Iir; Atype : Iir);
 
-   --  Interface for a package association.
-   --  Field: Field4 Ref
-   function Get_Associated_Interface (Assoc : Iir) return Iir;
-   procedure Set_Associated_Interface (Assoc : Iir; Inter : Iir);
-
    --  List of individual associations for association_element_by_individual.
    --  Associations for parenthesis_name.
    --  Field: Field2 Chain
@@ -6783,12 +6864,12 @@ package Iirs is
    procedure Set_Simple_Name_Subtype (Target : Iir; Atype : Iir);
 
    --  Body of a protected type declaration.
-   --  Field: Field2
+   --  Field: Field2 Ref
    function Get_Protected_Type_Body (Target : Iir) return Iir;
    procedure Set_Protected_Type_Body (Target : Iir; Bod : Iir);
 
    --  Corresponsing protected type declaration of a protected type body.
-   --  Field: Field4
+   --  Field: Field4 Ref
    function Get_Protected_Type_Declaration (Target : Iir) return Iir;
    procedure Set_Protected_Type_Declaration (Target : Iir; Decl : Iir);
 

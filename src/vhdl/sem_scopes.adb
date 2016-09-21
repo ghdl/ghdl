@@ -374,13 +374,17 @@ package body Sem_Scopes is
       case Get_Kind (Decl) is
          when Iir_Kind_Enumeration_Literal
            | Iir_Kind_Function_Declaration
-           | Iir_Kind_Procedure_Declaration =>
+           | Iir_Kind_Procedure_Declaration
+           | Iir_Kind_Interface_Function_Declaration
+           | Iir_Kind_Interface_Procedure_Declaration =>
             return True;
          when Iir_Kind_Non_Object_Alias_Declaration =>
             case Get_Kind (Get_Named_Entity (Get_Name (Decl))) is
                when Iir_Kind_Enumeration_Literal
                  | Iir_Kind_Function_Declaration
-                 | Iir_Kind_Procedure_Declaration =>
+                 | Iir_Kind_Procedure_Declaration
+                 | Iir_Kind_Interface_Function_Declaration
+                 | Iir_Kind_Interface_Procedure_Declaration =>
                   return True;
                when Iir_Kind_Non_Object_Alias_Declaration =>
                   raise Internal_Error;

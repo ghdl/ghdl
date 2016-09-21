@@ -500,6 +500,8 @@ package body Iirs is
            | Iir_Kind_Constant_Declaration
            | Iir_Kind_Iterator_Declaration
            | Iir_Kind_Interface_Package_Declaration
+           | Iir_Kind_Interface_Function_Declaration
+           | Iir_Kind_Interface_Procedure_Declaration
            | Iir_Kind_Sensitized_Process_Statement
            | Iir_Kind_Process_Statement
            | Iir_Kind_Concurrent_Simple_Signal_Assignment
@@ -1717,6 +1719,23 @@ package body Iirs is
       Set_Field5 (Pkg, Decl);
    end Set_Package_Body;
 
+   function Get_Package_Instantiation_Bodies_Chain (Pkg : Iir) return Iir is
+   begin
+      pragma Assert (Pkg /= Null_Iir);
+      pragma Assert (Has_Package_Instantiation_Bodies_Chain (Get_Kind (Pkg)),
+                     "no field Package_Instantiation_Bodies_Chain");
+      return Get_Field8 (Pkg);
+   end Get_Package_Instantiation_Bodies_Chain;
+
+   procedure Set_Package_Instantiation_Bodies_Chain (Pkg : Iir; Chain : Iir)
+   is
+   begin
+      pragma Assert (Pkg /= Null_Iir);
+      pragma Assert (Has_Package_Instantiation_Bodies_Chain (Get_Kind (Pkg)),
+                     "no field Package_Instantiation_Bodies_Chain");
+      Set_Field8 (Pkg, Chain);
+   end Set_Package_Instantiation_Bodies_Chain;
+
    function Get_Need_Body (Decl : Iir_Package_Declaration) return Boolean is
    begin
       pragma Assert (Decl /= Null_Iir);
@@ -1732,6 +1751,38 @@ package body Iirs is
                      "no field Need_Body");
       Set_Flag1 (Decl, Flag);
    end Set_Need_Body;
+
+   function Get_Macro_Expanded_Flag (Decl : Iir) return Boolean is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Macro_Expanded_Flag (Get_Kind (Decl)),
+                     "no field Macro_Expanded_Flag");
+      return Get_Flag2 (Decl);
+   end Get_Macro_Expanded_Flag;
+
+   procedure Set_Macro_Expanded_Flag (Decl : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Macro_Expanded_Flag (Get_Kind (Decl)),
+                     "no field Macro_Expanded_Flag");
+      Set_Flag2 (Decl, Flag);
+   end Set_Macro_Expanded_Flag;
+
+   function Get_Need_Instance_Bodies (Decl : Iir) return Boolean is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Need_Instance_Bodies (Get_Kind (Decl)),
+                     "no field Need_Instance_Bodies");
+      return Get_Flag3 (Decl);
+   end Get_Need_Instance_Bodies;
+
+   procedure Set_Need_Instance_Bodies (Decl : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Need_Instance_Bodies (Get_Kind (Decl)),
+                     "no field Need_Instance_Bodies");
+      Set_Flag3 (Decl, Flag);
+   end Set_Need_Instance_Bodies;
 
    function Get_Block_Configuration (Target : Iir) return Iir is
    begin
@@ -3146,6 +3197,22 @@ package body Iirs is
       Set_Field8 (Proc, Orig);
    end Set_Process_Origin;
 
+   function Get_Package_Origin (Pkg : Iir) return Iir is
+   begin
+      pragma Assert (Pkg /= Null_Iir);
+      pragma Assert (Has_Package_Origin (Get_Kind (Pkg)),
+                     "no field Package_Origin");
+      return Get_Field7 (Pkg);
+   end Get_Package_Origin;
+
+   procedure Set_Package_Origin (Pkg : Iir; Orig : Iir) is
+   begin
+      pragma Assert (Pkg /= Null_Iir);
+      pragma Assert (Has_Package_Origin (Get_Kind (Pkg)),
+                     "no field Package_Origin");
+      Set_Field7 (Pkg, Orig);
+   end Set_Package_Origin;
+
    function Get_Condition_Clause (Wait : Iir_Wait_Statement) return Iir is
    begin
       pragma Assert (Wait /= Null_Iir);
@@ -4429,22 +4496,6 @@ package body Iirs is
                      "no field Actual_Type");
       Set_Field5 (Target, Atype);
    end Set_Actual_Type;
-
-   function Get_Associated_Interface (Assoc : Iir) return Iir is
-   begin
-      pragma Assert (Assoc /= Null_Iir);
-      pragma Assert (Has_Associated_Interface (Get_Kind (Assoc)),
-                     "no field Associated_Interface");
-      return Get_Field4 (Assoc);
-   end Get_Associated_Interface;
-
-   procedure Set_Associated_Interface (Assoc : Iir; Inter : Iir) is
-   begin
-      pragma Assert (Assoc /= Null_Iir);
-      pragma Assert (Has_Associated_Interface (Get_Kind (Assoc)),
-                     "no field Associated_Interface");
-      Set_Field4 (Assoc, Inter);
-   end Set_Associated_Interface;
 
    function Get_Association_Chain (Target : Iir) return Iir is
    begin
