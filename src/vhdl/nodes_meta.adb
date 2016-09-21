@@ -268,6 +268,7 @@ package body Nodes_Meta is
       Field_Actual_Type => Type_Iir,
       Field_Association_Chain => Type_Iir,
       Field_Individual_Association_Chain => Type_Iir,
+      Field_Subprogram_Association_Chain => Type_Iir,
       Field_Aggregate_Info => Type_Iir,
       Field_Sub_Aggregate_Info => Type_Iir,
       Field_Aggr_Dynamic_Flag => Type_Boolean,
@@ -836,6 +837,8 @@ package body Nodes_Meta is
             return "association_chain";
          when Field_Individual_Association_Chain =>
             return "individual_association_chain";
+         when Field_Subprogram_Association_Chain =>
+            return "subprogram_association_chain";
          when Field_Aggregate_Info =>
             return "aggregate_info";
          when Field_Sub_Aggregate_Info =>
@@ -1669,7 +1672,7 @@ package body Nodes_Meta is
          when Field_Subtype_Definition =>
             return Attr_None;
          when Field_Interface_Type_Subprograms =>
-            return Attr_None;
+            return Attr_Chain;
          when Field_Nature =>
             return Attr_None;
          when Field_Mode =>
@@ -1990,6 +1993,8 @@ package body Nodes_Meta is
             return Attr_Chain;
          when Field_Individual_Association_Chain =>
             return Attr_Chain;
+         when Field_Subprogram_Association_Chain =>
+            return Attr_Chain;
          when Field_Aggregate_Info =>
             return Attr_None;
          when Field_Sub_Aggregate_Info =>
@@ -2262,7 +2267,7 @@ package body Nodes_Meta is
       Field_Formal,
       Field_Chain,
       Field_Actual,
-      Field_Actual_Type,
+      Field_Subprogram_Association_Chain,
       --  Iir_Kind_Association_Element_Subprogram
       Field_Whole_Association_Flag,
       Field_Collapse_Signal_Flag,
@@ -5137,6 +5142,8 @@ package body Nodes_Meta is
             return Get_Association_Chain (N);
          when Field_Individual_Association_Chain =>
             return Get_Individual_Association_Chain (N);
+         when Field_Subprogram_Association_Chain =>
+            return Get_Subprogram_Association_Chain (N);
          when Field_Aggregate_Info =>
             return Get_Aggregate_Info (N);
          when Field_Sub_Aggregate_Info =>
@@ -5511,6 +5518,8 @@ package body Nodes_Meta is
             Set_Association_Chain (N, V);
          when Field_Individual_Association_Chain =>
             Set_Individual_Association_Chain (N, V);
+         when Field_Subprogram_Association_Chain =>
+            Set_Subprogram_Association_Chain (N, V);
          when Field_Aggregate_Info =>
             Set_Aggregate_Info (N, V);
          when Field_Sub_Aggregate_Info =>
@@ -9490,13 +9499,7 @@ package body Nodes_Meta is
 
    function Has_Actual_Type (K : Iir_Kind) return Boolean is
    begin
-      case K is
-         when Iir_Kind_Association_Element_By_Individual
-           | Iir_Kind_Association_Element_Type =>
-            return True;
-         when others =>
-            return False;
-      end case;
+      return K = Iir_Kind_Association_Element_By_Individual;
    end Has_Actual_Type;
 
    function Has_Association_Chain (K : Iir_Kind) return Boolean is
@@ -9508,6 +9511,11 @@ package body Nodes_Meta is
    begin
       return K = Iir_Kind_Association_Element_By_Individual;
    end Has_Individual_Association_Chain;
+
+   function Has_Subprogram_Association_Chain (K : Iir_Kind) return Boolean is
+   begin
+      return K = Iir_Kind_Association_Element_Type;
+   end Has_Subprogram_Association_Chain;
 
    function Has_Aggregate_Info (K : Iir_Kind) return Boolean is
    begin

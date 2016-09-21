@@ -308,6 +308,7 @@ package Nodes_Meta is
       Field_Actual_Type,
       Field_Association_Chain,
       Field_Individual_Association_Chain,
+      Field_Subprogram_Association_Chain,
       Field_Aggregate_Info,
       Field_Sub_Aggregate_Info,
       Field_Aggr_Dynamic_Flag,
@@ -806,6 +807,7 @@ package Nodes_Meta is
    function Has_Actual_Type (K : Iir_Kind) return Boolean;
    function Has_Association_Chain (K : Iir_Kind) return Boolean;
    function Has_Individual_Association_Chain (K : Iir_Kind) return Boolean;
+   function Has_Subprogram_Association_Chain (K : Iir_Kind) return Boolean;
    function Has_Aggregate_Info (K : Iir_Kind) return Boolean;
    function Has_Sub_Aggregate_Info (K : Iir_Kind) return Boolean;
    function Has_Aggr_Dynamic_Flag (K : Iir_Kind) return Boolean;

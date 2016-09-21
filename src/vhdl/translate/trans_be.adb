@@ -76,6 +76,16 @@ package body Trans_Be is
 
       Canon.Canonicalize (Unit);
 
+      --  FIXME: for Main only ?
+      if Get_Kind (Lib) = Iir_Kind_Package_Declaration
+        and then not Get_Need_Body (Lib)
+        and then Get_Need_Instance_Bodies (Lib)
+      then
+         --  Create the bodies for instances
+         Set_Package_Instantiation_Bodies_Chain
+           (Lib, Canon.Create_Instantiation_Bodies (Lib));
+      end if;
+
       if (Main or Flags.Dump_All) and then Flags.Dump_Canon then
          Disp_Tree.Disp_Tree (Unit);
       end if;

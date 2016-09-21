@@ -4530,6 +4530,22 @@ package body Iirs is
       Set_Field4 (Target, Chain);
    end Set_Individual_Association_Chain;
 
+   function Get_Subprogram_Association_Chain (Target : Iir) return Iir is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Subprogram_Association_Chain (Get_Kind (Target)),
+                     "no field Subprogram_Association_Chain");
+      return Get_Field4 (Target);
+   end Get_Subprogram_Association_Chain;
+
+   procedure Set_Subprogram_Association_Chain (Target : Iir; Chain : Iir) is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Subprogram_Association_Chain (Get_Kind (Target)),
+                     "no field Subprogram_Association_Chain");
+      Set_Field4 (Target, Chain);
+   end Set_Subprogram_Association_Chain;
+
    function Get_Aggregate_Info (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);
