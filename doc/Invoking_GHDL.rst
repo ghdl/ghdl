@@ -62,7 +62,8 @@ Elaborate a design::
 
 On GNU/Linux, if the GCC backend was enabled during the compilation of `GHDL`,
 the elaboration command creates an executable containing the code of the `VHDL`
-sources, the elaboration code and simulation code to execute a design hierarchy.
+sources, the elaboration code and simulation code to execute a design
+hierarchy. The executable is created in the current directory.
 On Windows or if the GCC backend was not enabled, this command elaborates the design
 but does not generate anything.
 
@@ -118,7 +119,7 @@ The options and arguments are the same as for the elaboration command, :ref:`Ela
 
 On GNU/Linux this command simply determines the filename of the executable
 and executes it.  Options are ignored. You may also directly execute
-the program.
+the program. The executable must be in the current directory.
 
 This command exists for three reasons:
 
