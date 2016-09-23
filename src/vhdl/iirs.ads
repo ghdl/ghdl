@@ -408,7 +408,7 @@ package Iirs is
    -- Only for Iir_Kind_Association_Element_By_Individual:
    --   Get/Set_Individual_Association_Chain (Field4)
    --
-   --  A function call or a type conversion for the association.
+   --  A function call or a type conversion for the actual.
    --  FIXME: should be a name ?
    -- Only for Iir_Kind_Association_Element_By_Expression:
    --   Get/Set_In_Conversion (Field4)
@@ -419,6 +419,7 @@ package Iirs is
    -- Only for Iir_Kind_Association_Element_By_Individual:
    --   Get/Set_Actual_Type (Field5)
    --
+   --  A function call or a type conversion for the formal.
    -- Only for Iir_Kind_Association_Element_By_Expression:
    --   Get/Set_Out_Conversion (Field5)
    --

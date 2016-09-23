@@ -123,6 +123,9 @@ package Evaluation is
    --  EXPR must be of a discrete subtype.
    function Eval_Pos (Expr : Iir) return Iir_Int64;
 
+   --  Return True iff L and R (scalar literals) are equal.
+   function Eval_Is_Eq (L, R : Iir) return Boolean;
+
    --  Replace ORIGIN (an overflow literal) with extreme positive value (if
    --  IS_POS is true) or extreme negative value.
    function Build_Extreme_Value (Is_Pos : Boolean; Origin : Iir) return Iir;

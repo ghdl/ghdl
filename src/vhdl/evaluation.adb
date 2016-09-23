@@ -2873,6 +2873,26 @@ package body Evaluation is
       return Get_Left_Limit (Range_Expr);
    end Eval_Discrete_Range_Left;
 
+   function Eval_Is_Eq (L, R : Iir) return Boolean
+   is
+      Expr_Type : constant Iir := Get_Type (L);
+   begin
+      case Get_Kind (Expr_Type) is
+         when Iir_Kind_Integer_Subtype_Definition
+           | Iir_Kind_Integer_Type_Definition
+           | Iir_Kind_Physical_Subtype_Definition
+           | Iir_Kind_Physical_Type_Definition
+           | Iir_Kind_Enumeration_Subtype_Definition
+           | Iir_Kind_Enumeration_Type_Definition =>
+            return Eval_Pos (L) = Eval_Pos (R);
+         when Iir_Kind_Floating_Subtype_Definition
+           | Iir_Kind_Floating_Type_Definition =>
+            return Get_Fp_Value (L) = Get_Fp_Value (R);
+         when others =>
+            Error_Kind ("eval_is_eq", Expr_Type);
+      end case;
+   end Eval_Is_Eq;
+
    procedure Eval_Operator_Symbol_Name (Id : Name_Id)
    is
    begin

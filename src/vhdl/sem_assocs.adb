@@ -397,7 +397,7 @@ package body Sem_Assocs is
 
    --  Check for restrictions in LRM 1.1.1.2
    --  Return FALSE in case of error.
-   function Check_Port_Association_Restriction
+   function Check_Port_Association_Mode_Restrictions
      (Formal : Iir_Interface_Signal_Declaration;
       Actual : Iir_Interface_Signal_Declaration;
       Assoc : Iir)
@@ -426,7 +426,97 @@ package body Sem_Assocs is
               & Get_Mode_Name (Amode), +Formal);
       end if;
       return False;
-   end Check_Port_Association_Restriction;
+   end Check_Port_Association_Mode_Restrictions;
+
+   --  Check restrictions of LRM02 12.2.4
+   procedure Check_Port_Association_Bounds_Restrictions
+     (Formal : Iir; Actual : Iir; Assoc : Iir)
+   is
+      function Is_Scalar_Type_Compatible (Src : Iir; Dest : Iir)
+                                         return Boolean
+      is
+         Src_Range : Iir;
+         Dst_Range : Iir;
+      begin
+         if Get_Kind (Src) not in Iir_Kinds_Scalar_Type_Definition then
+            return True;
+         end if;
+
+         Src_Range := Get_Range_Constraint (Src);
+         Dst_Range := Get_Range_Constraint (Dest);
+         if Get_Expr_Staticness (Src_Range) /= Locally
+           or else Get_Expr_Staticness (Dst_Range) /= Locally
+         then
+            return True;
+         end if;
+
+         --  FIXME: non-static bounds have to be checked at run-time
+         --  (during elaboration).
+         if not Eval_Is_Eq (Get_Left_Limit (Src_Range),
+                            Get_Left_Limit (Dst_Range))
+           or else not Eval_Is_Eq (Get_Right_Limit (Src_Range),
+                                      Get_Right_Limit (Dst_Range))
+           or else Get_Direction (Src_Range) /= Get_Direction (Dst_Range)
+         then
+            return False;
+         end if;
+
+         return True;
+      end Is_Scalar_Type_Compatible;
+
+      Inter : constant Iir := Get_Object_Prefix (Formal, False);
+      Ftype : constant Iir := Get_Type (Formal);
+      Atype : constant Iir := Get_Type (Actual);
+      F_Conv : constant Iir := Get_Out_Conversion (Assoc);
+      A_Conv : constant Iir := Get_In_Conversion (Assoc);
+      F2a_Type : Iir;
+      A2f_Type : Iir;
+   begin
+      --  LRM02 12.2.4 The port map aspect
+      --  If an actual signal is associated with a port of any mode, and if
+      --  the type of the formal is a scalar type, then it is an error if
+      --  (after applying any conversion function or type conversion
+      --  expression present in the actual part) the bounds and direction of
+      --  the subtype denoted by the subtype indication of the formal are not
+      --  identical to the bounds and direction of the subtype denoted by the
+      --  subtype indication of the actual.
+      if Is_Valid (F_Conv) then
+         F2a_Type := Get_Type (F_Conv);
+      else
+         F2a_Type := Ftype;
+      end if;
+      if Is_Valid (A_Conv) then
+         A2f_Type := Get_Type (A_Conv);
+      else
+         A2f_Type := Atype;
+      end if;
+      if Get_Mode (Inter) in Iir_In_Modes
+        and then not Is_Scalar_Type_Compatible (A2f_Type, Ftype)
+      then
+         if Flag_Elaborate then
+            Error_Msg_Elab
+              (Assoc,
+               "bounds or direction of formal and actual mismatch");
+         else
+            Warning_Msg_Sem
+              (Warnid_Port_Bounds, +Assoc,
+               "bounds or direction of formal and actual mismatch");
+         end if;
+      end if;
+      if Get_Mode (Inter) in Iir_Out_Modes
+        and then not Is_Scalar_Type_Compatible (F2a_Type, Atype)
+      then
+         if Flag_Elaborate then
+            Error_Msg_Elab
+              (Assoc,
+               "bounds or direction of formal and actual mismatch");
+         else
+            Warning_Msg_Sem
+              (Warnid_Port_Bounds, +Assoc,
+               "bounds or direction of formal and actual mismatch");
+         end if;
+      end if;
+   end Check_Port_Association_Bounds_Restrictions;
 
    --  Handle indexed name
    --  FORMAL is the formal name to be handled.

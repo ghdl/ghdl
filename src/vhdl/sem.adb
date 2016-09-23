@@ -555,13 +555,15 @@ package body Sem is
                   if Get_Name_Staticness (Object) < Globally then
                      Error_Msg_Sem (+Actual, "actual must be a static name");
                   end if;
+                  Check_Port_Association_Bounds_Restrictions
+                    (Formal, Actual, El);
                   if Get_Kind (Prefix) = Iir_Kind_Interface_Signal_Declaration
                   then
                      declare
                         P : Boolean;
                         pragma Unreferenced (P);
                      begin
-                        P := Check_Port_Association_Restriction
+                        P := Check_Port_Association_Mode_Restrictions
                           (Formal_Base, Prefix, El);
                      end;
                   end if;
