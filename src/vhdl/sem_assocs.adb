@@ -20,8 +20,11 @@ with Errorout; use Errorout;
 with Flags; use Flags;
 with Types; use Types;
 with Iirs_Utils; use Iirs_Utils;
+with Std_Names;
 with Sem_Names; use Sem_Names;
 with Sem_Types;
+with Std_Package;
+with Sem_Scopes;
 with Iir_Chains; use Iir_Chains;
 with Xrefs;
 
@@ -1444,6 +1447,70 @@ package body Sem_Assocs is
       return;
    end Sem_Association_Package;
 
+   --  Create an implicit association_element_subprogram for the declaration
+   --  of function ID for ACTUAL (a name of a type).
+   function Sem_Implicit_Operator_Association
+     (Id : Name_Id; Actual : Iir) return Iir
+   is
+      use Sem_Scopes;
+
+      Atype : constant Iir := Get_Type (Actual);
+
+      --  Return TRUE if DECL is a function declaration with a comparaison
+      --  operator profile.
+      function Has_Comparaison_Profile (Decl : Iir) return Boolean
+      is
+         Inter : Iir;
+      begin
+         --  A function declaration.
+         if Get_Kind (Decl) /= Iir_Kind_Function_Declaration then
+            return False;
+         end if;
+         --  That returns a boolean.
+         if (Get_Base_Type (Get_Return_Type (Decl))
+               /= Std_Package.Boolean_Type_Definition)
+         then
+            return False;
+         end if;
+
+         --  With 2 interfaces of type ATYPE.
+         Inter := Get_Interface_Declaration_Chain (Decl);
+         for I in 1 .. 2 loop
+            if Inter = Null_Iir then
+               return False;
+            end if;
+            if Get_Base_Type (Get_Type (Inter)) /= Get_Base_Type (Atype) then
+               return False;
+            end if;
+            Inter := Get_Chain (Inter);
+         end loop;
+         if Inter /= Null_Iir then
+            return False;
+         end if;
+         return True;
+      end Has_Comparaison_Profile;
+
+      Interp : Name_Interpretation_Type;
+      Decl : Iir;
+      Res : Iir;
+   begin
+      Interp := Get_Interpretation (Id);
+      while Valid_Interpretation (Interp) loop
+         Decl := Get_Declaration (Interp);
+         if Has_Comparaison_Profile (Decl) then
+            Res := Create_Iir (Iir_Kind_Association_Element_Subprogram);
+            Location_Copy (Res, Actual);
+            Set_Actual (Res, Build_Simple_Name (Decl, Get_Location (Actual)));
+            return Res;
+         end if;
+         Interp := Get_Next_Interpretation (Interp);
+      end loop;
+
+      Error_Msg_Sem (+Actual, "cannot find a %i declaration for type %i",
+                     (+Id, +Actual));
+      return Null_Iir;
+   end Sem_Implicit_Operator_Association;
+
    procedure Sem_Association_Type
      (Assoc : Iir;
       Inter : Iir;
@@ -1451,6 +1518,7 @@ package body Sem_Assocs is
       Match : out Compatibility_Level)
    is
       Actual : Iir;
+      Op_Eq, Op_Neq : Iir;
    begin
       if not Finish then
          Sem_Association_Package_Type_Not_Finish (Assoc, Inter, Match);
@@ -1466,7 +1534,18 @@ package body Sem_Assocs is
       --  indication.
       --  FIXME: ghdl only supports type_mark!
       Actual := Sem_Types.Sem_Subtype_Indication (Actual);
-      Set_Actual_Type (Assoc, Get_Type (Actual));
+      Set_Actual (Assoc, Actual);
+
+      --  FIXME: it is not clear at all from the LRM how the implicit
+      --  associations are done...
+      Op_Eq := Sem_Implicit_Operator_Association
+        (Std_Names.Name_Op_Equality, Actual);
+      if Op_Eq /= Null_Iir then
+         Op_Neq := Sem_Implicit_Operator_Association
+           (Std_Names.Name_Op_Inequality, Actual);
+         Set_Chain (Op_Eq, Op_Neq);
+         Set_Subprogram_Association_Chain (Assoc, Op_Eq);
+      end if;
    end Sem_Association_Type;
 
    --  Associate ASSOC with interface INTERFACE

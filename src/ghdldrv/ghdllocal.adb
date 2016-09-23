@@ -935,10 +935,10 @@ package body Ghdllocal is
       procedure Delete_Top_Unit (Str : String) is
       begin
          --  Delete elaboration file
-         Delete_Asm_Obj (Image (Libraries.Work_Directory) & Elab_Prefix & Str);
+         Delete_Asm_Obj (Elab_Prefix & Str);
 
          --  Delete file list.
-         Delete (Image (Libraries.Work_Directory) & Str & List_Suffix & Nul);
+         Delete (Str & List_Suffix & Nul);
 
          --  Delete executable.
          Delete (Str & Nul);
@@ -966,6 +966,7 @@ package body Ghdllocal is
          Delete_Asm_Obj (Str.all);
          Free (Str);
 
+         --  Try any possible top-level names
          Design_Unit := Get_First_Design_Unit (File);
          while Design_Unit /= Null_Iir loop
             Lib_Unit := Get_Library_Unit (Design_Unit);

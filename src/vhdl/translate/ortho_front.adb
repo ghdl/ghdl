@@ -222,8 +222,7 @@ package body Ortho_Front is
 
    --  Lighter version of libraries.is_obselete, since DESIGN_UNIT must be in
    --  the currently analyzed design file.
-   function Is_Obsolete (Design_Unit : Iir_Design_Unit)
-     return Boolean
+   function Is_Obsolete (Design_Unit : Iir_Design_Unit) return Boolean
    is
       List : Iir_List;
       El : Iir;

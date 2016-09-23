@@ -650,7 +650,7 @@ package body Sem_Inst is
                declare
                   Inter_Type_Def : constant Iir :=
                     Get_Type (Get_Association_Interface (Assoc, Inter));
-                  Actual_Type : constant Iir := Get_Actual_Type (Assoc);
+                  Actual_Type : constant Iir := Get_Type (Get_Actual (Assoc));
                begin
                   Set_Instance (Inter_Type_Def, Actual_Type);
                end;
@@ -744,6 +744,22 @@ package body Sem_Inst is
                   Inter := Get_Association_Interface (Inst_El, Inter_El);
                   Set_Instance (Get_Type (Get_Origin (Inter)),
                                 Get_Type (Get_Actual (Inst_El)));
+                  --  Implicit operators.
+                  declare
+                     Imp_Inter : Iir;
+                     Imp_Assoc : Iir;
+                  begin
+                     Imp_Assoc := Get_Subprogram_Association_Chain (Inst_El);
+                     Imp_Inter := Get_Interface_Type_Subprograms
+                       (Get_Origin (Inter_El));
+                     while Is_Valid (Imp_Inter) and Is_Valid (Imp_Assoc) loop
+                        Set_Instance
+                          (Imp_Inter,
+                           Get_Named_Entity (Get_Actual (Imp_Assoc)));
+                        Imp_Inter := Get_Chain (Imp_Inter);
+                        Imp_Assoc := Get_Chain (Imp_Assoc);
+                     end loop;
+                  end;
                when Iir_Kind_Association_Element_Package =>
                   --  TODO.
                   raise Internal_Error;

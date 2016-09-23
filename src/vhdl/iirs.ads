@@ -391,6 +391,7 @@ package Iirs is
    -- Iir_Kind_Association_Element_By_Individual (Short)
    -- Iir_Kind_Association_Element_Package (Short)
    -- Iir_Kind_Association_Element_Type (Short)
+   -- Iir_Kind_Association_Element_Subprogram (Short)
    --  These are used for association element of an association list with
    --  an interface (ie subprogram call, port map, generic map).
    --
@@ -401,6 +402,7 @@ package Iirs is
    -- Only for Iir_Kind_Association_Element_By_Expression:
    -- Only for Iir_Kind_Association_Element_Package:
    -- Only for Iir_Kind_Association_Element_Type:
+   -- Only for Iir_Kind_Association_Element_Subprogram:
    --   Get/Set_Actual (Field3)
    --
    -- Only for Iir_Kind_Association_Element_By_Individual:
@@ -411,8 +413,10 @@ package Iirs is
    -- Only for Iir_Kind_Association_Element_By_Expression:
    --   Get/Set_In_Conversion (Field4)
    --
-   -- Only for Iir_Kind_Association_Element_By_Individual:
    -- Only for Iir_Kind_Association_Element_Type:
+   --   Get/Set_Subprogram_Association_Chain (Field4)
+   --
+   -- Only for Iir_Kind_Association_Element_By_Individual:
    --   Get/Set_Actual_Type (Field5)
    --
    -- Only for Iir_Kind_Association_Element_By_Expression:
@@ -1447,6 +1451,8 @@ package Iirs is
    --
    -- Only for Iir_Kind_Interface_Function_Declaration:
    --   Get/Set_Pure_Flag (Flag2)
+   --
+   --   Get/Set_Foreign_Flag (Flag3)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -3817,6 +3823,7 @@ package Iirs is
       Iir_Kind_Association_Element_Open,
       Iir_Kind_Association_Element_Package,
       Iir_Kind_Association_Element_Type,
+      Iir_Kind_Association_Element_Subprogram,
       Iir_Kind_Choice_By_Others,
       Iir_Kind_Choice_By_Expression,
       Iir_Kind_Choice_By_Range,
@@ -5872,7 +5879,7 @@ package Iirs is
    procedure Set_Subtype_Definition (Target : Iir; Def : Iir);
 
    --  Implicit operations of an interface type declaration.
-   --  Field: Field4
+   --  Field: Field4 Chain
    function Get_Interface_Type_Subprograms (Target : Iir) return Iir;
    procedure Set_Interface_Type_Subprograms (Target : Iir; Subprg : Iir);
 
@@ -6694,6 +6701,11 @@ package Iirs is
    --  Field: Field4 Chain
    function Get_Individual_Association_Chain (Target : Iir) return Iir;
    procedure Set_Individual_Association_Chain (Target : Iir; Chain : Iir);
+
+   --  Chain of implicit subprogram associations for a type association.
+   --  Field: Field4 Chain
+   function Get_Subprogram_Association_Chain (Target : Iir) return Iir;
+   procedure Set_Subprogram_Association_Chain (Target : Iir; Chain : Iir);
 
    --  Get/Set info for the aggregate.
    --  There is one aggregate_info for for each dimension.
