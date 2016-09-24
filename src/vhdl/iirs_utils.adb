@@ -892,9 +892,13 @@ package body Iirs_Utils is
 
    function Is_Second_Subprogram_Specification (Spec : Iir) return Boolean
    is
-      Bod : constant Iir := Get_Subprogram_Body (Spec);
+      Bod : constant Iir := Get_Chain (Spec);
    begin
+      --  FIXME: don't directly use Subprogram_Body as it is not yet correctly
+      --  set during instantiation.
       return Bod /= Null_Iir
+        and then Kind_In (Bod, Iir_Kind_Function_Body,
+                          Iir_Kind_Procedure_Body)
         and then Get_Subprogram_Specification (Bod) /= Spec;
    end Is_Second_Subprogram_Specification;
 
