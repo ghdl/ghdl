@@ -2604,7 +2604,9 @@ package body Sem is
                   Pkg : constant Iir :=
                     Get_Named_Entity (Get_Uninstantiated_Package_Name (El));
                begin
-                  if Get_Need_Body (Pkg) then
+                  if not Is_Error (Pkg)
+                    and then Get_Need_Body (Pkg)
+                  then
                      return True;
                   end if;
                end;
