@@ -1464,6 +1464,8 @@ package Iirs is
    --
    -- Only for Iir_Kind_Interface_Function_Declaration:
    --   Get/Set_Has_Pure (Flag8)
+   --
+   --   Get/Set_All_Sensitized_State (State3)
 
    -- Iir_Kind_Signal_Declaration (Short)
    --
@@ -3930,10 +3932,10 @@ package Iirs is
       Iir_Kind_Interface_Variable_Declaration, -- object, interface
       Iir_Kind_Interface_Signal_Declaration,   -- object, interface
       Iir_Kind_Interface_File_Declaration,     -- object, interface
-      Iir_Kind_Interface_Type_Declaration,
-      Iir_Kind_Interface_Package_Declaration,
-      Iir_Kind_Interface_Function_Declaration,
-      Iir_Kind_Interface_Procedure_Declaration,
+      Iir_Kind_Interface_Type_Declaration,     --         interface
+      Iir_Kind_Interface_Package_Declaration,  --         interface
+      Iir_Kind_Interface_Function_Declaration, --         interface
+      Iir_Kind_Interface_Procedure_Declaration, --        interface
 
    -- Expressions.
       Iir_Kind_Identity_Operator,
@@ -4774,6 +4776,10 @@ package Iirs is
      Iir_Kind_Function_Declaration ..
      Iir_Kind_Procedure_Declaration;
 
+   subtype Iir_Kinds_Subprogram_Body is Iir_Kind range
+     Iir_Kind_Function_Body ..
+     Iir_Kind_Procedure_Body;
+
    subtype Iir_Kinds_Process_Statement is Iir_Kind range
      Iir_Kind_Sensitized_Process_Statement ..
      Iir_Kind_Process_Statement;
@@ -4790,7 +4796,9 @@ package Iirs is
    --Iir_Kind_Interface_Signal_Declaration
    --Iir_Kind_Interface_File_Declaration
    --Iir_Kind_Interface_Type_Declaration
-     Iir_Kind_Interface_Package_Declaration;
+   --Iir_Kind_Interface_Package_Declaration
+   --Iir_Kind_Interface_Function_Declaration
+     Iir_Kind_Interface_Procedure_Declaration;
 
    subtype Iir_Kinds_Object_Declaration is Iir_Kind range
      Iir_Kind_Object_Alias_Declaration ..
@@ -4804,6 +4812,10 @@ package Iirs is
    --Iir_Kind_Interface_Variable_Declaration
    --Iir_Kind_Interface_Signal_Declaration
      Iir_Kind_Interface_File_Declaration;
+
+   subtype Iir_Kinds_Interface_Subprogram_Declaration is Iir_Kind range
+     Iir_Kind_Interface_Function_Declaration ..
+     Iir_Kind_Interface_Procedure_Declaration;
 
    subtype Iir_Kinds_Branch_Quantity_Declaration is Iir_Kind range
      Iir_Kind_Across_Quantity_Declaration ..

@@ -148,6 +148,16 @@ package Iirs_Utils is
    function Is_Implicit_Subprogram (Spec : Iir) return Boolean;
    pragma Inline (Is_Implicit_Subprogram);
 
+   --  Return True if N is a function_declaration or an
+   --  interface_function_declaration.
+   function Is_Function_Declaration (N : Iir) return Boolean;
+   pragma Inline (Is_Function_Declaration);
+
+   --  Return True if N is a procedure_declaration or an
+   --  interface_procedure_declaration.
+   function Is_Procedure_Declaration (N : Iir) return Boolean;
+   pragma Inline (Is_Procedure_Declaration);
+
    --  If NAME is a simple or an expanded name, return the denoted declaration.
    --  Otherwise, return NAME.
    function Strip_Denoting_Name (Name : Iir) return Iir;

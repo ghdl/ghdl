@@ -962,6 +962,7 @@ package body Sem_Scopes is
            | Iir_Kind_Non_Object_Alias_Declaration
            | Iir_Kinds_Interface_Object_Declaration
            | Iir_Kind_Interface_Package_Declaration
+           | Iir_Kinds_Interface_Subprogram_Declaration
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Attribute_Declaration
            | Iir_Kind_Group_Template_Declaration

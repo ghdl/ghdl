@@ -1526,11 +1526,13 @@ package body Sem_Names is
             Name_Res := Finish_Sem_Denoting_Name (Name, Res);
             Set_Base_Name (Name_Res, Res);
             return Name_Res;
-         when Iir_Kind_Function_Declaration =>
+         when Iir_Kind_Function_Declaration
+           | Iir_Kind_Interface_Function_Declaration =>
             Name_Res := Finish_Sem_Denoting_Name (Name, Res);
             Set_Type (Name_Res, Get_Return_Type (Res));
             return Name_Res;
-         when Iir_Kind_Procedure_Declaration =>
+         when Iir_Kind_Procedure_Declaration
+           | Iir_Kind_Interface_Procedure_Declaration =>
             return Finish_Sem_Denoting_Name (Name, Res);
          when Iir_Kind_Type_Conversion =>
             pragma Assert (Get_Kind (Name) = Iir_Kind_Parenthesis_Name);
@@ -2227,7 +2229,7 @@ package body Sem_Names is
          --  Only values can be indexed or sliced.
          --  Catch errors such as slice of a type conversion.
          if Name_To_Value (Sub_Name) = Null_Iir
-           and then Get_Kind (Sub_Name) /= Iir_Kind_Function_Declaration
+           and then not Is_Function_Declaration (Sub_Name)
          then
             if Finish then
                Error_Msg_Sem
@@ -2343,7 +2345,7 @@ package body Sem_Names is
          Call : Iir;
       begin
          Used := False;
-         if Get_Kind (Sub_Name) = Iir_Kind_Function_Declaration then
+         if Is_Function_Declaration (Sub_Name) then
             Sem_Association_Chain
               (Get_Interface_Declaration_Chain (Sub_Name),
                Assoc_Chain, False, Missing_Parameter, Name, Match);
@@ -2354,7 +2356,7 @@ package body Sem_Names is
                Used := True;
             end if;
          end if;
-         if Get_Kind (Sub_Name) /= Iir_Kind_Procedure_Declaration then
+         if not Is_Procedure_Declaration (Sub_Name) then
             R := Sem_As_Indexed_Or_Slice_Name (Sub_Name, False);
             if R /= Null_Iir then
                Add_Result (Res, R);
@@ -2393,8 +2395,8 @@ package body Sem_Names is
       Assoc_Chain := Get_Association_Chain (Name);
       Actual := Get_One_Actual (Assoc_Chain);
 
-      if Get_Kind (Prefix) = Iir_Kind_Type_Declaration
-        or else Get_Kind (Prefix) = Iir_Kind_Subtype_Declaration
+      if Kind_In (Prefix, Iir_Kind_Type_Declaration,
+                  Iir_Kind_Subtype_Declaration)
       then
          --  A type conversion.  The prefix is a type mark.
 
@@ -2465,7 +2467,8 @@ package body Sem_Names is
                  (+Name, "no overloaded function found matching %n",
                   +Prefix_Name);
             end if;
-         when Iir_Kind_Function_Declaration =>
+         when Iir_Kind_Function_Declaration
+           | Iir_Kind_Interface_Function_Declaration =>
             Sem_Parenthesis_Function (Prefix);
             if Res = Null_Iir then
                Error_Parenthesis_Function (Prefix);
@@ -2527,7 +2530,8 @@ package body Sem_Names is
             end if;
             return;
 
-         when Iir_Kind_Procedure_Declaration =>
+         when Iir_Kind_Procedure_Declaration
+           | Iir_Kind_Interface_Procedure_Declaration =>
             Error_Msg_Sem (+Name, "function name is a procedure");
 
          when Iir_Kinds_Process_Statement

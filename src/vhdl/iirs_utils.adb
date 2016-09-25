@@ -908,6 +908,18 @@ package body Iirs_Utils is
         and then Get_Implicit_Definition (Spec) in Iir_Predefined_Implicit;
    end Is_Implicit_Subprogram;
 
+   function Is_Function_Declaration (N : Iir) return Boolean is
+   begin
+      return Kind_In (N, Iir_Kind_Function_Declaration,
+                      Iir_Kind_Interface_Function_Declaration);
+   end Is_Function_Declaration;
+
+   function Is_Procedure_Declaration (N : Iir) return Boolean is
+   begin
+      return Kind_In (N, Iir_Kind_Procedure_Declaration,
+                      Iir_Kind_Interface_Procedure_Declaration);
+   end Is_Procedure_Declaration;
+
    function Is_Same_Profile (L, R: Iir) return Boolean
    is
       L1, R1 : Iir;

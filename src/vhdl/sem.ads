@@ -65,6 +65,7 @@ package Sem is
    procedure Compute_Subprogram_Hash (Subprg : Iir);
 
    --  LRM 2.1  Subprogram Declarations.
+   procedure Sem_Subprogram_Specification (Subprg: Iir);
    procedure Sem_Subprogram_Declaration (Subprg: Iir);
 
    --  LRM 2.2  Subprogram Bodies.

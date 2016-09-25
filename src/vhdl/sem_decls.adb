@@ -448,6 +448,11 @@ package body Sem_Decls is
       Xref_Decl (Inter);
    end Sem_Interface_Type_Declaration;
 
+   procedure Sem_Interface_Subprogram_Declaration (Inter : Iir) is
+   begin
+      Sem_Subprogram_Specification (Inter);
+   end Sem_Interface_Subprogram_Declaration;
+
    procedure Sem_Interface_Chain (Interface_Chain: Iir;
                                   Interface_Kind : Interface_Kind_Type)
    is
@@ -474,6 +479,8 @@ package body Sem_Decls is
                Sem_Interface_Package_Declaration (Inter);
             when Iir_Kind_Interface_Type_Declaration =>
                Sem_Interface_Type_Declaration (Inter);
+            when Iir_Kinds_Interface_Subprogram_Declaration =>
+               Sem_Interface_Subprogram_Declaration (Inter);
          end case;
 
          --  LRM08 6.5.6 Interface lists
