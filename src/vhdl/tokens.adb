@@ -351,6 +351,8 @@ package body Tokens is
          --  VHDL 08
          when Tok_Context =>
             return "context";
+         when Tok_Parameter =>
+            return "parameter";
 
          --  AMS-VHDL
          when Tok_Across =>

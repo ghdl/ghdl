@@ -155,6 +155,7 @@ package body Std_Names is
       Def ("protected", Name_Protected);
 
       Def ("context", Name_Context);
+      Def ("parameter", Name_Parameter);
 
       Def ("across", Name_Across);
       Def ("break", Name_Break);
@@ -451,7 +452,6 @@ package body Std_Names is
       Def ("notif0",       Name_Notif0);
       Def ("notif1",       Name_Notif1);
       Def ("output",       Name_Output);
-      Def ("parameter",    Name_Parameter);
       Def ("pmos",         Name_Pmos);
       Def ("posedge",      Name_Posedge);
       Def ("primitive",    Name_Primitive);
