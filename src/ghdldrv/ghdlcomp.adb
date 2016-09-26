@@ -426,6 +426,7 @@ package body Ghdlcomp is
                             Arg : String;
                             Res : out Option_Res)
    is
+      pragma Assert (Option'First = 1);
    begin
       if Option = "--expect-failure" then
          Flag_Expect_Failure := True;
@@ -437,8 +438,10 @@ package body Ghdlcomp is
             --  Silently accepted.
             Res := Option_Arg;
          end if;
-      --elsif Option'Length >= 4 and then Option (1 .. 4) = "-Wl," then
-      --   Res := Option_Ok;
+      elsif Option'Length >= 4
+        and then Option (1 .. 4) = "-Wl," then
+         Error_Msg_Option ("option -Wl is not available when ghdl "
+                             & "is not configured with gcc or llvm");
       else
          Decode_Option (Command_Lib (Cmd), Option, Arg, Res);
       end if;
