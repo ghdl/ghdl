@@ -832,13 +832,11 @@ package body Disp_Vhdl is
 
    procedure Disp_Type_Declaration (Decl: Iir_Type_Declaration)
    is
-      Indent: Count;
-      Def : Iir;
+      Indent : constant Count := Col;
+      Def : constant Iir := Get_Type_Definition (Decl);
    begin
-      Indent := Col;
       Put ("type ");
       Disp_Name_Of (Decl);
-      Def := Get_Type_Definition (Decl);
       if Def = Null_Iir
         or else Get_Kind (Def) = Iir_Kind_Incomplete_Type_Definition
       then
@@ -1114,6 +1112,8 @@ package body Disp_Vhdl is
             when Iir_Kind_Interface_Type_Declaration =>
                Put ("type ");
                Disp_Identifier (Inter);
+            when Iir_Kinds_Interface_Subprogram_Declaration =>
+               Disp_Subprogram_Declaration (Inter);
             when others =>
                Error_Kind ("disp_interface_chain", Inter);
          end case;
@@ -1434,13 +1434,15 @@ package body Disp_Vhdl is
       end if;
 
       case Get_Kind (Subprg) is
-         when Iir_Kind_Function_Declaration =>
+         when Iir_Kind_Function_Declaration
+           | Iir_Kind_Interface_Function_Declaration =>
             if Get_Has_Pure (Subprg) then
                Disp_Pure (Subprg);
                Put (' ');
             end if;
             Put ("function");
-         when Iir_Kind_Procedure_Declaration =>
+         when Iir_Kind_Procedure_Declaration
+           | Iir_Kind_Interface_Procedure_Declaration =>
             Put ("procedure");
          when others =>
             raise Internal_Error;
@@ -1457,14 +1459,16 @@ package body Disp_Vhdl is
       end if;
 
       case Get_Kind (Subprg) is
-         when Iir_Kind_Function_Declaration =>
+         when Iir_Kind_Function_Declaration
+           | Iir_Kind_Interface_Function_Declaration =>
             Put (" return ");
             if Implicit then
                Disp_Type (Get_Return_Type (Subprg));
             else
                Disp_Name (Get_Return_Type_Mark (Subprg));
             end if;
-         when Iir_Kind_Procedure_Declaration =>
+         when Iir_Kind_Procedure_Declaration
+           | Iir_Kind_Interface_Procedure_Declaration =>
             null;
          when others =>
             raise Internal_Error;
@@ -1713,7 +1717,7 @@ package body Disp_Vhdl is
             when Iir_Kind_Function_Body
               | Iir_Kind_Procedure_Body =>
                --  The declaration was just displayed.
-               Put_Line (" is");
+               Put_Line ("is");
                Set_Col (Indent);
                Disp_Subprogram_Body (Decl);
             when Iir_Kind_Protected_Type_Body =>

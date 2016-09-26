@@ -431,7 +431,8 @@ package body Sem is
             when Iir_Kind_Association_Element_Open
               | Iir_Kind_Association_Element_By_Individual
               | Iir_Kind_Association_Element_Package
-              | Iir_Kind_Association_Element_Type =>
+              | Iir_Kind_Association_Element_Type
+              | Iir_Kind_Association_Element_Subprogram =>
                null;
             when others =>
                Error_Kind ("sem_generic_association_chain(1)", El);

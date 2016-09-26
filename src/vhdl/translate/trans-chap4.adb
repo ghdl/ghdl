@@ -1631,7 +1631,8 @@ package body Trans.Chap4 is
                Create_Object (Decl);
             when Iir_Kind_Interface_Package_Declaration =>
                Create_Package_Interface (Decl);
-            when Iir_Kind_Interface_Type_Declaration =>
+            when Iir_Kind_Interface_Type_Declaration
+              | Iir_Kinds_Interface_Subprogram_Declaration =>
                null;
             when others =>
                Error_Kind ("translate_generic_chain", Decl);

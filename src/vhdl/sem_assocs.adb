@@ -39,6 +39,8 @@ package body Sem_Assocs is
             N_Assoc := Create_Iir (Iir_Kind_Association_Element_Package);
          when Iir_Kind_Interface_Type_Declaration =>
             N_Assoc := Create_Iir (Iir_Kind_Association_Element_Type);
+         when Iir_Kinds_Interface_Subprogram_Declaration =>
+            N_Assoc := Create_Iir (Iir_Kind_Association_Element_Subprogram);
          when others =>
             Error_Kind ("rewrite_non_object_association", Inter);
       end case;
@@ -1601,12 +1603,12 @@ package body Sem_Assocs is
       return Null_Iir;
    end Sem_Implicit_Operator_Association;
 
-   procedure Sem_Association_Type
-     (Assoc : Iir;
-      Inter : Iir;
-      Finish : Boolean;
-      Match : out Compatibility_Level)
+   procedure Sem_Association_Type (Assoc : Iir;
+                                   Inter : Iir;
+                                   Finish : Boolean;
+                                   Match : out Compatibility_Level)
    is
+      Inter_Def : constant Iir := Get_Type (Inter);
       Actual : Iir;
       Op_Eq, Op_Neq : Iir;
    begin
@@ -1626,6 +1628,10 @@ package body Sem_Assocs is
       Actual := Sem_Types.Sem_Subtype_Indication (Actual);
       Set_Actual (Assoc, Actual);
 
+      --  Set type association for analysis of reference to this interface.
+      pragma Assert (Is_Null (Get_Associated_Type (Inter_Def)));
+      Set_Associated_Type (Inter_Def, Get_Type (Actual));
+
       --  FIXME: it is not clear at all from the LRM how the implicit
       --  associations are done...
       Op_Eq := Sem_Implicit_Operator_Association
@@ -1637,6 +1643,178 @@ package body Sem_Assocs is
          Set_Subprogram_Association_Chain (Assoc, Op_Eq);
       end if;
    end Sem_Association_Type;
+
+   function Has_Interface_Subprogram_Profile
+     (Inter : Iir;
+      Decl : Iir;
+      Explain_Loc : Location_Type := No_Location) return Boolean
+   is
+      --  Handle previous assocation of interface type before full
+      --  instantiation.
+      function Get_Inter_Type (Inter : Iir) return Iir
+      is
+         Res : Iir;
+      begin
+         Res := Get_Type (Inter);
+         if Get_Kind (Res) = Iir_Kind_Interface_Type_Definition then
+            --  FIXME: recurse ?
+            return Get_Associated_Type (Res);
+         else
+            return Res;
+         end if;
+      end Get_Inter_Type;
+
+      Explain : constant Boolean := Explain_Loc /= No_Location;
+      El_Inter, El_Decl : Iir;
+   begin
+      case Iir_Kinds_Interface_Subprogram_Declaration (Get_Kind (Inter)) is
+         when Iir_Kind_Interface_Function_Declaration =>
+            if not Is_Function_Declaration (Decl) then
+               if Explain then
+                  Error_Msg_Sem (Explain_Loc, " actual is not a function");
+               end if;
+               return False;
+            end if;
+            if Get_Base_Type (Get_Inter_Type (Inter))
+              /= Get_Base_Type (Get_Type (Decl))
+            then
+               if Explain then
+                  Error_Msg_Sem (Explain_Loc, " return type doesn't match");
+               end if;
+               return False;
+            end if;
+         when Iir_Kind_Interface_Procedure_Declaration =>
+            if not Is_Procedure_Declaration (Decl) then
+               if Explain then
+                  Error_Msg_Sem (Explain_Loc, " actual is not a procedure");
+               end if;
+               return False;
+            end if;
+      end case;
+
+      El_Inter := Get_Interface_Declaration_Chain (Inter);
+      El_Decl := Get_Interface_Declaration_Chain (Decl);
+      loop
+         exit when Is_Null (El_Inter) and Is_Null (El_Decl);
+         if Is_Null (El_Inter) or Is_Null (El_Decl) then
+            if Explain then
+               Error_Msg_Sem
+                 (Explain_Loc, " number of interfaces doesn't match");
+            end if;
+            return False;
+         end if;
+         if Get_Base_Type (Get_Inter_Type (El_Inter))
+           /= Get_Base_Type (Get_Type (El_Decl))
+         then
+            if Explain then
+               Error_Msg_Sem
+                 (Explain_Loc,
+                  " type of interface %i doesn't match", +El_Inter);
+            end if;
+            return False;
+         end if;
+         El_Inter := Get_Chain (El_Inter);
+         El_Decl := Get_Chain (El_Decl);
+      end loop;
+
+      return True;
+   end Has_Interface_Subprogram_Profile;
+
+   procedure Sem_Association_Subprogram (Assoc : Iir;
+                                         Inter : Iir;
+                                         Finish : Boolean;
+                                         Match : out Compatibility_Level)
+   is
+      Discard : Boolean;
+      pragma Unreferenced (Discard);
+      Actual : Iir;
+      Res : Iir;
+   begin
+      if not Finish then
+         Sem_Association_Package_Type_Not_Finish (Assoc, Inter, Match);
+         return;
+      end if;
+
+      Match := Fully_Compatible;
+      Sem_Association_Package_Type_Finish (Assoc, Inter);
+      Actual := Get_Actual (Assoc);
+
+      --  LRM08 6.5.7.2 Generic map aspects
+      --  An actual associated with a formal generic subprogram shall be a name
+      --  that denotes a subprogram whose profile conforms to that of the
+      --  formal, or the reserved word OPEN.  The actual, if a predefined
+      --  attribute name that denotes a function, shall be one of the
+      --  predefined attributes 'IMAGE, 'VALUE, 'POS, 'VAL, 'SUCC, 'PREV,
+      --  'LEFTOF, or 'RIGHTOF.
+      Sem_Name (Actual);
+      Res := Get_Named_Entity (Actual);
+
+      if Is_Error (Res) then
+         return;
+      end if;
+
+      case Get_Kind (Res) is
+         when Iir_Kinds_Subprogram_Declaration
+           | Iir_Kinds_Interface_Subprogram_Declaration =>
+            if not Has_Interface_Subprogram_Profile (Inter, Res) then
+               Error_Msg_Sem
+                 (+Assoc, "profile of %n doesn't match profile of %n",
+                  (+Actual, +Inter));
+               Discard := Has_Interface_Subprogram_Profile
+                 (Inter, Res, Get_Location (Assoc));
+            end if;
+         when Iir_Kind_Overload_List =>
+            declare
+               First_Error : Boolean;
+               List : Iir_List;
+               El, R : Iir;
+            begin
+               First_Error := True;
+               R := Null_Iir;
+               List := Get_Overload_List (Res);
+               for I in Natural loop
+                  El := Get_Nth_Element (List, I);
+                  exit when El = Null_Iir;
+                  if Has_Interface_Subprogram_Profile (Inter, El) then
+                     if Is_Null (R) then
+                        R := El;
+                     else
+                        if First_Error then
+                           Error_Msg_Sem
+                             (+Assoc,
+                              "many possible actual subprogram for %n:",
+                              +Inter);
+                           Error_Msg_Sem
+                             (+Assoc, " %n declared at %l", (+R, + R));
+                           First_Error := False;
+                        else
+                           Error_Msg_Sem
+                             (+Assoc, " %n declared at %l", (+El, +El));
+                        end if;
+                     end if;
+                  end if;
+               end loop;
+               if Is_Null (R) then
+                  Error_Msg_Sem
+                    (+Assoc, "no matching name for %n", +Inter);
+                  if True then
+                     Error_Msg_Sem
+                       (+Assoc, " these names were incompatible:");
+                     for I in Natural loop
+                        El := Get_Nth_Element (List, I);
+                        exit when El = Null_Iir;
+                        Error_Msg_Sem
+                          (+Assoc, " %n declared at %l", (+El, +El));
+                     end loop;
+                  end if;
+               end if;
+               Free_Overload_List (Res);
+               Set_Named_Entity (Actual, R);
+            end;
+         when others =>
+            Error_Kind ("sem_association_subprogram", Res);
+      end case;
+   end Sem_Association_Subprogram;
 
    --  Associate ASSOC with interface INTERFACE
    --  This sets MATCH.
@@ -1872,14 +2050,17 @@ package body Sem_Assocs is
          when Iir_Kind_Association_Element_Open =>
             Sem_Association_Open (Assoc, Inter, Finish, Match);
 
+         when Iir_Kind_Association_Element_By_Expression =>
+            Sem_Association_By_Expression (Assoc, Inter, Finish, Match);
+
          when Iir_Kind_Association_Element_Package =>
             Sem_Association_Package (Assoc, Inter, Finish, Match);
 
          when Iir_Kind_Association_Element_Type =>
             Sem_Association_Type (Assoc, Inter, Finish, Match);
 
-         when Iir_Kind_Association_Element_By_Expression =>
-            Sem_Association_By_Expression (Assoc, Inter, Finish, Match);
+         when Iir_Kind_Association_Element_Subprogram =>
+            Sem_Association_Subprogram (Assoc, Inter, Finish, Match);
 
          when others =>
             Error_Kind ("sem_assocation", Assoc);
@@ -2173,6 +2354,12 @@ package body Sem_Assocs is
                   Error_Kind ("sem_association_chain", Inter);
             end case;
          end if;
+
+         --  Clear associated type of interface type.
+         if Get_Kind (Inter) = Iir_Kind_Interface_Type_Declaration then
+            Set_Associated_Type (Get_Type (Inter), Null_Iir);
+         end if;
+
          Inter := Get_Chain (Inter);
          Pos := Pos + 1;
       end loop;

@@ -890,7 +890,8 @@ package body Canon is
                   when Iir_Kind_Association_Element_By_Individual =>
                      Found := True;
                   when Iir_Kind_Association_Element_Package
-                    | Iir_Kind_Association_Element_Type =>
+                    | Iir_Kind_Association_Element_Type
+                    | Iir_Kind_Association_Element_Subprogram =>
                      goto Done;
                   when others =>
                      Error_Kind ("canon_association_chain", Assoc_El);

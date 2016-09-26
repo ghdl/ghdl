@@ -2221,6 +2221,11 @@ package Iirs is
    --
    --   Get/Set_Base_Type (Field4)
    --
+   --  Set only during analysis of association: type associated with this
+   --  interface, so that references to this interface can use the actual
+   --  type.
+   --   Get/Set_Associated_Type (Field5)
+   --
    --   Get/Set_Type_Staticness (State1)
    --
    --   Get/Set_Resolved_Flag (Flag1)
@@ -6071,6 +6076,10 @@ package Iirs is
    --  Field: Field3 Ref
    function Get_Type_Declarator (Def : Iir) return Iir;
    procedure Set_Type_Declarator (Def : Iir; Decl : Iir);
+
+   --  Field: Field5 Ref
+   function Get_Associated_Type (Def : Iir) return Iir;
+   procedure Set_Associated_Type (Def : Iir; Atype : Iir);
 
    --  Field: Field2 (uc)
    function Get_Enumeration_Literal_List (Target : Iir) return Iir_List;
