@@ -384,25 +384,33 @@ package body Sem_Inst is
                      Set_Index_Subtype_List (Res, List);
                   end;
 
+               when Field_Subprogram_Body =>
+                  --  This is a forward reference.  Not yet solved.
+                  Set_Subprogram_Body (Res, Null_Iir);
+
+               when Field_Subprogram_Specification =>
+                  --  Resolve it.
+                  Instantiate_Iir_Field (Res, N, F);
+
+                  --  Set body.
+                  pragma Assert (Kind_In (Res, Iir_Kind_Procedure_Body,
+                                          Iir_Kind_Function_Body));
+                  declare
+                     Spec : constant Iir := Get_Subprogram_Specification (Res);
+                  begin
+                     pragma Assert (Get_Subprogram_Body (Spec) = Null_Iir);
+                     Set_Subprogram_Body (Spec, Res);
+                  end;
+
                when others =>
                   --  Common case.
                   Instantiate_Iir_Field (Res, N, F);
             end case;
          end loop;
 
-         case Kind is
-            when Iir_Kind_Function_Declaration
-              | Iir_Kind_Procedure_Declaration =>
-               --  Subprogram body is a forward declaration.
-               --  Clear Subprogram_Body so that the node is seen as a
-               --  declaration and not a specification of a body.
-               Set_Subprogram_Body (Res, Null_Iir);
-            when others =>
-               --  TODO: other forward references:
-               --  incomplete constant
-               --  attribute_value
-               null;
-         end case;
+         --  TODO: other forward references:
+         --  incomplete constant
+         --  attribute_value
 
          return Res;
       end;
