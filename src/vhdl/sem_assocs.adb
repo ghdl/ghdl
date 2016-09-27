@@ -454,6 +454,17 @@ package body Sem_Assocs is
 
          --  FIXME: non-static bounds have to be checked at run-time
          --  (during elaboration).
+
+         --  In vhdl08, the subtypes must be compatible.  Use the that rule
+         --  for 93c and relaxed rules.
+         if Vhdl_Std >= Vhdl_08
+           or else Vhdl_Std = Vhdl_93c
+           or else Flag_Relaxed_Rules
+         then
+            return Eval_Is_Range_In_Bound (Src, Dest, True);
+         end if;
+
+         --  Prior vhdl08, the subtypes must be identical.
          if not Eval_Is_Eq (Get_Left_Limit (Src_Range),
                             Get_Left_Limit (Dst_Range))
            or else not Eval_Is_Eq (Get_Right_Limit (Src_Range),
@@ -482,6 +493,19 @@ package body Sem_Assocs is
       --  the subtype denoted by the subtype indication of the formal are not
       --  identical to the bounds and direction of the subtype denoted by the
       --  subtype indication of the actual.
+
+      --  LRM08 14.3.5 Port map aspect
+      --  If an actual signal is associated with a port of mode IN or INOUT,
+      --  and if the type of the formal is a scalar type, then it is an error
+      --  if (after applying any conversion function or type conversion
+      --  expression present in the actual part) the subtype of the actual is
+      --  not compatible with the subtype of the formal.  [...]
+      --
+      --  Similarly, if an actual signal is associated with a port of mode
+      --  OUT, INOUT, or BUFFER, and the type of the actual is a scalar type,
+      --  then it is an error if (after applying any conversion function or
+      --  type conversion expression present in the formal part) the subtype
+      --  or the formal is not compatible with the subtype of the actual.
       if Is_Valid (F_Conv) then
          F2a_Type := Get_Type (F_Conv);
       else
