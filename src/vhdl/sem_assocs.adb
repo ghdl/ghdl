@@ -434,6 +434,8 @@ package body Sem_Assocs is
    procedure Check_Port_Association_Bounds_Restrictions
      (Formal : Iir; Actual : Iir; Assoc : Iir)
    is
+      Inter : constant Iir := Get_Object_Prefix (Formal, False);
+
       function Is_Scalar_Type_Compatible (Src : Iir; Dest : Iir)
                                          return Boolean
       is
@@ -477,7 +479,24 @@ package body Sem_Assocs is
          return True;
       end Is_Scalar_Type_Compatible;
 
-      Inter : constant Iir := Get_Object_Prefix (Formal, False);
+      procedure Error_Msg
+      is
+         Id : Msgid_Type;
+         Orig : Report_Origin;
+      begin
+         if Flag_Elaborate then
+            Id := Msgid_Error;
+            Orig := Elaboration;
+         else
+            Id := Warnid_Port_Bounds;
+            Orig := Semantic;
+         end if;
+         Report_Msg
+           (Id, Orig, +Assoc,
+            "bounds or direction of actual don't match with %n",
+            (1 => +Inter));
+      end Error_Msg;
+
       Ftype : constant Iir := Get_Type (Formal);
       Atype : constant Iir := Get_Type (Actual);
       F_Conv : constant Iir := Get_Out_Conversion (Assoc);
@@ -519,28 +538,12 @@ package body Sem_Assocs is
       if Get_Mode (Inter) in Iir_In_Modes
         and then not Is_Scalar_Type_Compatible (A2f_Type, Ftype)
       then
-         if Flag_Elaborate then
-            Error_Msg_Elab
-              (Assoc,
-               "bounds or direction of formal and actual mismatch");
-         else
-            Warning_Msg_Sem
-              (Warnid_Port_Bounds, +Assoc,
-               "bounds or direction of formal and actual mismatch");
-         end if;
+         Error_Msg;
       end if;
       if Get_Mode (Inter) in Iir_Out_Modes
         and then not Is_Scalar_Type_Compatible (F2a_Type, Atype)
       then
-         if Flag_Elaborate then
-            Error_Msg_Elab
-              (Assoc,
-               "bounds or direction of formal and actual mismatch");
-         else
-            Warning_Msg_Sem
-              (Warnid_Port_Bounds, +Assoc,
-               "bounds or direction of formal and actual mismatch");
-         end if;
+         Error_Msg;
       end if;
    end Check_Port_Association_Bounds_Restrictions;
 

@@ -1627,8 +1627,10 @@ package body Sem_Specs is
             Assoc := Create_Iir (Iir_Kind_Association_Element_By_Expression);
             Location_Copy (Assoc, Parent);
             Set_Actual (Assoc, Comp_El);
-            Check_Port_Association_Bounds_Restrictions
-              (Ent_El, Comp_El, Assoc);
+            if Kind = Map_Port then
+               Check_Port_Association_Bounds_Restrictions
+                 (Ent_El, Comp_El, Assoc);
+            end if;
             Found := Found + 1;
          end if;
          Set_Whole_Association_Flag (Assoc, True);

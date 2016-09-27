@@ -2935,6 +2935,17 @@ package Iirs is
    -- Iir_Kind_If_Statement (Short)
    -- Iir_Kind_Elsif (Short)
    --
+   --  LRM08 10.8
+   --   if_statement ::=
+   --      [ /if/_label : ]
+   --         IF condition THEN
+   --            sequence_of_statements
+   --         { ELSIF condition THEN
+   --            sequence_of_statements }
+   --         [ ELSE
+   --            sequence_of_satements ]
+   --         END IF [ /if/_label ] ;
+   --
    --   Get/Set_Parent (Field0)
    --
    --  May be NULL only for an iir_kind_elsif node, and then means the else
