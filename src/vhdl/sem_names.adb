@@ -1297,9 +1297,8 @@ package body Sem_Names is
    is
       procedure Update_Impure_Depth (Subprg_Spec : Iir; Depth : Iir_Int32)
       is
-         Bod : Iir;
+         Bod : constant Iir := Get_Subprogram_Body (Subprg_Spec);
       begin
-         Bod := Get_Subprogram_Body (Subprg_Spec);
          if Bod = Null_Iir then
             return;
          end if;
@@ -1396,6 +1395,7 @@ package body Sem_Names is
            | Iir_Kind_Block_Statement
            | Iir_Kind_If_Generate_Statement
            | Iir_Kind_For_Generate_Statement
+           | Iir_Kind_Generate_Statement_Body
            | Iir_Kinds_Process_Statement
            | Iir_Kind_Protected_Type_Body =>
             --  The procedure is impure.
