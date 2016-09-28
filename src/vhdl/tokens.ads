@@ -234,6 +234,7 @@ package Tokens is
 
    --  Added by vhdl 2008:
        Tok_Context,
+       Tok_Parameter,
 
    --  AMS reserved words
        Tok_Across,

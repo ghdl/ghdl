@@ -448,9 +448,15 @@ package body Sem_Decls is
       Xref_Decl (Inter);
    end Sem_Interface_Type_Declaration;
 
+   procedure Sem_Interface_Subprogram_Declaration (Inter : Iir) is
+   begin
+      Sem_Subprogram_Specification (Inter);
+   end Sem_Interface_Subprogram_Declaration;
+
    procedure Sem_Interface_Chain (Interface_Chain: Iir;
                                   Interface_Kind : Interface_Kind_Type)
    is
+      --  Control visibility of interface object.  See below for its use.
       Immediately_Visible : constant Boolean :=
         Interface_Kind = Generic_Interface_List
         and then Flags.Vhdl_Std >= Vhdl_08;
@@ -474,9 +480,15 @@ package body Sem_Decls is
                Sem_Interface_Package_Declaration (Inter);
             when Iir_Kind_Interface_Type_Declaration =>
                Sem_Interface_Type_Declaration (Inter);
+            when Iir_Kinds_Interface_Subprogram_Declaration =>
+               Sem_Interface_Subprogram_Declaration (Inter);
          end case;
 
          --  LRM08 6.5.6 Interface lists
+         --  A name that denotes an interface object declared in a port
+         --  interface list of a prameter interface list shall not appear in
+         --  any interface declaration within the interface list containing the
+         --  denoted interface object expect to declare this object.
          --  A name that denotes an interface declaration in a generic
          --  interface list may appear in an interface declaration within the
          --  interface list containing the denoted interface declaration.
@@ -3129,7 +3141,8 @@ package body Sem_Decls is
                   end if;
                end;
             when Iir_Kind_Package_Declaration =>
-               if Get_Need_Body (El)
+               if Is_Null (Get_Package_Origin (El))
+                 and then Get_Need_Body (El)
                  and then Get_Package_Body (El) = Null_Iir
                then
                   Error_Msg_Sem (+El, "missing package body for %n", +El);

@@ -80,6 +80,10 @@ package Errorout is
       --  Incorrect use of universal value.
       Warnid_Universal,
 
+      --  Mismatch of bounds between actual and formal in a scalar port
+      --  association
+      Warnid_Port_Bounds,
+
       --  Runtime error detected at analysis time.
       Warnid_Runtime_Error,
 

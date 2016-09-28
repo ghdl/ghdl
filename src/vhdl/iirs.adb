@@ -2478,6 +2478,22 @@ package body Iirs is
       Set_Field3 (Def, Decl);
    end Set_Type_Declarator;
 
+   function Get_Associated_Type (Def : Iir) return Iir is
+   begin
+      pragma Assert (Def /= Null_Iir);
+      pragma Assert (Has_Associated_Type (Get_Kind (Def)),
+                     "no field Associated_Type");
+      return Get_Field5 (Def);
+   end Get_Associated_Type;
+
+   procedure Set_Associated_Type (Def : Iir; Atype : Iir) is
+   begin
+      pragma Assert (Def /= Null_Iir);
+      pragma Assert (Has_Associated_Type (Get_Kind (Def)),
+                     "no field Associated_Type");
+      Set_Field5 (Def, Atype);
+   end Set_Associated_Type;
+
    function Get_Enumeration_Literal_List (Target : Iir) return Iir_List is
    begin
       pragma Assert (Target /= Null_Iir);

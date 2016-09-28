@@ -431,7 +431,8 @@ package body Sem is
             when Iir_Kind_Association_Element_Open
               | Iir_Kind_Association_Element_By_Individual
               | Iir_Kind_Association_Element_Package
-              | Iir_Kind_Association_Element_Type =>
+              | Iir_Kind_Association_Element_Type
+              | Iir_Kind_Association_Element_Subprogram =>
                null;
             when others =>
                Error_Kind ("sem_generic_association_chain(1)", El);
@@ -555,13 +556,15 @@ package body Sem is
                   if Get_Name_Staticness (Object) < Globally then
                      Error_Msg_Sem (+Actual, "actual must be a static name");
                   end if;
+                  Check_Port_Association_Bounds_Restrictions
+                    (Formal, Actual, El);
                   if Get_Kind (Prefix) = Iir_Kind_Interface_Signal_Declaration
                   then
                      declare
                         P : Boolean;
                         pragma Unreferenced (P);
                      begin
-                        P := Check_Port_Association_Restriction
+                        P := Check_Port_Association_Mode_Restrictions
                           (Formal_Base, Prefix, El);
                      end;
                   end if;
@@ -1843,31 +1846,11 @@ package body Sem is
       Set_Subprogram_Hash (Subprg, To_Int32 (Hash + Sig));
    end Compute_Subprogram_Hash;
 
-   --  LRM 2.1  Subprogram Declarations.
-   procedure Sem_Subprogram_Declaration (Subprg: Iir)
+   procedure Sem_Subprogram_Specification (Subprg: Iir)
    is
-      Parent : constant Iir := Get_Parent (Subprg);
-      Spec: Iir;
       Interface_Chain : Iir;
-      Subprg_Body : Iir;
       Return_Type : Iir;
    begin
-      --  Set depth.
-      case Get_Kind (Parent) is
-         when Iir_Kind_Function_Declaration
-           | Iir_Kind_Procedure_Declaration =>
-            raise Internal_Error;
-         when Iir_Kind_Function_Body
-           | Iir_Kind_Procedure_Body =>
-            Set_Subprogram_Depth
-              (Subprg,
-               Get_Subprogram_Depth
-                 (Get_Subprogram_Specification (Parent)) + 1);
-         when others =>
-            --  FIXME: protected type ?
-            Set_Subprogram_Depth (Subprg, 0);
-      end case;
-
       --  LRM 10.1 Declarative Region
       --  3. A subprogram declaration, together with the corresponding
       --     subprogram body.
@@ -1876,7 +1859,8 @@ package body Sem is
       --  Sem interfaces.
       Interface_Chain := Get_Interface_Declaration_Chain (Subprg);
       case Get_Kind (Subprg) is
-         when Iir_Kind_Function_Declaration =>
+         when Iir_Kind_Function_Declaration
+           | Iir_Kind_Interface_Function_Declaration =>
             Sem_Interface_Chain
               (Interface_Chain, Function_Parameter_Interface_List);
             Return_Type := Get_Return_Type_Mark (Subprg);
@@ -1923,9 +1907,14 @@ package body Sem is
                   end if;
             end case;
 
+         when Iir_Kind_Interface_Procedure_Declaration =>
+            Sem_Interface_Chain
+              (Interface_Chain, Procedure_Parameter_Interface_List);
+
          when Iir_Kind_Procedure_Declaration =>
             Sem_Interface_Chain
               (Interface_Chain, Procedure_Parameter_Interface_List);
+
             --  Unless the body is analyzed, the procedure purity is unknown.
             Set_Purity_State (Subprg, Unknown);
             --  Check if the procedure is passive.
@@ -1965,12 +1954,37 @@ package body Sem is
       --  The specification has been analyzed, close the declarative region
       --  now.
       Close_Declarative_Region;
+   end Sem_Subprogram_Specification;
+
+   --  LRM 2.1  Subprogram Declarations.
+   procedure Sem_Subprogram_Declaration (Subprg: Iir)
+   is
+      Parent : constant Iir := Get_Parent (Subprg);
+      Spec: Iir;
+      Subprg_Body : Iir;
+   begin
+      --  Set depth.
+      case Get_Kind (Parent) is
+         when Iir_Kind_Function_Declaration
+           | Iir_Kind_Procedure_Declaration =>
+            raise Internal_Error;
+         when Iir_Kind_Function_Body
+           | Iir_Kind_Procedure_Body =>
+            Set_Subprogram_Depth
+              (Subprg,
+               Get_Subprogram_Depth
+                 (Get_Subprogram_Specification (Parent)) + 1);
+         when others =>
+            --  FIXME: protected type ?
+            Set_Subprogram_Depth (Subprg, 0);
+      end case;
+
+      Sem_Subprogram_Specification (Subprg);
 
       --  Look if there is an associated body (the next node).
       Subprg_Body := Get_Chain (Subprg);
       if Subprg_Body /= Null_Iir
-        and then (Get_Kind (Subprg_Body) = Iir_Kind_Function_Body
-                  or else Get_Kind (Subprg_Body) = Iir_Kind_Procedure_Body)
+        and then Get_Kind (Subprg_Body) in Iir_Kinds_Subprogram_Body
       then
          Spec := Find_Subprogram_Specification (Subprg);
       else
@@ -2591,7 +2605,9 @@ package body Sem is
                   Pkg : constant Iir :=
                     Get_Named_Entity (Get_Uninstantiated_Package_Name (El));
                begin
-                  if Get_Need_Body (Pkg) then
+                  if not Is_Error (Pkg)
+                    and then Get_Need_Body (Pkg)
+                  then
                      return True;
                   end if;
                end;
@@ -2627,6 +2643,8 @@ package body Sem is
                      return True;
                   end if;
                end;
+            when Iir_Kinds_Interface_Subprogram_Declaration =>
+               return True;
          end case;
          Inter := Get_Chain (Inter);
       end loop;

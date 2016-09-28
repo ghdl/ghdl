@@ -402,6 +402,9 @@ package body Sem_Inst is
                      Set_Subprogram_Body (Spec, Res);
                   end;
 
+               when Field_Incomplete_Type_List =>
+                  null;
+
                when others =>
                   --  Common case.
                   Instantiate_Iir_Field (Res, N, F);
@@ -410,6 +413,7 @@ package body Sem_Inst is
 
          --  TODO: other forward references:
          --  incomplete constant
+         --  incomplete type
          --  attribute_value
 
          return Res;
@@ -457,6 +461,8 @@ package body Sem_Inst is
                  (Res, Get_Uninstantiated_Package_Name (Inter));
             when Iir_Kind_Interface_Type_Declaration =>
                Set_Type (Res, Get_Type (Inter));
+            when Iir_Kinds_Interface_Subprogram_Declaration =>
+               null;
             when others =>
                Error_Kind ("instantiate_generic_chain", Res);
          end case;
@@ -662,6 +668,16 @@ package body Sem_Inst is
                begin
                   Set_Instance (Inter_Type_Def, Actual_Type);
                end;
+            when Iir_Kind_Association_Element_Subprogram =>
+               --  Replace the interface subprogram by the subprogram.
+               declare
+                  Inter_Subprg : constant Iir :=
+                    Get_Association_Interface (Assoc, Inter);
+                  Actual_Subprg : constant Iir :=
+                    Get_Named_Entity (Get_Actual (Assoc));
+               begin
+                  Set_Instance (Get_Origin (Inter_Subprg), Actual_Subprg);
+               end;
             when others =>
                Error_Kind ("instantiate_generic_map_chain", Assoc);
          end case;
@@ -759,7 +775,7 @@ package body Sem_Inst is
                   begin
                      Imp_Assoc := Get_Subprogram_Association_Chain (Inst_El);
                      Imp_Inter := Get_Interface_Type_Subprograms
-                       (Get_Origin (Inter_El));
+                       (Get_Origin (Inter));
                      while Is_Valid (Imp_Inter) and Is_Valid (Imp_Assoc) loop
                         Set_Instance
                           (Imp_Inter,

@@ -100,7 +100,13 @@ package Evaluation is
    procedure Eval_Check_Range (A_Range : Iir; Sub_Type : Iir;
                                Any_Dir : Boolean);
 
-   --  Return TRUE if range expression A_RANGE is not included in SUB_TYPE.
+   --  Return TRUE if A_RANGE is compatible with SUB_TYPE.  Compatibility is
+   --  defined in LRM:
+   --
+   --  LRM08 5.2 Scalar types
+   --  A range constraint is /compatible/ with a subtype if each bound of the
+   --  range belongs to the subtype or if the range constraint defines a null
+   --  range.
    function Eval_Is_Range_In_Bound
      (A_Range : Iir; Sub_Type : Iir; Any_Dir : Boolean)
      return Boolean;
@@ -122,6 +128,9 @@ package Evaluation is
    --  sub_type is the type of expr.
    --  EXPR must be of a discrete subtype.
    function Eval_Pos (Expr : Iir) return Iir_Int64;
+
+   --  Return True iff L and R (scalar literals) are equal.
+   function Eval_Is_Eq (L, R : Iir) return Boolean;
 
    --  Replace ORIGIN (an overflow literal) with extreme positive value (if
    --  IS_POS is true) or extreme negative value.

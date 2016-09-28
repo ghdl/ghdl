@@ -55,9 +55,14 @@ package Sem_Assocs is
 
    --  Check for restrictions in LRM93 1.1.1.2
    --  Return FALSE in case of error.
-   function Check_Port_Association_Restriction
+   function Check_Port_Association_Mode_Restrictions
      (Formal : Iir_Interface_Signal_Declaration;
       Actual : Iir_Interface_Signal_Declaration;
       Assoc : Iir)
      return Boolean;
+
+   --  Check restrictions of LRM02 12.2.4
+   procedure Check_Port_Association_Bounds_Restrictions
+     (Formal : Iir; Actual : Iir; Assoc : Iir);
+
 end Sem_Assocs;

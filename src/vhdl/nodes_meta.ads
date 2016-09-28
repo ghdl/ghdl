@@ -180,6 +180,7 @@ package Nodes_Meta is
       Field_Context_Reference_Chain,
       Field_Selected_Name,
       Field_Type_Declarator,
+      Field_Associated_Type,
       Field_Enumeration_Literal_List,
       Field_Entity_Class_Entry_Chain,
       Field_Group_Constituent_List,
@@ -673,6 +674,7 @@ package Nodes_Meta is
    function Has_Context_Reference_Chain (K : Iir_Kind) return Boolean;
    function Has_Selected_Name (K : Iir_Kind) return Boolean;
    function Has_Type_Declarator (K : Iir_Kind) return Boolean;
+   function Has_Associated_Type (K : Iir_Kind) return Boolean;
    function Has_Enumeration_Literal_List (K : Iir_Kind) return Boolean;
    function Has_Entity_Class_Entry_Chain (K : Iir_Kind) return Boolean;
    function Has_Group_Constituent_List (K : Iir_Kind) return Boolean;

@@ -63,6 +63,8 @@ package body Parse is
    procedure Parse_Concurrent_Statements (Parent : Iir);
    function Parse_Subprogram_Declaration return Iir;
    function Parse_Subtype_Indication (Name : Iir := Null_Iir) return Iir;
+   function Parse_Interface_List (Ctxt : Interface_Kind_Type; Parent : Iir)
+                                 return Iir;
    procedure Parse_Component_Specification (Res : Iir);
    function Parse_Binding_Indication return Iir_Binding_Indication;
    function Parse_Aggregate return Iir;
@@ -1458,6 +1460,172 @@ package body Parse is
       return Inter;
    end Parse_Interface_Package_Declaration;
 
+   --  Precond:  identifier or string
+   --  Postcond: next token
+   --
+   --  [ 2.1 ]
+   --  designator ::= identifier | operator_symbol
+   procedure Parse_Subprogram_Designator (Subprg : Iir) is
+   begin
+      if Current_Token = Tok_Identifier then
+         Set_Identifier (Subprg, Current_Identifier);
+         Set_Location (Subprg);
+      elsif Current_Token = Tok_String then
+         if Kind_In (Subprg, Iir_Kind_Procedure_Declaration,
+                     Iir_Kind_Interface_Procedure_Declaration)
+         then
+            --  LRM93 2.1
+            --  A procedure designator is always an identifier.
+            Error_Msg_Parse ("a procedure name must be an identifier");
+         end if;
+         --  LRM93 2.1
+         --  A function designator is either an identifier or an operator
+         --  symbol.
+         Set_Identifier (Subprg, Scan_To_Operator_Name (Get_Token_Location));
+         Set_Location (Subprg);
+      else
+         --  Just to display a parse error.
+         Expect (Tok_Identifier);
+      end if;
+
+      --  Eat designator (identifier or string).
+      Scan;
+   end Parse_Subprogram_Designator;
+
+   --  Precond: '(' or return or any
+   --  Postcond: next token
+   procedure Parse_Subprogram_Parameters_And_Return
+     (Subprg : Iir; Is_Func : Boolean)
+   is
+      Old : Iir;
+      pragma Unreferenced (Old);
+      Inters : Iir;
+   begin
+      if Current_Token = Tok_Parameter then
+         --  Eat 'parameter'
+         Scan;
+
+         if Current_Token /= Tok_Left_Paren then
+            Error_Msg_Parse
+              ("'parameter' must be followed by a list of parameters");
+         end if;
+      end if;
+
+      if Current_Token = Tok_Left_Paren then
+         --  Parse the interface declaration.
+         if Is_Func then
+            Inters := Parse_Interface_List
+              (Function_Parameter_Interface_List, Subprg);
+         else
+            Inters := Parse_Interface_List
+              (Procedure_Parameter_Interface_List, Subprg);
+         end if;
+         Set_Interface_Declaration_Chain (Subprg, Inters);
+      end if;
+
+      if Current_Token = Tok_Return then
+         if not Is_Func then
+            Error_Msg_Parse
+              ("'return' not allowed for a procedure", Cont => True);
+            Error_Msg_Parse
+              ("(remove return part or declare a function)");
+
+            --  Skip 'return'
+            Scan;
+
+            Old := Parse_Type_Mark;
+         else
+            --  Skip 'return'
+            Scan;
+
+            Set_Return_Type_Mark
+              (Subprg, Parse_Type_Mark (Check_Paren => True));
+         end if;
+      else
+         if Is_Func then
+            Error_Msg_Parse ("'return' expected");
+         end if;
+      end if;
+   end Parse_Subprogram_Parameters_And_Return;
+
+   --  Precond:  PROCEDURE, FUNCTION, PURE, IMPURE
+   --  Postcond: next token
+   --
+   --  LRM08 6.5.4 Interface subrpogram declarations
+   --  interface_subprogram_declaration ::=
+   --     interface_subprogram_specification
+   --        [ IS interface_subprogram_default ]
+   --
+   --  interface_subrpogram_specification ::=
+   --     interface_procedure_specification | interface_function_specification
+   --
+   --  interface_procedure_specification ::=
+   --     PROCEDURE designator
+   --     [ [ PARAMETER ] ( formal_parameter_list ) ]
+   --
+   --  interface_function_specification ::=
+   --     [ PURE | IMPURE ] FUNCTION designator
+   --       [ [ PARAMETER ] ( formal_parameter_list ) ] RETURN type_mark
+   --
+   --  interface_subprogram_default ::=
+   --     /subprogram/_name | <>
+   function Parse_Interface_Subprogram_Declaration return Iir
+   is
+      Kind : Iir_Kind;
+      Subprg: Iir;
+      Old : Iir;
+      pragma Unreferenced (Old);
+   begin
+      --  Create the node.
+      case Current_Token is
+         when Tok_Procedure =>
+            Kind := Iir_Kind_Interface_Procedure_Declaration;
+         when Tok_Function
+           | Tok_Pure
+           | Tok_Impure =>
+            Kind := Iir_Kind_Interface_Function_Declaration;
+         when others =>
+            raise Internal_Error;
+      end case;
+      Subprg := Create_Iir (Kind);
+      Set_Location (Subprg);
+
+      case Current_Token is
+         when Tok_Procedure =>
+            null;
+         when Tok_Function =>
+            --  LRM93 2.1
+            --  A function is impure if its specification contains the
+            --  reserved word IMPURE; otherwise it is said to be pure.
+            Set_Pure_Flag (Subprg, True);
+         when Tok_Pure
+           | Tok_Impure =>
+            Set_Pure_Flag (Subprg, Current_Token = Tok_Pure);
+            Set_Has_Pure (Subprg, True);
+            --  FIXME: what to do in case of error ??
+
+            --  Eat 'pure' or 'impure'.
+            Scan;
+
+            Expect (Tok_Function, "'function' must follow 'pure' or 'impure'");
+         when others =>
+            raise Internal_Error;
+      end case;
+
+      --  Eat 'procedure' or 'function'.
+      Scan;
+
+      --  Designator.
+      Parse_Subprogram_Designator (Subprg);
+
+      Parse_Subprogram_Parameters_And_Return
+        (Subprg, Kind = Iir_Kind_Interface_Function_Declaration);
+
+      --  TODO: interface_subprogram_default
+
+      return Subprg;
+   end Parse_Interface_Subprogram_Declaration;
+
    --  Precond : '('
    --  Postcond: next token
    --
@@ -1510,12 +1678,24 @@ package body Parse is
                end if;
                Inters := Create_Iir (Iir_Kind_Interface_Type_Declaration);
                Scan_Expect (Tok_Identifier,
-                            "am identifier is expected after 'type'");
+                            "an identifier is expected after 'type'");
                Set_Identifier (Inters, Current_Identifier);
                Set_Location (Inters);
 
                --  Skip identifier
                Scan;
+            when Tok_Procedure
+              | Tok_Pure
+              | Tok_Impure
+              | Tok_Function =>
+               if Ctxt /= Generic_Interface_List then
+                  Error_Msg_Parse
+                    ("subprogram interface only allowed in generic interface");
+               elsif Flags.Vhdl_Std < Vhdl_08 then
+                  Error_Msg_Parse
+                    ("subprogram interface not allowed before vhdl 08");
+               end if;
+               Inters := Parse_Interface_Subprogram_Declaration;
             when Tok_Right_Paren =>
                if Res = Null_Iir then
                   Error_Msg_Parse
@@ -1526,9 +1706,7 @@ package body Parse is
                end if;
                exit;
             when others =>
-               Error_Msg_Parse
-                 ("'signal', 'constant', 'variable', 'file' "
-                  & "or identifier expected");
+               Error_Msg_Parse ("interface declaration expected");
                --  Use a variable interface as a fall-back.
                Inters := Parse_Interface_Object_Declaration (Ctxt);
          end case;
@@ -1551,7 +1729,8 @@ package body Parse is
 
          case Current_Token is
             when Tok_Comma =>
-               Error_Msg_Parse ("';' expected instead of ','");
+               Error_Msg_Parse
+                 ("interfaces must be separated by ';' (found ',')");
             when Tok_Semi_Colon =>
                null;
             when others =>
@@ -6230,7 +6409,6 @@ package body Parse is
    function Parse_Subprogram_Declaration return Iir
    is
       Kind : Iir_Kind;
-      Inters : Iir;
       Subprg: Iir;
       Subprg_Body : Iir;
       Old : Iir;
@@ -6280,63 +6458,11 @@ package body Parse is
       --  Eat 'procedure' or 'function'.
       Scan;
 
-      if Current_Token = Tok_Identifier then
-         Set_Identifier (Subprg, Current_Identifier);
-         Set_Location (Subprg);
-      elsif Current_Token = Tok_String then
-         if Kind = Iir_Kind_Procedure_Declaration then
-            --  LRM93 2.1
-            --  A procedure designator is always an identifier.
-            Error_Msg_Parse ("a procedure name must be an identifier");
-         end if;
-         --  LRM93 2.1
-         --  A function designator is either an identifier or an operator
-         --  symbol.
-         Set_Identifier (Subprg, Scan_To_Operator_Name (Get_Token_Location));
-         Set_Location (Subprg);
-      else
-         --  Just to display a parse error.
-         Expect (Tok_Identifier);
-      end if;
+      --  Designator.
+      Parse_Subprogram_Designator (Subprg);
 
-      --  Eat designator (identifier or string).
-      Scan;
-
-      if Current_Token = Tok_Left_Paren then
-         --  Parse the interface declaration.
-         if Kind = Iir_Kind_Function_Declaration then
-            Inters := Parse_Interface_List
-              (Function_Parameter_Interface_List, Subprg);
-         else
-            Inters := Parse_Interface_List
-              (Procedure_Parameter_Interface_List, Subprg);
-         end if;
-         Set_Interface_Declaration_Chain (Subprg, Inters);
-      end if;
-
-      if Current_Token = Tok_Return then
-         if Kind = Iir_Kind_Procedure_Declaration then
-            Error_Msg_Parse
-              ("'return' not allowed for a procedure", Cont => True);
-            Error_Msg_Parse
-              ("(remove return part or declare a function)");
-
-            --  Skip 'return'
-            Scan;
-
-            Old := Parse_Type_Mark;
-         else
-            --  Skip 'return'
-            Scan;
-
-            Set_Return_Type_Mark
-              (Subprg, Parse_Type_Mark (Check_Paren => True));
-         end if;
-      else
-         if Kind = Iir_Kind_Function_Declaration then
-            Error_Msg_Parse ("'return' expected");
-         end if;
-      end if;
+      Parse_Subprogram_Parameters_And_Return
+        (Subprg, Kind = Iir_Kind_Function_Declaration);
 
       if Current_Token = Tok_Semi_Colon then
          return Subprg;

@@ -1608,7 +1608,7 @@ package body Sem_Specs is
                   (+Ent_El, +Ent_El));
                Error := True;
             elsif Kind = Map_Port
-              and then not Check_Port_Association_Restriction
+              and then not Check_Port_Association_Mode_Restrictions
               (Ent_El, Comp_El, Null_Iir)
             then
                if not Error then
@@ -1627,6 +1627,8 @@ package body Sem_Specs is
             Assoc := Create_Iir (Iir_Kind_Association_Element_By_Expression);
             Location_Copy (Assoc, Parent);
             Set_Actual (Assoc, Comp_El);
+            Check_Port_Association_Bounds_Restrictions
+              (Ent_El, Comp_El, Assoc);
             Found := Found + 1;
          end if;
          Set_Whole_Association_Flag (Assoc, True);

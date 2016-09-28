@@ -408,7 +408,7 @@ package Iirs is
    -- Only for Iir_Kind_Association_Element_By_Individual:
    --   Get/Set_Individual_Association_Chain (Field4)
    --
-   --  A function call or a type conversion for the association.
+   --  A function call or a type conversion for the actual.
    --  FIXME: should be a name ?
    -- Only for Iir_Kind_Association_Element_By_Expression:
    --   Get/Set_In_Conversion (Field4)
@@ -419,6 +419,7 @@ package Iirs is
    -- Only for Iir_Kind_Association_Element_By_Individual:
    --   Get/Set_Actual_Type (Field5)
    --
+   --  A function call or a type conversion for the formal.
    -- Only for Iir_Kind_Association_Element_By_Expression:
    --   Get/Set_Out_Conversion (Field5)
    --
@@ -1463,6 +1464,8 @@ package Iirs is
    --
    -- Only for Iir_Kind_Interface_Function_Declaration:
    --   Get/Set_Has_Pure (Flag8)
+   --
+   --   Get/Set_All_Sensitized_State (State3)
 
    -- Iir_Kind_Signal_Declaration (Short)
    --
@@ -2217,6 +2220,11 @@ package Iirs is
    --   Get/Set_Type_Declarator (Field3)
    --
    --   Get/Set_Base_Type (Field4)
+   --
+   --  Set only during analysis of association: type associated with this
+   --  interface, so that references to this interface can use the actual
+   --  type.
+   --   Get/Set_Associated_Type (Field5)
    --
    --   Get/Set_Type_Staticness (State1)
    --
@@ -3929,10 +3937,10 @@ package Iirs is
       Iir_Kind_Interface_Variable_Declaration, -- object, interface
       Iir_Kind_Interface_Signal_Declaration,   -- object, interface
       Iir_Kind_Interface_File_Declaration,     -- object, interface
-      Iir_Kind_Interface_Type_Declaration,
-      Iir_Kind_Interface_Package_Declaration,
-      Iir_Kind_Interface_Function_Declaration,
-      Iir_Kind_Interface_Procedure_Declaration,
+      Iir_Kind_Interface_Type_Declaration,     --         interface
+      Iir_Kind_Interface_Package_Declaration,  --         interface
+      Iir_Kind_Interface_Function_Declaration, --         interface
+      Iir_Kind_Interface_Procedure_Declaration, --        interface
 
    -- Expressions.
       Iir_Kind_Identity_Operator,
@@ -4773,6 +4781,10 @@ package Iirs is
      Iir_Kind_Function_Declaration ..
      Iir_Kind_Procedure_Declaration;
 
+   subtype Iir_Kinds_Subprogram_Body is Iir_Kind range
+     Iir_Kind_Function_Body ..
+     Iir_Kind_Procedure_Body;
+
    subtype Iir_Kinds_Process_Statement is Iir_Kind range
      Iir_Kind_Sensitized_Process_Statement ..
      Iir_Kind_Process_Statement;
@@ -4789,7 +4801,9 @@ package Iirs is
    --Iir_Kind_Interface_Signal_Declaration
    --Iir_Kind_Interface_File_Declaration
    --Iir_Kind_Interface_Type_Declaration
-     Iir_Kind_Interface_Package_Declaration;
+   --Iir_Kind_Interface_Package_Declaration
+   --Iir_Kind_Interface_Function_Declaration
+     Iir_Kind_Interface_Procedure_Declaration;
 
    subtype Iir_Kinds_Object_Declaration is Iir_Kind range
      Iir_Kind_Object_Alias_Declaration ..
@@ -4803,6 +4817,10 @@ package Iirs is
    --Iir_Kind_Interface_Variable_Declaration
    --Iir_Kind_Interface_Signal_Declaration
      Iir_Kind_Interface_File_Declaration;
+
+   subtype Iir_Kinds_Interface_Subprogram_Declaration is Iir_Kind range
+     Iir_Kind_Interface_Function_Declaration ..
+     Iir_Kind_Interface_Procedure_Declaration;
 
    subtype Iir_Kinds_Branch_Quantity_Declaration is Iir_Kind range
      Iir_Kind_Across_Quantity_Declaration ..
@@ -6058,6 +6076,10 @@ package Iirs is
    --  Field: Field3 Ref
    function Get_Type_Declarator (Def : Iir) return Iir;
    procedure Set_Type_Declarator (Def : Iir; Decl : Iir);
+
+   --  Field: Field5 Ref
+   function Get_Associated_Type (Def : Iir) return Iir;
+   procedure Set_Associated_Type (Def : Iir; Atype : Iir);
 
    --  Field: Field2 (uc)
    function Get_Enumeration_Literal_List (Target : Iir) return Iir_List;
