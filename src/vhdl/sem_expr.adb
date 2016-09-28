@@ -664,11 +664,14 @@ package body Sem_Expr is
       Set_Expr_Staticness (Expr, Min (Get_Expr_Staticness (Left),
                                       Get_Expr_Staticness (Right)));
 
-      if A_Type /= Null_Iir
-        and then Are_Types_Compatible (Expr_Type, A_Type) = Not_Compatible
-      then
-         Error_Msg_Sem (+Expr, "type of range doesn't match expected type");
-         return Null_Iir;
+      if A_Type /= Null_Iir then
+         if Are_Types_Compatible (Expr_Type, A_Type) = Not_Compatible then
+            Error_Msg_Sem (+Expr, "type of range doesn't match expected type");
+            return Null_Iir;
+         end if;
+
+         --  Use A_TYPE for the type of the expression.
+         Expr_Type := A_Type;
       end if;
 
       Set_Type (Expr, Expr_Type);
