@@ -278,9 +278,14 @@ package body Parse is
    -- If left is null_iir, the current token is used to create the left limit
    -- expression.
    --
-   -- [3.1]
-   -- range ::= RANGE_attribute_name
+   --  [ 3.1 ]
+   --  range_constraint ::= RANGE range
+   --
+   --  [ 3.1 ]
+   --  range ::= RANGE_attribute_name
    --         | simple_expression direction simple_expression
+   --
+   --  direction ::= TO | DOWNTO
    function Parse_Range_Expression (Left : Iir) return Iir
    is
       Res : Iir;
@@ -305,40 +310,6 @@ package body Parse is
       return Res;
    end Parse_Range_Expression;
 
-   --  [ 3.1 ]
-   --  range_constraint ::= RANGE range
-   --
-   --  [ 3.1 ]
-   --  range ::= range_attribute_name
-   --          | simple_expression direction simple_expression
-   --
-   --  [ 3.1 ]
-   --  direction ::= TO | DOWNTO
-
-   --  precond:  TO or DOWNTO
-   --  postcond: next token
-   function Parse_Range_Right (Left : Iir) return Iir
-   is
-      Res : Iir;
-   begin
-      Res := Create_Iir (Iir_Kind_Range_Expression);
-      Set_Location (Res);
-      Set_Left_Limit (Res, Left);
-
-      case Current_Token is
-         when Tok_To =>
-            Set_Direction (Res, Iir_To);
-         when Tok_Downto =>
-            Set_Direction (Res, Iir_Downto);
-         when others =>
-            raise Internal_Error;
-      end case;
-
-      Scan;
-      Set_Right_Limit (Res, Parse_Simple_Expression);
-      return Res;
-   end Parse_Range_Right;
-
    --  precond:  next token
    --  postcond: next token
    function Parse_Range return Iir
@@ -350,7 +321,7 @@ package body Parse is
       case Current_Token is
          when Tok_To
            | Tok_Downto =>
-            return Parse_Range_Right (Left);
+            return Parse_Range_Expression (Left);
          when others =>
             if Left /= Null_Iir then
                if Is_Range_Attribute_Name (Left) then
@@ -408,7 +379,7 @@ package body Parse is
       case Current_Token is
          when Tok_To
            | Tok_Downto =>
-            return Parse_Range_Right (Left);
+            return Parse_Range_Expression (Left);
          when Tok_Range =>
             return Parse_Subtype_Indication (Left);
          when others =>
@@ -2008,7 +1979,7 @@ package body Parse is
               | Tok_Downto =>
                --  A range
                Index_Constrained := True;
-               Def := Parse_Range_Right (Type_Mark);
+               Def := Parse_Range_Expression (Type_Mark);
             when others =>
                --  For a /range/_attribute_name
                Index_Constrained := True;
@@ -4502,7 +4473,7 @@ package body Parse is
       elsif Current_Token = Tok_To or else Current_Token = Tok_Downto then
          A_Choice := Create_Iir (Iir_Kind_Choice_By_Range);
          Location_Copy (A_Choice, Expr1);
-         Set_Choice_Range (A_Choice, Parse_Range_Right (Expr1));
+         Set_Choice_Range (A_Choice, Parse_Range_Expression (Expr1));
          return A_Choice;
       else
          A_Choice := Create_Iir (Iir_Kind_Choice_By_Expression);
