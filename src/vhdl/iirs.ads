@@ -26,22 +26,42 @@ package Iirs is
    --  The tree is roughly based on IIR (Internal Intermediate Representation),
    --  [AIRE/CE Advanced Intermediate Representation with Extensibility,
    --   Common Environment.  http://www.vhdl.org/aire/index.html [DEAD LINK] ]
-   --  but oriented object features are not used, and sometimes, functions
+   --  but oriented object features are not used, and often, functions
    --  or fields have changed.
 
    --  Note: this tree is also used during syntaxic analysis, but with
    --  a little bit different meanings for the fields.
    --  The parser (parse package) build the tree.
-   --  The semantic pass (sem, sem_expr, sem_name) transforms it into a
+   --  The semantic pass (sem, sem_expr, sem_names, ...) transforms it into a
    --  semantic tree.
 
    --  Documentation:
    --  Only the semantic aspect is to be fully documented.
    --  The syntaxic aspect is only used between parse and sem.
 
-   --  Each node of the tree is a record of type iir.  The record has only
-   --  one discriminent, which contains the kind of the node.  There is
-   --  currenlty no variant (but this can change, this is not public).
+   --  Each node of the tree is a record of type iir, based on the private (so
+   --  hidden) type nodes.node_type.
+   --
+   --  Each node in the tree should be referenced only once (as this is a
+   --  tree).  There are some exceptions to this rule for space optimization
+   --  purpose:
+   --    - the interface list of implicit subprograms are shared among the
+   --      implicit subprograms.
+   --
+   --  As the tree represents an AST it is in fact a graph: for there are links
+   --  from names to the declaration.  However these links are marked
+   --  explicitely as Ref.  A Ref doesn't own the node.
+   --
+   --  The distinction between owner and reference is very important as it
+   --  allows to use this meta-model for processing: displaying the tree
+   --  (without creating infinite loops), copying the tree for instantiation...
+   --
+   --  There is a little bit of overhead due to this choice:
+   --    - some fields looks duplicated: for example an object declaration has
+   --      both a type field and a subtype indication field, array subtypes
+   --      have both an index_subtype_list and an index_constraint_list.
+   --    - Maybe_Ref trick: the Is_Ref flag tells whether the Maybe_Ref are
+   --      owner or ref.
 
    --  The root of a semantic tree is a library_declaration.
    --  All the library_declarations are kept in a private list, held by
@@ -2512,13 +2532,13 @@ package Iirs is
 
    -- Iir_Kind_Range_Expression (Short)
    --
+   --   Get/Set_Range_Origin (Field0)
+   --
    --   Get/Set_Type (Field1)
    --
    --   Get/Set_Left_Limit (Field2)
    --
    --   Get/Set_Right_Limit (Field3)
-   --
-   --   Get/Set_Range_Origin (Field4)
    --
    --   Get/Set_Expr_Staticness (State1)
    --
@@ -2936,15 +2956,15 @@ package Iirs is
    -- Iir_Kind_Elsif (Short)
    --
    --  LRM08 10.8
-   --   if_statement ::=
-   --      [ /if/_label : ]
-   --         IF condition THEN
-   --            sequence_of_statements
-   --         { ELSIF condition THEN
-   --            sequence_of_statements }
-   --         [ ELSE
-   --            sequence_of_satements ]
-   --         END IF [ /if/_label ] ;
+   --  if_statement ::=
+   --    [ /if/_label : ]
+   --       IF condition THEN
+   --          sequence_of_statements
+   --       { ELSIF condition THEN
+   --          sequence_of_statements }
+   --       [ ELSE
+   --          sequence_of_satements ]
+   --       END IF [ /if/_label ] ;
    --
    --   Get/Set_Parent (Field0)
    --
@@ -5652,7 +5672,7 @@ package Iirs is
    function Get_Literal_Origin (Lit : Iir) return Iir;
    procedure Set_Literal_Origin (Lit : Iir; Orig : Iir);
 
-   --  Field: Field4
+   --  Field: Field0
    function Get_Range_Origin (Lit : Iir) return Iir;
    procedure Set_Range_Origin (Lit : Iir; Orig : Iir);
 

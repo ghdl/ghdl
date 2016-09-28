@@ -2593,9 +2593,9 @@ package body Nodes_Meta is
       --  Iir_Kind_Range_Expression
       Field_Expr_Staticness,
       Field_Direction,
+      Field_Range_Origin,
       Field_Left_Limit,
       Field_Right_Limit,
-      Field_Range_Origin,
       Field_Type,
       --  Iir_Kind_Protected_Type_Body
       Field_Identifier,

@@ -1115,7 +1115,7 @@ package body Iirs is
       pragma Assert (Lit /= Null_Iir);
       pragma Assert (Has_Range_Origin (Get_Kind (Lit)),
                      "no field Range_Origin");
-      return Get_Field4 (Lit);
+      return Get_Field0 (Lit);
    end Get_Range_Origin;
 
    procedure Set_Range_Origin (Lit : Iir; Orig : Iir) is
@@ -1123,7 +1123,7 @@ package body Iirs is
       pragma Assert (Lit /= Null_Iir);
       pragma Assert (Has_Range_Origin (Get_Kind (Lit)),
                      "no field Range_Origin");
-      Set_Field4 (Lit, Orig);
+      Set_Field0 (Lit, Orig);
    end Set_Range_Origin;
 
    function Get_Literal_Subtype (Lit : Iir) return Iir is
