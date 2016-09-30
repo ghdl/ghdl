@@ -3154,10 +3154,15 @@ package body Evaluation is
                Path_Add_Name (El);
                Path_Add (":");
             when Iir_Kind_Package_Declaration
-              | Iir_Kind_Package_Body =>
-               Path_Add_Element
-                 (Get_Library (Get_Design_File (Get_Design_Unit (El))),
-                  Is_Instance);
+              | Iir_Kind_Package_Body
+              | Iir_Kind_Package_Instantiation_Declaration =>
+               if Is_Nested_Package (El) then
+                  Path_Add_Element (Get_Parent (El), Is_Instance);
+               else
+                  Path_Add_Element
+                    (Get_Library (Get_Design_File (Get_Design_Unit (El))),
+                     Is_Instance);
+               end if;
                Path_Add_Name (El);
                Path_Add (":");
             when Iir_Kind_Entity_Declaration =>
