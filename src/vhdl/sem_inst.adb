@@ -518,6 +518,8 @@ package body Sem_Inst is
                Set_Has_Identifier_List (Res, Get_Has_Identifier_List (Inter));
                Set_Expr_Staticness (Res, Get_Expr_Staticness (Inter));
                Set_Name_Staticness (Res, Get_Name_Staticness (Inter));
+               Set_Default_Value (Res, Get_Default_Value (Inter));
+               Set_Is_Ref (Res, True);
             when Iir_Kind_Interface_Package_Declaration =>
                Set_Uninstantiated_Package_Name
                  (Res, Get_Uninstantiated_Package_Name (Inter));
@@ -847,11 +849,19 @@ package body Sem_Inst is
                         Imp_Assoc := Get_Chain (Imp_Assoc);
                      end loop;
                   end;
-               when Iir_Kind_Association_Element_Package =>
+
+               when Iir_Kind_Association_Element_Subprogram =>
+                  Inter := Get_Association_Interface (Inst_El, Inter_El);
+                  Set_Instance (Get_Origin (Inter),
+                                Get_Named_Entity (Get_Actual (Inst_El)));
+
+               when Iir_Kind_Association_Element_By_Expression
+                 | Iir_Kind_Association_Element_By_Individual
+                 | Iir_Kind_Association_Element_Open =>
+                  null;
+               when others =>
                   --  TODO.
                   raise Internal_Error;
-               when others =>
-                  null;
             end case;
             Next_Association_Interface (Inst_El, Inter_El);
          end loop;
