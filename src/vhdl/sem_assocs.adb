@@ -1620,6 +1620,7 @@ package body Sem_Assocs is
             Res := Create_Iir (Iir_Kind_Association_Element_Subprogram);
             Location_Copy (Res, Actual);
             Set_Actual (Res, Build_Simple_Name (Decl, Get_Location (Actual)));
+            Set_Use_Flag (Decl, True);
             return Res;
          end if;
          Interp := Get_Next_Interpretation (Interp);
@@ -1787,8 +1788,10 @@ package body Sem_Assocs is
                Error_Msg_Sem
                  (+Assoc, "profile of %n doesn't match profile of %n",
                   (+Actual, +Inter));
+               --  Explain
                Discard := Has_Interface_Subprogram_Profile
                  (Inter, Res, Get_Location (Assoc));
+               return;
             end if;
          when Iir_Kind_Overload_List =>
             declare
@@ -1834,13 +1837,19 @@ package body Sem_Assocs is
                           (+Assoc, " %n declared at %l", (+El, +El));
                      end loop;
                   end if;
+                  return;
+               elsif First_Error then
+                  return;
                end if;
                Free_Overload_List (Res);
-               Set_Named_Entity (Actual, R);
+               Res := R;
             end;
          when others =>
             Error_Kind ("sem_association_subprogram", Res);
       end case;
+
+      Set_Named_Entity (Actual, Res);
+      Set_Use_Flag (Res, True);
    end Sem_Association_Subprogram;
 
    --  Associate ASSOC with interface INTERFACE
