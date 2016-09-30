@@ -101,13 +101,15 @@ package body Ghdllocal is
          then
             --  Create the bodies for instances
             Set_Package_Instantiation_Bodies_Chain
-              (Lib_Unit, Canon.Create_Instantiation_Bodies (Lib_Unit));
+              (Lib_Unit,
+               Canon.Create_Instantiation_Bodies (Lib_Unit, Lib_Unit));
          elsif Get_Kind (Lib_Unit) = Iir_Kind_Package_Body
            and then Get_Need_Instance_Bodies (Get_Package (Lib_Unit))
          then
             Iir_Chains.Append_Chain
               (Lib_Unit, Nodes_Meta.Field_Declaration_Chain,
-               Canon.Create_Instantiation_Bodies (Get_Package (Lib_Unit)));
+               Canon.Create_Instantiation_Bodies (Get_Package (Lib_Unit),
+                                                  Lib_Unit));
          end if;
 
          if (Main or Flags.List_All) and then Flags.List_Canon then
