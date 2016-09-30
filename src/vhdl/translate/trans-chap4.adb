@@ -2374,7 +2374,13 @@ package body Trans.Chap4 is
                Chap3.Translate_Protected_Type_Body_Subprograms (El);
             when Iir_Kind_Package_Declaration
               | Iir_Kind_Package_Body =>
-               Translate_Declaration_Chain_Subprograms (El);
+               declare
+                  Mark  : Id_Mark_Type;
+               begin
+                  Push_Identifier_Prefix (Mark, Get_Identifier (El));
+                  Translate_Declaration_Chain_Subprograms (El);
+                  Pop_Identifier_Prefix (Mark);
+               end;
             when others =>
                null;
          end case;
