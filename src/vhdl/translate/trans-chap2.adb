@@ -1211,7 +1211,8 @@ package body Trans.Chap2 is
                   case Get_Field_Attribute (F) is
                      when Attr_None =>
                         Instantiate_Iir_Info (Get_Iir (N, F));
-                     when Attr_Ref =>
+                     when Attr_Ref
+                       | Attr_Forward_Ref =>
                         null;
                      when Attr_Maybe_Ref =>
                         if not Get_Is_Ref (N) then

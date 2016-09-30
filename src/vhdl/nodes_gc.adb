@@ -137,6 +137,7 @@ package body Nodes_GC is
             F := Fields (I);
             case Get_Field_Attribute (F) is
                when Attr_Ref
+                 | Attr_Forward_Ref
                  | Attr_Chain_Next =>
                   null;
                when Attr_Maybe_Ref =>

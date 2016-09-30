@@ -216,6 +216,10 @@ package body Sem_Inst is
                      R := Instantiate_Iir (S, True);
                   when Attr_Maybe_Ref =>
                      R := Instantiate_Iir (S, Get_Is_Ref (N));
+                  when Attr_Forward_Ref =>
+                     --  Must be explicitely handled in Instantiate_Iir, as it
+                     --  requires special handling.
+                     raise Internal_Error;
                   when Attr_Chain =>
                      R := Instantiate_Iir_Chain (S);
                   when Attr_Chain_Next =>
@@ -523,7 +527,7 @@ package body Sem_Inst is
                      case Get_Field_Attribute (F) is
                         when Attr_None =>
                            Set_Instance_On_Iir (S, S_Inst);
-                        when Attr_Ref =>
+                        when Attr_Ref | Attr_Forward_Ref =>
                            null;
                         when Attr_Maybe_Ref =>
                            if not Get_Is_Ref (N) then
@@ -547,7 +551,8 @@ package body Sem_Inst is
                         when Attr_None =>
                            Set_Instance_On_Iir_List (S, S_Inst);
                         when Attr_Of_Ref
-                          | Attr_Ref =>
+                          | Attr_Ref
+                          | Attr_Forward_Ref =>
                            null;
                         when others =>
                            --  Ref is specially handled in Instantiate_Iir.
@@ -839,7 +844,7 @@ package body Sem_Inst is
                         case Get_Field_Attribute (F) is
                            when Attr_None =>
                               Substitute_On_Iir (S, E, Rep);
-                           when Attr_Ref =>
+                           when Attr_Ref | Attr_Forward_Ref =>
                               null;
                            when Attr_Maybe_Ref =>
                               if not Get_Is_Ref (N) then
@@ -863,7 +868,8 @@ package body Sem_Inst is
                         when Attr_None =>
                            Substitute_On_Iir_List (S, E, Rep);
                         when Attr_Of_Ref
-                          | Attr_Ref =>
+                          | Attr_Ref
+                          | Attr_Forward_Ref =>
                            null;
                         when others =>
                            --  Ref is specially handled in Instantiate_Iir.
