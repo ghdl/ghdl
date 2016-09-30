@@ -1219,7 +1219,7 @@ package body Trans.Chap3 is
       Info  : Incomplete_Type_Info_Acc;
       Ctype : Iir;
    begin
-      if Get_Nbr_Elements (Get_Incomplete_Type_List (Def)) = 0 then
+      if Is_Null (Get_Incomplete_Type_Ref_Chain (Def)) then
          --  FIXME:
          --  This is a work-around for dummy incomplete type (ie incomplete
          --  types not used before the full type declaration).
@@ -1227,7 +1227,7 @@ package body Trans.Chap3 is
       end if;
 
       --  Get the complete type definition.
-      Ctype := Get_Type (Get_Type_Declarator (Def));
+      Ctype := Get_Complete_Type_Definition (Def);
       Info := Add_Info (Ctype, Kind_Incomplete_Type);
       Info.Incomplete_Type := Def;
    end Translate_Incomplete_Type;
@@ -1235,15 +1235,11 @@ package body Trans.Chap3 is
    procedure Translate_Complete_Type
      (Incomplete_Info : in out Incomplete_Type_Info_Acc)
    is
-      List     : constant Iir_List :=
-        Get_Incomplete_Type_List (Incomplete_Info.Incomplete_Type);
       Atype    : Iir;
       Def_Info : Type_Info_Acc;
    begin
-      for I in Natural loop
-         Atype := Get_Nth_Element (List, I);
-         exit when Atype = Null_Iir;
-
+      Atype := Get_Incomplete_Type_Ref_Chain (Incomplete_Info.Incomplete_Type);
+      while Is_Valid (Atype) loop
          --  Only access type can be completed.
          pragma Assert (Get_Kind (Atype) = Iir_Kind_Access_Type_Definition);
 
@@ -1251,6 +1247,8 @@ package body Trans.Chap3 is
          Finish_Access_Type
            (Def_Info.Ortho_Type (Mode_Value),
             Get_Ortho_Designated_Type (Atype));
+
+         Atype := Get_Incomplete_Type_Ref_Chain (Atype);
       end loop;
       Unchecked_Deallocation (Incomplete_Info);
    end Translate_Complete_Type;

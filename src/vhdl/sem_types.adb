@@ -129,8 +129,8 @@ package body Sem_Types is
       Left, Right: Iir;
       Bt_L_Kind, Bt_R_Kind : Iir_Kind;
    begin
-      Left := Sem_Expression_Universal (Get_Left_Limit (Expr));
-      Right := Sem_Expression_Universal (Get_Right_Limit (Expr));
+      Left := Sem_Expression_Universal (Get_Left_Limit_Expr (Expr));
+      Right := Sem_Expression_Universal (Get_Right_Limit_Expr (Expr));
       if Left = Null_Iir or Right = Null_Iir then
          return Null_Iir;
       end if;
@@ -147,6 +147,8 @@ package body Sem_Types is
          Right := Build_Extreme_Value
            (Get_Direction (Expr) = Iir_To, Right);
       end if;
+      Set_Left_Limit_Expr (Expr, Left);
+      Set_Right_Limit_Expr (Expr, Right);
       Set_Left_Limit (Expr, Left);
       Set_Right_Limit (Expr, Right);
 
@@ -396,16 +398,19 @@ package body Sem_Types is
          end Lit_To_Phys_Lit;
 
          Phys_Range : Iir_Range_Expression;
+         Lit : Iir;
       begin
          --  Create the physical range.
          Phys_Range := Create_Iir (Iir_Kind_Range_Expression);
          Location_Copy (Phys_Range, Range_Expr1);
          Set_Type (Phys_Range, Def);
          Set_Direction (Phys_Range, Get_Direction (Range_Expr1));
-         Set_Left_Limit
-           (Phys_Range, Lit_To_Phys_Lit (Get_Left_Limit (Range_Expr1)));
-         Set_Right_Limit
-           (Phys_Range, Lit_To_Phys_Lit (Get_Right_Limit (Range_Expr1)));
+         Lit := Lit_To_Phys_Lit (Get_Left_Limit (Range_Expr1));
+         Set_Left_Limit (Phys_Range, Lit);
+         Set_Left_Limit_Expr (Phys_Range, Lit);
+         Lit := Lit_To_Phys_Lit (Get_Right_Limit (Range_Expr1));
+         Set_Right_Limit (Phys_Range, Lit);
+         Set_Right_Limit_Expr (Phys_Range, Lit);
          Set_Expr_Staticness
            (Phys_Range, Get_Expr_Staticness (Range_Expr1));
 
@@ -1048,7 +1053,10 @@ package body Sem_Types is
       if D_Type /= Null_Iir then
          case Get_Kind (D_Type) is
             when Iir_Kind_Incomplete_Type_Definition =>
-               Append_Element (Get_Incomplete_Type_List (D_Type), Def);
+               --  Append on the chain of incomplete type ref
+               Set_Incomplete_Type_Ref_Chain
+                 (Def, Get_Incomplete_Type_Ref_Chain (D_Type));
+               Set_Incomplete_Type_Ref_Chain (D_Type, Def);
             when Iir_Kind_File_Type_Definition =>
                --  LRM 3.3
                --  The designated type must not be a file type.

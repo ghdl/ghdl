@@ -291,7 +291,7 @@ package body Parse is
       Res : Iir;
    begin
       Res := Create_Iir (Iir_Kind_Range_Expression);
-      Set_Left_Limit (Res, Left);
+      Set_Left_Limit_Expr (Res, Left);
 
       Location_Copy (Res, Left);
       case Current_Token is
@@ -306,7 +306,7 @@ package body Parse is
       --  Skip TO or DOWNTO.
       Scan;
 
-      Set_Right_Limit (Res, Parse_Simple_Expression);
+      Set_Right_Limit_Expr (Res, Parse_Simple_Expression);
       return Res;
    end Parse_Range_Expression;
 

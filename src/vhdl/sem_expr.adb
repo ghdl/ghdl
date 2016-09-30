@@ -553,8 +553,8 @@ package body Sem_Expr is
       Expr_Type : Iir;
    begin
       Expr_Type := Get_Type (Expr);
-      Left := Get_Left_Limit (Expr);
-      Right := Get_Right_Limit (Expr);
+      Left := Get_Left_Limit_Expr (Expr);
+      Right := Get_Right_Limit_Expr (Expr);
 
       if Expr_Type = Null_Iir then
          --  Pass 1.
@@ -659,8 +659,13 @@ package body Sem_Expr is
 
       Left := Eval_Expr_If_Static (Left);
       Right := Eval_Expr_If_Static (Right);
+
+      Set_Left_Limit_Expr (Expr, Left);
+      Set_Right_Limit_Expr (Expr, Right);
+
       Set_Left_Limit (Expr, Left);
       Set_Right_Limit (Expr, Right);
+
       Set_Expr_Staticness (Expr, Min (Get_Expr_Staticness (Left),
                                       Get_Expr_Staticness (Right)));
 

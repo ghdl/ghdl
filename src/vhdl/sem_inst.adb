@@ -406,8 +406,66 @@ package body Sem_Inst is
                      Set_Subprogram_Body (Spec, Res);
                   end;
 
-               when Field_Incomplete_Type_List =>
+               when Field_Incomplete_Type_Ref_Chain =>
+                  if Get_Kind (Res) = Iir_Kind_Access_Type_Definition then
+                     --  Link
+                     declare
+                        Def : constant Iir := Get_Named_Entity
+                          (Get_Designated_Subtype_Indication (Res));
+                     begin
+                        if Get_Kind (Def) = Iir_Kind_Incomplete_Type_Definition
+                        then
+                           Set_Incomplete_Type_Ref_Chain
+                             (Res, Get_Incomplete_Type_Ref_Chain (Def));
+                           Set_Incomplete_Type_Ref_Chain (Def, Res);
+                        end if;
+                     end;
+                  end if;
+
+               when Field_Designated_Type =>
                   null;
+               when Field_Designated_Subtype_Indication =>
+                  Instantiate_Iir_Field (Res, N, F);
+                  --  The designated type will be patched later if it is an
+                  --  incomplete type definition
+                  Set_Designated_Type
+                    (Res, Get_Type (Get_Designated_Subtype_Indication (Res)));
+               when Field_Complete_Type_Definition =>
+                  --  Will be set by the declaration of the complete type
+                  null;
+               when Field_Incomplete_Type_Declaration =>
+                  Instantiate_Iir_Field (Res, N, F);
+                  declare
+                     Res_Decl : constant Iir :=
+                       Get_Incomplete_Type_Declaration (Res);
+                     N_Decl : constant Iir :=
+                       Get_Incomplete_Type_Declaration (N);
+                     Res_Complete : Iir;
+                     N_Def, Res_Def : Iir;
+                     N_El, Next_N_El : Iir;
+                     Res_El, Next_Res_El : Iir;
+                  begin
+                     if Is_Valid (N_Decl) then
+                        --  N/RES completes a type declaration.
+                        N_Def := Get_Type_Definition (N_Decl);
+                        Res_Def := Get_Type_Definition (Res_Decl);
+                        --  Set Complete_Type_Definition
+                        Res_Complete := Get_Type (Res);
+                        Set_Complete_Type_Definition (Res_Def, Res_Complete);
+                        --  Rebuild the list and patch designated types
+                        N_El := N_Def;
+                        Res_El := Res_Def;
+                        loop
+                           Next_N_El := Get_Incomplete_Type_Ref_Chain (N_El);
+                           exit when Is_Null (Next_N_El);
+                           Next_Res_El := Get_Instance (Next_N_El);
+                           Set_Designated_Type (Next_Res_El, Res_Complete);
+                           Set_Incomplete_Type_Ref_Chain (Res_El, Next_Res_El);
+                           N_El := Next_N_El;
+                        end loop;
+                     end if;
+                  end;
+
 
                when others =>
                   --  Common case.

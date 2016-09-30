@@ -147,6 +147,7 @@ package Nodes_Meta is
       Field_Discrete_Range,
       Field_Type_Definition,
       Field_Subtype_Definition,
+      Field_Incomplete_Type_Declaration,
       Field_Interface_Type_Subprograms,
       Field_Nature,
       Field_Mode,
@@ -180,6 +181,8 @@ package Nodes_Meta is
       Field_Context_Reference_Chain,
       Field_Selected_Name,
       Field_Type_Declarator,
+      Field_Complete_Type_Definition,
+      Field_Incomplete_Type_Ref_Chain,
       Field_Associated_Type,
       Field_Enumeration_Literal_List,
       Field_Entity_Class_Entry_Chain,
@@ -193,6 +196,8 @@ package Nodes_Meta is
       Field_Direction,
       Field_Left_Limit,
       Field_Right_Limit,
+      Field_Left_Limit_Expr,
+      Field_Right_Limit_Expr,
       Field_Base_Type,
       Field_Resolution_Indication,
       Field_Record_Element_Resolution_Chain,
@@ -331,7 +336,6 @@ package Nodes_Meta is
       Field_Type_Mark,
       Field_File_Type_Mark,
       Field_Return_Type_Mark,
-      Field_Incomplete_Type_List,
       Field_Has_Disconnect_Flag,
       Field_Has_Active_Flag,
       Field_Is_Within_Flag,
@@ -386,7 +390,7 @@ package Nodes_Meta is
    type Field_Attribute is
      (
       Attr_None,
-      Attr_Ref, Attr_Maybe_Ref, Attr_Of_Ref,
+      Attr_Ref, Attr_Maybe_Ref, Attr_Of_Ref, Attr_Forward_Ref,
       Attr_Chain, Attr_Chain_Next
      );
 
@@ -641,6 +645,7 @@ package Nodes_Meta is
    function Has_Discrete_Range (K : Iir_Kind) return Boolean;
    function Has_Type_Definition (K : Iir_Kind) return Boolean;
    function Has_Subtype_Definition (K : Iir_Kind) return Boolean;
+   function Has_Incomplete_Type_Declaration (K : Iir_Kind) return Boolean;
    function Has_Interface_Type_Subprograms (K : Iir_Kind) return Boolean;
    function Has_Nature (K : Iir_Kind) return Boolean;
    function Has_Mode (K : Iir_Kind) return Boolean;
@@ -674,6 +679,8 @@ package Nodes_Meta is
    function Has_Context_Reference_Chain (K : Iir_Kind) return Boolean;
    function Has_Selected_Name (K : Iir_Kind) return Boolean;
    function Has_Type_Declarator (K : Iir_Kind) return Boolean;
+   function Has_Complete_Type_Definition (K : Iir_Kind) return Boolean;
+   function Has_Incomplete_Type_Ref_Chain (K : Iir_Kind) return Boolean;
    function Has_Associated_Type (K : Iir_Kind) return Boolean;
    function Has_Enumeration_Literal_List (K : Iir_Kind) return Boolean;
    function Has_Entity_Class_Entry_Chain (K : Iir_Kind) return Boolean;
@@ -687,6 +694,8 @@ package Nodes_Meta is
    function Has_Direction (K : Iir_Kind) return Boolean;
    function Has_Left_Limit (K : Iir_Kind) return Boolean;
    function Has_Right_Limit (K : Iir_Kind) return Boolean;
+   function Has_Left_Limit_Expr (K : Iir_Kind) return Boolean;
+   function Has_Right_Limit_Expr (K : Iir_Kind) return Boolean;
    function Has_Base_Type (K : Iir_Kind) return Boolean;
    function Has_Resolution_Indication (K : Iir_Kind) return Boolean;
    function Has_Record_Element_Resolution_Chain (K : Iir_Kind)
@@ -832,7 +841,6 @@ package Nodes_Meta is
    function Has_Type_Mark (K : Iir_Kind) return Boolean;
    function Has_File_Type_Mark (K : Iir_Kind) return Boolean;
    function Has_Return_Type_Mark (K : Iir_Kind) return Boolean;
-   function Has_Incomplete_Type_List (K : Iir_Kind) return Boolean;
    function Has_Has_Disconnect_Flag (K : Iir_Kind) return Boolean;
    function Has_Has_Active_Flag (K : Iir_Kind) return Boolean;
    function Has_Is_Within_Flag (K : Iir_Kind) return Boolean;

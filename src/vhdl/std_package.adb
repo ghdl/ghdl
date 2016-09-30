@@ -143,8 +143,10 @@ package body Std_Package is
       begin
          Res := Create_Std_Iir (Iir_Kind_Range_Expression);
          Set_Left_Limit (Res, Left);
+         Set_Left_Limit_Expr (Res, Left);
          Set_Direction (Res, Iir_To);
          Set_Right_Limit (Res, Right);
+         Set_Right_Limit_Expr (Res, Right);
          Set_Expr_Staticness (Res, Locally);
          Set_Type (Res, Rtype);
          return Res;

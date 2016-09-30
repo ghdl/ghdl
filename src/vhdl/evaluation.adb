@@ -273,7 +273,9 @@ package body Evaluation is
       Location_Copy (Res, Origin);
       Set_Type (Res, Get_Type (Range_Expr));
       Set_Left_Limit (Res, Get_Left_Limit (Range_Expr));
+      Set_Left_Limit_Expr (Res, Get_Left_Limit_Expr (Range_Expr));
       Set_Right_Limit (Res, Get_Right_Limit (Range_Expr));
+      Set_Right_Limit_Expr (Res, Get_Right_Limit_Expr (Range_Expr));
       Set_Direction (Res, Get_Direction (Range_Expr));
       Set_Range_Origin (Res, Origin);
       Set_Expr_Staticness (Res, Locally);
@@ -302,16 +304,12 @@ package body Evaluation is
    --  Set the right limit of A_RANGE from LEN.
    procedure Set_Right_Limit_By_Length (A_Range : Iir; Len : Iir_Int64)
    is
-      Left, Right : Iir;
+      A_Type : constant Iir := Get_Type (A_Range);
+      Left : constant Iir := Get_Left_Limit (A_Range);
+      Right : Iir;
       Pos : Iir_Int64;
-      A_Type : Iir;
    begin
-      if Get_Expr_Staticness (A_Range) /= Locally then
-         raise Internal_Error;
-      end if;
-      A_Type := Get_Type (A_Range);
-
-      Left := Get_Left_Limit (A_Range);
+      pragma Assert (Get_Expr_Staticness (A_Range) = Locally);
 
       Pos := Eval_Pos (Left);
       case Get_Direction (A_Range) is
@@ -329,6 +327,7 @@ package body Evaluation is
          -- FIXME: what about nul range?
          Right := Build_Discrete (Pos, A_Range);
          Set_Literal_Origin (Right, Null_Iir);
+         Set_Right_Limit_Expr (A_Range, Right);
       end if;
       Set_Right_Limit (A_Range, Right);
    end Set_Right_Limit_By_Length;
@@ -1846,13 +1845,18 @@ package body Evaluation is
       end Create_Bound;
 
       Res : Iir;
+      Lit : Iir;
    begin
       Res_Btype := Get_Base_Type (Res_Type);
       Res := Create_Iir (Iir_Kind_Range_Expression);
       Location_Copy (Res, Loc);
       Set_Type (Res, Res_Btype);
-      Set_Left_Limit (Res, Create_Bound (Get_Left_Limit (Rng)));
-      Set_Right_Limit (Res, Create_Bound (Get_Right_Limit (Rng)));
+      Lit := Create_Bound (Get_Left_Limit (Rng));
+      Set_Left_Limit (Res, Lit);
+      Set_Left_Limit_Expr (Res, Lit);
+      Lit := Create_Bound (Get_Right_Limit (Rng));
+      Set_Right_Limit (Res, Lit);
+      Set_Right_Limit_Expr (Res, Lit);
       Set_Direction (Res, Get_Direction (Rng));
       Set_Expr_Staticness (Res, Locally);
       return Res;

@@ -1476,6 +1476,7 @@ package body Sem_Decls is
       end if;
    end Create_Implicit_Operations;
 
+   --  Analyze a type or an anonymous type declaration.
    procedure Sem_Type_Declaration (Decl: Iir; Is_Global : Boolean)
    is
       Def: Iir;
@@ -1495,6 +1496,8 @@ package body Sem_Decls is
                       Iir_Kind_Incomplete_Type_Definition)
          then
             Old_Decl := Null_Iir;
+         else
+            Set_Incomplete_Type_Declaration (Decl, Old_Decl);
          end if;
       else
          Old_Decl := Null_Iir;
@@ -1503,6 +1506,8 @@ package body Sem_Decls is
       if Old_Decl = Null_Iir then
          if Get_Kind (Decl) = Iir_Kind_Type_Declaration then
             --  This is necessary at least for enumeration type definition.
+            --  Type declaration for anonymous types don't have name, only
+            --  their subtype have names.  Those are added later.
             Sem_Scopes.Add_Name (Decl);
          end if;
       else
@@ -1524,107 +1529,105 @@ package body Sem_Decls is
          Set_Signal_Type_Flag (Def, True);
          Set_Type_Declarator (Def, Decl);
          Set_Visible_Flag (Decl, True);
-         Set_Incomplete_Type_List (Def, Create_Iir_List);
+         Xref_Decl (Decl);
+
+         return;
+
+      end if;
+
+      --  A complete type declaration.
+      if Old_Decl = Null_Iir then
          Xref_Decl (Decl);
       else
-         --  A complete type declaration.
-         if Old_Decl = Null_Iir then
-            Xref_Decl (Decl);
-         else
-            Xref_Body (Decl, Old_Decl);
-         end if;
+         Xref_Body (Decl, Old_Decl);
+      end if;
 
-         Def := Sem_Type_Definition (Def, Decl);
+      Def := Sem_Type_Definition (Def, Decl);
+      if Def = Null_Iir then
+         return;
+      end if;
 
-         if Def /= Null_Iir then
-            case Get_Kind (Def) is
-               when Iir_Kind_Integer_Subtype_Definition
-                 | Iir_Kind_Floating_Subtype_Definition
-                 | Iir_Kind_Physical_Subtype_Definition
-                 | Iir_Kind_Array_Subtype_Definition =>
-                  --  Some type declaration are in fact subtype declarations.
-                  St_Decl := Create_Iir (Iir_Kind_Subtype_Declaration);
-                  Location_Copy (St_Decl, Decl);
-                  Set_Identifier (St_Decl, Get_Identifier (Decl));
-                  Set_Parent (St_Decl, Get_Parent (Decl));
-                  Set_Type (St_Decl, Def);
-                  Set_Type_Declarator (Def, St_Decl);
-                  Set_Chain (St_Decl, Get_Chain (Decl));
-                  Set_Chain (Decl, St_Decl);
+      case Get_Kind (Def) is
+         when Iir_Kind_Integer_Subtype_Definition
+           | Iir_Kind_Floating_Subtype_Definition
+           | Iir_Kind_Physical_Subtype_Definition
+           | Iir_Kind_Array_Subtype_Definition =>
+            --  Some type declaration are in fact subtype declarations.
+            St_Decl := Create_Iir (Iir_Kind_Subtype_Declaration);
+            Location_Copy (St_Decl, Decl);
+            Set_Identifier (St_Decl, Get_Identifier (Decl));
+            Set_Parent (St_Decl, Get_Parent (Decl));
+            Set_Type (St_Decl, Def);
+            Set_Type_Declarator (Def, St_Decl);
+            Set_Chain (St_Decl, Get_Chain (Decl));
+            Set_Chain (Decl, St_Decl);
 
-                  --  The type declaration declares the base type.
-                  Bt_Def := Get_Base_Type (Def);
-                  Set_Type_Definition (Decl, Bt_Def);
-                  Set_Type_Declarator (Bt_Def, Decl);
-                  Set_Subtype_Definition (Decl, Def);
+            --  The type declaration declares the base type.
+            Bt_Def := Get_Base_Type (Def);
+            Set_Type_Definition (Decl, Bt_Def);
+            Set_Type_Declarator (Bt_Def, Decl);
+            Set_Subtype_Definition (Decl, Def);
 
-                  if Old_Decl = Null_Iir then
-                     Sem_Scopes.Add_Name (St_Decl);
-                  else
-                     Replace_Name (Get_Identifier (Decl), Old_Decl, St_Decl);
-                     Set_Type_Declarator
-                       (Get_Type_Definition (Old_Decl), St_Decl);
-                  end if;
-
-                  Sem_Scopes.Name_Visible (St_Decl);
-
-                  --  The implicit subprogram will be added in the
-                  -- scope just after.
-                  Create_Implicit_Operations (Decl, False);
-
-               when Iir_Kind_Enumeration_Type_Definition
-                 | Iir_Kind_Array_Type_Definition
-                 | Iir_Kind_Record_Type_Definition
-                 | Iir_Kind_Access_Type_Definition
-                 | Iir_Kind_File_Type_Definition =>
-                  St_Decl := Null_Iir;
-                  Set_Type_Declarator (Def, Decl);
-
-                  Sem_Scopes.Name_Visible (Decl);
-
-                  --  The implicit subprogram will be added in the
-                  -- scope just after.
-                  Create_Implicit_Operations (Decl, False);
-
-               when Iir_Kind_Protected_Type_Declaration =>
-                  Set_Type_Declarator (Def, Decl);
-                  St_Decl := Null_Iir;
-                  --  No implicit subprograms.
-
-               when others =>
-                  Error_Kind ("sem_type_declaration", Def);
-            end case;
-
-            if Old_Decl /= Null_Iir then
-               --  Complete the type definition.
-               declare
-                  List : Iir_List;
-                  El : Iir;
-                  Old_Def : Iir;
-               begin
-                  Old_Def := Get_Type_Definition (Old_Decl);
-                  Set_Signal_Type_Flag (Old_Def, Get_Signal_Type_Flag (Def));
-                  List := Get_Incomplete_Type_List (Old_Def);
-                  for I in Natural loop
-                     El := Get_Nth_Element (List, I);
-                     exit when El = Null_Iir;
-                     Set_Designated_Type (El, Def);
-                  end loop;
-                  --  Complete the incomplete_type_definition node
-                  --  (set type_declarator and base_type).
-
-                  Set_Base_Type (Old_Def, Get_Base_Type (Def));
-                  if St_Decl = Null_Iir then
-                     Set_Type_Declarator (Old_Def, Decl);
-                     Replace_Name (Get_Identifier (Decl), Old_Decl, Decl);
-                  end if;
-               end;
+            if Old_Decl = Null_Iir then
+               Sem_Scopes.Add_Name (St_Decl);
             end if;
 
-            if Is_Global then
-               Set_Type_Has_Signal (Def);
+            Sem_Scopes.Name_Visible (St_Decl);
+
+            --  The implicit subprogram will be added in the
+            -- scope just after.
+            Create_Implicit_Operations (Decl, False);
+
+         when Iir_Kind_Enumeration_Type_Definition
+           | Iir_Kind_Array_Type_Definition
+           | Iir_Kind_Record_Type_Definition
+           | Iir_Kind_Access_Type_Definition
+           | Iir_Kind_File_Type_Definition =>
+            St_Decl := Null_Iir;
+            Set_Type_Declarator (Def, Decl);
+
+            Sem_Scopes.Name_Visible (Decl);
+
+            --  The implicit subprogram will be added in the
+            -- scope just after.
+            Create_Implicit_Operations (Decl, False);
+
+         when Iir_Kind_Protected_Type_Declaration =>
+            Set_Type_Declarator (Def, Decl);
+            St_Decl := Null_Iir;
+            --  No implicit subprograms.
+
+         when others =>
+            Error_Kind ("sem_type_declaration", Def);
+      end case;
+
+      if Old_Decl /= Null_Iir then
+         --  Complete the type definition.
+         declare
+            Old_Def : constant Iir := Get_Type_Definition (Old_Decl);
+            Ref : Iir;
+         begin
+            Set_Signal_Type_Flag (Old_Def, Get_Signal_Type_Flag (Def));
+            Ref := Get_Incomplete_Type_Ref_Chain (Old_Def);
+            while Is_Valid (Ref) loop
+               pragma Assert
+                 (Get_Kind (Ref) = Iir_Kind_Access_Type_Definition);
+               Set_Designated_Type (Ref, Def);
+               Ref := Get_Incomplete_Type_Ref_Chain (Ref);
+            end loop;
+            Set_Complete_Type_Definition (Old_Def, Def);
+
+            --  The identifier now designates the complete type declaration.
+            if St_Decl = Null_Iir then
+               Replace_Name (Get_Identifier (Decl), Old_Decl, Decl);
+            else
+               Replace_Name (Get_Identifier (Decl), Old_Decl, St_Decl);
             end if;
-         end if;
+         end;
+      end if;
+
+      if Is_Global then
+         Set_Type_Has_Signal (Def);
       end if;
    end Sem_Type_Declaration;
 
@@ -3125,11 +3128,10 @@ package body Sem_Decls is
                end if;
             when Iir_Kind_Type_Declaration =>
                declare
-                  Def : Iir;
+                  Def : constant Iir := Get_Type_Definition (El);
                begin
-                  Def := Get_Type_Definition (El);
                   if Get_Kind (Def) = Iir_Kind_Incomplete_Type_Definition
-                    and then Get_Type_Declarator (Def) = El
+                    and then Is_Null (Get_Complete_Type_Definition (Def))
                   then
                      Error_Msg_Sem
                        (+El, "missing full type declaration for %n", +El);

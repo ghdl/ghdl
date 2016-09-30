@@ -1945,6 +1945,22 @@ package body Iirs is
       Set_Field4 (Target, Def);
    end Set_Subtype_Definition;
 
+   function Get_Incomplete_Type_Declaration (N : Iir) return Iir is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Incomplete_Type_Declaration (Get_Kind (N)),
+                     "no field Incomplete_Type_Declaration");
+      return Get_Field5 (N);
+   end Get_Incomplete_Type_Declaration;
+
+   procedure Set_Incomplete_Type_Declaration (N : Iir; Decl : Iir) is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Incomplete_Type_Declaration (Get_Kind (N)),
+                     "no field Incomplete_Type_Declaration");
+      Set_Field5 (N, Decl);
+   end Set_Incomplete_Type_Declaration;
+
    function Get_Interface_Type_Subprograms (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);
@@ -2478,6 +2494,38 @@ package body Iirs is
       Set_Field3 (Def, Decl);
    end Set_Type_Declarator;
 
+   function Get_Complete_Type_Definition (N : Iir) return Iir is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Complete_Type_Definition (Get_Kind (N)),
+                     "no field Complete_Type_Definition");
+      return Get_Field5 (N);
+   end Get_Complete_Type_Definition;
+
+   procedure Set_Complete_Type_Definition (N : Iir; Def : Iir) is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Complete_Type_Definition (Get_Kind (N)),
+                     "no field Complete_Type_Definition");
+      Set_Field5 (N, Def);
+   end Set_Complete_Type_Definition;
+
+   function Get_Incomplete_Type_Ref_Chain (N : Iir) return Iir is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Incomplete_Type_Ref_Chain (Get_Kind (N)),
+                     "no field Incomplete_Type_Ref_Chain");
+      return Get_Field0 (N);
+   end Get_Incomplete_Type_Ref_Chain;
+
+   procedure Set_Incomplete_Type_Ref_Chain (N : Iir; Def : Iir) is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Incomplete_Type_Ref_Chain (Get_Kind (N)),
+                     "no field Incomplete_Type_Ref_Chain");
+      Set_Field0 (N, Def);
+   end Set_Incomplete_Type_Ref_Chain;
+
    function Get_Associated_Type (Def : Iir) return Iir is
    begin
       pragma Assert (Def /= Null_Iir);
@@ -2685,6 +2733,39 @@ package body Iirs is
                      "no field Right_Limit");
       Set_Field3 (Decl, Limit);
    end Set_Right_Limit;
+
+   function Get_Left_Limit_Expr (Decl : Iir_Range_Expression) return Iir is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Left_Limit_Expr (Get_Kind (Decl)),
+                     "no field Left_Limit_Expr");
+      return Get_Field4 (Decl);
+   end Get_Left_Limit_Expr;
+
+   procedure Set_Left_Limit_Expr (Decl : Iir_Range_Expression; Limit : Iir) is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Left_Limit_Expr (Get_Kind (Decl)),
+                     "no field Left_Limit_Expr");
+      Set_Field4 (Decl, Limit);
+   end Set_Left_Limit_Expr;
+
+   function Get_Right_Limit_Expr (Decl : Iir_Range_Expression) return Iir is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Right_Limit_Expr (Get_Kind (Decl)),
+                     "no field Right_Limit_Expr");
+      return Get_Field5 (Decl);
+   end Get_Right_Limit_Expr;
+
+   procedure Set_Right_Limit_Expr (Decl : Iir_Range_Expression; Limit : Iir)
+   is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Right_Limit_Expr (Get_Kind (Decl)),
+                     "no field Right_Limit_Expr");
+      Set_Field5 (Decl, Limit);
+   end Set_Right_Limit_Expr;
 
    function Get_Base_Type (Decl : Iir) return Iir is
    begin
@@ -4906,22 +4987,6 @@ package body Iirs is
                      "no field Return_Type_Mark");
       Set_Field8 (Target, Mark);
    end Set_Return_Type_Mark;
-
-   function Get_Incomplete_Type_List (Target : Iir) return Iir_List is
-   begin
-      pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_Incomplete_Type_List (Get_Kind (Target)),
-                     "no field Incomplete_Type_List");
-      return Iir_To_Iir_List (Get_Field2 (Target));
-   end Get_Incomplete_Type_List;
-
-   procedure Set_Incomplete_Type_List (Target : Iir; List : Iir_List) is
-   begin
-      pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_Incomplete_Type_List (Get_Kind (Target)),
-                     "no field Incomplete_Type_List");
-      Set_Field2 (Target, Iir_List_To_Iir (List));
-   end Set_Incomplete_Type_List;
 
    function Get_Has_Disconnect_Flag (Target : Iir) return Boolean is
    begin
