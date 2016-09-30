@@ -1929,14 +1929,14 @@ package body Trans.Chap3 is
                --  Type is being completed.
                Complete_Info := Info;
                Clear_Info (Def);
-               Info := Add_Info (Def, Kind_Type);
             when others =>
                raise Internal_Error;
          end case;
       else
          Complete_Info := null;
-         Info := Add_Info (Def, Kind_Type);
       end if;
+
+      Info := Add_Info (Def, Kind_Type);
 
       Base_Type := Get_Base_Type (Def);
       Base_Info := Get_Info (Base_Type);
