@@ -920,17 +920,18 @@ package body Sem_Names is
       --  value of which must not exceed the dimensionality of A.  If omitted,
       --  it defaults to 1.
       if Param = Null_Iir then
-         Parameter := Universal_Integer_One;
+         Parameter := Null_Iir;
       else
          Parameter := Sem_Expression
            (Param, Universal_Integer_Type_Definition);
-         if Parameter = Null_Iir then
-            Parameter := Universal_Integer_One;
-         else
+         if Parameter /= Null_Iir then
             if Get_Expr_Staticness (Parameter) /= Locally then
                Error_Msg_Sem (+Parameter, "parameter must be locally static");
-               Parameter := Universal_Integer_One;
             end if;
+         else
+            --  Don't forget there is a parameter, so the attribute cannot
+            --  be reanalyzed with a default parameter.
+            Parameter := Error_Mark;
          end if;
       end if;
 
@@ -953,11 +954,16 @@ package body Sem_Names is
          Indexes_List : constant Iir_List :=
            Get_Index_Subtype_List (Prefix_Type);
       begin
-         Dim := Get_Value (Parameter);
+         if Is_Null (Parameter)
+           or else Get_Expr_Staticness (Parameter) /= Locally
+         then
+            Dim := 1;
+         else
+            Dim := Get_Value (Parameter);
+         end if;
          if Dim < 1 or else Dim > Iir_Int64 (Get_Nbr_Elements (Indexes_List))
          then
             Error_Msg_Sem (+Attr, "parameter value out of bound");
-            Parameter := Universal_Integer_One;
             Dim := 1;
          end if;
          Index_Type := Get_Index_Type (Indexes_List, Natural (Dim - 1));

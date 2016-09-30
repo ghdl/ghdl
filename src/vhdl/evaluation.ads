@@ -45,6 +45,9 @@ package Evaluation is
    --  Constraint_Error.
    function Get_Physical_Value (Expr : Iir) return Iir_Int64;
 
+   --  Get the parameter of an attribute, or 1 if doesn't exist.
+   function Eval_Attribute_Parameter_Or_1 (Attr : Iir) return Natural;
+
    --  Evaluate the locally static expression EXPR (without checking that EXPR
    --  is locally static).  Return a literal or an aggregate, without setting
    --  the origin, and do not modify EXPR.  This can be used only to get the

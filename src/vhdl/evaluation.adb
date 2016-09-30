@@ -1460,11 +1460,24 @@ package body Evaluation is
          return Build_Overflow (Orig);
    end Eval_Dyadic_Operator;
 
+   --  Get the parameter of an attribute, or 1 if doesn't exist.
+   function Eval_Attribute_Parameter_Or_1 (Attr : Iir) return Natural
+   is
+      Parameter : constant Iir := Get_Parameter (Attr);
+   begin
+      if Is_Null (Parameter) or else Is_Error (Parameter) then
+         return 1;
+      else
+         return Natural (Get_Value (Parameter));
+      end if;
+   end Eval_Attribute_Parameter_Or_1;
+
    --  Evaluate any array attribute, return the type for the prefix.
    function Eval_Array_Attribute (Attr : Iir) return Iir
    is
       Prefix : Iir;
       Prefix_Type : Iir;
+      Dim : Natural;
    begin
       Prefix := Get_Prefix (Attr);
       case Get_Kind (Prefix) is
@@ -1488,8 +1501,9 @@ package body Evaluation is
       if Get_Kind (Prefix_Type) /= Iir_Kind_Array_Subtype_Definition then
          Error_Kind ("eval_array_attribute(2)", Prefix_Type);
       end if;
-      return Get_Nth_Element (Get_Index_Subtype_List (Prefix_Type),
-                              Natural (Get_Value (Get_Parameter (Attr)) - 1));
+
+      Dim := Eval_Attribute_Parameter_Or_1 (Attr);
+      return Get_Nth_Element (Get_Index_Subtype_List (Prefix_Type), Dim - 1);
    end Eval_Array_Attribute;
 
    function Eval_Integer_Image (Val : Iir_Int64; Orig : Iir) return Iir
@@ -2782,6 +2796,7 @@ package body Evaluation is
                declare
                   Prefix : Iir;
                   Res : Iir;
+                  Dim : Natural;
                begin
                   Prefix := Get_Prefix (Expr);
                   if Get_Kind (Prefix) /= Iir_Kind_Array_Subtype_Definition
@@ -2793,9 +2808,9 @@ package body Evaluation is
                      --  Unconstrained object.
                      return Null_Iir;
                   end if;
+                  Dim := Eval_Attribute_Parameter_Or_1 (Expr);
                   Expr := Get_Nth_Element
-                    (Get_Index_Subtype_List (Prefix),
-                     Natural (Eval_Pos (Get_Parameter (Expr))) - 1);
+                    (Get_Index_Subtype_List (Prefix), Dim - 1);
                   if Kind = Iir_Kind_Reverse_Range_Array_Attribute then
                      Expr := Eval_Static_Range (Expr);
 

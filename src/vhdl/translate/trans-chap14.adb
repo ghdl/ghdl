@@ -45,7 +45,7 @@ package body Trans.Chap14 is
          --  Prefix is an object.
          Arr := Chap6.Translate_Name (Prefix, Mode_Value);
       end if;
-      Dim := Natural (Get_Value (Get_Parameter (Expr)));
+      Dim := Eval_Attribute_Parameter_Or_1 (Expr);
       return Chap3.Get_Array_Range (Arr, Get_Type (Prefix), Dim);
    end Translate_Array_Attribute_To_Range;
 
