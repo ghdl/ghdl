@@ -1488,7 +1488,8 @@ package body Evaluation is
            | Iir_Kind_Type_Declaration
            | Iir_Kind_Implicit_Dereference
            | Iir_Kind_Function_Call
-           | Iir_Kind_Attribute_Value =>
+           | Iir_Kind_Attribute_Value
+           | Iir_Kind_Attribute_Name =>
             Prefix_Type := Get_Type (Prefix);
          when Iir_Kinds_Subtype_Definition =>
             Prefix_Type := Prefix;

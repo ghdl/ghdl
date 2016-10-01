@@ -1174,21 +1174,21 @@ package body Iirs_Utils is
    function Create_Array_Subtype (Arr_Type : Iir; Loc : Location_Type)
      return Iir_Array_Subtype_Definition
    is
+      Base_Type : constant Iir := Get_Base_Type (Arr_Type);
+      El_Type : constant Iir := Get_Element_Subtype (Base_Type);
       Res : Iir_Array_Subtype_Definition;
-      Base_Type : Iir;
       List : Iir_List;
    begin
       Res := Create_Iir (Iir_Kind_Array_Subtype_Definition);
       Set_Location (Res, Loc);
-      Base_Type := Get_Base_Type (Arr_Type);
       Set_Base_Type (Res, Base_Type);
-      Set_Element_Subtype (Res, Get_Element_Subtype (Base_Type));
+      Set_Element_Subtype (Res, El_Type);
       if Get_Kind (Arr_Type) = Iir_Kind_Array_Subtype_Definition then
          Set_Resolution_Indication (Res, Get_Resolution_Indication (Arr_Type));
       end if;
       Set_Resolved_Flag (Res, Get_Resolved_Flag (Arr_Type));
       Set_Signal_Type_Flag (Res, Get_Signal_Type_Flag (Arr_Type));
-      Set_Type_Staticness (Res, Get_Type_Staticness (Base_Type));
+      Set_Type_Staticness (Res, Get_Type_Staticness (El_Type));
       List := Create_Iir_List;
       Set_Index_Subtype_List (Res, List);
       Set_Index_Constraint_List (Res, List);
