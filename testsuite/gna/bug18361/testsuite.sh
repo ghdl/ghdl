@@ -2,8 +2,7 @@
 
 . ../../testenv.sh
 
-analyze cnt.vhdl
-elab_simulate_failure cnt_v_tb
+analyze_failure cnt.vhdl
 
 clean
 
