@@ -870,18 +870,18 @@ package body Sem_Names is
       if Get_Kind (Res) in Iir_Kinds_Denoting_Name then
          --  Common correct case.
          Atype := Get_Named_Entity (Res);
-         if Get_Kind (Atype) = Iir_Kind_Type_Declaration then
-            Atype := Get_Type_Definition (Atype);
-         elsif Get_Kind (Atype) = Iir_Kind_Subtype_Declaration
-           or else Get_Kind (Atype) = Iir_Kind_Interface_Type_Declaration
-         then
-            Atype := Get_Type (Atype);
-         else
-            Error_Msg_Sem
-              (+Name, "a type mark must denote a type or a subtype");
-            Atype := Create_Error_Type (Atype);
-            Set_Named_Entity (Res, Atype);
-         end if;
+         case Get_Kind (Atype) is
+            when Iir_Kind_Type_Declaration =>
+               Atype := Get_Type_Definition (Atype);
+            when Iir_Kind_Subtype_Declaration
+              | Iir_Kind_Interface_Type_Declaration =>
+               Atype := Get_Type (Atype);
+            when others =>
+               Error_Msg_Sem
+                 (+Name, "a type mark must denote a type or a subtype");
+               Atype := Create_Error_Type (Atype);
+               Set_Named_Entity (Res, Atype);
+         end case;
       else
          if Get_Kind (Res) /= Iir_Kind_Error then
             Error_Msg_Sem
