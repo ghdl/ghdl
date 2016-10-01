@@ -591,12 +591,8 @@ package body Iirs_Utils is
       Location_Copy (Range_Expr, Def);
       Set_Type (Range_Expr, Def);
       Set_Direction (Range_Expr, Iir_To);
-      Set_Left_Limit
-        (Range_Expr,
-         Copy_Enumeration_Literal (Get_First_Element (Literal_List)));
-      Set_Right_Limit
-        (Range_Expr,
-         Copy_Enumeration_Literal (Get_Last_Element (Literal_List)));
+      Set_Left_Limit (Range_Expr, Get_First_Element (Literal_List));
+      Set_Right_Limit (Range_Expr, Get_Last_Element (Literal_List));
       Set_Expr_Staticness (Range_Expr, Locally);
       Set_Range_Constraint (Def, Range_Expr);
    end Create_Range_Constraint_For_Enumeration_Type;
