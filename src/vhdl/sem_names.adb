@@ -906,6 +906,7 @@ package body Sem_Names is
       return Res;
    end Sem_Type_Mark;
 
+   --  Return Globally if the prefix of NAME is a globally static name.
    function Get_Object_Type_Staticness (Name : Iir) return Iir_Staticness
    is
       Base : constant Iir := Get_Base_Name (Name);
