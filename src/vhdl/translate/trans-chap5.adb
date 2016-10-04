@@ -47,12 +47,15 @@ package body Trans.Chap5 is
    procedure Translate_Attribute_Specification
      (Spec : Iir_Attribute_Specification)
    is
-      Spec_Type : constant Iir := Get_Type (Spec);
+      Spec_Expr : constant Iir := Get_Expression (Spec);
+      Spec_Type : constant Iir := Get_Type (Spec_Expr);
       Attr   : constant Iir_Attribute_Declaration :=
         Get_Named_Entity (Get_Attribute_Designator (Spec));
       Mark   : Id_Mark_Type;
       Mark2  : Id_Mark_Type;
       Info   : Object_Info_Acc;
+      Val    : Iir;
+      Num    : Natural;
    begin
       Push_Identifier_Prefix_Uniq (Mark);
       if Is_Anonymous_Type_Definition (Spec_Type) then
@@ -60,19 +63,39 @@ package body Trans.Chap5 is
          Chap3.Translate_Type_Definition (Spec_Type, True);
          Pop_Identifier_Prefix (Mark2);
       end if;
-      Info := Add_Info (Spec, Kind_Object);
-      Info.Object_Var := Create_Var
-        (Create_Var_Identifier (Attr),
-         Chap4.Get_Object_Type (Get_Info (Spec_Type), Mode_Value),
-         Global_Storage);
+
+      Num := 1;
+      Val := Get_Attribute_Value_Spec_Chain (Spec);
+      while Is_Valid (Val) loop
+         Info := Add_Info (Val, Kind_Object);
+         Info.Object_Var := Create_Var
+           (Create_Var_Identifier (Attr, "V", Num),
+            Chap4.Get_Object_Type (Get_Info (Spec_Type), Mode_Value),
+            Global_Storage);
+
+         --  Create only one object if the expression is static.
+         exit when Get_Expr_Staticness (Spec_Expr) /= None;
+
+         Val := Get_Spec_Chain (Val);
+         Num := Num + 1;
+      end loop;
       Pop_Identifier_Prefix (Mark);
    end Translate_Attribute_Specification;
 
    procedure Elab_Attribute_Specification
-     (Spec : Iir_Attribute_Specification) is
+     (Spec : Iir_Attribute_Specification)
+   is
+      Expr : constant Iir := Get_Expression (Spec);
+      Val    : Iir;
    begin
-      Chap3.Elab_Object_Subtype (Get_Type (Spec));
-      Chap4.Elab_Object_Value (Spec, Get_Expression (Spec));
+      Chap3.Elab_Object_Subtype (Get_Type (Expr));
+
+      Val := Get_Attribute_Value_Spec_Chain (Spec);
+      while Is_Valid (Val) loop
+         Chap4.Elab_Object_Value (Val, Expr);
+         exit when Get_Expr_Staticness (Expr) /= None;
+         Val := Get_Spec_Chain (Val);
+      end loop;
    end Elab_Attribute_Specification;
 
    procedure Gen_Elab_Disconnect_Non_Composite (Targ      : Mnode;

@@ -186,6 +186,8 @@ package body Sem_Specs is
                                Check_Defined : Boolean)
    is
       use Tokens;
+      Attr_Expr : constant Iir := Get_Expression (Attr);
+
       El : Iir_Attribute_Value;
 
       --  Attribute declaration corresponding to ATTR.
@@ -294,18 +296,13 @@ package body Sem_Specs is
       Set_Name_Staticness (El, None);
       Set_Attribute_Specification (El, Attr);
       --  FIXME: create an expr_error node?
-      declare
-         Expr : Iir;
-      begin
-         Expr := Get_Expression (Attr);
-         if Expr = Error_Mark then
-            Set_Expr_Staticness (El, Locally);
-         else
-            Set_Expr_Staticness (El, Get_Expr_Staticness (Expr));
-         end if;
-      end;
+      if Is_Error (Attr_Expr) then
+         Set_Expr_Staticness (El, Locally);
+      else
+         Set_Expr_Staticness (El, Get_Expr_Staticness (Attr_Expr));
+      end if;
       Set_Designated_Entity (El, Decl);
-      Set_Type (El, Get_Type (Attr));
+      Set_Type (El, Get_Type (Attr_Expr));
       Set_Base_Name (El, El);
 
       --  Put the attribute value in the attribute_value_chain.
@@ -313,6 +310,7 @@ package body Sem_Specs is
       Set_Attribute_Value_Chain (Attr_Chain_Parent, El);
 
       --  Put the attribute value in the chain of the attribute specification.
+      --  This is prepended, so in reverse order.  Will be reversed later.
       Set_Spec_Chain (El, Get_Attribute_Value_Spec_Chain (Attr));
       Set_Attribute_Value_Spec_Chain (Attr, El);
 
@@ -717,7 +715,6 @@ package body Sem_Specs is
       --  the same as (or implicitly convertible to) the type mark in the
       --  corresponding attribute declaration.
       Attr_Type := Get_Type (Attr);
-      Set_Type (Spec, Attr_Type);
       Expr := Sem_Expression (Get_Expression (Spec), Attr_Type);
       if Expr /= Null_Iir then
          Check_Read (Expr);
@@ -748,11 +745,11 @@ package body Sem_Specs is
       end if;
 
       --  LRM93 3.2.1.1 Index constraints and discrete ranges
-      --  - For an attribtue whose value is specified by an attribute
+      --  - For an attribute whose value is specified by an attribute
       --    specification, the index ranges are defined by the expression
       --    given in the specification, if the subtype of the attribute is
       --    unconstrained [...]
-      Sem_Decls.Sem_Object_Type_From_Value (Spec, Get_Expression (Spec));
+      --  GHDL: For attribute value.
 
       --  LRM 5.1
       --  The entity name list identifies those named entities, both
@@ -807,6 +804,25 @@ package body Sem_Specs is
             end loop;
          end;
       end if;
+
+      --  Reverse the chain of attribute value in specification, so that they
+      --  are in textual order.  This is important if the expression is not
+      --  static.
+      declare
+         El : Iir;
+         New_El : Iir;
+         Tmp : Iir;
+      begin
+         El := Get_Attribute_Value_Spec_Chain (Spec);
+         New_El := Null_Iir;
+         while Is_Valid (El) loop
+            Tmp := Get_Spec_Chain (El);
+            Set_Spec_Chain (El, New_El);
+            New_El := El;
+            El := Tmp;
+         end loop;
+         Set_Attribute_Value_Spec_Chain (Spec, New_El);
+      end;
    end Sem_Attribute_Specification;
 
    procedure Check_Post_Attribute_Specification

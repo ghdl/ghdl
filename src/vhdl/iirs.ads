@@ -697,9 +697,6 @@ package Iirs is
    --
    --   Get/Set_Parent (Field0)
    --
-   --  The type can be constrained due to the expression.
-   --   Get/Set_Type (Field1)
-   --
    --   Get/Set_Chain (Field2)
    --
    --   Get/Set_Entity_Class (Field3)
