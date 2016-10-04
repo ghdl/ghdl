@@ -553,8 +553,8 @@ package body Sem_Expr is
       Expr_Type : Iir;
    begin
       Expr_Type := Get_Type (Expr);
-      Left := Get_Left_Limit (Expr);
-      Right := Get_Right_Limit (Expr);
+      Left := Get_Left_Limit_Expr (Expr);
+      Right := Get_Right_Limit_Expr (Expr);
 
       if Expr_Type = Null_Iir then
          --  Pass 1.
@@ -659,16 +659,24 @@ package body Sem_Expr is
 
       Left := Eval_Expr_If_Static (Left);
       Right := Eval_Expr_If_Static (Right);
+
+      Set_Left_Limit_Expr (Expr, Left);
+      Set_Right_Limit_Expr (Expr, Right);
+
       Set_Left_Limit (Expr, Left);
       Set_Right_Limit (Expr, Right);
+
       Set_Expr_Staticness (Expr, Min (Get_Expr_Staticness (Left),
                                       Get_Expr_Staticness (Right)));
 
-      if A_Type /= Null_Iir
-        and then Are_Types_Compatible (Expr_Type, A_Type) = Not_Compatible
-      then
-         Error_Msg_Sem (+Expr, "type of range doesn't match expected type");
-         return Null_Iir;
+      if A_Type /= Null_Iir then
+         if Are_Types_Compatible (Expr_Type, A_Type) = Not_Compatible then
+            Error_Msg_Sem (+Expr, "type of range doesn't match expected type");
+            return Null_Iir;
+         end if;
+
+         --  Use A_TYPE for the type of the expression.
+         Expr_Type := A_Type;
       end if;
 
       Set_Type (Expr, Expr_Type);

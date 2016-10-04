@@ -273,7 +273,9 @@ package body Evaluation is
       Location_Copy (Res, Origin);
       Set_Type (Res, Get_Type (Range_Expr));
       Set_Left_Limit (Res, Get_Left_Limit (Range_Expr));
+      Set_Left_Limit_Expr (Res, Get_Left_Limit_Expr (Range_Expr));
       Set_Right_Limit (Res, Get_Right_Limit (Range_Expr));
+      Set_Right_Limit_Expr (Res, Get_Right_Limit_Expr (Range_Expr));
       Set_Direction (Res, Get_Direction (Range_Expr));
       Set_Range_Origin (Res, Origin);
       Set_Expr_Staticness (Res, Locally);
@@ -302,16 +304,12 @@ package body Evaluation is
    --  Set the right limit of A_RANGE from LEN.
    procedure Set_Right_Limit_By_Length (A_Range : Iir; Len : Iir_Int64)
    is
-      Left, Right : Iir;
+      A_Type : constant Iir := Get_Type (A_Range);
+      Left : constant Iir := Get_Left_Limit (A_Range);
+      Right : Iir;
       Pos : Iir_Int64;
-      A_Type : Iir;
    begin
-      if Get_Expr_Staticness (A_Range) /= Locally then
-         raise Internal_Error;
-      end if;
-      A_Type := Get_Type (A_Range);
-
-      Left := Get_Left_Limit (A_Range);
+      pragma Assert (Get_Expr_Staticness (A_Range) = Locally);
 
       Pos := Eval_Pos (Left);
       case Get_Direction (A_Range) is
@@ -329,6 +327,7 @@ package body Evaluation is
          -- FIXME: what about nul range?
          Right := Build_Discrete (Pos, A_Range);
          Set_Literal_Origin (Right, Null_Iir);
+         Set_Right_Limit_Expr (A_Range, Right);
       end if;
       Set_Right_Limit (A_Range, Right);
    end Set_Right_Limit_By_Length;
@@ -1460,11 +1459,24 @@ package body Evaluation is
          return Build_Overflow (Orig);
    end Eval_Dyadic_Operator;
 
+   --  Get the parameter of an attribute, or 1 if doesn't exist.
+   function Eval_Attribute_Parameter_Or_1 (Attr : Iir) return Natural
+   is
+      Parameter : constant Iir := Get_Parameter (Attr);
+   begin
+      if Is_Null (Parameter) or else Is_Error (Parameter) then
+         return 1;
+      else
+         return Natural (Get_Value (Parameter));
+      end if;
+   end Eval_Attribute_Parameter_Or_1;
+
    --  Evaluate any array attribute, return the type for the prefix.
    function Eval_Array_Attribute (Attr : Iir) return Iir
    is
       Prefix : Iir;
       Prefix_Type : Iir;
+      Dim : Natural;
    begin
       Prefix := Get_Prefix (Attr);
       case Get_Kind (Prefix) is
@@ -1476,7 +1488,8 @@ package body Evaluation is
            | Iir_Kind_Type_Declaration
            | Iir_Kind_Implicit_Dereference
            | Iir_Kind_Function_Call
-           | Iir_Kind_Attribute_Value =>
+           | Iir_Kind_Attribute_Value
+           | Iir_Kind_Attribute_Name =>
             Prefix_Type := Get_Type (Prefix);
          when Iir_Kinds_Subtype_Definition =>
             Prefix_Type := Prefix;
@@ -1488,8 +1501,9 @@ package body Evaluation is
       if Get_Kind (Prefix_Type) /= Iir_Kind_Array_Subtype_Definition then
          Error_Kind ("eval_array_attribute(2)", Prefix_Type);
       end if;
-      return Get_Nth_Element (Get_Index_Subtype_List (Prefix_Type),
-                              Natural (Get_Value (Get_Parameter (Attr)) - 1));
+
+      Dim := Eval_Attribute_Parameter_Or_1 (Attr);
+      return Get_Nth_Element (Get_Index_Subtype_List (Prefix_Type), Dim - 1);
    end Eval_Array_Attribute;
 
    function Eval_Integer_Image (Val : Iir_Int64; Orig : Iir) return Iir
@@ -1832,13 +1846,18 @@ package body Evaluation is
       end Create_Bound;
 
       Res : Iir;
+      Lit : Iir;
    begin
       Res_Btype := Get_Base_Type (Res_Type);
       Res := Create_Iir (Iir_Kind_Range_Expression);
       Location_Copy (Res, Loc);
       Set_Type (Res, Res_Btype);
-      Set_Left_Limit (Res, Create_Bound (Get_Left_Limit (Rng)));
-      Set_Right_Limit (Res, Create_Bound (Get_Right_Limit (Rng)));
+      Lit := Create_Bound (Get_Left_Limit (Rng));
+      Set_Left_Limit (Res, Lit);
+      Set_Left_Limit_Expr (Res, Lit);
+      Lit := Create_Bound (Get_Right_Limit (Rng));
+      Set_Right_Limit (Res, Lit);
+      Set_Right_Limit_Expr (Res, Lit);
       Set_Direction (Res, Get_Direction (Rng));
       Set_Expr_Staticness (Res, Locally);
       return Res;
@@ -2782,6 +2801,7 @@ package body Evaluation is
                declare
                   Prefix : Iir;
                   Res : Iir;
+                  Dim : Natural;
                begin
                   Prefix := Get_Prefix (Expr);
                   if Get_Kind (Prefix) /= Iir_Kind_Array_Subtype_Definition
@@ -2793,9 +2813,9 @@ package body Evaluation is
                      --  Unconstrained object.
                      return Null_Iir;
                   end if;
+                  Dim := Eval_Attribute_Parameter_Or_1 (Expr);
                   Expr := Get_Nth_Element
-                    (Get_Index_Subtype_List (Prefix),
-                     Natural (Eval_Pos (Get_Parameter (Expr))) - 1);
+                    (Get_Index_Subtype_List (Prefix), Dim - 1);
                   if Kind = Iir_Kind_Reverse_Range_Array_Attribute then
                      Expr := Eval_Static_Range (Expr);
 
@@ -3135,10 +3155,15 @@ package body Evaluation is
                Path_Add_Name (El);
                Path_Add (":");
             when Iir_Kind_Package_Declaration
-              | Iir_Kind_Package_Body =>
-               Path_Add_Element
-                 (Get_Library (Get_Design_File (Get_Design_Unit (El))),
-                  Is_Instance);
+              | Iir_Kind_Package_Body
+              | Iir_Kind_Package_Instantiation_Declaration =>
+               if Is_Nested_Package (El) then
+                  Path_Add_Element (Get_Parent (El), Is_Instance);
+               else
+                  Path_Add_Element
+                    (Get_Library (Get_Design_File (Get_Design_Unit (El))),
+                     Is_Instance);
+               end if;
                Path_Add_Name (El);
                Path_Add (":");
             when Iir_Kind_Entity_Declaration =>

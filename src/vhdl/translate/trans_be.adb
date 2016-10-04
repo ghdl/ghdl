@@ -15,8 +15,9 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Types; use Types;
 with Iirs; use Iirs;
+with Nodes_Meta;
+with Iir_Chains;
 with Disp_Tree;
 with Disp_Vhdl;
 with Sem;
@@ -33,7 +34,7 @@ package body Trans_Be is
      (Unit : Iir_Design_Unit; Main : Boolean := False)
    is
       use Ada.Text_IO;
-      Lib : constant Iir := Get_Library_Unit (Unit);
+      Lib_Unit : constant Iir := Get_Library_Unit (Unit);
    begin
       if (Main or Flags.Dump_All) and then Flags.Dump_Parse then
          Disp_Tree.Disp_Tree (Unit);
@@ -41,8 +42,8 @@ package body Trans_Be is
 
       --  Semantic analysis.
       if Flags.Verbose then
-         Report_Msg (Msgid_Note, Semantic, No_Location,
-                     "analyse %n", (1 => +Lib));
+         Report_Msg (Msgid_Note, Semantic, +Lib_Unit,
+                     "analyse %n", (1 => +Lib_Unit));
       end if;
       Sem.Semantic (Unit);
 
@@ -70,20 +71,28 @@ package body Trans_Be is
       --  Canonalisation.
       ------------------
       if Flags.Verbose then
-         Report_Msg (Msgid_Note, Semantic, No_Location,
-                     "canonicalize %n", (1 => +Lib));
+         Report_Msg (Msgid_Note, Semantic, +Lib_Unit,
+                     "canonicalize %n", (1 => +Lib_Unit));
       end if;
 
       Canon.Canonicalize (Unit);
 
       --  FIXME: for Main only ?
-      if Get_Kind (Lib) = Iir_Kind_Package_Declaration
-        and then not Get_Need_Body (Lib)
-        and then Get_Need_Instance_Bodies (Lib)
+      if Get_Kind (Lib_Unit) = Iir_Kind_Package_Declaration
+        and then not Get_Need_Body (Lib_Unit)
+        and then Get_Need_Instance_Bodies (Lib_Unit)
       then
          --  Create the bodies for instances
          Set_Package_Instantiation_Bodies_Chain
-           (Lib, Canon.Create_Instantiation_Bodies (Lib));
+           (Lib_Unit,
+            Canon.Create_Instantiation_Bodies (Lib_Unit, Lib_Unit));
+      elsif Get_Kind (Lib_Unit) = Iir_Kind_Package_Body
+        and then Get_Need_Instance_Bodies (Get_Package (Lib_Unit))
+      then
+         Iir_Chains.Append_Chain
+           (Lib_Unit, Nodes_Meta.Field_Declaration_Chain,
+            Canon.Create_Instantiation_Bodies (Get_Package (Lib_Unit),
+                                               Lib_Unit));
       end if;
 
       if (Main or Flags.Dump_All) and then Flags.Dump_Canon then
@@ -99,12 +108,13 @@ package body Trans_Be is
       end if;
 
       if Flags.Flag_Elaborate then
-         if Get_Kind (Lib) = Iir_Kind_Architecture_Body then
+         if Get_Kind (Lib_Unit) = Iir_Kind_Architecture_Body then
             declare
                Config : Iir_Design_Unit;
             begin
-               Config := Canon.Create_Default_Configuration_Declaration (Lib);
-               Set_Default_Configuration_Declaration (Lib, Config);
+               Config :=
+                 Canon.Create_Default_Configuration_Declaration (Lib_Unit);
+               Set_Default_Configuration_Declaration (Lib_Unit, Config);
                if (Main or Flags.Dump_All) and then Flags.Dump_Canon then
                   Disp_Tree.Disp_Tree (Config);
                end if;

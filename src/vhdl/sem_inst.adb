@@ -216,6 +216,10 @@ package body Sem_Inst is
                      R := Instantiate_Iir (S, True);
                   when Attr_Maybe_Ref =>
                      R := Instantiate_Iir (S, Get_Is_Ref (N));
+                  when Attr_Forward_Ref =>
+                     --  Must be explicitely handled in Instantiate_Iir, as it
+                     --  requires special handling.
+                     raise Internal_Error;
                   when Attr_Chain =>
                      R := Instantiate_Iir_Chain (S);
                   when Attr_Chain_Next =>
@@ -402,8 +406,66 @@ package body Sem_Inst is
                      Set_Subprogram_Body (Spec, Res);
                   end;
 
-               when Field_Incomplete_Type_List =>
+               when Field_Incomplete_Type_Ref_Chain =>
+                  if Get_Kind (Res) = Iir_Kind_Access_Type_Definition then
+                     --  Link
+                     declare
+                        Def : constant Iir := Get_Named_Entity
+                          (Get_Designated_Subtype_Indication (Res));
+                     begin
+                        if Get_Kind (Def) = Iir_Kind_Incomplete_Type_Definition
+                        then
+                           Set_Incomplete_Type_Ref_Chain
+                             (Res, Get_Incomplete_Type_Ref_Chain (Def));
+                           Set_Incomplete_Type_Ref_Chain (Def, Res);
+                        end if;
+                     end;
+                  end if;
+
+               when Field_Designated_Type =>
                   null;
+               when Field_Designated_Subtype_Indication =>
+                  Instantiate_Iir_Field (Res, N, F);
+                  --  The designated type will be patched later if it is an
+                  --  incomplete type definition
+                  Set_Designated_Type
+                    (Res, Get_Type (Get_Designated_Subtype_Indication (Res)));
+               when Field_Complete_Type_Definition =>
+                  --  Will be set by the declaration of the complete type
+                  null;
+               when Field_Incomplete_Type_Declaration =>
+                  Instantiate_Iir_Field (Res, N, F);
+                  declare
+                     Res_Decl : constant Iir :=
+                       Get_Incomplete_Type_Declaration (Res);
+                     N_Decl : constant Iir :=
+                       Get_Incomplete_Type_Declaration (N);
+                     Res_Complete : Iir;
+                     N_Def, Res_Def : Iir;
+                     N_El, Next_N_El : Iir;
+                     Res_El, Next_Res_El : Iir;
+                  begin
+                     if Is_Valid (N_Decl) then
+                        --  N/RES completes a type declaration.
+                        N_Def := Get_Type_Definition (N_Decl);
+                        Res_Def := Get_Type_Definition (Res_Decl);
+                        --  Set Complete_Type_Definition
+                        Res_Complete := Get_Type (Res);
+                        Set_Complete_Type_Definition (Res_Def, Res_Complete);
+                        --  Rebuild the list and patch designated types
+                        N_El := N_Def;
+                        Res_El := Res_Def;
+                        loop
+                           Next_N_El := Get_Incomplete_Type_Ref_Chain (N_El);
+                           exit when Is_Null (Next_N_El);
+                           Next_Res_El := Get_Instance (Next_N_El);
+                           Set_Designated_Type (Next_Res_El, Res_Complete);
+                           Set_Incomplete_Type_Ref_Chain (Res_El, Next_Res_El);
+                           N_El := Next_N_El;
+                        end loop;
+                     end if;
+                  end;
+
 
                when others =>
                   --  Common case.
@@ -456,6 +518,8 @@ package body Sem_Inst is
                Set_Has_Identifier_List (Res, Get_Has_Identifier_List (Inter));
                Set_Expr_Staticness (Res, Get_Expr_Staticness (Inter));
                Set_Name_Staticness (Res, Get_Name_Staticness (Inter));
+               Set_Default_Value (Res, Get_Default_Value (Inter));
+               Set_Is_Ref (Res, True);
             when Iir_Kind_Interface_Package_Declaration =>
                Set_Uninstantiated_Package_Name
                  (Res, Get_Uninstantiated_Package_Name (Inter));
@@ -523,7 +587,7 @@ package body Sem_Inst is
                      case Get_Field_Attribute (F) is
                         when Attr_None =>
                            Set_Instance_On_Iir (S, S_Inst);
-                        when Attr_Ref =>
+                        when Attr_Ref | Attr_Forward_Ref =>
                            null;
                         when Attr_Maybe_Ref =>
                            if not Get_Is_Ref (N) then
@@ -547,7 +611,8 @@ package body Sem_Inst is
                         when Attr_None =>
                            Set_Instance_On_Iir_List (S, S_Inst);
                         when Attr_Of_Ref
-                          | Attr_Ref =>
+                          | Attr_Ref
+                          | Attr_Forward_Ref =>
                            null;
                         when others =>
                            --  Ref is specially handled in Instantiate_Iir.
@@ -784,11 +849,19 @@ package body Sem_Inst is
                         Imp_Assoc := Get_Chain (Imp_Assoc);
                      end loop;
                   end;
-               when Iir_Kind_Association_Element_Package =>
+
+               when Iir_Kind_Association_Element_Subprogram =>
+                  Inter := Get_Association_Interface (Inst_El, Inter_El);
+                  Set_Instance (Get_Origin (Inter),
+                                Get_Named_Entity (Get_Actual (Inst_El)));
+
+               when Iir_Kind_Association_Element_By_Expression
+                 | Iir_Kind_Association_Element_By_Individual
+                 | Iir_Kind_Association_Element_Open =>
+                  null;
+               when others =>
                   --  TODO.
                   raise Internal_Error;
-               when others =>
-                  null;
             end case;
             Next_Association_Interface (Inst_El, Inter_El);
          end loop;
@@ -839,7 +912,7 @@ package body Sem_Inst is
                         case Get_Field_Attribute (F) is
                            when Attr_None =>
                               Substitute_On_Iir (S, E, Rep);
-                           when Attr_Ref =>
+                           when Attr_Ref | Attr_Forward_Ref =>
                               null;
                            when Attr_Maybe_Ref =>
                               if not Get_Is_Ref (N) then
@@ -863,7 +936,8 @@ package body Sem_Inst is
                         when Attr_None =>
                            Substitute_On_Iir_List (S, E, Rep);
                         when Attr_Of_Ref
-                          | Attr_Ref =>
+                          | Attr_Ref
+                          | Attr_Forward_Ref =>
                            null;
                         when others =>
                            --  Ref is specially handled in Instantiate_Iir.

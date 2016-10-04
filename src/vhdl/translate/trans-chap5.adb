@@ -742,6 +742,7 @@ package body Trans.Chap5 is
                declare
                   Value : constant Iir := Get_Default_Value (Formal);
                begin
+                  pragma Assert (Is_Valid (Value));
                   Set_Map_Env (Formal_Env);
                   Chap4.Elab_Object_Value (Formal, Value);
                   Chap9.Destroy_Types (Value);

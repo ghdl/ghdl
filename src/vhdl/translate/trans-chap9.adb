@@ -1153,7 +1153,8 @@ package body Trans.Chap9 is
                   case Get_Field_Attribute (F) is
                      when Attr_None =>
                         Destroy_Types (Get_Iir (N, F));
-                     when Attr_Ref =>
+                     when Attr_Ref
+                       | Attr_Forward_Ref =>
                         null;
                      when Attr_Maybe_Ref =>
                         if not Get_Is_Ref (N) then

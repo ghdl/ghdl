@@ -172,6 +172,9 @@ package Std_Package is
    --  at compilation time.
    subtype Iir_Wildcard_Types is Iir range 7 .. 10;
 
+   --  Chain of wildcard declarations, to own the nodes.
+   Wildcard_Type_Declaration_Chain : Iir;
+
    --  Create the first well-known nodes.
    procedure Create_First_Nodes;
 

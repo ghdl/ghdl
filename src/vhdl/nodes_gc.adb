@@ -87,13 +87,6 @@ package body Nodes_GC is
                --  Anonymous interfaces are shared by predefined functions.
                return;
             end if;
-         when Iir_Kind_Enumeration_Literal =>
-            if Get_Enum_Pos (N) = 0
-              or else N = Get_Right_Limit (Get_Range_Constraint
-                                             (Get_Type (N)))
-            then
-               return;
-            end if;
          when others =>
             null;
       end case;
@@ -137,6 +130,7 @@ package body Nodes_GC is
             F := Fields (I);
             case Get_Field_Attribute (F) is
                when Attr_Ref
+                 | Attr_Forward_Ref
                  | Attr_Chain_Next =>
                   null;
                when Attr_Maybe_Ref =>
@@ -159,7 +153,7 @@ package body Nodes_GC is
                         null;
                   end case;
                when Attr_Of_Ref =>
-                  raise Internal_Error;
+                  null;
             end case;
          end loop;
       end;
@@ -185,6 +179,7 @@ package body Nodes_GC is
       Mark_Iir (Convertible_Real_Type_Declaration);
       Mark_Iir (Universal_Integer_One);
       Mark_Iir (Error_Mark);
+      Mark_Chain (Wildcard_Type_Declaration_Chain);
 
       El := Error_Mark;
       Nbr_Unreferenced := 0;

@@ -434,6 +434,8 @@ package body Sem_Assocs is
    procedure Check_Port_Association_Bounds_Restrictions
      (Formal : Iir; Actual : Iir; Assoc : Iir)
    is
+      Inter : constant Iir := Get_Object_Prefix (Formal, False);
+
       function Is_Scalar_Type_Compatible (Src : Iir; Dest : Iir)
                                          return Boolean
       is
@@ -477,7 +479,24 @@ package body Sem_Assocs is
          return True;
       end Is_Scalar_Type_Compatible;
 
-      Inter : constant Iir := Get_Object_Prefix (Formal, False);
+      procedure Error_Msg
+      is
+         Id : Msgid_Type;
+         Orig : Report_Origin;
+      begin
+         if Flag_Elaborate then
+            Id := Msgid_Error;
+            Orig := Elaboration;
+         else
+            Id := Warnid_Port_Bounds;
+            Orig := Semantic;
+         end if;
+         Report_Msg
+           (Id, Orig, +Assoc,
+            "bounds or direction of actual don't match with %n",
+            (1 => +Inter));
+      end Error_Msg;
+
       Ftype : constant Iir := Get_Type (Formal);
       Atype : constant Iir := Get_Type (Actual);
       F_Conv : constant Iir := Get_Out_Conversion (Assoc);
@@ -519,28 +538,12 @@ package body Sem_Assocs is
       if Get_Mode (Inter) in Iir_In_Modes
         and then not Is_Scalar_Type_Compatible (A2f_Type, Ftype)
       then
-         if Flag_Elaborate then
-            Error_Msg_Elab
-              (Assoc,
-               "bounds or direction of formal and actual mismatch");
-         else
-            Warning_Msg_Sem
-              (Warnid_Port_Bounds, +Assoc,
-               "bounds or direction of formal and actual mismatch");
-         end if;
+         Error_Msg;
       end if;
       if Get_Mode (Inter) in Iir_Out_Modes
         and then not Is_Scalar_Type_Compatible (F2a_Type, Atype)
       then
-         if Flag_Elaborate then
-            Error_Msg_Elab
-              (Assoc,
-               "bounds or direction of formal and actual mismatch");
-         else
-            Warning_Msg_Sem
-              (Warnid_Port_Bounds, +Assoc,
-               "bounds or direction of formal and actual mismatch");
-         end if;
+         Error_Msg;
       end if;
    end Check_Port_Association_Bounds_Restrictions;
 
@@ -1617,6 +1620,7 @@ package body Sem_Assocs is
             Res := Create_Iir (Iir_Kind_Association_Element_Subprogram);
             Location_Copy (Res, Actual);
             Set_Actual (Res, Build_Simple_Name (Decl, Get_Location (Actual)));
+            Set_Use_Flag (Decl, True);
             return Res;
          end if;
          Interp := Get_Next_Interpretation (Interp);
@@ -1784,8 +1788,10 @@ package body Sem_Assocs is
                Error_Msg_Sem
                  (+Assoc, "profile of %n doesn't match profile of %n",
                   (+Actual, +Inter));
+               --  Explain
                Discard := Has_Interface_Subprogram_Profile
                  (Inter, Res, Get_Location (Assoc));
+               return;
             end if;
          when Iir_Kind_Overload_List =>
             declare
@@ -1831,13 +1837,19 @@ package body Sem_Assocs is
                           (+Assoc, " %n declared at %l", (+El, +El));
                      end loop;
                   end if;
+                  return;
+               elsif First_Error then
+                  return;
                end if;
                Free_Overload_List (Res);
-               Set_Named_Entity (Actual, R);
+               Res := R;
             end;
          when others =>
             Error_Kind ("sem_association_subprogram", Res);
       end case;
+
+      Set_Named_Entity (Actual, Res);
+      Set_Use_Flag (Res, True);
    end Sem_Association_Subprogram;
 
    --  Associate ASSOC with interface INTERFACE

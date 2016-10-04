@@ -1765,10 +1765,9 @@ package body Trans.Rtis is
       return Info.Type_Rti;
    end Generate_Type_Definition;
 
-   function Generate_Incomplete_Type_Definition (Def : Iir)
-                                                    return O_Dnode
+   function Generate_Incomplete_Type_Definition (Def : Iir) return O_Dnode
    is
-      Ndef     : constant Iir := Get_Type (Get_Type_Declarator (Def));
+      Ndef     : constant Iir := Get_Complete_Type_Definition (Def);
       Info     : constant Type_Info_Acc := Get_Info (Ndef);
       Rti_Type : O_Tnode;
    begin

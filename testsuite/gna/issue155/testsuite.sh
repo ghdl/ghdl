@@ -2,8 +2,7 @@
 
 . ../../testenv.sh
 
-analyze_failure cnt.vhdl
-
+analyze failure.vhdl
 clean
 
 echo "Test successful"

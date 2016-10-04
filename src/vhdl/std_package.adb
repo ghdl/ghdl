@@ -143,8 +143,10 @@ package body Std_Package is
       begin
          Res := Create_Std_Iir (Iir_Kind_Range_Expression);
          Set_Left_Limit (Res, Left);
+         Set_Left_Limit_Expr (Res, Left);
          Set_Direction (Res, Iir_To);
          Set_Right_Limit (Res, Right);
+         Set_Right_Limit_Expr (Res, Right);
          Set_Expr_Staticness (Res, Locally);
          Set_Type (Res, Rtype);
          return Res;
@@ -351,6 +353,9 @@ package body Std_Package is
          Set_Type_Staticness (Def, None);
          Set_Type_Definition (Decl, Def);
          Set_Type_Declarator (Def, Decl);
+
+         Set_Chain (Decl, Wildcard_Type_Declaration_Chain);
+         Wildcard_Type_Declaration_Chain := Decl;
       end Create_Wildcard_Type;
 
    begin
@@ -1207,6 +1212,7 @@ package body Std_Package is
       --  Wilcard types.
       --  Create the declaration and give them meaningful (and invalid) names
       --  so that error messages are clear for the user.
+      Wildcard_Type_Declaration_Chain := Null_Iir;
       Create_Wildcard_Type (Wildcard_Any_Type, "any type");
       Create_Wildcard_Type (Wildcard_Any_Aggregate_Type, "any aggregate type");
       Create_Wildcard_Type (Wildcard_Any_String_Type, "any string type");

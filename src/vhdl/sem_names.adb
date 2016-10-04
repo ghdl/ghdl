@@ -870,18 +870,18 @@ package body Sem_Names is
       if Get_Kind (Res) in Iir_Kinds_Denoting_Name then
          --  Common correct case.
          Atype := Get_Named_Entity (Res);
-         if Get_Kind (Atype) = Iir_Kind_Type_Declaration then
-            Atype := Get_Type_Definition (Atype);
-         elsif Get_Kind (Atype) = Iir_Kind_Subtype_Declaration
-           or else Get_Kind (Atype) = Iir_Kind_Interface_Type_Declaration
-         then
-            Atype := Get_Type (Atype);
-         else
-            Error_Msg_Sem
-              (+Name, "a type mark must denote a type or a subtype");
-            Atype := Create_Error_Type (Atype);
-            Set_Named_Entity (Res, Atype);
-         end if;
+         case Get_Kind (Atype) is
+            when Iir_Kind_Type_Declaration =>
+               Atype := Get_Type_Definition (Atype);
+            when Iir_Kind_Subtype_Declaration
+              | Iir_Kind_Interface_Type_Declaration =>
+               Atype := Get_Type (Atype);
+            when others =>
+               Error_Msg_Sem
+                 (+Name, "a type mark must denote a type or a subtype");
+               Atype := Create_Error_Type (Atype);
+               Set_Named_Entity (Res, Atype);
+         end case;
       else
          if Get_Kind (Res) /= Iir_Kind_Error then
             Error_Msg_Sem
@@ -906,6 +906,44 @@ package body Sem_Names is
       return Res;
    end Sem_Type_Mark;
 
+   function Get_Object_Type_Staticness (Name : Iir) return Iir_Staticness
+   is
+      Base : constant Iir := Get_Base_Name (Name);
+      Parent : Iir;
+   begin
+      if Get_Kind (Base) in Iir_Kinds_Dereference then
+         return None;
+      end if;
+
+      Parent := Get_Parent (Base);
+      loop
+         case Get_Kind (Parent) is
+            when Iir_Kind_Entity_Declaration
+              | Iir_Kind_Architecture_Body
+              | Iir_Kind_Block_Statement
+              | Iir_Kind_Block_Header
+              | Iir_Kinds_Process_Statement
+              | Iir_Kind_Generate_Statement_Body
+              | Iir_Kind_Design_Unit =>
+               --  Globally static.
+               return Globally;
+            when Iir_Kind_Package_Declaration
+              | Iir_Kind_Package_Body
+              | Iir_Kind_Package_Instantiation_Declaration
+              | Iir_Kind_Protected_Type_Body =>
+               --  Possibly nested construct.
+               Parent := Get_Parent (Parent);
+            when Iir_Kinds_Subprogram_Declaration
+              | Iir_Kinds_Subprogram_Body
+              | Iir_Kinds_Interface_Subprogram_Declaration =>
+               --  Not globally static.
+               return None;
+            when others =>
+               Error_Kind ("get_object_type_staticness", Parent);
+         end case;
+      end loop;
+   end Get_Object_Type_Staticness;
+
    procedure Finish_Sem_Array_Attribute
      (Attr_Name : Iir; Attr : Iir; Param : Iir)
    is
@@ -914,23 +952,25 @@ package body Sem_Names is
       Index_Type : Iir;
       Prefix : Iir;
       Prefix_Name : Iir;
+      Staticness : Iir_Staticness;
    begin
       --  LRM93 14.1
       --  Parameter: A locally static expression of type universal_integer, the
       --  value of which must not exceed the dimensionality of A.  If omitted,
       --  it defaults to 1.
       if Param = Null_Iir then
-         Parameter := Universal_Integer_One;
+         Parameter := Null_Iir;
       else
          Parameter := Sem_Expression
            (Param, Universal_Integer_Type_Definition);
-         if Parameter = Null_Iir then
-            Parameter := Universal_Integer_One;
-         else
+         if Parameter /= Null_Iir then
             if Get_Expr_Staticness (Parameter) /= Locally then
                Error_Msg_Sem (+Parameter, "parameter must be locally static");
-               Parameter := Universal_Integer_One;
             end if;
+         else
+            --  Don't forget there is a parameter, so the attribute cannot
+            --  be reanalyzed with a default parameter.
+            Parameter := Error_Mark;
          end if;
       end if;
 
@@ -953,11 +993,16 @@ package body Sem_Names is
          Indexes_List : constant Iir_List :=
            Get_Index_Subtype_List (Prefix_Type);
       begin
-         Dim := Get_Value (Parameter);
+         if Is_Null (Parameter)
+           or else Get_Expr_Staticness (Parameter) /= Locally
+         then
+            Dim := 1;
+         else
+            Dim := Get_Value (Parameter);
+         end if;
          if Dim < 1 or else Dim > Iir_Int64 (Get_Nbr_Elements (Indexes_List))
          then
             Error_Msg_Sem (+Attr, "parameter value out of bound");
-            Parameter := Universal_Integer_One;
             Dim := 1;
          end if;
          Index_Type := Get_Index_Type (Indexes_List, Natural (Dim - 1));
@@ -1015,7 +1060,12 @@ package body Sem_Names is
       --  formed by imposing on an unconstrained array type a globally static
       --  index constraint.
 
-      Set_Expr_Staticness (Attr, Get_Type_Staticness (Prefix_Type));
+      Staticness := Get_Type_Staticness (Prefix_Type);
+      if Is_Object_Name (Prefix) then
+         Staticness := Iir_Staticness'Max
+           (Staticness, Get_Object_Type_Staticness (Prefix));
+      end if;
+      Set_Expr_Staticness (Attr, Staticness);
    end Finish_Sem_Array_Attribute;
 
    procedure Finish_Sem_Scalar_Type_Attribute
@@ -1297,9 +1347,8 @@ package body Sem_Names is
    is
       procedure Update_Impure_Depth (Subprg_Spec : Iir; Depth : Iir_Int32)
       is
-         Bod : Iir;
+         Bod : constant Iir := Get_Subprogram_Body (Subprg_Spec);
       begin
-         Bod := Get_Subprogram_Body (Subprg_Spec);
          if Bod = Null_Iir then
             return;
          end if;
@@ -1396,6 +1445,7 @@ package body Sem_Names is
            | Iir_Kind_Block_Statement
            | Iir_Kind_If_Generate_Statement
            | Iir_Kind_For_Generate_Statement
+           | Iir_Kind_Generate_Statement_Body
            | Iir_Kinds_Process_Statement
            | Iir_Kind_Protected_Type_Body =>
             --  The procedure is impure.

@@ -2565,8 +2565,8 @@ package body Canon is
       end if;
    end Canon_Package_Instantiation_Declaration;
 
-   function Create_Instantiation_Bodies (Decl : Iir_Package_Declaration)
-                                        return Iir
+   function Create_Instantiation_Bodies
+     (Decl : Iir_Package_Declaration; Parent : Iir) return Iir
    is
       First, Last : Iir;
       El : Iir;
@@ -2581,6 +2581,7 @@ package body Canon is
            and then Get_Package_Origin (El) /= Null_Iir
          then
             Bod := Sem_Inst.Instantiate_Package_Body (El);
+            Set_Parent (Bod, Parent);
 
             --  Append.
             if First = Null_Iir then

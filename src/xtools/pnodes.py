@@ -20,7 +20,8 @@ class FuncDesc:
         self.name = name
         self.field = field
         self.conv = conv
-        self.acc = acc  # access: Chain, Chain_Next, Ref, Of_Ref, Maybe_Ref
+        self.acc = acc  # access: Chain, Chain_Next, Ref, Of_Ref, Maybe_Ref,
+                        #         Forward_Ref
         self.pname = pname # Parameter mame
         self.ptype = ptype # Parameter type
         self.rname = rname # value name (for procedure)
@@ -230,7 +231,7 @@ def read_kinds(filename):
     funcs = []
     pat_field = re.compile(
         '   --  Field: (\w+)'
-        + '( Of_Ref| Ref| Maybe_Ref| Chain_Next| Chain)?( .*)?\n')
+        + '( Of_Ref| Ref| Maybe_Ref| Forward_Ref| Chain_Next| Chain)?( .*)?\n')
     pat_conv = re.compile('^ \((\w+)\)$')
     pat_func = \
       re.compile('   function Get_(\w+) \((\w+) : (\w+)\) return (\w+);\n')
@@ -665,7 +666,7 @@ elif args.action == 'meta_body':
         elif l == '      --  FIELDS_ARRAY':
             last = None
             nodes_types = [node_type, node_type + '_List']
-            ref_names = ['Ref', 'Of_Ref', 'Maybe_Ref']
+            ref_names = ['Ref', 'Of_Ref', 'Maybe_Ref', 'Forward_Ref']
             for k in kinds:
                 v = nodes[k]
                 if last:
@@ -689,7 +690,8 @@ elif args.action == 'meta_body':
                                     and fv.acc in ['Maybe_Ref']])
                     flds += sorted([fk for fk, fv in v.fields.items() \
                                     if fv and fv.rtype in nodes_types\
-                                    and fv.acc in ['Ref', 'Of_Ref']])
+                                    and fv.acc in ['Ref', 'Of_Ref',
+                                                   'Forward_Ref']])
                 for fk in flds:
                     if last:
                         print last + ','
