@@ -1454,6 +1454,11 @@ package body Disp_Vhdl is
       Put (' ');
       Disp_Function_Name (Subprg);
 
+      if Get_Has_Parameter (Subprg) then
+         Put (' ');
+         Put ("parameter");
+      end if;
+
       Inter := Get_Interface_Declaration_Chain (Subprg);
       if Implicit then
          Disp_Interface_Chain (Inter, "", Start);

@@ -1372,6 +1372,8 @@ package Iirs is
    --  True is the specification is immediately followed by a body.
    --   Get/Set_Has_Body (Flag9)
    --
+   --   Get/Set_Has_Parameter (Flag10)
+   --
    -- Only for Iir_Kind_Procedure_Declaration:
    --   Get/Set_Suspend_Flag (Flag11)
    --
@@ -1483,6 +1485,8 @@ package Iirs is
    --
    -- Only for Iir_Kind_Interface_Function_Declaration:
    --   Get/Set_Has_Pure (Flag8)
+   --
+   --   Get/Set_Has_Parameter (Flag10)
    --
    --   Get/Set_All_Sensitized_State (State3)
 
@@ -7019,6 +7023,11 @@ package Iirs is
    --  Field: Flag9
    function Get_Has_Body (Decl : Iir) return Boolean;
    procedure Set_Has_Body (Decl : Iir; Flag : Boolean);
+
+   --  Layout flag: true if 'parameter' reserved identifier is present.
+   --  Field: Flag10
+   function Get_Has_Parameter (Decl : Iir) return Boolean;
+   procedure Set_Has_Parameter (Decl : Iir; Flag : Boolean);
 
    --  Layout flag for object declaration.  If True, the identifier of this
    --  declaration is followed by an identifier (and separated by a comma).

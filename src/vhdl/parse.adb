@@ -1473,6 +1473,8 @@ package body Parse is
       Inters : Iir;
    begin
       if Current_Token = Tok_Parameter then
+         Set_Has_Parameter (Subprg, True);
+
          --  Eat 'parameter'
          Scan;
 

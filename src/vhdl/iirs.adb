@@ -5356,6 +5356,22 @@ package body Iirs is
       Set_Flag9 (Decl, Flag);
    end Set_Has_Body;
 
+   function Get_Has_Parameter (Decl : Iir) return Boolean is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Has_Parameter (Get_Kind (Decl)),
+                     "no field Has_Parameter");
+      return Get_Flag10 (Decl);
+   end Get_Has_Parameter;
+
+   procedure Set_Has_Parameter (Decl : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Has_Parameter (Get_Kind (Decl)),
+                     "no field Has_Parameter");
+      Set_Flag10 (Decl, Flag);
+   end Set_Has_Parameter;
+
    function Get_Has_Identifier_List (Decl : Iir) return Boolean is
    begin
       pragma Assert (Decl /= Null_Iir);
