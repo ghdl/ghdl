@@ -1070,6 +1070,7 @@ package body Disp_Vhdl is
    is
       Inter: Iir;
       Next_Inter : Iir;
+      First_Inter : Iir;
       Start: Count;
    begin
       if Chain = Null_Iir then
@@ -1082,6 +1083,8 @@ package body Disp_Vhdl is
          Next_Inter := Get_Chain (Inter);
          Set_Col (Start);
 
+         First_Inter := Inter;
+
          case Get_Kind (Inter) is
             when Iir_Kinds_Interface_Object_Declaration =>
                Disp_Interface_Class (Inter);
@@ -1092,7 +1095,7 @@ package body Disp_Vhdl is
                   Next_Inter := Get_Chain (Inter);
                   Disp_Name_Of (Inter);
                end loop;
-               Disp_Interface_Mode_And_Type (Inter);
+               Disp_Interface_Mode_And_Type (First_Inter);
             when Iir_Kind_Interface_Package_Declaration =>
                Put ("package ");
                Disp_Identifier (Inter);

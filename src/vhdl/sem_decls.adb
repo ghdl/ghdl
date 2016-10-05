@@ -128,7 +128,6 @@ package body Sem_Decls is
       A_Type := Get_Subtype_Indication (Inter);
       if A_Type = Null_Iir then
          pragma Assert (Last /= Null_Iir);
-         Set_Subtype_Indication (Inter, Get_Subtype_Indication (Last));
          A_Type := Get_Type (Last);
          Default_Value := Get_Default_Value (Last);
       else
@@ -1741,6 +1740,9 @@ package body Sem_Decls is
          end if;
       else
          Default_Value := Get_Default_Value (Last_Decl);
+         if Is_Valid (Default_Value) then
+            Set_Is_Ref (Decl, True);
+         end if;
          Atype := Get_Type (Last_Decl);
       end if;
 

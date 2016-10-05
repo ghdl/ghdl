@@ -1041,8 +1041,6 @@ package Iirs is
    --   Get/Set_After_Drivers_Flag (Flag5)
    --
    --   Get/Set_Use_Flag (Flag6)
-   --
-   --   Get/Set_Is_Ref (Flag7)
 
    -- Iir_Kind_Non_Object_Alias_Declaration (Short)
    --
@@ -1146,8 +1144,6 @@ package Iirs is
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Use_Flag (Flag6)
-   --
-   --   Get/Set_Is_Ref (Flag7)
 
    -- Iir_Kind_Nature_Declaration (Short)
    --
@@ -1604,6 +1600,7 @@ package Iirs is
    --
    --   Get/Set_Use_Flag (Flag6)
    --
+   -- Only for Iir_Kind_Constant_Declaration:
    --   Get/Set_Is_Ref (Flag7)
    --
    --   Get/Set_Expr_Staticness (State1)
@@ -1680,8 +1677,6 @@ package Iirs is
    --
    --   Get/Set_Use_Flag (Flag6)
    --
-   --   Get/Set_Is_Ref (Flag7)
-   --
    --   Get/Set_Has_Mode (Flag10)
    --
    --   Get/Set_Expr_Staticness (State1)
@@ -1714,8 +1709,6 @@ package Iirs is
    --   Get/Set_Has_Identifier_List (Flag3)
    --
    --   Get/Set_Visible_Flag (Flag4)
-   --
-   --   Get/Set_Is_Ref (Flag7)
 
    -- Iir_Kind_Record_Element_Constraint (Short)
    --
@@ -3443,7 +3436,8 @@ package Iirs is
    --   Get/Set_Allocator_Designated_Type (Field2)
    --
    -- Only for Iir_Kind_Allocator_By_Subtype:
-   --  Same as subtype indication but set to own the subtype.
+   --  Same as subtype indication but set when the allocator defines a new
+   --  subtype.
    --   Get/Set_Allocator_Subtype (Field3)
    --
    -- Only for Iir_Kind_Allocator_By_Expression:
@@ -3455,9 +3449,6 @@ package Iirs is
    --   Get/Set_Subtype_Indication (Field5)
    --
    --   Get/Set_Expr_Staticness (State1)
-   --
-   -- Only for Iir_Kind_Allocator_By_Subtype:
-   --   Get/Set_Is_Ref (Flag7)
 
    ------------
    --  Names --
@@ -3628,8 +3619,6 @@ package Iirs is
    --
    --  Only for Iir_Kind_External_Variable_Name:
    --   Get/Set_Shared_Flag (Flag2)
-   --
-   --   Get/Set_Is_Ref (Flag7)
    --
    --   Get/Set_Expr_Staticness (State1)
    --
@@ -5705,7 +5694,7 @@ package Iirs is
    function Get_Literal_Subtype (Lit : Iir) return Iir;
    procedure Set_Literal_Subtype (Lit : Iir; Atype : Iir);
 
-   --  Field: Field3
+   --  Field: Field3 Ref
    function Get_Allocator_Subtype (Lit : Iir) return Iir;
    procedure Set_Allocator_Subtype (Lit : Iir; Atype : Iir);
 
@@ -5927,10 +5916,11 @@ package Iirs is
    procedure Set_Type (Target : Iir; Atype : Iir);
    pragma Inline (Get_Type);
 
-   --  The subtype indication of a declaration.  Note that this node can be
-   --  shared between declarations if they are separated by comma, such as in:
+   --  The subtype indication of a declaration.  If several declarations share
+   --  the same subtype_indication like in:
    --    variable a, b : integer := 5;
-   --  Field: Field5 Maybe_Ref
+   --  then only the first declaration has a subtype_indication.
+   --  Field: Field5
    function Get_Subtype_Indication (Target : Iir) return Iir;
    procedure Set_Subtype_Indication (Target : Iir; Atype : Iir);
 

@@ -3369,7 +3369,6 @@ package body Parse is
             when others =>
                null;
          end case;
-         Set_Is_Ref (Object, Object /= First);
          Object := Get_Chain (Object);
       end loop;
 
