@@ -271,6 +271,7 @@ package Nodes_Meta is
       Field_Guard_Expression,
       Field_Guard_Decl,
       Field_Guard_Sensitivity_List,
+      Field_Signal_Attribute_Chain,
       Field_Block_Block_Configuration,
       Field_Package_Header,
       Field_Block_Header,
@@ -311,6 +312,8 @@ package Nodes_Meta is
       Field_Suffix,
       Field_Index_Subtype,
       Field_Parameter,
+      Field_Attr_Chain,
+      Field_Signal_Attribute_Declaration,
       Field_Actual_Type,
       Field_Association_Chain,
       Field_Individual_Association_Chain,
@@ -774,6 +777,7 @@ package Nodes_Meta is
    function Has_Guard_Expression (K : Iir_Kind) return Boolean;
    function Has_Guard_Decl (K : Iir_Kind) return Boolean;
    function Has_Guard_Sensitivity_List (K : Iir_Kind) return Boolean;
+   function Has_Signal_Attribute_Chain (K : Iir_Kind) return Boolean;
    function Has_Block_Block_Configuration (K : Iir_Kind) return Boolean;
    function Has_Package_Header (K : Iir_Kind) return Boolean;
    function Has_Block_Header (K : Iir_Kind) return Boolean;
@@ -816,6 +820,8 @@ package Nodes_Meta is
    function Has_Suffix (K : Iir_Kind) return Boolean;
    function Has_Index_Subtype (K : Iir_Kind) return Boolean;
    function Has_Parameter (K : Iir_Kind) return Boolean;
+   function Has_Attr_Chain (K : Iir_Kind) return Boolean;
+   function Has_Signal_Attribute_Declaration (K : Iir_Kind) return Boolean;
    function Has_Actual_Type (K : Iir_Kind) return Boolean;
    function Has_Association_Chain (K : Iir_Kind) return Boolean;
    function Has_Individual_Association_Chain (K : Iir_Kind) return Boolean;

@@ -1725,8 +1725,16 @@ package body Trans.Chap4 is
          when Iir_Kind_Attribute_Specification =>
             Chap5.Translate_Attribute_Specification (Decl);
 
-         when Iir_Kinds_Signal_Attribute =>
-            Chap4.Create_Implicit_Signal (Decl);
+         when Iir_Kind_Signal_Attribute_Declaration =>
+            declare
+               Sig : Iir;
+            begin
+               Sig := Get_Signal_Attribute_Chain (Decl);
+               while Is_Valid (Sig) loop
+                  Chap4.Create_Implicit_Signal (Sig);
+                  Sig := Get_Attr_Chain (Sig);
+               end loop;
+            end;
 
          when Iir_Kind_Guard_Signal_Declaration =>
             Create_Signal (Decl);
@@ -2455,13 +2463,23 @@ package body Trans.Chap4 is
                | Iir_Kind_Procedure_Body =>
                null;
 
-            when Iir_Kind_Stable_Attribute
-               | Iir_Kind_Quiet_Attribute
-               | Iir_Kind_Transaction_Attribute =>
-               Elab_Signal_Attribute (Decl);
-
-            when Iir_Kind_Delayed_Attribute =>
-               Elab_Signal_Delayed_Attribute (Decl);
+            when Iir_Kind_Signal_Attribute_Declaration =>
+               declare
+                  Sig : Iir;
+               begin
+                  Sig := Get_Signal_Attribute_Chain (Decl);
+                  while Is_Valid (Sig) loop
+                     case Iir_Kinds_Signal_Attribute (Get_Kind (Sig)) is
+                        when Iir_Kind_Stable_Attribute
+                          | Iir_Kind_Quiet_Attribute
+                          | Iir_Kind_Transaction_Attribute =>
+                           Elab_Signal_Attribute (Sig);
+                        when Iir_Kind_Delayed_Attribute =>
+                           Elab_Signal_Delayed_Attribute (Sig);
+                     end case;
+                     Sig := Get_Attr_Chain (Sig);
+                  end loop;
+               end;
 
             when Iir_Kind_Group_Template_Declaration
                | Iir_Kind_Group_Declaration =>

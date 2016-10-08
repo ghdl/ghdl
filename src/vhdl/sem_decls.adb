@@ -47,13 +47,14 @@ package body Sem_Decls is
 
    --  Region that can declare signals.  Used to add implicit declarations.
    Current_Signals_Region : Implicit_Signal_Declaration_Type :=
-     (Null_Iir, False, Null_Iir, Null_Iir);
+     (Null_Iir, Null_Iir, Null_Iir, False, Null_Iir);
 
    procedure Push_Signals_Declarative_Part
      (Cell: out Implicit_Signal_Declaration_Type; Decls_Parent : Iir) is
    begin
       Cell := Current_Signals_Region;
-      Current_Signals_Region := (Decls_Parent, False, Null_Iir, Null_Iir);
+      Current_Signals_Region :=
+        (Decls_Parent, Null_Iir, Null_Iir, False, Null_Iir);
    end Push_Signals_Declarative_Part;
 
    procedure Pop_Signals_Declarative_Part
@@ -62,29 +63,94 @@ package body Sem_Decls is
       Current_Signals_Region := Cell;
    end Pop_Signals_Declarative_Part;
 
-   procedure Add_Declaration_For_Implicit_Signal (Sig : Iir) is
+   --  Insert the implicit signal declaration after LAST_DECL.
+   procedure Insert_Implicit_Signal (Last_Decl : Iir) is
    begin
+      if Last_Decl = Null_Iir then
+         Set_Declaration_Chain (Current_Signals_Region.Decls_Parent,
+                                Current_Signals_Region.Implicit_Decl);
+      else
+         Set_Chain (Last_Decl, Current_Signals_Region.Implicit_Decl);
+      end if;
+   end Insert_Implicit_Signal;
+
+   --  Add SIG as an implicit declaration in the current region.
+   procedure Add_Declaration_For_Implicit_Signal (Sig : Iir)
+   is
+      Decl : Iir;
+   begin
+      --  We deal only with signal attribute.
+      pragma Assert (Get_Kind (Sig) in Iir_Kinds_Signal_Attribute);
+
       --  There must be a declarative part for implicit signals.
       pragma Assert (Current_Signals_Region.Decls_Parent /= Null_Iir);
 
-      --  Chain must be empty.
-      pragma Assert (Get_Chain (Sig) = Null_Iir);
+      --  Attr_Chain must be empty.
+      pragma Assert (Get_Attr_Chain (Sig) = Null_Iir);
 
-      if Current_Signals_Region.Decls_Analyzed then
-         --  Just append.
-         if Current_Signals_Region.Last_Implicit_Decl = Null_Iir then
-            --  No declarations.
-            Set_Declaration_Chain (Current_Signals_Region.Decls_Parent, Sig);
-         else
-            --  Append to the last declaration.
-            Set_Chain (Current_Signals_Region.Last_Implicit_Decl, Sig);
+      if Current_Signals_Region.Implicit_Decl = Null_Iir then
+         --  Create the signal_attribute_declaration to hold all the implicit
+         --  signals.
+         Decl := Create_Iir (Iir_Kind_Signal_Attribute_Declaration);
+         Location_Copy (Decl, Sig);
+         Set_Parent (Decl, Current_Signals_Region.Decls_Parent);
+
+         --  Save the implicit declaration.
+         Current_Signals_Region.Implicit_Decl := Decl;
+
+         --  Append SIG (this is the first one).
+         Set_Signal_Attribute_Chain (Decl, Sig);
+
+         if Current_Signals_Region.Decls_Analyzed then
+            --  Declarative region was completely analyzed.  Just append DECL
+            --  at the end of declarations.
+            Insert_Implicit_Signal (Current_Signals_Region.Last_Decl);
          end if;
-         Current_Signals_Region.Last_Implicit_Decl := Sig;
       else
-         Sub_Chain_Append (Current_Signals_Region.First_Implicit_Decl,
-                           Current_Signals_Region.Last_Implicit_Decl, Sig);
+         --  Append SIG.
+         Set_Attr_Chain (Current_Signals_Region.Last_Attribute_Signal, Sig);
       end if;
+      Current_Signals_Region.Last_Attribute_Signal := Sig;
+
+      Set_Signal_Attribute_Declaration
+        (Sig, Current_Signals_Region.Implicit_Decl);
    end Add_Declaration_For_Implicit_Signal;
+
+   --  Insert pending implicit declarations after the last analyzed LAST_DECL,
+   --  and update it.  Then the caller has to insert the declaration which
+   --  created the implicit declarations.
+   procedure Insert_Pending_Implicit_Declarations
+     (Parent : Iir; Last_Decl : in out Iir) is
+   begin
+      if Current_Signals_Region.Decls_Parent = Parent
+        and then Current_Signals_Region.Implicit_Decl /= Null_Iir
+      then
+         pragma Assert (not Current_Signals_Region.Decls_Analyzed);
+
+         --  Add pending implicit declarations before the current one.
+         Insert_Implicit_Signal (Last_Decl);
+         Last_Decl := Current_Signals_Region.Implicit_Decl;
+
+         --  Detach the implicit declaration.
+         Current_Signals_Region.Implicit_Decl := Null_Iir;
+         Current_Signals_Region.Last_Attribute_Signal := Null_Iir;
+      end if;
+   end Insert_Pending_Implicit_Declarations;
+
+   --  Mark the end of declaration analysis.  New implicit declarations will
+   --  simply be appended to the last declaration.
+   procedure End_Of_Declarations_For_Implicit_Declarations
+     (Parent : Iir; Last_Decl : Iir) is
+   begin
+      if Current_Signals_Region.Decls_Parent = Parent then
+         pragma Assert (not Current_Signals_Region.Decls_Analyzed);
+
+         --  All declarations have been analyzed, new implicit declarations
+         --  will be appended.
+         Current_Signals_Region.Decls_Analyzed := True;
+         Current_Signals_Region.Last_Decl := Last_Decl;
+      end if;
+   end End_Of_Declarations_For_Implicit_Declarations;
 
    --  Emit an error if the type of DECL is a file type, access type,
    --  protected type or if a subelement of DECL is an access type.
@@ -2980,21 +3046,9 @@ package body Sem_Decls is
             Check_Post_Attribute_Specification (Attr_Spec_Chain, Decl);
          end if;
 
-         if Current_Signals_Region.Decls_Parent = Parent
-           and then Current_Signals_Region.First_Implicit_Decl /= Null_Iir
-         then
-            --  Add pending implicit declarations before the current one.
-            if Last_Decl = Null_Iir then
-               Set_Declaration_Chain
-                 (Parent, Current_Signals_Region.First_Implicit_Decl);
-            else
-               Set_Chain
-                 (Last_Decl, Current_Signals_Region.First_Implicit_Decl);
-            end if;
-            Last_Decl := Current_Signals_Region.Last_Implicit_Decl;
-            Sub_Chain_Init (Current_Signals_Region.First_Implicit_Decl,
-                            Current_Signals_Region.Last_Implicit_Decl);
-         end if;
+         --  Insert *before* DECL pending implicit signal declarations created
+         --  for DECL after LAST_DECL.  This updates LAST_DECL.
+         Insert_Pending_Implicit_Declarations (Parent, Last_Decl);
 
          if Last_Decl = Null_Iir then
             --  Append now to handle expand names.
@@ -3006,12 +3060,8 @@ package body Sem_Decls is
          Decl := Get_Chain (Decl);
       end loop;
 
-      if Current_Signals_Region.Decls_Parent = Parent then
-         --  All declarations have been analyzed, new implicit declarations
-         --  will be appended.
-         Current_Signals_Region.Decls_Analyzed := True;
-         Current_Signals_Region.Last_Implicit_Decl := Last_Decl;
-      end if;
+      --  Keep the point of insertion for implicit signal declarations.
+      End_Of_Declarations_For_Implicit_Declarations (Parent, Last_Decl);
    end Sem_Declaration_Chain;
 
    procedure Check_Full_Declaration (Decls_Parent : Iir; Decl: Iir)

@@ -2109,17 +2109,12 @@ package body Trans.Rtis is
                --  Eg: array subtypes.
                null;
             when Iir_Kind_Signal_Declaration
-               | Iir_Kind_Interface_Signal_Declaration
-               | Iir_Kind_Constant_Declaration
-               | Iir_Kind_Interface_Constant_Declaration
-               | Iir_Kind_Variable_Declaration
-               | Iir_Kind_File_Declaration
-               | Iir_Kind_Transaction_Attribute
-               | Iir_Kind_Quiet_Attribute
-               | Iir_Kind_Stable_Attribute =>
-               null;
-            when Iir_Kind_Delayed_Attribute =>
-               --  FIXME: to be added.
+              | Iir_Kind_Interface_Signal_Declaration
+              | Iir_Kind_Constant_Declaration
+              | Iir_Kind_Interface_Constant_Declaration
+              | Iir_Kind_Variable_Declaration
+              | Iir_Kind_File_Declaration
+              | Iir_Kind_Signal_Attribute_Declaration =>
                null;
             when Iir_Kind_Object_Alias_Declaration
                | Iir_Kind_Attribute_Declaration =>
@@ -2233,9 +2228,8 @@ package body Trans.Rtis is
                  or else Get_Deferred_Declaration_Flag (Decl)
                then
                   declare
-                     Info : Object_Info_Acc;
+                     Info : constant Object_Info_Acc := Get_Info (Decl);
                   begin
-                     Info := Get_Info (Decl);
                      Generate_Object (Decl, Info.Object_Rti);
                      Add_Rti_Node (Info.Object_Rti);
                   end;
@@ -2250,19 +2244,34 @@ package body Trans.Rtis is
                   Add_Rti_Node (Info.Object_Rti);
                end;
             when Iir_Kind_Signal_Declaration
-               | Iir_Kind_Interface_Signal_Declaration
-               | Iir_Kind_Transaction_Attribute
-               | Iir_Kind_Quiet_Attribute
-               | Iir_Kind_Stable_Attribute =>
+               | Iir_Kind_Interface_Signal_Declaration =>
                declare
                   Info : constant Signal_Info_Acc := Get_Info (Decl);
                begin
                   Generate_Object (Decl, Info.Signal_Rti);
                   Add_Rti_Node (Info.Signal_Rti);
                end;
-            when Iir_Kind_Delayed_Attribute =>
-               --  FIXME: to be added.
-               null;
+            when Iir_Kind_Signal_Attribute_Declaration =>
+               declare
+                  Sig : Iir;
+                  Info : Signal_Info_Acc;
+               begin
+                  Sig := Get_Signal_Attribute_Chain (Decl);
+                  while Is_Valid (Sig) loop
+                     case Iir_Kinds_Signal_Attribute (Get_Kind (Sig)) is
+                        when Iir_Kind_Stable_Attribute
+                          | Iir_Kind_Quiet_Attribute
+                          | Iir_Kind_Transaction_Attribute =>
+                           Info := Get_Info (Sig);
+                           Generate_Object (Sig, Info.Signal_Rti);
+                           Add_Rti_Node (Info.Signal_Rti);
+                        when Iir_Kind_Delayed_Attribute =>
+                           null;
+                     end case;
+                     Sig := Get_Attr_Chain (Sig);
+                  end loop;
+               end;
+
             when Iir_Kind_Object_Alias_Declaration
                | Iir_Kind_Attribute_Declaration =>
                declare

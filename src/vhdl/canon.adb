@@ -2687,7 +2687,7 @@ package body Canon is
          when Iir_Kind_Package_Instantiation_Declaration =>
             return Canon_Package_Instantiation_Declaration (Decl);
 
-         when Iir_Kinds_Signal_Attribute =>
+         when Iir_Kind_Signal_Attribute_Declaration =>
             null;
 
          when Iir_Kind_Nature_Declaration =>

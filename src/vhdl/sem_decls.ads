@@ -83,18 +83,23 @@ private
       --  Declaration or statement than will contain implicit declarations.
       Decls_Parent : Iir;
 
+      --  Set to the signal_attribute_declaration when created (ie when the
+      --  first attribute signal is added).
+      Implicit_Decl : Iir;
+
+      --  Last attribute signal inserted in the current Implicit_Decl.
+      Last_Attribute_Signal : Iir;
+
       --  If True, declarations of DECLS_PARENT have already been analyzed.
       --  So implicit declarations are appended to the parent, and the last
-      --  declaration is LAST_IMPLICIT_DECL.
+      --  declaration is LAST_DECL.
       --  If False, declarations are being analyzed.  Implicit declarations
-      --  are saved in FIRST_IMPLICIT_DECL / LAST_IMPLICIT_DECL and will be
+      --  are appended to IMPLICIT_DECL/LAST_ATTRIBUTE_SIGNAL and will be
       --  inserted before the current declaration.
       Decls_Analyzed : Boolean;
 
-      --  If DECLS_ANALYZED is False, this is the chain of implicit
-      --  declarations.  If True, LAST_IMPLICIT_DECL contains the last
-      --  declaration.
-      First_Implicit_Decl : Iir;
-      Last_Implicit_Decl : Iir;
+      --  Last declaration in the region.  If an implicit_decl is createed, it
+      --  will be appended to LAST_DECL.
+      Last_Decl : Iir;
    end record;
 end Sem_Decls;

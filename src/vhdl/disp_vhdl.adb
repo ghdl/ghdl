@@ -1738,7 +1738,7 @@ package body Disp_Vhdl is
                Disp_Attribute_Declaration (Decl);
             when Iir_Kind_Attribute_Specification =>
                Disp_Attribute_Specification (Decl);
-            when Iir_Kinds_Signal_Attribute =>
+            when Iir_Kind_Signal_Attribute_Declaration =>
                null;
             when Iir_Kind_Group_Template_Declaration =>
                Disp_Group_Template_Declaration (Decl);

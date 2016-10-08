@@ -1560,6 +1560,19 @@ package Iirs is
    --
    --   Get/Set_Name_Staticness (State2)
 
+   -- Iir_Kind_Signal_Attribute_Declaration (Short)
+   --
+   --  Chain of implicit signals created from signal attribute.  This is just
+   --  an helper so that translation can create these implicit signals at the
+   --  same time as user signal declarations.
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --  Chain of signals
+   --   Get/Set_Signal_Attribute_Chain (Field3)
+
    -- Iir_Kind_Constant_Declaration (Medium)
    -- Iir_Kind_Iterator_Declaration (Medium)
    --
@@ -3733,12 +3746,18 @@ package Iirs is
    --
    --   Get/Set_Prefix (Field0)
    --
-   --   Get/Set_Type (Field1)
-   --
-   --   Get/Set_Chain (Field2)
-   --
    --  Not used by Iir_Kind_Transaction_Attribute
    --   Get/Set_Parameter (Field4)
+   --
+   --   Get/Set_Type (Field1)
+   --
+   --  Next attribute signal in the chain owned by the
+   --  signal_attribute_declaration.  Usual Get/Set_Chain is not used here as
+   --  the chain is composed only of forward references.
+   --   Get/Set_Attr_Chain (Field2)
+   --
+   --  Head of the chain.  Used only to ease the reconstruction of the chain.
+   --   Get/Set_Signal_Attribute_Declaration (Field3)
    --
    --   Get/Set_Base_Name (Field5)
    --
@@ -3987,6 +4006,8 @@ package Iirs is
       Iir_Kind_Interface_Package_Declaration,  --         interface
       Iir_Kind_Interface_Function_Declaration, --         interface
       Iir_Kind_Interface_Procedure_Declaration, --        interface
+
+      Iir_Kind_Signal_Attribute_Declaration,
 
    -- Expressions.
       Iir_Kind_Identity_Operator,
@@ -6585,6 +6606,10 @@ package Iirs is
    function Get_Guard_Sensitivity_List (Guard : Iir) return Iir_List;
    procedure Set_Guard_Sensitivity_List (Guard : Iir; List : Iir_List);
 
+   --  Field: Field3 Forward_Ref
+   function Get_Signal_Attribute_Chain (Decl : Iir) return Iir;
+   procedure Set_Signal_Attribute_Chain (Decl : Iir; Chain : Iir);
+
    --  Block_Configuration that applies to this block statement.
    --  Field: Field6
    function Get_Block_Block_Configuration (Block : Iir) return Iir;
@@ -6773,6 +6798,14 @@ package Iirs is
    --  Field: Field4
    function Get_Parameter (Target : Iir) return Iir;
    procedure Set_Parameter (Target : Iir; Param : Iir);
+
+   --  Field: Field2 Forward_Ref
+   function Get_Attr_Chain (Attr : Iir) return Iir;
+   procedure Set_Attr_Chain (Attr : Iir; Chain : Iir);
+
+   --  Field: Field3 Forward_Ref
+   function Get_Signal_Attribute_Declaration (Attr : Iir) return Iir;
+   procedure Set_Signal_Attribute_Declaration (Attr : Iir; Decl : Iir);
 
    --  Type of the actual for an association by individual.
    --    Unless the formal is an unconstrained array type, this is the same as
