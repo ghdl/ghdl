@@ -563,10 +563,18 @@ package body Grt.Avhpi is
            | VhpiArchBodyK
            | VhpiEntityDeclK
            | VhpiProcessStmtK
-           | VhpiBlockStmtK
-           | VhpiIfGenerateK
-           | VhpiForGenerateK =>
+           | VhpiBlockStmtK =>
             return To_Ghdl_Rtin_Block_Acc (Obj.Ctxt.Block).Name;
+         when VhpiIfGenerateK
+           | VhpiForGenerateK =>
+            declare
+               --  The context is a generate body.
+               Gen : constant Ghdl_Rtin_Block_Acc :=
+                 To_Ghdl_Rtin_Block_Acc (Obj.Ctxt.Block);
+            begin
+               --  Get the name of the if/for/case generate.
+               return To_Ghdl_Rtin_Generate_Acc (Gen.Parent).Name;
+            end;
          when VhpiRootInstK =>
             declare
                Blk : Ghdl_Rtin_Block_Acc;
