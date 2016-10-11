@@ -59,27 +59,24 @@ $ ./configure --with-gcc=/path/to/gcc/source/dir --prefix=/usr/local
 Then invoke make to copy ghdl sources in the source dir:
 $ make copy-sources
 
-To build gcc, you must first compile gmp, mpfr and mpc (replace /usr/local
- by your prefix directory):
-$ mkdir gmp-objs; cd gmp-objs
-$ ../gmp-4.3.2/configure --prefix=/usr/local --disable-shared
-$ make; make install
-$ cd ..; mkdir mpfr-objs; cd mpfr-objs
-$ ../mpfr-2.4.2/configure --prefix=/usr/local --disable-shared \
-  --with-gmp=/usr/local
-$ make; make install
-$ cd ..; mkdir mpc-objs; cd mpc-objs
-$ ../mpc-0.8.1/configure --prefix=/usr/local --disable-shared \
-  --with-gmp=/usr/local
-$ make; make install
+There are some dependencies for building gcc (gmp, mpfr and mpc). If you have
+not them installed on your system, you can either build them manually or use
+the 'download_prerequisite' script provided in gcc source tree (recommended).
+
+$ cd /path/to/gcc/source/dir
+$ ./contrib/download_prerequisites
 
 Then configure gcc.  The list of --disable configure options could be
 adjusted for your needs.  GHDL don't require all these optional
 libraries and disabling them speed-up the build. Note the prefix
 directory must be the same as the one used to configure ghdl.
+If you have manually built gmp/mpfr/mpc (without using the script
+in contrib) and if you have installed them in a non-standard
+directory, you may need to add --with-gmp=GMP_INSTALL_DIR.
+
 $ mkdir gcc-objs; cd gcc-objs
 $ ../gcc-4.9.3/configure --prefix=/usr/local --enable-languages=c,vhdl \
-  --disable-bootstrap --with-gmp=/usr/local --disable-lto --disable-multilib \
+  --disable-bootstrap --disable-lto --disable-multilib \
   --disable-libssp --disable-libgomp --disable-libquadmath
 $ make -j2
 

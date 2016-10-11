@@ -898,6 +898,9 @@ package body Errorout is
             return Disp_Identifier (Node, "non-object alias");
          when Iir_Kind_Guard_Signal_Declaration =>
             return "GUARD signal";
+         when Iir_Kind_Signal_Attribute_Declaration =>
+            --  Should not appear.
+            return "signal attribute";
          when Iir_Kind_Group_Template_Declaration =>
             return Disp_Identifier (Node, "group template");
          when Iir_Kind_Group_Declaration =>

@@ -906,6 +906,7 @@ package body Sem_Names is
       return Res;
    end Sem_Type_Mark;
 
+   --  Return Globally if the prefix of NAME is a globally static name.
    function Get_Object_Type_Staticness (Name : Iir) return Iir_Staticness
    is
       Base : constant Iir := Get_Base_Name (Name);
@@ -1042,13 +1043,24 @@ package body Sem_Names is
       --     other than ...], whose prefix is either a locally static subtype
       --     or is an object that is of a locally static subtype, and whose
       --     actual parameter (if any) is a locally static expression.
+      --
+      --  LRM08 9.4.3 Globally static primaries
+      --  l) A predefined attribute that is a function, [other than ... and
+      --     other than ...], whose prefix is appropriate for a globally
+      --     static attribute, and whose actual parameter (if any) is a
+      --     globally static expression.
+      --
+      --  A prefix is appropriate for a globally static attribute if it denotes
+      --  a signal, a constant, a type or subtype, a globally static function
+      --  call, a variable that is not of an access type, or a variable of an
+      --  access type whose designated subtype is fully constrained.
 
-      --  LRM 7.4.1
+      --  LRM93 7.4.1
       --  A locally static range is either [...], or a range of the first form
       --  whose prefix denotes either a locally static subtype or an object
       --  that is of a locally static subtype.
 
-      --  LRM 7.4.2
+      --  LRM93 7.4.2
       --  A globally static range is either [...], or a range of the first form
       --  whose prefix denotes either a globally static subtype or an object
       --  that is of a globally static subtype.

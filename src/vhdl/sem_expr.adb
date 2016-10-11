@@ -3705,9 +3705,6 @@ package body Sem_Expr is
                end if;
                if Is_Anonymous_Type_Definition (Arg) then
                   Set_Allocator_Subtype (Expr, Get_Subtype_Indication (Expr));
-                  Set_Is_Ref (Expr, True);
-               else
-                  Set_Is_Ref (Expr, False);
                end if;
 
                --  LRM93 7.3.6

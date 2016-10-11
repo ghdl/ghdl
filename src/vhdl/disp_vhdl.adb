@@ -1070,6 +1070,7 @@ package body Disp_Vhdl is
    is
       Inter: Iir;
       Next_Inter : Iir;
+      First_Inter : Iir;
       Start: Count;
    begin
       if Chain = Null_Iir then
@@ -1082,6 +1083,8 @@ package body Disp_Vhdl is
          Next_Inter := Get_Chain (Inter);
          Set_Col (Start);
 
+         First_Inter := Inter;
+
          case Get_Kind (Inter) is
             when Iir_Kinds_Interface_Object_Declaration =>
                Disp_Interface_Class (Inter);
@@ -1092,7 +1095,7 @@ package body Disp_Vhdl is
                   Next_Inter := Get_Chain (Inter);
                   Disp_Name_Of (Inter);
                end loop;
-               Disp_Interface_Mode_And_Type (Inter);
+               Disp_Interface_Mode_And_Type (First_Inter);
             when Iir_Kind_Interface_Package_Declaration =>
                Put ("package ");
                Disp_Identifier (Inter);
@@ -1451,6 +1454,11 @@ package body Disp_Vhdl is
       Put (' ');
       Disp_Function_Name (Subprg);
 
+      if Get_Has_Parameter (Subprg) then
+         Put (' ');
+         Put ("parameter");
+      end if;
+
       Inter := Get_Interface_Declaration_Chain (Subprg);
       if Implicit then
          Disp_Interface_Chain (Inter, "", Start);
@@ -1730,7 +1738,7 @@ package body Disp_Vhdl is
                Disp_Attribute_Declaration (Decl);
             when Iir_Kind_Attribute_Specification =>
                Disp_Attribute_Specification (Decl);
-            when Iir_Kinds_Signal_Attribute =>
+            when Iir_Kind_Signal_Attribute_Declaration =>
                null;
             when Iir_Kind_Group_Template_Declaration =>
                Disp_Group_Template_Declaration (Decl);

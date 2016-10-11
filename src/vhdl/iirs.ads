@@ -697,9 +697,6 @@ package Iirs is
    --
    --   Get/Set_Parent (Field0)
    --
-   --  The type can be constrained due to the expression.
-   --   Get/Set_Type (Field1)
-   --
    --   Get/Set_Chain (Field2)
    --
    --   Get/Set_Entity_Class (Field3)
@@ -1044,8 +1041,6 @@ package Iirs is
    --   Get/Set_After_Drivers_Flag (Flag5)
    --
    --   Get/Set_Use_Flag (Flag6)
-   --
-   --   Get/Set_Is_Ref (Flag7)
 
    -- Iir_Kind_Non_Object_Alias_Declaration (Short)
    --
@@ -1149,8 +1144,6 @@ package Iirs is
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Use_Flag (Flag6)
-   --
-   --   Get/Set_Is_Ref (Flag7)
 
    -- Iir_Kind_Nature_Declaration (Short)
    --
@@ -1379,6 +1372,8 @@ package Iirs is
    --  True is the specification is immediately followed by a body.
    --   Get/Set_Has_Body (Flag9)
    --
+   --   Get/Set_Has_Parameter (Flag10)
+   --
    -- Only for Iir_Kind_Procedure_Declaration:
    --   Get/Set_Suspend_Flag (Flag11)
    --
@@ -1491,6 +1486,8 @@ package Iirs is
    -- Only for Iir_Kind_Interface_Function_Declaration:
    --   Get/Set_Has_Pure (Flag8)
    --
+   --   Get/Set_Has_Parameter (Flag10)
+   --
    --   Get/Set_All_Sensitized_State (State3)
 
    -- Iir_Kind_Signal_Declaration (Short)
@@ -1563,6 +1560,19 @@ package Iirs is
    --
    --   Get/Set_Name_Staticness (State2)
 
+   -- Iir_Kind_Signal_Attribute_Declaration (Short)
+   --
+   --  Chain of implicit signals created from signal attribute.  This is just
+   --  an helper so that translation can create these implicit signals at the
+   --  same time as user signal declarations.
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --  Chain of signals
+   --   Get/Set_Signal_Attribute_Chain (Field3)
+
    -- Iir_Kind_Constant_Declaration (Medium)
    -- Iir_Kind_Iterator_Declaration (Medium)
    --
@@ -1607,6 +1617,7 @@ package Iirs is
    --
    --   Get/Set_Use_Flag (Flag6)
    --
+   -- Only for Iir_Kind_Constant_Declaration:
    --   Get/Set_Is_Ref (Flag7)
    --
    --   Get/Set_Expr_Staticness (State1)
@@ -1683,8 +1694,6 @@ package Iirs is
    --
    --   Get/Set_Use_Flag (Flag6)
    --
-   --   Get/Set_Is_Ref (Flag7)
-   --
    --   Get/Set_Has_Mode (Flag10)
    --
    --   Get/Set_Expr_Staticness (State1)
@@ -1717,8 +1726,6 @@ package Iirs is
    --   Get/Set_Has_Identifier_List (Flag3)
    --
    --   Get/Set_Visible_Flag (Flag4)
-   --
-   --   Get/Set_Is_Ref (Flag7)
 
    -- Iir_Kind_Record_Element_Constraint (Short)
    --
@@ -3446,7 +3453,8 @@ package Iirs is
    --   Get/Set_Allocator_Designated_Type (Field2)
    --
    -- Only for Iir_Kind_Allocator_By_Subtype:
-   --  Same as subtype indication but set to own the subtype.
+   --  Same as subtype indication but set when the allocator defines a new
+   --  subtype.
    --   Get/Set_Allocator_Subtype (Field3)
    --
    -- Only for Iir_Kind_Allocator_By_Expression:
@@ -3458,9 +3466,6 @@ package Iirs is
    --   Get/Set_Subtype_Indication (Field5)
    --
    --   Get/Set_Expr_Staticness (State1)
-   --
-   -- Only for Iir_Kind_Allocator_By_Subtype:
-   --   Get/Set_Is_Ref (Flag7)
 
    ------------
    --  Names --
@@ -3632,8 +3637,6 @@ package Iirs is
    --  Only for Iir_Kind_External_Variable_Name:
    --   Get/Set_Shared_Flag (Flag2)
    --
-   --   Get/Set_Is_Ref (Flag7)
-   --
    --   Get/Set_Expr_Staticness (State1)
    --
    --   Get/Set_Name_Staticness (State2)
@@ -3743,12 +3746,18 @@ package Iirs is
    --
    --   Get/Set_Prefix (Field0)
    --
-   --   Get/Set_Type (Field1)
-   --
-   --   Get/Set_Chain (Field2)
-   --
    --  Not used by Iir_Kind_Transaction_Attribute
    --   Get/Set_Parameter (Field4)
+   --
+   --   Get/Set_Type (Field1)
+   --
+   --  Next attribute signal in the chain owned by the
+   --  signal_attribute_declaration.  Usual Get/Set_Chain is not used here as
+   --  the chain is composed only of forward references.
+   --   Get/Set_Attr_Chain (Field2)
+   --
+   --  Head of the chain.  Used only to ease the reconstruction of the chain.
+   --   Get/Set_Signal_Attribute_Declaration (Field3)
    --
    --   Get/Set_Base_Name (Field5)
    --
@@ -3997,6 +4006,8 @@ package Iirs is
       Iir_Kind_Interface_Package_Declaration,  --         interface
       Iir_Kind_Interface_Function_Declaration, --         interface
       Iir_Kind_Interface_Procedure_Declaration, --        interface
+
+      Iir_Kind_Signal_Attribute_Declaration,
 
    -- Expressions.
       Iir_Kind_Identity_Operator,
@@ -5708,7 +5719,7 @@ package Iirs is
    function Get_Literal_Subtype (Lit : Iir) return Iir;
    procedure Set_Literal_Subtype (Lit : Iir; Atype : Iir);
 
-   --  Field: Field3
+   --  Field: Field3 Ref
    function Get_Allocator_Subtype (Lit : Iir) return Iir;
    procedure Set_Allocator_Subtype (Lit : Iir; Atype : Iir);
 
@@ -5930,10 +5941,11 @@ package Iirs is
    procedure Set_Type (Target : Iir; Atype : Iir);
    pragma Inline (Get_Type);
 
-   --  The subtype indication of a declaration.  Note that this node can be
-   --  shared between declarations if they are separated by comma, such as in:
+   --  The subtype indication of a declaration.  If several declarations share
+   --  the same subtype_indication like in:
    --    variable a, b : integer := 5;
-   --  Field: Field5 Maybe_Ref
+   --  then only the first declaration has a subtype_indication.
+   --  Field: Field5
    function Get_Subtype_Indication (Target : Iir) return Iir;
    procedure Set_Subtype_Indication (Target : Iir; Atype : Iir);
 
@@ -6594,6 +6606,10 @@ package Iirs is
    function Get_Guard_Sensitivity_List (Guard : Iir) return Iir_List;
    procedure Set_Guard_Sensitivity_List (Guard : Iir; List : Iir_List);
 
+   --  Field: Field3 Forward_Ref
+   function Get_Signal_Attribute_Chain (Decl : Iir) return Iir;
+   procedure Set_Signal_Attribute_Chain (Decl : Iir; Chain : Iir);
+
    --  Block_Configuration that applies to this block statement.
    --  Field: Field6
    function Get_Block_Block_Configuration (Block : Iir) return Iir;
@@ -6782,6 +6798,14 @@ package Iirs is
    --  Field: Field4
    function Get_Parameter (Target : Iir) return Iir;
    procedure Set_Parameter (Target : Iir; Param : Iir);
+
+   --  Field: Field2 Forward_Ref
+   function Get_Attr_Chain (Attr : Iir) return Iir;
+   procedure Set_Attr_Chain (Attr : Iir; Chain : Iir);
+
+   --  Field: Field3 Forward_Ref
+   function Get_Signal_Attribute_Declaration (Attr : Iir) return Iir;
+   procedure Set_Signal_Attribute_Declaration (Attr : Iir; Decl : Iir);
 
    --  Type of the actual for an association by individual.
    --    Unless the formal is an unconstrained array type, this is the same as
@@ -7032,6 +7056,11 @@ package Iirs is
    --  Field: Flag9
    function Get_Has_Body (Decl : Iir) return Boolean;
    procedure Set_Has_Body (Decl : Iir; Flag : Boolean);
+
+   --  Layout flag: true if 'parameter' reserved identifier is present.
+   --  Field: Flag10
+   function Get_Has_Parameter (Decl : Iir) return Boolean;
+   procedure Set_Has_Parameter (Decl : Iir; Flag : Boolean);
 
    --  Layout flag for object declaration.  If True, the identifier of this
    --  declaration is followed by an identifier (and separated by a comma).

@@ -338,6 +338,7 @@ package body Iirs is
            | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Interface_File_Declaration
            | Iir_Kind_Interface_Type_Declaration
+           | Iir_Kind_Signal_Attribute_Declaration
            | Iir_Kind_Identity_Operator
            | Iir_Kind_Negation_Operator
            | Iir_Kind_Absolute_Operator
@@ -3937,6 +3938,22 @@ package body Iirs is
       Set_Field4 (Guard, Iir_List_To_Iir (List));
    end Set_Guard_Sensitivity_List;
 
+   function Get_Signal_Attribute_Chain (Decl : Iir) return Iir is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Signal_Attribute_Chain (Get_Kind (Decl)),
+                     "no field Signal_Attribute_Chain");
+      return Get_Field3 (Decl);
+   end Get_Signal_Attribute_Chain;
+
+   procedure Set_Signal_Attribute_Chain (Decl : Iir; Chain : Iir) is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Signal_Attribute_Chain (Get_Kind (Decl)),
+                     "no field Signal_Attribute_Chain");
+      Set_Field3 (Decl, Chain);
+   end Set_Signal_Attribute_Chain;
+
    function Get_Block_Block_Configuration (Block : Iir) return Iir is
    begin
       pragma Assert (Block /= Null_Iir);
@@ -4578,6 +4595,38 @@ package body Iirs is
                      "no field Parameter");
       Set_Field4 (Target, Param);
    end Set_Parameter;
+
+   function Get_Attr_Chain (Attr : Iir) return Iir is
+   begin
+      pragma Assert (Attr /= Null_Iir);
+      pragma Assert (Has_Attr_Chain (Get_Kind (Attr)),
+                     "no field Attr_Chain");
+      return Get_Field2 (Attr);
+   end Get_Attr_Chain;
+
+   procedure Set_Attr_Chain (Attr : Iir; Chain : Iir) is
+   begin
+      pragma Assert (Attr /= Null_Iir);
+      pragma Assert (Has_Attr_Chain (Get_Kind (Attr)),
+                     "no field Attr_Chain");
+      Set_Field2 (Attr, Chain);
+   end Set_Attr_Chain;
+
+   function Get_Signal_Attribute_Declaration (Attr : Iir) return Iir is
+   begin
+      pragma Assert (Attr /= Null_Iir);
+      pragma Assert (Has_Signal_Attribute_Declaration (Get_Kind (Attr)),
+                     "no field Signal_Attribute_Declaration");
+      return Get_Field3 (Attr);
+   end Get_Signal_Attribute_Declaration;
+
+   procedure Set_Signal_Attribute_Declaration (Attr : Iir; Decl : Iir) is
+   begin
+      pragma Assert (Attr /= Null_Iir);
+      pragma Assert (Has_Signal_Attribute_Declaration (Get_Kind (Attr)),
+                     "no field Signal_Attribute_Declaration");
+      Set_Field3 (Attr, Decl);
+   end Set_Signal_Attribute_Declaration;
 
    function Get_Actual_Type (Target : Iir) return Iir is
    begin
@@ -5355,6 +5404,22 @@ package body Iirs is
                      "no field Has_Body");
       Set_Flag9 (Decl, Flag);
    end Set_Has_Body;
+
+   function Get_Has_Parameter (Decl : Iir) return Boolean is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Has_Parameter (Get_Kind (Decl)),
+                     "no field Has_Parameter");
+      return Get_Flag10 (Decl);
+   end Get_Has_Parameter;
+
+   procedure Set_Has_Parameter (Decl : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Has_Parameter (Get_Kind (Decl)),
+                     "no field Has_Parameter");
+      Set_Flag10 (Decl, Flag);
+   end Set_Has_Parameter;
 
    function Get_Has_Identifier_List (Decl : Iir) return Boolean is
    begin

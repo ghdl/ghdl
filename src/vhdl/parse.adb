@@ -1473,6 +1473,8 @@ package body Parse is
       Inters : Iir;
    begin
       if Current_Token = Tok_Parameter then
+         Set_Has_Parameter (Subprg, True);
+
          --  Eat 'parameter'
          Scan;
 
@@ -3369,7 +3371,6 @@ package body Parse is
             when others =>
                null;
          end case;
-         Set_Is_Ref (Object, Object /= First);
          Object := Get_Chain (Object);
       end loop;
 

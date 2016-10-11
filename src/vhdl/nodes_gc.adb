@@ -94,6 +94,16 @@ package body Nodes_GC is
       Report_Already_Marked (N);
    end Already_Marked;
 
+   procedure Not_Marked (N : Iir; F : Nodes_Meta.Fields_Enum)
+   is
+      use Ada.Text_IO;
+   begin
+      Put ("early reference to ");
+      Put (Nodes_Meta.Get_Field_Image (F));
+      Put (" in ");
+      Disp_Tree.Disp_Tree (N, True);
+   end Not_Marked;
+
    procedure Mark_Chain (Head : Iir)
    is
       El : Iir;
@@ -129,8 +139,14 @@ package body Nodes_GC is
          for I in Fields'Range loop
             F := Fields (I);
             case Get_Field_Attribute (F) is
-               when Attr_Ref
-                 | Attr_Forward_Ref
+               when Attr_Ref =>
+                  pragma Assert (Get_Field_Type (F) = Type_Iir);
+                  if Is_Valid (Get_Iir (N, F))
+                    and then not Markers (Get_Iir (N, F))
+                  then
+                     Not_Marked (N, F);
+                  end if;
+               when Attr_Forward_Ref
                  | Attr_Chain_Next =>
                   null;
                when Attr_Maybe_Ref =>
