@@ -182,7 +182,8 @@ package body Canon is
 
          when Iir_Kind_Qualified_Expression
            | Iir_Kind_Type_Conversion
-           | Iir_Kind_Allocator_By_Expression =>
+           | Iir_Kind_Allocator_By_Expression
+           | Iir_Kind_Parenthesis_Expression =>
             Canon_Extract_Sensitivity
               (Get_Expression (Expr), Sensitivity_List, False);
 
