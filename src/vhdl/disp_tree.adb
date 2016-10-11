@@ -401,7 +401,8 @@ package body Disp_Tree is
                      when Attr_None =>
                         Disp_Iir (Get_Iir (N, F), Sub_Indent, Depth - 1);
                      when Attr_Ref
-                       | Attr_Forward_Ref =>
+                       | Attr_Forward_Ref
+                       | Attr_Maybe_Forward_Ref =>
                         Disp_Iir (Get_Iir (N, F), Sub_Indent, 0);
                      when Attr_Maybe_Ref =>
                         if Get_Is_Ref (N) then

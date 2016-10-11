@@ -170,7 +170,7 @@ package body Sem_Specs is
                return Value;
             end if;
          end if;
-         Value := Get_Chain (Value);
+         Value := Get_Value_Chain (Value);
       end loop;
       return Null_Iir;
    end Find_Attribute_Value;
@@ -288,7 +288,7 @@ package body Sem_Specs is
                end if;
             end;
          end if;
-         El := Get_Chain (El);
+         El := Get_Value_Chain (El);
       end loop;
 
       El := Create_Iir (Iir_Kind_Attribute_Value);
@@ -306,7 +306,7 @@ package body Sem_Specs is
       Set_Base_Name (El, El);
 
       --  Put the attribute value in the attribute_value_chain.
-      Set_Chain (El, Get_Attribute_Value_Chain (Attr_Chain_Parent));
+      Set_Value_Chain (El, Get_Attribute_Value_Chain (Attr_Chain_Parent));
       Set_Attribute_Value_Chain (Attr_Chain_Parent, El);
 
       --  Put the attribute value in the chain of the attribute specification.
@@ -1415,6 +1415,7 @@ package body Sem_Specs is
                        (Inst, Spec, Primary_Entity_Aspect);
                      Xref_Ref (El, Inst);
                      Set_Named_Entity (El, Inst);
+                     Set_Is_Forward_Ref (El, True);
                   end if;
                end if;
             end if;
@@ -1578,6 +1579,7 @@ package body Sem_Specs is
       Res, Last : Iir;
       Comp_El, Ent_El : Iir;
       Assoc : Iir;
+      Name : Iir;
       Found : Natural;
       Comp_Chain : Iir;
       Ent_Chain : Iir;
@@ -1642,7 +1644,9 @@ package body Sem_Specs is
             end if;
             Assoc := Create_Iir (Iir_Kind_Association_Element_By_Expression);
             Location_Copy (Assoc, Parent);
-            Set_Actual (Assoc, Comp_El);
+            Name := Build_Simple_Name (Comp_El, Parent);
+            Set_Type (Name, Get_Type (Comp_El));
+            Set_Actual (Assoc, Name);
             if Kind = Map_Port then
                Check_Port_Association_Bounds_Restrictions
                  (Ent_El, Comp_El, Assoc);
@@ -1650,7 +1654,9 @@ package body Sem_Specs is
             Found := Found + 1;
          end if;
          Set_Whole_Association_Flag (Assoc, True);
-         Set_Formal (Assoc, Ent_El);
+         Name := Build_Simple_Name (Ent_El, Parent);
+         Set_Type (Name, Get_Type (Ent_El));
+         Set_Formal (Assoc, Name);
          if Kind = Map_Port
            and then not Error
            and then Comp_El /= Null_Iir

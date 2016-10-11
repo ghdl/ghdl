@@ -2518,8 +2518,7 @@ package body Canon is
    --  Return the new package declaration (if any).
    function Canon_Package_Instantiation_Declaration (Decl : Iir) return Iir
    is
-      Pkg : constant Iir :=
-        Get_Named_Entity (Get_Uninstantiated_Package_Name (Decl));
+      Pkg : constant Iir := Get_Uninstantiated_Package_Decl (Decl);
    begin
       --  Canon map aspect.
       Set_Generic_Map_Aspect_Chain

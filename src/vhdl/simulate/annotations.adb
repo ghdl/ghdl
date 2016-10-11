@@ -1078,8 +1078,7 @@ package body Annotations is
 
       if Get_Kind (Decl) = Iir_Kind_Package_Instantiation_Declaration then
          declare
-            Uninst : constant Iir :=
-              Get_Named_Entity (Get_Uninstantiated_Package_Name (Decl));
+            Uninst : constant Iir := Get_Uninstantiated_Package_Decl (Decl);
             Uninst_Info : constant Sim_Info_Acc := Get_Info (Uninst);
          begin
             --  There is not corresponding body for an instantiation, so

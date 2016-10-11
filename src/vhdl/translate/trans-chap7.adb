@@ -3050,7 +3050,7 @@ package body Trans.Chap7 is
                Set_El (Get_Nth_Element (El_List, El_Index));
                El_Index := El_Index + 1;
             when Iir_Kind_Choice_By_Name =>
-               Set_El (Get_Choice_Name (Assoc));
+               Set_El (Get_Named_Entity (Get_Choice_Name (Assoc)));
                El_Index := Natural'Last;
             when Iir_Kind_Choice_By_Others =>
                for J in Set_Array'Range loop

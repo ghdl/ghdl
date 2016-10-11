@@ -2592,14 +2592,13 @@ package body Sem_Expr is
       Free (Arr);
    end Sem_Check_Continuous_Choices;
 
-   procedure Sem_Choices_Range
-     (Choice_Chain : in out Iir;
-      Sub_Type : Iir;
-      Is_Sub_Range : Boolean;
-      Is_Case_Stmt : Boolean;
-      Loc : Location_Type;
-      Low : out Iir;
-      High : out Iir)
+   procedure Sem_Choices_Range (Choice_Chain : in out Iir;
+                                Sub_Type : Iir;
+                                Is_Sub_Range : Boolean;
+                                Is_Case_Stmt : Boolean;
+                                Loc : Location_Type;
+                                Low : out Iir;
+                                High : out Iir)
    is
       --  Number of positionnal choice.
       Nbr_Pos : Iir_Int64;
@@ -2826,83 +2825,6 @@ package body Sem_Expr is
         (Choice_Chain, Sub_Type, Is_Sub_Range, Loc, Low, High);
    end Sem_Choices_Range;
 
---    -- Find out the MIN and the MAX of an all named association choice list.
---    -- It also returns the number of elements associed (counting range).
---    procedure Sem_Find_Min_Max_Association_Choice_List
---      (List: Iir_Association_Choices_List;
---       Min: out Iir;
---       Max: out Iir;
---       Length: out natural)
---    is
---       Min_Res: Iir := null;
---       Max_Res: Iir := null;
---       procedure Update_With_Value (Val: Iir) is
---       begin
---          if Min_Res = null then
---             Min_Res := Val;
---             Max_Res := Val;
---          elsif Get_Value (Val) < Get_Value (Min_Res) then
---             Min_Res := Val;
---          elsif Get_Value (Val) > Get_Value (Max_Res) then
---             Max_Res := Val;
---          end if;
---       end Update_With_Value;
-
---       Number_Elements: Natural;
-
---       procedure Update (Choice: Iir) is
---          Left, Right: Iir;
---          Expr: Iir;
---       begin
---          case Get_Kind (Choice) is
---             when Iir_Kind_Choice_By_Expression =>
---                Update_With_Value (Get_Expression (Choice));
---                Number_Elements := Number_Elements + 1;
---             when Iir_Kind_Choice_By_Range =>
---                Expr := Get_Expression (Choice);
---                Left := Get_Left_Limit (Expr);
---                Right := Get_Right_Limit (Expr);
---                Update_With_Value (Left);
---                Update_With_Value (Right);
---                -- There can't be null range.
---                case Get_Direction (Expr) is
---                   when Iir_To =>
---                      Number_Elements := Number_Elements +
---                        Natural (Get_Value (Right) - Get_Value (Left) + 1);
---                   when Iir_Downto =>
---                      Number_Elements := Number_Elements +
---                        Natural (Get_Value (Left) - Get_Value (Right) + 1);
---                end case;
---             when others =>
---             Error_Kind ("sem_find_min_max_association_choice_list", Choice);
---          end case;
---       end Update;
-
---       El: Iir;
---       Sub_List: Iir_Association_Choices_List;
---       Sub_El: Iir;
---    begin
---       Number_Elements := 0;
---       for I in Natural loop
---          El := Get_Nth_Element (List, I);
---          exit when El = null;
---          case Get_Kind (El) is
---             when Iir_Kind_Choice_By_List =>
---                Sub_List := Get_Choice_List (El);
---                for J in Natural loop
---                   Sub_El := Get_Nth_Element (Sub_List, J);
---                   exit when Sub_El = null;
---                   Update (Sub_El);
---                end loop;
---             when others =>
---                Update (El);
---          end case;
---       end loop;
---       Min := Min_Res;
---       Max := Max_Res;
---       Length := Number_Elements;
---    end Sem_Find_Min_Max_Association_Choice_List;
-
    -- Perform semantisation on a (sub)aggregate AGGR, which is of type
    -- A_TYPE.
    -- return FALSE is case of failure
@@ -2950,35 +2872,33 @@ package body Sem_Expr is
       --  FIXME: should mutate the node.
       function Sem_Simple_Choice (Ass : Iir) return Iir
       is
+         Expr : constant Iir := Get_Choice_Expression (Ass);
          N_El : Iir;
-         Expr : Iir;
          Aggr_El : Iir_Element_Declaration;
       begin
-         Expr := Get_Choice_Expression (Ass);
          if Get_Kind (Expr) /= Iir_Kind_Simple_Name then
             Error_Msg_Sem (+Ass, "element association must be a simple name");
             Ok := False;
             return Ass;
          end if;
-         Aggr_El := Find_Name_In_List
-           (Get_Elements_Declaration_List (Base_Type), Get_Identifier (Expr));
+         Aggr_El := Find_Name_In_List (El_List, Get_Identifier (Expr));
          if Aggr_El = Null_Iir then
             Error_Msg_Sem (+Ass, "record has no such element %n", +Ass);
             Ok := False;
             return Ass;
          end if;
+         Set_Named_Entity (Expr, Aggr_El);
+         Xref_Ref (Expr, Aggr_El);
 
          N_El := Create_Iir (Iir_Kind_Choice_By_Name);
          Location_Copy (N_El, Ass);
-         Set_Choice_Name (N_El, Aggr_El);
+         Set_Choice_Name (N_El, Expr);
          Set_Associated_Expr (N_El, Get_Associated_Expr (Ass));
          Set_Associated_Chain (N_El, Get_Associated_Chain (Ass));
          Set_Chain (N_El, Get_Chain (Ass));
          Set_Same_Alternative_Flag (N_El, Get_Same_Alternative_Flag (Ass));
 
-         Xref_Ref (Expr, Aggr_El);
          Free_Iir (Ass);
-         Free_Iir (Expr);
          Add_Match (N_El, Aggr_El);
          return N_El;
       end Sem_Simple_Choice;
@@ -3369,6 +3289,7 @@ package body Sem_Expr is
                      when Iir_Kind_Choice_By_Range =>
                         Expr := Get_Choice_Range (Choice);
                         Set_Range_Constraint (Info.Index_Subtype, Expr);
+                        Set_Is_Ref (Info.Index_Subtype, True);
                         -- FIXME: avoid allocation-free.
                         Free_Iir (Index_Subtype_Constraint);
                      when others =>
@@ -3636,16 +3557,11 @@ package body Sem_Expr is
            | Iir_Kind_Physical_Fp_Literal =>
             Unit_Name := Get_Unit_Name (Lit);
             Res := Lit;
-         when Iir_Kind_Unit_Declaration =>
-            Res := Create_Iir (Iir_Kind_Physical_Int_Literal);
-            Location_Copy (Res, Lit);
-            Set_Value (Res, 1);
-            Unit_Name := Null_Iir;
-            raise Program_Error;
          when Iir_Kinds_Denoting_Name =>
             Res := Create_Iir (Iir_Kind_Physical_Int_Literal);
             Location_Copy (Res, Lit);
             Set_Value (Res, 1);
+            Set_Literal_Origin (Res, Lit);
             Unit_Name := Lit;
          when others =>
             Error_Kind ("sem_physical_literal", Lit);
@@ -3657,6 +3573,7 @@ package body Sem_Expr is
          Set_Named_Entity (Unit_Name, Create_Error_Name (Unit_Name));
       end if;
       Set_Unit_Name (Res, Unit_Name);
+      Set_Physical_Unit (Res, Get_Named_Entity (Unit_Name));
       Unit_Type := Get_Type (Unit_Name);
       Set_Type (Res, Unit_Type);
 
