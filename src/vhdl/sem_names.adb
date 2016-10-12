@@ -1711,7 +1711,7 @@ package body Sem_Names is
             --  Certainly an error!
             return Res;
          when others =>
-            Error_Kind ("finish_sem_name", Res);
+            Error_Kind ("finish_sem_name_1", Res);
       end case;
 
       --  Finish prefix.
@@ -1741,7 +1741,7 @@ package body Sem_Names is
          when Iir_Kinds_Signal_Value_Attribute =>
             Sem_Name_Free_Result (Name, Res);
          when others =>
-            Error_Kind ("finish_sem_name(2)", Res);
+            Error_Kind ("finish_sem_name_1(2)", Res);
       end case;
       return Res;
    end Finish_Sem_Name_1;
@@ -2297,9 +2297,10 @@ package body Sem_Names is
 
    procedure Sem_Parenthesis_Name (Name : Iir_Parenthesis_Name)
    is
+      Prefix_Name : constant Iir := Get_Prefix (Name);
       Prefix: Iir;
-      Prefix_Name : Iir;
       Res : Iir;
+      Res_Prefix : Iir;
       Assoc_Chain : Iir;
 
       Slice_Index_Kind : Iir_Kind;
@@ -2440,6 +2441,8 @@ package body Sem_Names is
          Call : Iir;
       begin
          Used := False;
+
+         --  A function call.
          if Is_Function_Declaration (Sub_Name) then
             Sem_Association_Chain
               (Get_Interface_Declaration_Chain (Sub_Name),
@@ -2448,16 +2451,21 @@ package body Sem_Names is
                Call := Sem_As_Function_Call
                  (Prefix_Name, Sub_Name, Assoc_Chain);
                Add_Result (Res, Call);
+               Add_Result (Res_Prefix, Sub_Name);
                Used := True;
             end if;
          end if;
+
+         --  A slice/index of a call (without parameters).
          if not Is_Procedure_Declaration (Sub_Name) then
             R := Sem_As_Indexed_Or_Slice_Name (Sub_Name, False);
             if R /= Null_Iir then
                Add_Result (Res, R);
+               Add_Result (Res_Prefix, Sub_Name);
                Used := True;
             end if;
          end if;
+
          if not Used then
             Sem_Name_Free_Result (Sub_Name, Null_Iir);
          end if;
@@ -2477,8 +2485,7 @@ package body Sem_Names is
       Actual : Iir;
       Actual_Expr : Iir;
    begin
-      -- The prefix is a function name, a type mark or an array.
-      Prefix_Name := Get_Prefix (Name);
+      --  The prefix is a function name, a type mark or an array.
       Sem_Name (Prefix_Name);
       Prefix := Get_Named_Entity (Prefix_Name);
       if Prefix = Error_Mark then
@@ -2510,6 +2517,7 @@ package body Sem_Names is
       --  Select between slice or indexed name.
       Actual_Expr := Null_Iir;
       if Actual /= Null_Iir then
+         --  Only one actual: can be a slice or an index
          if Get_Kind (Actual) in Iir_Kinds_Name
            or else Get_Kind (Actual) = Iir_Kind_Attribute_Name
          then
@@ -2529,13 +2537,17 @@ package body Sem_Names is
             --    Sem_Discrete_Range_Expression (Actual, Null_Iir, False);
             --  Set_Actual (Assoc_Chain, Actual_Expr);
          else
+            --  Any other expression: an indexed name.
             Slice_Index_Kind := Iir_Kind_Indexed_Name;
          end if;
       else
+         --  More than one actual: an indexed name.
+
          --  FIXME: improve error message for multi-dim slice ?
          Slice_Index_Kind := Index_Or_Not (Assoc_Chain);
       end if;
 
+      --  Analyze actuals if not already done (done for slices).
       if Slice_Index_Kind /= Iir_Kind_Slice_Name then
          if Sem_Actual_Of_Association_Chain (Assoc_Chain) = False then
             Actual := Null_Iir;
@@ -2543,6 +2555,8 @@ package body Sem_Names is
             Actual := Get_One_Actual (Assoc_Chain);
          end if;
       end if;
+
+      Res_Prefix := Null_Iir;
 
       case Get_Kind (Prefix) is
          when Iir_Kind_Overload_List =>
@@ -2556,6 +2570,10 @@ package body Sem_Names is
                   exit when El = Null_Iir;
                   Sem_Parenthesis_Function (El);
                end loop;
+               --  Some prefixes may have been removed, replace with the
+               --  rebuilt prefix list.
+               Free_Overload_List (Prefix);
+               Set_Named_Entity (Prefix_Name, Res_Prefix);
             end;
             if Res = Null_Iir then
                Error_Msg_Sem
@@ -2565,6 +2583,7 @@ package body Sem_Names is
          when Iir_Kind_Function_Declaration
            | Iir_Kind_Interface_Function_Declaration =>
             Sem_Parenthesis_Function (Prefix);
+            Set_Named_Entity (Prefix_Name, Res_Prefix);
             if Res = Null_Iir then
                Error_Parenthesis_Function (Prefix);
             end if;
