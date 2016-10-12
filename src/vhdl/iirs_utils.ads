@@ -166,15 +166,12 @@ package Iirs_Utils is
    function Build_Simple_Name (Ref : Iir; Loc : Location_Type) return Iir;
    function Build_Simple_Name (Ref : Iir; Loc : Iir) return Iir;
 
+   --  Create a name that referenced the same named entity as NAME.
+   function Build_Reference_Name (Name : Iir) return Iir;
+
    --  If SUBTYP has a resolution indication that is a function name, returns
    --  the function declaration (not the name).
    function Has_Resolution_Function (Subtyp : Iir) return Iir;
-
-   --  Return a simple name for the primary unit of physical type PHYSICAL_DEF.
-   --  This is the artificial unit name for the value of the primary unit, thus
-   --  its location is the location of the primary unit.  Used mainly to build
-   --  evaluated literals.
-   function Get_Primary_Unit_Name (Physical_Def : Iir) return Iir;
 
    --  Get the type of any node representing a subtype indication.  This simply
    --  skip over denoting names.

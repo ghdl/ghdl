@@ -756,7 +756,10 @@ package body Parse is
                Set_Location (Res);
                if Get_Kind (Prefix) = Iir_Kind_Signature then
                   Set_Attribute_Signature (Res, Prefix);
+
+                  --  Transfer the prefix from the signature to the attribute.
                   Set_Prefix (Res, Get_Signature_Prefix (Prefix));
+                  Set_Signature_Prefix (Prefix, Null_Iir);
                else
                   Set_Prefix (Res, Prefix);
                end if;

@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 
 package Nodes_GC is
-   Flag_Disp_Multiref : Boolean := False;
+   Flag_Disp_Multiref : Boolean := True;
 
    procedure Report_Unreferenced;
    --  Display nodes that aren't referenced.

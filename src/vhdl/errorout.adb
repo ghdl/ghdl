@@ -792,6 +792,9 @@ package body Errorout is
             return '''
               & Name_Table.Nam_Buffer (1 .. Name_Table.Nam_Length)
               & ''';
+         when Iir_Kind_Reference_Name =>
+            --  Shouldn't happen.
+            return "name";
          when Iir_Kind_External_Constant_Name =>
             return "external constant name";
          when Iir_Kind_External_Signal_Name =>

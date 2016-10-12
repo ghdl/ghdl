@@ -800,6 +800,17 @@ package body Iirs_Utils is
       return Build_Simple_Name (Ref, Get_Location (Loc));
    end Build_Simple_Name;
 
+   function Build_Reference_Name (Name : Iir) return Iir
+   is
+      Res : Iir;
+   begin
+      Res := Create_Iir (Iir_Kind_Reference_Name);
+      Location_Copy (Res, Name);
+      Set_Referenced_Name (Res, Name);
+      Set_Named_Entity (Res, Get_Named_Entity (Name));
+      return Res;
+   end Build_Reference_Name;
+
    function Has_Resolution_Function (Subtyp : Iir) return Iir
    is
       Ind : constant Iir := Get_Resolution_Indication (Subtyp);
@@ -812,13 +823,6 @@ package body Iirs_Utils is
          return Null_Iir;
       end if;
    end Has_Resolution_Function;
-
-   function Get_Primary_Unit_Name (Physical_Def : Iir) return Iir
-   is
-      Unit : constant Iir := Get_Primary_Unit (Physical_Def);
-   begin
-      return Get_Unit_Name (Get_Physical_Unit_Value (Unit));
-   end Get_Primary_Unit_Name;
 
    function Is_Type_Name (Name : Iir) return Iir
    is

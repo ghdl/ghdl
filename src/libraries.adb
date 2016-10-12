@@ -1553,7 +1553,7 @@ package body Libraries is
       --  The unit must not be loaded.
       pragma Assert (Get_Date_State (Design_Unit) = Date_Disk);
 
-      --  Load and parse the unit.
+      --  Load the file in memory.
       Design_File := Get_Design_File (Design_Unit);
       Fe := Files_Map.Load_Source_File
         (Get_Design_File_Directory (Design_File),
@@ -1564,6 +1564,7 @@ package body Libraries is
       end if;
       Set_File (Fe);
 
+      --  Check if the file has changed.
       if not Files_Map.Is_Eq
         (Files_Map.Get_File_Checksum (Get_Current_Source_File),
          Get_File_Checksum (Design_File))
@@ -1576,24 +1577,42 @@ package body Libraries is
                         +Get_Library_Unit (Design_Unit));
          raise Compilation_Error;
       end if;
+
+      --  Set the position of the lexer
       Pos := Get_Design_Unit_Source_Pos (Design_Unit);
       Line := Natural (Get_Design_Unit_Source_Line (Design_Unit));
       Off := Natural (Get_Design_Unit_Source_Col (Design_Unit));
       Files_Map.File_Add_Line_Number (Get_Current_Source_File, Line, Pos);
       Set_Current_Position (Pos + Source_Ptr (Off));
+
+      --  Parse
       Res := Parse.Parse_Design_Unit;
       Close_File;
       if Res = Null_Iir then
          raise Compilation_Error;
       end if;
+
       Set_Date_State (Design_Unit, Date_Parse);
+
       --  FIXME: check the library unit read is the one expected.
-      --  Copy node.
+
+      --  Move the unit in the library: keep the design_unit of the library,
+      --  but replace the library_unit by the one that has been parsed.  Do
+      --  not forget to relocate parents.
       Iirs_Utils.Free_Recursive (Get_Library_Unit (Design_Unit));
       Set_Library_Unit (Design_Unit, Get_Library_Unit (Res));
       Set_Design_Unit (Get_Library_Unit (Res), Design_Unit);
       Set_Parent (Get_Library_Unit (Res), Design_Unit);
-      Set_Context_Items (Design_Unit, Get_Context_Items (Res));
+      declare
+         Item : Iir;
+      begin
+         Item := Get_Context_Items (Res);
+         Set_Context_Items (Design_Unit, Item);
+         while Is_Valid (Item) loop
+            Set_Parent (Item, Design_Unit);
+            Item := Get_Chain (Item);
+         end loop;
+      end;
       Location_Copy (Design_Unit, Res);
       Free_Dependence_List (Design_Unit);
       Set_Dependence_List (Design_Unit, Get_Dependence_List (Res));

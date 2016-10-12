@@ -220,6 +220,12 @@ package body Sem_Inst is
                      --  Must be explicitely handled in Instantiate_Iir, as it
                      --  requires special handling.
                      raise Internal_Error;
+                  when Attr_Maybe_Forward_Ref =>
+                     if Get_Is_Forward_Ref (N) then
+                        raise Internal_Error;
+                     else
+                        R := Instantiate_Iir (S, True);
+                     end if;
                   when Attr_Chain =>
                      R := Instantiate_Iir_Chain (S);
                   when Attr_Chain_Next =>
@@ -430,6 +436,7 @@ package body Sem_Inst is
                   --  incomplete type definition
                   Set_Designated_Type
                     (Res, Get_Type (Get_Designated_Subtype_Indication (Res)));
+
                when Field_Complete_Type_Definition =>
                   --  Will be set by the declaration of the complete type
                   null;
@@ -466,6 +473,33 @@ package body Sem_Inst is
                      end if;
                   end;
 
+               when Field_Deferred_Declaration =>
+                  if not Get_Deferred_Declaration_Flag (N)
+                    and then Is_Valid (Get_Deferred_Declaration (N))
+                  then
+                     --  This is the completion.
+                     declare
+                        Incomplete_Decl_N : constant Iir :=
+                          Get_Deferred_Declaration (N);
+                        Incomplete_Decl_Res : constant Iir :=
+                          Get_Instance (Incomplete_Decl_N);
+                     begin
+                        pragma Assert (Is_Valid (Incomplete_Decl_Res));
+                        Set_Deferred_Declaration (Res, Incomplete_Decl_Res);
+                        Set_Deferred_Declaration (Incomplete_Decl_Res, Res);
+                     end;
+                  end if;
+
+               when Field_Protected_Type_Body =>
+                  null;
+               when Field_Protected_Type_Declaration =>
+                  Instantiate_Iir_Field (Res, N, F);
+                  Set_Protected_Type_Body
+                    (Get_Protected_Type_Declaration (Res), Res);
+
+               when Field_Subtype_Definition =>
+                  --  TODO
+                  null;
 
                when others =>
                   --  Common case.
@@ -511,7 +545,7 @@ package body Sem_Inst is
          case Get_Kind (Res) is
             when Iir_Kind_Interface_Constant_Declaration =>
                Set_Type (Res, Get_Type (Inter));
-               Set_Subtype_Indication (Res, Get_Subtype_Indication (Inter));
+               Set_Subtype_Indication (Res, Null_Iir); --  Not owner
                Set_Mode (Res, Get_Mode (Inter));
                Set_Has_Mode (Res, Get_Has_Mode (Inter));
                Set_Has_Class (Res, Get_Has_Class (Inter));
@@ -521,8 +555,8 @@ package body Sem_Inst is
                Set_Default_Value (Res, Get_Default_Value (Inter));
                Set_Is_Ref (Res, True);
             when Iir_Kind_Interface_Package_Declaration =>
-               Set_Uninstantiated_Package_Name
-                 (Res, Get_Uninstantiated_Package_Name (Inter));
+               Set_Uninstantiated_Package_Decl
+                 (Res, Get_Uninstantiated_Package_Decl (Inter));
             when Iir_Kind_Interface_Type_Declaration =>
                Set_Type (Res, Get_Type (Inter));
             when Iir_Kinds_Interface_Subprogram_Declaration =>
@@ -587,7 +621,9 @@ package body Sem_Inst is
                      case Get_Field_Attribute (F) is
                         when Attr_None =>
                            Set_Instance_On_Iir (S, S_Inst);
-                        when Attr_Ref | Attr_Forward_Ref =>
+                        when Attr_Ref
+                          | Attr_Forward_Ref
+                          | Attr_Maybe_Forward_Ref =>
                            null;
                         when Attr_Maybe_Ref =>
                            if not Get_Is_Ref (N) then
@@ -789,8 +825,7 @@ package body Sem_Inst is
    function Instantiate_Package_Body (Inst : Iir) return Iir
    is
       Inst_Decl : constant Iir := Get_Package_Origin (Inst);
-      Pkg : constant Iir :=
-        Get_Named_Entity (Get_Uninstantiated_Package_Name (Inst_Decl));
+      Pkg : constant Iir := Get_Uninstantiated_Package_Decl (Inst_Decl);
       Prev_Instance_File : constant Source_File_Entry := Instance_File;
       Mark : constant Instance_Index_Type := Prev_Instance_Table.Last;
       Res : Iir;
@@ -912,7 +947,9 @@ package body Sem_Inst is
                         case Get_Field_Attribute (F) is
                            when Attr_None =>
                               Substitute_On_Iir (S, E, Rep);
-                           when Attr_Ref | Attr_Forward_Ref =>
+                           when Attr_Ref
+                             | Attr_Forward_Ref
+                             | Attr_Maybe_Forward_Ref =>
                               null;
                            when Attr_Maybe_Ref =>
                               if not Get_Is_Ref (N) then

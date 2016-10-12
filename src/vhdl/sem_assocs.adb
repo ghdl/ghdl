@@ -166,7 +166,7 @@ package body Sem_Assocs is
    procedure Check_Parameter_Association_Restriction
      (Inter : Iir; Base_Actual : Iir; Loc : Iir) is
    begin
-      case Get_Mode (Inter) is
+      case Iir_Parameter_Modes (Get_Mode (Inter)) is
          when Iir_In_Mode =>
             if Can_Interface_Be_Read (Base_Actual) then
                return;
@@ -181,8 +181,6 @@ package body Sem_Assocs is
             then
                return;
             end if;
-         when others =>
-            Error_Kind ("check_parameter_association_restriction", Inter);
       end case;
       Error_Msg_Sem
         (+Loc, "cannot associate an " & Get_Mode_Name (Get_Mode (Base_Actual))
@@ -556,16 +554,14 @@ package body Sem_Assocs is
      (Sub_Assoc : in out Iir; Formal : Iir)
    is
       Base_Assoc : constant Iir := Sub_Assoc;
+      Index_List : constant Iir_List := Get_Index_List (Formal);
+      Nbr : constant Natural := Get_Nbr_Elements (Index_List);
       Choice : Iir;
       Last_Choice : Iir;
-      Index_List : Iir_List;
       Index : Iir;
-      Nbr : Natural;
       Staticness : Iir_Staticness;
    begin
       --  Find element.
-      Index_List := Get_Index_List (Formal);
-      Nbr := Get_Nbr_Elements (Index_List);
       for I in 0 .. Nbr - 1 loop
          Index := Get_Nth_Element (Index_List, I);
 
@@ -683,6 +679,8 @@ package body Sem_Assocs is
       Sub_Assoc := Choice;
    end Add_Individual_Assoc_Selected_Name;
 
+   --  Subroutine of Add_Individual_Association.
+   --  Search/build the tree of choices for FORMAL, starting for IASSOC.
    procedure Add_Individual_Association_1 (Iassoc : in out Iir; Formal : Iir)
    is
       Base_Assoc : constant Iir := Iassoc;
@@ -847,13 +845,23 @@ package body Sem_Assocs is
             Set_Direction (Index_Subtype_Constraint,
                            Get_Direction (Index_Constraint));
 
+            --  For ownership purpose, the bounds must be copied otherwise
+            --  they would be referenced before being defined.  This is non
+            --  optimal but it doesn't happen often.
+            Low := Copy_Constant (Low);
+            High := Copy_Constant (High);
+
             case Get_Direction (Index_Constraint) is
                when Iir_To =>
                   Set_Left_Limit (Index_Subtype_Constraint, Low);
+                  Set_Left_Limit_Expr (Index_Subtype_Constraint, Low);
                   Set_Right_Limit (Index_Subtype_Constraint, High);
+                  Set_Right_Limit_Expr (Index_Subtype_Constraint, High);
                when Iir_Downto =>
                   Set_Left_Limit (Index_Subtype_Constraint, High);
+                  Set_Left_Limit_Expr (Index_Subtype_Constraint, High);
                   Set_Right_Limit (Index_Subtype_Constraint, Low);
+                  Set_Right_Limit_Expr (Index_Subtype_Constraint, Low);
             end case;
             Set_Expr_Staticness (Index_Subtype_Constraint, Locally);
             Append_Element (Get_Index_Subtype_List (Actual_Type),
@@ -906,6 +914,30 @@ package body Sem_Assocs is
       Set_Actual_Type (Assoc, Atype);
    end Finish_Individual_Assoc_Record;
 
+   --  Free recursively all the choices of ASSOC.
+   procedure Clean_Individual_Association (Assoc : Iir)
+   is
+      El, N_El : Iir;
+      Expr : Iir;
+   begin
+      El := Get_Individual_Association_Chain (Assoc);
+      Set_Individual_Association_Chain (Assoc, Null_Iir);
+
+      while Is_Valid (El) loop
+         N_El := Get_Chain (El);
+
+         pragma Assert (Get_Kind (El) in Iir_Kinds_Choice);
+         Expr := Get_Associated_Expr (El);
+         if Get_Kind (Expr) = Iir_Kind_Association_Element_By_Individual then
+            Clean_Individual_Association (Expr);
+            Free_Iir (Expr);
+         end if;
+
+         Free_Iir (El);
+         El := N_El;
+      end loop;
+   end Clean_Individual_Association;
+
    --  Called by sem_individual_association to finish the analyze of
    --  individual association ASSOC: compute bounds, detect missing elements.
    procedure Finish_Individual_Association (Assoc : Iir)
@@ -933,6 +965,7 @@ package body Sem_Assocs is
                Set_Index_Constraint_Flag (Atype, True);
                Set_Constraint_State (Atype, Fully_Constrained);
                Set_Actual_Type (Assoc, Atype);
+               Set_Actual_Type_Definition (Assoc, Atype);
                Finish_Individual_Assoc_Array (Assoc, Assoc, 1);
             end if;
          when Iir_Kind_Record_Type_Definition
@@ -941,12 +974,29 @@ package body Sem_Assocs is
          when others =>
             Error_Kind ("finish_individual_association", Atype);
       end case;
+
+      --  Free the hierarchy, keep only the top individual association.
+      Clean_Individual_Association (Assoc);
    end Finish_Individual_Association;
 
    --  Sem individual associations of ASSOCS:
    --  Add an Iir_Kind_Association_Element_By_Individual before each
    --  group of individual association for the same formal, and call
    --  Finish_Individual_Association with each of these added nodes.
+   --
+   --  The purpose of By_Individual association is to have the type of the
+   --  actual (might be an array subtype), and also to be sure that all
+   --  sub-elements are associated.  For that a tree is created.  The tree is
+   --  rooted by the top Association_Element_By_Individual, which contains a
+   --  chain of choices (like the aggregate).  The child of a choice is either
+   --  an Association_Element written by the user, or a new subtree rooted
+   --  by another Association_Element_By_Individual.  The tree doesn't
+   --  follow all the ownership rules: the formal of sub association_element
+   --  are directly set to the association, and the associated_expr of the
+   --  choices are directly set to formals.
+   --
+   --  This tree is temporary (used only during analysis of the individual
+   --  association) and removed once the check is done.
    procedure Sem_Individual_Association (Assoc_Chain : in out Iir)
    is
       Assoc : Iir;
@@ -978,7 +1028,7 @@ package body Sem_Assocs is
                Location_Copy (Iassoc, Assoc);
                Set_Choice_Staticness (Iassoc, Locally);
                pragma Assert (Cur_Iface /= Null_Iir);
-               Set_Formal (Iassoc, Cur_Iface);
+               Set_Formal (Iassoc, Build_Simple_Name (Cur_Iface, Iassoc));
                --  Insert IASSOC.
                if Prev_Assoc = Null_Iir then
                   Assoc_Chain := Iassoc;
@@ -1362,6 +1412,7 @@ package body Sem_Assocs is
      (Conv : Iir; Res_Type : Iir; Param_Type : Iir) return Iir
    is
       Func : Iir;
+      Assoc : Iir;
    begin
       if Conv = Null_Iir then
          return Null_Iir;
@@ -1371,8 +1422,12 @@ package body Sem_Assocs is
          return Null_Iir;
       end if;
       case Get_Kind (Func) is
-         when Iir_Kind_Function_Call
-           | Iir_Kind_Type_Conversion =>
+         when Iir_Kind_Function_Call =>
+            Assoc := Get_Parameter_Association_Chain (Func);
+            Free_Iir (Assoc);
+            Set_Parameter_Association_Chain (Func, Null_Iir);
+            return Func;
+         when Iir_Kind_Type_Conversion =>
             return Func;
          when others =>
             Error_Kind ("extract_in_conversion", Func);
@@ -1537,11 +1592,8 @@ package body Sem_Assocs is
          return;
       end if;
 
-      Package_Inter :=
-        Get_Named_Entity (Get_Uninstantiated_Package_Name (Inter));
-      if Get_Named_Entity (Get_Uninstantiated_Package_Name (Actual))
-        /= Package_Inter
-      then
+      Package_Inter := Get_Uninstantiated_Package_Decl (Inter);
+      if Get_Uninstantiated_Package_Decl (Actual) /= Package_Inter then
          Error_Msg_Sem
            (+Assoc,
             "actual package name is not an instance of interface package");

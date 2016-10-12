@@ -295,7 +295,7 @@ package body Sem_Types is
    begin
       Lit := Create_Iir (Iir_Kind_Physical_Int_Literal);
       Set_Value (Lit, Val);
-      Set_Unit_Name (Lit, Unit);
+      Set_Physical_Unit (Lit, Unit);
       Set_Expr_Staticness (Lit, Locally);
       Set_Type (Lit, Get_Type (Unit));
       Location_Copy (Lit, Unit);
@@ -307,7 +307,6 @@ package body Sem_Types is
       return Iir_Physical_Subtype_Definition
    is
       Unit: Iir_Unit_Declaration;
-      Unit_Name : Iir;
       Def : Iir_Physical_Type_Definition;
       Sub_Type: Iir_Physical_Subtype_Definition;
       Range_Expr1: Iir;
@@ -368,8 +367,7 @@ package body Sem_Types is
       --  Analyze the primary unit.
       Unit := Get_Unit_Chain (Def);
 
-      Unit_Name := Build_Simple_Name (Unit, Unit);
-      Lit := Create_Physical_Literal (1, Unit_Name);
+      Lit := Create_Physical_Literal (1, Unit);
       Set_Physical_Unit_Value (Unit, Lit);
 
       Sem_Scopes.Add_Name (Unit);
@@ -391,7 +389,7 @@ package body Sem_Types is
             Location_Copy (Res, Lim);
             Set_Type (Res, Def);
             Set_Value (Res, Get_Value (Lim));
-            Set_Unit_Name (Res, Get_Primary_Unit_Name (Def));
+            Set_Physical_Unit (Res, Get_Primary_Unit (Def));
             Set_Expr_Staticness (Res, Locally);
             Set_Literal_Origin (Res, Lim);
             return Res;
@@ -429,7 +427,6 @@ package body Sem_Types is
          Sem_Scopes.Add_Name (Unit);
          Val := Sem_Expression (Get_Physical_Literal (Unit), Def);
          if Val /= Null_Iir then
-            Set_Physical_Literal (Unit, Val);
             Val := Eval_Physical_Literal (Val);
             Set_Physical_Unit_Value (Unit, Val);
 
@@ -861,6 +858,7 @@ package body Sem_Types is
          else
             Staticness := None;
          end if;
+         Set_Base_Element_Declaration (El, El);
          Sem_Scopes.Add_Name (El);
          Name_Visible (El);
          Xref_Decl (El);
@@ -982,6 +980,7 @@ package body Sem_Types is
          Index_Name := Sem_Discrete_Range_Integer (Index_Type);
          if Index_Name /= Null_Iir then
             Index_Name := Range_To_Subtype_Indication (Index_Name);
+            --  Index_Name is a subtype_indication, which can be a type_mark.
          else
             --  Avoid errors.
             Index_Name :=
@@ -996,7 +995,7 @@ package body Sem_Types is
 
          --  Set the index subtype definition for the array base type.
          if Get_Kind (Index_Name) in Iir_Kinds_Denoting_Name then
-            Index_Type := Index_Name;
+            Index_Type := Get_Named_Entity (Index_Name);
          else
             pragma Assert
               (Get_Kind (Index_Name) in Iir_Kinds_Subtype_Definition);
@@ -1004,16 +1003,18 @@ package body Sem_Types is
             if Index_Type = Null_Iir then
                --  From a range expression like '1 to 4' or from an attribute
                --  name.
-               declare
-                  Subtype_Decl : constant Iir :=
-                    Get_First_Subtype_Declaration (Index_Name);
-               begin
-                  Index_Type := Build_Simple_Name (Subtype_Decl, Index_Name);
-                  Set_Type (Index_Type, Get_Type (Subtype_Decl));
-               end;
+               Index_Type := Get_First_Subtype_Declaration (Index_Name);
+            else
+               Index_Type := Get_Named_Entity (Index_Type);
             end if;
          end if;
-         Append_Element (Base_Index_List, Index_Type);
+
+         --  Create a new simple_name, as the type_mark is owned by the
+         --  index constraint of the array subtype.
+         Index_Name := Build_Simple_Name (Index_Type, Index_Name);
+         Set_Type (Index_Name, Get_Type (Index_Type));
+
+         Append_Element (Base_Index_List, Index_Name);
       end loop;
       Set_Index_Subtype_List (Def, Index_List);
 
@@ -1340,11 +1341,113 @@ package body Sem_Types is
      (Def : Iir; Type_Mark : Iir; Resolution : Iir)
      return Iir;
 
+   --  Create a copy of elements_declaration_list of SRC and set it to DST.
+   procedure Copy_Record_Elements_Declaration_List (Dst : Iir; Src : Iir)
+   is
+      El_List, New_El_List : Iir_List;
+      El, New_El : Iir;
+   begin
+      New_El_List := Create_Iir_List;
+      Set_Elements_Declaration_List (Dst, New_El_List);
+      El_List := Get_Elements_Declaration_List (Src);
+      for I in Natural loop
+         El := Get_Nth_Element (El_List, I);
+         exit when El = Null_Iir;
+
+         New_El := Create_Iir (Iir_Kind_Element_Declaration);
+         Location_Copy (New_El, El);
+         Set_Identifier (New_El, Get_Identifier (El));
+         Set_Type (New_El, Get_Type (El));
+         Set_Base_Element_Declaration (New_El, El);
+         Append_Element (New_El_List, New_El);
+      end loop;
+   end Copy_Record_Elements_Declaration_List;
+
+   function Copy_Resolution_Indication (Subdef : Iir) return Iir
+   is
+      Ind : constant Iir := Get_Resolution_Indication (Subdef);
+   begin
+      if Is_Null (Ind)
+        or else Get_Kind (Ind) = Iir_Kind_Array_Element_Resolution
+      then
+         --  No need to copy array_element_resolution, it is part of the
+         --  element_subtype.
+         return Null_Iir;
+      else
+         return Build_Reference_Name (Ind);
+      end if;
+   end Copy_Resolution_Indication;
+
+   function Copy_Subtype_Indication (Def : Iir) return Iir
+   is
+      Res : Iir;
+   begin
+      case Get_Kind (Def) is
+         when Iir_Kind_Integer_Subtype_Definition
+           | Iir_Kind_Floating_Subtype_Definition
+           | Iir_Kind_Enumeration_Subtype_Definition
+           | Iir_Kind_Physical_Subtype_Definition =>
+            Res := Create_Iir (Get_Kind (Def));
+            Set_Range_Constraint (Res, Get_Range_Constraint (Def));
+            Set_Is_Ref (Res, True);
+            Set_Resolution_Indication
+              (Res, Copy_Resolution_Indication (Def));
+         when Iir_Kind_Enumeration_Type_Definition =>
+            Res := Create_Iir (Iir_Kind_Enumeration_Subtype_Definition);
+            Set_Range_Constraint (Res, Get_Range_Constraint (Def));
+            Set_Is_Ref (Res, True);
+
+         when Iir_Kind_Access_Subtype_Definition
+           | Iir_Kind_Access_Type_Definition =>
+            Res := Create_Iir (Iir_Kind_Access_Subtype_Definition);
+            Set_Designated_Type (Res, Get_Designated_Type (Def));
+
+         when Iir_Kind_Array_Type_Definition =>
+            Res := Create_Iir (Iir_Kind_Array_Subtype_Definition);
+            Set_Type_Staticness (Res, Get_Type_Staticness (Def));
+            Set_Resolved_Flag (Res, Get_Resolved_Flag (Def));
+            Set_Index_Constraint_List (Res, Null_Iir_List);
+            Set_Index_Subtype_List
+              (Res, Get_Index_Subtype_Definition_List (Def));
+            Set_Element_Subtype (Res, Get_Element_Subtype (Def));
+            Set_Index_Constraint_Flag (Res, False);
+            Set_Constraint_State (Res, Get_Constraint_State (Def));
+         when Iir_Kind_Array_Subtype_Definition =>
+            Res := Create_Iir (Iir_Kind_Array_Subtype_Definition);
+            Set_Resolution_Indication (Res, Copy_Resolution_Indication (Def));
+            Set_Resolved_Flag (Res, Get_Resolved_Flag (Def));
+            Set_Index_Subtype_List (Res, Get_Index_Subtype_List (Def));
+            Set_Element_Subtype (Res, Get_Element_Subtype (Def));
+            Set_Index_Constraint_Flag
+              (Res, Get_Index_Constraint_Flag (Def));
+            Set_Constraint_State (Res, Get_Constraint_State (Def));
+
+         when Iir_Kind_Record_Type_Definition
+           | Iir_Kind_Record_Subtype_Definition =>
+            Res := Create_Iir (Iir_Kind_Record_Subtype_Definition);
+            Set_Type_Staticness (Res, Get_Type_Staticness (Def));
+            if Get_Kind (Def) = Iir_Kind_Record_Subtype_Definition then
+               Set_Resolution_Indication
+                 (Res, Copy_Resolution_Indication (Def));
+            end if;
+            Set_Resolved_Flag (Res, Get_Resolved_Flag (Def));
+            Set_Constraint_State (Res, Get_Constraint_State (Def));
+            Copy_Record_Elements_Declaration_List (Res, Def);
+         when others =>
+            --  FIXME: todo (protected type ?)
+            Error_Kind ("copy_subtype_indication", Def);
+      end case;
+      Location_Copy (Res, Def);
+      Set_Base_Type (Res, Get_Base_Type (Def));
+      Set_Type_Staticness (Res, Get_Type_Staticness (Def));
+      Set_Signal_Type_Flag (Res, Get_Signal_Type_Flag (Def));
+      return Res;
+   end Copy_Subtype_Indication;
+
    --  DEF is an incomplete subtype_indication or array_constraint,
    --  TYPE_MARK is the base type of the subtype_indication.
    function Sem_Array_Constraint
-     (Def : Iir; Type_Mark : Iir; Resolution : Iir)
-     return Iir
+     (Def : Iir; Type_Mark : Iir; Resolution : Iir) return Iir
    is
       El_Type : constant Iir := Get_Element_Subtype (Type_Mark);
       Res : Iir;
@@ -1516,6 +1619,11 @@ package body Sem_Types is
       --  Element subtype.
       if Resolv_El /= Null_Iir or else El_Def /= Null_Iir then
          El_Def := Sem_Subtype_Constraint (El_Def, El_Type, Resolv_El);
+         if Resolv_El /= Null_Iir then
+            --  Save EL_DEF so that it is owned.
+            Set_Element_Subtype_Indication (Resolution, El_Def);
+            Set_Resolution_Indication (Resolution, Null_Iir);
+         end if;
       end if;
       if El_Def = Null_Iir then
          El_Def := Get_Element_Subtype (Type_Mark);
@@ -1708,9 +1816,7 @@ package body Sem_Types is
 
          when Iir_Kind_Array_Subtype_Definition =>
             --  Record constraints are parsed as array constraints.
-            if Get_Kind (Def) /= Iir_Kind_Array_Subtype_Definition then
-               raise Internal_Error;
-            end if;
+            pragma Assert (Get_Kind (Def) = Iir_Kind_Array_Subtype_Definition);
             Index_List := Get_Index_Constraint_List (Def);
             El_List := Create_Iir_List;
             Set_Elements_Declaration_List (Res, El_List);
@@ -1786,8 +1892,8 @@ package body Sem_Types is
                                 (El_Type, Tm_El_Type);
                            when Iir_Kind_Record_Type_Definition
                              | Iir_Kind_Record_Subtype_Definition =>
-                              El_Type := Reparse_As_Record_Constraint
-                                (El_Type);
+                              El_Type :=
+                                Reparse_As_Record_Constraint (El_Type);
                            when others =>
                               Error_Msg_Sem
                                 (+El_Type,
@@ -1855,7 +1961,7 @@ package body Sem_Types is
             Set_Constraint_State (Res, Constraint);
          end;
       else
-         Set_Elements_Declaration_List (Res, Tm_El_List);
+         Copy_Record_Elements_Declaration_List (Res, Type_Mark);
          Set_Constraint_State (Res, Get_Constraint_State (Type_Mark));
       end if;
 
@@ -1915,11 +2021,13 @@ package body Sem_Types is
          A_Range := Get_Range_Constraint (Def);
          if A_Range = Null_Iir then
             A_Range := Get_Range_Constraint (Type_Mark);
+            Set_Is_Ref (Res, True);
          else
             A_Range := Sem_Range_Expression (A_Range, Type_Mark, True);
             if A_Range = Null_Iir then
                --  Avoid error propagation.
                A_Range := Get_Range_Constraint (Type_Mark);
+               Set_Is_Ref (Res, True);
             end if;
          end if;
          Set_Range_Constraint (Res, A_Range);
@@ -2000,11 +2108,11 @@ package body Sem_Types is
                   --  of an access type in a subtype indication is an index
                   --  constraint.
                   declare
+                     Base_Type : constant Iir :=
+                       Get_Designated_Type (Type_Mark);
                      Sub_Type : Iir;
-                     Base_Type : Iir;
                      Res : Iir;
                   begin
-                     Base_Type := Get_Designated_Type (Type_Mark);
                      Sub_Type := Sem_Array_Constraint
                        (Def, Base_Type, Null_Iir);
                      Res := Create_Iir (Iir_Kind_Access_Subtype_Definition);
@@ -2012,6 +2120,12 @@ package body Sem_Types is
                      Set_Base_Type (Res, Type_Mark);
                      Set_Designated_Subtype_Indication (Res, Sub_Type);
                      Set_Signal_Type_Flag (Res, False);
+
+                     --  The type_mark is a type_mark of the access subtype,
+                     --  not of the array subtype.
+                     Set_Subtype_Type_Mark
+                       (Res, Get_Subtype_Type_Mark (Sub_Type));
+                     Set_Subtype_Type_Mark (Sub_Type, Null_Iir);
                      return Res;
                   end;
                when others =>
@@ -2103,71 +2217,6 @@ package body Sem_Types is
       Set_Subtype_Type_Mark (Res, Type_Mark_Name);
       return Res;
    end Sem_Subtype_Indication;
-
-   function Copy_Subtype_Indication (Def : Iir) return Iir
-   is
-      Res : Iir;
-   begin
-      case Get_Kind (Def) is
-         when Iir_Kind_Integer_Subtype_Definition
-           | Iir_Kind_Floating_Subtype_Definition
-           | Iir_Kind_Enumeration_Subtype_Definition
-           | Iir_Kind_Physical_Subtype_Definition =>
-            Res := Create_Iir (Get_Kind (Def));
-            Set_Range_Constraint (Res, Get_Range_Constraint (Def));
-            Set_Resolution_Indication
-              (Res, Get_Resolution_Indication (Def));
-         when Iir_Kind_Enumeration_Type_Definition =>
-            Res := Create_Iir (Iir_Kind_Enumeration_Subtype_Definition);
-            Set_Range_Constraint (Res, Get_Range_Constraint (Def));
-
-         when Iir_Kind_Access_Subtype_Definition
-           | Iir_Kind_Access_Type_Definition =>
-            Res := Create_Iir (Iir_Kind_Access_Subtype_Definition);
-            Set_Designated_Type (Res, Get_Designated_Type (Def));
-
-         when Iir_Kind_Array_Type_Definition =>
-            Res := Create_Iir (Iir_Kind_Array_Subtype_Definition);
-            Set_Type_Staticness (Res, Get_Type_Staticness (Def));
-            Set_Resolved_Flag (Res, Get_Resolved_Flag (Def));
-            Set_Index_Constraint_List (Res, Null_Iir_List);
-            Set_Index_Subtype_List
-              (Res, Get_Index_Subtype_Definition_List (Def));
-            Set_Element_Subtype (Res, Get_Element_Subtype (Def));
-            Set_Index_Constraint_Flag (Res, False);
-            Set_Constraint_State (Res, Get_Constraint_State (Def));
-         when Iir_Kind_Array_Subtype_Definition =>
-            Res := Create_Iir (Iir_Kind_Array_Subtype_Definition);
-            Set_Resolution_Indication (Res, Get_Resolution_Indication (Def));
-            Set_Resolved_Flag (Res, Get_Resolved_Flag (Def));
-            Set_Index_Subtype_List (Res, Get_Index_Subtype_List (Def));
-            Set_Element_Subtype (Res, Get_Element_Subtype (Def));
-            Set_Index_Constraint_Flag
-              (Res, Get_Index_Constraint_Flag (Def));
-            Set_Constraint_State (Res, Get_Constraint_State (Def));
-
-         when Iir_Kind_Record_Type_Definition
-           | Iir_Kind_Record_Subtype_Definition =>
-            Res := Create_Iir (Iir_Kind_Record_Subtype_Definition);
-            Set_Type_Staticness (Res, Get_Type_Staticness (Def));
-            if Get_Kind (Def) = Iir_Kind_Record_Subtype_Definition then
-               Set_Resolution_Indication
-                 (Res, Get_Resolution_Indication (Def));
-            end if;
-            Set_Resolved_Flag (Res, Get_Resolved_Flag (Def));
-            Set_Constraint_State (Res, Get_Constraint_State (Def));
-            Set_Elements_Declaration_List
-              (Res, Get_Elements_Declaration_List (Def));
-         when others =>
-            --  FIXME: todo (protected type ?)
-            Error_Kind ("copy_subtype_indication", Def);
-      end case;
-      Location_Copy (Res, Def);
-      Set_Base_Type (Res, Get_Base_Type (Def));
-      Set_Type_Staticness (Res, Get_Type_Staticness (Def));
-      Set_Signal_Type_Flag (Res, Get_Signal_Type_Flag (Def));
-      return Res;
-   end Copy_Subtype_Indication;
 
    function Sem_Subnature_Indication (Def: Iir) return Iir
    is

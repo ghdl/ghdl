@@ -390,8 +390,7 @@ package body Elaboration is
       if Get_Kind (Decl) = Iir_Kind_Package_Instantiation_Declaration then
          --  Elaborate the body now.
          declare
-            Uninst : constant Iir :=
-              Get_Named_Entity (Get_Uninstantiated_Package_Name (Decl));
+            Uninst : constant Iir := Get_Uninstantiated_Package_Decl (Decl);
          begin
             Elaborate_Declarative_Part
               (Instance, Get_Declaration_Chain (Get_Package_Body (Uninst)));

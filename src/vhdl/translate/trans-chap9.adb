@@ -1154,7 +1154,8 @@ package body Trans.Chap9 is
                      when Attr_None =>
                         Destroy_Types (Get_Iir (N, F));
                      when Attr_Ref
-                       | Attr_Forward_Ref =>
+                       | Attr_Forward_Ref
+                       | Attr_Maybe_Forward_Ref =>
                         null;
                      when Attr_Maybe_Ref =>
                         if not Get_Is_Ref (N) then

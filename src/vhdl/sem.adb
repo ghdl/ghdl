@@ -2599,8 +2599,7 @@ package body Sem is
          case Get_Kind (El) is
             when Iir_Kind_Package_Instantiation_Declaration =>
                declare
-                  Pkg : constant Iir :=
-                    Get_Named_Entity (Get_Uninstantiated_Package_Name (El));
+                  Pkg : constant Iir := Get_Uninstantiated_Package_Decl (El);
                begin
                   if not Is_Error (Pkg)
                     and then Get_Need_Body (Pkg)
@@ -2633,8 +2632,8 @@ package body Sem is
                return True;
             when Iir_Kind_Interface_Package_Declaration =>
                declare
-                  Pkg : constant Iir := Get_Named_Entity
-                    (Get_Uninstantiated_Package_Name (Inter));
+                  Pkg : constant Iir :=
+                    Get_Uninstantiated_Package_Decl (Inter);
                begin
                   if Get_Macro_Expanded_Flag (Pkg) then
                      return True;
@@ -2835,6 +2834,8 @@ package body Sem is
          --  What could be done ?
          return Null_Iir;
       end if;
+
+      Set_Uninstantiated_Package_Decl (Decl, Pkg);
 
       return Pkg;
    end Sem_Uninstantiated_Package_Name;

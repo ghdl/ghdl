@@ -646,8 +646,9 @@ package body Sem_Decls is
             Set_Identifier (Inter, Std_Names.Name_Open_Kind);
             Set_Type (Inter, Std_Package.File_Open_Kind_Type_Definition);
             Set_Mode (Inter, Iir_In_Mode);
-            Set_Default_Value (Inter,
-                               Std_Package.File_Open_Kind_Read_Mode);
+            Set_Default_Value
+              (Inter,
+               Build_Simple_Name (Std_Package.File_Open_Kind_Read_Mode, Loc));
             Append (Last_Interface, Proc, Inter);
             Compute_Subprogram_Hash (Proc);
             -- Add it to the list.
@@ -697,7 +698,7 @@ package body Sem_Decls is
       Inter := Create_Iir (Iir_Kind_Interface_Variable_Declaration);
       Set_Identifier (Inter, Std_Names.Name_Value);
       Set_Location (Inter, Loc);
-      Set_Subtype_Indication (Inter, Type_Mark);
+      Set_Subtype_Indication (Inter, Build_Simple_Name (Decl, Loc));
       Set_Type (Inter, Type_Mark_Type);
       Set_Mode (Inter, Iir_Out_Mode);
       Append (Last_Interface, Proc, Inter);
@@ -737,7 +738,7 @@ package body Sem_Decls is
       Inter := Create_Iir (Iir_Kind_Interface_Constant_Declaration);
       Set_Identifier (Inter, Std_Names.Name_Value);
       Set_Location (Inter, Loc);
-      Set_Subtype_Indication (Inter, Type_Mark);
+      Set_Subtype_Indication (Inter, Build_Simple_Name (Decl, Loc));
       Set_Type (Inter, Type_Mark_Type);
       Set_Mode (Inter, Iir_In_Mode);
       Append (Last_Interface, Proc, Inter);
@@ -1596,6 +1597,7 @@ package body Sem_Decls is
             Set_Identifier (St_Decl, Get_Identifier (Decl));
             Set_Parent (St_Decl, Get_Parent (Decl));
             Set_Type (St_Decl, Def);
+            Set_Subtype_Indication (St_Decl, Def);
             Set_Type_Declarator (Def, St_Decl);
             Set_Chain (St_Decl, Get_Chain (Decl));
             Set_Chain (Decl, St_Decl);
@@ -2664,6 +2666,11 @@ package body Sem_Decls is
          Set_Name (Res, Get_Name (Alias));
          Set_Alias_Signature (Res, Sig);
 
+         if Is_Valid (Sig) then
+            --  The prefix is owned by the non_object_alias_declaration.
+            Set_Signature_Prefix (Sig, Null_Iir);
+         end if;
+
          Sem_Scopes.Add_Name (Res);
          Name_Visible (Res);
 
@@ -2756,6 +2763,14 @@ package body Sem_Decls is
             El := Finish_Sem_Name (El);
             Replace_Nth_Element (Constituent_List, I, El);
             El_Name := Get_Named_Entity (El);
+
+            --  Statements are textually afer the group declaration.  To avoid
+            --  adding a flag on each node with a base_name, this field is
+            --  cleared, as we don't care about base name.
+            if Class = Tok_Label then
+               Set_Is_Forward_Ref (El, True);
+            end if;
+            Set_Base_Name (El, Null_Iir);
 
             --  LRM93 4.7
             --  It is an error if the class of any group constituent in the

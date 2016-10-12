@@ -129,6 +129,7 @@ package Nodes_Meta is
       Field_Configuration_Item_Chain,
       Field_Attribute_Value_Chain,
       Field_Spec_Chain,
+      Field_Value_Chain,
       Field_Attribute_Value_Spec_Chain,
       Field_Entity_Name,
       Field_Package,
@@ -175,6 +176,7 @@ package Nodes_Meta is
       Field_File_Logical_Name,
       Field_File_Open_Kind,
       Field_Element_Position,
+      Field_Base_Element_Declaration,
       Field_Element_Declaration,
       Field_Selected_Element,
       Field_Use_Clause_Chain,
@@ -276,6 +278,7 @@ package Nodes_Meta is
       Field_Package_Header,
       Field_Block_Header,
       Field_Uninstantiated_Package_Name,
+      Field_Uninstantiated_Package_Decl,
       Field_Generate_Block_Configuration,
       Field_Generate_Statement_Body,
       Field_Alternative_Label,
@@ -294,11 +297,13 @@ package Nodes_Meta is
       Field_Binding_Indication,
       Field_Named_Entity,
       Field_Alias_Declaration,
+      Field_Referenced_Name,
       Field_Expr_Staticness,
       Field_Error_Origin,
       Field_Operand,
       Field_Left,
       Field_Right,
+      Field_Physical_Unit,
       Field_Unit_Name,
       Field_Name,
       Field_Group_Template_Name,
@@ -315,6 +320,7 @@ package Nodes_Meta is
       Field_Attr_Chain,
       Field_Signal_Attribute_Declaration,
       Field_Actual_Type,
+      Field_Actual_Type_Definition,
       Field_Association_Chain,
       Field_Individual_Association_Chain,
       Field_Subprogram_Association_Chain,
@@ -368,6 +374,7 @@ package Nodes_Meta is
       Field_Has_Class,
       Field_Suspend_Flag,
       Field_Is_Ref,
+      Field_Is_Forward_Ref,
       Field_Psl_Property,
       Field_Psl_Sequence,
       Field_Psl_Declaration,
@@ -394,7 +401,8 @@ package Nodes_Meta is
    type Field_Attribute is
      (
       Attr_None,
-      Attr_Ref, Attr_Maybe_Ref, Attr_Of_Ref, Attr_Forward_Ref,
+      Attr_Ref, Attr_Maybe_Ref, Attr_Of_Ref,
+      Attr_Forward_Ref, Attr_Maybe_Forward_Ref,
       Attr_Chain, Attr_Chain_Next
      );
 
@@ -630,6 +638,7 @@ package Nodes_Meta is
    function Has_Configuration_Item_Chain (K : Iir_Kind) return Boolean;
    function Has_Attribute_Value_Chain (K : Iir_Kind) return Boolean;
    function Has_Spec_Chain (K : Iir_Kind) return Boolean;
+   function Has_Value_Chain (K : Iir_Kind) return Boolean;
    function Has_Attribute_Value_Spec_Chain (K : Iir_Kind) return Boolean;
    function Has_Entity_Name (K : Iir_Kind) return Boolean;
    function Has_Package (K : Iir_Kind) return Boolean;
@@ -677,6 +686,7 @@ package Nodes_Meta is
    function Has_File_Logical_Name (K : Iir_Kind) return Boolean;
    function Has_File_Open_Kind (K : Iir_Kind) return Boolean;
    function Has_Element_Position (K : Iir_Kind) return Boolean;
+   function Has_Base_Element_Declaration (K : Iir_Kind) return Boolean;
    function Has_Element_Declaration (K : Iir_Kind) return Boolean;
    function Has_Selected_Element (K : Iir_Kind) return Boolean;
    function Has_Use_Clause_Chain (K : Iir_Kind) return Boolean;
@@ -782,6 +792,7 @@ package Nodes_Meta is
    function Has_Package_Header (K : Iir_Kind) return Boolean;
    function Has_Block_Header (K : Iir_Kind) return Boolean;
    function Has_Uninstantiated_Package_Name (K : Iir_Kind) return Boolean;
+   function Has_Uninstantiated_Package_Decl (K : Iir_Kind) return Boolean;
    function Has_Generate_Block_Configuration (K : Iir_Kind) return Boolean;
    function Has_Generate_Statement_Body (K : Iir_Kind) return Boolean;
    function Has_Alternative_Label (K : Iir_Kind) return Boolean;
@@ -802,11 +813,13 @@ package Nodes_Meta is
    function Has_Binding_Indication (K : Iir_Kind) return Boolean;
    function Has_Named_Entity (K : Iir_Kind) return Boolean;
    function Has_Alias_Declaration (K : Iir_Kind) return Boolean;
+   function Has_Referenced_Name (K : Iir_Kind) return Boolean;
    function Has_Expr_Staticness (K : Iir_Kind) return Boolean;
    function Has_Error_Origin (K : Iir_Kind) return Boolean;
    function Has_Operand (K : Iir_Kind) return Boolean;
    function Has_Left (K : Iir_Kind) return Boolean;
    function Has_Right (K : Iir_Kind) return Boolean;
+   function Has_Physical_Unit (K : Iir_Kind) return Boolean;
    function Has_Unit_Name (K : Iir_Kind) return Boolean;
    function Has_Name (K : Iir_Kind) return Boolean;
    function Has_Group_Template_Name (K : Iir_Kind) return Boolean;
@@ -823,6 +836,7 @@ package Nodes_Meta is
    function Has_Attr_Chain (K : Iir_Kind) return Boolean;
    function Has_Signal_Attribute_Declaration (K : Iir_Kind) return Boolean;
    function Has_Actual_Type (K : Iir_Kind) return Boolean;
+   function Has_Actual_Type_Definition (K : Iir_Kind) return Boolean;
    function Has_Association_Chain (K : Iir_Kind) return Boolean;
    function Has_Individual_Association_Chain (K : Iir_Kind) return Boolean;
    function Has_Subprogram_Association_Chain (K : Iir_Kind) return Boolean;
@@ -877,6 +891,7 @@ package Nodes_Meta is
    function Has_Has_Class (K : Iir_Kind) return Boolean;
    function Has_Suspend_Flag (K : Iir_Kind) return Boolean;
    function Has_Is_Ref (K : Iir_Kind) return Boolean;
+   function Has_Is_Forward_Ref (K : Iir_Kind) return Boolean;
    function Has_Psl_Property (K : Iir_Kind) return Boolean;
    function Has_Psl_Sequence (K : Iir_Kind) return Boolean;
    function Has_Psl_Declaration (K : Iir_Kind) return Boolean;

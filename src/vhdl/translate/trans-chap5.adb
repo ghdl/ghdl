@@ -802,8 +802,8 @@ package body Trans.Chap5 is
                pragma Assert (Get_Kind (Formal) =
                                 Iir_Kind_Interface_Package_Declaration);
                declare
-                  Uninst_Pkg  : constant Iir := Get_Named_Entity
-                    (Get_Uninstantiated_Package_Name (Formal));
+                  Uninst_Pkg  : constant Iir :=
+                    Get_Uninstantiated_Package_Decl (Formal);
                   Uninst_Info : constant Ortho_Info_Acc :=
                     Get_Info (Uninst_Pkg);
                   Formal_Info : constant Ortho_Info_Acc :=

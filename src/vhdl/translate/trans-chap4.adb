@@ -269,8 +269,7 @@ package body Trans.Chap4 is
 
    procedure Create_Package_Interface (Inter : Iir)
    is
-      Pkg      : constant Iir := Get_Named_Entity
-        (Get_Uninstantiated_Package_Name (Inter));
+      Pkg      : constant Iir := Get_Uninstantiated_Package_Decl (Inter);
       Pkg_Info : constant Ortho_Info_Acc := Get_Info (Pkg);
       Info     : Ortho_Info_Acc;
    begin

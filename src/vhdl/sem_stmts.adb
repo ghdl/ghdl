@@ -432,7 +432,7 @@ package body Sem_Stmts is
       Expr: Iir;
    begin
       Target := Get_Target (Stmt);
-      Target := Sem_Expression_Wildcard (Target, Sig_Type);
+      Target := Sem_Expression_Wildcard (Target, Get_Base_Type (Sig_Type));
 
       if Target /= Null_Iir then
          Set_Target (Stmt, Target);

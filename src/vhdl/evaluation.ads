@@ -179,4 +179,7 @@ package Evaluation is
 
    function Get_Path_Instance_Name_Suffix (Attr : Iir)
                                           return Path_Instance_Name_Type;
+
+   --  Create a copy of VAL.
+   function Copy_Constant (Val : Iir) return Iir;
 end Evaluation;

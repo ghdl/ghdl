@@ -182,7 +182,8 @@ package body Canon is
 
          when Iir_Kind_Qualified_Expression
            | Iir_Kind_Type_Conversion
-           | Iir_Kind_Allocator_By_Expression =>
+           | Iir_Kind_Allocator_By_Expression
+           | Iir_Kind_Parenthesis_Expression =>
             Canon_Extract_Sensitivity
               (Get_Expression (Expr), Sensitivity_List, False);
 
@@ -2518,8 +2519,7 @@ package body Canon is
    --  Return the new package declaration (if any).
    function Canon_Package_Instantiation_Declaration (Decl : Iir) return Iir
    is
-      Pkg : constant Iir :=
-        Get_Named_Entity (Get_Uninstantiated_Package_Name (Decl));
+      Pkg : constant Iir := Get_Uninstantiated_Package_Decl (Decl);
    begin
       --  Canon map aspect.
       Set_Generic_Map_Aspect_Chain

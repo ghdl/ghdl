@@ -919,7 +919,7 @@ package body Trans.Chap8 is
                Elem := Get_Nth_Element (El_List, El_Index);
                El_Index := El_Index + 1;
             when Iir_Kind_Choice_By_Name =>
-               Elem := Get_Choice_Name (Aggr_El);
+               Elem := Get_Named_Entity (Get_Choice_Name (Aggr_El));
             when others =>
                Error_Kind ("translate_variable_rec_aggr", Aggr_El);
          end case;
@@ -3158,7 +3158,7 @@ package body Trans.Chap8 is
                  and then (Get_Kind (Base_Formal)
                              = Iir_Kind_Interface_Variable_Declaration)
                then
-                  Formal_Type := Get_Type (Get_Formal (El));
+                  Formal_Type := Get_Type (Get_Named_Entity (Get_Formal (El)));
                   Ftype_Info := Get_Info (Formal_Type);
                   pragma Assert
                     (Get_Interface_Kind (Base_Formal) = Mode_Value);
@@ -3817,7 +3817,7 @@ package body Trans.Chap8 is
                Element := Get_Nth_Element (El_List, El_Index);
                El_Index := El_Index + 1;
             when Iir_Kind_Choice_By_Name =>
-               Element := Get_Choice_Name (Aggr_El);
+               Element := Get_Named_Entity (Get_Choice_Name (Aggr_El));
                El_Index := Natural'Last;
             when others =>
                Error_Kind ("translate_signal_target_record_aggr", Aggr_El);

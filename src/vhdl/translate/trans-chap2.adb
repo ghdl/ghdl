@@ -1212,7 +1212,8 @@ package body Trans.Chap2 is
                      when Attr_None =>
                         Instantiate_Iir_Info (Get_Iir (N, F));
                      when Attr_Ref
-                       | Attr_Forward_Ref =>
+                       | Attr_Forward_Ref
+                       | Attr_Maybe_Forward_Ref =>
                         null;
                      when Attr_Maybe_Ref =>
                         if not Get_Is_Ref (N) then
@@ -1313,8 +1314,7 @@ package body Trans.Chap2 is
    --  package_instantiation_declaration
    procedure Instantiate_Info_Package (Inst : Iir)
    is
-      Spec     : constant Iir :=
-        Get_Named_Entity (Get_Uninstantiated_Package_Name (Inst));
+      Spec     : constant Iir := Get_Uninstantiated_Package_Decl (Inst);
       Pkg_Info : constant Ortho_Info_Acc := Get_Info (Spec);
       Info     : Ortho_Info_Acc;
    begin
@@ -1337,8 +1337,7 @@ package body Trans.Chap2 is
 
    procedure Translate_Package_Instantiation_Declaration (Inst : Iir)
    is
-      Spec           : constant Iir :=
-        Get_Named_Entity (Get_Uninstantiated_Package_Name (Inst));
+      Spec           : constant Iir := Get_Uninstantiated_Package_Decl (Inst);
       Pkg_Info       : constant Ortho_Info_Acc := Get_Info (Spec);
       Info           : Ortho_Info_Acc;
       Interface_List : O_Inter_List;
@@ -1395,8 +1394,7 @@ package body Trans.Chap2 is
 
    procedure Elab_Package_Instantiation_Declaration (Inst : Iir)
    is
-      Spec           : constant Iir :=
-        Get_Named_Entity (Get_Uninstantiated_Package_Name (Inst));
+      Spec           : constant Iir := Get_Uninstantiated_Package_Decl (Inst);
       Pkg_Info       : constant Ortho_Info_Acc := Get_Info (Spec);
       Info           : constant Ortho_Info_Acc := Get_Info (Inst);
       Constr         : O_Assoc_List;

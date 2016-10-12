@@ -383,9 +383,18 @@ package body Disp_Vhdl is
             when Iir_Kinds_Denoting_Name =>
                Disp_Name (Ind);
             when Iir_Kind_Array_Element_Resolution =>
-               Put ("(");
-               Inner (Get_Resolution_Indication (Ind));
-               Put (")");
+               declare
+                  Res : constant Iir := Get_Resolution_Indication (Ind);
+               begin
+                  Put ("(");
+                  if Is_Valid (Res) then
+                     Inner (Res);
+                  else
+                     Disp_Name (Get_Resolution_Indication
+                                  (Get_Element_Subtype_Indication (Ind)));
+                  end if;
+                  Put (")");
+               end;
             when others =>
                Error_Kind ("disp_resolution_indication", Ind);
          end case;
@@ -708,7 +717,9 @@ package body Disp_Vhdl is
       Put (";");
    end Disp_Array_Type_Definition;
 
-   procedure Disp_Physical_Literal (Lit: Iir) is
+   procedure Disp_Physical_Literal (Lit: Iir)
+   is
+      Unit : Iir;
    begin
       case Get_Kind (Lit) is
          when Iir_Kind_Physical_Int_Literal =>
@@ -722,7 +733,12 @@ package body Disp_Vhdl is
             Error_Kind ("disp_physical_literal", Lit);
       end case;
       Put (' ');
-      Disp_Name (Get_Unit_Name (Lit));
+
+      Unit := Get_Unit_Name (Lit);
+      if Is_Valid (Unit) then
+         --  No unit in range_constraint of physical type declaration.
+         Disp_Name (Unit);
+      end if;
    end Disp_Physical_Literal;
 
    procedure Disp_Physical_Subtype_Definition
@@ -1232,10 +1248,14 @@ package body Disp_Vhdl is
 
    procedure Disp_Signature (Sig : Iir)
    is
+      Prefix : constant Iir := Get_Signature_Prefix (Sig);
       List : Iir_List;
       El : Iir;
    begin
-      Disp_Name (Get_Signature_Prefix (Sig));
+      if Is_Valid (Prefix) then
+         --  Only in alias.
+         Disp_Name (Prefix);
+      end if;
       Put (" [");
       List := Get_Type_Marks_List (Sig);
       if List /= Null_Iir_List then
@@ -1280,10 +1300,9 @@ package body Disp_Vhdl is
       Put ("alias ");
       Disp_Function_Name (Decl);
       Put (" is ");
+      Disp_Name (Get_Name (Decl));
       if Sig /= Null_Iir then
          Disp_Signature (Sig);
-      else
-         Disp_Name (Get_Name (Decl));
       end if;
       Put_Line (";");
    end Disp_Non_Object_Alias_Declaration;
@@ -1570,10 +1589,9 @@ package body Disp_Vhdl is
    is
       Sig : constant Iir := Get_Attribute_Signature (Attr);
    begin
+      Disp_Name (Get_Prefix (Attr));
       if Sig /= Null_Iir then
          Disp_Signature (Sig);
-      else
-         Disp_Name (Get_Prefix (Attr));
       end if;
       Put ("'");
       Disp_Ident (Get_Identifier (Attr));

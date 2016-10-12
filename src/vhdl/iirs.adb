@@ -423,6 +423,7 @@ package body Iirs is
            | Iir_Kind_Simple_Name
            | Iir_Kind_Selected_Name
            | Iir_Kind_Operator_Symbol
+           | Iir_Kind_Reference_Name
            | Iir_Kind_Selected_By_All_Name
            | Iir_Kind_Parenthesis_Name
            | Iir_Kind_External_Constant_Name
@@ -1646,7 +1647,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Spec_Chain (Get_Kind (Target)),
                      "no field Spec_Chain");
-      return Get_Field0 (Target);
+      return Get_Field2 (Target);
    end Get_Spec_Chain;
 
    procedure Set_Spec_Chain (Target : Iir; Chain : Iir) is
@@ -1654,8 +1655,24 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Spec_Chain (Get_Kind (Target)),
                      "no field Spec_Chain");
-      Set_Field0 (Target, Chain);
+      Set_Field2 (Target, Chain);
    end Set_Spec_Chain;
+
+   function Get_Value_Chain (Target : Iir) return Iir is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Value_Chain (Get_Kind (Target)),
+                     "no field Value_Chain");
+      return Get_Field0 (Target);
+   end Get_Value_Chain;
+
+   procedure Set_Value_Chain (Target : Iir; Chain : Iir) is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Value_Chain (Get_Kind (Target)),
+                     "no field Value_Chain");
+      Set_Field0 (Target, Chain);
+   end Set_Value_Chain;
 
    function Get_Attribute_Value_Spec_Chain (Target : Iir) return Iir is
    begin
@@ -2399,6 +2416,22 @@ package body Iirs is
       Set_Field4 (Target, Iir_Index32'Pos (Pos));
    end Set_Element_Position;
 
+   function Get_Base_Element_Declaration (Target : Iir) return Iir is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Base_Element_Declaration (Get_Kind (Target)),
+                     "no field Base_Element_Declaration");
+      return Get_Field2 (Target);
+   end Get_Base_Element_Declaration;
+
+   procedure Set_Base_Element_Declaration (Target : Iir; El : Iir) is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Base_Element_Declaration (Get_Kind (Target)),
+                     "no field Base_Element_Declaration");
+      Set_Field2 (Target, El);
+   end Set_Base_Element_Declaration;
+
    function Get_Element_Declaration (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);
@@ -2708,7 +2741,7 @@ package body Iirs is
       pragma Assert (Decl /= Null_Iir);
       pragma Assert (Has_Left_Limit (Get_Kind (Decl)),
                      "no field Left_Limit");
-      return Get_Field2 (Decl);
+      return Get_Field4 (Decl);
    end Get_Left_Limit;
 
    procedure Set_Left_Limit (Decl : Iir_Range_Expression; Limit : Iir) is
@@ -2716,7 +2749,7 @@ package body Iirs is
       pragma Assert (Decl /= Null_Iir);
       pragma Assert (Has_Left_Limit (Get_Kind (Decl)),
                      "no field Left_Limit");
-      Set_Field2 (Decl, Limit);
+      Set_Field4 (Decl, Limit);
    end Set_Left_Limit;
 
    function Get_Right_Limit (Decl : Iir_Range_Expression) return Iir is
@@ -2724,7 +2757,7 @@ package body Iirs is
       pragma Assert (Decl /= Null_Iir);
       pragma Assert (Has_Right_Limit (Get_Kind (Decl)),
                      "no field Right_Limit");
-      return Get_Field3 (Decl);
+      return Get_Field5 (Decl);
    end Get_Right_Limit;
 
    procedure Set_Right_Limit (Decl : Iir_Range_Expression; Limit : Iir) is
@@ -2732,7 +2765,7 @@ package body Iirs is
       pragma Assert (Decl /= Null_Iir);
       pragma Assert (Has_Right_Limit (Get_Kind (Decl)),
                      "no field Right_Limit");
-      Set_Field3 (Decl, Limit);
+      Set_Field5 (Decl, Limit);
    end Set_Right_Limit;
 
    function Get_Left_Limit_Expr (Decl : Iir_Range_Expression) return Iir is
@@ -2740,7 +2773,7 @@ package body Iirs is
       pragma Assert (Decl /= Null_Iir);
       pragma Assert (Has_Left_Limit_Expr (Get_Kind (Decl)),
                      "no field Left_Limit_Expr");
-      return Get_Field4 (Decl);
+      return Get_Field2 (Decl);
    end Get_Left_Limit_Expr;
 
    procedure Set_Left_Limit_Expr (Decl : Iir_Range_Expression; Limit : Iir) is
@@ -2748,7 +2781,7 @@ package body Iirs is
       pragma Assert (Decl /= Null_Iir);
       pragma Assert (Has_Left_Limit_Expr (Get_Kind (Decl)),
                      "no field Left_Limit_Expr");
-      Set_Field4 (Decl, Limit);
+      Set_Field2 (Decl, Limit);
    end Set_Left_Limit_Expr;
 
    function Get_Right_Limit_Expr (Decl : Iir_Range_Expression) return Iir is
@@ -2756,7 +2789,7 @@ package body Iirs is
       pragma Assert (Decl /= Null_Iir);
       pragma Assert (Has_Right_Limit_Expr (Get_Kind (Decl)),
                      "no field Right_Limit_Expr");
-      return Get_Field5 (Decl);
+      return Get_Field3 (Decl);
    end Get_Right_Limit_Expr;
 
    procedure Set_Right_Limit_Expr (Decl : Iir_Range_Expression; Limit : Iir)
@@ -2765,7 +2798,7 @@ package body Iirs is
       pragma Assert (Decl /= Null_Iir);
       pragma Assert (Has_Right_Limit_Expr (Get_Kind (Decl)),
                      "no field Right_Limit_Expr");
-      Set_Field5 (Decl, Limit);
+      Set_Field3 (Decl, Limit);
    end Set_Right_Limit_Expr;
 
    function Get_Base_Type (Decl : Iir) return Iir is
@@ -4018,6 +4051,22 @@ package body Iirs is
       Set_Field7 (Inst, Name);
    end Set_Uninstantiated_Package_Name;
 
+   function Get_Uninstantiated_Package_Decl (Inst : Iir) return Iir is
+   begin
+      pragma Assert (Inst /= Null_Iir);
+      pragma Assert (Has_Uninstantiated_Package_Decl (Get_Kind (Inst)),
+                     "no field Uninstantiated_Package_Decl");
+      return Get_Field9 (Inst);
+   end Get_Uninstantiated_Package_Decl;
+
+   procedure Set_Uninstantiated_Package_Decl (Inst : Iir; Pkg : Iir) is
+   begin
+      pragma Assert (Inst /= Null_Iir);
+      pragma Assert (Has_Uninstantiated_Package_Decl (Get_Kind (Inst)),
+                     "no field Uninstantiated_Package_Decl");
+      Set_Field9 (Inst, Pkg);
+   end Set_Uninstantiated_Package_Decl;
+
    function Get_Generate_Block_Configuration (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);
@@ -4308,6 +4357,22 @@ package body Iirs is
       Set_Field2 (Name, Val);
    end Set_Alias_Declaration;
 
+   function Get_Referenced_Name (N : Iir) return Iir is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Referenced_Name (Get_Kind (N)),
+                     "no field Referenced_Name");
+      return Get_Field2 (N);
+   end Get_Referenced_Name;
+
+   procedure Set_Referenced_Name (N : Iir; Name : Iir) is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Referenced_Name (Get_Kind (N)),
+                     "no field Referenced_Name");
+      Set_Field2 (N, Name);
+   end Set_Referenced_Name;
+
    function Get_Expr_Staticness (Target : Iir) return Iir_Staticness is
    begin
       pragma Assert (Target /= Null_Iir);
@@ -4388,12 +4453,28 @@ package body Iirs is
       Set_Field4 (Target, An_Iir);
    end Set_Right;
 
+   function Get_Physical_Unit (Lit : Iir) return Iir is
+   begin
+      pragma Assert (Lit /= Null_Iir);
+      pragma Assert (Has_Physical_Unit (Get_Kind (Lit)),
+                     "no field Physical_Unit");
+      return Get_Field3 (Lit);
+   end Get_Physical_Unit;
+
+   procedure Set_Physical_Unit (Lit : Iir; Name : Iir) is
+   begin
+      pragma Assert (Lit /= Null_Iir);
+      pragma Assert (Has_Physical_Unit (Get_Kind (Lit)),
+                     "no field Physical_Unit");
+      Set_Field3 (Lit, Name);
+   end Set_Physical_Unit;
+
    function Get_Unit_Name (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Unit_Name (Get_Kind (Target)),
                      "no field Unit_Name");
-      return Get_Field3 (Target);
+      return Get_Field0 (Target);
    end Get_Unit_Name;
 
    procedure Set_Unit_Name (Target : Iir; Name : Iir) is
@@ -4401,7 +4482,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Unit_Name (Get_Kind (Target)),
                      "no field Unit_Name");
-      Set_Field3 (Target, Name);
+      Set_Field0 (Target, Name);
    end Set_Unit_Name;
 
    function Get_Name (Target : Iir) return Iir is
@@ -4633,7 +4714,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Actual_Type (Get_Kind (Target)),
                      "no field Actual_Type");
-      return Get_Field5 (Target);
+      return Get_Field3 (Target);
    end Get_Actual_Type;
 
    procedure Set_Actual_Type (Target : Iir; Atype : Iir) is
@@ -4641,8 +4722,24 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Actual_Type (Get_Kind (Target)),
                      "no field Actual_Type");
-      Set_Field5 (Target, Atype);
+      Set_Field3 (Target, Atype);
    end Set_Actual_Type;
+
+   function Get_Actual_Type_Definition (Target : Iir) return Iir is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Actual_Type_Definition (Get_Kind (Target)),
+                     "no field Actual_Type_Definition");
+      return Get_Field5 (Target);
+   end Get_Actual_Type_Definition;
+
+   procedure Set_Actual_Type_Definition (Target : Iir; Atype : Iir) is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Actual_Type_Definition (Get_Kind (Target)),
+                     "no field Actual_Type_Definition");
+      Set_Field5 (Target, Atype);
+   end Set_Actual_Type_Definition;
 
    function Get_Association_Chain (Target : Iir) return Iir is
    begin
@@ -5500,6 +5597,22 @@ package body Iirs is
                      "no field Is_Ref");
       Set_Flag7 (N, Ref);
    end Set_Is_Ref;
+
+   function Get_Is_Forward_Ref (N : Iir) return Boolean is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Is_Forward_Ref (Get_Kind (N)),
+                     "no field Is_Forward_Ref");
+      return Get_Flag1 (N);
+   end Get_Is_Forward_Ref;
+
+   procedure Set_Is_Forward_Ref (N : Iir; Ref : Boolean) is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Is_Forward_Ref (Get_Kind (N)),
+                     "no field Is_Forward_Ref");
+      Set_Flag1 (N, Ref);
+   end Set_Is_Forward_Ref;
 
    function Get_Psl_Property (Decl : Iir) return PSL_Node is
    begin

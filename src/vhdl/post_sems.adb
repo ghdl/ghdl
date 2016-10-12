@@ -69,7 +69,7 @@ package body Post_Sems is
                Ieee.Vital_Timing.Check_Vital_Level1 (Unit);
             end if;
 
-            Value := Get_Chain (Value);
+            Value := Get_Value_Chain (Value);
          end loop;
       end if;
    end Post_Sem_Checks;

@@ -47,7 +47,8 @@ package Nodes_Meta is
    type Field_Attribute is
      (
       Attr_None,
-      Attr_Ref, Attr_Maybe_Ref, Attr_Of_Ref, Attr_Forward_Ref,
+      Attr_Ref, Attr_Maybe_Ref, Attr_Of_Ref,
+      Attr_Forward_Ref, Attr_Maybe_Forward_Ref,
       Attr_Chain, Attr_Chain_Next
      );
 
