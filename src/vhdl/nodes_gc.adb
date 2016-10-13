@@ -123,7 +123,7 @@ package body Nodes_GC is
    procedure Report_Unreferenced_Node (N : Iir) is
    begin
       Disp_Tree.Disp_Tree (N, True);
-      --  Has_Error := True;
+      Has_Error := True;
    end Report_Unreferenced_Node;
 
    procedure Mark_Iir_Ref_Field (N : Iir; F : Fields_Enum) is
