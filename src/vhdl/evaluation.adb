@@ -531,13 +531,14 @@ package body Evaluation is
 
          when Iir_Predefined_TF_Array_Not =>
             declare
+               Lit_Val : Iir;
                O_List : Iir_List;
                R_List : Iir_List;
                El : Iir;
                Lit : Iir;
             begin
-               O_List := Get_Simple_Aggregate_List
-                 (Eval_String_Literal (Operand));
+               Lit_Val := Eval_String_Literal (Operand);
+               O_List := Get_Simple_Aggregate_List (Lit_Val);
                R_List := Create_Iir_List;
 
                for I in Natural loop
@@ -553,6 +554,7 @@ package body Evaluation is
                   end case;
                   Append_Element (R_List, Lit);
                end loop;
+               Free_Eval_String_Literal (Lit_Val, Operand);
                return Build_Simple_Aggregate
                  (R_List, Orig, Get_Type (Operand));
             end;
