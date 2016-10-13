@@ -1149,9 +1149,7 @@ package body Sem_Names is
          when others =>
             raise Internal_Error;
       end case;
-      if Get_Parameter (Attr) /= Null_Iir then
-         raise Internal_Error;
-      end if;
+      pragma Assert (Get_Parameter (Attr) = Null_Iir);
       if Parameter = Null_Iir then
          Set_Parameter (Attr, Param);
          Set_Expr_Staticness (Attr, None);
@@ -1692,10 +1690,10 @@ package body Sem_Names is
                Free_Parenthesis_Name (Name, Res);
             end if;
             return Res;
-         when Iir_Kinds_Type_Attribute =>
+         when Iir_Kinds_Type_Attribute
+           |  Iir_Kind_Base_Attribute =>
+            pragma Assert (Get_Kind (Name) = Iir_Kind_Attribute_Name);
             Free_Iir (Name);
-            return Res;
-         when Iir_Kind_Base_Attribute =>
             return Res;
          when Iir_Kind_Simple_Name_Attribute
            | Iir_Kind_Path_Name_Attribute
@@ -1714,7 +1712,7 @@ package body Sem_Names is
             Error_Kind ("finish_sem_name_1", Res);
       end case;
 
-      --  Finish prefix.
+      --  The name has a prefix, finish it.
       Prefix := Get_Prefix (Res);
       Name_Prefix := Get_Prefix (Name);
       Prefix := Finish_Sem_Name_1 (Name_Prefix, Prefix);
@@ -3018,6 +3016,8 @@ package body Sem_Names is
             Set_Expr_Staticness (Res, Get_Expr_Staticness (Prefix));
          when Iir_Kind_Base_Attribute =>
             --  Base_Attribute is already finished.
+            pragma Assert (Get_Kind (Prefix_Name) = Iir_Kind_Attribute_Name);
+            Free_Iir (Prefix_Name);
             Prefix_Type := Get_Type (Prefix);
             Set_Expr_Staticness (Res, Get_Type_Staticness (Prefix_Type));
          when others =>

@@ -48,9 +48,9 @@ package Sem_Names is
    --  is displayed and the named entity is error_mark.
    procedure Sem_Name (Name : Iir; Keep_Alias : Boolean := False);
 
-   --  Finish semantisation of NAME, if necessary.  The named entity must not
+   --  Finish analysis of NAME, if necessary.  The named entity must not
    --  be an overload list (ie the overload resolution must have been done).
-   --  This make remaining checks, transforms function names into calls...
+   --  Do remaining checks, transform function names into calls...
    function Finish_Sem_Name (Name : Iir) return Iir;
 
    --  Analyze NAME as a type mark.  NAME must be either a simple name or an
