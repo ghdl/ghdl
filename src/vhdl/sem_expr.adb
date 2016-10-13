@@ -3478,9 +3478,12 @@ package body Sem_Expr is
          for I in Infos'Range loop
             declare
                St : constant Iir := Infos (I).Index_Subtype;
+               Rng : Iir;
             begin
                if St /= Null_Iir then
-                  Free_Iir (Get_Range_Constraint (St));
+                  Rng := Get_Range_Constraint (St);
+                  Free_Iir (Get_Right_Limit_Expr (Rng));
+                  Free_Iir (Rng);
                   Free_Iir (St);
                end if;
             end;

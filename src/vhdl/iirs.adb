@@ -1032,20 +1032,20 @@ package body Iirs is
       Set_Field4 (Lit, Int32_To_Iir (Len));
    end Set_String_Length;
 
-   function Get_Bit_String_Base (Lit : Iir) return Base_Type is
+   function Get_Bit_String_Base (Lit : Iir) return Number_Base_Type is
    begin
       pragma Assert (Lit /= Null_Iir);
       pragma Assert (Has_Bit_String_Base (Get_Kind (Lit)),
                      "no field Bit_String_Base");
-      return Base_Type'Val (Get_Odigit1 (Lit));
+      return Number_Base_Type'Val (Get_Odigit1 (Lit));
    end Get_Bit_String_Base;
 
-   procedure Set_Bit_String_Base (Lit : Iir; Base : Base_Type) is
+   procedure Set_Bit_String_Base (Lit : Iir; Base : Number_Base_Type) is
    begin
       pragma Assert (Lit /= Null_Iir);
       pragma Assert (Has_Bit_String_Base (Get_Kind (Lit)),
                      "no field Bit_String_Base");
-      Set_Odigit1 (Lit, Base_Type'Pos (Base));
+      Set_Odigit1 (Lit, Number_Base_Type'Pos (Base));
    end Set_Bit_String_Base;
 
    function Get_Has_Signed (Lit : Iir) return Boolean is

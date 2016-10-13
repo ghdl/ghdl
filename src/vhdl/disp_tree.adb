@@ -437,8 +437,9 @@ package body Disp_Tree is
                   Put_Line (Source_Ptr'Image (Get_Source_Ptr (N, F)));
                when Type_Date_Type =>
                   Put_Line (Date_Type'Image (Get_Date_Type (N, F)));
-               when Type_Base_Type =>
-                  Put_Line (Base_Type'Image (Get_Base_Type (N, F)));
+               when Type_Number_Base_Type =>
+                  Put_Line (Number_Base_Type'Image
+                              (Get_Number_Base_Type (N, F)));
                when Type_Iir_Constraint =>
                   Put_Line (Image_Iir_Constraint
                               (Get_Iir_Constraint (N, F)));

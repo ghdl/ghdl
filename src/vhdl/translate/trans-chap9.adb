@@ -1188,7 +1188,7 @@ package body Trans.Chap9 is
                  | Type_File_Checksum_Id
                  | Type_String8_Id
                  | Type_Source_Ptr
-                 | Type_Base_Type
+                 | Type_Number_Base_Type
                  | Type_Iir_Constraint
                  | Type_Iir_Mode
                  | Type_Iir_Index32

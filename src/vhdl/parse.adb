@@ -4663,7 +4663,7 @@ package body Parse is
       use Name_Table;
       Res : Iir;
       C : Character;
-      B : Base_Type;
+      B : Number_Base_Type;
    begin
       Res := Create_Iir (Iir_Kind_String_Literal8);
       Set_Location (Res);

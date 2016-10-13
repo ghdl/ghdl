@@ -24,7 +24,6 @@ package Nodes_Meta is
    --  The enumeration of all possible types in the nodes.
    type Types_Enum is
      (
-      Type_Base_Type,
       Type_Boolean,
       Type_Date_State_Type,
       Type_Date_Type,
@@ -47,6 +46,7 @@ package Nodes_Meta is
       Type_Int32,
       Type_Location_Type,
       Type_Name_Id,
+      Type_Number_Base_Type,
       Type_PSL_NFA,
       Type_PSL_Node,
       Type_Source_Ptr,
@@ -417,11 +417,6 @@ package Nodes_Meta is
    function Get_Fields (K : Iir_Kind) return Fields_Array;
 
    --  Get/Set a field.
-   function Get_Base_Type
-      (N : Iir; F : Fields_Enum) return Base_Type;
-   procedure Set_Base_Type
-      (N : Iir; F : Fields_Enum; V: Base_Type);
-
    function Get_Boolean
       (N : Iir; F : Fields_Enum) return Boolean;
    procedure Set_Boolean
@@ -531,6 +526,11 @@ package Nodes_Meta is
       (N : Iir; F : Fields_Enum) return Name_Id;
    procedure Set_Name_Id
       (N : Iir; F : Fields_Enum; V: Name_Id);
+
+   function Get_Number_Base_Type
+      (N : Iir; F : Fields_Enum) return Number_Base_Type;
+   procedure Set_Number_Base_Type
+      (N : Iir; F : Fields_Enum; V: Number_Base_Type);
 
    function Get_PSL_NFA
       (N : Iir; F : Fields_Enum) return PSL_NFA;

@@ -5297,7 +5297,7 @@ package Iirs is
    --  Purity depth of an impure subprogram.
    Iir_Depth_Impure : constant Iir_Int32 := -1;
 
-   type Base_Type is (Base_None, Base_2, Base_8, Base_10, Base_16);
+   type Number_Base_Type is (Base_None, Base_2, Base_8, Base_10, Base_16);
 
    -- design file
    subtype Iir_Design_File is Iir;
@@ -5758,8 +5758,8 @@ package Iirs is
 
    --  Base of a bit string.  Base_None for a string literal.
    --  Field: Odigit1 (pos)
-   function Get_Bit_String_Base (Lit : Iir) return Base_Type;
-   procedure Set_Bit_String_Base (Lit : Iir; Base : Base_Type);
+   function Get_Bit_String_Base (Lit : Iir) return Number_Base_Type;
+   procedure Set_Bit_String_Base (Lit : Iir; Base : Number_Base_Type);
 
    --  Bit string is signed.
    --  Field: Flag1
@@ -6658,7 +6658,7 @@ package Iirs is
 
    --  A conditional expression.
    --  Node kind is a Iir_Kind_Conditional_Expression.
-   --  Field: Field5
+   --  Field: Field5 Chain
    function Get_Conditional_Expression (Target : Iir) return Iir;
    procedure Set_Conditional_Expression (Target : Iir; Expr : Iir);
 

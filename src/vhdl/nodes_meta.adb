@@ -50,7 +50,7 @@ package body Nodes_Meta is
       Field_Simple_Aggregate_List => Type_Iir_List,
       Field_String8_Id => Type_String8_Id,
       Field_String_Length => Type_Int32,
-      Field_Bit_String_Base => Type_Base_Type,
+      Field_Bit_String_Base => Type_Number_Base_Type,
       Field_Has_Signed => Type_Boolean,
       Field_Has_Sign => Type_Boolean,
       Field_Has_Length => Type_Boolean,
@@ -1962,7 +1962,7 @@ package body Nodes_Meta is
          when Field_Expression =>
             return Attr_None;
          when Field_Conditional_Expression =>
-            return Attr_None;
+            return Attr_Chain;
          when Field_Allocator_Designated_Type =>
             return Attr_Ref;
          when Field_Selected_Waveform_Chain =>
@@ -4600,30 +4600,6 @@ package body Nodes_Meta is
       return Fields_Of_Iir (First .. Last);
    end Get_Fields;
 
-   function Get_Base_Type
-      (N : Iir; F : Fields_Enum) return Base_Type is
-   begin
-      pragma Assert (Fields_Type (F) = Type_Base_Type);
-      case F is
-         when Field_Bit_String_Base =>
-            return Get_Bit_String_Base (N);
-         when others =>
-            raise Internal_Error;
-      end case;
-   end Get_Base_Type;
-
-   procedure Set_Base_Type
-      (N : Iir; F : Fields_Enum; V: Base_Type) is
-   begin
-      pragma Assert (Fields_Type (F) = Type_Base_Type);
-      case F is
-         when Field_Bit_String_Base =>
-            Set_Bit_String_Base (N, V);
-         when others =>
-            raise Internal_Error;
-      end case;
-   end Set_Base_Type;
-
    function Get_Boolean
       (N : Iir; F : Fields_Enum) return Boolean is
    begin
@@ -6311,6 +6287,30 @@ package body Nodes_Meta is
             raise Internal_Error;
       end case;
    end Set_Name_Id;
+
+   function Get_Number_Base_Type
+      (N : Iir; F : Fields_Enum) return Number_Base_Type is
+   begin
+      pragma Assert (Fields_Type (F) = Type_Number_Base_Type);
+      case F is
+         when Field_Bit_String_Base =>
+            return Get_Bit_String_Base (N);
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Get_Number_Base_Type;
+
+   procedure Set_Number_Base_Type
+      (N : Iir; F : Fields_Enum; V: Number_Base_Type) is
+   begin
+      pragma Assert (Fields_Type (F) = Type_Number_Base_Type);
+      case F is
+         when Field_Bit_String_Base =>
+            Set_Bit_String_Base (N, V);
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Set_Number_Base_Type;
 
    function Get_PSL_NFA
       (N : Iir; F : Fields_Enum) return PSL_NFA is

@@ -531,13 +531,14 @@ package body Evaluation is
 
          when Iir_Predefined_TF_Array_Not =>
             declare
+               Lit_Val : Iir;
                O_List : Iir_List;
                R_List : Iir_List;
                El : Iir;
                Lit : Iir;
             begin
-               O_List := Get_Simple_Aggregate_List
-                 (Eval_String_Literal (Operand));
+               Lit_Val := Eval_String_Literal (Operand);
+               O_List := Get_Simple_Aggregate_List (Lit_Val);
                R_List := Create_Iir_List;
 
                for I in Natural loop
@@ -553,6 +554,7 @@ package body Evaluation is
                   end case;
                   Append_Element (R_List, Lit);
                end loop;
+               Free_Eval_String_Literal (Lit_Val, Operand);
                return Build_Simple_Aggregate
                  (R_List, Orig, Get_Type (Operand));
             end;
@@ -1917,51 +1919,53 @@ package body Evaluation is
       end if;
    end Eval_Array_Type_Conversion;
 
-   function Eval_Type_Conversion (Expr : Iir) return Iir
+   function Eval_Type_Conversion (Conv : Iir) return Iir
    is
+      Expr : constant Iir := Get_Expression (Conv);
       Val : Iir;
       Val_Type : Iir;
       Conv_Type : Iir;
       Res : Iir;
    begin
-      Val := Eval_Static_Expr (Get_Expression (Expr));
+      Val := Eval_Static_Expr (Expr);
       Val_Type := Get_Base_Type (Get_Type (Val));
-      Conv_Type := Get_Base_Type (Get_Type (Expr));
+      Conv_Type := Get_Base_Type (Get_Type (Conv));
       if Conv_Type = Val_Type then
-         Res := Build_Constant (Val, Expr);
+         Res := Build_Constant (Val, Conv);
       else
          case Get_Kind (Conv_Type) is
             when Iir_Kind_Integer_Type_Definition =>
                case Get_Kind (Val_Type) is
                   when Iir_Kind_Integer_Type_Definition =>
-                     Res := Build_Integer (Get_Value (Val), Expr);
+                     Res := Build_Integer (Get_Value (Val), Conv);
                   when Iir_Kind_Floating_Type_Definition =>
                      Res := Build_Integer
-                       (Iir_Int64 (Get_Fp_Value (Val)), Expr);
+                       (Iir_Int64 (Get_Fp_Value (Val)), Conv);
                   when others =>
                      Error_Kind ("eval_type_conversion(1)", Val_Type);
                end case;
             when Iir_Kind_Floating_Type_Definition =>
                case Get_Kind (Val_Type) is
                   when Iir_Kind_Integer_Type_Definition =>
-                     Res := Build_Floating (Iir_Fp64 (Get_Value (Val)), Expr);
+                     Res := Build_Floating (Iir_Fp64 (Get_Value (Val)), Conv);
                   when Iir_Kind_Floating_Type_Definition =>
-                     Res := Build_Floating (Get_Fp_Value (Val), Expr);
+                     Res := Build_Floating (Get_Fp_Value (Val), Conv);
                   when others =>
                      Error_Kind ("eval_type_conversion(2)", Val_Type);
                end case;
             when Iir_Kind_Array_Type_Definition =>
                --  Not a scalar, do not check bounds.
-               return Eval_Array_Type_Conversion (Expr, Val);
+               return Eval_Array_Type_Conversion (Conv, Val);
             when others =>
                Error_Kind ("eval_type_conversion(3)", Conv_Type);
          end case;
       end if;
-      if not Eval_Is_In_Bound (Res, Get_Type (Expr)) then
+      if not Eval_Is_In_Bound (Res, Get_Type (Conv)) then
          if Get_Kind (Res) /= Iir_Kind_Overflow_Literal then
-            Warning_Msg_Sem (Warnid_Runtime_Error, +Expr,
+            Warning_Msg_Sem (Warnid_Runtime_Error, +Conv,
                              "result of conversion out of bounds");
-            Res := Build_Overflow (Expr);
+            Free_Eval_Static_Expr (Res, Conv);
+            Res := Build_Overflow (Conv);
          end if;
       end if;
       return Res;
