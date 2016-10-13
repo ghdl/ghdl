@@ -6658,7 +6658,7 @@ package Iirs is
 
    --  A conditional expression.
    --  Node kind is a Iir_Kind_Conditional_Expression.
-   --  Field: Field5
+   --  Field: Field5 Chain
    function Get_Conditional_Expression (Target : Iir) return Iir;
    procedure Set_Conditional_Expression (Target : Iir; Expr : Iir);
 

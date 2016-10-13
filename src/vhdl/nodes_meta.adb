@@ -1962,7 +1962,7 @@ package body Nodes_Meta is
          when Field_Expression =>
             return Attr_None;
          when Field_Conditional_Expression =>
-            return Attr_None;
+            return Attr_Chain;
          when Field_Allocator_Designated_Type =>
             return Attr_Ref;
          when Field_Selected_Waveform_Chain =>
