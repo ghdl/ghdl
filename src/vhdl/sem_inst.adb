@@ -267,8 +267,8 @@ package body Sem_Inst is
            | Type_File_Checksum_Id =>
             --  Can this happen ?
             raise Internal_Error;
-         when Type_Base_Type =>
-            Set_Base_Type (Res, F, Get_Base_Type (N, F));
+         when Type_Number_Base_Type =>
+            Set_Number_Base_Type (Res, F, Get_Number_Base_Type (N, F));
          when Type_Iir_Constraint =>
             Set_Iir_Constraint (Res, F, Get_Iir_Constraint (N, F));
          when Type_Iir_Mode =>
