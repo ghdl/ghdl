@@ -26,7 +26,6 @@ with Name_Table; use Name_Table;
 with Files_Map;
 with Libraries;
 with Errorout; use Errorout;
-with Iirs; use Iirs;
 with Iirs_Utils; use Iirs_Utils;
 with Tokens;
 with Scanner;

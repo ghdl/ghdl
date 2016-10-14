@@ -1,5 +1,5 @@
---  GHDL driver - print commands.
---  Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
+--  GHDL driver - xml commands
+--  Copyright (C) 2016 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -16,10 +16,6 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Iirs; use Iirs;
-
-package Ghdlprint is
-   procedure Analyze_Design_File_Units (File : Iir_Design_File);
-
+package Ghdlxml is
    procedure Register_Commands;
-end Ghdlprint;
+end Ghdlxml;
