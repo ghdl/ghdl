@@ -91,21 +91,10 @@ $EnableVerbose =			$PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent
 $EnableDebug =				$PSCmdlet.MyInvocation.BoundParameters["Debug"].IsPresent
 
 # load modules from GHDL's 'libraries' directory
-Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -ArgumentList "$Script_WorkingDir"
+Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -ArgumentList "$Script_WorkingDir", $Hosted
 
 # Display help if no command was selected
 $Help = $Help -or (-not ($Compile -or $VHDL87 -or $VHDL93 -or $VHDL2008 -or $Clean))
-
-function Exit-CompileScript
-{	[CmdletBinding()]
-	param(
-		[int]$ExitCode = 0
-	)
-	cd $Script_WorkingDir
-	# unload modules
-	Remove-Module shared -Verbose:$false
-	exit $ExitCode
-}
 
 if ($Help)
 {	Get-Help $MYINVOCATION.InvocationName -Detailed
