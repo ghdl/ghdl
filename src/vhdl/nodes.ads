@@ -261,50 +261,60 @@ package Nodes is
    --  Free all and reinit.
    procedure Initialize;
 private
-   type Node_Record (Format : Format_Type := Format_Short) is record
-      --  First byte (with Format):
-      Flag1 : Boolean := False;
-      Flag2 : Boolean := False;
-      Flag3 : Boolean := False;
-      Flag4 : Boolean := False;
-      Flag5 : Boolean := False;
-      Flag6 : Boolean := False;
-      Flag7 : Boolean := False;
+   type Node_Record is record
+      --  First byte:
+      Format : Format_Type;
+      Flag1 : Boolean;
+      Flag2 : Boolean;
+      Flag3 : Boolean;
+      Flag4 : Boolean;
+      Flag5 : Boolean;
+      Flag6 : Boolean;
+      Flag7 : Boolean;
 
       --  Second byte:
-      Flag8 : Boolean := False;
-      Flag9 : Boolean := False;
-      Flag10 : Boolean := False;
-      Flag11 : Boolean := False;
-      Flag12 : Boolean := False;
-      Flag13 : Boolean := False;
-      Flag14 : Boolean := False;
-      Flag15 : Boolean := False;
+      Flag8 : Boolean;
+      Flag9 : Boolean;
+      Flag10 : Boolean;
+      Flag11 : Boolean;
+      Flag12 : Boolean;
+      Flag13 : Boolean;
+      Flag14 : Boolean;
+      Flag15 : Boolean;
 
       --  Third byte:
-      Flag16 : Boolean := False;
-      Flag17 : Boolean := False;
-      Flag18 : Boolean := False;
+      Flag16 : Boolean;
+      Flag17 : Boolean;
+      Flag18 : Boolean;
 
       --  2*2 = 4 bits
-      State1 : Bit2_Type := 0;
-      State2 : Bit2_Type := 0;
+      State1 : Bit2_Type;
+      State2 : Bit2_Type;
 
       --  9 bits
       Kind : Kind_Type;
 
       -- Location.
-      Location: Location_Type := Location_Nil;
+      Location: Location_Type;
 
-      Field0 : Node_Type := Null_Node;
-      Field1 : Node_Type := Null_Node;
-      Field2 : Node_Type := Null_Node;
-      Field3 : Node_Type := Null_Node;
-      Field4 : Node_Type := Null_Node;
-      Field5 : Node_Type := Null_Node;
+      Field0 : Node_Type;
+      Field1 : Node_Type;
+      Field2 : Node_Type;
+      Field3 : Node_Type;
+      Field4 : Node_Type;
+      Field5 : Node_Type;
    end record;
-
    pragma Pack (Node_Record);
    for Node_Record'Size use 8*32;
    for Node_Record'Alignment use 4;
+   pragma Suppress_Initialization (Node_Record);
+
+   Init_Node : constant Node_Record := Node_Record'
+     (Format => Format_Short,
+      Kind => 0,
+      State1 | State2 => 0,
+      Location => Location_Nil,
+      Field0 | Field1 | Field2 | Field3 | Field4 | Field5 => Null_Node,
+      others => False);
+
 end Nodes;

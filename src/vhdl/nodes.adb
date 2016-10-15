@@ -27,10 +27,6 @@ package body Nodes is
    --  Null_Node or Error_Node).
    --pragma Suppress (Index_Check);
 
-   --  Suppress discriminant checks on the table.  Relatively safe, since
-   --  iirs do their own checks.
-   pragma Suppress (Discriminant_Check);
-
    package Nodet is new Tables
      (Table_Component_Type => Node_Record,
       Table_Index_Type => Node_Type,
@@ -44,55 +40,38 @@ package body Nodes is
 
    Free_Chain : Node_Type := Null_Node;
 
-   --  Just to have the default value.
-   pragma Warnings (Off);
-   Init_Short  : Node_Record (Format_Short);
-   Init_Medium : Node_Record (Format_Medium);
-   pragma Warnings (On);
-
    function Create_Node (Format : Format_Type) return Node_Type
    is
       Res : Node_Type;
    begin
-      if Format = Format_Medium then
-         --  Allocate a first node.
-         Nodet.Increment_Last;
-         Res := Nodet.Last;
-         --  Check alignment.
-         if Res mod 2 = 1 then
-            Set_Field1 (Res, Free_Chain);
-            Free_Chain := Res;
+      case Format is
+         when Format_Medium =>
+            --  Allocate a first node.
             Nodet.Increment_Last;
             Res := Nodet.Last;
-         end if;
-         --  Allocate the second node.
-         Nodet.Increment_Last;
-         Nodet.Table (Res) := Init_Medium;
-         Nodet.Table (Res + 1) := Init_Medium;
-      else
-         --  Check from free pool
-         if Free_Chain = Null_Node then
+            --  Check alignment.
+            if Res mod 2 = 1 then
+               Set_Field1 (Res, Free_Chain);
+               Free_Chain := Res;
+               Nodet.Increment_Last;
+               Res := Nodet.Last;
+            end if;
+            --  Allocate the second node.
             Nodet.Increment_Last;
-            Res := Nodet.Last;
-         else
-            Res := Free_Chain;
-            Free_Chain := Get_Field1 (Res);
-         end if;
-         case Format is
-            when Format_Short =>
-               --  Inline initialization for speed.
-               Nodet.Table (Res) := Node_Record'
-                 (Format => Format_Short,
-                  Kind => 0,
-                  State1 | State2 => 0,
-                  Location => Location_Nil,
-                  Field0 | Field1 | Field2 | Field3  => Null_Node,
-                  Field4 | Field5 => Null_Node,
-                  others => False);
-            when Format_Medium =>
-               raise Program_Error;
-         end case;
-      end if;
+            Nodet.Table (Res) := Init_Node;
+            Nodet.Table (Res).Format := Format_Medium;
+            Nodet.Table (Res + 1) := Init_Node;
+         when Format_Short =>
+            --  Check from free pool
+            if Free_Chain = Null_Node then
+               Nodet.Increment_Last;
+               Res := Nodet.Last;
+            else
+               Res := Free_Chain;
+               Free_Chain := Get_Field1 (Res);
+            end if;
+            Nodet.Table (Res) := Init_Node;
+      end case;
       return Res;
    end Create_Node;
 
