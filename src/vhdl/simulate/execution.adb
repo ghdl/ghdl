@@ -1990,7 +1990,8 @@ package body Execution is
                Set_Expr (Pos);
                Pos := Pos + 1;
             when Iir_Kind_Choice_By_Name =>
-               Set_Expr (1 + Get_Element_Position (Get_Choice_Name (Assoc)));
+               Set_Expr (1 + Get_Element_Position
+                           (Get_Named_Entity (Get_Choice_Name (Assoc))));
             when Iir_Kind_Choice_By_Others =>
                for I in Res.Val_Record.V'Range loop
                   if Res.Val_Record.V (I) = null then
@@ -2189,12 +2190,13 @@ package body Execution is
       end case;
    end Execute_Name_Aggregate;
 
-   --  Return the indexes range of dimension DIM for type or object PREFIX.
-   --  DIM starts at 1.
-   function Execute_Indexes
-     (Block: Block_Instance_Acc; Prefix: Iir; Dim : Iir_Int64)
-      return Iir_Value_Literal_Acc
+   --  Return the indexes range for prefix of ATTR.
+   function Execute_Indexes (Block: Block_Instance_Acc; Attr : Iir)
+                            return Iir_Value_Literal_Acc
    is
+      Prefix : constant Iir := Strip_Denoting_Name (Get_Prefix (Attr));
+      Dim : constant Natural :=
+        Evaluation.Eval_Attribute_Parameter_Or_1 (Attr);
    begin
       case Get_Kind (Prefix) is
          when Iir_Kind_Type_Declaration
@@ -2203,12 +2205,9 @@ package body Execution is
                Index : Iir;
             begin
                Index := Get_Nth_Element
-                 (Get_Index_Subtype_List (Get_Type (Prefix)),
-                  Natural (Dim - 1));
+                 (Get_Index_Subtype_List (Get_Type (Prefix)), Dim - 1);
                return Execute_Bounds (Block, Index);
             end;
-         when Iir_Kinds_Denoting_Name =>
-            return Execute_Indexes (Block, Get_Named_Entity (Prefix), Dim);
          when Iir_Kind_Array_Type_Definition
            | Iir_Kind_Array_Subtype_Definition =>
             Error_Kind ("execute_indexes", Prefix);
@@ -2257,29 +2256,17 @@ package body Execution is
             return Execute_Bounds (Block, Get_Range_Constraint (Prefix));
 
          when Iir_Kind_Range_Array_Attribute =>
-            declare
-               Prefix_Val : Iir_Value_Literal_Acc;
-               Dim : Iir_Int64;
-            begin
-               Dim := Get_Value (Get_Parameter (Prefix));
-               Prefix_Val := Execute_Indexes (Block, Get_Prefix (Prefix), Dim);
-               Bound := Prefix_Val;
-            end;
+            Bound := Execute_Indexes (Block, Prefix);
          when Iir_Kind_Reverse_Range_Array_Attribute =>
-            declare
-               Dim : Iir_Int64;
-            begin
-               Dim := Get_Value (Get_Parameter (Prefix));
-               Bound := Execute_Indexes (Block, Get_Prefix (Prefix), Dim);
-               case Bound.Dir is
-                  when Iir_To =>
-                     Bound := Create_Range_Value
-                       (Bound.Right, Bound.Left, Iir_Downto, Bound.Length);
-                  when Iir_Downto =>
-                     Bound := Create_Range_Value
-                       (Bound.Right, Bound.Left, Iir_To, Bound.Length);
-               end case;
-            end;
+            Bound := Execute_Indexes (Block, Prefix);
+            case Bound.Dir is
+               when Iir_To =>
+                  Bound := Create_Range_Value
+                    (Bound.Right, Bound.Left, Iir_Downto, Bound.Length);
+               when Iir_Downto =>
+                  Bound := Create_Range_Value
+                    (Bound.Right, Bound.Left, Iir_To, Bound.Length);
+            end case;
 
          when Iir_Kind_Floating_Type_Definition
            | Iir_Kind_Integer_Type_Definition =>
@@ -3057,33 +3044,27 @@ package body Execution is
             return Execute_Low_Limit (Res);
 
          when Iir_Kind_High_Array_Attribute =>
-            Res := Execute_Indexes
-              (Block, Get_Prefix (Expr), Get_Value (Get_Parameter (Expr)));
+            Res := Execute_Indexes (Block, Expr);
             return Execute_High_Limit (Res);
 
          when Iir_Kind_Low_Array_Attribute =>
-            Res := Execute_Indexes
-              (Block, Get_Prefix (Expr), Get_Value (Get_Parameter (Expr)));
+            Res := Execute_Indexes (Block, Expr);
             return Execute_Low_Limit (Res);
 
          when Iir_Kind_Left_Array_Attribute =>
-            Res := Execute_Indexes
-              (Block, Get_Prefix (Expr), Get_Value (Get_Parameter (Expr)));
+            Res := Execute_Indexes (Block, Expr);
             return Execute_Left_Limit (Res);
 
          when Iir_Kind_Right_Array_Attribute =>
-            Res := Execute_Indexes
-              (Block, Get_Prefix (Expr), Get_Value (Get_Parameter (Expr)));
+            Res := Execute_Indexes (Block, Expr);
             return Execute_Right_Limit (Res);
 
          when Iir_Kind_Length_Array_Attribute =>
-            Res := Execute_Indexes
-              (Block, Get_Prefix (Expr), Get_Value (Get_Parameter (Expr)));
+            Res := Execute_Indexes (Block, Expr);
             return Execute_Length (Res);
 
          when Iir_Kind_Ascending_Array_Attribute =>
-            Res := Execute_Indexes
-              (Block, Get_Prefix (Expr), Get_Value (Get_Parameter (Expr)));
+            Res := Execute_Indexes (Block, Expr);
             return Boolean_To_Lit (Res.Dir = Iir_To);
 
          when Iir_Kind_Event_Attribute =>
