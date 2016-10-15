@@ -461,16 +461,23 @@ package body Iirs_Utils is
          return;
       end if;
 
-      case Get_Kind (Unit) is
-         when Iir_Kind_Design_Unit
-           | Iir_Kind_Entity_Aspect_Entity =>
-            null;
-         when others =>
-            Error_Kind ("add_dependence", Unit);
-      end case;
+      pragma Assert (Kind_In (Unit, Iir_Kind_Design_Unit,
+                              Iir_Kind_Entity_Aspect_Entity));
 
       Add_Element (Get_Dependence_List (Target), Unit);
    end Add_Dependence;
+
+   function Get_Unit_From_Dependence (Dep : Iir) return Iir is
+   begin
+      case Get_Kind (Dep) is
+         when Iir_Kind_Design_Unit =>
+            return Dep;
+         when Iir_Kind_Entity_Aspect_Entity =>
+            return Get_Design_Unit (Get_Entity (Dep));
+         when others =>
+            Error_Kind ("get_unit_from_dependence", Dep);
+      end case;
+   end Get_Unit_From_Dependence;
 
    procedure Clear_Instantiation_Configuration_Vhdl87
      (Parent : Iir; In_Generate : Boolean; Full : Boolean)

@@ -2401,11 +2401,10 @@ package body Canon is
          El := Get_Named_Entity (El);
          Comp_Conf := Get_Component_Configuration (El);
          if Comp_Conf /= Null_Iir and then Comp_Conf /= Conf then
-            if Get_Kind (Comp_Conf) /= Iir_Kind_Configuration_Specification
-              or else Get_Kind (Conf) /= Iir_Kind_Component_Configuration
-            then
-               raise Internal_Error;
-            end if;
+            pragma Assert
+              (Get_Kind (Comp_Conf) = Iir_Kind_Configuration_Specification);
+            pragma Assert
+              (Get_Kind (Conf) = Iir_Kind_Component_Configuration);
             Canon_Incremental_Binding (Comp_Conf, Conf, Parent);
          else
             Set_Component_Configuration (El, Conf);

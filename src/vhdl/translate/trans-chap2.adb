@@ -1348,8 +1348,7 @@ package body Trans.Chap2 is
       Instantiate_Info_Package (Inst);
       Info := Get_Info (Inst);
 
-      --  FIXME: if the instantiation occurs within a package declaration,
-      --  the variable must be declared extern (and public in the body).
+      --  Create the variable containing data for the package instance.
       Info.Package_Instance_Body_Var := Create_Var
         (Create_Var_Identifier (Inst),
          Get_Scope_Type (Pkg_Info.Package_Body_Scope));

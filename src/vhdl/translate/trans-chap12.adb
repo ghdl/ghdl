@@ -243,24 +243,25 @@ package body Trans.Chap12 is
       end loop;
 
       --  Default config.
-      Config := Get_Library_Unit
-        (Get_Default_Configuration_Declaration (Arch));
-      Config_Info := Get_Info (Config);
-      if Config_Info /= null then
-         --  Do not create a trampoline for the default_config if it is not
-         --  used.
-         Start_Procedure_Decl
-           (Inter_List, Create_Identifier ("DEFAULT_CONFIG"),
-            O_Storage_Public);
-         New_Interface_Decl (Inter_List, Instance, Wki_Instance,
-                             Arch_Info.Block_Decls_Ptr_Type);
-         Finish_Subprogram_Decl (Inter_List, Subprg);
+      Config := Get_Default_Configuration_Declaration (Arch);
+      if Is_Valid (Config) then
+         Config_Info := Get_Info (Get_Library_Unit (Config));
+         if Config_Info /= null then
+            --  Do not create a trampoline for the default_config if it is not
+            --  used.
+            Start_Procedure_Decl
+              (Inter_List, Create_Identifier ("DEFAULT_CONFIG"),
+               O_Storage_Public);
+            New_Interface_Decl (Inter_List, Instance, Wki_Instance,
+                                Arch_Info.Block_Decls_Ptr_Type);
+            Finish_Subprogram_Decl (Inter_List, Subprg);
 
-         Start_Subprogram_Body (Subprg);
-         Start_Association (Constr, Config_Info.Config_Subprg);
-         New_Association (Constr, New_Obj_Value (Instance));
-         New_Procedure_Call (Constr);
+            Start_Subprogram_Body (Subprg);
+            Start_Association (Constr, Config_Info.Config_Subprg);
+            New_Association (Constr, New_Obj_Value (Instance));
+            New_Procedure_Call (Constr);
          Finish_Subprogram_Body;
+         end if;
       end if;
 
       Pop_Identifier_Prefix (Arch_Mark);

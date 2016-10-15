@@ -35,7 +35,6 @@ with Xrefs;
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
 with Disp_Vhdl;
-with Back_End;
 
 package body Ghdlprint is
    type Html_Format_Type is (Html_2, Html_Css);
@@ -998,7 +997,7 @@ package body Ghdlprint is
          Unit := Get_First_Design_Unit (Design_File);
          while Unit /= Null_Iir loop
             --  Analyze the design unit.
-            Back_End.Finish_Compilation (Unit, True);
+            Libraries.Finish_Compilation (Unit, True);
 
             Next_Unit := Get_Chain (Unit);
             if Errorout.Nbr_Errors = 0 then

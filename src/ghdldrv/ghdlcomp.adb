@@ -26,7 +26,6 @@ with Types;
 with Iirs; use Iirs;
 with Nodes_GC;
 with Flags;
-with Back_End;
 with Sem;
 with Name_Table;
 with Errorout; use Errorout;
@@ -341,7 +340,7 @@ package body Ghdlcomp is
          if Design_File /= Null_Iir then
             Unit := Get_First_Design_Unit (Design_File);
             while Unit /= Null_Iir loop
-               Back_End.Finish_Compilation (Unit, True);
+               Libraries.Finish_Compilation (Unit, True);
 
                Next_Unit := Get_Chain (Unit);
 
