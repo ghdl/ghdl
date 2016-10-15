@@ -52,10 +52,12 @@ package Nodes is
    --   Flag10 : Boolean
    --   Flag11 : Boolean
    --   Flag12 : Boolean
+   --   Flag13 : Boolean
+   --   Flag14 : Boolean
+   --   Flag15 : Boolean
    --   Nkind : Kind_Type
    --   State1 : Bit2_Type
    --   State2 : Bit2_Type
-   --   Odigit1 : Bit3_Type
    --   Location : Location_Type
    --   Field0 : Iir
    --   Field1 : Iir
@@ -73,7 +75,6 @@ package Nodes is
    --   Field5 : Iir
 
    -- Fields of Format_Medium:
-   --   Odigit2 : Bit3_Type (odigit1)
    --   State3 : Bit2_Type
    --   State4 : Bit2_Type
    --   Field4 : Iir
@@ -227,6 +228,21 @@ package Nodes is
    procedure Set_Flag12 (N : Node_Type; V : Boolean);
    pragma Inline (Set_Flag12);
 
+   function Get_Flag13 (N : Node_Type) return Boolean;
+   pragma Inline (Get_Flag13);
+   procedure Set_Flag13 (N : Node_Type; V : Boolean);
+   pragma Inline (Set_Flag13);
+
+   function Get_Flag14 (N : Node_Type) return Boolean;
+   pragma Inline (Get_Flag14);
+   procedure Set_Flag14 (N : Node_Type; V : Boolean);
+   pragma Inline (Set_Flag14);
+
+   function Get_Flag15 (N : Node_Type) return Boolean;
+   pragma Inline (Get_Flag15);
+   procedure Set_Flag15 (N : Node_Type; V : Boolean);
+   pragma Inline (Set_Flag15);
+
 
    function Get_State1 (N : Node_Type) return Bit2_Type;
    pragma Inline (Get_State1);
@@ -248,18 +264,6 @@ package Nodes is
    procedure Set_State4 (N : Node_Type; V : Bit2_Type);
    pragma Inline (Set_State4);
 
-
-   function Get_Odigit1 (N : Node_Type) return Bit3_Type;
-   pragma Inline (Get_Odigit1);
-   procedure Set_Odigit1 (N : Node_Type; V : Bit3_Type);
-   pragma Inline (Set_Odigit1);
-
-   function Get_Odigit2 (N : Node_Type) return Bit3_Type;
-   pragma Inline (Get_Odigit2);
-   procedure Set_Odigit2 (N : Node_Type; V : Bit3_Type);
-   pragma Inline (Set_Odigit2);
-
-
    function Get_Fp64 (N : Node_Type) return Iir_Fp64;
    pragma Inline (Get_Fp64);
    procedure Set_Fp64 (N : Node_Type; V : Iir_Fp64);
@@ -278,26 +282,32 @@ package Nodes is
    procedure Initialize;
 private
    type Node_Record (Format : Format_Type := Format_Short) is record
+      --  First byte (with Format):
       Flag1 : Boolean := False;
       Flag2 : Boolean := False;
       Flag3 : Boolean := False;
       Flag4 : Boolean := False;
       Flag5 : Boolean := False;
       Flag6 : Boolean := False;
+
+      --  Second byte:
       Flag7 : Boolean := False;
       Flag8 : Boolean := False;
       Flag9 : Boolean := False;
       Flag10 : Boolean := False;
-
       Flag11 : Boolean := False;
       Flag12 : Boolean := False;
       Flag13 : Boolean := False;
       Flag14 : Boolean := False;
 
-      --  2*2 + 1*3 = 7 bits
+      --  Third byte:
+      Flag15 : Boolean := False;
+      Flag16 : Boolean := False;
+      Flag17 : Boolean := False;
+
+      --  2*2 = 4 bits
       State1 : Bit2_Type := 0;
       State2 : Bit2_Type := 0;
-      Odigit1 : Bit3_Type := 0;
 
       --  9 bits
       Kind : Kind_Type;

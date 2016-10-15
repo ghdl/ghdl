@@ -314,7 +314,7 @@ package Iirs is
    --
    --  Base of the bit_string (corresponds to letters 'b', 'o', 'd' or 'x' in
    --  the base specifier).
-   --   Get/Set_Bit_String_Base (Odigit1)
+   --   Get/Set_Bit_String_Base (Flag12,Flag13,Flag14)
    --
    --   Get/Set_Expr_Staticness (State1)
    --
@@ -1215,7 +1215,7 @@ package Iirs is
    --  present for uniformity (and speed).
    --   Get/Set_Type (Field1)
    --
-   --   Get/Set_Mode (Odigit1)
+   --   Get/Set_Mode (Flag12,Flag13,Flag14)
    --
    -- Only for Iir_Kind_Interface_Signal_Declaration:
    --   Get/Set_Has_Disconnect_Flag (Flag1)
@@ -1244,7 +1244,7 @@ package Iirs is
    --   Get/Set_Has_Class (Flag11)
    --
    -- Only for Iir_Kind_Interface_Signal_Declaration:
-   --   Get/Set_Open_Flag (Flag12)
+   --   Get/Set_Open_Flag (Flag15)
    --
    --   Get/Set_Expr_Staticness (State1)
    --
@@ -1708,7 +1708,7 @@ package Iirs is
    --   Get/Set_File_Open_Kind (Field7)
    --
    --  This is used only in vhdl 87.
-   --   Get/Set_Mode (Odigit1)
+   --   Get/Set_Mode (Flag12,Flag13,Flag14)
    --
    --   Get/Set_Has_Identifier_List (Flag3)
    --
@@ -5757,7 +5757,7 @@ package Iirs is
    procedure Set_String_Length (Lit : Iir; Len : Int32);
 
    --  Base of a bit string.  Base_None for a string literal.
-   --  Field: Odigit1 (pos)
+   --  Field: Flag12,Flag13,Flag14 (grp)
    function Get_Bit_String_Base (Lit : Iir) return Number_Base_Type;
    procedure Set_Bit_String_Base (Lit : Iir; Base : Number_Base_Type);
 
@@ -5866,7 +5866,7 @@ package Iirs is
 
    --  This flag is set for a very short time during the check that no in
    --  port is unconnected.
-   --  Field: Flag12
+   --  Field: Flag15
    function Get_Open_Flag (Target : Iir) return Boolean;
    procedure Set_Open_Flag (Target : Iir; Flag : Boolean);
 
@@ -6061,7 +6061,7 @@ package Iirs is
    procedure Set_Nature (Target : Iir; Nature : Iir);
 
    --  Mode of interfaces or file (v87).
-   --  Field: Odigit1 (pos)
+   --  Field: Flag12,Flag13,Flag14 (grp)
    function Get_Mode (Target : Iir) return Iir_Mode;
    procedure Set_Mode (Target : Iir; Mode : Iir_Mode);
 

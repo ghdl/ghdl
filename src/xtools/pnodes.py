@@ -12,13 +12,13 @@ prefix_name = "Iir_Kind_"
 prefix_range_name = "Iir_Kinds_"
 type_name = "Iir_Kind"
 node_type = "Iir"
-conversions = ['uc', 'pos']
+conversions = ['uc', 'pos', 'grp']
 
 class FuncDesc:
-    def __init__(self, name, field, conv, acc,
+    def __init__(self, name, fields, conv, acc,
                  pname, ptype, rname, rtype):
         self.name = name
-        self.field = field
+        self.fields = fields  # List of physical fields used
         self.conv = conv
         self.acc = acc  # access: Chain, Chain_Next, Ref, Of_Ref, Maybe_Ref,
                         #         Forward_Ref, Maybe_Forward_Ref
@@ -229,9 +229,7 @@ def read_kinds(filename):
 
     # Read functions
     funcs = []
-    pat_field = re.compile(
-        '   --  Field: (\w+)'
-        + '( Of_Ref| Ref| Maybe_Ref| Forward_Ref| Maybe_Forward_Ref| Chain_Next| Chain)?( .*)?\n')
+    pat_field = re.compile('   --  Field: ([\w,]+)( \w+)?( \(\w+\))?\n')
     pat_conv = re.compile('^ \((\w+)\)$')
     pat_func = \
       re.compile('   function Get_(\w+) \((\w+) : (\w+)\) return (\w+);\n')
@@ -244,10 +242,12 @@ def read_kinds(filename):
             break
         m = pat_field.match(l)
         if m:
-            # Extract conversion
+            fields = m.group(1).split(',')
+            # Extract access modifier
             acc = m.group(2)
             if acc:
                 acc = acc.strip()
+            # Extract conversion
             conv = m.group(3)
             if conv:
                 mc = pat_conv.match(conv)
@@ -280,7 +280,7 @@ def read_kinds(filename):
                 raise ParseError(lr, 'parameter type mismatch with function')
             if mf.group(4) != mp.group(5):
                 raise ParseError(lr, 'result type mismatch with function')
-            funcs.append(FuncDesc(mf.group(1), m.group(1), conv, acc,
+            funcs.append(FuncDesc(mf.group(1), fields, conv, acc,
                                   mp.group(2), mp.group(3),
                                   mp.group(4), mp.group(5)))
 
@@ -291,7 +291,7 @@ def read_kinds(filename):
 #  (one description may describe several nodes).
 def read_nodes_fields(lr, names, fields, nodes, funcs_dict):
     pat_only = re.compile('   -- Only for ' + prefix_name + '(\w+):\n')
-    pat_field = re.compile('   --   Get/Set_(\w+) \((Alias )?(\w+)\)\n')
+    pat_field = re.compile('   --   Get/Set_(\w+) \((Alias )?([\w,]+)\)\n')
     pat_comment = re.compile('   --.*\n')
     pat_start = re.compile ('   --   \w.*\n')
 
@@ -326,21 +326,24 @@ def read_nodes_fields(lr, names, fields, nodes, funcs_dict):
             # 1) Check the function exists
             func = m.group(1)
             alias = m.group(2)
-            field = m.group(3)
+            fields = m.group(3).split(',')
             if func not in funcs_dict:
                 raise ParseError(lr, 'unknown function')
             func = funcs_dict[func]
-            if func.field != field:
-                raise ParseError(lr, 'field mismatch')
+            if func.fields != fields:
+                raise ParseError(lr, 'fields mismatch')
             for c in only_nodes:
-                if field not in c.fields:
-                    raise ParseError(lr, 'field ' + field + \
-                                     ' does not exist in node')
+                for f in fields:
+                    if f not in c.fields:
+                        raise ParseError(lr, 'field ' + f + \
+                                        ' does not exist in node')
                 if not alias:
-                    if c.fields[field]:
-                        raise ParseError(lr, 'field already used')
-                    c.fields[field] = func
-                    c.order.append(field)
+                    for f in fields:
+                        if c.fields[f]:
+                            raise ParseError \
+                              (lr, 'field ' + f + ' already used')
+                        c.fields[f] = func
+                        c.order.append(f)
                 c.attrs[func.name] = func
             only_nodes = cur_nodes
         elif pat_start.match(l):
@@ -450,36 +453,79 @@ def gen_assert(func):
         print '         ' + cond
         print '          ' + msg
 
+def get_field_type(fields, f):
+    for fld in fields.values():
+        if f in fld:
+            return fld[f]
+    return None
+
 # Generate Get_XXX/Set_XXX subprograms for FUNC.
 def gen_get_set(func, nodes, fields):
-    g = 'Get_' + func.field + ' (' + func.pname + ')'
+    rtype = func.rtype
+    # If the function needs several fields, it must be user defined
+    if func.conv == 'grp':
+        print '   type %s_Conv is record' % rtype
+        for f in func.fields:
+            print '      %s: %s;' % (f, get_field_type(fields, f))
+        print '   end record;'
+        print '   pragma Pack (%s_Conv);' % rtype
+        print "   pragma Assert (%s_Conv'Size = %s'Size);" % (rtype, rtype)
+        print
+    else:
+        f = func.fields[0]
+        g = 'Get_' + f + ' (' + func.pname + ')'
+
     s = func.rname
     if func.conv:
-        field_type = None
-        for fld in fields.values():
-            if func.field in fld:
-                field_type = fld[func.field]
-                break
         if func.conv == 'uc':
-            g = field_type + '_To_' + func.rtype + ' (' + g + ')'
-            s = func.rtype + '_To_' + field_type + ' (' + s + ')'
+            field_type = get_field_type(fields, f)
+            g = field_type + '_To_' + rtype + ' (' + g + ')'
+            s = rtype + '_To_' + field_type + ' (' + s + ')'
         elif func.conv == 'pos':
-            g = func.rtype + "'Val (" + g + ')'
-            s = func.rtype + "'Pos (" + s + ')'
+            g = rtype + "'Val (" + g + ')'
+            s = rtype + "'Pos (" + s + ')'
 
     subprg = '   function Get_' + func.name + ' (' + func.pname \
-          + ' : ' + func.ptype + ') return ' + func.rtype
-    gen_subprg_header(subprg)
+          + ' : ' + func.ptype + ') return ' + rtype
+    if func.conv == 'grp':
+        print subprg
+        print '   is'
+        print '      function To_%s is new Ada.Unchecked_Conversion' % \
+          func.rtype
+        print '         (%s_Conv, %s);' % (rtype, rtype);
+        print '      Conv : %s_Conv;' % rtype
+        print '   begin'
+    else:
+        gen_subprg_header(subprg)
     gen_assert(func)
+    if func.conv == 'grp':
+        for f in func.fields:
+            print '      Conv.%s := Get_%s (%s);' % (f, f, func.pname)
+        g = 'To_%s (Conv)' % rtype
     print '      return ' + g + ';'
     print '   end Get_' + func.name + ';'
     print
+
     subprg =  '   procedure Set_' + func.name + ' (' \
           + func.pname + ' : ' + func.ptype + '; ' \
           + func.rname + ' : ' + func.rtype + ')'
-    gen_subprg_header(subprg)
+    if func.conv == 'grp':
+        print subprg
+        print '   is'
+        print '      function To_%s_Conv is new Ada.Unchecked_Conversion' % \
+          func.rtype
+        print '         (%s, %s_Conv);' % (rtype, rtype);
+        print '      Conv : %s_Conv;' % rtype
+        print '   begin'
+    else:
+        gen_subprg_header(subprg)
     gen_assert(func)
-    print '      Set_' + func.field + ' (' + func.pname + ', ' + s + ');'
+    if func.conv == 'grp':
+        print '      Conv := To_%s_Conv (%s);' % (rtype, func.rname)
+        for f in func.fields:
+            print '      Set_%s (%s, Conv.%s);' % (f, func.pname, f)
+    else:
+        print '      Set_' + f + ' (' + func.pname + ', ' + s + ');'
     print '   end Set_' + func.name + ';'
     print
 
@@ -666,45 +712,35 @@ elif args.action == 'meta_body':
         elif l == '      --  FIELDS_ARRAY':
             last = None
             nodes_types = [node_type, node_type + '_List']
-            ref_names = ['Ref', 'Of_Ref', 'Maybe_Ref', 'Forward_Ref',
-                         'Maybe_Forward_Ref']
             for k in kinds:
                 v = nodes[k]
                 if last:
                     print last + ','
                 last = None
                 print '      --  ' + prefix_name + k
+                # Get list of physical fields for V, in some order.
                 if flag_keep_order:
                     flds = v.order
-                elif True:
-                    # first non Iir and no Iir_List
-                    flds = sorted([fk for fk, fv in v.fields.items() \
+                else:
+                    # First non Iir and no Iir_List.
+                    flds = sorted([fk for fk, fv in v.fields.items()
                                    if fv and fv.rtype not in nodes_types])
                     # Then Iir and Iir_List in order of appearance
                     flds += (fv for fv in v.order
                               if v.fields[fv].rtype in nodes_types)
-                else:
-                    # Sort fields: first non Iir and non Iir_List,
-                    #              then Iir and Iir_List that aren't references
-                    #              then Maybe_Ref
-                    #              then Ref and Ref_Of
-                    flds = sorted([fk for fk, fv in v.fields.items() \
-                                   if fv and fv.rtype not in nodes_types])
-                    flds += sorted([fk for fk, fv in v.fields.items() \
-                                    if fv and fv.rtype in nodes_types \
-                                    and fv.acc not in ref_names])
-                    flds += sorted([fk for fk, fv in v.fields.items() \
-                                    if fv and fv.rtype in nodes_types\
-                                    and fv.acc in ['Maybe_Ref']])
-                    flds += sorted([fk for fk, fv in v.fields.items() \
-                                    if fv and fv.rtype in nodes_types\
-                                    and fv.acc in ['Ref', 'Of_Ref',
-                                                   'Forward_Ref',
-                                                   'Maybe_Forward_Ref']])
+                # Print the corresponding node field, but remove duplicate due
+                # to 'grp'.
+                fldsn = []
                 for fk in flds:
                     if last:
                         print last + ','
-                    last = '      Field_' + v.fields[fk].name
+                    # Remove duplicate
+                    fn = v.fields[fk].name
+                    if fn not in fldsn:
+                        last = '      Field_' + fn
+                        fldsn.append(fn)
+                    else:
+                        last = None
             if last:
                 print last
         elif l == '      --  FIELDS_ARRAY_POS':
@@ -712,7 +748,8 @@ elif args.action == 'meta_body':
             last = None
             for k in kinds:
                 v = nodes[k]
-                flds = [fk for fk, fv in v.fields.items() if fv]
+                # Create a set to remove duplicate for 'grp'.
+                flds = set([fv.name for fk, fv in v.fields.items() if fv])
                 pos += len(flds)
                 if last:
                     print last + ','

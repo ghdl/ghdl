@@ -87,7 +87,6 @@ package body Nodes is
                  (Format => Format_Short,
                   Kind => 0,
                   State1 | State2 => 0,
-                  Odigit1 => 0,
                   Location => Location_Nil,
                   Field0 | Field1 | Field2 | Field3  => Null_Node,
                   Field4 | Field5 => Null_Node,
@@ -403,6 +402,36 @@ package body Nodes is
       Nodet.Table (N).Flag12 := V;
    end Set_Flag12;
 
+   function Get_Flag13 (N : Node_Type) return Boolean is
+   begin
+      return Nodet.Table (N).Flag13;
+   end Get_Flag13;
+
+   procedure Set_Flag13 (N : Node_Type; V : Boolean) is
+   begin
+      Nodet.Table (N).Flag13 := V;
+   end Set_Flag13;
+
+   function Get_Flag14 (N : Node_Type) return Boolean is
+   begin
+      return Nodet.Table (N).Flag14;
+   end Get_Flag14;
+
+   procedure Set_Flag14 (N : Node_Type; V : Boolean) is
+   begin
+      Nodet.Table (N).Flag14 := V;
+   end Set_Flag14;
+
+   function Get_Flag15 (N : Node_Type) return Boolean is
+   begin
+      return Nodet.Table (N).Flag15;
+   end Get_Flag15;
+
+   procedure Set_Flag15 (N : Node_Type; V : Boolean) is
+   begin
+      Nodet.Table (N).Flag15 := V;
+   end Set_Flag15;
+
 
    function Get_State1 (N : Node_Type) return Bit2_Type is
    begin
@@ -443,28 +472,6 @@ package body Nodes is
    begin
       Nodet.Table (N + 1).State2 := V;
    end Set_State4;
-
-
-   function Get_Odigit1 (N : Node_Type) return Bit3_Type is
-   begin
-      return Nodet.Table (N).Odigit1;
-   end Get_Odigit1;
-
-   procedure Set_Odigit1 (N : Node_Type; V : Bit3_Type) is
-   begin
-      Nodet.Table (N).Odigit1 := V;
-   end Set_Odigit1;
-
-   function Get_Odigit2 (N : Node_Type) return Bit3_Type is
-   begin
-      return Nodet.Table (N + 1).Odigit1;
-   end Get_Odigit2;
-
-   procedure Set_Odigit2 (N : Node_Type; V : Bit3_Type) is
-   begin
-      Nodet.Table (N + 1).Odigit1 := V;
-   end Set_Odigit2;
-
 
    function Get_Fp64 (N : Node_Type) return Iir_Fp64 is
    begin
