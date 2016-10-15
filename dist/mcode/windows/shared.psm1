@@ -32,19 +32,19 @@
 
 [CmdletBinding()]
 param(
-	[Parameter(Mandatory=$true)][string]$WorkingDir
+	[Parameter(Mandatory=$true)][string]$WorkingDir,
+	[Parameter(Mandatory=$true)][Switch]$Hosted
 )
 
-$Module_WorkingDir =			$WorkingDir
+$Module_WorkingDir =	$WorkingDir
+$Module_Hosted =			$Hosted
 
 function Exit-CompileScript
-{		<#
+{	<#
 		.SYNOPSIS
 		Undocumented
-		
 		.DESCRIPTION
 		Undocumented
-		
 		.PARAMETER ExitCode
 		ExitCode of this script run
 	#>
@@ -52,13 +52,12 @@ function Exit-CompileScript
 	param(
 		[int]$ExitCode = 0
 	)
-	
 	cd $Module_WorkingDir
-	
 	# unload modules
-	Remove-Module shared -Verbose:$false
-	Remove-Module targets -Verbose:$false
-	
+	if (-not $Module_Hosted)
+	{	Remove-Module shared  -Verbose:$false
+		Remove-Module targets -Verbose:$false
+	}
 	exit $ExitCode
 }
 

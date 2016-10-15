@@ -46,29 +46,29 @@
 [CmdletBinding()]
 param(
 	# Display this help"
-	[switch]$Help =			$false,
+	[switch]$Help =							$false,
 	
 	# Slean up all files and directories
-	[switch]$Clean =					$false,
-		[switch]$Clean_GHDL =		$false,
+	[switch]$Clean =						$false,
+		[switch]$Clean_GHDL =			$false,
 	
 	# Compile all targets
-	[switch]$All =						$false,
+	[switch]$All =							$false,
 	
 	# Compile main targets
-	[switch]$Compile =				$false,
+	[switch]$Compile =					$false,
 		# Compile GHDL (simulator)
-		[switch]$Compile_GHDL =	$false,
+		[switch]$Compile_GHDL =		$false,
 	# Undocumented
-	[switch]$Test =						$false,
+	[switch]$Test =							$false,
 		# Undocumented
-		[switch]$Test_GHDL =		$false,
+		[switch]$Test_GHDL =			$false,
 	
 	# Build options
 	# Build a release version
-	[switch]$Release =	$false,
+	[switch]$Release =					$false,
 	# Set the back-end
-	[string]$Backend =	"mcode",
+	[string]$Backend =					"mcode",
 	
 	# Reduced messages
 	[switch]$Quiet =						$false,
@@ -97,7 +97,7 @@ $EnableDebug =		$PSCmdlet.MyInvocation.BoundParameters["Debug"].IsPresent
 # Write-Host ("--> " + $PSCommandPath + "  " + $PSBoundParameters + "  " + $PSCmdlet + "  " + $PSDefaultParameterValues)
 
 # load modules from GHDL's 'libraries' directory
-Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -ArgumentList "$Script_WorkingDir"
+Import-Module $PSScriptRoot\shared.psm1  -Verbose:$false -ArgumentList "$Script_WorkingDir", $Hosted
 Import-Module $PSScriptRoot\targets.psm1 -Verbose:$false
 
 # Display help if no command was selected
