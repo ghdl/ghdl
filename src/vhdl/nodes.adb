@@ -48,8 +48,6 @@ package body Nodes is
    pragma Warnings (Off);
    Init_Short  : Node_Record (Format_Short);
    Init_Medium : Node_Record (Format_Medium);
-   Init_Fp     : Node_Record (Format_Fp);
-   Init_Int    : Node_Record (Format_Int);
    pragma Warnings (On);
 
    function Create_Node (Format : Format_Type) return Node_Type
@@ -93,10 +91,6 @@ package body Nodes is
                   others => False);
             when Format_Medium =>
                raise Program_Error;
-            when Format_Fp =>
-               Nodet.Table (Res) := Init_Fp;
-            when Format_Int =>
-               Nodet.Table (Res) := Init_Int;
          end case;
       end if;
       return Res;
@@ -121,9 +115,7 @@ package body Nodes is
       case Nodet.Table (N).Format is
          when Format_Medium =>
             return N + 2;
-         when Format_Short
-           | Format_Int
-           | Format_Fp =>
+         when Format_Short =>
             return N + 1;
       end case;
    end Next_Node;
@@ -472,27 +464,6 @@ package body Nodes is
    begin
       Nodet.Table (N + 1).State2 := V;
    end Set_State4;
-
-   function Get_Fp64 (N : Node_Type) return Iir_Fp64 is
-   begin
-      return Nodet.Table (N).Fp64;
-   end Get_Fp64;
-
-   procedure Set_Fp64 (N : Node_Type; V : Iir_Fp64) is
-   begin
-      Nodet.Table (N).Fp64 := V;
-   end Set_Fp64;
-
-
-   function Get_Int64 (N : Node_Type) return Iir_Int64 is
-   begin
-      return Nodet.Table (N).Int64;
-   end Get_Int64;
-
-   procedure Set_Int64 (N : Node_Type; V : Iir_Int64) is
-   begin
-      Nodet.Table (N).Int64 := V;
-   end Set_Int64;
 
    procedure Initialize is
    begin

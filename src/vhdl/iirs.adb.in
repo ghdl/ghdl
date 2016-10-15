@@ -74,14 +74,7 @@ package body Iirs is
          Num (Kind) := Num (Kind) + 1;
          Format := Get_Format (Kind);
          Formats (Format) := Formats (Format) + 1;
-         case Format is
-            when Format_Medium =>
-               I := I + 2;
-            when Format_Short
-              | Format_Fp
-              | Format_Int =>
-               I := I + 1;
-         end case;
+         I := Next_Node (I);
       end loop;
 
       Put_Line ("Stats per iir_kind:");

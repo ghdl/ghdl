@@ -74,14 +74,7 @@ package body Iirs is
          Num (Kind) := Num (Kind) + 1;
          Format := Get_Format (Kind);
          Formats (Format) := Formats (Format) + 1;
-         case Format is
-            when Format_Medium =>
-               I := I + 2;
-            when Format_Short
-              | Format_Fp
-              | Format_Int =>
-               I := I + 1;
-         end case;
+         I := Next_Node (I);
       end loop;
 
       Put_Line ("Stats per iir_kind:");
@@ -260,8 +253,12 @@ package body Iirs is
            | Iir_Kind_Library_Clause
            | Iir_Kind_Use_Clause
            | Iir_Kind_Context_Reference
+           | Iir_Kind_Integer_Literal
+           | Iir_Kind_Floating_Point_Literal
            | Iir_Kind_Null_Literal
            | Iir_Kind_String_Literal8
+           | Iir_Kind_Physical_Int_Literal
+           | Iir_Kind_Physical_Fp_Literal
            | Iir_Kind_Simple_Aggregate
            | Iir_Kind_Overflow_Literal
            | Iir_Kind_Waveform_Element
@@ -517,12 +514,6 @@ package body Iirs is
            | Iir_Kind_Simple_Simultaneous_Statement
            | Iir_Kind_Wait_Statement =>
             return Format_Medium;
-         when Iir_Kind_Floating_Point_Literal
-           | Iir_Kind_Physical_Fp_Literal =>
-            return Format_Fp;
-         when Iir_Kind_Integer_Literal
-           | Iir_Kind_Physical_Int_Literal =>
-            return Format_Int;
       end case;
    end Get_Format;
 
@@ -904,20 +895,39 @@ package body Iirs is
       Set_Field12 (Design_Unit, Int32_To_Iir (Line));
    end Set_Design_Unit_Source_Col;
 
-   function Get_Value (Lit : Iir) return Iir_Int64 is
+   type Iir_Int64_Conv is record
+      Field4: Iir;
+      Field5: Iir;
+   end record;
+   pragma Pack (Iir_Int64_Conv);
+   pragma Assert (Iir_Int64_Conv'Size = Iir_Int64'Size);
+
+   function Get_Value (Lit : Iir) return Iir_Int64
+   is
+      function To_Iir_Int64 is new Ada.Unchecked_Conversion
+         (Iir_Int64_Conv, Iir_Int64);
+      Conv : Iir_Int64_Conv;
    begin
       pragma Assert (Lit /= Null_Iir);
       pragma Assert (Has_Value (Get_Kind (Lit)),
                      "no field Value");
-      return Get_Int64 (Lit);
+      Conv.Field4 := Get_Field4 (Lit);
+      Conv.Field5 := Get_Field5 (Lit);
+      return To_Iir_Int64 (Conv);
    end Get_Value;
 
-   procedure Set_Value (Lit : Iir; Val : Iir_Int64) is
+   procedure Set_Value (Lit : Iir; Val : Iir_Int64)
+   is
+      function To_Iir_Int64_Conv is new Ada.Unchecked_Conversion
+         (Iir_Int64, Iir_Int64_Conv);
+      Conv : Iir_Int64_Conv;
    begin
       pragma Assert (Lit /= Null_Iir);
       pragma Assert (Has_Value (Get_Kind (Lit)),
                      "no field Value");
-      Set_Int64 (Lit, Val);
+      Conv := To_Iir_Int64_Conv (Val);
+      Set_Field4 (Lit, Conv.Field4);
+      Set_Field5 (Lit, Conv.Field5);
    end Set_Value;
 
    function Get_Enum_Pos (Lit : Iir) return Iir_Int32 is
@@ -968,20 +978,39 @@ package body Iirs is
       Set_Field5 (Unit, Lit);
    end Set_Physical_Unit_Value;
 
-   function Get_Fp_Value (Lit : Iir) return Iir_Fp64 is
+   type Iir_Fp64_Conv is record
+      Field4: Iir;
+      Field5: Iir;
+   end record;
+   pragma Pack (Iir_Fp64_Conv);
+   pragma Assert (Iir_Fp64_Conv'Size = Iir_Fp64'Size);
+
+   function Get_Fp_Value (Lit : Iir) return Iir_Fp64
+   is
+      function To_Iir_Fp64 is new Ada.Unchecked_Conversion
+         (Iir_Fp64_Conv, Iir_Fp64);
+      Conv : Iir_Fp64_Conv;
    begin
       pragma Assert (Lit /= Null_Iir);
       pragma Assert (Has_Fp_Value (Get_Kind (Lit)),
                      "no field Fp_Value");
-      return Get_Fp64 (Lit);
+      Conv.Field4 := Get_Field4 (Lit);
+      Conv.Field5 := Get_Field5 (Lit);
+      return To_Iir_Fp64 (Conv);
    end Get_Fp_Value;
 
-   procedure Set_Fp_Value (Lit : Iir; Val : Iir_Fp64) is
+   procedure Set_Fp_Value (Lit : Iir; Val : Iir_Fp64)
+   is
+      function To_Iir_Fp64_Conv is new Ada.Unchecked_Conversion
+         (Iir_Fp64, Iir_Fp64_Conv);
+      Conv : Iir_Fp64_Conv;
    begin
       pragma Assert (Lit /= Null_Iir);
       pragma Assert (Has_Fp_Value (Get_Kind (Lit)),
                      "no field Fp_Value");
-      Set_Fp64 (Lit, Val);
+      Conv := To_Iir_Fp64_Conv (Val);
+      Set_Field4 (Lit, Conv.Field4);
+      Set_Field5 (Lit, Conv.Field5);
    end Set_Fp_Value;
 
    function Get_Simple_Aggregate_List (Target : Iir) return Iir_List is

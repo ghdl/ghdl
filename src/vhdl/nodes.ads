@@ -34,9 +34,7 @@ package Nodes is
    type Format_Type is
      (
       Format_Short,
-      Format_Medium,
-      Format_Fp,
-      Format_Int
+      Format_Medium
      );
 
    -- Common fields are:
@@ -63,22 +61,14 @@ package Nodes is
    --   Field1 : Iir
    --   Field2 : Iir
    --   Field3 : Iir
-
-   -- Fields of Format_Fp:
-   --   Fp64 : Iir_Fp64
-
-   -- Fields of Format_Int:
-   --   Int64 : Iir_Int64
-
-   -- Fields of Format_Short:
    --   Field4 : Iir
    --   Field5 : Iir
+
+   -- Fields of Format_Short:
 
    -- Fields of Format_Medium:
    --   State3 : Bit2_Type
    --   State4 : Bit2_Type
-   --   Field4 : Iir
-   --   Field5 : Iir
    --   Field6 : Iir (location)
    --   Field7 : Iir (field0)
    --   Field8 : Iir (field1)
@@ -264,16 +254,6 @@ package Nodes is
    procedure Set_State4 (N : Node_Type; V : Bit2_Type);
    pragma Inline (Set_State4);
 
-   function Get_Fp64 (N : Node_Type) return Iir_Fp64;
-   pragma Inline (Get_Fp64);
-   procedure Set_Fp64 (N : Node_Type; V : Iir_Fp64);
-   pragma Inline (Set_Fp64);
-
-   function Get_Int64 (N : Node_Type) return Iir_Int64;
-   pragma Inline (Get_Int64);
-   procedure Set_Int64 (N : Node_Type; V : Iir_Int64);
-   pragma Inline (Set_Int64);
-
    --  Get the last node allocated.
    function Get_Last_Node return Node_Type;
    pragma Inline (Get_Last_Node);
@@ -289,9 +269,9 @@ private
       Flag4 : Boolean := False;
       Flag5 : Boolean := False;
       Flag6 : Boolean := False;
+      Flag7 : Boolean := False;
 
       --  Second byte:
-      Flag7 : Boolean := False;
       Flag8 : Boolean := False;
       Flag9 : Boolean := False;
       Flag10 : Boolean := False;
@@ -299,11 +279,12 @@ private
       Flag12 : Boolean := False;
       Flag13 : Boolean := False;
       Flag14 : Boolean := False;
+      Flag15 : Boolean := False;
 
       --  Third byte:
-      Flag15 : Boolean := False;
       Flag16 : Boolean := False;
       Flag17 : Boolean := False;
+      Flag18 : Boolean := False;
 
       --  2*2 = 4 bits
       State1 : Bit2_Type := 0;
@@ -319,17 +300,8 @@ private
       Field1 : Node_Type := Null_Node;
       Field2 : Node_Type := Null_Node;
       Field3 : Node_Type := Null_Node;
-
-      case Format is
-         when Format_Short
-           | Format_Medium =>
-            Field4: Node_Type := Null_Node;
-            Field5: Node_Type := Null_Node;
-         when Format_Fp =>
-            Fp64 : Iir_Fp64;
-         when Format_Int =>
-            Int64 : Iir_Int64;
-      end case;
+      Field4 : Node_Type := Null_Node;
+      Field5 : Node_Type := Null_Node;
    end record;
 
    pragma Pack (Node_Record);

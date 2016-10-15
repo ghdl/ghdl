@@ -258,7 +258,8 @@ def read_kinds(filename):
                     raise ParseError(lr, 'unknown conversion ' + conv)
             else:
                 conv = None
-
+            if len(fields) > 1 and conv != 'grp':
+                raise ParseError(lr, 'bad conversion for multiple fields')
             # Read function
             l = lr.get()
             mf = pat_func.match(l)
