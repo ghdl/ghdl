@@ -30,6 +30,7 @@ with Iirs_Utils; use Iirs_Utils;
 with Tokens;
 with Scanner;
 with Parse;
+with Canon;
 with Version;
 with Xrefs;
 with Ghdlmain; use Ghdlmain;
@@ -984,7 +985,13 @@ package body Ghdlprint is
       Next_Unit : Iir;
    begin
       Setup_Libraries (True);
+
+      --  Keep parenthesis during parse.
       Parse.Flag_Parse_Parenthesis := True;
+
+      Canon.Canon_Flag_Concurrent_Stmts := False;
+      Canon.Canon_Flag_Configurations := False;
+      Canon.Canon_Flag_Specification_Lists := False;
 
       --  Parse all files.
       for I in Args'Range loop
