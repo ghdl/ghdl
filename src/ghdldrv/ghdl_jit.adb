@@ -1,5 +1,5 @@
 --  GHDL driver for jit.
---  Copyright (C) 2002-2014 Tristan Gingold
+--  Copyright (C) 2002-2016 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -20,6 +20,7 @@ with Ghdllocal;
 with Ghdlprint;
 with Ghdlrun;
 with Ghdlvpi;
+with Ghdlxml;
 with Ortho_Jit;
 
 procedure Ghdl_Jit is
@@ -29,9 +30,10 @@ begin
    Ghdlmain.Version_String :=
      new String'(Ortho_Jit.Get_Jit_Name & " code generator");
    Ghdlrun.Register_Commands;
-   Ghdlvpi.Register_Commands;
    Ghdllocal.Register_Commands;
    Ghdlprint.Register_Commands;
+   Ghdlvpi.Register_Commands;
+   Ghdlxml.Register_Commands;
    Ghdlmain.Register_Commands;
    Ghdlmain.Main;
 end Ghdl_Jit;

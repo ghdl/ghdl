@@ -20,7 +20,6 @@
 
 with Ada.Text_IO; use Ada.Text_IO;
 with Name_Table;
-with Tokens;
 with Files_Map;
 with PSL.Dump_Tree;
 with Nodes_Meta;

@@ -1,5 +1,5 @@
 --  GHDL driver for gcc.
---  Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
+--  Copyright (C) 2002-2016 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -20,6 +20,7 @@ with Ghdllocal;
 with Ghdldrv;
 with Ghdlprint;
 with Ghdlvpi;
+with Ghdlxml;
 
 procedure Ghdl_Gcc is
 begin
@@ -28,9 +29,10 @@ begin
    Ghdlmain.Version_String := new String'("GCC back-end code generator");
    Ghdldrv.Backend := Ghdldrv.Backend_Gcc;
    Ghdldrv.Register_Commands;
-   Ghdlvpi.Register_Commands;
    Ghdllocal.Register_Commands;
    Ghdlprint.Register_Commands;
+   Ghdlvpi.Register_Commands;
+   Ghdlxml.Register_Commands;
    Ghdlmain.Register_Commands;
    Ghdlmain.Main;
 end Ghdl_Gcc;
