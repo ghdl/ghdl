@@ -927,6 +927,7 @@ package body Sem_Names is
               | Iir_Kind_Architecture_Body
               | Iir_Kind_Block_Statement
               | Iir_Kind_Block_Header
+              | Iir_Kind_Component_Declaration
               | Iir_Kinds_Process_Statement
               | Iir_Kind_Generate_Statement_Body
               | Iir_Kind_Design_Unit =>
