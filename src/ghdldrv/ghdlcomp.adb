@@ -24,7 +24,6 @@ with Ada.Text_IO;
 
 with Types;
 with Iirs; use Iirs;
-with Nodes_GC;
 with Flags;
 with Sem;
 with Name_Table;
@@ -37,9 +36,6 @@ with Version;
 package body Ghdlcomp is
 
    Flag_Expect_Failure : Boolean := False;
-
-   Flag_Debug_Nodes_Leak : Boolean := False;
-   --  If True, detect unreferenced nodes at the end of analysis.
 
    --  Commands which use the mcode compiler.
    type Command_Comp is abstract new Command_Lib with null record;
@@ -58,8 +54,8 @@ package body Ghdlcomp is
       if Option = "--expect-failure" then
          Flag_Expect_Failure := True;
          Res := Option_Ok;
-      elsif Option = "--debug-nodes-leak" then
-         Flag_Debug_Nodes_Leak := True;
+      elsif Option = "--check-ast" then
+         Flags.Check_Ast_Level := Flags.Check_Ast_Level + 1;
          Res := Option_Ok;
       elsif Hooks.Decode_Option.all (Option) then
          Res := Option_Ok;
@@ -375,10 +371,6 @@ package body Ghdlcomp is
 
       if Flag_Expect_Failure then
          raise Compilation_Error;
-      end if;
-
-      if Flag_Debug_Nodes_Leak then
-         Nodes_GC.Report_Unreferenced;
       end if;
 
       Libraries.Save_Work_Library;

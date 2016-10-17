@@ -37,6 +37,7 @@ with Disp_Vhdl;
 with Sem;
 with Post_Sems;
 with Canon;
+with Nodes_GC;
 
 package body Libraries is
    --  Chain of known libraries.  This is also the top node of all iir node.
@@ -1554,6 +1555,10 @@ package body Libraries is
    begin
       if (Main or Flags.Dump_All) and then Flags.Dump_Parse then
          Disp_Tree.Disp_Tree (Unit);
+      end if;
+
+      if Flags.Check_Ast_Level > 0 then
+         Nodes_GC.Check_Tree (Unit);
       end if;
 
       if Flags.Verbose then
