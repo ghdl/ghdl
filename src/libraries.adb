@@ -23,14 +23,21 @@ with System;
 with Errorout; use Errorout;
 with Scanner;
 with Iirs_Utils; use Iirs_Utils;
+with Iir_Chains;
+with Nodes_Meta;
 with Parse;
-with Back_End;
 with Name_Table; use Name_Table;
 with Str_Table;
 with Tokens;
 with Files_Map;
 with Flags;
 with Std_Package;
+with Disp_Tree;
+with Disp_Vhdl;
+with Sem;
+with Post_Sems;
+with Canon;
+with Nodes_GC;
 
 package body Libraries is
    --  Chain of known libraries.  This is also the top node of all iir node.
@@ -1541,6 +1548,87 @@ package body Libraries is
       return False;
    end Is_Obsolete;
 
+   procedure Finish_Compilation
+     (Unit : Iir_Design_Unit; Main : Boolean := False)
+   is
+      Lib_Unit : constant Iir := Get_Library_Unit (Unit);
+   begin
+      if (Main or Flags.Dump_All) and then Flags.Dump_Parse then
+         Disp_Tree.Disp_Tree (Unit);
+      end if;
+
+      if Flags.Check_Ast_Level > 0 then
+         Nodes_GC.Check_Tree (Unit);
+      end if;
+
+      if Flags.Verbose then
+         Report_Msg (Msgid_Note, Semantic, +Lib_Unit,
+                     "analyze %n", (1 => +Lib_Unit));
+      end if;
+
+      Sem.Semantic (Unit);
+
+      if (Main or Flags.Dump_All) and then Flags.Dump_Sem then
+         Disp_Tree.Disp_Tree (Unit);
+      end if;
+
+      if Errorout.Nbr_Errors > 0 then
+         raise Compilation_Error;
+      end if;
+
+      if (Main or Flags.List_All) and then Flags.List_Sem then
+         Disp_Vhdl.Disp_Vhdl (Unit);
+      end if;
+
+      --  Post checks
+      ----------------
+
+      Post_Sems.Post_Sem_Checks (Unit);
+
+      if Errorout.Nbr_Errors > 0 then
+         raise Compilation_Error;
+      end if;
+
+      --  Canonalisation.
+      ------------------
+
+      if Flags.Verbose then
+         Report_Msg (Msgid_Note, Semantic, +Lib_Unit,
+                     "canonicalize %n", (1 => +Lib_Unit));
+      end if;
+
+      Canon.Canonicalize (Unit);
+
+      --  FIXME: for Main only ?
+      if Get_Kind (Lib_Unit) = Iir_Kind_Package_Declaration
+        and then not Get_Need_Body (Lib_Unit)
+        and then Get_Need_Instance_Bodies (Lib_Unit)
+      then
+         --  Create the bodies for instances
+         Set_Package_Instantiation_Bodies_Chain
+           (Lib_Unit, Canon.Create_Instantiation_Bodies (Lib_Unit, Lib_Unit));
+      elsif Get_Kind (Lib_Unit) = Iir_Kind_Package_Body
+        and then Get_Need_Instance_Bodies (Get_Package (Lib_Unit))
+      then
+         Iir_Chains.Append_Chain
+           (Lib_Unit, Nodes_Meta.Field_Declaration_Chain,
+            Canon.Create_Instantiation_Bodies (Get_Package (Lib_Unit),
+                                               Lib_Unit));
+      end if;
+
+      if (Main or Flags.Dump_All) and then Flags.Dump_Canon then
+         Disp_Tree.Disp_Tree (Unit);
+      end if;
+
+      if Errorout.Nbr_Errors > 0 then
+         raise Compilation_Error;
+      end if;
+
+      if (Main or Flags.List_All) and then Flags.List_Canon then
+         Disp_Vhdl.Disp_Vhdl (Unit);
+      end if;
+   end Finish_Compilation;
+
    procedure Load_Parse_Design_Unit (Design_Unit: Iir_Design_Unit; Loc : Iir)
    is
       use Scanner;
@@ -1639,7 +1727,7 @@ package body Libraries is
          --  Avoid infinite recursion, if the unit is self-referenced.
          Set_Date_State (Design_Unit, Date_Analyze);
 
-         Back_End.Finish_Compilation (Design_Unit);
+         Finish_Compilation (Design_Unit);
       end if;
 
       case Get_Date (Design_Unit) is

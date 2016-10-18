@@ -30,12 +30,12 @@ with Iirs_Utils; use Iirs_Utils;
 with Tokens;
 with Scanner;
 with Parse;
+with Canon;
 with Version;
 with Xrefs;
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
 with Disp_Vhdl;
-with Back_End;
 
 package body Ghdlprint is
    type Html_Format_Type is (Html_2, Html_Css);
@@ -985,7 +985,13 @@ package body Ghdlprint is
       Next_Unit : Iir;
    begin
       Setup_Libraries (True);
+
+      --  Keep parenthesis during parse.
       Parse.Flag_Parse_Parenthesis := True;
+
+      Canon.Canon_Flag_Concurrent_Stmts := False;
+      Canon.Canon_Flag_Configurations := False;
+      Canon.Canon_Flag_Specification_Lists := False;
 
       --  Parse all files.
       for I in Args'Range loop
@@ -998,7 +1004,7 @@ package body Ghdlprint is
          Unit := Get_First_Design_Unit (Design_File);
          while Unit /= Null_Iir loop
             --  Analyze the design unit.
-            Back_End.Finish_Compilation (Unit, True);
+            Libraries.Finish_Compilation (Unit, True);
 
             Next_Unit := Get_Chain (Unit);
             if Errorout.Nbr_Errors = 0 then

@@ -96,6 +96,10 @@ package Iirs_Utils is
    --  UNIT must be either a design unit or a entity_aspect_entity.
    procedure Add_Dependence (Target: Iir_Design_Unit; Unit: Iir);
 
+   --  Get the design_unit from dependency DEP.  DEP must be an element of
+   --  a dependencies list.
+   function Get_Unit_From_Dependence (Dep : Iir) return Iir;
+
    --  Clear configuration field of all component instantiation of
    --  the concurrent statements of PARENT.
    procedure Clear_Instantiation_Configuration (Parent : Iir; Full : Boolean);

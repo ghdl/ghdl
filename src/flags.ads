@@ -67,6 +67,10 @@ package Flags is
    --  -dstats: disp statistics.
    Dump_Stats : Boolean := False;
 
+   --  If not 0, do internal consistency and leaks check on the AST after
+   --  analysis.
+   Check_Ast_Level : Natural := 0;
+
    -- -lX options: list tree as a vhdl file.
 
    -- --lall option: makes -lX options to apply to all files

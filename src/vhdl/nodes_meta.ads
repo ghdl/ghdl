@@ -85,7 +85,6 @@ package Nodes_Meta is
       Field_Value,
       Field_Enum_Pos,
       Field_Physical_Literal,
-      Field_Physical_Unit_Value,
       Field_Fp_Value,
       Field_Simple_Aggregate_List,
       Field_String8_Id,
@@ -593,7 +592,6 @@ package Nodes_Meta is
    function Has_Value (K : Iir_Kind) return Boolean;
    function Has_Enum_Pos (K : Iir_Kind) return Boolean;
    function Has_Physical_Literal (K : Iir_Kind) return Boolean;
-   function Has_Physical_Unit_Value (K : Iir_Kind) return Boolean;
    function Has_Fp_Value (K : Iir_Kind) return Boolean;
    function Has_Simple_Aggregate_List (K : Iir_Kind) return Boolean;
    function Has_String8_Id (K : Iir_Kind) return Boolean;

@@ -303,17 +303,17 @@ package body Sem_Types is
    end Create_Physical_Literal;
 
    --  Analyze a physical type definition.  Create a subtype.
-   function Sem_Physical_Type_Definition (Range_Expr: Iir; Decl : Iir)
+   function Sem_Physical_Type_Definition (Def : Iir; Decl : Iir)
       return Iir_Physical_Subtype_Definition
    is
       Unit: Iir_Unit_Declaration;
-      Def : Iir_Physical_Type_Definition;
       Sub_Type: Iir_Physical_Subtype_Definition;
+      Range_Expr : Iir;
       Range_Expr1: Iir;
       Val : Iir;
       Lit : Iir_Physical_Int_Literal;
    begin
-      Def := Get_Type (Range_Expr);
+      Range_Expr := Get_Range_Constraint (Def);
 
       --  LRM93 4.1
       --  The simple name declared by a type declaration denotes the
@@ -325,11 +325,6 @@ package body Sem_Types is
       Set_Resolved_Flag (Def, False);
       Set_Type_Staticness (Def, Locally);
       Set_Signal_Type_Flag (Def, True);
-
-      --  Set the type definition of the type declaration (it was currently the
-      --  range expression).  Do it early so that the units can be referenced
-      --  by expanded names.
-      Set_Type_Definition (Decl, Def);
 
       --  LRM93 3.1.3
       --  Each bound of a range constraint that is used in a physical type
@@ -367,13 +362,14 @@ package body Sem_Types is
       --  Analyze the primary unit.
       Unit := Get_Unit_Chain (Def);
 
-      Lit := Create_Physical_Literal (1, Unit);
-      Set_Physical_Unit_Value (Unit, Lit);
-
-      Sem_Scopes.Add_Name (Unit);
+      --  Set its value to 1.
       Set_Type (Unit, Def);
       Set_Expr_Staticness (Unit, Locally);
       Set_Name_Staticness (Unit, Locally);
+      Lit := Create_Physical_Literal (1, Unit);
+      Set_Physical_Literal (Unit, Lit);
+
+      Sem_Scopes.Add_Name (Unit);
       Set_Visible_Flag (Unit, True);
       Xref_Decl (Unit);
 
@@ -428,7 +424,7 @@ package body Sem_Types is
          Val := Sem_Expression (Get_Physical_Literal (Unit), Def);
          if Val /= Null_Iir then
             Val := Eval_Physical_Literal (Val);
-            Set_Physical_Unit_Value (Unit, Val);
+            Set_Physical_Literal (Unit, Val);
 
             --  LRM93 §3.1
             --  The position number of unit names need not lie within the range
@@ -445,8 +441,9 @@ package body Sem_Types is
             end if;
          else
             --  Avoid errors storm.
-            Set_Physical_Literal (Unit, Get_Primary_Unit (Def));
-            Set_Physical_Unit_Value (Unit, Lit);
+            Val := Create_Physical_Literal (1, Get_Primary_Unit (Def));
+            Set_Literal_Origin (Val, Get_Physical_Literal (Unit));
+            Set_Physical_Literal (Unit, Val);
          end if;
 
          Set_Type (Unit, Def);
@@ -1018,11 +1015,13 @@ package body Sem_Types is
       end loop;
       Set_Index_Subtype_List (Def, Index_List);
 
-      -- Element type.
-      Set_Element_Subtype_Indication (Base_Type, Get_Element_Subtype (Def));
+      --  Element type.  Transfer it to the base type.
+      Set_Element_Subtype_Indication
+        (Base_Type, Get_Array_Element_Constraint (Def));
       Sem_Array_Element (Base_Type);
       El_Type := Get_Element_Subtype (Base_Type);
       Set_Element_Subtype (Def, El_Type);
+      Set_Array_Element_Constraint (Def, Null_Iir);
 
       Set_Signal_Type_Flag (Def, Get_Signal_Type_Flag (Base_Type));
 
@@ -1121,12 +1120,11 @@ package body Sem_Types is
          when Iir_Kind_Enumeration_Type_Definition =>
             return Sem_Enumeration_Type_Definition (Def, Decl);
 
+         when Iir_Kind_Physical_Type_Definition =>
+            return Sem_Physical_Type_Definition (Def, Decl);
+
          when Iir_Kind_Range_Expression =>
-            if Get_Type (Def) /= Null_Iir then
-               return Sem_Physical_Type_Definition (Def, Decl);
-            else
-               return Range_Expr_To_Type_Definition (Def, Decl);
-            end if;
+            return Range_Expr_To_Type_Definition (Def, Decl);
 
          when Iir_Kind_Range_Array_Attribute
            | Iir_Kind_Attribute_Name
@@ -1482,6 +1480,7 @@ package body Sem_Types is
          --  There is no element_constraint.
          pragma Assert (Resolution /= Null_Iir);
          Res := Copy_Subtype_Indication (Type_Mark);
+         El_Def := Null_Iir;
       else
          case Get_Kind (Def) is
             when Iir_Kind_Subtype_Definition =>
@@ -1516,7 +1515,7 @@ package body Sem_Types is
 
                Base_Type := Get_Base_Type (Type_Mark);
                Set_Base_Type (Def, Base_Type);
-               El_Def := Get_Element_Subtype (Def);
+               El_Def := Get_Array_Element_Constraint (Def);
 
                Staticness := Get_Type_Staticness (El_Type);
                Error_Seen := False;

@@ -21,6 +21,7 @@ with Std_Package;
 with Name_Table; use Name_Table;
 with Flags;
 with Iirs_Utils; use Iirs_Utils;
+with Canon;
 
 package body Configuration is
    procedure Add_Design_Concurrent_Stmts (Parent : Iir);
@@ -282,6 +283,7 @@ package body Configuration is
       Entity : Iir;
       Arch : Iir;
       Config : Iir;
+      Arch_Lib : Iir;
       Id : Name_Id;
       Entity_Lib : Iir;
    begin
@@ -329,17 +331,24 @@ package body Configuration is
             --  before the architecture in case of recursive instantiation:
             --  the configuration depends on the architecture.
             if Add_Default then
-               Config := Get_Default_Configuration_Declaration
-                 (Get_Library_Unit (Arch));
-               if Config /= Null_Iir then
-                  if Get_Configuration_Mark_Flag (Config)
-                    and then not Get_Configuration_Done_Flag (Config)
-                  then
-                     --  Recursive instantiation.
-                     return;
-                  else
-                     Add_Design_Unit (Config, Aspect);
-                  end if;
+               Arch_Lib := Get_Library_Unit (Arch);
+
+               --  The default configuration may already exist due to a
+               --  previous instantiation.  Create it if it doesn't exist.
+               Config := Get_Default_Configuration_Declaration (Arch_Lib);
+               if Is_Null (Config) then
+                  Config :=
+                    Canon.Create_Default_Configuration_Declaration (Arch_Lib);
+                  Set_Default_Configuration_Declaration (Arch_Lib, Config);
+               end if;
+
+               if Get_Configuration_Mark_Flag (Config)
+                 and then not Get_Configuration_Done_Flag (Config)
+               then
+                  --  Recursive instantiation.
+                  return;
+               else
+                  Add_Design_Unit (Config, Aspect);
                end if;
             end if;
 
@@ -609,11 +618,12 @@ package body Configuration is
                return Null_Iir;
             end if;
             Lib_Unit := Get_Library_Unit (Unit);
-            Top := Get_Default_Configuration_Declaration (Lib_Unit);
-            if Top = Null_Iir then
-               --  No default configuration for this architecture.
-               raise Internal_Error;
-            end if;
+            pragma Assert
+              (Is_Null (Get_Default_Configuration_Declaration (Lib_Unit)));
+
+            Top := Canon.Create_Default_Configuration_Declaration (Lib_Unit);
+            Set_Default_Configuration_Declaration (Lib_Unit, Top);
+            pragma Assert (Is_Valid (Top));
          when Iir_Kind_Configuration_Declaration =>
             Top := Unit;
          when others =>

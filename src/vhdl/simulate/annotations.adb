@@ -595,11 +595,20 @@ package body Annotations is
    procedure Annotate_Declaration (Block_Info: Sim_Info_Acc; Decl: Iir) is
    begin
       case Get_Kind (Decl) is
-         when Iir_Kind_Delayed_Attribute
-           | Iir_Kind_Stable_Attribute
-           | Iir_Kind_Quiet_Attribute
-           | Iir_Kind_Transaction_Attribute
-           | Iir_Kind_Signal_Declaration =>
+         when Iir_Kind_Signal_Attribute_Declaration =>
+            declare
+               Attr : Iir;
+            begin
+               Attr := Get_Signal_Attribute_Chain (Decl);
+               while Is_Valid (Attr) loop
+                  Annotate_Anonymous_Type_Definition
+                    (Block_Info, Get_Type (Attr));
+                  Create_Signal_Info (Block_Info, Attr);
+                  Attr := Get_Attr_Chain (Attr);
+               end loop;
+            end;
+
+         when Iir_Kind_Signal_Declaration =>
             Annotate_Anonymous_Type_Definition (Block_Info, Get_Type (Decl));
             Create_Signal_Info (Block_Info, Decl);
 

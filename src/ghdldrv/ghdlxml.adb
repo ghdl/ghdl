@@ -198,9 +198,18 @@ package body Ghdlxml is
       Put_Empty_Stag_End;
    end Disp_Iir_List_Ref;
 
-   procedure Disp_Iir_Chain (Id : String; N : Iir)
+   procedure Disp_Iir_Chain_Elements (Chain : Iir)
    is
       El : Iir;
+   begin
+      El := Chain;
+      while Is_Valid (El) loop
+         Disp_Iir ("el", El);
+         El := Get_Chain (El);
+      end loop;
+   end Disp_Iir_Chain_Elements;
+
+   procedure Disp_Iir_Chain (Id : String; N : Iir) is
    begin
       if N = Null_Iir then
          return;
@@ -208,13 +217,7 @@ package body Ghdlxml is
 
       Put_Stag (Id);
       Put_Stag_End;
-
-      El := N;
-      while Is_Valid (El) loop
-         Disp_Iir ("el", El);
-         El := Get_Chain (El);
-      end loop;
-
+      Disp_Iir_Chain_Elements (N);
       Put_Etag (Id);
    end Disp_Iir_Chain;
 
@@ -513,7 +516,11 @@ package body Ghdlxml is
       Col := 0;
       Put_Line
         ("<?xml version=""1.0"" encoding=""UTF-8"" standalone=""yes""?>");
-      Disp_Iir_Chain ("root", Libraries.Get_Libraries_Chain);
+      Put_Stag ("root");
+      Put_Attribute ("version", "0.13");
+      Put_Stag_End;
+      Disp_Iir_Chain_Elements (Libraries.Get_Libraries_Chain);
+      Put_Etag ("root");
    exception
       when Compilation_Error =>
          Error ("xml dump failed due to compilation error");

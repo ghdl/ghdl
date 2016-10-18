@@ -26,18 +26,6 @@ package Back_End is
    type Disp_Option_Acc is access procedure;
    Disp_Option : Disp_Option_Acc := null;
 
-   --  UNIT is a design unit from parse.
-   --  According to the current back-end, do what is necessary.
-   --
-   --  If MAIN is true, then UNIT is a wanted to be analysed design unit, and
-   --  dump/list options can applied.
-   --  This avoid to dump/list units fetched (through a selected name or a
-   --  use clause) indirectly by the main unit.
-   type Finish_Compilation_Acc is access
-     procedure (Unit : Iir_Design_Unit; Main : Boolean := False);
-
-   Finish_Compilation : Finish_Compilation_Acc := null;
-
    --  DECL is an architecture (library unit) or a subprogram (specification)
    --  decorated with a FOREIGN attribute.  Do back-end checks.
    --  May be NULL for no additionnal checks.

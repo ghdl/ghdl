@@ -16,8 +16,13 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
+with Iirs; use Iirs;
+
 package Nodes_GC is
    Flag_Disp_Multiref : Boolean := True;
+
+   --  Perform an internal check on the tree structure of UNIT.
+   procedure Check_Tree (Unit : Iir);
 
    procedure Report_Unreferenced;
    --  Display nodes that aren't referenced.

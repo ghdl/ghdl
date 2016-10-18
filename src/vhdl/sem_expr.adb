@@ -3552,6 +3552,7 @@ package body Sem_Expr is
    function Sem_Physical_Literal (Lit: Iir) return Iir
    is
       Unit_Name : Iir;
+      Unit : Iir;
       Unit_Type : Iir;
       Res: Iir;
    begin
@@ -3570,9 +3571,11 @@ package body Sem_Expr is
             Error_Kind ("sem_physical_literal", Lit);
       end case;
       Unit_Name := Sem_Denoting_Name (Unit_Name);
-      if Get_Kind (Get_Named_Entity (Unit_Name)) /= Iir_Kind_Unit_Declaration
-      then
-         Error_Class_Match (Unit_Name, "unit");
+      Unit := Get_Named_Entity (Unit_Name);
+      if Get_Kind (Unit) /= Iir_Kind_Unit_Declaration then
+         if not Is_Error (Unit) then
+            Error_Class_Match (Unit_Name, "unit");
+         end if;
          Set_Named_Entity (Unit_Name, Create_Error_Name (Unit_Name));
       end if;
       Set_Unit_Name (Res, Unit_Name);
@@ -4051,12 +4054,14 @@ package body Sem_Expr is
            | Iir_Kind_Unit_Declaration =>
             declare
                Res: Iir;
+               Res_Type : Iir;
             begin
                Res := Sem_Physical_Literal (Expr);
-               if Res = Null_Iir then
+               Res_Type := Get_Type (Res);
+               if Is_Null (Res_Type) then
                   return Null_Iir;
                end if;
-               if A_Type /= Null_Iir and then Get_Type (Res) /= A_Type then
+               if A_Type /= Null_Iir and then Res_Type /= A_Type then
                   Error_Not_Match (Res, A_Type);
                   return Null_Iir;
                end if;

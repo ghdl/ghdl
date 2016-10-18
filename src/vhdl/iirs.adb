@@ -74,14 +74,7 @@ package body Iirs is
          Num (Kind) := Num (Kind) + 1;
          Format := Get_Format (Kind);
          Formats (Format) := Formats (Format) + 1;
-         case Format is
-            when Format_Medium =>
-               I := I + 2;
-            when Format_Short
-              | Format_Fp
-              | Format_Int =>
-               I := I + 1;
-         end case;
+         I := Next_Node (I);
       end loop;
 
       Put_Line ("Stats per iir_kind:");
@@ -131,18 +124,19 @@ package body Iirs is
       return Res;
    end Create_Iir_Error;
 
-   procedure Location_Copy (Target: Iir; Src: Iir) is
+   procedure Location_Copy (Target : Iir; Src : Iir) is
    begin
       Set_Location (Target, Get_Location (Src));
    end Location_Copy;
 
    -- Get kind
-   function Get_Kind (An_Iir: Iir) return Iir_Kind
+   function Get_Kind (N : Iir) return Iir_Kind
    is
       --  Speed up: avoid to check that nkind is in the bounds of Iir_Kind.
       pragma Suppress (Range_Check);
    begin
-      return Iir_Kind'Val (Get_Nkind (An_Iir));
+      pragma Assert (N /= Null_Iir);
+      return Iir_Kind'Val (Get_Nkind (N));
    end Get_Kind;
 
    function Time_Stamp_Id_To_Iir is new Ada.Unchecked_Conversion
@@ -260,8 +254,12 @@ package body Iirs is
            | Iir_Kind_Library_Clause
            | Iir_Kind_Use_Clause
            | Iir_Kind_Context_Reference
+           | Iir_Kind_Integer_Literal
+           | Iir_Kind_Floating_Point_Literal
            | Iir_Kind_Null_Literal
            | Iir_Kind_String_Literal8
+           | Iir_Kind_Physical_Int_Literal
+           | Iir_Kind_Physical_Fp_Literal
            | Iir_Kind_Simple_Aggregate
            | Iir_Kind_Overflow_Literal
            | Iir_Kind_Waveform_Element
@@ -517,12 +515,6 @@ package body Iirs is
            | Iir_Kind_Simple_Simultaneous_Statement
            | Iir_Kind_Wait_Statement =>
             return Format_Medium;
-         when Iir_Kind_Floating_Point_Literal
-           | Iir_Kind_Physical_Fp_Literal =>
-            return Format_Fp;
-         when Iir_Kind_Integer_Literal
-           | Iir_Kind_Physical_Int_Literal =>
-            return Format_Int;
       end case;
    end Get_Format;
 
@@ -904,20 +896,39 @@ package body Iirs is
       Set_Field12 (Design_Unit, Int32_To_Iir (Line));
    end Set_Design_Unit_Source_Col;
 
-   function Get_Value (Lit : Iir) return Iir_Int64 is
+   type Iir_Int64_Conv is record
+      Field4: Iir;
+      Field5: Iir;
+   end record;
+   pragma Pack (Iir_Int64_Conv);
+   pragma Assert (Iir_Int64_Conv'Size = Iir_Int64'Size);
+
+   function Get_Value (Lit : Iir) return Iir_Int64
+   is
+      function To_Iir_Int64 is new Ada.Unchecked_Conversion
+         (Iir_Int64_Conv, Iir_Int64);
+      Conv : Iir_Int64_Conv;
    begin
       pragma Assert (Lit /= Null_Iir);
       pragma Assert (Has_Value (Get_Kind (Lit)),
                      "no field Value");
-      return Get_Int64 (Lit);
+      Conv.Field4 := Get_Field4 (Lit);
+      Conv.Field5 := Get_Field5 (Lit);
+      return To_Iir_Int64 (Conv);
    end Get_Value;
 
-   procedure Set_Value (Lit : Iir; Val : Iir_Int64) is
+   procedure Set_Value (Lit : Iir; Val : Iir_Int64)
+   is
+      function To_Iir_Int64_Conv is new Ada.Unchecked_Conversion
+         (Iir_Int64, Iir_Int64_Conv);
+      Conv : Iir_Int64_Conv;
    begin
       pragma Assert (Lit /= Null_Iir);
       pragma Assert (Has_Value (Get_Kind (Lit)),
                      "no field Value");
-      Set_Int64 (Lit, Val);
+      Conv := To_Iir_Int64_Conv (Val);
+      Set_Field4 (Lit, Conv.Field4);
+      Set_Field5 (Lit, Conv.Field5);
    end Set_Value;
 
    function Get_Enum_Pos (Lit : Iir) return Iir_Int32 is
@@ -952,36 +963,39 @@ package body Iirs is
       Set_Field4 (Unit, Lit);
    end Set_Physical_Literal;
 
-   function Get_Physical_Unit_Value (Unit : Iir) return Iir is
-   begin
-      pragma Assert (Unit /= Null_Iir);
-      pragma Assert (Has_Physical_Unit_Value (Get_Kind (Unit)),
-                     "no field Physical_Unit_Value");
-      return Get_Field5 (Unit);
-   end Get_Physical_Unit_Value;
+   type Iir_Fp64_Conv is record
+      Field4: Iir;
+      Field5: Iir;
+   end record;
+   pragma Pack (Iir_Fp64_Conv);
+   pragma Assert (Iir_Fp64_Conv'Size = Iir_Fp64'Size);
 
-   procedure Set_Physical_Unit_Value (Unit : Iir; Lit : Iir) is
-   begin
-      pragma Assert (Unit /= Null_Iir);
-      pragma Assert (Has_Physical_Unit_Value (Get_Kind (Unit)),
-                     "no field Physical_Unit_Value");
-      Set_Field5 (Unit, Lit);
-   end Set_Physical_Unit_Value;
-
-   function Get_Fp_Value (Lit : Iir) return Iir_Fp64 is
+   function Get_Fp_Value (Lit : Iir) return Iir_Fp64
+   is
+      function To_Iir_Fp64 is new Ada.Unchecked_Conversion
+         (Iir_Fp64_Conv, Iir_Fp64);
+      Conv : Iir_Fp64_Conv;
    begin
       pragma Assert (Lit /= Null_Iir);
       pragma Assert (Has_Fp_Value (Get_Kind (Lit)),
                      "no field Fp_Value");
-      return Get_Fp64 (Lit);
+      Conv.Field4 := Get_Field4 (Lit);
+      Conv.Field5 := Get_Field5 (Lit);
+      return To_Iir_Fp64 (Conv);
    end Get_Fp_Value;
 
-   procedure Set_Fp_Value (Lit : Iir; Val : Iir_Fp64) is
+   procedure Set_Fp_Value (Lit : Iir; Val : Iir_Fp64)
+   is
+      function To_Iir_Fp64_Conv is new Ada.Unchecked_Conversion
+         (Iir_Fp64, Iir_Fp64_Conv);
+      Conv : Iir_Fp64_Conv;
    begin
       pragma Assert (Lit /= Null_Iir);
       pragma Assert (Has_Fp_Value (Get_Kind (Lit)),
                      "no field Fp_Value");
-      Set_Fp64 (Lit, Val);
+      Conv := To_Iir_Fp64_Conv (Val);
+      Set_Field4 (Lit, Conv.Field4);
+      Set_Field5 (Lit, Conv.Field5);
    end Set_Fp_Value;
 
    function Get_Simple_Aggregate_List (Target : Iir) return Iir_List is
@@ -1032,20 +1046,42 @@ package body Iirs is
       Set_Field4 (Lit, Int32_To_Iir (Len));
    end Set_String_Length;
 
-   function Get_Bit_String_Base (Lit : Iir) return Number_Base_Type is
+   type Number_Base_Type_Conv is record
+      Flag12: Boolean;
+      Flag13: Boolean;
+      Flag14: Boolean;
+   end record;
+   pragma Pack (Number_Base_Type_Conv);
+   pragma Assert (Number_Base_Type_Conv'Size = Number_Base_Type'Size);
+
+   function Get_Bit_String_Base (Lit : Iir) return Number_Base_Type
+   is
+      function To_Number_Base_Type is new Ada.Unchecked_Conversion
+         (Number_Base_Type_Conv, Number_Base_Type);
+      Conv : Number_Base_Type_Conv;
    begin
       pragma Assert (Lit /= Null_Iir);
       pragma Assert (Has_Bit_String_Base (Get_Kind (Lit)),
                      "no field Bit_String_Base");
-      return Number_Base_Type'Val (Get_Odigit1 (Lit));
+      Conv.Flag12 := Get_Flag12 (Lit);
+      Conv.Flag13 := Get_Flag13 (Lit);
+      Conv.Flag14 := Get_Flag14 (Lit);
+      return To_Number_Base_Type (Conv);
    end Get_Bit_String_Base;
 
-   procedure Set_Bit_String_Base (Lit : Iir; Base : Number_Base_Type) is
+   procedure Set_Bit_String_Base (Lit : Iir; Base : Number_Base_Type)
+   is
+      function To_Number_Base_Type_Conv is new Ada.Unchecked_Conversion
+         (Number_Base_Type, Number_Base_Type_Conv);
+      Conv : Number_Base_Type_Conv;
    begin
       pragma Assert (Lit /= Null_Iir);
       pragma Assert (Has_Bit_String_Base (Get_Kind (Lit)),
                      "no field Bit_String_Base");
-      Set_Odigit1 (Lit, Number_Base_Type'Pos (Base));
+      Conv := To_Number_Base_Type_Conv (Base);
+      Set_Flag12 (Lit, Conv.Flag12);
+      Set_Flag13 (Lit, Conv.Flag13);
+      Set_Flag14 (Lit, Conv.Flag14);
    end Set_Bit_String_Base;
 
    function Get_Has_Signed (Lit : Iir) return Boolean is
@@ -1390,7 +1426,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Open_Flag (Get_Kind (Target)),
                      "no field Open_Flag");
-      return Get_Flag12 (Target);
+      return Get_Flag15 (Target);
    end Get_Open_Flag;
 
    procedure Set_Open_Flag (Target : Iir; Flag : Boolean) is
@@ -1398,7 +1434,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Open_Flag (Get_Kind (Target)),
                      "no field Open_Flag");
-      Set_Flag12 (Target, Flag);
+      Set_Flag15 (Target, Flag);
    end Set_Open_Flag;
 
    function Get_After_Drivers_Flag (Target : Iir) return Boolean is
@@ -2011,20 +2047,42 @@ package body Iirs is
       Set_Field1 (Target, Nature);
    end Set_Nature;
 
-   function Get_Mode (Target : Iir) return Iir_Mode is
+   type Iir_Mode_Conv is record
+      Flag12: Boolean;
+      Flag13: Boolean;
+      Flag14: Boolean;
+   end record;
+   pragma Pack (Iir_Mode_Conv);
+   pragma Assert (Iir_Mode_Conv'Size = Iir_Mode'Size);
+
+   function Get_Mode (Target : Iir) return Iir_Mode
+   is
+      function To_Iir_Mode is new Ada.Unchecked_Conversion
+         (Iir_Mode_Conv, Iir_Mode);
+      Conv : Iir_Mode_Conv;
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Mode (Get_Kind (Target)),
                      "no field Mode");
-      return Iir_Mode'Val (Get_Odigit1 (Target));
+      Conv.Flag12 := Get_Flag12 (Target);
+      Conv.Flag13 := Get_Flag13 (Target);
+      Conv.Flag14 := Get_Flag14 (Target);
+      return To_Iir_Mode (Conv);
    end Get_Mode;
 
-   procedure Set_Mode (Target : Iir; Mode : Iir_Mode) is
+   procedure Set_Mode (Target : Iir; Mode : Iir_Mode)
+   is
+      function To_Iir_Mode_Conv is new Ada.Unchecked_Conversion
+         (Iir_Mode, Iir_Mode_Conv);
+      Conv : Iir_Mode_Conv;
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Mode (Get_Kind (Target)),
                      "no field Mode");
-      Set_Odigit1 (Target, Iir_Mode'Pos (Mode));
+      Conv := To_Iir_Mode_Conv (Mode);
+      Set_Flag12 (Target, Conv.Flag12);
+      Set_Flag13 (Target, Conv.Flag13);
+      Set_Flag14 (Target, Conv.Flag14);
    end Set_Mode;
 
    function Get_Guarded_Signal_Flag (Target : Iir) return Boolean is
@@ -2629,7 +2687,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Unit_Chain (Get_Kind (Target)),
                      "no field Unit_Chain");
-      return Get_Field1 (Target);
+      return Get_Field2 (Target);
    end Get_Unit_Chain;
 
    procedure Set_Unit_Chain (Target : Iir; Chain : Iir) is
@@ -2637,7 +2695,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Unit_Chain (Get_Kind (Target)),
                      "no field Unit_Chain");
-      Set_Field1 (Target, Chain);
+      Set_Field2 (Target, Chain);
    end Set_Unit_Chain;
 
    function Get_Primary_Unit (Target : Iir) return Iir is
@@ -2645,7 +2703,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Primary_Unit (Get_Kind (Target)),
                      "no field Primary_Unit");
-      return Get_Field1 (Target);
+      return Get_Field2 (Target);
    end Get_Primary_Unit;
 
    procedure Set_Primary_Unit (Target : Iir; Unit : Iir) is
@@ -2653,7 +2711,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Primary_Unit (Get_Kind (Target)),
                      "no field Primary_Unit");
-      Set_Field1 (Target, Unit);
+      Set_Field2 (Target, Unit);
    end Set_Primary_Unit;
 
    function Get_Identifier (Target : Iir) return Name_Id is

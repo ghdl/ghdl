@@ -2401,11 +2401,10 @@ package body Canon is
          El := Get_Named_Entity (El);
          Comp_Conf := Get_Component_Configuration (El);
          if Comp_Conf /= Null_Iir and then Comp_Conf /= Conf then
-            if Get_Kind (Comp_Conf) /= Iir_Kind_Configuration_Specification
-              or else Get_Kind (Conf) /= Iir_Kind_Component_Configuration
-            then
-               raise Internal_Error;
-            end if;
+            pragma Assert
+              (Get_Kind (Comp_Conf) = Iir_Kind_Configuration_Specification);
+            pragma Assert
+              (Get_Kind (Conf) = Iir_Kind_Component_Configuration);
             Canon_Incremental_Binding (Comp_Conf, Conf, Parent);
          else
             Set_Component_Configuration (El, Conf);
@@ -2444,34 +2443,38 @@ package body Canon is
       if Canon_Flag_Expressions then
          Canon_Expression (Get_Expression (Dis));
       end if;
-      Signal_List := Get_Signal_List (Dis);
-      if Signal_List = Iir_List_All then
-         Force := True;
-      elsif Signal_List = Iir_List_Others then
-         Force := False;
-      else
-         return;
-      end if;
-      Dis_Type := Get_Type (Get_Type_Mark (Dis));
-      N_List := Create_Iir_List;
-      Set_Signal_List (Dis, N_List);
-      El := Get_Declaration_Chain (Decl_Parent);
-      while El /= Null_Iir loop
-         if Get_Kind (El) = Iir_Kind_Signal_Declaration
-           and then Get_Type (El) = Dis_Type
-           and then Get_Guarded_Signal_Flag (El)
-         then
-            if not Get_Has_Disconnect_Flag (El) then
-               Set_Has_Disconnect_Flag (El, True);
-               Append_Element (N_List, El);
-            else
-               if Force then
-                  raise Internal_Error;
+
+      if Canon_Flag_Specification_Lists then
+         Signal_List := Get_Signal_List (Dis);
+         if Signal_List = Iir_List_All then
+            Force := True;
+         elsif Signal_List = Iir_List_Others then
+            Force := False;
+         else
+            return;
+         end if;
+
+         Dis_Type := Get_Type (Get_Type_Mark (Dis));
+         N_List := Create_Iir_List;
+         Set_Signal_List (Dis, N_List);
+         El := Get_Declaration_Chain (Decl_Parent);
+         while El /= Null_Iir loop
+            if Get_Kind (El) = Iir_Kind_Signal_Declaration
+              and then Get_Type (El) = Dis_Type
+              and then Get_Guarded_Signal_Flag (El)
+            then
+               if not Get_Has_Disconnect_Flag (El) then
+                  Set_Has_Disconnect_Flag (El, True);
+                  Append_Element (N_List, El);
+               else
+                  if Force then
+                     raise Internal_Error;
+                  end if;
                end if;
             end if;
-         end if;
-         El := Get_Chain (El);
-      end loop;
+            El := Get_Chain (El);
+         end loop;
+      end if;
    end Canon_Disconnection_Specification;
 
    procedure Canon_Subtype_Indication (Def : Iir) is
@@ -2676,8 +2679,10 @@ package body Canon is
             null;
 
          when Iir_Kind_Configuration_Specification =>
-            Canon_Component_Specification (Decl, Parent);
-            Canon_Component_Configuration (Top, Decl);
+            if Canon_Flag_Configurations then
+               Canon_Component_Specification (Decl, Parent);
+               Canon_Component_Configuration (Top, Decl);
+            end if;
 
          when Iir_Kind_Package_Declaration =>
             Canon_Declarations (Top, Decl, Parent);
@@ -3021,17 +3026,23 @@ package body Canon is
             Canon_Interface_List (Get_Generic_Chain (El));
             Canon_Interface_List (Get_Port_Chain (El));
             Canon_Declarations (Unit, El, El);
-            Canon_Concurrent_Stmts (Unit, El);
+            if Canon_Flag_Concurrent_Stmts then
+               Canon_Concurrent_Stmts (Unit, El);
+            end if;
          when Iir_Kind_Architecture_Body =>
             Canon_Declarations (Unit, El, El);
-            Canon_Concurrent_Stmts (Unit, El);
+            if Canon_Flag_Concurrent_Stmts then
+               Canon_Concurrent_Stmts (Unit, El);
+            end if;
          when Iir_Kind_Package_Declaration =>
             Canon_Declarations (Unit, El, Null_Iir);
          when Iir_Kind_Package_Body =>
             Canon_Declarations (Unit, El, Null_Iir);
          when Iir_Kind_Configuration_Declaration =>
             Canon_Declarations (Unit, El, Null_Iir);
-            Canon_Block_Configuration (Unit, Get_Block_Configuration (El));
+            if Canon_Flag_Configurations then
+               Canon_Block_Configuration (Unit, Get_Block_Configuration (El));
+            end if;
          when Iir_Kind_Package_Instantiation_Declaration =>
             El := Canon_Package_Instantiation_Declaration (El);
             Set_Library_Unit (Unit, El);

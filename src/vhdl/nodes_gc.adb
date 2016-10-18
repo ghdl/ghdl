@@ -17,11 +17,11 @@
 --  02111-1307, USA.
 
 with Ada.Text_IO;
+with Ada.Unchecked_Deallocation;
 with Types; use Types;
 with Nodes;
 with Nodes_Meta; use Nodes_Meta;
 with Errorout; use Errorout;
-with Iirs; use Iirs;
 with Libraries;
 with Disp_Tree;
 with Std_Package;
@@ -34,6 +34,9 @@ package body Nodes_GC is
    Has_Error : Boolean := False;
 
    Markers : Marker_Array_Acc;
+
+   procedure Free is new Ada.Unchecked_Deallocation
+     (Marker_Array, Marker_Array_Acc);
 
    procedure Mark_Iir (N : Iir);
 
@@ -242,6 +245,8 @@ package body Nodes_GC is
          return;
       end if;
 
+      Markers (Get_Design_File (Unit)) := True;
+
       --  First mark dependences
       List := Get_Dependence_List (Unit);
       if List /= Null_Iir_List then
@@ -273,12 +278,11 @@ package body Nodes_GC is
       Mark_Iir (Unit);
    end Mark_Unit;
 
-   procedure Report_Unreferenced
+   --  Initialize the mark process.  Create the array and mark some unrooted
+   --  but referenced nodes in std_package.
+   procedure Mark_Init
    is
-      use Ada.Text_IO;
       use Std_Package;
-      El : Iir;
-      Nbr_Unreferenced : Natural;
    begin
       Markers := new Marker_Array'(Null_Iir .. Iirs.Get_Last_Node => False);
 
@@ -287,7 +291,29 @@ package body Nodes_GC is
       --  Node not owned, but used for "/" (time, time).
       Markers (Convertible_Integer_Type_Definition) := True;
       Markers (Convertible_Real_Type_Definition) := True;
+   end Mark_Init;
 
+   --  Marks known nodes that aren't owned.
+   procedure Mark_Not_Owned
+   is
+      use Std_Package;
+   begin
+      --  These nodes are owned by type/subtype declarations, so unmark them
+      --  before marking their owner.
+      Markers (Convertible_Integer_Type_Definition) := False;
+      Markers (Convertible_Real_Type_Definition) := False;
+
+      --  These nodes are not rooted.
+      Mark_Iir (Convertible_Integer_Type_Declaration);
+      Mark_Iir (Convertible_Integer_Subtype_Declaration);
+      Mark_Iir (Convertible_Real_Type_Declaration);
+      Mark_Iir (Universal_Integer_One);
+      Mark_Chain (Wildcard_Type_Declaration_Chain);
+      Mark_Iir (Error_Mark);
+   end Mark_Not_Owned;
+
+   procedure Mark_Units_Of_All_Libraries is
+   begin
       --  The user nodes.
       declare
          Lib : Iir;
@@ -355,20 +381,20 @@ package body Nodes_GC is
             Unit := Get_Chain (Unit);
          end loop;
       end;
+   end Mark_Units_Of_All_Libraries;
 
-      --  These nodes are owned by type/subtype declarations, so unmark them
-      --  before marking their owner.
-      Markers (Convertible_Integer_Type_Definition) := False;
-      Markers (Convertible_Real_Type_Definition) := False;
+   procedure Report_Unreferenced
+   is
+      use Ada.Text_IO;
+      use Std_Package;
+      El : Iir;
+      Nbr_Unreferenced : Natural;
+   begin
+      Mark_Init;
+      Mark_Units_Of_All_Libraries;
+      Mark_Not_Owned;
 
-      --  These nodes are not rooted.
-      Mark_Iir (Convertible_Integer_Type_Declaration);
-      Mark_Iir (Convertible_Integer_Subtype_Declaration);
-      Mark_Iir (Convertible_Real_Type_Declaration);
-      Mark_Iir (Universal_Integer_One);
-      Mark_Chain (Wildcard_Type_Declaration_Chain);
-      Mark_Iir (Error_Mark);
-
+      --  Iterate on all nodes, and report nodes not marked.
       El := Error_Mark;
       Nbr_Unreferenced := 0;
       while El in Markers'Range loop
@@ -382,8 +408,20 @@ package body Nodes_GC is
          El := Iir (Nodes.Next_Node (Nodes.Node_Type (El)));
       end loop;
 
+      Free (Markers);
+
       if Has_Error then
          raise Internal_Error;
       end if;
    end Report_Unreferenced;
+
+   procedure Check_Tree (Unit : Iir) is
+   begin
+      Mark_Init;
+      Mark_Unit (Unit);
+      Free (Markers);
+      if Has_Error then
+         raise Internal_Error;
+      end if;
+   end Check_Tree;
 end Nodes_GC;

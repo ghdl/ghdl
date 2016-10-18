@@ -40,7 +40,9 @@ package body Evaluation is
          when Iir_Kind_Physical_Int_Literal
            | Iir_Kind_Physical_Fp_Literal =>
             --  Extract Unit.
-            Unit := Get_Physical_Unit_Value (Get_Physical_Unit (Expr));
+            Unit := Get_Physical_Literal (Get_Physical_Unit (Expr));
+            pragma Assert (Get_Physical_Unit (Unit)
+                             = Get_Primary_Unit (Get_Type (Unit)));
             case Kind is
                when Iir_Kind_Physical_Int_Literal =>
                   return Get_Value (Expr) * Get_Value (Unit);
@@ -51,7 +53,7 @@ package body Evaluation is
                   raise Program_Error;
             end case;
          when Iir_Kind_Unit_Declaration =>
-            return Get_Value (Get_Physical_Unit_Value (Expr));
+            return Get_Value (Get_Physical_Literal (Expr));
          when others =>
             Error_Kind ("get_physical_value", Expr);
       end case;
@@ -1748,7 +1750,7 @@ package body Evaluation is
          return Build_Overflow (Expr);
       end if;
 
-      Mult := Get_Value (Get_Physical_Unit_Value (Unit));
+      Mult := Get_Value (Get_Physical_Literal (Unit));
       if Found_Real then
          return Build_Physical
            (Iir_Int64 (Iir_Fp64'Value (Val (Val'First .. Sep))
@@ -2066,7 +2068,7 @@ package body Evaluation is
          when Iir_Kind_Object_Alias_Declaration =>
             return Eval_Static_Expr (Get_Name (Expr));
          when Iir_Kind_Unit_Declaration =>
-            return Get_Physical_Unit_Value (Expr);
+            return Get_Physical_Literal (Expr);
          when Iir_Kind_Simple_Aggregate =>
             return Expr;
 

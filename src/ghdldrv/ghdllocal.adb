@@ -19,24 +19,17 @@ with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Command_Line; use Ada.Command_Line;
 with GNAT.Directory_Operations;
 with Types; use Types;
-with Iir_Chains;
-with Nodes_Meta;
 with Libraries;
 with Std_Package;
 with Flags;
 with Name_Table;
 with Std_Names;
-with Back_End;
 with Disp_Vhdl;
 with Default_Pathes;
 with Scanner;
-with Sem;
-with Canon;
 with Errorout;
 with Configuration;
 with Files_Map;
-with Post_Sems;
-with Disp_Tree;
 with Options;
 with Iirs_Utils; use Iirs_Utils;
 
@@ -48,89 +41,10 @@ package body Ghdllocal is
    --  If TRUE, generate 32bits code on 64bits machines.
    Flag_32bit : Boolean := False;
 
-   procedure Finish_Compilation
-     (Unit : Iir_Design_Unit; Main : Boolean := False)
-   is
-      use Errorout;
-      Lib_Unit : constant Iir := Get_Library_Unit (Unit);
-      Config : Iir_Design_Unit;
-   begin
-      if (Main or Flags.Dump_All) and then Flags.Dump_Parse then
-         Disp_Tree.Disp_Tree (Unit);
-      end if;
-
-      if Flags.Verbose then
-         Report_Msg (Msgid_Note, Semantic, +Unit,
-                     "analyze %n", (1 => +Lib_Unit));
-      end if;
-
-      Sem.Semantic (Unit);
-
-      if (Main or Flags.Dump_All) and then Flags.Dump_Sem then
-         Disp_Tree.Disp_Tree (Unit);
-      end if;
-
-      if Errorout.Nbr_Errors > 0 then
-         raise Compilation_Error;
-      end if;
-
-      if (Main or Flags.List_All) and then Flags.List_Sem then
-         Disp_Vhdl.Disp_Vhdl (Unit);
-      end if;
-
-      Post_Sems.Post_Sem_Checks (Unit);
-
-      if Errorout.Nbr_Errors > 0 then
-         raise Compilation_Error;
-      end if;
-
-      if Flags.Flag_Elaborate
-        or else ((Main or Flags.List_All) and then Flags.List_Canon)
-      then
-         if Flags.Verbose then
-            Report_Msg (Msgid_Note, Semantic, No_Location,
-                        "canonicalize %n", (1 => +Lib_Unit));
-         end if;
-
-         Canon.Canonicalize (Unit);
-
-         --  FIXME: for Main only ?
-         if Get_Kind (Lib_Unit) = Iir_Kind_Package_Declaration
-           and then not Get_Need_Body (Lib_Unit)
-           and then Get_Need_Instance_Bodies (Lib_Unit)
-         then
-            --  Create the bodies for instances
-            Set_Package_Instantiation_Bodies_Chain
-              (Lib_Unit,
-               Canon.Create_Instantiation_Bodies (Lib_Unit, Lib_Unit));
-         elsif Get_Kind (Lib_Unit) = Iir_Kind_Package_Body
-           and then Get_Need_Instance_Bodies (Get_Package (Lib_Unit))
-         then
-            Iir_Chains.Append_Chain
-              (Lib_Unit, Nodes_Meta.Field_Declaration_Chain,
-               Canon.Create_Instantiation_Bodies (Get_Package (Lib_Unit),
-                                                  Lib_Unit));
-         end if;
-
-         if (Main or Flags.List_All) and then Flags.List_Canon then
-            Disp_Vhdl.Disp_Vhdl (Unit);
-         end if;
-      end if;
-
-      if Flags.Flag_Elaborate then
-         if Get_Kind (Lib_Unit) = Iir_Kind_Architecture_Body then
-            Config :=
-              Canon.Create_Default_Configuration_Declaration (Lib_Unit);
-            Set_Default_Configuration_Declaration (Lib_Unit, Config);
-         end if;
-      end if;
-   end Finish_Compilation;
-
    procedure Compile_Init is
    begin
       Options.Initialize;
       Flag_Ieee := Lib_Standard;
-      Back_End.Finish_Compilation := Finish_Compilation'Access;
       Flag_Verbose := False;
    end Compile_Init;
 
@@ -800,7 +714,7 @@ package body Ghdllocal is
                     | Date_Analyzed =>
                      null;
                   when Date_Parsed =>
-                     Back_End.Finish_Compilation (Unit, False);
+                     Libraries.Finish_Compilation (Unit, False);
                   when others =>
                      raise Internal_Error;
                end case;
@@ -865,7 +779,7 @@ package body Ghdllocal is
             New_Line;
          end if;
          -- Sem, canon, annotate a design unit.
-         Back_End.Finish_Compilation (Unit, True);
+         Libraries.Finish_Compilation (Unit, True);
 
          Next_Unit := Get_Chain (Unit);
          if Errorout.Nbr_Errors = 0 then

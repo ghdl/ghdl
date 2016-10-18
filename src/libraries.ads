@@ -145,6 +145,10 @@ package Libraries is
      (Primary: Iir_Design_Unit; Name: Name_Id; Loc : Iir)
      return Iir_Design_Unit;
 
+   --  Analyze UNIT.
+   procedure Finish_Compilation
+     (Unit : Iir_Design_Unit; Main : Boolean := False);
+
    --  Get or create a library from an identifier.
    --  LOC is used only to report errors.
    function Get_Library (Ident : Name_Id; Loc : Location_Type)
