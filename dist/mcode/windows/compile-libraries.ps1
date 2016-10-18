@@ -87,11 +87,14 @@ $Script_WorkingDir =	Get-Location
 $GHDLRootDir =				Convert-Path (Resolve-Path ($PSScriptRoot + "\" + $RelPathToRoot))
 
 # set default values
-$EnableVerbose =			$PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent
-$EnableDebug =				$PSCmdlet.MyInvocation.BoundParameters["Debug"].IsPresent
+$EnableVerbose =			$PSCmdlet.MyInvocation.BoundParameters["Verbose"]
+$EnableDebug =				$PSCmdlet.MyInvocation.BoundParameters["Debug"]
+if ($EnableVerbose -eq $null)	{	$EnableVerbose =	$false	}
+if ($EnableDebug	 -eq $null)	{	$EnableDebug =		$false	}
+if ($EnableDebug	 -eq $true)	{	$EnableVerbose =	$true		}
 
 # load modules from GHDL's 'libraries' directory
-Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -ArgumentList "$Script_WorkingDir", $Hosted
+Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -Debug:$false -ArgumentList "$Script_WorkingDir", $Hosted
 
 # Display help if no command was selected
 $Help = $Help -or (-not ($Compile -or $VHDL87 -or $VHDL93 -or $VHDL2008 -or $Clean))
@@ -186,7 +189,7 @@ if (-not $Hosted)
 if ($Clean)
 {	Write-Host "Removing all created files and directories..."
 	if (Test-Path -Path $VHDLDestinationLibraryDirectory)
-	{	Write-Host "  rmdir $VHDLDestinationLibraryDirectory"
+	{	$EnableVerbose	-and (Write-Host "  rmdir $VHDLDestinationLibraryDirectory")	| Out-Null
 		Remove-Item $VHDLDestinationLibraryDirectory -Force -Recurse -ErrorAction SilentlyContinue
 		if ($? -eq $false)
 		{	Write-Host "[ERROR]: Cannot remove '$VHDLDestinationLibraryDirectory'." -ForegroundColor Red
@@ -221,17 +224,17 @@ if ($VHDL87 -or $VHDL93 -or $VHDL2008)
 
 	# create lib directory if it does not exist
 	if (Test-Path -Path $VHDLDestinationLibraryDirectory)
-	{	Write-Host "  Directory '$VHDLDestinationLibraryDirectory' already exists."
+	{	$EnableVerbose	-and (Write-Host "  Directory '$VHDLDestinationLibraryDirectory' already exists.")	| Out-Null
 		
 		# change working directory to VHDLDestinationLibraryDirectory
-		Write-Host "  cd $VHDLDestinationLibraryDirectory"
+		$EnableVerbose	-and (Write-Host "  cd $VHDLDestinationLibraryDirectory")	| Out-Null
 		Set-Location $VHDLDestinationLibraryDirectory
 	
-		Write-Host "  Cleaning up directory..."
+		$EnableVerbose	-and (Write-Host "  Cleaning up directory...")	| Out-Null
 		Remove-Item ./* -Force -Recurse -ErrorAction SilentlyContinue
 	}
 	else
-	{	Write-Host "  Creating directory '$VHDLDestinationLibraryDirectory'."
+	{	$EnableVerbose	-and (Write-Host "  Creating directory '$VHDLDestinationLibraryDirectory'.")	| Out-Null
 		New-Item -ItemType Directory -Path $VHDLDestinationLibraryDirectory -ErrorAction SilentlyContinue | Out-Null
 		if (-not $?)
 		{	Write-Host "[ERROR]: Cannot create destination directory '$VHDLDestinationLibraryDirectory'." -ForegroundColor Red
@@ -239,7 +242,7 @@ if ($VHDL87 -or $VHDL93 -or $VHDL2008)
 		}
 		
 		# change working directory to VHDLDestinationLibraryDirectory
-		Write-Host "  Change working directory to $VHDLDestinationLibraryDirectory"
+		$EnableVerbose	-and (Write-Host "  Change working directory to $VHDLDestinationLibraryDirectory")	| Out-Null
 		Set-Location $VHDLDestinationLibraryDirectory
 	}
 	
@@ -252,7 +255,7 @@ if ($VHDL87 -or $VHDL93 -or $VHDL2008)
 if ($VHDL87)
 {	$VHDLVersion =				"87"
 	$VersionedDirectory =	"$VHDLDestinationLibraryDirectory\v$VHDLVersion"
-	Write-Host "VHDL-$VHDLVersion" -ForegroundColor Cyan
+	Write-Host "Compiling libraries for VHDL-$VHDLVersion" -ForegroundColor Cyan
 	
 	# ----------------------------------------------------------------------
 	# v87\std
@@ -267,7 +270,10 @@ if ($VHDL87)
 	$VHDLSourcesIndex = "std"
 	foreach ($SourceFile in $SourceFiles[$VHDLSourcesIndex])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for VHDL-$VHDLVersion"																																														) | Out-Null
+		$EnableDebug -and		(Write-Host "        Get-Content `"$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl`" -Encoding Ascii ``"	-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Format-VHDLSourceFile -Version `"$VHDLVersion`" ``"																						-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Out-File `"$SourceFile.v$VHDLVersion`" -Encoding Ascii"																				-ForegroundColor DarkGray	) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -299,7 +305,10 @@ if ($VHDL87)
 	$VHDLSourcesIndex = "ieee"
 	foreach ($SourceFile in $SourceFiles[$VHDLSourcesIndex])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for VHDL-$VHDLVersion"																																														) | Out-Null
+		$EnableDebug -and		(Write-Host "        Get-Content `"$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl`" -Encoding Ascii ``"	-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Format-VHDLSourceFile -Version `"$VHDLVersion`" ``"																						-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Out-File `"$SourceFile.v$VHDLVersion`" -Encoding Ascii"																				-ForegroundColor DarkGray	) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -331,7 +340,10 @@ if ($VHDL87)
 	$VHDLSourcesIndex = "ieee"
 	foreach ($SourceFile in $SourceFiles[$VHDLSourcesIndex])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for VHDL-$VHDLVersion"																																														) | Out-Null
+		$EnableDebug -and		(Write-Host "        Get-Content `"$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl`" -Encoding Ascii ``"	-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Format-VHDLSourceFile -Version `"$VHDLVersion`" ``"																						-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Out-File `"$SourceFile.v$VHDLVersion`" -Encoding Ascii"																				-ForegroundColor DarkGray	) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -351,8 +363,10 @@ if ($VHDL87)
 	
 	foreach ($SourceFile in $SourceFiles["synopsys"] + $SourceFiles["synopsys8793"])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
-		# Patch file
+		$EnableVerbose -and	(Write-Host "      Patching file for VHDL-$VHDLVersion"																																														) | Out-Null
+		$EnableDebug -and		(Write-Host "        Get-Content `"$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl`" -Encoding Ascii ``"	-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Format-VHDLSourceFile -Version `"$VHDLVersion`" ``"																						-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Out-File `"$SourceFile.v$VHDLVersion`" -Encoding Ascii"																				-ForegroundColor DarkGray	) | Out-Null
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLFlavor\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
 			| Out-File "$SourceFile.v$VHDLVersion" -Encoding Ascii
@@ -372,7 +386,10 @@ if ($VHDL87)
 	$VHDLSourcesIndex = "vital95"
 	foreach ($SourceFile in $SourceFiles[$VHDLSourcesIndex])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for VHDL-$VHDLVersion"																																														) | Out-Null
+		$EnableDebug -and		(Write-Host "        Get-Content `"$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl`" -Encoding Ascii ``"	-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Format-VHDLSourceFile -Version `"$VHDLVersion`" ``"																						-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Out-File `"$SourceFile.v$VHDLVersion`" -Encoding Ascii"																				-ForegroundColor DarkGray	) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -396,7 +413,7 @@ if ($VHDL87)
 if ($VHDL93)
 {	$VHDLVersion =				"93"
 	$VersionedDirectory =	"$VHDLDestinationLibraryDirectory\v$VHDLVersion"
-	Write-Host "VHDL-$VHDLVersion" -ForegroundColor Cyan
+	Write-Host "Compiling libraries for VHDL-$VHDLVersion" -ForegroundColor Cyan
 	
 	# ----------------------------------------------------------------------
 	# v93\std
@@ -411,7 +428,10 @@ if ($VHDL93)
 	$VHDLSourcesIndex = "std"
 	foreach ($SourceFile in $SourceFiles[$VHDLSourcesIndex])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for VHDL-$VHDLVersion"																																														) | Out-Null
+		$EnableDebug -and		(Write-Host "        Get-Content `"$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl`" -Encoding Ascii ``"	-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Format-VHDLSourceFile -Version `"$VHDLVersion`" ``"																						-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Out-File `"$SourceFile.v$VHDLVersion`" -Encoding Ascii"																				-ForegroundColor DarkGray	) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -443,7 +463,10 @@ if ($VHDL93)
 	$VHDLSourcesIndex = "ieee"
 	foreach ($SourceFile in $SourceFiles[$VHDLSourcesIndex] + $SourceFiles["math"])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for VHDL-$VHDLVersion"																																														) | Out-Null
+		$EnableDebug -and		(Write-Host "        Get-Content `"$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl`" -Encoding Ascii ``"	-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Format-VHDLSourceFile -Version `"$VHDLVersion`" ``"																						-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Out-File `"$SourceFile.v$VHDLVersion`" -Encoding Ascii"																				-ForegroundColor DarkGray	) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -464,7 +487,10 @@ if ($VHDL93)
 	$VHDLSourcesIndex = "vital2000"
 	foreach ($SourceFile in $SourceFiles[$VHDLSourcesIndex])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for VHDL-$VHDLVersion"																																														) | Out-Null
+		$EnableDebug -and		(Write-Host "        Get-Content `"$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl`" -Encoding Ascii ``"	-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Format-VHDLSourceFile -Version `"$VHDLVersion`" ``"																						-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Out-File `"$SourceFile.v$VHDLVersion`" -Encoding Ascii"																				-ForegroundColor DarkGray	) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -496,7 +522,10 @@ if ($VHDL93)
 	$VHDLSourcesIndex = "ieee"
 	foreach ($SourceFile in $SourceFiles[$VHDLSourcesIndex] + $SourceFiles["math"])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for VHDL-$VHDLVersion"																																														) | Out-Null
+		$EnableDebug -and		(Write-Host "        Get-Content `"$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl`" -Encoding Ascii ``"	-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Format-VHDLSourceFile -Version `"$VHDLVersion`" ``"																						-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Out-File `"$SourceFile.v$VHDLVersion`" -Encoding Ascii"																				-ForegroundColor DarkGray	) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -516,7 +545,10 @@ if ($VHDL93)
 	
 	foreach ($SourceFile in $SourceFiles[$VHDLFlavor] + $SourceFiles["synopsys8793"])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for VHDL-$VHDLVersion"																																														) | Out-Null
+		$EnableDebug -and		(Write-Host "        Get-Content `"$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl`" -Encoding Ascii ``"	-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Format-VHDLSourceFile -Version `"$VHDLVersion`" ``"																						-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Out-File `"$SourceFile.v$VHDLVersion`" -Encoding Ascii"																				-ForegroundColor DarkGray	) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLFlavor\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -537,7 +569,10 @@ if ($VHDL93)
 	$VHDLSourcesIndex = "vital2000"
 	foreach ($SourceFile in $SourceFiles[$VHDLSourcesIndex])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for VHDL-$VHDLVersion"																																														) | Out-Null
+		$EnableDebug -and		(Write-Host "        Get-Content `"$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl`" -Encoding Ascii ``"	-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Format-VHDLSourceFile -Version `"$VHDLVersion`" ``"																						-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Out-File `"$SourceFile.v$VHDLVersion`" -Encoding Ascii"																				-ForegroundColor DarkGray	) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -569,7 +604,10 @@ if ($VHDL93)
 	$VHDLSourcesIndex = "ieee"
 	foreach ($SourceFile in $SourceFiles[$VHDLSourcesIndex] + $SourceFiles["math"])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for VHDL-$VHDLVersion"																																														) | Out-Null
+		$EnableDebug -and		(Write-Host "        Get-Content `"$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl`" -Encoding Ascii ``"	-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Format-VHDLSourceFile -Version `"$VHDLVersion`" ``"																						-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Out-File `"$SourceFile.v$VHDLVersion`" -Encoding Ascii"																				-ForegroundColor DarkGray	) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -589,7 +627,10 @@ if ($VHDL93)
 	
 	foreach ($SourceFile in $SourceFiles[$VHDLFlavor])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for VHDL-$VHDLVersion"																																														) | Out-Null
+		$EnableDebug -and		(Write-Host "        Get-Content `"$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl`" -Encoding Ascii ``"	-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Format-VHDLSourceFile -Version `"$VHDLVersion`" ``"																						-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Out-File `"$SourceFile.v$VHDLVersion`" -Encoding Ascii"																				-ForegroundColor DarkGray	) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLFlavor\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -610,7 +651,10 @@ if ($VHDL93)
 	$VHDLSourcesIndex = "vital2000"
 	foreach ($SourceFile in $SourceFiles[$VHDLSourcesIndex])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for VHDL-$VHDLVersion"																																														) | Out-Null
+		$EnableDebug -and		(Write-Host "        Get-Content `"$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl`" -Encoding Ascii ``"	-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Format-VHDLSourceFile -Version `"$VHDLVersion`" ``"																						-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Out-File `"$SourceFile.v$VHDLVersion`" -Encoding Ascii"																				-ForegroundColor DarkGray	) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -634,7 +678,7 @@ if ($VHDL93)
 if ($VHDL2008)
 {	$VHDLVersion =				"08"
 	$VersionedDirectory =	"$VHDLDestinationLibraryDirectory\v$VHDLVersion"
-	Write-Host "VHDL-$VHDLVersion" -ForegroundColor Cyan
+	Write-Host "Compiling libraries for VHDL-$VHDLVersion" -ForegroundColor Cyan
 	
 	# ----------------------------------------------------------------------
 	# v08\std
@@ -649,7 +693,10 @@ if ($VHDL2008)
 	$VHDLSourcesIndex = "std08"
 	foreach ($SourceFile in $SourceFiles[$VHDLSourcesIndex])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for VHDL-$VHDLVersion"																																														) | Out-Null
+		$EnableDebug -and		(Write-Host "        Get-Content `"$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl`" -Encoding Ascii ``"	-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Format-VHDLSourceFile -Version `"$VHDLVersion`" ``"																						-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Out-File `"$SourceFile.v$VHDLVersion`" -Encoding Ascii"																				-ForegroundColor DarkGray	) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLLibrary\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -681,7 +728,10 @@ if ($VHDL2008)
 	$VHDLSourcesIndex = "ieee2008"
 	foreach ($SourceFile in $SourceFiles[$VHDLSourcesIndex])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for VHDL-$VHDLVersion"																																														) | Out-Null
+		$EnableDebug -and		(Write-Host "        Get-Content `"$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl`" -Encoding Ascii ``"	-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Format-VHDLSourceFile -Version `"$VHDLVersion`" ``"																						-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Out-File `"$SourceFile.v$VHDLVersion`" -Encoding Ascii"																				-ForegroundColor DarkGray	) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -702,7 +752,10 @@ if ($VHDL2008)
 	$VHDLSourcesIndex = "vital2000"
 	foreach ($SourceFile in $SourceFiles[$VHDLSourcesIndex])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for VHDL-$VHDLVersion"																																														) | Out-Null
+		$EnableDebug -and		(Write-Host "        Get-Content `"$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl`" -Encoding Ascii ``"	-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Format-VHDLSourceFile -Version `"$VHDLVersion`" ``"																						-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Out-File `"$SourceFile.v$VHDLVersion`" -Encoding Ascii"																				-ForegroundColor DarkGray	) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -734,7 +787,10 @@ if ($VHDL2008)
 	$VHDLSourcesIndex = "ieee2008"
 	foreach ($SourceFile in $SourceFiles[$VHDLSourcesIndex])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for VHDL-$VHDLVersion"																																														) | Out-Null
+		$EnableDebug -and		(Write-Host "        Get-Content `"$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl`" -Encoding Ascii ``"	-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Format-VHDLSourceFile -Version `"$VHDLVersion`" ``"																						-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Out-File `"$SourceFile.v$VHDLVersion`" -Encoding Ascii"																				-ForegroundColor DarkGray	) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -754,7 +810,10 @@ if ($VHDL2008)
 	
 	foreach ($SourceFile in $SourceFiles[$VHDLFlavor])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for VHDL-$VHDLVersion"																																														) | Out-Null
+		$EnableDebug -and		(Write-Host "        Get-Content `"$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl`" -Encoding Ascii ``"	-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Format-VHDLSourceFile -Version `"$VHDLVersion`" ``"																						-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Out-File `"$SourceFile.v$VHDLVersion`" -Encoding Ascii"																				-ForegroundColor DarkGray	) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLFlavor\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
@@ -775,7 +834,10 @@ if ($VHDL2008)
 	$VHDLSourcesIndex = "vital2000"
 	foreach ($SourceFile in $SourceFiles[$VHDLSourcesIndex])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
-		$EnableVerbose -and	(Write-Host "      Patching file for $VHDLVersion"								) | Out-Null
+		$EnableVerbose -and	(Write-Host "      Patching file for VHDL-$VHDLVersion"																																														) | Out-Null
+		$EnableDebug -and		(Write-Host "        Get-Content `"$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl`" -Encoding Ascii ``"	-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Format-VHDLSourceFile -Version `"$VHDLVersion`" ``"																						-ForegroundColor DarkGray	) | Out-Null
+		$EnableDebug -and		(Write-Host "          | Out-File `"$SourceFile.v$VHDLVersion`" -Encoding Ascii"																				-ForegroundColor DarkGray	) | Out-Null
 		# Patch file
 		Get-Content "$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl" -Encoding Ascii `
 			| Format-VHDLSourceFile -Version "$VHDLVersion" `
