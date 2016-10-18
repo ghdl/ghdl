@@ -161,7 +161,7 @@ package Iirs is
    --
    --  Get the kind of the iir.
    --  See below for the (public) list of kinds.
-   --   function Get_Kind (An_Iir: Iir) return Iir_Kind;
+   --   function Get_Kind (N : Iir) return Iir_Kind;
 
    --  Get the location of the node: ie the current position in the source
    --  file when the node was created.  This is a little bit fuzzy.
@@ -5566,23 +5566,23 @@ package Iirs is
    -- General methods.
 
    -- Get the kind of the iir.
-   function Get_Kind (An_Iir: Iir) return Iir_Kind;
+   function Get_Kind (N : Iir) return Iir_Kind;
    pragma Inline (Get_Kind);
 
    --  Create a new IIR of kind NEW_KIND, and copy fields from SRC to this
    --  iir.  Src fields are cleaned.
    --function Clone_Iir (Src: Iir; New_Kind : Iir_Kind) return Iir;
 
-   procedure Set_Location (Target: Iir; Location: Location_Type)
+   procedure Set_Location (Target : Iir; Location : Location_Type)
      renames Nodes.Set_Location;
-   function Get_Location (Target: Iir) return Location_Type
+   function Get_Location (Target : Iir) return Location_Type
      renames Nodes.Get_Location;
 
-   procedure Location_Copy (Target: Iir; Src: Iir);
+   procedure Location_Copy (Target : Iir; Src : Iir);
 
-   function Create_Iir (Kind: Iir_Kind) return Iir;
+   function Create_Iir (Kind : Iir_Kind) return Iir;
    function Create_Iir_Error return Iir;
-   procedure Free_Iir (Target: Iir) renames Nodes.Free_Node;
+   procedure Free_Iir (Target : Iir) renames Nodes.Free_Node;
 
    --  Disp statistics about node usage.
    procedure Disp_Stats;

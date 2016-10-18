@@ -124,18 +124,19 @@ package body Iirs is
       return Res;
    end Create_Iir_Error;
 
-   procedure Location_Copy (Target: Iir; Src: Iir) is
+   procedure Location_Copy (Target : Iir; Src : Iir) is
    begin
       Set_Location (Target, Get_Location (Src));
    end Location_Copy;
 
    -- Get kind
-   function Get_Kind (An_Iir: Iir) return Iir_Kind
+   function Get_Kind (N : Iir) return Iir_Kind
    is
       --  Speed up: avoid to check that nkind is in the bounds of Iir_Kind.
       pragma Suppress (Range_Check);
    begin
-      return Iir_Kind'Val (Get_Nkind (An_Iir));
+      pragma Assert (N /= Null_Iir);
+      return Iir_Kind'Val (Get_Nkind (N));
    end Get_Kind;
 
    function Time_Stamp_Id_To_Iir is new Ada.Unchecked_Conversion
