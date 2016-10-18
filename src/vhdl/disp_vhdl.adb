@@ -2123,7 +2123,7 @@ package body Disp_Vhdl is
    begin
       Disp_Identifier (Iterator);
       Put (" in ");
-      Disp_Discrete_Range (Get_Discrete_Range (Iterator));
+      Disp_Discrete_Range (Get_Subtype_Indication (Iterator));
    end Disp_Parameter_Specification;
 
    procedure Disp_Method_Object (Call : Iir)

@@ -2072,8 +2072,11 @@ package Iirs is
 
    -- Iir_Kind_Physical_Type_Definition (Short)
    --
-   --   Get/Set_Unit_Chain (Field1)
-   --   Get/Set_Primary_Unit (Alias Field1)
+   --  The range_constraint from the type declaration.
+   --   Get/Set_Range_Constraint (Field1)
+   --
+   --   Get/Set_Unit_Chain (Field2)
+   --   Get/Set_Primary_Unit (Alias Field2)
    --
    --   Get/Set_Type_Declarator (Field3)
    --
@@ -2086,6 +2089,8 @@ package Iirs is
    --   Get/Set_Has_Signal_Flag (Flag3)
    --
    --   Get/Set_Type_Staticness (State1)
+   --
+   --   Get/Set_Is_Ref (Flag7)
    --
    --   Get/Set_End_Has_Reserved_Id (Flag8)
    --
@@ -2111,12 +2116,10 @@ package Iirs is
    --
    --   Get/Set_Identifier (Field3)
    --
-   --  The value of the unit, computed from the primary unit.  This is always
-   --  a physical integer literal.
-   --   Get/Set_Physical_Unit_Value (Field5)
-   --
-   --  The Physical_Literal is the expression that appear in the sources, so
-   --  this is Null_Iir for a primary unit.
+   --  The Physical_Literal is the expression that defines the value of a
+   --  unit.  It is evaluated during analysis and thus expressed as a multiple
+   --  of the primary unit.  That's true even for the primary unit whose value
+   --  is thus 1.
    --   Get/Set_Physical_Literal (Field4)
    --
    --   Get/Set_Expr_Staticness (State1)
@@ -2138,6 +2141,9 @@ package Iirs is
    -- Iir_Kind_Integer_Type_Definition (Short)
    -- Iir_Kind_Floating_Type_Definition (Short)
    --
+   --  The range_constraint from the type declaration.
+   --   Get/Set_Range_Constraint (Field1)
+   --
    --  The type declarator that has created this type.
    --   Get/Set_Type_Declarator (Field3)
    --
@@ -2151,6 +2157,8 @@ package Iirs is
    --   Get/Set_Signal_Type_Flag (Flag2)
    --
    --   Get/Set_Has_Signal_Flag (Flag3)
+   --
+   --   Get/Set_Is_Ref (Flag7)
 
    -- Iir_Kind_Array_Type_Definition (Medium)
    --
@@ -5727,14 +5735,9 @@ package Iirs is
    function Get_Enum_Pos (Lit : Iir) return Iir_Int32;
    procedure Set_Enum_Pos (Lit : Iir; Val : Iir_Int32);
 
-   --  Field: Field4 Ref
+   --  Field: Field4
    function Get_Physical_Literal (Unit : Iir) return Iir;
    procedure Set_Physical_Literal (Unit : Iir; Lit : Iir);
-
-   --  Value of a physical unit declaration.
-   --  Field: Field5
-   function Get_Physical_Unit_Value (Unit : Iir) return Iir;
-   procedure Set_Physical_Unit_Value (Unit : Iir; Lit : Iir);
 
    --  Value of a floating point literal.
    --  Field: Field4,Field5 (grp)
@@ -6033,7 +6036,7 @@ package Iirs is
 
    --  Discrete range of an iterator.  During analysis, a subtype indiciation
    --  is created from this range.
-   --  Field: Field6 Ref
+   --  Field: Field6
    function Get_Discrete_Range (Target : Iir) return Iir;
    procedure Set_Discrete_Range (Target : Iir; Rng : Iir);
 
@@ -6264,13 +6267,13 @@ package Iirs is
    --  Chain of physical type units.
    --  The first unit is the primary unit.  If you really need the primary
    --  unit (and not the chain), you'd better to use Get_Primary_Unit.
-   --  Field: Field1 Chain
+   --  Field: Field2 Chain
    function Get_Unit_Chain (Target : Iir) return Iir;
    procedure Set_Unit_Chain (Target : Iir; Chain : Iir);
 
    --  Alias of Get_Unit_Chain.
    --  Return the primary unit of a physical type.
-   --  Field: Field1 Ref
+   --  Field: Field2 Ref
    function Get_Primary_Unit (Target : Iir) return Iir;
    procedure Set_Primary_Unit (Target : Iir; Unit : Iir);
 

@@ -963,22 +963,6 @@ package body Iirs is
       Set_Field4 (Unit, Lit);
    end Set_Physical_Literal;
 
-   function Get_Physical_Unit_Value (Unit : Iir) return Iir is
-   begin
-      pragma Assert (Unit /= Null_Iir);
-      pragma Assert (Has_Physical_Unit_Value (Get_Kind (Unit)),
-                     "no field Physical_Unit_Value");
-      return Get_Field5 (Unit);
-   end Get_Physical_Unit_Value;
-
-   procedure Set_Physical_Unit_Value (Unit : Iir; Lit : Iir) is
-   begin
-      pragma Assert (Unit /= Null_Iir);
-      pragma Assert (Has_Physical_Unit_Value (Get_Kind (Unit)),
-                     "no field Physical_Unit_Value");
-      Set_Field5 (Unit, Lit);
-   end Set_Physical_Unit_Value;
-
    type Iir_Fp64_Conv is record
       Field4: Iir;
       Field5: Iir;
@@ -2703,7 +2687,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Unit_Chain (Get_Kind (Target)),
                      "no field Unit_Chain");
-      return Get_Field1 (Target);
+      return Get_Field2 (Target);
    end Get_Unit_Chain;
 
    procedure Set_Unit_Chain (Target : Iir; Chain : Iir) is
@@ -2711,7 +2695,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Unit_Chain (Get_Kind (Target)),
                      "no field Unit_Chain");
-      Set_Field1 (Target, Chain);
+      Set_Field2 (Target, Chain);
    end Set_Unit_Chain;
 
    function Get_Primary_Unit (Target : Iir) return Iir is
@@ -2719,7 +2703,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Primary_Unit (Get_Kind (Target)),
                      "no field Primary_Unit");
-      return Get_Field1 (Target);
+      return Get_Field2 (Target);
    end Get_Primary_Unit;
 
    procedure Set_Primary_Unit (Target : Iir; Unit : Iir) is
@@ -2727,7 +2711,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Primary_Unit (Get_Kind (Target)),
                      "no field Primary_Unit");
-      Set_Field1 (Target, Unit);
+      Set_Field2 (Target, Unit);
    end Set_Primary_Unit;
 
    function Get_Identifier (Target : Iir) return Name_Id is

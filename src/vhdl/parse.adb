@@ -2016,7 +2016,7 @@ package body Parse is
       if Array_Constrained then
          --  Sem_Type will create the array type.
          Res_Type := Create_Iir (Iir_Kind_Array_Subtype_Definition);
-         Set_Element_Subtype (Res_Type, Element_Subtype);
+         Set_Array_Element_Constraint (Res_Type, Element_Subtype);
          Set_Index_Constraint_List (Res_Type, Index_List);
       else
          Res_Type := Create_Iir (Iir_Kind_Array_Type_Definition);
@@ -2045,7 +2045,7 @@ package body Parse is
    --  [ LRM93 3.1.3 ]
    --  secondary_unit_declaration ::= identifier = physical_literal ;
    function Parse_Physical_Type_Definition (Parent : Iir)
-     return Iir_Physical_Type_Definition
+                                           return Iir_Physical_Type_Definition
    is
       use Iir_Chains.Unit_Chain_Handling;
       Res: Iir_Physical_Type_Definition;
@@ -2392,19 +2392,18 @@ package body Parse is
             if Current_Token = Tok_Units then
                --  A physical type definition.
                declare
-                  Unit_Def : Iir;
+                  Phys_Def : Iir;
                begin
-                  Unit_Def := Parse_Physical_Type_Definition (Parent);
+                  Phys_Def := Parse_Physical_Type_Definition (Parent);
                   if Current_Token = Tok_Identifier then
                      if Flags.Vhdl_Std = Vhdl_87 then
                         Error_Msg_Parse
                           ("simple_name not allowed here in vhdl87");
                      end if;
-                     Check_End_Name (Get_Identifier (Decl), Unit_Def);
+                     Check_End_Name (Get_Identifier (Decl), Phys_Def);
                   end if;
-                  if Def /= Null_Iir then
-                     Set_Type (Def, Unit_Def);
-                  end if;
+                  Set_Range_Constraint (Phys_Def, Def);
+                  Set_Type_Definition (Decl, Phys_Def);
                end;
             end if;
 
@@ -2631,7 +2630,7 @@ package body Parse is
       Scan;
 
       if Current_Token = Tok_Left_Paren then
-         Set_Element_Subtype (Def, Parse_Element_Constraint);
+         Set_Array_Element_Constraint (Def, Parse_Element_Constraint);
       end if;
       return Def;
    end Parse_Element_Constraint;

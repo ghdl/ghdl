@@ -798,13 +798,12 @@ package body Std_Package is
             Set_Type (Unit, Time_Type_Definition);
 
             Lit1 := Create_Std_Phys_Lit (Multiplier_Value, Multiplier);
-            Set_Physical_Literal (Unit, Lit1);
             Lit := Create_Std_Phys_Lit
               (Multiplier_Value
-               * Get_Value (Get_Physical_Unit_Value (Multiplier)),
-               Get_Physical_Unit (Get_Physical_Unit_Value (Multiplier)));
+               * Get_Value (Get_Physical_Literal (Multiplier)),
+               Get_Physical_Unit (Get_Physical_Literal (Multiplier)));
             Set_Literal_Origin (Lit, Lit1);
-            Set_Physical_Unit_Value (Unit, Lit);
+            Set_Physical_Literal (Unit, Lit);
 
             Set_Expr_Staticness (Unit, Time_Staticness);
             Set_Name_Staticness (Unit, Locally);
@@ -843,7 +842,7 @@ package body Std_Package is
          Set_Type (Time_Fs_Unit, Time_Type_Definition);
          Set_Expr_Staticness (Time_Fs_Unit, Time_Staticness);
          Set_Name_Staticness (Time_Fs_Unit, Locally);
-         Set_Physical_Unit_Value
+         Set_Physical_Literal
            (Time_Fs_Unit, Create_Std_Phys_Lit (1, Time_Fs_Unit));
          Append (Last_Unit, Time_Type_Definition, Time_Fs_Unit);
 

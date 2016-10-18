@@ -3230,7 +3230,7 @@ package body Sem_Decls is
          return;
       end if;
 
-      Set_Discrete_Range (Iterator, A_Range);
+      Set_Discrete_Range (Iterator, Null_Iir);
 
       It_Type := Range_To_Subtype_Indication (A_Range);
       Set_Subtype_Indication (Iterator, It_Type);
