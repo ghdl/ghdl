@@ -90,15 +90,15 @@ $Script_WorkingDir =	Get-Location
 $GHDLRootDir =				Convert-Path (Resolve-Path ($PSScriptRoot + "\" + $RelPathToRoot))
 
 # set default values
-$EnableVerbose =	$PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent
-$EnableDebug =		$PSCmdlet.MyInvocation.BoundParameters["Debug"].IsPresent
-
-# Write-Host ("--> " + $Verbose + " value: " +$PSCmdlet.MyInvocation.BoundParameters["Verbose"] + " IsPresent: " + $PSCmdlet.MyInvocation.BoundParameters["Verbose"].IsPresent)
-# Write-Host ("--> " + $PSCommandPath + "  " + $PSBoundParameters + "  " + $PSCmdlet + "  " + $PSDefaultParameterValues)
+$EnableVerbose =			$PSCmdlet.MyInvocation.BoundParameters["Verbose"]
+$EnableDebug =				$PSCmdlet.MyInvocation.BoundParameters["Debug"]
+if ($EnableVerbose -eq $null)	{	$EnableVerbose =	$false	}
+if ($EnableDebug	 -eq $null)	{	$EnableDebug =		$false	}
+if ($EnableDebug	 -eq $true)	{	$EnableVerbose =	$true		}
 
 # load modules from GHDL's 'libraries' directory
-Import-Module $PSScriptRoot\shared.psm1  -Verbose:$false -ArgumentList "$Script_WorkingDir", $Hosted
-Import-Module $PSScriptRoot\targets.psm1 -Verbose:$false
+Import-Module $PSScriptRoot\shared.psm1  -Verbose:$false -Debug:$false -ArgumentList "$Script_WorkingDir", $Hosted
+Import-Module $PSScriptRoot\targets.psm1 -Verbose:$false -Debug:$false
 
 # Display help if no command was selected
 $Help = $Help -or (-not (
