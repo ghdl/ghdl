@@ -71,7 +71,8 @@ Param(
 		[switch]$Zip,
 	
 	# install all files into a directory (xcopy deployment)
-	[string]$Install = "",
+	[switch]$Install = $false,
+	[parameter(mandatory=$false, ValueFromRemainingArguments=$true)][string]$InstallDir = "",
 	# update files
 	[switch]$Update,
 	# uninstall all files from a directory
@@ -142,6 +143,7 @@ $BuildDirectoryName =					"build\$Backend"
 $VHDLLibrariesDirectoryName =	"lib"
 $PackageDirectoryName =				"build\zip\$Backend"
 $ZipPackageFileName =					"ghdl-$Backend-$GHDLVersion.zip"
+$DefaultInstallPath =					"C:\Program Files (x86)\GHDL"				# This is the default path for 32-bit applications (x86-32)
 
 # construct directories
 $GHDLWindowsDir =							"$GHDLRootDir\$WindowsDirName"
@@ -151,6 +153,9 @@ $GHDLCompiledLibraryDir =			"$GHDLRootDir\$BuildDirectoryName\$VHDLLibrariesDire
 $GHDLZipPackageDir =					"$GHDLRootDir\$PackageDirectoryName"
 $GHDLZipPackageFile =					"$GHDLZipPackageDir\$ZipPackageFileName"
 
+# construct files
+$InstallDirFile =							"$GHDLBuildDir\InstallDir.conf"
+
 function Exit-Script
 {	[CmdletBinding()]
 	param(
@@ -158,8 +163,8 @@ function Exit-Script
 	)
 	cd $Script_WorkingDir
 	# unload modules
-	Remove-Module shared
-	Remove-Module targets
+	Remove-Module shared	-Verbose:$false -Debug:$false
+	Remove-Module targets	-Verbose:$false -Debug:$false
 	exit $ExitCode
 }
 
@@ -209,16 +214,10 @@ function Remove-Path
 	}
 	
 
-if ($Update)
-{	Write-Host "Updating GHDL $GHDLVersion for Windows..."
+if ($false)
+{	# Write-Host "Uninstalling GHDL $GHDLVersion for Windows..."
 
-	Write-Host "[ERROR]: This command is not implemented." -ForegroundColor Red
-	Exit-Script -1
-}	# Update
-elseif ($Uninstall)
-{	Write-Host "Uninstalling GHDL $GHDLVersion for Windows..."
-
-	Write-Host "[ERROR]: This command is not implemented." -ForegroundColor Red
+	# Write-Host "[ERROR]: This command is not implemented." -ForegroundColor Red
 	Exit-Script -1
 }	# Uninstall
 else
@@ -434,14 +433,18 @@ else
 	# ============================================================================
 	# Compile tasks
 	# ============================================================================
-	if ($Install)
+	if ($Install -eq $true)
 	{	Write-Host "Installing GHDL $GHDLVersion for Windows..."
-		if ($Install -eq $true)
-		{	$InstallPath = "C:\Program Files (x86)\GHDL"		}
-		elseif ($Install -eq "")
-		{	$InstallPath = "C:\Program Files (x86)\GHDL"		}
+		if ($InstallDir -eq "")
+		{	if (Test-Path $InstallDirFile -PathType Leaf)
+			{	Write-Host "  Reading installation path from '$InstallDirFile' ..."
+				$InstallPath = Get-Content $InstallDirFile -Encoding Ascii
+			}
+			else
+			{	$InstallPath = $DefaultInstallPath	}
+		}
 		else
-		{	$InstallPath = $Install													}
+		{	$InstallPath = $InstallDir						}
 		
 		if ($Zip)
 		{	Write-Host "Loading PowerShell Community Extensions (PSCX) " -NoNewline
@@ -459,7 +462,10 @@ else
 			Write-Host "[ERROR]: This command is not implemented." -ForegroundColor Red
 		}
 		else
-		{	if (Test-Path -Path $InstallPath)
+		{	Write-Host "  Writing installation path to '$InstallDirFile'..."
+			$InstallPath | Out-File -FilePath $InstallDirFile -Encoding Ascii
+		
+			if (Test-Path -Path $InstallPath)
 			{	Write-Host "[ERROR]: Directory '$InstallPath' already exists." -ForegroundColor Red
 				Exit-Script -1
 			}
@@ -472,13 +478,13 @@ else
 			
 			Write-Host "  Copying files..."
 			# executables
-			Copy-Item "$GHDLBuildDir\ghdl.exe"						"$InstallPath\bin\ghdl.exe"	-ErrorAction SilentlyContinue
+			Copy-Item "$GHDLBuildDir\ghdl.exe"						"$InstallPath\bin\ghdl.exe"	-Verbose:$EnableVerbose -ErrorAction SilentlyContinue
 			# include files
-			Copy-Item "$GHDLRootDir\src\grt\vpi_user.h"		"$InstallPath\include"			-ErrorAction SilentlyContinue
+			Copy-Item "$GHDLRootDir\src\grt\vpi_user.h"		"$InstallPath\include"			-Verbose:$EnableVerbose -ErrorAction SilentlyContinue
 			# pre-compile scripts
-			Copy-Item $GHDLVendorLibraryDir -Recurse			"$InstallPath\lib\vendors"	-ErrorAction SilentlyContinue
+			Copy-Item $GHDLVendorLibraryDir -Recurse			"$InstallPath\lib\vendors"	-Verbose:$EnableVerbose -ErrorAction SilentlyContinue
 			# pre-compiled libraries
-			Copy-Item $GHDLCompiledLibraryDir	-Recurse		"$InstallPath"							-ErrorAction SilentlyContinue
+			Copy-Item $GHDLCompiledLibraryDir	-Recurse		"$InstallPath"							-Verbose:$EnableVerbose -ErrorAction SilentlyContinue
 
 			Write-Host
 			Write-Host "Installing files " -NoNewline
@@ -488,6 +494,65 @@ else
 			Exit-Script
 		}	# Zip
 	}	# Install
+	elseif ($Update -eq $true)
+	{	Write-Host "Updating GHDL $GHDLVersion for Windows..."
+		if (Test-Path $InstallDirFile -PathType Leaf)
+		{	Write-Host "  Reading installation path from '$InstallDirFile' ..."
+			$InstallPath = Get-Content $InstallDirFile -Encoding Ascii
+		}
+		else
+		{	$InstallPath = $DefaultInstallPath		}
+		
+		Write-Host "  Install directory: $InstallPath"
+		if (Test-Path -Path $InstallPath)
+		{	Write-Host "  Cleaning up installation directory '$InstallPath'." -ForegroundColor Yellow
+			Get-ChildItem -Path $InstallPath -Depth 0 | foreach { Remove-Item $_ -ErrorAction SilentlyContinue }
+		}
+		Write-Host "  Creating directory sub-directories in '$InstallPath' ..."
+		# New-Item -ItemType directory -Path "$InstallPath"						-ErrorAction SilentlyContinue	| Out-Null
+		New-Item -ItemType directory -Path "$InstallPath\bin"				-ErrorAction SilentlyContinue	| Out-Null
+		New-Item -ItemType directory -Path "$InstallPath\include"		-ErrorAction SilentlyContinue	| Out-Null
+		New-Item -ItemType directory -Path "$InstallPath\lib"				-ErrorAction SilentlyContinue	| Out-Null
+		
+		Write-Host "  Copying files..."
+		# executables
+		Copy-Item "$GHDLBuildDir\ghdl.exe"						"$InstallPath\bin\ghdl.exe"	-Verbose:$EnableVerbose -ErrorAction SilentlyContinue
+		# include files
+		Copy-Item "$GHDLRootDir\src\grt\vpi_user.h"		"$InstallPath\include"			-Verbose:$EnableVerbose -ErrorAction SilentlyContinue
+		# pre-compile scripts
+		Copy-Item $GHDLVendorLibraryDir -Recurse			"$InstallPath\lib\vendors"	-Verbose:$EnableVerbose -ErrorAction SilentlyContinue
+		# pre-compiled libraries
+		Copy-Item $GHDLCompiledLibraryDir	-Recurse		"$InstallPath"							-Verbose:$EnableVerbose -ErrorAction SilentlyContinue
+
+		Write-Host
+		Write-Host "Updating files " -NoNewline
+		Write-Host "[SUCCESSFUL]" -ForegroundColor Green
+		Write-Host
+		
+		Exit-Script
+	}	# Update
+	elseif ($Uninstall -eq $true)
+	{	Write-Host "Uninstalling GHDL $GHDLVersion for Windows..."
+		if (Test-Path $InstallDirFile -PathType Leaf)
+		{	Write-Host "  Reading installation path from '$InstallDirFile' ..."
+			$InstallPath = Get-Content $InstallDirFile -Encoding Ascii
+		}
+		else
+		{	$InstallPath = $DefaultInstallPath		}
+		
+		Write-Host "  Install directory: $InstallPath"
+		if (Test-Path -Path $InstallPath)
+		{	Write-Host "  Removing installation directory '$InstallPath'." -ForegroundColor Yellow
+			Remove-Item $InstallPath -Recurse -ErrorAction SilentlyContinue
+		}
+
+		Write-Host
+		Write-Host "Uninstalling files " -NoNewline
+		Write-Host "[SUCCESSFUL]" -ForegroundColor Green
+		Write-Host
+		
+		Exit-Script
+	}	# Update
 	
 }	# Clean
 	
