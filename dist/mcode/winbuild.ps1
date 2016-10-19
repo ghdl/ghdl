@@ -482,7 +482,8 @@ else
 			{	$InstallPath = $DefaultInstallPath	}
 		}
 		else
-		{	$InstallPath = $InstallDir						}
+		{	$InstallPath = $InstallDir			}
+		$InstallPath = $InstallPath.TrimEnd("\")
 		
 		if ($Zip)
 		{	Write-Host "Loading PowerShell Community Extensions (PSCX) " -NoNewline
@@ -524,11 +525,14 @@ else
 			# pre-compiled libraries
 			Copy-Item $GHDLCompiledLibraryDir	-Recurse		"$InstallPath"							-Verbose:$EnableVerbose -ErrorAction SilentlyContinue
 
-			$InstallInPath = (Read-Host "Install GHDL in PATH at machine level? [Y/n]").ToLower()
+			Write-Host "Install GHDL in PATH at machine level? " -NoNewline -ForegroundColor DarkCyan
+			Write-Host "[Y/n]" -NoNewline -ForegroundColor Cyan
+			Write-Host ":" -NoNewline -ForegroundColor DarkCyan
+			$InstallInPath = (Read-Host).ToLower()
 			if (($InstallInPath -eq "") -or ($InstallInPath -eq "y"))
 			{	Write-Host "  Adding GHDL to PATH at machine level."
-				Add-EnvPath -Path $InstallPath -Container "Machine"
-				Add-EnvPath -Path $InstallPath -Container "Session"
+				Add-EnvPath -Path "$InstallPath\bin" -Container "Machine"
+				Add-EnvPath -Path "$InstallPath\bin" -Container "Session"
 			}
 			
 			Write-Host
@@ -546,7 +550,8 @@ else
 			$InstallPath = Get-Content $InstallDirFile -Encoding Ascii
 		}
 		else
-		{	$InstallPath = $DefaultInstallPath		}
+		{	$InstallPath = $InstallDir			}
+		$InstallPath = $InstallPath.TrimEnd("\")
 		
 		Write-Host "  Install directory: $InstallPath"
 		if (Test-Path -Path $InstallPath)
@@ -581,11 +586,14 @@ else
 		# pre-compiled libraries
 		Copy-Item $GHDLCompiledLibraryDir	-Recurse		"$InstallPath"							-Verbose:$EnableVerbose -ErrorAction SilentlyContinue
 
-		$InstallInPath = (Read-Host "Install GHDL in PATH at machine level? [Y/n]").ToLower()
+		Write-Host "Install GHDL in PATH at machine level? " -NoNewline -ForegroundColor DarkCyan
+		Write-Host "[Y/n]" -NoNewline -ForegroundColor Cyan
+		Write-Host ":" -NoNewline -ForegroundColor DarkCyan
+		$InstallInPath = (Read-Host).ToLower()
 		if (($InstallInPath -eq "") -or ($InstallInPath -eq "y"))
 		{	Write-Host "  Adding GHDL to PATH at machine level."
-			Add-EnvPath -Path $InstallPath -Container "Machine"
-			Add-EnvPath -Path $InstallPath -Container "Session"
+			Add-EnvPath -Path "$InstallPath\bin" -Container "Machine"
+			Add-EnvPath -Path "$InstallPath\bin" -Container "Session"
 		}
 		
 		Write-Host
