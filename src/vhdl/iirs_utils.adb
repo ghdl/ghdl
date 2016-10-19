@@ -369,48 +369,95 @@ package body Iirs_Utils is
       end case;
    end Is_Signal_Object;
 
-   function Get_Association_Interface (Assoc : Iir) return Iir
+   function Get_Interface_Of_Formal (Formal : Iir) return Iir
    is
-      Formal : Iir;
+      El : Iir;
    begin
-      Formal := Get_Formal (Assoc);
+      El := Formal;
       loop
-         case Get_Kind (Formal) is
+         case Get_Kind (El) is
             when Iir_Kind_Simple_Name =>
-               return Get_Named_Entity (Formal);
+               return Get_Named_Entity (El);
             when Iir_Kinds_Interface_Declaration =>
-               return Formal;
+               return El;
             when Iir_Kind_Slice_Name
               | Iir_Kind_Indexed_Name
               | Iir_Kind_Selected_Element =>
-               Formal := Get_Prefix (Formal);
+               --  FIXME: use get_base_name ?
+               El := Get_Prefix (El);
             when others =>
-               Error_Kind ("get_association_interface", Formal);
+               Error_Kind ("get_interface_of_formal", El);
          end case;
       end loop;
-   end Get_Association_Interface;
+   end Get_Interface_Of_Formal;
 
-   function Get_Association_Interface (Assoc : Iir; Inter : Iir) return Iir is
+   function Get_Association_Interface (Assoc : Iir; Inter : Iir) return Iir
+   is
+      Formal : constant Iir := Get_Formal (Assoc);
    begin
-      if Get_Formal (Assoc) /= Null_Iir then
-         return Get_Association_Interface (Assoc);
+      if Formal /= Null_Iir then
+         return Get_Interface_Of_Formal (Formal);
       else
          return Inter;
       end if;
    end Get_Association_Interface;
 
    procedure Next_Association_Interface
-     (Assoc : in out Iir; Inter : in out Iir) is
+     (Assoc : in out Iir; Inter : in out Iir)
+   is
+      Formal : constant Iir := Get_Formal (Assoc);
    begin
-      if Get_Formal (Assoc) /= Null_Iir then
-         --  Association by name.  Next one will also be associated by name
-         --  so no need to track interface.
-         Inter := Null_Iir;
+      --  In canon, open association can be inserted after an association by
+      --  name.  So do not assume there is no association by position after
+      --  association by name.
+      if Is_Valid (Formal) then
+         Inter := Get_Chain (Get_Interface_Of_Formal (Formal));
       else
          Inter := Get_Chain (Inter);
       end if;
       Assoc := Get_Chain (Assoc);
    end Next_Association_Interface;
+
+   function Get_Association_Formal (Assoc : Iir; Inter : Iir) return Iir
+   is
+      Formal : constant Iir := Get_Formal (Assoc);
+   begin
+      if Formal /= Null_Iir then
+         --  Strip denoting name
+         case Get_Kind (Formal) is
+            when Iir_Kind_Simple_Name =>
+               return Get_Named_Entity (Formal);
+            when Iir_Kinds_Interface_Declaration =>
+               --  Shouldn't happen.
+               raise Internal_Error;
+            when Iir_Kind_Slice_Name
+              | Iir_Kind_Indexed_Name
+              | Iir_Kind_Selected_Element =>
+               return Formal;
+            when others =>
+               Error_Kind ("get_association_formal", Formal);
+         end case;
+      else
+         return Inter;
+      end if;
+   end Get_Association_Formal;
+
+   function Find_First_Association_For_Interface
+     (Assoc_Chain : Iir; Inter_Chain : Iir; Inter : Iir) return Iir
+   is
+      Assoc_El : Iir;
+      Inter_El : Iir;
+   begin
+      Assoc_El := Assoc_Chain;
+      Inter_El := Inter_Chain;
+      while Is_Valid (Assoc_El) loop
+         if Get_Association_Interface (Assoc_El, Inter_El) = Inter then
+            return Assoc_El;
+         end if;
+         Next_Association_Interface (Assoc_El, Inter_El);
+      end loop;
+      return Null_Iir;
+   end Find_First_Association_For_Interface;
 
    function Find_Name_In_List (List: Iir_List; Lit: Name_Id) return Iir is
       El: Iir;
@@ -1230,13 +1277,13 @@ package body Iirs_Utils is
       end case;
    end Get_Method_Type;
 
-   function Get_Actual_Or_Default (Assoc : Iir) return Iir is
+   function Get_Actual_Or_Default (Assoc : Iir; Inter : Iir) return Iir is
    begin
       case Get_Kind (Assoc) is
          when Iir_Kind_Association_Element_By_Expression =>
             return Get_Actual (Assoc);
          when Iir_Kind_Association_Element_Open =>
-            return Get_Default_Value (Get_Formal (Assoc));
+            return Get_Default_Value (Inter);
          when others =>
             Error_Kind ("get_actual_or_default", Assoc);
       end case;

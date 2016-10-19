@@ -406,25 +406,33 @@ package body Configuration is
 
    procedure Check_Binding_Indication (Conf : Iir)
    is
+      Comp : constant Iir := Get_Named_Entity (Get_Component_Name (Conf));
       Bind : constant Iir_Binding_Indication := Get_Binding_Indication (Conf);
-      Conf_Chain : constant Iir := Get_Port_Map_Aspect_Chain (Bind);
+      Aspect : constant Iir := Get_Entity_Aspect (Bind);
+      Ent : constant Iir := Get_Entity_From_Entity_Aspect (Aspect);
+      Assoc_Chain : constant Iir := Get_Port_Map_Aspect_Chain (Bind);
+      Inter_Chain : constant Iir := Get_Port_Chain (Ent);
       Assoc : Iir;
-      Inst_Chain : Iir;
+      Inter : Iir;
+      Inst_Assoc_Chain : Iir;
+      Inst_Inter_Chain : Iir;
       Err : Boolean;
       Inst : Iir;
       Inst_List : Iir_List;
       Formal : Iir;
       Assoc_1 : Iir;
+      Inter_1 : Iir;
       Actual : Iir;
    begin
       Err := False;
       --  Note: the assoc chain is already canonicalized.
 
       --  First pass: check for open associations in configuration.
-      Assoc := Conf_Chain;
+      Assoc := Assoc_Chain;
+      Inter := Inter_Chain;
       while Assoc /= Null_Iir loop
          if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open then
-            Formal := Get_Association_Interface (Assoc);
+            Formal := Get_Association_Interface (Assoc, Inter);
             Err := Err or Check_Open_Port (Formal, Assoc);
             if Is_Warning_Enabled (Warnid_Binding)
               and then not Get_Artificial_Flag (Assoc)
@@ -437,7 +445,7 @@ package body Configuration is
                   "(in %n)", +Current_Configuration);
             end if;
          end if;
-         Assoc := Get_Chain (Assoc);
+         Next_Association_Interface (Assoc, Inter);
       end loop;
       if Err then
          return;
@@ -452,23 +460,26 @@ package body Configuration is
          Err := False;
 
          --  Mark component ports not associated.
-         Inst_Chain := Get_Port_Map_Aspect_Chain (Inst);
-         Assoc := Inst_Chain;
+         Inst_Assoc_Chain := Get_Port_Map_Aspect_Chain (Inst);
+         Inst_Inter_Chain := Get_Port_Chain (Comp);
+         Assoc := Inst_Assoc_Chain;
+         Inter := Inst_Inter_Chain;
          while Assoc /= Null_Iir loop
             if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open then
-               Formal := Get_Association_Interface (Assoc);
+               Formal := Get_Association_Interface (Assoc, Inter);
                Set_Open_Flag (Formal, True);
                Err := True;
             end if;
-            Assoc := Get_Chain (Assoc);
+            Next_Association_Interface (Assoc, Inter);
          end loop;
 
          --  If there is any component port open, search them in the
          --  configuration.
          if Err then
-            Assoc := Conf_Chain;
+            Assoc := Assoc_Chain;
+            Inter := Inter_Chain;
             while Assoc /= Null_Iir loop
-               Formal := Get_Association_Interface (Assoc);
+               Formal := Get_Association_Interface (Assoc, Inter);
                if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open then
                   Actual := Null_Iir;
                else
@@ -483,28 +494,31 @@ package body Configuration is
                  and then Check_Open_Port (Formal, Null_Iir)
                then
                   --  For a better message, find the location.
-                  Assoc_1 := Inst_Chain;
+                  Assoc_1 := Inst_Assoc_Chain;
+                  Inter_1 := Inst_Inter_Chain;
                   while Assoc_1 /= Null_Iir loop
                      if Get_Kind (Assoc_1) = Iir_Kind_Association_Element_Open
-                       and then Actual = Get_Association_Interface (Assoc_1)
+                       and then
+                       Actual = Get_Association_Interface (Assoc_1, Inter_1)
                      then
                         Err := Check_Open_Port (Formal, Assoc_1);
                         exit;
                      end if;
-                     Assoc_1 := Get_Chain (Assoc_1);
+                     Next_Association_Interface (Assoc_1, Inter_1);
                   end loop;
                end if;
-               Assoc := Get_Chain (Assoc);
+               Next_Association_Interface (Assoc, Inter);
             end loop;
 
             --  Clear open flag.
-            Assoc := Inst_Chain;
+            Assoc := Inst_Assoc_Chain;
+            Inter := Inst_Inter_Chain;
             while Assoc /= Null_Iir loop
                if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open then
-                  Formal := Get_Association_Interface (Assoc);
+                  Formal := Get_Association_Interface (Assoc, Inter);
                   Set_Open_Flag (Formal, False);
                end if;
-               Assoc := Get_Chain (Assoc);
+               Next_Association_Interface (Assoc, Inter);
             end loop;
          end if;
       end loop;
@@ -517,6 +531,7 @@ package body Configuration is
    procedure Add_Design_Binding_Indication (Conf : Iir; Add_Default : Boolean)
    is
       Bind : constant Iir_Binding_Indication := Get_Binding_Indication (Conf);
+      Aspect : Iir;
       Inst : Iir;
    begin
       if Bind = Null_Iir then
@@ -531,8 +546,13 @@ package body Configuration is
          end if;
          return;
       end if;
-      Check_Binding_Indication (Conf);
-      Add_Design_Aspect (Get_Entity_Aspect (Bind), Add_Default);
+      Aspect := Get_Entity_Aspect (Bind);
+      if Is_Valid (Aspect)
+        and then Get_Kind (Aspect) /= Iir_Kind_Entity_Aspect_Open
+      then
+         Check_Binding_Indication (Conf);
+         Add_Design_Aspect (Aspect, Add_Default);
+      end if;
    end Add_Design_Binding_Indication;
 
    procedure Add_Design_Block_Configuration (Blk : Iir_Block_Configuration)

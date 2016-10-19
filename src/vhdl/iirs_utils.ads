@@ -76,9 +76,9 @@ package Iirs_Utils is
    --  Return TRUE if EXPR is a signal name.
    function Is_Signal_Name (Expr : Iir) return Boolean;
 
-   --  Get the interface associated by the association ASSOC.  This is always
-   --  an interface, even if the formal is a name.
-   function Get_Association_Interface (Assoc : Iir) return Iir;
+   --  Get the interface corresponding to the formal name FORMAL.  This is
+   --  always an interface, even if the formal is a name.
+   function Get_Interface_Of_Formal (Formal : Iir) return Iir;
 
    --  Get the corresponding interface of an association while walking on
    --  associations.  ASSOC and INTER are the current association and
@@ -88,6 +88,17 @@ package Iirs_Utils is
    function Get_Association_Interface (Assoc : Iir; Inter : Iir) return Iir;
    procedure Next_Association_Interface
      (Assoc : in out Iir; Inter : in out Iir);
+
+   --  Return the formal of ASSOC as a named entity (either an interface
+   --  declaration or indexed/sliced/selected name of it).  If there is no
+   --  formal in ASSOC, return the corresponding interface INTER.
+   function Get_Association_Formal (Assoc : Iir; Inter : Iir) return Iir;
+
+   --  Return the first association in ASSOC_CHAIN for interface INTER.  This
+   --  is the first in case of individual association.
+   --  Return NULL_IIR if not found (not present).
+   function Find_First_Association_For_Interface
+     (Assoc_Chain : Iir; Inter_Chain : Iir; Inter : Iir) return Iir;
 
    --  Duplicate enumeration literal LIT.
    function Copy_Enumeration_Literal (Lit : Iir) return Iir;
@@ -275,8 +286,8 @@ package Iirs_Utils is
 
    --  For Association_Element_By_Expression: return the actual.
    --  For Association_Element_Open: return the default value of the
-   --    interface.
-   function Get_Actual_Or_Default (Assoc : Iir) return Iir;
+   --    interface INTER.
+   function Get_Actual_Or_Default (Assoc : Iir; Inter : Iir) return Iir;
 
    --  Create an error node for node ORIG.
    function Create_Error (Orig : Iir) return Iir;

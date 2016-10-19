@@ -1001,8 +1001,8 @@ package body Trans.Chap2 is
 
       if Is_Generic_Mapped_Package (Spec) then
          Chap5.Elab_Generic_Map_Aspect
-           (Get_Package_Header (Spec), (Info.Package_Spec_Scope'Access,
-                                        Info.Package_Spec_Scope));
+           (Get_Package_Header (Spec), Get_Package_Header (Spec),
+            (Info.Package_Spec_Scope'Access, Info.Package_Spec_Scope));
       end if;
       Chap4.Elab_Declaration_Chain (Spec, Final);
 
@@ -1404,8 +1404,9 @@ package body Trans.Chap2 is
       Set_Scope_Via_Field (Pkg_Info.Package_Spec_Scope,
                            Pkg_Info.Package_Spec_Field,
                            Pkg_Info.Package_Body_Scope'Access);
-      Chap5.Elab_Generic_Map_Aspect (Inst, (Pkg_Info.Package_Body_Scope'Access,
-                                            Pkg_Info.Package_Body_Scope));
+      Chap5.Elab_Generic_Map_Aspect
+        (Get_Package_Header (Spec), Inst,
+         (Pkg_Info.Package_Body_Scope'Access, Pkg_Info.Package_Body_Scope));
       Clear_Scope (Pkg_Info.Package_Spec_Scope);
 
       --  Call the elaborator of the generic.  The generic must be

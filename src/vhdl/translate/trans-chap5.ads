@@ -45,7 +45,8 @@ package Trans.Chap5 is
    procedure Save_Map_Env (Env : out Map_Env; Scope_Ptr : Var_Scope_Acc);
    procedure Set_Map_Env (Env : Map_Env);
 
-   procedure Elab_Generic_Map_Aspect (Mapping : Iir; Formal_Env : Map_Env);
+   procedure Elab_Generic_Map_Aspect
+     (Header : Iir; Map : Iir; Formal_Env : Map_Env);
 
    --  There are 4 cases of generic/port map:
    --  1) component instantiation
@@ -54,8 +55,8 @@ package Trans.Chap5 is
    --  3) block header
    --  4) direct (entity + architecture or configuration) instantiation
    --
-   --  MAPPING is the node containing the generic/port map aspects.
-
+   --  HEADER is the node containing generics and ports declarations.
+   --  MAPS is the node containing the generic/port map aspects.
    procedure Elab_Map_Aspect
-     (Mapping : Iir; Block_Parent : Iir; Formal_Env : Map_Env);
+     (Header : Iir; Maps : Iir; Block_Parent : Iir; Formal_Env : Map_Env);
 end Trans.Chap5;

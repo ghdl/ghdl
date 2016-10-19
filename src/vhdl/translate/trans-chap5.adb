@@ -368,15 +368,16 @@ package body Trans.Chap5 is
       Finish_Data_Record => Connect_Finish_Data_Composite);
 
    procedure Elab_Port_Map_Aspect_Assoc (Assoc : Iir;
+                                         Inter : Iir;
                                          By_Copy : Boolean;
                                          Formal_Env : Map_Env;
                                          Actual_Env : Map_Env)
    is
-      Formal      : constant Iir := Get_Formal (Assoc);
+      Formal      : constant Iir := Get_Association_Formal (Assoc, Inter);
       Actual      : constant Iir := Get_Actual (Assoc);
       Formal_Type : constant Iir := Get_Type (Formal);
       Actual_Type : constant Iir := Get_Type (Actual);
-      Inter       : constant Iir := Get_Association_Interface (Assoc);
+      Port        : constant Iir := Get_Interface_Of_Formal (Formal);
       Formal_Sig  : Mnode;
       Formal_Val  : Mnode;
       Actual_Sig  : Mnode;
@@ -412,7 +413,7 @@ package body Trans.Chap5 is
             --     association element that associates an actual
             --     with S.
             --  *  [...]
-            case Get_Mode (Inter) is
+            case Get_Mode (Port) is
                when Iir_In_Mode =>
                   Mode := Connect_Effective;
                when Iir_Inout_Mode =>
@@ -473,7 +474,7 @@ package body Trans.Chap5 is
          Connect (Formal_Sig, Formal_Type, Data);
       else
          if Get_In_Conversion (Assoc) /= Null_Iir then
-            Chap4.Elab_In_Conversion (Assoc, Actual_Sig);
+            Chap4.Elab_In_Conversion (Assoc, Inter, Actual_Sig);
             Set_Map_Env (Formal_Env);
             Formal_Sig := Chap6.Translate_Name (Formal, Mode_Signal);
             Data := (Actual_Sig => Actual_Sig,
@@ -485,7 +486,7 @@ package body Trans.Chap5 is
          end if;
          if Get_Out_Conversion (Assoc) /= Null_Iir then
             --  flow: FORMAL to ACTUAL
-            Chap4.Elab_Out_Conversion (Assoc, Formal_Sig);
+            Chap4.Elab_Out_Conversion (Assoc, Inter, Formal_Sig);
             Set_Map_Env (Actual_Env);
             Actual_Sig := Chap6.Translate_Name (Actual, Mode_Signal);
             Data := (Actual_Sig => Actual_Sig,
@@ -517,7 +518,8 @@ package body Trans.Chap5 is
                    Tinfo.T.Bounds_Ptr_Type);
    end Alloc_Bounds;
 
-   function Get_Unconstrained_Port_Bounds (Assoc : Iir) return Mnode
+   function Get_Unconstrained_Port_Bounds (Assoc : Iir; Inter : Iir)
+                                          return Mnode
    is
       Actual : constant Iir := Get_Actual (Assoc);
       Actual_Type : constant Iir := Get_Type (Actual);
@@ -598,7 +600,7 @@ package body Trans.Chap5 is
       end if;
 
       pragma Assert (Can_Convert);
-      Res_Type := Get_Type (Get_Association_Interface (Assoc));
+      Res_Type := Get_Type (Get_Association_Interface (Assoc, Inter));
       Bounds := Get_Actual_Bounds (False);
       Res := Alloc_Bounds (Res_Type, Alloc_System);
       Chap7.Translate_Type_Conversion_Bounds
@@ -616,7 +618,7 @@ package body Trans.Chap5 is
       case Iir_Kinds_Association_Element (Get_Kind (Assoc)) is
          when Iir_Kind_Association_Element_By_Expression =>
             pragma Assert (Get_Whole_Association_Flag (Assoc));
-            Bounds := Get_Unconstrained_Port_Bounds (Assoc);
+            Bounds := Get_Unconstrained_Port_Bounds (Assoc, Port);
          when Iir_Kind_Association_Element_Open =>
             declare
                Actual_Type : constant Iir :=
@@ -648,19 +650,21 @@ package body Trans.Chap5 is
    end Elab_Unconstrained_Port_Bounds;
 
    procedure Elab_Port_Map_Aspect
-     (Mapping : Iir; Block_Parent : Iir; Formal_Env : Map_Env)
+     (Header : Iir; Map : Iir; Block_Parent : Iir; Formal_Env : Map_Env)
    is
       Actual_Env : Map_Env;
       Assoc : Iir;
+      Inter : Iir;
    begin
       Save_Map_Env (Actual_Env, Formal_Env.Scope_Ptr);
 
       --  Ports.
-      Assoc := Get_Port_Map_Aspect_Chain (Mapping);
+      Assoc := Get_Port_Map_Aspect_Chain (Map);
+      Inter := Get_Port_Chain (Header);
       while Assoc /= Null_Iir loop
          declare
-            Formal : constant Iir := Strip_Denoting_Name (Get_Formal (Assoc));
-            Formal_Base : constant Iir := Get_Association_Interface (Assoc);
+            Formal : constant Iir := Get_Association_Formal (Assoc, Inter);
+            Formal_Base : constant Iir := Get_Interface_Of_Formal (Formal);
             Fb_Type : constant Iir := Get_Type (Formal_Base);
             Fbt_Info : constant Type_Info_Acc := Get_Info (Fb_Type);
          begin
@@ -697,14 +701,14 @@ package body Trans.Chap5 is
                      if Get_Collapse_Signal_Flag (Assoc) then
                         --  For collapsed association, copy signals.
                         Elab_Port_Map_Aspect_Assoc
-                          (Assoc, True, Formal_Env, Actual_Env);
+                          (Assoc, Inter, True, Formal_Env, Actual_Env);
                      else
                         --  Create non-collapsed signals.
                         Chap4.Elab_Signal_Declaration_Object
                           (Formal, Block_Parent, False);
                         --  And associate.
                         Elab_Port_Map_Aspect_Assoc
-                          (Assoc, False, Formal_Env, Actual_Env);
+                          (Assoc, Inter, False, Formal_Env, Actual_Env);
                      end if;
                   else
                      --  By sub-element.
@@ -712,7 +716,7 @@ package body Trans.Chap5 is
                      --  created.
                      --  And associate.
                      Elab_Port_Map_Aspect_Assoc
-                       (Assoc, False, Formal_Env, Actual_Env);
+                       (Assoc, Inter, False, Formal_Env, Actual_Env);
                   end if;
                when Iir_Kind_Association_Element_Open
                  | Iir_Kind_Association_Element_By_Individual =>
@@ -723,24 +727,27 @@ package body Trans.Chap5 is
             end case;
             Close_Temp;
          end;
-         Assoc := Get_Chain (Assoc);
+         Next_Association_Interface (Assoc, Inter);
       end loop;
       Set_Map_Env (Actual_Env);
    end Elab_Port_Map_Aspect;
 
-   procedure Elab_Generic_Map_Aspect (Mapping : Iir; Formal_Env : Map_Env)
+   procedure Elab_Generic_Map_Aspect
+     (Header : Iir; Map : Iir; Formal_Env : Map_Env)
    is
       Actual_Env : Map_Env;
       Assoc  : Iir;
       Formal : Iir;
+      Inter : Iir;
    begin
       Save_Map_Env (Actual_Env, Formal_Env.Scope_Ptr);
 
       --  Elab generics, and associate.
-      Assoc := Get_Generic_Map_Aspect_Chain (Mapping);
+      Assoc := Get_Generic_Map_Aspect_Chain (Map);
+      Inter := Get_Generic_Chain (Header);
       while Assoc /= Null_Iir loop
+         Formal := Get_Association_Formal (Assoc, Inter);
          Open_Temp;
-         Formal := Strip_Denoting_Name (Get_Formal (Assoc));
          case Get_Kind (Assoc) is
             when Iir_Kind_Association_Element_By_Expression =>
                declare
@@ -833,12 +840,12 @@ package body Trans.Chap5 is
                Error_Kind ("elab_generic_map_aspect(1)", Assoc);
          end case;
          Close_Temp;
-         Assoc := Get_Chain (Assoc);
+         Next_Association_Interface (Assoc, Inter);
       end loop;
    end Elab_Generic_Map_Aspect;
 
    procedure Elab_Map_Aspect
-     (Mapping : Iir; Block_Parent : Iir; Formal_Env : Map_Env) is
+     (Header : Iir; Maps : Iir; Block_Parent : Iir; Formal_Env : Map_Env) is
    begin
       --  The use of FORMAL_ENV (and then later ACTUAL_ENV) is rather fragile
       --  as in some cases both the formal and the actual are referenced in the
@@ -848,8 +855,8 @@ package body Trans.Chap5 is
 
       --  The generic map must be done before the elaboration of
       --  the ports, since a port subtype may depend on a generic.
-      Elab_Generic_Map_Aspect (Mapping, Formal_Env);
+      Elab_Generic_Map_Aspect (Header, Maps, Formal_Env);
 
-      Elab_Port_Map_Aspect (Mapping, Block_Parent, Formal_Env);
+      Elab_Port_Map_Aspect (Header, Maps, Block_Parent, Formal_Env);
    end Elab_Map_Aspect;
 end Trans.Chap5;
