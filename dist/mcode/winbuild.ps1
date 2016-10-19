@@ -45,13 +45,20 @@
 # # Normal flow
 # PS> .\winbuild.ps1 -Clean
 # PS> .\winbuild.ps1 -Compile
+# PS> .\winbuild.ps1 -Install
+# 
+# # Combine all commands in a single call
+# PS>.\winbuild.ps1 -Clean -Compile -Install "C:\Tools\GHDL"
+#
+# # Install to user defined dir
 # PS> .\winbuild.ps1 -Install "C:\Tools\GHDL"
+#
+# # Update or Uninstall
+# PS> .\winbuild.ps1 -Update
+# PS> .\winbuild.ps1 -Uninstall
 # 
 # # Create a Zip-file
 # PS>.\winbuild.ps1 -CreatePackage -Zip 
-# 
-# # combine all commands in a single call
-# PS>.\winbuild.ps1 -Clean -Compile -Install "C:\Tools\GHDL"
 #
 [CmdletBinding()]
 Param(
@@ -72,7 +79,8 @@ Param(
 	
 	# install all files into a directory (xcopy deployment)
 	[switch]$Install = $false,
-	[parameter(mandatory=$false, ValueFromRemainingArguments=$true)][string]$InstallDir = "",
+	[parameter(mandatory=$false, ValueFromRemainingArguments=$true)]
+	[string]$InstallDir = "",
 	# update files
 	[switch]$Update,
 	# uninstall all files from a directory
@@ -156,6 +164,11 @@ $GHDLZipPackageFile =					"$GHDLZipPackageDir\$ZipPackageFileName"
 # construct files
 $InstallDirFile =							"$GHDLBuildDir\InstallDir.conf"
 
+$EnvPath_ContainerMapping = @{
+	Machine =	[EnvironmentVariableTarget]::Machine
+	User =		[EnvironmentVariableTarget]::User
+}
+
 function Exit-Script
 {	[CmdletBinding()]
 	param(
@@ -168,51 +181,76 @@ function Exit-Script
 	exit $ExitCode
 }
 
-# Author:	Ed Wilson
-# Source:	https://blogs.technet.com/b/heyscriptingguy/archive/2011/07/23/use-powershell-to-modify-your-environmental-path.aspx
-function Add-Path
-	(	[parameter(Mandatory=$True,ValueFromPipeline=$True,Position=0)]
-		[string]$AddedFolder
+# GitHub user:            https://github.com/mkropat
+# Gist account at GitHub: https://gist.github.com/mkropat
+# Gist snippet URL:       https://gist.github.com/mkropat/c1226e0cc2ca941b23a9
+function Add-EnvPath
+{	param(
+		[Parameter(Mandatory=$true)]
+		[string] $Path,
+
+		[ValidateSet("Machine", "User", "Session")]
+		[string] $Container = "Session"
 	)
-# function body
-	{	# Get the current search path from the environment keys in the registry.
-		$OldPath = (Get-ItemProperty -Path "Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment" -Name PATH).Path
 
-		# See if a new folder has been supplied.
-		if (!$AddedFolder)
-			{	return "No Folder Supplied. $ENV:PATH Unchanged"	}
-
-		# See if the new folder exists on the file system.
-		if (!(Test-Path $AddedFolder))
-			{	return "Folder Does not Exist, Cannot be added to $ENV:PATH"	}
-
-		# See if the new Folder is already in the path.
-		if ($ENV:Path | Select-String -SimpleMatch $AddedFolder)
-			{	return "Folder already within $ENV:PATH"	}
-
-		# Set the New Path
-		$NewPath = $OldPath + ";" + $AddedFolder
-
-		Set-ItemProperty -Path "Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment" -Name PATH -Value $NewPath
+	if ($Container -ne "Session")
+	{	$containerType =	$EnvPath_ContainerMapping[$Container]
+		$persistedPaths =	[Environment]::GetEnvironmentVariable("Path", $containerType) -split ";"
+		if ($persistedPaths -notcontains $Path)
+		{	$persistedPaths = $persistedPaths + $Path | where { $_ }
+			[Environment]::SetEnvironmentVariable("Path", $persistedPaths -join ";", $containerType)
+		}
 	}
 
-# Author:	Ed Wilson
-# Source:	https://blogs.technet.com/b/heyscriptingguy/archive/2011/07/23/use-powershell-to-modify-your-environmental-path.aspx
-function Remove-Path
-	(	[parameter(Mandatory=$True,ValueFromPipeline=$True,Position=0)]
-		[string]$RemovedFolder
-	)
-# function body
-	{	# Get the Current Search Path from the environment keys in the registry
-		$OldPath = (Get-ItemProperty -Path "Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment" -Name PATH).Path
-
-		# Find the value to remove, replace it with $NULL. If it’s not found, nothing will change.
-		$NewPath = $OldPath -replace $RemovedFolder,$Null
-
-		# Update the Environment Path
-		Set-ItemProperty -Path "Registry::HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\Environment" -Name PATH -Value $NewPath
+	$envPaths = $env:Path -split ";"
+	if ($envPaths -notcontains $Path)
+	{	$envPaths = $envPaths + $Path | where { $_ }
+		$env:Path = $envPaths -join ";"
 	}
-	
+}
+
+# GitHub user:            https://github.com/mkropat
+# Gist account at GitHub: https://gist.github.com/mkropat
+# Gist snippet URL:       https://gist.github.com/mkropat/c1226e0cc2ca941b23a9
+function Remove-EnvPath
+{	param (
+		[Parameter(Mandatory=$true)]
+		[string] $Path,
+
+		[ValidateSet("Machine", "User", "Session")]
+		[string] $Container = "Session"
+	)
+
+	if ($Container -ne "Session")
+	{	$containerType =	$EnvPath_ContainerMapping[$Container]
+		$persistedPaths =	[Environment]::GetEnvironmentVariable("Path", $containerType) -split ";"
+		if ($persistedPaths -contains $Path)
+		{	$persistedPaths = $persistedPaths | where { $_ -and $_ -ne $Path }
+			[Environment]::SetEnvironmentVariable("Path", $persistedPaths -join ";", $containerType)
+		}
+	}
+
+	$envPaths = $env:Path -split ";"
+	if ($envPaths -contains $Path)
+	{	$envPaths = $envPaths | where { $_ -and $_ -ne $Path }
+		$env:Path = $envPaths -join ";"
+	}
+}
+
+# GitHub user:            https://github.com/mkropat
+# Gist account at GitHub: https://gist.github.com/mkropat
+# Gist snippet URL:       https://gist.github.com/mkropat/c1226e0cc2ca941b23a9
+function Get-EnvPath
+{	param (
+		[Parameter(Mandatory=$true)]
+		[ValidateSet("Machine", "User")]
+		[string] $Container
+	)
+
+	$containerType = $EnvPath_ContainerMapping[$Container]
+	[Environment]::GetEnvironmentVariable('Path', $containerType) -split ";" | where { $_ }
+}
+
 
 if ($false)
 {	# Write-Host "Uninstalling GHDL $GHDLVersion for Windows..."
@@ -230,10 +268,10 @@ else
 	if ($Clean_GHDL)
 	{	$Script_Path = 				$GHDLWindowsDir + "\compile-ghdl.ps1"
 		$Script_Parameters =	@(
-			'-Clean',
-			'-Hosted',
-			'-Verbose:$EnableVerbose',
-			'-Debug:$EnableDebug'
+			"-Clean",
+			"-Hosted",
+			"-Verbose:$EnableVerbose",
+			"-Debug:$EnableDebug"
 		)
 		
 		Write-Host "Running compile-ghdl.ps1 -Clean ..." -ForegroundColor DarkCyan
@@ -255,10 +293,10 @@ else
 	if ($Clean_Libraries)
 	{	$Script_Path = 				$GHDLWindowsDir + "\compile-libraries.ps1"
 		$Script_Parameters =	@(
-			'-Clean',
-			'-Hosted',
-			'-Verbose:$EnableVerbose',
-			'-Debug:$EnableDebug'
+			"-Clean",
+			"-Hosted",
+			"-Verbose:$EnableVerbose",
+			"-Debug:$EnableDebug"
 		)
 		
 		Write-Host "Running compile-libraries.ps1 -Clean ..." -ForegroundColor DarkCyan
@@ -312,9 +350,9 @@ else
 		$Script_Path = 				$GHDLWindowsDir + "\compile-ghdl.ps1"
 		$Script_Parameters =	@()
 		$Script_Parameters =	@(
-			'-All',
-			'-Verbose:$EnableVerbose',
-			'-Debug:$EnableDebug'
+			"-All",
+			"-Verbose:$EnableVerbose",
+			"-Debug:$EnableDebug"
 		)
 					
 		Write-Host "Running compile-ghdl.ps1 -All ..." -ForegroundColor DarkCyan
@@ -339,9 +377,9 @@ else
 		$Script_Path = 				$GHDLWindowsDir + "\compile-libraries.ps1"
 		$Script_Parameters =	@()
 		$Script_Parameters =	@(
-			'-Compile',
-			'-Verbose:$EnableVerbose',
-			'-Debug:$EnableDebug'
+			"-Compile",
+			"-Verbose:$EnableVerbose",
+			"-Debug:$EnableDebug"
 		)
 		
 		$env:GHDL = "$GHDLBuildDir\ghdl.exe"
@@ -486,6 +524,13 @@ else
 			# pre-compiled libraries
 			Copy-Item $GHDLCompiledLibraryDir	-Recurse		"$InstallPath"							-Verbose:$EnableVerbose -ErrorAction SilentlyContinue
 
+			$InstallInPath = (Read-Host "Install GHDL in PATH at machine level? [Y/n]").ToLower()
+			if (($InstallInPath -eq "") -or ($InstallInPath -eq "y"))
+			{	Write-Host "  Adding GHDL to PATH at machine level."
+				Add-EnvPath -Path $InstallPath -Container "Machine"
+				Add-EnvPath -Path $InstallPath -Container "Session"
+			}
+			
 			Write-Host
 			Write-Host "Installing files " -NoNewline
 			Write-Host "[SUCCESSFUL]" -ForegroundColor Green
@@ -508,6 +553,18 @@ else
 		{	Write-Host "  Cleaning up installation directory '$InstallPath'." -ForegroundColor Yellow
 			Get-ChildItem -Path $InstallPath -Depth 0 | foreach { Remove-Item $_ -ErrorAction SilentlyContinue }
 		}
+		
+		Write-Host "  Removing GHDL from PATH variables in Machine, User..." -ForegroundColor Yellow
+		foreach ($container in @("Machine", "User"))
+		{	foreach ($entry in (Get-EnvPath -Container $container))
+			{	if ($entry.ToLower().Contains("ghdl"))
+				{	Write-Host "    Removing '$entry' from $container level."
+					Remove-EnvPath -Path $entry -Container $container
+					Remove-EnvPath -Path $entry -Container "Session"
+				}
+			}
+		}
+		
 		Write-Host "  Creating directory sub-directories in '$InstallPath' ..."
 		# New-Item -ItemType directory -Path "$InstallPath"						-ErrorAction SilentlyContinue	| Out-Null
 		New-Item -ItemType directory -Path "$InstallPath\bin"				-ErrorAction SilentlyContinue	| Out-Null
@@ -524,6 +581,13 @@ else
 		# pre-compiled libraries
 		Copy-Item $GHDLCompiledLibraryDir	-Recurse		"$InstallPath"							-Verbose:$EnableVerbose -ErrorAction SilentlyContinue
 
+		$InstallInPath = (Read-Host "Install GHDL in PATH at machine level? [Y/n]").ToLower()
+		if (($InstallInPath -eq "") -or ($InstallInPath -eq "y"))
+		{	Write-Host "  Adding GHDL to PATH at machine level."
+			Add-EnvPath -Path $InstallPath -Container "Machine"
+			Add-EnvPath -Path $InstallPath -Container "Session"
+		}
+		
 		Write-Host
 		Write-Host "Updating files " -NoNewline
 		Write-Host "[SUCCESSFUL]" -ForegroundColor Green
@@ -544,6 +608,17 @@ else
 		if (Test-Path -Path $InstallPath)
 		{	Write-Host "  Removing installation directory '$InstallPath'." -ForegroundColor Yellow
 			Remove-Item $InstallPath -Recurse -ErrorAction SilentlyContinue
+		}
+		
+		Write-Host "  Removing GHDL from PATH variables in Machine, User..." -ForegroundColor Yellow
+		foreach ($container in @("Machine", "User"))
+		{	foreach ($entry in (Get-EnvPath -Container $container))
+			{	if ($entry.ToLower().Contains("ghdl"))
+				{	Write-Host "    Removing '$entry' from $container level."
+					Remove-EnvPath -Path $entry -Container $container
+					Remove-EnvPath -Path $entry -Container "Session"
+				}
+			}
 		}
 
 		Write-Host
