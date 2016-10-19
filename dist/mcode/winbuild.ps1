@@ -268,10 +268,10 @@ else
 	if ($Clean_GHDL)
 	{	$Script_Path = 				$GHDLWindowsDir + "\compile-ghdl.ps1"
 		$Script_Parameters =	@(
-			"-Clean",
-			"-Hosted",
-			"-Verbose:$EnableVerbose",
-			"-Debug:$EnableDebug"
+			'-Clean',
+			'-Hosted',
+			'-Verbose:$EnableVerbose',
+			'-Debug:$EnableDebug'
 		)
 		
 		Write-Host "Running compile-ghdl.ps1 -Clean ..." -ForegroundColor DarkCyan
@@ -293,10 +293,10 @@ else
 	if ($Clean_Libraries)
 	{	$Script_Path = 				$GHDLWindowsDir + "\compile-libraries.ps1"
 		$Script_Parameters =	@(
-			"-Clean",
-			"-Hosted",
-			"-Verbose:$EnableVerbose",
-			"-Debug:$EnableDebug"
+			'-Clean',
+			'-Hosted',
+			'-Verbose:$EnableVerbose',
+			'-Debug:$EnableDebug'
 		)
 		
 		Write-Host "Running compile-libraries.ps1 -Clean ..." -ForegroundColor DarkCyan
@@ -350,9 +350,9 @@ else
 		$Script_Path = 				$GHDLWindowsDir + "\compile-ghdl.ps1"
 		$Script_Parameters =	@()
 		$Script_Parameters =	@(
-			"-All",
-			"-Verbose:$EnableVerbose",
-			"-Debug:$EnableDebug"
+			'-All',
+			'-Verbose:$EnableVerbose',
+			'-Debug:$EnableDebug'
 		)
 					
 		Write-Host "Running compile-ghdl.ps1 -All ..." -ForegroundColor DarkCyan
@@ -377,9 +377,9 @@ else
 		$Script_Path = 				$GHDLWindowsDir + "\compile-libraries.ps1"
 		$Script_Parameters =	@()
 		$Script_Parameters =	@(
-			"-Compile",
-			"-Verbose:$EnableVerbose",
-			"-Debug:$EnableDebug"
+			'-Compile',
+			'-Verbose:$EnableVerbose',
+			'-Debug:$EnableDebug'
 		)
 		
 		$env:GHDL = "$GHDLBuildDir\ghdl.exe"
