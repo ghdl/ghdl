@@ -589,10 +589,6 @@ package Iirs is
    --  declaration by semantic.
    --   Get/Set_Entity_Aspect (Field3)
    --
-   --   Get/Set_Default_Generic_Map_Aspect_Chain (Field6)
-   --
-   --   Get/Set_Default_Port_Map_Aspect_Chain (Field7)
-   --
    --   Get/Set_Generic_Map_Aspect_Chain (Field8)
    --
    --   Get/Set_Port_Map_Aspect_Chain (Field9)
@@ -6782,14 +6778,6 @@ package Iirs is
    --  Field: Field1
    function Get_Default_Entity_Aspect (Target : Iir) return Iir;
    procedure Set_Default_Entity_Aspect (Target : Iir; Aspect : Iir);
-
-   --  Field: Field6 Chain
-   function Get_Default_Generic_Map_Aspect_Chain (Target : Iir) return Iir;
-   procedure Set_Default_Generic_Map_Aspect_Chain (Target : Iir; Chain : Iir);
-
-   --  Field: Field7 Chain
-   function Get_Default_Port_Map_Aspect_Chain (Target : Iir) return Iir;
-   procedure Set_Default_Port_Map_Aspect_Chain (Target : Iir; Chain : Iir);
 
    --  Field: Field3
    function Get_Binding_Indication (Target : Iir) return Iir;

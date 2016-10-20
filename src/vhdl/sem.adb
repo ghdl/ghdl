@@ -1210,7 +1210,7 @@ package body Sem is
       Sem_Scopes.Add_Component_Declarations (Comp);
       Binding := Get_Binding_Indication (Conf);
       if Binding /= Null_Iir then
-         Sem_Binding_Indication (Binding, Comp, Conf, Primary_Entity_Aspect);
+         Sem_Binding_Indication (Binding, Conf, Primary_Entity_Aspect);
 
          if Primary_Entity_Aspect /= Null_Iir then
             --  LRM93 5.2.1  Binding Indication
@@ -1229,20 +1229,12 @@ package body Sem is
          --  Create a default binding indication.
          Entity := Get_Visible_Entity_Declaration (Comp);
          Binding := Sem_Create_Default_Binding_Indication
-           (Comp, Entity, Conf, False);
+           (Comp, Entity, Conf, False, False);
 
          if Binding /= Null_Iir then
             --  Remap to defaults.
             Set_Default_Entity_Aspect (Binding, Get_Entity_Aspect (Binding));
             Set_Entity_Aspect (Binding, Null_Iir);
-
-            Set_Default_Generic_Map_Aspect_Chain
-              (Binding, Get_Generic_Map_Aspect_Chain (Binding));
-            Set_Generic_Map_Aspect_Chain (Binding, Null_Iir);
-
-            Set_Default_Port_Map_Aspect_Chain
-              (Binding, Get_Port_Map_Aspect_Chain (Binding));
-            Set_Port_Map_Aspect_Chain (Binding, Null_Iir);
 
             Set_Binding_Indication (Conf, Binding);
          end if;

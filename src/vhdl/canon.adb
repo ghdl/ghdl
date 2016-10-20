@@ -22,6 +22,7 @@ with Flags;
 with Name_Table;
 with Sem;
 with Sem_Inst;
+with Sem_Specs;
 with Iir_Chains; use Iir_Chains;
 with PSL.Nodes;
 with PSL.Rewrites;
@@ -2087,6 +2088,7 @@ package body Canon is
         Get_Kind (Cfg) = Iir_Kind_Component_Configuration;
 
       Bind : Iir;
+      Comp : Iir;
       Instances : Iir_List;
       Entity_Aspect : Iir;
       Block : Iir_Block_Configuration;
@@ -2121,10 +2123,13 @@ package body Canon is
          if Entity_Aspect /= Null_Iir then
             Add_Binding_Indication_Dependence (Top, Bind);
             Entity := Get_Entity_From_Entity_Aspect (Entity_Aspect);
+            Comp := Get_Named_Entity (Get_Component_Name (Cfg));
+
             Map_Chain := Get_Generic_Map_Aspect_Chain (Bind);
             if Map_Chain = Null_Iir then
-               if Is_Config then
-                  Map_Chain := Get_Default_Generic_Map_Aspect_Chain (Bind);
+               if Is_Config and then Is_Valid (Entity) then
+                  Map_Chain := Sem_Specs.Create_Default_Map_Aspect
+                    (Comp, Entity, Sem_Specs.Map_Generic, Bind);
                end if;
             else
                Map_Chain := Canon_Association_Chain
@@ -2134,8 +2139,9 @@ package body Canon is
 
             Map_Chain := Get_Port_Map_Aspect_Chain (Bind);
             if Map_Chain = Null_Iir then
-               if Is_Config then
-                  Map_Chain := Get_Default_Port_Map_Aspect_Chain (Bind);
+               if Is_Config and then Is_Valid (Entity) then
+                  Map_Chain := Sem_Specs.Create_Default_Map_Aspect
+                    (Comp, Entity, Sem_Specs.Map_Port, Bind);
                end if;
             else
                Map_Chain := Canon_Association_Chain
@@ -2269,6 +2275,7 @@ package body Canon is
       Cs_Chain : Iir;
       Res_Binding : Iir_Binding_Indication;
       Entity : Iir;
+      Comp : Iir;
       Instance_List : Iir_List;
       Conf_Instance_List : Iir_List;
       Instance : Iir;
@@ -2304,11 +2311,13 @@ package body Canon is
       Set_Binding_Indication (Res, Res_Binding);
 
       Entity := Get_Entity_From_Entity_Aspect (Get_Entity_Aspect (Cs_Binding));
+      Comp := Get_Named_Entity (Get_Component_Name (Conf_Spec));
 
       --  Merge generic map aspect.
       Cs_Chain := Get_Generic_Map_Aspect_Chain (Cs_Binding);
       if Cs_Chain = Null_Iir then
-         Cs_Chain := Get_Default_Generic_Map_Aspect_Chain (Cs_Binding);
+         Cs_Chain := Sem_Specs.Create_Default_Map_Aspect
+           (Comp, Entity, Sem_Specs.Map_Generic, Cs_Binding);
       end if;
       Set_Generic_Map_Aspect_Chain
         (Res_Binding,
@@ -2319,7 +2328,8 @@ package body Canon is
       --  merge port map aspect
       Cs_Chain := Get_Port_Map_Aspect_Chain (Cs_Binding);
       if Cs_Chain = Null_Iir then
-         Cs_Chain := Get_Default_Port_Map_Aspect_Chain (Cs_Binding);
+         Cs_Chain := Sem_Specs.Create_Default_Map_Aspect
+           (Comp, Entity, Sem_Specs.Map_Port, Cs_Binding);
       end if;
       Set_Port_Map_Aspect_Chain
         (Res_Binding,

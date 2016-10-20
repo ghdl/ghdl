@@ -291,8 +291,6 @@ package Nodes_Meta is
       Field_Instantiation_List,
       Field_Entity_Aspect,
       Field_Default_Entity_Aspect,
-      Field_Default_Generic_Map_Aspect_Chain,
-      Field_Default_Port_Map_Aspect_Chain,
       Field_Binding_Indication,
       Field_Named_Entity,
       Field_Alias_Declaration,
@@ -804,10 +802,6 @@ package Nodes_Meta is
    function Has_Instantiation_List (K : Iir_Kind) return Boolean;
    function Has_Entity_Aspect (K : Iir_Kind) return Boolean;
    function Has_Default_Entity_Aspect (K : Iir_Kind) return Boolean;
-   function Has_Default_Generic_Map_Aspect_Chain (K : Iir_Kind)
-      return Boolean;
-   function Has_Default_Port_Map_Aspect_Chain (K : Iir_Kind)
-      return Boolean;
    function Has_Binding_Indication (K : Iir_Kind) return Boolean;
    function Has_Named_Entity (K : Iir_Kind) return Boolean;
    function Has_Alias_Declaration (K : Iir_Kind) return Boolean;
