@@ -147,7 +147,8 @@ if ($Compile)
 $GHDLVersion =								Get-GHDLVersion $GHDLRootDir
 $Backend =										"mcode"
 $WindowsDirName =							"dist\$Backend\windows"
-$BuildDirectoryName =					"build\$Backend"
+$BuildDirectoryName =					"build"
+$BuildBackendDirectoryName =	"$BuildDirectoryName\$Backend"
 $VHDLLibrariesDirectoryName =	"lib"
 $PackageDirectoryName =				"build\zip\$Backend"
 $ZipPackageFileName =					"ghdl-$Backend-$GHDLVersion.zip"
@@ -155,14 +156,14 @@ $DefaultInstallPath =					"C:\Program Files (x86)\GHDL"				# This is the default
 
 # construct directories
 $GHDLWindowsDir =							"$GHDLRootDir\$WindowsDirName"
-$GHDLBuildDir =								"$GHDLRootDir\$BuildDirectoryName"
+$GHDLBuildDir =								"$GHDLRootDir\$BuildBackendDirectoryName"
 $GHDLVendorLibraryDir =				"$GHDLRootDir\libraries\vendors"
-$GHDLCompiledLibraryDir =			"$GHDLRootDir\$BuildDirectoryName\$VHDLLibrariesDirectoryName"
+$GHDLCompiledLibraryDir =			"$GHDLRootDir\$BuildBackendDirectoryName\$VHDLLibrariesDirectoryName"
 $GHDLZipPackageDir =					"$GHDLRootDir\$PackageDirectoryName"
 $GHDLZipPackageFile =					"$GHDLZipPackageDir\$ZipPackageFileName"
 
 # construct files
-$InstallDirFile =							"$GHDLBuildDir\InstallDir.conf"
+$InstallDirFile =							"$BuildDirectoryName\InstallDir.conf"
 
 $EnvPath_ContainerMapping = @{
 	Machine =	[EnvironmentVariableTarget]::Machine
@@ -291,7 +292,10 @@ else
 		}
 	}	# Clean_GHDL
 	if ($Clean_Libraries)
-	{	$Script_Path = 				$GHDLWindowsDir + "\compile-libraries.ps1"
+	{	if ($Clean_GHDL)
+		{	Write-Host		}
+		
+		$Script_Path = 				$GHDLWindowsDir + "\compile-libraries.ps1"
 		$Script_Parameters =	@(
 			'-Clean',
 			'-Hosted',
@@ -316,7 +320,12 @@ else
 		}
 	}	# Clean_Libraries
 	if ($Clean_Package_Zip)
-	{	Write-Host "Removing installer packages and temporary directories..."
+	{	if ($Clean_GHDL -or $Clean_Libraries)
+		{	Write-Host		}
+	
+		Write-Host "Running more clean-up tasks..." -ForegroundColor DarkCyan
+		Write-Host "--------------------------------------------------------------------------------" -ForegroundColor DarkCyan
+		Write-Host "Removing installer packages and temporary directories..." -ForegroundColor Yellow
 		if (Test-Path -Path $GHDLZipPackageDir)
 		{	Write-Host "  rmdir $GHDLZipPackageDir"
 			Remove-Item $GHDLZipPackageDir -Force -Recurse -ErrorAction SilentlyContinue
@@ -345,16 +354,22 @@ else
 	# Compile tasks
 	# ============================================================================
 	if ($Compile_GHDL)
-	{	Write-Host "Compiling GHDL $GHDLVersion for Windows..."
+	{	if ($Clean)
+		{	Write-Host		}
 			
 		$Script_Path = 				$GHDLWindowsDir + "\compile-ghdl.ps1"
 		$Script_Parameters =	@()
 		$Script_Parameters =	@(
 			'-All',
+			'-Hosted',
 			'-Verbose:$EnableVerbose',
 			'-Debug:$EnableDebug'
 		)
-					
+		
+		# Write-Host "Compiling GHDL $GHDLVersion for Windows..." -ForegroundColor DarkCyan
+		# Write-Host "--------------------------------------------------------------------------------" -ForegroundColor DarkCyan
+		
+		Write-Host
 		Write-Host "Running compile-ghdl.ps1 -All ..." -ForegroundColor DarkCyan
 		Write-Host "--------------------------------------------------------------------------------" -ForegroundColor DarkCyan
 		$InvokeExpr = "$Script_Path " + ($Script_Parameters -join " ")
@@ -372,19 +387,25 @@ else
 		}
 	}	# Compile_GHDL
 	if ($Compile_Libraries)
-	{	Write-Host "Compiling GHDL's libraries ..."
-			
+	{	if ($Compile_GHDL)
+		{	Write-Host		}
+		
 		$Script_Path = 				$GHDLWindowsDir + "\compile-libraries.ps1"
 		$Script_Parameters =	@()
 		$Script_Parameters =	@(
 			'-Compile',
+			'-Hosted',
 			'-Verbose:$EnableVerbose',
 			'-Debug:$EnableDebug'
 		)
 		
-		$env:GHDL = "$GHDLBuildDir\ghdl.exe"
-		Write-Host "env:GHDL --" + $env:GHDL + "--"
+		# Write-Host "Compiling GHDL's libraries ..." -ForegroundColor DarkCyan
+		# Write-Host "--------------------------------------------------------------------------------" -ForegroundColor DarkCyan
 		
+		$env:GHDL = "$GHDLBuildDir\ghdl.exe"
+		Write-Host ("Setting env:GHDL to '" + $env:GHDL + "'")
+
+		Write-Host
 		Write-Host "Running compile-libraries.ps1 -Compile ..." -ForegroundColor DarkCyan
 		Write-Host "--------------------------------------------------------------------------------" -ForegroundColor DarkCyan
 		$InvokeExpr = "$Script_Path " + ($Script_Parameters -join " ")
@@ -471,7 +492,7 @@ else
 	# ============================================================================
 	# Compile tasks
 	# ============================================================================
-	if ($Install -eq $true)
+	if ($Install)
 	{	Write-Host "Installing GHDL $GHDLVersion for Windows..."
 		if ($InstallDir -eq "")
 		{	if (Test-Path $InstallDirFile -PathType Leaf)
@@ -525,13 +546,28 @@ else
 			# pre-compiled libraries
 			Copy-Item $GHDLCompiledLibraryDir	-Recurse		"$InstallPath"							-Verbose:$EnableVerbose -ErrorAction SilentlyContinue
 
-			Write-Host "Install GHDL in PATH at machine level? " -NoNewline -ForegroundColor DarkCyan
-			Write-Host "[Y/n]" -NoNewline -ForegroundColor Cyan
-			Write-Host ":" -NoNewline -ForegroundColor DarkCyan
+			Write-Host "  Install GHDL in PATH at machine level? [" -NoNewline -ForegroundColor DarkCyan
+			Write-Host "M" -NoNewline -ForegroundColor Cyan
+			Write-Host "achine/" -NoNewline -ForegroundColor DarkCyan
+			Write-Host "u" -NoNewline -ForegroundColor Cyan
+			Write-Host "ser/" -NoNewline -ForegroundColor DarkCyan
+			Write-Host "s" -NoNewline -ForegroundColor Cyan
+			Write-Host "ession/" -NoNewline -ForegroundColor DarkCyan
+			Write-Host "n" -NoNewline -ForegroundColor Cyan
+			Write-Host "o]: " -NoNewline -ForegroundColor DarkCyan
 			$InstallInPath = (Read-Host).ToLower()
-			if (($InstallInPath -eq "") -or ($InstallInPath -eq "y"))
+			if (($InstallInPath -eq "") -or ($InstallInPath -eq "m"))
 			{	Write-Host "  Adding GHDL to PATH at machine level."
 				Add-EnvPath -Path "$InstallPath\bin" -Container "Machine"
+				Add-EnvPath -Path "$InstallPath\bin" -Container "Session"
+			}
+			elseif ($InstallInPath -eq "u")
+			{	Write-Host "  Adding GHDL to PATH at user level."
+				Add-EnvPath -Path "$InstallPath\bin" -Container "User"
+				Add-EnvPath -Path "$InstallPath\bin" -Container "Session"
+			}
+			elseif ($InstallInPath -eq "s")
+			{	Write-Host "  Adding GHDL to PATH at session level."
 				Add-EnvPath -Path "$InstallPath\bin" -Container "Session"
 			}
 			
@@ -543,7 +579,7 @@ else
 			Exit-Script
 		}	# Zip
 	}	# Install
-	elseif ($Update -eq $true)
+	elseif ($Update)
 	{	Write-Host "Updating GHDL $GHDLVersion for Windows..."
 		if (Test-Path $InstallDirFile -PathType Leaf)
 		{	Write-Host "  Reading installation path from '$InstallDirFile' ..."
@@ -556,22 +592,21 @@ else
 		Write-Host "  Install directory: $InstallPath"
 		if (Test-Path -Path $InstallPath)
 		{	Write-Host "  Cleaning up installation directory '$InstallPath'." -ForegroundColor Yellow
-			Get-ChildItem -Path $InstallPath -Depth 0 | foreach { Remove-Item $_ -ErrorAction SilentlyContinue }
+			Get-ChildItem -Path $InstallPath -Depth 0 | foreach { Remove-Item $_ -Recurse -ErrorAction SilentlyContinue }
 		}
 		
-		Write-Host "  Removing GHDL from PATH variables in Machine, User..." -ForegroundColor Yellow
+		Write-Host "  Removing GHDL from PATH variables in Machine, User, Session ..." -ForegroundColor Yellow
 		foreach ($container in @("Machine", "User"))
 		{	foreach ($entry in (Get-EnvPath -Container $container))
 			{	if ($entry.ToLower().Contains("ghdl"))
 				{	Write-Host "    Removing '$entry' from $container level."
 					Remove-EnvPath -Path $entry -Container $container
-					Remove-EnvPath -Path $entry -Container "Session"
 				}
 			}
 		}
+		Remove-EnvPath -Path $entry -Container "Session"
 		
 		Write-Host "  Creating directory sub-directories in '$InstallPath' ..."
-		# New-Item -ItemType directory -Path "$InstallPath"						-ErrorAction SilentlyContinue	| Out-Null
 		New-Item -ItemType directory -Path "$InstallPath\bin"				-ErrorAction SilentlyContinue	| Out-Null
 		New-Item -ItemType directory -Path "$InstallPath\include"		-ErrorAction SilentlyContinue	| Out-Null
 		New-Item -ItemType directory -Path "$InstallPath\lib"				-ErrorAction SilentlyContinue	| Out-Null
@@ -586,13 +621,28 @@ else
 		# pre-compiled libraries
 		Copy-Item $GHDLCompiledLibraryDir	-Recurse		"$InstallPath"							-Verbose:$EnableVerbose -ErrorAction SilentlyContinue
 
-		Write-Host "Install GHDL in PATH at machine level? " -NoNewline -ForegroundColor DarkCyan
-		Write-Host "[Y/n]" -NoNewline -ForegroundColor Cyan
-		Write-Host ":" -NoNewline -ForegroundColor DarkCyan
+		Write-Host "  Install GHDL in PATH at machine level? [" -NoNewline -ForegroundColor DarkCyan
+		Write-Host "M" -NoNewline -ForegroundColor Cyan
+		Write-Host "achine/" -NoNewline -ForegroundColor DarkCyan
+		Write-Host "u" -NoNewline -ForegroundColor Cyan
+		Write-Host "ser/" -NoNewline -ForegroundColor DarkCyan
+		Write-Host "s" -NoNewline -ForegroundColor Cyan
+		Write-Host "ession/" -NoNewline -ForegroundColor DarkCyan
+		Write-Host "n" -NoNewline -ForegroundColor Cyan
+		Write-Host "o]: " -NoNewline -ForegroundColor DarkCyan
 		$InstallInPath = (Read-Host).ToLower()
-		if (($InstallInPath -eq "") -or ($InstallInPath -eq "y"))
+		if (($InstallInPath -eq "") -or ($InstallInPath -eq "m"))
 		{	Write-Host "  Adding GHDL to PATH at machine level."
 			Add-EnvPath -Path "$InstallPath\bin" -Container "Machine"
+			Add-EnvPath -Path "$InstallPath\bin" -Container "Session"
+		}
+		elseif ($InstallInPath -eq "u")
+		{	Write-Host "  Adding GHDL to PATH at user level."
+			Add-EnvPath -Path "$InstallPath\bin" -Container "User"
+			Add-EnvPath -Path "$InstallPath\bin" -Container "Session"
+		}
+		elseif ($InstallInPath -eq "s")
+		{	Write-Host "  Adding GHDL to PATH at session level."
 			Add-EnvPath -Path "$InstallPath\bin" -Container "Session"
 		}
 		
@@ -603,7 +653,7 @@ else
 		
 		Exit-Script
 	}	# Update
-	elseif ($Uninstall -eq $true)
+	elseif ($Uninstall)
 	{	Write-Host "Uninstalling GHDL $GHDLVersion for Windows..."
 		if (Test-Path $InstallDirFile -PathType Leaf)
 		{	Write-Host "  Reading installation path from '$InstallDirFile' ..."
@@ -618,16 +668,16 @@ else
 			Remove-Item $InstallPath -Recurse -ErrorAction SilentlyContinue
 		}
 		
-		Write-Host "  Removing GHDL from PATH variables in Machine, User..." -ForegroundColor Yellow
+		Write-Host "  Removing GHDL from PATH variables in Machine, User, Session ..." -ForegroundColor Yellow
 		foreach ($container in @("Machine", "User"))
 		{	foreach ($entry in (Get-EnvPath -Container $container))
 			{	if ($entry.ToLower().Contains("ghdl"))
 				{	Write-Host "    Removing '$entry' from $container level."
 					Remove-EnvPath -Path $entry -Container $container
-					Remove-EnvPath -Path $entry -Container "Session"
 				}
 			}
 		}
+		Remove-EnvPath -Path $entry -Container "Session"
 
 		Write-Host
 		Write-Host "Uninstalling files " -NoNewline
