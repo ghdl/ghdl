@@ -159,12 +159,11 @@ package body Trans.Chap9 is
 
    procedure Translate_Component_Instantiation_Statement (Inst : Iir)
    is
-      Comp      : constant Iir := Get_Instantiated_Unit (Inst);
-      Info      : Block_Info_Acc;
-      Comp_Info : Comp_Info_Acc;
+      Info : Block_Info_Acc;
+      Ports : Iir;
 
       Mark, Mark2 : Id_Mark_Type;
-      Assoc, Conv, In_Type : Iir;
+      Assoc, Inter, Conv, In_Type : Iir;
       Has_Conv_Record      : Boolean := False;
    begin
       Info := Add_Info (Inst, Kind_Block);
@@ -172,15 +171,22 @@ package body Trans.Chap9 is
 
       if Is_Component_Instantiation (Inst) then
          --  Via a component declaration.
-         Comp_Info := Get_Info (Get_Named_Entity (Comp));
-         Info.Block_Link_Field := Add_Instance_Factory_Field
-           (Create_Identifier_Without_Prefix (Inst),
-            Get_Scope_Type (Comp_Info.Comp_Scope));
+         declare
+            Comp : constant Iir :=
+              Get_Named_Entity (Get_Instantiated_Unit (Inst));
+            Comp_Info : constant Comp_Info_Acc := Get_Info (Comp);
+         begin
+            Info.Block_Link_Field := Add_Instance_Factory_Field
+              (Create_Identifier_Without_Prefix (Inst),
+               Get_Scope_Type (Comp_Info.Comp_Scope));
+            Ports := Comp;
+         end;
       else
          --  Direct instantiation.
          Info.Block_Link_Field := Add_Instance_Factory_Field
            (Create_Identifier_Without_Prefix (Inst),
             Rtis.Ghdl_Component_Link_Type);
+         Ports := Get_Entity_From_Entity_Aspect (Get_Instantiated_Unit (Inst));
       end if;
 
       --  When conversions are used, the subtype of the actual (or of the
@@ -189,6 +195,7 @@ package body Trans.Chap9 is
       --  We need to translate it and create variables in the instance
       --  because it will be referenced by the conversion subprogram.
       Assoc := Get_Port_Map_Aspect_Chain (Inst);
+      Inter := Get_Port_Chain (Ports);
       while Assoc /= Null_Iir loop
          if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression
          then
@@ -207,12 +214,12 @@ package body Trans.Chap9 is
                --  formal.
                Push_Identifier_Prefix
                  (Mark2,
-                  Get_Identifier (Get_Association_Interface (Assoc)));
+                  Get_Identifier (Get_Association_Interface (Assoc, Inter)));
                Chap3.Translate_Type_Definition (In_Type, True);
                Pop_Identifier_Prefix (Mark2);
             end if;
          end if;
-         Assoc := Get_Chain (Assoc);
+         Next_Association_Interface (Assoc, Inter);
       end loop;
       if Has_Conv_Record then
          Pop_Instance_Factory (Info.Block_Scope'Access);
@@ -946,8 +953,8 @@ package body Trans.Chap9 is
          --  instantiation statement.
          Set_Component_Link (Comp_Info.Comp_Scope, Comp_Info.Comp_Link);
 
-         Chap5.Elab_Map_Aspect (Stmt, Comp, (Comp_Info.Comp_Scope'Access,
-                                             Comp_Info.Comp_Scope));
+         Chap5.Elab_Map_Aspect (Comp, Stmt, Comp, (Comp_Info.Comp_Scope'Access,
+                                                   Comp_Info.Comp_Scope));
 
          Clear_Scope (Comp_Info.Comp_Scope);
       end if;
@@ -1723,7 +1730,7 @@ package body Trans.Chap9 is
       begin
          Entity_Map.Scope_Ptr := Entity_Info.Block_Scope'Access;
          Set_Scope_Via_Param_Ptr (Entity_Map.Scope, Var_Sub);
-         Chap5.Elab_Map_Aspect (Mapping, Entity, Entity_Map);
+         Chap5.Elab_Map_Aspect (Entity, Mapping, Entity, Entity_Map);
          Clear_Scope (Entity_Map.Scope);
       end;
 
@@ -2453,7 +2460,7 @@ package body Trans.Chap9 is
                   Block_Info := Get_Info (Block);
                   Block_Env := (Block_Info.Block_Scope'Access,
                                 Block_Info.Block_Scope);
-                  Chap5.Elab_Map_Aspect (Header, Block, Block_Env);
+                  Chap5.Elab_Map_Aspect (Header, Header, Block, Block_Env);
                   Merge_Signals_Rti_Of_Port_Chain (Get_Port_Chain (Header));
                end if;
             end;

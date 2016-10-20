@@ -454,7 +454,7 @@ package body Sem is
    procedure Sem_Port_Association_Chain
      (Inter_Parent : Iir; Assoc_Parent : Iir)
    is
-      El : Iir;
+      Assoc : Iir;
       Actual : Iir;
       Prefix : Iir;
       Object : Iir;
@@ -517,23 +517,14 @@ package body Sem is
       --  LRM93 1.1.1.2
       --  The actual, if a port or signal, must be denoted by a static name.
       --  The actual, if an expression, must be a globally static expression.
-      El := Assoc_Chain;
+      Assoc := Assoc_Chain;
       Inter := Get_Port_Chain (Inter_Parent);
-      while El /= Null_Iir loop
-         Formal := Get_Formal (El);
+      while Assoc /= Null_Iir loop
+         Formal := Get_Association_Formal (Assoc, Inter);
+         Formal_Base := Get_Interface_Of_Formal (Formal);
 
-         if Formal = Null_Iir then
-            --  No formal: use association by position.
-            Formal := Inter;
-            Formal_Base := Inter;
-            Inter := Get_Chain (Inter);
-         else
-            Inter := Null_Iir;
-            Formal_Base := Get_Association_Interface (El);
-         end if;
-
-         if Get_Kind (El) = Iir_Kind_Association_Element_By_Expression then
-            Actual := Get_Actual (El);
+         if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression then
+            Actual := Get_Actual (Assoc);
             --  There has been an error, exit from the loop.
             exit when Actual = Null_Iir;
             Object := Name_To_Object (Actual);
@@ -549,12 +540,12 @@ package body Sem is
                  | Iir_Kinds_Signal_Attribute =>
                   --  Port or signal.
                   Set_Collapse_Signal_Flag
-                    (El, Can_Collapse_Signals (El, Formal));
+                    (Assoc, Can_Collapse_Signals (Assoc, Formal));
                   if Get_Name_Staticness (Object) < Globally then
                      Error_Msg_Sem (+Actual, "actual must be a static name");
                   end if;
                   Check_Port_Association_Bounds_Restrictions
-                    (Formal, Actual, El);
+                    (Formal, Actual, Assoc);
                   if Get_Kind (Prefix) = Iir_Kind_Interface_Signal_Declaration
                   then
                      declare
@@ -562,25 +553,25 @@ package body Sem is
                         pragma Unreferenced (P);
                      begin
                         P := Check_Port_Association_Mode_Restrictions
-                          (Formal_Base, Prefix, El);
+                          (Formal_Base, Prefix, Assoc);
                      end;
                   end if;
                when others =>
                   --  Expression.
-                  Set_Collapse_Signal_Flag (El, False);
+                  Set_Collapse_Signal_Flag (Assoc, False);
 
                   --  If there is an IN conversion, re-integrate it into
                   --  the actual.
                   declare
                      In_Conv : Iir;
                   begin
-                     In_Conv := Get_In_Conversion (El);
+                     In_Conv := Get_In_Conversion (Assoc);
                      if In_Conv /= Null_Iir then
-                        Set_In_Conversion (El, Null_Iir);
+                        Set_In_Conversion (Assoc, Null_Iir);
                         Set_Expr_Staticness
                           (In_Conv, Get_Expr_Staticness (Actual));
                         Actual := In_Conv;
-                        Set_Actual (El, Actual);
+                        Set_Actual (Assoc, Actual);
                      end if;
                   end;
                   if Flags.Vhdl_Std >= Vhdl_93c then
@@ -591,7 +582,7 @@ package body Sem is
                      --  of mode in.
                      if Get_Mode (Formal_Base) /= Iir_In_Mode then
                         Error_Msg_Sem
-                          (+El, "only 'in' ports may be associated with "
+                          (+Assoc, "only 'in' ports may be associated with "
                              & "expression");
                      end if;
 
@@ -605,12 +596,12 @@ package body Sem is
                      end if;
                   else
                      Error_Msg_Sem
-                       (+El,
+                       (+Assoc,
                         "cannot associate ports with expression in vhdl87");
                   end if;
             end case;
          end if;
-         El := Get_Chain (El);
+         Next_Association_Interface (Assoc, Inter);
       end loop;
    end Sem_Port_Association_Chain;
 
@@ -1110,6 +1101,56 @@ package body Sem is
       Sem_Scopes.Close_Scope_Extension;
    end Sem_Block_Configuration;
 
+   --  Check that incremental binding of the component configuration CONF only
+   --  rebinds non associated ports of each instantiations of CONFIGURED_BLOCK
+   --  which CONF applies to.
+   procedure Check_Incremental_Binding (Configured_Block : Iir; Conf : Iir)
+   is
+      Comp : constant Iir := Get_Named_Entity (Get_Component_Name (Conf));
+      Inter_Chain : constant Iir := Get_Port_Chain (Comp);
+      Binding : constant Iir := Get_Binding_Indication (Conf);
+      Inst : Iir;
+   begin
+      --  Check each component instantiation of the block configured by CONF.
+      Inst := Get_Concurrent_Statement_Chain (Configured_Block);
+      while Inst /= Null_Iir loop
+         if Get_Kind (Inst) = Iir_Kind_Component_Instantiation_Statement
+           and then Get_Component_Configuration (Inst) = Conf
+         then
+            --  Check this instantiation.
+            declare
+               Primary_Binding : constant Iir := Get_Binding_Indication
+                 (Get_Configuration_Specification (Inst));
+               F_Chain : constant Iir :=
+                 Get_Port_Map_Aspect_Chain (Primary_Binding);
+               S_El : Iir;
+               S_Inter : Iir;
+               F_El : Iir;
+               Formal : Iir;
+            begin
+               S_El := Get_Port_Map_Aspect_Chain (Binding);
+               S_Inter := Inter_Chain;
+               while S_El /= Null_Iir loop
+                  --  Find S_EL formal in F_CHAIN.
+                  Formal := Get_Association_Interface (S_El, S_Inter);
+                  F_El := Find_First_Association_For_Interface
+                    (F_Chain, Inter_Chain, Formal);
+                  if F_El /= Null_Iir
+                    and then
+                    Get_Kind (F_El) /= Iir_Kind_Association_Element_Open
+                  then
+                     Error_Msg_Sem
+                       (+S_El,
+                        "%n already associated in primary binding", +Formal);
+                  end if;
+                  Next_Association_Interface (S_El, S_Inter);
+               end loop;
+            end;
+         end if;
+         Inst := Get_Chain (Inst);
+      end loop;
+   end Check_Incremental_Binding;
+
    --  LRM 1.3.2
    procedure Sem_Component_Configuration
      (Conf : Iir_Component_Configuration; Father : Iir)
@@ -1125,7 +1166,7 @@ package body Sem is
       --  11. A component configuration.
       Open_Declarative_Region;
 
-      --  LRM93 §10.2
+      --  LRM93 10.2
       --  If a component configuration appears as a configuration item
       --  immediatly within a block configuration that configures a given
       --  block, and the scope of a given declaration includes the end of the
@@ -1136,9 +1177,7 @@ package body Sem is
       -- for local ports and generics of the component.
       if Get_Kind (Father) = Iir_Kind_Block_Configuration then
          Configured_Block := Get_Block_Specification (Father);
-         if Get_Kind (Configured_Block) = Iir_Kind_Design_Unit then
-            raise Internal_Error;
-         end if;
+         pragma Assert (Get_Kind (Configured_Block) /= Iir_Kind_Design_Unit);
          Configured_Block :=
            Get_Block_From_Block_Specification (Configured_Block);
          Sem_Scopes.Extend_Scope_Of_Block_Declarations (Configured_Block);
@@ -1171,7 +1210,7 @@ package body Sem is
       Sem_Scopes.Add_Component_Declarations (Comp);
       Binding := Get_Binding_Indication (Conf);
       if Binding /= Null_Iir then
-         Sem_Binding_Indication (Binding, Comp, Conf, Primary_Entity_Aspect);
+         Sem_Binding_Indication (Binding, Conf, Primary_Entity_Aspect);
 
          if Primary_Entity_Aspect /= Null_Iir then
             --  LRM93 5.2.1  Binding Indication
@@ -1179,47 +1218,7 @@ package body Sem is
             --  of the incremental binding indication and it is a formal
             --  port that is associated with an actual other than OPEN in one
             --  of the primary binding indications.
-            declare
-               Inst : Iir;
-               Primary_Binding : Iir;
-               F_Chain : Iir;
-               F_El, S_El : Iir;
-               Formal : Iir;
-            begin
-               Inst := Get_Concurrent_Statement_Chain (Configured_Block);
-               while Inst /= Null_Iir loop
-                  if Get_Kind (Inst)
-                    = Iir_Kind_Component_Instantiation_Statement
-                    and then Get_Component_Configuration (Inst) = Conf
-                  then
-                     --  Check here.
-                     Primary_Binding := Get_Binding_Indication
-                       (Get_Configuration_Specification (Inst));
-                     F_Chain := Get_Port_Map_Aspect_Chain (Primary_Binding);
-                     S_El := Get_Port_Map_Aspect_Chain (Binding);
-                     while S_El /= Null_Iir loop
-                        --  Find S_EL formal in F_CHAIN.
-                        Formal := Get_Association_Interface (S_El);
-                        F_El := F_Chain;
-                        while F_El /= Null_Iir loop
-                           exit when Get_Association_Interface (F_El) = Formal;
-                           F_El := Get_Chain (F_El);
-                        end loop;
-                        if F_El /= Null_Iir
-                          and then Get_Kind (F_El)
-                          /= Iir_Kind_Association_Element_Open
-                        then
-                           Error_Msg_Sem
-                             (+S_El,
-                              "%n already associated in primary binding",
-                              +Formal);
-                        end if;
-                        S_El := Get_Chain (S_El);
-                     end loop;
-                  end if;
-                  Inst := Get_Chain (Inst);
-               end loop;
-            end;
+            Check_Incremental_Binding (Configured_Block, Conf);
          end if;
       elsif Primary_Entity_Aspect = Null_Iir then
          --  LRM93 5.2.1
@@ -1230,20 +1229,12 @@ package body Sem is
          --  Create a default binding indication.
          Entity := Get_Visible_Entity_Declaration (Comp);
          Binding := Sem_Create_Default_Binding_Indication
-           (Comp, Entity, Conf, False);
+           (Comp, Entity, Conf, False, False);
 
          if Binding /= Null_Iir then
             --  Remap to defaults.
             Set_Default_Entity_Aspect (Binding, Get_Entity_Aspect (Binding));
             Set_Entity_Aspect (Binding, Null_Iir);
-
-            Set_Default_Generic_Map_Aspect_Chain
-              (Binding, Get_Generic_Map_Aspect_Chain (Binding));
-            Set_Generic_Map_Aspect_Chain (Binding, Null_Iir);
-
-            Set_Default_Port_Map_Aspect_Chain
-              (Binding, Get_Port_Map_Aspect_Chain (Binding));
-            Set_Port_Map_Aspect_Chain (Binding, Null_Iir);
 
             Set_Binding_Indication (Conf, Binding);
          end if;

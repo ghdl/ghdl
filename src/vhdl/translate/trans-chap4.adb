@@ -2550,12 +2550,13 @@ package body Trans.Chap4 is
      (Stmt       : Iir;
       Block      : Iir;
       Assoc      : Iir;
+      Inter      : Iir;
       Mode       : Conv_Mode;
       Conv_Info  : in out Assoc_Conv_Info;
       Base_Block : Iir;
       Entity     : Iir)
    is
-      Formal : constant Iir := Get_Formal (Assoc);
+      Formal : constant Iir := Get_Association_Formal (Assoc, Inter);
       Actual : constant Iir := Get_Actual (Assoc);
 
       Mark2, Mark3      : Id_Mark_Type;
@@ -2598,7 +2599,7 @@ package body Trans.Chap4 is
       end case;
       --  FIXME: individual assoc -> overload.
       Push_Identifier_Prefix
-        (Mark3, Get_Identifier (Get_Association_Interface (Assoc)));
+        (Mark3, Get_Identifier (Get_Association_Interface (Assoc, Inter)));
 
       --  Handle anonymous subtypes.
       Chap3.Translate_Anonymous_Type_Definition (Out_Type);
@@ -2835,9 +2836,15 @@ package body Trans.Chap4 is
      (Stmt : Iir; Block : Iir; Base_Block : Iir; Entity : Iir)
    is
       Assoc : Iir;
+      Inter : Iir;
       Info  : Assoc_Info_Acc;
    begin
       Assoc := Get_Port_Map_Aspect_Chain (Stmt);
+      if Is_Null (Entity) then
+         Inter := Get_Port_Chain (Stmt);
+      else
+         Inter := Get_Port_Chain (Entity);
+      end if;
       while Assoc /= Null_Iir loop
          if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression
          then
@@ -2845,7 +2852,7 @@ package body Trans.Chap4 is
             if Get_In_Conversion (Assoc) /= Null_Iir then
                Info := Add_Info (Assoc, Kind_Assoc);
                Translate_Association_Subprogram
-                 (Stmt, Block, Assoc, Conv_Mode_In, Info.Assoc_In,
+                 (Stmt, Block, Assoc, Inter, Conv_Mode_In, Info.Assoc_In,
                   Base_Block, Entity);
             end if;
             if Get_Out_Conversion (Assoc) /= Null_Iir then
@@ -2853,11 +2860,11 @@ package body Trans.Chap4 is
                   Info := Add_Info (Assoc, Kind_Assoc);
                end if;
                Translate_Association_Subprogram
-                 (Stmt, Block, Assoc, Conv_Mode_Out, Info.Assoc_Out,
+                 (Stmt, Block, Assoc, Inter, Conv_Mode_Out, Info.Assoc_Out,
                   Base_Block, Entity);
             end if;
          end if;
-         Assoc := Get_Chain (Assoc);
+         Next_Association_Interface (Assoc, Inter);
       end loop;
    end Translate_Association_Subprograms;
 
@@ -2983,22 +2990,24 @@ package body Trans.Chap4 is
    end Elab_Conversion;
 
    --  In conversion: from actual to formal.
-   procedure Elab_In_Conversion (Assoc : Iir; Ndest : out Mnode)
+   procedure Elab_In_Conversion (Assoc : Iir; Inter : Iir; Ndest : out Mnode)
    is
       Assoc_Info : constant Assoc_Info_Acc := Get_Info (Assoc);
    begin
       Elab_Conversion
-        (Get_Actual (Assoc), Get_Formal (Assoc),
+        (Get_Actual (Assoc), Get_Association_Formal (Assoc, Inter),
          Ghdl_Signal_In_Conversion, Assoc_Info.Assoc_In, Ndest);
    end Elab_In_Conversion;
 
    --  Out conversion: from formal to actual.
-   procedure Elab_Out_Conversion (Assoc : Iir; Ndest : out Mnode)
+   procedure Elab_Out_Conversion (Assoc : Iir; Inter : Iir; Ndest : out Mnode)
    is
+      --  Note: because it's an out conversion, the formal of ASSOC is set.
+      --  Still pass INTER for coherence with Elab_In_Conversion.
       Assoc_Info : constant Assoc_Info_Acc := Get_Info (Assoc);
    begin
       Elab_Conversion
-        (Get_Formal (Assoc), Get_Actual (Assoc),
+        (Get_Association_Formal (Assoc, Inter), Get_Actual (Assoc),
          Ghdl_Signal_Out_Conversion, Assoc_Info.Assoc_Out, Ndest);
    end Elab_Out_Conversion;
 

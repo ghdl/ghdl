@@ -4334,39 +4334,6 @@ package body Iirs is
       Set_Field1 (Target, Aspect);
    end Set_Default_Entity_Aspect;
 
-   function Get_Default_Generic_Map_Aspect_Chain (Target : Iir) return Iir is
-   begin
-      pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_Default_Generic_Map_Aspect_Chain (Get_Kind (Target)),
-                     "no field Default_Generic_Map_Aspect_Chain");
-      return Get_Field6 (Target);
-   end Get_Default_Generic_Map_Aspect_Chain;
-
-   procedure Set_Default_Generic_Map_Aspect_Chain (Target : Iir; Chain : Iir)
-   is
-   begin
-      pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_Default_Generic_Map_Aspect_Chain (Get_Kind (Target)),
-                     "no field Default_Generic_Map_Aspect_Chain");
-      Set_Field6 (Target, Chain);
-   end Set_Default_Generic_Map_Aspect_Chain;
-
-   function Get_Default_Port_Map_Aspect_Chain (Target : Iir) return Iir is
-   begin
-      pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_Default_Port_Map_Aspect_Chain (Get_Kind (Target)),
-                     "no field Default_Port_Map_Aspect_Chain");
-      return Get_Field7 (Target);
-   end Get_Default_Port_Map_Aspect_Chain;
-
-   procedure Set_Default_Port_Map_Aspect_Chain (Target : Iir; Chain : Iir) is
-   begin
-      pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_Default_Port_Map_Aspect_Chain (Get_Kind (Target)),
-                     "no field Default_Port_Map_Aspect_Chain");
-      Set_Field7 (Target, Chain);
-   end Set_Default_Port_Map_Aspect_Chain;
-
    function Get_Binding_Indication (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);

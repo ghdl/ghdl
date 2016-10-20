@@ -1524,7 +1524,7 @@ package body Sem_Stmts is
                      or else Get_Date (Entity_Unit) in Date_Valid)
          then
             Bind := Sem_Create_Default_Binding_Indication
-              (Decl, Entity_Unit, Stmt, False);
+              (Decl, Entity_Unit, Stmt, False, True);
             Set_Default_Binding_Indication (Stmt, Bind);
          end if;
       end if;

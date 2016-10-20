@@ -1111,7 +1111,6 @@ package body Sem_Specs is
    end Sem_Entity_Aspect;
 
    procedure Sem_Binding_Indication (Bind : Iir_Binding_Indication;
-                                     Comp : Iir_Component_Declaration;
                                      Parent : Iir;
                                      Primary_Entity_Aspect : Iir)
    is
@@ -1187,20 +1186,7 @@ package body Sem_Specs is
          --  If the generic map aspect or port map aspect of a binding
          --  indication is not present, then the default rules as described
          --  in 5.2.2 apply.
-         if Get_Generic_Map_Aspect_Chain (Bind) = Null_Iir
-           and then Primary_Entity_Aspect = Null_Iir
-         then
-            Set_Default_Generic_Map_Aspect_Chain
-              (Bind,
-               Create_Default_Map_Aspect (Comp, Entity, Map_Generic, Parent));
-         end if;
-         if Get_Port_Map_Aspect_Chain (Bind) = Null_Iir
-           and then Primary_Entity_Aspect = Null_Iir
-         then
-            Set_Default_Port_Map_Aspect_Chain
-              (Bind,
-               Create_Default_Map_Aspect (Comp, Entity, Map_Port, Parent));
-         end if;
+         --  GHDL: done in canon
       end if;
    end Sem_Binding_Indication;
 
@@ -1439,8 +1425,8 @@ package body Sem_Specs is
       --  Extend scope of component interface declaration.
       Sem_Scopes.Open_Scope_Extension;
       Sem_Scopes.Add_Component_Declarations (Component);
-      Sem_Binding_Indication (Get_Binding_Indication (Conf),
-                              Component, Conf, Primary_Entity_Aspect);
+      Sem_Binding_Indication
+        (Get_Binding_Indication (Conf), Conf, Primary_Entity_Aspect);
       --  FIXME: check default port and generic association.
       Sem_Scopes.Close_Scope_Extension;
    end Sem_Configuration_Specification;
@@ -1449,7 +1435,8 @@ package body Sem_Specs is
      (Comp : Iir_Component_Declaration;
       Entity_Unit : Iir_Design_Unit;
       Parent : Iir;
-      Force : Boolean)
+      Force : Boolean;
+      Create_Map_Aspect : Boolean)
      return Iir_Binding_Indication
    is
       Entity : Iir_Entity_Declaration;
@@ -1530,19 +1517,22 @@ package body Sem_Specs is
       Set_Entity_Name (Aspect, Entity_Name);
       Set_Entity_Aspect (Res, Aspect);
 
-      --  LRM 5.2.2
-      --  The default binding indication includes a default generic map aspect
-      --  if the design entity implied by the entity aspect contains formal
-      --  generics.
-      Set_Generic_Map_Aspect_Chain
-        (Res, Create_Default_Map_Aspect (Comp, Entity, Map_Generic, Parent));
+      if Create_Map_Aspect then
+         --  LRM 5.2.2
+         --  The default binding indication includes a default generic map
+         --  aspect if the design entity implied by the entity aspect contains
+         --  formal generics.
+         Set_Generic_Map_Aspect_Chain
+           (Res,
+            Create_Default_Map_Aspect (Comp, Entity, Map_Generic, Parent));
 
-      --  LRM 5.2.2
-      --  The default binding indication includes a default port map aspect
-      --  if the design entity implied by the entity aspect contains formal
-      --  ports.
-      Set_Port_Map_Aspect_Chain
-        (Res, Create_Default_Map_Aspect (Comp, Entity, Map_Port, Parent));
+         --  LRM 5.2.2
+         --  The default binding indication includes a default port map aspect
+         --  if the design entity implied by the entity aspect contains formal
+         --  ports.
+         Set_Port_Map_Aspect_Chain
+           (Res, Create_Default_Map_Aspect (Comp, Entity, Map_Port, Parent));
+      end if;
 
       return Res;
    end Sem_Create_Default_Binding_Indication;

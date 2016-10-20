@@ -1802,18 +1802,16 @@ package body Trans.Chap8 is
 
    procedure Translate_Write_Procedure_Call (Imp : Iir; Param_Chain : Iir)
    is
-      F_Assoc     : Iir;
-      Value_Assoc : Iir;
+      Inter_Chain : constant Iir := Get_Interface_Declaration_Chain (Imp);
+      F_Assoc     : constant Iir := Param_Chain;
+      Value_Assoc : constant Iir := Get_Chain (Param_Chain);
+      Value_Inter : constant Iir := Get_Chain (Inter_Chain);
+      Formal_Type : constant Iir := Get_Type (Value_Inter);
+      Tinfo       : constant Type_Info_Acc := Get_Info (Formal_Type);
       Value       : O_Dnode;
-      Formal_Type : Iir;
-      Tinfo       : Type_Info_Acc;
       Assocs      : O_Assoc_List;
       Subprg_Info : Subprg_Info_Acc;
    begin
-      F_Assoc := Param_Chain;
-      Value_Assoc := Get_Chain (Param_Chain);
-      Formal_Type := Get_Type (Get_Formal (Value_Assoc));
-      Tinfo := Get_Info (Formal_Type);
       case Tinfo.Type_Mode is
          when Type_Mode_Scalar =>
             Open_Temp;
@@ -1862,18 +1860,16 @@ package body Trans.Chap8 is
 
    procedure Translate_Read_Procedure_Call (Imp : Iir; Param_Chain : Iir)
    is
-      F_Assoc     : Iir;
-      Value_Assoc : Iir;
+      Inter_Chain : constant Iir := Get_Interface_Declaration_Chain (Imp);
+      F_Assoc     : constant Iir := Param_Chain;
+      Value_Assoc : constant Iir := Get_Chain (Param_Chain);
+      Value_Inter : constant Iir := Get_Chain (Inter_Chain);
+      Formal_Type : constant Iir := Get_Type (Value_Inter);
+      Tinfo       : constant Type_Info_Acc := Get_Info (Formal_Type);
       Value       : Mnode;
-      Formal_Type : Iir;
-      Tinfo       : Type_Info_Acc;
       Assocs      : O_Assoc_List;
       Subprg_Info : Subprg_Info_Acc;
    begin
-      F_Assoc := Param_Chain;
-      Value_Assoc := Get_Chain (Param_Chain);
-      Formal_Type := Get_Type (Get_Formal (Value_Assoc));
-      Tinfo := Get_Info (Formal_Type);
       case Tinfo.Type_Mode is
          when Type_Mode_Scalar =>
             Open_Temp;
@@ -1940,89 +1936,84 @@ package body Trans.Chap8 is
       Imp         : constant Iir := Get_Implementation (Call);
       Kind        : constant Iir_Predefined_Functions :=
         Get_Implicit_Definition (Imp);
-      Param_Chain : constant Iir := Get_Parameter_Association_Chain (Call);
+      Assoc_Chain : constant Iir := Get_Parameter_Association_Chain (Call);
+      Inter_Chain : constant Iir := Get_Interface_Declaration_Chain (Imp);
    begin
       case Kind is
          when Iir_Predefined_Write =>
-            --  Check wether text or not.
             declare
-               File_Param : Iir;
+               File_Assoc : constant Iir := Assoc_Chain;
+               File_Param : constant Iir := Get_Actual (File_Assoc);
+               Value_Assoc : constant Iir := Get_Chain (File_Assoc);
+               Value_Param : constant Iir := Get_Actual (Value_Assoc);
                Assocs     : O_Assoc_List;
             begin
-               File_Param := Param_Chain;
-               -- FIXME: do the test.
-               if Get_Text_File_Flag (Get_Type (Get_Formal (File_Param)))
-               then
+               --  Check whether text or not.
+               if Get_Text_File_Flag (Get_Type (File_Param)) then
                   --  If text:
                   Start_Association (Assocs, Ghdl_Text_Write);
                   --    compute file parameter (get an index)
                   New_Association
-                    (Assocs,
-                     Chap7.Translate_Expression (Get_Actual (File_Param)));
+                    (Assocs, Chap7.Translate_Expression (File_Param));
                   --    compute string parameter (get a fat array pointer)
                   New_Association
                     (Assocs, Chap7.Translate_Expression
-                       (Get_Actual (Get_Chain (Param_Chain)),
-                        String_Type_Definition));
+                       (Value_Param, String_Type_Definition));
                   --    call a predefined procedure
                   New_Procedure_Call (Assocs);
                else
-                  Translate_Write_Procedure_Call (Imp, Param_Chain);
+                  Translate_Write_Procedure_Call (Imp, Assoc_Chain);
                end if;
             end;
 
          when Iir_Predefined_Read_Length =>
             --  FIXME: works only for text read length.
             declare
-               File_Param : Iir;
-               N_Param    : Iir;
+               File_Assoc : constant Iir := Assoc_Chain;
+               File_Param : constant Iir := Get_Actual (File_Assoc);
+               N_Assoc    : Iir;
                Assocs     : O_Assoc_List;
                Str        : O_Enode;
                Res        : Mnode;
             begin
-               File_Param := Param_Chain;
-               if Get_Text_File_Flag (Get_Type (Get_Formal (File_Param)))
-               then
-                  N_Param := Get_Chain (File_Param);
+               if Get_Text_File_Flag (Get_Type (File_Param)) then
+                  N_Assoc := Get_Chain (File_Assoc);
                   Str := Chap7.Translate_Expression
-                    (Get_Actual (N_Param), String_Type_Definition);
-                  N_Param := Get_Chain (N_Param);
+                    (Get_Actual (N_Assoc), String_Type_Definition);
+                  N_Assoc := Get_Chain (N_Assoc);
                   Res :=
-                    Chap6.Translate_Name (Get_Actual (N_Param), Mode_Value);
+                    Chap6.Translate_Name (Get_Actual (N_Assoc), Mode_Value);
                   Start_Association (Assocs, Ghdl_Text_Read_Length);
                   --    compute file parameter (get an index)
                   New_Association
-                    (Assocs,
-                     Chap7.Translate_Expression (Get_Actual (File_Param)));
+                    (Assocs, Chap7.Translate_Expression (File_Param));
                   --    compute string parameter (get a fat array pointer)
                   New_Association (Assocs, Str);
                   --    call a predefined procedure
-                  New_Assign_Stmt
-                    (M2Lv (Res), New_Function_Call (Assocs));
+                  New_Assign_Stmt (M2Lv (Res), New_Function_Call (Assocs));
                else
-                  Translate_Read_Procedure_Call (Imp, Param_Chain);
+                  Translate_Read_Procedure_Call (Imp, Assoc_Chain);
                end if;
             end;
 
          when Iir_Predefined_Read =>
-            Translate_Read_Procedure_Call (Imp, Param_Chain);
+            Translate_Read_Procedure_Call (Imp, Assoc_Chain);
 
          when Iir_Predefined_Deallocate =>
-            Chap3.Translate_Object_Deallocation (Get_Actual (Param_Chain));
+            Chap3.Translate_Object_Deallocation (Get_Actual (Assoc_Chain));
 
          when Iir_Predefined_File_Open =>
             declare
-               N_Param    : Iir;
-               File_Param : Iir;
-               Name_Param : Iir;
-               Kind_Param : Iir;
+               File_Param : constant Iir := Get_Actual (Assoc_Chain);
+               Name_Inter : constant Iir := Get_Chain (Inter_Chain);
+               Name_Assoc : constant Iir := Get_Chain (Assoc_Chain);
+               Name_Param : constant Iir := Get_Actual (Name_Assoc);
+               Kind_Inter : constant Iir := Get_Chain (Name_Inter);
+               Kind_Assoc : constant Iir := Get_Chain (Name_Assoc);
+               Kind_Param : constant Iir :=
+                 Get_Actual_Or_Default (Kind_Assoc, Kind_Inter);
                Constr     : O_Assoc_List;
             begin
-               File_Param := Get_Actual (Param_Chain);
-               N_Param := Get_Chain (Param_Chain);
-               Name_Param := Get_Actual (N_Param);
-               N_Param := Get_Chain (N_Param);
-               Kind_Param := Get_Actual_Or_Default (N_Param);
                if Get_Text_File_Flag (Get_Type (File_Param)) then
                   Start_Association (Constr, Ghdl_Text_File_Open);
                else
@@ -2045,21 +2036,21 @@ package body Trans.Chap8 is
                Std_File_Open_Status_Otype : constant O_Tnode :=
                  Get_Ortho_Type (File_Open_Status_Type_Definition,
                                  Mode_Value);
-               N_Param      : Iir;
-               Status_Param : constant Iir := Get_Actual (Param_Chain);
-               File_Param   : Iir;
-               Name_Param   : Iir;
-               Kind_Param   : Iir;
+               Status_Param : constant Iir := Get_Actual (Assoc_Chain);
+               File_Inter : constant Iir := Get_Chain (Inter_Chain);
+               File_Assoc : constant Iir := Get_Chain (Assoc_Chain);
+               File_Param : constant Iir := Get_Actual (File_Assoc);
+               Name_Inter : constant Iir := Get_Chain (File_Inter);
+               Name_Assoc : constant Iir := Get_Chain (File_Assoc);
+               Name_Param : constant Iir := Get_Actual (Name_Assoc);
+               Kind_Inter : constant Iir := Get_Chain (Name_Inter);
+               Kind_Assoc : constant Iir := Get_Chain (Name_Assoc);
+               Kind_Param : constant Iir :=
+                 Get_Actual_Or_Default (Kind_Assoc, Kind_Inter);
                Constr       : O_Assoc_List;
                Status       : Mnode;
             begin
                Status := Chap6.Translate_Name (Status_Param, Mode_Value);
-               N_Param := Get_Chain (Param_Chain);
-               File_Param := Get_Actual (N_Param);
-               N_Param := Get_Chain (N_Param);
-               Name_Param := Get_Actual (N_Param);
-               N_Param := Get_Chain (N_Param);
-               Kind_Param := Get_Actual_Or_Default (N_Param);
                if Get_Text_File_Flag (Get_Type (File_Param)) then
                   Start_Association (Constr, Ghdl_Text_File_Open_Status);
                else
@@ -2073,16 +2064,16 @@ package body Trans.Chap8 is
                New_Association
                  (Constr,
                   Chap7.Translate_Expression (Name_Param,
-                    String_Type_Definition));
+                                              String_Type_Definition));
                New_Assign_Stmt
                  (M2Lv (Status),
                   New_Convert_Ov (New_Function_Call (Constr),
-                    Std_File_Open_Status_Otype));
+                                  Std_File_Open_Status_Otype));
             end;
 
          when Iir_Predefined_File_Close =>
             declare
-               File_Param : constant Iir := Get_Actual (Param_Chain);
+               File_Param : constant Iir := Get_Actual (Assoc_Chain);
                Constr     : O_Assoc_List;
             begin
                if Get_Text_File_Flag (Get_Type (File_Param)) then
@@ -2097,7 +2088,7 @@ package body Trans.Chap8 is
 
          when Iir_Predefined_Flush =>
             declare
-               File_Param : constant Iir := Get_Actual (Param_Chain);
+               File_Param : constant Iir := Get_Actual (Assoc_Chain);
                Constr     : O_Assoc_List;
             begin
                Start_Association (Constr, Ghdl_File_Flush);
@@ -2128,7 +2119,7 @@ package body Trans.Chap8 is
       Imp : constant Iir := Get_Implementation (Call);
       Info : constant Call_Info_Acc := Get_Info (Call);
 
-      Assoc : Iir;
+      Assoc, Inter : Iir;
       Num : Natural;
    begin
       Push_Instance_Factory (Info.Call_State_Scope'Access);
@@ -2141,13 +2132,13 @@ package body Trans.Chap8 is
                                           Ghdl_Ptr_Type, O_Storage_Local);
 
       Assoc := Get_Parameter_Association_Chain (Call);
+      Inter := Get_Interface_Declaration_Chain (Imp);
       Num := 0;
       while Assoc /= Null_Iir loop
          declare
-            Formal : constant Iir := Strip_Denoting_Name (Get_Formal (Assoc));
+            Formal : constant Iir := Get_Association_Formal (Assoc, Inter);
             Ftype : constant Iir := Get_Type (Formal);
             Ftype_Info : constant Type_Info_Acc := Get_Info (Ftype);
-            Inter : constant Iir := Get_Association_Interface (Assoc);
             Call_Assoc_Info : Call_Assoc_Info_Acc;
             Actual : Iir;
             Act_Type : Iir;
@@ -2271,6 +2262,8 @@ package body Trans.Chap8 is
                return True;
             end Need_Value_Field;
          begin
+            Inter := Get_Association_Interface (Assoc, Inter);
+
             Call_Assoc_Info := null;
             Has_Bounds_Field := False;
             Has_Fat_Pointer_Field := False;
@@ -2412,7 +2405,7 @@ package body Trans.Chap8 is
                Num := Num + 1;
             end if;
          end;
-         Assoc := Get_Chain (Assoc);
+         Next_Association_Interface (Assoc, Inter);
       end loop;
 
       Pop_Instance_Factory (Info.Call_State_Scope'Access);
@@ -2515,6 +2508,7 @@ package body Trans.Chap8 is
      (Call : Iir; Assoc_Chain : Iir; Obj : Iir) return O_Enode
    is
       Imp : constant Iir := Get_Implementation (Call);
+      Inter_Chain : constant Iir := Get_Interface_Declaration_Chain (Imp);
 
       Is_Procedure : constant Boolean :=
         Get_Kind (Imp) = Iir_Kind_Procedure_Declaration;
@@ -2552,6 +2546,7 @@ package body Trans.Chap8 is
       Params_Var : Var_Type;
       Res : Mnode;
       El : Iir;
+      Inter : Iir;
       Pos : Natural;
       Constr : O_Assoc_List;
       Last_Individual : Natural;
@@ -2614,6 +2609,7 @@ package body Trans.Chap8 is
       --  Non-composite in-out parameters address are saved in order to
       --  be able to assignate the result.
       El := Assoc_Chain;
+      Inter := Inter_Chain;
       Pos := 0;
       while El /= Null_Iir loop
          Params (Pos) := Mnode_Null;
@@ -2622,15 +2618,15 @@ package body Trans.Chap8 is
          Inout_Params (Pos) := Mnode_Null;
 
          declare
-            Assoc_Info : Call_Assoc_Info_Acc;
-            Base_Formal : constant Iir := Get_Association_Interface (El);
-            Formal : constant Iir := Strip_Denoting_Name (Get_Formal (El));
+            Formal : constant Iir := Get_Association_Formal (El, Inter);
             Formal_Type : constant Iir := Get_Type (Formal);
             Ftype_Info : constant Type_Info_Acc := Get_Info (Formal_Type);
+            Base_Formal : constant Iir := Get_Interface_Of_Formal (Formal);
             Formal_Info : constant Interface_Info_Acc :=
               Get_Info (Base_Formal);
             Formal_Object_Kind : constant Object_Kind_Type :=
               Get_Interface_Kind (Base_Formal);
+            Assoc_Info : Call_Assoc_Info_Acc;
             Act : Iir;
             Actual_Type : Iir;
             In_Conv : Iir;
@@ -2668,7 +2664,7 @@ package body Trans.Chap8 is
 
             case Get_Kind (El) is
                when Iir_Kind_Association_Element_Open =>
-                  Act := Get_Default_Value (Formal);
+                  Act := Get_Default_Value (Base_Formal);
                   In_Conv := Null_Iir;
                when Iir_Kind_Association_Element_By_Expression =>
                   Act := Get_Actual (El);
@@ -2976,7 +2972,7 @@ package body Trans.Chap8 is
             << Continue >> null;
          end;
 
-         El := Get_Chain (El);
+         Next_Association_Interface (El, Inter);
          Pos := Pos + 1;
       end loop;
 
@@ -3011,8 +3007,9 @@ package body Trans.Chap8 is
          begin
             Open_Temp;
             El := Assoc_Chain;
+            Inter := Inter_Chain;
             while El /= Null_Iir loop
-               Base_Formal := Get_Association_Interface (El);
+               Base_Formal := Get_Association_Interface (El, Inter);
                case Get_Kind (El) is
                   when Iir_Kind_Association_Element_By_Individual =>
                      if Get_Kind (Base_Formal)
@@ -3051,7 +3048,7 @@ package body Trans.Chap8 is
                   when others =>
                      null;
                end case;
-               El := Get_Chain (El);
+               Next_Association_Interface (El, Inter);
             end loop;
             Close_Temp;
          end;
@@ -3082,11 +3079,13 @@ package body Trans.Chap8 is
 
       --  Parameters.
       El := Assoc_Chain;
+      Inter := Inter_Chain;
       Pos := 0;
       while El /= Null_Iir loop
          declare
-            Formal : constant Iir := Strip_Denoting_Name (Get_Formal (El));
-            Base_Formal : constant Iir := Get_Association_Interface (El);
+            Formal : constant Iir := Get_Association_Formal (El, Inter);
+            Base_Formal : constant Iir :=
+              Get_Association_Interface (El, Inter);
             Formal_Info : constant Ortho_Info_Acc := Get_Info (Base_Formal);
          begin
             if Formal_Info.Interface_Field (Mode_Value) = O_Fnode_Null then
@@ -3110,7 +3109,7 @@ package body Trans.Chap8 is
             end if;
          end;
 
-         El := Get_Chain (El);
+         Next_Association_Interface (El, Inter);
          Pos := Pos + 1;
       end loop;
 
@@ -3144,13 +3143,15 @@ package body Trans.Chap8 is
 
       --  Copy-out non-composite parameters.
       El := Assoc_Chain;
+      Inter := Inter_Chain;
       Pos := 0;
       while El /= Null_Iir loop
          if Get_Kind (El) = Iir_Kind_Association_Element_By_Individual then
             Last_Individual := Pos;
             declare
                Assoc_Info : constant Call_Assoc_Info_Acc := Get_Info (El);
-               Base_Formal : constant Iir := Get_Association_Interface (El);
+               Base_Formal : constant Iir :=
+                 Get_Association_Interface (El, Inter);
                Formal_Type : Iir;
                Ftype_Info : Type_Info_Acc;
             begin
@@ -3178,8 +3179,8 @@ package body Trans.Chap8 is
          elsif Params (Pos) /= Mnode_Null then
             declare
                Assoc_Info : constant Call_Assoc_Info_Acc := Get_Info (El);
-               Formal : constant Iir := Strip_Denoting_Name (Get_Formal (El));
-               Base_Formal : constant Iir := Get_Association_Interface (El);
+               Formal : constant Iir := Get_Association_Formal (El, Inter);
+               Base_Formal : constant Iir := Get_Interface_Of_Formal (Formal);
                Formal_Type : constant Iir := Get_Type (Formal);
                Ftype_Info : constant Type_Info_Acc := Get_Info (Formal_Type);
                Formal_Info : constant Ortho_Info_Acc := Get_Info (Base_Formal);
@@ -3238,7 +3239,7 @@ package body Trans.Chap8 is
                Chap7.Translate_Assign (Param, Val, Out_Expr, Actual_Type, El);
             end;
          end if;
-         El := Get_Chain (El);
+         Next_Association_Interface (El, Inter);
          Pos := Pos + 1;
       end loop;
 

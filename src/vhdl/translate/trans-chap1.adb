@@ -392,6 +392,10 @@ package body Trans.Chap1 is
       end if;
 
       Entity_Aspect := Get_Entity_Aspect (Binding);
+      if Get_Kind (Entity_Aspect) = Iir_Kind_Entity_Aspect_Open then
+         --  Unbound component.
+         return;
+      end if;
 
       Comp := Get_Named_Entity (Get_Component_Name (Cfg));
       Comp_Info := Get_Info (Comp);
@@ -530,11 +534,19 @@ package body Trans.Chap1 is
    procedure Translate_Component_Configuration_Call
      (Cfg : Iir; Base_Block : Iir; Block_Info : Block_Info_Acc)
    is
+      Binding : constant Iir := Get_Binding_Indication (Cfg);
+      Aspect : Iir;
       Cfg_Info  : Config_Info_Acc;
       Base_Info : Block_Info_Acc;
    begin
-      if Get_Binding_Indication (Cfg) = Null_Iir then
+      if Is_Null (Binding) then
          --  Unbound component configuration, nothing to do.
+         return;
+      end if;
+      Aspect := Get_Entity_Aspect (Binding);
+      if Is_Null (Aspect)
+        or else Get_Kind (Aspect) = Iir_Kind_Entity_Aspect_Open
+      then
          return;
       end if;
 

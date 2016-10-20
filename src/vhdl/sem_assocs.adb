@@ -192,7 +192,6 @@ package body Sem_Assocs is
      (Inter_Chain : Iir; Assoc_Chain : Iir)
    is
       Assoc : Iir;
-      Formal : Iir;
       Formal_Inter : Iir;
       Actual : Iir;
       Prefix : Iir;
@@ -202,16 +201,7 @@ package body Sem_Assocs is
       Assoc := Assoc_Chain;
       Inter := Inter_Chain;
       while Assoc /= Null_Iir loop
-         Formal := Get_Formal (Assoc);
-         if Formal = Null_Iir then
-            --  Association by position.
-            Formal_Inter := Inter;
-            Inter := Get_Chain (Inter);
-         else
-            --  Association by name.
-            Formal_Inter := Get_Association_Interface (Assoc);
-            Inter := Null_Iir;
-         end if;
+         Formal_Inter := Get_Association_Interface (Assoc, Inter);
          case Get_Kind (Assoc) is
             when Iir_Kind_Association_Element_Open =>
                if Get_Default_Value (Formal_Inter) = Null_Iir then
@@ -363,7 +353,7 @@ package body Sem_Assocs is
             when others =>
                Error_Kind ("check_subprogram_associations", Assoc);
          end case;
-         Assoc := Get_Chain (Assoc);
+         Next_Association_Interface (Assoc, Inter);
       end loop;
    end Check_Subprogram_Associations;
 
@@ -722,7 +712,8 @@ package body Sem_Assocs is
                      Error_Msg_Sem
                        (+Formal, "individual association of %n"
                           & " conflicts with that at %l",
-                        (+Get_Association_Interface (Iassoc), +Sub));
+                        (+Get_Interface_Of_Formal (Get_Formal (Iassoc)),
+                         +Sub));
                      return;
                end case;
             end if;
@@ -763,7 +754,7 @@ package body Sem_Assocs is
       if Prev /= Null_Iir then
          Error_Msg_Sem
            (+Assoc, "individual association of %n conflicts with that at %l",
-            (+Get_Association_Interface (Assoc), +Prev));
+            (+Get_Interface_Of_Formal (Get_Formal (Assoc)), +Prev));
       else
          Set_Associated_Expr (Res_Iass, Assoc);
       end if;
@@ -950,7 +941,7 @@ package body Sem_Assocs is
          return;
       end if;
 
-      Formal := Get_Association_Interface (Assoc);
+      Formal := Get_Interface_Of_Formal (Get_Formal (Assoc));
       Atype := Get_Type (Formal);
       Set_Whole_Association_Flag (Assoc, True);
 

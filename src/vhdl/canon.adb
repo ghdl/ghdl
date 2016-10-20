@@ -22,6 +22,7 @@ with Flags;
 with Name_Table;
 with Sem;
 with Sem_Inst;
+with Sem_Specs;
 with Iir_Chains; use Iir_Chains;
 with PSL.Nodes;
 with PSL.Rewrites;
@@ -31,6 +32,8 @@ with PSL.NFAs.Utils;
 with Canon_PSL;
 
 package body Canon is
+   Canon_Flag_Set_Assoc_Formals : constant Boolean := False;
+
    --  Canonicalize the chain of declarations in Declaration_Chain of
    --  DECL_PARENT. PARENT must be the parent of the current statements chain,
    --  or NULL_IIR if DECL_PARENT has no corresponding current statments.
@@ -316,6 +319,25 @@ package body Canon is
       end if;
    end Canon_Extract_Sensitivity_If_Not_Null;
 
+   procedure Canon_Extract_Sensitivity_Procedure_Call
+     (Sensitivity_List : Iir_List; Call : Iir)
+   is
+      Assoc : Iir;
+      Inter : Iir;
+   begin
+      Assoc := Get_Parameter_Association_Chain (Call);
+      Inter := Get_Interface_Declaration_Chain (Get_Implementation (Call));
+      while Assoc /= Null_Iir loop
+         if (Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression)
+           and then (Get_Mode (Get_Association_Interface (Assoc, Inter))
+                       /= Iir_Out_Mode)
+         then
+            Canon_Extract_Sensitivity (Get_Actual (Assoc), Sensitivity_List);
+         end if;
+         Next_Association_Interface (Assoc, Inter);
+      end loop;
+   end Canon_Extract_Sensitivity_Procedure_Call;
+
    procedure Canon_Extract_Sequential_Statement_Chain_Sensitivity
      (Chain : Iir; List : Iir_List)
    is
@@ -450,22 +472,8 @@ package body Canon is
                --    to each actual designator (other than OPEN) associated
                --    with each formal parameter of mode IN or INOUT, and
                --    construct the union of the resulting sets.
-               declare
-                  Param : Iir;
-               begin
-                  Param := Get_Parameter_Association_Chain
-                    (Get_Procedure_Call (Stmt));
-                  while Param /= Null_Iir loop
-                     if (Get_Kind (Param)
-                           = Iir_Kind_Association_Element_By_Expression)
-                       and then (Get_Mode (Get_Association_Interface (Param))
-                                   /= Iir_Out_Mode)
-                     then
-                        Canon_Extract_Sensitivity (Get_Actual (Param), List);
-                     end if;
-                     Param := Get_Chain (Param);
-                  end loop;
-               end;
+               Canon_Extract_Sensitivity_Procedure_Call
+                 (List, Get_Procedure_Call (Stmt));
             when others =>
                Error_Kind
                  ("canon_extract_sequential_statement_chain_sensitivity",
@@ -842,6 +850,7 @@ package body Canon is
       N_Chain, Last : Iir;
       Inter : Iir;
       Assoc_El, Prev_Assoc_El, Next_Assoc_El : Iir;
+      Formal : Iir;
       Assoc_Chain : Iir;
 
       Found : Boolean;
@@ -865,10 +874,18 @@ package body Canon is
          Prev_Assoc_El := Null_Iir;
          while Assoc_El /= Null_Iir loop
             Next_Assoc_El := Get_Chain (Assoc_El);
-            if Get_Formal (Assoc_El) = Null_Iir then
-               Set_Formal (Assoc_El, Inter);
+
+            Formal := Get_Formal (Assoc_El);
+            if Formal  = Null_Iir then
+               Formal := Inter;
+               if Canon_Flag_Set_Assoc_Formals then
+                  Set_Formal (Assoc_El, Inter);
+               end if;
+            else
+               Formal := Get_Interface_Of_Formal (Formal);
             end if;
-            if Get_Association_Interface (Assoc_El) = Inter then
+
+            if Formal = Inter then
 
                --  Remove ASSOC_EL from ASSOC_CHAIN
                if Prev_Assoc_El /= Null_Iir then
@@ -914,7 +931,11 @@ package body Canon is
          Set_Artificial_Flag (Assoc_El, True);
          Set_Whole_Association_Flag (Assoc_El, True);
          Location_Copy (Assoc_El, Loc);
-         Set_Formal (Assoc_El, Inter);
+
+         if Canon_Flag_Set_Assoc_Formals then
+            Set_Formal (Assoc_El, Inter);
+         end if;
+
          Sub_Chain_Append (N_Chain, Last, Assoc_El);
 
          << Done >> null;
@@ -988,7 +1009,9 @@ package body Canon is
          Assoc := Create_Iir (Iir_Kind_Association_Element_Open);
          Set_Whole_Association_Flag (Assoc, True);
          Set_Artificial_Flag (Assoc, True);
-         Set_Formal (Assoc, El);
+         if Canon_Flag_Set_Assoc_Formals then
+            Set_Formal (Assoc, El);
+         end if;
          Location_Copy (Assoc, El);
          Sub_Chain_Append (Res, Last, Assoc);
          El := Get_Chain (El);
@@ -1336,8 +1359,6 @@ package body Canon is
       Call : constant Iir_Procedure_Call := Get_Procedure_Call (El);
       Imp : constant Iir := Get_Implementation (Call);
       Assoc_Chain : Iir;
-      Assoc : Iir;
-      Inter : Iir;
       Sensitivity_List : Iir_List;
       Is_Sensitized : Boolean;
    begin
@@ -1384,7 +1405,6 @@ package body Canon is
          Get_Parameter_Association_Chain (Call),
          Call);
       Set_Parameter_Association_Chain (Call, Assoc_Chain);
-      Assoc := Assoc_Chain;
 
       --  LRM93 9.3
       --  If there exists a name that denotes a signal in the actual part of
@@ -1395,22 +1415,7 @@ package body Canon is
       --  the union of the sets constructed by applying th rule of Section 8.1
       --  to each actual part associated with a formal parameter.
       Sensitivity_List := Create_Iir_List;
-      while Assoc /= Null_Iir loop
-         case Get_Kind (Assoc) is
-            when Iir_Kind_Association_Element_By_Expression =>
-               Inter := Get_Association_Interface (Assoc);
-               if Get_Mode (Inter) in Iir_In_Modes then
-                  Canon_Extract_Sensitivity
-                    (Get_Actual (Assoc), Sensitivity_List, False);
-               end if;
-            when Iir_Kind_Association_Element_Open
-              | Iir_Kind_Association_Element_By_Individual =>
-               null;
-            when others =>
-               raise Internal_Error;
-         end case;
-         Assoc := Get_Chain (Assoc);
-      end loop;
+      Canon_Extract_Sensitivity_Procedure_Call (Sensitivity_List, Call);
       if Is_Sensitized then
          Set_Sensitivity_List (Proc, Sensitivity_List);
       else
@@ -2083,6 +2088,7 @@ package body Canon is
         Get_Kind (Cfg) = Iir_Kind_Component_Configuration;
 
       Bind : Iir;
+      Comp : Iir;
       Instances : Iir_List;
       Entity_Aspect : Iir;
       Block : Iir_Block_Configuration;
@@ -2117,10 +2123,13 @@ package body Canon is
          if Entity_Aspect /= Null_Iir then
             Add_Binding_Indication_Dependence (Top, Bind);
             Entity := Get_Entity_From_Entity_Aspect (Entity_Aspect);
+            Comp := Get_Named_Entity (Get_Component_Name (Cfg));
+
             Map_Chain := Get_Generic_Map_Aspect_Chain (Bind);
             if Map_Chain = Null_Iir then
-               if Is_Config then
-                  Map_Chain := Get_Default_Generic_Map_Aspect_Chain (Bind);
+               if Is_Config and then Is_Valid (Entity) then
+                  Map_Chain := Sem_Specs.Create_Default_Map_Aspect
+                    (Comp, Entity, Sem_Specs.Map_Generic, Bind);
                end if;
             else
                Map_Chain := Canon_Association_Chain
@@ -2130,8 +2139,9 @@ package body Canon is
 
             Map_Chain := Get_Port_Map_Aspect_Chain (Bind);
             if Map_Chain = Null_Iir then
-               if Is_Config then
-                  Map_Chain := Get_Default_Port_Map_Aspect_Chain (Bind);
+               if Is_Config and then Is_Valid (Entity) then
+                  Map_Chain := Sem_Specs.Create_Default_Map_Aspect
+                    (Comp, Entity, Sem_Specs.Map_Port, Bind);
                end if;
             else
                Map_Chain := Canon_Association_Chain
@@ -2160,6 +2170,7 @@ package body Canon is
       end if;
    end Canon_Component_Configuration;
 
+   --  Create the 'final' binding indication in case of incremental binding.
    procedure Canon_Incremental_Binding
      (Conf_Spec : Iir_Configuration_Specification;
       Comp_Conf : Iir_Component_Configuration;
@@ -2173,7 +2184,8 @@ package body Canon is
          First, Last : Iir;
 
          --  Copy an association and append new elements to FIRST/LAST.
-         procedure Copy_Association (Assoc : in out Iir; Inter : Iir)
+         procedure Copy_Association
+           (Assoc : in out Iir; Inter : in out Iir; Copy_Inter : Iir)
          is
             El : Iir;
          begin
@@ -2203,49 +2215,54 @@ package body Canon is
                end case;
 
                Sub_Chain_Append (First, Last, El);
-               Assoc := Get_Chain (Assoc);
+               Next_Association_Interface (Assoc, Inter);
                exit when Assoc = Null_Iir;
-               exit when Get_Association_Interface (Assoc) /= Inter;
+               exit when
+                 Get_Association_Interface (Assoc, Inter) /= Copy_Inter;
             end loop;
          end Copy_Association;
 
-         procedure Advance (Assoc : in out Iir; Inter : Iir) is
+         procedure Advance
+           (Assoc : in out Iir; Inter : in out Iir; Skip_Inter : Iir) is
          begin
             loop
-               Assoc := Get_Chain (Assoc);
+               Next_Association_Interface (Assoc, Inter);
                exit when Assoc = Null_Iir;
-               exit when Get_Association_Interface (Assoc) /= Inter;
+               exit when
+                 Get_Association_Interface (Assoc, Inter) /= Skip_Inter;
             end loop;
          end Advance;
 
          Inter : Iir;
          F_El : Iir;
+         F_Inter : Iir;
          S_El : Iir;
+         S_Inter : Iir;
       begin
          if Sec_Chain = Null_Iir then
             --  Short-cut.
             return First_Chain;
          end if;
          F_El := First_Chain;
+         F_Inter := Inter_Chain;
          Sub_Chain_Init (First, Last);
          Inter := Inter_Chain;
          while Inter /= Null_Iir loop
             --  Consistency check.
-            pragma Assert (Get_Association_Interface (F_El) = Inter);
+            pragma Assert (Get_Association_Interface (F_El, F_Inter) = Inter);
 
             --  Find the associated in the second chain.
-            S_El := Sec_Chain;
-            while S_El /= Null_Iir loop
-               exit when Get_Association_Interface (S_El) = Inter;
-               S_El := Get_Chain (S_El);
-            end loop;
+            S_El := Find_First_Association_For_Interface
+              (Sec_Chain, Inter_Chain, Inter);
+
             if S_El /= Null_Iir
               and then Get_Kind (S_El) /= Iir_Kind_Association_Element_Open
             then
-               Copy_Association (S_El, Inter);
-               Advance (F_El, Inter);
+               S_Inter := Inter;
+               Copy_Association (S_El, S_Inter, Inter);
+               Advance (F_El, F_Inter, Inter);
             else
-               Copy_Association (F_El, Inter);
+               Copy_Association (F_El, F_Inter, Inter);
             end if;
             Inter := Get_Chain (Inter);
          end loop;
@@ -2258,6 +2275,7 @@ package body Canon is
       Cs_Chain : Iir;
       Res_Binding : Iir_Binding_Indication;
       Entity : Iir;
+      Comp : Iir;
       Instance_List : Iir_List;
       Conf_Instance_List : Iir_List;
       Instance : Iir;
@@ -2293,11 +2311,13 @@ package body Canon is
       Set_Binding_Indication (Res, Res_Binding);
 
       Entity := Get_Entity_From_Entity_Aspect (Get_Entity_Aspect (Cs_Binding));
+      Comp := Get_Named_Entity (Get_Component_Name (Conf_Spec));
 
       --  Merge generic map aspect.
       Cs_Chain := Get_Generic_Map_Aspect_Chain (Cs_Binding);
       if Cs_Chain = Null_Iir then
-         Cs_Chain := Get_Default_Generic_Map_Aspect_Chain (Cs_Binding);
+         Cs_Chain := Sem_Specs.Create_Default_Map_Aspect
+           (Comp, Entity, Sem_Specs.Map_Generic, Cs_Binding);
       end if;
       Set_Generic_Map_Aspect_Chain
         (Res_Binding,
@@ -2308,7 +2328,8 @@ package body Canon is
       --  merge port map aspect
       Cs_Chain := Get_Port_Map_Aspect_Chain (Cs_Binding);
       if Cs_Chain = Null_Iir then
-         Cs_Chain := Get_Default_Port_Map_Aspect_Chain (Cs_Binding);
+         Cs_Chain := Sem_Specs.Create_Default_Map_Aspect
+           (Comp, Entity, Sem_Specs.Map_Port, Cs_Binding);
       end if;
       Set_Port_Map_Aspect_Chain
         (Res_Binding,
