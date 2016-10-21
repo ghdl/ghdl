@@ -66,6 +66,15 @@ package Trans.Chap8 is
    procedure Translate_Case_Choice
      (Choice : Iir; Choice_Type : Iir; Blk : in out O_Case_Block);
 
+   --  Procedures with a paramater to be called by Translate_Case.
+   type Case_Handler is tagged null record;
+   --  Called to translate the associated node of a choice.
+   procedure Case_Association_Cb (Assoc : Iir;
+                                  Handler : in out Case_Handler) is null;
+
+   --  Translate a case statement or a selected signal assignment.
+   procedure Translate_Case (N : Iir; Handler : in out Case_Handler'Class);
+
    --  Inc or dec by VAL ITERATOR according to DIR.
    --  Used for loop statements.
    procedure Gen_Update_Iterator (Iterator : O_Dnode;

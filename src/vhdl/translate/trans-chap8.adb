@@ -1143,35 +1143,13 @@ package body Trans.Chap8 is
            (New_Obj (Expr_Node), Tinfo.T.Bounds_Field (Mode_Value)));
    end Translate_String_Case_Statement_Common;
 
-   --  Translate only the statements in choice.  The state after the whole case
-   --  statement is NEXT_STATE, the state for the choices are NEXT_STATE + 1 ..
-   --  NEXT_STATE + nbr_choices.
-   procedure Translate_Case_Statement_State
-     (Stmt : Iir_Case_Statement; Next_State : State_Type)
-   is
-      Choice     : Iir;
-      Choice_State  : State_Type;
-   begin
-      Choice_State := Next_State;
-      Choice := Get_Case_Statement_Alternative_Chain (Stmt);
-      while Choice /= Null_Iir loop
-         if not Get_Same_Alternative_Flag (Choice) then
-            Choice_State := Choice_State + 1;
-            State_Start (Choice_State);
-            Translate_Statements_Chain (Get_Associated_Chain (Choice));
-            State_Jump (Next_State);
-         end if;
-         Choice := Get_Chain (Choice);
-      end loop;
-      State_Start (Next_State);
-   end Translate_Case_Statement_State;
-
    --  Translate a string case statement using a dichotomy.
    --  NBR_CHOICES is the number of non-others choices.
    procedure Translate_String_Case_Statement_Dichotomy
-     (Stmt : Iir_Case_Statement; Nbr_Choices : Positive)
+     (Stmt : Iir;
+      Nbr_Choices : Positive;
+      Handler : in out Case_Handler'Class)
    is
-      Has_Suspend : constant Boolean := Get_Suspend_Flag (Stmt);
       Choices_Chain : constant Iir :=
         Get_Case_Statement_Alternative_Chain (Stmt);
 
@@ -1527,14 +1505,8 @@ package body Trans.Chap8 is
       --      ...
       --    end case;
       declare
-         Case_Blk                : O_Case_Block;
-         Next_State : State_Type;
-         Choice_State  : State_Type;
+         Case_Blk : O_Case_Block;
       begin
-         if Has_Suspend then
-            Next_State := State_Allocate;
-         end if;
-
          Start_Case_Stmt (Case_Blk, New_Obj_Value (Var_Idx));
 
          Nbr_Assocs := 0;
@@ -1545,13 +1517,7 @@ package body Trans.Chap8 is
                   Start_Choice (Case_Blk);
                   New_Expr_Choice (Case_Blk, Others_Lit);
                   Finish_Choice (Case_Blk);
-                  if Has_Suspend then
-                     Choice_State := State_Allocate;
-                     State_Jump (Choice_State);
-                  else
-                     Translate_Statements_Chain
-                       (Get_Associated_Chain (Choice));
-                  end if;
+                  Case_Association_Cb (Get_Associated_Chain (Choice), Handler);
                when Iir_Kind_Choice_By_Expression =>
                   if not Get_Same_Alternative_Flag (Choice) then
                      Start_Choice (Case_Blk);
@@ -1560,13 +1526,8 @@ package body Trans.Chap8 is
                         New_Unsigned_Literal
                           (Ghdl_Index_Type, Unsigned_64 (Nbr_Assocs)));
                      Finish_Choice (Case_Blk);
-                     if Has_Suspend then
-                        Choice_State := State_Allocate;
-                        State_Jump (Choice_State);
-                     else
-                        Translate_Statements_Chain
-                          (Get_Associated_Chain (Choice));
-                     end if;
+                     Case_Association_Cb
+                       (Get_Associated_Chain (Choice), Handler);
                      if not Get_Same_Alternative_Flag (Choice) then
                         Nbr_Assocs := Nbr_Assocs + 1;
                      end if;
@@ -1584,22 +1545,14 @@ package body Trans.Chap8 is
 
          Finish_Case_Stmt (Case_Blk);
          Close_Temp;
-
-         if Has_Suspend then
-            Translate_Case_Statement_State (Stmt, Next_State);
-         end if;
       end;
    end Translate_String_Case_Statement_Dichotomy;
 
    --  Case statement whose expression is an unidim array.
    --  Translate into if/elsif statements (linear search).
    procedure Translate_String_Case_Statement_Linear
-     (Stmt : Iir_Case_Statement)
+     (Stmt : Iir; Handler : in out Case_Handler'Class)
    is
-      Has_Suspend : constant Boolean := Get_Suspend_Flag (Stmt);
-      Next_State : State_Type;
-      Choice_State  : State_Type;
-
       Expr_Type : Iir;
       --  Node containing the address of the selector.
       Expr_Node : O_Dnode;
@@ -1637,12 +1590,7 @@ package body Trans.Chap8 is
                                                  Get_Type (Ch_Expr)),
                      Val_Node, Tinfo, Func);
                when Iir_Kind_Choice_By_Others =>
-                  if Has_Suspend then
-                     Choice_State := State_Allocate;
-                     State_Jump (Choice_State);
-                  else
-                     Translate_Statements_Chain (Stmt_Chain);
-                  end if;
+                  Case_Association_Cb (Stmt_Chain, Handler);
                   return;
                when others =>
                   Error_Kind ("translate_string_choice", Ch);
@@ -1665,12 +1613,7 @@ package body Trans.Chap8 is
             Cond := New_Obj_Value (Cond_Var);
          end if;
          Start_If_Stmt (If_Blk, Cond);
-         if Has_Suspend then
-            Choice_State := State_Allocate;
-            State_Jump (Choice_State);
-         else
-            Translate_Statements_Chain (Stmt_Chain);
-         end if;
+         Case_Association_Cb (Stmt_Chain, Handler);
          New_Else_Stmt (If_Blk);
          Translate_String_Choice (Ch);
          Finish_If_Stmt (If_Blk);
@@ -1685,16 +1628,8 @@ package body Trans.Chap8 is
 
       Cond_Var := Create_Temp (Std_Boolean_Type_Node);
 
-      if Has_Suspend then
-         Next_State := State_Allocate;
-      end if;
-
       Translate_String_Choice (Get_Case_Statement_Alternative_Chain (Stmt));
       Close_Temp;
-
-      if Has_Suspend then
-         Translate_Case_Statement_State (Stmt, Next_State);
-      end if;
    end Translate_String_Case_Statement_Linear;
 
    procedure Translate_Case_Choice
@@ -1725,9 +1660,9 @@ package body Trans.Chap8 is
       end case;
    end Translate_Case_Choice;
 
-   procedure Translate_Case_Statement (Stmt : Iir_Case_Statement)
+   procedure Translate_Case (N : Iir; Handler : in out Case_Handler'Class)
    is
-      Expr : constant Iir := Get_Expression (Stmt);
+      Expr : constant Iir := Get_Expression (N);
       Expr_Type : constant Iir := Get_Type (Expr);
    begin
       if Get_Kind (Expr_Type) = Iir_Kind_Array_Subtype_Definition then
@@ -1737,7 +1672,7 @@ package body Trans.Chap8 is
             Choice      : Iir;
          begin
             --  Count number of choices.
-            Choice := Get_Case_Statement_Alternative_Chain (Stmt);
+            Choice := Get_Case_Statement_Alternative_Chain (N);
             while Choice /= Null_Iir loop
                case Get_Kind (Choice) is
                   when Iir_Kind_Choice_By_Others =>
@@ -1753,26 +1688,21 @@ package body Trans.Chap8 is
 
             --  Select the strategy according to the number of choices.
             if Nbr_Choices < 3 then
-               Translate_String_Case_Statement_Linear (Stmt);
+               Translate_String_Case_Statement_Linear (N, Handler);
             else
-               Translate_String_Case_Statement_Dichotomy (Stmt, Nbr_Choices);
+               Translate_String_Case_Statement_Dichotomy
+                 (N, Nbr_Choices, Handler);
             end if;
          end;
       else
          --  Normal case statement: expression is discrete.
          declare
-            Has_Suspend : constant Boolean := Get_Suspend_Flag (Stmt);
             Case_Blk   : O_Case_Block;
             Choice     : Iir;
             Stmt_Chain : Iir;
-            Next_State : State_Type;
-            Choice_State  : State_Type;
          begin
             Start_Case_Stmt (Case_Blk, Chap7.Translate_Expression (Expr));
-            Choice := Get_Case_Statement_Alternative_Chain (Stmt);
-            if Has_Suspend then
-               Next_State := State_Allocate;
-            end if;
+            Choice := Get_Case_Statement_Alternative_Chain (N);
             while Choice /= Null_Iir loop
                Start_Choice (Case_Blk);
                Stmt_Chain := Get_Associated_Chain (Choice);
@@ -1784,18 +1714,70 @@ package body Trans.Chap8 is
                   pragma Assert (Get_Associated_Chain (Choice) = Null_Iir);
                end loop;
                Finish_Choice (Case_Blk);
-               if Has_Suspend then
-                  Choice_State := State_Allocate;
-                  State_Jump (Choice_State);
-               else
-                  Translate_Statements_Chain (Stmt_Chain);
-               end if;
+               Case_Association_Cb (Stmt_Chain, Handler);
             end loop;
             Finish_Case_Stmt (Case_Blk);
+         end;
+      end if;
+   end Translate_Case;
 
-            if Has_Suspend then
-               Translate_Case_Statement_State (Stmt, Next_State);
-            end if;
+   --  Handler for a case statement.
+   type Case_Statement_Handler is new Case_Handler with record
+      --  True if there is a suspend statement in the case statement.
+      Has_Suspend : Boolean;
+
+      --  State after the case statement.  Set only if Has_Suspend is true.
+      Next_State : State_Type;
+   end record;
+
+   procedure Case_Association_Cb (Assoc : Iir;
+                                  Handler : in out Case_Statement_Handler)
+   is
+      Choice_State  : State_Type;
+   begin
+      if Handler.Has_Suspend then
+         --  Jump to the corresponding state.
+         Choice_State := State_Allocate;
+         State_Jump (Choice_State);
+      else
+         --  Execute the statements.
+         Translate_Statements_Chain (Assoc);
+      end if;
+   end Case_Association_Cb;
+
+   procedure Translate_Case_Statement (Stmt : Iir_Case_Statement)
+   is
+      Handler : Case_Statement_Handler;
+   begin
+      --  Initialize handler.
+      Handler.Has_Suspend := Get_Suspend_Flag (Stmt);
+      if Handler.Has_Suspend then
+         Handler.Next_State := State_Allocate;
+      end if;
+
+      --  Translate the case statement.
+      Translate_Case (Stmt, Handler);
+
+      if Handler.Has_Suspend then
+         --  Translate only the statements in choice.  The state after the
+         --  whole case statement is NEXT_STATE, the state for the choices
+         --  are NEXT_STATE + 1 .. NEXT_STATE + nbr_choices.
+         declare
+            Choice : Iir;
+            Choice_State  : State_Type;
+         begin
+            Choice_State := Handler.Next_State;
+            Choice := Get_Case_Statement_Alternative_Chain (Stmt);
+            while Choice /= Null_Iir loop
+               if not Get_Same_Alternative_Flag (Choice) then
+                  Choice_State := Choice_State + 1;
+                  State_Start (Choice_State);
+                  Translate_Statements_Chain (Get_Associated_Chain (Choice));
+                  State_Jump (Handler.Next_State);
+               end if;
+               Choice := Get_Chain (Choice);
+            end loop;
+            State_Start (Handler.Next_State);
          end;
       end if;
    end Translate_Case_Statement;
