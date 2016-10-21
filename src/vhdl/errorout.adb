@@ -1153,6 +1153,9 @@ package body Errorout is
          when Iir_Kind_Conditional_Signal_Assignment_Statement =>
             return Disp_Label
               (Node, "conditional signal assignment statement");
+         when Iir_Kind_Selected_Waveform_Assignment_Statement =>
+            return Disp_Label
+              (Node, "selected waveform assignment statement");
          when Iir_Kind_Variable_Assignment_Statement =>
             return Disp_Label (Node, "variable assignment statement");
          when Iir_Kind_Conditional_Variable_Assignment_Statement =>

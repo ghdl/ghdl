@@ -1396,6 +1396,8 @@ package body Nodes_Meta is
             return "simple_signal_assignment_statement";
          when Iir_Kind_Conditional_Signal_Assignment_Statement =>
             return "conditional_signal_assignment_statement";
+         when Iir_Kind_Selected_Waveform_Assignment_Statement =>
+            return "selected_waveform_assignment_statement";
          when Iir_Kind_Null_Statement =>
             return "null_statement";
          when Iir_Kind_Assertion_Statement =>
@@ -3836,6 +3838,17 @@ package body Nodes_Meta is
       Field_Chain,
       Field_Reject_Time_Expression,
       Field_Conditional_Waveform_Chain,
+      --  Iir_Kind_Selected_Waveform_Assignment_Statement
+      Field_Label,
+      Field_Delay_Mechanism,
+      Field_Visible_Flag,
+      Field_Guarded_Target_State,
+      Field_Parent,
+      Field_Target,
+      Field_Chain,
+      Field_Reject_Time_Expression,
+      Field_Expression,
+      Field_Selected_Waveform_Chain,
       --  Iir_Kind_Null_Statement
       Field_Label,
       Field_Visible_Flag,
@@ -4504,74 +4517,75 @@ package body Nodes_Meta is
       Iir_Kind_If_Generate_Else_Clause => 1432,
       Iir_Kind_Simple_Signal_Assignment_Statement => 1441,
       Iir_Kind_Conditional_Signal_Assignment_Statement => 1450,
-      Iir_Kind_Null_Statement => 1454,
-      Iir_Kind_Assertion_Statement => 1461,
-      Iir_Kind_Report_Statement => 1467,
-      Iir_Kind_Wait_Statement => 1474,
-      Iir_Kind_Variable_Assignment_Statement => 1480,
-      Iir_Kind_Conditional_Variable_Assignment_Statement => 1486,
-      Iir_Kind_Return_Statement => 1492,
-      Iir_Kind_For_Loop_Statement => 1501,
-      Iir_Kind_While_Loop_Statement => 1509,
-      Iir_Kind_Next_Statement => 1515,
-      Iir_Kind_Exit_Statement => 1521,
-      Iir_Kind_Case_Statement => 1529,
-      Iir_Kind_Procedure_Call_Statement => 1535,
-      Iir_Kind_If_Statement => 1544,
-      Iir_Kind_Elsif => 1549,
-      Iir_Kind_Character_Literal => 1557,
-      Iir_Kind_Simple_Name => 1565,
-      Iir_Kind_Selected_Name => 1574,
-      Iir_Kind_Operator_Symbol => 1580,
-      Iir_Kind_Reference_Name => 1583,
-      Iir_Kind_Selected_By_All_Name => 1589,
-      Iir_Kind_Parenthesis_Name => 1594,
-      Iir_Kind_External_Constant_Name => 1602,
-      Iir_Kind_External_Signal_Name => 1610,
-      Iir_Kind_External_Variable_Name => 1618,
-      Iir_Kind_Package_Pathname => 1622,
-      Iir_Kind_Absolute_Pathname => 1623,
-      Iir_Kind_Relative_Pathname => 1624,
-      Iir_Kind_Pathname_Element => 1629,
-      Iir_Kind_Base_Attribute => 1631,
-      Iir_Kind_Left_Type_Attribute => 1636,
-      Iir_Kind_Right_Type_Attribute => 1641,
-      Iir_Kind_High_Type_Attribute => 1646,
-      Iir_Kind_Low_Type_Attribute => 1651,
-      Iir_Kind_Ascending_Type_Attribute => 1656,
-      Iir_Kind_Image_Attribute => 1662,
-      Iir_Kind_Value_Attribute => 1668,
-      Iir_Kind_Pos_Attribute => 1674,
-      Iir_Kind_Val_Attribute => 1680,
-      Iir_Kind_Succ_Attribute => 1686,
-      Iir_Kind_Pred_Attribute => 1692,
-      Iir_Kind_Leftof_Attribute => 1698,
-      Iir_Kind_Rightof_Attribute => 1704,
-      Iir_Kind_Delayed_Attribute => 1713,
-      Iir_Kind_Stable_Attribute => 1722,
-      Iir_Kind_Quiet_Attribute => 1731,
-      Iir_Kind_Transaction_Attribute => 1740,
-      Iir_Kind_Event_Attribute => 1744,
-      Iir_Kind_Active_Attribute => 1748,
-      Iir_Kind_Last_Event_Attribute => 1752,
-      Iir_Kind_Last_Active_Attribute => 1756,
-      Iir_Kind_Last_Value_Attribute => 1760,
-      Iir_Kind_Driving_Attribute => 1764,
-      Iir_Kind_Driving_Value_Attribute => 1768,
-      Iir_Kind_Behavior_Attribute => 1768,
-      Iir_Kind_Structure_Attribute => 1768,
-      Iir_Kind_Simple_Name_Attribute => 1775,
-      Iir_Kind_Instance_Name_Attribute => 1780,
-      Iir_Kind_Path_Name_Attribute => 1785,
-      Iir_Kind_Left_Array_Attribute => 1792,
-      Iir_Kind_Right_Array_Attribute => 1799,
-      Iir_Kind_High_Array_Attribute => 1806,
-      Iir_Kind_Low_Array_Attribute => 1813,
-      Iir_Kind_Length_Array_Attribute => 1820,
-      Iir_Kind_Ascending_Array_Attribute => 1827,
-      Iir_Kind_Range_Array_Attribute => 1834,
-      Iir_Kind_Reverse_Range_Array_Attribute => 1841,
-      Iir_Kind_Attribute_Name => 1850
+      Iir_Kind_Selected_Waveform_Assignment_Statement => 1460,
+      Iir_Kind_Null_Statement => 1464,
+      Iir_Kind_Assertion_Statement => 1471,
+      Iir_Kind_Report_Statement => 1477,
+      Iir_Kind_Wait_Statement => 1484,
+      Iir_Kind_Variable_Assignment_Statement => 1490,
+      Iir_Kind_Conditional_Variable_Assignment_Statement => 1496,
+      Iir_Kind_Return_Statement => 1502,
+      Iir_Kind_For_Loop_Statement => 1511,
+      Iir_Kind_While_Loop_Statement => 1519,
+      Iir_Kind_Next_Statement => 1525,
+      Iir_Kind_Exit_Statement => 1531,
+      Iir_Kind_Case_Statement => 1539,
+      Iir_Kind_Procedure_Call_Statement => 1545,
+      Iir_Kind_If_Statement => 1554,
+      Iir_Kind_Elsif => 1559,
+      Iir_Kind_Character_Literal => 1567,
+      Iir_Kind_Simple_Name => 1575,
+      Iir_Kind_Selected_Name => 1584,
+      Iir_Kind_Operator_Symbol => 1590,
+      Iir_Kind_Reference_Name => 1593,
+      Iir_Kind_Selected_By_All_Name => 1599,
+      Iir_Kind_Parenthesis_Name => 1604,
+      Iir_Kind_External_Constant_Name => 1612,
+      Iir_Kind_External_Signal_Name => 1620,
+      Iir_Kind_External_Variable_Name => 1628,
+      Iir_Kind_Package_Pathname => 1632,
+      Iir_Kind_Absolute_Pathname => 1633,
+      Iir_Kind_Relative_Pathname => 1634,
+      Iir_Kind_Pathname_Element => 1639,
+      Iir_Kind_Base_Attribute => 1641,
+      Iir_Kind_Left_Type_Attribute => 1646,
+      Iir_Kind_Right_Type_Attribute => 1651,
+      Iir_Kind_High_Type_Attribute => 1656,
+      Iir_Kind_Low_Type_Attribute => 1661,
+      Iir_Kind_Ascending_Type_Attribute => 1666,
+      Iir_Kind_Image_Attribute => 1672,
+      Iir_Kind_Value_Attribute => 1678,
+      Iir_Kind_Pos_Attribute => 1684,
+      Iir_Kind_Val_Attribute => 1690,
+      Iir_Kind_Succ_Attribute => 1696,
+      Iir_Kind_Pred_Attribute => 1702,
+      Iir_Kind_Leftof_Attribute => 1708,
+      Iir_Kind_Rightof_Attribute => 1714,
+      Iir_Kind_Delayed_Attribute => 1723,
+      Iir_Kind_Stable_Attribute => 1732,
+      Iir_Kind_Quiet_Attribute => 1741,
+      Iir_Kind_Transaction_Attribute => 1750,
+      Iir_Kind_Event_Attribute => 1754,
+      Iir_Kind_Active_Attribute => 1758,
+      Iir_Kind_Last_Event_Attribute => 1762,
+      Iir_Kind_Last_Active_Attribute => 1766,
+      Iir_Kind_Last_Value_Attribute => 1770,
+      Iir_Kind_Driving_Attribute => 1774,
+      Iir_Kind_Driving_Value_Attribute => 1778,
+      Iir_Kind_Behavior_Attribute => 1778,
+      Iir_Kind_Structure_Attribute => 1778,
+      Iir_Kind_Simple_Name_Attribute => 1785,
+      Iir_Kind_Instance_Name_Attribute => 1790,
+      Iir_Kind_Path_Name_Attribute => 1795,
+      Iir_Kind_Left_Array_Attribute => 1802,
+      Iir_Kind_Right_Array_Attribute => 1809,
+      Iir_Kind_High_Array_Attribute => 1816,
+      Iir_Kind_Low_Array_Attribute => 1823,
+      Iir_Kind_Length_Array_Attribute => 1830,
+      Iir_Kind_Ascending_Array_Attribute => 1837,
+      Iir_Kind_Range_Array_Attribute => 1844,
+      Iir_Kind_Reverse_Range_Array_Attribute => 1851,
+      Iir_Kind_Attribute_Name => 1860
      );
 
    function Get_Fields (K : Iir_Kind) return Fields_Array
@@ -6584,7 +6598,8 @@ package body Nodes_Meta is
            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Simple_Signal_Assignment_Statement
-           | Iir_Kind_Conditional_Signal_Assignment_Statement =>
+           | Iir_Kind_Conditional_Signal_Assignment_Statement
+           | Iir_Kind_Selected_Waveform_Assignment_Statement =>
             return True;
          when others =>
             return False;
@@ -7156,6 +7171,7 @@ package body Nodes_Meta is
            | Iir_Kind_Simple_Simultaneous_Statement
            | Iir_Kind_Simple_Signal_Assignment_Statement
            | Iir_Kind_Conditional_Signal_Assignment_Statement
+           | Iir_Kind_Selected_Waveform_Assignment_Statement
            | Iir_Kind_Null_Statement
            | Iir_Kind_Assertion_Statement
            | Iir_Kind_Report_Statement
@@ -7939,6 +7955,7 @@ package body Nodes_Meta is
            | Iir_Kind_Generate_Statement_Body
            | Iir_Kind_Simple_Signal_Assignment_Statement
            | Iir_Kind_Conditional_Signal_Assignment_Statement
+           | Iir_Kind_Selected_Waveform_Assignment_Statement
            | Iir_Kind_Null_Statement
            | Iir_Kind_Assertion_Statement
            | Iir_Kind_Report_Statement
@@ -7987,6 +8004,7 @@ package body Nodes_Meta is
            | Iir_Kind_Simple_Simultaneous_Statement
            | Iir_Kind_Simple_Signal_Assignment_Statement
            | Iir_Kind_Conditional_Signal_Assignment_Statement
+           | Iir_Kind_Selected_Waveform_Assignment_Statement
            | Iir_Kind_Null_Statement
            | Iir_Kind_Assertion_Statement
            | Iir_Kind_Report_Statement
@@ -8071,6 +8089,7 @@ package body Nodes_Meta is
            | Iir_Kind_If_Generate_Else_Clause
            | Iir_Kind_Simple_Signal_Assignment_Statement
            | Iir_Kind_Conditional_Signal_Assignment_Statement
+           | Iir_Kind_Selected_Waveform_Assignment_Statement
            | Iir_Kind_Null_Statement
            | Iir_Kind_Assertion_Statement
            | Iir_Kind_Report_Statement
@@ -8403,6 +8422,7 @@ package body Nodes_Meta is
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Simple_Signal_Assignment_Statement
            | Iir_Kind_Conditional_Signal_Assignment_Statement
+           | Iir_Kind_Selected_Waveform_Assignment_Statement
            | Iir_Kind_Variable_Assignment_Statement
            | Iir_Kind_Conditional_Variable_Assignment_Statement =>
             return True;
@@ -8442,7 +8462,8 @@ package body Nodes_Meta is
            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Simple_Signal_Assignment_Statement
-           | Iir_Kind_Conditional_Signal_Assignment_Statement =>
+           | Iir_Kind_Conditional_Signal_Assignment_Statement
+           | Iir_Kind_Selected_Waveform_Assignment_Statement =>
             return True;
          when others =>
             return False;
@@ -8456,7 +8477,8 @@ package body Nodes_Meta is
            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Simple_Signal_Assignment_Statement
-           | Iir_Kind_Conditional_Signal_Assignment_Statement =>
+           | Iir_Kind_Conditional_Signal_Assignment_Statement
+           | Iir_Kind_Selected_Waveform_Assignment_Statement =>
             return True;
          when others =>
             return False;
@@ -8861,6 +8883,7 @@ package body Nodes_Meta is
            | Iir_Kind_Allocator_By_Expression
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Case_Generate_Statement
+           | Iir_Kind_Selected_Waveform_Assignment_Statement
            | Iir_Kind_Variable_Assignment_Statement
            | Iir_Kind_Return_Statement
            | Iir_Kind_Case_Statement =>
@@ -8888,7 +8911,13 @@ package body Nodes_Meta is
 
    function Has_Selected_Waveform_Chain (K : Iir_Kind) return Boolean is
    begin
-      return K = Iir_Kind_Concurrent_Selected_Signal_Assignment;
+      case K is
+         when Iir_Kind_Concurrent_Selected_Signal_Assignment
+           | Iir_Kind_Selected_Waveform_Assignment_Statement =>
+            return True;
+         when others =>
+            return False;
+      end case;
    end Has_Selected_Waveform_Chain;
 
    function Has_Conditional_Waveform_Chain (K : Iir_Kind) return Boolean is
@@ -9117,6 +9146,7 @@ package body Nodes_Meta is
            | Iir_Kind_If_Generate_Else_Clause
            | Iir_Kind_Simple_Signal_Assignment_Statement
            | Iir_Kind_Conditional_Signal_Assignment_Statement
+           | Iir_Kind_Selected_Waveform_Assignment_Statement
            | Iir_Kind_Null_Statement
            | Iir_Kind_Assertion_Statement
            | Iir_Kind_Report_Statement

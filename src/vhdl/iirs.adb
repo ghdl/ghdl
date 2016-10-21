@@ -513,6 +513,7 @@ package body Iirs is
            | Iir_Kind_Block_Statement
            | Iir_Kind_Component_Instantiation_Statement
            | Iir_Kind_Simple_Simultaneous_Statement
+           | Iir_Kind_Selected_Waveform_Assignment_Statement
            | Iir_Kind_Wait_Statement =>
             return Format_Medium;
       end case;

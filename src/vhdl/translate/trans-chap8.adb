@@ -1147,12 +1147,10 @@ package body Trans.Chap8 is
    --  NBR_CHOICES is the number of non-others choices.
    procedure Translate_String_Case_Statement_Dichotomy
      (Stmt : Iir;
+      Choices_Chain : Iir;
       Nbr_Choices : Positive;
       Handler : in out Case_Handler'Class)
    is
-      Choices_Chain : constant Iir :=
-        Get_Case_Statement_Alternative_Chain (Stmt);
-
       type Choice_Id is new Integer;
       subtype Valid_Choice_Id is Choice_Id
         range 0 .. Choice_Id (Nbr_Choices - 1);
@@ -1551,7 +1549,7 @@ package body Trans.Chap8 is
    --  Case statement whose expression is an unidim array.
    --  Translate into if/elsif statements (linear search).
    procedure Translate_String_Case_Statement_Linear
-     (Stmt : Iir; Handler : in out Case_Handler'Class)
+     (Stmt : Iir; Choices : Iir; Handler : in out Case_Handler'Class)
    is
       Expr_Type : Iir;
       --  Node containing the address of the selector.
@@ -1628,7 +1626,7 @@ package body Trans.Chap8 is
 
       Cond_Var := Create_Temp (Std_Boolean_Type_Node);
 
-      Translate_String_Choice (Get_Case_Statement_Alternative_Chain (Stmt));
+      Translate_String_Choice (Choices);
       Close_Temp;
    end Translate_String_Case_Statement_Linear;
 
@@ -1664,7 +1662,18 @@ package body Trans.Chap8 is
    is
       Expr : constant Iir := Get_Expression (N);
       Expr_Type : constant Iir := Get_Type (Expr);
+      Choices : Iir;
    begin
+      --  Get the chain of choices.
+      case Get_Kind (N) is
+         when Iir_Kind_Case_Statement =>
+            Choices := Get_Case_Statement_Alternative_Chain (N);
+         when Iir_Kind_Selected_Waveform_Assignment_Statement =>
+            Choices := Get_Selected_Waveform_Chain (N);
+         when others =>
+            Error_Kind ("translate_case", N);
+      end case;
+
       if Get_Kind (Expr_Type) = Iir_Kind_Array_Subtype_Definition then
          --  Expression is a one-dimensional array.
          declare
@@ -1672,7 +1681,7 @@ package body Trans.Chap8 is
             Choice      : Iir;
          begin
             --  Count number of choices.
-            Choice := Get_Case_Statement_Alternative_Chain (N);
+            Choice := Choices;
             while Choice /= Null_Iir loop
                case Get_Kind (Choice) is
                   when Iir_Kind_Choice_By_Others =>
@@ -1688,10 +1697,10 @@ package body Trans.Chap8 is
 
             --  Select the strategy according to the number of choices.
             if Nbr_Choices < 3 then
-               Translate_String_Case_Statement_Linear (N, Handler);
+               Translate_String_Case_Statement_Linear (N, Choices, Handler);
             else
                Translate_String_Case_Statement_Dichotomy
-                 (N, Nbr_Choices, Handler);
+                 (N, Choices, Nbr_Choices, Handler);
             end if;
          end;
       else
@@ -1702,7 +1711,7 @@ package body Trans.Chap8 is
             Stmt_Chain : Iir;
          begin
             Start_Case_Stmt (Case_Blk, Chap7.Translate_Expression (Expr));
-            Choice := Get_Case_Statement_Alternative_Chain (N);
+            Choice := Choices;
             while Choice /= Null_Iir loop
                Start_Choice (Case_Blk);
                Stmt_Chain := Get_Associated_Chain (Choice);
@@ -3978,83 +3987,113 @@ package body Trans.Chap8 is
       Update_Data_Record => Gen_Signal_Direct_Update_Data_Record,
       Finish_Data_Record => Gen_Signal_Direct_Finish_Data_Composite);
 
-   procedure Translate_Direct_Signal_Assignment (Stmt : Iir; We : Iir)
+   procedure Translate_Direct_Signal_Assignment
+     (Target : Iir; Targ : Mnode; Drv : Mnode; We : Iir)
    is
-      Target      : constant Iir := Get_Target (Stmt);
       Target_Type : constant Iir := Get_Type (Target);
       Arg         : Signal_Direct_Assign_Data;
-      Targ_Sig    : Mnode;
    begin
-      Chap6.Translate_Direct_Driver (Target, Targ_Sig, Arg.Drv);
-
+      Arg.Drv := Drv;
       Arg.Expr := E2M (Chap7.Translate_Expression (We, Target_Type),
                        Get_Info (Target_Type), Mode_Value);
       Arg.Expr_Node := We;
-      Gen_Signal_Direct_Assign (Targ_Sig, Target_Type, Arg);
-      Chap9.Destroy_Types (Target);
+      Gen_Signal_Direct_Assign (Targ, Target_Type, Arg);
    end Translate_Direct_Signal_Assignment;
 
-   procedure Translate_Simple_Signal_Assignment_Statement (Stmt : Iir)
-   is
-      Target      : constant Iir := Get_Target (Stmt);
-      Target_Type : constant Iir := Get_Type (Target);
-      We          : Iir_Waveform_Element;
-      Targ        : Mnode;
-      Val         : O_Enode;
-      Value       : Iir;
-      Is_Simple   : Boolean;
+   --  Return True iff signal assignment statement STMT has a delay mechanism:
+   --  either transport or a reject delay.
+   function Is_Reject_Signal_Assignment (Stmt : Iir) return Boolean is
    begin
-      We := Get_Waveform_Chain (Stmt);
+      return Get_Delay_Mechanism (Stmt) /= Iir_Inertial_Delay
+        or else Get_Reject_Time_Expression (Stmt) /= Null_Iir;
+   end Is_Reject_Signal_Assignment;
 
+   --  Return True if waveform chain WE has only one expression, ie:
+   --   * no time expression
+   --   * one element
+   --   * not a null
+   --  which corresponds to:
+   --   ... <= EXPR
+   function Is_Simple_Waveform (We : Iir) return Boolean is
+   begin
       if We /= Null_Iir
         and then Get_Chain (We) = Null_Iir
         and then Get_Time (We) = Null_Iir
-        and then Get_Delay_Mechanism (Stmt) = Iir_Inertial_Delay
-        and then Get_Reject_Time_Expression (Stmt) = Null_Iir
       then
-         --  Simple signal assignment ?
-         Value := Get_We_Value (We);
-         Is_Simple := Get_Kind (Value) /= Iir_Kind_Null_Literal;
+         return Get_Kind (Get_We_Value (We)) /= Iir_Kind_Null_Literal;
       else
-         Is_Simple := False;
+         return False;
       end if;
+   end Is_Simple_Waveform;
 
+   --  Valid only for single_signal_assignment.
+   --  True iff direct assignment can be used.
+   function Is_Direct_Signal_Assignment (Target : Iir) return Boolean is
+   begin
+      return Flag_Direct_Drivers
+        and then Get_Kind (Target) /= Iir_Kind_Aggregate
+        and then Chap4.Has_Direct_Driver (Target);
+   end Is_Direct_Signal_Assignment;
+
+   type Signal_Assignment_Mechanism is
+     (Signal_Assignment_Direct,
+      Signal_Assignment_Simple,
+      Signal_Assignment_General);
+
+   procedure Translate_Signal_Assignment_Target
+     (Target : Iir;
+      Mechanism : Signal_Assignment_Mechanism;
+      Targ : out Mnode;
+      Drv : out Mnode)
+   is
+      Target_Type : constant Iir := Get_Type (Target);
+   begin
       if Get_Kind (Target) = Iir_Kind_Aggregate then
          Chap3.Translate_Anonymous_Type_Definition (Target_Type);
          Targ := Create_Temp (Get_Info (Target_Type), Mode_Signal);
          Chap4.Allocate_Complex_Object (Target_Type, Alloc_Stack, Targ);
          Translate_Signal_Target_Aggr (Targ, Target, Target_Type);
       else
-         if Is_Simple
-           and then Flag_Direct_Drivers
-           and then Chap4.Has_Direct_Driver (Target)
-         then
-            Translate_Direct_Signal_Assignment (Stmt, Value);
-            return;
+         if Mechanism = Signal_Assignment_Direct then
+            Chap6.Translate_Direct_Driver (Target, Targ, Drv);
+         else
+            Targ := Chap6.Translate_Name (Target, Mode_Signal);
          end if;
-         Targ := Chap6.Translate_Name (Target, Mode_Signal);
+      end if;
+   end Translate_Signal_Assignment_Target;
+
+   procedure Translate_Waveform_Assignment
+     (Stmt : Iir;
+      Mechanism : Signal_Assignment_Mechanism;
+      Wf_Chain : Iir;
+      Targ : Mnode;
+      Drv : Mnode)
+   is
+      Target      : constant Iir := Get_Target (Stmt);
+      Target_Type : constant Iir := Get_Type (Target);
+      We          : Iir_Waveform_Element;
+      Val         : O_Enode;
+      Value       : Iir;
+   begin
+      if Mechanism = Signal_Assignment_Direct then
+         Translate_Direct_Signal_Assignment
+           (Target, Targ, Drv, Get_We_Value (Wf_Chain));
+         return;
       end if;
 
-      if We = Null_Iir then
+      if Wf_Chain = Null_Iir then
          --  Implicit disconnect statment.
          Register_Signal (Targ, Target_Type, Ghdl_Signal_Disconnect);
-         Chap9.Destroy_Types (Target);
          return;
       end if;
 
       --  Handle a simple and common case: only one waveform, inertial,
       --  and no time (eg: sig <= expr).
-      Value := Get_We_Value (We);
+      Value := Get_We_Value (Wf_Chain);
       Signal_Assign_Line := Get_Line_Number (Value);
-      if Get_Chain (We) = Null_Iir
-        and then Get_Time (We) = Null_Iir
-        and then Get_Delay_Mechanism (Stmt) = Iir_Inertial_Delay
-        and then Get_Reject_Time_Expression (Stmt) = Null_Iir
-        and then Get_Kind (Value) /= Iir_Kind_Null_Literal
-      then
+      if Mechanism = Signal_Assignment_Simple then
          Val := Chap7.Translate_Expression (Value, Target_Type);
          Gen_Simple_Signal_Assign (Targ, Target_Type, Val);
-         Chap9.Destroy_Types (Target);
          return;
       end if;
 
@@ -4068,6 +4107,7 @@ package body Trans.Chap8 is
          Var_Targ := Stabilize (Targ, True);
 
          --  Translate the first waveform element.
+         We := Wf_Chain;
          declare
             Reject_Time : O_Dnode;
             After_Time  : O_Dnode;
@@ -4153,8 +4193,96 @@ package body Trans.Chap8 is
 
          Close_Temp;
       end;
+   end Translate_Waveform_Assignment;
+
+   procedure Translate_Simple_Signal_Assignment_Statement (Stmt : Iir)
+   is
+      Target : constant Iir := Get_Target (Stmt);
+      Wf_Chain : constant Iir := Get_Waveform_Chain (Stmt);
+      Mechanism : Signal_Assignment_Mechanism;
+      Targ : Mnode;
+      Drv : Mnode;
+   begin
+      if Is_Reject_Signal_Assignment (Stmt)
+        or else not Is_Simple_Waveform (Wf_Chain)
+      then
+         Mechanism := Signal_Assignment_General;
+      else
+         if Is_Direct_Signal_Assignment (Target) then
+            Mechanism := Signal_Assignment_Direct;
+         else
+            Mechanism := Signal_Assignment_Simple;
+         end if;
+      end if;
+
+      Translate_Signal_Assignment_Target (Target, Mechanism, Targ, Drv);
+
+      Translate_Waveform_Assignment (Stmt, Mechanism, Wf_Chain, Targ, Drv);
+
       Chap9.Destroy_Types (Target);
    end Translate_Simple_Signal_Assignment_Statement;
+
+   type Selected_Assignment_Handler is new Case_Handler with record
+      Stmt : Iir;
+      Mechanism : Signal_Assignment_Mechanism;
+      Targ : Mnode;
+      Drv : Mnode;
+   end record;
+
+   procedure Case_Association_Cb
+     (Assoc : Iir; Handler : in out Selected_Assignment_Handler)
+   is
+   begin
+      Translate_Waveform_Assignment
+        (Handler.Stmt, Handler.Mechanism, Assoc, Handler.Targ, Handler.Drv);
+   end Case_Association_Cb;
+
+   procedure Translate_Selected_Waveform_Assignment_Statement (Stmt : Iir)
+   is
+      Target : constant Iir := Get_Target (Stmt);
+      Swf_Chain : constant Iir := Get_Selected_Waveform_Chain (Stmt);
+      Swf : Iir;
+      Wf : Iir;
+      Handler : Selected_Assignment_Handler;
+   begin
+      Handler.Stmt := Stmt;
+
+      --  Compute the mechanism used.
+      if Is_Reject_Signal_Assignment (Stmt) then
+         Handler.Mechanism := Signal_Assignment_General;
+      else
+         if Is_Direct_Signal_Assignment (Target) then
+            Handler.Mechanism := Signal_Assignment_Direct;
+         else
+            Handler.Mechanism := Signal_Assignment_Simple;
+         end if;
+         Swf := Swf_Chain;
+         while Swf /= Null_Iir loop
+            Wf := Get_Associated_Chain (Swf);
+            if Wf /= Null_Iir then
+               if not Is_Simple_Waveform (Wf) then
+                  Handler.Mechanism := Signal_Assignment_General;
+                  exit;
+               end if;
+            end if;
+            Swf := Get_Chain (Swf);
+         end loop;
+      end if;
+
+      Open_Temp;
+
+      Translate_Signal_Assignment_Target
+        (Target, Handler.Mechanism, Handler.Targ, Handler.Drv);
+
+      Handler.Targ := Stabilize (Handler.Targ, True);
+      if Handler.Mechanism = Signal_Assignment_Direct then
+         Handler.Drv := Stabilize (Handler.Drv, True);
+      end if;
+
+      Translate_Case (Stmt, Handler);
+
+      Close_Temp;
+   end Translate_Selected_Waveform_Assignment_Statement;
 
    procedure Translate_Statement (Stmt : Iir)
    is
@@ -4184,6 +4312,8 @@ package body Trans.Chap8 is
 
          when Iir_Kind_Simple_Signal_Assignment_Statement =>
             Translate_Simple_Signal_Assignment_Statement (Stmt);
+         when Iir_Kind_Selected_Waveform_Assignment_Statement =>
+            Translate_Selected_Waveform_Assignment_Statement (Stmt);
          when Iir_Kind_Variable_Assignment_Statement =>
             Translate_Variable_Assignment_Statement (Stmt);
          when Iir_Kind_Conditional_Variable_Assignment_Statement =>

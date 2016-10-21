@@ -3156,6 +3156,7 @@ package Iirs is
 
    -- Iir_Kind_Simple_Signal_Assignment_Statement (Short)
    -- Iir_Kind_Conditional_Signal_Assignment_Statement (Short)
+   -- Iir_Kind_Selected_Waveform_Assignment_Statement (Medium)
    --
    --   Get/Set_Parent (Field0)
    --
@@ -3177,6 +3178,12 @@ package Iirs is
    --
    -- Only for Iir_Kind_Conditional_Signal_Assignment_Statement:
    --   Get/Set_Conditional_Waveform_Chain (Field5)
+   --
+   -- Only for Iir_Kind_Selected_Waveform_Assignment_Statement:
+   --   Get/Set_Expression (Field5)
+   --
+   -- Only for Iir_Kind_Selected_Waveform_Assignment_Statement:
+   --   Get/Set_Selected_Waveform_Chain (Field7)
    --
    --   Get/Set_Delay_Mechanism (Flag1)
    --
@@ -4168,6 +4175,7 @@ package Iirs is
    -- Iir_Kind_Sequential_Statement
       Iir_Kind_Simple_Signal_Assignment_Statement,
       Iir_Kind_Conditional_Signal_Assignment_Statement,
+      Iir_Kind_Selected_Waveform_Assignment_Statement,
       Iir_Kind_Null_Statement,
       Iir_Kind_Assertion_Statement,
       Iir_Kind_Report_Statement,
@@ -5157,6 +5165,7 @@ package Iirs is
    subtype Iir_Kinds_Sequential_Statement is Iir_Kind range
      Iir_Kind_Simple_Signal_Assignment_Statement ..
    --Iir_Kind_Conditional_Signal_Assignment_Statement
+   --Iir_Kind_Selected_Waveform_Assignment_Statement
    --Iir_Kind_Null_Statement
    --Iir_Kind_Assertion_Statement
    --Iir_Kind_Report_Statement

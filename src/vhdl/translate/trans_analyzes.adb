@@ -66,7 +66,7 @@ package body Trans_Analyzes is
       Status : Walk_Status;
       pragma Unreferenced (Status);
    begin
-      case Get_Kind (Stmt) is
+      case Iir_Kinds_Sequential_Statement (Get_Kind (Stmt)) is
          when Iir_Kind_Simple_Signal_Assignment_Statement =>
             Extract_Has_After (Get_Waveform_Chain (Stmt));
             Status := Walk_Assignment_Target
@@ -79,6 +79,18 @@ package body Trans_Analyzes is
                while Cond_Wf /= Null_Iir loop
                   Extract_Has_After (Get_Waveform_Chain (Cond_Wf));
                   Cond_Wf := Get_Chain (Cond_Wf);
+               end loop;
+               Status := Walk_Assignment_Target
+                 (Get_Target (Stmt), Extract_Driver_Target'Access);
+            end;
+         when Iir_Kind_Selected_Waveform_Assignment_Statement =>
+            declare
+               Swf : Iir;
+            begin
+               Swf := Get_Selected_Waveform_Chain (Stmt);
+               while Swf /= Null_Iir loop
+                  Extract_Has_After (Get_Associated_Chain (Swf));
+                  Swf := Get_Chain (Swf);
                end loop;
                Status := Walk_Assignment_Target
                  (Get_Target (Stmt), Extract_Driver_Target'Access);
@@ -109,7 +121,19 @@ package body Trans_Analyzes is
                   Next_Association_Interface (Assoc, Inter);
                end loop;
             end;
-         when others =>
+         when Iir_Kind_Null_Statement
+           | Iir_Kind_Assertion_Statement
+           | Iir_Kind_Report_Statement
+           | Iir_Kind_Wait_Statement
+           | Iir_Kind_Return_Statement
+           | Iir_Kind_Next_Statement
+           | Iir_Kind_Exit_Statement
+           | Iir_Kind_Variable_Assignment_Statement
+           | Iir_Kind_Conditional_Variable_Assignment_Statement
+           | Iir_Kind_For_Loop_Statement
+           | Iir_Kind_While_Loop_Statement
+           | Iir_Kind_Case_Statement
+           | Iir_Kind_If_Statement =>
             null;
       end case;
       return Walk_Continue;
