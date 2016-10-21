@@ -5542,7 +5542,10 @@ package body Parse is
       Parse_Options (Res);
 
       Wf := Parse_Conditional_Waveforms;
-      if Get_Kind (Wf) = Iir_Kind_Conditional_Waveform then
+      --  WF can be Null_Iir if the waveform is simply 'unaffected'.
+      if Wf /= Null_Iir
+        and then Get_Kind (Wf) = Iir_Kind_Conditional_Waveform
+      then
          N_Res :=
            Create_Iir (Iir_Kind_Concurrent_Conditional_Signal_Assignment);
          if Get_Guard (Res) /= Null_Iir then
