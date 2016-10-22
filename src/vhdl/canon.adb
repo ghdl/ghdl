@@ -818,12 +818,12 @@ package body Canon is
       end case;
    end Canon_Discrete_Range;
 
-   procedure Canon_Waveform_Chain
-     (Chain : Iir_Waveform_Element; Sensitivity_List: Iir_List)
+   --  Extract sensitivity of WAVEFORM, and canon expressions.
+   procedure Canon_Waveform (Waveform : Iir; Sensitivity_List: Iir_List)
    is
-      We: Iir_Waveform_Element;
+      We : Iir_Waveform_Element;
    begin
-      We := Chain;
+      We := Waveform;
       while We /= Null_Iir loop
          if Sensitivity_List /= Null_Iir_List then
             Canon_Extract_Sensitivity
@@ -837,7 +837,7 @@ package body Canon is
          end if;
          We := Get_Chain (We);
       end loop;
-   end Canon_Waveform_Chain;
+   end Canon_Waveform;
 
    -- Names associations by position,
    -- reorder associations by name,
@@ -1112,7 +1112,7 @@ package body Canon is
 
             when Iir_Kind_Simple_Signal_Assignment_Statement =>
                Canon_Expression (Get_Target (Stmt));
-               Canon_Waveform_Chain (Get_Waveform_Chain (Stmt), Null_Iir_List);
+               Canon_Waveform (Get_Waveform_Chain (Stmt), Null_Iir_List);
 
             when Iir_Kind_Conditional_Signal_Assignment_Statement =>
                N_Stmt := Canon_Conditional_Signal_Assignment_Statement (Stmt);
@@ -1462,7 +1462,7 @@ package body Canon is
          else
             Sensitivity_List := Get_Sensitivity_List (Proc);
          end if;
-         Canon_Waveform_Chain (Waveform_Chain, Sensitivity_List);
+         Canon_Waveform (Waveform_Chain, Sensitivity_List);
          Set_Waveform_Chain (Stmt, Waveform_Chain);
          Set_Delay_Mechanism (Stmt, Get_Delay_Mechanism (Orig_Stmt));
          Set_Reject_Time_Expression
@@ -1561,35 +1561,63 @@ package body Canon is
    procedure Canon_Concurrent_Selected_Signal_Assignment
      (Conc_Stmt : Iir; Proc : Iir; Parent : Iir)
    is
+      Sensitivity_List : constant Iir_List := Get_Sensitivity_List (Proc);
+      Expr : constant Iir := Get_Expression (Conc_Stmt);
       Selected_Waveform : Iir;
       Case_Stmt: Iir_Case_Statement;
-      Expr : Iir;
       Stmt : Iir;
-      Assoc : Iir;
+      Waveform : Iir;
    begin
-      Case_Stmt := Create_Iir (Iir_Kind_Case_Statement);
-      Set_Parent (Case_Stmt, Parent);
-      Set_Sequential_Statement_Chain (Parent, Case_Stmt);
-      Location_Copy (Case_Stmt, Conc_Stmt);
-      Expr := Get_Expression (Conc_Stmt);
+      Selected_Waveform := Get_Selected_Waveform_Chain (Conc_Stmt);
       if Canon_Flag_Expressions then
          Canon_Expression (Expr);
       end if;
-      Set_Expression (Case_Stmt, Expr);
-      Canon_Extract_Sensitivity
-        (Expr, Get_Sensitivity_List (Proc), False);
+      Canon_Extract_Sensitivity (Expr, Sensitivity_List, False);
 
-      Selected_Waveform := Get_Selected_Waveform_Chain (Conc_Stmt);
-      Set_Case_Statement_Alternative_Chain (Case_Stmt, Selected_Waveform);
-      while Selected_Waveform /= Null_Iir loop
-         Assoc := Get_Associated_Chain (Selected_Waveform);
-         if Assoc /= Null_Iir then
-            Stmt := Canon_Wave_Transform (Conc_Stmt, Assoc, Proc);
-            Set_Parent (Stmt, Case_Stmt);
-            Set_Associated_Chain (Selected_Waveform, Stmt);
-         end if;
-         Selected_Waveform := Get_Chain (Selected_Waveform);
-      end loop;
+      if False then
+         Case_Stmt := Create_Iir (Iir_Kind_Case_Statement);
+         Set_Parent (Case_Stmt, Parent);
+         Set_Sequential_Statement_Chain (Parent, Case_Stmt);
+         Location_Copy (Case_Stmt, Conc_Stmt);
+
+         Set_Expression (Case_Stmt, Expr);
+
+         Set_Case_Statement_Alternative_Chain (Case_Stmt, Selected_Waveform);
+         while Selected_Waveform /= Null_Iir loop
+            Waveform := Get_Associated_Chain (Selected_Waveform);
+            if Waveform /= Null_Iir then
+               Stmt := Canon_Wave_Transform (Conc_Stmt, Waveform, Proc);
+               Set_Parent (Stmt, Case_Stmt);
+               Set_Associated_Chain (Selected_Waveform, Stmt);
+            end if;
+            Selected_Waveform := Get_Chain (Selected_Waveform);
+         end loop;
+      else
+         Stmt := Create_Iir (Iir_Kind_Selected_Waveform_Assignment_Statement);
+         Set_Parent (Stmt, Parent);
+         Set_Sequential_Statement_Chain (Parent, Stmt);
+         Location_Copy (Stmt, Conc_Stmt);
+
+         Set_Expression (Stmt, Expr);
+         Set_Expression (Conc_Stmt, Null_Iir);
+
+         Set_Target (Stmt, Get_Target (Conc_Stmt));
+         Set_Target (Conc_Stmt, Null_Iir);
+         Set_Delay_Mechanism (Stmt, Get_Delay_Mechanism (Conc_Stmt));
+         Set_Reject_Time_Expression
+           (Stmt, Get_Reject_Time_Expression (Conc_Stmt));
+         Set_Reject_Time_Expression (Conc_Stmt, Null_Iir);
+
+         Set_Selected_Waveform_Chain (Stmt, Selected_Waveform);
+         Set_Selected_Waveform_Chain (Conc_Stmt, Selected_Waveform);
+         while Selected_Waveform /= Null_Iir loop
+            Waveform := Get_Associated_Chain (Selected_Waveform);
+            if Waveform /= Null_Iir then
+               Canon_Waveform (Waveform, Sensitivity_List);
+            end if;
+            Selected_Waveform := Get_Chain (Selected_Waveform);
+         end loop;
+      end if;
    end Canon_Concurrent_Selected_Signal_Assignment;
 
    procedure Canon_Generate_Statement_Body
