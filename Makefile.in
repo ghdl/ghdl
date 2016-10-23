@@ -180,7 +180,7 @@ install.gcc: install.vhdllib install.grt install.vpi
 
 GHDL_GCC_INCFLAGS=$(GHDL_COMMON_INCFLAGS)
 
-ghdl1-gcc$(EXEEXT): force
+ghdl1-gcc$(EXEEXT): version.ads force
 	$(MAKE) -f $(srcdir)/src/ortho/gcc/Makefile \
 	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
 	 GNAT_FLAGS="$(GHDL_GCC_INCFLAGS) $(GNATFLAGS)" all
