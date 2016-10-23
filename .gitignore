@@ -32,3 +32,4 @@ grt.lst
 libgrt.a
 run-bind.adb
 run-bind.ads
+src/version.ads

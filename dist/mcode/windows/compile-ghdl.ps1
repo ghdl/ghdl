@@ -228,15 +228,6 @@ if ($Compile_GHDL)
 	{	Write-Host "  [FAILED]"	-ForegroundColor Red
 		Exit-CompileScript -1
 	}
-	
-	# restore the version file if it was patched
-	if (-not $Release -and $Git_IsGitRepo)
-	{	$error = Restore-PatchedVersionFile $GHDLRootDir
-		if ($error -eq $true)
-		{	Write-Host "  [FAILED]"	-ForegroundColor Red
-			Exit-CompileScript -1
-		}
-	}
 }
 
 
