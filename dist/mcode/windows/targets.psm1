@@ -49,7 +49,8 @@ $WinMcodeSourceDirName =	"dist\mcode\windows"
 # $WinLLVMSourceDirName =		"dist\llvm\windows"
 
 # construct file paths
-$VersionFileName =				"version.ads"
+$VersionFileName_In =				"version.in"
+$VersionFileName_Ads =			"version.ads"
 
 
 function Invoke-Clean
@@ -126,7 +127,7 @@ function Get-GHDLVersion
 	)
 	# construct DirectoryPaths
 	$SourceDirectory =		$GHDLRootDir + "\" + $CommonSourceDirName
-	$VersionFilePath =		$SourceDirectory + "\" + $VersionFileName
+	$VersionFilePath =		$SourceDirectory + "\" + $VersionFileName_In
 	
 	if (-not (Test-Path -Path $VersionFilePath -PathType Leaf))
 	{	Write-Host "[ERROR]: Version file '$VersionFilePath' does not exists." -ForegroundColor Red
@@ -165,68 +166,33 @@ function Invoke-PatchVersionFile
 		[switch]	$Quiet =								$false
 	)
 	# construct DirectoryPaths
-	$SourceDirectory =					$GHDLRootDir + "\" + $CommonSourceDirName
-	$CurrentVersionFilePath =		$SourceDirectory + "\" + $VersionFileName
-	$OriginalVersionFilePath =	$SourceDirectory + "\" + $VersionFileName + ".bak"
+	$SourceDirectory =				$GHDLRootDir + "\" + $CommonSourceDirName
+	$VersionInputFilePath =		$SourceDirectory + "\" + $VersionFileName_In
+	$VersionFilePath =				$SourceDirectory + "\" + $VersionFileName_Ads
 	
 	Write-Host "Executing build target 'PatchVersionFile' ..." -ForegroundColor Yellow
 	
-	if (-not (Test-Path -Path $CurrentVersionFilePath -PathType Leaf))
-	{	Write-Host "[ERROR]: Version file '$CurrentVersionFilePath' does not exists." -ForegroundColor Red
+	if (-not (Test-Path -Path $VersionInputFilePath -PathType Leaf))
+	{	Write-Host "[ERROR]: Version file '$VersionInputFilePath' does not exists." -ForegroundColor Red
 		return $true
 	}
-	-not $Quiet -and (Write-Host "  Patching '$CurrentVersionFilePath'.") | Out-Null
-	$FileContent = Get-Content -Path $CurrentVersionFilePath -Encoding Ascii
+	-not $Quiet -and (Write-Host "  Patching '$VersionInputFilePath'.") | Out-Null
+	$FileContent = Get-Content -Path $VersionInputFilePath -Encoding Ascii
 	if ($? -eq $false)
-	{	Write-Host "[ERROR]: While opening '$CurrentVersionFilePath'." -ForegroundColor Red
+	{	Write-Host "[ERROR]: While opening '$VersionInputFilePath'." -ForegroundColor Red
 		return $true
 	}
-	$FileContent = $FileContent -Replace "\s\(\d+\)\s", " (commit: $GitCommitDataString;  git branch: $GitBranchName';  hash: $GitCommitHash) "
+	$FileContent = $FileContent -Replace "\s\(tarball\)\s", " (commit: $GitCommitDataString;  git branch: $GitBranchName';  hash: $GitCommitHash) "
 	
-	Move-Item $CurrentVersionFilePath $OriginalVersionFilePath -Force
-	$FileContent | Out-File $CurrentVersionFilePath -Encoding Ascii
+	$FileContent | Out-File $VersionFilePath -Encoding Ascii
 	if ($? -eq $false)
-	{	Write-Host "[ERROR]: While writing to '$CurrentVersionFilePath'." -ForegroundColor Red
+	{	Write-Host "[ERROR]: While writing to '$VersionFilePath'." -ForegroundColor Red
 		return $true
 	}
 	
 	return $false
 }	# Invoke-PatchVersionFile
 
-function Restore-PatchedVersionFile
-{	<#
-		.SYNOPSIS
-		This CommandLet restores the original version file.
-		.PARAMETER GHDLRootDir
-		The repository root directory.
-		.PARAMETER Quiet
-		Disable outputs to the host console.
-	#>
-	[CmdletBinding()]
-	param(
-		[string]	$GHDLRootDir,
-		[switch]	$Quiet = $false
-	)
-	# construct DirectoryPaths
-	$SourceDirectory =					$GHDLRootDir + "\" + $CommonSourceDirName
-	$CurrentVersionFilePath =		$SourceDirectory + "\" + $VersionFileName
-	$OriginalVersionFilePath =	$SourceDirectory + "\" + $VersionFileName + ".bak"
-	
-	Write-Host "Executing build target 'PatchedVersionFile' ..." -ForegroundColor Yellow
-	
-	if (-not (Test-Path -Path "$OriginalVersionFilePath" -PathType Leaf))
-	{	Write-Host "[ERROR]: Original version file '$OriginalVersionFilePath' does not exists." -ForegroundColor Red
-		return $true
-	}
-	-not $Quiet -and (Write-Host "  Restoring '$CurrentVersionFilePath'.") | Out-Null
-	Move-Item $OriginalVersionFilePath $CurrentVersionFilePath -Force
-	if ($? -eq $false)
-	{	Write-Host "[ERROR]: While moving '$OriginalVersionFilePath' to '$CurrentVersionFilePath'." -ForegroundColor Red
-		return $true
-	}
-	
-	return $false
-}	# Restore-PatchedVersionFile
 
 function Get-CFlags
 {	<#
