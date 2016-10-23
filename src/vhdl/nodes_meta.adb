@@ -1034,6 +1034,8 @@ package body Nodes_Meta is
             return "simple_aggregate";
          when Iir_Kind_Overflow_Literal =>
             return "overflow_literal";
+         when Iir_Kind_Unaffected_Waveform =>
+            return "unaffected_waveform";
          when Iir_Kind_Waveform_Element =>
             return "waveform_element";
          when Iir_Kind_Conditional_Waveform =>
@@ -2294,6 +2296,7 @@ package body Nodes_Meta is
       Field_Expr_Staticness,
       Field_Literal_Origin,
       Field_Type,
+      --  Iir_Kind_Unaffected_Waveform
       --  Iir_Kind_Waveform_Element
       Field_We_Value,
       Field_Time,
@@ -4336,6 +4339,7 @@ package body Nodes_Meta is
       Iir_Kind_Physical_Fp_Literal => 79,
       Iir_Kind_Simple_Aggregate => 84,
       Iir_Kind_Overflow_Literal => 87,
+      Iir_Kind_Unaffected_Waveform => 87,
       Iir_Kind_Waveform_Element => 90,
       Iir_Kind_Conditional_Waveform => 93,
       Iir_Kind_Conditional_Expression => 96,

@@ -407,6 +407,9 @@ package Iirs is
    --
    --   Get/Set_Expr_Staticness (State1)
 
+   -- Iir_Kind_Unaffected_Waveform (Short)
+   --  The 'unaffected' reserved word when it appears in the sources.
+
    -------------
    --  Tuples --
    -------------
@@ -3968,6 +3971,8 @@ package Iirs is
       Iir_Kind_Physical_Fp_Literal,
       Iir_Kind_Simple_Aggregate,
       Iir_Kind_Overflow_Literal,
+
+      Iir_Kind_Unaffected_Waveform,
 
    -- Tuple,
       Iir_Kind_Waveform_Element,

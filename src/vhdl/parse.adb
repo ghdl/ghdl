@@ -5371,11 +5371,11 @@ package body Parse is
    --  precond : next token
    --  postcond: next token.
    --
-   --  [ §8.4 ]
+   --  [ 8.4 ]
    --  waveform ::= waveform_element { , waveform_element }
    --             | UNAFFECTED
    --
-   --  [ §8.4.1 ]
+   --  [ 8.4.1 ]
    --  waveform_element ::= VALUE_expression [ AFTER TIME_expression ]
    --                     | NULL [ AFTER TIME_expression ]
    function Parse_Waveform return Iir_Waveform_Element
@@ -5387,31 +5387,43 @@ package body Parse is
          if Flags.Vhdl_Std = Vhdl_87 then
             Error_Msg_Parse ("'unaffected' is not allowed in vhdl87");
          end if;
+
+         Res := Create_Iir (Iir_Kind_Unaffected_Waveform);
+         Set_Location (Res);
+
+         --  Skip 'unaffected'.
          Scan;
-         return Null_Iir;
       else
          Sub_Chain_Init (Res, Last_We);
          loop
             We := Create_Iir (Iir_Kind_Waveform_Element);
             Sub_Chain_Append (Res, Last_We, We);
             Set_Location (We);
+
             --  Note: NULL is handled as a null_literal.
             Set_We_Value (We, Parse_Expression);
+
             if Current_Token = Tok_After then
+               --  Skip 'after'.
                Scan;
+
                Set_Time (We, Parse_Expression);
             end if;
+
             exit when Current_Token /= Tok_Comma;
+
+            --  Skip ','.
             Scan;
          end loop;
-         return Res;
       end if;
+
+      return Res;
    end Parse_Waveform;
 
    --  precond : next token
    --  postcond: next token
    --
-   --  [ §8.4 ]
+   --  [ 8.4 ]
    --  delay_mechanism ::= TRANSPORT
    --                    | [ REJECT TIME_expression ] INERTIAL
    procedure Parse_Delay_Mechanism (Assign: Iir) is
@@ -5542,7 +5554,6 @@ package body Parse is
       Parse_Options (Res);
 
       Wf := Parse_Conditional_Waveforms;
-      --  WF can be Null_Iir if the waveform is simply 'unaffected'.
       if Wf /= Null_Iir
         and then Get_Kind (Wf) = Iir_Kind_Conditional_Waveform
       then
@@ -5929,9 +5940,12 @@ package body Parse is
       --  LRM 8.4 Signal assignment statement
       --  It is an error is the reserved word UNAFFECTED appears as a
       --  waveform in a (sequential) signal assignment statement.
-      if Wave_Chain = Null_Iir then
-         Error_Msg_Parse
-           ("'unaffected' is not allowed in a sequential statement");
+      if Get_Kind (Wave_Chain) = Iir_Kind_Unaffected_Waveform then
+         if Flags.Vhdl_Std < Vhdl_08 then
+            Error_Msg_Parse
+              ("'unaffected' is not allowed in a sequential statement");
+         end if;
+         Set_Waveform_Chain (Stmt, Wave_Chain);
       elsif Get_Kind (Wave_Chain) = Iir_Kind_Conditional_Waveform then
          if Flags.Vhdl_Std < Vhdl_08 then
             Error_Msg_Parse

@@ -26,6 +26,7 @@ package body Trans_Analyzes is
    Driver_List : Iir_List;
 
    Has_After : Boolean;
+
    function Extract_Driver_Target (Target : Iir) return Walk_Status
    is
       Base : Iir;
@@ -48,15 +49,15 @@ package body Trans_Analyzes is
       return Walk_Continue;
    end Extract_Driver_Target;
 
+   --  Set Has_After to True iff WF requires a non-direct driver.
    procedure Extract_Has_After (Wf : Iir) is
    begin
-      if Wf /= Null_Iir
-        and then Get_Chain (Wf) = Null_Iir
-        and then Get_Time (Wf) = Null_Iir
-        and then Get_Kind (Get_We_Value (Wf)) /= Iir_Kind_Null_Literal
+      --  Disconnect, or time expression.
+      if Wf = Null_Iir
+        or else Get_Chain (Wf) /= Null_Iir
+        or else Get_Time (Wf) /= Null_Iir
+        or else Get_Kind (Get_We_Value (Wf)) = Iir_Kind_Null_Literal
       then
-         Has_After := False;
-      else
          Has_After := True;
       end if;
    end Extract_Has_After;
@@ -66,34 +67,70 @@ package body Trans_Analyzes is
       Status : Walk_Status;
       pragma Unreferenced (Status);
    begin
+      --  Clear Has_After.  It will be set to True if a signal assignment
+      --  has an delay expression or a null transaction.
+      --  (It is cleared for any statement, just to factorize code).
+      Has_After := False;
+
       case Iir_Kinds_Sequential_Statement (Get_Kind (Stmt)) is
          when Iir_Kind_Simple_Signal_Assignment_Statement =>
-            Extract_Has_After (Get_Waveform_Chain (Stmt));
-            Status := Walk_Assignment_Target
-              (Get_Target (Stmt), Extract_Driver_Target'Access);
+            declare
+               Wf : constant Iir := Get_Waveform_Chain (Stmt);
+            begin
+               if Is_Null (Wf)
+                 or else Get_Kind (Wf) /= Iir_Kind_Unaffected_Waveform
+               then
+                  --  Not unaffected or implicit disconnect.
+                  Extract_Has_After (Wf);
+                  Status := Walk_Assignment_Target
+                    (Get_Target (Stmt), Extract_Driver_Target'Access);
+               end if;
+            end;
          when Iir_Kind_Conditional_Signal_Assignment_Statement =>
             declare
                Cond_Wf : Iir;
+               Wf : Iir;
+               Has_Drv : Boolean;
             begin
                Cond_Wf := Get_Conditional_Waveform_Chain (Stmt);
+               Has_Drv := False;
                while Cond_Wf /= Null_Iir loop
-                  Extract_Has_After (Get_Waveform_Chain (Cond_Wf));
+                  Wf := Get_Waveform_Chain (Cond_Wf);
+                  if Get_Kind (Wf) /= Iir_Kind_Unaffected_Waveform then
+                     --  Not unaffected
+                     Extract_Has_After (Wf);
+                     Has_Drv := True;
+                  end if;
                   Cond_Wf := Get_Chain (Cond_Wf);
                end loop;
-               Status := Walk_Assignment_Target
-                 (Get_Target (Stmt), Extract_Driver_Target'Access);
+               if Has_Drv then
+                  Status := Walk_Assignment_Target
+                    (Get_Target (Stmt), Extract_Driver_Target'Access);
+               end if;
             end;
          when Iir_Kind_Selected_Waveform_Assignment_Statement =>
             declare
                Swf : Iir;
+               Wf : Iir;
+               Has_Drv : Boolean;
             begin
                Swf := Get_Selected_Waveform_Chain (Stmt);
+               Has_Drv := False;
                while Swf /= Null_Iir loop
-                  Extract_Has_After (Get_Associated_Chain (Swf));
+                  if not Get_Same_Alternative_Flag (Swf) then
+                     Wf := Get_Associated_Chain (Swf);
+                     if Get_Kind (Wf) /= Iir_Kind_Unaffected_Waveform then
+                        --  Not unaffected
+                        Extract_Has_After (Wf);
+                        Has_Drv := True;
+                     end if;
+                  end if;
                   Swf := Get_Chain (Swf);
                end loop;
-               Status := Walk_Assignment_Target
-                 (Get_Target (Stmt), Extract_Driver_Target'Access);
+               if Has_Drv then
+                  Status := Walk_Assignment_Target
+                    (Get_Target (Stmt), Extract_Driver_Target'Access);
+               end if;
             end;
          when Iir_Kind_Procedure_Call_Statement =>
             declare

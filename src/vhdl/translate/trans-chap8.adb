@@ -4203,6 +4203,13 @@ package body Trans.Chap8 is
       Targ : Mnode;
       Drv : Mnode;
    begin
+      if Is_Valid (Wf_Chain)
+        and then Get_Kind (Wf_Chain) = Iir_Kind_Unaffected_Waveform
+      then
+         --  Unaffected, like a null statement.
+         return;
+      end if;
+
       if Is_Reject_Signal_Assignment (Stmt)
         or else not Is_Simple_Waveform (Wf_Chain)
       then

@@ -1783,6 +1783,9 @@ package body Disp_Vhdl is
       if Chain = Null_Iir then
          Put ("null after {disconnection_time}");
          return;
+      elsif Get_Kind (Chain) = Iir_Kind_Unaffected_Waveform then
+         Put ("unaffected");
+         return;
       end if;
       We := Chain;
       while We /= Null_Iir loop

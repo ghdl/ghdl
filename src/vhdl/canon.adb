@@ -1436,7 +1436,7 @@ package body Canon is
       Stmt : Iir;
       Sensitivity_List : Iir_List;
    begin
-      if Waveform_Chain = Null_Iir then
+      if Get_Kind (Waveform_Chain) = Iir_Kind_Unaffected_Waveform then
          --  LRM 9.5.1 Conditionnal Signal Assignment
          --  If the waveform is of the form:
          --    UNAFFECTED

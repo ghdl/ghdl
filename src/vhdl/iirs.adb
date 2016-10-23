@@ -262,6 +262,7 @@ package body Iirs is
            | Iir_Kind_Physical_Fp_Literal
            | Iir_Kind_Simple_Aggregate
            | Iir_Kind_Overflow_Literal
+           | Iir_Kind_Unaffected_Waveform
            | Iir_Kind_Waveform_Element
            | Iir_Kind_Conditional_Waveform
            | Iir_Kind_Conditional_Expression

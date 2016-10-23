@@ -464,7 +464,7 @@ package body Sem_Stmts is
       We: Iir_Waveform_Element;
       Time, Last_Time : Iir_Int64;
    begin
-      if Waveform_Chain = Null_Iir then
+      if Get_Kind (Waveform_Chain) = Iir_Kind_Unaffected_Waveform then
          --  Unaffected.
          return;
       end if;
@@ -584,7 +584,7 @@ package body Sem_Stmts is
       Expr : Iir;
       Targ_Type : Iir;
    begin
-      if Waveform_Chain = Null_Iir then
+      if Get_Kind (Waveform_Chain) = Iir_Kind_Unaffected_Waveform then
          return;
       end if;
 
@@ -722,9 +722,12 @@ package body Sem_Stmts is
                   El := Get_Selected_Waveform_Chain (Stmt);
                   while El /= Null_Iir loop
                      Wf_Chain := Get_Associated_Chain (El);
-                     Sem_Waveform_Chain (Wf_Chain, Target_Type);
-                     if Done then
-                        Sem_Check_Waveform_Chain (Stmt, Wf_Chain);
+                     if Is_Valid (Wf_Chain) then
+                        --  The first choice of a list.
+                        Sem_Waveform_Chain (Wf_Chain, Target_Type);
+                        if Done then
+                           Sem_Check_Waveform_Chain (Stmt, Wf_Chain);
+                        end if;
                      end if;
                      El := Get_Chain (El);
                   end loop;
