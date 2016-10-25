@@ -80,6 +80,10 @@ while [[ $# > 0 ]]; do
 		COMPILE_SIMPRIM=TRUE
 		NO_COMMAND=0
 		;;
+		--corelib)
+		COMPILE_CORELIB=TRUE
+		NO_COMMAND=0
+		;;
 		--secureip)
 		COMPILE_SECUREIP=TRUE
 		;;
@@ -149,6 +153,7 @@ if [ "$HELP" == "TRUE" ]; then
 	echo "     --unisim           Compile the unisim library."
 	echo "     --unimacro         Compile the unimacro library."
 	echo "     --simprim          Compile the simprim library."
+	echo "     --corelib          Compile the corelib library."
 	echo "     --secureip         Compile the secureip library."
 	echo ""
 	echo "Library compile options:"
@@ -173,6 +178,7 @@ if [ "$COMPILE_ALL" == "TRUE" ]; then
 	COMPILE_UNISIM=TRUE
 	COMPILE_UNIMACRO=TRUE
 	COMPILE_SIMPRIM=TRUE
+	COMPILE_CORELIB=TRUE
 	COMPILE_SECUREIP=TRUE
 fi
 
@@ -339,6 +345,22 @@ if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_SIMPRIM" == "TRUE" ] && [ "$COMPILE_S
 
 	GHDLCompileLibrary
 fi
+
+# Library corelib
+# ==============================================================================
+# compile corelib packages
+if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_CORELIB" == "TRUE" ]; then
+	Library="xilinxcorelib"
+	
+	# append absolute source path
+	SourceFiles=()
+	grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/XilinxCoreLib/vhdl_analyze_order" | while read File; do
+		SourceFiles+=("$SourceDirectory/XilinxCoreLib/$File")
+	done
+
+	GHDLCompilePackages
+fi
+
 	
 echo "--------------------------------------------------------------------------------"
 echo -n "Compiling Xilinx ISE libraries "
