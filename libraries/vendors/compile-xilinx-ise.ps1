@@ -43,6 +43,7 @@
 #       - unisim (incl. secureip)
 #       - unimacro
 #       - simprim (incl. secureip)
+#       - xilinxcorelib
 #
 [CmdletBinding()]
 param(
