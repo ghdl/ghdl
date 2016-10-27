@@ -159,11 +159,11 @@ function Get-GHDLBinary
 	)
 
 	if ($GHDL -ne "")
-	{	$GHDLBinary = $GHDL				}
+	{	$GHDLBinary = $GHDL.TrimEnd("\")			+ "\ghdl.exe"	}
 	elseif (Test-Path env:GHDL)
-	{	$GHDLBinary = $env:GHDL		}
+	{	$GHDLBinary = $env:GHDL.TrimEnd("\")	+ "\ghdl.exe"	}
 	else
-	{	$GHDLBinary = "ghdl.exe"	}
+	{	$GHDLBinary = "ghdl.exe"														}
 	
 	if (-not (Test-Path $GHDLBinary -PathType Leaf))
 	{	Write-Host "Use adv. options '-GHDL' to set the GHDL executable." -ForegroundColor Red
