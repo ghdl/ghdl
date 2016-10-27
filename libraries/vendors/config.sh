@@ -13,7 +13,7 @@
 #	This Bash file exports variables containing the users local tool environment.
 #
 # ==============================================================================
-#	Copyright (C) 2015-2016 Patrick Lehmann
+#	Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -67,4 +67,3 @@ SourceDirectories[VUnit]="vunit/vhdl"
 
 # input files greater than $LARGE_FILESIZE are skipped if '--skip-largefiles' is set
 LARGE_FILESIZE=125000
-

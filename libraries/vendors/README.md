@@ -40,6 +40,7 @@ lines with the help of grc/grcat ([generic colourizer][grc]).
      - unisim (incl. secureip)
      - unimacro
      - simprim (incl. secureip)
+     - xilinxcorelib
  - Xilinx Vivado (&ge;2014.1):
      - unisim (incl. secureip)
      - unimacro
@@ -164,12 +165,12 @@ directories. Use an empty string `""` for not installed tools.
 `config.sh`:
 ```Bash
 declare -A InstallationDirectory
-InstallationDirectory[AlteraQuartus]="/opt/Altera/15.0"
-InstallationDirectory[LatticeDiamond]="/opt/Diamond/3.7_x64"
+InstallationDirectory[AlteraQuartus]="/opt/Altera/16.0"
+InstallationDirectory[LatticeDiamond]="/opt/Diamond/3.8_x64"
 InstallationDirectory[OSVVM]="/home/<user>/git/GitHub/osvvm"
 InstallationDirectory[VUnit]="/home/<user>/git/GitHub/vunit"
 InstallationDirectory[XilinxISE]="/opt/Xilinx/14.7"
-InstallationDirectory[XilinxVivado]="/opt/Xilinx/Vivado/2015.2"
+InstallationDirectory[XilinxVivado]="/opt/Xilinx/Vivado/2016.3"
 ```
 
 #### For Windows: `config.psm1`
@@ -182,9 +183,9 @@ folder. Use an empty string `""` for not installed tools.
 ```PowerShell
 $InstallationDirectory = @{
   "AlteraQuartus" =   "C:\Altera\16.0";
-  "LatticeDiamond" =  "C:\Lattice\Diamond\3.7_x64";
+  "LatticeDiamond" =  "C:\Lattice\Diamond\3.8_x64";
   "XilinxISE" =       "C:\Xilinx\14.7\ISE_DS";
-  "XilinxVivado" =    "C:\Xilinx\Vivado\2016.2";
+  "XilinxVivado" =    "C:\Xilinx\Vivado\2016.3";
   "OSVVM" =           "D:\git\GitHub\osvvm";
   "VUnit" =           "D:\git\GitHub\vunit"
 }
@@ -222,6 +223,7 @@ $InstallationDirectory = @{
            --unisim           Compile the unisim primitives
            --unimacro         Compile the unimacro macros
            --simprim          Compile the simprim primitives
+           --corelib          Compile the xilinxcorelib macros
            --secureip         Compile the secureip primitives
     Compile options:
 
@@ -276,6 +278,7 @@ $InstallationDirectory = @{
         -Unisim               Compile the unisim primitives
         -Unimacro             Compile the unimacro macros
         -Simprim              Compile the simprim primitives
+        -CoreLib              Compile the xilinxcorelib macros
         -Secureip             Compile the secureip primitives
     Compile options:
 
@@ -304,4 +307,5 @@ $InstallationDirectory = @{
         -VUnit  		          Compile the VUnit library.
 
 ------------------------
-Author: Patrick Lehmann (22.06.2016)
+Author: Patrick Lehmann  
+Last update: 28.10.2016
