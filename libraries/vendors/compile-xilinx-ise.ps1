@@ -15,7 +15,7 @@
 #		- compiles all Xilinx ISE simulation libraries and packages
 #
 # ==============================================================================
-#	Copyright (C) 2015-2016 Patrick Lehmann
+#	Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -43,6 +43,7 @@
 #       - unisim (incl. secureip)
 #       - unimacro
 #       - simprim (incl. secureip)
+#       - xilinxcorelib
 #
 [CmdletBinding()]
 param(
@@ -60,6 +61,9 @@ param(
 	
 	# Compile the Xilinx post-map simulation library.
 	[switch]$Simprim =					$false,
+	
+	# Compile the Xilinx CoreLib simulation library.
+	[switch]$CoreLib =					$false,
 	
 	# Compile the Xilinx secureip library.
 	[switch]$SecureIP =					$false,
@@ -95,21 +99,22 @@ if ($Help)
 $WorkingDir =		Get-Location
 
 # load modules from GHDL's 'vendors' library directory
-Import-Module $PSScriptRoot\config.psm1 -Verbose:$false -ArgumentList "XilinxISE"
-Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -ArgumentList @("Xilinx ISE", "$WorkingDir")
+Import-Module $PSScriptRoot\config.psm1 -Verbose:$false -Debug:$false -ArgumentList "XilinxISE"
+Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -Debug:$false -ArgumentList @("Xilinx ISE", "$WorkingDir")
 
 # Display help if no command was selected
-$Help = $Help -or (-not ($All -or $Unisim -or $Simprim -or $Unimacro))
+$Help = $Help -or (-not ($All -or $Unisim -or $Simprim -or $Unimacro -or $CoreLib -or $Clean))
 
 if ($Help)
 {	Get-Help $MYINVOCATION.InvocationName -Detailed
 	Exit-CompileScript
 }
 if ($All)
-{	$Unisim =		$true
-	$Simprim =	$true
-	$Unimacro =	$true
-	$SecureIP =	$true
+{	$Unisim =					$true
+	$Simprim =				$true
+	$Unimacro =				$true
+	$CoreLib =	$true
+	$SecureIP =				$true
 }
 
 function Get-XilinxISEDirectory
@@ -161,7 +166,7 @@ $ErrorCount =			0
 # Cleanup directories
 # ==============================================================================
 if ($Clean)
-{	Write-Host "[ERROR]: '-Clean' is not implemented!"
+{	Write-Host "[ERROR]: '-Clean' is not implemented!" -ForegroundColor Red
 	Exit-CompileScript -1
 	
 	Write-Host "Cleaning up vendor directory ..." -ForegroundColor Yellow
@@ -260,6 +265,30 @@ if ((-not $StopCompiling) -and $Simprim)
 if ((-not $StopCompiling) -and $Simprim -and $SecureIP)
 {	$Library = "secureip"
 	$SourceFiles = dir "$SourceDirectory\simprims\secureip\other\*.vhd*"
+	
+	$ErrorCount += 0
+	Start-PrimitiveCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+}
+
+# Library XilinxCoreLib
+# ==============================================================================
+# compile CoreLib primitives
+if ((-not $StopCompiling) -and $CoreLib)
+{	$Library = "xilinxcorelib"
+
+	$AnalyzeFile = "$SourceDirectory\XilinxCoreLib\vhdl_analyze_order"
+	if (-not (Test-Path $AnalyzeFile -PathType Leaf))
+	{	Write-Host "[ERROR]: Analyze file '$AnalyzeFile' not found!"
+		Exit-CompileScript -1
+	}
+	
+	$AnalyzeOrder = Get-Content $AnalyzeFile -Encoding Ascii
+	$SourceFiles = @()
+	foreach ($line in $AnalyzeOrder)
+	{	if (-not $line.StartsWith("#"))
+		{	$SourceFiles += "$SourceDirectory\XilinxCoreLib\$line"	}
+	}
 	
 	$ErrorCount += 0
 	Start-PrimitiveCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError

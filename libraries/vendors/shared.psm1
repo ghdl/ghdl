@@ -14,7 +14,7 @@
 #	output streams (stdout and stderr).
 #
 # ==============================================================================
-#	Copyright (C) 2015-2016 Patrick Lehmann
+#	Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -66,7 +66,7 @@ function Exit-CompileScript
 	if ($ExitCode -eq 0)
 	{	exit 0	}
 	else
-	{	Write-Host "[DEBUG]: HARD EXIT" -ForegroundColor Cyan
+	{	Write-Host "[DEBUG]: HARD EXIT" -ForegroundColor Red
 		exit $ExitCode
 	}
 }
@@ -159,11 +159,11 @@ function Get-GHDLBinary
 	)
 
 	if ($GHDL -ne "")
-	{	$GHDLBinary = $GHDL				}
+	{	$GHDLBinary = $GHDL.TrimEnd("\")			+ "\ghdl.exe"	}
 	elseif (Test-Path env:GHDL)
-	{	$GHDLBinary = $env:GHDL		}
+	{	$GHDLBinary = $env:GHDL.TrimEnd("\")	+ "\ghdl.exe"	}
 	else
-	{	$GHDLBinary = "ghdl.exe"	}
+	{	$GHDLBinary = "ghdl.exe"														}
 	
 	if (-not (Test-Path $GHDLBinary -PathType Leaf))
 	{	Write-Host "Use adv. options '-GHDL' to set the GHDL executable." -ForegroundColor Red

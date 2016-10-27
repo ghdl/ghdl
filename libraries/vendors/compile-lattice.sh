@@ -17,7 +17,8 @@
 #		- compiles all Lattice Diamond simulation libraries and packages
 #
 # ==============================================================================
-#	Copyright (C) 2015-2016 Patrick Lehmann and Markus Koch
+#	Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
+#	Copyright (C) 2015-2016 Markus Koch
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -126,6 +127,8 @@ if [ "$HELP" == "TRUE" ]; then
 	echo "  One library folder 'lib/v??' per VHDL library will be created relative to the current"
 	echo "  working directory."
 	echo ""
+	echo "  Use the adv. options or edit 'config.sh' to supply paths and default params."
+	echo ""
 	echo "Usage:"
 	echo "  compile-lattice.sh <common command>|<library> [<options>] [<adv. options>]"
 	echo ""
@@ -139,15 +142,15 @@ if [ "$HELP" == "TRUE" ]; then
   echo "                        \"$deviceList\""
 	echo ""
 	echo "Library compile options:"
-	echo "     --vhdl93            Compile the libraries with VHDL-93."
-	echo "     --vhdl2008          Compile the libraries with VHDL-2008."
+	echo "     --vhdl93           Compile the libraries with VHDL-93."
+	echo "     --vhdl2008         Compile the libraries with VHDL-2008."
 	echo "  -s --skip-existing    Skip already compiled files (an *.o file exists)."
 	echo "  -H --halt-on-error    Halt on error(s)."
 	echo ""
 	echo "Advanced options:"
-	echo "  --ghdl <GHDL Binary>   Path to GHDL's binary e.g. /usr/local/bin/ghdl."
-	echo "  --out <dir name>       Name of the output directory."
-	echo "  --src <Path to OSVVM>  Path to the source directory."
+	echo "  --ghdl <GHDL bin dir> Path to GHDL's binary directory, e.g. /usr/local/bin"
+	echo "  --out <dir name>      Name of the output directory, e.g. xilinx-vivado"
+	echo "  --src <Path to lib>   Path to the sources."
 	echo ""
 	echo "Verbosity:"
 	echo "  -n --no-warnings      Suppress all warnings. Show only error messages."
