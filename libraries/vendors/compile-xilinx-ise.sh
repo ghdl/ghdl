@@ -141,6 +141,8 @@ if [ "$HELP" == "TRUE" ]; then
 	echo "  One library folder 'lib/v??' per VHDL library will be created relative to the current"
 	echo "  working directory."
 	echo ""
+	echo "  Use the adv. options or edit 'config.sh' to supply paths and default params."
+	echo ""
 	echo "Usage:"
 	echo "  compile-xilinx-ise.sh <common command>|<library> [<options>] [<adv. options>]"
 	echo ""
@@ -164,12 +166,12 @@ if [ "$HELP" == "TRUE" ]; then
 	echo "  -H --halt-on-error    Halt on error(s)."
 	echo ""
 	echo "Advanced options:"
-	echo "  --ghdl <GHDL Binary>   Path to GHDL's binary e.g. /usr/local/bin/ghdl."
-	echo "  --out <dir name>       Name of the output directory."
-	echo "  --src <Path to OSVVM>  Path to the source directory."
+	echo "  --ghdl <GHDL bin dir> Path to GHDL's binary directory, e.g. /usr/local/bin"
+	echo "  --out <dir name>      Name of the output directory, e.g. xilinx-ise"
+	echo "  --src <Path to lib>   Path to the sources, e.g. /opt/Xilinx/14.7/ISE_DS/ISE/vhdl/src"
 	echo ""
 	echo "Verbosity:"
-	echo "  -n --no-warnings      Suppress all warnings. Show only error messages."
+	echo "  -n --no-warnings        Suppress all warnings. Show only error messages."
 	echo ""
 	exit 0
 fi
@@ -354,9 +356,9 @@ if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_CORELIB" == "TRUE" ]; then
 	
 	# append absolute source path
 	SourceFiles=()
-	grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/XilinxCoreLib/vhdl_analyze_order" | while read File; do
+	while IFS= read -r File; do
 		SourceFiles+=("$SourceDirectory/XilinxCoreLib/$File")
-	done
+	done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/XilinxCoreLib/vhdl_analyze_order")
 
 	GHDLCompilePackages
 fi
