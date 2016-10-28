@@ -434,6 +434,11 @@ function Write-ColoredGHDLLine
 				Write-Host "${Indent}ERROR: "		-NoNewline -ForegroundColor Red
 				Write-Host $InputObject
 			}
+			elseif ($InputObject -match ":error:\s")
+			{	$ErrorRecordFound	= $true
+				Write-Host "${Indent}ERROR: "		-NoNewline -ForegroundColor Red
+				Write-Host $InputObject
+			}
 			else
 			{	Write-Host "${Indent}$InputObject"		}
 		}
