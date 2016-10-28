@@ -66,7 +66,7 @@ function Exit-CompileScript
 	if ($ExitCode -eq 0)
 	{	exit 0	}
 	else
-	{	Write-Host "[DEBUG]: HARD EXIT" -ForegroundColor Cyan
+	{	Write-Host "[DEBUG]: HARD EXIT" -ForegroundColor Red
 		exit $ExitCode
 	}
 }

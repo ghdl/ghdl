@@ -152,7 +152,7 @@ $ErrorCount =			0
 # Cleanup directories
 # ==============================================================================
 if ($Clean)
-{	Write-Host "[ERROR]: '-Clean' is not implemented!"
+{	Write-Host "[ERROR]: '-Clean' is not implemented!" -ForegroundColor Red
 	Exit-CompileScript -1
 	
 	Write-Host "Cleaning up vendor directory ..." -ForegroundColor Yellow

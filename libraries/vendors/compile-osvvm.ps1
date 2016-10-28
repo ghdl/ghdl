@@ -72,11 +72,11 @@ param(
 $WorkingDir =		Get-Location
 
 # load modules from GHDL's 'vendors' library directory
-Import-Module $PSScriptRoot\config.psm1 -Verbose:$false -ArgumentList "OSVVM"
-Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -ArgumentList @("OSVVM", "$WorkingDir")
+Import-Module $PSScriptRoot\config.psm1 -Verbose:$false -Debug:$false -ArgumentList "OSVVM"
+Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -Debug:$false -ArgumentList @("OSVVM", "$WorkingDir")
 
 # Display help if no command was selected
-$Help = $Help -or (-not ($All -or $OSVVM))
+$Help = $Help -or (-not ($All -or $OSVVM -or $Clean))
 
 if ($Help)
 {	Get-Help $MYINVOCATION.InvocationName -Detailed
@@ -109,7 +109,7 @@ $ErrorCount =			0
 # Cleanup directories
 # ==============================================================================
 if ($Clean)
-{	Write-Host "[ERROR]: '-Clean' is not implemented!"
+{	Write-Host "[ERROR]: '-Clean' is not implemented!" -ForegroundColor Red
 	Exit-CompileScript -1
 	
 	Write-Host "Cleaning up vendor directory ..." -ForegroundColor Yellow

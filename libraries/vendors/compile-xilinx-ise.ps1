@@ -103,7 +103,7 @@ Import-Module $PSScriptRoot\config.psm1 -Verbose:$false -Debug:$false -ArgumentL
 Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -Debug:$false -ArgumentList @("Xilinx ISE", "$WorkingDir")
 
 # Display help if no command was selected
-$Help = $Help -or (-not ($All -or $Unisim -or $Simprim -or $Unimacro -or $CoreLib))
+$Help = $Help -or (-not ($All -or $Unisim -or $Simprim -or $Unimacro -or $CoreLib -or $Clean))
 
 if ($Help)
 {	Get-Help $MYINVOCATION.InvocationName -Detailed
@@ -166,7 +166,7 @@ $ErrorCount =			0
 # Cleanup directories
 # ==============================================================================
 if ($Clean)
-{	Write-Host "[ERROR]: '-Clean' is not implemented!"
+{	Write-Host "[ERROR]: '-Clean' is not implemented!" -ForegroundColor Red
 	Exit-CompileScript -1
 	
 	Write-Host "Cleaning up vendor directory ..." -ForegroundColor Yellow

@@ -103,11 +103,11 @@ param(
 $WorkingDir =		Get-Location
 
 # load modules from GHDL's 'vendors' library directory
-Import-Module $PSScriptRoot\config.psm1 -Verbose:$false -ArgumentList "AlteraQuartus"
-Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -ArgumentList @("Altera Quartus", "$WorkingDir")
+Import-Module $PSScriptRoot\config.psm1 -Verbose:$false -Debug:$false -ArgumentList "AlteraQuartus"
+Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -Debug:$false -ArgumentList @("Altera Quartus", "$WorkingDir")
 
 # Display help if no command was selected
-$Help = $Help -or (-not ($All -or $Altera -or $Max -or $Cyclone -or $Arria -or $Stratix -or $Nanometer))
+$Help = $Help -or (-not ($All -or $Altera -or $Max -or $Cyclone -or $Arria -or $Stratix -or $Nanometer -or $Clean))
 
 if ($Help)
 {	Get-Help $MYINVOCATION.InvocationName -Detailed
@@ -167,7 +167,7 @@ $ErrorCount =			0
 # Cleanup directories
 # ==============================================================================
 if ($Clean)
-{	Write-Host "[ERROR]: '-Clean' is not implemented!"
+{	Write-Host "[ERROR]: '-Clean' is not implemented!" -ForegroundColor Red
 	Exit-CompileScript -1
 	
 	Write-Host "Cleaning up vendor directory ..." -ForegroundColor Yellow
