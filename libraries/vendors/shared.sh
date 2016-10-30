@@ -12,7 +12,7 @@
 #		TODO
 #
 # ==============================================================================
-#	Copyright (C) 2015 Patrick Lehmann
+#	Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -36,6 +36,7 @@ ANSI_YELLOW="\e[33m"
 ANSI_BLUE="\e[34m"
 ANSI_MAGENTA="\e[35m"
 ANSI_CYAN="\e[36;1m"
+ANSI_DARKCYAN="\e[36m"
 ANSI_NOCOLOR="\e[0m"
 
 # red texts
@@ -162,7 +163,7 @@ GHDLCompileLibrary() {
 		elif [ $SKIP_LARGE_FILES -eq 1 ] && [ ${FileSize[0]} -gt $LARGE_FILESIZE ]; then
 			echo -e "${ANSI_CYAN}Skipping large file '$File'${ANSI_NOCOLOR}"
 		else
-			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_NOCOLOR}"
+			echo -e "${ANSI_DARKCYAN}Analyzing file '$File'${ANSI_NOCOLOR}"
 			$GHDLBinary -a ${GHDL_PARAMS[@]} --work=$Library "$File" 2>&1 | $GRC_COMMAND
 			if [ $? -ne 0 ]; then
 				let ERRORCOUNT++
@@ -185,7 +186,7 @@ GHDLCompilePackages() {
 		if [ $SKIP_EXISTING_FILES -eq 1 ] && [ -e "${FileName%.*}.o" ]; then
 			echo -e "${ANSI_CYAN}Skipping existing package '$File'${ANSI_NOCOLOR}"
 		else
-			echo -e "${ANSI_CYAN}Analyzing package '$File'${ANSI_NOCOLOR}"
+			echo -e "${ANSI_DARKCYAN}Analyzing package '$File'${ANSI_NOCOLOR}"
 			$GHDLBinary -a ${GHDL_PARAMS[@]} --work=$Library "$File" 2>&1 | $GRC_COMMAND
 			if [ $? -ne 0 ]; then
 				let ERRORCOUNT++

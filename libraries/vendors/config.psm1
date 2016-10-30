@@ -13,7 +13,7 @@
 #	environment.
 #
 # ==============================================================================
-#	Copyright (C) 2015-2016 Patrick Lehmann
+#	Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -41,10 +41,10 @@ $Module_VendorToolName = $VendorToolName
 # Configure your tools here. Use absolute paths, without trailing directory
 #	delimiter. Empty strings indicate not installed tools
 $InstallationDirectories = @{
-	"AlteraQuartus" =		""		# "C:\Altera\15.1\quartus";
-	"LatticeDiamond" =	""		# "C:\Lattice\Diamond\3.7_x64"
+	"AlteraQuartus" =		""		# "C:\Altera\16.0\quartus";
+	"LatticeDiamond" =	""		# "C:\Lattice\Diamond\3.8_x64"
 	"XilinxISE" =				""		# "C:\Xilinx\14.7\ISE_DS";
-	"XilinxVivado" =		""		# "C:\Xilinx\Vivado\2016.1";
+	"XilinxVivado" =		""		# "C:\Xilinx\Vivado\2016.3";
 	"OSVVM" =						""		# "C:\git\GitHub\osvvm";
 	"VUnit" =						""		# "C:\git\GitHub\vunit"
 }
