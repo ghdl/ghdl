@@ -28,7 +28,7 @@ with Grt.Errors; use Grt.Errors;
 with Grt.Stdio; use Grt.Stdio;
 with Grt.Astdio;
 with Grt.Hooks;
-with Grt.Wave_Opt_File.Parse;
+with Grt.Wave_Opt.File;
 
 package body Grt.Options is
 
@@ -165,7 +165,7 @@ package body Grt.Options is
       P (" --no-run          do not simulate, only elaborate");
       P (" --unbuffered      disable buffering on stdout, stderr and");
       P ("                   files opened in write or append mode (TEXTIO).");
-      P (" --wave-opt-file=FILENAME  read a wave option file");
+      P (" --wave-opt-file=FILENAME  read/write a wave option file.");
       --  P (" --threads=N       use N threads for simulation");
       P ("Additional features:");
       P (" --has-feature=X   test presence of feature X");
@@ -488,7 +488,7 @@ package body Grt.Options is
          setbuf (stderr, NULL_voids);
       elsif Option'Length >= 16 and then Option (1 .. 16) = "--wave-opt-file="
       then
-         Wave_Opt_File.Parse.Start (Option (17 .. Option'Last));
+         Wave_Opt.File.Start (Option (17 .. Option'Last));
       elsif not Grt.Hooks.Call_Option_Hooks (Option) then
          Error_C ("unknown option '");
          Error_C (Option);

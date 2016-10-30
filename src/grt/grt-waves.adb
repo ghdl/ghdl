@@ -44,8 +44,9 @@ with Grt.Signals; use Grt.Signals;
 with System; use System;
 with Grt.Vstrings; use Grt.Vstrings;
 with Grt.Ghw; use Grt.Ghw;
-with Grt.Wave_Opt_File; use Grt.Wave_Opt_File;
-with Grt.Wave_Opt_File.Tree_Reading; use Grt.Wave_Opt_File.Tree_Reading;
+with Grt.Wave_Opt; use Grt.Wave_Opt;
+with Grt.Wave_Opt.File; use Grt.Wave_Opt.File;
+with Grt.Wave_Opt.Design; use Grt.Wave_Opt.Design;
 
 pragma Elaborate_All (Grt.Rtis_Utils);
 pragma Elaborate_All (Grt.Table);
@@ -915,15 +916,15 @@ package body Grt.Waves is
    --  Create a hierarchy block.
    procedure Wave_Put_Hierarchy_Block (Inst : VhpiHandleT;
                                        Step : Step_Type;
-                                       Wave_Elem : Wave_Opt_File.Elem_Acc);
+                                       Wave_Elem : Wave_Opt.Elem_Acc);
 
    procedure Wave_Put_Hierarchy_1
-     (Inst : VhpiHandleT; Step : Step_Type; Wave_Elem : Wave_Opt_File.Elem_Acc)
+     (Inst : VhpiHandleT; Step : Step_Type; Wave_Elem : Wave_Opt.Elem_Acc)
    is
       Decl_It : VhpiHandleT;
       Decl : VhpiHandleT;
       Error : AvhpiErrorT;
-      Wave_Elem_Child : Wave_Opt_File.Elem_Acc;
+      Wave_Elem_Child : Wave_Opt.Elem_Acc;
    begin
       Vhpi_Iterator (VhpiDecls, Inst, Decl_It, Error);
       if Error /= AvhpiErrorOk then
@@ -940,12 +941,12 @@ package body Grt.Waves is
             return;
          end if;
 
-         Wave_Elem_Child := Get_Cursor
-           (Avhpi_Get_Base_Name (Decl), Wave_Elem, Is_Signal => True);
-         if Is_Displayed (Wave_Elem_Child) then
-            case Vhpi_Get_Kind (Decl) is
-               when VhpiPortDeclK
-                 | VhpiSigDeclK =>
+         case Vhpi_Get_Kind (Decl) is
+            when VhpiPortDeclK
+              | VhpiSigDeclK =>
+               Wave_Elem_Child := Get_Cursor
+                 (Wave_Elem, Avhpi_Get_Base_Name (Decl), Is_Signal => True);
+               if Is_Displayed (Wave_Elem_Child) then
                   case Step is
                      when Step_Name =>
                         Create_String_Id (Avhpi_Get_Base_Name (Decl));
@@ -954,12 +955,12 @@ package body Grt.Waves is
                      when Step_Hierarchy =>
                         Write_Hierarchy_El (Decl);
                   end case;
-                  --Wave_Put_Name (Decl);
-                  --Wave_Newline;
-               when others =>
-                  null;
-            end case;
-         end if;
+               end if;
+               --Wave_Put_Name (Decl);
+               --Wave_Newline;
+            when others =>
+               null;
+         end case;
       end loop;
 
       --  No sub-scopes for packages.
@@ -984,7 +985,7 @@ package body Grt.Waves is
 
          Nbr_Scopes := Nbr_Scopes + 1;
 
-         Wave_Elem_Child := Get_Cursor (Avhpi_Get_Base_Name (Decl), Wave_Elem);
+         Wave_Elem_Child := Get_Cursor (Wave_Elem, Avhpi_Get_Base_Name (Decl));
          if Is_Displayed (Wave_Elem_Child) then
             case Vhpi_Get_Kind (Decl) is
                when VhpiIfGenerateK
@@ -1011,7 +1012,7 @@ package body Grt.Waves is
 
    procedure Wave_Put_Hierarchy_Block (Inst : VhpiHandleT;
                                        Step : Step_Type;
-                                       Wave_Elem : Wave_Opt_File.Elem_Acc) is
+                                       Wave_Elem : Wave_Opt.Elem_Acc) is
    begin
       case Step is
          when Step_Name =>
@@ -1035,7 +1036,7 @@ package body Grt.Waves is
       Pack_It : VhpiHandleT;
       Pack : VhpiHandleT;
       Error : AvhpiErrorT;
-      Wave_Elem : Wave_Opt_File.Elem_Acc;
+      Wave_Elem : Wave_Opt.Elem_Acc;
    begin
       --  First packages.
       Get_Package_Inst (Pack_It);
@@ -1046,14 +1047,14 @@ package body Grt.Waves is
             Avhpi_Error (Error);
             return;
          end if;
-         Wave_Elem := Get_Top_Cursor (Avhpi_Get_Base_Name (Pack), Pkg);
+         Wave_Elem := Get_Top_Cursor (Pkg, Avhpi_Get_Base_Name (Pack));
          if Is_Displayed (Wave_Elem) then
             Wave_Put_Hierarchy_Block (Pack, Step, Wave_Elem);
          end if;
       end loop;
 
       --  Then top entity.
-      Wave_Elem := Get_Top_Cursor (Avhpi_Get_Base_Name (Root), Entity);
+      Wave_Elem := Get_Top_Cursor (Entity, Avhpi_Get_Base_Name (Root));
       if Is_Displayed (Wave_Elem) then
          Wave_Put_Hierarchy_Block (Root, Step, Wave_Elem);
       end if;
@@ -1577,9 +1578,7 @@ package body Grt.Waves is
       -- Vcd_Search_Packages;
       Wave_Put_Hierarchy (Root, Step_Name);
 
-      Wave_Opt_File.Tree_Reading.Check_If_All_Found;
-      -- TODO : The tree of the wave option file should be deallocated here,
-      --        but the memory gain shouldn't be significative
+      Wave_Opt.File.Finalize;
 
       if Str_Table.Last > 0 then
          Freeze_Strings;
@@ -1590,6 +1589,11 @@ package body Grt.Waves is
       Write_Types;
       Write_Known_Types;
       Write_Hierarchy (Root);
+
+      Wave_Opt.Design.Last_Checks;
+
+      -- TODO : The tree of the wave option file should be deallocated here,
+      --        but the memory gain shouldn't be significative
 
       --  End of header mark.
       Wave_Section ("EOH" & NUL);

@@ -52,8 +52,8 @@ with Grt.Hooks; use Grt.Hooks;
 with Grt.Rtis; use Grt.Rtis;
 with Grt.Rtis_Types; use Grt.Rtis_Types;
 with Grt.Vstrings;
-with Grt.Wave_Opt_File; use Grt.Wave_Opt_File;
-with Grt.Wave_Opt_File.Tree_Reading; use Grt.Wave_Opt_File.Tree_Reading;
+with Grt.Wave_Opt; use Grt.Wave_Opt;
+with Grt.Wave_Opt.Design; use Grt.Wave_Opt.Design;
 with Ada.Unchecked_Deallocation;
 pragma Elaborate_All (Grt.Table);
 
@@ -413,11 +413,10 @@ package body Grt.Fst is
    end Fst_Add_Signal;
 
    procedure Fst_Put_Hierarchy
-     (Inst : VhpiHandleT; Wave_Elem : Wave_Opt_File.Elem_Acc);
+     (Inst : VhpiHandleT; Wave_Elem : Wave_Opt.Elem_Acc);
 
-   procedure Fst_Put_Scope (Scope : fstScopeType;
-                            Decl : VhpiHandleT;
-                            Wave_Elem : Wave_Opt_File.Elem_Acc)
+   procedure Fst_Put_Scope
+     (Scope : fstScopeType; Decl : VhpiHandleT; Wave_Elem : Wave_Opt.Elem_Acc)
    is
       Name : String (1 .. 128);
       Name_Len : Integer;
@@ -473,12 +472,12 @@ package body Grt.Fst is
    end Fst_Put_Scope;
 
    procedure Fst_Put_Hierarchy
-     (Inst : VhpiHandleT; Wave_Elem : Wave_Opt_File.Elem_Acc)
+     (Inst : VhpiHandleT; Wave_Elem : Wave_Opt.Elem_Acc)
    is
       Decl_It : VhpiHandleT;
       Decl : VhpiHandleT;
       Error : AvhpiErrorT;
-      Wave_Elem_Child : Wave_Opt_File.Elem_Acc;
+      Wave_Elem_Child : Wave_Opt.Elem_Acc;
    begin
       Vhpi_Iterator (VhpiDecls, Inst, Decl_It, Error);
       if Error /= AvhpiErrorOk then
@@ -495,18 +494,17 @@ package body Grt.Fst is
             return;
          end if;
 
-
-         Wave_Elem_Child := Get_Cursor
-           (Avhpi_Get_Base_Name (Decl), Wave_Elem, Is_Signal => True);
-         if Is_Displayed (Wave_Elem_Child) then
-            case Vhpi_Get_Kind (Decl) is
-               when VhpiPortDeclK
-                 | VhpiSigDeclK =>
+         case Vhpi_Get_Kind (Decl) is
+            when VhpiPortDeclK
+              | VhpiSigDeclK =>
+               Wave_Elem_Child := Get_Cursor
+                 (Wave_Elem, Avhpi_Get_Base_Name (Decl), Is_Signal => True);
+               if Is_Displayed (Wave_Elem_Child) then
                   Fst_Add_Signal (Decl);
-               when others =>
-                  null;
-            end case;
-         end if;
+               end if;
+            when others =>
+               null;
+         end case;
       end loop;
 
       --  Extract sub-scopes.
@@ -529,7 +527,7 @@ package body Grt.Fst is
             return;
          end if;
 
-         Wave_Elem_Child := Get_Cursor (Avhpi_Get_Base_Name (Decl), Wave_Elem);
+         Wave_Elem_Child := Get_Cursor (Wave_Elem, Avhpi_Get_Base_Name (Decl));
          if Is_Displayed (Wave_Elem_Child) then
             case Vhpi_Get_Kind (Decl) is
                when VhpiIfGenerateK =>
@@ -626,7 +624,7 @@ package body Grt.Fst is
       Pack : VhpiHandleT;
       Error : AvhpiErrorT;
       Root : VhpiHandleT;
-      Wave_Elem : Wave_Opt_File.Elem_Acc;
+      Wave_Elem : Wave_Opt.Elem_Acc;
    begin
       --  Do nothing if there is no VCD file to generate.
       if Context = Null_fstContext then
@@ -652,7 +650,7 @@ package body Grt.Fst is
             Avhpi_Error (Error);
             return;
          end if;
-         Wave_Elem := Get_Top_Cursor (Avhpi_Get_Base_Name (Pack), Pkg);
+         Wave_Elem := Get_Top_Cursor (Pkg, Avhpi_Get_Base_Name (Pack));
          if Is_Displayed (Wave_Elem) then
             Fst_Put_Hierarchy (Pack, Wave_Elem);
          end if;
@@ -660,11 +658,11 @@ package body Grt.Fst is
 
       --  Then top entity.
       Get_Root_Inst (Root);
-      Wave_Elem := Get_Top_Cursor (Avhpi_Get_Base_Name (Root), Entity);
+      Wave_Elem := Get_Top_Cursor (Entity, Avhpi_Get_Base_Name (Root));
       if Is_Displayed (Wave_Elem) then
          Fst_Put_Hierarchy (Root, Wave_Elem);
       end if;
-      Wave_Opt_File.Tree_Reading.Check_If_All_Found;
+      Wave_Opt.Design.Last_Checks;
 
       if Flag_Aliases then
          Free_Hash_Tab;

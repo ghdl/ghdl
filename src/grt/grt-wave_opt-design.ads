@@ -23,31 +23,38 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 
--- Description: Wave option file child package for reading the tree created
---              after parsing the wave option file. It provides functions to
---              find in the tree which signals are to be displayed or not
+-- Description: Wave option file child package doing the link between the
+--              design and the other wave option packages.
+--              Provides functions to find in the tree which signals are to be
+--              displayed or not.
+--              When State = Display_Tree, it reads the tree created after
+--              parsing the wave option file and filters signals accordingly.
+--              When State = Write_File, it calls File.Update_Tree to create
+--              the tree from the design tree and write the signal paths of all
+--              the design to a new wave option file.
 
 with Grt.Types; use Grt.Types;
 
-package Grt.Wave_Opt_File.Tree_Reading is
+package Grt.Wave_Opt.Design is
    pragma Preelaborate;
 
    -- Returns the top element of the tree corresponding to the index given, but
    -- only if the name given matches with it.  Otherwise returns null
-   function Get_Top_Cursor (Name : Ghdl_C_String; Index : Tree_Index_Type)
+   function Get_Top_Cursor (Tree_Index : Tree_Index_Type; Name : Ghdl_C_String)
                            return Elem_Acc;
 
-   -- If there is an element in the parent element given that match the name
+   -- If there is an element in the parent element given that matches the name
    -- given, returns it, otherwise returns null
    function Get_Cursor
-     (Name : Ghdl_C_String; Parent : Elem_Acc; Is_Signal : Boolean := False)
+     (Parent : Elem_Acc; Name : Ghdl_C_String; Is_Signal : Boolean := False)
      return Elem_Acc;
 
    -- Returns true if the element given is not null, which means it exists in
    -- the tree of the VHDL elements to be displayed
    function Is_Displayed (Cursor : Elem_Acc) return Boolean;
 
-   -- Read the whole tree and check if every element was found in design
-   procedure Check_If_All_Found;
+   -- If relevent, read the whole tree and check if every element was found in
+   -- design
+   procedure Last_Checks;
 
-end Grt.Wave_Opt_File.Tree_Reading;
+end Grt.Wave_Opt.Design;
