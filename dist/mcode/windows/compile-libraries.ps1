@@ -187,7 +187,7 @@ if (-not $Hosted)
 }
 
 if ($Clean)
-{	Write-Host "Removing all created files and directories..."
+{	Write-Host "Removing all created files and directories..." -ForegroundColor Yellow
 	if (Test-Path -Path $VHDLDestinationLibraryDirectory)
 	{	$EnableVerbose	-and (Write-Host "  rmdir $VHDLDestinationLibraryDirectory")	| Out-Null
 		Remove-Item $VHDLDestinationLibraryDirectory -Force -Recurse -ErrorAction SilentlyContinue
