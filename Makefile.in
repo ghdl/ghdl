@@ -43,11 +43,11 @@ incdir=$(prefix)/include
 MKDIR=mkdir
 LN=ln -s
 CP=cp
+MV=mv
 SED=sed
 GRT_RANLIB=ranlib
 
 VHDL_LIB_DIR=$(prefix)/$(libdirsuffix)
-ADAC=$(CC)
 
 # Debug
 OPT_FLAGS=-g
@@ -102,7 +102,7 @@ version.tmp: $(srcdir)/src/version.in force
 #	Create version.tmp from version.in, using git date/hash
 	if [ -d $(srcdir)/.git ]; then \
 	  desc=`cd $(srcdir); git describe --dirty`; \
-	  sed -e "s/[(].*[)]/($$desc)/" < $< > $@; \
+	  $(SED) -e "s/[(].*[)]/($$desc)/" < $< > $@; \
 	else \
 	  $(CP) $< $@; \
 	fi
@@ -279,7 +279,7 @@ libmhdlsimvhdl.a:  $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) version.ads force
 	gnatbind -Lmhdlsim_vhdl_ mhdlsim.ali -O > mhdlsim.files
 	gnatbind -Lmhdlsim_vhdl_ mhdlsim.ali -K -Z > mhdlsim.link
 	$(GNATMAKE) -c b~mhdlsim.adb
-	rm -f $@
+	$(RM) -f $@
 	ar rc $@ b~mhdlsim.o `cat mhdlsim.files` $(GRT_ADD_OBJS)
 
 ################ ghwdump #################################################

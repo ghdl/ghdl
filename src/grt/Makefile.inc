@@ -20,7 +20,7 @@
 # AR: ar command
 # RM
 # CC
-# ADAC: the GNAT compiler
+# GNATMAKE: the GNAT compiler (gnatmake)
 # GHDL1: the ghdl compiler
 # GRT_RANLIB: the ranlib tool for the grt library.
 # grt_libdir: the place to put grt.
@@ -92,7 +92,7 @@ endif
 GRT_PRAGMA_FLAG=-gnatec$(GRTSRCDIR)/grt.adc -gnat05 -gnatdY
 
 # Rule to compile an Ada file.
-GRT_ADACOMPILE=$(ADAC) -c $(GRT_FLAGS) $(GRT_PRAGMA_FLAG) -o $@ $<
+GRT_ADACOMPILE=$(GNATMAKE) -u -c $(GRT_FLAGS) $(GRT_PRAGMA_FLAG)
 
 grt-all: libgrt.a $(GRT_LIBBACKTRACE) grt.lst
 
@@ -103,23 +103,18 @@ libgrt.a: $(GRT_ADD_OBJS) run-bind.o main.o grt-files
 	$(GRT_RANLIB) $@
 
 run-bind.adb: $(GRT_SRC_DEPS) grt-force
-	gnatmake -c -aI$(GRTSRCDIR) $(GRT_PRAGMA_FLAG) \
+	$(GNATMAKE) -c -aI$(GRTSRCDIR) $(GRT_PRAGMA_FLAG) \
 	  ghdl_main $(GRT_ADAFLAGS) -cargs $(GRT_FLAGS)
 # 	Set No Run-Time flag to suppress references to standard gnat library.
 	sed -e '/^P /s/P /P NR /' < ghdl_main.ali > ghdl_main-tmp.ali
-	mv ghdl_main-tmp.ali ghdl_main.ali
+	$(MV) ghdl_main-tmp.ali ghdl_main.ali
 	gnatbind -Lgrt_ -o run-bind.adb -n ghdl_main.ali
 
-#system.ads:
-#	sed -e "/Configurable_Run_Time/s/False/True/" \
-#	 -e "/Suppress_Standard_Library/s/False/True/" \
-#	  < `$(ADAC) -print-file-name=adainclude/system.ads` > $@
-
 run-bind.o: run-bind.adb
-	$(GRT_ADACOMPILE)
+	$(GRT_ADACOMPILE) -o $@ $<
 
 main.o: $(GRTSRCDIR)/main.adb
-	$(GRT_ADACOMPILE)
+	$(GRT_ADACOMPILE) -o $@ $<
 
 jumps.o: $(GRTSRCDIR)/config/jumps.c
 	$(CC) -c $(GRT_FLAGS) $(GRT_CFLAGS) -o $@ $<
