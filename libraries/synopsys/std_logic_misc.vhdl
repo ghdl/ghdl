@@ -53,7 +53,7 @@ package std_logic_misc is
 --synopsys synthesis_on
     function Drive (V: STD_ULOGIC_VECTOR) return STD_LOGIC_VECTOR;
 
-    function Drive (V: STD_LOGIC_VECTOR) return STD_ULOGIC_VECTOR;
+    function Drive (V: STD_LOGIC_VECTOR) return STD_ULOGIC_VECTOR; --!V08
 --synopsys synthesis_off
 
     --attribute CLOSELY_RELATED_TCF of Drive: function is TRUE;
@@ -68,16 +68,18 @@ package std_logic_misc is
 
     function Sense (V: STD_ULOGIC; vZ, vU, vDC: STD_ULOGIC) return STD_LOGIC;
 
+--START-!V08
     function Sense (V: STD_ULOGIC_VECTOR; vZ, vU, vDC: STD_ULOGIC) 
     					   return STD_LOGIC_VECTOR;
-    function Sense (V: STD_ULOGIC_VECTOR; vZ, vU, vDC: STD_ULOGIC) 
+--END-!V08
+		function Sense (V: STD_ULOGIC_VECTOR; vZ, vU, vDC: STD_ULOGIC) 
     					   return STD_ULOGIC_VECTOR;
-
+--START-!V08
     function Sense (V: STD_LOGIC_VECTOR; vZ, vU, vDC: STD_ULOGIC) 
     					   return STD_LOGIC_VECTOR;
     function Sense (V: STD_LOGIC_VECTOR; vZ, vU, vDC: STD_ULOGIC) 
     					   return STD_ULOGIC_VECTOR;
-
+--END-!V08
 --synopsys synthesis_on
 
 
@@ -142,13 +144,15 @@ package std_logic_misc is
     	) return BIT;
 
         --------------------------------------------------------------------
+--START-!V08
         function AND_REDUCE(ARG: STD_LOGIC_VECTOR) return UX01;
         function NAND_REDUCE(ARG: STD_LOGIC_VECTOR) return UX01;
         function OR_REDUCE(ARG: STD_LOGIC_VECTOR) return UX01;
         function NOR_REDUCE(ARG: STD_LOGIC_VECTOR) return UX01;
         function XOR_REDUCE(ARG: STD_LOGIC_VECTOR) return UX01;
         function XNOR_REDUCE(ARG: STD_LOGIC_VECTOR) return UX01;
-    
+--END-!V08
+
         function AND_REDUCE(ARG: STD_ULOGIC_VECTOR) return UX01;
         function NAND_REDUCE(ARG: STD_ULOGIC_VECTOR) return UX01;
         function OR_REDUCE(ARG: STD_ULOGIC_VECTOR) return UX01;

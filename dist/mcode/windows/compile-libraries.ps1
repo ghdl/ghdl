@@ -166,13 +166,13 @@ $SourceFiles = @{
 		"prmtvs_p",							"prmtvs_b",
 		"memory_p",							"memory_b"
 	);
+	"synopsys8793" = @(
+		"std_logic_textio"
+	);
 	"synopsys" = @(
 		"std_logic_arith",
 		"std_logic_unsigned",
-		"std_logic_signed"
-	);
-	"synopsys8793" = @(
-		"std_logic_textio",
+		"std_logic_signed",
 		"std_logic_misc",				"std_logic_misc-body"
 	);
 	"mentor" = @(
@@ -361,7 +361,7 @@ if ($VHDL87)
 		}
 	}
 	
-	foreach ($SourceFile in $SourceFiles["synopsys"] + $SourceFiles["synopsys8793"])
+	foreach ($SourceFile in $SourceFiles[$VHDLFlavor] + $SourceFiles["synopsys8793"])
 	{	Write-Host "    file: v$VHDLVersion\$SourceFile.v$VHDLVersion"
 		$EnableVerbose -and	(Write-Host "      Patching file for VHDL-$VHDLVersion"																																														) | Out-Null
 		$EnableDebug -and		(Write-Host "        Get-Content `"$VHDLSourceLibraryDirectory\$VHDLSourcesIndex\$SourceFile.vhdl`" -Encoding Ascii ``"	-ForegroundColor DarkGray	) | Out-Null
