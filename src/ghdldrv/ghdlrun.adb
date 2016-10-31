@@ -604,7 +604,7 @@ package body Ghdlrun is
       Str_Table.Initialize;
       Nodes.Initialize;
       Files_Map.Initialize;
-      Name_Table.Initialize;
+      Name_Table.Finalize;
 
       if Flag_Verbose then
          Ada.Text_IO.Put_Line ("Starting simulation");

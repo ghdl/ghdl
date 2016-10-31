@@ -1,5 +1,5 @@
 --  Name table.
---  Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
+--  Copyright (C) 2002 - 2016 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -51,6 +51,9 @@ package body Name_Table is
 
    type Hash_Array is array (Hash_Value_Type range <>) of Name_Id;
    type Hash_Array_Acc is access Hash_Array;
+
+   procedure Deallocate is new Ada.Unchecked_Deallocation
+     (Hash_Array, Hash_Array_Acc);
 
    --  Hash table.  Lower bound is always 0, upper bound is always
    --  Hash_Table_Size - 1.
@@ -107,7 +110,7 @@ package body Name_Table is
 
       Strings_Table.Append (NUL);
 
-      --  Reserve entry 0.
+      --  Reserve entry 0 for Null_Identifier.
       Strings_Table.Append (NUL);
       Names_Table.Append ((Hash => 0,
                            Name => Strings_Table.Last,
@@ -128,9 +131,18 @@ package body Name_Table is
 
       Append_Terminator;
 
+      --  Allocate the Hash_Table.
+      Hash_Table_Size := 1024;
       Hash_Table :=
         new Hash_Array'(0 .. Hash_Table_Size - 1 => Null_Identifier);
    end Initialize;
+
+   procedure Finalize is
+   begin
+      Strings_Table.Free;
+      Names_Table.Free;
+      Deallocate (Hash_Table);
+   end Finalize;
 
    --  Compute the hash value of a string.  In case of algorithm change, check
    --  the performance using Disp_Stats.
@@ -238,9 +250,6 @@ package body Name_Table is
    --  Expand the hash table (double the size).
    procedure Expand
    is
-      procedure Deallocate is new Ada.Unchecked_Deallocation
-        (Hash_Array, Hash_Array_Acc);
-
       Old_Hash_Table : Hash_Array_Acc;
       Id : Name_Id;
    begin
@@ -308,8 +317,6 @@ package body Name_Table is
                                   Info => 0);
       Hash_Table (Hash_Index) := Res;
       Append_Terminator;
-
-      --Put_Line ("created");
 
       return Res;
    end Get_Identifier;
@@ -442,4 +449,6 @@ package body Name_Table is
          end loop;
       end;
    end Disp_Stats;
+begin
+   Initialize;
 end Name_Table;

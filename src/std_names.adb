@@ -28,8 +28,6 @@ package body Std_Names is
          end if;
       end Def;
    begin
-      Name_Table.Initialize;
-
       Def ("mod", Name_Mod);
       Def ("rem", Name_Rem);
 

@@ -1,5 +1,5 @@
 --  Name table.
---  Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
+--  Copyright (C) 2002 - 2016 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -26,9 +26,6 @@ with Types; use Types;
 --  doubled.
 
 package Name_Table is
-   --  Initialize the package, ie create tables.
-   procedure Initialize;
-
    --  Get an entry in the name table for a character.
    --  (entries for characters are already built).  Characters are put in the
    --  name table, but are always different from identifiers.  They simply
@@ -99,6 +96,10 @@ package Name_Table is
 
    --  The length of the name string.
    Nam_Length: Natural range 0 .. Max_Nam_Length;
+
+   --  Free all resources.  The package cannot be used anymore after calling
+   --  this procedure.
+   procedure Finalize;
 
    --  Disp statistics.
    --  Used for debugging.
