@@ -20,7 +20,6 @@ with GNAT.OS_Lib; use GNAT.OS_Lib;
 with Types; use Types;
 with Name_Table; use Name_Table;
 with Nodes_Meta; use Nodes_Meta;
-with Str_Table;
 with Files_Map;
 with Disp_Tree; use Disp_Tree;
 with Ghdlprint; use Ghdlprint;
@@ -429,9 +428,7 @@ package body Ghdlxml is
                   begin
                      Put_Stag (Get_Field_Image (F));
                      Put_Attribute ("length", Strip (Int32'Image (Len)));
-                     Put_Attribute ("content",
-                                    To_XML (Str_Table.String_String8
-                                              (Get_String8_Id (N), Len)));
+                     Put_Attribute ("content", To_XML (Image_String8 (N)));
                      Put_Empty_Stag_End;
                   end;
                when others =>

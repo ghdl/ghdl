@@ -310,6 +310,8 @@ package Iirs is
    --  Number of literals in the expanded string.
    --   Get/Set_String_Length (Field4)
    --
+   --  Before analysis, this is the ASCII code of each character in the string.
+   --  After analysis, this is the position of each literal.
    --   Get/Set_String8_Id (Field5)
    --
    --  Base of the bit_string (corresponds to letters 'b', 'o', 'd' or 'x' in
