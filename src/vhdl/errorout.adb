@@ -397,7 +397,6 @@ package body Errorout is
                      declare
                         Arg : Earg_Type renames Args (Argn);
                      begin
-                        Put (''');
                         case Arg.Kind is
                            when Earg_Iir =>
                               Put (Disp_Node (Arg.Val_Iir));
@@ -405,7 +404,6 @@ package body Errorout is
                               --  Invalid conversion to node.
                               raise Internal_Error;
                         end case;
-                        Put (''');
                      end;
                   when others =>
                      --  Unknown format.
@@ -717,7 +715,9 @@ package body Errorout is
          when Iir_Kind_Association_Element_By_Individual =>
             return "individual association element";
          when Iir_Kind_Association_Element_By_Expression
-           | Iir_Kind_Association_Element_Package =>
+           | Iir_Kind_Association_Element_Package
+           | Iir_Kind_Association_Element_Type
+            | Iir_Kind_Association_Element_Subprogram =>
             return "association element";
          when Iir_Kind_Overload_List =>
             return "overloaded name or expression";
@@ -753,6 +753,8 @@ package body Errorout is
             return Disp_Type (Node, "floating type");
          when Iir_Kind_Incomplete_Type_Definition =>
             return Disp_Type (Node, "incomplete type");
+         when Iir_Kind_Interface_Type_Definition =>
+            return Disp_Type (Node, "interface type");
          when Iir_Kind_Protected_Type_Declaration =>
             return Disp_Type (Node, "protected type");
          when Iir_Kind_Protected_Type_Body =>
@@ -790,6 +792,9 @@ package body Errorout is
             return '''
               & Name_Table.Nam_Buffer (1 .. Name_Table.Nam_Length)
               & ''';
+         when Iir_Kind_Reference_Name =>
+            --  Shouldn't happen.
+            return "name";
          when Iir_Kind_External_Constant_Name =>
             return "external constant name";
          when Iir_Kind_External_Signal_Name =>
@@ -879,6 +884,8 @@ package body Errorout is
             return Disp_Identifier (Node, "file interface");
          when Iir_Kind_Interface_Package_Declaration =>
             return Disp_Identifier (Node, "package interface");
+         when Iir_Kind_Interface_Type_Declaration =>
+            return Disp_Identifier (Node, "type interface");
          when Iir_Kind_Signal_Declaration =>
             return Disp_Identifier (Node, "signal");
          when Iir_Kind_Variable_Declaration =>
@@ -894,6 +901,9 @@ package body Errorout is
             return Disp_Identifier (Node, "non-object alias");
          when Iir_Kind_Guard_Signal_Declaration =>
             return "GUARD signal";
+         when Iir_Kind_Signal_Attribute_Declaration =>
+            --  Should not appear.
+            return "signal attribute";
          when Iir_Kind_Group_Template_Declaration =>
             return Disp_Identifier (Node, "group template");
          when Iir_Kind_Group_Declaration =>
@@ -907,11 +917,15 @@ package body Errorout is
 
          when Iir_Kind_Procedure_Declaration =>
             return Disp_Identifier (Node, "procedure");
+         when Iir_Kind_Function_Declaration =>
+            return Disp_Identifier (Node, "function");
+         when Iir_Kind_Interface_Procedure_Declaration =>
+            return Disp_Identifier (Node, "interface procedure");
+         when Iir_Kind_Interface_Function_Declaration =>
+            return Disp_Identifier (Node, "interface function");
          when Iir_Kind_Procedure_Body
            | Iir_Kind_Function_Body =>
             return "subprogram body";
-         when Iir_Kind_Function_Declaration =>
-            return Disp_Identifier (Node, "function");
 
          when Iir_Kind_Package_Declaration =>
             return Disp_Identifier (Node, "package");

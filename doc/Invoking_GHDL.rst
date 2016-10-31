@@ -12,6 +12,11 @@ the command.  The options are used to slightly modify the action.
 No option is allowed before the command.  Except for the run command,
 no option is allowed after a filename or a unit name.
 
+If the number of options is large and the command line length is
+beyond the system limit, you can use a response file. An argument that
+starts with a :samp:`@` is considered as a response file; it is replaced
+by arguments read from the file (separated by blanks and end of line).
+
 Building commands
 =================
 
@@ -57,7 +62,8 @@ Elaborate a design::
 
 On GNU/Linux, if the GCC backend was enabled during the compilation of `GHDL`,
 the elaboration command creates an executable containing the code of the `VHDL`
-sources, the elaboration code and simulation code to execute a design hierarchy.
+sources, the elaboration code and simulation code to execute a design
+hierarchy. The executable is created in the current directory.
 On Windows or if the GCC backend was not enabled, this command elaborates the design
 but does not generate anything.
 
@@ -113,7 +119,7 @@ The options and arguments are the same as for the elaboration command, :ref:`Ela
 
 On GNU/Linux this command simply determines the filename of the executable
 and executes it.  Options are ignored. You may also directly execute
-the program.
+the program. The executable must be in the current directory.
 
 This command exists for three reasons:
 
@@ -956,7 +962,7 @@ Display the `GHDL` version and exit::
 
 
 VPI build commands
-==============
+==================
 
 These commands simplify the compile and the link of a user vpi
 module. They are all wrapper: the arguments are in fact a whole
@@ -968,7 +974,7 @@ command before its execution.
 .. _VPI_compile_command:
 
 VPI compile command
------------------
+-------------------
 
 .. index:: --vpi-compile command
 
@@ -991,7 +997,7 @@ executes::
 .. _VPI_link_command:
 
 VPI link command
---------------
+----------------
 
 .. index:: --vpi-link command
 
@@ -1015,7 +1021,7 @@ executes::
 .. _VPI_cflags_command:
 
 VPI cflags command
-----------------
+------------------
 
 .. index:: --vpi-cflags command
 
@@ -1027,7 +1033,7 @@ Display flags added by :option:`--vpi-compile`::
 .. _VPI_ldflags_command:
 
 VPI ldflags command
------------------
+-------------------
 
 .. index:: --vpi-ldflags command
 
@@ -1038,7 +1044,7 @@ Display flags added by :option:`--vpi-link`::
 .. _VPI_include_dir_command:
 
 VPI include dir command
---------------------
+-----------------------
 
 .. index:: --vpi-include-dir command
 
@@ -1049,7 +1055,7 @@ Display the include directory added by the compile flags::
 .. _VPI_library_dir_command:
 
 VPI library dir command
--------------------
+-----------------------
 
 .. index:: --vpi-library-dir command
 

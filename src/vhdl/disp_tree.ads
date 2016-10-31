@@ -17,6 +17,7 @@
 --  02111-1307, USA.
 with Types; use Types;
 with Iirs; use Iirs;
+with Tokens; use Tokens;
 
 package Disp_Tree is
    --  Disp TREE recursively.
@@ -24,4 +25,26 @@ package Disp_Tree is
 
    procedure Disp_Tree_For_Psl
      (N : Int32; Indent : Natural; Depth : Natural);
+
+   --  Image for various field types.
+   function Image_Name_Id (Ident: Name_Id) return String;
+   function Image_Iir_Staticness (Static: Iir_Staticness) return String;
+   function Image_Boolean (Bool : Boolean) return String;
+   function Image_Iir_Delay_Mechanism (Mech : Iir_Delay_Mechanism)
+                                      return String;
+   function Image_Iir_Mode (Mode : Iir_Mode) return String;
+   function Image_Iir_Signal_Kind (Kind : Iir_Signal_Kind) return String;
+   function Image_Iir_Pure_State (State : Iir_Pure_State) return String;
+   function Image_Iir_All_Sensitized (Sig : Iir_All_Sensitized)
+                                     return String;
+   function Image_Iir_Constraint (Const : Iir_Constraint) return String;
+   function Image_Date_State_Type (State : Date_State_Type) return String;
+   function Image_Tri_State_Type (State : Tri_State_Type) return String;
+   function Image_Time_Stamp_Id (Id : Time_Stamp_Id) return String;
+   function Image_File_Checksum_Id (Id : File_Checksum_Id) return String;
+   function Image_Iir_Predefined_Functions (F : Iir_Predefined_Functions)
+                                           return String;
+   function Image_Location_Type (Loc : Location_Type) return String;
+   function Image_Iir_Direction (Dir : Iir_Direction) return String;
+   function Image_Token_Type (Tok : Tokens.Token_Type) return String;
 end Disp_Tree;

@@ -27,10 +27,6 @@ package body Nodes is
    --  Null_Node or Error_Node).
    --pragma Suppress (Index_Check);
 
-   --  Suppress discriminant checks on the table.  Relatively safe, since
-   --  iirs do their own checks.
-   pragma Suppress (Discriminant_Check);
-
    package Nodet is new Tables
      (Table_Component_Type => Node_Record,
       Table_Index_Type => Node_Type,
@@ -44,63 +40,38 @@ package body Nodes is
 
    Free_Chain : Node_Type := Null_Node;
 
-   --  Just to have the default value.
-   pragma Warnings (Off);
-   Init_Short  : Node_Record (Format_Short);
-   Init_Medium : Node_Record (Format_Medium);
-   Init_Fp     : Node_Record (Format_Fp);
-   Init_Int    : Node_Record (Format_Int);
-   pragma Warnings (On);
-
    function Create_Node (Format : Format_Type) return Node_Type
    is
       Res : Node_Type;
    begin
-      if Format = Format_Medium then
-         --  Allocate a first node.
-         Nodet.Increment_Last;
-         Res := Nodet.Last;
-         --  Check alignment.
-         if Res mod 2 = 1 then
-            Set_Field1 (Res, Free_Chain);
-            Free_Chain := Res;
+      case Format is
+         when Format_Medium =>
+            --  Allocate a first node.
             Nodet.Increment_Last;
             Res := Nodet.Last;
-         end if;
-         --  Allocate the second node.
-         Nodet.Increment_Last;
-         Nodet.Table (Res) := Init_Medium;
-         Nodet.Table (Res + 1) := Init_Medium;
-      else
-         --  Check from free pool
-         if Free_Chain = Null_Node then
+            --  Check alignment.
+            if Res mod 2 = 1 then
+               Set_Field1 (Res, Free_Chain);
+               Free_Chain := Res;
+               Nodet.Increment_Last;
+               Res := Nodet.Last;
+            end if;
+            --  Allocate the second node.
             Nodet.Increment_Last;
-            Res := Nodet.Last;
-         else
-            Res := Free_Chain;
-            Free_Chain := Get_Field1 (Res);
-         end if;
-         case Format is
-            when Format_Short =>
-               --  Inline initialization for speed.
-               Nodet.Table (Res) := Node_Record'
-                 (Format => Format_Short,
-                  Kind => 0,
-                  State1 | State2 => 0,
-                  Odigit1 => 0,
-                  Unused_Odigit2 => 0,
-                  Location => Location_Nil,
-                  Field0 | Field1 | Field2 | Field3  => Null_Node,
-                  Field4 | Field5 => Null_Node,
-                  others => False);
-            when Format_Medium =>
-               raise Program_Error;
-            when Format_Fp =>
-               Nodet.Table (Res) := Init_Fp;
-            when Format_Int =>
-               Nodet.Table (Res) := Init_Int;
-         end case;
-      end if;
+            Nodet.Table (Res) := Init_Node;
+            Nodet.Table (Res).Format := Format_Medium;
+            Nodet.Table (Res + 1) := Init_Node;
+         when Format_Short =>
+            --  Check from free pool
+            if Free_Chain = Null_Node then
+               Nodet.Increment_Last;
+               Res := Nodet.Last;
+            else
+               Res := Free_Chain;
+               Free_Chain := Get_Field1 (Res);
+            end if;
+            Nodet.Table (Res) := Init_Node;
+      end case;
       return Res;
    end Create_Node;
 
@@ -123,9 +94,7 @@ package body Nodes is
       case Nodet.Table (N).Format is
          when Format_Medium =>
             return N + 2;
-         when Format_Short
-           | Format_Int
-           | Format_Fp =>
+         when Format_Short =>
             return N + 1;
       end case;
    end Next_Node;
@@ -404,6 +373,36 @@ package body Nodes is
       Nodet.Table (N).Flag12 := V;
    end Set_Flag12;
 
+   function Get_Flag13 (N : Node_Type) return Boolean is
+   begin
+      return Nodet.Table (N).Flag13;
+   end Get_Flag13;
+
+   procedure Set_Flag13 (N : Node_Type; V : Boolean) is
+   begin
+      Nodet.Table (N).Flag13 := V;
+   end Set_Flag13;
+
+   function Get_Flag14 (N : Node_Type) return Boolean is
+   begin
+      return Nodet.Table (N).Flag14;
+   end Get_Flag14;
+
+   procedure Set_Flag14 (N : Node_Type; V : Boolean) is
+   begin
+      Nodet.Table (N).Flag14 := V;
+   end Set_Flag14;
+
+   function Get_Flag15 (N : Node_Type) return Boolean is
+   begin
+      return Nodet.Table (N).Flag15;
+   end Get_Flag15;
+
+   procedure Set_Flag15 (N : Node_Type; V : Boolean) is
+   begin
+      Nodet.Table (N).Flag15 := V;
+   end Set_Flag15;
+
 
    function Get_State1 (N : Node_Type) return Bit2_Type is
    begin
@@ -444,49 +443,6 @@ package body Nodes is
    begin
       Nodet.Table (N + 1).State2 := V;
    end Set_State4;
-
-
-   function Get_Odigit1 (N : Node_Type) return Bit3_Type is
-   begin
-      return Nodet.Table (N).Odigit1;
-   end Get_Odigit1;
-
-   procedure Set_Odigit1 (N : Node_Type; V : Bit3_Type) is
-   begin
-      Nodet.Table (N).Odigit1 := V;
-   end Set_Odigit1;
-
-   function Get_Odigit2 (N : Node_Type) return Bit3_Type is
-   begin
-      return Nodet.Table (N + 1).Odigit1;
-   end Get_Odigit2;
-
-   procedure Set_Odigit2 (N : Node_Type; V : Bit3_Type) is
-   begin
-      Nodet.Table (N + 1).Odigit1 := V;
-   end Set_Odigit2;
-
-
-   function Get_Fp64 (N : Node_Type) return Iir_Fp64 is
-   begin
-      return Nodet.Table (N).Fp64;
-   end Get_Fp64;
-
-   procedure Set_Fp64 (N : Node_Type; V : Iir_Fp64) is
-   begin
-      Nodet.Table (N).Fp64 := V;
-   end Set_Fp64;
-
-
-   function Get_Int64 (N : Node_Type) return Iir_Int64 is
-   begin
-      return Nodet.Table (N).Int64;
-   end Get_Int64;
-
-   procedure Set_Int64 (N : Node_Type; V : Iir_Int64) is
-   begin
-      Nodet.Table (N).Int64 := V;
-   end Set_Int64;
 
    procedure Initialize is
    begin

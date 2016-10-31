@@ -26,17 +26,16 @@ with Name_Table; use Name_Table;
 with Files_Map;
 with Libraries;
 with Errorout; use Errorout;
-with Iirs; use Iirs;
 with Iirs_Utils; use Iirs_Utils;
 with Tokens;
 with Scanner;
 with Parse;
+with Canon;
 with Version;
 with Xrefs;
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
 with Disp_Vhdl;
-with Back_End;
 
 package body Ghdlprint is
    type Html_Format_Type is (Html_2, Html_Css);
@@ -386,7 +385,8 @@ package body Ghdlprint is
                Disp_Reserved;
             when Tok_Protected =>
                Disp_Reserved;
-            when Tok_Context =>
+            when Tok_Context
+              | Tok_Parameter =>
                Disp_Reserved;
             when Tok_Across .. Tok_Tolerance =>
                Disp_Reserved;
@@ -762,8 +762,6 @@ package body Ghdlprint is
                   raise Internal_Error;
                end if;
 
-               Location_To_File_Pos
-                 (Get_End_Location (Unit), File_Entry, Lend);
                --  Find the ';'.
                while Buffer (Lend) /= ';' loop
                   Lend := Lend + 1;
@@ -987,7 +985,13 @@ package body Ghdlprint is
       Next_Unit : Iir;
    begin
       Setup_Libraries (True);
+
+      --  Keep parenthesis during parse.
       Parse.Flag_Parse_Parenthesis := True;
+
+      Canon.Canon_Flag_Concurrent_Stmts := False;
+      Canon.Canon_Flag_Configurations := False;
+      Canon.Canon_Flag_Specification_Lists := False;
 
       --  Parse all files.
       for I in Args'Range loop
@@ -1000,7 +1004,7 @@ package body Ghdlprint is
          Unit := Get_First_Design_Unit (Design_File);
          while Unit /= Null_Iir loop
             --  Analyze the design unit.
-            Back_End.Finish_Compilation (Unit, True);
+            Libraries.Finish_Compilation (Unit, True);
 
             Next_Unit := Get_Chain (Unit);
             if Errorout.Nbr_Errors = 0 then
@@ -1327,7 +1331,6 @@ package body Ghdlprint is
       if Cmd.Output_Dir /= null
         and then not Is_Directory (Cmd.Output_Dir.all)
       then
-         declare
          begin
             Make_Dir (Cmd.Output_Dir.all);
          exception
@@ -1368,6 +1371,7 @@ package body Ghdlprint is
       Xrefs.Sort_By_Location;
 
       if False then
+         --  Dump locations
          for I in 1 .. Xrefs.Get_Last_Xref loop
             declare
                use Xrefs;

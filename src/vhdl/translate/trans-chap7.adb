@@ -718,29 +718,23 @@ package body Trans.Chap7 is
    is
       Imp : constant Iir := Get_Implementation (Call);
 
-      function Create_Assoc (Actual : Iir; Formal : Iir) return Iir
+      function Create_Assoc (Actual : Iir) return Iir
       is
          R : Iir;
       begin
          R := Create_Iir (Iir_Kind_Association_Element_By_Expression);
          Location_Copy (R, Actual);
          Set_Actual (R, Actual);
-         Set_Formal (R, Formal);
          return R;
       end Create_Assoc;
 
-      Inter : Iir;
       El_L  : Iir;
       El_R  : Iir;
       Res   : O_Enode;
    begin
-      Inter := Get_Interface_Declaration_Chain (Imp);
-
-      El_L := Create_Assoc (Left, Inter);
-
+      El_L := Create_Assoc (Left);
       if Right /= Null_Iir then
-         Inter := Get_Chain (Inter);
-         El_R := Create_Assoc (Right, Inter);
+         El_R := Create_Assoc (Right);
          Set_Chain (El_L, El_R);
       end if;
 
@@ -3050,7 +3044,7 @@ package body Trans.Chap7 is
                Set_El (Get_Nth_Element (El_List, El_Index));
                El_Index := El_Index + 1;
             when Iir_Kind_Choice_By_Name =>
-               Set_El (Get_Choice_Name (Assoc));
+               Set_El (Get_Named_Entity (Get_Choice_Name (Assoc)));
                El_Index := Natural'Last;
             when Iir_Kind_Choice_By_Others =>
                for J in Set_Array'Range loop

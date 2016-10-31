@@ -51,7 +51,6 @@ package Sem_Specs is
    --  component configuration PARENT.
    --  PRIMARY_ENTITY_ASPECT is not Null_Iir for an incremental binding.
    procedure Sem_Binding_Indication (Bind : Iir_Binding_Indication;
-                                     Comp : Iir_Component_Declaration;
                                      Parent : Iir;
                                      Primary_Entity_Aspect : Iir);
 
@@ -69,12 +68,14 @@ package Sem_Specs is
    --  If ENTITY_UNIT is NULL_IIR, the component is not bound.
    --  If FORCE is True, a binding indication will be created even if the
    --   component is not bound (this is an open binding indication).
+   --  If CREATE_MAP_ASPECT is true, port and generic map aspect are created.
    --  PARENT is used to report error.
    function Sem_Create_Default_Binding_Indication
      (Comp : Iir_Component_Declaration;
       Entity_Unit : Iir_Design_Unit;
       Parent : Iir;
-      Force : Boolean)
+      Force : Boolean;
+      Create_Map_Aspect : Boolean)
      return Iir_Binding_Indication;
 
    --  Create a default generic or port map aspect that associates all elements

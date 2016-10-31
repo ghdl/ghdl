@@ -28,24 +28,14 @@ package Nodes is
    type Bit2_Type is range 0 .. 2 ** 2 - 1;
    type Bit3_Type is range 0 .. 2 ** 3 - 1;
 
-   type Kind_Type is range 0 .. 255;
+   type Kind_Type is range 0 .. 2 ** 9 - 1;
 
    --  Format of a node.
    type Format_Type is
      (
       Format_Short,
-      Format_Medium,
-      Format_Fp,
-      Format_Int
+      Format_Medium
      );
-
-   --  Current layout:    (rem)
-   --   Format: 2 bits    30
-   --   Flags: 6*1 bits   24
-   --   Nkind:  8 bits    16 (vhdl: 216 nodes)
-   --   State: 2*2 bits   12
-   --   Flags: 6*1 bits    6
-   --   Odigit: 2*3 bits   0
 
    -- Common fields are:
    --   Flag1 : Boolean
@@ -60,32 +50,25 @@ package Nodes is
    --   Flag10 : Boolean
    --   Flag11 : Boolean
    --   Flag12 : Boolean
+   --   Flag13 : Boolean
+   --   Flag14 : Boolean
+   --   Flag15 : Boolean
    --   Nkind : Kind_Type
    --   State1 : Bit2_Type
    --   State2 : Bit2_Type
-   --   Odigit1 : Bit3_Type
    --   Location : Location_Type
    --   Field0 : Iir
    --   Field1 : Iir
    --   Field2 : Iir
    --   Field3 : Iir
-
-   -- Fields of Format_Fp:
-   --   Fp64 : Iir_Fp64
-
-   -- Fields of Format_Int:
-   --   Int64 : Iir_Int64
+   --   Field4 : Iir
+   --   Field5 : Iir
 
    -- Fields of Format_Short:
-   --   Field4 : Iir
-   --   Field5 : Iir
 
    -- Fields of Format_Medium:
-   --   Odigit2 : Bit3_Type (odigit1)
    --   State3 : Bit2_Type
    --   State4 : Bit2_Type
-   --   Field4 : Iir
-   --   Field5 : Iir
    --   Field6 : Iir (location)
    --   Field7 : Iir (field0)
    --   Field8 : Iir (field1)
@@ -235,6 +218,21 @@ package Nodes is
    procedure Set_Flag12 (N : Node_Type; V : Boolean);
    pragma Inline (Set_Flag12);
 
+   function Get_Flag13 (N : Node_Type) return Boolean;
+   pragma Inline (Get_Flag13);
+   procedure Set_Flag13 (N : Node_Type; V : Boolean);
+   pragma Inline (Set_Flag13);
+
+   function Get_Flag14 (N : Node_Type) return Boolean;
+   pragma Inline (Get_Flag14);
+   procedure Set_Flag14 (N : Node_Type; V : Boolean);
+   pragma Inline (Set_Flag14);
+
+   function Get_Flag15 (N : Node_Type) return Boolean;
+   pragma Inline (Get_Flag15);
+   procedure Set_Flag15 (N : Node_Type; V : Boolean);
+   pragma Inline (Set_Flag15);
+
 
    function Get_State1 (N : Node_Type) return Bit2_Type;
    pragma Inline (Get_State1);
@@ -256,28 +254,6 @@ package Nodes is
    procedure Set_State4 (N : Node_Type; V : Bit2_Type);
    pragma Inline (Set_State4);
 
-
-   function Get_Odigit1 (N : Node_Type) return Bit3_Type;
-   pragma Inline (Get_Odigit1);
-   procedure Set_Odigit1 (N : Node_Type; V : Bit3_Type);
-   pragma Inline (Set_Odigit1);
-
-   function Get_Odigit2 (N : Node_Type) return Bit3_Type;
-   pragma Inline (Get_Odigit2);
-   procedure Set_Odigit2 (N : Node_Type; V : Bit3_Type);
-   pragma Inline (Set_Odigit2);
-
-
-   function Get_Fp64 (N : Node_Type) return Iir_Fp64;
-   pragma Inline (Get_Fp64);
-   procedure Set_Fp64 (N : Node_Type; V : Iir_Fp64);
-   pragma Inline (Set_Fp64);
-
-   function Get_Int64 (N : Node_Type) return Iir_Int64;
-   pragma Inline (Get_Int64);
-   procedure Set_Int64 (N : Node_Type; V : Iir_Int64);
-   pragma Inline (Set_Int64);
-
    --  Get the last node allocated.
    function Get_Last_Node return Node_Type;
    pragma Inline (Get_Last_Node);
@@ -285,56 +261,60 @@ package Nodes is
    --  Free all and reinit.
    procedure Initialize;
 private
-   type Node_Record (Format : Format_Type := Format_Short) is record
-      Flag1 : Boolean := False;
-      Flag2 : Boolean := False;
-      Flag3 : Boolean := False;
-      Flag4 : Boolean := False;
-      Flag5 : Boolean := False;
-      Flag6 : Boolean := False;
+   type Node_Record is record
+      --  First byte:
+      Format : Format_Type;
+      Flag1 : Boolean;
+      Flag2 : Boolean;
+      Flag3 : Boolean;
+      Flag4 : Boolean;
+      Flag5 : Boolean;
+      Flag6 : Boolean;
+      Flag7 : Boolean;
 
-      --  Kind field use 8 bits.
-      --  So, on 32 bits systems, there are 24 bits left.
-      --  + 8 (8 * 1)
-      --  + 10 (5 * 2)
-      --  + 6 (2 * 3)
-      --  = 24
+      --  Second byte:
+      Flag8 : Boolean;
+      Flag9 : Boolean;
+      Flag10 : Boolean;
+      Flag11 : Boolean;
+      Flag12 : Boolean;
+      Flag13 : Boolean;
+      Flag14 : Boolean;
+      Flag15 : Boolean;
 
+      --  Third byte:
+      Flag16 : Boolean;
+      Flag17 : Boolean;
+      Flag18 : Boolean;
+
+      --  2*2 = 4 bits
+      State1 : Bit2_Type;
+      State2 : Bit2_Type;
+
+      --  9 bits
       Kind : Kind_Type;
 
-      State1 : Bit2_Type := 0;
-      State2 : Bit2_Type := 0;
-      Flag7 : Boolean := False;
-      Flag8 : Boolean := False;
-      Flag9 : Boolean := False;
-      Flag10 : Boolean := False;
-
-      Flag11 : Boolean := False;
-      Flag12 : Boolean := False;
-      Odigit1 : Bit3_Type := 0;
-      Unused_Odigit2 : Bit3_Type := 0;
-
       -- Location.
-      Location: Location_Type := Location_Nil;
+      Location: Location_Type;
 
-      Field0 : Node_Type := Null_Node;
-      Field1 : Node_Type := Null_Node;
-      Field2 : Node_Type := Null_Node;
-      Field3 : Node_Type := Null_Node;
-
-      case Format is
-         when Format_Short
-           | Format_Medium =>
-            Field4: Node_Type := Null_Node;
-            Field5: Node_Type := Null_Node;
-         when Format_Fp =>
-            Fp64 : Iir_Fp64;
-         when Format_Int =>
-            Int64 : Iir_Int64;
-      end case;
+      Field0 : Node_Type;
+      Field1 : Node_Type;
+      Field2 : Node_Type;
+      Field3 : Node_Type;
+      Field4 : Node_Type;
+      Field5 : Node_Type;
    end record;
-
    pragma Pack (Node_Record);
    for Node_Record'Size use 8*32;
    for Node_Record'Alignment use 4;
+   pragma Suppress_Initialization (Node_Record);
+
+   Init_Node : constant Node_Record := Node_Record'
+     (Format => Format_Short,
+      Kind => 0,
+      State1 | State2 => 0,
+      Location => Location_Nil,
+      Field0 | Field1 | Field2 | Field3 | Field4 | Field5 => Null_Node,
+      others => False);
+
 end Nodes;

@@ -45,7 +45,7 @@ Print flatly the list of iirs that is $arg0.
 end
 
 define ptc
-call disp_chain ($arg0, 0, 0)
+call disp_tree.disp_chain ($arg0, 0, 0)
 end
 
 document ptc

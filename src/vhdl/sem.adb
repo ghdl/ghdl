@@ -378,19 +378,17 @@ package body Sem is
 
             --  GHDL: for a direct instantiation, follow rules of
             --  LRM 1.1.1.1 Generic and LRM 1.1.1.2 Ports.
-            if Flags.Vhdl_Std = Vhdl_87
-              or else Get_Kind (Inter_Parent) = Iir_Kind_Entity_Declaration
-            then
-               Miss := Missing_Generic;
-            else
-               Miss := Missing_Allowed;
-            end if;
+            --  The difference between 87 and 93 is simply a clarification:
+            --  missing association are left open, but need a default
+            --  expression in the formal declaration.
+            Miss := Missing_Generic;
          when Iir_Kind_Binding_Indication =>
             --  LRM 5.2.1.2  Generic map and port map aspects
             Miss := Missing_Allowed;
          when Iir_Kind_Block_Header =>
             Miss := Missing_Generic;
-         when Iir_Kind_Package_Instantiation_Declaration =>
+         when Iir_Kind_Package_Instantiation_Declaration
+           | Iir_Kind_Package_Header =>
             --  LRM08 4.9
             --  Each formal generic (or member thereof) shall be associated
             --  at most once.
@@ -429,10 +427,12 @@ package body Sem is
                Check_Read (Get_Actual (El));
             when Iir_Kind_Association_Element_Open
               | Iir_Kind_Association_Element_By_Individual
-              | Iir_Kind_Association_Element_Package =>
+              | Iir_Kind_Association_Element_Package
+              | Iir_Kind_Association_Element_Type
+              | Iir_Kind_Association_Element_Subprogram =>
                null;
             when others =>
-               Error_Kind ("sem_generic_map_association_chain(1)", El);
+               Error_Kind ("sem_generic_association_chain(1)", El);
          end case;
          El := Get_Chain (El);
       end loop;
@@ -454,7 +454,7 @@ package body Sem is
    procedure Sem_Port_Association_Chain
      (Inter_Parent : Iir; Assoc_Parent : Iir)
    is
-      El : Iir;
+      Assoc : Iir;
       Actual : Iir;
       Prefix : Iir;
       Object : Iir;
@@ -517,23 +517,14 @@ package body Sem is
       --  LRM93 1.1.1.2
       --  The actual, if a port or signal, must be denoted by a static name.
       --  The actual, if an expression, must be a globally static expression.
-      El := Assoc_Chain;
+      Assoc := Assoc_Chain;
       Inter := Get_Port_Chain (Inter_Parent);
-      while El /= Null_Iir loop
-         Formal := Get_Formal (El);
+      while Assoc /= Null_Iir loop
+         Formal := Get_Association_Formal (Assoc, Inter);
+         Formal_Base := Get_Interface_Of_Formal (Formal);
 
-         if Formal = Null_Iir then
-            --  No formal: use association by position.
-            Formal := Inter;
-            Formal_Base := Inter;
-            Inter := Get_Chain (Inter);
-         else
-            Inter := Null_Iir;
-            Formal_Base := Get_Association_Interface (El);
-         end if;
-
-         if Get_Kind (El) = Iir_Kind_Association_Element_By_Expression then
-            Actual := Get_Actual (El);
+         if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression then
+            Actual := Get_Actual (Assoc);
             --  There has been an error, exit from the loop.
             exit when Actual = Null_Iir;
             Object := Name_To_Object (Actual);
@@ -549,36 +540,38 @@ package body Sem is
                  | Iir_Kinds_Signal_Attribute =>
                   --  Port or signal.
                   Set_Collapse_Signal_Flag
-                    (El, Can_Collapse_Signals (El, Formal));
+                    (Assoc, Can_Collapse_Signals (Assoc, Formal));
                   if Get_Name_Staticness (Object) < Globally then
                      Error_Msg_Sem (+Actual, "actual must be a static name");
                   end if;
+                  Check_Port_Association_Bounds_Restrictions
+                    (Formal, Actual, Assoc);
                   if Get_Kind (Prefix) = Iir_Kind_Interface_Signal_Declaration
                   then
                      declare
                         P : Boolean;
                         pragma Unreferenced (P);
                      begin
-                        P := Check_Port_Association_Restriction
-                          (Formal_Base, Prefix, El);
+                        P := Check_Port_Association_Mode_Restrictions
+                          (Formal_Base, Prefix, Assoc);
                      end;
                   end if;
                when others =>
                   --  Expression.
-                  Set_Collapse_Signal_Flag (El, False);
+                  Set_Collapse_Signal_Flag (Assoc, False);
 
                   --  If there is an IN conversion, re-integrate it into
                   --  the actual.
                   declare
                      In_Conv : Iir;
                   begin
-                     In_Conv := Get_In_Conversion (El);
+                     In_Conv := Get_In_Conversion (Assoc);
                      if In_Conv /= Null_Iir then
-                        Set_In_Conversion (El, Null_Iir);
+                        Set_In_Conversion (Assoc, Null_Iir);
                         Set_Expr_Staticness
                           (In_Conv, Get_Expr_Staticness (Actual));
                         Actual := In_Conv;
-                        Set_Actual (El, Actual);
+                        Set_Actual (Assoc, Actual);
                      end if;
                   end;
                   if Flags.Vhdl_Std >= Vhdl_93c then
@@ -589,7 +582,7 @@ package body Sem is
                      --  of mode in.
                      if Get_Mode (Formal_Base) /= Iir_In_Mode then
                         Error_Msg_Sem
-                          (+El, "only 'in' ports may be associated with "
+                          (+Assoc, "only 'in' ports may be associated with "
                              & "expression");
                      end if;
 
@@ -603,12 +596,12 @@ package body Sem is
                      end if;
                   else
                      Error_Msg_Sem
-                       (+El,
+                       (+Assoc,
                         "cannot associate ports with expression in vhdl87");
                   end if;
             end case;
          end if;
-         El := Get_Chain (El);
+         Next_Association_Interface (Assoc, Inter);
       end loop;
    end Sem_Port_Association_Chain;
 
@@ -1108,6 +1101,56 @@ package body Sem is
       Sem_Scopes.Close_Scope_Extension;
    end Sem_Block_Configuration;
 
+   --  Check that incremental binding of the component configuration CONF only
+   --  rebinds non associated ports of each instantiations of CONFIGURED_BLOCK
+   --  which CONF applies to.
+   procedure Check_Incremental_Binding (Configured_Block : Iir; Conf : Iir)
+   is
+      Comp : constant Iir := Get_Named_Entity (Get_Component_Name (Conf));
+      Inter_Chain : constant Iir := Get_Port_Chain (Comp);
+      Binding : constant Iir := Get_Binding_Indication (Conf);
+      Inst : Iir;
+   begin
+      --  Check each component instantiation of the block configured by CONF.
+      Inst := Get_Concurrent_Statement_Chain (Configured_Block);
+      while Inst /= Null_Iir loop
+         if Get_Kind (Inst) = Iir_Kind_Component_Instantiation_Statement
+           and then Get_Component_Configuration (Inst) = Conf
+         then
+            --  Check this instantiation.
+            declare
+               Primary_Binding : constant Iir := Get_Binding_Indication
+                 (Get_Configuration_Specification (Inst));
+               F_Chain : constant Iir :=
+                 Get_Port_Map_Aspect_Chain (Primary_Binding);
+               S_El : Iir;
+               S_Inter : Iir;
+               F_El : Iir;
+               Formal : Iir;
+            begin
+               S_El := Get_Port_Map_Aspect_Chain (Binding);
+               S_Inter := Inter_Chain;
+               while S_El /= Null_Iir loop
+                  --  Find S_EL formal in F_CHAIN.
+                  Formal := Get_Association_Interface (S_El, S_Inter);
+                  F_El := Find_First_Association_For_Interface
+                    (F_Chain, Inter_Chain, Formal);
+                  if F_El /= Null_Iir
+                    and then
+                    Get_Kind (F_El) /= Iir_Kind_Association_Element_Open
+                  then
+                     Error_Msg_Sem
+                       (+S_El,
+                        "%n already associated in primary binding", +Formal);
+                  end if;
+                  Next_Association_Interface (S_El, S_Inter);
+               end loop;
+            end;
+         end if;
+         Inst := Get_Chain (Inst);
+      end loop;
+   end Check_Incremental_Binding;
+
    --  LRM 1.3.2
    procedure Sem_Component_Configuration
      (Conf : Iir_Component_Configuration; Father : Iir)
@@ -1123,7 +1166,7 @@ package body Sem is
       --  11. A component configuration.
       Open_Declarative_Region;
 
-      --  LRM93 §10.2
+      --  LRM93 10.2
       --  If a component configuration appears as a configuration item
       --  immediatly within a block configuration that configures a given
       --  block, and the scope of a given declaration includes the end of the
@@ -1134,9 +1177,7 @@ package body Sem is
       -- for local ports and generics of the component.
       if Get_Kind (Father) = Iir_Kind_Block_Configuration then
          Configured_Block := Get_Block_Specification (Father);
-         if Get_Kind (Configured_Block) = Iir_Kind_Design_Unit then
-            raise Internal_Error;
-         end if;
+         pragma Assert (Get_Kind (Configured_Block) /= Iir_Kind_Design_Unit);
          Configured_Block :=
            Get_Block_From_Block_Specification (Configured_Block);
          Sem_Scopes.Extend_Scope_Of_Block_Declarations (Configured_Block);
@@ -1169,7 +1210,7 @@ package body Sem is
       Sem_Scopes.Add_Component_Declarations (Comp);
       Binding := Get_Binding_Indication (Conf);
       if Binding /= Null_Iir then
-         Sem_Binding_Indication (Binding, Comp, Conf, Primary_Entity_Aspect);
+         Sem_Binding_Indication (Binding, Conf, Primary_Entity_Aspect);
 
          if Primary_Entity_Aspect /= Null_Iir then
             --  LRM93 5.2.1  Binding Indication
@@ -1177,47 +1218,7 @@ package body Sem is
             --  of the incremental binding indication and it is a formal
             --  port that is associated with an actual other than OPEN in one
             --  of the primary binding indications.
-            declare
-               Inst : Iir;
-               Primary_Binding : Iir;
-               F_Chain : Iir;
-               F_El, S_El : Iir;
-               Formal : Iir;
-            begin
-               Inst := Get_Concurrent_Statement_Chain (Configured_Block);
-               while Inst /= Null_Iir loop
-                  if Get_Kind (Inst)
-                    = Iir_Kind_Component_Instantiation_Statement
-                    and then Get_Component_Configuration (Inst) = Conf
-                  then
-                     --  Check here.
-                     Primary_Binding := Get_Binding_Indication
-                       (Get_Configuration_Specification (Inst));
-                     F_Chain := Get_Port_Map_Aspect_Chain (Primary_Binding);
-                     S_El := Get_Port_Map_Aspect_Chain (Binding);
-                     while S_El /= Null_Iir loop
-                        --  Find S_EL formal in F_CHAIN.
-                        Formal := Get_Association_Interface (S_El);
-                        F_El := F_Chain;
-                        while F_El /= Null_Iir loop
-                           exit when Get_Association_Interface (F_El) = Formal;
-                           F_El := Get_Chain (F_El);
-                        end loop;
-                        if F_El /= Null_Iir
-                          and then Get_Kind (F_El)
-                          /= Iir_Kind_Association_Element_Open
-                        then
-                           Error_Msg_Sem
-                             (+S_El,
-                              "%n already associated in primary binding",
-                              +Formal);
-                        end if;
-                        S_El := Get_Chain (S_El);
-                     end loop;
-                  end if;
-                  Inst := Get_Chain (Inst);
-               end loop;
-            end;
+            Check_Incremental_Binding (Configured_Block, Conf);
          end if;
       elsif Primary_Entity_Aspect = Null_Iir then
          --  LRM93 5.2.1
@@ -1228,20 +1229,12 @@ package body Sem is
          --  Create a default binding indication.
          Entity := Get_Visible_Entity_Declaration (Comp);
          Binding := Sem_Create_Default_Binding_Indication
-           (Comp, Entity, Conf, False);
+           (Comp, Entity, Conf, False, False);
 
          if Binding /= Null_Iir then
             --  Remap to defaults.
             Set_Default_Entity_Aspect (Binding, Get_Entity_Aspect (Binding));
             Set_Entity_Aspect (Binding, Null_Iir);
-
-            Set_Default_Generic_Map_Aspect_Chain
-              (Binding, Get_Generic_Map_Aspect_Chain (Binding));
-            Set_Generic_Map_Aspect_Chain (Binding, Null_Iir);
-
-            Set_Default_Port_Map_Aspect_Chain
-              (Binding, Get_Port_Map_Aspect_Chain (Binding));
-            Set_Port_Map_Aspect_Chain (Binding, Null_Iir);
 
             Set_Binding_Indication (Conf, Binding);
          end if;
@@ -1841,31 +1834,11 @@ package body Sem is
       Set_Subprogram_Hash (Subprg, To_Int32 (Hash + Sig));
    end Compute_Subprogram_Hash;
 
-   --  LRM 2.1  Subprogram Declarations.
-   procedure Sem_Subprogram_Declaration (Subprg: Iir)
+   procedure Sem_Subprogram_Specification (Subprg: Iir)
    is
-      Parent : constant Iir := Get_Parent (Subprg);
-      Spec: Iir;
       Interface_Chain : Iir;
-      Subprg_Body : Iir;
       Return_Type : Iir;
    begin
-      --  Set depth.
-      case Get_Kind (Parent) is
-         when Iir_Kind_Function_Declaration
-           | Iir_Kind_Procedure_Declaration =>
-            raise Internal_Error;
-         when Iir_Kind_Function_Body
-           | Iir_Kind_Procedure_Body =>
-            Set_Subprogram_Depth
-              (Subprg,
-               Get_Subprogram_Depth
-                 (Get_Subprogram_Specification (Parent)) + 1);
-         when others =>
-            --  FIXME: protected type ?
-            Set_Subprogram_Depth (Subprg, 0);
-      end case;
-
       --  LRM 10.1 Declarative Region
       --  3. A subprogram declaration, together with the corresponding
       --     subprogram body.
@@ -1874,7 +1847,8 @@ package body Sem is
       --  Sem interfaces.
       Interface_Chain := Get_Interface_Declaration_Chain (Subprg);
       case Get_Kind (Subprg) is
-         when Iir_Kind_Function_Declaration =>
+         when Iir_Kind_Function_Declaration
+           | Iir_Kind_Interface_Function_Declaration =>
             Sem_Interface_Chain
               (Interface_Chain, Function_Parameter_Interface_List);
             Return_Type := Get_Return_Type_Mark (Subprg);
@@ -1921,9 +1895,14 @@ package body Sem is
                   end if;
             end case;
 
+         when Iir_Kind_Interface_Procedure_Declaration =>
+            Sem_Interface_Chain
+              (Interface_Chain, Procedure_Parameter_Interface_List);
+
          when Iir_Kind_Procedure_Declaration =>
             Sem_Interface_Chain
               (Interface_Chain, Procedure_Parameter_Interface_List);
+
             --  Unless the body is analyzed, the procedure purity is unknown.
             Set_Purity_State (Subprg, Unknown);
             --  Check if the procedure is passive.
@@ -1963,12 +1942,37 @@ package body Sem is
       --  The specification has been analyzed, close the declarative region
       --  now.
       Close_Declarative_Region;
+   end Sem_Subprogram_Specification;
+
+   --  LRM 2.1  Subprogram Declarations.
+   procedure Sem_Subprogram_Declaration (Subprg: Iir)
+   is
+      Parent : constant Iir := Get_Parent (Subprg);
+      Spec: Iir;
+      Subprg_Body : Iir;
+   begin
+      --  Set depth.
+      case Get_Kind (Parent) is
+         when Iir_Kind_Function_Declaration
+           | Iir_Kind_Procedure_Declaration =>
+            raise Internal_Error;
+         when Iir_Kind_Function_Body
+           | Iir_Kind_Procedure_Body =>
+            Set_Subprogram_Depth
+              (Subprg,
+               Get_Subprogram_Depth
+                 (Get_Subprogram_Specification (Parent)) + 1);
+         when others =>
+            --  FIXME: protected type ?
+            Set_Subprogram_Depth (Subprg, 0);
+      end case;
+
+      Sem_Subprogram_Specification (Subprg);
 
       --  Look if there is an associated body (the next node).
       Subprg_Body := Get_Chain (Subprg);
       if Subprg_Body /= Null_Iir
-        and then (Get_Kind (Subprg_Body) = Iir_Kind_Function_Body
-                  or else Get_Kind (Subprg_Body) = Iir_Kind_Procedure_Body)
+        and then Get_Kind (Subprg_Body) in Iir_Kinds_Subprogram_Body
       then
          Spec := Find_Subprogram_Specification (Subprg);
       else
@@ -2499,8 +2503,8 @@ package body Sem is
       end if;
    end Sem_Analysis_Checks_List;
 
-   -- Return true if package declaration DECL needs a body.
-   -- Ie, it contains subprogram specification or deferred constants.
+   --  Return true if package declaration DECL needs a body.
+   --  Ie, it contains subprogram specification or deferred constants.
    function Package_Need_Body_P (Decl: Iir_Package_Declaration)
      return Boolean
    is
@@ -2548,6 +2552,19 @@ package body Sem is
                null;
             when Iir_Kind_Protected_Type_Body =>
                null;
+            when Iir_Kind_Package_Declaration =>
+               --  LRM08 4.8 Package bodies
+               --  A package body that is not a library unit shall appear
+               --  immediately within the same declarative region as the
+               --  corresponding package declaration and textually subsequent
+               --  to that package declaration.
+               if Get_Need_Body (El) then
+                  return True;
+               end if;
+            when Iir_Kind_Package_Body =>
+               null;
+            when Iir_Kind_Package_Instantiation_Declaration =>
+               null;
             when Iir_Kind_Nature_Declaration
               | Iir_Kind_Subnature_Declaration =>
                null;
@@ -2560,6 +2577,66 @@ package body Sem is
       end loop;
       return False;
    end Package_Need_Body_P;
+
+   --  Return true if package declaration DECL contains at least one package
+   --  instantiation that needs a body.
+   function Package_Need_Instance_Bodies_P (Decl: Iir_Package_Declaration)
+                                           return Boolean
+   is
+      El: Iir;
+   begin
+      El := Get_Declaration_Chain (Decl);
+      while El /= Null_Iir loop
+         case Get_Kind (El) is
+            when Iir_Kind_Package_Instantiation_Declaration =>
+               declare
+                  Pkg : constant Iir := Get_Uninstantiated_Package_Decl (El);
+               begin
+                  if not Is_Error (Pkg)
+                    and then Get_Need_Body (Pkg)
+                  then
+                     return True;
+                  end if;
+               end;
+            when others =>
+               null;
+         end case;
+         El := Get_Chain (El);
+      end loop;
+      return False;
+   end Package_Need_Instance_Bodies_P;
+
+   --  Return true if uninstantiated pckage DECL must be macro-expanded (at
+   --  least one interface type).
+   function Is_Package_Macro_Expanded
+     (Decl : Iir_Package_Declaration) return Boolean
+   is
+      Header : constant Iir := Get_Package_Header (Decl);
+      Inter : Iir;
+   begin
+      Inter := Get_Generic_Chain (Header);
+      while Is_Valid (Inter) loop
+         case Iir_Kinds_Interface_Declaration (Get_Kind (Inter)) is
+            when Iir_Kinds_Interface_Object_Declaration =>
+               null;
+            when Iir_Kind_Interface_Type_Declaration =>
+               return True;
+            when Iir_Kind_Interface_Package_Declaration =>
+               declare
+                  Pkg : constant Iir :=
+                    Get_Uninstantiated_Package_Decl (Inter);
+               begin
+                  if Get_Macro_Expanded_Flag (Pkg) then
+                     return True;
+                  end if;
+               end;
+            when Iir_Kinds_Interface_Subprogram_Declaration =>
+               return True;
+         end case;
+         Inter := Get_Chain (Inter);
+      end loop;
+      return False;
+   end Is_Package_Macro_Expanded;
 
    --  LRM 2.5  Package Declarations.
    procedure Sem_Package_Declaration (Decl: Iir_Package_Declaration)
@@ -2589,12 +2666,48 @@ package body Sem is
       Push_Signals_Declarative_Part (Implicit, Decl);
 
       if Header /= Null_Iir then
-         Sem_Interface_Chain
-           (Get_Generic_Chain (Header), Generic_Interface_List);
-         if Get_Generic_Map_Aspect_Chain (Header) /= Null_Iir then
-            --  FIXME: todo
-            raise Internal_Error;
-         end if;
+         declare
+            Generic_Chain : constant Iir := Get_Generic_Chain (Header);
+            Generic_Map : constant Iir :=
+              Get_Generic_Map_Aspect_Chain (Header);
+            Assoc_El : Iir;
+            Inter_El : Iir;
+            Inter : Iir;
+         begin
+            Sem_Interface_Chain (Generic_Chain, Generic_Interface_List);
+
+            if Generic_Map /= Null_Iir then
+               --  Generic-mapped packages are not macro-expanded.
+               Set_Macro_Expanded_Flag (Decl, False);
+
+               if Sem_Generic_Association_Chain (Header, Header) then
+                  --  For generic-mapped packages, use the actual type for
+                  --  interface type.
+                  Assoc_El := Get_Generic_Map_Aspect_Chain (Header);
+                  Inter_El := Generic_Chain;
+                  while Is_Valid (Assoc_El) loop
+                     if Get_Kind (Assoc_El) = Iir_Kind_Association_Element_Type
+                     then
+                        Inter :=
+                          Get_Association_Interface (Assoc_El, Inter_El);
+                        Sem_Inst.Substitute_On_Chain
+                          (Generic_Chain,
+                           Get_Type (Inter),
+                           Get_Type (Get_Named_Entity
+                                       (Get_Actual (Assoc_El))));
+                     end if;
+                     Next_Association_Interface (Assoc_El, Inter_El);
+                  end loop;
+               end if;
+            else
+               --  Uninstantiated package.  Maybe macro expanded.
+               Set_Macro_Expanded_Flag
+                 (Decl, Is_Package_Macro_Expanded (Decl));
+            end if;
+         end;
+      else
+         --  Simple packages are never expanded.
+         Set_Macro_Expanded_Flag (Decl, False);
       end if;
 
       Sem_Declaration_Chain (Decl);
@@ -2603,29 +2716,70 @@ package body Sem is
       Pop_Signals_Declarative_Part (Implicit);
       Close_Declarative_Region;
       Set_Need_Body (Decl, Package_Need_Body_P (Decl));
+      if Vhdl_Std >= Vhdl_08 then
+         Set_Need_Instance_Bodies
+           (Decl, Package_Need_Instance_Bodies_P (Decl));
+      end if;
    end Sem_Package_Declaration;
 
    --  LRM 2.6  Package Bodies.
-   procedure Sem_Package_Body (Decl: Iir)
+   procedure Sem_Package_Body (Decl : Iir)
    is
-      Package_Ident: Name_Id;
-      Design_Unit: Iir_Design_Unit;
-      Package_Decl: Iir;
+      Package_Ident : constant Name_Id := Get_Identifier (Decl);
+      Package_Decl : Iir;
    begin
       -- First, find the package declaration.
-      Package_Ident := Get_Identifier (Decl);
-      Design_Unit := Libraries.Load_Primary_Unit
-        (Get_Library (Get_Design_File (Get_Current_Design_Unit)),
-         Package_Ident, Decl);
-      if Design_Unit = Null_Iir then
-         Error_Msg_Sem (+Decl, "package %i was not analysed", +Package_Ident);
-         return;
-      end if;
-      Package_Decl := Get_Library_Unit (Design_Unit);
-      if Get_Kind (Package_Decl) /= Iir_Kind_Package_Declaration then
-         Error_Msg_Sem
-           (+Decl, "primary unit %i is not a package", +Package_Ident);
-         return;
+      if not Is_Nested_Package (Decl) then
+         declare
+            Design_Unit: Iir_Design_Unit;
+         begin
+            Design_Unit := Libraries.Load_Primary_Unit
+              (Get_Library (Get_Design_File (Get_Current_Design_Unit)),
+               Package_Ident, Decl);
+            if Design_Unit = Null_Iir then
+               Error_Msg_Sem
+                 (+Decl, "package %i was not analysed", +Package_Ident);
+               return;
+            end if;
+
+            Package_Decl := Get_Library_Unit (Design_Unit);
+            if Get_Kind (Package_Decl) /= Iir_Kind_Package_Declaration then
+               Error_Msg_Sem
+                 (+Decl, "primary unit %i is not a package", +Package_Ident);
+               return;
+            end if;
+
+            --  LRM08 13.5 Order of analysis
+            --  In each case, the second unit depends on the first unit
+            Add_Dependence (Design_Unit);
+
+            Add_Name (Design_Unit);
+
+            --  Add the context clauses from the primary unit.
+            Add_Context_Clauses (Design_Unit);
+         end;
+      else
+         declare
+            Interp : Name_Interpretation_Type;
+         begin
+            Interp := Get_Interpretation (Get_Identifier (Decl));
+            if not Valid_Interpretation (Interp)
+              or else not Is_In_Current_Declarative_Region (Interp)
+              or else Is_Potentially_Visible (Interp)
+            then
+               Error_Msg_Sem
+                 (+Decl, "no corresponding package declaration for %i",
+                  +Package_Ident);
+               return;
+            end if;
+
+            Package_Decl := Get_Declaration (Interp);
+            if Get_Kind (Package_Decl) /= Iir_Kind_Package_Declaration then
+               Error_Msg_Sem
+                 (+Decl, "declaration %i is not a package", +Package_Ident);
+               return;
+            end if;
+         end;
       end if;
 
       --  Emit a warning is a body is not necessary.
@@ -2637,12 +2791,6 @@ package body Sem is
       Set_Package (Decl, Package_Decl);
       Xref_Body (Decl, Package_Decl);
       Set_Package_Body (Package_Decl, Decl);
-      Add_Dependence (Design_Unit);
-
-      Add_Name (Design_Unit);
-
-      --  Add the context clauses from the primary unit.
-      Add_Context_Clauses (Design_Unit);
 
       --  LRM93 10.1 Declarative Region
       --  4. A package declaration, together with the corresponding
@@ -2678,6 +2826,8 @@ package body Sem is
          return Null_Iir;
       end if;
 
+      Set_Uninstantiated_Package_Decl (Decl, Pkg);
+
       return Pkg;
    end Sem_Uninstantiated_Package_Name;
 
@@ -2711,11 +2861,9 @@ package body Sem is
       --  the actuals are associated with the instantiated formal.
       --  FIXME: do it in Instantiate_Package_Declaration ?
       Hdr := Get_Package_Header (Pkg);
-      if Sem_Generic_Association_Chain (Hdr, Decl) then
-         Sem_Inst.Instantiate_Package_Declaration (Decl, Pkg);
-      else
+      if not Sem_Generic_Association_Chain (Hdr, Decl) then
          --  FIXME: stop analysis here ?
-         null;
+         return;
       end if;
 
       --  FIXME: unless the parent is a package declaration library unit, the
@@ -2723,10 +2871,16 @@ package body Sem is
       if Get_Need_Body (Pkg) then
          Bod := Libraries.Load_Secondary_Unit
            (Get_Design_Unit (Pkg), Null_Identifier, Decl);
-         if Bod /= Null_Iir then
+         if Is_Null (Bod) then
+            Error_Msg_Sem (+Decl, "cannot find package body of %n", +Pkg);
+         else
             Add_Dependence (Bod);
          end if;
       end if;
+
+      --  Instantiate the declaration after analyse of the body.  So that
+      --  the use_flag on the declaration can be propagated to the instance.
+      Sem_Inst.Instantiate_Package_Declaration (Decl, Pkg);
    end Sem_Package_Instantiation_Declaration;
 
    --  LRM 10.4  Use Clauses.

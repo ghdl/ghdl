@@ -20,7 +20,6 @@
 
 with Ada.Text_IO; use Ada.Text_IO;
 with Name_Table;
-with Tokens;
 with Files_Map;
 with PSL.Dump_Tree;
 with Nodes_Meta;
@@ -29,9 +28,6 @@ with Nodes_Meta;
 --  trees, which is annoying while debugging.
 
 package body Disp_Tree is
-   --  function Is_Anonymous_Type_Definition (Def : Iir) return Boolean
-   --    renames Iirs_Utils.Is_Anonymous_Type_Definition;
-
    --  Max depth for Disp_Iir.  Can be modified from a debugger.
    pragma Warnings (Off);
    Max_Depth : Natural := 10;
@@ -377,7 +373,18 @@ package body Disp_Tree is
       end if;
 
       Header ("location", Indent);
-      Put_Line (Image_Location_Type (Get_Location (N)));
+      declare
+         L : Location_Type;
+      begin
+         L := Get_Location (N);
+         loop
+            Put (Image_Location_Type (L));
+            L := Files_Map.Location_Instance_To_Location (L);
+            exit when L = No_Location;
+            Put (" instantiated at ");
+         end loop;
+         New_Line;
+      end;
 
       declare
          use Nodes_Meta;
@@ -392,7 +399,9 @@ package body Disp_Tree is
                   case Get_Field_Attribute (F) is
                      when Attr_None =>
                         Disp_Iir (Get_Iir (N, F), Sub_Indent, Depth - 1);
-                     when Attr_Ref =>
+                     when Attr_Ref
+                       | Attr_Forward_Ref
+                       | Attr_Maybe_Forward_Ref =>
                         Disp_Iir (Get_Iir (N, F), Sub_Indent, 0);
                      when Attr_Maybe_Ref =>
                         if Get_Is_Ref (N) then
@@ -427,8 +436,9 @@ package body Disp_Tree is
                   Put_Line (Source_Ptr'Image (Get_Source_Ptr (N, F)));
                when Type_Date_Type =>
                   Put_Line (Date_Type'Image (Get_Date_Type (N, F)));
-               when Type_Base_Type =>
-                  Put_Line (Base_Type'Image (Get_Base_Type (N, F)));
+               when Type_Number_Base_Type =>
+                  Put_Line (Number_Base_Type'Image
+                              (Get_Number_Base_Type (N, F)));
                when Type_Iir_Constraint =>
                   Put_Line (Image_Iir_Constraint
                               (Get_Iir_Constraint (N, F)));

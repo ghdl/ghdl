@@ -36,15 +36,25 @@ with Xrefs; use Xrefs;
 use Iir_Chains;
 
 package body Sem_Decls is
+   function Create_Anonymous_Interface
+     (Atype : Iir) return Iir_Interface_Constant_Declaration;
+   function Create_Implicit_Function (Name : Name_Id;
+                                      Decl : Iir;
+                                      Def : Iir_Predefined_Functions;
+                                      Interface_Chain : Iir;
+                                      Return_Type : Iir)
+                                     return Iir;
+
    --  Region that can declare signals.  Used to add implicit declarations.
    Current_Signals_Region : Implicit_Signal_Declaration_Type :=
-     (Null_Iir, False, Null_Iir, Null_Iir);
+     (Null_Iir, Null_Iir, Null_Iir, False, Null_Iir);
 
    procedure Push_Signals_Declarative_Part
      (Cell: out Implicit_Signal_Declaration_Type; Decls_Parent : Iir) is
    begin
       Cell := Current_Signals_Region;
-      Current_Signals_Region := (Decls_Parent, False, Null_Iir, Null_Iir);
+      Current_Signals_Region :=
+        (Decls_Parent, Null_Iir, Null_Iir, False, Null_Iir);
    end Push_Signals_Declarative_Part;
 
    procedure Pop_Signals_Declarative_Part
@@ -53,29 +63,94 @@ package body Sem_Decls is
       Current_Signals_Region := Cell;
    end Pop_Signals_Declarative_Part;
 
-   procedure Add_Declaration_For_Implicit_Signal (Sig : Iir) is
+   --  Insert the implicit signal declaration after LAST_DECL.
+   procedure Insert_Implicit_Signal (Last_Decl : Iir) is
    begin
+      if Last_Decl = Null_Iir then
+         Set_Declaration_Chain (Current_Signals_Region.Decls_Parent,
+                                Current_Signals_Region.Implicit_Decl);
+      else
+         Set_Chain (Last_Decl, Current_Signals_Region.Implicit_Decl);
+      end if;
+   end Insert_Implicit_Signal;
+
+   --  Add SIG as an implicit declaration in the current region.
+   procedure Add_Declaration_For_Implicit_Signal (Sig : Iir)
+   is
+      Decl : Iir;
+   begin
+      --  We deal only with signal attribute.
+      pragma Assert (Get_Kind (Sig) in Iir_Kinds_Signal_Attribute);
+
       --  There must be a declarative part for implicit signals.
       pragma Assert (Current_Signals_Region.Decls_Parent /= Null_Iir);
 
-      --  Chain must be empty.
-      pragma Assert (Get_Chain (Sig) = Null_Iir);
+      --  Attr_Chain must be empty.
+      pragma Assert (Get_Attr_Chain (Sig) = Null_Iir);
 
-      if Current_Signals_Region.Decls_Analyzed then
-         --  Just append.
-         if Current_Signals_Region.Last_Implicit_Decl = Null_Iir then
-            --  No declarations.
-            Set_Declaration_Chain (Current_Signals_Region.Decls_Parent, Sig);
-         else
-            --  Append to the last declaration.
-            Set_Chain (Current_Signals_Region.Last_Implicit_Decl, Sig);
+      if Current_Signals_Region.Implicit_Decl = Null_Iir then
+         --  Create the signal_attribute_declaration to hold all the implicit
+         --  signals.
+         Decl := Create_Iir (Iir_Kind_Signal_Attribute_Declaration);
+         Location_Copy (Decl, Sig);
+         Set_Parent (Decl, Current_Signals_Region.Decls_Parent);
+
+         --  Save the implicit declaration.
+         Current_Signals_Region.Implicit_Decl := Decl;
+
+         --  Append SIG (this is the first one).
+         Set_Signal_Attribute_Chain (Decl, Sig);
+
+         if Current_Signals_Region.Decls_Analyzed then
+            --  Declarative region was completely analyzed.  Just append DECL
+            --  at the end of declarations.
+            Insert_Implicit_Signal (Current_Signals_Region.Last_Decl);
          end if;
-         Current_Signals_Region.Last_Implicit_Decl := Sig;
       else
-         Sub_Chain_Append (Current_Signals_Region.First_Implicit_Decl,
-                           Current_Signals_Region.Last_Implicit_Decl, Sig);
+         --  Append SIG.
+         Set_Attr_Chain (Current_Signals_Region.Last_Attribute_Signal, Sig);
       end if;
+      Current_Signals_Region.Last_Attribute_Signal := Sig;
+
+      Set_Signal_Attribute_Declaration
+        (Sig, Current_Signals_Region.Implicit_Decl);
    end Add_Declaration_For_Implicit_Signal;
+
+   --  Insert pending implicit declarations after the last analyzed LAST_DECL,
+   --  and update it.  Then the caller has to insert the declaration which
+   --  created the implicit declarations.
+   procedure Insert_Pending_Implicit_Declarations
+     (Parent : Iir; Last_Decl : in out Iir) is
+   begin
+      if Current_Signals_Region.Decls_Parent = Parent
+        and then Current_Signals_Region.Implicit_Decl /= Null_Iir
+      then
+         pragma Assert (not Current_Signals_Region.Decls_Analyzed);
+
+         --  Add pending implicit declarations before the current one.
+         Insert_Implicit_Signal (Last_Decl);
+         Last_Decl := Current_Signals_Region.Implicit_Decl;
+
+         --  Detach the implicit declaration.
+         Current_Signals_Region.Implicit_Decl := Null_Iir;
+         Current_Signals_Region.Last_Attribute_Signal := Null_Iir;
+      end if;
+   end Insert_Pending_Implicit_Declarations;
+
+   --  Mark the end of declaration analysis.  New implicit declarations will
+   --  simply be appended to the last declaration.
+   procedure End_Of_Declarations_For_Implicit_Declarations
+     (Parent : Iir; Last_Decl : Iir) is
+   begin
+      if Current_Signals_Region.Decls_Parent = Parent then
+         pragma Assert (not Current_Signals_Region.Decls_Analyzed);
+
+         --  All declarations have been analyzed, new implicit declarations
+         --  will be appended.
+         Current_Signals_Region.Decls_Analyzed := True;
+         Current_Signals_Region.Last_Decl := Last_Decl;
+      end if;
+   end End_Of_Declarations_For_Implicit_Declarations;
 
    --  Emit an error if the type of DECL is a file type, access type,
    --  protected type or if a subelement of DECL is an access type.
@@ -91,6 +166,8 @@ package body Sem_Decls is
                null;
             when Iir_Kind_Protected_Type_Declaration =>
                null;
+            when Iir_Kind_Interface_Type_Definition =>
+               null;
             when Iir_Kind_Access_Type_Definition
               | Iir_Kind_Access_Subtype_Definition =>
                null;
@@ -105,25 +182,6 @@ package body Sem_Decls is
       end if;
    end Check_Signal_Type;
 
-   --  Create a globally static subtype.
-   procedure Sem_Force_Static_Type (Decl : Iir; Atype : Iir)
-   is
-      Base_Type : constant Iir := Get_Base_Type (Atype);
-      Res : Iir;
-   begin
-      pragma Assert (Get_Kind (Base_Type) = Iir_Kind_Array_Type_Definition);
-      Res := Create_Iir (Iir_Kind_Array_Subtype_Definition);
-      Set_Location (Res, Get_Location (Decl));
-      Set_Element_Subtype (Res, Get_Element_Subtype (Atype));
-      Set_Base_Type (Res, Base_Type);
-      Set_Index_Subtype_List (Res, Get_Index_Subtype_List (Atype));
-      Set_Type_Staticness (Res, Globally);
-      Set_Constraint_State (Res, Get_Constraint_State (Atype));
-      Set_Index_Constraint_Flag (Res, Get_Index_Constraint_Flag (Atype));
-      Set_Signal_Type_Flag (Res, Get_Signal_Type_Flag (Atype));
-      Set_Type (Decl, Res);
-   end Sem_Force_Static_Type;
-
    procedure Sem_Interface_Object_Declaration
      (Inter, Last : Iir; Interface_Kind : Interface_Kind_Type)
    is
@@ -136,7 +194,6 @@ package body Sem_Decls is
       A_Type := Get_Subtype_Indication (Inter);
       if A_Type = Null_Iir then
          pragma Assert (Last /= Null_Iir);
-         Set_Subtype_Indication (Inter, Get_Subtype_Indication (Last));
          A_Type := Get_Type (Last);
          Default_Value := Get_Default_Value (Last);
       else
@@ -302,14 +359,6 @@ package body Sem_Decls is
                --   LRM93 7.4.2 (Globally static primaries)
                --   3. a generic constant.
                Set_Expr_Staticness (Inter, Globally);
-
-               if A_Type /= Null_Iir
-                 and then (Get_Kind (A_Type)
-                             in Iir_Kinds_Composite_Type_Definition)
-                 and then Get_Type_Staticness (A_Type) = None
-               then
-                  Sem_Force_Static_Type (Inter, A_Type);
-               end if;
             end if;
          when Port_Interface_List =>
             if Get_Kind (Inter) /= Iir_Kind_Interface_Signal_Declaration then
@@ -376,12 +425,80 @@ package body Sem_Decls is
       end if;
 
       Sem_Scopes.Add_Name (Inter);
+      Set_Is_Within_Flag (Inter, True);
       Xref_Decl (Inter);
    end Sem_Interface_Package_Declaration;
+
+   function Create_Implicit_Interface_Function (Name : Name_Id;
+                                                Decl : Iir;
+                                                Interface_Chain : Iir;
+                                                Return_Type : Iir)
+                                               return Iir
+   is
+      Operation : Iir_Function_Declaration;
+   begin
+      Operation := Create_Iir (Iir_Kind_Interface_Function_Declaration);
+      Location_Copy (Operation, Decl);
+      Set_Parent (Operation, Get_Parent (Decl));
+      Set_Interface_Declaration_Chain (Operation, Interface_Chain);
+      Set_Return_Type (Operation, Return_Type);
+      Set_Identifier (Operation, Name);
+      Set_Visible_Flag (Operation, True);
+      Compute_Subprogram_Hash (Operation);
+      return Operation;
+   end Create_Implicit_Interface_Function;
+
+   procedure Sem_Interface_Type_Declaration (Inter : Iir)
+   is
+      Def : Iir;
+      Finters : Iir;
+      Op_Eq, Op_Neq : Iir;
+   begin
+      --  Create type definition.
+      Def := Create_Iir (Iir_Kind_Interface_Type_Definition);
+      Set_Location (Def, Get_Location (Inter));
+      Set_Type_Declarator (Def, Inter);
+      Set_Type (Inter, Def);
+      Set_Base_Type (Def, Def);
+      Set_Type_Staticness (Def, None);
+      Set_Resolved_Flag (Def, False);
+      Set_Signal_Type_Flag (Def, True);
+      Set_Has_Signal_Flag (Def, False);
+
+      --  Create operations for the interface type.
+      Finters := Create_Anonymous_Interface (Def);
+      Set_Chain (Finters, Create_Anonymous_Interface (Def));
+
+      Op_Eq := Create_Implicit_Interface_Function
+        (Std_Names.Name_Op_Equality,
+         Inter, Finters, Std_Package.Boolean_Type_Definition);
+
+      Op_Neq := Create_Implicit_Interface_Function
+        (Std_Names.Name_Op_Inequality,
+         Inter, Finters, Std_Package.Boolean_Type_Definition);
+
+      Set_Interface_Type_Subprograms (Inter, Op_Eq);
+      Set_Chain (Op_Eq, Op_Neq);
+
+      Sem_Scopes.Add_Name (Inter);
+      Sem_Scopes.Add_Name (Op_Eq);
+      Sem_Scopes.Add_Name (Op_Neq);
+      Xref_Decl (Inter);
+   end Sem_Interface_Type_Declaration;
+
+   procedure Sem_Interface_Subprogram_Declaration (Inter : Iir) is
+   begin
+      Sem_Subprogram_Specification (Inter);
+   end Sem_Interface_Subprogram_Declaration;
 
    procedure Sem_Interface_Chain (Interface_Chain: Iir;
                                   Interface_Kind : Interface_Kind_Type)
    is
+      --  Control visibility of interface object.  See below for its use.
+      Immediately_Visible : constant Boolean :=
+        Interface_Kind = Generic_Interface_List
+        and then Flags.Vhdl_Std >= Vhdl_08;
+
       Inter : Iir;
 
       --  LAST is the last interface declaration that has a type.  This is
@@ -393,15 +510,30 @@ package body Sem_Decls is
 
       Inter := Interface_Chain;
       while Inter /= Null_Iir loop
-         case Get_Kind (Inter) is
+         case Iir_Kinds_Interface_Declaration (Get_Kind (Inter)) is
             when Iir_Kinds_Interface_Object_Declaration =>
                Sem_Interface_Object_Declaration (Inter, Last, Interface_Kind);
                Last := Inter;
             when Iir_Kind_Interface_Package_Declaration =>
                Sem_Interface_Package_Declaration (Inter);
-            when others =>
-               raise Internal_Error;
+            when Iir_Kind_Interface_Type_Declaration =>
+               Sem_Interface_Type_Declaration (Inter);
+            when Iir_Kinds_Interface_Subprogram_Declaration =>
+               Sem_Interface_Subprogram_Declaration (Inter);
          end case;
+
+         --  LRM08 6.5.6 Interface lists
+         --  A name that denotes an interface object declared in a port
+         --  interface list of a prameter interface list shall not appear in
+         --  any interface declaration within the interface list containing the
+         --  denoted interface object expect to declare this object.
+         --  A name that denotes an interface declaration in a generic
+         --  interface list may appear in an interface declaration within the
+         --  interface list containing the denoted interface declaration.
+         if Immediately_Visible then
+            Name_Visible (Inter);
+         end if;
+
          Inter := Get_Chain (Inter);
       end loop;
 
@@ -416,11 +548,13 @@ package body Sem_Decls is
 
       --  GHDL: this is achieved by making the interface object visible after
       --   having analyzed the interface list.
-      Inter := Interface_Chain;
-      while Inter /= Null_Iir loop
-         Name_Visible (Inter);
-         Inter := Get_Chain (Inter);
-      end loop;
+      if not Immediately_Visible then
+         Inter := Interface_Chain;
+         while Inter /= Null_Iir loop
+            Name_Visible (Inter);
+            Inter := Get_Chain (Inter);
+         end loop;
+      end if;
    end Sem_Interface_Chain;
 
    --  LRM93 7.2.2
@@ -512,8 +646,9 @@ package body Sem_Decls is
             Set_Identifier (Inter, Std_Names.Name_Open_Kind);
             Set_Type (Inter, Std_Package.File_Open_Kind_Type_Definition);
             Set_Mode (Inter, Iir_In_Mode);
-            Set_Default_Value (Inter,
-                               Std_Package.File_Open_Kind_Read_Mode);
+            Set_Default_Value
+              (Inter,
+               Build_Simple_Name (Std_Package.File_Open_Kind_Read_Mode, Loc));
             Append (Last_Interface, Proc, Inter);
             Compute_Subprogram_Hash (Proc);
             -- Add it to the list.
@@ -563,7 +698,7 @@ package body Sem_Decls is
       Inter := Create_Iir (Iir_Kind_Interface_Variable_Declaration);
       Set_Identifier (Inter, Std_Names.Name_Value);
       Set_Location (Inter, Loc);
-      Set_Subtype_Indication (Inter, Type_Mark);
+      Set_Subtype_Indication (Inter, Build_Simple_Name (Decl, Loc));
       Set_Type (Inter, Type_Mark_Type);
       Set_Mode (Inter, Iir_Out_Mode);
       Append (Last_Interface, Proc, Inter);
@@ -603,7 +738,7 @@ package body Sem_Decls is
       Inter := Create_Iir (Iir_Kind_Interface_Constant_Declaration);
       Set_Identifier (Inter, Std_Names.Name_Value);
       Set_Location (Inter, Loc);
-      Set_Subtype_Indication (Inter, Type_Mark);
+      Set_Subtype_Indication (Inter, Build_Simple_Name (Decl, Loc));
       Set_Type (Inter, Type_Mark_Type);
       Set_Mode (Inter, Iir_In_Mode);
       Append (Last_Interface, Proc, Inter);
@@ -666,6 +801,28 @@ package body Sem_Decls is
       return Inter;
    end Create_Anonymous_Interface;
 
+   --  Create an implicit/predefined function for DECL.
+   function Create_Implicit_Function (Name : Name_Id;
+                                      Decl : Iir;
+                                      Def : Iir_Predefined_Functions;
+                                      Interface_Chain : Iir;
+                                      Return_Type : Iir)
+                                     return Iir
+   is
+      Operation : Iir_Function_Declaration;
+   begin
+      Operation := Create_Iir (Iir_Kind_Function_Declaration);
+      Location_Copy (Operation, Decl);
+      Set_Parent (Operation, Get_Parent (Decl));
+      Set_Interface_Declaration_Chain (Operation, Interface_Chain);
+      Set_Return_Type (Operation, Return_Type);
+      Set_Implicit_Definition (Operation, Def);
+      Set_Identifier (Operation, Name);
+      Set_Visible_Flag (Operation, True);
+      Compute_Subprogram_Hash (Operation);
+      return Operation;
+   end Create_Implicit_Function;
+
    procedure Create_Implicit_Operations
      (Decl : Iir; Is_Std_Standard : Boolean := False)
    is
@@ -682,15 +839,8 @@ package body Sem_Decls is
       is
          Operation : Iir_Function_Declaration;
       begin
-         Operation := Create_Iir (Iir_Kind_Function_Declaration);
-         Location_Copy (Operation, Decl);
-         Set_Parent (Operation, Get_Parent (Decl));
-         Set_Interface_Declaration_Chain (Operation, Interface_Chain);
-         Set_Return_Type (Operation, Return_Type);
-         Set_Implicit_Definition (Operation, Def);
-         Set_Identifier (Operation, Name);
-         Set_Visible_Flag (Operation, True);
-         Compute_Subprogram_Hash (Operation);
+         Operation := Create_Implicit_Function
+           (Name, Decl, Def, Interface_Chain, Return_Type);
          Insert_Incr (Last, Operation);
       end Add_Operation;
 
@@ -1079,11 +1229,14 @@ package body Sem_Decls is
             begin
                Deallocate_Proc :=
                  Create_Iir (Iir_Kind_Procedure_Declaration);
+               Location_Copy (Deallocate_Proc, Decl);
                Set_Identifier (Deallocate_Proc, Std_Names.Name_Deallocate);
                Set_Implicit_Definition
                  (Deallocate_Proc, Iir_Predefined_Deallocate);
+
                Var_Interface :=
                  Create_Iir (Iir_Kind_Interface_Variable_Declaration);
+               Location_Copy (Var_Interface, Decl);
                Set_Identifier (Var_Interface, Std_Names.Name_P);
                Set_Type (Var_Interface, Type_Definition);
                Set_Mode (Var_Interface, Iir_Inout_Mode);
@@ -1362,6 +1515,7 @@ package body Sem_Decls is
       end if;
    end Create_Implicit_Operations;
 
+   --  Analyze a type or an anonymous type declaration.
    procedure Sem_Type_Declaration (Decl: Iir; Is_Global : Boolean)
    is
       Def: Iir;
@@ -1381,6 +1535,8 @@ package body Sem_Decls is
                       Iir_Kind_Incomplete_Type_Definition)
          then
             Old_Decl := Null_Iir;
+         else
+            Set_Incomplete_Type_Declaration (Decl, Old_Decl);
          end if;
       else
          Old_Decl := Null_Iir;
@@ -1389,6 +1545,8 @@ package body Sem_Decls is
       if Old_Decl = Null_Iir then
          if Get_Kind (Decl) = Iir_Kind_Type_Declaration then
             --  This is necessary at least for enumeration type definition.
+            --  Type declaration for anonymous types don't have name, only
+            --  their subtype have names.  Those are added later.
             Sem_Scopes.Add_Name (Decl);
          end if;
       else
@@ -1410,107 +1568,106 @@ package body Sem_Decls is
          Set_Signal_Type_Flag (Def, True);
          Set_Type_Declarator (Def, Decl);
          Set_Visible_Flag (Decl, True);
-         Set_Incomplete_Type_List (Def, Create_Iir_List);
+         Xref_Decl (Decl);
+
+         return;
+
+      end if;
+
+      --  A complete type declaration.
+      if Old_Decl = Null_Iir then
          Xref_Decl (Decl);
       else
-         --  A complete type declaration.
-         if Old_Decl = Null_Iir then
-            Xref_Decl (Decl);
-         else
-            Xref_Body (Decl, Old_Decl);
-         end if;
+         Xref_Body (Decl, Old_Decl);
+      end if;
 
-         Def := Sem_Type_Definition (Def, Decl);
+      Def := Sem_Type_Definition (Def, Decl);
+      if Def = Null_Iir then
+         return;
+      end if;
 
-         if Def /= Null_Iir then
-            case Get_Kind (Def) is
-               when Iir_Kind_Integer_Subtype_Definition
-                 | Iir_Kind_Floating_Subtype_Definition
-                 | Iir_Kind_Physical_Subtype_Definition
-                 | Iir_Kind_Array_Subtype_Definition =>
-                  --  Some type declaration are in fact subtype declarations.
-                  St_Decl := Create_Iir (Iir_Kind_Subtype_Declaration);
-                  Location_Copy (St_Decl, Decl);
-                  Set_Identifier (St_Decl, Get_Identifier (Decl));
-                  Set_Parent (St_Decl, Get_Parent (Decl));
-                  Set_Type (St_Decl, Def);
-                  Set_Type_Declarator (Def, St_Decl);
-                  Set_Chain (St_Decl, Get_Chain (Decl));
-                  Set_Chain (Decl, St_Decl);
+      case Get_Kind (Def) is
+         when Iir_Kind_Integer_Subtype_Definition
+           | Iir_Kind_Floating_Subtype_Definition
+           | Iir_Kind_Physical_Subtype_Definition
+           | Iir_Kind_Array_Subtype_Definition =>
+            --  Some type declaration are in fact subtype declarations.
+            St_Decl := Create_Iir (Iir_Kind_Subtype_Declaration);
+            Location_Copy (St_Decl, Decl);
+            Set_Identifier (St_Decl, Get_Identifier (Decl));
+            Set_Parent (St_Decl, Get_Parent (Decl));
+            Set_Type (St_Decl, Def);
+            Set_Subtype_Indication (St_Decl, Def);
+            Set_Type_Declarator (Def, St_Decl);
+            Set_Chain (St_Decl, Get_Chain (Decl));
+            Set_Chain (Decl, St_Decl);
 
-                  --  The type declaration declares the base type.
-                  Bt_Def := Get_Base_Type (Def);
-                  Set_Type_Definition (Decl, Bt_Def);
-                  Set_Type_Declarator (Bt_Def, Decl);
-                  Set_Subtype_Definition (Decl, Def);
+            --  The type declaration declares the base type.
+            Bt_Def := Get_Base_Type (Def);
+            Set_Type_Definition (Decl, Bt_Def);
+            Set_Type_Declarator (Bt_Def, Decl);
+            Set_Subtype_Definition (Decl, Def);
 
-                  if Old_Decl = Null_Iir then
-                     Sem_Scopes.Add_Name (St_Decl);
-                  else
-                     Replace_Name (Get_Identifier (Decl), Old_Decl, St_Decl);
-                     Set_Type_Declarator
-                       (Get_Type_Definition (Old_Decl), St_Decl);
-                  end if;
-
-                  Sem_Scopes.Name_Visible (St_Decl);
-
-                  --  The implicit subprogram will be added in the
-                  -- scope just after.
-                  Create_Implicit_Operations (Decl, False);
-
-               when Iir_Kind_Enumeration_Type_Definition
-                 | Iir_Kind_Array_Type_Definition
-                 | Iir_Kind_Record_Type_Definition
-                 | Iir_Kind_Access_Type_Definition
-                 | Iir_Kind_File_Type_Definition =>
-                  St_Decl := Null_Iir;
-                  Set_Type_Declarator (Def, Decl);
-
-                  Sem_Scopes.Name_Visible (Decl);
-
-                  --  The implicit subprogram will be added in the
-                  -- scope just after.
-                  Create_Implicit_Operations (Decl, False);
-
-               when Iir_Kind_Protected_Type_Declaration =>
-                  Set_Type_Declarator (Def, Decl);
-                  St_Decl := Null_Iir;
-                  --  No implicit subprograms.
-
-               when others =>
-                  Error_Kind ("sem_type_declaration", Def);
-            end case;
-
-            if Old_Decl /= Null_Iir then
-               --  Complete the type definition.
-               declare
-                  List : Iir_List;
-                  El : Iir;
-                  Old_Def : Iir;
-               begin
-                  Old_Def := Get_Type_Definition (Old_Decl);
-                  Set_Signal_Type_Flag (Old_Def, Get_Signal_Type_Flag (Def));
-                  List := Get_Incomplete_Type_List (Old_Def);
-                  for I in Natural loop
-                     El := Get_Nth_Element (List, I);
-                     exit when El = Null_Iir;
-                     Set_Designated_Type (El, Def);
-                  end loop;
-                  --  Complete the incomplete_type_definition node
-                  --  (set type_declarator and base_type).
-
-                  Set_Base_Type (Old_Def, Get_Base_Type (Def));
-                  if St_Decl = Null_Iir then
-                     Set_Type_Declarator (Old_Def, Decl);
-                     Replace_Name (Get_Identifier (Decl), Old_Decl, Decl);
-                  end if;
-               end;
+            if Old_Decl = Null_Iir then
+               Sem_Scopes.Add_Name (St_Decl);
             end if;
 
-            if Is_Global then
-               Set_Type_Has_Signal (Def);
+            Sem_Scopes.Name_Visible (St_Decl);
+
+            --  The implicit subprogram will be added in the
+            -- scope just after.
+            Create_Implicit_Operations (Decl, False);
+
+         when Iir_Kind_Enumeration_Type_Definition
+           | Iir_Kind_Array_Type_Definition
+           | Iir_Kind_Record_Type_Definition
+           | Iir_Kind_Access_Type_Definition
+           | Iir_Kind_File_Type_Definition =>
+            St_Decl := Null_Iir;
+            Set_Type_Declarator (Def, Decl);
+
+            Sem_Scopes.Name_Visible (Decl);
+
+            --  The implicit subprogram will be added in the
+            -- scope just after.
+            Create_Implicit_Operations (Decl, False);
+
+         when Iir_Kind_Protected_Type_Declaration =>
+            Set_Type_Declarator (Def, Decl);
+            St_Decl := Null_Iir;
+            --  No implicit subprograms.
+
+         when others =>
+            Error_Kind ("sem_type_declaration", Def);
+      end case;
+
+      if Old_Decl /= Null_Iir then
+         --  Complete the type definition.
+         declare
+            Old_Def : constant Iir := Get_Type_Definition (Old_Decl);
+            Ref : Iir;
+         begin
+            Set_Signal_Type_Flag (Old_Def, Get_Signal_Type_Flag (Def));
+            Ref := Get_Incomplete_Type_Ref_Chain (Old_Def);
+            while Is_Valid (Ref) loop
+               pragma Assert
+                 (Get_Kind (Ref) = Iir_Kind_Access_Type_Definition);
+               Set_Designated_Type (Ref, Def);
+               Ref := Get_Incomplete_Type_Ref_Chain (Ref);
+            end loop;
+            Set_Complete_Type_Definition (Old_Def, Def);
+
+            --  The identifier now designates the complete type declaration.
+            if St_Decl = Null_Iir then
+               Replace_Name (Get_Identifier (Decl), Old_Decl, Decl);
+            else
+               Replace_Name (Get_Identifier (Decl), Old_Decl, St_Decl);
             end if;
-         end if;
+         end;
+      end if;
+
+      if Is_Global then
+         Set_Type_Has_Signal (Def);
       end if;
    end Sem_Type_Declaration;
 
@@ -1608,8 +1765,6 @@ package body Sem_Decls is
       then
          if Get_Type_Staticness (Value_Type) >= Globally then
             Set_Type (Decl, Value_Type);
-         else
-            Sem_Force_Static_Type (Decl, Value_Type);
          end if;
       end if;
    end Sem_Object_Type_From_Value;
@@ -1653,6 +1808,9 @@ package body Sem_Decls is
          end if;
       else
          Default_Value := Get_Default_Value (Last_Decl);
+         if Is_Valid (Default_Value) then
+            Set_Is_Ref (Decl, True);
+         end if;
          Atype := Get_Type (Last_Decl);
       end if;
 
@@ -1766,49 +1924,8 @@ package body Sem_Decls is
             Set_Type_Has_Signal (Atype);
 
          when Iir_Kind_Variable_Declaration =>
-            --  LRM93 4.3.1.3  Variable declarations
-            --  Variable declared immediatly within entity declarations,
-            --  architectures bodies, packages, packages bodies, and blocks
-            --  must be shared variable.
-            --  Variables declared immediatly within subprograms and
-            --  processes must not be shared variables.
-            --  Variables may appear in proteted type bodies; such
-            --  variables, which must not be shared variables, represent
-            --  shared data.
-            case Get_Kind (Parent) is
-               when Iir_Kind_Entity_Declaration
-                 | Iir_Kind_Architecture_Body
-                 | Iir_Kind_Package_Declaration
-                 | Iir_Kind_Package_Body
-                 | Iir_Kind_Block_Statement
-                 | Iir_Kind_Generate_Statement_Body =>
-                  if not Get_Shared_Flag (Decl) then
-                     Error_Msg_Sem
-                       (+Decl,
-                        "non shared variable declaration not allowed here");
-                  end if;
-               when Iir_Kinds_Process_Statement
-                 | Iir_Kind_Function_Body
-                 | Iir_Kind_Procedure_Body =>
-                  if Get_Shared_Flag (Decl) then
-                     Error_Msg_Sem
-                       (+Decl,
-                        "shared variable declaration not allowed here");
-                  end if;
-               when Iir_Kind_Protected_Type_Body =>
-                  if Get_Shared_Flag (Decl) then
-                     Error_Msg_Sem
-                       (+Decl,
-                        "variable of protected type body must not be shared");
-                  end if;
-               when Iir_Kind_Protected_Type_Declaration =>
-                  --  This is not allowed, but caught
-                  --  in sem_protected_type_declaration.
-                  null;
-               when others =>
-                  Error_Kind ("sem_object_declaration(2)", Parent);
-            end case;
-
+            --  GHDL: restriction for shared variables are checked during
+            --  parse.
             if Flags.Vhdl_Std >= Vhdl_00 then
                declare
                   Base_Type : Iir;
@@ -2549,6 +2666,11 @@ package body Sem_Decls is
          Set_Name (Res, Get_Name (Alias));
          Set_Alias_Signature (Res, Sig);
 
+         if Is_Valid (Sig) then
+            --  The prefix is owned by the non_object_alias_declaration.
+            Set_Signature_Prefix (Sig, Null_Iir);
+         end if;
+
          Sem_Scopes.Add_Name (Res);
          Name_Visible (Res);
 
@@ -2641,6 +2763,14 @@ package body Sem_Decls is
             El := Finish_Sem_Name (El);
             Replace_Nth_Element (Constituent_List, I, El);
             El_Name := Get_Named_Entity (El);
+
+            --  Statements are textually afer the group declaration.  To avoid
+            --  adding a flag on each node with a base_name, this field is
+            --  cleared, as we don't care about base name.
+            if Class = Tok_Label then
+               Set_Is_Forward_Ref (El, True);
+            end if;
+            Set_Base_Name (El, Null_Iir);
 
             --  LRM93 4.7
             --  It is an error if the class of any group constituent in the
@@ -2907,6 +3037,14 @@ package body Sem_Decls is
                null;
             when Iir_Kind_Protected_Type_Body =>
                Sem_Protected_Type_Body (Decl);
+
+            when Iir_Kind_Package_Declaration =>
+               Sem_Package_Declaration (Decl);
+            when Iir_Kind_Package_Body =>
+               Sem_Package_Body (Decl);
+            when Iir_Kind_Package_Instantiation_Declaration =>
+               Sem_Package_Instantiation_Declaration (Decl);
+
             when Iir_Kind_Nature_Declaration =>
                Sem_Nature_Declaration (Decl);
             when Iir_Kind_Terminal_Declaration =>
@@ -2923,21 +3061,9 @@ package body Sem_Decls is
             Check_Post_Attribute_Specification (Attr_Spec_Chain, Decl);
          end if;
 
-         if Current_Signals_Region.Decls_Parent = Parent
-           and then Current_Signals_Region.First_Implicit_Decl /= Null_Iir
-         then
-            --  Add pending implicit declarations before the current one.
-            if Last_Decl = Null_Iir then
-               Set_Declaration_Chain
-                 (Parent, Current_Signals_Region.First_Implicit_Decl);
-            else
-               Set_Chain
-                 (Last_Decl, Current_Signals_Region.First_Implicit_Decl);
-            end if;
-            Last_Decl := Current_Signals_Region.Last_Implicit_Decl;
-            Sub_Chain_Init (Current_Signals_Region.First_Implicit_Decl,
-                            Current_Signals_Region.Last_Implicit_Decl);
-         end if;
+         --  Insert *before* DECL pending implicit signal declarations created
+         --  for DECL after LAST_DECL.  This updates LAST_DECL.
+         Insert_Pending_Implicit_Declarations (Parent, Last_Decl);
 
          if Last_Decl = Null_Iir then
             --  Append now to handle expand names.
@@ -2949,12 +3075,8 @@ package body Sem_Decls is
          Decl := Get_Chain (Decl);
       end loop;
 
-      if Current_Signals_Region.Decls_Parent = Parent then
-         --  All declarations have been analyzed, new implicit declarations
-         --  will be appended.
-         Current_Signals_Region.Decls_Analyzed := True;
-         Current_Signals_Region.Last_Implicit_Decl := Last_Decl;
-      end if;
+      --  Keep the point of insertion for implicit signal declarations.
+      End_Of_Declarations_For_Implicit_Declarations (Parent, Last_Decl);
    end Sem_Declaration_Chain;
 
    procedure Check_Full_Declaration (Decls_Parent : Iir; Decl: Iir)
@@ -3044,11 +3166,10 @@ package body Sem_Decls is
                end if;
             when Iir_Kind_Type_Declaration =>
                declare
-                  Def : Iir;
+                  Def : constant Iir := Get_Type_Definition (El);
                begin
-                  Def := Get_Type_Definition (El);
                   if Get_Kind (Def) = Iir_Kind_Incomplete_Type_Definition
-                    and then Get_Type_Declarator (Def) = El
+                    and then Is_Null (Get_Complete_Type_Definition (Def))
                   then
                      Error_Msg_Sem
                        (+El, "missing full type declaration for %n", +El);
@@ -3059,6 +3180,13 @@ package body Sem_Decls is
                        (+El, "missing protected type body for %n", +El);
                   end if;
                end;
+            when Iir_Kind_Package_Declaration =>
+               if Is_Null (Get_Package_Origin (El))
+                 and then Get_Need_Body (El)
+                 and then Get_Package_Body (El) = Null_Iir
+               then
+                  Error_Msg_Sem (+El, "missing package body for %n", +El);
+               end if;
             when others =>
                null;
          end case;
@@ -3102,7 +3230,7 @@ package body Sem_Decls is
          return;
       end if;
 
-      Set_Discrete_Range (Iterator, A_Range);
+      Set_Discrete_Range (Iterator, Null_Iir);
 
       It_Type := Range_To_Subtype_Indication (A_Range);
       Set_Subtype_Indication (Iterator, It_Type);

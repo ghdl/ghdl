@@ -24,17 +24,12 @@ with Std_Package;
 with Flags;
 with Name_Table;
 with Std_Names;
-with Back_End;
 with Disp_Vhdl;
 with Default_Pathes;
 with Scanner;
-with Sem;
-with Canon;
 with Errorout;
 with Configuration;
 with Files_Map;
-with Post_Sems;
-with Disp_Tree;
 with Options;
 with Iirs_Utils; use Iirs_Utils;
 
@@ -43,78 +38,13 @@ package body Ghdllocal is
    type Ieee_Lib_Kind is (Lib_Standard, Lib_None, Lib_Synopsys, Lib_Mentor);
    Flag_Ieee : Ieee_Lib_Kind;
 
-   Flag_Create_Default_Config : constant Boolean := True;
-
    --  If TRUE, generate 32bits code on 64bits machines.
    Flag_32bit : Boolean := False;
-
-   procedure Finish_Compilation
-     (Unit : Iir_Design_Unit; Main : Boolean := False)
-   is
-      use Errorout;
-      Config : Iir_Design_Unit;
-      Lib : Iir;
-   begin
-      if (Main or Flags.Dump_All) and then Flags.Dump_Parse then
-         Disp_Tree.Disp_Tree (Unit);
-      end if;
-
-      if Flags.Verbose then
-         Report_Msg (Msgid_Note, Semantic, No_Location,
-                     "analyze %n", (1 => +Get_Library_Unit (Unit)));
-      end if;
-
-      Sem.Semantic (Unit);
-
-      if (Main or Flags.Dump_All) and then Flags.Dump_Sem then
-         Disp_Tree.Disp_Tree (Unit);
-      end if;
-
-      if Errorout.Nbr_Errors > 0 then
-         raise Compilation_Error;
-      end if;
-
-      if (Main or Flags.List_All) and then Flags.List_Sem then
-         Disp_Vhdl.Disp_Vhdl (Unit);
-      end if;
-
-      Post_Sems.Post_Sem_Checks (Unit);
-
-      if Errorout.Nbr_Errors > 0 then
-         raise Compilation_Error;
-      end if;
-
-      if Flags.Flag_Elaborate
-        or else ((Main or Flags.List_All) and then Flags.List_Canon)
-      then
-         if Flags.Verbose then
-            Report_Msg (Msgid_Note, Semantic, No_Location,
-                        "canonicalize %n", (1 => +Get_Library_Unit (Unit)));
-         end if;
-
-         Canon.Canonicalize (Unit);
-
-         if (Main or Flags.List_All) and then Flags.List_Canon then
-            Disp_Vhdl.Disp_Vhdl (Unit);
-         end if;
-      end if;
-
-      if Flags.Flag_Elaborate then
-         if Flag_Create_Default_Config then
-            Lib := Get_Library_Unit (Unit);
-            if Get_Kind (Lib) = Iir_Kind_Architecture_Body then
-               Config := Canon.Create_Default_Configuration_Declaration (Lib);
-               Set_Default_Configuration_Declaration (Lib, Config);
-            end if;
-         end if;
-      end if;
-   end Finish_Compilation;
 
    procedure Compile_Init is
    begin
       Options.Initialize;
       Flag_Ieee := Lib_Standard;
-      Back_End.Finish_Compilation := Finish_Compilation'Access;
       Flag_Verbose := False;
    end Compile_Init;
 
@@ -517,6 +447,8 @@ package body Ghdllocal is
             Put ("package instance ");
          when Iir_Kind_Package_Body =>
             Put ("package body ");
+         when Iir_Kind_Context_Declaration =>
+            Put ("context ");
          when others =>
             Put ("???");
             return;
@@ -782,7 +714,7 @@ package body Ghdllocal is
                     | Date_Analyzed =>
                      null;
                   when Date_Parsed =>
-                     Back_End.Finish_Compilation (Unit, False);
+                     Libraries.Finish_Compilation (Unit, False);
                   when others =>
                      raise Internal_Error;
                end case;
@@ -847,7 +779,7 @@ package body Ghdllocal is
             New_Line;
          end if;
          -- Sem, canon, annotate a design unit.
-         Back_End.Finish_Compilation (Unit, True);
+         Libraries.Finish_Compilation (Unit, True);
 
          Next_Unit := Get_Chain (Unit);
          if Errorout.Nbr_Errors = 0 then
@@ -929,10 +861,10 @@ package body Ghdllocal is
       procedure Delete_Top_Unit (Str : String) is
       begin
          --  Delete elaboration file
-         Delete_Asm_Obj (Image (Libraries.Work_Directory) & Elab_Prefix & Str);
+         Delete_Asm_Obj (Elab_Prefix & Str);
 
          --  Delete file list.
-         Delete (Image (Libraries.Work_Directory) & Str & List_Suffix & Nul);
+         Delete (Str & List_Suffix & Nul);
 
          --  Delete executable.
          Delete (Str & Nul);
@@ -960,6 +892,7 @@ package body Ghdllocal is
          Delete_Asm_Obj (Str.all);
          Free (Str);
 
+         --  Try any possible top-level names
          Design_Unit := Get_First_Design_Unit (File);
          while Design_Unit /= Null_Iir loop
             Lib_Unit := Get_Library_Unit (Design_Unit);
@@ -1013,7 +946,7 @@ package body Ghdllocal is
       end if;
       Perform_Action (Command_Clean (Cmd), Args);
       Delete (Image (Libraries.Work_Directory)
-              & Back_End.Library_To_File_Name (Libraries.Work_Library)
+              & Libraries.Library_To_File_Name (Libraries.Work_Library)
               & Nul);
    end Perform_Action;
 

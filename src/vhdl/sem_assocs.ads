@@ -19,8 +19,10 @@ with Iirs; use Iirs;
 with Sem_Expr; use Sem_Expr;
 
 package Sem_Assocs is
-   --  Change the kind of association corresponding to non-object interfaces.
-   --  Such an association mustn't be handled an like association for object.
+   --  Rewrite the association chain by changing the kind of assocation
+   --  corresponding to non-object interfaces.  Such an association mustn't be
+   --  handled an like association for object as the actual is not an
+   --  expression.
    function Extract_Non_Object_Association
      (Assoc_Chain : Iir; Inter_Chain : Iir) return Iir;
 
@@ -53,9 +55,14 @@ package Sem_Assocs is
 
    --  Check for restrictions in LRM93 1.1.1.2
    --  Return FALSE in case of error.
-   function Check_Port_Association_Restriction
+   function Check_Port_Association_Mode_Restrictions
      (Formal : Iir_Interface_Signal_Declaration;
       Actual : Iir_Interface_Signal_Declaration;
       Assoc : Iir)
      return Boolean;
+
+   --  Check restrictions of LRM02 12.2.4
+   procedure Check_Port_Association_Bounds_Restrictions
+     (Formal : Iir; Actual : Iir; Assoc : Iir);
+
 end Sem_Assocs;

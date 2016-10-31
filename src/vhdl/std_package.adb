@@ -143,8 +143,10 @@ package body Std_Package is
       begin
          Res := Create_Std_Iir (Iir_Kind_Range_Expression);
          Set_Left_Limit (Res, Left);
+         Set_Left_Limit_Expr (Res, Left);
          Set_Direction (Res, Iir_To);
          Set_Right_Limit (Res, Right);
+         Set_Right_Limit_Expr (Res, Right);
          Set_Expr_Staticness (Res, Locally);
          Set_Type (Res, Rtype);
          return Res;
@@ -186,12 +188,45 @@ package body Std_Package is
          Nxt : Iir;
       begin
          Sem_Decls.Create_Implicit_Operations (Decl, True);
+
+         --  Update Last_Decl
          loop
             Nxt := Get_Chain (Last_Decl);
             exit when Nxt = Null_Iir;
             Last_Decl := Nxt;
          end loop;
       end Add_Implicit_Operations;
+
+      --  Find implicit declaration of "**" for type declaration TYPE_DECL
+      --  and append it at the current end of std_package.
+      procedure Relocate_Exp_At_End (Type_Decl : Iir)
+      is
+         Prev_El, El : Iir;
+      begin
+         pragma Assert
+           (Get_Kind (Type_Decl) = Iir_Kind_Anonymous_Type_Declaration);
+         El := Type_Decl;
+         loop
+            Prev_El := El;
+            El := Get_Chain (El);
+            pragma Assert (Get_Kind (El) = Iir_Kind_Function_Declaration);
+            exit when
+              Get_Implicit_Definition (El) = Iir_Predefined_Integer_Exp;
+            exit when
+              Get_Implicit_Definition (El) = Iir_Predefined_Floating_Exp;
+         end loop;
+
+         --  EL must not be the last element, otherwise Add_Decl will break
+         --  the chain.
+         pragma Assert (Is_Valid (Get_Chain (El)));
+
+         --  Remove from the chain.
+         Set_Chain (Prev_El, Get_Chain (El));
+         Set_Chain (El, Null_Iir);
+
+         --  Append.
+         Add_Decl (El);
+      end Relocate_Exp_At_End;
 
       procedure Create_Std_Type (Decl : out Iir; Def : Iir; Name : Name_Id) is
       begin
@@ -247,6 +282,7 @@ package body Std_Package is
          Subtype_Decl := Create_Std_Decl (Iir_Kind_Subtype_Declaration);
          Set_Std_Identifier (Subtype_Decl, Get_Identifier (Type_Decl));
          Set_Type (Subtype_Decl, Subtype_Definition);
+         Set_Subtype_Indication (Subtype_Decl, Subtype_Definition);
          Set_Type_Declarator (Subtype_Definition, Subtype_Decl);
          Set_Subtype_Definition (Type_Decl, Subtype_Definition);
       end Create_Integer_Subtype;
@@ -351,6 +387,9 @@ package body Std_Package is
          Set_Type_Staticness (Def, None);
          Set_Type_Definition (Decl, Def);
          Set_Type_Declarator (Def, Decl);
+
+         Set_Chain (Decl, Wildcard_Type_Declaration_Chain);
+         Wildcard_Type_Declaration_Chain := Decl;
       end Create_Wildcard_Type;
 
    begin
@@ -574,6 +613,7 @@ package body Std_Package is
          Set_Signal_Type_Flag (Universal_Real_Type_Definition, True);
          Set_Has_Signal_Flag (Universal_Real_Type_Definition, False);
 
+         --  type universal_real is ...
          Universal_Real_Type_Declaration :=
            Create_Std_Decl (Iir_Kind_Anonymous_Type_Declaration);
          Set_Identifier (Universal_Real_Type_Declaration, Name_Universal_Real);
@@ -596,13 +636,15 @@ package body Std_Package is
          Set_Signal_Type_Flag (Universal_Real_Subtype_Definition, True);
          Set_Has_Signal_Flag (Universal_Real_Subtype_Definition, False);
 
-         --  type is
+         --  subtype universal_real is ...
          Universal_Real_Subtype_Declaration :=
            Create_Std_Decl (Iir_Kind_Subtype_Declaration);
          Set_Identifier (Universal_Real_Subtype_Declaration,
                          Name_Universal_Real);
          Set_Type (Universal_Real_Subtype_Declaration,
                    Universal_Real_Subtype_Definition);
+         Set_Subtype_Indication (Universal_Real_Subtype_Declaration,
+                                 Universal_Real_Subtype_Definition);
          Set_Type_Declarator (Universal_Real_Subtype_Definition,
                               Universal_Real_Subtype_Declaration);
          Set_Subtype_Definition (Universal_Real_Type_Declaration,
@@ -654,9 +696,18 @@ package body Std_Package is
                               Name_Integer);
          Add_Decl (Integer_Type_Declaration);
 
-         Add_Implicit_Operations (Integer_Type_Declaration);
+         --  Now that Integer is declared, create operations for universal
+         --  types.  They will be inserted just after the type declaration,
+         --  but cannot be done before as "**" relies on Integer.
          Add_Implicit_Operations (Universal_Integer_Type_Declaration);
          Add_Implicit_Operations (Universal_Real_Type_Declaration);
+
+         --  Don't define "**" for universal types before the declaration of
+         --  Integer, so move them.
+         Relocate_Exp_At_End (Universal_Integer_Type_Declaration);
+         Relocate_Exp_At_End (Universal_Real_Type_Declaration);
+
+         Add_Implicit_Operations (Integer_Type_Declaration);
 
          Create_Integer_Subtype (Integer_Type_Definition,
                                  Integer_Type_Declaration,
@@ -704,6 +755,8 @@ package body Std_Package is
            Create_Std_Decl (Iir_Kind_Subtype_Declaration);
          Set_Std_Identifier (Real_Subtype_Declaration, Name_Real);
          Set_Type (Real_Subtype_Declaration, Real_Subtype_Definition);
+         Set_Subtype_Indication (Real_Subtype_Declaration,
+                                 Real_Subtype_Definition);
          Set_Type_Declarator
            (Real_Subtype_Definition, Real_Subtype_Declaration);
          Add_Decl (Real_Subtype_Declaration);
@@ -726,8 +779,8 @@ package body Std_Package is
          begin
             Lit := Create_Std_Iir (Iir_Kind_Physical_Int_Literal);
             Set_Value (Lit, Value);
-            pragma Assert (Get_Kind (Unit) = Iir_Kind_Simple_Name);
-            Set_Unit_Name (Lit, Unit);
+            pragma Assert (Get_Kind (Unit) = Iir_Kind_Unit_Declaration);
+            Set_Physical_Unit (Lit, Unit);
             Set_Type (Lit, Time_Type_Definition);
             Set_Expr_Staticness (Lit, Time_Staticness);
             return Lit;
@@ -738,29 +791,25 @@ package body Std_Package is
                                 Multiplier : in Iir_Unit_Declaration;
                                 Name : Name_Id)
          is
-            Lit: Iir_Physical_Int_Literal;
-            Mul_Name : Iir;
+            Lit, Lit1 : Iir_Physical_Int_Literal;
          begin
             Unit := Create_Std_Decl (Iir_Kind_Unit_Declaration);
             Set_Std_Identifier (Unit, Name);
             Set_Type (Unit, Time_Type_Definition);
 
-            Mul_Name := Iirs_Utils.Build_Simple_Name
-              (Multiplier, Std_Location);
-            Lit := Create_Std_Phys_Lit (Multiplier_Value, Mul_Name);
-            Set_Physical_Literal (Unit, Lit);
+            Lit1 := Create_Std_Phys_Lit (Multiplier_Value, Multiplier);
             Lit := Create_Std_Phys_Lit
               (Multiplier_Value
-               * Get_Value (Get_Physical_Unit_Value (Multiplier)),
-               Get_Unit_Name (Get_Physical_Unit_Value (Multiplier)));
-            Set_Physical_Unit_Value (Unit, Lit);
+               * Get_Value (Get_Physical_Literal (Multiplier)),
+               Get_Physical_Unit (Get_Physical_Literal (Multiplier)));
+            Set_Literal_Origin (Lit, Lit1);
+            Set_Physical_Literal (Unit, Lit);
 
             Set_Expr_Staticness (Unit, Time_Staticness);
             Set_Name_Staticness (Unit, Locally);
             Append (Last_Unit, Time_Type_Definition, Unit);
          end Create_Unit;
 
-         Time_Fs_Name : Iir;
          Time_Fs_Unit: Iir_Unit_Declaration;
          Time_Ps_Unit: Iir_Unit_Declaration;
          Time_Ns_Unit: Iir_Unit_Declaration;
@@ -793,10 +842,8 @@ package body Std_Package is
          Set_Type (Time_Fs_Unit, Time_Type_Definition);
          Set_Expr_Staticness (Time_Fs_Unit, Time_Staticness);
          Set_Name_Staticness (Time_Fs_Unit, Locally);
-         Time_Fs_Name := Iirs_Utils.Build_Simple_Name
-           (Time_Fs_Unit, Std_Location);
-         Set_Physical_Unit_Value
-           (Time_Fs_Unit, Create_Std_Phys_Lit (1, Time_Fs_Name));
+         Set_Physical_Literal
+           (Time_Fs_Unit, Create_Std_Phys_Lit (1, Time_Fs_Unit));
          Append (Last_Unit, Time_Type_Definition, Time_Fs_Unit);
 
          Create_Unit (Time_Ps_Unit, 1000, Time_Fs_Unit, Name_Ps);
@@ -821,9 +868,9 @@ package body Std_Package is
            Create_Std_Iir (Iir_Kind_Physical_Subtype_Definition);
          Constraint := Create_Std_Range_Expr
            (Create_Std_Phys_Lit (Low_Bound (Flags.Flag_Time_64),
-                                 Time_Fs_Name),
+                                 Time_Fs_Unit),
             Create_Std_Phys_Lit (High_Bound (Flags.Flag_Time_64),
-                                 Time_Fs_Name),
+                                 Time_Fs_Unit),
             Time_Type_Definition);
          Set_Range_Constraint (Time_Subtype_Definition, Constraint);
          Set_Base_Type (Time_Subtype_Definition, Time_Type_Definition);
@@ -839,6 +886,8 @@ package body Std_Package is
            Create_Std_Decl (Iir_Kind_Subtype_Declaration);
          Set_Std_Identifier (Time_Subtype_Declaration, Name_Time);
          Set_Type (Time_Subtype_Declaration, Time_Subtype_Definition);
+         Set_Subtype_Indication (Time_Subtype_Declaration,
+                                 Time_Subtype_Definition);
          Set_Type_Declarator (Time_Subtype_Definition,
                               Time_Subtype_Declaration);
          Add_Decl (Time_Subtype_Declaration);
@@ -876,9 +925,9 @@ package body Std_Package is
               (Delay_Length_Subtype_Definition,
                Create_Std_Type_Mark (Time_Subtype_Declaration));
             Constraint := Create_Std_Range_Expr
-              (Create_Std_Phys_Lit (0, Time_Fs_Name),
+              (Create_Std_Phys_Lit (0, Time_Fs_Unit),
                Create_Std_Phys_Lit (High_Bound (Flags.Flag_Time_64),
-                                    Time_Fs_Name),
+                                    Time_Fs_Unit),
                Time_Type_Definition);
             Set_Range_Constraint (Delay_Length_Subtype_Definition, Constraint);
             Set_Base_Type
@@ -1207,12 +1256,14 @@ package body Std_Package is
       --  Wilcard types.
       --  Create the declaration and give them meaningful (and invalid) names
       --  so that error messages are clear for the user.
+      Wildcard_Type_Declaration_Chain := Null_Iir;
       Create_Wildcard_Type (Wildcard_Any_Type, "any type");
       Create_Wildcard_Type (Wildcard_Any_Aggregate_Type, "any aggregate type");
       Create_Wildcard_Type (Wildcard_Any_String_Type, "any string type");
       Create_Wildcard_Type (Wildcard_Any_Access_Type, "any access type");
 
       Error_Type := Iirs_Utils.Create_Error_Type (Wildcard_Any_Type);
+      Set_Error_Origin (Error_Type, Null_Iir);
       Create_Wildcard_Type (Error_Type, "unknown type");
    end Create_Std_Standard_Package;
 end Std_Package;

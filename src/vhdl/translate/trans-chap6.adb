@@ -920,9 +920,20 @@ package body Trans.Chap6 is
             return Translate_Name (Get_Named_Entity (Name), Mode);
          when Iir_Kind_Attribute_Value =>
             pragma Assert (Mode = Mode_Value);
-            return Get_Var
-              (Get_Info (Get_Attribute_Specification (Name)).Object_Var,
-               Type_Info, Mode_Value);
+            declare
+               Attr : constant Iir := Get_Attribute_Specification (Name);
+               Val : Iir;
+            begin
+               if Get_Expr_Staticness (Get_Expression (Attr)) = None then
+                  Val := Name;
+               else
+                  --  If the expression is static, an object is created only
+                  --  for the first value.
+                  Val := Get_Attribute_Value_Spec_Chain (Attr);
+               end if;
+               return Get_Var (Get_Info (Val).Object_Var,
+                               Type_Info, Mode_Value);
+            end;
 
          when Iir_Kind_Object_Alias_Declaration =>
             --  Alias_Var is not like an object variable, since it is

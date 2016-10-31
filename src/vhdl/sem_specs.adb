@@ -170,7 +170,7 @@ package body Sem_Specs is
                return Value;
             end if;
          end if;
-         Value := Get_Chain (Value);
+         Value := Get_Value_Chain (Value);
       end loop;
       return Null_Iir;
    end Find_Attribute_Value;
@@ -186,6 +186,8 @@ package body Sem_Specs is
                                Check_Defined : Boolean)
    is
       use Tokens;
+      Attr_Expr : constant Iir := Get_Expression (Attr);
+
       El : Iir_Attribute_Value;
 
       --  Attribute declaration corresponding to ATTR.
@@ -286,7 +288,7 @@ package body Sem_Specs is
                end if;
             end;
          end if;
-         El := Get_Chain (El);
+         El := Get_Value_Chain (El);
       end loop;
 
       El := Create_Iir (Iir_Kind_Attribute_Value);
@@ -294,25 +296,21 @@ package body Sem_Specs is
       Set_Name_Staticness (El, None);
       Set_Attribute_Specification (El, Attr);
       --  FIXME: create an expr_error node?
-      declare
-         Expr : Iir;
-      begin
-         Expr := Get_Expression (Attr);
-         if Expr = Error_Mark then
-            Set_Expr_Staticness (El, Locally);
-         else
-            Set_Expr_Staticness (El, Get_Expr_Staticness (Expr));
-         end if;
-      end;
+      if Is_Error (Attr_Expr) then
+         Set_Expr_Staticness (El, Locally);
+      else
+         Set_Expr_Staticness (El, Get_Expr_Staticness (Attr_Expr));
+      end if;
       Set_Designated_Entity (El, Decl);
-      Set_Type (El, Get_Type (Attr));
+      Set_Type (El, Get_Type (Attr_Expr));
       Set_Base_Name (El, El);
 
       --  Put the attribute value in the attribute_value_chain.
-      Set_Chain (El, Get_Attribute_Value_Chain (Attr_Chain_Parent));
+      Set_Value_Chain (El, Get_Attribute_Value_Chain (Attr_Chain_Parent));
       Set_Attribute_Value_Chain (Attr_Chain_Parent, El);
 
       --  Put the attribute value in the chain of the attribute specification.
+      --  This is prepended, so in reverse order.  Will be reversed later.
       Set_Spec_Chain (El, Get_Attribute_Value_Spec_Chain (Attr));
       Set_Attribute_Value_Spec_Chain (Attr, El);
 
@@ -717,7 +715,6 @@ package body Sem_Specs is
       --  the same as (or implicitly convertible to) the type mark in the
       --  corresponding attribute declaration.
       Attr_Type := Get_Type (Attr);
-      Set_Type (Spec, Attr_Type);
       Expr := Sem_Expression (Get_Expression (Spec), Attr_Type);
       if Expr /= Null_Iir then
          Check_Read (Expr);
@@ -748,11 +745,11 @@ package body Sem_Specs is
       end if;
 
       --  LRM93 3.2.1.1 Index constraints and discrete ranges
-      --  - For an attribtue whose value is specified by an attribute
+      --  - For an attribute whose value is specified by an attribute
       --    specification, the index ranges are defined by the expression
       --    given in the specification, if the subtype of the attribute is
       --    unconstrained [...]
-      Sem_Decls.Sem_Object_Type_From_Value (Spec, Get_Expression (Spec));
+      --  GHDL: For attribute value.
 
       --  LRM 5.1
       --  The entity name list identifies those named entities, both
@@ -807,6 +804,25 @@ package body Sem_Specs is
             end loop;
          end;
       end if;
+
+      --  Reverse the chain of attribute value in specification, so that they
+      --  are in textual order.  This is important if the expression is not
+      --  static.
+      declare
+         El : Iir;
+         New_El : Iir;
+         Tmp : Iir;
+      begin
+         El := Get_Attribute_Value_Spec_Chain (Spec);
+         New_El := Null_Iir;
+         while Is_Valid (El) loop
+            Tmp := Get_Spec_Chain (El);
+            Set_Spec_Chain (El, New_El);
+            New_El := El;
+            El := Tmp;
+         end loop;
+         Set_Attribute_Value_Spec_Chain (Spec, New_El);
+      end;
    end Sem_Attribute_Specification;
 
    procedure Check_Post_Attribute_Specification
@@ -1095,7 +1111,6 @@ package body Sem_Specs is
    end Sem_Entity_Aspect;
 
    procedure Sem_Binding_Indication (Bind : Iir_Binding_Indication;
-                                     Comp : Iir_Component_Declaration;
                                      Parent : Iir;
                                      Primary_Entity_Aspect : Iir)
    is
@@ -1171,20 +1186,7 @@ package body Sem_Specs is
          --  If the generic map aspect or port map aspect of a binding
          --  indication is not present, then the default rules as described
          --  in 5.2.2 apply.
-         if Get_Generic_Map_Aspect_Chain (Bind) = Null_Iir
-           and then Primary_Entity_Aspect = Null_Iir
-         then
-            Set_Default_Generic_Map_Aspect_Chain
-              (Bind,
-               Create_Default_Map_Aspect (Comp, Entity, Map_Generic, Parent));
-         end if;
-         if Get_Port_Map_Aspect_Chain (Bind) = Null_Iir
-           and then Primary_Entity_Aspect = Null_Iir
-         then
-            Set_Default_Port_Map_Aspect_Chain
-              (Bind,
-               Create_Default_Map_Aspect (Comp, Entity, Map_Port, Parent));
-         end if;
+         --  GHDL: done in canon
       end if;
    end Sem_Binding_Indication;
 
@@ -1399,6 +1401,7 @@ package body Sem_Specs is
                        (Inst, Spec, Primary_Entity_Aspect);
                      Xref_Ref (El, Inst);
                      Set_Named_Entity (El, Inst);
+                     Set_Is_Forward_Ref (El, True);
                   end if;
                end if;
             end if;
@@ -1422,8 +1425,8 @@ package body Sem_Specs is
       --  Extend scope of component interface declaration.
       Sem_Scopes.Open_Scope_Extension;
       Sem_Scopes.Add_Component_Declarations (Component);
-      Sem_Binding_Indication (Get_Binding_Indication (Conf),
-                              Component, Conf, Primary_Entity_Aspect);
+      Sem_Binding_Indication
+        (Get_Binding_Indication (Conf), Conf, Primary_Entity_Aspect);
       --  FIXME: check default port and generic association.
       Sem_Scopes.Close_Scope_Extension;
    end Sem_Configuration_Specification;
@@ -1432,7 +1435,8 @@ package body Sem_Specs is
      (Comp : Iir_Component_Declaration;
       Entity_Unit : Iir_Design_Unit;
       Parent : Iir;
-      Force : Boolean)
+      Force : Boolean;
+      Create_Map_Aspect : Boolean)
      return Iir_Binding_Indication
    is
       Entity : Iir_Entity_Declaration;
@@ -1513,19 +1517,22 @@ package body Sem_Specs is
       Set_Entity_Name (Aspect, Entity_Name);
       Set_Entity_Aspect (Res, Aspect);
 
-      --  LRM 5.2.2
-      --  The default binding indication includes a default generic map aspect
-      --  if the design entity implied by the entity aspect contains formal
-      --  generics.
-      Set_Generic_Map_Aspect_Chain
-        (Res, Create_Default_Map_Aspect (Comp, Entity, Map_Generic, Parent));
+      if Create_Map_Aspect then
+         --  LRM 5.2.2
+         --  The default binding indication includes a default generic map
+         --  aspect if the design entity implied by the entity aspect contains
+         --  formal generics.
+         Set_Generic_Map_Aspect_Chain
+           (Res,
+            Create_Default_Map_Aspect (Comp, Entity, Map_Generic, Parent));
 
-      --  LRM 5.2.2
-      --  The default binding indication includes a default port map aspect
-      --  if the design entity implied by the entity aspect contains formal
-      --  ports.
-      Set_Port_Map_Aspect_Chain
-        (Res, Create_Default_Map_Aspect (Comp, Entity, Map_Port, Parent));
+         --  LRM 5.2.2
+         --  The default binding indication includes a default port map aspect
+         --  if the design entity implied by the entity aspect contains formal
+         --  ports.
+         Set_Port_Map_Aspect_Chain
+           (Res, Create_Default_Map_Aspect (Comp, Entity, Map_Port, Parent));
+      end if;
 
       return Res;
    end Sem_Create_Default_Binding_Indication;
@@ -1562,6 +1569,7 @@ package body Sem_Specs is
       Res, Last : Iir;
       Comp_El, Ent_El : Iir;
       Assoc : Iir;
+      Name : Iir;
       Found : Natural;
       Comp_Chain : Iir;
       Ent_Chain : Iir;
@@ -1608,7 +1616,7 @@ package body Sem_Specs is
                   (+Ent_El, +Ent_El));
                Error := True;
             elsif Kind = Map_Port
-              and then not Check_Port_Association_Restriction
+              and then not Check_Port_Association_Mode_Restrictions
               (Ent_El, Comp_El, Null_Iir)
             then
                if not Error then
@@ -1626,11 +1634,19 @@ package body Sem_Specs is
             end if;
             Assoc := Create_Iir (Iir_Kind_Association_Element_By_Expression);
             Location_Copy (Assoc, Parent);
-            Set_Actual (Assoc, Comp_El);
+            Name := Build_Simple_Name (Comp_El, Parent);
+            Set_Type (Name, Get_Type (Comp_El));
+            Set_Actual (Assoc, Name);
+            if Kind = Map_Port then
+               Check_Port_Association_Bounds_Restrictions
+                 (Ent_El, Comp_El, Assoc);
+            end if;
             Found := Found + 1;
          end if;
          Set_Whole_Association_Flag (Assoc, True);
-         Set_Formal (Assoc, Ent_El);
+         Name := Build_Simple_Name (Ent_El, Parent);
+         Set_Type (Name, Get_Type (Ent_El));
+         Set_Formal (Assoc, Name);
          if Kind = Map_Port
            and then not Error
            and then Comp_El /= Null_Iir

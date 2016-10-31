@@ -52,6 +52,10 @@ package Sem_Types is
    --  This is used when an alias of DEF is required (eg: subtype a is b).
    function Copy_Subtype_Indication (Def : Iir) return Iir;
 
+   --  Return a copy of the resolution_indication in SUBDEF, or null_iir if
+   --  none.
+   function Copy_Resolution_Indication (Subdef : Iir) return Iir;
+
    --  Although a nature is not a type, it is patterned like a type.
    function Sem_Subnature_Indication (Def: Iir) return Iir;
 end Sem_Types;

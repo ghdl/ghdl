@@ -28,6 +28,28 @@ package body Iir_Chains is
       return Res;
    end Get_Chain_Length;
 
+   procedure Append_Chain
+     (N : Iir; Field : Nodes_Meta.Fields_Enum; Chain : Iir)
+   is
+      use Nodes_Meta;
+      N_Chain : Iir;
+      Next_Chain : Iir;
+   begin
+      N_Chain := Get_Iir (N, Field);
+      if Is_Null (N_Chain) then
+         Set_Iir (N, Field, Chain);
+      else
+         loop
+            Next_Chain := Get_Chain (N_Chain);
+            if Is_Null (Next_Chain) then
+               Set_Chain (N_Chain, Chain);
+               exit;
+            end if;
+            N_Chain := Next_Chain;
+         end loop;
+      end if;
+   end Append_Chain;
+
    procedure Sub_Chain_Init (First, Last : out Iir) is
    begin
       First := Null_Iir;

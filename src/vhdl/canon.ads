@@ -25,6 +25,15 @@ package Canon is
    --  If true, canon sequentials statements (processes and subprograms).
    Canon_Flag_Sequentials_Stmts : Boolean := False;
 
+   --  If true, canon concurrent statements.
+   Canon_Flag_Concurrent_Stmts : Boolean := True;
+
+   --  If true, canon configuration.
+   Canon_Flag_Configurations : Boolean := True;
+
+   --  If true, canon lists in specifications.
+   Canon_Flag_Specification_Lists : Boolean := True;
+
    --  If true, canon expressions.
    Canon_Flag_Expressions : Boolean := False;
 
@@ -51,6 +60,11 @@ package Canon is
    function Create_Default_Configuration_Declaration
      (Arch : Iir_Architecture_Body)
      return Iir_Design_Unit;
+
+   --  Macro-expand package bodies for instantiations in DECL.  Return the
+   --  chain of bodies (the parent of each body is set to PARENT).
+   function Create_Instantiation_Bodies
+     (Decl : Iir_Package_Declaration; Parent : Iir) return Iir;
 
    --  Canonicalize a subprogram call.
    procedure Canon_Subprogram_Call (Call : Iir);

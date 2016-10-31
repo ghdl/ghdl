@@ -21,6 +21,8 @@ with Types; use Types;
 with Flags;
 with Name_Table;
 with Sem;
+with Sem_Inst;
+with Sem_Specs;
 with Iir_Chains; use Iir_Chains;
 with PSL.Nodes;
 with PSL.Rewrites;
@@ -30,16 +32,19 @@ with PSL.NFAs.Utils;
 with Canon_PSL;
 
 package body Canon is
-   --  Canonicalize a list of declarations.  LIST can be null.
-   --  PARENT must be the parent of the current statements chain for LIST,
-   --  or NULL_IIR if LIST has no corresponding current statments.
+   Canon_Flag_Set_Assoc_Formals : constant Boolean := False;
+
+   --  Canonicalize the chain of declarations in Declaration_Chain of
+   --  DECL_PARENT. PARENT must be the parent of the current statements chain,
+   --  or NULL_IIR if DECL_PARENT has no corresponding current statments.
    procedure Canon_Declarations (Top : Iir_Design_Unit;
                                  Decl_Parent : Iir;
                                  Parent : Iir);
-   procedure Canon_Declaration (Top : Iir_Design_Unit;
-                                Decl : Iir;
-                                Parent : Iir;
-                                Decl_Parent : Iir);
+   function Canon_Declaration (Top : Iir_Design_Unit;
+                               Decl : Iir;
+                               Parent : Iir;
+                               Decl_Parent : Iir)
+                              return Iir;
 
    procedure Canon_Concurrent_Stmts (Top : Iir_Design_Unit; Parent : Iir);
 
@@ -180,7 +185,8 @@ package body Canon is
 
          when Iir_Kind_Qualified_Expression
            | Iir_Kind_Type_Conversion
-           | Iir_Kind_Allocator_By_Expression =>
+           | Iir_Kind_Allocator_By_Expression
+           | Iir_Kind_Parenthesis_Expression =>
             Canon_Extract_Sensitivity
               (Get_Expression (Expr), Sensitivity_List, False);
 
@@ -312,6 +318,25 @@ package body Canon is
          Canon_Extract_Sensitivity (Expr, Sensitivity_List, Is_Target);
       end if;
    end Canon_Extract_Sensitivity_If_Not_Null;
+
+   procedure Canon_Extract_Sensitivity_Procedure_Call
+     (Sensitivity_List : Iir_List; Call : Iir)
+   is
+      Assoc : Iir;
+      Inter : Iir;
+   begin
+      Assoc := Get_Parameter_Association_Chain (Call);
+      Inter := Get_Interface_Declaration_Chain (Get_Implementation (Call));
+      while Assoc /= Null_Iir loop
+         if (Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression)
+           and then (Get_Mode (Get_Association_Interface (Assoc, Inter))
+                       /= Iir_Out_Mode)
+         then
+            Canon_Extract_Sensitivity (Get_Actual (Assoc), Sensitivity_List);
+         end if;
+         Next_Association_Interface (Assoc, Inter);
+      end loop;
+   end Canon_Extract_Sensitivity_Procedure_Call;
 
    procedure Canon_Extract_Sequential_Statement_Chain_Sensitivity
      (Chain : Iir; List : Iir_List)
@@ -447,22 +472,8 @@ package body Canon is
                --    to each actual designator (other than OPEN) associated
                --    with each formal parameter of mode IN or INOUT, and
                --    construct the union of the resulting sets.
-               declare
-                  Param : Iir;
-               begin
-                  Param := Get_Parameter_Association_Chain
-                    (Get_Procedure_Call (Stmt));
-                  while Param /= Null_Iir loop
-                     if (Get_Kind (Param)
-                           = Iir_Kind_Association_Element_By_Expression)
-                       and then (Get_Mode (Get_Association_Interface (Param))
-                                   /= Iir_Out_Mode)
-                     then
-                        Canon_Extract_Sensitivity (Get_Actual (Param), List);
-                     end if;
-                     Param := Get_Chain (Param);
-                  end loop;
-               end;
+               Canon_Extract_Sensitivity_Procedure_Call
+                 (List, Get_Procedure_Call (Stmt));
             when others =>
                Error_Kind
                  ("canon_extract_sequential_statement_chain_sensitivity",
@@ -839,6 +850,7 @@ package body Canon is
       N_Chain, Last : Iir;
       Inter : Iir;
       Assoc_El, Prev_Assoc_El, Next_Assoc_El : Iir;
+      Formal : Iir;
       Assoc_Chain : Iir;
 
       Found : Boolean;
@@ -862,10 +874,18 @@ package body Canon is
          Prev_Assoc_El := Null_Iir;
          while Assoc_El /= Null_Iir loop
             Next_Assoc_El := Get_Chain (Assoc_El);
-            if Get_Formal (Assoc_El) = Null_Iir then
-               Set_Formal (Assoc_El, Inter);
+
+            Formal := Get_Formal (Assoc_El);
+            if Formal  = Null_Iir then
+               Formal := Inter;
+               if Canon_Flag_Set_Assoc_Formals then
+                  Set_Formal (Assoc_El, Inter);
+               end if;
+            else
+               Formal := Get_Interface_Of_Formal (Formal);
             end if;
-            if Get_Association_Interface (Assoc_El) = Inter then
+
+            if Formal = Inter then
 
                --  Remove ASSOC_EL from ASSOC_CHAIN
                if Prev_Assoc_El /= Null_Iir then
@@ -887,7 +907,9 @@ package body Canon is
                      end if;
                   when Iir_Kind_Association_Element_By_Individual =>
                      Found := True;
-                  when Iir_Kind_Association_Element_Package =>
+                  when Iir_Kind_Association_Element_Package
+                    | Iir_Kind_Association_Element_Type
+                    | Iir_Kind_Association_Element_Subprogram =>
                      goto Done;
                   when others =>
                      Error_Kind ("canon_association_chain", Assoc_El);
@@ -909,7 +931,11 @@ package body Canon is
          Set_Artificial_Flag (Assoc_El, True);
          Set_Whole_Association_Flag (Assoc_El, True);
          Location_Copy (Assoc_El, Loc);
-         Set_Formal (Assoc_El, Inter);
+
+         if Canon_Flag_Set_Assoc_Formals then
+            Set_Formal (Assoc_El, Inter);
+         end if;
+
          Sub_Chain_Append (N_Chain, Last, Assoc_El);
 
          << Done >> null;
@@ -983,57 +1009,15 @@ package body Canon is
          Assoc := Create_Iir (Iir_Kind_Association_Element_Open);
          Set_Whole_Association_Flag (Assoc, True);
          Set_Artificial_Flag (Assoc, True);
-         Set_Formal (Assoc, El);
+         if Canon_Flag_Set_Assoc_Formals then
+            Set_Formal (Assoc, El);
+         end if;
          Location_Copy (Assoc, El);
          Sub_Chain_Append (Res, Last, Assoc);
          El := Get_Chain (El);
       end loop;
       return Res;
    end Canon_Default_Association_Chain;
-
---    function Canon_Default_Map_Association_List
---      (Formal_List, Actual_List : Iir_List; Loc : Location_Type)
---      return Iir_Association_List
---    is
---       Res : Iir_Association_List;
---       Formal, Actual : Iir;
---       Assoc : Iir;
---       Nbr_Assoc : Natural;
---    begin
---       --  formal is the entity port/generic.
---       if Formal_List = Null_Iir_List then
---          if Actual_List /= Null_Iir_List then
---             raise Internal_Error;
---          end if;
---          return Null_Iir_List;
---       end if;
-
---       Res := Create_Iir (Iir_Kind_Association_List);
---       Set_Location (Res, Loc);
---       Nbr_Assoc := 0;
---       for I in Natural loop
---          Formal := Get_Nth_Element (Formal_List, I);
---          exit when Formal = Null_Iir;
---          Actual := Find_Name_In_List (Actual_List, Get_Identifier (Formal));
---          if Actual /= Null_Iir then
---            Assoc := Create_Iir (Iir_Kind_Association_Element_By_Expression);
---             Set_Whole_Association_Flag (Assoc, True);
---             Set_Actual (Assoc, Actual);
---             Nbr_Assoc := Nbr_Assoc + 1;
---          else
---             Assoc := Create_Iir (Iir_Kind_Association_Element_Open);
---          end if;
---          Set_Location (Assoc, Loc);
---          Set_Formal (Assoc, Formal);
---          Set_Associated_Formal (Assoc, Formal);
---          Append_Element (Res, Assoc);
---       end loop;
---       if Nbr_Assoc /= Get_Nbr_Elements (Actual_List) then
---          --  There is non-associated actuals.
---          raise Internal_Error;
---       end if;
---       return Res;
---    end Canon_Default_Map_Association_List;
 
    function Canon_Conditional_Variable_Assignment_Statement (Stmt : Iir)
                                                             return Iir
@@ -1268,13 +1252,13 @@ package body Canon is
       return Res;
    end Canon_Sequential_Stmts;
 
-   -- Create a statement transform from concurrent_signal_assignment
-   -- statement STMT (either selected or conditional).
-   -- waveform transformation is not done.
-   -- PROC is the process created.
-   -- PARENT is the place where signal assignment must be placed.  This may
-   --  be PROC, or an 'if' statement if the assignment is guarded.
-   -- See LRM93 9.5
+   --  Create a statement transform from concurrent_signal_assignment
+   --  statement STMT (either selected or conditional).
+   --  waveform transformation is not done.
+   --  PROC is the process created.
+   --  PARENT is the place where signal assignment must be placed.  This may
+   --   be PROC, or an 'if' statement if the assignment is guarded.
+   --  See LRM93 9.5
    procedure Canon_Concurrent_Signal_Assignment
      (Stmt: Iir;
       Proc: out Iir_Sensitized_Process_Statement;
@@ -1308,19 +1292,23 @@ package body Canon is
       end if;
 
       if Get_Guard (Stmt) /= Null_Iir then
-         -- LRM93 9.1
-         -- If the option guarded appears in the concurrent signal assignment
-         -- statement, then the concurrent signal assignment is called a
-         -- guarded assignment.
-         -- If the concurrent signal assignement statement is a guarded
-         -- assignment and the target of the concurrent signal assignment is
-         -- a guarded target, then the statement transform is as follow:
-         --   if GUARD then signal_transform else disconnect_statements end if;
-         -- Otherwise, if the concurrent signal assignment statement is a
-         -- guarded assignement, but the target if the concurrent signal
-         -- assignment is not a guarded target, the then statement transform
-         -- is as follows:
-         --  if GUARD then signal_transform end if;
+         --  LRM93 9.1
+         --  If the option guarded appears in the concurrent signal assignment
+         --  statement, then the concurrent signal assignment is called a
+         --  guarded assignment.
+         --  If the concurrent signal assignement statement is a guarded
+         --  assignment and the target of the concurrent signal assignment is
+         --  a guarded target, then the statement transform is as follow:
+         --    if GUARD then
+         --       signal_transform
+         --    else
+         --       disconnect_statements
+         --    end if;
+         --  Otherwise, if the concurrent signal assignment statement is a
+         --  guarded assignement, but the target if the concurrent signal
+         --  assignment is not a guarded target, the then statement transform
+         --  is as follows:
+         --   if GUARD then signal_transform end if;
          If_Stmt := Create_Iir (Iir_Kind_If_Statement);
          Set_Parent (If_Stmt, Proc);
          Set_Sequential_Statement_Chain (Proc, If_Stmt);
@@ -1352,12 +1340,12 @@ package body Canon is
             end if;
          end;
       else
-         -- LRM93 9.1
-         -- Finally, if the concurrent signal assignment statement is not a
-         -- guarded assignment, and the traget of the concurrent signal
-         -- assignment is not a guarded target, then the statement transform
-         -- is as follows:
-         --    signal_transform
+         --  LRM93 9.1
+         --  Finally, if the concurrent signal assignment statement is not a
+         --  guarded assignment, and the traget of the concurrent signal
+         --  assignment is not a guarded target, then the statement transform
+         --  is as follows:
+         --     signal_transform
          Chain := Proc;
       end if;
    end Canon_Concurrent_Signal_Assignment;
@@ -1371,8 +1359,6 @@ package body Canon is
       Call : constant Iir_Procedure_Call := Get_Procedure_Call (El);
       Imp : constant Iir := Get_Implementation (Call);
       Assoc_Chain : Iir;
-      Assoc : Iir;
-      Inter : Iir;
       Sensitivity_List : Iir_List;
       Is_Sensitized : Boolean;
    begin
@@ -1419,7 +1405,6 @@ package body Canon is
          Get_Parameter_Association_Chain (Call),
          Call);
       Set_Parameter_Association_Chain (Call, Assoc_Chain);
-      Assoc := Assoc_Chain;
 
       --  LRM93 9.3
       --  If there exists a name that denotes a signal in the actual part of
@@ -1430,22 +1415,7 @@ package body Canon is
       --  the union of the sets constructed by applying th rule of Section 8.1
       --  to each actual part associated with a formal parameter.
       Sensitivity_List := Create_Iir_List;
-      while Assoc /= Null_Iir loop
-         case Get_Kind (Assoc) is
-            when Iir_Kind_Association_Element_By_Expression =>
-               Inter := Get_Association_Interface (Assoc);
-               if Get_Mode (Inter) in Iir_In_Modes then
-                  Canon_Extract_Sensitivity
-                    (Get_Actual (Assoc), Sensitivity_List, False);
-               end if;
-            when Iir_Kind_Association_Element_Open
-              | Iir_Kind_Association_Element_By_Individual =>
-               null;
-            when others =>
-               raise Internal_Error;
-         end case;
-         Assoc := Get_Chain (Assoc);
-      end loop;
+      Canon_Extract_Sensitivity_Procedure_Call (Sensitivity_List, Call);
       if Is_Sensitized then
          Set_Sensitivity_List (Proc, Sensitivity_List);
       else
@@ -1960,10 +1930,17 @@ package body Canon is
                end;
 
             when Iir_Kind_For_Generate_Statement =>
-               Canon_Declaration
-                 (Top, Get_Parameter_Specification (El), Null_Iir, Null_Iir);
-               Canon_Generate_Statement_Body
-                 (Top, Get_Generate_Statement_Body (El));
+               declare
+                  Decl : constant Iir := Get_Parameter_Specification (El);
+                  New_Decl : Iir;
+               begin
+                  New_Decl := Canon_Declaration
+                    (Top, Decl, Null_Iir, Null_Iir);
+                  pragma Assert (New_Decl = Decl);
+
+                  Canon_Generate_Statement_Body
+                    (Top, Get_Generate_Statement_Body (El));
+               end;
 
             when Iir_Kind_Psl_Assert_Statement =>
                declare
@@ -2111,6 +2088,7 @@ package body Canon is
         Get_Kind (Cfg) = Iir_Kind_Component_Configuration;
 
       Bind : Iir;
+      Comp : Iir;
       Instances : Iir_List;
       Entity_Aspect : Iir;
       Block : Iir_Block_Configuration;
@@ -2126,10 +2104,9 @@ package body Canon is
             --  designator_all and designator_others must have been replaced
             --  by a list during canon.
             raise Internal_Error;
-         else
-            Bind := Get_Default_Binding_Indication
-              (Get_Named_Entity (Get_First_Element (Instances)));
          end if;
+         Bind := Get_Default_Binding_Indication
+           (Get_Named_Entity (Get_First_Element (Instances)));
          if Bind = Null_Iir then
             --  Component is not bound.
             return;
@@ -2146,10 +2123,13 @@ package body Canon is
          if Entity_Aspect /= Null_Iir then
             Add_Binding_Indication_Dependence (Top, Bind);
             Entity := Get_Entity_From_Entity_Aspect (Entity_Aspect);
+            Comp := Get_Named_Entity (Get_Component_Name (Cfg));
+
             Map_Chain := Get_Generic_Map_Aspect_Chain (Bind);
             if Map_Chain = Null_Iir then
-               if Is_Config then
-                  Map_Chain := Get_Default_Generic_Map_Aspect_Chain (Bind);
+               if Is_Config and then Is_Valid (Entity) then
+                  Map_Chain := Sem_Specs.Create_Default_Map_Aspect
+                    (Comp, Entity, Sem_Specs.Map_Generic, Bind);
                end if;
             else
                Map_Chain := Canon_Association_Chain
@@ -2159,8 +2139,9 @@ package body Canon is
 
             Map_Chain := Get_Port_Map_Aspect_Chain (Bind);
             if Map_Chain = Null_Iir then
-               if Is_Config then
-                  Map_Chain := Get_Default_Port_Map_Aspect_Chain (Bind);
+               if Is_Config and then Is_Valid (Entity) then
+                  Map_Chain := Sem_Specs.Create_Default_Map_Aspect
+                    (Comp, Entity, Sem_Specs.Map_Port, Bind);
                end if;
             else
                Map_Chain := Canon_Association_Chain
@@ -2177,9 +2158,8 @@ package body Canon is
                     and then Get_Architecture (Entity_Aspect) = Null_Iir
                   then
                      Entity := Get_Entity (Entity_Aspect);
-                     if Get_Kind (Entity) /= Iir_Kind_Entity_Declaration then
-                        raise Internal_Error;
-                     end if;
+                     pragma Assert
+                       (Get_Kind (Entity) = Iir_Kind_Entity_Declaration);
                      Set_Architecture
                        (Entity_Aspect, Get_Block_Specification (Block));
                   end if;
@@ -2190,6 +2170,7 @@ package body Canon is
       end if;
    end Canon_Component_Configuration;
 
+   --  Create the 'final' binding indication in case of incremental binding.
    procedure Canon_Incremental_Binding
      (Conf_Spec : Iir_Configuration_Specification;
       Comp_Conf : Iir_Component_Configuration;
@@ -2203,7 +2184,8 @@ package body Canon is
          First, Last : Iir;
 
          --  Copy an association and append new elements to FIRST/LAST.
-         procedure Copy_Association (Assoc : in out Iir; Inter : Iir)
+         procedure Copy_Association
+           (Assoc : in out Iir; Inter : in out Iir; Copy_Inter : Iir)
          is
             El : Iir;
          begin
@@ -2233,50 +2215,54 @@ package body Canon is
                end case;
 
                Sub_Chain_Append (First, Last, El);
-               Assoc := Get_Chain (Assoc);
+               Next_Association_Interface (Assoc, Inter);
                exit when Assoc = Null_Iir;
-               exit when Get_Association_Interface (Assoc) /= Inter;
+               exit when
+                 Get_Association_Interface (Assoc, Inter) /= Copy_Inter;
             end loop;
          end Copy_Association;
 
-         procedure Advance (Assoc : in out Iir; Inter : Iir)
-         is
+         procedure Advance
+           (Assoc : in out Iir; Inter : in out Iir; Skip_Inter : Iir) is
          begin
             loop
-               Assoc := Get_Chain (Assoc);
+               Next_Association_Interface (Assoc, Inter);
                exit when Assoc = Null_Iir;
-               exit when Get_Association_Interface (Assoc) /= Inter;
+               exit when
+                 Get_Association_Interface (Assoc, Inter) /= Skip_Inter;
             end loop;
          end Advance;
 
          Inter : Iir;
          F_El : Iir;
+         F_Inter : Iir;
          S_El : Iir;
+         S_Inter : Iir;
       begin
          if Sec_Chain = Null_Iir then
             --  Short-cut.
             return First_Chain;
          end if;
          F_El := First_Chain;
+         F_Inter := Inter_Chain;
          Sub_Chain_Init (First, Last);
          Inter := Inter_Chain;
          while Inter /= Null_Iir loop
             --  Consistency check.
-            pragma Assert (Get_Association_Interface (F_El) = Inter);
+            pragma Assert (Get_Association_Interface (F_El, F_Inter) = Inter);
 
             --  Find the associated in the second chain.
-            S_El := Sec_Chain;
-            while S_El /= Null_Iir loop
-               exit when Get_Association_Interface (S_El) = Inter;
-               S_El := Get_Chain (S_El);
-            end loop;
+            S_El := Find_First_Association_For_Interface
+              (Sec_Chain, Inter_Chain, Inter);
+
             if S_El /= Null_Iir
               and then Get_Kind (S_El) /= Iir_Kind_Association_Element_Open
             then
-               Copy_Association (S_El, Inter);
-               Advance (F_El, Inter);
+               S_Inter := Inter;
+               Copy_Association (S_El, S_Inter, Inter);
+               Advance (F_El, F_Inter, Inter);
             else
-               Copy_Association (F_El, Inter);
+               Copy_Association (F_El, F_Inter, Inter);
             end if;
             Inter := Get_Chain (Inter);
          end loop;
@@ -2289,6 +2275,7 @@ package body Canon is
       Cs_Chain : Iir;
       Res_Binding : Iir_Binding_Indication;
       Entity : Iir;
+      Comp : Iir;
       Instance_List : Iir_List;
       Conf_Instance_List : Iir_List;
       Instance : Iir;
@@ -2324,11 +2311,13 @@ package body Canon is
       Set_Binding_Indication (Res, Res_Binding);
 
       Entity := Get_Entity_From_Entity_Aspect (Get_Entity_Aspect (Cs_Binding));
+      Comp := Get_Named_Entity (Get_Component_Name (Conf_Spec));
 
       --  Merge generic map aspect.
       Cs_Chain := Get_Generic_Map_Aspect_Chain (Cs_Binding);
       if Cs_Chain = Null_Iir then
-         Cs_Chain := Get_Default_Generic_Map_Aspect_Chain (Cs_Binding);
+         Cs_Chain := Sem_Specs.Create_Default_Map_Aspect
+           (Comp, Entity, Sem_Specs.Map_Generic, Cs_Binding);
       end if;
       Set_Generic_Map_Aspect_Chain
         (Res_Binding,
@@ -2339,7 +2328,8 @@ package body Canon is
       --  merge port map aspect
       Cs_Chain := Get_Port_Map_Aspect_Chain (Cs_Binding);
       if Cs_Chain = Null_Iir then
-         Cs_Chain := Get_Default_Port_Map_Aspect_Chain (Cs_Binding);
+         Cs_Chain := Sem_Specs.Create_Default_Map_Aspect
+           (Comp, Entity, Sem_Specs.Map_Port, Cs_Binding);
       end if;
       Set_Port_Map_Aspect_Chain
         (Res_Binding,
@@ -2385,40 +2375,36 @@ package body Canon is
    begin
       El := Get_Concurrent_Statement_Chain (Parent);
       while El /= Null_Iir loop
-         case Get_Kind (El) is
-            when Iir_Kind_Component_Instantiation_Statement =>
-               if Is_Component_Instantiation (El)
-                 and then Get_Named_Entity (Get_Instantiated_Unit (El)) = Comp
+         --  Handle only component instantiation of COMP.
+         if Get_Kind (El) = Iir_Kind_Component_Instantiation_Statement
+           and then Is_Component_Instantiation (El)
+           and then Get_Named_Entity (Get_Instantiated_Unit (El)) = Comp
+         then
+            Comp_Conf := Get_Component_Configuration (El);
+            if Comp_Conf = Null_Iir then
+               --  The component is not yet configured.
+               Append_Element (List, Build_Simple_Name (El, El));
+               Set_Component_Configuration (El, Conf);
+            else
+               --  The component is already configured.
+               --  Handle incremental configuration.
+               if Get_Kind (Comp_Conf) = Iir_Kind_Configuration_Specification
+                 and then Spec = Iir_List_All
                then
-                  Comp_Conf := Get_Component_Configuration (El);
-                  if Comp_Conf = Null_Iir then
-                     --  The component is not yet configured.
-                     Append_Element (List, Build_Simple_Name (El, El));
-                     Set_Component_Configuration (El, Conf);
-                  else
-                     --  The component is already configured.
-                     --  Handle incremental configuration.
-                     if (Get_Kind (Comp_Conf)
-                         = Iir_Kind_Configuration_Specification)
-                       and then Spec = Iir_List_All
-                     then
-                        --  FIXME: handle incremental configuration.
-                        raise Internal_Error;
-                     end if;
-                     if Spec = Iir_List_All then
-                        --  Several component configuration for an instance.
-                        --  Must have been caught by sem.
-                        raise Internal_Error;
-                     elsif Spec = Iir_List_Others then
-                        null;
-                     else
-                        raise Internal_Error;
-                     end if;
-                  end if;
+                  --  FIXME: handle incremental configuration.
+                  raise Internal_Error;
                end if;
-            when others =>
-               null;
-         end case;
+               if Spec = Iir_List_All then
+                  --  Several component configuration for an instance.
+                  --  Must have been caught by sem.
+                  raise Internal_Error;
+               elsif Spec = Iir_List_Others then
+                  null;
+               else
+                  raise Internal_Error;
+               end if;
+            end if;
+         end if;
          El := Get_Chain (El);
       end loop;
    end Canon_Component_Specification_All_Others;
@@ -2436,11 +2422,10 @@ package body Canon is
          El := Get_Named_Entity (El);
          Comp_Conf := Get_Component_Configuration (El);
          if Comp_Conf /= Null_Iir and then Comp_Conf /= Conf then
-            if Get_Kind (Comp_Conf) /= Iir_Kind_Configuration_Specification
-              or else Get_Kind (Conf) /= Iir_Kind_Component_Configuration
-            then
-               raise Internal_Error;
-            end if;
+            pragma Assert
+              (Get_Kind (Comp_Conf) = Iir_Kind_Configuration_Specification);
+            pragma Assert
+              (Get_Kind (Conf) = Iir_Kind_Component_Configuration);
             Canon_Incremental_Binding (Comp_Conf, Conf, Parent);
          else
             Set_Component_Configuration (El, Conf);
@@ -2479,34 +2464,38 @@ package body Canon is
       if Canon_Flag_Expressions then
          Canon_Expression (Get_Expression (Dis));
       end if;
-      Signal_List := Get_Signal_List (Dis);
-      if Signal_List = Iir_List_All then
-         Force := True;
-      elsif Signal_List = Iir_List_Others then
-         Force := False;
-      else
-         return;
-      end if;
-      Dis_Type := Get_Type (Get_Type_Mark (Dis));
-      N_List := Create_Iir_List;
-      Set_Signal_List (Dis, N_List);
-      El := Get_Declaration_Chain (Decl_Parent);
-      while El /= Null_Iir loop
-         if Get_Kind (El) = Iir_Kind_Signal_Declaration
-           and then Get_Type (El) = Dis_Type
-           and then Get_Guarded_Signal_Flag (El)
-         then
-            if not Get_Has_Disconnect_Flag (El) then
-               Set_Has_Disconnect_Flag (El, True);
-               Append_Element (N_List, El);
-            else
-               if Force then
-                  raise Internal_Error;
+
+      if Canon_Flag_Specification_Lists then
+         Signal_List := Get_Signal_List (Dis);
+         if Signal_List = Iir_List_All then
+            Force := True;
+         elsif Signal_List = Iir_List_Others then
+            Force := False;
+         else
+            return;
+         end if;
+
+         Dis_Type := Get_Type (Get_Type_Mark (Dis));
+         N_List := Create_Iir_List;
+         Set_Signal_List (Dis, N_List);
+         El := Get_Declaration_Chain (Decl_Parent);
+         while El /= Null_Iir loop
+            if Get_Kind (El) = Iir_Kind_Signal_Declaration
+              and then Get_Type (El) = Dis_Type
+              and then Get_Guarded_Signal_Flag (El)
+            then
+               if not Get_Has_Disconnect_Flag (El) then
+                  Set_Has_Disconnect_Flag (El, True);
+                  Append_Element (N_List, El);
+               else
+                  if Force then
+                     raise Internal_Error;
+                  end if;
                end if;
             end if;
-         end if;
-         El := Get_Chain (El);
-      end loop;
+            El := Get_Chain (El);
+         end loop;
+      end if;
    end Canon_Disconnection_Specification;
 
    procedure Canon_Subtype_Indication (Def : Iir) is
@@ -2551,10 +2540,91 @@ package body Canon is
       end if;
    end Canon_Subtype_Indication_If_Anonymous;
 
-   procedure Canon_Declaration (Top : Iir_Design_Unit;
-                                Decl : Iir;
-                                Parent : Iir;
-                                Decl_Parent : Iir)
+   --  Return the new package declaration (if any).
+   function Canon_Package_Instantiation_Declaration (Decl : Iir) return Iir
+   is
+      Pkg : constant Iir := Get_Uninstantiated_Package_Decl (Decl);
+   begin
+      --  Canon map aspect.
+      Set_Generic_Map_Aspect_Chain
+        (Decl,
+         Canon_Association_Chain_And_Actuals
+           (Get_Generic_Chain (Decl),
+            Get_Generic_Map_Aspect_Chain (Decl), Decl));
+
+      if Get_Macro_Expanded_Flag (Pkg) then
+         declare
+            New_Decl : Iir;
+            New_Hdr : Iir;
+         begin
+            --  Replace package instantiation by the macro-expanded
+            --  generic-mapped package.
+            --  Use move semantics.
+            --  FIXME: adjust Parent.
+            New_Decl := Create_Iir (Iir_Kind_Package_Declaration);
+            Location_Copy (New_Decl, Decl);
+            Set_Parent (New_Decl, Get_Parent (Decl));
+            Set_Identifier (New_Decl, Get_Identifier (Decl));
+            Set_Need_Body (New_Decl, Get_Need_Body (Pkg));
+
+            New_Hdr := Create_Iir (Iir_Kind_Package_Header);
+            Set_Package_Header (New_Decl, New_Hdr);
+            Location_Copy (New_Hdr, Get_Package_Header (Pkg));
+            Set_Generic_Chain (New_Hdr, Get_Generic_Chain (Decl));
+            Set_Generic_Map_Aspect_Chain
+              (New_Hdr, Get_Generic_Map_Aspect_Chain (Decl));
+            Set_Generic_Chain (Decl, Null_Iir);
+            Set_Generic_Map_Aspect_Chain (Decl, Null_Iir);
+
+            Set_Declaration_Chain (New_Decl, Get_Declaration_Chain (Decl));
+            Set_Declaration_Chain (Decl, Null_Iir);
+            Set_Chain (New_Decl, Get_Chain (Decl));
+            Set_Chain (Decl, Null_Iir);
+
+            Set_Package_Origin (New_Decl, Decl);
+            return New_Decl;
+         end;
+      else
+         return Decl;
+      end if;
+   end Canon_Package_Instantiation_Declaration;
+
+   function Create_Instantiation_Bodies
+     (Decl : Iir_Package_Declaration; Parent : Iir) return Iir
+   is
+      First, Last : Iir;
+      El : Iir;
+      Bod : Iir;
+   begin
+      First := Null_Iir;
+      Last := Null_Iir;  --  Kill the warning
+      El := Get_Declaration_Chain (Decl);
+      while Is_Valid (El) loop
+         if Get_Kind (El) = Iir_Kind_Package_Declaration
+           and then Get_Need_Body (El)
+           and then Get_Package_Origin (El) /= Null_Iir
+         then
+            Bod := Sem_Inst.Instantiate_Package_Body (El);
+            Set_Parent (Bod, Parent);
+
+            --  Append.
+            if First = Null_Iir then
+               First := Bod;
+            else
+               Set_Chain (Last, Bod);
+            end if;
+            Last := Bod;
+         end if;
+         El := Get_Chain (El);
+      end loop;
+      return First;
+   end Create_Instantiation_Bodies;
+
+   function Canon_Declaration (Top : Iir_Design_Unit;
+                               Decl : Iir;
+                               Parent : Iir;
+                               Decl_Parent : Iir)
+                              return Iir
    is
       Stmts : Iir;
    begin
@@ -2630,44 +2700,20 @@ package body Canon is
             null;
 
          when Iir_Kind_Configuration_Specification =>
-            Canon_Component_Specification (Decl, Parent);
-            Canon_Component_Configuration (Top, Decl);
---             declare
---                List : Iir_List;
---                Binding : Iir_Binding_Indication;
---                Component : Iir_Component_Declaration;
---                Aspect : Iir;
---                Entity : Iir;
---             begin
---                Binding := Get_Binding_Indication (Decl);
---                Component := Get_Component_Name (Decl);
---                Aspect := Get_Entity_Aspect (Binding);
---                case Get_Kind (Aspect) is
---                   when Iir_Kind_Entity_Aspect_Entity =>
---                      Entity := Get_Entity (Aspect);
---                   when others =>
---                      Error_Kind ("configuration_specification", Aspect);
---                end case;
---                Entity := Get_Library_Unit (Entity);
---                List := Get_Generic_Map_Aspect_List (Binding);
---                if List = Null_Iir_List then
---                   Set_Generic_Map_Aspect_List
---                     (Binding,
---                      Canon_Default_Map_Association_List
---                    (Get_Generic_List (Entity), Get_Generic_List (Component),
---                       Get_Location (Decl)));
---                end if;
---                List := Get_Port_Map_Aspect_List (Binding);
---                if List = Null_Iir_List then
---                   Set_Port_Map_Aspect_List
---                     (Binding,
---                      Canon_Default_Map_Association_List
---                      (Get_Port_List (Entity), Get_Port_List (Component),
---                       Get_Location (Decl)));
---                end if;
---             end;
+            if Canon_Flag_Configurations then
+               Canon_Component_Specification (Decl, Parent);
+               Canon_Component_Configuration (Top, Decl);
+            end if;
 
-         when Iir_Kinds_Signal_Attribute =>
+         when Iir_Kind_Package_Declaration =>
+            Canon_Declarations (Top, Decl, Parent);
+         when Iir_Kind_Package_Body =>
+            Canon_Declarations (Top, Decl, Parent);
+
+         when Iir_Kind_Package_Instantiation_Declaration =>
+            return Canon_Package_Instantiation_Declaration (Decl);
+
+         when Iir_Kind_Signal_Attribute_Declaration =>
             null;
 
          when Iir_Kind_Nature_Declaration =>
@@ -2679,6 +2725,7 @@ package body Canon is
          when others =>
             Error_Kind ("canon_declaration", Decl);
       end case;
+      return Decl;
    end Canon_Declaration;
 
    procedure Canon_Declarations (Top : Iir_Design_Unit;
@@ -2686,14 +2733,29 @@ package body Canon is
                                  Parent : Iir)
    is
       Decl : Iir;
+      Prev_Decl : Iir;
+      New_Decl : Iir;
    begin
       if Parent /= Null_Iir then
          Clear_Instantiation_Configuration (Parent, True);
       end if;
+
       Decl := Get_Declaration_Chain (Decl_Parent);
+      Prev_Decl := Null_Iir;
       while Decl /= Null_Iir loop
-         Canon_Declaration (Top, Decl, Parent, Decl_Parent);
-         Decl := Get_Chain (Decl);
+         New_Decl := Canon_Declaration (Top, Decl, Parent, Decl_Parent);
+
+         if New_Decl /= Decl then
+            --  Replace declaration
+            if Prev_Decl = Null_Iir then
+               Set_Declaration_Chain (Decl_Parent, New_Decl);
+            else
+               Set_Chain (Prev_Decl, New_Decl);
+            end if;
+         end if;
+
+         Prev_Decl := New_Decl;
+         Decl := Get_Chain (New_Decl);
       end loop;
    end Canon_Declarations;
 
@@ -2915,10 +2977,7 @@ package body Canon is
                   end if;
                end;
 
-            when Iir_Kind_Sensitized_Process_Statement
-              | Iir_Kind_Process_Statement
-              | Iir_Kind_Psl_Assert_Statement
-              | Iir_Kind_Psl_Cover_Statement
+            when Iir_Kinds_Simple_Concurrent_Statement
               | Iir_Kind_Psl_Default_Clock
               | Iir_Kind_Psl_Declaration
               | Iir_Kind_Psl_Endpoint_Declaration
@@ -2988,29 +3047,26 @@ package body Canon is
             Canon_Interface_List (Get_Generic_Chain (El));
             Canon_Interface_List (Get_Port_Chain (El));
             Canon_Declarations (Unit, El, El);
-            Canon_Concurrent_Stmts (Unit, El);
+            if Canon_Flag_Concurrent_Stmts then
+               Canon_Concurrent_Stmts (Unit, El);
+            end if;
          when Iir_Kind_Architecture_Body =>
             Canon_Declarations (Unit, El, El);
-            Canon_Concurrent_Stmts (Unit, El);
+            if Canon_Flag_Concurrent_Stmts then
+               Canon_Concurrent_Stmts (Unit, El);
+            end if;
          when Iir_Kind_Package_Declaration =>
             Canon_Declarations (Unit, El, Null_Iir);
          when Iir_Kind_Package_Body =>
             Canon_Declarations (Unit, El, Null_Iir);
          when Iir_Kind_Configuration_Declaration =>
             Canon_Declarations (Unit, El, Null_Iir);
-            Canon_Block_Configuration (Unit, Get_Block_Configuration (El));
+            if Canon_Flag_Configurations then
+               Canon_Block_Configuration (Unit, Get_Block_Configuration (El));
+            end if;
          when Iir_Kind_Package_Instantiation_Declaration =>
-            declare
-               Pkg : constant Iir :=
-                 Get_Named_Entity (Get_Uninstantiated_Package_Name (El));
-               Hdr : constant Iir := Get_Package_Header (Pkg);
-            begin
-               Set_Generic_Map_Aspect_Chain
-                 (El,
-                  Canon_Association_Chain_And_Actuals
-                    (Get_Generic_Chain (Hdr),
-                     Get_Generic_Map_Aspect_Chain (El), El));
-            end;
+            El := Canon_Package_Instantiation_Declaration (El);
+            Set_Library_Unit (Unit, El);
          when Iir_Kind_Context_Declaration =>
             null;
          when others =>

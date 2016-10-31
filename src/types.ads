@@ -85,25 +85,26 @@ package Types is
    --  *command-line*: used for identifiers from command line
    --    (eg: unit to elab)
 
-   -- Index into a file buffer.
-   type Source_Ptr is new Int32;
+   --  Index into a file buffer.
+   type Source_Ptr is new Uns32;
 
-   --  Lower boundary of any file buffer.
+   --  Valid bounds of any file buffer.
    Source_Ptr_Org : constant Source_Ptr := 0;
+   Source_Ptr_Last : constant Source_Ptr := Source_Ptr'Last - 1;
 
    --  Bad file buffer index (used to mark no line).
-   Source_Ptr_Bad : constant Source_Ptr := -1;
-
-   -- This type contains everything necessary to get a file name, a line
-   -- number and a column number.
-   type Location_Type is new Nat32;
-   for Location_Type'Size use 32;
-   Location_Nil : constant Location_Type := 0;
-   No_Location : constant Location_Type := 0;
+   Source_Ptr_Bad : constant Source_Ptr := Source_Ptr'Last;
 
    --  Type of a file buffer.
    type File_Buffer is array (Source_Ptr range <>) of Character;
    type File_Buffer_Acc is access File_Buffer;
+
+   --  This type contains everything necessary to get a file name, a line
+   --  number and a column number.
+   type Location_Type is new Uns32;
+   for Location_Type'Size use 32;
+   Location_Nil : constant Location_Type := 0;
+   No_Location : constant Location_Type := 0;
 
    --  PSL Node.
    type PSL_Node is new Int32;

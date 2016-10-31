@@ -374,13 +374,17 @@ package body Sem_Scopes is
       case Get_Kind (Decl) is
          when Iir_Kind_Enumeration_Literal
            | Iir_Kind_Function_Declaration
-           | Iir_Kind_Procedure_Declaration =>
+           | Iir_Kind_Procedure_Declaration
+           | Iir_Kind_Interface_Function_Declaration
+           | Iir_Kind_Interface_Procedure_Declaration =>
             return True;
          when Iir_Kind_Non_Object_Alias_Declaration =>
             case Get_Kind (Get_Named_Entity (Get_Name (Decl))) is
                when Iir_Kind_Enumeration_Literal
                  | Iir_Kind_Function_Declaration
-                 | Iir_Kind_Procedure_Declaration =>
+                 | Iir_Kind_Procedure_Declaration
+                 | Iir_Kind_Interface_Function_Declaration
+                 | Iir_Kind_Interface_Procedure_Declaration =>
                   return True;
                when Iir_Kind_Non_Object_Alias_Declaration =>
                   raise Internal_Error;
@@ -956,11 +960,9 @@ package body Sem_Scopes is
            | Iir_Kind_File_Declaration
            | Iir_Kind_Object_Alias_Declaration
            | Iir_Kind_Non_Object_Alias_Declaration
-           | Iir_Kind_Interface_Constant_Declaration
-           | Iir_Kind_Interface_Signal_Declaration
-           | Iir_Kind_Interface_Variable_Declaration
-           | Iir_Kind_Interface_File_Declaration
+           | Iir_Kinds_Interface_Object_Declaration
            | Iir_Kind_Interface_Package_Declaration
+           | Iir_Kinds_Interface_Subprogram_Declaration
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Attribute_Declaration
            | Iir_Kind_Group_Template_Declaration
@@ -972,6 +974,7 @@ package body Sem_Scopes is
            | Iir_Kind_Terminal_Declaration
            | Iir_Kind_Entity_Declaration
            | Iir_Kind_Package_Declaration
+           | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Context_Declaration
            | Iir_Kinds_Concurrent_Statement
@@ -1019,6 +1022,17 @@ package body Sem_Scopes is
                   end loop;
                end if;
             end;
+         when Iir_Kind_Interface_Type_Declaration =>
+            Handle_Decl (Decl, Arg);
+            declare
+               El : Iir;
+            begin
+               El := Get_Interface_Type_Subprograms (Decl);
+               while El /= Null_Iir loop
+                  Handle_Decl (El, Arg);
+                  El := Get_Chain (El);
+               end loop;
+            end;
          when Iir_Kind_Use_Clause
            | Iir_Kind_Context_Reference =>
             Handle_Decl (Decl, Arg);
@@ -1032,6 +1046,9 @@ package body Sem_Scopes is
 
          when Iir_Kind_Procedure_Body
            | Iir_Kind_Function_Body =>
+            null;
+
+         when Iir_Kind_Package_Body =>
             null;
 
          when Iir_Kind_Attribute_Specification

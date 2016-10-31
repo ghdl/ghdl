@@ -170,13 +170,14 @@ package Std_Names is
 
    Name_Last_Vhdl00 :    constant Name_Id := Name_Protected;
    subtype Name_Id_Vhdl00_Reserved_Words is
-     Name_Id range Name_Protected .. Name_Protected;
+     Name_Id range Name_Protected .. Name_Last_Vhdl00;
 
    Name_Context :      constant Name_Id := Name_First_Keyword + 098;
+   Name_Parameter :    constant Name_Id := Name_First_Keyword + 099;
 
-   Name_Last_Vhdl08 :    constant Name_Id := Name_Context;
+   Name_Last_Vhdl08 :    constant Name_Id := Name_Parameter;
    subtype Name_Id_Vhdl08_Reserved_Words is
-     Name_Id range Name_Context .. Name_Context;
+     Name_Id range Name_Context .. Name_Last_Vhdl08;
 
    Name_First_Ams_Keyword : constant Name_Id := Name_Last_Vhdl08 + 1;
    Name_Across :         constant Name_Id := Name_First_Ams_Keyword + 000;
@@ -483,7 +484,8 @@ package Std_Names is
    Name_VITAL_Level1       : constant Name_Id := Name_First_Ieee + 010;
    Name_Std_Logic_Arith    : constant Name_Id := Name_First_Ieee + 011;
    Name_Std_Logic_Signed   : constant Name_Id := Name_First_Ieee + 012;
-   Name_Std_Logic_Unsigned : constant Name_Id := Name_First_Ieee + 013;
+   Name_Std_Logic_Textio   : constant Name_Id := Name_First_Ieee + 013;
+   Name_Std_Logic_Unsigned : constant Name_Id := Name_First_Ieee + 014;
    Name_Last_Ieee          : constant Name_Id := Name_Std_Logic_Unsigned;
 
    --  Verilog keywords.
@@ -522,43 +524,42 @@ package Std_Names is
    Name_Notif0 :         constant Name_Id := Name_First_Verilog + 31;
    Name_Notif1 :         constant Name_Id := Name_First_Verilog + 32;
    Name_Output :         constant Name_Id := Name_First_Verilog + 33;
-   Name_Parameter :      constant Name_Id := Name_First_Verilog + 34;
-   Name_Pmos :           constant Name_Id := Name_First_Verilog + 35;
-   Name_Posedge :        constant Name_Id := Name_First_Verilog + 36;
-   Name_Primitive :      constant Name_Id := Name_First_Verilog + 37;
-   Name_Pull0 :          constant Name_Id := Name_First_Verilog + 38;
-   Name_Pull1 :          constant Name_Id := Name_First_Verilog + 39;
-   Name_Pulldown :       constant Name_Id := Name_First_Verilog + 40;
-   Name_Pullup :         constant Name_Id := Name_First_Verilog + 41;
-   Name_Reg :            constant Name_Id := Name_First_Verilog + 42;
-   Name_Repeat :         constant Name_Id := Name_First_Verilog + 43;
-   Name_Rcmos :          constant Name_Id := Name_First_Verilog + 44;
-   Name_Rnmos :          constant Name_Id := Name_First_Verilog + 45;
-   Name_Rpmos :          constant Name_Id := Name_First_Verilog + 46;
-   Name_Rtran :          constant Name_Id := Name_First_Verilog + 47;
-   Name_Rtranif0 :       constant Name_Id := Name_First_Verilog + 48;
-   Name_Rtranif1 :       constant Name_Id := Name_First_Verilog + 49;
-   Name_Small :          constant Name_Id := Name_First_Verilog + 50;
-   Name_Specify :        constant Name_Id := Name_First_Verilog + 51;
-   Name_Specparam :      constant Name_Id := Name_First_Verilog + 52;
-   Name_Strong0 :        constant Name_Id := Name_First_Verilog + 53;
-   Name_Strong1 :        constant Name_Id := Name_First_Verilog + 54;
-   Name_Supply0 :        constant Name_Id := Name_First_Verilog + 55;
-   Name_Supply1 :        constant Name_Id := Name_First_Verilog + 56;
-   Name_Tablex :         constant Name_Id := Name_First_Verilog + 57;
-   Name_Task :           constant Name_Id := Name_First_Verilog + 58;
-   Name_Tran :           constant Name_Id := Name_First_Verilog + 59;
-   Name_Tranif0 :        constant Name_Id := Name_First_Verilog + 60;
-   Name_Tranif1 :        constant Name_Id := Name_First_Verilog + 61;
-   Name_Tri :            constant Name_Id := Name_First_Verilog + 62;
-   Name_Tri0 :           constant Name_Id := Name_First_Verilog + 63;
-   Name_Tri1 :           constant Name_Id := Name_First_Verilog + 64;
-   Name_Trireg :         constant Name_Id := Name_First_Verilog + 65;
-   Name_Wand :           constant Name_Id := Name_First_Verilog + 66;
-   Name_Weak0 :          constant Name_Id := Name_First_Verilog + 67;
-   Name_Weak1 :          constant Name_Id := Name_First_Verilog + 68;
-   Name_Wire :           constant Name_Id := Name_First_Verilog + 69;
-   Name_Wor :            constant Name_Id := Name_First_Verilog + 70;
+   Name_Pmos :           constant Name_Id := Name_First_Verilog + 34;
+   Name_Posedge :        constant Name_Id := Name_First_Verilog + 35;
+   Name_Primitive :      constant Name_Id := Name_First_Verilog + 36;
+   Name_Pull0 :          constant Name_Id := Name_First_Verilog + 37;
+   Name_Pull1 :          constant Name_Id := Name_First_Verilog + 38;
+   Name_Pulldown :       constant Name_Id := Name_First_Verilog + 39;
+   Name_Pullup :         constant Name_Id := Name_First_Verilog + 40;
+   Name_Reg :            constant Name_Id := Name_First_Verilog + 41;
+   Name_Repeat :         constant Name_Id := Name_First_Verilog + 42;
+   Name_Rcmos :          constant Name_Id := Name_First_Verilog + 43;
+   Name_Rnmos :          constant Name_Id := Name_First_Verilog + 44;
+   Name_Rpmos :          constant Name_Id := Name_First_Verilog + 45;
+   Name_Rtran :          constant Name_Id := Name_First_Verilog + 46;
+   Name_Rtranif0 :       constant Name_Id := Name_First_Verilog + 47;
+   Name_Rtranif1 :       constant Name_Id := Name_First_Verilog + 48;
+   Name_Small :          constant Name_Id := Name_First_Verilog + 49;
+   Name_Specify :        constant Name_Id := Name_First_Verilog + 50;
+   Name_Specparam :      constant Name_Id := Name_First_Verilog + 51;
+   Name_Strong0 :        constant Name_Id := Name_First_Verilog + 52;
+   Name_Strong1 :        constant Name_Id := Name_First_Verilog + 53;
+   Name_Supply0 :        constant Name_Id := Name_First_Verilog + 54;
+   Name_Supply1 :        constant Name_Id := Name_First_Verilog + 55;
+   Name_Tablex :         constant Name_Id := Name_First_Verilog + 56;
+   Name_Task :           constant Name_Id := Name_First_Verilog + 57;
+   Name_Tran :           constant Name_Id := Name_First_Verilog + 58;
+   Name_Tranif0 :        constant Name_Id := Name_First_Verilog + 59;
+   Name_Tranif1 :        constant Name_Id := Name_First_Verilog + 60;
+   Name_Tri :            constant Name_Id := Name_First_Verilog + 61;
+   Name_Tri0 :           constant Name_Id := Name_First_Verilog + 62;
+   Name_Tri1 :           constant Name_Id := Name_First_Verilog + 63;
+   Name_Trireg :         constant Name_Id := Name_First_Verilog + 64;
+   Name_Wand :           constant Name_Id := Name_First_Verilog + 65;
+   Name_Weak0 :          constant Name_Id := Name_First_Verilog + 66;
+   Name_Weak1 :          constant Name_Id := Name_First_Verilog + 67;
+   Name_Wire :           constant Name_Id := Name_First_Verilog + 68;
+   Name_Wor :            constant Name_Id := Name_First_Verilog + 69;
    Name_Last_Verilog :   constant Name_Id := Name_Wor;
 
    --  Verilog Directives.

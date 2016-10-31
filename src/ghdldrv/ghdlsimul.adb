@@ -25,7 +25,6 @@ with GNAT.OS_Lib; use GNAT.OS_Lib;
 with Types;
 with Iirs; use Iirs;
 with Flags;
-with Back_End;
 with Name_Table;
 with Errorout; use Errorout;
 with Std_Package;
@@ -35,7 +34,6 @@ with Configuration;
 with Iirs_Utils;
 with Annotations;
 with Elaboration;
-with Sim_Be;
 with Simulation.Main;
 with Debugger;
 with Execution;
@@ -58,10 +56,6 @@ package body Ghdlsimul is
          return;
       end if;
 
-      -- Initialize.
-      Back_End.Finish_Compilation := Sim_Be.Finish_Compilation'Access;
-      Back_End.Sem_Foreign := null;
-
       Setup_Libraries (False);
       Libraries.Load_Std_Library;
 
@@ -79,6 +73,7 @@ package body Ghdlsimul is
    is
       use Name_Table;
       use Types;
+      use Configuration;
 
       First_Id : Name_Id;
       Sec_Id : Name_Id;
@@ -117,6 +112,11 @@ package body Ghdlsimul is
             raise Compilation_Error;
          end if;
       end;
+
+      --  Annotate all units.
+      for I in Design_Units.First .. Design_Units.Last loop
+         Annotations.Annotate (Design_Units.Table (I));
+      end loop;
    end Compile_Elab;
 
    --  Set options.

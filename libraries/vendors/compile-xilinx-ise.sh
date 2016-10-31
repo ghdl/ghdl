@@ -16,7 +16,7 @@
 #		- compiles all Xilinx ISE simulation libraries and packages
 #
 # ==============================================================================
-#	Copyright (C) 2015-2016 Patrick Lehmann
+#	Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -80,6 +80,10 @@ while [[ $# > 0 ]]; do
 		COMPILE_SIMPRIM=TRUE
 		NO_COMMAND=0
 		;;
+		--corelib)
+		COMPILE_CORELIB=TRUE
+		NO_COMMAND=0
+		;;
 		--secureip)
 		COMPILE_SECUREIP=TRUE
 		;;
@@ -137,6 +141,8 @@ if [ "$HELP" == "TRUE" ]; then
 	echo "  One library folder 'lib/v??' per VHDL library will be created relative to the current"
 	echo "  working directory."
 	echo ""
+	echo "  Use the adv. options or edit 'config.sh' to supply paths and default params."
+	echo ""
 	echo "Usage:"
 	echo "  compile-xilinx-ise.sh <common command>|<library> [<options>] [<adv. options>]"
 	echo ""
@@ -149,6 +155,7 @@ if [ "$HELP" == "TRUE" ]; then
 	echo "     --unisim           Compile the unisim library."
 	echo "     --unimacro         Compile the unimacro library."
 	echo "     --simprim          Compile the simprim library."
+	echo "     --corelib          Compile the corelib library."
 	echo "     --secureip         Compile the secureip library."
 	echo ""
 	echo "Library compile options:"
@@ -159,12 +166,12 @@ if [ "$HELP" == "TRUE" ]; then
 	echo "  -H --halt-on-error    Halt on error(s)."
 	echo ""
 	echo "Advanced options:"
-	echo "  --ghdl <GHDL Binary>   Path to GHDL's binary e.g. /usr/local/bin/ghdl."
-	echo "  --out <dir name>       Name of the output directory."
-	echo "  --src <Path to OSVVM>  Path to the source directory."
+	echo "  --ghdl <GHDL bin dir> Path to GHDL's binary directory, e.g. /usr/local/bin"
+	echo "  --out <dir name>      Name of the output directory, e.g. xilinx-ise"
+	echo "  --src <Path to lib>   Path to the sources, e.g. /opt/Xilinx/14.7/ISE_DS/ISE/vhdl/src"
 	echo ""
 	echo "Verbosity:"
-	echo "  -n --no-warnings      Suppress all warnings. Show only error messages."
+	echo "  -n --no-warnings        Suppress all warnings. Show only error messages."
 	echo ""
 	exit 0
 fi
@@ -173,6 +180,7 @@ if [ "$COMPILE_ALL" == "TRUE" ]; then
 	COMPILE_UNISIM=TRUE
 	COMPILE_UNIMACRO=TRUE
 	COMPILE_SIMPRIM=TRUE
+	COMPILE_CORELIB=TRUE
 	COMPILE_SECUREIP=TRUE
 fi
 
@@ -339,6 +347,22 @@ if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_SIMPRIM" == "TRUE" ] && [ "$COMPILE_S
 
 	GHDLCompileLibrary
 fi
+
+# Library corelib
+# ==============================================================================
+# compile corelib packages
+if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_CORELIB" == "TRUE" ]; then
+	Library="xilinxcorelib"
+	
+	# append absolute source path
+	SourceFiles=()
+	while IFS= read -r File; do
+		SourceFiles+=("$SourceDirectory/XilinxCoreLib/$File")
+	done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/XilinxCoreLib/vhdl_analyze_order")
+
+	GHDLCompilePackages
+fi
+
 	
 echo "--------------------------------------------------------------------------------"
 echo -n "Compiling Xilinx ISE libraries "

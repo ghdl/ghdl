@@ -390,8 +390,7 @@ package body Elaboration is
       if Get_Kind (Decl) = Iir_Kind_Package_Instantiation_Declaration then
          --  Elaborate the body now.
          declare
-            Uninst : constant Iir :=
-              Get_Named_Entity (Get_Uninstantiated_Package_Name (Decl));
+            Uninst : constant Iir := Get_Uninstantiated_Package_Decl (Decl);
          begin
             Elaborate_Declarative_Part
               (Instance, Get_Declaration_Chain (Get_Package_Body (Uninst)));
@@ -2531,14 +2530,28 @@ package body Elaboration is
          when Iir_Kind_Use_Clause =>
             null;
 
-         when Iir_Kind_Delayed_Attribute =>
-            Elaborate_Delayed_Signal (Instance, Decl);
-         when Iir_Kind_Stable_Attribute =>
-            Elaborate_Implicit_Signal (Instance, Decl, Mode_Stable);
-         when Iir_Kind_Quiet_Attribute =>
-            Elaborate_Implicit_Signal (Instance, Decl, Mode_Quiet);
-         when Iir_Kind_Transaction_Attribute =>
-            Elaborate_Implicit_Signal (Instance, Decl, Mode_Transaction);
+         when Iir_Kind_Signal_Attribute_Declaration =>
+            declare
+               Attr : Iir;
+            begin
+               Attr := Get_Signal_Attribute_Chain (Decl);
+               while Is_Valid (Attr) loop
+                  case Iir_Kinds_Signal_Attribute (Get_Kind (Attr)) is
+                     when Iir_Kind_Delayed_Attribute =>
+                        Elaborate_Delayed_Signal (Instance, Attr);
+                     when Iir_Kind_Stable_Attribute =>
+                        Elaborate_Implicit_Signal
+                          (Instance, Attr, Mode_Stable);
+                     when Iir_Kind_Quiet_Attribute =>
+                        Elaborate_Implicit_Signal
+                          (Instance, Attr, Mode_Quiet);
+                     when Iir_Kind_Transaction_Attribute =>
+                        Elaborate_Implicit_Signal
+                          (Instance, Attr, Mode_Transaction);
+                  end case;
+                  Attr := Get_Attr_Chain (Attr);
+               end loop;
+            end;
 
          when Iir_Kind_Non_Object_Alias_Declaration =>
             null;

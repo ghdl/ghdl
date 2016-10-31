@@ -15,7 +15,7 @@
 #		- compiles all OSVVM packages 
 #
 # ==============================================================================
-#	Copyright (C) 2015-2016 Patrick Lehmann
+#	Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -119,20 +119,20 @@ if [ "$HELP" == "TRUE" ]; then
 	echo "  compile-osvvm.sh <common command>|<library> [<options>] [<adv. options>]"
 	echo ""
 	echo "Common commands:"
-	echo "  -h --help              Print this help page"
-	echo "  -c --clean             Remove all generated files"
+	echo "  -h --help             Print this help page"
+	echo "  -c --clean            Remove all generated files"
 	echo ""
 	echo "Libraries:"
-	echo "  -a --all               Compile all libraries."
-	echo "     --osvvm             Compile library osvvm."
+	echo "  -a --all              Compile all libraries."
+	echo "     --osvvm            Compile library osvvm."
 	echo ""
 	echo "Library compile options:"
-	echo "  -H --halt-on-error     Halt on error(s)."
+	echo "  -H --halt-on-error    Halt on error(s)."
 	echo ""
 	echo "Advanced options:"
-	echo "  --ghdl <GHDL Binary>   Path to GHDL's binary e.g. /usr/local/bin/ghdl."
-	echo "  --out <dir name>       Name of the output directory."
-	echo "  --src <Path to OSVVM>  Path to the source directory."
+	echo "  --ghdl <GHDL bin dir> Path to GHDL's binary directory, e.g. /usr/local/bin"
+	echo "  --out <dir name>      Name of the output directory, e.g. vunit"
+	echo "  --src <Path to OSVVM> Path to the sources."
 	echo ""
 	echo "Verbosity:"
 	echo "  -n --no-warnings      Suppress all warnings. Show only error messages."

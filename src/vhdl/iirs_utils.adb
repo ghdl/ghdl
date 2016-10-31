@@ -369,26 +369,95 @@ package body Iirs_Utils is
       end case;
    end Is_Signal_Object;
 
-   function Get_Association_Interface (Assoc : Iir) return Iir
+   function Get_Interface_Of_Formal (Formal : Iir) return Iir
    is
-      Formal : Iir;
+      El : Iir;
    begin
-      Formal := Get_Formal (Assoc);
+      El := Formal;
       loop
-         case Get_Kind (Formal) is
+         case Get_Kind (El) is
             when Iir_Kind_Simple_Name =>
-               return Get_Named_Entity (Formal);
-            when Iir_Kinds_Interface_Object_Declaration =>
-               return Formal;
+               return Get_Named_Entity (El);
+            when Iir_Kinds_Interface_Declaration =>
+               return El;
             when Iir_Kind_Slice_Name
               | Iir_Kind_Indexed_Name
               | Iir_Kind_Selected_Element =>
-               Formal := Get_Prefix (Formal);
+               --  FIXME: use get_base_name ?
+               El := Get_Prefix (El);
             when others =>
-               Error_Kind ("get_association_interface", Formal);
+               Error_Kind ("get_interface_of_formal", El);
          end case;
       end loop;
+   end Get_Interface_Of_Formal;
+
+   function Get_Association_Interface (Assoc : Iir; Inter : Iir) return Iir
+   is
+      Formal : constant Iir := Get_Formal (Assoc);
+   begin
+      if Formal /= Null_Iir then
+         return Get_Interface_Of_Formal (Formal);
+      else
+         return Inter;
+      end if;
    end Get_Association_Interface;
+
+   procedure Next_Association_Interface
+     (Assoc : in out Iir; Inter : in out Iir)
+   is
+      Formal : constant Iir := Get_Formal (Assoc);
+   begin
+      --  In canon, open association can be inserted after an association by
+      --  name.  So do not assume there is no association by position after
+      --  association by name.
+      if Is_Valid (Formal) then
+         Inter := Get_Chain (Get_Interface_Of_Formal (Formal));
+      else
+         Inter := Get_Chain (Inter);
+      end if;
+      Assoc := Get_Chain (Assoc);
+   end Next_Association_Interface;
+
+   function Get_Association_Formal (Assoc : Iir; Inter : Iir) return Iir
+   is
+      Formal : constant Iir := Get_Formal (Assoc);
+   begin
+      if Formal /= Null_Iir then
+         --  Strip denoting name
+         case Get_Kind (Formal) is
+            when Iir_Kind_Simple_Name =>
+               return Get_Named_Entity (Formal);
+            when Iir_Kinds_Interface_Declaration =>
+               --  Shouldn't happen.
+               raise Internal_Error;
+            when Iir_Kind_Slice_Name
+              | Iir_Kind_Indexed_Name
+              | Iir_Kind_Selected_Element =>
+               return Formal;
+            when others =>
+               Error_Kind ("get_association_formal", Formal);
+         end case;
+      else
+         return Inter;
+      end if;
+   end Get_Association_Formal;
+
+   function Find_First_Association_For_Interface
+     (Assoc_Chain : Iir; Inter_Chain : Iir; Inter : Iir) return Iir
+   is
+      Assoc_El : Iir;
+      Inter_El : Iir;
+   begin
+      Assoc_El := Assoc_Chain;
+      Inter_El := Inter_Chain;
+      while Is_Valid (Assoc_El) loop
+         if Get_Association_Interface (Assoc_El, Inter_El) = Inter then
+            return Assoc_El;
+         end if;
+         Next_Association_Interface (Assoc_El, Inter_El);
+      end loop;
+      return Null_Iir;
+   end Find_First_Association_For_Interface;
 
    function Find_Name_In_List (List: Iir_List; Lit: Name_Id) return Iir is
       El: Iir;
@@ -439,16 +508,23 @@ package body Iirs_Utils is
          return;
       end if;
 
-      case Get_Kind (Unit) is
-         when Iir_Kind_Design_Unit
-           | Iir_Kind_Entity_Aspect_Entity =>
-            null;
-         when others =>
-            Error_Kind ("add_dependence", Unit);
-      end case;
+      pragma Assert (Kind_In (Unit, Iir_Kind_Design_Unit,
+                              Iir_Kind_Entity_Aspect_Entity));
 
       Add_Element (Get_Dependence_List (Target), Unit);
    end Add_Dependence;
+
+   function Get_Unit_From_Dependence (Dep : Iir) return Iir is
+   begin
+      case Get_Kind (Dep) is
+         when Iir_Kind_Design_Unit =>
+            return Dep;
+         when Iir_Kind_Entity_Aspect_Entity =>
+            return Get_Design_Unit (Get_Entity (Dep));
+         when others =>
+            Error_Kind ("get_unit_from_dependence", Dep);
+      end case;
+   end Get_Unit_From_Dependence;
 
    procedure Clear_Instantiation_Configuration_Vhdl87
      (Parent : Iir; In_Generate : Boolean; Full : Boolean)
@@ -569,12 +645,8 @@ package body Iirs_Utils is
       Location_Copy (Range_Expr, Def);
       Set_Type (Range_Expr, Def);
       Set_Direction (Range_Expr, Iir_To);
-      Set_Left_Limit
-        (Range_Expr,
-         Copy_Enumeration_Literal (Get_First_Element (Literal_List)));
-      Set_Right_Limit
-        (Range_Expr,
-         Copy_Enumeration_Literal (Get_Last_Element (Literal_List)));
+      Set_Left_Limit (Range_Expr, Get_First_Element (Literal_List));
+      Set_Right_Limit (Range_Expr, Get_Last_Element (Literal_List));
       Set_Expr_Staticness (Range_Expr, Locally);
       Set_Range_Constraint (Def, Range_Expr);
    end Create_Range_Constraint_For_Enumeration_Type;
@@ -782,6 +854,17 @@ package body Iirs_Utils is
       return Build_Simple_Name (Ref, Get_Location (Loc));
    end Build_Simple_Name;
 
+   function Build_Reference_Name (Name : Iir) return Iir
+   is
+      Res : Iir;
+   begin
+      Res := Create_Iir (Iir_Kind_Reference_Name);
+      Location_Copy (Res, Name);
+      Set_Referenced_Name (Res, Name);
+      Set_Named_Entity (Res, Get_Named_Entity (Name));
+      return Res;
+   end Build_Reference_Name;
+
    function Has_Resolution_Function (Subtyp : Iir) return Iir
    is
       Ind : constant Iir := Get_Resolution_Indication (Subtyp);
@@ -794,13 +877,6 @@ package body Iirs_Utils is
          return Null_Iir;
       end if;
    end Has_Resolution_Function;
-
-   function Get_Primary_Unit_Name (Physical_Def : Iir) return Iir
-   is
-      Unit : constant Iir := Get_Primary_Unit (Physical_Def);
-   begin
-      return Get_Unit_Name (Get_Physical_Unit_Value (Unit));
-   end Get_Primary_Unit_Name;
 
    function Is_Type_Name (Name : Iir) return Iir
    is
@@ -870,9 +946,11 @@ package body Iirs_Utils is
 
    function Is_Second_Subprogram_Specification (Spec : Iir) return Boolean
    is
-      Bod : constant Iir := Get_Subprogram_Body (Spec);
+      Bod : constant Iir := Get_Chain (Spec);
    begin
-      return Bod /= Null_Iir
+      --  FIXME: don't directly use Subprogram_Body as it is not yet correctly
+      --  set during instantiation.
+      return Get_Has_Body (Spec)
         and then Get_Subprogram_Specification (Bod) /= Spec;
    end Is_Second_Subprogram_Specification;
 
@@ -881,6 +959,18 @@ package body Iirs_Utils is
       return Get_Kind (Spec) in Iir_Kinds_Subprogram_Declaration
         and then Get_Implicit_Definition (Spec) in Iir_Predefined_Implicit;
    end Is_Implicit_Subprogram;
+
+   function Is_Function_Declaration (N : Iir) return Boolean is
+   begin
+      return Kind_In (N, Iir_Kind_Function_Declaration,
+                      Iir_Kind_Interface_Function_Declaration);
+   end Is_Function_Declaration;
+
+   function Is_Procedure_Declaration (N : Iir) return Boolean is
+   begin
+      return Kind_In (N, Iir_Kind_Procedure_Declaration,
+                      Iir_Kind_Interface_Procedure_Declaration);
+   end Is_Procedure_Declaration;
 
    function Is_Same_Profile (L, R: Iir) return Boolean
    is
@@ -1140,21 +1230,21 @@ package body Iirs_Utils is
    function Create_Array_Subtype (Arr_Type : Iir; Loc : Location_Type)
      return Iir_Array_Subtype_Definition
    is
+      Base_Type : constant Iir := Get_Base_Type (Arr_Type);
+      El_Type : constant Iir := Get_Element_Subtype (Base_Type);
       Res : Iir_Array_Subtype_Definition;
-      Base_Type : Iir;
       List : Iir_List;
    begin
       Res := Create_Iir (Iir_Kind_Array_Subtype_Definition);
       Set_Location (Res, Loc);
-      Base_Type := Get_Base_Type (Arr_Type);
       Set_Base_Type (Res, Base_Type);
-      Set_Element_Subtype (Res, Get_Element_Subtype (Base_Type));
+      Set_Element_Subtype (Res, El_Type);
       if Get_Kind (Arr_Type) = Iir_Kind_Array_Subtype_Definition then
          Set_Resolution_Indication (Res, Get_Resolution_Indication (Arr_Type));
       end if;
       Set_Resolved_Flag (Res, Get_Resolved_Flag (Arr_Type));
       Set_Signal_Type_Flag (Res, Get_Signal_Type_Flag (Arr_Type));
-      Set_Type_Staticness (Res, Get_Type_Staticness (Base_Type));
+      Set_Type_Staticness (Res, Get_Type_Staticness (El_Type));
       List := Create_Iir_List;
       Set_Index_Subtype_List (Res, List);
       Set_Index_Constraint_List (Res, List);
@@ -1187,13 +1277,13 @@ package body Iirs_Utils is
       end case;
    end Get_Method_Type;
 
-   function Get_Actual_Or_Default (Assoc : Iir) return Iir is
+   function Get_Actual_Or_Default (Assoc : Iir; Inter : Iir) return Iir is
    begin
       case Get_Kind (Assoc) is
          when Iir_Kind_Association_Element_By_Expression =>
             return Get_Actual (Assoc);
          when Iir_Kind_Association_Element_Open =>
-            return Get_Default_Value (Get_Formal (Assoc));
+            return Get_Default_Value (Inter);
          when others =>
             Error_Kind ("get_actual_or_default", Assoc);
       end case;
@@ -1257,6 +1347,11 @@ package body Iirs_Utils is
             Error_Kind ("get_entity_from_entity_aspect", Aspect);
       end case;
    end Get_Entity_From_Entity_Aspect;
+
+   function Is_Nested_Package (Pkg : Iir) return Boolean is
+   begin
+      return Get_Kind (Get_Parent (Pkg)) /= Iir_Kind_Design_Unit;
+   end Is_Nested_Package;
 
    --  LRM08 4.7 Package declarations
    --  If the package header is empty, the package declared by a package

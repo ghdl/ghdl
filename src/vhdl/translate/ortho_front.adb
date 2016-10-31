@@ -17,17 +17,16 @@
 --  02111-1307, USA.
 with Types; use Types;
 with Name_Table;
-with Std_Package;
-with Back_End;
-with Flags;
-with Translation;
 with Iirs; use Iirs;
 with Libraries; use Libraries;
+with Iirs_Utils; use Iirs_Utils;
+with Std_Package;
+with Flags;
+with Configuration;
+with Translation;
 with Sem;
 with Errorout; use Errorout;
 with GNAT.OS_Lib;
-with Canon;
-with Disp_Vhdl;
 with Bug;
 with Trans_Be;
 with Options;
@@ -81,8 +80,7 @@ package body Ortho_Front is
       Flag_Expect_Failure := False;
    end Init;
 
-   function Decode_Elab_Option (Arg : String_Acc) return Natural
-   is
+   function Decode_Elab_Option (Arg : String_Acc) return Natural is
    begin
       Elab_Architecture := null;
       --  Entity (+ architecture) to elaborate
@@ -220,60 +218,185 @@ package body Ortho_Front is
    end Decode_Option;
 
 
-   --  Lighter version of libraries.is_obselete, since DESIGN_UNIT must be in
-   --  the currently analyzed design file.
-   function Is_Obsolete (Design_Unit : Iir_Design_Unit)
-     return Boolean
+   --  Add dependencies of UNIT in DEP_LIST.  If a UNIT or a unit it depends
+   --  on is obsolete, later units are not inserted and this function returns
+   --  FALSE.  UNIT is not added to DEP_LIST.
+   function Add_Dependence (Unit : Iir_Design_Unit; Dep_List : Iir_List)
+                           return Boolean
    is
       List : Iir_List;
       El : Iir;
    begin
-      if Get_Date (Design_Unit) = Date_Obsolete then
-         return True;
-      end if;
-      List := Get_Dependence_List (Design_Unit);
-      if Is_Null_List (List) then
+      if Get_Date (Unit) = Date_Obsolete then
          return False;
+      end if;
+      List := Get_Dependence_List (Unit);
+      if Is_Null_List (List) then
+         return True;
       end if;
       for I in Natural loop
          El := Get_Nth_Element (List, I);
          exit when Is_Null (El);
-         --  FIXME: there may be entity_aspect_entity...
-         if Get_Kind (El) = Iir_Kind_Design_Unit
-           and then Get_Date (El) = Date_Obsolete
-         then
-            return True;
+
+         El := Get_Unit_From_Dependence (El);
+
+         if not Get_Configuration_Mark_Flag (El) then
+            --  EL is not in the list.
+            if not Add_Dependence (El, Dep_List) then
+               --  FIXME: Also mark UNIT to avoid walking again.
+               --  FIXME: this doesn't work as Libraries cannot write the .cf
+               --         file if a unit is obsolete.
+               --  Set_Date (Unit, Date_Obsolete);
+               return False;
+            end if;
+
+            --  Add to the list (only once).
+            Set_Configuration_Mark_Flag (El, True);
+            Append_Element (Dep_List, El);
          end if;
       end loop;
-      return False;
-   end Is_Obsolete;
+      return True;
+   end Add_Dependence;
 
-   Nbr_Parse : Natural := 0;
-
-   function Parse (Filename : String_Acc) return Boolean
+   procedure Do_Compile (Vhdl_File : Name_Id)
    is
       Res : Iir_Design_File;
       New_Design_File : Iir_Design_File;
       Design : Iir_Design_Unit;
       Next_Design : Iir_Design_Unit;
 
-      --  The vhdl filename to compile.
-      Vhdl_File : Name_Id;
+      --  List of dependencies.
+      Dep_List : Iir_List;
+
+      --  List of units to be compiled.  It is generally the same units as the
+      --  one in the design_file, but some may be removed because a unit can be
+      --  obsoleted (directly or indirectly) by a later unit in the same file.
+      Units_List : Iir_List;
+   begin
+      --  Do not elaborate.
+      Flags.Flag_Elaborate := False;
+
+      --  Read and parse the file.
+      Res := Libraries.Load_File (Vhdl_File);
+      if Errorout.Nbr_Errors > 0 then
+         raise Compilation_Error;
+      end if;
+
+      --  Analyze all design units.
+      --  FIXME: outdate the design file?
+      New_Design_File := Null_Iir;
+      Design := Get_First_Design_Unit (Res);
+      while Is_Valid (Design) loop
+         --  Analyze and canon a design unit.
+         Libraries.Finish_Compilation (Design, True);
+
+         Next_Design := Get_Chain (Design);
+         if Errorout.Nbr_Errors = 0 then
+            Set_Chain (Design, Null_Iir);
+            Libraries.Add_Design_Unit_Into_Library (Design);
+            New_Design_File := Get_Design_File (Design);
+         end if;
+
+         Design := Next_Design;
+      end loop;
+
+      if Errorout.Nbr_Errors > 0 then
+         raise Compilation_Error;
+      end if;
+
+      --  Must have at least one design unit
+      pragma Assert (Is_Valid (New_Design_File));
+
+      --  Do late analysis checks.
+      Design := Get_First_Design_Unit (New_Design_File);
+      while Is_Valid (Design) loop
+         Sem.Sem_Analysis_Checks_List
+           (Design, Is_Warning_Enabled (Warnid_Delayed_Checks));
+         Design := Get_Chain (Design);
+      end loop;
+
+      --  Gather dependencies
+      pragma Assert (Flags.Flag_Elaborate = False);
+      Configuration.Flag_Load_All_Design_Units := False;
+
+      --  Exclude std.standard
+      Set_Configuration_Mark_Flag (Std_Package.Std_Standard_Unit, True);
+      Set_Configuration_Done_Flag (Std_Package.Std_Standard_Unit, True);
+
+      Dep_List := Create_Iir_List;
+      Units_List := Create_Iir_List;
+
+      Design := Get_First_Design_Unit (New_Design_File);
+      while Is_Valid (Design) loop
+         if Add_Dependence (Design, Dep_List) then
+            --  Discard obsolete units.
+            Append_Element (Units_List, Design);
+         end if;
+         Design := Get_Chain (Design);
+      end loop;
+
+      if Errorout.Nbr_Errors > 0 then
+         --  Errors can happen (missing package body for instantiation).
+         raise Compilation_Error;
+      end if;
+
+      --  Translate declarations of dependencies.
+      Translation.Translate_Standard (False);
+      for I in Natural loop
+         Design := Get_Nth_Element (Dep_List, I);
+         exit when Design = Null_Iir;
+         if Get_Design_File (Design) /= New_Design_File then
+            --  Do not yet translate units to be compiled.  They can appear as
+            --  dependencies.
+            Translation.Translate (Design, False);
+         end if;
+      end loop;
+
+      --  Compile only now.
+      --  Note: the order of design unit is kept.
+      for I in Natural loop
+         Design := Get_Nth_Element (Units_List, I);
+         exit when Design = Null_Iir;
+
+         if Get_Kind (Get_Library_Unit (Design))
+           = Iir_Kind_Configuration_Declaration
+         then
+            --  Defer code generation of configuration declaration.
+            --  (default binding may change between analysis and
+            --   elaboration).
+            Translation.Translate (Design, False);
+         else
+            Translation.Translate (Design, True);
+         end if;
+
+         if Errorout.Nbr_Errors > 0 then
+            --  This can happen (foreign attribute).
+            raise Compilation_Error;
+         end if;
+
+         Design := Get_Chain (Design);
+      end loop;
+
+      -- Save the working library.
+      Libraries.Save_Work_Library;
+   end Do_Compile;
+
+   Nbr_Parse : Natural := 0;
+
+   function Parse (Filename : String_Acc) return Boolean
+   is
+      Res : Iir_Design_File;
+      Design : Iir_Design_Unit;
+      Next_Design : Iir_Design_Unit;
    begin
       if Nbr_Parse = 0 then
          --  Initialize only once...
          Libraries.Load_Std_Library;
 
-         -- Here, time_base can be set.
+         --  Here, time_base can be set.
          Translation.Initialize;
-         Canon.Canon_Flag_Add_Labels := True;
 
-         if Flags.List_All and then Flags.List_Annotate then
-            Disp_Vhdl.Disp_Vhdl (Std_Package.Std_Standard_Unit);
-         end if;
-
-         if Action = Action_Anaelab and then Anaelab_Files /= null
-         then
+         if Action = Action_Anaelab and then Anaelab_Files /= null then
             Libraries.Load_Work_Library (True);
          else
             Libraries.Load_Work_Library (False);
@@ -355,86 +478,15 @@ package body Ortho_Front is
                                  Filename.all & """ ignored)");
                return False;
             end if;
-            Vhdl_File := Name_Table.Get_Identifier (Filename.all);
-
-            Translation.Translate_Standard (False);
-
-            Flags.Flag_Elaborate := False;
-            Res := Libraries.Load_File (Vhdl_File);
-            if Errorout.Nbr_Errors > 0 then
-               raise Compilation_Error;
-            end if;
-
-            --  Analyze all design units.
-            --  FIXME: outdate the design file?
-            New_Design_File := Null_Iir;
-            Design := Get_First_Design_Unit (Res);
-            while not Is_Null (Design) loop
-               -- Sem, canon, annotate a design unit.
-               Back_End.Finish_Compilation (Design, True);
-
-               Next_Design := Get_Chain (Design);
-               if Errorout.Nbr_Errors = 0 then
-                  Set_Chain (Design, Null_Iir);
-                  Libraries.Add_Design_Unit_Into_Library (Design);
-                  New_Design_File := Get_Design_File (Design);
-               end if;
-
-               Design := Next_Design;
-            end loop;
-
-            if Errorout.Nbr_Errors > 0 then
-               raise Compilation_Error;
-            end if;
-
-            --  Do late analysis checks.
-            Design := Get_First_Design_Unit (New_Design_File);
-            while not Is_Null (Design) loop
-               Sem.Sem_Analysis_Checks_List
-                 (Design, Is_Warning_Enabled (Warnid_Delayed_Checks));
-               Design := Get_Chain (Design);
-            end loop;
-
-            --  Compile only now.
-            if not Is_Null (New_Design_File) then
-               --  Note: the order of design unit is kept.
-               Design := Get_First_Design_Unit (New_Design_File);
-               while not Is_Null (Design) loop
-                  if not Is_Obsolete (Design) then
-
-                     if Get_Kind (Get_Library_Unit (Design))
-                       = Iir_Kind_Configuration_Declaration
-                     then
-                        --  Defer code generation of configuration declaration.
-                        --  (default binding may change between analysis and
-                        --   elaboration).
-                        Translation.Translate (Design, False);
-                     else
-                        Translation.Translate (Design, True);
-                     end if;
-
-                     if Errorout.Nbr_Errors > 0 then
-                        --  This can happen (foreign attribute).
-                        raise Compilation_Error;
-                     end if;
-                  end if;
-
-                  Design := Get_Chain (Design);
-               end loop;
-            end if;
-
-            -- Save the working library.
-            Libraries.Save_Work_Library;
+            Do_Compile (Name_Table.Get_Identifier (Filename.all));
       end case;
+
       if Flag_Expect_Failure then
          return False;
       else
          return True;
       end if;
    exception
-      --when File_Error =>
-      --   Error_Msg_Option ("cannot open file '" & Filename.all & "'");
-      --   return False;
       when Compilation_Error
         | Parse_Error =>
          if Flag_Expect_Failure then

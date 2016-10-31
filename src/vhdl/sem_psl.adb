@@ -579,7 +579,7 @@ package body Sem_Psl is
       Set_Label (Res, Get_Label (Stmt));
       Set_Severity_Expression (Res, Get_Severity_Expression (Stmt));
       Set_Report_Expression (Res, Get_Report_Expression (Stmt));
-      Set_Postponed_Flag (Res, False);
+      Set_Postponed_Flag (Res, Get_Postponed_Flag (Stmt));
       return Res;
    end Rewrite_As_Concurrent_Assertion;
 
@@ -589,7 +589,7 @@ package body Sem_Psl is
       case Get_Kind (Expr) is
          when N_HDL_Expr =>
             return True;
-         when N_And_Bool | N_Or_Bool =>
+         when N_And_Bool | N_Or_Bool | N_Not_Bool =>
             return True;
          when others =>
             return False;
@@ -617,6 +617,8 @@ package body Sem_Psl is
       Prop : Node;
       Res : Iir;
    begin
+      pragma Assert (Get_Kind (Stmt) = Iir_Kind_Psl_Assert_Statement);
+
       --  Sem report and severity expressions.
       Sem_Report_Statement (Stmt);
 
@@ -624,14 +626,17 @@ package body Sem_Psl is
       Prop := Sem_Property (Prop, True);
       Set_Psl_Property (Stmt, Prop);
 
-      if Get_Kind (Stmt) = Iir_Kind_Psl_Assert_Statement
-        and then Is_Boolean_Assertion (Prop)
-      then
+      if Is_Boolean_Assertion (Prop) then
          --  This is a simple assertion.  Convert to a non-PSL statement, as
          --  the handling is simpler (and the assertion doesn't need a clock).
          Res := Rewrite_As_Concurrent_Assertion (Stmt);
          Free_Iir (Stmt);
          return Res;
+      end if;
+
+      if Get_Postponed_Flag (Stmt) then
+         Error_Msg_Sem (+Stmt, "PSL assertions cannot be postponed");
+         Set_Postponed_Flag (Stmt, False);
       end if;
 
       --  Properties must be clocked.

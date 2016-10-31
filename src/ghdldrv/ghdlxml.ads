@@ -1,5 +1,5 @@
---  Interpreter back-end
---  Copyright (C) 2014 Tristan Gingold
+--  GHDL driver - xml commands
+--  Copyright (C) 2016 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -12,14 +12,10 @@
 --  for more details.
 --
 --  You should have received a copy of the GNU General Public License
---  along with GHDL; see the file COPYING.  If not, write to the Free
+--  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Iirs; use Iirs;
-
-package Sim_Be is
-   procedure Finish_Compilation
-     (Unit: Iir_Design_Unit; Main: Boolean := False);
-end Sim_Be;
-
+package Ghdlxml is
+   procedure Register_Commands;
+end Ghdlxml;

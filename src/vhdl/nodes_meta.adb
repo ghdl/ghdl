@@ -45,12 +45,11 @@ package body Nodes_Meta is
       Field_Value => Type_Iir_Int64,
       Field_Enum_Pos => Type_Iir_Int32,
       Field_Physical_Literal => Type_Iir,
-      Field_Physical_Unit_Value => Type_Iir,
       Field_Fp_Value => Type_Iir_Fp64,
       Field_Simple_Aggregate_List => Type_Iir_List,
       Field_String8_Id => Type_String8_Id,
       Field_String_Length => Type_Int32,
-      Field_Bit_String_Base => Type_Base_Type,
+      Field_Bit_String_Base => Type_Number_Base_Type,
       Field_Has_Signed => Type_Boolean,
       Field_Has_Sign => Type_Boolean,
       Field_Has_Length => Type_Boolean,
@@ -89,11 +88,15 @@ package body Nodes_Meta is
       Field_Configuration_Item_Chain => Type_Iir,
       Field_Attribute_Value_Chain => Type_Iir,
       Field_Spec_Chain => Type_Iir,
+      Field_Value_Chain => Type_Iir,
       Field_Attribute_Value_Spec_Chain => Type_Iir,
       Field_Entity_Name => Type_Iir,
       Field_Package => Type_Iir,
       Field_Package_Body => Type_Iir,
+      Field_Package_Instantiation_Bodies_Chain => Type_Iir,
       Field_Need_Body => Type_Boolean,
+      Field_Macro_Expanded_Flag => Type_Boolean,
+      Field_Need_Instance_Bodies => Type_Boolean,
       Field_Block_Configuration => Type_Iir,
       Field_Concurrent_Statement_Chain => Type_Iir,
       Field_Chain => Type_Iir,
@@ -104,6 +107,8 @@ package body Nodes_Meta is
       Field_Discrete_Range => Type_Iir,
       Field_Type_Definition => Type_Iir,
       Field_Subtype_Definition => Type_Iir,
+      Field_Incomplete_Type_Declaration => Type_Iir,
+      Field_Interface_Type_Subprograms => Type_Iir,
       Field_Nature => Type_Iir,
       Field_Mode => Type_Iir_Mode,
       Field_Guarded_Signal_Flag => Type_Boolean,
@@ -130,12 +135,16 @@ package body Nodes_Meta is
       Field_File_Logical_Name => Type_Iir,
       Field_File_Open_Kind => Type_Iir,
       Field_Element_Position => Type_Iir_Index32,
+      Field_Base_Element_Declaration => Type_Iir,
       Field_Element_Declaration => Type_Iir,
       Field_Selected_Element => Type_Iir,
       Field_Use_Clause_Chain => Type_Iir,
       Field_Context_Reference_Chain => Type_Iir,
       Field_Selected_Name => Type_Iir,
       Field_Type_Declarator => Type_Iir,
+      Field_Complete_Type_Definition => Type_Iir,
+      Field_Incomplete_Type_Ref_Chain => Type_Iir,
+      Field_Associated_Type => Type_Iir,
       Field_Enumeration_Literal_List => Type_Iir_List,
       Field_Entity_Class_Entry_Chain => Type_Iir,
       Field_Group_Constituent_List => Type_Iir_List,
@@ -148,6 +157,8 @@ package body Nodes_Meta is
       Field_Direction => Type_Iir_Direction,
       Field_Left_Limit => Type_Iir,
       Field_Right_Limit => Type_Iir,
+      Field_Left_Limit_Expr => Type_Iir,
+      Field_Right_Limit_Expr => Type_Iir,
       Field_Base_Type => Type_Iir,
       Field_Resolution_Indication => Type_Iir,
       Field_Record_Element_Resolution_Chain => Type_Iir,
@@ -181,6 +192,7 @@ package body Nodes_Meta is
       Field_Reject_Time_Expression => Type_Iir,
       Field_Sensitivity_List => Type_Iir_List,
       Field_Process_Origin => Type_Iir,
+      Field_Package_Origin => Type_Iir,
       Field_Condition_Clause => Type_Iir,
       Field_Timeout_Clause => Type_Iir,
       Field_Postponed_Flag => Type_Boolean,
@@ -220,10 +232,12 @@ package body Nodes_Meta is
       Field_Guard_Expression => Type_Iir,
       Field_Guard_Decl => Type_Iir,
       Field_Guard_Sensitivity_List => Type_Iir_List,
+      Field_Signal_Attribute_Chain => Type_Iir,
       Field_Block_Block_Configuration => Type_Iir,
       Field_Package_Header => Type_Iir,
       Field_Block_Header => Type_Iir,
       Field_Uninstantiated_Package_Name => Type_Iir,
+      Field_Uninstantiated_Package_Decl => Type_Iir,
       Field_Generate_Block_Configuration => Type_Iir,
       Field_Generate_Statement_Body => Type_Iir,
       Field_Alternative_Label => Type_Name_Id,
@@ -237,16 +251,16 @@ package body Nodes_Meta is
       Field_Instantiation_List => Type_Iir_List,
       Field_Entity_Aspect => Type_Iir,
       Field_Default_Entity_Aspect => Type_Iir,
-      Field_Default_Generic_Map_Aspect_Chain => Type_Iir,
-      Field_Default_Port_Map_Aspect_Chain => Type_Iir,
       Field_Binding_Indication => Type_Iir,
       Field_Named_Entity => Type_Iir,
       Field_Alias_Declaration => Type_Iir,
+      Field_Referenced_Name => Type_Iir,
       Field_Expr_Staticness => Type_Iir_Staticness,
       Field_Error_Origin => Type_Iir,
       Field_Operand => Type_Iir,
       Field_Left => Type_Iir,
       Field_Right => Type_Iir,
+      Field_Physical_Unit => Type_Iir,
       Field_Unit_Name => Type_Iir,
       Field_Name => Type_Iir,
       Field_Group_Template_Name => Type_Iir,
@@ -260,10 +274,13 @@ package body Nodes_Meta is
       Field_Suffix => Type_Iir,
       Field_Index_Subtype => Type_Iir,
       Field_Parameter => Type_Iir,
+      Field_Attr_Chain => Type_Iir,
+      Field_Signal_Attribute_Declaration => Type_Iir,
       Field_Actual_Type => Type_Iir,
-      Field_Associated_Interface => Type_Iir,
+      Field_Actual_Type_Definition => Type_Iir,
       Field_Association_Chain => Type_Iir,
       Field_Individual_Association_Chain => Type_Iir,
+      Field_Subprogram_Association_Chain => Type_Iir,
       Field_Aggregate_Info => Type_Iir,
       Field_Sub_Aggregate_Info => Type_Iir,
       Field_Aggr_Dynamic_Flag => Type_Boolean,
@@ -285,7 +302,6 @@ package body Nodes_Meta is
       Field_Type_Mark => Type_Iir,
       Field_File_Type_Mark => Type_Iir,
       Field_Return_Type_Mark => Type_Iir,
-      Field_Incomplete_Type_List => Type_Iir_List,
       Field_Has_Disconnect_Flag => Type_Boolean,
       Field_Has_Active_Flag => Type_Boolean,
       Field_Is_Within_Flag => Type_Boolean,
@@ -309,11 +325,13 @@ package body Nodes_Meta is
       Field_Has_Is => Type_Boolean,
       Field_Has_Pure => Type_Boolean,
       Field_Has_Body => Type_Boolean,
+      Field_Has_Parameter => Type_Boolean,
       Field_Has_Identifier_List => Type_Boolean,
       Field_Has_Mode => Type_Boolean,
       Field_Has_Class => Type_Boolean,
       Field_Suspend_Flag => Type_Boolean,
       Field_Is_Ref => Type_Boolean,
+      Field_Is_Forward_Ref => Type_Boolean,
       Field_Psl_Property => Type_PSL_Node,
       Field_Psl_Sequence => Type_PSL_Node,
       Field_Psl_Declaration => Type_PSL_Node,
@@ -386,8 +404,6 @@ package body Nodes_Meta is
             return "enum_pos";
          when Field_Physical_Literal =>
             return "physical_literal";
-         when Field_Physical_Unit_Value =>
-            return "physical_unit_value";
          when Field_Fp_Value =>
             return "fp_value";
          when Field_Simple_Aggregate_List =>
@@ -474,6 +490,8 @@ package body Nodes_Meta is
             return "attribute_value_chain";
          when Field_Spec_Chain =>
             return "spec_chain";
+         when Field_Value_Chain =>
+            return "value_chain";
          when Field_Attribute_Value_Spec_Chain =>
             return "attribute_value_spec_chain";
          when Field_Entity_Name =>
@@ -482,8 +500,14 @@ package body Nodes_Meta is
             return "package";
          when Field_Package_Body =>
             return "package_body";
+         when Field_Package_Instantiation_Bodies_Chain =>
+            return "package_instantiation_bodies_chain";
          when Field_Need_Body =>
             return "need_body";
+         when Field_Macro_Expanded_Flag =>
+            return "macro_expanded_flag";
+         when Field_Need_Instance_Bodies =>
+            return "need_instance_bodies";
          when Field_Block_Configuration =>
             return "block_configuration";
          when Field_Concurrent_Statement_Chain =>
@@ -504,6 +528,10 @@ package body Nodes_Meta is
             return "type_definition";
          when Field_Subtype_Definition =>
             return "subtype_definition";
+         when Field_Incomplete_Type_Declaration =>
+            return "incomplete_type_declaration";
+         when Field_Interface_Type_Subprograms =>
+            return "interface_type_subprograms";
          when Field_Nature =>
             return "nature";
          when Field_Mode =>
@@ -556,6 +584,8 @@ package body Nodes_Meta is
             return "file_open_kind";
          when Field_Element_Position =>
             return "element_position";
+         when Field_Base_Element_Declaration =>
+            return "base_element_declaration";
          when Field_Element_Declaration =>
             return "element_declaration";
          when Field_Selected_Element =>
@@ -568,6 +598,12 @@ package body Nodes_Meta is
             return "selected_name";
          when Field_Type_Declarator =>
             return "type_declarator";
+         when Field_Complete_Type_Definition =>
+            return "complete_type_definition";
+         when Field_Incomplete_Type_Ref_Chain =>
+            return "incomplete_type_ref_chain";
+         when Field_Associated_Type =>
+            return "associated_type";
          when Field_Enumeration_Literal_List =>
             return "enumeration_literal_list";
          when Field_Entity_Class_Entry_Chain =>
@@ -592,6 +628,10 @@ package body Nodes_Meta is
             return "left_limit";
          when Field_Right_Limit =>
             return "right_limit";
+         when Field_Left_Limit_Expr =>
+            return "left_limit_expr";
+         when Field_Right_Limit_Expr =>
+            return "right_limit_expr";
          when Field_Base_Type =>
             return "base_type";
          when Field_Resolution_Indication =>
@@ -658,6 +698,8 @@ package body Nodes_Meta is
             return "sensitivity_list";
          when Field_Process_Origin =>
             return "process_origin";
+         when Field_Package_Origin =>
+            return "package_origin";
          when Field_Condition_Clause =>
             return "condition_clause";
          when Field_Timeout_Clause =>
@@ -736,6 +778,8 @@ package body Nodes_Meta is
             return "guard_decl";
          when Field_Guard_Sensitivity_List =>
             return "guard_sensitivity_list";
+         when Field_Signal_Attribute_Chain =>
+            return "signal_attribute_chain";
          when Field_Block_Block_Configuration =>
             return "block_block_configuration";
          when Field_Package_Header =>
@@ -744,6 +788,8 @@ package body Nodes_Meta is
             return "block_header";
          when Field_Uninstantiated_Package_Name =>
             return "uninstantiated_package_name";
+         when Field_Uninstantiated_Package_Decl =>
+            return "uninstantiated_package_decl";
          when Field_Generate_Block_Configuration =>
             return "generate_block_configuration";
          when Field_Generate_Statement_Body =>
@@ -770,16 +816,14 @@ package body Nodes_Meta is
             return "entity_aspect";
          when Field_Default_Entity_Aspect =>
             return "default_entity_aspect";
-         when Field_Default_Generic_Map_Aspect_Chain =>
-            return "default_generic_map_aspect_chain";
-         when Field_Default_Port_Map_Aspect_Chain =>
-            return "default_port_map_aspect_chain";
          when Field_Binding_Indication =>
             return "binding_indication";
          when Field_Named_Entity =>
             return "named_entity";
          when Field_Alias_Declaration =>
             return "alias_declaration";
+         when Field_Referenced_Name =>
+            return "referenced_name";
          when Field_Expr_Staticness =>
             return "expr_staticness";
          when Field_Error_Origin =>
@@ -790,6 +834,8 @@ package body Nodes_Meta is
             return "left";
          when Field_Right =>
             return "right";
+         when Field_Physical_Unit =>
+            return "physical_unit";
          when Field_Unit_Name =>
             return "unit_name";
          when Field_Name =>
@@ -816,14 +862,20 @@ package body Nodes_Meta is
             return "index_subtype";
          when Field_Parameter =>
             return "parameter";
+         when Field_Attr_Chain =>
+            return "attr_chain";
+         when Field_Signal_Attribute_Declaration =>
+            return "signal_attribute_declaration";
          when Field_Actual_Type =>
             return "actual_type";
-         when Field_Associated_Interface =>
-            return "associated_interface";
+         when Field_Actual_Type_Definition =>
+            return "actual_type_definition";
          when Field_Association_Chain =>
             return "association_chain";
          when Field_Individual_Association_Chain =>
             return "individual_association_chain";
+         when Field_Subprogram_Association_Chain =>
+            return "subprogram_association_chain";
          when Field_Aggregate_Info =>
             return "aggregate_info";
          when Field_Sub_Aggregate_Info =>
@@ -866,8 +918,6 @@ package body Nodes_Meta is
             return "file_type_mark";
          when Field_Return_Type_Mark =>
             return "return_type_mark";
-         when Field_Incomplete_Type_List =>
-            return "incomplete_type_list";
          when Field_Has_Disconnect_Flag =>
             return "has_disconnect_flag";
          when Field_Has_Active_Flag =>
@@ -914,6 +964,8 @@ package body Nodes_Meta is
             return "has_pure";
          when Field_Has_Body =>
             return "has_body";
+         when Field_Has_Parameter =>
+            return "has_parameter";
          when Field_Has_Identifier_List =>
             return "has_identifier_list";
          when Field_Has_Mode =>
@@ -924,6 +976,8 @@ package body Nodes_Meta is
             return "suspend_flag";
          when Field_Is_Ref =>
             return "is_ref";
+         when Field_Is_Forward_Ref =>
+            return "is_forward_ref";
          when Field_Psl_Property =>
             return "psl_property";
          when Field_Psl_Sequence =>
@@ -994,6 +1048,10 @@ package body Nodes_Meta is
             return "association_element_open";
          when Iir_Kind_Association_Element_Package =>
             return "association_element_package";
+         when Iir_Kind_Association_Element_Type =>
+            return "association_element_type";
+         when Iir_Kind_Association_Element_Subprogram =>
+            return "association_element_subprogram";
          when Iir_Kind_Choice_By_Others =>
             return "choice_by_others";
          when Iir_Kind_Choice_By_Expression =>
@@ -1046,6 +1104,8 @@ package body Nodes_Meta is
             return "access_type_definition";
          when Iir_Kind_Incomplete_Type_Definition =>
             return "incomplete_type_definition";
+         when Iir_Kind_Interface_Type_Definition =>
+            return "interface_type_definition";
          when Iir_Kind_File_Type_Definition =>
             return "file_type_definition";
          when Iir_Kind_Protected_Type_Declaration =>
@@ -1174,8 +1234,16 @@ package body Nodes_Meta is
             return "interface_signal_declaration";
          when Iir_Kind_Interface_File_Declaration =>
             return "interface_file_declaration";
+         when Iir_Kind_Interface_Type_Declaration =>
+            return "interface_type_declaration";
          when Iir_Kind_Interface_Package_Declaration =>
             return "interface_package_declaration";
+         when Iir_Kind_Interface_Function_Declaration =>
+            return "interface_function_declaration";
+         when Iir_Kind_Interface_Procedure_Declaration =>
+            return "interface_procedure_declaration";
+         when Iir_Kind_Signal_Attribute_Declaration =>
+            return "signal_attribute_declaration";
          when Iir_Kind_Identity_Operator =>
             return "identity_operator";
          when Iir_Kind_Negation_Operator =>
@@ -1300,14 +1368,12 @@ package body Nodes_Meta is
             return "concurrent_selected_signal_assignment";
          when Iir_Kind_Concurrent_Assertion_Statement =>
             return "concurrent_assertion_statement";
-         when Iir_Kind_Psl_Default_Clock =>
-            return "psl_default_clock";
+         when Iir_Kind_Concurrent_Procedure_Call_Statement =>
+            return "concurrent_procedure_call_statement";
          when Iir_Kind_Psl_Assert_Statement =>
             return "psl_assert_statement";
          when Iir_Kind_Psl_Cover_Statement =>
             return "psl_cover_statement";
-         when Iir_Kind_Concurrent_Procedure_Call_Statement =>
-            return "concurrent_procedure_call_statement";
          when Iir_Kind_Block_Statement =>
             return "block_statement";
          when Iir_Kind_If_Generate_Statement =>
@@ -1318,6 +1384,8 @@ package body Nodes_Meta is
             return "for_generate_statement";
          when Iir_Kind_Component_Instantiation_Statement =>
             return "component_instantiation_statement";
+         when Iir_Kind_Psl_Default_Clock =>
+            return "psl_default_clock";
          when Iir_Kind_Simple_Simultaneous_Statement =>
             return "simple_simultaneous_statement";
          when Iir_Kind_Generate_Statement_Body =>
@@ -1366,6 +1434,8 @@ package body Nodes_Meta is
             return "selected_name";
          when Iir_Kind_Operator_Symbol =>
             return "operator_symbol";
+         when Iir_Kind_Reference_Name =>
+            return "reference_name";
          when Iir_Kind_Selected_By_All_Name =>
             return "selected_by_all_name";
          when Iir_Kind_Parenthesis_Name =>
@@ -1507,7 +1577,7 @@ package body Nodes_Meta is
          when Field_Library_Unit =>
             return Attr_None;
          when Field_Hash_Chain =>
-            return Attr_Ref;
+            return Attr_Forward_Ref;
          when Field_Design_Unit_Source_Pos =>
             return Attr_None;
          when Field_Design_Unit_Source_Line =>
@@ -1520,12 +1590,10 @@ package body Nodes_Meta is
             return Attr_None;
          when Field_Physical_Literal =>
             return Attr_None;
-         when Field_Physical_Unit_Value =>
-            return Attr_None;
          when Field_Fp_Value =>
             return Attr_None;
          when Field_Simple_Aggregate_List =>
-            return Attr_None;
+            return Attr_Ref;
          when Field_String8_Id =>
             return Attr_None;
          when Field_String_Length =>
@@ -1545,7 +1613,7 @@ package body Nodes_Meta is
          when Field_Literal_Subtype =>
             return Attr_None;
          when Field_Allocator_Subtype =>
-            return Attr_None;
+            return Attr_Ref;
          when Field_Entity_Class =>
             return Attr_None;
          when Field_Entity_Name_List =>
@@ -1553,13 +1621,13 @@ package body Nodes_Meta is
          when Field_Attribute_Designator =>
             return Attr_None;
          when Field_Attribute_Specification_Chain =>
-            return Attr_None;
+            return Attr_Ref;
          when Field_Attribute_Specification =>
             return Attr_Ref;
          when Field_Signal_List =>
             return Attr_None;
          when Field_Designated_Entity =>
-            return Attr_Ref;
+            return Attr_Forward_Ref;
          when Field_Formal =>
             return Attr_None;
          when Field_Actual =>
@@ -1605,9 +1673,11 @@ package body Nodes_Meta is
          when Field_Configuration_Item_Chain =>
             return Attr_Chain;
          when Field_Attribute_Value_Chain =>
-            return Attr_Chain;
+            return Attr_Ref;
          when Field_Spec_Chain =>
             return Attr_None;
+         when Field_Value_Chain =>
+            return Attr_Ref;
          when Field_Attribute_Value_Spec_Chain =>
             return Attr_None;
          when Field_Entity_Name =>
@@ -1615,8 +1685,14 @@ package body Nodes_Meta is
          when Field_Package =>
             return Attr_Ref;
          when Field_Package_Body =>
-            return Attr_Ref;
+            return Attr_Forward_Ref;
+         when Field_Package_Instantiation_Bodies_Chain =>
+            return Attr_Chain;
          when Field_Need_Body =>
+            return Attr_None;
+         when Field_Macro_Expanded_Flag =>
+            return Attr_None;
+         when Field_Need_Instance_Bodies =>
             return Attr_None;
          when Field_Block_Configuration =>
             return Attr_None;
@@ -1631,13 +1707,17 @@ package body Nodes_Meta is
          when Field_Type =>
             return Attr_Ref;
          when Field_Subtype_Indication =>
-            return Attr_Maybe_Ref;
+            return Attr_None;
          when Field_Discrete_Range =>
             return Attr_None;
          when Field_Type_Definition =>
             return Attr_None;
          when Field_Subtype_Definition =>
-            return Attr_None;
+            return Attr_Forward_Ref;
+         when Field_Incomplete_Type_Declaration =>
+            return Attr_Ref;
+         when Field_Interface_Type_Subprograms =>
+            return Attr_Chain;
          when Field_Nature =>
             return Attr_None;
          when Field_Mode =>
@@ -1655,7 +1735,7 @@ package body Nodes_Meta is
          when Field_Sequential_Statement_Chain =>
             return Attr_Chain;
          when Field_Subprogram_Body =>
-            return Attr_Ref;
+            return Attr_Forward_Ref;
          when Field_Overload_Number =>
             return Attr_None;
          when Field_Subprogram_Depth =>
@@ -1671,7 +1751,7 @@ package body Nodes_Meta is
          when Field_Default_Value =>
             return Attr_Maybe_Ref;
          when Field_Deferred_Declaration =>
-            return Attr_Ref;
+            return Attr_Forward_Ref;
          when Field_Deferred_Declaration_Flag =>
             return Attr_None;
          when Field_Shared_Flag =>
@@ -1690,6 +1770,8 @@ package body Nodes_Meta is
             return Attr_None;
          when Field_Element_Position =>
             return Attr_None;
+         when Field_Base_Element_Declaration =>
+            return Attr_Ref;
          when Field_Element_Declaration =>
             return Attr_None;
          when Field_Selected_Element =>
@@ -1701,6 +1783,12 @@ package body Nodes_Meta is
          when Field_Selected_Name =>
             return Attr_None;
          when Field_Type_Declarator =>
+            return Attr_Ref;
+         when Field_Complete_Type_Definition =>
+            return Attr_Forward_Ref;
+         when Field_Incomplete_Type_Ref_Chain =>
+            return Attr_Forward_Ref;
+         when Field_Associated_Type =>
             return Attr_Ref;
          when Field_Enumeration_Literal_List =>
             return Attr_None;
@@ -1719,12 +1807,16 @@ package body Nodes_Meta is
          when Field_Visible_Flag =>
             return Attr_None;
          when Field_Range_Constraint =>
-            return Attr_None;
+            return Attr_Maybe_Ref;
          when Field_Direction =>
             return Attr_None;
          when Field_Left_Limit =>
-            return Attr_None;
+            return Attr_Ref;
          when Field_Right_Limit =>
+            return Attr_Ref;
+         when Field_Left_Limit_Expr =>
+            return Attr_None;
+         when Field_Right_Limit_Expr =>
             return Attr_None;
          when Field_Base_Type =>
             return Attr_Ref;
@@ -1765,7 +1857,7 @@ package body Nodes_Meta is
          when Field_Elements_Declaration_List =>
             return Attr_None;
          when Field_Designated_Type =>
-            return Attr_Ref;
+            return Attr_Forward_Ref;
          when Field_Designated_Subtype_Indication =>
             return Attr_None;
          when Field_Index_List =>
@@ -1783,7 +1875,7 @@ package body Nodes_Meta is
          when Field_Waveform_Chain =>
             return Attr_Chain;
          when Field_Guard =>
-            return Attr_None;
+            return Attr_Ref;
          when Field_Delay_Mechanism =>
             return Attr_None;
          when Field_Reject_Time_Expression =>
@@ -1791,6 +1883,8 @@ package body Nodes_Meta is
          when Field_Sensitivity_List =>
             return Attr_None;
          when Field_Process_Origin =>
+            return Attr_None;
+         when Field_Package_Origin =>
             return Attr_None;
          when Field_Condition_Clause =>
             return Attr_None;
@@ -1847,9 +1941,9 @@ package body Nodes_Meta is
          when Field_Configuration_Name =>
             return Attr_None;
          when Field_Component_Configuration =>
-            return Attr_None;
+            return Attr_Forward_Ref;
          when Field_Configuration_Specification =>
-            return Attr_None;
+            return Attr_Ref;
          when Field_Default_Binding_Indication =>
             return Attr_None;
          when Field_Default_Configuration_Declaration =>
@@ -1857,7 +1951,7 @@ package body Nodes_Meta is
          when Field_Expression =>
             return Attr_None;
          when Field_Conditional_Expression =>
-            return Attr_None;
+            return Attr_Chain;
          when Field_Allocator_Designated_Type =>
             return Attr_Ref;
          when Field_Selected_Waveform_Chain =>
@@ -1870,16 +1964,20 @@ package body Nodes_Meta is
             return Attr_None;
          when Field_Guard_Sensitivity_List =>
             return Attr_None;
+         when Field_Signal_Attribute_Chain =>
+            return Attr_Forward_Ref;
          when Field_Block_Block_Configuration =>
-            return Attr_None;
+            return Attr_Forward_Ref;
          when Field_Package_Header =>
             return Attr_None;
          when Field_Block_Header =>
             return Attr_None;
          when Field_Uninstantiated_Package_Name =>
             return Attr_None;
+         when Field_Uninstantiated_Package_Decl =>
+            return Attr_Ref;
          when Field_Generate_Block_Configuration =>
-            return Attr_None;
+            return Attr_Forward_Ref;
          when Field_Generate_Statement_Body =>
             return Attr_None;
          when Field_Alternative_Label =>
@@ -1904,16 +2002,14 @@ package body Nodes_Meta is
             return Attr_None;
          when Field_Default_Entity_Aspect =>
             return Attr_None;
-         when Field_Default_Generic_Map_Aspect_Chain =>
-            return Attr_Chain;
-         when Field_Default_Port_Map_Aspect_Chain =>
-            return Attr_Chain;
          when Field_Binding_Indication =>
             return Attr_None;
          when Field_Named_Entity =>
-            return Attr_Ref;
+            return Attr_Maybe_Forward_Ref;
          when Field_Alias_Declaration =>
-            return Attr_None;
+            return Attr_Ref;
+         when Field_Referenced_Name =>
+            return Attr_Ref;
          when Field_Expr_Staticness =>
             return Attr_None;
          when Field_Error_Origin =>
@@ -1924,6 +2020,8 @@ package body Nodes_Meta is
             return Attr_None;
          when Field_Right =>
             return Attr_None;
+         when Field_Physical_Unit =>
+            return Attr_Ref;
          when Field_Unit_Name =>
             return Attr_None;
          when Field_Name =>
@@ -1935,7 +2033,7 @@ package body Nodes_Meta is
          when Field_Prefix =>
             return Attr_None;
          when Field_Signature_Prefix =>
-            return Attr_Ref;
+            return Attr_None;
          when Field_External_Pathname =>
             return Attr_None;
          when Field_Pathname_Suffix =>
@@ -1947,16 +2045,22 @@ package body Nodes_Meta is
          when Field_Suffix =>
             return Attr_None;
          when Field_Index_Subtype =>
-            return Attr_None;
+            return Attr_Ref;
          when Field_Parameter =>
             return Attr_None;
+         when Field_Attr_Chain =>
+            return Attr_Forward_Ref;
+         when Field_Signal_Attribute_Declaration =>
+            return Attr_Forward_Ref;
          when Field_Actual_Type =>
-            return Attr_None;
-         when Field_Associated_Interface =>
             return Attr_Ref;
+         when Field_Actual_Type_Definition =>
+            return Attr_None;
          when Field_Association_Chain =>
             return Attr_Chain;
          when Field_Individual_Association_Chain =>
+            return Attr_Chain;
+         when Field_Subprogram_Association_Chain =>
             return Attr_Chain;
          when Field_Aggregate_Info =>
             return Attr_None;
@@ -1967,9 +2071,9 @@ package body Nodes_Meta is
          when Field_Aggr_Min_Length =>
             return Attr_None;
          when Field_Aggr_Low_Limit =>
-            return Attr_None;
+            return Attr_Ref;
          when Field_Aggr_High_Limit =>
-            return Attr_None;
+            return Attr_Ref;
          when Field_Aggr_Others_Flag =>
             return Attr_None;
          when Field_Aggr_Named_Flag =>
@@ -1989,7 +2093,7 @@ package body Nodes_Meta is
          when Field_Parameter_Association_Chain =>
             return Attr_Chain;
          when Field_Method_Object =>
-            return Attr_None;
+            return Attr_Ref;
          when Field_Subtype_Type_Mark =>
             return Attr_None;
          when Field_Type_Conversion_Subtype =>
@@ -1999,8 +2103,6 @@ package body Nodes_Meta is
          when Field_File_Type_Mark =>
             return Attr_None;
          when Field_Return_Type_Mark =>
-            return Attr_None;
-         when Field_Incomplete_Type_List =>
             return Attr_None;
          when Field_Has_Disconnect_Flag =>
             return Attr_None;
@@ -2023,9 +2125,9 @@ package body Nodes_Meta is
          when Field_Simple_Name_Subtype =>
             return Attr_None;
          when Field_Protected_Type_Body =>
-            return Attr_None;
+            return Attr_Forward_Ref;
          when Field_Protected_Type_Declaration =>
-            return Attr_None;
+            return Attr_Ref;
          when Field_End_Location =>
             return Attr_None;
          when Field_Use_Flag =>
@@ -2048,6 +2150,8 @@ package body Nodes_Meta is
             return Attr_None;
          when Field_Has_Body =>
             return Attr_None;
+         when Field_Has_Parameter =>
+            return Attr_None;
          when Field_Has_Identifier_List =>
             return Attr_None;
          when Field_Has_Mode =>
@@ -2057,6 +2161,8 @@ package body Nodes_Meta is
          when Field_Suspend_Flag =>
             return Attr_None;
          when Field_Is_Ref =>
+            return Attr_None;
+         when Field_Is_Forward_Ref =>
             return Attr_None;
          when Field_Psl_Property =>
             return Attr_None;
@@ -2089,8 +2195,8 @@ package body Nodes_Meta is
       Field_Signal_Type_Flag,
       Field_Has_Signal_Flag,
       Field_Expr_Staticness,
-      Field_Error_Origin,
       Field_Type,
+      Field_Error_Origin,
       Field_Type_Declarator,
       Field_Base_Type,
       --  Iir_Kind_Design_File
@@ -2099,10 +2205,10 @@ package body Nodes_Meta is
       Field_Analysis_Time_Stamp,
       Field_File_Checksum,
       Field_Elab_Flag,
+      Field_Library,
       Field_File_Dependence_List,
       Field_Chain,
       Field_First_Design_Unit,
-      Field_Library,
       Field_Last_Design_Unit,
       --  Iir_Kind_Design_Unit
       Field_Design_Unit_Source_Pos,
@@ -2115,29 +2221,29 @@ package body Nodes_Meta is
       Field_Configuration_Mark_Flag,
       Field_Configuration_Done_Flag,
       Field_Date_State,
+      Field_Design_File,
       Field_Context_Items,
       Field_Chain,
       Field_Library_Unit,
-      Field_Design_File,
       Field_Hash_Chain,
       Field_Dependence_List,
       Field_Analysis_Checks_List,
       --  Iir_Kind_Library_Clause
       Field_Identifier,
       Field_Has_Identifier_List,
-      Field_Chain,
       Field_Parent,
       Field_Library_Declaration,
+      Field_Chain,
       --  Iir_Kind_Use_Clause
+      Field_Parent,
       Field_Selected_Name,
       Field_Chain,
       Field_Use_Clause_Chain,
-      Field_Parent,
       --  Iir_Kind_Context_Reference
+      Field_Parent,
       Field_Selected_Name,
       Field_Chain,
       Field_Context_Reference_Chain,
-      Field_Parent,
       --  Iir_Kind_Integer_Literal
       Field_Value,
       Field_Expr_Staticness,
@@ -2155,9 +2261,9 @@ package body Nodes_Meta is
       Field_String_Length,
       Field_String8_Id,
       Field_Has_Signed,
+      Field_Bit_String_Base,
       Field_Has_Sign,
       Field_Has_Length,
-      Field_Bit_String_Base,
       Field_Expr_Staticness,
       Field_Literal_Origin,
       Field_Literal_Subtype,
@@ -2166,18 +2272,20 @@ package body Nodes_Meta is
       Field_Value,
       Field_Expr_Staticness,
       Field_Literal_Origin,
+      Field_Physical_Unit,
       Field_Unit_Name,
       Field_Type,
       --  Iir_Kind_Physical_Fp_Literal
       Field_Fp_Value,
       Field_Expr_Staticness,
       Field_Literal_Origin,
+      Field_Physical_Unit,
       Field_Unit_Name,
       Field_Type,
       --  Iir_Kind_Simple_Aggregate
       Field_Expr_Staticness,
-      Field_Literal_Origin,
       Field_Literal_Subtype,
+      Field_Literal_Origin,
       Field_Simple_Aggregate_List,
       Field_Type,
       --  Iir_Kind_Overflow_Literal
@@ -2186,16 +2294,16 @@ package body Nodes_Meta is
       Field_Type,
       --  Iir_Kind_Waveform_Element
       Field_We_Value,
-      Field_Chain,
       Field_Time,
+      Field_Chain,
       --  Iir_Kind_Conditional_Waveform
       Field_Condition,
-      Field_Chain,
       Field_Waveform_Chain,
+      Field_Chain,
       --  Iir_Kind_Conditional_Expression
       Field_Condition,
-      Field_Chain,
       Field_Expression,
+      Field_Chain,
       --  Iir_Kind_Association_Element_By_Expression
       Field_Whole_Association_Flag,
       Field_Collapse_Signal_Flag,
@@ -2210,8 +2318,9 @@ package body Nodes_Meta is
       Field_Choice_Staticness,
       Field_Formal,
       Field_Chain,
-      Field_Actual_Type,
       Field_Individual_Association_Chain,
+      Field_Actual_Type_Definition,
+      Field_Actual_Type,
       --  Iir_Kind_Association_Element_Open
       Field_Whole_Association_Flag,
       Field_Collapse_Signal_Flag,
@@ -2224,42 +2333,54 @@ package body Nodes_Meta is
       Field_Formal,
       Field_Chain,
       Field_Actual,
-      Field_Associated_Interface,
+      --  Iir_Kind_Association_Element_Type
+      Field_Whole_Association_Flag,
+      Field_Collapse_Signal_Flag,
+      Field_Formal,
+      Field_Chain,
+      Field_Actual,
+      Field_Subprogram_Association_Chain,
+      --  Iir_Kind_Association_Element_Subprogram
+      Field_Whole_Association_Flag,
+      Field_Collapse_Signal_Flag,
+      Field_Formal,
+      Field_Chain,
+      Field_Actual,
       --  Iir_Kind_Choice_By_Others
       Field_Same_Alternative_Flag,
+      Field_Parent,
       Field_Chain,
       Field_Associated_Expr,
       Field_Associated_Chain,
-      Field_Parent,
       --  Iir_Kind_Choice_By_Expression
       Field_Same_Alternative_Flag,
       Field_Choice_Staticness,
+      Field_Parent,
       Field_Chain,
       Field_Associated_Expr,
       Field_Associated_Chain,
       Field_Choice_Expression,
-      Field_Parent,
       --  Iir_Kind_Choice_By_Range
       Field_Same_Alternative_Flag,
       Field_Choice_Staticness,
+      Field_Parent,
       Field_Chain,
       Field_Associated_Expr,
       Field_Associated_Chain,
       Field_Choice_Range,
-      Field_Parent,
       --  Iir_Kind_Choice_By_None
       Field_Same_Alternative_Flag,
+      Field_Parent,
       Field_Chain,
       Field_Associated_Expr,
       Field_Associated_Chain,
-      Field_Parent,
       --  Iir_Kind_Choice_By_Name
       Field_Same_Alternative_Flag,
+      Field_Parent,
       Field_Chain,
       Field_Associated_Expr,
       Field_Associated_Chain,
       Field_Choice_Name,
-      Field_Parent,
       --  Iir_Kind_Entity_Aspect_Entity
       Field_Entity_Name,
       Field_Architecture,
@@ -2267,29 +2388,27 @@ package body Nodes_Meta is
       Field_Configuration_Name,
       --  Iir_Kind_Entity_Aspect_Open
       --  Iir_Kind_Block_Configuration
+      Field_Parent,
       Field_Declaration_Chain,
       Field_Chain,
       Field_Configuration_Item_Chain,
-      Field_Block_Specification,
-      Field_Parent,
       Field_Prev_Block_Configuration,
+      Field_Block_Specification,
       --  Iir_Kind_Block_Header
       Field_Generic_Chain,
       Field_Port_Chain,
       Field_Generic_Map_Aspect_Chain,
       Field_Port_Map_Aspect_Chain,
       --  Iir_Kind_Component_Configuration
-      Field_Instantiation_List,
-      Field_Chain,
-      Field_Binding_Indication,
-      Field_Component_Name,
-      Field_Block_Configuration,
       Field_Parent,
+      Field_Component_Name,
+      Field_Instantiation_List,
+      Field_Block_Configuration,
+      Field_Binding_Indication,
+      Field_Chain,
       --  Iir_Kind_Binding_Indication
       Field_Default_Entity_Aspect,
       Field_Entity_Aspect,
-      Field_Default_Generic_Map_Aspect_Chain,
-      Field_Default_Port_Map_Aspect_Chain,
       Field_Generic_Map_Aspect_Chain,
       Field_Port_Map_Aspect_Chain,
       --  Iir_Kind_Entity_Class
@@ -2299,15 +2418,15 @@ package body Nodes_Meta is
       Field_Expr_Staticness,
       Field_Name_Staticness,
       Field_Spec_Chain,
-      Field_Chain,
       Field_Type,
+      Field_Value_Chain,
       Field_Designated_Entity,
       Field_Attribute_Specification,
       Field_Base_Name,
       --  Iir_Kind_Signature
+      Field_Signature_Prefix,
       Field_Type_Marks_List,
       Field_Return_Type_Mark,
-      Field_Signature_Prefix,
       --  Iir_Kind_Aggregate_Info
       Field_Aggr_Min_Length,
       Field_Aggr_Others_Flag,
@@ -2319,17 +2438,18 @@ package body Nodes_Meta is
       --  Iir_Kind_Procedure_Call
       Field_Prefix,
       Field_Parameter_Association_Chain,
-      Field_Method_Object,
       Field_Implementation,
+      Field_Method_Object,
       --  Iir_Kind_Record_Element_Constraint
       Field_Identifier,
       Field_Element_Position,
       Field_Visible_Flag,
-      Field_Element_Declaration,
       Field_Parent,
       Field_Type,
+      Field_Element_Declaration,
       --  Iir_Kind_Array_Element_Resolution
       Field_Resolution_Indication,
+      Field_Element_Subtype_Indication,
       --  Iir_Kind_Record_Resolution
       Field_Record_Element_Resolution_Chain,
       --  Iir_Kind_Record_Element_Resolution
@@ -2338,26 +2458,25 @@ package body Nodes_Meta is
       Field_Resolution_Indication,
       --  Iir_Kind_Attribute_Specification
       Field_Entity_Class,
+      Field_Parent,
       Field_Chain,
-      Field_Attribute_Value_Spec_Chain,
+      Field_Entity_Name_List,
       Field_Expression,
+      Field_Attribute_Value_Spec_Chain,
       Field_Attribute_Designator,
       Field_Attribute_Specification_Chain,
-      Field_Entity_Name_List,
-      Field_Parent,
-      Field_Type,
       --  Iir_Kind_Disconnection_Specification
+      Field_Parent,
       Field_Chain,
       Field_Signal_List,
       Field_Type_Mark,
       Field_Expression,
-      Field_Parent,
       --  Iir_Kind_Configuration_Specification
-      Field_Instantiation_List,
-      Field_Chain,
-      Field_Binding_Indication,
-      Field_Component_Name,
       Field_Parent,
+      Field_Component_Name,
+      Field_Instantiation_List,
+      Field_Binding_Indication,
+      Field_Chain,
       --  Iir_Kind_Access_Type_Definition
       Field_Resolved_Flag,
       Field_Signal_Type_Flag,
@@ -2366,14 +2485,24 @@ package body Nodes_Meta is
       Field_Designated_Type,
       Field_Type_Declarator,
       Field_Base_Type,
+      Field_Incomplete_Type_Ref_Chain,
       --  Iir_Kind_Incomplete_Type_Definition
       Field_Resolved_Flag,
       Field_Signal_Type_Flag,
       Field_Has_Signal_Flag,
       Field_Type_Staticness,
-      Field_Incomplete_Type_List,
+      Field_Incomplete_Type_Ref_Chain,
       Field_Type_Declarator,
       Field_Base_Type,
+      Field_Complete_Type_Definition,
+      --  Iir_Kind_Interface_Type_Definition
+      Field_Resolved_Flag,
+      Field_Signal_Type_Flag,
+      Field_Has_Signal_Flag,
+      Field_Type_Staticness,
+      Field_Type_Declarator,
+      Field_Base_Type,
+      Field_Associated_Type,
       --  Iir_Kind_File_Type_Definition
       Field_Resolved_Flag,
       Field_Signal_Type_Flag,
@@ -2410,12 +2539,12 @@ package body Nodes_Meta is
       Field_Index_Constraint_Flag,
       Field_Type_Staticness,
       Field_Constraint_State,
-      Field_Element_Subtype_Indication,
       Field_Index_Subtype_Definition_List,
+      Field_Element_Subtype_Indication,
+      Field_Index_Subtype_List,
       Field_Element_Subtype,
       Field_Type_Declarator,
       Field_Base_Type,
-      Field_Index_Subtype_List,
       --  Iir_Kind_Array_Subtype_Definition
       Field_Resolved_Flag,
       Field_Signal_Type_Flag,
@@ -2426,12 +2555,12 @@ package body Nodes_Meta is
       Field_Subtype_Type_Mark,
       Field_Resolution_Indication,
       Field_Index_Constraint_List,
-      Field_Tolerance,
+      Field_Index_Subtype_List,
       Field_Array_Element_Constraint,
+      Field_Tolerance,
       Field_Element_Subtype,
       Field_Type_Declarator,
       Field_Base_Type,
-      Field_Index_Subtype_List,
       --  Iir_Kind_Record_Subtype_Definition
       Field_Resolved_Flag,
       Field_Signal_Type_Flag,
@@ -2440,109 +2569,122 @@ package body Nodes_Meta is
       Field_Constraint_State,
       Field_Elements_Declaration_List,
       Field_Subtype_Type_Mark,
-      Field_Resolution_Indication,
-      Field_Tolerance,
       Field_Type_Declarator,
       Field_Base_Type,
+      Field_Resolution_Indication,
+      Field_Tolerance,
       --  Iir_Kind_Access_Subtype_Definition
       Field_Resolved_Flag,
       Field_Signal_Type_Flag,
       Field_Type_Staticness,
-      Field_Subtype_Type_Mark,
-      Field_Designated_Subtype_Indication,
       Field_Designated_Type,
+      Field_Subtype_Type_Mark,
       Field_Type_Declarator,
       Field_Base_Type,
+      Field_Designated_Subtype_Indication,
       --  Iir_Kind_Physical_Subtype_Definition
       Field_Resolved_Flag,
       Field_Signal_Type_Flag,
       Field_Has_Signal_Flag,
+      Field_Is_Ref,
       Field_Type_Staticness,
       Field_Range_Constraint,
       Field_Subtype_Type_Mark,
-      Field_Resolution_Indication,
       Field_Type_Declarator,
       Field_Base_Type,
+      Field_Resolution_Indication,
       --  Iir_Kind_Floating_Subtype_Definition
       Field_Resolved_Flag,
       Field_Signal_Type_Flag,
       Field_Has_Signal_Flag,
+      Field_Is_Ref,
       Field_Type_Staticness,
       Field_Range_Constraint,
       Field_Subtype_Type_Mark,
-      Field_Resolution_Indication,
-      Field_Tolerance,
       Field_Type_Declarator,
       Field_Base_Type,
+      Field_Resolution_Indication,
+      Field_Tolerance,
       --  Iir_Kind_Integer_Subtype_Definition
       Field_Resolved_Flag,
       Field_Signal_Type_Flag,
       Field_Has_Signal_Flag,
+      Field_Is_Ref,
       Field_Type_Staticness,
       Field_Range_Constraint,
       Field_Subtype_Type_Mark,
-      Field_Resolution_Indication,
       Field_Type_Declarator,
       Field_Base_Type,
+      Field_Resolution_Indication,
       --  Iir_Kind_Enumeration_Subtype_Definition
       Field_Resolved_Flag,
       Field_Signal_Type_Flag,
       Field_Has_Signal_Flag,
+      Field_Is_Ref,
       Field_Type_Staticness,
       Field_Range_Constraint,
       Field_Subtype_Type_Mark,
-      Field_Resolution_Indication,
       Field_Type_Declarator,
       Field_Base_Type,
+      Field_Resolution_Indication,
       --  Iir_Kind_Enumeration_Type_Definition
       Field_Resolved_Flag,
       Field_Signal_Type_Flag,
       Field_Has_Signal_Flag,
       Field_Only_Characters_Flag,
+      Field_Is_Ref,
       Field_Type_Staticness,
-      Field_Range_Constraint,
       Field_Enumeration_Literal_List,
+      Field_Range_Constraint,
       Field_Type_Declarator,
       Field_Base_Type,
       --  Iir_Kind_Integer_Type_Definition
       Field_Resolved_Flag,
       Field_Signal_Type_Flag,
       Field_Has_Signal_Flag,
+      Field_Is_Ref,
       Field_Type_Staticness,
+      Field_Range_Constraint,
       Field_Type_Declarator,
       Field_Base_Type,
       --  Iir_Kind_Floating_Type_Definition
       Field_Resolved_Flag,
       Field_Signal_Type_Flag,
       Field_Has_Signal_Flag,
+      Field_Is_Ref,
       Field_Type_Staticness,
+      Field_Range_Constraint,
       Field_Type_Declarator,
       Field_Base_Type,
       --  Iir_Kind_Physical_Type_Definition
       Field_Resolved_Flag,
       Field_Signal_Type_Flag,
       Field_Has_Signal_Flag,
+      Field_Is_Ref,
       Field_End_Has_Reserved_Id,
       Field_End_Has_Identifier,
       Field_Type_Staticness,
+      Field_Range_Constraint,
       Field_Unit_Chain,
       Field_Type_Declarator,
       Field_Base_Type,
       --  Iir_Kind_Range_Expression
       Field_Expr_Staticness,
       Field_Direction,
-      Field_Left_Limit,
-      Field_Right_Limit,
+      Field_Left_Limit_Expr,
+      Field_Right_Limit_Expr,
       Field_Range_Origin,
       Field_Type,
+      Field_Left_Limit,
+      Field_Right_Limit,
       --  Iir_Kind_Protected_Type_Body
       Field_Identifier,
       Field_End_Has_Reserved_Id,
       Field_End_Has_Identifier,
+      Field_Parent,
       Field_Declaration_Chain,
       Field_Chain,
       Field_Protected_Type_Declaration,
-      Field_Parent,
       --  Iir_Kind_Wildcard_Type_Definition
       Field_Resolved_Flag,
       Field_Signal_Type_Flag,
@@ -2550,6 +2692,7 @@ package body Nodes_Meta is
       Field_Type_Declarator,
       Field_Base_Type,
       --  Iir_Kind_Subtype_Definition
+      Field_Is_Ref,
       Field_Range_Constraint,
       Field_Subtype_Type_Mark,
       Field_Resolution_Indication,
@@ -2565,79 +2708,88 @@ package body Nodes_Meta is
       Field_Identifier,
       Field_Visible_Flag,
       Field_Use_Flag,
+      Field_Parent,
       Field_Type_Definition,
       Field_Chain,
-      Field_Parent,
+      Field_Incomplete_Type_Declaration,
       --  Iir_Kind_Anonymous_Type_Declaration
       Field_Identifier,
+      Field_Parent,
       Field_Type_Definition,
       Field_Chain,
       Field_Subtype_Definition,
-      Field_Parent,
+      Field_Incomplete_Type_Declaration,
       --  Iir_Kind_Subtype_Declaration
       Field_Identifier,
       Field_Visible_Flag,
       Field_Use_Flag,
-      Field_Is_Ref,
+      Field_Parent,
       Field_Chain,
       Field_Subtype_Indication,
-      Field_Parent,
       Field_Type,
       --  Iir_Kind_Nature_Declaration
       Field_Identifier,
       Field_Visible_Flag,
       Field_Use_Flag,
+      Field_Parent,
       Field_Nature,
       Field_Chain,
-      Field_Parent,
       --  Iir_Kind_Subnature_Declaration
       Field_Identifier,
       Field_Visible_Flag,
       Field_Use_Flag,
+      Field_Parent,
       Field_Nature,
       Field_Chain,
-      Field_Parent,
       --  Iir_Kind_Package_Declaration
       Field_Identifier,
       Field_Need_Body,
+      Field_Macro_Expanded_Flag,
+      Field_Need_Instance_Bodies,
       Field_Visible_Flag,
       Field_End_Has_Reserved_Id,
       Field_End_Has_Identifier,
-      Field_Declaration_Chain,
-      Field_Attribute_Value_Chain,
-      Field_Package_Header,
       Field_Parent,
+      Field_Package_Header,
+      Field_Declaration_Chain,
+      Field_Chain,
+      Field_Attribute_Value_Chain,
       Field_Package_Body,
+      Field_Package_Origin,
+      Field_Package_Instantiation_Bodies_Chain,
       --  Iir_Kind_Package_Instantiation_Declaration
       Field_Identifier,
       Field_Visible_Flag,
       Field_End_Has_Reserved_Id,
       Field_End_Has_Identifier,
-      Field_Declaration_Chain,
-      Field_Attribute_Value_Chain,
+      Field_Parent,
       Field_Uninstantiated_Package_Name,
+      Field_Uninstantiated_Package_Decl,
       Field_Generic_Chain,
       Field_Generic_Map_Aspect_Chain,
-      Field_Parent,
+      Field_Declaration_Chain,
+      Field_Chain,
+      Field_Attribute_Value_Chain,
       Field_Package_Body,
       --  Iir_Kind_Package_Body
       Field_Identifier,
       Field_End_Has_Reserved_Id,
       Field_End_Has_Identifier,
-      Field_Declaration_Chain,
-      Field_Attribute_Value_Chain,
       Field_Parent,
+      Field_Declaration_Chain,
+      Field_Chain,
+      Field_Attribute_Value_Chain,
       Field_Package,
       --  Iir_Kind_Configuration_Declaration
       Field_Identifier,
       Field_Visible_Flag,
       Field_End_Has_Reserved_Id,
       Field_End_Has_Identifier,
+      Field_Parent,
       Field_Declaration_Chain,
       Field_Entity_Name,
       Field_Attribute_Value_Chain,
       Field_Block_Configuration,
-      Field_Parent,
       --  Iir_Kind_Entity_Declaration
       Field_Identifier,
       Field_Has_Begin,
@@ -2645,12 +2797,12 @@ package body Nodes_Meta is
       Field_Is_Within_Flag,
       Field_End_Has_Reserved_Id,
       Field_End_Has_Identifier,
-      Field_Declaration_Chain,
-      Field_Attribute_Value_Chain,
-      Field_Concurrent_Statement_Chain,
+      Field_Parent,
       Field_Generic_Chain,
       Field_Port_Chain,
-      Field_Parent,
+      Field_Declaration_Chain,
+      Field_Concurrent_Statement_Chain,
+      Field_Attribute_Value_Chain,
       --  Iir_Kind_Architecture_Body
       Field_Identifier,
       Field_Foreign_Flag,
@@ -2658,19 +2810,19 @@ package body Nodes_Meta is
       Field_Is_Within_Flag,
       Field_End_Has_Reserved_Id,
       Field_End_Has_Identifier,
-      Field_Declaration_Chain,
-      Field_Entity_Name,
-      Field_Attribute_Value_Chain,
-      Field_Concurrent_Statement_Chain,
-      Field_Default_Configuration_Declaration,
       Field_Parent,
+      Field_Entity_Name,
+      Field_Declaration_Chain,
+      Field_Concurrent_Statement_Chain,
+      Field_Attribute_Value_Chain,
+      Field_Default_Configuration_Declaration,
       --  Iir_Kind_Context_Declaration
       Field_Identifier,
       Field_Visible_Flag,
       Field_End_Has_Reserved_Id,
       Field_End_Has_Identifier,
-      Field_Context_Items,
       Field_Parent,
+      Field_Context_Items,
       --  Iir_Kind_Package_Header
       Field_Generic_Chain,
       Field_Generic_Map_Aspect_Chain,
@@ -2679,11 +2831,10 @@ package body Nodes_Meta is
       Field_Visible_Flag,
       Field_Expr_Staticness,
       Field_Name_Staticness,
-      Field_Chain,
-      Field_Physical_Literal,
-      Field_Physical_Unit_Value,
       Field_Parent,
       Field_Type,
+      Field_Chain,
+      Field_Physical_Literal,
       --  Iir_Kind_Library_Declaration
       Field_Identifier,
       Field_Date,
@@ -2699,50 +2850,50 @@ package body Nodes_Meta is
       Field_Has_Is,
       Field_End_Has_Reserved_Id,
       Field_End_Has_Identifier,
+      Field_Parent,
       Field_Chain,
       Field_Generic_Chain,
       Field_Port_Chain,
-      Field_Parent,
       --  Iir_Kind_Attribute_Declaration
       Field_Identifier,
       Field_Visible_Flag,
       Field_Use_Flag,
-      Field_Chain,
-      Field_Type_Mark,
       Field_Parent,
       Field_Type,
+      Field_Chain,
+      Field_Type_Mark,
       --  Iir_Kind_Group_Template_Declaration
       Field_Identifier,
       Field_Visible_Flag,
       Field_Use_Flag,
+      Field_Parent,
       Field_Entity_Class_Entry_Chain,
       Field_Chain,
-      Field_Parent,
       --  Iir_Kind_Group_Declaration
       Field_Identifier,
       Field_Visible_Flag,
       Field_Use_Flag,
+      Field_Parent,
       Field_Group_Constituent_List,
       Field_Chain,
       Field_Group_Template_Name,
-      Field_Parent,
       --  Iir_Kind_Element_Declaration
       Field_Identifier,
       Field_Element_Position,
       Field_Has_Identifier_List,
       Field_Visible_Flag,
-      Field_Is_Ref,
       Field_Subtype_Indication,
       Field_Type,
+      Field_Base_Element_Declaration,
       --  Iir_Kind_Non_Object_Alias_Declaration
       Field_Identifier,
       Field_Implicit_Alias_Flag,
       Field_Visible_Flag,
       Field_Use_Flag,
+      Field_Parent,
       Field_Chain,
       Field_Name,
       Field_Alias_Signature,
-      Field_Parent,
       --  Iir_Kind_Psl_Declaration
       Field_Identifier,
       Field_Psl_Declaration,
@@ -2750,8 +2901,8 @@ package body Nodes_Meta is
       Field_PSL_NFA,
       Field_Visible_Flag,
       Field_Use_Flag,
-      Field_Chain,
       Field_Parent,
+      Field_Chain,
       --  Iir_Kind_Psl_Endpoint_Declaration
       Field_Identifier,
       Field_Psl_Declaration,
@@ -2763,53 +2914,53 @@ package body Nodes_Meta is
       Field_Use_Flag,
       Field_Expr_Staticness,
       Field_Name_Staticness,
-      Field_PSL_Clock_Sensitivity,
-      Field_Chain,
       Field_Parent,
       Field_Type,
+      Field_Chain,
+      Field_PSL_Clock_Sensitivity,
       --  Iir_Kind_Terminal_Declaration
       Field_Identifier,
       Field_Visible_Flag,
       Field_Use_Flag,
+      Field_Parent,
       Field_Nature,
       Field_Chain,
-      Field_Parent,
       --  Iir_Kind_Free_Quantity_Declaration
       Field_Identifier,
       Field_Visible_Flag,
       Field_Use_Flag,
       Field_Expr_Staticness,
       Field_Name_Staticness,
-      Field_Chain,
-      Field_Default_Value,
       Field_Parent,
       Field_Type,
+      Field_Chain,
+      Field_Default_Value,
       --  Iir_Kind_Across_Quantity_Declaration
       Field_Identifier,
       Field_Visible_Flag,
       Field_Use_Flag,
       Field_Expr_Staticness,
       Field_Name_Staticness,
+      Field_Parent,
+      Field_Type,
       Field_Chain,
+      Field_Default_Value,
       Field_Tolerance,
       Field_Plus_Terminal,
       Field_Minus_Terminal,
-      Field_Default_Value,
-      Field_Parent,
-      Field_Type,
       --  Iir_Kind_Through_Quantity_Declaration
       Field_Identifier,
       Field_Visible_Flag,
       Field_Use_Flag,
       Field_Expr_Staticness,
       Field_Name_Staticness,
+      Field_Parent,
+      Field_Type,
       Field_Chain,
+      Field_Default_Value,
       Field_Tolerance,
       Field_Plus_Terminal,
       Field_Minus_Terminal,
-      Field_Default_Value,
-      Field_Parent,
-      Field_Type,
       --  Iir_Kind_Enumeration_Literal
       Field_Identifier,
       Field_Subprogram_Hash,
@@ -2819,9 +2970,9 @@ package body Nodes_Meta is
       Field_Is_Within_Flag,
       Field_Expr_Staticness,
       Field_Name_Staticness,
-      Field_Literal_Origin,
       Field_Parent,
       Field_Type,
+      Field_Literal_Origin,
       --  Iir_Kind_Function_Declaration
       Field_Subprogram_Depth,
       Field_Overload_Number,
@@ -2829,6 +2980,7 @@ package body Nodes_Meta is
       Field_Subprogram_Hash,
       Field_Implicit_Definition,
       Field_Seen_Flag,
+      Field_Has_Parameter,
       Field_Hide_Implicit_Flag,
       Field_Pure_Flag,
       Field_Foreign_Flag,
@@ -2840,12 +2992,12 @@ package body Nodes_Meta is
       Field_Has_Body,
       Field_Wait_State,
       Field_All_Sensitized_State,
+      Field_Parent,
+      Field_Return_Type,
       Field_Chain,
       Field_Interface_Declaration_Chain,
       Field_Generic_Chain,
       Field_Return_Type_Mark,
-      Field_Parent,
-      Field_Return_Type,
       Field_Subprogram_Body,
       --  Iir_Kind_Procedure_Declaration
       Field_Subprogram_Depth,
@@ -2854,6 +3006,7 @@ package body Nodes_Meta is
       Field_Subprogram_Hash,
       Field_Implicit_Definition,
       Field_Seen_Flag,
+      Field_Has_Parameter,
       Field_Suspend_Flag,
       Field_Hide_Implicit_Flag,
       Field_Passive_Flag,
@@ -2865,21 +3018,21 @@ package body Nodes_Meta is
       Field_Wait_State,
       Field_Purity_State,
       Field_All_Sensitized_State,
+      Field_Parent,
       Field_Chain,
       Field_Interface_Declaration_Chain,
       Field_Generic_Chain,
       Field_Return_Type_Mark,
-      Field_Parent,
       Field_Subprogram_Body,
       --  Iir_Kind_Function_Body
       Field_Impure_Depth,
       Field_End_Has_Reserved_Id,
       Field_End_Has_Identifier,
+      Field_Parent,
       Field_Declaration_Chain,
       Field_Chain,
       Field_Attribute_Value_Chain,
       Field_Sequential_Statement_Chain,
-      Field_Parent,
       Field_Subprogram_Specification,
       Field_Callees_List,
       --  Iir_Kind_Procedure_Body
@@ -2887,11 +3040,11 @@ package body Nodes_Meta is
       Field_Suspend_Flag,
       Field_End_Has_Reserved_Id,
       Field_End_Has_Identifier,
+      Field_Parent,
       Field_Declaration_Chain,
       Field_Chain,
       Field_Attribute_Value_Chain,
       Field_Sequential_Statement_Chain,
-      Field_Parent,
       Field_Subprogram_Specification,
       Field_Callees_List,
       --  Iir_Kind_Object_Alias_Declaration
@@ -2899,30 +3052,28 @@ package body Nodes_Meta is
       Field_Visible_Flag,
       Field_After_Drivers_Flag,
       Field_Use_Flag,
-      Field_Is_Ref,
       Field_Expr_Staticness,
       Field_Name_Staticness,
+      Field_Parent,
       Field_Chain,
       Field_Name,
       Field_Subtype_Indication,
-      Field_Parent,
       Field_Type,
       --  Iir_Kind_File_Declaration
       Field_Identifier,
       Field_Has_Mode,
+      Field_Mode,
       Field_Has_Identifier_List,
       Field_Visible_Flag,
       Field_Use_Flag,
-      Field_Is_Ref,
-      Field_Mode,
       Field_Expr_Staticness,
       Field_Name_Staticness,
-      Field_Chain,
-      Field_File_Logical_Name,
-      Field_File_Open_Kind,
-      Field_Subtype_Indication,
       Field_Parent,
       Field_Type,
+      Field_Chain,
+      Field_Subtype_Indication,
+      Field_File_Logical_Name,
+      Field_File_Open_Kind,
       --  Iir_Kind_Guard_Signal_Declaration
       Field_Identifier,
       Field_Has_Active_Flag,
@@ -2932,10 +3083,10 @@ package body Nodes_Meta is
       Field_Signal_Kind,
       Field_Expr_Staticness,
       Field_Name_Staticness,
-      Field_Guard_Expression,
-      Field_Guard_Sensitivity_List,
       Field_Parent,
       Field_Type,
+      Field_Guard_Expression,
+      Field_Guard_Sensitivity_List,
       Field_Block_Statement,
       --  Iir_Kind_Signal_Declaration
       Field_Identifier,
@@ -2950,10 +3101,10 @@ package body Nodes_Meta is
       Field_Signal_Kind,
       Field_Expr_Staticness,
       Field_Name_Staticness,
-      Field_Chain,
-      Field_Default_Value,
-      Field_Subtype_Indication,
       Field_Parent,
+      Field_Chain,
+      Field_Subtype_Indication,
+      Field_Default_Value,
       Field_Type,
       --  Iir_Kind_Variable_Declaration
       Field_Identifier,
@@ -2964,10 +3115,10 @@ package body Nodes_Meta is
       Field_Is_Ref,
       Field_Expr_Staticness,
       Field_Name_Staticness,
-      Field_Chain,
-      Field_Default_Value,
-      Field_Subtype_Indication,
       Field_Parent,
+      Field_Chain,
+      Field_Subtype_Indication,
+      Field_Default_Value,
       Field_Type,
       --  Iir_Kind_Constant_Declaration
       Field_Identifier,
@@ -2978,10 +3129,10 @@ package body Nodes_Meta is
       Field_Is_Ref,
       Field_Expr_Staticness,
       Field_Name_Staticness,
-      Field_Chain,
-      Field_Default_Value,
-      Field_Subtype_Indication,
       Field_Parent,
+      Field_Chain,
+      Field_Subtype_Indication,
+      Field_Default_Value,
       Field_Type,
       Field_Deferred_Declaration,
       --  Iir_Kind_Iterator_Declaration
@@ -2989,53 +3140,53 @@ package body Nodes_Meta is
       Field_Has_Identifier_List,
       Field_Visible_Flag,
       Field_Use_Flag,
-      Field_Is_Ref,
       Field_Expr_Staticness,
       Field_Name_Staticness,
-      Field_Chain,
-      Field_Discrete_Range,
-      Field_Subtype_Indication,
       Field_Parent,
+      Field_Chain,
+      Field_Subtype_Indication,
+      Field_Discrete_Range,
       Field_Type,
       --  Iir_Kind_Interface_Constant_Declaration
       Field_Identifier,
       Field_Has_Mode,
       Field_Has_Class,
+      Field_Mode,
       Field_Has_Identifier_List,
       Field_Visible_Flag,
       Field_After_Drivers_Flag,
       Field_Use_Flag,
       Field_Is_Ref,
-      Field_Mode,
       Field_Expr_Staticness,
       Field_Name_Staticness,
-      Field_Chain,
-      Field_Default_Value,
-      Field_Subtype_Indication,
       Field_Parent,
+      Field_Chain,
+      Field_Subtype_Indication,
+      Field_Default_Value,
       Field_Type,
       --  Iir_Kind_Interface_Variable_Declaration
       Field_Identifier,
       Field_Has_Mode,
       Field_Has_Class,
+      Field_Mode,
       Field_Has_Identifier_List,
       Field_Visible_Flag,
       Field_After_Drivers_Flag,
       Field_Use_Flag,
       Field_Is_Ref,
-      Field_Mode,
       Field_Expr_Staticness,
       Field_Name_Staticness,
-      Field_Chain,
-      Field_Default_Value,
-      Field_Subtype_Indication,
       Field_Parent,
+      Field_Chain,
+      Field_Subtype_Indication,
+      Field_Default_Value,
       Field_Type,
       --  Iir_Kind_Interface_Signal_Declaration
       Field_Identifier,
       Field_Has_Disconnect_Flag,
       Field_Has_Mode,
       Field_Has_Class,
+      Field_Mode,
       Field_Open_Flag,
       Field_Has_Active_Flag,
       Field_Has_Identifier_List,
@@ -3045,303 +3196,351 @@ package body Nodes_Meta is
       Field_Is_Ref,
       Field_Guarded_Signal_Flag,
       Field_Signal_Kind,
-      Field_Mode,
       Field_Expr_Staticness,
       Field_Name_Staticness,
-      Field_Chain,
-      Field_Default_Value,
-      Field_Subtype_Indication,
       Field_Parent,
+      Field_Chain,
+      Field_Subtype_Indication,
+      Field_Default_Value,
       Field_Type,
       --  Iir_Kind_Interface_File_Declaration
       Field_Identifier,
       Field_Has_Mode,
       Field_Has_Class,
+      Field_Mode,
       Field_Has_Identifier_List,
       Field_Visible_Flag,
       Field_After_Drivers_Flag,
       Field_Use_Flag,
       Field_Is_Ref,
-      Field_Mode,
       Field_Expr_Staticness,
       Field_Name_Staticness,
+      Field_Parent,
       Field_Chain,
-      Field_Default_Value,
       Field_Subtype_Indication,
+      Field_Default_Value,
+      Field_Type,
+      --  Iir_Kind_Interface_Type_Declaration
+      Field_Identifier,
+      Field_Has_Identifier_List,
+      Field_Visible_Flag,
+      Field_Use_Flag,
+      Field_Is_Ref,
+      Field_Name_Staticness,
       Field_Parent,
       Field_Type,
+      Field_Chain,
+      Field_Interface_Type_Subprograms,
       --  Iir_Kind_Interface_Package_Declaration
       Field_Identifier,
       Field_Visible_Flag,
+      Field_Is_Within_Flag,
+      Field_Parent,
+      Field_Uninstantiated_Package_Name,
+      Field_Uninstantiated_Package_Decl,
+      Field_Generic_Chain,
+      Field_Generic_Map_Aspect_Chain,
       Field_Declaration_Chain,
       Field_Chain,
       Field_Attribute_Value_Chain,
-      Field_Uninstantiated_Package_Name,
-      Field_Generic_Chain,
-      Field_Generic_Map_Aspect_Chain,
+      --  Iir_Kind_Interface_Function_Declaration
+      Field_Subprogram_Depth,
+      Field_Identifier,
+      Field_Subprogram_Hash,
+      Field_Seen_Flag,
+      Field_Has_Parameter,
+      Field_Pure_Flag,
+      Field_Foreign_Flag,
+      Field_Visible_Flag,
+      Field_Use_Flag,
+      Field_Resolution_Function_Flag,
+      Field_Has_Pure,
+      Field_All_Sensitized_State,
       Field_Parent,
+      Field_Return_Type,
+      Field_Chain,
+      Field_Interface_Declaration_Chain,
+      Field_Return_Type_Mark,
+      --  Iir_Kind_Interface_Procedure_Declaration
+      Field_Subprogram_Depth,
+      Field_Identifier,
+      Field_Subprogram_Hash,
+      Field_Seen_Flag,
+      Field_Has_Parameter,
+      Field_Foreign_Flag,
+      Field_Visible_Flag,
+      Field_Use_Flag,
+      Field_All_Sensitized_State,
+      Field_Parent,
+      Field_Chain,
+      Field_Interface_Declaration_Chain,
+      Field_Return_Type_Mark,
+      --  Iir_Kind_Signal_Attribute_Declaration
+      Field_Parent,
+      Field_Chain,
+      Field_Signal_Attribute_Chain,
       --  Iir_Kind_Identity_Operator
       Field_Expr_Staticness,
-      Field_Operand,
       Field_Type,
+      Field_Operand,
       Field_Implementation,
       --  Iir_Kind_Negation_Operator
       Field_Expr_Staticness,
-      Field_Operand,
       Field_Type,
+      Field_Operand,
       Field_Implementation,
       --  Iir_Kind_Absolute_Operator
       Field_Expr_Staticness,
-      Field_Operand,
       Field_Type,
+      Field_Operand,
       Field_Implementation,
       --  Iir_Kind_Not_Operator
       Field_Expr_Staticness,
-      Field_Operand,
       Field_Type,
+      Field_Operand,
       Field_Implementation,
       --  Iir_Kind_Condition_Operator
       Field_Expr_Staticness,
-      Field_Operand,
       Field_Type,
+      Field_Operand,
       Field_Implementation,
       --  Iir_Kind_Reduction_And_Operator
       Field_Expr_Staticness,
-      Field_Operand,
       Field_Type,
+      Field_Operand,
       Field_Implementation,
       --  Iir_Kind_Reduction_Or_Operator
       Field_Expr_Staticness,
-      Field_Operand,
       Field_Type,
+      Field_Operand,
       Field_Implementation,
       --  Iir_Kind_Reduction_Nand_Operator
       Field_Expr_Staticness,
-      Field_Operand,
       Field_Type,
+      Field_Operand,
       Field_Implementation,
       --  Iir_Kind_Reduction_Nor_Operator
       Field_Expr_Staticness,
-      Field_Operand,
       Field_Type,
+      Field_Operand,
       Field_Implementation,
       --  Iir_Kind_Reduction_Xor_Operator
       Field_Expr_Staticness,
-      Field_Operand,
       Field_Type,
+      Field_Operand,
       Field_Implementation,
       --  Iir_Kind_Reduction_Xnor_Operator
       Field_Expr_Staticness,
-      Field_Operand,
       Field_Type,
+      Field_Operand,
       Field_Implementation,
       --  Iir_Kind_And_Operator
       Field_Expr_Staticness,
-      Field_Left,
-      Field_Right,
       Field_Type,
+      Field_Left,
       Field_Implementation,
+      Field_Right,
       --  Iir_Kind_Or_Operator
       Field_Expr_Staticness,
-      Field_Left,
-      Field_Right,
       Field_Type,
+      Field_Left,
       Field_Implementation,
+      Field_Right,
       --  Iir_Kind_Nand_Operator
       Field_Expr_Staticness,
-      Field_Left,
-      Field_Right,
       Field_Type,
+      Field_Left,
       Field_Implementation,
+      Field_Right,
       --  Iir_Kind_Nor_Operator
       Field_Expr_Staticness,
-      Field_Left,
-      Field_Right,
       Field_Type,
+      Field_Left,
       Field_Implementation,
+      Field_Right,
       --  Iir_Kind_Xor_Operator
       Field_Expr_Staticness,
-      Field_Left,
-      Field_Right,
       Field_Type,
+      Field_Left,
       Field_Implementation,
+      Field_Right,
       --  Iir_Kind_Xnor_Operator
       Field_Expr_Staticness,
-      Field_Left,
-      Field_Right,
       Field_Type,
+      Field_Left,
       Field_Implementation,
+      Field_Right,
       --  Iir_Kind_Equality_Operator
       Field_Expr_Staticness,
-      Field_Left,
-      Field_Right,
       Field_Type,
+      Field_Left,
       Field_Implementation,
+      Field_Right,
       --  Iir_Kind_Inequality_Operator
       Field_Expr_Staticness,
-      Field_Left,
-      Field_Right,
       Field_Type,
+      Field_Left,
       Field_Implementation,
+      Field_Right,
       --  Iir_Kind_Less_Than_Operator
       Field_Expr_Staticness,
-      Field_Left,
-      Field_Right,
       Field_Type,
+      Field_Left,
       Field_Implementation,
+      Field_Right,
       --  Iir_Kind_Less_Than_Or_Equal_Operator
       Field_Expr_Staticness,
-      Field_Left,
-      Field_Right,
       Field_Type,
+      Field_Left,
       Field_Implementation,
+      Field_Right,
       --  Iir_Kind_Greater_Than_Operator
       Field_Expr_Staticness,
-      Field_Left,
-      Field_Right,
       Field_Type,
+      Field_Left,
       Field_Implementation,
+      Field_Right,
       --  Iir_Kind_Greater_Than_Or_Equal_Operator
       Field_Expr_Staticness,
-      Field_Left,
-      Field_Right,
       Field_Type,
+      Field_Left,
       Field_Implementation,
+      Field_Right,
       --  Iir_Kind_Match_Equality_Operator
       Field_Expr_Staticness,
-      Field_Left,
-      Field_Right,
       Field_Type,
+      Field_Left,
       Field_Implementation,
+      Field_Right,
       --  Iir_Kind_Match_Inequality_Operator
       Field_Expr_Staticness,
-      Field_Left,
-      Field_Right,
       Field_Type,
+      Field_Left,
       Field_Implementation,
+      Field_Right,
       --  Iir_Kind_Match_Less_Than_Operator
       Field_Expr_Staticness,
-      Field_Left,
-      Field_Right,
       Field_Type,
+      Field_Left,
       Field_Implementation,
+      Field_Right,
       --  Iir_Kind_Match_Less_Than_Or_Equal_Operator
       Field_Expr_Staticness,
-      Field_Left,
-      Field_Right,
       Field_Type,
+      Field_Left,
       Field_Implementation,
+      Field_Right,
       --  Iir_Kind_Match_Greater_Than_Operator
       Field_Expr_Staticness,
-      Field_Left,
-      Field_Right,
       Field_Type,
+      Field_Left,
       Field_Implementation,
+      Field_Right,
       --  Iir_Kind_Match_Greater_Than_Or_Equal_Operator
       Field_Expr_Staticness,
-      Field_Left,
-      Field_Right,
       Field_Type,
+      Field_Left,
       Field_Implementation,
+      Field_Right,
       --  Iir_Kind_Sll_Operator
       Field_Expr_Staticness,
-      Field_Left,
-      Field_Right,
       Field_Type,
+      Field_Left,
       Field_Implementation,
+      Field_Right,
       --  Iir_Kind_Sla_Operator
       Field_Expr_Staticness,
-      Field_Left,
-      Field_Right,
       Field_Type,
+      Field_Left,
       Field_Implementation,
+      Field_Right,
       --  Iir_Kind_Srl_Operator
       Field_Expr_Staticness,
-      Field_Left,
-      Field_Right,
       Field_Type,
+      Field_Left,
       Field_Implementation,
+      Field_Right,
       --  Iir_Kind_Sra_Operator
       Field_Expr_Staticness,
-      Field_Left,
-      Field_Right,
       Field_Type,
+      Field_Left,
       Field_Implementation,
+      Field_Right,
       --  Iir_Kind_Rol_Operator
       Field_Expr_Staticness,
-      Field_Left,
-      Field_Right,
       Field_Type,
+      Field_Left,
       Field_Implementation,
+      Field_Right,
       --  Iir_Kind_Ror_Operator
       Field_Expr_Staticness,
-      Field_Left,
-      Field_Right,
       Field_Type,
+      Field_Left,
       Field_Implementation,
+      Field_Right,
       --  Iir_Kind_Addition_Operator
       Field_Expr_Staticness,
-      Field_Left,
-      Field_Right,
       Field_Type,
+      Field_Left,
       Field_Implementation,
+      Field_Right,
       --  Iir_Kind_Substraction_Operator
       Field_Expr_Staticness,
-      Field_Left,
-      Field_Right,
       Field_Type,
+      Field_Left,
       Field_Implementation,
+      Field_Right,
       --  Iir_Kind_Concatenation_Operator
       Field_Expr_Staticness,
-      Field_Left,
-      Field_Right,
       Field_Type,
+      Field_Left,
       Field_Implementation,
+      Field_Right,
       --  Iir_Kind_Multiplication_Operator
       Field_Expr_Staticness,
-      Field_Left,
-      Field_Right,
       Field_Type,
+      Field_Left,
       Field_Implementation,
+      Field_Right,
       --  Iir_Kind_Division_Operator
       Field_Expr_Staticness,
-      Field_Left,
-      Field_Right,
       Field_Type,
+      Field_Left,
       Field_Implementation,
+      Field_Right,
       --  Iir_Kind_Modulus_Operator
       Field_Expr_Staticness,
-      Field_Left,
-      Field_Right,
       Field_Type,
+      Field_Left,
       Field_Implementation,
+      Field_Right,
       --  Iir_Kind_Remainder_Operator
       Field_Expr_Staticness,
-      Field_Left,
-      Field_Right,
       Field_Type,
+      Field_Left,
       Field_Implementation,
+      Field_Right,
       --  Iir_Kind_Exponentiation_Operator
       Field_Expr_Staticness,
-      Field_Left,
-      Field_Right,
       Field_Type,
+      Field_Left,
       Field_Implementation,
+      Field_Right,
       --  Iir_Kind_Function_Call
       Field_Expr_Staticness,
       Field_Name_Staticness,
       Field_Prefix,
-      Field_Parameter_Association_Chain,
-      Field_Method_Object,
       Field_Type,
+      Field_Parameter_Association_Chain,
       Field_Implementation,
+      Field_Method_Object,
       Field_Base_Name,
       --  Iir_Kind_Aggregate
       Field_Expr_Staticness,
       Field_Value_Staticness,
-      Field_Aggregate_Info,
-      Field_Literal_Subtype,
       Field_Association_Choices_Chain,
+      Field_Literal_Subtype,
+      Field_Aggregate_Info,
       Field_Type,
       --  Iir_Kind_Parenthesis_Expression
       Field_Expr_Staticness,
@@ -3349,26 +3548,25 @@ package body Nodes_Meta is
       Field_Type,
       --  Iir_Kind_Qualified_Expression
       Field_Expr_Staticness,
+      Field_Type,
       Field_Type_Mark,
       Field_Expression,
-      Field_Type,
       --  Iir_Kind_Type_Conversion
       Field_Expr_Staticness,
+      Field_Type,
       Field_Type_Conversion_Subtype,
       Field_Type_Mark,
       Field_Expression,
-      Field_Type,
       --  Iir_Kind_Allocator_By_Expression
       Field_Expr_Staticness,
-      Field_Expression,
       Field_Type,
+      Field_Expression,
       Field_Allocator_Designated_Type,
       --  Iir_Kind_Allocator_By_Subtype
-      Field_Is_Ref,
       Field_Expr_Staticness,
-      Field_Allocator_Subtype,
-      Field_Subtype_Indication,
       Field_Type,
+      Field_Subtype_Indication,
+      Field_Allocator_Subtype,
       Field_Allocator_Designated_Type,
       --  Iir_Kind_Selected_Element
       Field_Expr_Staticness,
@@ -3401,8 +3599,8 @@ package body Nodes_Meta is
       Field_Expr_Staticness,
       Field_Name_Staticness,
       Field_Prefix,
-      Field_Index_List,
       Field_Type,
+      Field_Index_List,
       Field_Base_Name,
       --  Iir_Kind_Psl_Expression
       Field_Psl_Expression,
@@ -3420,14 +3618,14 @@ package body Nodes_Meta is
       Field_End_Has_Reserved_Id,
       Field_End_Has_Identifier,
       Field_Wait_State,
+      Field_Parent,
       Field_Declaration_Chain,
       Field_Chain,
       Field_Attribute_Value_Chain,
       Field_Sequential_Statement_Chain,
       Field_Sensitivity_List,
-      Field_Process_Origin,
-      Field_Parent,
       Field_Callees_List,
+      Field_Process_Origin,
       --  Iir_Kind_Process_Statement
       Field_Label,
       Field_Seen_Flag,
@@ -3442,64 +3640,67 @@ package body Nodes_Meta is
       Field_End_Has_Reserved_Id,
       Field_End_Has_Identifier,
       Field_Wait_State,
+      Field_Parent,
       Field_Declaration_Chain,
       Field_Chain,
       Field_Attribute_Value_Chain,
       Field_Sequential_Statement_Chain,
-      Field_Process_Origin,
-      Field_Parent,
       Field_Callees_List,
+      Field_Process_Origin,
       --  Iir_Kind_Concurrent_Simple_Signal_Assignment
       Field_Label,
       Field_Delay_Mechanism,
       Field_Postponed_Flag,
       Field_Visible_Flag,
       Field_Guarded_Target_State,
+      Field_Parent,
       Field_Target,
       Field_Chain,
       Field_Reject_Time_Expression,
       Field_Waveform_Chain,
       Field_Guard,
-      Field_Parent,
       --  Iir_Kind_Concurrent_Conditional_Signal_Assignment
       Field_Label,
       Field_Delay_Mechanism,
       Field_Postponed_Flag,
       Field_Visible_Flag,
       Field_Guarded_Target_State,
+      Field_Parent,
       Field_Target,
       Field_Chain,
       Field_Reject_Time_Expression,
       Field_Conditional_Waveform_Chain,
       Field_Guard,
-      Field_Parent,
       --  Iir_Kind_Concurrent_Selected_Signal_Assignment
       Field_Label,
       Field_Delay_Mechanism,
       Field_Postponed_Flag,
       Field_Visible_Flag,
       Field_Guarded_Target_State,
+      Field_Parent,
       Field_Target,
       Field_Chain,
       Field_Reject_Time_Expression,
       Field_Expression,
       Field_Selected_Waveform_Chain,
       Field_Guard,
-      Field_Parent,
       --  Iir_Kind_Concurrent_Assertion_Statement
       Field_Label,
       Field_Postponed_Flag,
       Field_Visible_Flag,
+      Field_Parent,
       Field_Assertion_Condition,
       Field_Chain,
       Field_Severity_Expression,
       Field_Report_Expression,
-      Field_Parent,
-      --  Iir_Kind_Psl_Default_Clock
-      Field_Psl_Boolean,
+      --  Iir_Kind_Concurrent_Procedure_Call_Statement
       Field_Label,
-      Field_Chain,
+      Field_Suspend_Flag,
+      Field_Postponed_Flag,
+      Field_Visible_Flag,
       Field_Parent,
+      Field_Procedure_Call,
+      Field_Chain,
       --  Iir_Kind_Psl_Assert_Statement
       Field_Psl_Property,
       Field_Label,
@@ -3507,12 +3708,13 @@ package body Nodes_Meta is
       Field_PSL_NFA,
       Field_PSL_Nbr_States,
       Field_PSL_EOS_Flag,
+      Field_Postponed_Flag,
       Field_Visible_Flag,
-      Field_PSL_Clock_Sensitivity,
+      Field_Parent,
       Field_Chain,
       Field_Severity_Expression,
       Field_Report_Expression,
-      Field_Parent,
+      Field_PSL_Clock_Sensitivity,
       --  Iir_Kind_Psl_Cover_Statement
       Field_Psl_Sequence,
       Field_Label,
@@ -3520,84 +3722,82 @@ package body Nodes_Meta is
       Field_PSL_NFA,
       Field_PSL_Nbr_States,
       Field_PSL_EOS_Flag,
+      Field_Postponed_Flag,
       Field_Visible_Flag,
-      Field_PSL_Clock_Sensitivity,
+      Field_Parent,
       Field_Chain,
       Field_Severity_Expression,
       Field_Report_Expression,
-      Field_Parent,
-      --  Iir_Kind_Concurrent_Procedure_Call_Statement
-      Field_Label,
-      Field_Suspend_Flag,
-      Field_Postponed_Flag,
-      Field_Visible_Flag,
-      Field_Procedure_Call,
-      Field_Chain,
-      Field_Parent,
+      Field_PSL_Clock_Sensitivity,
       --  Iir_Kind_Block_Statement
       Field_Label,
       Field_Visible_Flag,
       Field_Is_Within_Flag,
       Field_End_Has_Reserved_Id,
       Field_End_Has_Identifier,
+      Field_Parent,
+      Field_Guard_Decl,
+      Field_Block_Header,
       Field_Declaration_Chain,
       Field_Chain,
       Field_Attribute_Value_Chain,
       Field_Concurrent_Statement_Chain,
       Field_Block_Block_Configuration,
-      Field_Block_Header,
-      Field_Guard_Decl,
-      Field_Parent,
       --  Iir_Kind_If_Generate_Statement
       Field_Label,
       Field_Visible_Flag,
       Field_Is_Within_Flag,
       Field_End_Has_Reserved_Id,
       Field_End_Has_Identifier,
+      Field_Parent,
       Field_Condition,
       Field_Chain,
       Field_Generate_Statement_Body,
       Field_Generate_Else_Clause,
-      Field_Parent,
       --  Iir_Kind_Case_Generate_Statement
       Field_Label,
       Field_Visible_Flag,
       Field_Is_Within_Flag,
       Field_End_Has_Reserved_Id,
       Field_End_Has_Identifier,
+      Field_Parent,
       Field_Case_Statement_Alternative_Chain,
       Field_Chain,
       Field_Expression,
-      Field_Parent,
       --  Iir_Kind_For_Generate_Statement
       Field_Label,
       Field_Visible_Flag,
       Field_Is_Within_Flag,
       Field_End_Has_Reserved_Id,
       Field_End_Has_Identifier,
+      Field_Parent,
       Field_Parameter_Specification,
       Field_Chain,
       Field_Generate_Statement_Body,
-      Field_Parent,
       --  Iir_Kind_Component_Instantiation_Statement
       Field_Label,
       Field_Visible_Flag,
+      Field_Parent,
       Field_Instantiated_Unit,
       Field_Chain,
       Field_Default_Binding_Indication,
-      Field_Component_Configuration,
-      Field_Configuration_Specification,
       Field_Generic_Map_Aspect_Chain,
       Field_Port_Map_Aspect_Chain,
+      Field_Configuration_Specification,
+      Field_Component_Configuration,
+      --  Iir_Kind_Psl_Default_Clock
+      Field_Psl_Boolean,
+      Field_Label,
       Field_Parent,
+      Field_Chain,
       --  Iir_Kind_Simple_Simultaneous_Statement
       Field_Label,
       Field_Visible_Flag,
+      Field_Parent,
       Field_Chain,
       Field_Simultaneous_Left,
       Field_Simultaneous_Right,
       Field_Tolerance,
-      Field_Parent,
       --  Iir_Kind_Generate_Statement_Body
       Field_Alternative_Label,
       Field_Has_Begin,
@@ -3605,225 +3805,233 @@ package body Nodes_Meta is
       Field_Is_Within_Flag,
       Field_Has_Label,
       Field_End_Has_Identifier,
+      Field_Parent,
       Field_Declaration_Chain,
       Field_Generate_Block_Configuration,
       Field_Attribute_Value_Chain,
       Field_Concurrent_Statement_Chain,
-      Field_Parent,
       --  Iir_Kind_If_Generate_Else_Clause
       Field_Visible_Flag,
+      Field_Parent,
       Field_Condition,
       Field_Generate_Statement_Body,
       Field_Generate_Else_Clause,
-      Field_Parent,
       --  Iir_Kind_Simple_Signal_Assignment_Statement
       Field_Label,
       Field_Delay_Mechanism,
       Field_Visible_Flag,
       Field_Guarded_Target_State,
+      Field_Parent,
       Field_Target,
       Field_Chain,
       Field_Reject_Time_Expression,
       Field_Waveform_Chain,
-      Field_Parent,
       --  Iir_Kind_Conditional_Signal_Assignment_Statement
       Field_Label,
       Field_Delay_Mechanism,
       Field_Visible_Flag,
       Field_Guarded_Target_State,
+      Field_Parent,
       Field_Target,
       Field_Chain,
       Field_Reject_Time_Expression,
       Field_Conditional_Waveform_Chain,
-      Field_Parent,
       --  Iir_Kind_Null_Statement
       Field_Label,
       Field_Visible_Flag,
-      Field_Chain,
       Field_Parent,
+      Field_Chain,
       --  Iir_Kind_Assertion_Statement
       Field_Label,
       Field_Visible_Flag,
+      Field_Parent,
       Field_Assertion_Condition,
       Field_Chain,
       Field_Severity_Expression,
       Field_Report_Expression,
-      Field_Parent,
       --  Iir_Kind_Report_Statement
       Field_Label,
       Field_Visible_Flag,
+      Field_Parent,
       Field_Chain,
       Field_Severity_Expression,
       Field_Report_Expression,
-      Field_Parent,
       --  Iir_Kind_Wait_Statement
       Field_Label,
       Field_Visible_Flag,
+      Field_Parent,
       Field_Timeout_Clause,
       Field_Chain,
       Field_Condition_Clause,
       Field_Sensitivity_List,
-      Field_Parent,
       --  Iir_Kind_Variable_Assignment_Statement
       Field_Label,
       Field_Visible_Flag,
+      Field_Parent,
       Field_Target,
       Field_Chain,
       Field_Expression,
-      Field_Parent,
       --  Iir_Kind_Conditional_Variable_Assignment_Statement
       Field_Label,
       Field_Visible_Flag,
+      Field_Parent,
       Field_Target,
       Field_Chain,
       Field_Conditional_Expression,
-      Field_Parent,
       --  Iir_Kind_Return_Statement
       Field_Label,
       Field_Visible_Flag,
-      Field_Chain,
-      Field_Expression,
       Field_Parent,
       Field_Type,
+      Field_Chain,
+      Field_Expression,
       --  Iir_Kind_For_Loop_Statement
       Field_Label,
       Field_Suspend_Flag,
       Field_Visible_Flag,
       Field_Is_Within_Flag,
       Field_End_Has_Identifier,
+      Field_Parent,
       Field_Parameter_Specification,
       Field_Chain,
       Field_Sequential_Statement_Chain,
-      Field_Parent,
       --  Iir_Kind_While_Loop_Statement
       Field_Label,
       Field_Suspend_Flag,
       Field_Visible_Flag,
       Field_End_Has_Identifier,
+      Field_Parent,
       Field_Condition,
       Field_Chain,
       Field_Sequential_Statement_Chain,
-      Field_Parent,
       --  Iir_Kind_Next_Statement
       Field_Label,
       Field_Visible_Flag,
+      Field_Parent,
       Field_Condition,
       Field_Chain,
       Field_Loop_Label,
-      Field_Parent,
       --  Iir_Kind_Exit_Statement
       Field_Label,
       Field_Visible_Flag,
+      Field_Parent,
       Field_Condition,
       Field_Chain,
       Field_Loop_Label,
-      Field_Parent,
       --  Iir_Kind_Case_Statement
       Field_Label,
       Field_Suspend_Flag,
       Field_Visible_Flag,
       Field_End_Has_Identifier,
+      Field_Parent,
       Field_Case_Statement_Alternative_Chain,
       Field_Chain,
       Field_Expression,
-      Field_Parent,
       --  Iir_Kind_Procedure_Call_Statement
       Field_Label,
       Field_Suspend_Flag,
       Field_Visible_Flag,
+      Field_Parent,
       Field_Procedure_Call,
       Field_Chain,
-      Field_Parent,
       --  Iir_Kind_If_Statement
       Field_Label,
       Field_Suspend_Flag,
       Field_Visible_Flag,
       Field_End_Has_Identifier,
+      Field_Parent,
       Field_Condition,
       Field_Chain,
       Field_Else_Clause,
       Field_Sequential_Statement_Chain,
-      Field_Parent,
       --  Iir_Kind_Elsif
       Field_End_Has_Identifier,
+      Field_Parent,
       Field_Condition,
       Field_Else_Clause,
       Field_Sequential_Statement_Chain,
-      Field_Parent,
       --  Iir_Kind_Character_Literal
       Field_Identifier,
+      Field_Is_Forward_Ref,
       Field_Expr_Staticness,
       Field_Name_Staticness,
-      Field_Alias_Declaration,
       Field_Type,
+      Field_Alias_Declaration,
       Field_Named_Entity,
       Field_Base_Name,
       --  Iir_Kind_Simple_Name
       Field_Identifier,
+      Field_Is_Forward_Ref,
       Field_Expr_Staticness,
       Field_Name_Staticness,
-      Field_Alias_Declaration,
       Field_Type,
+      Field_Alias_Declaration,
       Field_Named_Entity,
       Field_Base_Name,
       --  Iir_Kind_Selected_Name
       Field_Identifier,
+      Field_Is_Forward_Ref,
       Field_Expr_Staticness,
       Field_Name_Staticness,
       Field_Prefix,
-      Field_Alias_Declaration,
       Field_Type,
+      Field_Alias_Declaration,
       Field_Named_Entity,
       Field_Base_Name,
       --  Iir_Kind_Operator_Symbol
       Field_Identifier,
-      Field_Alias_Declaration,
+      Field_Is_Forward_Ref,
       Field_Type,
+      Field_Alias_Declaration,
       Field_Named_Entity,
       Field_Base_Name,
+      --  Iir_Kind_Reference_Name
+      Field_Is_Forward_Ref,
+      Field_Named_Entity,
+      Field_Referenced_Name,
       --  Iir_Kind_Selected_By_All_Name
+      Field_Is_Forward_Ref,
       Field_Expr_Staticness,
       Field_Prefix,
       Field_Type,
       Field_Named_Entity,
       Field_Base_Name,
       --  Iir_Kind_Parenthesis_Name
+      Field_Is_Forward_Ref,
       Field_Prefix,
-      Field_Association_Chain,
       Field_Type,
+      Field_Association_Chain,
       Field_Named_Entity,
       --  Iir_Kind_External_Constant_Name
       Field_Shared_Flag,
-      Field_Is_Ref,
       Field_Expr_Staticness,
       Field_Name_Staticness,
+      Field_Parent,
+      Field_Type,
       Field_Chain,
       Field_External_Pathname,
       Field_Subtype_Indication,
-      Field_Parent,
-      Field_Type,
       --  Iir_Kind_External_Signal_Name
       Field_Shared_Flag,
-      Field_Is_Ref,
       Field_Expr_Staticness,
       Field_Name_Staticness,
+      Field_Parent,
+      Field_Type,
       Field_Chain,
       Field_External_Pathname,
       Field_Subtype_Indication,
-      Field_Parent,
-      Field_Type,
       --  Iir_Kind_External_Variable_Name
       Field_Shared_Flag,
-      Field_Is_Ref,
       Field_Expr_Staticness,
       Field_Name_Staticness,
+      Field_Parent,
+      Field_Type,
       Field_Chain,
       Field_External_Pathname,
       Field_Subtype_Indication,
-      Field_Parent,
-      Field_Type,
       --  Iir_Kind_Package_Pathname
       Field_Identifier,
+      Field_Is_Forward_Ref,
       Field_Pathname_Suffix,
       Field_Named_Entity,
       --  Iir_Kind_Absolute_Pathname
@@ -3832,9 +4040,10 @@ package body Nodes_Meta is
       Field_Pathname_Suffix,
       --  Iir_Kind_Pathname_Element
       Field_Identifier,
+      Field_Is_Forward_Ref,
       Field_Pathname_Suffix,
-      Field_Pathname_Expression,
       Field_Named_Entity,
+      Field_Pathname_Expression,
       --  Iir_Kind_Base_Attribute
       Field_Prefix,
       Field_Type,
@@ -3872,93 +4081,97 @@ package body Nodes_Meta is
       Field_Expr_Staticness,
       Field_Name_Staticness,
       Field_Prefix,
-      Field_Parameter,
       Field_Type,
+      Field_Parameter,
       Field_Base_Name,
       --  Iir_Kind_Value_Attribute
       Field_Expr_Staticness,
       Field_Name_Staticness,
       Field_Prefix,
-      Field_Parameter,
       Field_Type,
+      Field_Parameter,
       Field_Base_Name,
       --  Iir_Kind_Pos_Attribute
       Field_Expr_Staticness,
       Field_Name_Staticness,
       Field_Prefix,
-      Field_Parameter,
       Field_Type,
+      Field_Parameter,
       Field_Base_Name,
       --  Iir_Kind_Val_Attribute
       Field_Expr_Staticness,
       Field_Name_Staticness,
       Field_Prefix,
-      Field_Parameter,
       Field_Type,
+      Field_Parameter,
       Field_Base_Name,
       --  Iir_Kind_Succ_Attribute
       Field_Expr_Staticness,
       Field_Name_Staticness,
       Field_Prefix,
-      Field_Parameter,
       Field_Type,
+      Field_Parameter,
       Field_Base_Name,
       --  Iir_Kind_Pred_Attribute
       Field_Expr_Staticness,
       Field_Name_Staticness,
       Field_Prefix,
-      Field_Parameter,
       Field_Type,
+      Field_Parameter,
       Field_Base_Name,
       --  Iir_Kind_Leftof_Attribute
       Field_Expr_Staticness,
       Field_Name_Staticness,
       Field_Prefix,
-      Field_Parameter,
       Field_Type,
+      Field_Parameter,
       Field_Base_Name,
       --  Iir_Kind_Rightof_Attribute
       Field_Expr_Staticness,
       Field_Name_Staticness,
       Field_Prefix,
-      Field_Parameter,
       Field_Type,
+      Field_Parameter,
       Field_Base_Name,
       --  Iir_Kind_Delayed_Attribute
       Field_Has_Active_Flag,
       Field_Expr_Staticness,
       Field_Name_Staticness,
       Field_Prefix,
-      Field_Chain,
       Field_Parameter,
       Field_Type,
+      Field_Attr_Chain,
+      Field_Signal_Attribute_Declaration,
       Field_Base_Name,
       --  Iir_Kind_Stable_Attribute
       Field_Has_Active_Flag,
       Field_Expr_Staticness,
       Field_Name_Staticness,
       Field_Prefix,
-      Field_Chain,
       Field_Parameter,
       Field_Type,
+      Field_Attr_Chain,
+      Field_Signal_Attribute_Declaration,
       Field_Base_Name,
       --  Iir_Kind_Quiet_Attribute
       Field_Has_Active_Flag,
       Field_Expr_Staticness,
       Field_Name_Staticness,
       Field_Prefix,
-      Field_Chain,
       Field_Parameter,
       Field_Type,
+      Field_Attr_Chain,
+      Field_Signal_Attribute_Declaration,
       Field_Base_Name,
       --  Iir_Kind_Transaction_Attribute
       Field_Has_Active_Flag,
       Field_Expr_Staticness,
       Field_Name_Staticness,
       Field_Prefix,
-      Field_Chain,
       Field_Parameter,
       Field_Type,
+      Field_Attr_Chain,
+      Field_Signal_Attribute_Declaration,
       Field_Base_Name,
       --  Iir_Kind_Event_Attribute
       Field_Expr_Staticness,
@@ -4021,73 +4234,74 @@ package body Nodes_Meta is
       Field_Expr_Staticness,
       Field_Name_Staticness,
       Field_Prefix,
+      Field_Type,
       Field_Index_Subtype,
       Field_Parameter,
-      Field_Type,
       Field_Base_Name,
       --  Iir_Kind_Right_Array_Attribute
       Field_Expr_Staticness,
       Field_Name_Staticness,
       Field_Prefix,
+      Field_Type,
       Field_Index_Subtype,
       Field_Parameter,
-      Field_Type,
       Field_Base_Name,
       --  Iir_Kind_High_Array_Attribute
       Field_Expr_Staticness,
       Field_Name_Staticness,
       Field_Prefix,
+      Field_Type,
       Field_Index_Subtype,
       Field_Parameter,
-      Field_Type,
       Field_Base_Name,
       --  Iir_Kind_Low_Array_Attribute
       Field_Expr_Staticness,
       Field_Name_Staticness,
       Field_Prefix,
+      Field_Type,
       Field_Index_Subtype,
       Field_Parameter,
-      Field_Type,
       Field_Base_Name,
       --  Iir_Kind_Length_Array_Attribute
       Field_Expr_Staticness,
       Field_Name_Staticness,
       Field_Prefix,
+      Field_Type,
       Field_Index_Subtype,
       Field_Parameter,
-      Field_Type,
       Field_Base_Name,
       --  Iir_Kind_Ascending_Array_Attribute
       Field_Expr_Staticness,
       Field_Name_Staticness,
       Field_Prefix,
+      Field_Type,
       Field_Index_Subtype,
       Field_Parameter,
-      Field_Type,
       Field_Base_Name,
       --  Iir_Kind_Range_Array_Attribute
       Field_Expr_Staticness,
       Field_Name_Staticness,
       Field_Prefix,
+      Field_Type,
       Field_Index_Subtype,
       Field_Parameter,
-      Field_Type,
       Field_Base_Name,
       --  Iir_Kind_Reverse_Range_Array_Attribute
       Field_Expr_Staticness,
       Field_Name_Staticness,
       Field_Prefix,
+      Field_Type,
       Field_Index_Subtype,
       Field_Parameter,
-      Field_Type,
       Field_Base_Name,
       --  Iir_Kind_Attribute_Name
       Field_Identifier,
+      Field_Is_Forward_Ref,
       Field_Expr_Staticness,
       Field_Name_Staticness,
       Field_Prefix,
-      Field_Attribute_Signature,
       Field_Type,
+      Field_Attribute_Signature,
       Field_Named_Entity,
       Field_Base_Name
      );
@@ -4105,251 +4319,259 @@ package body Nodes_Meta is
       Iir_Kind_Floating_Point_Literal => 55,
       Iir_Kind_Null_Literal => 57,
       Iir_Kind_String_Literal8 => 67,
-      Iir_Kind_Physical_Int_Literal => 72,
-      Iir_Kind_Physical_Fp_Literal => 77,
-      Iir_Kind_Simple_Aggregate => 82,
-      Iir_Kind_Overflow_Literal => 85,
-      Iir_Kind_Waveform_Element => 88,
-      Iir_Kind_Conditional_Waveform => 91,
-      Iir_Kind_Conditional_Expression => 94,
-      Iir_Kind_Association_Element_By_Expression => 101,
-      Iir_Kind_Association_Element_By_Individual => 108,
-      Iir_Kind_Association_Element_Open => 113,
-      Iir_Kind_Association_Element_Package => 119,
-      Iir_Kind_Choice_By_Others => 124,
-      Iir_Kind_Choice_By_Expression => 131,
-      Iir_Kind_Choice_By_Range => 138,
-      Iir_Kind_Choice_By_None => 143,
-      Iir_Kind_Choice_By_Name => 149,
-      Iir_Kind_Entity_Aspect_Entity => 151,
-      Iir_Kind_Entity_Aspect_Configuration => 152,
-      Iir_Kind_Entity_Aspect_Open => 152,
-      Iir_Kind_Block_Configuration => 158,
-      Iir_Kind_Block_Header => 162,
-      Iir_Kind_Component_Configuration => 168,
-      Iir_Kind_Binding_Indication => 174,
-      Iir_Kind_Entity_Class => 176,
-      Iir_Kind_Attribute_Value => 184,
-      Iir_Kind_Signature => 187,
-      Iir_Kind_Aggregate_Info => 194,
-      Iir_Kind_Procedure_Call => 198,
-      Iir_Kind_Record_Element_Constraint => 204,
-      Iir_Kind_Array_Element_Resolution => 205,
-      Iir_Kind_Record_Resolution => 206,
-      Iir_Kind_Record_Element_Resolution => 209,
-      Iir_Kind_Attribute_Specification => 218,
-      Iir_Kind_Disconnection_Specification => 223,
-      Iir_Kind_Configuration_Specification => 228,
-      Iir_Kind_Access_Type_Definition => 235,
-      Iir_Kind_Incomplete_Type_Definition => 242,
-      Iir_Kind_File_Type_Definition => 249,
-      Iir_Kind_Protected_Type_Declaration => 258,
-      Iir_Kind_Record_Type_Definition => 268,
-      Iir_Kind_Array_Type_Definition => 280,
-      Iir_Kind_Array_Subtype_Definition => 295,
-      Iir_Kind_Record_Subtype_Definition => 306,
-      Iir_Kind_Access_Subtype_Definition => 314,
-      Iir_Kind_Physical_Subtype_Definition => 323,
-      Iir_Kind_Floating_Subtype_Definition => 333,
-      Iir_Kind_Integer_Subtype_Definition => 342,
-      Iir_Kind_Enumeration_Subtype_Definition => 351,
-      Iir_Kind_Enumeration_Type_Definition => 360,
-      Iir_Kind_Integer_Type_Definition => 366,
-      Iir_Kind_Floating_Type_Definition => 372,
-      Iir_Kind_Physical_Type_Definition => 381,
-      Iir_Kind_Range_Expression => 387,
-      Iir_Kind_Protected_Type_Body => 394,
-      Iir_Kind_Wildcard_Type_Definition => 399,
-      Iir_Kind_Subtype_Definition => 403,
-      Iir_Kind_Scalar_Nature_Definition => 407,
-      Iir_Kind_Overload_List => 408,
-      Iir_Kind_Type_Declaration => 414,
-      Iir_Kind_Anonymous_Type_Declaration => 419,
-      Iir_Kind_Subtype_Declaration => 427,
-      Iir_Kind_Nature_Declaration => 433,
-      Iir_Kind_Subnature_Declaration => 439,
-      Iir_Kind_Package_Declaration => 449,
-      Iir_Kind_Package_Instantiation_Declaration => 460,
-      Iir_Kind_Package_Body => 467,
-      Iir_Kind_Configuration_Declaration => 476,
-      Iir_Kind_Entity_Declaration => 488,
-      Iir_Kind_Architecture_Body => 500,
-      Iir_Kind_Context_Declaration => 506,
-      Iir_Kind_Package_Header => 508,
-      Iir_Kind_Unit_Declaration => 517,
-      Iir_Kind_Library_Declaration => 524,
-      Iir_Kind_Component_Declaration => 534,
-      Iir_Kind_Attribute_Declaration => 541,
-      Iir_Kind_Group_Template_Declaration => 547,
-      Iir_Kind_Group_Declaration => 554,
-      Iir_Kind_Element_Declaration => 561,
-      Iir_Kind_Non_Object_Alias_Declaration => 569,
-      Iir_Kind_Psl_Declaration => 577,
-      Iir_Kind_Psl_Endpoint_Declaration => 591,
-      Iir_Kind_Terminal_Declaration => 597,
-      Iir_Kind_Free_Quantity_Declaration => 606,
-      Iir_Kind_Across_Quantity_Declaration => 618,
-      Iir_Kind_Through_Quantity_Declaration => 630,
-      Iir_Kind_Enumeration_Literal => 641,
-      Iir_Kind_Function_Declaration => 665,
-      Iir_Kind_Procedure_Declaration => 688,
-      Iir_Kind_Function_Body => 698,
-      Iir_Kind_Procedure_Body => 709,
-      Iir_Kind_Object_Alias_Declaration => 721,
-      Iir_Kind_File_Declaration => 736,
-      Iir_Kind_Guard_Signal_Declaration => 749,
-      Iir_Kind_Signal_Declaration => 766,
-      Iir_Kind_Variable_Declaration => 779,
-      Iir_Kind_Constant_Declaration => 793,
-      Iir_Kind_Iterator_Declaration => 805,
-      Iir_Kind_Interface_Constant_Declaration => 821,
-      Iir_Kind_Interface_Variable_Declaration => 837,
-      Iir_Kind_Interface_Signal_Declaration => 858,
-      Iir_Kind_Interface_File_Declaration => 874,
-      Iir_Kind_Interface_Package_Declaration => 883,
-      Iir_Kind_Identity_Operator => 887,
-      Iir_Kind_Negation_Operator => 891,
-      Iir_Kind_Absolute_Operator => 895,
-      Iir_Kind_Not_Operator => 899,
-      Iir_Kind_Condition_Operator => 903,
-      Iir_Kind_Reduction_And_Operator => 907,
-      Iir_Kind_Reduction_Or_Operator => 911,
-      Iir_Kind_Reduction_Nand_Operator => 915,
-      Iir_Kind_Reduction_Nor_Operator => 919,
-      Iir_Kind_Reduction_Xor_Operator => 923,
-      Iir_Kind_Reduction_Xnor_Operator => 927,
-      Iir_Kind_And_Operator => 932,
-      Iir_Kind_Or_Operator => 937,
-      Iir_Kind_Nand_Operator => 942,
-      Iir_Kind_Nor_Operator => 947,
-      Iir_Kind_Xor_Operator => 952,
-      Iir_Kind_Xnor_Operator => 957,
-      Iir_Kind_Equality_Operator => 962,
-      Iir_Kind_Inequality_Operator => 967,
-      Iir_Kind_Less_Than_Operator => 972,
-      Iir_Kind_Less_Than_Or_Equal_Operator => 977,
-      Iir_Kind_Greater_Than_Operator => 982,
-      Iir_Kind_Greater_Than_Or_Equal_Operator => 987,
-      Iir_Kind_Match_Equality_Operator => 992,
-      Iir_Kind_Match_Inequality_Operator => 997,
-      Iir_Kind_Match_Less_Than_Operator => 1002,
-      Iir_Kind_Match_Less_Than_Or_Equal_Operator => 1007,
-      Iir_Kind_Match_Greater_Than_Operator => 1012,
-      Iir_Kind_Match_Greater_Than_Or_Equal_Operator => 1017,
-      Iir_Kind_Sll_Operator => 1022,
-      Iir_Kind_Sla_Operator => 1027,
-      Iir_Kind_Srl_Operator => 1032,
-      Iir_Kind_Sra_Operator => 1037,
-      Iir_Kind_Rol_Operator => 1042,
-      Iir_Kind_Ror_Operator => 1047,
-      Iir_Kind_Addition_Operator => 1052,
-      Iir_Kind_Substraction_Operator => 1057,
-      Iir_Kind_Concatenation_Operator => 1062,
-      Iir_Kind_Multiplication_Operator => 1067,
-      Iir_Kind_Division_Operator => 1072,
-      Iir_Kind_Modulus_Operator => 1077,
-      Iir_Kind_Remainder_Operator => 1082,
-      Iir_Kind_Exponentiation_Operator => 1087,
-      Iir_Kind_Function_Call => 1095,
-      Iir_Kind_Aggregate => 1101,
-      Iir_Kind_Parenthesis_Expression => 1104,
-      Iir_Kind_Qualified_Expression => 1108,
-      Iir_Kind_Type_Conversion => 1113,
-      Iir_Kind_Allocator_By_Expression => 1117,
-      Iir_Kind_Allocator_By_Subtype => 1123,
-      Iir_Kind_Selected_Element => 1129,
-      Iir_Kind_Dereference => 1134,
-      Iir_Kind_Implicit_Dereference => 1139,
-      Iir_Kind_Slice_Name => 1146,
-      Iir_Kind_Indexed_Name => 1152,
-      Iir_Kind_Psl_Expression => 1154,
-      Iir_Kind_Sensitized_Process_Statement => 1174,
-      Iir_Kind_Process_Statement => 1194,
-      Iir_Kind_Concurrent_Simple_Signal_Assignment => 1205,
-      Iir_Kind_Concurrent_Conditional_Signal_Assignment => 1216,
-      Iir_Kind_Concurrent_Selected_Signal_Assignment => 1228,
-      Iir_Kind_Concurrent_Assertion_Statement => 1236,
-      Iir_Kind_Psl_Default_Clock => 1240,
-      Iir_Kind_Psl_Assert_Statement => 1252,
-      Iir_Kind_Psl_Cover_Statement => 1264,
-      Iir_Kind_Concurrent_Procedure_Call_Statement => 1271,
-      Iir_Kind_Block_Statement => 1284,
-      Iir_Kind_If_Generate_Statement => 1294,
-      Iir_Kind_Case_Generate_Statement => 1303,
-      Iir_Kind_For_Generate_Statement => 1312,
-      Iir_Kind_Component_Instantiation_Statement => 1322,
-      Iir_Kind_Simple_Simultaneous_Statement => 1329,
-      Iir_Kind_Generate_Statement_Body => 1340,
-      Iir_Kind_If_Generate_Else_Clause => 1345,
-      Iir_Kind_Simple_Signal_Assignment_Statement => 1354,
-      Iir_Kind_Conditional_Signal_Assignment_Statement => 1363,
-      Iir_Kind_Null_Statement => 1367,
-      Iir_Kind_Assertion_Statement => 1374,
-      Iir_Kind_Report_Statement => 1380,
-      Iir_Kind_Wait_Statement => 1387,
-      Iir_Kind_Variable_Assignment_Statement => 1393,
-      Iir_Kind_Conditional_Variable_Assignment_Statement => 1399,
-      Iir_Kind_Return_Statement => 1405,
-      Iir_Kind_For_Loop_Statement => 1414,
-      Iir_Kind_While_Loop_Statement => 1422,
-      Iir_Kind_Next_Statement => 1428,
-      Iir_Kind_Exit_Statement => 1434,
-      Iir_Kind_Case_Statement => 1442,
-      Iir_Kind_Procedure_Call_Statement => 1448,
-      Iir_Kind_If_Statement => 1457,
-      Iir_Kind_Elsif => 1462,
-      Iir_Kind_Character_Literal => 1469,
-      Iir_Kind_Simple_Name => 1476,
-      Iir_Kind_Selected_Name => 1484,
-      Iir_Kind_Operator_Symbol => 1489,
-      Iir_Kind_Selected_By_All_Name => 1494,
-      Iir_Kind_Parenthesis_Name => 1498,
-      Iir_Kind_External_Constant_Name => 1507,
-      Iir_Kind_External_Signal_Name => 1516,
-      Iir_Kind_External_Variable_Name => 1525,
-      Iir_Kind_Package_Pathname => 1528,
-      Iir_Kind_Absolute_Pathname => 1529,
-      Iir_Kind_Relative_Pathname => 1530,
-      Iir_Kind_Pathname_Element => 1534,
-      Iir_Kind_Base_Attribute => 1536,
-      Iir_Kind_Left_Type_Attribute => 1541,
-      Iir_Kind_Right_Type_Attribute => 1546,
-      Iir_Kind_High_Type_Attribute => 1551,
-      Iir_Kind_Low_Type_Attribute => 1556,
-      Iir_Kind_Ascending_Type_Attribute => 1561,
-      Iir_Kind_Image_Attribute => 1567,
-      Iir_Kind_Value_Attribute => 1573,
-      Iir_Kind_Pos_Attribute => 1579,
-      Iir_Kind_Val_Attribute => 1585,
-      Iir_Kind_Succ_Attribute => 1591,
-      Iir_Kind_Pred_Attribute => 1597,
-      Iir_Kind_Leftof_Attribute => 1603,
-      Iir_Kind_Rightof_Attribute => 1609,
-      Iir_Kind_Delayed_Attribute => 1617,
-      Iir_Kind_Stable_Attribute => 1625,
-      Iir_Kind_Quiet_Attribute => 1633,
-      Iir_Kind_Transaction_Attribute => 1641,
-      Iir_Kind_Event_Attribute => 1645,
-      Iir_Kind_Active_Attribute => 1649,
-      Iir_Kind_Last_Event_Attribute => 1653,
-      Iir_Kind_Last_Active_Attribute => 1657,
-      Iir_Kind_Last_Value_Attribute => 1661,
-      Iir_Kind_Driving_Attribute => 1665,
-      Iir_Kind_Driving_Value_Attribute => 1669,
-      Iir_Kind_Behavior_Attribute => 1669,
-      Iir_Kind_Structure_Attribute => 1669,
-      Iir_Kind_Simple_Name_Attribute => 1676,
-      Iir_Kind_Instance_Name_Attribute => 1681,
-      Iir_Kind_Path_Name_Attribute => 1686,
-      Iir_Kind_Left_Array_Attribute => 1693,
-      Iir_Kind_Right_Array_Attribute => 1700,
-      Iir_Kind_High_Array_Attribute => 1707,
-      Iir_Kind_Low_Array_Attribute => 1714,
-      Iir_Kind_Length_Array_Attribute => 1721,
-      Iir_Kind_Ascending_Array_Attribute => 1728,
-      Iir_Kind_Range_Array_Attribute => 1735,
-      Iir_Kind_Reverse_Range_Array_Attribute => 1742,
-      Iir_Kind_Attribute_Name => 1750
+      Iir_Kind_Physical_Int_Literal => 73,
+      Iir_Kind_Physical_Fp_Literal => 79,
+      Iir_Kind_Simple_Aggregate => 84,
+      Iir_Kind_Overflow_Literal => 87,
+      Iir_Kind_Waveform_Element => 90,
+      Iir_Kind_Conditional_Waveform => 93,
+      Iir_Kind_Conditional_Expression => 96,
+      Iir_Kind_Association_Element_By_Expression => 103,
+      Iir_Kind_Association_Element_By_Individual => 111,
+      Iir_Kind_Association_Element_Open => 116,
+      Iir_Kind_Association_Element_Package => 121,
+      Iir_Kind_Association_Element_Type => 127,
+      Iir_Kind_Association_Element_Subprogram => 132,
+      Iir_Kind_Choice_By_Others => 137,
+      Iir_Kind_Choice_By_Expression => 144,
+      Iir_Kind_Choice_By_Range => 151,
+      Iir_Kind_Choice_By_None => 156,
+      Iir_Kind_Choice_By_Name => 162,
+      Iir_Kind_Entity_Aspect_Entity => 164,
+      Iir_Kind_Entity_Aspect_Configuration => 165,
+      Iir_Kind_Entity_Aspect_Open => 165,
+      Iir_Kind_Block_Configuration => 171,
+      Iir_Kind_Block_Header => 175,
+      Iir_Kind_Component_Configuration => 181,
+      Iir_Kind_Binding_Indication => 185,
+      Iir_Kind_Entity_Class => 187,
+      Iir_Kind_Attribute_Value => 195,
+      Iir_Kind_Signature => 198,
+      Iir_Kind_Aggregate_Info => 205,
+      Iir_Kind_Procedure_Call => 209,
+      Iir_Kind_Record_Element_Constraint => 215,
+      Iir_Kind_Array_Element_Resolution => 217,
+      Iir_Kind_Record_Resolution => 218,
+      Iir_Kind_Record_Element_Resolution => 221,
+      Iir_Kind_Attribute_Specification => 229,
+      Iir_Kind_Disconnection_Specification => 234,
+      Iir_Kind_Configuration_Specification => 239,
+      Iir_Kind_Access_Type_Definition => 247,
+      Iir_Kind_Incomplete_Type_Definition => 255,
+      Iir_Kind_Interface_Type_Definition => 262,
+      Iir_Kind_File_Type_Definition => 269,
+      Iir_Kind_Protected_Type_Declaration => 278,
+      Iir_Kind_Record_Type_Definition => 288,
+      Iir_Kind_Array_Type_Definition => 300,
+      Iir_Kind_Array_Subtype_Definition => 315,
+      Iir_Kind_Record_Subtype_Definition => 326,
+      Iir_Kind_Access_Subtype_Definition => 334,
+      Iir_Kind_Physical_Subtype_Definition => 344,
+      Iir_Kind_Floating_Subtype_Definition => 355,
+      Iir_Kind_Integer_Subtype_Definition => 365,
+      Iir_Kind_Enumeration_Subtype_Definition => 375,
+      Iir_Kind_Enumeration_Type_Definition => 385,
+      Iir_Kind_Integer_Type_Definition => 393,
+      Iir_Kind_Floating_Type_Definition => 401,
+      Iir_Kind_Physical_Type_Definition => 412,
+      Iir_Kind_Range_Expression => 420,
+      Iir_Kind_Protected_Type_Body => 427,
+      Iir_Kind_Wildcard_Type_Definition => 432,
+      Iir_Kind_Subtype_Definition => 437,
+      Iir_Kind_Scalar_Nature_Definition => 441,
+      Iir_Kind_Overload_List => 442,
+      Iir_Kind_Type_Declaration => 449,
+      Iir_Kind_Anonymous_Type_Declaration => 455,
+      Iir_Kind_Subtype_Declaration => 462,
+      Iir_Kind_Nature_Declaration => 468,
+      Iir_Kind_Subnature_Declaration => 474,
+      Iir_Kind_Package_Declaration => 489,
+      Iir_Kind_Package_Instantiation_Declaration => 502,
+      Iir_Kind_Package_Body => 510,
+      Iir_Kind_Configuration_Declaration => 519,
+      Iir_Kind_Entity_Declaration => 531,
+      Iir_Kind_Architecture_Body => 543,
+      Iir_Kind_Context_Declaration => 549,
+      Iir_Kind_Package_Header => 551,
+      Iir_Kind_Unit_Declaration => 559,
+      Iir_Kind_Library_Declaration => 566,
+      Iir_Kind_Component_Declaration => 576,
+      Iir_Kind_Attribute_Declaration => 583,
+      Iir_Kind_Group_Template_Declaration => 589,
+      Iir_Kind_Group_Declaration => 596,
+      Iir_Kind_Element_Declaration => 603,
+      Iir_Kind_Non_Object_Alias_Declaration => 611,
+      Iir_Kind_Psl_Declaration => 619,
+      Iir_Kind_Psl_Endpoint_Declaration => 633,
+      Iir_Kind_Terminal_Declaration => 639,
+      Iir_Kind_Free_Quantity_Declaration => 648,
+      Iir_Kind_Across_Quantity_Declaration => 660,
+      Iir_Kind_Through_Quantity_Declaration => 672,
+      Iir_Kind_Enumeration_Literal => 683,
+      Iir_Kind_Function_Declaration => 708,
+      Iir_Kind_Procedure_Declaration => 732,
+      Iir_Kind_Function_Body => 742,
+      Iir_Kind_Procedure_Body => 753,
+      Iir_Kind_Object_Alias_Declaration => 764,
+      Iir_Kind_File_Declaration => 778,
+      Iir_Kind_Guard_Signal_Declaration => 791,
+      Iir_Kind_Signal_Declaration => 808,
+      Iir_Kind_Variable_Declaration => 821,
+      Iir_Kind_Constant_Declaration => 835,
+      Iir_Kind_Iterator_Declaration => 846,
+      Iir_Kind_Interface_Constant_Declaration => 862,
+      Iir_Kind_Interface_Variable_Declaration => 878,
+      Iir_Kind_Interface_Signal_Declaration => 899,
+      Iir_Kind_Interface_File_Declaration => 915,
+      Iir_Kind_Interface_Type_Declaration => 925,
+      Iir_Kind_Interface_Package_Declaration => 936,
+      Iir_Kind_Interface_Function_Declaration => 953,
+      Iir_Kind_Interface_Procedure_Declaration => 966,
+      Iir_Kind_Signal_Attribute_Declaration => 969,
+      Iir_Kind_Identity_Operator => 973,
+      Iir_Kind_Negation_Operator => 977,
+      Iir_Kind_Absolute_Operator => 981,
+      Iir_Kind_Not_Operator => 985,
+      Iir_Kind_Condition_Operator => 989,
+      Iir_Kind_Reduction_And_Operator => 993,
+      Iir_Kind_Reduction_Or_Operator => 997,
+      Iir_Kind_Reduction_Nand_Operator => 1001,
+      Iir_Kind_Reduction_Nor_Operator => 1005,
+      Iir_Kind_Reduction_Xor_Operator => 1009,
+      Iir_Kind_Reduction_Xnor_Operator => 1013,
+      Iir_Kind_And_Operator => 1018,
+      Iir_Kind_Or_Operator => 1023,
+      Iir_Kind_Nand_Operator => 1028,
+      Iir_Kind_Nor_Operator => 1033,
+      Iir_Kind_Xor_Operator => 1038,
+      Iir_Kind_Xnor_Operator => 1043,
+      Iir_Kind_Equality_Operator => 1048,
+      Iir_Kind_Inequality_Operator => 1053,
+      Iir_Kind_Less_Than_Operator => 1058,
+      Iir_Kind_Less_Than_Or_Equal_Operator => 1063,
+      Iir_Kind_Greater_Than_Operator => 1068,
+      Iir_Kind_Greater_Than_Or_Equal_Operator => 1073,
+      Iir_Kind_Match_Equality_Operator => 1078,
+      Iir_Kind_Match_Inequality_Operator => 1083,
+      Iir_Kind_Match_Less_Than_Operator => 1088,
+      Iir_Kind_Match_Less_Than_Or_Equal_Operator => 1093,
+      Iir_Kind_Match_Greater_Than_Operator => 1098,
+      Iir_Kind_Match_Greater_Than_Or_Equal_Operator => 1103,
+      Iir_Kind_Sll_Operator => 1108,
+      Iir_Kind_Sla_Operator => 1113,
+      Iir_Kind_Srl_Operator => 1118,
+      Iir_Kind_Sra_Operator => 1123,
+      Iir_Kind_Rol_Operator => 1128,
+      Iir_Kind_Ror_Operator => 1133,
+      Iir_Kind_Addition_Operator => 1138,
+      Iir_Kind_Substraction_Operator => 1143,
+      Iir_Kind_Concatenation_Operator => 1148,
+      Iir_Kind_Multiplication_Operator => 1153,
+      Iir_Kind_Division_Operator => 1158,
+      Iir_Kind_Modulus_Operator => 1163,
+      Iir_Kind_Remainder_Operator => 1168,
+      Iir_Kind_Exponentiation_Operator => 1173,
+      Iir_Kind_Function_Call => 1181,
+      Iir_Kind_Aggregate => 1187,
+      Iir_Kind_Parenthesis_Expression => 1190,
+      Iir_Kind_Qualified_Expression => 1194,
+      Iir_Kind_Type_Conversion => 1199,
+      Iir_Kind_Allocator_By_Expression => 1203,
+      Iir_Kind_Allocator_By_Subtype => 1208,
+      Iir_Kind_Selected_Element => 1214,
+      Iir_Kind_Dereference => 1219,
+      Iir_Kind_Implicit_Dereference => 1224,
+      Iir_Kind_Slice_Name => 1231,
+      Iir_Kind_Indexed_Name => 1237,
+      Iir_Kind_Psl_Expression => 1239,
+      Iir_Kind_Sensitized_Process_Statement => 1259,
+      Iir_Kind_Process_Statement => 1279,
+      Iir_Kind_Concurrent_Simple_Signal_Assignment => 1290,
+      Iir_Kind_Concurrent_Conditional_Signal_Assignment => 1301,
+      Iir_Kind_Concurrent_Selected_Signal_Assignment => 1313,
+      Iir_Kind_Concurrent_Assertion_Statement => 1321,
+      Iir_Kind_Concurrent_Procedure_Call_Statement => 1328,
+      Iir_Kind_Psl_Assert_Statement => 1341,
+      Iir_Kind_Psl_Cover_Statement => 1354,
+      Iir_Kind_Block_Statement => 1367,
+      Iir_Kind_If_Generate_Statement => 1377,
+      Iir_Kind_Case_Generate_Statement => 1386,
+      Iir_Kind_For_Generate_Statement => 1395,
+      Iir_Kind_Component_Instantiation_Statement => 1405,
+      Iir_Kind_Psl_Default_Clock => 1409,
+      Iir_Kind_Simple_Simultaneous_Statement => 1416,
+      Iir_Kind_Generate_Statement_Body => 1427,
+      Iir_Kind_If_Generate_Else_Clause => 1432,
+      Iir_Kind_Simple_Signal_Assignment_Statement => 1441,
+      Iir_Kind_Conditional_Signal_Assignment_Statement => 1450,
+      Iir_Kind_Null_Statement => 1454,
+      Iir_Kind_Assertion_Statement => 1461,
+      Iir_Kind_Report_Statement => 1467,
+      Iir_Kind_Wait_Statement => 1474,
+      Iir_Kind_Variable_Assignment_Statement => 1480,
+      Iir_Kind_Conditional_Variable_Assignment_Statement => 1486,
+      Iir_Kind_Return_Statement => 1492,
+      Iir_Kind_For_Loop_Statement => 1501,
+      Iir_Kind_While_Loop_Statement => 1509,
+      Iir_Kind_Next_Statement => 1515,
+      Iir_Kind_Exit_Statement => 1521,
+      Iir_Kind_Case_Statement => 1529,
+      Iir_Kind_Procedure_Call_Statement => 1535,
+      Iir_Kind_If_Statement => 1544,
+      Iir_Kind_Elsif => 1549,
+      Iir_Kind_Character_Literal => 1557,
+      Iir_Kind_Simple_Name => 1565,
+      Iir_Kind_Selected_Name => 1574,
+      Iir_Kind_Operator_Symbol => 1580,
+      Iir_Kind_Reference_Name => 1583,
+      Iir_Kind_Selected_By_All_Name => 1589,
+      Iir_Kind_Parenthesis_Name => 1594,
+      Iir_Kind_External_Constant_Name => 1602,
+      Iir_Kind_External_Signal_Name => 1610,
+      Iir_Kind_External_Variable_Name => 1618,
+      Iir_Kind_Package_Pathname => 1622,
+      Iir_Kind_Absolute_Pathname => 1623,
+      Iir_Kind_Relative_Pathname => 1624,
+      Iir_Kind_Pathname_Element => 1629,
+      Iir_Kind_Base_Attribute => 1631,
+      Iir_Kind_Left_Type_Attribute => 1636,
+      Iir_Kind_Right_Type_Attribute => 1641,
+      Iir_Kind_High_Type_Attribute => 1646,
+      Iir_Kind_Low_Type_Attribute => 1651,
+      Iir_Kind_Ascending_Type_Attribute => 1656,
+      Iir_Kind_Image_Attribute => 1662,
+      Iir_Kind_Value_Attribute => 1668,
+      Iir_Kind_Pos_Attribute => 1674,
+      Iir_Kind_Val_Attribute => 1680,
+      Iir_Kind_Succ_Attribute => 1686,
+      Iir_Kind_Pred_Attribute => 1692,
+      Iir_Kind_Leftof_Attribute => 1698,
+      Iir_Kind_Rightof_Attribute => 1704,
+      Iir_Kind_Delayed_Attribute => 1713,
+      Iir_Kind_Stable_Attribute => 1722,
+      Iir_Kind_Quiet_Attribute => 1731,
+      Iir_Kind_Transaction_Attribute => 1740,
+      Iir_Kind_Event_Attribute => 1744,
+      Iir_Kind_Active_Attribute => 1748,
+      Iir_Kind_Last_Event_Attribute => 1752,
+      Iir_Kind_Last_Active_Attribute => 1756,
+      Iir_Kind_Last_Value_Attribute => 1760,
+      Iir_Kind_Driving_Attribute => 1764,
+      Iir_Kind_Driving_Value_Attribute => 1768,
+      Iir_Kind_Behavior_Attribute => 1768,
+      Iir_Kind_Structure_Attribute => 1768,
+      Iir_Kind_Simple_Name_Attribute => 1775,
+      Iir_Kind_Instance_Name_Attribute => 1780,
+      Iir_Kind_Path_Name_Attribute => 1785,
+      Iir_Kind_Left_Array_Attribute => 1792,
+      Iir_Kind_Right_Array_Attribute => 1799,
+      Iir_Kind_High_Array_Attribute => 1806,
+      Iir_Kind_Low_Array_Attribute => 1813,
+      Iir_Kind_Length_Array_Attribute => 1820,
+      Iir_Kind_Ascending_Array_Attribute => 1827,
+      Iir_Kind_Range_Array_Attribute => 1834,
+      Iir_Kind_Reverse_Range_Array_Attribute => 1841,
+      Iir_Kind_Attribute_Name => 1850
      );
 
    function Get_Fields (K : Iir_Kind) return Fields_Array
@@ -4365,30 +4587,6 @@ package body Nodes_Meta is
       Last := Fields_Of_Iir_Last (K);
       return Fields_Of_Iir (First .. Last);
    end Get_Fields;
-
-   function Get_Base_Type
-      (N : Iir; F : Fields_Enum) return Base_Type is
-   begin
-      pragma Assert (Fields_Type (F) = Type_Base_Type);
-      case F is
-         when Field_Bit_String_Base =>
-            return Get_Bit_String_Base (N);
-         when others =>
-            raise Internal_Error;
-      end case;
-   end Get_Base_Type;
-
-   procedure Set_Base_Type
-      (N : Iir; F : Fields_Enum; V: Base_Type) is
-   begin
-      pragma Assert (Fields_Type (F) = Type_Base_Type);
-      case F is
-         when Field_Bit_String_Base =>
-            Set_Bit_String_Base (N, V);
-         when others =>
-            raise Internal_Error;
-      end case;
-   end Set_Base_Type;
 
    function Get_Boolean
       (N : Iir; F : Fields_Enum) return Boolean is
@@ -4415,6 +4613,10 @@ package body Nodes_Meta is
             return Get_Same_Alternative_Flag (N);
          when Field_Need_Body =>
             return Get_Need_Body (N);
+         when Field_Macro_Expanded_Flag =>
+            return Get_Macro_Expanded_Flag (N);
+         when Field_Need_Instance_Bodies =>
+            return Get_Need_Instance_Bodies (N);
          when Field_Guarded_Signal_Flag =>
             return Get_Guarded_Signal_Flag (N);
          when Field_Deferred_Declaration_Flag =>
@@ -4489,6 +4691,8 @@ package body Nodes_Meta is
             return Get_Has_Pure (N);
          when Field_Has_Body =>
             return Get_Has_Body (N);
+         when Field_Has_Parameter =>
+            return Get_Has_Parameter (N);
          when Field_Has_Identifier_List =>
             return Get_Has_Identifier_List (N);
          when Field_Has_Mode =>
@@ -4499,6 +4703,8 @@ package body Nodes_Meta is
             return Get_Suspend_Flag (N);
          when Field_Is_Ref =>
             return Get_Is_Ref (N);
+         when Field_Is_Forward_Ref =>
+            return Get_Is_Forward_Ref (N);
          when Field_PSL_EOS_Flag =>
             return Get_PSL_EOS_Flag (N);
          when others =>
@@ -4531,6 +4737,10 @@ package body Nodes_Meta is
             Set_Same_Alternative_Flag (N, V);
          when Field_Need_Body =>
             Set_Need_Body (N, V);
+         when Field_Macro_Expanded_Flag =>
+            Set_Macro_Expanded_Flag (N, V);
+         when Field_Need_Instance_Bodies =>
+            Set_Need_Instance_Bodies (N, V);
          when Field_Guarded_Signal_Flag =>
             Set_Guarded_Signal_Flag (N, V);
          when Field_Deferred_Declaration_Flag =>
@@ -4605,6 +4815,8 @@ package body Nodes_Meta is
             Set_Has_Pure (N, V);
          when Field_Has_Body =>
             Set_Has_Body (N, V);
+         when Field_Has_Parameter =>
+            Set_Has_Parameter (N, V);
          when Field_Has_Identifier_List =>
             Set_Has_Identifier_List (N, V);
          when Field_Has_Mode =>
@@ -4615,6 +4827,8 @@ package body Nodes_Meta is
             Set_Suspend_Flag (N, V);
          when Field_Is_Ref =>
             Set_Is_Ref (N, V);
+         when Field_Is_Forward_Ref =>
+            Set_Is_Forward_Ref (N, V);
          when Field_PSL_EOS_Flag =>
             Set_PSL_EOS_Flag (N, V);
          when others =>
@@ -4719,8 +4933,6 @@ package body Nodes_Meta is
             return Get_Hash_Chain (N);
          when Field_Physical_Literal =>
             return Get_Physical_Literal (N);
-         when Field_Physical_Unit_Value =>
-            return Get_Physical_Unit_Value (N);
          when Field_Literal_Origin =>
             return Get_Literal_Origin (N);
          when Field_Range_Origin =>
@@ -4773,6 +4985,8 @@ package body Nodes_Meta is
             return Get_Attribute_Value_Chain (N);
          when Field_Spec_Chain =>
             return Get_Spec_Chain (N);
+         when Field_Value_Chain =>
+            return Get_Value_Chain (N);
          when Field_Attribute_Value_Spec_Chain =>
             return Get_Attribute_Value_Spec_Chain (N);
          when Field_Entity_Name =>
@@ -4781,6 +4995,8 @@ package body Nodes_Meta is
             return Get_Package (N);
          when Field_Package_Body =>
             return Get_Package_Body (N);
+         when Field_Package_Instantiation_Bodies_Chain =>
+            return Get_Package_Instantiation_Bodies_Chain (N);
          when Field_Block_Configuration =>
             return Get_Block_Configuration (N);
          when Field_Concurrent_Statement_Chain =>
@@ -4801,6 +5017,10 @@ package body Nodes_Meta is
             return Get_Type_Definition (N);
          when Field_Subtype_Definition =>
             return Get_Subtype_Definition (N);
+         when Field_Incomplete_Type_Declaration =>
+            return Get_Incomplete_Type_Declaration (N);
+         when Field_Interface_Type_Subprograms =>
+            return Get_Interface_Type_Subprograms (N);
          when Field_Nature =>
             return Get_Nature (N);
          when Field_Base_Name =>
@@ -4831,6 +5051,8 @@ package body Nodes_Meta is
             return Get_File_Logical_Name (N);
          when Field_File_Open_Kind =>
             return Get_File_Open_Kind (N);
+         when Field_Base_Element_Declaration =>
+            return Get_Base_Element_Declaration (N);
          when Field_Element_Declaration =>
             return Get_Element_Declaration (N);
          when Field_Selected_Element =>
@@ -4843,6 +5065,12 @@ package body Nodes_Meta is
             return Get_Selected_Name (N);
          when Field_Type_Declarator =>
             return Get_Type_Declarator (N);
+         when Field_Complete_Type_Definition =>
+            return Get_Complete_Type_Definition (N);
+         when Field_Incomplete_Type_Ref_Chain =>
+            return Get_Incomplete_Type_Ref_Chain (N);
+         when Field_Associated_Type =>
+            return Get_Associated_Type (N);
          when Field_Entity_Class_Entry_Chain =>
             return Get_Entity_Class_Entry_Chain (N);
          when Field_Unit_Chain =>
@@ -4855,6 +5083,10 @@ package body Nodes_Meta is
             return Get_Left_Limit (N);
          when Field_Right_Limit =>
             return Get_Right_Limit (N);
+         when Field_Left_Limit_Expr =>
+            return Get_Left_Limit_Expr (N);
+         when Field_Right_Limit_Expr =>
+            return Get_Right_Limit_Expr (N);
          when Field_Base_Type =>
             return Get_Base_Type (N);
          when Field_Resolution_Indication =>
@@ -4899,6 +5131,8 @@ package body Nodes_Meta is
             return Get_Reject_Time_Expression (N);
          when Field_Process_Origin =>
             return Get_Process_Origin (N);
+         when Field_Package_Origin =>
+            return Get_Package_Origin (N);
          when Field_Condition_Clause =>
             return Get_Condition_Clause (N);
          when Field_Timeout_Clause =>
@@ -4939,6 +5173,8 @@ package body Nodes_Meta is
             return Get_Guard_Expression (N);
          when Field_Guard_Decl =>
             return Get_Guard_Decl (N);
+         when Field_Signal_Attribute_Chain =>
+            return Get_Signal_Attribute_Chain (N);
          when Field_Block_Block_Configuration =>
             return Get_Block_Block_Configuration (N);
          when Field_Package_Header =>
@@ -4947,6 +5183,8 @@ package body Nodes_Meta is
             return Get_Block_Header (N);
          when Field_Uninstantiated_Package_Name =>
             return Get_Uninstantiated_Package_Name (N);
+         when Field_Uninstantiated_Package_Decl =>
+            return Get_Uninstantiated_Package_Decl (N);
          when Field_Generate_Block_Configuration =>
             return Get_Generate_Block_Configuration (N);
          when Field_Generate_Statement_Body =>
@@ -4969,16 +5207,14 @@ package body Nodes_Meta is
             return Get_Entity_Aspect (N);
          when Field_Default_Entity_Aspect =>
             return Get_Default_Entity_Aspect (N);
-         when Field_Default_Generic_Map_Aspect_Chain =>
-            return Get_Default_Generic_Map_Aspect_Chain (N);
-         when Field_Default_Port_Map_Aspect_Chain =>
-            return Get_Default_Port_Map_Aspect_Chain (N);
          when Field_Binding_Indication =>
             return Get_Binding_Indication (N);
          when Field_Named_Entity =>
             return Get_Named_Entity (N);
          when Field_Alias_Declaration =>
             return Get_Alias_Declaration (N);
+         when Field_Referenced_Name =>
+            return Get_Referenced_Name (N);
          when Field_Error_Origin =>
             return Get_Error_Origin (N);
          when Field_Operand =>
@@ -4987,6 +5223,8 @@ package body Nodes_Meta is
             return Get_Left (N);
          when Field_Right =>
             return Get_Right (N);
+         when Field_Physical_Unit =>
+            return Get_Physical_Unit (N);
          when Field_Unit_Name =>
             return Get_Unit_Name (N);
          when Field_Name =>
@@ -5011,14 +5249,20 @@ package body Nodes_Meta is
             return Get_Index_Subtype (N);
          when Field_Parameter =>
             return Get_Parameter (N);
+         when Field_Attr_Chain =>
+            return Get_Attr_Chain (N);
+         when Field_Signal_Attribute_Declaration =>
+            return Get_Signal_Attribute_Declaration (N);
          when Field_Actual_Type =>
             return Get_Actual_Type (N);
-         when Field_Associated_Interface =>
-            return Get_Associated_Interface (N);
+         when Field_Actual_Type_Definition =>
+            return Get_Actual_Type_Definition (N);
          when Field_Association_Chain =>
             return Get_Association_Chain (N);
          when Field_Individual_Association_Chain =>
             return Get_Individual_Association_Chain (N);
+         when Field_Subprogram_Association_Chain =>
+            return Get_Subprogram_Association_Chain (N);
          when Field_Aggregate_Info =>
             return Get_Aggregate_Info (N);
          when Field_Sub_Aggregate_Info =>
@@ -5089,8 +5333,6 @@ package body Nodes_Meta is
             Set_Hash_Chain (N, V);
          when Field_Physical_Literal =>
             Set_Physical_Literal (N, V);
-         when Field_Physical_Unit_Value =>
-            Set_Physical_Unit_Value (N, V);
          when Field_Literal_Origin =>
             Set_Literal_Origin (N, V);
          when Field_Range_Origin =>
@@ -5143,6 +5385,8 @@ package body Nodes_Meta is
             Set_Attribute_Value_Chain (N, V);
          when Field_Spec_Chain =>
             Set_Spec_Chain (N, V);
+         when Field_Value_Chain =>
+            Set_Value_Chain (N, V);
          when Field_Attribute_Value_Spec_Chain =>
             Set_Attribute_Value_Spec_Chain (N, V);
          when Field_Entity_Name =>
@@ -5151,6 +5395,8 @@ package body Nodes_Meta is
             Set_Package (N, V);
          when Field_Package_Body =>
             Set_Package_Body (N, V);
+         when Field_Package_Instantiation_Bodies_Chain =>
+            Set_Package_Instantiation_Bodies_Chain (N, V);
          when Field_Block_Configuration =>
             Set_Block_Configuration (N, V);
          when Field_Concurrent_Statement_Chain =>
@@ -5171,6 +5417,10 @@ package body Nodes_Meta is
             Set_Type_Definition (N, V);
          when Field_Subtype_Definition =>
             Set_Subtype_Definition (N, V);
+         when Field_Incomplete_Type_Declaration =>
+            Set_Incomplete_Type_Declaration (N, V);
+         when Field_Interface_Type_Subprograms =>
+            Set_Interface_Type_Subprograms (N, V);
          when Field_Nature =>
             Set_Nature (N, V);
          when Field_Base_Name =>
@@ -5201,6 +5451,8 @@ package body Nodes_Meta is
             Set_File_Logical_Name (N, V);
          when Field_File_Open_Kind =>
             Set_File_Open_Kind (N, V);
+         when Field_Base_Element_Declaration =>
+            Set_Base_Element_Declaration (N, V);
          when Field_Element_Declaration =>
             Set_Element_Declaration (N, V);
          when Field_Selected_Element =>
@@ -5213,6 +5465,12 @@ package body Nodes_Meta is
             Set_Selected_Name (N, V);
          when Field_Type_Declarator =>
             Set_Type_Declarator (N, V);
+         when Field_Complete_Type_Definition =>
+            Set_Complete_Type_Definition (N, V);
+         when Field_Incomplete_Type_Ref_Chain =>
+            Set_Incomplete_Type_Ref_Chain (N, V);
+         when Field_Associated_Type =>
+            Set_Associated_Type (N, V);
          when Field_Entity_Class_Entry_Chain =>
             Set_Entity_Class_Entry_Chain (N, V);
          when Field_Unit_Chain =>
@@ -5225,6 +5483,10 @@ package body Nodes_Meta is
             Set_Left_Limit (N, V);
          when Field_Right_Limit =>
             Set_Right_Limit (N, V);
+         when Field_Left_Limit_Expr =>
+            Set_Left_Limit_Expr (N, V);
+         when Field_Right_Limit_Expr =>
+            Set_Right_Limit_Expr (N, V);
          when Field_Base_Type =>
             Set_Base_Type (N, V);
          when Field_Resolution_Indication =>
@@ -5269,6 +5531,8 @@ package body Nodes_Meta is
             Set_Reject_Time_Expression (N, V);
          when Field_Process_Origin =>
             Set_Process_Origin (N, V);
+         when Field_Package_Origin =>
+            Set_Package_Origin (N, V);
          when Field_Condition_Clause =>
             Set_Condition_Clause (N, V);
          when Field_Timeout_Clause =>
@@ -5309,6 +5573,8 @@ package body Nodes_Meta is
             Set_Guard_Expression (N, V);
          when Field_Guard_Decl =>
             Set_Guard_Decl (N, V);
+         when Field_Signal_Attribute_Chain =>
+            Set_Signal_Attribute_Chain (N, V);
          when Field_Block_Block_Configuration =>
             Set_Block_Block_Configuration (N, V);
          when Field_Package_Header =>
@@ -5317,6 +5583,8 @@ package body Nodes_Meta is
             Set_Block_Header (N, V);
          when Field_Uninstantiated_Package_Name =>
             Set_Uninstantiated_Package_Name (N, V);
+         when Field_Uninstantiated_Package_Decl =>
+            Set_Uninstantiated_Package_Decl (N, V);
          when Field_Generate_Block_Configuration =>
             Set_Generate_Block_Configuration (N, V);
          when Field_Generate_Statement_Body =>
@@ -5339,16 +5607,14 @@ package body Nodes_Meta is
             Set_Entity_Aspect (N, V);
          when Field_Default_Entity_Aspect =>
             Set_Default_Entity_Aspect (N, V);
-         when Field_Default_Generic_Map_Aspect_Chain =>
-            Set_Default_Generic_Map_Aspect_Chain (N, V);
-         when Field_Default_Port_Map_Aspect_Chain =>
-            Set_Default_Port_Map_Aspect_Chain (N, V);
          when Field_Binding_Indication =>
             Set_Binding_Indication (N, V);
          when Field_Named_Entity =>
             Set_Named_Entity (N, V);
          when Field_Alias_Declaration =>
             Set_Alias_Declaration (N, V);
+         when Field_Referenced_Name =>
+            Set_Referenced_Name (N, V);
          when Field_Error_Origin =>
             Set_Error_Origin (N, V);
          when Field_Operand =>
@@ -5357,6 +5623,8 @@ package body Nodes_Meta is
             Set_Left (N, V);
          when Field_Right =>
             Set_Right (N, V);
+         when Field_Physical_Unit =>
+            Set_Physical_Unit (N, V);
          when Field_Unit_Name =>
             Set_Unit_Name (N, V);
          when Field_Name =>
@@ -5381,14 +5649,20 @@ package body Nodes_Meta is
             Set_Index_Subtype (N, V);
          when Field_Parameter =>
             Set_Parameter (N, V);
+         when Field_Attr_Chain =>
+            Set_Attr_Chain (N, V);
+         when Field_Signal_Attribute_Declaration =>
+            Set_Signal_Attribute_Declaration (N, V);
          when Field_Actual_Type =>
             Set_Actual_Type (N, V);
-         when Field_Associated_Interface =>
-            Set_Associated_Interface (N, V);
+         when Field_Actual_Type_Definition =>
+            Set_Actual_Type_Definition (N, V);
          when Field_Association_Chain =>
             Set_Association_Chain (N, V);
          when Field_Individual_Association_Chain =>
             Set_Individual_Association_Chain (N, V);
+         when Field_Subprogram_Association_Chain =>
+            Set_Subprogram_Association_Chain (N, V);
          when Field_Aggregate_Info =>
             Set_Aggregate_Info (N, V);
          when Field_Sub_Aggregate_Info =>
@@ -5685,8 +5959,6 @@ package body Nodes_Meta is
             return Get_Guard_Sensitivity_List (N);
          when Field_Instantiation_List =>
             return Get_Instantiation_List (N);
-         when Field_Incomplete_Type_List =>
-            return Get_Incomplete_Type_List (N);
          when Field_Type_Marks_List =>
             return Get_Type_Marks_List (N);
          when Field_Overload_List =>
@@ -5737,8 +6009,6 @@ package body Nodes_Meta is
             Set_Guard_Sensitivity_List (N, V);
          when Field_Instantiation_List =>
             Set_Instantiation_List (N, V);
-         when Field_Incomplete_Type_List =>
-            Set_Incomplete_Type_List (N, V);
          when Field_Type_Marks_List =>
             Set_Type_Marks_List (N, V);
          when Field_Overload_List =>
@@ -5993,6 +6263,30 @@ package body Nodes_Meta is
             raise Internal_Error;
       end case;
    end Set_Name_Id;
+
+   function Get_Number_Base_Type
+      (N : Iir; F : Fields_Enum) return Number_Base_Type is
+   begin
+      pragma Assert (Fields_Type (F) = Type_Number_Base_Type);
+      case F is
+         when Field_Bit_String_Base =>
+            return Get_Bit_String_Base (N);
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Get_Number_Base_Type;
+
+   procedure Set_Number_Base_Type
+      (N : Iir; F : Fields_Enum; V: Number_Base_Type) is
+   begin
+      pragma Assert (Fields_Type (F) = Type_Number_Base_Type);
+      case F is
+         when Field_Bit_String_Base =>
+            Set_Bit_String_Base (N, V);
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Set_Number_Base_Type;
 
    function Get_PSL_NFA
       (N : Iir; F : Fields_Enum) return PSL_NFA is
@@ -6343,11 +6637,6 @@ package body Nodes_Meta is
       return K = Iir_Kind_Unit_Declaration;
    end Has_Physical_Literal;
 
-   function Has_Physical_Unit_Value (K : Iir_Kind) return Boolean is
-   begin
-      return K = Iir_Kind_Unit_Declaration;
-   end Has_Physical_Unit_Value;
-
    function Has_Fp_Value (K : Iir_Kind) return Boolean is
    begin
       case K is
@@ -6481,7 +6770,9 @@ package body Nodes_Meta is
          when Iir_Kind_Association_Element_By_Expression
            | Iir_Kind_Association_Element_By_Individual
            | Iir_Kind_Association_Element_Open
-           | Iir_Kind_Association_Element_Package =>
+           | Iir_Kind_Association_Element_Package
+           | Iir_Kind_Association_Element_Type
+           | Iir_Kind_Association_Element_Subprogram =>
             return True;
          when others =>
             return False;
@@ -6492,7 +6783,9 @@ package body Nodes_Meta is
    begin
       case K is
          when Iir_Kind_Association_Element_By_Expression
-           | Iir_Kind_Association_Element_Package =>
+           | Iir_Kind_Association_Element_Package
+           | Iir_Kind_Association_Element_Type
+           | Iir_Kind_Association_Element_Subprogram =>
             return True;
          when others =>
             return False;
@@ -6515,7 +6808,9 @@ package body Nodes_Meta is
          when Iir_Kind_Association_Element_By_Expression
            | Iir_Kind_Association_Element_By_Individual
            | Iir_Kind_Association_Element_Open
-           | Iir_Kind_Association_Element_Package =>
+           | Iir_Kind_Association_Element_Package
+           | Iir_Kind_Association_Element_Type
+           | Iir_Kind_Association_Element_Subprogram =>
             return True;
          when others =>
             return False;
@@ -6528,7 +6823,9 @@ package body Nodes_Meta is
          when Iir_Kind_Association_Element_By_Expression
            | Iir_Kind_Association_Element_By_Individual
            | Iir_Kind_Association_Element_Open
-           | Iir_Kind_Association_Element_Package =>
+           | Iir_Kind_Association_Element_Package
+           | Iir_Kind_Association_Element_Type
+           | Iir_Kind_Association_Element_Subprogram =>
             return True;
          when others =>
             return False;
@@ -6688,6 +6985,11 @@ package body Nodes_Meta is
       return K = Iir_Kind_Attribute_Value;
    end Has_Spec_Chain;
 
+   function Has_Value_Chain (K : Iir_Kind) return Boolean is
+   begin
+      return K = Iir_Kind_Attribute_Value;
+   end Has_Value_Chain;
+
    function Has_Attribute_Value_Spec_Chain (K : Iir_Kind) return Boolean is
    begin
       return K = Iir_Kind_Attribute_Specification;
@@ -6721,10 +7023,26 @@ package body Nodes_Meta is
       end case;
    end Has_Package_Body;
 
+   function Has_Package_Instantiation_Bodies_Chain (K : Iir_Kind)
+      return Boolean is
+   begin
+      return K = Iir_Kind_Package_Declaration;
+   end Has_Package_Instantiation_Bodies_Chain;
+
    function Has_Need_Body (K : Iir_Kind) return Boolean is
    begin
       return K = Iir_Kind_Package_Declaration;
    end Has_Need_Body;
+
+   function Has_Macro_Expanded_Flag (K : Iir_Kind) return Boolean is
+   begin
+      return K = Iir_Kind_Package_Declaration;
+   end Has_Macro_Expanded_Flag;
+
+   function Has_Need_Instance_Bodies (K : Iir_Kind) return Boolean is
+   begin
+      return K = Iir_Kind_Package_Declaration;
+   end Has_Need_Instance_Bodies;
 
    function Has_Block_Configuration (K : Iir_Kind) return Boolean is
    begin
@@ -6765,6 +7083,8 @@ package body Nodes_Meta is
            | Iir_Kind_Association_Element_By_Individual
            | Iir_Kind_Association_Element_Open
            | Iir_Kind_Association_Element_Package
+           | Iir_Kind_Association_Element_Type
+           | Iir_Kind_Association_Element_Subprogram
            | Iir_Kind_Choice_By_Others
            | Iir_Kind_Choice_By_Expression
            | Iir_Kind_Choice_By_Range
@@ -6773,7 +7093,6 @@ package body Nodes_Meta is
            | Iir_Kind_Block_Configuration
            | Iir_Kind_Component_Configuration
            | Iir_Kind_Entity_Class
-           | Iir_Kind_Attribute_Value
            | Iir_Kind_Record_Element_Resolution
            | Iir_Kind_Attribute_Specification
            | Iir_Kind_Disconnection_Specification
@@ -6784,6 +7103,9 @@ package body Nodes_Meta is
            | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Nature_Declaration
            | Iir_Kind_Subnature_Declaration
+           | Iir_Kind_Package_Declaration
+           | Iir_Kind_Package_Instantiation_Declaration
+           | Iir_Kind_Package_Body
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Library_Declaration
            | Iir_Kind_Component_Declaration
@@ -6811,22 +7133,26 @@ package body Nodes_Meta is
            | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Interface_File_Declaration
+           | Iir_Kind_Interface_Type_Declaration
            | Iir_Kind_Interface_Package_Declaration
+           | Iir_Kind_Interface_Function_Declaration
+           | Iir_Kind_Interface_Procedure_Declaration
+           | Iir_Kind_Signal_Attribute_Declaration
            | Iir_Kind_Sensitized_Process_Statement
            | Iir_Kind_Process_Statement
            | Iir_Kind_Concurrent_Simple_Signal_Assignment
            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Concurrent_Assertion_Statement
-           | Iir_Kind_Psl_Default_Clock
+           | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Psl_Assert_Statement
            | Iir_Kind_Psl_Cover_Statement
-           | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_If_Generate_Statement
            | Iir_Kind_Case_Generate_Statement
            | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Component_Instantiation_Statement
+           | Iir_Kind_Psl_Default_Clock
            | Iir_Kind_Simple_Simultaneous_Statement
            | Iir_Kind_Simple_Signal_Assignment_Statement
            | Iir_Kind_Conditional_Signal_Assignment_Statement
@@ -6846,11 +7172,7 @@ package body Nodes_Meta is
            | Iir_Kind_If_Statement
            | Iir_Kind_External_Constant_Name
            | Iir_Kind_External_Signal_Name
-           | Iir_Kind_External_Variable_Name
-           | Iir_Kind_Delayed_Attribute
-           | Iir_Kind_Stable_Attribute
-           | Iir_Kind_Quiet_Attribute
-           | Iir_Kind_Transaction_Attribute =>
+           | Iir_Kind_External_Variable_Name =>
             return True;
          when others =>
             return False;
@@ -6900,7 +7222,6 @@ package body Nodes_Meta is
            | Iir_Kind_Overflow_Literal
            | Iir_Kind_Attribute_Value
            | Iir_Kind_Record_Element_Constraint
-           | Iir_Kind_Attribute_Specification
            | Iir_Kind_Range_Expression
            | Iir_Kind_Type_Declaration
            | Iir_Kind_Subtype_Declaration
@@ -6924,6 +7245,8 @@ package body Nodes_Meta is
            | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Interface_File_Declaration
+           | Iir_Kind_Interface_Type_Declaration
+           | Iir_Kind_Interface_Function_Declaration
            | Iir_Kind_Identity_Operator
            | Iir_Kind_Negation_Operator
            | Iir_Kind_Absolute_Operator
@@ -7079,6 +7402,22 @@ package body Nodes_Meta is
       return K = Iir_Kind_Anonymous_Type_Declaration;
    end Has_Subtype_Definition;
 
+   function Has_Incomplete_Type_Declaration (K : Iir_Kind) return Boolean is
+   begin
+      case K is
+         when Iir_Kind_Type_Declaration
+           | Iir_Kind_Anonymous_Type_Declaration =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Has_Incomplete_Type_Declaration;
+
+   function Has_Interface_Type_Subprograms (K : Iir_Kind) return Boolean is
+   begin
+      return K = Iir_Kind_Interface_Type_Declaration;
+   end Has_Interface_Type_Subprograms;
+
    function Has_Nature (K : Iir_Kind) return Boolean is
    begin
       case K is
@@ -7183,7 +7522,9 @@ package body Nodes_Meta is
    begin
       case K is
          when Iir_Kind_Function_Declaration
-           | Iir_Kind_Procedure_Declaration =>
+           | Iir_Kind_Procedure_Declaration
+           | Iir_Kind_Interface_Function_Declaration
+           | Iir_Kind_Interface_Procedure_Declaration =>
             return True;
          when others =>
             return False;
@@ -7244,7 +7585,9 @@ package body Nodes_Meta is
    begin
       case K is
          when Iir_Kind_Function_Declaration
-           | Iir_Kind_Procedure_Declaration =>
+           | Iir_Kind_Procedure_Declaration
+           | Iir_Kind_Interface_Function_Declaration
+           | Iir_Kind_Interface_Procedure_Declaration =>
             return True;
          when others =>
             return False;
@@ -7256,7 +7599,9 @@ package body Nodes_Meta is
       case K is
          when Iir_Kind_Enumeration_Literal
            | Iir_Kind_Function_Declaration
-           | Iir_Kind_Procedure_Declaration =>
+           | Iir_Kind_Procedure_Declaration
+           | Iir_Kind_Interface_Function_Declaration
+           | Iir_Kind_Interface_Procedure_Declaration =>
             return True;
          when others =>
             return False;
@@ -7278,7 +7623,8 @@ package body Nodes_Meta is
    begin
       case K is
          when Iir_Kind_Enumeration_Literal
-           | Iir_Kind_Function_Declaration =>
+           | Iir_Kind_Function_Declaration
+           | Iir_Kind_Interface_Function_Declaration =>
             return True;
          when others =>
             return False;
@@ -7411,6 +7757,11 @@ package body Nodes_Meta is
       end case;
    end Has_Element_Position;
 
+   function Has_Base_Element_Declaration (K : Iir_Kind) return Boolean is
+   begin
+      return K = Iir_Kind_Element_Declaration;
+   end Has_Base_Element_Declaration;
+
    function Has_Element_Declaration (K : Iir_Kind) return Boolean is
    begin
       return K = Iir_Kind_Record_Element_Constraint;
@@ -7448,6 +7799,7 @@ package body Nodes_Meta is
          when Iir_Kind_Error
            | Iir_Kind_Access_Type_Definition
            | Iir_Kind_Incomplete_Type_Definition
+           | Iir_Kind_Interface_Type_Definition
            | Iir_Kind_File_Type_Definition
            | Iir_Kind_Protected_Type_Declaration
            | Iir_Kind_Record_Type_Definition
@@ -7469,6 +7821,27 @@ package body Nodes_Meta is
             return False;
       end case;
    end Has_Type_Declarator;
+
+   function Has_Complete_Type_Definition (K : Iir_Kind) return Boolean is
+   begin
+      return K = Iir_Kind_Incomplete_Type_Definition;
+   end Has_Complete_Type_Definition;
+
+   function Has_Incomplete_Type_Ref_Chain (K : Iir_Kind) return Boolean is
+   begin
+      case K is
+         when Iir_Kind_Access_Type_Definition
+           | Iir_Kind_Incomplete_Type_Definition =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Has_Incomplete_Type_Ref_Chain;
+
+   function Has_Associated_Type (K : Iir_Kind) return Boolean is
+   begin
+      return K = Iir_Kind_Interface_Type_Definition;
+   end Has_Associated_Type;
 
    function Has_Enumeration_Literal_List (K : Iir_Kind) return Boolean is
    begin
@@ -7543,22 +7916,25 @@ package body Nodes_Meta is
            | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Interface_File_Declaration
+           | Iir_Kind_Interface_Type_Declaration
            | Iir_Kind_Interface_Package_Declaration
+           | Iir_Kind_Interface_Function_Declaration
+           | Iir_Kind_Interface_Procedure_Declaration
            | Iir_Kind_Sensitized_Process_Statement
            | Iir_Kind_Process_Statement
            | Iir_Kind_Concurrent_Simple_Signal_Assignment
            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Concurrent_Assertion_Statement
-           | Iir_Kind_Psl_Default_Clock
+           | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Psl_Assert_Statement
            | Iir_Kind_Psl_Cover_Statement
-           | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_If_Generate_Statement
            | Iir_Kind_Case_Generate_Statement
            | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Component_Instantiation_Statement
+           | Iir_Kind_Psl_Default_Clock
            | Iir_Kind_Simple_Simultaneous_Statement
            | Iir_Kind_Generate_Statement_Body
            | Iir_Kind_Simple_Signal_Assignment_Statement
@@ -7599,15 +7975,15 @@ package body Nodes_Meta is
            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Concurrent_Assertion_Statement
-           | Iir_Kind_Psl_Default_Clock
+           | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Psl_Assert_Statement
            | Iir_Kind_Psl_Cover_Statement
-           | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_If_Generate_Statement
            | Iir_Kind_Case_Generate_Statement
            | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Component_Instantiation_Statement
+           | Iir_Kind_Psl_Default_Clock
            | Iir_Kind_Simple_Simultaneous_Statement
            | Iir_Kind_Simple_Signal_Assignment_Statement
            | Iir_Kind_Conditional_Signal_Assignment_Statement
@@ -7673,16 +8049,19 @@ package body Nodes_Meta is
            | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Interface_File_Declaration
+           | Iir_Kind_Interface_Type_Declaration
            | Iir_Kind_Interface_Package_Declaration
+           | Iir_Kind_Interface_Function_Declaration
+           | Iir_Kind_Interface_Procedure_Declaration
            | Iir_Kind_Sensitized_Process_Statement
            | Iir_Kind_Process_Statement
            | Iir_Kind_Concurrent_Simple_Signal_Assignment
            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Concurrent_Assertion_Statement
+           | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Psl_Assert_Statement
            | Iir_Kind_Psl_Cover_Statement
-           | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_If_Generate_Statement
            | Iir_Kind_Case_Generate_Statement
@@ -7720,6 +8099,9 @@ package body Nodes_Meta is
            | Iir_Kind_Integer_Subtype_Definition
            | Iir_Kind_Enumeration_Subtype_Definition
            | Iir_Kind_Enumeration_Type_Definition
+           | Iir_Kind_Integer_Type_Definition
+           | Iir_Kind_Floating_Type_Definition
+           | Iir_Kind_Physical_Type_Definition
            | Iir_Kind_Subtype_Definition =>
             return True;
          when others =>
@@ -7742,12 +8124,23 @@ package body Nodes_Meta is
       return K = Iir_Kind_Range_Expression;
    end Has_Right_Limit;
 
+   function Has_Left_Limit_Expr (K : Iir_Kind) return Boolean is
+   begin
+      return K = Iir_Kind_Range_Expression;
+   end Has_Left_Limit_Expr;
+
+   function Has_Right_Limit_Expr (K : Iir_Kind) return Boolean is
+   begin
+      return K = Iir_Kind_Range_Expression;
+   end Has_Right_Limit_Expr;
+
    function Has_Base_Type (K : Iir_Kind) return Boolean is
    begin
       case K is
          when Iir_Kind_Error
            | Iir_Kind_Access_Type_Definition
            | Iir_Kind_Incomplete_Type_Definition
+           | Iir_Kind_Interface_Type_Definition
            | Iir_Kind_File_Type_Definition
            | Iir_Kind_Protected_Type_Declaration
            | Iir_Kind_Record_Type_Definition
@@ -7858,6 +8251,7 @@ package body Nodes_Meta is
          when Iir_Kind_Error
            | Iir_Kind_Access_Type_Definition
            | Iir_Kind_Incomplete_Type_Definition
+           | Iir_Kind_Interface_Type_Definition
            | Iir_Kind_File_Type_Definition
            | Iir_Kind_Protected_Type_Declaration
            | Iir_Kind_Record_Type_Definition
@@ -7912,7 +8306,13 @@ package body Nodes_Meta is
 
    function Has_Element_Subtype_Indication (K : Iir_Kind) return Boolean is
    begin
-      return K = Iir_Kind_Array_Type_Definition;
+      case K is
+         when Iir_Kind_Array_Element_Resolution
+           | Iir_Kind_Array_Type_Definition =>
+            return True;
+         when others =>
+            return False;
+      end case;
    end Has_Element_Subtype_Indication;
 
    function Has_Element_Subtype (K : Iir_Kind) return Boolean is
@@ -8085,6 +8485,11 @@ package body Nodes_Meta is
       end case;
    end Has_Process_Origin;
 
+   function Has_Package_Origin (K : Iir_Kind) return Boolean is
+   begin
+      return K = Iir_Kind_Package_Declaration;
+   end Has_Package_Origin;
+
    function Has_Condition_Clause (K : Iir_Kind) return Boolean is
    begin
       return K = Iir_Kind_Wait_Statement;
@@ -8104,7 +8509,9 @@ package body Nodes_Meta is
            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Concurrent_Assertion_Statement
-           | Iir_Kind_Concurrent_Procedure_Call_Statement =>
+           | Iir_Kind_Concurrent_Procedure_Call_Statement
+           | Iir_Kind_Psl_Assert_Statement
+           | Iir_Kind_Psl_Cover_Statement =>
             return True;
          when others =>
             return False;
@@ -8138,7 +8545,13 @@ package body Nodes_Meta is
 
    function Has_Resolution_Function_Flag (K : Iir_Kind) return Boolean is
    begin
-      return K = Iir_Kind_Function_Declaration;
+      case K is
+         when Iir_Kind_Function_Declaration
+           | Iir_Kind_Interface_Function_Declaration =>
+            return True;
+         when others =>
+            return False;
+      end case;
    end Has_Resolution_Function_Flag;
 
    function Has_Wait_State (K : Iir_Kind) return Boolean is
@@ -8158,7 +8571,9 @@ package body Nodes_Meta is
    begin
       case K is
          when Iir_Kind_Function_Declaration
-           | Iir_Kind_Procedure_Declaration =>
+           | Iir_Kind_Procedure_Declaration
+           | Iir_Kind_Interface_Function_Declaration
+           | Iir_Kind_Interface_Procedure_Declaration =>
             return True;
          when others =>
             return False;
@@ -8171,6 +8586,8 @@ package body Nodes_Meta is
          when Iir_Kind_Enumeration_Literal
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Procedure_Declaration
+           | Iir_Kind_Interface_Function_Declaration
+           | Iir_Kind_Interface_Procedure_Declaration
            | Iir_Kind_Sensitized_Process_Statement
            | Iir_Kind_Process_Statement =>
             return True;
@@ -8181,7 +8598,13 @@ package body Nodes_Meta is
 
    function Has_Pure_Flag (K : Iir_Kind) return Boolean is
    begin
-      return K = Iir_Kind_Function_Declaration;
+      case K is
+         when Iir_Kind_Function_Declaration
+           | Iir_Kind_Interface_Function_Declaration =>
+            return True;
+         when others =>
+            return False;
+      end case;
    end Has_Pure_Flag;
 
    function Has_Foreign_Flag (K : Iir_Kind) return Boolean is
@@ -8189,7 +8612,9 @@ package body Nodes_Meta is
       case K is
          when Iir_Kind_Architecture_Body
            | Iir_Kind_Function_Declaration
-           | Iir_Kind_Procedure_Declaration =>
+           | Iir_Kind_Procedure_Declaration
+           | Iir_Kind_Interface_Function_Declaration
+           | Iir_Kind_Interface_Procedure_Declaration =>
             return True;
          when others =>
             return False;
@@ -8202,6 +8627,7 @@ package body Nodes_Meta is
          when Iir_Kind_Error
            | Iir_Kind_Access_Type_Definition
            | Iir_Kind_Incomplete_Type_Definition
+           | Iir_Kind_Interface_Type_Definition
            | Iir_Kind_File_Type_Definition
            | Iir_Kind_Protected_Type_Declaration
            | Iir_Kind_Record_Type_Definition
@@ -8230,6 +8656,7 @@ package body Nodes_Meta is
          when Iir_Kind_Error
            | Iir_Kind_Access_Type_Definition
            | Iir_Kind_Incomplete_Type_Definition
+           | Iir_Kind_Interface_Type_Definition
            | Iir_Kind_File_Type_Definition
            | Iir_Kind_Protected_Type_Declaration
            | Iir_Kind_Record_Type_Definition
@@ -8257,6 +8684,7 @@ package body Nodes_Meta is
       case K is
          when Iir_Kind_Error
            | Iir_Kind_Incomplete_Type_Definition
+           | Iir_Kind_Interface_Type_Definition
            | Iir_Kind_Record_Type_Definition
            | Iir_Kind_Array_Type_Definition
            | Iir_Kind_Array_Subtype_Definition
@@ -8489,6 +8917,11 @@ package body Nodes_Meta is
       return K = Iir_Kind_Guard_Signal_Declaration;
    end Has_Guard_Sensitivity_List;
 
+   function Has_Signal_Attribute_Chain (K : Iir_Kind) return Boolean is
+   begin
+      return K = Iir_Kind_Signal_Attribute_Declaration;
+   end Has_Signal_Attribute_Chain;
+
    function Has_Block_Block_Configuration (K : Iir_Kind) return Boolean is
    begin
       return K = Iir_Kind_Block_Statement;
@@ -8514,6 +8947,17 @@ package body Nodes_Meta is
             return False;
       end case;
    end Has_Uninstantiated_Package_Name;
+
+   function Has_Uninstantiated_Package_Decl (K : Iir_Kind) return Boolean is
+   begin
+      case K is
+         when Iir_Kind_Package_Instantiation_Declaration
+           | Iir_Kind_Interface_Package_Declaration =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Has_Uninstantiated_Package_Decl;
 
    function Has_Generate_Block_Configuration (K : Iir_Kind) return Boolean is
    begin
@@ -8648,22 +9092,26 @@ package body Nodes_Meta is
            | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Interface_File_Declaration
+           | Iir_Kind_Interface_Type_Declaration
            | Iir_Kind_Interface_Package_Declaration
+           | Iir_Kind_Interface_Function_Declaration
+           | Iir_Kind_Interface_Procedure_Declaration
+           | Iir_Kind_Signal_Attribute_Declaration
            | Iir_Kind_Sensitized_Process_Statement
            | Iir_Kind_Process_Statement
            | Iir_Kind_Concurrent_Simple_Signal_Assignment
            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
            | Iir_Kind_Concurrent_Assertion_Statement
-           | Iir_Kind_Psl_Default_Clock
+           | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Psl_Assert_Statement
            | Iir_Kind_Psl_Cover_Statement
-           | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Block_Statement
            | Iir_Kind_If_Generate_Statement
            | Iir_Kind_Case_Generate_Statement
            | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Component_Instantiation_Statement
+           | Iir_Kind_Psl_Default_Clock
            | Iir_Kind_Simple_Simultaneous_Statement
            | Iir_Kind_Generate_Statement_Body
            | Iir_Kind_If_Generate_Else_Clause
@@ -8736,18 +9184,6 @@ package body Nodes_Meta is
       return K = Iir_Kind_Binding_Indication;
    end Has_Default_Entity_Aspect;
 
-   function Has_Default_Generic_Map_Aspect_Chain (K : Iir_Kind)
-      return Boolean is
-   begin
-      return K = Iir_Kind_Binding_Indication;
-   end Has_Default_Generic_Map_Aspect_Chain;
-
-   function Has_Default_Port_Map_Aspect_Chain (K : Iir_Kind)
-      return Boolean is
-   begin
-      return K = Iir_Kind_Binding_Indication;
-   end Has_Default_Port_Map_Aspect_Chain;
-
    function Has_Binding_Indication (K : Iir_Kind) return Boolean is
    begin
       case K is
@@ -8766,6 +9202,7 @@ package body Nodes_Meta is
            | Iir_Kind_Simple_Name
            | Iir_Kind_Selected_Name
            | Iir_Kind_Operator_Symbol
+           | Iir_Kind_Reference_Name
            | Iir_Kind_Selected_By_All_Name
            | Iir_Kind_Parenthesis_Name
            | Iir_Kind_Package_Pathname
@@ -8789,6 +9226,11 @@ package body Nodes_Meta is
             return False;
       end case;
    end Has_Alias_Declaration;
+
+   function Has_Referenced_Name (K : Iir_Kind) return Boolean is
+   begin
+      return K = Iir_Kind_Reference_Name;
+   end Has_Referenced_Name;
 
    function Has_Expr_Staticness (K : Iir_Kind) return Boolean is
    begin
@@ -9032,6 +9474,17 @@ package body Nodes_Meta is
       end case;
    end Has_Right;
 
+   function Has_Physical_Unit (K : Iir_Kind) return Boolean is
+   begin
+      case K is
+         when Iir_Kind_Physical_Int_Literal
+           | Iir_Kind_Physical_Fp_Literal =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Has_Physical_Unit;
+
    function Has_Unit_Name (K : Iir_Kind) return Boolean is
    begin
       case K is
@@ -9080,6 +9533,7 @@ package body Nodes_Meta is
            | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Interface_File_Declaration
+           | Iir_Kind_Interface_Type_Declaration
            | Iir_Kind_Function_Call
            | Iir_Kind_Selected_Element
            | Iir_Kind_Dereference
@@ -9281,15 +9735,41 @@ package body Nodes_Meta is
       end case;
    end Has_Parameter;
 
+   function Has_Attr_Chain (K : Iir_Kind) return Boolean is
+   begin
+      case K is
+         when Iir_Kind_Delayed_Attribute
+           | Iir_Kind_Stable_Attribute
+           | Iir_Kind_Quiet_Attribute
+           | Iir_Kind_Transaction_Attribute =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Has_Attr_Chain;
+
+   function Has_Signal_Attribute_Declaration (K : Iir_Kind) return Boolean is
+   begin
+      case K is
+         when Iir_Kind_Delayed_Attribute
+           | Iir_Kind_Stable_Attribute
+           | Iir_Kind_Quiet_Attribute
+           | Iir_Kind_Transaction_Attribute =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Has_Signal_Attribute_Declaration;
+
    function Has_Actual_Type (K : Iir_Kind) return Boolean is
    begin
       return K = Iir_Kind_Association_Element_By_Individual;
    end Has_Actual_Type;
 
-   function Has_Associated_Interface (K : Iir_Kind) return Boolean is
+   function Has_Actual_Type_Definition (K : Iir_Kind) return Boolean is
    begin
-      return K = Iir_Kind_Association_Element_Package;
-   end Has_Associated_Interface;
+      return K = Iir_Kind_Association_Element_By_Individual;
+   end Has_Actual_Type_Definition;
 
    function Has_Association_Chain (K : Iir_Kind) return Boolean is
    begin
@@ -9300,6 +9780,11 @@ package body Nodes_Meta is
    begin
       return K = Iir_Kind_Association_Element_By_Individual;
    end Has_Individual_Association_Chain;
+
+   function Has_Subprogram_Association_Chain (K : Iir_Kind) return Boolean is
+   begin
+      return K = Iir_Kind_Association_Element_Type;
+   end Has_Subprogram_Association_Chain;
 
    function Has_Aggregate_Info (K : Iir_Kind) return Boolean is
    begin
@@ -9507,17 +9992,14 @@ package body Nodes_Meta is
       case K is
          when Iir_Kind_Signature
            | Iir_Kind_Function_Declaration
-           | Iir_Kind_Procedure_Declaration =>
+           | Iir_Kind_Procedure_Declaration
+           | Iir_Kind_Interface_Function_Declaration
+           | Iir_Kind_Interface_Procedure_Declaration =>
             return True;
          when others =>
             return False;
       end case;
    end Has_Return_Type_Mark;
-
-   function Has_Incomplete_Type_List (K : Iir_Kind) return Boolean is
-   begin
-      return K = Iir_Kind_Incomplete_Type_Definition;
-   end Has_Incomplete_Type_List;
 
    function Has_Has_Disconnect_Flag (K : Iir_Kind) return Boolean is
    begin
@@ -9554,6 +10036,7 @@ package body Nodes_Meta is
            | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Procedure_Declaration
+           | Iir_Kind_Interface_Package_Declaration
            | Iir_Kind_Sensitized_Process_Statement
            | Iir_Kind_Process_Statement
            | Iir_Kind_Block_Statement
@@ -9648,7 +10131,10 @@ package body Nodes_Meta is
            | Iir_Kind_Interface_Constant_Declaration
            | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Interface_Signal_Declaration
-           | Iir_Kind_Interface_File_Declaration =>
+           | Iir_Kind_Interface_File_Declaration
+           | Iir_Kind_Interface_Type_Declaration
+           | Iir_Kind_Interface_Function_Declaration
+           | Iir_Kind_Interface_Procedure_Declaration =>
             return True;
          when others =>
             return False;
@@ -9772,7 +10258,13 @@ package body Nodes_Meta is
 
    function Has_Has_Pure (K : Iir_Kind) return Boolean is
    begin
-      return K = Iir_Kind_Function_Declaration;
+      case K is
+         when Iir_Kind_Function_Declaration
+           | Iir_Kind_Interface_Function_Declaration =>
+            return True;
+         when others =>
+            return False;
+      end case;
    end Has_Has_Pure;
 
    function Has_Has_Body (K : Iir_Kind) return Boolean is
@@ -9785,6 +10277,19 @@ package body Nodes_Meta is
             return False;
       end case;
    end Has_Has_Body;
+
+   function Has_Has_Parameter (K : Iir_Kind) return Boolean is
+   begin
+      case K is
+         when Iir_Kind_Function_Declaration
+           | Iir_Kind_Procedure_Declaration
+           | Iir_Kind_Interface_Function_Declaration
+           | Iir_Kind_Interface_Procedure_Declaration =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Has_Has_Parameter;
 
    function Has_Has_Identifier_List (K : Iir_Kind) return Boolean is
    begin
@@ -9799,7 +10304,8 @@ package body Nodes_Meta is
            | Iir_Kind_Interface_Constant_Declaration
            | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Interface_Signal_Declaration
-           | Iir_Kind_Interface_File_Declaration =>
+           | Iir_Kind_Interface_File_Declaration
+           | Iir_Kind_Interface_Type_Declaration =>
             return True;
          when others =>
             return False;
@@ -9854,27 +10360,47 @@ package body Nodes_Meta is
    function Has_Is_Ref (K : Iir_Kind) return Boolean is
    begin
       case K is
-         when Iir_Kind_Subtype_Declaration
-           | Iir_Kind_Element_Declaration
-           | Iir_Kind_Object_Alias_Declaration
-           | Iir_Kind_File_Declaration
+         when Iir_Kind_Physical_Subtype_Definition
+           | Iir_Kind_Floating_Subtype_Definition
+           | Iir_Kind_Integer_Subtype_Definition
+           | Iir_Kind_Enumeration_Subtype_Definition
+           | Iir_Kind_Enumeration_Type_Definition
+           | Iir_Kind_Integer_Type_Definition
+           | Iir_Kind_Floating_Type_Definition
+           | Iir_Kind_Physical_Type_Definition
+           | Iir_Kind_Subtype_Definition
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Constant_Declaration
-           | Iir_Kind_Iterator_Declaration
            | Iir_Kind_Interface_Constant_Declaration
            | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Interface_File_Declaration
-           | Iir_Kind_Allocator_By_Subtype
-           | Iir_Kind_External_Constant_Name
-           | Iir_Kind_External_Signal_Name
-           | Iir_Kind_External_Variable_Name =>
+           | Iir_Kind_Interface_Type_Declaration =>
             return True;
          when others =>
             return False;
       end case;
    end Has_Is_Ref;
+
+   function Has_Is_Forward_Ref (K : Iir_Kind) return Boolean is
+   begin
+      case K is
+         when Iir_Kind_Character_Literal
+           | Iir_Kind_Simple_Name
+           | Iir_Kind_Selected_Name
+           | Iir_Kind_Operator_Symbol
+           | Iir_Kind_Reference_Name
+           | Iir_Kind_Selected_By_All_Name
+           | Iir_Kind_Parenthesis_Name
+           | Iir_Kind_Package_Pathname
+           | Iir_Kind_Pathname_Element
+           | Iir_Kind_Attribute_Name =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Has_Is_Forward_Ref;
 
    function Has_Psl_Property (K : Iir_Kind) return Boolean is
    begin

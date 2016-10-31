@@ -269,8 +269,7 @@ package body Trans.Chap4 is
 
    procedure Create_Package_Interface (Inter : Iir)
    is
-      Pkg      : constant Iir := Get_Named_Entity
-        (Get_Uninstantiated_Package_Name (Inter));
+      Pkg      : constant Iir := Get_Uninstantiated_Package_Decl (Inter);
       Pkg_Info : constant Ortho_Info_Acc := Get_Info (Pkg);
       Info     : Ortho_Info_Acc;
    begin
@@ -1631,6 +1630,9 @@ package body Trans.Chap4 is
                Create_Object (Decl);
             when Iir_Kind_Interface_Package_Declaration =>
                Create_Package_Interface (Decl);
+            when Iir_Kind_Interface_Type_Declaration
+              | Iir_Kinds_Interface_Subprogram_Declaration =>
+               null;
             when others =>
                Error_Kind ("translate_generic_chain", Decl);
          end case;
@@ -1722,11 +1724,26 @@ package body Trans.Chap4 is
          when Iir_Kind_Attribute_Specification =>
             Chap5.Translate_Attribute_Specification (Decl);
 
-         when Iir_Kinds_Signal_Attribute =>
-            Chap4.Create_Implicit_Signal (Decl);
+         when Iir_Kind_Signal_Attribute_Declaration =>
+            declare
+               Sig : Iir;
+            begin
+               Sig := Get_Signal_Attribute_Chain (Decl);
+               while Is_Valid (Sig) loop
+                  Chap4.Create_Implicit_Signal (Sig);
+                  Sig := Get_Attr_Chain (Sig);
+               end loop;
+            end;
 
          when Iir_Kind_Guard_Signal_Declaration =>
             Create_Signal (Decl);
+
+         when Iir_Kind_Package_Declaration =>
+            Chap2.Translate_Package_Declaration (Decl);
+         when Iir_Kind_Package_Body =>
+            Chap2.Translate_Package_Body (Decl);
+         when Iir_Kind_Package_Instantiation_Declaration =>
+            Chap2.Translate_Package_Instantiation_Declaration (Decl);
 
          when Iir_Kind_Group_Template_Declaration =>
             null;
@@ -2362,6 +2379,15 @@ package body Trans.Chap4 is
             when Iir_Kind_Protected_Type_Body =>
                Chap3.Translate_Protected_Type_Body (El);
                Chap3.Translate_Protected_Type_Body_Subprograms (El);
+            when Iir_Kind_Package_Declaration
+              | Iir_Kind_Package_Body =>
+               declare
+                  Mark  : Id_Mark_Type;
+               begin
+                  Push_Identifier_Prefix (Mark, Get_Identifier (El));
+                  Translate_Declaration_Chain_Subprograms (El);
+                  Pop_Identifier_Prefix (Mark);
+               end;
             when others =>
                null;
          end case;
@@ -2436,17 +2462,42 @@ package body Trans.Chap4 is
                | Iir_Kind_Procedure_Body =>
                null;
 
-            when Iir_Kind_Stable_Attribute
-               | Iir_Kind_Quiet_Attribute
-               | Iir_Kind_Transaction_Attribute =>
-               Elab_Signal_Attribute (Decl);
-
-            when Iir_Kind_Delayed_Attribute =>
-               Elab_Signal_Delayed_Attribute (Decl);
+            when Iir_Kind_Signal_Attribute_Declaration =>
+               declare
+                  Sig : Iir;
+               begin
+                  Sig := Get_Signal_Attribute_Chain (Decl);
+                  while Is_Valid (Sig) loop
+                     case Iir_Kinds_Signal_Attribute (Get_Kind (Sig)) is
+                        when Iir_Kind_Stable_Attribute
+                          | Iir_Kind_Quiet_Attribute
+                          | Iir_Kind_Transaction_Attribute =>
+                           Elab_Signal_Attribute (Sig);
+                        when Iir_Kind_Delayed_Attribute =>
+                           Elab_Signal_Delayed_Attribute (Sig);
+                     end case;
+                     Sig := Get_Attr_Chain (Sig);
+                  end loop;
+               end;
 
             when Iir_Kind_Group_Template_Declaration
                | Iir_Kind_Group_Declaration =>
                null;
+
+            when Iir_Kind_Package_Declaration =>
+               Chap2.Elab_Package (Decl);
+               --  FIXME: finalizer
+            when Iir_Kind_Package_Body =>
+               declare
+                  Nested_Final : Boolean;
+               begin
+                  Elab_Declaration_Chain (Decl, Nested_Final);
+                  Need_Final := Need_Final or Nested_Final;
+               end;
+
+            when Iir_Kind_Package_Instantiation_Declaration =>
+               --  FIXME: finalizers ?
+               Chap2.Elab_Package_Instantiation_Declaration (Decl);
 
             when others =>
                Error_Kind ("elab_declaration_chain", Decl);
@@ -2499,12 +2550,13 @@ package body Trans.Chap4 is
      (Stmt       : Iir;
       Block      : Iir;
       Assoc      : Iir;
+      Inter      : Iir;
       Mode       : Conv_Mode;
       Conv_Info  : in out Assoc_Conv_Info;
       Base_Block : Iir;
       Entity     : Iir)
    is
-      Formal : constant Iir := Get_Formal (Assoc);
+      Formal : constant Iir := Get_Association_Formal (Assoc, Inter);
       Actual : constant Iir := Get_Actual (Assoc);
 
       Mark2, Mark3      : Id_Mark_Type;
@@ -2547,7 +2599,7 @@ package body Trans.Chap4 is
       end case;
       --  FIXME: individual assoc -> overload.
       Push_Identifier_Prefix
-        (Mark3, Get_Identifier (Get_Association_Interface (Assoc)));
+        (Mark3, Get_Identifier (Get_Association_Interface (Assoc, Inter)));
 
       --  Handle anonymous subtypes.
       Chap3.Translate_Anonymous_Type_Definition (Out_Type);
@@ -2784,9 +2836,15 @@ package body Trans.Chap4 is
      (Stmt : Iir; Block : Iir; Base_Block : Iir; Entity : Iir)
    is
       Assoc : Iir;
+      Inter : Iir;
       Info  : Assoc_Info_Acc;
    begin
       Assoc := Get_Port_Map_Aspect_Chain (Stmt);
+      if Is_Null (Entity) then
+         Inter := Get_Port_Chain (Stmt);
+      else
+         Inter := Get_Port_Chain (Entity);
+      end if;
       while Assoc /= Null_Iir loop
          if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression
          then
@@ -2794,7 +2852,7 @@ package body Trans.Chap4 is
             if Get_In_Conversion (Assoc) /= Null_Iir then
                Info := Add_Info (Assoc, Kind_Assoc);
                Translate_Association_Subprogram
-                 (Stmt, Block, Assoc, Conv_Mode_In, Info.Assoc_In,
+                 (Stmt, Block, Assoc, Inter, Conv_Mode_In, Info.Assoc_In,
                   Base_Block, Entity);
             end if;
             if Get_Out_Conversion (Assoc) /= Null_Iir then
@@ -2802,11 +2860,11 @@ package body Trans.Chap4 is
                   Info := Add_Info (Assoc, Kind_Assoc);
                end if;
                Translate_Association_Subprogram
-                 (Stmt, Block, Assoc, Conv_Mode_Out, Info.Assoc_Out,
+                 (Stmt, Block, Assoc, Inter, Conv_Mode_Out, Info.Assoc_Out,
                   Base_Block, Entity);
             end if;
          end if;
-         Assoc := Get_Chain (Assoc);
+         Next_Association_Interface (Assoc, Inter);
       end loop;
    end Translate_Association_Subprograms;
 
@@ -2932,22 +2990,24 @@ package body Trans.Chap4 is
    end Elab_Conversion;
 
    --  In conversion: from actual to formal.
-   procedure Elab_In_Conversion (Assoc : Iir; Ndest : out Mnode)
+   procedure Elab_In_Conversion (Assoc : Iir; Inter : Iir; Ndest : out Mnode)
    is
       Assoc_Info : constant Assoc_Info_Acc := Get_Info (Assoc);
    begin
       Elab_Conversion
-        (Get_Actual (Assoc), Get_Formal (Assoc),
+        (Get_Actual (Assoc), Get_Association_Formal (Assoc, Inter),
          Ghdl_Signal_In_Conversion, Assoc_Info.Assoc_In, Ndest);
    end Elab_In_Conversion;
 
    --  Out conversion: from formal to actual.
-   procedure Elab_Out_Conversion (Assoc : Iir; Ndest : out Mnode)
+   procedure Elab_Out_Conversion (Assoc : Iir; Inter : Iir; Ndest : out Mnode)
    is
+      --  Note: because it's an out conversion, the formal of ASSOC is set.
+      --  Still pass INTER for coherence with Elab_In_Conversion.
       Assoc_Info : constant Assoc_Info_Acc := Get_Info (Assoc);
    begin
       Elab_Conversion
-        (Get_Formal (Assoc), Get_Actual (Assoc),
+        (Get_Association_Formal (Assoc, Inter), Get_Actual (Assoc),
          Ghdl_Signal_Out_Conversion, Assoc_Info.Assoc_Out, Ndest);
    end Elab_Out_Conversion;
 

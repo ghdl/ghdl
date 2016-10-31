@@ -403,6 +403,26 @@ package body Trans is
                    Kind => Var_Scope_Decl, D => Decl);
       end Set_Scope_Via_Decl;
 
+      procedure Set_Scope_Via_Var
+        (Scope : in out Var_Scope_Type; Var : Var_Type) is
+      begin
+         pragma Assert (Scope.Kind = Var_Scope_None);
+         case Var.Kind is
+            when Var_Scope =>
+               Scope := (Scope_Type => Scope.Scope_Type,
+                         Kind => Var_Scope_Field,
+                         Field => Var.I_Field,
+                         Up_Link => Var.I_Scope);
+            when Var_Global
+              | Var_Local =>
+               Scope := (Scope_Type => Scope.Scope_Type,
+                         Kind => Var_Scope_Decl,
+                         D => Var.E);
+            when Var_None =>
+               raise Internal_Error;
+         end case;
+      end Set_Scope_Via_Var;
+
       procedure Clear_Scope (Scope : in out Var_Scope_Type) is
       begin
          pragma Assert (Scope.Kind /= Var_Scope_None);

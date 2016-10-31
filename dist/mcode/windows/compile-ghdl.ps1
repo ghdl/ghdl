@@ -35,216 +35,212 @@
 #	Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #	02111-1307, USA.
 # ==============================================================================
-<#
-	.SYNOPSIS 
-	GHDL for Windows - GHDL compile script
-	Use 'compile.ps1 -Help' to see the integrated help page
-	
-	.EXAMPLE
-	C:\PS> .\compile.ps1 -Clean -Compile
-#>
 
-# define script parameters
+# .SYNOPSIS 
+# GHDL for Windows - GHDL compile script
+# Use 'compile.ps1 -Help' to see the integrated help page
+# 
+# .EXAMPLE
+# C:\PS> .\compile.ps1 -Clean -Compile
+# 
 [CmdletBinding()]
-Param(
-	# compile ALL
-	[switch]$All =			$false,
+param(
+	# Display this help"
+	[switch]$Help =							$false,
 	
-	# compile main targets
-	[switch]$Compile =	$false,
-		# compile GHDL (simulator)
-		[switch]$GHDL =		$false,
-		[switch]$Test =		$false,
+	# Slean up all files and directories
+	[switch]$Clean =						$false,
+		[switch]$Clean_GHDL =			$false,
 	
-	# compile TOOLS
-	[switch]$Tools =		$false,
-		# compile Filter (helper)
-		[switch]$Filter =	$false,
+	# Compile all targets
+	[switch]$All =							$false,
 	
-	# build options
-	[switch]$Release =	$false,
+	# Compile main targets
+	[switch]$Compile =					$false,
+		# Compile GHDL (simulator)
+		[switch]$Compile_GHDL =		$false,
+	# Undocumented
+	[switch]$Test =							$false,
+		# Undocumented
+		[switch]$Test_GHDL =			$false,
 	
-	# clean up all files and directories
-	[switch]$Clean =		$false,
+	# Build options
+	# Build a release version
+	[switch]$Release =					$false,
+	# Set the back-end
+	[string]$Backend =					"mcode",
 	
-	# display this help"
-	[switch]$Help =			$false
+	# Reduced messages
+	[switch]$Quiet =						$false,
+	# Skip warning messages. (Show errors only.)
+	[switch]$SuppressWarnings = $false,
+	# Halt on errors
+	[switch]$HaltOnError =			$false,
+	# Undocumented
+	[switch]$Hosted =						$false
 )
 
 # configure script here
-$Script_RelPathToRoot =	"..\..\.."
+$RelPathToRoot =			"..\..\.."
 
-# save parameters and current working directory
-$Script_Parameters =	$args
+# ---------------------------------------------
+# save parameters and working directory
+$Script_ScriptDir =		$PSScriptRoot
 $Script_WorkingDir =	Get-Location
-$GHDLRootDir =				Convert-Path (Resolve-Path ($PSScriptRoot + "\" + $Script_RelPathToRoot))
+$GHDLRootDir =				Convert-Path (Resolve-Path ($PSScriptRoot + "\" + $RelPathToRoot))
 
 # set default values
-$Script_ExitCode = 		0
-$BuildRelease =				"Development"		# "Release"
+$EnableVerbose =			$PSCmdlet.MyInvocation.BoundParameters["Verbose"]
+$EnableDebug =				$PSCmdlet.MyInvocation.BoundParameters["Debug"]
+if ($EnableVerbose -eq $null)	{	$EnableVerbose =	$false	}
+if ($EnableDebug	 -eq $null)	{	$EnableDebug =		$false	}
+if ($EnableDebug	 -eq $true)	{	$EnableVerbose =	$true		}
 
+# load modules from GHDL's 'libraries' directory
+Import-Module $PSScriptRoot\shared.psm1  -Verbose:$false -Debug:$false -ArgumentList "$Script_WorkingDir", $Hosted
+Import-Module $PSScriptRoot\targets.psm1 -Verbose:$false -Debug:$false
+
+# Display help if no command was selected
+$Help = $Help -or (-not (
+					$All -or 
+					$Clean -or $Clean_GHDL -or
+					$Compile -or $Compile_GHDL -or
+					$Test -or $Test_GHDL
+				))
+
+if (-not $Hosted)
+{	Write-Host "================================================================================" -ForegroundColor Magenta
+	Write-Host "GHDL for Windows - GHDL compile script" -ForegroundColor Magenta
+	Write-Host "================================================================================" -ForegroundColor Magenta
+}
+
+if ($Help)
+{	Get-Help $MYINVOCATION.InvocationName -Detailed
+	Exit-CompileScript
+}
+
+if ($Clean)
+{	$Clean_GHDL =		$true
+}
 if ($All)
-{	$Compile =	$true
-	$Tools =		$true
+{	$Compile =			$true
 }
 if ($Compile)
-{	$GHDL =			$true
-	$Test =			$true
+{	$Compile_GHDL =	$true
 }
-if ($Tools)
-{	$Filter =		$true
+if ($Test)
+{	$Test_GHDL =		$true
 }
 
-if ($Release)
-{	$BuildRelease =		"Release"			}
-else
-{	$BuildRelease =		"Development"	}
+# configure some variables: paths, executables, directory names, ...
+$BuildDirectoryName =						"build"
 
-$NoCommand = -not ($Clean -or $All -or $Compile -or $Tools -or $GHDL -or $Test -or $Filter)
-if ($NoCommand)
-{	$Help = $true		}
+# Parameter checks
+if ($Backend -ne "mcode")
+{	Write-Host "[ERROR]: Back-end '$Backend' is not supported on Windows." -ForegroundColor Red
+	Exit-CompileScript -1
+}
 
-Write-Host "================================================================================" -ForegroundColor Magenta
-Write-Host "GHDL for Windows - GHDL and tools compile script" -ForegroundColor Magenta
-Write-Host "================================================================================" -ForegroundColor Magenta
-
-# if command is help or no command was given => display help page(s)
-if ($Help)
-{	Write-Host "Usage:"
-	Write-Host "  compile.ps1 (-Help|-Clean|-All|-Compile|-Tools|-GHDL|-Test|-Filter)" -ForegroundColor Gray
-	Write-Host
-	Write-Host "Options:"
-	Write-Host "  -Release    build in release mode"
-	# Write-Host "  -Debug      enable debug messages"
-	# Write-Host
-	Write-Host "Commands:"
-	Write-Host "  -Help       display this help"
-	Write-Host "  -All        compile all targets"
-	Write-Host "  -Compile    compile all main targets"
-	Write-Host "  -Tools      compile all tool targets"
-	Write-Host "  -GHDL       compile ghdl.exe"
-	Write-Host "  -Filter     compile filter.exe"
-	Write-Host "  -Clean      clean up all files and directories"
-	Write-Host
-	
-	exit 0
-}	# Help
-
-# load modules
-Import-Module $PSScriptRoot\shared.psm1
-Import-Module $PSScriptRoot\targets.psm1
+# construct directories
+$BinaryDestinationDirectory =		"$GHDLRootDir\$BuildDirectoryName\$Backend"
+# construct executables
+$GHDLNewExecutable =						"$GHDLRootDir\$BuildDirectoryName\$Backend\bin\ghdl.exe"
 
 # grep GHDL version string from Ada source file
-$GHDLVersion = 				Get-GHDLVersion $GHDLRootDir
+$GHDLVersion = 							Get-GHDLVersion $GHDLRootDir
+# compute some variables
+$BuildRelease = if ($Release)	{	"Release"	}	else	{	"Development"	}
+if (-not $Hosted)
+{	Write-Host "  Version:    $GHDLVersion"
+	Write-Host "  Release:    $BuildRelease"
+}
 
-# gather git information
 $Git_IsGitRepo =						Test-GitRepository
+# gather git information
 if ($Git_IsGitRepo)
 {	$Git_Branch_Name =				& git rev-parse --abbrev-ref HEAD
-	$Git_Commit_DataString =	& git log -1 --format=%cd --date=short
+	$Git_Commit_DateString =	& git log -1 --format=%cd --date=short
 	$Git_Commit_ShortHash =		& git rev-parse --short HEAD
-}
 
-Write-Host "  Version:    $GHDLVersion"
-Write-Host "  Release:    $BuildRelease"
-if ($Git_IsGitRepo)
-{	Write-Host "  Git branch: $Git_Branch_Name"
-	Write-Host "  Git commit: $Git_Commit_DataString ($Git_Commit_ShortHash)"
+	if (-not $Hosted)
+	{	Write-Host "  Git branch: $Git_Branch_Name"
+		Write-Host "  Git commit: $Git_Commit_DataString ($Git_Commit_ShortHash)"
+	}
 }
-Write-Host
+if (-not $Hosted)
+{	Write-Host ""	}
 
-function Write-TargetResult($error)
-{	if ($error)
-	{	Write-Host "  [FAILED]"	-ForegroundColor Red		}
-	# else
-	# {	Write-Host "  [DONE]"		-ForegroundColor Green	}
-}
-
-if ($BuildRelease -eq "Release")
-{	$BuildDir =		$GHDLRootDir + "\dist\mcode\build"		}
-elseif ($BuildRelease -eq "Development")
-{	$BuildDir =		$GHDLRootDir + "\dist\mcode\build"		}
+if ($Release)
+{	$BuildDirectory =		$BinaryDestinationDirectory		}
 else
-{	Write-Host "[ERROR]: Unknown build setting '$BuildRelease'." -ForegroundColor Red
-	exit 1
-}
+{	$BuildDirectory =		$BinaryDestinationDirectory		}
+
 
 # ==============================================================================
 # Main Target: Clean
 # ==============================================================================
-if ($Clean)
-{	$error = Invoke-Clean $BuildDir
-	Write-TargetResult $error
+if ($Clean_GHDL)
+{	$error = Invoke-Clean $BuildDirectory -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug
+	if ($error -eq $true)
+	{	Write-Host "  [FAILED]"	-ForegroundColor Red
+		Exit-CompileScript -1
+	}
 }	# Clean
 
 
 # ==============================================================================
 # Main Target: GHDL
 # ==============================================================================
-if ($GHDL)
+if ($Compile_GHDL)
 {	# create a build directory
-	$error = Invoke-CreateBuildDirectory $BuildDir
-	Write-TargetResult $error
+	$error = New-BuildDirectory $BuildDirectory
+	if ($error -eq $true)
+	{	Write-Host "  [FAILED]"	-ForegroundColor Red
+		Exit-CompileScript -1
+	}
 	
 	# patch the version file if it's no release build
-	if ((-not $error) -and ($BuildRelease -eq "Development") -and $Git_IsGitRepo)
-	{	$error = Invoke-PatchVersionFile $GHDLRootDir $Git_Branch_Name $Git_Commit_DataString $Git_Commit_ShortHash
-		Write-TargetResult $error
+	if (-not $Release -and $Git_IsGitRepo)
+	{	$error = Invoke-PatchVersionFile $GHDLRootDir $Git_Branch_Name $Git_Commit_DateString $Git_Commit_ShortHash
+		if ($error -eq $true)
+		{	Write-Host "  [FAILED]"	-ForegroundColor Red
+			Exit-CompileScript -1
+		}
 	}
 	
 	# build C source files
-	if (-not $error)
-	{	$error = Invoke-CompileCFiles $GHDLRootDir $BuildDir
-		Write-TargetResult $error
+	$error = Invoke-CompileCFiles $GHDLRootDir $BinaryDestinationDirectory
+	if ($error -eq $true)
+	{	Write-Host "  [FAILED]"	-ForegroundColor Red
+		Exit-CompileScript -1
 	}
 	
 	# build Ada source files
-	if (-not $error)
-	{	$error = Invoke-CompileGHDLAdaFiles $GHDLRootDir $BuildDir
-		Write-TargetResult $error
+	$error = Invoke-CompileGHDLAdaFiles $GHDLRootDir $BinaryDestinationDirectory
+	if ($error -eq $true)
+	{	Write-Host "  [FAILED]"	-ForegroundColor Red
+		Exit-CompileScript -1
 	}
 	
 	# strip result
-	if (-not $error)
-	{	$error = Invoke-StripGHDLExecutable $BuildDir
-		Write-TargetResult $error
+	$error = Invoke-StripGHDLExecutable $BinaryDestinationDirectory
+	if ($error -eq $true)
+	{	Write-Host "  [FAILED]"	-ForegroundColor Red
+		Exit-CompileScript -1
 	}
-	
-	# restore the version file if it was patched
-	if ((-not $error) -and ($BuildRelease -eq "Development") -and $Git_IsGitRepo)
-	{	$error = Restore-PatchedVersionFile $GHDLRootDir
-		Write-TargetResult $error
-	}
-} # Compile
+}
 
-if ($Test)
+
+# ==============================================================================
+# Main Target: GHDL
+# ==============================================================================
+if ($Test_GHDL)
 {	# running ghdl
 	$error = Test-GHDLVersion $BuildDir
-	Write-TargetResult $error
+	if ($error -eq $true)
+	{	Write-Host "  [FAILED]"	-ForegroundColor Red
+		Exit-CompileScript -1
+	}
 }	# Test
 
-# ==============================================================================
-# Tool Target: Filter
-# ==============================================================================
-if ($Filter)
-{	# create a build directory
-	$error = Invoke-CreateBuildDirectory $BuildDir
-	Write-TargetResult $error
-
-	# build Ada source files
-	if (-not $error)
-	{	$error = Invoke-CompileFilterAdaFiles $GHDLRootDir $BuildDir
-		Write-TargetResult $error
-	}
-}	# Tools
-
-
-# unload PowerShell modules
-Remove-Module shared
-Remove-Module targets
-	
-# restore working directory if changed
-Set-Location $Script_WorkingDir
-
-# return exit status
-exit $Script_ExitCode
+Exit-CompileScript 0

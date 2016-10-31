@@ -30,6 +30,8 @@ gcc_src_dir=@gcc_src_dir@
 LLVM_CONFIG=@llvm_config@
 LDFLAGS=@LDFLAGS@
 LIBBACKTRACE=@backtrace_lib@
+llvm_be=@llvm_be@
+llvm_be_ver=@llvm_be_ver@
 build_mode=@build_mode@
 
 INSTALL_PROGRAM=install -m 755
@@ -96,6 +98,20 @@ GHDL_COMMON_INCFLAGS=-aI$(srcdir)/src -aI$(srcdir)/src/vhdl -aI$(srcdir)/src/psl
 GRTSRCDIR=$(srcdir)/src/grt
 include $(GRTSRCDIR)/Makefile.inc
 
+version.tmp: $(srcdir)/src/version.in force
+#	Create version.tmp from version.in, using git date/hash
+	if [ -d $(srcdir)/.git ]; then \
+	  desc=`cd $(srcdir); git describe --dirty`; \
+	  sed -e "s/[(].*[)]/($$desc)/" < $< > $@; \
+	else \
+	  $(CP) $< $@; \
+	fi
+
+version.ads: version.tmp
+#	Change version.ads only if version.tmp has been modified to avoid
+#	useless rebuild.
+	if [ ! -r $@ ] || ! cmp $< $@ > /dev/null; then $(CP) $< $@; fi
+
 #################### For mcode backend ##############################
 
 all.mcode: ghdl_mcode$(EXEEXT) libs.vhdl.mcode all.vpi
@@ -104,7 +120,7 @@ GHDL_MCODE_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir
 
 ghdl_mcode$(EXEEXT): GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
 ghdl_mcode$(EXEEXT): $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) $(ORTHO_DEPS) \
-            memsegs_c.o chkstk.o force
+            memsegs_c.o chkstk.o version.ads force
 	$(GNATMAKE) -o $@ $(GHDL_MCODE_INCFLAGS) $(GNATFLAGS) -gnatw.A ghdl_jit.adb $(GNAT_BARGS) -largs memsegs_c.o chkstk.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
 
 memsegs_c.o: $(srcdir)/src/ortho/mcode/memsegs_c.c
@@ -133,9 +149,10 @@ all.gcc:
 	echo "3) make ghdllib"
 	echo "4) make install"
 
-copy-sources.gcc:
+copy-sources.gcc: version.ads
 	$(RM) -rf $(gcc_vhdl_dir)
 	$(MKDIR) $(gcc_vhdl_dir)
+	$(CP) -p version.ads $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/*.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/vhdl/*.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/vhdl/translate/*.ad? $(gcc_vhdl_dir)
@@ -159,6 +176,8 @@ ghdllib: libs.vhdl.gcc libgrt.a
 
 install.gcc: install.vhdllib install.grt install.vpi
 
+#################### For gcc backend - development only (local build) ####
+
 GHDL_GCC_INCFLAGS=$(GHDL_COMMON_INCFLAGS)
 
 ghdl1-gcc$(EXEEXT): force
@@ -166,7 +185,7 @@ ghdl1-gcc$(EXEEXT): force
 	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
 	 GNAT_FLAGS="$(GHDL_GCC_INCFLAGS) $(GNATFLAGS)" all
 
-ghdl_gcc$(EXEEXT): force
+ghdl_gcc$(EXEEXT): version.ads force
 	$(GNATMAKE) $(GHDL_GCC_INCFLAGS) -aI$(srcdir)/src/ghdldrv \
 	 $(GNATFLAGS) ghdl_gcc $(GNAT_BARGS) -largs $(GNAT_LARGS)
 
@@ -179,9 +198,10 @@ grt.links:
 	  ln -sf $(libdirreverse)/libbacktrace.a .; \
 	fi
 
-libs.vhdl.local_gcc: ghdl_gcc$(EXEEXT) ghdl1-gcc$(EXEEXT) vhdl.libs.all libs.vhdl.standard
+libs.vhdl.local_gcc: ghdl_gcc$(EXEEXT) ghdl1-gcc$(EXEEXT)
+	$(MAKE) GHDL=$(PWD)/ghdl_gcc$(EXEEXT) ANALYZE_OPTS="--GHDL1=ghdl1-gcc$(EXEEXT)" STD_GHDL_FLAGS="--GHDL1=$(PWD)/ghdl1-gcc$(EXEEXT)" vhdl.libs.all libs.vhdl.standard
 
-ghdl1-debug$(EXEEXT): force
+ghdl1-debug$(EXEEXT): version.ads force
 	$(MAKE) -f $(srcdir)/src/ortho/debug/Makefile \
 	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
 	 GNAT_FLAGS="$(GHDL_GCC_INCFLAGS) $(GNATFLAGS)" \
@@ -194,7 +214,7 @@ oread-gcc$(EXEEXT): force
 
 #################### For llvm backend ##############################
 
-GHDL_LLVM_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/grt -aI$(srcdir)/src/ortho -aI$(srcdir)/src/ortho/llvm
+GHDL_LLVM_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/grt -aI$(srcdir)/src/ortho -aI$(srcdir)/src/ortho/$(llvm_be)
 
 all.llvm: ghdl1-llvm$(EXEEXT) ghdl_llvm$(EXEEXT) grt-all libs.vhdl.llvm all.vpi
 
@@ -202,13 +222,13 @@ all.llvm_jit: ghdl_llvm_jit$(EXEEXT)
 
 ghdl_llvm_jit$(EXEEXT): GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
 ghdl_llvm_jit$(EXEEXT): $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) $(ORTHO_DEPS) \
-               llvm-cbindings.o force
+               llvm-cbindings.o version.ads force
 	$(GNATMAKE) -o $@ $(GHDL_LLVM_INCFLAGS) $(GNATFLAGS) ghdl_jit.adb \
 	 $(GNAT_BARGS) -largs llvm-cbindings.o $(GNAT_LARGS) $(GRT_ADD_OBJS) \
 	 $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB)) --LINK=$(CXX) \
 	 `$(LLVM_CONFIG) --ldflags --libs --system-libs` $(LDFLAGS)
 
-llvm-cbindings.o: $(srcdir)/src/ortho/llvm/llvm-cbindings.cpp
+llvm-cbindings.o: $(srcdir)/src/ortho/$(llvm_be)/llvm-cbindings.cpp
 	$(CXX) -c `$(LLVM_CONFIG) --includedir --cxxflags` \
 	  $(OPT_FLAGS) -o $@ $<
 
@@ -218,22 +238,22 @@ libs.vhdl.llvmjit: ghdl_llvm_jit$(EXEEXT)
 libs.vhdl.llvm: ghdl_llvm$(EXEEXT) ghdl1-llvm$(EXEEXT)
 	$(MAKE) GHDL=$(PWD)/ghdl_llvm$(EXEEXT) ANALYZE_OPTS="--GHDL1=ghdl1-llvm$(EXEEXT)" vhdl.libs.all libs.vhdl.standard
 
-ghdl_llvm$(EXEEXT): force
+ghdl_llvm$(EXEEXT): version.ads force
 	$(GNATMAKE) $(GHDL_LLVM_INCFLAGS) -aI$(srcdir)/src/ghdldrv $(GNATFLAGS)\
 	 ghdl_llvm $(GNAT_BARGS) -largs $(GNAT_LARGS)
 
-ghdl1-llvm$(EXEEXT): force
-	$(MAKE) -f $(srcdir)/src/ortho/llvm/Makefile \
+ghdl1-llvm$(EXEEXT): version.ads force
+	$(MAKE) -f $(srcdir)/src/ortho/$(llvm_be)/Makefile \
 	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
 	 GNAT_FLAGS="$(GHDL_LLVM_INCFLAGS) $(GNATFLAGS)" LDFLAGS="$(LDFLAGS)" \
-	 LLVM_CONFIG="$(LLVM_CONFIG)" all
+	 LLVM_CONFIG="$(LLVM_CONFIG)" llvm_be_ver="$(llvm_be_ver)" all
 
 oread-llvm$(EXEEXT): force
-	$(MAKE) -f $(srcdir)/src/ortho/llvm/Makefile \
+	$(MAKE) -f $(srcdir)/src/ortho/$(llvm_be)/Makefile \
 	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
 	 GNATMAKE="$(GNATMAKE)" \
 	 GNAT_FLAGS="-aI$(srcdir)/src/ortho/oread $(GNATFLAGS)" \
-	 LLVM_CONFIG="$(LLVM_CONFIG)"
+	 LLVM_CONFIG="$(LLVM_CONFIG)" llvm_be_ver="$(llvm_be_ver)"
 
 install.llvm.program: install.dirs ghdl1-llvm$(EXEEXT) ghdl_llvm$(EXEEXT)
 	$(INSTALL_PROGRAM) ghdl_llvm$(EXEEXT) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
@@ -245,7 +265,7 @@ install.llvm: install.llvm.program install.vhdllib install.grt install.vpi
 
 GHDL_SIMUL_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/vhdl/simulate -aI$(srcdir)/src/grt
 
-ghdl_simul$(EXEEXT): $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) force
+ghdl_simul$(EXEEXT): $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) version.ads force
 	$(GNATMAKE) $(GHDL_SIMUL_INCFLAGS) $(GNATFLAGS) ghdl_simul $(GNAT_BARGS) -largs $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
 
 libs.vhdl.simul: ghdl_simul$(EXEEXT) vhdl.libs.all
@@ -254,7 +274,7 @@ libs.vhdl.simul: ghdl_simul$(EXEEXT) vhdl.libs.all
 
 GHDL_MHDLSIM_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/mhdlsim -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/vhdl/simulate -aI$(srcdir)/src/grt
 
-libmhdlsimvhdl.a:  $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) force
+libmhdlsimvhdl.a:  $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) version.ads force
 	$(GNATMAKE) -c mhdlsim $(GNATFLAGS) $(GHDL_MHDLSIM_INCFLAGS)
 	gnatbind -Lmhdlsim_vhdl_ mhdlsim.ali -O > mhdlsim.files
 	gnatbind -Lmhdlsim_vhdl_ mhdlsim.ali -K -Z > mhdlsim.link

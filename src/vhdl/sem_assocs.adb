@@ -20,7 +20,11 @@ with Errorout; use Errorout;
 with Flags; use Flags;
 with Types; use Types;
 with Iirs_Utils; use Iirs_Utils;
+with Std_Names;
 with Sem_Names; use Sem_Names;
+with Sem_Types;
+with Std_Package;
+with Sem_Scopes;
 with Iir_Chains; use Iir_Chains;
 with Xrefs;
 
@@ -33,6 +37,10 @@ package body Sem_Assocs is
       case Get_Kind (Inter) is
          when Iir_Kind_Interface_Package_Declaration =>
             N_Assoc := Create_Iir (Iir_Kind_Association_Element_Package);
+         when Iir_Kind_Interface_Type_Declaration =>
+            N_Assoc := Create_Iir (Iir_Kind_Association_Element_Type);
+         when Iir_Kinds_Interface_Subprogram_Declaration =>
+            N_Assoc := Create_Iir (Iir_Kind_Association_Element_Subprogram);
          when others =>
             Error_Kind ("rewrite_non_object_association", Inter);
       end case;
@@ -40,7 +48,6 @@ package body Sem_Assocs is
       Set_Formal (N_Assoc, Get_Formal (Assoc));
       Set_Actual (N_Assoc, Get_Actual (Assoc));
       Set_Chain (N_Assoc, Get_Chain (Assoc));
-      Set_Associated_Interface (N_Assoc, Inter);
       Set_Whole_Association_Flag (N_Assoc, True);
       Free_Iir (Assoc);
       return N_Assoc;
@@ -159,7 +166,7 @@ package body Sem_Assocs is
    procedure Check_Parameter_Association_Restriction
      (Inter : Iir; Base_Actual : Iir; Loc : Iir) is
    begin
-      case Get_Mode (Inter) is
+      case Iir_Parameter_Modes (Get_Mode (Inter)) is
          when Iir_In_Mode =>
             if Can_Interface_Be_Read (Base_Actual) then
                return;
@@ -174,8 +181,6 @@ package body Sem_Assocs is
             then
                return;
             end if;
-         when others =>
-            Error_Kind ("check_parameter_association_restriction", Inter);
       end case;
       Error_Msg_Sem
         (+Loc, "cannot associate an " & Get_Mode_Name (Get_Mode (Base_Actual))
@@ -187,7 +192,6 @@ package body Sem_Assocs is
      (Inter_Chain : Iir; Assoc_Chain : Iir)
    is
       Assoc : Iir;
-      Formal : Iir;
       Formal_Inter : Iir;
       Actual : Iir;
       Prefix : Iir;
@@ -197,16 +201,7 @@ package body Sem_Assocs is
       Assoc := Assoc_Chain;
       Inter := Inter_Chain;
       while Assoc /= Null_Iir loop
-         Formal := Get_Formal (Assoc);
-         if Formal = Null_Iir then
-            --  Association by position.
-            Formal_Inter := Inter;
-            Inter := Get_Chain (Inter);
-         else
-            --  Association by name.
-            Formal_Inter := Get_Association_Interface (Assoc);
-            Inter := Null_Iir;
-         end if;
+         Formal_Inter := Get_Association_Interface (Assoc, Inter);
          case Get_Kind (Assoc) is
             when Iir_Kind_Association_Element_Open =>
                if Get_Default_Value (Formal_Inter) = Null_Iir then
@@ -358,7 +353,7 @@ package body Sem_Assocs is
             when others =>
                Error_Kind ("check_subprogram_associations", Assoc);
          end case;
-         Assoc := Get_Chain (Assoc);
+         Next_Association_Interface (Assoc, Inter);
       end loop;
    end Check_Subprogram_Associations;
 
@@ -392,7 +387,7 @@ package body Sem_Assocs is
 
    --  Check for restrictions in LRM 1.1.1.2
    --  Return FALSE in case of error.
-   function Check_Port_Association_Restriction
+   function Check_Port_Association_Mode_Restrictions
      (Formal : Iir_Interface_Signal_Declaration;
       Actual : Iir_Interface_Signal_Declaration;
       Assoc : Iir)
@@ -421,7 +416,124 @@ package body Sem_Assocs is
               & Get_Mode_Name (Amode), +Formal);
       end if;
       return False;
-   end Check_Port_Association_Restriction;
+   end Check_Port_Association_Mode_Restrictions;
+
+   --  Check restrictions of LRM02 12.2.4
+   procedure Check_Port_Association_Bounds_Restrictions
+     (Formal : Iir; Actual : Iir; Assoc : Iir)
+   is
+      Inter : constant Iir := Get_Object_Prefix (Formal, False);
+
+      function Is_Scalar_Type_Compatible (Src : Iir; Dest : Iir)
+                                         return Boolean
+      is
+         Src_Range : Iir;
+         Dst_Range : Iir;
+      begin
+         if Get_Kind (Src) not in Iir_Kinds_Scalar_Type_Definition then
+            return True;
+         end if;
+
+         Src_Range := Get_Range_Constraint (Src);
+         Dst_Range := Get_Range_Constraint (Dest);
+         if Get_Expr_Staticness (Src_Range) /= Locally
+           or else Get_Expr_Staticness (Dst_Range) /= Locally
+         then
+            return True;
+         end if;
+
+         --  FIXME: non-static bounds have to be checked at run-time
+         --  (during elaboration).
+
+         --  In vhdl08, the subtypes must be compatible.  Use the that rule
+         --  for 93c and relaxed rules.
+         if Vhdl_Std >= Vhdl_08
+           or else Vhdl_Std = Vhdl_93c
+           or else Flag_Relaxed_Rules
+         then
+            return Eval_Is_Range_In_Bound (Src, Dest, True);
+         end if;
+
+         --  Prior vhdl08, the subtypes must be identical.
+         if not Eval_Is_Eq (Get_Left_Limit (Src_Range),
+                            Get_Left_Limit (Dst_Range))
+           or else not Eval_Is_Eq (Get_Right_Limit (Src_Range),
+                                      Get_Right_Limit (Dst_Range))
+           or else Get_Direction (Src_Range) /= Get_Direction (Dst_Range)
+         then
+            return False;
+         end if;
+
+         return True;
+      end Is_Scalar_Type_Compatible;
+
+      procedure Error_Msg
+      is
+         Id : Msgid_Type;
+         Orig : Report_Origin;
+      begin
+         if Flag_Elaborate then
+            Id := Msgid_Error;
+            Orig := Elaboration;
+         else
+            Id := Warnid_Port_Bounds;
+            Orig := Semantic;
+         end if;
+         Report_Msg
+           (Id, Orig, +Assoc,
+            "bounds or direction of actual don't match with %n",
+            (1 => +Inter));
+      end Error_Msg;
+
+      Ftype : constant Iir := Get_Type (Formal);
+      Atype : constant Iir := Get_Type (Actual);
+      F_Conv : constant Iir := Get_Out_Conversion (Assoc);
+      A_Conv : constant Iir := Get_In_Conversion (Assoc);
+      F2a_Type : Iir;
+      A2f_Type : Iir;
+   begin
+      --  LRM02 12.2.4 The port map aspect
+      --  If an actual signal is associated with a port of any mode, and if
+      --  the type of the formal is a scalar type, then it is an error if
+      --  (after applying any conversion function or type conversion
+      --  expression present in the actual part) the bounds and direction of
+      --  the subtype denoted by the subtype indication of the formal are not
+      --  identical to the bounds and direction of the subtype denoted by the
+      --  subtype indication of the actual.
+
+      --  LRM08 14.3.5 Port map aspect
+      --  If an actual signal is associated with a port of mode IN or INOUT,
+      --  and if the type of the formal is a scalar type, then it is an error
+      --  if (after applying any conversion function or type conversion
+      --  expression present in the actual part) the subtype of the actual is
+      --  not compatible with the subtype of the formal.  [...]
+      --
+      --  Similarly, if an actual signal is associated with a port of mode
+      --  OUT, INOUT, or BUFFER, and the type of the actual is a scalar type,
+      --  then it is an error if (after applying any conversion function or
+      --  type conversion expression present in the formal part) the subtype
+      --  or the formal is not compatible with the subtype of the actual.
+      if Is_Valid (F_Conv) then
+         F2a_Type := Get_Type (F_Conv);
+      else
+         F2a_Type := Ftype;
+      end if;
+      if Is_Valid (A_Conv) then
+         A2f_Type := Get_Type (A_Conv);
+      else
+         A2f_Type := Atype;
+      end if;
+      if Get_Mode (Inter) in Iir_In_Modes
+        and then not Is_Scalar_Type_Compatible (A2f_Type, Ftype)
+      then
+         Error_Msg;
+      end if;
+      if Get_Mode (Inter) in Iir_Out_Modes
+        and then not Is_Scalar_Type_Compatible (F2a_Type, Atype)
+      then
+         Error_Msg;
+      end if;
+   end Check_Port_Association_Bounds_Restrictions;
 
    --  Handle indexed name
    --  FORMAL is the formal name to be handled.
@@ -432,16 +544,14 @@ package body Sem_Assocs is
      (Sub_Assoc : in out Iir; Formal : Iir)
    is
       Base_Assoc : constant Iir := Sub_Assoc;
+      Index_List : constant Iir_List := Get_Index_List (Formal);
+      Nbr : constant Natural := Get_Nbr_Elements (Index_List);
       Choice : Iir;
       Last_Choice : Iir;
-      Index_List : Iir_List;
       Index : Iir;
-      Nbr : Natural;
       Staticness : Iir_Staticness;
    begin
       --  Find element.
-      Index_List := Get_Index_List (Formal);
-      Nbr := Get_Nbr_Elements (Index_List);
       for I in 0 .. Nbr - 1 loop
          Index := Get_Nth_Element (Index_List, I);
 
@@ -559,6 +669,8 @@ package body Sem_Assocs is
       Sub_Assoc := Choice;
    end Add_Individual_Assoc_Selected_Name;
 
+   --  Subroutine of Add_Individual_Association.
+   --  Search/build the tree of choices for FORMAL, starting for IASSOC.
    procedure Add_Individual_Association_1 (Iassoc : in out Iir; Formal : Iir)
    is
       Base_Assoc : constant Iir := Iassoc;
@@ -600,7 +712,8 @@ package body Sem_Assocs is
                      Error_Msg_Sem
                        (+Formal, "individual association of %n"
                           & " conflicts with that at %l",
-                        (+Get_Association_Interface (Iassoc), +Sub));
+                        (+Get_Interface_Of_Formal (Get_Formal (Iassoc)),
+                         +Sub));
                      return;
                end case;
             end if;
@@ -641,7 +754,7 @@ package body Sem_Assocs is
       if Prev /= Null_Iir then
          Error_Msg_Sem
            (+Assoc, "individual association of %n conflicts with that at %l",
-            (+Get_Association_Interface (Assoc), +Prev));
+            (+Get_Interface_Of_Formal (Get_Formal (Assoc)), +Prev));
       else
          Set_Associated_Expr (Res_Iass, Assoc);
       end if;
@@ -723,13 +836,23 @@ package body Sem_Assocs is
             Set_Direction (Index_Subtype_Constraint,
                            Get_Direction (Index_Constraint));
 
+            --  For ownership purpose, the bounds must be copied otherwise
+            --  they would be referenced before being defined.  This is non
+            --  optimal but it doesn't happen often.
+            Low := Copy_Constant (Low);
+            High := Copy_Constant (High);
+
             case Get_Direction (Index_Constraint) is
                when Iir_To =>
                   Set_Left_Limit (Index_Subtype_Constraint, Low);
+                  Set_Left_Limit_Expr (Index_Subtype_Constraint, Low);
                   Set_Right_Limit (Index_Subtype_Constraint, High);
+                  Set_Right_Limit_Expr (Index_Subtype_Constraint, High);
                when Iir_Downto =>
                   Set_Left_Limit (Index_Subtype_Constraint, High);
+                  Set_Left_Limit_Expr (Index_Subtype_Constraint, High);
                   Set_Right_Limit (Index_Subtype_Constraint, Low);
+                  Set_Right_Limit_Expr (Index_Subtype_Constraint, Low);
             end case;
             Set_Expr_Staticness (Index_Subtype_Constraint, Locally);
             Append_Element (Get_Index_Subtype_List (Actual_Type),
@@ -782,6 +905,30 @@ package body Sem_Assocs is
       Set_Actual_Type (Assoc, Atype);
    end Finish_Individual_Assoc_Record;
 
+   --  Free recursively all the choices of ASSOC.
+   procedure Clean_Individual_Association (Assoc : Iir)
+   is
+      El, N_El : Iir;
+      Expr : Iir;
+   begin
+      El := Get_Individual_Association_Chain (Assoc);
+      Set_Individual_Association_Chain (Assoc, Null_Iir);
+
+      while Is_Valid (El) loop
+         N_El := Get_Chain (El);
+
+         pragma Assert (Get_Kind (El) in Iir_Kinds_Choice);
+         Expr := Get_Associated_Expr (El);
+         if Get_Kind (Expr) = Iir_Kind_Association_Element_By_Individual then
+            Clean_Individual_Association (Expr);
+            Free_Iir (Expr);
+         end if;
+
+         Free_Iir (El);
+         El := N_El;
+      end loop;
+   end Clean_Individual_Association;
+
    --  Called by sem_individual_association to finish the analyze of
    --  individual association ASSOC: compute bounds, detect missing elements.
    procedure Finish_Individual_Association (Assoc : Iir)
@@ -794,7 +941,7 @@ package body Sem_Assocs is
          return;
       end if;
 
-      Formal := Get_Association_Interface (Assoc);
+      Formal := Get_Interface_Of_Formal (Get_Formal (Assoc));
       Atype := Get_Type (Formal);
       Set_Whole_Association_Flag (Assoc, True);
 
@@ -809,6 +956,7 @@ package body Sem_Assocs is
                Set_Index_Constraint_Flag (Atype, True);
                Set_Constraint_State (Atype, Fully_Constrained);
                Set_Actual_Type (Assoc, Atype);
+               Set_Actual_Type_Definition (Assoc, Atype);
                Finish_Individual_Assoc_Array (Assoc, Assoc, 1);
             end if;
          when Iir_Kind_Record_Type_Definition
@@ -817,12 +965,29 @@ package body Sem_Assocs is
          when others =>
             Error_Kind ("finish_individual_association", Atype);
       end case;
+
+      --  Free the hierarchy, keep only the top individual association.
+      Clean_Individual_Association (Assoc);
    end Finish_Individual_Association;
 
    --  Sem individual associations of ASSOCS:
    --  Add an Iir_Kind_Association_Element_By_Individual before each
    --  group of individual association for the same formal, and call
    --  Finish_Individual_Association with each of these added nodes.
+   --
+   --  The purpose of By_Individual association is to have the type of the
+   --  actual (might be an array subtype), and also to be sure that all
+   --  sub-elements are associated.  For that a tree is created.  The tree is
+   --  rooted by the top Association_Element_By_Individual, which contains a
+   --  chain of choices (like the aggregate).  The child of a choice is either
+   --  an Association_Element written by the user, or a new subtree rooted
+   --  by another Association_Element_By_Individual.  The tree doesn't
+   --  follow all the ownership rules: the formal of sub association_element
+   --  are directly set to the association, and the associated_expr of the
+   --  choices are directly set to formals.
+   --
+   --  This tree is temporary (used only during analysis of the individual
+   --  association) and removed once the check is done.
    procedure Sem_Individual_Association (Assoc_Chain : in out Iir)
    is
       Assoc : Iir;
@@ -854,7 +1019,7 @@ package body Sem_Assocs is
                Location_Copy (Iassoc, Assoc);
                Set_Choice_Staticness (Iassoc, Locally);
                pragma Assert (Cur_Iface /= Null_Iir);
-               Set_Formal (Iassoc, Cur_Iface);
+               Set_Formal (Iassoc, Build_Simple_Name (Cur_Iface, Iassoc));
                --  Insert IASSOC.
                if Prev_Assoc = Null_Iir then
                   Assoc_Chain := Iassoc;
@@ -1238,6 +1403,7 @@ package body Sem_Assocs is
      (Conv : Iir; Res_Type : Iir; Param_Type : Iir) return Iir
    is
       Func : Iir;
+      Assoc : Iir;
    begin
       if Conv = Null_Iir then
          return Null_Iir;
@@ -1247,8 +1413,12 @@ package body Sem_Assocs is
          return Null_Iir;
       end if;
       case Get_Kind (Func) is
-         when Iir_Kind_Function_Call
-           | Iir_Kind_Type_Conversion =>
+         when Iir_Kind_Function_Call =>
+            Assoc := Get_Parameter_Association_Chain (Func);
+            Free_Iir (Assoc);
+            Set_Parameter_Association_Chain (Func, Null_Iir);
+            return Func;
+         when Iir_Kind_Type_Conversion =>
             return Func;
          when others =>
             Error_Kind ("extract_in_conversion", Func);
@@ -1341,30 +1511,31 @@ package body Sem_Assocs is
       Match := Fully_Compatible;
    end Sem_Association_Open;
 
-   procedure Sem_Association_Package
+   procedure Sem_Association_Package_Type_Not_Finish
      (Assoc : Iir;
       Inter : Iir;
-      Finish : Boolean;
       Match : out Compatibility_Level)
    is
       Formal : constant Iir := Get_Formal (Assoc);
-      Actual : Iir;
-      Package_Inter : Iir;
    begin
-      if not Finish then
-         if Get_Associated_Interface (Assoc) = Inter then
+      if Formal = Null_Iir then
+         --  Can be associated only once
+         Match := Fully_Compatible;
+      else
+         if Get_Kind (Formal) = Iir_Kind_Simple_Name
+           and then Get_Identifier (Formal) = Get_Identifier (Inter)
+         then
             Match := Fully_Compatible;
          else
             Match := Not_Compatible;
          end if;
-         return;
       end if;
+   end Sem_Association_Package_Type_Not_Finish;
 
-      --  Always match (as this is a generic association, there is no
-      --  need to resolve overload).
-      pragma Assert (Get_Associated_Interface (Assoc) = Inter);
-      Match := Fully_Compatible;
-
+   procedure Sem_Association_Package_Type_Finish (Assoc : Iir; Inter : Iir)
+   is
+      Formal : constant Iir := Get_Formal (Assoc);
+   begin
       if Formal /= Null_Iir then
          pragma Assert (Get_Kind (Formal) = Iir_Kind_Simple_Name);
          pragma Assert (Get_Identifier (Formal) = Get_Identifier (Inter));
@@ -1372,6 +1543,24 @@ package body Sem_Assocs is
          Set_Base_Name (Formal, Inter);
          Xrefs.Xref_Ref (Formal, Inter);
       end if;
+   end Sem_Association_Package_Type_Finish;
+
+   procedure Sem_Association_Package
+     (Assoc : Iir;
+      Inter : Iir;
+      Finish : Boolean;
+      Match : out Compatibility_Level)
+   is
+      Actual : Iir;
+      Package_Inter : Iir;
+   begin
+      if not Finish then
+         Sem_Association_Package_Type_Not_Finish (Assoc, Inter, Match);
+         return;
+      end if;
+
+      Match := Not_Compatible;
+      Sem_Association_Package_Type_Finish (Assoc, Inter);
 
       --  Analyze actual.
       Actual := Get_Actual (Assoc);
@@ -1394,11 +1583,8 @@ package body Sem_Assocs is
          return;
       end if;
 
-      Package_Inter :=
-        Get_Named_Entity (Get_Uninstantiated_Package_Name (Inter));
-      if Get_Named_Entity (Get_Uninstantiated_Package_Name (Actual))
-        /= Package_Inter
-      then
+      Package_Inter := Get_Uninstantiated_Package_Decl (Inter);
+      if Get_Uninstantiated_Package_Decl (Actual) /= Package_Inter then
          Error_Msg_Sem
            (+Assoc,
             "actual package name is not an instance of interface package");
@@ -1418,8 +1604,296 @@ package body Sem_Assocs is
          raise Internal_Error;
       end if;
 
+      Match := Fully_Compatible;
+
       return;
    end Sem_Association_Package;
+
+   --  Create an implicit association_element_subprogram for the declaration
+   --  of function ID for ACTUAL (a name of a type).
+   function Sem_Implicit_Operator_Association
+     (Id : Name_Id; Actual : Iir) return Iir
+   is
+      use Sem_Scopes;
+
+      Atype : constant Iir := Get_Type (Actual);
+
+      --  Return TRUE if DECL is a function declaration with a comparaison
+      --  operator profile.
+      function Has_Comparaison_Profile (Decl : Iir) return Boolean
+      is
+         Inter : Iir;
+      begin
+         --  A function declaration.
+         if Get_Kind (Decl) /= Iir_Kind_Function_Declaration then
+            return False;
+         end if;
+         --  That returns a boolean.
+         if (Get_Base_Type (Get_Return_Type (Decl))
+               /= Std_Package.Boolean_Type_Definition)
+         then
+            return False;
+         end if;
+
+         --  With 2 interfaces of type ATYPE.
+         Inter := Get_Interface_Declaration_Chain (Decl);
+         for I in 1 .. 2 loop
+            if Inter = Null_Iir then
+               return False;
+            end if;
+            if Get_Base_Type (Get_Type (Inter)) /= Get_Base_Type (Atype) then
+               return False;
+            end if;
+            Inter := Get_Chain (Inter);
+         end loop;
+         if Inter /= Null_Iir then
+            return False;
+         end if;
+         return True;
+      end Has_Comparaison_Profile;
+
+      Interp : Name_Interpretation_Type;
+      Decl : Iir;
+      Res : Iir;
+   begin
+      Interp := Get_Interpretation (Id);
+      while Valid_Interpretation (Interp) loop
+         Decl := Get_Declaration (Interp);
+         if Has_Comparaison_Profile (Decl) then
+            Res := Create_Iir (Iir_Kind_Association_Element_Subprogram);
+            Location_Copy (Res, Actual);
+            Set_Actual (Res, Build_Simple_Name (Decl, Get_Location (Actual)));
+            Set_Use_Flag (Decl, True);
+            return Res;
+         end if;
+         Interp := Get_Next_Interpretation (Interp);
+      end loop;
+
+      Error_Msg_Sem (+Actual, "cannot find a %i declaration for type %i",
+                     (+Id, +Actual));
+      return Null_Iir;
+   end Sem_Implicit_Operator_Association;
+
+   procedure Sem_Association_Type (Assoc : Iir;
+                                   Inter : Iir;
+                                   Finish : Boolean;
+                                   Match : out Compatibility_Level)
+   is
+      Inter_Def : constant Iir := Get_Type (Inter);
+      Actual : Iir;
+      Op_Eq, Op_Neq : Iir;
+   begin
+      if not Finish then
+         Sem_Association_Package_Type_Not_Finish (Assoc, Inter, Match);
+         return;
+      end if;
+
+      Match := Fully_Compatible;
+      Sem_Association_Package_Type_Finish (Assoc, Inter);
+      Actual := Get_Actual (Assoc);
+
+      --  LRM08 6.5.7.2 Generic map aspects
+      --  An actual associated with a formal generic type must be a subtype
+      --  indication.
+      --  FIXME: ghdl only supports type_mark!
+      Actual := Sem_Types.Sem_Subtype_Indication (Actual);
+      Set_Actual (Assoc, Actual);
+
+      --  Set type association for analysis of reference to this interface.
+      pragma Assert (Is_Null (Get_Associated_Type (Inter_Def)));
+      Set_Associated_Type (Inter_Def, Get_Type (Actual));
+
+      --  FIXME: it is not clear at all from the LRM how the implicit
+      --  associations are done...
+      Op_Eq := Sem_Implicit_Operator_Association
+        (Std_Names.Name_Op_Equality, Actual);
+      if Op_Eq /= Null_Iir then
+         Op_Neq := Sem_Implicit_Operator_Association
+           (Std_Names.Name_Op_Inequality, Actual);
+         Set_Chain (Op_Eq, Op_Neq);
+         Set_Subprogram_Association_Chain (Assoc, Op_Eq);
+      end if;
+   end Sem_Association_Type;
+
+   function Has_Interface_Subprogram_Profile
+     (Inter : Iir;
+      Decl : Iir;
+      Explain_Loc : Location_Type := No_Location) return Boolean
+   is
+      --  Handle previous assocation of interface type before full
+      --  instantiation.
+      function Get_Inter_Type (Inter : Iir) return Iir
+      is
+         Res : Iir;
+      begin
+         Res := Get_Type (Inter);
+         if Get_Kind (Res) = Iir_Kind_Interface_Type_Definition then
+            --  FIXME: recurse ?
+            return Get_Associated_Type (Res);
+         else
+            return Res;
+         end if;
+      end Get_Inter_Type;
+
+      Explain : constant Boolean := Explain_Loc /= No_Location;
+      El_Inter, El_Decl : Iir;
+   begin
+      case Iir_Kinds_Interface_Subprogram_Declaration (Get_Kind (Inter)) is
+         when Iir_Kind_Interface_Function_Declaration =>
+            if not Is_Function_Declaration (Decl) then
+               if Explain then
+                  Error_Msg_Sem (Explain_Loc, " actual is not a function");
+               end if;
+               return False;
+            end if;
+            if Get_Base_Type (Get_Inter_Type (Inter))
+              /= Get_Base_Type (Get_Type (Decl))
+            then
+               if Explain then
+                  Error_Msg_Sem (Explain_Loc, " return type doesn't match");
+               end if;
+               return False;
+            end if;
+         when Iir_Kind_Interface_Procedure_Declaration =>
+            if not Is_Procedure_Declaration (Decl) then
+               if Explain then
+                  Error_Msg_Sem (Explain_Loc, " actual is not a procedure");
+               end if;
+               return False;
+            end if;
+      end case;
+
+      El_Inter := Get_Interface_Declaration_Chain (Inter);
+      El_Decl := Get_Interface_Declaration_Chain (Decl);
+      loop
+         exit when Is_Null (El_Inter) and Is_Null (El_Decl);
+         if Is_Null (El_Inter) or Is_Null (El_Decl) then
+            if Explain then
+               Error_Msg_Sem
+                 (Explain_Loc, " number of interfaces doesn't match");
+            end if;
+            return False;
+         end if;
+         if Get_Base_Type (Get_Inter_Type (El_Inter))
+           /= Get_Base_Type (Get_Type (El_Decl))
+         then
+            if Explain then
+               Error_Msg_Sem
+                 (Explain_Loc,
+                  " type of interface %i doesn't match", +El_Inter);
+            end if;
+            return False;
+         end if;
+         El_Inter := Get_Chain (El_Inter);
+         El_Decl := Get_Chain (El_Decl);
+      end loop;
+
+      return True;
+   end Has_Interface_Subprogram_Profile;
+
+   procedure Sem_Association_Subprogram (Assoc : Iir;
+                                         Inter : Iir;
+                                         Finish : Boolean;
+                                         Match : out Compatibility_Level)
+   is
+      Discard : Boolean;
+      pragma Unreferenced (Discard);
+      Actual : Iir;
+      Res : Iir;
+   begin
+      if not Finish then
+         Sem_Association_Package_Type_Not_Finish (Assoc, Inter, Match);
+         return;
+      end if;
+
+      Match := Fully_Compatible;
+      Sem_Association_Package_Type_Finish (Assoc, Inter);
+      Actual := Get_Actual (Assoc);
+
+      --  LRM08 6.5.7.2 Generic map aspects
+      --  An actual associated with a formal generic subprogram shall be a name
+      --  that denotes a subprogram whose profile conforms to that of the
+      --  formal, or the reserved word OPEN.  The actual, if a predefined
+      --  attribute name that denotes a function, shall be one of the
+      --  predefined attributes 'IMAGE, 'VALUE, 'POS, 'VAL, 'SUCC, 'PREV,
+      --  'LEFTOF, or 'RIGHTOF.
+      Sem_Name (Actual);
+      Res := Get_Named_Entity (Actual);
+
+      if Is_Error (Res) then
+         return;
+      end if;
+
+      case Get_Kind (Res) is
+         when Iir_Kinds_Subprogram_Declaration
+           | Iir_Kinds_Interface_Subprogram_Declaration =>
+            if not Has_Interface_Subprogram_Profile (Inter, Res) then
+               Error_Msg_Sem
+                 (+Assoc, "profile of %n doesn't match profile of %n",
+                  (+Actual, +Inter));
+               --  Explain
+               Discard := Has_Interface_Subprogram_Profile
+                 (Inter, Res, Get_Location (Assoc));
+               return;
+            end if;
+         when Iir_Kind_Overload_List =>
+            declare
+               First_Error : Boolean;
+               List : Iir_List;
+               El, R : Iir;
+            begin
+               First_Error := True;
+               R := Null_Iir;
+               List := Get_Overload_List (Res);
+               for I in Natural loop
+                  El := Get_Nth_Element (List, I);
+                  exit when El = Null_Iir;
+                  if Has_Interface_Subprogram_Profile (Inter, El) then
+                     if Is_Null (R) then
+                        R := El;
+                     else
+                        if First_Error then
+                           Error_Msg_Sem
+                             (+Assoc,
+                              "many possible actual subprogram for %n:",
+                              +Inter);
+                           Error_Msg_Sem
+                             (+Assoc, " %n declared at %l", (+R, + R));
+                           First_Error := False;
+                        else
+                           Error_Msg_Sem
+                             (+Assoc, " %n declared at %l", (+El, +El));
+                        end if;
+                     end if;
+                  end if;
+               end loop;
+               if Is_Null (R) then
+                  Error_Msg_Sem
+                    (+Assoc, "no matching name for %n", +Inter);
+                  if True then
+                     Error_Msg_Sem
+                       (+Assoc, " these names were incompatible:");
+                     for I in Natural loop
+                        El := Get_Nth_Element (List, I);
+                        exit when El = Null_Iir;
+                        Error_Msg_Sem
+                          (+Assoc, " %n declared at %l", (+El, +El));
+                     end loop;
+                  end if;
+                  return;
+               elsif First_Error then
+                  return;
+               end if;
+               Free_Overload_List (Res);
+               Res := R;
+            end;
+         when others =>
+            Error_Kind ("sem_association_subprogram", Res);
+      end case;
+
+      Set_Named_Entity (Actual, Res);
+      Set_Use_Flag (Res, True);
+   end Sem_Association_Subprogram;
 
    --  Associate ASSOC with interface INTERFACE
    --  This sets MATCH.
@@ -1655,11 +2129,17 @@ package body Sem_Assocs is
          when Iir_Kind_Association_Element_Open =>
             Sem_Association_Open (Assoc, Inter, Finish, Match);
 
+         when Iir_Kind_Association_Element_By_Expression =>
+            Sem_Association_By_Expression (Assoc, Inter, Finish, Match);
+
          when Iir_Kind_Association_Element_Package =>
             Sem_Association_Package (Assoc, Inter, Finish, Match);
 
-         when Iir_Kind_Association_Element_By_Expression =>
-            Sem_Association_By_Expression (Assoc, Inter, Finish, Match);
+         when Iir_Kind_Association_Element_Type =>
+            Sem_Association_Type (Assoc, Inter, Finish, Match);
+
+         when Iir_Kind_Association_Element_Subprogram =>
+            Sem_Association_Subprogram (Assoc, Inter, Finish, Match);
 
          when others =>
             Error_Kind ("sem_assocation", Assoc);
@@ -1953,6 +2433,12 @@ package body Sem_Assocs is
                   Error_Kind ("sem_association_chain", Inter);
             end case;
          end if;
+
+         --  Clear associated type of interface type.
+         if Get_Kind (Inter) = Iir_Kind_Interface_Type_Declaration then
+            Set_Associated_Type (Get_Type (Inter), Null_Iir);
+         end if;
+
          Inter := Get_Chain (Inter);
          Pos := Pos + 1;
       end loop;

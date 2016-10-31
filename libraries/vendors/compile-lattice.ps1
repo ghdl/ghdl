@@ -15,7 +15,7 @@
 #		- compiles all Lattice Diamond simulation libraries and packages
 #
 # ==============================================================================
-#	Copyright (C) 2015-2016 Patrick Lehmann
+#	Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -114,8 +114,8 @@ param(
 $WorkingDir =		Get-Location
 
 # load modules from GHDL's 'vendors' library directory
-Import-Module $PSScriptRoot\config.psm1 -ArgumentList "LatticeDiamond"
-Import-Module $PSScriptRoot\shared.psm1 -ArgumentList @("Lattice Diamond", "$WorkingDir")
+Import-Module $PSScriptRoot\config.psm1 -Verbose:$false -Debug:$false -ArgumentList "LatticeDiamond"
+Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -Debug:$false -ArgumentList @("Lattice Diamond", "$WorkingDir")
 
 # Display help if no command was selected
 $Help = $Help -or (-not ($All -or 
@@ -123,8 +123,8 @@ $Help = $Help -or (-not ($All -or
 										($lptm -or $lptm2) -or 
 										($MachXO -or $MachXO2 -or $MachXO3L) -or 
 										($sc -or $scm) -or
-										($xp -or $xp2)
-									))
+										($xp -or $xp2) -or
+										$Clean))
 
 if ($Help)
 {	Get-Help $MYINVOCATION.InvocationName -Detailed
@@ -205,7 +205,7 @@ $FileLists = @{
 # Cleanup directories
 # ==============================================================================
 if ($Clean)
-{	Write-Host "[ERROR]: '-Clean' is not implemented!"
+{	Write-Host "[ERROR]: '-Clean' is not implemented!" -ForegroundColor Red
 	Exit-CompileScript -1
 	
 	Write-Host "Cleaning up vendor directory ..." -ForegroundColor Yellow

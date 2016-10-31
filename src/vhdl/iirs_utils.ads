@@ -76,9 +76,29 @@ package Iirs_Utils is
    --  Return TRUE if EXPR is a signal name.
    function Is_Signal_Name (Expr : Iir) return Boolean;
 
-   --  Get the interface associated by the association ASSOC.  This is always
-   --  an interface, even if the formal is a name.
-   function Get_Association_Interface (Assoc : Iir) return Iir;
+   --  Get the interface corresponding to the formal name FORMAL.  This is
+   --  always an interface, even if the formal is a name.
+   function Get_Interface_Of_Formal (Formal : Iir) return Iir;
+
+   --  Get the corresponding interface of an association while walking on
+   --  associations.  ASSOC and INTER are the current association and
+   --  interface (initialized to the association chain and interface chain).
+   --  The function Get_Association_Interface return the interface associated
+   --  to ASSOC,and Next_Association_Interface updates ASSOC and INTER.
+   function Get_Association_Interface (Assoc : Iir; Inter : Iir) return Iir;
+   procedure Next_Association_Interface
+     (Assoc : in out Iir; Inter : in out Iir);
+
+   --  Return the formal of ASSOC as a named entity (either an interface
+   --  declaration or indexed/sliced/selected name of it).  If there is no
+   --  formal in ASSOC, return the corresponding interface INTER.
+   function Get_Association_Formal (Assoc : Iir; Inter : Iir) return Iir;
+
+   --  Return the first association in ASSOC_CHAIN for interface INTER.  This
+   --  is the first in case of individual association.
+   --  Return NULL_IIR if not found (not present).
+   function Find_First_Association_For_Interface
+     (Assoc_Chain : Iir; Inter_Chain : Iir; Inter : Iir) return Iir;
 
    --  Duplicate enumeration literal LIT.
    function Copy_Enumeration_Literal (Lit : Iir) return Iir;
@@ -86,6 +106,10 @@ package Iirs_Utils is
    --  Make TARGETS depends on UNIT.
    --  UNIT must be either a design unit or a entity_aspect_entity.
    procedure Add_Dependence (Target: Iir_Design_Unit; Unit: Iir);
+
+   --  Get the design_unit from dependency DEP.  DEP must be an element of
+   --  a dependencies list.
+   function Get_Unit_From_Dependence (Dep : Iir) return Iir;
 
    --  Clear configuration field of all component instantiation of
    --  the concurrent statements of PARENT.
@@ -139,6 +163,16 @@ package Iirs_Utils is
    function Is_Implicit_Subprogram (Spec : Iir) return Boolean;
    pragma Inline (Is_Implicit_Subprogram);
 
+   --  Return True if N is a function_declaration or an
+   --  interface_function_declaration.
+   function Is_Function_Declaration (N : Iir) return Boolean;
+   pragma Inline (Is_Function_Declaration);
+
+   --  Return True if N is a procedure_declaration or an
+   --  interface_procedure_declaration.
+   function Is_Procedure_Declaration (N : Iir) return Boolean;
+   pragma Inline (Is_Procedure_Declaration);
+
    --  If NAME is a simple or an expanded name, return the denoted declaration.
    --  Otherwise, return NAME.
    function Strip_Denoting_Name (Name : Iir) return Iir;
@@ -147,15 +181,12 @@ package Iirs_Utils is
    function Build_Simple_Name (Ref : Iir; Loc : Location_Type) return Iir;
    function Build_Simple_Name (Ref : Iir; Loc : Iir) return Iir;
 
+   --  Create a name that referenced the same named entity as NAME.
+   function Build_Reference_Name (Name : Iir) return Iir;
+
    --  If SUBTYP has a resolution indication that is a function name, returns
    --  the function declaration (not the name).
    function Has_Resolution_Function (Subtyp : Iir) return Iir;
-
-   --  Return a simple name for the primary unit of physical type PHYSICAL_DEF.
-   --  This is the artificial unit name for the value of the primary unit, thus
-   --  its location is the location of the primary unit.  Used mainly to build
-   --  evaluated literals.
-   function Get_Primary_Unit_Name (Physical_Def : Iir) return Iir;
 
    --  Get the type of any node representing a subtype indication.  This simply
    --  skip over denoting names.
@@ -255,8 +286,8 @@ package Iirs_Utils is
 
    --  For Association_Element_By_Expression: return the actual.
    --  For Association_Element_Open: return the default value of the
-   --    interface.
-   function Get_Actual_Or_Default (Assoc : Iir) return Iir;
+   --    interface INTER.
+   function Get_Actual_Or_Default (Assoc : Iir; Inter : Iir) return Iir;
 
    --  Create an error node for node ORIG.
    function Create_Error (Orig : Iir) return Iir;
@@ -272,6 +303,11 @@ package Iirs_Utils is
    --  Note: if ASPECT is a component declaration, returns ASPECT.
    --        if ASPECT is open, return Null_Iir;
    function Get_Entity_From_Entity_Aspect (Aspect : Iir) return Iir;
+
+   --  Definition from LRM08 4.8 Package bodies
+   --  True if PKG (a package declaration or a package body) is not a library
+   --  unit.  Can be true only for vhdl08.
+   function Is_Nested_Package (Pkg : Iir) return Boolean;
 
    --  Definitions from LRM08 4.7 Package declarations.
    --  PKG must denote a package declaration.

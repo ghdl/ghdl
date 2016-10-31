@@ -969,6 +969,7 @@ package body Ortho_Front is
       if Name /= null and then Name.Scope = Scope then
          Prev := Name.Inter;
          if Prev.Kind = Inter.Kind
+           and then Prev.Kind /= Node_Field
            and then Prev.Decl_Dtype = Inter.Decl_Dtype
            and then Prev.Decl_Storage = O_Storage_External
            and then Inter.Decl_Storage = O_Storage_Public
@@ -1023,6 +1024,8 @@ package body Ortho_Front is
       Field : Node_Acc;
       Num : Natural;
    begin
+      Push_Scope;
+
       Last_Field := null;
       Num := 0;
       loop
@@ -1041,6 +1044,10 @@ package body Ortho_Front is
                             Field_Type => F_Type,
                             Field_Next => null,
                             Field_Hash_Next => null);
+
+         --  Check fields are uniq.
+         Add_Decl (F, Field);
+
          case Aggr_Type.Kind is
             when Type_Record =>
                New_Record_Field (Constr, Field.Field_Fnode, F.Ident,
@@ -1065,6 +1072,8 @@ package body Ortho_Front is
          Expect (Tok_Semicolon, "';' expected");
          Next_Token;
       end loop;
+
+      Pop_Scope;
 
       --  Create a map if there are a lot of fields.
       if Num > 16 then

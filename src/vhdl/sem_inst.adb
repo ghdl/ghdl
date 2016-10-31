@@ -18,6 +18,7 @@ with Tables;
 with Nodes;
 with Nodes_Meta;
 with Types; use Types;
+with Files_Map; use Files_Map;
 with Iirs_Utils; use Iirs_Utils;
 with Errorout; use Errorout;
 
@@ -48,9 +49,8 @@ package body Sem_Inst is
    is
       use Nodes;
       Last : constant Iir := Iirs.Get_Last_Node;
-      El: Iir;
+      El : constant Iir := Origin_Table.Last;
    begin
-      El := Origin_Table.Last;
       if El < Last then
          Origin_Table.Set_Last (Last);
          Origin_Table.Table (El + 1 .. Last) := (others => Null_Iir);
@@ -102,7 +102,7 @@ package body Sem_Inst is
 
    --  Table of previous values in Origin_Table.  The first purpose of this
    --  table is to be able to revert the calls to Set_Instance, so that a unit
-   --  can be instantiated several times.  Keep the nodes that have been
+   --  can be instantiated several times.  Keeping the nodes that have been
    --  instantiated is cheaper than walking the tree a second time.
    --  The second purpose of this table is not yet implemented: being able to
    --  have uninstantiated packages in instantiated packages.  In that case,
@@ -114,6 +114,9 @@ package body Sem_Inst is
       Table_Low_Bound => 1,
       Table_Initial => 256);
 
+   --  The instance of ORIG is now N.  So during instantiation, a reference
+   --  to ORIG will be replaced by a reference to N.  The previous instance
+   --  of ORIG is saved.
    procedure Set_Instance (Orig : Iir; N : Iir)
    is
       use Nodes;
@@ -141,8 +144,8 @@ package body Sem_Inst is
       Prev_Instance_Table.Set_Last (Mark);
    end Restore_Origin;
 
-   --  The location to be used while instantiated nodes.
-   Instantiate_Loc : Location_Type;
+   --  The virtual file for the instance.
+   Instance_File : Source_File_Entry;
 
    function Instantiate_Iir (N : Iir; Is_Ref : Boolean) return Iir;
 
@@ -213,6 +216,16 @@ package body Sem_Inst is
                      R := Instantiate_Iir (S, True);
                   when Attr_Maybe_Ref =>
                      R := Instantiate_Iir (S, Get_Is_Ref (N));
+                  when Attr_Forward_Ref =>
+                     --  Must be explicitely handled in Instantiate_Iir, as it
+                     --  requires special handling.
+                     raise Internal_Error;
+                  when Attr_Maybe_Forward_Ref =>
+                     if Get_Is_Forward_Ref (N) then
+                        raise Internal_Error;
+                     else
+                        R := Instantiate_Iir (S, True);
+                     end if;
                   when Attr_Chain =>
                      R := Instantiate_Iir_Chain (S);
                   when Attr_Chain_Next =>
@@ -254,8 +267,8 @@ package body Sem_Inst is
            | Type_File_Checksum_Id =>
             --  Can this happen ?
             raise Internal_Error;
-         when Type_Base_Type =>
-            Set_Base_Type (Res, F, Get_Base_Type (N, F));
+         when Type_Number_Base_Type =>
+            Set_Number_Base_Type (Res, F, Get_Number_Base_Type (N, F));
          when Type_Iir_Constraint =>
             Set_Iir_Constraint (Res, F, Get_Iir_Constraint (N, F));
          when Type_Iir_Mode =>
@@ -284,7 +297,9 @@ package body Sem_Inst is
          when Type_Iir_Direction =>
             Set_Iir_Direction (Res, F, Get_Iir_Direction (N, F));
          when Type_Location_Type =>
-            Set_Location_Type (Res, F, Instantiate_Loc);
+            Set_Location_Type
+              (Res, F, Instance_Relocate (Instance_File,
+                                          Get_Location_Type (N, F)));
          when Type_Iir_Int32 =>
             Set_Iir_Int32 (Res, F, Get_Iir_Int32 (N, F));
          when Type_Int32 =>
@@ -347,7 +362,8 @@ package body Sem_Inst is
          --  And the instance of N is RES.
          Set_Instance (N, Res);
 
-         Set_Location (Res, Instantiate_Loc);
+         Set_Location
+           (Res, Instance_Relocate (Instance_File, Get_Location (N)));
 
          for I in Fields'Range loop
             F := Fields (I);
@@ -378,25 +394,123 @@ package body Sem_Inst is
                      Set_Index_Subtype_List (Res, List);
                   end;
 
+               when Field_Subprogram_Body =>
+                  --  This is a forward reference.  Not yet solved.
+                  Set_Subprogram_Body (Res, Null_Iir);
+
+               when Field_Subprogram_Specification =>
+                  --  Resolve it.
+                  Instantiate_Iir_Field (Res, N, F);
+
+                  --  Set body.
+                  pragma Assert (Kind_In (Res, Iir_Kind_Procedure_Body,
+                                          Iir_Kind_Function_Body));
+                  declare
+                     Spec : constant Iir := Get_Subprogram_Specification (Res);
+                  begin
+                     pragma Assert (Get_Subprogram_Body (Spec) = Null_Iir);
+                     Set_Subprogram_Body (Spec, Res);
+                  end;
+
+               when Field_Incomplete_Type_Ref_Chain =>
+                  if Get_Kind (Res) = Iir_Kind_Access_Type_Definition then
+                     --  Link
+                     declare
+                        Def : constant Iir := Get_Named_Entity
+                          (Get_Designated_Subtype_Indication (Res));
+                     begin
+                        if Get_Kind (Def) = Iir_Kind_Incomplete_Type_Definition
+                        then
+                           Set_Incomplete_Type_Ref_Chain
+                             (Res, Get_Incomplete_Type_Ref_Chain (Def));
+                           Set_Incomplete_Type_Ref_Chain (Def, Res);
+                        end if;
+                     end;
+                  end if;
+
+               when Field_Designated_Type =>
+                  null;
+               when Field_Designated_Subtype_Indication =>
+                  Instantiate_Iir_Field (Res, N, F);
+                  --  The designated type will be patched later if it is an
+                  --  incomplete type definition
+                  Set_Designated_Type
+                    (Res, Get_Type (Get_Designated_Subtype_Indication (Res)));
+
+               when Field_Complete_Type_Definition =>
+                  --  Will be set by the declaration of the complete type
+                  null;
+               when Field_Incomplete_Type_Declaration =>
+                  Instantiate_Iir_Field (Res, N, F);
+                  declare
+                     Res_Decl : constant Iir :=
+                       Get_Incomplete_Type_Declaration (Res);
+                     N_Decl : constant Iir :=
+                       Get_Incomplete_Type_Declaration (N);
+                     Res_Complete : Iir;
+                     N_Def, Res_Def : Iir;
+                     N_El, Next_N_El : Iir;
+                     Res_El, Next_Res_El : Iir;
+                  begin
+                     if Is_Valid (N_Decl) then
+                        --  N/RES completes a type declaration.
+                        N_Def := Get_Type_Definition (N_Decl);
+                        Res_Def := Get_Type_Definition (Res_Decl);
+                        --  Set Complete_Type_Definition
+                        Res_Complete := Get_Type (Res);
+                        Set_Complete_Type_Definition (Res_Def, Res_Complete);
+                        --  Rebuild the list and patch designated types
+                        N_El := N_Def;
+                        Res_El := Res_Def;
+                        loop
+                           Next_N_El := Get_Incomplete_Type_Ref_Chain (N_El);
+                           exit when Is_Null (Next_N_El);
+                           Next_Res_El := Get_Instance (Next_N_El);
+                           Set_Designated_Type (Next_Res_El, Res_Complete);
+                           Set_Incomplete_Type_Ref_Chain (Res_El, Next_Res_El);
+                           N_El := Next_N_El;
+                        end loop;
+                     end if;
+                  end;
+
+               when Field_Deferred_Declaration =>
+                  if not Get_Deferred_Declaration_Flag (N)
+                    and then Is_Valid (Get_Deferred_Declaration (N))
+                  then
+                     --  This is the completion.
+                     declare
+                        Incomplete_Decl_N : constant Iir :=
+                          Get_Deferred_Declaration (N);
+                        Incomplete_Decl_Res : constant Iir :=
+                          Get_Instance (Incomplete_Decl_N);
+                     begin
+                        pragma Assert (Is_Valid (Incomplete_Decl_Res));
+                        Set_Deferred_Declaration (Res, Incomplete_Decl_Res);
+                        Set_Deferred_Declaration (Incomplete_Decl_Res, Res);
+                     end;
+                  end if;
+
+               when Field_Protected_Type_Body =>
+                  null;
+               when Field_Protected_Type_Declaration =>
+                  Instantiate_Iir_Field (Res, N, F);
+                  Set_Protected_Type_Body
+                    (Get_Protected_Type_Declaration (Res), Res);
+
+               when Field_Subtype_Definition =>
+                  --  TODO
+                  null;
+
                when others =>
                   --  Common case.
                   Instantiate_Iir_Field (Res, N, F);
             end case;
          end loop;
 
-         case Kind is
-            when Iir_Kind_Function_Declaration
-              | Iir_Kind_Procedure_Declaration =>
-               --  Subprogram body is a forward declaration.
-               --  Clear Subprogram_Body so that the node is seen as a
-               --  declaration and not a specification of a body.
-               Set_Subprogram_Body (Res, Null_Iir);
-            when others =>
-               --  TODO: other forward references:
-               --  incomplete constant
-               --  attribute_value
-               null;
-         end case;
+         --  TODO: other forward references:
+         --  incomplete constant
+         --  incomplete type
+         --  attribute_value
 
          return Res;
       end;
@@ -418,7 +532,9 @@ package body Sem_Inst is
       while Inter /= Null_Iir loop
          --  Create a copy of the interface.  FIXME: is it really needed ?
          Res := Create_Iir (Get_Kind (Inter));
-         Set_Location (Res, Instantiate_Loc);
+         Set_Location
+           (Res, Instance_Relocate (Instance_File, Get_Location (Inter)));
+
          Set_Parent (Res, Inst);
          Set_Identifier (Res, Get_Identifier (Inter));
          Set_Visible_Flag (Res, Get_Visible_Flag (Inter));
@@ -429,16 +545,22 @@ package body Sem_Inst is
          case Get_Kind (Res) is
             when Iir_Kind_Interface_Constant_Declaration =>
                Set_Type (Res, Get_Type (Inter));
-               Set_Subtype_Indication (Res, Get_Subtype_Indication (Inter));
+               Set_Subtype_Indication (Res, Null_Iir); --  Not owner
                Set_Mode (Res, Get_Mode (Inter));
                Set_Has_Mode (Res, Get_Has_Mode (Inter));
                Set_Has_Class (Res, Get_Has_Class (Inter));
                Set_Has_Identifier_List (Res, Get_Has_Identifier_List (Inter));
                Set_Expr_Staticness (Res, Get_Expr_Staticness (Inter));
                Set_Name_Staticness (Res, Get_Name_Staticness (Inter));
+               Set_Default_Value (Res, Get_Default_Value (Inter));
+               Set_Is_Ref (Res, True);
             when Iir_Kind_Interface_Package_Declaration =>
-               Set_Uninstantiated_Package_Name
-                 (Res, Get_Uninstantiated_Package_Name (Inter));
+               Set_Uninstantiated_Package_Decl
+                 (Res, Get_Uninstantiated_Package_Decl (Inter));
+            when Iir_Kind_Interface_Type_Declaration =>
+               Set_Type (Res, Get_Type (Inter));
+            when Iir_Kinds_Interface_Subprogram_Declaration =>
+               null;
             when others =>
                Error_Kind ("instantiate_generic_chain", Res);
          end case;
@@ -499,7 +621,9 @@ package body Sem_Inst is
                      case Get_Field_Attribute (F) is
                         when Attr_None =>
                            Set_Instance_On_Iir (S, S_Inst);
-                        when Attr_Ref =>
+                        when Attr_Ref
+                          | Attr_Forward_Ref
+                          | Attr_Maybe_Forward_Ref =>
                            null;
                         when Attr_Maybe_Ref =>
                            if not Get_Is_Ref (N) then
@@ -523,7 +647,8 @@ package body Sem_Inst is
                         when Attr_None =>
                            Set_Instance_On_Iir_List (S, S_Inst);
                         when Attr_Of_Ref
-                          | Attr_Ref =>
+                          | Attr_Ref
+                          | Attr_Forward_Ref =>
                            null;
                         when others =>
                            --  Ref is specially handled in Instantiate_Iir.
@@ -584,9 +709,35 @@ package body Sem_Inst is
    is
       pragma Unreferenced (Pkg);
       Assoc : Iir;
+      Inter : Iir;
    begin
       Assoc := Get_Generic_Map_Aspect_Chain (Inst);
-      while Assoc /= Null_Iir loop
+      Inter := Get_Generic_Chain (Inst);
+      while Is_Valid (Assoc) loop
+         --  Replace formal reference to the instance.
+         --  Cf Get_association_Interface
+         declare
+            Formal : Iir;
+         begin
+            Formal := Get_Formal (Assoc);
+            if Is_Valid (Formal) then
+               loop
+                  case Get_Kind (Formal) is
+                     when Iir_Kind_Simple_Name =>
+                        Set_Named_Entity
+                          (Formal, Get_Instance (Get_Named_Entity (Formal)));
+                        exit;
+                     when Iir_Kind_Slice_Name
+                       | Iir_Kind_Indexed_Name
+                       | Iir_Kind_Selected_Element =>
+                        Formal := Get_Prefix (Formal);
+                     when others =>
+                        Error_Kind ("instantiate_generic_map_chain", Formal);
+                  end case;
+               end loop;
+            end if;
+         end;
+
          case Get_Kind (Assoc) is
             when Iir_Kind_Association_Element_By_Expression
               | Iir_Kind_Association_Element_By_Individual
@@ -596,28 +747,62 @@ package body Sem_Inst is
                declare
                   Sub_Inst : constant Iir :=
                     Get_Named_Entity (Get_Actual (Assoc));
-                  Sub_Pkg : constant Iir := Get_Associated_Interface (Assoc);
+                  Sub_Pkg_Inter : constant Iir :=
+                    Get_Association_Interface (Assoc, Inter);
+                  Sub_Pkg : constant Iir := Get_Origin (Sub_Pkg_Inter);
                begin
+                  --  Replace references of interface package to references
+                  --  to the actual package.
                   Set_Instance (Sub_Pkg, Sub_Inst);
                   Set_Instance_On_Chain (Get_Generic_Chain (Sub_Pkg),
                                          Get_Generic_Chain (Sub_Inst));
                   Set_Instance_On_Chain (Get_Declaration_Chain (Sub_Pkg),
                                         Get_Declaration_Chain (Sub_Inst));
                end;
+            when Iir_Kind_Association_Element_Type =>
+               --  Replace the incomplete interface type by the actual subtype
+               --  indication.
+               declare
+                  Inter_Type_Def : constant Iir :=
+                    Get_Type (Get_Association_Interface (Assoc, Inter));
+                  Actual_Type : constant Iir := Get_Type (Get_Actual (Assoc));
+               begin
+                  Set_Instance (Inter_Type_Def, Actual_Type);
+               end;
+            when Iir_Kind_Association_Element_Subprogram =>
+               --  Replace the interface subprogram by the subprogram.
+               declare
+                  Inter_Subprg : constant Iir :=
+                    Get_Association_Interface (Assoc, Inter);
+                  Actual_Subprg : constant Iir :=
+                    Get_Named_Entity (Get_Actual (Assoc));
+               begin
+                  Set_Instance (Get_Origin (Inter_Subprg), Actual_Subprg);
+               end;
             when others =>
                Error_Kind ("instantiate_generic_map_chain", Assoc);
          end case;
-         Assoc := Get_Chain (Assoc);
+         Next_Association_Interface (Assoc, Inter);
       end loop;
    end Instantiate_Generic_Map_Chain;
+
+   procedure Create_Relocation (Inst : Iir; Orig : Iir)
+   is
+      Orig_File : Source_File_Entry;
+      Pos : Source_Ptr;
+   begin
+      Location_To_File_Pos (Get_Location (Orig), Orig_File, Pos);
+      Instance_File := Create_Instance_Source_File
+        (Orig_File, Get_Location (Inst), Inst);
+   end Create_Relocation;
 
    procedure Instantiate_Package_Declaration (Inst : Iir; Pkg : Iir)
    is
       Header : constant Iir := Get_Package_Header (Pkg);
-      Prev_Loc : constant Location_Type := Instantiate_Loc;
+      Prev_Instance_File : constant Source_File_Entry := Instance_File;
       Mark : constant Instance_Index_Type := Prev_Instance_Table.Last;
    begin
-      Instantiate_Loc := Get_Location (Inst);
+      Create_Relocation (Inst, Pkg);
 
       --  Be sure Get_Origin_Priv can be called on existing nodes.
       Expand_Origin_Table;
@@ -633,7 +818,205 @@ package body Sem_Inst is
 
       Set_Origin (Pkg, Null_Iir);
 
-      Instantiate_Loc := Prev_Loc;
+      Instance_File := Prev_Instance_File;
       Restore_Origin (Mark);
    end Instantiate_Package_Declaration;
+
+   function Instantiate_Package_Body (Inst : Iir) return Iir
+   is
+      Inst_Decl : constant Iir := Get_Package_Origin (Inst);
+      Pkg : constant Iir := Get_Uninstantiated_Package_Decl (Inst_Decl);
+      Prev_Instance_File : constant Source_File_Entry := Instance_File;
+      Mark : constant Instance_Index_Type := Prev_Instance_Table.Last;
+      Res : Iir;
+   begin
+      Create_Relocation (Inst, Pkg);
+
+      --  Be sure Get_Origin_Priv can be called on existing nodes.
+      Expand_Origin_Table;
+
+      --  References to package specification (and its declarations) will
+      --  be redirected to the package instantiation.
+      Set_Instance (Pkg, Inst);
+      declare
+         Pkg_Hdr : constant Iir := Get_Package_Header (Pkg);
+         Inst_Hdr : constant Iir := Get_Package_Header (Inst);
+         Pkg_El : Iir;
+         Inst_El : Iir;
+         Inter_El : Iir;
+         Inter : Iir;
+      begin
+         --  In the body, references to interface object are redirected to the
+         --  instantiated interface objects.
+         Pkg_El := Get_Generic_Chain (Pkg_Hdr);
+         Inst_El := Get_Generic_Chain (Inst_Hdr);
+         while Is_Valid (Pkg_El) loop
+            if Get_Kind (Pkg_El) in Iir_Kinds_Interface_Object_Declaration then
+               Set_Instance (Pkg_El, Inst_El);
+            end if;
+            Pkg_El := Get_Chain (Pkg_El);
+            Inst_El := Get_Chain (Inst_El);
+         end loop;
+
+         --  In the body, references to interface type are substitued to the
+         --  mapped type.
+         Inst_El := Get_Generic_Map_Aspect_Chain (Inst_Hdr);
+         Inter_El := Get_Generic_Chain (Inst_Hdr);
+         while Is_Valid (Inst_El) loop
+            case Get_Kind (Inst_El) is
+               when Iir_Kind_Association_Element_Type =>
+                  Inter := Get_Association_Interface (Inst_El, Inter_El);
+                  Set_Instance (Get_Type (Get_Origin (Inter)),
+                                Get_Type (Get_Actual (Inst_El)));
+                  --  Implicit operators.
+                  declare
+                     Imp_Inter : Iir;
+                     Imp_Assoc : Iir;
+                  begin
+                     Imp_Assoc := Get_Subprogram_Association_Chain (Inst_El);
+                     Imp_Inter := Get_Interface_Type_Subprograms
+                       (Get_Origin (Inter));
+                     while Is_Valid (Imp_Inter) and Is_Valid (Imp_Assoc) loop
+                        Set_Instance
+                          (Imp_Inter,
+                           Get_Named_Entity (Get_Actual (Imp_Assoc)));
+                        Imp_Inter := Get_Chain (Imp_Inter);
+                        Imp_Assoc := Get_Chain (Imp_Assoc);
+                     end loop;
+                  end;
+
+               when Iir_Kind_Association_Element_Subprogram =>
+                  Inter := Get_Association_Interface (Inst_El, Inter_El);
+                  Set_Instance (Get_Origin (Inter),
+                                Get_Named_Entity (Get_Actual (Inst_El)));
+
+               when Iir_Kind_Association_Element_By_Expression
+                 | Iir_Kind_Association_Element_By_Individual
+                 | Iir_Kind_Association_Element_Open =>
+                  null;
+               when others =>
+                  --  TODO.
+                  raise Internal_Error;
+            end case;
+            Next_Association_Interface (Inst_El, Inter_El);
+         end loop;
+      end;
+      Set_Instance_On_Chain
+        (Get_Declaration_Chain (Pkg), Get_Declaration_Chain (Inst));
+
+      --  Instantiate the body.
+      Res := Instantiate_Iir (Get_Package_Body (Pkg), False);
+      Set_Identifier (Res, Get_Identifier (Inst));
+
+      --  Restore.
+      Instance_File := Prev_Instance_File;
+      Restore_Origin (Mark);
+
+      return Res;
+   end Instantiate_Package_Body;
+
+   procedure Substitute_On_Iir_List (L : Iir_List; E : Iir; Rep : Iir);
+
+   procedure Substitute_On_Iir (N : Iir; E : Iir; Rep : Iir) is
+   begin
+      if N = Null_Iir then
+         return;
+      end if;
+
+      pragma Assert (N /= E);
+
+      declare
+         use Nodes_Meta;
+         Kind : constant Iir_Kind := Get_Kind (N);
+         Fields : constant Fields_Array := Get_Fields (Kind);
+         F : Fields_Enum;
+      begin
+         for I in Fields'Range loop
+            F := Fields (I);
+
+            case Get_Field_Type (F) is
+               when Type_Iir =>
+                  declare
+                     S : constant Iir := Get_Iir (N, F);
+                  begin
+                     if S = E then
+                        --  Substitute
+                        Set_Iir (N, F, Rep);
+                        pragma Assert (Get_Field_Attribute (F) = Attr_Ref);
+                     else
+                        case Get_Field_Attribute (F) is
+                           when Attr_None =>
+                              Substitute_On_Iir (S, E, Rep);
+                           when Attr_Ref
+                             | Attr_Forward_Ref
+                             | Attr_Maybe_Forward_Ref =>
+                              null;
+                           when Attr_Maybe_Ref =>
+                              if not Get_Is_Ref (N) then
+                                 Substitute_On_Iir (S, E, Rep);
+                              end if;
+                           when Attr_Chain =>
+                              Substitute_On_Chain (S, E, Rep);
+                           when Attr_Chain_Next =>
+                              null;
+                           when Attr_Of_Ref =>
+                              --  Can only appear in list.
+                              raise Internal_Error;
+                        end case;
+                     end if;
+                  end;
+               when Type_Iir_List =>
+                  declare
+                     S : constant Iir_List := Get_Iir_List (N, F);
+                  begin
+                     case Get_Field_Attribute (F) is
+                        when Attr_None =>
+                           Substitute_On_Iir_List (S, E, Rep);
+                        when Attr_Of_Ref
+                          | Attr_Ref
+                          | Attr_Forward_Ref =>
+                           null;
+                        when others =>
+                           --  Ref is specially handled in Instantiate_Iir.
+                           --  Others cannot appear for lists.
+                           raise Internal_Error;
+                     end case;
+                  end;
+               when others =>
+                  null;
+            end case;
+         end loop;
+      end;
+   end Substitute_On_Iir;
+
+   procedure Substitute_On_Iir_List (L : Iir_List; E : Iir; Rep : Iir)
+   is
+      El : Iir;
+   begin
+      case L is
+         when Null_Iir_List
+           | Iir_List_All
+           | Iir_List_Others =>
+            return;
+         when others =>
+            for I in Natural loop
+               El := Get_Nth_Element (L, I);
+               exit when El = Null_Iir;
+
+               Substitute_On_Iir (El, E, Rep);
+            end loop;
+      end case;
+   end Substitute_On_Iir_List;
+
+   procedure Substitute_On_Chain (Chain : Iir; E : Iir; Rep : Iir)
+   is
+      El : Iir;
+   begin
+      El := Chain;
+      while Is_Valid (El) loop
+         Substitute_On_Iir (El, E, Rep);
+         El := Get_Chain (El);
+      end loop;
+   end Substitute_On_Chain;
+
 end Sem_Inst;

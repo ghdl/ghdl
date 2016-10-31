@@ -65,10 +65,20 @@ package Sem is
    procedure Compute_Subprogram_Hash (Subprg : Iir);
 
    --  LRM 2.1  Subprogram Declarations.
+   procedure Sem_Subprogram_Specification (Subprg: Iir);
    procedure Sem_Subprogram_Declaration (Subprg: Iir);
 
    --  LRM 2.2  Subprogram Bodies.
    procedure Sem_Subprogram_Body (Subprg: Iir);
+
+   --  LRM 2.5  Package Declarations.
+   procedure Sem_Package_Declaration (Decl: Iir_Package_Declaration);
+
+   --  LRM 2.6  Package Bodies.
+   procedure Sem_Package_Body (Decl: Iir);
+
+   --  LRM08 4.9  Package Instantiation Declaration
+   procedure Sem_Package_Instantiation_Declaration (Decl : Iir);
 
    --  Do late analysis checks (pure rules).
    procedure Sem_Analysis_Checks_List (Unit : Iir_Design_Unit;

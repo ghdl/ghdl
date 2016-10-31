@@ -97,13 +97,7 @@ package body Trans_Analyzes is
                Inter := Get_Interface_Declaration_Chain
                  (Get_Implementation (Call));
                while Assoc /= Null_Iir loop
-                  Formal := Get_Formal (Assoc);
-                  if Formal = Null_Iir then
-                     Formal := Inter;
-                     Inter := Get_Chain (Inter);
-                  else
-                     Formal := Get_Association_Interface (Assoc);
-                  end if;
+                  Formal := Get_Association_Interface (Assoc, Inter);
                   if Get_Kind (Assoc)
                     = Iir_Kind_Association_Element_By_Expression
                     and then
@@ -112,7 +106,7 @@ package body Trans_Analyzes is
                   then
                      Status := Extract_Driver_Target (Get_Actual (Assoc));
                   end if;
-                  Assoc := Get_Chain (Assoc);
+                  Next_Association_Interface (Assoc, Inter);
                end loop;
             end;
          when others =>

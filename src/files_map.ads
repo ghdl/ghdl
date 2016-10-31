@@ -16,11 +16,11 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Types; use Types;
+with Nodes;
+
+--  Source file handling
 
 package Files_Map is
-
-   -- Source file handling
-   -----------------------
 
    --  Create the path from DIRECTORY and NAME:
    --  If NAME is an absolute pathname, then return NAME.
@@ -44,7 +44,7 @@ package Files_Map is
    --  Each file in memory has two terminal EOT.
    EOT : constant Character := Character'Val (4);
 
-   --  Create a Source_File for a virtual file name.  Used for implicit,
+   --  Create an empty Source_File for a virtual file name.  Used for implicit,
    --  command-line and std.standard library.
    function Create_Virtual_Source_File (Name : Name_Id)
                                        return Source_File_Entry;
@@ -54,16 +54,36 @@ package Files_Map is
    function Create_Source_File_From_String (Name : Name_Id; Content : String)
                                            return Source_File_Entry;
 
-   -- Return a buffer (access to the contents of the file) for a file entry.
+   --  Create a pseudo source file from REF for instance INST (created at
+   --  location LOC).  The content of this file is the same as REF, but with
+   --  new locations so that it is possible to retrieve the instance from
+   --  the new locations.
+   function Create_Instance_Source_File
+     (Ref : Source_File_Entry; Loc : Location_Type; Inst : Nodes.Node_Type)
+     return Source_File_Entry;
+
+   --  Relocate location LOC (which must be in the reference of INST_FILE)
+   --  for instrnace INST_FILE.
+   function Instance_Relocate
+     (Inst_File : Source_File_Entry; Loc : Location_Type)
+     return Location_Type;
+
+   --  If LOC is a location of an instance (in a file created by
+   --  create_instance_source_file), return the location where the instance
+   --  has been created.  Otherwise, return No_Location.
+   function Location_Instance_To_Location
+     (Loc : Location_Type) return Location_Type;
+
+   --  Return a buffer (access to the contents of the file) for a file entry.
    function Get_File_Source (File : Source_File_Entry) return File_Buffer_Acc;
 
-   -- Return the length of the file (which is the size of the file buffer).
+   --  Return the length of the file (which is the size of the file buffer).
    function Get_File_Length (File : Source_File_Entry) return Source_Ptr;
 
-   -- Return the name of the file.
+   --  Return the name of the file.
    function Get_File_Name (File : Source_File_Entry) return Name_Id;
 
-   -- Return the directory of the file.
+   --  Return the directory of the file.
    function Get_Source_File_Directory (File : Source_File_Entry)
                                       return Name_Id;
 
@@ -87,17 +107,14 @@ package Files_Map is
    function Get_File_Checksum_String (Checksum : File_Checksum_Id)
                                      return String;
 
-   -- Return the current date of the system.
+   --  Return the current date of the system.
    function Get_Os_Time_Stamp return Time_Stamp_Id;
 
-   -- Return the home directory (current directory).
+   --  Return the home directory (current directory).
    function Get_Home_Directory return Name_Id;
 
-   --  Get the path of directory DIR.
-   --function Get_Directory_Path (Dir : Directory_Index) return String;
-
-   -- Add a new entry in the lines_table.
-   -- The new entry must be the next one after the last entry.
+   --  Add a new entry in the lines_table.
+   --  The new entry must be the next one after the last entry.
    procedure File_Add_Line_Number
      (File : Source_File_Entry; Line : Natural; Pos : Source_Ptr);
 
@@ -106,9 +123,11 @@ package Files_Map is
    procedure Location_To_File_Pos (Location : Location_Type;
                                    File : out Source_File_Entry;
                                    Pos : out Source_Ptr);
+
    --  Convert a FILE and an offset POS in the file into a location.
    function File_Pos_To_Location (File : Source_File_Entry; Pos : Source_Ptr)
                                  return Location_Type;
+
    --  Convert a FILE into a location.
    function Source_File_To_Location (File : Source_File_Entry)
                                     return Location_Type;

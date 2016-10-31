@@ -155,6 +155,7 @@ package body Std_Names is
       Def ("protected", Name_Protected);
 
       Def ("context", Name_Context);
+      Def ("parameter", Name_Parameter);
 
       Def ("across", Name_Across);
       Def ("break", Name_Break);
@@ -413,6 +414,7 @@ package body Std_Names is
       Def ("vital_level1",       Name_VITAL_Level1);
       Def ("std_logic_arith",    Name_Std_Logic_Arith);
       Def ("std_logic_signed",   Name_Std_Logic_Signed);
+      Def ("std_logic_textio",   Name_Std_Logic_Textio);
       Def ("std_logic_unsigned", Name_Std_Logic_Unsigned);
 
       --  Verilog keywords
@@ -450,7 +452,6 @@ package body Std_Names is
       Def ("notif0",       Name_Notif0);
       Def ("notif1",       Name_Notif1);
       Def ("output",       Name_Output);
-      Def ("parameter",    Name_Parameter);
       Def ("pmos",         Name_Pmos);
       Def ("posedge",      Name_Posedge);
       Def ("primitive",    Name_Primitive);

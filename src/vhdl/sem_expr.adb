@@ -553,8 +553,8 @@ package body Sem_Expr is
       Expr_Type : Iir;
    begin
       Expr_Type := Get_Type (Expr);
-      Left := Get_Left_Limit (Expr);
-      Right := Get_Right_Limit (Expr);
+      Left := Get_Left_Limit_Expr (Expr);
+      Right := Get_Right_Limit_Expr (Expr);
 
       if Expr_Type = Null_Iir then
          --  Pass 1.
@@ -659,16 +659,24 @@ package body Sem_Expr is
 
       Left := Eval_Expr_If_Static (Left);
       Right := Eval_Expr_If_Static (Right);
+
+      Set_Left_Limit_Expr (Expr, Left);
+      Set_Right_Limit_Expr (Expr, Right);
+
       Set_Left_Limit (Expr, Left);
       Set_Right_Limit (Expr, Right);
+
       Set_Expr_Staticness (Expr, Min (Get_Expr_Staticness (Left),
                                       Get_Expr_Staticness (Right)));
 
-      if A_Type /= Null_Iir
-        and then Are_Types_Compatible (Expr_Type, A_Type) = Not_Compatible
-      then
-         Error_Msg_Sem (+Expr, "type of range doesn't match expected type");
-         return Null_Iir;
+      if A_Type /= Null_Iir then
+         if Are_Types_Compatible (Expr_Type, A_Type) = Not_Compatible then
+            Error_Msg_Sem (+Expr, "type of range doesn't match expected type");
+            return Null_Iir;
+         end if;
+
+         --  Use A_TYPE for the type of the expression.
+         Expr_Type := A_Type;
       end if;
 
       Set_Type (Expr, Expr_Type);
@@ -915,20 +923,27 @@ package body Sem_Expr is
       end case;
 
       --  Staticness.
-      case Get_Implicit_Definition (Imp) is
-         when Iir_Predefined_Error =>
-            raise Internal_Error;
-         when Iir_Predefined_Pure_Functions =>
-            null;
-         when Iir_Predefined_Impure_Functions =>
-            --  Predefined functions such as Now, Endfile are not static.
+      case Get_Kind (Imp) is
+         when Iir_Kind_Function_Declaration =>
+            case Get_Implicit_Definition (Imp) is
+               when Iir_Predefined_Error =>
+                  raise Internal_Error;
+               when Iir_Predefined_Pure_Functions =>
+                  null;
+               when Iir_Predefined_Impure_Functions =>
+                  --  Predefined functions such as Now, Endfile are not static.
+                  Staticness := None;
+               when Iir_Predefined_Explicit =>
+                  if Get_Pure_Flag (Imp) then
+                     Staticness := Min (Staticness, Globally);
+                  else
+                     Staticness := None;
+                  end if;
+            end case;
+         when Iir_Kind_Interface_Function_Declaration =>
             Staticness := None;
-         when Iir_Predefined_Explicit =>
-            if Get_Pure_Flag (Imp) then
-               Staticness := Min (Staticness, Globally);
-            else
-               Staticness := None;
-            end if;
+         when others =>
+            Error_Kind ("set_function_call_staticness", Imp);
       end case;
       Set_Expr_Staticness (Expr, Staticness);
    end Set_Function_Call_Staticness;
@@ -1116,6 +1131,10 @@ package body Sem_Expr is
             if Get_Purity_State (Callee) = Pure then
                return;
             end if;
+         when Iir_Kind_Interface_Function_Declaration
+           | Iir_Kind_Interface_Procedure_Declaration =>
+            --  FIXME: how to compute sensitivity ?  Recurse ?
+            return;
          when others =>
             Error_Kind ("sem_call_all_sensitized_check", Callee);
       end case;
@@ -1384,13 +1403,19 @@ package body Sem_Expr is
          else
             --  Only one interpretation for the subprogram name.
             if Is_Func then
-               if Get_Kind (Inter_List) /= Iir_Kind_Function_Declaration then
-                  Error_Msg_Sem (+Expr, "name does not designate a function");
+               if not Is_Function_Declaration (Inter_List) then
+                  Error_Msg_Sem (+Expr, "name does not designate a function",
+                                 Cont => True);
+                  Error_Msg_Sem (+Expr, "name is %n defined at %l",
+                                 (+Inter_List, +Inter_List));
                   return Null_Iir;
                end if;
             else
-               if Get_Kind (Inter_List) /= Iir_Kind_Procedure_Declaration then
-                  Error_Msg_Sem (+Expr, "name does not designate a procedure");
+               if not Is_Procedure_Declaration (Inter_List) then
+                  Error_Msg_Sem (+Expr, "name does not designate a procedure",
+                                Cont => True);
+                  Error_Msg_Sem (+Expr, "name is %n defined at %l",
+                                 (+Inter_List, +Inter_List));
                   return Null_Iir;
                end if;
             end if;
@@ -1777,7 +1802,8 @@ package body Sem_Expr is
             Decl := Get_Non_Alias_Declaration (Interpretation);
 
             --  It is compatible with operand types ?
-            pragma Assert (Get_Kind (Decl) = Iir_Kind_Function_Declaration);
+            pragma Assert (Kind_In (Decl, Iir_Kind_Function_Declaration,
+                                    Iir_Kind_Interface_Function_Declaration));
 
             --  LRM08 12.3 Visibility
             --  [...] or all visible declarations denote the same named entity.
@@ -2566,14 +2592,13 @@ package body Sem_Expr is
       Free (Arr);
    end Sem_Check_Continuous_Choices;
 
-   procedure Sem_Choices_Range
-     (Choice_Chain : in out Iir;
-      Sub_Type : Iir;
-      Is_Sub_Range : Boolean;
-      Is_Case_Stmt : Boolean;
-      Loc : Location_Type;
-      Low : out Iir;
-      High : out Iir)
+   procedure Sem_Choices_Range (Choice_Chain : in out Iir;
+                                Sub_Type : Iir;
+                                Is_Sub_Range : Boolean;
+                                Is_Case_Stmt : Boolean;
+                                Loc : Location_Type;
+                                Low : out Iir;
+                                High : out Iir)
    is
       --  Number of positionnal choice.
       Nbr_Pos : Iir_Int64;
@@ -2800,83 +2825,6 @@ package body Sem_Expr is
         (Choice_Chain, Sub_Type, Is_Sub_Range, Loc, Low, High);
    end Sem_Choices_Range;
 
---    -- Find out the MIN and the MAX of an all named association choice list.
---    -- It also returns the number of elements associed (counting range).
---    procedure Sem_Find_Min_Max_Association_Choice_List
---      (List: Iir_Association_Choices_List;
---       Min: out Iir;
---       Max: out Iir;
---       Length: out natural)
---    is
---       Min_Res: Iir := null;
---       Max_Res: Iir := null;
---       procedure Update_With_Value (Val: Iir) is
---       begin
---          if Min_Res = null then
---             Min_Res := Val;
---             Max_Res := Val;
---          elsif Get_Value (Val) < Get_Value (Min_Res) then
---             Min_Res := Val;
---          elsif Get_Value (Val) > Get_Value (Max_Res) then
---             Max_Res := Val;
---          end if;
---       end Update_With_Value;
-
---       Number_Elements: Natural;
-
---       procedure Update (Choice: Iir) is
---          Left, Right: Iir;
---          Expr: Iir;
---       begin
---          case Get_Kind (Choice) is
---             when Iir_Kind_Choice_By_Expression =>
---                Update_With_Value (Get_Expression (Choice));
---                Number_Elements := Number_Elements + 1;
---             when Iir_Kind_Choice_By_Range =>
---                Expr := Get_Expression (Choice);
---                Left := Get_Left_Limit (Expr);
---                Right := Get_Right_Limit (Expr);
---                Update_With_Value (Left);
---                Update_With_Value (Right);
---                -- There can't be null range.
---                case Get_Direction (Expr) is
---                   when Iir_To =>
---                      Number_Elements := Number_Elements +
---                        Natural (Get_Value (Right) - Get_Value (Left) + 1);
---                   when Iir_Downto =>
---                      Number_Elements := Number_Elements +
---                        Natural (Get_Value (Left) - Get_Value (Right) + 1);
---                end case;
---             when others =>
---             Error_Kind ("sem_find_min_max_association_choice_list", Choice);
---          end case;
---       end Update;
-
---       El: Iir;
---       Sub_List: Iir_Association_Choices_List;
---       Sub_El: Iir;
---    begin
---       Number_Elements := 0;
---       for I in Natural loop
---          El := Get_Nth_Element (List, I);
---          exit when El = null;
---          case Get_Kind (El) is
---             when Iir_Kind_Choice_By_List =>
---                Sub_List := Get_Choice_List (El);
---                for J in Natural loop
---                   Sub_El := Get_Nth_Element (Sub_List, J);
---                   exit when Sub_El = null;
---                   Update (Sub_El);
---                end loop;
---             when others =>
---                Update (El);
---          end case;
---       end loop;
---       Min := Min_Res;
---       Max := Max_Res;
---       Length := Number_Elements;
---    end Sem_Find_Min_Max_Association_Choice_List;
-
    -- Perform semantisation on a (sub)aggregate AGGR, which is of type
    -- A_TYPE.
    -- return FALSE is case of failure
@@ -2924,35 +2872,33 @@ package body Sem_Expr is
       --  FIXME: should mutate the node.
       function Sem_Simple_Choice (Ass : Iir) return Iir
       is
+         Expr : constant Iir := Get_Choice_Expression (Ass);
          N_El : Iir;
-         Expr : Iir;
          Aggr_El : Iir_Element_Declaration;
       begin
-         Expr := Get_Choice_Expression (Ass);
          if Get_Kind (Expr) /= Iir_Kind_Simple_Name then
             Error_Msg_Sem (+Ass, "element association must be a simple name");
             Ok := False;
             return Ass;
          end if;
-         Aggr_El := Find_Name_In_List
-           (Get_Elements_Declaration_List (Base_Type), Get_Identifier (Expr));
+         Aggr_El := Find_Name_In_List (El_List, Get_Identifier (Expr));
          if Aggr_El = Null_Iir then
             Error_Msg_Sem (+Ass, "record has no such element %n", +Ass);
             Ok := False;
             return Ass;
          end if;
+         Set_Named_Entity (Expr, Aggr_El);
+         Xref_Ref (Expr, Aggr_El);
 
          N_El := Create_Iir (Iir_Kind_Choice_By_Name);
          Location_Copy (N_El, Ass);
-         Set_Choice_Name (N_El, Aggr_El);
+         Set_Choice_Name (N_El, Expr);
          Set_Associated_Expr (N_El, Get_Associated_Expr (Ass));
          Set_Associated_Chain (N_El, Get_Associated_Chain (Ass));
          Set_Chain (N_El, Get_Chain (Ass));
          Set_Same_Alternative_Flag (N_El, Get_Same_Alternative_Flag (Ass));
 
-         Xref_Ref (Expr, Aggr_El);
          Free_Iir (Ass);
-         Free_Iir (Expr);
          Add_Match (N_El, Aggr_El);
          return N_El;
       end Sem_Simple_Choice;
@@ -3343,6 +3289,7 @@ package body Sem_Expr is
                      when Iir_Kind_Choice_By_Range =>
                         Expr := Get_Choice_Range (Choice);
                         Set_Range_Constraint (Info.Index_Subtype, Expr);
+                        Set_Is_Ref (Info.Index_Subtype, True);
                         -- FIXME: avoid allocation-free.
                         Free_Iir (Index_Subtype_Constraint);
                      when others =>
@@ -3531,9 +3478,12 @@ package body Sem_Expr is
          for I in Infos'Range loop
             declare
                St : constant Iir := Infos (I).Index_Subtype;
+               Rng : Iir;
             begin
                if St /= Null_Iir then
-                  Free_Iir (Get_Range_Constraint (St));
+                  Rng := Get_Range_Constraint (St);
+                  Free_Iir (Get_Right_Limit_Expr (Rng));
+                  Free_Iir (Rng);
                   Free_Iir (St);
                end if;
             end;
@@ -3602,6 +3552,7 @@ package body Sem_Expr is
    function Sem_Physical_Literal (Lit: Iir) return Iir
    is
       Unit_Name : Iir;
+      Unit : Iir;
       Unit_Type : Iir;
       Res: Iir;
    begin
@@ -3610,27 +3561,25 @@ package body Sem_Expr is
            | Iir_Kind_Physical_Fp_Literal =>
             Unit_Name := Get_Unit_Name (Lit);
             Res := Lit;
-         when Iir_Kind_Unit_Declaration =>
-            Res := Create_Iir (Iir_Kind_Physical_Int_Literal);
-            Location_Copy (Res, Lit);
-            Set_Value (Res, 1);
-            Unit_Name := Null_Iir;
-            raise Program_Error;
          when Iir_Kinds_Denoting_Name =>
             Res := Create_Iir (Iir_Kind_Physical_Int_Literal);
             Location_Copy (Res, Lit);
             Set_Value (Res, 1);
+            Set_Literal_Origin (Res, Lit);
             Unit_Name := Lit;
          when others =>
             Error_Kind ("sem_physical_literal", Lit);
       end case;
       Unit_Name := Sem_Denoting_Name (Unit_Name);
-      if Get_Kind (Get_Named_Entity (Unit_Name)) /= Iir_Kind_Unit_Declaration
-      then
-         Error_Class_Match (Unit_Name, "unit");
+      Unit := Get_Named_Entity (Unit_Name);
+      if Get_Kind (Unit) /= Iir_Kind_Unit_Declaration then
+         if not Is_Error (Unit) then
+            Error_Class_Match (Unit_Name, "unit");
+         end if;
          Set_Named_Entity (Unit_Name, Create_Error_Name (Unit_Name));
       end if;
       Set_Unit_Name (Res, Unit_Name);
+      Set_Physical_Unit (Res, Get_Named_Entity (Unit_Name));
       Unit_Type := Get_Type (Unit_Name);
       Set_Type (Res, Unit_Type);
 
@@ -4105,12 +4054,14 @@ package body Sem_Expr is
            | Iir_Kind_Unit_Declaration =>
             declare
                Res: Iir;
+               Res_Type : Iir;
             begin
                Res := Sem_Physical_Literal (Expr);
-               if Res = Null_Iir then
+               Res_Type := Get_Type (Res);
+               if Is_Null (Res_Type) then
                   return Null_Iir;
                end if;
-               if A_Type /= Null_Iir and then Get_Type (Res) /= A_Type then
+               if A_Type /= Null_Iir and then Res_Type /= A_Type then
                   Error_Not_Match (Res, A_Type);
                   return Null_Iir;
                end if;

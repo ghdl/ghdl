@@ -37,8 +37,6 @@ package body Trans.Chap2 is
    use Trans.Subprgs;
    use Trans.Helpers;
 
-   procedure Elab_Package (Spec : Iir_Package_Declaration);
-
    type Name_String_Xlat_Array is array (Name_Id range <>) of String (1 .. 4);
 
    --  Ortho function names are only composed of [A-Za-z0-9_].  For VHDL
@@ -384,9 +382,15 @@ package body Trans.Chap2 is
                   when Iir_Kinds_Composite_Type_Definition =>
                      --  At least for "=".
                      return True;
-                  when Iir_Kind_Incomplete_Type_Definition =>
+                  when Iir_Kind_Incomplete_Type_Definition
+                    | Iir_Kind_Interface_Type_Definition =>
                      null;
                end case;
+            when Iir_Kind_Package_Declaration
+              | Iir_Kind_Package_Body =>
+               if Has_Nested_Subprograms (Decl) then
+                  return True;
+               end if;
             when others =>
                null;
          end case;
@@ -753,12 +757,24 @@ package body Trans.Chap2 is
 
    procedure Translate_Package_Declaration (Decl : Iir_Package_Declaration)
    is
-      Header               : constant Iir := Get_Package_Header (Decl);
+      Is_Nested            : constant Boolean := Is_Nested_Package (Decl);
+      Header               : constant Iir     := Get_Package_Header (Decl);
+      Mark                 : Id_Mark_Type;
       Info                 : Ortho_Info_Acc;
       Interface_List       : O_Inter_List;
       Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
+      Bod                  : Iir;
    begin
+      --  Skip uninstantiated package that have to be macro-expanded.
+      if Get_Macro_Expanded_Flag (Decl) then
+         return;
+      end if;
+
       Info := Add_Info (Decl, Kind_Package);
+
+      if Is_Nested then
+         Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
+      end if;
 
       --  Translate declarations.
       if Is_Uninstantiated_Package (Decl) then
@@ -786,21 +802,40 @@ package body Trans.Chap2 is
            (Info.Package_Body_Scope'Access, Info.Package_Body_Ptr_Type,
             Wki_Instance, Prev_Subprg_Instance);
       else
+         if Header /= Null_Iir then
+            Chap4.Translate_Generic_Chain (Header);
+         end if;
          Chap4.Translate_Declaration_Chain (Decl);
-         Info.Package_Elab_Var := Create_Var
-           (Create_Var_Identifier ("ELABORATED"), Ghdl_Bool_Type);
+         Bod := Get_Package_Instantiation_Bodies_Chain (Decl);
+         if Is_Valid (Bod) then
+            Chap4.Translate_Declaration_Chain (Bod);
+         end if;
+         if not Is_Nested then
+            Info.Package_Elab_Var := Create_Var
+              (Create_Var_Identifier ("ELABORATED"), Ghdl_Bool_Type);
+         end if;
       end if;
 
       --  Translate subprograms declarations.
-      Chap4.Translate_Declaration_Chain_Subprograms (Decl);
+      if not Is_Nested then
+         --  For nested package, this will be translated when translating
+         --  subprograms.
+         Chap4.Translate_Declaration_Chain_Subprograms (Decl);
+         Bod := Get_Package_Instantiation_Bodies_Chain (Decl);
+         if Is_Valid (Bod) then
+            Chap4.Translate_Declaration_Chain_Subprograms (Bod);
+         end if;
+      end if;
 
       --  Declare elaborator for the body.
-      Start_Procedure_Decl
-        (Interface_List, Create_Identifier ("ELAB_BODY"), Global_Storage);
-      Subprgs.Add_Subprg_Instance_Interfaces
-        (Interface_List, Info.Package_Elab_Body_Instance);
-      Finish_Subprogram_Decl
-        (Interface_List, Info.Package_Elab_Body_Subprg);
+      if not Is_Nested then
+         Start_Procedure_Decl
+           (Interface_List, Create_Identifier ("ELAB_BODY"), Global_Storage);
+         Subprgs.Add_Subprg_Instance_Interfaces
+           (Interface_List, Info.Package_Elab_Body_Instance);
+         Finish_Subprogram_Decl
+           (Interface_List, Info.Package_Elab_Body_Subprg);
+      end if;
 
       if Is_Uninstantiated_Package (Decl) then
          Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
@@ -811,21 +846,24 @@ package body Trans.Chap2 is
             Wki_Instance, Prev_Subprg_Instance);
       end if;
 
-      Start_Procedure_Decl
-        (Interface_List, Create_Identifier ("ELAB_SPEC"), Global_Storage);
-      Subprgs.Add_Subprg_Instance_Interfaces
-        (Interface_List, Info.Package_Elab_Spec_Instance);
-      Finish_Subprogram_Decl
-        (Interface_List, Info.Package_Elab_Spec_Subprg);
+      if not Is_Nested then
+         --  Declare elaborator for the spec.
+         Start_Procedure_Decl
+           (Interface_List, Create_Identifier ("ELAB_SPEC"), Global_Storage);
+         Subprgs.Add_Subprg_Instance_Interfaces
+           (Interface_List, Info.Package_Elab_Spec_Instance);
+         Finish_Subprogram_Decl
+           (Interface_List, Info.Package_Elab_Spec_Subprg);
 
-      if Flag_Rti then
-         --  Generate RTI.
-         Rtis.Generate_Unit (Decl);
-      end if;
+         if Flag_Rti then
+            --  Generate RTI.
+            Rtis.Generate_Unit (Decl);
+         end if;
 
-      if Global_Storage = O_Storage_Public then
-         --  Create elaboration procedure for the spec
-         Elab_Package (Decl);
+         if Global_Storage = O_Storage_Public then
+            --  Create elaboration procedure for the spec
+            Elab_Package (Decl);
+         end if;
       end if;
 
       if Is_Uninstantiated_Package (Decl) then
@@ -842,15 +880,29 @@ package body Trans.Chap2 is
          Push_Package_Instance_Factory (Decl);
          Pop_Package_Instance_Factory (Decl);
       end if;
+
+      if Is_Nested then
+         Pop_Identifier_Prefix (Mark);
+      end if;
    end Translate_Package_Declaration;
 
    procedure Translate_Package_Body (Bod : Iir_Package_Body)
    is
-      Spec : constant Iir_Package_Declaration := Get_Package (Bod);
-      Info : constant Ortho_Info_Acc := Get_Info (Spec);
-      Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
+      Is_Nested : constant Boolean := Is_Nested_Package (Bod);
+      Spec      : constant Iir_Package_Declaration := Get_Package (Bod);
+      Info      : constant Ortho_Info_Acc := Get_Info (Spec);
       Prev_Storage : constant O_Storage := Global_Storage;
+      Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
+      Mark                 : Id_Mark_Type;
    begin
+      if Get_Macro_Expanded_Flag (Spec) then
+         return;
+      end if;
+
+      if Is_Nested then
+         Push_Identifier_Prefix (Mark, Get_Identifier (Spec));
+      end if;
+
       --  Translate declarations.
       if Is_Uninstantiated_Package (Spec) then
          Push_Package_Instance_Factory (Spec);
@@ -859,16 +911,17 @@ package body Trans.Chap2 is
          Chap4.Translate_Declaration_Chain (Bod);
 
          Pop_Package_Instance_Factory (Spec);
+      end if;
 
-         if Global_Storage = O_Storage_External then
-            return;
+      --  May be called during elaboration to generate RTI.
+      if Global_Storage = O_Storage_External then
+         if Is_Nested then
+            Pop_Identifier_Prefix (Mark);
          end if;
-      else
-         --  May be called during elaboration to generate RTI.
-         if Global_Storage = O_Storage_External then
-            return;
-         end if;
+         return;
+      end if;
 
+      if not Is_Uninstantiated_Package (Spec) then
          Restore_Local_Identifier (Info.Package_Local_Id);
 
          Chap4.Translate_Declaration_Chain (Bod);
@@ -876,7 +929,9 @@ package body Trans.Chap2 is
 
       Global_Storage := O_Storage_Private;
 
-      if Flag_Rti then
+      --  Generate RTI, but not for nested packages (RTI will be generated as
+      --  a declaration by the parent).
+      if not Is_Nested and then Flag_Rti then
          Rtis.Generate_Unit (Bod);
       end if;
 
@@ -890,52 +945,74 @@ package body Trans.Chap2 is
                               Info.Package_Body_Scope'Access);
       end if;
 
-      Chap4.Translate_Declaration_Chain_Subprograms (Bod);
+      if not Is_Nested then
+         --  Translate subprograms.  For nested package, this has to be called
+         --  when translating subprograms.
+         Chap4.Translate_Declaration_Chain_Subprograms (Bod);
+      end if;
 
       if Is_Uninstantiated_Package (Spec) then
          Clear_Scope (Info.Package_Spec_Scope);
          Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
       end if;
 
-      Elab_Package_Body (Spec, Bod);
+      if not Is_Nested then
+         Elab_Package_Body (Spec, Bod);
+      end if;
 
       Global_Storage := Prev_Storage;
+
+      if Is_Nested then
+         Pop_Identifier_Prefix (Mark);
+      end if;
    end Translate_Package_Body;
 
    procedure Elab_Package (Spec : Iir_Package_Declaration)
    is
+      Is_Nested : constant Boolean := Is_Nested_Package (Spec);
       Info   : constant Ortho_Info_Acc := Get_Info (Spec);
       Final  : Boolean;
       Constr : O_Assoc_List;
       pragma Unreferenced (Final);
    begin
-      Start_Subprogram_Body (Info.Package_Elab_Spec_Subprg);
-      Push_Local_Factory;
-      Subprgs.Start_Subprg_Instance_Use (Info.Package_Elab_Spec_Instance);
+      if not Is_Nested then
+         Start_Subprogram_Body (Info.Package_Elab_Spec_Subprg);
+         Push_Local_Factory;
+         Subprgs.Start_Subprg_Instance_Use (Info.Package_Elab_Spec_Instance);
 
-      Elab_Dependence (Get_Design_Unit (Spec));
+         Elab_Dependence (Get_Design_Unit (Spec));
 
-      if not Is_Uninstantiated_Package (Spec)
-        and then Get_Kind (Get_Parent (Spec)) = Iir_Kind_Design_Unit
-      then
-         --  Register the top level package.  This is done dynamically, as
-         --  we know only during elaboration that the design depends on a
-         --  package (a package maybe referenced by an entity which is never
-         --  instantiated due to generate statements).
-         Start_Association (Constr, Ghdl_Rti_Add_Package);
-         New_Association
-           (Constr,
-            New_Lit (Rtis.New_Rti_Address (Info.Package_Rti_Const)));
-         New_Procedure_Call (Constr);
+         if not Is_Uninstantiated_Package (Spec)
+           and then Get_Kind (Get_Parent (Spec)) = Iir_Kind_Design_Unit
+         then
+            --  Register the top level package.  This is done dynamically, as
+            --  we know only during elaboration that the design depends on a
+            --  package (a package maybe referenced by an entity which is never
+            --  instantiated due to generate statements).
+            Start_Association (Constr, Ghdl_Rti_Add_Package);
+            New_Association
+              (Constr,
+               New_Lit (Rtis.New_Rti_Address (Info.Package_Rti_Const)));
+            New_Procedure_Call (Constr);
+         end if;
+
+         Open_Temp;
       end if;
 
-      Open_Temp;
+      if Is_Generic_Mapped_Package (Spec) then
+         Chap5.Elab_Generic_Map_Aspect
+           (Get_Package_Header (Spec), Get_Package_Header (Spec),
+            (Info.Package_Spec_Scope'Access, Info.Package_Spec_Scope));
+      end if;
       Chap4.Elab_Declaration_Chain (Spec, Final);
-      Close_Temp;
 
-      Subprgs.Finish_Subprg_Instance_Use (Info.Package_Elab_Spec_Instance);
-      Pop_Local_Factory;
-      Finish_Subprogram_Body;
+      if not Is_Nested then
+         Close_Temp;
+
+         Subprgs.Finish_Subprg_Instance_Use (Info.Package_Elab_Spec_Instance);
+         Pop_Local_Factory;
+         Finish_Subprogram_Body;
+      end if;
    end Elab_Package;
 
    procedure Elab_Package_Body (Spec : Iir_Package_Declaration; Bod : Iir)
@@ -1080,6 +1157,16 @@ package body Trans.Chap2 is
          when Kind_Expr =>
             Dest.all := (Kind => Kind_Expr,
                          Expr_Node => Src.Expr_Node);
+         when Kind_Package_Instance =>
+            Dest.all :=
+              (Kind => Kind_Package_Instance,
+               Package_Instance_Spec_Var => Src.Package_Instance_Spec_Var,
+               Package_Instance_Body_Var => Src.Package_Instance_Body_Var,
+               Package_Instance_Elab_Subprg =>
+                 Src.Package_Instance_Elab_Subprg,
+               Package_Instance_Spec_Scope => Src.Package_Instance_Spec_Scope,
+               Package_Instance_Body_Scope => Src.Package_Instance_Body_Scope);
+
          when others =>
             raise Internal_Error;
       end case;
@@ -1124,7 +1211,9 @@ package body Trans.Chap2 is
                   case Get_Field_Attribute (F) is
                      when Attr_None =>
                         Instantiate_Iir_Info (Get_Iir (N, F));
-                     when Attr_Ref =>
+                     when Attr_Ref
+                       | Attr_Forward_Ref
+                       | Attr_Maybe_Forward_Ref =>
                         null;
                      when Attr_Maybe_Ref =>
                         if not Get_Is_Ref (N) then
@@ -1159,7 +1248,7 @@ package body Trans.Chap2 is
                   raise Internal_Error;
                when Type_String8_Id
                   | Type_Source_Ptr
-                  | Type_Base_Type
+                  | Type_Number_Base_Type
                   | Type_Iir_Constraint
                   | Type_Iir_Mode
                   | Type_Iir_Index32
@@ -1205,15 +1294,13 @@ package body Trans.Chap2 is
       Inter := Chain;
       while Inter /= Null_Iir loop
          case Get_Kind (Inter) is
-            when Iir_Kind_Interface_Constant_Declaration =>
+            when Iir_Kind_Interface_Constant_Declaration
+              | Iir_Kind_Interface_Package_Declaration =>
                Orig := Sem_Inst.Get_Origin (Inter);
                Orig_Info := Get_Info (Orig);
 
                Info := Add_Info (Inter, Orig_Info.Kind);
                Copy_Info (Info, Orig_Info);
-
-            when Iir_Kind_Interface_Package_Declaration =>
-               null;
 
             when others =>
                raise Internal_Error;
@@ -1227,8 +1314,7 @@ package body Trans.Chap2 is
    --  package_instantiation_declaration
    procedure Instantiate_Info_Package (Inst : Iir)
    is
-      Spec     : constant Iir :=
-        Get_Named_Entity (Get_Uninstantiated_Package_Name (Inst));
+      Spec     : constant Iir := Get_Uninstantiated_Package_Decl (Inst);
       Pkg_Info : constant Ortho_Info_Acc := Get_Info (Spec);
       Info     : Ortho_Info_Acc;
    begin
@@ -1251,29 +1337,33 @@ package body Trans.Chap2 is
 
    procedure Translate_Package_Instantiation_Declaration (Inst : Iir)
    is
-      Spec           : constant Iir :=
-        Get_Named_Entity (Get_Uninstantiated_Package_Name (Inst));
+      Spec           : constant Iir := Get_Uninstantiated_Package_Decl (Inst);
       Pkg_Info       : constant Ortho_Info_Acc := Get_Info (Spec);
       Info           : Ortho_Info_Acc;
       Interface_List : O_Inter_List;
-      Constr         : O_Assoc_List;
    begin
+      --  Canon must have replaced instatiation by generic-mapped packages.
+      pragma Assert (not Get_Macro_Expanded_Flag (Spec));
+
       Instantiate_Info_Package (Inst);
       Info := Get_Info (Inst);
 
-      --  FIXME: if the instantiation occurs within a package declaration,
-      --  the variable must be declared extern (and public in the body).
+      --  Create the variable containing data for the package instance.
       Info.Package_Instance_Body_Var := Create_Var
         (Create_Var_Identifier (Inst),
          Get_Scope_Type (Pkg_Info.Package_Body_Scope));
 
       --  FIXME: this is correct only for global instantiation, and only if
       --  there is only one.
-      Set_Scope_Via_Decl (Info.Package_Instance_Body_Scope,
-                          Get_Var_Label (Info.Package_Instance_Body_Var));
+      Set_Scope_Via_Var (Info.Package_Instance_Body_Scope,
+                         Info.Package_Instance_Body_Var);
       Set_Scope_Via_Field (Info.Package_Instance_Spec_Scope,
                            Pkg_Info.Package_Spec_Field,
                            Info.Package_Instance_Body_Scope'Access);
+
+      if Is_Nested_Package (Inst) then
+         return;
+      end if;
 
       --  Declare elaboration procedure
       Start_Procedure_Decl
@@ -1294,14 +1384,29 @@ package body Trans.Chap2 is
 
       Elab_Dependence (Get_Design_Unit (Inst));
 
-      Set_Scope_Via_Decl (Pkg_Info.Package_Body_Scope,
-                          Get_Var_Label (Info.Package_Instance_Body_Var));
+      Elab_Package_Instantiation_Declaration (Inst);
+
+      --  Chap2.Finish_Subprg_Instance_Use
+      --    (Info.Package_Instance_Elab_Instance);
+      Finish_Subprogram_Body;
+   end Translate_Package_Instantiation_Declaration;
+
+   procedure Elab_Package_Instantiation_Declaration (Inst : Iir)
+   is
+      Spec           : constant Iir := Get_Uninstantiated_Package_Decl (Inst);
+      Pkg_Info       : constant Ortho_Info_Acc := Get_Info (Spec);
+      Info           : constant Ortho_Info_Acc := Get_Info (Inst);
+      Constr         : O_Assoc_List;
+   begin
+      Set_Scope_Via_Var (Pkg_Info.Package_Body_Scope,
+                         Info.Package_Instance_Body_Var);
 
       Set_Scope_Via_Field (Pkg_Info.Package_Spec_Scope,
                            Pkg_Info.Package_Spec_Field,
                            Pkg_Info.Package_Body_Scope'Access);
-      Chap5.Elab_Generic_Map_Aspect (Inst, (Pkg_Info.Package_Body_Scope'Access,
-                                            Pkg_Info.Package_Body_Scope));
+      Chap5.Elab_Generic_Map_Aspect
+        (Get_Package_Header (Spec), Inst,
+         (Pkg_Info.Package_Body_Scope'Access, Pkg_Info.Package_Body_Scope));
       Clear_Scope (Pkg_Info.Package_Spec_Scope);
 
       --  Call the elaborator of the generic.  The generic must be
@@ -1312,11 +1417,7 @@ package body Trans.Chap2 is
       New_Procedure_Call (Constr);
 
       Clear_Scope (Pkg_Info.Package_Body_Scope);
-
-      --  Chap2.Finish_Subprg_Instance_Use
-      --    (Info.Package_Instance_Elab_Instance);
-      Finish_Subprogram_Body;
-   end Translate_Package_Instantiation_Declaration;
+   end Elab_Package_Instantiation_Declaration;
 
    procedure Elab_Dependence_Package (Pkg : Iir_Package_Declaration)
    is

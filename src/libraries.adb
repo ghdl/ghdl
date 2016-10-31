@@ -23,14 +23,21 @@ with System;
 with Errorout; use Errorout;
 with Scanner;
 with Iirs_Utils; use Iirs_Utils;
+with Iir_Chains;
+with Nodes_Meta;
 with Parse;
-with Back_End;
 with Name_Table; use Name_Table;
 with Str_Table;
 with Tokens;
 with Files_Map;
 with Flags;
 with Std_Package;
+with Disp_Tree;
+with Disp_Vhdl;
+with Sem;
+with Post_Sems;
+with Canon;
+with Nodes_GC;
 
 package body Libraries is
    --  Chain of known libraries.  This is also the top node of all iir node.
@@ -114,11 +121,29 @@ package body Libraries is
       return Pathes.Table (N);
    end Get_Path;
 
+   -- Transform a library identifier into a file name.
+   -- Very simple mechanism: just add '-objVV.cf' extension, where VV
+   -- is the version.
+   function Library_To_File_Name (Library: Iir_Library_Declaration)
+                                 return String
+   is
+      use Flags;
+   begin
+      case Vhdl_Std is
+         when Vhdl_87 =>
+            return Image_Identifier (Library) & "-obj87.cf";
+         when Vhdl_93c | Vhdl_93 | Vhdl_00 | Vhdl_02 =>
+            return Image_Identifier (Library) & "-obj93.cf";
+         when Vhdl_08 =>
+            return Image_Identifier (Library) & "-obj08.cf";
+      end case;
+   end Library_To_File_Name;
+
    --  Search LIBRARY in the library path.
    procedure Search_Library_In_Path (Library : Iir)
    is
       use Flags;
-      File_Name : constant String := Back_End.Library_To_File_Name (Library);
+      File_Name : constant String := Library_To_File_Name (Library);
       Library_Id : constant Name_Id := Get_Identifier (Library);
       Id_Len : constant Natural := Get_Name_Length (Library_Id);
       L : Natural;
@@ -181,7 +206,7 @@ package body Libraries is
                                    Library: Iir_Library_Declaration)
      return Boolean
    is
-      File_Name : constant String := Back_End.Library_To_File_Name (Library);
+      File_Name : constant String := Library_To_File_Name (Library);
       Fe : Source_File_Entry;
    begin
       Fe := Files_Map.Load_Source_File (Dir, Get_Identifier (File_Name));
@@ -1165,7 +1190,7 @@ package body Libraries is
       use Interfaces.C_Streams;
       use GNAT.OS_Lib;
       Temp_Name: constant String := Image (Work_Directory)
-        & '_' & Back_End.Library_To_File_Name (Library) & ASCII.NUL;
+        & '_' & Library_To_File_Name (Library) & ASCII.NUL;
       Mode : constant String := 'w' & ASCII.NUL;
       Stream : FILEs;
       Success : Boolean;
@@ -1338,7 +1363,7 @@ package body Libraries is
       declare
          use Files_Map;
          File_Name: constant String := Image (Work_Directory)
-           & Back_End.Library_To_File_Name (Library) & ASCII.NUL;
+           & Library_To_File_Name (Library) & ASCII.NUL;
          Delete_Success : Boolean;
       begin
          --  For windows: renames doesn't overwrite destination; so first
@@ -1523,6 +1548,87 @@ package body Libraries is
       return False;
    end Is_Obsolete;
 
+   procedure Finish_Compilation
+     (Unit : Iir_Design_Unit; Main : Boolean := False)
+   is
+      Lib_Unit : constant Iir := Get_Library_Unit (Unit);
+   begin
+      if (Main or Flags.Dump_All) and then Flags.Dump_Parse then
+         Disp_Tree.Disp_Tree (Unit);
+      end if;
+
+      if Flags.Check_Ast_Level > 0 then
+         Nodes_GC.Check_Tree (Unit);
+      end if;
+
+      if Flags.Verbose then
+         Report_Msg (Msgid_Note, Semantic, +Lib_Unit,
+                     "analyze %n", (1 => +Lib_Unit));
+      end if;
+
+      Sem.Semantic (Unit);
+
+      if (Main or Flags.Dump_All) and then Flags.Dump_Sem then
+         Disp_Tree.Disp_Tree (Unit);
+      end if;
+
+      if Errorout.Nbr_Errors > 0 then
+         raise Compilation_Error;
+      end if;
+
+      if (Main or Flags.List_All) and then Flags.List_Sem then
+         Disp_Vhdl.Disp_Vhdl (Unit);
+      end if;
+
+      --  Post checks
+      ----------------
+
+      Post_Sems.Post_Sem_Checks (Unit);
+
+      if Errorout.Nbr_Errors > 0 then
+         raise Compilation_Error;
+      end if;
+
+      --  Canonalisation.
+      ------------------
+
+      if Flags.Verbose then
+         Report_Msg (Msgid_Note, Semantic, +Lib_Unit,
+                     "canonicalize %n", (1 => +Lib_Unit));
+      end if;
+
+      Canon.Canonicalize (Unit);
+
+      --  FIXME: for Main only ?
+      if Get_Kind (Lib_Unit) = Iir_Kind_Package_Declaration
+        and then not Get_Need_Body (Lib_Unit)
+        and then Get_Need_Instance_Bodies (Lib_Unit)
+      then
+         --  Create the bodies for instances
+         Set_Package_Instantiation_Bodies_Chain
+           (Lib_Unit, Canon.Create_Instantiation_Bodies (Lib_Unit, Lib_Unit));
+      elsif Get_Kind (Lib_Unit) = Iir_Kind_Package_Body
+        and then Get_Need_Instance_Bodies (Get_Package (Lib_Unit))
+      then
+         Iir_Chains.Append_Chain
+           (Lib_Unit, Nodes_Meta.Field_Declaration_Chain,
+            Canon.Create_Instantiation_Bodies (Get_Package (Lib_Unit),
+                                               Lib_Unit));
+      end if;
+
+      if (Main or Flags.Dump_All) and then Flags.Dump_Canon then
+         Disp_Tree.Disp_Tree (Unit);
+      end if;
+
+      if Errorout.Nbr_Errors > 0 then
+         raise Compilation_Error;
+      end if;
+
+      if (Main or Flags.List_All) and then Flags.List_Canon then
+         Disp_Vhdl.Disp_Vhdl (Unit);
+      end if;
+   end Finish_Compilation;
+
    procedure Load_Parse_Design_Unit (Design_Unit: Iir_Design_Unit; Loc : Iir)
    is
       use Scanner;
@@ -1535,7 +1641,7 @@ package body Libraries is
       --  The unit must not be loaded.
       pragma Assert (Get_Date_State (Design_Unit) = Date_Disk);
 
-      --  Load and parse the unit.
+      --  Load the file in memory.
       Design_File := Get_Design_File (Design_Unit);
       Fe := Files_Map.Load_Source_File
         (Get_Design_File_Directory (Design_File),
@@ -1546,6 +1652,7 @@ package body Libraries is
       end if;
       Set_File (Fe);
 
+      --  Check if the file has changed.
       if not Files_Map.Is_Eq
         (Files_Map.Get_File_Checksum (Get_Current_Source_File),
          Get_File_Checksum (Design_File))
@@ -1558,24 +1665,42 @@ package body Libraries is
                         +Get_Library_Unit (Design_Unit));
          raise Compilation_Error;
       end if;
+
+      --  Set the position of the lexer
       Pos := Get_Design_Unit_Source_Pos (Design_Unit);
       Line := Natural (Get_Design_Unit_Source_Line (Design_Unit));
       Off := Natural (Get_Design_Unit_Source_Col (Design_Unit));
       Files_Map.File_Add_Line_Number (Get_Current_Source_File, Line, Pos);
       Set_Current_Position (Pos + Source_Ptr (Off));
+
+      --  Parse
       Res := Parse.Parse_Design_Unit;
       Close_File;
       if Res = Null_Iir then
          raise Compilation_Error;
       end if;
+
       Set_Date_State (Design_Unit, Date_Parse);
+
       --  FIXME: check the library unit read is the one expected.
-      --  Copy node.
+
+      --  Move the unit in the library: keep the design_unit of the library,
+      --  but replace the library_unit by the one that has been parsed.  Do
+      --  not forget to relocate parents.
       Iirs_Utils.Free_Recursive (Get_Library_Unit (Design_Unit));
       Set_Library_Unit (Design_Unit, Get_Library_Unit (Res));
       Set_Design_Unit (Get_Library_Unit (Res), Design_Unit);
       Set_Parent (Get_Library_Unit (Res), Design_Unit);
-      Set_Context_Items (Design_Unit, Get_Context_Items (Res));
+      declare
+         Item : Iir;
+      begin
+         Item := Get_Context_Items (Res);
+         Set_Context_Items (Design_Unit, Item);
+         while Is_Valid (Item) loop
+            Set_Parent (Item, Design_Unit);
+            Item := Get_Chain (Item);
+         end loop;
+      end;
       Location_Copy (Design_Unit, Res);
       Free_Dependence_List (Design_Unit);
       Set_Dependence_List (Design_Unit, Get_Dependence_List (Res));
@@ -1602,7 +1727,7 @@ package body Libraries is
          --  Avoid infinite recursion, if the unit is self-referenced.
          Set_Date_State (Design_Unit, Date_Analyze);
 
-         Back_End.Finish_Compilation (Design_Unit);
+         Finish_Compilation (Design_Unit);
       end if;
 
       case Get_Date (Design_Unit) is

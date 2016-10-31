@@ -432,7 +432,7 @@ package body Sem_Stmts is
       Expr: Iir;
    begin
       Target := Get_Target (Stmt);
-      Target := Sem_Expression_Wildcard (Target, Sig_Type);
+      Target := Sem_Expression_Wildcard (Target, Get_Base_Type (Sig_Type));
 
       if Target /= Null_Iir then
          Set_Target (Stmt, Target);
@@ -1327,14 +1327,14 @@ package body Sem_Stmts is
                end;
             when Iir_Kind_For_Loop_Statement =>
                declare
-                  Iterator: Iir;
+                  Iterator : constant Iir :=
+                    Get_Parameter_Specification (Stmt);
                begin
                   --  LRM 10.1 Declarative region
                   --  9. A loop statement.
                   Open_Declarative_Region;
 
                   Set_Is_Within_Flag (Stmt, True);
-                  Iterator := Get_Parameter_Specification (Stmt);
                   Sem_Scopes.Add_Name (Iterator);
                   Sem_Iterator (Iterator, None);
                   Set_Visible_Flag (Iterator, True);
@@ -1443,7 +1443,9 @@ package body Sem_Stmts is
       Comp_Name : Iir;
       Comp : Iir;
    begin
-      if Get_Kind (Inst) in Iir_Kinds_Denoting_Name then
+      if Get_Kind (Inst) in Iir_Kinds_Entity_Aspect then
+         return Sem_Entity_Aspect (Inst);
+      else
          Comp := Get_Named_Entity (Inst);
          if Comp /= Null_Iir then
             --  Already analyzed before, while trying to separate
@@ -1451,6 +1453,13 @@ package body Sem_Stmts is
             pragma Assert (Get_Kind (Comp) = Iir_Kind_Component_Declaration);
             return Comp;
          end if;
+
+         --  Needs a denoting name
+         if Get_Kind (Inst) not in Iir_Kinds_Denoting_Name then
+            Error_Msg_Sem (+Inst, "name for a component expected");
+            return Null_Iir;
+         end if;
+
          --  The component may be an entity or a configuration.
          Comp_Name := Sem_Denoting_Name (Inst);
          Set_Instantiated_Unit (Stmt, Comp_Name);
@@ -1459,9 +1468,8 @@ package body Sem_Stmts is
             Error_Class_Match (Comp_Name, "component");
             return Null_Iir;
          end if;
+
          return Comp;
-      else
-         return Sem_Entity_Aspect (Inst);
       end if;
    end Sem_Instantiated_Unit;
 
@@ -1477,7 +1485,7 @@ package body Sem_Stmts is
          Error_Msg_Sem (+Stmt, "component instantiation forbidden in entity");
       end if;
 
-      -- Check for label.
+      --  Check for label.
       --  This cannot be moved in parse since a procedure_call may be revert
       --  into a component instantiation.
       if Get_Label (Stmt) = Null_Identifier then
@@ -1490,7 +1498,7 @@ package body Sem_Stmts is
          return;
       end if;
 
-      -- The association
+      --  The association
       Sem_Generic_Port_Association_Chain (Decl, Stmt);
 
       --  FIXME: add sources for signals, in order to detect multiple sources
@@ -1516,7 +1524,7 @@ package body Sem_Stmts is
                      or else Get_Date (Entity_Unit) in Date_Valid)
          then
             Bind := Sem_Create_Default_Binding_Indication
-              (Decl, Entity_Unit, Stmt, False);
+              (Decl, Entity_Unit, Stmt, False, True);
             Set_Default_Binding_Indication (Stmt, Bind);
          end if;
       end if;
@@ -1588,9 +1596,9 @@ package body Sem_Stmts is
 
    procedure Sem_Block_Statement (Stmt: Iir_Block_Statement)
    is
+      Header : constant Iir_Block_Header := Get_Block_Header (Stmt);
+      Guard : constant Iir_Guard_Signal_Declaration := Get_Guard_Decl (Stmt);
       Expr: Iir;
-      Guard : Iir_Guard_Signal_Declaration;
-      Header : Iir_Block_Header;
       Generic_Chain : Iir;
       Port_Chain : Iir;
    begin
@@ -1600,7 +1608,6 @@ package body Sem_Stmts is
 
       Set_Is_Within_Flag (Stmt, True);
 
-      Header := Get_Block_Header (Stmt);
       if Header /= Null_Iir then
          Generic_Chain := Get_Generic_Chain (Header);
          Sem_Interface_Chain (Generic_Chain, Generic_Interface_List);
@@ -1629,7 +1636,6 @@ package body Sem_Stmts is
       --  implicitly declared at the beginning of the declarative part of the
       --  block, and the guard expression defined the value of that signal at
       --  any given time.
-      Guard := Get_Guard_Decl (Stmt);
       if Guard /= Null_Iir then
          --  LRM93 9.1
          --  The type of the guard expression must be type BOOLEAN.
@@ -1671,19 +1677,20 @@ package body Sem_Stmts is
 
    procedure Sem_For_Generate_Statement (Stmt : Iir)
    is
-      Param : Iir;
+      Param : constant Iir := Get_Parameter_Specification (Stmt);
    begin
       --  LRM93 10.1 Declarative region.
       --  12. A generate statement.
       Open_Declarative_Region;
       Set_Is_Within_Flag (Stmt, True);
 
-      Param := Get_Parameter_Specification (Stmt);
       Sem_Scopes.Add_Name (Param);
+
       --  LRM93 7.4.2 (Globally Static Primaries)
       --   4. a generate parameter;
       Sem_Iterator (Param, Globally);
       Set_Visible_Flag (Param, True);
+
       --  LRM93 9.7
       --  The discrete range in a generation scheme of the first form must
       --  be a static discrete range;
