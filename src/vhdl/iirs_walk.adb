@@ -59,6 +59,7 @@ package body Iirs_Walk is
       case Iir_Kinds_Sequential_Statement (Get_Kind (Stmt)) is
          when Iir_Kind_Simple_Signal_Assignment_Statement
            | Iir_Kind_Conditional_Signal_Assignment_Statement
+           | Iir_Kind_Selected_Waveform_Assignment_Statement
            | Iir_Kind_Null_Statement
            | Iir_Kind_Assertion_Statement
            | Iir_Kind_Report_Statement

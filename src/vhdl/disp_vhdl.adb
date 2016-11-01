@@ -1783,6 +1783,9 @@ package body Disp_Vhdl is
       if Chain = Null_Iir then
          Put ("null after {disconnection_time}");
          return;
+      elsif Get_Kind (Chain) = Iir_Kind_Unaffected_Waveform then
+         Put ("unaffected");
+         return;
       end if;
       We := Chain;
       while We /= Null_Iir loop
@@ -1854,6 +1857,35 @@ package body Disp_Vhdl is
       Disp_Conditional_Waveform (Get_Conditional_Waveform_Chain (Stmt));
       Put_Line (";");
    end Disp_Conditional_Signal_Assignment;
+
+   procedure Disp_Selected_Waveforms (Stmt : Iir; Indent : Count)
+   is
+      Assoc_Chain : constant Iir := Get_Selected_Waveform_Chain (Stmt);
+      Assoc: Iir;
+   begin
+      Assoc := Assoc_Chain;
+      while Assoc /= Null_Iir loop
+         if Assoc /= Assoc_Chain then
+            Put_Line (",");
+         end if;
+         Set_Col (Indent + Indentation);
+         Disp_Waveform (Get_Associated_Chain (Assoc));
+         Put (" when ");
+         Disp_Choice (Assoc);
+      end loop;
+      Put_Line (";");
+   end Disp_Selected_Waveforms;
+
+   procedure Disp_Selected_Waveform_Assignment (Stmt: Iir; Indent : Count) is
+   begin
+      Put ("with ");
+      Disp_Expression (Get_Expression (Stmt));
+      Put (" select ");
+      Disp_Expression (Get_Target (Stmt));
+      Put (" <= ");
+      Disp_Delay_Mechanism (Stmt);
+      Disp_Selected_Waveforms (Stmt, Indent);
+   end Disp_Selected_Waveform_Assignment;
 
    procedure Disp_Variable_Assignment (Stmt: Iir) is
    begin
@@ -1929,8 +1961,6 @@ package body Disp_Vhdl is
    procedure Disp_Concurrent_Selected_Signal_Assignment (Stmt: Iir)
    is
       Indent: constant Count := Col;
-      Assoc: Iir;
-      Assoc_Chain : Iir;
    begin
       Set_Col (Indent);
       Disp_Label (Stmt);
@@ -1944,18 +1974,7 @@ package body Disp_Vhdl is
          Put ("guarded ");
       end if;
       Disp_Delay_Mechanism (Stmt);
-      Assoc_Chain := Get_Selected_Waveform_Chain (Stmt);
-      Assoc := Assoc_Chain;
-      while Assoc /= Null_Iir loop
-         if Assoc /= Assoc_Chain then
-            Put_Line (",");
-         end if;
-         Set_Col (Indent + Indentation);
-         Disp_Waveform (Get_Associated_Chain (Assoc));
-         Put (" when ");
-         Disp_Choice (Assoc);
-      end loop;
-      Put_Line (";");
+      Disp_Selected_Waveforms (Stmt, Indent);
    end Disp_Concurrent_Selected_Signal_Assignment;
 
    procedure Disp_Concurrent_Conditional_Signal_Assignment (Stmt: Iir) is
@@ -2152,8 +2171,8 @@ package body Disp_Vhdl is
 
    procedure Disp_Sequential_Statements (First : Iir)
    is
-      Stmt: Iir;
       Start: constant Count := Col;
+      Stmt: Iir;
    begin
       Stmt := First;
       while Stmt /= Null_Iir loop
@@ -2190,6 +2209,8 @@ package body Disp_Vhdl is
                Disp_Simple_Signal_Assignment (Stmt);
             when Iir_Kind_Conditional_Signal_Assignment_Statement =>
                Disp_Conditional_Signal_Assignment (Stmt);
+            when Iir_Kind_Selected_Waveform_Assignment_Statement =>
+               Disp_Selected_Waveform_Assignment (Stmt, Start);
             when Iir_Kind_Variable_Assignment_Statement =>
                Disp_Variable_Assignment (Stmt);
             when Iir_Kind_Conditional_Variable_Assignment_Statement =>

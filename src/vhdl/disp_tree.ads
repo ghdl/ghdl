@@ -47,4 +47,5 @@ package Disp_Tree is
    function Image_Location_Type (Loc : Location_Type) return String;
    function Image_Iir_Direction (Dir : Iir_Direction) return String;
    function Image_Token_Type (Tok : Tokens.Token_Type) return String;
+   function Image_String8 (N : Iir) return String;
 end Disp_Tree;

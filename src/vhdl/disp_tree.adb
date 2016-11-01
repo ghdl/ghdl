@@ -20,6 +20,7 @@
 
 with Ada.Text_IO; use Ada.Text_IO;
 with Name_Table;
+with Str_Table;
 with Files_Map;
 with PSL.Dump_Tree;
 with Nodes_Meta;
@@ -314,6 +315,33 @@ package body Disp_Tree is
 
    function Image_Token_Type (Tok : Tokens.Token_Type) return String
      renames Tokens.Image;
+
+   function Image_String8 (N : Iir) return String
+   is
+      use Str_Table;
+      T : constant Iir := Get_Type (N);
+      Str : constant String8_Id := Get_String8_Id (N);
+      Len : constant Int32 := Get_String_Length (N);
+   begin
+      if Is_Null (T) then
+         --  Not yet analyzed, the string is the ASCII image.
+         return Str_Table.String_String8 (Str, Len);
+      else
+         declare
+            El : constant Iir := Get_Base_Type (Get_Element_Subtype (T));
+            Lits : constant Iir_List := Get_Enumeration_Literal_List (El);
+            Res : String (1 .. Natural (Len));
+            C : Natural;
+         begin
+            for I in 1 .. Len loop
+               C := Natural (Element_String8 (Str, I));
+               Res (Natural (I)) := Name_Table.Get_Character
+                 (Get_Identifier (Get_Nth_Element (Lits, C)));
+            end loop;
+            return Res;
+         end;
+      end if;
+   end Image_String8;
 
    procedure Header (Str : String; Indent : Natural) is
    begin

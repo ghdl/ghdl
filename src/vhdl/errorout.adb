@@ -691,6 +691,8 @@ package body Errorout is
             return "null literal";
          when Iir_Kind_Overflow_Literal =>
             return Disp_Node (Get_Literal_Origin (Node));
+         when Iir_Kind_Unaffected_Waveform =>
+            return "unaffected waveform";
          when Iir_Kind_Aggregate =>
             return "aggregate";
          when Iir_Kind_Unit_Declaration =>
@@ -1153,6 +1155,9 @@ package body Errorout is
          when Iir_Kind_Conditional_Signal_Assignment_Statement =>
             return Disp_Label
               (Node, "conditional signal assignment statement");
+         when Iir_Kind_Selected_Waveform_Assignment_Statement =>
+            return Disp_Label
+              (Node, "selected waveform assignment statement");
          when Iir_Kind_Variable_Assignment_Statement =>
             return Disp_Label (Node, "variable assignment statement");
          when Iir_Kind_Conditional_Variable_Assignment_Statement =>

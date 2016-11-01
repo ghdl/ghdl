@@ -310,6 +310,8 @@ package Iirs is
    --  Number of literals in the expanded string.
    --   Get/Set_String_Length (Field4)
    --
+   --  Before analysis, this is the ASCII code of each character in the string.
+   --  After analysis, this is the position of each literal.
    --   Get/Set_String8_Id (Field5)
    --
    --  Base of the bit_string (corresponds to letters 'b', 'o', 'd' or 'x' in
@@ -406,6 +408,9 @@ package Iirs is
    --   Get/Set_Type (Field1)
    --
    --   Get/Set_Expr_Staticness (State1)
+
+   -- Iir_Kind_Unaffected_Waveform (Short)
+   --  The 'unaffected' reserved word when it appears in the sources.
 
    -------------
    --  Tuples --
@@ -3156,6 +3161,7 @@ package Iirs is
 
    -- Iir_Kind_Simple_Signal_Assignment_Statement (Short)
    -- Iir_Kind_Conditional_Signal_Assignment_Statement (Short)
+   -- Iir_Kind_Selected_Waveform_Assignment_Statement (Medium)
    --
    --   Get/Set_Parent (Field0)
    --
@@ -3177,6 +3183,12 @@ package Iirs is
    --
    -- Only for Iir_Kind_Conditional_Signal_Assignment_Statement:
    --   Get/Set_Conditional_Waveform_Chain (Field5)
+   --
+   -- Only for Iir_Kind_Selected_Waveform_Assignment_Statement:
+   --   Get/Set_Expression (Field5)
+   --
+   -- Only for Iir_Kind_Selected_Waveform_Assignment_Statement:
+   --   Get/Set_Selected_Waveform_Chain (Field7)
    --
    --   Get/Set_Delay_Mechanism (Flag1)
    --
@@ -3962,6 +3974,8 @@ package Iirs is
       Iir_Kind_Simple_Aggregate,
       Iir_Kind_Overflow_Literal,
 
+      Iir_Kind_Unaffected_Waveform,
+
    -- Tuple,
       Iir_Kind_Waveform_Element,
       Iir_Kind_Conditional_Waveform,
@@ -4168,6 +4182,7 @@ package Iirs is
    -- Iir_Kind_Sequential_Statement
       Iir_Kind_Simple_Signal_Assignment_Statement,
       Iir_Kind_Conditional_Signal_Assignment_Statement,
+      Iir_Kind_Selected_Waveform_Assignment_Statement,
       Iir_Kind_Null_Statement,
       Iir_Kind_Assertion_Statement,
       Iir_Kind_Report_Statement,
@@ -5157,6 +5172,7 @@ package Iirs is
    subtype Iir_Kinds_Sequential_Statement is Iir_Kind range
      Iir_Kind_Simple_Signal_Assignment_Statement ..
    --Iir_Kind_Conditional_Signal_Assignment_Statement
+   --Iir_Kind_Selected_Waveform_Assignment_Statement
    --Iir_Kind_Null_Statement
    --Iir_Kind_Assertion_Statement
    --Iir_Kind_Report_Statement
