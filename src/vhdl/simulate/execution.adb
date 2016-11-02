@@ -2767,7 +2767,7 @@ package body Execution is
                if Unit = Null_Iir then
                   Error_Msg_Exec ("incorrect unit name", Expr);
                end if;
-               Mult := Ghdl_I64 (Get_Value (Get_Physical_Unit_Value (Unit)));
+               Mult := Ghdl_I64 (Get_Value (Get_Physical_Unit (Unit)));
 
                Str_Bnd.Dim_1.Length := Lit_End;
                if Is_Real then
@@ -3458,12 +3458,14 @@ package body Execution is
    --  Establish correspondance for association list ASSOC_LIST from block
    --  instance OUT_BLOCK for subprogram of block SUBPRG_BLOCK.
    procedure Execute_Association
-     (Out_Block: Block_Instance_Acc;
-      Subprg_Block: Block_Instance_Acc;
-      Assoc_Chain: Iir)
+     (Out_Block : Block_Instance_Acc;
+      Subprg_Block : Block_Instance_Acc;
+      Inter_Chain : Iir;
+      Assoc_Chain : Iir)
    is
       Nbr_Assoc : constant Natural := Get_Chain_Length (Assoc_Chain);
       Assoc: Iir;
+      Assoc_Inter : Iir;
       Actual : Iir;
       Inter: Iir;
       Formal : Iir;
@@ -3478,10 +3480,11 @@ package body Execution is
       Mark (Marker, Expr_Pool);
 
       Assoc := Assoc_Chain;
+      Assoc_Inter := Inter_Chain;
       Assoc_Idx := 1;
       while Assoc /= Null_Iir loop
          Formal := Get_Formal (Assoc);
-         Inter := Get_Association_Interface (Assoc);
+         Inter := Get_Association_Interface (Assoc, Assoc_Inter);
 
          --  Extract the actual value.
          case Get_Kind (Assoc) is
@@ -3614,7 +3617,7 @@ package body Execution is
          end if;
 
          << Continue >> null;
-         Assoc := Get_Chain (Assoc);
+         Next_Association_Interface (Assoc, Assoc_Inter);
          Assoc_Idx := Assoc_Idx + 1;
       end loop;
 
@@ -3623,18 +3626,21 @@ package body Execution is
 
    procedure Execute_Back_Association (Instance : Block_Instance_Acc)
    is
-      Proc : constant Iir := Get_Procedure_Call (Instance.Parent.Stmt);
-      Assoc: Iir;
-      Inter: Iir;
+      Call : constant Iir := Get_Procedure_Call (Instance.Parent.Stmt);
+      Imp : constant Iir := Get_Implementation (Call);
+      Assoc : Iir;
+      Assoc_Inter : Iir;
+      Inter : Iir;
       Formal : Iir;
       Assoc_Idx : Iir_Index32;
    begin
-      Assoc := Get_Parameter_Association_Chain (Proc);
+      Assoc := Get_Parameter_Association_Chain (Call);
+      Assoc_Inter := Get_Interface_Declaration_Chain (Imp);
       Assoc_Idx := 1;
       while Assoc /= Null_Iir loop
          if Get_Kind (Assoc) /= Iir_Kind_Association_Element_By_Individual then
             Formal := Get_Formal (Assoc);
-            Inter := Get_Association_Interface (Assoc);
+            Inter := Get_Association_Interface (Assoc, Assoc_Inter);
             case Get_Kind (Inter) is
                when Iir_Kind_Interface_Variable_Declaration =>
                   if Get_Mode (Inter) /= Iir_In_Mode
@@ -3678,7 +3684,7 @@ package body Execution is
                   Error_Kind ("execute_back_association", Inter);
             end case;
          end if;
-         Assoc := Get_Chain (Assoc);
+         Next_Association_Interface (Assoc, Assoc_Inter);
          Assoc_Idx := Assoc_Idx + 1;
       end loop;
    end Execute_Back_Association;
@@ -3733,7 +3739,8 @@ package body Execution is
             Subprg_Block :=
               Create_Subprogram_Instance (Block, Prot_Block, Imp);
             Assoc_Chain := Get_Parameter_Association_Chain (Expr);
-            Execute_Association (Block, Subprg_Block, Assoc_Chain);
+            Execute_Association
+              (Block, Subprg_Block, Inter_Chain, Assoc_Chain);
             --  No out/inout interface for functions.
             pragma Assert (Subprg_Block.Actuals_Ref = null);
          when Iir_Kinds_Dyadic_Operator =>
@@ -4531,6 +4538,7 @@ package body Execution is
       Subprg_Instance : Block_Instance_Acc;
       Prot_Block : Block_Instance_Acc;
       Assoc_Chain: Iir;
+      Inter_Chain : Iir;
       Subprg_Body : Iir;
    begin
       if Get_Implicit_Definition (Imp) in Iir_Predefined_Implicit then
@@ -4545,7 +4553,9 @@ package body Execution is
          Subprg_Instance :=
            Create_Subprogram_Instance (Instance, Prot_Block, Imp);
          Assoc_Chain := Get_Parameter_Association_Chain (Call);
-         Execute_Association (Instance, Subprg_Instance, Assoc_Chain);
+         Inter_Chain := Get_Interface_Declaration_Chain (Imp);
+         Execute_Association
+           (Instance, Subprg_Instance, Inter_Chain, Assoc_Chain);
 
          Current_Process.Instance := Subprg_Instance;
          Subprg_Body := Get_Subprogram_Body (Imp);

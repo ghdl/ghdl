@@ -51,6 +51,7 @@ package body Elaboration is
    procedure Elaborate_Generic_Map_Aspect
      (Target_Instance : Block_Instance_Acc;
       Local_Instance : Block_Instance_Acc;
+      Generics : Iir;
       Map : Iir);
 
    --  CONF is the block_configuration for components of ARCH.
@@ -381,7 +382,9 @@ package body Elaboration is
       if Get_Kind (Decl) = Iir_Kind_Package_Instantiation_Declaration then
          Elaborate_Generic_Clause (Instance, Get_Generic_Chain (Decl));
          Elaborate_Generic_Map_Aspect
-           (Instance, Instance, Get_Generic_Map_Aspect_Chain (Decl));
+           (Instance, Instance,
+            Get_Generic_Chain (Decl),
+            Get_Generic_Map_Aspect_Chain (Decl));
       end if;
 
       -- Elaborate objects declarations.
@@ -1066,9 +1069,11 @@ package body Elaboration is
    procedure Elaborate_Generic_Map_Aspect
      (Target_Instance : Block_Instance_Acc;
       Local_Instance : Block_Instance_Acc;
+      Generics : Iir;
       Map : Iir)
    is
       Assoc : Iir;
+      Gen : Iir;
       Inter : Iir_Interface_Constant_Declaration;
       Value : Iir;
       Val : Iir_Value_Literal_Acc;
@@ -1082,13 +1087,14 @@ package body Elaboration is
       --  elaboration of each generic association element in the
       --  association list.
       Assoc := Map;
+      Gen := Generics;
       Mark (Marker, Expr_Pool);
       while Assoc /= Null_Iir loop
          --  Elaboration of a generic association element consists of the
          --  elaboration of the formal part and the evaluation of the actual
          --  part.
          --  FIXME:  elaboration of the formal part.
-         Inter := Get_Association_Interface (Assoc);
+         Inter := Get_Association_Interface (Assoc, Gen);
          case Get_Kind (Assoc) is
             when Iir_Kind_Association_Element_Open =>
                --  The generic association list contains an implicit
@@ -1170,7 +1176,7 @@ package body Elaboration is
 
          <<Continue>> null;
          Release (Marker, Expr_Pool);
-         Assoc := Get_Chain (Assoc);
+         Next_Association_Interface (Assoc, Gen);
       end loop;
    end Elaborate_Generic_Map_Aspect;
 
@@ -1216,6 +1222,7 @@ package body Elaboration is
                              Formal_Instance => Formal_Instance,
                              Actual => Local_Expr,
                              Actual_Instance => Local_Instance,
+                             Inter => Inter,
                              Assoc => Assoc));
    end Elab_Connect;
 
@@ -1228,6 +1235,7 @@ package body Elaboration is
       Map : Iir)
    is
       Assoc : Iir;
+      Port : Iir;
       Inter : Iir_Interface_Signal_Declaration;
       Actual_Expr : Iir_Value_Literal_Acc;
       Init_Expr : Iir_Value_Literal_Acc;
@@ -1254,11 +1262,12 @@ package body Elaboration is
       end if;
 
       Assoc := Map;
+      Port := Ports;
       while Assoc /= Null_Iir loop
          --  Elaboration of a port association list consists of the elaboration
          --  of each port association element in the association list whose
          --  actual is not the reserved word OPEN.
-         Inter := Get_Association_Interface (Assoc);
+         Inter := Get_Association_Interface (Assoc, Port);
          case Get_Kind (Assoc) is
             when Iir_Kind_Association_Element_By_Expression =>
                if Get_In_Conversion (Assoc) = Null_Iir
@@ -1355,7 +1364,7 @@ package body Elaboration is
             when others =>
                Error_Kind ("elaborate_port_map_aspect", Assoc);
          end case;
-         Assoc := Get_Chain (Assoc);
+         Next_Association_Interface (Assoc, Port);
       end loop;
    end Elaborate_Port_Map_Aspect;
 
@@ -1369,7 +1378,9 @@ package body Elaboration is
    begin
       Elaborate_Generic_Clause (Instance, Get_Generic_Chain (Header));
       Elaborate_Generic_Map_Aspect
-        (Instance, Instance, Get_Generic_Map_Aspect_Chain (Header));
+        (Instance, Instance,
+         Get_Generic_Chain (Header),
+         Get_Generic_Map_Aspect_Chain (Header));
       Elaborate_Port_Clause (Instance, Get_Port_Chain (Header));
       Elaborate_Port_Map_Aspect
         (Instance, Instance,
@@ -1583,7 +1594,9 @@ package body Elaboration is
             Current_Component := Frame;
             Elaborate_Generic_Clause (Frame, Get_Generic_Chain (Component));
             Elaborate_Generic_Map_Aspect
-              (Frame, Instance, Get_Generic_Map_Aspect_Chain (Stmt));
+              (Frame, Instance,
+               Get_Generic_Chain (Component),
+               Get_Generic_Map_Aspect_Chain (Stmt));
             Elaborate_Port_Clause (Frame, Get_Port_Chain (Component));
             Elaborate_Port_Map_Aspect
               (Frame, Instance,
@@ -2699,7 +2712,8 @@ package body Elaboration is
 
       Current_Component := Parent_Instance;
       Elaborate_Generic_Clause (Instance, Get_Generic_Chain (Entity));
-      Elaborate_Generic_Map_Aspect (Instance, Parent_Instance, Generic_Map);
+      Elaborate_Generic_Map_Aspect (Instance, Parent_Instance,
+                                    Get_Generic_Chain (Entity), Generic_Map);
       Elaborate_Port_Clause (Instance, Get_Port_Chain (Entity));
       Elaborate_Port_Map_Aspect (Instance, Parent_Instance,
                                  Get_Port_Chain (Entity), Port_Map);
@@ -2816,15 +2830,17 @@ package body Elaboration is
       end loop;
    end Override_Generics;
 
-   procedure Check_No_Unconstrained (Map : Iir)
+   procedure Check_No_Unconstrained (Ports : Iir; Map : Iir)
    is
       Assoc : Iir;
+      Port : Iir;
       Formal : Iir;
    begin
       Assoc := Map;
+      Port := Ports;
       while Assoc /= Null_Iir loop
          if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open then
-            Formal := Get_Association_Interface (Assoc);
+            Formal := Get_Association_Interface (Assoc, Port);
             if Get_Default_Value (Formal) = Null_Iir
               and then not Is_Fully_Constrained_Type (Get_Type (Formal))
             then
@@ -2832,7 +2848,7 @@ package body Elaboration is
                  (Formal, "top-level %n must have a value", +Formal);
             end if;
          end if;
-         Assoc := Get_Chain (Assoc);
+         Next_Association_Interface (Assoc, Port);
       end loop;
    end Check_No_Unconstrained;
 
@@ -2889,8 +2905,8 @@ package body Elaboration is
         (Get_Port_Chain (Entity), Null_Iir, Entity);
       Override_Generics (Generic_Map, Grt.Options.First_Generic_Override);
 
-      Check_No_Unconstrained (Generic_Map);
-      Check_No_Unconstrained (Port_Map);
+      Check_No_Unconstrained (Get_Generic_Chain (Entity), Generic_Map);
+      Check_No_Unconstrained (Get_Port_Chain (Entity), Port_Map);
 
       --  Stop now in case of errors.
       if Nbr_Errors /= 0 then

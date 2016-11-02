@@ -271,7 +271,8 @@ GHDL_SIMUL_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir
 ghdl_simul$(EXEEXT): $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) version.ads force
 	$(GNATMAKE) $(GHDL_SIMUL_INCFLAGS) $(GNATFLAGS) ghdl_simul $(GNAT_BARGS) -largs $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
 
-libs.vhdl.simul: ghdl_simul$(EXEEXT) vhdl.libs.all
+libs.vhdl.simul: ghdl_simul$(EXEEXT)
+	$(MAKE) GHDL=$(PWD)/ghdl_simul$(EXEEXT) vhdl.libs.all
 
 ################ mhdlsim (library for the vhdl part) ####################
 
