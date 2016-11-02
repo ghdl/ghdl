@@ -130,16 +130,16 @@ if ($Clean)
 if ((-not $StopCompiling) -and $UVVM)
 {	$Library = "uvvm_util"
 	$Files = @(
-		"src\types_pkg.vhd",
-		"src\adaptations_pkg.vhd",
-		"src\string_methods_pkg.vhd",
-		"src\protected_types_pkg.vhd",
-		"src\hierarchy_linked_list_pkg.vhd",
-		"src\alert_hierarchy_pkg.vhd",
-		"src\license_pkg.vhd",
-		"src\methods_pkg.vhd",
-		"src\bfm_common_pkg.vhd",
-		"src\uvvm_util_context.vhd"
+		"uvvm_util\src\types_pkg.vhd",
+		"uvvm_util\src\adaptations_pkg.vhd",
+		"uvvm_util\src\string_methods_pkg.vhd",
+		"uvvm_util\src\protected_types_pkg.vhd",
+		"uvvm_util\src\hierarchy_linked_list_pkg.vhd",
+		"uvvm_util\src\alert_hierarchy_pkg.vhd",
+		"uvvm_util\src\license_pkg.vhd",
+		"uvvm_util\src\methods_pkg.vhd",
+		"uvvm_util\src\bfm_common_pkg.vhd",
+		"uvvm_util\src\uvvm_util_context.vhd"
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 	
@@ -149,7 +149,7 @@ if ((-not $StopCompiling) -and $UVVM)
 }
 
 Write-Host "--------------------------------------------------------------------------------"
-Write-Host "Compiling UVVM packages " -NoNewline
+Write-Host "Compiling UVVM Utility Library packages " -NoNewline
 if ($ErrorCount -gt 0)
 {	Write-Host "[FAILED]" -ForegroundColor Red				}
 else

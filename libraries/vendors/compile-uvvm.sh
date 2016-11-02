@@ -6,13 +6,13 @@
 # ==============================================================================
 #	Authors:						Patrick Lehmann
 # 
-#	Bash Script:				Script to compile the VUnit library for GHDL on Linux
+#	Bash Script:				Script to compile the UVVM library for GHDL on Linux
 # 
 # Description:
 # ------------------------------------
 #	This is a Bash script (executable) which:
 #		- creates a subdirectory in the current working directory
-#		- compiles all VUnit packages 
+#		- compiles all UVVM packages 
 #
 # ==============================================================================
 #	Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
@@ -64,7 +64,7 @@ while [[ $# > 0 ]]; do
 		COMPILE_ALL=TRUE
 		NO_COMMAND=0
 		;;
-		--vunit)
+		--uvvm)
 		COMPILE_VUNIT=TRUE
 		NO_COMMAND=0
 		;;
@@ -98,7 +98,7 @@ while [[ $# > 0 ]]; do
 	shift # past argument or value
 done
 
-# makes no sense to enable it for VUnit
+# makes no sense to enable it for UVVM
 SKIP_EXISTING_FILES=0
 
 if [ $NO_COMMAND -eq 1 ]; then
@@ -109,14 +109,14 @@ if [ "$HELP" == "TRUE" ]; then
 	test $NO_COMMAND -eq 1 && echo 1>&2 -e "\n${COLORED_ERROR} No command selected."
 	echo ""
 	echo "Synopsis:"
-	echo "  A script to compile the simulation library 'vunit_lib' for GHDL on Linux."
-	echo "  A library folder 'vunit_lib/v08' will be created relative to the current"
+	echo "  A script to compile the simulation library 'uvvm_util' for GHDL on Linux."
+	echo "  A library folder 'uvvm_util/v08' will be created relative to the current"
 	echo "  working directory."
 	echo ""
 	echo "  Use the adv. options or edit 'config.sh' to supply paths and default params."
 	echo ""
 	echo "Usage:"
-	echo "  compile-vunit.sh <common command>|<library> [<options>] [<adv. options>]"
+	echo "  compile-uvvm.sh <common command>|<library> [<options>] [<adv. options>]"
 	echo ""
 	echo "Common commands:"
 	echo "  -h --help             Print this help page"
@@ -124,15 +124,15 @@ if [ "$HELP" == "TRUE" ]; then
 	echo ""
 	echo "Libraries:"
 	echo "  -a --all              Compile all libraries."
-	echo "     --vunit            Compile library vunit_lib."
+	echo "     --uvvm             Compile library uvvm_util."
 	echo ""
 	echo "Library compile options:"
 	echo "  -H --halt-on-error    Halt on error(s)."
 	echo ""
 	echo "Advanced options:"
 	echo "  --ghdl <GHDL bin dir> Path to GHDL's binary directory, e.g. /usr/local/bin"
-	echo "  --out <dir name>      Name of the output directory, e.g. vunit_lib"
-	echo "  --src <Path to VUnit> Path to the sources."
+	echo "  --out <dir name>      Name of the output directory, e.g. uvvm_util"
+	echo "  --src <Path to UVVM>  Path to the sources."
 	echo ""
 	echo "Verbosity:"
 	echo "  -n --no-warnings      Suppress all warnings. Show only error messages."
@@ -141,7 +141,7 @@ if [ "$HELP" == "TRUE" ]; then
 fi
 
 if [ "$COMPILE_ALL" == "TRUE" ]; then
-	COMPILE_VUNIT=TRUE
+	COMPILE_UVVM=TRUE
 fi
 
 # -> $SourceDirectories
@@ -152,9 +152,9 @@ fi
 # <= $SourceDirectory
 # <= $DestinationDirectory
 # <= $GHDLBinary
-SetupDirectories VUnit "VUnit"
+SetupDirectories UVVM "UVVM"
 
-# create "vunit_lib" directory and change to it
+# create "uvvm_util" directory and change to it
 # => $DestinationDirectory
 CreateDestinationDirectory
 cd $DestinationDirectory
@@ -177,52 +177,24 @@ if [ "$CLEAN" == "TRUE" ]; then
 	rm *.cf 2> /dev/null
 fi
 
-# Library vunit_lib
+# Library uvvm_util
 # ==============================================================================
 # compile vunit packages	
 ERRORCOUNT=0
-if [ "$COMPILE_VUNIT" == "TRUE" ]; then
-	Library="vunit_lib"
+if [ "$COMPILE_UVVM" == "TRUE" ]; then
+	Library="uvvm_util"
 	VHDLVersion="v08"
 	Files=(
-		run/src/stop_api.vhd
-		vhdl/src/lib/std/textio.vhd
-		vhdl/src/lang/lang.vhd
-		com/src/com_types.vhd
-		run/src/stop_body_2008.vhd
-		com/src/com_api.vhd
-		string_ops/src/string_ops.vhd
-		path/src/path.vhd
-		logging/src/log_types.vhd
-		logging/src/log_formatting.vhd
-		logging/src/log_special_types200x.vhd
-		array/src/array_pkg.vhd
-		logging/src/log_base_api.vhd
-		logging/src/log_base.vhd
-		logging/src/log_api.vhd
-		logging/src/log.vhd
-		check/src/check_types.vhd
-		check/src/check_special_types200x.vhd
-		check/src/check_base_api.vhd
-		check/src/check_base.vhd
-		check/src/check_api.vhd
-		check/src/check.vhd
-		dictionary/src/dictionary.vhd
-		run/src/run_types.vhd
-		run/src/run_special_types200x.vhd
-		run/src/run_base_api.vhd
-		run/src/run_base.vhd
-		run/src/run_api.vhd
-		run/src/run.vhd
-		vunit_run_context.vhd
-		vunit_context.vhd
-		com/src/com_std_codec_builder.vhd
-		com/src/com_debug_codec_builder.vhd
-		com/src/com_string.vhd
-		com/src/com_codec_api.vhd
-		com/src/com_codec.vhd
-		com/src/com.vhd
-		com/src/com_context.vhd
+		uvvm_util/src/types_pkg.vhd
+		uvvm_util/src/adaptations_pkg.vhd
+		uvvm_util/src/string_methods_pkg.vhd
+		uvvm_util/src/protected_types_pkg.vhd
+		uvvm_util/src/hierarchy_linked_list_pkg.vhd
+		uvvm_util/src/alert_hierarchy_pkg.vhd
+		uvvm_util/src/license_pkg.vhd
+		uvvm_util/src/methods_pkg.vhd
+		uvvm_util/src/bfm_common_pkg.vhd
+		uvvm_util/src/uvvm_util_context.vhd
 	)
 
 	# append absolute source path
@@ -239,7 +211,7 @@ if [ "$COMPILE_VUNIT" == "TRUE" ]; then
 fi
 	
 echo "--------------------------------------------------------------------------------"
-echo -n "Compiling VUnit packages "
+echo -n "Compiling UVVM Utility Library packages "
 if [ $ERRORCOUNT -gt 0 ]; then
 	echo -e $COLORED_FAILED
 else

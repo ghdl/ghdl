@@ -43,28 +43,31 @@ $Module_VendorToolName = $VendorToolName
 $InstallationDirectories = @{
 	"AlteraQuartus" =		""		# "C:\Altera\16.0\quartus";
 	"LatticeDiamond" =	""		# "C:\Lattice\Diamond\3.8_x64"
+	"OSVVM" =						""		# "C:\git\GitHub\osvvm";
+	"UVVM" =						""		# "C:\git\GitHub\uvvm_all";
+	"VUnit" =						""		# "C:\git\GitHub\vunit"
 	"XilinxISE" =				""		# "C:\Xilinx\14.7\ISE_DS";
 	"XilinxVivado" =		""		# "C:\Xilinx\Vivado\2016.3";
-	"OSVVM" =						""		# "C:\git\GitHub\osvvm";
-	"VUnit" =						""		# "C:\git\GitHub\vunit"
 }
 
 $SourceDirectories = @{
 	"AlteraQuartus" =		"eda\sim_lib";
 	"LatticeDiamond" =	"cae_library\simulation\vhdl"
-	"XilinxISE" =				"ISE\vhdl\src";
-	"XilinxVivado" =		"data\vhdl\src";
 	"OSVVM" =						".";
-	"VUnit" =						"vunit\vhdl"
+	"UVVM" =						".";
+	"VUnit" =						"vunit\vhdl";
+	"XilinxISE" =				"ISE\vhdl\src";
+	"XilinxVivado" =		"data\vhdl\src"
 }
 
 $DestinationDirectories = @{
 	"AlteraQuartus" =		"altera";
 	"LatticeDiamond" =	"lattice";
-	"XilinxISE" =				"xilinx-ise";
-	"XilinxVivado" =		"xilinx-vivado";
 	"OSVVM" =						".";
-	"VUnit" =						"."
+	"UVVM" =						".";
+	"VUnit" =						".";
+	"XilinxISE" =				"xilinx-ise";
+	"XilinxVivado" =		"xilinx-vivado"
 }
 
 

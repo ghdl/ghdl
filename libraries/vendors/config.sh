@@ -43,6 +43,7 @@ declare -A InstallationDirectories
 InstallationDirectories[AlteraQuartus]=""     # "/opt/altera/16.0/quartus"
 InstallationDirectories[LatticeDiamond]=""    # "/usr/local/diamond/3.7_x64"
 InstallationDirectories[OSVVM]=""	   					# "~/git/github/osvvm"
+InstallationDirectories[UVVM]=""	   					# "~/git/github/uvvm_all"
 InstallationDirectories[VUnit]=""	   					# "~/git/github/vunit"
 InstallationDirectories[XilinxISE]=""	  		  # "/opt/Xilinx/14.7/ISE_DS/ISE"
 InstallationDirectories[XilinxVivado]=""      # "/opt/Xilinx/Vivado/2016.2"
@@ -52,6 +53,7 @@ declare -A DestinationDirectories
 DestinationDirectories[AlteraQuartus]="altera"
 DestinationDirectories[LatticeDiamond]="lattice"
 DestinationDirectories[OSVVM]="."										# "osvvm"
+DestinationDirectories[UVVM]="."
 DestinationDirectories[VUnit]="."										# "vunit_lib"
 DestinationDirectories[XilinxISE]="xilinx-ise"
 DestinationDirectories[XilinxVivado]="xilinx-vivado"
@@ -59,11 +61,12 @@ DestinationDirectories[XilinxVivado]="xilinx-vivado"
 # Declare source directories depending on the installation paths:
 declare -A SourceDirectories
 SourceDirectories[AlteraQuartus]="eda/sim_lib"
-SourceDirectories[XilinxISE]="vhdl/src"
-SourceDirectories[XilinxVivado]="data/vhdl/src"
 SourceDirectories[LatticeDiamond]="cae_library/simulation/vhdl"
 SourceDirectories[OSVVM]="."
+SourceDirectories[UVVM]="."
 SourceDirectories[VUnit]="vunit/vhdl"
+SourceDirectories[XilinxISE]="vhdl/src"
+SourceDirectories[XilinxVivado]="data/vhdl/src"
 
 # input files greater than $LARGE_FILESIZE are skipped if '--skip-largefiles' is set
 LARGE_FILESIZE=125000
