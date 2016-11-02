@@ -38,20 +38,27 @@ with Grt.Types; use Grt.Types;
 package Grt.Wave_Opt.Design is
    pragma Preelaborate;
 
+   type Match_Elem_Type;
+   type Match_List is access Match_Elem_Type;
+   type Match_Elem_Type is record
+      Tree_Elem : Elem_Acc;
+      Next : Match_List;
+   end record;
+
    -- Returns the top element of the tree corresponding to the index given, but
    -- only if the name given matches with it.  Otherwise returns null
    function Get_Top_Cursor (Tree_Index : Tree_Index_Type; Name : Ghdl_C_String)
-                           return Elem_Acc;
+                           return Match_List;
 
    -- If there is an element in the parent element given that matches the name
    -- given, returns it, otherwise returns null
    function Get_Cursor
-     (Parent : Elem_Acc; Name : Ghdl_C_String; Is_Signal : Boolean := False)
-     return Elem_Acc;
+     (Parent : Match_List; Name : Ghdl_C_String; Is_Signal : Boolean := False)
+     return Match_List;
 
    -- Returns true if the element given is not null, which means it exists in
    -- the tree of the VHDL elements to be displayed
-   function Is_Displayed (Cursor : Elem_Acc) return Boolean;
+   function Is_Displayed (Cursor : Match_List) return Boolean;
 
    -- If relevent, read the whole tree and check if every element was found in
    -- design

@@ -33,72 +33,150 @@ package body Grt.Wave_Opt.Design is
    -- Find the element that matches the name given. Starts with the element
    -- given, then go thru all its siblings
    function Find_Cursor (Name : String;
-                         First_Sibling : Elem_Acc;
+                         Parent : Match_List;
                          Is_Signal : Boolean := False)
-                        return Elem_Acc;
+                        return Match_List;
+
+   -- If the name of the current design object matches with the child tree
+   -- element given in parameter (Elem_Acc), this procedure is called to add
+   -- the latter to the list of all the child tree elements that match a design
+   -- object.
+   -- A list needs to be done, because if /top/sub/a, /top/sub/b and /top/sub/c
+   -- exist in the design and if we have /top/sub/a, /top/*/b and /top/**/c in
+   -- the tree, then a list of the child tree elements of /top will be done
+   -- with sub, * and ** so that /top/sub/a, /top/sub/b and /top/sub/c can be
+   -- matched with respectively /top/sub/a, /top/*/b and /top/**/c
+   procedure Match_List_Append
+     (List : in out Match_List; Tree_Elem : Elem_Acc);
+   -- TODO : Deallocate the list somewhere, but the memory gain shouldn't be
+   --        significative
 
    function Get_Top_Cursor (Tree_Index : Tree_Index_Type; Name : Ghdl_C_String)
-                           return Elem_Acc
+                           return Match_List
    is
-      Root : Elem_Acc;
+      Root : Match_List;
    begin
-      Root := Trees (Tree_Index);
-      if State = Write_File and then Root.Next_Child = null then
+      if State = Write_File and then Trees (Tree_Index).Next_Child = null then
          Write_Tree_Comment (Tree_Index);
       end if;
+      Root := new Match_Elem_Type'(Trees (Tree_Index), null);
       return Get_Cursor (Root, Name);
    end Get_Top_Cursor;
 
-   function Get_Cursor (Parent : Elem_Acc;
+   function Get_Cursor (Parent : Match_List;
                         Name : Ghdl_C_String;
-                        Is_Signal : Boolean := False) return Elem_Acc
+                        Is_Signal : Boolean := False) return Match_List
    is
-      Cursor : Elem_Acc;
-      Dummy_Bool : Boolean;
+      Tree_Elem_Cursor : Elem_Acc;
+      Last_Updated : Boolean;
       Str_Name : constant String := Name (1 .. strlen (Name));
    begin
       case State is
          when Write_File =>
-            Cursor := Parent;
-            Update_Tree (Cursor => Cursor,
-                         Updated => Dummy_Bool,
-                         Elem_Name => Str_Name,
-                         Level => Parent.Level + 1);
+            Tree_Elem_Cursor := Parent.Tree_Elem;
+            Last_Updated := True;
+            Update_Tree (Cursor => Tree_Elem_Cursor,
+                         Last_Updated => Last_Updated,
+                         Elem_Expr => Str_Name,
+                         Level => Tree_Elem_Cursor.Level + 1);
             if Is_Signal then
-               Write_Signal_Path (Cursor);
+               Write_Signal_Path (Tree_Elem_Cursor);
             end if;
-            return Cursor;
+            return new Match_Elem_Type'(Tree_Elem_Cursor, null);
          when Display_Tree =>
-            return Find_Cursor (Str_Name, Parent.Next_Child, Is_Signal);
+            return Find_Cursor (Str_Name, Parent, Is_Signal);
          when Display_All =>
             return null;
       end case;
    end Get_Cursor;
 
    function Find_Cursor (Name : String;
-                         First_Sibling : Elem_Acc;
+                         Parent : Match_List;
                          Is_Signal : Boolean := False)
-                        return Elem_Acc
+                        return Match_List
    is
-      Cursor : Elem_Acc;
-   begin
-      Cursor := First_Sibling;
-      loop
-         if Cursor = null then
-            return null;
-         elsif Cursor.Name.all = Name then
-            if Is_Signal then
-               Cursor.Kind := Signal;
-            else
-               Cursor.Kind := Pkg_Entity;
+      Tree_Elem_Cursor : Elem_Acc;
+      Parent_Cursor, List : Match_List;
+      --
+      function Match_Expr return Boolean is
+      begin
+         if Tree_Elem_Cursor.Expr.all = Name then
+            return True;
+         elsif Tree_Elem_Cursor.Expr.all = "*" then
+            -- Returns true in the following cases :
+            --    Design object : /top/a       | Tree element : /top/*
+            --    Design object : /top/sub/... | Tree element : /top/*/...
+            if Is_Signal xor Tree_Elem_Cursor.Next_Child /= null then
+               return True;
             end if;
-            return Cursor;
+         elsif Tree_Elem_Cursor.Expr.all = "**" then
+            -- Returns true in the following cases :
+            --    Design object : /top/sub/... | Tree element : /top/**
+            --    Design object : /top/a       | Tree element : /top/**
+            -- But will return false in the following case :
+            --    Design object : /top/a       | Tree element : /top/**/x
+            if not Is_Signal or else Tree_Elem_Cursor.Next_Child = null then
+               return True;
+            end if;
          end if;
-         Cursor := Cursor.Next_Sibling;
+         return False;
+      end Match_Expr;
+
+      function Get_Cursor_Kind return Elem_Kind_Type is
+      begin
+         if Tree_Elem_Cursor.Expr.all = "**" then
+            return Recursion;
+         elsif Is_Signal then
+            return Signal;
+         else
+            return Pkg_Entity;
+         end if;
+      end Get_Cursor_Kind;
+   begin
+      Parent_Cursor := Parent;
+      loop
+         exit when Parent_Cursor = null;
+         Tree_Elem_Cursor := Parent_Cursor.Tree_Elem.Next_Child;
+         if Parent_Cursor.Tree_Elem.Expr.all = "**" then
+            -- Add the current tree element to the list in the following cases:
+            --    Design object : /top/y/x     | Tree element : /top/**/x
+            --    Design object : /top/y/x/... | Tree element : /top/**/x/...
+            -- where x matchs the Name parameter, ** is the parent expression
+            if Tree_Elem_Cursor /= null
+              and then Tree_Elem_Cursor.Expr.all = Name
+            then
+               Match_List_Append (List, Tree_Elem_Cursor);
+            -- Add the parent tree element (**) to the list in the following
+            -- cases:
+            --    Design object : /top/y/x/... | Tree element : /top/**
+            --    Design object : /top/y/x     | Tree element : /top/**
+            -- But it won't do it in the following case:
+            --    Design object : /top/y/x       | Tree element : /top/**/z
+            -- as x != z
+            elsif not Is_Signal or else Tree_Elem_Cursor = null then
+               Match_List_Append (List, Parent_Cursor.Tree_Elem);
+            end if;
+         end if;
+         loop
+            exit when Tree_Elem_Cursor = null;
+            if Match_Expr then
+               Tree_Elem_Cursor.Kind := Get_Cursor_Kind;
+               Match_List_Append (List, Tree_Elem_Cursor);
+            end if;
+            Tree_Elem_Cursor := Tree_Elem_Cursor.Next_Sibling;
+         end loop;
+         Parent_Cursor := Parent_Cursor.Next;
       end loop;
+      return List;
    end Find_Cursor;
 
-   function Is_Displayed (Cursor : Elem_Acc) return Boolean is
+   procedure Match_List_Append (List : in out Match_List; Tree_Elem : Elem_Acc)
+   is
+   begin
+      List := new Match_Elem_Type'(Tree_Elem => Tree_Elem, Next => List);
+   end Match_List_Append;
+
+   function Is_Displayed (Cursor : Match_List) return Boolean is
    begin
       if State /= Display_Tree or else Cursor /= null then
          return True;
@@ -129,14 +207,12 @@ package body Grt.Wave_Opt.Design is
       while Cursor /= null loop
          if Cursor.Kind = Not_Found then
             Print_Context (Cursor, Warning);
-            Report_C (Cursor.Name.all);
+            Report_C (Cursor.Expr.all);
             Report_C (" : first element of the path not found in design.");
-            Report_E (" more references may follow");
-         elsif Cursor.Level = Cursor.Path_Context.Max_Level
-           and then Cursor.Kind = Pkg_Entity
-         then
+            Report_E (" More references may follow");
+         elsif Cursor.Next_Child = null and then Cursor.Kind = Pkg_Entity then
             Print_Context (Cursor, Warning);
-            Report_C (Cursor.Name.all);
+            Report_C (Cursor.Expr.all);
             Report_E (" is not a signal");
          else
             Check_Sub_Tree_If_All_Found (Cursor.Next_Child);

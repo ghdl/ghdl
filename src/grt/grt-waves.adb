@@ -916,15 +916,15 @@ package body Grt.Waves is
    --  Create a hierarchy block.
    procedure Wave_Put_Hierarchy_Block (Inst : VhpiHandleT;
                                        Step : Step_Type;
-                                       Wave_Elem : Wave_Opt.Elem_Acc);
+                                       Match_List : Design.Match_List);
 
    procedure Wave_Put_Hierarchy_1
-     (Inst : VhpiHandleT; Step : Step_Type; Wave_Elem : Wave_Opt.Elem_Acc)
+     (Inst : VhpiHandleT; Step : Step_Type; Match_List : Design.Match_List)
    is
       Decl_It : VhpiHandleT;
       Decl : VhpiHandleT;
       Error : AvhpiErrorT;
-      Wave_Elem_Child : Wave_Opt.Elem_Acc;
+      Match_List_Child : Design.Match_List;
    begin
       Vhpi_Iterator (VhpiDecls, Inst, Decl_It, Error);
       if Error /= AvhpiErrorOk then
@@ -944,9 +944,9 @@ package body Grt.Waves is
          case Vhpi_Get_Kind (Decl) is
             when VhpiPortDeclK
               | VhpiSigDeclK =>
-               Wave_Elem_Child := Get_Cursor
-                 (Wave_Elem, Avhpi_Get_Base_Name (Decl), Is_Signal => True);
-               if Is_Displayed (Wave_Elem_Child) then
+               Match_List_Child := Get_Cursor
+                 (Match_List, Avhpi_Get_Base_Name (Decl), Is_Signal => True);
+               if Is_Displayed (Match_List_Child) then
                   case Step is
                      when Step_Name =>
                         Create_String_Id (Avhpi_Get_Base_Name (Decl));
@@ -985,14 +985,15 @@ package body Grt.Waves is
 
          Nbr_Scopes := Nbr_Scopes + 1;
 
-         Wave_Elem_Child := Get_Cursor (Wave_Elem, Avhpi_Get_Base_Name (Decl));
-         if Is_Displayed (Wave_Elem_Child) then
+         Match_List_Child := Get_Cursor
+           (Match_List, Avhpi_Get_Base_Name (Decl));
+         if Is_Displayed (Match_List_Child) then
             case Vhpi_Get_Kind (Decl) is
                when VhpiIfGenerateK
                  | VhpiForGenerateK
                  | VhpiBlockStmtK
                  | VhpiCompInstStmtK =>
-                  Wave_Put_Hierarchy_Block (Decl, Step, Wave_Elem_Child);
+                  Wave_Put_Hierarchy_Block (Decl, Step, Match_List_Child);
                when VhpiProcessStmtK =>
                   case Step is
                      when Step_Name =>
@@ -1012,7 +1013,7 @@ package body Grt.Waves is
 
    procedure Wave_Put_Hierarchy_Block (Inst : VhpiHandleT;
                                        Step : Step_Type;
-                                       Wave_Elem : Wave_Opt.Elem_Acc) is
+                                       Match_List : Design.Match_List) is
    begin
       case Step is
          when Step_Name =>
@@ -1024,7 +1025,7 @@ package body Grt.Waves is
             Write_Hierarchy_El (Inst);
       end case;
 
-      Wave_Put_Hierarchy_1 (Inst, Step, Wave_Elem);
+      Wave_Put_Hierarchy_1 (Inst, Step, Match_List);
 
       if Step = Step_Hierarchy then
          Wave_Put_Byte (Ghw_Hie_Eos);
@@ -1036,7 +1037,7 @@ package body Grt.Waves is
       Pack_It : VhpiHandleT;
       Pack : VhpiHandleT;
       Error : AvhpiErrorT;
-      Wave_Elem : Wave_Opt.Elem_Acc;
+      Match_List : Design.Match_List;
    begin
       --  First packages.
       Get_Package_Inst (Pack_It);
@@ -1047,16 +1048,16 @@ package body Grt.Waves is
             Avhpi_Error (Error);
             return;
          end if;
-         Wave_Elem := Get_Top_Cursor (Pkg, Avhpi_Get_Base_Name (Pack));
-         if Is_Displayed (Wave_Elem) then
-            Wave_Put_Hierarchy_Block (Pack, Step, Wave_Elem);
+         Match_List := Get_Top_Cursor (Pkg, Avhpi_Get_Base_Name (Pack));
+         if Is_Displayed (Match_List) then
+            Wave_Put_Hierarchy_Block (Pack, Step, Match_List);
          end if;
       end loop;
 
       --  Then top entity.
-      Wave_Elem := Get_Top_Cursor (Entity, Avhpi_Get_Base_Name (Root));
-      if Is_Displayed (Wave_Elem) then
-         Wave_Put_Hierarchy_Block (Root, Step, Wave_Elem);
+      Match_List := Get_Top_Cursor (Entity, Avhpi_Get_Base_Name (Root));
+      if Is_Displayed (Match_List) then
+         Wave_Put_Hierarchy_Block (Root, Step, Match_List);
       end if;
    end Wave_Put_Hierarchy;
 

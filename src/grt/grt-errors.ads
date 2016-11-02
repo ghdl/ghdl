@@ -46,6 +46,7 @@ package Grt.Errors is
    procedure Report_Now_C;
    procedure Report_E (Str : String);
    procedure Report_E (Str : Std_String_Ptr);
+   procedure Report_E (N : Integer);
 
    --  Complete error message.
    procedure Error (Str : String);

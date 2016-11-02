@@ -39,7 +39,7 @@
 --      the right tree while looking for signals to be displayed in the design.
 --   2) Create only 1 case sensitive tree then latter when we have more
 --      informations, look for VHDL paths in the tree and merge elements who
---      have the same name after lowering their characters.
+--      have the same expression after lowering their characters.
 
 with System; use System;
 with Grt.Types; use Grt.Types;
@@ -218,7 +218,7 @@ package body Grt.Wave_Opt.File is
    begin
       for I in Tree_Index_Type'Range loop
          Trees (I) := new Elem_Type;
-         Trees (I).Name := new String'(1 => Seps (I));
+         Trees (I).Expr := new String'(1 => Seps (I));
          Trees (I).Level := 0;
       end loop;
    end Initialize_Tree;
@@ -233,13 +233,11 @@ package body Grt.Wave_Opt.File is
    is
       -- Can equal to 0 in case of error (like '.' as a full path)
       First, Last : Natural;
-      Path_Context : Path_Context_Acc;
+      Level : Positive;
       Tree_Index : Tree_Index_Type;
       Tree_Cursor : Elem_Acc;
       Tree_Updated : Boolean;
    begin
-      Path_Context := new Path_Context_Type'(Lineno => Lineno,
-                                             Max_Level => 0);
       To_Lower (Line);
       Last := Line'First;
       if Line (Line'First) = '/' then
@@ -248,7 +246,7 @@ package body Grt.Wave_Opt.File is
          -- Catch '/' as a full path
          if Last > Line'Length then
             Error_Context
-              ("invalid signal path", Path_Context.Lineno, Line'First);
+              ("invalid signal path", Lineno, Line'First);
          end if;
       else
          -- '/' not allowed for package signal paths in a.  Catch also the
@@ -256,11 +254,13 @@ package body Grt.Wave_Opt.File is
          -- code to believe it's inside a package
          if Find (Line, '/') > 0 then
             Error_Context
-              ("invalid signal path", Path_Context.Lineno, Line'First);
+              ("invalid signal path", Lineno, Line'First);
          end if;
          Tree_Index := Pkg;
       end if;
       Tree_Cursor := Trees (Tree_Index);
+      Tree_Updated := False;
+      Level := 1;
 
       loop
          First := Last;
@@ -276,29 +276,37 @@ package body Grt.Wave_Opt.File is
             Last := Last + 1;
          end loop;
 
-         Path_Context.Max_Level := Path_Context.Max_Level + 1;
          Update_Tree (Cursor => Tree_Cursor,
-                      Updated => Tree_Updated,
-                      Elem_Name => Line (First .. Last),
-                      Level => Path_Context.Max_Level,
-                      Path_Context => Path_Context);
+                      Last_Updated => Tree_Updated,
+                      Elem_Expr => Line (First .. Last),
+                      Level => Level,
+                      Lineno => Lineno);
 
          if Last = Line'Last then
-            if not Tree_Updated then
-               Error_Context ("ignored already known signal path",
-                              Path_Context.Lineno,
-                              Line'First,
-                              Warning);
+            -- If there is the following content in the wave option file :
+            --    /top/a/b
+            --    /top/a
+            -- Then there is a conflict between those lines as according to the
+            -- 2nd line, a is a signal but it isn't according to the 1st line.
+            -- Then /top/a will supercede /top/a/b.
+            if not Tree_Updated and Tree_Cursor.Next_Child /= null then
+               Print_Context (Lineno, Line'First, Warning);
+               Report_C ("supercedes line ");
+               Report_C (Tree_Cursor.Lineno);
+               Report_E (" and possibly more lines in between");
+               -- TODO : destroy Tree_Cursor.Next_Child
+               Tree_Cursor.Lineno := Lineno;
+               Tree_Cursor.Next_Child := null;
             end if;
             return;
          end if;
 
+         Level := Level + 1;
          -- Skip the separator
          Last := Last + 2;
          -- Catch signal paths ending with / or .
          if Last > Line'Last then
-            Error_Context
-              ("invalid signal path", Path_Context.Lineno, Line'First);
+            Error_Context ("invalid signal path", Lineno, Line'First);
          end if;
 
       end loop;
@@ -306,10 +314,10 @@ package body Grt.Wave_Opt.File is
    end Parse_Path;
 
    procedure Update_Tree (Cursor : in out Elem_Acc;
-                          Updated : out Boolean;
-                          Elem_Name : String;
+                          Last_Updated : in out Boolean;
+                          Elem_Expr : String;
                           Level : Natural;
-                          Path_Context : Path_Context_Acc := null)
+                          Lineno : Natural := 0)
    is
       Sibling_Cursor, Previous_Sibling_Cursor : Elem_Acc;
       Created_Elem : Elem_Acc;
@@ -321,24 +329,37 @@ package body Grt.Wave_Opt.File is
          -- to no existing element ? Then we will create an element
          if Sibling_Cursor = null then
             Created_Elem := new Elem_Type;
-            Created_Elem.Name := new String'(Elem_Name);
-            Created_Elem.Path_Context := Path_Context;
-            Created_Elem.Column := Elem_Name'First;
+            Created_Elem.Expr := new String'(Elem_Expr);
+            Created_Elem.Lineno := Lineno;
+            Created_Elem.Column := Elem_Expr'First;
             Created_Elem.Level := Level;
             Created_Elem.Parent := Cursor;
             -- First element of level ?
             if Previous_Sibling_Cursor = null then
+               -- If there is the following content in the wave option file :
+               --    /top/a
+               --    /top/a/b
+               -- Then there is a conflict between those lines as according to
+               -- the 1st line, a is a signal but it isn't according to the 2nd
+               -- line. Then /top/a will supercede /top/a/b.
+               if Level > 1 and not Last_Updated then
+                  Print_Context (Lineno, Elem_Expr'First, Warning);
+                  Report_C ("superceded by line ");
+                  Report_E (Cursor.Lineno);
+                  return;
+                  -- TODO : destroy Created_Elem
+               end if;
                Cursor.Next_Child := Created_Elem;
             else
                Previous_Sibling_Cursor.Next_Sibling := Created_Elem;
             end if;
             Cursor := Created_Elem;
-            Updated := True;
+            Last_Updated := True;
             return;
          -- Identifier was found in the tree ? Then move to its first child
-         elsif Elem_Name = Sibling_Cursor.Name.all then
+         elsif Elem_Expr = Sibling_Cursor.Expr.all then
             Cursor := Sibling_Cursor;
-            Updated := False;
+            Last_Updated := False;
             return;
          end if;
          Previous_Sibling_Cursor := Sibling_Cursor;
@@ -414,17 +435,17 @@ package body Grt.Wave_Opt.File is
          Signal_Path (I) := Cursor;
          Cursor := Cursor.Parent;
       end loop;
-      if Signal_Path (1).Parent.Name.all = "/" then
+      if Signal_Path (1).Parent.Expr.all = "/" then
          Sep := '/';
          Put (Write_Stream, Sep);
       else
          Sep := '.';
       end if;
       for I in Signal_Path'Range loop
-         Put (Write_Stream, Signal_Path (I).Name.all);
+         Put (Write_Stream, Signal_Path (I).Expr.all);
          Put (Write_Stream, Sep);
       end loop;
-      Put_Line (Write_Stream, Signal.Name.all);
+      Put_Line (Write_Stream, Signal.Expr.all);
    end Write_Signal_Path;
 
    procedure Finalize is

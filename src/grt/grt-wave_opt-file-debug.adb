@@ -56,7 +56,7 @@ package body Grt.Wave_Opt.File.Debug is
       while Sibling_Cursor /= null loop
          Put ((3 .. 2 * Sibling_Cursor.Level => ' '));
          Put ('/');
-         Put_Line (Sibling_Cursor.Name.all);
+         Put_Line (Sibling_Cursor.Expr.all);
          Dump_Sub_Tree (Sibling_Cursor.Next_Child);
          Sibling_Cursor := Sibling_Cursor.Next_Sibling;
       end loop;
