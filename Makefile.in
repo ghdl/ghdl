@@ -329,10 +329,10 @@ install.vpi: all.vpi install.dirs
 LIBSRC_DIR:=$(srcdir)/libraries
 LIBDST_DIR:=$(libdirsuffix)
 
-GHDL=$(PWD)/ghdl_$(backend)$(EXEEXT)
+ANALYZE_DEP:=ghdl_$(backend)$(EXEEXT)
+GHDL=$(PWD)/$(ANALYZE_DEP)
 ANALYZE_OPTS:=
 ANALYZE:=$(GHDL) -a $(ANALYZE_OPTS) $(LIB_CFLAGS)
-ANALYZE_DEP:=$(GHDL)
 
 # TODO?: don't include, make it separate
 include $(srcdir)/libraries/Makefile.inc
