@@ -1172,13 +1172,17 @@ package body Trans.Chap9 is
                         Destroy_Types_In_Chain (Get_Iir (N, F));
                      when Attr_Chain_Next =>
                         null;
-                     when Attr_Of_Ref =>
+                     when Attr_Of_Ref | Attr_Of_Maybe_Ref =>
                         raise Internal_Error;
                   end case;
                when Type_Iir_List =>
                   case Get_Field_Attribute (F) is
                      when Attr_None =>
                         Destroy_Types_In_List (Get_Iir_List (N, F));
+                     when Attr_Of_Maybe_Ref =>
+                        if not Get_Is_Ref (N) then
+                           Destroy_Types_In_List (Get_Iir_List (N, F));
+                        end if;
                      when Attr_Ref
                         | Attr_Of_Ref =>
                         null;
@@ -1549,9 +1553,15 @@ package body Trans.Chap9 is
          when Iir_Kind_Entity_Aspect_Entity =>
             Entity := Get_Entity (Aspect);
             Arch := Get_Architecture (Aspect);
-            if Flags.Flag_Elaborate and then Arch = Null_Iir then
-               --  This is valid only during elaboration.
-               Arch := Libraries.Get_Latest_Architecture (Entity);
+            if Arch = Null_Iir then
+               if Flags.Flag_Elaborate then
+                  --  This is valid only during elaboration.
+                  Arch := Libraries.Get_Latest_Architecture (Entity);
+               end if;
+            else
+               if Is_Valid (Get_Named_Entity (Arch)) then
+                  Arch := Get_Named_Entity (Arch);
+               end if;
             end if;
             Config := Null_Iir;
          when Iir_Kind_Entity_Aspect_Configuration =>

@@ -1510,9 +1510,7 @@ package body Sem_Specs is
       Aspect := Create_Iir (Iir_Kind_Entity_Aspect_Entity);
       Location_Copy (Aspect, Parent);
 
-      Entity_Name := Create_Iir (Iir_Kind_Simple_Name);
-      Location_Copy (Entity_Name, Parent);
-      Set_Named_Entity (Entity_Name, Entity);
+      Entity_Name := Build_Simple_Name (Entity, Parent);
 
       Set_Entity_Name (Aspect, Entity_Name);
       Set_Entity_Aspect (Res, Aspect);

@@ -16,6 +16,8 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
+with Iirs_Utils; use Iirs_Utils;
+
 package body Iirs_Walk is
    function Walk_Chain (Chain : Iir; Cb : Walk_Cb) return Walk_Status
    is
@@ -98,12 +100,13 @@ package body Iirs_Walk is
    function Walk_Assignment_Target (Target : Iir; Cb : Walk_Cb)
                                    return Walk_Status
    is
+      Targ : constant Iir := Strip_Reference_Name (Target);
       Chain : Iir;
       Status : Walk_Status := Walk_Continue;
    begin
-      case Get_Kind (Target) is
+      case Get_Kind (Targ) is
          when Iir_Kind_Aggregate =>
-            Chain := Get_Association_Choices_Chain (Target);
+            Chain := Get_Association_Choices_Chain (Targ);
             while Chain /= Null_Iir loop
                Status :=
                  Walk_Assignment_Target (Get_Associated_Expr (Chain), Cb);
@@ -111,7 +114,7 @@ package body Iirs_Walk is
                Chain := Get_Chain (Chain);
             end loop;
          when others =>
-            Status := Cb.all (Target);
+            Status := Cb.all (Targ);
       end case;
       return Status;
    end Walk_Assignment_Target;

@@ -31,4 +31,6 @@ package Sem_Inst is
    --  In CHAIN, substitute all references to E by REP.
    procedure Substitute_On_Chain (Chain : Iir; E : Iir; Rep : Iir);
 
+   --  Deep copy of ORIG.  Doesn't change location.
+   function Copy_Tree (Orig : Iir) return Iir;
 end Sem_Inst;
