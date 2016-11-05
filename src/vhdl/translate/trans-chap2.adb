@@ -1223,13 +1223,17 @@ package body Trans.Chap2 is
                         Instantiate_Iir_Chain_Info (Get_Iir (N, F));
                      when Attr_Chain_Next =>
                         null;
-                     when Attr_Of_Ref =>
+                     when Attr_Of_Ref | Attr_Of_Maybe_Ref =>
                         raise Internal_Error;
                   end case;
                when Type_Iir_List =>
                   case Get_Field_Attribute (F) is
                      when Attr_None =>
                         Instantiate_Iir_List_Info (Get_Iir_List (N, F));
+                     when Attr_Of_Maybe_Ref =>
+                        if not Get_Is_Ref (N) then
+                           Instantiate_Iir_List_Info (Get_Iir_List (N, F));
+                        end if;
                      when Attr_Ref
                         | Attr_Of_Ref =>
                         null;

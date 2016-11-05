@@ -142,6 +142,12 @@ package body Grt.Errors is
       Newline_Err;
    end Report_E;
 
+   procedure Report_E (N : Integer) is
+   begin
+      Put_Err (N);
+      Newline_Err;
+   end Report_E;
+
    procedure Report_E (Str : Std_String_Ptr)
    is
       subtype Ada_Str is String (1 .. Natural (Str.Bounds.Dim_1.Length));

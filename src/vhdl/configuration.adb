@@ -281,6 +281,7 @@ package body Configuration is
       use Libraries;
 
       Entity : Iir;
+      Arch_Name : Iir;
       Arch : Iir;
       Config : Iir;
       Arch_Lib : Iir;
@@ -298,23 +299,23 @@ package body Configuration is
             Add_Design_Unit (Entity, Aspect);
 
             --  Extract and add the architecture.
-            Arch := Get_Architecture (Aspect);
-            if Arch /= Null_Iir then
-               case Get_Kind (Arch) is
+            Arch_Name := Get_Architecture (Aspect);
+            if Arch_Name /= Null_Iir then
+               case Get_Kind (Arch_Name) is
                   when Iir_Kind_Simple_Name =>
-                     Id := Get_Identifier (Arch);
+                     Id := Get_Identifier (Arch_Name);
                      Arch := Load_Secondary_Unit (Entity, Id, Aspect);
                      if Arch = Null_Iir then
                         Error_Msg_Elab ("cannot find architecture %i of %n",
                                         (+Id, +Entity_Lib));
                         return;
                      else
-                        Set_Architecture (Aspect, Get_Library_Unit (Arch));
+                        Set_Named_Entity (Arch_Name, Get_Library_Unit (Arch));
                      end if;
-                  when Iir_Kind_Architecture_Body =>
-                     Arch := Get_Design_Unit (Arch);
+                  when Iir_Kind_Reference_Name =>
+                     Arch := Get_Design_Unit (Get_Named_Entity (Arch_Name));
                   when others =>
-                     Error_Kind ("add_design_aspect", Arch);
+                     Error_Kind ("add_design_aspect", Arch_Name);
                end case;
             else
                Arch := Get_Latest_Architecture (Entity_Lib);

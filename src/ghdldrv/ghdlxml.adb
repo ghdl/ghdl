@@ -401,7 +401,7 @@ package body Ghdlxml is
                            Disp_Iir_Chain (Img, V);
                         when Attr_Chain_Next =>
                            null;
-                        when Attr_Of_Ref =>
+                        when Attr_Of_Ref | Attr_Of_Maybe_Ref =>
                            raise Internal_Error;
                      end case;
                   end;
@@ -415,6 +415,8 @@ package body Ghdlxml is
                            Disp_Iir_List (Img, L, False);
                         when Attr_Of_Ref =>
                            Disp_Iir_List (Img, L, True);
+                        when Attr_Of_Maybe_Ref =>
+                           Disp_Iir_List (Img, L, Get_Is_Ref (N));
                         when Attr_Ref =>
                            Disp_Iir_List_Ref (Img, L);
                         when others =>

@@ -409,6 +409,7 @@ package body Sem_Types is
            (Phys_Range, Get_Expr_Staticness (Range_Expr1));
 
          Set_Range_Constraint (Sub_Type, Phys_Range);
+         Set_Range_Constraint (Def, Null_Iir);
          --  This must be locally...
          Set_Type_Staticness (Sub_Type, Get_Expr_Staticness (Range_Expr1));
 

@@ -27,10 +27,10 @@
 
 with Grt.Errors; use Grt.Errors;
 
-package body Grt.Wave_Opt_File is
+package body Grt.Wave_Opt is
 
    procedure Print_Context
-     (Line_Pos, Column_Pos : Positive; Severity : Severity_Type) is
+     (Lineno, Column : Positive; Severity : Severity_Type) is
    begin
       case Severity is
          when Error =>
@@ -40,23 +40,23 @@ package body Grt.Wave_Opt_File is
       end case;
       Report_C (File_Path.all);
       Report_C (":");
-      Report_C (Line_Pos);
+      Report_C (Lineno);
       Report_C (":");
-      Report_C (Column_Pos);
+      Report_C (Column);
       Report_C (": ");
    end Print_Context;
 
    procedure Print_Context (Element : Elem_Acc; Severity : Severity_Type) is
    begin
       Print_Context
-        (Element.Path_Context.Line_Pos, Element.Column_Pos, Severity);
+        (Element.Lineno, Element.Column, Severity);
    end Print_Context;
 
    procedure Error_Context (Msg : String;
-                            Line_Pos, Column_Pos : Positive;
+                            Lineno, Column : Positive;
                             Severity : Severity_Type := Error) is
    begin
-      Print_Context (Line_Pos, Column_Pos, Severity);
+      Print_Context (Lineno, Column, Severity);
       case Severity is
          when Error =>
             Error_E (Msg);
@@ -69,7 +69,7 @@ package body Grt.Wave_Opt_File is
      (Msg : String; Element : Elem_Acc; Severity : Severity_Type := Error) is
    begin
       Error_Context
-        (Msg, Element.Path_Context.Line_Pos, Element.Column_Pos, Severity);
+        (Msg, Element.Lineno, Element.Column, Severity);
    end Error_Context;
 
-end Grt.Wave_Opt_File;
+end Grt.Wave_Opt;

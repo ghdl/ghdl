@@ -865,6 +865,25 @@ package body Iirs_Utils is
       return Res;
    end Build_Reference_Name;
 
+   function Build_Reference_Decl (Decl : Iir; Loc : Iir) return Iir
+   is
+      Res : Iir;
+   begin
+      Res := Create_Iir (Iir_Kind_Reference_Name);
+      Location_Copy (Res, Loc);
+      Set_Named_Entity (Res, Decl);
+      return Res;
+   end Build_Reference_Decl;
+
+   function Strip_Reference_Name (N : Iir) return Iir is
+   begin
+      if Get_Kind (N) = Iir_Kind_Reference_Name then
+         return Get_Named_Entity (N);
+      else
+         return N;
+      end if;
+   end Strip_Reference_Name;
+
    function Has_Resolution_Function (Subtyp : Iir) return Iir
    is
       Ind : constant Iir := Get_Resolution_Indication (Subtyp);

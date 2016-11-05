@@ -329,10 +329,10 @@ install.vpi: all.vpi install.dirs
 LIBSRC_DIR:=$(srcdir)/libraries
 LIBDST_DIR:=$(libdirsuffix)
 
-GHDL=$(PWD)/ghdl_$(backend)$(EXEEXT)
+ANALYZE_DEP:=ghdl_$(backend)$(EXEEXT)
+GHDL=$(PWD)/$(ANALYZE_DEP)
 ANALYZE_OPTS:=
 ANALYZE:=$(GHDL) -a $(ANALYZE_OPTS) $(LIB_CFLAGS)
-ANALYZE_DEP:=$(GHDL)
 
 # TODO?: don't include, make it separate
 include $(srcdir)/libraries/Makefile.inc
@@ -387,7 +387,7 @@ install.vhdllib: install.dirs
 ####################### clean ############################################
 
 clean: force
-	$(RM) -f *.o *.ali b~*.ad? *~ *.d b__*.ad? *.a *.deps *.bexch
+	$(RM) -f *.o *.ali b~*.ad? *~ *.d b__*.ad? *.a *.so *.deps *.bexch version.*
 	$(RM) -f ghdl_gcc$(EXEEXT) ghdl_mcode$(EXEEXT) ghdl$(EXEEXT) ghdl_llvm$(EXEEXT) ghdl_llvm_jit$(EXEEXT) ghdl_simul$(EXEEXT)
 	$(RM) -f ghdl1-gcc$(EXEEXT) ghdl1-llvm$(EXEEXT) ghdl1-debug$(EXEEXT)
 	$(RM) -f run-bind.ad? grt.lst grt-files grt-files.in

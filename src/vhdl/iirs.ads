@@ -639,6 +639,8 @@ package Iirs is
    --   Get/Set_Binding_Indication (Field3)
    --
    --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Disconnection_Specification (Short)
    --
@@ -658,13 +660,15 @@ package Iirs is
    --  The declaration containing this type declaration.
    --   Get/Set_Parent (Field0)
    --
-   --   Get/Set_Chain (Field2)
-   --
    --   Get/Set_Signal_List (Field3)
    --
    --   Get/Set_Type_Mark (Field4)
    --
    --   Get/Set_Expression (Field5)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Block_Header (Medium)
    --
@@ -1216,7 +1220,7 @@ package Iirs is
    --  present for uniformity (and speed).
    --   Get/Set_Type (Field1)
    --
-   --   Get/Set_Mode (Flag12,Flag13,Flag14)
+   --   Get/Set_Mode (Flag13,Flag14,Flag15)
    --
    -- Only for Iir_Kind_Interface_Signal_Declaration:
    --   Get/Set_Has_Disconnect_Flag (Flag1)
@@ -1232,8 +1236,6 @@ package Iirs is
    --
    --   Get/Set_Use_Flag (Flag6)
    --
-   --   Get/Set_Is_Ref (Flag7)
-   --
    -- Only for Iir_Kind_Interface_Signal_Declaration:
    --   Get/Set_Guarded_Signal_Flag (Flag8)
    --
@@ -1244,8 +1246,10 @@ package Iirs is
    --
    --   Get/Set_Has_Class (Flag11)
    --
+   --   Get/Set_Is_Ref (Flag12)
+   --
    -- Only for Iir_Kind_Interface_Signal_Declaration:
-   --   Get/Set_Open_Flag (Flag15)
+   --   Get/Set_Open_Flag (Flag7)
    --
    --   Get/Set_Expr_Staticness (State1)
    --
@@ -1269,7 +1273,7 @@ package Iirs is
    --
    --   Get/Set_Use_Flag (Flag6)
    --
-   --   Get/Set_Is_Ref (Flag7)
+   --   Get/Set_Is_Ref (Flag12)
    --
    --   Get/Set_Name_Staticness (State2)
 
@@ -1543,11 +1547,11 @@ package Iirs is
    --
    --   Get/Set_Use_Flag (Flag6)
    --
-   --   Get/Set_Is_Ref (Flag7)
-   --
    --   Get/Set_Guarded_Signal_Flag (Flag8)
    --
    --   Get/Set_Signal_Kind (Flag9)
+   --
+   --   Get/Set_Is_Ref (Flag12)
    --
    --   Get/Set_Expr_Staticness (State1)
    --
@@ -1641,7 +1645,7 @@ package Iirs is
    --   Get/Set_Use_Flag (Flag6)
    --
    -- Only for Iir_Kind_Constant_Declaration:
-   --   Get/Set_Is_Ref (Flag7)
+   --   Get/Set_Is_Ref (Flag12)
    --
    --   Get/Set_Expr_Staticness (State1)
    --
@@ -1670,7 +1674,7 @@ package Iirs is
    --
    --   Get/Set_Use_Flag (Flag6)
    --
-   --   Get/Set_Is_Ref (Flag7)
+   --   Get/Set_Is_Ref (Flag12)
    --
    --   Get/Set_Expr_Staticness (State1)
    --
@@ -1709,7 +1713,7 @@ package Iirs is
    --   Get/Set_File_Open_Kind (Field7)
    --
    --  This is used only in vhdl 87.
-   --   Get/Set_Mode (Flag12,Flag13,Flag14)
+   --   Get/Set_Mode (Flag13,Flag14,Flag15)
    --
    --   Get/Set_Has_Identifier_List (Flag3)
    --
@@ -2033,7 +2037,7 @@ package Iirs is
    --
    --   Get/Set_Only_Characters_Flag (Flag4)
    --
-   --   Get/Set_Is_Ref (Flag7)
+   --   Get/Set_Is_Ref (Flag12)
    --
    --   Get/Set_Type_Staticness (State1)
 
@@ -2091,11 +2095,11 @@ package Iirs is
    --
    --   Get/Set_Type_Staticness (State1)
    --
-   --   Get/Set_Is_Ref (Flag7)
-   --
    --   Get/Set_End_Has_Reserved_Id (Flag8)
    --
    --   Get/Set_End_Has_Identifier (Flag9)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Unit_Declaration (Short)
    --
@@ -2159,7 +2163,7 @@ package Iirs is
    --
    --   Get/Set_Has_Signal_Flag (Flag3)
    --
-   --   Get/Set_Is_Ref (Flag7)
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Array_Type_Definition (Medium)
    --
@@ -2460,7 +2464,7 @@ package Iirs is
    --
    --   Get/Set_Has_Signal_Flag (Flag3)
    --
-   --   Get/Set_Is_Ref (Flag7)
+   --   Get/Set_Is_Ref (Flag12)
    --
    --   Get/Set_Type_Staticness (State1)
 
@@ -2484,7 +2488,7 @@ package Iirs is
    --
    --   Get/Set_Has_Signal_Flag (Flag3)
    --
-   --   Get/Set_Is_Ref (Flag7)
+   --   Get/Set_Is_Ref (Flag12)
    --
    --   Get/Set_Type_Staticness (State1)
 
@@ -2637,7 +2641,7 @@ package Iirs is
    --
    --   Get/Set_Tolerance (Field7)
    --
-   --   Get/Set_Is_Ref (Flag7)
+   --   Get/Set_Is_Ref (Flag12)
 
    -------------------------
    --  Nature definitions --
@@ -2754,6 +2758,9 @@ package Iirs is
    --
    -- Only for Iir_Kind_Process_Statement:
    --   Get/Set_Suspend_Flag (Flag11)
+   --
+   -- Only for Iir_Kind_Sensitized_Process_Statement:
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Concurrent_Assertion_Statement (Short)
    --
@@ -3051,23 +3058,23 @@ package Iirs is
    --
    --   Get/Set_Parent (Field0)
    --
-   --  May be NULL only for an iir_kind_elsif node, and then means the else
-   --  clause.
-   --   Get/Set_Condition (Field1)
-   --
-   -- Only for Iir_Kind_If_Statement:
-   --   Get/Set_Chain (Field2)
-   --
    -- Only for Iir_Kind_If_Statement:
    --   Get/Set_Label (Field3)
    --
    -- Only for Iir_Kind_If_Statement:
    --   Get/Set_Identifier (Alias Field3)
    --
+   --  May be NULL only for an iir_kind_elsif node, and then means the else
+   --  clause.
+   --   Get/Set_Condition (Field1)
+   --
+   --   Get/Set_Sequential_Statement_Chain (Field5)
+   --
    --  Must be an Iir_kind_elsif node, or NULL for no more elsif clauses.
    --   Get/Set_Else_Clause (Field4)
    --
-   --   Get/Set_Sequential_Statement_Chain (Field5)
+   -- Only for Iir_Kind_If_Statement:
+   --   Get/Set_Chain (Field2)
    --
    -- Only for Iir_Kind_If_Statement:
    --   Get/Set_Visible_Flag (Flag4)
@@ -3275,6 +3282,8 @@ package Iirs is
    --   Get/Set_Sensitivity_List (Field6)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Return_Statement (Short)
    --
@@ -3586,6 +3595,8 @@ package Iirs is
    --
    --   Get/Set_Named_Entity (Field4)
    --
+   --  The name from which the reference was created.  Can be Null_Iir if the
+   --  reference was created directly from a declaration.
    --   Get/Set_Referenced_Name (Field2)
    --
    --   Get/Set_Is_Forward_Ref (Flag1)
@@ -5616,8 +5627,9 @@ package Iirs is
    function Get_Last_Design_Unit (Design : Iir) return Iir;
    procedure Set_Last_Design_Unit (Design : Iir; Chain : Iir);
 
-   --  Library declaration of a library clause.
-   --  Field: Field1 Ref
+   --  Library declaration of a library clause.  This is Forward_Ref as the
+   --  dependency of the unit on the library is not tracked.
+   --  Field: Field1 Forward_Ref
    function Get_Library_Declaration (Design : Iir) return Iir;
    procedure Set_Library_Declaration (Design : Iir; Library : Iir);
 
@@ -5836,7 +5848,7 @@ package Iirs is
    function Get_Attribute_Specification (Val : Iir) return Iir;
    procedure Set_Attribute_Specification (Val : Iir; Attr : Iir);
 
-   --  Field: Field3 (uc)
+   --  Field: Field3 Of_Maybe_Ref (uc)
    function Get_Signal_List (Target : Iir) return Iir_List;
    procedure Set_Signal_List (Target : Iir; List : Iir_List);
 
@@ -5881,7 +5893,7 @@ package Iirs is
 
    --  This flag is set for a very short time during the check that no in
    --  port is unconnected.
-   --  Field: Flag15
+   --  Field: Flag7
    function Get_Open_Flag (Target : Iir) return Boolean;
    procedure Set_Open_Flag (Target : Iir; Flag : Boolean);
 
@@ -6076,7 +6088,7 @@ package Iirs is
    procedure Set_Nature (Target : Iir; Nature : Iir);
 
    --  Mode of interfaces or file (v87).
-   --  Field: Flag12,Flag13,Flag14 (grp)
+   --  Field: Flag13,Flag14,Flag15 (grp)
    function Get_Mode (Target : Iir) return Iir_Mode;
    procedure Set_Mode (Target : Iir; Mode : Iir_Mode);
 
@@ -6468,7 +6480,8 @@ package Iirs is
    function Get_Reject_Time_Expression (Target : Iir) return Iir;
    procedure Set_Reject_Time_Expression (Target : Iir; Expr : Iir);
 
-   --  Field: Field6 (uc)
+   --  The Is_Ref flag is set for extracted sensitivity lists.
+   --  Field: Field6 Of_Maybe_Ref (uc)
    function Get_Sensitivity_List (Wait : Iir) return Iir_List;
    procedure Set_Sensitivity_List (Wait : Iir; List : Iir_List);
 
@@ -6703,7 +6716,7 @@ package Iirs is
    procedure Set_Guard_Decl (Target : Iir_Block_Statement; Decl : Iir);
 
    --  Sensitivity list for the implicit guard signal.
-   --  Field: Field4 (uc)
+   --  Field: Field4 Of_Ref (uc)
    function Get_Guard_Sensitivity_List (Guard : Iir) return Iir_List;
    procedure Set_Guard_Sensitivity_List (Guard : Iir; List : Iir_List);
 
@@ -6795,7 +6808,7 @@ package Iirs is
    function Get_Default_Entity_Aspect (Target : Iir) return Iir;
    procedure Set_Default_Entity_Aspect (Target : Iir; Aspect : Iir);
 
-   --  Field: Field3
+   --  Field: Field3 Maybe_Ref
    function Get_Binding_Indication (Target : Iir) return Iir;
    procedure Set_Binding_Indication (Target : Iir; Binding : Iir);
 
@@ -7204,7 +7217,7 @@ package Iirs is
    --  the first, while Has_Identifier_List is set to True on all items but
    --  the last.  Furthermore Is_Ref appears in nodes where Has_Identifier_List
    --  is not present.
-   --  Field: Flag7
+   --  Field: Flag12
    function Get_Is_Ref (N : Iir) return Boolean;
    procedure Set_Is_Ref (N : Iir; Ref : Boolean);
 

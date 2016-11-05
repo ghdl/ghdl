@@ -38,6 +38,26 @@ package body Nodes_GC is
    procedure Free is new Ada.Unchecked_Deallocation
      (Marker_Array, Marker_Array_Acc);
 
+   procedure Report_Early_Reference (N : Iir; F : Nodes_Meta.Fields_Enum)
+   is
+      use Ada.Text_IO;
+   begin
+      Put ("early reference to ");
+      Put (Nodes_Meta.Get_Field_Image (F));
+      Put (" in ");
+      Disp_Tree.Disp_Tree (N, True);
+      Has_Error := True;
+   end Report_Early_Reference;
+
+   procedure Report_Already_Marked (N : Iir)
+   is
+      use Ada.Text_IO;
+   begin
+      Put ("Already marked ");
+      Disp_Tree.Disp_Tree (N, True);
+      Has_Error := True;
+   end Report_Already_Marked;
+
    procedure Mark_Iir (N : Iir);
 
    procedure Mark_Iir_List (N : Iir_List)
@@ -58,6 +78,26 @@ package body Nodes_GC is
       end case;
    end Mark_Iir_List;
 
+   procedure Mark_Iir_List_Ref (N : Iir_List; F : Fields_Enum)
+   is
+      El : Iir;
+   begin
+      case N is
+         when Null_Iir_List
+           | Iir_List_All
+           | Iir_List_Others =>
+            null;
+         when others =>
+            for I in Natural loop
+               El := Get_Nth_Element (N, I);
+               exit when El = Null_Iir;
+               if not Markers (El) then
+                  Report_Early_Reference (El, F);
+               end if;
+            end loop;
+      end case;
+   end Mark_Iir_List_Ref;
+
    procedure Mark_PSL_Node (N : PSL_Node) is
    begin
       null;
@@ -67,15 +107,6 @@ package body Nodes_GC is
    begin
       null;
    end Mark_PSL_NFA;
-
-   procedure Report_Already_Marked (N : Iir)
-   is
-      use Ada.Text_IO;
-   begin
-      Put ("Already marked ");
-      Disp_Tree.Disp_Tree (N, True);
-      Has_Error := True;
-   end Report_Already_Marked;
 
    procedure Already_Marked (N : Iir) is
    begin
@@ -101,17 +132,6 @@ package body Nodes_GC is
       Report_Already_Marked (N);
    end Already_Marked;
 
-   procedure Report_Early_Reference (N : Iir; F : Nodes_Meta.Fields_Enum)
-   is
-      use Ada.Text_IO;
-   begin
-      Put ("early reference to ");
-      Put (Nodes_Meta.Get_Field_Image (F));
-      Put (" in ");
-      Disp_Tree.Disp_Tree (N, True);
-      Has_Error := True;
-   end Report_Early_Reference;
-
    procedure Mark_Chain (Head : Iir)
    is
       El : Iir;
@@ -129,36 +149,13 @@ package body Nodes_GC is
       Has_Error := True;
    end Report_Unreferenced_Node;
 
-   procedure Mark_Iir_Ref_Field (N : Iir; F : Fields_Enum) is
+   procedure Mark_Iir_Ref_Field (N : Iir; F : Fields_Enum)
+   is
+      Nf : constant Iir := Get_Iir (N, F);
    begin
-      case Get_Field_Type (F) is
-         when Type_Iir =>
-            declare
-               Nf : constant Iir := Get_Iir (N, F);
-            begin
-               if Is_Valid (Nf) and then not Markers (Nf) then
-                  Report_Early_Reference (N, F);
-               end if;
-            end;
-         when Type_Iir_List =>
-            declare
-               Nl : constant Iir_List := Get_Iir_List (N, F);
-               El : Iir;
-            begin
-               if Is_Null_List (Nl) or else Nl in Iir_Lists_All_Others then
-                  return;
-               end if;
-               for I in Natural loop
-                  El := Get_Nth_Element (Nl, I);
-                  exit when El = Null_Iir;
-                  if not Markers (El) then
-                     Report_Early_Reference (El, F);
-                  end if;
-               end loop;
-            end;
-         when others =>
-            raise Internal_Error;
-      end case;
+      if Is_Valid (Nf) and then not Markers (Nf) then
+         Report_Early_Reference (N, F);
+      end if;
    end Mark_Iir_Ref_Field;
 
    procedure Mark_Iir (N : Iir) is
@@ -178,58 +175,79 @@ package body Nodes_GC is
       begin
          for I in Fields'Range loop
             F := Fields (I);
-            case Get_Field_Attribute (F) is
-               when Attr_Ref =>
-                  Mark_Iir_Ref_Field (N, F);
-               when Attr_Forward_Ref
-                 | Attr_Chain_Next =>
-                  null;
-               when Attr_Maybe_Forward_Ref =>
-                  --  Only used for Named_Entity
-                  pragma Assert (F = Field_Named_Entity);
+            case Get_Field_Type (F) is
+               when Type_Iir =>
+                  case Get_Field_Attribute (F) is
+                     when Attr_None =>
+                        Mark_Iir (Get_Iir (N, F));
+                     when Attr_Ref =>
+                        Mark_Iir_Ref_Field (N, F);
+                     when Attr_Forward_Ref
+                       | Attr_Chain_Next =>
+                        null;
+                     when Attr_Maybe_Forward_Ref =>
+                        --  Only used for Named_Entity
+                        pragma Assert (F = Field_Named_Entity);
 
-                  --  Overload_List has to be handled specially, as it that
-                  --  case the Ref applies to the elements of the list.
-                  declare
-                     Nf : constant Iir := Get_Iir (N, F);
-                  begin
-                     if Nf /= Null_Iir then
-                        if Get_Is_Forward_Ref (N) then
-                           pragma Assert
-                             (Get_Kind (Nf) /= Iir_Kind_Overload_List);
-                           null;
-                        else
-                           if Get_Kind (Nf) = Iir_Kind_Overload_List then
-                              Mark_Iir (Nf);
-                           else
-                              Mark_Iir_Ref_Field (N, F);
+                        --  Overload_List has to be handled specially, as it
+                        --  that case the Ref applies to the elements of the
+                        --  list.
+                        declare
+                           Nf : constant Iir := Get_Iir (N, F);
+                        begin
+                           if Nf /= Null_Iir then
+                              if Get_Is_Forward_Ref (N) then
+                                 pragma Assert
+                                   (Get_Kind (Nf) /= Iir_Kind_Overload_List);
+                                 null;
+                              else
+                                 if Get_Kind (Nf) = Iir_Kind_Overload_List then
+                                    Mark_Iir (Nf);
+                                 else
+                                    Mark_Iir_Ref_Field (N, F);
+                                 end if;
+                              end if;
                            end if;
+                        end;
+                     when Attr_Maybe_Ref =>
+                        if Get_Is_Ref (N) then
+                           Mark_Iir_Ref_Field (N, F);
+                        else
+                           Mark_Iir (Get_Iir (N, F));
                         end if;
+                     when Attr_Chain =>
+                        Mark_Chain (Get_Iir (N, F));
+                     when Attr_Of_Ref | Attr_Of_Maybe_Ref =>
+                        raise Internal_Error;
+                  end case;
+               when Type_Iir_List =>
+                  declare
+                     Ref : Boolean;
+                  begin
+                     case Get_Field_Attribute (F) is
+                        when Attr_None =>
+                           Ref := False;
+                        when Attr_Of_Ref =>
+                           Ref := True;
+                        when Attr_Of_Maybe_Ref =>
+                           Ref := Get_Is_Ref (N);
+                        when Attr_Ref =>
+                           Ref := True;
+                        when others =>
+                           raise Internal_Error;
+                     end case;
+                     if Ref then
+                        Mark_Iir_List_Ref (Get_Iir_List (N, F), F);
+                     else
+                        Mark_Iir_List (Get_Iir_List (N, F));
                      end if;
                   end;
-               when Attr_Maybe_Ref =>
-                  if Get_Is_Ref (N) then
-                     Mark_Iir_Ref_Field (N, F);
-                  else
-                     Mark_Iir (Get_Iir (N, F));
-                  end if;
-               when Attr_Chain =>
-                  Mark_Chain (Get_Iir (N, F));
-               when Attr_None =>
-                  case Get_Field_Type (F) is
-                     when Type_Iir =>
-                        Mark_Iir (Get_Iir (N, F));
-                     when Type_Iir_List =>
-                        Mark_Iir_List (Get_Iir_List (N, F));
-                     when Type_PSL_Node =>
-                        Mark_PSL_Node (Get_PSL_Node (N, F));
-                     when Type_PSL_NFA =>
-                        Mark_PSL_NFA (Get_PSL_NFA (N, F));
-                     when others =>
-                        null;
-                  end case;
-               when Attr_Of_Ref =>
-                  Mark_Iir_Ref_Field (N, F);
+               when Type_PSL_Node =>
+                  Mark_PSL_Node (Get_PSL_Node (N, F));
+               when Type_PSL_NFA =>
+                  Mark_PSL_NFA (Get_PSL_NFA (N, F));
+               when others =>
+                  null;
             end case;
          end loop;
       end;
@@ -245,7 +263,14 @@ package body Nodes_GC is
          return;
       end if;
 
-      Markers (Get_Design_File (Unit)) := True;
+      --  Mark parents of UNIT.
+      declare
+         File : constant Iir := Get_Design_File (Unit);
+         Lib : constant Iir := Get_Library (File);
+      begin
+         Markers (File) := True;
+         Markers (Lib) := True;
+      end;
 
       --  First mark dependences
       List := Get_Dependence_List (Unit);

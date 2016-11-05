@@ -28,31 +28,34 @@
 --              the help of it's child units)
 --              Contains common stuff for it's child units
 
-package Grt.Wave_Opt_File is
+package Grt.Wave_Opt is
    pragma Preelaborate;
+
+   -- State :
+   -- Display_All  : No signal filtering, display all
+   -- Write_File   : Write in a new wave option file the signals found in the
+   --                design. No signal filtering too.
+   -- Display_Tree : Parse the given option file and create the tree. Display
+   --                only the signals that are in the tree
+   type State_Type is (Display_All, Write_File, Display_Tree);
+   State : State_Type := Display_All;
 
    type String_Cst is access constant String;
    Value_String_Size : constant := 10;
 
    File_Path : String_Cst;
 
-   type Path_Context_Type is record
-      Line_Pos : Natural;
-      Max_Level : Natural;
-   end record;
-   type Path_Context_Acc is access Path_Context_Type;
-
-   type Elem_Kind_Type is (Not_Found, Pkg_Entity, Signal);
+   type Elem_Kind_Type is (Not_Found, Pkg_Entity, Signal, Recursion);
    type Elem_Type;
    type Elem_Acc is access Elem_Type;
    type Elem_Type is record
-      Name : String_Cst;
-      Path_Context : Path_Context_Acc;
-      Column_Pos : Positive;
-      Level : Positive;
-      Kind : Elem_Kind_Type;
-      Next_Sibling : Elem_Acc;
-      Next_Child : Elem_Acc;
+      Expr : String_Cst;
+      Lineno : Natural;
+      Column : Natural;
+      Level : Natural;
+      Kind : Elem_Kind_Type := Not_Found;
+      Parent : Elem_Acc := null;
+      Next_Sibling, Next_Child : Elem_Acc := null;
    end record;
 
    type Tree_Index_Type is (Pkg, Entity);
@@ -64,17 +67,18 @@ package Grt.Wave_Opt_File is
    type Severity_Type is (Error, Warning);
 
 private
+
    -- An error/warning message start with the context or the error/warning.
    -- This procedure print this context
    procedure Print_Context
-     (Line_Pos, Column_Pos : Positive; Severity : Severity_Type);
+     (Lineno, Column : Positive; Severity : Severity_Type);
    procedure Print_Context (Element : Elem_Acc; Severity : Severity_Type);
 
    -- Print an error/warning with it's context
    procedure Error_Context (Msg : String;
-                            Line_Pos, Column_Pos : Positive;
+                            Lineno, Column : Positive;
                             Severity : Severity_Type := Error);
    procedure Error_Context
      (Msg : String; Element : Elem_Acc; Severity : Severity_Type := Error);
 
-end Grt.Wave_Opt_File;
+end Grt.Wave_Opt;

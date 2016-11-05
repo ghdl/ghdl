@@ -118,10 +118,45 @@ all options available, including the debugging one.
   Disable buffering on stdout, stderr and files opened in write or append mode (TEXTIO).
 
 
-.. option:: --wave-opt-file=<FILENAME>
+.. option:: --read-opt-file=<FILENAME>
 
   Filter signals to be dumped to the wave file according to the wave option
   file provided.
+
+  Here is a description of the wave option file format currently supported :
+
+     $ version = 1.1  # Optional
+
+     # Path format for signals in packages :
+     my_pkg.global_signal_a
+
+     # Path format for signals in entities :
+     /top/sub/clk
+
+     # Dumps every signals named reset in first level sub entities of top
+     /top/*/reset
+
+     # Dumps every signals named reset in recursive sub entities of top
+     /top/**/reset
+
+     # Dump every signals of sub2 which could be anywhere in design except on
+     # top level
+     /**/sub2/*
+
+     # Dump every signals of sub3 which must be a first level sub entity of the
+     # top level
+     /*/sub3/*
+
+     # Dump every signals of the first level sub entities of sub3 (but not
+     # those of sub3)
+     /**/sub3/*/*
+
+
+.. option:: --write-opt-file=<FILENAME>
+
+  If the wave option file doesn't exist, creates it with all the signals of
+  the design. Otherwise throws an error, because it won't erase an existing
+  file.
 
 
 .. option:: --vcd=<FILENAME>

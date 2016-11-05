@@ -998,9 +998,7 @@ package body Sem is
 
                Comp_Arch := Get_Architecture (Entity_Aspect);
                if Comp_Arch /= Null_Iir then
-                  if Get_Kind (Comp_Arch) /= Iir_Kind_Simple_Name then
-                     raise Internal_Error;
-                  end if;
+                  pragma Assert (Get_Kind (Comp_Arch) = Iir_Kind_Simple_Name);
                   if Get_Identifier (Comp_Arch) /= Get_Identifier (Block_Spec)
                   then
                      Error_Msg_Sem
@@ -1024,6 +1022,7 @@ package body Sem is
                     (+Block_Conf, "no architecture %i", +Block_Spec);
                   return;
                end if;
+               Add_Dependence (Design);
                Arch := Get_Library_Unit (Design);
                Set_Named_Entity (Block_Spec, Arch);
                Xref_Ref (Block_Spec, Arch);

@@ -443,15 +443,24 @@ package body Disp_Tree is
                      when Attr_Chain_Next =>
                         Disp_Iir_Number (Get_Iir (N, F));
                         New_Line;
-                     when Attr_Of_Ref =>
+                     when Attr_Of_Ref | Attr_Of_Maybe_Ref =>
                         raise Internal_Error;
                   end case;
                when Type_Iir_List =>
-                  if Get_Field_Attribute (F) = Attr_Of_Ref then
-                     Ndepth := 0;
-                  else
-                     Ndepth := Depth - 1;
-                  end if;
+                  case Get_Field_Attribute (F) is
+                     when Attr_None =>
+                        Ndepth := Depth - 1;
+                     when Attr_Of_Ref =>
+                        Ndepth := 0;
+                     when Attr_Of_Maybe_Ref =>
+                        if Get_Is_Ref (N) then
+                           Ndepth := 0;
+                        else
+                           Ndepth := Depth - 1;
+                        end if;
+                     when others =>
+                        raise Internal_Error;
+                  end case;
                   Disp_Iir_List (Get_Iir_List (N, F), Sub_Indent, Ndepth);
                when Type_PSL_NFA =>
                   Disp_PSL_NFA (Get_PSL_NFA (N, F), Sub_Indent);

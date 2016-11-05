@@ -1580,6 +1580,10 @@ package body Libraries is
          Disp_Vhdl.Disp_Vhdl (Unit);
       end if;
 
+      if Flags.Check_Ast_Level > 0 then
+         Nodes_GC.Check_Tree (Unit);
+      end if;
+
       --  Post checks
       ----------------
 
@@ -1626,6 +1630,10 @@ package body Libraries is
 
       if (Main or Flags.List_All) and then Flags.List_Canon then
          Disp_Vhdl.Disp_Vhdl (Unit);
+      end if;
+
+      if Flags.Check_Ast_Level > 0 then
+         Nodes_GC.Check_Tree (Unit);
       end if;
    end Finish_Compilation;
 

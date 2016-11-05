@@ -18,7 +18,7 @@ with Tables;
 with Nodes;
 with Nodes_Meta;
 with Types; use Types;
-with Files_Map; use Files_Map;
+with Files_Map;
 with Iirs_Utils; use Iirs_Utils;
 with Errorout; use Errorout;
 
@@ -147,6 +147,18 @@ package body Sem_Inst is
    --  The virtual file for the instance.
    Instance_File : Source_File_Entry;
 
+   --  Get the new location.
+   function Relocate (Loc : Location_Type) return Location_Type is
+   begin
+      if Instance_File /= No_Source_File_Entry then
+         --  For Instantiate.
+         return Files_Map.Instance_Relocate (Instance_File, Loc);
+      else
+         --  For Copy_Tree.
+         return Loc;
+      end if;
+   end Relocate;
+
    function Instantiate_Iir (N : Iir; Is_Ref : Boolean) return Iir;
 
    --  Instantiate a list.  Simply create a new list and instantiate nodes of
@@ -230,7 +242,7 @@ package body Sem_Inst is
                      R := Instantiate_Iir_Chain (S);
                   when Attr_Chain_Next =>
                      R := Null_Iir;
-                  when Attr_Of_Ref =>
+                  when Attr_Of_Ref | Attr_Of_Maybe_Ref =>
                      --  Can only appear in list.
                      raise Internal_Error;
                end case;
@@ -240,17 +252,21 @@ package body Sem_Inst is
             declare
                S : constant Iir_List := Get_Iir_List (N, F);
                R : Iir_List;
+               Ref : Boolean;
             begin
                case Get_Field_Attribute (F) is
                   when Attr_None =>
-                     R := Instantiate_Iir_List (S, False);
+                     Ref := False;
                   when Attr_Of_Ref =>
-                     R := Instantiate_Iir_List (S, True);
+                     Ref := True;
+                  when Attr_Of_Maybe_Ref =>
+                     Ref := Get_Is_Ref (N);
                   when others =>
                      --  Ref is specially handled in Instantiate_Iir.
                      --  Others cannot appear for lists.
                      raise Internal_Error;
                end case;
+               R := Instantiate_Iir_List (S, Ref);
                Set_Iir_List (Res, F, R);
             end;
          when Type_PSL_NFA
@@ -298,8 +314,7 @@ package body Sem_Inst is
             Set_Iir_Direction (Res, F, Get_Iir_Direction (N, F));
          when Type_Location_Type =>
             Set_Location_Type
-              (Res, F, Instance_Relocate (Instance_File,
-                                          Get_Location_Type (N, F)));
+              (Res, F, Relocate (Get_Location_Type (N, F)));
          when Type_Iir_Int32 =>
             Set_Iir_Int32 (Res, F, Get_Iir_Int32 (N, F));
          when Type_Int32 =>
@@ -362,8 +377,7 @@ package body Sem_Inst is
          --  And the instance of N is RES.
          Set_Instance (N, Res);
 
-         Set_Location
-           (Res, Instance_Relocate (Instance_File, Get_Location (N)));
+         Set_Location (Res, Relocate (Get_Location (N)));
 
          for I in Fields'Range loop
             F := Fields (I);
@@ -532,8 +546,7 @@ package body Sem_Inst is
       while Inter /= Null_Iir loop
          --  Create a copy of the interface.  FIXME: is it really needed ?
          Res := Create_Iir (Get_Kind (Inter));
-         Set_Location
-           (Res, Instance_Relocate (Instance_File, Get_Location (Inter)));
+         Set_Location (Res, Relocate (Get_Location (Inter)));
 
          Set_Parent (Res, Inst);
          Set_Identifier (Res, Get_Identifier (Inter));
@@ -633,7 +646,7 @@ package body Sem_Inst is
                            Set_Instance_On_Chain (S, S_Inst);
                         when Attr_Chain_Next =>
                            null;
-                        when Attr_Of_Ref =>
+                        when Attr_Of_Ref | Attr_Of_Maybe_Ref =>
                            --  Can only appear in list.
                            raise Internal_Error;
                      end case;
@@ -646,6 +659,10 @@ package body Sem_Inst is
                      case Get_Field_Attribute (F) is
                         when Attr_None =>
                            Set_Instance_On_Iir_List (S, S_Inst);
+                        when Attr_Of_Maybe_Ref =>
+                           if not Get_Is_Ref (N) then
+                              Set_Instance_On_Iir_List (S, S_Inst);
+                           end if;
                         when Attr_Of_Ref
                           | Attr_Ref
                           | Attr_Forward_Ref =>
@@ -786,8 +803,28 @@ package body Sem_Inst is
       end loop;
    end Instantiate_Generic_Map_Chain;
 
+   function Copy_Tree (Orig : Iir) return Iir
+   is
+      Prev_Instance_File : constant Source_File_Entry := Instance_File;
+      Mark : constant Instance_Index_Type := Prev_Instance_Table.Last;
+      Res : Iir;
+   begin
+      Instance_File := No_Source_File_Entry;
+
+      --  Be sure Get_Origin_Priv can be called on existing nodes.
+      Expand_Origin_Table;
+
+      Res := Instantiate_Iir (Orig, False);
+
+      Instance_File := Prev_Instance_File;
+      Restore_Origin (Mark);
+
+      return Res;
+   end Copy_Tree;
+
    procedure Create_Relocation (Inst : Iir; Orig : Iir)
    is
+      use Files_Map;
       Orig_File : Source_File_Entry;
       Pos : Source_Ptr;
    begin
@@ -959,7 +996,7 @@ package body Sem_Inst is
                               Substitute_On_Chain (S, E, Rep);
                            when Attr_Chain_Next =>
                               null;
-                           when Attr_Of_Ref =>
+                           when Attr_Of_Ref | Attr_Of_Maybe_Ref =>
                               --  Can only appear in list.
                               raise Internal_Error;
                         end case;
@@ -972,6 +1009,10 @@ package body Sem_Inst is
                      case Get_Field_Attribute (F) is
                         when Attr_None =>
                            Substitute_On_Iir_List (S, E, Rep);
+                        when Attr_Of_Maybe_Ref =>
+                           if not Get_Is_Ref (N) then
+                              Substitute_On_Iir_List (S, E, Rep);
+                           end if;
                         when Attr_Of_Ref
                           | Attr_Ref
                           | Attr_Forward_Ref =>
