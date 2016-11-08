@@ -1,0 +1,129 @@
+--  Efficient expandable one dimensional array.
+--  Copyright (C) 2015 - 2016 Tristan Gingold
+--
+--  GHDL is free software; you can redistribute it and/or modify it under
+--  the terms of the GNU General Public License as published by the Free
+--  Software Foundation; either version 2, or (at your option) any later
+--  version.
+--
+--  GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
+--  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+--  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+--  for more details.
+--
+--  You should have received a copy of the GNU General Public License
+--  along with GHDL; see the file COPYING.  If not, write to the Free
+--  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+--  02111-1307, USA.
+
+with Interfaces.C; use Interfaces.C;
+with System;
+
+package body Dyn_Tables is
+   --  Size of an element in storage units (bytes).
+   El_Size : constant size_t :=
+     size_t (Table_Type'Component_Size / System.Storage_Unit);
+
+   --  Expand the table by doubling its size.  The table must have been
+   --  initialized.
+   procedure Expand (T : in out Instance; Num : Natural)
+   is
+      --  For efficiency, directly call realloc.
+      function Crealloc (Ptr : Table_Thin_Ptr; Size : size_t)
+                        return Table_Thin_Ptr;
+      pragma Import (C, Crealloc, "realloc");
+   begin
+      pragma Assert (T.Priv.Length /= 0);
+      pragma Assert (T.Table /= null);
+
+      --  Expand the bound.
+      T.Priv.Last_Pos := T.Priv.Last_Pos + Num;
+
+      --  Check if need to reallocate.
+      if T.Priv.Last_Pos < T.Priv.Length then
+         return;
+      else
+         --  Double the length.
+         loop
+            T.Priv.Length := T.Priv.Length * 2;
+            exit when T.Priv.Length > T.Priv.Last_Pos;
+         end loop;
+      end if;
+
+      --  Realloc and check result.
+      T.Table := Crealloc (T.Table, size_t (T.Priv.Length) * El_Size);
+      if T.Table = null then
+         raise Storage_Error;
+      end if;
+   end Expand;
+
+   procedure Allocate (T : in out Instance; Num : Natural := 1) is
+   begin
+      Expand (T, Num);
+   end Allocate;
+
+   procedure Increment_Last (T : in out Instance) is
+   begin
+      --  Increase by 1.
+      Expand (T, 1);
+   end Increment_Last;
+
+   procedure Decrement_Last (T : in out Instance) is
+   begin
+      T.Priv.Last_Pos := T.Priv.Last_Pos - 1;
+   end Decrement_Last;
+
+   procedure Set_Last (T : in out Instance; Index : Table_Index_Type)
+   is
+      New_Last : constant Natural :=
+        (Table_Index_Type'Pos (Index)
+           - Table_Index_Type'Pos (Table_Low_Bound) + 1);
+   begin
+      if New_Last < T.Priv.Last_Pos then
+         --  Decrease length.
+         T.Priv.Last_Pos := New_Last;
+      else
+         --  Increase length.
+         Expand (T, New_Last - T.Priv.Last_Pos);
+      end if;
+   end Set_Last;
+
+   procedure Init (T : in out Instance)
+   is
+      --  Direct interface to malloc.
+      function Cmalloc (Size : size_t) return Table_Thin_Ptr;
+      pragma Import (C, Cmalloc, "malloc");
+   begin
+      if T.Table = null then
+         --  Allocate memory if not already allocated.
+         T.Priv.Length := Table_Initial;
+         T.Table := Cmalloc (size_t (T.Priv.Length) * El_Size);
+      end if;
+
+      --  Table is initially empty.
+      T.Priv.Last_Pos := 0;
+   end Init;
+
+   function Last (T : Instance) return Table_Index_Type is
+   begin
+      return Table_Index_Type'Val
+        (Table_Index_Type'Pos (Table_Low_Bound) + T.Priv.Last_Pos - 1);
+   end Last;
+
+   procedure Free (T : in out Instance) is
+      --  Direct interface to free.
+      procedure Cfree (Ptr : Table_Thin_Ptr);
+      pragma Import (C, Cfree, "free");
+   begin
+      Cfree (T.Table);
+      T := (Table => null,
+            Priv => (Length => 0,
+                     Last_Pos => 0));
+   end Free;
+
+   procedure Append (T : in out Instance; Val : Table_Component_Type) is
+   begin
+      Increment_Last (T);
+      T.Table (Last (T)) := Val;
+   end Append;
+end Dyn_Tables;

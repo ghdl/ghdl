@@ -1,5 +1,5 @@
---  Efficient expandable one dimensional array.
---  Copyright (C) 2015 Tristan Gingold
+--  Efficient expandable one dimensional array type.
+--  Copyright (C) 2015 - 2016 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -20,8 +20,6 @@
 --  - the index type can be any discrete type (in particular a modular type)
 --  - the increment is not used
 --  - the interface is simplified.
-with Dyn_Tables;
-
 generic
    --  This package creates:
    --    array (Table_Index_Type range Table_Low_Bound .. <>)
@@ -36,50 +34,72 @@ generic
 
    --  Initial number of elements.
    Table_Initial   : Positive;
-package Tables is
-   package Dyn_Table is new Dyn_Tables (Table_Component_Type,
-                                        Table_Index_Type,
-                                        Table_Low_Bound,
-                                        Table_Initial);
 
-   T : Dyn_Table.Instance;
+package Dyn_Tables is
+   --  Ada type for the array.
+   type Table_Type is
+     array (Table_Index_Type range <>) of Table_Component_Type;
+   --  Fat subtype (so that the access is thin).
+   subtype Big_Table_Type is
+     Table_Type (Table_Low_Bound .. Table_Index_Type'Last);
 
-   subtype Table_Type is Dyn_Table.Table_Type;
+   --  Access type for the vector.  This is a thin pointer so that it is
+   --  compatible with C pointer, as this package uses malloc/realloc/free for
+   --  memory management.
+   type Table_Thin_Ptr is access all Big_Table_Type;
+   pragma Convention (C, Table_Thin_Ptr);
+   for Table_Thin_Ptr'Storage_Size use 0;
 
-   --  Pointer to the table.  Note that the use of a thin pointer to the
-   --  largest array, this implementation bypasses Ada index checks.
-   Table : Dyn_Table.Table_Thin_Ptr renames T.Table;
+   --  Non user visible data.
+   type Instance_Private is private;
+
+   --  Type for the dynamic table.
+   type Instance is record
+      --  Pointer to the table.  Note that the use of a thin pointer to the
+      --  largest array, this implementation bypasses Ada index checks.
+      Table : Table_Thin_Ptr := null;
+
+      --  Private data.
+      Priv : Instance_Private;
+   end record;
 
    --  Initialize the table.  This is done automatically at elaboration.
-   procedure Init;
+   procedure Init (T : in out Instance);
 
    --  Logical bounds of the array.
    First : constant Table_Index_Type := Table_Low_Bound;
-   function Last return Table_Index_Type;
+   function Last (T : Instance) return Table_Index_Type;
    pragma Inline (Last);
 
    --  Deallocate all the memory.  Makes the array unusable until the next
    --  call to Init.
-   procedure Free;
+   procedure Free (T : in out Instance);
 
    --  Increase by 1 the length of the array.  This may allocate memory.
-   procedure Increment_Last;
+   procedure Increment_Last (T : in out Instance);
    pragma Inline (Increment_Last);
 
    --  Decrease by 1 the length of the array.
-   procedure Decrement_Last;
+   procedure Decrement_Last (T : in out Instance);
    pragma Inline (Decrement_Last);
 
    --  Increase or decrease the length of the array by specifying the upper
    --  bound.
-   procedure Set_Last (Index : Table_Index_Type);
+   procedure Set_Last (T : in out Instance; Index : Table_Index_Type);
 
    --  Append VAL to the array.  This always increase the length of the array.
-   procedure Append (Val : Table_Component_Type);
+   procedure Append (T : in out Instance; Val : Table_Component_Type);
    pragma Inline (Append);
 
-   --  Increase by NUM the length of the array, and returns the old value
-   --  of Last + 1.
-   function Allocate (Num : Natural := 1) return Table_Index_Type;
-   pragma Inline (Allocate);
-end Tables;
+   --  Increase by NUM the length of the array.
+   procedure Allocate (T : in out Instance; Num : Natural := 1);
+
+private
+   type Instance_Private is record
+      --  Number of allocated elements in the table.
+      Length : Natural := 0;
+
+      --  Number of used elements in the table.
+      Last_Pos : Natural := 0;
+   end record;
+end Dyn_Tables;

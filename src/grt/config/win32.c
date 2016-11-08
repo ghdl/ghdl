@@ -164,36 +164,34 @@ int
 __ghdl_run_through_longjump (int (*func)(void))
 {
   int res;
+
 #ifdef __i386__
+  /* Install an SEH handler.  */
   struct exception_registration er;
   struct exception_registration *prev;
 
   /* Get current handler.  */
-  asm ("mov %%fs:(0),%0" : "=r" (prev));
+  asm volatile ("mov %%fs:(0),%0" : "=r" (prev));
 
   /* Build regisration.  */
   er.prev = prev;
   er.handler = ghdl_SEH_handler;
 
   /* Register.  */
-  asm ("mov %0,%%fs:(0)" : : "r" (&er));
-
-  run_env_en = 1;
-  res = setjmp (run_env);
-  if (res == 0)
-    res = (*func)();
-  run_env_en = 0;
-
-  /* Restore.  */
-  asm ("mov %0,%%fs:(0)" : : "r" (prev));
-
-#elif defined (__x86_64__)
-  run_env_en = 1;
-  res = setjmp (run_env);
-  if (res == 0)
-    res = (*func)();
-  run_env_en = 0;
+  asm volatile ("mov %0,%%fs:(0)" : : "r" (&er));
 #endif
+
+  run_env_en = 1;
+  res = setjmp (run_env);
+  if (res == 0)
+    res = (*func)();
+  run_env_en = 0;
+
+#ifdef __i386__
+  /* Restore.  */
+  asm volatile ("mov %0,%%fs:(0)" : : "r" (prev));
+#endif
+
   return res;
 }
 
