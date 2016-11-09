@@ -1,5 +1,7 @@
 # GHDL
 
+[![Join the chat at https://gitter.im/ghdl1/Lobby](https://badges.gitter.im/ghdl1/Lobby.svg)](https://gitter.im/ghdl1/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 This directory contains the sources of GHDL, the VHDL simulator.
 
 GHDL is not an interpreter: it generates machine code from your design,
