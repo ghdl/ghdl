@@ -42,29 +42,35 @@
 #
 [CmdletBinding()]
 param(
-	# Show the embedded help page(s)
-	[switch]$Help =							$false,
+	# Show the embedded help page(s).
+	[switch]$Help =								$false,
 	
 	# Compile all packages.
-	[switch]$All =							$true,
+	[switch]$All =								$true,
 	
 	# Compile all UVVM packages.
-	[switch]$UVVM =							$true,
+	[switch]$UVVM =								$true,
+	# Compile all UVVM Verification IPs (VIPs).
+	[switch]$UVVM_VIP =						$true,
+	# Compile all UVVM Utility packages.
+	[switch]$UVVM_Utilities =			$true,
+	# Compile all UVVM VCC Framework packages.
+	[switch]$UVVM_VCC_Framework =	$true,
 	
 	# Clean up directory before analyzing.
-	[switch]$Clean =						$false,
+	[switch]$Clean =							$false,
 	
 	#Skip warning messages. (Show errors only.)
-	[switch]$SuppressWarnings = $false,
-	# Halt on errors
-	[switch]$HaltOnError =			$false,
+	[switch]$SuppressWarnings = 	$false,
+	# Halt on errors.
+	[switch]$HaltOnError =				$false,
 	
-	# Set vendor library source directory
-	[string]$Source =						"",
-	# Set output directory name
-	[string]$Output =						"",
-	# Set GHDL executable
-	[string]$GHDL =							""
+	# Set vendor library source directory.
+	[string]$Source =							"",
+	# Set output directory name.
+	[string]$Output =							"",
+	# Set GHDL executable.
+	[string]$GHDL =								""
 )
 
 # ---------------------------------------------
@@ -83,14 +89,30 @@ Import-Module $PSScriptRoot\config.psm1 -Verbose:$false -Debug:$false -ArgumentL
 Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -Debug:$false -ArgumentList @("UVVM", "$WorkingDir")
 
 # Display help if no command was selected
-$Help = $Help -or (-not ($All -or $UVVM -or $Clean))
+$Help = $Help -or (-not ($All -or
+									($UVVM -or $UVVM_VIP) -or
+									($UVVM_Utilities -or $UVVM_VVC_Framework) -or
+									($UVVM_VIP_AXI_Lite -or $UVVM_VIP_AXI_Stream -or $UVVM_VIP_I2C -or $UVVM_VIP_UART) -or
+									$Clean))
 
 if ($Help)
 {	Get-Help $MYINVOCATION.InvocationName -Detailed
 	Exit-CompileScript
 }
 if ($All)
-{	$UVVM =			$true
+{	$UVVM =									$true
+	$UVVM_VIP =							$true
+}
+if ($UVVM)
+{	$UVVM_Utilities =				$true
+	$UVVM_VCC_Framework =		$true
+}
+if ($UVVM_VIP)
+{	$UVVM_VIP_AXI_Lite =		$true
+	$UVVM_VIP_AXI_Stream =	$true
+	$UVVM_VIP_I2C =					$true
+	$UVVM_VIP_SBI =					$true
+	$UVVM_VIP_UART =				$true
 }
 
 
@@ -127,7 +149,7 @@ if ($Clean)
 # UVVM packages
 # ==============================================================================
 # compile uvvm_util library
-if ((-not $StopCompiling) -and $UVVM)
+if ((-not $StopCompiling) -and $UVVM_Utilities)
 {	$Library = "uvvm_util"
 	$Files = @(
 		"uvvm_util\src\types_pkg.vhd",
@@ -144,12 +166,131 @@ if ((-not $StopCompiling) -and $UVVM)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 	
 	$ErrorCount += 0
-	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+}
+
+# compile uvvm_vvc_framework library
+if ((-not $StopCompiling) -and $UVVM_VCC_Framework)
+{	$Library = "uvvm_vvc_framework"
+	$Files = @(
+		"uvvm_vvc_framework\src\ti_vvc_framework_support_pkg.vhd",
+		"uvvm_vvc_framework\src\ti_generic_queue_pkg.vhd",
+		"uvvm_vvc_framework\src\ti_data_queue_pkg.vhd",
+		"uvvm_vvc_framework\src\ti_data_fifo_pkg.vhd",
+		"uvvm_vvc_framework\src\ti_data_stack_pkg.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+}
+
+# compile bitvis_vip_axilite library
+if ((-not $StopCompiling) -and $UVVM_VIP_AXI_Lite)
+{	$Library = "bitvis_vip_axilite"
+	$Files = @(
+		"bitvis_vip_axilite\src\axilite_bfm_pkg.vhd",
+		"bitvis_vip_axilite\src\vvc_cmd_pkg.vhd",
+		"uvvm_vvc_framework\src_target_dependent\td_target_support_pkg.vhd",
+		"uvvm_vvc_framework\src_target_dependent\td_vvc_framework_common_methods_pkg.vhd",
+		"bitvis_vip_axilite\src\vvc_methods_pkg.vhd",
+		"uvvm_vvc_framework\src_target_dependent\td_queue_pkg.vhd",
+		"uvvm_vvc_framework\src_target_dependent\td_vvc_entity_support_pkg.vhd",
+		"bitvis_vip_axilite\src\axilite_vvc.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+}
+
+# compile bitvis_vip_axistream library
+if ((-not $StopCompiling) -and $UVVM_VIP_AXI_Stream)
+{	$Library = "bitvis_vip_axistream"
+	$Files = @(
+		"bitvis_vip_axistream\src\axistream_bfm_pkg.vhd",
+		"bitvis_vip_axistream\src\vvc_cmd_pkg.vhd",
+		"uvvm_vvc_framework\src_target_dependent\td_target_support_pkg.vhd",
+		"uvvm_vvc_framework\src_target_dependent\td_vvc_framework_common_methods_pkg.vhd",
+		"bitvis_vip_axistream\src\vvc_methods_pkg.vhd",
+		"uvvm_vvc_framework\src_target_dependent\td_queue_pkg.vhd",
+		"uvvm_vvc_framework\src_target_dependent\td_vvc_entity_support_pkg.vhd",
+		"bitvis_vip_axistream\src\axistream_vvc.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+}
+
+# compile bitvis_vip_i2c library
+if ((-not $StopCompiling) -and $UVVM_VIP_I2C)
+{	$Library = "bitvis_vip_i2c"
+	$Files = @(
+		"bitvis_vip_i2c\src\i2c_bfm_pkg.vhd",
+		"bitvis_vip_i2c\src\vvc_cmd_pkg.vhd",
+		"uvvm_vvc_framework\src_target_dependent\td_target_support_pkg.vhd",
+		"uvvm_vvc_framework\src_target_dependent\td_vvc_framework_common_methods_pkg.vhd",
+		"bitvis_vip_i2c\src\vvc_methods_pkg.vhd",
+		"uvvm_vvc_framework\src_target_dependent\td_queue_pkg.vhd",
+		"uvvm_vvc_framework\src_target_dependent\td_vvc_entity_support_pkg.vhd",
+		"bitvis_vip_i2c\src\i2c_vvc.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+}
+
+# compile bitvis_vip_sbi library
+if ((-not $StopCompiling) -and $UVVM_VIP_UART)
+{	$Library = "bitvis_vip_sbi"
+	$Files = @(
+		"bitvis_vip_sbi/src/sbi_bfm_pkg.vhd",
+		"bitvis_vip_sbi/src/vvc_cmd_pkg.vhd",
+		"uvvm_vvc_framework/src_target_dependent/td_target_support_pkg.vhd",
+		"uvvm_vvc_framework/src_target_dependent/td_vvc_framework_common_methods_pkg.vhd",
+		"bitvis_vip_sbi/src/vvc_methods_pkg.vhd",
+		"uvvm_vvc_framework/src_target_dependent/td_queue_pkg.vhd",
+		"uvvm_vvc_framework/src_target_dependent/td_vvc_entity_support_pkg.vhd",
+		"bitvis_vip_sbi/src/sbi_vvc.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+}
+
+# compile bitvis_vip_uart library
+if ((-not $StopCompiling) -and $UVVM_VIP_UART)
+{	$Library = "bitvis_vip_uart"
+	$Files = @(
+		"bitvis_vip_uart\src\uart_bfm_pkg.vhd",
+		"bitvis_vip_uart\src\vvc_cmd_pkg.vhd",
+		"uvvm_vvc_framework\src_target_dependent\td_target_support_pkg.vhd",
+		"uvvm_vvc_framework\src_target_dependent\td_vvc_framework_common_methods_pkg.vhd",
+		"bitvis_vip_uart\src\vvc_methods_pkg.vhd",
+		"uvvm_vvc_framework\src_target_dependent\td_queue_pkg.vhd",
+		"uvvm_vvc_framework\src_target_dependent\td_vvc_entity_support_pkg.vhd",
+		"bitvis_vip_uart\src\uart_rx_vvc.vhd",
+		"bitvis_vip_uart\src\uart_tx_vvc.vhd",
+		"bitvis_vip_uart\src\uart_vvc.vhd"
+	)
+	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
+	
+	$ErrorCount += 0
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
 Write-Host "--------------------------------------------------------------------------------"
-Write-Host "Compiling UVVM Utility Library packages " -NoNewline
+Write-Host "Compiling UVVM packages " -NoNewline
 if ($ErrorCount -gt 0)
 {	Write-Host "[FAILED]" -ForegroundColor Red				}
 else
