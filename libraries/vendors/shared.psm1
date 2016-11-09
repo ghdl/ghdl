@@ -266,6 +266,7 @@ function Start-PackageCompilation
 		[Parameter(Mandatory=$true)][string]$Library,
 		[Parameter(Mandatory=$true)][string]$VHDLVersion,
 		[Parameter(Mandatory=$true)][string[]]$SourceFiles,
+		[Parameter(Mandatory=$true)][bool]$SuppressWarnings,
 		[Parameter(Mandatory=$true)][bool]$HaltOnError
 	)
 	# set default values
@@ -325,6 +326,7 @@ function Start-PrimitiveCompilation
 		[Parameter(Mandatory=$true)][string]$Library,
 		[Parameter(Mandatory=$true)][string]$VHDLVersion,
 		[Parameter(Mandatory=$true)][string[]]$SourceFiles,
+		[Parameter(Mandatory=$true)][bool]$SuppressWarnings,
 		[Parameter(Mandatory=$true)][bool]$HaltOnError
 	)
 	# set default values
