@@ -106,7 +106,7 @@ if [ $NO_COMMAND -eq 1 ]; then
 fi
 
 if [ "$HELP" == "TRUE" ]; then
-	test $NO_COMMAND -eq 1 && echo 1>&2 -e "\n${COLORED_ERROR} No command selected."
+	test $NO_COMMAND -eq 1 && echo 1>&2 -e "/n${COLORED_ERROR} No command selected."
 	echo ""
 	echo "Synopsis:"
 	echo "  A script to compile the simulation library 'uvvm_util' for GHDL on Linux."
@@ -197,16 +197,16 @@ if [ "$COMPILE_UVVM" == "TRUE" ]; then
 	Library="uvvm_util"
 	VHDLVersion="v08"
 	Files=(
-		uvvm_util\src\types_pkg.vhd
-		uvvm_util\src\adaptations_pkg.vhd
-		uvvm_util\src\string_methods_pkg.vhd
-		uvvm_util\src\protected_types_pkg.vhd
-		uvvm_util\src\hierarchy_linked_list_pkg.vhd
-		uvvm_util\src\alert_hierarchy_pkg.vhd
-		uvvm_util\src\license_pkg.vhd
-		uvvm_util\src\methods_pkg.vhd
-		uvvm_util\src\bfm_common_pkg.vhd
-		uvvm_util\src\uvvm_util_context.vhd
+		uvvm_util/src/types_pkg.vhd
+		uvvm_util/src/adaptations_pkg.vhd
+		uvvm_util/src/string_methods_pkg.vhd
+		uvvm_util/src/protected_types_pkg.vhd
+		uvvm_util/src/hierarchy_linked_list_pkg.vhd
+		uvvm_util/src/alert_hierarchy_pkg.vhd
+		uvvm_util/src/license_pkg.vhd
+		uvvm_util/src/methods_pkg.vhd
+		uvvm_util/src/bfm_common_pkg.vhd
+		uvvm_util/src/uvvm_util_context.vhd
 	)
 
 	# append absolute source path
@@ -217,7 +217,7 @@ if [ "$COMPILE_UVVM" == "TRUE" ]; then
 
 	# create local set of GHDL parameters
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--std=08)
+	GHDL_PARAMS+=(--std=08 -P$DestinationDirectory)
 	
 	GHDLCompilePackages
 fi
@@ -228,11 +228,11 @@ if [ "$COMPILE_UVVM" == "TRUE" ]; then
 	Library="uvvm_vvc_framework"
 	VHDLVersion="v08"
 	Files=(
-		"uvvm_vvc_framework\src\ti_vvc_framework_support_pkg.vhd",
-		"uvvm_vvc_framework\src\ti_generic_queue_pkg.vhd",
-		"uvvm_vvc_framework\src\ti_data_queue_pkg.vhd",
-		"uvvm_vvc_framework\src\ti_data_fifo_pkg.vhd",
-		"uvvm_vvc_framework\src\ti_data_stack_pkg.vhd"
+		uvvm_vvc_framework/src/ti_vvc_framework_support_pkg.vhd
+		uvvm_vvc_framework/src/ti_generic_queue_pkg.vhd
+		uvvm_vvc_framework/src/ti_data_queue_pkg.vhd
+		uvvm_vvc_framework/src/ti_data_fifo_pkg.vhd
+		uvvm_vvc_framework/src/ti_data_stack_pkg.vhd
 	)
 
 	# append absolute source path
@@ -243,7 +243,7 @@ if [ "$COMPILE_UVVM" == "TRUE" ]; then
 
 	# create local set of GHDL parameters
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--std=08)
+	GHDL_PARAMS+=(--std=08 -P$DestinationDirectory)
 	
 	GHDLCompilePackages
 fi
@@ -256,14 +256,14 @@ if [ "$COMPILE_UVVM_VIP_AXILITE" == "TRUE" ]; then
 	Library="bitvis_vip_axilite"
 	VHDLVersion="v08"
 	Files=(
-		bitvis_vip_axilite\src\axilite_bfm_pkg.vhd
-		bitvis_vip_axilite\src\vvc_cmd_pkg.vhd
-		uvvm_vvc_framework\src_target_dependent\td_target_support_pkg.vhd
-		uvvm_vvc_framework\src_target_dependent\td_vvc_framework_common_methods_pkg.vhd
-		bitvis_vip_axilite\src\vvc_methods_pkg.vhd
-		uvvm_vvc_framework\src_target_dependent\td_queue_pkg.vhd
-		uvvm_vvc_framework\src_target_dependent\td_vvc_entity_support_pkg.vhd
-		bitvis_vip_axilite\src\axilite_vvc.vhd
+		bitvis_vip_axilite/src/axilite_bfm_pkg.vhd
+		bitvis_vip_axilite/src/vvc_cmd_pkg.vhd
+		uvvm_vvc_framework/src_target_dependent/td_target_support_pkg.vhd
+		uvvm_vvc_framework/src_target_dependent/td_vvc_framework_common_methods_pkg.vhd
+		bitvis_vip_axilite/src/vvc_methods_pkg.vhd
+		uvvm_vvc_framework/src_target_dependent/td_queue_pkg.vhd
+		uvvm_vvc_framework/src_target_dependent/td_vvc_entity_support_pkg.vhd
+		bitvis_vip_axilite/src/axilite_vvc.vhd
 	)
 
 	# append absolute source path
@@ -274,7 +274,7 @@ if [ "$COMPILE_UVVM_VIP_AXILITE" == "TRUE" ]; then
 
 	# create local set of GHDL parameters
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--std=08)
+	GHDL_PARAMS+=(--std=08 -P$DestinationDirectory)
 	
 	GHDLCompilePackages
 fi
@@ -285,14 +285,14 @@ if [ "$COMPILE_UVVM_VIP_AXISTREAM" == "TRUE" ]; then
 	Library="bitvis_vip_axistream"
 	VHDLVersion="v08"
 	Files=(
-		bitvis_vip_axistream\src\axistream_bfm_pkg.vhd
-		bitvis_vip_axistream\src\vvc_cmd_pkg.vhd
-		uvvm_vvc_framework\src_target_dependent\td_target_support_pkg.vhd
-		uvvm_vvc_framework\src_target_dependent\td_vvc_framework_common_methods_pkg.vhd
-		bitvis_vip_axistream\src\vvc_methods_pkg.vhd
-		uvvm_vvc_framework\src_target_dependent\td_queue_pkg.vhd
-		uvvm_vvc_framework\src_target_dependent\td_vvc_entity_support_pkg.vhd
-		bitvis_vip_axistream\src\axistream_vvc.vhd
+		bitvis_vip_axistream/src/axistream_bfm_pkg.vhd
+		bitvis_vip_axistream/src/vvc_cmd_pkg.vhd
+		uvvm_vvc_framework/src_target_dependent/td_target_support_pkg.vhd
+		uvvm_vvc_framework/src_target_dependent/td_vvc_framework_common_methods_pkg.vhd
+		bitvis_vip_axistream/src/vvc_methods_pkg.vhd
+		uvvm_vvc_framework/src_target_dependent/td_queue_pkg.vhd
+		uvvm_vvc_framework/src_target_dependent/td_vvc_entity_support_pkg.vhd
+		bitvis_vip_axistream/src/axistream_vvc.vhd
 	)
 
 	# append absolute source path
@@ -303,7 +303,7 @@ if [ "$COMPILE_UVVM_VIP_AXISTREAM" == "TRUE" ]; then
 
 	# create local set of GHDL parameters
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--std=08)
+	GHDL_PARAMS+=(--std=08 -P$DestinationDirectory)
 	
 	GHDLCompilePackages
 fi
@@ -314,14 +314,14 @@ if [ "$COMPILE_UVVM_VIP_I2C" == "TRUE" ]; then
 	Library="bitvis_vip_i2c"
 	VHDLVersion="v08"
 	Files=(
-		bitvis_vip_i2c\src\i2c_bfm_pkg.vhd
-		bitvis_vip_i2c\src\vvc_cmd_pkg.vhd
-		uvvm_vvc_framework\src_target_dependent\td_target_support_pkg.vhd
-		uvvm_vvc_framework\src_target_dependent\td_vvc_framework_common_methods_pkg.vhd
-		bitvis_vip_i2c\src\vvc_methods_pkg.vhd
-		uvvm_vvc_framework\src_target_dependent\td_queue_pkg.vhd
-		uvvm_vvc_framework\src_target_dependent\td_vvc_entity_support_pkg.vhd
-		bitvis_vip_i2c\src\i2c_vvc.vhd
+		bitvis_vip_i2c/src/i2c_bfm_pkg.vhd
+		bitvis_vip_i2c/src/vvc_cmd_pkg.vhd
+		uvvm_vvc_framework/src_target_dependent/td_target_support_pkg.vhd
+		uvvm_vvc_framework/src_target_dependent/td_vvc_framework_common_methods_pkg.vhd
+		bitvis_vip_i2c/src/vvc_methods_pkg.vhd
+		uvvm_vvc_framework/src_target_dependent/td_queue_pkg.vhd
+		uvvm_vvc_framework/src_target_dependent/td_vvc_entity_support_pkg.vhd
+		bitvis_vip_i2c/src/i2c_vvc.vhd
 	)
 
 	# append absolute source path
@@ -332,7 +332,7 @@ if [ "$COMPILE_UVVM_VIP_I2C" == "TRUE" ]; then
 
 	# create local set of GHDL parameters
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--std=08)
+	GHDL_PARAMS+=(--std=08--P$DestinationDirectory)
 	
 	GHDLCompilePackages
 fi
@@ -361,7 +361,7 @@ if [ "$COMPILE_UVVM_VIP_SBI" == "TRUE" ]; then
 
 	# create local set of GHDL parameters
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--std=08)
+	GHDL_PARAMS+=(--std=08 -P$DestinationDirectory)
 	
 	GHDLCompilePackages
 fi
@@ -372,16 +372,16 @@ if [ "$COMPILE_UVVM_VIP_UART" == "TRUE" ]; then
 	Library="bitvis_vip_uart"
 	VHDLVersion="v08"
 	Files=(
-		bitvis_vip_uart\src\uart_bfm_pkg.vhd
-		bitvis_vip_uart\src\vvc_cmd_pkg.vhd
-		uvvm_vvc_framework\src_target_dependent\td_target_support_pkg.vhd
-		uvvm_vvc_framework\src_target_dependent\td_vvc_framework_common_methods_pkg.vhd
-		bitvis_vip_uart\src\vvc_methods_pkg.vhd
-		uvvm_vvc_framework\src_target_dependent\td_queue_pkg.vhd
-		uvvm_vvc_framework\src_target_dependent\td_vvc_entity_support_pkg.vhd
-		bitvis_vip_uart\src\uart_rx_vvc.vhd
-		bitvis_vip_uart\src\uart_tx_vvc.vhd
-		bitvis_vip_uart\src\uart_vvc.vhd
+		bitvis_vip_uart/src/uart_bfm_pkg.vhd
+		bitvis_vip_uart/src/vvc_cmd_pkg.vhd
+		uvvm_vvc_framework/src_target_dependent/td_target_support_pkg.vhd
+		uvvm_vvc_framework/src_target_dependent/td_vvc_framework_common_methods_pkg.vhd
+		bitvis_vip_uart/src/vvc_methods_pkg.vhd
+		uvvm_vvc_framework/src_target_dependent/td_queue_pkg.vhd
+		uvvm_vvc_framework/src_target_dependent/td_vvc_entity_support_pkg.vhd
+		bitvis_vip_uart/src/uart_rx_vvc.vhd
+		bitvis_vip_uart/src/uart_tx_vvc.vhd
+		bitvis_vip_uart/src/uart_vvc.vhd
 	)
 
 	# append absolute source path
@@ -392,7 +392,7 @@ if [ "$COMPILE_UVVM_VIP_UART" == "TRUE" ]; then
 
 	# create local set of GHDL parameters
 	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--std=08)
+	GHDL_PARAMS+=(--std=08 -P$DestinationDirectory)
 	
 	GHDLCompilePackages
 fi
