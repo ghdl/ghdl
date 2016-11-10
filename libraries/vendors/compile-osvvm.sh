@@ -202,6 +202,9 @@ if [ "$COMPILE_OSVVM" == "TRUE" ]; then
 		RandomBasePkg.vhd
 		RandomPkg.vhd
 		CoveragePkg.vhd
+		ScoreboardGenericPkg.vhd
+		ScoreboardPkg_int.vhd
+		ScoreboardPkg_slv.vhd
 		OsvvmContext.vhd
 	)
 
