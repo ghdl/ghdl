@@ -68,6 +68,10 @@ while [[ $# > 0 ]]; do
 		COMPILE_UVVM=TRUE
 		NO_COMMAND=0
 		;;
+		--uvvm-vip)
+		COMPILE_UVVM_VIP=TRUE
+		NO_COMMAND=0
+		;;
 		-h|--help)
 		HELP=TRUE
 		NO_COMMAND=0
@@ -124,7 +128,8 @@ if [ "$HELP" == "TRUE" ]; then
 	echo ""
 	echo "Libraries:"
 	echo "  -a --all              Compile all libraries."
-	echo "     --uvvm             Compile library uvvm_util."
+	echo "     --uvvm             Compile UVVM library packages."
+	echo "     --uvvm-vip         Compile UVVM Verification IPs (VIPs)."
 	echo ""
 	echo "Library compile options:"
 	echo "  -H --halt-on-error    Halt on error(s)."
@@ -180,6 +185,9 @@ SetupGRCat
 # define global GHDL Options
 GHDL_OPTIONS=(-fexplicit -frelaxed-rules --no-vital-checks --warn-binding --mb-comments)
 
+# create a set of GHDL parameters
+GHDL_PARAMS=(${GHDL_OPTIONS[@]})
+GHDL_PARAMS+=(--std=08 -P$DestinationDirectory)
 
 # Cleanup directory
 # ==============================================================================
@@ -215,10 +223,6 @@ if [ "$COMPILE_UVVM" == "TRUE" ]; then
 		SourceFiles+=("$SourceDirectory/$File")
 	done
 
-	# create local set of GHDL parameters
-	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--std=08 -P$DestinationDirectory)
-	
 	GHDLCompilePackages
 fi
 
@@ -241,10 +245,6 @@ if [ "$COMPILE_UVVM" == "TRUE" ]; then
 		SourceFiles+=("$SourceDirectory/$File")
 	done
 
-	# create local set of GHDL parameters
-	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--std=08 -P$DestinationDirectory)
-	
 	GHDLCompilePackages
 fi
 
@@ -272,10 +272,6 @@ if [ "$COMPILE_UVVM_VIP_AXILITE" == "TRUE" ]; then
 		SourceFiles+=("$SourceDirectory/$File")
 	done
 
-	# create local set of GHDL parameters
-	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--std=08 -P$DestinationDirectory)
-	
 	GHDLCompilePackages
 fi
 
@@ -301,10 +297,6 @@ if [ "$COMPILE_UVVM_VIP_AXISTREAM" == "TRUE" ]; then
 		SourceFiles+=("$SourceDirectory/$File")
 	done
 
-	# create local set of GHDL parameters
-	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--std=08 -P$DestinationDirectory)
-	
 	GHDLCompilePackages
 fi
 
@@ -330,10 +322,6 @@ if [ "$COMPILE_UVVM_VIP_I2C" == "TRUE" ]; then
 		SourceFiles+=("$SourceDirectory/$File")
 	done
 
-	# create local set of GHDL parameters
-	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--std=08--P$DestinationDirectory)
-	
 	GHDLCompilePackages
 fi
 
@@ -359,10 +347,6 @@ if [ "$COMPILE_UVVM_VIP_SBI" == "TRUE" ]; then
 		SourceFiles+=("$SourceDirectory/$File")
 	done
 
-	# create local set of GHDL parameters
-	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--std=08 -P$DestinationDirectory)
-	
 	GHDLCompilePackages
 fi
 
@@ -390,10 +374,6 @@ if [ "$COMPILE_UVVM_VIP_UART" == "TRUE" ]; then
 		SourceFiles+=("$SourceDirectory/$File")
 	done
 
-	# create local set of GHDL parameters
-	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-	GHDL_PARAMS+=(--std=08 -P$DestinationDirectory)
-	
 	GHDLCompilePackages
 fi
 	
