@@ -76,6 +76,10 @@ while [[ $# > 0 ]]; do
 		COMPILE_UNIMACRO=TRUE
 		NO_COMMAND=0
 		;;
+		--unifast)
+		COMPILE_UNIFAST=TRUE
+		NO_COMMAND=0
+		;;
 		--secureip)
 		COMPILE_SECUREIP=TRUE
 		;;
@@ -146,6 +150,7 @@ if [ "$HELP" == "TRUE" ]; then
 	echo "  -a --all              Compile all Xilinx simulation libraries."
 	echo "     --unisim           Compile the unisim library."
 	echo "     --unimacro         Compile the unimacro library."
+	echo "     --unifast          Compile the unifast library."
 	echo "     --secureip         Compile the secureip library."
 	echo ""
 	echo "Library compile options:"
@@ -169,6 +174,7 @@ fi
 if [ "$COMPILE_ALL" == "TRUE" ]; then
 	COMPILE_UNISIM=TRUE
 	COMPILE_UNIMACRO=TRUE
+	COMPILE_UNIFAST=TRUE
 	COMPILE_SECUREIP=TRUE
 fi
 
@@ -277,10 +283,7 @@ fi
 # compile unisim retarget primitives
 if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_UNISIM" == "TRUE" ]; then
 	Library="unisim"
-	SourceFiles=()
-	while IFS= read -r File; do
-		SourceFiles+=("$SourceDirectory/${Library}s/retarget/$File")
-	done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/${Library}s/retarget/vhdl_analyze_order")
+	SourceFiles="$(LC_COLLATE=C ls $SourceDirectory/${Library}s/retarget/*.vhd)"
 
 	GHDLCompileLibrary
 fi
@@ -288,10 +291,7 @@ fi
 # compile unisim secureip primitives
 if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_UNISIM" == "TRUE" ] && [ "$COMPILE_SECUREIP" == "TRUE" ]; then
 	Library="secureip"
-	SourceFiles=()
-	while IFS= read -r File; do
-		SourceFiles+=("$SourceDirectory/unisims/$Library/$File")
-	done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/unisims/$Library/vhdl_analyze_order")
+	SourceFiles="$(LC_COLLATE=C ls $SourceDirectory/unisims/$Library/*.vhd)"
 
 	GHDLCompileLibrary
 fi
@@ -316,14 +316,26 @@ fi
 # compile unimacro macros
 if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_UNIMACRO" == "TRUE" ]; then
 	Library="unimacro"
-	SourceFiles=($(LC_COLLATE=C ls $SourceDirectory/$Library/*_MACRO.vhd))
+	SourceFiles=()
+	while IFS= read -r File; do
+		SourceFiles+=("$SourceDirectory/${Library}/$File")
+	done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/${Library}/vhdl_analyze_order")
 
 	GHDLCompileLibrary
 fi
 
 # Library UNIFAST
 # ==============================================================================
-# TODO:
+# compile unisim primitives
+if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_UNIFAST" == "TRUE" ]; then
+	Library="unifast"
+	SourceFiles=()
+	while IFS= read -r File; do
+		SourceFiles+=("$SourceDirectory/${Library}/primitive/$File")
+	done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/${Library}/primitive/vhdl_analyze_order")
+
+	GHDLCompileLibrary
+fi
 
 echo "--------------------------------------------------------------------------------"
 echo -n "Compiling Xilinx Vivado libraries "
