@@ -46,10 +46,10 @@ param(
 	[switch]$Help =							$false,
 	
 	# Compile all libraries and packages.
-	[switch]$All =							$true,
+	[switch]$All =							$false,
 	
 	# Compile all OSVVM packages.
-	[switch]$OSVVM =						$true,
+	[switch]$OSVVM =						$false,
 	
 	# Clean up directory before analyzing.
 	[switch]$Clean =						$false,
