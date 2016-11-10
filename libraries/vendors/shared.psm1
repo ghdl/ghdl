@@ -266,6 +266,7 @@ function Start-PackageCompilation
 		[Parameter(Mandatory=$true)][string]$Library,
 		[Parameter(Mandatory=$true)][string]$VHDLVersion,
 		[Parameter(Mandatory=$true)][string[]]$SourceFiles,
+		[Parameter(Mandatory=$true)][bool]$SuppressWarnings,
 		[Parameter(Mandatory=$true)][bool]$HaltOnError
 	)
 	# set default values
@@ -325,6 +326,7 @@ function Start-PrimitiveCompilation
 		[Parameter(Mandatory=$true)][string]$Library,
 		[Parameter(Mandatory=$true)][string]$VHDLVersion,
 		[Parameter(Mandatory=$true)][string[]]$SourceFiles,
+		[Parameter(Mandatory=$true)][bool]$SuppressWarnings,
 		[Parameter(Mandatory=$true)][bool]$HaltOnError
 	)
 	# set default values
@@ -446,6 +448,11 @@ function Write-ColoredGHDLLine
 				}
 			}
 			elseif ($InputObject -match ":\d+:\d+:\s")
+			{	$ErrorRecordFound	= $true
+				Write-Host "${Indent}ERROR: "		-NoNewline -ForegroundColor Red
+				Write-Host $InputObject
+			}
+			elseif ($InputObject -match ":error:\s")
 			{	$ErrorRecordFound	= $true
 				Write-Host "${Indent}ERROR: "		-NoNewline -ForegroundColor Red
 				Write-Host $InputObject
