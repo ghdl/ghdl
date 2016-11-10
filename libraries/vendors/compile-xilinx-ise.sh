@@ -315,10 +315,7 @@ fi
 # compile unimacro macros
 if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_UNIMACRO" == "TRUE" ]; then
 	Library="unimacro"
-	SourceFiles=()
-	while IFS= read -r File; do
-		SourceFiles+=("$SourceDirectory/${Library}/$File")
-	done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/${Library}/vhdl_analyze_order")
+	SourceFiles=($(LC_COLLATE=C ls $SourceDirectory/$Library/*_MACRO.vhd))
 
 	GHDLCompileLibrary
 fi
