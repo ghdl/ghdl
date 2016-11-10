@@ -146,7 +146,7 @@ if ((-not $StopCompiling) -and $OSVVM)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 	
 	$ErrorCount += 0
-	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 

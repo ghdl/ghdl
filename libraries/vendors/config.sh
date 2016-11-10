@@ -59,11 +59,11 @@ DestinationDirectories[XilinxVivado]="xilinx-vivado"
 # Declare source directories depending on the installation paths:
 declare -A SourceDirectories
 SourceDirectories[AlteraQuartus]="eda/sim_lib"
-SourceDirectories[XilinxISE]="vhdl/src"
-SourceDirectories[XilinxVivado]="data/vhdl/src"
 SourceDirectories[LatticeDiamond]="cae_library/simulation/vhdl"
 SourceDirectories[OSVVM]="."
 SourceDirectories[VUnit]="vunit/vhdl"
+SourceDirectories[XilinxISE]="vhdl/src"
+SourceDirectories[XilinxVivado]="data/vhdl/src"
 
 # input files greater than $LARGE_FILESIZE are skipped if '--skip-largefiles' is set
 LARGE_FILESIZE=125000
