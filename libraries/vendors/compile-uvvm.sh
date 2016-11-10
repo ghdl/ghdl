@@ -65,7 +65,7 @@ while [[ $# > 0 ]]; do
 		NO_COMMAND=0
 		;;
 		--uvvm)
-		COMPILE_VUNIT=TRUE
+		COMPILE_UVVM=TRUE
 		NO_COMMAND=0
 		;;
 		-h|--help)
@@ -142,6 +142,18 @@ fi
 
 if [ "$COMPILE_ALL" == "TRUE" ]; then
 	COMPILE_UVVM=TRUE
+	COMPILE_UVVM_VIP=TRUE
+fi
+if [ "$COMPILE_UVVM" == "TRUE" ]; then
+	COMPILE_UVVM_UTILITIES=TRUE
+	COMPILE_UVVM_VVC_FRAMEWORK=TRUE
+fi
+if [ "$COMPILE_UVVM_VIP" == "TRUE" ]; then
+	COMPILE_UVVM_VIP_AXILITE=TRUE
+	COMPILE_UVVM_VIP_AXISTREAM=TRUE
+	COMPILE_UVVM_VIP_I2C=TRUE
+	COMPILE_UVVM_VIP_SBI=TRUE
+	COMPILE_UVVM_VIP_UART=TRUE
 fi
 
 # -> $SourceDirectories
@@ -177,24 +189,199 @@ if [ "$CLEAN" == "TRUE" ]; then
 	rm *.cf 2> /dev/null
 fi
 
-# Library uvvm_util
+# UVVM libraries
 # ==============================================================================
-# compile vunit packages	
+# compile uvvm_util packages
 ERRORCOUNT=0
 if [ "$COMPILE_UVVM" == "TRUE" ]; then
 	Library="uvvm_util"
 	VHDLVersion="v08"
 	Files=(
-		uvvm_util/src/types_pkg.vhd
-		uvvm_util/src/adaptations_pkg.vhd
-		uvvm_util/src/string_methods_pkg.vhd
-		uvvm_util/src/protected_types_pkg.vhd
-		uvvm_util/src/hierarchy_linked_list_pkg.vhd
-		uvvm_util/src/alert_hierarchy_pkg.vhd
-		uvvm_util/src/license_pkg.vhd
-		uvvm_util/src/methods_pkg.vhd
-		uvvm_util/src/bfm_common_pkg.vhd
-		uvvm_util/src/uvvm_util_context.vhd
+		uvvm_util\src\types_pkg.vhd
+		uvvm_util\src\adaptations_pkg.vhd
+		uvvm_util\src\string_methods_pkg.vhd
+		uvvm_util\src\protected_types_pkg.vhd
+		uvvm_util\src\hierarchy_linked_list_pkg.vhd
+		uvvm_util\src\alert_hierarchy_pkg.vhd
+		uvvm_util\src\license_pkg.vhd
+		uvvm_util\src\methods_pkg.vhd
+		uvvm_util\src\bfm_common_pkg.vhd
+		uvvm_util\src\uvvm_util_context.vhd
+	)
+
+	# append absolute source path
+	SourceFiles=()
+	for File in ${Files[@]}; do
+		SourceFiles+=("$SourceDirectory/$File")
+	done
+
+	# create local set of GHDL parameters
+	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
+	GHDL_PARAMS+=(--std=08)
+	
+	GHDLCompilePackages
+fi
+
+# compile uvvm_vvc_framework packages
+ERRORCOUNT=0
+if [ "$COMPILE_UVVM" == "TRUE" ]; then
+	Library="uvvm_vvc_framework"
+	VHDLVersion="v08"
+	Files=(
+		"uvvm_vvc_framework\src\ti_vvc_framework_support_pkg.vhd",
+		"uvvm_vvc_framework\src\ti_generic_queue_pkg.vhd",
+		"uvvm_vvc_framework\src\ti_data_queue_pkg.vhd",
+		"uvvm_vvc_framework\src\ti_data_fifo_pkg.vhd",
+		"uvvm_vvc_framework\src\ti_data_stack_pkg.vhd"
+	)
+
+	# append absolute source path
+	SourceFiles=()
+	for File in ${Files[@]}; do
+		SourceFiles+=("$SourceDirectory/$File")
+	done
+
+	# create local set of GHDL parameters
+	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
+	GHDL_PARAMS+=(--std=08)
+	
+	GHDLCompilePackages
+fi
+
+# Verification IPs
+# ==============================================================================
+# compile bitvis_vip_axilite packages
+ERRORCOUNT=0
+if [ "$COMPILE_UVVM_VIP_AXILITE" == "TRUE" ]; then
+	Library="bitvis_vip_axilite"
+	VHDLVersion="v08"
+	Files=(
+		bitvis_vip_axilite\src\axilite_bfm_pkg.vhd
+		bitvis_vip_axilite\src\vvc_cmd_pkg.vhd
+		uvvm_vvc_framework\src_target_dependent\td_target_support_pkg.vhd
+		uvvm_vvc_framework\src_target_dependent\td_vvc_framework_common_methods_pkg.vhd
+		bitvis_vip_axilite\src\vvc_methods_pkg.vhd
+		uvvm_vvc_framework\src_target_dependent\td_queue_pkg.vhd
+		uvvm_vvc_framework\src_target_dependent\td_vvc_entity_support_pkg.vhd
+		bitvis_vip_axilite\src\axilite_vvc.vhd
+	)
+
+	# append absolute source path
+	SourceFiles=()
+	for File in ${Files[@]}; do
+		SourceFiles+=("$SourceDirectory/$File")
+	done
+
+	# create local set of GHDL parameters
+	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
+	GHDL_PARAMS+=(--std=08)
+	
+	GHDLCompilePackages
+fi
+
+# compile bitvis_vip_axistream packages
+ERRORCOUNT=0
+if [ "$COMPILE_UVVM_VIP_AXISTREAM" == "TRUE" ]; then
+	Library="bitvis_vip_axistream"
+	VHDLVersion="v08"
+	Files=(
+		bitvis_vip_axistream\src\axistream_bfm_pkg.vhd
+		bitvis_vip_axistream\src\vvc_cmd_pkg.vhd
+		uvvm_vvc_framework\src_target_dependent\td_target_support_pkg.vhd
+		uvvm_vvc_framework\src_target_dependent\td_vvc_framework_common_methods_pkg.vhd
+		bitvis_vip_axistream\src\vvc_methods_pkg.vhd
+		uvvm_vvc_framework\src_target_dependent\td_queue_pkg.vhd
+		uvvm_vvc_framework\src_target_dependent\td_vvc_entity_support_pkg.vhd
+		bitvis_vip_axistream\src\axistream_vvc.vhd
+	)
+
+	# append absolute source path
+	SourceFiles=()
+	for File in ${Files[@]}; do
+		SourceFiles+=("$SourceDirectory/$File")
+	done
+
+	# create local set of GHDL parameters
+	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
+	GHDL_PARAMS+=(--std=08)
+	
+	GHDLCompilePackages
+fi
+
+# compile bitvis_vip_i2c packages
+ERRORCOUNT=0
+if [ "$COMPILE_UVVM_VIP_I2C" == "TRUE" ]; then
+	Library="bitvis_vip_i2c"
+	VHDLVersion="v08"
+	Files=(
+		bitvis_vip_i2c\src\i2c_bfm_pkg.vhd
+		bitvis_vip_i2c\src\vvc_cmd_pkg.vhd
+		uvvm_vvc_framework\src_target_dependent\td_target_support_pkg.vhd
+		uvvm_vvc_framework\src_target_dependent\td_vvc_framework_common_methods_pkg.vhd
+		bitvis_vip_i2c\src\vvc_methods_pkg.vhd
+		uvvm_vvc_framework\src_target_dependent\td_queue_pkg.vhd
+		uvvm_vvc_framework\src_target_dependent\td_vvc_entity_support_pkg.vhd
+		bitvis_vip_i2c\src\i2c_vvc.vhd
+	)
+
+	# append absolute source path
+	SourceFiles=()
+	for File in ${Files[@]}; do
+		SourceFiles+=("$SourceDirectory/$File")
+	done
+
+	# create local set of GHDL parameters
+	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
+	GHDL_PARAMS+=(--std=08)
+	
+	GHDLCompilePackages
+fi
+
+# compile bitvis_vip_sbi packages
+ERRORCOUNT=0
+if [ "$COMPILE_UVVM_VIP_SBI" == "TRUE" ]; then
+	Library="bitvis_vip_sbi"
+	VHDLVersion="v08"
+	Files=(
+		bitvis_vip_sbi/src/sbi_bfm_pkg.vhd
+		bitvis_vip_sbi/src/vvc_cmd_pkg.vhd
+		uvvm_vvc_framework/src_target_dependent/td_target_support_pkg.vhd
+		uvvm_vvc_framework/src_target_dependent/td_vvc_framework_common_methods_pkg.vhd
+		bitvis_vip_sbi/src/vvc_methods_pkg.vhd
+		uvvm_vvc_framework/src_target_dependent/td_queue_pkg.vhd
+		uvvm_vvc_framework/src_target_dependent/td_vvc_entity_support_pkg.vhd
+		bitvis_vip_sbi/src/sbi_vvc.vhd
+	)
+
+	# append absolute source path
+	SourceFiles=()
+	for File in ${Files[@]}; do
+		SourceFiles+=("$SourceDirectory/$File")
+	done
+
+	# create local set of GHDL parameters
+	GHDL_PARAMS=(${GHDL_OPTIONS[@]})
+	GHDL_PARAMS+=(--std=08)
+	
+	GHDLCompilePackages
+fi
+
+# compile bitvis_vip_uart packages
+ERRORCOUNT=0
+if [ "$COMPILE_UVVM_VIP_UART" == "TRUE" ]; then
+	Library="bitvis_vip_uart"
+	VHDLVersion="v08"
+	Files=(
+		bitvis_vip_uart\src\uart_bfm_pkg.vhd
+		bitvis_vip_uart\src\vvc_cmd_pkg.vhd
+		uvvm_vvc_framework\src_target_dependent\td_target_support_pkg.vhd
+		uvvm_vvc_framework\src_target_dependent\td_vvc_framework_common_methods_pkg.vhd
+		bitvis_vip_uart\src\vvc_methods_pkg.vhd
+		uvvm_vvc_framework\src_target_dependent\td_queue_pkg.vhd
+		uvvm_vvc_framework\src_target_dependent\td_vvc_entity_support_pkg.vhd
+		bitvis_vip_uart\src\uart_rx_vvc.vhd
+		bitvis_vip_uart\src\uart_tx_vvc.vhd
+		bitvis_vip_uart\src\uart_vvc.vhd
 	)
 
 	# append absolute source path
@@ -211,7 +398,7 @@ if [ "$COMPILE_UVVM" == "TRUE" ]; then
 fi
 	
 echo "--------------------------------------------------------------------------------"
-echo -n "Compiling UVVM Utility Library packages "
+echo -n "Compiling UVVM packages "
 if [ $ERRORCOUNT -gt 0 ]; then
 	echo -e $COLORED_FAILED
 else
