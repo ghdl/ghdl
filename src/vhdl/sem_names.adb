@@ -2645,7 +2645,8 @@ package body Sem_Names is
 
          when Iir_Kind_Procedure_Declaration
            | Iir_Kind_Interface_Procedure_Declaration =>
-            Error_Msg_Sem (+Name, "function name is a procedure");
+            Error_Msg_Sem (+Name, "cannot call %n in an expression",
+                           +Prefix);
 
          when Iir_Kinds_Process_Statement
            | Iir_Kind_Component_Declaration
