@@ -2302,24 +2302,30 @@ package body Trans.Rtis is
                | Iir_Kind_Group_Declaration =>
                null;
             when Iir_Kind_Package_Declaration =>
-               declare
-                  Mark : Id_Mark_Type;
-               begin
-                  Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
-                  Generate_Block (Decl, Parent_Rti);
-                  Pop_Identifier_Prefix (Mark);
-               end;
+               if Get_Info (Decl) /= null then
+                  --  Do not generate RTIs for untranslated packages.
+                  declare
+                     Mark : Id_Mark_Type;
+                  begin
+                     Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
+                     Generate_Block (Decl, Parent_Rti);
+                     Pop_Identifier_Prefix (Mark);
+                  end;
+               end if;
             when Iir_Kind_Package_Body =>
-               declare
-                  Mark : Id_Mark_Type;
-                  Mark1 : Id_Mark_Type;
-               begin
-                  Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
-                  Push_Identifier_Prefix (Mark1, "BODY");
-                  Generate_Block (Decl, Parent_Rti);
-                  Pop_Identifier_Prefix (Mark1);
-                  Pop_Identifier_Prefix (Mark);
-               end;
+               if Get_Info (Get_Package (Decl)) /= null then
+                  --  Do not generate RTIs for untranslated packages.
+                  declare
+                     Mark : Id_Mark_Type;
+                     Mark1 : Id_Mark_Type;
+                  begin
+                     Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
+                     Push_Identifier_Prefix (Mark1, "BODY");
+                     Generate_Block (Decl, Parent_Rti);
+                     Pop_Identifier_Prefix (Mark1);
+                     Pop_Identifier_Prefix (Mark);
+                  end;
+               end if;
 
             when Iir_Kind_Package_Instantiation_Declaration =>
                --  FIXME: todo

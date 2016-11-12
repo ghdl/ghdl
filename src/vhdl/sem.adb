@@ -2867,9 +2867,14 @@ package body Sem is
 
       --  FIXME: unless the parent is a package declaration library unit, the
       --  design unit depends on the body.
-      if Get_Need_Body (Pkg) then
-         Bod := Libraries.Load_Secondary_Unit
-           (Get_Design_Unit (Pkg), Null_Identifier, Decl);
+      if Get_Need_Body (Pkg) and then not Is_Nested_Package (Pkg) then
+         Bod := Get_Package_Body (Pkg);
+         if Is_Null (Bod) then
+            Bod := Libraries.Load_Secondary_Unit
+              (Get_Design_Unit (Pkg), Null_Identifier, Decl);
+         else
+            Bod := Get_Design_Unit (Bod);
+         end if;
          if Is_Null (Bod) then
             Error_Msg_Sem (+Decl, "cannot find package body of %n", +Pkg);
          else
