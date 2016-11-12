@@ -20,6 +20,7 @@ with Errorout; use Errorout;
 with Flags; use Flags;
 with Types; use Types;
 with Iirs_Utils; use Iirs_Utils;
+with Parse;
 with Std_Names;
 with Sem_Names; use Sem_Names;
 with Sem_Types;
@@ -33,7 +34,9 @@ package body Sem_Assocs is
                                            return Iir
    is
       N_Assoc : Iir;
+      Actual : Iir;
    begin
+      Actual := Get_Actual (Assoc);
       case Get_Kind (Inter) is
          when Iir_Kind_Interface_Package_Declaration =>
             N_Assoc := Create_Iir (Iir_Kind_Association_Element_Package);
@@ -41,12 +44,15 @@ package body Sem_Assocs is
             N_Assoc := Create_Iir (Iir_Kind_Association_Element_Type);
          when Iir_Kinds_Interface_Subprogram_Declaration =>
             N_Assoc := Create_Iir (Iir_Kind_Association_Element_Subprogram);
+            if Get_Kind (Actual) = Iir_Kind_String_Literal8 then
+               Actual := Parse.String_To_Operator_Symbol (Actual);
+            end if;
          when others =>
             Error_Kind ("rewrite_non_object_association", Inter);
       end case;
       Location_Copy (N_Assoc, Assoc);
       Set_Formal (N_Assoc, Get_Formal (Assoc));
-      Set_Actual (N_Assoc, Get_Actual (Assoc));
+      Set_Actual (N_Assoc, Actual);
       Set_Chain (N_Assoc, Get_Chain (Assoc));
       Set_Whole_Association_Flag (N_Assoc, True);
       Free_Iir (Assoc);
@@ -1838,11 +1844,11 @@ package body Sem_Assocs is
             end if;
          when Iir_Kind_Overload_List =>
             declare
-               First_Error : Boolean;
+               Nbr_Errors : Natural;
                List : Iir_List;
                El, R : Iir;
             begin
-               First_Error := True;
+               Nbr_Errors := 0;
                R := Null_Iir;
                List := Get_Overload_List (Res);
                for I in Natural loop
@@ -1852,18 +1858,18 @@ package body Sem_Assocs is
                      if Is_Null (R) then
                         R := El;
                      else
-                        if First_Error then
+                        if Nbr_Errors = 0 then
                            Error_Msg_Sem
                              (+Assoc,
                               "many possible actual subprogram for %n:",
                               +Inter);
                            Error_Msg_Sem
                              (+Assoc, " %n declared at %l", (+R, + R));
-                           First_Error := False;
                         else
                            Error_Msg_Sem
                              (+Assoc, " %n declared at %l", (+El, +El));
                         end if;
+                        Nbr_Errors := Nbr_Errors + 1;
                      end if;
                   end if;
                end loop;
@@ -1881,7 +1887,7 @@ package body Sem_Assocs is
                      end loop;
                   end if;
                   return;
-               elsif First_Error then
+               elsif Nbr_Errors > 0 then
                   return;
                end if;
                Free_Overload_List (Res);

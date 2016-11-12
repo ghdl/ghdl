@@ -36,6 +36,10 @@ package Parse is
                                   Len : Nat32;
                                   Loc : Location_Type) return Name_Id;
 
+   --  Convert string literal STR to an operator symbol.
+   --  Emit an error message if the string is not an operator name.
+   function String_To_Operator_Symbol (Str : Iir) return Iir;
+
    -- Parse a single design unit.
    -- The scanner must have been initialized, however, the current_token
    -- shouldn't have been set.

@@ -4719,6 +4719,11 @@ package Iirs is
      Iir_Predefined_None ..
      Iir_Predefined_Functions'Last;
 
+   --  Explicit known subprograms (from ieee)
+   subtype Iir_Predefined_IEEE_Explicit is Iir_Predefined_Functions range
+     Iir_Predefined_Functions'Succ (Iir_Predefined_None) ..
+     Iir_Predefined_Functions'Last;
+
    --  Staticness as defined by LRM93 6.1 and 7.4
    type Iir_Staticness is (Unknown, None, Globally, Locally);
 

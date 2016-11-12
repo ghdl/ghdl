@@ -967,8 +967,7 @@ package body Sem_Expr is
    --  Check purity rules when SUBPRG calls CALLEE.
    --  Both SUBPRG and CALLEE are subprogram declarations.
    --  Update purity_state/impure_depth of SUBPRG if it is a procedure.
-   procedure Sem_Call_Purity_Check (Subprg : Iir; Callee : Iir; Loc : Iir)
-   is
+   procedure Sem_Call_Purity_Check (Subprg : Iir; Callee : Iir; Loc : Iir) is
    begin
       if Callee = Subprg then
          return;
@@ -991,7 +990,8 @@ package body Sem_Expr is
       end case;
 
       case Get_Kind (Callee) is
-         when Iir_Kind_Function_Declaration =>
+         when Iir_Kind_Function_Declaration
+           | Iir_Kind_Interface_Function_Declaration =>
             if Get_Pure_Flag (Callee) then
                --  Pure functions may be called anywhere.
                return;

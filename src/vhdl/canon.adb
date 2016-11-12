@@ -2613,7 +2613,7 @@ package body Canon is
             Location_Copy (New_Decl, Decl);
             Set_Parent (New_Decl, Get_Parent (Decl));
             Set_Identifier (New_Decl, Get_Identifier (Decl));
-            Set_Need_Body (New_Decl, Get_Need_Body (Pkg));
+            Set_Need_Body (New_Decl, False);
 
             New_Hdr := Create_Iir (Iir_Kind_Package_Header);
             Set_Package_Header (New_Decl, New_Hdr);
@@ -2643,25 +2643,24 @@ package body Canon is
       First, Last : Iir;
       El : Iir;
       Bod : Iir;
+      Orig : Iir;
    begin
-      First := Null_Iir;
-      Last := Null_Iir;  --  Kill the warning
+      Sub_Chain_Init (First, Last);
       El := Get_Declaration_Chain (Decl);
       while Is_Valid (El) loop
-         if Get_Kind (El) = Iir_Kind_Package_Declaration
-           and then Get_Need_Body (El)
-           and then Get_Package_Origin (El) /= Null_Iir
-         then
-            Bod := Sem_Inst.Instantiate_Package_Body (El);
-            Set_Parent (Bod, Parent);
+         if Get_Kind (El) = Iir_Kind_Package_Declaration then
+            Orig := Get_Package_Origin (El);
+            if Orig /= Null_Iir
+              and then Get_Need_Body (Get_Uninstantiated_Package_Decl (Orig))
+            then
+               --  That's a package instantiation of a package that needs a
+               --  body.  Therefore, the instantiation also needs a body.
+               --  Create it.
+               Bod := Sem_Inst.Instantiate_Package_Body (El);
+               Set_Parent (Bod, Parent);
 
-            --  Append.
-            if First = Null_Iir then
-               First := Bod;
-            else
-               Set_Chain (Last, Bod);
+               Sub_Chain_Append (First, Last, Bod);
             end if;
-            Last := Bod;
          end if;
          El := Get_Chain (El);
       end loop;
