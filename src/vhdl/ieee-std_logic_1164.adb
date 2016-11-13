@@ -16,6 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Types; use Types;
+with Name_Table;
 with Std_Names; use Std_Names;
 with Iirs_Utils; use Iirs_Utils;
 with Errorout; use Errorout;
@@ -164,6 +165,23 @@ package body Ieee.Std_Logic_1164 is
          raise Error;
       end if;
       Std_Ulogic_Type := Def;
+
+      --  Get node of some literals.
+      declare
+         use Name_Table;
+         Lit_List : constant Iir_List := Get_Enumeration_Literal_List (Def);
+      begin
+         if Get_Nbr_Elements (Lit_List) /= 9 then
+            raise Error;
+         end if;
+         Std_Ulogic_0 := Get_Nth_Element (Lit_List, 2);
+         Std_Ulogic_1 := Get_Nth_Element (Lit_List, 3);
+         if Get_Identifier (Std_Ulogic_0) /= Get_Identifier ('0')
+           or else Get_Identifier (Std_Ulogic_1) /= Get_Identifier ('1')
+         then
+            raise Error;
+         end if;
+      end;
 
       --  The second declaration should be std_ulogic_vector.
       Decl := Get_Chain (Decl);
@@ -315,6 +333,8 @@ package body Ieee.Std_Logic_1164 is
          Std_Ulogic_Vector_Type := Null_Iir;
          Std_Logic_Type := Null_Iir;
          Std_Logic_Vector_Type := Null_Iir;
+         Std_Ulogic_0 := Null_Iir;
+         Std_Ulogic_1 := Null_Iir;
          Rising_Edge := Null_Iir;
          Falling_Edge := Null_Iir;
    end Extract_Declarations;

@@ -22,6 +22,8 @@ package Ieee.Std_Logic_1164 is
    Std_Logic_1164_Pkg : Iir_Package_Declaration := Null_Iir;
    Std_Ulogic_Type : Iir_Enumeration_Type_Definition := Null_Iir;
    Std_Ulogic_Vector_Type : Iir_Array_Type_Definition := Null_Iir;
+   Std_Ulogic_0 : Iir_Enumeration_Literal := Null_Iir;
+   Std_Ulogic_1 : Iir_Enumeration_Literal := Null_Iir;
    Std_Logic_Type : Iir_Enumeration_Subtype_Definition := Null_Iir;
    Std_Logic_Vector_Type : Iir_Array_Type_Definition := Null_Iir;
    Resolved : Iir_Function_Declaration := Null_Iir;
