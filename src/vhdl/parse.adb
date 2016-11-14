@@ -6805,8 +6805,13 @@ package body Parse is
    function Parse_Generic_Map_Aspect return Iir is
    begin
       Expect (Tok_Generic);
+
+      --  Skip 'generic'.
       Scan_Expect (Tok_Map);
+
+      --  Skip 'map'.
       Scan;
+
       return Parse_Association_List_In_Parenthesis;
    end Parse_Generic_Map_Aspect;
 
@@ -8539,6 +8544,10 @@ package body Parse is
 
       if Current_Token = Tok_Generic then
          Set_Generic_Map_Aspect_Chain (Res, Parse_Generic_Map_Aspect);
+      elsif Current_Token = Tok_Left_Paren then
+         Error_Msg_Parse ("missing 'generic map'");
+         Set_Generic_Map_Aspect_Chain
+           (Res, Parse_Association_List_In_Parenthesis);
       end if;
 
       Expect (Tok_Semi_Colon);
