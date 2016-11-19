@@ -34,7 +34,7 @@ compiler and GNAT GPL is very easy to install (download anonymously from
 libre.adacore.com, untar and run the doinstall script).  You also need
 zlib (for Debian or Ubuntu: install zlib1g-dev package).
 
-In the GHDL source directory, configure and build:
+In the GHDL base directory, configure and build:
 ```sh
 $ ./configure --prefix=/usr/local
 $ make
