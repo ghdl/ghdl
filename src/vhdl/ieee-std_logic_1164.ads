@@ -15,7 +15,6 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Iirs; use Iirs;
 
 package Ieee.Std_Logic_1164 is
    --  Nodes corresponding to declarations in the package.
