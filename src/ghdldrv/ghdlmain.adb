@@ -21,6 +21,7 @@ with Ada.Command_Line.Response_File;
 with Version;
 with Bug;
 with Options;
+with Types; use Types;
 
 package body Ghdlmain is
    procedure Init (Cmd : in out Command_Type)
@@ -239,22 +240,16 @@ package body Ghdlmain is
    --  Disp MSG on the standard output with the command name.
    procedure Error (Msg : String)
    is
-      use Ada.Command_Line;
-      use Ada.Text_IO;
+      use Errorout;
    begin
-      Put (Standard_Error, Command_Name);
-      Put (Standard_Error, ": ");
-      Put_Line (Standard_Error, Msg);
+      Report_Msg (Msgid_Error, Option, No_Location, Msg);
    end Error;
 
    procedure Warning (Msg : String)
    is
-      use Ada.Command_Line;
-      use Ada.Text_IO;
+      use Errorout;
    begin
-      Put (Standard_Error, Command_Name);
-      Put (Standard_Error, ":warning: ");
-      Put_Line (Standard_Error, Msg);
+      Report_Msg (Msgid_Warning, Option, No_Location, Msg);
    end Warning;
 
    procedure Main
@@ -266,6 +261,9 @@ package body Ghdlmain is
       Arg_Index : Natural;
       First_Arg : Natural;
    begin
+      --  Set program name for error message.
+      Errorout.Set_Program_Name (Command_Name);
+
       --  Handle case of no argument
       if Argument_Count = 0 then
          Error ("missing command, try " & Command_Name & " --help");

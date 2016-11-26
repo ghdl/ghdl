@@ -16,7 +16,6 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Ada.Text_IO;
-with Ada.Command_Line;
 with Scanner;
 with Name_Table;
 with Iirs_Utils; use Iirs_Utils;
@@ -29,6 +28,9 @@ with PSL.Nodes;
 package body Errorout is
    --  If True, disp original source line and a caret indicating the column.
    Flag_Show_Caret : constant Boolean := False;
+
+   --  Name of the program, used to report error message.
+   Program_Name : String_Acc := null;
 
    type Warning_Control_Type is record
       Enabled : Boolean;
@@ -122,10 +124,13 @@ package body Errorout is
       end if;
    end "+";
 
+   Msg_Len : Natural;
+
    procedure Put (Str : String)
    is
       use Ada.Text_IO;
    begin
+      Msg_Len := Msg_Len + Str'Length;
       Put (Standard_Error, Str);
    end Put;
 
@@ -133,6 +138,7 @@ package body Errorout is
    is
       use Ada.Text_IO;
    begin
+      Msg_Len := Msg_Len + 1;
       Put (Standard_Error, C);
    end Put;
 
@@ -141,6 +147,7 @@ package body Errorout is
       use Ada.Text_IO;
    begin
       Put_Line (Standard_Error, Str);
+      Msg_Len := 0;
    end Put_Line;
 
    procedure Disp_Natural (Val: Natural)
@@ -184,10 +191,17 @@ package body Errorout is
       Put (':');
    end Disp_Location;
 
+   procedure Set_Program_Name (Name : String) is
+   begin
+      Program_Name := new String'(Name);
+   end Set_Program_Name;
+
    procedure Disp_Program_Name is
    begin
-      Put (Ada.Command_Line.Command_Name);
-      Put (':');
+      if Program_Name /= null then
+         Put (Program_Name.all);
+         Put (':');
+      end if;
    end Disp_Program_Name;
 
    procedure Report_Msg (Id : Msgid_Type;
@@ -260,6 +274,8 @@ package body Errorout is
             end if;
       end case;
 
+      Msg_Len := 0;
+
       if Progname then
          Disp_Program_Name;
       elsif File /= No_Source_File_Entry then
@@ -268,20 +284,33 @@ package body Errorout is
          Put ("??:??:??:");
       end if;
 
-      case Id is
-         when Msgid_Note =>
-            Put ("note:");
-         when Msgid_Warning | Msgid_Warnings =>
-            if Flags.Warn_Error then
-               Nbr_Errors := Nbr_Errors + 1;
-            else
+      --  Display level.
+      declare
+         Id_Level : Msgid_Type;
+      begin
+         if Flags.Warn_Error
+           and then (Id = Msgid_Warning or Id in Msgid_Warnings)
+         then
+            Id_Level := Msgid_Error;
+         else
+            Id_Level := Id;
+         end if;
+
+         case Id_Level is
+            when Msgid_Note =>
+               Put ("note:");
+            when Msgid_Warning | Msgid_Warnings =>
                Put ("warning:");
-            end if;
-         when Msgid_Error =>
-            Nbr_Errors := Nbr_Errors + 1;
-         when Msgid_Fatal =>
-            Put ("fatal:");
-      end case;
+            when Msgid_Error =>
+               Nbr_Errors := Nbr_Errors + 1;
+               if Msg_Len = 0 then
+                  --  'error:' is displayed only if not location is present.
+                  Put ("error:");
+               end if;
+            when Msgid_Fatal =>
+               Put ("fatal:");
+         end case;
+      end;
 
       Put (' ');
 

@@ -24,6 +24,10 @@ package Errorout is
    Parse_Error: exception;
    Compilation_Error: exception;
 
+   --  Set the program name, used in error messages for options.  Not displayed
+   --  if not initialized.
+   procedure Set_Program_Name (Name : String);
+
    -- This kind can't be handled.
    --procedure Error_Kind (Msg: String; Kind: Iir_Kind);
    procedure Error_Kind (Msg: String; An_Iir: in Iir);
