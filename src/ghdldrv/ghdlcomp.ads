@@ -65,6 +65,9 @@ package Ghdlcomp is
    --  Register commands.
    procedure Register_Commands;
 
+   --  Output of --disp-config.
+   procedure Disp_Config;
+
    --  Functionnal interface.
    --  Must be first initialized by Compile_Init
    procedure Compile_Analyze_Init (Load_Work : Boolean := True);
