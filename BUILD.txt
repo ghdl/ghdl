@@ -86,7 +86,7 @@ or if you don't want to install makeinfo:
 $ make install MAKEINFO=true
 
 Build and install vhdl libraries:
-$ cd ..
+$ cd /path/to/ghdl/source/dir
 $ make ghdllib
 $ make install
 
