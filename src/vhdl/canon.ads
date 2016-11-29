@@ -25,7 +25,7 @@ package Canon is
    --  If true, canon sequentials statements (processes and subprograms).
    Canon_Flag_Sequentials_Stmts : Boolean := False;
 
-   --  If true, canon concurrent statements.
+   --  If true, canon concurrent statements: transform them into processes.
    Canon_Flag_Concurrent_Stmts : Boolean := True;
 
    --  If true, canon configuration.
