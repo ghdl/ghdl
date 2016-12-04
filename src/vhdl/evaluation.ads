@@ -175,6 +175,26 @@ package Evaluation is
    type Compare_Type is (Compare_Lt, Compare_Eq, Compare_Gt);
    function Compare_String_Literals (L, R : Iir) return Compare_Type;
 
+   package String_Utils is
+      type Str_Info (Is_String : Boolean := True) is record
+         Len : Nat32;
+
+         case Is_String is
+            when True =>
+               Id : String8_Id;
+            when False =>
+               --  A simple aggregate.  List of elements.
+               List : Iir_List;
+         end case;
+      end record;
+
+      --  Fill Res from EL.  This is used to speed up Lt and Eq operations.
+      function Get_Info (Expr : Iir) return Str_Info;
+
+      --  Return the position of element IDX of STR.
+      function Get_Pos (Str : Str_Info; Idx : Nat32) return Iir_Int32;
+   end String_Utils;
+
    --  Return the local part of 'Instance_Name or 'Path_Name.
    type Path_Instance_Name_Type (Len : Natural) is record
       --  The node before suffix (entity, architecture or generate iterator).

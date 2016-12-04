@@ -3485,34 +3485,26 @@ package body Evaluation is
 --       end if;
    end Eval_Simple_Name;
 
-   function Compare_String_Literals (L, R : Iir) return Compare_Type
-   is
-      type Str_Info is record
-         El : Iir;
-         Id : String8_Id;
-         Len : Nat32;
-         List : Iir_List;
-      end record;
-
-      Literal_List : Iir_List;
-
+   package body String_Utils is
       --  Fill Res from EL.  This is used to speed up Lt and Eq operations.
-      procedure Get_Info (Expr : Iir; Res : out Str_Info) is
+      function Get_Info (Expr : Iir) return Str_Info
+      is
       begin
          case Get_Kind (Expr) is
             when Iir_Kind_Simple_Aggregate =>
-               Res := Str_Info'(El => Expr,
-                                Id => Null_String8,
-                                Len => 0,
-                                List => Get_Simple_Aggregate_List (Expr));
-               Res.Len := Nat32 (Get_Nbr_Elements (Res.List));
+               declare
+                  List : constant Iir_List := Get_Simple_Aggregate_List (Expr);
+               begin
+                  return Str_Info'(Is_String => False,
+                                   Len => Nat32 (Get_Nbr_Elements (List)),
+                                   List => List);
+               end;
             when Iir_Kind_String_Literal8 =>
-               Res := Str_Info'(El => Expr,
-                                Id => Get_String8_Id (Expr),
+               return Str_Info'(Is_String => True,
                                 Len => Get_String_Length (Expr),
-                                List => Null_Iir_List);
+                                Id => Get_String8_Id (Expr));
             when others =>
-               Error_Kind ("sem_string_choice_range.get_info", Expr);
+               Error_Kind ("string_utils.get_info", Expr);
          end case;
       end Get_Info;
 
@@ -3522,30 +3514,27 @@ package body Evaluation is
          S : Iir;
          P : Nat32;
       begin
-         case Get_Kind (Str.El) is
-            when Iir_Kind_Simple_Aggregate =>
+         case Str.Is_String is
+            when False =>
                S := Get_Nth_Element (Str.List, Natural (Idx));
-            when Iir_Kind_String_Literal8 =>
+               return Get_Enum_Pos (S);
+            when True =>
                P := Str_Table.Element_String8 (Str.Id, Idx + 1);
-               S := Get_Nth_Element (Literal_List, Natural (P));
-            when others =>
-               Error_Kind ("sem_string_choice_range.get_pos", Str.El);
+               return Iir_Int32 (P);
          end case;
-         return Get_Enum_Pos (S);
       end Get_Pos;
+   end String_Utils;
 
-      L_Info, R_Info : Str_Info;
+   function Compare_String_Literals (L, R : Iir) return Compare_Type
+   is
+      use String_Utils;
+      L_Info : constant Str_Info := Get_Info (L);
+      R_Info : constant Str_Info := Get_Info (R);
       L_Pos, R_Pos : Iir_Int32;
    begin
-      Get_Info (L, L_Info);
-      Get_Info (R, R_Info);
-
       if L_Info.Len /= R_Info.Len then
          raise Internal_Error;
       end if;
-
-      Literal_List := Get_Enumeration_Literal_List
-        (Get_Base_Type (Get_Element_Subtype (Get_Type (L))));
 
       for I in 0 .. L_Info.Len - 1 loop
          L_Pos := Get_Pos (L_Info, I);
