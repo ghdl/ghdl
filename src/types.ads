@@ -33,6 +33,7 @@ package Types is
    subtype Nat8 is Nat32 range 0 .. 255;
 
    type Uns32 is new Interfaces.Unsigned_32;
+   type Uns64 is new Interfaces.Unsigned_64;
 
    type Fp64 is new Interfaces.IEEE_Float_64;
 
