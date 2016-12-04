@@ -15,6 +15,8 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+
+with Ada.Unchecked_Deallocation;
 with Types; use Types;
 with Iirs; use Iirs;
 
@@ -136,6 +138,43 @@ package Sem_Expr is
    --  a simple name that is a physical unit.  In the later case, a physical
    --  literal is created.
    function Sem_Physical_Literal (Lit: Iir) return Iir;
+
+   type Annex_Array is array (Natural range <>) of Int32;
+   type Annex_Array_Acc is access Annex_Array;
+   procedure Free_Annex_Array is new Ada.Unchecked_Deallocation
+     (Annex_Array, Annex_Array_Acc);
+
+   --  Various info and sorted array for choices.
+   type Choice_Info_Type is record
+      --  Number of choices by expression or by range.
+      Nbr_Choices : Natural;
+
+      --  Number of alternatives
+      Nbr_Alternatives : Natural;
+
+      --  Set to the others choice is present.
+      Others_Choice : Iir;
+
+      --  Array of sorted choices.
+      Arr : Iir_Array_Acc;
+
+      --  Allocated and deallocated by the user.  If not null, it will be
+      --  reordered when ARR is sorted.
+      Annex_Arr : Annex_Array_Acc;
+   end record;
+
+   --  Compute the number of locally static choices and set Has_Others.
+   procedure Count_Choices (Info : out Choice_Info_Type; Choice_Chain : Iir);
+
+   --  Allocate and fill INFO.ARR.
+   procedure Fill_Choices_Array (Info : in out Choice_Info_Type;
+                                 Choice_Chain : Iir);
+
+   --  Sort INFO.ARR.  Only for one-dimensional strings.
+   procedure Sort_String_Choices (Info : in out Choice_Info_Type);
+
+   --  Likewise for discrete choices.
+   procedure Sort_Discrete_Choices (Info : in out Choice_Info_Type);
 
    --  CHOICES_CHAIN is a chain of choices (none, expression, range or
    --    others).  It is an in-out as it may be mutated (from expression to
