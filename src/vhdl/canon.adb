@@ -2617,36 +2617,6 @@ package body Canon is
       return Decl;
    end Canon_Package_Instantiation_Declaration;
 
-   function Create_Instantiation_Bodies
-     (Decl : Iir_Package_Declaration; Parent : Iir) return Iir
-   is
-      First, Last : Iir;
-      El : Iir;
-      Bod : Iir;
-      Spec : Iir;
-   begin
-      Sub_Chain_Init (First, Last);
-      El := Get_Declaration_Chain (Decl);
-      while Is_Valid (El) loop
-         if Get_Kind (El) = Iir_Kind_Package_Instantiation_Declaration then
-            Spec := Get_Uninstantiated_Package_Decl (El);
-            if Get_Macro_Expanded_Flag (Spec)
-              and then Get_Need_Body (Spec)
-            then
-               --  That's a package instantiation of a package that needs a
-               --  body.  Therefore, the instantiation also needs a body.
-               --  Create it.
-               Bod := Sem_Inst.Instantiate_Package_Body (El);
-               Set_Parent (Bod, Parent);
-
-               Sub_Chain_Append (First, Last, Bod);
-            end if;
-         end if;
-         El := Get_Chain (El);
-      end loop;
-      return First;
-   end Create_Instantiation_Bodies;
-
    function Canon_Declaration
      (Top : Iir_Design_Unit; Decl : Iir; Parent : Iir; Decl_Parent : Iir)
      return Iir

@@ -133,7 +133,6 @@ package Nodes_Meta is
       Field_Entity_Name,
       Field_Package,
       Field_Package_Body,
-      Field_Package_Instantiation_Bodies_Chain,
       Field_Need_Body,
       Field_Macro_Expanded_Flag,
       Field_Need_Instance_Bodies,
@@ -640,8 +639,6 @@ package Nodes_Meta is
    function Has_Entity_Name (K : Iir_Kind) return Boolean;
    function Has_Package (K : Iir_Kind) return Boolean;
    function Has_Package_Body (K : Iir_Kind) return Boolean;
-   function Has_Package_Instantiation_Bodies_Chain (K : Iir_Kind)
-      return Boolean;
    function Has_Need_Body (K : Iir_Kind) return Boolean;
    function Has_Macro_Expanded_Flag (K : Iir_Kind) return Boolean;
    function Has_Need_Instance_Bodies (K : Iir_Kind) return Boolean;

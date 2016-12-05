@@ -1776,23 +1776,6 @@ package body Iirs is
       Set_Field5 (Pkg, Decl);
    end Set_Package_Body;
 
-   function Get_Package_Instantiation_Bodies_Chain (Pkg : Iir) return Iir is
-   begin
-      pragma Assert (Pkg /= Null_Iir);
-      pragma Assert (Has_Package_Instantiation_Bodies_Chain (Get_Kind (Pkg)),
-                     "no field Package_Instantiation_Bodies_Chain");
-      return Get_Field8 (Pkg);
-   end Get_Package_Instantiation_Bodies_Chain;
-
-   procedure Set_Package_Instantiation_Bodies_Chain (Pkg : Iir; Chain : Iir)
-   is
-   begin
-      pragma Assert (Pkg /= Null_Iir);
-      pragma Assert (Has_Package_Instantiation_Bodies_Chain (Get_Kind (Pkg)),
-                     "no field Package_Instantiation_Bodies_Chain");
-      Set_Field8 (Pkg, Chain);
-   end Set_Package_Instantiation_Bodies_Chain;
-
    function Get_Need_Body (Decl : Iir_Package_Declaration) return Boolean is
    begin
       pragma Assert (Decl /= Null_Iir);

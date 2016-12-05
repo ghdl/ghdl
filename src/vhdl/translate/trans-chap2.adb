@@ -767,7 +767,6 @@ package body Trans.Chap2 is
       Info                 : Ortho_Info_Acc;
       Interface_List       : O_Inter_List;
       Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
-      Bod                  : Iir;
    begin
       Info := Add_Info (Decl, Kind_Package);
 
@@ -816,18 +815,6 @@ package body Trans.Chap2 is
          --  For nested package, this will be translated when translating
          --  subprograms.
          Chap4.Translate_Declaration_Chain_Subprograms (Decl);
-         --  Bod := Get_Package_Instantiation_Bodies_Chain (Decl);
-         --  if Is_Valid (Bod) then
-         --     Chap4.Translate_Declaration_Chain_Subprograms (Bod);
-         --  end if;
-      end if;
-
-      --  Translate bodies of instances.
-      if Get_Kind (Decl) = Iir_Kind_Package_Declaration then
-         Bod := Get_Package_Instantiation_Bodies_Chain (Decl);
-         if Is_Valid (Bod) then
-            Chap4.Translate_Declaration_Chain (Bod);
-         end if;
       end if;
 
       --  Declare elaborator for the body.

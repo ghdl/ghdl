@@ -884,10 +884,6 @@ package Iirs is
    --
    --   Get/Set_Package_Origin (Field7)
    --
-   --  Chain of bodies for package instantiation.  Present only in certain
-   --  conditions.
-   --   Get/Set_Package_Instantiation_Bodies_Chain (Field8)
-   --
    --  If true, the package need a body.
    --   Get/Set_Need_Body (Flag1)
    --
@@ -6013,10 +6009,6 @@ package Iirs is
    --  Field: Field5 Forward_Ref
    function Get_Package_Body (Pkg : Iir) return Iir;
    procedure Set_Package_Body (Pkg : Iir; Decl : Iir);
-
-   --  Field: Field8 Chain
-   function Get_Package_Instantiation_Bodies_Chain (Pkg : Iir) return Iir;
-   procedure Set_Package_Instantiation_Bodies_Chain (Pkg : Iir; Chain : Iir);
 
    --  Field: Flag1
    function Get_Need_Body (Decl : Iir_Package_Declaration) return Boolean;
