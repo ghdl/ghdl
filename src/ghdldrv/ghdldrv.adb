@@ -41,8 +41,8 @@ package body Ghdldrv is
    --  Name of the tools used.
    Compiler_Cmd : String_Access := null;
    Post_Processor_Cmd : String_Access := null;
-   Assembler_Cmd : constant String := "as";
-   Linker_Cmd : constant String := "gcc";
+   Assembler_Cmd : String_Access := null;
+   Linker_Cmd : String_Access := null;
 
    --  Path of the tools.
    Compiler_Path : String_Access;
@@ -62,6 +62,9 @@ package body Ghdldrv is
 
    --  "-quiet" option.
    Dash_Quiet : constant String_Access := new String'("-quiet");
+
+   --  "-fpic" option.
+   Dash_Fpic : constant String_Access := new String'("-fpic");
 
    --  True if --post is present.
    Flag_Postprocess : Boolean := False;
@@ -162,7 +165,7 @@ package body Ghdldrv is
       declare
          P : Natural;
          Nbr_Args : constant Natural :=
-           Last (Compiler_Args) + Options'Length + 4;
+           Last (Compiler_Args) + Options'Length + 5;
          Args : Argument_List (1 .. Nbr_Args);
       begin
          P := 0;
@@ -186,6 +189,20 @@ package body Ghdldrv is
                when Backend_Llvm =>
                   P := P + 1;
                   Args (P) := Dash_c;
+               when Backend_Mcode =>
+                  null;
+            end case;
+         end if;
+
+         --  Add -fpic for gcc/llvm.
+         if not Flag_Postprocess
+           and then Default_Pathes.Default_Pie
+         then
+            case Backend is
+               when Backend_Gcc
+                 | Backend_Llvm =>
+                  P := P + 1;
+                  Args (P) := Dash_Fpic;
                when Backend_Mcode =>
                   null;
             end case;
@@ -409,7 +426,7 @@ package body Ghdldrv is
       raise Option_Error;
    end Tool_Not_Found;
 
-   --  Set the compiler command according to the configuration (and swicthes).
+   --  Set the compiler command according to the configuration (and switches).
    procedure Set_Tools_Name is
    begin
       --  Set tools name.
@@ -429,6 +446,12 @@ package body Ghdldrv is
       end if;
       if Post_Processor_Cmd = null then
          Post_Processor_Cmd := new String'(Default_Pathes.Post_Processor);
+      end if;
+      if Assembler_Cmd = null then
+         Assembler_Cmd := new String'("as");
+      end if;
+      if Linker_Cmd = null then
+         Linker_Cmd := new String'("gcc");
       end if;
    end Set_Tools_Name;
 
@@ -489,9 +512,9 @@ package body Ghdldrv is
       --  Assembler.
       case Backend is
          when Backend_Gcc =>
-            Assembler_Path := Locate_Exec_On_Path (Assembler_Cmd);
+            Assembler_Path := Locate_Exec_On_Path (Assembler_Cmd.all);
             if Assembler_Path = null and not Flag_Asm then
-               Tool_Not_Found (Assembler_Cmd);
+               Tool_Not_Found (Assembler_Cmd.all);
             end if;
          when Backend_Llvm
            | Backend_Mcode =>
@@ -499,9 +522,9 @@ package body Ghdldrv is
       end case;
 
       --  Linker.
-      Linker_Path := Locate_Exec_On_Path (Linker_Cmd);
+      Linker_Path := Locate_Exec_On_Path (Linker_Cmd.all);
       if Linker_Path = null then
-         Tool_Not_Found (Linker_Cmd);
+         Tool_Not_Found (Linker_Cmd.all);
       end if;
    end Locate_Tools;
 
@@ -569,6 +592,12 @@ package body Ghdldrv is
          Res := Option_Ok;
       elsif Opt'Length > 8 and then Opt (1 .. 8) = "--GHDL1=" then
          Compiler_Cmd := new String'(Opt (9 .. Opt'Last));
+         Res := Option_Ok;
+      elsif Opt'Length > 5 and then Opt (1 .. 5) = "--AS=" then
+         Assembler_Cmd := new String'(Opt (6 .. Opt'Last));
+         Res := Option_Ok;
+      elsif Opt'Length > 7 and then Opt (1 .. 7) = "--LINK=" then
+         Linker_Cmd := new String'(Opt (8 .. Opt'Last));
          Res := Option_Ok;
       elsif Opt = "-S" then
          Flag_Asm := True;
@@ -649,6 +678,8 @@ package body Ghdldrv is
       Disp_Long_Help (Command_Lib (Cmd));
       Put_Line (" -v             Be verbose");
       Put_Line (" --GHDL1=PATH   Set the path of the ghdl1 compiler");
+      Put_Line (" --AS=as        Use as for the assembler");
+      Put_Line (" --LINK=gcc     Use gcc for the linker driver");
       Put_Line (" -S             Do not assemble");
       Put_Line (" -o FILE        Set the name of the output file");
    -- Put_Line (" -m32           Generate 32bit code on 64bit machines");
@@ -705,13 +736,13 @@ package body Ghdldrv is
       case Backend is
          when Backend_Gcc =>
             Put ("assembler command: ");
-            Put_Line (Assembler_Cmd);
+            Put_Line (Assembler_Cmd.all);
          when Backend_Llvm
            | Backend_Mcode =>
             null;
       end case;
       Put ("linker command: ");
-      Put_Line (Linker_Cmd);
+      Put_Line (Linker_Cmd.all);
       Put_Line ("default lib prefix: " & Default_Pathes.Lib_Prefix);
 
       New_Line;
