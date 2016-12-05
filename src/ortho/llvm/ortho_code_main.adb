@@ -70,7 +70,7 @@ procedure Ortho_Code_Main is
 
    CPU : constant Cstring := Empty_Cstring;
    Features : constant Cstring := Empty_Cstring;
-   Reloc : constant RelocMode := RelocDefault;
+   Reloc : constant RelocMode := RelocPIC; --RelocDefault;
 
    function To_String (C : Cstring) return String is
       function Strlen (C : Cstring) return Natural;
