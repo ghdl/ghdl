@@ -782,7 +782,7 @@ package body Sem_Inst is
                declare
                   Inter_Type_Def : constant Iir :=
                     Get_Type (Get_Association_Interface (Assoc, Inter));
-                  Actual_Type : constant Iir := Get_Type (Get_Actual (Assoc));
+                  Actual_Type : constant Iir := Get_Actual_Type (Assoc);
                begin
                   Set_Instance (Inter_Type_Def, Actual_Type);
                end;

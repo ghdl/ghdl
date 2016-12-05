@@ -42,6 +42,42 @@ package body Sem_Assocs is
             N_Assoc := Create_Iir (Iir_Kind_Association_Element_Package);
          when Iir_Kind_Interface_Type_Declaration =>
             N_Assoc := Create_Iir (Iir_Kind_Association_Element_Type);
+            if Get_Kind (Actual) = Iir_Kind_Parenthesis_Name then
+               --  Convert parenthesis name to array subtype.
+               declare
+                  N_Actual : Iir;
+                  Sub_Assoc : Iir;
+                  Indexes : Iir_List;
+                  Old : Iir;
+               begin
+                  N_Actual := Create_Iir (Iir_Kind_Array_Subtype_Definition);
+                  Location_Copy (N_Actual, Actual);
+                  Set_Subtype_Type_Mark (N_Actual, Get_Prefix (Actual));
+                  Sub_Assoc := Get_Association_Chain (Actual);
+                  Indexes := Create_Iir_List;
+                  Set_Index_Constraint_List (N_Actual, Indexes);
+                  while Is_Valid (Sub_Assoc) loop
+                     if Get_Kind (Sub_Assoc)
+                       /= Iir_Kind_Association_Element_By_Expression
+                     then
+                        Error_Msg_Sem
+                          (+Sub_Assoc, "index constraint must be a range");
+                     else
+                        if Get_Formal (Sub_Assoc) /= Null_Iir then
+                           Error_Msg_Sem
+                             (+Sub_Assoc, "formal part not allowed");
+                        end if;
+                        Append_Element (Indexes, Get_Actual (Sub_Assoc));
+                     end if;
+                     Old := Sub_Assoc;
+                     Sub_Assoc := Get_Chain (Sub_Assoc);
+                     Free_Iir (Old);
+                  end loop;
+                  Old := Actual;
+                  Free_Iir (Old);
+                  Actual := N_Actual;
+               end;
+            end if;
          when Iir_Kinds_Interface_Subprogram_Declaration =>
             N_Assoc := Create_Iir (Iir_Kind_Association_Element_Subprogram);
             if Get_Kind (Actual) = Iir_Kind_String_Literal8 then
@@ -1616,13 +1652,11 @@ package body Sem_Assocs is
    end Sem_Association_Package;
 
    --  Create an implicit association_element_subprogram for the declaration
-   --  of function ID for ACTUAL (a name of a type).
+   --  of function ID for ACTUAL_Type (a type/subtype definition).
    function Sem_Implicit_Operator_Association
-     (Id : Name_Id; Actual : Iir) return Iir
+     (Id : Name_Id; Actual_Type : Iir; Actual_Name : Iir) return Iir
    is
       use Sem_Scopes;
-
-      Atype : constant Iir := Get_Type (Actual);
 
       --  Return TRUE if DECL is a function declaration with a comparaison
       --  operator profile.
@@ -1647,7 +1681,8 @@ package body Sem_Assocs is
             if Inter = Null_Iir then
                return False;
             end if;
-            if Get_Base_Type (Get_Type (Inter)) /= Get_Base_Type (Atype) then
+            if Get_Base_Type (Get_Type (Inter)) /= Get_Base_Type (Actual_Type)
+            then
                return False;
             end if;
             Inter := Get_Chain (Inter);
@@ -1667,16 +1702,17 @@ package body Sem_Assocs is
          Decl := Get_Declaration (Interp);
          if Has_Comparaison_Profile (Decl) then
             Res := Create_Iir (Iir_Kind_Association_Element_Subprogram);
-            Location_Copy (Res, Actual);
-            Set_Actual (Res, Build_Simple_Name (Decl, Get_Location (Actual)));
+            Location_Copy (Res, Actual_Name);
+            Set_Actual
+              (Res, Build_Simple_Name (Decl, Get_Location (Actual_Name)));
             Set_Use_Flag (Decl, True);
             return Res;
          end if;
          Interp := Get_Next_Interpretation (Interp);
       end loop;
 
-      Error_Msg_Sem (+Actual, "cannot find a %i declaration for type %i",
-                     (+Id, +Actual));
+      Error_Msg_Sem (+Actual_Name, "cannot find a %i declaration for type %i",
+                     (+Id, +Actual_Name));
       return Null_Iir;
    end Sem_Implicit_Operator_Association;
 
@@ -1687,6 +1723,7 @@ package body Sem_Assocs is
    is
       Inter_Def : constant Iir := Get_Type (Inter);
       Actual : Iir;
+      Actual_Type : Iir;
       Op_Eq, Op_Neq : Iir;
    begin
       if not Finish then
@@ -1707,15 +1744,21 @@ package body Sem_Assocs is
 
       --  Set type association for analysis of reference to this interface.
       pragma Assert (Is_Null (Get_Associated_Type (Inter_Def)));
-      Set_Associated_Type (Inter_Def, Get_Type (Actual));
+      if Get_Kind (Actual) in Iir_Kinds_Subtype_Definition then
+         Actual_Type := Actual;
+      else
+         Actual_Type := Get_Type (Actual);
+      end if;
+      Set_Actual_Type (Assoc, Actual_Type);
+      Set_Associated_Type (Inter_Def, Actual_Type);
 
       --  FIXME: it is not clear at all from the LRM how the implicit
       --  associations are done...
       Op_Eq := Sem_Implicit_Operator_Association
-        (Std_Names.Name_Op_Equality, Actual);
+        (Std_Names.Name_Op_Equality, Actual_Type, Actual);
       if Op_Eq /= Null_Iir then
          Op_Neq := Sem_Implicit_Operator_Association
-           (Std_Names.Name_Op_Inequality, Actual);
+           (Std_Names.Name_Op_Inequality, Actual_Type, Actual);
          Set_Chain (Op_Eq, Op_Neq);
          Set_Subprogram_Association_Chain (Assoc, Op_Eq);
       end if;
