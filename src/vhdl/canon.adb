@@ -2592,6 +2592,7 @@ package body Canon is
    function Canon_Package_Instantiation_Declaration (Decl : Iir) return Iir
    is
       Pkg : constant Iir := Get_Uninstantiated_Package_Decl (Decl);
+      Bod : Iir;
    begin
       --  Canon map aspect.
       Set_Generic_Map_Aspect_Chain
@@ -2600,41 +2601,20 @@ package body Canon is
            (Get_Generic_Chain (Decl),
             Get_Generic_Map_Aspect_Chain (Decl), Decl));
 
-      if Get_Macro_Expanded_Flag (Pkg) then
-         declare
-            New_Decl : Iir;
-            New_Hdr : Iir;
-         begin
-            --  Replace package instantiation by the macro-expanded
-            --  generic-mapped package.
-            --  Use move semantics.
-            --  FIXME: adjust Parent.
-            New_Decl := Create_Iir (Iir_Kind_Package_Declaration);
-            Location_Copy (New_Decl, Decl);
-            Set_Parent (New_Decl, Get_Parent (Decl));
-            Set_Identifier (New_Decl, Get_Identifier (Decl));
-            Set_Need_Body (New_Decl, False);
-
-            New_Hdr := Create_Iir (Iir_Kind_Package_Header);
-            Set_Package_Header (New_Decl, New_Hdr);
-            Location_Copy (New_Hdr, Get_Package_Header (Pkg));
-            Set_Generic_Chain (New_Hdr, Get_Generic_Chain (Decl));
-            Set_Generic_Map_Aspect_Chain
-              (New_Hdr, Get_Generic_Map_Aspect_Chain (Decl));
-            Set_Generic_Chain (Decl, Null_Iir);
-            Set_Generic_Map_Aspect_Chain (Decl, Null_Iir);
-
-            Set_Declaration_Chain (New_Decl, Get_Declaration_Chain (Decl));
-            Set_Declaration_Chain (Decl, Null_Iir);
-            Set_Chain (New_Decl, Get_Chain (Decl));
-            Set_Chain (Decl, Null_Iir);
-
-            Set_Package_Origin (New_Decl, Decl);
-            return New_Decl;
-         end;
-      else
-         return Decl;
+      --  Generate the body now.
+      --  Note: according to the LRM, if the instantiation occurs within a
+      --  package, the body of the instance should be appended to the package
+      --  body.
+      --  FIXME: generate only if generating code for this unit.
+      if Get_Macro_Expanded_Flag (Pkg)
+        and then Get_Need_Body (Pkg)
+      then
+         Bod := Sem_Inst.Instantiate_Package_Body (Decl);
+         Set_Parent (Bod, Get_Parent (Decl));
+         Set_Package_Body (Decl, Bod);
       end if;
+
+      return Decl;
    end Canon_Package_Instantiation_Declaration;
 
    function Create_Instantiation_Bodies
@@ -2643,15 +2623,15 @@ package body Canon is
       First, Last : Iir;
       El : Iir;
       Bod : Iir;
-      Orig : Iir;
+      Spec : Iir;
    begin
       Sub_Chain_Init (First, Last);
       El := Get_Declaration_Chain (Decl);
       while Is_Valid (El) loop
-         if Get_Kind (El) = Iir_Kind_Package_Declaration then
-            Orig := Get_Package_Origin (El);
-            if Orig /= Null_Iir
-              and then Get_Need_Body (Get_Uninstantiated_Package_Decl (Orig))
+         if Get_Kind (El) = Iir_Kind_Package_Instantiation_Declaration then
+            Spec := Get_Uninstantiated_Package_Decl (El);
+            if Get_Macro_Expanded_Flag (Spec)
+              and then Get_Need_Body (Spec)
             then
                --  That's a package instantiation of a package that needs a
                --  body.  Therefore, the instantiation also needs a body.
@@ -2667,11 +2647,9 @@ package body Canon is
       return First;
    end Create_Instantiation_Bodies;
 
-   function Canon_Declaration (Top : Iir_Design_Unit;
-                               Decl : Iir;
-                               Parent : Iir;
-                               Decl_Parent : Iir)
-                              return Iir
+   function Canon_Declaration
+     (Top : Iir_Design_Unit; Decl : Iir; Parent : Iir; Decl_Parent : Iir)
+     return Iir
    is
       Stmts : Iir;
    begin
