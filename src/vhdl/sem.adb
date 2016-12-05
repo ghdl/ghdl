@@ -1479,6 +1479,12 @@ package body Sem is
          when Iir_Kinds_Monadic_Operator =>
             return Are_Trees_Equal (Get_Operand (Left), Get_Operand (Right));
 
+         when Iir_Kind_Function_Call =>
+            return Are_Trees_Equal (Get_Prefix (Left), Get_Prefix (Right))
+              and then
+              Are_Trees_Chain_Equal (Get_Parameter_Association_Chain (Left),
+                                     Get_Parameter_Association_Chain (Right));
+
          when Iir_Kind_Access_Type_Definition
            | Iir_Kind_Record_Type_Definition
            | Iir_Kind_Array_Type_Definition
