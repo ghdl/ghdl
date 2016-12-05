@@ -452,6 +452,8 @@ package body Disp_Tree is
                         Ndepth := Depth - 1;
                      when Attr_Of_Ref =>
                         Ndepth := 0;
+                     when Attr_Ref =>
+                        Ndepth := 0;
                      when Attr_Of_Maybe_Ref =>
                         if Get_Is_Ref (N) then
                            Ndepth := 0;
