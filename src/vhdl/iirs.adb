@@ -1776,23 +1776,6 @@ package body Iirs is
       Set_Field5 (Pkg, Decl);
    end Set_Package_Body;
 
-   function Get_Package_Instantiation_Bodies_Chain (Pkg : Iir) return Iir is
-   begin
-      pragma Assert (Pkg /= Null_Iir);
-      pragma Assert (Has_Package_Instantiation_Bodies_Chain (Get_Kind (Pkg)),
-                     "no field Package_Instantiation_Bodies_Chain");
-      return Get_Field8 (Pkg);
-   end Get_Package_Instantiation_Bodies_Chain;
-
-   procedure Set_Package_Instantiation_Bodies_Chain (Pkg : Iir; Chain : Iir)
-   is
-   begin
-      pragma Assert (Pkg /= Null_Iir);
-      pragma Assert (Has_Package_Instantiation_Bodies_Chain (Get_Kind (Pkg)),
-                     "no field Package_Instantiation_Bodies_Chain");
-      Set_Field8 (Pkg, Chain);
-   end Set_Package_Instantiation_Bodies_Chain;
-
    function Get_Need_Body (Decl : Iir_Package_Declaration) return Boolean is
    begin
       pragma Assert (Decl /= Null_Iir);
@@ -4741,7 +4724,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Actual_Type (Get_Kind (Target)),
                      "no field Actual_Type");
-      return Get_Field3 (Target);
+      return Get_Field5 (Target);
    end Get_Actual_Type;
 
    procedure Set_Actual_Type (Target : Iir; Atype : Iir) is
@@ -4749,7 +4732,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Actual_Type (Get_Kind (Target)),
                      "no field Actual_Type");
-      Set_Field3 (Target, Atype);
+      Set_Field5 (Target, Atype);
    end Set_Actual_Type;
 
    function Get_Actual_Type_Definition (Target : Iir) return Iir is
@@ -4757,7 +4740,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Actual_Type_Definition (Get_Kind (Target)),
                      "no field Actual_Type_Definition");
-      return Get_Field5 (Target);
+      return Get_Field3 (Target);
    end Get_Actual_Type_Definition;
 
    procedure Set_Actual_Type_Definition (Target : Iir; Atype : Iir) is
@@ -4765,7 +4748,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Actual_Type_Definition (Get_Kind (Target)),
                      "no field Actual_Type_Definition");
-      Set_Field5 (Target, Atype);
+      Set_Field3 (Target, Atype);
    end Set_Actual_Type_Definition;
 
    function Get_Association_Chain (Target : Iir) return Iir is

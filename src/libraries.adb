@@ -23,8 +23,6 @@ with System;
 with Errorout; use Errorout;
 with Scanner;
 with Iirs_Utils; use Iirs_Utils;
-with Iir_Chains;
-with Nodes_Meta;
 with Parse;
 with Name_Table; use Name_Table;
 with Str_Table;
@@ -35,7 +33,6 @@ with Std_Package;
 with Disp_Tree;
 with Disp_Vhdl;
 with Sem;
-with Sem_Inst;
 with Post_Sems;
 with Canon;
 with Nodes_GC;
@@ -1604,45 +1601,6 @@ package body Libraries is
       end if;
 
       Canon.Canonicalize (Unit);
-
-      --  The library unit may have been changed from package instantiation
-      --  to package declaration.
-      Lib_Unit := Get_Library_Unit (Unit);
-
-      --  FIXME: for Main only ?
-      if Get_Kind (Lib_Unit) = Iir_Kind_Package_Declaration
-        and then not Get_Need_Body (Lib_Unit)
-        and then Get_Need_Instance_Bodies (Lib_Unit)
-      then
-         --  This is a package declaration without body.  If there are package
-         --  instantiations within that package and if the instances need
-         --  bodies, create them.  Ideally they should be created in the
-         --  package body, but as we don't know if there is one, do it now.
-         Set_Package_Instantiation_Bodies_Chain
-           (Lib_Unit, Canon.Create_Instantiation_Bodies (Lib_Unit, Lib_Unit));
-      elsif Get_Kind (Lib_Unit) = Iir_Kind_Package_Body
-        and then Get_Need_Instance_Bodies (Get_Package (Lib_Unit))
-      then
-         --  If there are package instances in the package declaration and if
-         --  they need bodies, create them now that the body (of the package
-         --  containing the instances) is analyzed.
-         Iir_Chains.Append_Chain
-           (Lib_Unit, Nodes_Meta.Field_Declaration_Chain,
-            Canon.Create_Instantiation_Bodies (Get_Package (Lib_Unit),
-                                               Lib_Unit));
-      elsif Get_Kind (Lib_Unit) = Iir_Kind_Package_Declaration
-        and then Get_Package_Origin (Lib_Unit) /= Null_Iir
-        and then (Get_Kind (Get_Package_Origin (Lib_Unit))
-                    = Iir_Kind_Package_Instantiation_Declaration)
-      then
-         --  Instantiate the body for package instantiation.
-         declare
-            Bod : Iir;
-         begin
-            Bod := Sem_Inst.Instantiate_Package_Body (Lib_Unit);
-            Set_Package_Body (Lib_Unit, Bod);
-         end;
-      end if;
 
       if (Main or Flags.Dump_All) and then Flags.Dump_Canon then
          Disp_Tree.Disp_Tree (Unit);

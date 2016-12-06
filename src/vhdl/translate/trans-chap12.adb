@@ -711,9 +711,7 @@ package body Trans.Chap12 is
          Lib_Unit := Get_Library_Unit (Unit);
          case Get_Kind (Lib_Unit) is
             when Iir_Kind_Package_Declaration =>
-               if not Get_Elab_Flag (Unit)
-                 and then Get_Package_Origin (Lib_Unit) = Null_Iir
-               then
+               if not Get_Elab_Flag (Unit) then
                   Chap2.Elab_Package_Body (Lib_Unit, Null_Iir);
                end if;
             when Iir_Kind_Entity_Declaration =>

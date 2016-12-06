@@ -2606,7 +2606,8 @@ package body Trans.Rtis is
 
       Field_Off := O_Cnode_Null;
       case Get_Kind (Blk) is
-         when Iir_Kind_Package_Declaration =>
+         when Iir_Kind_Package_Declaration
+           | Iir_Kind_Package_Instantiation_Declaration =>
             Kind := Ghdl_Rtik_Package;
             Generate_Declaration_Chain (Get_Declaration_Chain (Blk), Rti);
          when Iir_Kind_Package_Body =>
@@ -2747,7 +2748,8 @@ package body Trans.Rtis is
          when Iir_Kind_Process_Statement
             | Iir_Kind_Sensitized_Process_Statement =>
             Info.Process_Rti_Const := Rti;
-         when Iir_Kind_Package_Declaration =>
+         when Iir_Kind_Package_Declaration
+           | Iir_Kind_Package_Instantiation_Declaration =>
             Info.Package_Rti_Const := Rti;
          when Iir_Kind_Package_Body =>
             --  Replace package declaration RTI with the body one.
@@ -2861,8 +2863,9 @@ package body Trans.Rtis is
          --  Compute parent RTI.
          case Get_Kind (Lib_Unit) is
             when Iir_Kind_Package_Declaration
-               | Iir_Kind_Entity_Declaration
-               | Iir_Kind_Configuration_Declaration =>
+              | Iir_Kind_Entity_Declaration
+              | Iir_Kind_Configuration_Declaration
+              | Iir_Kind_Package_Instantiation_Declaration =>
                --  The library.
                declare
                   Lib : Iir_Library_Declaration;

@@ -452,10 +452,11 @@ package Iirs is
    --
    --  Owner of Actual_Type if needed.
    -- Only for Iir_Kind_Association_Element_By_Individual:
-   --   Get/Set_Actual_Type_Definition (Field5)
+   --   Get/Set_Actual_Type_Definition (Field3)
    --
    -- Only for Iir_Kind_Association_Element_By_Individual:
-   --   Get/Set_Actual_Type (Field3)
+   -- Only for Iir_Kind_Association_Element_Type:
+   --   Get/Set_Actual_Type (Field5)
    --
    --  Get/Set the whole association flag (true if the formal is associated in
    --  whole and not individually, see LRM93 4.3.2.2)
@@ -883,10 +884,6 @@ package Iirs is
    --
    --   Get/Set_Package_Origin (Field7)
    --
-   --  Chain of bodies for package instantiation.  Present only in certain
-   --  conditions.
-   --   Get/Set_Package_Instantiation_Bodies_Chain (Field8)
-   --
    --  If true, the package need a body.
    --   Get/Set_Need_Body (Flag1)
    --
@@ -896,10 +893,10 @@ package Iirs is
    --  type.
    --   Get/Set_Macro_Expanded_Flag (Flag2)
    --
-   --  True if the package declaration has the package has at least one
-   --  package instantiation declaration whose uninstantiated declaration
-   --  needs both a body and macro-expansion.  In that case, the instantiation
-   --  needs macro-expansion of their body.
+   --  True if the package declaration at least one package instantiation
+   --  declaration whose uninstantiated declaration needs both a body and
+   --  macro-expansion.  In that case, the instantiation needs macro-expansion
+   --  of their body.
    --   Get/Set_Need_Instance_Bodies (Flag3)
    --
    --   Get/Set_Visible_Flag (Flag4)
@@ -6013,10 +6010,6 @@ package Iirs is
    function Get_Package_Body (Pkg : Iir) return Iir;
    procedure Set_Package_Body (Pkg : Iir; Decl : Iir);
 
-   --  Field: Field8 Chain
-   function Get_Package_Instantiation_Bodies_Chain (Pkg : Iir) return Iir;
-   procedure Set_Package_Instantiation_Bodies_Chain (Pkg : Iir; Chain : Iir);
-
    --  Field: Flag1
    function Get_Need_Body (Decl : Iir_Package_Declaration) return Boolean;
    procedure Set_Need_Body (Decl : Iir_Package_Declaration; Flag : Boolean);
@@ -6934,11 +6927,11 @@ package Iirs is
    --    Unless the formal is an unconstrained array type, this is the same as
    --    the formal type.
    --  Subtype indiciation for a type association.
-   --  Field: Field3 Ref
+   --  Field: Field5 Ref
    function Get_Actual_Type (Target : Iir) return Iir;
    procedure Set_Actual_Type (Target : Iir; Atype : Iir);
 
-   --  Field: Field5
+   --  Field: Field3
    function Get_Actual_Type_Definition (Target : Iir) return Iir;
    procedure Set_Actual_Type_Definition (Target : Iir; Atype : Iir);
 

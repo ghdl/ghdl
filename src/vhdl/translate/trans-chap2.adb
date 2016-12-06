@@ -755,21 +755,19 @@ package body Trans.Chap2 is
       Pop_Instance_Factory (Info.Package_Body_Scope'Access);
    end Pop_Package_Instance_Factory;
 
-   procedure Translate_Package_Declaration (Decl : Iir_Package_Declaration)
+   --  Translate a package declaration or a macro-expanded package
+   --  instantiation.  HEADER is the node containing generic and generic_map.
+   procedure Translate_Package (Decl : Iir; Header : Iir)
    is
       Is_Nested            : constant Boolean := Is_Nested_Package (Decl);
-      Header               : constant Iir     := Get_Package_Header (Decl);
+      Is_Uninstantiated    : constant Boolean :=
+        Get_Kind (Decl) = Iir_Kind_Package_Declaration
+        and then Is_Uninstantiated_Package (Decl);
       Mark                 : Id_Mark_Type;
       Info                 : Ortho_Info_Acc;
       Interface_List       : O_Inter_List;
       Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
-      Bod                  : Iir;
    begin
-      --  Skip uninstantiated package that have to be macro-expanded.
-      if Get_Macro_Expanded_Flag (Decl) then
-         return;
-      end if;
-
       Info := Add_Info (Decl, Kind_Package);
 
       if Is_Nested then
@@ -777,7 +775,7 @@ package body Trans.Chap2 is
       end if;
 
       --  Translate declarations.
-      if Is_Uninstantiated_Package (Decl) then
+      if Is_Uninstantiated then
          --  Create an instance for the spec.
          Push_Instance_Factory (Info.Package_Spec_Scope'Access);
          Chap4.Translate_Generic_Chain (Header);
@@ -806,10 +804,6 @@ package body Trans.Chap2 is
             Chap4.Translate_Generic_Chain (Header);
          end if;
          Chap4.Translate_Declaration_Chain (Decl);
-         Bod := Get_Package_Instantiation_Bodies_Chain (Decl);
-         if Is_Valid (Bod) then
-            Chap4.Translate_Declaration_Chain (Bod);
-         end if;
          if not Is_Nested then
             Info.Package_Elab_Var := Create_Var
               (Create_Var_Identifier ("ELABORATED"), Ghdl_Bool_Type);
@@ -821,10 +815,6 @@ package body Trans.Chap2 is
          --  For nested package, this will be translated when translating
          --  subprograms.
          Chap4.Translate_Declaration_Chain_Subprograms (Decl);
-         Bod := Get_Package_Instantiation_Bodies_Chain (Decl);
-         if Is_Valid (Bod) then
-            Chap4.Translate_Declaration_Chain_Subprograms (Bod);
-         end if;
       end if;
 
       --  Declare elaborator for the body.
@@ -837,7 +827,7 @@ package body Trans.Chap2 is
            (Interface_List, Info.Package_Elab_Body_Subprg);
       end if;
 
-      if Is_Uninstantiated_Package (Decl) then
+      if Is_Uninstantiated then
          Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
 
          --  The spec elaborator has a spec instance argument.
@@ -862,16 +852,16 @@ package body Trans.Chap2 is
 
          if Global_Storage = O_Storage_Public then
             --  Create elaboration procedure for the spec
-            Elab_Package (Decl);
+            Elab_Package (Decl, Header);
          end if;
       end if;
 
-      if Is_Uninstantiated_Package (Decl) then
+      if Is_Uninstantiated then
          Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
       end if;
       Save_Local_Identifier (Info.Package_Local_Id);
 
-      if Is_Uninstantiated_Package (Decl)
+      if Is_Uninstantiated
         and then not Get_Need_Body (Decl)
         and then Get_Package_Body (Decl) = Null_Iir
       then
@@ -884,18 +874,58 @@ package body Trans.Chap2 is
       if Is_Nested then
          Pop_Identifier_Prefix (Mark);
       end if;
+   end Translate_Package;
+
+   procedure Translate_Package_Declaration (Decl : Iir_Package_Declaration)
+   is
+      El : Iir;
+      Bod : Iir;
+   begin
+      --  Skip uninstantiated package that have to be macro-expanded.
+      if Get_Macro_Expanded_Flag (Decl) then
+         return;
+      end if;
+
+      Translate_Package (Decl, Get_Package_Header (Decl));
+
+      if Global_Storage = O_Storage_Public then
+         --  If there are package instances declared that were macro-expanded
+         --  and if the package has (possibly) no body, translate the bodies
+         --  of the instances.
+         if Get_Need_Instance_Bodies (Decl)
+--           and not Get_Need_Body (Decl)
+         then
+            El := Get_Declaration_Chain (Decl);
+            while Is_Valid (El) loop
+               if Get_Kind (El) = Iir_Kind_Package_Instantiation_Declaration
+               then
+                  Bod := Get_Package_Body (El);
+                  if Is_Valid (Bod) then
+                     Translate_Package_Body (Bod);
+                  end if;
+               end if;
+               El := Get_Chain (El);
+            end loop;
+         end if;
+      end if;
    end Translate_Package_Declaration;
 
    procedure Translate_Package_Body (Bod : Iir_Package_Body)
    is
       Is_Nested : constant Boolean := Is_Nested_Package (Bod);
       Spec      : constant Iir_Package_Declaration := Get_Package (Bod);
+
+      --  True if the package spec is a package declaration.  It could be a
+      --  package instantiation declaration.
+      Is_Spec_Decl : constant Boolean :=
+        Get_Kind (Spec) = Iir_Kind_Package_Declaration;
+
       Info      : constant Ortho_Info_Acc := Get_Info (Spec);
       Prev_Storage : constant O_Storage := Global_Storage;
       Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
       Mark                 : Id_Mark_Type;
    begin
-      if Get_Macro_Expanded_Flag (Spec) then
+      if Is_Spec_Decl and then Get_Macro_Expanded_Flag (Spec) then
          return;
       end if;
 
@@ -904,7 +934,7 @@ package body Trans.Chap2 is
       end if;
 
       --  Translate declarations.
-      if Is_Uninstantiated_Package (Spec) then
+      if Is_Spec_Decl and then Is_Uninstantiated_Package (Spec) then
          Push_Package_Instance_Factory (Spec);
 
          --  Translate the specifications.
@@ -921,7 +951,7 @@ package body Trans.Chap2 is
          return;
       end if;
 
-      if not Is_Uninstantiated_Package (Spec) then
+      if not (Is_Spec_Decl and then Is_Uninstantiated_Package (Spec)) then
          Restore_Local_Identifier (Info.Package_Local_Id);
 
          Chap4.Translate_Declaration_Chain (Bod);
@@ -935,7 +965,7 @@ package body Trans.Chap2 is
          Rtis.Generate_Unit (Bod);
       end if;
 
-      if Is_Uninstantiated_Package (Spec) then
+      if Is_Spec_Decl and then Is_Uninstantiated_Package (Spec) then
          --  Add access to the specs.
          Subprgs.Push_Subprg_Instance
            (Info.Package_Body_Scope'Access, Info.Package_Body_Ptr_Type,
@@ -945,13 +975,13 @@ package body Trans.Chap2 is
                               Info.Package_Body_Scope'Access);
       end if;
 
-      if not Is_Nested then
+      if not Is_Nested or else not Is_Spec_Decl then
          --  Translate subprograms.  For nested package, this has to be called
          --  when translating subprograms.
          Chap4.Translate_Declaration_Chain_Subprograms (Bod);
       end if;
 
-      if Is_Uninstantiated_Package (Spec) then
+      if Is_Spec_Decl and then Is_Uninstantiated_Package (Spec) then
          Clear_Scope (Info.Package_Spec_Scope);
          Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
       end if;
@@ -967,7 +997,8 @@ package body Trans.Chap2 is
       end if;
    end Translate_Package_Body;
 
-   procedure Elab_Package (Spec : Iir_Package_Declaration)
+   --  Elaborate a package or a package instantiation.
+   procedure Elab_Package (Spec : Iir; Header : Iir)
    is
       Is_Nested : constant Boolean := Is_Nested_Package (Spec);
       Info   : constant Ortho_Info_Acc := Get_Info (Spec);
@@ -982,8 +1013,8 @@ package body Trans.Chap2 is
 
          Elab_Dependence (Get_Design_Unit (Spec));
 
-         if not Is_Uninstantiated_Package (Spec)
-           and then Get_Kind (Get_Parent (Spec)) = Iir_Kind_Design_Unit
+         if not (Get_Kind (Spec) = Iir_Kind_Package_Declaration
+                   and then Is_Uninstantiated_Package (Spec))
          then
             --  Register the top level package.  This is done dynamically, as
             --  we know only during elaboration that the design depends on a
@@ -999,9 +1030,11 @@ package body Trans.Chap2 is
          Open_Temp;
       end if;
 
-      if Is_Generic_Mapped_Package (Spec) then
+      if Is_Valid (Header)
+        and then Is_Valid (Get_Generic_Map_Aspect_Chain (Header))
+      then
          Chap5.Elab_Generic_Map_Aspect
-           (Get_Package_Header (Spec), Get_Package_Header (Spec),
+           (Header, Header,
             (Info.Package_Spec_Scope'Access, Info.Package_Spec_Scope));
       end if;
       Chap4.Elab_Declaration_Chain (Spec, Final);
@@ -1017,16 +1050,23 @@ package body Trans.Chap2 is
 
    procedure Elab_Package_Body (Spec : Iir_Package_Declaration; Bod : Iir)
    is
+      Is_Spec_Decl : constant Boolean :=
+        Get_Kind (Spec) = Iir_Kind_Package_Declaration;
+
       Info   : constant Ortho_Info_Acc := Get_Info (Spec);
       If_Blk : O_If_Block;
       Constr : O_Assoc_List;
       Final  : Boolean;
    begin
+      if Is_Spec_Decl and then Get_Macro_Expanded_Flag (Spec) then
+         return;
+      end if;
+
       Start_Subprogram_Body (Info.Package_Elab_Body_Subprg);
       Push_Local_Factory;
       Subprgs.Start_Subprg_Instance_Use (Info.Package_Elab_Body_Instance);
 
-      if Is_Uninstantiated_Package (Spec) then
+      if Is_Spec_Decl and then Is_Uninstantiated_Package (Spec) then
          Set_Scope_Via_Field (Info.Package_Spec_Scope,
                               Info.Package_Spec_Field,
                               Info.Package_Body_Scope'Access);
@@ -1053,7 +1093,7 @@ package body Trans.Chap2 is
          Close_Temp;
       end if;
 
-      if Is_Uninstantiated_Package (Spec) then
+      if Is_Spec_Decl and then Is_Uninstantiated_Package (Spec) then
          Clear_Scope (Info.Package_Spec_Scope);
       end if;
 
@@ -1346,8 +1386,25 @@ package body Trans.Chap2 is
       Info           : Ortho_Info_Acc;
       Interface_List : O_Inter_List;
    begin
-      --  Canon must have replaced instatiation by generic-mapped packages.
-      pragma Assert (not Get_Macro_Expanded_Flag (Spec));
+      if Get_Macro_Expanded_Flag (Spec) then
+         --  Macro-expanded instantiations are translated like a package.
+         Translate_Package (Inst, Inst);
+
+         --  For top-level package, generate code for the body.
+         if Global_Storage = O_Storage_Public
+           and then not Is_Nested_Package (Inst)
+         then
+            declare
+               Bod : constant Iir := Get_Package_Body (Inst);
+            begin
+               if Is_Valid (Bod) then
+                  Translate_Package_Body (Bod);
+               end if;
+            end;
+         end if;
+
+         return;
+      end if;
 
       Instantiate_Info_Package (Inst);
       Info := Get_Info (Inst);
@@ -1402,6 +1459,11 @@ package body Trans.Chap2 is
       Info           : constant Ortho_Info_Acc := Get_Info (Inst);
       Constr         : O_Assoc_List;
    begin
+      if Get_Macro_Expanded_Flag (Spec) then
+         Elab_Package (Inst, Inst);
+         return;
+      end if;
+
       Set_Scope_Via_Var (Pkg_Info.Package_Body_Scope,
                          Info.Package_Instance_Body_Var);
 
@@ -1423,22 +1485,12 @@ package body Trans.Chap2 is
       Clear_Scope (Pkg_Info.Package_Body_Scope);
    end Elab_Package_Instantiation_Declaration;
 
-   procedure Elab_Dependence_Package (Pkg : Iir_Package_Declaration)
+   procedure Elab_Dependence_Package (Pkg : Iir)
    is
       Info   : Ortho_Info_Acc;
       If_Blk : O_If_Block;
       Constr : O_Assoc_List;
    begin
-      --  Std.Standard is pre-elaborated.
-      if Pkg = Standard_Package then
-         return;
-      end if;
-
-      --  Nothing to do for uninstantiated package.
-      if Is_Uninstantiated_Package (Pkg) then
-         return;
-      end if;
-
       --  Call the package elaborator only if not already elaborated.
       Info := Get_Info (Pkg);
       Start_If_Stmt
@@ -1451,13 +1503,36 @@ package body Trans.Chap2 is
       Finish_If_Stmt (If_Blk);
    end Elab_Dependence_Package;
 
-   procedure Elab_Dependence_Package_Instantiation (Pkg : Iir)
-   is
-      Info   : constant Ortho_Info_Acc := Get_Info (Pkg);
-      Constr : O_Assoc_List;
+   procedure Elab_Dependence_Package_Declaration
+     (Pkg : Iir_Package_Declaration) is
    begin
-      Start_Association (Constr, Info.Package_Instance_Elab_Subprg);
-      New_Procedure_Call (Constr);
+      --  Std.Standard is pre-elaborated.
+      if Pkg = Standard_Package then
+         return;
+      end if;
+
+      --  Nothing to do for uninstantiated package.
+      if Is_Uninstantiated_Package (Pkg) then
+         return;
+      end if;
+
+      Elab_Dependence_Package (Pkg);
+   end Elab_Dependence_Package_Declaration;
+
+   procedure Elab_Dependence_Package_Instantiation (Pkg : Iir) is
+   begin
+      if Get_Macro_Expanded_Flag (Get_Uninstantiated_Package_Decl (Pkg)) then
+         --  Handled as a normal package
+         Elab_Dependence_Package (Pkg);
+      else
+         declare
+            Info   : constant Ortho_Info_Acc := Get_Info (Pkg);
+            Constr : O_Assoc_List;
+         begin
+            Start_Association (Constr, Info.Package_Instance_Elab_Subprg);
+            New_Procedure_Call (Constr);
+         end;
+      end if;
    end Elab_Dependence_Package_Instantiation;
 
    procedure Elab_Dependence (Design_Unit: Iir_Design_Unit)
@@ -1475,7 +1550,7 @@ package body Trans.Chap2 is
             Library_Unit := Get_Library_Unit (Design);
             case Get_Kind (Library_Unit) is
                when Iir_Kind_Package_Declaration =>
-                  Elab_Dependence_Package (Library_Unit);
+                  Elab_Dependence_Package_Declaration (Library_Unit);
                when Iir_Kind_Package_Instantiation_Declaration =>
                   Elab_Dependence_Package_Instantiation (Library_Unit);
                when Iir_Kind_Entity_Declaration =>

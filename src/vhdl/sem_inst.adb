@@ -782,7 +782,7 @@ package body Sem_Inst is
                declare
                   Inter_Type_Def : constant Iir :=
                     Get_Type (Get_Association_Interface (Assoc, Inter));
-                  Actual_Type : constant Iir := Get_Type (Get_Actual (Assoc));
+                  Actual_Type : constant Iir := Get_Actual_Type (Assoc);
                begin
                   Set_Instance (Inter_Type_Def, Actual_Type);
                end;
@@ -861,8 +861,7 @@ package body Sem_Inst is
 
    function Instantiate_Package_Body (Inst : Iir) return Iir
    is
-      Inst_Decl : constant Iir := Get_Package_Origin (Inst);
-      Pkg : constant Iir := Get_Uninstantiated_Package_Decl (Inst_Decl);
+      Pkg : constant Iir := Get_Uninstantiated_Package_Decl (Inst);
       Prev_Instance_File : constant Source_File_Entry := Instance_File;
       Mark : constant Instance_Index_Type := Prev_Instance_Table.Last;
       Res : Iir;
@@ -877,7 +876,6 @@ package body Sem_Inst is
       Set_Instance (Pkg, Inst);
       declare
          Pkg_Hdr : constant Iir := Get_Package_Header (Pkg);
-         Inst_Hdr : constant Iir := Get_Package_Header (Inst);
          Pkg_El : Iir;
          Inst_El : Iir;
          Inter_El : Iir;
@@ -886,7 +884,7 @@ package body Sem_Inst is
          --  In the body, references to interface object are redirected to the
          --  instantiated interface objects.
          Pkg_El := Get_Generic_Chain (Pkg_Hdr);
-         Inst_El := Get_Generic_Chain (Inst_Hdr);
+         Inst_El := Get_Generic_Chain (Inst);
          while Is_Valid (Pkg_El) loop
             if Get_Kind (Pkg_El) in Iir_Kinds_Interface_Object_Declaration then
                Set_Instance (Pkg_El, Inst_El);
@@ -897,8 +895,8 @@ package body Sem_Inst is
 
          --  In the body, references to interface type are substitued to the
          --  mapped type.
-         Inst_El := Get_Generic_Map_Aspect_Chain (Inst_Hdr);
-         Inter_El := Get_Generic_Chain (Inst_Hdr);
+         Inst_El := Get_Generic_Map_Aspect_Chain (Inst);
+         Inter_El := Get_Generic_Chain (Inst);
          while Is_Valid (Inst_El) loop
             case Get_Kind (Inst_El) is
                when Iir_Kind_Association_Element_Type =>

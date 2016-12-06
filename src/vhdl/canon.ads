@@ -61,11 +61,6 @@ package Canon is
      (Arch : Iir_Architecture_Body)
      return Iir_Design_Unit;
 
-   --  Macro-expand package bodies for instantiations in DECL.  Return the
-   --  chain of bodies (the parent of each body is set to PARENT).
-   function Create_Instantiation_Bodies
-     (Decl : Iir_Package_Declaration; Parent : Iir) return Iir;
-
    --  Canonicalize a subprogram call.
    procedure Canon_Subprogram_Call (Call : Iir);
 
