@@ -2346,7 +2346,8 @@ package body Disp_Vhdl is
                when Iir_Kind_Association_Element_Open =>
                   Put ("open");
                when Iir_Kind_Association_Element_Package
-                 | Iir_Kind_Association_Element_Type =>
+                 | Iir_Kind_Association_Element_Type
+                 | Iir_Kind_Association_Element_Subprogram =>
                   Disp_Name (Get_Actual (El));
                when others =>
                   Conv := Get_In_Conversion (El);
