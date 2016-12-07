@@ -3162,7 +3162,7 @@ package body Parse is
                Set_Minus_Terminal (First, Parse_Name);
             end if;
          when others =>
-            Error_Msg_Parse ("missign type or across/throught aspect "
+            Error_Msg_Parse ("missing type or across/throught aspect "
                                & "in quantity declaration");
             Eat_Tokens_Until_Semi_Colon;
             raise Expect_Error;
@@ -3271,7 +3271,7 @@ package body Parse is
          if Current_Token /= Tok_Comma then
             case Current_Token is
                when Tok_Assign =>
-                  Error_Msg_Parse ("missign type in " & Disp_Name (Kind));
+                  Error_Msg_Parse ("missing type in " & Disp_Name (Kind));
                   exit;
                when others =>
                   Error_Msg_Parse
