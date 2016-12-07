@@ -1941,6 +1941,7 @@ package body Sem_Assocs is
       end case;
 
       Set_Named_Entity (Actual, Res);
+      Xrefs.Xref_Name (Actual);
       Set_Use_Flag (Res, True);
    end Sem_Association_Subprogram;
 

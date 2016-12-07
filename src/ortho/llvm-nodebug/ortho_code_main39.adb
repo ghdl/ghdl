@@ -62,7 +62,7 @@ procedure Ortho_Code_Main39 is
 
    CPU : constant Cstring := Empty_Cstring;
    Features : constant Cstring := Empty_Cstring;
-   Reloc : constant RelocMode := RelocDefault;
+   Reloc : RelocMode := RelocDefault;
 
    function To_String (C : Cstring) return String is
       function Strlen (C : Cstring) return Natural;
@@ -117,6 +117,10 @@ begin
                Optimization := CodeGenLevelDefault;
             elsif Arg = "-O3" then
                Optimization := CodeGenLevelAggressive;
+            elsif Arg = "-fpic" or Arg = "-fPIC" then
+               Reloc := RelocPIC;
+            elsif Arg = "-fno-pic" then
+               Reloc := RelocStatic;
             elsif Arg = "--emit-llvm" then
                Output_Kind := Output_Llvm;
             elsif Arg = "--emit-bc" then
