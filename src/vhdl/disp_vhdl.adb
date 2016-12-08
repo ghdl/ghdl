@@ -2335,7 +2335,18 @@ package body Disp_Vhdl is
             end if;
             Formal := Get_Formal (El);
             if Formal /= Null_Iir then
-               Disp_Expression (Formal);
+               case Get_Kind (El) is
+                  when Iir_Kind_Association_Element_Package
+                    | Iir_Kind_Association_Element_Type
+                    | Iir_Kind_Association_Element_Subprogram =>
+                     Disp_Name (Formal);
+                  when Iir_Kind_Association_Element_By_Expression
+                    | Iir_Kind_Association_Element_By_Individual
+                    | Iir_Kind_Association_Element_Open =>
+                     Disp_Expression (Formal);
+                  when others =>
+                     raise Internal_Error;
+               end case;
                if Conv /= Null_Iir then
                   Put (")");
                end if;

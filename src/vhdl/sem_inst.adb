@@ -21,6 +21,7 @@ with Types; use Types;
 with Files_Map;
 with Iirs_Utils; use Iirs_Utils;
 with Errorout; use Errorout;
+with Sem;
 
 package body Sem_Inst is
    --  Table of origin.  This is an extension of vhdl nodes to track the
@@ -573,7 +574,7 @@ package body Sem_Inst is
             when Iir_Kind_Interface_Type_Declaration =>
                Set_Type (Res, Get_Type (Inter));
             when Iir_Kinds_Interface_Subprogram_Declaration =>
-               null;
+               Sem.Compute_Subprogram_Hash (Res);
             when others =>
                Error_Kind ("instantiate_generic_chain", Res);
          end case;
@@ -740,7 +741,8 @@ package body Sem_Inst is
             if Is_Valid (Formal) then
                loop
                   case Get_Kind (Formal) is
-                     when Iir_Kind_Simple_Name =>
+                     when Iir_Kind_Simple_Name
+                       | Iir_Kind_Operator_Symbol =>
                         Set_Named_Entity
                           (Formal, Get_Instance (Get_Named_Entity (Formal)));
                         exit;

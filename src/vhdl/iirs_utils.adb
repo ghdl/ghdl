@@ -376,7 +376,8 @@ package body Iirs_Utils is
       El := Formal;
       loop
          case Get_Kind (El) is
-            when Iir_Kind_Simple_Name =>
+            when Iir_Kind_Simple_Name
+              | Iir_Kind_Operator_Symbol =>
                return Get_Named_Entity (El);
             when Iir_Kinds_Interface_Declaration =>
                return El;
@@ -425,7 +426,8 @@ package body Iirs_Utils is
       if Formal /= Null_Iir then
          --  Strip denoting name
          case Get_Kind (Formal) is
-            when Iir_Kind_Simple_Name =>
+            when Iir_Kind_Simple_Name
+              | Iir_Kind_Operator_Symbol =>
                return Get_Named_Entity (Formal);
             when Iir_Kinds_Interface_Declaration =>
                --  Shouldn't happen.

@@ -111,18 +111,20 @@ package body Sem_Assocs is
       Res := Null_Iir;
 
       --  Common case: only objects in interfaces.
-      while Inter /= Null_Iir loop
+      while Is_Valid (Inter) loop
          exit when Get_Kind (Inter)
            not in Iir_Kinds_Interface_Object_Declaration;
          Inter := Get_Chain (Inter);
       end loop;
-      if Inter = Null_Iir then
+      if Is_Null (Inter) then
+         --  Only interface object, nothing to to.
          return Assoc_Chain;
       end if;
 
+      Inter := Inter_Chain;
       loop
          --  Don't try to detect errors.
-         if Assoc = Null_Iir then
+         if Is_Null (Assoc) then
             return Res;
          end if;
 
@@ -139,7 +141,8 @@ package body Sem_Assocs is
                Assoc := Rewrite_Non_Object_Association (Assoc, Inter);
             end if;
          else
-            if Get_Kind (Formal) = Iir_Kind_Simple_Name then
+            if Kind_In (Formal, Iir_Kind_Simple_Name, Iir_Kind_Operator_Symbol)
+            then
                --  A candidate.  Search the corresponding interface.
                Inter := Find_Name_In_Chain
                  (Inter_Chain, Get_Identifier (Formal));
@@ -162,6 +165,9 @@ package body Sem_Assocs is
          end if;
          Prev_Assoc := Assoc;
          Assoc := Get_Chain (Assoc);
+         if Is_Valid (Inter) then
+            Inter := Get_Chain (Inter);
+         end if;
       end loop;
    end Extract_Non_Object_Association;
 
@@ -1330,7 +1336,8 @@ package body Sem_Assocs is
       Formal_Type : Iir;
    begin
       case Get_Kind (Formal) is
-         when Iir_Kind_Simple_Name =>
+         when Iir_Kind_Simple_Name
+           | Iir_Kind_Operator_Symbol =>
             --  Certainly the most common case: FORMAL_NAME => VAL.
             --  It is also the easiest.  So, handle it completly now.
             if Get_Identifier (Formal) = Get_Identifier (Inter) then
@@ -1564,7 +1571,7 @@ package body Sem_Assocs is
          --  Can be associated only once
          Match := Fully_Compatible;
       else
-         if Get_Kind (Formal) = Iir_Kind_Simple_Name
+         if Kind_In (Formal, Iir_Kind_Simple_Name, Iir_Kind_Operator_Symbol)
            and then Get_Identifier (Formal) = Get_Identifier (Inter)
          then
             Match := Fully_Compatible;
@@ -1579,7 +1586,6 @@ package body Sem_Assocs is
       Formal : constant Iir := Get_Formal (Assoc);
    begin
       if Formal /= Null_Iir then
-         pragma Assert (Get_Kind (Formal) = Iir_Kind_Simple_Name);
          pragma Assert (Get_Identifier (Formal) = Get_Identifier (Inter));
          Set_Named_Entity (Formal, Inter);
          Set_Base_Name (Formal, Inter);

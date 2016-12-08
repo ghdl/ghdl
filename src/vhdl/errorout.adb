@@ -1259,9 +1259,11 @@ package body Errorout is
       case Get_Kind (Subprg) is
          when Iir_Kind_Enumeration_Literal =>
             Append (Res, "enumeration literal ");
-         when Iir_Kind_Function_Declaration =>
+         when Iir_Kind_Function_Declaration
+           | Iir_Kind_Interface_Function_Declaration =>
             Append (Res, "function ");
-         when Iir_Kind_Procedure_Declaration =>
+         when Iir_Kind_Procedure_Declaration
+           | Iir_Kind_Interface_Procedure_Declaration =>
             Append (Res, "procedure ");
          when others =>
             Error_Kind ("disp_subprg", Subprg);
@@ -1289,8 +1291,8 @@ package body Errorout is
       Append (Res, " [");
 
       case Get_Kind (Subprg) is
-         when Iir_Kind_Function_Declaration
-           | Iir_Kind_Procedure_Declaration =>
+         when Iir_Kinds_Subprogram_Declaration
+           | Iir_Kinds_Interface_Subprogram_Declaration =>
             declare
                El : Iir;
             begin
@@ -1308,6 +1310,7 @@ package body Errorout is
 
       case Get_Kind (Subprg) is
          when Iir_Kind_Function_Declaration
+           | Iir_Kind_Interface_Function_Declaration
            | Iir_Kind_Enumeration_Literal =>
             Append (Res, " return ");
             Append_Type (Get_Return_Type (Subprg));
