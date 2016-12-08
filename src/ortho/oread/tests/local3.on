@@ -1,0 +1,33 @@
+type __ghdl_integer is signed (32);
+
+public function test_arg (v : __ghdl_integer) return __ghdl_integer
+declare
+  local var w : __ghdl_integer;
+begin
+  w := v;
+  declare
+    local var b1 : __ghdl_integer;
+  begin
+    b1 := w;
+    w := b1;
+    declare
+      local var b2 : __ghdl_integer;
+    begin
+      b2 := w;
+      w := b2;
+    end;
+    declare
+      local var b3 : __ghdl_integer;
+    begin
+      b3 := w;
+      w := b3;
+    end;
+  end;
+  declare
+    local var b4 : __ghdl_integer;
+  begin
+    b4 := w;
+    w := b4;
+  end;
+  return w;
+end;

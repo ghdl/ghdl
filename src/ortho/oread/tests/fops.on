@@ -1,0 +1,104 @@
+TYPE float64 IS FLOAT;
+TYPE bool IS BOOLEAN {false, true};
+TYPE int32 IS SIGNED (32);
+
+PUBLIC FUNCTION fadd (a : float64; b : float64) RETURN float64
+DECLARE
+BEGIN
+  RETURN a +# b;
+END;
+
+PUBLIC FUNCTION fsub (a : float64; b : float64) RETURN float64
+DECLARE
+BEGIN
+  RETURN a -# b;
+END;
+
+PUBLIC FUNCTION fmul (a : float64; b : float64) RETURN float64
+DECLARE
+BEGIN
+  RETURN a *# b;
+END;
+
+PUBLIC FUNCTION fdiv (a : float64; b : float64) RETURN float64
+DECLARE
+BEGIN
+  RETURN a /# b;
+END;
+
+PUBLIC FUNCTION fneg (a : float64) RETURN float64
+DECLARE
+BEGIN
+  RETURN -a;
+END;
+
+PUBLIC FUNCTION fabs (a : float64) RETURN float64
+DECLARE
+BEGIN
+  RETURN ABS a;
+END;
+
+PUBLIC FUNCTION fcall1 (a : float64; b : float64) RETURN float64
+DECLARE
+BEGIN
+  RETURN fadd (fmul (a, b), fneg (b));
+END;
+
+PUBLIC FUNCTION fgt (a : float64; b : float64) RETURN bool
+DECLARE
+BEGIN
+  RETURN bool'(a >= b);
+END;
+
+PUBLIC FUNCTION mainint () RETURN int32
+DECLARE
+  LOCAL VAR l : int32;
+  LOCAL VAR r : int32;
+BEGIN
+  l:= 1;
+  r := 2;
+  IF bool'(l < r) THEN
+    RETURN int32'(0);
+  ELSE
+    RETURN int32'(1);
+  END IF;
+END;
+
+PRIVATE CONSTANT fone : float64;
+CONSTANT fone := 1.0;
+
+--  Return 0 in case of error.
+PUBLIC FUNCTION main () RETURN int32
+DECLARE
+  LOCAL VAR lf : float64;
+  LOCAL VAR rf : float64;
+BEGIN
+  lf := 1.0;
+  rf := 2.0;
+  IF bool'(lf >= rf) THEN
+    RETURN int32'(0);
+  END IF;
+  lf := fadd (lf, fone);
+  IF bool'(lf /= rf) THEN
+    RETURN int32'(0);
+  END IF;
+
+  lf := fone;
+  lf := -lf;
+  IF bool'(lf > 0.0) THEN
+    RETURN int32'(0);
+  END IF;
+  
+  lf := ABS lf;
+  IF bool'(lf /= fone) THEN
+    RETURN int32'(0);
+  END IF;
+
+  lf := 2.0;
+  IF bool'(fdiv (lf, fone) /= lf) THEN
+    RETURN int32'(0);
+  END IF;
+
+  RETURN int32'(1);
+END;
+

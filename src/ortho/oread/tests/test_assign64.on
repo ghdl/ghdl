@@ -1,0 +1,22 @@
+TYPE __ghdl_integer IS SIGNED (64);
+
+PUBLIC VAR gbl : __ghdl_integer;
+
+PUBLIC PROCEDURE test_assign (v : __ghdl_integer)
+DECLARE
+BEGIN
+  gbl := __ghdl_integer'[123456] -# v;
+END;
+
+PUBLIC PROCEDURE test_assign2 (v : __ghdl_integer)
+DECLARE
+BEGIN
+  gbl := __ghdl_integer'[891234567890] +# v;
+END;
+
+PUBLIC PROCEDURE main ()
+DECLARE
+BEGIN
+  test_assign (12);
+  test_assign (5);
+END;

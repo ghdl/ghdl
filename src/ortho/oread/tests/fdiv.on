@@ -1,0 +1,17 @@
+TYPE float64 IS FLOAT;
+TYPE int32 IS SIGNED (32);
+TYPE int64 IS SIGNED (64);
+
+PUBLIC FUNCTION fdiv (a : int64; b : int64) RETURN float64
+DECLARE
+BEGIN
+  RETURN float64'conv(a) /# float64'conv (b);
+END;
+
+TYPE char IS UNSIGNED(8);
+
+PUBLIC FUNCTION add (a : char; b : char) RETURN int32
+DECLARE
+BEGIN
+  RETURN int32'conv(a) +# int32'conv(b);
+END;

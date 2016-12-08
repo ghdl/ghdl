@@ -1,0 +1,24 @@
+TYPE std__standard__bit IS BOOLEAN {C_0, C_1};
+
+--F /Users/gingold/devel/ghdl-updates.git/testsuite/gna/simple1/simple1.vhdl
+
+-- architecture behav
+
+TYPE work__simple1__ARCH__behav__INSTTYPE IS RECORD;
+
+TYPE work__simple1__ARCH__behav__INSTPTR IS ACCESS 
+  work__simple1__ARCH__behav__INSTTYPE;
+
+PRIVATE VAR v_acc : work__simple1__ARCH__behav__INSTPTR;
+
+TYPE work__simple1__ARCH__behav__INSTTYPE IS RECORD 
+  s_VAL: std__standard__bit;
+END RECORD;
+--  f : work__simple1__ARCH__behav__INSTPTR;
+
+
+PRIVATE VAR v_inst : work__simple1__ARCH__behav__INSTTYPE;
+
+PRIVATE CONSTANT INST000001 : work__simple1__ARCH__behav__INSTTYPE;
+
+CONSTANT INST000001 := { std__standard__bit'[C_0]};

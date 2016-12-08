@@ -1,0 +1,1 @@
+type __ghdl_bool_type is boolean {false, true};

@@ -1,0 +1,12 @@
+type __ghdl_index_type is unsigned (32);
+type __ghdl_bool_type is boolean {false, true};
+
+public function main (a : __ghdl_index_type) return __ghdl_index_type
+declare
+begin
+  if __ghdl_bool_type'(a > 5) then
+    return a +# 1;
+  else
+    return a -# 1;
+  end if;
+end;
