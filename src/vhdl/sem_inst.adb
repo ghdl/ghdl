@@ -741,7 +741,8 @@ package body Sem_Inst is
             if Is_Valid (Formal) then
                loop
                   case Get_Kind (Formal) is
-                     when Iir_Kind_Simple_Name =>
+                     when Iir_Kind_Simple_Name
+                       | Iir_Kind_Operator_Symbol =>
                         Set_Named_Entity
                           (Formal, Get_Instance (Get_Named_Entity (Formal)));
                         exit;

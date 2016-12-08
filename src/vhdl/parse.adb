@@ -6642,23 +6642,27 @@ package body Parse is
       return Res;
    end Parse_Process_Statement;
 
-   procedure Check_Formal_Form (Formal : Iir) is
+   function Check_Formal_Form (Formal : Iir) return Iir is
    begin
       if Formal = Null_Iir then
-         return;
+         return Formal;
       end if;
 
       case Get_Kind (Formal) is
          when Iir_Kind_Simple_Name
            | Iir_Kind_Slice_Name
            | Iir_Kind_Selected_Name =>
-            null;
+            return Formal;
          when Iir_Kind_Parenthesis_Name =>
             --  Could be an indexed name, so nothing to check within the
             --  parenthesis.
-            null;
+            return Formal;
+         when Iir_Kind_String_Literal8 =>
+            --  Operator designator
+            return String_To_Operator_Symbol (Formal);
          when others =>
-            Error_Msg_Parse (+Formal, "incorrect formal name");
+            Error_Msg_Parse (+Formal, "incorrect formal name ignored");
+            return Null_Iir;
       end case;
    end Check_Formal_Form;
 
@@ -6736,10 +6740,8 @@ package body Parse is
                   end if;
 
                when Tok_Double_Arrow =>
-                  Formal := Actual;
-
                   --  Check that FORMAL is a name and not an expression.
-                  Check_Formal_Form (Formal);
+                  Formal := Check_Formal_Form (Actual);
 
                   --  Skip '=>'
                   Scan;
