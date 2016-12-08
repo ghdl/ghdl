@@ -386,7 +386,13 @@ package body Sem_Names is
            | Iir_Kind_For_Generate_Statement =>
             null;
          when Iir_Kind_Package_Declaration =>
-            null;
+            declare
+               Header : constant Iir := Get_Package_Header (Decl);
+            begin
+               if Is_Valid (Header) then
+                  Iterator_Decl_Chain (Get_Generic_Chain (Header), Id);
+               end if;
+            end;
          when Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Interface_Package_Declaration =>
             Iterator_Decl_Chain (Get_Generic_Chain (Decl), Id);
@@ -2116,6 +2122,7 @@ package body Sem_Names is
                --  LRM93 §6.3
                --  This form of expanded name is only allowed within the
                --  construct itself.
+               --  FIXME: LRM08 12.3 Visibility h)
                if not Kind_In (Prefix,
                                Iir_Kind_Package_Declaration,
                                Iir_Kind_Package_Instantiation_Declaration)
