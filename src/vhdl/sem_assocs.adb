@@ -111,18 +111,20 @@ package body Sem_Assocs is
       Res := Null_Iir;
 
       --  Common case: only objects in interfaces.
-      while Inter /= Null_Iir loop
+      while Is_Valid (Inter) loop
          exit when Get_Kind (Inter)
            not in Iir_Kinds_Interface_Object_Declaration;
          Inter := Get_Chain (Inter);
       end loop;
-      if Inter = Null_Iir then
+      if Is_Null (Inter) then
+         --  Only interface object, nothing to to.
          return Assoc_Chain;
       end if;
 
+      Inter := Inter_Chain;
       loop
          --  Don't try to detect errors.
-         if Assoc = Null_Iir then
+         if Is_Null (Assoc) then
             return Res;
          end if;
 
@@ -162,6 +164,9 @@ package body Sem_Assocs is
          end if;
          Prev_Assoc := Assoc;
          Assoc := Get_Chain (Assoc);
+         if Is_Valid (Inter) then
+            Inter := Get_Chain (Inter);
+         end if;
       end loop;
    end Extract_Non_Object_Association;
 
