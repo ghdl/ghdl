@@ -1,0 +1,8 @@
+-- internal declarations, part 1
+
+TYPE __ghdl_size_type IS UNSIGNED (32);
+
+TYPE __ghdl_index_type IS UNSIGNED (32);
+
+PUBLIC CONSTANT size1 : __ghdl_size_type;
+CONSTANT size1 := __ghdl_size_type'[2];

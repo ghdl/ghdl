@@ -1,0 +1,32 @@
+type int is signed (32);
+
+public function smod (a : int; b : int) return int
+declare
+begin
+  return a mod# b;
+end;
+
+public function do_m3_m3 () return int
+declare
+begin
+  return -3 mod# -3;
+end;
+
+public function do_m3_m2 () return int
+declare
+begin
+  return -3 mod# -2;
+end;
+
+public function do_11_5 () return int
+declare
+begin
+  return 11 mod# 5;
+end;
+
+public function do_m11_5 () return int
+declare
+begin
+  return -11 mod# 5;
+end;
+

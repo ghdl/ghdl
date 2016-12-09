@@ -1,0 +1,17 @@
+type __ghdl_index_type is unsigned (32);
+type __ghdl_bool_type is boolean {false, true};
+
+type __ghdl_char is unsigned (8);
+
+type __ghdl_chararray is array [__ghdl_index_type] of __ghdl_index_type;
+
+private constant TAB : subarray __ghdl_chararray[__ghdl_index_type'[10]
+  ];
+
+constant TAB := {65, 66, 67, 68, 69, 48, 49, 50, 51, 52 };
+
+public function main (a : __ghdl_index_type) return __ghdl_index_type
+declare
+begin
+  return TAB[a];
+end;

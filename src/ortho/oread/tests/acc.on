@@ -1,0 +1,5 @@
+type __ghdl_file_index is unsigned (32);
+
+type __ghdl_file_index_ptr is access __ghdl_file_index;
+
+public var acc1 : __ghdl_file_index_ptr;

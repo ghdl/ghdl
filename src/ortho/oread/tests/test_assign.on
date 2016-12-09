@@ -1,0 +1,19 @@
+TYPE __ghdl_size_type IS UNSIGNED (32);
+
+TYPE __ghdl_index_type IS UNSIGNED (32);
+
+TYPE __ghdl_integer IS SIGNED (32);
+
+PUBLIC VAR gbl : __ghdl_integer;
+
+PUBLIC PROCEDURE test_assign ()
+DECLARE
+BEGIN
+  gbl := __ghdl_integer'[5];
+END;
+
+PUBLIC PROCEDURE main ()
+DECLARE
+BEGIN
+  test_assign ();
+END;

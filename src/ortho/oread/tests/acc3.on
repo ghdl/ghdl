@@ -1,0 +1,18 @@
+type index_ptr1 is access;
+
+type index is unsigned (32);
+
+type index_ptr1 is access index;
+
+type index_ptr2 is access index;
+
+public var acc1 : index_ptr1;
+
+public function Get () return index
+declare
+  local var acc2 : index_ptr2;
+begin
+  acc2 := index_ptr2'conv(acc1);
+  return acc2.all;
+end;
+

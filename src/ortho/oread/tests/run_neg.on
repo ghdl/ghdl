@@ -1,0 +1,7 @@
+type __ghdl_index_type is signed (32);
+
+public function main (a : __ghdl_index_type) return __ghdl_index_type
+declare
+begin
+  return -a;
+end;

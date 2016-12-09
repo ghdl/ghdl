@@ -1,0 +1,10 @@
+TYPE __ghdl_index_type IS UNSIGNED (32);
+
+TYPE __ghdl_char IS UNSIGNED (8);
+
+TYPE struct4 IS RECORD 
+  i: __ghdl_index_type; 
+  c : __ghdl_char;
+END RECORD;
+
+PUBLIC VAR var1 : struct4;

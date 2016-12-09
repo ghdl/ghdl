@@ -1,0 +1,36 @@
+TYPE __ghdl_size_type IS UNSIGNED (32);
+
+TYPE __ghdl_index_type IS UNSIGNED (32);
+
+TYPE __ghdl_char IS UNSIGNED (8);
+
+TYPE __ghdl_chararray IS ARRAY [__ghdl_index_type] OF __ghdl_char;
+
+TYPE __ghdl_char_ptr IS ACCESS __ghdl_chararray;
+
+TYPE __ghdl_str_len IS RECORD 
+  len: __ghdl_index_type; 
+  str: __ghdl_char_ptr; 
+END RECORD;
+
+PRIVATE VAR c : __ghdl_str_len;
+
+CONSTANT c := __ghdl_str_len'[DEFAULT];
+
+PUBLIC VAR c2 : __ghdl_str_len;
+
+CONSTANT c2 := { __ghdl_index_type'[1], __ghdl_char_ptr'[DEFAULT]};
+
+
+
+TYPE rec1_type IS RECORD;
+
+TYPE rec1_acc IS ACCESS rec1_type;
+
+TYPE rec1_type IS RECORD 
+  len: __ghdl_index_type; 
+END RECORD;
+
+PRIVATE VAR c3 : rec1_type;
+
+CONSTANT c3 := rec1_type'[DEFAULT];

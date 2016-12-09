@@ -1,0 +1,16 @@
+type __ghdl_int is unsigned (32);
+
+public function main (a : __ghdl_int) return __ghdl_int
+declare
+  local var b : __ghdl_int;
+  local var z : __ghdl_int;
+begin
+  b := a;
+  declare
+    local var c : __ghdl_int;
+  begin
+    c := b;
+    z := c;
+  end;
+  return z +# 1;
+end;

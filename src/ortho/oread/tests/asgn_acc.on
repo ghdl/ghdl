@@ -1,0 +1,13 @@
+TYPE int32 IS SIGNED (32);
+TYPE int32_acc IS ACCESS int32;
+PRIVATE CONSTANT zero_i32 : int32 := 0;
+
+PRIVATE PROCEDURE call_arg_addr ()
+DECLARE
+BEGIN
+DECLARE
+  LOCAL VAR ap : int32_acc;
+BEGIN
+  ap := int32_acc'address (zero_i32);
+END;
+END;

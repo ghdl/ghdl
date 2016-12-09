@@ -1,0 +1,5 @@
+-- internal declarations, part 1
+
+type __ghdl_size_type is unsigned (32);
+
+type __ghdl_index_type is unsigned (32);

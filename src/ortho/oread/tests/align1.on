@@ -1,0 +1,9 @@
+-- internal declarations, part 1
+
+type __ghdl_size_type is unsigned (32);
+
+type __ghdl_index_type is unsigned (32);
+
+public constant align1 : __ghdl_size_type;
+
+constant align1 := __ghdl_size_type'alignof (__ghdl_index_type);

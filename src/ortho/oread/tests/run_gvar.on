@@ -1,0 +1,10 @@
+TYPE __ghdl_index_type IS UNSIGNED (32);
+
+PUBLIC VAR v : __ghdl_index_type;
+
+PUBLIC FUNCTION main (a : __ghdl_index_type) RETURN __ghdl_index_type
+DECLARE
+BEGIN
+  v := a;
+  RETURN v +# 1;
+END;

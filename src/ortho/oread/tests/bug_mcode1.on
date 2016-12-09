@@ -1,0 +1,41 @@
+TYPE __ghdl_index_type IS UNSIGNED (32);
+
+-- package std.standard
+
+TYPE std__standard__integer__BT IS SIGNED (32);
+
+TYPE std__standard__real__BT IS FLOAT;
+
+-- package declaration math_real
+
+EXTERNAL FUNCTION ieee__math_real__ceil (x: std__standard__real__BT)
+  RETURN std__standard__real__BT;
+
+--F /Users/gingold/devel/vhdl-testsuite/OSVVM_2014_01/src/CoveragePkg.vhd
+
+TYPE work__coveragepkg__covptype__covbinbasetemptype IS RECORD 
+  action: std__standard__integer__BT; 
+  action2: std__standard__integer__BT; 
+  count: std__standard__integer__BT; 
+  atleast: std__standard__integer__BT; 
+END RECORD;
+
+TYPE work__coveragepkg__covptype__covbintemptype__BASE IS ARRAY [
+  __ghdl_index_type] OF work__coveragepkg__covptype__covbinbasetemptype;
+
+TYPE work__coveragepkg__covptype__covbintemptype__ARR IS SUBARRAY
+  work__coveragepkg__covptype__covbintemptype__BASE[2];
+
+PRIVATE FUNCTION work__coveragepkg__covptype__calcweightO1 ()
+  RETURN std__standard__integer__BT
+DECLARE
+  LOCAL VAR RESULT : std__standard__integer__BT;
+  LOCAL VAR x : std__standard__real__BT;
+  LOCAL VAR b : work__coveragepkg__covptype__covbintemptype__ARR;
+  LOCAL VAR T2_8 : __ghdl_index_type;
+BEGIN
+  RESULT := ( (std__standard__integer__BT
+    'conv (ieee__math_real__ceil (x)) -# b[T2_8].count));
+  RETURN RESULT;
+END;
+

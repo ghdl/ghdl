@@ -1,0 +1,41 @@
+type __ghdl_rtik is enum {__ghdl_rtik_top = 0, __ghdl_rtik_library = 1,
+   __ghdl_rtik_package = 2, __ghdl_rtik_package_body = 3,
+   __ghdl_rtik_entity = 4, __ghdl_rtik_architecture = 5,
+   __ghdl_rtik_process = 6, __ghdl_rtik_block = 7,
+   __ghdl_rtik_if_generate = 8, __ghdl_rtik_for_generate = 9,
+   __ghdl_rtik_instance = 10, __ghdl_rtik_constant = 11,
+   __ghdl_rtik_iterator = 12, __ghdl_rtik_variable = 13,
+   __ghdl_rtik_signal = 14, __ghdl_rtik_file = 15, __ghdl_rtik_port = 16,
+   __ghdl_rtik_generic = 17, __ghdl_rtik_alias = 18, __ghdl_rtik_guard = 19,
+   __ghdl_rtik_component = 20, __ghdl_rtik_attribute = 21,
+   __ghdl_rtik_type_b2 = 22, __ghdl_rtik_type_e8 = 23,
+   __ghdl_rtik_type_e32 = 24, __ghdl_rtik_type_i32 = 25,
+   __ghdl_rtik_type_i64 = 26, __ghdl_rtik_type_f64 = 27,
+   __ghdl_rtik_type_p32 = 28, __ghdl_rtik_type_p64 = 29,
+   __ghdl_rtik_type_access = 30, __ghdl_rtik_type_array = 31,
+   __ghdl_rtik_type_record = 32, __ghdl_rtik_type_file = 33,
+   __ghdl_rtik_subtype_scalar = 34, __ghdl_rtik_subtype_array = 35,
+   __ghdl_rtik_subtype_unconstrained_array = 36,
+   __ghdl_rtik_subtype_record = 37, __ghdl_rtik_subtype_access = 38,
+   __ghdl_rtik_type_protected = 39, __ghdl_rtik_element = 40,
+   __ghdl_rtik_unit64 = 41, __ghdl_rtik_unitptr = 42,
+   __ghdl_rtik_attribute_transaction = 43, __ghdl_rtik_attribute_quiet = 44,
+   __ghdl_rtik_attribute_stable = 45, __ghdl_rtik_psl_assert = 46,
+   __ghdl_rtik_error = 47};
+
+type __ghdl_rti_depth is unsigned (8);
+
+type __ghdl_rti_u8 is unsigned (8);
+
+type __ghdl_rti_common is record 
+  kind: __ghdl_rtik; 
+  depth: __ghdl_rti_depth; 
+  mode: __ghdl_rti_u8; 
+  max_depth: __ghdl_rti_depth; 
+end record;
+
+type __ghdl_rti_access is access __ghdl_rti_common;
+
+public var st3p : __ghdl_rti_access;
+
+public var st3 : __ghdl_rti_common;

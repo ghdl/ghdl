@@ -1,0 +1,5 @@
+-- internal declarations, part 1
+
+TYPE integer IS SIGNED (32);
+
+PUBLIC VAR v1 : integer;

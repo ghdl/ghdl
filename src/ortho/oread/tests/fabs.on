@@ -1,0 +1,38 @@
+TYPE float64 IS FLOAT;
+
+PUBLIC FUNCTION fadd (a : float64; b : float64) RETURN float64
+DECLARE
+BEGIN
+  RETURN a +# b;
+END;
+
+PUBLIC FUNCTION fsub (a : float64; b : float64) RETURN float64
+DECLARE
+BEGIN
+  RETURN a -# b;
+END;
+
+PUBLIC FUNCTION fmul (a : float64; b : float64) RETURN float64
+DECLARE
+BEGIN
+  RETURN a *# b;
+END;
+
+PUBLIC FUNCTION fdiv (a : float64; b : float64) RETURN float64
+DECLARE
+BEGIN
+  RETURN a /# b;
+END;
+
+PUBLIC FUNCTION fneg (a : float64) RETURN float64
+DECLARE
+BEGIN
+  RETURN -a;
+END;
+
+PUBLIC FUNCTION fabs (a : float64) RETURN float64
+DECLARE
+BEGIN
+  RETURN ABS a;
+END;
+

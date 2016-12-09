@@ -1,0 +1,8 @@
+type __ghdl_index_type is unsigned (32);
+
+public procedure test_ret ()
+declare
+begin
+  return;
+  return;
+end;

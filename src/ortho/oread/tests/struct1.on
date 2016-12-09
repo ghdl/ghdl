@@ -1,0 +1,16 @@
+TYPE __ghdl_index_type IS UNSIGNED (32);
+
+TYPE __ghdl_char IS UNSIGNED (8);
+
+TYPE __ghdl_chararray IS ARRAY [__ghdl_index_type] OF __ghdl_char;
+
+TYPE __ghdl_char_ptr IS ACCESS __ghdl_chararray;
+
+TYPE __ghdl_char_ptr_array IS ARRAY [__ghdl_index_type] OF __ghdl_char_ptr;
+
+TYPE __ghdl_str_len IS RECORD
+  len: __ghdl_index_type;
+  str: __ghdl_char_ptr;
+END RECORD;
+
+PUBLIC VAR var1 : __ghdl_str_len;

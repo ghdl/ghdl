@@ -1,0 +1,21 @@
+TYPE int32 IS SIGNED (32);
+TYPE uns32 IS UNSIGNED (32);
+TYPE char8 IS UNSIGNED (8);
+
+TYPE string8 IS ARRAY [uns32] OF char8;
+TYPE string_acc IS ACCESS string8;
+
+TYPE bool IS BOOLEAN {false, true};
+
+PRIVATE PROCEDURE puts (s : string_acc);
+
+PRIVATE PROCEDURE puti32 (n : int32)
+DECLARE
+  TYPE str8x11 IS SUBARRAY string8[11];
+  LOCAL VAR s : str8x11;
+  LOCAL VAR i : uns32;
+BEGIN
+  i := 9;
+  s[10] := 0;
+  puts(string_acc'address(s[i...]));
+END;

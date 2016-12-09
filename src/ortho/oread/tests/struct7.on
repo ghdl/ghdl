@@ -1,0 +1,14 @@
+TYPE float IS FLOAT;
+
+TYPE __ghdl_index_type IS UNSIGNED (32);
+
+TYPE __ghdl_char IS UNSIGNED (8);
+TYPE string IS ARRAY [__ghdl_index_type] OF __ghdl_char;
+TYPE str7 IS SUBARRAY string[7];
+
+TYPE struct7 IS RECORD 
+  f : float;
+  s : str7;
+END RECORD;
+
+PUBLIC VAR var1 : struct7;
