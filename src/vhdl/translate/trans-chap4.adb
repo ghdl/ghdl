@@ -2393,10 +2393,14 @@ package body Trans.Chap4 is
                  (Get_Uninstantiated_Package_Decl (El))
                then
                   declare
+                     Bod : constant Iir := Get_Package_Body (El);
                      Mark  : Id_Mark_Type;
                   begin
                      Push_Identifier_Prefix (Mark, Get_Identifier (El));
                      Translate_Declaration_Chain_Subprograms (El);
+                     if Is_Valid (Bod) then
+                        Translate_Declaration_Chain_Subprograms (Bod);
+                     end if;
                      Pop_Identifier_Prefix (Mark);
                   end;
                end if;

@@ -889,12 +889,9 @@ package body Trans.Chap2 is
       Translate_Package (Decl, Get_Package_Header (Decl));
 
       if Global_Storage = O_Storage_Public then
-         --  If there are package instances declared that were macro-expanded
-         --  and if the package has (possibly) no body, translate the bodies
-         --  of the instances.
-         if Get_Need_Instance_Bodies (Decl)
---           and not Get_Need_Body (Decl)
-         then
+         --  If there are package instances declared that were macro-expanded,
+         --  translate the bodies of the instances.
+         if Get_Need_Instance_Bodies (Decl) then
             El := Get_Declaration_Chain (Decl);
             while Is_Valid (El) loop
                if Get_Kind (El) = Iir_Kind_Package_Instantiation_Declaration
@@ -975,7 +972,7 @@ package body Trans.Chap2 is
                               Info.Package_Body_Scope'Access);
       end if;
 
-      if not Is_Nested or else not Is_Spec_Decl then
+      if not Is_Nested then
          --  Translate subprograms.  For nested package, this has to be called
          --  when translating subprograms.
          Chap4.Translate_Declaration_Chain_Subprograms (Bod);
@@ -1390,10 +1387,9 @@ package body Trans.Chap2 is
          --  Macro-expanded instantiations are translated like a package.
          Translate_Package (Inst, Inst);
 
-         --  For top-level package, generate code for the body.
-         if Global_Storage = O_Storage_Public
-           and then not Is_Nested_Package (Inst)
-         then
+         --  For top-level package or nested package not within a package,
+         --  generate code for the body.
+         if Global_Storage = O_Storage_Public then
             declare
                Bod : constant Iir := Get_Package_Body (Inst);
             begin
