@@ -850,7 +850,7 @@ package body Trans.Chap2 is
             Rtis.Generate_Unit (Decl);
          end if;
 
-         if Global_Storage = O_Storage_Public then
+         if Global_Storage /= O_Storage_External then
             --  Create elaboration procedure for the spec
             Elab_Package (Decl, Header);
          end if;
@@ -876,10 +876,7 @@ package body Trans.Chap2 is
       end if;
    end Translate_Package;
 
-   procedure Translate_Package_Declaration (Decl : Iir_Package_Declaration)
-   is
-      El : Iir;
-      Bod : Iir;
+   procedure Translate_Package_Declaration (Decl : Iir_Package_Declaration) is
    begin
       --  Skip uninstantiated package that have to be macro-expanded.
       if Get_Macro_Expanded_Flag (Decl) then
@@ -887,24 +884,6 @@ package body Trans.Chap2 is
       end if;
 
       Translate_Package (Decl, Get_Package_Header (Decl));
-
-      if Global_Storage = O_Storage_Public then
-         --  If there are package instances declared that were macro-expanded,
-         --  translate the bodies of the instances.
-         if Get_Need_Instance_Bodies (Decl) then
-            El := Get_Declaration_Chain (Decl);
-            while Is_Valid (El) loop
-               if Get_Kind (El) = Iir_Kind_Package_Instantiation_Declaration
-               then
-                  Bod := Get_Package_Body (El);
-                  if Is_Valid (Bod) then
-                     Translate_Package_Body (Bod);
-                  end if;
-               end if;
-               El := Get_Chain (El);
-            end loop;
-         end if;
-      end if;
    end Translate_Package_Declaration;
 
    procedure Translate_Package_Body (Bod : Iir_Package_Body)
@@ -1387,9 +1366,8 @@ package body Trans.Chap2 is
          --  Macro-expanded instantiations are translated like a package.
          Translate_Package (Inst, Inst);
 
-         --  For top-level package or nested package not within a package,
-         --  generate code for the body.
-         if Global_Storage = O_Storage_Public then
+         --  Generate code for the body.
+         if Global_Storage /= O_Storage_External then
             declare
                Bod : constant Iir := Get_Package_Body (Inst);
             begin
@@ -1430,7 +1408,7 @@ package body Trans.Chap2 is
       Finish_Subprogram_Decl
         (Interface_List, Info.Package_Instance_Elab_Subprg);
 
-      if Global_Storage /= O_Storage_Public then
+      if Global_Storage = O_Storage_External then
          return;
       end if;
 

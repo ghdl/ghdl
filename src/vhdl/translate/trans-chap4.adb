@@ -2398,7 +2398,9 @@ package body Trans.Chap4 is
                   begin
                      Push_Identifier_Prefix (Mark, Get_Identifier (El));
                      Translate_Declaration_Chain_Subprograms (El);
-                     if Is_Valid (Bod) then
+                     if Is_Valid (Bod)
+                       and then Global_Storage /= O_Storage_External
+                     then
                         Translate_Declaration_Chain_Subprograms (Bod);
                      end if;
                      Pop_Identifier_Prefix (Mark);
