@@ -132,18 +132,21 @@ if ((-not $StopCompiling) -and $OSVVM)
 	$Files = @(
 		"NamePkg.vhd",
 		"OsvvmGlobalPkg.vhd",
-		"TextUtilPkg.vhd",
+		"VendorCovApiPkg.vhd",
 		"TranscriptPkg.vhd",
+		"TextUtilPkg.vhd",
 		"AlertLogPkg.vhd",
-		"MemoryPkg.vhd",
 		"MessagePkg.vhd",
 		"SortListPkg_int.vhd",
 		"RandomBasePkg.vhd",
 		"RandomPkg.vhd",
 		"CoveragePkg.vhd",
+		"MemoryPkg.vhd",
 		"ScoreboardGenericPkg.vhd",
-		"ScoreboardPkg_int.vhd",
 		"ScoreboardPkg_slv.vhd",
+		"ScoreboardPkg_int.vhd",
+		"ResolutionPkg.vhd",
+		"TbUtilPkg.vhd",
 		"OsvvmContext.vhd"
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
