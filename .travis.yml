@@ -18,6 +18,7 @@ matrix:
           - gnat
     - os: linux
       sudo: false
+      dist: trusty
       env: BLD=llvm-3.8
       addons:
         apt:
