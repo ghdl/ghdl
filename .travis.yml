@@ -10,24 +10,20 @@ matrix:
         - sudo apt-get install -y gnat-4.8 zlib1g-dev
         - sudo apt-get install -y llvm-3.5-dev llvm-3.5-tools libedit-dev
     - os: linux
+      sudo: required
+      dist: trusty
+      env: BLD=llvm-3.8
+      before_install:
+        - sudo apt-get update -qq
+        - sudo apt-get install -y gnat-6 zlib1g-dev
+        - sudo apt-get install -y llvm-3.8-dev llvm-3.8-tools libedit-dev
+    - os: linux
       sudo: false
       env: BLD=mcode
       addons:
         apt:
           packages:
           - gnat
-    - os: linux
-      sudo: false
-      dist: precise
-      env: BLD=llvm-3.8
-      addons:
-        apt:
-          packages:
-          - gnat-5
-          - llvm-3.8-dev
-          - llvm-3.8-tools
-          - libedit-dev
-          - zlib1g-dev
 script: ./dist/travis-ci.sh $BLD
 deploy:
   provider: releases
