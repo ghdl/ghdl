@@ -1,4 +1,4 @@
-language: c
+language: cpp
 matrix:
   include:
     - os: linux
@@ -18,7 +18,7 @@ matrix:
           - gnat
     - os: linux
       sudo: false
-      dist: trusty
+      dist: precise
       env: BLD=llvm-3.8
       addons:
         apt:
