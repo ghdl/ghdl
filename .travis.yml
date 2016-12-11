@@ -1,4 +1,4 @@
-language: cpp
+language: c
 matrix:
   include:
     - os: linux
@@ -23,7 +23,7 @@ matrix:
       addons:
         apt:
           packages:
-          - gnat-6
+          - gnat-5
           - llvm-3.8-dev
           - llvm-3.8-tools
           - libedit-dev
