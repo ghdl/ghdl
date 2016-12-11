@@ -72,23 +72,19 @@ param(
 $WorkingDir =		Get-Location
 
 # set default values
-$EnableVerbose =			$PSCmdlet.MyInvocation.BoundParameters["Verbose"]
-$EnableDebug =				$PSCmdlet.MyInvocation.BoundParameters["Debug"]
-if ($EnableVerbose -eq $null)	{	$EnableVerbose =	$false	}
-if ($EnableDebug	 -eq $null)	{	$EnableDebug =		$false	}
-if ($EnableDebug	 -eq $true)	{	$EnableVerbose =	$true		}
+$EnableDebug =		[bool]$PSCmdlet.MyInvocation.BoundParameters["Debug"]
+$EnableVerbose =	[bool]$PSCmdlet.MyInvocation.BoundParameters["Verbose"] -or $EnableDebug
 
 # load modules from GHDL's 'vendors' library directory
 Import-Module $PSScriptRoot\config.psm1 -Verbose:$false -Debug:$false -ArgumentList "OSVVM"
 Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -Debug:$false -ArgumentList @("OSVVM", "$WorkingDir")
 
 # Display help if no command was selected
-$Help = $Help -or (-not ($All -or $OSVVM -or $Clean))
-
-if ($Help)
+if ($Help -or (-not ($All -or $OSVVM -or $Clean)))
 {	Get-Help $MYINVOCATION.InvocationName -Detailed
 	Exit-CompileScript
 }
+
 if ($All)
 {	$OSVVM =			$true
 }

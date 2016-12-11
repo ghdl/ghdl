@@ -22,8 +22,10 @@ case "$BLD" in
   mcode)
     ../configure --prefix="$prefix" ;;
 
-  llvm)
-    ../configure --prefix="$prefix" --with-llvm-config=llvm-config-3.5 ;;
+  llvm-*)
+    llvm_ver=`echo $BLD | sed -e 's/llvm-//'`
+    ../configure --prefix="$prefix" --with-llvm-config=llvm-config-$llvm_ver
+    ;;
 
   *)
     echo "unknown build $BLD"
