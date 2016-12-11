@@ -23,10 +23,10 @@ matrix:
         apt:
           packages:
           - gnat-6
-	  - llvm-3.8-dev
-	  - llvm-3.8-tools
-	  - libedit-dev
-	  - zlib1g-dev
+          - llvm-3.8-dev
+          - llvm-3.8-tools
+          - libedit-dev
+          - zlib1g-dev
 script: ./dist/travis-ci.sh $BLD
 deploy:
   provider: releases
