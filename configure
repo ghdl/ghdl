@@ -197,7 +197,7 @@ esac
 
 # Check if gcc was configured with --enable-default-pie.  In that case -fPIC
 # should be added.
-if gcc --version 2>&1 | grep -q enable-default-pie; then
+if gcc -v 2>&1 | grep -q enable-default-pie; then
     default_pie="yes"
 else
     default_pie="no"
