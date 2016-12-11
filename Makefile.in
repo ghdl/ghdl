@@ -69,7 +69,7 @@ OPT_FLAGS+=-fprofile-arcs -ftest-coverage
 endif
 
 GNATFLAGS=-gnaty3befhkmr -gnatwae -aO. -gnatf -gnat05 $(OPT_FLAGS) $(ADA_FLAGS)
-GRT_FLAGS=$(OPT_FLAGS) -fPIC
+GRT_FLAGS=$(OPT_FLAGS)
 
 WARN_CFLAGS=-Wall
 
