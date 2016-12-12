@@ -992,6 +992,7 @@ package body Ghdlprint is
       Canon.Canon_Flag_Concurrent_Stmts := False;
       Canon.Canon_Flag_Configurations := False;
       Canon.Canon_Flag_Specification_Lists := False;
+      Canon.Canon_Flag_Associations := False;
 
       --  Parse all files.
       for I in Args'Range loop

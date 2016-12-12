@@ -871,6 +871,10 @@ package body Canon is
 
       Found : Boolean;
    begin
+      if not Canon_Flag_Associations then
+         return Association_Chain;
+      end if;
+
       --  No argument, so return now.
       if Interface_Chain = Null_Iir then
          pragma Assert (Association_Chain = Null_Iir);

@@ -31,6 +31,9 @@ package Canon is
    --  If true, canon configuration.
    Canon_Flag_Configurations : Boolean := True;
 
+   --  If true, canon associations (reorder, add open associations).
+   Canon_Flag_Associations : Boolean := True;
+
    --  If true, canon lists in specifications.
    Canon_Flag_Specification_Lists : Boolean := True;
 
