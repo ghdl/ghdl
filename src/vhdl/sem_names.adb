@@ -1898,27 +1898,31 @@ package body Sem_Names is
       --  Analyze SUB_NAME.NAME as a selected element.
       procedure Sem_As_Selected_Element (Sub_Name : Iir)
       is
-         Base_Type : Iir;
+         Name_Type : Iir;
          Ptr_Type : Iir;
          Rec_El : Iir;
          R : Iir;
          Se : Iir;
       begin
          --  FIXME: if not is_expr (sub_name) return.
-         Base_Type := Get_Base_Type (Get_Type (Sub_Name));
-         if Get_Kind (Base_Type) = Iir_Kind_Access_Type_Definition then
-            Ptr_Type := Base_Type;
-            Base_Type := Get_Base_Type (Get_Designated_Type (Base_Type));
+         Name_Type := Get_Type (Sub_Name);
+         if Kind_In (Name_Type, Iir_Kind_Access_Type_Definition,
+                     Iir_Kind_Access_Subtype_Definition)
+         then
+            Ptr_Type := Name_Type;
+            Name_Type := Get_Designated_Type (Name_Type);
          else
             Ptr_Type := Null_Iir;
          end if;
 
-         if Get_Kind (Base_Type) /= Iir_Kind_Record_Type_Definition then
+         if not Kind_In (Name_Type, Iir_Kind_Record_Type_Definition,
+                         Iir_Kind_Record_Subtype_Definition)
+         then
             return;
          end if;
 
          Rec_El := Find_Name_In_List
-           (Get_Elements_Declaration_List (Base_Type), Suffix);
+           (Get_Elements_Declaration_List (Name_Type), Suffix);
          if Rec_El = Null_Iir then
             return;
          end if;

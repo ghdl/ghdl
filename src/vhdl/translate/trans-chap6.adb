@@ -816,8 +816,9 @@ package body Trans.Chap6 is
    function Translate_Selected_Element
      (Prefix : Mnode; El : Iir_Element_Declaration) return Mnode
    is
-      El_Info       : constant Field_Info_Acc := Get_Info (El);
-      El_Type       : constant Iir := Get_Type (El);
+      Base_El : constant Iir := Get_Base_Element_Declaration (El);
+      El_Info       : constant Field_Info_Acc := Get_Info (Base_El);
+      El_Type       : constant Iir := Get_Type (Base_El);
       El_Tinfo      : constant Type_Info_Acc := Get_Info (El_Type);
       Kind          : constant Object_Kind_Type := Get_Object_Kind (Prefix);
       Stable_Prefix : Mnode;
