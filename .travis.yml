@@ -14,7 +14,7 @@ matrix:
       dist: precise
       env:
         - BLD=llvm-3.8
-        - CXX=clang++-3.8
+        - CLANGXX=clang++-3.8
       addons:
         apt:
           sources:
