@@ -11,6 +11,20 @@ matrix:
         - sudo apt-get install -y llvm-3.5-dev llvm-3.5-tools libedit-dev
     - os: linux
       sudo: false
+      dist: precise
+      env: BLD=llvm-3.8
+      addons:
+        apt:
+          sources:
+          - ubuntu-toolchain-r-test
+          - llvm-toolchain-precise-3.8
+          packages:
+          - gnat-6
+          - llvm-3.8-dev
+          - zlib1g-dev
+          - libedit-dev
+    - os: linux
+      sudo: false
       env: BLD=mcode
       addons:
         apt:
