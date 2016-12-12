@@ -1485,6 +1485,21 @@ package body Sem is
               Are_Trees_Chain_Equal (Get_Parameter_Association_Chain (Left),
                                      Get_Parameter_Association_Chain (Right));
 
+         when Iir_Kind_Association_Element_By_Expression =>
+            return Are_Trees_Equal (Get_Actual (Left), Get_Actual (Right))
+              and then Are_Trees_Equal (Get_Formal (Left), Get_Formal (Right))
+              and then Are_Trees_Equal (Get_In_Conversion (Left),
+                                        Get_In_Conversion (Right))
+              and then Are_Trees_Equal (Get_Out_Conversion (Left),
+                                        Get_Out_Conversion (Right));
+
+         when Iir_Kind_Type_Conversion =>
+            return Are_Trees_Equal (Get_Type_Mark (Left),
+                                    Get_Type_Mark (Right))
+              and then
+              Are_Trees_Equal (Get_Expression (Left),
+                               Get_Expression (Right));
+
          when Iir_Kind_Access_Type_Definition
            | Iir_Kind_Record_Type_Definition
            | Iir_Kind_Array_Type_Definition
