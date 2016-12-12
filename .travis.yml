@@ -20,6 +20,7 @@ matrix:
           - llvm-toolchain-precise-3.8
           packages:
           - gnat-6
+          - libstdc++-6-dev
           - clang-3.8
           - llvm-3.8-dev
           - zlib1g-dev
