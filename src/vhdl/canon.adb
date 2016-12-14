@@ -1023,6 +1023,10 @@ package body Canon is
       Last : Iir;
       Assoc, El : Iir;
    begin
+      if not Canon_Flag_Associations then
+         return Null_Iir;
+      end if;
+
       El := Interface_Chain;
       Sub_Chain_Init (Res, Last);
       while El /= Null_Iir loop
