@@ -5,11 +5,10 @@ init:
 
 install:
   - ps: Write-Host "Installing requirements after reboot ..."
-  - ps: dir "c:\"
+#  - ps: dir "c:\"
   - ps: c:\msys64\usr\bin\pacman -V
 #  - ps: c:\msys64\usr\bin\pacman -Syuu --noconfirm
   - ps: c:\msys64\usr\bin\pacman -Q
-  - ps: c:\msys64\usr\bin\pacman -S mingw-w64-x86_64-gcc-ada --noconfirm
   - ps: c:\msys64\usr\bin\pacman -S mingw-w64-x86_64-llvm35 --noconfirm
   - ps: pwd
   - ps: mkdir build\mingw64-llvm
