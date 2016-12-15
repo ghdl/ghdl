@@ -240,6 +240,8 @@ package body Iirs_Utils is
                Adecl := Get_Named_Entity (Adecl);
             when Iir_Kind_Attribute_Name =>
                return Get_Named_Entity (Adecl);
+            when Iir_Kind_Error =>
+               return Adecl;
             when others =>
                Error_Kind ("get_object_prefix", Adecl);
          end case;

@@ -1992,21 +1992,44 @@ package body Sem_Assocs is
       Actual := Get_Actual (Assoc);
       In_Conv := Null_Iir;
       if Get_Kind (Inter) /= Iir_Kind_Interface_Constant_Declaration then
-         case Get_Kind (Actual) is
-            when Iir_Kind_Function_Call =>
-               Expr := Get_Parameter_Association_Chain (Actual);
-               if Is_Conversion_Function (Expr) then
-                  In_Conv := Actual;
-                  Actual := Get_Actual (Expr);
+         declare
+            --  Actual before the extraction of the conversion.
+            Prev_Actual : constant Iir := Actual;
+         begin
+            --  Extract conversion and new actual (conv_expr).
+            case Get_Kind (Actual) is
+               when Iir_Kind_Function_Call =>
+                  Expr := Get_Parameter_Association_Chain (Actual);
+                  if Is_Conversion_Function (Expr) then
+                     In_Conv := Actual;
+                     Actual := Get_Actual (Expr);
+                  end if;
+               when Iir_Kind_Type_Conversion =>
+                  if Flags.Vhdl_Std > Vhdl_87 then
+                     In_Conv := Actual;
+                     Actual := Get_Expression (Actual);
+                  end if;
+               when others =>
+                  null;
+            end case;
+
+            --  There could be an ambiguity between a conversion and a normal
+            --  actual expression.  Check if the new actual is an object and
+            --  if the object is of the corresponding class.
+            if Is_Valid (In_Conv) then
+               if Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration then
+                  if not Is_Signal_Object (Actual) then
+                     --  Actual is not a signal object.  This is not a
+                     --  conversion but a regular association.
+                     In_Conv := Null_Iir;
+                     Actual := Prev_Actual;
+                  end if;
+               else
+                  --  Variable: let as is.
+                  null;
                end if;
-            when Iir_Kind_Type_Conversion =>
-               if Flags.Vhdl_Std > Vhdl_87 then
-                  In_Conv := Actual;
-                  Actual := Get_Expression (Actual);
-               end if;
-            when others =>
-               null;
-         end case;
+            end if;
+         end;
       end if;
 
       --  4 cases: F:out_conv, G:in_conv.
