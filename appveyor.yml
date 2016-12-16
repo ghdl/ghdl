@@ -20,4 +20,10 @@ install:
   - ps: C:\msys64\usr\bin\pacman -S mingw-w64-x86_64-llvm35 --noconfirm
   - ps: mkdir build\mingw64-llvm | cd; c:\msys64\usr\bin\bash.exe -c "../../configure --prefix=C:\Tools\GHDL-0.34-dev-mingw64-llvm --with-llvm-config"
 
+build_script:
+  - ps: cd build\mingw64-llvm; make
+
+test_script:
+  - ps: cd dist; bash -c "pwd; ./testsuite.sh"
+	
 build: off
