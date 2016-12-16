@@ -24,6 +24,6 @@ build_script:
   - ps: cd build\mingw64-llvm; make
 
 test_script:
-  - ps: cd dist; bash -c "pwd; ./testsuite.sh"
+  - ps: cd dist; bash -c 'pwd;./testsuite.sh'
 	
 build: off
