@@ -12,6 +12,7 @@ install:
   - ps: c:\msys64\usr\bin\pacman -Q
   - ps: c:\msys64\usr\bin\pacman -S mingw-w64-x86_64-llvm35 --noconfirm
   - ps: pwd
+  - ps: $env:PATH += ";C:\msys64\mingw64"
   - ps: mkdir build\mingw64-llvm
   - ps: cd build\mingw64-llvm; c:\msys64\usr\bin\bash.exe -c ../../configure --prefix=C:\Tools\GHDL-0.34-dev-mingw64-llvm --with-llvm-config
 
