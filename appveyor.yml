@@ -11,25 +11,14 @@ version: 0.34-dev-{build}
 
 init:
   - ps: Write-Host "Initializing virtual machine ..."
-  - ps: $env:PATH = "C:\msys64\mingw64\bin;" + $env:PATH
+  - ps: $env:PATH = "C:\msys64\mingw64\bin;C:\msys64\usr\bin;" + $env:PATH
 
 install:
   - ps: Write-Host "Installing dependencies ..."
-  - '%APPVEYOR_BUILD_FOLDER%\dist\appveyor.install.cmd
-#  - ps: dir "c:\"
-#  - ps: Write-Host $env:PATH
   - ps: C:\msys64\usr\bin\pacman -V
-#  - ps: C:\msys64\usr\bin\pacman -Syuu --noconfirm
+  - ps: C:\msys64\usr\bin\pacman -Syu --noconfirm
   - ps: C:\msys64\usr\bin\pacman -Q
   - ps: C:\msys64\usr\bin\pacman -S mingw-w64-x86_64-llvm35 --noconfirm
-#  - ps: pwd
-#  - ps: $env:PATH += ";C:\msys64\mingw64\bin"
   - ps: mkdir build\mingw64-llvm | cd; c:\msys64\usr\bin\bash.exe -c "../../configure --prefix=C:\Tools\GHDL-0.34-dev-mingw64-llvm --with-llvm-config"
-
-#build_script:
-#  - '%APPVEYOR_BUILD_FOLDER%\dist\appveyor.build.cmd
-
-#test_script:
-#  - '%APPVEYOR_BUILD_FOLDER%\dist\appveyor.test.cmd
 
 build: off
