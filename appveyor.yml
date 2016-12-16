@@ -21,7 +21,6 @@ install:
   - ps: Write-Host $env:PATH
   - ps: $env:PATH.Split(";") | % { Write-Host $_}
   - ps: C:\msys64\usr\bin\pacman -S mingw-w64-x86_64-llvm35 --noconfirm
-  - ps: $env:PATH = $env:PATH.Split(";") | % { if (-not $_.Contains("14")) { $_ } else {Write-Host $_ -Foreground Yellow}}
   - ps: mkdir build\mingw64-llvm | cd; c:\msys64\usr\bin\bash.exe -c "../../configure --prefix=C:\Tools\GHDL-0.34-dev-mingw64-llvm --with-llvm-config"
   - ps: c:\msys64\usr\bin\bash.exe -c "make"
   - ps: cd ..\..\dist; c:\msys64\usr\bin\bash.exe -c "pwd;./testsuite.sh"
