@@ -17,8 +17,8 @@ install:
   - ps: Write-Host "Installing dependencies ..."
   - ps: C:\msys64\usr\bin\pacman -V
 #  - ps: C:\msys64\usr\bin\pacman -Q
-  - ps: $env:PATH.Split(";") | % { Write-Host $_}
-  - ps: $env:PATH.Split(";") | % { if (-not $_.Contains("Program Files (x86)")) { $_ } else {Write-Host $_ -Foreground Yellow}} | % { Write-Host $_ -Foreground Green }
+#  - ps: $env:PATH.Split(";") | % { Write-Host $_}
+  - ps: $env:PATH = $env:PATH.Split(";") | % { if (-not $_.Contains("Program Files (x86)")) { $_ } else {Write-Host $_ -Foreground Yellow}}
   - ps: C:\msys64\usr\bin\pacman -S mingw-w64-x86_64-llvm35 --noconfirm
   - ps: mkdir build\mingw64-llvm | cd; c:\msys64\usr\bin\bash.exe -c "../../configure --prefix=C:\Tools\GHDL-0.34-dev-mingw64-llvm --with-llvm-config"
   - ps: make
