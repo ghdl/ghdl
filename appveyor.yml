@@ -25,12 +25,7 @@ install:
 #  - ps: c:\msys64\usr\bin\bash.exe -c "../../configure --prefix=C:\Tools\GHDL-0.34-dev-mingw64-llvm --with-llvm-config"
   - ps: mkdir build\mingw64-mcode | cd
   - ps: c:\msys64\usr\bin\bash.exe -c "../../configure --prefix=C:\Tools\GHDL-0.34-dev-mingw64-mcode"
-  - ps: c:\msys64\mingw64\bin\gcc.exe -v
-  - ps: c:\msys64\mingw64\bin\cpp.exe -v
-  - ps: c:\msys64\mingw64\bin\g++.exe -v
-  - ps: c:\msys64\mingw64\bin\gcc.exe -print-search-dirs
-  - ps: c:\msys64\mingw64\bin\cpp.exe -print-search-dirs
-  - ps: c:\msys64\mingw64\bin\g++.exe -print-search-dirs
+  - ps: ..\..\dist\appveyor.debug.ps1
   - ps: cd ..\..\dist; c:\msys64\usr\bin\bash.exe -c "pwd;./testsuite.sh"
 
 #build_script:
