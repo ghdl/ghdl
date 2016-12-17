@@ -26,6 +26,7 @@ install:
 #  - ps: mkdir build\mingw64-mcode | cd
 #  - ps: c:\msys64\usr\bin\bash.exe -c "../../configure --prefix=C:\Tools\GHDL-0.34-dev-mingw64-mcode"
   - ps: ..\..\dist\appveyor.debug.ps1
+  - ps: c:\msys64\usr\bin\make.exe
   - ps: cd ..\..\dist; c:\msys64\usr\bin\bash.exe -c "pwd;./testsuite.sh"
 
 #build_script:
