@@ -47,6 +47,8 @@ function Restore-NativeCommandStream
 }
 
 Write-Host "Building GHDL and libraries..."
+cd "$($env:APPVEYOR_BUILD_FOLDER)\build\mingw64-llvm"
 c:\msys64\usr\bin\make.exe 2>&1 | Restore-NativeCommandStream | %{ "$_" }
 
+cd $env:APPVEYOR_BUILD_FOLDER
 exit 0

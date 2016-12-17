@@ -14,22 +14,15 @@ init:
   - ps: $env:PATH = "C:\msys64\mingw64\bin;C:\msys64\usr\bin;" + $env:PATH
 
 install:
-  - ps: Write-Host "Installing dependencies ..."
-  - ps: C:\msys64\usr\bin\pacman -V
-#  - ps: C:\msys64\usr\bin\pacman -Q
-#  - ps: $env:PATH = ($env:PATH.Split(";") | % { if (-not $_.Contains("Program Files (x86)")) { $_ } }) -join ";"
-#  - ps: Write-Host $env:PATH
-#  - ps: $env:PATH.Split(";") | % { Write-Host $_}
-  - ps: C:\msys64\usr\bin\pacman -S mingw-w64-x86_64-llvm35 mingw-w64-x86_64-clang35 --noconfirm
+  - ps: .\dist\appveyor.install.ps1
   - ps: .\dist\appveyor.info.ps1
 
 before_build:
-  - ps: mkdir build\mingw64-llvm | cd
-  - ps: c:\msys64\usr\bin\bash.exe -c "../../configure --prefix=C:\Tools\GHDL-0.34-dev-mingw64-llvm --with-llvm-config" 2>&1 | %{ "$_" }
+  - ps: .\dist\appveyor.configure.ps1
 
 build: off
 build_script:
-  - ps: .\dist\appveyor.info.ps1
+  - ps: .\dist\appveyor.build.ps1
 
 test_script:
   - ps: pwd
