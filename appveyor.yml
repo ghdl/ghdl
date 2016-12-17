@@ -27,14 +27,6 @@ version: 0.34-dev-{build}
 #      secure: $#(JFDA)jQ@#$
 
 # clone_folder: c:\projects\ghdl
-#environment:
-#  matrix:
-#  - COMPILER: msys2
-#  - PLATFORM: x64
-#  - MSYS2_ARCH: x86_64
-#  - MSYS2_DIR: msys64
-#  - MSYSTEM: MINGW64
-#  - BIT: 64
 
 # ==============================================================================
 # Build flow configuration
@@ -43,24 +35,24 @@ version: 0.34-dev-{build}
 init:
   - ps: Write-Host "Initializing virtual machine ..."
   - ps: $env:PATH = "C:\msys64\mingw64\bin;C:\msys64\usr\bin;" + $env:PATH
-#  - ps: Import-Module .\dist\appveyor.psm1 -Verbose
+#  - ps: Import-Module .\dist\appveyor\shared.psm1 -Verbose
 
 # installation scripts to run
 install:
-  - ps: .\dist\appveyor.install.ps1
-  - ps: .\dist\appveyor.info.ps1
+  - ps: .\dist\appveyor\install.ps1
+  - ps: .\dist\appveyor\info.ps1
 
 # Build flow
 # --------------------------------------
 # scripts to run before builds
 before_build:
-  - ps: .\dist\appveyor.configure.ps1
+  - ps: .\dist\appveyor\configure.ps1
 
 # Disable MSBuild
 build: off
 # build scripts to run
 build_script:
-  - ps: .\dist\appveyor.build.ps1
+  - ps: .\dist\appveyor\build.ps1
 
 # scripts to run after builds
 #after_build:
@@ -69,11 +61,11 @@ build_script:
 # --------------------------------------
 # scripts to run before tests
 before_test:
-  - ps: .\dist\appveyor.setup.ps1
+  - ps: .\dist\appveyor\setup.ps1
 
 # test scripts to run
 test_script:
-  - ps: .\dist\appveyor.test.ps1
+  - ps: .\dist\appveyor\test.ps1
 
 # scripts to run after tests
 #after_test:

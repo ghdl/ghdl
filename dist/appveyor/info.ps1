@@ -46,16 +46,15 @@ function Restore-NativeCommandStream
 	}
 }
 
-Write-Host "Configuring GHDL for MinGW64, LLVM-3.5..."
-
-$GHDL_BUILD_DIR =  "$($env:APPVEYOR_BUILD_FOLDER)\build\mingw64-llvm"
-$GHDL_PREFIX_DIR = "/c/Tools/GHDL/0.34-dev-mingw64-llvm"
-
-$env:GHDL_BUILD_DIR =  $GHDL_BUILD_DIR
-$env:GHDL_PREFIX_DIR = $GHDL_PREFIX_DIR
-
-mkdir $GHDL_BUILD_DIR | cd
-c:\msys64\usr\bin\bash.exe -c "../../configure --prefix=$GHDL_PREFIX_DIR --with-llvm-config" 2>&1 | Restore-NativeCommandStream | %{ "$_" }
-
-cd $env:APPVEYOR_BUILD_FOLDER
-exit 0
+Write-Host "List env:..." -Foreground Yellow
+dir env:
+Write-Host "Print env:PATH..." -Foreground Yellow
+$env:PATH.Split(";") | % { Write-Host "  $_" }
+Write-Host "Print GCC setup..." -Foreground Yellow
+c:\msys64\mingw64\bin\gcc.exe -v 2>&1 | Restore-NativeCommandStream | %{ "$_" }
+Write-Host "Print GCC search directories..." -Foreground Yellow
+c:\msys64\mingw64\bin\gcc.exe -print-search-dirs 2>&1 | Restore-NativeCommandStream | %{ "$_" }
+Write-Host "Print CLang setup..." -Foreground Yellow
+c:\msys64\mingw64\bin\clang.exe -v 2>&1 | Restore-NativeCommandStream | %{ "$_" }
+Write-Host "Print CLang search directories..." -Foreground Yellow
+c:\msys64\mingw64\bin\clang.exe -print-search-dirs 2>&1 | Restore-NativeCommandStream | %{ "$_" }

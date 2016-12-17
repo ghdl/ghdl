@@ -46,9 +46,13 @@ function Restore-NativeCommandStream
 	}
 }
 
-Write-Host "Building GHDL and libraries..."
-cd $env:GHDL_BUILD_DIR
-c:\msys64\usr\bin\make.exe 2>&1 | Restore-NativeCommandStream | %{ "$_" }
+Write-Host "Building GHDL and libraries..." -Foreground Yellow
+cd "$($env:APPVEYOR_BUILD_FOLDER)\testsuite"
+
+# Use a MinGW compatible path
+$env:GHDL="$($env:GHDL_PREFIX_DIR)/bin/ghdl.exe"
+
+c:\msys64\usr\bin\bash.exe -c "./testsuite.sh" 2>&1 | Restore-NativeCommandStream | %{ "$_" }
 
 cd $env:APPVEYOR_BUILD_FOLDER
 exit 0
