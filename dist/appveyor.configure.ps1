@@ -47,7 +47,7 @@ function Restore-NativeCommandStream
 }
 
 Write-Host "Configuring GHDL for MinGW64, LLVM-3.5..."
-mkdir "$($env:APPVEYOR_BUILD_FOLDER)build\mingw64-llvm" | cd
+mkdir "$($env:APPVEYOR_BUILD_FOLDER)\build\mingw64-llvm" | cd
 c:\msys64\usr\bin\bash.exe -c "../../configure --prefix=C:\Tools\GHDL-0.34-dev-mingw64-llvm --with-llvm-config" 2>&1 | Restore-NativeCommandStream | %{ "$_" }
 
 cd $env:APPVEYOR_BUILD_FOLDER
