@@ -43,7 +43,7 @@ version: 0.34-dev-{build}
 init:
   - ps: Write-Host "Initializing virtual machine ..."
   - ps: $env:PATH = "C:\msys64\mingw64\bin;C:\msys64\usr\bin;" + $env:PATH
-  - ps: Import-Module .\dist\appveyor.psm1 -Verbose
+#  - ps: Import-Module .\dist\appveyor.psm1 -Verbose
 
 # installation scripts to run
 install:
