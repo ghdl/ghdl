@@ -137,7 +137,7 @@ std.v87: $(ANALYZE_DEP) $(LIB87_DIR) $(STD87_SRCS) force
 	$(RM) -rf $(STD87_DIR)
 	mkdir $(STD87_DIR)
 	cd $(STD87_DIR); \
-  echo "--" $(PWD) "--" pwd "--"; \
+  echo "PWD=$(PWD)"; \
 	for i in $(STD87_BSRCS); do \
 	  cmd="$(ANALYZE87) --bootstrap --work=std ../../src/$$i"; \
 	  echo $$cmd; eval $$cmd || exit 1; \

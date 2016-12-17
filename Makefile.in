@@ -105,6 +105,7 @@ version.tmp: $(srcdir)/src/version.in force
 	  $(SED) -e "s/[(].*[)]/($$desc)/" < $< > $@; \
 	else \
 	  $(CP) $< $@; \
+    echo "PWD=$(PWD)"; \
 	fi
 
 version.ads: version.tmp
