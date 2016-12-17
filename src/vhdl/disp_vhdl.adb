@@ -303,7 +303,7 @@ package body Disp_Vhdl is
             declare
                Origin : constant Iir := Get_Range_Origin (Rng);
             begin
-               if Origin /= Null_Iir then
+               if Dump_Origin_Flag and then Origin /= Null_Iir then
                   Disp_Expression (Origin);
                else
                   Disp_Expression (Get_Left_Limit (Rng));
@@ -2649,21 +2649,21 @@ package body Disp_Vhdl is
       case Get_Kind (Expr) is
          when Iir_Kind_Integer_Literal =>
             Orig := Get_Literal_Origin (Expr);
-            if Orig /= Null_Iir then
+            if Dump_Origin_Flag and then Orig /= Null_Iir then
                Disp_Expression (Orig);
             else
                Disp_Int64 (Get_Value (Expr));
             end if;
          when Iir_Kind_Floating_Point_Literal =>
             Orig := Get_Literal_Origin (Expr);
-            if Orig /= Null_Iir then
+            if Dump_Origin_Flag and then Orig /= Null_Iir then
                Disp_Expression (Orig);
             else
                Disp_Fp64 (Get_Fp_Value (Expr));
             end if;
          when Iir_Kind_String_Literal8 =>
             Orig := Get_Literal_Origin (Expr);
-            if Orig /= Null_Iir then
+            if Dump_Origin_Flag and then Orig /= Null_Iir then
                Disp_Expression (Orig);
             else
                Disp_String_Literal
@@ -2677,7 +2677,7 @@ package body Disp_Vhdl is
          when Iir_Kind_Physical_Fp_Literal
            | Iir_Kind_Physical_Int_Literal =>
             Orig := Get_Literal_Origin (Expr);
-            if Orig /= Null_Iir then
+            if Dump_Origin_Flag and then Orig /= Null_Iir then
                Disp_Expression (Orig);
             else
                Disp_Physical_Literal (Expr);
@@ -2688,14 +2688,14 @@ package body Disp_Vhdl is
             Disp_Identifier (Expr);
          when Iir_Kind_Enumeration_Literal =>
             Orig := Get_Literal_Origin (Expr);
-            if Orig /= Null_Iir then
+            if Dump_Origin_Flag and then Orig /= Null_Iir then
                Disp_Expression (Orig);
             else
                Disp_Name_Of (Expr);
             end if;
          when Iir_Kind_Overflow_Literal =>
             Orig := Get_Literal_Origin (Expr);
-            if Orig /= Null_Iir then
+            if Dump_Origin_Flag and then Orig /= Null_Iir then
                Disp_Expression (Orig);
             else
                Put ("*OVERFLOW*");
@@ -2709,7 +2709,7 @@ package body Disp_Vhdl is
             Put ("null");
          when Iir_Kind_Simple_Aggregate =>
             Orig := Get_Literal_Origin (Expr);
-            if Orig /= Null_Iir then
+            if Dump_Origin_Flag and then Orig /= Null_Iir then
                Disp_Expression (Orig);
             else
                Disp_Simple_Aggregate (Expr);

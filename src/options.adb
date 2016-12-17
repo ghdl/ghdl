@@ -143,6 +143,8 @@ package body Options is
          Dump_Canon := True;
       elsif Opt = "-da" then
          Dump_Annotate := True;
+      elsif Opt = "-do" then
+         Dump_Origin_Flag := False;
       elsif Opt = "--dall" then
          Dump_All := True;
       elsif Opt = "-dstats" then
