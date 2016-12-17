@@ -2032,6 +2032,41 @@ package body Evaluation is
       end;
    end Eval_Value_Attribute;
 
+   function Eval_Selected_Element (Expr : Iir) return Iir
+   is
+      Selected_El : constant Iir := Get_Selected_Element (Expr);
+      El_Pos : constant Iir_Index32 := Get_Element_Position (Selected_El);
+      Prefix : Iir;
+      Cur_Pos : Iir_Index32;
+      Assoc : Iir;
+   begin
+      Prefix := Get_Prefix (Expr);
+      Prefix := Eval_Static_Expr (Prefix);
+      pragma Assert (Get_Kind (Prefix) = Iir_Kind_Aggregate);
+      Assoc := Get_Association_Choices_Chain (Prefix);
+      Cur_Pos := 0;
+      loop
+         case Get_Kind (Assoc) is
+            when Iir_Kind_Choice_By_None =>
+               exit when Cur_Pos = El_Pos;
+               Cur_Pos := Cur_Pos + 1;
+            when Iir_Kind_Choice_By_Name =>
+               declare
+                  Choice : constant Iir := Get_Choice_Name (Assoc);
+               begin
+                  exit when Get_Element_Position (Get_Named_Entity (Choice))
+                    = El_Pos;
+               end;
+            when Iir_Kind_Choice_By_Others =>
+               exit;
+            when others =>
+               Error_Kind ("eval_selected_element", Assoc);
+         end case;
+         Assoc := Get_Chain (Assoc);
+      end loop;
+      return Get_Associated_Expr (Assoc);
+   end Eval_Selected_Element;
+
    function Eval_Static_Expr (Expr: Iir) return Iir
    is
       Res : Iir;
@@ -2071,6 +2106,11 @@ package body Evaluation is
             return Get_Physical_Literal (Expr);
          when Iir_Kind_Simple_Aggregate =>
             return Expr;
+         when Iir_Kind_Aggregate =>
+            return Expr;
+
+         when Iir_Kind_Selected_Element =>
+            return Eval_Selected_Element (Expr);
 
          when Iir_Kind_Parenthesis_Expression =>
             return Eval_Static_Expr (Get_Expression (Expr));
@@ -2394,7 +2434,12 @@ package body Evaluation is
    function Eval_Expr_If_Static (Expr : Iir) return Iir is
    begin
       if Expr /= Null_Iir and then Get_Expr_Staticness (Expr) = Locally then
-         return Eval_Expr_Keep_Orig (Expr, False);
+         --  Evaluate only scalar expressions.
+         if Get_Kind (Get_Type (Expr)) in Iir_Kinds_Scalar_Type_Definition then
+            return Eval_Expr_Keep_Orig (Expr, False);
+         else
+            return Expr;
+         end if;
       else
          return Expr;
       end if;

@@ -3008,7 +3008,8 @@ package body Sem_Expr is
          end if;
       end loop;
       Set_Value_Staticness (Aggr, Value_Staticness);
-      Set_Expr_Staticness (Aggr, Min (Globally, Value_Staticness));
+      Set_Expr_Staticness (Aggr, Min (Get_Expr_Staticness (Aggr),
+                                      Value_Staticness));
       return Ok;
    end Sem_Record_Aggregate;
 
@@ -3073,6 +3074,7 @@ package body Sem_Expr is
       Index_Constraint : Iir_Range_Expression; -- FIXME: 'range.
       Dir : Iir_Direction;
       Choice_Staticness : Iir_Staticness;
+      Value_Staticness : Iir_Staticness;
 
       Info : Array_Aggr_Info renames Infos (Dim);
    begin
@@ -3334,6 +3336,7 @@ package body Sem_Expr is
       end if;
 
       --  Analyze aggregate elements.
+      Value_Staticness := Locally;
       if Dim = Get_Nbr_Elements (Index_List) then
          --  A type has been found for AGGR, analyze AGGR as if it was
          --  an aggregate with a subtype (and not a string).
@@ -3349,20 +3352,15 @@ package body Sem_Expr is
             Element_Type : constant Iir := Get_Element_Subtype (A_Type);
             El : Iir;
             Expr : Iir;
-            Value_Staticness : Iir_Staticness;
-            Expr_Staticness : Iir_Staticness;
+            El_Staticness : Iir_Staticness;
          begin
             El := Assoc_Chain;
-            Value_Staticness := Locally;
             while El /= Null_Iir loop
                Expr := Get_Associated_Expr (El);
                if Expr /= Null_Iir then
                   Expr := Sem_Expression (Expr, Element_Type);
                   if Expr /= Null_Iir then
-                     Expr_Staticness := Get_Expr_Staticness (Expr);
-                     Set_Expr_Staticness (Aggr,
-                                          Min (Get_Expr_Staticness (Aggr),
-                                               Expr_Staticness));
+                     El_Staticness := Get_Expr_Staticness (Expr);
                      Expr := Eval_Expr_If_Static (Expr);
                      Set_Associated_Expr (El, Expr);
 
@@ -3378,23 +3376,20 @@ package body Sem_Expr is
                      --     Expr_Staticness := Get_Value_Staticness (Expr);
                      --  end if;
                      Value_Staticness := Min (Value_Staticness,
-                                              Expr_Staticness);
+                                              El_Staticness);
                   else
                      Info.Error := True;
                   end if;
                end if;
                El := Get_Chain (El);
             end loop;
-            Set_Value_Staticness (Aggr, Value_Staticness);
          end;
       else
          declare
             Assoc : Iir;
-            Value_Staticness : Iir_Staticness;
          begin
             Assoc := Null_Iir;
             Choice := Assoc_Chain;
-            Value_Staticness := Locally;
             while Choice /= Null_Iir loop
                if Get_Associated_Expr (Choice) /= Null_Iir then
                   Assoc := Get_Associated_Expr (Choice);
@@ -3420,9 +3415,12 @@ package body Sem_Expr is
                end case;
                Choice := Get_Chain (Choice);
             end loop;
-            Set_Value_Staticness (Aggr, Value_Staticness);
          end;
       end if;
+      Set_Value_Staticness (Aggr, Value_Staticness);
+      Set_Expr_Staticness (Aggr, Min (Get_Expr_Staticness (Aggr),
+                                      Min (Value_Staticness,
+                                           Choice_Staticness)));
    end Sem_Array_Aggregate_Type_1;
 
    --  Analyze an array aggregate whose type is AGGR_TYPE.
@@ -3523,8 +3521,14 @@ package body Sem_Expr is
    begin
       pragma Assert (A_Type /= Null_Iir);
 
-      --  An aggregate is at most globally static.
-      Set_Expr_Staticness (Expr, Globally);
+      if False and Flags.Vhdl_Std >= Vhdl_08 then
+         --  An aggregate can be a locally static primary according to LRM08
+         --  9.4.2 Locally static primaries l) and m).
+         Set_Expr_Staticness (Expr, Locally);
+      else
+         --  An aggregate is at most globally static.
+         Set_Expr_Staticness (Expr, Globally);
+      end if;
 
       Set_Type (Expr, A_Type); -- FIXME: should free old type
       case Get_Kind (A_Type) is
@@ -3535,6 +3539,11 @@ package body Sem_Expr is
             return Sem_Array_Aggregate_Type (Expr, A_Type, False);
          when Iir_Kind_Record_Type_Definition
            | Iir_Kind_Record_Subtype_Definition =>
+            if Flags.Vhdl_Std >= Vhdl_08 then
+               --  An aggregate can be a locally static primary according to
+               --  LRM08 9.4.2 Locally static primaries l) and m).
+               Set_Expr_Staticness (Expr, Locally);
+            end if;
             if not Sem_Record_Aggregate (Expr, A_Type) then
                return Null_Iir;
             end if;

@@ -114,13 +114,9 @@ package body Trans.Chap7 is
          return False;
       end if;
 
-      if Get_Expr_Staticness (Decl) = Locally then
-         return True;
-      end if;
-
-      --  Only aggregates are handled.
+      --  Only aggregates are specially handled.
       if Get_Kind (Expr) /= Iir_Kind_Aggregate then
-         return False;
+         return Get_Expr_Staticness (Decl) = Locally;
       end if;
 
       Atype := Get_Type (Decl);
