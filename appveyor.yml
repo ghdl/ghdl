@@ -21,19 +21,18 @@ install:
 #  - ps: Write-Host $env:PATH
 #  - ps: $env:PATH.Split(";") | % { Write-Host $_}
   - ps: C:\msys64\usr\bin\pacman -S mingw-w64-x86_64-llvm35 mingw-w64-x86_64-clang35 --noconfirm
-  - ps: ..\..\dist\appveyor.debug.ps1
-  - ps: cd ..\..\dist; c:\msys64\usr\bin\bash.exe -c "pwd;./testsuite.sh"
+  - ps: .\dist\appveyor.info.ps1
 
 before_build:
   - ps: pwd
   - ps: mkdir build\mingw64-llvm | cd
   - ps: c:\msys64\usr\bin\bash.exe -c "../../configure --prefix=C:\Tools\GHDL-0.34-dev-mingw64-llvm --with-llvm-config" 2>&1 | %{ "$_" }
 
+build: off
 build_script:
   - ps: pwd
   - ps: c:\msys64\usr\bin\make.exe 2>&1 | %{ "$_" }
 
-
-#test_script:
-
-build: off
+test_script:
+  - ps: pwd
+  - ps: cd ..\..\dist; c:\msys64\usr\bin\bash.exe -c "pwd;./testsuite.sh"
