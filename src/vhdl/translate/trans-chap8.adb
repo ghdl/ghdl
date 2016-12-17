@@ -2587,6 +2587,7 @@ package body Trans.Chap8 is
          else
             --  Caller does not suspend; create the frame variable.
             Start_Declare_Stmt;
+            Open_Local_Temp;
             Mark_Var := Create_Var (Create_Var_Identifier ("CMARK"),
                                     Ghdl_Ptr_Type, O_Storage_Local);
             Params_Var := Create_Var (Create_Var_Identifier ("CPARAMS"),
@@ -3250,6 +3251,7 @@ package body Trans.Chap8 is
             State_Start (Next_State);
          else
             Release_Stack2 (Get_Var (Mark_Var));
+            Close_Local_Temp;
             Finish_Declare_Stmt;
          end if;
       end if;
