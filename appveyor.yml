@@ -25,5 +25,4 @@ build_script:
   - ps: .\dist\appveyor.build.ps1
 
 test_script:
-  - ps: pwd
-  - ps: cd ..\..\dist; c:\msys64\usr\bin\bash.exe -c "pwd;./testsuite.sh"
+  - ps: .\dist\appveyor.test.ps1
