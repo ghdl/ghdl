@@ -41,11 +41,13 @@ IEEE_SRCS := ieee/std_logic_1164.vhdl ieee/std_logic_1164_body.vhdl \
   ieee/numeric_std.vhdl ieee/numeric_std-body.vhdl
 MATH_SRCS := ieee/math_real.vhdl ieee/math_real-body.vhdl \
   ieee/math_complex.vhdl ieee/math_complex-body.vhdl
-VITAL95_BSRCS := vital95/vital_timing.vhdl vital95/vital_timing_body.vhdl \
-  vital95/vital_primitives.vhdl vital95/vital_primitives_body.vhdl
-VITAL2000_BSRCS := vital2000/timing_p.vhdl vital2000/timing_b.vhdl \
-  vital2000/prmtvs_p.vhdl vital2000/prmtvs_b.vhdl \
-  vital2000/memory_p.vhdl vital2000/memory_b.vhdl
+VITAL95_BSRCS := 
+#  vital95/vital_timing.vhdl vital95/vital_timing_body.vhdl \
+#  vital95/vital_primitives.vhdl vital95/vital_primitives_body.vhdl
+VITAL2000_BSRCS := 
+#  vital2000/timing_p.vhdl vital2000/timing_b.vhdl \
+#  vital2000/prmtvs_p.vhdl vital2000/prmtvs_b.vhdl \
+#  vital2000/memory_p.vhdl vital2000/memory_b.vhdl
 SYNOPSYS_BSRCS := synopsys/std_logic_arith.vhdl \
   synopsys/std_logic_unsigned.vhdl \
   synopsys/std_logic_signed.vhdl
