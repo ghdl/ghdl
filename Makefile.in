@@ -36,6 +36,7 @@ build_mode=@build_mode@
 
 INSTALL_PROGRAM=install -m 755
 INSTALL_DATA=install -m 644
+PWD?=$(shell pwd)
 DESTDIR=
 bindir=$(prefix)/bin
 libdir=$(prefix)/lib
