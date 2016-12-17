@@ -1,5 +1,8 @@
 #! /bin/sh
 
+echo "Test skipped"
+exit 0
+
 . ../../testenv.sh
 
 GHDL_STD_FLAGS=--workdir=work1
