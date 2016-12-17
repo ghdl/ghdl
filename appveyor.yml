@@ -78,5 +78,22 @@ test_script:
 # scripts to run after tests
 #after_test:
 
+# ==============================================================================
+# Deployment configuration
+# ==============================================================================
+#deploy:
+#  - provider: GitHub
+#    draft: false
+#    prerelease: false
+#    on:
+#      branch: master
+#      appveyor_repo_tag: true
 
+# scripts to run before deployment
+#before_deploy:
 
+# deployment scripts to run
+#deploy_script:
+
+# scripts to run after deployment
+#after_deploy:
