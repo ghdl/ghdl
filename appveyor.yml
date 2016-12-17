@@ -4,10 +4,10 @@
 # Build names
 version: 0.34-dev-{build}
 # Branches to build
-branches:
-  only:
-    - master
-    - appveyor
+# branches:
+#   only:
+#     - master
+#     - paebbels/appveyor
 
 # ==============================================================================
 # Build matrix configuration
