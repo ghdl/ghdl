@@ -1,4 +1,30 @@
+# ==============================================================================
+# General configuration
+# ==============================================================================
+# Build names
 version: 0.34-dev-{build}
+# Branches to build
+branches:
+  only:
+    - master
+
+# ==============================================================================
+# Build matrix configuration
+# ==============================================================================
+# environment:
+#  global:
+#    connection_string: server=12;password=13;
+#    service_url: https://127.0.0.1:8090
+#
+#  matrix:
+#  - db: mysql
+#    provider: mysql
+#
+#  - db: mssql
+#    provider: mssql
+#    password:
+#      secure: $#(JFDA)jQ@#$
+
 # clone_folder: c:\projects\ghdl
 #environment:
 #  matrix:
@@ -9,20 +35,47 @@ version: 0.34-dev-{build}
 #  - MSYSTEM: MINGW64
 #  - BIT: 64
 
+# ==============================================================================
+# Build flow configuration
+# ==============================================================================
+# initialization scripts to run
 init:
   - ps: Write-Host "Initializing virtual machine ..."
   - ps: $env:PATH = "C:\msys64\mingw64\bin;C:\msys64\usr\bin;" + $env:PATH
+  - ps: Import-Module .\dist\appveyor.psm1 -Verbose
 
+# installation scripts to run
 install:
   - ps: .\dist\appveyor.install.ps1
   - ps: .\dist\appveyor.info.ps1
 
+# Build flow
+# --------------------------------------
+# scripts to run before builds
 before_build:
   - ps: .\dist\appveyor.configure.ps1
 
+# Disable MSBuild
 build: off
+# build scripts to run
 build_script:
   - ps: .\dist\appveyor.build.ps1
 
+# scripts to run after builds
+#after_build:
+
+# Test flow
+# --------------------------------------
+# scripts to run before tests
+before_test:
+  - ps: .\dist\appveyor.setup.ps1
+
+# test scripts to run
 test_script:
   - ps: .\dist\appveyor.test.ps1
+
+# scripts to run after tests
+#after_test:
+
+
+
