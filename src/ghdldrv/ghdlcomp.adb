@@ -489,26 +489,33 @@ package body Ghdlcomp is
       return "--disp-config      Disp tools path";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : in out Command_Dispconfig;
-                             Args : Argument_List)
+   procedure Disp_Config
    is
       use Ada.Text_IO;
       use Libraries;
-      pragma Unreferenced (Cmd);
    begin
-      if Args'Length /= 0 then
-         Error ("--disp-config does not accept any argument");
-         raise Errorout.Option_Error;
-      end if;
-
       Disp_Config_Prefixes;
 
-      Put_Line ("command_name: " & Ada.Command_Line.Command_Name);
       Put_Line ("default library pathes:");
       for I in 2 .. Get_Nbr_Pathes loop
          Put (' ');
          Put_Line (Name_Table.Image (Get_Path (I)));
       end loop;
+   end Disp_Config;
+
+   procedure Perform_Action (Cmd : in out Command_Dispconfig;
+                             Args : Argument_List)
+   is
+      pragma Unreferenced (Cmd);
+      use Ada.Text_IO;
+   begin
+      if Args'Length /= 0 then
+         Error ("--disp-config does not accept any argument");
+         raise Errorout.Option_Error;
+      end if;
+      Put_Line ("command_name: " & Ada.Command_Line.Command_Name);
+
+      Disp_Config;
    end Perform_Action;
 
    --  Command Make.

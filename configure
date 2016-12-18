@@ -25,7 +25,7 @@ PIC_FLAGS=-fPIC
 show_help=no
 progname=$0
 
-subst_vars="CC GNATMAKE CFLAGS LDFLAGS build srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config llvm_be llvm_be_ver backtrace_lib build_mode EXEEXT SOEXT PIC_FLAGS"
+subst_vars="CC GNATMAKE CFLAGS LDFLAGS build srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config llvm_be llvm_be_ver backtrace_lib build_mode EXEEXT SOEXT PIC_FLAGS default_pie"
 
 # Find srcdir
 srcdir=`dirname $progname`
@@ -163,7 +163,7 @@ if test $backend = llvm; then
     fi
     if check_version 3.5 $llvm_version; then
 	llvm_be=llvm
-    elif check_version 3.6 $llvm_version || 
+    elif check_version 3.6 $llvm_version ||
 	 check_version 3.7 $llvm_version ||
          check_version 3.8 $llvm_version;
     then
@@ -194,6 +194,14 @@ case "$build" in
     *darwin*) SOEXT=".dylib"; EXEEXT="";     PIC_FLAGS="";;
     *)        SOEXT=".so";    EXEEXT="";     PIC_FLAGS="-fPIC";;
 esac
+
+# Check if gcc was configured with --enable-default-pie.  In that case -fPIC
+# should be added.
+if gcc -v 2>&1 | grep -q enable-default-pie; then
+    default_pie="yes"
+else
+    default_pie="no"
+fi
 
 # Generate config.status
 rm -f config.status
@@ -266,6 +274,7 @@ sed -e "s%@COMPILER_GCC@%ghdl1-gcc$EXEEXT%" \
     -e "s%@INSTALL_PREFIX@%$prefix%" \
     -e "s%@LIB_PREFIX@%$libdirsuffix%" \
     -e "s%@SOEXT@%$SOEXT%" \
+    -e "s%@default_pie@%$default_pie%" \
     < $srcdir/src/ghdldrv/default_pathes.ads.in > default_pathes.ads
 
 exit 0

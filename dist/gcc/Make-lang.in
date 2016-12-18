@@ -108,6 +108,7 @@ vhdl/default_pathes.ads: Makefile
 	echo "     \"lib/ghdl\";" >> tmp-dpathes.ads
 	echo "   Shared_Library_Extension : constant String :=">> tmp-dpathes.ads
 	echo "     \"$(VHDL_SOEXT)\";" >> tmp-dpathes.ads
+	echo "   Default_Pie : constant Boolean := False;" >> tmp-dpathes.ads
 	echo "end Default_Pathes;" >> tmp-dpathes.ads
 	$(srcdir)/../move-if-change tmp-dpathes.ads $@
 

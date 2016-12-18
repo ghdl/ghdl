@@ -444,6 +444,7 @@ package body Sem_Decls is
       Set_Return_Type (Operation, Return_Type);
       Set_Identifier (Operation, Name);
       Set_Visible_Flag (Operation, True);
+      Set_Pure_Flag (Operation, True);
       Compute_Subprogram_Hash (Operation);
       return Operation;
    end Create_Implicit_Interface_Function;
@@ -489,6 +490,7 @@ package body Sem_Decls is
    procedure Sem_Interface_Subprogram_Declaration (Inter : Iir) is
    begin
       Sem_Subprogram_Specification (Inter);
+      Xref_Decl (Inter);
    end Sem_Interface_Subprogram_Declaration;
 
    procedure Sem_Interface_Chain (Interface_Chain: Iir;

@@ -18,7 +18,7 @@
 with Errorout; use Errorout;
 with Iirs_Utils; use Iirs_Utils;
 with Types; use Types;
-with Flags;
+with Flags; use Flags;
 with Name_Table;
 with Sem;
 with Sem_Inst;
@@ -76,6 +76,7 @@ package body Canon is
 
    function Canon_Conditional_Signal_Assignment
      (Conc_Stmt : Iir; Proc : Iir; Parent : Iir) return Iir;
+   procedure Canon_Conditional_Signal_Assignment_Expression (Stmt : Iir);
 
    procedure Canon_Extract_Sensitivity_Aggregate
      (Aggr : Iir;
@@ -785,6 +786,13 @@ package body Canon is
       end case;
    end Canon_Expression;
 
+   procedure Canon_Expression_If_Valid (Expr : Iir) is
+   begin
+      if Is_Valid (Expr) then
+         Canon_Expression (Expr);
+      end if;
+   end Canon_Expression_If_Valid;
+
    procedure Canon_PSL_Expression (Expr : PSL_Node)
    is
       use PSL.Nodes;
@@ -818,26 +826,34 @@ package body Canon is
       end case;
    end Canon_Discrete_Range;
 
-   --  Extract sensitivity of WAVEFORM, and canon expressions.
-   procedure Canon_Waveform (Waveform : Iir; Sensitivity_List: Iir_List)
+   --  Extract sensitivity of WAVEFORM.
+   procedure Extract_Waveform_Sensitivity
+     (Waveform : Iir; Sensitivity_List: Iir_List)
    is
       We : Iir_Waveform_Element;
    begin
       We := Waveform;
       while We /= Null_Iir loop
-         if Sensitivity_List /= Null_Iir_List then
-            Canon_Extract_Sensitivity
-              (Get_We_Value (We), Sensitivity_List, False);
-         end if;
-         if Canon_Flag_Expressions then
-            Canon_Expression (Get_We_Value (We));
-            if Get_Time (We) /= Null_Iir then
-               Canon_Expression (Get_Time (We));
-            end if;
+         Canon_Extract_Sensitivity
+           (Get_We_Value (We), Sensitivity_List, False);
+         We := Get_Chain (We);
+      end loop;
+   end Extract_Waveform_Sensitivity;
+
+   --  Canon expression of WAVEFORM.
+   procedure Canon_Waveform_Expression (Waveform : Iir)
+   is
+      We : Iir_Waveform_Element;
+   begin
+      We := Waveform;
+      while We /= Null_Iir loop
+         Canon_Expression (Get_We_Value (We));
+         if Get_Time (We) /= Null_Iir then
+            Canon_Expression (Get_Time (We));
          end if;
          We := Get_Chain (We);
       end loop;
-   end Canon_Waveform;
+   end Canon_Waveform_Expression;
 
    -- Names associations by position,
    -- reorder associations by name,
@@ -855,6 +871,10 @@ package body Canon is
 
       Found : Boolean;
    begin
+      if not Canon_Flag_Associations then
+         return Association_Chain;
+      end if;
+
       --  No argument, so return now.
       if Interface_Chain = Null_Iir then
          pragma Assert (Association_Chain = Null_Iir);
@@ -1003,6 +1023,10 @@ package body Canon is
       Last : Iir;
       Assoc, El : Iir;
    begin
+      if not Canon_Flag_Associations then
+         return Null_Iir;
+      end if;
+
       El := Interface_Chain;
       Sub_Chain_Init (Res, Last);
       while El /= Null_Iir loop
@@ -1100,9 +1124,7 @@ package body Canon is
                   Clause := Stmt;
                   while Clause /= Null_Iir loop
                      Cond := Get_Condition (Clause);
-                     if Cond /= Null_Iir then
-                        Canon_Expression (Cond);
-                     end if;
+                     Canon_Expression_If_Valid (Cond);
                      Stmts := Get_Sequential_Statement_Chain (Clause);
                      Stmts := Canon_Sequential_Stmts (Stmts);
                      Set_Sequential_Statement_Chain (Clause, Stmts);
@@ -1112,9 +1134,10 @@ package body Canon is
 
             when Iir_Kind_Simple_Signal_Assignment_Statement =>
                Canon_Expression (Get_Target (Stmt));
-               Canon_Waveform (Get_Waveform_Chain (Stmt), Null_Iir_List);
+               Canon_Waveform_Expression (Get_Waveform_Chain (Stmt));
 
             when Iir_Kind_Conditional_Signal_Assignment_Statement =>
+               Canon_Conditional_Signal_Assignment_Expression (Stmt);
                N_Stmt := Canon_Conditional_Signal_Assignment_Statement (Stmt);
 
             when Iir_Kind_Variable_Assignment_Statement =>
@@ -1127,17 +1150,12 @@ package body Canon is
 
             when Iir_Kind_Wait_Statement =>
                declare
-                  Expr: Iir;
-                  List: Iir_List;
+                  List : Iir_List;
+                  Expr : Iir;
                begin
-                  Expr := Get_Timeout_Clause (Stmt);
-                  if Expr /= Null_Iir then
-                     Canon_Expression (Expr);
-                  end if;
+                  Canon_Expression_If_Valid (Get_Timeout_Clause (Stmt));
                   Expr := Get_Condition_Clause (Stmt);
-                  if Expr /= Null_Iir then
-                     Canon_Expression (Expr);
-                  end if;
+                  Canon_Expression_If_Valid (Expr);
                   List := Get_Sensitivity_List (Stmt);
                   if List = Null_Iir_List and then Expr /= Null_Iir then
                      List := Create_Iir_List;
@@ -1164,21 +1182,11 @@ package body Canon is
 
             when Iir_Kind_Assertion_Statement
               | Iir_Kind_Report_Statement =>
-               declare
-                  Expr: Iir;
-               begin
-                  if Get_Kind (Stmt) = Iir_Kind_Assertion_Statement then
-                     Canon_Expression (Get_Assertion_Condition (Stmt));
-                  end if;
-                  Expr := Get_Report_Expression (Stmt);
-                  if Expr /= Null_Iir then
-                     Canon_Expression (Expr);
-                  end if;
-                  Expr := Get_Severity_Expression (Stmt);
-                  if Expr /= Null_Iir then
-                     Canon_Expression (Expr);
-                  end if;
-               end;
+               if Get_Kind (Stmt) = Iir_Kind_Assertion_Statement then
+                  Canon_Expression (Get_Assertion_Condition (Stmt));
+               end if;
+               Canon_Expression_If_Valid (Get_Report_Expression (Stmt));
+               Canon_Expression_If_Valid (Get_Severity_Expression (Stmt));
 
             when Iir_Kind_For_Loop_Statement =>
                declare
@@ -1199,14 +1207,10 @@ package body Canon is
 
             when Iir_Kind_While_Loop_Statement =>
                declare
-                  Expr : Iir;
                   Stmts : Iir;
                   Prev_Loop : Iir;
                begin
-                  Expr := Get_Condition (Stmt);
-                  if Expr /= Null_Iir then
-                     Canon_Expression (Expr);
-                  end if;
+                  Canon_Expression_If_Valid (Get_Condition (Stmt));
                   Prev_Loop := Cur_Loop;
                   Cur_Loop := Stmt;
                   Stmts := Get_Sequential_Statement_Chain (Stmt);
@@ -1219,12 +1223,8 @@ package body Canon is
               | Iir_Kind_Exit_Statement =>
                declare
                   Loop_Label : Iir;
-                  Expr: Iir;
                begin
-                  Expr := Get_Condition (Stmt);
-                  if Expr /= Null_Iir then
-                     Canon_Expression (Expr);
-                  end if;
+                  Canon_Expression_If_Valid (Get_Condition (Stmt));
                   Loop_Label := Get_Loop_Label (Stmt);
                   if Loop_Label = Null_Iir then
                      Set_Loop_Label (Stmt, Build_Simple_Name (Cur_Loop, Stmt));
@@ -1272,6 +1272,7 @@ package body Canon is
       Set_Parent (Proc, Get_Parent (Stmt));
       Sensitivity_List := Create_Iir_List;
       Set_Sensitivity_List (Proc, Sensitivity_List);
+      Set_Is_Ref (Proc, True);
       Set_Process_Origin (Proc, Stmt);
 
       --  LRM93 9.5
@@ -1286,10 +1287,6 @@ package body Canon is
       Set_Postponed_Flag (Proc, Get_Postponed_Flag (Proc));
 
       Canon_Extract_Sensitivity (Get_Target (Stmt), Sensitivity_List, True);
-
-      if Canon_Flag_Expressions then
-         Canon_Expression (Get_Target (Stmt));
-      end if;
 
       if Get_Guard (Stmt) /= Null_Iir then
          --  LRM93 9.1
@@ -1314,7 +1311,9 @@ package body Canon is
          Set_Sequential_Statement_Chain (Proc, If_Stmt);
          Location_Copy (If_Stmt, Stmt);
          Canon_Extract_Sensitivity (Get_Guard (Stmt), Sensitivity_List, False);
-         Set_Condition (If_Stmt, Get_Guard (Stmt));
+         Set_Condition
+           (If_Stmt, Build_Reference_Decl (Get_Guard (Stmt), If_Stmt));
+         Set_Guard (Stmt, Null_Iir);
          Chain := If_Stmt;
 
          declare
@@ -1333,7 +1332,7 @@ package body Canon is
                  Create_Iir (Iir_Kind_Simple_Signal_Assignment_Statement);
                Location_Copy (Dis_Stmt, Stmt);
                Set_Parent (Dis_Stmt, If_Stmt);
-               Set_Target (Dis_Stmt, Target);
+               Set_Target (Dis_Stmt, Build_Reference_Decl (Target, Dis_Stmt));
                Set_Sequential_Statement_Chain (Else_Clause, Dis_Stmt);
                --  XX
                Set_Waveform_Chain (Dis_Stmt, Null_Iir);
@@ -1350,15 +1349,14 @@ package body Canon is
       end if;
    end Canon_Concurrent_Signal_Assignment;
 
-   function Canon_Concurrent_Procedure_Call (El : Iir)
+   function Canon_Concurrent_Procedure_Call (Conc_Stmt : Iir)
      return Iir_Sensitized_Process_Statement
    is
+      Call : constant Iir_Procedure_Call := Get_Procedure_Call (Conc_Stmt);
+      Imp : constant Iir := Get_Implementation (Call);
       Proc : Iir_Sensitized_Process_Statement;
       Call_Stmt : Iir_Procedure_Call_Statement;
       Wait_Stmt : Iir_Wait_Statement;
-      Call : constant Iir_Procedure_Call := Get_Procedure_Call (El);
-      Imp : constant Iir := Get_Implementation (Call);
-      Assoc_Chain : Iir;
       Sensitivity_List : Iir_List;
       Is_Sensitized : Boolean;
    begin
@@ -1378,33 +1376,29 @@ package body Canon is
       else
          Proc := Create_Iir (Iir_Kind_Process_Statement);
       end if;
-      Location_Copy (Proc, El);
-      Set_Parent (Proc, Get_Parent (El));
-      Set_Process_Origin (Proc, El);
+      Location_Copy (Proc, Conc_Stmt);
+      Set_Parent (Proc, Get_Parent (Conc_Stmt));
+      Set_Process_Origin (Proc, Conc_Stmt);
+      Set_Procedure_Call (Conc_Stmt, Null_Iir);
 
       --  LRM93 9.3
       --  The equivalent process statement has a label if and only if the
       --  concurrent procedure call statement has a label; if the equivalent
       --  process statement has a label, it is the same as that of the
       --  concurrent procedure call statement.
-      Set_Label (Proc, Get_Label (El));
+      Set_Label (Proc, Get_Label (Conc_Stmt));
 
       --  LRM93 9.3
       --  The equivalent process statement is a postponed process if and only
       --  if the concurrent procedure call statement includes the reserved
       --  word POSTPONED.
-      Set_Postponed_Flag (Proc, Get_Postponed_Flag (El));
+      Set_Postponed_Flag (Proc, Get_Postponed_Flag (Conc_Stmt));
 
       Call_Stmt := Create_Iir (Iir_Kind_Procedure_Call_Statement);
       Set_Sequential_Statement_Chain (Proc, Call_Stmt);
-      Location_Copy (Call_Stmt, El);
+      Location_Copy (Call_Stmt, Conc_Stmt);
       Set_Parent (Call_Stmt, Proc);
       Set_Procedure_Call (Call_Stmt, Call);
-      Assoc_Chain := Canon_Association_Chain_And_Actuals
-        (Get_Interface_Declaration_Chain (Imp),
-         Get_Parameter_Association_Chain (Call),
-         Call);
-      Set_Parameter_Association_Chain (Call, Assoc_Chain);
 
       --  LRM93 9.3
       --  If there exists a name that denotes a signal in the actual part of
@@ -1418,21 +1412,26 @@ package body Canon is
       Canon_Extract_Sensitivity_Procedure_Call (Sensitivity_List, Call);
       if Is_Sensitized then
          Set_Sensitivity_List (Proc, Sensitivity_List);
+         Set_Is_Ref (Proc, True);
       else
          Wait_Stmt := Create_Iir (Iir_Kind_Wait_Statement);
-         Location_Copy (Wait_Stmt, El);
+         Location_Copy (Wait_Stmt, Conc_Stmt);
          Set_Parent (Wait_Stmt, Proc);
          Set_Sensitivity_List (Wait_Stmt, Sensitivity_List);
+         Set_Is_Ref (Wait_Stmt, True);
          Set_Chain (Call_Stmt, Wait_Stmt);
       end if;
       return Proc;
    end Canon_Concurrent_Procedure_Call;
 
    --  Return a statement from a waveform.
-   function Canon_Wave_Transform
-     (Orig_Stmt : Iir; Waveform_Chain : Iir_Waveform_Element; Proc : Iir)
-     return Iir
+   function Canon_Wave_Transform (Orig_Stmt : Iir;
+                                  Waveform_Chain : Iir_Waveform_Element;
+                                  Proc : Iir;
+                                  Is_First : Boolean)
+                                 return Iir
    is
+      Target : Iir;
       Stmt : Iir;
       Sensitivity_List : Iir_List;
    begin
@@ -1456,17 +1455,22 @@ package body Canon is
          --    target <= [ delay_mechanism ] waveform_element1,
          --       waveform_element2, ..., waveform_elementN;
          Stmt := Create_Iir (Iir_Kind_Simple_Signal_Assignment_Statement);
-         Set_Target (Stmt, Get_Target (Orig_Stmt));
+         Target := Get_Target (Orig_Stmt);
+         if not Is_First then
+            Target := Build_Reference_Decl (Target, Orig_Stmt);
+         end if;
+         Set_Target (Stmt, Target);
          if Proc = Null_Iir then
             Sensitivity_List := Null_Iir_List;
          else
             Sensitivity_List := Get_Sensitivity_List (Proc);
          end if;
-         Canon_Waveform (Waveform_Chain, Sensitivity_List);
+         Extract_Waveform_Sensitivity (Waveform_Chain, Sensitivity_List);
          Set_Waveform_Chain (Stmt, Waveform_Chain);
          Set_Delay_Mechanism (Stmt, Get_Delay_Mechanism (Orig_Stmt));
          Set_Reject_Time_Expression
            (Stmt, Get_Reject_Time_Expression (Orig_Stmt));
+         Set_Reject_Time_Expression (Orig_Stmt, Null_Iir);
       end if;
       Location_Copy (Stmt, Orig_Stmt);
       return Stmt;
@@ -1479,10 +1483,25 @@ package body Canon is
       Stmt : Iir;
    begin
       Stmt := Canon_Wave_Transform
-        (Conc_Stmt, Get_Waveform_Chain (Conc_Stmt), Proc);
+        (Conc_Stmt, Get_Waveform_Chain (Conc_Stmt), Proc, True);
+      Set_Waveform_Chain (Conc_Stmt, Null_Iir);
+      Set_Target (Conc_Stmt, Null_Iir);
       Set_Parent (Stmt, Parent);
       Set_Sequential_Statement_Chain (Parent, Stmt);
    end Canon_Concurrent_Simple_Signal_Assignment;
+
+   procedure Canon_Conditional_Signal_Assignment_Expression (Stmt : Iir)
+   is
+      Cond_Wf : Iir_Conditional_Waveform;
+   begin
+      Cond_Wf := Get_Conditional_Waveform_Chain (Stmt);
+      while Cond_Wf /= Null_Iir loop
+         Canon_Expression_If_Valid (Get_Condition (Cond_Wf));
+         Canon_Waveform_Expression (Get_Waveform_Chain (Cond_Wf));
+
+         Cond_Wf := Get_Chain (Cond_Wf);
+      end loop;
+   end Canon_Conditional_Signal_Assignment_Expression;
 
    --  Create signal_transform for a concurrent conditional signal assignment.
    function Canon_Conditional_Signal_Assignment
@@ -1506,7 +1525,8 @@ package body Canon is
 
          --  Canon waveform.
          Wf := Get_Waveform_Chain (Cond_Wf);
-         Wf := Canon_Wave_Transform (Conc_Stmt, Wf, Proc);
+         Wf := Canon_Wave_Transform
+           (Conc_Stmt, Wf, Proc, Cond_Wf = Cond_Wf_Chain);
 
          if Expr = Null_Iir and Cond_Wf = Cond_Wf_Chain then
             --  A conditional assignment that is in fact a simple one.  Usual
@@ -1521,9 +1541,6 @@ package body Canon is
 
             --  Canon condition (if any).
             if Expr /= Null_Iir then
-               if Canon_Flag_Expressions then
-                  Canon_Expression (Expr);
-               end if;
                if Proc /= Null_Iir then
                   Canon_Extract_Sensitivity
                     (Expr, Get_Sensitivity_List (Proc), False);
@@ -1543,8 +1560,14 @@ package body Canon is
             Set_Parent (Wf, Stmt);
             Last_Res := Res1;
          end if;
+
+         Set_Condition (Cond_Wf, Null_Iir);
+         Set_Waveform_Chain (Cond_Wf, Null_Iir);
+
          Cond_Wf := Get_Chain (Cond_Wf);
       end loop;
+
+      Set_Target (Conc_Stmt, Null_Iir);
       return Stmt;
    end Canon_Conditional_Signal_Assignment;
 
@@ -1558,23 +1581,40 @@ package body Canon is
       Set_Sequential_Statement_Chain (Parent, Stmt);
    end Canon_Concurrent_Conditional_Signal_Assignment;
 
+   procedure Canon_Selected_Signal_Assignment_Expression (Stmt : Iir)
+   is
+      Selected_Waveform : Iir;
+      Waveform : Iir;
+   begin
+      Canon_Expression (Get_Expression (Stmt));
+
+      Selected_Waveform := Get_Selected_Waveform_Chain (Stmt);
+      while Selected_Waveform /= Null_Iir loop
+         Waveform := Get_Associated_Chain (Selected_Waveform);
+         if Waveform /= Null_Iir then
+            Canon_Waveform_Expression (Waveform);
+         end if;
+         Selected_Waveform := Get_Chain (Selected_Waveform);
+      end loop;
+   end Canon_Selected_Signal_Assignment_Expression;
+
    procedure Canon_Concurrent_Selected_Signal_Assignment
      (Conc_Stmt : Iir; Proc : Iir; Parent : Iir)
    is
       Sensitivity_List : constant Iir_List := Get_Sensitivity_List (Proc);
       Expr : constant Iir := Get_Expression (Conc_Stmt);
+      Selected_Waveform_Chain : constant Iir :=
+        Get_Selected_Waveform_Chain (Conc_Stmt);
+      Target : constant Iir := Get_Target (Conc_Stmt);
+      Reject_Time : constant Iir := Get_Reject_Time_Expression (Conc_Stmt);
       Selected_Waveform : Iir;
       Case_Stmt: Iir_Case_Statement;
       Stmt : Iir;
       Waveform : Iir;
    begin
-      Selected_Waveform := Get_Selected_Waveform_Chain (Conc_Stmt);
-      if Canon_Flag_Expressions then
-         Canon_Expression (Expr);
-      end if;
       Canon_Extract_Sensitivity (Expr, Sensitivity_List, False);
 
-      if False then
+      if Vhdl_Std < Vhdl_08 then
          Case_Stmt := Create_Iir (Iir_Kind_Case_Statement);
          Set_Parent (Case_Stmt, Parent);
          Set_Sequential_Statement_Chain (Parent, Case_Stmt);
@@ -1582,11 +1622,17 @@ package body Canon is
 
          Set_Expression (Case_Stmt, Expr);
 
-         Set_Case_Statement_Alternative_Chain (Case_Stmt, Selected_Waveform);
+         Set_Case_Statement_Alternative_Chain
+           (Case_Stmt, Selected_Waveform_Chain);
+
+         Selected_Waveform := Selected_Waveform_Chain;
          while Selected_Waveform /= Null_Iir loop
+            Set_Parent (Selected_Waveform, Case_Stmt);
             Waveform := Get_Associated_Chain (Selected_Waveform);
             if Waveform /= Null_Iir then
-               Stmt := Canon_Wave_Transform (Conc_Stmt, Waveform, Proc);
+               Stmt := Canon_Wave_Transform
+                 (Conc_Stmt, Waveform, Proc,
+                  Selected_Waveform = Selected_Waveform_Chain);
                Set_Parent (Stmt, Case_Stmt);
                Set_Associated_Chain (Selected_Waveform, Stmt);
             end if;
@@ -1599,25 +1645,29 @@ package body Canon is
          Location_Copy (Stmt, Conc_Stmt);
 
          Set_Expression (Stmt, Expr);
-         Set_Expression (Conc_Stmt, Null_Iir);
 
-         Set_Target (Stmt, Get_Target (Conc_Stmt));
-         Set_Target (Conc_Stmt, Null_Iir);
+         Set_Target (Stmt, Target);
          Set_Delay_Mechanism (Stmt, Get_Delay_Mechanism (Conc_Stmt));
-         Set_Reject_Time_Expression
-           (Stmt, Get_Reject_Time_Expression (Conc_Stmt));
-         Set_Reject_Time_Expression (Conc_Stmt, Null_Iir);
+         Set_Reject_Time_Expression (Stmt, Reject_Time);
 
-         Set_Selected_Waveform_Chain (Stmt, Selected_Waveform);
-         Set_Selected_Waveform_Chain (Conc_Stmt, Selected_Waveform);
+         Set_Selected_Waveform_Chain (Stmt, Selected_Waveform_Chain);
+         Set_Selected_Waveform_Chain (Conc_Stmt, Null_Iir);
+         Selected_Waveform := Selected_Waveform_Chain;
          while Selected_Waveform /= Null_Iir loop
             Waveform := Get_Associated_Chain (Selected_Waveform);
+            Set_Parent (Selected_Waveform, Stmt);
             if Waveform /= Null_Iir then
-               Canon_Waveform (Waveform, Sensitivity_List);
+               Extract_Waveform_Sensitivity (Waveform, Sensitivity_List);
             end if;
             Selected_Waveform := Get_Chain (Selected_Waveform);
          end loop;
       end if;
+
+      --  Transfer ownership.
+      Set_Expression (Conc_Stmt, Null_Iir);
+      Set_Target (Conc_Stmt, Null_Iir);
+      Set_Selected_Waveform_Chain (Conc_Stmt, Null_Iir);
+      Set_Reject_Time_Expression (Conc_Stmt, Null_Iir);
    end Canon_Concurrent_Selected_Signal_Assignment;
 
    procedure Canon_Generate_Statement_Body
@@ -1696,6 +1746,57 @@ package body Canon is
       Alt_Num := Alt_Num + 1;
    end Canon_If_Case_Generate_Statement_Body;
 
+   function Canon_Concurrent_Assertion_Statement (Stmt : Iir) return Iir
+   is
+      Proc : Iir;
+      Asrt : Iir;
+      Expr : Iir;
+      Sensitivity_List : Iir_List;
+   begin
+      -- Create a new entry.
+      Proc := Create_Iir (Iir_Kind_Sensitized_Process_Statement);
+      Location_Copy (Proc, Stmt);
+      Set_Parent (Proc, Get_Parent (Stmt));
+      Set_Process_Origin (Proc, Stmt);
+
+      --  LRM93 9.4
+      --  The equivalent process statement has a label if and only if the
+      --  current assertion statement has a label; if the equivalent process
+      --  statement has a label; it is the same as that of the concurrent
+      --  assertion statement.
+      Set_Label (Proc, Get_Label (Stmt));
+
+      --  LRM93 9.4
+      --  The equivalent process statement is a postponed process if and only
+      --  if the current assertion statement includes the reserved word
+      --  POSTPONED.
+      Set_Postponed_Flag (Proc, Get_Postponed_Flag (Stmt));
+
+      Asrt := Create_Iir (Iir_Kind_Assertion_Statement);
+      Set_Sequential_Statement_Chain (Proc, Asrt);
+      Set_Parent (Asrt, Proc);
+      Location_Copy (Asrt, Stmt);
+      Sensitivity_List := Create_Iir_List;
+      Set_Sensitivity_List (Proc, Sensitivity_List);
+      Set_Is_Ref (Proc, True);
+
+      -- Expand the expression, fill the sensitivity list,
+      Expr := Get_Assertion_Condition (Stmt);
+      Canon_Extract_Sensitivity (Expr, Sensitivity_List, False);
+      Set_Assertion_Condition (Asrt, Expr);
+      Set_Assertion_Condition (Stmt, Null_Iir);
+
+      Expr := Get_Report_Expression (Stmt);
+      Set_Report_Expression (Asrt, Expr);
+      Set_Report_Expression (Stmt, Null_Iir);
+
+      Expr := Get_Severity_Expression (Stmt);
+      Set_Severity_Expression (Asrt, Expr);
+      Set_Severity_Expression (Stmt, Null_Iir);
+
+      return Proc;
+   end Canon_Concurrent_Assertion_Statement;
+
    procedure Canon_Concurrent_Stmts (Top : Iir_Design_Unit; Parent : Iir)
    is
       --  Current element in the chain of concurrent statements.
@@ -1716,11 +1817,9 @@ package body Canon is
       end Replace_Stmt;
 
       Proc: Iir;
-      Stmt: Iir;
       Sub_Chain : Iir;
       Expr: Iir;
       Proc_Num : Natural := 0;
-      Sensitivity_List : Iir_List;
    begin
       Prev_El := Null_Iir;
       El := Get_Concurrent_Statement_Chain (Parent);
@@ -1748,86 +1847,79 @@ package body Canon is
 
          case Get_Kind (El) is
             when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
-               Canon_Concurrent_Signal_Assignment (El, Proc, Sub_Chain);
+               if Canon_Flag_Expressions then
+                  Canon_Expression (Get_Target (El));
+                  Canon_Waveform_Expression (Get_Waveform_Chain (El));
+               end if;
 
-               Canon_Concurrent_Simple_Signal_Assignment (El, Proc, Sub_Chain);
-
-               Replace_Stmt (Proc);
-               El := Proc;
+               if Canon_Flag_Concurrent_Stmts then
+                  Canon_Concurrent_Signal_Assignment (El, Proc, Sub_Chain);
+                  Canon_Concurrent_Simple_Signal_Assignment
+                    (El, Proc, Sub_Chain);
+                  Replace_Stmt (Proc);
+                  El := Proc;
+               end if;
 
             when Iir_Kind_Concurrent_Conditional_Signal_Assignment =>
-               Canon_Concurrent_Signal_Assignment (El, Proc, Sub_Chain);
+               if Canon_Flag_Expressions then
+                  Canon_Expression (Get_Target (El));
+                  Canon_Conditional_Signal_Assignment_Expression (El);
+               end if;
 
-               Canon_Concurrent_Conditional_Signal_Assignment
-                 (El, Proc, Sub_Chain);
-
-               Replace_Stmt (Proc);
-               El := Proc;
+               if Canon_Flag_Concurrent_Stmts then
+                  Canon_Concurrent_Signal_Assignment (El, Proc, Sub_Chain);
+                  Canon_Concurrent_Conditional_Signal_Assignment
+                    (El, Proc, Sub_Chain);
+                  Replace_Stmt (Proc);
+                  El := Proc;
+               end if;
 
             when Iir_Kind_Concurrent_Selected_Signal_Assignment =>
-               Canon_Concurrent_Signal_Assignment (El, Proc, Sub_Chain);
+               if Canon_Flag_Expressions then
+                  Canon_Expression (Get_Target (El));
+                  Canon_Selected_Signal_Assignment_Expression (El);
+               end if;
 
-               Canon_Concurrent_Selected_Signal_Assignment
-                 (El, Proc, Sub_Chain);
-
-               Replace_Stmt (Proc);
-               El := Proc;
+               if Canon_Flag_Concurrent_Stmts then
+                  Canon_Concurrent_Signal_Assignment (El, Proc, Sub_Chain);
+                  Canon_Concurrent_Selected_Signal_Assignment
+                    (El, Proc, Sub_Chain);
+                  Replace_Stmt (Proc);
+                  El := Proc;
+               end if;
 
             when Iir_Kind_Concurrent_Assertion_Statement =>
-               -- Create a new entry.
-               Proc := Create_Iir (Iir_Kind_Sensitized_Process_Statement);
-               Location_Copy (Proc, El);
-               Set_Parent (Proc, Get_Parent (El));
-               Set_Process_Origin (Proc, El);
-
-               --  LRM93 9.4
-               --  The equivalent process statement has a label if and only if
-               --  the current assertion statement has a label; if the
-               --  equivalent process statement has a label; it is the same
-               --  as that of the concurrent assertion statement.
-               Set_Label (Proc, Get_Label (El));
-
-               --  LRM93 9.4
-               --  The equivalent process statement is a postponed process if
-               --  and only if the current assertion statement includes the
-               --  reserved word POSTPONED.
-               Set_Postponed_Flag (Proc, Get_Postponed_Flag (El));
-
-               Stmt := Create_Iir (Iir_Kind_Assertion_Statement);
-               Set_Sequential_Statement_Chain (Proc, Stmt);
-               Set_Parent (Stmt, Proc);
-               Location_Copy (Stmt, El);
-               Sensitivity_List := Create_Iir_List;
-               Set_Sensitivity_List (Proc, Sensitivity_List);
-
-               -- Expand the expression, fill the sensitivity list,
-               Canon_Extract_Sensitivity
-                 (Get_Assertion_Condition (El), Sensitivity_List, False);
                if Canon_Flag_Expressions then
                   Canon_Expression (Get_Assertion_Condition (El));
+                  Canon_Expression_If_Valid (Get_Report_Expression (El));
+                  Canon_Expression_If_Valid (Get_Severity_Expression (El));
                end if;
-               Set_Assertion_Condition
-                 (Stmt, Get_Assertion_Condition (El));
 
-               Expr := Get_Report_Expression (El);
-               if Canon_Flag_Expressions and Expr /= Null_Iir then
-                  Canon_Expression (Expr);
+               if Canon_Flag_Concurrent_Stmts then
+                  Proc := Canon_Concurrent_Assertion_Statement (El);
+                  Replace_Stmt (Proc);
+                  El := Proc;
                end if;
-               Set_Report_Expression (Stmt, Expr);
-
-               Expr := Get_Severity_Expression (El);
-               if Canon_Flag_Expressions and Expr /= Null_Iir then
-                  Canon_Expression (Expr);
-               end if;
-               Set_Severity_Expression (Stmt, Expr);
-
-               Replace_Stmt (Proc);
-               El := Proc;
 
             when Iir_Kind_Concurrent_Procedure_Call_Statement =>
-               Proc := Canon_Concurrent_Procedure_Call (El);
-               Replace_Stmt (Proc);
-               El := Proc;
+               declare
+                  Call : constant Iir_Procedure_Call :=
+                    Get_Procedure_Call (El);
+                  Imp : constant Iir := Get_Implementation (Call);
+                  Assoc_Chain : Iir;
+               begin
+                  Assoc_Chain := Canon_Association_Chain_And_Actuals
+                    (Get_Interface_Declaration_Chain (Imp),
+                     Get_Parameter_Association_Chain (Call),
+                     Call);
+                  Set_Parameter_Association_Chain (Call, Assoc_Chain);
+               end;
+
+               if Canon_Flag_Concurrent_Stmts then
+                  Proc := Canon_Concurrent_Procedure_Call (El);
+                  Replace_Stmt (Proc);
+                  El := Proc;
+               end if;
 
             when Iir_Kind_Sensitized_Process_Statement
               | Iir_Kind_Process_Statement =>
@@ -1917,17 +2009,13 @@ package body Canon is
             when Iir_Kind_If_Generate_Statement =>
                declare
                   Clause : Iir;
-                  Cond : Iir;
                   Alt_Num : Natural;
                begin
                   Clause := El;
                   Alt_Num := 1;
                   while Clause /= Null_Iir loop
                      if Canon_Flag_Expressions then
-                        Cond := Get_Condition (El);
-                        if Cond /= Null_Iir then
-                           Canon_Expression (Cond);
-                        end if;
+                        Canon_Expression_If_Valid (Get_Condition (El));
                      end if;
 
                      Canon_If_Case_Generate_Statement_Body
@@ -2128,11 +2216,9 @@ package body Canon is
          --  Add a default binding indication
          --  Extract a component instantiation
          Instances := Get_Instantiation_List (Cfg);
-         if Instances = Iir_List_All or Instances = Iir_List_Others then
-            --  designator_all and designator_others must have been replaced
-            --  by a list during canon.
-            raise Internal_Error;
-         end if;
+         --  Designator_all and designator_others must have been replaced
+         --  by a list during canon.
+         pragma Assert (Instances not in Iir_Lists_All_Others);
          Bind := Get_Default_Binding_Indication
            (Get_Named_Entity (Get_First_Element (Instances)));
          if Bind = Null_Iir then
@@ -2140,6 +2226,7 @@ package body Canon is
             return;
          end if;
          Set_Binding_Indication (Cfg, Bind);
+         Set_Is_Ref (Cfg, True);
          Add_Binding_Indication_Dependence (Top, Bind);
          return;
       else
@@ -2153,6 +2240,7 @@ package body Canon is
             Entity := Get_Entity_From_Entity_Aspect (Entity_Aspect);
             Comp := Get_Named_Entity (Get_Component_Name (Cfg));
 
+            --  Canon generic map
             Map_Chain := Get_Generic_Map_Aspect_Chain (Bind);
             if Map_Chain = Null_Iir then
                if Is_Config and then Is_Valid (Entity) then
@@ -2165,6 +2253,7 @@ package body Canon is
             end if;
             Set_Generic_Map_Aspect_Chain (Bind, Map_Chain);
 
+            --  Canon port map
             Map_Chain := Get_Port_Map_Aspect_Chain (Bind);
             if Map_Chain = Null_Iir then
                if Is_Config and then Is_Valid (Entity) then
@@ -2177,7 +2266,7 @@ package body Canon is
             end if;
             Set_Port_Map_Aspect_Chain (Bind, Map_Chain);
 
-            if Get_Kind (Cfg) = Iir_Kind_Component_Configuration then
+            if Is_Config then
                Block := Get_Block_Configuration (Cfg);
                if Block /= Null_Iir then
                   --  If there is no architecture_identifier in the binding,
@@ -2189,7 +2278,9 @@ package body Canon is
                      pragma Assert
                        (Get_Kind (Entity) = Iir_Kind_Entity_Declaration);
                      Set_Architecture
-                       (Entity_Aspect, Get_Block_Specification (Block));
+                       (Entity_Aspect,
+                        Build_Reference_Name
+                          (Get_Block_Specification (Block)));
                   end if;
                   Canon_Block_Configuration (Top, Block);
                end if;
@@ -2220,7 +2311,7 @@ package body Canon is
             loop
                El := Create_Iir (Get_Kind (Assoc));
                Location_Copy (El, Assoc);
-               Set_Formal (El, Get_Formal (Assoc));
+               Set_Formal (El, Sem_Inst.Copy_Tree (Get_Formal (Assoc)));
                Set_Whole_Association_Flag
                  (El, Get_Whole_Association_Flag (Assoc));
 
@@ -2228,16 +2319,16 @@ package body Canon is
                   when Iir_Kind_Association_Element_Open =>
                      null;
                   when Iir_Kind_Association_Element_By_Expression =>
-                     Set_Actual (El, Get_Actual (Assoc));
-                     Set_In_Conversion (El, Get_In_Conversion (Assoc));
-                     Set_Out_Conversion (El, Get_Out_Conversion (Assoc));
+                     Set_Actual (El, Sem_Inst.Copy_Tree (Get_Actual (Assoc)));
+                     Set_In_Conversion
+                       (El, Sem_Inst.Copy_Tree (Get_In_Conversion (Assoc)));
+                     Set_Out_Conversion
+                       (El, Sem_Inst.Copy_Tree (Get_Out_Conversion (Assoc)));
                      Set_Collapse_Signal_Flag
                        (Assoc,
                         Sem.Can_Collapse_Signals (Assoc, Get_Formal (Assoc)));
                   when Iir_Kind_Association_Element_By_Individual =>
                      Set_Actual_Type (El, Get_Actual_Type (Assoc));
-                     Set_Individual_Association_Chain
-                       (El, Get_Individual_Association_Chain (Assoc));
                   when others =>
                      Error_Kind ("copy_association", Assoc);
                end case;
@@ -2267,10 +2358,6 @@ package body Canon is
          S_El : Iir;
          S_Inter : Iir;
       begin
-         if Sec_Chain = Null_Iir then
-            --  Short-cut.
-            return First_Chain;
-         end if;
          F_El := First_Chain;
          F_Inter := Inter_Chain;
          Sub_Chain_Init (First, Last);
@@ -2297,13 +2384,14 @@ package body Canon is
          return First;
       end Merge_Association_Chain;
 
+      Comp_Name : constant Iir := Get_Component_Name (Conf_Spec);
+      Comp : constant Iir := Get_Named_Entity (Comp_Name);
+      Cs_Binding : constant Iir := Get_Binding_Indication (Conf_Spec);
+      Cc_Binding : constant Iir := Get_Binding_Indication (Comp_Conf);
       Res : Iir_Component_Configuration;
-      Cs_Binding : Iir_Binding_Indication;
-      Cc_Binding : Iir_Binding_Indication;
       Cs_Chain : Iir;
       Res_Binding : Iir_Binding_Indication;
       Entity : Iir;
-      Comp : Iir;
       Instance_List : Iir_List;
       Conf_Instance_List : Iir_List;
       Instance : Iir;
@@ -2314,32 +2402,13 @@ package body Canon is
       Res := Create_Iir (Iir_Kind_Component_Configuration);
       Location_Copy (Res, Comp_Conf);
       Set_Parent (Res, Parent);
-      Set_Component_Name (Res, Get_Component_Name (Conf_Spec));
+      Set_Component_Name (Res, Build_Reference_Name (Comp_Name));
 
---       --  Keep in the designator list only the non-incrementally
---       --  bound instances.
---       Inst_List := Get_Instantiation_List (Comp_Conf);
---       Designator_List := Create_Iir_List;
---       for I in 0 .. Get_Nbr_Elements (Inst_List) - 1 loop
---          Inst := Get_Nth_Element (Inst_List, I);
---          if Get_Component_Configuration (Inst) = Comp_Conf then
---             Set_Component_Configuration (Inst, Res);
---             Append_Element (Designator_List, Inst);
---          end if;
---       end loop;
---       Set_Instantiation_List (Res, Designator_List);
---       Set_Binding_Indication
---         (Res, Get_Binding_Indication (Comp_Conf));
---       Append (Last_Item, Conf, Comp_Conf);
-
-      Cs_Binding := Get_Binding_Indication (Conf_Spec);
-      Cc_Binding := Get_Binding_Indication (Comp_Conf);
       Res_Binding := Create_Iir (Iir_Kind_Binding_Indication);
       Location_Copy (Res_Binding, Res);
       Set_Binding_Indication (Res, Res_Binding);
 
       Entity := Get_Entity_From_Entity_Aspect (Get_Entity_Aspect (Cs_Binding));
-      Comp := Get_Named_Entity (Get_Component_Name (Conf_Spec));
 
       --  Merge generic map aspect.
       Cs_Chain := Get_Generic_Map_Aspect_Chain (Cs_Binding);
@@ -2353,7 +2422,7 @@ package body Canon is
                                   Cs_Chain,
                                   Get_Generic_Map_Aspect_Chain (Cc_Binding)));
 
-      --  merge port map aspect
+      --  Merge port map aspect.
       Cs_Chain := Get_Port_Map_Aspect_Chain (Cs_Binding);
       if Cs_Chain = Null_Iir then
          Cs_Chain := Sem_Specs.Create_Default_Map_Aspect
@@ -2365,10 +2434,11 @@ package body Canon is
                                   Cs_Chain,
                                   Get_Port_Map_Aspect_Chain (Cc_Binding)));
 
-      --  set entity aspect
-      Set_Entity_Aspect (Res_Binding, Get_Entity_Aspect (Cs_Binding));
+      --  Set entity aspect.
+      Set_Entity_Aspect
+        (Res_Binding, Sem_Inst.Copy_Tree (Get_Entity_Aspect (Cs_Binding)));
 
-      --  create list of instances:
+      --  Create list of instances:
       --   * keep common instances
       --   replace component_configuration of them
       --   remove them in the instance list of COMP_CONF
@@ -2400,6 +2470,7 @@ package body Canon is
    is
       El : Iir;
       Comp_Conf : Iir;
+      Inst : Iir;
    begin
       El := Get_Concurrent_Statement_Chain (Parent);
       while El /= Null_Iir loop
@@ -2411,7 +2482,9 @@ package body Canon is
             Comp_Conf := Get_Component_Configuration (El);
             if Comp_Conf = Null_Iir then
                --  The component is not yet configured.
-               Append_Element (List, Build_Simple_Name (El, El));
+               Inst := Build_Simple_Name (El, El);
+               Set_Is_Forward_Ref (Inst, True);
+               Append_Element (List, Inst);
                Set_Component_Configuration (El, Conf);
             else
                --  The component is already configured.
@@ -2422,15 +2495,9 @@ package body Canon is
                   --  FIXME: handle incremental configuration.
                   raise Internal_Error;
                end if;
-               if Spec = Iir_List_All then
-                  --  Several component configuration for an instance.
-                  --  Must have been caught by sem.
-                  raise Internal_Error;
-               elsif Spec = Iir_List_Others then
-                  null;
-               else
-                  raise Internal_Error;
-               end if;
+               --  Several component configuration for an instance.
+               --  Must have been caught by sem.
+               pragma Assert (Spec = Iir_List_Others);
             end if;
          end if;
          El := Get_Chain (El);
@@ -2467,7 +2534,7 @@ package body Canon is
       Spec : constant Iir_List := Get_Instantiation_List (Conf);
       List : Iir_Designator_List;
    begin
-      if Spec = Iir_List_All or Spec = Iir_List_Others then
+      if Spec in Iir_Lists_All_Others then
          List := Create_Iir_List;
          Canon_Component_Specification_All_Others
            (Conf, Parent, Spec, List,
@@ -2500,12 +2567,14 @@ package body Canon is
          elsif Signal_List = Iir_List_Others then
             Force := False;
          else
+            --  User list: nothing to do.
             return;
          end if;
 
          Dis_Type := Get_Type (Get_Type_Mark (Dis));
          N_List := Create_Iir_List;
          Set_Signal_List (Dis, N_List);
+         Set_Is_Ref (Dis, True);
          El := Get_Declaration_Chain (Decl_Parent);
          while El /= Null_Iir loop
             if Get_Kind (El) = Iir_Kind_Signal_Declaration
@@ -2572,6 +2641,7 @@ package body Canon is
    function Canon_Package_Instantiation_Declaration (Decl : Iir) return Iir
    is
       Pkg : constant Iir := Get_Uninstantiated_Package_Decl (Decl);
+      Bod : Iir;
    begin
       --  Canon map aspect.
       Set_Generic_Map_Aspect_Chain
@@ -2580,79 +2650,25 @@ package body Canon is
            (Get_Generic_Chain (Decl),
             Get_Generic_Map_Aspect_Chain (Decl), Decl));
 
-      if Get_Macro_Expanded_Flag (Pkg) then
-         declare
-            New_Decl : Iir;
-            New_Hdr : Iir;
-         begin
-            --  Replace package instantiation by the macro-expanded
-            --  generic-mapped package.
-            --  Use move semantics.
-            --  FIXME: adjust Parent.
-            New_Decl := Create_Iir (Iir_Kind_Package_Declaration);
-            Location_Copy (New_Decl, Decl);
-            Set_Parent (New_Decl, Get_Parent (Decl));
-            Set_Identifier (New_Decl, Get_Identifier (Decl));
-            Set_Need_Body (New_Decl, Get_Need_Body (Pkg));
-
-            New_Hdr := Create_Iir (Iir_Kind_Package_Header);
-            Set_Package_Header (New_Decl, New_Hdr);
-            Location_Copy (New_Hdr, Get_Package_Header (Pkg));
-            Set_Generic_Chain (New_Hdr, Get_Generic_Chain (Decl));
-            Set_Generic_Map_Aspect_Chain
-              (New_Hdr, Get_Generic_Map_Aspect_Chain (Decl));
-            Set_Generic_Chain (Decl, Null_Iir);
-            Set_Generic_Map_Aspect_Chain (Decl, Null_Iir);
-
-            Set_Declaration_Chain (New_Decl, Get_Declaration_Chain (Decl));
-            Set_Declaration_Chain (Decl, Null_Iir);
-            Set_Chain (New_Decl, Get_Chain (Decl));
-            Set_Chain (Decl, Null_Iir);
-
-            Set_Package_Origin (New_Decl, Decl);
-            return New_Decl;
-         end;
-      else
-         return Decl;
+      --  Generate the body now.
+      --  Note: according to the LRM, if the instantiation occurs within a
+      --  package, the body of the instance should be appended to the package
+      --  body.
+      --  FIXME: generate only if generating code for this unit.
+      if Get_Macro_Expanded_Flag (Pkg)
+        and then Get_Need_Body (Pkg)
+      then
+         Bod := Sem_Inst.Instantiate_Package_Body (Decl);
+         Set_Parent (Bod, Get_Parent (Decl));
+         Set_Package_Body (Decl, Bod);
       end if;
+
+      return Decl;
    end Canon_Package_Instantiation_Declaration;
 
-   function Create_Instantiation_Bodies
-     (Decl : Iir_Package_Declaration; Parent : Iir) return Iir
-   is
-      First, Last : Iir;
-      El : Iir;
-      Bod : Iir;
-   begin
-      First := Null_Iir;
-      Last := Null_Iir;  --  Kill the warning
-      El := Get_Declaration_Chain (Decl);
-      while Is_Valid (El) loop
-         if Get_Kind (El) = Iir_Kind_Package_Declaration
-           and then Get_Need_Body (El)
-           and then Get_Package_Origin (El) /= Null_Iir
-         then
-            Bod := Sem_Inst.Instantiate_Package_Body (El);
-            Set_Parent (Bod, Parent);
-
-            --  Append.
-            if First = Null_Iir then
-               First := Bod;
-            else
-               Set_Chain (Last, Bod);
-            end if;
-            Last := Bod;
-         end if;
-         El := Get_Chain (El);
-      end loop;
-      return First;
-   end Create_Instantiation_Bodies;
-
-   function Canon_Declaration (Top : Iir_Design_Unit;
-                               Decl : Iir;
-                               Parent : Iir;
-                               Decl_Parent : Iir)
-                              return Iir
+   function Canon_Declaration
+     (Top : Iir_Design_Unit; Decl : Iir; Parent : Iir; Decl_Parent : Iir)
+     return Iir
    is
       Stmts : Iir;
    begin
@@ -2832,7 +2848,7 @@ package body Canon is
       El := Get_Declaration_Chain (Blk);
       while El /= Null_Iir loop
          if Get_Kind (El) = Iir_Kind_Configuration_Specification then
-            --  Already canoncalized during canon of block declarations.
+            --  Already canonicalized during canon of block declarations.
             --  But need to set configuration on instantiations.
             Canon_Component_Specification (El, Blk);
          end if;
@@ -2899,7 +2915,9 @@ package body Canon is
                         Res := Create_Iir (Iir_Kind_Component_Configuration);
                         Location_Copy (Res, El);
                         Set_Parent (Res, Conf);
-                        Set_Component_Name (Res, Get_Instantiated_Unit (El));
+                        Set_Component_Name
+                          (Res,
+                           Build_Reference_Name (Get_Instantiated_Unit (El)));
                         Designator_List := Create_Iir_List;
                         Append_Element
                           (Designator_List, Build_Simple_Name (El, El));
@@ -2913,7 +2931,9 @@ package body Canon is
                      Res := Create_Iir (Iir_Kind_Component_Configuration);
                      Location_Copy (Res, Comp_Conf);
                      Set_Parent (Res, Conf);
-                     Set_Component_Name (Res, Get_Component_Name (Comp_Conf));
+                     Set_Component_Name
+                       (Res,
+                        Build_Reference_Name (Get_Component_Name (Comp_Conf)));
                      --  Keep in the designator list only the non-incrementally
                      --  bound instances, and only the instances in the current
                      --  statements parts (vhdl-87 generate issue).
@@ -2926,12 +2946,14 @@ package body Canon is
                           and then Get_Parent (Inst) = Blk
                         then
                            Set_Component_Configuration (Inst, Res);
-                           Append_Element (Designator_List, Inst_Name);
+                           Append_Element (Designator_List,
+                                           Build_Reference_Name (Inst_Name));
                         end if;
                      end loop;
                      Set_Instantiation_List (Res, Designator_List);
                      Set_Binding_Indication
                        (Res, Get_Binding_Indication (Comp_Conf));
+                     Set_Is_Ref (Res, True);
                      Append (Last_Item, Conf, Res);
                   end if;
                end;
@@ -3075,14 +3097,10 @@ package body Canon is
             Canon_Interface_List (Get_Generic_Chain (El));
             Canon_Interface_List (Get_Port_Chain (El));
             Canon_Declarations (Unit, El, El);
-            if Canon_Flag_Concurrent_Stmts then
-               Canon_Concurrent_Stmts (Unit, El);
-            end if;
+            Canon_Concurrent_Stmts (Unit, El);
          when Iir_Kind_Architecture_Body =>
             Canon_Declarations (Unit, El, El);
-            if Canon_Flag_Concurrent_Stmts then
-               Canon_Concurrent_Stmts (Unit, El);
-            end if;
+            Canon_Concurrent_Stmts (Unit, El);
          when Iir_Kind_Package_Declaration =>
             Canon_Declarations (Unit, El, Null_Iir);
          when Iir_Kind_Package_Body =>

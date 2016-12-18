@@ -386,7 +386,13 @@ package body Sem_Names is
            | Iir_Kind_For_Generate_Statement =>
             null;
          when Iir_Kind_Package_Declaration =>
-            null;
+            declare
+               Header : constant Iir := Get_Package_Header (Decl);
+            begin
+               if Is_Valid (Header) then
+                  Iterator_Decl_Chain (Get_Generic_Chain (Header), Id);
+               end if;
+            end;
          when Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Interface_Package_Declaration =>
             Iterator_Decl_Chain (Get_Generic_Chain (Decl), Id);
@@ -1892,27 +1898,31 @@ package body Sem_Names is
       --  Analyze SUB_NAME.NAME as a selected element.
       procedure Sem_As_Selected_Element (Sub_Name : Iir)
       is
-         Base_Type : Iir;
+         Name_Type : Iir;
          Ptr_Type : Iir;
          Rec_El : Iir;
          R : Iir;
          Se : Iir;
       begin
          --  FIXME: if not is_expr (sub_name) return.
-         Base_Type := Get_Base_Type (Get_Type (Sub_Name));
-         if Get_Kind (Base_Type) = Iir_Kind_Access_Type_Definition then
-            Ptr_Type := Base_Type;
-            Base_Type := Get_Base_Type (Get_Designated_Type (Base_Type));
+         Name_Type := Get_Type (Sub_Name);
+         if Kind_In (Name_Type, Iir_Kind_Access_Type_Definition,
+                     Iir_Kind_Access_Subtype_Definition)
+         then
+            Ptr_Type := Name_Type;
+            Name_Type := Get_Designated_Type (Name_Type);
          else
             Ptr_Type := Null_Iir;
          end if;
 
-         if Get_Kind (Base_Type) /= Iir_Kind_Record_Type_Definition then
+         if not Kind_In (Name_Type, Iir_Kind_Record_Type_Definition,
+                         Iir_Kind_Record_Subtype_Definition)
+         then
             return;
          end if;
 
          Rec_El := Find_Name_In_List
-           (Get_Elements_Declaration_List (Base_Type), Suffix);
+           (Get_Elements_Declaration_List (Name_Type), Suffix);
          if Rec_El = Null_Iir then
             return;
          end if;
@@ -2116,6 +2126,7 @@ package body Sem_Names is
                --  LRM93 §6.3
                --  This form of expanded name is only allowed within the
                --  construct itself.
+               --  FIXME: LRM08 12.3 Visibility h)
                if not Kind_In (Prefix,
                                Iir_Kind_Package_Declaration,
                                Iir_Kind_Package_Instantiation_Declaration)
@@ -2645,7 +2656,8 @@ package body Sem_Names is
 
          when Iir_Kind_Procedure_Declaration
            | Iir_Kind_Interface_Procedure_Declaration =>
-            Error_Msg_Sem (+Name, "function name is a procedure");
+            Error_Msg_Sem (+Name, "cannot call %n in an expression",
+                           +Prefix);
 
          when Iir_Kinds_Process_Statement
            | Iir_Kind_Component_Declaration

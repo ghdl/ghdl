@@ -1,0 +1,8 @@
+type __ghdl_integer is signed (32);
+
+public function test_assign () return __ghdl_integer
+declare
+begin
+  return __ghdl_integer'[5];
+  return __ghdl_integer'[4];
+end;

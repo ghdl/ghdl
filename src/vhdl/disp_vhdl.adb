@@ -289,6 +289,8 @@ package body Disp_Vhdl is
          when Iir_Kind_Range_Array_Attribute
            | Iir_Kind_Reverse_Range_Array_Attribute =>
             Disp_Range (Name);
+         when Iir_Kind_Reference_Name =>
+            Disp_Name (Get_Referenced_Name (Name));
          when others =>
             Error_Kind ("disp_name", Name);
       end case;
@@ -1533,7 +1535,7 @@ package body Disp_Vhdl is
             if I /= Natural'First then
                Put (", ");
             end if;
-            Disp_Name_Of (El);
+            Disp_Name (El);
          end loop;
       end if;
    end Disp_Instantiation_List;
@@ -2333,7 +2335,18 @@ package body Disp_Vhdl is
             end if;
             Formal := Get_Formal (El);
             if Formal /= Null_Iir then
-               Disp_Expression (Formal);
+               case Get_Kind (El) is
+                  when Iir_Kind_Association_Element_Package
+                    | Iir_Kind_Association_Element_Type
+                    | Iir_Kind_Association_Element_Subprogram =>
+                     Disp_Name (Formal);
+                  when Iir_Kind_Association_Element_By_Expression
+                    | Iir_Kind_Association_Element_By_Individual
+                    | Iir_Kind_Association_Element_Open =>
+                     Disp_Expression (Formal);
+                  when others =>
+                     raise Internal_Error;
+               end case;
                if Conv /= Null_Iir then
                   Put (")");
                end if;
@@ -2344,7 +2357,8 @@ package body Disp_Vhdl is
                when Iir_Kind_Association_Element_Open =>
                   Put ("open");
                when Iir_Kind_Association_Element_Package
-                 | Iir_Kind_Association_Element_Type =>
+                 | Iir_Kind_Association_Element_Type
+                 | Iir_Kind_Association_Element_Subprogram =>
                   Disp_Name (Get_Actual (El));
                when others =>
                   Conv := Get_In_Conversion (El);
@@ -2721,6 +2735,16 @@ package body Disp_Vhdl is
            | Iir_Kind_Iterator_Declaration =>
             Disp_Name_Of (Expr);
             return;
+         when Iir_Kind_Reference_Name =>
+            declare
+               Name : constant Iir := Get_Referenced_Name (Expr);
+            begin
+               if Is_Valid (Name) then
+                  Disp_Name (Name);
+               else
+                  Disp_Expression (Get_Named_Entity (Expr));
+               end if;
+            end;
 
          when Iir_Kinds_Dyadic_Operator =>
             Disp_Dyadic_Operator (Expr);
@@ -3290,7 +3314,7 @@ package body Disp_Vhdl is
       Put ("for ");
       Disp_Instantiation_List (Get_Instantiation_List (Conf));
       Put (" : ");
-      Disp_Name_Of (Get_Component_Name (Conf));
+      Disp_Name (Get_Component_Name (Conf));
       New_Line;
       Binding := Get_Binding_Indication (Conf);
       if Binding /= Null_Iir then

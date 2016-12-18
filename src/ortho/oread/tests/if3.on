@@ -1,0 +1,18 @@
+type __ghdl_bool_type is boolean {false, true};
+type __ghdl_integer is signed (32);
+
+public function test_arg (v : __ghdl_bool_type) return __ghdl_integer
+declare
+  local var r : __ghdl_integer;
+begin
+  r := __ghdl_integer'[0];
+  if v then
+   declare
+     local var w : __ghdl_integer;
+   begin
+     w := __ghdl_integer'[1];
+     r := w;
+   end;
+  end if;
+  return r; 
+end;

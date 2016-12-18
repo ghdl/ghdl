@@ -542,7 +542,7 @@ else
 			# include files
 			Copy-Item "$GHDLRootDir\src\grt\vpi_user.h"		"$InstallPath\include"			-Verbose:$EnableVerbose -ErrorAction SilentlyContinue
 			# pre-compile scripts
-			Copy-Item $GHDLVendorLibraryDir -Recurse			"$InstallPath\lib\vendors"	-Verbose:$EnableVerbose -ErrorAction SilentlyContinue
+			Copy-Item $GHDLVendorLibraryDir -Recurse			"$InstallPath\lib"					-Verbose:$EnableVerbose -ErrorAction SilentlyContinue
 			# pre-compiled libraries
 			Copy-Item $GHDLCompiledLibraryDir	-Recurse		"$InstallPath"							-Verbose:$EnableVerbose -ErrorAction SilentlyContinue
 
@@ -617,7 +617,7 @@ else
 		# include files
 		Copy-Item "$GHDLRootDir\src\grt\vpi_user.h"		"$InstallPath\include"			-Verbose:$EnableVerbose -ErrorAction SilentlyContinue
 		# pre-compile scripts
-		Copy-Item $GHDLVendorLibraryDir -Recurse			"$InstallPath\lib\vendors"	-Verbose:$EnableVerbose -ErrorAction SilentlyContinue
+		Copy-Item $GHDLVendorLibraryDir -Recurse			"$InstallPath\lib"					-Verbose:$EnableVerbose -ErrorAction SilentlyContinue
 		# pre-compiled libraries
 		Copy-Item $GHDLCompiledLibraryDir	-Recurse		"$InstallPath"							-Verbose:$EnableVerbose -ErrorAction SilentlyContinue
 

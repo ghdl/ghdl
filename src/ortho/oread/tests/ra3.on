@@ -1,0 +1,9 @@
+TYPE float64 IS FLOAT;
+TYPE int32 IS SIGNED (32);
+TYPE int64 IS SIGNED (64);
+
+PUBLIC FUNCTION div (a : int32; b : int32) RETURN float64
+DECLARE
+BEGIN
+  RETURN float64'conv (a /# int32'(1)) /# float64'conv (b /# int32'(1));
+END;

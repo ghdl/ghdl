@@ -184,6 +184,13 @@ package Iirs_Utils is
    --  Create a name that referenced the same named entity as NAME.
    function Build_Reference_Name (Name : Iir) return Iir;
 
+   --  Create a reference to a declaration (or aggregate).
+   function Build_Reference_Decl (Decl : Iir; Loc : Iir) return Iir;
+
+   --  If N is a reference_name, return the corresponding node, otherwise
+   --  return N.
+   function Strip_Reference_Name (N : Iir) return Iir;
+
    --  If SUBTYP has a resolution indication that is a function name, returns
    --  the function declaration (not the name).
    function Has_Resolution_Function (Subtyp : Iir) return Iir;

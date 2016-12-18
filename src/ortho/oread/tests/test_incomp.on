@@ -1,0 +1,17 @@
+type int is signed (32);
+type bool is boolean { false, true };
+
+type incomp_ptr is access;
+type rec is record
+  nxt : incomp_ptr;
+  val : int;
+end record;
+
+type incomp_ptr is access rec;
+
+public function eq (l : incomp_ptr; r : incomp_ptr) return bool
+declare
+begin
+   return bool'(l.all.val = r.all.val);
+end;
+

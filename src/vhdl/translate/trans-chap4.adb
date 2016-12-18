@@ -2388,6 +2388,24 @@ package body Trans.Chap4 is
                   Translate_Declaration_Chain_Subprograms (El);
                   Pop_Identifier_Prefix (Mark);
                end;
+            when Iir_Kind_Package_Instantiation_Declaration =>
+               if Get_Macro_Expanded_Flag
+                 (Get_Uninstantiated_Package_Decl (El))
+               then
+                  declare
+                     Bod : constant Iir := Get_Package_Body (El);
+                     Mark  : Id_Mark_Type;
+                  begin
+                     Push_Identifier_Prefix (Mark, Get_Identifier (El));
+                     Translate_Declaration_Chain_Subprograms (El);
+                     if Is_Valid (Bod)
+                       and then Global_Storage /= O_Storage_External
+                     then
+                        Translate_Declaration_Chain_Subprograms (Bod);
+                     end if;
+                     Pop_Identifier_Prefix (Mark);
+                  end;
+               end if;
             when others =>
                null;
          end case;
@@ -2485,7 +2503,7 @@ package body Trans.Chap4 is
                null;
 
             when Iir_Kind_Package_Declaration =>
-               Chap2.Elab_Package (Decl);
+               Chap2.Elab_Package (Decl, Get_Package_Header (Decl));
                --  FIXME: finalizer
             when Iir_Kind_Package_Body =>
                declare

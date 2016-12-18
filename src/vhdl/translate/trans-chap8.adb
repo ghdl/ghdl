@@ -347,7 +347,8 @@ package body Trans.Chap8 is
       Else_Clause : Iir;
    begin
       Start_If_Stmt
-        (Blk, Chap7.Translate_Expression (Get_Condition (Stmt)));
+        (Blk, Chap7.Translate_Expression (Strip_Reference_Name
+                                            (Get_Condition (Stmt))));
 
       Translate_Statements_Chain (Get_Sequential_Statement_Chain (Stmt));
 
@@ -4069,7 +4070,7 @@ package body Trans.Chap8 is
       Targ : Mnode;
       Drv : Mnode)
    is
-      Target      : constant Iir := Get_Target (Stmt);
+      Target      : constant Iir := Strip_Reference_Name (Get_Target (Stmt));
       Target_Type : constant Iir := Get_Type (Target);
       We          : Iir_Waveform_Element;
       Val         : O_Enode;
@@ -4197,7 +4198,7 @@ package body Trans.Chap8 is
 
    procedure Translate_Simple_Signal_Assignment_Statement (Stmt : Iir)
    is
-      Target : constant Iir := Get_Target (Stmt);
+      Target : constant Iir := Strip_Reference_Name (Get_Target (Stmt));
       Wf_Chain : constant Iir := Get_Waveform_Chain (Stmt);
       Mechanism : Signal_Assignment_Mechanism;
       Targ : Mnode;

@@ -35,7 +35,7 @@ package Trans.Chap2 is
    procedure Translate_Package_Body (Bod : Iir_Package_Body);
    procedure Translate_Package_Instantiation_Declaration (Inst : Iir);
 
-   procedure Elab_Package (Spec : Iir_Package_Declaration);
+   procedure Elab_Package (Spec : Iir; Header : Iir);
    procedure Elab_Package_Body (Spec : Iir_Package_Declaration; Bod : Iir);
 
    procedure Elab_Package_Instantiation_Declaration (Inst : Iir);

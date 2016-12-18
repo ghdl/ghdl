@@ -1428,7 +1428,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Open_Flag (Get_Kind (Target)),
                      "no field Open_Flag");
-      return Get_Flag15 (Target);
+      return Get_Flag7 (Target);
    end Get_Open_Flag;
 
    procedure Set_Open_Flag (Target : Iir; Flag : Boolean) is
@@ -1436,7 +1436,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Open_Flag (Get_Kind (Target)),
                      "no field Open_Flag");
-      Set_Flag15 (Target, Flag);
+      Set_Flag7 (Target, Flag);
    end Set_Open_Flag;
 
    function Get_After_Drivers_Flag (Target : Iir) return Boolean is
@@ -1776,23 +1776,6 @@ package body Iirs is
       Set_Field5 (Pkg, Decl);
    end Set_Package_Body;
 
-   function Get_Package_Instantiation_Bodies_Chain (Pkg : Iir) return Iir is
-   begin
-      pragma Assert (Pkg /= Null_Iir);
-      pragma Assert (Has_Package_Instantiation_Bodies_Chain (Get_Kind (Pkg)),
-                     "no field Package_Instantiation_Bodies_Chain");
-      return Get_Field8 (Pkg);
-   end Get_Package_Instantiation_Bodies_Chain;
-
-   procedure Set_Package_Instantiation_Bodies_Chain (Pkg : Iir; Chain : Iir)
-   is
-   begin
-      pragma Assert (Pkg /= Null_Iir);
-      pragma Assert (Has_Package_Instantiation_Bodies_Chain (Get_Kind (Pkg)),
-                     "no field Package_Instantiation_Bodies_Chain");
-      Set_Field8 (Pkg, Chain);
-   end Set_Package_Instantiation_Bodies_Chain;
-
    function Get_Need_Body (Decl : Iir_Package_Declaration) return Boolean is
    begin
       pragma Assert (Decl /= Null_Iir);
@@ -2050,9 +2033,9 @@ package body Iirs is
    end Set_Nature;
 
    type Iir_Mode_Conv is record
-      Flag12: Boolean;
       Flag13: Boolean;
       Flag14: Boolean;
+      Flag15: Boolean;
    end record;
    pragma Pack (Iir_Mode_Conv);
    pragma Assert (Iir_Mode_Conv'Size = Iir_Mode'Size);
@@ -2066,9 +2049,9 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Mode (Get_Kind (Target)),
                      "no field Mode");
-      Conv.Flag12 := Get_Flag12 (Target);
       Conv.Flag13 := Get_Flag13 (Target);
       Conv.Flag14 := Get_Flag14 (Target);
+      Conv.Flag15 := Get_Flag15 (Target);
       return To_Iir_Mode (Conv);
    end Get_Mode;
 
@@ -2082,9 +2065,9 @@ package body Iirs is
       pragma Assert (Has_Mode (Get_Kind (Target)),
                      "no field Mode");
       Conv := To_Iir_Mode_Conv (Mode);
-      Set_Flag12 (Target, Conv.Flag12);
       Set_Flag13 (Target, Conv.Flag13);
       Set_Flag14 (Target, Conv.Flag14);
+      Set_Flag15 (Target, Conv.Flag15);
    end Set_Mode;
 
    function Get_Guarded_Signal_Flag (Target : Iir) return Boolean is
@@ -4741,7 +4724,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Actual_Type (Get_Kind (Target)),
                      "no field Actual_Type");
-      return Get_Field3 (Target);
+      return Get_Field5 (Target);
    end Get_Actual_Type;
 
    procedure Set_Actual_Type (Target : Iir; Atype : Iir) is
@@ -4749,7 +4732,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Actual_Type (Get_Kind (Target)),
                      "no field Actual_Type");
-      Set_Field3 (Target, Atype);
+      Set_Field5 (Target, Atype);
    end Set_Actual_Type;
 
    function Get_Actual_Type_Definition (Target : Iir) return Iir is
@@ -4757,7 +4740,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Actual_Type_Definition (Get_Kind (Target)),
                      "no field Actual_Type_Definition");
-      return Get_Field5 (Target);
+      return Get_Field3 (Target);
    end Get_Actual_Type_Definition;
 
    procedure Set_Actual_Type_Definition (Target : Iir; Atype : Iir) is
@@ -4765,7 +4748,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Actual_Type_Definition (Get_Kind (Target)),
                      "no field Actual_Type_Definition");
-      Set_Field5 (Target, Atype);
+      Set_Field3 (Target, Atype);
    end Set_Actual_Type_Definition;
 
    function Get_Association_Chain (Target : Iir) return Iir is
@@ -5614,7 +5597,7 @@ package body Iirs is
       pragma Assert (N /= Null_Iir);
       pragma Assert (Has_Is_Ref (Get_Kind (N)),
                      "no field Is_Ref");
-      return Get_Flag7 (N);
+      return Get_Flag12 (N);
    end Get_Is_Ref;
 
    procedure Set_Is_Ref (N : Iir; Ref : Boolean) is
@@ -5622,7 +5605,7 @@ package body Iirs is
       pragma Assert (N /= Null_Iir);
       pragma Assert (Has_Is_Ref (Get_Kind (N)),
                      "no field Is_Ref");
-      Set_Flag7 (N, Ref);
+      Set_Flag12 (N, Ref);
    end Set_Is_Ref;
 
    function Get_Is_Forward_Ref (N : Iir) return Boolean is

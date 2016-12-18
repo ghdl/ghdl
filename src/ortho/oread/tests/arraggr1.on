@@ -1,0 +1,12 @@
+type __ghdl_index_type is unsigned (32);
+
+type __ghdl_char is unsigned (8);
+
+type __ghdl_chararray is array [__ghdl_index_type] of __ghdl_char;
+
+private constant _UI00000000 : subarray __ghdl_chararray[__ghdl_index_type'[10]
+  ];
+
+constant _UI00000000 := {__ghdl_char'[110], __ghdl_char'[101],
+   __ghdl_char'[115], __ghdl_char'[116], __ghdl_char'[49], __ghdl_char'[46],
+   __ghdl_char'[118], __ghdl_char'[104], __ghdl_char'[100], __ghdl_char'[0]};

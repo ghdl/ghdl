@@ -98,6 +98,13 @@ if ($Help)
 # save working directory
 $WorkingDir =		Get-Location
 
+# set default values
+$EnableVerbose =			$PSCmdlet.MyInvocation.BoundParameters["Verbose"]
+$EnableDebug =				$PSCmdlet.MyInvocation.BoundParameters["Debug"]
+if ($EnableVerbose -eq $null)	{	$EnableVerbose =	$false	}
+if ($EnableDebug	 -eq $null)	{	$EnableDebug =		$false	}
+if ($EnableDebug	 -eq $true)	{	$EnableVerbose =	$true		}
+
 # load modules from GHDL's 'vendors' library directory
 Import-Module $PSScriptRoot\config.psm1 -Verbose:$false -Debug:$false -ArgumentList "XilinxISE"
 Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -Debug:$false -ArgumentList @("Xilinx ISE", "$WorkingDir")
@@ -186,7 +193,7 @@ if ((-not $StopCompiling) -and $Unisim)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 	
 	$ErrorCount += 0
-	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
@@ -196,7 +203,7 @@ if ((-not $StopCompiling) -and $Unisim)
 	$SourceFiles = dir "$SourceDirectory\unisims\primitive\*.vhd*"
 	
 	$ErrorCount += 0
-	Start-PrimitiveCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	Start-PrimitiveCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
@@ -206,7 +213,7 @@ if ((-not $StopCompiling) -and $Unisim -and $SecureIP)
 	$SourceFiles = dir "$SourceDirectory\unisims\secureip\*.vhd*"
 	
 	$ErrorCount += 0
-	Start-PrimitiveCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	Start-PrimitiveCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
@@ -221,7 +228,7 @@ if ((-not $StopCompiling) -and $Unimacro)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 	
 	$ErrorCount += 0
-	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
@@ -231,7 +238,7 @@ if ((-not $StopCompiling) -and $Unimacro)
 	$SourceFiles = dir "$SourceDirectory\unimacro\*_MACRO.vhd*"
 	
 	$ErrorCount += 0
-	Start-PrimitiveCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	Start-PrimitiveCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
@@ -247,7 +254,7 @@ if ((-not $StopCompiling) -and $Simprim)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 	
 	$ErrorCount += 0
-	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
@@ -257,7 +264,7 @@ if ((-not $StopCompiling) -and $Simprim)
 	$SourceFiles = dir "$SourceDirectory\simprims\primitive\other\*.vhd*"
 	
 	$ErrorCount += 0
-	Start-PrimitiveCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	Start-PrimitiveCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
@@ -267,7 +274,7 @@ if ((-not $StopCompiling) -and $Simprim -and $SecureIP)
 	$SourceFiles = dir "$SourceDirectory\simprims\secureip\other\*.vhd*"
 	
 	$ErrorCount += 0
-	Start-PrimitiveCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	Start-PrimitiveCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 
@@ -291,7 +298,7 @@ if ((-not $StopCompiling) -and $CoreLib)
 	}
 	
 	$ErrorCount += 0
-	Start-PrimitiveCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	Start-PrimitiveCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 

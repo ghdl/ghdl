@@ -2302,24 +2302,30 @@ package body Trans.Rtis is
                | Iir_Kind_Group_Declaration =>
                null;
             when Iir_Kind_Package_Declaration =>
-               declare
-                  Mark : Id_Mark_Type;
-               begin
-                  Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
-                  Generate_Block (Decl, Parent_Rti);
-                  Pop_Identifier_Prefix (Mark);
-               end;
+               if Get_Info (Decl) /= null then
+                  --  Do not generate RTIs for untranslated packages.
+                  declare
+                     Mark : Id_Mark_Type;
+                  begin
+                     Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
+                     Generate_Block (Decl, Parent_Rti);
+                     Pop_Identifier_Prefix (Mark);
+                  end;
+               end if;
             when Iir_Kind_Package_Body =>
-               declare
-                  Mark : Id_Mark_Type;
-                  Mark1 : Id_Mark_Type;
-               begin
-                  Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
-                  Push_Identifier_Prefix (Mark1, "BODY");
-                  Generate_Block (Decl, Parent_Rti);
-                  Pop_Identifier_Prefix (Mark1);
-                  Pop_Identifier_Prefix (Mark);
-               end;
+               if Get_Info (Get_Package (Decl)) /= null then
+                  --  Do not generate RTIs for untranslated packages.
+                  declare
+                     Mark : Id_Mark_Type;
+                     Mark1 : Id_Mark_Type;
+                  begin
+                     Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
+                     Push_Identifier_Prefix (Mark1, "BODY");
+                     Generate_Block (Decl, Parent_Rti);
+                     Pop_Identifier_Prefix (Mark1);
+                     Pop_Identifier_Prefix (Mark);
+                  end;
+               end if;
 
             when Iir_Kind_Package_Instantiation_Declaration =>
                --  FIXME: todo
@@ -2600,7 +2606,8 @@ package body Trans.Rtis is
 
       Field_Off := O_Cnode_Null;
       case Get_Kind (Blk) is
-         when Iir_Kind_Package_Declaration =>
+         when Iir_Kind_Package_Declaration
+           | Iir_Kind_Package_Instantiation_Declaration =>
             Kind := Ghdl_Rtik_Package;
             Generate_Declaration_Chain (Get_Declaration_Chain (Blk), Rti);
          when Iir_Kind_Package_Body =>
@@ -2741,7 +2748,8 @@ package body Trans.Rtis is
          when Iir_Kind_Process_Statement
             | Iir_Kind_Sensitized_Process_Statement =>
             Info.Process_Rti_Const := Rti;
-         when Iir_Kind_Package_Declaration =>
+         when Iir_Kind_Package_Declaration
+           | Iir_Kind_Package_Instantiation_Declaration =>
             Info.Package_Rti_Const := Rti;
          when Iir_Kind_Package_Body =>
             --  Replace package declaration RTI with the body one.
@@ -2855,8 +2863,9 @@ package body Trans.Rtis is
          --  Compute parent RTI.
          case Get_Kind (Lib_Unit) is
             when Iir_Kind_Package_Declaration
-               | Iir_Kind_Entity_Declaration
-               | Iir_Kind_Configuration_Declaration =>
+              | Iir_Kind_Entity_Declaration
+              | Iir_Kind_Configuration_Declaration
+              | Iir_Kind_Package_Instantiation_Declaration =>
                --  The library.
                declare
                   Lib : Iir_Library_Declaration;

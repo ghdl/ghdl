@@ -1,0 +1,8 @@
+TYPE int32 IS SIGNED (32);
+TYPE char IS UNSIGNED(8);
+
+PUBLIC FUNCTION add (a : char; b : char) RETURN int32
+DECLARE
+BEGIN
+  RETURN int32'conv(a) +# int32'conv(b);
+END;

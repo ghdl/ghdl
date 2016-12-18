@@ -1510,7 +1510,7 @@ package body Sem_Stmts is
 
       --  Create a default binding indication if necessary.
       if Get_Component_Configuration (Stmt) = Null_Iir
-        and then Get_Kind (Decl) = Iir_Kind_Component_Declaration
+        and then Is_Component_Instantiation (Stmt)
       then
          Entity_Unit := Get_Visible_Entity_Declaration (Decl);
          if Entity_Unit = Null_Iir then

@@ -276,7 +276,10 @@ fi
 # compile unisim primitives
 if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_UNISIM" == "TRUE" ]; then
 	Library="unisim"
-	SourceFiles="$(LC_COLLATE=C ls $SourceDirectory/${Library}s/primitive/*.vhd)"
+	SourceFiles=()
+	while IFS= read -r File; do
+		SourceFiles+=("$SourceDirectory/${Library}s/primitive/$File")
+	done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/${Library}s/primitive/vhdl_analyze_order")
 
 	GHDLCompileLibrary
 fi
@@ -284,7 +287,10 @@ fi
 # compile unisim secureip primitives
 if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_UNISIM" == "TRUE" ] && [ "$COMPILE_SECUREIP" == "TRUE" ]; then
 	Library="secureip"
-	SourceFiles="$(LC_COLLATE=C ls $SourceDirectory/unisims/$Library/*.vhd)"
+	SourceFiles=()
+	while IFS= read -r File; do
+		SourceFiles+=("$SourceDirectory/unisims/$Library/$File")
+	done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/unisims/$Library/vhdl_analyze_order")
 
 	GHDLCompileLibrary
 fi
@@ -309,7 +315,7 @@ fi
 # compile unimacro macros
 if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_UNIMACRO" == "TRUE" ]; then
 	Library="unimacro"
-	SourceFiles="$(LC_COLLATE=C ls $SourceDirectory/$Library/*_MACRO.vhd)"
+	SourceFiles=($(LC_COLLATE=C ls $SourceDirectory/$Library/*_MACRO.vhd))
 
 	GHDLCompileLibrary
 fi
@@ -335,7 +341,10 @@ fi
 # compile simprim primitives
 if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_SIMPRIM" == "TRUE" ]; then
 	Library="simprim"
-	SourceFiles="$(LC_COLLATE=C ls $SourceDirectory/${Library}s/primitive/other/*.vhd)"
+	SourceFiles=()
+	while IFS= read -r File; do
+		SourceFiles+=("$SourceDirectory/${Library}s/primitive/other/$File")
+	done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/${Library}s/primitive/other/vhdl_analyze_order")
 
 	GHDLCompileLibrary
 fi
@@ -343,7 +352,10 @@ fi
 # compile simprim secureip primitives
 if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_SIMPRIM" == "TRUE" ] && [ "$COMPILE_SECUREIP" == "TRUE" ]; then
 	Library="secureip"
-	SourceFiles="$(LC_COLLATE=C ls $SourceDirectory/simprims/$Library/other/*.vhd)"
+	SourceFiles=()
+	while IFS= read -r File; do
+		SourceFiles+=("$SourceDirectory/simprims/$Library/other/$File")
+	done < <(grep --no-filename -R '^[a-zA-Z]' "$SourceDirectory/simprims/$Library/other/vhdl_analyze_order")
 
 	GHDLCompileLibrary
 fi

@@ -460,7 +460,19 @@ manual for details.
 .. option:: --GHDL1=<COMMAND>
 
   Use :samp:`COMMAND` as the command name for the compiler.  If :samp:`COMMAND` is
-  not a path, then it is search in the list of program directories.
+  not a path, then it is searched in the path.
+
+
+.. option:: --AS=<COMMAND>
+
+  Use :samp:`COMMAND` as the command name for the assembler.  If :samp:`COMMAND` is
+  not a path, then it is searched in the path.  The default is :samp:`as`.
+
+
+.. option:: --LINK=<COMMAND>
+
+  Use :samp:`COMMAND` as the linker driver.  If :samp:`COMMAND` is
+  not a path, then it is searched in the path.  The default is :samp:`gcc`.
 
 
 .. option:: -v

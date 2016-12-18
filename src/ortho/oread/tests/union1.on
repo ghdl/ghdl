@@ -1,0 +1,12 @@
+TYPE __ghdl_index_type IS UNSIGNED (32);
+
+TYPE __ghdl_char IS UNSIGNED (8);
+
+TYPE __ghdl_ptr IS ACCESS __ghdl_char;
+
+TYPE __ghdl_rti_loc IS UNION
+  offset: __ghdl_char;
+  address: __ghdl_ptr;
+END UNION;
+
+PUBLIC VAR var1 : __ghdl_rti_loc;

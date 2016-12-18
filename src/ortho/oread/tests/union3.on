@@ -1,0 +1,27 @@
+TYPE __ghdl_index_type IS UNSIGNED (32);
+
+TYPE __ghdl_char IS UNSIGNED (8);
+
+TYPE __ghdl_ptr IS ACCESS __ghdl_char;
+
+TYPE __ghdl_rti_loc IS UNION
+  offset: __ghdl_char;
+  address: __ghdl_ptr;
+END UNION;
+
+TYPE rec1 IS RECORD
+  f1: __ghdl_char;
+  f2: __ghdl_rti_loc;
+  f3: __ghdl_index_type;
+END RECORD;
+
+PUBLIC VAR var1 : rec1;
+
+PUBLIC FUNCTION main (a : __ghdl_index_type) RETURN __ghdl_index_type
+DECLARE
+BEGIN
+  var1.f3 := 3;
+  var1.f1 := 1;
+  var1.f2.offset := 2;
+  RETURN 0;
+END;

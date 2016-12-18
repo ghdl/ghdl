@@ -46,10 +46,10 @@ param(
 	[switch]$Help =							$false,
 	
 	# Compile all libraries and packages.
-	[switch]$All =							$true,
+	[switch]$All =							$false,
 	
 	# Compile all OSVVM packages.
-	[switch]$OSVVM =						$true,
+	[switch]$OSVVM =						$false,
 	
 	# Clean up directory before analyzing.
 	[switch]$Clean =						$false,
@@ -71,17 +71,20 @@ param(
 # save working directory
 $WorkingDir =		Get-Location
 
+# set default values
+$EnableDebug =		[bool]$PSCmdlet.MyInvocation.BoundParameters["Debug"]
+$EnableVerbose =	[bool]$PSCmdlet.MyInvocation.BoundParameters["Verbose"] -or $EnableDebug
+
 # load modules from GHDL's 'vendors' library directory
 Import-Module $PSScriptRoot\config.psm1 -Verbose:$false -Debug:$false -ArgumentList "OSVVM"
 Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -Debug:$false -ArgumentList @("OSVVM", "$WorkingDir")
 
 # Display help if no command was selected
-$Help = $Help -or (-not ($All -or $OSVVM -or $Clean))
-
-if ($Help)
+if ($Help -or (-not ($All -or $OSVVM -or $Clean)))
 {	Get-Help $MYINVOCATION.InvocationName -Detailed
 	Exit-CompileScript
 }
+
 if ($All)
 {	$OSVVM =			$true
 }
@@ -125,21 +128,27 @@ if ((-not $StopCompiling) -and $OSVVM)
 	$Files = @(
 		"NamePkg.vhd",
 		"OsvvmGlobalPkg.vhd",
-		"TextUtilPkg.vhd",
+		"VendorCovApiPkg.vhd",
 		"TranscriptPkg.vhd",
+		"TextUtilPkg.vhd",
 		"AlertLogPkg.vhd",
-		"MemoryPkg.vhd",
 		"MessagePkg.vhd",
 		"SortListPkg_int.vhd",
 		"RandomBasePkg.vhd",
 		"RandomPkg.vhd",
 		"CoveragePkg.vhd",
+		"MemoryPkg.vhd",
+		"ScoreboardGenericPkg.vhd",
+		"ScoreboardPkg_slv.vhd",
+		"ScoreboardPkg_int.vhd",
+		"ResolutionPkg.vhd",
+		"TbUtilPkg.vhd",
 		"OsvvmContext.vhd"
 	)
 	$SourceFiles = $Files | % { "$SourceDirectory\$_" }
 	
 	$ErrorCount += 0
-	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $HaltOnError
+	Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
 	$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 }
 

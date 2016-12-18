@@ -1,0 +1,18 @@
+TYPE float IS FLOAT;
+
+TYPE __ghdl_index_type IS UNSIGNED (32);
+
+TYPE __ghdl_char IS UNSIGNED (8);
+
+TYPE struct6 IS RECORD 
+  f : float;
+  i: __ghdl_char; 
+END RECORD;
+
+PUBLIC VAR var1 : struct6;
+
+TYPE struct6_arr IS ARRAY [__ghdl_index_type] OF struct6;
+
+TYPE struct6x2 IS SUBARRAY struct6_arr[2];
+
+PUBLIC VAR var2 : struct6x2;

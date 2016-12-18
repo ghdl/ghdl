@@ -20,19 +20,24 @@ cd build-$BLD
 # Configure
 case "$BLD" in
   mcode)
-    ../configure --prefix="$prefix" ;;
+      ../configure --prefix="$prefix"
+      MAKEOPTS=""
+      ;;
 
-  llvm)
-    ../configure --prefix="$prefix" --with-llvm-config=llvm-config-3.5 ;;
+  llvm*)
+      llvm_ver=`echo $BLD | sed -e 's/llvm//'`
+      ../configure --prefix="$prefix" --with-llvm-config=llvm-config$llvm_ver
+      MAKEOPTS="CLANGXX=clang++$llvm_ver"
+      ;;
 
   *)
-    echo "unknown build $BLD"
-    exit 1
-    ;;
+      echo "unknown build $BLD"
+      exit 1
+      ;;
 esac
 
 # Build
-make
+make $MAKEOPTS
 make install
 cd ..
 

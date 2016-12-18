@@ -1,0 +1,13 @@
+TYPE float IS FLOAT;
+
+PRIVATE FUNCTION add_float (a : float; b : float) RETURN float
+DECLARE
+BEGIN
+  RETURN a +# b;
+END;
+
+PRIVATE FUNCTION add3_float (a : float; b : float; c : float) RETURN float
+DECLARE
+BEGIN
+  RETURN add_float (a, add_float (b, c));
+END;

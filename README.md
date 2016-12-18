@@ -1,5 +1,7 @@
 # GHDL
 
+[![Join the chat at https://gitter.im/ghdl1/Lobby](https://badges.gitter.im/ghdl1/Lobby.svg)](https://gitter.im/ghdl1/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 This directory contains the sources of GHDL, the VHDL simulator.
 
 GHDL is not an interpreter: it generates machine code from your design,
@@ -32,7 +34,7 @@ compiler and GNAT GPL is very easy to install (download anonymously from
 libre.adacore.com, untar and run the doinstall script).  You also need
 zlib (for Debian or Ubuntu: install zlib1g-dev package).
 
-In the GHDL source directory, configure and build:
+In the GHDL base directory, configure and build:
 ```sh
 $ ./configure --prefix=/usr/local
 $ make

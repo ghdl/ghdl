@@ -1,0 +1,16 @@
+TYPE float64 IS FLOAT;
+TYPE int32 IS SIGNED (32);
+TYPE int64 IS SIGNED (64);
+
+PUBLIC FUNCTION to_int64 (a : int32) RETURN int64
+DECLARE
+BEGIN
+  RETURN int64'conv(a);
+END;
+
+--  Test spill
+PUBLIC FUNCTION spill1 (a : int32) RETURN int64
+DECLARE
+BEGIN
+  RETURN int64'conv(a) +# to_int64 (a);
+END;

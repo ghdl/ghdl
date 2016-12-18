@@ -3162,7 +3162,7 @@ package body Parse is
                Set_Minus_Terminal (First, Parse_Name);
             end if;
          when others =>
-            Error_Msg_Parse ("missign type or across/throught aspect "
+            Error_Msg_Parse ("missing type or across/throught aspect "
                                & "in quantity declaration");
             Eat_Tokens_Until_Semi_Colon;
             raise Expect_Error;
@@ -3271,7 +3271,7 @@ package body Parse is
          if Current_Token /= Tok_Comma then
             case Current_Token is
                when Tok_Assign =>
-                  Error_Msg_Parse ("missign type in " & Disp_Name (Kind));
+                  Error_Msg_Parse ("missing type in " & Disp_Name (Kind));
                   exit;
                when others =>
                   Error_Msg_Parse
@@ -6642,23 +6642,27 @@ package body Parse is
       return Res;
    end Parse_Process_Statement;
 
-   procedure Check_Formal_Form (Formal : Iir) is
+   function Check_Formal_Form (Formal : Iir) return Iir is
    begin
       if Formal = Null_Iir then
-         return;
+         return Formal;
       end if;
 
       case Get_Kind (Formal) is
          when Iir_Kind_Simple_Name
            | Iir_Kind_Slice_Name
            | Iir_Kind_Selected_Name =>
-            null;
+            return Formal;
          when Iir_Kind_Parenthesis_Name =>
             --  Could be an indexed name, so nothing to check within the
             --  parenthesis.
-            null;
+            return Formal;
+         when Iir_Kind_String_Literal8 =>
+            --  Operator designator
+            return String_To_Operator_Symbol (Formal);
          when others =>
-            Error_Msg_Parse (+Formal, "incorrect formal name");
+            Error_Msg_Parse (+Formal, "incorrect formal name ignored");
+            return Null_Iir;
       end case;
    end Check_Formal_Form;
 
@@ -6736,10 +6740,8 @@ package body Parse is
                   end if;
 
                when Tok_Double_Arrow =>
-                  Formal := Actual;
-
                   --  Check that FORMAL is a name and not an expression.
-                  Check_Formal_Form (Formal);
+                  Formal := Check_Formal_Form (Actual);
 
                   --  Skip '=>'
                   Scan;
@@ -6805,8 +6807,13 @@ package body Parse is
    function Parse_Generic_Map_Aspect return Iir is
    begin
       Expect (Tok_Generic);
+
+      --  Skip 'generic'.
       Scan_Expect (Tok_Map);
+
+      --  Skip 'map'.
       Scan;
+
       return Parse_Association_List_In_Parenthesis;
    end Parse_Generic_Map_Aspect;
 
@@ -8539,6 +8546,10 @@ package body Parse is
 
       if Current_Token = Tok_Generic then
          Set_Generic_Map_Aspect_Chain (Res, Parse_Generic_Map_Aspect);
+      elsif Current_Token = Tok_Left_Paren then
+         Error_Msg_Parse ("missing 'generic map'");
+         Set_Generic_Map_Aspect_Chain
+           (Res, Parse_Association_List_In_Parenthesis);
       end if;
 
       Expect (Tok_Semi_Colon);

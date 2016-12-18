@@ -39,4 +39,5 @@ package Default_Pathes is
 
    Shared_Library_Extension : constant String :=
      "@SOEXT@";
+   Default_Pie : constant Boolean := "@default_pie@" = String'("yes");
 end Default_Pathes;

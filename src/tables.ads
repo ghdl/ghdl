@@ -20,6 +20,8 @@
 --  - the index type can be any discrete type (in particular a modular type)
 --  - the increment is not used
 --  - the interface is simplified.
+with Dyn_Tables;
+
 generic
    --  This package creates:
    --    array (Table_Index_Type range Table_Low_Bound .. <>)
@@ -35,23 +37,18 @@ generic
    --  Initial number of elements.
    Table_Initial   : Positive;
 package Tables is
-   --  Ada type for the array.
-   type Table_Type is
-     array (Table_Index_Type range <>) of Table_Component_Type;
-   --  Fat subtype (so that the access is thin).
-   subtype Big_Table_Type is
-     Table_Type (Table_Low_Bound .. Table_Index_Type'Last);
+   package Dyn_Table is new Dyn_Tables (Table_Component_Type,
+                                        Table_Index_Type,
+                                        Table_Low_Bound,
+                                        Table_Initial);
 
-   --  Access type for the vector.  This is a thin pointer so that it is
-   --  compatible with C pointer, as this package uses malloc/realloc/free for
-   --  memory management.
-   type Table_Thin_Ptr is access all Big_Table_Type;
-   pragma Convention (C, Table_Thin_Ptr);
-   for Table_Thin_Ptr'Storage_Size use 0;
+   T : Dyn_Table.Instance;
+
+   subtype Table_Type is Dyn_Table.Table_Type;
 
    --  Pointer to the table.  Note that the use of a thin pointer to the
    --  largest array, this implementation bypasses Ada index checks.
-   Table : Table_Thin_Ptr := null;
+   Table : Dyn_Table.Table_Thin_Ptr renames T.Table;
 
    --  Initialize the table.  This is done automatically at elaboration.
    procedure Init;
@@ -84,4 +81,5 @@ package Tables is
    --  Increase by NUM the length of the array, and returns the old value
    --  of Last + 1.
    function Allocate (Num : Natural := 1) return Table_Index_Type;
+   pragma Inline (Allocate);
 end Tables;

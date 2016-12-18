@@ -16,6 +16,7 @@
 #  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 #  02111-1307, USA.
 CC=@CC@
+CLANGXX=clang++
 build=@build@
 srcdir=@srcdir@
 GNATMAKE=@GNATMAKE@
@@ -225,11 +226,11 @@ ghdl_llvm_jit$(EXEEXT): $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) $(ORTHO_DEPS) \
                llvm-cbindings.o version.ads force
 	$(GNATMAKE) -o $@ $(GHDL_LLVM_INCFLAGS) $(GNATFLAGS) ghdl_jit.adb \
 	 $(GNAT_BARGS) -largs llvm-cbindings.o $(GNAT_LARGS) $(GRT_ADD_OBJS) \
-	 $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB)) --LINK=$(CXX) \
+	 $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB)) --LINK=$(CLANGXX) \
 	 `$(LLVM_CONFIG) --ldflags --libs --system-libs` $(LDFLAGS)
 
 llvm-cbindings.o: $(srcdir)/src/ortho/$(llvm_be)/llvm-cbindings.cpp
-	$(CXX) -c `$(LLVM_CONFIG) --includedir --cxxflags` \
+	$(CLANGXX) -c `$(LLVM_CONFIG) --includedir --cxxflags` \
 	  $(OPT_FLAGS) -o $@ $<
 
 libs.vhdl.llvmjit: ghdl_llvm_jit$(EXEEXT)
@@ -246,14 +247,16 @@ ghdl1-llvm$(EXEEXT): version.ads force
 	$(MAKE) -f $(srcdir)/src/ortho/$(llvm_be)/Makefile \
 	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
 	 GNAT_FLAGS="$(GHDL_LLVM_INCFLAGS) $(GNATFLAGS)" LDFLAGS="$(LDFLAGS)" \
-	 LLVM_CONFIG="$(LLVM_CONFIG)" llvm_be_ver="$(llvm_be_ver)" all
+	 LLVM_CONFIG="$(LLVM_CONFIG)" CLANGXX="$(CLANGXX)" \
+	 llvm_be_ver="$(llvm_be_ver)" all
 
 oread-llvm$(EXEEXT): force
 	$(MAKE) -f $(srcdir)/src/ortho/$(llvm_be)/Makefile \
 	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
 	 GNATMAKE="$(GNATMAKE)" \
 	 GNAT_FLAGS="-aI$(srcdir)/src/ortho/oread $(GNATFLAGS)" \
-	 LLVM_CONFIG="$(LLVM_CONFIG)" llvm_be_ver="$(llvm_be_ver)"
+	 LLVM_CONFIG="$(LLVM_CONFIG)" CLANGXX="$(CLANGXX)" \
+	 llvm_be_ver="$(llvm_be_ver)"
 
 install.llvm.program: install.dirs ghdl1-llvm$(EXEEXT) ghdl_llvm$(EXEEXT)
 	$(INSTALL_PROGRAM) ghdl_llvm$(EXEEXT) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
@@ -268,7 +271,8 @@ GHDL_SIMUL_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir
 ghdl_simul$(EXEEXT): $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) version.ads force
 	$(GNATMAKE) $(GHDL_SIMUL_INCFLAGS) $(GNATFLAGS) ghdl_simul $(GNAT_BARGS) -largs $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
 
-libs.vhdl.simul: ghdl_simul$(EXEEXT) vhdl.libs.all
+libs.vhdl.simul: ghdl_simul$(EXEEXT)
+	$(MAKE) GHDL=$(PWD)/ghdl_simul$(EXEEXT) vhdl.libs.all
 
 ################ mhdlsim (library for the vhdl part) ####################
 
@@ -329,10 +333,10 @@ install.vpi: all.vpi install.dirs
 LIBSRC_DIR:=$(srcdir)/libraries
 LIBDST_DIR:=$(libdirsuffix)
 
-GHDL=$(PWD)/ghdl_$(backend)$(EXEEXT)
+ANALYZE_DEP:=ghdl_$(backend)$(EXEEXT)
+GHDL=$(PWD)/$(ANALYZE_DEP)
 ANALYZE_OPTS:=
 ANALYZE:=$(GHDL) -a $(ANALYZE_OPTS) $(LIB_CFLAGS)
-ANALYZE_DEP:=$(GHDL)
 
 # TODO?: don't include, make it separate
 include $(srcdir)/libraries/Makefile.inc
@@ -387,7 +391,7 @@ install.vhdllib: install.dirs
 ####################### clean ############################################
 
 clean: force
-	$(RM) -f *.o *.ali b~*.ad? *~ *.d b__*.ad? *.a *.deps *.bexch
+	$(RM) -f *.o *.ali b~*.ad? *~ *.d b__*.ad? *.a *.so *.deps *.bexch version.*
 	$(RM) -f ghdl_gcc$(EXEEXT) ghdl_mcode$(EXEEXT) ghdl$(EXEEXT) ghdl_llvm$(EXEEXT) ghdl_llvm_jit$(EXEEXT) ghdl_simul$(EXEEXT)
 	$(RM) -f ghdl1-gcc$(EXEEXT) ghdl1-llvm$(EXEEXT) ghdl1-debug$(EXEEXT)
 	$(RM) -f run-bind.ad? grt.lst grt-files grt-files.in

@@ -905,13 +905,60 @@ package body Scanner is
                      end if;
                   end if;
                end;
-            end if;
-            if Vhdl_Std > Vhdl_87 and then C = '\' then
+            elsif Vhdl_Std > Vhdl_87 and then C = '\' then
                --  Start of extended identifier.  Cannot follow an identifier.
                Error_Separator;
             end if;
-         when Invalid
-           | Format_Effector
+
+         when Invalid =>
+            --  Improve error message for use of UTF-8 quote marks.
+            --  It's possible because in the sequence of UTF-8 bytes for the
+            --  quote marks, there are invalid character (in the 128-160
+            --  range).
+            if C = Character'Val (16#80#)
+              and then Nam_Buffer (Len) = Character'Val (16#e2#)
+              and then (Source (Pos + 1) = Character'Val (16#98#)
+                          or else Source (Pos + 1) = Character'Val (16#99#))
+            then
+               --  UTF-8 left or right single quote mark.
+               if Len > 1 then
+                  --  The first byte (0xe2) is part of the identifier.  An
+                  --  error will be detected as the next byte (0x80) is
+                  --  invalid.  Remove the first byte from the identifier, and
+                  --  let's catch the error later.
+                  Nam_Length := Len - 1;
+                  Pos := Pos - 1;
+               else
+                  Error_Msg_Scan ("invalid use of UTF8 character for '");
+                  Pos := Pos + 2;
+
+                  --  Distinguish between character literal and tick.  Don't
+                  --  care about possible invalid character literal, as in any
+                  --  case we have already emitted an error message.
+                  if Current_Context.Prev_Token /= Tok_Identifier
+                    and then Current_Context.Prev_Token /= Tok_Character
+                    and then
+                    (Source (Pos + 1) = '''
+                       or else
+                       (Source (Pos + 1) = Character'Val (16#e2#)
+                          and then Source (Pos + 2) = Character'Val (16#80#)
+                          and then Source (Pos + 3) = Character'Val (16#99#)))
+                  then
+                     Current_Token := Tok_Character;
+                     Current_Context.Identifier :=
+                       Name_Table.Get_Identifier (Source (Pos));
+                     if Source (Pos + 1) = ''' then
+                        Pos := Pos + 2;
+                     else
+                        Pos := Pos + 4;
+                     end if;
+                  else
+                     Current_Token := Tok_Tick;
+                  end if;
+                  return;
+               end if;
+            end if;
+         when Format_Effector
            | Space_Character =>
             null;
       end case;

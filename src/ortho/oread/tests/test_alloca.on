@@ -1,0 +1,22 @@
+type __ghdl_size_type is unsigned (32);
+
+type __ghdl_index_type is unsigned (32);
+
+type __ghdl_integer is signed (32);
+
+type integer_array is array[__ghdl_index_type] of __ghdl_integer;
+type integer_arr_ptr is access integer_array;
+
+public procedure test_alloca ()
+declare
+  local var len : __ghdl_size_type;
+begin
+  len := __ghdl_size_type'[16];
+  declare
+    local var ptr : integer_arr_ptr;  
+  begin
+    ptr := integer_arr_ptr'alloca (len);
+  end;
+  len := __ghdl_size_type'[0];
+end;
+

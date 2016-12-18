@@ -91,9 +91,9 @@ function Get-SourceDirectory
 	)
 
 	if ($Source -ne "")
-	{	$SourceDirectory = $Source			}										# TODO: remove trailing backslashes
+	{	$SourceDirectory = $Source.TrimEnd("\")		}
 	elseif ($EnvSource -ne "")
-	{	$SourceDirectory = $EnvSource		}
+	{	$SourceDirectory = $EnvSource							}
 	else
 	{	$SourceDirectory = (Get-VendorToolInstallationDirectory) + "\" + (Get-VendorToolSourceDirectory)	}
 	
@@ -126,7 +126,7 @@ function Get-DestinationDirectory
 		[string]$Output
 	)
 	if ($Output -ne "")
-	{	$DestinationDirectory = $Output		}										# TODO: remove trailing backslashes
+	{	$DestinationDirectory = $Output.TrimEnd("\")								}
 	else
 	{	$DestinationDirectory = Get-VendorToolDestinationDirectory	}
 	
@@ -266,19 +266,28 @@ function Start-PackageCompilation
 		[Parameter(Mandatory=$true)][string]$Library,
 		[Parameter(Mandatory=$true)][string]$VHDLVersion,
 		[Parameter(Mandatory=$true)][string[]]$SourceFiles,
+		[Parameter(Mandatory=$true)][bool]$SuppressWarnings,
 		[Parameter(Mandatory=$true)][bool]$HaltOnError
 	)
+	# set default values
+	$EnableVerbose =			$PSCmdlet.MyInvocation.BoundParameters["Verbose"]
+	$EnableDebug =				$PSCmdlet.MyInvocation.BoundParameters["Debug"]
+	if ($EnableVerbose -eq $null)	{	$EnableVerbose =	$false	}
+	if ($EnableDebug	 -eq $null)	{	$EnableDebug =		$false	}
+	if ($EnableDebug	 -eq $true)	{	$EnableVerbose =	$true		}
+	
 	$LibraryDirectory="$DestinationDirectory/$Library/$VHDLVersion"
+	$EnableDebug -and		(Write-Host "  mkdir $LibraryDirectory"	-ForegroundColor DarkGray	) | Out-Null
 	mkdir $LibraryDirectory -ErrorAction SilentlyContinue | Out-Null
-	echo $LibraryDirectory
+	$EnableDebug -and		(Write-Host "  cd $LibraryDirectory"		-ForegroundColor DarkGray	) | Out-Null
 	cd $LibraryDirectory
 	Write-Host "Compiling library '$Library' ..." -ForegroundColor Yellow
 	$ErrorCount = 0
 	foreach ($File in $SourceFiles)
 	{	Write-Host "Analyzing package file '$File'" -ForegroundColor DarkCyan
 		$InvokeExpr = "$GHDLBinary " + ($GHDLOptions -join " ") + " --work=$Library " + $File + " 2>&1"
-		# Write-Host "  $InvokeExpr" -ForegroundColor DarkGray
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
+		$EnableDebug -and		(Write-Host "  $InvokeExpr" -ForegroundColor DarkGray	) | Out-Null
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "  "
 		if ($LastExitCode -ne 0)
 		{	$ErrorCount += 1
 			if ($HaltOnError)
@@ -317,19 +326,28 @@ function Start-PrimitiveCompilation
 		[Parameter(Mandatory=$true)][string]$Library,
 		[Parameter(Mandatory=$true)][string]$VHDLVersion,
 		[Parameter(Mandatory=$true)][string[]]$SourceFiles,
+		[Parameter(Mandatory=$true)][bool]$SuppressWarnings,
 		[Parameter(Mandatory=$true)][bool]$HaltOnError
 	)
+	# set default values
+	$EnableVerbose =			$PSCmdlet.MyInvocation.BoundParameters["Verbose"]
+	$EnableDebug =				$PSCmdlet.MyInvocation.BoundParameters["Debug"]
+	if ($EnableVerbose -eq $null)	{	$EnableVerbose =	$false	}
+	if ($EnableDebug	 -eq $null)	{	$EnableDebug =		$false	}
+	if ($EnableDebug	 -eq $true)	{	$EnableVerbose =	$true		}
+	
 	$LibraryDirectory="$DestinationDirectory/$Library/$VHDLVersion"
+	$EnableDebug -and		(Write-Host "  mkdir $LibraryDirectory"	-ForegroundColor DarkGray	) | Out-Null
 	mkdir $LibraryDirectory -ErrorAction SilentlyContinue | Out-Null
-	echo $LibraryDirectory
+	$EnableDebug -and		(Write-Host "  cd $LibraryDirectory"		-ForegroundColor DarkGray	) | Out-Null
 	cd $LibraryDirectory
 	Write-Host "Compiling library '$Library' ..." -ForegroundColor Yellow
 	$ErrorCount = 0
 	foreach ($File in $SourceFiles)
 	{	Write-Host "Analyzing primitive file '$File'" -ForegroundColor DarkCyan
 		$InvokeExpr = "$GHDLBinary " + ($GHDLOptions -join " ") + " --work=$Library " + $File + " 2>&1"
-		# Write-Host "  $InvokeExpr" -ForegroundColor DarkGray
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings
+		$EnableDebug -and		(Write-Host "  $InvokeExpr" -ForegroundColor DarkGray	) | Out-Null
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "  "
 		if ($LastExitCode -ne 0)
 		{	$ErrorCount += 1
 			if ($HaltOnError)
@@ -430,6 +448,11 @@ function Write-ColoredGHDLLine
 				}
 			}
 			elseif ($InputObject -match ":\d+:\d+:\s")
+			{	$ErrorRecordFound	= $true
+				Write-Host "${Indent}ERROR: "		-NoNewline -ForegroundColor Red
+				Write-Host $InputObject
+			}
+			elseif ($InputObject -match ":error:\s")
 			{	$ErrorRecordFound	= $true
 				Write-Host "${Indent}ERROR: "		-NoNewline -ForegroundColor Red
 				Write-Host $InputObject

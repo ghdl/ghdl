@@ -1,0 +1,4 @@
+type __ghdl_compare_type is enum {lt = 0, eq = 1, gt = 2};
+
+public constant en1 : __ghdl_compare_type;
+constant en1 := __ghdl_compare_type'[eq];

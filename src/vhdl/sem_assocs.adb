@@ -20,6 +20,7 @@ with Errorout; use Errorout;
 with Flags; use Flags;
 with Types; use Types;
 with Iirs_Utils; use Iirs_Utils;
+with Parse;
 with Std_Names;
 with Sem_Names; use Sem_Names;
 with Sem_Types;
@@ -33,20 +34,61 @@ package body Sem_Assocs is
                                            return Iir
    is
       N_Assoc : Iir;
+      Actual : Iir;
    begin
+      Actual := Get_Actual (Assoc);
       case Get_Kind (Inter) is
          when Iir_Kind_Interface_Package_Declaration =>
             N_Assoc := Create_Iir (Iir_Kind_Association_Element_Package);
          when Iir_Kind_Interface_Type_Declaration =>
             N_Assoc := Create_Iir (Iir_Kind_Association_Element_Type);
+            if Get_Kind (Actual) = Iir_Kind_Parenthesis_Name then
+               --  Convert parenthesis name to array subtype.
+               declare
+                  N_Actual : Iir;
+                  Sub_Assoc : Iir;
+                  Indexes : Iir_List;
+                  Old : Iir;
+               begin
+                  N_Actual := Create_Iir (Iir_Kind_Array_Subtype_Definition);
+                  Location_Copy (N_Actual, Actual);
+                  Set_Subtype_Type_Mark (N_Actual, Get_Prefix (Actual));
+                  Sub_Assoc := Get_Association_Chain (Actual);
+                  Indexes := Create_Iir_List;
+                  Set_Index_Constraint_List (N_Actual, Indexes);
+                  while Is_Valid (Sub_Assoc) loop
+                     if Get_Kind (Sub_Assoc)
+                       /= Iir_Kind_Association_Element_By_Expression
+                     then
+                        Error_Msg_Sem
+                          (+Sub_Assoc, "index constraint must be a range");
+                     else
+                        if Get_Formal (Sub_Assoc) /= Null_Iir then
+                           Error_Msg_Sem
+                             (+Sub_Assoc, "formal part not allowed");
+                        end if;
+                        Append_Element (Indexes, Get_Actual (Sub_Assoc));
+                     end if;
+                     Old := Sub_Assoc;
+                     Sub_Assoc := Get_Chain (Sub_Assoc);
+                     Free_Iir (Old);
+                  end loop;
+                  Old := Actual;
+                  Free_Iir (Old);
+                  Actual := N_Actual;
+               end;
+            end if;
          when Iir_Kinds_Interface_Subprogram_Declaration =>
             N_Assoc := Create_Iir (Iir_Kind_Association_Element_Subprogram);
+            if Get_Kind (Actual) = Iir_Kind_String_Literal8 then
+               Actual := Parse.String_To_Operator_Symbol (Actual);
+            end if;
          when others =>
             Error_Kind ("rewrite_non_object_association", Inter);
       end case;
       Location_Copy (N_Assoc, Assoc);
       Set_Formal (N_Assoc, Get_Formal (Assoc));
-      Set_Actual (N_Assoc, Get_Actual (Assoc));
+      Set_Actual (N_Assoc, Actual);
       Set_Chain (N_Assoc, Get_Chain (Assoc));
       Set_Whole_Association_Flag (N_Assoc, True);
       Free_Iir (Assoc);
@@ -69,18 +111,20 @@ package body Sem_Assocs is
       Res := Null_Iir;
 
       --  Common case: only objects in interfaces.
-      while Inter /= Null_Iir loop
+      while Is_Valid (Inter) loop
          exit when Get_Kind (Inter)
            not in Iir_Kinds_Interface_Object_Declaration;
          Inter := Get_Chain (Inter);
       end loop;
-      if Inter = Null_Iir then
+      if Is_Null (Inter) then
+         --  Only interface object, nothing to to.
          return Assoc_Chain;
       end if;
 
+      Inter := Inter_Chain;
       loop
          --  Don't try to detect errors.
-         if Assoc = Null_Iir then
+         if Is_Null (Assoc) then
             return Res;
          end if;
 
@@ -97,7 +141,8 @@ package body Sem_Assocs is
                Assoc := Rewrite_Non_Object_Association (Assoc, Inter);
             end if;
          else
-            if Get_Kind (Formal) = Iir_Kind_Simple_Name then
+            if Kind_In (Formal, Iir_Kind_Simple_Name, Iir_Kind_Operator_Symbol)
+            then
                --  A candidate.  Search the corresponding interface.
                Inter := Find_Name_In_Chain
                  (Inter_Chain, Get_Identifier (Formal));
@@ -120,6 +165,9 @@ package body Sem_Assocs is
          end if;
          Prev_Assoc := Assoc;
          Assoc := Get_Chain (Assoc);
+         if Is_Valid (Inter) then
+            Inter := Get_Chain (Inter);
+         end if;
       end loop;
    end Extract_Non_Object_Association;
 
@@ -1288,7 +1336,8 @@ package body Sem_Assocs is
       Formal_Type : Iir;
    begin
       case Get_Kind (Formal) is
-         when Iir_Kind_Simple_Name =>
+         when Iir_Kind_Simple_Name
+           | Iir_Kind_Operator_Symbol =>
             --  Certainly the most common case: FORMAL_NAME => VAL.
             --  It is also the easiest.  So, handle it completly now.
             if Get_Identifier (Formal) = Get_Identifier (Inter) then
@@ -1522,7 +1571,7 @@ package body Sem_Assocs is
          --  Can be associated only once
          Match := Fully_Compatible;
       else
-         if Get_Kind (Formal) = Iir_Kind_Simple_Name
+         if Kind_In (Formal, Iir_Kind_Simple_Name, Iir_Kind_Operator_Symbol)
            and then Get_Identifier (Formal) = Get_Identifier (Inter)
          then
             Match := Fully_Compatible;
@@ -1537,7 +1586,6 @@ package body Sem_Assocs is
       Formal : constant Iir := Get_Formal (Assoc);
    begin
       if Formal /= Null_Iir then
-         pragma Assert (Get_Kind (Formal) = Iir_Kind_Simple_Name);
          pragma Assert (Get_Identifier (Formal) = Get_Identifier (Inter));
          Set_Named_Entity (Formal, Inter);
          Set_Base_Name (Formal, Inter);
@@ -1610,13 +1658,11 @@ package body Sem_Assocs is
    end Sem_Association_Package;
 
    --  Create an implicit association_element_subprogram for the declaration
-   --  of function ID for ACTUAL (a name of a type).
+   --  of function ID for ACTUAL_Type (a type/subtype definition).
    function Sem_Implicit_Operator_Association
-     (Id : Name_Id; Actual : Iir) return Iir
+     (Id : Name_Id; Actual_Type : Iir; Actual_Name : Iir) return Iir
    is
       use Sem_Scopes;
-
-      Atype : constant Iir := Get_Type (Actual);
 
       --  Return TRUE if DECL is a function declaration with a comparaison
       --  operator profile.
@@ -1641,7 +1687,8 @@ package body Sem_Assocs is
             if Inter = Null_Iir then
                return False;
             end if;
-            if Get_Base_Type (Get_Type (Inter)) /= Get_Base_Type (Atype) then
+            if Get_Base_Type (Get_Type (Inter)) /= Get_Base_Type (Actual_Type)
+            then
                return False;
             end if;
             Inter := Get_Chain (Inter);
@@ -1661,16 +1708,17 @@ package body Sem_Assocs is
          Decl := Get_Declaration (Interp);
          if Has_Comparaison_Profile (Decl) then
             Res := Create_Iir (Iir_Kind_Association_Element_Subprogram);
-            Location_Copy (Res, Actual);
-            Set_Actual (Res, Build_Simple_Name (Decl, Get_Location (Actual)));
+            Location_Copy (Res, Actual_Name);
+            Set_Actual
+              (Res, Build_Simple_Name (Decl, Get_Location (Actual_Name)));
             Set_Use_Flag (Decl, True);
             return Res;
          end if;
          Interp := Get_Next_Interpretation (Interp);
       end loop;
 
-      Error_Msg_Sem (+Actual, "cannot find a %i declaration for type %i",
-                     (+Id, +Actual));
+      Error_Msg_Sem (+Actual_Name, "cannot find a %i declaration for type %i",
+                     (+Id, +Actual_Name));
       return Null_Iir;
    end Sem_Implicit_Operator_Association;
 
@@ -1681,6 +1729,7 @@ package body Sem_Assocs is
    is
       Inter_Def : constant Iir := Get_Type (Inter);
       Actual : Iir;
+      Actual_Type : Iir;
       Op_Eq, Op_Neq : Iir;
    begin
       if not Finish then
@@ -1701,15 +1750,21 @@ package body Sem_Assocs is
 
       --  Set type association for analysis of reference to this interface.
       pragma Assert (Is_Null (Get_Associated_Type (Inter_Def)));
-      Set_Associated_Type (Inter_Def, Get_Type (Actual));
+      if Get_Kind (Actual) in Iir_Kinds_Subtype_Definition then
+         Actual_Type := Actual;
+      else
+         Actual_Type := Get_Type (Actual);
+      end if;
+      Set_Actual_Type (Assoc, Actual_Type);
+      Set_Associated_Type (Inter_Def, Actual_Type);
 
       --  FIXME: it is not clear at all from the LRM how the implicit
       --  associations are done...
       Op_Eq := Sem_Implicit_Operator_Association
-        (Std_Names.Name_Op_Equality, Actual);
+        (Std_Names.Name_Op_Equality, Actual_Type, Actual);
       if Op_Eq /= Null_Iir then
          Op_Neq := Sem_Implicit_Operator_Association
-           (Std_Names.Name_Op_Inequality, Actual);
+           (Std_Names.Name_Op_Inequality, Actual_Type, Actual);
          Set_Chain (Op_Eq, Op_Neq);
          Set_Subprogram_Association_Chain (Assoc, Op_Eq);
       end if;
@@ -1838,11 +1893,11 @@ package body Sem_Assocs is
             end if;
          when Iir_Kind_Overload_List =>
             declare
-               First_Error : Boolean;
+               Nbr_Errors : Natural;
                List : Iir_List;
                El, R : Iir;
             begin
-               First_Error := True;
+               Nbr_Errors := 0;
                R := Null_Iir;
                List := Get_Overload_List (Res);
                for I in Natural loop
@@ -1852,18 +1907,18 @@ package body Sem_Assocs is
                      if Is_Null (R) then
                         R := El;
                      else
-                        if First_Error then
+                        if Nbr_Errors = 0 then
                            Error_Msg_Sem
                              (+Assoc,
                               "many possible actual subprogram for %n:",
                               +Inter);
                            Error_Msg_Sem
                              (+Assoc, " %n declared at %l", (+R, + R));
-                           First_Error := False;
                         else
                            Error_Msg_Sem
                              (+Assoc, " %n declared at %l", (+El, +El));
                         end if;
+                        Nbr_Errors := Nbr_Errors + 1;
                      end if;
                   end if;
                end loop;
@@ -1881,7 +1936,7 @@ package body Sem_Assocs is
                      end loop;
                   end if;
                   return;
-               elsif First_Error then
+               elsif Nbr_Errors > 0 then
                   return;
                end if;
                Free_Overload_List (Res);
@@ -1892,6 +1947,7 @@ package body Sem_Assocs is
       end case;
 
       Set_Named_Entity (Actual, Res);
+      Xrefs.Xref_Name (Actual);
       Set_Use_Flag (Res, True);
    end Sem_Association_Subprogram;
 
@@ -1936,21 +1992,44 @@ package body Sem_Assocs is
       Actual := Get_Actual (Assoc);
       In_Conv := Null_Iir;
       if Get_Kind (Inter) /= Iir_Kind_Interface_Constant_Declaration then
-         case Get_Kind (Actual) is
-            when Iir_Kind_Function_Call =>
-               Expr := Get_Parameter_Association_Chain (Actual);
-               if Is_Conversion_Function (Expr) then
-                  In_Conv := Actual;
-                  Actual := Get_Actual (Expr);
+         declare
+            --  Actual before the extraction of the conversion.
+            Prev_Actual : constant Iir := Actual;
+         begin
+            --  Extract conversion and new actual (conv_expr).
+            case Get_Kind (Actual) is
+               when Iir_Kind_Function_Call =>
+                  Expr := Get_Parameter_Association_Chain (Actual);
+                  if Is_Conversion_Function (Expr) then
+                     In_Conv := Actual;
+                     Actual := Get_Actual (Expr);
+                  end if;
+               when Iir_Kind_Type_Conversion =>
+                  if Flags.Vhdl_Std > Vhdl_87 then
+                     In_Conv := Actual;
+                     Actual := Get_Expression (Actual);
+                  end if;
+               when others =>
+                  null;
+            end case;
+
+            --  There could be an ambiguity between a conversion and a normal
+            --  actual expression.  Check if the new actual is an object and
+            --  if the object is of the corresponding class.
+            if Is_Valid (In_Conv) then
+               if Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration then
+                  if not Is_Signal_Object (Actual) then
+                     --  Actual is not a signal object.  This is not a
+                     --  conversion but a regular association.
+                     In_Conv := Null_Iir;
+                     Actual := Prev_Actual;
+                  end if;
+               else
+                  --  Variable: let as is.
+                  null;
                end if;
-            when Iir_Kind_Type_Conversion =>
-               if Flags.Vhdl_Std > Vhdl_87 then
-                  In_Conv := Actual;
-                  Actual := Get_Expression (Actual);
-               end if;
-            when others =>
-               null;
-         end case;
+            end if;
+         end;
       end if;
 
       --  4 cases: F:out_conv, G:in_conv.

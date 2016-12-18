@@ -1330,17 +1330,25 @@ package body Grt.Vpi is
       return Res;
    end vpi_register_cb;
 
--------------------------------------------------------------------------------
--- * * *   V P I   d u m m i e s   * * * * * * * * * * * * * * * * * * * * * *
--------------------------------------------------------------------------------
-
    -- int vpi_free_object(vpiHandle ref)
    function vpi_free_object (aRef: vpiHandle) return integer
    is
-      pragma Unreferenced (aRef);
+      Ref_Copy : vpiHandle;
    begin
+      if Flag_Trace then
+         Trace_Start ("vpi_free_object (");
+         Trace (aRef);
+         Trace (")");
+         Trace_Newline;
+      end if;
+      Ref_Copy := aRef;
+      Free(Ref_Copy);
       return 1;
    end vpi_free_object;
+
+-------------------------------------------------------------------------------
+-- * * *   V P I   d u m m i e s   * * * * * * * * * * * * * * * * * * * * * *
+-------------------------------------------------------------------------------
 
    -- int vpi_get_vlog_info(p_vpi_vlog_info vlog_info_p)
    function vpi_get_vlog_info (info : p_vpi_vlog_info) return integer is
