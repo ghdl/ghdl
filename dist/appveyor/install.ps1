@@ -9,6 +9,9 @@ Write-Host "  Installing PSGet ..." -Foreground Yellow
 Invoke-WebRequest "http://psget.net/GetPsGet.ps1" | Invoke-Expression
 #Write-Host "  Installing Chocolatey ..." -Foreground Yellow
 #Invoke-WebRequest https://chocolatey.org/install.ps1 -UseBasicParsing | Invoke-Expression
+Write-Host "  Installing NuGet ..." -Foreground Yellow
+(new-object net.webclient).DownloadFile('https://dist.nuget.org/win-x86-commandline/v3.5.0/NuGet.exe', 'NuGet.exe')
+.\Nuget.exe
 
 Write-Host "  Installing PowerShell modules ..." -Foreground Yellow
 Find-Module -Name Pscx

@@ -46,8 +46,10 @@ function Restore-NativeCommandStream
 	}
 }
 
+
+Write-Host "ExecutionPolicy = {0}" -f (Get-ExecutionPolicy) -Foreground Yellow
 Write-Host "List env:..." -Foreground Yellow
-dir env:
+dir env: | % { Write-Host "  $_" }
 Write-Host "Print env:PATH..." -Foreground Yellow
 $env:PATH.Split(";") | % { Write-Host "  $_" }
 Write-Host "Print GCC setup..." -Foreground Yellow
