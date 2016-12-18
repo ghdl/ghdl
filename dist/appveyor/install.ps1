@@ -5,6 +5,9 @@ C:\msys64\usr\bin\pacman -V
 # C:\msys64\usr\bin\pacman -Q
 C:\msys64\usr\bin\pacman -S mingw-w64-x86_64-llvm35 mingw-w64-x86_64-clang35 --noconfirm
 
+Write-Host "  Installing Chocolatey packages ..." -Foreground Yellow
+Invoke-WebRequest https://chocolatey.org/install.ps1 -UseBasicParsing | Invoke-Expression
+
 Write-Host "  Installing PowerShell packages ..." -Foreground Yellow
 Install-Module -Name Pscx
 
