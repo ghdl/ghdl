@@ -47,12 +47,31 @@ function Restore-NativeCommandStream
 }
 
 Write-Host "Run testsuites..." -Foreground Yellow
-cd "$($env:APPVEYOR_BUILD_FOLDER)\testsuite\gna"
-
+cd "$($env:APPVEYOR_BUILD_FOLDER)\testsuite"
 # Use a MinGW compatible path
 $env:GHDL="$($env:GHDL_PREFIX_DIR)/bin/ghdl.exe"
 
-c:\msys64\usr\bin\bash.exe -c "./testsuite.sh" 2>&1 | Restore-NativeCommandStream | %{ "$_" }
+# ==============================================================================
+$TestFramework =  "GNA"
+Write-Host "Running GNA tests..." -Foreground Yellow
+
+$Directories = dir -Directory -Path gna *
+foreach ($Directory in $Directories)
+{	$TestName = "GNA test: {0}" -f $Directory
+	$TestFile = $Directory
+	
+	cd $Directory
+	Add-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome Running
+	$start = Get-Date
+	c:\msys64\usr\bin\bash.exe -c "./testsuite.sh" 2>&1 | Restore-NativeCommandStream | %{ "$_" }
+	$end = Get-Date
+	Update-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome $(if ($LastExitCode -eq 0) {"Passed"} else {"Failed"}) -Duration ($end - $start).TotalSeconds
+	cd ..
+}
+
+Write-Host "Running VEST tests..." -Foreground Yellow
+
+Write-Host "  [Skipped]" -Foreground Red
 
 cd $env:APPVEYOR_BUILD_FOLDER
 exit 0
