@@ -46,8 +46,8 @@ function Restore-NativeCommandStream
 	}
 }
 
-Write-Host "Building GHDL and libraries..." -Foreground Yellow
-cd "$($env:APPVEYOR_BUILD_FOLDER)\testsuite"
+Write-Host "Run testsuites..." -Foreground Yellow
+cd "$($env:APPVEYOR_BUILD_FOLDER)\testsuite\gna"
 
 # Use a MinGW compatible path
 $env:GHDL="$($env:GHDL_PREFIX_DIR)/bin/ghdl.exe"
