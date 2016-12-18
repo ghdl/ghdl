@@ -10,7 +10,8 @@ Invoke-WebRequest "http://psget.net/GetPsGet.ps1" | Invoke-Expression
 #Write-Host "  Installing Chocolatey ..." -Foreground Yellow
 #Invoke-WebRequest https://chocolatey.org/install.ps1 -UseBasicParsing | Invoke-Expression
 Write-Host "  Installing NuGet ..." -Foreground Yellow
-(new-object net.webclient).DownloadFile('https://dist.nuget.org/win-x86-commandline/v3.5.0/NuGet.exe', 'NuGet.exe')
+(new-object net.webclient).DownloadFile("https://dist.nuget.org/win-x86-commandline/v3.5.0/NuGet.exe", "$($env:APPVEYOR_BUILD_FOLDER)\NuGet.exe")
+dir
 .\Nuget.exe
 
 Write-Host "  Installing PowerShell modules ..." -Foreground Yellow
