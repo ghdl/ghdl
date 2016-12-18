@@ -54,12 +54,14 @@ $env:GHDL="$($env:GHDL_PREFIX_DIR)/bin/ghdl.exe"
 # ==============================================================================
 $TestFramework =  "GNA"
 Write-Host "Running GNA tests..." -Foreground Yellow
+cd gna
 
-$Directories = dir -Directory -Path gna *
+$Directories = dir -Directory *
 foreach ($Directory in $Directories)
 {	$TestName = "GNA test: {0}" -f $Directory
 	$TestFile = $Directory
 	
+	Write-Host $TestName -Foreground Yellow
 	cd $Directory
 	Add-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome Running
 	$start = Get-Date
@@ -68,10 +70,24 @@ foreach ($Directory in $Directories)
 	Update-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome $(if ($LastExitCode -eq 0) {"Passed"} else {"Failed"}) -Duration ($end - $start).TotalSeconds
 	cd ..
 }
+cd ..
 
-Write-Host "Running VEST tests..." -Foreground Yellow
+# ==============================================================================
+$TestFramework =  "VESTS"
+Write-Host "Running VESTS tests..." -Foreground Yellow
+cd vests
 
-Write-Host "  [Skipped]" -Foreground Red
+$TestName = "VESTS test:" # {0}" -f $Directory
+$TestFile = $Directory
+	
+Write-Host $TestName -Foreground Yellow
+Add-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome Running
+$start = Get-Date
+c:\msys64\usr\bin\bash.exe -c "./testsuite.sh" 2>&1 | Restore-NativeCommandStream | %{ "$_" }
+$end = Get-Date
+Update-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome $(if ($LastExitCode -eq 0) {"Passed"} else {"Failed"}) -Duration ($end - $start).TotalSeconds
+cd ..
 
+# ==============================================================================
 cd $env:APPVEYOR_BUILD_FOLDER
 exit 0
