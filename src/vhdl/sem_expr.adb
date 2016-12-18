@@ -3515,7 +3515,7 @@ package body Sem_Expr is
    begin
       pragma Assert (A_Type /= Null_Iir);
 
-      if False and Flags.Vhdl_Std >= Vhdl_08 then
+      if Flags.Vhdl_Std >= Vhdl_08 then
          --  An aggregate can be a locally static primary according to LRM08
          --  9.4.2 Locally static primaries l) and m).
          Set_Expr_Staticness (Expr, Locally);
@@ -3533,11 +3533,6 @@ package body Sem_Expr is
             return Sem_Array_Aggregate_Type (Expr, A_Type, False);
          when Iir_Kind_Record_Type_Definition
            | Iir_Kind_Record_Subtype_Definition =>
-            if Flags.Vhdl_Std >= Vhdl_08 then
-               --  An aggregate can be a locally static primary according to
-               --  LRM08 9.4.2 Locally static primaries l) and m).
-               Set_Expr_Staticness (Expr, Locally);
-            end if;
             if not Sem_Record_Aggregate (Expr, A_Type) then
                return Null_Iir;
             end if;

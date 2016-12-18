@@ -585,26 +585,25 @@ package body Trans.Chap4 is
       Value : constant Iir := Get_Default_Value (Obj);
       Obj1  : Iir;
    begin
-      --  A locally static constant is pre-elaborated.
-      --  (only constant can be locally static).
-      if Get_Expr_Staticness (Obj) = Locally
-        and then Get_Deferred_Declaration (Obj) = Null_Iir
-      then
-         if Get_Kind (Value) = Iir_Kind_Overflow_Literal then
-            Chap6.Gen_Bound_Error (Obj);
-         end if;
-         return;
-      end if;
-
       --  Set default value.
       if Get_Kind (Obj) = Iir_Kind_Constant_Declaration then
-         if Get_Info (Obj).Object_Static then
-            return;
-         end if;
          if Get_Deferred_Declaration_Flag (Obj) then
             --  No code generation for a deferred constant.
             return;
          end if;
+
+         if Get_Kind (Value) = Iir_Kind_Overflow_Literal then
+            --  An overflow can be static, but must still generate an error
+            --  at run time.
+            Chap6.Gen_Bound_Error (Obj);
+            return;
+         end if;
+
+         if Get_Info (Obj).Object_Static then
+            --  A static object is pre-initialized.
+            return;
+         end if;
+
          Obj1 := Get_Deferred_Declaration (Obj);
          if Obj1 = Null_Iir then
             Obj1 := Obj;

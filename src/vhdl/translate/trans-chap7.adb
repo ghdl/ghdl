@@ -107,17 +107,28 @@ package body Trans.Chap7 is
       Atype : Iir;
       Info  : Iir;
    begin
-      if Expr = Null_Iir
-        or else Get_Kind (Expr) = Iir_Kind_Overflow_Literal
-      then
+      if Expr = Null_Iir then
          --  Deferred constant.
          return False;
       end if;
 
       --  Only aggregates are specially handled.
-      if Get_Kind (Expr) /= Iir_Kind_Aggregate then
-         return Get_Expr_Staticness (Decl) = Locally;
-      end if;
+      case Get_Kind (Expr) is
+         when Iir_Kind_Aggregate =>
+            null;
+         when Iir_Kind_Simple_Aggregate
+           | Iir_Kind_Null_Literal
+           | Iir_Kind_Physical_Int_Literal
+           | Iir_Kind_Physical_Fp_Literal
+           | Iir_Kind_Integer_Literal
+           | Iir_Kind_Floating_Point_Literal
+           | Iir_Kind_String_Literal8 =>
+            return True;
+         when Iir_Kind_Overflow_Literal =>
+            return False;
+         when others =>
+            return False;
+      end case;
 
       Atype := Get_Type (Decl);
       --  Bounds must be known (and static).
@@ -1262,11 +1273,13 @@ package body Trans.Chap7 is
       Var_Off : O_Dnode;
 
       --  Assign: write values to the result array.
-      procedure Assign_El (E : Iir) is
+      procedure Assign_El (E : Iir)
+      is
+         El_Type : constant Iir := Get_Element_Subtype (Expr_Type);
       begin
          Chap3.Translate_Object_Copy
            (Chap3.Index_Base (Var_Arr, Expr_Type, New_Obj_Value (Var_Off)),
-            Translate_Expression (E), Get_Element_Subtype (Expr_Type));
+            Translate_Expression (E, El_Type), El_Type);
          Inc_Var (Var_Off);
       end Assign_El;
 

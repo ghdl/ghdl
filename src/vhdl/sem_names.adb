@@ -644,12 +644,7 @@ package body Sem_Names is
 
       Set_Type (Expr, Get_Element_Subtype (Prefix_Type));
 
-      --  An indexed name cannot be locally static.
-      Set_Expr_Staticness
-        (Expr, Min (Globally, Min (Expr_Staticness,
-                                   Get_Expr_Staticness (Prefix))));
-
-      -- LRM93 §6.1:
+      -- LRM93 6.1
       -- a name is said to be a static name iff:
       -- The name is an indexed name whose prefix is a static name
       -- and every expression that appears as part of the name is a
@@ -659,8 +654,15 @@ package body Sem_Names is
       -- The name is an indexed name whose prefix is a locally
       -- static name and every expression that appears as part
       -- of the name is a locally static expression.
-      Set_Name_Staticness (Expr, Min (Expr_Staticness,
-                                      Get_Name_Staticness (Prefix)));
+      Set_Name_Staticness
+        (Expr, Min (Expr_Staticness, Get_Name_Staticness (Prefix)));
+
+      --  An indexed name cannot be locally static.
+      if Flags.Vhdl_Std < Vhdl_08 then
+         Expr_Staticness := Min (Globally, Expr_Staticness);
+      end if;
+      Set_Expr_Staticness
+        (Expr, Min (Expr_Staticness, Get_Expr_Staticness (Prefix)));
 
       Set_Base_Name (Expr, Get_Base_Name (Prefix));
    end Finish_Sem_Indexed_Name;

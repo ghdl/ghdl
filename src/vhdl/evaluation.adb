@@ -27,6 +27,9 @@ with Std_Names;
 with Ada.Characters.Handling;
 
 package body Evaluation is
+   --  If FORCE is true, always return a literal.
+   function Eval_Expr_Keep_Orig (Expr : Iir; Force : Boolean) return Iir;
+
    function Eval_Enum_To_String (Lit : Iir; Orig : Iir) return Iir;
    function Eval_Integer_Image (Val : Iir_Int64; Orig : Iir) return Iir;
 
@@ -326,7 +329,7 @@ package body Evaluation is
       Pos := Eval_Pos (Left);
       case Get_Direction (A_Range) is
          when Iir_To =>
-            Pos := Pos + Len -1;
+            Pos := Pos + Len - 1;
          when Iir_Downto =>
             Pos := Pos - Len + 1;
       end case;
@@ -454,36 +457,121 @@ package body Evaluation is
       end if;
    end Free_Eval_String_Literal;
 
-   function Eval_String_Literal (Str : Iir) return Iir
+   function String_Literal8_To_Simple_Aggregate (Str : Iir) return Iir
    is
-      Len : Nat32;
+      Element_Type : constant Iir := Get_Base_Type
+        (Get_Element_Subtype (Get_Base_Type (Get_Type (Str))));
+      Literal_List : constant Iir_List :=
+        Get_Enumeration_Literal_List (Element_Type);
+
+      Len : constant Nat32 := Get_String_Length (Str);
+      Id : constant String8_Id := Get_String8_Id (Str);
+
+      List : Iir_List;
+      Lit : Iir;
+   begin
+      List := Create_Iir_List;
+
+      for I in 1 .. Len loop
+         Lit := Get_Nth_Element
+           (Literal_List, Natural (Str_Table.Element_String8 (Id, I)));
+         Append_Element (List, Lit);
+      end loop;
+      return Build_Simple_Aggregate (List, Str, Get_Type (Str));
+   end String_Literal8_To_Simple_Aggregate;
+
+   --  Return the offset of EXPR in RNG.  A result of 0 means the left bound,
+   --  a result of 1 mean the next element after the left bound.
+   --  Assume no overflow.
+   function Eval_Pos_In_Range (Rng : Iir; Expr : Iir) return Iir_Index32
+   is
+      Left_Pos : constant Iir_Int64 := Eval_Pos (Get_Left_Limit (Rng));
+      Pos : constant Iir_Int64 := Eval_Pos (Expr);
+   begin
+      case Get_Direction (Rng) is
+         when Iir_To =>
+            return Iir_Index32 (Pos - Left_Pos);
+         when Iir_Downto =>
+            return Iir_Index32 (Left_Pos - Pos);
+      end case;
+   end Eval_Pos_In_Range;
+
+   function Aggregate_To_Simple_Aggregate (Aggr : Iir) return Iir
+   is
+      Aggr_Type : constant Iir := Get_Type (Aggr);
+      Index_Type : constant Iir := Get_Index_Type (Aggr_Type, 0);
+      Index_Range : constant Iir := Eval_Static_Range (Index_Type);
+      Len : constant Iir_Int64 := Eval_Discrete_Range_Length (Index_Range);
+      List : Iir_List;
+      Assoc : Iir;
+      Assoc_Expr : Iir;
+      Cur_Pos : Natural;
+
+      procedure Set_Element (Pos : Natural; El : Iir) is
+      begin
+         pragma Assert (Get_Nth_Element (List, Pos) = Null_Iir);
+         Replace_Nth_Element (List, Pos, El);
+      end Set_Element;
+   begin
+      List := Create_Iir_List;
+      for I in 1 .. Len loop
+         Append_Element (List, Null_Iir);
+      end loop;
+
+      Assoc := Get_Association_Choices_Chain (Aggr);
+      Cur_Pos := 0;
+      while Is_Valid (Assoc) loop
+         Assoc_Expr := Get_Associated_Expr (Assoc);
+         Assoc_Expr := Eval_Static_Expr (Assoc_Expr);
+         case Iir_Kinds_Array_Choice (Get_Kind (Assoc)) is
+            when Iir_Kind_Choice_By_None =>
+               Set_Element (Cur_Pos, Assoc_Expr);
+               Cur_Pos := Cur_Pos + 1;
+            when Iir_Kind_Choice_By_Range =>
+               declare
+                  Rng : constant Iir := Get_Choice_Range (Assoc);
+                  Rng_Start : Iir;
+                  Rng_Len : Iir_Int64;
+               begin
+                  if Get_Direction (Rng) = Get_Direction (Index_Range) then
+                     Rng_Start := Get_Left_Limit (Rng);
+                  else
+                     Rng_Start := Get_Right_Limit (Rng);
+                  end if;
+                  Cur_Pos := Natural
+                    (Eval_Pos_In_Range (Index_Range, Rng_Start));
+                  Rng_Len := Eval_Discrete_Range_Length (Rng);
+                  for I in 1 .. Rng_Len loop
+                     Set_Element (Cur_Pos, Assoc_Expr);
+                     Cur_Pos := Cur_Pos + 1;
+                  end loop;
+               end;
+            when Iir_Kind_Choice_By_Expression =>
+               Cur_Pos := Natural
+                 (Eval_Pos_In_Range (Index_Range,
+                                     Get_Choice_Expression (Assoc)));
+               Set_Element (Cur_Pos, Assoc_Expr);
+            when Iir_Kind_Choice_By_Others =>
+               for I in 1 .. Len loop
+                  if Get_Nth_Element (List, Natural (I - 1)) = Null_Iir then
+                     Set_Element (Natural (I - 1), Assoc_Expr);
+                  end if;
+               end loop;
+         end case;
+         Assoc := Get_Chain (Assoc);
+      end loop;
+
+      return Build_Simple_Aggregate (List, Aggr, Aggr_Type);
+   end Aggregate_To_Simple_Aggregate;
+
+   function Eval_String_Literal (Str : Iir) return Iir is
    begin
       case Get_Kind (Str) is
          when Iir_Kind_String_Literal8 =>
-            declare
-               Element_Type : Iir;
-               Literal_List : Iir_List;
-               Lit : Iir;
+            return String_Literal8_To_Simple_Aggregate (Str);
 
-               List : Iir_List;
-               Id : String8_Id;
-            begin
-               Element_Type := Get_Base_Type
-                 (Get_Element_Subtype (Get_Base_Type (Get_Type (Str))));
-               Literal_List := Get_Enumeration_Literal_List (Element_Type);
-               List := Create_Iir_List;
-
-               Id := Get_String8_Id (Str);
-               Len := Get_String_Length (Str);
-
-               for I in 1 .. Len loop
-                  Lit := Get_Nth_Element
-                    (Literal_List,
-                     Natural (Str_Table.Element_String8 (Id, I)));
-                  Append_Element (List, Lit);
-               end loop;
-               return Build_Simple_Aggregate (List, Str, Get_Type (Str));
-            end;
+         when Iir_Kind_Aggregate =>
+            return Aggregate_To_Simple_Aggregate (Str);
 
          when Iir_Kind_Simple_Aggregate =>
             return Str;
@@ -2032,6 +2120,36 @@ package body Evaluation is
       end;
    end Eval_Value_Attribute;
 
+   --  Be sure that all expressions within an aggregate have been evaluated.
+   procedure Eval_Aggregate (Aggr : Iir)
+   is
+      Assoc : Iir;
+      Expr : Iir;
+   begin
+      Assoc := Get_Association_Choices_Chain (Aggr);
+      while Is_Valid (Assoc) loop
+         case Iir_Kinds_Choice (Get_Kind (Assoc)) is
+            when Iir_Kind_Choice_By_None =>
+               null;
+            when Iir_Kind_Choice_By_Name =>
+               null;
+            when Iir_Kind_Choice_By_Range =>
+               Set_Choice_Range
+                 (Assoc, Eval_Range (Get_Choice_Range (Assoc)));
+            when Iir_Kind_Choice_By_Expression =>
+               Set_Choice_Expression
+                 (Assoc, Eval_Expr (Get_Choice_Expression (Assoc)));
+            when Iir_Kind_Choice_By_Others =>
+               null;
+         end case;
+         Expr := Get_Associated_Expr (Assoc);
+         if Get_Kind (Expr) = Iir_Kind_Aggregate then
+            Eval_Aggregate (Expr);
+         end if;
+         Assoc := Get_Chain (Assoc);
+      end loop;
+   end Eval_Aggregate;
+
    function Eval_Selected_Element (Expr : Iir) return Iir
    is
       Selected_El : constant Iir := Get_Selected_Element (Expr);
@@ -2039,14 +2157,19 @@ package body Evaluation is
       Prefix : Iir;
       Cur_Pos : Iir_Index32;
       Assoc : Iir;
+      Res : Iir;
    begin
       Prefix := Get_Prefix (Expr);
       Prefix := Eval_Static_Expr (Prefix);
+      if Get_Kind (Prefix) = Iir_Kind_Overflow_Literal then
+         return Build_Overflow (Expr, Get_Type (Expr));
+      end if;
+
       pragma Assert (Get_Kind (Prefix) = Iir_Kind_Aggregate);
       Assoc := Get_Association_Choices_Chain (Prefix);
       Cur_Pos := 0;
       loop
-         case Get_Kind (Assoc) is
+         case Iir_Kinds_Record_Choice (Get_Kind (Assoc)) is
             when Iir_Kind_Choice_By_None =>
                exit when Cur_Pos = El_Pos;
                Cur_Pos := Cur_Pos + 1;
@@ -2059,13 +2182,157 @@ package body Evaluation is
                end;
             when Iir_Kind_Choice_By_Others =>
                exit;
-            when others =>
-               Error_Kind ("eval_selected_element", Assoc);
          end case;
          Assoc := Get_Chain (Assoc);
       end loop;
-      return Get_Associated_Expr (Assoc);
+
+      --  Eval element and save it.
+      Res := Eval_Expr_Keep_Orig (Get_Associated_Expr (Assoc), True);
+      Set_Associated_Expr (Assoc, Res);
+      return Res;
    end Eval_Selected_Element;
+
+   function Eval_Indexed_Aggregate (Prefix : Iir; Expr : Iir) return Iir
+   is
+      Indexes : constant Iir_List := Get_Index_List (Expr);
+      Prefix_Type : constant Iir := Get_Type (Prefix);
+      Indexes_Type : constant Iir_List := Get_Index_Subtype_List (Prefix_Type);
+      Idx : Iir;
+      Assoc : Iir;
+      Aggr_Bounds : Iir;
+      Aggr : Iir;
+      Cur_Pos : Iir_Int64;
+      Res : Iir;
+   begin
+      Aggr := Prefix;
+
+      for Dim in 0 .. Get_Nbr_Elements (Indexes) - 1 loop
+         Idx := Get_Nth_Element (Indexes, Dim);
+
+         --  Find Idx in choices.
+         Assoc := Get_Association_Choices_Chain (Aggr);
+         Aggr_Bounds := Eval_Static_Range
+           (Get_Nth_Element (Indexes_Type, Dim));
+         Cur_Pos := Eval_Pos (Eval_Discrete_Range_Left (Aggr_Bounds));
+         loop
+            case Get_Kind (Assoc) is
+               when Iir_Kind_Choice_By_None =>
+                  exit when Cur_Pos = Eval_Pos (Idx);
+                  case Get_Direction (Aggr_Bounds) is
+                     when Iir_To =>
+                        Cur_Pos := Cur_Pos + 1;
+                     when Iir_Downto =>
+                        Cur_Pos := Cur_Pos - 1;
+                  end case;
+               when Iir_Kind_Choice_By_Expression =>
+                  exit when Eval_Is_Eq (Get_Choice_Expression (Assoc), Idx);
+               when Iir_Kind_Choice_By_Range =>
+                  exit when Eval_Is_In_Bound (Idx, Get_Choice_Range (Assoc));
+               when Iir_Kind_Choice_By_Others =>
+                  exit;
+               when others =>
+                  raise Internal_Error;
+            end case;
+            Assoc := Get_Chain (Assoc);
+         end loop;
+         Aggr := Get_Associated_Expr (Assoc);
+      end loop;
+
+      --  Eval element and save it.
+      Res := Eval_Expr_Keep_Orig (Aggr, True);
+      Set_Associated_Expr (Assoc, Res);
+
+      return Res;
+   end Eval_Indexed_Aggregate;
+
+   function Eval_Indexed_String_Literal8 (Str : Iir; Expr : Iir) return Iir
+   is
+      Str_Type : constant Iir := Get_Type (Str);
+
+      Index_Type : constant Iir := Get_Index_Type (Str_Type, 0);
+      Index_Range : constant Iir := Eval_Static_Range (Index_Type);
+
+      Indexes : constant Iir_List := Get_Index_List (Expr);
+
+      Id : constant String8_Id := Get_String8_Id (Str);
+
+      Idx : Iir;
+      Pos : Iir_Index32;
+   begin
+      Idx := Eval_Static_Expr (Get_Nth_Element (Indexes, 0));
+      Pos := Eval_Pos_In_Range (Index_Range, Idx);
+
+      return Build_Enumeration_Constant
+        (Iir_Index32 (Str_Table.Element_String8 (Id, Int32 (Pos + 1))), Expr);
+   end Eval_Indexed_String_Literal8;
+
+   function Eval_Indexed_Simple_Aggregate (Aggr : Iir; Expr : Iir) return Iir
+   is
+      Aggr_Type : constant Iir := Get_Type (Aggr);
+
+      Index_Type : constant Iir := Get_Index_Type (Aggr_Type, 0);
+      Index_Range : constant Iir := Eval_Static_Range (Index_Type);
+
+      Indexes : constant Iir_List := Get_Index_List (Expr);
+
+      Idx : Iir;
+      Pos : Iir_Index32;
+      El : Iir;
+   begin
+      Idx := Eval_Static_Expr (Get_Nth_Element (Indexes, 0));
+      Pos := Eval_Pos_In_Range (Index_Range, Idx);
+
+      El := Get_Nth_Element (Get_Simple_Aggregate_List (Aggr), Natural (Pos));
+      return Build_Constant (El, Expr);
+   end Eval_Indexed_Simple_Aggregate;
+
+   function Eval_Indexed_Name (Expr : Iir) return Iir
+   is
+      Prefix : Iir;
+   begin
+      Prefix := Get_Prefix (Expr);
+      Prefix := Eval_Static_Expr (Prefix);
+
+      declare
+         Prefix_Type : constant Iir := Get_Type (Prefix);
+         Indexes_Type : constant Iir_List :=
+           Get_Index_Subtype_List (Prefix_Type);
+         Indexes_List : constant Iir_List := Get_Index_List (Expr);
+         Prefix_Index : Iir;
+         Index : Iir;
+      begin
+         for I in Natural loop
+            Prefix_Index := Get_Nth_Element (Indexes_Type, I);
+            exit when Prefix_Index = Null_Iir;
+
+            --  Eval index.
+            Index := Get_Nth_Element (Indexes_List, I);
+            Index := Eval_Static_Expr (Index);
+            Replace_Nth_Element (Indexes_List, I, Index);
+
+            --  Return overflow if out of range.
+            if Get_Kind (Index) = Iir_Kind_Overflow_Literal
+              or else not Eval_Is_In_Bound (Index, Prefix_Index)
+            then
+               return Build_Overflow (Expr, Get_Type (Expr));
+            end if;
+         end loop;
+      end;
+
+      case Get_Kind (Prefix) is
+         when Iir_Kind_Aggregate =>
+            return Eval_Indexed_Aggregate (Prefix, Expr);
+         when Iir_Kind_String_Literal8 =>
+            return Eval_Indexed_String_Literal8 (Prefix, Expr);
+         when Iir_Kind_Simple_Aggregate =>
+            return Eval_Indexed_Simple_Aggregate (Prefix, Expr);
+         when Iir_Kind_Overflow_Literal =>
+            return Build_Overflow (Expr, Get_Type (Expr));
+         when others =>
+            Error_Kind ("eval_indexed_name", Prefix);
+      end case;
+      return Null_Iir;
+   end Eval_Indexed_Name;
 
    function Eval_Static_Expr (Expr: Iir) return Iir
    is
@@ -2107,10 +2374,13 @@ package body Evaluation is
          when Iir_Kind_Simple_Aggregate =>
             return Expr;
          when Iir_Kind_Aggregate =>
+            Eval_Aggregate (Expr);
             return Expr;
 
          when Iir_Kind_Selected_Element =>
             return Eval_Selected_Element (Expr);
+         when Iir_Kind_Indexed_Name =>
+            return Eval_Indexed_Name (Expr);
 
          when Iir_Kind_Parenthesis_Expression =>
             return Eval_Static_Expr (Get_Expression (Expr));
@@ -2459,8 +2729,13 @@ package body Evaluation is
       Res : Iir;
    begin
       if Expr /= Null_Iir and then Get_Expr_Staticness (Expr) = Locally then
-         --  Expression is static and can be evaluated.
-         Res := Eval_Expr_Keep_Orig (Expr, False);
+         --  Expression is static and can be evaluated.  Don't try to
+         --  evaluate non-scalar expressions, that may create too large data.
+         if Get_Kind (Atype) in Iir_Kinds_Scalar_Type_Definition then
+            Res := Eval_Expr_Keep_Orig (Expr, False);
+         else
+            Res := Expr;
+         end if;
 
          if Res /= Null_Iir
            and then Get_Type_Staticness (Atype) = Locally
@@ -2687,7 +2962,7 @@ package body Evaluation is
       end if;
 
       if not Eval_Is_In_Bound (Expr, Sub_Type) then
-         Error_Msg_Sem (+Expr, "static constant violates bounds");
+         Error_Msg_Sem (+Expr, "static expression violates bounds");
       end if;
    end Eval_Check_Bound;
 
