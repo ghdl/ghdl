@@ -272,9 +272,9 @@ package body Iirs is
            | Iir_Kind_Association_Element_Package
            | Iir_Kind_Association_Element_Type
            | Iir_Kind_Association_Element_Subprogram
-           | Iir_Kind_Choice_By_Others
-           | Iir_Kind_Choice_By_Expression
            | Iir_Kind_Choice_By_Range
+           | Iir_Kind_Choice_By_Expression
+           | Iir_Kind_Choice_By_Others
            | Iir_Kind_Choice_By_None
            | Iir_Kind_Choice_By_Name
            | Iir_Kind_Entity_Aspect_Entity
@@ -4804,7 +4804,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Aggregate_Info (Get_Kind (Target)),
                      "no field Aggregate_Info");
-      return Get_Field2 (Target);
+      return Get_Field5 (Target);
    end Get_Aggregate_Info;
 
    procedure Set_Aggregate_Info (Target : Iir; Info : Iir) is
@@ -4812,7 +4812,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Aggregate_Info (Get_Kind (Target)),
                      "no field Aggregate_Info");
-      Set_Field2 (Target, Info);
+      Set_Field5 (Target, Info);
    end Set_Aggregate_Info;
 
    function Get_Sub_Aggregate_Info (Target : Iir) return Iir is

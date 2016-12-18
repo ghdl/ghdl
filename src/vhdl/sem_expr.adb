@@ -2332,12 +2332,6 @@ package body Sem_Expr is
       Low : out Iir;
       High : out Iir)
    is
-      --  Nodes that can appear.
-      subtype Iir_Kinds_Case_Choice is Iir_Kind range
-        Iir_Kind_Choice_By_Others ..
-        --Iir_Kind_Choice_By_Expression
-        Iir_Kind_Choice_By_Range;
-
       --  Number of named choices.
       Nbr_Named : Natural;
 

@@ -3416,7 +3416,12 @@ package Iirs is
    --  Same as Type, but marked as property of that node.
    --   Get/Set_Literal_Subtype (Field3)
    --
-   --   Get/Set_Aggregate_Info (Field2)
+   --  Exist for symetry with other literals, but must never be set.  The
+   --  content of the aggregate is modified during evaluation, not the
+   --  aggregate itself.
+   --   Get/Set_Literal_Origin (Field2)
+   --
+   --   Get/Set_Aggregate_Info (Field5)
    --
    --   Get/Set_Type (Field1)
    --
@@ -3994,9 +3999,9 @@ package Iirs is
       Iir_Kind_Association_Element_Package,
       Iir_Kind_Association_Element_Type,
       Iir_Kind_Association_Element_Subprogram,
-      Iir_Kind_Choice_By_Others,
-      Iir_Kind_Choice_By_Expression,
       Iir_Kind_Choice_By_Range,
+      Iir_Kind_Choice_By_Expression,
+      Iir_Kind_Choice_By_Others,
       Iir_Kind_Choice_By_None,
       Iir_Kind_Choice_By_Name,
       Iir_Kind_Entity_Aspect_Entity,
@@ -5021,9 +5026,28 @@ package Iirs is
      Iir_Kind_Association_Element_Open;
 
    subtype Iir_Kinds_Choice is Iir_Kind range
-     Iir_Kind_Choice_By_Others ..
+     Iir_Kind_Choice_By_Range ..
    --Iir_Kind_Choice_By_Expression
-   --Iir_Kind_Choice_By_Range
+   --Iir_Kind_Choice_By_Others
+   --Iir_Kind_Choice_By_None
+     Iir_Kind_Choice_By_Name;
+
+   --  Choices in a case statement.
+   subtype Iir_Kinds_Case_Choice is Iir_Kind range
+     Iir_Kind_Choice_By_Range ..
+   --Iir_Kind_Choice_By_Expression
+     Iir_Kind_Choice_By_Others;
+
+   --  Choices in array aggregate.
+   subtype Iir_Kinds_Array_Choice is Iir_Kind range
+     Iir_Kind_Choice_By_Range ..
+   --Iir_Kind_Choice_By_Expression
+   --Iir_Kind_Choice_By_Others
+     Iir_Kind_Choice_By_None;
+
+   --  Choices in record aggregate.
+   subtype Iir_Kinds_Record_Choice is Iir_Kind range
+     Iir_Kind_Choice_By_Others ..
    --Iir_Kind_Choice_By_None
      Iir_Kind_Choice_By_Name;
 
@@ -6953,7 +6977,7 @@ package Iirs is
 
    --  Get/Set info for the aggregate.
    --  There is one aggregate_info for for each dimension.
-   --  Field: Field2
+   --  Field: Field5
    function Get_Aggregate_Info (Target : Iir) return Iir;
    procedure Set_Aggregate_Info (Target : Iir; Info : Iir);
 
