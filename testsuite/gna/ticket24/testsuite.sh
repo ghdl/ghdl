@@ -1,8 +1,5 @@
 #! /bin/sh
 
-echo "Test skipped"
-exit 0
-
 . ../../testenv.sh
 
 analyze -fpsl psl.vhdl
