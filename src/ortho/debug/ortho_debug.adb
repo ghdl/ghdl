@@ -222,6 +222,9 @@ package body Ortho_Debug is
    is
       Res : Boolean;
    begin
+      if Disable_Checks then
+         return;
+      end if;
       case Decl.Kind is
          when ON_Interface_Decl =>
             Res := Decl.Func_Scope.Alive;
