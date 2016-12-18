@@ -162,19 +162,6 @@ package body Lists is
       Append_Element (List, El);
    end Add_Element;
 
-   procedure Remove_Nth_Element (List: List_Type; N: Natural)
-   is
-      Nbr : constant Natural := Get_Nbr_Elements (List);
-   begin
-      if N >= Nbr then
-         raise Program_Error;
-      end if;
-      for I in N .. Nbr - 2 loop
-         Listt.Table (List).Els (I) := Listt.Table (List).Els (I + 1);
-      end loop;
-      Listt.Table (List).Nbr := Nbr - 1;
-   end Remove_Nth_Element;
-
    procedure Set_Nbr_Elements (List: List_Type; N: Natural) is
    begin
       if N > Get_Nbr_Elements (List) then
