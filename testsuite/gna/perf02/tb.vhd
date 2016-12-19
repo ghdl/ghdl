@@ -148,7 +148,7 @@ begin
 
 			clock_counter <= clock_counter + 1;
 
-			if simu_disp_cycles = '1' then
+			if false and simu_disp_cycles = '1' then
 				-- Write simulation message
 				write(l, string'("INFO clock cycle "));
 				write(l, clock_counter);
