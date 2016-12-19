@@ -852,9 +852,12 @@ package body Ghdllocal is
       pragma Unreferenced (Cmd);
       use Name_Table;
 
+      Obj_Suffix : constant String_Access := Get_Object_Suffix;
+      Exec_Suffix : constant String_Access := Get_Executable_Suffix;
+
       procedure Delete_Asm_Obj (Str : String) is
       begin
-         Delete (Str & Get_Object_Suffix.all & Nul);
+         Delete (Str & Obj_Suffix.all & Nul);
          Delete (Str & Asm_Suffix & Nul);
       end Delete_Asm_Obj;
 
@@ -867,7 +870,7 @@ package body Ghdllocal is
          Delete (Str & List_Suffix & Nul);
 
          --  Delete executable.
-         Delete (Str & Nul);
+         Delete (Str & Exec_Suffix.all & Nul);
       end Delete_Top_Unit;
 
       File : Iir_Design_File;
