@@ -46,10 +46,12 @@ function Restore-NativeCommandStream
 	}
 }
 
+
+Write-Host ("ExecutionPolicy = {0}" -f (Get-ExecutionPolicy)) -Foreground Yellow
 Write-Host "List env:..." -Foreground Yellow
-dir env:
+dir env: | foreach { Write-Host ("  {0}={1}" -f $_.Name,$_.Value) }
 Write-Host "Print env:PATH..." -Foreground Yellow
-$env:PATH.Split(";") | % { Write-Host "  $_" }
+$env:PATH.Split(";") | foreach { Write-Host "  $_" }
 Write-Host "Print GCC setup..." -Foreground Yellow
 c:\msys64\mingw64\bin\gcc.exe -v 2>&1 | Restore-NativeCommandStream | %{ "$_" }
 Write-Host "Print GCC search directories..." -Foreground Yellow

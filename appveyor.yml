@@ -1,6 +1,8 @@
 # ==============================================================================
 # General configuration
 # ==============================================================================
+# Virtual Machine Image
+image: WMF 5
 # Build names
 version: 0.34-dev-{build}
 # Branches to build
