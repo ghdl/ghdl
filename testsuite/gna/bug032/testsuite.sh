@@ -1,8 +1,10 @@
 #! /bin/sh
 
-# Skip iif $OS = Windows_NT ?
-#echo "Test skipped"
-#exit 0
+if [ "$OS" = "Windows_NT" ]; then
+    # Many issues with blanks in command line.  Not worth fixing it.
+    echo "Test skipped on windows"
+    exit 0
+fi
 
 . ../../testenv.sh
 
