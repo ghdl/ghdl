@@ -61,6 +61,6 @@ c:\msys64\mingw64\bin\clang.exe -v 2>&1 | Restore-NativeCommandStream | %{ "$_" 
 Write-Host "Print CLang search directories..." -Foreground Yellow
 c:\msys64\mingw64\bin\clang.exe -print-search-dirs 2>&1 | Restore-NativeCommandStream | %{ "$_" }
 
-dir c:\msys64\mingw32
+dir c:\msys64\mingw32\bin
 
-dir c:\msys64\mingw64
+dir c:\msys64\mingw64\bin
