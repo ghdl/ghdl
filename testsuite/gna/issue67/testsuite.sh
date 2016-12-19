@@ -1,5 +1,6 @@
 #! /bin/sh
 
+# Missing SEH handler on windows-64.
 echo "Test skipped"
 exit 0
 

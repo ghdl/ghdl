@@ -1,8 +1,8 @@
 #! /bin/sh
 
 # Skip iif $OS = Windows_NT ?
-echo "Test skipped"
-exit 0
+#echo "Test skipped"
+#exit 0
 
 . ../../testenv.sh
 
