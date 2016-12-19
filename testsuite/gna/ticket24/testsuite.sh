@@ -1,14 +1,11 @@
 #! /bin/sh
 
-echo "Test skipped"
-exit 0
-
 . ../../testenv.sh
 
 analyze -fpsl psl.vhdl
 elab_simulate -fpsl psl --psl-report=psl.out
 
-if ! cmp psl.out psl.ref; then
+if ! diff --strip-trailing-cr psl.out psl.ref > /dev/null; then
     echo "report mismatch"
     exit 1
 fi
@@ -21,7 +18,7 @@ GHDL_STD_FLAGS="-fpsl --std=08"
 analyze psl.vhdl
 elab_simulate psl --psl-report=psl.out
 
-cmp -s psl.out psl.ref
+diff --strip-trailing-cr -q psl.out psl.ref
 
 rm -f psl.out
 clean
