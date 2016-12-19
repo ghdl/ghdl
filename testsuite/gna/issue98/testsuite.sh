@@ -1,9 +1,12 @@
 #! /bin/sh
 
-echo "Test skipped"
-exit 0
+#echo "Test skipped"
+#exit 0
 
 . ../../testenv.sh
+
+$GHDL --vpi-library-dir
+$GHDL --vpi-include-dir
 
 analyze test_load.vhdl
 $GHDL --vpi-compile -v gcc -c vpi1.c
