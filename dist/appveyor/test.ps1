@@ -58,8 +58,8 @@ cd gna
 
 $Directories = dir -Directory *
 foreach ($Directory in $Directories)
-{	$TestName = "GNA test: {0}" -f $Directory
-	$TestFile = $Directory
+{	$TestName = "GNA test: {0}" -f $Directory.Name
+	$TestFile = $Directory.Name
 	
 	Write-Host $TestName -Foreground Yellow
 	cd $Directory
@@ -67,7 +67,7 @@ foreach ($Directory in $Directories)
 	$start = Get-Date
 	c:\msys64\usr\bin\bash.exe -c "./testsuite.sh" 2>&1 | Restore-NativeCommandStream | %{ "$_" }
 	$end = Get-Date
-	Update-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome $(if ($LastExitCode -eq 0) {"Passed"} else {"Failed"}) -Duration ($end - $start).TotalSeconds
+	Update-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome $(if ($LastExitCode -eq 0) {"Passed"} else {"Failed"}) -Duration ($end - $start).TotalMilliseconds
 	cd ..
 }
 cd ..
@@ -78,14 +78,14 @@ Write-Host "Running VESTS tests..." -Foreground Yellow
 cd vests
 
 $TestName = "VESTS test:" # {0}" -f $Directory
-$TestFile = $Directory
+$TestFile = "VESTS" #$Directory
 	
 Write-Host $TestName -Foreground Yellow
 Add-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome Running
 $start = Get-Date
 c:\msys64\usr\bin\bash.exe -c "./testsuite.sh" 2>&1 | Restore-NativeCommandStream | %{ "$_" }
 $end = Get-Date
-Update-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome $(if ($LastExitCode -eq 0) {"Passed"} else {"Failed"}) -Duration ($end - $start).TotalSeconds
+Update-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome $(if ($LastExitCode -eq 0) {"Passed"} else {"Failed"}) -Duration ($end - $start).TotalMilliseconds
 cd ..
 
 # ==============================================================================
