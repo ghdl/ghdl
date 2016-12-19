@@ -59,7 +59,7 @@ cd gna
 $Directories = dir -Directory *
 foreach ($Directory in $Directories)
 {	$TestName = "GNA test: {0}" -f $Directory.Name
-	$TestFile = $Directory.Name
+	$FileName = $Directory.Name
 	
 	Write-Host $TestName -Foreground Yellow
 	cd $Directory
@@ -81,7 +81,7 @@ c:\msys64\mingw64\bin\gnatmake.exe get_entities 2>&1 | Restore-NativeCommandStre
 cd vests
 
 $TestName = "VESTS test:" # {0}" -f $Directory
-$TestFile = "VESTS" #$Directory
+$FileName = "VESTS" #$Directory
 
 Write-Host $TestName -Foreground Yellow
 Add-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome Running
