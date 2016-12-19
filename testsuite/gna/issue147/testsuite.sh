@@ -13,7 +13,9 @@ rmdir work1
 
 # Some simple checks
 if test -f simple || test -f 'e~simple.o'; then
-  echo "Not correctly cleaned"
+    echo "Not correctly cleaned"
+    ls -l
+    env
   exit 1
 fi
 
