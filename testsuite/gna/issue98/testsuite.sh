@@ -6,7 +6,7 @@
 . ../../testenv.sh
 
 if [ "$OS" = "Windows_NT" ]; then
-    vpi_lib=`$GHDL --vpi-library-dir | sed 's!\\!/!g' 's!^C:!/C/!g'`
+    vpi_lib=`$GHDL --vpi-library-dir | sed -e 's!\\!/!g' -e 's!^C:!/C!g'`
     echo vpi_lib: $vpi_lib
     PATH="$PATH:$vpi_lib"
 fi
