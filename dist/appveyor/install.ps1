@@ -10,7 +10,8 @@ Install-PackageProvider nuget -force
 Import-PackageProvider nuget -force
 
 Write-Host "  Installing PowerShell modules ..." -Foreground Yellow
-Install-Module -Name Pscx
+Install-Module Pscx -Force
+Install-Module Pscx -Scope CurrentUser
 
 Write-Host "  Check all Write-* CmdLets ..." -Foreground Yellow
 Get-Command -Verb Write | Format-Table
