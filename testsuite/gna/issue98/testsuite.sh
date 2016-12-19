@@ -5,8 +5,11 @@
 
 . ../../testenv.sh
 
-$GHDL --vpi-library-dir
-$GHDL --vpi-include-dir
+if [ "$OS" = "Windows_NT" ]; then
+    vpi_lib=`$GHDL --vpi-library-dir | sed 's!\\!/!g' 's!^C:!/C/!g'`
+    echo vpi_lib: $vpi_lib
+    PATH="$PATH:$vpi_lib"
+fi
 
 analyze test_load.vhdl
 $GHDL --vpi-compile -v gcc -c vpi1.c
