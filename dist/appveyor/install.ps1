@@ -17,8 +17,4 @@ Install-Module Pscx -AllowClobber
 #Write-Host "Check all Write-* CmdLets ..." -Foreground Yellow
 #Get-Command -Verb Write | Format-Table
 
-dir c:\MinGW\bin
-dir c:\MinGW\msys\1.0
-dir c:\msys64
-#exit $LastExitCode
-exit 0
+exit $LastExitCode
