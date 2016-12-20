@@ -51,7 +51,6 @@ package Grt.Strings is
 
    --  Convert C/S to lowercase.
    function To_Lower (C : Character) return Character;
-   procedure To_Lower (S : in out String);
 
    -- Str/Char : image of a natural number/digit
    function Value (Str : String) return Integer;

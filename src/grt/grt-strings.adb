@@ -79,13 +79,6 @@ package body Grt.Strings is
       end if;
    end To_Lower;
 
-   procedure To_Lower (S : in out String) is
-   begin
-      for I in S'Range loop
-         S (I) := To_Lower (S (I));
-      end loop;
-   end To_Lower;
-
    function Value (Str : String) return Integer
    is
       Decimal : Positive;
