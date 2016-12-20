@@ -77,7 +77,7 @@ foreach ($Directory in $Directories)
 		Update-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome Failed -Duration $TotalMilliseconds
 	}
 }
-cd ..
+cd ..\..
 
 # ==============================================================================
 $TestFramework =  "VESTS"
