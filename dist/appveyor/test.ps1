@@ -73,7 +73,7 @@ foreach ($Directory in $Directories)
 		Update-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome Passed -Duration $TotalMilliseconds
 	}
 	else
-	{	Write-Host "PASSED" -Foreground Red
+	{	Write-Host "FAILED" -Foreground Red
 		Update-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome Failed -Duration $TotalMilliseconds
 	}
 }
@@ -91,23 +91,27 @@ $TestName = "VESTS test:" # {0}" -f $Directory
 $FileName = "VESTS" #$Directory
 
 Write-Host $TestName -Foreground Yellow
-Add-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome Running
-$start = Get-Date
-
 # Disable vests.  It works but takes ~20 min
-# c:\msys64\usr\bin\bash.exe -c "./testsuite.sh" 2>&1 | Restore-NativeCommandStream | %{ "$_" }
-
-$end = Get-Date
-$TotalMilliseconds = ($end - $start).TotalMilliseconds
-if ($LastExitCode -eq 0)
-{ Write-Host "PASSED" -Foreground Green
-	Update-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome Passed -Duration $TotalMilliseconds
+if ($true)
+{	Add-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome Skipped
+	$start = Get-Date
 }
 else
-{	Write-Host "PASSED" -Foreground Red
-	Update-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome Failed -Duration $TotalMilliseconds
+{	Add-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome Running
+	$start = Get-Date
+	c:\msys64\usr\bin\bash.exe -c "./testsuite.sh" 2>&1 | Restore-NativeCommandStream | %{ "$_" }
+	$end = Get-Date
+	$TotalMilliseconds = ($end - $start).TotalMilliseconds
+	if ($LastExitCode -eq 0)
+	{ Write-Host "PASSED" -Foreground Green
+		Update-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome Passed -Duration $TotalMilliseconds
+	}
+	else
+	{	Write-Host "FAILED" -Foreground Red
+		Update-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome Failed -Duration $TotalMilliseconds
+	}
+	cd ..
 }
-cd ..
 
 # ==============================================================================
 cd $env:APPVEYOR_BUILD_FOLDER
