@@ -14,19 +14,20 @@ version: 0.34-dev-{build}
 # ==============================================================================
 # Build matrix configuration
 # ==============================================================================
-# environment:
+environment:
 #  global:
 #    connection_string: server=12;password=13;
 #    service_url: https://127.0.0.1:8090
 #
-#  matrix:
-#  - db: mysql
-#    provider: mysql
-#
-#  - db: mssql
-#    provider: mssql
-#    password:
-#      secure: $#(JFDA)jQ@#$
+  matrix:
+    - BUILD_MINGW: mingw32
+      BUILD_BACKEND: mcode
+    - BUILD_MINGW: mingw32
+      BUILD_BACKEND: llvm
+    - BUILD_MINGW: mingw64
+      BUILD_BACKEND: mcode
+    - BUILD_MINGW: mingw64
+      BUILD_BACKEND: llvm
 
 # clone_folder: c:\projects\ghdl
 
@@ -36,7 +37,7 @@ version: 0.34-dev-{build}
 # initialization scripts to run
 init:
   - ps: Write-Host "Initializing virtual machine ..."
-  - ps: $env:PATH = "C:\msys64\mingw64\bin;C:\msys64\usr\bin;" + $env:PATH
+  - ps: $env:PATH = "C:\msys64\$($env:BUILD_MINGW)\bin;C:\msys64\usr\bin;" + $env:PATH
 #  - ps: Import-Module .\dist\appveyor\shared.psm1 -Verbose
 
 # installation scripts to run
@@ -75,13 +76,22 @@ test_script:
 # ==============================================================================
 # Deployment configuration
 # ==============================================================================
-#deploy:
-#  - provider: GitHub
-#    draft: false
-#    prerelease: false
-#    on:
+deploy:
+  - provider: GitHub
+    release: GHDL-v$(appveyor_build_version)
+    description: 'Release description'
+    draft: false
+    prerelease: false
+    on:
 #      branch: master
 #      appveyor_repo_tag: true
+    auth_token:
+      secure: 7K/sSRV3kBk/Iw/d1NGd0pAv9Qf0+lGba3UWt9RDLcIsM8binjC2ogPINilWfy46
+  - provider: Environment
+    name: GitHub Paebbels/ghdl
+    on:
+      branch: master
+
 
 # scripts to run before deployment
 #before_deploy:
