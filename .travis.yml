@@ -1,4 +1,7 @@
 language: c
+branches:
+  except:
+    - appveyor
 matrix:
   include:
     - os: linux
