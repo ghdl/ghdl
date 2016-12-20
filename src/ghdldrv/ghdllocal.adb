@@ -1065,6 +1065,37 @@ package body Ghdllocal is
       Disp_Vhdl.Disp_Vhdl (Std_Package.Std_Standard_Unit);
    end Perform_Action;
 
+   --  Command --bug-box.
+   type Command_Bug_Box is new Command_Type with null record;
+   function Decode_Command (Cmd : Command_Bug_Box; Name : String)
+                           return Boolean;
+   function Get_Short_Help (Cmd : Command_Bug_Box) return String;
+   procedure Perform_Action (Cmd : in out Command_Bug_Box;
+                             Args : Argument_List);
+
+   function Decode_Command (Cmd : Command_Bug_Box; Name : String)
+                           return Boolean
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      return Name = "--bug-box";
+   end Decode_Command;
+
+   function Get_Short_Help (Cmd : Command_Bug_Box) return String
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      return "!--bug-box          Crash and emit a bug-box";
+   end Get_Short_Help;
+
+   procedure Perform_Action (Cmd : in out Command_Bug_Box;
+                             Args : Argument_List)
+   is
+      pragma Unreferenced (Cmd, Args);
+   begin
+      raise Program_Error;
+   end Perform_Action;
+
    procedure Load_All_Libraries_And_Files
    is
       use Files_Map;
@@ -1508,5 +1539,6 @@ package body Ghdllocal is
       Register_Command (new Command_Remove);
       Register_Command (new Command_Copy);
       Register_Command (new Command_Disp_Standard);
+      Register_Command (new Command_Bug_Box);
    end Register_Commands;
 end Ghdllocal;

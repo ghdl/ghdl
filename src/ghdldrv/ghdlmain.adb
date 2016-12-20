@@ -129,7 +129,13 @@ package body Ghdlmain is
          Put_Line ("COMMAND is one of:");
          C := First_Cmd;
          while C /= null loop
-            Put_Line (Get_Short_Help (C.all));
+            declare
+               S : constant String := Get_Short_Help (C.all);
+            begin
+               if S'Length > 1 and then S (S'First) /= '!' then
+                  Put_Line (S);
+               end if;
+            end;
             C := C.Next;
          end loop;
          New_Line;
