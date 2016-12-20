@@ -2418,9 +2418,8 @@ package body Evaluation is
          when Iir_Kind_Attribute_Name =>
             --  An attribute name designates an attribute value.
             declare
-               Attr_Val : constant Iir := Get_Named_Entity (Expr);
                Attr_Expr : constant Iir :=
-                 Get_Expression (Get_Attribute_Specification (Attr_Val));
+                 Get_Attribute_Name_Expression (Expr);
                Val : Iir;
             begin
                Val := Eval_Static_Expr (Attr_Expr);
@@ -2701,11 +2700,141 @@ package body Evaluation is
       end if;
    end Eval_Expr;
 
+   --  Subroutine of Can_Eval_Composite_Value.  Return True iff EXPR is
+   --  considered as a small composite.
+   function Is_Small_Composite_Value (Expr : Iir) return Boolean
+   is
+      Expr_Type : constant Iir := Get_Type (Expr);
+      Indexes : Iir_List;
+      Len : Iir_Int64;
+   begin
+      --  Consider only arrays.  Records are never composite.
+      if Get_Kind (Expr_Type) /= Iir_Kind_Array_Subtype_Definition then
+         return False;
+      end if;
+
+      --  Element must be scalar.
+      if Get_Kind (Get_Element_Subtype (Expr_Type)) not in
+        Iir_Kinds_Scalar_Type_Definition
+      then
+         return False;
+      end if;
+
+      Indexes := Get_Index_Subtype_List (Expr_Type);
+
+      --  Multi-dimensional arrays aren't considered as small.
+      if Get_Nbr_Elements (Indexes) /= 1 then
+         return False;
+      end if;
+
+      Len := Eval_Discrete_Type_Length (Get_Nth_Element (Indexes, 0));
+      return Len <= 128;
+   end Is_Small_Composite_Value;
+
+   function Can_Eval_Composite_Value (Expr : Iir; Top : Boolean := False)
+                                     return Boolean;
+
+   --  Return True if EXPR should be evaluated.
+   function Can_Eval_Value (Expr : Iir; Top : Boolean) return Boolean is
+   begin
+      --  Always evaluate scalar values.
+      if Get_Kind (Get_Type (Expr)) in Iir_Kinds_Scalar_Type_Definition then
+         return True;
+      end if;
+      return Can_Eval_Composite_Value (Expr, Top);
+   end Can_Eval_Value;
+
+   --  For composite values.
+   --  Evluating a composite value is a trade-off: it can simplify the
+   --  generated code if the value is small enough, or it can be a bad idea if
+   --  the value is very large.  It is very easy to create large static
+   --  composite values (like: bit_vector'(1 to 10**4 => '0'))
+   function Can_Eval_Composite_Value (Expr : Iir; Top : Boolean := False)
+                                     return Boolean
+   is
+      --  We are only considering static values.
+      pragma Assert (Get_Expr_Staticness (Expr) = Locally);
+
+      --  We are only considering composite types.
+      pragma Assert (Get_Kind (Get_Type (Expr))
+                       not in Iir_Kinds_Scalar_Type_Definition);
+   begin
+      case Get_Kind (Expr) is
+         when Iir_Kind_Type_Conversion
+           | Iir_Kind_Qualified_Expression =>
+            return Can_Eval_Composite_Value (Get_Expression (Expr));
+         when Iir_Kinds_Denoting_Name =>
+            return Can_Eval_Composite_Value (Get_Named_Entity (Expr), Top);
+         when Iir_Kind_Constant_Declaration =>
+            --  Pass through names only for small values.
+            if Top or else not Is_Small_Composite_Value (Expr) then
+               return False;
+            else
+               return Can_Eval_Composite_Value (Get_Default_Value (Expr));
+            end if;
+         when Iir_Kind_Attribute_Name =>
+            if Top or else not Is_Small_Composite_Value (Expr) then
+               return False;
+            else
+               return Can_Eval_Composite_Value
+                 (Get_Attribute_Name_Expression (Expr));
+            end if;
+         when Iir_Kinds_Dyadic_Operator =>
+            --  Concatenation can increase the size.
+            --  Others (rol, ror...) don't.
+            return Can_Eval_Value (Get_Left (Expr), False)
+              and then Can_Eval_Value (Get_Right (Expr), False);
+         when Iir_Kinds_Monadic_Operator =>
+            --  For not.
+            return Can_Eval_Composite_Value (Get_Operand (Expr));
+         when Iir_Kind_Aggregate =>
+            return Is_Small_Composite_Value (Expr);
+         when Iir_Kinds_Literal
+           | Iir_Kind_Enumeration_Literal
+           | Iir_Kind_Simple_Aggregate
+           | Iir_Kind_Image_Attribute
+           | Iir_Kind_Simple_Name_Attribute =>
+            return True;
+         when Iir_Kind_Overflow_Literal =>
+            return True;
+         when Iir_Kind_Function_Call =>
+            --  Either using post-fixed notation or implicit functions like
+            --  to_string.
+            --  Cannot be a user function (won't be locally static).
+            declare
+               Assoc : Iir;
+               Assoc_Expr : Iir;
+            begin
+               Assoc := Get_Parameter_Association_Chain (Expr);
+               while Is_Valid (Assoc) loop
+                  case Iir_Kinds_Association_Element (Get_Kind (Assoc)) is
+                     when Iir_Kind_Association_Element_By_Expression =>
+                        Assoc_Expr := Get_Actual (Assoc);
+                        if not Can_Eval_Value (Assoc_Expr, False) then
+                           return False;
+                        end if;
+                     when Iir_Kind_Association_Element_Open =>
+                        null;
+                     when Iir_Kind_Association_Element_By_Individual =>
+                        return False;
+                  end case;
+                  Assoc := Get_Chain (Assoc);
+               end loop;
+               return True;
+            end;
+
+         when others =>
+            --  Be safe, don't crash on unhandled expression.
+            --  Error_Kind ("can_eval_composite_value", Expr);
+            return False;
+      end case;
+   end Can_Eval_Composite_Value;
+
    function Eval_Expr_If_Static (Expr : Iir) return Iir is
    begin
       if Expr /= Null_Iir and then Get_Expr_Staticness (Expr) = Locally then
-         --  Evaluate only scalar expressions.
-         if Get_Kind (Get_Type (Expr)) in Iir_Kinds_Scalar_Type_Definition then
+         --  Evaluate only when there is a positive effect.
+         if Can_Eval_Value (Expr, True) then
             return Eval_Expr_Keep_Orig (Expr, False);
          else
             return Expr;

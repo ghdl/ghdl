@@ -267,6 +267,10 @@ package Iirs_Utils is
      (Inst : Iir_Component_Instantiation_Statement)
      return Boolean;
 
+   --  Get the expression of the attribute specification corresponding to the
+   --  attribute name NAME.  Meaningful only for static values.
+   function Get_Attribute_Name_Expression (Name : Iir) return Iir;
+
    --  Return the bound type of a string type, ie the type of the (first)
    --  dimension of a one-dimensional array type.
    function Get_String_Type_Bound_Type (Sub_Type : Iir) return Iir;

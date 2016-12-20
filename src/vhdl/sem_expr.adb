@@ -3338,7 +3338,12 @@ package body Sem_Expr is
       end if;
 
       --  Analyze aggregate elements.
-      Expr_Staticness := Locally;
+      if Constrained then
+         Expr_Staticness := Get_Type_Staticness (Index_Type);
+      else
+         Expr_Staticness := Locally;
+      end if;
+
       if Dim = Get_Nbr_Elements (Index_List) then
          --  A type has been found for AGGR, analyze AGGR as if it was
          --  an aggregate with a subtype (and not a string).

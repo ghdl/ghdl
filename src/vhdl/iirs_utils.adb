@@ -1278,6 +1278,15 @@ package body Iirs_Utils is
       end case;
    end Is_Entity_Instantiation;
 
+   function Get_Attribute_Name_Expression (Name : Iir) return Iir
+   is
+      Attr_Val : constant Iir := Get_Named_Entity (Name);
+      Attr_Spec : constant Iir := Get_Attribute_Specification (Attr_Val);
+      Attr_Expr : constant Iir := Get_Expression (Attr_Spec);
+   begin
+      return Attr_Expr;
+   end Get_Attribute_Name_Expression;
+
    function Get_String_Type_Bound_Type (Sub_Type : Iir) return Iir is
    begin
       if Get_Kind (Sub_Type) /= Iir_Kind_Array_Subtype_Definition then
