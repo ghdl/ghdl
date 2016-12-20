@@ -82,7 +82,7 @@ deploy:
     description: 'Release description'
     draft: false
     prerelease: false
-    on:
+#    on:
 #      branch: master
 #      appveyor_repo_tag: true
     auth_token:
