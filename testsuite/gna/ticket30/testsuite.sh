@@ -2,7 +2,9 @@
 
 . ../../testenv.sh
 
-if ! "$GHDL" --dir ieee | grep -q vital; then
+# Don't use grep -q, doesn't work on windows.
+
+if ! "$GHDL" --dir ieee | grep vital > /dev/null; then
   echo "No vital libraries, skipping"
   exit 0
 fi

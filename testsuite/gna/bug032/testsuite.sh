@@ -1,5 +1,11 @@
 #! /bin/sh
 
+if [ "$OS" = "Windows_NT" ]; then
+    # Many issues with blanks in command line.  Not worth fixing it.
+    echo "Test skipped on windows"
+    exit 0
+fi
+
 . ../../testenv.sh
 
 # Incorrect options are always rejected (analyze_failure doesn't work here)
