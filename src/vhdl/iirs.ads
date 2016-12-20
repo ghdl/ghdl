@@ -469,7 +469,7 @@ package Iirs is
    --
    -- Only for Iir_Kind_Association_Element_By_Individual:
    --  Must be Locally unless there is an error on one choice.
-   --   Get/Set_Choice_Staticness (State2)
+   --   Get/Set_Choice_Staticness (State1)
 
    -- Iir_Kind_Waveform_Element (Short)
    --
@@ -548,7 +548,7 @@ package Iirs is
    --
    -- Only for Iir_Kind_Choice_By_Range:
    -- Only for Iir_Kind_Choice_By_Expression:
-   --   Get/Set_Choice_Staticness (State2)
+   --   Get/Set_Choice_Staticness (State1)
 
    -- Iir_Kind_Entity_Aspect_Entity (Short)
    --
@@ -3427,7 +3427,9 @@ package Iirs is
    --
    --   Get/Set_Expr_Staticness (State1)
    --
-   --   Get/Set_Value_Staticness (State2)
+   --  If true, the aggregate can be statically built.  This is an optimization
+   --  and the conditions are defined in sem_expr.
+   --   Get/Set_Aggregate_Expand_Flag (Flag1)
 
    -- Iir_Kind_Aggregate_Info (Short)
    --
@@ -7019,12 +7021,10 @@ package Iirs is
    function Get_Aggr_Named_Flag (Target : Iir_Aggregate_Info) return Boolean;
    procedure Set_Aggr_Named_Flag (Target : Iir_Aggregate_Info; Val : Boolean);
 
-   --  Staticness of the expressions in an aggregate.
-   --  We can't use expr_staticness for this purpose, since the staticness
-   --  of an aggregate is at most globally.
-   --  Field: State2 (pos)
-   function Get_Value_Staticness (Target : Iir) return Iir_Staticness;
-   procedure Set_Value_Staticness (Target : Iir; Staticness : Iir_Staticness);
+   --  True if the aggregate can be statically built.
+   --  Field: Flag1
+   function Get_Aggregate_Expand_Flag (Aggr : Iir) return Boolean;
+   procedure Set_Aggregate_Expand_Flag (Aggr : Iir; Flag : Boolean);
 
    --  Chain of choices.
    --  Field: Field4 Chain
@@ -7037,7 +7037,7 @@ package Iirs is
    procedure Set_Case_Statement_Alternative_Chain (Target : Iir; Chain : Iir);
 
    --  Staticness of the choice.
-   --  Field: State2 (pos)
+   --  Field: State1 (pos)
    function Get_Choice_Staticness (Target : Iir) return Iir_Staticness;
    procedure Set_Choice_Staticness (Target : Iir; Staticness : Iir_Staticness);
 

@@ -288,7 +288,7 @@ package body Nodes_Meta is
       Field_Aggr_High_Limit => Type_Iir,
       Field_Aggr_Others_Flag => Type_Boolean,
       Field_Aggr_Named_Flag => Type_Boolean,
-      Field_Value_Staticness => Type_Iir_Staticness,
+      Field_Aggregate_Expand_Flag => Type_Boolean,
       Field_Association_Choices_Chain => Type_Iir,
       Field_Case_Statement_Alternative_Chain => Type_Iir,
       Field_Choice_Staticness => Type_Iir_Staticness,
@@ -889,8 +889,8 @@ package body Nodes_Meta is
             return "aggr_others_flag";
          when Field_Aggr_Named_Flag =>
             return "aggr_named_flag";
-         when Field_Value_Staticness =>
-            return "value_staticness";
+         when Field_Aggregate_Expand_Flag =>
+            return "aggregate_expand_flag";
          when Field_Association_Choices_Chain =>
             return "association_choices_chain";
          when Field_Case_Statement_Alternative_Chain =>
@@ -2077,7 +2077,7 @@ package body Nodes_Meta is
             return Attr_None;
          when Field_Aggr_Named_Flag =>
             return Attr_None;
-         when Field_Value_Staticness =>
+         when Field_Aggregate_Expand_Flag =>
             return Attr_None;
          when Field_Association_Choices_Chain =>
             return Attr_Chain;
@@ -3539,8 +3539,8 @@ package body Nodes_Meta is
       Field_Method_Object,
       Field_Base_Name,
       --  Iir_Kind_Aggregate
+      Field_Aggregate_Expand_Flag,
       Field_Expr_Staticness,
-      Field_Value_Staticness,
       Field_Association_Choices_Chain,
       Field_Literal_Subtype,
       Field_Literal_Origin,
@@ -4682,6 +4682,8 @@ package body Nodes_Meta is
             return Get_Aggr_Others_Flag (N);
          when Field_Aggr_Named_Flag =>
             return Get_Aggr_Named_Flag (N);
+         when Field_Aggregate_Expand_Flag =>
+            return Get_Aggregate_Expand_Flag (N);
          when Field_Has_Disconnect_Flag =>
             return Get_Has_Disconnect_Flag (N);
          when Field_Has_Active_Flag =>
@@ -4806,6 +4808,8 @@ package body Nodes_Meta is
             Set_Aggr_Others_Flag (N, V);
          when Field_Aggr_Named_Flag =>
             Set_Aggr_Named_Flag (N, V);
+         when Field_Aggregate_Expand_Flag =>
+            Set_Aggregate_Expand_Flag (N, V);
          when Field_Has_Disconnect_Flag =>
             Set_Has_Disconnect_Flag (N, V);
          when Field_Has_Active_Flag =>
@@ -6142,8 +6146,6 @@ package body Nodes_Meta is
             return Get_Expr_Staticness (N);
          when Field_Name_Staticness =>
             return Get_Name_Staticness (N);
-         when Field_Value_Staticness =>
-            return Get_Value_Staticness (N);
          when Field_Choice_Staticness =>
             return Get_Choice_Staticness (N);
          when others =>
@@ -6162,8 +6164,6 @@ package body Nodes_Meta is
             Set_Expr_Staticness (N, V);
          when Field_Name_Staticness =>
             Set_Name_Staticness (N, V);
-         when Field_Value_Staticness =>
-            Set_Value_Staticness (N, V);
          when Field_Choice_Staticness =>
             Set_Choice_Staticness (N, V);
          when others =>
@@ -9858,10 +9858,10 @@ package body Nodes_Meta is
       return K = Iir_Kind_Aggregate_Info;
    end Has_Aggr_Named_Flag;
 
-   function Has_Value_Staticness (K : Iir_Kind) return Boolean is
+   function Has_Aggregate_Expand_Flag (K : Iir_Kind) return Boolean is
    begin
       return K = Iir_Kind_Aggregate;
-   end Has_Value_Staticness;
+   end Has_Aggregate_Expand_Flag;
 
    function Has_Association_Choices_Chain (K : Iir_Kind) return Boolean is
    begin

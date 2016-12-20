@@ -2902,12 +2902,12 @@ package body Sem_Expr is
       Expr: Iir;
       Has_Named : Boolean;
       Rec_El_Index : Natural;
-      Value_Staticness : Iir_Staticness;
+      Expr_Staticness : Iir_Staticness;
    begin
       Ok := True;
       Assoc_Chain := Get_Association_Choices_Chain (Aggr);
       Matches := (others => Null_Iir);
-      Value_Staticness := Locally;
+      Expr_Staticness := Locally;
 
       El_Type := Null_Iir;
       Has_Named := False;
@@ -2976,8 +2976,8 @@ package body Sem_Expr is
                Expr := Sem_Expression (Expr, El_Type);
                if Expr /= Null_Iir then
                   Set_Associated_Expr (El, Eval_Expr_If_Static (Expr));
-                  Value_Staticness := Min (Value_Staticness,
-                                           Get_Expr_Staticness (Expr));
+                  Expr_Staticness := Min (Expr_Staticness,
+                                          Get_Expr_Staticness (Expr));
                else
                   Ok := False;
                end if;
@@ -3001,9 +3001,8 @@ package body Sem_Expr is
             Ok := False;
          end if;
       end loop;
-      Set_Value_Staticness (Aggr, Value_Staticness);
       Set_Expr_Staticness (Aggr, Min (Get_Expr_Staticness (Aggr),
-                                      Value_Staticness));
+                                      Expr_Staticness));
       return Ok;
    end Sem_Record_Aggregate;
 
@@ -3030,6 +3029,11 @@ package body Sem_Expr is
       --  If not NULL_IIR, this is the bounds of the dimension.
       --  If every dimension has bounds, then the aggregate is constrained.
       Index_Subtype : Iir := Null_Iir;
+
+      --  Number of associations in last-level (not for sub-aggregate).  This
+      --  is used only to decide whether or not a static aggregate can be
+      --  expanded.
+      Nbr_Assocs : Natural := 0;
 
       --  True if there is an error.
       Error : Boolean := False;
@@ -3068,11 +3072,11 @@ package body Sem_Expr is
       Index_Constraint : Iir_Range_Expression; -- FIXME: 'range.
       Dir : Iir_Direction;
       Choice_Staticness : Iir_Staticness;
-      Value_Staticness : Iir_Staticness;
+      Expr_Staticness : Iir_Staticness;
 
       Info : Array_Aggr_Info renames Infos (Dim);
    begin
-      --  Sem choices.
+      --  Analyze choices.
       case Get_Kind (Aggr) is
          when Iir_Kind_Aggregate =>
             Assoc_Chain := Get_Association_Choices_Chain (Aggr);
@@ -3159,6 +3163,7 @@ package body Sem_Expr is
             Is_Positional := True;
             Has_Others := False;
             Choice_Staticness := Locally;
+            Info.Nbr_Assocs := Info.Nbr_Assocs + Len;
 
          when others =>
             Error_Kind ("sem_array_aggregate_type_1", Aggr);
@@ -3191,6 +3196,7 @@ package body Sem_Expr is
             return;
          end if;
          Info.Has_Dynamic := True;
+         Set_Aggregate_Expand_Flag (Aggr, False);
       end if;
 
       --  Compute bounds of the index if there is no index subtype.
@@ -3271,6 +3277,8 @@ package body Sem_Expr is
                end if;
             else
                --  Dynamic aggregate.
+               Set_Aggregate_Expand_Flag (Aggr, False);
+
                declare
                   --  There is only one choice.
                   Choice : constant Iir := Assoc_Chain;
@@ -3330,12 +3338,13 @@ package body Sem_Expr is
       end if;
 
       --  Analyze aggregate elements.
-      Value_Staticness := Locally;
+      Expr_Staticness := Locally;
       if Dim = Get_Nbr_Elements (Index_List) then
          --  A type has been found for AGGR, analyze AGGR as if it was
          --  an aggregate with a subtype (and not a string).
 
          if Get_Kind (Aggr) /= Iir_Kind_Aggregate then
+            --  Nothing to do for a string.
             return;
          end if;
 
@@ -3358,6 +3367,10 @@ package body Sem_Expr is
                      Expr := Eval_Expr_If_Static (Expr);
                      Set_Associated_Expr (El, Expr);
 
+                     if not Is_Static_Construct (Expr) then
+                        Set_Aggregate_Expand_Flag (Aggr, False);
+                     end if;
+
                      if not Eval_Is_In_Bound (Expr, Element_Type)
                      then
                         Info.Has_Bound_Error := True;
@@ -3365,12 +3378,9 @@ package body Sem_Expr is
                                          "element is out of the bounds");
                      end if;
 
-                     --  FIXME: handle name/others in translate.
-                     --  if Get_Kind (Expr) = Iir_Kind_Aggregate then
-                     --     Expr_Staticness := Get_Value_Staticness (Expr);
-                     --  end if;
-                     Value_Staticness := Min (Value_Staticness,
-                                              El_Staticness);
+                     Expr_Staticness := Min (Expr_Staticness, El_Staticness);
+
+                     Info.Nbr_Assocs := Info.Nbr_Assocs + 1;
                   else
                      Info.Error := True;
                   end if;
@@ -3379,6 +3389,7 @@ package body Sem_Expr is
             end loop;
          end;
       else
+         --  A sub-aggregate: recurse.
          declare
             Assoc : Iir;
          begin
@@ -3392,8 +3403,6 @@ package body Sem_Expr is
                   when Iir_Kind_Aggregate =>
                      Sem_Array_Aggregate_Type_1
                        (Assoc, A_Type, Infos, Constrained, Dim + 1);
-                     Value_Staticness := Min (Value_Staticness,
-                                              Get_Value_Staticness (Assoc));
                   when Iir_Kind_String_Literal8 =>
                      if Dim + 1 = Get_Nbr_Elements (Index_List) then
                         Sem_Array_Aggregate_Type_1
@@ -3411,9 +3420,8 @@ package body Sem_Expr is
             end loop;
          end;
       end if;
-      Set_Value_Staticness (Aggr, Value_Staticness);
       Set_Expr_Staticness (Aggr, Min (Get_Expr_Staticness (Aggr),
-                                      Min (Value_Staticness,
+                                      Min (Expr_Staticness,
                                            Choice_Staticness)));
    end Sem_Array_Aggregate_Type_1;
 
@@ -3434,6 +3442,9 @@ package body Sem_Expr is
       Aggr_Constrained : Boolean;
       Info, Prev_Info : Iir_Aggregate_Info;
    begin
+      --  By default, consider the aggregate can be statically built.
+      Set_Aggregate_Expand_Flag (Aggr, True);
+
       --  Analyze the aggregate.
       Sem_Array_Aggregate_Type_1 (Aggr, Aggr_Type, Infos, Constrained, 1);
 
@@ -3441,6 +3452,7 @@ package body Sem_Expr is
       for I in Infos'Range loop
          --  Return now in case of error.
          if Infos (I).Error then
+            Set_Aggregate_Expand_Flag (Aggr, False);
             return Null_Iir;
          end if;
          if Infos (I).Index_Subtype = Null_Iir then
@@ -3465,6 +3477,25 @@ package body Sem_Expr is
          Set_Constraint_State (A_Subtype, Fully_Constrained);
          Set_Type (Aggr, A_Subtype);
          Set_Literal_Subtype (Aggr, A_Subtype);
+         if Get_Type_Staticness (A_Subtype) = Locally
+           and then Get_Aggregate_Expand_Flag (Aggr)
+         then
+            --  Compute ratio of elements vs size of the aggregate to determine
+            --  if the aggregate can be expanded.
+            declare
+               Size : Iir_Int64;
+            begin
+               Size := 1;
+               for I in Infos'Range loop
+                  Size := Size
+                    * Eval_Discrete_Type_Length (Infos (I).Index_Subtype);
+               end loop;
+               Set_Aggregate_Expand_Flag
+                 (Aggr, Infos (Nbr_Dim).Nbr_Assocs >= Natural (Size / 10));
+            end;
+         else
+            Set_Aggregate_Expand_Flag (Aggr, False);
+         end if;
       else
          --  Free unused indexes subtype.
          for I in Infos'Range loop
@@ -3480,6 +3511,9 @@ package body Sem_Expr is
                end if;
             end;
          end loop;
+
+         --  If bounds are not known, the aggregate cannot be statically built.
+         Set_Aggregate_Expand_Flag (Aggr, False);
       end if;
 
       if Infos (Nbr_Dim).Has_Bound_Error then

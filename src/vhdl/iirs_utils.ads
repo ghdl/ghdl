@@ -103,6 +103,13 @@ package Iirs_Utils is
    --  Duplicate enumeration literal LIT.
    function Copy_Enumeration_Literal (Lit : Iir) return Iir;
 
+   --  True if EXPR can be built statically.  This is the case of literals
+   --  (except overflow), and the case of some aggregates.
+   --  This is different from locally static expression, particularly for
+   --  agregate: the analyzer may choose to dynamically create a locally
+   --  static aggregate if it is sparse.
+   function Is_Static_Construct (Expr : Iir) return Boolean;
+
    --  Make TARGETS depends on UNIT.
    --  UNIT must be either a design unit or a entity_aspect_entity.
    procedure Add_Dependence (Target: Iir_Design_Unit; Unit: Iir);

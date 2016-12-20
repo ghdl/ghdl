@@ -113,28 +113,13 @@ package body Trans.Chap7 is
       end if;
 
       --  Only aggregates are specially handled.
-      case Get_Kind (Expr) is
-         when Iir_Kind_Aggregate =>
-            null;
-         when Iir_Kind_Simple_Aggregate
-           | Iir_Kind_Null_Literal
-           | Iir_Kind_Physical_Int_Literal
-           | Iir_Kind_Physical_Fp_Literal
-           | Iir_Kind_Integer_Literal
-           | Iir_Kind_Floating_Point_Literal
-           | Iir_Kind_String_Literal8 =>
-            return True;
-         when Iir_Kind_Overflow_Literal =>
-            return False;
-         when others =>
-            return False;
-      end case;
-
-      Atype := Get_Type (Decl);
-      --  Bounds must be known (and static).
-      if Get_Type_Staticness (Atype) /= Locally then
+      if not Is_Static_Construct (Expr)
+        or else Get_Kind (Expr) /= Iir_Kind_Aggregate
+      then
          return False;
       end if;
+
+      Atype := Get_Type (Decl);
 
       --  Currently, only array aggregates are handled.
       if Get_Kind (Get_Base_Type (Atype)) /= Iir_Kind_Array_Type_Definition
@@ -142,11 +127,6 @@ package body Trans.Chap7 is
          return False;
       end if;
 
-      --  Aggregate elements must be locally static.
-      --  Note: this does not yet handled aggregates of aggregates.
-      if Get_Value_Staticness (Expr) /= Locally then
-         return False;
-      end if;
       Info := Get_Aggregate_Info (Expr);
       while Info /= Null_Iir loop
          if Get_Aggr_Dynamic_Flag (Info) then
@@ -4543,11 +4523,14 @@ package body Trans.Chap7 is
 
    procedure Translate_Predefined_Array_Equality (Subprg : Iir)
    is
+      Arr_Type       : constant Iir_Array_Type_Definition :=
+        Get_Type (Get_Interface_Declaration_Chain (Subprg));
+      El_Type        : constant Iir := Get_Element_Subtype (Arr_Type);
+      Info           : constant Type_Info_Acc := Get_Info (Arr_Type);
+      Id             : constant Name_Id :=
+        Get_Identifier (Get_Type_Declarator (Arr_Type));
+      Arr_Ptr_Type   : constant O_Tnode := Info.Ortho_Ptr_Type (Mode_Value);
       F_Info         : Subprg_Info_Acc;
-      Arr_Type       : Iir_Array_Type_Definition;
-      Arr_Ptr_Type   : O_Tnode;
-      Info           : Type_Info_Acc;
-      Id             : Name_Id;
       Var_L, Var_R   : O_Dnode;
       L, R           : Mnode;
       Interface_List : O_Inter_List;
@@ -4558,14 +4541,7 @@ package body Trans.Chap7 is
       Var_Len        : O_Dnode;
       Label          : O_Snode;
       Le, Re         : Mnode;
-      El_Type        : Iir;
    begin
-      Arr_Type := Get_Type (Get_Interface_Declaration_Chain (Subprg));
-      El_Type := Get_Element_Subtype (Arr_Type);
-      Info := Get_Info (Arr_Type);
-      Id := Get_Identifier (Get_Type_Declarator (Arr_Type));
-      Arr_Ptr_Type := Info.Ortho_Ptr_Type (Mode_Value);
-
       F_Info := Add_Info (Subprg, Kind_Subprg);
 
       --  Create function.

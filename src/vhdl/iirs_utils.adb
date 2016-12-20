@@ -736,6 +736,25 @@ package body Iirs_Utils is
       Set_Range_Constraint (Def, Range_Expr);
    end Create_Range_Constraint_For_Enumeration_Type;
 
+   function Is_Static_Construct (Expr : Iir) return Boolean is
+   begin
+      case Get_Kind (Expr) is
+         when Iir_Kind_Aggregate =>
+            return Get_Aggregate_Expand_Flag (Expr);
+         when Iir_Kinds_Literal =>
+            return True;
+         when Iir_Kind_Simple_Aggregate
+           | Iir_Kind_Enumeration_Literal
+           | Iir_Kind_Character_Literal =>
+            return True;
+         when Iir_Kind_Overflow_Literal =>
+            --  Needs to generate an error.
+            return False;
+         when others =>
+            return False;
+      end case;
+   end Is_Static_Construct;
+
    procedure Free_Name (Node : Iir)
    is
       N : Iir;
