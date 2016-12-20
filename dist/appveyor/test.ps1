@@ -67,8 +67,15 @@ foreach ($Directory in $Directories)
 	$start = Get-Date
 	c:\msys64\usr\bin\bash.exe -c "./testsuite.sh" 2>&1 | Restore-NativeCommandStream | %{ "$_" }
 	$end = Get-Date
-	Update-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome $(if ($LastExitCode -eq 0) {"Passed"} else {"Failed"}) -Duration ($end - $start).TotalMilliseconds
-	cd ..
+	$TotalMilliseconds = ($end - $start).TotalMilliseconds
+	if ($LastExitCode -eq 0)
+	{ Write-Host "PASSED" -Foreground Green
+		Update-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome Passed -Duration $TotalMilliseconds
+	}
+	else
+	{	Write-Host "PASSED" -Foreground Red
+		Update-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome Failed -Duration $TotalMilliseconds
+	}
 }
 cd ..
 
@@ -91,7 +98,15 @@ $start = Get-Date
 # c:\msys64\usr\bin\bash.exe -c "./testsuite.sh" 2>&1 | Restore-NativeCommandStream | %{ "$_" }
 
 $end = Get-Date
-Update-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome $(if ($LastExitCode -eq 0) {"Passed"} else {"Failed"}) -Duration ($end - $start).TotalMilliseconds
+$TotalMilliseconds = ($end - $start).TotalMilliseconds
+if ($LastExitCode -eq 0)
+{ Write-Host "PASSED" -Foreground Green
+	Update-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome Passed -Duration $TotalMilliseconds
+}
+else
+{	Write-Host "PASSED" -Foreground Red
+	Update-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome Failed -Duration $TotalMilliseconds
+}
 cd ..
 
 # ==============================================================================

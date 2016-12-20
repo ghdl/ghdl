@@ -56,9 +56,13 @@ Write-Host "Print GCC setup..." -Foreground Yellow
 c:\msys64\mingw64\bin\gcc.exe -v 2>&1 | Restore-NativeCommandStream | %{ "$_" }
 Write-Host "Print GCC search directories..." -Foreground Yellow
 c:\msys64\mingw64\bin\gcc.exe -print-search-dirs 2>&1 | Restore-NativeCommandStream | %{ "$_" }
-Write-Host "Print CLang setup..." -Foreground Yellow
-c:\msys64\mingw64\bin\clang.exe -v 2>&1 | Restore-NativeCommandStream | %{ "$_" }
-Write-Host "Print CLang search directories..." -Foreground Yellow
-c:\msys64\mingw64\bin\clang.exe -print-search-dirs 2>&1 | Restore-NativeCommandStream | %{ "$_" }
+
+if ($env:BUILD_BACKEND -eq "llvm")
+{	Write-Host "Print CLang setup..." -Foreground Yellow
+	c:\msys64\mingw64\bin\clang.exe -v 2>&1 | Restore-NativeCommandStream | %{ "$_" }
+	Write-Host "Print CLang search directories..." -Foreground Yellow
+	c:\msys64\mingw64\bin\clang.exe -print-search-dirs 2>&1 | Restore-NativeCommandStream | %{ "$_" }
+}
+
 Write-Host "Print gnatls setup..." -Foreground Yellow
 c:\msys64\mingw64\bin\gnatls.exe -v 2>&1 | Restore-NativeCommandStream | %{ "$_" }
