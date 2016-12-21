@@ -62,7 +62,7 @@ check_version()
 for opt do
   optarg=`expr x"$opt" : 'x[^=]*=\(.*\)'`
   case "$opt" in
-      CC=*|CFLAGS=*|GNATMAKE=*)
+      CC=*|CFLAGS=*|GNATMAKE=*|LDFLAGS=*)
         optvar=`expr x"$opt" : 'x\([^=]*\)=.*'`
 	eval $optvar=\"$optarg\"
 	;;
