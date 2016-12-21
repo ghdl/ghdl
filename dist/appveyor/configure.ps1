@@ -49,23 +49,20 @@ function Restore-NativeCommandStream
 $GHDL_BUILD_DIR =  "$($env:APPVEYOR_BUILD_FOLDER)\build\$($env:BUILD_MINGW)-$($env:BUILD_BACKEND)"
 $GHDL_PREFIX_DIR = "/c/Tools/GHDL/0.34-dev-$($env:BUILD_MINGW)-$($env:BUILD_BACKEND)"
 
+$env:GHDL_BUILD_DIR =  $GHDL_BUILD_DIR
+$env:GHDL_PREFIX_DIR = $GHDL_PREFIX_DIR
+
+mkdir $GHDL_BUILD_DIR | cd
+
 if ($env:BUILD_BACKEND -eq "mcode")
 {	Write-Host "Configuring GHDL for $($env:BUILD_MINGW), mcode..." -Foreground Yellow
 
-	$env:GHDL_BUILD_DIR =  $GHDL_BUILD_DIR
-	$env:GHDL_PREFIX_DIR = $GHDL_PREFIX_DIR
-
-	mkdir $GHDL_BUILD_DIR | cd
-	c:\msys64\usr\bin\bash.exe -c "../../configure --prefix=$GHDL_PREFIX_DIR" 2>&1 | Restore-NativeCommandStream | %{ "$_" }
+	c:\msys64\usr\bin\bash.exe -c "../../configure --prefix=$GHDL_PREFIX_DIR LDFLAGS=-static" 2>&1 | Restore-NativeCommandStream | %{ "$_" }
 }
 elseif ($env:BUILD_BACKEND -eq "llvm")
 {	Write-Host "Configuring GHDL for $($env:BUILD_MINGW), LLVM-3.5..." -Foreground Yellow
 
-	$env:GHDL_BUILD_DIR =  $GHDL_BUILD_DIR
-	$env:GHDL_PREFIX_DIR = $GHDL_PREFIX_DIR
-
-	mkdir $GHDL_BUILD_DIR | cd
-	c:\msys64\usr\bin\bash.exe -c "../../configure --prefix=$GHDL_PREFIX_DIR --with-llvm-config" 2>&1 | Restore-NativeCommandStream | %{ "$_" }
+	c:\msys64\usr\bin\bash.exe -c "../../configure --prefix=$GHDL_PREFIX_DIR --with-llvm-config LDFLAGS=-static" 2>&1 | Restore-NativeCommandStream | %{ "$_" }
 }
 
 cd $env:APPVEYOR_BUILD_FOLDER
