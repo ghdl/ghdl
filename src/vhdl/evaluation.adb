@@ -2142,7 +2142,9 @@ package body Evaluation is
             when Iir_Kind_Choice_By_Others =>
                null;
          end case;
-         Expr := Get_Associated_Expr (Assoc);
+         if not Get_Same_Alternative_Flag (Assoc) then
+            Expr := Get_Associated_Expr (Assoc);
+         end if;
          if Get_Kind (Expr) = Iir_Kind_Aggregate then
             Eval_Aggregate (Expr);
          end if;
@@ -2157,6 +2159,7 @@ package body Evaluation is
       Prefix : Iir;
       Cur_Pos : Iir_Index32;
       Assoc : Iir;
+      Assoc_Expr : Iir;
       Res : Iir;
    begin
       Prefix := Get_Prefix (Expr);
@@ -2168,7 +2171,11 @@ package body Evaluation is
       pragma Assert (Get_Kind (Prefix) = Iir_Kind_Aggregate);
       Assoc := Get_Association_Choices_Chain (Prefix);
       Cur_Pos := 0;
+      Assoc_Expr := Null_Iir;
       loop
+         if not Get_Same_Alternative_Flag (Assoc) then
+            Assoc_Expr := Assoc;
+         end if;
          case Iir_Kinds_Record_Choice (Get_Kind (Assoc)) is
             when Iir_Kind_Choice_By_None =>
                exit when Cur_Pos = El_Pos;
@@ -2187,8 +2194,8 @@ package body Evaluation is
       end loop;
 
       --  Eval element and save it.
-      Res := Eval_Expr_Keep_Orig (Get_Associated_Expr (Assoc), True);
-      Set_Associated_Expr (Assoc, Res);
+      Res := Eval_Expr_Keep_Orig (Get_Associated_Expr (Assoc_Expr), True);
+      Set_Associated_Expr (Assoc_Expr, Res);
       return Res;
    end Eval_Selected_Element;
 
@@ -2199,6 +2206,7 @@ package body Evaluation is
       Indexes_Type : constant Iir_List := Get_Index_Subtype_List (Prefix_Type);
       Idx : Iir;
       Assoc : Iir;
+      Assoc_Expr : Iir;
       Aggr_Bounds : Iir;
       Aggr : Iir;
       Cur_Pos : Iir_Int64;
@@ -2214,7 +2222,11 @@ package body Evaluation is
          Aggr_Bounds := Eval_Static_Range
            (Get_Nth_Element (Indexes_Type, Dim));
          Cur_Pos := Eval_Pos (Eval_Discrete_Range_Left (Aggr_Bounds));
+         Assoc_Expr := Null_Iir;
          loop
+            if not Get_Same_Alternative_Flag (Assoc) then
+               Assoc_Expr := Assoc;
+            end if;
             case Get_Kind (Assoc) is
                when Iir_Kind_Choice_By_None =>
                   exit when Cur_Pos = Eval_Pos (Idx);
@@ -2235,12 +2247,12 @@ package body Evaluation is
             end case;
             Assoc := Get_Chain (Assoc);
          end loop;
-         Aggr := Get_Associated_Expr (Assoc);
+         Aggr := Get_Associated_Expr (Assoc_Expr);
       end loop;
 
       --  Eval element and save it.
       Res := Eval_Expr_Keep_Orig (Aggr, True);
-      Set_Associated_Expr (Assoc, Res);
+      Set_Associated_Expr (Assoc_Expr, Res);
 
       return Res;
    end Eval_Indexed_Aggregate;
