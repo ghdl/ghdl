@@ -22,8 +22,9 @@ environment:
   matrix:
     - BUILD_MINGW: mingw32
       BUILD_BACKEND: mcode
-    - BUILD_MINGW: mingw32
-      BUILD_BACKEND: llvm
+# Not yet functionnal
+#    - BUILD_MINGW: mingw32
+#      BUILD_BACKEND: llvm
 # mcode is not yet supported on Win64
 #    - BUILD_MINGW: mingw64
 #      BUILD_BACKEND: mcode
