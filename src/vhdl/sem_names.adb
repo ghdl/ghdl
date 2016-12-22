@@ -3821,6 +3821,26 @@ package body Sem_Names is
                end if;
             end loop;
             if Res = Null_Iir then
+               --  Specific error message for a non-visible enumeration
+               --  literal.
+               if (Get_Kind (Get_Base_Type (A_Type))
+                     = Iir_Kind_Enumeration_Type_Definition)
+                 and then Kind_In (Name, Iir_Kind_Simple_Name,
+                                   Iir_Kind_Character_Literal)
+               then
+                  Res := Find_Name_In_List (Get_Enumeration_Literal_List
+                                              (Get_Base_Type (A_Type)),
+                                            Get_Identifier (Name));
+                  if Res /= Null_Iir then
+                     Error_Msg_Sem
+                       (+Name, "enumeration literal %i is not visible "
+                          & "(add a use clause)", +Name);
+                     --  Keep the literal as result.
+                  end if;
+               end if;
+            end if;
+
+            if Res = Null_Iir then
                Error_Not_Match (Name, A_Type);
                return Create_Error_Expr (Name, A_Type);
             elsif Is_Overload_List (Res) then
