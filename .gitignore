@@ -6,6 +6,7 @@ b~*.ad?
 *.v93
 *.v08
 *.cf
+.gdb_history
 
 testsuite/get_entities
 
