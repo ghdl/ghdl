@@ -2774,7 +2774,8 @@ package body Evaluation is
       case Get_Kind (Expr) is
          when Iir_Kind_Type_Conversion
            | Iir_Kind_Qualified_Expression =>
-            return Can_Eval_Composite_Value (Get_Expression (Expr));
+            --  Not yet handled.
+            return False;
          when Iir_Kinds_Denoting_Name =>
             return Can_Eval_Composite_Value (Get_Named_Entity (Expr), Top);
          when Iir_Kind_Constant_Declaration =>
