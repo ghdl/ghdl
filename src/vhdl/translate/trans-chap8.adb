@@ -2144,17 +2144,17 @@ package body Trans.Chap8 is
 
             --  For unconstrained interfaces:
             --  * create a field for the fat pointer, unless
-            --    - the expression is locally static
+            --    - the expression is statically built
             function Need_Fat_Pointer_Field return Boolean is
             begin
                return not Is_Fully_Constrained_Type (Ftype)
                  and then (Actual = Null_Iir
-                             or else Get_Expr_Staticness (Actual) /= Locally);
+                             or else not Is_Static_Construct (Actual));
             end Need_Fat_Pointer_Field;
 
             --  For unconstrained interfaces:
             --  * create a field for the bounds, unless
-            --    - the expression is locally static
+            --    - the expression is statically built
             --    - the expression/name type is locally static
             --    - expression is a call to an unconstrained function
             --    - expression is an object name that is not a slice
@@ -2220,7 +2220,7 @@ package body Trans.Chap8 is
             --  If the associated expression is not a name of an object (never
             --  the case for a signal interface and variable interface):
             --  * create a field for the value, unless
-            --    - expression is locally static
+            --    - expression is statically built
             --    - expression is scalar
             --    - expression is a call to an unconstrained function
             --  If the actual is a name of an object, create a field for the
@@ -2243,7 +2243,7 @@ package body Trans.Chap8 is
                   return False;
                end if;
 
-               if Get_Expr_Staticness (Actual) = Locally
+               if Is_Static_Construct (Actual)
                  or else (Get_Kind (Act_Type)
                             in Iir_Kinds_Scalar_Type_Definition)
                  or else Get_Kind (Ftype) = Iir_Kind_File_Type_Definition
