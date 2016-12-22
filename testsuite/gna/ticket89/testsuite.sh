@@ -31,4 +31,5 @@ clean
 clean ieee_proposed
 clean bitvis_util
 
+rm -f alertlog.txt testlog.txt
 echo "Test successful"
