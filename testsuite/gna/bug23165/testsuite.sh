@@ -10,6 +10,7 @@ analyze mwe_working/counter.vhd
 analyze mwe_working/mwe.vhd
 if ghdl_has_feature mwe ghw; then
   elab_simulate mwe --stop-time=100us --wave=output.ghw
+  rm -f output.ghw
 fi
 
 analyze mwe2/mwe.vhd
