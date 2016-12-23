@@ -496,36 +496,28 @@ package body Evaluation is
       end case;
    end Eval_Pos_In_Range;
 
-   function Aggregate_To_Simple_Aggregate (Aggr : Iir) return Iir
+   procedure Build_Array_Choices_Vector
+     (Vect : out Iir_Array; Choice_Range : Iir; Choices_Chain : Iir)
    is
-      Aggr_Type : constant Iir := Get_Type (Aggr);
-      Index_Type : constant Iir := Get_Index_Type (Aggr_Type, 0);
-      Index_Range : constant Iir := Eval_Static_Range (Index_Type);
-      Len : constant Iir_Int64 := Eval_Discrete_Range_Length (Index_Range);
-      List : Iir_List;
+      pragma Assert (Vect'First = 0);
+      pragma Assert (Vect'Length = Eval_Discrete_Range_Length (Choice_Range));
       Assoc : Iir;
-      Assoc_Expr : Iir;
+      Choice : Iir;
       Cur_Pos : Natural;
-
-      procedure Set_Element (Pos : Natural; El : Iir) is
-      begin
-         pragma Assert (Get_Nth_Element (List, Pos) = Null_Iir);
-         Replace_Nth_Element (List, Pos, El);
-      end Set_Element;
    begin
-      List := Create_Iir_List;
-      for I in 1 .. Len loop
-         Append_Element (List, Null_Iir);
-      end loop;
+      --  Initialize Vect (to correctly handle 'others').
+      Vect := (others => Null_Iir);
 
-      Assoc := Get_Association_Choices_Chain (Aggr);
+      Assoc := Choices_Chain;
       Cur_Pos := 0;
+      Choice := Null_Iir;
       while Is_Valid (Assoc) loop
-         Assoc_Expr := Get_Associated_Expr (Assoc);
-         Assoc_Expr := Eval_Static_Expr (Assoc_Expr);
+         if not Get_Same_Alternative_Flag (Assoc) then
+            Choice := Assoc;
+         end if;
          case Iir_Kinds_Array_Choice (Get_Kind (Assoc)) is
             when Iir_Kind_Choice_By_None =>
-               Set_Element (Cur_Pos, Assoc_Expr);
+               Vect (Cur_Pos) := Choice;
                Cur_Pos := Cur_Pos + 1;
             when Iir_Kind_Choice_By_Range =>
                declare
@@ -533,32 +525,66 @@ package body Evaluation is
                   Rng_Start : Iir;
                   Rng_Len : Iir_Int64;
                begin
-                  if Get_Direction (Rng) = Get_Direction (Index_Range) then
+                  if Get_Direction (Rng) = Get_Direction (Choice_Range) then
                      Rng_Start := Get_Left_Limit (Rng);
                   else
                      Rng_Start := Get_Right_Limit (Rng);
                   end if;
                   Cur_Pos := Natural
-                    (Eval_Pos_In_Range (Index_Range, Rng_Start));
+                    (Eval_Pos_In_Range (Choice_Range, Rng_Start));
                   Rng_Len := Eval_Discrete_Range_Length (Rng);
                   for I in 1 .. Rng_Len loop
-                     Set_Element (Cur_Pos, Assoc_Expr);
+                     Vect (Cur_Pos) := Choice;
                      Cur_Pos := Cur_Pos + 1;
                   end loop;
                end;
             when Iir_Kind_Choice_By_Expression =>
                Cur_Pos := Natural
-                 (Eval_Pos_In_Range (Index_Range,
+                 (Eval_Pos_In_Range (Choice_Range,
                                      Get_Choice_Expression (Assoc)));
-               Set_Element (Cur_Pos, Assoc_Expr);
+               Vect (Cur_Pos) := Choice;
             when Iir_Kind_Choice_By_Others =>
-               for I in 1 .. Len loop
-                  if Get_Nth_Element (List, Natural (I - 1)) = Null_Iir then
-                     Set_Element (Natural (I - 1), Assoc_Expr);
+               for I in Vect'Range loop
+                  if Vect (I) = Null_Iir then
+                     Vect (I) := Choice;
                   end if;
                end loop;
          end case;
          Assoc := Get_Chain (Assoc);
+      end loop;
+   end Build_Array_Choices_Vector;
+
+   function Aggregate_To_Simple_Aggregate (Aggr : Iir) return Iir
+   is
+      Aggr_Type : constant Iir := Get_Type (Aggr);
+      Index_Type : constant Iir := Get_Index_Type (Aggr_Type, 0);
+      Index_Range : constant Iir := Eval_Static_Range (Index_Type);
+      Len : constant Iir_Int64 := Eval_Discrete_Range_Length (Index_Range);
+      Assocs : constant Iir := Get_Association_Choices_Chain (Aggr);
+      Vect : Iir_Array (0 .. Natural (Len - 1));
+      List : Iir_List;
+      Assoc : Iir;
+      Expr : Iir;
+   begin
+      Assoc := Assocs;
+      while Is_Valid (Assoc) loop
+         if not Get_Same_Alternative_Flag (Assoc) then
+            Expr := Get_Associated_Expr (Assoc);
+            if Get_Kind (Get_Type (Expr))
+              in Iir_Kinds_Scalar_Type_Definition
+            then
+               Expr := Eval_Static_Expr (Expr);
+               Set_Associated_Expr (Assoc, Expr);
+            end if;
+         end if;
+         Assoc := Get_Chain (Assoc);
+      end loop;
+
+      Build_Array_Choices_Vector (Vect, Index_Range, Assocs);
+
+      List := Create_Iir_List;
+      for I in Vect'Range loop
+         Append_Element (List, Get_Associated_Expr (Vect (I)));
       end loop;
 
       return Build_Simple_Aggregate (List, Aggr, Aggr_Type);

@@ -2904,6 +2904,9 @@ package body Sem_Expr is
       Rec_El_Index : Natural;
       Expr_Staticness : Iir_Staticness;
    begin
+      --  Not yet handled.
+      Set_Aggregate_Expand_Flag (Aggr, False);
+
       Ok := True;
       Assoc_Chain := Get_Association_Choices_Chain (Aggr);
       Matches := (others => Null_Iir);
@@ -3340,6 +3343,11 @@ package body Sem_Expr is
       --  Analyze aggregate elements.
       if Constrained then
          Expr_Staticness := Get_Type_Staticness (Index_Type);
+         if Expr_Staticness /= Locally then
+            --  Cannot be statically built as the bounds are not known and
+            --  must be checked at run-time.
+            Set_Aggregate_Expand_Flag (Aggr, False);
+         end if;
       else
          Expr_Staticness := Locally;
       end if;
@@ -3364,8 +3372,8 @@ package body Sem_Expr is
          begin
             El := Assoc_Chain;
             while El /= Null_Iir loop
-               Expr := Get_Associated_Expr (El);
-               if Expr /= Null_Iir then
+               if not Get_Same_Alternative_Flag (El) then
+                  Expr := Get_Associated_Expr (El);
                   Expr := Sem_Expression (Expr, Element_Type);
                   if Expr /= Null_Iir then
                      El_Staticness := Get_Expr_Staticness (Expr);
@@ -3396,38 +3404,40 @@ package body Sem_Expr is
       else
          --  A sub-aggregate: recurse.
          declare
-            Assoc : Iir;
+            Sub_Aggr : Iir;
          begin
-            Assoc := Null_Iir;
             Choice := Assoc_Chain;
             while Choice /= Null_Iir loop
-               if Get_Associated_Expr (Choice) /= Null_Iir then
-                  Assoc := Get_Associated_Expr (Choice);
-               end if;
-               case Get_Kind (Assoc) is
-                  when Iir_Kind_Aggregate =>
-                     Sem_Array_Aggregate_Type_1
-                       (Assoc, A_Type, Infos, Constrained, Dim + 1);
-                  when Iir_Kind_String_Literal8 =>
-                     if Dim + 1 = Get_Nbr_Elements (Index_List) then
+               if not Get_Same_Alternative_Flag (Choice) then
+                  Sub_Aggr := Get_Associated_Expr (Choice);
+                  case Get_Kind (Sub_Aggr) is
+                     when Iir_Kind_Aggregate =>
                         Sem_Array_Aggregate_Type_1
-                          (Assoc, A_Type, Infos, Constrained, Dim + 1);
-                     else
-                        Error_Msg_Sem
-                          (+Assoc, "string literal not allowed here");
+                          (Sub_Aggr, A_Type, Infos, Constrained, Dim + 1);
+                        if not Get_Aggregate_Expand_Flag (Sub_Aggr) then
+                           Set_Aggregate_Expand_Flag (Aggr, False);
+                        end if;
+                     when Iir_Kind_String_Literal8 =>
+                        if Dim + 1 = Get_Nbr_Elements (Index_List) then
+                           Sem_Array_Aggregate_Type_1
+                             (Sub_Aggr, A_Type, Infos, Constrained, Dim + 1);
+                        else
+                           Error_Msg_Sem
+                             (+Sub_Aggr, "string literal not allowed here");
+                           Infos (Dim + 1).Error := True;
+                        end if;
+                     when others =>
+                        Error_Msg_Sem (+Sub_Aggr, "sub-aggregate expected");
                         Infos (Dim + 1).Error := True;
-                     end if;
-                  when others =>
-                     Error_Msg_Sem (+Assoc, "sub-aggregate expected");
-                     Infos (Dim + 1).Error := True;
-               end case;
+                  end case;
+               end if;
                Choice := Get_Chain (Choice);
             end loop;
          end;
       end if;
-      Set_Expr_Staticness (Aggr, Min (Get_Expr_Staticness (Aggr),
-                                      Min (Expr_Staticness,
-                                           Choice_Staticness)));
+      Expr_Staticness := Min (Get_Expr_Staticness (Aggr),
+                              Min (Expr_Staticness, Choice_Staticness));
+      Set_Expr_Staticness (Aggr, Expr_Staticness);
    end Sem_Array_Aggregate_Type_1;
 
    --  Analyze an array aggregate whose type is AGGR_TYPE.

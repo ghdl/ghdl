@@ -223,6 +223,9 @@ package Iirs_Utils is
    --  Number of dimensions (1..n) for ARRAY_TYPE.
    function Get_Nbr_Dimensions (Array_Type : Iir) return Natural;
 
+   --  Return True iff the all bounds of ARRAY_TYPE are locally static.
+   function Are_Bounds_Locally_Static (Array_Type : Iir) return Boolean;
+
    --  Return the type or subtype definition of the SUBTYP type mark.
    function Get_Denoted_Type_Mark (Subtyp : Iir) return Iir;
 

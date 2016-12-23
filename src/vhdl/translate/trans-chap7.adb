@@ -73,7 +73,6 @@ package body Trans.Chap7 is
 
       --  Handle only constrained to unconstrained conversion.
       pragma Assert (Get_Kind (Res_Type) in Iir_Kinds_Array_Type_Definition);
-      pragma Assert (Get_Constraint_State (Res_Type) = Unconstrained);
 
       Expr_Info := Get_Info (Expr_Type);
       Res_Info := Get_Info (Res_Type);
@@ -167,56 +166,61 @@ package body Trans.Chap7 is
       end loop;
    end Translate_Static_String_Literal8_Inner;
 
-   procedure Translate_Static_Aggregate_1 (List    : in out O_Array_Aggr_List;
-                                           Aggr    : Iir;
-                                           Info    : Iir;
-                                           El_Type : Iir)
+   procedure Translate_Static_Array_Aggregate_1
+     (List : in out O_Array_Aggr_List;
+      Aggr : Iir;
+      Aggr_Type : Iir;
+      Dim : Positive)
    is
-      N_Info : constant Iir := Get_Sub_Aggregate_Info (Info);
-      Assoc  : Iir;
-      Sub    : Iir;
+      Nbr_Dims  : constant Natural := Get_Nbr_Dimensions (Aggr_Type);
+      El_Type   : constant Iir := Get_Element_Subtype (Aggr_Type);
    begin
       case Get_Kind (Aggr) is
          when Iir_Kind_Aggregate =>
-            Assoc := Get_Association_Choices_Chain (Aggr);
-            while Assoc /= Null_Iir loop
-               Sub := Get_Associated_Expr (Assoc);
-               case Get_Kind (Assoc) is
-                  when Iir_Kind_Choice_By_None =>
-                     if N_Info = Null_Iir then
-                        New_Array_Aggr_El
-                          (List, Translate_Static_Expression (Sub, El_Type));
-                     else
-                        Translate_Static_Aggregate_1
-                          (List, Sub, N_Info, El_Type);
-                     end if;
-                  when others =>
-                     Error_Kind ("translate_static_aggregate_1(2)", Assoc);
-               end case;
-               Assoc := Get_Chain (Assoc);
-            end loop;
+            declare
+               Index_Type : constant Iir :=
+                 Get_Index_Type (Aggr_Type, Dim - 1);
+               Index_Range : constant Iir := Eval_Static_Range (Index_Type);
+               Len : constant Iir_Int64 :=
+                 Eval_Discrete_Range_Length (Index_Range);
+               Assocs : constant Iir := Get_Association_Choices_Chain (Aggr);
+               Vect : Iir_Array (0 .. Integer (Len - 1));
+            begin
+               Build_Array_Choices_Vector (Vect, Index_Range, Assocs);
+
+               if Dim = Nbr_Dims then
+                  for I in Vect'Range loop
+                     New_Array_Aggr_El
+                       (List,
+                        Translate_Static_Expression
+                          (Get_Associated_Expr (Vect (I)), El_Type));
+                  end loop;
+               else
+                  for I in Vect'Range loop
+                     Translate_Static_Array_Aggregate_1
+                       (List, Get_Associated_Expr (Vect (I)),
+                        Aggr_Type, Dim + 1);
+                  end loop;
+               end if;
+            end;
          when Iir_Kind_String_Literal8 =>
-            if N_Info /= Null_Iir then
-               raise Internal_Error;
-            end if;
+            pragma Assert (Dim = Nbr_Dims);
             Translate_Static_String_Literal8_Inner (List, Aggr, El_Type);
          when others =>
-            Error_Kind ("translate_static_aggregate_1", Aggr);
+            Error_Kind ("translate_static_array_aggregate_1", Aggr);
       end case;
-   end Translate_Static_Aggregate_1;
+   end Translate_Static_Array_Aggregate_1;
 
    function Translate_Static_Aggregate (Aggr : Iir) return O_Cnode
    is
       Aggr_Type : constant Iir := Get_Type (Aggr);
-      El_Type   : constant Iir := Get_Element_Subtype (Aggr_Type);
       List      : O_Array_Aggr_List;
       Res       : O_Cnode;
    begin
       Chap3.Translate_Anonymous_Type_Definition (Aggr_Type);
       Start_Array_Aggr (List, Get_Ortho_Type (Aggr_Type, Mode_Value));
 
-      Translate_Static_Aggregate_1
-        (List, Aggr, Get_Aggregate_Info (Aggr), El_Type);
+      Translate_Static_Array_Aggregate_1 (List, Aggr, Aggr_Type, 1);
       Finish_Array_Aggr (List, Res);
       return Res;
    end Translate_Static_Aggregate;
@@ -416,7 +420,8 @@ package body Trans.Chap7 is
       return Res;
    end Translate_Static_String;
 
-   function Translate_String_Literal (Str : Iir; Res_Type : Iir) return O_Enode
+   function Translate_Composite_Literal (Str : Iir; Res_Type : Iir)
+                                        return O_Enode
    is
       Str_Type : constant Iir := Get_Type (Str);
       Is_Static : Boolean;
@@ -427,7 +432,7 @@ package body Trans.Chap7 is
       R        : O_Enode;
    begin
       if Get_Constraint_State (Str_Type) = Fully_Constrained
-        and then Get_Type_Staticness (Get_Index_Type (Str_Type, 0)) = Locally
+        and then Are_Bounds_Locally_Static (Str_Type)
       then
          Chap3.Create_Array_Subtype (Str_Type);
          case Get_Kind (Str) is
@@ -438,11 +443,12 @@ package body Trans.Chap7 is
             when Iir_Kind_Simple_Name_Attribute =>
                Res := Translate_Static_String
                  (Get_Type (Str), Get_Simple_Name_Identifier (Str));
+            when Iir_Kind_Aggregate =>
+               Res := Translate_Static_Aggregate (Str);
             when others =>
                raise Internal_Error;
          end case;
-         Is_Static :=
-           Get_Type_Staticness (Get_Index_Type (Res_Type, 0)) = Locally;
+         Is_Static := Are_Bounds_Locally_Static (Res_Type);
 
          if Is_Static then
             Res := Translate_Static_Implicit_Conv (Res, Str_Type, Res_Type);
@@ -465,7 +471,7 @@ package body Trans.Chap7 is
            (Translate_Non_Static_String_Literal (Str), Str_Type, Res_Type,
             Mode_Value, Str);
       end if;
-   end Translate_String_Literal;
+   end Translate_Composite_Literal;
 
    function Translate_Numeric_Literal (Expr : Iir; Res_Type : O_Tnode)
                                       return O_Cnode is
@@ -3775,54 +3781,58 @@ package body Trans.Chap7 is
          when Iir_Kind_String_Literal8
             | Iir_Kind_Simple_Aggregate
             | Iir_Kind_Simple_Name_Attribute =>
-            return Translate_String_Literal (Expr, Res_Type);
+            return Translate_Composite_Literal (Expr, Res_Type);
 
          when Iir_Kind_Aggregate =>
-            declare
-               Aggr_Type : Iir;
-               Tinfo     : Type_Info_Acc;
-               Mres      : Mnode;
-            begin
-               --  Extract the type of the aggregate.  Use the type of the
-               --  context if it is fully constrained.
-               Aggr_Type := Expr_Type;
-               if Rtype /= Null_Iir
-                 and then Is_Fully_Constrained_Type (Rtype)
-               then
-                  Aggr_Type := Rtype;
-               else
-                  pragma Assert (Is_Fully_Constrained_Type (Expr_Type));
-                  null;
-               end if;
+            if Get_Aggregate_Expand_Flag (Expr) then
+               return Translate_Composite_Literal (Expr, Res_Type);
+            else
+               declare
+                  Aggr_Type : Iir;
+                  Tinfo     : Type_Info_Acc;
+                  Mres      : Mnode;
+               begin
+                  --  Extract the type of the aggregate.  Use the type of the
+                  --  context if it is fully constrained.
+                  Aggr_Type := Expr_Type;
+                  if Rtype /= Null_Iir
+                    and then Is_Fully_Constrained_Type (Rtype)
+                  then
+                     Aggr_Type := Rtype;
+                  else
+                     pragma Assert (Is_Fully_Constrained_Type (Expr_Type));
+                     null;
+                  end if;
 
-               if Get_Kind (Aggr_Type) = Iir_Kind_Array_Subtype_Definition
-               then
-                  Chap3.Create_Array_Subtype (Aggr_Type);
-               end if;
+                  if Get_Kind (Aggr_Type) = Iir_Kind_Array_Subtype_Definition
+                  then
+                     Chap3.Create_Array_Subtype (Aggr_Type);
+                  end if;
 
-               --  FIXME: this may be not necessary
-               Tinfo := Get_Info (Aggr_Type);
+                  --  FIXME: this may be not necessary
+                  Tinfo := Get_Info (Aggr_Type);
 
-               --  The result area has to be created
-               if Is_Complex_Type (Tinfo) then
-                  Mres := Create_Temp (Tinfo);
-                  Chap4.Allocate_Complex_Object
-                    (Aggr_Type, Alloc_Stack, Mres);
-               else
-                  --  if thin array/record:
-                  --    create result
-                  Mres := Create_Temp (Tinfo);
-               end if;
+                  --  The result area has to be created
+                  if Is_Complex_Type (Tinfo) then
+                     Mres := Create_Temp (Tinfo);
+                     Chap4.Allocate_Complex_Object
+                       (Aggr_Type, Alloc_Stack, Mres);
+                  else
+                     --  if thin array/record:
+                     --    create result
+                     Mres := Create_Temp (Tinfo);
+                  end if;
 
-               Translate_Aggregate (Mres, Aggr_Type, Expr);
-               Res := M2E (Mres);
+                  Translate_Aggregate (Mres, Aggr_Type, Expr);
+                  Res := M2E (Mres);
 
-               if Rtype /= Null_Iir and then Aggr_Type /= Rtype then
-                  Res := Translate_Implicit_Conv
-                    (Res, Aggr_Type, Rtype, Mode_Value, Expr);
-               end if;
-               return Res;
-            end;
+                  if Rtype /= Null_Iir and then Aggr_Type /= Rtype then
+                     Res := Translate_Implicit_Conv
+                       (Res, Aggr_Type, Rtype, Mode_Value, Expr);
+                  end if;
+                  return Res;
+               end;
+            end if;
 
          when Iir_Kind_Null_Literal =>
             declare

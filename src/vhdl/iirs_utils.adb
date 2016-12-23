@@ -1054,6 +1054,21 @@ package body Iirs_Utils is
       return Get_Nbr_Elements (Get_Index_Subtype_List (Array_Type));
    end Get_Nbr_Dimensions;
 
+   function Are_Bounds_Locally_Static (Array_Type : Iir) return Boolean
+   is
+      Indexes : constant Iir_List := Get_Index_Subtype_List (Array_Type);
+      Index : Iir;
+   begin
+      for I in Natural loop
+         Index := Get_Index_Type (Indexes, I);
+         exit when Index = Null_Iir;
+         if Get_Type_Staticness (Index) /= Locally then
+            return False;
+         end if;
+      end loop;
+      return True;
+   end Are_Bounds_Locally_Static;
+
    function Get_Denoted_Type_Mark (Subtyp : Iir) return Iir
    is
       Type_Mark_Name : constant Iir := Get_Subtype_Type_Mark (Subtyp);

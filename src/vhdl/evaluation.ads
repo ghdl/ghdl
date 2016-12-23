@@ -142,6 +142,13 @@ package Evaluation is
    --  Create a Iir_Kind_Overflow node of type EXPR_TYPE for ORIGIN.
    function Build_Overflow (Origin : Iir; Expr_Type : Iir) return Iir;
 
+   --  Fill VECT with choices from CHOICES_CHAIN: each position of CHOICE_RANGE
+   --  is associated with its corresponding choice from CHOICES_CHAIN.
+   --  VECT bounds must be 0 .. Len - 1, where Len is the length of
+   --  CHOICE_RANGE.
+   procedure Build_Array_Choices_Vector
+     (Vect : out Iir_Array; Choice_Range : Iir; Choices_Chain : Iir);
+
    --  Create an array subtype from LEN and BASE_TYPE, according to rules
    --  of LRM93 7.3.2.2. (which are the same as LRM93 7.2.4).
    function Create_Unidim_Array_By_Length
