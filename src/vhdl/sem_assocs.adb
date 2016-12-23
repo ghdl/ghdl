@@ -411,27 +411,54 @@ package body Sem_Assocs is
    subtype Iir_Known_Mode is Iir_Mode range Iir_Linkage_Mode .. Iir_In_Mode;
    type Assocs_Right_Map is array (Iir_Known_Mode, Iir_Known_Mode) of Boolean;
 
+   --  LRM93 1.1.1.2 Ports
    Vhdl93_Assocs_Map : constant Assocs_Right_Map :=
-     (Iir_Linkage_Mode => (others => True),
-      Iir_Buffer_Mode => (Iir_Buffer_Mode => True, others => False),
-      Iir_Out_Mode => (Iir_Out_Mode | Iir_Inout_Mode => True,
-                       others => False),
-      Iir_Inout_Mode => (Iir_Inout_Mode => True,
-                         others => False),
-      Iir_In_Mode => (Iir_In_Mode | Iir_Inout_Mode | Iir_Buffer_Mode => True,
-                      others => False));
+     (Iir_In_Mode =>
+        (Iir_In_Mode | Iir_Inout_Mode | Iir_Buffer_Mode => True,
+         others => False),
+      Iir_Out_Mode =>
+        (Iir_Out_Mode | Iir_Inout_Mode => True,
+         others => False),
+      Iir_Inout_Mode =>
+        (Iir_Inout_Mode => True,
+         others => False),
+      Iir_Buffer_Mode =>
+        (Iir_Buffer_Mode => True, others => False),
+      Iir_Linkage_Mode =>
+        (others => True));
 
+   --  LRM02 1.1.1.2 Ports
    Vhdl02_Assocs_Map : constant Assocs_Right_Map :=
-     (Iir_Linkage_Mode => (others => True),
-      Iir_Buffer_Mode => (Iir_Out_Mode | Iir_Inout_Mode
-                          | Iir_Buffer_Mode => True,
-                          others => False),
-      Iir_Out_Mode => (Iir_Out_Mode | Iir_Inout_Mode | Iir_Buffer_Mode => True,
-                       others => False),
-      Iir_Inout_Mode => (Iir_Inout_Mode | Iir_Buffer_Mode => True,
-                         others => False),
-      Iir_In_Mode => (Iir_In_Mode | Iir_Inout_Mode | Iir_Buffer_Mode => True,
-                      others => False));
+     (Iir_In_Mode =>
+        (Iir_In_Mode | Iir_Inout_Mode | Iir_Buffer_Mode => True,
+         others => False),
+      Iir_Out_Mode =>
+        (Iir_Out_Mode | Iir_Inout_Mode | Iir_Buffer_Mode => True,
+         others => False),
+      Iir_Inout_Mode =>
+        (Iir_Inout_Mode | Iir_Buffer_Mode => True,
+         others => False),
+      Iir_Buffer_Mode =>
+        (Iir_Out_Mode | Iir_Inout_Mode | Iir_Buffer_Mode => True,
+         others => False),
+      Iir_Linkage_Mode =>
+        (others => True));
+
+   --  LRM08 6.5.6.3 Port clauses
+   Vhdl08_Assocs_Map : constant Assocs_Right_Map :=
+     (Iir_In_Mode =>
+        (Iir_In_Mode | Iir_Out_Mode | Iir_Inout_Mode | Iir_Buffer_Mode => True,
+         others => False),
+      Iir_Out_Mode =>
+        (Iir_Out_Mode | Iir_Inout_Mode | Iir_Buffer_Mode => True,
+         others => False),
+      Iir_Inout_Mode =>
+        (Iir_Out_Mode | Iir_Inout_Mode | Iir_Buffer_Mode => True,
+         others => False),
+      Iir_Buffer_Mode =>
+        (Iir_Out_Mode | Iir_Inout_Mode | Iir_Buffer_Mode => True,
+         others => False),
+      Iir_Linkage_Mode => (others => True));
 
    --  Check for restrictions in LRM 1.1.1.2
    --  Return FALSE in case of error.
@@ -447,15 +474,20 @@ package body Sem_Assocs is
       pragma Assert (Fmode /= Iir_Unknown_Mode);
       pragma Assert (Amode /= Iir_Unknown_Mode);
 
-      if Flags.Vhdl_Std < Vhdl_02 then
-         if Vhdl93_Assocs_Map (Fmode, Amode) then
-            return True;
-         end if;
-      else
-         if Vhdl02_Assocs_Map (Fmode, Amode) then
-            return True;
-         end if;
-      end if;
+      case Flags.Vhdl_Std is
+         when Vhdl_87 | Vhdl_93c | Vhdl_93 | Vhdl_00 =>
+            if Vhdl93_Assocs_Map (Fmode, Amode) then
+               return True;
+            end if;
+         when Vhdl_02 =>
+            if Vhdl02_Assocs_Map (Fmode, Amode) then
+               return True;
+            end if;
+         when Vhdl_08 =>
+            if Vhdl08_Assocs_Map (Fmode, Amode) then
+               return True;
+            end if;
+      end case;
 
       if Assoc /= Null_Iir then
          Error_Msg_Sem
