@@ -147,7 +147,7 @@ grt_sigsegv_handler (int signo, siginfo_t *info, void *ptr)
 
   get_bt_from_ucontext (ptr, &bt);
 
-#if defined (__linux__) && defined (__i386__)
+#if defined (__linux__) && (defined (__i386__) || defined (__x86_64__))
   if (signo == SIGSEGV)
     {
       ucontext_t *uctxt = (ucontext_t *)ptr;
