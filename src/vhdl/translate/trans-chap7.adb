@@ -186,6 +186,12 @@ package body Trans.Chap7 is
                Assocs : constant Iir := Get_Association_Choices_Chain (Aggr);
                Vect : Iir_Array (0 .. Integer (Len - 1));
             begin
+               if Len = 0 then
+                  --  Should be automatically handled, but fails with some
+                  --  old versions of gnat (gnatgpl 2014 with -O).
+                  return;
+               end if;
+
                Build_Array_Choices_Vector (Vect, Index_Range, Assocs);
 
                if Dim = Nbr_Dims then
