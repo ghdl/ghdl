@@ -27,7 +27,7 @@ case "$BLD" in
   llvm*)
       llvm_ver=`echo $BLD | sed -e 's/llvm//'`
       ../configure --prefix="$prefix" --with-llvm-config=llvm-config$llvm_ver
-      MAKEOPTS="CLANGXX=clang++$llvm_ver"
+      MAKEOPTS="CXX=clang++$llvm_ver"
       ;;
 
   *)

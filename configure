@@ -5,6 +5,7 @@
 
 backend=mcode
 CC=${CC:-gcc}
+CXX=${CXX:-clang++}
 CFLAGS=${CFLAGS:--g}
 GNATMAKE=${GNATMAKE:-gnatmake}
 LDFLAGS=
@@ -25,7 +26,7 @@ PIC_FLAGS=-fPIC
 show_help=no
 progname=$0
 
-subst_vars="CC GNATMAKE CFLAGS LDFLAGS build srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config llvm_be llvm_be_ver backtrace_lib build_mode EXEEXT SOEXT PIC_FLAGS default_pie"
+subst_vars="CC CXX GNATMAKE CFLAGS LDFLAGS build srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config llvm_be llvm_be_ver backtrace_lib build_mode EXEEXT SOEXT PIC_FLAGS default_pie"
 
 # Find srcdir
 srcdir=`dirname $progname`
@@ -62,7 +63,7 @@ check_version()
 for opt do
   optarg=`expr x"$opt" : 'x[^=]*=\(.*\)'`
   case "$opt" in
-      CC=*|CFLAGS=*|GNATMAKE=*|LDFLAGS=*)
+      CC=*|CFLAGS=*|GNATMAKE=*|LDFLAGS=*|CXX=*)
         optvar=`expr x"$opt" : 'x\([^=]*\)=.*'`
 	eval $optvar=\"$optarg\"
 	;;
