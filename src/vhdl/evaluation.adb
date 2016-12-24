@@ -573,7 +573,7 @@ package body Evaluation is
             if Get_Kind (Get_Type (Expr))
               in Iir_Kinds_Scalar_Type_Definition
             then
-               Expr := Eval_Static_Expr (Expr);
+               Expr := Eval_Expr_Keep_Orig (Expr, True);
                Set_Associated_Expr (Assoc, Expr);
             end if;
          end if;

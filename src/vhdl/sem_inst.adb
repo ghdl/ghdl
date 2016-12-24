@@ -235,6 +235,7 @@ package body Sem_Inst is
                      raise Internal_Error;
                   when Attr_Maybe_Forward_Ref =>
                      if Get_Is_Forward_Ref (N) then
+                        --  Likewise: must be explicitely handled.
                         raise Internal_Error;
                      else
                         R := Instantiate_Iir (S, True);

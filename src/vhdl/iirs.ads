@@ -411,6 +411,10 @@ package Iirs is
 
    -- Iir_Kind_Unaffected_Waveform (Short)
    --  The 'unaffected' reserved word when it appears in the sources.
+   --
+   --  Unaffected replaces a waveform element, so it is considered to be part
+   --  of a chain.  But it is always alone in the chain.
+   --   Get/Set_Chain (Field2)
 
    -------------
    --  Tuples --

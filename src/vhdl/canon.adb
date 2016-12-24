@@ -2307,11 +2307,28 @@ package body Canon is
            (Assoc : in out Iir; Inter : in out Iir; Copy_Inter : Iir)
          is
             El : Iir;
+            Formal : Iir;
          begin
             loop
                El := Create_Iir (Get_Kind (Assoc));
                Location_Copy (El, Assoc);
-               Set_Formal (El, Sem_Inst.Copy_Tree (Get_Formal (Assoc)));
+
+               --  Copy formal.
+               --  Special case: formal comes from a default binding
+               --  indication.  In that case Is_Forward_Ref is set, which makes
+               --  it non-copiable by Sem_Inst.
+               Formal := Get_Formal (Assoc);
+               if Is_Valid (Formal) then
+                  if Get_Kind (Formal) = Iir_Kind_Simple_Name
+                    and then Get_Is_Forward_Ref (Formal)
+                  then
+                     Formal := Build_Simple_Name
+                       (Get_Named_Entity (Formal), Formal);
+                  else
+                     Formal := Sem_Inst.Copy_Tree (Formal);
+                  end if;
+               end if;
+               Set_Formal (El, Formal);
                Set_Whole_Association_Flag
                  (El, Get_Whole_Association_Flag (Assoc));
 
