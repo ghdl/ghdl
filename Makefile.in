@@ -145,11 +145,11 @@ oread-mcode$(EXEEXT): force
 gcc_vhdl_dir=$(gcc_src_dir)/gcc/vhdl
 
 all.gcc:
-	echo "For installing sources in gcc, do:"
-	echo "1) make copy-sources"
-	echo "2) configure, build and install gcc"
-	echo "3) make ghdllib"
-	echo "4) make install"
+	@echo "For installing sources in gcc, do:"
+	@echo "1) make copy-sources"
+	@echo "2) configure, build and install gcc"
+	@echo "3) make ghdllib"
+	@echo "4) make install"
 
 copy-sources.gcc: version.ads
 	$(RM) -rf $(gcc_vhdl_dir)
