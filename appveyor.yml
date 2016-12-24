@@ -78,21 +78,21 @@ test_script:
 # ==============================================================================
 # Deployment configuration
 # ==============================================================================
-deploy:
-  - provider: GitHub
-    release: GHDL-v$(appveyor_build_version)
-    description: 'Release description'
-    draft: false
-    prerelease: false
+#deploy:
+#  - provider: GitHub
+#    release: GHDL-v$(appveyor_build_version)
+#    description: 'Release description'
+#    draft: false
+#    prerelease: false
 #    on:
 #      branch: master
 #      appveyor_repo_tag: true
-    auth_token:
-      secure: 7K/sSRV3kBk/Iw/d1NGd0pAv9Qf0+lGba3UWt9RDLcIsM8binjC2ogPINilWfy46
-  - provider: Environment
-    name: GitHub Paebbels/ghdl
-    on:
-      branch: master
+#    auth_token:
+#      secure: 7K/sSRV3kBk/Iw/d1NGd0pAv9Qf0+lGba3UWt9RDLcIsM8binjC2ogPINilWfy46
+#  - provider: Environment
+#    name: GitHub Paebbels/ghdl
+#    on:
+#      branch: master
 
 
 # scripts to run before deployment
