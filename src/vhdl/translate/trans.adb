@@ -1095,10 +1095,11 @@ package body Trans is
       end if;
       case Vtype.Type_Mode is
          when Type_Mode_Scalar
-            | Type_Mode_Acc
-            | Type_Mode_File
-            | Type_Mode_Fat_Array
-            | Type_Mode_Bounds_Acc =>
+           | Type_Mode_Acc
+           | Type_Mode_File
+           | Type_Mode_Unbounded_Array
+           | Type_Mode_Unbounded_Record
+           | Type_Mode_Bounds_Acc =>
             if Stable then
                return Dv2M (D, Vtype, Mode);
             else
@@ -1734,14 +1735,15 @@ package body Trans is
    begin
       case Vtype.Type_Mode is
          when Type_Mode_Scalar
-            | Type_Mode_Acc
-            | Type_Mode_File
-            | Type_Mode_Fat_Array
-            | Type_Mode_Bounds_Acc =>
+           | Type_Mode_Acc
+           | Type_Mode_File
+           | Type_Mode_Unbounded_Array
+           | Type_Mode_Unbounded_Record
+           | Type_Mode_Bounds_Acc =>
             return Lv2M (L, Vtype, Mode);
          when Type_Mode_Array
-            | Type_Mode_Record
-            | Type_Mode_Protected =>
+           | Type_Mode_Record
+           | Type_Mode_Protected =>
             if Is_Complex_Type (Vtype) then
                return Lp2M (L, Vtype, Mode);
             else
@@ -1757,14 +1759,15 @@ package body Trans is
    begin
       case Vtype.Type_Mode is
          when Type_Mode_Scalar
-            | Type_Mode_Acc
-            | Type_Mode_File
-            | Type_Mode_Fat_Array
-            | Type_Mode_Bounds_Acc =>
+           | Type_Mode_Acc
+           | Type_Mode_File
+           | Type_Mode_Unbounded_Array
+           | Type_Mode_Unbounded_Record
+           | Type_Mode_Bounds_Acc =>
             return Dv2M (D, Vtype, Mode);
          when Type_Mode_Array
-            | Type_Mode_Record
-            | Type_Mode_Protected =>
+           | Type_Mode_Record
+           | Type_Mode_Protected =>
             if Is_Complex_Type (Vtype) then
                return Dp2M (D, Vtype, Mode);
             else

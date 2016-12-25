@@ -1813,9 +1813,10 @@ package body Trans.Chap3 is
          if Info.C (Kind).Size_Var /= Null_Var then
             case Info.Type_Mode is
                when Type_Mode_Non_Composite
-                  | Type_Mode_Fat_Array
-                  | Type_Mode_Unknown
-                  | Type_Mode_Protected =>
+                 | Type_Mode_Unbounded_Array
+                 | Type_Mode_Unbounded_Record
+                 | Type_Mode_Unknown
+                 | Type_Mode_Protected =>
                   raise Internal_Error;
                when Type_Mode_Record =>
                   Create_Record_Size_Var (Def, Kind);
@@ -2570,15 +2571,18 @@ package body Trans.Chap3 is
          when Type_Mode_Scalar
            | Type_Mode_Acc
            | Type_Mode_Bounds_Acc
-            | Type_Mode_File =>
+           | Type_Mode_File =>
             --  Scalar or thin pointer.
             New_Assign_Stmt (M2Lv (Dest), Src);
-         when Type_Mode_Fat_Array =>
+         when Type_Mode_Unbounded_Array =>
             --  a fat array.
             D := Stabilize (Dest);
             Gen_Memcpy (M2Addr (Get_Array_Base (D)),
                         M2Addr (Get_Array_Base (E2M (Src, Info, Kind))),
                         Get_Object_Size (D, Obj_Type));
+         when Type_Mode_Unbounded_Record =>
+            --  TODO
+            raise Internal_Error;
          when Type_Mode_Array
             | Type_Mode_Record =>
             D := Stabilize (Dest);

@@ -2611,7 +2611,7 @@ package body Trans.Chap7 is
            | Type_Mode_Bounds_Acc
            | Type_Mode_File =>
             New_Assign_Stmt (M2Lv (Target), Val);
-         when Type_Mode_Fat_Array =>
+         when Type_Mode_Unbounded_Array =>
             declare
                T : Mnode;
                E : O_Dnode;
@@ -2631,6 +2631,9 @@ package body Trans.Chap7 is
             Chap3.Translate_Object_Copy (Target, Val, Target_Type);
          when Type_Mode_Record =>
             Chap3.Translate_Object_Copy (Target, Val, Target_Type);
+         when Type_Mode_Unbounded_Record =>
+            --  TODO
+            raise Internal_Error;
          when Type_Mode_Unknown
             | Type_Mode_Protected =>
             raise Internal_Error;
@@ -4530,9 +4533,10 @@ package body Trans.Chap7 is
             end;
 
          when Type_Mode_Unknown
-            | Type_Mode_File
-            | Type_Mode_Fat_Array
-            | Type_Mode_Protected =>
+           | Type_Mode_File
+           | Type_Mode_Unbounded_Array
+           | Type_Mode_Unbounded_Record
+           | Type_Mode_Protected =>
             raise Internal_Error;
       end case;
    end Translate_Equality;
@@ -5301,11 +5305,12 @@ package body Trans.Chap7 is
                   Close_Temp;
                end;
             when Type_Mode_Unknown
-               | Type_Mode_File
-               | Type_Mode_Acc
-               | Type_Mode_Bounds_Acc
-               | Type_Mode_Fat_Array
-               | Type_Mode_Protected =>
+              | Type_Mode_File
+              | Type_Mode_Acc
+              | Type_Mode_Bounds_Acc
+              | Type_Mode_Unbounded_Array
+              | Type_Mode_Unbounded_Record
+              | Type_Mode_Protected =>
                raise Internal_Error;
          end case;
       end Translate_Rw;

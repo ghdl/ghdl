@@ -242,7 +242,8 @@ package body Trans.Chap8 is
                Res := Chap7.Translate_Expression (Expr, Ret_Type);
                Gen_Return_Value (Res);
             end;
-         when Type_Mode_Fat_Array =>
+         when Type_Mode_Unbounded_Array
+           | Type_Mode_Unbounded_Record =>
             --  * if the return type is unconstrained: allocate an area from
             --    the secondary stack, copy it to the area, and fill the fat
             --    pointer.
@@ -1828,8 +1829,8 @@ package body Trans.Chap8 is
             New_Procedure_Call (Assocs);
             Close_Temp;
          when Type_Mode_Array
-            | Type_Mode_Record
-            | Type_Mode_Fat_Array =>
+           | Type_Mode_Record
+           | Type_Mode_Unbounded_Array =>
             Subprg_Info := Get_Info (Imp);
             Start_Association (Assocs, Subprg_Info.Ortho_Func);
             Subprgs.Add_Subprg_Instance_Assoc
@@ -1842,10 +1843,11 @@ package body Trans.Chap8 is
                  Formal_Type));
             New_Procedure_Call (Assocs);
          when Type_Mode_Unknown
-            | Type_Mode_File
-            | Type_Mode_Acc
-            | Type_Mode_Bounds_Acc
-            | Type_Mode_Protected =>
+           | Type_Mode_File
+           | Type_Mode_Acc
+           | Type_Mode_Bounds_Acc
+           | Type_Mode_Unbounded_Record
+           | Type_Mode_Protected =>
             raise Internal_Error;
       end case;
    end Translate_Write_Procedure_Call;
@@ -1893,7 +1895,7 @@ package body Trans.Chap8 is
               (Assocs,
                Chap7.Translate_Expression (Get_Actual (Value_Assoc)));
             New_Procedure_Call (Assocs);
-         when Type_Mode_Fat_Array =>
+         when Type_Mode_Unbounded_Array =>
             declare
                Length_Assoc : Iir;
                Length       : Mnode;
@@ -1915,10 +1917,11 @@ package body Trans.Chap8 is
                New_Assign_Stmt (M2Lv (Length), New_Function_Call (Assocs));
             end;
          when Type_Mode_Unknown
-            | Type_Mode_File
-            | Type_Mode_Acc
-            | Type_Mode_Bounds_Acc
-            | Type_Mode_Protected =>
+           | Type_Mode_File
+           | Type_Mode_Acc
+           | Type_Mode_Bounds_Acc
+           | Type_Mode_Unbounded_Record
+           | Type_Mode_Protected =>
             raise Internal_Error;
       end case;
    end Translate_Read_Procedure_Call;
