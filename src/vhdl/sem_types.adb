@@ -689,19 +689,19 @@ package body Sem_Types is
       Close_Declarative_Region;
    end Sem_Protected_Type_Body;
 
-   --  Return the constraint state from CONST (the initial state) and ATYPE,
+   --  Return the constraint state from CONST (the initial state) and EL_TYPE,
    --  as if ATYPE was a new element of a record.
-   function Update_Record_Constraint (Const : Iir_Constraint; Atype : Iir)
+   function Update_Record_Constraint (Const : Iir_Constraint; El_Type : Iir)
                                      return Iir_Constraint is
    begin
-      if Get_Kind (Atype) not in Iir_Kinds_Composite_Type_Definition then
+      if Get_Kind (El_Type) not in Iir_Kinds_Composite_Type_Definition then
          return Const;
       end if;
 
       case Const is
          when Fully_Constrained
            | Unconstrained =>
-            if Get_Constraint_State (Atype) = Const then
+            if Get_Constraint_State (El_Type) = Const then
                return Const;
             else
                return Partially_Constrained;
@@ -714,14 +714,12 @@ package body Sem_Types is
    function Get_Array_Constraint (Def : Iir) return Iir_Constraint
    is
       El_Type : constant Iir := Get_Element_Subtype (Def);
-      Index : constant Boolean :=
-        Get_Kind (Def) = Iir_Kind_Array_Subtype_Definition
-        and then Get_Index_Constraint_Flag (Def);
+      Constrained_Index : constant Boolean := Get_Index_Constraint_Flag (Def);
    begin
       if Get_Kind (El_Type) in Iir_Kinds_Composite_Type_Definition then
          case Get_Constraint_State (El_Type) is
             when Fully_Constrained =>
-               if Index then
+               if Constrained_Index then
                   return Fully_Constrained;
                else
                   return Partially_Constrained;
@@ -729,14 +727,15 @@ package body Sem_Types is
             when Partially_Constrained =>
                return Partially_Constrained;
             when Unconstrained =>
-               if not Index then
+               if not Constrained_Index then
                   return Unconstrained;
                else
                   return Partially_Constrained;
                end if;
          end case;
       else
-         if Index then
+         --  Element subtype is not a composite subtype.
+         if Constrained_Index then
             return Fully_Constrained;
          else
             return Unconstrained;
@@ -1097,14 +1096,38 @@ package body Sem_Types is
          --  If the base type is a composite type, it must not
          --  contain a subelement of an access type.
          Error_Msg_Sem (+Def, "%n cannot be a file type", +Type_Mark);
-      elsif Get_Kind (Type_Mark) in Iir_Kinds_Array_Type_Definition then
-         --  LRM 3.4
-         --  If the base type is an array type, it must be a one
-         --  dimensional array type.
-         if not Is_One_Dimensional_Array_Type (Type_Mark) then
-            Error_Msg_Sem
-              (+Def, "multi-dimensional %n cannot be a file type", +Type_Mark);
-         end if;
+      else
+         --  LRM08 5.5 File type
+         --  If the base type is an array type, it shall be a one-dimensional
+         --  array type whose element subtype is fully constrained.  If the
+         --  base type is a record type, it shall be fully constrained.
+         case Get_Kind (Type_Mark) is
+            when Iir_Kinds_Array_Type_Definition =>
+               --  LRM 3.4
+               --  If the base type is an array type, it must be a one
+               --  dimensional array type.
+               if not Is_One_Dimensional_Array_Type (Type_Mark) then
+                  Error_Msg_Sem
+                    (+Def, "multi-dimensional %n cannot be a file type",
+                     +Type_Mark);
+               elsif not Is_Fully_Constrained_Type
+                 (Get_Element_Subtype (Type_Mark))
+               then
+                  Error_Msg_Sem
+                    (+Def, "element subtype of %n must be fully constrained",
+                     +Type_Mark);
+               end if;
+            when Iir_Kind_Record_Type_Definition
+              | Iir_Kind_Record_Subtype_Definition =>
+               if Get_Constraint_State (Type_Mark) /= Fully_Constrained then
+                  Error_Msg_Sem
+                    (+Def, "%n must be fully constrained", +Type_Mark);
+               end if;
+            when Iir_Kind_Interface_Type_Definition =>
+               Error_Msg_Sem (+Def, "%n cannot be a file type", +Type_Mark);
+            when others =>
+               null;
+         end case;
       end if;
 
       Set_Base_Type (Def, Def);

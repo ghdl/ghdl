@@ -2200,6 +2200,7 @@ package Iirs is
    --
    --   Get/Set_Has_Signal_Flag (Flag3)
    --
+   --  Always false.
    --   Get/Set_Index_Constraint_Flag (Flag4)
 
    -- Iir_Kind_Record_Type_Definition (Short)
