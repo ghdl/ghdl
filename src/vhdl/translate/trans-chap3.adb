@@ -360,7 +360,7 @@ package body Trans.Chap3 is
             Info.Ortho_Type (Mode_Value) := New_Signed_Type (64);
             Info.Type_Mode := Type_Mode_P64;
       end case;
-      --  Phyiscals are always in their ranges.
+      --  Physical types are always in their ranges.
       Info.T.Nocheck_Low := True;
       Info.T.Nocheck_Hi := True;
 
@@ -996,10 +996,10 @@ package body Trans.Chap3 is
 
    procedure Translate_Record_Type (Def : Iir_Record_Type_Definition)
    is
+      Info       : constant Type_Info_Acc := Get_Info (Def);
+      List       : constant Iir_List := Get_Elements_Declaration_List (Def);
       El_List    : O_Element_List;
-      List       : Iir_List;
       El         : Iir_Element_Declaration;
-      Info       : Type_Info_Acc;
       Field_Info : Ortho_Info_Acc;
       El_Type    : Iir;
       El_Tinfo   : Type_Info_Acc;
@@ -1011,9 +1011,7 @@ package body Trans.Chap3 is
 
       Mark : Id_Mark_Type;
    begin
-      Info := Get_Info (Def);
       Need_Size := False;
-      List := Get_Elements_Declaration_List (Def);
 
       --  First, translate the anonymous type of the elements.
       for I in Natural loop
