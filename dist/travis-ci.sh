@@ -24,10 +24,14 @@ case "$BLD" in
       MAKEOPTS=""
       ;;
 
-  llvm*)
-      llvm_ver=`echo $BLD | sed -e 's/llvm//'`
-      ../configure --prefix="$prefix" --with-llvm-config=llvm-config$llvm_ver
-      MAKEOPTS="CXX=clang++$llvm_ver"
+  llvm-3.5)
+      ../configure --prefix="$prefix" --with-llvm-config=llvm-config-3.5
+      MAKEOPTS="CXX=clang++"
+      ;;
+
+  llvm-3.8)
+      ../configure --prefix="$prefix" --with-llvm-config=llvm-config-3.8
+      MAKEOPTS="CXX=clang++-3.8"
       ;;
 
   *)
