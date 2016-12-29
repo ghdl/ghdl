@@ -998,6 +998,8 @@ package body Trans.Chap3 is
    is
       Info       : constant Type_Info_Acc := Get_Info (Def);
       List       : constant Iir_List := Get_Elements_Declaration_List (Def);
+      Is_Unbounded : constant Boolean :=
+        Get_Constraint_State (Def) /= Fully_Constrained;
       El_List    : O_Element_List;
       El         : Iir_Element_Declaration;
       Field_Info : Ortho_Info_Acc;
@@ -1038,7 +1040,9 @@ package body Trans.Chap3 is
             exit when El = Null_Iir;
             Field_Info := Get_Info (El);
             El_Tinfo := Get_Info (Get_Type (El));
-            if Is_Complex_Type (El_Tinfo) then
+            if Is_Complex_Type (El_Tinfo)
+              or else Is_Unbounded_Type (El_Tinfo)
+            then
                --  Always use an offset for a complex type.
                El_Tnode := Ghdl_Index_Type;
             else
@@ -1051,7 +1055,11 @@ package body Trans.Chap3 is
          end loop;
          Finish_Record_Type (El_List, Info.Ortho_Type (Kind));
       end loop;
-      Info.Type_Mode := Type_Mode_Record;
+      if Is_Unbounded then
+         Info.Type_Mode := Type_Mode_Unbounded_Record;
+      else
+         Info.Type_Mode := Type_Mode_Record;
+      end if;
       Finish_Type_Definition (Info);
 
       if Need_Size then
@@ -1242,9 +1250,8 @@ package body Trans.Chap3 is
          pragma Assert (Get_Kind (Atype) = Iir_Kind_Access_Type_Definition);
 
          Def_Info := Get_Info (Atype);
-         Finish_Access_Type
-           (Def_Info.Ortho_Type (Mode_Value),
-            Get_Ortho_Designated_Type (Atype));
+         Finish_Access_Type (Def_Info.Ortho_Type (Mode_Value),
+                             Get_Ortho_Designated_Type (Atype));
 
          Atype := Get_Incomplete_Type_Ref_Chain (Atype);
       end loop;
@@ -2211,14 +2218,12 @@ package body Trans.Chap3 is
       end if;
    end Elab_Object_Subtype;
 
-   procedure Elab_Type_Declaration (Decl : Iir)
-   is
+   procedure Elab_Type_Declaration (Decl : Iir) is
    begin
       Elab_Type_Definition (Get_Type_Definition (Decl));
    end Elab_Type_Declaration;
 
-   procedure Elab_Subtype_Declaration (Decl : Iir_Subtype_Declaration)
-   is
+   procedure Elab_Subtype_Declaration (Decl : Iir_Subtype_Declaration) is
    begin
       Elab_Type_Definition (Get_Type (Decl));
    end Elab_Subtype_Declaration;

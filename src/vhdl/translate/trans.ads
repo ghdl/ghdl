@@ -888,6 +888,9 @@ package Trans is
    subtype Type_Mode_Fat is Type_Mode_Type range
      Type_Mode_Record .. Type_Mode_Protected;
 
+   subtype Type_Mode_Unbounded is Type_Mode_Type range
+     Type_Mode_Unbounded_Record .. Type_Mode_Unbounded_Array;
+
    --  Subprogram call argument mechanism.
    --  In VHDL, the evaluation is strict: actual parameters are evaluated
    --  before the call.  This is the usual strategy of most compiled languages
@@ -1159,6 +1162,10 @@ package Trans is
          when Kind_Index =>
             --  Field declaration for array dimension.
             Index_Field : O_Fnode;
+
+         when Kind_Field =>
+            --  Node for a record element declaration.
+            Field_Node : O_Fnode_Array := (O_Fnode_Null, O_Fnode_Null);
 
          when Kind_Expr =>
             --  Ortho tree which represents the expression, used for
@@ -1441,10 +1448,6 @@ package Trans is
             Config_Subprg : O_Dnode;
             Config_Instance : O_Dnode;
 
-         when Kind_Field =>
-            --  Node for a record element declaration.
-            Field_Node : O_Fnode_Array := (O_Fnode_Null, O_Fnode_Null);
-
          when Kind_Package =>
             --  Subprogram which elaborate the package spec/body.
             --  External units should call the body elaborator.
@@ -1570,6 +1573,10 @@ package Trans is
 
    function Is_Complex_Type (Tinfo : Type_Info_Acc) return Boolean;
    pragma Inline (Is_Complex_Type);
+
+   --  True iff TINFO is base + bounds.
+   function Is_Unbounded_Type (Tinfo : Type_Info_Acc) return Boolean;
+   pragma Inline (Is_Unbounded_Type);
 
    type Hexstr_Type is array (Integer range 0 .. 15) of Character;
    N2hex : constant Hexstr_Type := "0123456789abcdef";

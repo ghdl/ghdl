@@ -1370,13 +1370,18 @@ package body Trans is
 
    function Is_Composite (Info : Type_Info_Acc) return Boolean is
    begin
-      return Info.Type_Mode in Type_Mode_Fat;
+      return Info.Type_Mode in Type_Mode_Composite;
    end Is_Composite;
 
    function Is_Complex_Type (Tinfo : Type_Info_Acc) return Boolean is
    begin
       return Tinfo.C /= null;
    end Is_Complex_Type;
+
+   function Is_Unbounded_Type (Tinfo : Type_Info_Acc) return Boolean is
+   begin
+      return Tinfo.Type_Mode in Type_Mode_Unbounded;
+   end Is_Unbounded_Type;
 
    procedure Free_Node_Infos
    is
