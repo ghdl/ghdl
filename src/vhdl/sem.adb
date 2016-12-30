@@ -528,78 +528,57 @@ package body Sem is
             --  There has been an error, exit from the loop.
             exit when Actual = Null_Iir;
             Object := Name_To_Object (Actual);
-            if Object = Null_Iir then
-               Prefix := Actual;
-            else
+            if Is_Valid (Object) and then Is_Signal_Object (Object) then
+               --  Port or signal.
+               Set_Collapse_Signal_Flag
+                 (Assoc, Can_Collapse_Signals (Assoc, Formal));
+               if Get_Name_Staticness (Object) < Globally then
+                  Error_Msg_Sem (+Actual, "actual must be a static name");
+               end if;
+               Check_Port_Association_Bounds_Restrictions
+                 (Formal, Actual, Assoc);
                Prefix := Get_Object_Prefix (Object);
-            end if;
-            case Get_Kind (Prefix) is
-               when Iir_Kind_Signal_Declaration
-                 | Iir_Kind_Interface_Signal_Declaration
-                 | Iir_Kind_Guard_Signal_Declaration
-                 | Iir_Kinds_Signal_Attribute =>
-                  --  Port or signal.
-                  Set_Collapse_Signal_Flag
-                    (Assoc, Can_Collapse_Signals (Assoc, Formal));
-                  if Get_Name_Staticness (Object) < Globally then
-                     Error_Msg_Sem (+Actual, "actual must be a static name");
-                  end if;
-                  Check_Port_Association_Bounds_Restrictions
-                    (Formal, Actual, Assoc);
-                  if Get_Kind (Prefix) = Iir_Kind_Interface_Signal_Declaration
-                  then
-                     declare
-                        P : Boolean;
-                        pragma Unreferenced (P);
-                     begin
-                        P := Check_Port_Association_Mode_Restrictions
-                          (Formal_Base, Prefix, Assoc);
-                     end;
-                  end if;
-               when others =>
-                  --  Expression.
-                  Set_Collapse_Signal_Flag (Assoc, False);
-
-                  --  If there is an IN conversion, re-integrate it into
-                  --  the actual.
+               if Get_Kind (Prefix) = Iir_Kind_Interface_Signal_Declaration
+               then
                   declare
-                     In_Conv : Iir;
+                     P : Boolean;
+                     pragma Unreferenced (P);
                   begin
-                     In_Conv := Get_In_Conversion (Assoc);
-                     if In_Conv /= Null_Iir then
-                        Set_In_Conversion (Assoc, Null_Iir);
-                        Set_Expr_Staticness
-                          (In_Conv, Get_Expr_Staticness (Actual));
-                        Actual := In_Conv;
-                        Set_Actual (Assoc, Actual);
-                     end if;
+                     P := Check_Port_Association_Mode_Restrictions
+                       (Formal_Base, Prefix, Assoc);
                   end;
-                  if Flags.Vhdl_Std >= Vhdl_93c then
-                     --  LRM93 1.1.1.2 Ports
-                     --  Moreover, the ports of a block may be associated
-                     --  with an expression, in order to provide these ports
-                     --  with constant driving values; such ports must be
-                     --  of mode in.
-                     if Get_Mode (Formal_Base) /= Iir_In_Mode then
-                        Error_Msg_Sem
-                          (+Assoc, "only 'in' ports may be associated with "
-                             & "expression");
-                     end if;
+               end if;
+            else
+               --  Expression.
+               Set_Collapse_Signal_Flag (Assoc, False);
 
-                     --  LRM93 1.1.1.2 Ports
-                     --  The actual, if an expression, must be a globally
-                     --  static expression.
-                     if Get_Expr_Staticness (Actual) < Globally then
-                        Error_Msg_Sem
-                          (+Actual,
-                           "actual expression must be globally static");
-                     end if;
-                  else
+               pragma Assert (Is_Null (Get_In_Conversion (Assoc)));
+               if Flags.Vhdl_Std >= Vhdl_93c then
+                  --  LRM93 1.1.1.2 Ports
+                  --  Moreover, the ports of a block may be associated
+                  --  with an expression, in order to provide these ports
+                  --  with constant driving values; such ports must be
+                  --  of mode in.
+                  if Get_Mode (Formal_Base) /= Iir_In_Mode then
                      Error_Msg_Sem
-                       (+Assoc,
-                        "cannot associate ports with expression in vhdl87");
+                       (+Assoc, "only 'in' ports may be associated with "
+                          & "expression");
                   end if;
-            end case;
+
+                  --  LRM93 1.1.1.2 Ports
+                  --  The actual, if an expression, must be a globally
+                  --  static expression.
+                  if Get_Expr_Staticness (Actual) < Globally then
+                     Error_Msg_Sem
+                       (+Actual,
+                        "actual expression must be globally static");
+                  end if;
+               else
+                  Error_Msg_Sem
+                    (+Assoc,
+                     "cannot associate ports with expression in vhdl87");
+               end if;
+            end if;
          end if;
          Next_Association_Interface (Assoc, Inter);
       end loop;
@@ -1484,6 +1463,21 @@ package body Sem is
               and then
               Are_Trees_Chain_Equal (Get_Parameter_Association_Chain (Left),
                                      Get_Parameter_Association_Chain (Right));
+
+         when Iir_Kind_Association_Element_By_Expression =>
+            return Are_Trees_Equal (Get_Actual (Left), Get_Actual (Right))
+              and then Are_Trees_Equal (Get_Formal (Left), Get_Formal (Right))
+              and then Are_Trees_Equal (Get_In_Conversion (Left),
+                                        Get_In_Conversion (Right))
+              and then Are_Trees_Equal (Get_Out_Conversion (Left),
+                                        Get_Out_Conversion (Right));
+
+         when Iir_Kind_Type_Conversion =>
+            return Are_Trees_Equal (Get_Type_Mark (Left),
+                                    Get_Type_Mark (Right))
+              and then
+              Are_Trees_Equal (Get_Expression (Left),
+                               Get_Expression (Right));
 
          when Iir_Kind_Access_Type_Definition
            | Iir_Kind_Record_Type_Definition

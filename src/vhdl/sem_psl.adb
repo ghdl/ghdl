@@ -27,6 +27,7 @@ with Sem_Scopes;
 with Sem_Names;
 with Std_Names;
 with Iirs_Utils; use Iirs_Utils;
+with Evaluation; use Evaluation;
 with Std_Package;
 with Ieee.Std_Logic_1164;
 with Errorout; use Errorout;
@@ -575,6 +576,7 @@ package body Sem_Psl is
       then
          Cond := Sem_Expr.Insert_Condition_Operator (Cond);
       end if;
+      Cond := Eval_Expr_If_Static (Cond);
       Set_Assertion_Condition (Res, Cond);
       Set_Label (Res, Get_Label (Stmt));
       Set_Severity_Expression (Res, Get_Severity_Expression (Stmt));

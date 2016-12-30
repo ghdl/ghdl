@@ -64,9 +64,6 @@ package Lists is
    -- Can be used only to shrink the list.
    --   procedure Set_Nbr_Elements (List: in Iir_List; N: Natural);
    --
-   -- Remove an element from the list.
-   --   procedure remove_Nth_Element (List: in Iir_List; N: Natural);
-   --
    -- Return the position of the last element.
    -- Return -1 if the list is empty.
    --   function Get_Last_Element_Position (List: in Iir_List) return Integer;
@@ -103,8 +100,6 @@ package Lists is
    -- Set the number of elements in the list.
    -- Can be used only to shrink the list.
    procedure Set_Nbr_Elements (List: List_Type; N: Natural);
-
-   procedure Remove_Nth_Element (List : List_Type; N: Natural);
 
    function Get_Last_Element_Position (List: List_Type) return Integer;
 

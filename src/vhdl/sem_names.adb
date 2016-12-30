@@ -644,12 +644,7 @@ package body Sem_Names is
 
       Set_Type (Expr, Get_Element_Subtype (Prefix_Type));
 
-      --  An indexed name cannot be locally static.
-      Set_Expr_Staticness
-        (Expr, Min (Globally, Min (Expr_Staticness,
-                                   Get_Expr_Staticness (Prefix))));
-
-      -- LRM93 §6.1:
+      -- LRM93 6.1
       -- a name is said to be a static name iff:
       -- The name is an indexed name whose prefix is a static name
       -- and every expression that appears as part of the name is a
@@ -659,8 +654,15 @@ package body Sem_Names is
       -- The name is an indexed name whose prefix is a locally
       -- static name and every expression that appears as part
       -- of the name is a locally static expression.
-      Set_Name_Staticness (Expr, Min (Expr_Staticness,
-                                      Get_Name_Staticness (Prefix)));
+      Set_Name_Staticness
+        (Expr, Min (Expr_Staticness, Get_Name_Staticness (Prefix)));
+
+      --  An indexed name cannot be locally static.
+      if Flags.Vhdl_Std < Vhdl_08 then
+         Expr_Staticness := Min (Globally, Expr_Staticness);
+      end if;
+      Set_Expr_Staticness
+        (Expr, Min (Expr_Staticness, Get_Expr_Staticness (Prefix)));
 
       Set_Base_Name (Expr, Get_Base_Name (Prefix));
    end Finish_Sem_Indexed_Name;
@@ -1898,27 +1900,31 @@ package body Sem_Names is
       --  Analyze SUB_NAME.NAME as a selected element.
       procedure Sem_As_Selected_Element (Sub_Name : Iir)
       is
-         Base_Type : Iir;
+         Name_Type : Iir;
          Ptr_Type : Iir;
          Rec_El : Iir;
          R : Iir;
          Se : Iir;
       begin
          --  FIXME: if not is_expr (sub_name) return.
-         Base_Type := Get_Base_Type (Get_Type (Sub_Name));
-         if Get_Kind (Base_Type) = Iir_Kind_Access_Type_Definition then
-            Ptr_Type := Base_Type;
-            Base_Type := Get_Base_Type (Get_Designated_Type (Base_Type));
+         Name_Type := Get_Type (Sub_Name);
+         if Kind_In (Name_Type, Iir_Kind_Access_Type_Definition,
+                     Iir_Kind_Access_Subtype_Definition)
+         then
+            Ptr_Type := Name_Type;
+            Name_Type := Get_Designated_Type (Name_Type);
          else
             Ptr_Type := Null_Iir;
          end if;
 
-         if Get_Kind (Base_Type) /= Iir_Kind_Record_Type_Definition then
+         if not Kind_In (Name_Type, Iir_Kind_Record_Type_Definition,
+                         Iir_Kind_Record_Subtype_Definition)
+         then
             return;
          end if;
 
          Rec_El := Find_Name_In_List
-           (Get_Elements_Declaration_List (Base_Type), Suffix);
+           (Get_Elements_Declaration_List (Name_Type), Suffix);
          if Rec_El = Null_Iir then
             return;
          end if;
@@ -3814,6 +3820,26 @@ package body Sem_Names is
                   Add_Result (Res, El);
                end if;
             end loop;
+            if Res = Null_Iir then
+               --  Specific error message for a non-visible enumeration
+               --  literal.
+               if (Get_Kind (Get_Base_Type (A_Type))
+                     = Iir_Kind_Enumeration_Type_Definition)
+                 and then Kind_In (Name, Iir_Kind_Simple_Name,
+                                   Iir_Kind_Character_Literal)
+               then
+                  Res := Find_Name_In_List (Get_Enumeration_Literal_List
+                                              (Get_Base_Type (A_Type)),
+                                            Get_Identifier (Name));
+                  if Res /= Null_Iir then
+                     Error_Msg_Sem
+                       (+Name, "enumeration literal %i is not visible "
+                          & "(add a use clause)", +Name);
+                     --  Keep the literal as result.
+                  end if;
+               end if;
+            end if;
+
             if Res = Null_Iir then
                Error_Not_Match (Name, A_Type);
                return Create_Error_Expr (Name, A_Type);

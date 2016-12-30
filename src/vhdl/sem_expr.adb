@@ -15,6 +15,8 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+
+with Algos;
 with Std_Package; use Std_Package;
 with Errorout; use Errorout;
 with Flags; use Flags;
@@ -2076,65 +2078,119 @@ package body Sem_Expr is
       end if;
    end Sem_String_Literal;
 
-   generic
-      --  Compare two elements, return true iff OP1 < OP2.
-      with function Lt (Op1, Op2 : Natural) return Boolean;
+   procedure Count_Choices (Info : out Choice_Info_Type;
+                            Choice_Chain : Iir)
+   is
+      Choice : Iir;
+      S : Iir_Staticness;
+   begin
+      Info := (Nbr_Choices => 0,
+               Nbr_Alternatives => 0,
+               Others_Choice => Null_Iir,
+               Arr => null,
+               Annex_Arr => null);
+      Choice := Choice_Chain;
+      while Is_Valid (Choice) loop
+         case Iir_Kinds_Case_Choice (Get_Kind (Choice)) is
+            when Iir_Kind_Choice_By_Expression =>
+               S := Get_Expr_Staticness (Get_Choice_Expression (Choice));
+               pragma Assert (S = Get_Choice_Staticness (Choice));
+               if S = Locally then
+                  Info.Nbr_Choices := Info.Nbr_Choices + 1;
+               end if;
+            when Iir_Kind_Choice_By_Range =>
+               S := Get_Expr_Staticness (Get_Choice_Range (Choice));
+               pragma Assert (S = Get_Choice_Staticness (Choice));
+               if S = Locally then
+                  Info.Nbr_Choices := Info.Nbr_Choices + 1;
+               end if;
+            when Iir_Kind_Choice_By_Others =>
+               Info.Others_Choice := Choice;
+         end case;
+         if not Get_Same_Alternative_Flag (Choice) then
+            Info.Nbr_Alternatives := Info.Nbr_Alternatives + 1;
+         end if;
+         Choice := Get_Chain (Choice);
+      end loop;
+   end Count_Choices;
 
-      --  Swap two elements.
-      with procedure Swap (From : Natural; To : Natural);
-   package Heap_Sort is
-      --  Heap sort the N elements.
-      procedure Sort (N : Natural);
-   end Heap_Sort;
+   procedure Fill_Choices_Array (Info : in out Choice_Info_Type;
+                                 Choice_Chain : Iir)
+   is
+      Index : Natural;
+      Choice : Iir;
+      Expr : Iir;
+   begin
+      Info.Arr := new Iir_Array (1 .. Info.Nbr_Choices);
 
-   package body Heap_Sort is
-      --  An heap is an almost complete binary tree whose each edge is less
-      --  than or equal as its decendent.
+      --  Fill the array.
+      Index := 0;
+      Choice := Choice_Chain;
+      while Choice /= Null_Iir loop
+         case Iir_Kinds_Case_Choice (Get_Kind (Choice)) is
+            when Iir_Kind_Choice_By_Expression =>
+               Expr := Get_Choice_Expression (Choice);
+            when Iir_Kind_Choice_By_Range =>
+               Expr := Get_Choice_Range (Choice);
+            when Iir_Kind_Choice_By_Others =>
+               Expr := Null_Iir;
+         end case;
+         if Is_Valid (Expr) and then Get_Expr_Staticness (Expr) = Locally
+         then
+            Index := Index + 1;
+            Info.Arr (Index) := Choice;
+         end if;
+         Choice := Get_Chain (Choice);
+      end loop;
 
-      --  Bubble down element I of a partially ordered heap of length N in
-      --  array ARR.
-      procedure Bubble_Down (I, N : Natural)
-      is
-         Child : Natural;
-         Parent : Natural := I;
+      pragma Assert (Index = Info.Nbr_Choices);
+   end Fill_Choices_Array;
+
+   procedure Swap_Choice_Info (Info : Choice_Info_Type;
+                               From : Natural; To : Natural)
+   is
+      Tmp : Iir;
+   begin
+      Tmp := Info.Arr (To);
+      Info.Arr (To) := Info.Arr (From);
+      Info.Arr (From) := Tmp;
+
+      if Info.Annex_Arr /= null then
+         declare
+            T : Int32;
+         begin
+            T := Info.Annex_Arr (To);
+            Info.Annex_Arr (To) := Info.Annex_Arr (From);
+            Info.Annex_Arr (From) := T;
+         end;
+      end if;
+   end Swap_Choice_Info;
+
+   procedure Sort_String_Choices (Info : in out Choice_Info_Type)
+   is
+      --  Compare two elements of ARR.
+      --  Return true iff OP1 < OP2.
+      function Lt (Op1, Op2 : Natural) return Boolean is
       begin
-         loop
-            Child := 2 * Parent;
-            if Child < N and then Lt (Child, Child + 1) then
-               Child := Child + 1;
-            end if;
-            exit when Child > N;
-            exit when not Lt (Parent, Child);
-            Swap (Parent, Child);
-            Parent := Child;
-         end loop;
-      end Bubble_Down;
+         return Compare_String_Literals
+           (Get_Choice_Expression (Info.Arr (Op1)),
+            Get_Choice_Expression (Info.Arr (Op2)))
+           = Compare_Lt;
+      end Lt;
 
-      --  Heap sort of ARR.
-      procedure Sort (N : Natural)
-      is
+      procedure Swap (From : Natural; To : Natural) is
       begin
-         --  Heapify
-         for I in reverse 1 .. N / 2 loop
-            Bubble_Down (I, N);
-         end loop;
+         Swap_Choice_Info (Info, From, To);
+      end Swap;
 
-         --  Sort
-         for I in reverse 2 .. N loop
-            Swap (1, I);
-            Bubble_Down (1, I - 1);
-         end loop;
-      end Sort;
-   end Heap_Sort;
+      procedure Str_Heap_Sort is
+         new Algos.Heap_Sort (Lt => Lt, Swap => Swap);
+   begin
+      Str_Heap_Sort (Info.Nbr_Choices);
+   end Sort_String_Choices;
 
    procedure Sem_String_Choices_Range (Choice_Chain : Iir; Sel : Iir)
    is
-      --  True if others choice is present.
-      Has_Others : Boolean;
-
-      --  Number of simple choices.
-      Nbr_Choices : Natural;
-
       --  Type of SEL.
       Sel_Type : Iir;
 
@@ -2146,41 +2202,12 @@ package body Sem_Expr is
       --  Length of SEL (number of characters in SEL).
       Sel_Length : Iir_Int64;
 
-      --  Array of choices.
-      Arr : Iir_Array_Acc;
-      Index : Natural;
-
       --  True if length of a choice mismatches
       Has_Length_Error : Boolean := False;
 
       El : Iir;
 
-      --  Compare two elements of ARR.
-      --  Return true iff OP1 < OP2.
-      function Lt (Op1, Op2 : Natural) return Boolean is
-      begin
-         return Compare_String_Literals (Get_Choice_Expression (Arr (Op1)),
-                                         Get_Choice_Expression (Arr (Op2)))
-           = Compare_Lt;
-      end Lt;
-
-      function Eq (Op1, Op2 : Natural) return Boolean is
-      begin
-         return Compare_String_Literals (Get_Choice_Expression (Arr (Op1)),
-                                         Get_Choice_Expression (Arr (Op2)))
-           = Compare_Eq;
-      end Eq;
-
-      procedure Swap (From : Natural; To : Natural)
-      is
-         Tmp : Iir;
-      begin
-         Tmp := Arr (To);
-         Arr (To) := Arr (From);
-         Arr (From) := Tmp;
-      end Swap;
-
-      package Str_Heap_Sort is new Heap_Sort (Lt => Lt, Swap => Swap);
+      Info : Choice_Info_Type;
 
       procedure Sem_Simple_Choice (Choice : Iir)
       is
@@ -2201,6 +2228,7 @@ package body Sem_Expr is
             Has_Length_Error := True;
             return;
          end if;
+         Set_Choice_Staticness (Choice, Locally);
          Expr := Eval_Expr (Expr);
          Set_Choice_Expression (Choice, Expr);
          if Get_Kind (Expr) = Iir_Kind_Overflow_Literal then
@@ -2216,6 +2244,14 @@ package body Sem_Expr is
             return;
          end if;
       end Sem_Simple_Choice;
+
+      function Eq (Op1, Op2 : Natural) return Boolean is
+      begin
+         return Compare_String_Literals
+           (Get_Choice_Expression (Info.Arr (Op1)),
+            Get_Choice_Expression (Info.Arr (Op2)))
+           = Compare_Eq;
+      end Eq;
    begin
       --  LRM93 8.8
       --  If the expression is of one-dimensional character array type, then
@@ -2237,9 +2273,8 @@ package body Sem_Expr is
       Sel_El_Type := Get_Element_Subtype (Sel_Type);
       Sel_El_Length := Eval_Discrete_Type_Length (Sel_El_Type);
 
-      Has_Others := False;
-      Nbr_Choices := 0;
       El := Choice_Chain;
+      Info.Others_Choice := Null_Iir;
       while El /= Null_Iir loop
          case Get_Kind (El) is
             when Iir_Kind_Choice_By_None =>
@@ -2248,16 +2283,15 @@ package body Sem_Expr is
                Error_Msg_Sem
                  (+El, "range choice are not allowed for non-discrete type");
             when Iir_Kind_Choice_By_Expression =>
-               Nbr_Choices := Nbr_Choices + 1;
                Sem_Simple_Choice (El);
             when Iir_Kind_Choice_By_Others =>
-               if Has_Others then
+               if Info.Others_Choice /= Null_Iir then
                   Error_Msg_Sem (+El, "duplicate others choice");
                elsif Get_Chain (El) /= Null_Iir then
                   Error_Msg_Sem
                     (+El, "choice others must be the last alternative");
                end if;
-               Has_Others := True;
+               Info.Others_Choice := El;
             when others =>
                Error_Kind ("sem_string_choices_range", El);
          end case;
@@ -2279,39 +2313,30 @@ package body Sem_Expr is
       --  subtype must be represented once and only once in the set of choices
       --  of the case statement and no other value is allowed; [...]
 
-      -- 1. Allocate Arr and fill it
-      Arr := new Iir_Array (1 .. Nbr_Choices);
-      Index := 0;
-      El := Choice_Chain;
-      while El /= Null_Iir loop
-         if Get_Kind (El) = Iir_Kind_Choice_By_Expression then
-            Index := Index + 1;
-            Arr (Index) := El;
-         end if;
-         El := Get_Chain (El);
-      end loop;
+      -- 1. Allocate Arr, fill it and sort
+      Count_Choices (Info, Choice_Chain);
+      Fill_Choices_Array (Info, Choice_Chain);
+      Sort_String_Choices (Info);
 
-      -- 2. Sort Arr
-      Str_Heap_Sort.Sort (Nbr_Choices);
-
-      -- 3. Check for duplicate choices
-      for I in 1 .. Nbr_Choices - 1 loop
+      -- 2. Check for duplicate choices
+      for I in 1 .. Info.Nbr_Choices - 1 loop
          if Eq (I, I + 1) then
             Error_Msg_Sem
-              (+Arr (I), "duplicate choice with choice at %l", +Arr (I + 1));
+              (+Info.Arr (I),
+               "duplicate choice with choice at %l", +Info.Arr (I + 1));
             exit;
          end if;
       end loop;
 
-      -- 4. Free Arr
-      Free (Arr);
+      -- 3. Free Arr
+      Free (Info.Arr);
 
       --  Check for missing choice.
       --  Do not try to compute the expected number of choices as this can
       --  easily overflow.
-      if not Has_Others then
+      if Info.Others_Choice = Null_Iir then
          declare
-            Nbr : Iir_Int64 := Iir_Int64 (Nbr_Choices);
+            Nbr : Iir_Int64 := Iir_Int64 (Info.Nbr_Choices);
          begin
             for I in 1 .. Sel_Length loop
                Nbr := Nbr / Sel_El_Length;
@@ -2324,6 +2349,71 @@ package body Sem_Expr is
       end if;
    end Sem_String_Choices_Range;
 
+   --  Get low limit of ASSOC.
+   --  First, get the expression of the association, then the low limit.
+   --  ASSOC may be either association_by_range (in this case the low limit
+   --   is to be fetched), or association_by_expression (and the low limit
+   --   is the expression).
+   function Get_Assoc_Low (Assoc : Iir) return Iir
+   is
+      Expr : Iir;
+   begin
+      case Get_Kind (Assoc) is
+         when Iir_Kind_Choice_By_Expression =>
+            return Get_Choice_Expression (Assoc);
+         when Iir_Kind_Choice_By_Range =>
+            Expr := Get_Choice_Range (Assoc);
+            case Get_Kind (Expr) is
+               when Iir_Kind_Range_Expression =>
+                  return Get_Low_Limit (Expr);
+               when others =>
+                  return Expr;
+            end case;
+         when others =>
+            Error_Kind ("get_assoc_low", Assoc);
+      end case;
+   end Get_Assoc_Low;
+
+   function Get_Assoc_High (Assoc : Iir) return Iir
+   is
+      Expr : Iir;
+   begin
+      case Get_Kind (Assoc) is
+         when Iir_Kind_Choice_By_Expression =>
+            return Get_Choice_Expression (Assoc);
+         when Iir_Kind_Choice_By_Range =>
+            Expr := Get_Choice_Range (Assoc);
+            case Get_Kind (Expr) is
+               when Iir_Kind_Range_Expression =>
+                  return Get_High_Limit (Expr);
+               when others =>
+                  return Expr;
+            end case;
+         when others =>
+            Error_Kind ("get_assoc_high", Assoc);
+      end case;
+   end Get_Assoc_High;
+
+   procedure Sort_Discrete_Choices (Info : in out Choice_Info_Type)
+   is
+      --  Compare two elements of ARR.
+      --  Return true iff OP1 < OP2.
+      function Lt (Op1, Op2 : Natural) return Boolean is
+      begin
+         return (Eval_Pos (Get_Assoc_Low (Info.Arr (Op1)))
+                   < Eval_Pos (Get_Assoc_Low (Info.Arr (Op2))));
+      end Lt;
+
+      procedure Swap (From : Natural; To : Natural) is
+      begin
+         Swap_Choice_Info (Info, From, To);
+      end Swap;
+
+      procedure Disc_Heap_Sort is new Algos.Heap_Sort (Lt => Lt, Swap => Swap);
+   begin
+      Disc_Heap_Sort (Info.Nbr_Choices);
+   end Sort_Discrete_Choices;
+
    procedure Sem_Check_Continuous_Choices
      (Choice_Chain : Iir;
       Sub_Type : Iir;
@@ -2333,109 +2423,10 @@ package body Sem_Expr is
       High : out Iir)
    is
       --  Nodes that can appear.
-      subtype Iir_Kinds_Case_Choice is Iir_Kind range
-        Iir_Kind_Choice_By_Others ..
-        --Iir_Kind_Choice_By_Expression
-        Iir_Kind_Choice_By_Range;
+      Info : Choice_Info_Type;
 
-      --  Number of named choices.
-      Nbr_Named : Natural;
-
-      --  True if others choice is present.
-      Has_Others : Boolean;
-
-      --  True if SUB_TYPE has bounds.
       Type_Has_Bounds : Boolean;
-
-      Arr : Iir_Array_Acc;
-      Index : Natural;
-      El : Iir;
-
-      --  Get low limit of ASSOC.
-      --  First, get the expression of the association, then the low limit.
-      --  ASSOC may be either association_by_range (in this case the low limit
-      --   is to be fetched), or association_by_expression (and the low limit
-      --   is the expression).
-      function Get_Low (Assoc : Iir) return Iir
-      is
-         Expr : Iir;
-      begin
-         case Get_Kind (Assoc) is
-            when Iir_Kind_Choice_By_Expression =>
-               return Get_Choice_Expression (Assoc);
-            when Iir_Kind_Choice_By_Range =>
-               Expr := Get_Choice_Range (Assoc);
-               case Get_Kind (Expr) is
-                  when Iir_Kind_Range_Expression =>
-                     return Get_Low_Limit (Expr);
-                  when others =>
-                     return Expr;
-               end case;
-            when others =>
-               Error_Kind ("get_low", Assoc);
-         end case;
-      end Get_Low;
-
-      function Get_High (Assoc : Iir) return Iir
-      is
-         Expr : Iir;
-      begin
-         case Get_Kind (Assoc) is
-            when Iir_Kind_Choice_By_Expression =>
-               return Get_Choice_Expression (Assoc);
-            when Iir_Kind_Choice_By_Range =>
-               Expr := Get_Choice_Range (Assoc);
-               case Get_Kind (Expr) is
-                  when Iir_Kind_Range_Expression =>
-                     return Get_High_Limit (Expr);
-                  when others =>
-                     return Expr;
-               end case;
-            when others =>
-               Error_Kind ("get_high", Assoc);
-         end case;
-      end Get_High;
-
-      --  Compare two elements of ARR.
-      --  Return true iff OP1 < OP2.
-      function Lt (Op1, Op2 : Natural) return Boolean is
-      begin
-         return
-           Eval_Pos (Get_Low (Arr (Op1))) < Eval_Pos (Get_Low (Arr (Op2)));
-      end Lt;
-
-      --  Swap two elements of ARR.
-      procedure Swap (From : Natural; To : Natural)
-      is
-         Tmp : Iir;
-      begin
-         Tmp := Arr (To);
-         Arr (To) := Arr (From);
-         Arr (From) := Tmp;
-      end Swap;
-
-      package Disc_Heap_Sort is new Heap_Sort (Lt => Lt, Swap => Swap);
    begin
-      Low := Null_Iir;
-      High := Null_Iir;
-
-      --  Compute the number of elements, return early if a choice is not
-      --  static.
-      Nbr_Named := 0;
-      Has_Others := False;
-      El := Choice_Chain;
-      while El /= Null_Iir loop
-         case Iir_Kinds_Case_Choice (Get_Kind (El)) is
-            when Iir_Kind_Choice_By_Expression
-              | Iir_Kind_Choice_By_Range =>
-               pragma Assert (Get_Choice_Staticness (El) = Locally);
-               Nbr_Named := Nbr_Named + 1;
-            when Iir_Kind_Choice_By_Others =>
-               Has_Others := True;
-         end case;
-         El := Get_Chain (El);
-      end loop;
-
       --  Set TYPE_HAS_BOUNDS
       case Get_Kind (Sub_Type) is
          when Iir_Kind_Enumeration_Type_Definition
@@ -2445,65 +2436,63 @@ package body Sem_Expr is
          when Iir_Kind_Integer_Type_Definition =>
             Type_Has_Bounds := False;
          when others =>
-            Error_Kind ("sem_choice_range(3)", Sub_Type);
+            Error_Kind ("sem_check_continuous_choices(3)", Sub_Type);
       end case;
 
-      Arr := new Iir_Array (1 .. Nbr_Named);
-      Index := 0;
-
-      declare
-         procedure Add_Choice (Choice : Iir; A_Type : Iir)
-         is
+      --  Check the choices are within the bounds.
+      if Type_Has_Bounds
+        and then Get_Type_Staticness (Sub_Type) = Locally
+      then
+         declare
+            Choice : Iir;
             Ok : Boolean;
+            Has_Err : Boolean;
             Expr : Iir;
          begin
-            Ok := True;
-            if Type_Has_Bounds
-              and then Get_Type_Staticness (A_Type) = Locally
-            then
-               if Get_Kind (Choice) = Iir_Kind_Choice_By_Range then
-                  Expr := Get_Choice_Range (Choice);
-                  if Get_Expr_Staticness (Expr) = Locally then
-                     Ok := Eval_Is_Range_In_Bound (Expr, A_Type, True);
-                  end if;
-               else
-                  Expr := Get_Choice_Expression (Choice);
-                  if Get_Expr_Staticness (Expr) = Locally then
-                     Ok := Eval_Is_In_Bound (Expr, A_Type);
-                  end if;
-               end if;
+            Has_Err := False;
+            Choice := Choice_Chain;
+            while Choice /= Null_Iir loop
+               Ok := True;
+               case Iir_Kinds_Case_Choice (Get_Kind (Choice)) is
+                  when Iir_Kind_Choice_By_Expression =>
+                     Expr := Get_Choice_Expression (Choice);
+                     if Get_Expr_Staticness (Expr) = Locally then
+                        Ok := Eval_Is_In_Bound (Expr, Sub_Type);
+                     end if;
+                  when Iir_Kind_Choice_By_Range =>
+                     Expr := Get_Choice_Range (Choice);
+                     if Get_Expr_Staticness (Expr) = Locally then
+                        Ok := Eval_Is_Range_In_Bound (Expr, Sub_Type, True);
+                     end if;
+                  when Iir_Kind_Choice_By_Others =>
+                     null;
+               end case;
                if not Ok then
                   Error_Msg_Sem (+Choice, "%n out of index range", +Expr);
+                  Has_Err := True;
                end if;
-            end if;
-            if Ok then
-               Index := Index + 1;
-               Arr (Index) := Choice;
-            end if;
-         end Add_Choice;
-      begin
-         --  Fill the array.
-         El := Choice_Chain;
-         while El /= Null_Iir loop
-            case Iir_Kinds_Case_Choice (Get_Kind (El)) is
-               when Iir_Kind_Choice_By_Expression
-                 | Iir_Kind_Choice_By_Range =>
-                  Add_Choice (El, Sub_Type);
-               when Iir_Kind_Choice_By_Others =>
-                  null;
-            end case;
-            El := Get_Chain (El);
-         end loop;
-      end;
+               Choice := Get_Chain (Choice);
+            end loop;
 
-      --  Third:
-      --  Sort the list
-      Disc_Heap_Sort.Sort (Index);
+            --  In case of error (value not in range), don't try to extract
+            --  bounds or to sort values.
+            if Has_Err then
+               High := Null_Iir;
+               Low := Null_Iir;
+               return;
+            end if;
+         end;
+      end if;
+
+      --  Compute the number of elements and sort.
+      Count_Choices (Info, Choice_Chain);
+      Fill_Choices_Array (Info, Choice_Chain);
+      Sort_Discrete_Choices (Info);
 
       --  Set low and high bounds.
-      if Index > 0 then
-         Low := Get_Low (Arr (1));
-         High := Get_High (Arr (Index));
+      if Info.Nbr_Choices > 0 then
+         Low := Get_Assoc_Low (Info.Arr (Info.Arr'First));
+         High := Get_Assoc_High (Info.Arr (Info.Arr'Last));
       else
          Low := Null_Iir;
          High := Null_Iir;
@@ -2548,7 +2537,7 @@ package body Sem_Expr is
          end if;
          if Lb = Null_Iir or else Hb = Null_Iir then
             --  Return now in case of error.
-            Free (Arr);
+            Free (Info.Arr);
             return;
          end if;
          --  Checks all values between POS and POS_MAX are handled.
@@ -2556,40 +2545,42 @@ package body Sem_Expr is
          Pos_Max := Eval_Pos (Hb);
          if Pos > Pos_Max then
             --  Null range.
-            Free (Arr);
+            Free (Info.Arr);
             return;
          end if;
-         for I in 1 .. Index loop
-            E_Pos := Eval_Pos (Get_Low (Arr (I)));
+         for I in Info.Arr'Range loop
+            E_Pos := Eval_Pos (Get_Assoc_Low (Info.Arr (I)));
             if E_Pos > Pos_Max then
                --  Choice out of bound, already handled.
-               Error_No_Choice (Bt, Pos, Pos_Max, Get_Location (Arr (I)));
+               Error_No_Choice
+                 (Bt, Pos, Pos_Max, Get_Location (Info.Arr (I)));
                --  Avoid other errors.
                Pos := Pos_Max + 1;
                exit;
             end if;
-            if Pos < E_Pos and then not Has_Others then
-               Error_No_Choice (Bt, Pos, E_Pos - 1, Get_Location (Arr (I)));
+            if Pos < E_Pos and then Info.Others_Choice = Null_Iir then
+               Error_No_Choice
+                 (Bt, Pos, E_Pos - 1, Get_Location (Info.Arr (I)));
             elsif Pos > E_Pos then
                if Pos = E_Pos + 1 then
                   Error_Msg_Sem
-                    (+Arr (I),
+                    (+Info.Arr (I),
                      "duplicate choice for " & Disp_Discrete (Bt, E_Pos));
                else
                   Error_Msg_Sem
-                    (+Arr (I), "duplicate choices for "
+                    (+Info.Arr (I), "duplicate choices for "
                        & Disp_Discrete (Bt, E_Pos)
                        & " to " & Disp_Discrete (Bt, Pos));
                end if;
             end if;
-            Pos := Eval_Pos (Get_High (Arr (I))) + 1;
+            Pos := Eval_Pos (Get_Assoc_High (Info.Arr (I))) + 1;
          end loop;
-         if Pos /= Pos_Max + 1 and then not Has_Others then
+         if Pos /= Pos_Max + 1 and then Info.Others_Choice = Null_Iir then
             Error_No_Choice (Bt, Pos, Pos_Max, Loc);
          end if;
       end;
 
-      Free (Arr);
+      Free (Info.Arr);
    end Sem_Check_Continuous_Choices;
 
    procedure Sem_Choices_Range (Choice_Chain : in out Iir;
@@ -2908,12 +2899,15 @@ package body Sem_Expr is
       Expr: Iir;
       Has_Named : Boolean;
       Rec_El_Index : Natural;
-      Value_Staticness : Iir_Staticness;
+      Expr_Staticness : Iir_Staticness;
    begin
+      --  Not yet handled.
+      Set_Aggregate_Expand_Flag (Aggr, False);
+
       Ok := True;
       Assoc_Chain := Get_Association_Choices_Chain (Aggr);
       Matches := (others => Null_Iir);
-      Value_Staticness := Locally;
+      Expr_Staticness := Locally;
 
       El_Type := Null_Iir;
       Has_Named := False;
@@ -2982,8 +2976,8 @@ package body Sem_Expr is
                Expr := Sem_Expression (Expr, El_Type);
                if Expr /= Null_Iir then
                   Set_Associated_Expr (El, Eval_Expr_If_Static (Expr));
-                  Value_Staticness := Min (Value_Staticness,
-                                           Get_Expr_Staticness (Expr));
+                  Expr_Staticness := Min (Expr_Staticness,
+                                          Get_Expr_Staticness (Expr));
                else
                   Ok := False;
                end if;
@@ -3007,8 +3001,8 @@ package body Sem_Expr is
             Ok := False;
          end if;
       end loop;
-      Set_Value_Staticness (Aggr, Value_Staticness);
-      Set_Expr_Staticness (Aggr, Min (Globally, Value_Staticness));
+      Set_Expr_Staticness (Aggr, Min (Get_Expr_Staticness (Aggr),
+                                      Expr_Staticness));
       return Ok;
    end Sem_Record_Aggregate;
 
@@ -3035,6 +3029,11 @@ package body Sem_Expr is
       --  If not NULL_IIR, this is the bounds of the dimension.
       --  If every dimension has bounds, then the aggregate is constrained.
       Index_Subtype : Iir := Null_Iir;
+
+      --  Number of associations in last-level (not for sub-aggregate).  This
+      --  is used only to decide whether or not a static aggregate can be
+      --  expanded.
+      Nbr_Assocs : Natural := 0;
 
       --  True if there is an error.
       Error : Boolean := False;
@@ -3073,10 +3072,11 @@ package body Sem_Expr is
       Index_Constraint : Iir_Range_Expression; -- FIXME: 'range.
       Dir : Iir_Direction;
       Choice_Staticness : Iir_Staticness;
+      Expr_Staticness : Iir_Staticness;
 
       Info : Array_Aggr_Info renames Infos (Dim);
    begin
-      --  Sem choices.
+      --  Analyze choices.
       case Get_Kind (Aggr) is
          when Iir_Kind_Aggregate =>
             Assoc_Chain := Get_Association_Choices_Chain (Aggr);
@@ -3163,6 +3163,7 @@ package body Sem_Expr is
             Is_Positional := True;
             Has_Others := False;
             Choice_Staticness := Locally;
+            Info.Nbr_Assocs := Info.Nbr_Assocs + Len;
 
          when others =>
             Error_Kind ("sem_array_aggregate_type_1", Aggr);
@@ -3195,6 +3196,7 @@ package body Sem_Expr is
             return;
          end if;
          Info.Has_Dynamic := True;
+         Set_Aggregate_Expand_Flag (Aggr, False);
       end if;
 
       --  Compute bounds of the index if there is no index subtype.
@@ -3275,6 +3277,8 @@ package body Sem_Expr is
                end if;
             else
                --  Dynamic aggregate.
+               Set_Aggregate_Expand_Flag (Aggr, False);
+
                declare
                   --  There is only one choice.
                   Choice : constant Iir := Assoc_Chain;
@@ -3334,11 +3338,23 @@ package body Sem_Expr is
       end if;
 
       --  Analyze aggregate elements.
+      if Constrained then
+         Expr_Staticness := Get_Type_Staticness (Index_Type);
+         if Expr_Staticness /= Locally then
+            --  Cannot be statically built as the bounds are not known and
+            --  must be checked at run-time.
+            Set_Aggregate_Expand_Flag (Aggr, False);
+         end if;
+      else
+         Expr_Staticness := Locally;
+      end if;
+
       if Dim = Get_Nbr_Elements (Index_List) then
          --  A type has been found for AGGR, analyze AGGR as if it was
          --  an aggregate with a subtype (and not a string).
 
          if Get_Kind (Aggr) /= Iir_Kind_Aggregate then
+            --  Nothing to do for a string.
             return;
          end if;
 
@@ -3349,22 +3365,21 @@ package body Sem_Expr is
             Element_Type : constant Iir := Get_Element_Subtype (A_Type);
             El : Iir;
             Expr : Iir;
-            Value_Staticness : Iir_Staticness;
-            Expr_Staticness : Iir_Staticness;
+            El_Staticness : Iir_Staticness;
          begin
             El := Assoc_Chain;
-            Value_Staticness := Locally;
             while El /= Null_Iir loop
-               Expr := Get_Associated_Expr (El);
-               if Expr /= Null_Iir then
+               if not Get_Same_Alternative_Flag (El) then
+                  Expr := Get_Associated_Expr (El);
                   Expr := Sem_Expression (Expr, Element_Type);
                   if Expr /= Null_Iir then
-                     Expr_Staticness := Get_Expr_Staticness (Expr);
-                     Set_Expr_Staticness (Aggr,
-                                          Min (Get_Expr_Staticness (Aggr),
-                                               Expr_Staticness));
+                     El_Staticness := Get_Expr_Staticness (Expr);
                      Expr := Eval_Expr_If_Static (Expr);
                      Set_Associated_Expr (El, Expr);
+
+                     if not Is_Static_Construct (Expr) then
+                        Set_Aggregate_Expand_Flag (Aggr, False);
+                     end if;
 
                      if not Eval_Is_In_Bound (Expr, Element_Type)
                      then
@@ -3373,56 +3388,53 @@ package body Sem_Expr is
                                          "element is out of the bounds");
                      end if;
 
-                     --  FIXME: handle name/others in translate.
-                     --  if Get_Kind (Expr) = Iir_Kind_Aggregate then
-                     --     Expr_Staticness := Get_Value_Staticness (Expr);
-                     --  end if;
-                     Value_Staticness := Min (Value_Staticness,
-                                              Expr_Staticness);
+                     Expr_Staticness := Min (Expr_Staticness, El_Staticness);
+
+                     Info.Nbr_Assocs := Info.Nbr_Assocs + 1;
                   else
                      Info.Error := True;
                   end if;
                end if;
                El := Get_Chain (El);
             end loop;
-            Set_Value_Staticness (Aggr, Value_Staticness);
          end;
       else
+         --  A sub-aggregate: recurse.
          declare
-            Assoc : Iir;
-            Value_Staticness : Iir_Staticness;
+            Sub_Aggr : Iir;
          begin
-            Assoc := Null_Iir;
             Choice := Assoc_Chain;
-            Value_Staticness := Locally;
             while Choice /= Null_Iir loop
-               if Get_Associated_Expr (Choice) /= Null_Iir then
-                  Assoc := Get_Associated_Expr (Choice);
-               end if;
-               case Get_Kind (Assoc) is
-                  when Iir_Kind_Aggregate =>
-                     Sem_Array_Aggregate_Type_1
-                       (Assoc, A_Type, Infos, Constrained, Dim + 1);
-                     Value_Staticness := Min (Value_Staticness,
-                                              Get_Value_Staticness (Assoc));
-                  when Iir_Kind_String_Literal8 =>
-                     if Dim + 1 = Get_Nbr_Elements (Index_List) then
+               if not Get_Same_Alternative_Flag (Choice) then
+                  Sub_Aggr := Get_Associated_Expr (Choice);
+                  case Get_Kind (Sub_Aggr) is
+                     when Iir_Kind_Aggregate =>
                         Sem_Array_Aggregate_Type_1
-                          (Assoc, A_Type, Infos, Constrained, Dim + 1);
-                     else
-                        Error_Msg_Sem
-                          (+Assoc, "string literal not allowed here");
+                          (Sub_Aggr, A_Type, Infos, Constrained, Dim + 1);
+                        if not Get_Aggregate_Expand_Flag (Sub_Aggr) then
+                           Set_Aggregate_Expand_Flag (Aggr, False);
+                        end if;
+                     when Iir_Kind_String_Literal8 =>
+                        if Dim + 1 = Get_Nbr_Elements (Index_List) then
+                           Sem_Array_Aggregate_Type_1
+                             (Sub_Aggr, A_Type, Infos, Constrained, Dim + 1);
+                        else
+                           Error_Msg_Sem
+                             (+Sub_Aggr, "string literal not allowed here");
+                           Infos (Dim + 1).Error := True;
+                        end if;
+                     when others =>
+                        Error_Msg_Sem (+Sub_Aggr, "sub-aggregate expected");
                         Infos (Dim + 1).Error := True;
-                     end if;
-                  when others =>
-                     Error_Msg_Sem (+Assoc, "sub-aggregate expected");
-                     Infos (Dim + 1).Error := True;
-               end case;
+                  end case;
+               end if;
                Choice := Get_Chain (Choice);
             end loop;
-            Set_Value_Staticness (Aggr, Value_Staticness);
          end;
       end if;
+      Expr_Staticness := Min (Get_Expr_Staticness (Aggr),
+                              Min (Expr_Staticness, Choice_Staticness));
+      Set_Expr_Staticness (Aggr, Expr_Staticness);
    end Sem_Array_Aggregate_Type_1;
 
    --  Analyze an array aggregate whose type is AGGR_TYPE.
@@ -3442,6 +3454,9 @@ package body Sem_Expr is
       Aggr_Constrained : Boolean;
       Info, Prev_Info : Iir_Aggregate_Info;
    begin
+      --  By default, consider the aggregate can be statically built.
+      Set_Aggregate_Expand_Flag (Aggr, True);
+
       --  Analyze the aggregate.
       Sem_Array_Aggregate_Type_1 (Aggr, Aggr_Type, Infos, Constrained, 1);
 
@@ -3449,6 +3464,7 @@ package body Sem_Expr is
       for I in Infos'Range loop
          --  Return now in case of error.
          if Infos (I).Error then
+            Set_Aggregate_Expand_Flag (Aggr, False);
             return Null_Iir;
          end if;
          if Infos (I).Index_Subtype = Null_Iir then
@@ -3473,6 +3489,25 @@ package body Sem_Expr is
          Set_Constraint_State (A_Subtype, Fully_Constrained);
          Set_Type (Aggr, A_Subtype);
          Set_Literal_Subtype (Aggr, A_Subtype);
+         if Get_Type_Staticness (A_Subtype) = Locally
+           and then Get_Aggregate_Expand_Flag (Aggr)
+         then
+            --  Compute ratio of elements vs size of the aggregate to determine
+            --  if the aggregate can be expanded.
+            declare
+               Size : Iir_Int64;
+            begin
+               Size := 1;
+               for I in Infos'Range loop
+                  Size := Size
+                    * Eval_Discrete_Type_Length (Infos (I).Index_Subtype);
+               end loop;
+               Set_Aggregate_Expand_Flag
+                 (Aggr, Infos (Nbr_Dim).Nbr_Assocs >= Natural (Size / 10));
+            end;
+         else
+            Set_Aggregate_Expand_Flag (Aggr, False);
+         end if;
       else
          --  Free unused indexes subtype.
          for I in Infos'Range loop
@@ -3488,6 +3523,9 @@ package body Sem_Expr is
                end if;
             end;
          end loop;
+
+         --  If bounds are not known, the aggregate cannot be statically built.
+         Set_Aggregate_Expand_Flag (Aggr, False);
       end if;
 
       if Infos (Nbr_Dim).Has_Bound_Error then
@@ -3523,8 +3561,14 @@ package body Sem_Expr is
    begin
       pragma Assert (A_Type /= Null_Iir);
 
-      --  An aggregate is at most globally static.
-      Set_Expr_Staticness (Expr, Globally);
+      if Flags.Vhdl_Std >= Vhdl_08 then
+         --  An aggregate can be a locally static primary according to LRM08
+         --  9.4.2 Locally static primaries l) and m).
+         Set_Expr_Staticness (Expr, Locally);
+      else
+         --  An aggregate is at most globally static.
+         Set_Expr_Staticness (Expr, Globally);
+      end if;
 
       Set_Type (Expr, A_Type); -- FIXME: should free old type
       case Get_Kind (A_Type) is

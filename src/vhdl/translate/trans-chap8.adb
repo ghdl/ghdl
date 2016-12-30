@@ -242,7 +242,8 @@ package body Trans.Chap8 is
                Res := Chap7.Translate_Expression (Expr, Ret_Type);
                Gen_Return_Value (Res);
             end;
-         when Type_Mode_Fat_Array =>
+         when Type_Mode_Unbounded_Array
+           | Type_Mode_Unbounded_Record =>
             --  * if the return type is unconstrained: allocate an area from
             --    the secondary stack, copy it to the area, and fill the fat
             --    pointer.
@@ -1828,8 +1829,8 @@ package body Trans.Chap8 is
             New_Procedure_Call (Assocs);
             Close_Temp;
          when Type_Mode_Array
-            | Type_Mode_Record
-            | Type_Mode_Fat_Array =>
+           | Type_Mode_Record
+           | Type_Mode_Unbounded_Array =>
             Subprg_Info := Get_Info (Imp);
             Start_Association (Assocs, Subprg_Info.Ortho_Func);
             Subprgs.Add_Subprg_Instance_Assoc
@@ -1842,10 +1843,11 @@ package body Trans.Chap8 is
                  Formal_Type));
             New_Procedure_Call (Assocs);
          when Type_Mode_Unknown
-            | Type_Mode_File
-            | Type_Mode_Acc
-            | Type_Mode_Bounds_Acc
-            | Type_Mode_Protected =>
+           | Type_Mode_File
+           | Type_Mode_Acc
+           | Type_Mode_Bounds_Acc
+           | Type_Mode_Unbounded_Record
+           | Type_Mode_Protected =>
             raise Internal_Error;
       end case;
    end Translate_Write_Procedure_Call;
@@ -1893,7 +1895,7 @@ package body Trans.Chap8 is
               (Assocs,
                Chap7.Translate_Expression (Get_Actual (Value_Assoc)));
             New_Procedure_Call (Assocs);
-         when Type_Mode_Fat_Array =>
+         when Type_Mode_Unbounded_Array =>
             declare
                Length_Assoc : Iir;
                Length       : Mnode;
@@ -1915,10 +1917,11 @@ package body Trans.Chap8 is
                New_Assign_Stmt (M2Lv (Length), New_Function_Call (Assocs));
             end;
          when Type_Mode_Unknown
-            | Type_Mode_File
-            | Type_Mode_Acc
-            | Type_Mode_Bounds_Acc
-            | Type_Mode_Protected =>
+           | Type_Mode_File
+           | Type_Mode_Acc
+           | Type_Mode_Bounds_Acc
+           | Type_Mode_Unbounded_Record
+           | Type_Mode_Protected =>
             raise Internal_Error;
       end case;
    end Translate_Read_Procedure_Call;
@@ -2144,17 +2147,17 @@ package body Trans.Chap8 is
 
             --  For unconstrained interfaces:
             --  * create a field for the fat pointer, unless
-            --    - the expression is locally static
+            --    - the expression is statically built
             function Need_Fat_Pointer_Field return Boolean is
             begin
                return not Is_Fully_Constrained_Type (Ftype)
                  and then (Actual = Null_Iir
-                             or else Get_Expr_Staticness (Actual) /= Locally);
+                             or else not Is_Static_Construct (Actual));
             end Need_Fat_Pointer_Field;
 
             --  For unconstrained interfaces:
             --  * create a field for the bounds, unless
-            --    - the expression is locally static
+            --    - the expression is statically built
             --    - the expression/name type is locally static
             --    - expression is a call to an unconstrained function
             --    - expression is an object name that is not a slice
@@ -2220,7 +2223,7 @@ package body Trans.Chap8 is
             --  If the associated expression is not a name of an object (never
             --  the case for a signal interface and variable interface):
             --  * create a field for the value, unless
-            --    - expression is locally static
+            --    - expression is statically built
             --    - expression is scalar
             --    - expression is a call to an unconstrained function
             --  If the actual is a name of an object, create a field for the
@@ -2243,7 +2246,7 @@ package body Trans.Chap8 is
                   return False;
                end if;
 
-               if Get_Expr_Staticness (Actual) = Locally
+               if Is_Static_Construct (Actual)
                  or else (Get_Kind (Act_Type)
                             in Iir_Kinds_Scalar_Type_Definition)
                  or else Get_Kind (Ftype) = Iir_Kind_File_Type_Definition
@@ -2587,6 +2590,7 @@ package body Trans.Chap8 is
          else
             --  Caller does not suspend; create the frame variable.
             Start_Declare_Stmt;
+            Open_Local_Temp;
             Mark_Var := Create_Var (Create_Var_Identifier ("CMARK"),
                                     Ghdl_Ptr_Type, O_Storage_Local);
             Params_Var := Create_Var (Create_Var_Identifier ("CPARAMS"),
@@ -3250,6 +3254,7 @@ package body Trans.Chap8 is
             State_Start (Next_State);
          else
             Release_Stack2 (Get_Var (Mark_Var));
+            Close_Local_Temp;
             Finish_Declare_Stmt;
          end if;
       end if;

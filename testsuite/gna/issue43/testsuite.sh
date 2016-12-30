@@ -5,6 +5,6 @@
 analyze repro2.vhdl
 elab_simulate test_tb
 
-clean test
+clean
 
 echo "Test successful"

@@ -1095,10 +1095,11 @@ package body Trans is
       end if;
       case Vtype.Type_Mode is
          when Type_Mode_Scalar
-            | Type_Mode_Acc
-            | Type_Mode_File
-            | Type_Mode_Fat_Array
-            | Type_Mode_Bounds_Acc =>
+           | Type_Mode_Acc
+           | Type_Mode_File
+           | Type_Mode_Unbounded_Array
+           | Type_Mode_Unbounded_Record
+           | Type_Mode_Bounds_Acc =>
             if Stable then
                return Dv2M (D, Vtype, Mode);
             else
@@ -1369,13 +1370,18 @@ package body Trans is
 
    function Is_Composite (Info : Type_Info_Acc) return Boolean is
    begin
-      return Info.Type_Mode in Type_Mode_Fat;
+      return Info.Type_Mode in Type_Mode_Composite;
    end Is_Composite;
 
    function Is_Complex_Type (Tinfo : Type_Info_Acc) return Boolean is
    begin
       return Tinfo.C /= null;
    end Is_Complex_Type;
+
+   function Is_Unbounded_Type (Tinfo : Type_Info_Acc) return Boolean is
+   begin
+      return Tinfo.Type_Mode in Type_Mode_Unbounded;
+   end Is_Unbounded_Type;
 
    procedure Free_Node_Infos
    is
@@ -1734,14 +1740,15 @@ package body Trans is
    begin
       case Vtype.Type_Mode is
          when Type_Mode_Scalar
-            | Type_Mode_Acc
-            | Type_Mode_File
-            | Type_Mode_Fat_Array
-            | Type_Mode_Bounds_Acc =>
+           | Type_Mode_Acc
+           | Type_Mode_File
+           | Type_Mode_Unbounded_Array
+           | Type_Mode_Unbounded_Record
+           | Type_Mode_Bounds_Acc =>
             return Lv2M (L, Vtype, Mode);
          when Type_Mode_Array
-            | Type_Mode_Record
-            | Type_Mode_Protected =>
+           | Type_Mode_Record
+           | Type_Mode_Protected =>
             if Is_Complex_Type (Vtype) then
                return Lp2M (L, Vtype, Mode);
             else
@@ -1757,14 +1764,15 @@ package body Trans is
    begin
       case Vtype.Type_Mode is
          when Type_Mode_Scalar
-            | Type_Mode_Acc
-            | Type_Mode_File
-            | Type_Mode_Fat_Array
-            | Type_Mode_Bounds_Acc =>
+           | Type_Mode_Acc
+           | Type_Mode_File
+           | Type_Mode_Unbounded_Array
+           | Type_Mode_Unbounded_Record
+           | Type_Mode_Bounds_Acc =>
             return Dv2M (D, Vtype, Mode);
          when Type_Mode_Array
-            | Type_Mode_Record
-            | Type_Mode_Protected =>
+           | Type_Mode_Record
+           | Type_Mode_Protected =>
             if Is_Complex_Type (Vtype) then
                return Dp2M (D, Vtype, Mode);
             else

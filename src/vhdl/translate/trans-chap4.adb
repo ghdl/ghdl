@@ -353,7 +353,7 @@ package body Trans.Chap4 is
       --  Iterate on all elements of the object.
       Open_Temp;
 
-      if Type_Info.Type_Mode = Type_Mode_Fat_Array then
+      if Type_Info.Type_Mode = Type_Mode_Unbounded_Array then
          Sobj := Stabilize (Obj);
       else
          Sobj := Obj;
@@ -438,7 +438,7 @@ package body Trans.Chap4 is
             New_Assign_Stmt (M2Lv (Obj), Get_Scalar_Initial_Value (Obj_Type));
          when Type_Mode_Arrays =>
             Init_Array_Object (Obj, Obj_Type);
-         when Type_Mode_Record =>
+         when Type_Mode_Records =>
             declare
                Sobj : Mnode;
                El   : Iir_Element_Declaration;
@@ -585,26 +585,25 @@ package body Trans.Chap4 is
       Value : constant Iir := Get_Default_Value (Obj);
       Obj1  : Iir;
    begin
-      --  A locally static constant is pre-elaborated.
-      --  (only constant can be locally static).
-      if Get_Expr_Staticness (Obj) = Locally
-        and then Get_Deferred_Declaration (Obj) = Null_Iir
-      then
-         if Get_Kind (Value) = Iir_Kind_Overflow_Literal then
-            Chap6.Gen_Bound_Error (Obj);
-         end if;
-         return;
-      end if;
-
       --  Set default value.
       if Get_Kind (Obj) = Iir_Kind_Constant_Declaration then
-         if Get_Info (Obj).Object_Static then
-            return;
-         end if;
          if Get_Deferred_Declaration_Flag (Obj) then
             --  No code generation for a deferred constant.
             return;
          end if;
+
+         if Get_Kind (Value) = Iir_Kind_Overflow_Literal then
+            --  An overflow can be static, but must still generate an error
+            --  at run time.
+            Chap6.Gen_Bound_Error (Obj);
+            return;
+         end if;
+
+         if Get_Info (Obj).Object_Static then
+            --  A static object is pre-initialized.
+            return;
+         end if;
+
          Obj1 := Get_Deferred_Declaration (Obj);
          if Obj1 = Null_Iir then
             Obj1 := Obj;
@@ -683,7 +682,7 @@ package body Trans.Chap4 is
 
                return New_Obj_Value (Len);
             end;
-         when Type_Mode_Record =>
+         when Type_Mode_Records =>
             declare
                List   : constant Iir_List :=
                  Get_Elements_Declaration_List (Get_Base_Type (Sig_Type));
@@ -745,7 +744,7 @@ package body Trans.Chap4 is
                  (Chap3.Get_Array_Base (Res), Res_Type,
                   New_Lit (Ghdl_Index_0));
                Res_Type := Get_Element_Subtype (Res_Type);
-            when Type_Mode_Record =>
+            when Type_Mode_Records =>
                declare
                   Element : Iir;
                begin

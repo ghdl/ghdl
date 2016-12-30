@@ -173,6 +173,7 @@ package Elaboration is
       Formal_Instance : Block_Instance_Acc;
       Actual : Iir_Value_Literal_Acc;
       Actual_Instance : Block_Instance_Acc;
+      Inter : Iir;
       Assoc : Iir;
    end record;
 

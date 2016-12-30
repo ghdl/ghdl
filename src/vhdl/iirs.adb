@@ -272,9 +272,9 @@ package body Iirs is
            | Iir_Kind_Association_Element_Package
            | Iir_Kind_Association_Element_Type
            | Iir_Kind_Association_Element_Subprogram
-           | Iir_Kind_Choice_By_Others
-           | Iir_Kind_Choice_By_Expression
            | Iir_Kind_Choice_By_Range
+           | Iir_Kind_Choice_By_Expression
+           | Iir_Kind_Choice_By_Others
            | Iir_Kind_Choice_By_None
            | Iir_Kind_Choice_By_Name
            | Iir_Kind_Entity_Aspect_Entity
@@ -4804,7 +4804,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Aggregate_Info (Get_Kind (Target)),
                      "no field Aggregate_Info");
-      return Get_Field2 (Target);
+      return Get_Field5 (Target);
    end Get_Aggregate_Info;
 
    procedure Set_Aggregate_Info (Target : Iir; Info : Iir) is
@@ -4812,7 +4812,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Aggregate_Info (Get_Kind (Target)),
                      "no field Aggregate_Info");
-      Set_Field2 (Target, Info);
+      Set_Field5 (Target, Info);
    end Set_Aggregate_Info;
 
    function Get_Sub_Aggregate_Info (Target : Iir) return Iir is
@@ -4933,22 +4933,21 @@ package body Iirs is
       Set_Flag4 (Target, Val);
    end Set_Aggr_Named_Flag;
 
-   function Get_Value_Staticness (Target : Iir) return Iir_Staticness is
+   function Get_Aggregate_Expand_Flag (Aggr : Iir) return Boolean is
    begin
-      pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_Value_Staticness (Get_Kind (Target)),
-                     "no field Value_Staticness");
-      return Iir_Staticness'Val (Get_State2 (Target));
-   end Get_Value_Staticness;
+      pragma Assert (Aggr /= Null_Iir);
+      pragma Assert (Has_Aggregate_Expand_Flag (Get_Kind (Aggr)),
+                     "no field Aggregate_Expand_Flag");
+      return Get_Flag1 (Aggr);
+   end Get_Aggregate_Expand_Flag;
 
-   procedure Set_Value_Staticness (Target : Iir; Staticness : Iir_Staticness)
-   is
+   procedure Set_Aggregate_Expand_Flag (Aggr : Iir; Flag : Boolean) is
    begin
-      pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_Value_Staticness (Get_Kind (Target)),
-                     "no field Value_Staticness");
-      Set_State2 (Target, Iir_Staticness'Pos (Staticness));
-   end Set_Value_Staticness;
+      pragma Assert (Aggr /= Null_Iir);
+      pragma Assert (Has_Aggregate_Expand_Flag (Get_Kind (Aggr)),
+                     "no field Aggregate_Expand_Flag");
+      Set_Flag1 (Aggr, Flag);
+   end Set_Aggregate_Expand_Flag;
 
    function Get_Association_Choices_Chain (Target : Iir) return Iir is
    begin
@@ -4988,7 +4987,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Choice_Staticness (Get_Kind (Target)),
                      "no field Choice_Staticness");
-      return Iir_Staticness'Val (Get_State2 (Target));
+      return Iir_Staticness'Val (Get_State1 (Target));
    end Get_Choice_Staticness;
 
    procedure Set_Choice_Staticness (Target : Iir; Staticness : Iir_Staticness)
@@ -4997,7 +4996,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Choice_Staticness (Get_Kind (Target)),
                      "no field Choice_Staticness");
-      Set_State2 (Target, Iir_Staticness'Pos (Staticness));
+      Set_State1 (Target, Iir_Staticness'Pos (Staticness));
    end Set_Choice_Staticness;
 
    function Get_Procedure_Call (Stmt : Iir) return Iir is

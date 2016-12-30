@@ -142,6 +142,13 @@ package Evaluation is
    --  Create a Iir_Kind_Overflow node of type EXPR_TYPE for ORIGIN.
    function Build_Overflow (Origin : Iir; Expr_Type : Iir) return Iir;
 
+   --  Fill VECT with choices from CHOICES_CHAIN: each position of CHOICE_RANGE
+   --  is associated with its corresponding choice from CHOICES_CHAIN.
+   --  VECT bounds must be 0 .. Len - 1, where Len is the length of
+   --  CHOICE_RANGE.
+   procedure Build_Array_Choices_Vector
+     (Vect : out Iir_Array; Choice_Range : Iir; Choices_Chain : Iir);
+
    --  Create an array subtype from LEN and BASE_TYPE, according to rules
    --  of LRM93 7.3.2.2. (which are the same as LRM93 7.2.4).
    function Create_Unidim_Array_By_Length
@@ -167,6 +174,26 @@ package Evaluation is
    --  Compare two string literals (of same length).
    type Compare_Type is (Compare_Lt, Compare_Eq, Compare_Gt);
    function Compare_String_Literals (L, R : Iir) return Compare_Type;
+
+   package String_Utils is
+      type Str_Info (Is_String : Boolean := True) is record
+         Len : Nat32;
+
+         case Is_String is
+            when True =>
+               Id : String8_Id;
+            when False =>
+               --  A simple aggregate.  List of elements.
+               List : Iir_List;
+         end case;
+      end record;
+
+      --  Fill Res from EL.  This is used to speed up Lt and Eq operations.
+      function Get_Info (Expr : Iir) return Str_Info;
+
+      --  Return the position of element IDX of STR.
+      function Get_Pos (Str : Str_Info; Idx : Nat32) return Iir_Int32;
+   end String_Utils;
 
    --  Return the local part of 'Instance_Name or 'Path_Name.
    type Path_Instance_Name_Type (Len : Natural) is record

@@ -61,6 +61,9 @@ package Flags is
    --  -da: disp tree after annotation
    Dump_Annotate: Boolean := False;
 
+   --  -do: don't dump origin expression but evaluated expressions.
+   Dump_Origin_Flag : Boolean := True;
+
    --  --dall: makes -dX options to apply to all files.
    Dump_All: Boolean := False;
 

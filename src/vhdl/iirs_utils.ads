@@ -103,6 +103,13 @@ package Iirs_Utils is
    --  Duplicate enumeration literal LIT.
    function Copy_Enumeration_Literal (Lit : Iir) return Iir;
 
+   --  True if EXPR can be built statically.  This is the case of literals
+   --  (except overflow), and the case of some aggregates.
+   --  This is different from locally static expression, particularly for
+   --  agregate: the analyzer may choose to dynamically create a locally
+   --  static aggregate if it is sparse.
+   function Is_Static_Construct (Expr : Iir) return Boolean;
+
    --  Make TARGETS depends on UNIT.
    --  UNIT must be either a design unit or a entity_aspect_entity.
    procedure Add_Dependence (Target: Iir_Design_Unit; Unit: Iir);
@@ -216,6 +223,9 @@ package Iirs_Utils is
    --  Number of dimensions (1..n) for ARRAY_TYPE.
    function Get_Nbr_Dimensions (Array_Type : Iir) return Natural;
 
+   --  Return True iff the all bounds of ARRAY_TYPE are locally static.
+   function Are_Bounds_Locally_Static (Array_Type : Iir) return Boolean;
+
    --  Return the type or subtype definition of the SUBTYP type mark.
    function Get_Denoted_Type_Mark (Subtyp : Iir) return Iir;
 
@@ -259,6 +269,10 @@ package Iirs_Utils is
    function Is_Entity_Instantiation
      (Inst : Iir_Component_Instantiation_Statement)
      return Boolean;
+
+   --  Get the expression of the attribute specification corresponding to the
+   --  attribute name NAME.  Meaningful only for static values.
+   function Get_Attribute_Name_Expression (Name : Iir) return Iir;
 
    --  Return the bound type of a string type, ie the type of the (first)
    --  dimension of a one-dimensional array type.

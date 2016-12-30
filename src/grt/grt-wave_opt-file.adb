@@ -50,6 +50,8 @@ with Grt.Errors; use Grt.Errors;
 
 package body Grt.Wave_Opt.File is
 
+   procedure To_Lower (Signal_Path : in out String);
+
    -- Open the wave option file
    function Open (Option_File : String; To_Be_Created : Boolean) return FILEs;
 
@@ -237,6 +239,7 @@ package body Grt.Wave_Opt.File is
       Tree_Index : Tree_Index_Type;
       Tree_Cursor : Elem_Acc;
       Tree_Updated : Boolean;
+      Is_Extended_Identifier : Boolean := False;
    begin
       To_Lower (Line);
       Last := Line'First;
@@ -267,10 +270,21 @@ package body Grt.Wave_Opt.File is
 
          -- Find next identifier
          loop
-            if Line (Last) = Seps (Tree_Index) then
+            if Line (Last) = '\' then
+               Is_Extended_Identifier := not Is_Extended_Identifier;
+            end if;
+            -- What is enclosed between \ and \ is interpreted as an extended
+            -- identifier, so we need to make sure that nothing in between will
+            -- be interpreted as a signal path separator.
+            if not Is_Extended_Identifier and Line (Last) = Seps (Tree_Index)
+            then
                Last := Last - 1;
                exit;
             elsif Last = Line'Last then
+               if Is_Extended_Identifier then
+                  Error_Context("Extended identifier not terminated by a '\'",
+                                Lineno, First);
+               end if;
                exit;
             end if;
             Last := Last + 1;
@@ -375,6 +389,18 @@ package body Grt.Wave_Opt.File is
          Put_I32 (Stream, Ghdl_I32 (Current_Version.Minor));
          New_Line (Stream);
    end Write_Version;
+
+   procedure To_Lower (Signal_Path : in out String) is
+      Is_Extended_Identifier : Boolean := false;
+   begin
+      for I in Signal_Path'Range loop
+         if Signal_Path (I) = '\' then
+            Is_Extended_Identifier := not Is_Extended_Identifier;
+         elsif not Is_Extended_Identifier then
+            Signal_Path (I) := To_Lower (Signal_Path (I));
+         end if;
+      end loop;
+   end To_Lower;
 
    function Open (Option_File : String; To_Be_Created : Boolean) return FILEs
    is

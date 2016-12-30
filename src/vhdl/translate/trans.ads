@@ -847,12 +847,17 @@ package Trans is
 
       --  Record.
       Type_Mode_Record,
-      --  Protected type
-      Type_Mode_Protected,
+      --  Record with unbounded component(s).
+      Type_Mode_Unbounded_Record,
+      --  Unbounded array type (used for unconstrained array).
+      Type_Mode_Unbounded_Array,
       --  Constrained array type (length is known at compile-time).
       Type_Mode_Array,
-      --  Fat array type (used for unconstrained array).
-      Type_Mode_Fat_Array);
+      --  Protected type
+      Type_Mode_Protected);
+
+   --  For backward source compatibility, to be removed (TODO).
+   Type_Mode_Fat_Array : constant Type_Mode_Type := Type_Mode_Unbounded_Array;
 
    subtype Type_Mode_Valid is Type_Mode_Type range
      Type_Mode_B1 .. Type_Mode_Type'Last;
@@ -862,14 +867,18 @@ package Trans is
 
    --  Composite types, with the vhdl meaning: record and arrays.
    subtype Type_Mode_Composite is Type_Mode_Type range
-     Type_Mode_Record .. Type_Mode_Fat_Array;
+     Type_Mode_Record .. Type_Mode_Protected;
 
    subtype Type_Mode_Non_Composite is Type_Mode_Type range
      Type_Mode_B1 .. Type_Mode_Bounds_Acc;
 
    --  Array types.
    subtype Type_Mode_Arrays is Type_Mode_Type range
-     Type_Mode_Array .. Type_Mode_Fat_Array;
+     Type_Mode_Unbounded_Array .. Type_Mode_Array;
+
+   --  Record types.
+   subtype Type_Mode_Records is Type_Mode_Type range
+     Type_Mode_Record .. Type_Mode_Unbounded_Record;
 
    --  Thin types, ie types whose length is a scalar.
    subtype Type_Mode_Thin is Type_Mode_Type range
@@ -877,7 +886,10 @@ package Trans is
 
    --  Fat types, ie types whose length is longer than a scalar.
    subtype Type_Mode_Fat is Type_Mode_Type range
-     Type_Mode_Record .. Type_Mode_Fat_Array;
+     Type_Mode_Record .. Type_Mode_Protected;
+
+   subtype Type_Mode_Unbounded is Type_Mode_Type range
+     Type_Mode_Unbounded_Record .. Type_Mode_Unbounded_Array;
 
    --  Subprogram call argument mechanism.
    --  In VHDL, the evaluation is strict: actual parameters are evaluated
@@ -918,7 +930,7 @@ package Trans is
    --  The parameters are passed by address, ie the argument of the
    --  subprogram is an address to the object.
    subtype Type_Mode_Pass_By_Address is Type_Mode_Type range
-     Type_Mode_Record .. Type_Mode_Fat_Array;
+     Type_Mode_Record .. Type_Mode_Protected;
 
    --  Call conventions.
    subtype Type_Mode_Call_By_Value is Type_Mode_Non_Composite;
@@ -1123,10 +1135,10 @@ package Trans is
             --  Ortho node which represents the type.
             --  Type                             -> Ortho type
             --   scalar                          ->  scalar
-            --   record (complex or not)         ->  record
+            --   bounded record (complex or not) ->  record
             --   constrained non-complex array   ->  constrained array
             --   constrained complex array       ->  the element
-            --   unconstrained array             ->  fat pointer
+            --   unboubded array or record       ->  fat pointer
             --   access to unconstrained array   ->  fat pointer
             --   access (others)                 ->  access
             --   file                            ->  file_index_type
@@ -1150,6 +1162,10 @@ package Trans is
          when Kind_Index =>
             --  Field declaration for array dimension.
             Index_Field : O_Fnode;
+
+         when Kind_Field =>
+            --  Node for a record element declaration.
+            Field_Node : O_Fnode_Array := (O_Fnode_Null, O_Fnode_Null);
 
          when Kind_Expr =>
             --  Ortho tree which represents the expression, used for
@@ -1432,10 +1448,6 @@ package Trans is
             Config_Subprg : O_Dnode;
             Config_Instance : O_Dnode;
 
-         when Kind_Field =>
-            --  Node for a record element declaration.
-            Field_Node : O_Fnode_Array := (O_Fnode_Null, O_Fnode_Null);
-
          when Kind_Package =>
             --  Subprogram which elaborate the package spec/body.
             --  External units should call the body elaborator.
@@ -1561,6 +1573,10 @@ package Trans is
 
    function Is_Complex_Type (Tinfo : Type_Info_Acc) return Boolean;
    pragma Inline (Is_Complex_Type);
+
+   --  True iff TINFO is base + bounds.
+   function Is_Unbounded_Type (Tinfo : Type_Info_Acc) return Boolean;
+   pragma Inline (Is_Unbounded_Type);
 
    type Hexstr_Type is array (Integer range 0 .. 15) of Character;
    N2hex : constant Hexstr_Type := "0123456789abcdef";

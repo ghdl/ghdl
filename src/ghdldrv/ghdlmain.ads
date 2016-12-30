@@ -47,6 +47,8 @@ package Ghdlmain is
                             Res : out Option_Res);
 
    --  Get a one-line help for the command.
+   --  If the first character is '!', the string is not displayed by --help
+   --  (for internal commands).
    function Get_Short_Help (Cmd : Command_Type) return String
      is abstract;
 

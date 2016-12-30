@@ -1510,7 +1510,11 @@ package body Sem_Specs is
       Aspect := Create_Iir (Iir_Kind_Entity_Aspect_Entity);
       Location_Copy (Aspect, Parent);
 
+      --  Create a name for the entity.  As this is a default binding
+      --  indication, the design unit does *NOT* depend on the entity, so the
+      --  reference is a forward reference.
       Entity_Name := Build_Simple_Name (Entity, Parent);
+      Set_Is_Forward_Ref (Entity_Name, True);
 
       Set_Entity_Name (Aspect, Entity_Name);
       Set_Entity_Aspect (Res, Aspect);
@@ -1642,9 +1646,14 @@ package body Sem_Specs is
             Found := Found + 1;
          end if;
          Set_Whole_Association_Flag (Assoc, True);
+
+         --  Create the formal name.  This is a forward reference as the
+         --  current design unit does not depend on the entity.
          Name := Build_Simple_Name (Ent_El, Parent);
+         Set_Is_Forward_Ref (Name, True);
          Set_Type (Name, Get_Type (Ent_El));
          Set_Formal (Assoc, Name);
+
          if Kind = Map_Port
            and then not Error
            and then Comp_El /= Null_Iir

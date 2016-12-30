@@ -411,6 +411,10 @@ package Iirs is
 
    -- Iir_Kind_Unaffected_Waveform (Short)
    --  The 'unaffected' reserved word when it appears in the sources.
+   --
+   --  Unaffected replaces a waveform element, so it is considered to be part
+   --  of a chain.  But it is always alone in the chain.
+   --   Get/Set_Chain (Field2)
 
    -------------
    --  Tuples --
@@ -469,7 +473,7 @@ package Iirs is
    --
    -- Only for Iir_Kind_Association_Element_By_Individual:
    --  Must be Locally unless there is an error on one choice.
-   --   Get/Set_Choice_Staticness (State2)
+   --   Get/Set_Choice_Staticness (State1)
 
    -- Iir_Kind_Waveform_Element (Short)
    --
@@ -548,7 +552,7 @@ package Iirs is
    --
    -- Only for Iir_Kind_Choice_By_Range:
    -- Only for Iir_Kind_Choice_By_Expression:
-   --   Get/Set_Choice_Staticness (State2)
+   --   Get/Set_Choice_Staticness (State1)
 
    -- Iir_Kind_Entity_Aspect_Entity (Short)
    --
@@ -2196,6 +2200,7 @@ package Iirs is
    --
    --   Get/Set_Has_Signal_Flag (Flag3)
    --
+   --  Always false.
    --   Get/Set_Index_Constraint_Flag (Flag4)
 
    -- Iir_Kind_Record_Type_Definition (Short)
@@ -3416,13 +3421,20 @@ package Iirs is
    --  Same as Type, but marked as property of that node.
    --   Get/Set_Literal_Subtype (Field3)
    --
-   --   Get/Set_Aggregate_Info (Field2)
+   --  Exist for symetry with other literals, but must never be set.  The
+   --  content of the aggregate is modified during evaluation, not the
+   --  aggregate itself.
+   --   Get/Set_Literal_Origin (Field2)
+   --
+   --   Get/Set_Aggregate_Info (Field5)
    --
    --   Get/Set_Type (Field1)
    --
    --   Get/Set_Expr_Staticness (State1)
    --
-   --   Get/Set_Value_Staticness (State2)
+   --  If true, the aggregate can be statically built.  This is an optimization
+   --  and the conditions are defined in sem_expr.
+   --   Get/Set_Aggregate_Expand_Flag (Flag1)
 
    -- Iir_Kind_Aggregate_Info (Short)
    --
@@ -3994,9 +4006,9 @@ package Iirs is
       Iir_Kind_Association_Element_Package,
       Iir_Kind_Association_Element_Type,
       Iir_Kind_Association_Element_Subprogram,
-      Iir_Kind_Choice_By_Others,
-      Iir_Kind_Choice_By_Expression,
       Iir_Kind_Choice_By_Range,
+      Iir_Kind_Choice_By_Expression,
+      Iir_Kind_Choice_By_Others,
       Iir_Kind_Choice_By_None,
       Iir_Kind_Choice_By_Name,
       Iir_Kind_Entity_Aspect_Entity,
@@ -5021,9 +5033,28 @@ package Iirs is
      Iir_Kind_Association_Element_Open;
 
    subtype Iir_Kinds_Choice is Iir_Kind range
-     Iir_Kind_Choice_By_Others ..
+     Iir_Kind_Choice_By_Range ..
    --Iir_Kind_Choice_By_Expression
-   --Iir_Kind_Choice_By_Range
+   --Iir_Kind_Choice_By_Others
+   --Iir_Kind_Choice_By_None
+     Iir_Kind_Choice_By_Name;
+
+   --  Choices in a case statement.
+   subtype Iir_Kinds_Case_Choice is Iir_Kind range
+     Iir_Kind_Choice_By_Range ..
+   --Iir_Kind_Choice_By_Expression
+     Iir_Kind_Choice_By_Others;
+
+   --  Choices in array aggregate.
+   subtype Iir_Kinds_Array_Choice is Iir_Kind range
+     Iir_Kind_Choice_By_Range ..
+   --Iir_Kind_Choice_By_Expression
+   --Iir_Kind_Choice_By_Others
+     Iir_Kind_Choice_By_None;
+
+   --  Choices in record aggregate.
+   subtype Iir_Kinds_Record_Choice is Iir_Kind range
+     Iir_Kind_Choice_By_Others ..
    --Iir_Kind_Choice_By_None
      Iir_Kind_Choice_By_Name;
 
@@ -6953,7 +6984,7 @@ package Iirs is
 
    --  Get/Set info for the aggregate.
    --  There is one aggregate_info for for each dimension.
-   --  Field: Field2
+   --  Field: Field5
    function Get_Aggregate_Info (Target : Iir) return Iir;
    procedure Set_Aggregate_Info (Target : Iir; Info : Iir);
 
@@ -6995,12 +7026,10 @@ package Iirs is
    function Get_Aggr_Named_Flag (Target : Iir_Aggregate_Info) return Boolean;
    procedure Set_Aggr_Named_Flag (Target : Iir_Aggregate_Info; Val : Boolean);
 
-   --  Staticness of the expressions in an aggregate.
-   --  We can't use expr_staticness for this purpose, since the staticness
-   --  of an aggregate is at most globally.
-   --  Field: State2 (pos)
-   function Get_Value_Staticness (Target : Iir) return Iir_Staticness;
-   procedure Set_Value_Staticness (Target : Iir; Staticness : Iir_Staticness);
+   --  True if the aggregate can be statically built.
+   --  Field: Flag1
+   function Get_Aggregate_Expand_Flag (Aggr : Iir) return Boolean;
+   procedure Set_Aggregate_Expand_Flag (Aggr : Iir; Flag : Boolean);
 
    --  Chain of choices.
    --  Field: Field4 Chain
@@ -7013,7 +7042,7 @@ package Iirs is
    procedure Set_Case_Statement_Alternative_Chain (Target : Iir; Chain : Iir);
 
    --  Staticness of the choice.
-   --  Field: State2 (pos)
+   --  Field: State1 (pos)
    function Get_Choice_Staticness (Target : Iir) return Iir_Staticness;
    procedure Set_Choice_Staticness (Target : Iir; Staticness : Iir_Staticness);
 

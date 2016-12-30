@@ -360,7 +360,7 @@ package body Trans.Chap3 is
             Info.Ortho_Type (Mode_Value) := New_Signed_Type (64);
             Info.Type_Mode := Type_Mode_P64;
       end case;
-      --  Phyiscals are always in their ranges.
+      --  Physical types are always in their ranges.
       Info.T.Nocheck_Low := True;
       Info.T.Nocheck_Hi := True;
 
@@ -996,10 +996,12 @@ package body Trans.Chap3 is
 
    procedure Translate_Record_Type (Def : Iir_Record_Type_Definition)
    is
+      Info       : constant Type_Info_Acc := Get_Info (Def);
+      List       : constant Iir_List := Get_Elements_Declaration_List (Def);
+      Is_Unbounded : constant Boolean :=
+        Get_Constraint_State (Def) /= Fully_Constrained;
       El_List    : O_Element_List;
-      List       : Iir_List;
       El         : Iir_Element_Declaration;
-      Info       : Type_Info_Acc;
       Field_Info : Ortho_Info_Acc;
       El_Type    : Iir;
       El_Tinfo   : Type_Info_Acc;
@@ -1011,9 +1013,7 @@ package body Trans.Chap3 is
 
       Mark : Id_Mark_Type;
    begin
-      Info := Get_Info (Def);
       Need_Size := False;
-      List := Get_Elements_Declaration_List (Def);
 
       --  First, translate the anonymous type of the elements.
       for I in Natural loop
@@ -1040,7 +1040,9 @@ package body Trans.Chap3 is
             exit when El = Null_Iir;
             Field_Info := Get_Info (El);
             El_Tinfo := Get_Info (Get_Type (El));
-            if Is_Complex_Type (El_Tinfo) then
+            if Is_Complex_Type (El_Tinfo)
+              or else Is_Unbounded_Type (El_Tinfo)
+            then
                --  Always use an offset for a complex type.
                El_Tnode := Ghdl_Index_Type;
             else
@@ -1053,7 +1055,11 @@ package body Trans.Chap3 is
          end loop;
          Finish_Record_Type (El_List, Info.Ortho_Type (Kind));
       end loop;
-      Info.Type_Mode := Type_Mode_Record;
+      if Is_Unbounded then
+         Info.Type_Mode := Type_Mode_Unbounded_Record;
+      else
+         Info.Type_Mode := Type_Mode_Record;
+      end if;
       Finish_Type_Definition (Info);
 
       if Need_Size then
@@ -1244,9 +1250,8 @@ package body Trans.Chap3 is
          pragma Assert (Get_Kind (Atype) = Iir_Kind_Access_Type_Definition);
 
          Def_Info := Get_Info (Atype);
-         Finish_Access_Type
-           (Def_Info.Ortho_Type (Mode_Value),
-            Get_Ortho_Designated_Type (Atype));
+         Finish_Access_Type (Def_Info.Ortho_Type (Mode_Value),
+                             Get_Ortho_Designated_Type (Atype));
 
          Atype := Get_Incomplete_Type_Ref_Chain (Atype);
       end loop;
@@ -1813,9 +1818,10 @@ package body Trans.Chap3 is
          if Info.C (Kind).Size_Var /= Null_Var then
             case Info.Type_Mode is
                when Type_Mode_Non_Composite
-                  | Type_Mode_Fat_Array
-                  | Type_Mode_Unknown
-                  | Type_Mode_Protected =>
+                 | Type_Mode_Unbounded_Array
+                 | Type_Mode_Unbounded_Record
+                 | Type_Mode_Unknown
+                 | Type_Mode_Protected =>
                   raise Internal_Error;
                when Type_Mode_Record =>
                   Create_Record_Size_Var (Def, Kind);
@@ -2212,14 +2218,12 @@ package body Trans.Chap3 is
       end if;
    end Elab_Object_Subtype;
 
-   procedure Elab_Type_Declaration (Decl : Iir)
-   is
+   procedure Elab_Type_Declaration (Decl : Iir) is
    begin
       Elab_Type_Definition (Get_Type_Definition (Decl));
    end Elab_Type_Declaration;
 
-   procedure Elab_Subtype_Declaration (Decl : Iir_Subtype_Declaration)
-   is
+   procedure Elab_Subtype_Declaration (Decl : Iir_Subtype_Declaration) is
    begin
       Elab_Type_Definition (Get_Type (Decl));
    end Elab_Subtype_Declaration;
@@ -2570,15 +2574,18 @@ package body Trans.Chap3 is
          when Type_Mode_Scalar
            | Type_Mode_Acc
            | Type_Mode_Bounds_Acc
-            | Type_Mode_File =>
+           | Type_Mode_File =>
             --  Scalar or thin pointer.
             New_Assign_Stmt (M2Lv (Dest), Src);
-         when Type_Mode_Fat_Array =>
+         when Type_Mode_Unbounded_Array =>
             --  a fat array.
             D := Stabilize (Dest);
             Gen_Memcpy (M2Addr (Get_Array_Base (D)),
                         M2Addr (Get_Array_Base (E2M (Src, Info, Kind))),
                         Get_Object_Size (D, Obj_Type));
+         when Type_Mode_Unbounded_Record =>
+            --  TODO
+            raise Internal_Error;
          when Type_Mode_Array
             | Type_Mode_Record =>
             D := Stabilize (Dest);

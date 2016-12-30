@@ -31,7 +31,6 @@ package body Ghdlvpi is
    Is_Unix : constant Boolean := Shared_Library_Extension = ".so";
    Is_Darwin : constant Boolean := Shared_Library_Extension = ".dylib";
    Is_Windows : constant Boolean := Shared_Library_Extension = ".dll";
-   pragma Unreferenced (Is_Windows);
 
    --  Return the include directory.
    function Get_Vpi_Include_Dir return String is
@@ -42,7 +41,7 @@ package body Ghdlvpi is
       return Ghdllocal.Exec_Prefix.all & Directory_Separator & "include";
    end Get_Vpi_Include_Dir;
 
-   --  Return the include directory.
+   --  Return the lib directory.
    function Get_Vpi_Lib_Dir return String is
    begin
       if Ghdllocal.Exec_Prefix = null then
@@ -52,6 +51,32 @@ package body Ghdlvpi is
 
       return Ghdllocal.Exec_Prefix.all & Directory_Separator & "lib";
    end Get_Vpi_Lib_Dir;
+
+   --  Return the lib directory, but unixify the path (for a unix shell in
+   --  windows).
+   function Get_Vpi_Lib_Dir_Unix return String
+   is
+      Res : String := Get_Vpi_Lib_Dir;
+   begin
+      if Is_Windows then
+         --  Convert path separators.
+         for I in Res'Range loop
+            if Res (I) = '\' then
+               Res (I) := '/';
+            end if;
+         end loop;
+         if Res'Length > 2
+           and then (Res (Res'First) in 'a' .. 'z'
+                       or else Res (Res'First) in 'A' .. 'Z')
+           and then Res (Res'First + 1) = ':'
+         then
+            Res (Res'First + 1) := '/';
+            return '/' & Res;
+         end if;
+      end if;
+
+      return Res;
+   end Get_Vpi_Lib_Dir_Unix;
 
    function Get_Vpi_Cflags return Argument_List
    is
@@ -295,6 +320,15 @@ package body Ghdlvpi is
             Help_Str => new String'
               ("--vpi-library-dir  Display VPI library directory"),
             Disp => Get_Vpi_Lib_Dir'Access));
+      Register_Command
+        (new Command_Vpi_Disp'
+           (Command_Type with
+            Cmd_Str => new String'
+              ("--vpi-library-dir-unix"),
+            Help_Str => new String'
+              ("--vpi-library-dir-unix  "
+                 & "Display VPI library directory (unix form)"),
+            Disp => Get_Vpi_Lib_Dir_Unix'Access));
 
    end Register_Commands;
 end Ghdlvpi;

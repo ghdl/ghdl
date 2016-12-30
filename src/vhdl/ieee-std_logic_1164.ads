@@ -28,6 +28,17 @@ package Ieee.Std_Logic_1164 is
    Rising_Edge : Iir_Function_Declaration := Null_Iir;
    Falling_Edge : Iir_Function_Declaration := Null_Iir;
 
+   --  Position of literals (D represents '-' ie dont-care).
+   Std_Logic_U_Pos : constant := 0;
+   Std_Logic_X_Pos : constant := 1;
+   Std_Logic_0_Pos : constant := 2;
+   Std_Logic_1_Pos : constant := 3;
+   Std_Logic_Z_Pos : constant := 4;
+   Std_Logic_L_Pos : constant := 5;
+   Std_Logic_H_Pos : constant := 6;
+   Std_Logic_W_Pos : constant := 7;
+   Std_Logic_D_Pos : constant := 8;
+
    --  Extract declarations from PKG.
    --  PKG is the package declaration for ieee.std_logic_1164 package.
    --  Fills the node aboves.

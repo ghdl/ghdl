@@ -676,11 +676,11 @@ package body Simulation.Main is
       Formal_Expr : Iir_Value_Literal_Acc;
       Local_Instance : Block_Instance_Acc;
       Local_Expr : Iir_Value_Literal_Acc;
+      Inter : Iir;
       Assoc : Iir_Association_Element_By_Expression)
    is
       pragma Unreferenced (Formal_Instance);
       Formal : constant Iir := Get_Formal (Assoc);
-      Inter : constant Iir := Get_Association_Interface (Assoc);
    begin
       if False and Trace_Elaboration then
          Put ("connect formal ");
@@ -767,7 +767,7 @@ package body Simulation.Main is
          begin
             Set_Connect (E.Formal_Instance, E.Formal,
                          E.Actual_Instance, E.Actual,
-                         E.Assoc);
+                         E.Inter, E.Assoc);
          end;
       end loop;
 

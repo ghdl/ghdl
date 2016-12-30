@@ -204,7 +204,18 @@ package body Iirs_Utils is
               | Iir_Kind_Interface_Signal_Declaration
               | Iir_Kind_File_Declaration
               | Iir_Kind_Interface_File_Declaration
-              | Iir_Kind_Iterator_Declaration =>
+              | Iir_Kind_Iterator_Declaration
+              | Iir_Kind_Through_Quantity_Declaration
+              | Iir_Kind_Across_Quantity_Declaration
+              | Iir_Kind_Free_Quantity_Declaration
+              | Iir_Kind_Terminal_Declaration
+              | Iir_Kind_Interface_Type_Declaration
+              | Iir_Kind_Interface_Package_Declaration
+              | Iir_Kind_Interface_Function_Declaration
+              | Iir_Kind_Interface_Procedure_Declaration
+              | Iir_Kind_External_Signal_Name
+              | Iir_Kind_External_Constant_Name
+              | Iir_Kind_External_Variable_Name =>
                return Adecl;
             when Iir_Kind_Object_Alias_Declaration =>
                if With_Alias then
@@ -218,6 +229,7 @@ package body Iirs_Utils is
               | Iir_Kind_Selected_By_All_Name =>
                Adecl := Get_Base_Name (Adecl);
             when Iir_Kinds_Literal
+              | Iir_Kind_Overflow_Literal
               | Iir_Kind_Enumeration_Literal
               | Iir_Kinds_Monadic_Operator
               | Iir_Kinds_Dyadic_Operator
@@ -226,6 +238,7 @@ package body Iirs_Utils is
               | Iir_Kind_Type_Conversion
               | Iir_Kind_Allocator_By_Expression
               | Iir_Kind_Allocator_By_Subtype
+              | Iir_Kind_Parenthesis_Expression
               | Iir_Kinds_Attribute
               | Iir_Kind_Attribute_Value
               | Iir_Kind_Aggregate
@@ -233,15 +246,85 @@ package body Iirs_Utils is
               | Iir_Kind_Dereference
               | Iir_Kind_Implicit_Dereference
               | Iir_Kind_Unit_Declaration
-              | Iir_Kinds_Concurrent_Statement =>
+              | Iir_Kind_Psl_Expression
+              | Iir_Kinds_Concurrent_Statement
+              | Iir_Kinds_Sequential_Statement
+              | Iir_Kind_Simple_Simultaneous_Statement =>
                return Adecl;
             when Iir_Kind_Simple_Name
               | Iir_Kind_Selected_Name =>
                Adecl := Get_Named_Entity (Adecl);
             when Iir_Kind_Attribute_Name =>
                return Get_Named_Entity (Adecl);
-            when others =>
-               Error_Kind ("get_object_prefix", Adecl);
+            when Iir_Kind_Error
+              | Iir_Kind_Unused
+              | Iir_Kind_Parenthesis_Name
+              | Iir_Kind_Conditional_Expression
+              | Iir_Kind_Character_Literal
+              | Iir_Kind_Operator_Symbol
+              | Iir_Kind_Design_File
+              | Iir_Kind_Design_Unit
+              | Iir_Kind_Library_Clause
+              | Iir_Kind_Use_Clause
+              | Iir_Kind_Context_Reference
+              | Iir_Kind_Library_Declaration
+              | Iir_Kinds_Library_Unit_Declaration
+              | Iir_Kind_Component_Declaration
+              | Iir_Kind_Function_Declaration
+              | Iir_Kind_Procedure_Declaration
+              | Iir_Kind_Attribute_Declaration
+              | Iir_Kind_Nature_Declaration
+              | Iir_Kind_Subnature_Declaration
+              | Iir_Kinds_Type_Declaration
+              | Iir_Kinds_Type_And_Subtype_Definition
+              | Iir_Kind_Wildcard_Type_Definition
+              | Iir_Kind_Subtype_Definition
+              | Iir_Kind_Scalar_Nature_Definition
+              | Iir_Kind_Group_Template_Declaration
+              | Iir_Kind_Group_Declaration
+              | Iir_Kind_Signal_Attribute_Declaration
+              | Iir_Kind_Unaffected_Waveform
+              | Iir_Kind_Waveform_Element
+              | Iir_Kind_Conditional_Waveform
+              | Iir_Kind_Binding_Indication
+              | Iir_Kind_Component_Configuration
+              | Iir_Kind_Block_Configuration
+              | Iir_Kind_Attribute_Specification
+              | Iir_Kind_Disconnection_Specification
+              | Iir_Kind_Configuration_Specification
+              | Iir_Kind_Non_Object_Alias_Declaration
+              | Iir_Kinds_Subprogram_Body
+              | Iir_Kind_Protected_Type_Body
+              | Iir_Kind_Generate_Statement_Body
+              | Iir_Kind_Procedure_Call
+              | Iir_Kind_Aggregate_Info
+              | Iir_Kind_Entity_Class
+              | Iir_Kind_Signature
+              | Iir_Kind_Reference_Name
+              | Iir_Kind_Package_Header
+              | Iir_Kind_Block_Header
+              | Iir_Kinds_Association_Element
+              | Iir_Kind_Association_Element_Package
+              | Iir_Kind_Association_Element_Type
+              | Iir_Kind_Association_Element_Subprogram
+              | Iir_Kinds_Choice
+              | Iir_Kinds_Entity_Aspect
+              | Iir_Kind_If_Generate_Else_Clause
+              | Iir_Kind_Elsif
+              | Iir_Kind_Record_Element_Constraint
+              | Iir_Kind_Array_Element_Resolution
+              | Iir_Kind_Record_Resolution
+              | Iir_Kind_Record_Element_Resolution
+              | Iir_Kind_Element_Declaration
+              | Iir_Kind_Psl_Endpoint_Declaration
+              | Iir_Kind_Psl_Declaration
+              | Iir_Kind_Package_Pathname
+              | Iir_Kind_Absolute_Pathname
+              | Iir_Kind_Relative_Pathname
+              | Iir_Kind_Pathname_Element
+              | Iir_Kind_Range_Expression
+              | Iir_Kind_Overload_List =>
+               return Adecl;
          end case;
       end loop;
    end Get_Object_Prefix;
@@ -653,6 +736,25 @@ package body Iirs_Utils is
       Set_Range_Constraint (Def, Range_Expr);
    end Create_Range_Constraint_For_Enumeration_Type;
 
+   function Is_Static_Construct (Expr : Iir) return Boolean is
+   begin
+      case Get_Kind (Expr) is
+         when Iir_Kind_Aggregate =>
+            return Get_Aggregate_Expand_Flag (Expr);
+         when Iir_Kinds_Literal =>
+            return True;
+         when Iir_Kind_Simple_Aggregate
+           | Iir_Kind_Enumeration_Literal
+           | Iir_Kind_Character_Literal =>
+            return True;
+         when Iir_Kind_Overflow_Literal =>
+            --  Needs to generate an error.
+            return False;
+         when others =>
+            return False;
+      end case;
+   end Is_Static_Construct;
+
    procedure Free_Name (Node : Iir)
    is
       N : Iir;
@@ -952,6 +1054,21 @@ package body Iirs_Utils is
       return Get_Nbr_Elements (Get_Index_Subtype_List (Array_Type));
    end Get_Nbr_Dimensions;
 
+   function Are_Bounds_Locally_Static (Array_Type : Iir) return Boolean
+   is
+      Indexes : constant Iir_List := Get_Index_Subtype_List (Array_Type);
+      Index : Iir;
+   begin
+      for I in Natural loop
+         Index := Get_Index_Type (Indexes, I);
+         exit when Index = Null_Iir;
+         if Get_Type_Staticness (Index) /= Locally then
+            return False;
+         end if;
+      end loop;
+      return True;
+   end Are_Bounds_Locally_Static;
+
    function Get_Denoted_Type_Mark (Subtyp : Iir) return Iir
    is
       Type_Mark_Name : constant Iir := Get_Subtype_Type_Mark (Subtyp);
@@ -1175,6 +1292,15 @@ package body Iirs_Utils is
             Error_Kind ("is_entity_instantiation", Inst);
       end case;
    end Is_Entity_Instantiation;
+
+   function Get_Attribute_Name_Expression (Name : Iir) return Iir
+   is
+      Attr_Val : constant Iir := Get_Named_Entity (Name);
+      Attr_Spec : constant Iir := Get_Attribute_Specification (Attr_Val);
+      Attr_Expr : constant Iir := Get_Expression (Attr_Spec);
+   begin
+      return Attr_Expr;
+   end Get_Attribute_Name_Expression;
 
    function Get_String_Type_Bound_Type (Sub_Type : Iir) return Iir is
    begin

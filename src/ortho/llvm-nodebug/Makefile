@@ -12,7 +12,7 @@ $(ortho_exec): $(ortho_srcdir)/llvm-nodebug/ortho_llvm.ads force llvm-cbindings.
 	$(GNATMAKE) -o $@ -aI$(ortho_srcdir)/llvm-nodebug -aI$(ortho_srcdir) \
 	$(GNAT_FLAGS) ortho_code_main -bargs -E \
 	-largs llvm-cbindings.o --LINK=$(CXX) \
-	`$(LLVM_CONFIG) --ldflags --libs --system-libs` $(LDFLAGS)
+	$(LDFLAGS) `$(LLVM_CONFIG) --ldflags --libs --system-libs`
 
 llvm-cbindings.o: $(ortho_srcdir)/llvm-nodebug/llvm-cbindings.cpp
 	$(CXX) -c `$(LLVM_CONFIG) --cxxflags` -o $@ $<
