@@ -707,11 +707,11 @@ package body Trans.Chap6 is
                Res_D := Create_Temp (Slice_Info.Ortho_Type (Kind));
                New_Assign_Stmt
                  (New_Selected_Element (New_Obj (Res_D),
-                  Slice_Info.T.Bounds_Field (Kind)),
+                  Slice_Info.B.Bounds_Field (Kind)),
                   New_Value (M2Lp (Data.Slice_Range)));
                New_Assign_Stmt
                  (New_Selected_Element (New_Obj (Res_D),
-                  Slice_Info.T.Base_Field (Kind)),
+                  Slice_Info.B.Base_Field (Kind)),
                   M2E (Chap3.Slice_Base
                     (Chap3.Get_Array_Base (Prefix),
                          Slice_Type,

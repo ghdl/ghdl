@@ -392,8 +392,8 @@ package body Trans.Chap4 is
       Assoc : O_Assoc_List;
    begin
       --  Call the initializer.
-      Start_Association (Assoc, Info.T.Prot_Init_Subprg);
-      Subprgs.Add_Subprg_Instance_Assoc (Assoc, Info.T.Prot_Init_Instance);
+      Start_Association (Assoc, Info.B.Prot_Init_Subprg);
+      Subprgs.Add_Subprg_Instance_Assoc (Assoc, Info.B.Prot_Init_Instance);
       --  Use of M2Lp is a little bit fragile (not sure we get the
       --  variable, but should work: we didn't stabilize it).
       New_Assign_Stmt (M2Lp (Obj), New_Function_Call (Assoc));
@@ -407,7 +407,7 @@ package body Trans.Chap4 is
    begin
       Obj := Chap6.Translate_Name (Decl, Mode_Value);
       --  Call the Finalizator.
-      Start_Association (Assoc, Info.T.Prot_Final_Subprg);
+      Start_Association (Assoc, Info.B.Prot_Final_Subprg);
       New_Association (Assoc, M2E (Obj));
       New_Procedure_Call (Assoc);
    end Fini_Protected_Object;
@@ -1370,9 +1370,9 @@ package body Trans.Chap4 is
       else
          Start_Association (Constr, Ghdl_File_Elaborate);
          Info := Get_Info (Get_Type (Decl));
-         if Info.T.File_Signature /= O_Dnode_Null then
+         if Info.B.File_Signature /= O_Dnode_Null then
             New_Association
-              (Constr, New_Address (New_Obj (Info.T.File_Signature),
+              (Constr, New_Address (New_Obj (Info.B.File_Signature),
                Char_Ptr_Type));
          else
             New_Association (Constr,
@@ -1997,7 +1997,7 @@ package body Trans.Chap4 is
         (Var_Length, Wki_Length, O_Storage_Local, Ghdl_Index_Type);
 
       New_Var_Decl (Var_Bound, Get_Identifier ("BOUND"), O_Storage_Local,
-                    Base_Info.T.Bounds_Type);
+                    Base_Info.B.Bounds_Type);
       New_Var_Decl (Var_Array, Get_Identifier ("VARRAY"), O_Storage_Local,
                     Base_Info.Ortho_Type (Mode_Value));
 
@@ -2022,14 +2022,14 @@ package body Trans.Chap4 is
       Range_Ptr := Lv2M (New_Selected_Element (New_Obj (Var_Bound),
                                                Index_Info.Index_Field),
                          Index_Tinfo, Mode_Value,
-                         Index_Tinfo.T.Range_Type,
-                         Index_Tinfo.T.Range_Ptr_Type);
+                         Index_Tinfo.B.Range_Type,
+                         Index_Tinfo.B.Range_Ptr_Type);
       Chap3.Create_Range_From_Length (Index_Type, Var_Length, Range_Ptr, Func);
 
       New_Assign_Stmt
         (New_Selected_Element (New_Obj (Var_Array),
-         Base_Info.T.Bounds_Field (Mode_Value)),
-         New_Address (New_Obj (Var_Bound), Base_Info.T.Bounds_Ptr_Type));
+         Base_Info.B.Bounds_Field (Mode_Value)),
+         New_Address (New_Obj (Var_Bound), Base_Info.B.Bounds_Ptr_Type));
 
       --  Allocate the array.
       Chap3.Allocate_Fat_Array_Base

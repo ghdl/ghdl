@@ -1121,7 +1121,8 @@ package body Trans.Chap2 is
                          C => null,
                          Ortho_Type => Src.Ortho_Type,
                          Ortho_Ptr_Type => Src.Ortho_Ptr_Type,
-                         T => Src.T,
+                         B => Src.B,
+                         S => Src.S,
                          Type_Rti => Src.Type_Rti);
             pragma Assert (Src.C = null);
          when Kind_Object =>

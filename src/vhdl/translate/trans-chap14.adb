@@ -208,8 +208,8 @@ package body Trans.Chap14 is
       else
          Info := Get_Info (Atype);
          return New_Value
-           (New_Selected_Element (Get_Var (Info.T.Range_Var),
-            Info.T.Range_Dir));
+           (New_Selected_Element (Get_Var (Info.S.Range_Var),
+            Info.B.Range_Dir));
       end if;
    end Translate_Dir_Type_Attribute;
 

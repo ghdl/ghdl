@@ -118,7 +118,7 @@ package body Trans.Chap3 is
         (Interface_List, Info.C (Kind).Builder_Instance);
       case Info.Type_Mode is
          when Type_Mode_Fat_Array =>
-            Ptype := Info.T.Base_Ptr_Type (Kind);
+            Ptype := Info.B.Base_Ptr_Type (Kind);
          when Type_Mode_Record =>
             Ptype := Info.Ortho_Ptr_Type (Kind);
          when others =>
@@ -131,7 +131,7 @@ package body Trans.Chap3 is
       if Info.Type_Mode = Type_Mode_Fat_Array then
          New_Interface_Decl
            (Interface_List, Info.C (Kind).Builder_Bound_Param,
-            Get_Identifier ("bound"), Info.T.Bounds_Ptr_Type);
+            Get_Identifier ("bound"), Info.B.Bounds_Ptr_Type);
       end if;
       Finish_Subprogram_Decl (Interface_List, Info.C (Kind).Builder_Func);
    end Create_Builder_Subprogram_Decl;
@@ -248,8 +248,8 @@ package body Trans.Chap3 is
          Info.Type_Mode := Type_Mode_E32;
       end if;
       --  Enumerations are always in their range.
-      Info.T.Nocheck_Low := True;
-      Info.T.Nocheck_Hi := True;
+      Info.S.Nocheck_Low := True;
+      Info.S.Nocheck_Hi := True;
       Finish_Type_Definition (Info);
    end Translate_Enumeration_Type;
 
@@ -271,8 +271,8 @@ package body Trans.Chap3 is
       Info.Type_Mode := Type_Mode_B1;
       Set_Ortho_Expr (False_Lit, False_Node);
       Set_Ortho_Expr (True_Lit, True_Node);
-      Info.T.Nocheck_Low := True;
-      Info.T.Nocheck_Hi := True;
+      Info.S.Nocheck_Low := True;
+      Info.S.Nocheck_Hi := True;
       Finish_Type_Definition (Info);
    end Translate_Bool_Type;
 
@@ -319,8 +319,8 @@ package body Trans.Chap3 is
             Info.Type_Mode := Type_Mode_I64;
       end case;
       --  Integers are always in their ranges.
-      Info.T.Nocheck_Low := True;
-      Info.T.Nocheck_Hi := True;
+      Info.S.Nocheck_Low := True;
+      Info.S.Nocheck_Hi := True;
 
       Finish_Type_Definition (Info);
    end Translate_Integer_Type;
@@ -338,8 +338,8 @@ package body Trans.Chap3 is
       Info.Type_Mode := Type_Mode_F64;
       Info.Ortho_Type (Mode_Value) := New_Float_Type;
       --  Reals are always in their ranges.
-      Info.T.Nocheck_Low := True;
-      Info.T.Nocheck_Hi := True;
+      Info.S.Nocheck_Low := True;
+      Info.S.Nocheck_Hi := True;
 
       Finish_Type_Definition (Info);
    end Translate_Floating_Type;
@@ -361,8 +361,8 @@ package body Trans.Chap3 is
             Info.Type_Mode := Type_Mode_P64;
       end case;
       --  Physical types are always in their ranges.
-      Info.T.Nocheck_Low := True;
-      Info.T.Nocheck_Hi := True;
+      Info.S.Nocheck_Low := True;
+      Info.S.Nocheck_Hi := True;
 
       Finish_Type_Definition (Info);
    end Translate_Physical_Type;
@@ -483,7 +483,7 @@ package body Trans.Chap3 is
          Sig (Len + 1) := '.';
          Sig (Len + 2) := Character'Val (10);
          Info := Get_Info (Def);
-         Info.T.File_Signature := Create_String
+         Info.B.File_Signature := Create_String
            (Sig, Create_Identifier ("FILESIG"), Global_Storage);
       end;
    end Create_File_Type_Var;
@@ -508,11 +508,11 @@ package body Trans.Chap3 is
    begin
       Start_Record_Type (Constr);
       New_Record_Field
-        (Constr, Info.T.Base_Field (Kind), Wki_Base,
-         Info.T.Base_Ptr_Type (Kind));
+        (Constr, Info.B.Base_Field (Kind), Wki_Base,
+         Info.B.Base_Ptr_Type (Kind));
       New_Record_Field
-        (Constr, Info.T.Bounds_Field (Kind), Wki_Bounds,
-         Info.T.Bounds_Ptr_Type);
+        (Constr, Info.B.Bounds_Field (Kind), Wki_Bounds,
+         Info.B.Bounds_Ptr_Type);
       Finish_Record_Type (Constr, Info.Ortho_Type (Kind));
    end Create_Array_Fat_Pointer;
 
@@ -556,14 +556,14 @@ package body Trans.Chap3 is
 
          New_Record_Field (Constr, Index_Info.Index_Field,
                            Get_Identifier (Dim (P .. Dim'Last)),
-                           Get_Info (Get_Base_Type (Index)).T.Range_Type);
+                           Get_Info (Get_Base_Type (Index)).B.Range_Type);
       end loop;
-      Finish_Record_Type (Constr, Info.T.Bounds_Type);
+      Finish_Record_Type (Constr, Info.B.Bounds_Type);
       New_Type_Decl (Create_Identifier ("BOUND"),
-                     Info.T.Bounds_Type);
-      Info.T.Bounds_Ptr_Type := New_Access_Type (Info.T.Bounds_Type);
+                     Info.B.Bounds_Type);
+      Info.B.Bounds_Ptr_Type := New_Access_Type (Info.B.Bounds_Type);
       New_Type_Decl (Create_Identifier ("BOUNDP"),
-                     Info.T.Bounds_Ptr_Type);
+                     Info.B.Bounds_Ptr_Type);
    end Translate_Array_Type_Bounds;
 
    procedure Translate_Array_Type_Base
@@ -580,11 +580,11 @@ package body Trans.Chap3 is
 
       if Is_Complex_Type (El_Tinfo) then
          if El_Tinfo.Type_Mode = Type_Mode_Array then
-            Info.T.Base_Type := El_Tinfo.T.Base_Ptr_Type;
-            Info.T.Base_Ptr_Type := El_Tinfo.T.Base_Ptr_Type;
+            Info.B.Base_Type := El_Tinfo.B.Base_Ptr_Type;
+            Info.B.Base_Ptr_Type := El_Tinfo.B.Base_Ptr_Type;
          else
-            Info.T.Base_Type := El_Tinfo.Ortho_Ptr_Type;
-            Info.T.Base_Ptr_Type := El_Tinfo.Ortho_Ptr_Type;
+            Info.B.Base_Type := El_Tinfo.Ortho_Ptr_Type;
+            Info.B.Base_Ptr_Type := El_Tinfo.Ortho_Ptr_Type;
          end if;
       else
          for Kind in Mode_Value .. Type_To_Last_Object_Kind (Def) loop
@@ -598,13 +598,12 @@ package body Trans.Chap3 is
                   Id := Create_Identifier ("SIGBASE");
                   Idptr := Create_Identifier ("SIGBASEP");
             end case;
-            Info.T.Base_Type (Kind) :=
-              New_Array_Type (El_Tinfo.Ortho_Type (Kind),
-                              Ghdl_Index_Type);
-            New_Type_Decl (Id, Info.T.Base_Type (Kind));
-            Info.T.Base_Ptr_Type (Kind) :=
-              New_Access_Type (Info.T.Base_Type (Kind));
-            New_Type_Decl (Idptr, Info.T.Base_Ptr_Type (Kind));
+            Info.B.Base_Type (Kind) :=
+              New_Array_Type (El_Tinfo.Ortho_Type (Kind), Ghdl_Index_Type);
+            New_Type_Decl (Id, Info.B.Base_Type (Kind));
+            Info.B.Base_Ptr_Type (Kind) :=
+              New_Access_Type (Info.B.Base_Type (Kind));
+            New_Type_Decl (Idptr, Info.B.Base_Ptr_Type (Kind));
          end loop;
       end if;
    end Translate_Array_Type_Base;
@@ -616,7 +615,8 @@ package body Trans.Chap3 is
       El_Tinfo   : Type_Info_Acc;
    begin
       Info.Type_Mode := Type_Mode_Fat_Array;
-      Info.T := Ortho_Info_Type_Array_Init;
+      Info.B := Ortho_Info_Basetype_Array_Init;
+      Info.S := Ortho_Info_Subtype_Array_Init;
       Translate_Array_Type_Base (Def, Info);
       Translate_Array_Type_Bounds (Def, Info);
       Info.Ortho_Type (Mode_Signal) := O_Tnode_Null;
@@ -684,8 +684,8 @@ package body Trans.Chap3 is
       then
          --  This is a complex type as the size is not known at compile
          --  time.
-         Info.Ortho_Type := Binfo.T.Base_Ptr_Type;
-         Info.Ortho_Ptr_Type := Binfo.T.Base_Ptr_Type;
+         Info.Ortho_Type := Binfo.B.Base_Ptr_Type;
+         Info.Ortho_Ptr_Type := Binfo.B.Base_Ptr_Type;
 
          Create_Size_Var (Def);
 
@@ -697,7 +697,7 @@ package body Trans.Chap3 is
       else
          --  Length is known.  Create a constrained array.
          Info.Ortho_Type (Mode_Signal) := O_Tnode_Null;
-         Info.Ortho_Ptr_Type := Binfo.T.Base_Ptr_Type;
+         Info.Ortho_Ptr_Type := Binfo.B.Base_Ptr_Type;
          for I in Mode_Value .. Type_To_Last_Object_Kind (Def) loop
             case I is
                when Mode_Value =>
@@ -706,7 +706,7 @@ package body Trans.Chap3 is
                   Id := Create_Identifier ("SIG");
             end case;
             Info.Ortho_Type (I) := New_Constrained_Array_Type
-              (Binfo.T.Base_Type (I),
+              (Binfo.B.Base_Type (I),
                New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (Len)));
             New_Type_Decl (Id, Info.Ortho_Type (I));
          end loop;
@@ -756,7 +756,7 @@ package body Trans.Chap3 is
       List         : O_Record_Aggr_List;
       Res          : O_Cnode;
    begin
-      Start_Record_Aggr (List, Baseinfo.T.Bounds_Type);
+      Start_Record_Aggr (List, Baseinfo.B.Bounds_Type);
       for I in Natural loop
          Index := Get_Index_Type (Indexes_List, I);
          exit when Index = Null_Iir;
@@ -779,7 +779,7 @@ package body Trans.Chap3 is
       Targ             : Mnode;
    begin
       Targ := Lv2M (Target, null, Mode_Value,
-                    Baseinfo.T.Bounds_Type, Baseinfo.T.Bounds_Ptr_Type);
+                    Baseinfo.B.Bounds_Type, Baseinfo.B.Bounds_Ptr_Type);
       Open_Temp;
       if Get_Nbr_Elements (Indexes_List) > 1 then
          Targ := Stabilize (Targ);
@@ -796,12 +796,12 @@ package body Trans.Chap3 is
          begin
             Open_Temp;
             D := Create_Temp_Ptr
-              (Index_Info.T.Range_Ptr_Type,
+              (Index_Info.B.Range_Ptr_Type,
                New_Selected_Element (M2Lv (Targ),
                                      Base_Index_Info.Index_Field));
             Chap7.Translate_Discrete_Range
               (Dp2M (D, Index_Info, Mode_Value,
-                     Index_Info.T.Range_Type, Index_Info.T.Range_Ptr_Type),
+                     Index_Info.B.Range_Type, Index_Info.B.Range_Ptr_Type),
                Index);
             Close_Temp;
          end;
@@ -832,22 +832,22 @@ package body Trans.Chap3 is
       Base_Info : Type_Info_Acc;
       Val       : O_Cnode;
    begin
-      if Info.T.Array_Bounds /= Null_Var then
+      if Info.S.Array_Bounds /= Null_Var then
          return;
       end if;
       Base_Info := Get_Info (Get_Base_Type (Def));
       case Get_Array_Bounds_Staticness (Def) is
          when None
             | Globally =>
-            Info.T.Static_Bounds := False;
-            Info.T.Array_Bounds := Create_Var
-              (Create_Var_Identifier ("STB"), Base_Info.T.Bounds_Type);
+            Info.S.Static_Bounds := False;
+            Info.S.Array_Bounds := Create_Var
+              (Create_Var_Identifier ("STB"), Base_Info.B.Bounds_Type);
             if Elab_Now then
                Create_Array_Subtype_Bounds
-                 (Def, Get_Var (Info.T.Array_Bounds));
+                 (Def, Get_Var (Info.S.Array_Bounds));
             end if;
          when Locally =>
-            Info.T.Static_Bounds := True;
+            Info.S.Static_Bounds := True;
             if Global_Storage = O_Storage_External then
                --  Do not create the value of the type desc, since it
                --  is never dereferenced in a static type desc.
@@ -855,9 +855,9 @@ package body Trans.Chap3 is
             else
                Val := Create_Static_Array_Subtype_Bounds (Def);
             end if;
-            Info.T.Array_Bounds := Create_Global_Const
+            Info.S.Array_Bounds := Create_Global_Const
               (Create_Identifier ("STB"),
-               Base_Info.T.Bounds_Type, Global_Storage, Val);
+               Base_Info.B.Bounds_Type, Global_Storage, Val);
 
          when Unknown =>
             raise Internal_Error;
@@ -884,7 +884,7 @@ package body Trans.Chap3 is
       New_Var_Decl (Var_Length, Wki_Length, O_Storage_Local,
                     Ghdl_Index_Type);
       New_Var_Decl (Var_Mem, Get_Identifier ("mem"), O_Storage_Local,
-                    Info.T.Base_Ptr_Type (Kind));
+                    Info.B.Base_Ptr_Type (Kind));
       New_Var_Decl (Var_Off, Get_Identifier ("off"), O_Storage_Local,
                     Ghdl_Index_Type);
 
@@ -897,8 +897,8 @@ package body Trans.Chap3 is
                         New_Value (Get_Var (El_Info.C (Kind).Size_Var)),
                         Get_Bounds_Length (Dp2M (Bound, Info,
                                                  Mode_Value,
-                                                 Info.T.Bounds_Type,
-                                                 Info.T.Bounds_Ptr_Type),
+                                                 Info.B.Bounds_Type,
+                                                 Info.B.Bounds_Ptr_Type),
                                            Def)));
 
       --  Find the innermost non-array element.
@@ -923,7 +923,7 @@ package body Trans.Chap3 is
                                           Char_Ptr_Type)),
                        Chararray_Type,
                        New_Obj_Value (Var_Off)),
-            Info.T.Base_Ptr_Type (Kind)));
+            Info.B.Base_Ptr_Type (Kind)));
 
       New_Assign_Stmt
         (New_Obj (Var_Off),
@@ -1172,12 +1172,12 @@ package body Trans.Chap3 is
       D_Info   : constant Type_Info_Acc := Get_Info (D_Type);
    begin
       if not Is_Fully_Constrained_Type (D_Type) then
-         return D_Info.T.Bounds_Type;
+         return D_Info.B.Bounds_Type;
       else
          if D_Info.Type_Mode in Type_Mode_Arrays then
             --  The designated type cannot be a sub array inside ortho.
             --  FIXME: lift this restriction.
-            return D_Info.T.Base_Type (Mode_Value);
+            return D_Info.B.Base_Type (Mode_Value);
          else
             return D_Info.Ortho_Type (Mode_Value);
          end if;
@@ -1269,11 +1269,11 @@ package body Trans.Chap3 is
    begin
       --  The protected type is represented by an incomplete record, that
       --  will be completed by the protected type body.
-      Predeclare_Scope_Type (Info.T.Prot_Scope, Create_Identifier);
+      Predeclare_Scope_Type (Info.B.Prot_Scope, Create_Identifier);
       Info.Ortho_Type (Mode_Value) := O_Tnode_Null;
 
       --  Create a pointer type to that record.
-      Declare_Scope_Acc (Info.T.Prot_Scope,
+      Declare_Scope_Acc (Info.B.Prot_Scope,
                          Create_Identifier ("PTR"),
                          Info.Ortho_Ptr_Type (Mode_Value));
 
@@ -1313,11 +1313,11 @@ package body Trans.Chap3 is
         (Inter_List, Create_Identifier ("INIT"), Global_Storage,
          Info.Ortho_Ptr_Type (Mode_Value));
       Subprgs.Add_Subprg_Instance_Interfaces
-        (Inter_List, Info.T.Prot_Init_Instance);
-      Finish_Subprogram_Decl (Inter_List, Info.T.Prot_Init_Subprg);
+        (Inter_List, Info.B.Prot_Init_Instance);
+      Finish_Subprogram_Decl (Inter_List, Info.B.Prot_Init_Subprg);
 
       --  Use the object as instance.
-      Subprgs.Push_Subprg_Instance (Info.T.Prot_Scope'Unrestricted_Access,
+      Subprgs.Push_Subprg_Instance (Info.B.Prot_Scope'Unrestricted_Access,
                                     Info.Ortho_Ptr_Type (Mode_Value),
                                     Wki_Obj,
                                     Prev_Subprg_Instance);
@@ -1326,8 +1326,8 @@ package body Trans.Chap3 is
       Start_Procedure_Decl
         (Inter_List, Create_Identifier ("FINI"), Global_Storage);
       Subprgs.Add_Subprg_Instance_Interfaces
-        (Inter_List, Info.T.Prot_Final_Instance);
-      Finish_Subprogram_Decl (Inter_List, Info.T.Prot_Final_Subprg);
+        (Inter_List, Info.B.Prot_Final_Instance);
+      Finish_Subprogram_Decl (Inter_List, Info.B.Prot_Final_Subprg);
 
       --  Methods.
       El := Get_Declaration_Chain (Def);
@@ -1360,18 +1360,18 @@ package body Trans.Chap3 is
       Push_Identifier_Prefix (Mark, Get_Identifier (Bod));
 
       --  Create the object type
-      Push_Instance_Factory (Info.T.Prot_Scope'Unrestricted_Access);
+      Push_Instance_Factory (Info.B.Prot_Scope'Unrestricted_Access);
       --  First, the previous instance.
-      Subprgs.Add_Subprg_Instance_Field (Info.T.Prot_Subprg_Instance_Field);
+      Subprgs.Add_Subprg_Instance_Field (Info.B.Prot_Subprg_Instance_Field);
       --  Then the object lock
-      Info.T.Prot_Lock_Field := Add_Instance_Factory_Field
+      Info.B.Prot_Lock_Field := Add_Instance_Factory_Field
         (Get_Identifier ("LOCK"), Ghdl_Ptr_Type);
 
       --  Translate declarations.
       Chap4.Translate_Declaration_Chain (Bod);
 
-      Pop_Instance_Factory (Info.T.Prot_Scope'Unrestricted_Access);
-      -- Info.Ortho_Type (Mode_Value) := Get_Scope_Type (Info.T.Prot_Scope);
+      Pop_Instance_Factory (Info.B.Prot_Scope'Unrestricted_Access);
+      -- Info.Ortho_Type (Mode_Value) := Get_Scope_Type (Info.B.Prot_Scope);
 
       Pop_Identifier_Prefix (Mark);
    end Translate_Protected_Type_Body;
@@ -1386,8 +1386,8 @@ package body Trans.Chap3 is
         (Assoc,
          New_Unchecked_Address
            (New_Selected_Element
-                (Get_Instance_Ref (Info.T.Prot_Scope),
-                 Info.T.Prot_Lock_Field),
+                (Get_Instance_Ref (Info.B.Prot_Scope),
+                 Info.B.Prot_Lock_Field),
             Ghdl_Ptr_Type));
       New_Procedure_Call (Assoc);
    end Call_Ghdl_Protected_Procedure;
@@ -1403,17 +1403,17 @@ package body Trans.Chap3 is
       Push_Identifier_Prefix (Mark, Get_Identifier (Bod));
 
       --  Subprograms of BOD.
-      Subprgs.Push_Subprg_Instance (Info.T.Prot_Scope'Unrestricted_Access,
+      Subprgs.Push_Subprg_Instance (Info.B.Prot_Scope'Unrestricted_Access,
                                     Info.Ortho_Ptr_Type (Mode_Value),
                                     Wki_Obj,
                                     Prev_Subprg_Instance);
       Subprgs.Start_Prev_Subprg_Instance_Use_Via_Field
-        (Prev_Subprg_Instance, Info.T.Prot_Subprg_Instance_Field);
+        (Prev_Subprg_Instance, Info.B.Prot_Subprg_Instance_Field);
 
       Chap4.Translate_Declaration_Chain_Subprograms (Bod);
 
       Subprgs.Finish_Prev_Subprg_Instance_Use_Via_Field
-        (Prev_Subprg_Instance, Info.T.Prot_Subprg_Instance_Field);
+        (Prev_Subprg_Instance, Info.B.Prot_Subprg_Instance_Field);
       Subprgs.Pop_Subprg_Instance (Wki_Obj, Prev_Subprg_Instance);
 
       Pop_Identifier_Prefix (Mark);
@@ -1426,8 +1426,8 @@ package body Trans.Chap3 is
       declare
          Var_Obj : O_Dnode;
       begin
-         Start_Subprogram_Body (Info.T.Prot_Init_Subprg);
-         Subprgs.Start_Subprg_Instance_Use (Info.T.Prot_Init_Instance);
+         Start_Subprogram_Body (Info.B.Prot_Init_Subprg);
+         Subprgs.Start_Subprg_Instance_Use (Info.B.Prot_Init_Instance);
          New_Var_Decl (Var_Obj, Wki_Obj, O_Storage_Local,
                        Info.Ortho_Ptr_Type (Mode_Value));
 
@@ -1436,15 +1436,15 @@ package body Trans.Chap3 is
            (New_Obj (Var_Obj),
             Gen_Alloc
               (Alloc_System,
-               New_Lit (New_Sizeof (Get_Scope_Type (Info.T.Prot_Scope),
+               New_Lit (New_Sizeof (Get_Scope_Type (Info.B.Prot_Scope),
                                     Ghdl_Index_Type)),
                Info.Ortho_Ptr_Type (Mode_Value)));
 
          Subprgs.Set_Subprg_Instance_Field
-           (Var_Obj, Info.T.Prot_Subprg_Instance_Field,
-            Info.T.Prot_Init_Instance);
+           (Var_Obj, Info.B.Prot_Subprg_Instance_Field,
+            Info.B.Prot_Init_Instance);
 
-         Set_Scope_Via_Param_Ptr (Info.T.Prot_Scope, Var_Obj);
+         Set_Scope_Via_Param_Ptr (Info.B.Prot_Scope, Var_Obj);
 
          --   Create lock.
          Call_Ghdl_Protected_Procedure (Decl, Ghdl_Protected_Init);
@@ -1454,18 +1454,18 @@ package body Trans.Chap3 is
          Chap4.Elab_Declaration_Chain (Bod, Final);
          Close_Temp;
 
-         Clear_Scope (Info.T.Prot_Scope);
+         Clear_Scope (Info.B.Prot_Scope);
 
          New_Return_Stmt (New_Obj_Value (Var_Obj));
-         Subprgs.Finish_Subprg_Instance_Use (Info.T.Prot_Init_Instance);
+         Subprgs.Finish_Subprg_Instance_Use (Info.B.Prot_Init_Instance);
 
          Finish_Subprogram_Body;
       end;
 
       --  Fini subprogram
       begin
-         Start_Subprogram_Body (Info.T.Prot_Final_Subprg);
-         Subprgs.Start_Subprg_Instance_Use (Info.T.Prot_Final_Instance);
+         Start_Subprogram_Body (Info.B.Prot_Final_Subprg);
+         Subprgs.Start_Subprg_Instance_Use (Info.B.Prot_Final_Instance);
 
          --   Deallocate fields.
          if Final or True then
@@ -1475,7 +1475,7 @@ package body Trans.Chap3 is
          --   Destroy lock.
          Call_Ghdl_Protected_Procedure (Decl, Ghdl_Protected_Fini);
 
-         Subprgs.Finish_Subprg_Instance_Use (Info.T.Prot_Final_Instance);
+         Subprgs.Finish_Subprg_Instance_Use (Info.B.Prot_Final_Instance);
          Finish_Subprogram_Body;
       end;
    end Translate_Protected_Type_Body_Subprograms;
@@ -1491,7 +1491,7 @@ package body Trans.Chap3 is
    begin
       Chap7.Translate_Range
         (Lv2M (Target, T_Info, Mode_Value,
-               T_Info.T.Range_Type, T_Info.T.Range_Ptr_Type),
+               T_Info.B.Range_Type, T_Info.B.Range_Ptr_Type),
          Get_Range_Constraint (Def), Def);
    end Create_Scalar_Type_Range;
 
@@ -1510,24 +1510,24 @@ package body Trans.Chap3 is
       Info := Get_Info (Def);
       Start_Record_Type (Constr);
       New_Record_Field
-        (Constr, Info.T.Range_Left, Wki_Left,
+        (Constr, Info.B.Range_Left, Wki_Left,
          Info.Ortho_Type (Mode_Value));
       New_Record_Field
-        (Constr, Info.T.Range_Right, Wki_Right,
+        (Constr, Info.B.Range_Right, Wki_Right,
          Info.Ortho_Type (Mode_Value));
       New_Record_Field
-        (Constr, Info.T.Range_Dir, Wki_Dir, Ghdl_Dir_Type_Node);
+        (Constr, Info.B.Range_Dir, Wki_Dir, Ghdl_Dir_Type_Node);
       if With_Length then
          New_Record_Field
-           (Constr, Info.T.Range_Length, Wki_Length, Ghdl_Index_Type);
+           (Constr, Info.B.Range_Length, Wki_Length, Ghdl_Index_Type);
       else
-         Info.T.Range_Length := O_Fnode_Null;
+         Info.B.Range_Length := O_Fnode_Null;
       end if;
-      Finish_Record_Type (Constr, Info.T.Range_Type);
-      New_Type_Decl (Create_Identifier ("TRT"), Info.T.Range_Type);
-      Info.T.Range_Ptr_Type := New_Access_Type (Info.T.Range_Type);
+      Finish_Record_Type (Constr, Info.B.Range_Type);
+      New_Type_Decl (Create_Identifier ("TRT"), Info.B.Range_Type);
+      Info.B.Range_Ptr_Type := New_Access_Type (Info.B.Range_Type);
       New_Type_Decl (Create_Identifier ("TRPTR"),
-                     Info.T.Range_Ptr_Type);
+                     Info.B.Range_Ptr_Type);
    end Create_Scalar_Type_Range_Type;
 
    function Create_Static_Type_Definition_Type_Range (Def : Iir)
@@ -1558,14 +1558,14 @@ package body Trans.Chap3 is
       case Get_Kind (Def) is
          when Iir_Kind_Enumeration_Type_Definition
             | Iir_Kinds_Scalar_Subtype_Definition =>
-            Target := Get_Var (Get_Info (Def).T.Range_Var);
+            Target := Get_Var (Get_Info (Def).S.Range_Var);
             Create_Scalar_Type_Range (Def, Target);
 
          when Iir_Kind_Array_Subtype_Definition =>
             if Get_Constraint_State (Def) = Fully_Constrained then
                Info := Get_Info (Def);
-               if not Info.T.Static_Bounds then
-                  Target := Get_Var (Info.T.Array_Bounds);
+               if not Info.S.Static_Bounds then
+                  Target := Get_Var (Info.S.Array_Bounds);
                   Create_Array_Subtype_Bounds (Def, Target);
                end if;
             end if;
@@ -1706,20 +1706,21 @@ package body Trans.Chap3 is
       Subtype_Info.Ortho_Type := Base_Info.Ortho_Type;
       Subtype_Info.Ortho_Ptr_Type := Base_Info.Ortho_Ptr_Type;
       Subtype_Info.Type_Mode := Base_Info.Type_Mode;
-      Subtype_Info.T := Base_Info.T;
+      Subtype_Info.B := Base_Info.B;
+      Subtype_Info.S := Base_Info.S;
 
       Rng := Get_Range_Constraint (Def);
       if Get_Expr_Staticness (Rng) /= Locally then
          --  Bounds are not known.
          --  Do the checks.
-         Subtype_Info.T.Nocheck_Hi := False;
-         Subtype_Info.T.Nocheck_Low := False;
+         Subtype_Info.S.Nocheck_Hi := False;
+         Subtype_Info.S.Nocheck_Low := False;
       else
          --  Bounds are locally static.
          Get_Low_High_Limit (Rng, Lo, Hi);
-         Subtype_Info.T.Nocheck_Hi :=
+         Subtype_Info.S.Nocheck_Hi :=
            Is_Equal_Limit (Hi, True, Def, Base_Info.Type_Mode);
-         Subtype_Info.T.Nocheck_Low :=
+         Subtype_Info.S.Nocheck_Low :=
            Is_Equal_Limit (Lo, False, Def, Base_Info.Type_Mode);
       end if;
    end Create_Subtype_Info_From_Type;
@@ -1851,8 +1852,8 @@ package body Trans.Chap3 is
       case Get_Type_Staticness (Def) is
          when None
             | Globally =>
-            Info.T.Range_Var := Create_Var
-              (Create_Var_Identifier (Suffix), Base_Info.T.Range_Type);
+            Info.S.Range_Var := Create_Var
+              (Create_Var_Identifier (Suffix), Base_Info.B.Range_Type);
          when Locally =>
             if Global_Storage = O_Storage_External then
                --  Do not create the value of the type desc, since it
@@ -1861,9 +1862,9 @@ package body Trans.Chap3 is
             else
                Val := Create_Static_Type_Definition_Type_Range (Def);
             end if;
-            Info.T.Range_Var := Create_Global_Const
+            Info.S.Range_Var := Create_Global_Const
               (Create_Identifier (Suffix),
-               Base_Info.T.Range_Type, Global_Storage, Val);
+               Base_Info.B.Range_Type, Global_Storage, Val);
          when Unknown =>
             raise Internal_Error;
       end case;
@@ -1964,7 +1965,7 @@ package body Trans.Chap3 is
             if With_Vars and Get_Type_Staticness (Def) /= Locally then
                Translate_Physical_Units (Def);
             else
-               Info.T.Range_Var := Null_Var;
+               Info.S.Range_Var := Null_Var;
             end if;
 
          when Iir_Kind_Floating_Type_Definition =>
@@ -1976,7 +1977,7 @@ package body Trans.Chap3 is
             if With_Vars then
                Create_Type_Range_Var (Def);
             else
-               Info.T.Range_Var := Null_Var;
+               Info.S.Range_Var := Null_Var;
             end if;
 
          when Iir_Kind_Array_Type_Definition =>
@@ -2005,7 +2006,8 @@ package body Trans.Chap3 is
                   end;
                end if;
                Translate_Array_Subtype_Definition (Def);
-               Info.T := Base_Info.T;
+               Info.B := Base_Info.B;
+               Info.S := Base_Info.S;
                --Info.Type_Range_Type := Base_Info.Type_Range_Type;
                if With_Vars then
                   Create_Array_Subtype_Bounds_Var (Def, False);
@@ -2020,7 +2022,7 @@ package body Trans.Chap3 is
 
          when Iir_Kind_Record_Type_Definition =>
             Translate_Record_Type (Def);
-            Info.T := Ortho_Info_Type_Record_Init;
+            Info.B := Ortho_Info_Basetype_Record_Init;
 
          when Iir_Kind_Record_Subtype_Definition
             | Iir_Kind_Access_Subtype_Definition =>
@@ -2040,13 +2042,13 @@ package body Trans.Chap3 is
 
          when Iir_Kind_File_Type_Definition =>
             Translate_File_Type (Def);
-            Info.T := Ortho_Info_Type_File_Init;
+            Info.B := Ortho_Info_Basetype_File_Init;
             if With_Vars then
                Create_File_Type_Var (Def);
             end if;
 
          when Iir_Kind_Protected_Type_Declaration =>
-            Info.T := Ortho_Info_Type_Prot_Init;
+            Info.B := Ortho_Info_Basetype_Prot_Init;
             Translate_Protected_Type (Def);
 
          when others =>
@@ -2261,15 +2263,15 @@ package body Trans.Chap3 is
       return Lv2M (New_Selected_Element (M2Lv (B),
                                          Base_Index_Info.Index_Field),
                    Iinfo, Mode_Value,
-                   Iinfo.T.Range_Type, Iinfo.T.Range_Ptr_Type);
+                   Iinfo.B.Range_Type, Iinfo.B.Range_Ptr_Type);
    end Bounds_To_Range;
 
    function Type_To_Range (Atype : Iir) return Mnode
    is
       Info : constant Type_Info_Acc := Get_Info (Atype);
    begin
-      return Varv2M (Info.T.Range_Var, Info, Mode_Value,
-                     Info.T.Range_Type, Info.T.Range_Ptr_Type);
+      return Varv2M (Info.S.Range_Var, Info, Mode_Value,
+                     Info.B.Range_Type, Info.B.Range_Ptr_Type);
    end Type_To_Range;
 
    function Range_To_Length (R : Mnode) return Mnode
@@ -2277,7 +2279,7 @@ package body Trans.Chap3 is
       Tinfo : constant Type_Info_Acc := Get_Type_Info (R);
    begin
       return Lv2M (New_Selected_Element (M2Lv (R),
-                   Tinfo.T.Range_Length),
+                   Tinfo.B.Range_Length),
                    Tinfo,
                    Mode_Value);
    end Range_To_Length;
@@ -2287,7 +2289,7 @@ package body Trans.Chap3 is
       Tinfo : constant Type_Info_Acc := Get_Type_Info (R);
    begin
       return Lv2M (New_Selected_Element (M2Lv (R),
-                   Tinfo.T.Range_Dir),
+                   Tinfo.B.Range_Dir),
                    Tinfo,
                    Mode_Value);
    end Range_To_Dir;
@@ -2298,7 +2300,7 @@ package body Trans.Chap3 is
    begin
       Tinfo := Get_Type_Info (R);
       return Lv2M (New_Selected_Element (M2Lv (R),
-                   Tinfo.T.Range_Left),
+                   Tinfo.B.Range_Left),
                    Tinfo,
                    Mode_Value);
    end Range_To_Left;
@@ -2309,7 +2311,7 @@ package body Trans.Chap3 is
    begin
       Tinfo := Get_Type_Info (R);
       return Lv2M (New_Selected_Element (M2Lv (R),
-                   Tinfo.T.Range_Right),
+                   Tinfo.B.Range_Right),
                    Tinfo,
                    Mode_Value);
    end Range_To_Right;
@@ -2321,10 +2323,10 @@ package body Trans.Chap3 is
          when Type_Mode_Fat_Array =>
             raise Internal_Error;
          when Type_Mode_Array =>
-            return Varv2M (Info.T.Array_Bounds,
+            return Varv2M (Info.S.Array_Bounds,
                            Info, Mode_Value,
-                           Info.T.Bounds_Type,
-                           Info.T.Bounds_Ptr_Type);
+                           Info.B.Bounds_Type,
+                           Info.B.Bounds_Ptr_Type);
          when others =>
             raise Internal_Error;
       end case;
@@ -2346,11 +2348,11 @@ package body Trans.Chap3 is
             begin
                return Lp2M
                  (New_Selected_Element (M2Lv (Arr),
-                                        Info.T.Bounds_Field (Kind)),
+                                        Info.B.Bounds_Field (Kind)),
                   Info,
                   Mode_Value,
-                  Info.T.Bounds_Type,
-                  Info.T.Bounds_Ptr_Type);
+                  Info.B.Bounds_Type,
+                  Info.B.Bounds_Ptr_Type);
             end;
          when Type_Mode_Array =>
             return Get_Array_Type_Bounds (Info);
@@ -2432,11 +2434,11 @@ package body Trans.Chap3 is
             begin
                return Lp2M
                  (New_Selected_Element (M2Lv (Arr),
-                                        Info.T.Base_Field (Kind)),
+                                        Info.B.Base_Field (Kind)),
                   Info,
                   Kind,
-                  Info.T.Base_Type (Kind),
-                  Info.T.Base_Ptr_Type (Kind));
+                  Info.B.Base_Type (Kind),
+                  Info.B.Base_Ptr_Type (Kind));
             end;
          when Type_Mode_Array =>
             return Arr;
@@ -2452,8 +2454,8 @@ package body Trans.Chap3 is
    begin
       return Add_Pointer
         (Acc,
-         New_Lit (New_Sizeof (D_Info.T.Bounds_Type, Ghdl_Index_Type)),
-         D_Info.T.Base_Ptr_Type (Mode_Value));
+         New_Lit (New_Sizeof (D_Info.B.Bounds_Type, Ghdl_Index_Type)),
+         D_Info.B.Base_Ptr_Type (Mode_Value));
    end Get_Bounds_Acc_Base;
 
    function Reindex_Complex_Array
@@ -2502,11 +2504,11 @@ package body Trans.Chap3 is
          return Reindex_Complex_Array (Base, Atype, Index, T_Info);
       else
          return Lv2M (New_Slice (M2Lv (Base),
-                                 T_Info.T.Base_Type (Kind),
+                                 T_Info.B.Base_Type (Kind),
                                  Index),
                       T_Info, Kind,
-                      T_Info.T.Base_Type (Kind),
-                      T_Info.T.Base_Ptr_Type (Kind));
+                      T_Info.B.Base_Type (Kind),
+                      T_Info.B.Base_Ptr_Type (Kind));
       end if;
    end Slice_Base;
 
@@ -2540,7 +2542,7 @@ package body Trans.Chap3 is
       --  Allocate the storage for the elements.
       New_Assign_Stmt
         (M2Lp (Chap3.Get_Array_Base (Res)),
-         Gen_Alloc (Alloc_Kind, Length, Dinfo.T.Base_Ptr_Type (Kind)));
+         Gen_Alloc (Alloc_Kind, Length, Dinfo.B.Base_Ptr_Type (Kind)));
 
       Maybe_Call_Type_Builder (Res, Arr_Type);
    end Allocate_Fat_Array_Base;
@@ -2649,7 +2651,7 @@ package body Trans.Chap3 is
    begin
       Gen_Memcpy
         (Dest, Src,
-         New_Lit (New_Sizeof (Tinfo.T.Bounds_Type, Ghdl_Index_Type)));
+         New_Lit (New_Sizeof (Tinfo.B.Bounds_Type, Ghdl_Index_Type)));
    end Copy_Bounds;
 
    procedure Copy_Bounds (Dest : Mnode; Src : Mnode; Obj_Type : Iir) is
@@ -2671,9 +2673,9 @@ package body Trans.Chap3 is
          New_Assign_Stmt
            (M2Lp (Chap3.Get_Array_Bounds (Res)),
             Gen_Alloc (Alloc_Kind,
-                       New_Lit (New_Sizeof (Dinfo.T.Bounds_Type,
+                       New_Lit (New_Sizeof (Dinfo.B.Bounds_Type,
                                             Ghdl_Index_Type)),
-                       Dinfo.T.Bounds_Ptr_Type));
+                       Dinfo.B.Bounds_Ptr_Type));
 
          --  Copy bounds to the allocated area.
          Copy_Bounds (Chap3.Get_Array_Bounds (Res), Bounds, Obj_Type);
@@ -2728,23 +2730,23 @@ package body Trans.Chap3 is
       is
          L, H : O_Enode;
       begin
-         if not Info.T.Nocheck_Low then
+         if not Info.S.Nocheck_Low then
             L := New_Compare_Op
               (ON_Lt, New_Obj_Value (Value), Low, Ghdl_Bool_Type);
          end if;
-         if not Info.T.Nocheck_Hi then
+         if not Info.S.Nocheck_Hi then
             H := New_Compare_Op
               (ON_Gt, New_Obj_Value (Value), Hi, Ghdl_Bool_Type);
          end if;
-         if Info.T.Nocheck_Hi then
-            if Info.T.Nocheck_Low then
+         if Info.S.Nocheck_Hi then
+            if Info.S.Nocheck_Low then
                --  Should not happen!
                return New_Lit (Ghdl_Bool_False_Node);
             else
                return L;
             end if;
          else
-            if Info.T.Nocheck_Low then
+            if Info.S.Nocheck_Low then
                return H;
             else
                return New_Dyadic_Op (ON_Or, L, H);
@@ -2813,7 +2815,7 @@ package body Trans.Chap3 is
    is
       Info : constant Type_Info_Acc := Get_Info (Atype);
    begin
-      if Info.T.Nocheck_Low and Info.T.Nocheck_Hi then
+      if Info.S.Nocheck_Low and Info.S.Nocheck_Hi then
          return False;
       end if;
       if Expr /= Null_Iir and then Get_Type (Expr) = Atype then

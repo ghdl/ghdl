@@ -700,8 +700,8 @@ package Trans is
 
    type Rti_Depth_Type is new Natural range 0 .. 255;
 
-   type Ortho_Info_Type_Type (Kind : Ortho_Info_Type_Kind := Kind_Type_Scalar)
-   is record
+   type Ortho_Info_Basetype_Type
+     (Kind : Ortho_Info_Type_Kind := Kind_Type_Scalar) is record
       --  For all types:
       --  This is the maximum depth of RTI, that is the max of the depth of
       --  the type itself and every types it depends on.
@@ -710,18 +710,11 @@ package Trans is
       case Kind is
          when Kind_Type_Scalar =>
             --  For scalar types:
-            --  True if no need to check against low/high bound.
-            Nocheck_Low : Boolean := False;
-            Nocheck_Hi  : Boolean := False;
-
             --  Ortho type for the range record type.
             Range_Type : O_Tnode;
 
             --  Ortho type for an access to the range record type.
             Range_Ptr_Type : O_Tnode;
-
-            --  Tree for the range record declaration.
-            Range_Var : Var_Type;
 
             --  Fields of TYPE_RANGE_TYPE.
             Range_Left   : O_Fnode;
@@ -737,12 +730,6 @@ package Trans is
 
             Base_Field   : O_Fnode_Array;
             Bounds_Field : O_Fnode_Array;
-
-            --  True if the array bounds are static.
-            Static_Bounds : Boolean;
-
-            --  Variable containing the bounds for a constrained array.
-            Array_Bounds : Var_Type;
 
             --  Variable containing the description for each index.
             Array_Index_Desc : Var_Type;
@@ -771,6 +758,36 @@ package Trans is
       end case;
    end record;
 
+   type Ortho_Info_Subtype_Type
+     (Kind : Ortho_Info_Type_Kind := Kind_Type_Scalar) is record
+      case Kind is
+         when Kind_Type_Scalar =>
+            --  For scalar types:
+            --  True if no need to check against low/high bound.
+            Nocheck_Low : Boolean := False;
+            Nocheck_Hi  : Boolean := False;
+
+            --  Tree for the range record declaration.
+            Range_Var : Var_Type;
+
+         when Kind_Type_Array =>
+            --  True if the array bounds are static.
+            Static_Bounds : Boolean;
+
+            --  Variable containing the bounds for a constrained array.
+            Array_Bounds : Var_Type;
+
+         when Kind_Type_Record =>
+            null;
+
+         when Kind_Type_File =>
+            null;
+
+         when Kind_Type_Protected =>
+            null;
+      end case;
+   end record;
+
    --    Ortho_Info_Type_Scalar_Init : constant Ortho_Info_Type_Type :=
    --      (Kind => Kind_Type_Scalar,
    --       Range_Type => O_Tnode_Null,
@@ -781,7 +798,7 @@ package Trans is
    --       Range_Dir => O_Fnode_Null,
    --       Range_Length => O_Fnode_Null);
 
-   Ortho_Info_Type_Array_Init : constant Ortho_Info_Type_Type :=
+   Ortho_Info_Basetype_Array_Init : constant Ortho_Info_Basetype_Type :=
      (Kind => Kind_Type_Array,
       Rti_Max_Depth => 0,
       Base_Type => (O_Tnode_Null, O_Tnode_Null),
@@ -790,21 +807,24 @@ package Trans is
       Bounds_Ptr_Type => O_Tnode_Null,
       Base_Field => (O_Fnode_Null, O_Fnode_Null),
       Bounds_Field => (O_Fnode_Null, O_Fnode_Null),
-      Static_Bounds => False,
-      Array_Bounds => Null_Var,
       Array_Index_Desc => Null_Var);
 
-   Ortho_Info_Type_Record_Init : constant Ortho_Info_Type_Type :=
+   Ortho_Info_Subtype_Array_Init : constant Ortho_Info_Subtype_Type :=
+     (Kind => Kind_Type_Array,
+      Static_Bounds => False,
+      Array_Bounds => Null_Var);
+
+   Ortho_Info_Basetype_Record_Init : constant Ortho_Info_Basetype_Type :=
      (Kind => Kind_Type_Record,
       Rti_Max_Depth => 0,
       Record_El_Desc => Null_Var);
 
-   Ortho_Info_Type_File_Init : constant Ortho_Info_Type_Type :=
+   Ortho_Info_Basetype_File_Init : constant Ortho_Info_Basetype_Type :=
      (Kind => Kind_Type_File,
       Rti_Max_Depth => 0,
       File_Signature => O_Dnode_Null);
 
-   Ortho_Info_Type_Prot_Init : constant Ortho_Info_Type_Type :=
+   Ortho_Info_Basetype_Prot_Init : constant Ortho_Info_Basetype_Type :=
      (Kind => Kind_Type_Protected,
       Rti_Max_Depth => 0,
       Prot_Scope => Null_Var_Scope,
@@ -1150,7 +1170,8 @@ package Trans is
             Ortho_Ptr_Type : O_Tnode_Array;
 
             --  More info according to the type.
-            T : Ortho_Info_Type_Type;
+            B : Ortho_Info_Basetype_Type;
+            S : Ortho_Info_Subtype_Type;
 
             --  Run-time information.
             Type_Rti : O_Dnode := O_Dnode_Null;

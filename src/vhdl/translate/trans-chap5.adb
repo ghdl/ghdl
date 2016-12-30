@@ -506,16 +506,16 @@ package body Trans.Chap5 is
       Tinfo : constant Type_Info_Acc := Get_Info (Atype);
       Var : O_Dnode;
    begin
-      Var := Create_Temp (Tinfo.T.Bounds_Ptr_Type);
+      Var := Create_Temp (Tinfo.B.Bounds_Ptr_Type);
       New_Assign_Stmt
         (New_Obj (Var),
          Gen_Alloc (Alloc,
-                    New_Lit (New_Sizeof (Tinfo.T.Bounds_Type,
+                    New_Lit (New_Sizeof (Tinfo.B.Bounds_Type,
                                          Ghdl_Index_Type)),
-                    Tinfo.T.Bounds_Ptr_Type));
+                    Tinfo.B.Bounds_Ptr_Type));
       return Dp2M (Var, Tinfo, Mode_Value,
-                   Tinfo.T.Bounds_Type,
-                   Tinfo.T.Bounds_Ptr_Type);
+                   Tinfo.B.Bounds_Type,
+                   Tinfo.B.Bounds_Ptr_Type);
    end Alloc_Bounds;
 
    function Get_Unconstrained_Port_Bounds (Assoc : Iir; Inter : Iir)
@@ -538,7 +538,7 @@ package body Trans.Chap5 is
             Tinfo := Get_Info (Actual_Type);
             if Save
               and then
-              Get_Alloc_Kind_For_Var (Tinfo.T.Array_Bounds) = Alloc_Stack
+              Get_Alloc_Kind_For_Var (Tinfo.S.Array_Bounds) = Alloc_Stack
             then
                --  We need a copy.
                Bounds_Copy := Alloc_Bounds (Actual_Type, Alloc_System);

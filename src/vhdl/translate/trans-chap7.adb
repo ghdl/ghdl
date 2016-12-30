@@ -79,22 +79,22 @@ package body Trans.Chap7 is
       Val := Create_Global_Const
         (Create_Uniq_Identifier, Expr_Info.Ortho_Type (Mode_Value),
          O_Storage_Private, Expr);
-      Bound := Expr_Info.T.Array_Bounds;
+      Bound := Expr_Info.S.Array_Bounds;
       if Bound = Null_Var then
          Bound := Create_Global_Const
-           (Create_Uniq_Identifier, Expr_Info.T.Bounds_Type,
+           (Create_Uniq_Identifier, Expr_Info.B.Bounds_Type,
             O_Storage_Private,
             Chap3.Create_Static_Array_Subtype_Bounds (Expr_Type));
-         Expr_Info.T.Array_Bounds := Bound;
+         Expr_Info.S.Array_Bounds := Bound;
       end if;
 
       Start_Record_Aggr (List, Res_Info.Ortho_Type (Mode_Value));
       New_Record_Aggr_El
         (List, New_Global_Address (Get_Var_Label (Val),
-         Res_Info.T.Base_Ptr_Type (Mode_Value)));
+         Res_Info.B.Base_Ptr_Type (Mode_Value)));
       New_Record_Aggr_El
         (List, New_Global_Address (Get_Var_Label (Bound),
-         Expr_Info.T.Bounds_Ptr_Type));
+         Expr_Info.B.Bounds_Ptr_Type));
       Finish_Record_Aggr (List, Res);
 
       return Res;
@@ -310,7 +310,7 @@ package body Trans.Chap7 is
    begin
       --  Create the string value.
       Arr_Type := New_Constrained_Array_Type
-        (Get_Info (Str_Type).T.Base_Type (Mode_Value),
+        (Get_Info (Str_Type).B.Base_Type (Mode_Value),
          New_Unsigned_Literal (Ghdl_Index_Type,
            Unsigned_64 (Get_String_Length (Str))));
 
@@ -343,8 +343,8 @@ package body Trans.Chap7 is
 
       if Type_Info.Type_Mode = Type_Mode_Fat_Array then
          --  Create the string bound.
-         Start_Record_Aggr (Bound_Aggr, Type_Info.T.Bounds_Type);
-         Start_Record_Aggr (Index_Aggr, Index_Type_Info.T.Range_Type);
+         Start_Record_Aggr (Bound_Aggr, Type_Info.B.Bounds_Type);
+         Start_Record_Aggr (Index_Aggr, Index_Type_Info.B.Range_Type);
          New_Record_Aggr_El
            (Index_Aggr,
             New_Signed_Literal
@@ -362,7 +362,7 @@ package body Trans.Chap7 is
          New_Record_Aggr_El (Bound_Aggr, Res);
          Finish_Record_Aggr (Bound_Aggr, Res);
          Bound := Create_Global_Const
-           (Create_Uniq_Identifier, Type_Info.T.Bounds_Type,
+           (Create_Uniq_Identifier, Type_Info.B.Bounds_Type,
             O_Storage_Private, Res);
 
          --  The descriptor.
@@ -370,11 +370,11 @@ package body Trans.Chap7 is
          New_Record_Aggr_El
            (Res_Aggr,
             New_Global_Address (Get_Var_Label (Val),
-              Type_Info.T.Base_Ptr_Type (Mode_Value)));
+              Type_Info.B.Base_Ptr_Type (Mode_Value)));
          New_Record_Aggr_El
            (Res_Aggr,
             New_Global_Address (Get_Var_Label (Bound),
-              Type_Info.T.Bounds_Ptr_Type));
+              Type_Info.B.Bounds_Ptr_Type));
          Finish_Record_Aggr (Res_Aggr, Res);
 
          Val := Create_Global_Const
@@ -761,7 +761,7 @@ package body Trans.Chap7 is
       New_Assign_Stmt
         (M2Lp (Chap3.Get_Array_Base (Res)),
          New_Convert_Ov (M2Addr (Chap3.Get_Array_Base (Stable_Expr)),
-           Type_Info.T.Base_Ptr_Type (Kind)));
+           Type_Info.B.Base_Ptr_Type (Kind)));
       New_Assign_Stmt
         (M2Lp (Chap3.Get_Array_Bounds (Res)),
          M2Addr (Chap3.Get_Array_Bounds (Stable_Expr)));
@@ -1409,14 +1409,14 @@ package body Trans.Chap7 is
    begin
       --  Bounds
       Var_Bounds := Dv2M
-        (Create_Temp (Info.T.Bounds_Type), Info, Mode_Value,
-         Info.T.Bounds_Type, Info.T.Bounds_Ptr_Type);
+        (Create_Temp (Info.B.Bounds_Type), Info, Mode_Value,
+         Info.B.Bounds_Type, Info.B.Bounds_Ptr_Type);
 
       --  Base
-      Arr_Ptr := Create_Temp (Info.T.Base_Ptr_Type (Mode_Value));
+      Arr_Ptr := Create_Temp (Info.B.Base_Ptr_Type (Mode_Value));
       Var_Arr := Dp2M (Arr_Ptr, Info, Mode_Value,
-                       Info.T.Base_Type (Mode_Value),
-                       Info.T.Base_Ptr_Type (Mode_Value));
+                       Info.B.Base_Type (Mode_Value),
+                       Info.B.Base_Ptr_Type (Mode_Value));
 
       --  Result
       Var_Res := Create_Temp (Info.Ortho_Type (Mode_Value));
@@ -1575,7 +1575,7 @@ package body Trans.Chap7 is
         (New_Obj (Arr_Ptr),
          Gen_Alloc (Alloc_Stack,
                     Chap3.Get_Object_Size (Res, Expr_Type),
-                    Info.T.Base_Ptr_Type (Mode_Value)));
+                    Info.B.Base_Ptr_Type (Mode_Value)));
       New_Assign_Stmt
         (M2Lp (Chap3.Get_Array_Base (Res)), M2Addr (Var_Arr));
 
@@ -1776,7 +1776,7 @@ package body Trans.Chap7 is
       Res_Btype     : constant Iir := Get_Base_Type (Res_Type);
       Res_Info      : constant Type_Info_Acc := Get_Info (Res_Btype);
       Base_Ptr_Type : constant O_Tnode :=
-        Res_Info.T.Base_Ptr_Type (Mode_Value);
+        Res_Info.B.Base_Ptr_Type (Mode_Value);
       Arr           : Mnode;
       El            : O_Dnode;
       Base          : O_Dnode;
@@ -2244,16 +2244,16 @@ package body Trans.Chap7 is
                   V1 := New_Compare_Op
                     (Op1,
                      New_Value_Selected_Acc_Value
-                       (New_Obj (L), B.T.Base_Field (Mode_Value)),
+                       (New_Obj (L), B.B.Base_Field (Mode_Value)),
                      New_Value_Selected_Acc_Value
-                       (New_Obj (R), B.T.Base_Field (Mode_Value)),
+                       (New_Obj (R), B.B.Base_Field (Mode_Value)),
                      Std_Boolean_Type_Node);
                   V2 := New_Compare_Op
                     (Op1,
                      New_Value_Selected_Acc_Value
-                       (New_Obj (L), B.T.Bounds_Field (Mode_Value)),
+                       (New_Obj (L), B.B.Bounds_Field (Mode_Value)),
                      New_Value_Selected_Acc_Value
-                       (New_Obj (R), B.T.Bounds_Field (Mode_Value)),
+                       (New_Obj (R), B.B.Bounds_Field (Mode_Value)),
                      Std_Boolean_Type_Node);
                   return New_Dyadic_Op (Op2, V1, V2);
                end;
@@ -3142,8 +3142,8 @@ package body Trans.Chap7 is
                Chap3.Translate_Anonymous_Type_Definition (Subaggr_Type);
 
                A_Range :=
-                 Dv2M (Create_Temp (Rinfo.T.Range_Type), Rinfo, Mode_Value,
-                       Rinfo.T.Range_Type, Rinfo.T.Range_Ptr_Type);
+                 Dv2M (Create_Temp (Rinfo.B.Range_Type), Rinfo, Mode_Value,
+                       Rinfo.B.Range_Type, Rinfo.B.Range_Ptr_Type);
                Chap7.Translate_Range
                  (A_Range, Get_Range_Constraint (Subaggr_Type), Subaggr_Type);
 
@@ -3304,7 +3304,7 @@ package body Trans.Chap7 is
 
                --  Size of the bounds.
                Bounds_Size :=
-                 New_Sizeof (D_Info.T.Bounds_Type, Ghdl_Index_Type);
+                 New_Sizeof (D_Info.B.Bounds_Type, Ghdl_Index_Type);
 
                --  Allocate the object.
                New_Assign_Stmt
@@ -3353,7 +3353,7 @@ package body Trans.Chap7 is
 
       New_Assign_Stmt
         (M2Lp (Chap3.Get_Array_Bounds (Res)),
-         New_Convert_Ov (New_Obj_Value (Ptr), D_Info.T.Bounds_Ptr_Type));
+         New_Convert_Ov (New_Obj_Value (Ptr), D_Info.B.Bounds_Ptr_Type));
       New_Assign_Stmt
         (M2Lp (Chap3.Get_Array_Base (Res)),
          Chap3.Get_Bounds_Acc_Base (New_Obj_Value (Ptr), D_Type));
@@ -3392,7 +3392,7 @@ package body Trans.Chap7 is
 
                --  Size of the bounds.
                Bounds_Size :=
-                 New_Sizeof (D_Info.T.Bounds_Type, Ghdl_Index_Type);
+                 New_Sizeof (D_Info.B.Bounds_Type, Ghdl_Index_Type);
 
                --  Allocate the object.
                New_Assign_Stmt
@@ -3564,7 +3564,7 @@ package body Trans.Chap7 is
       Bounds            : O_Dnode;
    begin
       Res := Create_Temp (Res_Info, Mode_Value);
-      Bounds := Create_Temp (Res_Info.T.Bounds_Type);
+      Bounds := Create_Temp (Res_Info.B.Bounds_Type);
 
       Open_Temp;
       E := Stabilize (E2M (Expr, Expr_Info, Mode_Value));
@@ -3573,16 +3573,16 @@ package body Trans.Chap7 is
       New_Assign_Stmt
         (M2Lp (Chap3.Get_Array_Base (Res)),
          New_Convert_Ov (M2Addr (Chap3.Get_Array_Base (E)),
-           Res_Info.T.Base_Ptr_Type (Mode_Value)));
+           Res_Info.B.Base_Ptr_Type (Mode_Value)));
       --  Set bounds.
       New_Assign_Stmt
         (M2Lp (Chap3.Get_Array_Bounds (Res)),
-         New_Address (New_Obj (Bounds), Res_Info.T.Bounds_Ptr_Type));
+         New_Address (New_Obj (Bounds), Res_Info.B.Bounds_Ptr_Type));
 
       --  Convert bounds.
       Translate_Type_Conversion_Bounds
         (Dv2M (Bounds, Res_Info, Mode_Value,
-               Res_Info.T.Bounds_Type, Res_Info.T.Bounds_Ptr_Type),
+               Res_Info.B.Bounds_Type, Res_Info.B.Bounds_Ptr_Type),
          Stabilize (Chap3.Get_Array_Bounds (E)),
          Res_Type, Expr_Type, Loc);
 
@@ -4159,7 +4159,7 @@ package body Trans.Chap7 is
       New_Assign_Stmt
         (M2Lv (Chap3.Range_To_Dir (Res1)),
          New_Lit (Chap7.Translate_Static_Range_Dir (Expr)));
-      if T_Info.T.Range_Length /= O_Fnode_Null then
+      if T_Info.B.Range_Length /= O_Fnode_Null then
          if Get_Expr_Staticness (Expr) = Locally then
             New_Assign_Stmt
               (M2Lv (Chap3.Range_To_Length (Res1)),
@@ -4197,7 +4197,7 @@ package body Trans.Chap7 is
    begin
       Open_Temp;
       Arange1 := Stabilize (Lv2M (Arange, Rinfo, Mode_Value,
-                                  Rinfo.T.Range_Type, Rinfo.T.Range_Ptr_Type));
+                                  Rinfo.B.Range_Type, Rinfo.B.Range_Ptr_Type));
       Res1 := Stabilize (Res);
       New_Assign_Stmt (M2Lv (Chap3.Range_To_Left (Res1)),
                        M2E (Chap3.Range_To_Right (Arange1)));
@@ -4234,7 +4234,7 @@ package body Trans.Chap7 is
                        M2E (Chap3.Range_To_Right (Src1)));
       New_Assign_Stmt (M2Lv (Chap3.Range_To_Dir (Dest1)),
                        M2E (Chap3.Range_To_Dir (Src1)));
-      if Info.T.Range_Length /= O_Fnode_Null then
+      if Info.B.Range_Length /= O_Fnode_Null then
          --  Floating point types have no length.
          New_Assign_Stmt (M2Lv (Chap3.Range_To_Length (Dest1)),
                           M2E (Chap3.Range_To_Length (Src1)));
@@ -4253,11 +4253,11 @@ package body Trans.Chap7 is
             begin
                Open_Temp;
                Ptr := Create_Temp_Ptr
-                 (Rinfo.T.Range_Ptr_Type,
+                 (Rinfo.B.Range_Ptr_Type,
                   Chap14.Translate_Range_Array_Attribute (Arange));
                Copy_Range (Res,
                            Dp2M (Ptr, Rinfo, Mode_Value,
-                                 Rinfo.T.Range_Type, Rinfo.T.Range_Ptr_Type));
+                                 Rinfo.B.Range_Type, Rinfo.B.Range_Ptr_Type));
                Close_Temp;
             end;
          when Iir_Kind_Reverse_Range_Array_Attribute =>
@@ -4280,10 +4280,10 @@ package body Trans.Chap7 is
                declare
                   Rinfo : constant Type_Info_Acc := Get_Info (Arange);
                begin
-                  Copy_Range (Res, Lv2M (Get_Var (Rinfo.T.Range_Var),
+                  Copy_Range (Res, Lv2M (Get_Var (Rinfo.S.Range_Var),
                                          Rinfo, Mode_Value,
-                                         Rinfo.T.Range_Type,
-                                         Rinfo.T.Range_Ptr_Type));
+                                         Rinfo.B.Range_Type,
+                                         Rinfo.B.Range_Ptr_Type));
                end;
             else
                Translate_Range (Res,
@@ -4306,7 +4306,7 @@ package body Trans.Chap7 is
             return Translate_Range (Get_Named_Entity (Arange), Range_Type);
          when Iir_Kind_Subtype_Declaration =>
             --  Must be a scalar subtype.  Range of types is static.
-            return Get_Var (Get_Info (Get_Type (Arange)).T.Range_Var);
+            return Get_Var (Get_Info (Get_Type (Arange)).S.Range_Var);
          when Iir_Kind_Range_Array_Attribute =>
             return Chap14.Translate_Range_Array_Attribute (Arange);
          when Iir_Kind_Reverse_Range_Array_Attribute =>
@@ -4314,7 +4314,7 @@ package body Trans.Chap7 is
                Rinfo : constant Type_Info_Acc := Get_Info (Range_Type);
                Res   : O_Dnode;
             begin
-               Res := Create_Temp (Rinfo.T.Range_Type);
+               Res := Create_Temp (Rinfo.B.Range_Type);
                Translate_Reverse_Range
                  (Dv2M (Res, Rinfo, Mode_Value),
                   Chap14.Translate_Range_Array_Attribute (Arange),
@@ -4326,10 +4326,10 @@ package body Trans.Chap7 is
                Rinfo : constant Type_Info_Acc := Get_Info (Range_Type);
                Res   : O_Dnode;
             begin
-               Res := Create_Temp (Rinfo.T.Range_Type);
+               Res := Create_Temp (Rinfo.B.Range_Type);
                Translate_Range_Expression
                  (Dv2M (Res, Rinfo, Mode_Value,
-                        Rinfo.T.Range_Type, Rinfo.T.Range_Ptr_Type),
+                        Rinfo.B.Range_Type, Rinfo.B.Range_Ptr_Type),
                   Arange, Range_Type);
                return New_Obj (Res);
             end;
@@ -4345,14 +4345,14 @@ package body Trans.Chap7 is
       Res    : O_Cnode;
       T_Info : constant Type_Info_Acc := Get_Info (Range_Type);
    begin
-      Start_Record_Aggr (Constr, T_Info.T.Range_Type);
+      Start_Record_Aggr (Constr, T_Info.B.Range_Type);
       New_Record_Aggr_El
         (Constr, Chap7.Translate_Static_Range_Left (Arange, Range_Type));
       New_Record_Aggr_El
         (Constr, Chap7.Translate_Static_Range_Right (Arange, Range_Type));
       New_Record_Aggr_El
         (Constr, Chap7.Translate_Static_Range_Dir (Arange));
-      if T_Info.T.Range_Length /= O_Fnode_Null then
+      if T_Info.B.Range_Length /= O_Fnode_Null then
          New_Record_Aggr_El
            (Constr, Chap7.Translate_Static_Range_Length (Arange));
       end if;
@@ -4784,13 +4784,13 @@ package body Trans.Chap7 is
                     Ghdl_Index_Type);
       New_Var_Decl (Var_I, Wki_I, O_Storage_Local, Ghdl_Index_Type);
       New_Var_Decl (Var_Base, Get_Identifier ("base"), O_Storage_Local,
-                    Info.T.Base_Ptr_Type (Mode_Value));
+                    Info.B.Base_Ptr_Type (Mode_Value));
       New_Var_Decl (Var_L_Base, Get_Identifier ("l_base"), O_Storage_Local,
-                    Info.T.Base_Ptr_Type (Mode_Value));
+                    Info.B.Base_Ptr_Type (Mode_Value));
       if not Is_Monadic then
          New_Var_Decl
            (Var_R_Base, Get_Identifier ("r_base"), O_Storage_Local,
-            Info.T.Base_Ptr_Type (Mode_Value));
+            Info.B.Base_Ptr_Type (Mode_Value));
       end if;
       Open_Temp;
       --  Get length of LEFT.
@@ -5065,9 +5065,9 @@ package body Trans.Chap7 is
       New_Var_Decl (Var_I1, Get_Identifier ("I1"), O_Storage_Local,
                     Ghdl_Index_Type);
       New_Var_Decl (Var_Res_Base, Get_Identifier ("res_base"),
-                    O_Storage_Local, Info.T.Base_Ptr_Type (Mode_Value));
+                    O_Storage_Local, Info.B.Base_Ptr_Type (Mode_Value));
       New_Var_Decl (Var_L_Base, Get_Identifier ("l_base"),
-                    O_Storage_Local, Info.T.Base_Ptr_Type (Mode_Value));
+                    O_Storage_Local, Info.B.Base_Ptr_Type (Mode_Value));
       if Shift = Sh_Arith then
          New_Var_Decl (Var_E, Get_Identifier ("E"), O_Storage_Local,
                        Get_Info (Get_Element_Subtype (Arr_Type)).
@@ -5111,7 +5111,7 @@ package body Trans.Chap7 is
       New_Assign_Stmt
         (New_Obj (Var_Res_Base),
          Gen_Alloc (Alloc_Return, New_Obj_Value (Var_Length),
-           Info.T.Base_Ptr_Type (Mode_Value)));
+           Info.B.Base_Ptr_Type (Mode_Value)));
       New_Assign_Stmt (M2Lp (Chap3.Get_Array_Base (Res)),
                        New_Obj_Value (Var_Res_Base));
 

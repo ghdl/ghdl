@@ -1811,7 +1811,7 @@ package body Translation is
          Ghdl_Real_Type, Std_String_Ptr_Node, Get_Identifier ("format"));
       declare
          Bv_Base_Ptr : constant O_Tnode :=
-           Get_Info (Bit_Vector_Type_Definition).T.Base_Ptr_Type (Mode_Value);
+           Get_Info (Bit_Vector_Type_Definition).B.Base_Ptr_Type (Mode_Value);
       begin
          Create_To_String_Subprogram
            ("__ghdl_bv_to_ostring", Ghdl_BV_To_Ostring,

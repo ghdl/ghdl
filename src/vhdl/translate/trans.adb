@@ -1415,7 +1415,8 @@ package body Trans is
                   Free_Type_Info (Info);
                when Iir_Kind_Array_Subtype_Definition =>
                   if Get_Index_Constraint_Flag (I) then
-                     Info.T := Ortho_Info_Type_Array_Init;
+                     Info.B := Ortho_Info_Basetype_Array_Init;
+                     Info.S := Ortho_Info_Subtype_Array_Init;
                      Free_Type_Info (Info);
                   end if;
                when Iir_Kind_Function_Declaration =>
