@@ -731,12 +731,8 @@ package Trans is
             Base_Field   : O_Fnode_Array;
             Bounds_Field : O_Fnode_Array;
 
-            --  Variable containing the description for each index.
-            Array_Index_Desc : Var_Type;
-
          when Kind_Type_Record =>
-            --  Variable containing the description for each element.
-            Record_El_Desc : Var_Type;
+            null;
 
          when Kind_Type_File =>
             --  Constant containing the signature of the file.
@@ -806,8 +802,7 @@ package Trans is
       Bounds_Type => O_Tnode_Null,
       Bounds_Ptr_Type => O_Tnode_Null,
       Base_Field => (O_Fnode_Null, O_Fnode_Null),
-      Bounds_Field => (O_Fnode_Null, O_Fnode_Null),
-      Array_Index_Desc => Null_Var);
+      Bounds_Field => (O_Fnode_Null, O_Fnode_Null));
 
    Ortho_Info_Subtype_Array_Init : constant Ortho_Info_Subtype_Type :=
      (Kind => Kind_Type_Array,
@@ -816,8 +811,7 @@ package Trans is
 
    Ortho_Info_Basetype_Record_Init : constant Ortho_Info_Basetype_Type :=
      (Kind => Kind_Type_Record,
-      Rti_Max_Depth => 0,
-      Record_El_Desc => Null_Var);
+      Rti_Max_Depth => 0);
 
    Ortho_Info_Basetype_File_Init : constant Ortho_Info_Basetype_Type :=
      (Kind => Kind_Type_File,
