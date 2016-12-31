@@ -16,26 +16,11 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Types; use Types;
+with Name_Table;
 with Std_Names; use Std_Names;
-with Iirs_Utils; use Iirs_Utils;
 with Errorout; use Errorout;
-with Std_Package;
 
 package body Ieee.Std_Logic_1164 is
-   function Skip_Implicit (Decl : Iir) return Iir
-   is
-      Res : Iir;
-   begin
-      Res := Decl;
-      loop
-         exit when Res = Null_Iir;
-         exit when not (Get_Kind (Res) = Iir_Kind_Function_Declaration
-                          and then Is_Implicit_Subprogram (Res));
-         Res := Get_Chain (Res);
-      end loop;
-      return Res;
-   end Skip_Implicit;
-
    function Is_Scalar_Parameter (Inter : Iir) return Boolean is
    begin
       return Get_Base_Type (Get_Type (Inter)) = Std_Ulogic_Type;
@@ -143,13 +128,7 @@ package body Ieee.Std_Logic_1164 is
       Decl := Get_Declaration_Chain (Pkg);
 
       --  Skip a potential copyright constant.
-      if Decl /= Null_Iir
-        and then Get_Kind (Decl) = Iir_Kind_Constant_Declaration
-        and then (Get_Base_Type (Get_Type (Decl))
-                  = Std_Package.String_Type_Definition)
-      then
-         Decl := Get_Chain (Decl);
-      end if;
+      Decl := Skip_Copyright_Notice (Decl);
 
       --  The first declaration should be type std_ulogic.
       if Decl = Null_Iir
@@ -164,6 +143,23 @@ package body Ieee.Std_Logic_1164 is
          raise Error;
       end if;
       Std_Ulogic_Type := Def;
+
+      --  Get node of some literals.
+      declare
+         use Name_Table;
+         Lit_List : constant Iir_List := Get_Enumeration_Literal_List (Def);
+      begin
+         if Get_Nbr_Elements (Lit_List) /= 9 then
+            raise Error;
+         end if;
+         Std_Ulogic_0 := Get_Nth_Element (Lit_List, 2);
+         Std_Ulogic_1 := Get_Nth_Element (Lit_List, 3);
+         if Get_Identifier (Std_Ulogic_0) /= Get_Identifier ('0')
+           or else Get_Identifier (Std_Ulogic_1) /= Get_Identifier ('1')
+         then
+            raise Error;
+         end if;
+      end;
 
       --  The second declaration should be std_ulogic_vector.
       Decl := Get_Chain (Decl);
@@ -315,6 +311,8 @@ package body Ieee.Std_Logic_1164 is
          Std_Ulogic_Vector_Type := Null_Iir;
          Std_Logic_Type := Null_Iir;
          Std_Logic_Vector_Type := Null_Iir;
+         Std_Ulogic_0 := Null_Iir;
+         Std_Ulogic_1 := Null_Iir;
          Rising_Edge := Null_Iir;
          Falling_Edge := Null_Iir;
    end Extract_Declarations;

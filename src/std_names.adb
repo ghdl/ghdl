@@ -410,6 +410,12 @@ package body Std_Names is
       Def ("vital_timing",       Name_VITAL_Timing);
       Def ("vital_level0",       Name_VITAL_Level0);
       Def ("vital_level1",       Name_VITAL_Level1);
+      Def ("numeric_std",        Name_Numeric_Std);
+      Def ("numeric_bit",        Name_Numeric_Bit);
+      Def ("unsigned",           Name_Unsigned);
+      Def ("signed",             Name_Signed);
+      Def ("unresolved_unsigned", Name_Unresolved_Unsigned);
+      Def ("unresolved_signed",  Name_Unresolved_Signed);
       Def ("std_logic_arith",    Name_Std_Logic_Arith);
       Def ("std_logic_signed",   Name_Std_Logic_Signed);
       Def ("std_logic_textio",   Name_Std_Logic_Textio);

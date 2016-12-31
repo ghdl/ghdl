@@ -18,8 +18,7 @@
 with Iirs; use Iirs;
 
 package Canon is
-   --  If true, a label will be added for statements which do not have a
-   --  label.
+   --  If true, a label will be added to unlabelled concurrent statements.
    Canon_Flag_Add_Labels : Boolean := False;
 
    --  If true, canon sequentials statements (processes and subprograms).

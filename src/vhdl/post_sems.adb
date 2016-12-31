@@ -20,6 +20,7 @@ with Std_Names; use Std_Names;
 with Sem_Specs;
 with Ieee.Std_Logic_1164;
 with Ieee.Vital_Timing;
+with Ieee.Numeric;
 with Flags; use Flags;
 
 package body Post_Sems is
@@ -48,11 +49,16 @@ package body Post_Sems is
       if Get_Identifier (Lib) = Name_Ieee then
          --  This is a unit of IEEE.
          if Get_Kind (Lib_Unit) = Iir_Kind_Package_Declaration then
-            if Id = Name_Std_Logic_1164 then
-               Ieee.Std_Logic_1164.Extract_Declarations (Lib_Unit);
-            elsif Id = Name_VITAL_Timing then
-               Ieee.Vital_Timing.Extract_Declarations (Lib_Unit);
-            end if;
+            case Id is
+               when Name_Std_Logic_1164 =>
+                  Ieee.Std_Logic_1164.Extract_Declarations (Lib_Unit);
+               when Name_VITAL_Timing =>
+                  Ieee.Vital_Timing.Extract_Declarations (Lib_Unit);
+               when Name_Numeric_Std =>
+                  Ieee.Numeric.Extract_Std_Declarations (Lib_Unit);
+               when others =>
+                  null;
+            end case;
          end if;
       end if;
 

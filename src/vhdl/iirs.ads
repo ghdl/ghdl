@@ -4671,8 +4671,25 @@ package Iirs is
        Iir_Predefined_Ieee_1164_Vector_Nor,
        Iir_Predefined_Ieee_1164_Vector_Xor,
        Iir_Predefined_Ieee_1164_Vector_Xnor,
-       Iir_Predefined_Ieee_1164_Vector_Not
-      );
+       Iir_Predefined_Ieee_1164_Vector_Not,
+
+       --  Numeric_Std.
+       --  Abbreviations:
+       --  Uns: Unsigned, Sgn: Signed, Nat: Natural, Int: Integer.
+       Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns,
+       Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat,
+       Iir_Predefined_Ieee_Numeric_Std_Add_Nat_Uns,
+       Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Sgn,
+       Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Int,
+       Iir_Predefined_Ieee_Numeric_Std_Add_Int_Sgn,
+
+       Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Uns,
+       Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Nat,
+       Iir_Predefined_Ieee_Numeric_Std_Eq_Nat_Uns,
+       Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Sgn,
+       Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Int,
+       Iir_Predefined_Ieee_Numeric_Std_Eq_Int_Sgn
+);
 
    --  Return TRUE iff FUNC is a short-cut predefined function.
    function Iir_Predefined_Shortcut_P (Func : Iir_Predefined_Functions)
