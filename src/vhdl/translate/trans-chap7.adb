@@ -438,7 +438,7 @@ package body Trans.Chap7 is
       R        : O_Enode;
    begin
       if Get_Constraint_State (Str_Type) = Fully_Constrained
-        and then Are_Bounds_Locally_Static (Str_Type)
+        and then Are_Array_Indexes_Locally_Static (Str_Type)
       then
          Chap3.Create_Array_Subtype (Str_Type);
          case Get_Kind (Str) is
@@ -454,7 +454,7 @@ package body Trans.Chap7 is
             when others =>
                raise Internal_Error;
          end case;
-         Is_Static := Are_Bounds_Locally_Static (Res_Type);
+         Is_Static := Are_Array_Indexes_Locally_Static (Res_Type);
 
          if Is_Static then
             Res := Translate_Static_Implicit_Conv (Res, Str_Type, Res_Type);

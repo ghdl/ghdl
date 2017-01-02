@@ -558,8 +558,7 @@ package body Trans.Chap3 is
 
    --  Declare the bounds types for DEF.
    procedure Translate_Array_Type_Bounds
-     (Def      : Iir_Array_Type_Definition;
-      Info     : Type_Info_Acc)
+     (Def : Iir_Array_Type_Definition; Info : Type_Info_Acc)
    is
       Indexes_List    : constant Iir_List :=
         Get_Index_Subtype_Definition_List (Def);
@@ -828,22 +827,6 @@ package body Trans.Chap3 is
       Close_Temp;
    end Create_Array_Subtype_Bounds;
 
-   --  Get staticness of the array bounds.
-   function Get_Array_Bounds_Staticness (Def : Iir) return Iir_Staticness
-   is
-      List     : constant Iir_List := Get_Index_Subtype_List (Def);
-      Idx_Type : Iir;
-   begin
-      for I in Natural loop
-         Idx_Type := Get_Index_Type (List, I);
-         exit when Idx_Type = Null_Iir;
-         if Get_Type_Staticness (Idx_Type) /= Locally then
-            return Globally;
-         end if;
-      end loop;
-      return Locally;
-   end Get_Array_Bounds_Staticness;
-
    --  Create a variable containing the bounds for array subtype DEF.
    procedure Create_Array_Subtype_Bounds_Var (Def : Iir; Elab_Now : Boolean)
    is
@@ -855,32 +838,27 @@ package body Trans.Chap3 is
          return;
       end if;
       Base_Info := Get_Info (Get_Base_Type (Def));
-      case Get_Array_Bounds_Staticness (Def) is
-         when None
-           | Globally =>
-            Info.S.Static_Bounds := False;
-            Info.S.Array_Bounds := Create_Var
-              (Create_Var_Identifier ("STB"), Base_Info.B.Bounds_Type);
-            if Elab_Now then
-               Create_Array_Subtype_Bounds
-                 (Def, Get_Var (Info.S.Array_Bounds));
-            end if;
-         when Locally =>
-            Info.S.Static_Bounds := True;
-            if Global_Storage = O_Storage_External then
-               --  Do not create the value of the type desc, since it
-               --  is never dereferenced in a static type desc.
-               Val := O_Cnode_Null;
-            else
-               Val := Create_Static_Array_Subtype_Bounds (Def);
-            end if;
-            Info.S.Array_Bounds := Create_Global_Const
-              (Create_Identifier ("STB"),
-               Base_Info.B.Bounds_Type, Global_Storage, Val);
-
-         when Unknown =>
-            raise Internal_Error;
-      end case;
+      if Are_Bounds_Locally_Static (Def) then
+         Info.S.Static_Bounds := True;
+         if Global_Storage = O_Storage_External then
+            --  Do not create the value of the type desc, since it
+            --  is never dereferenced in a static type desc.
+            Val := O_Cnode_Null;
+         else
+            Val := Create_Static_Array_Subtype_Bounds (Def);
+         end if;
+         Info.S.Array_Bounds := Create_Global_Const
+           (Create_Identifier ("STB"),
+            Base_Info.B.Bounds_Type, Global_Storage, Val);
+      else
+         Info.S.Static_Bounds := False;
+         Info.S.Array_Bounds := Create_Var
+           (Create_Var_Identifier ("STB"), Base_Info.B.Bounds_Type);
+         if Elab_Now then
+            Create_Array_Subtype_Bounds
+              (Def, Get_Var (Info.S.Array_Bounds));
+         end if;
+      end if;
    end Create_Array_Subtype_Bounds_Var;
 
    procedure Create_Array_Type_Builder
