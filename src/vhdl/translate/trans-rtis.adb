@@ -1539,7 +1539,7 @@ package body Trans.Rtis is
          Pop_Identifier_Prefix (Mark);
       end if;
 
-      Bounds := Info.S.Array_Bounds;
+      Bounds := Info.S.Composite_Bounds;
       Depth := Get_Depth_From_Var (Bounds);
       Info.B.Rti_Max_Depth :=
         Rti_Depth_Type'Max (Depth, Base_Info.B.Rti_Max_Depth);

@@ -47,8 +47,7 @@ package Trans.Chap3 is
    procedure Translate_Type_Subprograms (Decl : Iir);
 
    procedure Create_Type_Definition_Type_Range (Def : Iir);
-   function Create_Static_Array_Subtype_Bounds
-     (Def : Iir_Array_Subtype_Definition) return O_Cnode;
+   function Create_Static_Composite_Subtype_Bounds (Def : Iir) return O_Cnode;
 
    --  Same as Translate_type_definition only for std.standard.boolean and
    --  std.standard.bit.

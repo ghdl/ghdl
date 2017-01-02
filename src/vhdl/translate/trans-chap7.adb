@@ -79,13 +79,13 @@ package body Trans.Chap7 is
       Val := Create_Global_Const
         (Create_Uniq_Identifier, Expr_Info.Ortho_Type (Mode_Value),
          O_Storage_Private, Expr);
-      Bound := Expr_Info.S.Array_Bounds;
+      Bound := Expr_Info.S.Composite_Bounds;
       if Bound = Null_Var then
          Bound := Create_Global_Const
            (Create_Uniq_Identifier, Expr_Info.B.Bounds_Type,
             O_Storage_Private,
-            Chap3.Create_Static_Array_Subtype_Bounds (Expr_Type));
-         Expr_Info.S.Array_Bounds := Bound;
+            Chap3.Create_Static_Composite_Subtype_Bounds (Expr_Type));
+         Expr_Info.S.Composite_Bounds := Bound;
       end if;
 
       Start_Record_Aggr (List, Res_Info.Ortho_Type (Mode_Value));

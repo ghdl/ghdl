@@ -770,11 +770,11 @@ package Trans is
             Range_Var : Var_Type;
 
          when Kind_Type_Array =>
-            --  True if the array bounds are static.
+            --  True if the bounds are static.
             Static_Bounds : Boolean;
 
-            --  Variable containing the bounds for a constrained array.
-            Array_Bounds : Var_Type;
+            --  Variable containing the bounds for a constrained type.
+            Composite_Bounds : Var_Type;
 
          when Kind_Type_Record =>
             null;
@@ -810,7 +810,7 @@ package Trans is
    Ortho_Info_Subtype_Array_Init : constant Ortho_Info_Subtype_Type :=
      (Kind => Kind_Type_Array,
       Static_Bounds => False,
-      Array_Bounds => Null_Var);
+      Composite_Bounds => Null_Var);
 
    Ortho_Info_Basetype_Record_Init : constant Ortho_Info_Basetype_Type :=
      (Kind => Kind_Type_Record,

@@ -552,6 +552,168 @@ package body Trans.Chap3 is
       New_Type_Decl (Create_Identifier ("BOUNDP"), Info.B.Bounds_Ptr_Type);
    end Finish_Unbounded_Type_Bounds;
 
+   function Create_Static_Composite_Subtype_Bounds (Def : Iir) return O_Cnode
+   is
+      Info : constant Type_Info_Acc := Get_Info (Def);
+      List : O_Record_Aggr_List;
+      Res : O_Cnode;
+   begin
+      Start_Record_Aggr (List, Info.B.Bounds_Type);
+
+      case Get_Kind (Def) is
+         when Iir_Kind_Array_Subtype_Definition =>
+            declare
+               Indexes_List : constant Iir_List :=
+                 Get_Index_Subtype_List (Def);
+               Index : Iir;
+            begin
+               for I in Natural loop
+                  Index := Get_Index_Type (Indexes_List, I);
+                  exit when Index = Null_Iir;
+                  New_Record_Aggr_El
+                    (List, Create_Static_Type_Definition_Type_Range (Index));
+               end loop;
+            end;
+
+         when Iir_Kind_Record_Subtype_Definition =>
+            declare
+               El_List : constant Iir_List :=
+                 Get_Elements_Declaration_List (Def);
+               El : Iir;
+               El_Info : Field_Info_Acc;
+            begin
+               for I in Natural loop
+                  El := Get_Nth_Element (El_List, I);
+                  exit when El = Null_Iir;
+                  El_Info := Get_Info (El);
+                  if El_Info.Field_Bound /= O_Fnode_Null then
+                     New_Record_Aggr_El
+                       (List,
+                        Create_Static_Composite_Subtype_Bounds
+                          (Get_Type (El)));
+                  end if;
+               end loop;
+            end;
+
+         when others =>
+            Error_Kind ("create_static_composite_subtype_bounds", Def);
+      end case;
+
+      Finish_Record_Aggr (List, Res);
+      return Res;
+   end Create_Static_Composite_Subtype_Bounds;
+
+   procedure Create_Composite_Subtype_Bounds (Def : Iir; Target : O_Lnode)
+   is
+      Info             : constant Type_Info_Acc := Get_Info (Def);
+      Base_Type        : constant Iir := Get_Base_Type (Def);
+      Targ             : Mnode;
+   begin
+      Targ := Lv2M (Target, null, Mode_Value,
+                    Info.B.Bounds_Type, Info.B.Bounds_Ptr_Type);
+      Open_Temp;
+
+      case Get_Kind (Def) is
+         when Iir_Kind_Array_Subtype_Definition =>
+            declare
+               Indexes_List : constant Iir_List :=
+                 Get_Index_Subtype_List (Def);
+               Indexes_Def_List : constant Iir_List :=
+                 Get_Index_Subtype_Definition_List (Base_Type);
+               Index : Iir;
+            begin
+               if Get_Nbr_Elements (Indexes_List) > 1 then
+                  Targ := Stabilize (Targ);
+               end if;
+               for I in Natural loop
+                  Index := Get_Index_Type (Indexes_List, I);
+                  exit when Index = Null_Iir;
+                  declare
+                     Index_Type : constant Iir := Get_Base_Type (Index);
+                     Index_Info : constant Type_Info_Acc :=
+                       Get_Info (Index_Type);
+                     Base_Index_Info : constant Index_Info_Acc :=
+                       Get_Info (Get_Nth_Element (Indexes_Def_List, I));
+                     D : O_Dnode;
+                  begin
+                     Open_Temp;
+                     D := Create_Temp_Ptr
+                       (Index_Info.B.Range_Ptr_Type,
+                        New_Selected_Element (M2Lv (Targ),
+                                              Base_Index_Info.Index_Field));
+                     Chap7.Translate_Discrete_Range
+                       (Dp2M (D, Index_Info, Mode_Value,
+                              Index_Info.B.Range_Type,
+                              Index_Info.B.Range_Ptr_Type),
+                        Index);
+                     Close_Temp;
+                  end;
+               end loop;
+            end;
+
+         when Iir_Kind_Record_Subtype_Definition =>
+            declare
+               El_List : constant Iir_List :=
+                 Get_Elements_Declaration_List (Def);
+               El : Iir;
+               El_Info : Field_Info_Acc;
+            begin
+               Targ := Stabilize (Targ);
+               for I in Natural loop
+                  El := Get_Nth_Element (El_List, I);
+                  exit when El = Null_Iir;
+                  El_Info := Get_Info (El);
+                  if El_Info.Field_Bound /= O_Fnode_Null then
+                     Create_Composite_Subtype_Bounds
+                       (Get_Type (El),
+                        New_Selected_Element (M2Lv (Targ),
+                                              El_Info.Field_Bound));
+                  end if;
+               end loop;
+            end;
+
+         when others =>
+            Error_Kind ("create_composite_subtype_bounds", Def);
+      end case;
+
+      Close_Temp;
+   end Create_Composite_Subtype_Bounds;
+
+   --  Create a variable containing the bounds for array subtype DEF.
+   procedure Create_Composite_Subtype_Bounds_Var
+     (Def : Iir; Elab_Now : Boolean)
+   is
+      Info      : constant Type_Info_Acc := Get_Info (Def);
+      Base_Info : Type_Info_Acc;
+      Val       : O_Cnode;
+   begin
+      if Info.S.Composite_Bounds /= Null_Var then
+         return;
+      end if;
+      Base_Info := Get_Info (Get_Base_Type (Def));
+      if Are_Bounds_Locally_Static (Def) then
+         Info.S.Static_Bounds := True;
+         if Global_Storage = O_Storage_External then
+            --  Do not create the value of the type desc, since it
+            --  is never dereferenced in a static type desc.
+            Val := O_Cnode_Null;
+         else
+            Val := Create_Static_Composite_Subtype_Bounds (Def);
+         end if;
+         Info.S.Composite_Bounds := Create_Global_Const
+           (Create_Identifier ("STB"),
+            Base_Info.B.Bounds_Type, Global_Storage, Val);
+      else
+         Info.S.Static_Bounds := False;
+         Info.S.Composite_Bounds := Create_Var
+           (Create_Var_Identifier ("STB"), Base_Info.B.Bounds_Type);
+         if Elab_Now then
+            Create_Composite_Subtype_Bounds
+              (Def, Get_Var (Info.S.Composite_Bounds));
+         end if;
+      end if;
+   end Create_Composite_Subtype_Bounds_Var;
+
    -------------
    --  Array  --
    -------------
@@ -763,103 +925,6 @@ package body Trans.Chap3 is
             Error_Kind ("translate_array_subtype_element_subtype", El_Type);
       end case;
    end Translate_Array_Subtype_Element_Subtype;
-
-   function Create_Static_Array_Subtype_Bounds
-     (Def : Iir_Array_Subtype_Definition)
-      return O_Cnode
-   is
-      Indexes_List : constant Iir_List := Get_Index_Subtype_List (Def);
-      Baseinfo     : constant Type_Info_Acc := Get_Info (Get_Base_Type (Def));
-      Index        : Iir;
-      List         : O_Record_Aggr_List;
-      Res          : O_Cnode;
-   begin
-      Start_Record_Aggr (List, Baseinfo.B.Bounds_Type);
-      for I in Natural loop
-         Index := Get_Index_Type (Indexes_List, I);
-         exit when Index = Null_Iir;
-         New_Record_Aggr_El
-           (List, Create_Static_Type_Definition_Type_Range (Index));
-      end loop;
-      Finish_Record_Aggr (List, Res);
-      return Res;
-   end Create_Static_Array_Subtype_Bounds;
-
-   procedure Create_Array_Subtype_Bounds
-     (Def : Iir_Array_Subtype_Definition; Target : O_Lnode)
-   is
-      Base_Type        : constant Iir := Get_Base_Type (Def);
-      Baseinfo         : constant Type_Info_Acc := Get_Info (Base_Type);
-      Indexes_List     : constant Iir_List := Get_Index_Subtype_List (Def);
-      Indexes_Def_List : constant Iir_List :=
-        Get_Index_Subtype_Definition_List (Base_Type);
-      Index            : Iir;
-      Targ             : Mnode;
-   begin
-      Targ := Lv2M (Target, null, Mode_Value,
-                    Baseinfo.B.Bounds_Type, Baseinfo.B.Bounds_Ptr_Type);
-      Open_Temp;
-      if Get_Nbr_Elements (Indexes_List) > 1 then
-         Targ := Stabilize (Targ);
-      end if;
-      for I in Natural loop
-         Index := Get_Index_Type (Indexes_List, I);
-         exit when Index = Null_Iir;
-         declare
-            Index_Type      : constant Iir := Get_Base_Type (Index);
-            Index_Info      : constant Type_Info_Acc := Get_Info (Index_Type);
-            Base_Index_Info : constant Index_Info_Acc :=
-              Get_Info (Get_Nth_Element (Indexes_Def_List, I));
-            D               : O_Dnode;
-         begin
-            Open_Temp;
-            D := Create_Temp_Ptr
-              (Index_Info.B.Range_Ptr_Type,
-               New_Selected_Element (M2Lv (Targ),
-                                     Base_Index_Info.Index_Field));
-            Chap7.Translate_Discrete_Range
-              (Dp2M (D, Index_Info, Mode_Value,
-                     Index_Info.B.Range_Type, Index_Info.B.Range_Ptr_Type),
-               Index);
-            Close_Temp;
-         end;
-      end loop;
-      Close_Temp;
-   end Create_Array_Subtype_Bounds;
-
-   --  Create a variable containing the bounds for array subtype DEF.
-   procedure Create_Array_Subtype_Bounds_Var (Def : Iir; Elab_Now : Boolean)
-   is
-      Info      : constant Type_Info_Acc := Get_Info (Def);
-      Base_Info : Type_Info_Acc;
-      Val       : O_Cnode;
-   begin
-      if Info.S.Array_Bounds /= Null_Var then
-         return;
-      end if;
-      Base_Info := Get_Info (Get_Base_Type (Def));
-      if Are_Bounds_Locally_Static (Def) then
-         Info.S.Static_Bounds := True;
-         if Global_Storage = O_Storage_External then
-            --  Do not create the value of the type desc, since it
-            --  is never dereferenced in a static type desc.
-            Val := O_Cnode_Null;
-         else
-            Val := Create_Static_Array_Subtype_Bounds (Def);
-         end if;
-         Info.S.Array_Bounds := Create_Global_Const
-           (Create_Identifier ("STB"),
-            Base_Info.B.Bounds_Type, Global_Storage, Val);
-      else
-         Info.S.Static_Bounds := False;
-         Info.S.Array_Bounds := Create_Var
-           (Create_Var_Identifier ("STB"), Base_Info.B.Bounds_Type);
-         if Elab_Now then
-            Create_Array_Subtype_Bounds
-              (Def, Get_Var (Info.S.Array_Bounds));
-         end if;
-      end if;
-   end Create_Array_Subtype_Bounds_Var;
 
    procedure Create_Array_Type_Builder
      (Def : Iir_Array_Type_Definition; Kind : Object_Kind_Type)
@@ -1562,7 +1627,7 @@ package body Trans.Chap3 is
             return Create_Static_Scalar_Type_Range (Def);
 
          when Iir_Kind_Array_Subtype_Definition =>
-            return Create_Static_Array_Subtype_Bounds (Def);
+            return Create_Static_Composite_Subtype_Bounds (Def);
 
          when Iir_Kind_Array_Type_Definition =>
             return O_Cnode_Null;
@@ -1587,8 +1652,8 @@ package body Trans.Chap3 is
             if Get_Constraint_State (Def) = Fully_Constrained then
                Info := Get_Info (Def);
                if not Info.S.Static_Bounds then
-                  Target := Get_Var (Info.S.Array_Bounds);
-                  Create_Array_Subtype_Bounds (Def, Target);
+                  Target := Get_Var (Info.S.Composite_Bounds);
+                  Create_Composite_Subtype_Bounds (Def, Target);
                end if;
             end if;
 
@@ -2031,7 +2096,7 @@ package body Trans.Chap3 is
                Info.B := Base_Info.B;
                Info.S := Base_Info.S;
                if With_Vars then
-                  Create_Array_Subtype_Bounds_Var (Def, False);
+                  Create_Composite_Subtype_Bounds_Var (Def, False);
                end if;
             else
                --  An unconstrained array subtype.  Use same infos as base
@@ -2344,7 +2409,7 @@ package body Trans.Chap3 is
          when Type_Mode_Fat_Array =>
             raise Internal_Error;
          when Type_Mode_Array =>
-            return Varv2M (Info.S.Array_Bounds,
+            return Varv2M (Info.S.Composite_Bounds,
                            Info, Mode_Value,
                            Info.B.Bounds_Type,
                            Info.B.Bounds_Ptr_Type);
@@ -2581,7 +2646,7 @@ package body Trans.Chap3 is
          Translate_Type_Definition (Sub_Type, False);
       end if;
       --  Force creation of variables.
-      Chap3.Create_Array_Subtype_Bounds_Var (Sub_Type, True);
+      Chap3.Create_Composite_Subtype_Bounds_Var (Sub_Type, True);
       Chap3.Create_Type_Definition_Size_Var (Sub_Type);
       Pop_Identifier_Prefix (Mark);
    end Create_Array_Subtype;
