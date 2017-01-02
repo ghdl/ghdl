@@ -1084,17 +1084,6 @@ package Trans is
       --  running time (and not a compile-time).
       Size_Var : Var_Type;
 
-      --  Variable containing the alignment of the type.
-      --  Only defined for recods and for Mode_Value.
-      --  Note: this is not optimal, because the alignment could be computed
-      --  at compile time, but there is no way to do that with ortho (no
-      --  operation on constants). Furthermore, the alignment is independent
-      --  of the instance, so there could be one global variable. But this
-      --  doesn't fit in the whole machinery (in particular, there is no
-      --  easy way to compute it once). As the overhead is very low, no need
-      --  to bother with this issue.
-      Align_Var : Var_Type;
-
       Builder_Need_Func : Boolean;
 
       --  Parameters for type builders.

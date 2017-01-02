@@ -973,12 +973,7 @@ package body Trans.Chap3 is
    --  Get the alignment mask for type INFO (Mode_Value).
    function Get_Type_Alignmask (Info : Type_Info_Acc) return O_Enode is
    begin
-      if Is_Complex_Type (Info) then
-         pragma Assert (Info.Type_Mode = Type_Mode_Record);
-         return New_Value (Get_Var (Info.C (Mode_Value).Align_Var));
-      else
-         return Get_Type_Alignmask (Info.Ortho_Type (Mode_Value));
-      end if;
+      return Get_Type_Alignmask (Info.Ortho_Type (Mode_Value));
    end Get_Type_Alignmask;
 
    --  Align VALUE (of unsigned type) for type ATYPE.
@@ -1115,8 +1110,6 @@ package body Trans.Chap3 is
 
       if Need_Size then
          Create_Size_Var (Def);
-         Info.C (Mode_Value).Align_Var := Create_Var
-           (Create_Var_Identifier ("ALIGNMSK"), Ghdl_Index_Type);
          Info.C (Mode_Value).Builder_Need_Func := True;
          Info.C (Mode_Signal).Builder_Need_Func := True;
       end if;
