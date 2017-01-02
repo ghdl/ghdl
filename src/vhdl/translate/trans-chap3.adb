@@ -1013,6 +1013,32 @@ package body Trans.Chap3 is
       return Res;
    end Get_Innermost_Non_Array_Element;
 
+   --  Declare the bounds types for DEF.
+   procedure Translate_Record_Type_Bounds
+     (Def : Iir_Record_Type_Definition; Info : Type_Info_Acc)
+   is
+      List : constant Iir_List := Get_Elements_Declaration_List (Def);
+      El : Iir;
+      El_Tinfo : Type_Info_Acc;
+      El_Info : Field_Info_Acc;
+      Constr : O_Element_List;
+   begin
+      Start_Record_Type (Constr);
+      for I in Natural loop
+         El := Get_Nth_Element (List, I);
+         exit when El = Null_Iir;
+         El_Tinfo := Get_Info (Get_Type (El));
+         if Is_Unbounded_Type (El_Tinfo) then
+            El_Info := Get_Info (El);
+            New_Record_Field (Constr, El_Info.Field_Bound,
+                              Create_Identifier_Without_Prefix (El),
+                              El_Tinfo.B.Bounds_Type);
+         end if;
+      end loop;
+      Finish_Record_Type (Constr, Info.B.Bounds_Type);
+      Finish_Unbounded_Type_Bounds (Info);
+   end Translate_Record_Type_Bounds;
+
    procedure Translate_Record_Type (Def : Iir_Record_Type_Definition)
    is
       Info       : constant Type_Info_Acc := Get_Info (Def);
@@ -1072,14 +1098,20 @@ package body Trans.Chap3 is
                               Create_Identifier_Without_Prefix (El),
                               El_Tnode);
          end loop;
-         Finish_Record_Type (El_List, Info.Ortho_Type (Kind));
+         Finish_Record_Type (El_List, Info.B.Base_Type (Kind));
       end loop;
       if Is_Unbounded then
          Info.Type_Mode := Type_Mode_Unbounded_Record;
+         Finish_Unbounded_Type_Base (Info);
+         Translate_Record_Type_Bounds (Def, Info);
+         Create_Unbounded_Type_Fat_Pointer (Info);
+         Finish_Type_Definition (Info);
       else
          Info.Type_Mode := Type_Mode_Record;
+         Info.Ortho_Type := Info.B.Base_Type;
+         Finish_Type_Definition (Info);
+         Info.B.Base_Ptr_Type := Info.Ortho_Ptr_Type;
       end if;
-      Finish_Type_Definition (Info);
 
       if Need_Size then
          Create_Size_Var (Def);
@@ -2039,8 +2071,8 @@ package body Trans.Chap3 is
             Translate_Array_Subtype_Element_Subtype (Def);
 
          when Iir_Kind_Record_Type_Definition =>
-            Translate_Record_Type (Def);
             Info.B := Ortho_Info_Basetype_Record_Init;
+            Translate_Record_Type (Def);
 
          when Iir_Kind_Record_Subtype_Definition
             | Iir_Kind_Access_Subtype_Definition =>
@@ -2059,8 +2091,8 @@ package body Trans.Chap3 is
             end;
 
          when Iir_Kind_File_Type_Definition =>
-            Translate_File_Type (Def);
             Info.B := Ortho_Info_Basetype_File_Init;
+            Translate_File_Type (Def);
             if With_Vars then
                Create_File_Type_Var (Def);
             end if;
@@ -2360,7 +2392,8 @@ package body Trans.Chap3 is
       Info : constant Type_Info_Acc := Get_Type_Info (Arr);
    begin
       case Info.Type_Mode is
-         when Type_Mode_Fat_Array =>
+         when Type_Mode_Unbounded_Array
+           | Type_Mode_Unbounded_Record =>
             declare
                Kind : constant Object_Kind_Type := Get_Object_Kind (Arr);
             begin

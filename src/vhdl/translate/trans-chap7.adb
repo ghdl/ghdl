@@ -4506,23 +4506,25 @@ package body Trans.Chap7 is
             return New_Compare_Op (ON_Eq, M2E (L), M2E (R),
                                    Ghdl_Bool_Type);
 
-         when Type_Mode_Array =>
+         when Type_Mode_Array
+           | Type_Mode_Unbounded_Array =>
             declare
+               Base_Type : constant Iir_Array_Type_Definition
+                 := Get_Base_Type (Etype);
                Lc, Rc    : O_Enode;
-               Base_Type : Iir_Array_Type_Definition;
                Func      : Iir;
             begin
-               Base_Type := Get_Base_Type (Etype);
+               Func := Find_Predefined_Function
+                 (Base_Type, Iir_Predefined_Array_Equality);
                Lc := Translate_Implicit_Conv
                  (M2E (L), Etype, Base_Type, Mode_Value, Null_Iir);
                Rc := Translate_Implicit_Conv
                  (M2E (R), Etype, Base_Type, Mode_Value, Null_Iir);
-               Func := Find_Predefined_Function
-                 (Base_Type, Iir_Predefined_Array_Equality);
                return Translate_Predefined_Lib_Operator (Lc, Rc, Func);
             end;
 
-         when Type_Mode_Record =>
+         when Type_Mode_Record
+           | Type_Mode_Unbounded_Record =>
             declare
                Func : Iir;
             begin
@@ -4534,8 +4536,6 @@ package body Trans.Chap7 is
 
          when Type_Mode_Unknown
            | Type_Mode_File
-           | Type_Mode_Unbounded_Array
-           | Type_Mode_Unbounded_Record
            | Type_Mode_Protected =>
             raise Internal_Error;
       end case;
@@ -4680,10 +4680,10 @@ package body Trans.Chap7 is
       for I in Natural loop
          El := Get_Nth_Element (El_List, I);
          exit when El = Null_Iir;
+         Open_Temp;
          Le := Chap6.Translate_Selected_Element (L, El);
          Re := Chap6.Translate_Selected_Element (R, El);
 
-         Open_Temp;
          Start_If_Stmt
            (If_Blk,
             New_Monadic_Op (ON_Not,

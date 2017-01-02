@@ -1652,7 +1652,7 @@ package body Trans.Rtis is
             New_Record_Aggr_El (Aggr, New_Rti_Address (Type_Rti));
             for I in Object_Kind_Type loop
                if Field_Info.Field_Node (I) /= O_Fnode_Null then
-                  Val := New_Offsetof (Info.Ortho_Type (I),
+                  Val := New_Offsetof (Info.B.Base_Type (I),
                                        Field_Info.Field_Node (I),
                                        Ghdl_Index_Type);
                else

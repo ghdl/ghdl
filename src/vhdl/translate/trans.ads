@@ -722,17 +722,20 @@ package Trans is
             Range_Dir    : O_Fnode;
             Range_Length : O_Fnode;
 
-         when Kind_Type_Array =>
+         when Kind_Type_Array
+           | Kind_Type_Record =>
+            --  For unbounded types:
+            --  The base type.
             Base_Type       : O_Tnode_Array;
             Base_Ptr_Type   : O_Tnode_Array;
+            --  The dope vector.
             Bounds_Type     : O_Tnode;
             Bounds_Ptr_Type : O_Tnode;
 
+            --  The ortho type is a fat pointer to the base and the bounds.
+            --  These are the fields of the fat pointer.
             Base_Field   : O_Fnode_Array;
             Bounds_Field : O_Fnode_Array;
-
-         when Kind_Type_Record =>
-            null;
 
          when Kind_Type_File =>
             --  Constant containing the signature of the file.
@@ -811,7 +814,13 @@ package Trans is
 
    Ortho_Info_Basetype_Record_Init : constant Ortho_Info_Basetype_Type :=
      (Kind => Kind_Type_Record,
-      Rti_Max_Depth => 0);
+      Rti_Max_Depth => 0,
+      Base_Type => (O_Tnode_Null, O_Tnode_Null),
+      Base_Ptr_Type => (O_Tnode_Null, O_Tnode_Null),
+      Bounds_Type => O_Tnode_Null,
+      Bounds_Ptr_Type => O_Tnode_Null,
+      Base_Field => (O_Fnode_Null, O_Fnode_Null),
+      Bounds_Field => (O_Fnode_Null, O_Fnode_Null));
 
    Ortho_Info_Basetype_File_Init : constant Ortho_Info_Basetype_Type :=
      (Kind => Kind_Type_File,
@@ -1181,6 +1190,9 @@ package Trans is
          when Kind_Field =>
             --  Node for a record element declaration.
             Field_Node : O_Fnode_Array := (O_Fnode_Null, O_Fnode_Null);
+
+            --  The field in the dope vector (for unbounded element).
+            Field_Bound : O_Fnode := O_Fnode_Null;
 
          when Kind_Expr =>
             --  Ortho tree which represents the expression, used for
