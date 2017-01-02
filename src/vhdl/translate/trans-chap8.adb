@@ -2902,8 +2902,8 @@ package body Trans.Chap8 is
                              (M2Lp (Chap3.Get_Array_Bounds (Fat)),
                               M2Addr (Bnd));
                            New_Assign_Stmt
-                             (M2Lp (Chap3.Get_Array_Base (Fat)),
-                              M2Addr (Chap3.Get_Array_Base (Mval)));
+                             (M2Lp (Chap3.Get_Composite_Base (Fat)),
+                              M2Addr (Chap3.Get_Composite_Base (Mval)));
                         else
                            --  No need to copy the bounds.
                            Copy_Fat_Pointer (Fat, Mval);
@@ -3611,7 +3611,7 @@ package body Trans.Chap8 is
          return Val;
       end if;
       Res := Signal_Assign_Data'
-        (Expr => Chap3.Index_Base (Chap3.Get_Array_Base (Val.Expr),
+        (Expr => Chap3.Index_Base (Chap3.Get_Composite_Base (Val.Expr),
          Targ_Type, New_Obj_Value (Index)),
          Reject => Val.Reject,
          After => Val.After);
@@ -3953,9 +3953,9 @@ package body Trans.Chap8 is
    is
    begin
       return Signal_Direct_Assign_Data'
-        (Drv => Chap3.Index_Base (Chap3.Get_Array_Base (Val.Drv),
+        (Drv => Chap3.Index_Base (Chap3.Get_Composite_Base (Val.Drv),
          Targ_Type, New_Obj_Value (Index)),
-         Expr => Chap3.Index_Base (Chap3.Get_Array_Base (Val.Expr),
+         Expr => Chap3.Index_Base (Chap3.Get_Composite_Base (Val.Expr),
            Targ_Type, New_Obj_Value (Index)),
          Expr_Node => Val.Expr_Node);
    end Gen_Signal_Direct_Update_Data_Array;

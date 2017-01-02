@@ -432,7 +432,7 @@ package body Trans.Chap6 is
 
       return (Offset => Offset,
               Res => Chap3.Index_Base
-                (Chap3.Get_Array_Base (Prefix), Prefix_Type,
+                (Chap3.Get_Composite_Base (Prefix), Prefix_Type,
                  New_Obj_Value (Offset)));
    end Translate_Indexed_Name_Init;
 
@@ -441,7 +441,7 @@ package body Trans.Chap6 is
          return Mnode
    is
    begin
-      return Chap3.Index_Base (Chap3.Get_Array_Base (Prefix),
+      return Chap3.Index_Base (Chap3.Get_Composite_Base (Prefix),
                                Get_Type (Get_Prefix (Expr)),
                                New_Obj_Value (Data.Offset));
    end Translate_Indexed_Name_Finish;
@@ -713,13 +713,13 @@ package body Trans.Chap6 is
                  (New_Selected_Element (New_Obj (Res_D),
                   Slice_Info.B.Base_Field (Kind)),
                   M2E (Chap3.Slice_Base
-                    (Chap3.Get_Array_Base (Prefix),
+                    (Chap3.Get_Composite_Base (Prefix),
                          Slice_Type,
                          New_Obj_Value (Data.Unsigned_Diff))));
                return Dv2M (Res_D, Slice_Info, Kind);
             when Type_Mode_Array =>
                return Chap3.Slice_Base
-                 (Chap3.Get_Array_Base (Prefix),
+                 (Chap3.Get_Composite_Base (Prefix),
                   Slice_Type,
                   New_Obj_Value (Data.Unsigned_Diff));
             when others =>

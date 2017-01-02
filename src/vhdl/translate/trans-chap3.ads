@@ -139,8 +139,8 @@ package Trans.Chap3 is
    --  Get the number of elements in array ATYPE.
    function Get_Array_Type_Length (Atype : Iir) return O_Enode;
 
-   --  Get the base of array ARR.
-   function Get_Array_Base (Arr : Mnode) return Mnode;
+   --  Get the base of array or record ARR.
+   function Get_Composite_Base (Arr : Mnode) return Mnode;
 
    --  Get the bounds of array ARR.
    function Get_Array_Bounds (Arr : Mnode) return Mnode;

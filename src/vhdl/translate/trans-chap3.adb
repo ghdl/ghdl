@@ -155,7 +155,7 @@ package body Trans.Chap3 is
          when Type_Mode_Fat_Array =>
             --  Note: a fat array can only be at the top of a complex type;
             --  the bounds must have been set.
-            New_Association (Assoc, M2Addr (Chap3.Get_Array_Base (Var)));
+            New_Association (Assoc, M2Addr (Chap3.Get_Composite_Base (Var)));
          when others =>
             raise Internal_Error;
       end case;
@@ -2423,12 +2423,13 @@ package body Trans.Chap3 is
       end if;
    end Get_Array_Length;
 
-   function Get_Array_Base (Arr : Mnode) return Mnode
+   function Get_Composite_Base (Arr : Mnode) return Mnode
    is
       Info : constant Type_Info_Acc := Get_Type_Info (Arr);
    begin
       case Info.Type_Mode is
-         when Type_Mode_Fat_Array =>
+         when Type_Mode_Unbounded_Array
+           | Type_Mode_Unbounded_Record =>
             declare
                Kind : constant Object_Kind_Type := Get_Object_Kind (Arr);
             begin
@@ -2440,12 +2441,13 @@ package body Trans.Chap3 is
                   Info.B.Base_Type (Kind),
                   Info.B.Base_Ptr_Type (Kind));
             end;
-         when Type_Mode_Array =>
+         when Type_Mode_Array
+           | Type_Mode_Record =>
             return Arr;
          when others =>
             raise Internal_Error;
       end case;
-   end Get_Array_Base;
+   end Get_Composite_Base;
 
    function Get_Bounds_Acc_Base
      (Acc : O_Enode; D_Type : Iir) return O_Enode
@@ -2541,7 +2543,7 @@ package body Trans.Chap3 is
       Length := Get_Object_Size (Res, Arr_Type);
       --  Allocate the storage for the elements.
       New_Assign_Stmt
-        (M2Lp (Chap3.Get_Array_Base (Res)),
+        (M2Lp (Chap3.Get_Composite_Base (Res)),
          Gen_Alloc (Alloc_Kind, Length, Dinfo.B.Base_Ptr_Type (Kind)));
 
       Maybe_Call_Type_Builder (Res, Arr_Type);
@@ -2582,8 +2584,8 @@ package body Trans.Chap3 is
          when Type_Mode_Unbounded_Array =>
             --  a fat array.
             D := Stabilize (Dest);
-            Gen_Memcpy (M2Addr (Get_Array_Base (D)),
-                        M2Addr (Get_Array_Base (E2M (Src, Info, Kind))),
+            Gen_Memcpy (M2Addr (Get_Composite_Base (D)),
+                        M2Addr (Get_Composite_Base (E2M (Src, Info, Kind))),
                         Get_Object_Size (D, Obj_Type));
          when Type_Mode_Unbounded_Record =>
             --  TODO

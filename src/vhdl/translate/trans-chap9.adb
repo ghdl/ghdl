@@ -1262,7 +1262,7 @@ package body Trans.Chap9 is
          return Mnode
    is
    begin
-      return Chap3.Index_Base (Chap3.Get_Array_Base (Val),
+      return Chap3.Index_Base (Chap3.Get_Composite_Base (Val),
                                Targ_Type, New_Obj_Value (Index));
    end Gen_Register_Direct_Driver_Update_Data_Array;
 
@@ -2337,7 +2337,7 @@ package body Trans.Chap9 is
          if Get_Type_Info (Data.Val).Type_Mode = Type_Mode_Record then
             Res.Val := Stabilize (Data.Val);
          else
-            Res.Val := Chap3.Get_Array_Base (Data.Val);
+            Res.Val := Chap3.Get_Composite_Base (Data.Val);
          end if;
       end if;
 

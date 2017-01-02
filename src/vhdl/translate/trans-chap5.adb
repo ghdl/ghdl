@@ -326,7 +326,7 @@ package body Trans.Chap5 is
    begin
       --  FIXME: should check matching elements!
       Res := (Actual_Sig =>
-                Chap3.Index_Base (Chap3.Get_Array_Base (Data.Actual_Sig),
+                Chap3.Index_Base (Chap3.Get_Composite_Base (Data.Actual_Sig),
                   Data.Actual_Type, New_Obj_Value (Index)),
               Actual_Type => Get_Element_Subtype (Data.Actual_Type),
               Mode => Data.Mode,
@@ -435,8 +435,8 @@ package body Trans.Chap5 is
                --  Copy pointer to the values.
                if Get_Info (Formal_Type).Type_Mode in Type_Mode_Arrays then
                   New_Assign_Stmt
-                    (M2Lp (Chap3.Get_Array_Base (Formal_Val)),
-                     M2Addr (Chap3.Get_Array_Base (Actual_Val)));
+                    (M2Lp (Chap3.Get_Composite_Base (Formal_Val)),
+                     M2Addr (Chap3.Get_Composite_Base (Actual_Val)));
                else
                   New_Assign_Stmt (M2Lp (Formal_Val), M2Addr (Actual_Val));
                end if;

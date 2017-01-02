@@ -759,8 +759,8 @@ package body Trans.Chap7 is
       Res := Create_Temp (Type_Info, Kind);
       Stable_Expr := Stabilize (Expr);
       New_Assign_Stmt
-        (M2Lp (Chap3.Get_Array_Base (Res)),
-         New_Convert_Ov (M2Addr (Chap3.Get_Array_Base (Stable_Expr)),
+        (M2Lp (Chap3.Get_Composite_Base (Res)),
+         New_Convert_Ov (M2Addr (Chap3.Get_Composite_Base (Stable_Expr)),
            Type_Info.B.Base_Ptr_Type (Kind)));
       New_Assign_Stmt
         (M2Lp (Chap3.Get_Array_Bounds (Res)),
@@ -799,7 +799,7 @@ package body Trans.Chap7 is
       Finish_Loop_Stmt (Success_Label);
       Close_Temp;
 
-      return Chap3.Get_Array_Base (Expr_Stable);
+      return Chap3.Get_Composite_Base (Expr_Stable);
    end Convert_Array_To_Thin_Array;
 
    function Translate_Implicit_Array_Conversion
@@ -1302,7 +1302,7 @@ package body Trans.Chap7 is
            (M2Lp (Chap3.Get_Array_Bounds (Var_Sub_Arr)),
             M2Addr (Chap3.Get_Array_Bounds (M)));
          New_Assign_Stmt
-           (M2Lp (Chap3.Get_Array_Base (Var_Sub_Arr)),
+           (M2Lp (Chap3.Get_Composite_Base (Var_Sub_Arr)),
             M2Addr (Chap3.Slice_Base (Var_Arr,
                                       Expr_Type,
                                       New_Obj_Value (Var_Off))));
@@ -1577,7 +1577,7 @@ package body Trans.Chap7 is
                     Chap3.Get_Object_Size (Res, Expr_Type),
                     Info.B.Base_Ptr_Type (Mode_Value)));
       New_Assign_Stmt
-        (M2Lp (Chap3.Get_Array_Base (Res)), M2Addr (Var_Arr));
+        (M2Lp (Chap3.Get_Composite_Base (Res)), M2Addr (Var_Arr));
 
       --  Assign expressions
       Open_Temp;
@@ -1667,7 +1667,7 @@ package body Trans.Chap7 is
       Dec_Var (Len);
       New_Assign_Stmt
         (New_Obj (El),
-         M2E (Chap3.Index_Base (Chap3.Get_Array_Base (Arr),
+         M2E (Chap3.Index_Base (Chap3.Get_Composite_Base (Arr),
                                 Left_Type, New_Obj_Value (Len))));
       Start_If_Stmt (If_Blk, New_Compare_Op (Op,
                                              New_Obj_Value (El),
@@ -1735,7 +1735,7 @@ package body Trans.Chap7 is
       Arr := Stabilize (E2M (Val, Get_Info (Val_Type), Mode_Value));
       return Translate_To_String
         (Subprg, Res_Type, Loc,
-         M2E (Chap3.Get_Array_Base (Arr)),
+         M2E (Chap3.Get_Composite_Base (Arr)),
          M2E (Chap3.Range_To_Length
                 (Chap3.Get_Array_Range (Arr, Val_Type, 1))));
    end Translate_Bv_To_String;
@@ -1820,13 +1820,13 @@ package body Trans.Chap7 is
          Translate_Predefined_Logical
            (Op,
             New_Obj_Value (El),
-            M2E (Chap3.Index_Base (Chap3.Get_Array_Base (Arr),
+            M2E (Chap3.Index_Base (Chap3.Get_Composite_Base (Arr),
                                    Arr_Type, New_Obj_Value (Len)))));
       Finish_Loop_Stmt (Label);
       Close_Temp;
 
       Res := Create_Temp (Res_Info, Mode_Value);
-      New_Assign_Stmt (M2Lp (Chap3.Get_Array_Base (Res)),
+      New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Base (Res)),
                        New_Obj_Value (Base));
       New_Assign_Stmt (M2Lp (Chap3.Get_Array_Bounds (Res)),
                        M2Addr (Chap3.Get_Array_Bounds (Arr)));
@@ -1887,7 +1887,7 @@ package body Trans.Chap7 is
          New_Dyadic_Op
            (Op,
             New_Obj_Value (Res),
-            M2E (Chap3.Index_Base (Chap3.Get_Array_Base (Arr),
+            M2E (Chap3.Index_Base (Chap3.Get_Composite_Base (Arr),
                                    Arr_Type, New_Obj_Value (Len)))));
       Finish_Loop_Stmt (Label);
       Close_Temp;
@@ -1989,14 +1989,14 @@ package body Trans.Chap7 is
       Start_Association (Assoc, Subprg);
       New_Association
         (Assoc,
-         New_Convert_Ov (M2E (Chap3.Get_Array_Base (L)), Ghdl_Ptr_Type));
+         New_Convert_Ov (M2E (Chap3.Get_Composite_Base (L)), Ghdl_Ptr_Type));
       New_Association
         (Assoc,
          M2E (Chap3.Range_To_Length (Chap3.Get_Array_Range (L, L_Type, 1))));
 
       New_Association
         (Assoc,
-         New_Convert_Ov (M2E (Chap3.Get_Array_Base (R)), Ghdl_Ptr_Type));
+         New_Convert_Ov (M2E (Chap3.Get_Composite_Base (R)), Ghdl_Ptr_Type));
       New_Association
         (Assoc,
          M2E (Chap3.Range_To_Length (Chap3.Get_Array_Range (R, R_Type, 1))));
@@ -2580,7 +2580,7 @@ package body Trans.Chap7 is
                end case;
                return Translate_To_String
                  (Subprg, Res_Type, Expr,
-                  New_Convert_Ov (M2E (Chap3.Get_Array_Base (Arg)),
+                  New_Convert_Ov (M2E (Chap3.Get_Composite_Base (Arg)),
                     Ghdl_Ptr_Type),
                   Chap3.Get_Array_Length (Arg, Left_Type),
                   New_Lit (Rtis.New_Rti_Address
@@ -2713,10 +2713,10 @@ package body Trans.Chap7 is
       case Info.Type_Mode is
          when Type_Mode_Fat_Array =>
             Arr_Var := Stabilize (Target);
-            Base_Ptr := Stabilize (Chap3.Get_Array_Base (Arr_Var));
+            Base_Ptr := Stabilize (Chap3.Get_Composite_Base (Arr_Var));
             Len_Val := Chap3.Get_Array_Length (Arr_Var, Target_Type);
          when Type_Mode_Array =>
-            Base_Ptr := Stabilize (Chap3.Get_Array_Base (Target));
+            Base_Ptr := Stabilize (Chap3.Get_Composite_Base (Target));
             Len_Val := Chap3.Get_Array_Type_Length (Target_Type);
          when others =>
             raise Internal_Error;
@@ -3119,7 +3119,7 @@ package body Trans.Chap7 is
    begin
       Open_Temp;
       Targ := Stabilize (Target);
-      Base := Stabilize (Chap3.Get_Array_Base (Targ));
+      Base := Stabilize (Chap3.Get_Composite_Base (Targ));
       Bounds := Stabilize (Chap3.Get_Array_Bounds (Targ));
       Aggr_Info := Get_Aggregate_Info (Aggr);
 
@@ -3324,7 +3324,7 @@ package body Trans.Chap7 is
                --  Copy values.
                Gen_Memcpy
                  (Chap3.Get_Bounds_Acc_Base (New_Obj_Value (Res), D_Type),
-                  M2Addr (Chap3.Get_Array_Base (Val_M)),
+                  M2Addr (Chap3.Get_Composite_Base (Val_M)),
                   New_Obj_Value (Val_Size));
 
                return New_Obj_Value (Res);
@@ -3355,7 +3355,7 @@ package body Trans.Chap7 is
         (M2Lp (Chap3.Get_Array_Bounds (Res)),
          New_Convert_Ov (New_Obj_Value (Ptr), D_Info.B.Bounds_Ptr_Type));
       New_Assign_Stmt
-        (M2Lp (Chap3.Get_Array_Base (Res)),
+        (M2Lp (Chap3.Get_Composite_Base (Res)),
          Chap3.Get_Bounds_Acc_Base (New_Obj_Value (Ptr), D_Type));
       return Res;
    end Bounds_Acc_To_Fat_Pointer;
@@ -3451,7 +3451,7 @@ package body Trans.Chap7 is
                Expr_Type, E,
                Loc);
             return New_Convert_Ov
-              (M2Addr (Chap3.Get_Array_Base (E)),
+              (M2Addr (Chap3.Get_Composite_Base (E)),
                Res_Info.Ortho_Ptr_Type (Mode_Value));
          when Type_Mode_Fat_Array =>
             declare
@@ -3571,8 +3571,8 @@ package body Trans.Chap7 is
 
       --  Set base.
       New_Assign_Stmt
-        (M2Lp (Chap3.Get_Array_Base (Res)),
-         New_Convert_Ov (M2Addr (Chap3.Get_Array_Base (E)),
+        (M2Lp (Chap3.Get_Composite_Base (Res)),
+         New_Convert_Ov (M2Addr (Chap3.Get_Composite_Base (E)),
            Res_Info.B.Base_Ptr_Type (Mode_Value)));
       --  Set bounds.
       New_Assign_Stmt
@@ -3596,7 +3596,7 @@ package body Trans.Chap7 is
       pragma Unreferenced (Targ, Targ_Type);
    begin
       if Get_Type_Info (Data).Type_Mode = Type_Mode_Fat_Array then
-         return Stabilize (Chap3.Get_Array_Base (Data));
+         return Stabilize (Chap3.Get_Composite_Base (Data));
       else
          return Stabilize (Data);
       end if;
@@ -4459,13 +4459,13 @@ package body Trans.Chap7 is
       New_Assign_Stmt
         (New_Obj (Var_L_El),
          M2E (Chap3.Index_Base
-           (Chap3.Get_Array_Base (Dp2M (L, Info, Mode_Value)),
+           (Chap3.Get_Composite_Base (Dp2M (L, Info, Mode_Value)),
                 Arr_Type,
                 New_Obj_Value (Var_I))));
       New_Assign_Stmt
         (New_Obj (Var_R_El),
          M2E (Chap3.Index_Base
-           (Chap3.Get_Array_Base (Dp2M (R, Info, Mode_Value)),
+           (Chap3.Get_Composite_Base (Dp2M (R, Info, Mode_Value)),
                 Arr_Type,
                 New_Obj_Value (Var_I))));
       Gen_Compare (Var_L_El, Var_R_El);
@@ -4617,9 +4617,9 @@ package body Trans.Chap7 is
       New_Return_Stmt (New_Lit (Std_Boolean_True_Node));
       Finish_If_Stmt (If_Blk);
       Open_Temp;
-      Le := Chap3.Index_Base (Chap3.Get_Array_Base (L), Arr_Type,
+      Le := Chap3.Index_Base (Chap3.Get_Composite_Base (L), Arr_Type,
                               New_Obj_Value (Var_I));
-      Re := Chap3.Index_Base (Chap3.Get_Array_Base (R), Arr_Type,
+      Re := Chap3.Index_Base (Chap3.Get_Composite_Base (R), Arr_Type,
                               New_Obj_Value (Var_I));
       Start_If_Stmt
         (If_Blk,
@@ -4814,14 +4814,14 @@ package body Trans.Chap7 is
         (Res, Alloc_Return, Arr_Type,
          Chap3.Get_Array_Bounds (Dp2M (L, Info, Mode_Value)));
       New_Assign_Stmt
-        (New_Obj (Var_Base), M2Addr (Chap3.Get_Array_Base (Res)));
+        (New_Obj (Var_Base), M2Addr (Chap3.Get_Composite_Base (Res)));
       New_Assign_Stmt
         (New_Obj (Var_L_Base),
-         M2Addr (Chap3.Get_Array_Base (Dp2M (L, Info, Mode_Value))));
+         M2Addr (Chap3.Get_Composite_Base (Dp2M (L, Info, Mode_Value))));
       if not Is_Monadic then
          New_Assign_Stmt
            (New_Obj (Var_R_Base),
-            M2Addr (Chap3.Get_Array_Base (Dp2M (R, Info, Mode_Value))));
+            M2Addr (Chap3.Get_Composite_Base (Dp2M (R, Info, Mode_Value))));
       end if;
 
       --  Do the logical operation on each element.
@@ -5102,8 +5102,8 @@ package body Trans.Chap7 is
               New_Lit (Ghdl_Index_0),
               Ghdl_Bool_Type)));
       New_Assign_Stmt
-        (M2Lp (Chap3.Get_Array_Base (Res)),
-         M2Addr (Chap3.Get_Array_Base (L)));
+        (M2Lp (Chap3.Get_Composite_Base (Res)),
+         M2Addr (Chap3.Get_Composite_Base (L)));
       New_Return_Stmt;
       Finish_If_Stmt (If_Blk);
 
@@ -5112,11 +5112,11 @@ package body Trans.Chap7 is
         (New_Obj (Var_Res_Base),
          Gen_Alloc (Alloc_Return, New_Obj_Value (Var_Length),
            Info.B.Base_Ptr_Type (Mode_Value)));
-      New_Assign_Stmt (M2Lp (Chap3.Get_Array_Base (Res)),
+      New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Base (Res)),
                        New_Obj_Value (Var_Res_Base));
 
       New_Assign_Stmt (New_Obj (Var_L_Base),
-                       M2Addr (Chap3.Get_Array_Base (L)));
+                       M2Addr (Chap3.Get_Composite_Base (L)));
 
       Start_If_Stmt (If_Blk,
                      New_Compare_Op (ON_Gt,
@@ -5393,7 +5393,7 @@ package body Trans.Chap7 is
                     (Ghdl_Index_Type,
                      Chap3.Get_Array_Length (Var, Etype));
                   Translate_Rw_Length (Var_Max, Ghdl_Write_Scalar);
-                  Translate_Rw_Array (Chap3.Get_Array_Base (Var), Etype,
+                  Translate_Rw_Array (Chap3.Get_Composite_Base (Var), Etype,
                                       Var_Max, Ghdl_Write_Scalar);
                   Close_Temp;
                end;
@@ -5417,7 +5417,7 @@ package body Trans.Chap7 is
                   Chap3.Get_Array_Length (Var, Etype),
                   Ghdl_Bool_Type),
                   Subprg, 1);
-               Translate_Rw_Array (Chap3.Get_Array_Base (Var), Etype,
+               Translate_Rw_Array (Chap3.Get_Composite_Base (Var), Etype,
                                    Var_Len, Ghdl_Read_Scalar);
                New_Return_Stmt (New_Convert_Ov (New_Obj_Value (Var_Len),
                                 Std_Integer_Otype));

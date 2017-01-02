@@ -376,7 +376,7 @@ package body Trans.Chap4 is
                      New_Compare_Op (ON_Eq,
                        New_Obj_Value (Index), Upper_Limit,
                        Ghdl_Bool_Type));
-      Init_Object (Chap3.Index_Base (Chap3.Get_Array_Base (Sobj),
+      Init_Object (Chap3.Index_Base (Chap3.Get_Composite_Base (Sobj),
                    Obj_Type,
                    New_Obj_Value (Index)),
                    Get_Element_Subtype (Obj_Type));
@@ -634,7 +634,7 @@ package body Trans.Chap4 is
             Chap3.Gen_Deallocate
               (New_Value (M2Lp (Chap3.Get_Array_Bounds (V))));
             Chap3.Gen_Deallocate
-              (New_Value (M2Lp (Chap3.Get_Array_Base (V))));
+              (New_Value (M2Lp (Chap3.Get_Composite_Base (V))));
             Close_Temp;
          end;
       elsif Is_Complex_Type (Type_Info) then
@@ -675,7 +675,7 @@ package body Trans.Chap4 is
                      New_Obj_Value (Len),
                      Get_Nbr_Signals
                        (Chap3.Index_Base
-                            (Chap3.Get_Array_Base (Ssig), Sig_Type,
+                            (Chap3.Get_Composite_Base (Ssig), Sig_Type,
                              New_Lit (Ghdl_Index_0)),
                         Get_Element_Subtype (Sig_Type))));
                Finish_If_Stmt (If_Blk);
@@ -741,7 +741,7 @@ package body Trans.Chap4 is
                return Res;
             when Type_Mode_Arrays =>
                Res := Chap3.Index_Base
-                 (Chap3.Get_Array_Base (Res), Res_Type,
+                 (Chap3.Get_Composite_Base (Res), Res_Type,
                   New_Lit (Ghdl_Index_0));
                Res_Type := Get_Element_Subtype (Res_Type);
             when Type_Mode_Records =>
@@ -926,9 +926,9 @@ package body Trans.Chap4 is
                Res.Init_Val := Stabilize (Data.Init_Val);
             end if;
          when Type_Mode_Arrays =>
-            Res.Value := Chap3.Get_Array_Base (Data.Value);
+            Res.Value := Chap3.Get_Composite_Base (Data.Value);
             if Data.Has_Val then
-               Res.Init_Val := Chap3.Get_Array_Base (Data.Init_Val);
+               Res.Init_Val := Chap3.Get_Composite_Base (Data.Init_Val);
             end if;
          when others =>
             raise Internal_Error;
@@ -1273,8 +1273,8 @@ package body Trans.Chap4 is
          Res.Targ_Val := Stabilize (Data.Targ_Val);
          Res.Pfx := Stabilize (Data.Pfx);
       else
-         Res.Targ_Val := Chap3.Get_Array_Base (Data.Targ_Val);
-         Res.Pfx := Chap3.Get_Array_Base (Data.Pfx);
+         Res.Targ_Val := Chap3.Get_Composite_Base (Data.Targ_Val);
+         Res.Pfx := Chap3.Get_Composite_Base (Data.Pfx);
       end if;
       return Res;
    end Create_Delayed_Signal_Prepare_Composite;
@@ -1583,7 +1583,7 @@ package body Trans.Chap4 is
                when Type_Mode_Array =>
                   Stabilize (N);
                   New_Assign_Stmt (Get_Var (A),
-                                   M2E (Chap3.Get_Array_Base (N)));
+                                   M2E (Chap3.Get_Composite_Base (N)));
                   Chap3.Check_Array_Match (Decl_Type, T2M (Decl_Type, Mode),
                                            Name_Type, N, Decl);
                when Type_Mode_Acc
@@ -2049,7 +2049,7 @@ package body Trans.Chap4 is
                        Ghdl_Bool_Type));
       --      fill array[i]
       V := Chap3.Index_Base
-        (Chap3.Get_Array_Base (Dv2M (Var_Array, Base_Info, Mode_Value)),
+        (Chap3.Get_Composite_Base (Dv2M (Var_Array, Base_Info, Mode_Value)),
          Base_Type, New_Obj_Value (Var_I));
       Data := Read_Source_Data'(Vals, Var_I, Read_Port);
       Read_Signal_Source (V, El_Type, Data);
@@ -2085,7 +2085,7 @@ package body Trans.Chap4 is
            New_Obj_Value (Var_J))));
 
       V := Chap3.Index_Base
-        (Chap3.Get_Array_Base (Dv2M (Var_Array, Base_Info, Mode_Value)),
+        (Chap3.Get_Composite_Base (Dv2M (Var_Array, Base_Info, Mode_Value)),
          Base_Type, New_Obj_Value (Var_I));
       Data := Read_Source_Data'(Vals, Var_J, Read_Driver);
       Read_Signal_Source (V, El_Type, Data);
