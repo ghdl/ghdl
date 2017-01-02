@@ -488,9 +488,9 @@ package body Trans.Chap3 is
       end;
    end Create_File_Type_Var;
 
-   -------------
-   --  Array  --
-   -------------
+   -----------------------
+   --  Unbounded types  --
+   -----------------------
 
    function Type_To_Last_Object_Kind (Def : Iir) return Object_Kind_Type is
    begin
@@ -501,20 +501,59 @@ package body Trans.Chap3 is
       end if;
    end Type_To_Last_Object_Kind;
 
-   procedure Create_Array_Fat_Pointer
-     (Info : Type_Info_Acc; Kind : Object_Kind_Type)
+   procedure Create_Unbounded_Type_Fat_Pointer (Info : Type_Info_Acc)
    is
       Constr : O_Element_List;
    begin
-      Start_Record_Type (Constr);
-      New_Record_Field
-        (Constr, Info.B.Base_Field (Kind), Wki_Base,
-         Info.B.Base_Ptr_Type (Kind));
-      New_Record_Field
-        (Constr, Info.B.Bounds_Field (Kind), Wki_Bounds,
-         Info.B.Bounds_Ptr_Type);
-      Finish_Record_Type (Constr, Info.Ortho_Type (Kind));
-   end Create_Array_Fat_Pointer;
+      for Kind in Object_Kind_Type loop
+         exit when Info.B.Base_Type (Kind) = O_Tnode_Null;
+
+         Start_Record_Type (Constr);
+         New_Record_Field
+           (Constr, Info.B.Base_Field (Kind), Wki_Base,
+            Info.B.Base_Ptr_Type (Kind));
+         New_Record_Field
+           (Constr, Info.B.Bounds_Field (Kind), Wki_Bounds,
+            Info.B.Bounds_Ptr_Type);
+         Finish_Record_Type (Constr, Info.Ortho_Type (Kind));
+      end loop;
+   end Create_Unbounded_Type_Fat_Pointer;
+
+   procedure Finish_Unbounded_Type_Base (Info : Type_Info_Acc)
+   is
+      Id, Idptr : O_Ident;
+   begin
+      for Kind in Object_Kind_Type loop
+         exit when Info.B.Base_Type (Kind) = O_Tnode_Null;
+
+         case Kind is
+            when Mode_Value =>
+               --  For the values.
+               Id := Create_Identifier ("BASE");
+               Idptr := Create_Identifier ("BASEP");
+            when Mode_Signal =>
+               --  For the signals
+               Id := Create_Identifier ("SIGBASE");
+               Idptr := Create_Identifier ("SIGBASEP");
+         end case;
+         New_Type_Decl (Id, Info.B.Base_Type (Kind));
+         Info.B.Base_Ptr_Type (Kind) :=
+           New_Access_Type (Info.B.Base_Type (Kind));
+         New_Type_Decl (Idptr, Info.B.Base_Ptr_Type (Kind));
+      end loop;
+   end Finish_Unbounded_Type_Base;
+
+   --  Create the dope vector type declaration and access type.
+   procedure Finish_Unbounded_Type_Bounds (Info : Type_Info_Acc) is
+   begin
+      New_Type_Decl (Create_Identifier ("BOUND"), Info.B.Bounds_Type);
+      Info.B.Bounds_Ptr_Type := New_Access_Type (Info.B.Bounds_Type);
+      New_Type_Decl (Create_Identifier ("BOUNDP"), Info.B.Bounds_Ptr_Type);
+   end Finish_Unbounded_Type_Bounds;
+
+   -------------
+   --  Array  --
+   -------------
 
    --  Declare the bounds types for DEF.
    procedure Translate_Array_Type_Bounds
@@ -559,11 +598,7 @@ package body Trans.Chap3 is
                            Get_Info (Get_Base_Type (Index)).B.Range_Type);
       end loop;
       Finish_Record_Type (Constr, Info.B.Bounds_Type);
-      New_Type_Decl (Create_Identifier ("BOUND"),
-                     Info.B.Bounds_Type);
-      Info.B.Bounds_Ptr_Type := New_Access_Type (Info.B.Bounds_Type);
-      New_Type_Decl (Create_Identifier ("BOUNDP"),
-                     Info.B.Bounds_Ptr_Type);
+      Finish_Unbounded_Type_Bounds (Info);
    end Translate_Array_Type_Bounds;
 
    procedure Translate_Array_Type_Base
@@ -572,7 +607,6 @@ package body Trans.Chap3 is
    is
       El_Type   : constant Iir := Get_Element_Subtype (Def);
       El_Tinfo  : Type_Info_Acc;
-      Id, Idptr : O_Ident;
    begin
       --  Be sure the element type is translated.
       Translate_Type_Definition (El_Type, True);
@@ -588,23 +622,10 @@ package body Trans.Chap3 is
          end if;
       else
          for Kind in Mode_Value .. Type_To_Last_Object_Kind (Def) loop
-            case Kind is
-               when Mode_Value =>
-                  --  For the values.
-                  Id := Create_Identifier ("BASE");
-                  Idptr := Create_Identifier ("BASEP");
-               when Mode_Signal =>
-                  --  For the signals
-                  Id := Create_Identifier ("SIGBASE");
-                  Idptr := Create_Identifier ("SIGBASEP");
-            end case;
             Info.B.Base_Type (Kind) :=
               New_Array_Type (El_Tinfo.Ortho_Type (Kind), Ghdl_Index_Type);
-            New_Type_Decl (Id, Info.B.Base_Type (Kind));
-            Info.B.Base_Ptr_Type (Kind) :=
-              New_Access_Type (Info.B.Base_Type (Kind));
-            New_Type_Decl (Idptr, Info.B.Base_Ptr_Type (Kind));
          end loop;
+         Finish_Unbounded_Type_Base (Info);
       end if;
    end Translate_Array_Type_Base;
 
@@ -620,10 +641,7 @@ package body Trans.Chap3 is
       Translate_Array_Type_Base (Def, Info);
       Translate_Array_Type_Bounds (Def, Info);
       Info.Ortho_Type (Mode_Signal) := O_Tnode_Null;
-      Create_Array_Fat_Pointer (Info, Mode_Value);
-      if Get_Has_Signal_Flag (Def) then
-         Create_Array_Fat_Pointer (Info, Mode_Signal);
-      end if;
+      Create_Unbounded_Type_Fat_Pointer (Info);
       Finish_Type_Definition (Info, False);
 
       El_Tinfo := Get_Info (Get_Element_Subtype (Def));
