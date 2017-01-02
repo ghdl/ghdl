@@ -1056,7 +1056,7 @@ package body Sem_Decls is
                   --   function MAXIMUM (L : T) return E;
                   if Vhdl_Std >= Vhdl_08
                     and then (Get_Kind (Element_Type) in
-                                Iir_Kinds_Scalar_Type_Definition)
+                                Iir_Kinds_Scalar_Type_And_Subtype_Definition)
                   then
                      Add_Vector_Min_Max
                        (Name_Maximum, Iir_Predefined_Vector_Maximum);

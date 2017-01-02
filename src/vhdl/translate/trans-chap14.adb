@@ -431,7 +431,8 @@ package body Trans.Chap14 is
       Prefix      : constant Iir := Get_Prefix (Attr);
       Prefix_Type : constant Iir := Get_Type (Prefix);
    begin
-      if Get_Kind (Prefix_Type) in Iir_Kinds_Scalar_Type_Definition then
+      if Get_Kind (Prefix_Type) in Iir_Kinds_Scalar_Type_And_Subtype_Definition
+      then
          --  Effecient handling for a scalar signal.
          Name := Chap6.Translate_Name (Prefix, Mode_Signal);
          return New_Value (Get_Signal_Field (Name, Field));
@@ -720,7 +721,8 @@ package body Trans.Chap14 is
       Prefix := Get_Prefix (Attr);
       Prefix_Type := Get_Type (Prefix);
 
-      if Get_Kind (Prefix_Type) in Iir_Kinds_Scalar_Type_Definition then
+      if Get_Kind (Prefix_Type) in Iir_Kinds_Scalar_Type_And_Subtype_Definition
+      then
          --  Effecient handling for a scalar signal.
          Name := Chap6.Translate_Name (Prefix, Mode_Signal);
          return Read_Driving_Attribute (New_Value (M2Lv (Name)));

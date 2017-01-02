@@ -399,7 +399,7 @@ package body Trans.Chap3 is
    function Get_File_Signature_Length (Def : Iir) return Natural is
    begin
       case Get_Kind (Def) is
-         when Iir_Kinds_Scalar_Type_Definition =>
+         when Iir_Kinds_Scalar_Type_And_Subtype_Definition =>
             return 1;
          when Iir_Kind_Array_Type_Definition
             | Iir_Kind_Array_Subtype_Definition =>
@@ -434,7 +434,7 @@ package body Trans.Chap3 is
         := "beEiIpPF";
    begin
       case Get_Kind (Def) is
-         when Iir_Kinds_Scalar_Type_Definition =>
+         when Iir_Kinds_Scalar_Type_And_Subtype_Definition =>
             Res (Off) := Scalar_Map (Get_Info (Def).Type_Mode);
             Off := Off + 1;
          when Iir_Kind_Array_Type_Definition
@@ -471,7 +471,8 @@ package body Trans.Chap3 is
       Type_Name : constant Iir := Get_Type (Get_File_Type_Mark (Def));
       Info      : Type_Info_Acc;
    begin
-      if Get_Kind (Type_Name) in Iir_Kinds_Scalar_Type_Definition then
+      if Get_Kind (Type_Name) in Iir_Kinds_Scalar_Type_And_Subtype_Definition
+      then
          return;
       end if;
       declare
@@ -856,7 +857,7 @@ package body Trans.Chap3 is
       Base_Info := Get_Info (Get_Base_Type (Def));
       case Get_Array_Bounds_Staticness (Def) is
          when None
-            | Globally =>
+           | Globally =>
             Info.S.Static_Bounds := False;
             Info.S.Array_Bounds := Create_Var
               (Create_Var_Identifier ("STB"), Base_Info.B.Bounds_Type);
@@ -2026,7 +2027,6 @@ package body Trans.Chap3 is
                Translate_Array_Subtype_Definition (Def);
                Info.B := Base_Info.B;
                Info.S := Base_Info.S;
-               --Info.Type_Range_Type := Base_Info.Type_Range_Type;
                if With_Vars then
                   Create_Array_Subtype_Bounds_Var (Def, False);
                end if;
@@ -2888,7 +2888,7 @@ package body Trans.Chap3 is
       Expr_Type : constant Iir := Get_Type (Expr);
    begin
       --  pragma Assert (Base_Type = Get_Base_Type (Atype));
-      if Get_Kind (Expr_Type) in Iir_Kinds_Scalar_Type_Definition
+      if Get_Kind (Expr_Type) in Iir_Kinds_Scalar_Type_And_Subtype_Definition
         and then Need_Range_Check (Expr, Atype)
       then
          return Insert_Scalar_Check (Value, Expr, Atype, Expr);

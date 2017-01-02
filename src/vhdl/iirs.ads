@@ -4885,7 +4885,7 @@ package Iirs is
    --Iir_Kind_Integer_Subtype_Definition
      Iir_Kind_Enumeration_Subtype_Definition;
 
-   subtype Iir_Kinds_Scalar_Type_Definition is Iir_Kind range
+   subtype Iir_Kinds_Scalar_Type_And_Subtype_Definition is Iir_Kind range
      Iir_Kind_Physical_Subtype_Definition ..
    --Iir_Kind_Floating_Subtype_Definition
    --Iir_Kind_Integer_Subtype_Definition

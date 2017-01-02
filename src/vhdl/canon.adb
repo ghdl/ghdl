@@ -129,7 +129,8 @@ package body Canon is
                   Canon_Extract_Sensitivity
                     (Get_Prefix (Expr), Sensitivity_List, Is_Target);
                   Suff := Get_Suffix (Expr);
-                  if Get_Kind (Suff) not in Iir_Kinds_Scalar_Type_Definition
+                  if Get_Kind (Suff)
+                    not in Iir_Kinds_Scalar_Type_And_Subtype_Definition
                   then
                      Canon_Extract_Sensitivity
                        (Suff, Sensitivity_List, False);

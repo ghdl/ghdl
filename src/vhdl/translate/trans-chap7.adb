@@ -3475,7 +3475,7 @@ package body Trans.Chap7 is
       Res      : O_Enode;
    begin
       case Get_Kind (Res_Type) is
-         when Iir_Kinds_Scalar_Type_Definition =>
+         when Iir_Kinds_Scalar_Type_And_Subtype_Definition =>
             Res := New_Convert_Ov (Expr, Res_Info.Ortho_Type (Mode_Value));
             if Chap3.Need_Range_Check (Null_Iir, Res_Type) then
                Res := Chap3.Insert_Scalar_Check

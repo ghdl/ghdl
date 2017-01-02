@@ -2903,7 +2903,8 @@ package body Sem_Names is
       case Id is
          when Name_Image
            | Name_Value =>
-            if Get_Kind (Prefix_Type) not in Iir_Kinds_Scalar_Type_Definition
+            if Get_Kind (Prefix_Type)
+              not in Iir_Kinds_Scalar_Type_And_Subtype_Definition
             then
                Error_Msg_Sem
                  (+Attr, "prefix of %i attribute must be a scalar type",
@@ -3145,7 +3146,7 @@ package body Sem_Names is
       end case;
 
       case Get_Kind (Prefix_Type) is
-         when Iir_Kinds_Scalar_Type_Definition =>
+         when Iir_Kinds_Scalar_Type_And_Subtype_Definition =>
             --  Note: prefix is a scalar type or subtype.
             return Sem_Predefined_Type_Attribute (Attr);
          when Iir_Kinds_Array_Type_Definition =>

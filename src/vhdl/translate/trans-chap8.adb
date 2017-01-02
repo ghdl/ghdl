@@ -2248,7 +2248,7 @@ package body Trans.Chap8 is
 
                if Is_Static_Construct (Actual)
                  or else (Get_Kind (Act_Type)
-                            in Iir_Kinds_Scalar_Type_Definition)
+                            in Iir_Kinds_Scalar_Type_And_Subtype_Definition)
                  or else Get_Kind (Ftype) = Iir_Kind_File_Type_Definition
                  or else Is_Result_On_Stack2_Expression (Actual)
                then
