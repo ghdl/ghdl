@@ -2628,7 +2628,7 @@ package body Disp_Vhdl is
       Put ("""");
 
       for I in 1 .. Len loop
-         Pos := Str_Table.Element_String8 (Str_Id, Pos32 (I));
+         Pos := Str_Table.Element_String8 (Str_Id, I);
          Lit := Get_Nth_Element (Literal_List, Natural (Pos));
          Id := Get_Identifier (Lit);
          pragma Assert (Name_Table.Is_Character (Id));
