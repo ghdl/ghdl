@@ -549,8 +549,10 @@ package body Trans.Chap9 is
                Chap8.Translate_Report
                  (Stmt, Ghdl_Psl_Assert_Failed, Severity_Level_Error);
             when Iir_Kind_Psl_Cover_Statement =>
-               Chap8.Translate_Report
-                 (Stmt, Ghdl_Psl_Cover, Severity_Level_Note);
+               if Get_Report_Expression (Stmt) /= Null_Iir then
+                  Chap8.Translate_Report
+                     (Stmt, Ghdl_Psl_Cover, Severity_Level_Note);
+               end if;
             when others =>
                Error_Kind ("Translate_Psl_Directive_Statement", Stmt);
          end case;
