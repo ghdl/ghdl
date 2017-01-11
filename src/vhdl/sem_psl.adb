@@ -232,6 +232,15 @@ package body Sem_Psl is
       end case;
    end Sem_Boolean;
 
+   procedure Sem_Boolean (N : Node)
+   is
+      Bool : Node;
+   begin
+      Bool := Get_Boolean (N);
+      Bool := Sem_Boolean (Bool);
+      Set_Boolean (N, Bool);
+   end Sem_Boolean;
+
    --  Used by Sem_Property to rewrite a property logical operator to a
    --  boolean logical operator.
    function Reduce_Logic_Node (Prop : Node; Bool_Kind : Nkind) return Node
@@ -259,8 +268,7 @@ package body Sem_Psl is
          when N_Clocked_SERE =>
             Res := Sem_Sequence (Get_SERE (Seq));
             Set_SERE (Seq, Res);
-            Res := Sem_Boolean (Get_Boolean (Seq));
-            Set_Boolean (Seq, Res);
+            Sem_Boolean (Seq);
             return Seq;
          when N_Concat_SERE
            | N_Fusion_SERE
@@ -312,6 +320,27 @@ package body Sem_Psl is
       end case;
    end Sem_Sequence;
 
+   function Sem_Property (Prop : Node; Top : Boolean := False) return Node;
+
+   procedure Sem_Property (N : Node; Top : Boolean := False)
+   is
+      Prop : Node;
+   begin
+      Prop := Get_Property (N);
+      Prop := Sem_Property (Prop, Top);
+      Set_Property (N, Prop);
+   end Sem_Property;
+
+   procedure Sem_Number (N : Node)
+   is
+      Num : Node;
+   begin
+      Num := Get_Number (N);
+      --  FIXME: todo
+      null;
+      Set_Number (N, Num);
+   end Sem_Number;
+
    function Sem_Property (Prop : Node; Top : Boolean := False) return Node
    is
       Res : Node;
@@ -324,27 +353,21 @@ package body Sem_Psl is
            | N_Never =>
             --  By extension, clock_event is allowed within outermost
             --  always/never.
-            Res := Sem_Property (Get_Property (Prop), Top);
-            Set_Property (Prop, Res);
+            Sem_Property (Prop, Top);
             return Prop;
          when N_Eventually =>
-            Res := Sem_Property (Get_Property (Prop));
-            Set_Property (Prop, Res);
+            Sem_Property (Prop);
             return Prop;
          when N_Clock_Event =>
-            Res := Sem_Property (Get_Property (Prop));
-            Set_Property (Prop, Res);
-            Res := Sem_Boolean (Get_Boolean (Prop));
-            Set_Boolean (Prop, Res);
+            Sem_Property (Prop);
+            Sem_Boolean (Prop);
             if not Top then
                Error_Msg_Sem (+Prop, "inner clock event not supported");
             end if;
             return Prop;
          when N_Abort =>
-            Res := Sem_Property (Get_Property (Prop));
-            Set_Property (Prop, Res);
-            Res := Sem_Boolean (Get_Boolean (Prop));
-            Set_Boolean (Prop, Res);
+            Sem_Property (Prop);
+            Sem_Boolean (Prop);
             return Prop;
          when N_Until
            | N_Before =>
@@ -379,18 +402,20 @@ package body Sem_Psl is
            | N_Imp_Seq =>
             Res := Sem_Sequence (Get_Sequence (Prop));
             Set_Sequence (Prop, Res);
-            Res := Sem_Property (Get_Property (Prop));
-            Set_Property (Prop, Res);
+            Sem_Property (Prop);
             return Prop;
          when N_Next =>
-            --  FIXME: number.
-            Res := Sem_Property (Get_Property (Prop));
-            Set_Property (Prop, Res);
+            Sem_Number (Prop);
+            Sem_Property (Prop);
             return Prop;
          when N_Next_A =>
             --  FIXME: range.
-            Res := Sem_Property (Get_Property (Prop));
-            Set_Property (Prop, Res);
+            Sem_Property (Prop);
+            return Prop;
+         when N_Next_Event =>
+            Sem_Number (Prop);
+            Sem_Boolean (Prop);
+            Sem_Property (Prop);
             return Prop;
          when N_HDL_Expr =>
             Res := Sem_Hdl_Expr (Prop);
