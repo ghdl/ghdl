@@ -1753,7 +1753,7 @@ package body Trans.Rtis is
          when Iir_Kind_Record_Subtype_Definition
             | Iir_Kind_Access_Subtype_Definition =>
             --  FIXME: No separate infos (yet).
-            null;
+            Info.Type_Rti := Get_Info (Get_Base_Type (Atype)).Type_Rti;
          when Iir_Kind_Record_Type_Definition =>
             Generate_Record_Type_Definition (Atype);
          when Iir_Kind_Protected_Type_Declaration =>

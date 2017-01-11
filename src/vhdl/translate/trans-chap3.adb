@@ -554,11 +554,11 @@ package body Trans.Chap3 is
 
    function Create_Static_Composite_Subtype_Bounds (Def : Iir) return O_Cnode
    is
-      Info : constant Type_Info_Acc := Get_Info (Def);
+      Binfo : constant Type_Info_Acc := Get_Info (Get_Base_Type (Def));
       List : O_Record_Aggr_List;
       Res : O_Cnode;
    begin
-      Start_Record_Aggr (List, Info.B.Bounds_Type);
+      Start_Record_Aggr (List, Binfo.B.Bounds_Type);
 
       case Get_Kind (Def) is
          when Iir_Kind_Array_Subtype_Definition =>
@@ -579,14 +579,18 @@ package body Trans.Chap3 is
             declare
                El_List : constant Iir_List :=
                  Get_Elements_Declaration_List (Def);
+               El_Blist : constant Iir_List :=
+                 Get_Elements_Declaration_List (Get_Base_Type (Def));
                El : Iir;
-               El_Info : Field_Info_Acc;
+               Bel : Iir;
+               Bel_Info : Field_Info_Acc;
             begin
                for I in Natural loop
-                  El := Get_Nth_Element (El_List, I);
-                  exit when El = Null_Iir;
-                  El_Info := Get_Info (El);
-                  if El_Info.Field_Bound /= O_Fnode_Null then
+                  Bel := Get_Nth_Element (El_Blist, I);
+                  exit when Bel = Null_Iir;
+                  Bel_Info := Get_Info (Bel);
+                  if Bel_Info.Field_Bound /= O_Fnode_Null then
+                     El := Get_Nth_Element (El_List, I);
                      New_Record_Aggr_El
                        (List,
                         Create_Static_Composite_Subtype_Bounds
@@ -2040,7 +2044,6 @@ package body Trans.Chap3 is
             Translate_Enumeration_Type (Def);
             Create_Scalar_Type_Range_Type (Def, True);
             Create_Type_Range_Var (Def);
-            --Create_Type_Desc_Var (Def);
 
          when Iir_Kind_Integer_Type_Definition =>
             Translate_Integer_Type (Def);
@@ -2110,8 +2113,23 @@ package body Trans.Chap3 is
             Info.B := Ortho_Info_Basetype_Record_Init;
             Translate_Record_Type (Def);
 
-         when Iir_Kind_Record_Subtype_Definition
-            | Iir_Kind_Access_Subtype_Definition =>
+         when Iir_Kind_Record_Subtype_Definition =>
+            Info.all := Base_Info.all;
+            Info.S := Ortho_Info_Subtype_Record_Init;
+            declare
+               Tm : constant Iir :=
+                 Get_Type (Get_Named_Entity (Get_Subtype_Type_Mark (Def)));
+            begin
+               if With_Vars
+                 and then Get_Constraint_State (Tm) /= Fully_Constrained
+                 and then Get_Constraint_State (Def) = Fully_Constrained
+               then
+                  Create_Composite_Subtype_Bounds_Var (Def, False);
+               end if;
+            end;
+
+         when Iir_Kind_Access_Subtype_Definition =>
+            --  Like the access type.
             Free_Info (Def);
             Set_Info (Def, Base_Info);
 

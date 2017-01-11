@@ -769,15 +769,13 @@ package Trans is
             --  Tree for the range record declaration.
             Range_Var : Var_Type;
 
-         when Kind_Type_Array =>
+         when Kind_Type_Array
+           | Kind_Type_Record =>
             --  True if the bounds are static.
             Static_Bounds : Boolean;
 
             --  Variable containing the bounds for a constrained type.
             Composite_Bounds : Var_Type;
-
-         when Kind_Type_Record =>
-            null;
 
          when Kind_Type_File =>
             null;
@@ -821,6 +819,11 @@ package Trans is
       Bounds_Ptr_Type => O_Tnode_Null,
       Base_Field => (O_Fnode_Null, O_Fnode_Null),
       Bounds_Field => (O_Fnode_Null, O_Fnode_Null));
+
+   Ortho_Info_Subtype_Record_Init : constant Ortho_Info_Subtype_Type :=
+     (Kind => Kind_Type_Record,
+      Static_Bounds => False,
+      Composite_Bounds => Null_Var);
 
    Ortho_Info_Basetype_File_Init : constant Ortho_Info_Basetype_Type :=
      (Kind => Kind_Type_File,
