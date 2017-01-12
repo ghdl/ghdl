@@ -798,7 +798,7 @@ package body Trans.Chap14 is
    begin
       Res := Create_Temp (Std_String_Node);
       Create_Temp_Stack2_Mark;
-      case Pinfo.Type_Mode is
+      case Type_Mode_Scalar (Pinfo.Type_Mode) is
          when Type_Mode_B1 =>
             Subprg := Ghdl_Image_B1;
             Conv := Ghdl_Bool_Type;
@@ -811,6 +811,9 @@ package body Trans.Chap14 is
          when Type_Mode_I32 =>
             Subprg := Ghdl_Image_I32;
             Conv := Ghdl_I32_Type;
+         when Type_Mode_I64 =>
+            Subprg := Ghdl_Image_I64;
+            Conv := Ghdl_I64_Type;
          when Type_Mode_P32 =>
             Subprg := Ghdl_Image_P32;
             Conv := Ghdl_I32_Type;
@@ -820,8 +823,6 @@ package body Trans.Chap14 is
          when Type_Mode_F64 =>
             Subprg := Ghdl_Image_F64;
             Conv := Ghdl_Real_Type;
-         when others =>
-            raise Internal_Error;
       end case;
       Start_Association (Assoc, Subprg);
       New_Association (Assoc,
@@ -831,7 +832,7 @@ package body Trans.Chap14 is
          New_Convert_Ov
            (Chap7.Translate_Expression (Get_Parameter (Attr), Prefix_Type),
             Conv));
-      case Pinfo.Type_Mode is
+      case Type_Mode_Scalar (Pinfo.Type_Mode) is
          when Type_Mode_B1
             | Type_Mode_E8
             | Type_Mode_E32
@@ -840,10 +841,9 @@ package body Trans.Chap14 is
             New_Association
               (Assoc, New_Lit (Rtis.New_Rti_Address (Pinfo.Type_Rti)));
          when Type_Mode_I32
-            | Type_Mode_F64 =>
+           | Type_Mode_I64
+           | Type_Mode_F64 =>
             null;
-         when others =>
-            raise Internal_Error;
       end case;
       New_Procedure_Call (Assoc);
       return New_Address (New_Obj (Res), Std_String_Ptr_Node);
@@ -857,7 +857,7 @@ package body Trans.Chap14 is
       Subprg      : O_Dnode;
       Assoc       : O_Assoc_List;
    begin
-      case Pinfo.Type_Mode is
+      case Type_Mode_Scalar (Pinfo.Type_Mode) is
          when Type_Mode_B1 =>
             Subprg := Ghdl_Value_B1;
          when Type_Mode_E8 =>
@@ -866,21 +866,21 @@ package body Trans.Chap14 is
             Subprg := Ghdl_Value_E32;
          when Type_Mode_I32 =>
             Subprg := Ghdl_Value_I32;
+         when Type_Mode_I64 =>
+            Subprg := Ghdl_Value_I64;
          when Type_Mode_P32 =>
             Subprg := Ghdl_Value_P32;
          when Type_Mode_P64 =>
             Subprg := Ghdl_Value_P64;
          when Type_Mode_F64 =>
             Subprg := Ghdl_Value_F64;
-         when others =>
-            raise Internal_Error;
       end case;
       Start_Association (Assoc, Subprg);
       New_Association
         (Assoc,
          Chap7.Translate_Expression (Get_Parameter (Attr),
            String_Type_Definition));
-      case Pinfo.Type_Mode is
+      case Type_Mode_Scalar (Pinfo.Type_Mode) is
          when Type_Mode_B1
             | Type_Mode_E8
             | Type_Mode_E32
@@ -889,10 +889,9 @@ package body Trans.Chap14 is
             New_Association
               (Assoc, New_Lit (Rtis.New_Rti_Address (Pinfo.Type_Rti)));
          when Type_Mode_I32
-            | Type_Mode_F64 =>
+           | Type_Mode_I64
+           | Type_Mode_F64 =>
             null;
-         when others =>
-            raise Internal_Error;
       end case;
       return New_Convert_Ov (New_Function_Call (Assoc),
                              Pinfo.Ortho_Type (Mode_Value));

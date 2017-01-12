@@ -1129,6 +1129,11 @@ package body Translation is
       Create_Image_Value_Subprograms
         ("i32", Ghdl_I32_Type, False, Ghdl_Image_I32, Ghdl_Value_I32);
 
+      --  procedure __ghdl_image_i64 (res : std_string_ptr_node;
+      --                              val : ghdl_i64_type);
+      Create_Image_Value_Subprograms
+        ("i64", Ghdl_I64_Type, False, Ghdl_Image_I64, Ghdl_Value_I64);
+
       --  procedure __ghdl_image_p32 (res : std_string_ptr_node;
       --                              val : ghdl_i32_type;
       --                             rti : ghdl_rti_access);

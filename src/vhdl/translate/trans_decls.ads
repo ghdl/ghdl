@@ -203,6 +203,7 @@ package Trans_Decls is
    Ghdl_Image_E8 : O_Dnode;
    Ghdl_Image_E32 : O_Dnode;
    Ghdl_Image_I32 : O_Dnode;
+   Ghdl_Image_I64 : O_Dnode;
    Ghdl_Image_P32 : O_Dnode;
    Ghdl_Image_P64 : O_Dnode;
    Ghdl_Image_F64 : O_Dnode;
@@ -212,6 +213,7 @@ package Trans_Decls is
    Ghdl_Value_E8 : O_Dnode;
    Ghdl_Value_E32 : O_Dnode;
    Ghdl_Value_I32 : O_Dnode;
+   Ghdl_Value_I64 : O_Dnode;
    Ghdl_Value_P32 : O_Dnode;
    Ghdl_Value_P64 : O_Dnode;
    Ghdl_Value_F64 : O_Dnode;
