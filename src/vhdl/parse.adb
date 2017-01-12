@@ -3879,6 +3879,64 @@ package body Parse is
       return Res;
    end Parse_Disconnection_Specification;
 
+   function Parse_Psl_Default_Clock return Iir
+   is
+      Res : Iir;
+   begin
+      Res := Create_Iir (Iir_Kind_Psl_Default_Clock);
+      Set_Location (Res);
+      Scanner.Flag_Psl := True;
+      Scan_Expect (Tok_Psl_Clock);
+      Scan_Expect (Tok_Is);
+      Scan;
+      Set_Psl_Boolean (Res, Parse_Psl.Parse_Psl_Boolean);
+      Expect (Tok_Semi_Colon);
+      Scanner.Flag_Scan_In_Comment := False;
+      Scanner.Flag_Psl := False;
+      return Res;
+   end Parse_Psl_Default_Clock;
+
+   function Parse_Psl_Declaration return Iir
+   is
+      Tok : constant Token_Type := Current_Token;
+      Loc : constant Location_Type := Get_Token_Location;
+      Res : Iir;
+      Decl : PSL_Node;
+      Id : Name_Id;
+   begin
+      --  Skip 'property', 'sequence' or 'endpoint'.
+      Scan;
+
+      if Current_Token /= Tok_Identifier then
+         Error_Msg_Parse ("declaration name expected here");
+         Id := Null_Identifier;
+      else
+         Id := Current_Identifier;
+      end if;
+
+      --  Parse PSL declaration.
+      Scanner.Flag_Psl := True;
+      Decl := Parse_Psl.Parse_Psl_Declaration (Tok);
+      Expect (Tok_Semi_Colon);
+      Scanner.Flag_Scan_In_Comment := False;
+      Scanner.Flag_Psl := False;
+
+      if Tok = Tok_Psl_Endpoint
+        and then Parse_Psl.Is_Instantiated_Declaration (Decl)
+      then
+         --  Instantiated endpoint: make it visible from VHDL.
+         Res := Create_Iir (Iir_Kind_Psl_Endpoint_Declaration);
+      else
+         --  Otherwise, it will be visible only from PSL.
+         Res := Create_Iir (Iir_Kind_Psl_Declaration);
+      end if;
+      Set_Location (Res, Loc);
+      Set_Identifier (Res, Id);
+      Set_Psl_Declaration (Res, Decl);
+
+      return Res;
+   end Parse_Psl_Declaration;
+
    --  Return the parent of a nested package.  Used to check if some
    --  declarations are allowed in a package.
    function Get_Package_Parent (Decl : Iir) return Iir
@@ -4092,8 +4150,8 @@ package body Parse is
    --
    --  Declarations for protected_type_declaration are handled in sem.
    --
-   --  (*: block means block_declarative_item, ie: block_statement,
-   --      architecture_body and generate_statement)
+   --  (*): block means block_declarative_item, ie: block_statement,
+   --       architecture_body and generate_statement)
    procedure Parse_Declarative_Part (Parent : Iir)
    is
       use Declaration_Chain_Handling;
@@ -4334,7 +4392,7 @@ package body Parse is
                     | Iir_Kind_Package_Declaration =>
                      null;
                   when others =>
-                     Error_Kind ("parse_declarative_part", Package_Parent);
+                     Error_Kind ("parse_declarative_part", Parent);
                end case;
                Decl := Parse_Disconnection_Specification;
             when Tok_Use =>
@@ -4356,9 +4414,33 @@ package body Parse is
                   end if;
                end if;
             when Tok_Identifier =>
-               Error_Msg_Parse
-                 ("object class keyword such as 'variable' is expected");
-               Eat_Tokens_Until_Semi_Colon;
+               if Vhdl_Std >= Vhdl_08
+                 and then Current_Identifier = Name_Default
+               then
+                  case Get_Kind (Parent) is
+                     when Iir_Kind_Function_Body
+                       | Iir_Kind_Procedure_Body
+                       | Iir_Kinds_Process_Statement
+                       | Iir_Kind_Protected_Type_Body
+                       | Iir_Kind_Package_Declaration
+                       | Iir_Kind_Package_Body
+                       | Iir_Kind_Protected_Type_Declaration =>
+                        Error_Msg_Parse
+                          ("PSL default clock declaration not allowed here");
+                     when Iir_Kind_Entity_Declaration
+                       | Iir_Kind_Architecture_Body
+                       | Iir_Kind_Block_Statement
+                       | Iir_Kind_Generate_Statement_Body =>
+                        null;
+                     when others =>
+                        Error_Kind ("parse_declarative_part", Parent);
+                  end case;
+                  Decl := Parse_Psl_Default_Clock;
+               else
+                  Error_Msg_Parse
+                    ("object class keyword such as 'variable' is expected");
+                  Eat_Tokens_Until_Semi_Colon;
+               end if;
             when Tok_Semi_Colon =>
                Error_Msg_Parse ("';' (semi colon) not allowed alone");
                Scan;
@@ -7546,63 +7628,6 @@ package body Parse is
             end if;
       end case;
    end Parse_Concurrent_Assignment;
-
-   function Parse_Psl_Default_Clock return Iir
-   is
-      Res : Iir;
-   begin
-      Res := Create_Iir (Iir_Kind_Psl_Default_Clock);
-      Scanner.Flag_Psl := True;
-      Scan_Expect (Tok_Psl_Clock);
-      Scan_Expect (Tok_Is);
-      Scan;
-      Set_Psl_Boolean (Res, Parse_Psl.Parse_Psl_Boolean);
-      Expect (Tok_Semi_Colon);
-      Scanner.Flag_Scan_In_Comment := False;
-      Scanner.Flag_Psl := False;
-      return Res;
-   end Parse_Psl_Default_Clock;
-
-   function Parse_Psl_Declaration return Iir
-   is
-      Tok : constant Token_Type := Current_Token;
-      Loc : constant Location_Type := Get_Token_Location;
-      Res : Iir;
-      Decl : PSL_Node;
-      Id : Name_Id;
-   begin
-      --  Skip 'property', 'sequence' or 'endpoint'.
-      Scan;
-
-      if Current_Token /= Tok_Identifier then
-         Error_Msg_Parse ("declaration name expected here");
-         Id := Null_Identifier;
-      else
-         Id := Current_Identifier;
-      end if;
-
-      --  Parse PSL declaration.
-      Scanner.Flag_Psl := True;
-      Decl := Parse_Psl.Parse_Psl_Declaration (Tok);
-      Expect (Tok_Semi_Colon);
-      Scanner.Flag_Scan_In_Comment := False;
-      Scanner.Flag_Psl := False;
-
-      if Tok = Tok_Psl_Endpoint
-        and then Parse_Psl.Is_Instantiated_Declaration (Decl)
-      then
-         --  Instantiated endpoint: make it visible from VHDL.
-         Res := Create_Iir (Iir_Kind_Psl_Endpoint_Declaration);
-      else
-         --  Otherwise, it will be visible only from PSL.
-         Res := Create_Iir (Iir_Kind_Psl_Declaration);
-      end if;
-      Set_Location (Res, Loc);
-      Set_Identifier (Res, Id);
-      Set_Psl_Declaration (Res, Decl);
-
-      return Res;
-   end Parse_Psl_Declaration;
 
    --  Parse end of PSL assert/cover statement.
    procedure Parse_Psl_Assert_Report_Severity (Stmt : Iir) is

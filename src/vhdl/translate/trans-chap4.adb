@@ -1676,6 +1676,11 @@ package body Trans.Chap4 is
          when Iir_Kind_Disconnection_Specification =>
             null;
 
+         when Iir_Kind_Psl_Default_Clock =>
+            null;
+         when Iir_Kind_Psl_Declaration =>
+            null;
+
          when Iir_Kind_Component_Declaration =>
             Chap4.Translate_Component_Declaration (Decl);
          when Iir_Kind_Type_Declaration =>
@@ -2515,6 +2520,11 @@ package body Trans.Chap4 is
             when Iir_Kind_Package_Instantiation_Declaration =>
                --  FIXME: finalizers ?
                Chap2.Elab_Package_Instantiation_Declaration (Decl);
+
+            when Iir_Kind_Psl_Default_Clock =>
+               null;
+            when Iir_Kind_Psl_Declaration =>
+               null;
 
             when others =>
                Error_Kind ("elab_declaration_chain", Decl);

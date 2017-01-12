@@ -2784,6 +2784,10 @@ package body Canon is
             null;
          when Iir_Kinds_Quantity_Declaration =>
             null;
+
+         when Iir_Kind_Psl_Default_Clock =>
+            null;
+
          when others =>
             Error_Kind ("canon_declaration", Decl);
       end case;

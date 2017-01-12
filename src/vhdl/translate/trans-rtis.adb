@@ -2331,6 +2331,11 @@ package body Trans.Rtis is
                --  FIXME: todo
                null;
 
+            when Iir_Kind_Psl_Default_Clock =>
+               null;
+            when Iir_Kind_Psl_Declaration =>
+               null;
+
             when others =>
                Error_Kind ("rti.generate_declaration_chain", Decl);
          end case;

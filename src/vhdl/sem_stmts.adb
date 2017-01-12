@@ -1666,7 +1666,7 @@ package body Sem_Stmts is
          Set_Visible_Flag (Guard, True);
       end if;
 
-      Sem_Block (Stmt, True);
+      Sem_Block (Stmt);
       Set_Is_Within_Flag (Stmt, False);
       Close_Declarative_Region;
    end Sem_Block_Statement;
@@ -1674,7 +1674,7 @@ package body Sem_Stmts is
    procedure Sem_Generate_Statement_Body (Bod : Iir) is
    begin
       Set_Is_Within_Flag (Bod, True);
-      Sem_Block (Bod, True); -- Flags.Vhdl_Std /= Vhdl_87);
+      Sem_Block (Bod);
       Set_Is_Within_Flag (Bod, False);
    end Sem_Generate_Statement_Body;
 
@@ -1918,10 +1918,8 @@ package body Sem_Stmts is
 
       Prev_El : Iir;
       Prev_Concurrent_Statement : Iir;
-      Prev_Psl_Default_Clock : Iir;
    begin
       Prev_Concurrent_Statement := Current_Concurrent_Statement;
-      Prev_Psl_Default_Clock := Current_Psl_Default_Clock;
 
       El := Get_Concurrent_Statement_Chain (Parent);
       Prev_El := Null_Iir;
@@ -2006,7 +2004,6 @@ package body Sem_Stmts is
       end loop;
 
       Current_Concurrent_Statement := Prev_Concurrent_Statement;
-      Current_Psl_Default_Clock := Prev_Psl_Default_Clock;
    end Sem_Concurrent_Statement_Chain;
 
    --  Put labels in declarative region.
@@ -2049,27 +2046,26 @@ package body Sem_Stmts is
       end loop;
    end Sem_Labels_Chain;
 
-   procedure Sem_Block (Blk: Iir; Sem_Decls : Boolean)
+   procedure Sem_Block (Blk: Iir)
    is
       Implicit : Implicit_Signal_Declaration_Type;
+      Prev_Psl_Default_Clock : Iir;
    begin
+      Prev_Psl_Default_Clock := Current_Psl_Default_Clock;
       Push_Signals_Declarative_Part (Implicit, Blk);
 
-      if Sem_Decls then
-         Sem_Labels_Chain (Blk);
-         Sem_Declaration_Chain (Blk);
-      end if;
+      Sem_Labels_Chain (Blk);
+      Sem_Declaration_Chain (Blk);
 
       Sem_Concurrent_Statement_Chain (Blk);
 
-      if Sem_Decls then
-         --  FIXME: do it only if there is conf. spec. in the declarative
-         --  part.
-         Sem_Specification_Chain (Blk, Blk);
-         Check_Full_Declaration (Blk, Blk);
-      end if;
+      --  FIXME: do it only if there is conf. spec. in the declarative
+      --  part.
+      Sem_Specification_Chain (Blk, Blk);
+      Check_Full_Declaration (Blk, Blk);
 
       Pop_Signals_Declarative_Part (Implicit);
+      Current_Psl_Default_Clock := Prev_Psl_Default_Clock;
    end Sem_Block;
 
    --  Add a driver for SIG.
