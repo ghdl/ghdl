@@ -4304,9 +4304,13 @@ package body Trans.Chap7 is
       case Get_Kind (Arange) is
          when Iir_Kinds_Denoting_Name =>
             return Translate_Range (Get_Named_Entity (Arange), Range_Type);
-         when Iir_Kind_Subtype_Declaration =>
+         when Iir_Kind_Subtype_Attribute
+           | Iir_Kind_Subtype_Declaration =>
+            return Translate_Range (Get_Type (Arange), Range_Type);
+         when Iir_Kinds_Scalar_Subtype_Definition
+           | Iir_Kind_Enumeration_Type_Definition =>
             --  Must be a scalar subtype.  Range of types is static.
-            return Get_Var (Get_Info (Get_Type (Arange)).S.Range_Var);
+            return Get_Var (Get_Info (Arange).S.Range_Var);
          when Iir_Kind_Range_Array_Attribute =>
             return Chap14.Translate_Range_Array_Attribute (Arange);
          when Iir_Kind_Reverse_Range_Array_Attribute =>

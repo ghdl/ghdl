@@ -747,8 +747,11 @@ package body Parse is
                   return Res;
                elsif Current_Token /= Tok_Range
                  and then Current_Token /= Tok_Identifier
+                 and then not (Vhdl_Std >= Vhdl_08
+                                 and then Current_Token = Tok_Subtype)
                then
-                  Expect (Tok_Identifier, "required for an attribute name");
+                  Expect
+                    (Tok_Identifier, "attribute identifier expected after '");
                   return Null_Iir;
                end if;
                Res := Create_Iir (Iir_Kind_Attribute_Name);

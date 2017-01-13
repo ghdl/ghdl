@@ -433,6 +433,8 @@ package body Iirs is
            | Iir_Kind_Relative_Pathname
            | Iir_Kind_Pathname_Element
            | Iir_Kind_Base_Attribute
+           | Iir_Kind_Subtype_Attribute
+           | Iir_Kind_Element_Attribute
            | Iir_Kind_Left_Type_Attribute
            | Iir_Kind_Right_Type_Attribute
            | Iir_Kind_High_Type_Attribute

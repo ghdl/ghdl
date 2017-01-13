@@ -3353,7 +3353,9 @@ package body Evaluation is
                end;
 
             when Iir_Kind_Subtype_Declaration
-              | Iir_Kind_Base_Attribute =>
+              | Iir_Kind_Base_Attribute
+              | Iir_Kind_Subtype_Attribute
+              | Iir_Kind_Element_Attribute =>
                Expr := Get_Type (Expr);
             when Iir_Kind_Type_Declaration =>
                Expr := Get_Type_Definition (Expr);

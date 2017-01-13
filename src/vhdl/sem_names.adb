@@ -879,30 +879,35 @@ package body Sem_Names is
       end if;
       Res := Finish_Sem_Name (Name);
 
-      if Get_Kind (Res) in Iir_Kinds_Denoting_Name then
-         --  Common correct case.
-         Atype := Get_Named_Entity (Res);
-         case Get_Kind (Atype) is
-            when Iir_Kind_Type_Declaration =>
-               Atype := Get_Type_Definition (Atype);
-            when Iir_Kind_Subtype_Declaration
-              | Iir_Kind_Interface_Type_Declaration =>
-               Atype := Get_Type (Atype);
-            when others =>
+      case Get_Kind (Res) is
+         when Iir_Kinds_Denoting_Name =>
+            --  Common correct case.
+            Atype := Get_Named_Entity (Res);
+            case Get_Kind (Atype) is
+               when Iir_Kind_Type_Declaration =>
+                  Atype := Get_Type_Definition (Atype);
+               when Iir_Kind_Subtype_Declaration
+                 | Iir_Kind_Interface_Type_Declaration
+                 | Iir_Kind_Subtype_Attribute =>
+                  Atype := Get_Type (Atype);
+               when others =>
+                  Error_Msg_Sem
+                    (+Name, "a type mark must denote a type or a subtype");
+                  Atype := Create_Error_Type (Atype);
+                  Set_Named_Entity (Res, Atype);
+            end case;
+         when Iir_Kind_Subtype_Attribute
+           | Iir_Kind_Element_Attribute =>
+            Atype := Get_Type (Res);
+         when others =>
+            if Get_Kind (Res) /= Iir_Kind_Error then
                Error_Msg_Sem
-                 (+Name, "a type mark must denote a type or a subtype");
-               Atype := Create_Error_Type (Atype);
-               Set_Named_Entity (Res, Atype);
-         end case;
-      else
-         if Get_Kind (Res) /= Iir_Kind_Error then
-            Error_Msg_Sem
-              (+Name, "a type mark must be a simple or expanded name");
-         end if;
-         Res := Name;
-         Atype := Create_Error_Type (Name);
-         Set_Named_Entity (Res, Atype);
-      end if;
+                 (+Name, "a type mark must be a simple or expanded name");
+            end if;
+            Res := Name;
+            Atype := Create_Error_Type (Name);
+            Set_Named_Entity (Res, Atype);
+      end case;
 
       if not Incomplete then
          if Get_Kind (Atype) = Iir_Kind_Incomplete_Type_Definition then
@@ -1111,7 +1116,7 @@ package body Sem_Names is
       if Get_Kind (Prefix) = Iir_Kind_Attribute_Name then
          Prefix := Finish_Sem_Name (Prefix);
          Set_Prefix (Attr, Prefix);
-         pragma Assert (Get_Kind (Prefix) = Iir_Kind_Base_Attribute);
+         pragma Assert (Get_Kind (Prefix) in Iir_Kinds_Subtype_Attribute);
       else
          Prefix := Sem_Type_Mark (Prefix);
       end if;
@@ -1689,6 +1694,9 @@ package body Sem_Names is
             else
                Free_Parenthesis_Name (Name, Res);
             end if;
+            return Res;
+         when Iir_Kind_Subtype_Attribute =>
+            Free_Iir (Name);
             return Res;
          when Iir_Kinds_Signal_Value_Attribute =>
             null;
@@ -2892,7 +2900,9 @@ package body Sem_Names is
             Prefix_Type := Get_Type_Definition (Prefix);
          when Iir_Kind_Subtype_Declaration =>
             Prefix_Type := Get_Type (Prefix);
-         when Iir_Kind_Base_Attribute =>
+         when Iir_Kind_Base_Attribute
+           | Iir_Kind_Subtype_Attribute
+           | Iir_Kind_Element_Attribute =>
             Prefix_Type := Get_Type (Prefix);
          when others =>
             Error_Msg_Sem
@@ -3121,7 +3131,9 @@ package body Sem_Names is
             end case;
          when Iir_Kind_Subtype_Declaration
            | Iir_Kind_Type_Declaration
-           | Iir_Kind_Base_Attribute =>
+           | Iir_Kind_Base_Attribute
+           | Iir_Kind_Subtype_Attribute
+           | Iir_Kind_Element_Attribute =>
             Prefix_Type := Get_Type (Prefix);
             if not Is_Fully_Constrained_Type (Prefix_Type) then
                Error_Msg_Sem (+Attr, "prefix type is not constrained");
@@ -3192,6 +3204,38 @@ package body Sem_Names is
       Set_Type (Res, Res_Type);
       return Res;
    end Sem_Array_Attribute_Name;
+
+   --  For 'Subtype
+   function Sem_Subtype_Attribute (Attr : Iir_Attribute_Name) return Iir
+   is
+      Prefix_Name : constant Iir := Get_Prefix (Attr);
+      Prefix : Iir;
+      Prefix_Type : Iir;
+      Res : Iir;
+   begin
+      Prefix := Get_Named_Entity (Prefix_Name);
+
+      --  LRM08 16.2 Predefined attributes
+      --  Prefix: Any prefix O that is appropriate for an object, or an alias
+      --  thereof
+      if Get_Kind (Prefix) not in Iir_Kinds_Object_Declaration then
+         Error_Msg_Sem (+Attr, "prefix must denote an object");
+         return Error_Mark;
+      end if;
+
+      Prefix_Type := Get_Type (Prefix);
+
+      Res := Create_Iir (Iir_Kind_Subtype_Attribute);
+      Location_Copy (Res, Attr);
+      Set_Prefix (Res, Prefix);
+      Set_Type (Res, Prefix_Type);
+
+      Set_Base_Name (Res, Get_Base_Name (Prefix_Name));
+      Set_Name_Staticness (Res, Get_Name_Staticness (Prefix));
+      Set_Type_Staticness (Res, Get_Type_Staticness (Prefix_Type));
+
+      return Res;
+   end Sem_Subtype_Attribute;
 
    function Sem_Signal_Signal_Attribute
      (Attr : Iir_Attribute_Name; Kind : Iir_Kind)
@@ -3620,6 +3664,13 @@ package body Sem_Names is
            | Name_Instance_Name =>
             if Flags.Vhdl_Std > Vhdl_87 then
                Res := Sem_Name_Attribute (Attr);
+            else
+               Res := Sem_User_Attribute (Attr);
+            end if;
+
+         when Name_Subtype =>
+            if Flags.Vhdl_Std >= Vhdl_08 then
+               Res := Sem_Subtype_Attribute (Attr);
             else
                Res := Sem_User_Attribute (Attr);
             end if;
