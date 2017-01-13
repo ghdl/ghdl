@@ -1700,6 +1700,66 @@ package body Disp_Vhdl is
       Put_Line (");");
    end Disp_Group_Declaration;
 
+   procedure Disp_PSL_HDL_Expr (N : PSL.Nodes.HDL_Node) is
+   begin
+      Disp_Expression (Iir (N));
+   end Disp_PSL_HDL_Expr;
+
+   procedure Disp_Psl_Expression (Expr : PSL_Node) is
+   begin
+      PSL.Prints.HDL_Expr_Printer := Disp_PSL_HDL_Expr'Access;
+      PSL.Prints.Print_Property (Expr);
+   end Disp_Psl_Expression;
+
+   procedure Disp_Psl_Sequence (Expr : PSL_Node) is
+   begin
+      PSL.Prints.HDL_Expr_Printer := Disp_PSL_HDL_Expr'Access;
+      PSL.Prints.Print_Sequence (Expr);
+   end Disp_Psl_Sequence;
+
+   procedure Disp_Psl_Default_Clock (Stmt : Iir) is
+   begin
+      if Vhdl_Std < Vhdl_08 then
+         Put ("--psl ");
+      end if;
+      Put ("default clock is ");
+      Disp_Psl_Expression (Get_Psl_Boolean (Stmt));
+      Put_Line (";");
+   end Disp_Psl_Default_Clock;
+
+   procedure Disp_Psl_Declaration (Stmt : Iir)
+   is
+      use PSL.Nodes;
+      Decl : constant PSL_Node := Get_Psl_Declaration (Stmt);
+   begin
+      if Vhdl_Std < Vhdl_08 then
+         Put ("--psl ");
+      end if;
+      case Get_Kind (Decl) is
+         when N_Property_Declaration =>
+            Put ("property ");
+            Disp_Ident (Get_Identifier (Decl));
+            Put (" is ");
+            Disp_Psl_Expression (Get_Property (Decl));
+            Put_Line (";");
+         when N_Sequence_Declaration =>
+            Put ("sequence ");
+            Disp_Ident (Get_Identifier (Decl));
+            Put (" is ");
+            Disp_Psl_Sequence (Get_Sequence (Decl));
+            Put_Line (";");
+         when N_Endpoint_Declaration =>
+            Put ("endpoint ");
+            Disp_Ident (Get_Identifier (Decl));
+            Put (" is ");
+            Disp_Psl_Sequence (Get_Sequence (Decl));
+            Put_Line (";");
+            Disp_PSL_NFA (Get_PSL_NFA (Stmt));
+         when others =>
+            Error_Kind ("disp_psl_declaration", Decl);
+      end case;
+   end Disp_Psl_Declaration;
+
    procedure Disp_Declaration_Chain (Parent : Iir; Indent: Count)
    is
       Decl: Iir;
@@ -1770,6 +1830,8 @@ package body Disp_Vhdl is
                Disp_Package_Body (Decl);
             when Iir_Kind_Package_Instantiation_Declaration =>
                Disp_Package_Instantiation_Declaration (Decl);
+            when Iir_Kind_Psl_Default_Clock =>
+               Disp_Psl_Default_Clock (Decl);
             when others =>
                Error_Kind ("disp_declaration_chain", Decl);
          end case;
@@ -2913,23 +2975,6 @@ package body Disp_Vhdl is
       end case;
    end Disp_Expression;
 
-   procedure Disp_PSL_HDL_Expr (N : PSL.Nodes.HDL_Node) is
-   begin
-      Disp_Expression (Iir (N));
-   end Disp_PSL_HDL_Expr;
-
-   procedure Disp_Psl_Expression (Expr : PSL_Node) is
-   begin
-      PSL.Prints.HDL_Expr_Printer := Disp_PSL_HDL_Expr'Access;
-      PSL.Prints.Print_Property (Expr);
-   end Disp_Psl_Expression;
-
-   procedure Disp_Psl_Sequence (Expr : PSL_Node) is
-   begin
-      PSL.Prints.HDL_Expr_Printer := Disp_PSL_HDL_Expr'Access;
-      PSL.Prints.Print_Sequence (Expr);
-   end Disp_Psl_Sequence;
-
    procedure Disp_Block_Header (Header : Iir_Block_Header; Indent: Count)
    is
       Chain : Iir;
@@ -3094,44 +3139,6 @@ package body Disp_Vhdl is
       Set_Col (Indent);
       Disp_End (Stmt, "generate");
    end Disp_Case_Generate_Statement;
-
-   procedure Disp_Psl_Default_Clock (Stmt : Iir) is
-   begin
-      Put ("--psl default clock is ");
-      Disp_Psl_Expression (Get_Psl_Boolean (Stmt));
-      Put_Line (";");
-   end Disp_Psl_Default_Clock;
-
-   procedure Disp_Psl_Declaration (Stmt : Iir)
-   is
-      use PSL.Nodes;
-      Decl : constant PSL_Node := Get_Psl_Declaration (Stmt);
-   begin
-      Put ("--psl ");
-      case Get_Kind (Decl) is
-         when N_Property_Declaration =>
-            Put ("property ");
-            Disp_Ident (Get_Identifier (Decl));
-            Put (" is ");
-            Disp_Psl_Expression (Get_Property (Decl));
-            Put_Line (";");
-         when N_Sequence_Declaration =>
-            Put ("sequence ");
-            Disp_Ident (Get_Identifier (Decl));
-            Put (" is ");
-            Disp_Psl_Sequence (Get_Sequence (Decl));
-            Put_Line (";");
-         when N_Endpoint_Declaration =>
-            Put ("endpoint ");
-            Disp_Ident (Get_Identifier (Decl));
-            Put (" is ");
-            Disp_Psl_Sequence (Get_Sequence (Decl));
-            Put_Line (";");
-            Disp_PSL_NFA (Get_PSL_NFA (Stmt));
-         when others =>
-            Error_Kind ("disp_psl_declaration", Decl);
-      end case;
-   end Disp_Psl_Declaration;
 
    procedure Disp_PSL_NFA (N : PSL.Nodes.NFA)
    is

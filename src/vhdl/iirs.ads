@@ -5164,7 +5164,7 @@ package Iirs is
      Iir_Kind_Base_Attribute ..
      Iir_Kind_Reverse_Range_Array_Attribute;
 
-   --  Attributes of a scalar type.
+   --  Attributes of scalar types.
    subtype Iir_Kinds_Type_Attribute is Iir_Kind range
      Iir_Kind_Left_Type_Attribute ..
    --Iir_Kind_Right_Type_Attribute
