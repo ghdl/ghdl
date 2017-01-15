@@ -3888,14 +3888,26 @@ package body Parse is
    begin
       Res := Create_Iir (Iir_Kind_Psl_Default_Clock);
       Set_Location (Res);
+
+      --  Recognize PSL keywords.
       Scanner.Flag_Psl := True;
+
+      --  Skip 'default'.
       Scan_Expect (Tok_Psl_Clock);
+      Xrefs.Xref_Keyword (Get_Token_Location);
+
+      --  Skip 'clock'.
       Scan_Expect (Tok_Is);
+
+      --  Skip 'is'.
       Scan;
+
       Set_Psl_Boolean (Res, Parse_Psl.Parse_Psl_Boolean);
       Expect (Tok_Semi_Colon);
+
       Scanner.Flag_Scan_In_Comment := False;
       Scanner.Flag_Psl := False;
+
       return Res;
    end Parse_Psl_Default_Clock;
 
@@ -4420,6 +4432,10 @@ package body Parse is
                if Vhdl_Std >= Vhdl_08
                  and then Current_Identifier = Name_Default
                then
+                  --  This identifier is a PSL keyword.
+                  Xrefs.Xref_Keyword (Get_Token_Location);
+
+                  --  Check whether default clock are allowed in this region.
                   case Get_Kind (Parent) is
                      when Iir_Kind_Function_Body
                        | Iir_Kind_Procedure_Body

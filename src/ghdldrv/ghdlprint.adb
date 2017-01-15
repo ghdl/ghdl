@@ -233,22 +233,26 @@ package body Ghdlprint is
          Bod : Iir;
          Loc : Location_Type;
       begin
-         Disp_Spaces;
          if Flags.Flag_Xref then
             Loc := File_Pos_To_Location (File, Bef_Tok);
             Ref := Find (Loc);
             if Ref = Bad_Xref then
+               Disp_Spaces;
                Disp_Text;
                Warning_Msg_Sem (Warnid_Missing_Xref, Loc, "cannot find xref");
                Missing_Xref := True;
                return;
             end if;
          else
+            Disp_Spaces;
             Disp_Text;
             return;
          end if;
          case Get_Xref_Kind (Ref) is
+            when Xref_Keyword =>
+               Disp_Reserved;
             when Xref_Decl =>
+               Disp_Spaces;
                Put ("<a");
                Disp_Anchor (Loc);
                Decl := Get_Xref_Node (Ref);
@@ -279,6 +283,7 @@ package body Ghdlprint is
                Put ("</a>");
             when Xref_Ref
               | Xref_End =>
+               Disp_Spaces;
                Decl := Get_Xref_Node (Ref);
                Loc := Get_Location (Decl);
                if Loc /= Location_Nil then
@@ -292,6 +297,7 @@ package body Ghdlprint is
                   Disp_Text;
                end if;
             when Xref_Body =>
+               Disp_Spaces;
                Put ("<a");
                Disp_Anchor (Loc);
                Disp_Href (Get_Location (Get_Xref_Node (Ref)));
@@ -1404,6 +1410,8 @@ package body Ghdlprint is
                      Put (" end ");
                   when Xref_Body =>
                      Put (" body ");
+                  when Xref_Keyword =>
+                     Put (" keyword ");
                end case;
                New_Line;
             end;
@@ -1744,6 +1752,9 @@ package body Ghdlprint is
                         Emit_Ref (I, 'r');
                      when Xref_Body =>
                         Emit_Ref (I, 'b');
+                     when Xref_Keyword =>
+                        --  Keywords location are not written.
+                        null;
                   end case;
                end if;
             end loop;
