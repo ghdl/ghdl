@@ -226,6 +226,8 @@ package body Std_Names is
       Def ("instance_name", Name_Instance_Name);
       Def ("path_name",     Name_Path_Name);
 
+      Def ("element",       Name_Element);
+
       Def ("contribution",  Name_Contribution);
       Def ("dot",           Name_Dot);
       Def ("integ",         Name_Integ);

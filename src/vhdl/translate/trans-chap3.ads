@@ -47,8 +47,7 @@ package Trans.Chap3 is
    procedure Translate_Type_Subprograms (Decl : Iir);
 
    procedure Create_Type_Definition_Type_Range (Def : Iir);
-   function Create_Static_Array_Subtype_Bounds
-     (Def : Iir_Array_Subtype_Definition) return O_Cnode;
+   function Create_Static_Composite_Subtype_Bounds (Def : Iir) return O_Cnode;
 
    --  Same as Translate_type_definition only for std.standard.boolean and
    --  std.standard.bit.
@@ -139,8 +138,8 @@ package Trans.Chap3 is
    --  Get the number of elements in array ATYPE.
    function Get_Array_Type_Length (Atype : Iir) return O_Enode;
 
-   --  Get the base of array ARR.
-   function Get_Array_Base (Arr : Mnode) return Mnode;
+   --  Get the base of array or record ARR.
+   function Get_Composite_Base (Arr : Mnode) return Mnode;
 
    --  Get the bounds of array ARR.
    function Get_Array_Bounds (Arr : Mnode) return Mnode;

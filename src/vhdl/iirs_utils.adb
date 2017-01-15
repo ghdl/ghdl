@@ -1054,7 +1054,7 @@ package body Iirs_Utils is
       return Get_Nbr_Elements (Get_Index_Subtype_List (Array_Type));
    end Get_Nbr_Dimensions;
 
-   function Are_Bounds_Locally_Static (Array_Type : Iir) return Boolean
+   function Are_Array_Indexes_Locally_Static (Array_Type : Iir) return Boolean
    is
       Indexes : constant Iir_List := Get_Index_Subtype_List (Array_Type);
       Index : Iir;
@@ -1067,6 +1067,56 @@ package body Iirs_Utils is
          end if;
       end loop;
       return True;
+   end Are_Array_Indexes_Locally_Static;
+
+   --  Return true if array/record bounds are locally static.
+   function Are_Bounds_Locally_Static (Def : Iir) return Boolean
+   is
+      pragma Assert (Get_Constraint_State (Def) = Fully_Constrained);
+   begin
+      case Get_Kind (Def) is
+         when Iir_Kind_Array_Subtype_Definition =>
+            declare
+               El_Btype : Iir;
+            begin
+               --  Indexes.
+               if not Are_Array_Indexes_Locally_Static (Def) then
+                  return False;
+               end if;
+
+               --  Element.
+               El_Btype := Get_Element_Subtype (Get_Base_Type (Def));
+               if not Is_Fully_Constrained_Type (El_Btype) then
+                  return Are_Bounds_Locally_Static (Get_Element_Subtype (Def));
+               else
+                  --  Element was fully constrained.
+                  return True;
+               end if;
+            end;
+         when Iir_Kind_Record_Subtype_Definition =>
+            declare
+               Base_Type : constant Iir := Get_Base_Type (Def);
+               El_List : constant Iir_List :=
+                 Get_Elements_Declaration_List (Def);
+               El_Blist : constant Iir_List :=
+                 Get_Elements_Declaration_List (Base_Type);
+               El, Bel : Iir;
+            begin
+               for I in Natural loop
+                  Bel := Get_Nth_Element (El_Blist, I);
+                  exit when Bel = Null_Iir;
+                  if not Is_Fully_Constrained_Type (Bel) then
+                     El := Get_Nth_Element (El_List, I);
+                     if not Are_Bounds_Locally_Static (El) then
+                        return False;
+                     end if;
+                  end if;
+               end loop;
+               return True;
+            end;
+         when others =>
+            Error_Kind ("get_bounds_staticness", Def);
+      end case;
    end Are_Bounds_Locally_Static;
 
    function Get_Denoted_Type_Mark (Subtyp : Iir) return Iir

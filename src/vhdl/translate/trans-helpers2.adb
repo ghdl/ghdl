@@ -28,8 +28,8 @@ package body Trans.Helpers2 is
 
    procedure Copy_Fat_Pointer (D : Mnode; S: Mnode) is
    begin
-      New_Assign_Stmt (M2Lp (Chap3.Get_Array_Base (D)),
-                       M2Addr (Chap3.Get_Array_Base (S)));
+      New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Base (D)),
+                       M2Addr (Chap3.Get_Composite_Base (S)));
       New_Assign_Stmt (M2Lp (Chap3.Get_Array_Bounds (D)),
                        M2Addr (Chap3.Get_Array_Bounds (S)));
    end Copy_Fat_Pointer;
@@ -250,7 +250,7 @@ package body Trans.Helpers2 is
       case Type_Info.Type_Mode is
          when Type_Mode_Array
             | Type_Mode_Fat_Array =>
-            Res := Chap3.Get_Array_Base (Res);
+            Res := Chap3.Get_Composite_Base (Res);
          when Type_Mode_Record =>
             Res := Stabilize (Res);
          when others =>

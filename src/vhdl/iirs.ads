@@ -3835,6 +3835,7 @@ package Iirs is
    --
    --   Get/Set_Type (Field1)
    --
+   --  Set only when known to be constrained.
    --   Get/Set_Index_Subtype (Field2)
    --
    --   Get/Set_Parameter (Field4)
@@ -3842,6 +3843,19 @@ package Iirs is
    --   Get/Set_Base_Name (Field5)
    --
    --   Get/Set_Expr_Staticness (State1)
+   --
+   --   Get/Set_Name_Staticness (State2)
+
+   -- Iir_Kind_Subtype_Attribute (Short)
+   -- Iir_Kind_Element_Attribute (Short)
+   --
+   --   Get/Set_Prefix (Field0)
+   --
+   --   Get/Set_Type (Field1)
+   --
+   --   Get/Set_Base_Name (Field5)
+   --
+   --   Get/Set_Type_Staticness (State1)
    --
    --   Get/Set_Name_Staticness (State2)
 
@@ -4240,6 +4254,8 @@ package Iirs is
 
    -- Attributes
       Iir_Kind_Base_Attribute,
+      Iir_Kind_Subtype_Attribute,
+      Iir_Kind_Element_Attribute,
       Iir_Kind_Left_Type_Attribute,            --  type_attribute
       Iir_Kind_Right_Type_Attribute,           --  type_attribute
       Iir_Kind_High_Type_Attribute,            --  type_attribute
@@ -4885,7 +4901,7 @@ package Iirs is
    --Iir_Kind_Integer_Subtype_Definition
      Iir_Kind_Enumeration_Subtype_Definition;
 
-   subtype Iir_Kinds_Scalar_Type_Definition is Iir_Kind range
+   subtype Iir_Kinds_Scalar_Type_And_Subtype_Definition is Iir_Kind range
      Iir_Kind_Physical_Subtype_Definition ..
    --Iir_Kind_Floating_Subtype_Definition
    --Iir_Kind_Integer_Subtype_Definition
@@ -5148,12 +5164,19 @@ package Iirs is
      Iir_Kind_Base_Attribute ..
      Iir_Kind_Reverse_Range_Array_Attribute;
 
+   --  Attributes of scalar types.
    subtype Iir_Kinds_Type_Attribute is Iir_Kind range
      Iir_Kind_Left_Type_Attribute ..
    --Iir_Kind_Right_Type_Attribute
    --Iir_Kind_High_Type_Attribute
    --Iir_Kind_Low_Type_Attribute
      Iir_Kind_Ascending_Type_Attribute;
+
+   --  Attributes whose result is a type.
+   subtype Iir_Kinds_Subtype_Attribute is Iir_Kind range
+     Iir_Kind_Base_Attribute ..
+   --Iir_Kind_Subtype_Attribute
+     Iir_Kind_Element_Attribute;
 
    subtype Iir_Kinds_Scalar_Type_Attribute is Iir_Kind range
      Iir_Kind_Pos_Attribute ..
@@ -6444,7 +6467,9 @@ package Iirs is
    procedure Set_Constraint_State (Atype : Iir; State : Iir_Constraint);
 
    --  Reference either index_subtype_definition_list of array_type_definition
-   --  or index_constraint_list of array_subtype_definition.
+   --  or index_constraint_list of array_subtype_definition.  Set only when
+   --  the index_sutype is constrained (to differentiate with unconstrained
+   --  index type).
    --  Field: Field9 Ref (uc)
    function Get_Index_Subtype_List (Decl : Iir) return Iir_List;
    procedure Set_Index_Subtype_List (Decl : Iir; List : Iir_List);

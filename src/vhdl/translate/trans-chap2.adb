@@ -367,9 +367,8 @@ package body Trans.Chap2 is
             when Iir_Kind_Type_Declaration
                | Iir_Kind_Anonymous_Type_Declaration =>
                Atype := Get_Type_Definition (Decl);
-               case Iir_Kinds_Type_And_Subtype_Definition
-                 (Get_Kind (Atype)) is
-                  when Iir_Kinds_Scalar_Type_Definition =>
+               case Iir_Kinds_Type_And_Subtype_Definition (Get_Kind (Atype)) is
+                  when Iir_Kinds_Scalar_Type_And_Subtype_Definition =>
                      null;
                   when Iir_Kind_Access_Type_Definition
                      | Iir_Kind_Access_Subtype_Definition =>
@@ -1121,7 +1120,8 @@ package body Trans.Chap2 is
                          C => null,
                          Ortho_Type => Src.Ortho_Type,
                          Ortho_Ptr_Type => Src.Ortho_Ptr_Type,
-                         T => Src.T,
+                         B => Src.B,
+                         S => Src.S,
                          Type_Rti => Src.Type_Rti);
             pragma Assert (Src.C = null);
          when Kind_Object =>

@@ -799,7 +799,7 @@ package body Sem_Types is
       El: Iir;
       El_Type : Iir;
       Resolved_Flag : Boolean;
-      Staticness : Iir_Staticness;
+      Type_Staticness : Iir_Staticness;
       Constraint : Iir_Constraint;
    begin
       --  LRM 10.1
@@ -808,7 +808,7 @@ package body Sem_Types is
 
       Resolved_Flag := True;
       Last_Type := Null_Iir;
-      Staticness := Locally;
+      Type_Staticness := Locally;
       Constraint := Fully_Constrained;
       Set_Signal_Type_Flag (Def, True);
 
@@ -848,12 +848,11 @@ package body Sem_Types is
             end if;
             Resolved_Flag :=
               Resolved_Flag and Get_Resolved_Flag (El_Type);
-            Staticness := Min (Staticness,
-                               Get_Type_Staticness (El_Type));
-            Constraint := Update_Record_Constraint
-              (Constraint, El_Type);
+            Type_Staticness := Min (Type_Staticness,
+                                    Get_Type_Staticness (El_Type));
+            Constraint := Update_Record_Constraint (Constraint, El_Type);
          else
-            Staticness := None;
+            Type_Staticness := None;
          end if;
          Set_Base_Element_Declaration (El, El);
          Sem_Scopes.Add_Name (El);
@@ -863,7 +862,7 @@ package body Sem_Types is
       Close_Declarative_Region;
       Set_Base_Type (Def, Def);
       Set_Resolved_Flag (Def, Resolved_Flag);
-      Set_Type_Staticness (Def, Staticness);
+      Set_Type_Staticness (Def, Type_Staticness);
       Set_Constraint_State (Def, Constraint);
       return Def;
    end Sem_Record_Type_Definition;
@@ -1414,6 +1413,7 @@ package body Sem_Types is
             Set_Is_Ref (Res, True);
             Set_Resolution_Indication
               (Res, Copy_Resolution_Indication (Def));
+
          when Iir_Kind_Enumeration_Type_Definition =>
             Res := Create_Iir (Iir_Kind_Enumeration_Subtype_Definition);
             Set_Range_Constraint (Res, Get_Range_Constraint (Def));
@@ -1434,6 +1434,7 @@ package body Sem_Types is
             Set_Element_Subtype (Res, Get_Element_Subtype (Def));
             Set_Index_Constraint_Flag (Res, False);
             Set_Constraint_State (Res, Get_Constraint_State (Def));
+
          when Iir_Kind_Array_Subtype_Definition =>
             Res := Create_Iir (Iir_Kind_Array_Subtype_Definition);
             Set_Resolution_Indication (Res, Copy_Resolution_Indication (Def));
@@ -1455,6 +1456,7 @@ package body Sem_Types is
             Set_Resolved_Flag (Res, Get_Resolved_Flag (Def));
             Set_Constraint_State (Res, Get_Constraint_State (Def));
             Copy_Record_Elements_Declaration_List (Res, Def);
+
          when others =>
             --  FIXME: todo (protected type ?)
             Error_Kind ("copy_subtype_indication", Def);
@@ -1476,7 +1478,7 @@ package body Sem_Types is
       Type_Index, Subtype_Index: Iir;
       Base_Type : Iir;
       El_Def : Iir;
-      Staticness : Iir_Staticness;
+      Index_Staticness : Iir_Staticness;
       Error_Seen : Boolean;
       Type_Index_List : Iir_List;
       Subtype_Index_List : Iir_List;
@@ -1532,6 +1534,7 @@ package body Sem_Types is
 
                --  No element constraint.
                El_Def := Null_Iir;
+               Index_Staticness := None;
 
             when Iir_Kind_Array_Subtype_Definition =>
                -- Case of a constraint for an array.
@@ -1541,7 +1544,7 @@ package body Sem_Types is
                Set_Base_Type (Def, Base_Type);
                El_Def := Get_Array_Element_Constraint (Def);
 
-               Staticness := Get_Type_Staticness (El_Type);
+               Index_Staticness := Locally;
                Error_Seen := False;
                Type_Index_List :=
                  Get_Index_Subtype_Definition_List (Base_Type);
@@ -1594,8 +1597,8 @@ package body Sem_Types is
                         if Subtype_Index /= Null_Iir then
                            Subtype_Index :=
                              Range_To_Subtype_Indication (Subtype_Index);
-                           Staticness := Min
-                             (Staticness,
+                           Index_Staticness := Min
+                             (Index_Staticness,
                               Get_Type_Staticness
                                 (Get_Type_Of_Subtype_Indication
                                    (Subtype_Index)));
@@ -1605,7 +1608,7 @@ package body Sem_Types is
                         --  Create a fake subtype from type_index.
                         --  FIXME: It is too fake.
                         Subtype_Index := Type_Index;
-                        Staticness := None;
+                        Index_Staticness := None;
                      end if;
                      if Error_Seen then
                         Append_Element (Subtype_Index_List, Subtype_Index);
@@ -1617,7 +1620,8 @@ package body Sem_Types is
                   Set_Index_Subtype_List (Def, Subtype_Index_List);
                   Set_Index_Constraint_Flag (Def, True);
                end if;
-               Set_Type_Staticness (Def, Staticness);
+               Set_Type_Staticness
+                 (Def, Min (Get_Type_Staticness (El_Type), Index_Staticness));
                Set_Signal_Type_Flag (Def, Get_Signal_Type_Flag (Type_Mark));
                Res := Def;
 
@@ -1807,8 +1811,7 @@ package body Sem_Types is
    end Reparse_As_Array_Constraint;
 
    function Sem_Record_Constraint
-     (Def : Iir; Type_Mark : Iir; Resolution : Iir)
-     return Iir
+     (Def : Iir; Type_Mark : Iir; Resolution : Iir) return Iir
    is
       Res : Iir;
       El_List, Tm_El_List : Iir_List;
@@ -1961,6 +1964,7 @@ package body Sem_Types is
                Tm_El := Get_Nth_Element (Tm_El_List, I);
                if Els (I) = Null_Iir and Res_Els (I) = Null_Iir then
                   El := Tm_El;
+                  El_Type := Get_Type (El);
                else
                   if Els (I) = Null_Iir then
                      El := Create_Iir (Iir_Kind_Record_Element_Constraint);
@@ -1978,8 +1982,7 @@ package body Sem_Types is
                   Set_Type (El, El_Type);
                end if;
                Append_Element (El_List, El);
-               Constraint := Update_Record_Constraint
-                 (Constraint, Get_Type (El));
+               Constraint := Update_Record_Constraint (Constraint, El_Type);
             end loop;
             Set_Constraint_State (Res, Constraint);
          end;

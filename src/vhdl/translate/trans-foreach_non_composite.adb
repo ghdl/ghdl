@@ -46,7 +46,7 @@ begin
             Open_Temp;
             Var_Array := Stabilize (Targ);
             Var_Length := Create_Temp (Ghdl_Index_Type);
-            Var_Base := Stabilize (Chap3.Get_Array_Base (Var_Array));
+            Var_Base := Stabilize (Chap3.Get_Composite_Base (Var_Array));
             New_Assign_Stmt
               (New_Obj (Var_Length),
                Chap3.Get_Array_Length (Var_Array, Targ_Type));

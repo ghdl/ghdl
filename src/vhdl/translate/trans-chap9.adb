@@ -549,8 +549,10 @@ package body Trans.Chap9 is
                Chap8.Translate_Report
                  (Stmt, Ghdl_Psl_Assert_Failed, Severity_Level_Error);
             when Iir_Kind_Psl_Cover_Statement =>
-               Chap8.Translate_Report
-                 (Stmt, Ghdl_Psl_Cover, Severity_Level_Note);
+               if Get_Report_Expression (Stmt) /= Null_Iir then
+                  Chap8.Translate_Report
+                     (Stmt, Ghdl_Psl_Cover, Severity_Level_Note);
+               end if;
             when others =>
                Error_Kind ("Translate_Psl_Directive_Statement", Stmt);
          end case;
@@ -1262,7 +1264,7 @@ package body Trans.Chap9 is
          return Mnode
    is
    begin
-      return Chap3.Index_Base (Chap3.Get_Array_Base (Val),
+      return Chap3.Index_Base (Chap3.Get_Composite_Base (Val),
                                Targ_Type, New_Obj_Value (Index));
    end Gen_Register_Direct_Driver_Update_Data_Array;
 
@@ -1911,10 +1913,10 @@ package body Trans.Chap9 is
                                 (Get_Choice_Expression (Alt), Base_Type),
                               Ghdl_Bool_Type);
                         when Iir_Kind_Choice_By_Range =>
-                           Var_Rng := Create_Temp (Tinfo.T.Range_Type);
+                           Var_Rng := Create_Temp (Tinfo.B.Range_Type);
                            Rng := Dv2M (Var_Rng, Tinfo, Mode_Value,
-                                        Tinfo.T.Range_Type,
-                                        Tinfo.T.Range_Ptr_Type);
+                                        Tinfo.B.Range_Type,
+                                        Tinfo.B.Range_Ptr_Type);
                            Chap7.Translate_Discrete_Range
                              (Rng, Get_Choice_Range (Alt));
                            C1 := New_Dyadic_Op
@@ -2090,8 +2092,8 @@ package body Trans.Chap9 is
       Chap3.Elab_Object_Subtype (Iter_Type);
 
       Range_Ptr := Create_Temp_Ptr
-        (Iter_Type_Info.T.Range_Ptr_Type,
-         Get_Var (Get_Info (Iter_Type).T.Range_Var));
+        (Iter_Type_Info.B.Range_Ptr_Type,
+         Get_Var (Get_Info (Iter_Type).S.Range_Var));
 
       --  Allocate instances.
       Var_Inst := Create_Temp (Info.Block_Decls_Array_Ptr_Type);
@@ -2102,7 +2104,7 @@ package body Trans.Chap9 is
             New_Dyadic_Op (ON_Mul_Ov,
                            New_Value_Selected_Acc_Value
                              (New_Obj (Range_Ptr),
-                              Iter_Type_Info.T.Range_Length),
+                              Iter_Type_Info.B.Range_Length),
                            New_Lit (Get_Scope_Size (Info.Block_Scope))),
             Info.Block_Decls_Array_Ptr_Type));
 
@@ -2121,7 +2123,7 @@ package body Trans.Chap9 is
                          New_Obj_Value (Var_I),
                          New_Value_Selected_Acc_Value
                            (New_Obj (Range_Ptr),
-                            Iter_Type_Info.T.Range_Length),
+                            Iter_Type_Info.B.Range_Length),
                          Ghdl_Bool_Type));
 
       Var := Create_Temp_Ptr
@@ -2152,16 +2154,16 @@ package body Trans.Chap9 is
             New_Compare_Op (ON_Eq,
                             New_Value_Selected_Acc_Value
                               (New_Obj (Range_Ptr),
-                               Iter_Type_Info.T.Range_Dir),
+                               Iter_Type_Info.B.Range_Dir),
                             New_Lit (Ghdl_Dir_To_Node),
                             Ghdl_Bool_Type));
          New_Assign_Stmt (New_Obj (Val), New_Value_Selected_Acc_Value
                             (New_Obj (Range_Ptr),
-                             Iter_Type_Info.T.Range_Left));
+                             Iter_Type_Info.B.Range_Left));
          New_Else_Stmt (If_Blk);
          New_Assign_Stmt (New_Obj (Val), New_Value_Selected_Acc_Value
                             (New_Obj (Range_Ptr),
-                             Iter_Type_Info.T.Range_Right));
+                             Iter_Type_Info.B.Range_Right));
          Finish_If_Stmt (If_Blk);
 
          New_Assign_Stmt
@@ -2213,8 +2215,8 @@ package body Trans.Chap9 is
       Var_Len := Create_Temp_Init
         (Ghdl_Index_Type,
          New_Value (New_Selected_Element
-                      (Get_Var (Get_Info (Iter_Type).T.Range_Var),
-                       Iter_Type_Info.T.Range_Length)));
+                      (Get_Var (Get_Info (Iter_Type).S.Range_Var),
+                       Iter_Type_Info.B.Range_Length)));
 
       --  Start loop.
       Var_I := Create_Temp (Ghdl_Index_Type);
@@ -2337,7 +2339,7 @@ package body Trans.Chap9 is
          if Get_Type_Info (Data.Val).Type_Mode = Type_Mode_Record then
             Res.Val := Stabilize (Data.Val);
          else
-            Res.Val := Chap3.Get_Array_Base (Data.Val);
+            Res.Val := Chap3.Get_Composite_Base (Data.Val);
          end if;
       end if;
 

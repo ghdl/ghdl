@@ -677,8 +677,8 @@ package body Trans.Chap1 is
                New_Value (New_Obj (Var_I)),
                New_Value
                  (New_Selected_Element
-                      (Get_Var (Get_Info (Iter_Type).T.Range_Var),
-                       Type_Info.T.Range_Length)),
+                      (Get_Var (Get_Info (Iter_Type).S.Range_Var),
+                       Type_Info.B.Range_Length)),
                Ghdl_Bool_Type));
          --  Selected_name is for default configurations, so
          --  program should not fail if a block is already
@@ -725,17 +725,17 @@ package body Trans.Chap1 is
             begin
                Open_Temp;
                Rng := Stabilize (Chap3.Type_To_Range (Iter_Type));
-               Slice := Create_Temp (Type_Info.T.Range_Type);
+               Slice := Create_Temp (Type_Info.B.Range_Type);
                Chap7.Translate_Discrete_Range
                  (Dv2M (Slice, Type_Info, Mode_Value,
-                        Type_Info.T.Range_Type, Type_Info.T.Range_Ptr_Type),
+                        Type_Info.B.Range_Type, Type_Info.B.Range_Ptr_Type),
                   Get_Suffix (Spec));
                Left := Create_Temp_Init
                  (Ghdl_Index_Type,
                   Chap6.Translate_Index_To_Offset
                     (Rng,
                      New_Value (New_Selected_Element
-                                  (New_Obj (Slice), Type_Info.T.Range_Left)),
+                                  (New_Obj (Slice), Type_Info.B.Range_Left)),
                      Spec, Iter_Type, Spec));
                Right := Create_Temp_Init
                  (Ghdl_Index_Type,
@@ -743,7 +743,7 @@ package body Trans.Chap1 is
                     (Rng,
                      New_Value (New_Selected_Element
                                   (New_Obj (Slice),
-                                   Type_Info.T.Range_Right)),
+                                   Type_Info.B.Range_Right)),
                      Spec, Iter_Type, Spec));
                Index := Create_Temp (Ghdl_Index_Type);
                High := Create_Temp (Ghdl_Index_Type);
@@ -754,7 +754,7 @@ package body Trans.Chap1 is
                                   New_Value
                                     (New_Selected_Element
                                        (New_Obj (Slice),
-                                        Type_Info.T.Range_Dir)),
+                                        Type_Info.B.Range_Dir)),
                                   Ghdl_Bool_Type));
                --  Same direction, so left to right.
                New_Assign_Stmt (New_Obj (Index),

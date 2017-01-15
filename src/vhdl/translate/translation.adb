@@ -1129,6 +1129,11 @@ package body Translation is
       Create_Image_Value_Subprograms
         ("i32", Ghdl_I32_Type, False, Ghdl_Image_I32, Ghdl_Value_I32);
 
+      --  procedure __ghdl_image_i64 (res : std_string_ptr_node;
+      --                              val : ghdl_i64_type);
+      Create_Image_Value_Subprograms
+        ("i64", Ghdl_I64_Type, False, Ghdl_Image_I64, Ghdl_Value_I64);
+
       --  procedure __ghdl_image_p32 (res : std_string_ptr_node;
       --                              val : ghdl_i32_type;
       --                             rti : ghdl_rti_access);
@@ -1811,7 +1816,7 @@ package body Translation is
          Ghdl_Real_Type, Std_String_Ptr_Node, Get_Identifier ("format"));
       declare
          Bv_Base_Ptr : constant O_Tnode :=
-           Get_Info (Bit_Vector_Type_Definition).T.Base_Ptr_Type (Mode_Value);
+           Get_Info (Bit_Vector_Type_Definition).B.Base_Ptr_Type (Mode_Value);
       begin
          Create_To_String_Subprogram
            ("__ghdl_bv_to_ostring", Ghdl_BV_To_Ostring,

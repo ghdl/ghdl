@@ -510,7 +510,8 @@ package body Sem_Assocs is
          Src_Range : Iir;
          Dst_Range : Iir;
       begin
-         if Get_Kind (Src) not in Iir_Kinds_Scalar_Type_Definition then
+         if Get_Kind (Src) not in Iir_Kinds_Scalar_Type_And_Subtype_Definition
+         then
             return True;
          end if;
 

@@ -571,7 +571,7 @@ package body Evaluation is
          if not Get_Same_Alternative_Flag (Assoc) then
             Expr := Get_Associated_Expr (Assoc);
             if Get_Kind (Get_Type (Expr))
-              in Iir_Kinds_Scalar_Type_Definition
+              in Iir_Kinds_Scalar_Type_And_Subtype_Definition
             then
                Expr := Eval_Expr_Keep_Orig (Expr, True);
                Set_Associated_Expr (Assoc, Expr);
@@ -2752,8 +2752,8 @@ package body Evaluation is
       end if;
 
       --  Element must be scalar.
-      if Get_Kind (Get_Element_Subtype (Expr_Type)) not in
-        Iir_Kinds_Scalar_Type_Definition
+      if Get_Kind (Get_Element_Subtype (Expr_Type))
+        not in Iir_Kinds_Scalar_Type_And_Subtype_Definition
       then
          return False;
       end if;
@@ -2776,7 +2776,9 @@ package body Evaluation is
    function Can_Eval_Value (Expr : Iir; Top : Boolean) return Boolean is
    begin
       --  Always evaluate scalar values.
-      if Get_Kind (Get_Type (Expr)) in Iir_Kinds_Scalar_Type_Definition then
+      if Get_Kind (Get_Type (Expr))
+        in Iir_Kinds_Scalar_Type_And_Subtype_Definition
+      then
          return True;
       end if;
       return Can_Eval_Composite_Value (Expr, Top);
@@ -2795,7 +2797,7 @@ package body Evaluation is
 
       --  We are only considering composite types.
       pragma Assert (Get_Kind (Get_Type (Expr))
-                       not in Iir_Kinds_Scalar_Type_Definition);
+                       not in Iir_Kinds_Scalar_Type_And_Subtype_Definition);
    begin
       case Get_Kind (Expr) is
          when Iir_Kind_Type_Conversion
@@ -2899,7 +2901,8 @@ package body Evaluation is
       if Expr /= Null_Iir and then Get_Expr_Staticness (Expr) = Locally then
          --  Expression is static and can be evaluated.  Don't try to
          --  evaluate non-scalar expressions, that may create too large data.
-         if Get_Kind (Atype) in Iir_Kinds_Scalar_Type_Definition then
+         if Get_Kind (Atype) in Iir_Kinds_Scalar_Type_And_Subtype_Definition
+         then
             Res := Eval_Expr_Keep_Orig (Expr, False);
          else
             Res := Expr;
@@ -3350,7 +3353,9 @@ package body Evaluation is
                end;
 
             when Iir_Kind_Subtype_Declaration
-              | Iir_Kind_Base_Attribute =>
+              | Iir_Kind_Base_Attribute
+              | Iir_Kind_Subtype_Attribute
+              | Iir_Kind_Element_Attribute =>
                Expr := Get_Type (Expr);
             when Iir_Kind_Type_Declaration =>
                Expr := Get_Type_Definition (Expr);

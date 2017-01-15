@@ -481,7 +481,7 @@ package body Trans.Chap8 is
       else
          It_Info.Iterator_Range := Create_Var
            (Create_Var_Identifier ("IT_RANGE"),
-            Iter_Type_Info.T.Range_Ptr_Type,
+            Iter_Type_Info.B.Range_Ptr_Type,
             O_Storage_Local);
       end if;
    end Translate_For_Loop_Statement_Declaration;
@@ -522,17 +522,17 @@ package body Trans.Chap8 is
          New_Assign_Stmt (Get_Var (It_Info.Iterator_Range),
                           New_Address (Chap7.Translate_Range
                                          (Constraint, Iter_Base_Type),
-                                       Iter_Type_Info.T.Range_Ptr_Type));
+                                       Iter_Type_Info.B.Range_Ptr_Type));
          New_Assign_Stmt
            (Get_Var (It_Info.Iterator_Var),
             Get_Range_Ptr_Field_Value (Get_Var (It_Info.Iterator_Range),
-                                       Iter_Type_Info.T.Range_Left));
+                                       Iter_Type_Info.B.Range_Left));
          --  Before starting the loop, check whether there will be at least
          --  one iteration.
          Cond := New_Compare_Op
            (ON_Gt,
             Get_Range_Ptr_Field_Value (Get_Var (It_Info.Iterator_Range),
-                                       Iter_Type_Info.T.Range_Length),
+                                       Iter_Type_Info.B.Range_Length),
             New_Lit (Ghdl_Index_0),
             Ghdl_Bool_Type);
       end if;
@@ -554,7 +554,7 @@ package body Trans.Chap8 is
          Val := New_Value (Get_Var (It_Info.Iterator_Right));
       else
          Val := Get_Range_Ptr_Field_Value
-           (Get_Var (It_Info.Iterator_Range), Iter_Type_Info.T.Range_Right);
+           (Get_Var (It_Info.Iterator_Range), Iter_Type_Info.B.Range_Right);
       end if;
       Cond := New_Compare_Op (ON_Eq,
                               New_Value (Get_Var (It_Info.Iterator_Var)), Val,
@@ -586,7 +586,7 @@ package body Trans.Chap8 is
            (If_Blk1, New_Compare_Op
               (ON_Eq,
                Get_Range_Ptr_Field_Value (Get_Var (It_Info.Iterator_Range),
-                                          Iter_Type_Info.T.Range_Dir),
+                                          Iter_Type_Info.B.Range_Dir),
                New_Lit (Ghdl_Dir_To_Node),
                Ghdl_Bool_Type));
          Gen_Update_Iterator (It_Info.Iterator_Var,
@@ -1102,7 +1102,7 @@ package body Trans.Chap8 is
       Func_Info : Subprg_Info_Acc;
    begin
       New_Assign_Stmt (New_Selected_Element (New_Obj (Val_Node),
-                                             Tinfo.T.Base_Field (Mode_Value)),
+                                             Tinfo.B.Base_Field (Mode_Value)),
                        Val);
       Func_Info := Get_Info (Func);
       Start_Association (Assoc, Func_Info.Ortho_Func);
@@ -1140,9 +1140,9 @@ package body Trans.Chap8 is
       C_Node := Create_Temp (Tinfo.Ortho_Type (Mode_Value));
       New_Assign_Stmt
         (New_Selected_Element (New_Obj (C_Node),
-         Tinfo.T.Bounds_Field (Mode_Value)),
+         Tinfo.B.Bounds_Field (Mode_Value)),
          New_Value_Selected_Acc_Value
-           (New_Obj (Expr_Node), Tinfo.T.Bounds_Field (Mode_Value)));
+           (New_Obj (Expr_Node), Tinfo.B.Bounds_Field (Mode_Value)));
    end Translate_String_Case_Statement_Common;
 
    --  Translate a string case statement using a dichotomy.
@@ -1307,7 +1307,7 @@ package body Trans.Chap8 is
       Sel_Length := Eval_Discrete_Type_Length
         (Get_String_Type_Bound_Type (Expr_Type));
       String_Type := New_Constrained_Array_Type
-        (Tinfo.T.Base_Type (Mode_Value),
+        (Tinfo.B.Base_Type (Mode_Value),
          New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (Sel_Length)));
       Table_Base_Type := New_Array_Type (String_Type, Ghdl_Index_Type);
       New_Type_Decl (Create_Uniq_Identifier, Table_Base_Type);
@@ -1406,7 +1406,7 @@ package body Trans.Chap8 is
               (Expr_Node,
                New_Address (New_Indexed_Element (New_Obj (Table),
                                                  New_Obj_Value (Var_Mid)),
-                            Tinfo.T.Base_Ptr_Type (Mode_Value)),
+                            Tinfo.B.Base_Ptr_Type (Mode_Value)),
                C_Node, Tinfo, Func));
 
          --  Generate:
@@ -2248,7 +2248,7 @@ package body Trans.Chap8 is
 
                if Is_Static_Construct (Actual)
                  or else (Get_Kind (Act_Type)
-                            in Iir_Kinds_Scalar_Type_Definition)
+                            in Iir_Kinds_Scalar_Type_And_Subtype_Definition)
                  or else Get_Kind (Ftype) = Iir_Kind_File_Type_Definition
                  or else Is_Result_On_Stack2_Expression (Actual)
                then
@@ -2329,7 +2329,7 @@ package body Trans.Chap8 is
                         --  Type of actual was not yet translated.  Possible
                         --  only for slice.  Do it manually.
                         Atype_Binfo := Get_Info (Get_Base_Type (Act_Type));
-                        Ref_Type := Atype_Binfo.T.Base_Ptr_Type (Object_Kind);
+                        Ref_Type := Atype_Binfo.B.Base_Ptr_Type (Object_Kind);
                      end if;
                      Call_Assoc_Info.Call_Assoc_Ref := Create_Var
                        (Create_Var_Identifier (Inter, "__REF", Num),
@@ -2344,7 +2344,7 @@ package body Trans.Chap8 is
                         --   - the array (if the actual is constrained and not
                         --                complex) - TODO
                         --   - a pointer to the base.
-                        Val_Type := Ftype_Info.T.Base_Ptr_Type (Mode);
+                        Val_Type := Ftype_Info.B.Base_Ptr_Type (Mode);
                      else
                         --  For constrained arrays/records:
                         --   - the base if not complex
@@ -2371,7 +2371,7 @@ package body Trans.Chap8 is
                if Has_Bounds_Field then
                   Call_Assoc_Info.Call_Assoc_Bounds := Create_Var
                     (Create_Var_Identifier (Inter, "__BND", Num),
-                     Ftype_Info.T.Bounds_Type, O_Storage_Local);
+                     Ftype_Info.B.Bounds_Type, O_Storage_Local);
                end if;
 
                if Has_Fat_Pointer_Field then
@@ -2894,16 +2894,16 @@ package body Trans.Chap8 is
                            Bnd := Stabilize
                              (Lv2M (Get_Var (Assoc_Info.Call_Assoc_Bounds),
                                     Ftype_Info, Mode_Value,
-                                    Ftype_Info.T.Bounds_Type,
-                                    Ftype_Info.T.Bounds_Ptr_Type));
+                                    Ftype_Info.B.Bounds_Type,
+                                    Ftype_Info.B.Bounds_Ptr_Type));
                            Chap3.Copy_Bounds
                              (Bnd, Chap3.Get_Array_Bounds (Mval), Formal_Type);
                            New_Assign_Stmt
                              (M2Lp (Chap3.Get_Array_Bounds (Fat)),
                               M2Addr (Bnd));
                            New_Assign_Stmt
-                             (M2Lp (Chap3.Get_Array_Base (Fat)),
-                              M2Addr (Chap3.Get_Array_Base (Mval)));
+                             (M2Lp (Chap3.Get_Composite_Base (Fat)),
+                              M2Addr (Chap3.Get_Composite_Base (Mval)));
                         else
                            --  No need to copy the bounds.
                            Copy_Fat_Pointer (Fat, Mval);
@@ -3611,7 +3611,7 @@ package body Trans.Chap8 is
          return Val;
       end if;
       Res := Signal_Assign_Data'
-        (Expr => Chap3.Index_Base (Chap3.Get_Array_Base (Val.Expr),
+        (Expr => Chap3.Index_Base (Chap3.Get_Composite_Base (Val.Expr),
          Targ_Type, New_Obj_Value (Index)),
          Reject => Val.Reject,
          After => Val.After);
@@ -3953,9 +3953,9 @@ package body Trans.Chap8 is
    is
    begin
       return Signal_Direct_Assign_Data'
-        (Drv => Chap3.Index_Base (Chap3.Get_Array_Base (Val.Drv),
+        (Drv => Chap3.Index_Base (Chap3.Get_Composite_Base (Val.Drv),
          Targ_Type, New_Obj_Value (Index)),
-         Expr => Chap3.Index_Base (Chap3.Get_Array_Base (Val.Expr),
+         Expr => Chap3.Index_Base (Chap3.Get_Composite_Base (Val.Expr),
            Targ_Type, New_Obj_Value (Index)),
          Expr_Node => Val.Expr_Node);
    end Gen_Signal_Direct_Update_Data_Array;

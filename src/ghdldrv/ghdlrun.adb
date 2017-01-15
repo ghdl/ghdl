@@ -496,6 +496,8 @@ package body Ghdlrun is
            Grt.Images.Ghdl_Image_E32'Address);
       Def (Trans_Decls.Ghdl_Image_I32,
            Grt.Images.Ghdl_Image_I32'Address);
+      Def (Trans_Decls.Ghdl_Image_I64,
+           Grt.Images.Ghdl_Image_I64'Address);
       Def (Trans_Decls.Ghdl_Image_F64,
            Grt.Images.Ghdl_Image_F64'Address);
       Def (Trans_Decls.Ghdl_Image_P64,
@@ -511,6 +513,8 @@ package body Ghdlrun is
            Grt.Values.Ghdl_Value_E32'Address);
       Def (Trans_Decls.Ghdl_Value_I32,
            Grt.Values.Ghdl_Value_I32'Address);
+      Def (Trans_Decls.Ghdl_Value_I64,
+           Grt.Values.Ghdl_Value_I64'Address);
       Def (Trans_Decls.Ghdl_Value_F64,
            Grt.Values.Ghdl_Value_F64'Address);
       Def (Trans_Decls.Ghdl_Value_P32,

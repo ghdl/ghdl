@@ -376,7 +376,7 @@ package body Trans.Chap4 is
                      New_Compare_Op (ON_Eq,
                        New_Obj_Value (Index), Upper_Limit,
                        Ghdl_Bool_Type));
-      Init_Object (Chap3.Index_Base (Chap3.Get_Array_Base (Sobj),
+      Init_Object (Chap3.Index_Base (Chap3.Get_Composite_Base (Sobj),
                    Obj_Type,
                    New_Obj_Value (Index)),
                    Get_Element_Subtype (Obj_Type));
@@ -392,8 +392,8 @@ package body Trans.Chap4 is
       Assoc : O_Assoc_List;
    begin
       --  Call the initializer.
-      Start_Association (Assoc, Info.T.Prot_Init_Subprg);
-      Subprgs.Add_Subprg_Instance_Assoc (Assoc, Info.T.Prot_Init_Instance);
+      Start_Association (Assoc, Info.B.Prot_Init_Subprg);
+      Subprgs.Add_Subprg_Instance_Assoc (Assoc, Info.B.Prot_Init_Instance);
       --  Use of M2Lp is a little bit fragile (not sure we get the
       --  variable, but should work: we didn't stabilize it).
       New_Assign_Stmt (M2Lp (Obj), New_Function_Call (Assoc));
@@ -407,7 +407,7 @@ package body Trans.Chap4 is
    begin
       Obj := Chap6.Translate_Name (Decl, Mode_Value);
       --  Call the Finalizator.
-      Start_Association (Assoc, Info.T.Prot_Final_Subprg);
+      Start_Association (Assoc, Info.B.Prot_Final_Subprg);
       New_Association (Assoc, M2E (Obj));
       New_Procedure_Call (Assoc);
    end Fini_Protected_Object;
@@ -634,7 +634,7 @@ package body Trans.Chap4 is
             Chap3.Gen_Deallocate
               (New_Value (M2Lp (Chap3.Get_Array_Bounds (V))));
             Chap3.Gen_Deallocate
-              (New_Value (M2Lp (Chap3.Get_Array_Base (V))));
+              (New_Value (M2Lp (Chap3.Get_Composite_Base (V))));
             Close_Temp;
          end;
       elsif Is_Complex_Type (Type_Info) then
@@ -675,7 +675,7 @@ package body Trans.Chap4 is
                      New_Obj_Value (Len),
                      Get_Nbr_Signals
                        (Chap3.Index_Base
-                            (Chap3.Get_Array_Base (Ssig), Sig_Type,
+                            (Chap3.Get_Composite_Base (Ssig), Sig_Type,
                              New_Lit (Ghdl_Index_0)),
                         Get_Element_Subtype (Sig_Type))));
                Finish_If_Stmt (If_Blk);
@@ -741,7 +741,7 @@ package body Trans.Chap4 is
                return Res;
             when Type_Mode_Arrays =>
                Res := Chap3.Index_Base
-                 (Chap3.Get_Array_Base (Res), Res_Type,
+                 (Chap3.Get_Composite_Base (Res), Res_Type,
                   New_Lit (Ghdl_Index_0));
                Res_Type := Get_Element_Subtype (Res_Type);
             when Type_Mode_Records =>
@@ -926,9 +926,9 @@ package body Trans.Chap4 is
                Res.Init_Val := Stabilize (Data.Init_Val);
             end if;
          when Type_Mode_Arrays =>
-            Res.Value := Chap3.Get_Array_Base (Data.Value);
+            Res.Value := Chap3.Get_Composite_Base (Data.Value);
             if Data.Has_Val then
-               Res.Init_Val := Chap3.Get_Array_Base (Data.Init_Val);
+               Res.Init_Val := Chap3.Get_Composite_Base (Data.Init_Val);
             end if;
          when others =>
             raise Internal_Error;
@@ -1273,8 +1273,8 @@ package body Trans.Chap4 is
          Res.Targ_Val := Stabilize (Data.Targ_Val);
          Res.Pfx := Stabilize (Data.Pfx);
       else
-         Res.Targ_Val := Chap3.Get_Array_Base (Data.Targ_Val);
-         Res.Pfx := Chap3.Get_Array_Base (Data.Pfx);
+         Res.Targ_Val := Chap3.Get_Composite_Base (Data.Targ_Val);
+         Res.Pfx := Chap3.Get_Composite_Base (Data.Pfx);
       end if;
       return Res;
    end Create_Delayed_Signal_Prepare_Composite;
@@ -1370,9 +1370,9 @@ package body Trans.Chap4 is
       else
          Start_Association (Constr, Ghdl_File_Elaborate);
          Info := Get_Info (Get_Type (Decl));
-         if Info.T.File_Signature /= O_Dnode_Null then
+         if Info.B.File_Signature /= O_Dnode_Null then
             New_Association
-              (Constr, New_Address (New_Obj (Info.T.File_Signature),
+              (Constr, New_Address (New_Obj (Info.B.File_Signature),
                Char_Ptr_Type));
          else
             New_Association (Constr,
@@ -1583,7 +1583,7 @@ package body Trans.Chap4 is
                when Type_Mode_Array =>
                   Stabilize (N);
                   New_Assign_Stmt (Get_Var (A),
-                                   M2E (Chap3.Get_Array_Base (N)));
+                                   M2E (Chap3.Get_Composite_Base (N)));
                   Chap3.Check_Array_Match (Decl_Type, T2M (Decl_Type, Mode),
                                            Name_Type, N, Decl);
                when Type_Mode_Acc
@@ -1674,6 +1674,11 @@ package body Trans.Chap4 is
          when Iir_Kind_Configuration_Specification =>
             null;
          when Iir_Kind_Disconnection_Specification =>
+            null;
+
+         when Iir_Kind_Psl_Default_Clock =>
+            null;
+         when Iir_Kind_Psl_Declaration =>
             null;
 
          when Iir_Kind_Component_Declaration =>
@@ -1997,7 +2002,7 @@ package body Trans.Chap4 is
         (Var_Length, Wki_Length, O_Storage_Local, Ghdl_Index_Type);
 
       New_Var_Decl (Var_Bound, Get_Identifier ("BOUND"), O_Storage_Local,
-                    Base_Info.T.Bounds_Type);
+                    Base_Info.B.Bounds_Type);
       New_Var_Decl (Var_Array, Get_Identifier ("VARRAY"), O_Storage_Local,
                     Base_Info.Ortho_Type (Mode_Value));
 
@@ -2022,14 +2027,14 @@ package body Trans.Chap4 is
       Range_Ptr := Lv2M (New_Selected_Element (New_Obj (Var_Bound),
                                                Index_Info.Index_Field),
                          Index_Tinfo, Mode_Value,
-                         Index_Tinfo.T.Range_Type,
-                         Index_Tinfo.T.Range_Ptr_Type);
+                         Index_Tinfo.B.Range_Type,
+                         Index_Tinfo.B.Range_Ptr_Type);
       Chap3.Create_Range_From_Length (Index_Type, Var_Length, Range_Ptr, Func);
 
       New_Assign_Stmt
         (New_Selected_Element (New_Obj (Var_Array),
-         Base_Info.T.Bounds_Field (Mode_Value)),
-         New_Address (New_Obj (Var_Bound), Base_Info.T.Bounds_Ptr_Type));
+         Base_Info.B.Bounds_Field (Mode_Value)),
+         New_Address (New_Obj (Var_Bound), Base_Info.B.Bounds_Ptr_Type));
 
       --  Allocate the array.
       Chap3.Allocate_Fat_Array_Base
@@ -2049,7 +2054,7 @@ package body Trans.Chap4 is
                        Ghdl_Bool_Type));
       --      fill array[i]
       V := Chap3.Index_Base
-        (Chap3.Get_Array_Base (Dv2M (Var_Array, Base_Info, Mode_Value)),
+        (Chap3.Get_Composite_Base (Dv2M (Var_Array, Base_Info, Mode_Value)),
          Base_Type, New_Obj_Value (Var_I));
       Data := Read_Source_Data'(Vals, Var_I, Read_Port);
       Read_Signal_Source (V, El_Type, Data);
@@ -2085,7 +2090,7 @@ package body Trans.Chap4 is
            New_Obj_Value (Var_J))));
 
       V := Chap3.Index_Base
-        (Chap3.Get_Array_Base (Dv2M (Var_Array, Base_Info, Mode_Value)),
+        (Chap3.Get_Composite_Base (Dv2M (Var_Array, Base_Info, Mode_Value)),
          Base_Type, New_Obj_Value (Var_I));
       Data := Read_Source_Data'(Vals, Var_J, Read_Driver);
       Read_Signal_Source (V, El_Type, Data);
@@ -2515,6 +2520,11 @@ package body Trans.Chap4 is
             when Iir_Kind_Package_Instantiation_Declaration =>
                --  FIXME: finalizers ?
                Chap2.Elab_Package_Instantiation_Declaration (Decl);
+
+            when Iir_Kind_Psl_Default_Clock =>
+               null;
+            when Iir_Kind_Psl_Declaration =>
+               null;
 
             when others =>
                Error_Kind ("elab_declaration_chain", Decl);

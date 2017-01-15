@@ -19,10 +19,9 @@ with Iirs; use Iirs;
 
 package Sem_Stmts is
    --  Analyze declarations and concurrent statements of BLK, which is
-   --  either an architecture_declaration, and entity_declaration or
-   --  a block_statement.
-   --  If SEM_DECLS is true, then analyze the declarations of BLK.
-   procedure Sem_Block (Blk: Iir; Sem_Decls : Boolean);
+   --  either an architecture_declaration, and entity_declaration,
+   --  a block_statement or a generate_statement_body.
+   procedure Sem_Block (Blk: Iir);
 
    --  Analyze the concurrent statements of PARENT.
    procedure Sem_Concurrent_Statement_Chain (Parent : Iir);

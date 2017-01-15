@@ -1457,6 +1457,10 @@ package body Nodes_Meta is
             return "pathname_element";
          when Iir_Kind_Base_Attribute =>
             return "base_attribute";
+         when Iir_Kind_Subtype_Attribute =>
+            return "subtype_attribute";
+         when Iir_Kind_Element_Attribute =>
+            return "element_attribute";
          when Iir_Kind_Left_Type_Attribute =>
             return "left_type_attribute";
          when Iir_Kind_Right_Type_Attribute =>
@@ -4065,6 +4069,18 @@ package body Nodes_Meta is
       --  Iir_Kind_Base_Attribute
       Field_Prefix,
       Field_Type,
+      --  Iir_Kind_Subtype_Attribute
+      Field_Type_Staticness,
+      Field_Name_Staticness,
+      Field_Prefix,
+      Field_Type,
+      Field_Base_Name,
+      --  Iir_Kind_Element_Attribute
+      Field_Type_Staticness,
+      Field_Name_Staticness,
+      Field_Prefix,
+      Field_Type,
+      Field_Base_Name,
       --  Iir_Kind_Left_Type_Attribute
       Field_Expr_Staticness,
       Field_Name_Staticness,
@@ -4554,44 +4570,46 @@ package body Nodes_Meta is
       Iir_Kind_Relative_Pathname => 1641,
       Iir_Kind_Pathname_Element => 1646,
       Iir_Kind_Base_Attribute => 1648,
-      Iir_Kind_Left_Type_Attribute => 1653,
-      Iir_Kind_Right_Type_Attribute => 1658,
-      Iir_Kind_High_Type_Attribute => 1663,
-      Iir_Kind_Low_Type_Attribute => 1668,
-      Iir_Kind_Ascending_Type_Attribute => 1673,
-      Iir_Kind_Image_Attribute => 1679,
-      Iir_Kind_Value_Attribute => 1685,
-      Iir_Kind_Pos_Attribute => 1691,
-      Iir_Kind_Val_Attribute => 1697,
-      Iir_Kind_Succ_Attribute => 1703,
-      Iir_Kind_Pred_Attribute => 1709,
-      Iir_Kind_Leftof_Attribute => 1715,
-      Iir_Kind_Rightof_Attribute => 1721,
-      Iir_Kind_Delayed_Attribute => 1730,
-      Iir_Kind_Stable_Attribute => 1739,
-      Iir_Kind_Quiet_Attribute => 1748,
-      Iir_Kind_Transaction_Attribute => 1757,
-      Iir_Kind_Event_Attribute => 1761,
-      Iir_Kind_Active_Attribute => 1765,
-      Iir_Kind_Last_Event_Attribute => 1769,
-      Iir_Kind_Last_Active_Attribute => 1773,
-      Iir_Kind_Last_Value_Attribute => 1777,
-      Iir_Kind_Driving_Attribute => 1781,
-      Iir_Kind_Driving_Value_Attribute => 1785,
-      Iir_Kind_Behavior_Attribute => 1785,
-      Iir_Kind_Structure_Attribute => 1785,
-      Iir_Kind_Simple_Name_Attribute => 1792,
-      Iir_Kind_Instance_Name_Attribute => 1797,
-      Iir_Kind_Path_Name_Attribute => 1802,
-      Iir_Kind_Left_Array_Attribute => 1809,
-      Iir_Kind_Right_Array_Attribute => 1816,
-      Iir_Kind_High_Array_Attribute => 1823,
-      Iir_Kind_Low_Array_Attribute => 1830,
-      Iir_Kind_Length_Array_Attribute => 1837,
-      Iir_Kind_Ascending_Array_Attribute => 1844,
-      Iir_Kind_Range_Array_Attribute => 1851,
-      Iir_Kind_Reverse_Range_Array_Attribute => 1858,
-      Iir_Kind_Attribute_Name => 1867
+      Iir_Kind_Subtype_Attribute => 1653,
+      Iir_Kind_Element_Attribute => 1658,
+      Iir_Kind_Left_Type_Attribute => 1663,
+      Iir_Kind_Right_Type_Attribute => 1668,
+      Iir_Kind_High_Type_Attribute => 1673,
+      Iir_Kind_Low_Type_Attribute => 1678,
+      Iir_Kind_Ascending_Type_Attribute => 1683,
+      Iir_Kind_Image_Attribute => 1689,
+      Iir_Kind_Value_Attribute => 1695,
+      Iir_Kind_Pos_Attribute => 1701,
+      Iir_Kind_Val_Attribute => 1707,
+      Iir_Kind_Succ_Attribute => 1713,
+      Iir_Kind_Pred_Attribute => 1719,
+      Iir_Kind_Leftof_Attribute => 1725,
+      Iir_Kind_Rightof_Attribute => 1731,
+      Iir_Kind_Delayed_Attribute => 1740,
+      Iir_Kind_Stable_Attribute => 1749,
+      Iir_Kind_Quiet_Attribute => 1758,
+      Iir_Kind_Transaction_Attribute => 1767,
+      Iir_Kind_Event_Attribute => 1771,
+      Iir_Kind_Active_Attribute => 1775,
+      Iir_Kind_Last_Event_Attribute => 1779,
+      Iir_Kind_Last_Active_Attribute => 1783,
+      Iir_Kind_Last_Value_Attribute => 1787,
+      Iir_Kind_Driving_Attribute => 1791,
+      Iir_Kind_Driving_Value_Attribute => 1795,
+      Iir_Kind_Behavior_Attribute => 1795,
+      Iir_Kind_Structure_Attribute => 1795,
+      Iir_Kind_Simple_Name_Attribute => 1802,
+      Iir_Kind_Instance_Name_Attribute => 1807,
+      Iir_Kind_Path_Name_Attribute => 1812,
+      Iir_Kind_Left_Array_Attribute => 1819,
+      Iir_Kind_Right_Array_Attribute => 1826,
+      Iir_Kind_High_Array_Attribute => 1833,
+      Iir_Kind_Low_Array_Attribute => 1840,
+      Iir_Kind_Length_Array_Attribute => 1847,
+      Iir_Kind_Ascending_Array_Attribute => 1854,
+      Iir_Kind_Range_Array_Attribute => 1861,
+      Iir_Kind_Reverse_Range_Array_Attribute => 1868,
+      Iir_Kind_Attribute_Name => 1877
      );
 
    function Get_Fields (K : Iir_Kind) return Fields_Array
@@ -7328,6 +7346,8 @@ package body Nodes_Meta is
            | Iir_Kind_External_Signal_Name
            | Iir_Kind_External_Variable_Name
            | Iir_Kind_Base_Attribute
+           | Iir_Kind_Subtype_Attribute
+           | Iir_Kind_Element_Attribute
            | Iir_Kind_Left_Type_Attribute
            | Iir_Kind_Right_Type_Attribute
            | Iir_Kind_High_Type_Attribute
@@ -7497,6 +7517,8 @@ package body Nodes_Meta is
            | Iir_Kind_Selected_Name
            | Iir_Kind_Operator_Symbol
            | Iir_Kind_Selected_By_All_Name
+           | Iir_Kind_Subtype_Attribute
+           | Iir_Kind_Element_Attribute
            | Iir_Kind_Left_Type_Attribute
            | Iir_Kind_Right_Type_Attribute
            | Iir_Kind_High_Type_Attribute
@@ -8284,7 +8306,9 @@ package body Nodes_Meta is
            | Iir_Kind_Integer_Type_Definition
            | Iir_Kind_Floating_Type_Definition
            | Iir_Kind_Physical_Type_Definition
-           | Iir_Kind_Wildcard_Type_Definition =>
+           | Iir_Kind_Wildcard_Type_Definition
+           | Iir_Kind_Subtype_Attribute
+           | Iir_Kind_Element_Attribute =>
             return True;
          when others =>
             return False;
@@ -9574,6 +9598,8 @@ package body Nodes_Meta is
            | Iir_Kind_External_Constant_Name
            | Iir_Kind_External_Signal_Name
            | Iir_Kind_External_Variable_Name
+           | Iir_Kind_Subtype_Attribute
+           | Iir_Kind_Element_Attribute
            | Iir_Kind_Left_Type_Attribute
            | Iir_Kind_Right_Type_Attribute
            | Iir_Kind_High_Type_Attribute
@@ -9630,6 +9656,8 @@ package body Nodes_Meta is
            | Iir_Kind_Selected_By_All_Name
            | Iir_Kind_Parenthesis_Name
            | Iir_Kind_Base_Attribute
+           | Iir_Kind_Subtype_Attribute
+           | Iir_Kind_Element_Attribute
            | Iir_Kind_Left_Type_Attribute
            | Iir_Kind_Right_Type_Attribute
            | Iir_Kind_High_Type_Attribute

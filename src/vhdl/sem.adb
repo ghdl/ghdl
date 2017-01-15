@@ -77,7 +77,7 @@ package body Sem is
       Sem_Interface_Chain (Get_Port_Chain (Entity), Port_Interface_List);
 
       --  Entity declarative part and concurrent statements.
-      Sem_Block (Entity, True);
+      Sem_Block (Entity);
 
       Close_Declarative_Region;
       Set_Is_Within_Flag (Entity, False);
@@ -201,7 +201,7 @@ package body Sem is
       if Vhdl_Std >= Vhdl_02 then
          Open_Declarative_Region;
       end if;
-      Sem_Block (Arch, True);
+      Sem_Block (Arch);
       if Vhdl_Std >= Vhdl_02 then
          Close_Declarative_Region;
       end if;

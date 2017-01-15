@@ -31,6 +31,7 @@ with Sem_Scopes; use Sem_Scopes;
 with Sem_Names; use Sem_Names;
 with Sem_Specs; use Sem_Specs;
 with Sem_Types; use Sem_Types;
+with Sem_Psl;
 with Sem_Inst;
 with Xrefs; use Xrefs;
 use Iir_Chains;
@@ -1056,7 +1057,7 @@ package body Sem_Decls is
                   --   function MAXIMUM (L : T) return E;
                   if Vhdl_Std >= Vhdl_08
                     and then (Get_Kind (Element_Type) in
-                                Iir_Kinds_Scalar_Type_Definition)
+                                Iir_Kinds_Scalar_Type_And_Subtype_Definition)
                   then
                      Add_Vector_Min_Max
                        (Name_Maximum, Iir_Predefined_Vector_Maximum);
@@ -3056,6 +3057,12 @@ package body Sem_Decls is
               | Iir_Kind_Through_Quantity_Declaration =>
                Sem_Branch_Quantity_Declaration (Decl, Last_Obj_Decl);
                Last_Obj_Decl := Decl;
+
+            when Iir_Kind_Psl_Declaration =>
+               Sem_Psl.Sem_Psl_Declaration (Decl);
+            when Iir_Kind_Psl_Default_Clock =>
+               Sem_Psl.Sem_Psl_Default_Clock (Decl);
+
             when others =>
                Error_Kind ("sem_declaration_chain", Decl);
          end case;

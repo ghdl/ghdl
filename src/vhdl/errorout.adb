@@ -1073,6 +1073,10 @@ package body Errorout is
             return "'range attribute";
          when Iir_Kind_Reverse_Range_Array_Attribute =>
             return "'reverse_range attribute";
+         when Iir_Kind_Subtype_Attribute =>
+            return "'subtype attribute";
+         when Iir_Kind_Element_Attribute =>
+            return "'element attribute";
          when Iir_Kind_Ascending_Type_Attribute
            | Iir_Kind_Ascending_Array_Attribute =>
             return "'ascending attribute";

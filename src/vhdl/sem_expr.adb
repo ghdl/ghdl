@@ -682,8 +682,8 @@ package body Sem_Expr is
       end if;
 
       Set_Type (Expr, Expr_Type);
-      if Get_Kind (Get_Base_Type (Expr_Type))
-        not in Iir_Kinds_Scalar_Type_Definition
+      if Get_Kind (Expr_Type)
+        not in Iir_Kinds_Scalar_Type_And_Subtype_Definition
       then
          Error_Msg_Sem (+Expr, "type of range is not a scalar type");
          return Null_Iir;
@@ -756,7 +756,9 @@ package body Sem_Expr is
             return Null_Iir;
       end case;
 
-      if Get_Kind (Res_Type) not in Iir_Kinds_Scalar_Type_Definition then
+      if Get_Kind (Res_Type)
+        not in Iir_Kinds_Scalar_Type_And_Subtype_Definition
+      then
          Error_Msg_Sem (+Expr, "%n is not a range type", +Res);
          return Null_Iir;
       end if;
@@ -3453,6 +3455,7 @@ package body Sem_Expr is
       Infos : Array_Aggr_Info_Arr (1 .. Nbr_Dim);
       Aggr_Constrained : Boolean;
       Info, Prev_Info : Iir_Aggregate_Info;
+      Type_Staticness : Iir_Staticness;
    begin
       --  By default, consider the aggregate can be statically built.
       Set_Aggregate_Expand_Flag (Aggr, True);
@@ -3477,20 +3480,19 @@ package body Sem_Expr is
       --  and statically match the subtype of the aggregate.
       if Aggr_Constrained then
          A_Subtype := Create_Array_Subtype (Base_Type, Get_Location (Aggr));
+         Type_Staticness := Get_Type_Staticness (A_Subtype);
          for I in Infos'Range loop
             Append_Element (Get_Index_Subtype_List (A_Subtype),
                             Infos (I).Index_Subtype);
-            Set_Type_Staticness
-              (A_Subtype,
-               Iirs.Min (Get_Type_Staticness (A_Subtype),
-                         Get_Type_Staticness (Infos (I).Index_Subtype)));
+            Type_Staticness := Min
+              (Type_Staticness, Get_Type_Staticness (Infos (I).Index_Subtype));
          end loop;
+         Set_Type_Staticness (A_Subtype, Type_Staticness);
          Set_Index_Constraint_Flag (A_Subtype, True);
          Set_Constraint_State (A_Subtype, Fully_Constrained);
          Set_Type (Aggr, A_Subtype);
          Set_Literal_Subtype (Aggr, A_Subtype);
-         if Get_Type_Staticness (A_Subtype) = Locally
-           and then Get_Aggregate_Expand_Flag (Aggr)
+         if Type_Staticness = Locally and then Get_Aggregate_Expand_Flag (Aggr)
          then
             --  Compute ratio of elements vs size of the aggregate to determine
             --  if the aggregate can be expanded.

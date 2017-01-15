@@ -432,7 +432,7 @@ package body Trans.Chap6 is
 
       return (Offset => Offset,
               Res => Chap3.Index_Base
-                (Chap3.Get_Array_Base (Prefix), Prefix_Type,
+                (Chap3.Get_Composite_Base (Prefix), Prefix_Type,
                  New_Obj_Value (Offset)));
    end Translate_Indexed_Name_Init;
 
@@ -441,7 +441,7 @@ package body Trans.Chap6 is
          return Mnode
    is
    begin
-      return Chap3.Index_Base (Chap3.Get_Array_Base (Prefix),
+      return Chap3.Index_Base (Chap3.Get_Composite_Base (Prefix),
                                Get_Type (Get_Prefix (Expr)),
                                New_Obj_Value (Data.Offset));
    end Translate_Indexed_Name_Finish;
@@ -707,19 +707,19 @@ package body Trans.Chap6 is
                Res_D := Create_Temp (Slice_Info.Ortho_Type (Kind));
                New_Assign_Stmt
                  (New_Selected_Element (New_Obj (Res_D),
-                  Slice_Info.T.Bounds_Field (Kind)),
+                  Slice_Info.B.Bounds_Field (Kind)),
                   New_Value (M2Lp (Data.Slice_Range)));
                New_Assign_Stmt
                  (New_Selected_Element (New_Obj (Res_D),
-                  Slice_Info.T.Base_Field (Kind)),
+                  Slice_Info.B.Base_Field (Kind)),
                   M2E (Chap3.Slice_Base
-                    (Chap3.Get_Array_Base (Prefix),
+                    (Chap3.Get_Composite_Base (Prefix),
                          Slice_Type,
                          New_Obj_Value (Data.Unsigned_Diff))));
                return Dv2M (Res_D, Slice_Info, Kind);
             when Type_Mode_Array =>
                return Chap3.Slice_Base
-                 (Chap3.Get_Array_Base (Prefix),
+                 (Chap3.Get_Composite_Base (Prefix),
                   Slice_Type,
                   New_Obj_Value (Data.Unsigned_Diff));
             when others =>
@@ -821,27 +821,63 @@ package body Trans.Chap6 is
       El_Type       : constant Iir := Get_Type (Base_El);
       El_Tinfo      : constant Type_Info_Acc := Get_Info (El_Type);
       Kind          : constant Object_Kind_Type := Get_Object_Kind (Prefix);
-      Stable_Prefix : Mnode;
+      Stable_Prefix, Base, Res, Fat_Res : Mnode;
    begin
-      if Is_Complex_Type (El_Tinfo) then
-         --  The element is in fact an offset.
+      --  There are 3 cases:
+      --  a) the record is bounded (and so is the element).
+      --  b) the record is unbounded and the element is bounded
+      --  c) the record is unbounded and the element is unbounded.
+      --  If the record is unbounded, PREFIX is a fat pointer.
+      --  On top of that, the element may be complex.
+
+      if Is_Unbounded_Type (El_Tinfo) then
          Stable_Prefix := Stabilize (Prefix);
-         return E2M
+
+         --  Result is a fat pointer, create it and set bounds.
+         Fat_Res := Create_Temp (El_Tinfo, Kind);
+         New_Assign_Stmt
+           (New_Selected_Element (M2Lv (Fat_Res),
+                                  El_Tinfo.B.Bounds_Field (Kind)),
+            New_Address
+              (New_Selected_Element
+                 (M2Lv (Chap3.Get_Array_Bounds (Stable_Prefix)),
+                  El_Info.Field_Bound),
+               El_Tinfo.B.Bounds_Ptr_Type));
+      else
+         Stable_Prefix := Prefix;
+      end if;
+
+      Base := Chap3.Get_Composite_Base (Stable_Prefix);
+
+      if Is_Complex_Type (El_Tinfo) or Is_Unbounded_Type (El_Tinfo) then
+         --  The element is complex: it's an offset.
+         Stabilize (Base);
+         Res := E2M
            (New_Unchecked_Address
               (New_Slice
                    (New_Access_Element
-                        (New_Unchecked_Address
-                           (M2Lv (Stable_Prefix), Char_Ptr_Type)),
+                        (New_Unchecked_Address (M2Lv (Base), Char_Ptr_Type)),
                     Chararray_Type,
                     New_Value
-                      (New_Selected_Element (M2Lv (Stable_Prefix),
+                      (New_Selected_Element (M2Lv (Base),
                        El_Info.Field_Node (Kind)))),
-               El_Tinfo.Ortho_Ptr_Type (Kind)),
+               El_Tinfo.B.Base_Ptr_Type (Kind)),
             El_Tinfo, Kind);
       else
-         return Lv2M (New_Selected_Element (M2Lv (Prefix),
+         --  Normal element.
+         Res := Lv2M (New_Selected_Element (M2Lv (Base),
                       El_Info.Field_Node (Kind)),
                       El_Tinfo, Kind);
+      end if;
+
+      if Is_Unbounded_Type (El_Tinfo) then
+         New_Assign_Stmt
+           (New_Selected_Element (M2Lv (Fat_Res),
+                                  El_Tinfo.B.Base_Field (Kind)),
+            M2Addr (Res));
+         return Fat_Res;
+      else
+         return Res;
       end if;
    end Translate_Selected_Element;
 

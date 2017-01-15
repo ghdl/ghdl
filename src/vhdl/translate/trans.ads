@@ -700,8 +700,8 @@ package Trans is
 
    type Rti_Depth_Type is new Natural range 0 .. 255;
 
-   type Ortho_Info_Type_Type (Kind : Ortho_Info_Type_Kind := Kind_Type_Scalar)
-   is record
+   type Ortho_Info_Basetype_Type
+     (Kind : Ortho_Info_Type_Kind := Kind_Type_Scalar) is record
       --  For all types:
       --  This is the maximum depth of RTI, that is the max of the depth of
       --  the type itself and every types it depends on.
@@ -710,18 +710,11 @@ package Trans is
       case Kind is
          when Kind_Type_Scalar =>
             --  For scalar types:
-            --  True if no need to check against low/high bound.
-            Nocheck_Low : Boolean := False;
-            Nocheck_Hi  : Boolean := False;
-
             --  Ortho type for the range record type.
             Range_Type : O_Tnode;
 
             --  Ortho type for an access to the range record type.
             Range_Ptr_Type : O_Tnode;
-
-            --  Tree for the range record declaration.
-            Range_Var : Var_Type;
 
             --  Fields of TYPE_RANGE_TYPE.
             Range_Left   : O_Fnode;
@@ -729,27 +722,20 @@ package Trans is
             Range_Dir    : O_Fnode;
             Range_Length : O_Fnode;
 
-         when Kind_Type_Array =>
+         when Kind_Type_Array
+           | Kind_Type_Record =>
+            --  For unbounded types:
+            --  The base type.
             Base_Type       : O_Tnode_Array;
             Base_Ptr_Type   : O_Tnode_Array;
+            --  The dope vector.
             Bounds_Type     : O_Tnode;
             Bounds_Ptr_Type : O_Tnode;
 
+            --  The ortho type is a fat pointer to the base and the bounds.
+            --  These are the fields of the fat pointer.
             Base_Field   : O_Fnode_Array;
             Bounds_Field : O_Fnode_Array;
-
-            --  True if the array bounds are static.
-            Static_Bounds : Boolean;
-
-            --  Variable containing the bounds for a constrained array.
-            Array_Bounds : Var_Type;
-
-            --  Variable containing the description for each index.
-            Array_Index_Desc : Var_Type;
-
-         when Kind_Type_Record =>
-            --  Variable containing the description for each element.
-            Record_El_Desc : Var_Type;
 
          when Kind_Type_File =>
             --  Constant containing the signature of the file.
@@ -771,6 +757,34 @@ package Trans is
       end case;
    end record;
 
+   type Ortho_Info_Subtype_Type
+     (Kind : Ortho_Info_Type_Kind := Kind_Type_Scalar) is record
+      case Kind is
+         when Kind_Type_Scalar =>
+            --  For scalar types:
+            --  True if no need to check against low/high bound.
+            Nocheck_Low : Boolean := False;
+            Nocheck_Hi  : Boolean := False;
+
+            --  Tree for the range record declaration.
+            Range_Var : Var_Type;
+
+         when Kind_Type_Array
+           | Kind_Type_Record =>
+            --  True if the bounds are static.
+            Static_Bounds : Boolean;
+
+            --  Variable containing the bounds for a constrained type.
+            Composite_Bounds : Var_Type;
+
+         when Kind_Type_File =>
+            null;
+
+         when Kind_Type_Protected =>
+            null;
+      end case;
+   end record;
+
    --    Ortho_Info_Type_Scalar_Init : constant Ortho_Info_Type_Type :=
    --      (Kind => Kind_Type_Scalar,
    --       Range_Type => O_Tnode_Null,
@@ -781,7 +795,7 @@ package Trans is
    --       Range_Dir => O_Fnode_Null,
    --       Range_Length => O_Fnode_Null);
 
-   Ortho_Info_Type_Array_Init : constant Ortho_Info_Type_Type :=
+   Ortho_Info_Basetype_Array_Init : constant Ortho_Info_Basetype_Type :=
      (Kind => Kind_Type_Array,
       Rti_Max_Depth => 0,
       Base_Type => (O_Tnode_Null, O_Tnode_Null),
@@ -789,22 +803,34 @@ package Trans is
       Bounds_Type => O_Tnode_Null,
       Bounds_Ptr_Type => O_Tnode_Null,
       Base_Field => (O_Fnode_Null, O_Fnode_Null),
-      Bounds_Field => (O_Fnode_Null, O_Fnode_Null),
-      Static_Bounds => False,
-      Array_Bounds => Null_Var,
-      Array_Index_Desc => Null_Var);
+      Bounds_Field => (O_Fnode_Null, O_Fnode_Null));
 
-   Ortho_Info_Type_Record_Init : constant Ortho_Info_Type_Type :=
+   Ortho_Info_Subtype_Array_Init : constant Ortho_Info_Subtype_Type :=
+     (Kind => Kind_Type_Array,
+      Static_Bounds => False,
+      Composite_Bounds => Null_Var);
+
+   Ortho_Info_Basetype_Record_Init : constant Ortho_Info_Basetype_Type :=
      (Kind => Kind_Type_Record,
       Rti_Max_Depth => 0,
-      Record_El_Desc => Null_Var);
+      Base_Type => (O_Tnode_Null, O_Tnode_Null),
+      Base_Ptr_Type => (O_Tnode_Null, O_Tnode_Null),
+      Bounds_Type => O_Tnode_Null,
+      Bounds_Ptr_Type => O_Tnode_Null,
+      Base_Field => (O_Fnode_Null, O_Fnode_Null),
+      Bounds_Field => (O_Fnode_Null, O_Fnode_Null));
 
-   Ortho_Info_Type_File_Init : constant Ortho_Info_Type_Type :=
+   Ortho_Info_Subtype_Record_Init : constant Ortho_Info_Subtype_Type :=
+     (Kind => Kind_Type_Record,
+      Static_Bounds => False,
+      Composite_Bounds => Null_Var);
+
+   Ortho_Info_Basetype_File_Init : constant Ortho_Info_Basetype_Type :=
      (Kind => Kind_Type_File,
       Rti_Max_Depth => 0,
       File_Signature => O_Dnode_Null);
 
-   Ortho_Info_Type_Prot_Init : constant Ortho_Info_Type_Type :=
+   Ortho_Info_Basetype_Prot_Init : constant Ortho_Info_Basetype_Type :=
      (Kind => Kind_Type_Protected,
       Rti_Max_Depth => 0,
       Prot_Scope => Null_Var_Scope,
@@ -1061,17 +1087,6 @@ package Trans is
       --  running time (and not a compile-time).
       Size_Var : Var_Type;
 
-      --  Variable containing the alignment of the type.
-      --  Only defined for recods and for Mode_Value.
-      --  Note: this is not optimal, because the alignment could be computed
-      --  at compile time, but there is no way to do that with ortho (no
-      --  operation on constants). Furthermore, the alignment is independent
-      --  of the instance, so there could be one global variable. But this
-      --  doesn't fit in the whole machinery (in particular, there is no
-      --  easy way to compute it once). As the overhead is very low, no need
-      --  to bother with this issue.
-      Align_Var : Var_Type;
-
       Builder_Need_Func : Boolean;
 
       --  Parameters for type builders.
@@ -1150,7 +1165,8 @@ package Trans is
             Ortho_Ptr_Type : O_Tnode_Array;
 
             --  More info according to the type.
-            T : Ortho_Info_Type_Type;
+            B : Ortho_Info_Basetype_Type;
+            S : Ortho_Info_Subtype_Type;
 
             --  Run-time information.
             Type_Rti : O_Dnode := O_Dnode_Null;
@@ -1166,6 +1182,9 @@ package Trans is
          when Kind_Field =>
             --  Node for a record element declaration.
             Field_Node : O_Fnode_Array := (O_Fnode_Null, O_Fnode_Null);
+
+            --  The field in the dope vector (for unbounded element).
+            Field_Bound : O_Fnode := O_Fnode_Null;
 
          when Kind_Expr =>
             --  Ortho tree which represents the expression, used for

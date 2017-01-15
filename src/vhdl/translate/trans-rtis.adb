@@ -1066,7 +1066,7 @@ package body Trans.Rtis is
       Val  : O_Cnode;
    begin
       Generate_Type_Rti (Info, Ghdl_Rtin_Type_Enum);
-      Info.T.Rti_Max_Depth := 0;
+      Info.B.Rti_Max_Depth := 0;
 
       if Global_Storage = O_Storage_External then
          return;
@@ -1150,7 +1150,7 @@ package body Trans.Rtis is
       Info := Get_Info (Atype);
 
       Generate_Type_Rti (Info, Ghdl_Rtin_Type_Scalar);
-      Info.T.Rti_Max_Depth := 0;
+      Info.B.Rti_Max_Depth := 0;
 
       if Global_Storage = O_Storage_External then
          return;
@@ -1307,7 +1307,7 @@ package body Trans.Rtis is
       end if;
 
       Generate_Type_Rti (Info, Ghdl_Rtin_Subtype_Scalar);
-      Info.T.Rti_Max_Depth := Get_Depth_From_Var (Info.T.Range_Var);
+      Info.B.Rti_Max_Depth := Get_Depth_From_Var (Info.S.Range_Var);
       if Global_Storage = O_Storage_External then
          return;
       end if;
@@ -1316,12 +1316,12 @@ package body Trans.Rtis is
       Start_Record_Aggr (Aggr, Ghdl_Rtin_Subtype_Scalar);
       New_Record_Aggr_El
         (Aggr, Generate_Common_Type (Ghdl_Rtik_Subtype_Scalar,
-                                     Info.T.Rti_Max_Depth,
-                                     Info.T.Rti_Max_Depth));
+                                     Info.B.Rti_Max_Depth,
+                                     Info.B.Rti_Max_Depth));
 
       New_Record_Aggr_El (Aggr, New_Name_Address (Name));
       New_Record_Aggr_El (Aggr, New_Rti_Address (Base_Info.Type_Rti));
-      New_Record_Aggr_El (Aggr, Var_Acc_To_Loc (Info.T.Range_Var));
+      New_Record_Aggr_El (Aggr, Var_Acc_To_Loc (Info.S.Range_Var));
       Finish_Record_Aggr (Aggr, Val);
       Finish_Init_Value (Info.Type_Rti, Val);
    end Generate_Scalar_Subtype_Definition;
@@ -1339,7 +1339,7 @@ package body Trans.Rtis is
       Generate_Type_Rti (Info, Ghdl_Rtin_Type_Fileacc);
 
       if Global_Storage = O_Storage_External then
-         Info.T.Rti_Max_Depth := 0;
+         Info.B.Rti_Max_Depth := 0;
          return;
       end if;
 
@@ -1377,16 +1377,16 @@ package body Trans.Rtis is
             Error_Kind ("rti.generate_fileacc_type_definition", Atype);
       end case;
       if Base_Type = Null_Iir then
-         Info.T.Rti_Max_Depth := 0;
+         Info.B.Rti_Max_Depth := 0;
       else
-         Info.T.Rti_Max_Depth := Get_Info (Base_Type).T.Rti_Max_Depth;
+         Info.B.Rti_Max_Depth := Get_Info (Base_Type).B.Rti_Max_Depth;
       end if;
       Name := Generate_Type_Name (Atype);
 
       Start_Init_Value (Info.Type_Rti);
       Start_Record_Aggr (List, Ghdl_Rtin_Type_Fileacc);
       New_Record_Aggr_El
-        (List, Generate_Common_Type (Kind, 0, Info.T.Rti_Max_Depth));
+        (List, Generate_Common_Type (Kind, 0, Info.B.Rti_Max_Depth));
       New_Record_Aggr_El (List, New_Name_Address (Name));
       New_Record_Aggr_El (List, New_Rti_Address (Base));
       Finish_Record_Aggr (List, Val);
@@ -1412,7 +1412,7 @@ package body Trans.Rtis is
          Push_Identifier_Prefix (Mark, "DIM", Iir_Int32 (I));
          Tmp := Generate_Type_Definition (Index);
          Max_Depth := Rti_Depth_Type'Max (Max_Depth,
-                                          Get_Info (Index).T.Rti_Max_Depth);
+                                          Get_Info (Index).B.Rti_Max_Depth);
          Pop_Identifier_Prefix (Mark);
       end loop;
 
@@ -1483,11 +1483,11 @@ package body Trans.Rtis is
             Pop_Identifier_Prefix (Mark);
          end;
       end if;
-      Max_Depth := El_Info.T.Rti_Max_Depth;
+      Max_Depth := El_Info.B.Rti_Max_Depth;
 
       --  Translate each index.
       Generate_Array_Type_Indexes (Atype, Arr, Max_Depth);
-      Info.T.Rti_Max_Depth := Max_Depth;
+      Info.B.Rti_Max_Depth := Max_Depth;
       List := Get_Index_Subtype_List (Atype);
 
       --  Generate node.
@@ -1539,10 +1539,10 @@ package body Trans.Rtis is
          Pop_Identifier_Prefix (Mark);
       end if;
 
-      Bounds := Info.T.Array_Bounds;
+      Bounds := Info.S.Composite_Bounds;
       Depth := Get_Depth_From_Var (Bounds);
-      Info.T.Rti_Max_Depth :=
-        Rti_Depth_Type'Max (Depth, Base_Info.T.Rti_Max_Depth);
+      Info.B.Rti_Max_Depth :=
+        Rti_Depth_Type'Max (Depth, Base_Info.B.Rti_Max_Depth);
 
       --  Generate node.
       Generate_Type_Rti (Info, Ghdl_Rtin_Subtype_Array);
@@ -1566,7 +1566,7 @@ package body Trans.Rtis is
       New_Record_Aggr_El
         (Aggr,
          Generate_Common_Type
-           (Kind, Depth, Info.T.Rti_Max_Depth, Type_To_Mode (Atype)));
+           (Kind, Depth, Info.B.Rti_Max_Depth, Type_To_Mode (Atype)));
       New_Record_Aggr_El (Aggr, New_Name_Address (Name));
       New_Record_Aggr_El (Aggr, New_Rti_Address (Base_Info.Type_Rti));
       if Bounds = Null_Var then
@@ -1639,7 +1639,7 @@ package body Trans.Rtis is
             Type_Rti := Generate_Type_Definition (El_Type);
             Max_Depth :=
               Rti_Depth_Type'Max (Max_Depth,
-                                  Get_Info (El_Type).T.Rti_Max_Depth);
+                                  Get_Info (El_Type).B.Rti_Max_Depth);
 
             El_Name := Generate_Name (El);
             New_Const_Decl (El_Const, Create_Identifier ("RTIEL"),
@@ -1652,7 +1652,7 @@ package body Trans.Rtis is
             New_Record_Aggr_El (Aggr, New_Rti_Address (Type_Rti));
             for I in Object_Kind_Type loop
                if Field_Info.Field_Node (I) /= O_Fnode_Null then
-                  Val := New_Offsetof (Info.Ortho_Type (I),
+                  Val := New_Offsetof (Info.B.Base_Type (I),
                                        Field_Info.Field_Node (I),
                                        Ghdl_Index_Type);
                else
@@ -1670,7 +1670,7 @@ package body Trans.Rtis is
       El_Arr := Generate_Rti_Array (Create_Identifier ("RTIARRAY"));
       Pop_Rti_Node (Prev);
 
-      Info.T.Rti_Max_Depth := Max_Depth;
+      Info.B.Rti_Max_Depth := Max_Depth;
       --  Generate record.
       declare
          Aggr : O_Record_Aggr_List;
@@ -1753,7 +1753,7 @@ package body Trans.Rtis is
          when Iir_Kind_Record_Subtype_Definition
             | Iir_Kind_Access_Subtype_Definition =>
             --  FIXME: No separate infos (yet).
-            null;
+            Info.Type_Rti := Get_Info (Get_Base_Type (Atype)).Type_Rti;
          when Iir_Kind_Record_Type_Definition =>
             Generate_Record_Type_Definition (Atype);
          when Iir_Kind_Protected_Type_Declaration =>
@@ -2329,6 +2329,11 @@ package body Trans.Rtis is
 
             when Iir_Kind_Package_Instantiation_Declaration =>
                --  FIXME: todo
+               null;
+
+            when Iir_Kind_Psl_Default_Clock =>
+               null;
+            when Iir_Kind_Psl_Declaration =>
                null;
 
             when others =>

@@ -259,7 +259,7 @@ package Std_Names is
    Name_Last_Attribute : constant Name_Id := Name_Last_Value;
 
    subtype Name_Id_Attributes is Name_Id
-     range Name_First_Attribute ..Name_Last_Attribute;
+     range Name_First_Attribute .. Name_Last_Attribute;
 
    Name_First_Vhdl87_Attribute : constant Name_Id := Name_Last_Value + 1;
    Name_Behavior :       constant Name_Id := Name_First_Attribute + 022;
@@ -267,7 +267,7 @@ package Std_Names is
    Name_Last_Vhdl87_Attribute : constant Name_Id := Name_Structure;
 
    subtype Name_Id_Vhdl87_Attributes is Name_Id
-     range Name_First_Vhdl87_Attribute ..Name_Last_Vhdl87_Attribute;
+     range Name_First_Vhdl87_Attribute .. Name_Last_Vhdl87_Attribute;
 
    Name_First_Vhdl93_Attribute : constant Name_Id := Name_Structure + 1;
    Name_Ascending :      constant Name_Id := Name_First_Attribute + 024;
@@ -281,10 +281,16 @@ package Std_Names is
    Name_Last_Vhdl93_Attribute : constant Name_Id := Name_Path_Name;
 
    subtype Name_Id_Vhdl93_Attributes is Name_Id
-     range Name_First_Vhdl93_Attribute ..Name_Last_Vhdl93_Attribute;
+     range Name_First_Vhdl93_Attribute .. Name_Last_Vhdl93_Attribute;
+
+   Name_First_Vhdl08_Attribute : constant Name_Id :=
+                                             Name_Last_Vhdl93_Attribute + 01;
+   Name_Element :        constant Name_Id := Name_First_Vhdl08_Attribute + 00;
+   Name_Last_Vhdl08_Attribute :  constant Name_Id :=
+                                             Name_First_Vhdl08_Attribute + 00;
 
    Name_First_AMS_Attribute : constant Name_Id :=
-     Name_Last_Vhdl93_Attribute + 1;
+     Name_Last_Vhdl08_Attribute + 1;
    Name_Contribution :   constant Name_Id := Name_First_AMS_Attribute + 000;
    Name_Dot :            constant Name_Id := Name_First_AMS_Attribute + 001;
    Name_Integ :          constant Name_Id := Name_First_AMS_Attribute + 002;
