@@ -212,25 +212,17 @@ package body Canon is
 
          when Iir_Kinds_Type_Attribute =>
             null;
-         when Iir_Kind_Event_Attribute
-           | Iir_Kind_Active_Attribute =>
+         when Iir_Kinds_Signal_Value_Attribute =>
             --  LRM 8.1
             --  An attribute name: [...]; otherwise, apply this rule to the
             --  prefix of the attribute name.
             Canon_Extract_Sensitivity
               (Get_Prefix (Expr), Sensitivity_List, False);
 
-
-         when Iir_Kind_Last_Value_Attribute =>
-            null;
-
          when Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Guard_Signal_Declaration
-           | Iir_Kind_Stable_Attribute
-           | Iir_Kind_Delayed_Attribute
-           | Iir_Kind_Quiet_Attribute
-           | Iir_Kind_Transaction_Attribute =>
+           | Iir_Kinds_Signal_Attribute =>
             --  LRM 8.1
             --  A simple name that denotes a signal, add the longuest static
             --  prefix of the name to the sensitivity set;
