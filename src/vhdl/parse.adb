@@ -1075,6 +1075,9 @@ package body Parse is
          when Iir_Kind_Simple_Name
            | Iir_Kind_Selected_Name =>
             null;
+         when Iir_Kind_Attribute_Name =>
+            --  For O'Subtype.
+            null;
          when others =>
             Error_Msg_Parse (+Mark, "type mark must be a name of a type");
       end case;
