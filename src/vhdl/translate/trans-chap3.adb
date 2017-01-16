@@ -1162,6 +1162,91 @@ package body Trans.Chap3 is
       end if;
    end Translate_Record_Type;
 
+   procedure Translate_Record_Subtype (Def : Iir; With_Vars : Boolean)
+   is
+      Type_Mark  : constant Iir := Get_Type
+        (Get_Named_Entity (Get_Subtype_Type_Mark (Def)));
+      Base_Type  : constant Iir := Get_Base_Type (Def);
+      Info       : constant Type_Info_Acc := Get_Info (Def);
+      El_List    : constant Iir_List := Get_Elements_Declaration_List (Def);
+      El_Tm_List   : constant Iir_List :=
+        Get_Elements_Declaration_List (Type_Mark);
+      El_Blist   : constant Iir_List :=
+        Get_Elements_Declaration_List (Base_Type);
+      El, B_El   : Iir_Element_Declaration;
+      El_Type    : Iir;
+      El_Btype   : Iir;
+
+      Has_New_Constraints : Boolean;
+
+      Rec        : O_Element_List;
+      Field_Info : Ortho_Info_Acc;
+      El_Tinfo   : Type_Info_Acc;
+      El_Tnode   : O_Tnode;
+
+      Mark : Id_Mark_Type;
+
+      Base_Field : O_Fnode;
+   begin
+      --  Translate the newly constrained elements.
+      Has_New_Constraints := False;
+      for I in Natural loop
+         El := Get_Nth_Element (El_List, I);
+         exit when El = Null_Iir;
+         El_Type := Get_Type (El);
+         if Is_Fully_Constrained_Type (El) then
+            El_Btype := Get_Type (Get_Nth_Element (El_Tm_List, I));
+            if not Is_Fully_Constrained_Type (El_Btype) then
+               Has_New_Constraints := True;
+               Push_Identifier_Prefix (Mark, Get_Identifier (El));
+               Translate_Type_Definition (El_Type);
+               Pop_Identifier_Prefix (Mark);
+            end if;
+         end if;
+      end loop;
+
+      if Get_Constraint_State (Def) /= Fully_Constrained
+        or else not Has_New_Constraints
+      then
+         --  The subtype is not completly constrained: it cannot be used to
+         --    create objects, so wait until it is compltely constrained.
+         --  The subtype is simply an alias.
+         --  In both cases, use the same representation as its type mark.
+         Info.all := Get_Info (Type_Mark).all;
+         Info.S := Ortho_Info_Subtype_Record_Init;
+         return;
+      end if;
+
+      --  Then create the record type.
+      if Get_Type_Staticness (Def) = Locally then
+         Info.Ortho_Type (Mode_Signal) := O_Tnode_Null;
+         for Kind in Mode_Value .. Type_To_Last_Object_Kind (Def) loop
+            Start_Record_Type (Rec);
+            New_Record_Field (Rec, Base_Field, Wki_Base,
+                              Info.B.Base_Type (Kind));
+            for I in Natural loop
+               B_El := Get_Nth_Element (El_Blist, I);
+               exit when B_El = Null_Iir;
+
+               if Is_Unbounded_Type (Get_Info (Get_Type (B_El))) then
+                  Field_Info := Add_Info (El, Kind_Field);
+                  El_Tinfo := Get_Info (Get_Type (El));
+                  El_Tnode := El_Tinfo.Ortho_Type (Kind);
+                  New_Record_Field (Rec, Field_Info.Field_Node (Kind),
+                                    Create_Identifier_Without_Prefix (El),
+                                    El_Tnode);
+               end if;
+            end loop;
+            Finish_Record_Type (Rec, Info.Ortho_Type (Kind));
+         end loop;
+
+         Finish_Type_Definition (Info);
+      end if;
+      if With_Vars then
+         Create_Composite_Subtype_Bounds_Var (Def, False);
+      end if;
+   end Translate_Record_Subtype;
+
    procedure Create_Record_Type_Builder
      (Def : Iir_Record_Type_Definition; Kind : Object_Kind_Type)
    is
@@ -2114,19 +2199,7 @@ package body Trans.Chap3 is
             Translate_Record_Type (Def);
 
          when Iir_Kind_Record_Subtype_Definition =>
-            Info.all := Base_Info.all;
-            Info.S := Ortho_Info_Subtype_Record_Init;
-            declare
-               Tm : constant Iir :=
-                 Get_Type (Get_Named_Entity (Get_Subtype_Type_Mark (Def)));
-            begin
-               if With_Vars
-                 and then Get_Constraint_State (Tm) /= Fully_Constrained
-                 and then Get_Constraint_State (Def) = Fully_Constrained
-               then
-                  Create_Composite_Subtype_Bounds_Var (Def, False);
-               end if;
-            end;
+            Translate_Record_Subtype (Def, With_Vars);
 
          when Iir_Kind_Access_Subtype_Definition =>
             --  Like the access type.
