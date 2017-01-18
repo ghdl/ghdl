@@ -110,6 +110,13 @@ package body Xrefs is
       end if;
    end Xref_End;
 
+   procedure Xref_Keyword (Loc : Location_Type) is
+   begin
+      if Flags.Flag_Xref then
+         Add_Xref (Loc, Null_Iir, Xref_Keyword);
+      end if;
+   end Xref_Keyword;
+
    procedure Xref_Name_1 (Name : Iir) is
    begin
       case Get_Kind (Name) is

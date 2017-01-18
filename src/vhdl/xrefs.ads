@@ -31,7 +31,10 @@ package Xrefs is
       Xref_End,
 
       --  Body of a declaration (for package, subprograms or protected type).
-      Xref_Body
+      Xref_Body,
+
+      --  A PSL keyword that would be scanned as an identifier
+      Xref_Keyword
      );
 
    --  Initialize the xref table.
@@ -62,6 +65,10 @@ package Xrefs is
    --  LOC is the location of the simple_name after 'end' for DECL.
    procedure Xref_End (Loc : Location_Type; Decl : Iir);
    pragma Inline (Xref_End);
+
+   --  LOC is the location of a PSL keyword.
+   procedure Xref_Keyword (Loc : Location_Type);
+   pragma Inline (Xref_Keyword);
 
    --  Sort the xref table by location.  This is required before searching with
    --  Find.

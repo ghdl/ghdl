@@ -2120,10 +2120,10 @@ package body Trans.Chap7 is
 
          when Iir_Predefined_Vector_Minimum =>
             return Translate_Predefined_Vector_Min_Max
-              (True, Left, Res_Type);
+              (True, Left, Get_Type (Expr));
          when Iir_Predefined_Vector_Maximum =>
             return Translate_Predefined_Vector_Min_Max
-              (False, Left, Res_Type);
+              (False, Left, Get_Type (Expr));
 
          when Iir_Predefined_Bit_Rising_Edge
             | Iir_Predefined_Boolean_Rising_Edge =>

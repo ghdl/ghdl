@@ -33,6 +33,8 @@ package body Evaluation is
    function Eval_Enum_To_String (Lit : Iir; Orig : Iir) return Iir;
    function Eval_Integer_Image (Val : Iir_Int64; Orig : Iir) return Iir;
 
+   function Eval_Scalar_Compare (Left, Right : Iir) return Compare_Type;
+
    function Get_Physical_Value (Expr : Iir) return Iir_Int64
    is
       pragma Unsuppress (Overflow_Check);
@@ -561,7 +563,7 @@ package body Evaluation is
       Index_Range : constant Iir := Eval_Static_Range (Index_Type);
       Len : constant Iir_Int64 := Eval_Discrete_Range_Length (Index_Range);
       Assocs : constant Iir := Get_Association_Choices_Chain (Aggr);
-      Vect : Iir_Array (0 .. Natural (Len - 1));
+      Vect : Iir_Array (0 .. Integer (Len - 1));
       List : Iir_List;
       Assoc : Iir;
       Expr : Iir;
@@ -610,6 +612,8 @@ package body Evaluation is
    function Eval_Monadic_Operator (Orig : Iir; Operand : Iir) return Iir
    is
       pragma Unsuppress (Overflow_Check);
+      subtype Iir_Predefined_Vector_Minmax is Iir_Predefined_Functions range
+        Iir_Predefined_Vector_Minimum .. Iir_Predefined_Vector_Maximum;
 
       Func : Iir_Predefined_Functions;
    begin
@@ -679,6 +683,55 @@ package body Evaluation is
             return Eval_Enum_To_String (Operand, Orig);
          when Iir_Predefined_Integer_To_String =>
             return Eval_Integer_Image (Get_Value (Operand), Orig);
+
+         when Iir_Predefined_Vector_Minimum
+           | Iir_Predefined_Vector_Maximum =>
+            --  LRM08 5.3.2.4 Predefined operations on array types
+            declare
+               Saggr : Iir;
+               Lits : Iir_List;
+               Res : Iir;
+               El : Iir;
+               Cmp : Compare_Type;
+            begin
+               Saggr := Eval_String_Literal (Operand);
+               Lits := Get_Simple_Aggregate_List (Saggr);
+
+               if Get_Nbr_Elements (Lits) = 0 then
+                  declare
+                     Typ : constant Iir :=
+                       Get_Type (Get_Implementation (Orig));
+                     Rng : constant Iir := Eval_Static_Range (Typ);
+                  begin
+                     case Iir_Predefined_Vector_Minmax (Func) is
+                        when Iir_Predefined_Vector_Minimum =>
+                           Res := Get_High_Limit (Rng);
+                        when Iir_Predefined_Vector_Maximum =>
+                           Res := Get_Low_Limit (Rng);
+                     end case;
+                     Res := Eval_Static_Expr (Res);
+                  end;
+               else
+                  Res := Get_Nth_Element (Lits, 0);
+                  for I in Positive loop
+                     El := Get_Nth_Element (Lits, I);
+                     exit when El = Null_Iir;
+                     Cmp := Eval_Scalar_Compare (El, Res);
+                     case Iir_Predefined_Vector_Minmax (Func) is
+                        when Iir_Predefined_Vector_Minimum =>
+                           if Cmp <= Compare_Eq then
+                              Res := El;
+                           end if;
+                        when Iir_Predefined_Vector_Maximum =>
+                           if Cmp >= Compare_Eq then
+                              Res := El;
+                           end if;
+                     end case;
+                  end loop;
+               end if;
+               Free_Eval_String_Literal (Saggr, Operand);
+               return Res;
+            end;
 
          when others =>
             Error_Internal (Orig, "eval_monadic_operator: " &
@@ -1039,7 +1092,7 @@ package body Evaluation is
       return Build_Simple_Aggregate (Res_List, Orig, Res_Type, Res_Type);
    end Eval_Concatenation;
 
-   function Eval_Discrete_Compare (Left, Right : Iir) return Compare_Type
+   function Eval_Scalar_Compare (Left, Right : Iir) return Compare_Type
    is
       Ltype : constant Iir := Get_Base_Type (Get_Type (Left));
    begin
@@ -1062,6 +1115,21 @@ package body Evaluation is
                   end if;
                end if;
             end;
+         when Iir_Kind_Physical_Type_Definition =>
+            declare
+               L_Val : constant Iir_Int64 := Get_Physical_Value (Left);
+               R_Val : constant Iir_Int64 := Get_Physical_Value (Right);
+            begin
+               if L_Val = R_Val then
+                  return Compare_Eq;
+               else
+                  if L_Val < R_Val then
+                     return Compare_Lt;
+                  else
+                     return Compare_Gt;
+                  end if;
+               end if;
+            end;
          when Iir_Kind_Integer_Type_Definition =>
             declare
                L_Val : constant Iir_Int64 := Get_Value (Left);
@@ -1077,10 +1145,25 @@ package body Evaluation is
                   end if;
                end if;
             end;
+         when Iir_Kind_Floating_Type_Definition =>
+            declare
+               L_Val : constant Iir_Fp64 := Get_Fp_Value (Left);
+               R_Val : constant Iir_Fp64 := Get_Fp_Value (Right);
+            begin
+               if L_Val = R_Val then
+                  return Compare_Eq;
+               else
+                  if L_Val < R_Val then
+                     return Compare_Lt;
+                  else
+                     return Compare_Gt;
+                  end if;
+               end if;
+            end;
          when others =>
-            Error_Kind ("eval_discrete_compare", Ltype);
+            Error_Kind ("eval_scalar_compare", Ltype);
       end case;
-   end Eval_Discrete_Compare;
+   end Eval_Scalar_Compare;
 
    function Eval_Array_Compare (Left, Right : Iir) return Compare_Type is
    begin
@@ -1137,7 +1220,7 @@ package body Evaluation is
             Res := Compare_Eq;
             P := 0;
             while P < L_Len and P < R_Len loop
-               Res := Eval_Discrete_Compare (Get_Nth_Element (L_List, P),
+               Res := Eval_Scalar_Compare (Get_Nth_Element (L_List, P),
                                              Get_Nth_Element (R_List, P));
                exit when Res /= Compare_Eq;
                P := P + 1;

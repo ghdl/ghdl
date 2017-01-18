@@ -1028,6 +1028,8 @@ package body Iirs_Utils is
             return Get_Type (Ind);
          when Iir_Kinds_Subtype_Definition =>
             return Ind;
+         when Iir_Kind_Subtype_Attribute =>
+            return Get_Type (Ind);
          when others =>
             Error_Kind ("get_type_of_subtype_indication", Ind);
       end case;

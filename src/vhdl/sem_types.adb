@@ -2219,10 +2219,14 @@ package body Sem_Types is
       --
       --  If the subtype indication does not include a constraint, the subtype
       --  is the same as that denoted by the type mark.
-      if Get_Kind (Def) in Iir_Kinds_Denoting_Name then
-         Type_Mark := Sem_Type_Mark (Def, Incomplete);
-         return Type_Mark;
-      end if;
+      case Get_Kind (Def) is
+         when Iir_Kinds_Denoting_Name
+           | Iir_Kind_Attribute_Name =>
+            Type_Mark := Sem_Type_Mark (Def, Incomplete);
+            return Type_Mark;
+         when others =>
+            null;
+      end case;
 
       --  Analyze the type mark.
       Type_Mark_Name := Get_Subtype_Type_Mark (Def);

@@ -1696,8 +1696,7 @@ package body Sem_Names is
             end if;
             return Res;
          when Iir_Kind_Subtype_Attribute =>
-            Free_Iir (Name);
-            return Res;
+            null;
          when Iir_Kinds_Signal_Value_Attribute =>
             null;
          when Iir_Kinds_Signal_Attribute =>
@@ -1753,7 +1752,8 @@ package body Sem_Names is
             pragma Assert (Get_Kind (Name) = Iir_Kind_Selected_By_All_Name);
             Finish_Sem_Dereference (Res);
             Free_Iir (Name);
-         when Iir_Kinds_Signal_Value_Attribute =>
+         when Iir_Kinds_Signal_Value_Attribute
+           | Iir_Kind_Subtype_Attribute =>
             Sem_Name_Free_Result (Name, Res);
          when others =>
             Error_Kind ("finish_sem_name_1(2)", Res);

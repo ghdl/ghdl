@@ -274,12 +274,16 @@ package body Disp_Vhdl is
          when Iir_Kind_Base_Attribute =>
             Disp_Name (Get_Prefix (Name));
             Put ("'base");
+         when Iir_Kind_Subtype_Attribute =>
+            Disp_Name (Get_Prefix (Name));
+            Put ("'subtype");
          when Iir_Kind_Type_Declaration
            | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Unit_Declaration
            | Iir_Kinds_Interface_Object_Declaration
            | Iir_Kind_Variable_Declaration
+           | Iir_Kind_Constant_Declaration
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Procedure_Declaration
            | Iir_Kind_Terminal_Declaration
@@ -567,10 +571,14 @@ package body Disp_Vhdl is
       Base_Type : Iir;
       Decl : Iir;
    begin
-      if Get_Kind (Def) in Iir_Kinds_Denoting_Name then
-         Disp_Name (Def);
-         return;
-      end if;
+      case Get_Kind (Def) is
+         when Iir_Kinds_Denoting_Name
+           | Iir_Kind_Subtype_Attribute =>
+            Disp_Name (Def);
+            return;
+         when others =>
+            null;
+      end case;
 
       Decl := Get_Type_Declarator (Def);
       if not Full_Decl and then Decl /= Null_Iir then
