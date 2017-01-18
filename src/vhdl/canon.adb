@@ -1453,12 +1453,10 @@ package body Canon is
             Target := Build_Reference_Decl (Target, Orig_Stmt);
          end if;
          Set_Target (Stmt, Target);
-         if Proc = Null_Iir then
-            Sensitivity_List := Null_Iir_List;
-         else
+         if Proc /= Null_Iir then
             Sensitivity_List := Get_Sensitivity_List (Proc);
+            Extract_Waveform_Sensitivity (Waveform_Chain, Sensitivity_List);
          end if;
-         Extract_Waveform_Sensitivity (Waveform_Chain, Sensitivity_List);
          Set_Waveform_Chain (Stmt, Waveform_Chain);
          Set_Delay_Mechanism (Stmt, Get_Delay_Mechanism (Orig_Stmt));
          Set_Reject_Time_Expression
