@@ -563,7 +563,7 @@ package body Evaluation is
       Index_Range : constant Iir := Eval_Static_Range (Index_Type);
       Len : constant Iir_Int64 := Eval_Discrete_Range_Length (Index_Range);
       Assocs : constant Iir := Get_Association_Choices_Chain (Aggr);
-      Vect : Iir_Array (0 .. Natural (Len - 1));
+      Vect : Iir_Array (0 .. Integer (Len - 1));
       List : Iir_List;
       Assoc : Iir;
       Expr : Iir;
