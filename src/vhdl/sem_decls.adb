@@ -1856,9 +1856,15 @@ package body Sem_Decls is
             end if;
       end case;
 
-      if not Check_Implicit_Conversion (Atype, Default_Value) then
-         Error_Msg_Sem
-           (+Decl, "default value length does not match object type length");
+      if Is_Valid (Default_Value)
+        and then not Eval_Is_In_Bound (Default_Value, Atype)
+        and then Get_Kind (Default_Value) /= Iir_Kind_Overflow_Literal
+      then
+         Warning_Msg_Sem
+           (Warnid_Runtime_Error, +Decl,
+            "default value constraints don't match object type ones");
+         Default_Value := Build_Overflow (Default_Value, Atype);
+         Set_Default_Value (Decl, Default_Value);
       end if;
 
       case Get_Kind (Decl) is

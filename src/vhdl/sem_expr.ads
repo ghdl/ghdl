@@ -93,13 +93,6 @@ package Sem_Expr is
    --  Check EXPR can be updated.
    procedure Check_Update (Expr : Iir);
 
-   --  Check the type of EXPR can be implicitly converted to TARG_TYPE, ie
-   --  if TARG_TYPE is a constrained array subtype, number of elements matches.
-   --  Return FALSE in case of error.
-   --  If TARG_TYPE or EXPR is NULL_IIR, silently returns TRUE.
-   function Check_Implicit_Conversion (Targ_Type : Iir; Expr : Iir)
-                                      return Boolean;
-
    -- For a procedure call, A_TYPE must be null.
    function Sem_Subprogram_Call (Expr: Iir; A_Type: Iir) return Iir;
 

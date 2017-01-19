@@ -2222,9 +2222,9 @@ package body Sem_Assocs is
          Expr := Eval_Expr_Check_If_Static (Expr, Res_Type);
          Set_Actual (Assoc, Expr);
          if In_Conv = Null_Iir and then Out_Conv = Null_Iir then
-            if not Check_Implicit_Conversion (Formal_Type, Expr) then
+            if not Eval_Is_In_Bound (Expr, Formal_Type) then
                Error_Msg_Sem
-                 (+Assoc, "actual length does not match formal length");
+                 (+Assoc, "actual constraints don't match formal ones");
             end if;
          end if;
       end if;
