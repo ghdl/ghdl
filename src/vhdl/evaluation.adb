@@ -585,9 +585,12 @@ package body Evaluation is
       Build_Array_Choices_Vector (Vect, Index_Range, Assocs);
 
       List := Create_Iir_List;
-      for I in Vect'Range loop
-         Append_Element (List, Get_Associated_Expr (Vect (I)));
-      end loop;
+      if Len > 0 then
+         --  Workaround GNAT GPL2014 compiler bug.
+         for I in Vect'Range loop
+            Append_Element (List, Get_Associated_Expr (Vect (I)));
+         end loop;
+      end if;
 
       return Build_Simple_Aggregate (List, Aggr, Aggr_Type);
    end Aggregate_To_Simple_Aggregate;
