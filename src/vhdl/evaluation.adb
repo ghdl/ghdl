@@ -585,9 +585,12 @@ package body Evaluation is
       Build_Array_Choices_Vector (Vect, Index_Range, Assocs);
 
       List := Create_Iir_List;
-      for I in Vect'Range loop
-         Append_Element (List, Get_Associated_Expr (Vect (I)));
-      end loop;
+      if Len > 0 then
+         --  Workaround GNAT GPL2014 compiler bug.
+         for I in Vect'Range loop
+            Append_Element (List, Get_Associated_Expr (Vect (I)));
+         end loop;
+      end if;
 
       return Build_Simple_Aggregate (List, Aggr, Aggr_Type);
    end Aggregate_To_Simple_Aggregate;
@@ -3095,40 +3098,48 @@ package body Evaluation is
       Val : Iir;
    begin
       case Get_Kind (Expr) is
+         when Iir_Kind_Simple_Name
+           | Iir_Kind_Character_Literal
+           | Iir_Kind_Selected_Name
+           | Iir_Kind_Parenthesis_Name =>
+            Val := Get_Named_Entity (Expr);
+         when others =>
+            Val := Expr;
+      end case;
+
+      case Get_Kind (Val) is
          when Iir_Kind_Error =>
             --  Ignore errors.
             return True;
          when Iir_Kind_Overflow_Literal =>
             --  Never within bounds
             return False;
-         when Iir_Kind_Simple_Name
-           | Iir_Kind_Character_Literal
-           | Iir_Kind_Selected_Name =>
-            Val := Get_Named_Entity (Expr);
          when others =>
-            Val := Expr;
+            null;
       end case;
 
       case Get_Kind (Sub_Type) is
          when Iir_Kind_Integer_Subtype_Definition =>
-            if Get_Expr_Staticness (Expr) /= Locally
+            if Get_Expr_Staticness (Val) /= Locally
               or else Get_Type_Staticness (Sub_Type) /= Locally
             then
                return True;
             end if;
             Type_Range := Get_Range_Constraint (Sub_Type);
             return Eval_Int_In_Range (Get_Value (Val), Type_Range);
+
          when Iir_Kind_Floating_Subtype_Definition =>
-            if Get_Expr_Staticness (Expr) /= Locally
+            if Get_Expr_Staticness (Val) /= Locally
               or else Get_Type_Staticness (Sub_Type) /= Locally
             then
                return True;
             end if;
             Type_Range := Get_Range_Constraint (Sub_Type);
             return Eval_Fp_In_Range (Get_Fp_Value (Val), Type_Range);
+
          when Iir_Kind_Enumeration_Subtype_Definition
            | Iir_Kind_Enumeration_Type_Definition =>
-            if Get_Expr_Staticness (Expr) /= Locally
+            if Get_Expr_Staticness (Val) /= Locally
               or else Get_Type_Staticness (Sub_Type) /= Locally
             then
                return True;
@@ -3138,8 +3149,9 @@ package body Evaluation is
             Type_Range := Get_Range_Constraint (Sub_Type);
             return Eval_Int_In_Range
               (Iir_Int64 (Get_Enum_Pos (Val)), Type_Range);
+
          when Iir_Kind_Physical_Subtype_Definition =>
-            if Get_Expr_Staticness (Expr) /= Locally
+            if Get_Expr_Staticness (Val) /= Locally
               or else Get_Type_Staticness (Sub_Type) /= Locally
             then
                return True;
@@ -3148,7 +3160,7 @@ package body Evaluation is
             return Eval_Phys_In_Range (Get_Physical_Value (Val), Type_Range);
 
          when Iir_Kind_Base_Attribute =>
-            if Get_Expr_Staticness (Expr) /= Locally
+            if Get_Expr_Staticness (Val) /= Locally
               or else Get_Type_Staticness (Sub_Type) /= Locally
             then
                return True;
@@ -3159,6 +3171,11 @@ package body Evaluation is
             declare
                Val_Type : constant Iir := Get_Type (Val);
             begin
+               if Is_Null (Val_Type) then
+                  --  Punt on errors.
+                  return True;
+               end if;
+
                if Get_Constraint_State (Sub_Type) /= Fully_Constrained
                  or else
                  Get_Kind (Val_Type) /= Iir_Kind_Array_Subtype_Definition
@@ -3201,6 +3218,21 @@ package body Evaluation is
            | Iir_Kind_Record_Type_Definition
            | Iir_Kind_Record_Subtype_Definition =>
             --  FIXME: do it.
+            return True;
+
+         when Iir_Kind_File_Type_Definition =>
+            return True;
+
+         when Iir_Kind_Integer_Type_Definition
+           | Iir_Kind_Physical_Type_Definition
+           | Iir_Kind_Floating_Type_Definition =>
+            return True;
+
+         when Iir_Kind_Interface_Type_Definition
+           | Iir_Kind_Protected_Type_Declaration =>
+            return True;
+
+         when Iir_Kind_Error =>
             return True;
 
          when others =>

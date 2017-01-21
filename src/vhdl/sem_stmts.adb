@@ -605,9 +605,13 @@ package body Sem_Stmts is
                   "null transactions can be assigned only to guarded signals");
             end if;
          else
-            if not Check_Implicit_Conversion (Targ_Type, Expr) then
-               Error_Msg_Sem
-                 (+We, "length of value does not match length of target");
+            if not Eval_Is_In_Bound (Expr, Targ_Type)
+              and then Get_Kind (Expr) /= Iir_Kind_Overflow_Literal
+            then
+               Warning_Msg_Sem
+                 (Warnid_Runtime_Error, +We,
+                  "value constraints don't match target ones");
+               Set_We_Value (We, Build_Overflow (Expr, Targ_Type));
             end if;
          end if;
          We := Get_Chain (We);
@@ -836,11 +840,12 @@ package body Sem_Stmts is
                   Set_Expression (Stmt, Expr);
                   Merge_Wildcard_Type (Expr, Stmt_Type);
                   if Done
-                    and then not Check_Implicit_Conversion (Target_Type, Expr)
+                    and then not Eval_Is_In_Bound (Expr, Target_Type)
+                    and then Get_Kind (Expr) /= Iir_Kind_Overflow_Literal
                   then
                      Warning_Msg_Sem
                        (Warnid_Runtime_Error, +Stmt,
-                        "expression length does not match target length");
+                        "expression constraints don't match target ones");
                      Set_Expression (Stmt, Build_Overflow (Expr, Target_Type));
                   end if;
                end if;
