@@ -1881,6 +1881,7 @@ package body Sem_Types is
 
       Tm_El_List := Get_Elements_Declaration_List (Type_Mark);
       if El_List /= Null_Iir_List or Res_List /= Null_Iir_List then
+         --  Constraints (either range or resolution) have been added.
          declare
             Nbr_Els : constant Natural := Get_Nbr_Elements (Tm_El_List);
             Els : Iir_Array (0 .. Nbr_Els - 1) := (others => Null_Iir);
@@ -1888,16 +1889,20 @@ package body Sem_Types is
             Pos : Natural;
             Constraint : Iir_Constraint;
          begin
-            --  Fill ELS.
+            --  Fill ELS with record constraints.
             if El_List /= Null_Iir_List then
                for I in Natural loop
                   El := Get_Nth_Element (El_List, I);
                   exit when El = Null_Iir;
                   Tm_El := Find_Name_In_List (Tm_El_List, Get_Identifier (El));
                   if Tm_El = Null_Iir then
+                     --  Constraint element references an element name that
+                     --  doesn't exist.
                      Error_Msg_Sem (+El, "%n has no %n", (+Type_Mark, +El));
                   else
                      Set_Element_Declaration (El, Tm_El);
+                     Set_Base_Element_Declaration
+                       (El, Get_Base_Element_Declaration (Tm_El));
                      Pos := Natural (Get_Element_Position (Tm_El));
                      if Els (Pos) /= Null_Iir then
                         Error_Msg_Sem
@@ -1912,6 +1917,7 @@ package body Sem_Types is
                      El_Type := Get_Type (El);
                      Tm_El_Type := Get_Type (Tm_El);
                      if Get_Kind (El_Type) = Iir_Kind_Parenthesis_Name then
+                        --  Recurse.
                         case Get_Kind (Tm_El_Type) is
                            when Iir_Kinds_Array_Type_Definition =>
                               El_Type := Reparse_As_Array_Constraint
@@ -1929,10 +1935,11 @@ package body Sem_Types is
                      Set_Type (El, El_Type);
                   end if;
                end loop;
+               --  Record element constraints are now in Els.
                Destroy_Iir_List (El_List);
             end if;
 
-            --  Fill Res_Els.
+            --  Fill Res_Els (handle resolution constraints).
             if Res_List /= Null_Iir_List then
                for I in Natural loop
                   El := Get_Nth_Element (Res_List, I);
@@ -1963,13 +1970,18 @@ package body Sem_Types is
             for I in Els'Range loop
                Tm_El := Get_Nth_Element (Tm_El_List, I);
                if Els (I) = Null_Iir and Res_Els (I) = Null_Iir then
+                  --  No new record element constraints.  Copy the element from
+                  --  the type mark.
                   El := Tm_El;
                   El_Type := Get_Type (El);
                else
                   if Els (I) = Null_Iir then
+                     --  Only a resolution constraint.
                      El := Create_Iir (Iir_Kind_Record_Element_Constraint);
                      Location_Copy (El, Tm_El);
                      Set_Element_Declaration (El, Tm_El);
+                     Set_Base_Element_Declaration
+                       (El, Get_Base_Element_Declaration (Tm_El));
                      Set_Element_Position (El, Get_Element_Position (Tm_El));
                      El_Type := Null_Iir;
                   else

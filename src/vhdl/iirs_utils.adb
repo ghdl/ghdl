@@ -1107,9 +1107,9 @@ package body Iirs_Utils is
                for I in Natural loop
                   Bel := Get_Nth_Element (El_Blist, I);
                   exit when Bel = Null_Iir;
-                  if not Is_Fully_Constrained_Type (Bel) then
+                  if not Is_Fully_Constrained_Type (Get_Type (Bel)) then
                      El := Get_Nth_Element (El_List, I);
-                     if not Are_Bounds_Locally_Static (El) then
+                     if not Are_Bounds_Locally_Static (Get_Type (El)) then
                         return False;
                      end if;
                   end if;
