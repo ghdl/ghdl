@@ -202,7 +202,7 @@ package body Sem_Decls is
          A_Type := Get_Type_Of_Subtype_Indication (A_Type);
 
          Default_Value := Get_Default_Value (Inter);
-         if Default_Value /= Null_Iir and then A_Type /= Null_Iir then
+         if Default_Value /= Null_Iir and then not Is_Error (A_Type) then
             Deferred_Constant_Allowed := True;
             Default_Value := Sem_Expression (Default_Value, A_Type);
             Default_Value :=
@@ -215,7 +215,7 @@ package body Sem_Decls is
       Set_Name_Staticness (Inter, Locally);
       Xref_Decl (Inter);
 
-      if A_Type /= Null_Iir then
+      if not Is_Error (A_Type) then
          Set_Type (Inter, A_Type);
 
          if Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration then

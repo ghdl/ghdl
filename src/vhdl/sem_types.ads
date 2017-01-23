@@ -22,8 +22,8 @@ package Sem_Types is
 
    --  Analyze subtype indication DEF.
    --  If INCOMPLETE is TRUE, then DEF may designate an incomplete type
-   --  definition.  Return either a name (denoting a type) or an anonymous
-   --  subtype definition.
+   --  definition.  Return either a name (denoting a type), an anonymous
+   --  subtype definition or a name whose type is an error node.
    function Sem_Subtype_Indication (Def: Iir; Incomplete : Boolean := False)
      return Iir;
 
