@@ -1095,8 +1095,9 @@ package body Sem_Names is
          return;
       end if;
 
-      Prefix := Name_To_Analyzed_Name (Get_Prefix (Attr));
+      Prefix := Finish_Sem_Name (Get_Prefix (Attr));
       Free_Iir (Attr_Name);
+      Set_Prefix (Attr, Prefix);
 
       Prefix_Type := Get_Type (Prefix);
       Prefix_Bt := Get_Base_Type (Prefix_Type);
