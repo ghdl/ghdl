@@ -1767,13 +1767,15 @@ package Iirs is
    --
    --   Get/Set_Type (Field1)
    --
-   --   Get/Set_Element_Declaration (Field2)
+   --   Get/Set_Element_Declaration (Field5)
    --
    --   Get/Set_Identifier (Field3)
    --
    --  Return the position of the element in the record, starting from 0 for
    --  the first record element, increasing by one for each successive element.
    --   Get/Set_Element_Position (Field4)
+   --
+   --   Get/Set_Base_Element_Declaration (Field2)
    --
    --   Get/Set_Visible_Flag (Flag4)
 
@@ -6305,7 +6307,7 @@ package Iirs is
    function Get_Base_Element_Declaration (Target : Iir) return Iir;
    procedure Set_Base_Element_Declaration (Target : Iir; El : Iir);
 
-   --  Field: Field2
+   --  Field: Field5
    function Get_Element_Declaration (Target : Iir) return Iir;
    procedure Set_Element_Declaration (Target : Iir; El : Iir);
 

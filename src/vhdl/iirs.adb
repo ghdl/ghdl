@@ -2482,7 +2482,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Element_Declaration (Get_Kind (Target)),
                      "no field Element_Declaration");
-      return Get_Field2 (Target);
+      return Get_Field5 (Target);
    end Get_Element_Declaration;
 
    procedure Set_Element_Declaration (Target : Iir; El : Iir) is
@@ -2490,7 +2490,7 @@ package body Iirs is
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Element_Declaration (Get_Kind (Target)),
                      "no field Element_Declaration");
-      Set_Field2 (Target, El);
+      Set_Field5 (Target, El);
    end Set_Element_Declaration;
 
    function Get_Selected_Element (Target : Iir) return Iir is
