@@ -57,9 +57,6 @@ package body Grt.Std_Logic_1164 is
       Left : constant Std_Ulogic := Std_Ulogic'Val (L);
       Right : constant Std_Ulogic := Std_Ulogic'Val (R);
    begin
-      if Left = '-' or Right = '-' then
-         Assert_Not_Match;
-      end if;
       return Std_Ulogic'Pos (Match_Eq_Table (Left, Right));
    end Ghdl_Std_Ulogic_Match_Eq;
 
@@ -68,9 +65,6 @@ package body Grt.Std_Logic_1164 is
       Left : constant Std_Ulogic := Std_Ulogic'Val (L);
       Right : constant Std_Ulogic := Std_Ulogic'Val (R);
    begin
-      if Left = '-' or Right = '-' then
-         Assert_Not_Match;
-      end if;
       return Std_Ulogic'Pos (Not_Table (Match_Eq_Table (Left, Right)));
    end Ghdl_Std_Ulogic_Match_Ne;
 
@@ -120,7 +114,6 @@ package body Grt.Std_Logic_1164 is
       R_Arr : constant Ghdl_E8_Array_Base_Ptr :=
         To_Ghdl_E8_Array_Base_Ptr (R);
       Res : Std_Ulogic := '1';
-      Has_Match_Err : Boolean;
    begin
       if L_Len /= R_Len then
          Ghdl_Ieee_Assert_Failed
@@ -129,18 +122,11 @@ package body Grt.Std_Logic_1164 is
          return Std_Ulogic'Pos ('0');
       end if;
 
-      Has_Match_Err := False;
       for I in 1 .. L_Len loop
          declare
             Le : constant Std_Ulogic := Std_Ulogic'Val (L_Arr (I - 1));
             Re : constant Std_Ulogic := Std_Ulogic'Val (R_Arr (I - 1));
          begin
-            if Le = '-' or Re = '-' then
-               if not Has_Match_Err then
-                  Assert_Not_Match;
-                  Has_Match_Err := True;
-               end if;
-            end if;
             Res := And_Table (Res, Match_Eq_Table (Le, Re));
          end;
       end loop;
