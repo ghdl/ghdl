@@ -1205,6 +1205,10 @@ package body Trans.Chap3 is
          end if;
       end loop;
 
+      --  By default, use the same representation as the type mark.
+      Info.all := Get_Info (Type_Mark).all;
+      Info.S := Ortho_Info_Subtype_Record_Init;
+
       if Get_Constraint_State (Def) /= Fully_Constrained
         or else not Has_New_Constraints
       then
@@ -1212,8 +1216,6 @@ package body Trans.Chap3 is
          --    create objects, so wait until it is compltely constrained.
          --  The subtype is simply an alias.
          --  In both cases, use the same representation as its type mark.
-         Info.all := Get_Info (Type_Mark).all;
-         Info.S := Ortho_Info_Subtype_Record_Init;
          return;
       end if;
 
@@ -2443,6 +2445,19 @@ package body Trans.Chap3 is
                    Iinfo.B.Range_Type, Iinfo.B.Range_Ptr_Type);
    end Bounds_To_Range;
 
+   function Bounds_To_Element_Bounds (B : Mnode; El : Iir) return Mnode
+   is
+      El_Type : constant Iir := Get_Type (El);
+      El_Tinfo : constant Type_Info_Acc := Get_Info (El_Type);
+      Base_El : constant Iir := Get_Base_Element_Declaration (El);
+   begin
+      return Lv2M
+        (New_Selected_Element (M2Lv (B),
+                               Get_Info (Base_El).Field_Bound),
+         El_Tinfo, Mode_Value,
+         El_Tinfo.B.Range_Type, El_Tinfo.B.Range_Ptr_Type);
+   end Bounds_To_Element_Bounds;
+
    function Type_To_Range (Atype : Iir) return Mnode
    is
       Info : constant Type_Info_Acc := Get_Info (Atype);
@@ -2796,8 +2811,8 @@ package body Trans.Chap3 is
             | Type_Mode_Array
             | Type_Mode_Record =>
             return New_Lit (New_Sizeof (Type_Info.Ortho_Type (Kind),
-                            Ghdl_Index_Type));
-         when Type_Mode_Fat_Array =>
+                                        Ghdl_Index_Type));
+         when Type_Mode_Unbounded_Array =>
             declare
                El_Type  : constant Iir := Get_Element_Subtype (Atype);
                El_Sz    : O_Enode;
@@ -2806,6 +2821,41 @@ package body Trans.Chap3 is
                El_Sz := Get_Subtype_Size (El_Type, Mnode_Null, Kind);
                return New_Dyadic_Op
                  (ON_Mul_Ov, Chap3.Get_Bounds_Length (Bounds, Atype), El_Sz);
+            end;
+         when Type_Mode_Unbounded_Record =>
+            declare
+               El_List : constant Iir_List :=
+                 Get_Elements_Declaration_List (Atype);
+               El : Iir;
+               El_Type : Iir;
+               El_Type_Info : Type_Info_Acc;
+               El_Bounds : Mnode;
+               Res : O_Enode;
+            begin
+               --  Size of base type
+               Res := New_Lit (New_Sizeof (Type_Info.B.Base_Type (Kind),
+                                           Ghdl_Index_Type));
+               for I in Natural loop
+                  El := Get_Nth_Element (El_List, I);
+                  exit when El = Null_Iir;
+                  El_Type := Get_Type (El);
+                  El_Type_Info := Get_Info (El_Type);
+                  if El_Type_Info.Type_Mode in Type_Mode_Unbounded then
+                     --  Recurse
+                     Res := Realign (Res, El_Type);
+                     El_Bounds := Bounds_To_Element_Bounds (Bounds, El);
+                     Res := New_Dyadic_Op
+                       (ON_Add_Ov,
+                        Res, Get_Subtype_Size (El_Type, El_Bounds, Kind));
+                  elsif Is_Complex_Type (El_Type_Info) then
+                     --  Add supplement
+                     Res := Realign (Res, El_Type);
+                     Res := New_Dyadic_Op
+                       (ON_Add_Ov,
+                        Res, Get_Subtype_Size (El_Type, Mnode_Null, Kind));
+                  end if;
+               end loop;
+               return Res;
             end;
          when others =>
             raise Internal_Error;
@@ -2818,7 +2868,7 @@ package body Trans.Chap3 is
       Type_Info : constant Type_Info_Acc := Get_Type_Info (Obj);
       Kind      : constant Object_Kind_Type := Get_Object_Kind (Obj);
    begin
-      if Type_Info.Type_Mode = Type_Mode_Fat_Array then
+      if Type_Info.Type_Mode in Type_Mode_Unbounded then
          return Get_Subtype_Size (Obj_Type, Get_Array_Bounds (Obj), Kind);
       else
          return Get_Subtype_Size (Obj_Type, Mnode_Null, Kind);
@@ -2848,7 +2898,7 @@ package body Trans.Chap3 is
       Dinfo : constant Type_Info_Acc := Get_Info (Obj_Type);
       Kind  : constant Object_Kind_Type := Get_Object_Kind (Res);
    begin
-      if Dinfo.Type_Mode = Type_Mode_Fat_Array then
+      if Dinfo.Type_Mode in Type_Mode_Unbounded then
          --  Allocate memory for bounds.
          New_Assign_Stmt
            (M2Lp (Chap3.Get_Array_Bounds (Res)),

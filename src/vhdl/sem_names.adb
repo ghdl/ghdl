@@ -44,6 +44,9 @@ package body Sem_Names is
    --  Error messages are emitted here.
    function Finish_Sem_Name (Name : Iir; Res : Iir) return Iir;
 
+   --  Return the fully analyzed name of NAME.
+   function Name_To_Analyzed_Name (Name : Iir) return Iir;
+
    procedure Error_Overload (Expr: Iir) is
    begin
       if Is_Error (Expr) then
@@ -879,37 +882,17 @@ package body Sem_Names is
       end if;
       Res := Finish_Sem_Name (Name);
 
-      case Get_Kind (Res) is
-         when Iir_Kinds_Denoting_Name =>
-            --  Common correct case.
-            Atype := Get_Named_Entity (Res);
-            case Get_Kind (Atype) is
-               when Iir_Kind_Type_Declaration =>
-                  Atype := Get_Type_Definition (Atype);
-               when Iir_Kind_Subtype_Declaration
-                 | Iir_Kind_Interface_Type_Declaration
-                 | Iir_Kind_Subtype_Attribute =>
-                  Atype := Get_Type (Atype);
-               when others =>
-                  Error_Msg_Sem
-                    (+Name, "a type mark must denote a type or a subtype");
-                  Atype := Create_Error_Type (Atype);
-                  Set_Named_Entity (Res, Atype);
-            end case;
-         when Iir_Kind_Subtype_Attribute
-           | Iir_Kind_Element_Attribute =>
-            Atype := Get_Type (Res);
-         when others =>
-            if Get_Kind (Res) /= Iir_Kind_Error then
-               Error_Msg_Sem
-                 (+Name, "a type mark must be a simple or expanded name");
-            end if;
-            Res := Name;
-            Atype := Create_Error_Type (Name);
-            Set_Named_Entity (Res, Atype);
-      end case;
+      --  LRM87 14.1 Predefined attributes
+      if Get_Kind (Res) = Iir_Kind_Base_Attribute then
+         Error_Msg_Sem
+           (+Name, "'Base attribute cannot be used as a type mark");
+      end if;
 
-      if not Incomplete then
+      Atype := Name_To_Type_Definition (Res);
+
+      if Is_Error (Atype) then
+         Set_Named_Entity (Res, Atype);
+      elsif not Incomplete then
          if Get_Kind (Atype) = Iir_Kind_Incomplete_Type_Definition then
             Error_Msg_Sem
               (+Name, "invalid use of an incomplete type definition");
@@ -1112,16 +1095,10 @@ package body Sem_Names is
          return;
       end if;
 
-      Prefix := Get_Prefix (Attr);
-      if Get_Kind (Prefix) = Iir_Kind_Attribute_Name then
-         Prefix := Finish_Sem_Name (Prefix);
-         Set_Prefix (Attr, Prefix);
-         pragma Assert (Get_Kind (Prefix) in Iir_Kinds_Subtype_Attribute);
-      else
-         Prefix := Sem_Type_Mark (Prefix);
-      end if;
-      Set_Prefix (Attr, Prefix);
+      Prefix := Finish_Sem_Name (Get_Prefix (Attr));
       Free_Iir (Attr_Name);
+      Set_Prefix (Attr, Prefix);
+
       Prefix_Type := Get_Type (Prefix);
       Prefix_Bt := Get_Base_Type (Prefix_Type);
 
@@ -1720,10 +1697,11 @@ package body Sem_Names is
             return Res;
          when Iir_Kind_Psl_Declaration =>
             return Name;
-         when Iir_Kind_Element_Declaration
-           | Iir_Kind_Error =>
+         when Iir_Kind_Element_Declaration =>
             --  Certainly an error!
-            return Res;
+            return Name;
+         when Iir_Kind_Error =>
+            return Name;
          when others =>
             Error_Kind ("finish_sem_name_1", Res);
       end case;
@@ -2776,29 +2754,23 @@ package body Sem_Names is
    function Sem_Base_Attribute (Attr : Iir_Attribute_Name) return Iir
    is
       Prefix_Name : Iir;
-      Prefix : Iir;
+      Prefix_Type : Iir;
       Res : Iir;
       Base_Type : Iir;
       Type_Decl : Iir;
    begin
       Prefix_Name := Finish_Sem_Name (Get_Prefix (Attr));
-      --  FIXME: handle error
-      Prefix := Get_Named_Entity (Prefix_Name);
-      case Get_Kind (Prefix) is
-         when Iir_Kind_Type_Declaration =>
-            Base_Type := Get_Type_Definition (Prefix);
-         when Iir_Kind_Subtype_Declaration =>
-            Base_Type := Get_Base_Type (Get_Type (Prefix));
-            --  Get the first subtype.  FIXME: ref?
-            Type_Decl := Get_Type_Declarator (Base_Type);
-            if Get_Kind (Type_Decl) = Iir_Kind_Anonymous_Type_Declaration then
-               Base_Type := Get_Subtype_Definition (Type_Decl);
-            end if;
-         when others =>
-            Error_Msg_Sem
-              (+Attr, "prefix of 'base attribute must be a type or a subtype");
-            return Error_Mark;
-      end case;
+      Prefix_Type := Name_To_Type_Definition (Prefix_Name);
+      if not Is_Error (Prefix_Type) then
+         Base_Type := Get_Base_Type (Prefix_Type);
+         --  Get the first subtype.  FIXME: ref?
+         Type_Decl := Get_Type_Declarator (Base_Type);
+         if Get_Kind (Type_Decl) = Iir_Kind_Anonymous_Type_Declaration then
+            Base_Type := Get_Subtype_Definition (Type_Decl);
+         end if;
+      else
+         Base_Type := Prefix_Type;
+      end if;
       Res := Create_Iir (Iir_Kind_Base_Attribute);
       Location_Copy (Res, Attr);
       Set_Prefix (Res, Prefix_Name);
@@ -2887,28 +2859,19 @@ package body Sem_Names is
       use Std_Names;
       Prefix_Name : constant Iir := Get_Prefix (Attr);
       Id : constant Name_Id := Get_Identifier (Attr);
-      Prefix : Iir;
       Prefix_Type : Iir;
       Res : Iir;
    begin
-      Prefix := Get_Named_Entity (Prefix_Name);
-
       --  LRM93 14.1
       --  Prefix: Any discrete or physical type of subtype T.
-      case Get_Kind (Prefix) is
-         when Iir_Kind_Type_Declaration =>
-            Prefix_Type := Get_Type_Definition (Prefix);
-         when Iir_Kind_Subtype_Declaration =>
-            Prefix_Type := Get_Type (Prefix);
-         when Iir_Kind_Base_Attribute
-           | Iir_Kind_Subtype_Attribute
-           | Iir_Kind_Element_Attribute =>
-            Prefix_Type := Get_Type (Prefix);
-         when others =>
-            Error_Msg_Sem
-              (+Attr, "prefix of %i attribute must be a type", +Id);
-            return Error_Mark;
-      end case;
+      Prefix_Type :=
+        Name_To_Type_Definition (Name_To_Analyzed_Name (Prefix_Name));
+      Set_Type (Prefix_Name, Prefix_Type);
+      if Is_Error (Prefix_Type) then
+         --Error_Msg_Sem
+         --(+Attr, "prefix of %i attribute must be a type", +Id);
+         return Error_Mark;
+      end if;
 
       case Id is
          when Name_Image
@@ -3507,8 +3470,21 @@ package body Sem_Names is
                  (+Attr,
                   "local ports or generics of a component cannot be a prefix");
             end if;
+
+         when Iir_Kind_Subtype_Attribute
+           | Iir_Kind_Base_Attribute =>
+            declare
+               Atype : constant Iir := Get_Type (Prefix);
+            begin
+               if Is_Anonymous_Type_Definition (Atype) then
+                  Error_Msg_Sem (+Attr, "%n is not a named entity", +Prefix);
+                  return Create_Error_Expr (Attr, String_Type_Definition);
+               end if;
+               Prefix := Get_Type_Declarator (Atype);
+            end;
          when others =>
             Error_Msg_Sem (+Attr, "%n is not a named entity", +Prefix);
+            return Create_Error_Expr (Attr, String_Type_Definition);
       end case;
 
       case Get_Identifier (Attr) is
@@ -3810,6 +3786,18 @@ package body Sem_Names is
       end case;
    end Remove_Procedures_From_List;
 
+   --  Return the fully analyzed name of NAME.
+   function Name_To_Analyzed_Name (Name : Iir) return Iir is
+   begin
+      case Get_Kind (Name) is
+         when Iir_Kind_Attribute_Name
+           | Iir_Kind_Parenthesis_Name =>
+            return Get_Named_Entity (Name);
+         when others =>
+            return Name;
+      end case;
+   end Name_To_Analyzed_Name;
+
    --  Convert name EXPR to an expression (ie, create function call).
    --  A_TYPE is the expected type of the expression.
    --  Returns an Error node in case of error.
@@ -4025,6 +4013,43 @@ package body Sem_Names is
             return Error_Mark;
       end case;
    end Name_To_Range;
+
+   function Name_To_Type_Definition (Name : Iir) return Iir
+   is
+      Atype : Iir;
+   begin
+      case Get_Kind (Name) is
+         when Iir_Kinds_Denoting_Name =>
+            --  Common correct case.
+            Atype := Get_Named_Entity (Name);
+            case Get_Kind (Atype) is
+               when Iir_Kind_Type_Declaration =>
+                  return Get_Type_Definition (Atype);
+               when Iir_Kind_Subtype_Declaration
+                 | Iir_Kind_Interface_Type_Declaration =>
+                  return Get_Type (Atype);
+               when Iir_Kind_Error =>
+                  return Atype;
+               when others =>
+                  Error_Msg_Sem
+                    (+Name, "a type mark must denote a type or a subtype",
+                     Cont => True);
+                  Error_Msg_Sem
+                    (+Name, "(type mark denotes %n)", +Atype);
+                  return Create_Error_Type (Atype);
+            end case;
+         when Iir_Kind_Subtype_Attribute
+           | Iir_Kind_Element_Attribute
+           | Iir_Kind_Base_Attribute =>
+            return Get_Type (Name);
+         when others =>
+            if not Is_Error (Name) then
+               Error_Msg_Sem
+                 (+Name, "a type mark must be a simple or expanded name");
+            end if;
+            return Create_Error_Type (Name);
+      end case;
+   end Name_To_Type_Definition;
 
    function Create_Error_Name (Orig : Iir) return Iir
    is

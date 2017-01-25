@@ -157,9 +157,8 @@ package body Sem_Decls is
    --  protected type or if a subelement of DECL is an access type.
    procedure Check_Signal_Type (Decl : Iir)
    is
-      Decl_Type : Iir;
+      Decl_Type : constant Iir := Get_Type (Decl);
    begin
-      Decl_Type := Get_Type (Decl);
       if Get_Signal_Type_Flag (Decl_Type) = False then
          Error_Msg_Sem (+Decl, "type of %n cannot be %n", (+Decl, +Decl_Type));
          case Get_Kind (Decl_Type) is
@@ -203,7 +202,7 @@ package body Sem_Decls is
          A_Type := Get_Type_Of_Subtype_Indication (A_Type);
 
          Default_Value := Get_Default_Value (Inter);
-         if Default_Value /= Null_Iir and then A_Type /= Null_Iir then
+         if Default_Value /= Null_Iir and then not Is_Error (A_Type) then
             Deferred_Constant_Allowed := True;
             Default_Value := Sem_Expression (Default_Value, A_Type);
             Default_Value :=
@@ -216,7 +215,7 @@ package body Sem_Decls is
       Set_Name_Staticness (Inter, Locally);
       Xref_Decl (Inter);
 
-      if A_Type /= Null_Iir then
+      if not Is_Error (A_Type) then
          Set_Type (Inter, A_Type);
 
          if Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration then
@@ -1850,6 +1849,8 @@ package body Sem_Decls is
       case Get_Kind (Atype) is
          when Iir_Kind_File_Type_Definition =>
             Error_Msg_Sem (+Decl, "%n cannot be of type file", +Decl);
+         when Iir_Kind_Error =>
+            null;
          when others =>
             if Get_Kind (Decl) /= Iir_Kind_Variable_Declaration then
                Check_Signal_Type (Decl);

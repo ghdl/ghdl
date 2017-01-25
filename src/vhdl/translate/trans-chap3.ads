@@ -157,7 +157,7 @@ package Trans.Chap3 is
    function Range_To_Left (R : Mnode) return Mnode;
    function Range_To_Right (R : Mnode) return Mnode;
 
-   --  Get range for dimension DIM (1 based) of array bounds B or type
+   --  Get range for dimension DIM (1 based) of array bounds B of type
    --  ATYPE.
    function Bounds_To_Range (B : Mnode; Atype : Iir; Dim : Positive)
                                 return Mnode;
@@ -172,6 +172,10 @@ package Trans.Chap3 is
    --  Return a pointer to the base from bounds_acc ACC.
    function Get_Bounds_Acc_Base
      (Acc : O_Enode; D_Type : Iir) return O_Enode;
+
+   --  From an unbounded record bounds B, get the bounds for (unbounded)
+   --  element EL.
+   function Bounds_To_Element_Bounds (B : Mnode; El : Iir) return Mnode;
 
    --  Deallocate OBJ.
    procedure Gen_Deallocate (Obj : O_Enode);

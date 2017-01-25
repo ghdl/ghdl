@@ -89,6 +89,11 @@ package Sem_Names is
    --  declaration or a range attribute).  Return Error_Mark in case of error.
    function Name_To_Range (Name : Iir) return Iir;
 
+   --  Convert name NAME to a type definition.  Return an error if NAME does
+   --  not designate a type (and emit an error message).  NAME must be a fully
+   --  analyzed name (cannot be an Iir_Kind_Attribute_Name).
+   function Name_To_Type_Definition (Name : Iir) return Iir;
+
    -- Return true if AN_IIR is an overload list.
    function Is_Overload_List (An_Iir: Iir) return Boolean;
    pragma Inline (Is_Overload_List);
