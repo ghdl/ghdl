@@ -2698,7 +2698,7 @@ package body Trans.Chap8 is
                            Alloc := Alloc_Stack;
                         end if;
 
-                        if Ftype_Info.Type_Mode = Type_Mode_Fat_Array then
+                        if Ftype_Info.Type_Mode in Type_Mode_Unbounded then
                            --  Create the constraints and then the object.
                            --  FIXME: do not allocate bounds.
                            Chap3.Create_Array_Subtype (Actual_Type);

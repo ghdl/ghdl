@@ -1302,9 +1302,7 @@ package body Trans is
 
    procedure Set_Info (Target : Iir; Info : Ortho_Info_Acc) is
    begin
-      if Node_Infos.Table (Target) /= null then
-         raise Internal_Error;
-      end if;
+      pragma Assert (Node_Infos.Table (Target) = null);
       Node_Infos.Table (Target) := Info;
    end Set_Info;
 
@@ -1325,6 +1323,7 @@ package body Trans is
    is
       Res : Ortho_Info_Acc;
    begin
+      pragma Assert (Target /= Null_Iir);
       Res := new Ortho_Info_Type (Kind);
       Set_Info (Target, Res);
       return Res;

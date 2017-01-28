@@ -2802,9 +2802,8 @@ package body Trans.Chap4 is
                E := New_Function_Call (Constr);
             end if;
             Res := E2M
-              (Chap7.Translate_Implicit_Conv
-                 (E, Get_Return_Type (Func),
-                  Out_Type, Mode_Value, Imp),
+              (Chap7.Translate_Implicit_Conv (E, Get_Return_Type (Func),
+                                              Out_Type, Mode_Value, Imp),
                Get_Info (Out_Type), Mode_Value);
 
          when Iir_Kind_Type_Conversion =>
