@@ -3568,7 +3568,7 @@ package body Execution is
                      Val := Create_Value_For_Type
                        (Out_Block, Get_Type (Formal), Init_Value_Default);
                   elsif Get_Kind (Get_Type (Formal)) in
-                    Iir_Kinds_Scalar_Type_Definition
+                    Iir_Kinds_Scalar_Type_And_Subtype_Definition
                   then
                      --  These are passed by value.  Must be reset.
                      Val := Create_Value_For_Type
