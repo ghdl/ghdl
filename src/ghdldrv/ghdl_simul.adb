@@ -20,12 +20,15 @@ with Ghdllocal;
 with Ghdlprint;
 with Ghdlsimul;
 
+with Ghdlsynth;
+
 procedure Ghdl_Simul is
 begin
    --  Manual elaboration so that the order is known (because it is the order
    --  used to display help).
    Ghdlmain.Version_String := new String'("interpretation");
    Ghdlsimul.Register_Commands;
+   Ghdlsynth.Register_Commands;
    Ghdllocal.Register_Commands;
    Ghdlprint.Register_Commands;
    Ghdlmain.Register_Commands;

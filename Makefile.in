@@ -267,10 +267,10 @@ install.llvm: install.llvm.program install.vhdllib install.grt install.vpi
 
 ################ For simul (no code generation, interpretation) ##########
 
-GHDL_SIMUL_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/vhdl/simulate -aI$(srcdir)/src/grt
+GHDL_SIMUL_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/vhdl/simulate -aI$(srcdir)/src/synth -aI$(srcdir)/src/grt
 
 ghdl_simul$(EXEEXT): $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) version.ads force
-	$(GNATMAKE) $(GHDL_SIMUL_INCFLAGS) $(GNATFLAGS) ghdl_simul $(GNAT_BARGS) -largs $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
+	$(GNATMAKE) $(GHDL_SIMUL_INCFLAGS) $(GNATFLAGS) -gnat12 ghdl_simul $(GNAT_BARGS) -largs $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
 
 libs.vhdl.simul: ghdl_simul$(EXEEXT)
 	$(MAKE) GHDL=$(PWD)/ghdl_simul$(EXEEXT) vhdl.libs.all
@@ -286,6 +286,19 @@ libmhdlsimvhdl.a:  $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) version.ads force
 	$(GNATMAKE) -c b~mhdlsim.adb
 	$(RM) -f $@
 	ar rc $@ b~mhdlsim.o `cat mhdlsim.files` $(GRT_ADD_OBJS)
+
+################ ghdlsynth library ######################################
+
+GHDL_SYNTHLIB_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/synth -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/vhdl/simulate -aI$(srcdir)/src/grt
+
+libghdlsynth.a:  $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) version.ads force
+	$(GNATMAKE) -c libghdlsynth $(GNATFLAGS) -gnat12 $(GHDL_SYNTHLIB_INCFLAGS)
+	gnatbind -Llibghdlsynth_ libghdlsynth.ali -O > ghdlsynth.files
+#	Extract link options, be sure to link statically with libgnat
+	gnatbind -Llibghdlsynth_ libghdlsynth.ali -K -Z | sed -e '\@adalib/$$@s/-L//' -e '\@adalib/@s@adalib/@adalib/libgnat.a@' -e '/-lgnat/d' > ghdlsynth.link
+	$(GNATMAKE) -c b~libghdlsynth.adb
+	$(RM) -f $@
+	ar rc $@ b~libghdlsynth.o `cat ghdlsynth.files` $(GRT_ADD_OBJS)
 
 ################ ghwdump #################################################
 
