@@ -978,6 +978,11 @@ package body Annotations is
             when Iir_Kind_Simple_Simultaneous_Statement =>
                null;
 
+            when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
+               --  In case concurrent signal assignemnts were not
+               --  canonicalized.
+               null;
+
             when others =>
                Error_Kind ("annotate_concurrent_statements_list", El);
          end case;

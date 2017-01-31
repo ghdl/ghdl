@@ -70,8 +70,12 @@ package Elaboration is
       Stmt : Iir;
 
       --  Instanciation tree.
+
       --  Parent is always set (but null for top-level block and packages)
       Parent: Block_Instance_Acc;
+
+      --  Chain of children.  They are in declaration order after elaboration.
+      --  (in reverse order during elaboration).
       --  Not null only for blocks and processes.
       Children: Block_Instance_Acc;
       Brother: Block_Instance_Acc;

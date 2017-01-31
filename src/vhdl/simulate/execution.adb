@@ -1676,9 +1676,7 @@ package body Execution is
       Bound : Iir_Value_Literal_Acc;
    begin
       --  Only for constrained subtypes.
-      if Get_Kind (A_Type) = Iir_Kind_Array_Type_Definition then
-         raise Internal_Error;
-      end if;
+      pragma Assert (Get_Kind (A_Type) /= Iir_Kind_Array_Type_Definition);
 
       Index_List := Get_Index_Subtype_List (A_Type);
       Res := Create_Array_Value
@@ -2007,12 +2005,10 @@ package body Execution is
       return Res;
    end Execute_Record_Aggregate;
 
-   function Execute_Aggregate
-     (Block: Block_Instance_Acc;
-      Aggregate: Iir;
-      Aggregate_Type: Iir)
-      return Iir_Value_Literal_Acc
-   is
+   function Execute_Aggregate (Block: Block_Instance_Acc;
+                               Aggregate: Iir;
+                               Aggregate_Type: Iir)
+                              return Iir_Value_Literal_Acc is
    begin
       case Get_Kind (Aggregate_Type) is
          when Iir_Kind_Array_Type_Definition
