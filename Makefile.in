@@ -300,6 +300,12 @@ libghdlsynth.a:  $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) version.ads force
 	$(RM) -f $@
 	ar rc $@ b~libghdlsynth.o `cat ghdlsynth.files` $(GRT_ADD_OBJS)
 
+install.libghdlsynth: libghdlsynth.a install.dirs
+	$(INSTALL_DATA) -p libghdlsynth.a $(DESTDIR)$(libdir)/
+	$(INSTALL_DATA) -p $(srcdir)/src/synth/ghdlsynth.h $(DESTDIR)$(incdir)/
+	$(INSTALL_DATA) -p $(srcdir)/src/synth/ghdlsynth_gates.h $(DESTDIR)$(incdir)/
+	$(INSTALL_DATA) -p ghdlsynth.link $(DESTDIR)$(libdir)/
+
 ################ ghwdump #################################################
 
 GHWDUMP_OBJS=ghwdump.o ghwlib.o
