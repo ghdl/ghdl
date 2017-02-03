@@ -816,12 +816,14 @@ package body Trans.Chap6 is
    function Translate_Selected_Element
      (Prefix : Mnode; El : Iir_Element_Declaration) return Mnode
    is
-      Base_El : constant Iir := Get_Base_Element_Declaration (El);
-      El_Info       : constant Field_Info_Acc := Get_Info (Base_El);
-      El_Type       : constant Iir := Get_Type (Base_El);
+      El_Type       : constant Iir := Get_Type (El);
       El_Tinfo      : constant Type_Info_Acc := Get_Info (El_Type);
       Kind          : constant Object_Kind_Type := Get_Object_Kind (Prefix);
+      El_Info       : Field_Info_Acc;
+      Base_Tinfo    : Type_Info_Acc;
       Stable_Prefix, Base, Res, Fat_Res : Mnode;
+      Box_Field : O_Fnode;
+      B : O_Lnode;
    begin
       --  There are 3 cases:
       --  a) the record is bounded (and so is the element).
@@ -829,6 +831,13 @@ package body Trans.Chap6 is
       --  c) the record is unbounded and the element is unbounded.
       --  If the record is unbounded, PREFIX is a fat pointer.
       --  On top of that, the element may be complex.
+
+      --  For record subtypes, there is no info for elements that have not
+      --  changed.
+      El_Info := Get_Info (El);
+      if El_Info = null then
+         El_Info := Get_Info (Get_Base_Element_Declaration (El));
+      end if;
 
       if Is_Unbounded_Type (El_Tinfo) then
          Stable_Prefix := Stabilize (Prefix);
@@ -848,8 +857,12 @@ package body Trans.Chap6 is
       end if;
 
       Base := Chap3.Get_Composite_Base (Stable_Prefix);
+      Base_Tinfo := Get_Type_Info (Base);
+      Box_Field := Base_Tinfo.S.Box_Field (Kind);
 
-      if Is_Complex_Type (El_Tinfo) or Is_Unbounded_Type (El_Tinfo) then
+      if Box_Field = O_Fnode_Null
+        and then (Is_Complex_Type (El_Tinfo) or Is_Unbounded_Type (El_Tinfo))
+      then
          --  The element is complex: it's an offset.
          Stabilize (Base);
          Res := E2M
@@ -865,8 +878,16 @@ package body Trans.Chap6 is
             El_Tinfo, Kind);
       else
          --  Normal element.
-         Res := Lv2M (New_Selected_Element (M2Lv (Base),
-                      El_Info.Field_Node (Kind)),
+         B := M2Lv (Base);
+
+         if Box_Field /= O_Fnode_Null
+           and then Get_Kind (El) = Iir_Kind_Element_Declaration
+         then
+            --  Unbox.
+            B := New_Selected_Element (B, Box_Field);
+         end if;
+
+         Res := Lv2M (New_Selected_Element (B, El_Info.Field_Node (Kind)),
                       El_Tinfo, Kind);
       end if;
 

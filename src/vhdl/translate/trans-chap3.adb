@@ -1119,6 +1119,7 @@ package body Trans.Chap3 is
       end loop;
 
       --  Then create the record type.
+      Info.S := Ortho_Info_Subtype_Record_Init;
       Info.Ortho_Type (Mode_Signal) := O_Tnode_Null;
       for Kind in Mode_Value .. Type_To_Last_Object_Kind (Def) loop
          Start_Record_Type (El_List);
@@ -1185,8 +1186,6 @@ package body Trans.Chap3 is
       El_Tnode   : O_Tnode;
 
       Mark : Id_Mark_Type;
-
-      Base_Field : O_Fnode;
    begin
       --  Translate the newly constrained elements.
       Has_New_Constraints := False;
@@ -1221,17 +1220,24 @@ package body Trans.Chap3 is
 
       --  Then create the record type.
       if Get_Type_Staticness (Def) = Locally then
+         Info.Type_Mode := Type_Mode_Record;
          Info.Ortho_Type (Mode_Signal) := O_Tnode_Null;
          for Kind in Mode_Value .. Type_To_Last_Object_Kind (Def) loop
             Start_Record_Type (Rec);
-            New_Record_Field (Rec, Base_Field, Wki_Base,
+            New_Record_Field (Rec, Info.S.Box_Field (Kind), Wki_Base,
                               Info.B.Base_Type (Kind));
             for I in Natural loop
                B_El := Get_Nth_Element (El_Blist, I);
                exit when B_El = Null_Iir;
 
                if Is_Unbounded_Type (Get_Info (Get_Type (B_El))) then
-                  Field_Info := Add_Info (El, Kind_Field);
+                  El := Get_Nth_Element (El_List, I);
+                  if Kind = Mode_Value then
+                     Field_Info := Add_Info (El, Kind_Field);
+                  else
+                     Field_Info := Get_Info (El);
+                  end if;
+                  El := Get_Nth_Element (El_List, I);
                   El_Tinfo := Get_Info (Get_Type (El));
                   El_Tnode := El_Tinfo.Ortho_Type (Kind);
                   New_Record_Field (Rec, Field_Info.Field_Node (Kind),
@@ -2455,7 +2461,7 @@ package body Trans.Chap3 is
         (New_Selected_Element (M2Lv (B),
                                Get_Info (Base_El).Field_Bound),
          El_Tinfo, Mode_Value,
-         El_Tinfo.B.Range_Type, El_Tinfo.B.Range_Ptr_Type);
+         El_Tinfo.B.Bounds_Type, El_Tinfo.B.Bounds_Ptr_Type);
    end Bounds_To_Element_Bounds;
 
    function Type_To_Range (Atype : Iir) return Mnode
@@ -2514,7 +2520,8 @@ package body Trans.Chap3 is
       case Info.Type_Mode is
          when Type_Mode_Fat_Array =>
             raise Internal_Error;
-         when Type_Mode_Array =>
+         when Type_Mode_Array
+           | Type_Mode_Record =>
             return Varv2M (Info.S.Composite_Bounds,
                            Info, Mode_Value,
                            Info.B.Bounds_Type,
@@ -2547,7 +2554,8 @@ package body Trans.Chap3 is
                   Info.B.Bounds_Type,
                   Info.B.Bounds_Ptr_Type);
             end;
-         when Type_Mode_Array =>
+         when Type_Mode_Array
+           | Type_Mode_Record =>
             return Get_Array_Type_Bounds (Info);
          when Type_Mode_Bounds_Acc =>
             return Lp2M (M2Lv (Arr), Info, Mode_Value);
@@ -2619,21 +2627,16 @@ package body Trans.Chap3 is
    function Get_Composite_Base (Arr : Mnode) return Mnode
    is
       Info : constant Type_Info_Acc := Get_Type_Info (Arr);
+      Kind : constant Object_Kind_Type := Get_Object_Kind (Arr);
    begin
       case Info.Type_Mode is
          when Type_Mode_Unbounded_Array
            | Type_Mode_Unbounded_Record =>
-            declare
-               Kind : constant Object_Kind_Type := Get_Object_Kind (Arr);
-            begin
-               return Lp2M
-                 (New_Selected_Element (M2Lv (Arr),
-                                        Info.B.Base_Field (Kind)),
-                  Info,
-                  Kind,
-                  Info.B.Base_Type (Kind),
-                  Info.B.Base_Ptr_Type (Kind));
-            end;
+            return Lp2M
+              (New_Selected_Element (M2Lv (Arr),
+                                     Info.B.Base_Field (Kind)),
+               Info, Kind,
+               Info.B.Base_Type (Kind), Info.B.Base_Ptr_Type (Kind));
          when Type_Mode_Array
            | Type_Mode_Record =>
             return Arr;
@@ -2774,15 +2777,13 @@ package body Trans.Chap3 is
            | Type_Mode_File =>
             --  Scalar or thin pointer.
             New_Assign_Stmt (M2Lv (Dest), Src);
-         when Type_Mode_Unbounded_Array =>
+         when Type_Mode_Unbounded_Array
+           | Type_Mode_Unbounded_Record =>
             --  a fat array.
             D := Stabilize (Dest);
             Gen_Memcpy (M2Addr (Get_Composite_Base (D)),
                         M2Addr (Get_Composite_Base (E2M (Src, Info, Kind))),
                         Get_Object_Size (D, Obj_Type));
-         when Type_Mode_Unbounded_Record =>
-            --  TODO
-            raise Internal_Error;
          when Type_Mode_Array
             | Type_Mode_Record =>
             D := Stabilize (Dest);
@@ -2830,8 +2831,11 @@ package body Trans.Chap3 is
                El_Type : Iir;
                El_Type_Info : Type_Info_Acc;
                El_Bounds : Mnode;
+               Stable_Bounds : Mnode;
                Res : O_Enode;
             begin
+               Stable_Bounds := Stabilize (Bounds);
+
                --  Size of base type
                Res := New_Lit (New_Sizeof (Type_Info.B.Base_Type (Kind),
                                            Ghdl_Index_Type));
@@ -2843,7 +2847,7 @@ package body Trans.Chap3 is
                   if El_Type_Info.Type_Mode in Type_Mode_Unbounded then
                      --  Recurse
                      Res := Realign (Res, El_Type);
-                     El_Bounds := Bounds_To_Element_Bounds (Bounds, El);
+                     El_Bounds := Bounds_To_Element_Bounds (Stable_Bounds, El);
                      Res := New_Dyadic_Op
                        (ON_Add_Ov,
                         Res, Get_Subtype_Size (El_Type, El_Bounds, Kind));

@@ -23,7 +23,6 @@ with Ghdllocal; use Ghdllocal;
 with GNAT.OS_Lib; use GNAT.OS_Lib;
 
 with Types;
-with Iirs; use Iirs;
 with Flags;
 with Name_Table;
 with Errorout; use Errorout;
@@ -204,6 +203,11 @@ package body Ghdlsimul is
    begin
       Put_Line (" --debug        Run with debugger");
    end Disp_Long_Help;
+
+   function Get_Top_Config return Iir is
+   begin
+      return Top_Conf;
+   end Get_Top_Config;
 
    procedure Set_Hooks is
    begin

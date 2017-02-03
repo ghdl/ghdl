@@ -777,6 +777,10 @@ package Trans is
             --  Variable containing the bounds for a constrained type.
             Composite_Bounds : Var_Type;
 
+            --  For a locally constrained record subtype whose base type has
+            --  unbounded elements: the field containing the base record.
+            Box_Field : O_Fnode_Array;
+
          when Kind_Type_File =>
             null;
 
@@ -808,7 +812,8 @@ package Trans is
    Ortho_Info_Subtype_Array_Init : constant Ortho_Info_Subtype_Type :=
      (Kind => Kind_Type_Array,
       Static_Bounds => False,
-      Composite_Bounds => Null_Var);
+      Composite_Bounds => Null_Var,
+      Box_Field => (O_Fnode_Null, O_Fnode_Null));
 
    Ortho_Info_Basetype_Record_Init : constant Ortho_Info_Basetype_Type :=
      (Kind => Kind_Type_Record,
@@ -823,7 +828,8 @@ package Trans is
    Ortho_Info_Subtype_Record_Init : constant Ortho_Info_Subtype_Type :=
      (Kind => Kind_Type_Record,
       Static_Bounds => False,
-      Composite_Bounds => Null_Var);
+      Composite_Bounds => Null_Var,
+      Box_Field => (O_Fnode_Null, O_Fnode_Null));
 
    Ortho_Info_Basetype_File_Init : constant Ortho_Info_Basetype_Type :=
      (Kind => Kind_Type_File,

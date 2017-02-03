@@ -75,25 +75,31 @@ package body Sem_Types is
          Set_Type_Has_Signal (Orig);
       end if;
 
-      --  Mark resolution function, and for composite types, also mark type
-      --  of elements.
+      --  For subtype, mark resolution function and base type.
+      case Get_Kind (Atype) is
+         when Iir_Kinds_Scalar_Subtype_Definition
+           | Iir_Kind_Array_Subtype_Definition
+           | Iir_Kind_Record_Subtype_Definition =>
+            Set_Type_Has_Signal (Get_Base_Type (Atype));
+            Mark_Resolution_Function (Atype);
+         when others =>
+            null;
+      end case;
+
+      --  For composite types, also mark type of elements.
       case Get_Kind (Atype) is
          when Iir_Kind_Integer_Type_Definition
            | Iir_Kind_Enumeration_Type_Definition
            | Iir_Kind_Physical_Type_Definition
            | Iir_Kind_Floating_Type_Definition =>
             null;
-         when Iir_Kinds_Scalar_Subtype_Definition
+         when Iir_Kinds_Scalar_Subtype_Definition =>
+            null;
+         when Iir_Kind_Array_Subtype_Definition
+           | Iir_Kind_Array_Type_Definition =>
+            Set_Type_Has_Signal (Get_Element_Subtype (Atype));
+         when Iir_Kind_Record_Type_Definition
            | Iir_Kind_Record_Subtype_Definition =>
-            Set_Type_Has_Signal (Get_Base_Type (Atype));
-            Mark_Resolution_Function (Atype);
-         when Iir_Kind_Array_Subtype_Definition =>
-            Set_Type_Has_Signal (Get_Base_Type (Atype));
-            Mark_Resolution_Function (Atype);
-            Set_Type_Has_Signal (Get_Element_Subtype (Atype));
-         when Iir_Kind_Array_Type_Definition =>
-            Set_Type_Has_Signal (Get_Element_Subtype (Atype));
-         when Iir_Kind_Record_Type_Definition =>
             declare
                El_List : constant Iir_List :=
                  Get_Elements_Declaration_List (Atype);
@@ -1827,7 +1833,6 @@ package body Sem_Types is
       Res := Create_Iir (Iir_Kind_Record_Subtype_Definition);
       Location_Copy (Res, Def);
       Set_Base_Type (Res, Get_Base_Type (Type_Mark));
-      Set_Type_Staticness (Res, Get_Type_Staticness (Type_Mark));
       if Get_Kind (Type_Mark) = Iir_Kind_Record_Subtype_Definition then
          Set_Resolution_Indication
            (Res, Get_Resolution_Indication (Type_Mark));
@@ -1888,6 +1893,7 @@ package body Sem_Types is
             Res_Els : Iir_Array (0 .. Nbr_Els - 1) := (others => Null_Iir);
             Pos : Natural;
             Constraint : Iir_Constraint;
+            Staticness : Iir_Staticness;
          begin
             --  Fill ELS with record constraints.
             if El_List /= Null_Iir_List then
@@ -1967,6 +1973,7 @@ package body Sem_Types is
             El_List := Create_Iir_List;
             Set_Elements_Declaration_List (Res, El_List);
             Constraint := Fully_Constrained;
+            Staticness := Locally;
             for I in Els'Range loop
                Tm_El := Get_Nth_Element (Tm_El_List, I);
                if Els (I) = Null_Iir and Res_Els (I) = Null_Iir then
@@ -1995,12 +2002,15 @@ package body Sem_Types is
                end if;
                Append_Element (El_List, El);
                Constraint := Update_Record_Constraint (Constraint, El_Type);
+               Staticness := Min (Staticness, Get_Type_Staticness (El_Type));
             end loop;
             Set_Constraint_State (Res, Constraint);
+            Set_Type_Staticness (Res, Staticness);
          end;
       else
          Copy_Record_Elements_Declaration_List (Res, Type_Mark);
          Set_Constraint_State (Res, Get_Constraint_State (Type_Mark));
+         Set_Type_Staticness (Res, Get_Type_Staticness (Type_Mark));
       end if;
 
       Set_Signal_Type_Flag (Res, Get_Signal_Type_Flag (Type_Mark));

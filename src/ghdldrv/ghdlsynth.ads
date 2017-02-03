@@ -1,5 +1,5 @@
---  GHDL driver - simulator commands.
---  Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
+--  GHDL driver for synthesis
+--  Copyright (C) 2016 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -15,14 +15,11 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+with Netlists;
+with GNAT.OS_Lib; use GNAT.OS_Lib;
 
-with Iirs; use Iirs;
-
-package Ghdlsimul is
+package Ghdlsynth is
    procedure Register_Commands;
 
-   --  Functional interface.
-   procedure Compile_Init;
-
-   function Get_Top_Config return Iir;
-end Ghdlsimul;
+   function Ghdl_Synth (Args : Argument_List) return Netlists.Module;
+end Ghdlsynth;

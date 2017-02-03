@@ -818,16 +818,15 @@ package body Trans.Chap7 is
       Ainfo := Get_Info (Res_Type);
       Einfo := Get_Info (Expr_Type);
       case Ainfo.Type_Mode is
-         when Type_Mode_Fat_Array =>
+         when Type_Mode_Unbounded_Array =>
             --  X to unconstrained.
             case Einfo.Type_Mode is
-               when Type_Mode_Fat_Array =>
+               when Type_Mode_Unbounded_Array =>
                   --  unconstrained to unconstrained.
                   return Expr;
                when Type_Mode_Array =>
                   --  constrained to unconstrained.
-                  return Convert_Constrained_To_Unconstrained
-                    (Expr, Res_Type);
+                  return Convert_Constrained_To_Unconstrained (Expr, Res_Type);
                when others =>
                   raise Internal_Error;
             end case;
@@ -855,6 +854,51 @@ package body Trans.Chap7 is
       end case;
    end Translate_Implicit_Array_Conversion;
 
+   function Translate_Implicit_Record_Conversion
+     (Expr : Mnode; Expr_Type : Iir; Res_Type : Iir; Loc : Iir) return Mnode
+   is
+      pragma Unreferenced (Loc);
+      Ainfo : Type_Info_Acc;
+      Einfo : Type_Info_Acc;
+   begin
+      if Res_Type = Expr_Type then
+         return Expr;
+      end if;
+
+      Ainfo := Get_Info (Res_Type);
+      Einfo := Get_Info (Expr_Type);
+      case Ainfo.Type_Mode is
+         when Type_Mode_Unbounded_Record =>
+            --  X to unbounded.
+            case Einfo.Type_Mode is
+               when Type_Mode_Unbounded_Record =>
+                  --  unbounded to unbounded
+                  return Expr;
+               when Type_Mode_Record =>
+                  --  bounded to unconstrained.
+                  return Convert_Constrained_To_Unconstrained (Expr, Res_Type);
+               when others =>
+                  raise Internal_Error;
+            end case;
+         when Type_Mode_Record =>
+            --  X to bounded
+            case Einfo.Type_Mode is
+               when Type_Mode_Unbounded_Record =>
+                  --  unbounded to bounded.
+                  --  TODO: need to check bounds.
+                  raise Internal_Error;
+               when Type_Mode_Record =>
+                  --  bounded to bounded.
+                  --  TODO: likewise ?
+                  return Expr;
+               when others =>
+                  raise Internal_Error;
+            end case;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Translate_Implicit_Record_Conversion;
+
    --  Convert (if necessary) EXPR translated from EXPR_ORIG to type ATYPE.
    function Translate_Implicit_Conv (Expr      : O_Enode;
                                      Expr_Type : Iir;
@@ -872,12 +916,20 @@ package body Trans.Chap7 is
          return New_Convert_Ov (Expr, Get_Ortho_Type (Atype, Mode_Value));
       elsif Expr_Type = Universal_Real_Type_Definition then
          return New_Convert_Ov (Expr, Get_Ortho_Type (Atype, Mode_Value));
-      elsif Get_Kind (Expr_Type) in Iir_Kinds_Array_Type_Definition then
-         return M2E (Translate_Implicit_Array_Conversion
-                     (E2M (Expr, Get_Info (Expr_Type), Is_Sig),
-                        Expr_Type, Atype, Loc));
       else
-         return Expr;
+         case Get_Kind (Expr_Type) is
+            when Iir_Kinds_Array_Type_Definition =>
+               return M2E (Translate_Implicit_Array_Conversion
+                             (E2M (Expr, Get_Info (Expr_Type), Is_Sig),
+                              Expr_Type, Atype, Loc));
+            when Iir_Kind_Record_Type_Definition
+              | Iir_Kind_Record_Subtype_Definition =>
+               return M2E (Translate_Implicit_Record_Conversion
+                             (E2M (Expr, Get_Info (Expr_Type), Is_Sig),
+                              Expr_Type, Atype, Loc));
+            when others =>
+               return Expr;
+         end case;
       end if;
    end Translate_Implicit_Conv;
 

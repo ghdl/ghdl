@@ -158,7 +158,7 @@ package body Annotations is
    function Get_File_Signature_Length (Def : Iir) return Natural is
    begin
       case Get_Kind (Def) is
-         when Iir_Kinds_Scalar_Type_Definition =>
+         when Iir_Kinds_Scalar_Type_And_Subtype_Definition =>
             return 1;
          when Iir_Kind_Array_Type_Definition
            | Iir_Kind_Array_Subtype_Definition =>
@@ -192,7 +192,7 @@ package body Annotations is
       Scalar_Map : constant array (Iir_Value_Scalars) of Character := "beEIF";
    begin
       case Get_Kind (Def) is
-         when Iir_Kinds_Scalar_Type_Definition =>
+         when Iir_Kinds_Scalar_Type_And_Subtype_Definition =>
             Res (Off) :=
               Scalar_Map (Get_Info (Get_Base_Type (Def)).Scalar_Mode);
             Off := Off + 1;
@@ -409,7 +409,8 @@ package body Annotations is
             begin
                if Get_Text_File_Flag (Def)
                  or else
-                 Get_Kind (Type_Name) in Iir_Kinds_Scalar_Type_Definition
+                 (Get_Kind (Type_Name)
+                    in Iir_Kinds_Scalar_Type_And_Subtype_Definition)
                then
                   Res := null;
                else
@@ -975,6 +976,11 @@ package body Annotations is
                Create_Object_Info (Block_Info, El, Kind_PSL);
 
             when Iir_Kind_Simple_Simultaneous_Statement =>
+               null;
+
+            when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
+               --  In case concurrent signal assignemnts were not
+               --  canonicalized.
                null;
 
             when others =>

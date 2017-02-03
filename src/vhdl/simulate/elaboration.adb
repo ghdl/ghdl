@@ -357,9 +357,15 @@ package body Elaboration is
          Actuals_Ref => null,
          Result => null);
 
-      if Father /= null and then Obj_Info.Kind = Kind_Block then
-         Res.Brother := Father.Children;
-         Father.Children := Res;
+      if Father /= null then
+         case Obj_Info.Kind is
+            when Kind_Block
+              | Kind_Process =>
+               Res.Brother := Father.Children;
+               Father.Children := Res;
+            when others =>
+               null;
+         end case;
       end if;
 
       return Res;
@@ -1803,11 +1809,32 @@ package body Elaboration is
               | Iir_Kind_Psl_Assert_Statement =>
                Elaborate_Psl_Directive (Instance, Stmt);
 
+            when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
+               --  In case concurrent signal assignemnts were not
+               --  canonicalized.
+               null;
+
             when others =>
                Error_Kind ("elaborate_statement_part", Stmt);
          end case;
          Stmt := Get_Chain (Stmt);
       end loop;
+
+      --  Put children in order (were prepended, so in reverse order).
+      declare
+         Last, Child : Block_Instance_Acc;
+         Next_Child : Block_Instance_Acc;
+      begin
+         Child := Instance.Children;
+         Last := null;
+         while Child /= null loop
+            Next_Child := Child.Brother;
+            Child.Brother := Last;
+            Last := Child;
+            Child := Next_Child;
+         end loop;
+         Instance.Children := Last;
+      end;
    end Elaborate_Statement_Part;
 
    --  Compute the default value for declaration DECL, using either
@@ -2037,9 +2064,9 @@ package body Elaboration is
       Expr : Iir_Value_Literal_Acc;
       Ind : Instance_Slot_Type;
    begin
-      --  Gather children (were prepended, so in reverse order).
+      --  Gather children.
       Child := Instance.Children;
-      for I in reverse Sub_Instances'Range loop
+      for I in Sub_Instances'Range loop
          Sub_Instances (I) := Child;
          Child := Child.Brother;
       end loop;
@@ -2112,22 +2139,25 @@ package body Elaboration is
 
       Item : Iir;
    begin
-      --  Gather children.
+      --  Gather block children.
       declare
          Child : Block_Instance_Acc;
+         Child_Info : Sim_Info_Acc;
       begin
          Child := Instance.Children;
          while Child /= null loop
-            declare
-               Slot : constant Instance_Slot_Type :=
-                 Get_Info (Child.Label).Inst_Slot;
-            begin
-               --  Skip processes (they have no slot).
-               if Slot /= Invalid_Instance_Slot then
-                  pragma Assert (Sub_Instances (Slot) = null);
-                  Sub_Instances (Slot) := Child;
-               end if;
-            end;
+            Child_Info := Get_Info (Child.Label);
+            if Child_Info.Kind = Kind_Block then
+               declare
+                  Slot : constant Instance_Slot_Type := Child_Info.Inst_Slot;
+               begin
+                  --  Skip processes (they have no slot).
+                  if Slot /= Invalid_Instance_Slot then
+                     pragma Assert (Sub_Instances (Slot) = null);
+                     Sub_Instances (Slot) := Child;
+                  end if;
+               end;
+            end if;
             Child := Child.Brother;
          end loop;
       end;
