@@ -519,6 +519,9 @@ package body Grt.Signals is
       end case;
    end Value_Equal;
 
+   procedure Error_Trans_Error (Trans : Transaction_Acc);
+   pragma No_Return (Error_Trans_Error);
+
    procedure Error_Trans_Error (Trans : Transaction_Acc) is
    begin
       Error_C ("range check error on signal at ");
@@ -527,7 +530,6 @@ package body Grt.Signals is
       Error_C (Natural (Trans.Line));
       Error_E ("");
    end Error_Trans_Error;
-   pragma No_Return (Error_Trans_Error);
 
    function Find_Driver (Sig : Ghdl_Signal_Ptr) return Ghdl_Index_Type
    is
