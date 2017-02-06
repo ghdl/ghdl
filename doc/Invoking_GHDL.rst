@@ -414,6 +414,9 @@ manual for details.
   :samp:`state1` are homograph, the enumeration literal is hidden in the
   immediate scope of the constant).
 
+  This option also relaxes the rules about pure functions.  Violations
+  result in warnings instead of errors.
+
 
 .. option:: -fpsl
 
@@ -480,6 +483,7 @@ manual for details.
   Be verbose.  For example, for analysis, elaboration and make commands, GHDL
   displays the commands executed.
 
+
 Passing options to other programs
 =================================
 
@@ -507,6 +511,20 @@ GCC manual for details on GCC options.
 
   Pass `OPTION` as an option to the linker.
 
+GHDL Diagnostics Control
+========================
+
+.. option:: -f[no-]color-diagnostics
+
+  Control whether diagnostic messages are displayed in color.  The
+  default is on when the standard output is a terminal.
+
+.. option:: -f[no-]diagnostics-show-option
+
+  Control whether the warning option is displayed at the end of
+  warning messages, so that user can easily know how to disable it.
+
+
 GHDL warnings
 =============
 
@@ -514,8 +532,8 @@ Some constructions are not erroneous but dubious.  Warnings are diagnostic
 messages that report such constructions.  Some warnings are reported only
 during analysis, others during elaboration.
 
-You could disable a warning by using the :samp:`--warn-no-XXX`
-instead of :samp:`--warn-XXX`.
+You could disable a warning by using the :samp:`--warn-no-XXX` or
+:samp:`-Wno-XX` instead of :samp:`--warn-XXX` or :samp:`-WXXX`.
 
 
 .. option:: --warn-reserved
@@ -590,6 +608,22 @@ instead of :samp:`--warn-XXX`.
 .. option:: --warn-error
 
   When this option is set, warnings are considered as errors.
+
+
+.. option:: --warn-nested-comment
+
+  Emit a warning if a :samp:`/*` appears within a block comment (vhdl 2008).
+
+
+.. option:: --warn-parenthesis
+
+  Emit a warning in case of weird use of parenthesis
+
+
+.. option:: --warn-runtime-error
+
+  Emit a warning in case of runtime error that is detected during
+  analysis.
 
 
 Rebuilding commands

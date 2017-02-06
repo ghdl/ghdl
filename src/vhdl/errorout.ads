@@ -94,9 +94,15 @@ package Errorout is
       --  Signal assignment creates a delta cycle in a postponed process.
       Warnid_Delta_Cycle,
 
+      --  Declaration of a shared variable with a non-protected type.
+      Warnid_Shared,
+
       --  Emit a warning when a declaration is never used.
       --  FIXME: currently only subprograms are handled.
       Warnid_Unused,
+
+      --  Violation of pure rules.
+      Warnid_Pure,
 
       --  Any error
       Msgid_Error,
@@ -106,7 +112,7 @@ package Errorout is
 
    --  All specific warning messages.
    subtype Msgid_Warnings is Msgid_Type
-     range Warnid_Library .. Warnid_Unused;
+     range Warnid_Library .. Warnid_Pure;
 
    --  Get the image of a warning.  This correspond the the identifier of ID,
    --  in lower case, without the Msgid_Warn_ prefix and with '_' replaced
@@ -166,6 +172,9 @@ package Errorout is
    --  Same as Error_Msg_Option but do not raise Option_Error.
    procedure Error_Msg_Option_NR (Msg: String);
 
+   --  Warn about an option.
+   procedure Warning_Msg_Option (Id : Msgid_Warnings; Msg: String);
+
    -- Disp a message during scan.
    -- The current location is automatically displayed before the message.
    procedure Error_Msg_Scan (Msg: String);
@@ -208,6 +217,7 @@ package Errorout is
 
    --  Like Error_Msg_Sem, but a warning if -frelaxed or --std=93c.
    procedure Error_Msg_Sem_Relaxed (Loc : Iir;
+                                    Id : Msgid_Warnings;
                                     Msg : String;
                                     Args : Earg_Arr := No_Eargs);
 

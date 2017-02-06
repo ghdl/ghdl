@@ -1879,7 +1879,7 @@ package body Sem is
                     and then Get_Pure_Flag (Subprg)
                   then
                      Error_Msg_Sem_Relaxed
-                       (Subprg,
+                       (Subprg, Warnid_Pure,
                         "result subtype of a pure function cannot denote an"
                           & " access type");
                   end if;
@@ -1889,7 +1889,8 @@ package body Sem is
                     and then Get_Pure_Flag (Subprg)
                   then
                      Error_Msg_Sem_Relaxed
-                       (Subprg, "result subtype of a pure function cannot have"
+                       (Subprg, Warnid_Pure,
+                        "result subtype of a pure function cannot have"
                           & " access subelements");
                   end if;
             end case;

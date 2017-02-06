@@ -22,15 +22,68 @@ with Iirs_Utils; use Iirs_Utils;
 with Files_Map; use Files_Map;
 with Ada.Strings.Unbounded;
 with Std_Names;
-with Flags;
+with Flags; use Flags;
 with PSL.Nodes;
 
 package body Errorout is
-   --  If True, disp original source line and a caret indicating the column.
-   Flag_Show_Caret : constant Boolean := False;
-
    --  Name of the program, used to report error message.
    Program_Name : String_Acc := null;
+
+   --  Terminal.
+
+   --  Set Flag_Color_Diagnostics to On or Off if is was Auto.
+   procedure Detect_Terminal
+   is
+      function isatty (Fd : Integer) return Integer;
+      pragma Import (C, isatty);
+   begin
+      if Flag_Color_Diagnostics = Auto then
+         if isatty (2) /= 0 then
+            Flag_Color_Diagnostics := On;
+         else
+            Flag_Color_Diagnostics := Off;
+         end if;
+      end if;
+   end Detect_Terminal;
+
+   --  Color to be used for various part of messages.
+   type Color_Type is (Color_Locus,
+                       Color_Note, Color_Warning, Color_Error, Color_Fatal,
+                       Color_Message,
+                       Color_None);
+
+   --  Switch to COLOR.
+   procedure Set_Color (Color : Color_Type)
+   is
+      procedure Put (S : String)
+      is
+         use Ada.Text_IO;
+      begin
+         Put (Standard_Error, S);
+      end Put;
+   begin
+      if Flag_Color_Diagnostics = Off then
+         return;
+      end if;
+
+      --  Use ANSI sequences.
+      --  They are also documented on msdn in 'Console Virtual Terminal
+      --  sequences'.
+
+      Put (ASCII.ESC & '[');
+      case Color is
+         when Color_Locus   => Put ("1");    --  Bold
+         when Color_Note    => Put ("1;36"); --  Bold, cyan
+         when Color_Warning => Put ("1;35"); --  Bold, magenta
+         when Color_Error   => Put ("1;31"); --  Bold, red
+         when Color_Fatal   => Put ("1;33"); --  Bold, yellow
+         when Color_Message => Put ("0;1");  --  Normal, bold
+         when Color_None    => Put ("0");    --  Normal
+      end case;
+      Put ("m");
+   end Set_Color;
+
+   --  Warnings.
 
    type Warning_Control_Type is record
       Enabled : Boolean;
@@ -40,8 +93,11 @@ package body Errorout is
    type Warnings_Array is array (Msgid_Warnings) of Warning_Control_Type;
 
    Warnings_Control : Warnings_Array :=
-     (Warnid_Binding => (Enabled => True, Error => False),
-      others         => (Enabled => False, Error => False));
+     (Warnid_Binding
+        | Warnid_Library => (Enabled => True, Error => False),
+      Warnid_Shared
+        | Warnid_Pure    => (Enabled => True, Error => False),
+      others             => (Enabled => False, Error => False));
 
    procedure Enable_Warning (Id : Msgid_Warnings; Enable : Boolean) is
    begin
@@ -56,12 +112,15 @@ package body Errorout is
    function Warning_Image (Id : Msgid_Warnings) return String
    is
       Img : constant String := Msgid_Warnings'Image (Id);
+
+      --  Prefix to strip.
       Prefix : constant String := "WARNID_";
       pragma Assert (Img'Length > Prefix'Length);
       pragma Assert (Img (1 .. Prefix'Length) = Prefix);
       Res : String (1 .. Img'Last - Prefix'Length);
       C : Character;
    begin
+      --  Convert to lower cases, and '_' to '-'.
       for I in Res'Range loop
          C := Img (Prefix'Length + I);
          case C is
@@ -74,6 +133,7 @@ package body Errorout is
          end case;
          Res (I) := C;
       end loop;
+
       return Res;
    end Warning_Image;
 
@@ -142,7 +202,7 @@ package body Errorout is
       Put (Standard_Error, C);
    end Put;
 
-   procedure Put_Line (Str : String)
+   procedure Put_Line (Str : String := "")
    is
       use Ada.Text_IO;
    begin
@@ -183,7 +243,11 @@ package body Errorout is
    procedure Disp_Location
      (File: Name_Id; Line: Natural; Col: Natural) is
    begin
-      Put (Name_Table.Image (File));
+      if File = Null_Identifier then
+         Put ("??");
+      else
+         Put (Name_Table.Image (File));
+      end if;
       Put (':');
       Disp_Natural (Line);
       Put (':');
@@ -238,6 +302,8 @@ package body Errorout is
       --  And no program name.
       Progname := False;
 
+      Detect_Terminal;
+
       case Origin is
          when Option
            | Library =>
@@ -276,12 +342,16 @@ package body Errorout is
 
       Msg_Len := 0;
 
+      if Flag_Color_Diagnostics = On then
+         Set_Color (Color_Locus);
+      end if;
+
       if Progname then
          Disp_Program_Name;
       elsif File /= No_Source_File_Entry then
          Disp_Location (Get_File_Name (File), Line, Col);
       else
-         Put ("??:??:??:");
+         Disp_Location (Null_Identifier, 0, 0);
       end if;
 
       --  Display level.
@@ -298,20 +368,38 @@ package body Errorout is
 
          case Id_Level is
             when Msgid_Note =>
+               if Flag_Color_Diagnostics = On then
+                  Set_Color (Color_Note);
+               end if;
                Put ("note:");
             when Msgid_Warning | Msgid_Warnings =>
+               if Flag_Color_Diagnostics = On then
+                  Set_Color (Color_Warning);
+               end if;
                Put ("warning:");
             when Msgid_Error =>
                Nbr_Errors := Nbr_Errors + 1;
-               if Msg_Len = 0 then
-                  --  'error:' is displayed only if not location is present.
+               if Flag_Color_Diagnostics = On then
+                  Set_Color (Color_Error);
+               end if;
+               if Msg_Len = 0
+                 or else Flag_Color_Diagnostics = On
+               then
+                  --  'error:' is displayed only if not location is present, or
+                  --  if messages are colored.
                   Put ("error:");
                end if;
             when Msgid_Fatal =>
+               if Flag_Color_Diagnostics = On then
+                  Set_Color (Color_Fatal);
+               end if;
                Put ("fatal:");
          end case;
       end;
 
+      if Flag_Color_Diagnostics = On then
+         Set_Color (Color_Message);
+      end if;
       Put (' ');
 
       --  Display message.
@@ -442,13 +530,27 @@ package body Errorout is
             end if;
             N := N + 1;
          end loop;
-         Put_Line (Msg (First .. N - 1));
+         Put (Msg (First .. N - 1));
 
          --  Are all arguments displayed ?
          pragma Assert (Argn > Args'Last);
       end;
 
-      if Flag_Show_Caret
+      if Flag_Diagnostics_Show_Option
+        and then Id in Msgid_Warnings
+      then
+         Put (" [-W");
+         Put (Warning_Image (Id));
+         Put ("]");
+      end if;
+
+      if Flag_Color_Diagnostics = On then
+         Set_Color (Color_None);
+      end if;
+
+      Put_Line;
+
+      if Flag_Caret_Diagnostics
         and then (File /= No_Source_File_Entry and Line /= 0)
       then
          declare
@@ -480,6 +582,11 @@ package body Errorout is
       Error_Msg_Option_NR (Msg);
       raise Option_Error;
    end Error_Msg_Option;
+
+   procedure Warning_Msg_Option (Id : Msgid_Warnings; Msg: String) is
+   begin
+      Report_Msg (Id, Option, No_Location, Msg);
+   end Warning_Msg_Option;
 
    procedure Warning_Msg_Sem (Id : Msgid_Warnings;
                               Loc : Location_Type;
@@ -598,15 +705,18 @@ package body Errorout is
    end Error_Msg_Sem_1;
 
    procedure Error_Msg_Relaxed (Origin : Report_Origin;
+                                Id : Msgid_Warnings;
                                 Msg : String;
                                 Loc : Iir;
                                 Args : Earg_Arr := No_Eargs)
    is
-      use Flags;
       Level : Msgid_Type;
    begin
       if Flag_Relaxed_Rules or Vhdl_Std = Vhdl_93c then
-         Level := Msgid_Warning;
+         if not Is_Warning_Enabled (Id) then
+            return;
+         end if;
+         Level := Id;
       else
          Level := Msgid_Error;
       end if;
@@ -614,10 +724,11 @@ package body Errorout is
    end Error_Msg_Relaxed;
 
    procedure Error_Msg_Sem_Relaxed (Loc : Iir;
+                                    Id : Msgid_Warnings;
                                     Msg : String;
                                     Args : Earg_Arr := No_Eargs) is
    begin
-      Error_Msg_Relaxed (Semantic, Msg, Loc, Args);
+      Error_Msg_Relaxed (Semantic, Id, Msg, Loc, Args);
    end Error_Msg_Sem_Relaxed;
 
    -- Disp a message during elaboration.
@@ -1425,10 +1536,12 @@ package body Errorout is
          L := Loc;
       end if;
       Error_Msg_Relaxed
-        (Origin, "pure " & Disp_Node (Caller) & " cannot call (impure) "
+        (Origin, Warnid_Pure,
+         "pure " & Disp_Node (Caller) & " cannot call (impure) "
          & Disp_Node (Callee), L);
       Error_Msg_Relaxed
-        (Origin, "(" & Disp_Node (Callee) & " is defined here)", Callee);
+        (Origin, Warnid_Pure,
+         "(" & Disp_Node (Callee) & " is defined here)", Callee);
    end Error_Pure;
 
    procedure Error_Not_Match (Expr: Iir; A_Type: Iir)

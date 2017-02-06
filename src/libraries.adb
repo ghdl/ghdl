@@ -63,12 +63,6 @@ package body Libraries is
       Report_Msg (Msgid_Error, Library, No_Location, Msg, (1 => Arg1));
    end Error_Lib_Msg;
 
-   --  Report a warning message.
-   procedure Warning_Lib_Msg (Msg : String; Args : Earg_Arr := No_Eargs) is
-   begin
-      Report_Msg (Msgid_Warning, Library, No_Location, Msg, Args);
-   end Warning_Lib_Msg;
-
    --  Initialize pathes table.
    --  Set the local path.
    procedure Init_Pathes
@@ -190,11 +184,14 @@ package body Libraries is
    procedure Set_Work_Library_Path (Path : String) is
    begin
       Work_Directory := Path_To_Id (Path);
-      if not GNAT.OS_Lib.Is_Directory (Get_Address (Work_Directory)) then
+      if not GNAT.OS_Lib.Is_Directory (Get_Address (Work_Directory))
+        and then Is_Warning_Enabled (Warnid_Library)
+      then
          --  This is a warning, since 'clean' action should not fail in
          --  this cases.
-         Warning_Lib_Msg
-           ("directory '" & Path & "' set by --workdir= does not exist");
+         Warning_Msg_Option
+           (Warnid_Library,
+            "directory '" & Path & "' set by --workdir= does not exist");
          --  raise Option_Error;
       end if;
    end Set_Work_Library_Path;
@@ -1054,13 +1051,16 @@ package body Libraries is
                if Is_Warning_Enabled (Warnid_Library) then
                   if Get_Kind (Library_Unit) /= Get_Kind (New_Library_Unit)
                   then
-                     Warning_Lib_Msg
-                       ("changing definition of a library unit:");
-                     Warning_Lib_Msg
-                       ("%n is now %n", (+Library_Unit, +New_Library_Unit));
+                     Warning_Msg_Sem
+                       (Warnid_Library, +Unit,
+                        "changing definition of a library unit:");
+                     Warning_Msg_Sem
+                       (Warnid_Library, +Unit,
+                        "%n is now %n", (+Library_Unit, +New_Library_Unit));
                   end if;
-                  Warning_Lib_Msg
-                    ("library unit %i was also defined in file %i",
+                  Warning_Msg_Sem
+                    (Warnid_Library, +Unit,
+                     "library unit %i was also defined in file %i",
                      (+Library_Unit, +Get_Design_File_Filename (Design_File)));
                end if;
             end if;

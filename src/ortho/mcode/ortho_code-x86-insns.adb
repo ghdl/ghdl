@@ -325,6 +325,10 @@ package body Ortho_Code.X86.Insns is
       return N;
    end Insert_Move;
 
+   procedure Error_Gen_Insn (Stmt : O_Enode; Reg : O_Reg);
+   procedure Error_Gen_Insn (Stmt : O_Enode; Mode : Mode_Type);
+   pragma No_Return (Error_Gen_Insn);
+
    procedure Error_Gen_Insn (Stmt : O_Enode; Reg : O_Reg)
    is
       use Ada.Text_IO;
@@ -343,8 +347,6 @@ package body Ortho_Code.X86.Insns is
                 & " of mode " & Mode_Type'Image (Get_Expr_Mode (Stmt)));
       raise Program_Error;
    end Error_Gen_Insn;
-
-   pragma No_Return (Error_Gen_Insn);
 
    Cur_Block : O_Enode;
 
@@ -449,6 +451,9 @@ package body Ortho_Code.X86.Insns is
 
    pragma Unreferenced (Dump_Regs);
 
+   procedure Error_Reg (Msg : String; Stmt : O_Enode; Reg : O_Reg);
+   pragma No_Return (Error_Reg);
+
    procedure Error_Reg (Msg : String; Stmt : O_Enode; Reg : O_Reg)
    is
       use Ada.Text_IO;
@@ -465,7 +470,6 @@ package body Ortho_Code.X86.Insns is
       --Dump_Regs;
       raise Program_Error;
    end Error_Reg;
-   pragma No_Return (Error_Reg);
 
    --  Free_XX
    --  Mark a register as unused.

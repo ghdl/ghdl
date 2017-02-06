@@ -1938,19 +1938,16 @@ package body Sem_Decls is
             --  parse.
             if Flags.Vhdl_Std >= Vhdl_00 then
                declare
-                  Base_Type : Iir;
-                  Is_Protected : Boolean;
-               begin
-                  Base_Type := Get_Base_Type (Atype);
-                  Is_Protected :=
+                  Base_Type : constant Iir := Get_Base_Type (Atype);
+                  Is_Protected : constant Boolean :=
                     Get_Kind (Base_Type) = Iir_Kind_Protected_Type_Declaration;
-
+               begin
                   --  LRM00 4.3.1.3
                   --  The base type of the subtype indication of a
                   --  shared variable declaration must be a protected type.
                   if Get_Shared_Flag (Decl) and not Is_Protected then
                      Error_Msg_Sem_Relaxed
-                       (Decl,
+                       (Decl, Warnid_Shared,
                         "type of a shared variable must be a protected type");
                   end if;
 
@@ -2099,7 +2096,8 @@ package body Sem_Decls is
                Spec := Get_Subprogram_Specification (Parent);
                if Get_Pure_Flag (Spec) then
                   Error_Msg_Sem_Relaxed
-                    (Decl, "cannot declare a file in a pure function");
+                    (Decl, Warnid_Pure,
+                     "cannot declare a file in a pure function");
                end if;
             when Iir_Kind_Procedure_Body =>
                Spec := Get_Subprogram_Specification (Parent);

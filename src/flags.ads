@@ -153,4 +153,18 @@ package Flags is
    --  --warn-error
    --  Turns warnings into errors.
    Warn_Error : Boolean := False;
+
+   --  If True, disp original source line and a caret indicating the column.
+   Flag_Caret_Diagnostics : Boolean := False;
+
+   type On_Off_Auto_Type is (On, Off, Auto);
+
+   --  -fcolor-diagnostics
+   --  -fno-color-diagnostics
+   --  Enable colors in diagnostic messages.  The default is auto, which turns
+   --  on when a terminal is detected on the standard error.
+   Flag_Color_Diagnostics : On_Off_Auto_Type := Auto;
+
+   --  -fdiagnostics-show-option
+   Flag_Diagnostics_Show_Option : Boolean := True;
 end Flags;

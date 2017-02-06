@@ -1366,7 +1366,8 @@ package body Sem_Names is
       is
       begin
          Error_Msg_Sem_Relaxed
-           (Loc, "reference to %n violate pure rule for %n", (+Obj, +Subprg));
+           (Loc, Warnid_Pure,
+            "reference to %n violate pure rule for %n", (+Obj, +Subprg));
       end Error_Pure;
 
       Subprg : constant Iir := Sem_Stmts.Get_Current_Subprogram;

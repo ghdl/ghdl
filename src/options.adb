@@ -106,9 +106,15 @@ package body Options is
       elsif Opt'Length > 10 and then Opt (1 .. 10) = "--workdir=" then
          Libraries.Set_Work_Library_Path (Opt (11 .. Opt'Last));
       elsif Opt'Length > 10 and then Opt (1 .. 10) = "--warn-no-" then
+         --  Handle --warn-no before -warn-!
          return Option_Warning (Opt (11 .. Opt'Last), False);
       elsif Opt'Length > 7 and then Opt (1 .. 7) = "--warn-" then
          return Option_Warning (Opt (8 .. Opt'Last), True);
+      elsif Opt'Length > 5 and then Opt (1 .. 5) = "-Wno-" then
+         --  Handle -Wno before -W!
+         return Option_Warning (Opt (6 .. Opt'Last), False);
+      elsif Opt'Length > 2 and then Opt (1 .. 2) = "-W" then
+         return Option_Warning (Opt (3 .. Opt'Last), True);
       elsif Opt'Length > 7 and then Opt (1 .. 7) = "--work=" then
          declare
             use Name_Table;
@@ -120,6 +126,18 @@ package body Options is
          end;
       elsif Opt = "-C" or else Opt = "--mb-comments" then
          Mb_Comment := True;
+      elsif Opt = "-fcaret-diagnostics" then
+         Flag_Caret_Diagnostics := True;
+      elsif Opt = "-fno-caret-diagnostics" then
+         Flag_Caret_Diagnostics := False;
+      elsif Opt = "-fcolor-diagnostics" then
+         Flag_Color_Diagnostics := On;
+      elsif Opt = "-fno-color-diagnostics" then
+         Flag_Color_Diagnostics := Off;
+      elsif Opt = "-fdiagnostics-show-option" then
+         Flag_Diagnostics_Show_Option := True;
+      elsif Opt = "-fno-diagnostics-show-option" then
+         Flag_Diagnostics_Show_Option := False;
       elsif Opt = "--bootstrap" then
          Bootstrap := True;
       elsif Opt = "-fexplicit" then
@@ -212,15 +230,15 @@ package body Options is
       P ("  --[no-]vital-checks  do [not] check VITAL restrictions");
       P ("Warnings:");
 --    P ("  --warn-undriven    disp undriven signals");
-      P ("  --warn-binding     warns for component not bound");
-      P ("  --warn-reserved    warns use of 93 reserved words in vhdl87");
-      P ("  --warn-library     warns for redefinition of a design unit");
-      P ("  --warn-vital-generic  warns of non-vital generic names");
-      P ("  --warn-delayed-checks warns for checks performed at elaboration");
-      P ("  --warn-body        warns for not necessary package body");
-      P ("  --warn-specs       warns if a all/others spec does not apply");
-      P ("  --warn-unused      warns if a subprogram is never used");
-      P ("  --warn-error       turns warnings into errors");
+      P ("  -Wbinding          warns for component not bound");
+      P ("  -Wreserved         warns use of 93 reserved words in vhdl87");
+      P ("  -Wlibrary          warns for redefinition of a design unit");
+      P ("  -Wvital-generic    warns of non-vital generic names");
+      P ("  -Wdelayed-checks   warns for checks performed at elaboration");
+      P ("  -Wbody             warns for not necessary package body");
+      P ("  -Wspecs            warns if a all/others spec does not apply");
+      P ("  -Wunused           warns if a subprogram is never used");
+      P ("  -Werror            turns warnings into errors");
 --    P ("Simulation option:");
 --    P ("  --time-resolution=UNIT   set the resolution of type time");
 --    P ("            UNIT can be fs, ps, ns, us, ms, sec, min or hr");
