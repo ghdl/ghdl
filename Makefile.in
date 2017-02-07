@@ -70,7 +70,7 @@ ifeq "$(build_mode)" "coverage"
 OPT_FLAGS+=-fprofile-arcs -ftest-coverage
 endif
 
-GNATFLAGS=-gnaty3befhkmr -gnatwae -aO. -gnatf -gnat05 $(OPT_FLAGS) $(ADA_FLAGS)
+GNATFLAGS=-gnaty3befhkmr -gnatwae -gnatf -gnat05 $(OPT_FLAGS) $(ADA_FLAGS)
 GRT_FLAGS=$(OPT_FLAGS)
 
 WARN_CFLAGS=-Wall
@@ -83,6 +83,15 @@ target=$(build)
 #target=i686-apple-darwin
 #target=x86_64-apple-darwin
 #target=i386-pc-mingw32
+
+ifeq ($(SOEXT),.so)
+SHLIB_FLAGS=-Wl,-soname,$@
+else ifeq ($(SOEXT),.dll)
+SHLIB_FLAGS=
+else ifeq ($(SOEXT),.dylib)
+# Allow the use of -rpath in executable
+SHLIB_FLAGS=-Wl,-install_name,@rpath/$@
+endif
 
 all: Makefile all.$(backend)
 
@@ -291,7 +300,7 @@ libmhdlsimvhdl.a:  $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) version.ads force
 
 GHDL_SYNTHLIB_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/synth -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/vhdl/simulate -aI$(srcdir)/src/grt
 
-libghdlsynth.a:  $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) version.ads force
+libghdlsynth.a: $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) version.ads force
 	$(GNATMAKE) -c libghdlsynth $(GNATFLAGS) -gnat12 $(GHDL_SYNTHLIB_INCFLAGS)
 	gnatbind -Llibghdlsynth_ libghdlsynth.ali -O > ghdlsynth.files
 #	Extract link options, be sure to link statically with libgnat
@@ -300,11 +309,19 @@ libghdlsynth.a:  $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) version.ads force
 	$(RM) -f $@
 	ar rc $@ b~libghdlsynth.o `cat ghdlsynth.files` $(GRT_ADD_OBJS)
 
-install.libghdlsynth: libghdlsynth.a install.dirs
-	$(INSTALL_DATA) -p libghdlsynth.a $(DESTDIR)$(libdir)/
+libghdlsynth$(SOEXT): $(GRT_ADD_SHOBJS) $(GRT_SRC_DEPS) version.ads force
+	$(GNATMAKE) -I- -aI. -D pic -z libghdlsynth -o $@ $(GNATFLAGS) $(PIC_FLAGS) -gnat12 $(GHDL_SYNTHLIB_INCFLAGS) -bargs -shared -Llibghdlsynth_ -largs -shared $(GRT_ADD_SHOBJS) $(SHLIB_FLAGS)
+
+install.libghdlsynth.include: install.dirs
 	$(INSTALL_DATA) -p $(srcdir)/src/synth/ghdlsynth.h $(DESTDIR)$(incdir)/
 	$(INSTALL_DATA) -p $(srcdir)/src/synth/ghdlsynth_gates.h $(DESTDIR)$(incdir)/
+
+install.libghdlsynth.static: libghdlsynth.a install.libghdlsynth.include
+	$(INSTALL_DATA) -p libghdlsynth.a $(DESTDIR)$(libdir)/
 	$(INSTALL_DATA) -p ghdlsynth.link $(DESTDIR)$(libdir)/
+
+install.libghdlsynth.shared: libghdlsynth$(SOEXT) install.libghdlsynth.include
+	$(INSTALL_DATA) -p libghdlsynth$(SOEXT) $(DESTDIR)$(libdir)/
 
 ################ ghwdump #################################################
 
@@ -332,15 +349,8 @@ vpi_thunk.o: $(GRTSRCDIR)/vpi_thunk.c $(GRTSRCDIR)/vpi_thunk.h
 #	Do not use OPT_FLAGS (do not enable coverage)
 	$(CC) -c -o $@ $< $(PIC_FLAGS) -O $(WARN_CFLAGS)
 
-libghdlvpi.so: vpi_thunk.o
-	$(CC) -o $@ $< -shared -Wl,-soname,libghdlvpi.so
-
-libghdlvpi.dll: vpi_thunk.o
-	$(CC) -o $@ $< -shared
-
-libghdlvpi.dylib: vpi_thunk.o
-#       Allow the use of -rpath in executable
-	$(CC) -o $@ $< -shared -Wl,-install_name,@rpath/libghdlvpi.dylib
+libghdlvpi$(SOEXT): vpi_thunk.o
+	$(CC) -o $@ $< -shared $(SHLIB_FLAGS)
 
 all.vpi: libghdlvpi$(SOEXT)
 

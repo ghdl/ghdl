@@ -71,6 +71,7 @@ GRT_FST_OBJS := fstapi.o lz4.o fastlz.o
 
 # Additionnal object files (C or asm files).
 GRT_ADD_OBJS:=$(GRT_TARGET_OBJS) grt-cbinding.o grt-cvpi.o $(GRT_FST_OBJS)
+GRT_ADD_SHOBJS:=$(patsubst %, pic/%, $(GRT_ADD_OBJS))
 
 # Source files create by grt.
 GRT_SRC_DEPS:=grt-backtraces-impl.ads
@@ -116,41 +117,65 @@ run-bind.o: run-bind.adb
 main.o: $(GRTSRCDIR)/main.adb
 	$(GRT_ADACOMPILE) -o $@ $<
 
+GRT_C_COMPILE = $(CC) -c $(GRT_FLAGS) -o $@ $<
+GRT_C_COMPILE_PIC = $(CC) -c $(GRT_FLAGS) $(PIC_FLAGS) -o $@ $<
+
 jumps.o: $(GRTSRCDIR)/config/jumps.c
-	$(CC) -c $(GRT_FLAGS) $(GRT_CFLAGS) -o $@ $<
+	$(GRT_C_COMPILE)
+
+pic/jumps.o: $(GRTSRCDIR)/config/jumps.c
+	$(GRT_C_COMPILE_PIC)
 
 win32.o: $(GRTSRCDIR)/config/win32.c
-	$(CC) -c $(GRT_FLAGS) -o $@ $<
+	$(GRT_C_COMPILE)
 
 math.o: $(GRTSRCDIR)/config/math.c
-	$(CC) -c $(GRT_FLAGS) -o $@ $<
+	$(GRT_C_COMPILE)
 
 times.o : $(GRTSRCDIR)/config/times.c
-	$(CC) -c $(GRT_FLAGS) -o $@ $<
+	$(GRT_C_COMPILE)
+
+pic/times.o : $(GRTSRCDIR)/config/times.c
+	$(GRT_C_COMPILE_PIC)
 
 clock.o : $(GRTSRCDIR)/config/clock.c
-	$(CC) -c $(GRT_FLAGS) -o $@ $<
+	$(GRT_C_COMPILE)
 
 grt-cbinding.o: $(GRTSRCDIR)/grt-cbinding.c
-	$(CC) -c $(GRT_FLAGS) -o $@ $<
+	$(GRT_C_COMPILE)
+
+pic/grt-cbinding.o: $(GRTSRCDIR)/grt-cbinding.c
+	$(GRT_C_COMPILE_PIC)
 
 grt-cvpi.o: $(GRTSRCDIR)/grt-cvpi.c
-	$(CC) -c $(GRT_FLAGS) -o $@ $<
+	$(GRT_C_COMPILE)
+
+pic/grt-cvpi.o: $(GRTSRCDIR)/grt-cvpi.c
+	$(GRT_C_COMPILE_PIC)
 
 grt-cthreads.o: $(GRTSRCDIR)/grt-cthreads.c
-	$(CC) -c $(GRT_FLAGS) -o $@ $<
+	$(GRT_C_COMPILE)
 
 fstapi.o: $(GRTSRCDIR)/fst/fstapi.c
-	$(CC) -c $(GRT_FLAGS) -o $@ -I$(GRTSRCDIR)/fst $<
+	$(GRT_C_COMPILE) -I$(GRTSRCDIR)/fst
+
+pic/fstapi.o: $(GRTSRCDIR)/fst/fstapi.c
+	$(GRT_C_COMPILE_PIC) -I$(GRTSRCDIR)/fst
 
 lz4.o: $(GRTSRCDIR)/fst/lz4.c
-	$(CC) -c $(GRT_FLAGS) -o $@ $<
+	$(GRT_C_COMPILE)
+
+pic/lz4.o: $(GRTSRCDIR)/fst/lz4.c
+	$(GRT_C_COMPILE_PIC)
 
 fastlz.o: $(GRTSRCDIR)/fst/fastlz.c
-	$(CC) -c $(GRT_FLAGS) -o $@ $<
+	$(GRT_C_COMPILE)
+
+pic/fastlz.o: $(GRTSRCDIR)/fst/fastlz.c
+	$(GRT_C_COMPILE_PIC)
 
 chkstk.o: $(GRTSRCDIR)/config/chkstk.S
-	$(CC) -c $(GRT_FLAGS) -o $@ $<
+	$(GRT_C_COMPILE)
 
 grt-backtraces-impl.ads:
 ifneq ($(GRT_LIBBACKTRACE),)
