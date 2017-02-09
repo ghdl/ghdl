@@ -5,7 +5,8 @@
 set -e
 
 CDIR=$PWD
-BLD=$1
+
+if [ $# -ne 0 ]; then BLD=$1; fi
 
 # Display environment
 echo "Environment:"
@@ -58,7 +59,7 @@ echo "creating $PKG_FILE"
 tar -zcvf $PKG_FILE -C $prefix .
 
 # Test
-export GHDL="$CDIR/install-$1/bin/ghdl"
+export GHDL="$CDIR/install-$BLD/bin/ghdl"
 cd testsuite
 gnatmake get_entities
 ./testsuite.sh
