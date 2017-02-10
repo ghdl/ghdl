@@ -47,7 +47,7 @@ make install
 cd ..
 
 # Package
-PKG_VER=`grep Ghdl_Ver src/version.ads | sed -e 's/.*"\(.*\)";/\1/'`
+PKG_VER=`grep Ghdl_Ver src/version.in | sed -e 's/.*"\(.*\)";/\1/'`
 
 if [ "$TRAVIS_TAG" = "" ]; then
     PKG_TAG=`date -u +%Y%m%d`
