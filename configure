@@ -204,6 +204,15 @@ else
     default_pie="no"
 fi
 
+# Create subdirectories
+if [ ! -d pic ]; then
+    echo "create pic/ subdirectory"
+    if ! mkdir pic; then
+        echo "failed to create pic/"
+        exit 1;
+    fi
+fi
+
 # Generate config.status
 rm -f config.status
 {
