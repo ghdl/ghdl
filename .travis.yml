@@ -36,7 +36,9 @@ matrix:
         apt:
           packages:
           - gnat
-script: ./dist/travis-ci.sh $BLD
+script:
+ - . ./dist/travis-ci.sh
+ - ./dist/buildtest.sh -b $BLD -f $PKG_FILE
 deploy:
   provider: releases
   skip_cleanup: true
