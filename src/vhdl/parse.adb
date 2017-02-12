@@ -2161,6 +2161,7 @@ package body Parse is
          loop
             El := Create_Iir (Iir_Kind_Element_Declaration);
             Set_Location (El);
+            Set_Parent (El, Res);
             if First = Null_Iir then
                First := El;
             end if;

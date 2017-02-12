@@ -768,10 +768,68 @@ package body Trans.Chap7 is
       return Res;
    end Convert_Constrained_To_Unconstrained;
 
-   function Convert_Array_To_Thin_Array
+   --  Innert procedure for Convert_Unconstrained_To_Constrained.
+   procedure Convert_Unconstrained_To_Constrained_Check
+     (Bounds : Mnode; Expr_Type : Iir; Atype : Iir; Failure_Label : O_Snode)
+   is
+      Stable_Bounds : Mnode;
+   begin
+      Open_Temp;
+      Stable_Bounds := Stabilize (Bounds);
+      case Get_Kind (Expr_Type) is
+         when Iir_Kind_Array_Type_Definition
+           | Iir_Kind_Array_Subtype_Definition =>
+            declare
+               Expr_Indexes  : constant Iir_List :=
+                 Get_Index_Subtype_List (Expr_Type);
+            begin
+               for I in 1 .. Get_Nbr_Elements (Expr_Indexes) loop
+                  Gen_Exit_When
+                    (Failure_Label,
+                     New_Compare_Op
+                       (ON_Neq,
+                        M2E (Chap3.Range_To_Length
+                               (Chap3.Bounds_To_Range
+                                  (Stable_Bounds, Expr_Type, I))),
+                        Chap6.Get_Array_Bound_Length
+                          (T2M (Atype, Mode_Value), Atype, I),
+                        Ghdl_Bool_Type));
+               end loop;
+            end;
+         when Iir_Kind_Record_Type_Definition
+           | Iir_Kind_Record_Subtype_Definition =>
+            declare
+               Expr_Els : constant Iir_List :=
+                 Get_Elements_Declaration_List (Expr_Type);
+               Atype_Els : constant Iir_List :=
+                 Get_Elements_Declaration_List (Atype);
+               Expr_El, Atype_El : Iir;
+               Expr_El_Type, Atype_El_Type : Iir;
+            begin
+               for I in Natural loop
+                  Expr_El := Get_Nth_Element (Expr_Els, I);
+                  exit when Expr_El = Null_Iir;
+                  Atype_El := Get_Nth_Element (Atype_Els, I);
+                  Expr_El_Type := Get_Type (Expr_El);
+                  Atype_El_Type := Get_Type (Atype_El);
+                  if Expr_El_Type /= Atype_El_Type then
+                     Convert_Unconstrained_To_Constrained_Check
+                       (Chap3.Bounds_To_Element_Bounds
+                          (Stable_Bounds, Expr_El),
+                        Expr_El_Type, Atype_El_Type, Failure_Label);
+                  end if;
+               end loop;
+            end;
+         when others =>
+            Error_Kind ("convert_unconstrained_to_constrained_check",
+                        Expr_Type);
+      end case;
+      Close_Temp;
+   end Convert_Unconstrained_To_Constrained_Check;
+
+   function Convert_Unconstrained_To_Constrained
      (Expr : Mnode; Expr_Type : Iir; Atype : Iir; Loc : Iir) return Mnode
    is
-      Expr_Indexes  : constant Iir_List := Get_Index_Subtype_List (Expr_Type);
       Expr_Stable   : Mnode;
       Success_Label : O_Snode;
       Failure_Label : O_Snode;
@@ -782,25 +840,20 @@ package body Trans.Chap7 is
       --  Check each dimension.
       Start_Loop_Stmt (Success_Label);
       Start_Loop_Stmt (Failure_Label);
-      for I in 1 .. Get_Nbr_Elements (Expr_Indexes) loop
-         Gen_Exit_When
-           (Failure_Label,
-            New_Compare_Op
-              (ON_Neq,
-               Chap6.Get_Array_Bound_Length
-                 (Expr_Stable, Expr_Type, I),
-               Chap6.Get_Array_Bound_Length
-                 (T2M (Atype, Get_Object_Kind (Expr_Stable)), Atype, I),
-               Ghdl_Bool_Type));
-      end loop;
+
+      Convert_Unconstrained_To_Constrained_Check
+        (Chap3.Get_Array_Bounds (Expr_Stable), Expr_Type,
+         Atype, Failure_Label);
+
       New_Exit_Stmt (Success_Label);
+
       Finish_Loop_Stmt (Failure_Label);
       Chap6.Gen_Bound_Error (Loc);
       Finish_Loop_Stmt (Success_Label);
       Close_Temp;
 
       return Chap3.Get_Composite_Base (Expr_Stable);
-   end Convert_Array_To_Thin_Array;
+   end Convert_Unconstrained_To_Constrained;
 
    function Translate_Implicit_Array_Conversion
      (Expr : Mnode; Expr_Type : Iir; Res_Type : Iir; Loc : Iir) return Mnode
@@ -846,7 +899,7 @@ package body Trans.Chap7 is
                return Expr;
             else
                --  Unbounded/bounded array to bounded array.
-               return Convert_Array_To_Thin_Array
+               return Convert_Unconstrained_To_Constrained
                  (Expr, Expr_Type, Res_Type, Loc);
             end if;
          when others =>
@@ -857,7 +910,6 @@ package body Trans.Chap7 is
    function Translate_Implicit_Record_Conversion
      (Expr : Mnode; Expr_Type : Iir; Res_Type : Iir; Loc : Iir) return Mnode
    is
-      pragma Unreferenced (Loc);
       Ainfo : Type_Info_Acc;
       Einfo : Type_Info_Acc;
    begin
@@ -885,8 +937,8 @@ package body Trans.Chap7 is
             case Einfo.Type_Mode is
                when Type_Mode_Unbounded_Record =>
                   --  unbounded to bounded.
-                  --  TODO: need to check bounds.
-                  raise Internal_Error;
+                  return Convert_Unconstrained_To_Constrained
+                    (Expr, Expr_Type, Res_Type, Loc);
                when Type_Mode_Record =>
                   --  bounded to bounded.
                   --  TODO: likewise ?

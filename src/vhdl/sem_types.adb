@@ -1383,9 +1383,11 @@ package body Sem_Types is
 
          New_El := Create_Iir (Iir_Kind_Element_Declaration);
          Location_Copy (New_El, El);
+         Set_Parent (New_El, Dst);
          Set_Identifier (New_El, Get_Identifier (El));
          Set_Type (New_El, Get_Type (El));
-         Set_Base_Element_Declaration (New_El, El);
+         Set_Base_Element_Declaration (New_El,
+                                       Get_Base_Element_Declaration (El));
          Append_Element (New_El_List, New_El);
       end loop;
    end Copy_Record_Elements_Declaration_List;

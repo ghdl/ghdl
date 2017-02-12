@@ -440,14 +440,13 @@ package body Trans.Chap4 is
             Init_Array_Object (Obj, Obj_Type);
          when Type_Mode_Records =>
             declare
+               List : constant Iir_List :=
+                 Get_Elements_Declaration_List (Obj_Type);
                Sobj : Mnode;
                El   : Iir_Element_Declaration;
-               List : Iir_List;
             begin
                Open_Temp;
                Sobj := Stabilize (Obj);
-               List := Get_Elements_Declaration_List
-                 (Get_Base_Type (Obj_Type));
                for I in Natural loop
                   El := Get_Nth_Element (List, I);
                   exit when El = Null_Iir;
