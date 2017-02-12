@@ -1006,7 +1006,7 @@ package body Files_Map is
          declare
             F : Source_File_Record renames Source_Files.Table(I);
          begin
-            Put ("file" & Source_File_Entry'Image (I));
+            Put (Source_File_Entry'Image (I));
             Put (" name: " & Image (F.File_Name));
             Put (" dir:" & Image (F.Directory));
             Put (" length:" & Natural'Image (F.File_Length));
@@ -1014,9 +1014,15 @@ package body Files_Map is
             if F.Checksum /= No_File_Checksum_Id then
                Put (" checksum: " & Get_File_Checksum_String (F.Checksum));
             end if;
-            Put (" nbr lines:" & Natural'Image (F.Nbr_Lines));
-            Put (" lines_table_max:" & Natural'Image (F.Lines_Table_Max));
-            New_Line;
+            case F.Kind is
+               when Source_File_File =>
+                  Put (" nbr lines:" & Natural'Image (F.Nbr_Lines));
+                  Put (" lines_table_max:"
+                         & Natural'Image (F.Lines_Table_Max));
+                  New_Line;
+               when others =>
+                  null;
+            end case;
          end;
       end loop;
    end Debug_Source_File;
