@@ -62,3 +62,10 @@ cd ..
 # Package
 echo "creating $PKG_FILE"
 tar -zcvf "$PKG_FILE" -C "$prefix" .
+
+# Test
+export GHDL="$CDIR/install-$BLD/bin/ghdl"
+cd testsuite
+gnatmake get_entities
+./testsuite.sh
+cd ..

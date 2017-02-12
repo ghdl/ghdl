@@ -44,20 +44,20 @@ init:
 
 # installation scripts to run
 install:
-  - ps: .\dist\win\appveyor\install.ps1
-  - ps: .\dist\win\appveyor\info.ps1
+  - ps: .\dist\windows\appveyor\install.ps1
+  - ps: .\dist\windows\appveyor\info.ps1
 
 # Build flow
 # --------------------------------------
 # scripts to run before builds
 before_build:
-  - ps: .\dist\win\appveyor\configure.ps1
+  - ps: .\dist\windows\appveyor\configure.ps1
 
 # Disable MSBuild
 build: off
 # build scripts to run
 build_script:
-  - ps: .\dist\win\appveyor\build.ps1
+  - ps: .\dist\windows\appveyor\build.ps1
 
 # scripts to run after builds
 #after_build:
@@ -66,11 +66,11 @@ build_script:
 # --------------------------------------
 # scripts to run before tests
 before_test:
-  - ps: .\dist\win\appveyor\setup.ps1
+  - ps: .\dist\windows\appveyor\setup.ps1
 
 # test scripts to run
 test_script:
-  - ps: .\dist\win\appveyor\test.ps1
+  - ps: .\dist\windows\appveyor\test.ps1
 
 # scripts to run after tests
 #after_test:
