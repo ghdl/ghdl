@@ -746,12 +746,10 @@ package body Libraries is
    is
       Library: Iir_Library_Declaration;
    begin
-      -- library work is a little bit special.
+      --  The library work is a little bit special.
       if Ident = Std_Names.Name_Work or else Ident = Work_Library_Name then
-         if Work_Library = Null_Iir then
-            --  load_work_library must have been called before.
-            raise Internal_Error;
-         end if;
+         --  load_work_library must have been called before.
+         pragma Assert (Work_Library /= Null_Iir);
          return Work_Library;
       end if;
 
@@ -768,7 +766,7 @@ package body Libraries is
       end if;
 
       Library := Create_Iir (Iir_Kind_Library_Declaration);
-      Set_Location (Library, Scanner.Get_Token_Location);
+      Set_Location (Library, Loc);
       Set_Library_Directory (Library, Null_Identifier);
       Set_Identifier (Library, Ident);
       if Load_Library (Library) = False then
