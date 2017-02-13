@@ -62,6 +62,10 @@ package Files_Map is
      (Ref : Source_File_Entry; Loc : Location_Type; Inst : Nodes.Node_Type)
      return Source_File_Entry;
 
+   --  Unload last source file.  Works only with the last one.  Must be
+   --  carefully used as the corresponding locations will be reused.
+   procedure Unload_Last_Source_File (File : Source_File_Entry);
+
    --  Relocate location LOC (which must be in the reference of INST_FILE)
    --  for instrnace INST_FILE.
    function Instance_Relocate

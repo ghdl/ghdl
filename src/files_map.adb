@@ -821,9 +821,39 @@ package body Files_Map is
       return Res;
    end Load_Source_File;
 
+   procedure Free_Source_File (File : Source_File_Entry)
+   is
+      procedure free (Ptr : Lines_Table_Ptr);
+      pragma Import (C, free);
+
+      procedure Free is new Ada.Unchecked_Deallocation
+        (File_Buffer, File_Buffer_Acc);
+
+      F : Source_File_Record renames Source_Files.Table (File);
+   begin
+      case F.Kind is
+         when Source_File_File =>
+            free (F.Lines_Table);
+            Free (F.Source);
+         when Source_File_String =>
+            Free (F.Source);
+         when Source_File_Instance =>
+            null;
+      end case;
+   end Free_Source_File;
+
+   procedure Unload_Last_Source_File (File : Source_File_Entry) is
+   begin
+      pragma Assert (File = Source_Files.Last);
+      Free_Source_File (File);
+      Source_Files.Decrement_Last;
+      Next_Location :=
+        Source_Files.Table (Source_Files.Last).Last_Location + 1;
+   end Unload_Last_Source_File;
+
    --  Check validity of FILE.
    --  Raise an exception in case of error.
-   procedure Check_File (File: in Source_File_Entry) is
+   procedure Check_File (File : Source_File_Entry) is
    begin
       pragma Assert (File <= Source_Files.Last);
       null;
@@ -1027,30 +1057,13 @@ package body Files_Map is
       end loop;
    end Debug_Source_File;
 
-   procedure Initialize
-   is
-      procedure free (Ptr : Lines_Table_Ptr);
-      pragma Import (C, free);
-
-      procedure Free is new Ada.Unchecked_Deallocation
-        (File_Buffer, File_Buffer_Acc);
+   procedure Initialize is
    begin
       for I in Source_Files.First .. Source_Files.Last loop
-         declare
-            F : Source_File_Record renames Source_Files.Table (I);
-         begin
-            case F.Kind is
-               when Source_File_File =>
-                  free (F.Lines_Table);
-                  Free (F.Source);
-               when Source_File_String =>
-                  Free (F.Source);
-               when Source_File_Instance =>
-                  null;
-            end case;
-         end;
+         Free_Source_File (I);
       end loop;
       Source_Files.Free;
       Source_Files.Init;
+      Next_Location := Location_Nil + 1;
    end Initialize;
 end Files_Map;

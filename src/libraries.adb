@@ -196,22 +196,6 @@ package body Libraries is
       end if;
    end Set_Work_Library_Path;
 
-   --  Open LIBRARY map file, return TRUE if successful.
-   function Set_Library_File_Name (Dir : Name_Id;
-                                   Library: Iir_Library_Declaration)
-     return Boolean
-   is
-      File_Name : constant String := Library_To_File_Name (Library);
-      Fe : Source_File_Entry;
-   begin
-      Fe := Files_Map.Load_Source_File (Dir, Get_Identifier (File_Name));
-      if Fe = No_Source_File_Entry then
-         return False;
-      end if;
-      Scanner.Set_File (Fe);
-      return True;
-   end Set_Library_File_Name;
-
    --  Every design unit is put in this hash table to be quickly found by
    --  its (primary) identifier.
    Unit_Hash_Length : constant Name_Id := 127;
@@ -448,14 +432,21 @@ package body Libraries is
          Search_Library_In_Path (Library);
          Dir := Get_Library_Directory (Library);
       end if;
-      if Dir = Null_Identifier
-        or else not Set_Library_File_Name (Dir, Library)
-      then
+      if Dir = Null_Identifier then
          --  Not found.
          Set_Date (Library, Date_Valid'First);
          return False;
       end if;
-      File := Get_Current_Source_File;
+
+      File := Files_Map.Load_Source_File
+        (Dir, Get_Identifier (Library_To_File_Name (Library)));
+      if File = No_Source_File_Entry then
+         --  Not found.
+         Set_Date (Library, Date_Valid'First);
+         return False;
+      end if;
+
+      Scanner.Set_File (File);
 
       --  Parse header.
       Scan;
@@ -641,7 +632,12 @@ package body Libraries is
          << Next_Line >> null;
       end loop;
       Set_Date (Library, Max_Date);
-      Close_File;
+
+      Scanner.Close_File;
+
+      --  Don't need the library file anymore.
+      Files_Map.Unload_Last_Source_File (File);
+
       return True;
    end Load_Library;
 
