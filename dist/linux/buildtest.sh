@@ -31,7 +31,11 @@ case "$BLD" in
       ../configure --prefix="$prefix"
       MAKEOPTS=""
       ;;
-
+	  
+  llvm)
+      ../configure --prefix="$prefix$" --with-llvm-config
+      ;;
+	  
   llvm-3.5)
       ../configure --prefix="$prefix" --with-llvm-config=llvm-config-3.5
       MAKEOPTS="CXX=clang++"
@@ -41,6 +45,8 @@ case "$BLD" in
       ../configure --prefix="$prefix" --with-llvm-config=llvm-config-3.8
       MAKEOPTS="CXX=clang++-3.8"
       ;;
+	  
+  docker) echo "Check docker container!"; exit 0;;
 
   *)
       echo "unknown build $BLD"
