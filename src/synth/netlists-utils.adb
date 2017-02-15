@@ -123,4 +123,63 @@ package body Netlists.Utils is
       --  Free Inst
       Free_Instance (Inst);
    end Disconnect_And_Free;
+
+   function Is_Unused_Instance (Inst : Instance) return Boolean
+   is
+      Nbr_Outputs : constant Port_Idx := Get_Nbr_Outputs (Inst);
+      N : Net;
+   begin
+      --  An instance without outputs is considered as used.
+      if Nbr_Outputs = 0 then
+         return False;
+      end if;
+
+      for Idx in 0 .. Nbr_Outputs - 1 loop
+         N := Get_Output (Inst, Idx);
+         if Is_Connected (N) then
+            --  Connected output.
+            return False;
+         end if;
+      end loop;
+
+      --  All outputs are unconnected.
+      return True;
+   end Is_Unused_Instance;
+
+   procedure Remove_Unused_Instances (M : Module)
+   is
+      pragma Assert (Is_Valid (M));
+      Inst : Instance;
+   begin
+      Extract_All_Instances (M, Inst);
+
+      --  Add the self instance (the first one).
+      Append_Instance (M, Inst);
+      Inst := Get_Next_Instance (Inst);
+
+      while Inst /= No_Instance loop
+         if not (Get_Id (Inst) = Id_Free
+                   or else Is_Unused_Instance (Inst))
+         then
+            --  Keep this used instance.
+            Append_Instance (M, Inst);
+         end if;
+         Inst := Get_Next_Instance (Inst);
+      end loop;
+   end Remove_Unused_Instances;
+
+   procedure Remove_Free_Instances (M : Module)
+   is
+      pragma Assert (Is_Valid (M));
+      Inst : Instance;
+   begin
+      Extract_All_Instances (M, Inst);
+
+      while Inst /= No_Instance loop
+         if Get_Id (Inst) /= Id_Free then
+            Append_Instance (M, Inst);
+         end if;
+         Inst := Get_Next_Instance (Inst);
+      end loop;
+   end Remove_Free_Instances;
 end Netlists.Utils;

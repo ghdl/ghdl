@@ -202,9 +202,6 @@ package Netlists is
    --  Use Remove_Free_Instances for a cleanup.
    procedure Free_Instance (Inst : Instance);
 
-   --  Unlink all free instances of M.
-   procedure Remove_Free_Instances (M : Module);
-
    function Is_Self_Instance (I : Instance) return Boolean;
    function Get_Module (Inst : Instance) return Module;
    function Get_Instance_Name (Inst : Instance) return Sname;
@@ -314,6 +311,11 @@ private
       First_Input : Input;
       First_Output : Net;
    end record;
+
+   --  Procedures to rewrite the instances of a module: first extract the chain
+   --  of instances from module M, then add the ones to keep.
+   procedure Extract_All_Instances (M : Module; First_Instance : out Instance);
+   procedure Append_Instance (M : Module; Inst : Instance);
 
    type Input is new Uns32;
    No_Input : constant Input := 0;

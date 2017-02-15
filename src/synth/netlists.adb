@@ -290,7 +290,21 @@ package body Netlists is
       Table_Low_Bound => No_Param_Idx,
       Table_Initial => 256);
 
-   procedure Append_Instance (M_Ent : in out Module_Record; Inst : Instance) is
+   procedure Extract_All_Instances (M : Module; First_Instance : out Instance)
+   is
+      pragma Assert (Is_Valid (M));
+      M_Ent : Module_Record renames Modules_Table.Table (M);
+   begin
+      First_Instance := M_Ent.First_Instance;
+
+      --  Clear the instance list.
+      M_Ent.First_Instance := No_Instance;
+      M_Ent.Last_Instance := No_Instance;
+   end Extract_All_Instances;
+
+   procedure Append_Instance (M : Module; Inst : Instance)
+   is
+      M_Ent : Module_Record renames Modules_Table.Table (M);
    begin
       if M_Ent.First_Instance = No_Instance then
          M_Ent.First_Instance := Inst;
@@ -311,7 +325,6 @@ package body Netlists is
    is
       pragma Assert (Is_Valid (Parent));
       pragma Assert (Is_Valid (M));
-      Parent_Ent : Module_Record renames Modules_Table.Table (Parent);
       Res : Instance;
       Inputs : constant Input := Inputs_Table.Allocate (Natural (Nbr_Inputs));
       Outputs : constant Net := Nets_Table.Allocate (Natural (Nbr_Outputs));
@@ -329,7 +342,7 @@ package body Netlists is
       Res := Instances_Table.Last;
 
       --  Link instance
-      Append_Instance (Parent_Ent, Res);
+      Append_Instance (Parent, Res);
 
       --  Setup inputs.
       if Nbr_Inputs > 0 then
@@ -403,25 +416,6 @@ package body Netlists is
    begin
       Instances_Table.Table (Inst).Klass := Free_Module;
    end Free_Instance;
-
-   procedure Remove_Free_Instances (M : Module)
-   is
-      pragma Assert (Is_Valid (M));
-      M_Ent : Module_Record renames Modules_Table.Table (M);
-      Inst : Instance;
-   begin
-      Inst := M_Ent.First_Instance;
-
-      M_Ent.First_Instance := No_Instance;
-      M_Ent.Last_Instance := No_Instance;
-
-      while Inst /= No_Instance loop
-         if Get_Id (Inst) /= Id_Free then
-            Append_Instance (M_Ent, Inst);
-         end if;
-         Inst := Get_Next_Instance (Inst);
-      end loop;
-   end Remove_Free_Instances;
 
    function Get_Module (Inst : Instance) return Module is
    begin
