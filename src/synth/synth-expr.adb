@@ -489,7 +489,7 @@ package body Synth.Expr is
          when Iir_To =>
             return Bit_Extract (Pfx, Uns32 (Idx - Rng.Left));
          when Iir_Downto =>
-            return Bit_Extract (Pfx, Uns32 (Rng.Right - Idx));
+            return Bit_Extract (Pfx, Uns32 (Rng.Left - Idx));
       end case;
    end Synth_Indexed_Name;
 
