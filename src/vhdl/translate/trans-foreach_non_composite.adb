@@ -26,9 +26,8 @@ procedure Trans.Foreach_Non_Composite (Targ      : Mnode;
 is
    use Trans.Helpers;
 
-   Type_Info : Type_Info_Acc;
+   Type_Info : constant Type_Info_Acc := Get_Info (Targ_Type);
 begin
-   Type_Info := Get_Info (Targ_Type);
    case Type_Info.Type_Mode is
       when Type_Mode_Scalar =>
          Do_Non_Composite (Targ, Targ_Type, Data);
@@ -89,13 +88,11 @@ begin
             Var_Record := Stabilize (Targ);
             Composite_Data :=
               Prepare_Data_Record (Var_Record, Targ_Type, Data);
-            List := Get_Elements_Declaration_List
-              (Get_Base_Type (Targ_Type));
+            List := Get_Elements_Declaration_List (Targ_Type);
             for I in Natural loop
                El := Get_Nth_Element (List, I);
                exit when El = Null_Iir;
-               Sub_Data := Update_Data_Record
-                 (Composite_Data, Targ_Type, El);
+               Sub_Data := Update_Data_Record (Composite_Data, Targ_Type, El);
                Foreach_Non_Composite
                  (Chap6.Translate_Selected_Element (Var_Record, El),
                   Get_Type (El),

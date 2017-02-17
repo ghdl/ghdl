@@ -769,7 +769,7 @@ package body Trans.Chap7 is
    end Convert_Constrained_To_Unconstrained;
 
    --  Innert procedure for Convert_Unconstrained_To_Constrained.
-   procedure Convert_Unconstrained_To_Constrained_Check
+   procedure Convert_To_Constrained_Check
      (Bounds : Mnode; Expr_Type : Iir; Atype : Iir; Failure_Label : O_Snode)
    is
       Stable_Bounds : Mnode;
@@ -813,7 +813,7 @@ package body Trans.Chap7 is
                   Expr_El_Type := Get_Type (Expr_El);
                   Atype_El_Type := Get_Type (Atype_El);
                   if Expr_El_Type /= Atype_El_Type then
-                     Convert_Unconstrained_To_Constrained_Check
+                     Convert_To_Constrained_Check
                        (Chap3.Bounds_To_Element_Bounds
                           (Stable_Bounds, Expr_El),
                         Expr_El_Type, Atype_El_Type, Failure_Label);
@@ -825,9 +825,9 @@ package body Trans.Chap7 is
                         Expr_Type);
       end case;
       Close_Temp;
-   end Convert_Unconstrained_To_Constrained_Check;
+   end Convert_To_Constrained_Check;
 
-   function Convert_Unconstrained_To_Constrained
+   function Convert_To_Constrained
      (Expr : Mnode; Expr_Type : Iir; Atype : Iir; Loc : Iir) return Mnode
    is
       Expr_Stable   : Mnode;
@@ -841,7 +841,7 @@ package body Trans.Chap7 is
       Start_Loop_Stmt (Success_Label);
       Start_Loop_Stmt (Failure_Label);
 
-      Convert_Unconstrained_To_Constrained_Check
+      Convert_To_Constrained_Check
         (Chap3.Get_Array_Bounds (Expr_Stable), Expr_Type,
          Atype, Failure_Label);
 
@@ -852,8 +852,18 @@ package body Trans.Chap7 is
       Finish_Loop_Stmt (Success_Label);
       Close_Temp;
 
-      return Chap3.Get_Composite_Base (Expr_Stable);
-   end Convert_Unconstrained_To_Constrained;
+      declare
+         Ainfo : constant Type_Info_Acc := Get_Info (Atype);
+         Kind : constant Object_Kind_Type := Get_Object_Kind (Expr);
+         Nptr : O_Enode;
+      begin
+         --  Pointer to the array.
+         Nptr := M2E (Chap3.Get_Composite_Base (Expr_Stable));
+         --  Convert it to pointer to the constrained type.
+         Nptr := New_Convert_Ov (Nptr, Ainfo.Ortho_Ptr_Type (Kind));
+         return E2M (Nptr, Ainfo, Kind);
+      end;
+   end Convert_To_Constrained;
 
    function Translate_Implicit_Array_Conversion
      (Expr : Mnode; Expr_Type : Iir; Res_Type : Iir; Loc : Iir) return Mnode
@@ -899,7 +909,7 @@ package body Trans.Chap7 is
                return Expr;
             else
                --  Unbounded/bounded array to bounded array.
-               return Convert_Unconstrained_To_Constrained
+               return Convert_To_Constrained
                  (Expr, Expr_Type, Res_Type, Loc);
             end if;
          when others =>
@@ -937,7 +947,7 @@ package body Trans.Chap7 is
             case Einfo.Type_Mode is
                when Type_Mode_Unbounded_Record =>
                   --  unbounded to bounded.
-                  return Convert_Unconstrained_To_Constrained
+                  return Convert_To_Constrained
                     (Expr, Expr_Type, Res_Type, Loc);
                when Type_Mode_Record =>
                   --  bounded to bounded.
