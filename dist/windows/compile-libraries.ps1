@@ -19,7 +19,7 @@
 #
 # ==============================================================================
 #	Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
-#	Copyright (C) 2015-2016 Patrick Lehmann
+#	Copyright (C) 2015-2017 Patrick Lehmann
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -42,11 +42,11 @@
 # 	Use 'compile-libraries.ps1 -Help' to see the integrated help page
 # 
 # .EXAMPLE
-# 	C:\PS> .\complib.ps1 -Clean
+# 	C:\PS> .\compile-libraries.ps1 -Clean
 # .EXAMPLE
-# 	C:\PS> .\complib.ps1 -Compile -Verbose
+# 	C:\PS> .\compile-libraries.ps1 -Compile -Verbose
 # .EXAMPLE
-# 	C:\PS> .\complib.ps1 -VHDL2008 -SuppressWarnings
+# 	C:\PS> .\compile-libraries.ps1 -VHDL2008 -SuppressWarnings
 # 
 [CmdletBinding()]
 param(
@@ -78,7 +78,7 @@ param(
 )
 
 # configure script here
-$RelPathToRoot =			"..\..\.."
+$RelPathToRoot =			"..\.."
 
 # ---------------------------------------------
 # save parameters and working directory
@@ -166,13 +166,13 @@ $SourceFiles = @{
 		"prmtvs_p",							"prmtvs_b",
 		"memory_p",							"memory_b"
 	);
+	"synopsys8793" = @(
+		"std_logic_textio"
+	);
 	"synopsys" = @(
 		"std_logic_arith",
 		"std_logic_unsigned",
-		"std_logic_signed"
-	);
-	"synopsys8793" = @(
-		"std_logic_textio",
+		"std_logic_signed",
 		"std_logic_misc",				"std_logic_misc-body"
 	);
 	"mentor" = @(

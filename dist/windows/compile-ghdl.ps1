@@ -18,7 +18,7 @@
 #
 # ==============================================================================
 #	Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
-#	Copyright (C) 2015-2016 Patrick Lehmann
+#	Copyright (C) 2015-2017 Patrick Lehmann
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -38,10 +38,10 @@
 
 # .SYNOPSIS 
 # GHDL for Windows - GHDL compile script
-# Use 'compile.ps1 -Help' to see the integrated help page
+# Use 'compile-ghdl.ps1 -Help' to see the integrated help page
 # 
 # .EXAMPLE
-# C:\PS> .\compile.ps1 -Clean -Compile
+# C:\PS> .\compile-ghdl.ps1 -Clean -Compile
 # 
 [CmdletBinding()]
 param(
@@ -81,7 +81,7 @@ param(
 )
 
 # configure script here
-$RelPathToRoot =			"..\..\.."
+$RelPathToRoot =			"..\.."
 
 # ---------------------------------------------
 # save parameters and working directory

@@ -12,7 +12,7 @@
 #	This PowerShell module provides CommandLets (CmdLets) to ...
 #
 # ==============================================================================
-#	Copyright (C) 2016 Patrick Lehmann
+#	Copyright (C) 2016-2017 Patrick Lehmann
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
