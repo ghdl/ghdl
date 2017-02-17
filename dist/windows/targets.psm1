@@ -12,7 +12,7 @@
 #	This PowerShell module provides build targets for GHDL.
 #
 # ==============================================================================
-#	Copyright (C) 2016 Patrick Lehmann
+#	Copyright (C) 2016-2017 Patrick Lehmann
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -45,8 +45,8 @@ $GHDL_Mcode_Name =				"ghdl.exe"
 
 # configure directory structure
 $CommonSourceDirName =		"src"
-$WinMcodeSourceDirName =	"dist\mcode\windows"
-# $WinLLVMSourceDirName =		"dist\llvm\windows"
+$WinMcodeSourceDirName =	"dist\windows\mcode"
+# $WinLLVMSourceDirName =		"dist\windows\llvm"
 
 # construct file paths
 $VersionFileName_In =				"version.in"
