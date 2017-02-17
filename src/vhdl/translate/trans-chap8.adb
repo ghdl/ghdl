@@ -2339,7 +2339,7 @@ package body Trans.Chap8 is
 
                if Has_Value_Field then
                   for Mode in Mode_Value .. Object_Kind loop
-                     if Ftype_Info.Type_Mode = Type_Mode_Fat_Array then
+                     if Ftype_Info.Type_Mode in Type_Mode_Unbounded then
                         --  For unconstrained arrays/records:
                         --   - the array (if the actual is constrained and not
                         --                complex) - TODO
@@ -2679,7 +2679,7 @@ package body Trans.Chap8 is
                         declare
                            Param_Var : Var_Type;
                         begin
-                           if Ftype_Info.Type_Mode = Type_Mode_Fat_Array then
+                           if Ftype_Info.Type_Mode in Type_Mode_Unbounded then
                               Param_Var := Assoc_Info.Call_Assoc_Fat (Mode);
                            else
                               Param_Var := Assoc_Info.Call_Assoc_Value (Mode);

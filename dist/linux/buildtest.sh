@@ -4,9 +4,16 @@
 # Stop in case of error
 set -e
 
-CDIR=$(pwd)
+while getopts ":b:f:" opt; do
+  case $opt in
+    b) BLD=$OPTARG ;;
+	f) PKG_FILE=$OPTARG;;
+    \?) echo "Invalid option: -$OPTARG" >&2; exit 1 ;;
+    :)  echo "Option -$OPTARG requires an argument." >&2; exit 1 ;;
+  esac
+done
 
-if [ $# -ne 0 ]; then BLD="$1"; fi
+CDIR=$(pwd)
 
 # Display environment
 echo "Environment:"
@@ -24,7 +31,11 @@ case "$BLD" in
       ../configure --prefix="$prefix"
       MAKEOPTS=""
       ;;
-
+	  
+  llvm)
+      ../configure --prefix="$prefix$" --with-llvm-config
+      ;;
+	  
   llvm-3.5)
       ../configure --prefix="$prefix" --with-llvm-config=llvm-config-3.5
       MAKEOPTS="CXX=clang++"
@@ -34,6 +45,8 @@ case "$BLD" in
       ../configure --prefix="$prefix" --with-llvm-config=llvm-config-3.8
       MAKEOPTS="CXX=clang++-3.8"
       ;;
+	  
+  docker) echo "Check docker container!"; exit 0;;
 
   *)
       echo "unknown build $BLD"
@@ -47,14 +60,6 @@ make install
 cd ..
 
 # Package
-PKG_VER=`grep Ghdl_Ver src/version.in | sed -e 's/.*"\(.*\)";/\1/'`
-
-if [ "$TRAVIS_TAG" = "" ]; then
-    PKG_TAG=`date -u +%Y%m%d`
-else
-    PKG_TAG="$TRAVIS_TAG"
-fi
-PKG_FILE="ghdl-$PKG_VER-$BLD-$PKG_TAG.tgz"
 echo "creating $PKG_FILE"
 tar -zcvf "$PKG_FILE" -C "$prefix" .
 

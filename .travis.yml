@@ -1,49 +1,41 @@
-language: c
 branches:
   except:
     - appveyor
-matrix:
-  include:
-    - os: linux
-      sudo: required
-      dist: trusty
-      env: BLD=llvm-3.5
-      before_install:
-        - sudo apt-get update -qq
-        - sudo apt-get install -y gnat-4.8 zlib1g-dev
-        - sudo apt-get install -y llvm-3.5-dev llvm-3.5-tools libedit-dev
-    - os: linux
-      sudo: false
-      dist: precise
-      env:
-        - BLD=llvm-3.8
-      addons:
-        apt:
-          sources:
-          - ubuntu-toolchain-r-test
-          - llvm-toolchain-precise-3.8
-          packages:
-          - gnat-6
-          - libstdc++-6-dev
-          - clang-3.8
-          - llvm-3.8-dev
-          - zlib1g-dev
-          - libedit-dev
-    - os: linux
-      sudo: false
-      env: BLD=mcode
-      addons:
-        apt:
-          packages:
-          - gnat
-script: ./dist/travis-ci.sh $BLD
+
+language: c
+os: linux
+sudo: required
+install: true
+services: docker
+
+env:
+  - THISENV="ubuntu1404_llvm35" && BUILDTHIS=
+  - THISENV="ubuntu1204_llvm38" && BUILDTHIS= 
+  - THISENV="fedora_mcode" && BUILDTHIS=
+  - THISENV="ubuntu_mcode" && BUILDTHIS=1
+  - THISENV="fedora_llvm" && BUILDTHIS=1
+ 
+before_script:
+  - DONTGRAB_SRCS=$CI
+  - eval ". ./dist/linux/envs/$THISENV.sh"
+  -  . ./dist/linux/travis-ci.sh
+
+script:
+  - if [ -n "$BUILDTHIS" ]; then . ./dist/linux/docker-buildtest.sh; fi
+  
+git:
+  depth: 10
+#Please note that if you use a depth of 1 and have a queue of jobs, Travis CI won’t build commits that are in the queue when you push a new commit.
+  
 deploy:
+#  overwrite: true
   provider: releases
   skip_cleanup: true
   api_key:
     secure: k1Idw3l/35mms1mESpO+5TmA2Kmf0UlMsxjgQiWikYu6va6icJjTzCHv6d3YjF6tzkouZZa74Gep22gg46uDWU6wtcBYq5X2IxEX1U3iRxi5CNXL77ZaYdj9Nn69cNImjGPqigJMJLOuIPi31ENlxgO83U07VYE1cV603+spvxw3a1TynrBIjdugiVMIFctrmt/zTIt/jBG1oQNLPdVTRFavnjpsFlnIcO5DvHvKxoDEpF3WwPcDr6h/bmnFZSfr8Sr2pptQU1S6qtHaLJPwg8w1f93nxr1LEK2MR8eVfS5XSEVC8nBZJHksdlwx/iiGyWEqEeXLXpoaHAO3aqkhjsMA1+mKbwtHjT7WBNWorKfmQP3ZTShhksPa+oBFitC33gXGCNCFMWSVdXrTIKIN8m//KSc3VTbxHL10afO9lCD955bZi1cpFZiE471BBXDxpN9Nv+1tV7RO7e6gm+94n9CYYkdCHcFK4hj0gGXDOQlUEEmZj4vAiwaDWfByfHxDNClT3rJ8tAm9BFjdDOI54NlA15/nyx+00Kw0FEZqvIemeMsCpz4Ril2bL8BZtwYm8e5sygqgdGODtRT5Q0hbHO2fuMpth4gvGGHraGlmH1Rez5BSnUsWVSQxV4Z+9/VZtQOK6HdfbbB8dd9SlOuEN1M9EqqEHBxdvHBkoMZy1uk=
   file_glob: true
-  file: "ghdl-*-$BLD-*.tgz"
+  file: "$PKG_FILE"
   on:
     tags: true
     all_branches: true
+    

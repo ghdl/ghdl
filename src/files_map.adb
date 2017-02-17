@@ -821,9 +821,39 @@ package body Files_Map is
       return Res;
    end Load_Source_File;
 
+   procedure Free_Source_File (File : Source_File_Entry)
+   is
+      procedure free (Ptr : Lines_Table_Ptr);
+      pragma Import (C, free);
+
+      procedure Free is new Ada.Unchecked_Deallocation
+        (File_Buffer, File_Buffer_Acc);
+
+      F : Source_File_Record renames Source_Files.Table (File);
+   begin
+      case F.Kind is
+         when Source_File_File =>
+            free (F.Lines_Table);
+            Free (F.Source);
+         when Source_File_String =>
+            Free (F.Source);
+         when Source_File_Instance =>
+            null;
+      end case;
+   end Free_Source_File;
+
+   procedure Unload_Last_Source_File (File : Source_File_Entry) is
+   begin
+      pragma Assert (File = Source_Files.Last);
+      Free_Source_File (File);
+      Source_Files.Decrement_Last;
+      Next_Location :=
+        Source_Files.Table (Source_Files.Last).Last_Location + 1;
+   end Unload_Last_Source_File;
+
    --  Check validity of FILE.
    --  Raise an exception in case of error.
-   procedure Check_File (File: in Source_File_Entry) is
+   procedure Check_File (File : Source_File_Entry) is
    begin
       pragma Assert (File <= Source_Files.Last);
       null;
@@ -1006,7 +1036,7 @@ package body Files_Map is
          declare
             F : Source_File_Record renames Source_Files.Table(I);
          begin
-            Put ("file" & Source_File_Entry'Image (I));
+            Put (Source_File_Entry'Image (I));
             Put (" name: " & Image (F.File_Name));
             Put (" dir:" & Image (F.Directory));
             Put (" length:" & Natural'Image (F.File_Length));
@@ -1014,37 +1044,26 @@ package body Files_Map is
             if F.Checksum /= No_File_Checksum_Id then
                Put (" checksum: " & Get_File_Checksum_String (F.Checksum));
             end if;
-            Put (" nbr lines:" & Natural'Image (F.Nbr_Lines));
-            Put (" lines_table_max:" & Natural'Image (F.Lines_Table_Max));
-            New_Line;
-         end;
-      end loop;
-   end Debug_Source_File;
-
-   procedure Initialize
-   is
-      procedure free (Ptr : Lines_Table_Ptr);
-      pragma Import (C, free);
-
-      procedure Free is new Ada.Unchecked_Deallocation
-        (File_Buffer, File_Buffer_Acc);
-   begin
-      for I in Source_Files.First .. Source_Files.Last loop
-         declare
-            F : Source_File_Record renames Source_Files.Table (I);
-         begin
             case F.Kind is
                when Source_File_File =>
-                  free (F.Lines_Table);
-                  Free (F.Source);
-               when Source_File_String =>
-                  Free (F.Source);
-               when Source_File_Instance =>
+                  Put (" nbr lines:" & Natural'Image (F.Nbr_Lines));
+                  Put (" lines_table_max:"
+                         & Natural'Image (F.Lines_Table_Max));
+                  New_Line;
+               when others =>
                   null;
             end case;
          end;
       end loop;
+   end Debug_Source_File;
+
+   procedure Initialize is
+   begin
+      for I in Source_Files.First .. Source_Files.Last loop
+         Free_Source_File (I);
+      end loop;
       Source_Files.Free;
       Source_Files.Init;
+      Next_Location := Location_Nil + 1;
    end Initialize;
 end Files_Map;

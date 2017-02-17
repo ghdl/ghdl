@@ -100,12 +100,13 @@ package body Synth.Inference is
             begin
                Drv := Get_Driver (I0);
                if Get_Id (Get_Net_Parent (Drv)) in Edge_Module_Id then
-                  Disconnect (I0);
+                  --  INST is clearly not synthesizable (boolean operation on
+                  --  an edge).  Will be removed at the end by
+                  --  remove_unused_instances.  Do not remove it now as its
+                  --  output may be used by other nets.
                   Clk := Drv;
                   I1 := Get_Input (Inst, 1);
                   Enable := Get_Driver (I1);
-                  Disconnect (I1);
-                  Free_Instance (Inst);
                end if;
             end;
          when others =>

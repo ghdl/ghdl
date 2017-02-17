@@ -1229,7 +1229,7 @@ package body Trans is
                          return Mnode is
    begin
       if Is_Complex_Type (Info)
-        and then Info.Type_Mode /= Type_Mode_Fat_Array
+        and then Info.Type_Mode not in Type_Mode_Unbounded
       then
          --  For a complex and constrained object, we just allocate
          --  a pointer to the object.

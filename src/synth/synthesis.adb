@@ -22,6 +22,7 @@ with Types; use Types;
 with Name_Table; use Name_Table;
 
 with Netlists.Builders; use Netlists.Builders;
+with Netlists.Utils;
 
 with Iirs_Utils; use Iirs_Utils;
 with Elaboration; use Elaboration;
@@ -221,7 +222,10 @@ package body Synthesis is
       Synth_Declarations (Syn_Inst, Get_Declaration_Chain (Arch));
       Synth_Statements (Syn_Inst, Get_Concurrent_Statement_Chain (Arch));
 
-      Remove_Free_Instances (Syn_Inst.M);
+      --  Remove unused gates.  This is not only an optimization but also
+      --  a correctness point: there might be some unsynthesizable gates, like
+      --  the one created for 'rising_egde (clk) and not rst'.
+      Netlists.Utils.Remove_Unused_Instances (Syn_Inst.M);
 
       return Syn_Inst;
    end Synth_Entity;

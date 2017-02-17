@@ -31,16 +31,14 @@ with Trans_Decls; use Trans_Decls;
 package body Trans.Chap6 is
    use Trans.Helpers;
 
-   function Get_Array_Bound_Length (Arr      : Mnode;
-                                    Arr_Type : Iir;
-                                    Dim      : Natural)
-                                       return O_Enode
+   function Get_Array_Bound_Length
+     (Arr : Mnode; Arr_Type : Iir; Dim : Natural) return O_Enode
    is
-      Index_Type : constant Iir := Get_Index_Type (Arr_Type, Dim - 1);
-      Tinfo      : constant Type_Info_Acc := Get_Info (Arr_Type);
-      Constraint : Iir;
+      Tinfo : constant Type_Info_Acc := Get_Info (Arr_Type);
+      Index_Type, Constraint : Iir;
    begin
       if Tinfo.Type_Locally_Constrained then
+         Index_Type := Get_Index_Type (Arr_Type, Dim - 1);
          Constraint := Get_Range_Constraint (Index_Type);
          return New_Lit (Chap7.Translate_Static_Range_Length (Constraint));
       else

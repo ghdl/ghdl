@@ -1091,16 +1091,16 @@ package Trans is
       --  Variable containing the size of the type.
       --  This is defined only for types whose size is only known at
       --  running time (and not a compile-time).
-      Size_Var : Var_Type;
+      Size_Var : Var_Type := Null_Var;
 
-      Builder_Need_Func : Boolean;
+      Builder_Need_Func : Boolean := False;
 
       --  Parameters for type builders.
       --  NOTE: this is only set for types (and *not* for subtypes).
       Builder_Instance    : Subprgs.Subprg_Instance_Type;
       Builder_Base_Param  : O_Dnode;
       Builder_Bound_Param : O_Dnode;
-      Builder_Func        : O_Dnode;
+      Builder_Func        : O_Dnode := O_Dnode_Null;
    end record;
    type Complex_Type_Arr_Info is array (Object_Kind_Type) of Complex_Type_Info;
    type Complex_Type_Info_Acc is access Complex_Type_Arr_Info;
