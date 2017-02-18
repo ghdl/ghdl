@@ -75,7 +75,7 @@ try:
 				if line:
 					version=line[0]
 except:
-    version = "latest"
+	version = "latest"
 	pass
 
 release = version  # The full version, including alpha/beta/rc tags.
