@@ -61,6 +61,9 @@ def _IsUnderGitControl():
 def _LatestTagName():
 	return check_output(["git", "describe", "--abbrev=0", "--tags"], universal_newlines=True).strip()
 
+print "file:" + __file__
+print "cwd:" + os.getcwd()
+
 try:
 	if _IsUnderGitControl:
 		latestTagName = _LatestTagName()[1:]		# remove prefix "v"
