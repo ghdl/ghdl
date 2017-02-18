@@ -44,7 +44,8 @@ package body Trans.Chap4 is
    begin
       if Is_Complex_Type (Tinfo) then
          case Tinfo.Type_Mode is
-            when Type_Mode_Fat_Array =>
+            when Type_Mode_Unbounded_Array
+              | Type_Mode_Unbounded_Record =>
                return Tinfo.Ortho_Type (Kind);
             when Type_Mode_Record
                | Type_Mode_Array
@@ -302,7 +303,7 @@ package body Trans.Chap4 is
       Targ      : Mnode;
    begin
       --  Cannot allocate unconstrained object (since size is unknown).
-      pragma Assert (Type_Info.Type_Mode /= Type_Mode_Fat_Array);
+      pragma Assert (Type_Info.Type_Mode not in Type_Mode_Unbounded);
 
       if not Is_Complex_Type (Type_Info) then
          --  Object is not complex.
@@ -487,7 +488,7 @@ package body Trans.Chap4 is
       end if;
 
       if Is_Complex_Type (Type_Info)
-        and then Type_Info.Type_Mode /= Type_Mode_Fat_Array
+        and then Type_Info.Type_Mode not in Type_Mode_Unbounded
       then
          --  FIXME: avoid allocation if the value is a string and
          --  the object is a constant
@@ -541,7 +542,7 @@ package body Trans.Chap4 is
       else
          Value_Node := Chap7.Translate_Expression (Value, Obj_Type);
 
-         if Type_Info.Type_Mode = Type_Mode_Fat_Array then
+         if Type_Info.Type_Mode in Type_Mode_Unbounded then
             declare
                S : Mnode;
             begin

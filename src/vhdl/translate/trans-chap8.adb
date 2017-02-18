@@ -2564,7 +2564,7 @@ package body Trans.Chap8 is
             Res_Info : constant Type_Info_Acc := Get_Info (Res_Type);
          begin
             Res := Create_Temp (Res_Info);
-            if Res_Info.Type_Mode /= Type_Mode_Fat_Array then
+            if Res_Info.Type_Mode not in Type_Mode_Unbounded then
                Chap4.Allocate_Complex_Object (Res_Type, Alloc_Stack, Res);
             end if;
          end;
