@@ -8,8 +8,8 @@ C:\msys64\usr\bin\pacman.exe -V
 cd $env:APPVEYOR_BUILD_FOLDER
 
 if ($env:BUILD_BACKEND -eq "gcc")
-{	Write-Host "Installing common MinGW packages ..." -Foreground Yellow
-	C:\msys64\usr\bin\pacman.exe -S wget --noconfirm
+{	# Write-Host "Installing common MinGW packages ..." -Foreground Yellow
+	# C:\msys64\usr\bin\pacman.exe -S wget --noconfirm
 }
 
 if ($env:BUILD_MINGW -eq "mingw32")
@@ -34,14 +34,15 @@ elseif ($env:BUILD_MINGW -eq "mingw64")
 if ($env:BUILD_BACKEND -eq "gcc")
 {	# Assembles paths
 	$GCC_SOURCE_DIR =     "$($env:APPVEYOR_BUILD_FOLDER)\gcc-$($env:BUILD_GCC_VERSION)"
+	$GCC_SOURCES_FILE =		"gcc-$($env:BUILD_GCC_VERSION).tar.gz"
 	# Export GCC paths as environment variable
 	$env:GCC_SOURCE_DIR = $GCC_SOURCE_DIR
 
 	cd $env:APPVEYOR_BUILD_FOLDER
 	Write-Host "Downloading GCC $($env:BUILD_GCC_VERSION) sources ..." -Foreground Yellow
-	C:\msys64\usr\bin\wget.exe "https://ftp.gnu.org/gnu/gcc/gcc-$($env:BUILD_GCC_VERSION)/gcc-$($env:BUILD_GCC_VERSION).tar.gz"
+	C:\msys64\usr\bin\wget.exe "https://ftp.gnu.org/gnu/gcc/gcc-$($env:BUILD_GCC_VERSION)/$GCC_SOURCES_FILE" $GCC_SOURCES_FILE
 	Write-Host "Extracting GCC sources ..." -Foreground Yellow
-	C:\msys64\usr\bin\tar.exe xzf "gcc-$($env:BUILD_GCC_VERSION).tar.gz"
+	C:\msys64\usr\bin\tar.exe xzf $GCC_SOURCES_FILE
 }
 
 Write-Host "Installing NuGet as PackageProvider ..." -Foreground Yellow
