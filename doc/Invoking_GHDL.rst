@@ -514,12 +514,14 @@ GCC manual for details on GCC options.
 GHDL Diagnostics Control
 ========================
 
-.. option:: -f[no-]color-diagnostics
+.. option:: -fcolor-diagnostics
+.. option:: -fno-color-diagnostics
 
   Control whether diagnostic messages are displayed in color.  The
   default is on when the standard output is a terminal.
 
-.. option:: -f[no-]diagnostics-show-option
+.. option:: -fdiagnostics-show-option
+.. option:: -fno-diagnostics-show-option
 
   Control whether the warning option is displayed at the end of
   warning messages, so that user can easily know how to disable it.
