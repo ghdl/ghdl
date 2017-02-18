@@ -39,9 +39,9 @@ if ($env:BUILD_BACKEND -eq "gcc")
 
 	cd $env:APPVEYOR_BUILD_FOLDER
 	Write-Host "Downloading GCC $($env:BUILD_GCC_VERSION) sources ..." -Foreground Yellow
-	wget "https://ftp.gnu.org/gnu/gcc/gcc-$($env:BUILD_GCC_VERSION)/gcc-$($env:BUILD_GCC_VERSION).tar.gz"
+	C:\msys64\usr\bin\wget.exe "https://ftp.gnu.org/gnu/gcc/gcc-$($env:BUILD_GCC_VERSION)/gcc-$($env:BUILD_GCC_VERSION).tar.gz"
 	Write-Host "Extracting GCC sources ..." -Foreground Yellow
-	tar xzf "gcc-$($env:BUILD_GCC_VERSION).tar.gz"
+	C:\msys64\usr\bin\tar.exe xzf "gcc-$($env:BUILD_GCC_VERSION).tar.gz"
 }
 
 Write-Host "Installing NuGet as PackageProvider ..." -Foreground Yellow
