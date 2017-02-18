@@ -16,6 +16,7 @@ import sys
 import os
 import shlex
 import re
+import subprocess
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
@@ -56,28 +57,26 @@ author = u'Tristan Gingold'
 # built documents.
 #
 def _IsUnderGitControl():
-	return (check_output(["git", "rev-parse", "--is-inside-work-tree"], universal_newlines=True).strip() == "true")
+	return (subprocess.check_output(["git", "rev-parse", "--is-inside-work-tree"], universal_newlines=True).strip() == "true")
 
 def _LatestTagName():
-	return check_output(["git", "describe", "--abbrev=0", "--tags"], universal_newlines=True).strip()
-
-print "file:" + __file__
-print "cwd:" + os.getcwd()
+	return subprocess.check_output(["git", "describe", "--abbrev=0", "--tags"], universal_newlines=True).strip()
 
 try:
 	if _IsUnderGitControl:
-		latestTagName = _LatestTagName()[1:]		# remove prefix "v"
-		versionParts =  latestTagName.split("-")[0].split(".")
-
-		version = ".".join(versionParts[:2])
-		#release = ".".join(versionParts[:3])
+		descr = _LatestTagName()
+		if descr.startswith('v'):
+			version = descr[1:]	 # remove prefix "v"
+		else:
+			version = descr
 	else:
 		with open('../src/version.in') as verin:
 			for line in verin:
 				line = re.findall(r'Ghdl_Ver.+\"(.+)\";', line)
 				if line:
 					version=line[0]
-except:
+except Exception, e:
+	print "cannot extract version: %s" % e
 	version = "latest"
 	pass
 
