@@ -1,4 +1,4 @@
-[![Documentation Status](https://readthedocs.org/projects/ghdl/badge/?version=latest)](http://ghdl.readthedocs.io/en/latest/?badge=latest) [![Join the chat at https://gitter.im/ghdl1/Lobby](https://badges.gitter.im/ghdl1/Lobby.svg)](https://gitter.im/ghdl1/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![GNU General Public License 2](https://img.shields.io/github/license/tgingold/ghdl.svg?style=flat)](https://github.com/tgingold/ghdl/blob/master/COPYING)
+[![Documentation Status](https://readthedocs.org/projects/ghdl/badge/?version=latest)](http://ghdl.readthedocs.io/en/latest/?badge=latest) [![Join the chat at https://gitter.im/ghdl1/Lobby](https://badges.gitter.im/ghdl1/Lobby.svg)](https://gitter.im/ghdl1/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 [![Linux containers at Travis-CI](https://travis-ci.org/tgingold/ghdl.svg?branch=master)](https://travis-ci.org/tgingold/ghdl) [![Windows VMs at AppVeyor](https://ci.appveyor.com/api/projects/status/rsq60m5wcly3og8j?svg=true)](https://ci.appveyor.com/project/tgingold/ghdl) ![Latest tag](https://img.shields.io/github/tag/tgingold/ghdl.svg?style=flat) [![Latest release](https://img.shields.io/github/release/tgingold/ghdl.svg?style=flat)](https://github.com/tgingold/ghdl/releases)
 
@@ -22,7 +22,7 @@ Supported third party projects: [VUnit](https://vunit.github.io), [OSVVM](http:/
 
 GHDL is free software:
 
-- [![GNU General Public License 2](https://img.shields.io/github/license/tgingold/ghdl.svg?style=flat)](https://github.com/tgingold/ghdl/blob/master/COPYING)
+- [![GNU General Public License 2](https://img.shields.io/github/license/tgingold/ghdl.svg?style=flat)](https://github.com/tgingold/ghdl/blob/master/COPYING.md)
 - Doc is available on [ghdl.readthedocs.org](https://ghdl.readthedocs.org/en/latest/index.html).
 - Some of the runtime libraries, are under different terms; see the individual source files for details.
 
@@ -34,7 +34,7 @@ You can download pre-built releases for different platforms, backends and librar
 
 ### Building GHDL
 
-You need the GNU Ada compiler, GNAT GPL, 2014 (or later) for x86 (32 or 64 bits). GNAT GPL can be downloaded anonymously from libre.adacore.com. Then, untar and run the doinstall script.
+You need the GNU Ada compiler, GNAT GPL, 2014 (or later) for x86 (32 or 64 bits). GNAT GPL can be downloaded anonymously from [libre.adacore.com](http://libre.adacore.com/tools/gnat-gpl-edition/). Then, untar and run the *doinstall* script.
 
 *Depending on the OS and distribution you are using, you will also need to install some toolchain dependencies, such as `zlib`. See '[Building](http://ghdl.readthedocs.io/en/latest/building/index.html)' for specific package names.*
 

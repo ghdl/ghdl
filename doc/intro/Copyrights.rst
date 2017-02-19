@@ -49,3 +49,27 @@ points in distributing VHDL executable.  Please, send a comment
   - https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
   - Available in the following formats: plain text, Texinfo, LaTeX, standalone HTML, Docbook, Markdown, ODF, RT
   - See `#280 <https://github.com/tgingold/ghdl/issues/280#issuecomment-279595802>`_
+  
+	GHDL is copyright (c) 2002 - 2015 Tristan Gingold.
+
+	This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.
+
+	This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+	
+  - Contributors to ghdl:
+	- Tristan Gingold    (sole author of ghdl as a whole)
+	- Brian Drummond     (gcc4.8.2 update, OSVVM port, some bugfixes)
+	- David Koontz       (Mac OSX builds, LRM compliance work, bugfix analyses)
+	- Joris van Rantwijk (Debian packaging)
+	- Brian Davis        (Windows Mcode builds)
+	- Adam Jensen        (FreeBSD builds)
+	- Felix Bertram      (VPI interface)
+
+with apologies to anyone who ought to be on this list but isn't.
+Thanks also to all those who have reported bugs and support issues,
+and often patches and testcases to either:
+https://gna.org/bugs/?group=ghdl
+or
+https://sourceforge.net/p/ghdl-updates/tickets/
