@@ -59,7 +59,7 @@ if ($env:BUILD_BACKEND -in @("mcode", "llvm"))
 elseif ($env:BUILD_BACKEND -eq "gcc")
 {	Write-Host "Configuring GCC with GHDL frontend..." -Foreground Yellow
 	cd $env:GCC_BUILD_DIR
-	c:\msys64\usr\bin\bash.exe -c "../configure --prefix=$($env:GHDL_PREFIX_DIR) --enable-languages=c,vhdl --disable-bootstrap --build=x86_64-w64-$($env:BUILD_MINGW) --host=x86_64-w64-$($env:BUILD_MINGW) --target=x86_64-w64-$($env:BUILD_MINGW) --disable-lto --disable-multilib --disable-libssp --disable-libgomp --disable-libquadmath" 2>&1 | Restore-NativeCommandStream | %{ "$_" }
+	c:\msys64\usr\bin\bash.exe -c "../configure --prefix=$($env:GHDL_PREFIX_DIR) --enable-languages=c,vhdl --disable-bootstrap --build=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --target=x86_64-w64-mingw32 --disable-lto --disable-multilib --disable-libssp --disable-libgomp --disable-libquadmath" 2>&1 | Restore-NativeCommandStream | %{ "$_" }
 
 	cd $env:GCC_SOURCE_DIR\gcc\vhdl
 	Write-Host "Patch ortho-lang.c..." -Foreground Yellow
