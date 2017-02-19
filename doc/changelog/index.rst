@@ -25,6 +25,6 @@ Change Log
 
 ------------------------
 
-.. TODO:: topic
+.. TODO::
 
-  `./NEWS <https://github.com/tgingold/ghdl/blob/master/NEWS>`_
+	- `./NEWS <https://github.com/tgingold/ghdl/blob/master/NEWS>`_

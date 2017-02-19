@@ -3,6 +3,9 @@
 Releases
 ########
 
-.. TODO:: topic
+.. TODO::
  
-  naming, stable, development, nightly
+  - Naming:
+	- branch ghdl-X.Y
+	- tag vX.Y
+  - stable, development, nightly
