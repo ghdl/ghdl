@@ -21,7 +21,10 @@ import subprocess
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('.'))
+# sys.path.insert(0, os.path.abspath('../py'))
+sys.path.insert(0, os.path.abspath('_extensions'))
+# sys.path.insert(0, os.path.abspath('_themes/sphinx_rtd_theme'))
 
 # -- General configuration ------------------------------------------------
 
@@ -31,10 +34,23 @@ import subprocess
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = []
+extensions = [
+# Standard Sphinx extensions
+	'sphinx.ext.extlinks',
+	'sphinx.ext.intersphinx',
+	'sphinx.ext.todo',
+	'sphinx.ext.graphviz',
+	'sphinx.ext.mathjax',
+	'sphinx.ext.ifconfig',
+	'sphinx.ext.viewcode',
+	# 'sphinx.ext.githubpages',
+# SphinxContrib extensions
+	# 'sphinxcontrib.textstyle',
+	# 'sphinxcontrib.spelling',
+]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ['_templates', '_themes']
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
@@ -124,8 +140,17 @@ pygments_style = 'sphinx'
 #keep_warnings = False
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
-todo_include_todos = False
+todo_include_todos = True
+todo_link_only = True
 
+# reST settings
+
+rst_prolog = """\
+.. |br| raw:: html
+
+   <br />
+   
+"""
 
 # -- Options for HTML output ----------------------------------------------
 
@@ -230,7 +255,7 @@ htmlhelp_basename = 'GHDLdoc'
 
 latex_elements = {
 # The paper size ('letterpaper' or 'a4paper').
-#'papersize': 'letterpaper',
+'papersize': 'a4paper',
 
 # The font size ('10pt', '11pt' or '12pt').
 #'pointsize': '10pt',
@@ -306,3 +331,20 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+# ==============================================================================
+# Sphinx.Ext.InterSphinx
+# ==============================================================================
+intersphinx_mapping = {
+	'python': ('https://docs.python.org/3.5/', None)
+#	'ghdl':   ('http://ghdl.readthedocs.io/en/latest', None)
+}
+
+# ==============================================================================
+# Sphinx.Ext.ExtLinks
+# ==============================================================================
+extlinks = {
+	'ghdlissue': ('https://github.com/tgingold/ghdl/issues/%s', 'issue #'),
+	'ghdlpull':  ('https://github.com/tgingold/ghdl/pull/%s', 'pull request #'),
+	'ghdlsrc':   ('https://github.com/tgingold/ghdl/blob/master/src/%s', None)
+}
