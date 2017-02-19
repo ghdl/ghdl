@@ -3,12 +3,12 @@
 Building GHDL
 #############
 
-.. TODO:: topic
+.. TODO::
 
-  `./BUILD.txt <https://github.com/tgingold/ghdl/blob/master/BUILD.txt>`_
-  Directory structure of the main branch [1138: #279]
-  Coverage, `gcov`, is unique to gcc. That specific difference is not explained anywhere. Should be added.
-  @1138 Backtraces optional -patchable-
+  - `./BUILD.txt <https://github.com/tgingold/ghdl/blob/master/BUILD.txt>`_
+  - Directory structure of the main branch [1138: #279]
+  - Coverage, `gcov`, is unique to gcc. That specific difference is not explained anywhere. Should be added.
+  - @1138 Backtraces optional -patchable-
 
 GCC backend
 =================
@@ -37,6 +37,6 @@ Test suites
 
 ----------------
 
-.. TODO:: topic
+.. TODO::
 
   @1138 explain that there are two (maybe three with vhdl08 tests)
