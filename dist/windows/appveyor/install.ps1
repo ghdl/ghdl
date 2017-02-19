@@ -40,7 +40,7 @@ if ($env:BUILD_BACKEND -eq "gcc")
 
 	cd $env:APPVEYOR_BUILD_FOLDER
 	Write-Host "Downloading GCC $($env:BUILD_GCC_VERSION) sources ..." -Foreground Yellow
-	C:\msys64\usr\bin\wget.exe "https://ftp.gnu.org/gnu/gcc/gcc-$($env:BUILD_GCC_VERSION)/$GCC_SOURCES_FILE" $GCC_SOURCES_FILE
+	C:\msys64\usr\bin\wget.exe -q -o "$GCC_SOURCES_FILE.log" -O $GCC_SOURCES_FILE "https://ftp.gnu.org/gnu/gcc/gcc-$($env:BUILD_GCC_VERSION)/$GCC_SOURCES_FILE"
 	Write-Host "Extracting GCC sources ..." -Foreground Yellow
 	C:\msys64\usr\bin\tar.exe xzf $GCC_SOURCES_FILE
 }
