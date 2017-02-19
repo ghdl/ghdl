@@ -3,6 +3,6 @@
 Releases
 ########
 
-.. TODO: topic
+.. TODO:: topic
  
   naming, stable, development, nightly

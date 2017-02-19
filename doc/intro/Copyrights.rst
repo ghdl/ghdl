@@ -44,9 +44,7 @@ sources.  To my mind, this is not a real restriction, since there is no
 points in distributing VHDL executable.  Please, send a comment
 (:ref:`Reporting_bugs`) if you don't like this policy.
 
-----------------
-
-.. TODO: topic
+.. TODO:: topic
 
   https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
   

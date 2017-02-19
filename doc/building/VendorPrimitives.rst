@@ -317,7 +317,7 @@ Last update: 28.10.2016
 
 ------------------------
 
-.. TODO: topic
+.. TODO:: topic
 
   - Vendor Primitives 
     - Alters / Intel
