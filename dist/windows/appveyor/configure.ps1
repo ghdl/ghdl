@@ -74,7 +74,8 @@ elseif ($env:BUILD_BACKEND -eq "gcc")
 	mkdir $GCC_BUILD_DIR
 	
 	Write-Host "Configuring GHDL for $($env:BUILD_MINGW), GCC $($env:BUILD_GCC_VERSION)..." -Foreground Yellow
-	c:\msys64\usr\bin\bash.exe -c "../../configure --prefix=$GHDL_PREFIX_DIR --with-gcc=$($env:GCC_SOURCE_DIR) LDFLAGS=-static CXX=g++" 2>&1 | Restore-NativeCommandStream | %{ "$_" }
+	$Command = "../../configure --prefix=$GHDL_PREFIX_DIR --with-gcc=$($env:GCC_SOURCE_DIR) LDFLAGS=-static CXX=g++" -replace "\\","/"
+	c:\msys64\usr\bin\bash.exe -c $Command 2>&1 | Restore-NativeCommandStream | %{ "$_" }
 	
 	Write-Host "Copy GHDL sources into GCC as a new language (vhdl)..." -Foreground Yellow
 	c:\msys64\usr\bin\make.exe copy-sources 2>&1 | Restore-NativeCommandStream | %{ "$_" }
