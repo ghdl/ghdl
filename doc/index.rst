@@ -71,10 +71,10 @@ sanctus est Lorem ipsum dolor sit amet
    :caption: Introduction
    :hidden:
    
-   0_Intro/WhatIsVHDL
-   0_Intro/WhatIsGHDL
-   0_Intro/Contributing
-   0_Intro/Copyrights
+   intro/WhatIsVHDL
+   intro/WhatIsGHDL
+   intro/Contributing
+   intro/Copyrights
    License/gpl-2.0
    
 .. raw:: latex
@@ -85,9 +85,9 @@ sanctus est Lorem ipsum dolor sit amet
    :caption: GHDL usage
    :hidden:
    
-   1_Using/QuickStartGuide
-   1_Using/InvokingGHDL
-   1_Using/Simulation
+   using/QuickStartGuide
+   using/InvokingGHDL
+   using/Simulation
    
 .. raw:: latex
 
@@ -97,10 +97,10 @@ sanctus est Lorem ipsum dolor sit amet
    :caption: Getting GHDL
    :hidden:
    
-   2_Getting/Releases
-   2_Getting/Docker
-   3_Building/index
-   3_Building/VendorPrimitives
+   getting/Releases
+   getting/Docker
+   building/index
+   building/VendorPrimitives
    
 .. raw:: latex
 
@@ -110,9 +110,9 @@ sanctus est Lorem ipsum dolor sit amet
    :caption: Implementation references
    :hidden:
    
-   4_References/CommandReference
-   4_References/ImplementationOfVHDL
-   4_References/ImplementationOfVITAL
+   references/CommandReference
+   references/ImplementationOfVHDL
+   references/ImplementationOfVITAL
    
 .. raw:: latex
 
@@ -122,7 +122,7 @@ sanctus est Lorem ipsum dolor sit amet
    :caption: Appendix
    :hidden:
    
-   X_ChangeLog/Roadmap
-   X_ChangeLog/index
+   changeLog/Roadmap
+   changeLog/index
    genindex
    
