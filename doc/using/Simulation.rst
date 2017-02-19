@@ -28,8 +28,6 @@ Here is the list of the most useful options.  Some debugging options are
 also available, but not described here.  The :option:`--help` options lists
 all options available, including the debugging one.
 
-
-
 .. option:: --assert-level=<LEVEL>
 
   Select the assertion level at which an assertion violation stops the
@@ -58,7 +56,6 @@ all options available, including the debugging one.
   This option can be useful to avoid assertion message from
   :samp:`ieee.numeric_std` (and other :samp:`ieee` packages).
 
-
 .. option:: --stop-time=<TIME>
 
   Stop the simulation after :samp:`TIME`.  :samp:`TIME` is expressed as a time
@@ -69,7 +66,6 @@ all options available, including the debugging one.
 
     $ ./my_design --stop-time=10ns
     $ ./my_design --stop-time=ps
-
 
 .. option:: --stop-delta=<N>
 
@@ -90,7 +86,6 @@ all options available, including the debugging one.
   This may be useful to understand the structure of a complex
   design. `KIND` is optional, but if set must be one of:
 
-
   * none
     Do not display hierarchy.  Same as if the option was not present.
 
@@ -105,18 +100,15 @@ all options available, including the debugging one.
     If `KIND` is not specified, the hierarchy is displayed with the
     :samp:`port` mode.
 
-
 .. option:: --no-run
 
   Do not simulate, only elaborate.  This may be used with
   :option:`--disp-tree` to display the tree without simulating the whole
   design.
 
-
 .. option:: --unbuffered
 
   Disable buffering on stdout, stderr and files opened in write or append mode (TEXTIO).
-
 
 .. option:: --read-opt-file=<FILENAME>
 
@@ -151,13 +143,11 @@ all options available, including the debugging one.
      # those of sub3)
      /**/sub3/*/*
 
-
 .. option:: --write-opt-file=<FILENAME>
 
   If the wave option file doesn't exist, creates it with all the signals of
   the design. Otherwise throws an error, because it won't erase an existing
   file.
-
 
 .. option:: --vcd=<FILENAME>
 
@@ -184,7 +174,6 @@ all options available, including the debugging one.
 
   Since it comes from `verilog`, only a few VHDL types can be dumped.  GHDL
   dumps only signals whose base type is of the following:
-
 
   * types defined in the :samp:`std.standard` package:
 
@@ -213,13 +202,11 @@ all options available, including the debugging one.
   format supporting VHDL types.  If you are aware of such a free format,
   please mail me (:ref:`Reporting_bugs`).
 
-
 .. option:: --fst=<FILENAME>
 
   Write the waveforms into a `fst`, that can be displayed by
   `gtkwave`. The `fst` files are much smaller than VCD or
   `GHW` files, but it handles only the same signals as the VCD format.
-
 
 .. option:: --wave=<FILENAME>
 
@@ -232,13 +219,11 @@ all options available, including the debugging one.
 
   Contrary to VCD files, any VHDL type can be dumped into a GHW file.
 
-
 .. option:: --psl-report=<FILENAME>
 
   Write a report for PSL assertions and coverage at the end of
   simulation.  The file is written using the JSON format, but still
   being human readable.
-
 
 .. option:: --sdf=<PATH>=<FILENAME>
 
@@ -260,7 +245,6 @@ all options available, including the debugging one.
   the annotator use the typical delay.
 
   See :ref:`Backannotation`, for more details.
-
 
 .. option:: --help
 

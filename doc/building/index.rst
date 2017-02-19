@@ -3,7 +3,7 @@
 Building GHDL
 #############
 
-.. TODO: topic
+.. TODO:: topic
 
   `./BUILD.txt <https://github.com/tgingold/ghdl/blob/master/BUILD.txt>`_
   Directory structure of the main branch [1138: #279]
@@ -37,6 +37,6 @@ Test suites
 
 ----------------
 
-.. TODO: topic
+.. TODO:: topic
 
   @1138 explain that there are two (maybe three with vhdl08 tests)
