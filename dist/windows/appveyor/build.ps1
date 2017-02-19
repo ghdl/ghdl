@@ -65,6 +65,8 @@ elseif ($env:BUILD_BACKEND -eq "gcc")
 	Write-Host "Patch ortho-lang.c..." -Foreground Yellow
 	mv "ortho-lang.c" "ortho-lang-4.c"
 	mv "ortho-lang-$($env:BUILD_GCC_VERSION[0]).c" "ortho-lang.c"
+	Write-Host "DEBUG: $($env:BUILD_GCC_VERSION[0])"
+	dir ortho-lang*
 	
 	cd $env:GCC_BUILD_DIR
 	Write-Host "Building GCC with GHDL frontend..." -Foreground Yellow
