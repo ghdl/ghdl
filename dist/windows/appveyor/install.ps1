@@ -5,6 +5,8 @@ C:\msys64\usr\bin\pacman.exe -V
 # list installed packages and versions
 # C:\msys64\usr\bin\pacman.exe -Q
 
+cat /etc/pacman.d/mirrorlist.*
+
 C:\msys64\usr\bin\pacman.exe -Ss gcc
 
 cd $env:APPVEYOR_BUILD_FOLDER
