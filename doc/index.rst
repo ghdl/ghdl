@@ -10,15 +10,15 @@ This manual is the user and reference manual for GHDL. It does not contain an in
       :scale: 60
       :target: https://www.github.com/tgingold/ghdl
       :alt: Source Code on GitHub
-   .. image:: https://travis-ci.org/tgingold/ghdl.svg?branch=release
+   .. image:: https://badges.gitter.im/ghdl/ghdl1.svg
+      :target: https://gitter.im/ghdl/ghdl1
+      :alt: Join
+   .. image:: https://travis-ci.org/tgingold/ghdl.svg?branch=master
       :target: https://travis-ci.org/tgingold/ghdl
       :alt: Build status by Travis-CI
    .. image:: https://ci.appveyor.com/api/projects/status/r5dtv6amsppigpsp/branch/release?svg=true
       :target: https://ci.appveyor.com/project/Paebbels/poc/branch/release
       :alt: Build status by AppVeyor
-   .. image:: https://badges.gitter.im/ghdl/ghdl1.svg
-      :target: https://gitter.im/ghdl/ghdl1
-      :alt: Join
       
    .. raw:: html
    
@@ -30,7 +30,7 @@ This manual is the user and reference manual for GHDL. It does not contain an in
       :target: https://github.com/tgingold/ghdl/releases
       :alt: Latest release
    .. image:: https://img.shields.io/github/license/tgingold/ghdl.svg?style=flat
-      :target: License.html
+      :target: intro/Copyrights.html
       :alt: GNU General Public License 2
       
    .. raw:: html
@@ -111,6 +111,7 @@ sanctus est Lorem ipsum dolor sit amet
    :hidden:
    
    references/CommandReference
+   references/CodingStyle
    references/ImplementationOfVHDL
    references/ImplementationOfVITAL
    
