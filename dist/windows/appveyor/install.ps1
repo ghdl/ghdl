@@ -5,6 +5,8 @@ C:\msys64\usr\bin\pacman.exe -V
 # list installed packages and versions
 # C:\msys64\usr\bin\pacman.exe -Q
 
+C:\msys64\usr\bin\pacman.exe -Ss gcc
+
 cd $env:APPVEYOR_BUILD_FOLDER
 
 if ($env:BUILD_BACKEND -eq "gcc")
