@@ -122,7 +122,7 @@ sanctus est Lorem ipsum dolor sit amet
    :caption: Appendix
    :hidden:
    
-   changeLog/Roadmap
-   changeLog/index
+   changelog/Roadmap
+   changelog/index
    genindex
    
