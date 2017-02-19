@@ -1,4 +1,5 @@
 .. _USING:Invoking:
+.. program:: ghdl
 
 *************
 Invoking GHDL
