@@ -65,13 +65,11 @@ you have not understood some parts of this manual, please tell me.
 English is not my mother tongue, so this manual may not be well-written.
 Again, rewriting part of it is a good way to improve it.
 
----
+.. TODO:: topic
 
-@TODO:
-
-- Reporting bugs
+  - Reporting bugs
 	- [1138: Issues, search first]
 	- Minimum-(non)-Working-Example (MWE)
-- Pull Requests (PRs)
+  - Pull Requests (PRs)
 	- [1138: check chapter 2 -> building -> GHDL -> directory structure]
 	- [1138: beware that some commit messages can `automatically close <https://help.github.com/articles/closing-issues-via-commit-messages/>`_ PRs]
