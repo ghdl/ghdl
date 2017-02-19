@@ -22,3 +22,9 @@ Change Log
       2015/index
       2016/index
       2017/index
+
+------------------------
+
+.. TODO: topic
+
+  `./NEWS <https://github.com/tgingold/ghdl/blob/master/NEWS>`_
