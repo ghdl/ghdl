@@ -13,17 +13,17 @@ This manual is the user and reference manual for GHDL. It does not contain an in
    .. image:: https://badges.gitter.im/ghdl/ghdl1.svg
       :target: https://gitter.im/ghdl/ghdl1
       :alt: Join
+	  
+   .. raw:: html
+   
+      <br />
+	  
    .. image:: https://travis-ci.org/tgingold/ghdl.svg?branch=master
       :target: https://travis-ci.org/tgingold/ghdl
       :alt: Build status by Travis-CI
    .. image:: https://ci.appveyor.com/api/projects/status/r5dtv6amsppigpsp/branch/release?svg=true
       :target: https://ci.appveyor.com/project/Paebbels/poc/branch/release
-      :alt: Build status by AppVeyor
-      
-   .. raw:: html
-   
-      <br />
-      
+      :alt: Build status by AppVeyor      
    .. image:: https://img.shields.io/github/tag/tgingold/ghdl.svg?style=flat
       :alt: Latest tag
    .. image:: https://img.shields.io/github/release/tgingold/ghdl.svg?style=flat
@@ -58,6 +58,10 @@ labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam
 et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata
 sanctus est Lorem ipsum dolor sit amet
 
+.. TODO:
+
+  - http://ghdl.free.fr
+  - In `doc/conf.py` add a command to copy `./COPYING.md` to `doc/License.md`
  
 ------------------------------------
 
@@ -75,7 +79,6 @@ sanctus est Lorem ipsum dolor sit amet
    intro/WhatIsGHDL
    intro/Contributing
    intro/Copyrights
-   License/gpl-2.0
    
 .. raw:: latex
 

@@ -1,5 +1,7 @@
-GHDL coding style
-*****************
+.. _REF:Style:
+
+Coding style
+#################
 
 Ada subset: use only a simple (VHDL like) subset of Ada: no tasking, no
 controlled types...  VHDL users should easily understand that subset.
@@ -87,4 +89,3 @@ Do not initialize variables, constants must be declared before variables:
    begin
 If the initialization expression has a side effect (such as allocation), do
 not use a constant.
-

@@ -73,3 +73,8 @@ Again, rewriting part of it is a good way to improve it.
   - Pull Requests (PRs)
 	- Check Building -> GHDL -> Directory Structure]
 	- Beware that some commit messages can `automatically close <https://help.github.com/articles/closing-issues-via-commit-messages/>`_ PRs]
+	
+	There is a mailing list for any questions.  You can subscribe via: https://mail.gna.org/listinfo/ghdl-discuss/
+	Please report bugs on https://github.com/tgingold/ghdl/issues
+
+	If you cannot compile, please report the gcc version, GNAT version and gcc source version.
