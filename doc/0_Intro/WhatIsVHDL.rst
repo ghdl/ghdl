@@ -27,3 +27,7 @@ instead of `execution`, with the same meaning.
 Like a program written in another hardware description language, a `VHDL`
 program can be transformed with a :dfn:`synthesis tool` into a netlist, that is,
 a detailed gate-level implementation.
+
+---
+
+@TODO: [1138: very very briefly explain that there are four major verions: 87, 93, 02 and 08]

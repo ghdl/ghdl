@@ -1,6 +1,7 @@
-**********
-Copyrights
-**********
+.. _INTRO:Copyrights:
+
+Copyrights | License
+############
 
 The GHDL front-end, the :samp:`std.textio` package and the runtime
 library (:samp:`grt`) are copyrighted Tristan Gingold, come with **absolutely
@@ -43,3 +44,12 @@ sources.  To my mind, this is not a real restriction, since there is no
 points in distributing VHDL executable.  Please, send a comment
 (:ref:`Reporting_bugs`) if you don't like this policy.
 
+---
+
+@TODO:
+
+https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+
+Available in the following formats: plain text, Texinfo, LaTeX, standalone HTML, Docbook, Markdown, ODF, RT
+
+See `#280 <https://github.com/tgingold/ghdl/issues/280#issuecomment-279595802>`_

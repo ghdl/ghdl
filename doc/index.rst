@@ -1,16 +1,12 @@
-.. raw:: latex
+This manual is the user and reference manual for GHDL. It does not contain an introduction to VHDL. Thus, the reader should have at least a basic knowledge of VHDL. A good knowledge of VHDL language reference manual (usually called LRM) is a plus.
 
-   \part{Introduction}
-
-This manual is the user and reference manual for GHDL. It does not contain an
-introduction to VHDL. Thus, the reader should have at least a basic knowledge
-of VHDL. A good knowledge of VHDL language reference manual (usually called
-LRM) is a plus.
-
-
---------------------------------------------------------------------------------
+---
 
 .. only:: html
+
+   .. raw:: html
+   
+      <hr />
 
    .. image:: /_static/logos/GitHub-Mark-32px.png
       :scale: 60
@@ -42,16 +38,6 @@ LRM) is a plus.
    .. raw:: html
    
       <hr />
-      
-      
-GHDL Documentation
-##################
-
-Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua.
-At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor
-sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et
-accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet
-
 
 .. only:: html
 
@@ -79,7 +65,6 @@ accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea taki
 
    This document was generated on |docdate|.
    
-   
 .. toctree::
    :caption: Introduction
    :hidden:
@@ -87,6 +72,7 @@ accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea taki
    0_Intro/WhatIsVHDL
    0_Intro/WhatIsGHDL
    0_Intro/Contributing
+   0_Intro/Copyrights
    License/gpl-2.0
    
 .. raw:: latex
@@ -109,15 +95,17 @@ accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea taki
    :caption: Getting GHDL
    :hidden:
    
-   2_Releases/index
+   2_Getting/Releases
+   2_Getting/Docker
    3_Building/index
+   3_Building/VendorPrimitives
    
 .. raw:: latex
 
    \part{References}
    
 .. toctree::
-   :caption: References
+   :caption: Implementation references
    :hidden:
    
    4_References/CommandReference
@@ -132,6 +120,7 @@ accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea taki
    :caption: Appendix
    :hidden:
    
+   X_ChangeLog/Roadmap
    X_ChangeLog/index
    genindex
    
