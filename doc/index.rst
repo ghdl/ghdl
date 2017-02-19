@@ -125,6 +125,7 @@ sanctus est Lorem ipsum dolor sit amet
    :caption: Appendix
    :hidden:
 
-   X_ChangeLog/Roadmap
-   X_ChangeLog/index
+   appendix/Roadmap
+   appendix/Changelog
+   appendix/Meta
    genindex
