@@ -1,7 +1,17 @@
 # GHDL
 
-[![Join the chat at https://gitter.im/ghdl1/Lobby](https://badges.gitter.im/ghdl1/Lobby.svg)](https://gitter.im/ghdl1/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Join the chat at https://gitter.im/ghdl1/Lobby](https://badges.gitter.im/ghdl1/Lobby.svg)](https://gitter.im/ghdl1/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) 
 
+Build status:
+	- [![Linux containers at Travis-CI](https://travis-ci.org/tgingold/ghdl.svg?branch=master)](https://travis-ci.org/tgingold/ghdl)
+	- [![Windows VMs at AppVeyor](https://ci.appveyor.com/api/projects/status/r5dtv6amsppigpsp/branch/release?svg=true)](https://ci.appveyor.com/project/Paebbels/poc/branch/release)
+Distribution:
+	- ![Latest tag](https://img.shields.io/github/tag/tgingold/ghdl.svg?style=flat)
+	- [![Latest release](https://img.shields.io/github/release/tgingold/ghdl.svg?style=flat)](https://github.com/tgingold/ghdl/releases)
+	- ![GNU General Public License 2](https://img.shields.io/github/license/tgingold/ghdl.svg?style=flat)
+	
+---
+	
 This directory contains the sources of GHDL, the VHDL simulator.
 
 GHDL is not an interpreter: it generates machine code from your design,

@@ -13,7 +13,10 @@ LRM) is a plus.
       :scale: 60
       :target: https://www.github.com/tgingold/ghdl
       :alt: Source Code on GitHub
-   .. image:: https://travis-ci.org/tgingold/ghdl.svg?branch=release
+   .. image:: https://badges.gitter.im/ghdl/ghdl1.svg
+      :target: https://gitter.im/ghdl/ghdl1
+      :alt: Join
+   .. image:: https://travis-ci.org/tgingold/ghdl.svg?branch=master
       :target: https://travis-ci.org/tgingold/ghdl
       :alt: Build status by Travis-CI
    .. image:: https://ci.appveyor.com/api/projects/status/r5dtv6amsppigpsp/branch/release?svg=true
@@ -33,7 +36,7 @@ LRM) is a plus.
       :target: https://github.com/tgingold/ghdl/releases
       :alt: Latest release
    .. image:: https://img.shields.io/github/license/tgingold/ghdl.svg?style=flat
-      :target: License.html
+      :target: intro/Copyrights.html
       :alt: GNU General Public License 2
 
    .. raw:: html
@@ -114,6 +117,7 @@ sanctus est Lorem ipsum dolor sit amet
    :hidden:
 
    4_References/CommandReference
+   4_References/CodingStyle
    4_References/ImplementationOfVHDL
    4_References/ImplementationOfVITAL
 

@@ -5,7 +5,7 @@ Building GHDL
 
 .. TODO::
 
-  - `./BUILD.txt <https://github.com/tgingold/ghdl/blob/master/BUILD.txt>`_
+  - `./doc/oldmds/BUILD.txt <https://github.com/tgingold/ghdl/blob/master/doc/oldmds/BUILD.txt>`_
   - Directory structure of the main branch [1138: #279]
   - Coverage, `gcov`, is unique to gcc. That specific difference is not explained anywhere. Should be added.
   - @1138 Backtraces optional -patchable-
@@ -13,8 +13,8 @@ Building GHDL
 GCC backend
 =================
 
-- ./dist/gcc/INSTALL
-- ./gcc/README
+- `./doc/oldmds/gcc/INSTALL <https://github.com/tgingold/ghdl/blob/master/doc/oldmds/gcc/INSTALL>`_
+- `./doc/oldmds/gcc/README <https://github.com/tgingold/ghdl/blob/master/doc/oldmds/gcc/README>`_
 - Linux
 
 LLVM backend 
@@ -27,15 +27,13 @@ LLVM backend
 Mcode backend
 =================
 
-- ./dist/mcode/README
+- `./doc/oldmds/mcode/README <https://github.com/tgingold/ghdl/blob/master/doc/oldmds/windows/mcode/README>`_
 - Linux
 - Windows GNAT GPL (32 only)
 - Windows MinGW 32/64
 
 Test suites
 =================
-
-----------------
 
 .. TODO::
 
