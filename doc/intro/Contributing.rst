@@ -3,22 +3,46 @@
 Contributing
 ############
 
-Despite all the testing and already reported `issues <https://github.com/tgingold/ghdl/issues>`_, you can find bugs
-or propose enhancements.
+.. include:: ../shields.txt
 
-  .. _reporting_bugs:
+The first step might be to use GHDL and explore it's possibilities in an own project. If you are new to VHDL, see the :ref:`Quick Start Guide <USING:QuickStart>` for an introduction. Furthermore, we encourage you to read :ref:`Invoking GHDL <USING:Invoking>`, where the most commonly used options are explained. You can also check the complete :ref:`Command Reference <REF:Command>`.
 
+If you are more familiar with GHDL, you might start asking yourself how it works internally. Then, you migh find :ref:`Implementation of VHDL <REF:ImplVHDL>` and :ref:`Implementation of VITAL <REF:ImplVITAL>` interesting. 
+
+While using GHDL, you might find flaws, such as bugs, missing features, typos in the documentation or topics which are still not covered. In order to improve GHDL, we welcome bugs report and suggestions for any aspect of GHDL. So, please report them so that we are aware!
+
+Either if it's a bug or an enhancement, have a look at the |SHIELD:issues-open| and |SHIELD:issues-closed| to see if someone already told us about it. You might find a solution there. To get a broader view, you can also check the :ref:`Roadmap <CHANGE>`. Then, you can reach us through various ways:
+
+- |SHIELD:gitter|
+- Open a |SHIELD:issues-new|
+- Fork, modify and create a Pull Request on |SHIELD:issues-pr| |SHIELD:issues-pr-closed|
+- Suscribe to the mailing-list |SHIELD:mailing|
+
+The indications below shall help you choose which one to take.
+
+improve doc
+examples
+
+
+If you have an interresting project, please send us feedback or get listed on our :doc:`Who uses GHDL?` page.
+
+
+Related interesting projects
+==============
+  
 Asking for enhancements
 ==============
+
+  .. _reporting_bugs:
   
 Reporting bugs
 ==============
 
-In order to improve GHDL, we welcome bugs report and suggestions for
-any aspect of GHDL.  Please create an issue on
-https://github.com/tgingold/ghdl/issues
+	If you cannot compile, please report the gcc version, GNAT version and gcc source version.
+	- Minimum-(non)-Working-Example (MWE)
+`How To Ask Questions The Smart Way <www.catb.org/~esr/faqs/smart-questions.html>`_
 
-If the compiler crashes, this is a bug.  Reliable tools never crash.
+If the compiler crashes, this is a bug. Reliable tools never crash.
 
 If your compiled VHDL executable crashes, this may be a bug at
 runtime or the code produced may be wrong.  However, since VHDL
@@ -67,14 +91,7 @@ Again, rewriting part of it is a good way to improve it.
 
 .. TODO::
 
-  - Reporting bugs
-	- [1138: Issues, search first]
-	- Minimum-(non)-Working-Example (MWE)
   - Pull Requests (PRs)
 	- Check Building -> GHDL -> Directory Structure]
 	- Beware that some commit messages can `automatically close <https://help.github.com/articles/closing-issues-via-commit-messages/>`_ PRs]
 	
-	There is a mailing list for any questions.  You can subscribe via: https://mail.gna.org/listinfo/ghdl-discuss/
-	Please report bugs on https://github.com/tgingold/ghdl/issues
-
-	If you cannot compile, please report the gcc version, GNAT version and gcc source version.

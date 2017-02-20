@@ -67,9 +67,7 @@ points in distributing VHDL executable.  Please, send a comment
 	- Adam Jensen        (FreeBSD builds)
 	- Felix Bertram      (VPI interface)
 
-with apologies to anyone who ought to be on this list but isn't.
-Thanks also to all those who have reported bugs and support issues,
-and often patches and testcases to either:
-https://gna.org/bugs/?group=ghdl
-or
-https://sourceforge.net/p/ghdl-updates/tickets/
+	with apologies to anyone who ought to be on this list but isn't. Thanks also to all those who have reported bugs and support issues, and often patches and testcases to either: https://gna.org/bugs/?group=ghdl or https://sourceforge.net/p/ghdl-updates/tickets/
+	
+	https://en.wikipedia.org/wiki/Wikipedia:Copyrights#Reusers.27_rights_and_obligations
+	https://en.wikipedia.org/wiki/Wikipedia:General_disclaimer

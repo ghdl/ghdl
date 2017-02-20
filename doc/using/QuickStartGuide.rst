@@ -87,7 +87,7 @@ A full adder
 ============
 
 VHDL is generally used for hardware design.  This example starts with
-a full adder described in the :file:`adder.vhdl` file:
+a `full adder <https://en.wikipedia.org/wiki/Adder_(electronics)#Full_adder>`_ described in the :file:`adder.vhdl` file:
 
 .. code-block:: VHDL
 
@@ -357,3 +357,9 @@ this VHDL dialect through some options::
 
 See :ref:`IEEE_library_pitfalls`, for more details.
 
+Further examples
+=======================
+
+.. TODO::
+
+  Add references to examples/tutorials with GHDL.

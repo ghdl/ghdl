@@ -1,7 +1,7 @@
 .. _REF:ImplVHDL:
 
 ***************************
-GHDL implementation of VHDL
+Implementation of VHDL
 ***************************
 
 This chapter describes several implementation defined aspect of VHDL in GHDL.

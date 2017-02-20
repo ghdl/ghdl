@@ -1,7 +1,7 @@
 .. _REF:ImplVITAL:
 
 ****************************
-GHDL implementation of VITAL
+Implementation of VITAL
 ****************************
 
 .. index:: VITAL

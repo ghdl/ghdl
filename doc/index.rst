@@ -1,44 +1,16 @@
+.. include:: shields.txt
+
+|SHIELD:gh-logo| |SHIELD:gitter| |SHIELD:code-lic| |SHIELD:doc-lic| |br| |SHIELD:travis-ci| |SHIELD:appveyor| |SHIELD:tag| |SHIELD:release|
+
+------------------------------------
+
+GHDL Documentation
+##################
+
 This manual is the user and reference manual for GHDL. It does not contain an
 introduction to VHDL. Thus, the reader should have at least a basic knowledge
 of VHDL. A good knowledge of VHDL language reference manual (usually called
 LRM) is a plus.
-
-.. only:: html
-
-   .. raw:: html
-
-      <hr />
-
-   .. image:: /_static/logos/GitHub-Mark-32px.png
-      :scale: 60
-      :target: https://www.github.com/tgingold/ghdl
-      :alt: Source Code on GitHub
-   .. image:: https://badges.gitter.im/ghdl/ghdl1.svg
-      :target: https://gitter.im/ghdl/ghdl1
-      :alt: Join
-
-   .. raw:: html
-
-      <br />
-
-   .. image:: https://travis-ci.org/tgingold/ghdl.svg?branch=master
-      :target: https://travis-ci.org/tgingold/ghdl
-      :alt: Build status by Travis-CI
-   .. image:: https://ci.appveyor.com/api/projects/status/r5dtv6amsppigpsp/branch/release?svg=true
-      :target: https://ci.appveyor.com/project/Paebbels/poc/branch/release
-      :alt: Build status by AppVeyor
-   .. image:: https://img.shields.io/github/tag/tgingold/ghdl.svg?style=flat
-      :alt: Latest tag
-   .. image:: https://img.shields.io/github/release/tgingold/ghdl.svg?style=flat
-      :target: https://github.com/tgingold/ghdl/releases
-      :alt: Latest release
-   .. image:: https://img.shields.io/github/license/tgingold/ghdl.svg?style=flat
-      :target: intro/Copyrights.html
-      :alt: GNU General Public License 2
-
-   .. raw:: html
-
-      <hr />
 
 .. only:: html
 
