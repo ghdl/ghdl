@@ -21,36 +21,26 @@ This manual is the user and reference manual for GHDL. It does not contain an in
 
    .. rubric:: 23.10.2015 - GHDL 0.33 was released.
    
-Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod
-tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At
-vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren,
-no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit
-amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut
-labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam
-et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata
-sanctus est Lorem ipsum dolor sit amet
+Lorem ipsum dolor sit amet...
 
 .. TODO:
 
   - http://ghdl.free.fr
   - In `doc/conf.py` add a command to copy `./COPYING.md` to `doc/License.md`, and `NEWS.md` to `doc/changelog/index.md`.
-
-------------------------------------
-							 
+						 
 .. |docdate| date:: %b %d, %Y - %H:%M
 
-.. only:: html
+.. container:: lastdocbuilddate
 
-   This document was generated on |docdate|.
+		This document was generated on |docdate|.
    
 .. toctree::
    :caption: Introduction
    :hidden:
    
-   intro/WhatIsVHDL
-   intro/WhatIsGHDL
-   intro/Contributing
-   intro/Copyrights
+   About
+   Contributing
+   Licenses
    
 .. raw:: latex
 
@@ -74,8 +64,8 @@ sanctus est Lorem ipsum dolor sit amet
    
    getting/Releases
    getting/Docker
-   building/index
-   building/VendorPrimitives
+   getting/Building
+   getting/VendorPrimitives
    
 .. raw:: latex
 
