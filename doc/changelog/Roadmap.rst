@@ -13,4 +13,8 @@ I have several axes for `GHDL` improvements:
 * Style checks
 * VITAL acceleration
 
+.. TODO::
+
+	- Convert VendorPrimitives Markdown to RST
+
 .. todolist::

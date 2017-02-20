@@ -1,54 +1,41 @@
-.. _VENDOR:
+## Vendor Primitives
 
-Vendor Primitives
-#############
+Vendors like Altera, Lattice and Xilinx have their own simulation libraries, especially for FPGA primitives, soft and hard macros. These libraries can not be shipped with *GHDL*, but we offer prepared compile scripts to pre-compile the vendor libraries, if the vendor tool is present on the computer. There are also popular simulation and verification libraries like [OSVVM][osvvm] and [VUnit][vunit], which can be pre-compiled, too.
 
-## Compile Scripts for Vendor VHDL Libraries
+The compilation scripts are writen in the shell languages: *PowerShell* for *Windows* |trade| and *Bash* for *GNU/Linux*. The compile scripts can colorize the *GHDL* warning and error lines with the help of `grc/grcat` ([generic colourizer][grc]).
 
-Vendors like Altera, Lattice and Xilinx have their own simulation libraries,
-especially for FPGA primitives, soft and hard macros. These libraries can not be
-shipped with GHDL, but we offer prepared compile scripts to pre-compile the
-vendor libraries, if the vendor tool is present on the computer.
-
-There are also popular simulation and verification libraries like [OSVVM][osvvm]
-and [VUnit][vunit], which can be pre-compile, too.
-
-The compilation scripts are writen in the shell languages: PowerShell for Windows
-and Bash for Linux. The compile scripts can colorize the GHDL warning and error
-lines with the help of grc/grcat ([generic colourizer][grc]).
-
- [osvvm]: http://osvvm.org/
- [vunit]: https://github.com/LarsAsplund/vunit
- [grc]: http://kassiopeia.juls.savba.sk/~garabik/software/grc.html
+- [osvvm]: http://osvvm.org/
+- [vunit]: https://github.com/LarsAsplund/vunit
+- [grc]: http://kassiopeia.juls.savba.sk/~garabik/software/grc.html
 
 ##### Supported Vendors Libraries
 
- - Altera Quartus (&ge;13.0):
-     - lpm, sgate
-     - altera, altera_mf, altera_lnsim
-     - arriaii, arriaii_pcie_hip, arriaiigz
-     - arriav, arriavgz, arriavgz_pcie_hip
-     - cycloneiv, cycloneiv_pcie_hip, cycloneive
-     - cyclonev
-     - max, maxii, maxv
-     - stratixiv, stratixiv_pcie_hip
-     - stratixv, stratixv_pcie_hip
-     - fiftyfivenm, twentynm
+ - Altera/Intel Quartus (&ge;13.0):
+     - `lpm`, `sgate`
+     - `altera`, `altera_mf`, `altera_lnsim`
+     - `arriaii`, `arriaii_pcie_hip`, `arriaiigz`
+     - `arriav`, `arriavgz`, `arriavgz_pcie_hip`
+     - `cycloneiv`, `cycloneiv_pcie_hip`, `cycloneive`
+     - `cyclonev`
+     - `max`, `maxii`, `maxv`
+     - `stratixiv`, `stratixiv_pcie_hip`
+     - `stratixv`, `stratixv_pcie_hip`
+     - `fiftyfivenm`, `twentynm`
  - Lattice (&ge;3.6):
-     - ec
-     - ecp, ecp2, ecp3, ecp5u
-     - lptm, lptm2
-     - machxo, machxo2, machxo3l
-     - sc, scm
-     - xp, xp2
+     - `ec`
+     - `ecp`, `ecp2`, `ecp3`, `ecp5u`
+     - `lptm`, `lptm2`
+     - `machxo`, `machxo2`, `machxo3l`
+     - `sc`, `scm`
+     - `xp`, `xp2`
  - Xilinx ISE (&ge;14.0):
-     - unisim (incl. secureip)
-     - unimacro
-     - simprim (incl. secureip)
-     - xilinxcorelib
+     - `unisim` (incl. `secureip`)
+     - `unimacro`
+     - `simprim` (incl. `secureip`)
+     - `xilinxcorelib`
  - Xilinx Vivado (&ge;2014.1):
-     - unisim (incl. secureip)
-     - unimacro
+     - `unisim` (incl. `secureip`)
+     - `unimacro`
 
 ##### Supported Simulation and Verification Libraries
 
@@ -316,14 +303,3 @@ Author: Patrick Lehmann
 Last update: 28.10.2016
 
 ------------------------
-
-.. TODO::
-
-	- Convert Markdown to RST
-	- Vendor Primitives 
-		- Alters / Intel
-		- Lattice
-		- OSVVM
-		- UVVM
-		- Xilinx ISE
-		- Xilinx Vivado

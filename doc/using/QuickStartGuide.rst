@@ -4,14 +4,12 @@
 Quick Start Guide
 ******************
 
-In this chapter, you will learn how to use the GHDL compiler by
-working on two examples.
+In this chapter, you will learn how to use `GHDL` by working on a few examples.
 
-The hello world program
+The `'Hello world'` program
 =======================
 
-To illustrate the large purpose of VHDL, here is a commented VHDL
-"Hello world" program.
+To illustrate the large purpose of `VHDL`, here is a commented `'Hello world'` program:
 
 .. code-block:: VHDL
 
@@ -33,31 +31,18 @@ To illustrate the large purpose of VHDL, here is a commented VHDL
      end process;
   end behaviour;
 
-Suppose this program is contained in the file :file:`hello.vhdl`.
-First, you have to compile the file; this is called `analysis` of a design
-file in VHDL terms.
+Suppose this program is contained in a file named :file:`hello.vhdl`. First, you have to compile the file; this is called `analysis` of a design file in `VHDL` terms. Run :samp:`ghdl -a hello.vhdl` in the `shell`. This command creates or updates a file :file:`work-obj93.cf`, which describes the library :samp:`work`.
 
-.. code-block:: shell
+.. TIP:: If a `GCC`/`LLVM` variant of `GHDL` is used, this command generates a file :file:`hello.o`, which is the object file corresponding to your `VHDL` program.  This is not created on Windows.
 
-  $ ghdl -a hello.vhdl
+Then, you have to build an executable file. Again, run :samp:`ghdl -e hello_world` in the `shell`. Option :option:`-e` means :dfn:`elaborate`, which is used to `'build'` a design, with the :samp:`hello_world` entity at the top of the hierarchy.
 
-This command creates or updates a file :file:`work-obj93.cf`, which
-describes the library `work`.  On GNU/Linux, this command generates a
-file :file:`hello.o`, which is the object file corresponding to your
-VHDL program.  The object file is not created on Windows.
+Last, launch the simulation running :samp:`ghdl -r hello_world` in the `shell`. The result of the simulation will be shown on the screen::
 
-Then, you have to build an executable file.
+  Hello world!
 
-.. code-block:: shell
+.. TIP:: If a `GCC`/`LLVM` variant of `GHDL` is used, an executable program called :file:`hello_world` is generated at this step. which can be run
 
-  $ ghdl -e hello_world
-
-The :option:`-e` option means :dfn:`elaborate`.  With this option, `GHDL`
-creates code in order to elaborate a design, with the :samp:`hello_world`
-entity at the top of the hierarchy.
-
-On GNU/Linux, if you have enabled the GCC backend during the compilation of `GHDL`,
-an executable program called :file:`hello_world` which can be run is generated:
 
 .. code-block:: shell
 
@@ -69,18 +54,11 @@ or directly:
 
   $ ./hello_world
 
-
 On Windows or if the GCC backend was not enabled, no file is created.
 The simulation is launched using this command:
 
-.. code-block:: shell
-
-  > ghdl -r hello_world
 
 
-The result of the simulation appears on the screen::
-
-  Hello world!
 
 
 A full adder
@@ -362,4 +340,5 @@ Further examples
 
 .. TODO::
 
-  Add references to examples/tutorials with GHDL.
+  * Add references to examples/tutorials with GHDL.
+  * Shall `René Doß <https://mail.gna.org/public/ghdl-discuss/2017-01/msg00000.html>` want to contribute adapting his article to RST?
