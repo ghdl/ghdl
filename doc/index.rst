@@ -24,20 +24,11 @@ LRM) is a plus.
 
    .. rubric:: 23.10.2015 - GHDL 0.33 was released.
 
-Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod
-tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At
-vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren,
-no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit
-amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut
-labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam
-et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata
-sanctus est Lorem ipsum dolor sit amet
-
-------------------------------------
+Lorem ipsum dolor sit amet...
 
 .. |docdate| date:: %b %d, %Y - %H:%M
 
-.. only:: html
+.. container:: lastdocbuilddate
 
    This document was generated on |docdate|.
 
@@ -72,7 +63,6 @@ sanctus est Lorem ipsum dolor sit amet
    :hidden:
 
    2_Getting/Releases
-   2_Getting/Docker
    3_Building/index
    3_Building/VendorPrimitives
 
