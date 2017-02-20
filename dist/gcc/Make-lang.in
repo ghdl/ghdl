@@ -57,14 +57,12 @@ GHDL1_OBJS = attribs.o vhdl/ortho-lang.o
 # before.
 vhdl_OBJS=vhdl/ortho-lang.o
 
-vhdl_srcdir := $(shell cd $(srcdir)/vhdl; pwd)
-
 # The compiler proper.
 # It is compiled into the vhdl/ subdirectory to avoid file name clashes but
 # linked in in gcc directory to be able to access to gcc object files.
 ghdl1$(exeext): force $(GHDL1_OBJS) $(BACKEND) $(LIBDEPS)
         # Create object file in vhdl/subdir
-	cd vhdl; $(GNATMAKE) -c -aI$(vhdl_srcdir) ortho_gcc-main \
+	$(GNATMAKE) -c -aI$(srcdir)/vhdl --subdirs=vhdl ortho_gcc-main \
 	 -cargs $(CFLAGS) $(GHDL_ADAFLAGS)
 	$(GNATMAKE) -o $@ -aI$(srcdir)/vhdl -aOvhdl ortho_gcc-main \
 	 -bargs -E -cargs $(CFLAGS) $(GHDL_ADAFLAGS) \
