@@ -352,9 +352,9 @@ package body Grt.Vcd is
             Kind := Rti_To_Vcd_Kind (Rti);
          when Ghdl_Rtik_Subtype_Array =>
             declare
-               St : Ghdl_Rtin_Subtype_Array_Acc;
+               St : constant Ghdl_Rtin_Subtype_Composite_Acc :=
+                 To_Ghdl_Rtin_Subtype_Composite_Acc (Rti);
             begin
-               St := To_Ghdl_Rtin_Subtype_Array_Acc (Rti);
                Kind := Rti_To_Vcd_Kind (St.Basetype);
                Irange := To_Ghdl_Range_Ptr
                  (Loc_To_Addr (St.Common.Depth, St.Bounds,

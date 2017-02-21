@@ -1225,6 +1225,8 @@ package body Trans.Chap3 is
       --  By default, use the same representation as the type mark.
       Info.all := Type_Mark_Info.all;
       Info.S := Ortho_Info_Subtype_Record_Init;
+      --  However, it is a different subtype which has its own rti.
+      Info.Type_Rti := O_Dnode_Null;
 
       if Get_Constraint_State (Def) /= Fully_Constrained
         or else not Has_New_Constraints

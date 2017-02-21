@@ -623,17 +623,17 @@ package body Grt.Waves is
             end;
          when Ghdl_Rtik_Subtype_Array =>
             declare
-               Arr : Ghdl_Rtin_Subtype_Array_Acc;
+               Arr : constant Ghdl_Rtin_Subtype_Composite_Acc :=
+                 To_Ghdl_Rtin_Subtype_Composite_Acc (Rti);
                B_Ctxt : Rti_Context;
             begin
-               Arr := To_Ghdl_Rtin_Subtype_Array_Acc (Rti);
                Create_String_Id (Arr.Name);
                if Rti_Complex_Type (Rti) then
                   B_Ctxt := Ctxt;
                else
                   B_Ctxt := N_Ctxt;
                end if;
-               Create_Type (To_Ghdl_Rti_Access (Arr.Basetype), B_Ctxt);
+               Create_Type (Arr.Basetype, B_Ctxt);
             end;
          when Ghdl_Rtik_Type_Array =>
             declare
@@ -1313,20 +1313,21 @@ package body Grt.Waves is
                   end;
                when Ghdl_Rtik_Subtype_Array =>
                   declare
-                     Arr : Ghdl_Rtin_Subtype_Array_Acc;
+                     Arr : constant Ghdl_Rtin_Subtype_Composite_Acc :=
+                       To_Ghdl_Rtin_Subtype_Composite_Acc (Rti);
                   begin
-                     Arr := To_Ghdl_Rtin_Subtype_Array_Acc (Rti);
                      Write_String_Id (Arr.Name);
-                     Write_Type_Id (To_Ghdl_Rti_Access (Arr.Basetype), Ctxt);
+                     Write_Type_Id (Arr.Basetype, Ctxt);
                      declare
-                        Rngs : Ghdl_Range_Array
-                          (0 .. Arr.Basetype.Nbr_Dim - 1);
+                        Bt : constant Ghdl_Rtin_Type_Array_Acc :=
+                          To_Ghdl_Rtin_Type_Array_Acc (Arr.Basetype);
+                        Rngs : Ghdl_Range_Array (0 .. Bt.Nbr_Dim - 1);
                      begin
                         Bound_To_Range
                           (Loc_To_Addr (Rti.Depth, Arr.Bounds, Ctxt),
-                           Arr.Basetype, Rngs);
+                           Bt, Rngs);
                         for I in Rngs'Range loop
-                           Write_Range (Arr.Basetype.Indexes (I), Rngs (I));
+                           Write_Range (Bt.Indexes (I), Rngs (I));
                         end loop;
                      end;
                   end;

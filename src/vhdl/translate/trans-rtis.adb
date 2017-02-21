@@ -105,14 +105,14 @@ package body Trans.Rtis is
    Ghdl_Rtin_Type_Array_Nbrdim  : O_Fnode;
    Ghdl_Rtin_Type_Array_Indexes : O_Fnode;
 
-   --  Node for an array subtype.
-   Ghdl_Rtin_Subtype_Array          : O_Tnode;
-   Ghdl_Rtin_Subtype_Array_Common   : O_Fnode;
-   Ghdl_Rtin_Subtype_Array_Name     : O_Fnode;
-   Ghdl_Rtin_Subtype_Array_Basetype : O_Fnode;
-   Ghdl_Rtin_Subtype_Array_Bounds   : O_Fnode;
-   Ghdl_Rtin_Subtype_Array_Valsize  : O_Fnode;
-   Ghdl_Rtin_Subtype_Array_Sigsize  : O_Fnode;
+   --  Node for a composite subtype.
+   Ghdl_Rtin_Subtype_Composite          : O_Tnode;
+   Ghdl_Rtin_Subtype_Composite_Common   : O_Fnode;
+   Ghdl_Rtin_Subtype_Composite_Name     : O_Fnode;
+   Ghdl_Rtin_Subtype_Composite_Basetype : O_Fnode;
+   Ghdl_Rtin_Subtype_Composite_Bounds   : O_Fnode;
+   Ghdl_Rtin_Subtype_Composite_Valsize  : O_Fnode;
+   Ghdl_Rtin_Subtype_Composite_Sigsize  : O_Fnode;
 
    --  Node for a record element.
    Ghdl_Rtin_Element        : O_Tnode;
@@ -271,6 +271,9 @@ package body Trans.Rtis is
            (Constr, Get_Identifier ("__ghdl_rtik_type_record"),
             Ghdl_Rtik_Type_Record);
          New_Enum_Literal
+           (Constr, Get_Identifier ("__ghdl_rtik_type_unbounded_record"),
+            Ghdl_Rtik_Type_Unbounded_Record);
+         New_Enum_Literal
            (Constr, Get_Identifier ("__ghdl_rtik_type_file"),
             Ghdl_Rtik_Type_File);
          New_Enum_Literal
@@ -286,6 +289,9 @@ package body Trans.Rtis is
          New_Enum_Literal
            (Constr, Get_Identifier ("__ghdl_rtik_subtype_record"),
             Ghdl_Rtik_Subtype_Record);
+         New_Enum_Literal
+           (Constr, Get_Identifier ("__ghdl_rtik_subtype_unbounded_record"),
+            Ghdl_Rtik_Subtype_Unbounded_Record);
          New_Enum_Literal
            (Constr, Get_Identifier ("__ghdl_rtik_subtype_access"),
             Ghdl_Rtik_Subtype_Access);
@@ -596,26 +602,26 @@ package body Trans.Rtis is
                         Ghdl_Rtin_Type_Array);
       end;
 
-      --  subtype_Array.
+      --  subtype_composite.
       declare
          Constr : O_Element_List;
       begin
          Start_Record_Type (Constr);
-         New_Record_Field (Constr, Ghdl_Rtin_Subtype_Array_Common,
+         New_Record_Field (Constr, Ghdl_Rtin_Subtype_Composite_Common,
                            Get_Identifier ("common"), Ghdl_Rti_Common);
-         New_Record_Field (Constr, Ghdl_Rtin_Subtype_Array_Name,
+         New_Record_Field (Constr, Ghdl_Rtin_Subtype_Composite_Name,
                            Get_Identifier ("name"), Char_Ptr_Type);
-         New_Record_Field (Constr, Ghdl_Rtin_Subtype_Array_Basetype,
+         New_Record_Field (Constr, Ghdl_Rtin_Subtype_Composite_Basetype,
                            Get_Identifier ("basetype"), Ghdl_Rti_Access);
-         New_Record_Field (Constr, Ghdl_Rtin_Subtype_Array_Bounds,
+         New_Record_Field (Constr, Ghdl_Rtin_Subtype_Composite_Bounds,
                            Get_Identifier ("bounds"), Ghdl_Ptr_Type);
-         New_Record_Field (Constr, Ghdl_Rtin_Subtype_Array_Valsize,
+         New_Record_Field (Constr, Ghdl_Rtin_Subtype_Composite_Valsize,
                            Get_Identifier ("val_size"), Ghdl_Ptr_Type);
-         New_Record_Field (Constr, Ghdl_Rtin_Subtype_Array_Sigsize,
+         New_Record_Field (Constr, Ghdl_Rtin_Subtype_Composite_Sigsize,
                            Get_Identifier ("sig_size"), Ghdl_Ptr_Type);
-         Finish_Record_Type (Constr, Ghdl_Rtin_Subtype_Array);
-         New_Type_Decl (Get_Identifier ("__ghdl_rtin_subtype_array"),
-                        Ghdl_Rtin_Subtype_Array);
+         Finish_Record_Type (Constr, Ghdl_Rtin_Subtype_Composite);
+         New_Type_Decl (Get_Identifier ("__ghdl_rtin_subtype_composite"),
+                        Ghdl_Rtin_Subtype_Composite);
       end;
 
       --  type record.
@@ -1365,10 +1371,6 @@ package body Trans.Rtis is
             Base_Type := Get_Type (Get_File_Type_Mark (Atype));
             Base := Generate_Type_Definition (Base_Type);
             Kind := Ghdl_Rtik_Type_File;
-         when Iir_Kind_Record_Subtype_Definition =>
-            Base_Type := Get_Base_Type (Atype);
-            Base := Get_Info (Base_Type).Type_Rti;
-            Kind := Ghdl_Rtik_Subtype_Record;
          when Iir_Kind_Access_Subtype_Definition =>
             Base_Type := Get_Base_Type (Atype);
             Base := Get_Info (Base_Type).Type_Rti;
@@ -1508,12 +1510,11 @@ package body Trans.Rtis is
       Finish_Init_Value (Info.Type_Rti, Val);
    end Generate_Array_Type_Definition;
 
-   procedure Generate_Array_Subtype_Definition
-     (Atype : Iir_Array_Subtype_Definition)
+   procedure Generate_Composite_Subtype_Definition (Atype : Iir)
    is
-      Base_Type : Iir;
-      Base_Info : Type_Info_Acc;
-      Info      : Type_Info_Acc;
+      Info      : constant Type_Info_Acc := Get_Info (Atype);
+      Base_Type : constant Iir := Get_Base_Type (Atype);
+      Base_Info : constant Type_Info_Acc := Get_Info (Base_Type);
       Aggr      : O_Record_Aggr_List;
       Val       : O_Cnode;
       Base_Rti  : O_Dnode;
@@ -1521,31 +1522,15 @@ package body Trans.Rtis is
       Bounds    : Var_Type;
       Name      : O_Dnode;
       Kind      : O_Cnode;
-      Mark      : Id_Mark_Type;
       Depth     : Rti_Depth_Type;
    begin
-      --  FIXME: temporary work-around
-      if Get_Constraint_State (Atype) /= Fully_Constrained then
-         return;
-      end if;
-
-      Info := Get_Info (Atype);
-
-      Base_Type := Get_Base_Type (Atype);
-      Base_Info := Get_Info (Base_Type);
-      if Base_Info.Type_Rti = O_Dnode_Null then
-         Push_Identifier_Prefix (Mark, "BT");
-         Base_Rti := Generate_Type_Definition (Base_Type);
-         Pop_Identifier_Prefix (Mark);
-      end if;
-
       Bounds := Info.S.Composite_Bounds;
       Depth := Get_Depth_From_Var (Bounds);
       Info.B.Rti_Max_Depth :=
         Rti_Depth_Type'Max (Depth, Base_Info.B.Rti_Max_Depth);
 
       --  Generate node.
-      Generate_Type_Rti (Info, Ghdl_Rtin_Subtype_Array);
+      Generate_Type_Rti (Info, Ghdl_Rtin_Subtype_Composite);
 
       if Global_Storage = O_Storage_External then
          return;
@@ -1554,14 +1539,18 @@ package body Trans.Rtis is
       Name := Generate_Type_Name (Atype);
 
       Start_Init_Value (Info.Type_Rti);
-      Start_Record_Aggr (Aggr, Ghdl_Rtin_Subtype_Array);
+      Start_Record_Aggr (Aggr, Ghdl_Rtin_Subtype_Composite);
       case Info.Type_Mode is
          when Type_Mode_Array =>
             Kind := Ghdl_Rtik_Subtype_Array;
-         when Type_Mode_Fat_Array =>
+         when Type_Mode_Unbounded_Array =>
             Kind := Ghdl_Rtik_Subtype_Unconstrained_Array;
+         when Type_Mode_Record =>
+            Kind := Ghdl_Rtik_Subtype_Record;
+         when Type_Mode_Unbounded_Record =>
+            Kind := Ghdl_Rtik_Subtype_Unbounded_Record;
          when others =>
-            Error_Kind ("generate_array_subtype_definition", Atype);
+            Error_Kind ("generate_composite_subtype_definition", Atype);
       end case;
       New_Record_Aggr_El
         (Aggr,
@@ -1577,7 +1566,8 @@ package body Trans.Rtis is
       New_Record_Aggr_El (Aggr, Val);
       for I in Mode_Value .. Mode_Signal loop
          case Info.Type_Mode is
-            when Type_Mode_Array =>
+            when Type_Mode_Array
+              | Type_Mode_Record =>
                Val := Get_Null_Loc;
                if Info.Ortho_Type (I) /= O_Tnode_Null then
                   if Is_Complex_Type (Info) then
@@ -1589,16 +1579,41 @@ package body Trans.Rtis is
                                         Ghdl_Ptr_Type);
                   end if;
                end if;
-            when Type_Mode_Fat_Array =>
+            when Type_Mode_Unbounded_Array
+              | Type_Mode_Unbounded_Record =>
                Val := Get_Null_Loc;
             when others =>
-               Error_Kind ("generate_array_subtype_definition", Atype);
+               Error_Kind ("generate_composite_subtype_definition", Atype);
          end case;
          New_Record_Aggr_El (Aggr, Val);
       end loop;
 
       Finish_Record_Aggr (Aggr, Val);
       Finish_Init_Value (Info.Type_Rti, Val);
+   end Generate_Composite_Subtype_Definition;
+
+   procedure Generate_Array_Subtype_Definition
+     (Atype : Iir_Array_Subtype_Definition)
+   is
+      Base_Type : constant Iir := Get_Base_Type (Atype);
+      Base_Info : constant Type_Info_Acc := Get_Info (Base_Type);
+      Base_Rti  : O_Dnode;
+      pragma Unreferenced (Base_Rti);
+      Mark      : Id_Mark_Type;
+   begin
+      --  FIXME: temporary work-around
+      if Get_Constraint_State (Atype) /= Fully_Constrained then
+         return;
+      end if;
+
+      --  Generate base type (when anonymous).
+      if Base_Info.Type_Rti = O_Dnode_Null then
+         Push_Identifier_Prefix (Mark, "BT");
+         Base_Rti := Generate_Type_Definition (Base_Type);
+         Pop_Identifier_Prefix (Mark);
+      end if;
+
+      Generate_Composite_Subtype_Definition (Atype);
    end Generate_Array_Subtype_Definition;
 
    procedure Generate_Record_Type_Definition (Atype : Iir)
@@ -1675,15 +1690,20 @@ package body Trans.Rtis is
       declare
          Aggr : O_Record_Aggr_List;
          Name : O_Dnode;
+         Rtik : O_Cnode;
       begin
          Name := Generate_Type_Name (Atype);
 
          Start_Init_Value (Info.Type_Rti);
          Start_Record_Aggr (Aggr, Ghdl_Rtin_Type_Record);
+         if Get_Constraint_State (Atype) = Fully_Constrained then
+            Rtik := Ghdl_Rtik_Type_Record;
+         else
+            Rtik := Ghdl_Rtik_Type_Unbounded_Record;
+         end if;
          New_Record_Aggr_El
            (Aggr,
-            Generate_Common_Type (Ghdl_Rtik_Type_Record, 0, Max_Depth,
-              Type_To_Mode (Atype)));
+            Generate_Common_Type (Rtik, 0, Max_Depth, Type_To_Mode (Atype)));
          New_Record_Aggr_El (Aggr, New_Name_Address (Name));
          New_Record_Aggr_El
            (Aggr, New_Unsigned_Literal
@@ -1750,8 +1770,9 @@ package body Trans.Rtis is
          when Iir_Kind_Access_Type_Definition
             | Iir_Kind_File_Type_Definition =>
             Generate_Fileacc_Type_Definition (Atype);
-         when Iir_Kind_Record_Subtype_Definition
-            | Iir_Kind_Access_Subtype_Definition =>
+         when Iir_Kind_Record_Subtype_Definition =>
+            Generate_Composite_Subtype_Definition (Atype);
+         when Iir_Kind_Access_Subtype_Definition =>
             --  FIXME: No separate infos (yet).
             Info.Type_Rti := Get_Info (Get_Base_Type (Atype)).Type_Rti;
          when Iir_Kind_Record_Type_Definition =>
@@ -1787,7 +1808,7 @@ package body Trans.Rtis is
          when Iir_Kind_Array_Type_Definition =>
             Rti_Type := Ghdl_Rtin_Type_Array;
          when Iir_Kind_Array_Subtype_Definition =>
-            Rti_Type := Ghdl_Rtin_Subtype_Array;
+            Rti_Type := Ghdl_Rtin_Subtype_Composite;
          when Iir_Kind_Access_Type_Definition
             | Iir_Kind_File_Type_Definition =>
             Rti_Type := Ghdl_Rtin_Type_Fileacc;

@@ -267,14 +267,17 @@ package body Grt.Rtis_Utils is
          end case;
       end Pos_To_Vstring;
 
-      procedure Handle_Array_1 (El_Rti : Ghdl_Rti_Access;
-                                Rngs : Ghdl_Range_Array;
-                                Rtis : Ghdl_Rti_Arr_Acc;
+      procedure Handle_Array_1 (Arr_Rti : Ghdl_Rtin_Type_Array_Acc;
+                                Bounds : in out Address;
                                 Index : Ghdl_Index_Type)
       is
+         Idx_Rti : constant Ghdl_Rti_Access := Arr_Rti.Indexes (Index);
+         Base_Type : constant Ghdl_Rti_Access := Get_Base_Type (Idx_Rti);
+         El_Rti : constant Ghdl_Rti_Access := Arr_Rti.Element;
+         Last_Index : constant Ghdl_Index_Type := Arr_Rti.Nbr_Dim - 1;
+         Rng : Ghdl_Range_Ptr;
          Len : Ghdl_Index_Type;
          P : Natural;
-         Base_Type : Ghdl_Rti_Access;
       begin
          P := Length (Name);
          if Index = 0 then
@@ -283,16 +286,16 @@ package body Grt.Rtis_Utils is
             Append (Name, ',');
          end if;
 
-         Base_Type := Get_Base_Type (Rtis (Index));
-         Len := Range_To_Length (Rngs (Index),  Base_Type);
+         Extract_Range (Bounds, Base_Type, Rng);
+         Len := Range_To_Length (Rng, Base_Type);
 
          for I in 1 .. Len loop
-            Pos_To_Vstring (Name, Base_Type, Rngs (Index), I - 1);
-            if Index = Rngs'Last then
+            Pos_To_Vstring (Name, Base_Type, Rng, I - 1);
+            if Index = Last_Index then
                Append (Name, ')');
                Handle_Any (El_Rti);
             else
-               Handle_Array_1 (El_Rti, Rngs, Rtis, Index + 1);
+               Handle_Array_1 (Arr_Rti, Bounds, Index + 1);
             end if;
             Truncate (Name, P + 1);
          end loop;
@@ -302,12 +305,11 @@ package body Grt.Rtis_Utils is
       procedure Handle_Array (Rti : Ghdl_Rtin_Type_Array_Acc;
                               Vals : Ghdl_Uc_Array_Acc)
       is
-         Nbr_Dim : constant Ghdl_Index_Type := Rti.Nbr_Dim;
-         Rngs : Ghdl_Range_Array (0 .. Nbr_Dim - 1);
+         Bounds : Address;
       begin
-         Bound_To_Range (Vals.Bounds, Rti, Rngs);
          Addr := Vals.Base;
-         Handle_Array_1 (Rti.Element, Rngs, Rti.Indexes, 0);
+         Bounds := Vals.Bounds;
+         Handle_Array_1 (Rti, Bounds, 0);
       end Handle_Array;
 
       procedure Handle_Record (Rti : Ghdl_Rtin_Type_Record_Acc)
@@ -356,14 +358,14 @@ package body Grt.Rtis_Utils is
                              To_Ghdl_Uc_Array_Acc (Addr));
             when Ghdl_Rtik_Subtype_Array =>
                declare
-                  St : constant Ghdl_Rtin_Subtype_Array_Acc :=
-                    To_Ghdl_Rtin_Subtype_Array_Acc (Rti);
-                  Bt : constant Ghdl_Rtin_Type_Array_Acc := St.Basetype;
-                  Rngs : Ghdl_Range_Array (0 .. Bt.Nbr_Dim - 1);
+                  St : constant Ghdl_Rtin_Subtype_Composite_Acc :=
+                    To_Ghdl_Rtin_Subtype_Composite_Acc (Rti);
+                  Bt : constant Ghdl_Rtin_Type_Array_Acc :=
+                    To_Ghdl_Rtin_Type_Array_Acc (St.Basetype);
+                  Bounds : Address;
                begin
-                  Bound_To_Range
-                    (Loc_To_Addr (St.Common.Depth, St.Bounds, Ctxt), Bt, Rngs);
-                  Handle_Array_1 (Bt.Element, Rngs, Bt.Indexes, 0);
+                  Bounds := Loc_To_Addr (St.Common.Depth, St.Bounds, Ctxt);
+                  Handle_Array_1 (Bt, Bounds, 0);
                end;
 --          when Ghdl_Rtik_Type_File =>
 --             declare
