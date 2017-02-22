@@ -50,7 +50,7 @@ Building with the gcc backend
 *****************************
 
 You need to download and untar the sources of
-gcc version 4.9 [do not modify this line as this is read by scripts].
+gcc version 4.9.x, 5.x or 6.x
 
 First configure ghdl, specify gcc source dir and prefix.
 (replace /usr/local by your prefix directory):
