@@ -22,10 +22,10 @@ footer hr {margin-bottom: 10px}
 @media screen and (max-width: 768px){  
   .wy-nav-top i {padding-top:7px}  
   .wy-nav-content-wrap{margin-left:0px}
-  .wy-nav-content-wrap.shift{margin-left:265px;position: static;}
-  .wy-nav-side.shift{width:265px;padding-bottom: 40px;}
-  .rst-versions{width:265px}
-  .wy-side-scroll{width:260px;}
+  .wy-nav-content-wrap.shift{margin-left:260px;position: static;}
+  .wy-nav-side.shift{width:260px;padding-bottom: 40px;}
+  .rst-versions{width:260px}
+  .wy-side-scroll{width:280px;}
 }
 
 /*Fix shields in small screens*/

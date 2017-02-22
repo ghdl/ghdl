@@ -30,7 +30,7 @@
   :target: https://mail.gna.org/listinfo/ghdl-discuss/
   
 .. |SHIELD:gitter| image:: https://img.shields.io/gitter/room/ghdl1/Lobby.svg?colorB=4cb696
-  :target: https://gitter.im/ghdl/ghdl1
+  :target: https://gitter.im/ghdl1/Lobby
   :alt: Talk to us on Gitter
   
 .. |SHIELD:issues-new| image:: https://img.shields.io/badge/new-issue-yellowgreen.svg?style=flat 
