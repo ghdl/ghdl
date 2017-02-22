@@ -16,5 +16,6 @@ I have several axes for `GHDL` improvements:
 .. TODO::
 
 	- Convert VendorPrimitives Markdown to RST
+	- SVG images are not shown in the PDF. That's because LaTeX is used. Can any package be added to allow so?
 
 .. todolist::
