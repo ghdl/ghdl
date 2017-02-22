@@ -151,6 +151,59 @@ package body Grt.Rtis_Utils is
       Append (Vstr, Enum_Rti.Names (Val));
    end Get_Enum_Value;
 
+   procedure Object_To_Base_Bounds (Obj_Type : Ghdl_Rti_Access;
+                                    Obj_Loc : Address;
+                                    Addr : out Address;
+                                    Bounds : out Address) is
+   begin
+      --  FIXME: put this into a function.
+      Bounds := Null_Address;
+      Addr := Obj_Loc;
+      case Obj_Type.Kind is
+         when  Ghdl_Rtik_Subtype_Array
+           | Ghdl_Rtik_Type_Record
+           | Ghdl_Rtik_Subtype_Record =>
+            --  Object is a pointer.
+            if Rti_Complex_Type (Obj_Type) then
+               Addr := To_Addr_Acc (Obj_Loc).all;
+            end if;
+         when Ghdl_Rtik_Type_Array
+           | Ghdl_Rtik_Type_Unbounded_Record
+           | Ghdl_Rtik_Subtype_Unbounded_Record =>
+            --  Object is a fat pointer.
+            Bounds := To_Ghdl_Uc_Array_Acc (Obj_Loc).Bounds;
+            Addr := To_Ghdl_Uc_Array_Acc (Obj_Loc).Base;
+         when others =>
+            null;
+      end case;
+   end Object_To_Base_Bounds;
+
+   procedure Record_To_Element_Base (Obj : Address;
+                                     El : Ghdl_Rtin_Element_Acc;
+                                     Is_Sig : Boolean;
+                                     Addr : out Address) is
+   begin
+      if Is_Sig then
+         Addr := Obj + El.Sig_Off;
+      else
+         Addr := Obj + El.Val_Off;
+      end if;
+      case El.Eltype.Kind is
+         when Ghdl_Rtik_Subtype_Array
+           | Ghdl_Rtik_Type_Record =>
+            --  Element is an offset.
+            if Rti_Complex_Type (El.Eltype) then
+               Addr := Obj + To_Ghdl_Index_Acc (Addr).all;
+            end if;
+         when Ghdl_Rtik_Type_Array
+           | Ghdl_Rtik_Type_Unbounded_Record
+           | Ghdl_Rtik_Subtype_Unbounded_Record =>
+            --  Element is an offset.
+            Addr := Obj + To_Ghdl_Index_Acc (Addr).all;
+         when others =>
+            null;
+      end case;
+   end Record_To_Element_Base;
 
    procedure Foreach_Scalar (Ctxt : Rti_Context;
                              Obj_Type : Ghdl_Rti_Access;
@@ -160,6 +213,7 @@ package body Grt.Rtis_Utils is
    is
       --  Current address.
       Addr : Address;
+      Bounds : Address;
 
       Name : Vstring;
 
@@ -268,7 +322,6 @@ package body Grt.Rtis_Utils is
       end Pos_To_Vstring;
 
       procedure Handle_Array_1 (Arr_Rti : Ghdl_Rtin_Type_Array_Acc;
-                                Bounds : in out Address;
                                 Index : Ghdl_Index_Type)
       is
          Idx_Rti : constant Ghdl_Rti_Access := Arr_Rti.Indexes (Index);
@@ -278,6 +331,7 @@ package body Grt.Rtis_Utils is
          Rng : Ghdl_Range_Ptr;
          Len : Ghdl_Index_Type;
          P : Natural;
+         Cur_Bounds : Address;
       begin
          P := Length (Name);
          if Index = 0 then
@@ -289,28 +343,20 @@ package body Grt.Rtis_Utils is
          Extract_Range (Bounds, Base_Type, Rng);
          Len := Range_To_Length (Rng, Base_Type);
 
+         Cur_Bounds := Bounds;
          for I in 1 .. Len loop
+            Bounds := Cur_Bounds;
             Pos_To_Vstring (Name, Base_Type, Rng, I - 1);
             if Index = Last_Index then
                Append (Name, ')');
                Handle_Any (El_Rti);
             else
-               Handle_Array_1 (Arr_Rti, Bounds, Index + 1);
+               Handle_Array_1 (Arr_Rti, Index + 1);
             end if;
             Truncate (Name, P + 1);
          end loop;
          Truncate (Name, P);
       end Handle_Array_1;
-
-      procedure Handle_Array (Rti : Ghdl_Rtin_Type_Array_Acc;
-                              Vals : Ghdl_Uc_Array_Acc)
-      is
-         Bounds : Address;
-      begin
-         Addr := Vals.Base;
-         Bounds := Vals.Bounds;
-         Handle_Array_1 (Rti, Bounds, 0);
-      end Handle_Array;
 
       procedure Handle_Record (Rti : Ghdl_Rtin_Type_Record_Acc)
       is
@@ -324,14 +370,7 @@ package body Grt.Rtis_Utils is
          Last_Addr := Addr;
          for I in 1 .. Rti.Nbrel loop
             El := To_Ghdl_Rtin_Element_Acc (Rti.Elements (I - 1));
-            if Is_Sig then
-               Addr := Obj_Addr + El.Sig_Off;
-            else
-               Addr := Obj_Addr + El.Val_Off;
-            end if;
-            if Rti_Complex_Type (El.Eltype) then
-               Addr := Obj_Addr + To_Ghdl_Index_Acc (Addr).all;
-            end if;
+            Record_To_Element_Base (Obj_Addr, El, Is_Sig, Addr);
             Append (Name, '.');
             Append (Name, El.Name);
             Handle_Any (El.Eltype);
@@ -354,18 +393,18 @@ package body Grt.Rtis_Utils is
               | Ghdl_Rtik_Type_B1 =>
                Handle_Scalar (Rti);
             when Ghdl_Rtik_Type_Array =>
-               Handle_Array (To_Ghdl_Rtin_Type_Array_Acc (Rti),
-                             To_Ghdl_Uc_Array_Acc (Addr));
+               Handle_Array_1 (To_Ghdl_Rtin_Type_Array_Acc (Rti), 0);
             when Ghdl_Rtik_Subtype_Array =>
                declare
                   St : constant Ghdl_Rtin_Subtype_Composite_Acc :=
                     To_Ghdl_Rtin_Subtype_Composite_Acc (Rti);
                   Bt : constant Ghdl_Rtin_Type_Array_Acc :=
                     To_Ghdl_Rtin_Type_Array_Acc (St.Basetype);
-                  Bounds : Address;
+                  Prev_Bounds : constant Address := Bounds;
                begin
                   Bounds := Loc_To_Addr (St.Common.Depth, St.Bounds, Ctxt);
-                  Handle_Array_1 (Bt, Bounds, 0);
+                  Handle_Array_1 (Bt, 0);
+                  Bounds := Prev_Bounds;
                end;
 --          when Ghdl_Rtik_Type_File =>
 --             declare
@@ -379,16 +418,24 @@ package body Grt.Rtis_Utils is
 --             end;
             when Ghdl_Rtik_Type_Record =>
                Handle_Record (To_Ghdl_Rtin_Type_Record_Acc (Rti));
+            when Ghdl_Rtik_Subtype_Record =>
+               declare
+                  St : constant Ghdl_Rtin_Subtype_Composite_Acc :=
+                    To_Ghdl_Rtin_Subtype_Composite_Acc (Rti);
+                  Bt : constant Ghdl_Rtin_Type_Record_Acc :=
+                    To_Ghdl_Rtin_Type_Record_Acc (St.Basetype);
+                  Prev_Bounds : constant Address := Bounds;
+               begin
+                  Bounds := Loc_To_Addr (St.Common.Depth, St.Bounds, Ctxt);
+                  Handle_Record (Bt);
+                  Bounds := Prev_Bounds;
+               end;
             when others =>
                Internal_Error ("grt.rtis_utils.foreach_scalar.handle_any");
          end case;
       end Handle_Any;
    begin
-      if Rti_Complex_Type (Obj_Type) then
-         Addr := To_Addr_Acc (Obj_Addr).all;
-      else
-         Addr := Obj_Addr;
-      end if;
+      Object_To_Base_Bounds (Obj_Type, Obj_Addr, Addr, Bounds);
       Handle_Any (Obj_Type);
       Free (Name);
    end Foreach_Scalar;

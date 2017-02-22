@@ -259,26 +259,7 @@ package body Grt.Disp_Rti is
          end if;
          Put (Stream, El.Name);
          Put (" => ");
-         if Is_Sig then
-            El_Addr := Obj + El.Sig_Off;
-         else
-            El_Addr := Obj + El.Val_Off;
-         end if;
-         case El.Eltype.Kind is
-            when Ghdl_Rtik_Subtype_Array
-              | Ghdl_Rtik_Type_Record =>
-               --  Element is an offset.
-               if Rti_Complex_Type (El.Eltype) then
-                  El_Addr := Obj + To_Ghdl_Index_Acc (El_Addr).all;
-               end if;
-            when Ghdl_Rtik_Type_Array
-              | Ghdl_Rtik_Type_Unbounded_Record
-              | Ghdl_Rtik_Subtype_Unbounded_Record =>
-               --  Element is an offset.
-               El_Addr := Obj + To_Ghdl_Index_Acc (El_Addr).all;
-            when others =>
-               null;
-         end case;
+         Record_To_Element_Base (Obj, El, Is_Sig, El_Addr);
          Disp_Value (Stream, El.Eltype, Ctxt, El_Addr, Bounds, Is_Sig);
       end loop;
       Put (")");
@@ -868,25 +849,7 @@ package body Grt.Disp_Rti is
       Disp_Subtype_Indication (Obj_Type, Ctxt, Addr);
       Put (" := ");
 
-      --  FIXME: put this into a function.
-      Bounds := Null_Address;
-      case Obj_Type.Kind is
-         when  Ghdl_Rtik_Subtype_Array
-           | Ghdl_Rtik_Type_Record
-           | Ghdl_Rtik_Subtype_Record =>
-            --  Object is a pointer.
-            if Rti_Complex_Type (Obj_Type) then
-               Addr := To_Addr_Acc (Addr).all;
-            end if;
-         when Ghdl_Rtik_Type_Array
-           | Ghdl_Rtik_Type_Unbounded_Record
-           | Ghdl_Rtik_Subtype_Unbounded_Record =>
-            --  Object is a fat pointer.
-            Bounds := To_Ghdl_Uc_Array_Acc (Addr).Bounds;
-            Addr := To_Ghdl_Uc_Array_Acc (Addr).Base;
-         when others =>
-            null;
-      end case;
+      Object_To_Base_Bounds (Obj_Type, Addr, Addr, Bounds);
       Disp_Value (stdout, Obj_Type, Ctxt, Addr, Bounds, Is_Sig);
       New_Line;
    end Disp_Object;
