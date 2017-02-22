@@ -12,15 +12,15 @@ GHDL currently supports three supported different backends (code generators): `m
 |                        | - very quick analysis                                                                    | - simulation is slower                                  |
 |                        | - can handle very large designs                                                          |                                                         |
 +------------------------+------------------------------------------------------------------------------------------+---------------------------------------------------------+
-| `GCC`                  | - generated code is faster (particularly with :samp:`-O` or :samp:`-O2`)                 | - analysis can take time (particularly for large units) |
+| GCC                  | - generated code is faster (particularly with :samp:`-O` or :samp:`-O2`)                 | - analysis can take time (particularly for large units) |
 |                        | - generated code can be debugged (with :samp:`-g`)                                       | - build is more complex                                 |
 |                        | - ported to many platforms (:samp:`x86`, :samp:`x86_64`, :samp:`powerpc`, :samp:`sparc`) |                                                         |
 +------------------------+------------------------------------------------------------------------------------------+---------------------------------------------------------+
-| `LLVM`                 | - Same as `GCC`                                                                          | Coverage, :samp:`gcov`, is unique to `GCC`              |
-|                        | - Easier to build than `GCC`                                                             |                                                         |
+| LLVM                 | - Same as GCC                                                                          | Coverage, :samp:`gcov`, is unique to GCC              |
+|                        | - Easier to build than GCC                                                             |                                                         |
 +------------------------+------------------------------------------------------------------------------------------+---------------------------------------------------------+
 
-.. HINT:: The output of both `GCC` and `LLVM` is an executable file, but `mcode` does not generate any. Therefore, if using `GCC`/`LLVM`, the call with argument :samp:`-r` can be replaced with direct execution of the binary.
+.. HINT:: The output of both GCC and LLVM is an executable file, but `mcode` does not generate any. Therefore, if using GCC/LLVM, the call with argument :samp:`-r` can be replaced with direct execution of the binary.
 
 After making your choice, you can jump to the corresponding section below. However, we suggest you to read :ref:`BUILD:dir_structure` before, so that you know where the content is placed and which temporal files are expected to be created.
 
@@ -73,11 +73,11 @@ LLVM backend
 GNU/Linux
 ----------------
 
-You need to install `LLVM` (usually depends on :samp:`libedit`). The supported versions are 3.5 till 3.9, but debugging is only supported with `LLVM` 3.5.
+You need to install LLVM (usually depends on :samp:`libedit`). The supported versions are 3.5 till 3.9, but debugging is only supported with LLVM 3.5.
 
 - First configure GHDL with the proper arg :samp:`./configure --with-llvm-config`. If :samp:`llvm-config` is not in your path, you can specify it: :samp:`./configure --with-llvm-config=LLVM_INSTALL/bin/llvm-config`.
 
-.. HINT:: If you want to have stack backtraces on errors (like assert failure or index of out bounds), you need to configure and build :samp:`libbacktrace` from `GCC` (you don't need to configure `GCC`). Then add the following arg to configure: :samp:`--with-backtrace-lib=/path-to-gcc-build/libbacktrace/.libs/libbacktrace.a`
+.. HINT:: If you want to have stack backtraces on errors (like assert failure or index of out bounds), you need to configure and build :samp:`libbacktrace` from GCC (you don't need to configure GCC). Then add the following arg to configure: :samp:`--with-backtrace-lib=/path-to-gcc-build/libbacktrace/.libs/libbacktrace.a`
 
 - Then build with :samp:`make` and install with :samp:`make install`.
   
@@ -92,9 +92,9 @@ GCC backend
 
 .. TODO::
 
-	- You need to download and untar the sources of `GCC` version 4.9 [do not modify this line as this is read by scripts].
+	- You need to download and untar the sources of GCC version 4.9 [do not modify this line as this is read by scripts].
 	- gcc object dir
-	- Notes for developpers developping with the GCC backend: once `GCC` (with GHDL) has been built once, it is possible to work on the GHDL source tree without copying it in the `GCC` tree. Commands are::
+	- Notes for developpers developping with the GCC backend: once GCC (with GHDL) has been built once, it is possible to work on the GHDL source tree without copying it in the GCC tree. Commands are::
 	
 		$ make ghdl1-gcc           # Build the compiler
 		$ make ghdl_gcc            # Build the driver
@@ -105,7 +105,7 @@ GCC backend
 GNU/Linux
 ----------------
 
-- First configure GHDL, specify `GCC` source dir and :samp:`prefix` (replace :samp:`/usr/local` with your desired installation directory)::
+- First configure GHDL, specify GCC source dir and :samp:`prefix` (replace :samp:`/usr/local` with your desired installation directory)::
 
 	./configure --with-gcc=/path/to/gcc/source/dir --prefix=/usr/local
 	
@@ -113,9 +113,9 @@ GNU/Linux
 
 	make copy-sources
 
-.. HINT:: There are some dependencies for building `GCC` (:samp:`gmp`, :samp:`mpfr` and :samp:`mpc`). If you have not them installed on your system, you can either build them manually or use the :samp:`download_prerequisite` script provided in the `GCC` source tree (recommended): :samp:`cd /path/to/gcc/source/dir && ./contrib/download_prerequisites`
+.. HINT:: There are some dependencies for building GCC (:samp:`gmp`, :samp:`mpfr` and :samp:`mpc`). If you have not them installed on your system, you can either build them manually or use the :samp:`download_prerequisite` script provided in the GCC source tree (recommended): :samp:`cd /path/to/gcc/source/dir && ./contrib/download_prerequisites`
 
-- Then, configure `GCC`. The list of :samp:`--disable` configure options can be adjusted to your needs. GHDL does not require all these optional libraries and disabling them will speed-up the build::
+- Then, configure GCC. The list of :samp:`--disable` configure options can be adjusted to your needs. GHDL does not require all these optional libraries and disabling them will speed-up the build::
 
 	../gcc-4.9.3/configure --prefix=/usr/local --enable-languages=c,vhdl \
 	--disable-bootstrap --disable-lto --disable-multilib --disable-libssp \
@@ -123,7 +123,7 @@ GNU/Linux
 
 .. HINT:: Note that the prefix directory must be the same as the one used to configure GHDL. If you have manually built :samp:`gmp`/:samp:`mpfr`/:samp:`mpc` (without using the script in :samp:`contrib`) and if you have installed them in a non-standard directory, you may need to add :samp:`--with-gmp=GMP_INSTALL_DIR`.
 
-- Then, build and install `GCC`::
+- Then, build and install GCC::
 
 	make -j2 && make install
 

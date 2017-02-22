@@ -33,33 +33,15 @@ To illustrate the large purpose of `VHDL`, here is a commented `'Hello world'` p
 
 Suppose this program is contained in a file named :file:`hello.vhdl`. First, you have to compile the file; this is called `analysis` of a design file in `VHDL` terms. Run :samp:`ghdl -a hello.vhdl` in the `shell`. This command creates or updates a file :file:`work-obj93.cf`, which describes the library :samp:`work`.
 
-.. TIP:: If a `GCC`/`LLVM` variant of `GHDL` is used, this command generates a file :file:`hello.o`, which is the object file corresponding to your `VHDL` program.  This is not created on Windows.
+.. TIP:: If a GCC/LLVM variant of `GHDL` is used, this command generates a file :file:`hello.o`, which is the object file corresponding to your `VHDL` program.  This is not created on Windows.
 
-Then, you have to build an executable file. Again, run :samp:`ghdl -e hello_world` in the `shell`. Option :option:`-e` means :dfn:`elaborate`, which is used to `'build'` a design, with the :samp:`hello_world` entity at the top of the hierarchy.
+Then,  run :samp:`ghdl -e hello_world` in the `shell`. Option :option:`-e` means :dfn:`elaborate`, which is used to `'build'` a design, with the :samp:`hello_world` entity at the top of the hierarchy.
 
 Last, launch the simulation running :samp:`ghdl -r hello_world` in the `shell`. The result of the simulation will be shown on the screen::
 
   Hello world!
 
-.. TIP:: If a `GCC`/`LLVM` variant of `GHDL` is used, an executable program called :file:`hello_world` is generated at this step. which can be run
-
-
-.. code-block:: shell
-
-  $ ghdl -r hello_world
-
-or directly:
-
-.. code-block:: shell
-
-  $ ./hello_world
-
-On Windows or if the GCC backend was not enabled, no file is created.
-The simulation is launched using this command:
-
-
-
-
+.. TIP:: If a GCC/LLVM variant of `GHDL` is used, an executable program called :file:`hello_world` is generated at this step. This can can be run directly: :samp:`./hello_world`.
 
 A full adder
 ============
@@ -92,13 +74,7 @@ You can analyze this design file:
   $ ghdl -a adder.vhdl
 
 
-You can try to execute the `adder` design, but this is useless,
-since nothing externally visible will happen.  In order to
-check this full adder, a testbench has to be run.  This testbench is
-very simple, since the adder is also simple: it checks exhaustively all
-inputs.  Note that only the behaviour is tested, timing constraints are
-not checked.  The file :file:`adder_tb.vhdl` contains the testbench for
-the adder:
+You can try to execute the `adder` design, but this is useless, since nothing externally visible will happen.  In order to check this full adder, a testbench has to be run.  This testbench is very simple, since the adder is also simple: it checks exhaustively all inputs.  Note that only the behaviour is tested, timing constraints are not checked. A file named :file:`adder_tb.vhdl` contains the testbench for the adder:
 
 .. code-block:: VHDL
 
@@ -167,26 +143,20 @@ As usual, you should analyze the design:
 
   $ ghdl -a adder_tb.vhdl
 
-And build an executable for the testbench:
+Then elaborate the testbench:
 
 .. code-block:: shell
 
   $ ghdl -e adder_tb
 
-You do not need to specify which object files are required: GHDL knows them
-and automatically adds them in the executable.  Now, it is time to run the
-testbench:
+You do not need to specify which object files are required: GHDL knows them and automatically adds them.  Now, it is time to run the testbench:
 
 .. code-block:: shell
 
   $ ghdl -r adder_tb
   adder_tb.vhdl:52:7:(assertion note): end of test
 
-
-If your design is rather complex, you'd like to inspect signals.  Signals
-value can be dumped using the VCD file format.  The resulting file can be
-read with a wave viewer such as GTKWave.  First, you should simulate your
-design and dump a waveform file:
+If your design is rather complex, you'd like to inspect signals.  Signals value can be dumped using multiple formats. The resulting file can be read with a wave viewer such as GTKWave.  First, you should simulate your design and dump a waveform file:
 
 .. code-block:: shell
 
