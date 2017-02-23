@@ -522,7 +522,7 @@ package body Trans.Chap4 is
          Init_Object (Name, Obj_Type);
          Close_Temp;
       elsif Get_Kind (Value) = Iir_Kind_Aggregate then
-         if Type_Info.Type_Mode = Type_Mode_Fat_Array then
+         if Type_Info.Type_Mode in Type_Mode_Unbounded then
             --  Allocate.
             declare
                Aggr_Type : constant Iir := Get_Type (Value);
@@ -920,7 +920,7 @@ package body Trans.Chap4 is
          end if;
       end if;
       case Get_Info (Targ_Type).Type_Mode is
-         when Type_Mode_Record =>
+         when Type_Mode_Records =>
             Res.Value := Stabilize (Data.Value);
             if Data.Has_Val then
                Res.Init_Val := Stabilize (Data.Init_Val);
@@ -1016,7 +1016,7 @@ package body Trans.Chap4 is
       Chap3.Elab_Object_Subtype (Sig_Type);
       Type_Info := Get_Info (Sig_Type);
 
-      if Type_Info.Type_Mode = Type_Mode_Fat_Array then
+      if Type_Info.Type_Mode in Type_Mode_Unbounded then
          --  Unbounded types are only allowed for ports; in that case the
          --  bounds have already been set.
          if Has_Copy then
