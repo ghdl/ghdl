@@ -146,9 +146,10 @@ package body Grt.Avhpi is
             case Res.N_Type.Kind is
                when Ghdl_Rtik_Subtype_Array =>
                   declare
-                     St : constant Ghdl_Rtin_Subtype_Array_Acc :=
-                       To_Ghdl_Rtin_Subtype_Array_Acc (Res.N_Type);
-                     Bt : constant Ghdl_Rtin_Type_Array_Acc := St.Basetype;
+                     St : constant Ghdl_Rtin_Subtype_Composite_Acc :=
+                       To_Ghdl_Rtin_Subtype_Composite_Acc (Res.N_Type);
+                     Bt : constant Ghdl_Rtin_Type_Array_Acc :=
+                       To_Ghdl_Rtin_Type_Array_Acc (St.Basetype);
                      Rngs : Ghdl_Range_Array (0 .. Bt.Nbr_Dim - 1);
                   begin
                      Bound_To_Range
@@ -203,10 +204,10 @@ package body Grt.Avhpi is
          when Ghdl_Rtik_Subtype_Array =>
             if Is_Sig then
                El_Size := Ghdl_Index_Type
-                 (To_Ghdl_Rtin_Subtype_Array_Acc (El_Type1).Sigsize);
+                 (To_Ghdl_Rtin_Subtype_Composite_Acc (El_Type1).Sigsize);
             else
                El_Size := Ghdl_Index_Type
-                 (To_Ghdl_Rtin_Subtype_Array_Acc (El_Type1).Valsize);
+                 (To_Ghdl_Rtin_Subtype_Composite_Acc (El_Type1).Valsize);
             end if;
          when others =>
             Internal_Error ("add_index");
@@ -383,11 +384,11 @@ package body Grt.Avhpi is
                     Obj => To_Ghdl_Rtin_Object_Acc (Rti));
          when Ghdl_Rtik_Subtype_Array =>
             declare
-               Atype : Ghdl_Rtin_Subtype_Array_Acc;
-               Bt : Ghdl_Rtin_Type_Array_Acc;
+               Atype : constant Ghdl_Rtin_Subtype_Composite_Acc :=
+                 To_Ghdl_Rtin_Subtype_Composite_Acc (Rti);
+               Bt : constant Ghdl_Rtin_Type_Array_Acc :=
+                 To_Ghdl_Rtin_Type_Array_Acc (Atype.Basetype);
             begin
-               Atype := To_Ghdl_Rtin_Subtype_Array_Acc (Rti);
-               Bt := Atype.Basetype;
                if Atype.Name = Bt.Name then
                   Res := (Kind => VhpiArrayTypeDeclK,
                           Ctxt => Ctxt,
@@ -933,8 +934,7 @@ package body Grt.Avhpi is
                case Atype.Kind is
                   when Ghdl_Rtik_Subtype_Array =>
                      Rti_To_Handle
-                       (To_Ghdl_Rti_Access (To_Ghdl_Rtin_Subtype_Array_Acc
-                                            (Atype).Basetype),
+                       (To_Ghdl_Rtin_Subtype_Composite_Acc (Atype).Basetype,
                         Ref.Ctxt, Res);
                      if Res.Kind /= VhpiUndefined then
                         Error := AvhpiErrorOk;
@@ -955,18 +955,19 @@ package body Grt.Avhpi is
             end;
          when VhpiElemSubtype =>
             declare
-               Base_Type : Ghdl_Rtin_Type_Array_Acc;
+               Base_Type : Ghdl_Rti_Access;
             begin
                case Ref.Atype.Kind is
                   when Ghdl_Rtik_Subtype_Array =>
                      Base_Type :=
-                       To_Ghdl_Rtin_Subtype_Array_Acc (Ref.Atype).Basetype;
+                       To_Ghdl_Rtin_Subtype_Composite_Acc (Ref.Atype).Basetype;
                   when Ghdl_Rtik_Type_Array =>
-                     Base_Type := To_Ghdl_Rtin_Type_Array_Acc (Ref.Atype);
+                     Base_Type := Ref.Atype;
                   when others =>
                      return;
                end case;
-               Rti_To_Handle (Base_Type.Element, Ref.Ctxt, Res);
+               Rti_To_Handle (To_Ghdl_Rtin_Type_Array_Acc (Base_Type).Element,
+                              Ref.Ctxt, Res);
                if Res.Kind /= VhpiUndefined then
                   Error := AvhpiErrorOk;
                end if;
@@ -981,8 +982,7 @@ package body Grt.Avhpi is
                                    Ref : VhpiHandleT;
                                    Index : Natural;
                                    Res : out VhpiHandleT;
-                                   Error : out AvhpiErrorT)
-   is
+                                   Error : out AvhpiErrorT) is
    begin
       --  Default error.
       Error := AvhpiErrorNotImplemented;
@@ -993,10 +993,10 @@ package body Grt.Avhpi is
                when VhpiSubtypeIndicK =>
                   if Ref.Atype.Kind = Ghdl_Rtik_Subtype_Array then
                      declare
-                        Arr_Subtype : constant Ghdl_Rtin_Subtype_Array_Acc :=
-                          To_Ghdl_Rtin_Subtype_Array_Acc (Ref.Atype);
+                        Arr_Subtype : constant Ghdl_Rtin_Subtype_Composite_Acc
+                          := To_Ghdl_Rtin_Subtype_Composite_Acc (Ref.Atype);
                         Basetype : constant Ghdl_Rtin_Type_Array_Acc :=
-                          Arr_Subtype.Basetype;
+                          To_Ghdl_Rtin_Type_Array_Acc (Arr_Subtype.Basetype);
                         Idx : constant Ghdl_Index_Type :=
                           Ghdl_Index_Type (Index);
                         Bounds : Ghdl_Range_Array (0 .. Basetype.Nbr_Dim - 1);

@@ -219,7 +219,15 @@ struct ghw_type_record
   int nbr_el;	/* Number of scalar signals.  */
   struct ghw_record_element *el;
 };
-  
+
+struct ghw_subtype_record
+{
+  enum ghdl_rtik kind;
+  const char *name;
+
+  struct ghw_type_record *base;
+};
+
 union ghw_type
 {
   enum ghdl_rtik kind;
@@ -229,6 +237,7 @@ union ghw_type
   struct ghw_type_physical ph;
   struct ghw_subtype_scalar ss;
   struct ghw_subtype_array sa;
+  struct ghw_subtype_record sr;
   struct ghw_type_array ar;
   struct ghw_type_record rec;
 };

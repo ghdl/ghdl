@@ -48,8 +48,9 @@ VITAL2000_BSRCS := vital2000/timing_p.vhdl vital2000/timing_b.vhdl \
   vital2000/memory_p.vhdl vital2000/memory_b.vhdl
 SYNOPSYS_BSRCS := synopsys/std_logic_arith.vhdl \
   synopsys/std_logic_unsigned.vhdl \
-  synopsys/std_logic_signed.vhdl
-SYNOPSYS8793_BSRCS := synopsys/std_logic_textio.vhdl synopsys/std_logic_misc.vhdl synopsys/std_logic_misc-body.vhdl
+  synopsys/std_logic_signed.vhdl \
+  synopsys/std_logic_misc.vhdl synopsys/std_logic_misc-body.vhdl
+SYNOPSYS8793_BSRCS := synopsys/std_logic_textio.vhdl
 MENTOR_BSRCS := mentor/std_logic_arith.vhdl mentor/std_logic_arith_body.vhdl
 IEEE08_BSRCS := \
   ieee2008/std_logic_1164.vhdl ieee2008/std_logic_1164-body.vhdl \

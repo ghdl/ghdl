@@ -623,23 +623,23 @@ package body Grt.Waves is
             end;
          when Ghdl_Rtik_Subtype_Array =>
             declare
-               Arr : Ghdl_Rtin_Subtype_Array_Acc;
+               Arr : constant Ghdl_Rtin_Subtype_Composite_Acc :=
+                 To_Ghdl_Rtin_Subtype_Composite_Acc (Rti);
                B_Ctxt : Rti_Context;
             begin
-               Arr := To_Ghdl_Rtin_Subtype_Array_Acc (Rti);
                Create_String_Id (Arr.Name);
                if Rti_Complex_Type (Rti) then
                   B_Ctxt := Ctxt;
                else
                   B_Ctxt := N_Ctxt;
                end if;
-               Create_Type (To_Ghdl_Rti_Access (Arr.Basetype), B_Ctxt);
+               Create_Type (Arr.Basetype, B_Ctxt);
             end;
          when Ghdl_Rtik_Type_Array =>
             declare
-               Arr : Ghdl_Rtin_Type_Array_Acc;
+               Arr : constant Ghdl_Rtin_Type_Array_Acc :=
+                 To_Ghdl_Rtin_Type_Array_Acc (Rti);
             begin
-               Arr := To_Ghdl_Rtin_Type_Array_Acc (Rti);
                Create_String_Id (Arr.Name);
                Create_Type (Arr.Element, N_Ctxt);
                for I in 1 .. Arr.Nbr_Dim loop
@@ -648,9 +648,9 @@ package body Grt.Waves is
             end;
          when Ghdl_Rtik_Subtype_Scalar =>
             declare
-               Sub : Ghdl_Rtin_Subtype_Scalar_Acc;
+               Sub : constant Ghdl_Rtin_Subtype_Scalar_Acc :=
+                 To_Ghdl_Rtin_Subtype_Scalar_Acc (Rti);
             begin
-               Sub := To_Ghdl_Rtin_Subtype_Scalar_Acc (Rti);
                Create_String_Id (Sub.Name);
                Create_Type (Sub.Basetype, N_Ctxt);
             end;
@@ -689,6 +689,14 @@ package body Grt.Waves is
                   Create_String_Id (El.Name);
                   Create_Type (El.Eltype, N_Ctxt);
                end loop;
+            end;
+         when Ghdl_Rtik_Subtype_Record =>
+            declare
+               Rec : constant Ghdl_Rtin_Subtype_Composite_Acc :=
+                 To_Ghdl_Rtin_Subtype_Composite_Acc (Rti);
+            begin
+               Create_String_Id (Rec.Name);
+               Create_Type (Rec.Basetype, N_Ctxt);
             end;
          when others =>
             Internal_Error ("wave.create_type");
@@ -1200,6 +1208,8 @@ package body Grt.Waves is
             return Ghw_Rtik_Type_Array;
          when Ghdl_Rtik_Type_Record =>
             return Ghw_Rtik_Type_Record;
+         when Ghdl_Rtik_Subtype_Record =>
+            return Ghw_Rtik_Subtype_Record;
          when Ghdl_Rtik_Subtype_Scalar =>
             return Ghw_Rtik_Subtype_Scalar;
          when Ghdl_Rtik_Type_I32 =>
@@ -1302,9 +1312,9 @@ package body Grt.Waves is
                when Ghdl_Rtik_Type_B1
                  | Ghdl_Rtik_Type_E8 =>
                   declare
-                     Enum : Ghdl_Rtin_Type_Enum_Acc;
+                     Enum : constant Ghdl_Rtin_Type_Enum_Acc :=
+                       To_Ghdl_Rtin_Type_Enum_Acc (Rti);
                   begin
-                     Enum := To_Ghdl_Rtin_Type_Enum_Acc (Rti);
                      Write_String_Id (Enum.Name);
                      Wave_Put_ULEB128 (Ghdl_E32 (Enum.Nbr));
                      for I in 1 .. Enum.Nbr loop
@@ -1313,28 +1323,29 @@ package body Grt.Waves is
                   end;
                when Ghdl_Rtik_Subtype_Array =>
                   declare
-                     Arr : Ghdl_Rtin_Subtype_Array_Acc;
+                     Arr : constant Ghdl_Rtin_Subtype_Composite_Acc :=
+                       To_Ghdl_Rtin_Subtype_Composite_Acc (Rti);
                   begin
-                     Arr := To_Ghdl_Rtin_Subtype_Array_Acc (Rti);
                      Write_String_Id (Arr.Name);
-                     Write_Type_Id (To_Ghdl_Rti_Access (Arr.Basetype), Ctxt);
+                     Write_Type_Id (Arr.Basetype, Ctxt);
                      declare
-                        Rngs : Ghdl_Range_Array
-                          (0 .. Arr.Basetype.Nbr_Dim - 1);
+                        Bt : constant Ghdl_Rtin_Type_Array_Acc :=
+                          To_Ghdl_Rtin_Type_Array_Acc (Arr.Basetype);
+                        Rngs : Ghdl_Range_Array (0 .. Bt.Nbr_Dim - 1);
                      begin
                         Bound_To_Range
                           (Loc_To_Addr (Rti.Depth, Arr.Bounds, Ctxt),
-                           Arr.Basetype, Rngs);
+                           Bt, Rngs);
                         for I in Rngs'Range loop
-                           Write_Range (Arr.Basetype.Indexes (I), Rngs (I));
+                           Write_Range (Bt.Indexes (I), Rngs (I));
                         end loop;
                      end;
                   end;
                when Ghdl_Rtik_Type_Array =>
                   declare
-                     Arr : Ghdl_Rtin_Type_Array_Acc;
+                     Arr : constant Ghdl_Rtin_Type_Array_Acc :=
+                       To_Ghdl_Rtin_Type_Array_Acc (Rti);
                   begin
-                     Arr := To_Ghdl_Rtin_Type_Array_Acc (Rti);
                      Write_String_Id (Arr.Name);
                      Write_Type_Id (Arr.Element, Ctxt);
                      Wave_Put_ULEB128 (Ghdl_E32 (Arr.Nbr_Dim));
@@ -1344,10 +1355,10 @@ package body Grt.Waves is
                   end;
                when Ghdl_Rtik_Type_Record =>
                   declare
-                     Rec : Ghdl_Rtin_Type_Record_Acc;
+                     Rec : constant Ghdl_Rtin_Type_Record_Acc :=
+                       To_Ghdl_Rtin_Type_Record_Acc (Rti);
                      El : Ghdl_Rtin_Element_Acc;
                   begin
-                     Rec := To_Ghdl_Rtin_Type_Record_Acc (Rti);
                      Write_String_Id (Rec.Name);
                      Wave_Put_ULEB128 (Ghdl_E32 (Rec.Nbrel));
                      for I in 1 .. Rec.Nbrel loop
@@ -1356,11 +1367,19 @@ package body Grt.Waves is
                         Write_Type_Id (El.Eltype, Ctxt);
                      end loop;
                   end;
+               when Ghdl_Rtik_Subtype_Record =>
+                  declare
+                     Arr : constant Ghdl_Rtin_Subtype_Composite_Acc :=
+                       To_Ghdl_Rtin_Subtype_Composite_Acc (Rti);
+                  begin
+                     Write_String_Id (Arr.Name);
+                     Write_Type_Id (Arr.Basetype, Ctxt);
+                  end;
                when Ghdl_Rtik_Subtype_Scalar =>
                   declare
-                     Sub : Ghdl_Rtin_Subtype_Scalar_Acc;
+                     Sub : constant Ghdl_Rtin_Subtype_Scalar_Acc :=
+                       To_Ghdl_Rtin_Subtype_Scalar_Acc (Rti);
                   begin
-                     Sub := To_Ghdl_Rtin_Subtype_Scalar_Acc (Rti);
                      Write_String_Id (Sub.Name);
                      Write_Type_Id (Sub.Basetype, Ctxt);
                      Write_Range
@@ -1373,18 +1392,18 @@ package body Grt.Waves is
                  | Ghdl_Rtik_Type_I64
                  | Ghdl_Rtik_Type_F64 =>
                   declare
-                     Base : Ghdl_Rtin_Type_Scalar_Acc;
+                     Base : constant Ghdl_Rtin_Type_Scalar_Acc :=
+                       To_Ghdl_Rtin_Type_Scalar_Acc (Rti);
                   begin
-                     Base := To_Ghdl_Rtin_Type_Scalar_Acc (Rti);
                      Write_String_Id (Base.Name);
                   end;
                when Ghdl_Rtik_Type_P32
                  | Ghdl_Rtik_Type_P64 =>
                   declare
-                     Base : Ghdl_Rtin_Type_Physical_Acc;
+                     Base : constant Ghdl_Rtin_Type_Physical_Acc :=
+                       To_Ghdl_Rtin_Type_Physical_Acc (Rti);
                      Unit : Ghdl_Rti_Access;
                   begin
-                     Base := To_Ghdl_Rtin_Type_Physical_Acc (Rti);
                      Write_String_Id (Base.Name);
                      Wave_Put_ULEB128 (Ghdl_U32 (Base.Nbr));
                      for I in 1 .. Base.Nbr loop
