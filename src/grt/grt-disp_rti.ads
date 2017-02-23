@@ -37,6 +37,7 @@ package Grt.Disp_Rti is
                          Rti : Ghdl_Rti_Access;
                          Ctxt : Rti_Context;
                          Obj : in out Address;
+                         Bounds : in out Address;
                          Is_Sig : Boolean);
 
    procedure Register;

@@ -62,6 +62,19 @@ package Grt.Rtis_Utils is
                              Is_Sig : Boolean;
                              Param : Param_Type);
 
+   --  Convert object address OBJ_LOC (got from RTIs) to ADDR and BOUNDS.
+   --  Deals with complex types and fat pointers.
+   procedure Object_To_Base_Bounds (Obj_Type : Ghdl_Rti_Access;
+                                    Obj_Loc : Address;
+                                    Addr : out Address;
+                                    Bounds : out Address);
+
+   --  Get address of element EL for record at OBJ.
+   procedure Record_To_Element_Base (Obj : Address;
+                                     El : Ghdl_Rtin_Element_Acc;
+                                     Is_Sig : Boolean;
+                                     Addr : out Address);
+
    procedure Get_Value (Str : in out Vstring;
                         Value : Value_Union;
                         Type_Rti : Ghdl_Rti_Access);

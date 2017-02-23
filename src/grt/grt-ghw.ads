@@ -59,4 +59,5 @@ package Grt.Ghw is
    Ghw_Rtik_Type_Record    : constant Ghw_Rtik := 32;
    Ghw_Rtik_Subtype_Scalar : constant Ghw_Rtik := 34;
    Ghw_Rtik_Subtype_Array  : constant Ghw_Rtik := 35;
+   Ghw_Rtik_Subtype_Record : constant Ghw_Rtik := 38;
 end Grt.Ghw;

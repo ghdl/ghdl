@@ -672,7 +672,7 @@ package body Trans.Chap3 is
                for I in Natural loop
                   El := Get_Nth_Element (El_List, I);
                   exit when El = Null_Iir;
-                  El_Info := Get_Info (El);
+                  El_Info := Get_Info (Get_Base_Element_Declaration (El));
                   if El_Info.Field_Bound /= O_Fnode_Null then
                      Create_Composite_Subtype_Bounds
                        (Get_Type (El),
@@ -687,6 +687,16 @@ package body Trans.Chap3 is
       end case;
 
       Close_Temp;
+   end Create_Composite_Subtype_Bounds;
+
+   procedure Create_Composite_Subtype_Bounds (Def : Iir)
+   is
+      Info : constant Type_Info_Acc := Get_Info (Def);
+   begin
+      if not Info.S.Static_Bounds then
+         Create_Composite_Subtype_Bounds
+           (Def, Get_Var (Info.S.Composite_Bounds));
+      end if;
    end Create_Composite_Subtype_Bounds;
 
    --  Create a variable containing the bounds for array subtype DEF.
@@ -718,8 +728,7 @@ package body Trans.Chap3 is
          Info.S.Composite_Bounds := Create_Var
            (Create_Var_Identifier ("STB"), Base_Info.B.Bounds_Type);
          if Elab_Now then
-            Create_Composite_Subtype_Bounds
-              (Def, Get_Var (Info.S.Composite_Bounds));
+            Create_Composite_Subtype_Bounds (Def);
          end if;
       end if;
    end Create_Composite_Subtype_Bounds_Var;
@@ -1216,6 +1225,8 @@ package body Trans.Chap3 is
       --  By default, use the same representation as the type mark.
       Info.all := Type_Mark_Info.all;
       Info.S := Ortho_Info_Subtype_Record_Init;
+      --  However, it is a different subtype which has its own rti.
+      Info.Type_Rti := O_Dnode_Null;
 
       if Get_Constraint_State (Def) /= Fully_Constrained
         or else not Has_New_Constraints
@@ -1305,7 +1316,7 @@ package body Trans.Chap3 is
       --  OFF = SIZEOF (record).
       New_Assign_Stmt
         (New_Obj (Off_Var),
-         New_Lit (New_Sizeof (Info.Ortho_Type (Kind), Ghdl_Index_Type)));
+         New_Lit (New_Sizeof (Info.B.Base_Type (Kind), Ghdl_Index_Type)));
 
       --  Set memory for each complex element.
       List := Get_Elements_Declaration_List (Def);
@@ -1794,11 +1805,7 @@ package body Trans.Chap3 is
 
          when Iir_Kind_Array_Subtype_Definition =>
             if Get_Constraint_State (Def) = Fully_Constrained then
-               Info := Get_Info (Def);
-               if not Info.S.Static_Bounds then
-                  Target := Get_Var (Info.S.Composite_Bounds);
-                  Create_Composite_Subtype_Bounds (Def, Target);
-               end if;
+               Create_Composite_Subtype_Bounds (Def);
             end if;
 
          when Iir_Kind_Array_Type_Definition =>
@@ -1816,11 +1823,17 @@ package body Trans.Chap3 is
                end loop;
             end;
             return;
+
+         when Iir_Kind_Record_Subtype_Definition =>
+            Info := Get_Info (Def);
+            if Info.S.Composite_Bounds /= Null_Var then
+               Create_Composite_Subtype_Bounds (Def);
+            end if;
+
          when Iir_Kind_Access_Type_Definition
             | Iir_Kind_Access_Subtype_Definition
             | Iir_Kind_File_Type_Definition
             | Iir_Kind_Record_Type_Definition
-            | Iir_Kind_Record_Subtype_Definition
             | Iir_Kind_Protected_Type_Declaration =>
             return;
 
@@ -1956,11 +1969,12 @@ package body Trans.Chap3 is
       end if;
    end Create_Subtype_Info_From_Type;
 
+   procedure Create_Type_Definition_Size_Var (Def : Iir);
+
    procedure Create_Record_Size_Var (Def : Iir; Kind : Object_Kind_Type)
    is
       Info        : constant Type_Info_Acc := Get_Info (Def);
-      List        : constant Iir_List :=
-        Get_Elements_Declaration_List (Get_Base_Type (Def));
+      List        : constant Iir_List := Get_Elements_Declaration_List (Def);
       El          : Iir_Element_Declaration;
       El_Type     : Iir;
       El_Tinfo    : Type_Info_Acc;
@@ -1975,7 +1989,7 @@ package body Trans.Chap3 is
       --  Start with the size of the 'base' record, that
       --  contains all non-complex types and an offset for
       --  each complex types.
-      Res := New_Lit (New_Sizeof (Info.Ortho_Type (Kind), Ghdl_Index_Type));
+      Res := New_Lit (New_Sizeof (Info.B.Base_Type (Kind), Ghdl_Index_Type));
 
       --  Start with alignment of the record.
       --  ALIGN = ALIGNOF (record)
@@ -1983,7 +1997,7 @@ package body Trans.Chap3 is
          Align_Var := Create_Temp (Ghdl_Index_Type);
          New_Assign_Stmt
            (New_Obj (Align_Var),
-            Get_Type_Alignmask (Info.Ortho_Type (Kind)));
+            Get_Type_Alignmask (Info.B.Base_Type (Kind)));
       end if;
 
       for I in Natural loop
@@ -1991,7 +2005,9 @@ package body Trans.Chap3 is
          exit when El = Null_Iir;
          El_Type := Get_Type (El);
          El_Tinfo := Get_Info (El_Type);
-         if Is_Complex_Type (El_Tinfo) then
+         if Is_Complex_Type (El_Tinfo)
+           or else Get_Kind (El) = Iir_Kind_Record_Element_Constraint
+         then
             Inner_Type := Get_Innermost_Non_Array_Element (El_Type);
 
             --  Align (only for Mode_Value) the size,
@@ -2123,17 +2139,33 @@ package body Trans.Chap3 is
             end;
          when Iir_Kind_Record_Type_Definition =>
             declare
+               List : constant Iir_List := Get_Elements_Declaration_List (Def);
                El   : Iir;
                Asub : Iir;
-               List : Iir_List;
             begin
-               List := Get_Elements_Declaration_List (Def);
                for I in Natural loop
                   El := Get_Nth_Element (List, I);
                   exit when El = Null_Iir;
                   Asub := Get_Type (El);
                   if Is_Anonymous_Type_Definition (Asub) then
                      Handle_A_Subtype (Asub);
+                  end if;
+               end loop;
+            end;
+         when Iir_Kind_Record_Subtype_Definition =>
+            declare
+               List : constant Iir_List := Get_Elements_Declaration_List (Def);
+               El   : Iir;
+               Asub : Iir;
+            begin
+               for I in Natural loop
+                  El := Get_Nth_Element (List, I);
+                  exit when El = Null_Iir;
+                  if Get_Kind (El) = Iir_Kind_Record_Element_Constraint then
+                     Asub := Get_Type (El);
+                     if Is_Anonymous_Type_Definition (Asub) then
+                        Handle_A_Subtype (Asub);
+                     end if;
                   end if;
                end loop;
             end;

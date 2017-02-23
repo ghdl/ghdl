@@ -29,7 +29,9 @@ with Ada.Unchecked_Conversion;
 package Grt.Rtis is
    pragma Preelaborate (Grt.Rtis);
 
-   --  Must be synchronized with trans-rtis.ads
+   --  To keep in sync with:
+   --   * trans-rtis.ads
+   --   * grt.disp_rti.Disp_Kind
    type Ghdl_Rtik is
      (Ghdl_Rtik_Top,
       Ghdl_Rtik_Library,        -- use scalar
@@ -73,24 +75,26 @@ package Grt.Rtis is
       Ghdl_Rtik_Type_Array,
       Ghdl_Rtik_Type_Record,
 
+      Ghdl_Rtik_Type_Unbounded_Record,
       Ghdl_Rtik_Type_File,
       Ghdl_Rtik_Subtype_Scalar,
       Ghdl_Rtik_Subtype_Array,
       Ghdl_Rtik_Subtype_Unconstrained_Array,
-      Ghdl_Rtik_Subtype_Record,
 
-      Ghdl_Rtik_Subtype_Access, -- 40
+      Ghdl_Rtik_Subtype_Record, -- 40
+      Ghdl_Rtik_Subtype_Unbounded_Record,
+      Ghdl_Rtik_Subtype_Access,
       Ghdl_Rtik_Type_Protected,
       Ghdl_Rtik_Element,
+
       Ghdl_Rtik_Unit64,
       Ghdl_Rtik_Unitptr,
-
       Ghdl_Rtik_Attribute_Transaction,
       Ghdl_Rtik_Attribute_Quiet,
       Ghdl_Rtik_Attribute_Stable,
+
       Ghdl_Rtik_Psl_Assert,
       Ghdl_Rtik_Psl_Cover,
-
       Ghdl_Rtik_Psl_Endpoint,
 
       Ghdl_Rtik_Error);
@@ -128,6 +132,7 @@ package Grt.Rtis is
       --    0
       Max_Depth : Ghdl_Rti_Depth;
    end record;
+   pragma Convention (C, Ghdl_Rti_Common);
 
    type Ghdl_Rti_Access is access all Ghdl_Rti_Common;
 
@@ -150,6 +155,7 @@ package Grt.Rtis is
       Nbr_Child : Ghdl_Index_Type;
       Children : Ghdl_Rti_Arr_Acc;
    end record;
+   pragma Convention (C, Ghdl_Rtin_Block);
    type Ghdl_Rtin_Block_Acc is access Ghdl_Rtin_Block;
    function To_Ghdl_Rtin_Block_Acc is new Ada.Unchecked_Conversion
      (Source => Ghdl_Rti_Access, Target => Ghdl_Rtin_Block_Acc);
@@ -166,6 +172,7 @@ package Grt.Rtis is
       Size : Ghdl_Index_Type;
       Child : Ghdl_Rti_Access;
    end record;
+   pragma Convention (C, Ghdl_Rtin_Generate);
    type Ghdl_Rtin_Generate_Acc is access Ghdl_Rtin_Generate;
    function To_Ghdl_Rtin_Generate_Acc is new Ada.Unchecked_Conversion
      (Source => Ghdl_Rti_Access, Target => Ghdl_Rtin_Generate_Acc);
@@ -176,6 +183,7 @@ package Grt.Rtis is
       Block : Ghdl_Rtin_Block;
       Filename : Ghdl_C_String;
    end record;
+   pragma Convention (C, Ghdl_Rtin_Block_Filename);
    type Ghdl_Rtin_Block_Filename_Acc is access Ghdl_Rtin_Block_Filename;
    function To_Ghdl_Rtin_Block_Filename_Acc is new Ada.Unchecked_Conversion
      (Source => Ghdl_Rti_Access, Target => Ghdl_Rtin_Block_Filename_Acc);
@@ -194,6 +202,7 @@ package Grt.Rtis is
       --  Line and column of the declaration.
       Linecol : Ghdl_Index_Type;
    end record;
+   pragma Convention (C, Ghdl_Rtin_Object);
    type Ghdl_Rtin_Object_Acc is access Ghdl_Rtin_Object;
    function To_Ghdl_Rtin_Object_Acc is new Ada.Unchecked_Conversion
      (Source => Ghdl_Rti_Access, Target => Ghdl_Rtin_Object_Acc);
@@ -208,6 +217,7 @@ package Grt.Rtis is
       Parent : Ghdl_Rti_Access;
       Instance : Ghdl_Rti_Access; --  Component or entity.
    end record;
+   pragma Convention (C, Ghdl_Rtin_Instance);
    type Ghdl_Rtin_Instance_Acc is access Ghdl_Rtin_Instance;
    function To_Ghdl_Rtin_Instance_Acc is new Ada.Unchecked_Conversion
      (Source => Ghdl_Rti_Access, Target => Ghdl_Rtin_Instance_Acc);
@@ -235,6 +245,7 @@ package Grt.Rtis is
       Nbr_Child : Ghdl_Index_Type;
       Children : Ghdl_Rti_Arr_Acc;
    end record;
+   pragma Convention (C, Ghdl_Rtin_Component);
    type Ghdl_Rtin_Component_Acc is access Ghdl_Rtin_Component;
    function To_Ghdl_Rtin_Component_Acc is new Ada.Unchecked_Conversion
      (Source => Ghdl_Rti_Access, Target => Ghdl_Rtin_Component_Acc);
@@ -247,6 +258,7 @@ package Grt.Rtis is
       --  extended identifiers are represented as is too.
       Names : Ghdl_C_String_Array_Ptr;
    end record;
+   pragma Convention (C, Ghdl_Rtin_Type_Enum);
    type Ghdl_Rtin_Type_Enum_Acc is access Ghdl_Rtin_Type_Enum;
    function To_Ghdl_Rtin_Type_Enum_Acc is new Ada.Unchecked_Conversion
      (Source => Ghdl_Rti_Access, Target => Ghdl_Rtin_Type_Enum_Acc);
@@ -255,6 +267,7 @@ package Grt.Rtis is
       Common : Ghdl_Rti_Common;
       Name : Ghdl_C_String;
    end record;
+   pragma Convention (C, Ghdl_Rtin_Type_Scalar);
    type Ghdl_Rtin_Type_Scalar_Acc is access Ghdl_Rtin_Type_Scalar;
    function To_Ghdl_Rtin_Type_Scalar_Acc is new Ada.Unchecked_Conversion
      (Source => Ghdl_Rti_Access, Target => Ghdl_Rtin_Type_Scalar_Acc);
@@ -265,6 +278,7 @@ package Grt.Rtis is
       Basetype : Ghdl_Rti_Access;
       Range_Loc : Ghdl_Rti_Loc;
    end record;
+   pragma Convention (C, Ghdl_Rtin_Subtype_Scalar);
    type Ghdl_Rtin_Subtype_Scalar_Acc is access Ghdl_Rtin_Subtype_Scalar;
    function To_Ghdl_Rtin_Subtype_Scalar_Acc is new Ada.Unchecked_Conversion
      (Source => Ghdl_Rti_Access, Target => Ghdl_Rtin_Subtype_Scalar_Acc);
@@ -286,31 +300,34 @@ package Grt.Rtis is
       Nbr_Dim : Ghdl_Index_Type;
       Indexes : Ghdl_Rti_Arr_Acc;
    end record;
+   pragma Convention (C, Ghdl_Rtin_Type_Array);
    type Ghdl_Rtin_Type_Array_Acc is access Ghdl_Rtin_Type_Array;
    function To_Ghdl_Rtin_Type_Array_Acc is new Ada.Unchecked_Conversion
      (Source => Ghdl_Rti_Access, Target => Ghdl_Rtin_Type_Array_Acc);
    function To_Ghdl_Rti_Access is new Ada.Unchecked_Conversion
      (Source => Ghdl_Rtin_Type_Array_Acc, Target => Ghdl_Rti_Access);
 
-   type Ghdl_Rtin_Subtype_Array is record
+   type Ghdl_Rtin_Subtype_Composite is record
       Common : Ghdl_Rti_Common;
       Name : Ghdl_C_String;
-      Basetype : Ghdl_Rtin_Type_Array_Acc;
+      Basetype : Ghdl_Rti_Access;
       Bounds : Ghdl_Rti_Loc;
       Valsize : Ghdl_Rti_Loc;
       Sigsize : Ghdl_Rti_Loc;
    end record;
-   type Ghdl_Rtin_Subtype_Array_Acc is access Ghdl_Rtin_Subtype_Array;
-   function To_Ghdl_Rtin_Subtype_Array_Acc is new Ada.Unchecked_Conversion
-     (Source => Ghdl_Rti_Access, Target => Ghdl_Rtin_Subtype_Array_Acc);
+   pragma Convention (C, Ghdl_Rtin_Subtype_Composite);
+   type Ghdl_Rtin_Subtype_Composite_Acc is access Ghdl_Rtin_Subtype_Composite;
+   function To_Ghdl_Rtin_Subtype_Composite_Acc is new Ada.Unchecked_Conversion
+     (Source => Ghdl_Rti_Access, Target => Ghdl_Rtin_Subtype_Composite_Acc);
    function To_Ghdl_Rti_Access is new Ada.Unchecked_Conversion
-     (Source => Ghdl_Rtin_Subtype_Array_Acc, Target => Ghdl_Rti_Access);
+     (Source => Ghdl_Rtin_Subtype_Composite_Acc, Target => Ghdl_Rti_Access);
 
    type Ghdl_Rtin_Type_Fileacc is record
       Common : Ghdl_Rti_Common;
       Name : Ghdl_C_String;
       Base : Ghdl_Rti_Access;
    end record;
+   pragma Convention (C, Ghdl_Rtin_Type_Fileacc);
    type Ghdl_Rtin_Type_Fileacc_Acc is access Ghdl_Rtin_Type_Fileacc;
    function To_Ghdl_Rtin_Type_Fileacc_Acc is new Ada.Unchecked_Conversion
      (Source => Ghdl_Rti_Access, Target => Ghdl_Rtin_Type_Fileacc_Acc);
@@ -322,6 +339,7 @@ package Grt.Rtis is
       Val_Off : Ghdl_Index_Type;
       Sig_Off : Ghdl_Index_Type;
    end record;
+   pragma Convention (C, Ghdl_Rtin_Element);
    type Ghdl_Rtin_Element_Acc is access Ghdl_Rtin_Element;
    function To_Ghdl_Rtin_Element_Acc is new Ada.Unchecked_Conversion
      (Source => Ghdl_Rti_Access, Target => Ghdl_Rtin_Element_Acc);
@@ -332,6 +350,7 @@ package Grt.Rtis is
       Nbrel : Ghdl_Index_Type;
       Elements : Ghdl_Rti_Arr_Acc;
    end record;
+   pragma Convention (C, Ghdl_Rtin_Type_Record);
    type Ghdl_Rtin_Type_Record_Acc is access Ghdl_Rtin_Type_Record;
    function To_Ghdl_Rtin_Type_Record_Acc is new Ada.Unchecked_Conversion
      (Source => Ghdl_Rti_Access, Target => Ghdl_Rtin_Type_Record_Acc);
@@ -341,6 +360,7 @@ package Grt.Rtis is
       Name : Ghdl_C_String;
       Value : Ghdl_I64;
    end record;
+   pragma Convention (C, Ghdl_Rtin_Unit64);
    type Ghdl_Rtin_Unit64_Acc is access Ghdl_Rtin_Unit64;
    function To_Ghdl_Rtin_Unit64_Acc is new Ada.Unchecked_Conversion
      (Source => Ghdl_Rti_Access, Target => Ghdl_Rtin_Unit64_Acc);
@@ -350,6 +370,7 @@ package Grt.Rtis is
       Name : Ghdl_C_String;
       Addr : Ghdl_Value_Ptr;
    end record;
+   pragma Convention (C, Ghdl_Rtin_Unitptr);
    type Ghdl_Rtin_Unitptr_Acc is access Ghdl_Rtin_Unitptr;
    function To_Ghdl_Rtin_Unitptr_Acc is new Ada.Unchecked_Conversion
      (Source => Ghdl_Rti_Access, Target => Ghdl_Rtin_Unitptr_Acc);
@@ -362,6 +383,7 @@ package Grt.Rtis is
       Nbr : Ghdl_Index_Type;
       Units : Ghdl_Rti_Arr_Acc;
    end record;
+   pragma Convention (C, Ghdl_Rtin_Type_Physical);
    type Ghdl_Rtin_Type_Physical_Acc is access Ghdl_Rtin_Type_Physical;
    function To_Ghdl_Rtin_Type_Physical_Acc is new Ada.Unchecked_Conversion
      (Source => Ghdl_Rti_Access, Target => Ghdl_Rtin_Type_Physical_Acc);
@@ -382,6 +404,7 @@ package Grt.Rtis is
       Rti : Ghdl_Rti_Access;
       Parent : Ghdl_Component_Link_Acc;
    end record;
+   pragma Convention (C, Ghdl_Entity_Link_Type);
 
    type Ghdl_Entity_Link_Acc is access Ghdl_Entity_Link_Type;
 
@@ -392,6 +415,7 @@ package Grt.Rtis is
       Instance : Ghdl_Entity_Link_Acc;
       Stmt : Ghdl_Rti_Access;
    end record;
+   pragma Convention (C, Ghdl_Component_Link_Type);
 
    function To_Ghdl_Component_Link_Acc is new Ada.Unchecked_Conversion
      (Source => Address, Target => Ghdl_Component_Link_Acc);

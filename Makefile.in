@@ -28,6 +28,7 @@ EXEEXT=@EXEEXT@
 SOEXT=@SOEXT@
 PIC_FLAGS=@PIC_FLAGS@
 gcc_src_dir=@gcc_src_dir@
+gcc_ortho_lang=@gcc_ortho_lang@
 LLVM_CONFIG=@llvm_config@
 LDFLAGS=@LDFLAGS@
 LIBBACKTRACE=@backtrace_lib@
@@ -172,6 +173,8 @@ copy-sources.gcc: version.ads
 	$(CP) -p $(srcdir)/src/ortho/gcc/*.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/ortho/gcc/*.c $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/ortho/gcc/*.opt $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/src/ortho/gcc/$(gcc_ortho_lang) \
+	  $(gcc_vhdl_dir)/ortho-lang.c
 	$(CP) -p $(srcdir)/doc/ghdl.texi $(srcdir)/doc/ghdl.1 $(gcc_vhdl_dir)
 	$(MKDIR) $(gcc_vhdl_dir)/ghdldrv
 	$(CP) -pR $(srcdir)/src/ghdldrv/*.ad? $(gcc_vhdl_dir)/ghdldrv

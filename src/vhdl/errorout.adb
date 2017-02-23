@@ -85,19 +85,7 @@ package body Errorout is
 
    --  Warnings.
 
-   type Warning_Control_Type is record
-      Enabled : Boolean;
-      Error : Boolean;
-   end record;
-
-   type Warnings_Array is array (Msgid_Warnings) of Warning_Control_Type;
-
-   Warnings_Control : Warnings_Array :=
-     (Warnid_Binding
-        | Warnid_Library => (Enabled => True, Error => False),
-      Warnid_Shared
-        | Warnid_Pure    => (Enabled => True, Error => False),
-      others             => (Enabled => False, Error => False));
+   Warnings_Control : Warnings_Setting := Default_Warnings;
 
    procedure Enable_Warning (Id : Msgid_Warnings; Enable : Boolean) is
    begin
@@ -136,6 +124,23 @@ package body Errorout is
 
       return Res;
    end Warning_Image;
+
+   procedure Save_Warnings_Setting (Res : out Warnings_Setting) is
+   begin
+      Res := Warnings_Control;
+   end Save_Warnings_Setting;
+
+   procedure Disable_All_Warnings is
+   begin
+      Warnings_Control := (others => (Enabled => False, Error => False));
+   end Disable_All_Warnings;
+
+   procedure Restore_Warnings_Setting (Res : Warnings_Setting) is
+   begin
+      Warnings_Control := Res;
+   end Restore_Warnings_Setting;
+
+   --  Error arguments
 
    function "+" (V : Iir) return Earg_Type is
    begin
