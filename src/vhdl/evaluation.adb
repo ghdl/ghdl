@@ -3796,10 +3796,19 @@ package body Evaluation is
                Path_Add_Element (Get_Library_Unit (El), Is_Instance);
             when Iir_Kind_Sensitized_Process_Statement
               | Iir_Kind_Process_Statement
-              | Iir_Kind_Block_Statement =>
+              | Iir_Kind_Block_Statement
+              | Iir_Kind_Protected_Type_Body =>
                Path_Add_Element (Get_Parent (El), Is_Instance);
                Path_Add_Name (El);
                Path_Add (":");
+            when Iir_Kind_Protected_Type_Declaration =>
+               declare
+                  Decl : constant Iir := Get_Type_Declarator (El);
+               begin
+                  Path_Add_Element (Get_Parent (Decl), Is_Instance);
+                  Path_Add_Name (Decl);
+                  Path_Add (":");
+               end;
             when Iir_Kind_Function_Declaration
               | Iir_Kind_Procedure_Declaration =>
                Path_Add_Element (Get_Parent (El), Is_Instance);
