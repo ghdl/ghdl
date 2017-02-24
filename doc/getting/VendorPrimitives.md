@@ -1,16 +1,12 @@
 ## Vendor Primitives
 
-Vendors like Altera, Lattice and Xilinx have their own simulation libraries, especially for FPGA primitives, soft and hard macros. These libraries can not be shipped with *GHDL*, but we offer prepared compile scripts to pre-compile the vendor libraries, if the vendor tool is present on the computer. There are also popular simulation and verification libraries like [OSVVM][osvvm] and [VUnit][vunit], which can be pre-compiled, too.
+Vendors like Altera, Lattice and Xilinx have their own simulation libraries, especially for FPGA primitives, soft and hard macros. These libraries can not be shipped with *GHDL*, but we offer prepared compile scripts to pre-compile the vendor libraries, if the vendor tool is present on the computer. There are also popular simulation and verification libraries like [OSVVM](http://osvvm.org) and [VUnit](https://github.com/LarsAsplund/vunit), which can be pre-compiled, too.
 
-The compilation scripts are writen in the shell languages: *PowerShell* for *Windows* |trade| and *Bash* for *GNU/Linux*. The compile scripts can colorize the *GHDL* warning and error lines with the help of `grc/grcat` ([generic colourizer][grc]).
-
-- [osvvm]: http://osvvm.org/
-- [vunit]: https://github.com/LarsAsplund/vunit
-- [grc]: http://kassiopeia.juls.savba.sk/~garabik/software/grc.html
+The compilation scripts are writen in the shell languages: *PowerShell* for *Windows* |trade| and *Bash* for *GNU/Linux*. The compile scripts can colorize the *GHDL* warning and error lines with the help of `grc/grcat` ([generic colourizer](http://kassiopeia.juls.savba.sk/~garabik/software/grc.html)).
 
 ##### Supported Vendors Libraries
 
- - Altera/Intel Quartus (&ge;13.0):
+ - Altera/Intel Quartus (13.0 or later):
      - `lpm`, `sgate`
      - `altera`, `altera_mf`, `altera_lnsim`
      - `arriaii`, `arriaii_pcie_hip`, `arriaiigz`
@@ -21,19 +17,19 @@ The compilation scripts are writen in the shell languages: *PowerShell* for *Win
      - `stratixiv`, `stratixiv_pcie_hip`
      - `stratixv`, `stratixv_pcie_hip`
      - `fiftyfivenm`, `twentynm`
- - Lattice (&ge;3.6):
+ - Lattice (3.6 or later):
      - `ec`
      - `ecp`, `ecp2`, `ecp3`, `ecp5u`
      - `lptm`, `lptm2`
      - `machxo`, `machxo2`, `machxo3l`
      - `sc`, `scm`
      - `xp`, `xp2`
- - Xilinx ISE (&ge;14.0):
+ - Xilinx ISE (14.0 or later):
      - `unisim` (incl. `secureip`)
      - `unimacro`
      - `simprim` (incl. `secureip`)
      - `xilinxcorelib`
- - Xilinx Vivado (&ge;2014.1):
+ - Xilinx Vivado (2014.1 or later):
      - `unisim` (incl. `secureip`)
      - `unimacro`
 

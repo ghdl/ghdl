@@ -1,13 +1,12 @@
 .. _USING:Simulation:
 
-**********************
 Simulation and runtime
 **********************
 
 .. _simulation_options:
 
 Simulation options
-==================
+============
 
 In most system environments, it is possible to pass options while
 invoking a program.  Contrary to most programming languages, there is no
@@ -77,45 +76,52 @@ all options available, including the debugging one.
 
   Display the time and delta cycle number as simulation advances.
 
-
-.. option:: --disp-tree[=<KIND>]
-
-  .. index:: display design hierarchy
-
-  Display the design hierarchy as a tree of instantiated design entities.
-  This may be useful to understand the structure of a complex
-  design. `KIND` is optional, but if set must be one of:
-
-  * none
-    Do not display hierarchy.  Same as if the option was not present.
-
-  * inst
-    Display entities, architectures, instances, blocks and generates statements.
-
-  * proc
-    Like :samp:`inst` but also display processes.
-
-  * port
-    Like :samp:`proc` but display ports and signals too.
-    If `KIND` is not specified, the hierarchy is displayed with the
-    :samp:`port` mode.
-
-.. option:: --no-run
-
-  Do not simulate, only elaborate.  This may be used with
-  :option:`--disp-tree` to display the tree without simulating the whole
-  design.
-
 .. option:: --unbuffered
 
   Disable buffering on stdout, stderr and files opened in write or append mode (TEXTIO).
+
+.. option:: --psl-report=<FILENAME>
+
+  Write a report for PSL assertions and coverage at the end of
+  simulation.  The file is written using the JSON format, but still
+  being human readable.
+
+.. option:: --sdf=<PATH>=<FILENAME>
+
+  Do VITAL annotation on `PATH` with SDF file :file:`FILENAME`.
+
+  `PATH` is a path of instances, separated with :samp:`.` or :samp:`/`.
+  Any separator can be used.  Instances are component instantiation labels,
+  generate labels or block labels.  Currently, you cannot use an indexed name.
+
+  Specifying a delay::
+
+   --sdf=min=<PATH>=<FILENAME>
+   --sdf=typ=<PATH>=<FILENAME>
+   --sdf=max=<PATH>=<FILENAME>
+
+  If the option contains a type of delay, that is :samp:`min=`,
+  :samp:`typ=` or :samp:`max=`, the annotator use respectively minimum,
+  typical or maximum values.  If the option does not contain a type of delay,
+  the annotator use the typical delay.
+
+  See :ref:`Backannotation`, for more details.
+
+.. option:: --help
+
+  Display a short description of the options accepted by the runtime library.
+
+.. _export_waves:
+  
+Export waveforms
+============
 
 .. option:: --read-opt-file=<FILENAME>
 
   Filter signals to be dumped to the wave file according to the wave option
   file provided.
 
-  Here is a description of the wave option file format currently supported :
+  Here is a description of the wave option file format currently supported ::
 
      $ version = 1.1  # Optional
 
@@ -219,39 +225,47 @@ all options available, including the debugging one.
 
   Contrary to VCD files, any VHDL type can be dumped into a GHW file.
 
-.. option:: --psl-report=<FILENAME>
+.. TODO::
 
-  Write a report for PSL assertions and coverage at the end of
-  simulation.  The file is written using the JSON format, but still
-  being human readable.
+  - :samp:` --vcd-nodate       do not write date in VCD file`
+  - Is interactive simulation only possible with VCD? Can't it be done with either FST or GHW?
+  - `Source code annotation is currently not available for VHDL, however all of GTKWave's other debug features are readily accessible. VHDL support is planned for a future release`. That's something that could be added in the future, but I have no plan for it.
+  
+Export design hierarchy
+============
+  
+.. option:: --disp-tree[=<KIND>]
 
-.. option:: --sdf=<PATH>=<FILENAME>
+  .. index:: display design hierarchy
 
-  Do VITAL annotation on `PATH` with SDF file :file:`FILENAME`.
+  Display the design hierarchy as a tree of instantiated design entities.
+  This may be useful to understand the structure of a complex
+  design. `KIND` is optional, but if set must be one of:
 
-  `PATH` is a path of instances, separated with :samp:`.` or :samp:`/`.
-  Any separator can be used.  Instances are component instantiation labels,
-  generate labels or block labels.  Currently, you cannot use an indexed name.
+  * none
+    Do not display hierarchy.  Same as if the option was not present.
 
-  Specifying a delay::
+  * inst
+    Display entities, architectures, instances, blocks and generates statements.
 
-   --sdf=min=<PATH>=<FILENAME>
-   --sdf=typ=<PATH>=<FILENAME>
-   --sdf=max=<PATH>=<FILENAME>
+  * proc
+    Like :samp:`inst` but also display processes.
 
-  If the option contains a type of delay, that is :samp:`min=`,
-  :samp:`typ=` or :samp:`max=`, the annotator use respectively minimum,
-  typical or maximum values.  If the option does not contain a type of delay,
-  the annotator use the typical delay.
+  * port
+    Like :samp:`proc` but display ports and signals too.
+    If `KIND` is not specified, the hierarchy is displayed with the
+    :samp:`port` mode.
 
-  See :ref:`Backannotation`, for more details.
+.. option:: --no-run
 
-.. option:: --help
-
-  Display a short description of the options accepted by the runtime library.
-
+  Stop the simulation before the first cycle. This may be used with :option:`--disp-tree` to display the tree without simulating the whole design. This option actually elaborates the design, so it will catch any bound error in port maps. 
+ 
+.. TODO::
+  * The json format is not documented, except it should be self-documented. Maybe worth adding a small example ?
+  * The XML format (for --file-to-xml) is not documented and it may change as it shows internal stuff. :samp:`--file-to-xml FILEs  Dump AST in XML`
+   
 Debugging VHDL programs
-=======================
+============
 
 .. index:: debugging
 
