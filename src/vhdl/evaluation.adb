@@ -1355,6 +1355,13 @@ package body Evaluation is
             begin
                Res := 1.0;
                Val := Get_Fp_Value (Left);
+               --  LRM08 9.2.8 Misellaneous operators
+               --  Exponentiation with an integer exponent is equivalent to
+               --  repeated multiplication of the left operand by itself for
+               --  a number of times indicated by the absolute value of the
+               --  exponent and from left to right; [...]
+               --  GHDL: use the standard power-of-2 approach.  This is not
+               --  strictly equivalent however.
                Exp := abs Get_Value (Right);
                while Exp /= 0 loop
                   if Exp mod 2 = 1 then
@@ -1363,6 +1370,9 @@ package body Evaluation is
                   Exp := Exp / 2;
                   Val := Val * Val;
                end loop;
+               --  LRM08 9.2.8 Misellaneous operators
+               --  [...] if the exponent is negative then the result is the
+               --  reciprocal of that [...]
                if Get_Value (Right) < 0 then
                   Res := 1.0 / Res;
                end if;
