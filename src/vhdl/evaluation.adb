@@ -1713,7 +1713,8 @@ package body Evaluation is
            | Iir_Kind_Implicit_Dereference
            | Iir_Kind_Function_Call
            | Iir_Kind_Attribute_Value
-           | Iir_Kind_Attribute_Name =>
+           | Iir_Kind_Attribute_Name
+           | Iir_Kind_Subtype_Attribute =>
             Prefix_Type := Get_Type (Prefix);
          when Iir_Kinds_Subtype_Definition =>
             Prefix_Type := Prefix;
