@@ -65,7 +65,7 @@ Jensen, Adam               FreeBSD builds
 Koch, Markus               vendor pre-compile script for Lattice (GNU/Linux)
 Koontz, David              Mac OSX builds, LRM compliance work, bugfix analyses
 Lehmann, Patrick           Windows compile scripts, vendor library pre-compile scripts (win+lin), building in MinGW, AppVeyor integration.
-Martinez-Corral, Unai      Docker builds, Travis-CI & Docker, adapt/fix STD theme
+Martinez-Corral, Unai      Docker builds, Travis-CI & Docker, adapt/fix RTD theme
 van Rantwijk, Joris        Debian packaging
 =========================  ============================================================
 
