@@ -160,6 +160,7 @@ package Grt.Processes is
    procedure Ghdl_Protected_Init (Obj : System.Address);
    procedure Ghdl_Protected_Fini (Obj : System.Address);
 
+   function Get_Rti_Context (Proc : Process_Acc) return Rtis_Addr.Rti_Context;
 private
    type Instance is null record;
 

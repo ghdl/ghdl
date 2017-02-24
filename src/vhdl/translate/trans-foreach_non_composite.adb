@@ -31,7 +31,7 @@ begin
    case Type_Info.Type_Mode is
       when Type_Mode_Scalar =>
          Do_Non_Composite (Targ, Targ_Type, Data);
-      when Type_Mode_Fat_Array
+      when Type_Mode_Unbounded_Array
         | Type_Mode_Array =>
          declare
             Var_Array      : Mnode;
@@ -76,7 +76,8 @@ begin
             Finish_Data_Array (Composite_Data);
             Close_Temp;
          end;
-      when Type_Mode_Record =>
+      when Type_Mode_Record
+        | Type_Mode_Unbounded_Record =>
          declare
             Var_Record     : Mnode;
             Sub_Data       : Data_Type;

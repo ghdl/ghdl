@@ -128,6 +128,11 @@ package body Grt.Processes is
       return Nbr_Resumed_Processes;
    end Get_Nbr_Resumed_Processes;
 
+   function Get_Rti_Context (Proc : Process_Acc) return Rti_Context is
+   begin
+      return Proc.Rti;
+   end Get_Rti_Context;
+
    procedure Process_Register (This : Instance_Acc;
                                Proc : Proc_Acc;
                                Ctxt : Rti_Context;

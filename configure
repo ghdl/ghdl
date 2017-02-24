@@ -13,7 +13,6 @@ prefix=/usr/local
 libdirsuffix=lib/ghdl
 libdirreverse=../..
 gcc_src_dir=
-gcc_ortho_lang=unknown
 llvm_config=
 backtrace_lib=
 llvm_be=llvm
@@ -26,7 +25,7 @@ PIC_FLAGS=-fPIC
 show_help=no
 progname=$0
 
-subst_vars="CC CXX GNATMAKE CFLAGS LDFLAGS build srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir gcc_ortho_lang llvm_config llvm_be llvm_be_ver backtrace_lib build_mode EXEEXT SOEXT PIC_FLAGS default_pie"
+subst_vars="CC CXX GNATMAKE CFLAGS LDFLAGS build srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config llvm_be llvm_be_ver backtrace_lib build_mode EXEEXT SOEXT PIC_FLAGS default_pie"
 
 # Find srcdir
 srcdir=`dirname $progname`
@@ -133,21 +132,12 @@ if test $backend = mcode; then
     fi
 fi
 
-# For gcc backend, check version
+# For gcc backend, check existing version
 if test $backend = gcc; then
     if ! test -f $gcc_src_dir/gcc/BASE-VER; then
 	echo "cannot find gcc/BASE-VER in $gcc_src_dir"
 	exit 1
     fi
-    base_ver=`cat $gcc_src_dir/gcc/BASE-VER`
-    case $base_ver in
-	 4.9*) gcc_ortho_lang=ortho-lang.c ;;
-	 5.*)  gcc_ortho_lang=ortho-lang-5.c ;;
-	 6.*)  gcc_ortho_lang=ortho-lang-6.c ;;
-	 *) echo "Mismatch gcc version from $gcc_src_dir"
-	    echo "Need gcc version 4.9.x, 5.x or 6.x"
-	    exit 1 ;;
-    esac
     if test "x$backtrace_lib" = x ; then
 	# Automatically use libbacktrace from gcc.
 	backtrace_lib="$prefix/$libdirsuffix/libbacktrace.a"
