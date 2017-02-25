@@ -105,7 +105,7 @@ LLVM backend
 GNU/Linux
 ----------------
 
-You need to install LLVM (usually depends on :samp:`libedit`). The supported versions are 3.5 till 3.9, but debugging is only supported with LLVM 3.5.
+You need to install LLVM (usually depends on :samp:`libedit`, see :ghdlsharp`29`). The supported versions are 3.5 till 3.9, but debugging is only supported with LLVM 3.5.
 
 - First configure GHDL with the proper arg :samp:`./configure --with-llvm-config`. If :samp:`llvm-config` is not in your path, you can specify it: :samp:`./configure --with-llvm-config=LLVM_INSTALL/bin/llvm-config`.
 

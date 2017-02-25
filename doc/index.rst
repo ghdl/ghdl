@@ -91,4 +91,5 @@ Lorem ipsum dolor sit amet...
    changelog/Roadmap
    changelog/index
    genindex
+   changelog/Meta
    
