@@ -69,8 +69,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'GHDL'
-copyright = u'2015, Tristan Gingold'
-author = u'Tristan Gingold'
+copyright = u'2015-2017, Tristan Gingold and contributors'
+author = u'Tristan Gingold and contributors'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -356,8 +356,9 @@ intersphinx_mapping = {
 # Sphinx.Ext.ExtLinks
 # ==============================================================================
 extlinks = {
+    'ghdlsharp': ('https://github.com/tgingold/ghdl/issues/%s', '#'),
 	'ghdlissue': ('https://github.com/tgingold/ghdl/issues/%s', 'issue #'),
 	'ghdlpull':  ('https://github.com/tgingold/ghdl/pull/%s', 'pull request #'),
 	'ghdlsrc':   ('https://github.com/tgingold/ghdl/blob/master/src/%s', None),
-	'wikipedia':   ('https://en.wikipedia.org/wiki/%s', None)
+	'wikipedia': ('https://en.wikipedia.org/wiki/%s', None)
 }
