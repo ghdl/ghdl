@@ -20,16 +20,31 @@ environment:
 #    service_url: https://127.0.0.1:8090
 #
   matrix:
-    - BUILD_MINGW: mingw32
-      BUILD_BACKEND: mcode
+#    - BUILD_MINGW: mingw32
+#      BUILD_BACKEND: mcode
 # Not yet functionnal
 #    - BUILD_MINGW: mingw32
 #      BUILD_BACKEND: llvm
 # mcode is not yet supported on Win64
 #    - BUILD_MINGW: mingw64
 #      BUILD_BACKEND: mcode
+#    - BUILD_MINGW: mingw64
+#      BUILD_BACKEND: llvm
+#    - BUILD_MINGW: mingw32
+#      BUILD_BACKEND: gcc
+#      BUILD_GCC_VERSION: 5.3.0
+#    - BUILD_MINGW: mingw32
+#      BUILD_BACKEND: gcc
+#      BUILD_GCC_VERSION: 5.3.0
+#    - BUILD_MINGW: mingw64
+#      BUILD_BACKEND: gcc
+#      BUILD_GCC_VERSION: 4.9.4
+#    - BUILD_MINGW: mingw64
+#      BUILD_BACKEND: gcc
+#      BUILD_GCC_VERSION: 5.4.0
     - BUILD_MINGW: mingw64
-      BUILD_BACKEND: llvm
+      BUILD_BACKEND: gcc
+      BUILD_GCC_VERSION: 6.3.0
 
 # clone_folder: c:\projects\ghdl
 
