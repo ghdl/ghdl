@@ -1,6 +1,6 @@
 # Testsuite environment
 #
-# This file defines the shell functions to analyse a file, elaborat or run
+# This file defines the shell functions to analyse a file, elaborate or run
 # a design. There are version for expected success and expected failure.
 #
 # Every test should source and use this file.
@@ -21,6 +21,14 @@ GET_ENTITIES=../get_entities
 
 # Exit in case of failure in shell scripts.
 set -e
+
+# Define colors
+ANSI_NOCOLOR="\033[0m"
+ANSI_RED="\033[31m"
+ANSI_BLUE="\033[34m"
+ANSI_GREEN="\033[32m"
+# Optionally disable colors
+if [ -z "$ENABLECOLOR" ]; then unset ANSI_NOCOLOR ANSI_RED ANSI_BLUE ANSI_GREEN; fi
 
 if [ x"$GHDL" = x ]; then
     echo "error: GHDL environment variable is not defined"

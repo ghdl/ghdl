@@ -48,8 +48,9 @@ ScriptDir="$($READLINK -f $ScriptDir)"
 DeviceList="ec ecp ecp2 ecp3 ecp5u lptm lptm2 machxo machxo2 machxo3l sc scm xp xp2"
 
 # source configuration file from GHDL's 'vendors' library directory
-source $ScriptDir/config.sh
-source $ScriptDir/shared.sh
+. $ScriptDir/../ansi_color.sh
+. $ScriptDir/config.sh
+. $ScriptDir/shared.sh
 
 # command line argument processing
 NO_COMMAND=1

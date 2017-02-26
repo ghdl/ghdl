@@ -32,27 +32,27 @@ for opt; do
   esac
 done
 
-for i in $dirs; do
-  echo "GNA dir $i:"
-  cd $i
+singlerun() {
+  echo ""
+  echo "GNA dir $1:"
+  cd $1
   if ! ./testsuite.sh; then
     echo "#################################################################"
-    echo "######### FAILURE: $i"
+    echo "######### FAILURE: $1"
     echo "#################################################################"
-    if [ $full = "y" ]; then
-      failures="$failures $i"
+    if [ $2 = "y" ]; then
+      failures="$failures $1"
     else
       exit 1;
     fi
   fi
   cd ..
-done
+}
+
+for i in $dirs; do singlerun $i $full; done
 
 if [ x"$failures" = x"" ]; then
-    echo "GNA tests are successful"
-    exit 0
+    echo "GNA tests are successful" && exit 0
 else
-    echo "GNA test failed ($failures)"
-    exit 1
+    echo "GNA test failed ($failures)" && exit 1
 fi
-
