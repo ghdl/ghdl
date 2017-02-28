@@ -54,11 +54,13 @@ package Trans.Rtis is
    Ghdl_Rtik_Type_Access                 : O_Cnode;
    Ghdl_Rtik_Type_Array                  : O_Cnode;
    Ghdl_Rtik_Type_Record                 : O_Cnode;
+   Ghdl_Rtik_Type_Unbounded_Record       : O_Cnode;
    Ghdl_Rtik_Type_File                   : O_Cnode;
    Ghdl_Rtik_Subtype_Scalar              : O_Cnode;
    Ghdl_Rtik_Subtype_Array               : O_Cnode;
    Ghdl_Rtik_Subtype_Unconstrained_Array : O_Cnode;
    Ghdl_Rtik_Subtype_Record              : O_Cnode;
+   Ghdl_Rtik_Subtype_Unbounded_Record    : O_Cnode;
    Ghdl_Rtik_Subtype_Access              : O_Cnode;
    Ghdl_Rtik_Type_Protected              : O_Cnode;
    Ghdl_Rtik_Element                     : O_Cnode;

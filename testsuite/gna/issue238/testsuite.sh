@@ -20,6 +20,15 @@ elab_simulate call1
 analyze call2.vhdl
 elab_simulate call2
 
+analyze call3.vhdl
+elab_simulate call3
+
+analyze call4.vhdl
+elab_simulate call4
+
+analyze call5.vhdl
+elab_simulate call5
+
 clean
 
 echo "Test successful"

@@ -47,6 +47,7 @@ with Grt.C; use Grt.C;
 with Grt.Hooks; use Grt.Hooks;
 with Grt.Rtis; use Grt.Rtis;
 with Grt.Rtis_Addr; use Grt.Rtis_Addr;
+with Grt.Rtis_Utils; use Grt.Rtis_Utils;
 with Grt.Rtis_Types; use Grt.Rtis_Types;
 with Grt.Vstrings;
 with Grt.Wave_Opt; use Grt.Wave_Opt;
@@ -325,6 +326,7 @@ package body Grt.Vcd is
       Rti : Ghdl_Rti_Access;
       Error : AvhpiErrorT;
       Sig_Addr : Address;
+      Bounds : Address;
 
       Kind : Vcd_Var_Type;
       Irange : Ghdl_Range_Ptr;
@@ -339,42 +341,46 @@ package body Grt.Vcd is
 
       Rti := Avhpi_Get_Rti (Sig_Type);
       Sig_Addr := Avhpi_Get_Address (Sig);
-      if Rti_Complex_Type (Rti) then
-         Sig_Addr := To_Addr_Acc (Sig_Addr).all;
-      end if;
+      Object_To_Base_Bounds (Rti, Sig_Addr, Sig_Addr, Bounds);
 
-      Kind := Vcd_Bad;
-      Irange := null;
       case Rti.Kind is
          when Ghdl_Rtik_Type_B1
            | Ghdl_Rtik_Type_E8
            | Ghdl_Rtik_Subtype_Scalar =>
             Kind := Rti_To_Vcd_Kind (Rti);
+            Irange := null;
          when Ghdl_Rtik_Subtype_Array =>
             declare
-               St : Ghdl_Rtin_Subtype_Array_Acc;
+               St : constant Ghdl_Rtin_Subtype_Composite_Acc :=
+                 To_Ghdl_Rtin_Subtype_Composite_Acc (Rti);
+               Arr_Rti : constant Ghdl_Rtin_Type_Array_Acc :=
+                 To_Ghdl_Rtin_Type_Array_Acc (St.Basetype);
+               Idx_Rti : constant Ghdl_Rti_Access :=
+                 Get_Base_Type (Arr_Rti.Indexes (0));
             begin
-               St := To_Ghdl_Rtin_Subtype_Array_Acc (Rti);
-               Kind := Rti_To_Vcd_Kind (St.Basetype);
-               Irange := To_Ghdl_Range_Ptr
-                 (Loc_To_Addr (St.Common.Depth, St.Bounds,
-                               Avhpi_Get_Context (Sig)));
+               Kind := Rti_To_Vcd_Kind (Arr_Rti);
+               Bounds := Loc_To_Addr (St.Common.Depth, St.Bounds,
+                                      Avhpi_Get_Context (Sig));
+               Extract_Range (Bounds, Idx_Rti, Irange);
             end;
          when Ghdl_Rtik_Type_Array =>
             declare
-               Uc : Ghdl_Uc_Array_Acc;
+               Arr_Rti : constant Ghdl_Rtin_Type_Array_Acc :=
+                 To_Ghdl_Rtin_Type_Array_Acc (Rti);
+               Idx_Rti : constant Ghdl_Rti_Access :=
+                 Get_Base_Type (Arr_Rti.Indexes (0));
             begin
-               Kind := Rti_To_Vcd_Kind (To_Ghdl_Rtin_Type_Array_Acc (Rti));
-               Uc := To_Ghdl_Uc_Array_Acc (Sig_Addr);
-               Sig_Addr := Uc.Base;
-               Irange := To_Ghdl_Range_Ptr (Uc.Bounds);
+               Kind := Rti_To_Vcd_Kind (Arr_Rti);
+               Extract_Range (Bounds, Idx_Rti, Irange);
             end;
          when others =>
-            null;
+            Kind := Vcd_Bad;
       end case;
 
       --  Do not allow null-array.
-      if Irange /= null and then Irange.I32.Len = 0 then
+      if Kind = Vcd_Bad
+        or else (Irange /= null and then Irange.I32.Len = 0)
+      then
          Info := (Vtype => Vcd_Bad, Val => Vcd_Effective, Ptr => Null_Address);
          return;
       end if;
