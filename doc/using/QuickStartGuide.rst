@@ -1,3 +1,4 @@
+.. program:: ghdl
 .. _USING:QuickStart:
 
 ******************
@@ -31,23 +32,26 @@ To illustrate the large purpose of `VHDL`, here is a commented `'Hello world'` p
      end process;
   end behaviour;
 
-.. TIP:: Both :samp:`.vhdl` and :samp:`.vhd` extensions are used for VHDL source files, while :samp:`.v` is used for Verilog. 
+.. TIP::
 
-.. TODO:: Unless you use especial characters, either `UTF-8` or `ISO-8859-1` encodings can be used. However, if you do, the latter should be used. The IEEE 1076-2008 Standard defines ASCII (7-bit encoding) or ISO Latin-1 (ISO-8859-1) as default. GHDL has a relaxing rule :samp:`--mb` (multi byte) to allow UTF-8 or other encodings in comments. Please see the MB description for details.
+	* Both :samp:`.vhdl` and :samp:`.vhd` extensions are used for VHDL source files, while :samp:`.v` is used for Verilog. 
+	* Unless you use especial characters, either `UTF-8` or `ISO-8859-1` encodings can be used. However, if you do, the latter should be used. The standard defines ASCII (7-bit encoding) or ISO Latin-1 (ISO-8859-1) as default. However, GHDL has a relaxing option, :option:`--mb-comments` (multi byte), to allow UTF-8 or other encodings in comments.
 
 - First, you have to compile the file; this is called `analysis` of a design file in `VHDL` terms. Run :samp:`ghdl -a hello.vhdl` in the `shell`. This command creates or updates a file :file:`work-obj93.cf`, which describes the library :samp:`work`.
+- Then, run :samp:`ghdl -e hello_world` in the `shell`. Option :option:`-e` means :dfn:`elaborate`, which is used to build a design, with the :samp:`hello_world` entity at the top of the hierarchy.
+- Last, you can directly launch the simulation running :samp:`ghdl -r hello_world` in the `shell`. The result of the simulation will be shown on screen:
 
-.. WARNING:: If a GCC/LLVM variant of `GHDL` is used:
+.. code-block:: shell
 
-  * `Analysis` generates a file, :file:`hello.o`, which is the object file corresponding to your `VHDL` program.  This is not created on Windows.
-  * An aditional step is required; run :samp:`ghdl -e hello_world` in the `shell`. Option :option:`-e` means :dfn:`elaborate`, which is used to build a design, with the :samp:`hello_world` entity at the top of the hierarchy. This wil generate an executable binary named :file:`hello_world`.
-  * :option:`-e` can be bypassed with mcode, but you can still use it to check for some elaboration problems.
-  
-- Last, launch the simulation running :samp:`ghdl -r hello_world` in the `shell`. The result of the simulation will be shown on the screen::
+	Hello world!  
 
-  Hello world!  
-  
-.. TIP:: If a GCC/LLVM variant of `GHDL` is used, :option:`-r` is just a passthrough to the binary generated in the `elaboration`. Therefore, the executable can be run directly, :samp:`./hello_world`. See :ref:`Run_command` for more informartion.
+.. HINT:: If a GCC/LLVM variant of `GHDL` is used:
+
+  * `Analysis` generates a file, :file:`hello.o`, which is the object file corresponding to your `VHDL` program.  This is not created with mcode.
+  * The elaboration step is compulsory after the analysis and prior to launching the simulation; This wil generate an executable binary named :file:`hello_world`.
+  * As a result, :option:`-r` is just a passthrough to the binary generated in the `elaboration`. Therefore, the executable can be run directly, :samp:`./hello_world`. See :option:`-r` for more informartion.
+ 
+.. HINT:: :option:`-e` can be bypassed with mcode, since :option:`-r` actually elaborates the design and saves it on memory before running the simulation. But you can still use it to check for some elaboration problems.
   
 A full adder
 ============
@@ -146,7 +150,7 @@ If your design is rather complex, you'd like to inspect signals. Signal values c
 
 As explained in the `manual <http://gtkwave.sourceforge.net/gtkwave.pdf>`_, GtkWave *'relies on a post-mortem approach through the use of dumpfiles'*. Therefore, you should first simulate your design and dump a waveform file, say VCD: :samp:`ghdl -r adder_tb --vcd=adder.vcd`. Then, you can view the dump: :samp:`gtkwave adder.vcd`.
 
-See :ref:`simulation_options`, for more details on other runtime options.
+See section ':ref:`simulation_options`', for more details on other runtime options.
 
 Starting with a design
 ======================
@@ -192,7 +196,7 @@ Unless you are only studying VHDL, you will work with larger designs than the on
   
   * Remove the :file:`work/` directory: :samp:`rm -rf work`. Only the executable is kept. If you want to rebuild the design, create the :file:`work/` directory, import the sources, and make the design.
 
-.. WARNING:: Sometimes, a design does not fully follow the VHDL standards. For example it uses the badly engineered :samp:`std_logic_unsigned` package. GHDL supports this VHDL dialect through some options: :samp:`--ieee=synopsys -fexplicit`. See :ref:`IEEE_library_pitfalls`, for more details.
+.. WARNING:: Sometimes, a design does not fully follow the VHDL standards. For example it uses the badly engineered :samp:`std_logic_unsigned` package. GHDL supports this VHDL dialect through some options: :samp:`--ieee=synopsys -fexplicit`. See section ':ref:`IEEE_library_pitfalls`', for more details.
 
 Further examples
 =======================
