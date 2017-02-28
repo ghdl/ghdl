@@ -1,3 +1,4 @@
+.. program:: ghdl
 .. _USING:Simulation:
 
 Simulation and runtime
@@ -27,7 +28,7 @@ Here is the list of the most useful options.  Some debugging options are
 also available, but not described here.  The :option:`--help` options lists
 all options available, including the debugging one.
 
-.. option:: --assert-level=<LEVEL>
+.. option:: --assert-level<=LEVEL>
 
   Select the assertion level at which an assertion violation stops the
   simulation.  `LEVEL` is the name from the `severity_level`
@@ -45,7 +46,7 @@ all options available, including the debugging one.
   Option :option:`--assert-level=none` prevents any assertion violation to stop
   simulation.
 
-.. option:: --ieee-asserts=<POLICY>
+.. option:: --ieee-asserts<=POLICY>
 
   Select how the assertions from :samp:`ieee` units are
   handled. `POLICY` can be :samp:`enable` (the default),
@@ -55,7 +56,7 @@ all options available, including the debugging one.
   This option can be useful to avoid assertion message from
   :samp:`ieee.numeric_std` (and other :samp:`ieee` packages).
 
-.. option:: --stop-time=<TIME>
+.. option:: --stop-time<=TIME>
 
   Stop the simulation after :samp:`TIME`.  :samp:`TIME` is expressed as a time
   value, *without* any space.  The time is the simulation time, not
@@ -66,7 +67,7 @@ all options available, including the debugging one.
     $ ./my_design --stop-time=10ns
     $ ./my_design --stop-time=ps
 
-.. option:: --stop-delta=<N>
+.. option:: --stop-delta<=N>
 
   Stop the simulation after `N` delta cycles in the same current time.
 
@@ -80,13 +81,13 @@ all options available, including the debugging one.
 
   Disable buffering on stdout, stderr and files opened in write or append mode (TEXTIO).
 
-.. option:: --psl-report=<FILENAME>
+.. option:: --psl-report<=FILENAME>
 
   Write a report for PSL assertions and coverage at the end of
   simulation.  The file is written using the JSON format, but still
   being human readable.
 
-.. option:: --sdf=<PATH>=<FILENAME>
+.. option:: --sdf<=PATH=FILENAME>
 
   Do VITAL annotation on `PATH` with SDF file :file:`FILENAME`.
 
@@ -96,16 +97,16 @@ all options available, including the debugging one.
 
   Specifying a delay::
 
-   --sdf=min=<PATH>=<FILENAME>
-   --sdf=typ=<PATH>=<FILENAME>
-   --sdf=max=<PATH>=<FILENAME>
+   --sdf=min=PATH=FILENAME
+   --sdf=typ=PATH=FILENAME
+   --sdf=max=PATH=FILENAME
 
   If the option contains a type of delay, that is :samp:`min=`,
   :samp:`typ=` or :samp:`max=`, the annotator use respectively minimum,
   typical or maximum values.  If the option does not contain a type of delay,
   the annotator use the typical delay.
 
-  See :ref:`Backannotation`, for more details.
+  See section ':ref:`Backannotation`', for more details.
 
 .. option:: --help
 
@@ -116,7 +117,7 @@ all options available, including the debugging one.
 Export waveforms
 ============
 
-.. option:: --read-opt-file=<FILENAME>
+.. option:: --read-opt-file<=FILENAME>
 
   Filter signals to be dumped to the wave file according to the wave option
   file provided.
@@ -149,15 +150,15 @@ Export waveforms
      # those of sub3)
      /**/sub3/*/*
 
-.. option:: --write-opt-file=<FILENAME>
+.. option:: --write-opt-file<=FILENAME>
 
   If the wave option file doesn't exist, creates it with all the signals of
   the design. Otherwise throws an error, because it won't erase an existing
   file.
 
-.. option:: --vcd=<FILENAME>
+.. option:: --vcd<=FILENAME>
 
-.. option:: --vcdgz=<FILENAME>
+.. option:: --vcdgz<=FILENAME>
 
   .. index:: vcd
 
@@ -208,13 +209,17 @@ Export waveforms
   format supporting VHDL types.  If you are aware of such a free format,
   please mail me (:ref:`Reporting_bugs`).
 
-.. option:: --fst=<FILENAME>
+.. option:: --vcd-nodate
+
+  Do not write date in VCD file
+  
+.. option:: --fst<=FILENAME>
 
   Write the waveforms into a `fst`, that can be displayed by
   `gtkwave`. The `fst` files are much smaller than VCD or
   `GHW` files, but it handles only the same signals as the VCD format.
 
-.. option:: --wave=<FILENAME>
+.. option:: --wave<=FILENAME>
 
   Write the waveforms into a `ghw` (GHdl Waveform) file.  Currently, all
   the signals are dumped into the waveform file, you cannot select a hierarchy
@@ -224,17 +229,17 @@ Export waveforms
   It may change slightly.  The :samp:`gtkwave` tool can read the GHW files.
 
   Contrary to VCD files, any VHDL type can be dumped into a GHW file.
-
+ 
 .. TODO::
 
-  - :samp:` --vcd-nodate       do not write date in VCD file`
-  - Is interactive simulation only possible with VCD? Can't it be done with either FST or GHW?
+  - Brief explanation on why these three formats where chosen only. Explain why other formats add no functionality.
+  - Interactive simulation (GtkWave) is only possible with VCD.
   - `Source code annotation is currently not available for VHDL, however all of GTKWave's other debug features are readily accessible. VHDL support is planned for a future release`. That's something that could be added in the future, but I have no plan for it.
   
-Export design hierarchy
+Export hierarchy and references
 ============
   
-.. option:: --disp-tree[=<KIND>]
+.. option:: --disp-tree<[=KIND]>
 
   .. index:: display design hierarchy
 
@@ -259,32 +264,96 @@ Export design hierarchy
 .. option:: --no-run
 
   Stop the simulation before the first cycle. This may be used with :option:`--disp-tree` to display the tree without simulating the whole design. This option actually elaborates the design, so it will catch any bound error in port maps. 
+
+.. option:: --xref-html <[options] file...>
+
+To easily navigate through your sources, you may generate cross-references. This command generates an html file for each :samp:`file` given in the command line, with syntax highlighting and full cross-reference: every identifier is a link to its declaration. Besides, an index of the files is created too.
+
+The set of :samp:`file` are analyzed, and then, if the analysis is successful, html files are generated in the directory specified by the :option:`-o <dir>` option, or :file:`html/` directory by default.
+
+* If the option :option:`--format=html2` is specified, then the generated html files follow the HTML 2.0 standard, and colours are specified with `<FONT>` tags. However, colours are hard-coded.
+
+* If the option :option:`--format=css` is specified, then the generated html files follow the HTML 4.0 standard, and use the CSS-1 file :file:`ghdl.css` to specify colours. This file is generated only if it does not already exist (it is never overwritten) and can be customized by the user to change colours or appearance. Refer to a generated file and its comments for more information.
+ 
+.. option:: --psl-report<=FILE>
+
+Generate a JSON file at the end of the simulation reporting, for each PSL cover and assert statements, the name, source location and whether it passed or failed.
  
 .. TODO::
-  * The json format is not documented, except it should be self-documented. Maybe worth adding a small example ?
-  * The XML format (for --file-to-xml) is not documented and it may change as it shows internal stuff. :samp:`--file-to-xml FILEs  Dump AST in XML`
-   
-Debugging VHDL programs
-============
+  * Maybe worth adding a small example of how to generate a JSON file?
+ 
+.. option:: --file-to-xml
+  
+Outputs an XML representation of the decorated syntax tree for the input file and its dependencies. It can be used for VHDL tooling using semantic information, like style checkers, documentation extraction, complexity estimation...
+
+.. WARNING::
+	* The AST slightly changes from time to time (particularly when new nodes are added for new language features), so be liberal in what is allowed by your tool. Also, the XML can be quite large so consider it only during prototyping.
+	* Note that at this time there is no XML dump of the elaborated design.
 
 .. index:: debugging
+	
+Debugging
+============
+
+.. option:: --trace-signals
+
+Display signals after each cycle.
+
+.. option:: --trace-processes
+
+Display process name before each cycle.
+
+.. option:: --stats
+
+Display run-time statistics.
+
+.. option:: --disp-order
+
+Display signals order.
+
+.. option:: --disp-sources
+
+Display sources while displaying signals.
+
+.. option:: --disp-sig-types
+
+Display signal types.
+
+.. option:: --disp-signals-map
+
+Display map bw declared signals and internal signals.
+
+.. option:: --disp-signals-table
+
+Display internal signals.
+
+.. option:: --checks
+
+Do internal checks after each process run.
+
+.. option:: --activity<=LEVEL>
+
+Watch activity of LEVEL signals: LEVEL is all, min (default) or none (unsafe).
+
+.. option:: --dump-rti
+
+Dump Run Time Information (RTI).
+
+.. option:: --bootstrap
+
+Allow :samp:`--work=std`
+
+GNU Debugger (GDB)
+-------------------
 
 .. index:: `__ghdl_fatal`
 
-Debugging VHDL programs using `GDB` is possible only on GNU/Linux systems.
+.. WARNING:: Debugging VHDL programs using `GDB` is possible only with GCC/LLVM.
 
-`GDB` is a general purpose debugger for programs compiled by `GCC`.
-Currently, there is no VHDL support for `GDB`.  It may be difficult
-to inspect variables or signals in `GDB`, however, `GDB` is
-still able to display the stack frame in case of error or to set a breakpoint
-at a specified line.
+GDB is a general purpose debugger for programs compiled by GCC. Currently, there is no VHDL support for GDB. It may be difficult to inspect variables or signals in GDB. However, it is still able to display the stack frame in case of error or to set a breakpoint at a specified line.
 
-`GDB` can be useful to precisely catch a runtime error, such as indexing
-an array beyond its bounds.  All error check subprograms call the
-`__ghdl_fatal` procedure.  Therefore, to catch runtime error, set
-a breakpoint like this:
+GDB can be useful to precisely catch a runtime error, such as indexing an array beyond its bounds. All error check subprograms call the :samp:`__ghdl_fatal` procedure. Therefore, to catch runtime error, set a breakpoint like this::
 
   (gdb) break __ghdl_fatal
 
-When the breakpoint is hit, use the `where` or `bt` command to
-display the stack frames.
+When the breakpoint is hit, use the :samp:`where` or :samp:`bt` command to display the stack frames.

@@ -31,6 +31,11 @@ After making your choice, you can jump to the corresponding section below. Howev
   - @1138 Backtraces optional -patchable-
   - Very briefly, why is mcode faster for analysis and GCC/LLVM for simulation?
   - The only other dependency is zlib (On ubuntu/debian, install zlib1g-dev).
+  - From :ghdlsharp:`279`:
+	- GCC: GHDL generates an intermediate representation for GCC, which creates an executable. So GHDL acts a a new language frontend like C for the GCC and uses the existing backend to generated e.g. x86(-64) binary code.
+	- LLVM: GHDL generates instructions for the LLVM abstract register machine, which then generates x86(-64) instructions for the host system.
+	- mcode: GHDL generates the x86(-64) instructions in memory and executes the model.
+    - gcc is currently only supported on Linux, because you need to compile a complete GCC from zero and add GHDL as a frontend into the GCC. Compiling the complete GCC suite plus GHDL takes a lot of time. I think it's not possible to finish the compile task in the bounds of a Travis-CI run.
   
 .. _BUILD:dir_structure:
   
@@ -53,7 +58,7 @@ Directory structure
 	
 		* :samp:`mcode`:
 		
-		* :samp:`appveyor`:
+		* :samp:`appveyor`: 
 		
 * :samp:`doc`: `Markdown` and `reStructuredText` sources and auxiliar files to build the documentation with `Sphinx <http://www.sphinx-doc.org>`_. Indeed, `Read the docs <http://readthedocs.org>`_ (RTD) is used to automatically build and deploy this site and/or PDF you are reading.
 
@@ -71,8 +76,10 @@ Directory structure
 
 	- [@1138-4EB|@Paebbels] Replace link to VendorPrimitives, when the file is translated from md to rst.
 	
-	- [@Paebbels] Add brief description of how the content in dist/windows is ordered.
-  
+	- [@Paebbels] Add brief description of how the content in dist/windows is ordered. From :ghdlsharp:`279`:
+		- The content in dist/appveyor is for the AppVeyor flow. AppVeyor is a continuous integration service like Travis-CI, but is offers a Windows Server 2012 R2 machine. The AppVeyor flow has more scripts than the Travis-CI flow, so we put them into a separate directory.
+		- The code in dist/windows/mcode is special code needed to build mcode in windows. mcode is supported on Linux (32/64-bit) and Windows (32-bit).
+
 Mcode backend
 =================
 
@@ -196,4 +203,7 @@ Test suites
 
 .. TODO::
 
-  @1138 explain that there are two (maybe three with vhdl08 tests)
+	* @1138 explain that there are two (maybe three with vhdl08 tests)
+  	* :samp:`--expect-failure      invert exit status`
+	* :samp:`--has-feature=X       test presence of feature X`
+	* :samp:`--list-features       display the list of features`

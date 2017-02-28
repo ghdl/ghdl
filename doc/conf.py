@@ -348,7 +348,8 @@ texinfo_documents = [
 # Sphinx.Ext.InterSphinx
 # ==============================================================================
 intersphinx_mapping = {
-	'python': ('https://docs.python.org/3.5/', None)
+	'python': ('https://docs.python.org/3.5/', None),
+	'poc': ('http://poc-library.readthedocs.io/en/release', None),
 #	'ghdl':   ('http://ghdl.readthedocs.io/en/latest', None)
 }
 
