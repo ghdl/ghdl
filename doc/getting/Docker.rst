@@ -3,6 +3,10 @@
 Docker containers
 #############
 
+* :ghdlsharp:`270`
+* :ghdlsharp:`272`
+* :ghdlsharp:`297`
+
 What is docker? A primer
 =================
 
