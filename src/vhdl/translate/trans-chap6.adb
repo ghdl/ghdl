@@ -20,10 +20,8 @@ with Files_Map;
 with Errorout; use Errorout;
 with Iirs_Utils; use Iirs_Utils;
 with Evaluation; use Evaluation;
-with Canon;
 with Trans.Chap3;
 with Trans.Chap7;
-with Trans.Chap8;
 with Trans.Chap14;
 with Trans.Helpers2; use Trans.Helpers2;
 with Trans_Decls; use Trans_Decls;
@@ -1083,23 +1081,8 @@ package body Trans.Chap6 is
             pragma Assert (Mode = Mode_Value);
             --  This can appear as a prefix of a name, therefore, the
             --  result is always a composite type or an access type.
-            declare
-               Imp         : constant Iir := Get_Implementation (Name);
-               Obj         : Iir;
-               Assoc_Chain : Iir;
-            begin
-               if Is_Implicit_Subprogram (Imp) then
-                  --  FIXME : to be done
-                  raise Internal_Error;
-               else
-                  Canon.Canon_Subprogram_Call (Name);
-                  Assoc_Chain := Get_Parameter_Association_Chain (Name);
-                  Obj := Get_Method_Object (Name);
-                  return E2M
-                    (Chap8.Translate_Subprogram_Call (Name, Assoc_Chain, Obj),
-                     Type_Info, Mode_Value);
-               end if;
-            end;
+            return E2M (Chap7.Translate_Expression (Name),
+                        Type_Info, Mode_Value);
 
          when Iir_Kind_Image_Attribute =>
             pragma Assert (Mode = Mode_Value);

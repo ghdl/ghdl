@@ -30,15 +30,6 @@
 #	02111-1307, USA.
 # ==============================================================================
 
-ANSI_RED="\e[31m"
-ANSI_GREEN="\e[32m"
-ANSI_YELLOW="\e[33m"
-ANSI_BLUE="\e[34m"
-ANSI_MAGENTA="\e[35m"
-ANSI_CYAN="\e[36;1m"
-ANSI_DARKCYAN="\e[36m"
-ANSI_NOCOLOR="\e[0m"
-
 # red texts
 COLORED_ERROR="$ANSI_RED[ERROR]$ANSI_NOCOLOR"
 COLORED_FAILED="$ANSI_RED[FAILED]$ANSI_NOCOLOR"

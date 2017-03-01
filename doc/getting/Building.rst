@@ -131,7 +131,7 @@ GCC backend
 
 .. TODO::
 
-	- You need to download and untar the sources of GCC version 4.9 [do not modify this line as this is read by scripts].
+	- You need to download and untar the sources of GCC version 4.9.x, 5.x or 6.x
 	- gcc object dir
 	- Notes for developpers developping with the GCC backend: once GCC (with GHDL) has been built once, it is possible to work on the GHDL source tree without copying it in the GCC tree. Commands are::
 	

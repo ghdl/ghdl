@@ -359,6 +359,7 @@ package body Synth.Expr is
       case Def is
          when Iir_Predefined_Error =>
             return null;
+
          when Iir_Predefined_Bit_And
            | Iir_Predefined_Boolean_And
            | Iir_Predefined_Ieee_1164_Scalar_And =>
@@ -369,6 +370,17 @@ package body Synth.Expr is
          when Iir_Predefined_Bit_Or
            | Iir_Predefined_Ieee_1164_Scalar_Or =>
             return Synth_Bit_Dyadic (Id_Or);
+
+         when Iir_Predefined_Bit_Nor
+           | Iir_Predefined_Ieee_1164_Scalar_Nor =>
+            return Synth_Bit_Dyadic (Id_Nor);
+         when Iir_Predefined_Bit_Nand
+           | Iir_Predefined_Ieee_1164_Scalar_Nand =>
+            return Synth_Bit_Dyadic (Id_Nand);
+         when Iir_Predefined_Bit_Xnor
+           | Iir_Predefined_Ieee_1164_Scalar_Xnor =>
+            return Synth_Bit_Dyadic (Id_Xnor);
+
          when Iir_Predefined_Enum_Equality =>
             if Get_Width (Left) = 1 then
                if Is_Const (Left) then

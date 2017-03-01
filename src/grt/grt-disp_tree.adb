@@ -120,12 +120,13 @@ package body Grt.Disp_Tree is
                  To_Ghdl_Rtin_Block_Acc (Gen.Child);
                Iter : constant Ghdl_Rtin_Object_Acc :=
                  To_Ghdl_Rtin_Object_Acc (Bod.Children (0));
-               Addr : Address;
+               Addr, Bounds : Address;
             begin
                Disp_Name (Gen.Name);
                Addr := Loc_To_Addr (Iter.Common.Depth, Iter.Loc, Ctxt);
+               Bounds := Null_Address;
                Put ('(');
-               Disp_Value (stdout, Iter.Obj_Type, Ctxt, Addr, False);
+               Disp_Value (stdout, Iter.Obj_Type, Ctxt, Addr, Bounds, False);
                Put (')');
             end;
          when Ghdl_Rtik_Signal

@@ -2336,7 +2336,7 @@ package body Trans.Chap9 is
    begin
       Res := Data;
       if Data.Has_Val then
-         if Get_Type_Info (Data.Val).Type_Mode = Type_Mode_Record then
+         if Get_Type_Info (Data.Val).Type_Mode in Type_Mode_Records then
             Res.Val := Stabilize (Data.Val);
          else
             Res.Val := Chap3.Get_Composite_Base (Data.Val);

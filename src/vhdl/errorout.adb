@@ -15,7 +15,9 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+
 with Ada.Text_IO;
+with GNAT.OS_Lib;
 with Scanner;
 with Name_Table;
 with Iirs_Utils; use Iirs_Utils;
@@ -34,14 +36,28 @@ package body Errorout is
    --  Set Flag_Color_Diagnostics to On or Off if is was Auto.
    procedure Detect_Terminal
    is
+      --  Import isatty.
       function isatty (Fd : Integer) return Integer;
       pragma Import (C, isatty);
+
+      --  Awful way to detect if the host is Windows.  Should be replaced by
+      --  a host-specific package.
+      Is_Windows : constant Boolean := GNAT.OS_Lib.Directory_Separator = '\';
    begin
       if Flag_Color_Diagnostics = Auto then
-         if isatty (2) /= 0 then
-            Flag_Color_Diagnostics := On;
-         else
+         if Is_Windows then
+            --  Off by default on Windows, as the consoles may not support
+            --  ANSI control sequences.  Should be replaced by calls to the
+            --  Win32 API.
             Flag_Color_Diagnostics := Off;
+         else
+            --  On Linux/Unix/Mac OS X: use color only when the output is to a
+            --  tty.
+            if isatty (2) /= 0 then
+               Flag_Color_Diagnostics := On;
+            else
+               Flag_Color_Diagnostics := Off;
+            end if;
          end if;
       end if;
    end Detect_Terminal;
@@ -85,19 +101,7 @@ package body Errorout is
 
    --  Warnings.
 
-   type Warning_Control_Type is record
-      Enabled : Boolean;
-      Error : Boolean;
-   end record;
-
-   type Warnings_Array is array (Msgid_Warnings) of Warning_Control_Type;
-
-   Warnings_Control : Warnings_Array :=
-     (Warnid_Binding
-        | Warnid_Library => (Enabled => True, Error => False),
-      Warnid_Shared
-        | Warnid_Pure    => (Enabled => True, Error => False),
-      others             => (Enabled => False, Error => False));
+   Warnings_Control : Warnings_Setting := Default_Warnings;
 
    procedure Enable_Warning (Id : Msgid_Warnings; Enable : Boolean) is
    begin
@@ -136,6 +140,23 @@ package body Errorout is
 
       return Res;
    end Warning_Image;
+
+   procedure Save_Warnings_Setting (Res : out Warnings_Setting) is
+   begin
+      Res := Warnings_Control;
+   end Save_Warnings_Setting;
+
+   procedure Disable_All_Warnings is
+   begin
+      Warnings_Control := (others => (Enabled => False, Error => False));
+   end Disable_All_Warnings;
+
+   procedure Restore_Warnings_Setting (Res : Warnings_Setting) is
+   begin
+      Warnings_Control := Res;
+   end Restore_Warnings_Setting;
+
+   --  Error arguments
 
    function "+" (V : Iir) return Earg_Type is
    begin

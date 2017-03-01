@@ -239,12 +239,10 @@ package body Grt.Rtis_Addr is
       end if;
    end Get_Instance_Context;
 
-   procedure Bound_To_Range (Bounds_Addr : Address;
-                             Def : Ghdl_Rtin_Type_Array_Acc;
-                             Res : out Ghdl_Range_Array)
+   procedure Extract_Range (Bounds : in out Address;
+                            Def : Ghdl_Rti_Access;
+                            Rng : out Ghdl_Range_Ptr)
    is
-      Bounds : Address;
-
       procedure Align (A : Ghdl_Index_Type) is
       begin
          Bounds := Align (Bounds, Ghdl_Rti_Loc (A));
@@ -254,7 +252,37 @@ package body Grt.Rtis_Addr is
       begin
          Bounds := Bounds + (S / Storage_Unit);
       end Update;
+   begin
+      if Bounds = Null_Address then
+         --  Propagate failure.
+         Rng := null;
+         return;
+      end if;
 
+      case Def.Kind is
+         when Ghdl_Rtik_Type_I32 =>
+            Align (Ghdl_Range_I32'Alignment);
+            Rng := To_Ghdl_Range_Ptr (Bounds);
+            Update (Ghdl_Range_I32'Size);
+         when Ghdl_Rtik_Type_B1 =>
+            Align (Ghdl_Range_B1'Alignment);
+            Rng := To_Ghdl_Range_Ptr (Bounds);
+            Update (Ghdl_Range_B1'Size);
+         when Ghdl_Rtik_Type_E8 =>
+            Align (Ghdl_Range_E8'Alignment);
+            Rng := To_Ghdl_Range_Ptr (Bounds);
+            Update (Ghdl_Range_E8'Size);
+         when others =>
+            --  Bounds are not known anymore.
+            Rng := null;
+      end case;
+   end Extract_Range;
+
+   procedure Bound_To_Range (Bounds_Addr : Address;
+                             Def : Ghdl_Rtin_Type_Array_Acc;
+                             Res : out Ghdl_Range_Array)
+   is
+      Bounds : Address;
       Idx_Def : Ghdl_Rti_Access;
    begin
       if Res'Length /= Def.Nbr_Dim or else Res'First /= 0 then
@@ -265,45 +293,18 @@ package body Grt.Rtis_Addr is
 
       for I in 0 .. Def.Nbr_Dim - 1 loop
          Idx_Def := Def.Indexes (I);
-
-         if Bounds = Null_Address then
-            Res (I) := null;
-         else
-            Idx_Def := Get_Base_Type (Idx_Def);
-            case Idx_Def.Kind is
-               when Ghdl_Rtik_Type_I32 =>
-                  Align (Ghdl_Range_I32'Alignment);
-                  Res (I) := To_Ghdl_Range_Ptr (Bounds);
-                  Update (Ghdl_Range_I32'Size);
-               when Ghdl_Rtik_Type_B1 =>
-                  Align (Ghdl_Range_B1'Alignment);
-                  Res (I) := To_Ghdl_Range_Ptr (Bounds);
-                  Update (Ghdl_Range_B1'Size);
-               when Ghdl_Rtik_Type_E8 =>
-                  Align (Ghdl_Range_E8'Alignment);
-                  Res (I) := To_Ghdl_Range_Ptr (Bounds);
-                  Update (Ghdl_Range_E8'Size);
-               when Ghdl_Rtik_Type_E32 =>
-                  Align (Ghdl_Range_E32'Alignment);
-                  Res (I) := To_Ghdl_Range_Ptr (Bounds);
-                  Update (Ghdl_Range_E32'Size);
-               when others =>
-                  --  Bounds are not known anymore.
-                  Bounds := Null_Address;
-            end case;
-         end if;
+         Idx_Def := Get_Base_Type (Idx_Def);
+         Extract_Range (Bounds, Idx_Def, Res (I));
       end loop;
    end Bound_To_Range;
 
-   function Get_Base_Type (Atype : Ghdl_Rti_Access) return Ghdl_Rti_Access
-   is
+   function Get_Base_Type (Atype : Ghdl_Rti_Access) return Ghdl_Rti_Access is
    begin
       case Atype.Kind is
          when Ghdl_Rtik_Subtype_Scalar =>
             return To_Ghdl_Rtin_Subtype_Scalar_Acc (Atype).Basetype;
          when Ghdl_Rtik_Subtype_Array =>
-            return To_Ghdl_Rti_Access
-              (To_Ghdl_Rtin_Subtype_Array_Acc (Atype).Basetype);
+            return To_Ghdl_Rtin_Subtype_Composite_Acc (Atype).Basetype;
          when Ghdl_Rtik_Type_E8
            | Ghdl_Rtik_Type_E32
            | Ghdl_Rtik_Type_B1 =>

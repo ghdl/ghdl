@@ -13,7 +13,6 @@ prefix=/usr/local
 libdirsuffix=lib/ghdl
 libdirreverse=../..
 gcc_src_dir=
-gcc_version=unknown
 llvm_config=
 backtrace_lib=
 llvm_be=llvm
@@ -42,10 +41,6 @@ else
   echon="-n"
   echoc=
 fi
-
-# Read required gcc version from BUILD.txt file
-gcc_version=`grep '^gcc version' $srcdir/BUILD.txt |
- sed -e 's/gcc version \([0-9.]*\) \[.*\]\.$/\1/'`
 
 # Check $1 is a prefix of $2
 check_version()
@@ -91,7 +86,7 @@ Usage: configure [options]
 Options [defaults in brackets]:
   --prefix=PREFIX             install in PREFIX [$prefix]
   --srcdir=SRCDIR             source code path [$srcdir]
-  --with-gcc=DIR              use gcc backend from DIR (needs gcc $gcc_version)
+  --with-gcc=DIR              use gcc backend from DIR
   --with-llvm-config=PATH     use llvm from PATH (needs llvm 3.5 - 3.9)
   --with-backtrace-lib=LIB.a  link with libbacktrace LIB.a to display a
                               backtrace on errors (only for llvm).
@@ -137,16 +132,10 @@ if test $backend = mcode; then
     fi
 fi
 
-# For gcc backend, check version
+# For gcc backend, check existing version
 if test $backend = gcc; then
     if ! test -f $gcc_src_dir/gcc/BASE-VER; then
 	echo "cannot find gcc/BASE-VER in $gcc_src_dir"
-	exit 1
-    fi
-    base_ver=`cat $gcc_src_dir/gcc/BASE-VER`
-    if ! check_version $gcc_version $base_ver; then
-	echo "Mismatch gcc version from $gcc_src_dir"
-	echo "Need gcc version $gcc_version"
 	exit 1
     fi
     if test "x$backtrace_lib" = x ; then

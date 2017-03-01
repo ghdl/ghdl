@@ -172,6 +172,17 @@ copy-sources.gcc: version.ads
 	$(CP) -p $(srcdir)/src/ortho/gcc/*.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/ortho/gcc/*.c $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/ortho/gcc/*.opt $(gcc_vhdl_dir)
+	base_ver=`cat $(gcc_src_dir)/gcc/BASE-VER`; \
+	case $$base_ver in \
+	 4.9*) gcc_ortho_lang=ortho-lang.c ;; \
+	 5.*)  gcc_ortho_lang=ortho-lang-5.c ;; \
+	 6.*)  gcc_ortho_lang=ortho-lang-6.c ;; \
+	 *) echo "Mismatch gcc version from $gcc_src_dir" \
+	    echo "Need gcc version 4.9.x, 5.x or 6.x" \
+	    exit 1 ;; \
+	esac; \
+	$(CP) -p $(srcdir)/src/ortho/gcc/$$gcc_ortho_lang \
+	  $(gcc_vhdl_dir)/ortho-lang.c
 	$(CP) -p $(srcdir)/doc/ghdl.texi $(srcdir)/doc/ghdl.1 $(gcc_vhdl_dir)
 	$(MKDIR) $(gcc_vhdl_dir)/ghdldrv
 	$(CP) -pR $(srcdir)/src/ghdldrv/*.ad? $(gcc_vhdl_dir)/ghdldrv
@@ -413,6 +424,9 @@ install.vhdllib: install.dirs
 	  $(INSTALL_DATA) -p \
 	    $(LIBDST_DIR)/$$d/* $(DESTDIR)$(VHDL_LIB_DIR)/$$d; \
 	done
+	    # ANSI color
+	$(INSTALL_DATA) -p \
+	    $(srcdir)/dist/ansi_color.sh $(DESTDIR)$(VHDL_LIB_DIR)/;
         # Vendors scripts
 	$(MKDIR) -p $(DESTDIR)$(VHDL_LIB_DIR)/vendors
 	$(INSTALL_DATA) -p \

@@ -85,6 +85,12 @@ package Grt.Rtis_Addr is
                                    Ctxt : Rti_Context;
                                    Sub_Ctxt : out Rti_Context);
 
+   --  Extract range RNG of type DEF from BOUNDS.  BOUNDS is updated to the
+   --  next range.  DEF must be a base type.
+   procedure Extract_Range (Bounds : in out Address;
+                            Def : Ghdl_Rti_Access;
+                            Rng : out Ghdl_Range_Ptr);
+
    --  Extract range of every dimension from bounds.
    procedure Bound_To_Range (Bounds_Addr : Address;
                              Def : Ghdl_Rtin_Type_Array_Acc;

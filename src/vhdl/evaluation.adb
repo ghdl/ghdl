@@ -1355,6 +1355,13 @@ package body Evaluation is
             begin
                Res := 1.0;
                Val := Get_Fp_Value (Left);
+               --  LRM08 9.2.8 Misellaneous operators
+               --  Exponentiation with an integer exponent is equivalent to
+               --  repeated multiplication of the left operand by itself for
+               --  a number of times indicated by the absolute value of the
+               --  exponent and from left to right; [...]
+               --  GHDL: use the standard power-of-2 approach.  This is not
+               --  strictly equivalent however.
                Exp := abs Get_Value (Right);
                while Exp /= 0 loop
                   if Exp mod 2 = 1 then
@@ -1363,6 +1370,9 @@ package body Evaluation is
                   Exp := Exp / 2;
                   Val := Val * Val;
                end loop;
+               --  LRM08 9.2.8 Misellaneous operators
+               --  [...] if the exponent is negative then the result is the
+               --  reciprocal of that [...]
                if Get_Value (Right) < 0 then
                   Res := 1.0 / Res;
                end if;
@@ -1703,7 +1713,8 @@ package body Evaluation is
            | Iir_Kind_Implicit_Dereference
            | Iir_Kind_Function_Call
            | Iir_Kind_Attribute_Value
-           | Iir_Kind_Attribute_Name =>
+           | Iir_Kind_Attribute_Name
+           | Iir_Kind_Subtype_Attribute =>
             Prefix_Type := Get_Type (Prefix);
          when Iir_Kinds_Subtype_Definition =>
             Prefix_Type := Prefix;
@@ -3796,10 +3807,19 @@ package body Evaluation is
                Path_Add_Element (Get_Library_Unit (El), Is_Instance);
             when Iir_Kind_Sensitized_Process_Statement
               | Iir_Kind_Process_Statement
-              | Iir_Kind_Block_Statement =>
+              | Iir_Kind_Block_Statement
+              | Iir_Kind_Protected_Type_Body =>
                Path_Add_Element (Get_Parent (El), Is_Instance);
                Path_Add_Name (El);
                Path_Add (":");
+            when Iir_Kind_Protected_Type_Declaration =>
+               declare
+                  Decl : constant Iir := Get_Type_Declarator (El);
+               begin
+                  Path_Add_Element (Get_Parent (Decl), Is_Instance);
+                  Path_Add_Name (Decl);
+                  Path_Add (":");
+               end;
             when Iir_Kind_Function_Declaration
               | Iir_Kind_Procedure_Declaration =>
                Path_Add_Element (Get_Parent (El), Is_Instance);

@@ -117,9 +117,6 @@ package body Grt.Disp_Signals is
       end case;
    end Disp_Context;
 
-   --  This is a debugging procedure.
-   pragma Unreferenced (Disp_Context);
-
    --  Option --trace-signals.
 
    --  Disp transaction TRANS from signal SIG.
@@ -236,6 +233,9 @@ package body Grt.Disp_Signals is
                for I in 0 .. Sig.S.Nbr_Drivers - 1 loop
                   New_Line;
                   Put ("   ");
+                  Disp_Context
+                    (Processes.Get_Rti_Context (Sig.S.Drivers (I).Proc));
+                  Put (": ");
                   Disp_Transaction
                     (Sig.S.Drivers (I).First_Trans, Sig_Type, Sig.Mode);
                end loop;

@@ -1693,7 +1693,9 @@ package body Libraries is
    end Load_Parse_Design_Unit;
 
    -- Load, parse, analyze, back-end a design_unit if necessary.
-   procedure Load_Design_Unit (Design_Unit: Iir_Design_Unit; Loc : Iir) is
+   procedure Load_Design_Unit (Design_Unit: Iir_Design_Unit; Loc : Iir)
+   is
+      Warnings : Warnings_Setting;
    begin
       if Get_Date_State (Design_Unit) = Date_Disk then
          Load_Parse_Design_Unit (Design_Unit, Loc);
@@ -1711,7 +1713,16 @@ package body Libraries is
          --  Avoid infinite recursion, if the unit is self-referenced.
          Set_Date_State (Design_Unit, Date_Analyze);
 
+         --  Disable all warnings.  Warnings are emitted only when the unit
+         --  is analyzed.
+         Save_Warnings_Setting (Warnings);
+         Disable_All_Warnings;
+
+         --  Analyze unit.
          Finish_Compilation (Design_Unit);
+
+         --  Restore warnings.
+         Restore_Warnings_Setting (Warnings);
       end if;
 
       case Get_Date (Design_Unit) is

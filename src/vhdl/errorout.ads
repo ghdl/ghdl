@@ -125,6 +125,15 @@ package Errorout is
    --  Get enable status of a warning.
    function Is_Warning_Enabled (Id : Msgid_Warnings) return Boolean;
 
+   --  State of warnings.
+   type Warnings_Setting is private;
+
+   --  Global control of warnings.
+   --  Used to disable warnings while a referenced unit is analyzed.
+   procedure Save_Warnings_Setting (Res : out Warnings_Setting);
+   procedure Disable_All_Warnings;
+   procedure Restore_Warnings_Setting (Res : Warnings_Setting);
+
    type Earg_Type is private;
    type Earg_Arr is array (Natural range <>) of Earg_Type;
 
@@ -310,4 +319,18 @@ private
    end record;
 
    No_Eargs : constant Earg_Arr := (1 .. 0 => (Kind => Earg_None));
+
+   type Warning_Control_Type is record
+      Enabled : Boolean;
+      Error : Boolean;
+   end record;
+
+   type Warnings_Setting is array (Msgid_Warnings) of Warning_Control_Type;
+
+   Default_Warnings : constant Warnings_Setting :=
+     (Warnid_Binding
+        | Warnid_Library => (Enabled => True, Error => False),
+      Warnid_Shared
+        | Warnid_Pure    => (Enabled => True, Error => False),
+      others             => (Enabled => False, Error => False));
 end Errorout;
