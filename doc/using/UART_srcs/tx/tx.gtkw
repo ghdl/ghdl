@@ -1,0 +1,33 @@
+[*]
+[*] GTKWave Analyzer v3.3.67 (w)1999-2015 BSI
+[*] Fri Dec 16 19:12:23 2016
+[*]
+[dumpfile] "/home/red/artikel_uart/tx/TX.ghw"
+[dumpfile_mtime] "Fri Dec 16 19:08:11 2016"
+[dumpfile_size] 349946
+[savefile] "/home/red/artikel_uart/tx/tx.gtkw"
+[timestart] 0
+[size] 1920 1016
+[pos] -83 -83
+*-35.000000 106965000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] top.
+[treeopen] top.tb_uart_tx_8n1.
+[treeopen] top.tb_uart_tx_8n1.uart_tx.
+[sst_width] 218
+[signals_width] 142
+[sst_expanded] 1
+[sst_vpaned_height] 215
+@28
+top.tb_uart_tx_8n1.board_clk
+top.tb_uart_tx_8n1.reset
+[color] 5
+top.tb_uart_tx_8n1.wr
+@22
+#{top.tb_uart_tx_8n1.send_data[7:0]} top.tb_uart_tx_8n1.send_data[7] top.tb_uart_tx_8n1.send_data[6] top.tb_uart_tx_8n1.send_data[5] top.tb_uart_tx_8n1.send_data[4] top.tb_uart_tx_8n1.send_data[3] top.tb_uart_tx_8n1.send_data[2] top.tb_uart_tx_8n1.send_data[1] top.tb_uart_tx_8n1.send_data[0]
+@200
+-FIFO_Control
+@22
+#{top.tb_uart_tx_8n1.uart_tx.nextread[4:0]} top.tb_uart_tx_8n1.uart_tx.nextread[4] top.tb_uart_tx_8n1.uart_tx.nextread[3] top.tb_uart_tx_8n1.uart_tx.nextread[2] top.tb_uart_tx_8n1.uart_tx.nextread[1] top.tb_uart_tx_8n1.uart_tx.nextread[0]
+#{top.tb_uart_tx_8n1.uart_tx.nextwrite[4:0]} top.tb_uart_tx_8n1.uart_tx.nextwrite[4] top.tb_uart_tx_8n1.uart_tx.nextwrite[3] top.tb_uart_tx_8n1.uart_tx.nextwrite[2] top.tb_uart_tx_8n1.uart_tx.nextwrite[1] top.tb_uart_tx_8n1.uart_tx.nextwrite[0]
+[pattern_trace] 1
+[pattern_trace] 0
