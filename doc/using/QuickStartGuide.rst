@@ -52,7 +52,31 @@ To illustrate the large purpose of `VHDL`, here is a commented `'Hello world'` p
   * As a result, :option:`-r` is just a passthrough to the binary generated in the `elaboration`. Therefore, the executable can be run directly, :samp:`./hello_world`. See :option:`-r` for more informartion.
  
 .. HINT:: :option:`-e` can be bypassed with mcode, since :option:`-r` actually elaborates the design and saves it on memory before running the simulation. But you can still use it to check for some elaboration problems.
-  
+
+The `heartbeat` program
+=======================
+
+.. code-block:: VHDL
+
+  entity hello_world is
+    port ( clk: out std_logic; )
+  end hearbeat;
+
+  architecture behaviour of hello_world is
+  begin
+    -- Clock process definition
+    clk_process: process
+    begin
+      clk <= '0';
+      wait for clk_period/2;
+      clk <= '1';
+      wait for clk_period/2;
+    end process;
+  end behaviour;
+
+.. TODO:: Complete `heartbeat` example program
+ 
+
 A full adder
 ============
 
@@ -205,3 +229,4 @@ Further examples
 
   * Add references to examples/tutorials with GHDL.
   * Shall `René Doß <https://mail.gna.org/public/ghdl-discuss/2017-01/msg00000.html>` want to contribute adapting his article to RST?
+  *  https://github.com/Obijuan/open-fpga-verilog-tutorial/wiki

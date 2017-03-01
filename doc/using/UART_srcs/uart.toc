@@ -1,0 +1,8 @@
+\contentsline {section}{\numberline {1}introduction UART transmission}{2}{section.1}
+\contentsline {section}{\numberline {2}advanced TX Unit with FIFO}{2}{section.2}
+\contentsline {section}{\numberline {3}advanced RX Unit with FIFO}{8}{section.3}
+\contentsline {section}{\numberline {4}example application}{13}{section.4}
+\contentsline {section}{\numberline {5}Makefile for workflow}{19}{section.5}
+\contentsline {section}{\numberline {6}file in/out}{19}{section.6}
+\contentsline {section}{\numberline {7}VHPI Interface to an other language}{22}{section.7}
+\contentsline {section}{\numberline {8}closing words}{28}{section.8}

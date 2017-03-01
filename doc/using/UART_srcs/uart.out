@@ -1,0 +1,8 @@
+\BOOKMARK [1][-]{section.1}{introduction UART transmission}{}% 1
+\BOOKMARK [1][-]{section.2}{advanced TX Unit with FIFO}{}% 2
+\BOOKMARK [1][-]{section.3}{advanced RX Unit with FIFO}{}% 3
+\BOOKMARK [1][-]{section.4}{example application}{}% 4
+\BOOKMARK [1][-]{section.5}{Makefile for workflow}{}% 5
+\BOOKMARK [1][-]{section.6}{file in/out}{}% 6
+\BOOKMARK [1][-]{section.7}{VHPI Interface to an other language}{}% 7
+\BOOKMARK [1][-]{section.8}{closing words}{}% 8
