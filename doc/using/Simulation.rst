@@ -81,12 +81,6 @@ all options available, including the debugging one.
 
   Disable buffering on stdout, stderr and files opened in write or append mode (TEXTIO).
 
-.. option:: --psl-report<=FILENAME>
-
-  Write a report for PSL assertions and coverage at the end of
-  simulation.  The file is written using the JSON format, but still
-  being human readable.
-
 .. option:: --sdf<=PATH=FILENAME>
 
   Do VITAL annotation on `PATH` with SDF file :file:`FILENAME`.
@@ -275,9 +269,9 @@ The set of :samp:`file` are analyzed, and then, if the analysis is successful, h
 
 * If the option :option:`--format=css` is specified, then the generated html files follow the HTML 4.0 standard, and use the CSS-1 file :file:`ghdl.css` to specify colours. This file is generated only if it does not already exist (it is never overwritten) and can be customized by the user to change colours or appearance. Refer to a generated file and its comments for more information.
  
-.. option:: --psl-report<=FILE>
+.. option:: --psl-report<=FILENAME>
 
-Generate a JSON file at the end of the simulation reporting, for each PSL cover and assert statements, the name, source location and whether it passed or failed.
+Write a report for PSL at the end of simulation. For each PSL cover and assert statements, the name, source location and whether it passed or failed is reported. The file is written using the JSON format, but still being human readable.
  
 .. TODO::
   * Maybe worth adding a small example of how to generate a JSON file?
