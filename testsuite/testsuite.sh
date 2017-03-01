@@ -1,63 +1,43 @@
 #! /bin/sh
 
-# Stop in case of error.
+# Stop in case of error
 set -e
 
-# Source the testsuite environment
 . ./testenv.sh
+printf "$ANSI_BLUE[$TASK| GHDL - test] Sourced the testsuite environment $ANSI_NOCOLOR\n"
 
-# The GNA testsuite:
-# regression testsuite using reports/issues from gna.org
-do_gna ()
-{
-  echo "**** GNA ****"
-  echo "*************"
-  cd gna
-  ./testsuite.sh
+# The GNA testsuite: regression testsuite using reports/issues from gna.org
+do_gna() {
+  cd gna && ./testsuite.sh 1>> ../../log.log 2>&1
   cd ..
 }
 
-# The VESTS testsuite:
-# compliance testsuite, from: https://github.com/nickg/vests.git 388250486a
-do_vests ()
-{
-  echo "**** VESTS ****"
-  echo "***************"
-  gnatmake get_entities
-  cd vests
-  ./testsuite.sh
+# The VESTS testsuite: compliance testsuite, from: https://github.com/nickg/vests.git 388250486a
+do_vests() {
+  gnatmake get_entities 1>> ../log.log 2>&1
+  cd vests && ./testsuite.sh
   cd ..
 }
 
 # Run a testsuite
-do_test ()
-{
+do_test() {
+  printf "$ANSI_BLUE[$TASK| GHDL - test] $1 $ANSI_NOCOLOR\n"  
   case $1 in
-      gna)
-	  do_gna;;
-      vests)
-	  do_vests;;
+      gna) do_gna;;
+      vests) do_vests;;
       *)
-          echo "$0: test name '$1' is unknown"
+          printf *e "$ANSI_RED$0: test name '$1' is unknown $ANSI_NOCOLOR"
           exit 1;;
   esac
 }
 
-all_list="gna vests"
+printf "$ANSI_BLUE[$TASK| GHDL - test] GHDL is: $GHDL $ANSI_NOCOLOR\n"
 
-echo "GHDL is: $GHDL"
+if [ $# -eq 0 ]; then tests="gna vests";
+else tests=$("$@"); fi
 
-if [ $# -eq 0 ]; then
-  for t in $all_list; do
-    do_test $t
-   done
-else
-  for t; do
-    do_test $t
-  done
-fi
+for t in $tests; do do_test $t; done
 
-echo
-echo "$0: Success ($GHDL)"
-$GHDL --version
+printf "$ANSI_BLUE[$TASK| GHDL - test] $0:  $cGREENSuccess$ANSI_BLUE [$GHDL] $ANSI_NOCOLOR\n"
+$GHDL --version 1>> ../log.log 2>&1
 exit 0

@@ -3,40 +3,18 @@
 . ../testenv.sh
 
 common_args="--std=93c $GHDL_FLAGS"
-
 # Test number.
 test_num="1"
-
 do_inter_clean="no"
 
 # Functions used by tests.
-setup_test_group ()
-{
-  echo "Test: $1 $2"
-}
-
-end_test_group ()
-{
-  delete_lib work
-  echo "*** End of tests"
-}
-
-create_lib ()
-{
-  echo "create library: $1"
-}
-
-delete_lib ()
-{
-  echo "delete library: $1"
-  cmd="$GHDL --remove $common_args --work=$1"
-  echo $cmd
-  eval $cmd
-}
+setup_test_group() { echo "Test: $1 $2"; }
+end_test_group() { delete_lib work; echo "*** End of tests"; }
+create_lib() { echo "create library: $1"; }
+delete_lib() { echo "delete library: $1" && cmd="$GHDL --remove $common_args --work=$1" && echo $cmd && eval $cmd; }
 
 # Usage: handle_test MODE FILE options...
-handle_test ()
-{
+handle_test() {
   mode=$1
   shift
   file=$1
@@ -135,26 +113,10 @@ handle_test ()
   test_num=`expr $test_num + 1`
 }
 
-build_compliant_test ()
-{
-  handle_test compile $@
-}
-
-run_non_compliant_test ()
-{
-   handle_test ana_err $@
-}
-
-run_compliant_test ()
-{
-   handle_test run $@
-}
-
-run_err_non_compliant_test ()
-{
-   handle_test run_err $@
-}
-
+build_compliant_test () { handle_test compile $@; }
+run_non_compliant_test () { handle_test ana_err $@; }
+run_compliant_test () { handle_test run $@; }
+run_err_non_compliant_test () { handle_test run_err $@; }
 
 # Decode options.
 skip=0
@@ -172,48 +134,55 @@ do
   shift;
 done
 
-# Test group
+# Test groups
 
-delete_lib work
+test_ashenden() {
+  delete_lib work
 
-dir=vhdl-93/clifton-labs/compliant
-. $dir/compliant1.exp
+  dir=vhdl-93/clifton-labs/compliant
+  . $dir/compliant1.exp
 
-# ashenden compliant
-# OK
-dir=vhdl-93/ashenden/compliant
-. $dir/compliant.exp
+  # ashenden compliant
+  # OK
+  dir=vhdl-93/ashenden/compliant
+  . $dir/compliant.exp
 
-# OK
-dir=vhdl-93/ashenden/non_compliant
-. $dir/non_compliant.exp
-
-
-# Clean frequently the work library.
-do_inter_clean="yes"
-
-# OK.
-dir=vhdl-93/billowitch/compliant
-. $dir/compliant.exp
-
-
-# OK but FIXMEs
-dir=vhdl-93/billowitch/non_compliant/analyzer_failure
-. $dir/non_compliant.exp
-
-run_non_compliant_test ()
-{
-   handle_test run_err $@
+  # OK
+  dir=vhdl-93/ashenden/non_compliant
+  . $dir/non_compliant.exp
 }
 
-dir=vhdl-93/billowitch/non_compliant/simulator_failure
-. $dir/non_compliant.exp
+test_billowitch() {
+  # OK.
+  dir=vhdl-93/billowitch/compliant
+  . $dir/compliant.exp
 
-delete_lib project
-delete_lib random
-delete_lib utilities
+  # OK but FIXMEs
+  dir=vhdl-93/billowitch/non_compliant/analyzer_failure
+  . $dir/non_compliant.exp
+
+  run_non_compliant_test() { handle_test run_err $@; }
+  
+  dir=vhdl-93/billowitch/non_compliant/simulator_failure
+  . $dir/non_compliant.exp
+}
+
+deletelibs() {
+  delete_lib project
+  delete_lib random
+  delete_lib utilities
+}
+
+printf "$ANSI_BLUE[$TASK| GHDL - test] vests: ashenden $ANSI_NOCOLOR\n"
+test_ashenden 1>> ../../log.log 2>&1
+# Clean frequently the work library.
+do_inter_clean="yes"
+printf "$ANSI_BLUE[$TASK| GHDL - test] vests: billowitch $ANSI_NOCOLOR\n"
+test_billowitch 1>> ../../log.log 2>&1
+printf "$ANSI_BLUE[$TASK| GHDL - test] vests: delete libs $ANSI_NOCOLOR\n"
+deletelibs 1>> ../../log.log 2>&1
 
 # Remove io files created by tests
 rm -f iofile.* *.file fopen*.out
 
-echo "Vests tests successful"
+echo "Vests tests successful" 1>> ../../log.log 2>&1

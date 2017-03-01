@@ -424,6 +424,9 @@ install.vhdllib: install.dirs
 	  $(INSTALL_DATA) -p \
 	    $(LIBDST_DIR)/$$d/* $(DESTDIR)$(VHDL_LIB_DIR)/$$d; \
 	done
+	    # ANSI color
+	$(INSTALL_DATA) -p \
+	    $(srcdir)/dist/ansi_color.sh $(DESTDIR)$(VHDL_LIB_DIR)/;
         # Vendors scripts
 	$(MKDIR) -p $(DESTDIR)$(VHDL_LIB_DIR)/vendors
 	$(INSTALL_DATA) -p \
