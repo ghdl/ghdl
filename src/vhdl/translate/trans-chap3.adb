@@ -1182,16 +1182,14 @@ package body Trans.Chap3 is
 
    procedure Translate_Record_Subtype (Def : Iir; With_Vars : Boolean)
    is
-      Type_Mark  : constant Iir := Get_Type
-        (Get_Named_Entity (Get_Subtype_Type_Mark (Def)));
       Base_Type  : constant Iir := Get_Base_Type (Def);
-      Type_Mark_Info : constant Type_Info_Acc := Get_Info (Type_Mark);
+      Base_Info  : constant Type_Info_Acc := Get_Info (Base_Type);
       Info       : constant Type_Info_Acc := Get_Info (Def);
       El_List    : constant Iir_List := Get_Elements_Declaration_List (Def);
-      El_Tm_List   : constant Iir_List :=
-        Get_Elements_Declaration_List (Type_Mark);
+      Type_Mark  : constant Iir := Get_Subtype_Type_Mark (Def);
       El_Blist   : constant Iir_List :=
         Get_Elements_Declaration_List (Base_Type);
+      El_Tm_List : Iir_List;
       El, B_El   : Iir_Element_Declaration;
       El_Type    : Iir;
       El_Btype   : Iir;
@@ -1206,6 +1204,13 @@ package body Trans.Chap3 is
       Mark : Id_Mark_Type;
    begin
       --  Translate the newly constrained elements.
+      if Is_Valid (Type_Mark) then
+         --  Type_mark may be null for anonymous subtype.
+         El_Tm_List := Get_Elements_Declaration_List
+           (Get_Type (Get_Named_Entity (Type_Mark)));
+      else
+         El_Tm_List := El_Blist;
+      end if;
       Has_New_Constraints := False;
       for I in Natural loop
          El := Get_Nth_Element (El_List, I);
@@ -1222,8 +1227,8 @@ package body Trans.Chap3 is
          end if;
       end loop;
 
-      --  By default, use the same representation as the type mark.
-      Info.all := Type_Mark_Info.all;
+      --  By default, use the same representation as the base type.
+      Info.all := Base_Info.all;
       Info.S := Ortho_Info_Subtype_Record_Init;
       --  However, it is a different subtype which has its own rti.
       Info.Type_Rti := O_Dnode_Null;
@@ -1242,7 +1247,7 @@ package body Trans.Chap3 is
       Info.Type_Mode := Type_Mode_Record;
 
       --  Base type is complex (unbounded record)
-      Copy_Complex_Type (Info, Type_Mark_Info);
+      Copy_Complex_Type (Info, Base_Info);
 
       --  Then create the record type.
       if Get_Type_Staticness (Def) = Locally then

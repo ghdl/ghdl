@@ -957,13 +957,13 @@ package body Sem_Assocs is
 
    procedure Finish_Individual_Assoc_Record (Assoc : Iir; Atype : Iir)
    is
-      Base_Type : constant Iir_Record_Type_Definition := Get_Base_Type (Atype);
-      El_List : constant Iir_List := Get_Elements_Declaration_List (Base_Type);
+      El_List : constant Iir_List := Get_Elements_Declaration_List (Atype);
       Matches : Iir_Array (0 .. Get_Nbr_Elements (El_List) - 1);
       Ch : Iir;
       Pos : Natural;
       Rec_El : Iir;
    begin
+      --  Check for duplicate associations.
       Matches := (others => Null_Iir);
       Ch := Get_Individual_Association_Chain (Assoc);
       while Ch /= Null_Iir loop
@@ -977,13 +977,71 @@ package body Sem_Assocs is
          end if;
          Ch := Get_Chain (Ch);
       end loop;
+
+      --  Check for missing associations.
       for I in Matches'Range loop
          Rec_El := Get_Nth_Element (El_List, I);
          if Matches (I) = Null_Iir then
             Error_Msg_Sem (+Assoc, "%n not associated", +Rec_El);
          end if;
       end loop;
-      Set_Actual_Type (Assoc, Atype);
+
+      if Get_Constraint_State (Atype) /= Fully_Constrained then
+         --  Some (sub-)elements are unbounded, create a bounded subtype.
+         declare
+            Ntype : Iir;
+            Nel_List : Iir_List;
+            Nrec_El : Iir;
+            Rec_El_Type : Iir;
+            Staticness : Iir_Staticness;
+         begin
+            Ntype := Create_Iir (Iir_Kind_Record_Subtype_Definition);
+            Location_Copy (Ntype, Assoc);
+            Set_Base_Type (Ntype, Get_Base_Type (Atype));
+            if Get_Kind (Atype) = Iir_Kind_Record_Subtype_Definition then
+               Set_Resolution_Indication
+                 (Ntype, Get_Resolution_Indication (Atype));
+            end if;
+            Nel_List := Create_Iir_List;
+            Set_Elements_Declaration_List (Ntype, Nel_List);
+
+            Staticness := Locally;
+            for I in Matches'Range loop
+               Rec_El := Get_Nth_Element (El_List, I);
+               Rec_El_Type := Get_Type (Rec_El);
+               if (Get_Kind (Rec_El_Type)
+                     not in Iir_Kinds_Composite_Type_Definition)
+                 or else
+                 Get_Constraint_State (Rec_El_Type) = Fully_Constrained
+                 or else
+                 Matches (I) = Null_Iir  --  In case of error.
+               then
+                  Nrec_El := Rec_El;
+               else
+                  Nrec_El := Create_Iir (Iir_Kind_Record_Element_Constraint);
+                  Ch := Matches (I);
+                  Location_Copy (Nrec_El, Ch);
+                  Set_Parent (Nrec_El, Ntype);
+                  Set_Identifier (Nrec_El, Get_Identifier (Rec_El));
+                  Set_Base_Element_Declaration
+                    (Nrec_El, Get_Base_Element_Declaration (Rec_El));
+                  Set_Element_Position
+                    (Nrec_El, Get_Element_Position (Rec_El));
+                  Ch := Get_Associated_Expr (Ch);
+                  Set_Type (Nrec_El, Get_Type (Get_Actual (Ch)));
+               end if;
+               Staticness := Min (Staticness,
+                                  Get_Type_Staticness (Get_Type (Nrec_El)));
+               Append_Element (Nel_List, Nrec_El);
+            end loop;
+            Set_Type_Staticness (Ntype, Staticness);
+            Set_Constraint_State (Ntype, Fully_Constrained);
+
+            Set_Actual_Type (Assoc, Ntype);
+         end;
+      else
+         Set_Actual_Type (Assoc, Atype);
+      end if;
    end Finish_Individual_Assoc_Record;
 
    --  Free recursively all the choices of ASSOC.

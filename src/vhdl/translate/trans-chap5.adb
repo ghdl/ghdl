@@ -671,7 +671,7 @@ package body Trans.Chap5 is
             Set_Map_Env (Formal_Env);
             --  Set bounds of unconstrained ports.
             if Get_Whole_Association_Flag (Assoc)
-              and then Fbt_Info.Type_Mode = Type_Mode_Fat_Array
+              and then Fbt_Info.Type_Mode in Type_Mode_Unbounded
             then
                Open_Temp;
                Elab_Unconstrained_Port_Bounds (Formal, Assoc);
