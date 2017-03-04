@@ -23,8 +23,8 @@ Downloading pre-build packages
 .. |Fed-mcode| image:: https://img.shields.io/github/downloads/tgingold/ghdl/2017-03-01/ghdl-0.34-dev-mcode-2017-03-01-fed.tgz.svg
    :target: https://github.com/tgingold/ghdl/releases/download/2017-03-01/ghdl-0.34-dev-mcode-2017-03-01-fed.tgz
    :alt: ghdl-0.34-dev-mcode-2017-03-01-fed.tgz
-.. |Win32-mcode| image:: https://img.shields.io/github/downloads/tgingold/ghdl/2017-03-01/ghdl-0.34-dev-mcode-2017-03-01-win32.tgz.svg
-   :target: https://github.com/tgingold/ghdl/releases/download/2017-03-01/ghdl-0.34-dev-mcode-2017-03-01-win32.tgz
+.. |Win32-mcode| image:: https://img.shields.io/github/downloads/tgingold/ghdl/2017-03-01/ghdl-0.34-dev-mcode-2017-03-01-win32.zip.svg
+   :target: https://github.com/tgingold/ghdl/releases/download/2017-03-01/ghdl-0.34-dev-mcode-2017-03-01-win32.zip
    :alt: ghdl-0.34-dev-mcode-2017-03-01-win32.tgz
 
 +--------------+----------+-----------+--------------------+
