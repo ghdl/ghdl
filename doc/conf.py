@@ -153,7 +153,8 @@ try:
 	with open(prologPath, "r") as prologFile:
 		rst_prolog = prologFile.read()
 except:
-	print("[ERROR:] File '{0!s}' nor found.".format(prologPath))
+	print("CWD: " + str(os.getcwd()))
+	print("[ERROR:] File '{0!s}' not found.".format(prologPath))
 	rst_prolog = ""
 
 # -- Options for HTML output ----------------------------------------------
