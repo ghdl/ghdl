@@ -36,10 +36,10 @@ Lorem ipsum dolor sit amet...
    :caption: Introduction
    :hidden:
 
-   0_Intro/WhatIsVHDL
-   0_Intro/WhatIsGHDL
-   0_Intro/Contributing
-   0_Intro/Copyrights
+   intro/WhatIsVHDL
+   intro/WhatIsGHDL
+   intro/Contributing
+   intro/Copyrights
    License/gpl-2.0
 
 .. raw:: latex
@@ -50,9 +50,9 @@ Lorem ipsum dolor sit amet...
    :caption: GHDL usage
    :hidden:
 
-   1_Using/QuickStartGuide
-   1_Using/InvokingGHDL
-   1_Using/Simulation
+   using/QuickStartGuide
+   using/InvokingGHDL
+   using/Simulation
 
 .. raw:: latex
 
@@ -62,9 +62,9 @@ Lorem ipsum dolor sit amet...
    :caption: Getting GHDL
    :hidden:
 
-   2_Getting/Releases
-   3_Building/Building
-   3_Building/VendorPrimitives
+   getting/Releases
+   Building GHDL building/building>
+   building/PrecompileVendorPrimitives
 
 .. raw:: latex
 
@@ -74,10 +74,10 @@ Lorem ipsum dolor sit amet...
    :caption: Implementation References
    :hidden:
 
-   4_References/CommandReference
-   4_References/CodingStyle
-   4_References/ImplementationOfVHDL
-   4_References/ImplementationOfVITAL
+   references/CommandReference
+   references/CodingStyle
+   references/ImplementationOfVHDL
+   references/ImplementationOfVITAL
 
 .. raw:: latex
 

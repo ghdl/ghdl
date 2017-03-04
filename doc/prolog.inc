@@ -1,4 +1,4 @@
-.. # preload commonly known graphical characters like ©
+.. # preload commonly known graphical characters like Â©
 .. include:: <isonum.txt>
 
 .. # define a hard kine break for HTML
