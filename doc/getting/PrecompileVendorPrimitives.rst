@@ -1,47 +1,75 @@
-## Vendor Primitives
+.. _GETTING:PrecompVendor:
 
-Vendors like Altera, Lattice and Xilinx have their own simulation libraries, especially for FPGA primitives, soft and hard macros. These libraries can not be shipped with *GHDL*, but we offer prepared compile scripts to pre-compile the vendor libraries, if the vendor tool is present on the computer. There are also popular simulation and verification libraries like [OSVVM](http://osvvm.org) and [VUnit](https://github.com/LarsAsplund/vunit), which can be pre-compiled, too.
+Precompile Vendor Primitives
+############################
 
-The compilation scripts are writen in the shell languages: *PowerShell* for *Windows* |trade| and *Bash* for *GNU/Linux*. The compile scripts can colorize the *GHDL* warning and error lines with the help of `grc/grcat` ([generic colourizer](http://kassiopeia.juls.savba.sk/~garabik/software/grc.html)).
+Vendors like Altera, Lattice and Xilinx have their own simulation libraries,
+especially for FPGA primitives, soft and hard macros. These libraries can not
+be shipped with *GHDL*, but we offer prepared compile scripts to pre-compile
+the vendor libraries, if the vendor tool is present on the computer. There are
+also popular simulation and verification libraries like OSVVM [#f1]_, VUnit
+[#f2]_ or UVVM [#f3]_, which can be pre-compiled, too.
 
-##### Supported Vendors Libraries
+The compilation scripts are writen in the shell languages: *PowerShell* for
+*Windows* |trade| and *Bash* for *GNU/Linux*. The compile scripts can colorize
+the GHDL warning and error lines with the help of `grc/grcat` [#f4]_.
 
- - Altera/Intel Quartus (13.0 or later):
-     - `lpm`, `sgate`
-     - `altera`, `altera_mf`, `altera_lnsim`
-     - `arriaii`, `arriaii_pcie_hip`, `arriaiigz`
-     - `arriav`, `arriavgz`, `arriavgz_pcie_hip`
-     - `cycloneiv`, `cycloneiv_pcie_hip`, `cycloneive`
-     - `cyclonev`
-     - `max`, `maxii`, `maxv`
-     - `stratixiv`, `stratixiv_pcie_hip`
-     - `stratixv`, `stratixv_pcie_hip`
-     - `fiftyfivenm`, `twentynm`
- - Lattice (3.6 or later):
-     - `ec`
-     - `ecp`, `ecp2`, `ecp3`, `ecp5u`
-     - `lptm`, `lptm2`
-     - `machxo`, `machxo2`, `machxo3l`
-     - `sc`, `scm`
-     - `xp`, `xp2`
- - Xilinx ISE (14.0 or later):
-     - `unisim` (incl. `secureip`)
-     - `unimacro`
-     - `simprim` (incl. `secureip`)
-     - `xilinxcorelib`
- - Xilinx Vivado (2014.1 or later):
-     - `unisim` (incl. `secureip`)
-     - `unimacro`
+Supported Vendors Libraries
+===========================
 
-##### Supported Simulation and Verification Libraries
+* Altera/Intel Quartus (13.0 or later):
 
- - OSVVM (for VHDL-2008)
-     - osvvm
- - VUnit (for VHDL-2008)
-     - vunit_lib
+  * `lpm`, `sgate`
+  * `altera`, `altera_mf`, `altera_lnsim`
+  * `arriaii`, `arriaii_pcie_hip`, `arriaiigz`
+  * `arriav`, `arriavgz`, `arriavgz_pcie_hip`
+  * `cycloneiv`, `cycloneiv_pcie_hip`, `cycloneive`
+  * `cyclonev`
+  * `max`, `maxii`, `maxv`
+  * `stratixiv`, `stratixiv_pcie_hip`
+  * `stratixv`, `stratixv_pcie_hip`
+  * `fiftyfivenm`, `twentynm`
+	
+* Lattice (3.6 or later):
+
+  * `ec`
+  * `ecp`, `ecp2`, `ecp3`, `ecp5u`
+  * `lptm`, `lptm2`
+  * `machxo`, `machxo2`, `machxo3l`
+  * `sc`, `scm`
+  * `xp`, `xp2`
+
+* Xilinx ISE (14.0 or later):
+
+  * `unisim` (incl. `secureip`)
+  * `unimacro`
+  * `simprim` (incl. `secureip`)
+  * `xilinxcorelib`
+
+* Xilinx Vivado (2014.1 or later):
+
+  * `unisim` (incl. `secureip`)
+  * `unimacro`
+
+Supported Simulation and Verification Libraries
+===============================================
+
+* OSVVM (for VHDL-2008)
+
+    * osvvm
+
+* VUnit (for VHDL-2008)
+
+    * vunit_lib
+
+* UVVM (for VHDL-2008)
+
+  * 
 
 ---------------------------------------------------------------------
-### Script Configuration
+
+Script Configuration
+====================
 
 The vendor library compile scripts need to know where the used / latest vendor
 tool chain is installed. Therefore, the script implement a default installation
@@ -63,18 +91,24 @@ these parameters in `config.sh` or `config.psm1`, so the command line can be
 shortened to the essential parts.
 
 ---------------------------------------------------------------------
-### Compiling on Linux
 
- - **Step 0 - Configure the scripts (optional)**
+Compiling on Linux
+==================
+
+* **Step 0 - Configure the scripts (optional)**
     See next section for how to configure `config.sh`.
 
- - **Step 1 - Browse to your simulation working directory**
-    ```Bash
+* **Step 1 - Browse to your simulation working directory**
+    
+  .. code-block:: Bash
+
     $ cd <MySimulationFolder>
     ```
 
- - **Step 2 - Start the compilation script(s)**
-    ```Bash
+* **Step 2 - Start the compilation script(s)**
+    
+  .. code-block:: Bash
+
     $ /usr/local/lib/ghdl/vendors/compile-altera.sh --all
     $ /usr/local/lib/ghdl/vendors/compile-lattice.sh --all
     $ /usr/local/lib/ghdl/vendors/compile-xilinx-ise.sh --all
@@ -86,11 +120,13 @@ shortened to the essential parts.
     In most cases GHDL is installed into `/usr/local/`. The scripts are
     installed into the `lib` directory.
 
- - **Step 3 - Viewing the result**
+* **Step 3 - Viewing the result**
     This creates vendor directories in your current working directory and
     compiles the vendor files into them.
 
-    ```Bash
+    
+  .. code-block:: Bash
+
     $ ls -ahl
     ...
     drwxr-xr-x  2 <user> <group>  56K Nov 30 17:41 altera
@@ -103,96 +139,115 @@ shortened to the essential parts.
 
 
 ---------------------------------------------------------------------
-### Compiling on Windows
 
- - **Step 0 - Configure the scripts (optional)**
-    See next section for how to configure `config.psm1`.
+Compiling on Windows
+====================
 
- - **Step 1 - Browse to your simulation working directory**
-    ```PowerShell
-    PS> cd <MySimulationFolder>
-    ```
+* **Step 0 - Configure the scripts (optional)**
 
- - **Step 2 - Start the compilation script(s)**
-    ```PowerShell
-    PS> <GHDL>\libraries\vendors\compile-altera.ps1 -All
-    PS> <GHDL>\libraries\vendors\compile-lattice.ps1 -All
-    PS> <GHDL>\libraries\vendors\compile-xilinx-ise.ps1 -All
-    PS> <GHDL>\libraries\vendors\compile-xilinx-vivado.ps1 -All
-    PS> <GHDL>\libraries\vendors\compile-osvvm.ps1 -All
-    PS> <GHDL>\libraries\vendors\compile-vunit.ps1 -All
-    ```
+  See next section for how to configure `config.psm1`.
 
- - **Step 3 - Viewing the result**
-    This creates vendor directories in your current working directory and
-    compiles the vendor files into them.
+* **Step 1 - Browse to your simulation working directory**
+    
+  .. code-block:: PowerShell
 
-    ```PowerShell
-    PS> dir
-        Directory: D:\temp\ghdl
+     PS> cd <MySimulationFolder>
 
-    Mode           LastWriteTime       Length Name
-    ----           -------------       ------ ----
-    d----    20.11.2015    19:33        <DIR> altera
-    d----    20.11.2015    19:38        <DIR> lattice
-    d----    20.11.2015    19:38        <DIR> osvvm
-    d----    20.11.2015    19:45        <DIR> vunit_lib
-    d----    20.11.2015    19:06        <DIR> xilinx-ise
-    d----    20.11.2015    19:40        <DIR> xilinx-vivado
-    ```
+* **Step 2 - Start the compilation script(s)**
+    
+  .. code-block:: PowerShell
+
+     PS> <GHDL>\libraries\vendors\compile-altera.ps1 -All
+     PS> <GHDL>\libraries\vendors\compile-lattice.ps1 -All
+     PS> <GHDL>\libraries\vendors\compile-xilinx-ise.ps1 -All
+     PS> <GHDL>\libraries\vendors\compile-xilinx-vivado.ps1 -All
+     PS> <GHDL>\libraries\vendors\compile-osvvm.ps1 -All
+     PS> <GHDL>\libraries\vendors\compile-vunit.ps1 -All
+
+* **Step 3 - Viewing the result**
+  This creates vendor directories in your current working directory and
+  compiles the vendor files into them.
+
+  .. code-block:: PowerShell
+
+     PS> dir
+         Directory: D:\temp\ghdl
+
+     Mode           LastWriteTime       Length Name
+     ----           -------------       ------ ----
+     d----    20.11.2015    19:33        <DIR> altera
+     d----    20.11.2015    19:38        <DIR> lattice
+     d----    20.11.2015    19:38        <DIR> osvvm
+     d----    20.11.2015    19:45        <DIR> vunit_lib
+     d----    20.11.2015    19:06        <DIR> xilinx-ise
+     d----    20.11.2015    19:40        <DIR> xilinx-vivado
+
 
 ---------------------------------------------------------------------
-### Configuration Files
 
-#### For Linux: `config.sh`
+Configuration Files
+======================
+
+For Linux: `config.sh`
+----------------------
 
 Please open the `config.sh` file and set the dictionary entries for the
 installed vendor tools to the appropriate directory to your tool's installation
 directories. Use an empty string `""` for not installed tools.
 
 `config.sh`:
-```Bash
-declare -A InstallationDirectory
-InstallationDirectory[AlteraQuartus]="/opt/Altera/16.0"
-InstallationDirectory[LatticeDiamond]="/opt/Diamond/3.8_x64"
-InstallationDirectory[OSVVM]="/home/<user>/git/GitHub/osvvm"
-InstallationDirectory[VUnit]="/home/<user>/git/GitHub/vunit"
-InstallationDirectory[XilinxISE]="/opt/Xilinx/14.7"
-InstallationDirectory[XilinxVivado]="/opt/Xilinx/Vivado/2016.3"
-```
 
-#### For Windows: `config.psm1`
+.. code-block:: Bash
+   
+   declare -A InstallationDirectory
+   InstallationDirectory[AlteraQuartus]="/opt/Altera/16.0"
+   InstallationDirectory[LatticeDiamond]="/opt/Diamond/3.8_x64"
+   InstallationDirectory[OSVVM]="/home/<user>/git/GitHub/osvvm"
+   InstallationDirectory[VUnit]="/home/<user>/git/GitHub/vunit"
+   InstallationDirectory[XilinxISE]="/opt/Xilinx/14.7"
+   InstallationDirectory[XilinxVivado]="/opt/Xilinx/Vivado/2016.3"
+
+
+For Windows: `config.psm1`
+--------------------------
 
 Please open the `config.psm1` file and set the dictionary entries for the
 installed vendor tools to the appropriate directory to your tool's installation
 folder. Use an empty string `""` for not installed tools.
 
 `config.psm1`:
-```PowerShell
-$InstallationDirectory = @{
-  "AlteraQuartus" =   "C:\Altera\16.0";
-  "LatticeDiamond" =  "C:\Lattice\Diamond\3.8_x64";
-  "XilinxISE" =       "C:\Xilinx\14.7\ISE_DS";
-  "XilinxVivado" =    "C:\Xilinx\Vivado\2016.3";
-  "OSVVM" =           "D:\git\GitHub\osvvm";
-  "VUnit" =           "D:\git\GitHub\vunit"
-}
-```
 
-### Selectable Options for the Bash Scripts:
+.. code-block:: PowerShell
+
+   $InstallationDirectory = @{
+     "AlteraQuartus" =   "C:\Altera\16.0";
+     "LatticeDiamond" =  "C:\Lattice\Diamond\3.8_x64";
+     "XilinxISE" =       "C:\Xilinx\14.7\ISE_DS";
+     "XilinxVivado" =    "C:\Xilinx\Vivado\2016.3";
+     "OSVVM" =           "D:\git\GitHub\osvvm";
+     "VUnit" =           "D:\git\GitHub\vunit"
+   }
+
+
+Selectable Options for the Bash Scripts:
+----------------------------------------
 
 *First I should translate the scripts before writing the docu...*
 
- - Common parameters to most scripts:
+* Common parameters to most scripts:
+  
+  .. code-block::
+	
+     -h --help             Print the embedded help page(s).
+     -c --clean            Cleanup directory before analyzing.
+     -n --no-warnings	     Don't show warnings. Report errors only.
+     -s --skip-existing    Skip already compiled files (an *.o file exists).
+     -S --skip-largefiles  Don't compile large entities like DSP and PCIe primitives.
+     -H --halt-on-error    Stop compiling if an error occured.
 
-        -h --help             Print the embedded help page(s).
-        -c --clean            Cleanup directory before analyzing.
-        -n --no-warnings	    Don't show warnings. Report errors only.
-        -s --skip-existing    Skip already compiled files (an *.o file exists).
-        -S --skip-largefiles  Don't compile large entities like DSP and PCIe primitives.
-        -H --halt-on-error    Stop compiling if an error occured.
- - `compile-altera.sh`
-    Selectable libraries:
+* `compile-altera.sh`
+
+   Selectable libraries:
 
         -a --all              Compile all libraries, including common libraries, packages and device libraries.
            --altera           Compile base libraries like 'altera' and 'altera_mf'
@@ -204,7 +259,9 @@ $InstallationDirectory = @{
 
            --vhdl93           Compile selected libraries with VHDL-93 (default).
            --vhdl2008         Compile selected libraries with VHDL-2008.
- - `compile-xilinx-ise.sh`
+
+* `compile-xilinx-ise.sh`
+
     Selectable libraries:
 
         -a --all              Compile all libraries, including common libraries, packages and device libraries.
@@ -217,7 +274,9 @@ $InstallationDirectory = @{
 
            --vhdl93           Compile selected libraries with VHDL-93 (default).
            --vhdl2008         Compile selected libraries with VHDL-2008.
- - `compile-xilinx-vivado.sh`
+
+* `compile-xilinx-vivado.sh`
+
     Selectable libraries:
 
         -a --all              Compile all libraries, including common libraries, packages and device libraries.
@@ -228,25 +287,32 @@ $InstallationDirectory = @{
 
            --vhdl93           Compile selected libraries with VHDL-93 (default).
            --vhdl2008         Compile selected libraries with VHDL-2008.
- - `compile-osvvm.sh`
+
+* `compile-osvvm.sh`
+
     Selectable libraries:
 
         -a --all              Compile all.
            --osvvm            Compile the OSVVM library.
- - `compile-vunit.sh`
+
+* `compile-vunit.sh`
+
     Selectable libraries:
 
         -a --all              Compile all.
            --osvvm            Compile the VUnit library.
 
-### Selectable Options for the PowerShell Scripts:
+Selectable Options for the PowerShell Scripts:
+----------------------------------------------
 
- - Common parameters to all scripts:
+* Common parameters to all scripts:
 
         -Help                 Print the embedded help page(s).
         -Clean                Cleanup directory before analyzing.
         -SuppressWarnings     Don't show warnings. Report errors only.
- - `compile-altera.ps1`
+
+* `compile-altera.ps1`
+
     Selectable libraries:
 
         -All                  Compile all libraries, including common libraries, packages and device libraries.
@@ -259,8 +325,10 @@ $InstallationDirectory = @{
 
         -VHDL93              Compile selected libraries with VHDL-93 (default).
         -VHDL2008            Compile selected libraries with VHDL-2008.
- - `compile-xilinx-ise.ps1`
-    Selectable libraries:
+
+* `compile-xilinx-ise.ps1`
+
+		Selectable libraries:
 
         -All                  Compile all libraries, including common libraries, packages and device libraries.
         -Unisim               Compile the unisim primitives
@@ -272,7 +340,9 @@ $InstallationDirectory = @{
 
         -VHDL93              Compile selected libraries with VHDL-93 (default).
         -VHDL2008            Compile selected libraries with VHDL-2008.
- - `compile-xilinx-vivado.ps1`
+
+* `compile-xilinx-vivado.ps1`
+
     Selectable libraries:
 
         -All                  Compile all libraries, including common libraries, packages and device libraries.
@@ -283,19 +353,28 @@ $InstallationDirectory = @{
 
         -VHDL93              Compile selected libraries with VHDL-93 (default).
         -VHDL2008            Compile selected libraries with VHDL-2008.
- - `compile-osvvm.ps1`
+
+* `compile-osvvm.ps1`
+
     Selectable libraries:
 
         -All                  Compile all.
         -OSVVM  		          Compile the OSVVM library.
- - `compile-vunit.ps1`
+
+* `compile-vunit.ps1`
+
     Selectable libraries:
 
         -All                  Compile all.
         -VUnit  		          Compile the VUnit library.
 
-------------------------
-Author: Patrick Lehmann  
-Last update: 28.10.2016
+--------------------------------------------------------------------------------
 
-------------------------
+.. container:: footnotes
+
+	 .. rubric:: Footnotes
+
+   .. [#f1] OSVVM http://github.com/OSVVM/OSVVM
+   .. [#f2] VUnit https://github.com/VUnit/vunit
+   .. [#f3] UVVM https://github.com/UVVM/UVVM_All
+   .. [#f4] Generic Colourizer http://kassiopeia.juls.savba.sk/~garabik/software/grc.html
