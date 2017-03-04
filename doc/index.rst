@@ -63,7 +63,7 @@ Lorem ipsum dolor sit amet...
    :hidden:
 
    2_Getting/Releases
-   3_Building/index
+   3_Building/Building
    3_Building/VendorPrimitives
 
 .. raw:: latex
@@ -71,7 +71,7 @@ Lorem ipsum dolor sit amet...
    \part{References}
 
 .. toctree::
-   :caption: Implementation references
+   :caption: Implementation References
    :hidden:
 
    4_References/CommandReference
