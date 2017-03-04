@@ -21,25 +21,27 @@ page for further details. The installation directory is referred to as ``GHDLRoo
 .. rubric:: Available back-ends
 
 GHDL currently supports three supported different back-ends (code generators):
-* `mcode` (built-in),
-* `GCC <http://gcc.gnu.org/>`_, and
-* `LLVM <http://llvm.org/>`_ .
+
+* mcode - built-in x86(or x86_64) code generator,
+* `GCC - Gnu Compiler Collection <http://gcc.gnu.org/>`_, and
+* `LLVM - Low-Level Virtual Machine <http://llvm.org/>`_ .
 
 Here is a short comparison, so that you can choose the one you want to use:
 
 +----------------------------+----------------------------------------------------------------------------+---------------------------------------------------------+
 | Back-end                   | Pros                                                                       | Cons                                                    |
 +============================+============================================================================+=========================================================+
-| :ref:`mcode <BUILD:mcode>` | * Very easy to build                                                       | * ``x86_64``/``i386`` only                              |
-|                            | * Very quick analysis                                                      | * Simulation is slower                                  |
+| :ref:`mcode <BUILD:mcode>` | * Very easy to build                                                       | * Simulation is slower                                  |
+|                            | * Very quick analysis                                                      | * x86_64/i386 only                                      |
 |                            | * Can handle very large designs                                            |                                                         |
 +----------------------------+----------------------------------------------------------------------------+---------------------------------------------------------+
-| :ref:`GCC <BUILD:gcc>`     | * Generated code is faster (particularly with ``-O`` or ``-O2``)           | * Analysis can take time (particularly for large units) |
-|                            | * Generated code can be debugged (with ``-g``)                             | * Build is more complex                                 |
-|                            | * Ported to many platforms (``x86``, ``x86_64``, ``powerpc``, ``sparc``)   | * Code coverage collection (``gcov``) is unique to GCC  |
-+----------------------------+----------------------------------------------------------------------------+---------------------------------------------------------+
-| :ref:`LLVM <BUILD:llvm>`   | * Same as GCC                                                              |                                                         |
+| :ref:`LLVM <BUILD:llvm>`   | * Generated code is faster                                                 | * Build is more complex                                 |
+|                            | * Generated code can be debugged (with ``-g``)                             |                                                         |
 |                            | * Easier to build than GCC                                                 |                                                         |
++----------------------------+----------------------------------------------------------------------------+---------------------------------------------------------+
+| :ref:`GCC <BUILD:gcc>`     | * Generated code is faster (particularly with ``-O`` or ``-O2``)           | * Build is even more complex                            |
+|                            | * Generated code can be debugged (with ``-g``)                             | * Analysis can take time (particularly for large units) |
+|                            | * Ported to many platforms (x86, x86_64, PowerPC, SPARC)                   | * Code coverage collection (``gcov``) is unique to GCC  |
 +----------------------------+----------------------------------------------------------------------------+---------------------------------------------------------+
   
 .. toctree::
