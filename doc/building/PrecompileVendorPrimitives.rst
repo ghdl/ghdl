@@ -236,7 +236,7 @@ Selectable Options for the Bash Scripts:
 
 * Common parameters to most scripts:
   
-  .. code-block::
+  .. code-block:: raw
 	
      -h --help             Print the embedded help page(s).
      -c --clean            Cleanup directory before analyzing.
@@ -247,126 +247,186 @@ Selectable Options for the Bash Scripts:
 
 * `compile-altera.sh`
 
-   Selectable libraries:
+  Selectable libraries:
+  
+  .. code-block:: raw
 
-        -a --all              Compile all libraries, including common libraries, packages and device libraries.
-           --altera           Compile base libraries like 'altera' and 'altera_mf'
-           --max              Compile device libraries for Max CPLDs
-           --arria            Compile device libraries for Arria FPGAs
-           --cyclone          Compile device libraries for Cyclone FPGAs
-           --stratix          Compile device libraries for Stratix FPGAs
-    Compile options:
+     -a --all              Compile all libraries, including common libraries, packages and device libraries.
+        --altera           Compile base libraries like 'altera' and 'altera_mf'
+        --max              Compile device libraries for Max CPLDs
+        --arria            Compile device libraries for Arria FPGAs
+        --cyclone          Compile device libraries for Cyclone FPGAs
+        --stratix          Compile device libraries for Stratix FPGAs
 
-           --vhdl93           Compile selected libraries with VHDL-93 (default).
-           --vhdl2008         Compile selected libraries with VHDL-2008.
+   Compile options:
+  
+   .. code-block:: raw
+	
+
+        --vhdl93           Compile selected libraries with VHDL-93 (default).
+        --vhdl2008         Compile selected libraries with VHDL-2008.
 
 * `compile-xilinx-ise.sh`
 
-    Selectable libraries:
+  Selectable libraries:
+  
+  .. code-block:: raw
+	
+     -a --all              Compile all libraries, including common libraries, packages and device libraries.
+        --unisim           Compile the unisim primitives
+        --unimacro         Compile the unimacro macros
+        --simprim          Compile the simprim primitives
+        --corelib          Compile the xilinxcorelib macros
+        --secureip         Compile the secureip primitives
 
-        -a --all              Compile all libraries, including common libraries, packages and device libraries.
-           --unisim           Compile the unisim primitives
-           --unimacro         Compile the unimacro macros
-           --simprim          Compile the simprim primitives
-           --corelib          Compile the xilinxcorelib macros
-           --secureip         Compile the secureip primitives
-    Compile options:
-
-           --vhdl93           Compile selected libraries with VHDL-93 (default).
-           --vhdl2008         Compile selected libraries with VHDL-2008.
+  Compile options:
+  
+  .. code-block:: raw
+	
+        --vhdl93           Compile selected libraries with VHDL-93 (default).
+        --vhdl2008         Compile selected libraries with VHDL-2008.
 
 * `compile-xilinx-vivado.sh`
 
-    Selectable libraries:
+  Selectable libraries:
+  
+  .. code-block:: raw
+	
+     -a --all              Compile all libraries, including common libraries, packages and device libraries.
+        --unisim           Compile the unisim primitives
+        --unimacro         Compile the unimacro macros
+        --secureip         Compile the secureip primitives
 
-        -a --all              Compile all libraries, including common libraries, packages and device libraries.
-           --unisim           Compile the unisim primitives
-           --unimacro         Compile the unimacro macros
-           --secureip         Compile the secureip primitives
-    Compile options:
-
-           --vhdl93           Compile selected libraries with VHDL-93 (default).
-           --vhdl2008         Compile selected libraries with VHDL-2008.
+  Compile options:
+  
+  .. code-block:: raw
+	
+        --vhdl93           Compile selected libraries with VHDL-93 (default).
+        --vhdl2008         Compile selected libraries with VHDL-2008.
 
 * `compile-osvvm.sh`
 
-    Selectable libraries:
-
-        -a --all              Compile all.
-           --osvvm            Compile the OSVVM library.
+  Selectable libraries:
+  
+  .. code-block:: raw
+	
+     -a --all              Compile all.
+        --osvvm            Compile the OSVVM library.
 
 * `compile-vunit.sh`
 
-    Selectable libraries:
+  Selectable libraries:
+  
+  .. code-block:: raw
+	
+     -a --all              Compile all.
+        --osvvm            Compile the VUnit library.
 
-        -a --all              Compile all.
-           --osvvm            Compile the VUnit library.
+* `compile-uvvm.sh`
+
+  Selectable libraries:
+  
+  .. code-block:: raw
+	
+     -a --all              Compile all.
+        --uvvm             Compile the VUnit library.
+
 
 Selectable Options for the PowerShell Scripts:
 ----------------------------------------------
 
 * Common parameters to all scripts:
-
-        -Help                 Print the embedded help page(s).
-        -Clean                Cleanup directory before analyzing.
-        -SuppressWarnings     Don't show warnings. Report errors only.
+  
+  .. code-block:: raw
+	
+     -Help                 Print the embedded help page(s).
+     -Clean                Cleanup directory before analyzing.
+     -SuppressWarnings     Don't show warnings. Report errors only.
 
 * `compile-altera.ps1`
 
-    Selectable libraries:
+  Selectable libraries:
+  
+  .. code-block:: raw
+	
+     -All                  Compile all libraries, including common libraries, packages and device libraries.
+     -Altera               Compile base libraries like 'altera' and 'altera_mf'
+     -Max                  Compile device libraries for Max CPLDs
+     -Arria                Compile device libraries for Arria FPGAs
+     -Cyclone              Compile device libraries for Cyclone FPGAs
+     -Stratix              Compile device libraries for Stratix FPGAs
 
-        -All                  Compile all libraries, including common libraries, packages and device libraries.
-        -Altera               Compile base libraries like 'altera' and 'altera_mf'
-        -Max                  Compile device libraries for Max CPLDs
-        -Arria                Compile device libraries for Arria FPGAs
-        -Cyclone              Compile device libraries for Cyclone FPGAs
-        -Stratix              Compile device libraries for Stratix FPGAs
-    Compile options:
+  Compile options:
+		
+  .. code-block:: raw
 
-        -VHDL93              Compile selected libraries with VHDL-93 (default).
-        -VHDL2008            Compile selected libraries with VHDL-2008.
+     -VHDL93               Compile selected libraries with VHDL-93 (default).
+     -VHDL2008             Compile selected libraries with VHDL-2008.
 
 * `compile-xilinx-ise.ps1`
 
-		Selectable libraries:
+  Selectable libraries:
+  
+  .. code-block:: raw
 
-        -All                  Compile all libraries, including common libraries, packages and device libraries.
-        -Unisim               Compile the unisim primitives
-        -Unimacro             Compile the unimacro macros
-        -Simprim              Compile the simprim primitives
-        -CoreLib              Compile the xilinxcorelib macros
-        -Secureip             Compile the secureip primitives
-    Compile options:
+     -All                  Compile all libraries, including common libraries, packages and device libraries.
+     -Unisim               Compile the unisim primitives
+     -Unimacro             Compile the unimacro macros
+     -Simprim              Compile the simprim primitives
+     -CoreLib              Compile the xilinxcorelib macros
+     -Secureip             Compile the secureip primitives
 
-        -VHDL93              Compile selected libraries with VHDL-93 (default).
-        -VHDL2008            Compile selected libraries with VHDL-2008.
+  Compile options:
+  
+  .. code-block:: raw
+
+     -VHDL93               Compile selected libraries with VHDL-93 (default).
+     -VHDL2008             Compile selected libraries with VHDL-2008.
 
 * `compile-xilinx-vivado.ps1`
 
-    Selectable libraries:
+  Selectable libraries:
+  
+  .. code-block:: raw
 
-        -All                  Compile all libraries, including common libraries, packages and device libraries.
-        -Unisim               Compile the unisim primitives
-        -Unimacro             Compile the unimacro macros
-        -Secureip             Compile the secureip primitives
-    Compile options:
+     -All                  Compile all libraries, including common libraries, packages and device libraries.
+     -Unisim               Compile the unisim primitives
+     -Unimacro             Compile the unimacro macros
+     -Secureip             Compile the secureip primitives
 
-        -VHDL93              Compile selected libraries with VHDL-93 (default).
-        -VHDL2008            Compile selected libraries with VHDL-2008.
+  Compile options:
+  
+  .. code-block:: raw
+
+     -VHDL93               Compile selected libraries with VHDL-93 (default).
+     -VHDL2008             Compile selected libraries with VHDL-2008.
 
 * `compile-osvvm.ps1`
 
-    Selectable libraries:
+  Selectable libraries:
+  
+  .. code-block:: raw
 
-        -All                  Compile all.
-        -OSVVM  		          Compile the OSVVM library.
+     -All                  Compile all.
+     -OSVVM  		           Compile the OSVVM library.
 
 * `compile-vunit.ps1`
 
-    Selectable libraries:
+  Selectable libraries:
+  
+  .. code-block:: raw
 
-        -All                  Compile all.
-        -VUnit  		          Compile the VUnit library.
+     -All                  Compile all.
+     -VUnit  		           Compile the VUnit library.
+
+* `compile-uvvm.ps1`
+
+  Selectable libraries:
+  
+  .. code-block:: raw
+
+     -All                  Compile all.
+     -UVVM  		           Compile the UVVM libraries.
 
 --------------------------------------------------------------------------------
 
