@@ -1,30 +1,72 @@
 .. _BUILD:
 
-Building GHDL
-#############
+Building GHDL from Sources
+##########################
 
-GHDL currently supports three supported different backends (code generators): `mcode` (built-in), `GCC <http://gcc.gnu.org/>`_ and `LLVM <http://llvm.org/>`_ . Here is a short comparison, so that you can choose the one you want to use:
+.. rubric:: Download
 
-+------------------------+------------------------------------------------------------------------------------------+---------------------------------------------------------+
-|                        | pros                                                                                     | cons                                                    |
-+========================+==========================================================================================+=========================================================+
-| `mcode`                | - very easy to build                                                                     | - :samp:`x86_64`/:samp:`i386` only                      |
-|                        | - very quick analysis                                                                    | - simulation is slower                                  |
-|                        | - can handle very large designs                                                          |                                                         |
-+------------------------+------------------------------------------------------------------------------------------+---------------------------------------------------------+
-| GCC                    | - generated code is faster (particularly with :samp:`-O` or :samp:`-O2`)                 | - analysis can take time (particularly for large units) |
-|                        | - generated code can be debugged (with :samp:`-g`)                                       | - build is more complex                                 |
-|                        | - ported to many platforms (:samp:`x86`, :samp:`x86_64`, :samp:`powerpc`, :samp:`sparc`) |                                                         |
-+------------------------+------------------------------------------------------------------------------------------+---------------------------------------------------------+
-| LLVM                   | - Same as GCC                                                                            | Coverage, :samp:`gcov`, is unique to GCC                |
-|                        | - Easier to build than GCC                                                               |                                                         |
-+------------------------+------------------------------------------------------------------------------------------+---------------------------------------------------------+
+GHDL can be downloaded as a `zip-file <https://github.com/tgingold/ghdl/archive/master.zip>`_
+(latest 'master' branch) or cloned with ``git clone`` from GitHub. GitHub
+offers HTTPS and SSH as transfer protocols. See the :ref:`Download <GETTING:Download>`
+page for further details. The installation directory is referred to as ``GHDLRoot``.
 
-.. HINT:: The output of both GCC and LLVM is an executable file, but `mcode` does not generate any. Therefore, if using GCC/LLVM, the call with argument :samp:`-r` can be replaced with direct execution of the binary. See section :ref:`USING:QuickStart`.
++----------+-----------------------------------------------------------+
+| Protocol | Git Clone Command                                         |
++==========+===========================================================+
+| HTTPS    | ``git clone https://github.com/tgingold/ghdl.git ghdl``   |
++----------+-----------------------------------------------------------+
+| SSH      | ``git clone ssh://git@github.com:tgingold/ghdl.git ghdl`` |
++----------+-----------------------------------------------------------+
 
-After making your choice, you can jump to the corresponding section below. However, we suggest you to read :ref:`BUILD:dir_structure` before, so that you know where the content is placed and which temporal files are expected to be created.
+.. rubric:: Available back-ends
 
-.. HINT:: Since GHDL is written in `Ada`, independently of the code generator you use, the `GNU Ada compiler`, `GNAT GPL`, is required, 2014 (or later) for :samp:`x86` (32 or 64 bits). `GNAT GPL` can be downloaded anonymously from `libre.adacore.com <http://libre.adacore.com/tools/gnat-gpl-edition/>`_. Then, untar and run the doinstall script. Alternatively, most GNU/Linux provide a package named :samp:`gcc-ada` or :samp:`gcc-gnat`.
+GHDL currently supports three supported different back-ends (code generators):
+* `mcode` (built-in),
+* `GCC <http://gcc.gnu.org/>`_, and
+* `LLVM <http://llvm.org/>`_ .
+
+Here is a short comparison, so that you can choose the one you want to use:
+
++----------------------------+----------------------------------------------------------------------------+---------------------------------------------------------+
+| Back-end                   | Pros                                                                       | Cons                                                    |
++============================+============================================================================+=========================================================+
+| :ref:`mcode <BUILD:mcode>` | * Very easy to build                                                       | * ``x86_64``/``i386`` only                              |
+|                            | * Very quick analysis                                                      | * Simulation is slower                                  |
+|                            | * Can handle very large designs                                            |                                                         |
++----------------------------+----------------------------------------------------------------------------+---------------------------------------------------------+
+| :ref:`GCC <BUILD:gcc>`     | * Generated code is faster (particularly with ``-O`` or ``-O2``)           | * Analysis can take time (particularly for large units) |
+|                            | * Generated code can be debugged (with ``-g``)                             | * Build is more complex                                 |
+|                            | * Ported to many platforms (``x86``, ``x86_64``, ``powerpc``, ``sparc``)   | * Code coverage collection (``gcov``) is unique to GCC  |
++----------------------------+----------------------------------------------------------------------------+---------------------------------------------------------+
+| :ref:`LLVM <BUILD:llvm>`   | * Same as GCC                                                              |                                                         |
+|                            | * Easier to build than GCC                                                 |                                                         |
++----------------------------+----------------------------------------------------------------------------+---------------------------------------------------------+
+  
+.. toctree::
+   :hidden:
+   
+   Directories
+   With mcode Backend <mcode/index>
+   With LLVM Backend <llvm/index>
+   With GCC Backend <gcc/index>
+   TestSuites
+
+.. HINT::
+   The output of both GCC and LLVM is an executable file, but `mcode` does not
+   generate any. Therefore, if using GCC/LLVM, the call with argument ``-r`` can
+   be replaced with direct execution of the binary. See section :ref:`USING:QuickStart`.
+
+After making your choice, you can jump to the corresponding section.
+However, we suggest you to read :ref:`BUILD:dir_structure` before, so that you
+know where the content is placed and which temporal files are expected to be
+created.
+
+.. HINT::
+   Since GHDL is written in `Ada`, independently of the code generator you use,
+   the `GNU Ada compiler`, `GNAT GPL`, is required, 2014 (or later) for ``x86``
+   (32 or 64 bits). `GNAT GPL` can be downloaded anonymously from `libre.adacore.com <http://libre.adacore.com/tools/gnat-gpl-edition/>`_.
+   Then, untar and run the doinstall script. Alternatively, most GNU/Linux
+   provide a package named ``gcc-ada`` or ``gcc-gnat``.
 
 .. TODO::
 
@@ -36,19 +78,3 @@ After making your choice, you can jump to the corresponding section below. Howev
    * LLVM: GHDL generates instructions for the LLVM abstract register machine, which then generates x86(-64) instructions for the host system.
    * mcode: GHDL generates the x86(-64) instructions in memory and executes the model.
      * gcc is currently only supported on Linux, because you need to compile a complete GCC from zero and add GHDL as a frontend into the GCC. Compiling the complete GCC suite plus GHDL takes a lot of time. I think it's not possible to finish the compile task in the bounds of a Travis-CI run.
-  
-
-GHDL can be build with three different back-ends: mcode, LLVM or GCC.
-
-* :ref:`mcode <BUILD:mcode>`
-* :ref:`LLVM <BUILD:llvm>`
-* :ref:`GCC <BUILD:gcc>`
-
-.. toctree::
-   :hidden:
-   
-   Directories
-   With mcode Backend <mcode/index>
-   With LLVM Backend <llvm/index>
-   With GCC Backend <gcc/index>
-   TestSuites

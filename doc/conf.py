@@ -153,8 +153,7 @@ try:
 	with open(prologPath, "r") as prologFile:
 		rst_prolog = prologFile.read()
 except Exception as ex:
-	print("CWD: " + str(os.getcwd()))
-	print("[ERROR:] File '{0!s}' not found.".format(prologPath))
+	print("[ERROR:] While reading '{0!s}'.".format(prologPath))
 	print(ex)
 	rst_prolog = ""
 
