@@ -1,5 +1,6 @@
 #-r ../requirements.txt
 sphinx>=1.5.2
+recommonmark
 # sphinxcontrib-textstyle>=0.2.1
 # sphinxcontrib-spelling>=2.2.0
 # changelog>=0.3.5
