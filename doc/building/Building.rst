@@ -12,12 +12,12 @@ GHDL currently supports three supported different backends (code generators): `m
 |                        | - very quick analysis                                                                    | - simulation is slower                                  |
 |                        | - can handle very large designs                                                          |                                                         |
 +------------------------+------------------------------------------------------------------------------------------+---------------------------------------------------------+
-| GCC                  | - generated code is faster (particularly with :samp:`-O` or :samp:`-O2`)                 | - analysis can take time (particularly for large units) |
+| GCC                    | - generated code is faster (particularly with :samp:`-O` or :samp:`-O2`)                 | - analysis can take time (particularly for large units) |
 |                        | - generated code can be debugged (with :samp:`-g`)                                       | - build is more complex                                 |
 |                        | - ported to many platforms (:samp:`x86`, :samp:`x86_64`, :samp:`powerpc`, :samp:`sparc`) |                                                         |
 +------------------------+------------------------------------------------------------------------------------------+---------------------------------------------------------+
-| LLVM                 | - Same as GCC                                                                          | Coverage, :samp:`gcov`, is unique to GCC              |
-|                        | - Easier to build than GCC                                                             |                                                         |
+| LLVM                   | - Same as GCC                                                                            | Coverage, :samp:`gcov`, is unique to GCC                |
+|                        | - Easier to build than GCC                                                               |                                                         |
 +------------------------+------------------------------------------------------------------------------------------+---------------------------------------------------------+
 
 .. HINT:: The output of both GCC and LLVM is an executable file, but `mcode` does not generate any. Therefore, if using GCC/LLVM, the call with argument :samp:`-r` can be replaced with direct execution of the binary. See section :ref:`USING:QuickStart`.

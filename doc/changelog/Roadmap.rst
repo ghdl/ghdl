@@ -1,7 +1,7 @@
 .. _CHANGE:Roadmap:
 
-Roadmap | Future improvements
-############
+Roadmap | Future Improvements
+#############################
 
 I have several axes for `GHDL` improvements:
 
@@ -14,7 +14,7 @@ I have several axes for `GHDL` improvements:
 * VITAL acceleration
 
 TODOs
-=================
+=====
 
 - RTD builds fail if EPUB is activated.
 - Convert VendorPrimitives Markdown to RST

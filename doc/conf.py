@@ -148,10 +148,12 @@ todo_include_todos = True
 todo_link_only = True
 
 # reST settings
+prologPath = "prolog.inc"
 try:
-	with open("prolog.inc", "r") as prologFile:
+	with open(prologPath, "r") as prologFile:
 		rst_prolog = prologFile.read()
 except:
+	print("[ERROR:] File '{0!s}' nor found.".format(prologPath))
 	rst_prolog = ""
 
 # -- Options for HTML output ----------------------------------------------
@@ -346,7 +348,7 @@ texinfo_documents = [
 # Sphinx.Ext.InterSphinx
 # ==============================================================================
 intersphinx_mapping = {
-	'python': ('https://docs.python.org/3.5/', None),
+	'python': ('https://docs.python.org/3.6/', None),
 	'poc': ('http://poc-library.readthedocs.io/en/release', None),
 #	'ghdl':   ('http://ghdl.readthedocs.io/en/latest', None)
 }
