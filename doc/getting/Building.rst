@@ -81,7 +81,7 @@ Directory structure
 		- The code in dist/windows/mcode is special code needed to build mcode in windows. mcode is supported on Linux (32/64-bit) and Windows (32-bit).
 
 Mcode backend
-=================
+=============
 
 This is the most simple procedure, because it requires the least dependencies and configuration options.
 
@@ -94,12 +94,12 @@ GNU/Linux
 - That's all!
 
 Windows MinGW 32/64
-----------------
+-------------------
 
 .. TODO:: For example, on Windows, you may want to set it to :samp:`--prefix=/c/Program Files (x86)/GHDL` .
 
 Windows GNAT GPL (32 only)
-----------------
+--------------------------
 
 .. TODO::
 	Note: this was tested with Windows XP SP2 familly edition.
@@ -107,10 +107,10 @@ Windows GNAT GPL (32 only)
 	The Ada95 GNAT compiler (GNAT GPL 2005 is known to work), along with NSIS to create the installer. Then unzip, edit winbuild to use correct path for makensis, and run winbuild. The installer is in the windows directory.
 	   
 LLVM backend 
-=================
+============
 
 GNU/Linux
-----------------
+---------
 
 You need to install LLVM (usually depends on :samp:`libedit`, see :ghdlsharp`29`). The supported versions are 3.5 till 3.9, but debugging is only supported with LLVM 3.5.
 
@@ -121,13 +121,13 @@ You need to install LLVM (usually depends on :samp:`libedit`, see :ghdlsharp`29`
 - Then build with :samp:`make` and install with :samp:`make install`.
   
 Mac OS?
-----------------
+-------
 
 Windows MinGW 32/64
-----------------
+-------------------
 
 GCC backend
-=================
+===========
 
 .. TODO::
 
@@ -142,7 +142,7 @@ GCC backend
 		$ make grt.links           # Locally install the GHDL runtime	
 
 GNU/Linux
-----------------
+---------
 
 - First configure GHDL, specify GCC source dir and :samp:`prefix` (replace :samp:`/usr/local` with your desired installation directory)::
 
@@ -175,7 +175,7 @@ GNU/Linux
 	make install
 
 Windows?
-----------------
+--------
 
 .. TODO:
 
@@ -199,7 +199,7 @@ Windows?
 .. _test_suites:
 	
 Test suites
-=================
+===========
 
 .. TODO::
 
