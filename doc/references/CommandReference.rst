@@ -7,7 +7,7 @@ Command Reference
 .. HINT:: The most common commands and options are shown in section :ref:`USING:Invoking`. Here the advanced and experimental features are described.
 
 Environment variables
-=============
+=====================
 
 .. envvar:: GHDL_PREFIX
 
@@ -21,7 +21,7 @@ There are a few GHDL commands which are seldom useful.
 .. index:: cmd help
 
 Help [:samp:`-h`]
-------------
+-----------------
 
 .. option:: --help, -h
 
@@ -36,7 +36,7 @@ for this later command are displayed::
 .. index:: cmd display configuration
   
 Display config [:samp:`--disp-config`]
--------------------
+--------------------------------------
 
 .. option:: --disp-config <[options]>
 
@@ -46,7 +46,7 @@ Display the program paths and options used by GHDL. This may be useful to track 
 .. index:: display :samp:`std.standard`
 
 Display standard [:samp:`--disp-standard`]
----------------------
+------------------------------------------
 
 .. option:: --disp-standard <[options]>
 
@@ -55,7 +55,7 @@ Display the :samp:`std.standard` package.
 .. index:: cmd version
 
 Version [:samp:`--version`]
----------------
+---------------------------
 
 .. option:: --version, -v
 
@@ -70,7 +70,7 @@ The following commands act on one or several files. These are not analyzed, ther
 .. index:: vhdl to html
 
 Pretty print [:samp:`--pp-html`]
---------------------
+--------------------------------
 
 .. option:: --pp-html <[options] file...>
 
@@ -84,7 +84,7 @@ The style of the html file can be modified with the :option:`--format=` option:
 .. index:: cmd file find
 
 Find [:samp:`-f`]
-------------
+-----------------
 
 .. option:: -f <file...>
 
@@ -93,7 +93,7 @@ The files are scanned, parsed and the names of design units are displayed. Desig
 .. index:: cmd file chop
 
 Chop [:samp:`--chop`]
-------------
+---------------------
 
 .. option:: --chop <files...>
 
@@ -112,19 +112,19 @@ This command may be useful to split big files, if your computer has not enough m
 .. index:: cmd file lines
 
 Lines [:samp:`--lines`]
--------------
+-----------------------
 
 .. option:: --lines <files...>
 
 Display on the standard output lines of files preceded by line number.
 
 GCC/LLVM only commands
-=================
+======================
 
 .. index:: cmd GCC/LLVM binding
 
 Bind [:samp:`--bind`]
-------------
+---------------------
 
 .. option:: --bind <[options] primary_unit [secondary_unit]>
 
@@ -133,7 +133,7 @@ Performs only the first stage of the elaboration command; the list of objects fi
 .. index:: cmd GCC/LLVM linking
 
 Link [:samp:`--link`]
-------------
+---------------------
 
 .. option:: --link <[options] primary_unit [secondary_unit]>
   
@@ -142,14 +142,14 @@ Performs only the second stage of the elaboration command: the executable is cre
 .. index:: cmd GCC/LLVM list link
 
 List link [:samp:`--list-link`]
------------------
+-------------------------------
 
 .. option:: --list-link <primary_unit [secondary_unit]>
 
 This command may be used only after a bind command. GHDL displays all the files which will be linked to create an executable. This command is intended to add object files in a link of a foreign program.
 
 Options
-=================
+=======
 
 .. option:: --mb-comments, -C
 

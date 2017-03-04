@@ -1,20 +1,22 @@
 .. program:: ghdl
 .. _USING:Invoking:
 
-*************
 Invoking GHDL
-*************
+#############
 
 The form of the :program:`ghdl` command is :samp:`ghdl command [options...]`. There are multiple available commands, but these general rules apply:
 
 * The first argument selects the command. The options are used to slightly modify the action.
 * No option is allowed before the command. Except for the run command, no option is allowed after a filename or a unit name.
 
-.. HINT:: If the number of options is large and the command line length is beyond the system limit, you can use a response file. An argument that starts with a :samp:`@` is considered as a response file; it is replaced by arguments read from the file (separated by blanks and end of line).
+.. HINT::
+   If the number of options is large and the command line length is beyond the system limit, you can use a response file. An argument that starts with a :samp:`@` is considered as a response file; it is replaced by arguments read from the file (separated by blanks and end of line).
 
-.. HINT:: Only the most common commands and options are shown here. For most advanced and experimental features see section :ref:`REF:Command`.
+.. HINT::
+   Only the most common commands and options are shown here. For most advanced and experimental features see section :ref:`REF:Command`.
 
-.. WARNING:: During analysis and elaboration GHDL may read the :samp:`std` and :samp:`ieee` files. The location of these files is based on the prefix, which is (in priority order):
+.. WARNING::
+   During analysis and elaboration GHDL may read the :samp:`std` and :samp:`ieee` files. The location of these files is based on the prefix, which is (in priority order):
 
 	* the :option:`--PREFIX` command line option
 	* the :envvar:`GHDL_PREFIX` environment variable
@@ -23,14 +25,15 @@ The form of the :program:`ghdl` command is :samp:`ghdl command [options...]`. Th
 	You should use the :option:`--disp-config` command to display and debug installation problems.
 
 Design building commands
-=================
+========================
 
 The mostly used commands of GHDL are those to analyze and elaborate a design.
+
 
 .. index:: cmd analysis
 
 Analysis [:samp:`-a`]
-----------------
+---------------------
 
 .. option:: -a <[options...] file...>
 
@@ -38,10 +41,11 @@ Analyzes/compiles one or more files, and creates an object file for each source 
 
 See :ref:`GHDL_options`, for details on the GHDL options. For example, to produce debugging information such as line numbers, use: :samp:`ghdl -a -g my_design.vhdl`.
 
+
 .. index:: cmd elaboration
 
 Elaboration [:samp:`-e`]
--------------------
+------------------------
 
 .. option:: -e <[options...] primary_unit [secondary_unit]>
 
@@ -59,10 +63,11 @@ Name of the units must be a simple name, without any dot.  You can select the na
 
 * If mcode is used, this command elaborates the design but does not generate anything. Since the run command also elaborates the design, this con be skipped.
 
+
 .. index:: cmd run
  
 Run [:samp:`-r`]
------------
+----------------
 
 .. option:: -r <[options...] primary_unit [secondary_unit] [simulation_options...]>
 
@@ -79,32 +84,36 @@ This command exists for three reasons:
 
 See section ':ref:`USING:Simulation`', for details on options.
 
+
 .. index:: cmd elaborate and run
 
 Elaborate and run [:samp:`--elab-run`]
--------------------------
+--------------------------------------
 
 .. option:: --elab-run <[elab_options...] primary_unit [secondary_unit] [run_options...]>
 
 Acts like the elaboration command (see :option:`-e`) followed by the run command (see :option:`-r`).
 
+
 .. index:: cmd checking syntax
 
 Check syntax [:samp:`-s`]
---------------------
+-------------------------
 
 .. option:: -s <[options] files>
 
 Analyze files but do not generate code. This command may be used to check the syntax of files. It does not update the library.
 
+
 .. index:: cmd analyze and elaborate
 
 Analyze and elaborate [:samp:`-c`]
------------------------------
+----------------------------------
 
 .. option:: -c <[options] file... -<e|r> primary_unit [secondary_unit]>
 
-.. HINT:: With GCC/LLVM, :option:`-e` should be used, and :option:`-r` with mcode.
+.. HINT::
+   With GCC/LLVM, :option:`-e` should be used, and :option:`-r` with mcode.
 
 The files are first parsed, and then a elaboration is performed, which drives an analysis. Effectively, analysis and elaboration are combined, but there is no explicit call to :option:`-a`. With GCC/LLVM, code is generated during the elaboration. With mcode, the simulation is launched after the elaboration.
 
@@ -117,19 +126,23 @@ The advantages over the traditional approach (analyze and then elaborate) are:
 * You don't need to know an analysis order.
 * This command produces smaller executable, since unused units and subprograms do not generate code.
 
-.. HINT:: However, you should know that currently most of the time is spent in code generation and the analyze and elaborate command generate code for all units needed, even units of :samp:`std` and :samp:`ieee` libraries.  Therefore, according to the design, the time for this command may be higher than the time for the analyze command followed by the elaborate command.
+.. HINT::
+   However, you should know that currently most of the time is spent in code generation and the analyze and elaborate command generate code for all units needed, even units of :samp:`std` and :samp:`ieee` libraries.  Therefore, according to the design, the time for this command may be higher than the time for the analyze command followed by the elaborate command.
 
-.. WARNING:: This command is still under development. In case of problems, you should go back to the traditional way.
+.. WARNING::
+   This command is still under development. In case of problems, you should go back to the traditional way.
+
 
 Design rebuilding commands
-===================
+==========================
 
 Analyzing and elaborating a design consisting in several files can be tricky, due to dependencies. GHDL has a few commands to rebuild a design.
+
 
 .. index:: cmd importing files
 
 Import [:samp:`-i`]
---------------
+-------------------
 
 .. option:: -i <[options] file...>
 
@@ -138,22 +151,21 @@ All the files specified in the command line are scanned, parsed and added in the
 .. HINT::
 
 	* Note that all the files are added to the work library. If you have many libraries, you must use the command for each library.
-
 	* Since the files are parsed, there must be correct files. However, since they are not analyzed, many errors are tolerated by this command.
 
 See :option:`-m`, to actually build the design.
 
+
 .. index:: cmd make
 
 Make [:samp:`-m`]
-------------
+-----------------
 
 .. option:: -m <[options] primary [secondary]>
 
 Analyze automatically outdated files and elaborate a design. The primary unit denoted by the :samp:`primary` argument must already be known by the system, either because you have already analyzed it (even if you have modified it) or because you have imported it. A file may be outdated because it has been modified (e.g. you just have edited it), or because a design unit contained in the file depends on a unit which is outdated. This rule is of course recursive.
 
 * With option :option:`--bind`, GHDL will stop before the final linking step. This is useful when the main entry point is not GHDL and you're linking GHDL object files into a foreign program.
-
 * With option :option:`-f` (force), GHDL analyzes all the units of the work library needed to create the design hierarchy. Not outdated units are recompiled.  This is useful if you want to compile a design hierarchy with new compilation flags (for example, to add the *-g* debugging option).
 
 The make command will only re-analyze design units in the work library. GHDL fails if it has to analyze an outdated unit from another library.
@@ -166,17 +178,19 @@ The make command imports files which have been modified. Then, a design hierarch
 
 This is not perfect, since the default architecture (the most recently analyzed one) may change while outdated design files are analyzed. In such a case, re-run the make command of GHDL.
 
+
 .. index:: cmd generate makefile
 
 Generate Makefile [:samp:`--gen-makefile`]
--------------------------
+------------------------------------------
 
 .. option:: --gen-makefile <[options] primary [secondary]>
 
 This command works like the make command (see :option:`-m`), but only a makefile is generated on the standard output.
 
+
 Options
-============
+=======
 
 .. index:: IEEE 1164
 .. index:: 1164
@@ -306,12 +320,14 @@ Options
 
   Be verbose. For example, for analysis, elaboration and make commands, GHDL displays the commands executed.
 
+
 Warnings
-=============
+========
 
 Some constructions are not erroneous but dubious. Warnings are diagnostic messages that report such constructions. Some warnings are reported only during analysis, others during elaboration.
 
-.. HINT:: You could disable a warning by using the :samp:`--warn-no-XXX` or :samp:`-Wno-XX` instead of :samp:`--warn-XXX` or :samp:`-WXXX`.
+.. HINT::
+   You could disable a warning by using the :samp:`--warn-no-XXX` or :samp:`-Wno-XX` instead of :samp:`--warn-XXX` or :samp:`-WXXX`.
 
 .. option:: --warn-reserved
 
@@ -371,8 +387,9 @@ Some constructions are not erroneous but dubious. Warnings are diagnostic messag
   Emit a warning in case of runtime error that is detected during
   analysis.
 
+
 Diagnostics Control
-========================
+===================
 
 .. option:: -fcolor-diagnostics
 .. option:: -fno-color-diagnostics
@@ -383,7 +400,8 @@ Diagnostics Control
 .. option:: -fno-diagnostics-show-option
 
   Control whether the warning option is displayed at the end of warning messages, so that user can easily know how to disable it.
-  
+
+
 Library commands
 ================
 
@@ -396,38 +414,42 @@ A library's source code is usually stored and compiled into its own directory, t
 
 Furthermore, GHDL provides a few commands which act on a library:
 
+
 .. index:: cmd library directory
 
 Directory [:samp:`--dir`]
------------------
+-------------------------
 
 .. option:: --dir <[options] [libs]>
 
 Displays the content of the design libraries (by default the :samp:`work` library). All options are allowed, but only a few are meaningful: :option:`--work`, :option:`--workdir` and :option:`--std`.
 
+
 .. index:: cmd library clean
 
 Clean [:samp:`--clean`]
--------------
+-----------------------
 
 .. option:: --clean <[options]>
 
 Try to remove any object, executable or temporary file it could have created. Source files are not removed. The library is kept.
 
+
 .. index:: cmd library remove
 
 Remove [:samp:`--remove`]
---------------
+-------------------------
 
 .. option:: --remove <[options]>
 
 Do like the clean command but remove the library too. Note that after removing a design library, the files are not
 known anymore by GHDL.
 
+
 .. index:: cmd library copy
 
 Copy [:samp:`--copy`]
-------------
+---------------------
 
 .. option:: --copy <--work=name [options]>
 
@@ -438,16 +460,18 @@ Make a local copy of an existing library.  This is very useful if you want to ad
   ghdl --copy --work=ieee --ieee=synopsys
   ghdl -a --work=ieee numeric_unsigned.vhd
 
+
 VPI build commands
 ==================
 
 These commands simplify the compile and the link of a user vpi module. They are all wrapper: the arguments are in fact a whole command line that is executed with additional switches. Currently a unix-like compiler (like `cc`, `gcc` or `clang`) is expected: the additional switches use their syntax. The only option is `-v` which displays the
 command before its execution.
 
+
 .. index:: cmd VPI compile
 
 compile [:samp:`--vpi-compile`]
--------------------
+-------------------------------
 
 .. option:: --vpi-compile <command>
 
@@ -472,7 +496,7 @@ executes::
 .. index:: cmd VPI link
 
 link [:samp:`--vpi-link`]
-----------------
+-------------------------
 
 .. option:: --vpi-link <command>
 
@@ -498,7 +522,7 @@ executes::
 .. index:: cmd VPI cflags
 
 cflags [:samp:`--vpi-cflags`]
-------------------
+-----------------------------
 
 .. option:: --vpi-cflags
 
@@ -507,7 +531,7 @@ Display flags added by :option:`--vpi-compile`.
 .. index:: cmd VPI ldflags
 
 ldflags [:samp:`--vpi-ldflags`]
--------------------
+-------------------------------
 
 .. option:: --vpi-ldflags
 
@@ -516,7 +540,7 @@ Display flags added by :option:`--vpi-link`.
 .. index:: cmd VPI include dir
 
 include dir [:samp:`--vpi-include-dir`]
------------------------
+---------------------------------------
 
 .. option:: --vpi-include-dir
 
@@ -525,11 +549,12 @@ Display the include directory added by the compile flags.
 .. index:: cmd VPI library dir
 
 library dir [:samp:`--vpi-library-dir`]
------------------------
+---------------------------------------
 
 .. option:: --vpi-library-dir
 
 Display the library directory added by the link flags.
+
 
 .. _ieee_library_pitfalls:
 
@@ -651,4 +676,5 @@ It is better to only use the standard packages defined by IEEE, which provides t
 
 .. index:: Math_Complex
 
-.. HINT:: The :samp:`ieee` math packages (:samp:`math_real` and :samp:`math_complex`) provided with `GHDL` are fully compliant with the `IEEE` standard.
+.. HINT::
+   The :samp:`ieee` math packages (:samp:`math_real` and :samp:`math_complex`) provided with `GHDL` are fully compliant with the `IEEE` standard.

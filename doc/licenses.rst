@@ -1,9 +1,8 @@
-.. include:: shields.txt
-.. include:: <isonum.txt>
+.. include:: shields.inc
 .. _INTRO:Copyrights:
 
 Copyrights | Licenses
-############
+#####################
 
 - The GHDL front-end, package :samp:`std.textio` and the runtime library, :samp:`grt`, are given under :ref:`LIC:GPLv2`.
 - The documentation is given under :ref:`LIC:CC-BY-SA`.
@@ -27,7 +26,7 @@ Copyrights | Licenses
 .. _LIC:GPLv2:
 
 GNU GPLv2
-==============
+=========
 
 GHDL is copyright |copy| 2002 - 2017 Tristan Gingold.
 
@@ -38,7 +37,7 @@ This program is distributed in the hope that it will be useful, but **WITHOUT AN
 .. _LIC:CC-BY-SA:
 
 CC-BY-SA
-==============
+========
 
 This is a free documentation; you can redistribute it and/or modify it under the terms of the `Creative Commons Attribution-ShareAlike 4.0 <https://creativecommons.org/licenses/by-sa/4.0/>`_ license. You are free to **share** (copy and redistribute the material in any medium or format) and/or **adapt** (remix, transform, and build upon the material for any purpose, even commercially). We cannot revoke these freedoms as long as you follow the these terms:
 
@@ -51,7 +50,7 @@ See `CC-BY-SA-4.0 Legal Code <https://creativecommons.org/licenses/by-sa/4.0/leg
 .. _LIC:contributors:
 
 List of Contributors
-==============
+====================
 
 =========================  ============================================================
 Contributor [#f1]_         Role
@@ -77,7 +76,7 @@ With apologies to anyone who ought to be either on this table or in the GitHub c
 
 .. container:: footnotes
 
-	.. rubric:: Footnotes
+   .. rubric:: Footnotes
 
-	.. [#f1] In alphabetical order.
-	.. [#f2] Maintainer.
+   .. [#f1] In alphabetical order.
+   .. [#f2] Maintainer.

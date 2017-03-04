@@ -2,12 +2,12 @@
 .. _USING:Simulation:
 
 Simulation and runtime
-**********************
+######################
 
 .. _simulation_options:
 
 Simulation options
-============
+==================
 
 In most system environments, it is possible to pass options while
 invoking a program.  Contrary to most programming languages, there is no
@@ -109,7 +109,7 @@ all options available, including the debugging one.
 .. _export_waves:
   
 Export waveforms
-============
+================
 
 .. option:: --read-opt-file<=FILENAME>
 
@@ -231,7 +231,7 @@ Export waveforms
   - `Source code annotation is currently not available for VHDL, however all of GTKWave's other debug features are readily accessible. VHDL support is planned for a future release`. That's something that could be added in the future, but I have no plan for it.
   
 Export hierarchy and references
-============
+===============================
   
 .. option:: --disp-tree<[=KIND]>
 
@@ -274,20 +274,21 @@ The set of :samp:`file` are analyzed, and then, if the analysis is successful, h
 Write a report for PSL at the end of simulation. For each PSL cover and assert statements, the name, source location and whether it passed or failed is reported. The file is written using the JSON format, but still being human readable.
  
 .. TODO::
-  * Maybe worth adding a small example of how to generate a JSON file?
+   * Maybe worth adding a small example of how to generate a JSON file?
  
 .. option:: --file-to-xml
   
 Outputs an XML representation of the decorated syntax tree for the input file and its dependencies. It can be used for VHDL tooling using semantic information, like style checkers, documentation extraction, complexity estimation...
 
 .. WARNING::
-	* The AST slightly changes from time to time (particularly when new nodes are added for new language features), so be liberal in what is allowed by your tool. Also, the XML can be quite large so consider it only during prototyping.
-	* Note that at this time there is no XML dump of the elaborated design.
+   * The AST slightly changes from time to time (particularly when new nodes are added for new language features), so be liberal in what is allowed by your tool. Also, the XML can be quite large so consider it only during prototyping.
+   * Note that at this time there is no XML dump of the elaborated design.
+
 
 .. index:: debugging
 	
 Debugging
-============
+=========
 
 .. option:: --trace-signals
 
@@ -338,7 +339,7 @@ Dump Run Time Information (RTI).
 Allow :samp:`--work=std`
 
 GNU Debugger (GDB)
--------------------
+------------------
 
 .. index:: `__ghdl_fatal`
 
