@@ -148,20 +148,18 @@ todo_include_todos = True
 todo_link_only = True
 
 # reST settings
-
-rst_prolog = """\
-.. include:: <isonum.txt>
-.. |br| raw:: html
-
-   <br />
-"""
+try:
+	with open("prolog.inc", "r") as prologFile:
+		rst_prolog = prologFile.read()
+except:
+	rst_prolog = ""
 
 # -- Options for HTML output ----------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #html_theme = 'alabaster'
-#html_theme = "sphinx_rtd_theme"
+html_theme = "sphinx_rtd_theme"
 # Override default css to get a larger width for ReadTheDoc build            
 html_context = {                                                             
     'css_files': [                                                           
