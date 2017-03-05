@@ -39,6 +39,7 @@ footer hr {margin-bottom: 10px}
 /*Remove 1 indentation space in the sidemenu items*/
 .wy-menu-vertical li.current a, .wy-menu-vertical li.toctree-l2.current > a{padding:0.4045em 1.618em}
 .wy-menu-vertical li.toctree-l2.current li.toctree-l3 > a{padding: 0.4045em 1.8em}
+.wy-menu-vertical li.toctree-l3.current li.toctree-l4 > a{padding: 0.4045em 2.618em}
 
 /*Remove empty add*/
 div.wy-menu.rst-pro{display: none !important;max-width: 260px}
