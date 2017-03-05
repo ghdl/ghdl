@@ -628,7 +628,7 @@ else
 		Write-Host "  Install directory: $InstallPath"
 		if (Test-Path -Path $InstallPath)
 		{	Write-Host "  Cleaning up installation directory '$InstallPath'." -ForegroundColor Yellow
-			Get-ChildItem -Path $InstallPath -Depth 0 | foreach { Remove-Item $_ -Recurse -ErrorAction SilentlyContinue }
+			Get-ChildItem -Path $InstallPath -Depth 0 | foreach { Remove-Item $_.FullName -Recurse -Force }
 		}
 		
 		Write-Host "  Removing GHDL from PATH variables in Machine, User, Session ..." -ForegroundColor Yellow
@@ -701,7 +701,7 @@ else
 		Write-Host "  Install directory: $InstallPath"
 		if (Test-Path -Path $InstallPath)
 		{	Write-Host "  Removing installation directory '$InstallPath'." -ForegroundColor Yellow
-			Remove-Item $InstallPath -Recurse -ErrorAction SilentlyContinue
+			Remove-Item $InstallPath -Recurse -Force -ErrorAction SilentlyContinue
 		}
 		
 		Write-Host "  Removing GHDL from PATH variables in Machine, User, Session ..." -ForegroundColor Yellow
@@ -721,7 +721,7 @@ else
 		Write-Host
 		
 		Exit-Script
-	}	# Update
+	}	# Uninstall
 	
 }	# Clean
 	
