@@ -33,12 +33,12 @@ To illustrate the large purpose of `VHDL`, here is a commented `'Hello world'` p
 
 .. TIP::
 
-   * Both :samp:`.vhdl` and :samp:`.vhd` extensions are used for VHDL source files, while :samp:`.v` is used for Verilog.
+   * Both ``.vhdl`` and ``.vhd`` extensions are used for VHDL source files, while ``.v`` is used for Verilog.
    * Unless you use especial characters, either `UTF-8` or `ISO-8859-1` encodings can be used. However, if you do, the latter should be used. The standard defines ASCII (7-bit encoding) or ISO Latin-1 (ISO-8859-1) as default. However, GHDL has a relaxing option, :option:`--mb-comments` (multi byte), to allow UTF-8 or other encodings in comments.
 
-- First, you have to compile the file; this is called `analysis` of a design file in `VHDL` terms. Run :samp:`ghdl -a hello.vhdl` in the `shell`. This command creates or updates a file :file:`work-obj93.cf`, which describes the library :samp:`work`.
-- Then, run :samp:`ghdl -e hello_world` in the `shell`. Option :option:`-e` means :dfn:`elaborate`, which is used to build a design, with the :samp:`hello_world` entity at the top of the hierarchy.
-- Last, you can directly launch the simulation running :samp:`ghdl -r hello_world` in the `shell`. The result of the simulation will be shown on screen:
+- First, you have to compile the file; this is called `analysis` of a design file in `VHDL` terms. Run ``ghdl -a hello.vhdl`` in the `shell`. This command creates or updates a file :file:`work-obj93.cf`, which describes the library ``work``.
+- Then, run ``ghdl -e hello_world`` in the `shell`. Option :option:`-e` means :dfn:`elaborate`, which is used to build a design, with the ``hello_world`` entity at the top of the hierarchy.
+- Last, you can directly launch the simulation running ``ghdl -r hello_world`` in the `shell`. The result of the simulation will be shown on screen:
 
 .. code-block:: shell
 
@@ -49,7 +49,7 @@ To illustrate the large purpose of `VHDL`, here is a commented `'Hello world'` p
 
    * `Analysis` generates a file, :file:`hello.o`, which is the object file corresponding to your `VHDL` program.  This is not created with mcode.
    * The elaboration step is compulsory after the analysis and prior to launching the simulation; This wil generate an executable binary named :file:`hello_world`.
-   * As a result, :option:`-r` is just a passthrough to the binary generated in the `elaboration`. Therefore, the executable can be run directly, :samp:`./hello_world`. See :option:`-r` for more informartion.
+   * As a result, :option:`-r` is just a passthrough to the binary generated in the `elaboration`. Therefore, the executable can be run directly, ``./hello_world``. See :option:`-r` for more informartion.
 
 .. HINT:: :option:`-e` can be bypassed with mcode, since :option:`-r` actually elaborates the design and saves it on memory before running the simulation. But you can still use it to check for some elaboration problems.
 
@@ -96,7 +96,7 @@ VHDL is generally used for hardware design.  This example starts with a `full ad
       co <= (i0 and i1) or (i0 and ci) or (i1 and ci);
    end rtl;
 
-You can analyze this design file, :samp:`ghdl -a adder.vhdl`, and try to execute the `adder` design. But this is useless, since nothing externally visible will happen. In order to check this full adder, a :dfn:`testbench` has to be run. This testbench is very simple, since the adder is also simple: it checks exhaustively all inputs.  Note that only the behaviour is tested, timing constraints are not checked. A file named :file:`adder_tb.vhdl` contains the testbench for the adder:
+You can analyze this design file, ``ghdl -a adder.vhdl``, and try to execute the `adder` design. But this is useless, since nothing externally visible will happen. In order to check this full adder, a :dfn:`testbench` has to be run. This testbench is very simple, since the adder is also simple: it checks exhaustively all inputs.  Note that only the behaviour is tested, timing constraints are not checked. A file named :file:`adder_tb.vhdl` contains the testbench for the adder:
 
 .. code-block:: VHDL
 
@@ -159,18 +159,18 @@ You can analyze this design file, :samp:`ghdl -a adder.vhdl`, and try to execute
    end behav;
 
 
-As usual, you should analyze the design, :samp:`ghdl -a adder_tb.vhdl`.
+As usual, you should analyze the design, ``ghdl -a adder_tb.vhdl``.
 
 .. HINT::
-   Then, if required, elaborate the testbench: :samp:`ghdl -e adder_tb`. You do not need to specify which object files are required, since GHDL knows them and automatically adds them.
+   Then, if required, elaborate the testbench: ``ghdl -e adder_tb``. You do not need to specify which object files are required, since GHDL knows them and automatically adds them.
 
-Now, it is time to run the testbench, :samp:`ghdl -r adder_tb`, and check the result on screen::
+Now, it is time to run the testbench, ``ghdl -r adder_tb``, and check the result on screen::
 
   adder_tb.vhdl:52:7:(assertion note): end of test
 
 If your design is rather complex, you'd like to inspect signals. Signal values can be dumped using multiple formats (see section ':ref:`export_waves`' for more information). The resulting file can be read with a wave viewer such as `GtkWave <http://gtkwave.sourceforge.net/>`_.
 
-As explained in the `manual <http://gtkwave.sourceforge.net/gtkwave.pdf>`_, GtkWave *'relies on a post-mortem approach through the use of dumpfiles'*. Therefore, you should first simulate your design and dump a waveform file, say VCD: :samp:`ghdl -r adder_tb --vcd=adder.vcd`. Then, you can view the dump: :samp:`gtkwave adder.vcd`.
+As explained in the `manual <http://gtkwave.sourceforge.net/gtkwave.pdf>`_, GtkWave *'relies on a post-mortem approach through the use of dumpfiles'*. Therefore, you should first simulate your design and dump a waveform file, say VCD: ``ghdl -r adder_tb --vcd=adder.vcd``. Then, you can view the dump: ``gtkwave adder.vcd``.
 
 See section ':ref:`simulation_options`', for more details on other runtime options.
 
@@ -179,7 +179,7 @@ Starting with a design
 
 Unless you are only studying VHDL, you will work with larger designs than the ones of the previous examples. Let's see how to analyze and run a bigger design, such as the DLX model suite written by Peter Ashenden which is distributed under the terms of the GNU General Public License. A copy is kept on `ghdl.free.fr/dlx.tar.gz <http://ghdl.free.fr/dlx.tar.gz>`_ .
 
-- First, untar the sources: :samp:`tar zxvf dlx.tar.gz`.
+- First, untar the sources: ``tar zxvf dlx.tar.gz``.
 
 .. HINT:: In order not to pollute the sources with the library, it is a good idea to create a :file:`work/` subdirectory for the `WORK` library.  To any GHDL commands, we will add the :option:`--workdir=work` option, so that all files generated by the compiler (except the executable) will be placed in this directory.
 
@@ -188,20 +188,20 @@ Unless you are only studying VHDL, you will work with larger designs than the on
      $ cd dlx
      $ mkdir work
 
-* Then, we will run the :samp:`dlx_test_behaviour` design.  We need to analyze all the design units for the design hierarchy, in the correct order. GHDL provides an easy way to do this, by importing the sources, :samp:`ghdl -i --workdir=work *.vhdl`.
+* Then, we will run the ``dlx_test_behaviour`` design.  We need to analyze all the design units for the design hierarchy, in the correct order. GHDL provides an easy way to do this, by importing the sources, ``ghdl -i --workdir=work *.vhdl``.
 
-* GHDL knows all the design units of the DLX, but no one have been analyzed. Run the make option, :samp:`ghdl -m --workdir=work dlx_test_behaviour`, which analyzes and elaborates a design. This creates many files in the :file:`work/` directory, and (GCC/LLVM only) the :file:`dlx_test_behaviour` executable in the current directory.
+* GHDL knows all the design units of the DLX, but no one have been analyzed. Run the make option, ``ghdl -m --workdir=work dlx_test_behaviour``, which analyzes and elaborates a design. This creates many files in the :file:`work/` directory, and (GCC/LLVM only) the :file:`dlx_test_behaviour` executable in the current directory.
 
-.. HINT:: The simulation needs to have a DLX program contained in the file :file:`dlx.out`. This memory image will be loaded in the DLX memory. Just take one sample: :samp:`cp test_loop.out dlx.out`.
+.. HINT:: The simulation needs to have a DLX program contained in the file :file:`dlx.out`. This memory image will be loaded in the DLX memory. Just take one sample: ``cp test_loop.out dlx.out``.
 
-* Now, you can run the test suite: :samp:`ghdl -r --workdir=work dlx_test_behaviour`. The test bench monitors the bus and displays each instruction executed. It finishes with an assertion of severity level note:
+* Now, you can run the test suite: ``ghdl -r --workdir=work dlx_test_behaviour``. The test bench monitors the bus and displays each instruction executed. It finishes with an assertion of severity level note:
 
   .. code-block:: shell
 
      dlx-behaviour.vhdl:395:11:(assertion note): TRAP instruction
       encountered, execution halted
 
-* Last, since the clock is still running, you have to manually stop the program with the :kbd:`C-c` key sequence.  This behavior prevents you from running the test bench in batch mode. However, you may force the simulator to stop when an assertion above or equal a certain severity level occurs. To do so, call run with this option instead: :samp:`ghdl -r --workdir=work dlx_test_behaviour --assert-level=note``. With this option, the program stops just after the previous message:
+* Last, since the clock is still running, you have to manually stop the program with the :kbd:`C-c` key sequence.  This behavior prevents you from running the test bench in batch mode. However, you may force the simulator to stop when an assertion above or equal a certain severity level occurs. To do so, call run with this option instead: ``ghdl -r --workdir=work dlx_test_behaviour --assert-level=note```. With this option, the program stops just after the previous message:
 
   .. code-block:: shell
 
@@ -211,8 +211,18 @@ Unless you are only studying VHDL, you will work with larger designs than the on
 
 .. TIP:: If you want to make room on your hard drive, you can either:
 
-   * Clean the design library with the GHDL command :samp:`ghdl --clean --workdir=work`. This removes the executable and all the object files. If you want to rebuild the design at this point, just do the make command as shown above.
-   * Remove the design library with the GHDL command :samp:`ghdl --remove --workdir=work`. This removes the executable, all the object files and the library file. If you want to rebuild the design, you have to import the sources again, and to make the design.
-   * Remove the :file:`work/` directory: :samp:`rm -rf work`. Only the executable is kept. If you want to rebuild the design, create the :file:`work/` directory, import the sources, and make the design.
+   * Clean the design library with the GHDL command ``ghdl --clean --workdir=work``. This removes the executable and all the object files. If you want to rebuild the design at this point, just do the make command as shown above.
+   * Remove the design library with the GHDL command ``ghdl --remove --workdir=work``. This removes the executable, all the object files and the library file. If you want to rebuild the design, you have to import the sources again, and to make the design.
+   * Remove the :file:`work/` directory: ``rm -rf work``. Only the executable is kept. If you want to rebuild the design, create the :file:`work/` directory, import the sources, and make the design.
 
-.. WARNING:: Sometimes, a design does not fully follow the VHDL standards. For example it uses the badly engineered :samp:`std_logic_unsigned` package. GHDL supports this VHDL dialect through some options: :samp:`--ieee=synopsys -fexplicit`. See section ':ref:`IEEE_library_pitfalls`', for more details.
+.. WARNING:: Sometimes, a design does not fully follow the VHDL standards. For example it uses the badly engineered ``std_logic_unsigned`` package. GHDL supports this VHDL dialect through some options: ``--ieee=synopsys -fexplicit``. See section ':ref:`IEEE_library_pitfalls`', for more details.
+
+Further examples
+=======================
+
+.. TODO::
+
+  * Add references to examples/tutorials with GHDL.
+  * Shall `René Doß <https://mail.gna.org/public/ghdl-discuss/2017-01/msg00000.html>` want to contribute adapting his article to RST?
+  * https://github.com/Obijuan/open-fpga-verilog-tutorial/wiki
+>>>>>>> doc/changelog renamed to doc/appendix

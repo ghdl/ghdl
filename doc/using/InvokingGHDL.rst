@@ -4,23 +4,23 @@
 Invoking GHDL
 #############
 
-The form of the :program:`ghdl` command is :samp:`ghdl command [options...]`. There are multiple available commands, but these general rules apply:
+The form of the :program:`ghdl` command is ``ghdl command [options...]``. There are multiple available commands, but these general rules apply:
 
 * The first argument selects the command. The options are used to slightly modify the action.
 * No option is allowed before the command. Except for the run command, no option is allowed after a filename or a unit name.
 
 .. HINT::
-   If the number of options is large and the command line length is beyond the system limit, you can use a response file. An argument that starts with a :samp:`@` is considered as a response file; it is replaced by arguments read from the file (separated by blanks and end of line).
+   If the number of options is large and the command line length is beyond the system limit, you can use a response file. An argument that starts with a ``@`` is considered as a response file; it is replaced by arguments read from the file (separated by blanks and end of line).
 
 .. HINT::
    Only the most common commands and options are shown here. For most advanced and experimental features see section :ref:`REF:Command`.
 
 .. WARNING::
-   During analysis and elaboration GHDL may read the :samp:`std` and :samp:`ieee` files. The location of these files is based on the prefix, which is (in priority order):
+   During analysis and elaboration GHDL may read the ``std`` and ``ieee`` files. The location of these files is based on the prefix, which is (in priority order):
 
 	* the :option:`--PREFIX` command line option
 	* the :envvar:`GHDL_PREFIX` environment variable
-	* a built-in default path. It is a hard-coded path on GNU/Linux, and it corresponds to the value of the :samp:`HKLM\Software\Ghdl\Install_Dir` registry entry on Windows.
+	* a built-in default path. It is a hard-coded path on GNU/Linux, and it corresponds to the value of the ``HKLM\Software\Ghdl\Install_Dir`` registry entry on Windows.
 
 	You should use the :option:`--disp-config` command to display and debug installation problems.
 
@@ -32,19 +32,19 @@ The mostly used commands of GHDL are those to analyze and elaborate a design.
 
 .. index:: cmd analysis
 
-Analysis [:samp:`-a`]
+Analysis [``-a``]
 ---------------------
 
 .. option:: -a <[options...] file...>
 
 Analyzes/compiles one or more files, and creates an object file for each source file. Any argument starting with a dash is an option, the others are filenames. No options are allowed after a filename argument. GHDL analyzes each filename in the given order, and stops the analysis in case of error (remaining files are not analyzed).
 
-See :ref:`GHDL_options`, for details on the GHDL options. For example, to produce debugging information such as line numbers, use: :samp:`ghdl -a -g my_design.vhdl`.
+See :ref:`GHDL_options`, for details on the GHDL options. For example, to produce debugging information such as line numbers, use: ``ghdl -a -g my_design.vhdl``.
 
 
 .. index:: cmd elaboration
 
-Elaboration [:samp:`-e`]
+Elaboration [``-e``]
 ------------------------
 
 .. option:: -e <[options...] primary_unit [secondary_unit]>
@@ -66,7 +66,7 @@ Name of the units must be a simple name, without any dot.  You can select the na
 
 .. index:: cmd run
  
-Run [:samp:`-r`]
+Run [``-r``]
 ----------------
 
 .. option:: -r <[options...] primary_unit [secondary_unit] [simulation_options...]>
@@ -87,7 +87,7 @@ See section ':ref:`USING:Simulation`', for details on options.
 
 .. index:: cmd elaborate and run
 
-Elaborate and run [:samp:`--elab-run`]
+Elaborate and run [``--elab-run``]
 --------------------------------------
 
 .. option:: --elab-run <[elab_options...] primary_unit [secondary_unit] [run_options...]>
@@ -97,7 +97,7 @@ Acts like the elaboration command (see :option:`-e`) followed by the run command
 
 .. index:: cmd checking syntax
 
-Check syntax [:samp:`-s`]
+Check syntax [``-s``]
 -------------------------
 
 .. option:: -s <[options] files>
@@ -107,7 +107,7 @@ Analyze files but do not generate code. This command may be used to check the sy
 
 .. index:: cmd analyze and elaborate
 
-Analyze and elaborate [:samp:`-c`]
+Analyze and elaborate [``-c``]
 ----------------------------------
 
 .. option:: -c <[options] file... -<e|r> primary_unit [secondary_unit]>
@@ -127,7 +127,7 @@ The advantages over the traditional approach (analyze and then elaborate) are:
 * This command produces smaller executable, since unused units and subprograms do not generate code.
 
 .. HINT::
-   However, you should know that currently most of the time is spent in code generation and the analyze and elaborate command generate code for all units needed, even units of :samp:`std` and :samp:`ieee` libraries.  Therefore, according to the design, the time for this command may be higher than the time for the analyze command followed by the elaborate command.
+   However, you should know that currently most of the time is spent in code generation and the analyze and elaborate command generate code for all units needed, even units of ``std`` and ``ieee`` libraries.  Therefore, according to the design, the time for this command may be higher than the time for the analyze command followed by the elaborate command.
 
 .. WARNING::
    This command is still under development. In case of problems, you should go back to the traditional way.
@@ -141,7 +141,7 @@ Analyzing and elaborating a design consisting in several files can be tricky, du
 
 .. index:: cmd importing files
 
-Import [:samp:`-i`]
+Import [``-i``]
 -------------------
 
 .. option:: -i <[options] file...>
@@ -158,12 +158,12 @@ See :option:`-m`, to actually build the design.
 
 .. index:: cmd make
 
-Make [:samp:`-m`]
+Make [``-m``]
 -----------------
 
 .. option:: -m <[options] primary [secondary]>
 
-Analyze automatically outdated files and elaborate a design. The primary unit denoted by the :samp:`primary` argument must already be known by the system, either because you have already analyzed it (even if you have modified it) or because you have imported it. A file may be outdated because it has been modified (e.g. you just have edited it), or because a design unit contained in the file depends on a unit which is outdated. This rule is of course recursive.
+Analyze automatically outdated files and elaborate a design. The primary unit denoted by the ``primary`` argument must already be known by the system, either because you have already analyzed it (even if you have modified it) or because you have imported it. A file may be outdated because it has been modified (e.g. you just have edited it), or because a design unit contained in the file depends on a unit which is outdated. This rule is of course recursive.
 
 * With option :option:`--bind`, GHDL will stop before the final linking step. This is useful when the main entry point is not GHDL and you're linking GHDL object files into a foreign program.
 * With option :option:`-f` (force), GHDL analyzes all the units of the work library needed to create the design hierarchy. Not outdated units are recompiled.  This is useful if you want to compile a design hierarchy with new compilation flags (for example, to add the *-g* debugging option).
@@ -181,7 +181,7 @@ This is not perfect, since the default architecture (the most recently analyzed 
 
 .. index:: cmd generate makefile
 
-Generate Makefile [:samp:`--gen-makefile`]
+Generate Makefile [``--gen-makefile``]
 ------------------------------------------
 
 .. option:: --gen-makefile <[options] primary [secondary]>
@@ -203,21 +203,21 @@ Options
 
 .. option:: --work<=NAME>
 
-  Specify the name of the :samp:`WORK` library.  Analyzed units are always placed in the library logically named :samp:`WORK`.  With this option, you can set its name.  By default, the name is :samp:`work`.
+  Specify the name of the ``WORK`` library.  Analyzed units are always placed in the library logically named ``WORK``.  With this option, you can set its name.  By default, the name is ``work``.
 
-  `GHDL` checks whether :samp:`WORK` is a valid identifier. Although being more or less supported, the :samp:`WORK` identifier should not be an extended identifier, since the filesystem may prevent it from correctly working (due to case sensitivity or forbidden characters in filenames).
+  `GHDL` checks whether ``WORK`` is a valid identifier. Although being more or less supported, the ``WORK`` identifier should not be an extended identifier, since the filesystem may prevent it from correctly working (due to case sensitivity or forbidden characters in filenames).
 
-  `VHDL` rules forbid you to add units to the :samp:`std` library. Furthermore, you should not put units in the :samp:`ieee` library.
+  `VHDL` rules forbid you to add units to the ``std`` library. Furthermore, you should not put units in the ``ieee`` library.
 
 .. option:: --workdir<=DIR>
 
-  Specify the directory where the :samp:`WORK` library is located. When this option is not present, the :samp:`WORK` library is in the current directory.  The object files created by the compiler are always placed in the same directory as the :samp:`WORK` library.
+  Specify the directory where the ``WORK`` library is located. When this option is not present, the ``WORK`` library is in the current directory.  The object files created by the compiler are always placed in the same directory as the ``WORK`` library.
 
-  Use option :option:`-P` to specify where libraries other than :samp:`WORK` are placed.
+  Use option :option:`-P` to specify where libraries other than ``WORK`` are placed.
 
 .. option:: --std<=STD>
 
-  Specify the standard to use.  By default, the standard is :samp:`93c`, which means VHDL-93 accepting VHDL-87 syntax.  For details on :samp:`STD` values see section ':ref:`VHDL_standards`'.
+  Specify the standard to use.  By default, the standard is ``93c``, which means VHDL-93 accepting VHDL-87 syntax.  For details on ``STD`` values see section ':ref:`VHDL_standards`'.
 
 .. option:: --ieee<=VER>
 
@@ -225,35 +225,35 @@ Options
   .. index:: synopsys library
   .. index:: mentor library
 
-  Select the :samp:`IEEE` library to use. :samp:`VER` must be one of:
+  Select the ``IEEE`` library to use. ``VER`` must be one of:
 
   none
-    Do not supply an `IEEE` library.  Any library clause with the :samp:`IEEE`
+    Do not supply an `IEEE` library.  Any library clause with the ``IEEE``
     identifier will fail, unless you have created by your own a library with
     the `IEEE` name.
 
   standard
     Supply an `IEEE` library containing only packages defined by
-    :samp:`ieee` standards.  Currently, there are the multivalue logic system
-    packages :samp:`std_logic_1164` defined by IEEE 1164, the synthesis
-    packages , :samp:`numeric_bit` and :samp:`numeric_std` defined by IEEE
-    1076.3, and the :samp:`vital` packages :samp:`vital_timing` and
-    :samp:`vital_primitives`, defined by IEEE 1076.4.  The version of these
+    ``ieee`` standards.  Currently, there are the multivalue logic system
+    packages ``std_logic_1164`` defined by IEEE 1164, the synthesis
+    packages , ``numeric_bit`` and ``numeric_std`` defined by IEEE
+    1076.3, and the ``vital`` packages ``vital_timing`` and
+    ``vital_primitives``, defined by IEEE 1076.4.  The version of these
     packages is defined by the VHDL standard used.  See section ':ref:`VITAL_packages`',
     for more details.
 
   synopsys
     Supply the former packages and the following additional packages:
-    :samp:`std_logic_arith`, :samp:`std_logic_signed`,
-    :samp:`std_logic_unsigned`, :samp:`std_logic_textio`.
+    ``std_logic_arith``, ``std_logic_signed``,
+    ``std_logic_unsigned``, ``std_logic_textio``.
 
     These packages were created by some companies, and are popular.  However
     they are not standard packages, and have been placed in the `IEEE`
-    library without the permission from the :samp:`ieee`.
+    library without the permission from the ``ieee``.
 
   mentor
     Supply the standard packages and the following additional package:
-    :samp:`std_logic_arith`.  The package is a slight variation of a definitely
+    ``std_logic_arith``.  The package is a slight variation of a definitely
     not standard but widely mis-used package.
 
   To avoid errors, you must use the same `IEEE` library for all units of
@@ -273,10 +273,10 @@ Options
 .. option:: -fexplicit
 
   When two operators are overloaded, give preference to the explicit declaration.
-  This may be used to avoid the most common pitfall of the :samp:`std_logic_arith`
+  This may be used to avoid the most common pitfall of the ``std_logic_arith``
   package.  See section ':ref:`IEEE_library_pitfalls`', for an example.
 
-.. WARNING:: This option is not set by default. I don't think this option is a good feature, because it breaks the encapsulation rule.  When set, an operator can be silently overridden in another package.  You'd better fix your design and use the :samp:`numeric_std` package.
+.. WARNING:: This option is not set by default. I don't think this option is a good feature, because it breaks the encapsulation rule.  When set, an operator can be silently overridden in another package.  You'd better fix your design and use the ``numeric_std`` package.
 
 .. option:: -frelaxed-rules
 
@@ -295,7 +295,7 @@ Options
 
   Some code (such as Xilinx packages) have such constructs, which are valid.
 
-  (The scope of the :samp:`state1` constant start at the `constant` word. Because the constant :samp:`state1` and the enumeration literal :samp:`state1` are homograph, the enumeration literal is hidden in the immediate scope of the constant).
+  (The scope of the ``state1`` constant start at the `constant` word. Because the constant ``state1`` and the enumeration literal ``state1`` are homograph, the enumeration literal is hidden in the immediate scope of the constant).
 
   This option also relaxes the rules about pure functions. Violations result in warnings instead of errors.
 
@@ -308,13 +308,13 @@ Options
 
   Disable or enable checks of restriction on VITAL units. Checks are enabled by default.
 
-  Checks are performed only when a design unit is decorated by a VITAL attribute. The VITAL attributes are :samp:`VITAL_Level0` and :samp:`VITAL_Level1`, both declared in the :samp:`ieee.VITAL_Timing` package.
+  Checks are performed only when a design unit is decorated by a VITAL attribute. The VITAL attributes are ``VITAL_Level0`` and ``VITAL_Level1``, both declared in the ``ieee.VITAL_Timing`` package.
 
   Currently, VITAL checks are only partially implemented. See section ':ref:`VHDL_restrictions_for_VITAL`' for more details.
 
 .. option:: --PREFIX<=PATH>
 
-  Use :file:`PATH` as the prefix path to find commands and pre-installed (:samp:`std` and :samp:`ieee`) libraries.
+  Use :file:`PATH` as the prefix path to find commands and pre-installed (``std`` and ``ieee``) libraries.
 
 .. option:: -v
 
@@ -327,7 +327,7 @@ Warnings
 Some constructions are not erroneous but dubious. Warnings are diagnostic messages that report such constructions. Some warnings are reported only during analysis, others during elaboration.
 
 .. HINT::
-   You could disable a warning by using the :samp:`--warn-no-XXX` or :samp:`-Wno-XX` instead of :samp:`--warn-XXX` or :samp:`-WXXX`.
+   You could disable a warning by using the ``--warn-no-XXX`` or ``-Wno-XX`` instead of ``--warn-XXX`` or ``-WXXX``.
 
 .. option:: --warn-reserved
 
@@ -376,7 +376,7 @@ Some constructions are not erroneous but dubious. Warnings are diagnostic messag
 
 .. option:: --warn-nested-comment
 
-  Emit a warning if a :samp:`/*` appears within a block comment (vhdl 2008).
+  Emit a warning if a ``/*`` appears within a block comment (vhdl 2008).
 
 .. option:: --warn-parenthesis
 
@@ -408,26 +408,26 @@ Library commands
 .. _Create_a_Library:
 .. index:: create your own library
 
-A new library is created implicitly, by compiling entities (packages etc.) into it: :samp:`ghdl -a --work=my_custom_lib my_file.vhd`.
+A new library is created implicitly, by compiling entities (packages etc.) into it: ``ghdl -a --work=my_custom_lib my_file.vhd``.
 
-A library's source code is usually stored and compiled into its own directory, that you specify with the :option:`--workdir` option: :samp:`ghdl -a --work=my_custom_lib --workdir=my_custom_libdir my_custom_lib_srcdir/my_file.vhd`. See also the :option:`-P` command line option.
+A library's source code is usually stored and compiled into its own directory, that you specify with the :option:`--workdir` option: ``ghdl -a --work=my_custom_lib --workdir=my_custom_libdir my_custom_lib_srcdir/my_file.vhd``. See also the :option:`-P` command line option.
 
 Furthermore, GHDL provides a few commands which act on a library:
 
 
 .. index:: cmd library directory
 
-Directory [:samp:`--dir`]
+Directory [``--dir``]
 -------------------------
 
 .. option:: --dir <[options] [libs]>
 
-Displays the content of the design libraries (by default the :samp:`work` library). All options are allowed, but only a few are meaningful: :option:`--work`, :option:`--workdir` and :option:`--std`.
+Displays the content of the design libraries (by default the ``work`` library). All options are allowed, but only a few are meaningful: :option:`--work`, :option:`--workdir` and :option:`--std`.
 
 
 .. index:: cmd library clean
 
-Clean [:samp:`--clean`]
+Clean [``--clean``]
 -----------------------
 
 .. option:: --clean <[options]>
@@ -437,7 +437,7 @@ Try to remove any object, executable or temporary file it could have created. So
 
 .. index:: cmd library remove
 
-Remove [:samp:`--remove`]
+Remove [``--remove``]
 -------------------------
 
 .. option:: --remove <[options]>
@@ -448,12 +448,12 @@ known anymore by GHDL.
 
 .. index:: cmd library copy
 
-Copy [:samp:`--copy`]
+Copy [``--copy``]
 ---------------------
 
 .. option:: --copy <--work=name [options]>
 
-Make a local copy of an existing library.  This is very useful if you want to add unit to the :samp:`ieee` library:
+Make a local copy of an existing library.  This is very useful if you want to add unit to the ``ieee`` library:
 
 .. code-block:: shell
 
@@ -470,7 +470,7 @@ command before its execution.
 
 .. index:: cmd VPI compile
 
-compile [:samp:`--vpi-compile`]
+compile [``--vpi-compile``]
 -------------------------------
 
 .. option:: --vpi-compile <command>
@@ -495,7 +495,7 @@ executes::
 
 .. index:: cmd VPI link
 
-link [:samp:`--vpi-link`]
+link [``--vpi-link``]
 -------------------------
 
 .. option:: --vpi-link <command>
@@ -521,7 +521,7 @@ executes::
 
 .. index:: cmd VPI cflags
 
-cflags [:samp:`--vpi-cflags`]
+cflags [``--vpi-cflags``]
 -----------------------------
 
 .. option:: --vpi-cflags
@@ -530,7 +530,7 @@ Display flags added by :option:`--vpi-compile`.
 
 .. index:: cmd VPI ldflags
 
-ldflags [:samp:`--vpi-ldflags`]
+ldflags [``--vpi-ldflags``]
 -------------------------------
 
 .. option:: --vpi-ldflags
@@ -539,7 +539,7 @@ Display flags added by :option:`--vpi-link`.
 
 .. index:: cmd VPI include dir
 
-include dir [:samp:`--vpi-include-dir`]
+include dir [``--vpi-include-dir``]
 ---------------------------------------
 
 .. option:: --vpi-include-dir
@@ -548,7 +548,7 @@ Display the include directory added by the compile flags.
 
 .. index:: cmd VPI library dir
 
-library dir [:samp:`--vpi-library-dir`]
+library dir [``--vpi-library-dir``]
 ---------------------------------------
 
 .. option:: --vpi-library-dir
@@ -561,7 +561,7 @@ Display the library directory added by the link flags.
 IEEE library pitfalls
 =====================
 
-When you use options :option:`--ieee=synopsys` or :option:`--ieee=mentor`, the :samp:`ieee` library contains non standard packages such as :samp:`std_logic_arith`. These packages are not standard because there are not described by an IEEE standard, even if they have been put in the `IEEE` library. Furthermore, they are not really de-facto standard, because there are slight differences between the packages of Mentor and those of Synopsys. Furthermore, since they are not well-thought, their use has pitfalls. For example, this description has error during compilation:
+When you use options :option:`--ieee=synopsys` or :option:`--ieee=mentor`, the ``ieee`` library contains non standard packages such as ``std_logic_arith``. These packages are not standard because there are not described by an IEEE standard, even if they have been put in the `IEEE` library. Furthermore, they are not really de-facto standard, because there are slight differences between the packages of Mentor and those of Synopsys. Furthermore, since they are not well-thought, their use has pitfalls. For example, this description has error during compilation:
 
 .. code-block:: VHDL
 
@@ -677,4 +677,4 @@ It is better to only use the standard packages defined by IEEE, which provides t
 .. index:: Math_Complex
 
 .. HINT::
-   The :samp:`ieee` math packages (:samp:`math_real` and :samp:`math_complex`) provided with `GHDL` are fully compliant with the `IEEE` standard.
+   The ``ieee`` math packages (``math_real`` and ``math_complex``) provided with `GHDL` are fully compliant with the `IEEE` standard.

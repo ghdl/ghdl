@@ -20,7 +20,7 @@ There are a few GHDL commands which are seldom useful.
 
 .. index:: cmd help
 
-Help [:samp:`-h`]
+Help [``-h``]
 -----------------
 
 .. option:: --help, -h
@@ -35,7 +35,7 @@ for this later command are displayed::
 
 .. index:: cmd display configuration
   
-Display config [:samp:`--disp-config`]
+Display config [``--disp-config``]
 --------------------------------------
 
 .. option:: --disp-config <[options]>
@@ -43,18 +43,18 @@ Display config [:samp:`--disp-config`]
 Display the program paths and options used by GHDL. This may be useful to track installation errors.
 
 .. index:: cmd display standard
-.. index:: display :samp:`std.standard`
+.. index:: display ``std.standard``
 
-Display standard [:samp:`--disp-standard`]
+Display standard [``--disp-standard``]
 ------------------------------------------
 
 .. option:: --disp-standard <[options]>
 
-Display the :samp:`std.standard` package.
+Display the ``std.standard`` package.
 
 .. index:: cmd version
 
-Version [:samp:`--version`]
+Version [``--version``]
 ---------------------------
 
 .. option:: --version, -v
@@ -69,7 +69,7 @@ The following commands act on one or several files. These are not analyzed, ther
 .. index:: cmd file pretty printing
 .. index:: vhdl to html
 
-Pretty print [:samp:`--pp-html`]
+Pretty print [``--pp-html``]
 --------------------------------
 
 .. option:: --pp-html <[options] file...>
@@ -83,7 +83,7 @@ The style of the html file can be modified with the :option:`--format=` option:
 
 .. index:: cmd file find
 
-Find [:samp:`-f`]
+Find [``-f``]
 -----------------
 
 .. option:: -f <file...>
@@ -92,7 +92,7 @@ The files are scanned, parsed and the names of design units are displayed. Desig
 
 .. index:: cmd file chop
 
-Chop [:samp:`--chop`]
+Chop [``--chop``]
 ---------------------
 
 .. option:: --chop <files...>
@@ -111,7 +111,7 @@ This command may be useful to split big files, if your computer has not enough m
 
 .. index:: cmd file lines
 
-Lines [:samp:`--lines`]
+Lines [``--lines``]
 -----------------------
 
 .. option:: --lines <files...>
@@ -123,7 +123,7 @@ GCC/LLVM only commands
 
 .. index:: cmd GCC/LLVM binding
 
-Bind [:samp:`--bind`]
+Bind [``--bind``]
 ---------------------
 
 .. option:: --bind <[options] primary_unit [secondary_unit]>
@@ -132,7 +132,7 @@ Performs only the first stage of the elaboration command; the list of objects fi
 
 .. index:: cmd GCC/LLVM linking
 
-Link [:samp:`--link`]
+Link [``--link``]
 ---------------------
 
 .. option:: --link <[options] primary_unit [secondary_unit]>
@@ -141,7 +141,7 @@ Performs only the second stage of the elaboration command: the executable is cre
 
 .. index:: cmd GCC/LLVM list link
 
-List link [:samp:`--list-link`]
+List link [``--list-link``]
 -------------------------------
 
 .. option:: --list-link <primary_unit [secondary_unit]>
@@ -167,15 +167,15 @@ This option is only useful during elaboration.
 
 .. option:: --GHDL1<=COMMAND>
 
-Use :samp:`COMMAND` as the command name for the compiler.  If :samp:`COMMAND` is not a path, then it is searched in the path.
+Use ``COMMAND`` as the command name for the compiler.  If ``COMMAND`` is not a path, then it is searched in the path.
 
 .. option:: --AS<=COMMAND>
 
-Use :samp:`COMMAND` as the command name for the assembler.  If :samp:`COMMAND` is not a path, then it is searched in the path.  The default is :samp:`as`.
+Use ``COMMAND`` as the command name for the assembler.  If ``COMMAND`` is not a path, then it is searched in the path.  The default is ``as``.
 
 .. option:: --LINK<=COMMAND>
 
-Use :samp:`COMMAND` as the linker driver.  If :samp:`COMMAND` is not a path, then it is searched in the path.  The default is :samp:`gcc`.
+Use ``COMMAND`` as the linker driver.  If ``COMMAND`` is not a path, then it is searched in the path.  The default is ``gcc``.
   
 Passing options to other programs
 =================================
