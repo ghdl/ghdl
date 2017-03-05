@@ -62,31 +62,33 @@
 #
 [CmdletBinding()]
 Param(
-	# clean up all files and directories
+	# Clean up all files and directories
 	[switch]$Clean,
 		[switch]$Clean_GHDL,
 		[switch]$Clean_Libraries,
 		
-	# compile GHDL
+	# Compile GHDL
 	[switch]$Compile,
 		[switch]$Compile_GHDL,
 		[switch]$Compile_Libraries,
 
-	# create an installer package
+	# Create an installer package
 	[switch]$CreatePackage,
-		# creates a zip-file for xcopy deployment
+		# Creates a zip-file for xcopy deployment
 		[switch]$Zip,
+		# Creates a self-extracting ps1-file for xcopy deployment
+		[switch]$PS1,
 	
-	# install all files into a directory (xcopy deployment)
+	# Install all files into a directory (xcopy deployment)
 	[switch]$Install = $false,
 	[parameter(mandatory=$false, ValueFromRemainingArguments=$true)]
 	[string]$InstallDir = "",
-	# update files
+	# Update files
 	[switch]$Update,
-	# uninstall all files from a directory
+	# Uninstall all files from a directory
 	[switch]$Uninstall,
 	
-	# display this help"
+	# Display this help"
 	[switch]$Help
 )
 
@@ -152,6 +154,8 @@ $BuildBackendDirectoryName =	"$BuildDirectoryName\$Backend"
 $VHDLLibrariesDirectoryName =	"lib"
 $PackageDirectoryName =				"build\zip\$Backend"
 $ZipPackageFileName =					"ghdl-$Backend-$GHDLVersion.zip"
+$PS1PackageFileName =					"ghdl-$Backend-$GHDLVersion.installer.ps1"
+$InstallerTemplateFileName =	"InstallerTemplate.ps1"
 $DefaultInstallPath =					"C:\Program Files (x86)\GHDL"				# This is the default path for 32-bit applications (x86-32)
 
 # construct directories
@@ -161,6 +165,8 @@ $GHDLVendorLibraryDir =				"$GHDLRootDir\libraries\vendors"
 $GHDLCompiledLibraryDir =			"$GHDLRootDir\$BuildBackendDirectoryName\$VHDLLibrariesDirectoryName"
 $GHDLZipPackageDir =					"$GHDLRootDir\$PackageDirectoryName"
 $GHDLZipPackageFile =					"$GHDLZipPackageDir\$ZipPackageFileName"
+$InstallerTemplateFile =			"$GHDLWindowsDir\$InstallerTemplateFileName"
+$GHDLPS1PackageFile =					"$GHDLZipPackageDir\$PS1PackageFileName"
 
 # construct files
 $InstallDirFile =							"$BuildDirectoryName\InstallDir.conf"
@@ -428,6 +434,7 @@ else
 	# ============================================================================
 	if ($CreatePackage)
 	{	Write-Host "Creating an installation package for GHDL $GHDLVersion for Windows"
+		$Good = $false
 	
 		if ($Zip)
 		{	Write-Host "Loading PowerShell Community Extensions (PSCX) " -NoNewline
@@ -481,8 +488,37 @@ else
 			Write-Host "Creating package " -NoNewline
 			Write-Host "[SUCCESSFUL]" -ForegroundColor Green
 			Write-Host
+			
+			$Good = $true
 		}
-		else
+		
+		if ($PS1)
+		{	Write-Host "Creating a self-extracting PowerShell package for GHDL $GHDLVersion for Windows"
+		
+			if (-not (Test-Path -Path $GHDLZipPackageFile))
+			{	Write-Host "[ERROR]: ZIP file '$GHDLZipPackageFile' does not exist." -ForegroundColor Red
+				Exit-Script -1
+			}
+		
+			# Read ZIP file and convert it to base64
+			$ResolvedPath =										Resolve-Path "$GHDLZipPackageFile"
+			$CompressedFileContentAsBytes =		[System.IO.File]::ReadAllBytes("$ResolvedPath")
+			$CompressedFileContentInBase64 =	[System.Convert]::ToBase64String($CompressedFileContentAsBytes)
+			
+			# Read a Installer template and add the base64 content
+			$Installer = Get-Content $InstallerTemplateFile
+			$Installer = $Installer -replace "# DATASECTION", "`$CompressedFileContentInBase64 = `"$CompressedFileContentInBase64`""
+			$Installer | Out-File -FilePath $GHDLPS1PackageFile
+					
+			Write-Host
+			Write-Host "Creating package " -NoNewline
+			Write-Host "[SUCCESSFUL]" -ForegroundColor Green
+			Write-Host
+			
+			$Good = $true
+		}
+		
+		if (-not $Good)
 		{	Write-Host "[ERROR]: No package format selected." -ForegroundColor Red
 			Write-Host "Possible formats:"
 			Write-Host "  - Zip-file (-Zip)"
@@ -490,7 +526,7 @@ else
 		}
 	}
 	# ============================================================================
-	# Compile tasks
+	# Install tasks
 	# ============================================================================
 	if ($Install)
 	{	Write-Host "Installing GHDL $GHDLVersion for Windows..."
