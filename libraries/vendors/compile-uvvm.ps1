@@ -14,7 +14,7 @@
 #		- compiles all UVVM packages 
 #
 # ==============================================================================
-#	Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
+#	Copyright (C) 2015-2017 Patrick Lehmann - Dresden, Germany
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -167,6 +167,7 @@ $UVVM_VVC_Files = @(
 	"uvvm_vvc_framework\src\ti_data_queue_pkg.vhd",
 	"uvvm_vvc_framework\src\ti_data_fifo_pkg.vhd",
 	"uvvm_vvc_framework\src\ti_data_stack_pkg.vhd"
+	"uvvm_vvc_framework\src\ti_uvvm_engine.vhd"
 )
 $VIP_Files = @{
 	"AXILite" = @{

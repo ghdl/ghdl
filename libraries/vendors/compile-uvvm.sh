@@ -15,7 +15,7 @@
 #		- compiles all UVVM packages 
 #
 # ==============================================================================
-#	Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
+#	Copyright (C) 2015-2017 Patrick Lehmann - Dresden, Germany
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -238,6 +238,7 @@ if [ "$COMPILE_UVVM" == "TRUE" ]; then
 		uvvm_vvc_framework/src/ti_data_queue_pkg.vhd
 		uvvm_vvc_framework/src/ti_data_fifo_pkg.vhd
 		uvvm_vvc_framework/src/ti_data_stack_pkg.vhd
+		uvvm_vvc_framework/src/ti_uvvm_engine.vhd
 	)
 
 	# append absolute source path
