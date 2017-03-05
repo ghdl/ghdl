@@ -20,8 +20,8 @@ could do it through the generics interfaces of the top entity.
 However, the GHDL runtime behaviour can be modified with some options; for
 example, it is possible to stop simulation after a certain time.
 
-The exit status of the simulation is :samp:`EXIT_SUCCESS` (0) if the
-simulation completes, or :samp:`EXIT_FAILURE` (1) in case of error
+The exit status of the simulation is ``EXIT_SUCCESS`` (0) if the
+simulation completes, or ``EXIT_FAILURE`` (1) in case of error
 (assertion failure, overflow or any constraint error).
 
 Here is the list of the most useful options.  Some debugging options are
@@ -33,14 +33,14 @@ all options available, including the debugging one.
   Select the assertion level at which an assertion violation stops the
   simulation.  `LEVEL` is the name from the `severity_level`
   enumerated type defined in the `standard` package or the
-  :samp:`none` name.
+  ``none`` name.
 
-  By default, only assertion violation of severity level :samp:`failure`
+  By default, only assertion violation of severity level ``failure``
   stops the simulation.
 
-  For example, if `LEVEL` was :samp:`warning`, any assertion violation
-  with severity level :samp:`warning`, :samp:`error` or :samp:`failure` would
-  stop simulation, but the assertion violation at the :samp:`note` severity
+  For example, if `LEVEL` was ``warning``, any assertion violation
+  with severity level ``warning``, ``error`` or ``failure`` would
+  stop simulation, but the assertion violation at the ``note`` severity
   level would only display a message.
 
   Option :option:`--assert-level=none` prevents any assertion violation to stop
@@ -48,17 +48,17 @@ all options available, including the debugging one.
 
 .. option:: --ieee-asserts<=POLICY>
 
-  Select how the assertions from :samp:`ieee` units are
-  handled. `POLICY` can be :samp:`enable` (the default),
-  :samp:`disable` which disables all assertion from :samp:`ieee` packages
-  and :samp:`disable-at-0` which disables only at start of simulation.
+  Select how the assertions from ``ieee`` units are
+  handled. `POLICY` can be ``enable`` (the default),
+  ``disable`` which disables all assertion from ``ieee`` packages
+  and ``disable-at-0`` which disables only at start of simulation.
 
   This option can be useful to avoid assertion message from
-  :samp:`ieee.numeric_std` (and other :samp:`ieee` packages).
+  ``ieee.numeric_std`` (and other ``ieee`` packages).
 
 .. option:: --stop-time<=TIME>
 
-  Stop the simulation after :samp:`TIME`.  :samp:`TIME` is expressed as a time
+  Stop the simulation after ``TIME``.  ``TIME`` is expressed as a time
   value, *without* any space.  The time is the simulation time, not
   the real clock time.
 
@@ -85,7 +85,7 @@ all options available, including the debugging one.
 
   Do VITAL annotation on `PATH` with SDF file :file:`FILENAME`.
 
-  `PATH` is a path of instances, separated with :samp:`.` or :samp:`/`.
+  `PATH` is a path of instances, separated with ``.`` or ``/``.
   Any separator can be used.  Instances are component instantiation labels,
   generate labels or block labels.  Currently, you cannot use an indexed name.
 
@@ -95,8 +95,8 @@ all options available, including the debugging one.
    --sdf=typ=PATH=FILENAME
    --sdf=max=PATH=FILENAME
 
-  If the option contains a type of delay, that is :samp:`min=`,
-  :samp:`typ=` or :samp:`max=`, the annotator use respectively minimum,
+  If the option contains a type of delay, that is ``min=``,
+  ``typ=`` or ``max=``, the annotator use respectively minimum,
   typical or maximum values.  If the option does not contain a type of delay,
   the annotator use the typical delay.
 
@@ -161,13 +161,13 @@ Export waveforms
   .. index:: dump of signals
 
   Option :option:`--vcd` dumps into the VCD file `FILENAME` the signal
-  values before each non-delta cycle.  If `FILENAME` is :samp:`-`,
+  values before each non-delta cycle.  If `FILENAME` is ``-``,
   then the standard output is used, otherwise a file is created or
   overwritten.
 
   The :option:`--vcdgz` option is the same as the *--vcd* option,
   but the output is compressed using the `zlib` (`gzip`
-  compression).  However, you can't use the :samp:`-` filename.
+  compression).  However, you can't use the ``-`` filename.
   Furthermore, only one VCD file can be written.
 
   :dfn:`VCD` (value change dump) is a file format defined
@@ -176,21 +176,21 @@ Export waveforms
   Since it comes from `verilog`, only a few VHDL types can be dumped.  GHDL
   dumps only signals whose base type is of the following:
 
-  * types defined in the :samp:`std.standard` package:
+  * types defined in the ``std.standard`` package:
 
-  * :samp:`bit`
+  * ``bit``
 
-  * :samp:`bit_vector`
+  * ``bit_vector``
 
-  * types defined in the :samp:`ieee.std_logic_1164` package:
+  * types defined in the ``ieee.std_logic_1164`` package:
 
-  * :samp:`std_ulogic`
+  * ``std_ulogic``
 
-  * :samp:`std_logic` (because it is a subtype of :samp:`std_ulogic`)
+  * ``std_logic`` (because it is a subtype of ``std_ulogic``)
 
-  * :samp:`std_ulogic_vector`
+  * ``std_ulogic_vector``
 
-  * :samp:`std_logic_vector`
+  * ``std_logic_vector``
 
   * any integer type
 
@@ -220,7 +220,7 @@ Export waveforms
   of signals to be dumped.
 
   The format of this file was defined by myself and is not yet completely fixed.
-  It may change slightly.  The :samp:`gtkwave` tool can read the GHW files.
+  It may change slightly.  The ``gtkwave`` tool can read the GHW files.
 
   Contrary to VCD files, any VHDL type can be dumped into a GHW file.
  
@@ -248,12 +248,12 @@ Export hierarchy and references
     Display entities, architectures, instances, blocks and generates statements.
 
   * proc
-    Like :samp:`inst` but also display processes.
+    Like ``inst`` but also display processes.
 
   * port
-    Like :samp:`proc` but display ports and signals too.
+    Like ``proc`` but display ports and signals too.
     If `KIND` is not specified, the hierarchy is displayed with the
-    :samp:`port` mode.
+    ``port`` mode.
 
 .. option:: --no-run
 
@@ -261,9 +261,9 @@ Export hierarchy and references
 
 .. option:: --xref-html <[options] file...>
 
-To easily navigate through your sources, you may generate cross-references. This command generates an html file for each :samp:`file` given in the command line, with syntax highlighting and full cross-reference: every identifier is a link to its declaration. Besides, an index of the files is created too.
+To easily navigate through your sources, you may generate cross-references. This command generates an html file for each ``file`` given in the command line, with syntax highlighting and full cross-reference: every identifier is a link to its declaration. Besides, an index of the files is created too.
 
-The set of :samp:`file` are analyzed, and then, if the analysis is successful, html files are generated in the directory specified by the :option:`-o <dir>` option, or :file:`html/` directory by default.
+The set of ``file`` are analyzed, and then, if the analysis is successful, html files are generated in the directory specified by the :option:`-o <dir>` option, or :file:`html/` directory by default.
 
 * If the option :option:`--format=html2` is specified, then the generated html files follow the HTML 2.0 standard, and colours are specified with `<FONT>` tags. However, colours are hard-coded.
 
@@ -336,7 +336,7 @@ Dump Run Time Information (RTI).
 
 .. option:: --bootstrap
 
-Allow :samp:`--work=std`
+Allow ``--work=std``
 
 GNU Debugger (GDB)
 ------------------
@@ -347,8 +347,8 @@ GNU Debugger (GDB)
 
 GDB is a general purpose debugger for programs compiled by GCC. Currently, there is no VHDL support for GDB. It may be difficult to inspect variables or signals in GDB. However, it is still able to display the stack frame in case of error or to set a breakpoint at a specified line.
 
-GDB can be useful to precisely catch a runtime error, such as indexing an array beyond its bounds. All error check subprograms call the :samp:`__ghdl_fatal` procedure. Therefore, to catch runtime error, set a breakpoint like this::
+GDB can be useful to precisely catch a runtime error, such as indexing an array beyond its bounds. All error check subprograms call the ``__ghdl_fatal`` procedure. Therefore, to catch runtime error, set a breakpoint like this::
 
   (gdb) break __ghdl_fatal
 
-When the breakpoint is hit, use the :samp:`where` or :samp:`bt` command to display the stack frames.
+When the breakpoint is hit, use the ``where`` or ``bt`` command to display the stack frames.

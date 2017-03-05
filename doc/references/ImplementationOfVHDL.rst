@@ -72,7 +72,7 @@ The latest version is 2008.  Many features have been added, and GHDL
 doesn't implement all of them.
 
 You can select the VHDL standard expected by GHDL with the
-:samp:`--std=VER` option, where :samp:`VER` is one of the left column of the
+``--std=VER`` option, where ``VER`` is one of the left column of the
 table below:
 
 
@@ -176,7 +176,7 @@ Library database
 ================
 
 Each design unit analyzed is placed into a design library.  By default,
-the name of this design library is :samp:`work`; however, this can be
+the name of this design library is ``work``; however, this can be
 changed with the :option:`--work=NAME` option of GHDL.
 
 To keep the list of design units in a design library, GHDL creates
@@ -255,7 +255,7 @@ attribute.  In this example, the `sin` function is imported:
 
 A subprogram is made foreign if the `foreign` attribute decorates
 it.  This attribute is declared in the 1993 revision of the
-:samp:`std.standard` package.  Therefore, you cannot use this feature in
+``std.standard`` package.  Therefore, you cannot use this feature in
 VHDL 1987.
 
 The decoration is achieved through an attribute specification.  The
@@ -266,7 +266,7 @@ The value of the specification must be a locally static string.
 Even when a subprogram is foreign, its body must be present.  However, since
 it won't be called, you can made it empty or simply but an assertion.
 
-The value of the attribute must start with :samp:`VHPIDIRECT` (an
+The value of the attribute must start with ``VHPIDIRECT`` (an
 upper-case keyword followed by one or more blanks).  The linkage name of the
 subprogram follows.
 
@@ -340,7 +340,7 @@ Starting a simulation from a foreign program
 --------------------------------------------
 
 You may run your design from an external program.  You just have to call
-the :samp:`ghdl_main` function which can be defined:
+the ``ghdl_main`` function which can be defined:
 
 in C:
 
@@ -380,7 +380,7 @@ suppose there is only one design file, :file:`design.vhdl`.
   $ ghdl -a design.vhdl
 
 Then, bind your design.  In this example, we suppose the entity at the
-design apex is :samp:`design`.
+design apex is ``design``.
 
 ::
 

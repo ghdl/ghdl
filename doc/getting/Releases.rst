@@ -158,12 +158,15 @@ protocol:
    git remote rename origin github
 
 
-
 ---------------------------------------------------------------------
 
 .. TODO::
  
-  - Naming:
-	- branch ghdl-X.Y
-	- tag vX.Y
-  - stable, development, nightly
+   * Naming:
+      * branch ghdl-X.Y
+      * tag vX.Y
+   * stable, development, nightly
+   * Regular: ubuntu-mcode and fedora-llvm (both latest default packages).
+   * Distro checking: three distros and three compilers, nine options total. Would you add Debian? Any other?
+   * Dependency version checking: single distro and specific compiler and version pairs. Which ones? LLVM 3.5? LLVM3.9? LLVM 4? GGC 4? GCC 5?
+   * Release: does it make any sense to realease multiple distro versions, if all of them are compiled with the same dependency version? A side observation is that Fedora's release is half the size of Ubuntu's, even though both are compiled with LLVM 3.8. Why?

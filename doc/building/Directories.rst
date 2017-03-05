@@ -3,9 +3,9 @@
 Directory Structure
 ###################
 
-* :samp:`src`: sources of GHDL, all of them in Ada.
+* ``src``: sources of GHDL, all of them in Ada.
 
-* :samp:`libraries`: mostly third party libraries such as, `ieee`, `mentor`,
+* ``libraries``: mostly third party libraries such as, `ieee`, `mentor`,
   `std`, `synopsys` and `vital`. Except a few shell and `Python` scripts, all
   the content is written in VHDL.
 
@@ -13,41 +13,41 @@ Directory Structure
     especially for FPGA primitives, soft and hard macros. These libraries can
     not be shipped with GHDL, but we offer prepared compile scripts to
     pre-compile the vendor libraries, if the vendor tool is present on the
-    computer. These are located in :samp:`libraries/vendor`.
+    computer. These are located in ``libraries/vendor``.
     See Vendor Primitives <VendorPrimitives.html> for information on how to
     use them.
 	
-* :samp:`dist`: scripts and auxiliar files to build GHDL in different
+* ``dist``: scripts and auxiliar files to build GHDL in different
   environments:
   
-  * :samp:`gcc`: header and configuration files to build GHDL with GCC (all the
+  * ``gcc``: header and configuration files to build GHDL with GCC (all the
     platforms).
-  * :samp:`linux`: build and test script written in shell, and other auxiliary
+  * ``linux``: build and test script written in shell, and other auxiliary
     files used to i) launch docker containers and ii) automate multiple builds
     in `Travis CI <https://travis-ci.org/>`_.
   
-  * :samp:`windows`:
+  * ``windows``:
     
-    * :samp:`mcode`:
-    * :samp:`appveyor`: 
+    * ``mcode``:
+    * ``appveyor``: 
   	
-* :samp:`doc`: `Markdown` and `reStructuredText` sources and auxiliary files to
+* ``doc``: `Markdown` and `reStructuredText` sources and auxiliary files to
   build the documentation with `Sphinx <http://www.sphinx-doc.org>`_. Indeed,
   `Read the docs <http://readthedocs.org>`_ (RTD) is used to automatically build
   and deploy this site and/or PDF you are reading.
 
-* :samp:`testsuite`: see section :ref:`test_suites`.
+* ``testsuite``: see section :ref:`test_suites`.
 
-* `.yml` configuration files for CI environments (:samp:`readthedocs`,
-  :samp:`travis` and :samp:`appveyor`) and `ignore` files for source control
-  management tools (:samp:`git` and :samp:`.hg`).
+* `.yml` configuration files for CI environments (``readthedocs``,
+  ``travis`` and ``appveyor``) and `ignore` files for source control
+  management tools (``git`` and ``.hg``).
 
-* Files for building GHDL: :samp:`configure` and :samp:`Makefile.in`.
+* Files for building GHDL: ``configure`` and ``Makefile.in``.
 
-* Auxiliar files for development: :samp:`.gdbinit` and :samp:`ghdl.gpr.in`
+* Auxiliar files for development: ``.gdbinit`` and ``ghdl.gpr.in``
   (GNAT project file).
 
-* Text files: :samp:`COPYING.md`, :samp:`NEWS.md` and :samp:`README.md`.
+* Text files: ``COPYING.md``, ``NEWS.md`` and ``README.md``.
 
 
 .. TODO::

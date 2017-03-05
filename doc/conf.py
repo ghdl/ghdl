@@ -308,7 +308,6 @@ latex_documents = [
 # If false, no module index is generated.
 #latex_domain_indices = True
 
-
 # -- Options for manual page output ---------------------------------------
 
 # One entry per manual page. List of tuples
@@ -349,18 +348,18 @@ texinfo_documents = [
 # Sphinx.Ext.InterSphinx
 # ==============================================================================
 intersphinx_mapping = {
-	'python': ('https://docs.python.org/3.6/', None),
-	'poc': ('http://poc-library.readthedocs.io/en/release', None),
-#	'ghdl':   ('http://ghdl.readthedocs.io/en/latest', None)
+   'python': ('https://docs.python.org/3.6/', None),
+   'poc': ('http://poc-library.readthedocs.io/en/release', None),
+#   'ghdl':   ('http://ghdl.readthedocs.io/en/latest', None)
 }
 
 # ==============================================================================
 # Sphinx.Ext.ExtLinks
 # ==============================================================================
 extlinks = {
-  'ghdlsharp': ('https://github.com/tgingold/ghdl/issues/%s', '#'),
-	'ghdlissue': ('https://github.com/tgingold/ghdl/issues/%s', 'issue #'),
-	'ghdlpull':  ('https://github.com/tgingold/ghdl/pull/%s', 'pull request #'),
-	'ghdlsrc':   ('https://github.com/tgingold/ghdl/blob/master/src/%s', None),
-	'wikipedia': ('https://en.wikipedia.org/wiki/%s', None)
+   'wikipedia': ('https://en.wikipedia.org/wiki/%s', None),
+   'ghdlsharp': ('https://github.com/tgingold/ghdl/issues/%s', '#'),
+   'ghdlissue': ('https://github.com/tgingold/ghdl/issues/%s', 'issue #'),
+   'ghdlpull':  ('https://github.com/tgingold/ghdl/pull/%s', 'pull request #'),
+   'ghdlsrc':   ('https://github.com/tgingold/ghdl/blob/master/src/%s', None)
 }
