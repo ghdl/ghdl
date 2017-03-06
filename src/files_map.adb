@@ -796,15 +796,21 @@ package body Files_Map is
       --  Load_Source_File call must follow its Create_Source_File.
       pragma Assert (Source_Files.Table (Res).First_Location = Next_Location);
 
+      --  Compute the SHA1.
       declare
          use GNAT.SHA1;
          use Str_Table;
 
          subtype Buffer_String is String (1 .. Buffer'Length - 2);
-         Buffer_Digest : constant Message_Digest :=
-           Digest (Buffer_String
-                     (Buffer (Source_Ptr_Org .. Source_Ptr_Org + Length - 1)));
+         Buffer_Digest : Message_Digest;
       begin
+         if Length /= 0 then
+            --  Avoid weird bounds for empty buffers.
+            Buffer_Digest := Digest
+              (Buffer_String
+                 (Buffer (Source_Ptr_Org .. Source_Ptr_Org + Length - 1)));
+         end if;
+
          Source_Files.Table (Res).Checksum :=
            File_Checksum_Id (Create_String8);
          for I in Buffer_Digest'Range loop
