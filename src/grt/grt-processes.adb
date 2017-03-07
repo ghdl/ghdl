@@ -739,6 +739,12 @@ package body Grt.Processes is
       Table : Process_Acc_Array_Acc;
       Last : Natural;
    begin
+      if Postponed then
+         null;
+      else
+         Call_Callbacks (Hooks.Cb_Start_Of_Processes);
+      end if;
+
       if Options.Flag_Stats then
          Stats.Start_Processes;
       end if;

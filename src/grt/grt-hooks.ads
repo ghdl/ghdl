@@ -86,11 +86,15 @@ package Grt.Hooks is
 
    --  Callbacks.
 
-   --  Called at the beginning of the cycle at time T.
+   --  Called at the beginning of a non-delta simulation cycle.
+   Cb_Next_Time_Step : Callbacks.Callback_List;
+
+   --  Called at the beginning of the cycle at time T.  Can create a new
+   --  simulation cycle, and called after Cb_Next_Time_Step.
    Cb_After_Delay : Callbacks.Callback_Time_List;
 
-   --  Called at the beginning of a non-delta cycle.
-   Cb_Next_Time_Step : Callbacks.Callback_List;
+   --  Called before running processes.
+   Cb_Start_Of_Processes : Callbacks.Callback_List;
 
    --  Called after updating the signals.  For value change detection.
    Cb_Signals_Updated : Callbacks.Callback_List;
@@ -101,6 +105,7 @@ package Grt.Hooks is
    --  cycle.
    Cb_Last_Known_Delta : Callbacks.Callback_List;
 
+   --  Called after postponed processes, may change the next time.
    Cb_End_Of_Time_Step : Callbacks.Callback_List;
 
 end Grt.Hooks;

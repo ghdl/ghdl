@@ -22,17 +22,18 @@
 --  covered by the GNU General Public License. This exception does not
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
+
+with System; use System;
 with Ada.Unchecked_Conversion;
 with Ada.Unchecked_Deallocation;
 with Interfaces; use Interfaces;
-with System.Storage_Elements; --  Work around GNAT bug.
-pragma Unreferenced (System.Storage_Elements);
 with Grt.Types; use Grt.Types;
 with Grt.Avhpi; use Grt.Avhpi;
 with Grt.Stdio; use Grt.Stdio;
 with Grt.C; use Grt.C;
 with Grt.Errors; use Grt.Errors;
 with Grt.Astdio; use Grt.Astdio;
+with Grt.Callbacks; use Grt.Callbacks;
 with Grt.Hooks; use Grt.Hooks;
 with Grt.Table;
 with Grt.Avls; use Grt.Avls;
@@ -41,7 +42,6 @@ with Grt.Rtis_Addr; use Grt.Rtis_Addr;
 with Grt.Rtis_Utils;
 with Grt.Rtis_Types;
 with Grt.Signals; use Grt.Signals;
-with System; use System;
 with Grt.Vstrings; use Grt.Vstrings;
 with Grt.Ghw; use Grt.Ghw;
 with Grt.Wave_Opt; use Grt.Wave_Opt;
@@ -1573,12 +1573,20 @@ package body Grt.Waves is
       Wave_Put ("ESN" & NUL);
    end Write_Snapshot;
 
+   procedure Wave_Start_Cb (Arg : System.Address)
+   is
+      pragma Unreferenced (Arg);
+   begin
+      Write_Snapshot;
+   end Wave_Start_Cb;
+
    procedure Wave_Cycle;
 
    --  Called after elaboration.
    procedure Wave_Start
    is
       Root : VhpiHandleT;
+      H : Callback_Handle;
    begin
       --  Do nothing if there is no VCD file to generate.
       if Wave_Stream = NULL_Stream then
@@ -1615,7 +1623,10 @@ package body Grt.Waves is
       --  End of header mark.
       Wave_Section ("EOH" & NUL);
 
-      Write_Snapshot;
+      --  Write the first snapshot just before running processes for the first
+      --  time.  At that point, signals are fully initialized.
+      Register_Callback (Cb_Start_Of_Processes, H, Oneshot,
+                         Wave_Start_Cb'Access);
 
       Register_Cycle_Hook (Wave_Cycle'Access);
 
