@@ -794,6 +794,19 @@ package body Trans.Chap2 is
          Chap2.Declare_Inst_Type_And_Ptr
            (Info.Package_Body_Scope'Access, Info.Package_Body_Ptr_Type);
 
+         if not Get_Need_Body (Decl)
+           and then Get_Package_Body (Decl) = Null_Iir
+         then
+            --  Generic package without a body.
+            --  Create an empty body instance.
+            Push_Package_Instance_Factory (Decl);
+            Pop_Package_Instance_Factory (Decl);
+
+            Set_Scope_Via_Field (Info.Package_Spec_Scope,
+                                 Info.Package_Spec_Field,
+                                 Info.Package_Body_Scope'Access);
+         end if;
+
          --  Each subprogram has a body instance argument.
          Subprgs.Push_Subprg_Instance
            (Info.Package_Body_Scope'Access, Info.Package_Body_Ptr_Type,
@@ -829,6 +842,12 @@ package body Trans.Chap2 is
       if Is_Uninstantiated then
          Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
 
+         if not Get_Need_Body (Decl)
+           and then Get_Package_Body (Decl) = Null_Iir
+         then
+            Clear_Scope (Info.Package_Spec_Scope);
+         end if;
+
          --  The spec elaborator has a spec instance argument.
          Subprgs.Push_Subprg_Instance
            (Info.Package_Spec_Scope'Access, Info.Package_Spec_Ptr_Type,
@@ -859,16 +878,6 @@ package body Trans.Chap2 is
          Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
       end if;
       Save_Local_Identifier (Info.Package_Local_Id);
-
-      if Is_Uninstantiated
-        and then not Get_Need_Body (Decl)
-        and then Get_Package_Body (Decl) = Null_Iir
-      then
-         --  Generic package without a body.
-         --  Create an empty body instance.
-         Push_Package_Instance_Factory (Decl);
-         Pop_Package_Instance_Factory (Decl);
-      end if;
 
       if Is_Nested then
          Pop_Identifier_Prefix (Mark);
@@ -1108,6 +1117,25 @@ package body Trans.Chap2 is
       end case;
    end Instantiate_Iir_List_Info;
 
+   function Copy_Info_Subtype (Src : Ortho_Info_Subtype_Type)
+                              return Ortho_Info_Subtype_Type
+   is
+      Res : Ortho_Info_Subtype_Type := Src;
+   begin
+      case Src.Kind is
+         when Kind_Type_Scalar =>
+            Res.Range_Var := Instantiate_Var (Src.Range_Var);
+         when Kind_Type_Array
+           | Kind_Type_Record =>
+            Res.Composite_Bounds := Instantiate_Var (Src.Composite_Bounds);
+         when Kind_Type_File =>
+            null;
+         when Kind_Type_Protected =>
+            null;
+      end case;
+      return Res;
+   end Copy_Info_Subtype;
+
    procedure Copy_Info (Dest : Ortho_Info_Acc; Src : Ortho_Info_Acc) is
    begin
       case Src.Kind is
@@ -1121,9 +1149,37 @@ package body Trans.Chap2 is
                          Ortho_Type => Src.Ortho_Type,
                          Ortho_Ptr_Type => Src.Ortho_Ptr_Type,
                          B => Src.B,
-                         S => Src.S,
+                         S => Copy_Info_Subtype (Src.S),
                          Type_Rti => Src.Type_Rti);
-            pragma Assert (Src.C = null);
+            if Src.C /= null then
+               Dest.C := new Complex_Type_Arr_Info'
+                 (Mode_Value =>
+                    (Size_Var => Instantiate_Var
+                       (Src.C (Mode_Value).Size_Var),
+                     Builder_Need_Func =>
+                       Src.C (Mode_Value).Builder_Need_Func,
+                     Builder_Instance => Instantiate_Subprg_Instance
+                       (Src.C (Mode_Value).Builder_Instance),
+                     Builder_Base_Param =>
+                       Src.C (Mode_Value).Builder_Base_Param,
+                     Builder_Bound_Param =>
+                       Src.C (Mode_Value).Builder_Bound_Param,
+                     Builder_Func =>
+                       Src.C (Mode_Value).Builder_Func),
+                  Mode_Signal =>
+                    (Size_Var => Instantiate_Var
+                       (Src.C (Mode_Signal).Size_Var),
+                     Builder_Need_Func =>
+                       Src.C (Mode_Signal).Builder_Need_Func,
+                     Builder_Instance => Instantiate_Subprg_Instance
+                       (Src.C (Mode_Signal).Builder_Instance),
+                     Builder_Base_Param =>
+                       Src.C (Mode_Signal).Builder_Base_Param,
+                     Builder_Bound_Param =>
+                       Src.C (Mode_Signal).Builder_Bound_Param,
+                     Builder_Func =>
+                       Src.C (Mode_Signal).Builder_Func));
+            end if;
          when Kind_Object =>
             Dest.all :=
               (Kind => Kind_Object,
@@ -1347,8 +1403,10 @@ package body Trans.Chap2 is
       Push_Instantiate_Var_Scope
         (Info.Package_Instance_Body_Scope'Access,
          Pkg_Info.Package_Body_Scope'Access);
+
       Instantiate_Iir_Generic_Chain_Info (Get_Generic_Chain (Inst));
       Instantiate_Iir_Chain_Info (Get_Declaration_Chain (Inst));
+
       Pop_Instantiate_Var_Scope
         (Info.Package_Instance_Body_Scope'Access);
       Pop_Instantiate_Var_Scope
