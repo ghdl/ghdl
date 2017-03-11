@@ -1061,7 +1061,8 @@ package body Parse is
             end if;
             Res := Parse_External_Name;
          when others =>
-            Error_Msg_Parse ("identifier expected here");
+            Error_Msg_Parse ("name expected here, found %t",
+                             +Current_Token);
             raise Parse_Error;
       end case;
 
