@@ -8,6 +8,12 @@ grep 2:8 t1.err
 analyze_failure -ftabstop=4 t1.vhdl 2> t1.err
 grep 2:4 t1.err
 
+analyze_failure -fcaret-diagnostics -ftabstop=4 t1.vhdl 2> t1.err
+grep "^    err;" t1.err
+
+analyze_failure -fcaret-diagnostics t1.vhdl 2> t1.err
+grep "^        err;" t1.err
+
 if analyze -ftabstop=0 t1.vhdl; then
     echo "error expected"
     exit 1
