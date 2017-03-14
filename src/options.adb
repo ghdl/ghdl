@@ -26,6 +26,7 @@ with Disp_Tree;
 with Scanner;
 with Back_End; use Back_End;
 with Flags; use Flags;
+with Files_Map;
 
 package body Options is
    procedure Initialize is
@@ -138,6 +139,22 @@ package body Options is
          Flag_Diagnostics_Show_Option := True;
       elsif Opt = "-fno-diagnostics-show-option" then
          Flag_Diagnostics_Show_Option := False;
+      elsif Opt'Length > 10 and then Opt (1 .. 10) = "-ftabstop=" then
+         declare
+            use Files_Map;
+            V : Natural;
+         begin
+            V := Natural'Value (Opt (11 .. Opt'Last));
+            if V not in Tab_Stop_Range then
+               Error_Msg_Option ("incorrect value for -ftabstop");
+               return True;
+            end if;
+            Tab_Stop := V;
+         exception
+            when Constraint_Error =>
+               Error_Msg_Option ("numeric value expected after -ftabstop=");
+               return True;
+         end;
       elsif Opt = "--bootstrap" then
          Bootstrap := True;
       elsif Opt = "-fexplicit" then
