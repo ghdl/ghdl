@@ -2596,7 +2596,9 @@ package body Sem_Assocs is
                            null;
                      end case;
                   end if;
-               when Iir_Kind_Interface_Package_Declaration =>
+               when Iir_Kind_Interface_Package_Declaration
+                 | Iir_Kind_Interface_Function_Declaration
+                 | Iir_Kind_Interface_Procedure_Declaration =>
                   Error_Msg_Sem (+Loc, "%n must be associated", +Inter);
                   Match := Not_Compatible;
                when others =>
