@@ -22,6 +22,13 @@ with Nodes;
 
 package Files_Map is
 
+   --  Range for Tab_Stop.
+   subtype Tab_Stop_Range is Natural range 1 .. 120;
+
+   --  Tab width: a tab character jumps to the next column that is one plus a
+   --  multiple of this witdh (if columns are numbered from 1).
+   Tab_Stop : Tab_Stop_Range := 8;
+
    --  Create the path from DIRECTORY and NAME:
    --  If NAME is an absolute pathname, then return NAME.
    --  Otherwise, return the concatenation of DIRECTORY and NAME.

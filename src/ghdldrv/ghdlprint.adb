@@ -146,8 +146,8 @@ package body Ghdlprint is
             C := Buf (P);
             if C = HT then
                --  Expand TABS.
-               N_Col := Col + 8;
-               N_Col := N_Col - N_Col mod 8;
+               N_Col := Col + Tab_Stop;
+               N_Col := N_Col - N_Col mod Tab_Stop;
                while Col < N_Col loop
                   Put (' ');
                   Col := Col + 1;

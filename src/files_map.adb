@@ -261,7 +261,8 @@ package body Files_Map is
    --  Convert a physical column to a logical column.
    --  A physical column is the offset in byte from the first byte of the line.
    --  A logical column is the position of the character when displayed.
-   --  A HT (tabulation) moves the cursor to the next position multiple of 8.
+   --  A HT (tabulation) moves the cursor to the next position multiple of the
+   --  tab stop.
    --  The first character is at position 1 and at offset 0.
    procedure Coord_To_Position (File : Source_File_Entry;
                                 Line_Pos : Source_Ptr;
@@ -278,7 +279,7 @@ package body Files_Map is
       else
          for I in Line_Pos .. Line_Pos + Source_Ptr (Offset) - 1 loop
             if Source_File.Source (I) = ASCII.HT then
-               Res := Res + 8 - Res mod 8;
+               Res := Res + Tab_Stop - Res mod Tab_Stop;
             else
                Res := Res + 1;
             end if;
