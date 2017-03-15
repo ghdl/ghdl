@@ -1019,6 +1019,74 @@ package body Files_Map is
       end;
    end Image;
 
+   --  Compute the length of line that starts at START.  Tabs are expanded to
+   --  compute the length.
+   function Compute_Expanded_Line_Length (File : Source_File_Entry;
+                                          Start : Source_Ptr) return Natural
+   is
+      Buf : constant File_Buffer_Acc := Get_File_Source (File);
+      Pos : Source_Ptr;
+      Len : Natural;
+      C : Character;
+   begin
+      --  Compute line length.
+      Pos := Start;
+      Len := 0;
+      loop
+         C := Buf (Pos);
+         Pos := Pos + 1;
+         exit when C = ASCII.CR or C = ASCII.LF or C = ASCII.EOT;
+         if C = ASCII.HT then
+            --  Expand tab.
+            Len := Len + (Tab_Stop - Len mod Tab_Stop);
+         else
+            Len := Len + 1;
+         end if;
+      end loop;
+      return Len;
+   end Compute_Expanded_Line_Length;
+
+   --  Return the line that starts at START in FILE.  This is slow.
+   function Extract_Expanded_Line (File : Source_File_Entry;
+                                   Start : Source_Ptr) return String
+   is
+      Buf : constant File_Buffer_Acc := Get_File_Source (File);
+      Len : constant Natural := Compute_Expanded_Line_Length (File, Start);
+      Res : String (1 .. Len);
+      P : Natural;
+      Pos : Source_Ptr;
+      C : Character;
+   begin
+      Pos := Start;
+      P := 0;
+      loop
+         C := Buf (Pos);
+         Pos := Pos + 1;
+         exit when C = ASCII.CR or C = ASCII.LF or C = ASCII.EOT;
+         if C = ASCII.HT then
+            --  Expand tab.
+            loop
+               P := P + 1;
+               Res (P) := ' ';
+               exit when P mod Tab_Stop = 0;
+            end loop;
+         else
+            P := P + 1;
+            Res (P) := C;
+         end if;
+      end loop;
+      pragma Assert (P = Res'Last);
+      return Res;
+   end Extract_Expanded_Line;
+
+   function Extract_Expanded_Line (File : Source_File_Entry;
+                                   Line : Natural) return String
+   is
+      Start : constant Source_Ptr := Line_To_Position (File, Line);
+   begin
+      return Extract_Expanded_Line (File, Start);
+   end Extract_Expanded_Line;
+
    -- Debug procedures.
    procedure Debug_Source_Lines (File: Source_File_Entry);
    pragma Unreferenced (Debug_Source_Lines);

@@ -574,34 +574,8 @@ package body Errorout is
       if Flag_Caret_Diagnostics
         and then (File /= No_Source_File_Entry and Line /= 0)
       then
-         declare
-            Buf : constant File_Buffer_Acc := Get_File_Source (File);
-            Pos : Source_Ptr;
-            Len : Natural;
-            C : Character;
-         begin
-            --  Compute line length.
-            Pos := Line_To_Position (File, Line);
-            Len := 0;
-            loop
-               C := Buf (Pos);
-               Pos := Pos + 1;
-               exit when C = ASCII.CR or C = ASCII.LF or C = ASCII.EOT;
-               if C = ASCII.HT then
-                  --  Expand tab.
-                  loop
-                     Put (' ');
-                     Len := Len + 1;
-                     exit when Len mod Tab_Stop = 0;
-                  end loop;
-               else
-                  Put (C);
-                  Len := Len + 1;
-               end if;
-            end loop;
-            Put_Line;
-            Put_Line ((1 .. Col => ' ') & '^');
-         end;
+         Put_Line (Extract_Expanded_Line (File, Line));
+         Put_Line ((1 .. Col => ' ') & '^');
       end if;
    end Report_Msg;
 

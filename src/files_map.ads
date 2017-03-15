@@ -177,6 +177,12 @@ package Files_Map is
                                    Line : out Natural;
                                    Col : out Natural);
 
+   --  Return the line LINE from FILE (without end of line).  The line is
+   --  expanded: tabs are replaced by spaces according to Tab_Stop.  This
+   --  function is slow.
+   function Extract_Expanded_Line (File : Source_File_Entry;
+                                   Line : Natural) return String;
+
    --  Return the image of LOC using the "FILENAME:LINE:COL" format or
    --  "LINE:COL" format if FILENAME is false;
    function Image (Loc : Location_Type; Filename : Boolean := True)
