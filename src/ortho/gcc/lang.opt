@@ -62,6 +62,14 @@ Disable VITAL checks
 vhdl
 Enable VITAL checks
 
+ftabstop=
+vhdl Joined RejectNegative UInteger
+-ftabstop=<number>	Distance between tab stops for column reporting
+
+fcaret-diagnostics
+vhdl
+Show the source line with a caret indicating the column
+
 fexplicit
 vhdl
 Explicit function declarations override implicit one in use
