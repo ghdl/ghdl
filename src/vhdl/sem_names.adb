@@ -982,6 +982,14 @@ package body Sem_Names is
          Prefix := Sem_Type_Mark (Prefix_Name);
       else
          Prefix := Finish_Sem_Name (Prefix_Name, Get_Prefix (Attr));
+         --  Convert function declaration to call.
+         if Get_Kind (Prefix) in Iir_Kinds_Denoting_Name
+           and then
+           (Get_Kind (Get_Named_Entity (Prefix))
+              = Iir_Kind_Function_Declaration)
+         then
+            Prefix := Function_Declaration_To_Call (Prefix);
+         end if;
       end if;
       Set_Prefix (Attr, Prefix);
 
