@@ -605,7 +605,8 @@ package body Sem_Stmts is
                   "null transactions can be assigned only to guarded signals");
             end if;
          else
-            if not Eval_Is_In_Bound (Expr, Targ_Type)
+            if Is_Valid (Get_Type (Expr))
+              and then not Eval_Is_In_Bound (Expr, Targ_Type)
               and then Get_Kind (Expr) /= Iir_Kind_Overflow_Literal
             then
                Warning_Msg_Sem
