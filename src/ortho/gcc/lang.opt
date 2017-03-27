@@ -64,7 +64,6 @@ Enable VITAL checks
 
 ftabstop=
 vhdl Joined RejectNegative UInteger
--ftabstop=<number>	Distance between tab stops for column reporting
 
 fcaret-diagnostics
 vhdl
