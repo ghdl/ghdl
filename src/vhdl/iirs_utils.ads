@@ -100,6 +100,9 @@ package Iirs_Utils is
    function Find_First_Association_For_Interface
      (Assoc_Chain : Iir; Inter_Chain : Iir; Inter : Iir) return Iir;
 
+   --  Return True iff interface INTER is a (subprogram) parameter.
+   function Is_Parameter (Inter : Iir) return Boolean;
+
    --  Duplicate enumeration literal LIT.
    function Copy_Enumeration_Literal (Lit : Iir) return Iir;
 

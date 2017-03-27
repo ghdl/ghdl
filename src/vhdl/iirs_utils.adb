@@ -544,6 +544,18 @@ package body Iirs_Utils is
       return Null_Iir;
    end Find_First_Association_For_Interface;
 
+   function Is_Parameter (Inter : Iir) return Boolean is
+   begin
+      case Get_Kind (Get_Parent (Inter)) is
+         when Iir_Kinds_Subprogram_Declaration
+           | Iir_Kinds_Interface_Subprogram_Declaration =>
+            return True;
+         when others =>
+            --  Port
+            return False;
+      end case;
+   end Is_Parameter;
+
    function Find_Name_In_List (List: Iir_List; Lit: Name_Id) return Iir is
       El: Iir;
       Ident: Name_Id;
