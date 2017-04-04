@@ -8,7 +8,7 @@ BE=llvm-nodebug
 
 all: $(ortho_exec)
 
-$(ortho_exec): $(ortho_srcdir)/llvm-nodebug/ortho_llvm.ads force llvm-cbindings.o ortho_code_main.adb
+$(ortho_exec): $(ortho_srcdir)/llvm-nodebug/ortho_llvm.ads force llvm-cbindings.o
 	$(GNATMAKE) -o $@ -aI$(ortho_srcdir)/llvm-nodebug -aI$(ortho_srcdir) \
 	$(GNAT_FLAGS) ortho_code_main -bargs -E \
 	-largs llvm-cbindings.o --LINK=$(CXX) \
@@ -16,14 +16,6 @@ $(ortho_exec): $(ortho_srcdir)/llvm-nodebug/ortho_llvm.ads force llvm-cbindings.
 
 llvm-cbindings.o: $(ortho_srcdir)/llvm-nodebug/llvm-cbindings.cpp
 	$(CXX) -c `$(LLVM_CONFIG) --cxxflags` -o $@ $<
-
-ortho_code_main.adb:
-	echo "with Ortho_Code_Main$(llvm_be_ver);" > ortho_code_main.tmp
-	echo "procedure Ortho_Code_Main is" >> ortho_code_main.tmp
-	echo "begin" >> ortho_code_main.tmp
-	echo "   Ortho_Code_Main$(llvm_be_ver);" >> ortho_code_main.tmp
-	echo "end Ortho_Code_Main;" >> ortho_code_main.tmp
-	mv ortho_code_main.tmp $@
 
 clean:
 	$(RM) -f *.o *.ali ortho_code_main

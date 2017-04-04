@@ -25,7 +25,7 @@ PIC_FLAGS=-fPIC
 show_help=no
 progname=$0
 
-subst_vars="CC CXX GNATMAKE CFLAGS LDFLAGS build srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config llvm_be llvm_be_ver backtrace_lib build_mode EXEEXT SOEXT PIC_FLAGS default_pie"
+subst_vars="CC CXX GNATMAKE CFLAGS LDFLAGS build srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config llvm_be backtrace_lib build_mode EXEEXT SOEXT PIC_FLAGS default_pie"
 
 # Find srcdir
 srcdir=`dirname $progname`
@@ -160,12 +160,10 @@ if test $backend = llvm; then
 	echo "Debugging is not enabled with llvm $llvm_version"
 	llvm_be=llvm-nodebug
 	# Tested with llvm 3.5, so assume 3.6, 3.7 and 3.8
-	llvm_be_ver=35
     elif check_version 3.9 $llvm_version ||
          check_version 4.0 $llvm_version; then
 	echo "Debugging is not enabled with llvm $llvm_version"
 	llvm_be=llvm4-nodebug
-	llvm_be_ver=4
     else
 	echo "Unhandled version llvm $llvm_version"
 	exit 1
