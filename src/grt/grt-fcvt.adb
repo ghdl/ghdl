@@ -25,6 +25,22 @@
 
 with Ada.Unchecked_Conversion;
 
+--  Double float (aka binary64 representation):
+--  exponent bias is 1023
+--
+--  |-----------------------------------------------------------
+--  | 63   | 62-52    | 51-0     |
+--  | sign | exponent | fraction | Value
+--  |-----------------------------------------------------------
+--  | s    | 0        | f        | (-1)**s * 0.f * 2**(1 - 1023)
+--  |-----------------------------------------------------------
+--  | s    | 1 - 2046 | f        | (-1)**s * 1.f * 2**(e - 1023)
+--  |-----------------------------------------------------------
+--  | s    | 2047     | 0        | (-1)**s * inf
+--  |-----------------------------------------------------------
+--  | s    | 2047     | /= 0     | NaN
+--  |-----------------------------------------------------------
+
 --  Implement 'dragon4' algorithm described in:
 --    Printing Floating-Point Numbers Quickly and Accurately
 --    Robert G. Burger  and  R. Kent Dybvig
@@ -36,15 +52,6 @@ with Ada.Unchecked_Conversion;
 package body Grt.Fcvt is
    function F64_To_U64 is new Ada.Unchecked_Conversion
      (IEEE_Float_64, Unsigned_64);
-
-   type Unsigned_32_Array is array (Natural range <>) of Unsigned_32;
-
-   type Bignum is record
-      --  Number of digits.  Must be 0 for number 0.
-      N : Natural;
-      --  Digits.  The leading digit V(N + 1) must not be 0.
-      V : Unsigned_32_Array (1 .. 37);
-   end record;
 
    type Fcvt_Context is record
       --  Inputs
@@ -60,13 +67,11 @@ package body Grt.Fcvt is
       --  If true, Mp = Mm (often the case).  In that case Mm is not set.
       Equal_M : Boolean;
 
-      --  If true, the number is >= 1.0
-      --  Used by the fast estimator.
-      Ge_One : Boolean;
+      --  Log2 (v).  Used to estimate k.
+      Log2v : Integer;
 
       --  Internal variables
       --  v = r / s
-      Log2_S0 : Natural;
       K : Integer;
       R : Bignum;
       S : Bignum;
@@ -90,8 +95,7 @@ package body Grt.Fcvt is
    end Bignum_Is_Valid;
 
    --  Create a bignum from a natural.
-   procedure Bignum_Int (Res : out Bignum; N : Natural)
-   is
+   procedure Bignum_Int (Res : out Bignum; N : Natural) is
    begin
       if N = 0 then
          Res.N := 0;
@@ -100,6 +104,24 @@ package body Grt.Fcvt is
          Res.V (1) := Unsigned_32 (N);
       end if;
    end Bignum_Int;
+
+   procedure Bignum_To_Int
+     (N : Bignum; Res : out Unsigned_64; OK : out Boolean) is
+   begin
+      OK := True;
+      case N.N is
+         when 0 =>
+            Res := 0;
+         when 1 =>
+            Res := Unsigned_64 (N.V (1));
+         when 2 =>
+            Res := Shift_Left (Unsigned_64 (N.V (2)), 32)
+              or Unsigned_64 (N.V (1));
+         when others =>
+            Res := 0;
+            OK := False;
+      end case;
+   end Bignum_To_Int;
 
    --  Add two bignums, assuming A > B.
    function Bignum_Add2 (A, B : Bignum) return Bignum
@@ -195,18 +217,14 @@ package body Grt.Fcvt is
       return Res;
    end Bignum_Mul;
 
-   function Bignum_Mul_Int (L : Bignum; R : Natural) return Bignum
+   function Bignum_Mul_Int (L : Bignum; R : Positive; Carry_In : Natural := 0)
+                           return Bignum
    is
       Res : Bignum;
 
       Tmp : Unsigned_64;
    begin
-      if R = 0 then
-         Res.N := 0;
-         return Res;
-      end if;
-
-      Tmp := 0;
+      Tmp := Unsigned_64 (Carry_In);
 
       for I in 1 .. L.N loop
          Tmp := Tmp + Unsigned_64 (L.V (I)) * Unsigned_64 (R);
@@ -226,11 +244,13 @@ package body Grt.Fcvt is
    end Bignum_Mul_Int;
 
    --  In place multiplication.
-   procedure Bignum_Mul_Int (L : in out Bignum; R : Positive)
+   procedure Bignum_Mul_Int
+     (L : in out Bignum; R : Positive; Carry_In : Natural := 0)
    is
       Tmp : Unsigned_64;
    begin
-      Tmp := 0;
+      Tmp := Unsigned_64 (Carry_In);
+
       for I in 1 .. L.N loop
          Tmp := Tmp + Unsigned_64 (L.V (I)) * Unsigned_64 (R);
          L.V (I) := Unsigned_32 (Tmp and 16#ffff_ffff#);
@@ -259,7 +279,7 @@ package body Grt.Fcvt is
    end Bignum_Pow2;
 
    --  Compute L**N
-   function Bignum_Pow (L : Bignum; N : Natural) return Bignum
+   function Bignum_Pow (L : Natural; N : Natural) return Bignum
    is
       Res : Bignum;
       N1 : Natural;
@@ -267,7 +287,7 @@ package body Grt.Fcvt is
    begin
       Bignum_Int (Res, 1);
 
-      T := L;
+      Bignum_Int (T, L);
       N1 := N;
       loop
          if N1 mod 2 = 1 then
@@ -323,6 +343,225 @@ package body Grt.Fcvt is
       end if;
    end Bignum_Divstep;
 
+   --  N := N * 2
+   procedure Bignum_Mul2 (N : in out Bignum)
+   is
+      Carry, Carry1 : Unsigned_32;
+      V : Unsigned_32;
+   begin
+      if N.N = 0 then
+         return;
+      end if;
+
+      Carry := 0;
+      for I in 1 .. N.N loop
+         V := N.V (I);
+         Carry1 := Shift_Right (V, 31);
+         V := Shift_Left (V, 1) or Carry;
+         N.V (I) := V;
+         Carry := Carry1;
+      end loop;
+      if Carry /= 0 then
+         N.N := N.N + 1;
+         N.V (N.N) := Carry;
+      end if;
+   end Bignum_Mul2;
+
+   function Ffs (V : Unsigned_32) return Natural
+   is
+      T : Unsigned_32;
+      Res : Natural;
+   begin
+      if V = 0 then
+         return 0;
+      end if;
+
+      --  Compute clz (Count Leading Zero).
+      T := V;
+      Res := 0;
+      if (T and 16#ffff_0000#) = 0 then
+         T := Shift_Left (T, 16);
+         Res := Res + 16;
+      end if;
+      if (T and 16#ff00_0000#) = 0 then
+         T := Shift_Left (T, 8);
+         Res := Res + 8;
+      end if;
+      if (T and 16#f000_0000#) = 0 then
+         T := Shift_Left (T, 4);
+         Res := Res + 4;
+      end if;
+      if (T and 16#c000_0000#) = 0 then
+         T := Shift_Left (T, 2);
+         Res := Res + 2;
+      end if;
+      if (T and 16#8000_0000#) = 0 then
+         Res := Res + 1;
+      end if;
+      return 32 - Res;
+   end Ffs;
+
+   --  Convert F to M*2**E, M having P bits of precision (2**P > M >= 2**(P-1))
+   --  P < 64
+   procedure Bignum_To_Fp (F : Bignum;
+                           P : Natural;
+                           M : out Unsigned_64;
+                           E : out Integer)
+   is
+      Nbits : Natural;
+      P1 : Natural;
+      MSW : Unsigned_32;
+      MSW_Pos : Natural;
+      R : Unsigned_32;
+      Carry : Boolean;
+   begin
+      if F.N = 0 then
+         M := 0;
+         E := 0;
+         return;
+      end if;
+
+      --  MSW_Pos is the position of the word from which R is extracted.
+      MSW_Pos := F.N;
+      MSW := F.V (MSW_Pos);
+      pragma Assert (MSW /= 0);
+      Nbits := Ffs (MSW);
+      P1 := P;
+      M := 0;
+
+      E := Nbits + (F.N - 1) * 32 - P;
+
+      if Nbits > P1 then
+         M := Unsigned_64 (Shift_Right (MSW, Nbits - P1));
+         R := Shift_Left (MSW, 32 - (Nbits - P1));
+      else
+         M := Shift_Left (Unsigned_64 (MSW), P1 - Nbits);
+         P1 := P1 - Nbits;
+         loop
+            MSW_Pos := MSW_Pos - 1;
+            if MSW_Pos = 0 then
+               --  No more input bits.
+               R := 0;
+               exit;
+            end if;
+            MSW:= F.V (MSW_Pos);
+            if P1 = 0 then
+               --  No more bits to shift in.
+               R := MSW;
+               exit;
+            end if;
+            if P1 < 32 then
+               M := M or Shift_Right (Unsigned_64 (MSW), 32 - P1);
+               R := Shift_Left (MSW, P1);
+               P1 := 0;
+               exit;
+            else
+               M := M or Shift_Left (Unsigned_64 (MSW), P1 - 32);
+               P1 := P1 - 32;
+            end if;
+         end loop;
+      end if;
+
+      --  Round.
+      if R > 16#8000_0000# then
+         Carry := True;
+      elsif R < 16#8000_0000# then
+         Carry := False;
+      else
+         --  Tie.
+         loop
+            --  MSW_Pos = 0 means R was 0.
+            pragma Assert (MSW_Pos /= 0);
+
+            if MSW_Pos = 1 then
+               --  R was extracted from the first word of F.  No more input
+               --  bits.
+
+               --  When exactely half in the middle, truncate.
+               Carry := False;
+               exit;
+            end if;
+
+            MSW_Pos := MSW_Pos - 1;
+            if F.V (MSW_Pos) /= 0 then
+               Carry := True;
+               exit;
+            end if;
+            MSW_Pos := MSW_Pos - 1;
+         end loop;
+      end if;
+
+      if Carry then
+         M := M + 1;
+         if M >= Shift_Left (1, P) then
+            E := E + 1;
+            M := Shift_Right (M, 1);
+         end if;
+      end if;
+   end Bignum_To_Fp;
+
+   --  Multiply N by 2**(32 * Count)
+   procedure Bignum_Shift32_Left (N : in out Bignum; Count : Natural) is
+   begin
+      for I in reverse 1 .. N.N loop
+         N.V (I + Count) := N.V (I);
+      end loop;
+      for I in 1 .. Count loop
+         N.V (I) := 0;
+      end loop;
+      N.N := N.N + Count;
+   end Bignum_Shift32_Left;
+
+   --  Compute F / Div = M * 2**E, with 2**Precision > M >= 2**(Precision-1)
+   procedure Bignum_Divide_To_Fp (F : in out Bignum;
+                                  Div : in out Bignum;
+                                  Precision : Natural;
+                                  M : out Unsigned_64;
+                                  E : out Integer)
+   is
+      Ediff : constant Integer := Div.N - (F.N + 1);
+      Dig : Boolean;
+   begin
+      --  Adjust exponents so that Div.N = F.N + 1
+      E := -Precision + 1;
+      if Ediff > 0 then
+         --  Divider is larger
+         E := E - (32 * Ediff);
+         Bignum_Shift32_Left (F, Ediff);
+      elsif Ediff < 0 then
+         E := E - (32 * Ediff);
+         Bignum_Shift32_Left (Div, -Ediff);
+      end if;
+      pragma Assert (Div.N > F.N);
+
+      --  Divide until the first 1.
+      loop
+         Bignum_Divstep (F, Div, Dig);
+         Bignum_Mul2 (F);
+         exit when Dig;
+         E := E - 1;
+      end loop;
+
+      M := 1;
+
+      --  Do precision steps
+      for I in 1 .. Precision - 1 loop
+         Bignum_Divstep (F, Div, Dig);
+         Bignum_Mul2 (F);
+         M := 2*M + Boolean'Pos (Dig);
+      end loop;
+
+      --  Round.
+      Bignum_Divstep (F, Div, Dig);
+      if Dig then
+         M := M + 1;
+         if M = Shift_Left (1, Precision) then
+            M := M / 2;
+            E := E + 1;
+         end if;
+      end if;
+   end Bignum_Divide_To_Fp;
+
    procedure Append (Str : in out String;
                      Len : in out Natural;
                      C : Character)
@@ -347,7 +586,9 @@ package body Grt.Fcvt is
    end Append_Digit;
 
    --  Implement Table 1
-   procedure Dragon4_Prepare (Ctxt : in out Fcvt_Context) is
+   procedure Dragon4_Prepare (Ctxt : in out Fcvt_Context)
+   is
+      Log2_S0 : Natural;
    begin
       if Ctxt.E >= 0 then
          --  Case e >= 0
@@ -359,7 +600,7 @@ package body Grt.Fcvt is
             --  m- = b**e
             Ctxt.R := Bignum_Mul (Ctxt.F, Bignum_Pow2 (Ctxt.E + 1));
             Bignum_Int (Ctxt.S, 2);
-            Ctxt.Log2_S0 := 1;
+            Log2_S0 := 1;
             Ctxt.Mp := Bignum_Pow2 (Ctxt.E);
             Ctxt.Equal_M := True;
          else
@@ -370,7 +611,7 @@ package body Grt.Fcvt is
             --  m- = b**e
             Ctxt.R := Bignum_Mul (Ctxt.F, Bignum_Pow2 (Ctxt.E + 1 + 1));
             Bignum_Int (Ctxt.S, 2 * 2);
-            Ctxt.Log2_S0 := 2;
+            Log2_S0 := 2;
             Ctxt.Mp := Bignum_Pow2 (Ctxt.E + 1);
             Ctxt.Mm := Bignum_Pow2 (Ctxt.E);
             Ctxt.Equal_M := False;
@@ -384,7 +625,7 @@ package body Grt.Fcvt is
             --  m+ = 1
             --  m- = 1
             Ctxt.R := Bignum_Mul_Int (Ctxt.F, 2);
-            Ctxt.Log2_S0 := -Ctxt.E + 1;
+            Log2_S0 := -Ctxt.E + 1;
             Bignum_Int (Ctxt.Mp, 1);
             Ctxt.Equal_M := True;
          else
@@ -394,14 +635,28 @@ package body Grt.Fcvt is
             --  m+ = b
             --  m- = 1
             Ctxt.R := Bignum_Mul_Int (Ctxt.F, 2 * 2);
-            Ctxt.Log2_S0 := -Ctxt.E + 1 + 1;
+            Log2_S0 := -Ctxt.E + 1 + 1;
             Bignum_Int (Ctxt.Mp, 2);
             Bignum_Int (Ctxt.Mm, 1);
             Ctxt.Equal_M := False;
          end if;
-         Ctxt.S := Bignum_Pow2 (Ctxt.Log2_S0);
+         Ctxt.S := Bignum_Pow2 (Log2_S0);
       end if;
    end Dragon4_Prepare;
+
+   procedure Dragon4_Fixup (Ctxt : in out Fcvt_Context)
+   is
+   begin
+      if Bignum_Compare (Bignum_Add (Ctxt.R, Ctxt.Mp), Ctxt.S) = Gt then
+         Ctxt.K := Ctxt.K + 1;
+      else
+         Bignum_Mul_Int (Ctxt.R, 10);
+         Bignum_Mul_Int (Ctxt.Mp, 10);
+         if not Ctxt.Equal_M then
+            Bignum_Mul_Int (Ctxt.Mm, 10);
+         end if;
+      end if;
+   end Dragon4_Fixup;
 
    --  2. Find the smallest integer k such that (r + m+) / s <= B**k; ie:
    --     k = ceil (logB ((r+m+)/s))
@@ -413,96 +668,34 @@ package body Grt.Fcvt is
    --     k = ceil (logB (high))
    procedure Dragon4_Scale (Ctxt : in out Fcvt_Context)
    is
+      L2 : Integer_64;
       T1 : Bignum;
    begin
-      if False and Ctxt.B = 10 then
-         --  TODO.
-         declare
-            E : Integer;
-         begin
-            if Ctxt.F.N = 2 and then Ctxt.F.V (2) >= 16#10_00_00# then
-               --  Normal binary64 number
-               E := 52 + Ctxt.E;
-            else
-               --  Denormal or non binary64.
-               E := Ctxt.E;
-            end if;
+      --  Estimate k.
+      --  log10(2) ~= 0.301029995664
+      --  log10(2) * 2**32 ~= 1292913986
+      L2 := Integer_64 (Ctxt.Log2v) * 1292913986;
+      Ctxt.K := Integer (L2 / 2**32);
 
-            --  Estimate k.
-            Ctxt.K := Integer (Float (E) * 0.30103);
-
-            --  Need to compute B**k
-            Bignum_Int (T1, Ctxt.B);
-
-            if Ctxt.K >= 0 then
-               T1 := Bignum_Pow (T1, Ctxt.K);
-               Ctxt.S := Bignum_Mul (Ctxt.S, T1);
-            else
-               T1 := Bignum_Pow (T1, -Ctxt.K);
-               Ctxt.R := Bignum_Mul (Ctxt.R, T1);
-               Ctxt.Mp := Bignum_Mul (Ctxt.Mp, T1);
-               if not Ctxt.Equal_M then
-                  Ctxt.Mm := Bignum_Mul (Ctxt.Mm, T1);
-               end if;
-            end if;
-         end;
-      else
-         Ctxt.K := 0;
-      end if;
-
-      T1 := Bignum_Add (Ctxt.R, Ctxt.Mp);
-
-      --  Adjust s0 so that r + m+ <= s0 * B**k
-      while Bignum_Compare (T1, Ctxt.S) >= Eq loop
+      --  Ceiling.
+      --  If L2 < 0, L2 rem 2**32 <= 0
+      if L2 rem 2**32 > 0 then
          Ctxt.K := Ctxt.K + 1;
-         Bignum_Mul_Int (Ctxt.S, Ctxt.B);
-      end loop;
-
-      if Ctxt.K > 0 then
-         return;
       end if;
 
-      loop
-         Bignum_Mul_Int (T1, Ctxt.B);
-         exit when not (Bignum_Compare (T1, Ctxt.S) <= Eq);
-         Ctxt.K := Ctxt.K - 1;
-         Bignum_Mul_Int (Ctxt.R, Ctxt.B);
-         Bignum_Mul_Int (Ctxt.Mp, Ctxt.B);
+      --  Need to compute B**k
+      if Ctxt.K >= 0 then
+         T1 := Bignum_Pow (10, Ctxt.K);
+         Ctxt.S := Bignum_Mul (Ctxt.S, T1);
+      else
+         T1 := Bignum_Pow (10, -Ctxt.K);
+         Ctxt.R := Bignum_Mul (Ctxt.R, T1);
+         Ctxt.Mp := Bignum_Mul (Ctxt.Mp, T1);
          if not Ctxt.Equal_M then
-            Bignum_Mul_Int (Ctxt.Mm, Ctxt.B);
+            Ctxt.Mm := Bignum_Mul (Ctxt.Mm, T1);
          end if;
-         T1 := Bignum_Add (Ctxt.R, Ctxt.Mp);
-      end loop;
-
-      --  Note: high = (v + v+) / 2
-      --             = (2*v + b**e) / 2
-      --             = ((2*f + 1) * b**e) / 2
-      --  Proof:
-      --
-      --  Case e >= 0
-      --    Case f /= b**(p-1):
-      --      high = ((2*f + 1) * b**e) / 2
-      --    Case f = b**(p-1)
-      --      high = ((2*f + 1) * b**(e+1)) / (b * 2)
-      --           = ((2*f + 1) * b**e) / 2
-      --  Case e < 0
-      --    Case e = min exp  or f /= b**(p-1)
-      --      high = (2*f + 1) / (2*b**(-e))
-      --    Case e > min exp  and f = b**(p-1)
-      --      high = (2*f*b + b) / (2*b**(-e+1))
-      --           = (2*f + 1) / (2*b**(-e))
-      --  In all cases:
-      --  high = ((2*f + 1) * b**e) / 2
-
-      --  if Ctxt.B = 10 then
-      --  log10(2) ~= 0.30103
-      --  k = ceil(log10((2*f+1) / 2) + log10(b**e))
-      --    = ceil(log10((2*f+1)/2) + e*log10(2))
-      --  If the input number was normalized, then:
-      --    2**53 <= (2*f + 1)/2 <= 2**54
-      --    15.95 <= log10((2*f+1)/2) <= 16.255
-
-      --  so k = ceil (log10(r+m+) - log2(s)*log10(2))
+      end if;
+      Dragon4_Fixup (Ctxt);
    end Dragon4_Scale;
 
    procedure Dragon4_Generate (Str : in out String;
@@ -518,8 +711,6 @@ package body Grt.Fcvt is
       Cond1, Cond2 : Boolean;
    begin
       loop
-         Bignum_Mul_Int (Ctxt.R, Ctxt.B);
-
          Bignum_Divstep (Ctxt.R, S8, Step);
          D := Boolean'Pos (Step) * 8;
          Bignum_Divstep (Ctxt.R, S4, Step);
@@ -529,13 +720,10 @@ package body Grt.Fcvt is
          Bignum_Divstep (Ctxt.R, S1, Step);
          D := D + Boolean'Pos (Step);
 
-         Bignum_Mul_Int (Ctxt.Mp, Ctxt.B);
-         if not Ctxt.Equal_M then
-            Bignum_Mul_Int (Ctxt.Mm, Ctxt.B);
-         end if;
-
          --  Stop conditions.
-         --  Note: there is a typo for condition (2) in the original paper.
+         --  Note: there is a typo for condition (2) in the original paper
+         --  (was fixed in 2006 - check the publish note at the bottom of the
+         --  first page).
          if not Ctxt.Equal_M then
             Cond1 := Bignum_Compare (Ctxt.R, Ctxt.Mm) = Lt;
          else
@@ -545,6 +733,12 @@ package body Grt.Fcvt is
          exit when Cond1 or Cond2;
 
          Append_Digit (Str, Len, D);
+
+         Bignum_Mul_Int (Ctxt.R, 10);
+         Bignum_Mul_Int (Ctxt.Mp, 10);
+         if not Ctxt.Equal_M then
+            Bignum_Mul_Int (Ctxt.Mm, 10);
+         end if;
       end loop;
 
       if Cond1 and not Cond2 then
@@ -595,8 +789,7 @@ package body Grt.Fcvt is
 
    procedure To_String (Str : out String;
                         Len : out Natural;
-                        V : IEEE_Float_64;
-                        Radix : Positive := 10)
+                        V : IEEE_Float_64)
    is
       pragma Assert (Str'First = 1);
 
@@ -618,7 +811,6 @@ package body Grt.Fcvt is
       --  Normal or denormal float.
       Len := 0;
 
-      Ctxt.B := Radix;
       Ctxt.F.N := 2;
       Ctxt.F.V (1) := Unsigned_32 (M and 16#ffff_ffff#);
       Ctxt.F.V (2) := Unsigned_32 (Shift_Right (M, 32) and 16#ffff_ffff#);
@@ -636,7 +828,16 @@ package body Grt.Fcvt is
 
          Ctxt.Is_Emin := True;
          Ctxt.Is_Pow2 := False; --  Not needed.
-         Ctxt.Ge_One := False;
+
+         --  Compute len(M).  Don't use a dichotomy as the distribution is
+         --  not uniform but exponential.
+         Ctxt.Log2v := -1022 - 53;
+         for I in reverse 0 .. 51 loop
+            if M >= Shift_Left (1, I) then
+               Ctxt.Log2v := -1022 - 53 + I + 1;
+               exit;
+            end if;
+         end loop;
       else
          --  Normal.
          Ctxt.E := E - 1023 - 52;
@@ -651,15 +852,17 @@ package body Grt.Fcvt is
 
          Ctxt.Is_Emin := False;
          Ctxt.Is_Pow2 := M = 0;
-         Ctxt.Ge_One := E = 1023;
+         Ctxt.Log2v := E - 1023;
       end if;
 
       pragma Assert (Bignum_Is_Valid (Ctxt.F));
 
       First := Len;
 
+      --  At this point, the number is represented as:
+      --  F * 2**K
       if Ctxt.F.N = 0 then
-         --  Zero is special
+         --  Zero is special, handle it directly.
          Append (Str, Len, '0');
          Ctxt.K := 1;
       else
@@ -711,4 +914,177 @@ package body Grt.Fcvt is
          end loop;
       end;
    end To_String;
+
+   --  Input is: (-1)**S * M * 2**E
+   function Pack (M : Unsigned_64;
+                  E : Integer;
+                  S : Boolean) return IEEE_Float_64
+   is
+      function To_IEEE_Float_64 is new Ada.Unchecked_Conversion
+        (Unsigned_64, IEEE_Float_64);
+      T : Unsigned_64;
+   begin
+      pragma Assert (M < 16#20_00_00_00_00_00_00#);
+      if M = 0 then
+         T := 0;
+      else
+         pragma Assert (M >= 16#10_00_00_00_00_00_00#);
+         --  Note: input is (-1)**S * 1.FFFFF... * 2**(E + 52)
+         if E + 52 + 1023 >= 2047 then
+            --  Above greatest IEEE number, use Inf.
+            T := 16#7ff_0000000000000#;
+         elsif E + 52 + 1023 < 1 then
+            --  Denormal
+            if E + 52 + 1023 < -52 then
+               --  Below small IEEE number, use 0
+               T := 0;
+            else
+               --  Denormal
+               T := Shift_Right (M, 52 + E + 52 + 1023);
+            end if;
+         else
+            --  Normal
+            T := M and 16#f_ff_ff_ff_ff_ff_ff#;
+            T := T or Shift_Left (Unsigned_64 (E + 52 + 1023), 52);
+         end if;
+      end if;
+
+      if S then
+         T := T or Shift_Left (1, 63);
+      end if;
+
+      return To_IEEE_Float_64 (T);
+   end Pack;
+
+   --  Return (-1)**Neg * F * BASE**EXP to a float.
+   function To_Float_64
+     (Neg : Boolean; F : Bignum; Base : Positive; Exp : Integer)
+     return IEEE_Float_64
+   is
+      M : Unsigned_64;
+      T : Bignum;
+      Frac : Bignum;
+      E : Integer;
+   begin
+      if F.N = 0 then
+         --  0 is always special...
+         M := 0;
+         E := 0;
+      elsif Exp >= 0 then
+         --  TODO: Multiply by 2**EXP * 5**EXP
+         Frac := Bignum_Mul (F, Bignum_Pow (Base, Exp));
+         Bignum_To_Fp (Frac, 53, M, E);
+      else
+         T := Bignum_Pow (Base, -Exp);
+         --  M = F / 10**-Exp
+         --    = F / T
+         Frac := F;
+         Bignum_Divide_To_Fp (Frac, T, 53, M, E);
+      end if;
+
+      return Pack (M, E, Neg);
+   end To_Float_64;
+
+   function From_String (Str : String) return IEEE_Float_64
+   is
+      P : Positive;
+      C : Character;
+
+      Neg : Boolean;
+      Nbr_Digits : Natural;
+      Point_Position : Integer;
+
+      F : Bignum;
+      Exp : Integer;
+      Exp_Neg : Boolean;
+   begin
+      Neg := False;
+
+      P := Str'First;
+
+      --  A correctly formatted number has at least one character.
+
+      --  Leading (and optional) sign.
+      C := Str (P);
+      if C = '-' then
+         Neg := True;
+         P := P + 1;
+         C := Str (P);
+      elsif C = '+' then
+         P := P + 1;
+         C := Str (P);
+      end if;
+
+      Nbr_Digits := 0;
+      Point_Position := -1;
+      F.N := 0;
+      loop
+         case C is
+            when '0' .. '9' =>
+               F := Bignum_Mul_Int
+                 (F, 10, Character'Pos (C) - Character'Pos ('0'));
+               Nbr_Digits := Nbr_Digits + 1;
+            when '.' =>
+               Point_Position := Nbr_Digits;
+            when '_' =>
+               null;
+            when 'e' | 'E' =>
+               Exp := 0;
+               exit;
+            when others =>
+               raise Constraint_Error;
+         end case;
+         P := P + 1;
+         if P > Str'Last then
+            Exp := -1;
+            exit;
+         end if;
+         C := Str (P);
+      end loop;
+
+      if Exp = 0 then
+         P := P + 1;
+         C := Str (P);
+
+         --  Sign of the exponent.
+         Exp_Neg := False;
+         if C = '-' then
+            Exp_Neg := True;
+            P := P + 1;
+            C := Str (P);
+         elsif C = '+' then
+            P := P + 1;
+            C := Str (P);
+         end if;
+
+         --  Exponent.
+         loop
+            case C is
+               when '0' .. '9' =>
+                  Exp := Exp * 10 + Character'Pos (C) - Character'Pos ('0');
+               when '_' =>
+                  null;
+               when others =>
+                  raise Constraint_Error;
+            end case;
+            P := P + 1;
+            exit when P > Str'Last;
+            C := Str (P);
+         end loop;
+
+         if Exp_Neg then
+            Exp := -Exp;
+         end if;
+      else
+         Exp := 0;
+      end if;
+
+      if Point_Position /= -1 then
+         Exp := Exp - (Nbr_Digits - Point_Position);
+      end if;
+
+      --  The internal representation of the number is:
+      --  F * 10**EXP
+      return To_Float_64 (Neg, F, 10, Exp);
+   end From_String;
 end Grt.Fcvt;

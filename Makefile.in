@@ -103,7 +103,7 @@ copy-sources: copy-sources.$(backend)
 Makefile: $(srcdir)/Makefile.in
 	./config.status
 
-GHDL_COMMON_INCFLAGS=-aI$(srcdir)/src -aI$(srcdir)/src/vhdl -aI$(srcdir)/src/psl -aI$(srcdir)/src/vhdl/translate
+GHDL_COMMON_INCFLAGS=-aI$(srcdir)/src -aI$(srcdir)/src/vhdl -aI$(srcdir)/src/grt -aI$(srcdir)/src/psl -aI$(srcdir)/src/vhdl/translate
 
 GRTSRCDIR=$(srcdir)/src/grt
 include $(GRTSRCDIR)/Makefile.inc
@@ -126,7 +126,7 @@ version.ads: version.tmp
 
 all.mcode: ghdl_mcode$(EXEEXT) libs.vhdl.mcode all.vpi
 
-GHDL_MCODE_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/grt -aI$(srcdir)/src/ortho -aI$(srcdir)/src/ortho/mcode
+GHDL_MCODE_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/ortho -aI$(srcdir)/src/ortho/mcode
 
 ghdl_mcode$(EXEEXT): GRT_FLAGS+=-DWITH_GNAT_RUN_TIME
 ghdl_mcode$(EXEEXT): $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) $(ORTHO_DEPS) \
@@ -167,6 +167,8 @@ copy-sources.gcc: version.ads
 	$(CP) -p $(srcdir)/src/vhdl/*.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/vhdl/translate/*.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/psl/*.ad? $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/src/grt/grt.ad? $(gcc_vhdl_dir)
+	$(CP) -p $(srcdir)/src/grt/grt-fcvt.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/ortho/*.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/ortho/gcc/*.ad? $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/src/ortho/gcc/*.c $(gcc_vhdl_dir)
@@ -235,7 +237,7 @@ oread-gcc$(EXEEXT): force
 
 #################### For llvm backend ##############################
 
-GHDL_LLVM_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/grt -aI$(srcdir)/src/ortho -aI$(srcdir)/src/ortho/$(llvm_be)
+GHDL_LLVM_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/ortho -aI$(srcdir)/src/ortho/$(llvm_be)
 
 all.llvm: ghdl1-llvm$(EXEEXT) ghdl_llvm$(EXEEXT) grt-all libs.vhdl.llvm all.vpi
 
@@ -285,7 +287,7 @@ install.llvm: install.llvm.program install.vhdllib install.grt install.vpi
 
 ################ For simul (no code generation, interpretation) ##########
 
-GHDL_SIMUL_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/vhdl/simulate -aI$(srcdir)/src/synth -aI$(srcdir)/src/grt
+GHDL_SIMUL_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/vhdl/simulate -aI$(srcdir)/src/synth
 
 ghdl_simul$(EXEEXT): $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) version.ads force
 	$(GNATMAKE) $(GHDL_SIMUL_INCFLAGS) $(GNATFLAGS) -gnat12 ghdl_simul $(GNAT_BARGS) -largs $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
@@ -295,7 +297,7 @@ libs.vhdl.simul: ghdl_simul$(EXEEXT)
 
 ################ mhdlsim (library for the vhdl part) ####################
 
-GHDL_MHDLSIM_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/mhdlsim -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/vhdl/simulate -aI$(srcdir)/src/grt
+GHDL_MHDLSIM_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/mhdlsim -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/vhdl/simulate
 
 libmhdlsimvhdl.a:  $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) version.ads force
 	$(GNATMAKE) -c mhdlsim $(GNATFLAGS) $(GHDL_MHDLSIM_INCFLAGS)
@@ -307,7 +309,7 @@ libmhdlsimvhdl.a:  $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) version.ads force
 
 ################ ghdlsynth library ######################################
 
-GHDL_SYNTHLIB_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/synth -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/vhdl/simulate -aI$(srcdir)/src/grt
+GHDL_SYNTHLIB_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/synth -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/vhdl/simulate
 
 libghdlsynth.a: $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) version.ads force
 	$(GNATMAKE) -c libghdlsynth $(GNATFLAGS) -gnat12 $(GHDL_SYNTHLIB_INCFLAGS)
