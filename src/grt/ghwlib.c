@@ -1345,6 +1345,31 @@ ghw_get_value (char *buf, int len, union ghw_val *val, union ghw_type *type)
     }
 }
 
+static int
+is_skip_signal (int *signals_to_keep, int nb_signals_to_keep, int signal)
+{
+  int i;
+
+  for (i = 0; i < nb_signals_to_keep; ++i)
+    {
+      if (signal==signals_to_keep[i])
+        return 0;
+    }
+  return 1;
+}
+
+void
+ghw_filter_values (struct ghw_handler *h, int *signals_to_keep, int nb_signals_to_keep)
+{
+  int i;
+
+  for (i = 0; i < h->nbr_sigs; ++i)
+    {
+      struct ghw_sig *s = &(h->sigs[i]);
+      s->skip = is_skip_signal (signals_to_keep, nb_signals_to_keep, i);
+    }
+}
+
 void
 ghw_disp_values (struct ghw_handler *h)
 {
@@ -1353,7 +1378,7 @@ ghw_disp_values (struct ghw_handler *h)
   for (i = 0; i < h->nbr_sigs; i++)
     {
       struct ghw_sig *s = &h->sigs[i];
-      if (s->type != NULL)
+      if (s->type != NULL && !(s->skip))
 	{
 	  printf ("#%d: ", i);
 	  ghw_disp_value (s->val, s->type);
