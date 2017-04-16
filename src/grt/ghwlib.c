@@ -1346,60 +1346,63 @@ ghw_get_value (char *buf, int len, union ghw_val *val, union ghw_type *type)
     }
 }
 
-static char is_skip_signal(
-    int *signals_to_keep,
-    int nb_signals_to_keep,
-    int signal
-) {
-    int i;
-    for(i=0; i<nb_signals_to_keep; ++i) {
-        if(signal==signals_to_keep[i]) {
-            return 0;
-        }
+static char
+is_skip_signal (int *signals_to_keep, int nb_signals_to_keep, int signal)
+{
+  int i;
+  for (i = 0; i < nb_signals_to_keep; ++i)
+    {
+      if (signal == signals_to_keep[i])
+	{
+	  return 0;
+	}
     }
-    return 1;
+  return 1;
 }
 
-void ghw_filter_signals(
-    struct ghw_handler *h,
-    int    *signals_to_keep,
-    int    nb_signals_to_keep
-) {
-    int i;
-    if(0<nb_signals_to_keep && 0!=signals_to_keep) {
-        if(0==h->skip_sigs) {
-            h->skip_sigs = (char*)malloc(sizeof(char)*h->nbr_sigs);
-        }
-        for(i=0; i<h->nbr_sigs; ++i) {
-            h->skip_sigs[i] = is_skip_signal(
-                signals_to_keep,
-                nb_signals_to_keep,
-                i
-            );
-        }
-    } else {
-        if(0!=h->skip_sigs) {
-            free(h->skip_sigs);
-            h->skip_sigs = 0;
-        }
+void
+ghw_filter_signals (struct ghw_handler *h,
+		    int *signals_to_keep, int nb_signals_to_keep)
+{
+  int i;
+  if (0 < nb_signals_to_keep && 0 != signals_to_keep)
+    {
+      if (0 == h->skip_sigs)
+	{
+	  h->skip_sigs = (char *) malloc (sizeof (char) * h->nbr_sigs);
+	}
+      for (i = 0; i < h->nbr_sigs; ++i)
+	{
+	  h->skip_sigs[i] = is_skip_signal (signals_to_keep,
+					    nb_signals_to_keep, i);
+	}
     }
-}
-
-void ghw_disp_values(
-    struct ghw_handler *h
-) {
-    int i;
-    for (i = 0; i < h->nbr_sigs; i++) {
-        struct ghw_sig *s = &h->sigs[i];
-        int skip = (0!=h->skip_sigs && (0!=h->skip_sigs[i]));
-        if(s->type != NULL && !skip) {
-            printf ("#%d: ", i);
-            ghw_disp_value (s->val, s->type);
-            printf ("\n");
-        }
+  else
+    {
+      if (0 != h->skip_sigs)
+	{
+	  free (h->skip_sigs);
+	  h->skip_sigs = 0;
+	}
     }
 }
 
+void
+ghw_disp_values (struct ghw_handler *h)
+{
+  int i;
+  for (i = 0; i < h->nbr_sigs; i++)
+    {
+      struct ghw_sig *s = &h->sigs[i];
+      int skip = (0 != h->skip_sigs && (0 != h->skip_sigs[i]));
+      if (s->type != NULL && !skip)
+	{
+	  printf ("#%d: ", i);
+	  ghw_disp_value (s->val, s->type);
+	  printf ("\n");
+	}
+    }
+}
 int
 ghw_read_directory (struct ghw_handler *h)
 {
