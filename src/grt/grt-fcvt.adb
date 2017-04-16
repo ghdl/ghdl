@@ -574,26 +574,6 @@ package body Grt.Fcvt is
       Len := Len + 1;
    end Append;
 
-   procedure Insert (Str : in out String;
-                     Len : in out Natural;
-                     Pos : Positive;
-                     C : Character)
-   is
-      Prev_C, C1 : Character;
-   begin
-      if Pos > Str'Length then
-         return;
-      end if;
-
-      C1 := C;
-      for I in Pos .. Positive'Min (Str'Length, Len) loop
-         Prev_C := Str (I);
-         Str (I) := C1;
-         C1 := Prev_C;
-      end loop;
-      Append (Str, Len, C1);
-   end Insert;
-
    procedure Append_Digit (Str : in out String;
                            Len : in out Natural;
                            D : Natural) is
@@ -876,65 +856,6 @@ package body Grt.Fcvt is
       end if;
 
       Exp := Ctxt.K;
-   end To_String;
-
-   procedure To_String (Str : out String;
-                        Len : out Natural;
-                        V : IEEE_Float_64)
-   is
-      Is_Num : Boolean;
-      Is_Neg : Boolean;
-      Exp : Integer;
-      First : Positive;
-   begin
-      To_String (Str, Len, Is_Num, Is_Neg, Exp, V);
-
-      --  Handle sign.
-      if Is_Neg then
-         First := 2;
-         Insert (Str, Len, 1, '-');
-      else
-         First := 1;
-      end if;
-
-      if not Is_Num then
-         return;
-      end if;
-
-      --  At this point STR contains the minus sign (if any) and digits.
-      --  The value is 0.NNNN * 10**K
-
-      --  Formatting.
-      --  Insert the dot.
-      Insert (Str, Len, First + 1, '.');
-      Exp := Exp - 1;
-
-      Append (Str, Len, 'e');
-      declare
-         K : Integer;
-         T : Integer;
-         Den : Natural;
-      begin
-         K := Exp;
-         if K < 0 then
-            Append (Str, Len, '-');
-            K := -K;
-         end if;
-         if K >= 100 then
-            Den := 100;
-         elsif K >= 10 then
-            Den := 10;
-         else
-            Den := 1;
-         end if;
-         loop
-            T := K / Den;
-            Append_Digit (Str, Len, T);
-            K := K - T * Den;
-            exit when Den = 1;
-            Den := Den / 10;
-         end loop;
-      end;
    end To_String;
 
    --  Input is: (-1)**S * M * 2**E

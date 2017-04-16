@@ -56,15 +56,6 @@ package Grt.Fcvt is
    procedure Format_Image
      (Str : out String; Last : out Natural; N : IEEE_Float_64);
 
-   --  Convert V to 10-based number stored (in ASCII) in STR/LEN [using at most
-   --  NDIGITS digits.]
-   --  LEN is the number of characters needed (so it may be greater than
-   --   STR'Length).
-   --  Requires STR'First = 1.
-   procedure To_String (Str : out String;
-                        Len : out Natural;
-                        V : IEEE_Float_64);
-
    --  Input format is [+-]int[.int][e[+-]int]
    --  where int is digit { _ digit }
    --    and [+-] means optional + or -.
