@@ -274,7 +274,7 @@ main (int argc, char **argv)
                     {
                       if (!filter_done)
                         {
-                          ghw_filter_values (hp, signal_set, nb_signals);
+                          ghw_filter_signals (hp, signal_set, nb_signals);
                           filter_done = 1;
                         }
                       ghw_disp_values (hp);
