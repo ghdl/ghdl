@@ -16,6 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Ada.Unchecked_Deallocation;
+with Interfaces;
 with Scanner;
 with Errorout; use Errorout;
 with Name_Table; use Name_Table;
@@ -25,6 +26,7 @@ with Std_Package; use Std_Package;
 with Flags; use Flags;
 with Std_Names;
 with Ada.Characters.Handling;
+with Grt.Fcvt;
 
 package body Evaluation is
    --  If FORCE is true, always return a literal.
@@ -1763,87 +1765,16 @@ package body Evaluation is
       use Str_Table;
       Id : String8_Id;
 
-      --  Sign (1) + digit (1) + dot (1) + digits (15) + exp (1) + sign (1)
+      --  Sign (1) + digit (1) + dot (1) + digits (15) + 'e' (1) + sign (1)
       --  + exp_digits (4) -> 24.
       Str : String (1 .. 25);
       P : Natural;
-      V : Iir_Fp64;
-      Vd : Iir_Fp64;
-      Exp : Integer;
-      D : Integer;
-      B : Boolean;
 
       Res : Iir;
    begin
-      --  Handle sign.
-      if Val < 0.0 then
-         Str (1) := '-';
-         P := 1;
-         V := -Val;
-      else
-         P := 0;
-         V := Val;
-      end if;
+      P := Str'First;
 
-      --  Compute the mantissa.
-      --  FIXME: should do a dichotomy.
-      if V  = 0.0 then
-         Exp := 0;
-      elsif V < 1.0 then
-         Exp := -1;
-         while V * (10.0 ** (-Exp)) < 1.0 loop
-            Exp := Exp - 1;
-         end loop;
-      else
-         Exp := 0;
-         while V / (10.0 ** Exp) >= 10.0 loop
-            Exp := Exp + 1;
-         end loop;
-      end if;
-
-      --  Normalize VAL: in [0; 10[
-      if Exp >= 0 then
-         V := V / (10.0 ** Exp);
-      else
-         V := V * 10.0 ** (-Exp);
-      end if;
-
-      for I in 0 .. 15 loop
-         Vd := Iir_Fp64'Truncation (V);
-         P := P + 1;
-         Str (P) := Character'Val (48 + Integer (Vd));
-         V := (V - Vd) * 10.0;
-
-         if I = 0 then
-            P := P + 1;
-            Str (P) := '.';
-         end if;
-         exit when I > 0 and V < 10.0 ** (I + 1 - 15);
-      end loop;
-
-      if Exp /= 0 then
-         --  LRM93 14.3
-         --  if the exponent is present, the `e' is written as a lower case
-         --  character.
-         P := P + 1;
-         Str (P) := 'e';
-
-         if Exp < 0 then
-            P := P + 1;
-            Str (P) := '-';
-            Exp := -Exp;
-         end if;
-         B := False;
-         for I in 0 .. 4 loop
-            D := (Exp / 10000) mod 10;
-            if D /= 0 or B or I = 4 then
-               P := P + 1;
-               Str (P) := Character'Val (48 + D);
-               B := True;
-            end if;
-            Exp := (Exp - D * 10000) * 10;
-         end loop;
-      end if;
+      Grt.Fcvt.Format_Image (Str, P, Interfaces.IEEE_Float_64 (Val));
 
       Id := Create_String8;
       for I in 1 .. P loop

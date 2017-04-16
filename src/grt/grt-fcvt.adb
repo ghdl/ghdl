@@ -574,6 +574,26 @@ package body Grt.Fcvt is
       Len := Len + 1;
    end Append;
 
+   procedure Insert (Str : in out String;
+                     Len : in out Natural;
+                     Pos : Positive;
+                     C : Character)
+   is
+      Prev_C, C1 : Character;
+   begin
+      if Pos > Str'Length then
+         return;
+      end if;
+
+      C1 := C;
+      for I in Pos .. Positive'Min (Str'Length, Len) loop
+         Prev_C := Str (I);
+         Str (I) := C1;
+         C1 := Prev_C;
+      end loop;
+      Append (Str, Len, C1);
+   end Insert;
+
    procedure Append_Digit (Str : in out String;
                            Len : in out Natural;
                            D : Natural) is
@@ -764,19 +784,11 @@ package body Grt.Fcvt is
    end Dragon4;
 
    procedure Output_Nan_Inf (Str : out String;
-                             Len : out Natural;
-                             Is_Inf : Boolean;
-                             S : Boolean) is
+                             Len : in out Natural;
+                             Is_Inf : Boolean) is
    begin
-      Len := 0;
-
       if Is_Inf then
          --  Infinite
-         if S then
-            Append (Str, Len, '-');
-         else
-            Append (Str, Len, '+');
-         end if;
          Append (Str, Len, 'i');
          Append (Str, Len, 'n');
          Append (Str, Len, 'f');
@@ -789,6 +801,9 @@ package body Grt.Fcvt is
 
    procedure To_String (Str : out String;
                         Len : out Natural;
+                        Is_Num : out Boolean;
+                        Is_Neg : out Boolean;
+                        Exp : out Integer;
                         V : IEEE_Float_64)
    is
       pragma Assert (Str'First = 1);
@@ -800,16 +815,19 @@ package body Grt.Fcvt is
       E : constant Integer := Integer (Shift_Right (V_Bits, 52) and 16#7_ff#);
 
       Ctxt : Fcvt_Context;
-      First : Natural;
    begin
+      Is_Neg := S;
+      Len := 0;
+
       --  Handle NaN & Inf
       if E = 2047 then
-         Output_Nan_Inf (Str, Len, M = 0, S);
+         Output_Nan_Inf (Str, Len, M = 0);
+         Is_Num := False;
          return;
       end if;
 
       --  Normal or denormal float.
-      Len := 0;
+      Is_Num := True;
 
       Ctxt.F.N := 2;
       Ctxt.F.V (1) := Unsigned_32 (M and 16#ffff_ffff#);
@@ -820,11 +838,6 @@ package body Grt.Fcvt is
 
          --  Bignum digits may be 0.
          Bignum_Normalize (Ctxt.F);
-
-         --  Display sign.
-         if S then
-            Append (Str, Len, '-');
-         end if;
 
          Ctxt.Is_Emin := True;
          Ctxt.Is_Pow2 := False; --  Not needed.
@@ -845,19 +858,12 @@ package body Grt.Fcvt is
          --  Implicit leading 1.
          Ctxt.F.V (2) := Ctxt.F.V (2) or 16#10_00_00#;
 
-         --  Display sign.
-         if S then
-            Append (Str, Len, '-');
-         end if;
-
          Ctxt.Is_Emin := False;
          Ctxt.Is_Pow2 := M = 0;
          Ctxt.Log2v := E - 1023;
       end if;
 
       pragma Assert (Bignum_Is_Valid (Ctxt.F));
-
-      First := Len;
 
       --  At this point, the number is represented as:
       --  F * 2**K
@@ -869,23 +875,39 @@ package body Grt.Fcvt is
          Dragon4 (Str, Len, Ctxt);
       end if;
 
+      Exp := Ctxt.K;
+   end To_String;
+
+   procedure To_String (Str : out String;
+                        Len : out Natural;
+                        V : IEEE_Float_64)
+   is
+      Is_Num : Boolean;
+      Is_Neg : Boolean;
+      Exp : Integer;
+      First : Positive;
+   begin
+      To_String (Str, Len, Is_Num, Is_Neg, Exp, V);
+
+      --  Handle sign.
+      if Is_Neg then
+         First := 2;
+         Insert (Str, Len, 1, '-');
+      else
+         First := 1;
+      end if;
+
+      if not Is_Num then
+         return;
+      end if;
+
+      --  At this point STR contains the minus sign (if any) and digits.
+      --  The value is 0.NNNN * 10**K
+
       --  Formatting.
       --  Insert the dot.
-      declare
-         C, Prev_C : Character;
-      begin
-         if Len > First + 1 then
-            C := '.';
-            for I in First + 2 .. Len loop
-               Prev_C := Str (I);
-               Str (I) := C;
-               C := Prev_C;
-            end loop;
-            Len := Len + 1;
-            Str (Len) := C;
-         end if;
-         Ctxt.K := Ctxt.K - 1;
-      end;
+      Insert (Str, Len, First + 1, '.');
+      Exp := Exp - 1;
 
       Append (Str, Len, 'e');
       declare
@@ -893,7 +915,7 @@ package body Grt.Fcvt is
          T : Integer;
          Den : Natural;
       begin
-         K := Ctxt.K;
+         K := Exp;
          if K < 0 then
             Append (Str, Len, '-');
             K := -K;
@@ -1087,4 +1109,76 @@ package body Grt.Fcvt is
       --  F * 10**EXP
       return To_Float_64 (Neg, F, 10, Exp);
    end From_String;
+
+   procedure Format_Image
+     (Str : out String; Last : out Natural; N : IEEE_Float_64)
+   is
+      P : Natural;
+      S : String (1 .. 20);
+      Len : Natural;
+      Is_Num : Boolean;
+      Is_Neg : Boolean;
+      Exp : Integer;
+   begin
+      To_String (S, Len, Is_Num, Is_Neg, Exp, N);
+
+      --  The sign.
+      P := Str'First;
+      if Is_Neg then
+         Str (P) := '-';
+         P := P + 1;
+      end if;
+
+      --  Non numbers
+      if not Is_Num then
+         Str (P .. P + Len - 1) := S (1 .. Len);
+         Last := P + Len - 1;
+         return;
+      end if;
+
+      --  Mantissa N.NNNNN
+      Str (P) := S (1);
+      Str (P + 1) := '.';
+      Exp := Exp - 1;
+      if Len = 1 then
+         Str (P + 2) := '0';
+         P := P + 3;
+      else
+         Str (P + 2 .. P + 2 + Len - 2) := S (2 .. Len);
+         P := P + 2 + Len - 2 + 1;
+      end if;
+
+      --  Exponent
+      if Exp /= 0 then
+         --  LRM93 14.3
+         --  if the exponent is present, the `e' is written as a lower case
+         --  character.
+         Str (P) := 'e';
+         P := P + 1;
+
+         if Exp < 0 then
+            Str (P) := '-';
+            P := P + 1;
+            Exp := -Exp;
+         end if;
+         declare
+            B : Boolean;
+            D : Natural;
+         begin
+            B := False;
+            for I in 0 .. 4 loop
+               D := (Exp / 10000) mod 10;
+               if D /= 0 or B or I = 4 then
+                  Str (P) := Character'Val (48 + D);
+                  P := P + 1;
+                  B := True;
+               end if;
+               Exp := (Exp - D * 10000) * 10;
+            end loop;
+         end;
+      end if;
+
+      Last := P - 1;
+   end Format_Image;
+
 end Grt.Fcvt;

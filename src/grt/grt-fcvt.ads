@@ -30,6 +30,32 @@
 with Interfaces; use Interfaces;
 
 package Grt.Fcvt is
+   pragma Preelaborate;
+
+   --  Convert (without formatting) number V.
+   --  The result is LEN characters stored to STR.  If STR is too short, then
+   --  the output is truncated but LEN contains the number of characters that
+   --  would be needed.  The procedure assumes STR'First = 1.
+   --  The digits are the digits after the point.  The output has to be read as
+   --   0.NNNNN * 10**EXP
+   --  IS_NUM is true if V is a number and false for NaN or Infinite.
+   --  IS_NEG is true if the number if negative.
+   procedure To_String (Str : out String;
+                        Len : out Natural;
+                        Is_Num : out Boolean;
+                        Is_Neg : out Boolean;
+                        Exp : out Integer;
+                        V : IEEE_Float_64);
+
+   --  Formatting.
+
+   --  For 'Image
+   --  STR must have at least 24 characters:
+   --  Sign (1) + digit (1) + dot (1) + digits (15) + 'e' (1) + sign (1)
+   --  + exp_digits (4) -> 24.
+   procedure Format_Image
+     (Str : out String; Last : out Natural; N : IEEE_Float_64);
+
    --  Convert V to 10-based number stored (in ASCII) in STR/LEN [using at most
    --  NDIGITS digits.]
    --  LEN is the number of characters needed (so it may be greater than
