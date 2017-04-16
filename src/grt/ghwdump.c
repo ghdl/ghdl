@@ -18,6 +18,7 @@
 */
 
 #include <stdio.h>
+#include <assert.h>
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
@@ -35,8 +36,98 @@ usage (void)
 	  " -h  display hierarchy\n"
 	  " -T  display time\n"
 	  " -s  display signals (and time)\n"
+	  " -f  <lst> list of signals to display (default: all, example: -f 1,3,5-7,21-33)\n"
 	  " -l  display list of sections\n"
 	  " -v  verbose\n");
+}
+
+static void add_single_signal(
+    int **signalSet,
+    int *nbSignals,
+    int signal
+) {
+    assert(NULL!=signalSet);
+    assert(NULL!=nbSignals);
+    assert(0<=nbSignals[0]);
+    assert(0<=signal);
+
+    int newSize = (1 + nbSignals[0]);
+    /*printf("adding signal %6d set of signals to display\n", signal);*/
+    signalSet[0] = (int*)realloc(signalSet[0], newSize*sizeof(int));
+    signalSet[0][nbSignals[0]] = signal;
+    nbSignals[0] = newSize;
+}
+
+static void add_signal_range(
+    int **signalSet,
+    int *nbSignals,
+    const char *s,
+    const char *e
+) {
+
+    int i;
+    int rangeSize;
+    int rangeEnd = -1;
+    int rangeStart = -1;
+    int bytesMatched = -1;
+    int expected = ((e - s) - 1);
+    int itemsMatched =sscanf(
+        s,
+        "%d-%d%n",
+        &rangeStart,
+        &rangeEnd,
+        &bytesMatched
+    );
+    if(2==itemsMatched && expected==bytesMatched) {
+        if(rangeEnd<rangeStart) {
+            int t = rangeEnd;
+            rangeEnd = rangeStart;
+            rangeStart = t;
+        }
+    } else {
+        itemsMatched = sscanf(
+            s,
+            "%d%n",
+            &rangeStart,
+            &bytesMatched
+        );
+        if(1==itemsMatched && expected==bytesMatched) {
+            if(0<=rangeStart) {
+                rangeEnd = rangeStart;
+            }
+        }
+    }
+
+    rangeSize = (rangeEnd - rangeStart);
+    if(rangeEnd<0 || rangeStart<0 || rangeSize<0) {
+        fprintf(
+            stderr,
+            "incorrect signal range specification\"%s\" found in command line, aborting\n",
+            s
+        );
+        exit(1);
+    }
+
+    for(i=rangeStart; i<=rangeEnd; ++i) {
+        add_single_signal(signalSet, nbSignals, i);
+    }
+}
+
+static void add_signals(
+    int **signalSet,
+    int *nbSignals,
+    const char *arg
+) {
+    int c = -1;
+    const char *e;
+    const char *s = e = arg;
+    while(0!=c) {
+        c = *(e++);
+        if(','==c || 0==c) {
+            add_signal_range(signalSet, nbSignals, s, e);
+            s = e;
+        }
+    }
 }
 
 int
@@ -49,6 +140,9 @@ main (int argc, char **argv)
   int flag_disp_signals;
   int flag_list;
   int flag_verbose;
+  int nb_signals;
+  int *signal_set;
+  int filter_done;
   int eof;
   enum ghw_sm_type sm;
 
@@ -59,12 +153,15 @@ main (int argc, char **argv)
   flag_disp_signals = 0;
   flag_list = 0;
   flag_verbose = 0;
+  nb_signals = 0;
+  signal_set = NULL;
+  filter_done = 0;
 
   while (1)
     {
       int c;
 
-      c = getopt (argc, argv, "thTslv");
+      c = getopt (argc, argv, "thTslvf:");
       if (c == -1)
 	break;
       switch (c)
@@ -81,6 +178,9 @@ main (int argc, char **argv)
 	case 's':
 	  flag_disp_signals = 1;
 	  flag_disp_time = 1;
+	  break;
+	case 'f':
+	  add_signals(&signal_set, &nb_signals, optarg);
 	  break;
 	case 'l':
 	  flag_list = 1;
@@ -171,7 +271,14 @@ main (int argc, char **argv)
 		  if (flag_disp_time)
 		    printf ("Time is %lld fs\n", hp->snap_time);
 		  if (flag_disp_signals)
-		    ghw_disp_values (hp);
+                    {
+                      if (!filter_done)
+                        {
+                          ghw_filter_values (hp, signal_set, nb_signals);
+                          filter_done = 1;
+                        }
+                      ghw_disp_values (hp);
+                    }
 		  break;
 		case ghw_res_eof:
 		  eof = 1;
