@@ -41,92 +41,87 @@ usage (void)
 	  " -v  verbose\n");
 }
 
-static void add_single_signal(
-    int **signalSet,
-    int *nbSignals,
-    int signal
-) {
-    assert(NULL!=signalSet);
-    assert(NULL!=nbSignals);
-    assert(0<=nbSignals[0]);
-    assert(0<=signal);
+static void
+add_single_signal (int **signalSet, int *nbSignals, int signal)
+{
+  assert (NULL != signalSet);
+  assert (NULL != nbSignals);
+  assert (0 <= nbSignals[0]);
+  assert (0 <= signal);
 
-    int newSize = (1 + nbSignals[0]);
-    /*printf("adding signal %6d set of signals to display\n", signal);*/
-    signalSet[0] = (int*)realloc(signalSet[0], newSize*sizeof(int));
-    signalSet[0][nbSignals[0]] = signal;
-    nbSignals[0] = newSize;
+  int newSize = (1 + nbSignals[0]);
+  /*printf("adding signal %6d set of signals to display\n", signal); */
+  signalSet[0] = (int *) realloc (signalSet[0], newSize * sizeof (int));
+  signalSet[0][nbSignals[0]] = signal;
+  nbSignals[0] = newSize;
 }
 
-static void add_signal_range(
-    int **signalSet,
-    int *nbSignals,
-    const char *s,
-    const char *e
-) {
+static void
+add_signal_range (int **signalSet,
+		  int *nbSignals, const char *s, const char *e)
+{
 
-    int i;
-    int rangeSize;
-    int rangeEnd = -1;
-    int rangeStart = -1;
-    int bytesMatched = -1;
-    int expected = ((e - s) - 1);
-    int itemsMatched =sscanf(
-        s,
-        "%d-%d%n",
-        &rangeStart,
-        &rangeEnd,
-        &bytesMatched
-    );
-    if(2==itemsMatched && expected==bytesMatched) {
-        if(rangeEnd<rangeStart) {
-            int t = rangeEnd;
-            rangeEnd = rangeStart;
-            rangeStart = t;
-        }
-    } else {
-        itemsMatched = sscanf(
-            s,
-            "%d%n",
-            &rangeStart,
-            &bytesMatched
-        );
-        if(1==itemsMatched && expected==bytesMatched) {
-            if(0<=rangeStart) {
-                rangeEnd = rangeStart;
-            }
-        }
+  int i;
+  int rangeSize;
+  int rangeEnd = -1;
+  int rangeStart = -1;
+  int bytesMatched = -1;
+  int expected = ((e - s) - 1);
+  int itemsMatched = sscanf (s,
+			     "%d-%d%n",
+			     &rangeStart,
+			     &rangeEnd,
+			     &bytesMatched);
+  if (2 == itemsMatched && expected == bytesMatched)
+    {
+      if (rangeEnd < rangeStart)
+	{
+	  int t = rangeEnd;
+	  rangeEnd = rangeStart;
+	  rangeStart = t;
+	}
+    }
+  else
+    {
+      itemsMatched = sscanf (s, "%d%n", &rangeStart, &bytesMatched);
+      if (1 == itemsMatched && expected == bytesMatched)
+	{
+	  if (0 <= rangeStart)
+	    {
+	      rangeEnd = rangeStart;
+	    }
+	}
     }
 
-    rangeSize = (rangeEnd - rangeStart);
-    if(rangeEnd<0 || rangeStart<0 || rangeSize<0) {
-        fprintf(
-            stderr,
-            "incorrect signal range specification\"%s\" found in command line, aborting\n",
-            s
-        );
-        exit(1);
+  rangeSize = (rangeEnd - rangeStart);
+  if (rangeEnd < 0 || rangeStart < 0 || rangeSize < 0)
+    {
+      fprintf (stderr,
+	       "incorrect signal range specification\"%s\" found in command line, aborting\n",
+	       s);
+      exit (1);
     }
 
-    for(i=rangeStart; i<=rangeEnd; ++i) {
-        add_single_signal(signalSet, nbSignals, i);
+  for (i = rangeStart; i <= rangeEnd; ++i)
+    {
+      add_single_signal (signalSet, nbSignals, i);
     }
 }
 
-static void add_signals(
-    int **signalSet,
-    int *nbSignals,
-    const char *arg
-) {
-    int c = -1;
-    const char *e;
-    const char *s = e = arg;
-    while(0!=c) {
-        c = *(e++);
-        if(','==c || 0==c) {
-            add_signal_range(signalSet, nbSignals, s, e);
-            s = e;
-        }
+static void
+add_signals (int **signalSet, int *nbSignals, const char *arg)
+{
+  int c = -1;
+  const char *e;
+  const char *s = e = arg;
+  while (0 != c)
+    {
+      c = *(e++);
+      if (',' == c || 0 == c)
+	{
+	  add_signal_range (signalSet, nbSignals, s, e);
+	  s = e;
+	}
     }
 }
 
@@ -274,7 +269,7 @@ main (int argc, char **argv)
                     {
                       if (!filter_done)
                         {
-                          ghw_filter_values (hp, signal_set, nb_signals);
+                          ghw_filter_signals (hp, signal_set, nb_signals);
                           filter_done = 1;
                         }
                       ghw_disp_values (hp);

@@ -256,7 +256,6 @@ struct ghw_sig
 {
   union ghw_type *type;
   union ghw_val *val;
-  int skip;
 };
 
 enum ghw_hie_kind {
@@ -333,6 +332,7 @@ struct ghw_handler
 
   /* Non-composite (or basic) signals.  */
   int nbr_sigs;
+  char *skip_sigs;
   struct ghw_sig *sigs;
 
   /* Hierarchy.  */
@@ -359,7 +359,7 @@ void ghw_disp_hie (struct ghw_handler *h, struct ghw_hie *top);
 
 int ghw_read_base (struct ghw_handler *h);
 
-void ghw_filter_values (struct ghw_handler *h, int *signals_to_keep, int nb_signals_to_keep);
+void ghw_filter_signals (struct ghw_handler *h, int *signals_to_keep, int nb_signals_to_keep);
 
 void ghw_disp_values (struct ghw_handler *h);
 
