@@ -24,6 +24,7 @@
 --  covered by the GNU Public License.
 with Grt.Errors; use Grt.Errors;
 with Grt.Options;
+with Grt.Fcvt;
 
 package body Grt.Lib is
    --procedure Memcpy (Dst : Address; Src : Address; Size : Size_T);
@@ -270,6 +271,14 @@ package body Grt.Lib is
          return 1.0 / Res;
       end if;
    end Ghdl_Real_Exp;
+
+   function Textio_Read_Real (Str : Std_String_Ptr) return Ghdl_F64
+   is
+      subtype Str1 is String (1 .. Natural (Str.Bounds.Dim_1.Length));
+   begin
+      return Ghdl_F64 (Grt.Fcvt.From_String
+                         (Str1 (Str.Base (0 .. Str.Bounds.Dim_1.Length))));
+   end Textio_Read_Real;
 
    function Ghdl_Get_Resolution_Limit return Std_Time is
    begin

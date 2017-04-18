@@ -492,13 +492,14 @@ package body textio is
     write (l, to_hstring (value), justified, field);
   end Hwrite;
 --END-V08
-  
+
+  attribute foreign : string;                                  --V87
+
   procedure untruncated_text_read                              --V87
     (variable f : text; str : out string; len : out natural);  --V87
   procedure untruncated_text_read                              --!V87
     (file f : text; str : out string; len : out natural);      --!V87
 
-  attribute foreign : string;                                  --V87
   attribute foreign of untruncated_text_read : procedure is "GHDL intrinsic";
 
   procedure untruncated_text_read
@@ -923,57 +924,42 @@ package body textio is
       severity failure;
   end read;
 
+  function textio_read_real (s : string) return real;
+
+  attribute foreign of textio_read_real : function is "GHDL intrinsic";
+
+  function textio_read_real (s : string) return real is
+  begin
+    assert false report "must not be called" severity failure;
+    return 0.0;
+  end textio_read_real;
+
   procedure read (l: inout line; value: out real; good: out boolean)
   is
-    --  The result.
-    variable val : real;
-    --  True if the result is negative.
-    variable val_neg : boolean;
-
-    --  Number of digits after the dot.
-    variable nbr_dec : natural;
-
-    --  Value of the exponent.
-    variable exp : integer;
-    --  True if the exponent is negative.
-    variable exp_neg : boolean;
-
     --  The parsing is done with a state machine.
     --  LEADING: leading blank suppression.
     --  SIGN: a sign has been found.
     --  DIGITS: integer parts
-    --  DECIMALS: digits after the dot.
+    --  DECIMALS, DECIMALS2: digits after the dot.
     --  EXPONENT_SIGN: sign after "E"
     --  EXPONENT_1: first digit of the exponent.
     --  EXPONENT: digits of the exponent.
-    type state_t is (leading, sign, digits, decimals,
+    type state_t is (leading, sign, digits, decimals, decimals2,
 		     exponent_sign, exponent_1, exponent);
-    variable cur_state : state_t := leading;
+    variable state : state_t := leading;
 
-    --  Set VALUE to the result, and set GOOD to TRUE.
-    procedure set_value is
+    variable left : positive;
+
+    procedure set_value (right : positive; off : natural) is
     begin
-      good := true;
-
-      if exp_neg then
-	val := val * 10.0 ** (-exp);
+      if right > left then
+        value := textio_read_real (l (left to right - off));
       else
-	val := val * 10.0 ** exp;
+        value := textio_read_real (l (left downto right + off));
       end if;
-      if val_neg then
-	value := -val;
-      else
-	value := val;
-      end if;
+      good := True;
     end set_value;
-
   begin
-    --  Initialization.
-    val_neg := false;
-    nbr_dec := 1;
-    exp := 0;
-    exp_neg := false;
-
     --  By default, parsing has failed.
     good := false;
 
@@ -981,99 +967,89 @@ package body textio is
     --  Return immediatly in case of parse error.
     --  Trim L and call SET_VALUE and return in case of success.
     for i in l'range loop
-      case cur_state is
+      case state is
 	when leading =>
-	  case l(i) is
+          left := i;
+	  case l (i) is
 	    when ' '
 	      | NBSP	--!V87
 	      | ht =>
 	      null;
-	    when '+' =>
-	      cur_state := sign;
-	    when '-' =>
-	      val_neg := true;
-	      cur_state := sign;
+	    when '+' | '-' =>
+	      state := sign;
 	    when '0' to '9' =>
-	      val := real (char_to_nat (l(i)));
-	      cur_state := digits;
+	      state := digits;
 	    when others =>
 	      return;
 	  end case;
 	when sign =>
-	  case l(i) is
+	  case l (i) is
 	    when '0' to '9' =>
-	      val := real (char_to_nat (l(i)));
-	      cur_state := digits;
+	      state := digits;
 	    when others =>
 	      return;
 	  end case;
 	when digits =>
-	  case l(i) is
+	  case l (i) is
 	    when '0' to '9' =>
-	      val := val * 10.0 + real (char_to_nat (l(i)));
+              null;
 	    when '.' =>
-	      cur_state := decimals;
+	      state := decimals;
 	    when others =>
 	      --  A "." (dot) is required in the string.
 	      return;
 	  end case;
-	when decimals =>
-	  case l(i) is
+	when decimals | decimals2 =>
+	  case l (i) is
 	    when '0' to '9' =>
-	      val := val + real (char_to_nat (l(i))) / (10.0 ** nbr_dec);
-	      nbr_dec := nbr_dec + 1;
+	      state := decimals2;
 	    when 'e' | 'E' =>
 	      --  "nnn.E" is erroneous.
-	      if nbr_dec = 1 then
+              if state = decimals then
 		return;
 	      end if;
-	      cur_state := exponent_sign;
+	      state := exponent_sign;
 	    when others =>
 	      --  "nnn.XX" is erroneous.
-	      if nbr_dec = 1 then
+              if state = decimals then
 		return;
 	      end if;
-	      trim (l, i);
-	      set_value;
-	      return;
+              set_value (i, 1);
+              trim (l, i);
+              return;
 	  end case;
 	when exponent_sign =>
-	  case l(i) is
-	    when '+' =>
-	      cur_state := exponent_1;
-	    when '-' =>
-	      exp_neg := true;
-	      cur_state := exponent_1;
+	  case l (i) is
+	    when '+' | '-' =>
+	      state := exponent_1;
 	    when '0' to '9' =>
-	      exp := char_to_nat (l(i));
-	      cur_state := exponent;
+	      state := exponent;
 	    when others =>
 	      --  Error.
 	      return;
 	  end case;
 	when exponent_1 | exponent =>
-	  case l(i) is
+	  case l (i) is
 	    when '0' to '9' =>
-	      exp := exp * 10 + char_to_nat (l(i));
-	      cur_state := exponent;
+	      state := exponent;
 	    when others =>
+              set_value (i, 1);
 	      trim (l, i);
-	      set_value;
 	      return;
 	  end case;
       end case;
     end loop;
 
     --  End of string.
-    case cur_state is
+    case state is
       when leading | sign | digits =>
 	--  Erroneous.
 	return;
       when decimals =>
 	--  "nnn.XX" is erroneous.
-	if nbr_dec = 1 then
-	  return;
-	end if;
+        return;
+      when decimals2 =>
+        null;
       when exponent_sign =>
 	--  Erroneous ("NNN.NNNE")
 	return;
@@ -1084,9 +1060,10 @@ package body textio is
 	null;
     end case;
 
+    set_value (l'right, 0);
+
     deallocate (l);
     l := new string'("");
-    set_value;
   end read;
 
   procedure read (l: inout line; value: out real)

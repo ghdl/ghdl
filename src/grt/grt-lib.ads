@@ -92,6 +92,8 @@ package Grt.Lib is
                                                      False  --  -
                                                     );
 
+   function Textio_Read_Real (Str : Std_String_Ptr) return Ghdl_F64;
+
    function Ghdl_Get_Resolution_Limit return Std_Time;
 
    procedure Ghdl_Control_Simulation
@@ -119,6 +121,9 @@ private
 
    pragma Export (C, Ghdl_Std_Ulogic_To_Boolean_Array,
                   "__ghdl_std_ulogic_to_boolean_array");
+
+   pragma Export (C, Textio_Read_Real,
+                  "std__textio__textio_read_real");
 
    pragma Export (C, Ghdl_Get_Resolution_Limit,
                   "std__env__get_resolution_limit");
