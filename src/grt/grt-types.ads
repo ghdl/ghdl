@@ -55,6 +55,9 @@ package Grt.Types is
 
    subtype Std_Integer is Ghdl_I32;
 
+   type Std_Integer_Acc is access Std_Integer;
+   pragma Convention (C, Std_Integer_Acc);
+
    type Std_Time is new Ghdl_I64;
    Bad_Time : constant Std_Time := Std_Time'First;
 

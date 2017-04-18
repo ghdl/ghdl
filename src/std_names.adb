@@ -399,6 +399,7 @@ package body Std_Names is
       Def ("maximum",               Name_Maximum);
       Def ("untruncated_text_read", Name_Untruncated_Text_Read);
       Def ("textio_read_real",      Name_Textio_Read_Real);
+      Def ("textio_write_real",     Name_Textio_Write_Real);
       Def ("get_resolution_limit",  Name_Get_Resolution_Limit);
       Def ("control_simulation",    Name_Control_Simulation);
 

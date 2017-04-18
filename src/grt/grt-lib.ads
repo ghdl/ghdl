@@ -94,6 +94,11 @@ package Grt.Lib is
 
    function Textio_Read_Real (Str : Std_String_Ptr) return Ghdl_F64;
 
+   procedure Textio_Write_Real (Str : Std_String_Ptr;
+                                Len : Std_Integer_Acc;
+                                V : Ghdl_F64;
+                                Ndigits : Std_Integer);
+
    function Ghdl_Get_Resolution_Limit return Std_Time;
 
    procedure Ghdl_Control_Simulation
@@ -124,6 +129,8 @@ private
 
    pragma Export (C, Textio_Read_Real,
                   "std__textio__textio_read_real");
+   pragma Export (C, Textio_Write_Real,
+                  "std__textio__textio_write_real");
 
    pragma Export (C, Ghdl_Get_Resolution_Limit,
                   "std__env__get_resolution_limit");

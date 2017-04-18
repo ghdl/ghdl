@@ -22,6 +22,8 @@
 --  covered by the GNU General Public License. This exception does not
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
+
+with Interfaces;
 with Grt.Errors; use Grt.Errors;
 with Grt.Options;
 with Grt.Fcvt;
@@ -277,8 +279,25 @@ package body Grt.Lib is
       subtype Str1 is String (1 .. Natural (Str.Bounds.Dim_1.Length));
    begin
       return Ghdl_F64 (Grt.Fcvt.From_String
-                         (Str1 (Str.Base (0 .. Str.Bounds.Dim_1.Length))));
+                         (Str1 (Str.Base (0 .. Str.Bounds.Dim_1.Length - 1))));
    end Textio_Read_Real;
+
+   procedure Textio_Write_Real (Str : Std_String_Ptr;
+                                Len : Std_Integer_Acc;
+                                V : Ghdl_F64;
+                                Ndigits : Std_Integer)
+   is
+      --  FIXME: avoid that copy.
+      S : String (1 .. Natural (Str.Bounds.Dim_1.Length));
+      Last : Natural;
+   begin
+      Grt.Fcvt.Format_Digits
+        (S, Last, Interfaces.IEEE_Float_64 (V), Natural (Ndigits));
+      Len.all := Std_Integer (Last);
+      for I in 1 .. Last loop
+         Str.Base (Ghdl_Index_Type (I - 1)) := S (I);
+      end loop;
+   end Textio_Write_Real;
 
    function Ghdl_Get_Resolution_Limit return Std_Time is
    begin

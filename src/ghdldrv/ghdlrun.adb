@@ -189,6 +189,8 @@ package body Ghdlrun is
                   Def (Ortho, Grt.Files.Ghdl_Untruncated_Text_Read'Address);
                elsif Name = "textio_read_real" then
                   Def (Ortho, Grt.Lib.Textio_Read_Real'Address);
+               elsif Name = "textio_write_real" then
+                  Def (Ortho, Grt.Lib.Textio_Write_Real'Address);
                elsif Name = "control_simulation" then
                   Def (Ortho, Grt.Lib.Ghdl_Control_Simulation'Address);
                elsif Name = "get_resolution_limit" then

@@ -75,9 +75,6 @@ package Grt.Files is
    function Ghdl_Text_Read_Length
      (File : Ghdl_File_Index; Str : Std_String_Ptr) return Std_Integer;
 
-   type Std_Integer_Acc is access Std_Integer;
-   pragma Convention (C, Std_Integer_Acc);
-
    procedure Ghdl_Untruncated_Text_Read
      (File : Ghdl_File_Index; Str : Std_String_Ptr; Len : Std_Integer_Acc);
 

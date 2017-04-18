@@ -16,6 +16,8 @@
 --  <http://www.gnu.org/licenses/>.
 
 package body textio is
+  attribute foreign : string;                                  --V87
+
 --START-V08
   --  LRM08 16.4
   --  The JUSTIFY operation formats a string value within a field that is at
@@ -334,6 +336,17 @@ package body textio is
     write (l, str (1 to pos - 1), justified, field);
   end write;
 
+  procedure textio_write_real
+    (s : out string; len : out natural; value: real; ndigits : natural);
+
+  attribute foreign of textio_write_real : procedure is "GHDL intrinsic";
+
+  procedure textio_write_real
+    (s : out string; len : out natural; value: real; ndigits : natural) is
+  begin
+    assert false report "must not be called" severity failure;
+  end textio_write_real;
+
   -- Parameter DIGITS specifies how many digits to the right of the decimal
   -- point are to be output when writing a real number; the default value 0
   -- indicates that the number should be output in standard form, consisting
@@ -350,133 +363,12 @@ package body textio is
     --  STR contains the result of the conversion.
     variable str : string (1 to 320);
 
-    --  POS is the index of the next character to be put in STR.
-    variable pos : positive := str'left;
-
-    --  VAL contains the value to be converted.
-    variable val : real;
-
-    --  The exponent or mantissa computed is stored in MANTISSA.  This is
-    --  a signed number.
-    variable mantissa : integer;
-
-    variable b : boolean;
-    variable d : natural;
-
-    --  Append character C in STR.
-    procedure add_char (c : character) is
-    begin
-      str (pos) := c;
-      pos := pos + 1;
-    end add_char;
-
-    --  Add digit V in STR.
-    procedure add_digit (v : natural) is
-    begin
-      add_char (character'val (character'pos ('0') + v));
-    end add_digit;
-
-    --  Add leading digit and substract it.
-    procedure extract_leading_digit is
-      variable d : natural range 0 to 10;
-    begin
-      --  Note: We need truncation but type conversion does rounding.
-      --  FIXME: should consider precision.
-      d := natural (val);
-      if real (d) > val then
-	d := d - 1;
-      end if;
-
-      val := (val - real (d)) * 10.0;
-
-      add_digit (d);
-    end extract_leading_digit;
+    variable len : natural;
   begin
-    --  Handle sign.
-    --  There is no overflow here, since with IEEE implementations, sign is
-    --  independant of the mantissa.
-    --  LRM93 14.3
-    --  The sign is never written if the value is non-negative.
-    if value < 0.0 then
-      add_char ('-');
-      val := -value;
-    else
-      val := value;
-    end if;
+    textio_write_real (str, len, value, digits);
+    assert len <= str'length severity failure;
 
-    --  Compute the mantissa.
-    --  FIXME: should do a dichotomy.
-    if val = 0.0 then
-      mantissa := 0;
-    elsif val < 1.0 then
-      mantissa := -1;
-      while val * (10.0 ** (-mantissa)) < 1.0 loop
-	mantissa := mantissa - 1;
-      end loop;
-    else
-      mantissa := 0;
-      while val / (10.0 ** mantissa) >= 10.0 loop
-	mantissa := mantissa + 1;
-      end loop;
-    end if;
-
-    --  Normalize VAL: in [0; 10[
-    if mantissa >= 0 then
-      val := val / (10.0 ** mantissa);
-    else
-      val := val * 10.0 ** (-mantissa);
-    end if;
-
-    if digits = 0 then
-      for i in 0 to 15 loop
-	extract_leading_digit;
-
-	if i = 0 then
-	  add_char ('.');
-	end if;
-	exit when i > 0 and val < 10.0 ** (i + 1 - 15);
-      end loop;
-
-      --  LRM93 14.3
-      --  if the exponent is present, the `e' is written as a lower case
-      --  character.
-      add_char ('e');
-
-      if mantissa < 0 then
-	add_char ('-');
-	mantissa := -mantissa;
-      end if;
-      b := false;
-      for i in 4 downto 0 loop
-	d := (mantissa / 10000) mod 10;
-	if d /= 0 or b or i = 0 then
-	  add_digit (d);
-	  b := true;
-	end if;
-	mantissa := (mantissa - d * 10000) * 10;
-      end loop;
-    else
-      if mantissa < 0 then
-	add_char ('0');
-	mantissa := mantissa + 1;
-      else
-	loop
-	  extract_leading_digit;
-	  exit when mantissa = 0;
-	  mantissa := mantissa - 1;
-	end loop;
-      end if;
-      add_char ('.');
-      for i in 1 to digits loop
-	if mantissa = 0 then
-	  extract_leading_digit;
-	else
-	  add_char ('0');
-	  mantissa := mantissa + 1;
-	end if;
-      end loop;
-    end if;
-    write (l, str (1 to pos - 1), justified, field);
+    write (l, str (1 to len), justified, field);
   end write;
 
 --START-V08
@@ -492,8 +384,6 @@ package body textio is
     write (l, to_hstring (value), justified, field);
   end Hwrite;
 --END-V08
-
-  attribute foreign : string;                                  --V87
 
   procedure untruncated_text_read                              --V87
     (variable f : text; str : out string; len : out natural);  --V87
