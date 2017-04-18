@@ -100,6 +100,8 @@ check: check.$(backend)
 
 copy-sources: copy-sources.$(backend)
 
+libs: libs.vhdl.$(backend)
+
 Makefile: $(srcdir)/Makefile.in
 	./config.status
 
