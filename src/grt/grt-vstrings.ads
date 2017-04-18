@@ -100,11 +100,9 @@ package Grt.Vstrings is
    --  + exp_digits (4) -> 24.
    procedure To_String (Str : out String; Last : out Natural; N : Ghdl_F64);
 
-   subtype String_Real_Digits is String (1 .. 128);
-
    --  Write the image of N into STR using NBR_DIGITS digits after the decimal
    --  point.
-   procedure To_String (Str : out String_Real_Digits;
+   procedure To_String (Str : out String;
                         Last : out Natural;
                         N : Ghdl_F64;
                         Nbr_Digits : Ghdl_I32);
@@ -113,7 +111,7 @@ package Grt.Vstrings is
 
    --  Write the image of N into STR using NBR_DIGITS digits after the decimal
    --  point.
-   procedure To_String (Str : out String_Real_Digits;
+   procedure To_String (Str : out String_Real_Format;
                         Last : out Natural;
                         N : Ghdl_F64;
                         Format : Ghdl_C_String);

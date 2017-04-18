@@ -268,22 +268,16 @@ package body Grt.Vstrings is
       Grt.Fcvt.Format_Image (Str, Last, Interfaces.IEEE_Float_64 (N));
    end To_String;
 
-   procedure To_String (Str : out String_Real_Digits;
+   procedure To_String (Str : out String;
                         Last : out Natural;
                         N : Ghdl_F64;
-                        Nbr_Digits : Ghdl_I32)
-   is
-      procedure Snprintf_Nf (Str : in out String;
-                             Len : Natural;
-                             Ndigits : Ghdl_I32;
-                             V : Ghdl_F64);
-      pragma Import (C, Snprintf_Nf, "__ghdl_snprintf_nf");
+                        Nbr_Digits : Ghdl_I32) is
    begin
-      Snprintf_Nf (Str, Str'Length, Nbr_Digits, N);
-      Last := strlen (To_Ghdl_C_String (Str'Address));
+      Grt.Fcvt.Format_Digits
+        (Str, Last, Interfaces.IEEE_Float_64 (N), Natural (Nbr_Digits));
    end To_String;
 
-   procedure To_String (Str : out String_Real_Digits;
+   procedure To_String (Str : out String_Real_Format;
                         Last : out Natural;
                         N : Ghdl_F64;
                         Format : Ghdl_C_String)

@@ -46,12 +46,6 @@ __ghdl_snprintf_g (char *buf, unsigned int len, double val)
 }
 
 void
-__ghdl_snprintf_nf (char *buf, unsigned int len, int ndigits, double val)
-{
-  snprintf (buf, len, "%.*f", ndigits, val);
-}
-
-void
 __ghdl_snprintf_fmtf (char *buf, unsigned int len,
 		      const char *format, double v)
 {

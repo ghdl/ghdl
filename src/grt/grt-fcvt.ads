@@ -56,6 +56,21 @@ package Grt.Fcvt is
    procedure Format_Image
      (Str : out String; Last : out Natural; N : IEEE_Float_64);
 
+   --  For To_String (Value : Real; Digits : Natural)
+   procedure Format_Digits (Str : out String;
+                            Last : out Natural;
+                            N : IEEE_Float_64;
+                            Ndigits : Natural);
+
+   --  Reduce the precision of STR to PREC digits after the point.  If PREC is
+   --  too large, this is no-op.
+   --  STR, LEN, EXP are the output of To_String, that is:
+   --  0.STR * 10**EXP
+   procedure Format_Precision (Str : in out String;
+                               Len : in out Natural;
+                               Exp : in out Integer;
+                               Prec : Positive);
+
    --  Input format is [+-]int[.int][e[+-]int]
    --  where int is digit { _ digit }
    --    and [+-] means optional + or -.

@@ -1102,4 +1102,167 @@ package body Grt.Fcvt is
       Last := P - 1;
    end Format_Image;
 
+   procedure Format_Precision (Str : in out String;
+                               Len : in out Natural;
+                               Exp : in out Integer;
+                               Prec : Positive)
+   is
+      pragma Assert (Str'First = 1);
+
+      --  LEN is the number of digits, so there are LEN - EXP digits after the
+      --  point.
+      Ndigits : constant Integer := Len - Exp;
+      Nlen : Integer;
+      Inc : Boolean;
+   begin
+      if Ndigits <= Prec then
+         --  Already precise enough.
+         return;
+      end if;
+
+      Nlen := Prec + Exp;
+      if Nlen < 0 then
+         --  Number is too small
+         Str (1) := '0';
+         Len := 1;
+         Exp := 0;
+         return;
+      end if;
+
+      if Nlen < Len then
+         --  Round.
+         if Str (Nlen + 1) < '5' then
+            Inc := False;
+         elsif Str (Nlen + 1) > '5' then
+            Inc := True;
+         else
+            Inc := False;
+            for I in Nlen + 2 .. Len loop
+               if Str (I) /= '0' then
+                  Inc := True;
+                  exit;
+               end if;
+            end loop;
+         end if;
+         if Inc then
+            --  Increment the last digit and handle carray propagation if any.
+            Inc := True;
+            for I in reverse 1 .. Nlen loop
+               if Str (I) < '9' then
+                  Str (I) := Character'Val (Character'Pos (Str (I)) + 1);
+                  Inc := False;
+                  exit;
+               else
+                  Str (I) := '0';
+               end if;
+            end loop;
+            if Inc then
+               --  The digits were 9999...  so becomes 10000...
+               --  Change the exponent so recompute the length.
+               Exp := Exp + 1;
+               Nlen := Prec + Exp;
+
+               Str (1) := '1';
+               Str (2 .. Nlen) := (others => '0');
+            end if;
+         end if;
+         Len := Nlen;
+      end if;
+   end Format_Precision;
+
+   procedure Format_Digits (Str : out String;
+                            Last : out Natural;
+                            N : IEEE_Float_64;
+                            Ndigits : Natural)
+   is
+      procedure Append (C : Character) is
+      begin
+         Last := Last + 1;
+         if Last <= Str'Last then
+            Str (Last) := C;
+         end if;
+      end Append;
+
+      S : String (1 .. 20);
+      Len : Natural;
+      Exp : Integer;
+      Is_Num, Is_Neg : Boolean;
+   begin
+      --  LRM08 5.2.6 Predefined operations on scalar types
+      --  If DIGITS is 0, then the string representation is the same as that
+      --  produced by the TO_STRING operation without the DIGITS or FORMAT
+      --  parameter.
+      if Ndigits = 0 then
+         Format_Image (Str, Last, N);
+         return;
+      end if;
+
+      --  Radix conversion.
+      Grt.Fcvt.To_String (S, Len, Is_Num, Is_Neg, Exp, N);
+
+      --  Sign.
+      Last := Str'First - 1;
+      if Is_Neg then
+         Append ('-');
+      end if;
+
+      --  Non finite numbers.  That shouldn't appear in VHDL, but let's handle
+      --  them.
+      if not Is_Num then
+         for I in 1 .. Len loop
+            Append (S (I));
+         end loop;
+         return;
+      end if;
+
+      --  Finite numbers.  Set precision.
+      Grt.Fcvt.Format_Precision (S, Len, Exp, Ndigits);
+
+      if Exp <= 0 then
+         --  Integer part is 0.
+         Append ('0');
+         Append ('.');
+         if Len - Exp <= Ndigits then
+            for I in 1 .. -Exp loop
+               Append ('0');
+            end loop;
+            for I in 1 .. Len loop
+               Append (S (I));
+            end loop;
+            for I in Len - Exp + 1 .. Ndigits loop
+               Append ('0');
+            end loop;
+         else
+            for I in 1 .. Ndigits loop
+               Append ('0');
+            end loop;
+         end if;
+      elsif Exp >= Len then
+         --  No fractional part.
+         for I in 1 .. Len loop
+            Append (S (I));
+         end loop;
+         for I in Len + 1 .. Exp loop
+            Append ('0');
+         end loop;
+         Append ('.');
+         for I in 1 .. Ndigits loop
+            Append ('0');
+         end loop;
+      else
+         for I in 1 .. Exp loop
+            Append (S (I));
+         end loop;
+         Append ('.');
+         for I in Exp + 1 .. Len loop
+            Append (S (I));
+         end loop;
+         --  Len - (Exp + 1) + 1 digits after the point have been added.
+         --  Complete with '0'.
+         for I in Len - (Exp + 1) + 1 + 1 .. Ndigits loop
+            Append ('0');
+         end loop;
+      end if;
+   end Format_Digits;
+
 end Grt.Fcvt;
