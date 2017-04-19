@@ -97,25 +97,28 @@ GRT_ADACOMPILE=$(GNATMAKE) -u -c $(GRT_FLAGS) $(GRT_PRAGMA_FLAG)
 
 grt-all: libgrt.a $(GRT_LIBBACKTRACE) grt.lst
 
-libgrt.a: $(GRT_ADD_OBJS) run-bind.o main.o grt-files
+libgrt.a: $(GRT_ADD_OBJS) grt/run-bind.o grt/main.o grt/grt-files
 	$(RM) -f $@
-	$(AR) rcv $@ `sed -e "/^-/d" < grt-files` $(GRT_ADD_OBJS) \
-	 run-bind.o main.o
+	$(AR) rcv $@ `sed -e "/^-/d" -e "s!^!grt/!" < grt/grt-files` \
+	 $(GRT_ADD_OBJS) grt/run-bind.o grt/main.o
 	$(GRT_RANLIB) $@
 
-run-bind.adb: $(GRT_SRC_DEPS) grt-force
-	$(GNATMAKE) -c -aI$(GRTSRCDIR) $(GRT_PRAGMA_FLAG) \
+grt/run-bind.adb: grt $(GRT_SRC_DEPS) grt-force
+	cd grt; $(GNATMAKE) -c -aI$(GRTSRCDIR) -aI.. $(GRT_PRAGMA_FLAG) \
 	  ghdl_main $(GRT_ADAFLAGS) -cargs $(GRT_FLAGS)
 # 	Set No Run-Time flag to suppress references to standard gnat library.
-	sed -e '/^P /s/P /P NR /' < ghdl_main.ali > ghdl_main-tmp.ali
-	$(MV) ghdl_main-tmp.ali ghdl_main.ali
-	gnatbind -Lgrt_ -o run-bind.adb -n ghdl_main.ali
+	sed -e '/^P /s/P /P NR /' < grt/ghdl_main.ali > grt/ghdl_main-tmp.ali
+	$(MV) grt/ghdl_main-tmp.ali grt/ghdl_main.ali
+	cd grt; gnatbind -Lgrt_ -o run-bind.adb -n ghdl_main.ali
 
-run-bind.o: run-bind.adb
-	$(GRT_ADACOMPILE) -o $@ $<
+grt:
+	mkdir grt
 
-main.o: $(GRTSRCDIR)/main.adb
-	$(GRT_ADACOMPILE) -o $@ $<
+grt/run-bind.o: grt/run-bind.adb
+	cd grt; $(GRT_ADACOMPILE) -o run-bind.o run-bind.adb
+
+grt/main.o: $(GRTSRCDIR)/main.adb
+	cd grt; $(GRT_ADACOMPILE) -o main.o $< -Igrt
 
 GRT_C_COMPILE = $(CC) -c $(GRT_FLAGS) -o $@ $<
 GRT_C_COMPILE_PIC = $(CC) -c $(GRT_FLAGS) $(PIC_FLAGS) -o $@ $<
@@ -192,7 +195,7 @@ grt-disp-config:
 	@echo "arch: $(arch)"
 	@echo "osys: $(osys)"
 
-grt-files: run-bind.adb
+grt/grt-files: grt/run-bind.adb
 	sed -e "1,/-- *BEGIN/d" -e "/-- *END/,\$$d" \
 	  -e "s/   --   //" < $< > $@
 
@@ -201,11 +204,11 @@ grt-files: run-bind.adb
 #  instead of an executable.
 # Also remove -lgnat and its associated -L flags.  This appears to be required
 #  with GNAT GPL 2005.
-grt-files.in: grt-files
+grt/grt-files.in: grt/grt-files
 	sed -e "\!^.[/\\]!d" -e "/-shared/d" -e "/-static/d" -e "/-lgnat/d" \
 	  -e "\X-L/Xd" < $< > $@
 
-grt.lst: grt-files.in
+grt.lst: grt/grt-files.in
 	echo "@/libgrt.a" > $@
 ifdef GRT_EXTRA_LIB
 	for i in $(GRT_EXTRA_LIB); do echo $$i >> $@; done
@@ -220,17 +223,6 @@ $(GRT_LIBBACKTRACE): $(LIBBACKTRACE)
 	cp $< $@
 endif
 
-grt-install: libgrt.a $(GRT_LIBBACKTRACE) grt.lst
-	$(INSTALL_DATA) libgrt.a $(DESTDIR)$(grt_libdir)/libgrt.a
-	$(INSTALL_DATA) grt.lst $(DESTDIR)$(grt_libdir)/grt.lst
-ifneq ($(GRT_LIBBACKTRACE),)
-	$(INSTALL_DATA) $(GRT_LIBBACKTRACE) $(DESTDIR)$(grt_libdir)/libbacktrace.a
-endif
-
 grt-force:
 
-grt-clean: grt-force
-	$(RM) *.o *.ali run-bind.adb run-bind.ads *.a std_standard.s
-	$(RM) grt-files grt-files.in grt.lst
-
-.PHONY: grt-all grt-force grt-clean grt-install
+.PHONY: grt-all grt-force
