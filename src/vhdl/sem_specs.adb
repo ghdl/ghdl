@@ -1611,10 +1611,10 @@ package body Sem_Specs is
                      (1 => +Parent), Cont => True);
                end if;
                Error_Msg_Sem
-                 (+Parent, "type of %n declarared at %l",
+                 (+Parent, "type of %n declared at %l",
                   (+Comp_El, +Comp_El), Cont => True);
                Error_Msg_Sem
-                 (+Parent, "not compatible with type of %n declarared at %l",
+                 (+Parent, "not compatible with type of %n declared at %l",
                   (+Ent_El, +Ent_El));
                Error := True;
             elsif Kind = Map_Port
@@ -1627,7 +1627,7 @@ package body Sem_Specs is
                end if;
                Error_Msg_Sem (+Parent, "cannot associate "
                                 & Get_Mode_Name (Get_Mode (Ent_El))
-                                & " %n declarared at %l",
+                                & " %n declared at %l",
                               (+Ent_El, +Ent_El), Cont => True);
                Error_Msg_Sem (+Parent, "with actual port of mode "
                                 & Get_Mode_Name (Get_Mode (Comp_El))
