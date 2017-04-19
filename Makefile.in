@@ -19,6 +19,7 @@ CC=@CC@
 CXX=@CXX@
 build=@build@
 srcdir=@srcdir@
+abs_srcdir=@abs_srcdir@
 GNATMAKE=@GNATMAKE@
 prefix=@prefix@
 backend=@backend@
@@ -107,7 +108,7 @@ Makefile: $(srcdir)/Makefile.in
 
 GHDL_COMMON_INCFLAGS=-aI$(srcdir)/src -aI$(srcdir)/src/vhdl -aI$(srcdir)/src/grt -aI$(srcdir)/src/psl -aI$(srcdir)/src/vhdl/translate
 
-GRTSRCDIR=$(srcdir)/src/grt
+GRTSRCDIR=$(abs_srcdir)/src/grt
 include $(GRTSRCDIR)/Makefile.inc
 
 version.tmp: $(srcdir)/src/version.in force
