@@ -3016,24 +3016,24 @@ package body Trans.Chap4 is
    end Elab_Conversion;
 
    --  In conversion: from actual to formal.
-   procedure Elab_In_Conversion (Assoc : Iir; Inter : Iir; Ndest : out Mnode)
+   procedure Elab_In_Conversion (Assoc : Iir; Formal : Iir; Ndest : out Mnode)
    is
       Assoc_Info : constant Assoc_Info_Acc := Get_Info (Assoc);
    begin
       Elab_Conversion
-        (Get_Actual (Assoc), Get_Association_Formal (Assoc, Inter),
+        (Get_Actual (Assoc), Formal,
          Ghdl_Signal_In_Conversion, Assoc_Info.Assoc_In, Ndest);
    end Elab_In_Conversion;
 
    --  Out conversion: from formal to actual.
-   procedure Elab_Out_Conversion (Assoc : Iir; Inter : Iir; Ndest : out Mnode)
+   procedure Elab_Out_Conversion (Assoc : Iir; Formal : Iir; Ndest : out Mnode)
    is
       --  Note: because it's an out conversion, the formal of ASSOC is set.
       --  Still pass INTER for coherence with Elab_In_Conversion.
       Assoc_Info : constant Assoc_Info_Acc := Get_Info (Assoc);
    begin
       Elab_Conversion
-        (Get_Association_Formal (Assoc, Inter), Get_Actual (Assoc),
+        (Formal, Get_Actual (Assoc),
          Ghdl_Signal_Out_Conversion, Assoc_Info.Assoc_Out, Ndest);
    end Elab_Out_Conversion;
 

@@ -368,12 +368,11 @@ package body Trans.Chap5 is
       Finish_Data_Record => Connect_Finish_Data_Composite);
 
    procedure Elab_Port_Map_Aspect_Assoc (Assoc : Iir;
-                                         Inter : Iir;
+                                         Formal : Iir;
                                          By_Copy : Boolean;
                                          Formal_Env : Map_Env;
                                          Actual_Env : Map_Env)
    is
-      Formal      : constant Iir := Get_Association_Formal (Assoc, Inter);
       Actual      : constant Iir := Get_Actual (Assoc);
       Formal_Type : constant Iir := Get_Type (Formal);
       Actual_Type : constant Iir := Get_Type (Actual);
@@ -474,7 +473,7 @@ package body Trans.Chap5 is
          Connect (Formal_Sig, Formal_Type, Data);
       else
          if Get_In_Conversion (Assoc) /= Null_Iir then
-            Chap4.Elab_In_Conversion (Assoc, Inter, Actual_Sig);
+            Chap4.Elab_In_Conversion (Assoc, Formal, Actual_Sig);
             Set_Map_Env (Formal_Env);
             Formal_Sig := Chap6.Translate_Name (Formal, Mode_Signal);
             Data := (Actual_Sig => Actual_Sig,
@@ -486,7 +485,7 @@ package body Trans.Chap5 is
          end if;
          if Get_Out_Conversion (Assoc) /= Null_Iir then
             --  flow: FORMAL to ACTUAL
-            Chap4.Elab_Out_Conversion (Assoc, Inter, Formal_Sig);
+            Chap4.Elab_Out_Conversion (Assoc, Formal, Formal_Sig);
             Set_Map_Env (Actual_Env);
             Actual_Sig := Chap6.Translate_Name (Actual, Mode_Signal);
             Data := (Actual_Sig => Actual_Sig,
@@ -701,14 +700,14 @@ package body Trans.Chap5 is
                      if Get_Collapse_Signal_Flag (Assoc) then
                         --  For collapsed association, copy signals.
                         Elab_Port_Map_Aspect_Assoc
-                          (Assoc, Inter, True, Formal_Env, Actual_Env);
+                          (Assoc, Formal, True, Formal_Env, Actual_Env);
                      else
                         --  Create non-collapsed signals.
                         Chap4.Elab_Signal_Declaration_Object
                           (Formal, Block_Parent, False);
                         --  And associate.
                         Elab_Port_Map_Aspect_Assoc
-                          (Assoc, Inter, False, Formal_Env, Actual_Env);
+                          (Assoc, Formal, False, Formal_Env, Actual_Env);
                      end if;
                   else
                      --  By sub-element.
@@ -716,7 +715,7 @@ package body Trans.Chap5 is
                      --  created.
                      --  And associate.
                      Elab_Port_Map_Aspect_Assoc
-                       (Assoc, Inter, False, Formal_Env, Actual_Env);
+                       (Assoc, Formal, False, Formal_Env, Actual_Env);
                   end if;
                when Iir_Kind_Association_Element_Open
                  | Iir_Kind_Association_Element_By_Individual =>

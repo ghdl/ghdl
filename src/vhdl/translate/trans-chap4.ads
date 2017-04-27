@@ -51,8 +51,10 @@ package Trans.Chap4 is
 
    --  Elaborate In/Out_Conversion for ASSOC (signals only).
    --  NDEST is the data structure to be registered.
-   procedure Elab_In_Conversion (Assoc : Iir; Inter : Iir; Ndest : out Mnode);
-   procedure Elab_Out_Conversion (Assoc : Iir; Inter : Iir; Ndest : out Mnode);
+   procedure Elab_In_Conversion
+     (Assoc : Iir; Formal : Iir; Ndest : out Mnode);
+   procedure Elab_Out_Conversion
+     (Assoc : Iir; Formal : Iir; Ndest : out Mnode);
 
    --  Create code to elaborate declarations.
    --  NEED_FINAL is set when at least one declaration needs to be
