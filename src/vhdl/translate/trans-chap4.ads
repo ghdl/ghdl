@@ -100,7 +100,8 @@ package Trans.Chap4 is
    function Get_Scalar_Initial_Value (Atype : Iir) return O_Enode;
 
    --  Initialize NAME/OBJ with VALUE.
-   procedure Elab_Object_Init (Name : Mnode; Obj : Iir; Value : Iir);
+   procedure Elab_Object_Init
+     (Name : Mnode; Obj : Iir; Value : Iir; Alloc_Kind : Allocation_Kind);
 
    --  Get the ortho type for an object of type TINFO.
    function Get_Object_Type (Tinfo : Type_Info_Acc; Kind : Object_Kind_Type)

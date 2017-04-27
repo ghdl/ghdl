@@ -77,6 +77,7 @@ package body Trans.Chap1 is
       El      : Iir;
       El_Type : Iir;
       Default : Iir;
+      Value : Iir;
    begin
       Push_Local_Factory;
 
@@ -93,6 +94,17 @@ package body Trans.Chap1 is
          end if;
          Chap4.Elab_Signal_Declaration_Storage (El, False);
          Chap4.Elab_Signal_Declaration_Object (El, Entity, False);
+
+         Value := Get_Default_Value (El);
+         if Is_Valid (Value) then
+            --  Set default value.
+            Chap9.Destroy_Types (Value);
+            Chap4.Elab_Object_Init
+              (Get_Var (Get_Info (El).Signal_Val,
+                        Get_Info (Get_Type (El)), Mode_Value),
+               El, Value, Alloc_System);
+         end if;
+
          Close_Temp;
 
          El := Get_Chain (El);

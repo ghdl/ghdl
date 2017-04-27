@@ -780,6 +780,7 @@ package body Translation is
       Start_Assign : out O_Dnode;
       Next_Assign : out O_Dnode;
       Associate_Value : out O_Dnode;
+      Add_Port_Driver : out O_Dnode;
       Driving_Value : out O_Dnode)
    is
       Interfaces : O_Inter_List;
@@ -828,8 +829,7 @@ package body Translation is
       New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("reject"),
                           Std_Time_Otype);
-      New_Interface_Decl (Interfaces, Param, Wki_Val,
-                          Val_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Val, Val_Type);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("after"),
                           Std_Time_Otype);
       Finish_Subprogram_Decl (Interfaces, Start_Assign);
@@ -841,8 +841,7 @@ package body Translation is
         (Interfaces, Get_Identifier ("__ghdl_signal_next_assign_" & Suffix),
          O_Storage_External);
       New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
-      New_Interface_Decl (Interfaces, Param, Wki_Val,
-                          Val_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Val, Val_Type);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("after"),
                           Std_Time_Otype);
       Finish_Subprogram_Decl (Interfaces, Next_Assign);
@@ -853,9 +852,18 @@ package body Translation is
         (Interfaces, Get_Identifier ("__ghdl_signal_associate_" & Suffix),
          O_Storage_External);
       New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
-      New_Interface_Decl (Interfaces, Param, Wki_Val,
-                          Val_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Val, Val_Type);
       Finish_Subprogram_Decl (Interfaces, Associate_Value);
+
+      --  procedure __ghdl_signal_add_port_driver_XX (sign : __ghdl_signal_ptr;
+      --                                              val : VAL_TYPE);
+      Start_Procedure_Decl
+        (Interfaces,
+         Get_Identifier ("__ghdl_signal_add_port_driver_" & Suffix),
+         O_Storage_External);
+      New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
+      New_Interface_Decl (Interfaces, Param, Wki_Val, Val_Type);
+      Finish_Subprogram_Decl (Interfaces, Add_Port_Driver);
 
       --  function __ghdl_signal_driving_value_XXX (sign : __ghdl_signal_ptr)
       --     return VAL_TYPE;
@@ -1477,6 +1485,7 @@ package body Translation is
                                  Ghdl_Signal_Start_Assign_E8,
                                  Ghdl_Signal_Next_Assign_E8,
                                  Ghdl_Signal_Associate_E8,
+                                 Ghdl_Signal_Add_Port_Driver_E8,
                                  Ghdl_Signal_Driving_Value_E8);
 
       --  function __ghdl_create_signal_e32 (init_val : ghdl_i32_type)
@@ -1490,6 +1499,7 @@ package body Translation is
                                  Ghdl_Signal_Start_Assign_E32,
                                  Ghdl_Signal_Next_Assign_E32,
                                  Ghdl_Signal_Associate_E32,
+                                 Ghdl_Signal_Add_Port_Driver_E32,
                                  Ghdl_Signal_Driving_Value_E32);
 
       --  function __ghdl_create_signal_b1 (init_val : ghdl_bool_type)
@@ -1503,6 +1513,7 @@ package body Translation is
                                  Ghdl_Signal_Start_Assign_B1,
                                  Ghdl_Signal_Next_Assign_B1,
                                  Ghdl_Signal_Associate_B1,
+                                 Ghdl_Signal_Add_Port_Driver_B1,
                                  Ghdl_Signal_Driving_Value_B1);
 
       Create_Signal_Subprograms ("i32", Ghdl_I32_Type,
@@ -1512,6 +1523,7 @@ package body Translation is
                                  Ghdl_Signal_Start_Assign_I32,
                                  Ghdl_Signal_Next_Assign_I32,
                                  Ghdl_Signal_Associate_I32,
+                                 Ghdl_Signal_Add_Port_Driver_I32,
                                  Ghdl_Signal_Driving_Value_I32);
 
       Create_Signal_Subprograms ("f64", Ghdl_Real_Type,
@@ -1521,6 +1533,7 @@ package body Translation is
                                  Ghdl_Signal_Start_Assign_F64,
                                  Ghdl_Signal_Next_Assign_F64,
                                  Ghdl_Signal_Associate_F64,
+                                 Ghdl_Signal_Add_Port_Driver_F64,
                                  Ghdl_Signal_Driving_Value_F64);
 
       if not Flag_Only_32b then
@@ -1531,6 +1544,7 @@ package body Translation is
                                     Ghdl_Signal_Start_Assign_I64,
                                     Ghdl_Signal_Next_Assign_I64,
                                     Ghdl_Signal_Associate_I64,
+                                    Ghdl_Signal_Add_Port_Driver_I64,
                                     Ghdl_Signal_Driving_Value_I64);
       end if;
 

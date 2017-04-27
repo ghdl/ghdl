@@ -403,24 +403,14 @@ package body Trans.Chap14 is
       return Data;
    end Bool_Sigattr_Update_Data_Record;
 
-   procedure Bool_Sigattr_Finish_Data_Composite
-     (Data : in out Bool_Sigattr_Data_Type)
-   is
-      pragma Unreferenced (Data);
-   begin
-      null;
-   end Bool_Sigattr_Finish_Data_Composite;
-
    procedure Bool_Sigattr_Foreach is new Foreach_Non_Composite
      (Data_Type => Bool_Sigattr_Data_Type,
       Composite_Data_Type => Bool_Sigattr_Data_Type,
       Do_Non_Composite => Bool_Sigattr_Non_Composite_Signal,
       Prepare_Data_Array => Bool_Sigattr_Prepare_Data_Composite,
       Update_Data_Array => Bool_Sigattr_Update_Data_Array,
-      Finish_Data_Array => Bool_Sigattr_Finish_Data_Composite,
       Prepare_Data_Record => Bool_Sigattr_Prepare_Data_Composite,
-      Update_Data_Record => Bool_Sigattr_Update_Data_Record,
-      Finish_Data_Record => Bool_Sigattr_Finish_Data_Composite);
+      Update_Data_Record => Bool_Sigattr_Update_Data_Record);
 
    function Translate_Bool_Signal_Attribute (Attr : Iir; Field : O_Fnode)
                                                 return O_Enode
@@ -570,24 +560,14 @@ package body Trans.Chap14 is
       return Data;
    end Last_Time_Update_Data_Record;
 
-   procedure Last_Time_Finish_Data_Composite
-     (Data : in out Last_Time_Data)
-   is
-      pragma Unreferenced (Data);
-   begin
-      null;
-   end Last_Time_Finish_Data_Composite;
-
    procedure Translate_Last_Time is new Foreach_Non_Composite
      (Data_Type => Last_Time_Data,
       Composite_Data_Type => Last_Time_Data,
       Do_Non_Composite => Translate_Last_Time_Non_Composite,
       Prepare_Data_Array => Last_Time_Prepare_Data_Composite,
       Update_Data_Array => Last_Time_Update_Data_Array,
-      Finish_Data_Array => Last_Time_Finish_Data_Composite,
       Prepare_Data_Record => Last_Time_Prepare_Data_Composite,
-      Update_Data_Record => Last_Time_Update_Data_Record,
-      Finish_Data_Record => Last_Time_Finish_Data_Composite);
+      Update_Data_Record => Last_Time_Update_Data_Record);
 
    function Translate_Last_Time_Attribute (Prefix : Iir; Field : O_Fnode)
                                               return O_Enode
@@ -692,23 +672,14 @@ package body Trans.Chap14 is
       return Label;
    end Driving_Update_Data_Record;
 
-   procedure Driving_Finish_Data_Composite (Label : in out O_Snode)
-   is
-      pragma Unreferenced (Label);
-   begin
-      null;
-   end Driving_Finish_Data_Composite;
-
    procedure Driving_Foreach is new Foreach_Non_Composite
      (Data_Type => O_Snode,
       Composite_Data_Type => O_Snode,
       Do_Non_Composite => Driving_Non_Composite_Signal,
       Prepare_Data_Array => Driving_Prepare_Data_Composite,
       Update_Data_Array => Driving_Update_Data_Array,
-      Finish_Data_Array => Driving_Finish_Data_Composite,
       Prepare_Data_Record => Driving_Prepare_Data_Composite,
-      Update_Data_Record => Driving_Update_Data_Record,
-      Finish_Data_Record => Driving_Finish_Data_Composite);
+      Update_Data_Record => Driving_Update_Data_Record);
 
    function Translate_Driving_Attribute (Attr : Iir) return O_Enode
    is

@@ -3638,24 +3638,14 @@ package body Trans.Chap8 is
       return Res;
    end Gen_Signal_Update_Data_Record;
 
-   procedure Gen_Signal_Finish_Data_Composite
-     (Data : in out Signal_Assign_Data)
-   is
-      pragma Unreferenced (Data);
-   begin
-      null;
-   end Gen_Signal_Finish_Data_Composite;
-
    procedure Gen_Start_Signal_Assign is new Foreach_Non_Composite
      (Data_Type => Signal_Assign_Data,
       Composite_Data_Type => Signal_Assign_Data,
       Do_Non_Composite => Gen_Start_Signal_Assign_Non_Composite,
       Prepare_Data_Array => Gen_Signal_Prepare_Data_Composite,
       Update_Data_Array => Gen_Signal_Update_Data_Array,
-      Finish_Data_Array => Gen_Signal_Finish_Data_Composite,
       Prepare_Data_Record => Gen_Signal_Prepare_Data_Record,
-      Update_Data_Record => Gen_Signal_Update_Data_Record,
-      Finish_Data_Record => Gen_Signal_Finish_Data_Composite);
+      Update_Data_Record => Gen_Signal_Update_Data_Record);
 
    procedure Gen_Next_Signal_Assign_Non_Composite
      (Targ : Mnode; Targ_Type : Iir; Data : Signal_Assign_Data)
@@ -3749,10 +3739,8 @@ package body Trans.Chap8 is
       Do_Non_Composite => Gen_Next_Signal_Assign_Non_Composite,
       Prepare_Data_Array => Gen_Signal_Prepare_Data_Composite,
       Update_Data_Array => Gen_Signal_Update_Data_Array,
-      Finish_Data_Array => Gen_Signal_Finish_Data_Composite,
       Prepare_Data_Record => Gen_Signal_Prepare_Data_Record,
-      Update_Data_Record => Gen_Signal_Update_Data_Record,
-      Finish_Data_Record => Gen_Signal_Finish_Data_Composite);
+      Update_Data_Record => Gen_Signal_Update_Data_Record);
 
    procedure Translate_Signal_Target_Aggr
      (Aggr : Mnode; Target : Iir; Target_Type : Iir);
@@ -3974,24 +3962,14 @@ package body Trans.Chap8 is
          Expr_Node => Val.Expr_Node);
    end Gen_Signal_Direct_Update_Data_Record;
 
-   procedure Gen_Signal_Direct_Finish_Data_Composite
-     (Data : in out Signal_Direct_Assign_Data)
-   is
-      pragma Unreferenced (Data);
-   begin
-      null;
-   end Gen_Signal_Direct_Finish_Data_Composite;
-
    procedure Gen_Signal_Direct_Assign is new Foreach_Non_Composite
      (Data_Type => Signal_Direct_Assign_Data,
       Composite_Data_Type => Signal_Direct_Assign_Data,
       Do_Non_Composite => Gen_Signal_Direct_Assign_Non_Composite,
       Prepare_Data_Array => Gen_Signal_Direct_Prepare_Data_Composite,
       Update_Data_Array => Gen_Signal_Direct_Update_Data_Array,
-      Finish_Data_Array => Gen_Signal_Direct_Finish_Data_Composite,
       Prepare_Data_Record => Gen_Signal_Direct_Prepare_Data_Record,
-      Update_Data_Record => Gen_Signal_Direct_Update_Data_Record,
-      Finish_Data_Record => Gen_Signal_Direct_Finish_Data_Composite);
+      Update_Data_Record => Gen_Signal_Direct_Update_Data_Record);
 
    procedure Translate_Direct_Signal_Assignment
      (Target : Iir; Targ : Mnode; Drv : Mnode; We : Iir)

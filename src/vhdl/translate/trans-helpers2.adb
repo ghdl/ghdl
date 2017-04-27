@@ -178,7 +178,7 @@ package body Trans.Helpers2 is
    function Register_Prepare_Data_Composite (Targ      : Mnode;
                                              Targ_Type : Iir;
                                              Data      : O_Dnode)
-                                                return O_Dnode
+                                            return O_Dnode
    is
       pragma Unreferenced (Targ);
       pragma Unreferenced (Targ_Type);
@@ -196,23 +196,14 @@ package body Trans.Helpers2 is
       return Data;
    end Register_Update_Data_Record;
 
-   procedure Register_Finish_Data_Composite (D : in out O_Dnode)
-   is
-      pragma Unreferenced (D);
-   begin
-      null;
-   end Register_Finish_Data_Composite;
-
    procedure Register_Signal_1 is new Foreach_Non_Composite
      (Data_Type => O_Dnode,
       Composite_Data_Type => O_Dnode,
       Do_Non_Composite => Register_Non_Composite_Signal,
       Prepare_Data_Array => Register_Prepare_Data_Composite,
       Update_Data_Array => Register_Update_Data_Array,
-      Finish_Data_Array => Register_Finish_Data_Composite,
       Prepare_Data_Record => Register_Prepare_Data_Composite,
-      Update_Data_Record => Register_Update_Data_Record,
-      Finish_Data_Record => Register_Finish_Data_Composite);
+      Update_Data_Record => Register_Update_Data_Record);
 
    procedure Register_Signal (Targ      : Mnode;
                               Targ_Type : Iir;

@@ -219,6 +219,13 @@ package body Trans.Chap4 is
          Info.Signal_Valp := Create_Var
            (Create_Var_Identifier (Decl, "_VALP", 0),
             Get_Object_Ptr_Type (Type_Info, Mode_Value));
+
+         if Get_Default_Value (Decl) /= Null_Iir then
+            --  Default value for ports.
+            Info.Signal_Val := Create_Var
+              (Create_Var_Identifier (Decl, "_INIT", 0),
+               Get_Object_Type (Type_Info, Mode_Value));
+         end if;
       else
          Info.Signal_Val := Create_Var
            (Create_Var_Identifier (Decl, "_VAL", 0),
@@ -499,20 +506,15 @@ package body Trans.Chap4 is
    end Elab_Object_Storage;
 
    --  Generate code to create object OBJ and initialize it with value VAL.
-   procedure Elab_Object_Init (Name : Mnode; Obj : Iir; Value : Iir)
+   procedure Elab_Object_Init
+     (Name : Mnode; Obj : Iir; Value : Iir; Alloc_Kind : Allocation_Kind)
    is
       Obj_Type  : constant Iir := Get_Type (Obj);
       Type_Info : constant Type_Info_Acc := Get_Info (Obj_Type);
-      Obj_Info  : constant Object_Info_Acc := Get_Info (Obj);
 
       Name_Node  : Mnode;
       Value_Node : O_Enode;
-
-      Alloc_Kind : Allocation_Kind;
    begin
-      --  Elaborate subtype.
-      Alloc_Kind := Get_Alloc_Kind_For_Var (Obj_Info.Object_Var);
-
       --  Note: no temporary variable region is created, as the allocation
       --  may be performed on the stack.
 
@@ -571,12 +573,14 @@ package body Trans.Chap4 is
    --  Generate code to create object OBJ and initialize it with value VAL.
    procedure Elab_Object_Value (Obj : Iir; Value : Iir)
    is
-      Name : Mnode;
+      Obj_Info  : constant Object_Info_Acc := Get_Info (Obj);
+      Alloc_Kind : constant Allocation_Kind :=
+        Get_Alloc_Kind_For_Var (Obj_Info.Object_Var);
+      Name : constant Mnode :=
+        Get_Var (Obj_Info.Object_Var, Get_Info (Get_Type (Obj)), Mode_Value);
    begin
       Elab_Object_Storage (Obj);
-      Name := Get_Var (Get_Info (Obj).Object_Var,
-                       Get_Info (Get_Type (Obj)), Mode_Value);
-      Elab_Object_Init (Name, Obj, Value);
+      Elab_Object_Init (Name, Obj, Value, Alloc_Kind);
    end Elab_Object_Value;
 
    --  Create code to elaborate OBJ.
@@ -1004,6 +1008,8 @@ package body Trans.Chap4 is
    --  Elaborate signal subtypes and allocate the storage for the object.
    procedure Elab_Signal_Declaration_Storage (Decl : Iir; Has_Copy : Boolean)
    is
+      Is_Port : constant Boolean :=
+        Get_Kind (Decl) = Iir_Kind_Interface_Signal_Declaration;
       Sig_Type  : constant Iir := Get_Type (Decl);
       Type_Info : Type_Info_Acc;
       Name_Sig : Mnode;
@@ -1021,26 +1027,37 @@ package body Trans.Chap4 is
          --  bounds have already been set.
          if Has_Copy then
             Name_Sig := Chap6.Translate_Name (Decl, Mode_Signal);
+            Name_Val := Mnode_Null;
          else
             Chap6.Translate_Signal_Name (Decl, Name_Sig, Name_Val);
          end if;
          Name_Sig := Stabilize (Name_Sig);
          Chap3.Allocate_Fat_Array_Base (Alloc_System, Name_Sig, Sig_Type);
-         if not Has_Copy then
+         if Name_Val /= Mnode_Null then
+            Name_Val := Stabilize (Name_Val);
+            Chap3.Allocate_Fat_Array_Base (Alloc_System, Name_Val, Sig_Type);
+         end if;
+         if Is_Port and then Get_Default_Value (Decl) /= Null_Iir then
+            Name_Val := Chap6.Get_Port_Init_Value (Decl);
             Name_Val := Stabilize (Name_Val);
             Chap3.Allocate_Fat_Array_Base (Alloc_System, Name_Val, Sig_Type);
          end if;
       elsif Is_Complex_Type (Type_Info) then
          if Has_Copy then
             Name_Sig := Chap6.Translate_Name (Decl, Mode_Signal);
+            Name_Val := Mnode_Null;
          else
             Chap6.Translate_Signal_Name (Decl, Name_Sig, Name_Val);
          end if;
          Allocate_Complex_Object (Sig_Type, Alloc_System, Name_Sig);
-         if not Has_Copy then
+         if Name_Val /= Mnode_Null then
             Allocate_Complex_Object (Sig_Type, Alloc_System, Name_Val);
          end if;
-      elsif Get_Kind (Decl) = Iir_Kind_Interface_Signal_Declaration then
+         if Is_Port and then Get_Default_Value (Decl) /= Null_Iir then
+            Name_Val := Chap6.Get_Port_Init_Value (Decl);
+            Allocate_Complex_Object (Sig_Type, Alloc_System, Name_Val);
+         end if;
+      elsif Is_Port then
          if not Has_Copy then
             --  A port that isn't collapsed.  Allocate value.
             Name_Val := Chap6.Translate_Name (Decl, Mode_Value);
@@ -1306,24 +1323,14 @@ package body Trans.Chap4 is
          Param => Data.Param);
    end Create_Delayed_Signal_Update_Data_Record;
 
-   procedure Create_Delayed_Signal_Finish_Data_Composite
-     (Data : in out Delayed_Signal_Data)
-   is
-      pragma Unreferenced (Data);
-   begin
-      null;
-   end Create_Delayed_Signal_Finish_Data_Composite;
-
    procedure Create_Delayed_Signal is new Foreach_Non_Composite
      (Data_Type => Delayed_Signal_Data,
       Composite_Data_Type => Delayed_Signal_Data,
       Do_Non_Composite => Create_Delayed_Signal_Noncomposite,
       Prepare_Data_Array => Create_Delayed_Signal_Prepare_Composite,
       Update_Data_Array => Create_Delayed_Signal_Update_Data_Array,
-      Finish_Data_Array => Create_Delayed_Signal_Finish_Data_Composite,
       Prepare_Data_Record => Create_Delayed_Signal_Prepare_Composite,
-      Update_Data_Record => Create_Delayed_Signal_Update_Data_Record,
-      Finish_Data_Record => Create_Delayed_Signal_Finish_Data_Composite);
+      Update_Data_Record => Create_Delayed_Signal_Update_Data_Record);
 
    procedure Elab_Signal_Delayed_Attribute (Decl : Iir)
    is
@@ -1498,15 +1505,11 @@ package body Trans.Chap4 is
       Chap3.Translate_Named_Type_Definition (Decl_Type, Get_Identifier (Decl));
 
       Info := Add_Info (Decl, Kind_Alias);
-      case Get_Kind (Get_Object_Prefix (Decl)) is
-         when Iir_Kind_Signal_Declaration
-           | Iir_Kind_Interface_Signal_Declaration
-           | Iir_Kind_Guard_Signal_Declaration
-           | Iir_Kinds_Signal_Attribute =>
-            Info.Alias_Kind := Mode_Signal;
-         when others =>
-            Info.Alias_Kind := Mode_Value;
-      end case;
+      if Is_Signal_Name (Decl) then
+         Info.Alias_Kind := Mode_Signal;
+      else
+         Info.Alias_Kind := Mode_Value;
+      end if;
 
       Tinfo := Get_Info (Decl_Type);
       for Mode in Mode_Value .. Info.Alias_Kind loop
@@ -1898,24 +1901,14 @@ package body Trans.Chap4 is
          Kind => Data.Kind);
    end Read_Source_Update_Data_Record;
 
-   procedure Read_Source_Finish_Data_Composite
-     (Data : in out Read_Source_Data)
-   is
-      pragma Unreferenced (Data);
-   begin
-      null;
-   end Read_Source_Finish_Data_Composite;
-
    procedure Read_Signal_Source is new Foreach_Non_Composite
      (Data_Type => Read_Source_Data,
       Composite_Data_Type => Read_Source_Data,
       Do_Non_Composite => Read_Source_Non_Composite,
       Prepare_Data_Array => Read_Source_Prepare_Data_Array,
       Update_Data_Array => Read_Source_Update_Data_Array,
-      Finish_Data_Array => Read_Source_Finish_Data_Composite,
       Prepare_Data_Record => Read_Source_Prepare_Data_Record,
-      Update_Data_Record => Read_Source_Update_Data_Record,
-      Finish_Data_Record => Read_Source_Finish_Data_Composite);
+      Update_Data_Record => Read_Source_Update_Data_Record);
 
    procedure Translate_Resolution_Function_Body (Func : Iir)
    is

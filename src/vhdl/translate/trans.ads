@@ -1278,6 +1278,7 @@ package Trans is
 
          when Kind_Signal =>
             --  The current value of the signal.
+            --  Also the initial value of collapsed ports.
             Signal_Val      : Var_Type := Null_Var;
             --  Pointer to the value, for ports.
             Signal_Valp     : Var_Type := Null_Var;

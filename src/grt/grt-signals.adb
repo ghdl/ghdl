@@ -289,7 +289,6 @@ package body Grt.Signals is
 
    procedure Ghdl_Signal_Init (Sig : Ghdl_Signal_Ptr; Val : Value_Union) is
    begin
-      Assign (Sig.Value_Ptr, Val, Sig.Mode);
       Sig.Driving_Value := Val;
       Sig.Last_Value := Val;
    end Ghdl_Signal_Init;
@@ -297,9 +296,8 @@ package body Grt.Signals is
    procedure Ghdl_Signal_Merge_Rti (Sig : Ghdl_Signal_Ptr;
                                     Rti : Ghdl_Rti_Access)
    is
-      S_Rti : Ghdl_Rtin_Object_Acc;
+      S_Rti : constant Ghdl_Rtin_Object_Acc := To_Ghdl_Rtin_Object_Acc (Rti);
    begin
-      S_Rti := To_Ghdl_Rtin_Object_Acc (Rti);
       if Flag_Activity = Activity_Minimal then
          if (S_Rti.Common.Mode and Ghdl_Rti_Signal_Has_Active) /= 0 then
             Sig.Has_Active := True;
@@ -409,6 +407,21 @@ package body Grt.Signals is
       end if;
    end Ghdl_Process_Add_Driver;
 
+   procedure Ghdl_Process_Add_Port_Driver
+     (Sign : Ghdl_Signal_Ptr; Val : Value_Union)
+   is
+      Trans : Transaction_Acc;
+   begin
+      Trans := new Transaction'(Kind => Trans_Value,
+                                Line => 0,
+                                Time => 0,
+                                Next => null,
+                                Val => Val);
+      if Ghdl_Signal_Add_Driver (Sign, Trans) then
+         Free (Trans);
+      end if;
+   end Ghdl_Process_Add_Port_Driver;
+
    procedure Ghdl_Signal_Add_Direct_Driver (Sign : Ghdl_Signal_Ptr;
                                             Drv : Ghdl_Value_Ptr)
    is
@@ -420,7 +433,7 @@ package body Grt.Signals is
                                 Line => 0,
                                 Time => 0,
                                 Next => null,
-                                Val => Read_Value (Sign.Value_Ptr, Sign.Mode));
+                                Val => Read_Value (Drv, Sign.Mode));
       if Ghdl_Signal_Add_Driver (Sign, Trans) then
          Free (Trans);
          return;
@@ -433,9 +446,6 @@ package body Grt.Signals is
                                  Val_Ptr => Drv);
       Sign.S.Drivers (Sign.S.Nbr_Drivers - 1).Last_Trans := Trans1;
       Trans.Next := Trans1;
-
-      --  Initialize driver value.
-      Assign (Drv, Sign.Value_Ptr, Sign.Mode);
    end Ghdl_Signal_Add_Direct_Driver;
 
    procedure Append_Port (Targ : Ghdl_Signal_Ptr; Src : Ghdl_Signal_Ptr)
@@ -975,6 +985,13 @@ package body Grt.Signals is
       Ghdl_Signal_Associate (Sig, Value_Union'(Mode => Mode_B1, B1 => Val));
    end Ghdl_Signal_Associate_B1;
 
+   procedure Ghdl_Signal_Add_Port_Driver_B1
+     (Sig : Ghdl_Signal_Ptr; Val : Ghdl_B1) is
+   begin
+      Ghdl_Process_Add_Port_Driver
+        (Sig, Value_Union'(Mode => Mode_B1, B1 => Val));
+   end Ghdl_Signal_Add_Port_Driver_B1;
+
    procedure Ghdl_Signal_Simple_Assign_B1 (Sign : Ghdl_Signal_Ptr;
                                            Val : Ghdl_B1)
    is
@@ -1043,6 +1060,13 @@ package body Grt.Signals is
    begin
       Ghdl_Signal_Associate (Sig, Value_Union'(Mode => Mode_E8, E8 => Val));
    end Ghdl_Signal_Associate_E8;
+
+   procedure Ghdl_Signal_Add_Port_Driver_E8
+     (Sig : Ghdl_Signal_Ptr; Val : Ghdl_E8) is
+   begin
+      Ghdl_Process_Add_Port_Driver
+        (Sig, Value_Union'(Mode => Mode_E8, E8 => Val));
+   end Ghdl_Signal_Add_Port_Driver_E8;
 
    procedure Ghdl_Signal_Simple_Assign_E8 (Sign : Ghdl_Signal_Ptr;
                                            Val : Ghdl_E8)
@@ -1115,6 +1139,13 @@ package body Grt.Signals is
       Ghdl_Signal_Associate (Sig, Value_Union'(Mode => Mode_E32, E32 => Val));
    end Ghdl_Signal_Associate_E32;
 
+   procedure Ghdl_Signal_Add_Port_Driver_E32
+     (Sig : Ghdl_Signal_Ptr; Val : Ghdl_E32) is
+   begin
+      Ghdl_Process_Add_Port_Driver
+        (Sig, Value_Union'(Mode => Mode_E32, E32 => Val));
+   end Ghdl_Signal_Add_Port_Driver_E32;
+
    procedure Ghdl_Signal_Simple_Assign_E32 (Sign : Ghdl_Signal_Ptr;
                                             Val : Ghdl_E32)
    is
@@ -1185,6 +1216,13 @@ package body Grt.Signals is
    begin
       Ghdl_Signal_Associate (Sig, Value_Union'(Mode => Mode_I32, I32 => Val));
    end Ghdl_Signal_Associate_I32;
+
+   procedure Ghdl_Signal_Add_Port_Driver_I32
+     (Sig : Ghdl_Signal_Ptr; Val : Ghdl_I32) is
+   begin
+      Ghdl_Process_Add_Port_Driver
+        (Sig, Value_Union'(Mode => Mode_I32, I32 => Val));
+   end Ghdl_Signal_Add_Port_Driver_I32;
 
    procedure Ghdl_Signal_Simple_Assign_I32 (Sign : Ghdl_Signal_Ptr;
                                             Val : Ghdl_I32)
@@ -1257,6 +1295,13 @@ package body Grt.Signals is
       Ghdl_Signal_Associate (Sig, Value_Union'(Mode => Mode_I64, I64 => Val));
    end Ghdl_Signal_Associate_I64;
 
+   procedure Ghdl_Signal_Add_Port_Driver_I64
+     (Sig : Ghdl_Signal_Ptr; Val : Ghdl_I64) is
+   begin
+      Ghdl_Process_Add_Port_Driver
+        (Sig, Value_Union'(Mode => Mode_I64, I64 => Val));
+   end Ghdl_Signal_Add_Port_Driver_I64;
+
    procedure Ghdl_Signal_Simple_Assign_I64 (Sign : Ghdl_Signal_Ptr;
                                             Val : Ghdl_I64)
    is
@@ -1327,6 +1372,13 @@ package body Grt.Signals is
    begin
       Ghdl_Signal_Associate (Sig, Value_Union'(Mode => Mode_F64, F64 => Val));
    end Ghdl_Signal_Associate_F64;
+
+   procedure Ghdl_Signal_Add_Port_Driver_F64
+     (Sig : Ghdl_Signal_Ptr; Val : Ghdl_F64) is
+   begin
+      Ghdl_Process_Add_Port_Driver
+        (Sig, Value_Union'(Mode => Mode_F64, F64 => Val));
+   end Ghdl_Signal_Add_Port_Driver_F64;
 
    procedure Ghdl_Signal_Simple_Assign_F64 (Sign : Ghdl_Signal_Ptr;
                                             Val : Ghdl_F64)
@@ -3478,6 +3530,13 @@ package body Grt.Signals is
       end loop;
    end Run_Propagation_Init;
 
+   --  LRM93 12.6.4 The simulation cycle
+   --  The initialization phase consists of the following steps:
+   --  - The driving value and the effective value of each explicitly
+   --    declared signal are computed, and the current value of the signal
+   --    is set to the effective value.  This value is assumed to have been
+   --    the value of the signal for an infinite length of time prior to
+   --    the start of the simulation.
    procedure Init_Signals
    is
       Sig : Ghdl_Signal_Ptr;
@@ -3488,8 +3547,11 @@ package body Grt.Signals is
          case Sig.Net is
             when Net_One_Driver
               | Net_One_Direct =>
-               --  Nothing to do: drivers were already created.
-               null;
+               --  Use the current value of the transaction for the current
+               --  value of the signal.
+               Assign (Sig.Driving_Value,
+                       Sig.S.Drivers (0).First_Trans.Val, Sig.Mode);
+               Assign (Sig.Value_Ptr, Sig.Driving_Value, Sig.Mode);
 
             when Net_One_Resolved =>
                Sig.Has_Active := True;
@@ -3499,7 +3561,7 @@ package body Grt.Signals is
                end if;
 
             when No_Signal_Net =>
-               null;
+               Assign (Sig.Value_Ptr, Sig.Driving_Value, Sig.Mode);
 
             when others =>
                if Propagation.Table (Sig.Net).Updated then

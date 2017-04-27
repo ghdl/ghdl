@@ -57,6 +57,7 @@ package body Trans.Chap9 is
          if Var /= Null_Var then
             Sig := Get_Object_Prefix (Drivers (I).Sig);
             Info := Get_Info (Sig);
+            pragma Assert (Info.Kind = Kind_Signal);
             case Info.Kind is
                when Kind_Signal =>
                   Info.Signal_Driver := Var;
@@ -276,9 +277,9 @@ package body Trans.Chap9 is
             Sig := Get_Nth_Element (Drivers, I - 1);
             Info.Process_Drivers (I) := (Sig => Sig, Var => Null_Var);
             Sig := Get_Object_Prefix (Sig);
-            if Get_Kind (Sig) /= Iir_Kind_Object_Alias_Declaration
-              and then not Get_After_Drivers_Flag (Sig)
-            then
+            pragma Assert
+              (Get_Kind (Sig) /= Iir_Kind_Object_Alias_Declaration);
+            if not Get_After_Drivers_Flag (Sig) then
                Info.Process_Drivers (I).Var :=
                  Create_Var (Create_Var_Identifier (Sig, "_DDRV", I),
                              Chap4.Get_Object_Type
@@ -1227,6 +1228,50 @@ package body Trans.Chap9 is
       end;
    end Destroy_Types;
 
+   function Foreach_Non_Composite_Prepare_Data_Array_Mnode
+     (Targ : Mnode; Targ_Type : Iir; Val : Mnode) return Mnode
+   is
+      pragma Unreferenced (Targ, Targ_Type);
+   begin
+      return Val;
+   end Foreach_Non_Composite_Prepare_Data_Array_Mnode;
+
+   function Foreach_Non_Composite_Prepare_Data_Record_Mnode
+     (Targ : Mnode; Targ_Type : Iir; Val : Mnode) return Mnode
+   is
+      pragma Unreferenced (Targ, Targ_Type);
+   begin
+      if Val = Mnode_Null then
+         return Mnode_Null;
+      else
+         return Stabilize (Val);
+      end if;
+   end Foreach_Non_Composite_Prepare_Data_Record_Mnode;
+
+   function Foreach_Non_Composite_Update_Data_Array_Mnode
+     (Val : Mnode; Targ_Type : Iir; Index : O_Dnode) return Mnode is
+   begin
+      if Val = Mnode_Null then
+         return Mnode_Null;
+      else
+         return Chap3.Index_Base (Chap3.Get_Composite_Base (Val),
+                                  Targ_Type, New_Obj_Value (Index));
+      end if;
+   end Foreach_Non_Composite_Update_Data_Array_Mnode;
+
+   function Foreach_Non_Composite_Update_Data_Record_Mnode
+     (Val : Mnode; Targ_Type : Iir; El : Iir_Element_Declaration)
+     return Mnode
+   is
+      pragma Unreferenced (Targ_Type);
+   begin
+      if Val = Mnode_Null then
+         return Mnode_Null;
+      else
+         return Chap6.Translate_Selected_Element (Val, El);
+      end if;
+   end Foreach_Non_Composite_Update_Data_Record_Mnode;
+
    procedure Gen_Register_Direct_Driver_Non_Composite
      (Targ : Mnode; Targ_Type : Iir; Drv : Mnode)
    is
@@ -1241,62 +1286,186 @@ package body Trans.Chap9 is
       New_Procedure_Call (Constr);
    end Gen_Register_Direct_Driver_Non_Composite;
 
-   function Gen_Register_Direct_Driver_Prepare_Data_Composite
-     (Targ : Mnode; Targ_Type : Iir; Val : Mnode)
-         return Mnode
-   is
-      pragma Unreferenced (Targ, Targ_Type);
-   begin
-      return Val;
-   end Gen_Register_Direct_Driver_Prepare_Data_Composite;
-
-   function Gen_Register_Direct_Driver_Prepare_Data_Record
-     (Targ : Mnode; Targ_Type : Iir; Val : Mnode)
-         return Mnode
-   is
-      pragma Unreferenced (Targ, Targ_Type);
-   begin
-      return Stabilize (Val);
-   end Gen_Register_Direct_Driver_Prepare_Data_Record;
-
-   function Gen_Register_Direct_Driver_Update_Data_Array
-     (Val : Mnode; Targ_Type : Iir; Index : O_Dnode)
-         return Mnode
-   is
-   begin
-      return Chap3.Index_Base (Chap3.Get_Composite_Base (Val),
-                               Targ_Type, New_Obj_Value (Index));
-   end Gen_Register_Direct_Driver_Update_Data_Array;
-
-   function Gen_Register_Direct_Driver_Update_Data_Record
-     (Val : Mnode; Targ_Type : Iir; El : Iir_Element_Declaration)
-         return Mnode
-   is
-      pragma Unreferenced (Targ_Type);
-   begin
-      return Chap6.Translate_Selected_Element (Val, El);
-   end Gen_Register_Direct_Driver_Update_Data_Record;
-
-   procedure Gen_Register_Direct_Driver_Finish_Data_Composite
-     (Data : in out Mnode)
-   is
-      pragma Unreferenced (Data);
-   begin
-      null;
-   end Gen_Register_Direct_Driver_Finish_Data_Composite;
-
    procedure Gen_Register_Direct_Driver is new Foreach_Non_Composite
      (Data_Type => Mnode,
       Composite_Data_Type => Mnode,
       Do_Non_Composite => Gen_Register_Direct_Driver_Non_Composite,
+      Prepare_Data_Array => Foreach_Non_Composite_Prepare_Data_Array_Mnode,
+      Update_Data_Array => Foreach_Non_Composite_Update_Data_Array_Mnode,
+      Prepare_Data_Record => Foreach_Non_Composite_Prepare_Data_Record_Mnode,
+      Update_Data_Record => Foreach_Non_Composite_Update_Data_Record_Mnode);
+
+   procedure Gen_Add_Port_Driver_Non_Composite
+     (Targ : Mnode; Targ_Type : Iir; Init : O_Enode)
+   is
+      Type_Info : constant Type_Info_Acc := Get_Info (Targ_Type);
+      Constr : O_Assoc_List;
+      Init_Subprg : O_Dnode;
+      Conv : O_Tnode;
+   begin
+      case Type_Info.Type_Mode is
+         when Type_Mode_B1 =>
+            Init_Subprg := Ghdl_Signal_Add_Port_Driver_B1;
+            Conv := Ghdl_Bool_Type;
+         when Type_Mode_E8 =>
+            Init_Subprg := Ghdl_Signal_Add_Port_Driver_E8;
+            Conv := Ghdl_I32_Type;
+         when Type_Mode_E32 =>
+            Init_Subprg := Ghdl_Signal_Add_Port_Driver_E32;
+            Conv := Ghdl_I32_Type;
+         when Type_Mode_I32
+           | Type_Mode_P32 =>
+            Init_Subprg := Ghdl_Signal_Add_Port_Driver_I32;
+            Conv := Ghdl_I32_Type;
+         when Type_Mode_P64
+           | Type_Mode_I64 =>
+            Init_Subprg := Ghdl_Signal_Add_Port_Driver_I64;
+            Conv := Ghdl_I64_Type;
+         when Type_Mode_F64 =>
+            Init_Subprg := Ghdl_Signal_Add_Port_Driver_F64;
+            Conv := Ghdl_Real_Type;
+         when others =>
+            Error_Kind ("gen_add_port_driver_non_composite", Targ_Type);
+      end case;
+
+      Start_Association (Constr, Init_Subprg);
+      New_Association
+        (Constr, New_Convert_Ov (New_Value (M2Lv (Targ)), Ghdl_Signal_Ptr));
+      New_Association (Constr, New_Convert_Ov (Init, Conv));
+      New_Procedure_Call (Constr);
+   end Gen_Add_Port_Driver_Non_Composite;
+
+   procedure Gen_Add_Port_Driver_Non_Composite
+     (Targ : Mnode; Targ_Type : Iir; Init : Mnode) is
+   begin
+      Gen_Add_Port_Driver_Non_Composite (Targ, Targ_Type, M2E (Init));
+   end Gen_Add_Port_Driver_Non_Composite;
+
+   procedure Gen_Add_Port_Driver is new Foreach_Non_Composite
+     (Data_Type => Mnode,
+      Composite_Data_Type => Mnode,
+      Do_Non_Composite => Gen_Add_Port_Driver_Non_Composite,
+      Prepare_Data_Array => Foreach_Non_Composite_Prepare_Data_Array_Mnode,
+      Update_Data_Array => Foreach_Non_Composite_Update_Data_Array_Mnode,
+      Prepare_Data_Record => Foreach_Non_Composite_Prepare_Data_Record_Mnode,
+      Update_Data_Record => Foreach_Non_Composite_Update_Data_Record_Mnode);
+
+   type Add_Port_Driver_Default_Data is null record;
+
+   procedure Gen_Add_Port_Driver_Non_Composite_Default
+     (Targ : Mnode; Targ_Type : Iir; Init : Add_Port_Driver_Default_Data)
+   is
+      pragma Unreferenced (Init);
+   begin
+      Gen_Add_Port_Driver_Non_Composite
+        (Targ, Targ_Type, Chap4.Get_Scalar_Initial_Value (Targ_Type));
+   end Gen_Add_Port_Driver_Non_Composite_Default;
+
+   function Gen_Add_Port_Driver_Prepare_Data_Composite_Default
+     (Targ : Mnode; Targ_Type : Iir; Data : Add_Port_Driver_Default_Data)
+     return Add_Port_Driver_Default_Data
+   is
+      pragma Unreferenced (Targ);
+      pragma Unreferenced (Targ_Type);
+   begin
+      return Data;
+   end Gen_Add_Port_Driver_Prepare_Data_Composite_Default;
+
+   function Gen_Add_Port_Driver_Update_Data_Array_Default
+     (Data : Add_Port_Driver_Default_Data; Targ_Type : Iir; Index : O_Dnode)
+     return Add_Port_Driver_Default_Data
+   is
+      pragma Unreferenced (Targ_Type);
+      pragma Unreferenced (Index);
+   begin
+      return Data;
+   end Gen_Add_Port_Driver_Update_Data_Array_Default;
+
+   function Gen_Add_Port_Driver_Update_Data_Record_Default
+     (Data : Add_Port_Driver_Default_Data;
+      Targ_Type : Iir;
+      El : Iir_Element_Declaration)
+     return Add_Port_Driver_Default_Data
+   is
+      pragma Unreferenced (Targ_Type);
+      pragma Unreferenced (El);
+   begin
+      return Data;
+   end Gen_Add_Port_Driver_Update_Data_Record_Default;
+
+   procedure Gen_Add_Port_Driver_Default is new Foreach_Non_Composite
+     (Data_Type => Add_Port_Driver_Default_Data,
+      Composite_Data_Type => Add_Port_Driver_Default_Data,
+      Do_Non_Composite => Gen_Add_Port_Driver_Non_Composite_Default,
       Prepare_Data_Array =>
-         Gen_Register_Direct_Driver_Prepare_Data_Composite,
-      Update_Data_Array => Gen_Register_Direct_Driver_Update_Data_Array,
-      Finish_Data_Array => Gen_Register_Direct_Driver_Finish_Data_Composite,
-      Prepare_Data_Record => Gen_Register_Direct_Driver_Prepare_Data_Record,
-      Update_Data_Record => Gen_Register_Direct_Driver_Update_Data_Record,
-      Finish_Data_Record =>
-         Gen_Register_Direct_Driver_Finish_Data_Composite);
+        Gen_Add_Port_Driver_Prepare_Data_Composite_Default,
+      Update_Data_Array =>
+        Gen_Add_Port_Driver_Update_Data_Array_Default,
+      Prepare_Data_Record =>
+        Gen_Add_Port_Driver_Prepare_Data_Composite_Default,
+      Update_Data_Record =>
+        Gen_Add_Port_Driver_Update_Data_Record_Default);
+
+   procedure Gen_Port_Init_Driving_Scalar
+     (Targ : Mnode; Targ_Type : Iir; Init : Mnode)
+   is
+      Type_Info : constant Type_Info_Acc := Get_Info (Targ_Type);
+      Assoc : O_Assoc_List;
+      Init_Subprg : O_Dnode;
+      Init_Val : O_Enode;
+      Conv : O_Tnode;
+   begin
+      case Type_Info.Type_Mode is
+         when Type_Mode_B1 =>
+            Init_Subprg := Ghdl_Signal_Init_B1;
+            Conv := Ghdl_Bool_Type;
+         when Type_Mode_E8 =>
+            Init_Subprg := Ghdl_Signal_Init_E8;
+            Conv := Ghdl_I32_Type;
+         when Type_Mode_E32 =>
+            Init_Subprg := Ghdl_Signal_Init_E32;
+            Conv := Ghdl_I32_Type;
+         when Type_Mode_I32
+           | Type_Mode_P32 =>
+            Init_Subprg := Ghdl_Signal_Init_I32;
+            Conv := Ghdl_I32_Type;
+         when Type_Mode_P64
+           | Type_Mode_I64 =>
+            Init_Subprg := Ghdl_Signal_Init_I64;
+            Conv := Ghdl_I64_Type;
+         when Type_Mode_F64 =>
+            Init_Subprg := Ghdl_Signal_Init_F64;
+            Conv := Ghdl_Real_Type;
+         when others =>
+            Error_Kind ("merge_signals_rti_non_composite", Targ_Type);
+      end case;
+
+      --  Init the signal.
+      Start_Association (Assoc, Init_Subprg);
+      New_Association
+        (Assoc,
+         New_Convert_Ov (New_Value (M2Lv (Targ)), Ghdl_Signal_Ptr));
+      if Init /= Mnode_Null then
+         Init_Val := M2E (Init);
+      else
+         Init_Val := Chap4.Get_Scalar_Initial_Value (Targ_Type);
+      end if;
+      New_Association (Assoc, New_Convert_Ov (Init_Val, Conv));
+      New_Procedure_Call (Assoc);
+   end Gen_Port_Init_Driving_Scalar;
+
+   procedure Gen_Port_Init_Driving_1 is new Foreach_Non_Composite
+     (Data_Type => Mnode,
+      Composite_Data_Type => Mnode,
+      Do_Non_Composite => Gen_Port_Init_Driving_Scalar,
+      Prepare_Data_Array => Foreach_Non_Composite_Prepare_Data_Array_Mnode,
+      Update_Data_Array => Foreach_Non_Composite_Update_Data_Array_Mnode,
+      Prepare_Data_Record => Foreach_Non_Composite_Prepare_Data_Record_Mnode,
+      Update_Data_Record => Foreach_Non_Composite_Update_Data_Record_Mnode);
+
+   procedure Gen_Port_Init_Driving
+     (Port : Mnode; Port_Type : Iir; Init : Mnode)
+     renames Gen_Port_Init_Driving_1;
 
    --    procedure Register_Scalar_Direct_Driver (Sig : Mnode;
    --                                             Sig_Type : Iir;
@@ -1365,19 +1534,38 @@ package body Trans.Chap9 is
       if Flag_Direct_Drivers then
          Chap9.Set_Direct_Drivers (Proc);
 
-         declare
-            Sig                : Iir;
-            Base               : Iir;
-            Sig_Node, Drv_Node : Mnode;
-         begin
-            for I in Info.Process_Drivers.all'Range loop
-               Sig := Info.Process_Drivers (I).Sig;
+         for I in Info.Process_Drivers.all'Range loop
+            declare
+               Sig : constant Iir := Info.Process_Drivers (I).Sig;
+               Base : constant Iir := Get_Object_Prefix (Sig);
+               Sig_Node, Drv_Node, Init_Node : Mnode;
+               Base_Type : Iir;
+            begin
                Open_Temp;
                Chap9.Destroy_Types (Sig);
-               Base := Get_Object_Prefix (Sig);
                if Info.Process_Drivers (I).Var /= Null_Var then
                   --  Elaborate direct driver.  Done only once.
                   Chap4.Elab_Direct_Driver_Declaration_Storage (Base);
+
+                  --  Initial value.
+                  Drv_Node := Chap6.Get_Signal_Direct_Driver (Base);
+                  Base_Type := Get_Type (Base);
+                  if Get_Kind (Base) = Iir_Kind_Interface_Signal_Declaration
+                  then
+                     --  From the port default value.
+                     if Is_Valid (Get_Default_Value (Base)) then
+                        Chap3.Translate_Object_Copy
+                          (Drv_Node, M2E (Chap6.Get_Port_Init_Value (Base)),
+                           Base_Type);
+                     else
+                        Chap4.Init_Object (Drv_Node, Base_Type);
+                     end if;
+                  else
+                     --  From the signal value.
+                     Chap3.Translate_Object_Copy
+                       (Drv_Node, Chap7.Translate_Expression (Base),
+                        Base_Type);
+                  end if;
                end if;
                if Chap4.Has_Direct_Driver (Base) then
                   --  Signal has a direct driver.
@@ -1385,13 +1573,28 @@ package body Trans.Chap9 is
                   Gen_Register_Direct_Driver
                     (Sig_Node, Get_Type (Sig), Drv_Node);
                else
-                  Register_Signal (Chap6.Translate_Name (Sig, Mode_Signal),
-                                   Get_Type (Sig),
-                                   Ghdl_Process_Add_Driver);
+                  --  TODO (issue328): add default value
+                  if Get_Kind (Base) = Iir_Kind_Interface_Signal_Declaration
+                  then
+                     if Is_Valid (Get_Default_Value (Base)) then
+                        Chap6.Translate_Port_Init
+                          (Sig, Sig_Node, Init_Node);
+                        Gen_Add_Port_Driver
+                          (Sig_Node, Get_Type (Sig), Init_Node);
+                     else
+                        Sig_Node := Chap6.Translate_Name (Sig, Mode_Signal);
+                        Gen_Add_Port_Driver_Default
+                          (Sig_Node, Get_Type (Sig), (others => <>));
+                     end if;
+                  else
+                     Register_Signal (Chap6.Translate_Name (Sig, Mode_Signal),
+                                      Get_Type (Sig),
+                                      Ghdl_Process_Add_Driver);
+                  end if;
                end if;
                Close_Temp;
-            end loop;
-         end;
+            end;
+         end loop;
 
          Chap9.Reset_Direct_Drivers (Proc);
       else
@@ -2246,196 +2449,68 @@ package body Trans.Chap9 is
       Close_Temp;
    end Elab_Stmt_For_Generate_Statement;
 
-   type Merge_Signals_Data is record
-      Sig      : Iir;
-      Set_Init : Boolean;
-      Has_Val  : Boolean;
-      Val      : Mnode;
-   end record;
-
-   procedure Merge_Signals_Rti_Non_Composite (Targ      : Mnode;
-                                              Targ_Type : Iir;
-                                              Data      : Merge_Signals_Data)
+   procedure Merge_Signals_Rti_Non_Composite
+     (Targ : Mnode; Targ_Type : Iir; Sig : Iir)
    is
-      Type_Info : Type_Info_Acc;
-      Sig       : Mnode;
-
-      Init_Subprg : O_Dnode;
-      Conv        : O_Tnode;
-      Assoc       : O_Assoc_List;
-      Init_Val    : O_Enode;
+      pragma Unreferenced (Targ_Type);
+      Assoc : O_Assoc_List;
    begin
-      Type_Info := Get_Info (Targ_Type);
-
-      Open_Temp;
-
-      if Data.Set_Init then
-         case Type_Info.Type_Mode is
-            when Type_Mode_B1 =>
-               Init_Subprg := Ghdl_Signal_Init_B1;
-               Conv := Ghdl_Bool_Type;
-            when Type_Mode_E8 =>
-               Init_Subprg := Ghdl_Signal_Init_E8;
-               Conv := Ghdl_I32_Type;
-            when Type_Mode_E32 =>
-               Init_Subprg := Ghdl_Signal_Init_E32;
-               Conv := Ghdl_I32_Type;
-            when Type_Mode_I32
-               | Type_Mode_P32 =>
-               Init_Subprg := Ghdl_Signal_Init_I32;
-               Conv := Ghdl_I32_Type;
-            when Type_Mode_P64
-               | Type_Mode_I64 =>
-               Init_Subprg := Ghdl_Signal_Init_I64;
-               Conv := Ghdl_I64_Type;
-            when Type_Mode_F64 =>
-               Init_Subprg := Ghdl_Signal_Init_F64;
-               Conv := Ghdl_Real_Type;
-            when others =>
-               Error_Kind ("merge_signals_rti_non_composite", Targ_Type);
-         end case;
-
-         Sig := Stabilize (Targ, True);
-
-         --  Init the signal.
-         Start_Association (Assoc, Init_Subprg);
-         New_Association
-           (Assoc,
-            New_Convert_Ov (New_Value (M2Lv (Sig)), Ghdl_Signal_Ptr));
-         if Data.Has_Val then
-            Init_Val := M2E (Data.Val);
-         else
-            Init_Val := Chap4.Get_Scalar_Initial_Value (Targ_Type);
-         end if;
-         New_Association (Assoc, New_Convert_Ov (Init_Val, Conv));
-         New_Procedure_Call (Assoc);
-      else
-         Sig := Targ;
-      end if;
-
       Start_Association (Assoc, Ghdl_Signal_Merge_Rti);
 
       New_Association
-        (Assoc, New_Convert_Ov (New_Value (M2Lv (Sig)), Ghdl_Signal_Ptr));
+        (Assoc, New_Convert_Ov (New_Value (M2Lv (Targ)), Ghdl_Signal_Ptr));
       New_Association
         (Assoc,
          New_Lit (New_Global_Unchecked_Address
-                    (Get_Info (Data.Sig).Signal_Rti,
-                     Rtis.Ghdl_Rti_Access)));
+                    (Get_Info (Sig).Signal_Rti, Rtis.Ghdl_Rti_Access)));
       New_Procedure_Call (Assoc);
-      Close_Temp;
    end Merge_Signals_Rti_Non_Composite;
 
    function Merge_Signals_Rti_Prepare
-     (Targ : Mnode; Targ_Type : Iir; Data : Merge_Signals_Data)
-     return Merge_Signals_Data
+     (Targ : Mnode; Targ_Type : Iir; Sig : Iir) return Iir
    is
       pragma Unreferenced (Targ);
       pragma Unreferenced (Targ_Type);
-      Res : Merge_Signals_Data;
    begin
-      Res := Data;
-      if Data.Has_Val then
-         if Get_Type_Info (Data.Val).Type_Mode in Type_Mode_Records then
-            Res.Val := Stabilize (Data.Val);
-         else
-            Res.Val := Chap3.Get_Composite_Base (Data.Val);
-         end if;
-      end if;
-
-      return Res;
+      return Sig;
    end Merge_Signals_Rti_Prepare;
 
    function Merge_Signals_Rti_Update_Data_Array
-     (Data : Merge_Signals_Data; Targ_Type : Iir; Index : O_Dnode)
-         return Merge_Signals_Data
-   is
-   begin
-      if not Data.Has_Val then
-         return Data;
-      else
-         return Merge_Signals_Data'
-           (Sig => Data.Sig,
-            Val => Chap3.Index_Base (Data.Val, Targ_Type,
-              New_Obj_Value (Index)),
-            Has_Val => True,
-            Set_Init => Data.Set_Init);
-      end if;
-   end Merge_Signals_Rti_Update_Data_Array;
-
-   procedure Merge_Signals_Rti_Finish_Data_Composite
-     (Data : in out Merge_Signals_Data)
-   is
-      pragma Unreferenced (Data);
-   begin
-      null;
-   end Merge_Signals_Rti_Finish_Data_Composite;
-
-   function Merge_Signals_Rti_Update_Data_Record
-     (Data      : Merge_Signals_Data;
-      Targ_Type : Iir;
-      El        : Iir_Element_Declaration) return Merge_Signals_Data
+     (Sig : Iir; Targ_Type : Iir; Index : O_Dnode) return Iir
    is
       pragma Unreferenced (Targ_Type);
+      pragma Unreferenced (Index);
    begin
-      if not Data.Has_Val then
-         return Data;
-      else
-         return Merge_Signals_Data'
-           (Sig => Data.Sig,
-            Val => Chap6.Translate_Selected_Element (Data.Val, El),
-            Has_Val => True,
-            Set_Init => Data.Set_Init);
-      end if;
+      return Sig;
+   end Merge_Signals_Rti_Update_Data_Array;
+
+   function Merge_Signals_Rti_Update_Data_Record
+     (Sig : Iir; Targ_Type : Iir; El : Iir_Element_Declaration) return Iir
+   is
+      pragma Unreferenced (Targ_Type);
+      pragma Unreferenced (El);
+   begin
+      return Sig;
    end Merge_Signals_Rti_Update_Data_Record;
 
-   pragma Inline (Merge_Signals_Rti_Finish_Data_Composite);
-
    procedure Merge_Signals_Rti is new Foreach_Non_Composite
-     (Data_Type => Merge_Signals_Data,
-      Composite_Data_Type => Merge_Signals_Data,
+     (Data_Type => Iir,
+      Composite_Data_Type => Iir,
       Do_Non_Composite => Merge_Signals_Rti_Non_Composite,
       Prepare_Data_Array => Merge_Signals_Rti_Prepare,
       Update_Data_Array => Merge_Signals_Rti_Update_Data_Array,
-      Finish_Data_Array => Merge_Signals_Rti_Finish_Data_Composite,
       Prepare_Data_Record => Merge_Signals_Rti_Prepare,
-      Update_Data_Record => Merge_Signals_Rti_Update_Data_Record,
-      Finish_Data_Record => Merge_Signals_Rti_Finish_Data_Composite);
+      Update_Data_Record => Merge_Signals_Rti_Update_Data_Record);
 
    procedure Merge_Signals_Rti_Of_Port_Chain (Chain : Iir)
    is
       Port      : Iir;
-      Port_Type : Iir;
-      Data      : Merge_Signals_Data;
-      Val       : Iir;
    begin
       Port := Chain;
       while Port /= Null_Iir loop
-         Port_Type := Get_Type (Port);
-         Data.Sig := Port;
          Open_Temp;
-
-         case Get_Mode (Port) is
-            when Iir_Buffer_Mode
-               | Iir_Out_Mode
-               | Iir_Inout_Mode =>
-               Data.Set_Init := True;
-               Val := Get_Default_Value (Port);
-               if Val = Null_Iir then
-                  Data.Has_Val := False;
-               else
-                  Data.Has_Val := True;
-                  Data.Val := E2M (Chap7.Translate_Expression (Val, Port_Type),
-                                   Get_Info (Port_Type),
-                                   Mode_Value);
-               end if;
-            when others =>
-               Data.Set_Init := False;
-               Data.Has_Val := False;
-         end case;
-
          Merge_Signals_Rti
-           (Chap6.Translate_Name (Port, Mode_Signal), Port_Type, Data);
+           (Chap6.Translate_Name (Port, Mode_Signal), Get_Type (Port), Port);
          Close_Temp;
 
          Port := Get_Chain (Port);

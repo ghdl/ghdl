@@ -3730,13 +3730,6 @@ package body Trans.Chap7 is
       return Chap6.Translate_Selected_Element (Val, El);
    end Sig2val_Update_Data_Record;
 
-   procedure Sig2val_Finish_Data_Composite (Data : in out Mnode)
-   is
-      pragma Unreferenced (Data);
-   begin
-      null;
-   end Sig2val_Finish_Data_Composite;
-
    procedure Translate_Signal_Assign_Driving_Non_Composite
      (Targ : Mnode; Targ_Type : Iir; Data: Mnode) is
    begin
@@ -3752,10 +3745,8 @@ package body Trans.Chap7 is
       Do_Non_Composite => Translate_Signal_Assign_Driving_Non_Composite,
       Prepare_Data_Array => Sig2val_Prepare_Composite,
       Update_Data_Array => Sig2val_Update_Data_Array,
-      Finish_Data_Array => Sig2val_Finish_Data_Composite,
       Prepare_Data_Record => Sig2val_Prepare_Composite,
-      Update_Data_Record => Sig2val_Update_Data_Record,
-      Finish_Data_Record => Sig2val_Finish_Data_Composite);
+      Update_Data_Record => Sig2val_Update_Data_Record);
 
    function Translate_Signal_Value (Sig : O_Enode; Sig_Type : Iir)
                                    return O_Enode
@@ -3775,10 +3766,8 @@ package body Trans.Chap7 is
          Do_Non_Composite => Translate_Signal_Non_Composite,
          Prepare_Data_Array => Sig2val_Prepare_Composite,
          Update_Data_Array => Sig2val_Update_Data_Array,
-         Finish_Data_Array => Sig2val_Finish_Data_Composite,
          Prepare_Data_Record => Sig2val_Prepare_Composite,
-         Update_Data_Record => Sig2val_Update_Data_Record,
-         Finish_Data_Record => Sig2val_Finish_Data_Composite);
+         Update_Data_Record => Sig2val_Update_Data_Record);
 
       Tinfo : Type_Info_Acc;
    begin

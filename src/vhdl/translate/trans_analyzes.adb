@@ -35,8 +35,7 @@ package body Trans_Analyzes is
       Base := Get_Object_Prefix (Target);
       --  Assigment to subprogram interface does not create a driver.
       if Get_Kind (Base) = Iir_Kind_Interface_Signal_Declaration
-        and then
-        Get_Kind (Get_Parent (Base)) = Iir_Kind_Procedure_Declaration
+        and then Is_Parameter (Base)
       then
          return Walk_Continue;
       end if;

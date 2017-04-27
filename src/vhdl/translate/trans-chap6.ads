@@ -30,15 +30,15 @@ package Trans.Chap6 is
    procedure Translate_Direct_Driver
      (Name : Iir; Sig : out Mnode; Drv : out Mnode);
 
-   --  Same as Translate_Name, but only for formal names.
-   --  If SCOPE_TYPE and SCOPE_PARAM are not null, use them for the scope
-   --  of the base name.
-   --  Indeed, for recursive instantiation, NAME can designates the actual
-   --  and the formal.
-   --       function Translate_Formal_Name (Scope_Type : O_Tnode;
-   --                                       Scope_Param : O_Lnode;
-   --                                       Name : Iir)
-   --                                      return Mnode;
+   --  Translate port NAME to its node (SIG) and its default value (INIT).
+   procedure Translate_Port_Init
+     (Name : Iir; Sig : out Mnode; Init : out Mnode);
+
+   --  Direct driver of SIG (must be present).
+   function Get_Signal_Direct_Driver (Sig : Iir) return Mnode;
+
+   --  Initial value of PORT (must be present).
+   function Get_Port_Init_Value (Port : Iir) return Mnode;
 
    --  Get record element EL of PREFIX.
    function Translate_Selected_Element

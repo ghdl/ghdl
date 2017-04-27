@@ -40,7 +40,8 @@ generic
                                    return Data_Type;
 
    --  This function is called at the end of a record process.
-   with procedure Finish_Data_Array (Data : in out Composite_Data_Type);
+   with procedure Finish_Data_Array (Data : in out Composite_Data_Type)
+      is null;
 
    --  This function should stabilize DATA.
    with function Prepare_Data_Record (Targ      : Mnode;
@@ -55,7 +56,8 @@ generic
                                     return Data_Type;
 
    --  This function is called at the end of a record process.
-   with procedure Finish_Data_Record (Data : in out Composite_Data_Type);
+   with procedure Finish_Data_Record (Data : in out Composite_Data_Type)
+     is null;
 
 procedure Trans.Foreach_Non_Composite (Targ      : Mnode;
                                        Targ_Type : Iir;

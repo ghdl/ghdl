@@ -40,4 +40,10 @@ package Trans.Chap9 is
    --  slices in the sensitivity or driver list) and the process subprg.
    procedure Destroy_Types (N : Iir);
    procedure Destroy_Types_In_List (L : Iir_List);
+
+   --  Called by chap5 to initialize the driving value of a signal associated
+   --  to a collapsed port.
+   procedure Gen_Port_Init_Driving
+     (Port : Mnode; Port_Type : Iir; Init : Mnode);
+
 end Trans.Chap9;

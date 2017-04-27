@@ -77,52 +77,58 @@ package Trans_Decls is
    Ghdl_Signal_Start_Assign_Null : O_Dnode;
    Ghdl_Signal_Next_Assign_Null : O_Dnode;
 
-   Ghdl_Create_Signal_E8 : O_Dnode;
-   Ghdl_Signal_Init_E8 : O_Dnode;
-   Ghdl_Signal_Simple_Assign_E8 : O_Dnode;
-   Ghdl_Signal_Start_Assign_E8 : O_Dnode;
-   Ghdl_Signal_Next_Assign_E8 : O_Dnode;
-   Ghdl_Signal_Associate_E8 : O_Dnode;
-   Ghdl_Signal_Driving_Value_E8 : O_Dnode;
-
-   Ghdl_Create_Signal_E32 : O_Dnode;
-   Ghdl_Signal_Init_E32 : O_Dnode;
-   Ghdl_Signal_Simple_Assign_E32 : O_Dnode;
-   Ghdl_Signal_Start_Assign_E32 : O_Dnode;
-   Ghdl_Signal_Next_Assign_E32 : O_Dnode;
-   Ghdl_Signal_Associate_E32 : O_Dnode;
-   Ghdl_Signal_Driving_Value_E32 : O_Dnode;
-
    Ghdl_Create_Signal_B1 : O_Dnode;
-   Ghdl_Signal_Init_B1 : O_Dnode;
    Ghdl_Signal_Simple_Assign_B1 : O_Dnode;
    Ghdl_Signal_Start_Assign_B1 : O_Dnode;
    Ghdl_Signal_Next_Assign_B1 : O_Dnode;
    Ghdl_Signal_Associate_B1 : O_Dnode;
+   Ghdl_Signal_Add_Port_Driver_B1 : O_Dnode;
+   Ghdl_Signal_Init_B1 : O_Dnode;
    Ghdl_Signal_Driving_Value_B1 : O_Dnode;
 
+   Ghdl_Create_Signal_E8 : O_Dnode;
+   Ghdl_Signal_Simple_Assign_E8 : O_Dnode;
+   Ghdl_Signal_Start_Assign_E8 : O_Dnode;
+   Ghdl_Signal_Next_Assign_E8 : O_Dnode;
+   Ghdl_Signal_Associate_E8 : O_Dnode;
+   Ghdl_Signal_Add_Port_Driver_E8 : O_Dnode;
+   Ghdl_Signal_Init_E8 : O_Dnode;
+   Ghdl_Signal_Driving_Value_E8 : O_Dnode;
+
+   Ghdl_Create_Signal_E32 : O_Dnode;
+   Ghdl_Signal_Simple_Assign_E32 : O_Dnode;
+   Ghdl_Signal_Start_Assign_E32 : O_Dnode;
+   Ghdl_Signal_Next_Assign_E32 : O_Dnode;
+   Ghdl_Signal_Associate_E32 : O_Dnode;
+   Ghdl_Signal_Add_Port_Driver_E32 : O_Dnode;
+   Ghdl_Signal_Init_E32 : O_Dnode;
+   Ghdl_Signal_Driving_Value_E32 : O_Dnode;
+
    Ghdl_Create_Signal_I32 : O_Dnode;
-   Ghdl_Signal_Init_I32 : O_Dnode;
    Ghdl_Signal_Simple_Assign_I32 : O_Dnode;
    Ghdl_Signal_Start_Assign_I32 : O_Dnode;
    Ghdl_Signal_Next_Assign_I32 : O_Dnode;
    Ghdl_Signal_Associate_I32 : O_Dnode;
+   Ghdl_Signal_Add_Port_Driver_I32 : O_Dnode;
+   Ghdl_Signal_Init_I32 : O_Dnode;
    Ghdl_Signal_Driving_Value_I32 : O_Dnode;
 
    Ghdl_Create_Signal_F64 : O_Dnode;
-   Ghdl_Signal_Init_F64 : O_Dnode;
    Ghdl_Signal_Simple_Assign_F64 : O_Dnode;
    Ghdl_Signal_Start_Assign_F64 : O_Dnode;
    Ghdl_Signal_Next_Assign_F64 : O_Dnode;
    Ghdl_Signal_Associate_F64 : O_Dnode;
+   Ghdl_Signal_Add_Port_Driver_F64 : O_Dnode;
+   Ghdl_Signal_Init_F64 : O_Dnode;
    Ghdl_Signal_Driving_Value_F64 : O_Dnode;
 
    Ghdl_Create_Signal_I64 : O_Dnode;
-   Ghdl_Signal_Init_I64 : O_Dnode;
    Ghdl_Signal_Simple_Assign_I64 : O_Dnode;
    Ghdl_Signal_Start_Assign_I64 : O_Dnode;
    Ghdl_Signal_Next_Assign_I64 : O_Dnode;
    Ghdl_Signal_Associate_I64 : O_Dnode;
+   Ghdl_Signal_Add_Port_Driver_I64 : O_Dnode;
+   Ghdl_Signal_Init_I64 : O_Dnode;
    Ghdl_Signal_Driving_Value_I64 : O_Dnode;
 
    Ghdl_Signal_In_Conversion : O_Dnode;

@@ -363,6 +363,8 @@ package body Ghdlrun is
            Grt.Signals.Ghdl_Signal_Next_Assign_B1'Address);
       Def (Trans_Decls.Ghdl_Signal_Associate_B1,
            Grt.Signals.Ghdl_Signal_Associate_B1'Address);
+      Def (Trans_Decls.Ghdl_Signal_Add_Port_Driver_B1,
+           Grt.Signals.Ghdl_Signal_Add_Port_Driver_B1'Address);
 
       Def (Trans_Decls.Ghdl_Create_Signal_E8,
            Grt.Signals.Ghdl_Create_Signal_E8'Address);
@@ -376,6 +378,8 @@ package body Ghdlrun is
            Grt.Signals.Ghdl_Signal_Next_Assign_E8'Address);
       Def (Trans_Decls.Ghdl_Signal_Associate_E8,
            Grt.Signals.Ghdl_Signal_Associate_E8'Address);
+      Def (Trans_Decls.Ghdl_Signal_Add_Port_Driver_E8,
+           Grt.Signals.Ghdl_Signal_Add_Port_Driver_E8'Address);
 
       Def (Trans_Decls.Ghdl_Create_Signal_E32,
            Grt.Signals.Ghdl_Create_Signal_E32'Address);
@@ -389,6 +393,8 @@ package body Ghdlrun is
            Grt.Signals.Ghdl_Signal_Next_Assign_E32'Address);
       Def (Trans_Decls.Ghdl_Signal_Associate_E32,
            Grt.Signals.Ghdl_Signal_Associate_E32'Address);
+      Def (Trans_Decls.Ghdl_Signal_Add_Port_Driver_E32,
+           Grt.Signals.Ghdl_Signal_Add_Port_Driver_E32'Address);
 
       Def (Trans_Decls.Ghdl_Create_Signal_I32,
            Grt.Signals.Ghdl_Create_Signal_I32'Address);
@@ -402,6 +408,8 @@ package body Ghdlrun is
            Grt.Signals.Ghdl_Signal_Next_Assign_I32'Address);
       Def (Trans_Decls.Ghdl_Signal_Associate_I32,
            Grt.Signals.Ghdl_Signal_Associate_I32'Address);
+      Def (Trans_Decls.Ghdl_Signal_Add_Port_Driver_I32,
+           Grt.Signals.Ghdl_Signal_Add_Port_Driver_I32'Address);
 
       Def (Trans_Decls.Ghdl_Create_Signal_I64,
            Grt.Signals.Ghdl_Create_Signal_I64'Address);
@@ -415,6 +423,8 @@ package body Ghdlrun is
            Grt.Signals.Ghdl_Signal_Next_Assign_I64'Address);
       Def (Trans_Decls.Ghdl_Signal_Associate_I64,
            Grt.Signals.Ghdl_Signal_Associate_I64'Address);
+      Def (Trans_Decls.Ghdl_Signal_Add_Port_Driver_I64,
+           Grt.Signals.Ghdl_Signal_Add_Port_Driver_I64'Address);
 
       Def (Trans_Decls.Ghdl_Create_Signal_F64,
            Grt.Signals.Ghdl_Create_Signal_F64'Address);
@@ -428,6 +438,8 @@ package body Ghdlrun is
            Grt.Signals.Ghdl_Signal_Next_Assign_F64'Address);
       Def (Trans_Decls.Ghdl_Signal_Associate_F64,
            Grt.Signals.Ghdl_Signal_Associate_F64'Address);
+      Def (Trans_Decls.Ghdl_Signal_Add_Port_Driver_F64,
+           Grt.Signals.Ghdl_Signal_Add_Port_Driver_F64'Address);
 
       Def (Trans_Decls.Ghdl_Signal_Attribute_Register_Prefix,
            Grt.Signals.Ghdl_Signal_Attribute_Register_Prefix'Address);

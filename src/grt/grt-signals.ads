@@ -585,6 +585,8 @@ package Grt.Signals is
    procedure Ghdl_Signal_Next_Assign_B1 (Sign : Ghdl_Signal_Ptr;
                                          Val : Ghdl_B1;
                                          After : Std_Time);
+   procedure Ghdl_Signal_Add_Port_Driver_B1 (Sig : Ghdl_Signal_Ptr;
+                                             Val : Ghdl_B1);
    function Ghdl_Signal_Driving_Value_B1 (Sig : Ghdl_Signal_Ptr)
                                          return Ghdl_B1;
    procedure Ghdl_Signal_Force_Driving_B1 (Sig : Ghdl_Signal_Ptr;
@@ -607,6 +609,8 @@ package Grt.Signals is
    procedure Ghdl_Signal_Next_Assign_E8 (Sign : Ghdl_Signal_Ptr;
                                          Val : Ghdl_E8;
                                          After : Std_Time);
+   procedure Ghdl_Signal_Add_Port_Driver_E8 (Sig : Ghdl_Signal_Ptr;
+                                             Val : Ghdl_E8);
    function Ghdl_Signal_Driving_Value_E8 (Sig : Ghdl_Signal_Ptr)
                                          return Ghdl_E8;
    procedure Ghdl_Signal_Force_Driving_E8 (Sig : Ghdl_Signal_Ptr;
@@ -629,6 +633,8 @@ package Grt.Signals is
    procedure Ghdl_Signal_Next_Assign_E32 (Sign : Ghdl_Signal_Ptr;
                                          Val : Ghdl_E32;
                                          After : Std_Time);
+   procedure Ghdl_Signal_Add_Port_Driver_E32 (Sig : Ghdl_Signal_Ptr;
+                                              Val : Ghdl_E32);
    function Ghdl_Signal_Driving_Value_E32 (Sig : Ghdl_Signal_Ptr)
                                          return Ghdl_E32;
 
@@ -647,6 +653,8 @@ package Grt.Signals is
    procedure Ghdl_Signal_Next_Assign_I32 (Sign : Ghdl_Signal_Ptr;
                                           Val : Ghdl_I32;
                                           After : Std_Time);
+   procedure Ghdl_Signal_Add_Port_Driver_I32 (Sig : Ghdl_Signal_Ptr;
+                                              Val : Ghdl_I32);
    function Ghdl_Signal_Driving_Value_I32 (Sig : Ghdl_Signal_Ptr)
                                          return Ghdl_I32;
 
@@ -665,6 +673,8 @@ package Grt.Signals is
    procedure Ghdl_Signal_Next_Assign_I64 (Sign : Ghdl_Signal_Ptr;
                                           Val : Ghdl_I64;
                                           After : Std_Time);
+   procedure Ghdl_Signal_Add_Port_Driver_I64 (Sig : Ghdl_Signal_Ptr;
+                                              Val : Ghdl_I64);
    function Ghdl_Signal_Driving_Value_I64 (Sig : Ghdl_Signal_Ptr)
                                           return Ghdl_I64;
 
@@ -683,6 +693,8 @@ package Grt.Signals is
    procedure Ghdl_Signal_Next_Assign_F64 (Sign : Ghdl_Signal_Ptr;
                                           Val : Ghdl_F64;
                                           After : Std_Time);
+   procedure Ghdl_Signal_Add_Port_Driver_F64 (Sig : Ghdl_Signal_Ptr;
+                                              Val : Ghdl_F64);
    function Ghdl_Signal_Driving_Value_F64 (Sig : Ghdl_Signal_Ptr)
                                          return Ghdl_F64;
 
@@ -827,6 +839,8 @@ private
                   "__ghdl_signal_start_assign_b1");
    pragma Export (Ada, Ghdl_Signal_Next_Assign_B1,
                   "__ghdl_signal_next_assign_b1");
+   pragma Export (Ada, Ghdl_Signal_Add_Port_Driver_B1,
+                  "__ghdl_signal_add_port_driver_b1");
    pragma Export (Ada, Ghdl_Signal_Driving_Value_B1,
                   "__ghdl_signal_driving_value_b1");
 
@@ -842,6 +856,8 @@ private
                   "__ghdl_signal_start_assign_e8");
    pragma Export (C, Ghdl_Signal_Next_Assign_E8,
                   "__ghdl_signal_next_assign_e8");
+   pragma Export (C, Ghdl_Signal_Add_Port_Driver_E8,
+                  "__ghdl_signal_add_port_driver_e8");
    pragma Export (C, Ghdl_Signal_Driving_Value_E8,
                   "__ghdl_signal_driving_value_e8");
 
@@ -857,6 +873,8 @@ private
                   "__ghdl_signal_start_assign_e32");
    pragma Export (C, Ghdl_Signal_Next_Assign_E32,
                   "__ghdl_signal_next_assign_e32");
+   pragma Export (C, Ghdl_Signal_Add_Port_Driver_E32,
+                  "__ghdl_signal_add_port_driver_e32");
    pragma Export (C, Ghdl_Signal_Driving_Value_E32,
                   "__ghdl_signal_driving_value_e32");
 
@@ -872,6 +890,8 @@ private
                   "__ghdl_signal_start_assign_i32");
    pragma Export (C, Ghdl_Signal_Next_Assign_I32,
                   "__ghdl_signal_next_assign_i32");
+   pragma Export (C, Ghdl_Signal_Add_Port_Driver_I32,
+                  "__ghdl_signal_add_port_driver_i32");
    pragma Export (C, Ghdl_Signal_Driving_Value_I32,
                   "__ghdl_signal_driving_value_i32");
 
@@ -887,6 +907,8 @@ private
                   "__ghdl_signal_start_assign_i64");
    pragma Export (C, Ghdl_Signal_Next_Assign_I64,
                   "__ghdl_signal_next_assign_i64");
+   pragma Export (C, Ghdl_Signal_Add_Port_Driver_I64,
+                  "__ghdl_signal_add_port_driver_i64");
    pragma Export (C, Ghdl_Signal_Driving_Value_I64,
                   "__ghdl_signal_driving_value_i64");
 
@@ -902,6 +924,8 @@ private
                   "__ghdl_signal_start_assign_f64");
    pragma Export (C, Ghdl_Signal_Next_Assign_F64,
                   "__ghdl_signal_next_assign_f64");
+   pragma Export (C, Ghdl_Signal_Add_Port_Driver_F64,
+                  "__ghdl_signal_add_port_driver_f64");
    pragma Export (C, Ghdl_Signal_Driving_Value_F64,
                   "__ghdl_signal_driving_value_f64");
 

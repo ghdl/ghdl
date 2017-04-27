@@ -957,6 +957,40 @@ package body Trans.Chap6 is
    --          end case;
    --       end Translate_Formal_Name;
 
+   function Translate_Object_Alias_Name (Name : Iir; Mode : Object_Kind_Type)
+                                        return Mnode
+   is
+      Name_Type : constant Iir := Get_Type (Name);
+      Name_Info : constant Ortho_Info_Acc := Get_Info (Name);
+      Type_Info : constant Type_Info_Acc := Get_Info (Name_Type);
+      R : O_Lnode;
+      pragma Assert (Mode <= Name_Info.Alias_Kind);
+   begin
+      --  Alias_Var is not like an object variable, since it is
+      --  always a pointer to the aliased object.
+      case Type_Info.Type_Mode is
+         when Type_Mode_Fat_Array =>
+            --  Get_Var for Mnode is ok here as an unbounded object is always
+            --  a pointer (and so is an alias).
+            return Get_Var (Name_Info.Alias_Var (Mode), Type_Info, Mode);
+         when Type_Mode_Array
+           | Type_Mode_Record
+           | Type_Mode_Acc
+           | Type_Mode_Bounds_Acc =>
+            R := Get_Var (Name_Info.Alias_Var (Mode));
+            return Lp2M (R, Type_Info, Mode);
+         when Type_Mode_Scalar =>
+            R := Get_Var (Name_Info.Alias_Var (Mode));
+            if Mode = Mode_Signal then
+               return Lv2M (R, Type_Info, Mode_Signal);
+            else
+               return Lp2M (R, Type_Info, Mode_Value);
+            end if;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Translate_Object_Alias_Name;
+
    function Translate_Name (Name : Iir; Mode : Object_Kind_Type) return Mnode
    is
       Name_Type : constant Iir := Get_Type (Name);
@@ -1099,30 +1133,49 @@ package body Trans.Chap6 is
       end case;
    end Translate_Name;
 
-   procedure Translate_Direct_Driver
-     (Name : Iir; Sig : out Mnode; Drv : out Mnode)
+   function Get_Signal_Direct_Driver (Sig : Iir) return Mnode
    is
-      Name_Type : constant Iir := Get_Type (Name);
-      Name_Info : constant Ortho_Info_Acc := Get_Info (Name);
-      Type_Info : constant Type_Info_Acc := Get_Info (Name_Type);
+      Info : constant Ortho_Info_Acc := Get_Info (Sig);
+      Type_Info : constant Type_Info_Acc := Get_Info (Get_Type (Sig));
+   begin
+      return Get_Var (Info.Signal_Driver, Type_Info, Mode_Value);
+   end Get_Signal_Direct_Driver;
+
+   function Get_Port_Init_Value (Port : Iir) return Mnode
+   is
+      Info : constant Ortho_Info_Acc := Get_Info (Port);
+      Type_Info : constant Type_Info_Acc := Get_Info (Get_Type (Port));
+   begin
+      return Get_Var (Info.Signal_Val, Type_Info, Mode_Value);
+   end Get_Port_Init_Value;
+
+   generic
+      with procedure Translate_Signal_Base
+        (Name : Iir; Sig : out Mnode; Drv : out Mnode);
+   procedure Translate_Signal (Name : Iir; Sig : out Mnode; Drv : out Mnode);
+
+   procedure Translate_Signal (Name : Iir; Sig : out Mnode; Drv : out Mnode) is
    begin
       case Get_Kind (Name) is
          when Iir_Kind_Simple_Name
             | Iir_Kind_Selected_Name =>
-            Translate_Direct_Driver (Get_Named_Entity (Name), Sig, Drv);
-         when Iir_Kind_Object_Alias_Declaration =>
-            Translate_Direct_Driver (Get_Name (Name), Sig, Drv);
+            Translate_Signal (Get_Named_Entity (Name), Sig, Drv);
          when Iir_Kind_Signal_Declaration
-            | Iir_Kind_Interface_Signal_Declaration =>
-            Sig := Get_Var (Name_Info.Signal_Sig, Type_Info, Mode_Signal);
-            Drv := Get_Var (Name_Info.Signal_Driver, Type_Info, Mode_Value);
+           | Iir_Kind_Interface_Signal_Declaration
+           | Iir_Kind_Stable_Attribute
+           | Iir_Kind_Quiet_Attribute
+           | Iir_Kind_Delayed_Attribute
+           | Iir_Kind_Transaction_Attribute
+           | Iir_Kind_Guard_Signal_Declaration
+           | Iir_Kind_Object_Alias_Declaration =>
+            Translate_Signal_Base (Name, Sig, Drv);
          when Iir_Kind_Slice_Name =>
             declare
                Data    : Slice_Name_Data;
                Pfx_Sig : Mnode;
                Pfx_Drv : Mnode;
             begin
-               Translate_Direct_Driver (Get_Prefix (Name), Pfx_Sig, Pfx_Drv);
+               Translate_Signal (Get_Prefix (Name), Pfx_Sig, Pfx_Drv);
                Translate_Slice_Name_Init (Pfx_Sig, Name, Data);
                Sig := Translate_Slice_Name_Finish
                  (Data.Prefix_Var, Name, Data);
@@ -1135,8 +1188,7 @@ package body Trans.Chap6 is
                Pfx_Sig : Mnode;
                Pfx_Drv : Mnode;
             begin
-               Translate_Direct_Driver
-                 (Get_Prefix (Name), Pfx_Sig, Pfx_Drv);
+               Translate_Signal (Get_Prefix (Name), Pfx_Sig, Pfx_Drv);
                Data := Translate_Indexed_Name_Init (Pfx_Sig, Name);
                Sig := Data.Res;
                Drv := Translate_Indexed_Name_Finish (Pfx_Drv, Name, Data);
@@ -1147,17 +1199,67 @@ package body Trans.Chap6 is
                Pfx_Sig : Mnode;
                Pfx_Drv : Mnode;
             begin
-               Translate_Direct_Driver
-                 (Get_Prefix (Name), Pfx_Sig, Pfx_Drv);
+               Translate_Signal (Get_Prefix (Name), Pfx_Sig, Pfx_Drv);
                Sig := Translate_Selected_Element (Pfx_Sig, El);
                Drv := Translate_Selected_Element (Pfx_Drv, El);
             end;
          when others =>
-            Error_Kind ("translate_direct_driver", Name);
+            Error_Kind ("translate_signal", Name);
       end case;
-   end Translate_Direct_Driver;
+   end Translate_Signal;
 
-   procedure Translate_Signal_Name
+   procedure Translate_Direct_Driver_Base
+     (Name : Iir; Sig : out Mnode; Drv : out Mnode) is
+   begin
+      case Get_Kind (Name) is
+         when Iir_Kind_Signal_Declaration
+           | Iir_Kind_Interface_Signal_Declaration =>
+            declare
+               Name_Type : constant Iir := Get_Type (Name);
+               Name_Info : constant Ortho_Info_Acc := Get_Info (Name);
+               Type_Info : constant Type_Info_Acc := Get_Info (Name_Type);
+            begin
+               Sig := Get_Var (Name_Info.Signal_Sig, Type_Info, Mode_Signal);
+               Drv := Get_Var (Name_Info.Signal_Driver, Type_Info, Mode_Value);
+            end;
+         when Iir_Kind_Object_Alias_Declaration =>
+            Translate_Direct_Driver (Get_Name (Name), Sig, Drv);
+         when others =>
+            Error_Kind ("translate_direct_driver_base", Name);
+      end case;
+   end Translate_Direct_Driver_Base;
+
+   procedure Translate_Direct_Driver_1 is new
+     Translate_Signal (Translate_Signal_Base => Translate_Direct_Driver_Base);
+
+   procedure Translate_Direct_Driver
+     (Name : Iir; Sig : out Mnode; Drv : out Mnode)
+     renames Translate_Direct_Driver_1;
+
+   procedure Translate_Port_Init_Base
+     (Name : Iir; Sig : out Mnode; Drv : out Mnode)
+   is
+      Name_Type : constant Iir := Get_Type (Name);
+      Name_Info : constant Ortho_Info_Acc := Get_Info (Name);
+      Type_Info : constant Type_Info_Acc := Get_Info (Name_Type);
+   begin
+      case Get_Kind (Name) is
+         when Iir_Kind_Interface_Signal_Declaration =>
+            Sig := Get_Var (Name_Info.Signal_Sig, Type_Info, Mode_Signal);
+            Drv := Get_Var (Name_Info.Signal_Val, Type_Info, Mode_Value);
+         when others =>
+            Error_Kind ("translate_direct_driver_base", Name);
+      end case;
+   end Translate_Port_Init_Base;
+
+   procedure Translate_Port_Init_1 is new
+     Translate_Signal (Translate_Signal_Base => Translate_Port_Init_Base);
+
+   procedure Translate_Port_Init
+     (Name : Iir; Sig : out Mnode; Init : out Mnode)
+     renames Translate_Port_Init_1;
+
+   procedure Translate_Signal_Base
      (Name : Iir; Sig : out Mnode; Val : out Mnode)
    is
       Name_Type : constant Iir := Get_Type (Name);
@@ -1165,12 +1267,6 @@ package body Trans.Chap6 is
       Type_Info : constant Type_Info_Acc := Get_Info (Name_Type);
    begin
       case Get_Kind (Name) is
-         when Iir_Kind_Simple_Name
-            | Iir_Kind_Selected_Name =>
-            Translate_Signal_Name (Get_Named_Entity (Name), Sig, Val);
-         when Iir_Kind_Object_Alias_Declaration =>
-            Sig := Translate_Name (Name, Mode_Signal);
-            Val := Translate_Name (Name, Mode_Value);
          when Iir_Kind_Signal_Declaration
            | Iir_Kind_Stable_Attribute
            | Iir_Kind_Quiet_Attribute
@@ -1182,44 +1278,18 @@ package body Trans.Chap6 is
          when Iir_Kind_Interface_Signal_Declaration =>
             Sig := Translate_Interface_Name (Name, Name_Info, Mode_Signal);
             Val := Translate_Interface_Name (Name, Name_Info, Mode_Value);
-         when Iir_Kind_Slice_Name =>
-            declare
-               Data    : Slice_Name_Data;
-               Pfx_Sig : Mnode;
-               Pfx_Val : Mnode;
-            begin
-               Translate_Signal_Name
-                 (Get_Prefix (Name), Pfx_Sig, Pfx_Val);
-               Translate_Slice_Name_Init (Pfx_Sig, Name, Data);
-               Sig := Translate_Slice_Name_Finish
-                 (Data.Prefix_Var, Name, Data);
-               Val := Translate_Slice_Name_Finish
-                 (Pfx_Val, Name, Data);
-            end;
-         when Iir_Kind_Indexed_Name =>
-            declare
-               Data    : Indexed_Name_Data;
-               Pfx_Sig : Mnode;
-               Pfx_Val : Mnode;
-            begin
-               Translate_Signal_Name
-                 (Get_Prefix (Name), Pfx_Sig, Pfx_Val);
-               Data := Translate_Indexed_Name_Init (Pfx_Sig, Name);
-               Sig := Data.Res;
-               Val := Translate_Indexed_Name_Finish (Pfx_Val, Name, Data);
-            end;
-         when Iir_Kind_Selected_Element =>
-            declare
-               El      : constant Iir := Get_Selected_Element (Name);
-               Pfx_Sig : Mnode;
-               Pfx_Val : Mnode;
-            begin
-               Translate_Signal_Name (Get_Prefix (Name), Pfx_Sig, Pfx_Val);
-               Sig := Translate_Selected_Element (Pfx_Sig, El);
-               Val := Translate_Selected_Element (Pfx_Val, El);
-            end;
+         when Iir_Kind_Object_Alias_Declaration =>
+            Sig := Translate_Object_Alias_Name (Name, Mode_Signal);
+            Val := Translate_Object_Alias_Name (Name, Mode_Value);
          when others =>
-            Error_Kind ("translate_signal_name", Name);
+            Error_Kind ("translate_signal_base", Name);
       end case;
-   end Translate_Signal_Name;
+   end Translate_Signal_Base;
+
+   procedure Translate_Signal_Name_1 is new
+     Translate_Signal (Translate_Signal_Base);
+
+   procedure Translate_Signal_Name
+     (Name : Iir; Sig : out Mnode; Val : out Mnode)
+     renames Translate_Signal_Name_1;
 end Trans.Chap6;

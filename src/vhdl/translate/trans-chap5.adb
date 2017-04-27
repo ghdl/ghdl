@@ -98,9 +98,8 @@ package body Trans.Chap5 is
       end loop;
    end Elab_Attribute_Specification;
 
-   procedure Gen_Elab_Disconnect_Non_Composite (Targ      : Mnode;
-                                                Targ_Type : Iir;
-                                                Time      : O_Dnode)
+   procedure Gen_Elab_Disconnect_Non_Composite
+     (Targ : Mnode; Targ_Type : Iir; Time : O_Dnode)
    is
       pragma Unreferenced (Targ_Type);
       Assoc : O_Assoc_List;
@@ -113,18 +112,15 @@ package body Trans.Chap5 is
    end Gen_Elab_Disconnect_Non_Composite;
 
    function Gen_Elab_Disconnect_Prepare
-     (Targ : Mnode; Targ_Type : Iir; Time : O_Dnode)
-         return O_Dnode
+     (Targ : Mnode; Targ_Type : Iir; Time : O_Dnode) return O_Dnode
    is
       pragma Unreferenced (Targ, Targ_Type);
    begin
       return Time;
    end Gen_Elab_Disconnect_Prepare;
 
-   function Gen_Elab_Disconnect_Update_Data_Array (Time      : O_Dnode;
-                                                   Targ_Type : Iir;
-                                                   Index     : O_Dnode)
-                                                      return O_Dnode
+   function Gen_Elab_Disconnect_Update_Data_Array
+     (Time : O_Dnode; Targ_Type : Iir; Index : O_Dnode) return O_Dnode
    is
       pragma Unreferenced (Targ_Type, Index);
    begin
@@ -133,20 +129,12 @@ package body Trans.Chap5 is
 
    function Gen_Elab_Disconnect_Update_Data_Record
      (Time : O_Dnode; Targ_Type : Iir; El : Iir_Element_Declaration)
-         return O_Dnode
+     return O_Dnode
    is
       pragma Unreferenced (Targ_Type, El);
    begin
       return Time;
    end Gen_Elab_Disconnect_Update_Data_Record;
-
-   procedure Gen_Elab_Disconnect_Finish_Data_Composite
-     (Data : in out O_Dnode)
-   is
-      pragma Unreferenced (Data);
-   begin
-      null;
-   end Gen_Elab_Disconnect_Finish_Data_Composite;
 
    procedure Gen_Elab_Disconnect is new Foreach_Non_Composite
      (Data_Type => O_Dnode,
@@ -154,10 +142,8 @@ package body Trans.Chap5 is
       Do_Non_Composite => Gen_Elab_Disconnect_Non_Composite,
       Prepare_Data_Array => Gen_Elab_Disconnect_Prepare,
       Update_Data_Array => Gen_Elab_Disconnect_Update_Data_Array,
-      Finish_Data_Array => Gen_Elab_Disconnect_Finish_Data_Composite,
       Prepare_Data_Record => Gen_Elab_Disconnect_Prepare,
-      Update_Data_Record => Gen_Elab_Disconnect_Update_Data_Record,
-      Finish_Data_Record => Gen_Elab_Disconnect_Finish_Data_Composite);
+      Update_Data_Record => Gen_Elab_Disconnect_Update_Data_Record);
 
    procedure Elab_Disconnection_Specification
      (Spec : Iir_Disconnection_Specification)
@@ -349,23 +335,14 @@ package body Trans.Chap5 is
       return Res;
    end Connect_Update_Data_Record;
 
-   procedure Connect_Finish_Data_Composite (Data : in out Connect_Data)
-   is
-      pragma Unreferenced (Data);
-   begin
-      null;
-   end Connect_Finish_Data_Composite;
-
    procedure Connect is new Foreach_Non_Composite
      (Data_Type => Connect_Data,
       Composite_Data_Type => Connect_Data,
       Do_Non_Composite => Connect_Scalar,
       Prepare_Data_Array => Connect_Prepare_Data_Composite,
       Update_Data_Array => Connect_Update_Data_Array,
-      Finish_Data_Array => Connect_Finish_Data_Composite,
       Prepare_Data_Record => Connect_Prepare_Data_Composite,
-      Update_Data_Record => Connect_Update_Data_Record,
-      Finish_Data_Record => Connect_Finish_Data_Composite);
+      Update_Data_Record => Connect_Update_Data_Record);
 
    procedure Elab_Port_Map_Aspect_Assoc (Assoc : Iir;
                                          Formal : Iir;
@@ -381,6 +358,7 @@ package body Trans.Chap5 is
       Formal_Val  : Mnode;
       Actual_Sig  : Mnode;
       Actual_Val  : Mnode;
+      Init_Node   : Mnode;
       Actual_En   : O_Enode;
       Data        : Connect_Data;
       Mode        : Connect_Mode;
@@ -471,6 +449,21 @@ package body Trans.Chap5 is
                   Mode => Mode,
                   By_Copy => By_Copy);
          Connect (Formal_Sig, Formal_Type, Data);
+
+         --  Set driving value
+         if By_Copy
+           and then (Mode = Connect_Both or Mode = Connect_Source)
+         then
+            Formal_Sig := Chap6.Translate_Name (Formal, Mode_Signal);
+
+            if Is_Valid (Get_Default_Value (Port)) then
+               Init_Node := Chap6.Get_Port_Init_Value (Formal);
+            else
+               Init_Node := Mnode_Null;
+            end if;
+            Chap9.Gen_Port_Init_Driving
+              (Formal_Sig, Formal_Type, Init_Node);
+         end if;
       else
          if Get_In_Conversion (Assoc) /= Null_Iir then
             Chap4.Elab_In_Conversion (Assoc, Formal, Actual_Sig);
@@ -610,6 +603,7 @@ package body Trans.Chap5 is
    --  Set bounds for PORT.
    procedure Elab_Unconstrained_Port_Bounds (Port : Iir; Assoc : Iir)
    is
+      Info : Signal_Info_Acc;
       Bounds : Mnode;
       Act_Node : Mnode;
    begin
@@ -645,6 +639,14 @@ package body Trans.Chap5 is
             M2Lp (Chap3.Get_Array_Bounds (Act_Node)),
             M2Addr (Bounds));
       end loop;
+
+      --  Set bounds of init value (if present)
+      Info := Get_Info (Port);
+      if Info.Signal_Val /= Null_Var then
+         New_Assign_Stmt
+           (M2Lp (Chap3.Get_Array_Bounds (Chap6.Get_Port_Init_Value (Port))),
+            M2Addr (Bounds));
+      end if;
       Close_Temp;
    end Elab_Unconstrained_Port_Bounds;
 
@@ -654,6 +656,7 @@ package body Trans.Chap5 is
       Actual_Env : Map_Env;
       Assoc : Iir;
       Inter : Iir;
+      Value : Iir;
    begin
       Save_Map_Env (Actual_Env, Formal_Env.Scope_Ptr);
 
@@ -668,7 +671,8 @@ package body Trans.Chap5 is
             Fbt_Info : constant Type_Info_Acc := Get_Info (Fb_Type);
          begin
             Set_Map_Env (Formal_Env);
-            --  Set bounds of unconstrained ports.
+
+            --  Set bounds of unbounded ports.
             if Get_Whole_Association_Flag (Assoc)
               and then Fbt_Info.Type_Mode in Type_Mode_Unbounded
             then
@@ -678,6 +682,7 @@ package body Trans.Chap5 is
             end if;
 
             --  Allocate storage of ports.
+            --  (Only once for each port, individual association are ignored).
             Open_Temp;
             case Iir_Kinds_Association_Element (Get_Kind (Assoc)) is
                when Iir_Kind_Association_Element_By_Individual
@@ -698,6 +703,15 @@ package body Trans.Chap5 is
                when Iir_Kind_Association_Element_By_Expression =>
                   if Get_Whole_Association_Flag (Assoc) then
                      if Get_Collapse_Signal_Flag (Assoc) then
+                        Value := Get_Default_Value (Formal_Base);
+                        if Is_Valid (Value) then
+                           --  Set default value.
+                           Chap9.Destroy_Types (Value);
+                           Chap4.Elab_Object_Init
+                             (Get_Var (Get_Info (Formal_Base).Signal_Val,
+                                       Fbt_Info, Mode_Value),
+                              Inter, Value, Alloc_System);
+                        end if;
                         --  For collapsed association, copy signals.
                         Elab_Port_Map_Aspect_Assoc
                           (Assoc, Formal, True, Formal_Env, Actual_Env);
@@ -711,8 +725,8 @@ package body Trans.Chap5 is
                      end if;
                   else
                      --  By sub-element.
-                     --  Either the whole signal is collapsed or it was already
-                     --  created.
+                     --  Never collapsed, signal was already created (by the
+                     --  By_Individual association).
                      --  And associate.
                      Elab_Port_Map_Aspect_Assoc
                        (Assoc, Formal, False, Formal_Env, Actual_Env);
@@ -758,7 +772,7 @@ package body Trans.Chap5 is
                      Targ := Chap6.Translate_Name (Formal, Mode_Value);
                      Set_Map_Env (Actual_Env);
                      Chap4.Elab_Object_Init
-                       (Targ, Formal, Get_Actual (Assoc));
+                       (Targ, Formal, Get_Actual (Assoc), Alloc_System);
                   else
                      Set_Map_Env (Formal_Env);
                      Targ := Chap6.Translate_Name (Formal, Mode_Value);
