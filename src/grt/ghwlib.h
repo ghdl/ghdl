@@ -333,6 +333,7 @@ struct ghw_handler
   /* Non-composite (or basic) signals.  */
   int nbr_sigs;
   char *skip_sigs;
+  int flag_full_names;
   struct ghw_sig *sigs;
 
   /* Hierarchy.  */

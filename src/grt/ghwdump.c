@@ -34,6 +34,7 @@ usage (void)
   printf ("Options are:\n"
 	  " -t  display types\n"
 	  " -h  display hierarchy\n"
+	  " -H  display hierarchy with full pathnames\n"
 	  " -T  display time\n"
 	  " -s  display signals (and time)\n"
 	  " -f  <lst> list of signals to display (default: all, example: -f 1,3,5-7,21-33)\n"
@@ -133,6 +134,7 @@ main (int argc, char **argv)
   int flag_disp_hierarchy;
   int flag_disp_time;
   int flag_disp_signals;
+  int flag_full_names;
   int flag_list;
   int flag_verbose;
   int nb_signals;
@@ -144,6 +146,7 @@ main (int argc, char **argv)
   progname = argv[0];
   flag_disp_types = 0;
   flag_disp_hierarchy = 0;
+  flag_full_names = 0;
   flag_disp_time = 0;
   flag_disp_signals = 0;
   flag_list = 0;
@@ -156,7 +159,7 @@ main (int argc, char **argv)
     {
       int c;
 
-      c = getopt (argc, argv, "thTslvf:");
+      c = getopt (argc, argv, "thHTslvf:");
       if (c == -1)
 	break;
       switch (c)
@@ -166,6 +169,10 @@ main (int argc, char **argv)
 	  break;
 	case 'h':
 	  flag_disp_hierarchy = 1;
+	  break;
+	case 'H':
+	  flag_disp_hierarchy = 1;
+	  flag_full_names = 1;
 	  break;
 	case 'T':
 	  flag_disp_time = 1;
@@ -252,7 +259,10 @@ main (int argc, char **argv)
 	  if (flag_disp_types)
 	    ghw_disp_types (hp);
 	  if (flag_disp_hierarchy)
-	    ghw_disp_hie (hp, hp->hie);
+	    {
+	      hp->flag_full_names = flag_full_names;
+	      ghw_disp_hie (hp, hp->hie);
+	    }
 
 #if 1
 	  sm = ghw_sm_init;
