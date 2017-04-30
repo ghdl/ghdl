@@ -1038,9 +1038,10 @@ print_name (struct ghw_hie *hie, int full_names)
     }
 
   putchar (' ');
+  putchar ('/');
   for (i = 0; i < depth; ++i)
     {
-      printf ("%s%s", i ? "." : "", buf[i]->name);
+      printf ("%s%s", i ? "/" : "", buf[i]->name);
     }
   putchar (':');
   putchar (' ');
@@ -1060,8 +1061,9 @@ ghw_disp_hie (struct ghw_handler *h, struct ghw_hie *top)
 
   while (1)
     {
-      for (i = 0; i < indent; i++)
-       fputc (' ', stdout);
+      if (0 == h->flag_full_names)
+	for (i = 0; i < indent; i++)
+	  fputc (' ', stdout);
       printf ("%s", ghw_get_hie_name (hie));
 
       switch (hie->kind)
@@ -1144,7 +1146,6 @@ ghw_read_eoh (struct ghw_handler *h)
 {
   return 0;
 }
-
 
 int
 ghw_read_base (struct ghw_handler *h)
