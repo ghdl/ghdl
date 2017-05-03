@@ -1042,6 +1042,12 @@ print_name (struct ghw_hie *hie, int full_names)
   for (i = 0; i < depth; ++i)
     {
       printf ("%s%s", i ? "/" : "", buf[i]->name);
+      if (ghw_hie_generate_for == buf[i]->kind)
+	{
+	  putchar ('(');
+	  ghw_disp_value (buf[i]->u.blk.iter_value, buf[i]->u.blk.iter_type);
+	  putchar (')');
+	}
     }
   putchar (':');
   putchar (' ');
