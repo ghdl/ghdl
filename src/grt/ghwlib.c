@@ -840,6 +840,7 @@ ghw_read_hie (struct ghw_handler *h)
 
   h->nbr_sigs++;
   h->skip_sigs = NULL;
+  h->flag_full_names = 0;
   h->sigs = (struct ghw_sig *) malloc (h->nbr_sigs * sizeof (struct ghw_sig));
   memset (h->sigs, 0, h->nbr_sigs * sizeof (struct ghw_sig));
 
@@ -1004,6 +1005,55 @@ ghw_get_hie_name (struct ghw_hie *h)
 void
 ghw_disp_value (union ghw_val *val, union ghw_type *type);
 
+static void
+print_name (struct ghw_hie *hie, int full_names)
+{
+  int i;
+  int depth;
+  struct ghw_hie *p;
+  struct ghw_hie **buf;
+  struct ghw_hie **end;
+
+  if (0 == full_names)
+    {
+      printf (" %s: ", hie->name);
+      return;
+    }
+
+  p = hie;
+  depth = 0;
+  while (p && p->name)
+    {
+      p = p->parent;
+      ++depth;
+    }
+  buf = (struct ghw_hie **) malloc (depth * sizeof (struct ghw_hie *));
+
+  p = hie;
+  end = depth + buf;
+  while (p && p->name)
+    {
+      *(--end) = p;
+      p = p->parent;
+    }
+
+  putchar (' ');
+  putchar ('/');
+  for (i = 0; i < depth; ++i)
+    {
+      printf ("%s%s", i ? "/" : "", buf[i]->name);
+      if (ghw_hie_generate_for == buf[i]->kind)
+	{
+	  putchar ('(');
+	  ghw_disp_value (buf[i]->u.blk.iter_value, buf[i]->u.blk.iter_type);
+	  putchar (')');
+	}
+    }
+  putchar (':');
+  putchar (' ');
+  free (buf);
+}
+
 void
 ghw_disp_hie (struct ghw_handler *h, struct ghw_hie *top)
 {
@@ -1017,8 +1067,9 @@ ghw_disp_hie (struct ghw_handler *h, struct ghw_hie *top)
 
   while (1)
     {
-      for (i = 0; i < indent; i++)
-	fputc (' ', stdout);
+      if (0 == h->flag_full_names)
+	for (i = 0; i < indent; i++)
+	  fputc (' ', stdout);
       printf ("%s", ghw_get_hie_name (hie));
 
       switch (hie->kind)
@@ -1031,7 +1082,7 @@ ghw_disp_hie (struct ghw_handler *h, struct ghw_hie *top)
 	case ghw_hie_process:
 	case ghw_hie_package:
 	  if (hie->name)
-	    printf (" %s", hie->name);
+	    print_name (hie, h->flag_full_names);
 	  if (hie->kind == ghw_hie_generate_for)
 	    {
 	      printf ("(");
@@ -1057,7 +1108,7 @@ ghw_disp_hie (struct ghw_handler *h, struct ghw_hie *top)
 	    unsigned int *sigs = hie->u.sig.sigs;
 	    unsigned int k, num;
 
-	    printf (" %s: ", hie->name);
+	    print_name (hie, h->flag_full_names);
 	    ghw_disp_subtype_indication (h, hie->u.sig.type);
 	    printf (":");
 	    k = 0;
@@ -1101,7 +1152,6 @@ ghw_read_eoh (struct ghw_handler *h)
 {
   return 0;
 }
-
 
 int
 ghw_read_base (struct ghw_handler *h)
