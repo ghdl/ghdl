@@ -1349,7 +1349,7 @@ package body Execution is
          when Iir_Predefined_Real_To_String_Digits =>
             Eval_Right;
             declare
-               Str : Grt.Vstrings.String_Real_Digits;
+               Str : Grt.Vstrings.String_Real_Format;
                Last : Natural;
             begin
                Grt.Vstrings.To_String
