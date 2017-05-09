@@ -2814,16 +2814,14 @@ package body Sem is
       Name := Sem_Denoting_Name (Get_Uninstantiated_Package_Name (Decl));
       Set_Uninstantiated_Package_Name (Decl, Name);
       Pkg := Get_Named_Entity (Name);
-      if Get_Kind (Pkg) /= Iir_Kind_Package_Declaration then
+      if Is_Error (Pkg) then
+         null;
+      elsif Get_Kind (Pkg) /= Iir_Kind_Package_Declaration then
          Error_Class_Match (Name, "package");
-
-         --  What could be done ?
-         return Null_Iir;
+         Pkg := Create_Error (Pkg);
       elsif not Is_Uninstantiated_Package (Pkg) then
          Error_Msg_Sem (+Name, "%n is not an uninstantiated package", +Pkg);
-
-         --  What could be done ?
-         return Null_Iir;
+         Pkg := Create_Error (Pkg);
       end if;
 
       Set_Uninstantiated_Package_Decl (Decl, Pkg);
@@ -2846,7 +2844,7 @@ package body Sem is
       --  The uninstantiated package name shall denote an uninstantiated
       --  package declared in a package declaration.
       Pkg := Sem_Uninstantiated_Package_Name (Decl);
-      if Pkg = Null_Iir then
+      if Pkg = Null_Iir or Is_Error (Pkg) then
          --  What could be done ?
          return;
       end if;
