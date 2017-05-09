@@ -70,12 +70,15 @@ ifeq "$(build_mode)" "coverage"
 OPT_FLAGS+=-fprofile-arcs -ftest-coverage
 endif
 
-GNATFLAGS=-gnaty3befhkmr -gnatwae -gnatf -gnat05 $(OPT_FLAGS) $(ADA_FLAGS)
+GNATFLAGS=-gnaty3befhkmr -gnatwa -gnatf -gnat05 $(OPT_FLAGS) $(ADA_FLAGS)
 GRT_FLAGS=$(OPT_FLAGS)
 
 WARN_CFLAGS=-Wall
 
 GNAT_BARGS=-bargs -E
+
+# Warnings as errors.  Comment this line if a warning looks not valid.
+GNATFLAGS+=-gnatwe
 
 target=$(build)
 #target=i686-pc-linux-gnu
