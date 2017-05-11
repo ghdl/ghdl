@@ -807,7 +807,8 @@ package body Trans.Chap2 is
                                  Info.Package_Body_Scope'Access);
          end if;
 
-         --  Each subprogram has a body instance argument.
+         --  Each subprogram has a body instance argument (because subprogram
+         --  bodys can access to body declarations).
          Subprgs.Push_Subprg_Instance
            (Info.Package_Body_Scope'Access, Info.Package_Body_Ptr_Type,
             Wki_Instance, Prev_Subprg_Instance);
@@ -1238,6 +1239,31 @@ package body Trans.Chap2 is
                  Src.Package_Instance_Elab_Subprg,
                Package_Instance_Spec_Scope => Src.Package_Instance_Spec_Scope,
                Package_Instance_Body_Scope => Src.Package_Instance_Body_Scope);
+
+         when Kind_Field =>
+            Dest.all := (Kind => Kind_Field,
+                         Field_Node => Src.Field_Node,
+                         Field_Bound => Src.Field_Bound);
+
+         when Kind_Package =>
+            Dest.all :=
+              (Kind => Kind_Package,
+               Package_Elab_Spec_Subprg => Src.Package_Elab_Spec_Subprg,
+               Package_Elab_Body_Subprg => Src.Package_Elab_Body_Subprg,
+               Package_Elab_Spec_Instance =>
+                 Instantiate_Subprg_Instance (Src.Package_Elab_Spec_Instance),
+               Package_Elab_Body_Instance =>
+                 Instantiate_Subprg_Instance (Src.Package_Elab_Body_Instance),
+               Package_Elab_Var => Instantiate_Var (Src.Package_Elab_Var),
+               Package_Rti_Const => Src.Package_Rti_Const,
+               Package_Spec_Scope =>
+                 Instantiate_Var_Scope (Src.Package_Spec_Scope),
+               Package_Spec_Ptr_Type => Src.Package_Spec_Ptr_Type,
+               Package_Body_Scope =>
+                 Instantiate_Var_Scope (Src.Package_Body_Scope),
+               Package_Body_Ptr_Type => Src.Package_Body_Ptr_Type,
+               Package_Spec_Field => Src.Package_Spec_Field,
+               Package_Local_Id => Src.Package_Local_Id);
 
          when others =>
             raise Internal_Error;

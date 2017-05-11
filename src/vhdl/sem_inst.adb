@@ -513,6 +513,12 @@ package body Sem_Inst is
                   Set_Protected_Type_Body
                     (Get_Protected_Type_Declaration (Res), Res);
 
+               when Field_Package_Body =>
+                  null;
+               when Field_Package =>
+                  Instantiate_Iir_Field (Res, N, F);
+                  Set_Package_Body (Get_Package (Res), Res);
+
                when Field_Subtype_Definition =>
                   --  TODO
                   null;
