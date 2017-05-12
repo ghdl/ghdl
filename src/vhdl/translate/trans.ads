@@ -1269,7 +1269,7 @@ package Trans is
               Subprgs.Null_Subprg_Instance;
 
             --  Parameters
-            Operator_Left, Operator_Right : O_Lnode;
+            Operator_Left, Operator_Right : O_Dnode;
 
          when Kind_Call =>
             Call_State_Scope : aliased Var_Scope_Type;
