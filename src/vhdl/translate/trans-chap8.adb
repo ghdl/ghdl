@@ -2432,7 +2432,7 @@ package body Trans.Chap8 is
                   Res_Otype : Type_Info_Acc;
                   Res : O_Dnode;
                begin
-                  Start_Association (Constr, Conv_Info.Ortho_Func);
+                  Start_Association (Constr, Conv_Info.Subprg_Node);
 
                   if Conv_Info.Res_Interface /= O_Dnode_Null then
                      Res_Otype := Get_Info (Get_Return_Type (Imp));
@@ -3051,7 +3051,7 @@ package body Trans.Chap8 is
          end;
       end if;
 
-      Start_Association (Constr, Info.Ortho_Func);
+      Start_Association (Constr, Info.Subprg_Node);
 
       if Is_Function and then Info.Res_Interface /= O_Dnode_Null then
          --  Composite result.

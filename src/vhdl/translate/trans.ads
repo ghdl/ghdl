@@ -1205,7 +1205,7 @@ package Trans is
             Use_Stack2 : Boolean := False;
 
             --  Subprogram declaration node.
-            Ortho_Func : O_Dnode;
+            Subprg_Node : O_Dnode;
 
             --  For a function:
             --    If the return value is not composite, then this field

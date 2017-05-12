@@ -47,7 +47,7 @@ package body Translation is
 
    function Get_Ortho_Decl (Subprg : Iir) return O_Dnode is
    begin
-      return Get_Info (Subprg).Ortho_Func;
+      return Get_Info (Subprg).Subprg_Node;
    end Get_Ortho_Decl;
 
    function Get_Resolv_Ortho_Decl (Func : Iir) return O_Dnode

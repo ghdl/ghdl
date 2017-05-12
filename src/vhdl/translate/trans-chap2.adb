@@ -322,11 +322,11 @@ package body Trans.Chap2 is
             Inter := Get_Chain (Inter);
          end loop;
       end if;
-      Finish_Subprogram_Decl (Interface_List, Info.Ortho_Func);
+      Finish_Subprogram_Decl (Interface_List, Info.Subprg_Node);
 
       --  Call the hook for foreign subprograms.
       if Is_Foreign and then Foreign_Hook /= null then
-         Foreign_Hook.all (Spec, Foreign, Info.Ortho_Func);
+         Foreign_Hook.all (Spec, Foreign, Info.Subprg_Node);
       end if;
 
       Save_Local_Identifier (Info.Subprg_Local_Id);
@@ -539,7 +539,7 @@ package body Trans.Chap2 is
 
       --  Create the body
 
-      Start_Subprogram_Body (Info.Ortho_Func);
+      Start_Subprogram_Body (Info.Subprg_Node);
 
       Start_Subprg_Instance_Use (Spec);
 
@@ -1204,7 +1204,7 @@ package body Trans.Chap2 is
             Dest.all :=
               (Kind => Kind_Subprg,
                Use_Stack2 => Src.Use_Stack2,
-               Ortho_Func => Src.Ortho_Func,
+               Subprg_Node => Src.Subprg_Node,
                Res_Interface => Src.Res_Interface,
                Subprg_Params_Var => Instantiate_Var (Src.Subprg_Params_Var),
                Subprg_Params_Type => Src.Subprg_Params_Type,

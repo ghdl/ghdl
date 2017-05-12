@@ -2106,7 +2106,7 @@ package body Trans.Chap4 is
          Create_Temp_Stack2_Mark;
       end if;
 
-      Start_Association (Assoc, Finfo.Ortho_Func);
+      Start_Association (Assoc, Finfo.Subprg_Node);
       if Finfo.Res_Interface /= O_Dnode_Null then
          New_Association (Assoc, M2E (Res));
       end if;
@@ -2775,7 +2775,7 @@ package body Trans.Chap4 is
             end if;
 
             --  Call conversion function.
-            Start_Association (Constr, Subprg_Info.Ortho_Func);
+            Start_Association (Constr, Subprg_Info.Subprg_Node);
 
             if Subprg_Info.Res_Interface /= O_Dnode_Null then
                --  Composite result.
