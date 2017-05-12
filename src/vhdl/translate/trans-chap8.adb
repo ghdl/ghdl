@@ -1099,14 +1099,14 @@ package body Trans.Chap8 is
      return O_Enode
    is
       Assoc     : O_Assoc_List;
-      Func_Info : Subprg_Info_Acc;
+      Func_Info : Operator_Info_Acc;
    begin
       New_Assign_Stmt (New_Selected_Element (New_Obj (Val_Node),
                                              Tinfo.B.Base_Field (Mode_Value)),
                        Val);
       Func_Info := Get_Info (Func);
-      Start_Association (Assoc, Func_Info.Ortho_Func);
-      Subprgs.Add_Subprg_Instance_Assoc (Assoc, Func_Info.Subprg_Instance);
+      Start_Association (Assoc, Func_Info.Operator_Node);
+      Subprgs.Add_Subprg_Instance_Assoc (Assoc, Func_Info.Operator_Instance);
       New_Association (Assoc, New_Obj_Value (Expr));
       New_Association (Assoc, New_Address (New_Obj (Val_Node),
                                            Tinfo.Ortho_Ptr_Type (Mode_Value)));
@@ -1803,7 +1803,7 @@ package body Trans.Chap8 is
       Tinfo       : constant Type_Info_Acc := Get_Info (Formal_Type);
       Value       : O_Dnode;
       Assocs      : O_Assoc_List;
-      Subprg_Info : Subprg_Info_Acc;
+      Subprg_Info : Operator_Info_Acc;
    begin
       case Tinfo.Type_Mode is
          when Type_Mode_Scalar =>
@@ -1832,9 +1832,9 @@ package body Trans.Chap8 is
            | Type_Mode_Record
            | Type_Mode_Unbounded_Array =>
             Subprg_Info := Get_Info (Imp);
-            Start_Association (Assocs, Subprg_Info.Ortho_Func);
+            Start_Association (Assocs, Subprg_Info.Operator_Node);
             Subprgs.Add_Subprg_Instance_Assoc
-              (Assocs, Subprg_Info.Subprg_Instance);
+              (Assocs, Subprg_Info.Operator_Instance);
             New_Association
               (Assocs, Chap7.Translate_Expression (Get_Actual (F_Assoc)));
             New_Association
@@ -1862,7 +1862,7 @@ package body Trans.Chap8 is
       Tinfo       : constant Type_Info_Acc := Get_Info (Formal_Type);
       Value       : Mnode;
       Assocs      : O_Assoc_List;
-      Subprg_Info : Subprg_Info_Acc;
+      Subprg_Info : Operator_Info_Acc;
    begin
       case Tinfo.Type_Mode is
          when Type_Mode_Scalar =>
@@ -1886,9 +1886,9 @@ package body Trans.Chap8 is
          when Type_Mode_Array
             | Type_Mode_Record =>
             Subprg_Info := Get_Info (Imp);
-            Start_Association (Assocs, Subprg_Info.Ortho_Func);
+            Start_Association (Assocs, Subprg_Info.Operator_Node);
             Subprgs.Add_Subprg_Instance_Assoc
-              (Assocs, Subprg_Info.Subprg_Instance);
+              (Assocs, Subprg_Info.Operator_Instance);
             New_Association
               (Assocs, Chap7.Translate_Expression (Get_Actual (F_Assoc)));
             New_Association
@@ -1902,9 +1902,9 @@ package body Trans.Chap8 is
             begin
                Length_Assoc := Get_Chain (Value_Assoc);
                Subprg_Info := Get_Info (Imp);
-               Start_Association (Assocs, Subprg_Info.Ortho_Func);
+               Start_Association (Assocs, Subprg_Info.Operator_Node);
                Subprgs.Add_Subprg_Instance_Assoc
-                 (Assocs, Subprg_Info.Subprg_Instance);
+                 (Assocs, Subprg_Info.Operator_Instance);
                New_Association
                  (Assocs,
                   Chap7.Translate_Expression (Get_Actual (F_Assoc)));

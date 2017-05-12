@@ -660,6 +660,7 @@ package Trans is
       Kind_Index,
       Kind_Expr,
       Kind_Subprg,
+      Kind_Operator,
       Kind_Call,
       Kind_Call_Assoc,
       Kind_Object,
@@ -1253,6 +1254,23 @@ package Trans is
             Subprg_Exit   : O_Snode := O_Snode_Null;
             Subprg_Result : O_Dnode := O_Dnode_Null;
 
+         when Kind_Operator =>
+            --  For an implicit subprogram like type operators or file
+            --  subprograms.
+
+            --  Use secondary stack (not referenced).
+            Operator_Stack2 : Boolean;
+
+            --  Subprogram declaration node.
+            Operator_Node : O_Dnode;
+
+            --  Instances for the subprograms.
+            Operator_Instance : Subprgs.Subprg_Instance_Type :=
+              Subprgs.Null_Subprg_Instance;
+
+            --  Parameters
+            Operator_Left, Operator_Right : O_Lnode;
+
          when Kind_Call =>
             Call_State_Scope : aliased Var_Scope_Type;
             Call_State_Mark : Var_Type := Null_Var;
@@ -1543,6 +1561,7 @@ package Trans is
    subtype Incomplete_Type_Info_Acc is Ortho_Info_Acc (Kind_Incomplete_Type);
    subtype Index_Info_Acc is Ortho_Info_Acc (Kind_Index);
    subtype Subprg_Info_Acc is Ortho_Info_Acc (Kind_Subprg);
+   subtype Operator_Info_Acc is Ortho_Info_Acc (Kind_Operator);
    subtype Interface_Info_Acc is Ortho_Info_Acc (Kind_Interface);
    subtype Call_Info_Acc is Ortho_Info_Acc (Kind_Call);
    subtype Call_Assoc_Info_Acc is Ortho_Info_Acc (Kind_Call_Assoc);

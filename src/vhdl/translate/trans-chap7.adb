@@ -40,6 +40,23 @@ package body Trans.Chap7 is
    use Trans.Helpers;
    procedure Copy_Range (Dest : Mnode; Src : Mnode);
 
+   procedure Create_Operator_Instance (Interfaces : in out O_Inter_List;
+                                       Info : Operator_Info_Acc) is
+   begin
+      Subprgs.Add_Subprg_Instance_Interfaces
+        (Interfaces, Info.Operator_Instance);
+   end Create_Operator_Instance;
+
+   procedure Start_Operator_Instance_Use (Info : Operator_Info_Acc) is
+   begin
+      Subprgs.Start_Subprg_Instance_Use (Info.Operator_Instance);
+   end Start_Operator_Instance_Use;
+
+   procedure Finish_Operator_Instance_Use (Info : Operator_Info_Acc) is
+   begin
+      Subprgs.Finish_Subprg_Instance_Use (Info.Operator_Instance);
+   end Finish_Operator_Instance_Use;
+
    function Translate_Static_Implicit_Conv
      (Expr : O_Cnode; Expr_Type : Iir; Res_Type : Iir) return O_Cnode
    is
@@ -1135,11 +1152,11 @@ package body Trans.Chap7 is
    function Translate_Predefined_Lib_Operator
      (Left, Right : O_Enode; Func : Iir_Function_Declaration) return O_Enode
    is
-      Info   : constant Subprg_Info_Acc := Get_Info (Func);
+      Info   : constant Operator_Info_Acc := Get_Info (Func);
       Constr : O_Assoc_List;
    begin
-      Start_Association (Constr, Info.Ortho_Func);
-      Subprgs.Add_Subprg_Instance_Assoc (Constr, Info.Subprg_Instance);
+      Start_Association (Constr, Info.Operator_Node);
+      Subprgs.Add_Subprg_Instance_Assoc (Constr, Info.Operator_Instance);
       New_Association (Constr, Left);
       if Right /= O_Enode_Null then
          New_Association (Constr, Right);
@@ -1151,14 +1168,14 @@ package body Trans.Chap7 is
      (Left, Right : O_Enode; Func : Iir) return O_Enode
    is
       Info      : constant Type_Info_Acc := Get_Info (Get_Return_Type (Func));
-      Func_Info : constant Subprg_Info_Acc := Get_Info (Func);
+      Func_Info : constant Operator_Info_Acc := Get_Info (Func);
       Res       : O_Dnode;
       Constr    : O_Assoc_List;
    begin
       Create_Temp_Stack2_Mark;
       Res := Create_Temp (Info.Ortho_Type (Mode_Value));
-      Start_Association (Constr, Func_Info.Ortho_Func);
-      Subprgs.Add_Subprg_Instance_Assoc (Constr, Func_Info.Subprg_Instance);
+      Start_Association (Constr, Func_Info.Operator_Node);
+      Subprgs.Add_Subprg_Instance_Assoc (Constr, Func_Info.Operator_Instance);
       New_Association (Constr,
                        New_Address (New_Obj (Res),
                                     Info.Ortho_Ptr_Type (Mode_Value)));
@@ -4495,7 +4512,7 @@ package body Trans.Chap7 is
         Get_Identifier (Get_Type_Declarator (Arr_Type));
       Arr_Ptr_Type : constant O_Tnode := Info.Ortho_Ptr_Type (Mode_Value);
 
-      F_Info               : Subprg_Info_Acc;
+      F_Info               : Operator_Info_Acc;
       L, R                 : O_Dnode;
       Interface_List       : O_Inter_List;
       If_Blk               : O_If_Block;
@@ -4505,7 +4522,7 @@ package body Trans.Chap7 is
       Label                : O_Snode;
       El_Otype             : O_Tnode;
    begin
-      F_Info := Add_Info (Subprg, Kind_Subprg);
+      F_Info := Add_Info (Subprg, Kind_Operator);
       --Chap2.Clear_Instance_Data (F_Info.Subprg_Instance);
 
       --  Create function.
@@ -4513,7 +4530,7 @@ package body Trans.Chap7 is
                            Global_Storage, Ghdl_Compare_Type);
       New_Interface_Decl (Interface_List, L, Wki_Left, Arr_Ptr_Type);
       New_Interface_Decl (Interface_List, R, Wki_Right, Arr_Ptr_Type);
-      Finish_Subprogram_Decl (Interface_List, F_Info.Ortho_Func);
+      Finish_Subprogram_Decl (Interface_List, F_Info.Operator_Node);
 
       if Global_Storage = O_Storage_External then
          return;
@@ -4521,7 +4538,7 @@ package body Trans.Chap7 is
 
       El_Otype := Get_Ortho_Type
         (Get_Element_Subtype (Arr_Type), Mode_Value);
-      Start_Subprogram_Body (F_Info.Ortho_Func);
+      Start_Subprogram_Body (F_Info.Operator_Node);
       --  Compute length of L and R.
       New_Var_Decl (Var_L_Len, Wki_L_Len,
                     O_Storage_Local, Ghdl_Index_Type);
@@ -4657,7 +4674,7 @@ package body Trans.Chap7 is
       Id             : constant Name_Id :=
         Get_Identifier (Get_Type_Declarator (Arr_Type));
       Arr_Ptr_Type   : constant O_Tnode := Info.Ortho_Ptr_Type (Mode_Value);
-      F_Info         : Subprg_Info_Acc;
+      F_Info         : Operator_Info_Acc;
       Var_L, Var_R   : O_Dnode;
       L, R           : Mnode;
       Interface_List : O_Inter_List;
@@ -4669,15 +4686,15 @@ package body Trans.Chap7 is
       Label          : O_Snode;
       Le, Re         : Mnode;
    begin
-      F_Info := Add_Info (Subprg, Kind_Subprg);
+      F_Info := Add_Info (Subprg, Kind_Operator);
 
       --  Create function.
       Start_Function_Decl (Interface_List, Create_Identifier (Id, "_EQ"),
                            Global_Storage, Std_Boolean_Type_Node);
-      Subprgs.Create_Subprg_Instance (Interface_List, Subprg);
+      Create_Operator_Instance (Interface_List, F_Info);
       New_Interface_Decl (Interface_List, Var_L, Wki_Left, Arr_Ptr_Type);
       New_Interface_Decl (Interface_List, Var_R, Wki_Right, Arr_Ptr_Type);
-      Finish_Subprogram_Decl (Interface_List, F_Info.Ortho_Func);
+      Finish_Subprogram_Decl (Interface_List, F_Info.Operator_Node);
 
       if Global_Storage = O_Storage_External then
          return;
@@ -4689,8 +4706,8 @@ package body Trans.Chap7 is
       Indexes := Get_Index_Subtype_List (Arr_Type);
       Nbr_Indexes := Get_Nbr_Elements (Indexes);
 
-      Start_Subprogram_Body (F_Info.Ortho_Func);
-      Subprgs.Start_Subprg_Instance_Use (Subprg);
+      Start_Subprogram_Body (F_Info.Operator_Node);
+      Start_Operator_Instance_Use (F_Info);
       --  for each dimension:  if length mismatch: return false
       for I in 1 .. Nbr_Indexes loop
          Start_If_Stmt
@@ -4736,17 +4753,19 @@ package body Trans.Chap7 is
       Close_Temp;
       Inc_Var (Var_I);
       Finish_Loop_Stmt (Label);
-      Subprgs.Finish_Subprg_Instance_Use (Subprg);
+      Finish_Operator_Instance_Use (F_Info);
       Finish_Subprogram_Body;
    end Translate_Predefined_Array_Equality;
 
    procedure Translate_Predefined_Record_Equality (Subprg : Iir)
    is
-      F_Info         : Subprg_Info_Acc;
-      Rec_Type       : Iir_Record_Type_Definition;
-      Rec_Ptr_Type   : O_Tnode;
-      Info           : Type_Info_Acc;
-      Id             : Name_Id;
+      Rec_Type       : constant Iir_Record_Type_Definition :=
+        Get_Type (Get_Interface_Declaration_Chain (Subprg));
+      Info           : constant Type_Info_Acc := Get_Info (Rec_Type);
+      Id             : constant Name_Id  :=
+        Get_Identifier (Get_Type_Declarator (Rec_Type));
+      Rec_Ptr_Type   : constant O_Tnode := Info.Ortho_Ptr_Type (Mode_Value);
+      F_Info         : Operator_Info_Acc;
       Var_L, Var_R   : O_Dnode;
       L, R           : Mnode;
       Interface_List : O_Inter_List;
@@ -4756,28 +4775,23 @@ package body Trans.Chap7 is
       El_List : Iir_List;
       El      : Iir_Element_Declaration;
    begin
-      Rec_Type := Get_Type (Get_Interface_Declaration_Chain (Subprg));
-      Info := Get_Info (Rec_Type);
-      Id := Get_Identifier (Get_Type_Declarator (Rec_Type));
-      Rec_Ptr_Type := Info.Ortho_Ptr_Type (Mode_Value);
-
-      F_Info := Add_Info (Subprg, Kind_Subprg);
+      F_Info := Add_Info (Subprg, Kind_Operator);
       --Chap2.Clear_Instance_Data (F_Info.Subprg_Instance);
 
       --  Create function.
       Start_Function_Decl (Interface_List, Create_Identifier (Id, "_EQ"),
                            Global_Storage, Std_Boolean_Type_Node);
-      Subprgs.Create_Subprg_Instance (Interface_List, Subprg);
+      Create_Operator_Instance (Interface_List, F_Info);
       New_Interface_Decl (Interface_List, Var_L, Wki_Left, Rec_Ptr_Type);
       New_Interface_Decl (Interface_List, Var_R, Wki_Right, Rec_Ptr_Type);
-      Finish_Subprogram_Decl (Interface_List, F_Info.Ortho_Func);
+      Finish_Subprogram_Decl (Interface_List, F_Info.Operator_Node);
 
       if Global_Storage = O_Storage_External then
          return;
       end if;
 
-      Start_Subprogram_Body (F_Info.Ortho_Func);
-      Subprgs.Start_Subprg_Instance_Use (Subprg);
+      Start_Subprogram_Body (F_Info.Operator_Node);
+      Start_Operator_Instance_Use (F_Info);
 
       L := Dp2M (Var_L, Info, Mode_Value);
       R := Dp2M (Var_R, Info, Mode_Value);
@@ -4800,7 +4814,7 @@ package body Trans.Chap7 is
          Close_Temp;
       end loop;
       New_Return_Stmt (New_Lit (Std_Boolean_True_Node));
-      Subprgs.Finish_Subprg_Instance_Use (Subprg);
+      Finish_Operator_Instance_Use (F_Info);
       Finish_Subprogram_Body;
    end Translate_Predefined_Record_Equality;
 
@@ -4814,7 +4828,7 @@ package body Trans.Chap7 is
       Id                : constant Name_Id :=
         Get_Identifier (Get_Type_Declarator (Arr_Type));
       Arr_Ptr_Type      : constant O_Tnode := Info.Ortho_Ptr_Type (Mode_Value);
-      F_Info            : Subprg_Info_Acc;
+      F_Info            : Operator_Info_Acc;
       Interface_List    : O_Inter_List;
       Var_Res           : O_Dnode;
       Res               : Mnode;
@@ -4831,9 +4845,9 @@ package body Trans.Chap7 is
       Op                : ON_Op_Kind;
       Do_Invert         : Boolean;
    begin
-      F_Info := Add_Info (Subprg, Kind_Subprg);
+      F_Info := Add_Info (Subprg, Kind_Operator);
       --Chap2.Clear_Instance_Data (F_Info.Subprg_Instance);
-      F_Info.Use_Stack2 := True;
+      F_Info.Operator_Stack2 := True;
 
       Is_Monadic := False;
       case Get_Implicit_Definition (Subprg) is
@@ -4880,13 +4894,13 @@ package body Trans.Chap7 is
       if not Is_Monadic then
          New_Interface_Decl (Interface_List, R, Wki_Right, Arr_Ptr_Type);
       end if;
-      Finish_Subprogram_Decl (Interface_List, F_Info.Ortho_Func);
+      Finish_Subprogram_Decl (Interface_List, F_Info.Operator_Node);
 
       if Global_Storage = O_Storage_External then
          return;
       end if;
 
-      Start_Subprogram_Body (F_Info.Ortho_Func);
+      Start_Subprogram_Body (F_Info.Operator_Node);
       New_Var_Decl (Var_Length, Wki_Length, O_Storage_Local,
                     Ghdl_Index_Type);
       New_Var_Decl (Var_I, Wki_I, O_Storage_Local, Ghdl_Index_Type);
@@ -4969,7 +4983,7 @@ package body Trans.Chap7 is
 
    procedure Translate_Predefined_Array_Shift (Subprg : Iir)
    is
-      F_Info         : Subprg_Info_Acc;
+      F_Info         : Operator_Info_Acc;
       Inter          : Iir;
       Arr_Type       : Iir_Array_Type_Definition;
       Arr_Ptr_Type   : O_Tnode;
@@ -5122,9 +5136,9 @@ package body Trans.Chap7 is
       Id := Get_Identifier (Get_Type_Declarator (Arr_Type));
       Arr_Ptr_Type := Info.Ortho_Ptr_Type (Mode_Value);
 
-      F_Info := Add_Info (Subprg, Kind_Subprg);
+      F_Info := Add_Info (Subprg, Kind_Operator);
       --Chap2.Clear_Instance_Data (F_Info.Subprg_Instance);
-      F_Info.Use_Stack2 := True;
+      F_Info.Operator_Stack2 := True;
 
       case Get_Implicit_Definition (Subprg) is
          when Iir_Predefined_Array_Sll
@@ -5154,14 +5168,14 @@ package body Trans.Chap7 is
       New_Interface_Decl (Interface_List, Var_Res, Wki_Res, Arr_Ptr_Type);
       New_Interface_Decl (Interface_List, Var_L, Wki_Left, Arr_Ptr_Type);
       New_Interface_Decl (Interface_List, Var_R, Wki_Right, Int_Type);
-      Finish_Subprogram_Decl (Interface_List, F_Info.Ortho_Func);
+      Finish_Subprogram_Decl (Interface_List, F_Info.Operator_Node);
 
       if Global_Storage = O_Storage_External then
          return;
       end if;
 
       --  Body
-      Start_Subprogram_Body (F_Info.Ortho_Func);
+      Start_Subprogram_Body (F_Info.Operator_Node);
       New_Var_Decl (Var_Length, Wki_Length, O_Storage_Local,
                     Ghdl_Index_Type);
       if Shift /= Rotation then
@@ -5325,10 +5339,10 @@ package body Trans.Chap7 is
 
    procedure Translate_File_Subprogram (Subprg : Iir; File_Type : Iir)
    is
-      Etype      : Iir;
-      Tinfo      : Type_Info_Acc;
+      Etype      : constant Iir := Get_Type (Get_File_Type_Mark (File_Type));
+      Tinfo      : constant Type_Info_Acc := Get_Info (Etype);
       Kind       : Iir_Predefined_Functions;
-      F_Info     : Subprg_Info_Acc;
+      F_Info     : Operator_Info_Acc;
       Name       : O_Ident;
       Inter_List : O_Inter_List;
       Id         : Name_Id;
@@ -5439,16 +5453,14 @@ package body Trans.Chap7 is
 
       Var : Mnode;
    begin
-      Etype := Get_Type (Get_File_Type_Mark (File_Type));
-      Tinfo := Get_Info (Etype);
       if Tinfo.Type_Mode in Type_Mode_Scalar then
          --  Intrinsic.
          return;
       end if;
 
-      F_Info := Add_Info (Subprg, Kind_Subprg);
+      F_Info := Add_Info (Subprg, Kind_Operator);
       --Chap2.Clear_Instance_Data (F_Info.Subprg_Instance);
-      F_Info.Use_Stack2 := False;
+      F_Info.Operator_Stack2 := False;
 
       Id := Get_Identifier (Get_Type_Declarator (File_Type));
       Kind := Get_Implicit_Definition (Subprg);
@@ -5469,7 +5481,7 @@ package body Trans.Chap7 is
       else
          Start_Procedure_Decl (Inter_List, Name, Global_Storage);
       end if;
-      Subprgs.Create_Subprg_Instance (Inter_List, Subprg);
+      Create_Operator_Instance (Inter_List, F_Info);
 
       New_Interface_Decl
         (Inter_List, Var_File, Get_Identifier ("FILE"),
@@ -5477,14 +5489,14 @@ package body Trans.Chap7 is
       New_Interface_Decl
         (Inter_List, Var_Val, Wki_Val,
          Tinfo.Ortho_Ptr_Type (Mode_Value));
-      Finish_Subprogram_Decl (Inter_List, F_Info.Ortho_Func);
+      Finish_Subprogram_Decl (Inter_List, F_Info.Operator_Node);
 
       if Global_Storage = O_Storage_External then
          return;
       end if;
 
-      Start_Subprogram_Body (F_Info.Ortho_Func);
-      Subprgs.Start_Subprg_Instance_Use (Subprg);
+      Start_Subprogram_Body (F_Info.Operator_Node);
+      Start_Operator_Instance_Use (F_Info);
       Push_Local_Factory;
 
       Var := Dp2M (Var_Val, Tinfo, Mode_Value);
@@ -5533,7 +5545,7 @@ package body Trans.Chap7 is
          when others =>
             raise Internal_Error;
       end case;
-      Subprgs.Finish_Subprg_Instance_Use (Subprg);
+      Finish_Operator_Instance_Use (F_Info);
       Pop_Local_Factory;
       Finish_Subprogram_Body;
    end Translate_File_Subprogram;

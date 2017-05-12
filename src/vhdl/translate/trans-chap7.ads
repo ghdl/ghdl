@@ -140,11 +140,11 @@ package Trans.Chap7 is
                                        return O_Enode;
 private
    type Implicit_Subprogram_Infos is record
-      Arr_Eq_Info     : Subprg_Info_Acc;
-      Rec_Eq_Info     : Subprg_Info_Acc;
-      Arr_Cmp_Info    : Subprg_Info_Acc;
-      Arr_Shl_Info    : Subprg_Info_Acc;
-      Arr_Sha_Info    : Subprg_Info_Acc;
-      Arr_Rot_Info    : Subprg_Info_Acc;
+      Arr_Eq_Info     : Operator_Info_Acc;
+      Rec_Eq_Info     : Operator_Info_Acc;
+      Arr_Cmp_Info    : Operator_Info_Acc;
+      Arr_Shl_Info    : Operator_Info_Acc;
+      Arr_Sha_Info    : Operator_Info_Acc;
+      Arr_Rot_Info    : Operator_Info_Acc;
    end record;
 end Trans.Chap7;
