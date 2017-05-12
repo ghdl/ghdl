@@ -2559,6 +2559,7 @@ package body Trans.Chap8 is
       if Is_Function and then Info.Res_Interface /= O_Dnode_Null then
          --  Composite result.
          --  If we need to allocate, do it before starting the call!
+         --  TODO: could be eliminated if the value is also returned (RVO).
          declare
             Res_Type : constant Iir := Get_Return_Type (Imp);
             Res_Info : constant Type_Info_Acc := Get_Info (Res_Type);

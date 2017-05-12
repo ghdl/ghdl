@@ -105,10 +105,10 @@ package body Sem_Inst is
    --  table is to be able to revert the calls to Set_Instance, so that a unit
    --  can be instantiated several times.  Keeping the nodes that have been
    --  instantiated is cheaper than walking the tree a second time.
-   --  The second purpose of this table is not yet implemented: being able to
-   --  have uninstantiated packages in instantiated packages.  In that case,
-   --  the slot in Origin_Table cannot be the origin and the instance at the
-   --  same time.
+   --  The second purpose of this table is to be able to have uninstantiated
+   --  packages in instantiated packages.  In that case, the slot in
+   --  Origin_Table cannot be the origin and the instance at the same time and
+   --  has to be saved.
    package Prev_Instance_Table is new Tables
      (Table_Component_Type => Instance_Entry_Type,
       Table_Index_Type => Instance_Index_Type,
@@ -368,7 +368,9 @@ package body Sem_Inst is
             return Res;
          end if;
 
-         pragma Assert (Res = Null_Iir);
+         --  RES is null_iir unless RES is also an instance (and therefore has
+         --  an origin).
+         --  pragma Assert (Res = Null_Iir);
 
          --  Create a new node.
          Res := Create_Iir (Kind);
