@@ -891,7 +891,11 @@ package body Sem_Names is
       Atype := Name_To_Type_Definition (Res);
 
       if Is_Error (Atype) then
-         Set_Named_Entity (Res, Atype);
+         if Get_Kind (Res) in Iir_Kinds_Denoting_Name then
+            Set_Named_Entity (Res, Atype);
+         else
+            return Create_Error_Type (Name);
+         end if;
       elsif not Incomplete then
          if Get_Kind (Atype) = Iir_Kind_Incomplete_Type_Definition then
             Error_Msg_Sem
