@@ -171,6 +171,16 @@ package Trans is
    type Allocation_Kind is
      (Alloc_Stack, Alloc_Return, Alloc_Heap, Alloc_System);
 
+   --  Sometimes useful to factorize code.  Defines what has to be translated.
+   type Subprg_Translate_Kind is
+     (Subprg_Translate_Only_Spec,
+      Subprg_Translate_Spec_And_Body,
+      Subprg_Translate_Only_Body);
+   subtype Subprg_Translate_Spec is Subprg_Translate_Kind range
+     Subprg_Translate_Only_Spec .. Subprg_Translate_Spec_And_Body;
+   subtype Subprg_Translate_Body is Subprg_Translate_Kind range
+     Subprg_Translate_Spec_And_Body .. Subprg_Translate_Only_Body;
+
    --  Return the value of field FIELD of lnode L that is contains
    --   a pointer to a record.
    --  This is equivalent to:

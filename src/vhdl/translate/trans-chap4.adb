@@ -2321,7 +2321,8 @@ package body Trans.Chap4 is
       Create_Union_Scope (State_Scope.all, Scope_Type);
    end Translate_Statements_Chain_State_Declaration;
 
-   procedure Translate_Declaration_Chain_Subprograms (Parent : Iir)
+   procedure Translate_Declaration_Chain_Subprograms
+     (Parent : Iir; What : Subprg_Translate_Kind)
    is
       El     : Iir;
       Infos  : Chap7.Implicit_Subprogram_Infos;
@@ -2341,51 +2342,68 @@ package body Trans.Chap4 is
                           | Iir_Predefined_Record_Equality =>
                            --  Used implicitly in case statement or other
                            --  predefined equality.
-                           Chap7.Translate_Implicit_Subprogram_Spec
-                             (El, Infos);
-                           Chap7.Translate_Implicit_Subprogram_Body (El);
+                           if What in Subprg_Translate_Spec then
+                              Chap7.Translate_Implicit_Subprogram_Spec
+                                (El, Infos);
+                           end if;
+                           if What in Subprg_Translate_Body then
+                              Chap7.Translate_Implicit_Subprogram_Body (El);
+                           end if;
                         when others =>
                            null;
                      end case;
                   else
-                     Chap7.Translate_Implicit_Subprogram_Spec (El, Infos);
-                     Chap7.Translate_Implicit_Subprogram_Body (El);
+                     if What in Subprg_Translate_Spec then
+                        Chap7.Translate_Implicit_Subprogram_Spec
+                          (El, Infos);
+                     end if;
+                     if What in Subprg_Translate_Body then
+                        Chap7.Translate_Implicit_Subprogram_Body (El);
+                     end if;
                   end if;
                else
                   --  Translate only if used.
-                  if Get_Info (El) /= null then
+                  if What in Subprg_Translate_Spec
+                    and then Get_Info (El) /= null
+                  then
                      Chap2.Translate_Subprogram_Declaration (El);
                      Translate_Resolution_Function (El);
                   end if;
                end if;
             when Iir_Kind_Function_Body
-               | Iir_Kind_Procedure_Body =>
-               --  Do not translate body if generating only specs (for
-               --  subprograms in an entity).
-               if Global_Storage /= O_Storage_External
-                 and then
-                   (not Flag_Discard_Unused
-                    or else
-                    Get_Use_Flag (Get_Subprogram_Specification (El)))
-               then
-                  Chap2.Translate_Subprogram_Body (El);
-                  Translate_Resolution_Function_Body
-                    (Get_Subprogram_Specification (El));
+              | Iir_Kind_Procedure_Body =>
+               if What in Subprg_Translate_Body then
+                  --  Do not translate body if generating only specs (for
+                  --  subprograms in an entity).
+                  if Global_Storage /= O_Storage_External
+                    and then
+                    (not Flag_Discard_Unused
+                       or else
+                       Get_Use_Flag (Get_Subprogram_Specification (El)))
+                  then
+                     Chap2.Translate_Subprogram_Body (El);
+                     Translate_Resolution_Function_Body
+                       (Get_Subprogram_Specification (El));
+                  end if;
                end if;
             when Iir_Kind_Type_Declaration
                | Iir_Kind_Anonymous_Type_Declaration =>
-               Chap3.Translate_Type_Subprograms (El);
+               Chap3.Translate_Type_Subprograms (El, What);
                Chap7.Init_Implicit_Subprogram_Infos (Infos);
             when Iir_Kind_Protected_Type_Body =>
-               Chap3.Translate_Protected_Type_Body (El);
-               Chap3.Translate_Protected_Type_Body_Subprograms (El);
+               if What in Subprg_Translate_Spec then
+                  Chap3.Translate_Protected_Type_Body (El);
+               end if;
+               if What in Subprg_Translate_Body then
+                  Chap3.Translate_Protected_Type_Body_Subprograms (El);
+               end if;
             when Iir_Kind_Package_Declaration
               | Iir_Kind_Package_Body =>
                declare
                   Mark  : Id_Mark_Type;
                begin
                   Push_Identifier_Prefix (Mark, Get_Identifier (El));
-                  Translate_Declaration_Chain_Subprograms (El);
+                  Translate_Declaration_Chain_Subprograms (El, What);
                   Pop_Identifier_Prefix (Mark);
                end;
             when Iir_Kind_Package_Instantiation_Declaration =>
@@ -2397,11 +2415,11 @@ package body Trans.Chap4 is
                      Mark  : Id_Mark_Type;
                   begin
                      Push_Identifier_Prefix (Mark, Get_Identifier (El));
-                     Translate_Declaration_Chain_Subprograms (El);
+                     Translate_Declaration_Chain_Subprograms (El, What);
                      if Is_Valid (Bod)
                        and then Global_Storage /= O_Storage_External
                      then
-                        Translate_Declaration_Chain_Subprograms (Bod);
+                        Translate_Declaration_Chain_Subprograms (Bod, What);
                      end if;
                      Pop_Identifier_Prefix (Mark);
                   end;

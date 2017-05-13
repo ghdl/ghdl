@@ -36,7 +36,8 @@ package Trans.Chap4 is
      (Stmts : Iir; State_Scope : Var_Scope_Acc);
 
    --  Translate subprograms in declaration chain of PARENT.
-   procedure Translate_Declaration_Chain_Subprograms (Parent : Iir);
+   procedure Translate_Declaration_Chain_Subprograms
+     (Parent : Iir; What : Subprg_Translate_Kind);
 
    --  Create subprograms for type/function conversion of signal
    --  associations.

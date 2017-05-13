@@ -528,7 +528,8 @@ package body Trans.Chap2 is
          Subprgs.Start_Prev_Subprg_Instance_Use_Via_Field
            (Prev_Subprg_Instances, Upframe_Field);
 
-         Chap4.Translate_Declaration_Chain_Subprograms (Subprg);
+         Chap4.Translate_Declaration_Chain_Subprograms
+           (Subprg, Subprg_Translate_Spec_And_Body);
 
          --  Link to previous frame
          Subprgs.Finish_Prev_Subprg_Instance_Use_Via_Field
@@ -556,7 +557,8 @@ package body Trans.Chap2 is
       if not Has_Suspend and not Has_Nested then
          Chap4.Translate_Declaration_Chain (Subprg);
          Rtis.Generate_Subprogram_Body (Subprg);
-         Chap4.Translate_Declaration_Chain_Subprograms (Subprg);
+         Chap4.Translate_Declaration_Chain_Subprograms
+           (Subprg, Subprg_Translate_Spec_And_Body);
       else
          New_Var_Decl (Frame_Ptr, Get_Identifier ("FRAMEPTR"),
                        O_Storage_Local, Frame_Ptr_Type);
@@ -827,7 +829,8 @@ package body Trans.Chap2 is
       if not Is_Nested then
          --  For nested package, this will be translated when translating
          --  subprograms.
-         Chap4.Translate_Declaration_Chain_Subprograms (Decl);
+         Chap4.Translate_Declaration_Chain_Subprograms
+           (Decl, Subprg_Translate_Spec_And_Body);
       end if;
 
       --  Declare elaborator for the body.
@@ -963,7 +966,8 @@ package body Trans.Chap2 is
       if not Is_Nested then
          --  Translate subprograms.  For nested package, this has to be called
          --  when translating subprograms.
-         Chap4.Translate_Declaration_Chain_Subprograms (Bod);
+         Chap4.Translate_Declaration_Chain_Subprograms
+           (Bod, Subprg_Translate_Spec_And_Body);
       end if;
 
       if Is_Spec_Decl and then Is_Uninstantiated_Package (Spec) then

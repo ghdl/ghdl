@@ -996,7 +996,8 @@ package body Trans.Chap9 is
       Stmt      : Iir;
       Mark      : Id_Mark_Type;
    begin
-      Chap4.Translate_Declaration_Chain_Subprograms (Block);
+      Chap4.Translate_Declaration_Chain_Subprograms
+        (Block, Subprg_Translate_Spec_And_Body);
 
       Stmt := Get_Concurrent_Statement_Chain (Block);
       while Stmt /= Null_Iir loop
@@ -1008,7 +1009,8 @@ package body Trans.Chap9 is
                   Chap9.Set_Direct_Drivers (Stmt);
                end if;
 
-               Chap4.Translate_Declaration_Chain_Subprograms (Stmt);
+               Chap4.Translate_Declaration_Chain_Subprograms
+                 (Stmt, Subprg_Translate_Spec_And_Body);
                Translate_Process_Statement (Stmt, Base_Info);
 
                if Flag_Direct_Drivers then

@@ -44,7 +44,8 @@ package Trans.Chap3 is
    procedure Translate_Anonymous_Type_Definition (Def : Iir);
 
    --  Translate subprograms for types.
-   procedure Translate_Type_Subprograms (Decl : Iir);
+   procedure Translate_Type_Subprograms
+     (Decl : Iir; Kind : Subprg_Translate_Kind);
 
    procedure Create_Type_Definition_Type_Range (Def : Iir);
    function Create_Static_Composite_Subtype_Bounds (Def : Iir) return O_Cnode;

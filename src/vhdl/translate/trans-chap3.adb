@@ -1543,7 +1543,7 @@ package body Trans.Chap3 is
       Pop_Identifier_Prefix (Mark);
    end Translate_Protected_Type;
 
-   procedure Translate_Protected_Type_Subprograms
+   procedure Translate_Protected_Type_Subprograms_Spec
      (Def : Iir_Protected_Type_Declaration)
    is
       Info                 : constant Type_Info_Acc := Get_Info (Def);
@@ -1595,7 +1595,7 @@ package body Trans.Chap3 is
       Subprgs.Pop_Subprg_Instance (Wki_Obj, Prev_Subprg_Instance);
 
       Pop_Identifier_Prefix (Mark);
-   end Translate_Protected_Type_Subprograms;
+   end Translate_Protected_Type_Subprograms_Spec;
 
    procedure Translate_Protected_Type_Body (Bod : Iir)
    is
@@ -1618,7 +1618,6 @@ package body Trans.Chap3 is
       Chap4.Translate_Declaration_Chain (Bod);
 
       Pop_Instance_Factory (Info.B.Prot_Scope'Unrestricted_Access);
-      -- Info.Ortho_Type (Mode_Value) := Get_Scope_Type (Info.B.Prot_Scope);
 
       Pop_Identifier_Prefix (Mark);
    end Translate_Protected_Type_Body;
@@ -1644,8 +1643,8 @@ package body Trans.Chap3 is
       Mark  : Id_Mark_Type;
       Decl  : constant Iir := Get_Protected_Type_Declaration (Bod);
       Info  : constant Type_Info_Acc := Get_Info (Decl);
-      Final : Boolean;
       Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
+      Final : Boolean;
    begin
       Push_Identifier_Prefix (Mark, Get_Identifier (Bod));
 
@@ -1657,7 +1656,8 @@ package body Trans.Chap3 is
       Subprgs.Start_Prev_Subprg_Instance_Use_Via_Field
         (Prev_Subprg_Instance, Info.B.Prot_Subprg_Instance_Field);
 
-      Chap4.Translate_Declaration_Chain_Subprograms (Bod);
+      Chap4.Translate_Declaration_Chain_Subprograms
+        (Bod, Subprg_Translate_Spec_And_Body);
 
       Subprgs.Finish_Prev_Subprg_Instance_Use_Via_Field
         (Prev_Subprg_Instance, Info.B.Prot_Subprg_Instance_Field);
@@ -2349,29 +2349,33 @@ package body Trans.Chap3 is
       Create_Scalar_Type_Range_Type (Def, True);
    end Translate_Bool_Type_Definition;
 
-   procedure Translate_Type_Subprograms (Decl : Iir)
+   procedure Translate_Type_Subprograms
+     (Decl : Iir; Kind : Subprg_Translate_Kind)
    is
-      Def   : Iir;
+      Def   : constant Iir := Get_Type_Definition (Decl);
       Tinfo : Type_Info_Acc;
       Id    : Name_Id;
    begin
-      Def := Get_Type_Definition (Decl);
-
-      if Get_Kind (Def) in Iir_Kinds_Subtype_Definition then
-         --  Also elaborate the base type, iff DEF and its BASE_TYPE have
-         --  been declared by the same type declarator.  This avoids several
-         --  elaboration of the same type.
-         Def := Get_Base_Type (Def);
-
-         --  Consistency check.
-         pragma Assert (Get_Type_Declarator (Def) = Decl);
-      elsif Get_Kind (Def) = Iir_Kind_Incomplete_Type_Definition then
-         return;
-      end if;
-
-      if Get_Kind (Def) = Iir_Kind_Protected_Type_Declaration then
-         Translate_Protected_Type_Subprograms (Def);
-      end if;
+      case Get_Kind (Def) is
+         when Iir_Kind_Incomplete_Type_Definition =>
+            return;
+         when Iir_Kind_Protected_Type_Declaration =>
+            Translate_Protected_Type_Subprograms_Spec (Def);
+            return;
+         when Iir_Kind_Record_Type_Definition
+           | Iir_Kind_Array_Type_Definition =>
+            null;
+         when Iir_Kind_Integer_Type_Definition
+           | Iir_Kind_Enumeration_Type_Definition
+           | Iir_Kind_Floating_Type_Definition
+           | Iir_Kind_Physical_Type_Definition
+           | Iir_Kind_File_Type_Definition
+           | Iir_Kind_Access_Type_Definition =>
+            --  Never complex.
+            return;
+         when others =>
+            raise Internal_Error;
+      end case;
 
       Tinfo := Get_Info (Def);
       if not Is_Complex_Type (Tinfo)
@@ -2380,32 +2384,36 @@ package body Trans.Chap3 is
          return;
       end if;
 
-      --  Declare subprograms.
-      Id := Get_Identifier (Decl);
-      Create_Builder_Subprogram_Decl (Tinfo, Id, Mode_Value);
-      if Get_Has_Signal_Flag (Def) then
-         Create_Builder_Subprogram_Decl (Tinfo, Id, Mode_Signal);
+      if Kind in Subprg_Translate_Spec then
+         --  Declare subprograms.
+         Id := Get_Identifier (Decl);
+         Create_Builder_Subprogram_Decl (Tinfo, Id, Mode_Value);
+         if Get_Has_Signal_Flag (Def) then
+            Create_Builder_Subprogram_Decl (Tinfo, Id, Mode_Signal);
+         end if;
       end if;
 
-      if Global_Storage = O_Storage_External then
-         return;
-      end if;
+      if Kind in Subprg_Translate_Body then
+         if Global_Storage = O_Storage_External then
+            return;
+         end if;
 
-      --  Define subprograms.
-      case Get_Kind (Def) is
-         when Iir_Kind_Array_Type_Definition =>
-            Create_Array_Type_Builder (Def, Mode_Value);
-            if Get_Has_Signal_Flag (Def) then
-               Create_Array_Type_Builder (Def, Mode_Signal);
-            end if;
-         when Iir_Kind_Record_Type_Definition =>
-            Create_Record_Type_Builder (Def, Mode_Value);
-            if Get_Has_Signal_Flag (Def) then
-               Create_Record_Type_Builder (Def, Mode_Signal);
-            end if;
-         when others =>
-            Error_Kind ("translate_type_subprograms", Def);
-      end case;
+         --  Define subprograms.
+         case Get_Kind (Def) is
+            when Iir_Kind_Array_Type_Definition =>
+               Create_Array_Type_Builder (Def, Mode_Value);
+               if Get_Has_Signal_Flag (Def) then
+                  Create_Array_Type_Builder (Def, Mode_Signal);
+               end if;
+            when Iir_Kind_Record_Type_Definition =>
+               Create_Record_Type_Builder (Def, Mode_Value);
+               if Get_Has_Signal_Flag (Def) then
+                  Create_Record_Type_Builder (Def, Mode_Signal);
+               end if;
+            when others =>
+               Error_Kind ("translate_type_subprograms", Def);
+         end case;
+      end if;
    end Translate_Type_Subprograms;
 
    --  Initialize the objects related to a type (type range and type
