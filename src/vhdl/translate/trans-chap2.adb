@@ -1223,11 +1223,13 @@ package body Trans.Chap2 is
             Dest.all :=
               (Kind => Kind_Operator,
                Operator_Stack2 => Src.Operator_Stack2,
+               Operator_Body => Src.Operator_Body,
                Operator_Node => Src.Operator_Node,
                Operator_Instance => Instantiate_Subprg_Instance
                  (Src.Operator_Instance),
                Operator_Left => Src.Operator_Left,
-               Operator_Right => Src.Operator_Right);
+               Operator_Right => Src.Operator_Right,
+               Operator_Res => Src.Operator_Res);
          when Kind_Interface =>
             Dest.all := (Kind => Kind_Interface,
                          Interface_Mechanism => Src.Interface_Mechanism,

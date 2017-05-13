@@ -4484,7 +4484,31 @@ package body Trans.Chap7 is
       return Res;
    end Translate_Static_Range;
 
-   procedure Translate_Predefined_Array_Compare (Subprg : Iir)
+   procedure Translate_Predefined_Array_Compare_Spec (Subprg : Iir)
+   is
+      Arr_Type     : constant Iir_Array_Type_Definition :=
+        Get_Type (Get_Interface_Declaration_Chain (Subprg));
+      Tinfo         : constant Type_Info_Acc := Get_Info (Arr_Type);
+      Id           : constant Name_Id :=
+        Get_Identifier (Get_Type_Declarator (Arr_Type));
+      Arr_Ptr_Type : constant O_Tnode := Tinfo.Ortho_Ptr_Type (Mode_Value);
+
+      F_Info               : Operator_Info_Acc;
+      Interface_List       : O_Inter_List;
+   begin
+      F_Info := Add_Info (Subprg, Kind_Operator);
+
+      --  Create function.
+      Start_Function_Decl (Interface_List, Create_Identifier (Id, "_CMP"),
+                           Global_Storage, Ghdl_Compare_Type);
+      New_Interface_Decl (Interface_List, F_Info.Operator_Left,
+                          Wki_Left, Arr_Ptr_Type);
+      New_Interface_Decl (Interface_List, F_Info.Operator_Right,
+                          Wki_Right, Arr_Ptr_Type);
+      Finish_Subprogram_Decl (Interface_List, F_Info.Operator_Node);
+   end Translate_Predefined_Array_Compare_Spec;
+
+   procedure Translate_Predefined_Array_Compare_Body (Subprg : Iir)
    is
       procedure Gen_Compare (L, R : O_Dnode)
       is
@@ -4507,13 +4531,9 @@ package body Trans.Chap7 is
 
       Arr_Type     : constant Iir_Array_Type_Definition :=
         Get_Type (Get_Interface_Declaration_Chain (Subprg));
-      Info         : constant Type_Info_Acc := Get_Info (Arr_Type);
-      Id           : constant Name_Id :=
-        Get_Identifier (Get_Type_Declarator (Arr_Type));
-      Arr_Ptr_Type : constant O_Tnode := Info.Ortho_Ptr_Type (Mode_Value);
+      Tinfo        : constant Type_Info_Acc := Get_Info (Arr_Type);
+      F_Info : constant Operator_Info_Acc := Get_Info (Subprg);
 
-      F_Info               : Operator_Info_Acc;
-      Interface_List       : O_Inter_List;
       If_Blk               : O_If_Block;
       Var_L_Len, Var_R_Len : O_Dnode;
       Var_L_El, Var_R_El   : O_Dnode;
@@ -4521,18 +4541,6 @@ package body Trans.Chap7 is
       Label                : O_Snode;
       El_Otype             : O_Tnode;
    begin
-      F_Info := Add_Info (Subprg, Kind_Operator);
-      --Chap2.Clear_Instance_Data (F_Info.Subprg_Instance);
-
-      --  Create function.
-      Start_Function_Decl (Interface_List, Create_Identifier (Id, "_CMP"),
-                           Global_Storage, Ghdl_Compare_Type);
-      New_Interface_Decl (Interface_List, F_Info.Operator_Left,
-                          Wki_Left, Arr_Ptr_Type);
-      New_Interface_Decl (Interface_List, F_Info.Operator_Right,
-                          Wki_Right, Arr_Ptr_Type);
-      Finish_Subprogram_Decl (Interface_List, F_Info.Operator_Node);
-
       if Global_Storage = O_Storage_External then
          return;
       end if;
@@ -4549,11 +4557,11 @@ package body Trans.Chap7 is
       New_Var_Decl (Var_I, Wki_I, O_Storage_Local, Ghdl_Index_Type);
       New_Assign_Stmt (New_Obj (Var_L_Len),
                        Chap6.Get_Array_Bound_Length
-                         (Dp2M (F_Info.Operator_Left, Info, Mode_Value),
+                         (Dp2M (F_Info.Operator_Left, Tinfo, Mode_Value),
                           Arr_Type, 1));
       New_Assign_Stmt (New_Obj (Var_R_Len),
                        Chap6.Get_Array_Bound_Length
-                         (Dp2M (F_Info.Operator_Right, Info, Mode_Value),
+                         (Dp2M (F_Info.Operator_Right, Tinfo, Mode_Value),
                           Arr_Type, 1));
       --  Find the minimum length.
       Start_If_Stmt (If_Blk,
@@ -4587,14 +4595,14 @@ package body Trans.Chap7 is
         (New_Obj (Var_L_El),
          M2E (Chap3.Index_Base
                 (Chap3.Get_Composite_Base
-                   (Dp2M (F_Info.Operator_Left, Info, Mode_Value)),
+                   (Dp2M (F_Info.Operator_Left, Tinfo, Mode_Value)),
                  Arr_Type,
                  New_Obj_Value (Var_I))));
       New_Assign_Stmt
         (New_Obj (Var_R_El),
          M2E (Chap3.Index_Base
                 (Chap3.Get_Composite_Base
-                   (Dp2M (F_Info.Operator_Right, Info, Mode_Value)),
+                   (Dp2M (F_Info.Operator_Right, Tinfo, Mode_Value)),
                 Arr_Type,
                 New_Obj_Value (Var_I))));
       Gen_Compare (Var_L_El, Var_R_El);
@@ -4602,7 +4610,7 @@ package body Trans.Chap7 is
       Inc_Var (Var_I);
       Finish_Loop_Stmt (Label);
       Finish_Subprogram_Body;
-   end Translate_Predefined_Array_Compare;
+   end Translate_Predefined_Array_Compare_Body;
 
    --  Find the declaration of the predefined function IMP in type
    --  definition BASE_TYPE.
@@ -4670,25 +4678,16 @@ package body Trans.Chap7 is
       end case;
    end Translate_Equality;
 
-   procedure Translate_Predefined_Array_Equality (Subprg : Iir)
+   procedure Translate_Predefined_Array_Equality_Spec (Subprg : Iir)
    is
       Arr_Type       : constant Iir_Array_Type_Definition :=
         Get_Type (Get_Interface_Declaration_Chain (Subprg));
-      El_Type        : constant Iir := Get_Element_Subtype (Arr_Type);
       Info           : constant Type_Info_Acc := Get_Info (Arr_Type);
       Id             : constant Name_Id :=
         Get_Identifier (Get_Type_Declarator (Arr_Type));
       Arr_Ptr_Type   : constant O_Tnode := Info.Ortho_Ptr_Type (Mode_Value);
       F_Info         : Operator_Info_Acc;
-      L, R           : Mnode;
       Interface_List : O_Inter_List;
-      Indexes        : Iir_List;
-      Nbr_Indexes    : Natural;
-      If_Blk         : O_If_Block;
-      Var_I          : O_Dnode;
-      Var_Len        : O_Dnode;
-      Label          : O_Snode;
-      Le, Re         : Mnode;
    begin
       F_Info := Add_Info (Subprg, Kind_Operator);
 
@@ -4701,16 +4700,30 @@ package body Trans.Chap7 is
       New_Interface_Decl (Interface_List, F_Info.Operator_Right,
                           Wki_Right, Arr_Ptr_Type);
       Finish_Subprogram_Decl (Interface_List, F_Info.Operator_Node);
+   end Translate_Predefined_Array_Equality_Spec;
 
+   procedure Translate_Predefined_Array_Equality_Body (Subprg : Iir)
+   is
+      Arr_Type       : constant Iir_Array_Type_Definition :=
+        Get_Type (Get_Interface_Declaration_Chain (Subprg));
+      El_Type        : constant Iir := Get_Element_Subtype (Arr_Type);
+      Info           : constant Type_Info_Acc := Get_Info (Arr_Type);
+      F_Info         : constant Operator_Info_Acc := Get_Info (Subprg);
+      L, R           : Mnode;
+      Indexes        : constant Iir_List := Get_Index_Subtype_List (Arr_Type);
+      Nbr_Indexes    : constant Natural := Get_Nbr_Elements (Indexes);
+      If_Blk         : O_If_Block;
+      Var_I          : O_Dnode;
+      Var_Len        : O_Dnode;
+      Label          : O_Snode;
+      Le, Re         : Mnode;
+   begin
       if Global_Storage = O_Storage_External then
          return;
       end if;
 
       L := Dp2M (F_Info.Operator_Left, Info, Mode_Value);
       R := Dp2M (F_Info.Operator_Right, Info, Mode_Value);
-
-      Indexes := Get_Index_Subtype_List (Arr_Type);
-      Nbr_Indexes := Get_Nbr_Elements (Indexes);
 
       Start_Subprogram_Body (F_Info.Operator_Node);
       Start_Operator_Instance_Use (F_Info);
@@ -4729,7 +4742,7 @@ package body Trans.Chap7 is
          Finish_If_Stmt (If_Blk);
       end loop;
 
-      --  for each element: if element is not equal, return false
+      --  For each element: if element is not equal, return false.
       New_Var_Decl (Var_I, Wki_I, O_Storage_Local, Ghdl_Index_Type);
       New_Var_Decl (Var_Len, Wki_Length, O_Storage_Local, Ghdl_Index_Type);
       Open_Temp;
@@ -4761,29 +4774,21 @@ package body Trans.Chap7 is
       Finish_Loop_Stmt (Label);
       Finish_Operator_Instance_Use (F_Info);
       Finish_Subprogram_Body;
-   end Translate_Predefined_Array_Equality;
+   end Translate_Predefined_Array_Equality_Body;
 
-   procedure Translate_Predefined_Record_Equality (Subprg : Iir)
+   procedure Translate_Predefined_Record_Equality_Spec (Subprg : Iir)
    is
       Rec_Type       : constant Iir_Record_Type_Definition :=
         Get_Type (Get_Interface_Declaration_Chain (Subprg));
-      Info           : constant Type_Info_Acc := Get_Info (Rec_Type);
+      Tinfo          : constant Type_Info_Acc := Get_Info (Rec_Type);
       Id             : constant Name_Id  :=
         Get_Identifier (Get_Type_Declarator (Rec_Type));
-      Rec_Ptr_Type   : constant O_Tnode := Info.Ortho_Ptr_Type (Mode_Value);
+      Rec_Ptr_Type   : constant O_Tnode := Tinfo.Ortho_Ptr_Type (Mode_Value);
       F_Info         : Operator_Info_Acc;
-      L, R           : Mnode;
       Interface_List : O_Inter_List;
-      If_Blk         : O_If_Block;
-      Le, Re         : Mnode;
-
-      El_List : Iir_List;
-      El      : Iir_Element_Declaration;
    begin
       F_Info := Add_Info (Subprg, Kind_Operator);
-      --Chap2.Clear_Instance_Data (F_Info.Subprg_Instance);
 
-      --  Create function.
       Start_Function_Decl (Interface_List, Create_Identifier (Id, "_EQ"),
                            Global_Storage, Std_Boolean_Type_Node);
       Create_Operator_Instance (Interface_List, F_Info);
@@ -4792,7 +4797,21 @@ package body Trans.Chap7 is
       New_Interface_Decl (Interface_List, F_Info.Operator_Right,
                           Wki_Right, Rec_Ptr_Type);
       Finish_Subprogram_Decl (Interface_List, F_Info.Operator_Node);
+   end Translate_Predefined_Record_Equality_Spec;
 
+   procedure Translate_Predefined_Record_Equality_Body (Subprg : Iir)
+   is
+      Rec_Type       : constant Iir_Record_Type_Definition :=
+        Get_Type (Get_Interface_Declaration_Chain (Subprg));
+      Tinfo          : constant Type_Info_Acc := Get_Info (Rec_Type);
+      F_Info         : constant Operator_Info_Acc := Get_Info (Subprg);
+      L, R           : Mnode;
+      If_Blk         : O_If_Block;
+      Le, Re         : Mnode;
+
+      El_List : Iir_List;
+      El      : Iir_Element_Declaration;
+   begin
       if Global_Storage = O_Storage_External then
          return;
       end if;
@@ -4800,8 +4819,8 @@ package body Trans.Chap7 is
       Start_Subprogram_Body (F_Info.Operator_Node);
       Start_Operator_Instance_Use (F_Info);
 
-      L := Dp2M (F_Info.Operator_Left, Info, Mode_Value);
-      R := Dp2M (F_Info.Operator_Right, Info, Mode_Value);
+      L := Dp2M (F_Info.Operator_Left, Tinfo, Mode_Value);
+      R := Dp2M (F_Info.Operator_Right, Tinfo, Mode_Value);
 
       --   Compare each element.
       El_List := Get_Elements_Declaration_List (Rec_Type);
@@ -4823,71 +4842,46 @@ package body Trans.Chap7 is
       New_Return_Stmt (New_Lit (Std_Boolean_True_Node));
       Finish_Operator_Instance_Use (F_Info);
       Finish_Subprogram_Body;
-   end Translate_Predefined_Record_Equality;
+   end Translate_Predefined_Record_Equality_Body;
 
-   procedure Translate_Predefined_Array_Logical (Subprg : Iir)
+   procedure Translate_Predefined_Array_Logical_Spec (Subprg : Iir)
    is
       Arr_Type          : constant Iir_Array_Type_Definition :=
         Get_Type (Get_Interface_Declaration_Chain (Subprg));
       --  Info for the array type.
-      Info              : constant Type_Info_Acc := Get_Info (Arr_Type);
+      Tinfo              : constant Type_Info_Acc := Get_Info (Arr_Type);
       --  Identifier of the type.
       Id                : constant Name_Id :=
         Get_Identifier (Get_Type_Declarator (Arr_Type));
-      Arr_Ptr_Type      : constant O_Tnode := Info.Ortho_Ptr_Type (Mode_Value);
+      Arr_Ptr_Type      : constant O_Tnode :=
+        Tinfo.Ortho_Ptr_Type (Mode_Value);
       F_Info            : Operator_Info_Acc;
       Interface_List    : O_Inter_List;
-      Var_Res           : O_Dnode;
-      Res               : Mnode;
-      Var_Length, Var_I : O_Dnode;
-      Var_Base          : O_Dnode;
-      Var_L_Base        : O_Dnode;
-      Var_R_Base        : O_Dnode;
-      If_Blk            : O_If_Block;
-      Label             : O_Snode;
       Name              : O_Ident;
       Is_Monadic        : Boolean;
-      El, L_El          : O_Enode;
-      Op                : ON_Op_Kind;
-      Do_Invert         : Boolean;
    begin
       F_Info := Add_Info (Subprg, Kind_Operator);
       --Chap2.Clear_Instance_Data (F_Info.Subprg_Instance);
       F_Info.Operator_Stack2 := True;
 
       Is_Monadic := False;
-      case Get_Implicit_Definition (Subprg) is
+      case Iir_Predefined_TF_Array_Functions
+        (Get_Implicit_Definition (Subprg)) is
          when Iir_Predefined_TF_Array_And =>
             Name := Create_Identifier (Id, "_AND");
-            Op := ON_And;
-            Do_Invert := False;
          when Iir_Predefined_TF_Array_Or =>
             Name := Create_Identifier (Id, "_OR");
-            Op := ON_Or;
-            Do_Invert := False;
          when Iir_Predefined_TF_Array_Nand =>
             Name := Create_Identifier (Id, "_NAND");
-            Op := ON_And;
-            Do_Invert := True;
          when Iir_Predefined_TF_Array_Nor =>
             Name := Create_Identifier (Id, "_NOR");
-            Op := ON_Or;
-            Do_Invert := True;
          when Iir_Predefined_TF_Array_Xor =>
             Name := Create_Identifier (Id, "_XOR");
-            Op := ON_Xor;
-            Do_Invert := False;
          when Iir_Predefined_TF_Array_Xnor =>
             Name := Create_Identifier (Id, "_XNOR");
-            Op := ON_Xor;
-            Do_Invert := True;
          when Iir_Predefined_TF_Array_Not =>
             Name := Create_Identifier (Id, "_NOT");
             Is_Monadic := True;
-            Op := ON_Not;
-            Do_Invert := False;
-         when others =>
-            raise Internal_Error;
       end case;
 
       --  Create function.
@@ -4895,7 +4889,8 @@ package body Trans.Chap7 is
       --  Note: contrary to user function which returns composite value
       --  via a result record, a concatenation returns its value without
       --  the use of the record.
-      New_Interface_Decl (Interface_List, Var_Res, Wki_Res, Arr_Ptr_Type);
+      New_Interface_Decl (Interface_List, F_Info.Operator_Res,
+                          Wki_Res, Arr_Ptr_Type);
       New_Interface_Decl (Interface_List, F_Info.Operator_Left,
                           Wki_Left, Arr_Ptr_Type);
       if not Is_Monadic then
@@ -4903,30 +4898,77 @@ package body Trans.Chap7 is
                              Wki_Right, Arr_Ptr_Type);
       end if;
       Finish_Subprogram_Decl (Interface_List, F_Info.Operator_Node);
+   end Translate_Predefined_Array_Logical_Spec;
 
+   procedure Translate_Predefined_Array_Logical_Body (Subprg : Iir)
+   is
+      Arr_Type          : constant Iir_Array_Type_Definition :=
+        Get_Type (Get_Interface_Declaration_Chain (Subprg));
+      --  Info for the array type.
+      Tinfo             : constant Type_Info_Acc := Get_Info (Arr_Type);
+      F_Info            : constant Operator_Info_Acc := Get_Info (Subprg);
+      Res               : Mnode;
+      Var_Length, Var_I : O_Dnode;
+      Var_Base          : O_Dnode;
+      Var_L_Base        : O_Dnode;
+      Var_R_Base        : O_Dnode;
+      If_Blk            : O_If_Block;
+      Label             : O_Snode;
+      Is_Monadic        : Boolean;
+      El, L_El          : O_Enode;
+      Op                : ON_Op_Kind;
+      Do_Invert         : Boolean;
+   begin
       if Global_Storage = O_Storage_External then
          return;
       end if;
+
+      Is_Monadic := False;
+      case Iir_Predefined_TF_Array_Functions
+        (Get_Implicit_Definition (Subprg)) is
+         when Iir_Predefined_TF_Array_And =>
+            Op := ON_And;
+            Do_Invert := False;
+         when Iir_Predefined_TF_Array_Or =>
+            Op := ON_Or;
+            Do_Invert := False;
+         when Iir_Predefined_TF_Array_Nand =>
+            Op := ON_And;
+            Do_Invert := True;
+         when Iir_Predefined_TF_Array_Nor =>
+            Op := ON_Or;
+            Do_Invert := True;
+         when Iir_Predefined_TF_Array_Xor =>
+            Op := ON_Xor;
+            Do_Invert := False;
+         when Iir_Predefined_TF_Array_Xnor =>
+            Op := ON_Xor;
+            Do_Invert := True;
+         when Iir_Predefined_TF_Array_Not =>
+            Is_Monadic := True;
+            Op := ON_Not;
+            Do_Invert := False;
+      end case;
 
       Start_Subprogram_Body (F_Info.Operator_Node);
       New_Var_Decl (Var_Length, Wki_Length, O_Storage_Local,
                     Ghdl_Index_Type);
       New_Var_Decl (Var_I, Wki_I, O_Storage_Local, Ghdl_Index_Type);
       New_Var_Decl (Var_Base, Get_Identifier ("base"), O_Storage_Local,
-                    Info.B.Base_Ptr_Type (Mode_Value));
+                    Tinfo.B.Base_Ptr_Type (Mode_Value));
       New_Var_Decl (Var_L_Base, Get_Identifier ("l_base"), O_Storage_Local,
-                    Info.B.Base_Ptr_Type (Mode_Value));
+                    Tinfo.B.Base_Ptr_Type (Mode_Value));
       if not Is_Monadic then
          New_Var_Decl
            (Var_R_Base, Get_Identifier ("r_base"), O_Storage_Local,
-            Info.B.Base_Ptr_Type (Mode_Value));
+            Tinfo.B.Base_Ptr_Type (Mode_Value));
       end if;
       Open_Temp;
       --  Get length of LEFT.
       New_Assign_Stmt
         (New_Obj (Var_Length),
          Chap6.Get_Array_Bound_Length
-           (Dp2M (F_Info.Operator_Left, Info, Mode_Value), Arr_Type, 1));
+           (Dp2M (F_Info.Operator_Left, Tinfo, Mode_Value), Arr_Type, 1));
       --  If dyadic, check RIGHT has the same length.
       if not Is_Monadic then
          Chap6.Check_Bound_Error
@@ -4934,28 +4976,29 @@ package body Trans.Chap7 is
               (ON_Neq,
                New_Obj_Value (Var_Length),
                Chap6.Get_Array_Bound_Length
-                 (Dp2M (F_Info.Operator_Right, Info, Mode_Value), Arr_Type, 1),
+                 (Dp2M (F_Info.Operator_Right, Tinfo, Mode_Value),
+                  Arr_Type, 1),
                Ghdl_Bool_Type),
             Subprg, 0);
       end if;
 
       --  Create the result from LEFT bound.
-      Res := Dp2M (Var_Res, Info, Mode_Value);
+      Res := Dp2M (F_Info.Operator_Res, Tinfo, Mode_Value);
       Chap3.Translate_Object_Allocation
         (Res, Alloc_Return, Arr_Type,
          Chap3.Get_Array_Bounds
-           (Dp2M (F_Info.Operator_Left, Info, Mode_Value)));
+           (Dp2M (F_Info.Operator_Left, Tinfo, Mode_Value)));
       New_Assign_Stmt
         (New_Obj (Var_Base), M2Addr (Chap3.Get_Composite_Base (Res)));
       New_Assign_Stmt
         (New_Obj (Var_L_Base),
          M2Addr (Chap3.Get_Composite_Base
-                   (Dp2M (F_Info.Operator_Left, Info, Mode_Value))));
+                   (Dp2M (F_Info.Operator_Left, Tinfo, Mode_Value))));
       if not Is_Monadic then
          New_Assign_Stmt
            (New_Obj (Var_R_Base),
             M2Addr (Chap3.Get_Composite_Base
-                      (Dp2M (F_Info.Operator_Right, Info, Mode_Value))));
+                      (Dp2M (F_Info.Operator_Right, Tinfo, Mode_Value))));
       end if;
 
       --  Do the logical operation on each element.
@@ -4992,9 +5035,9 @@ package body Trans.Chap7 is
       Finish_Loop_Stmt (Label);
       Close_Temp;
       Finish_Subprogram_Body;
-   end Translate_Predefined_Array_Logical;
+   end Translate_Predefined_Array_Logical_Body;
 
-   procedure Translate_Predefined_Array_Shift (Subprg : Iir)
+   procedure Translate_Predefined_Array_Shift_Spec (Subprg : Iir)
    is
       Inter : constant Iir := Get_Interface_Declaration_Chain (Subprg);
       Int_Info : constant Type_Info_Acc :=
@@ -5003,15 +5046,60 @@ package body Trans.Chap7 is
 
       --  Info for the array type.
       Arr_Type : constant Iir_Array_Type_Definition := Get_Type (Inter);
-      Info : constant Type_Info_Acc := Get_Info (Arr_Type);
-      Arr_Ptr_Type : constant O_Tnode := Info.Ortho_Ptr_Type (Mode_Value);
+      Tinfo : constant Type_Info_Acc := Get_Info (Arr_Type);
+      Arr_Ptr_Type : constant O_Tnode := Tinfo.Ortho_Ptr_Type (Mode_Value);
 
       Id : constant Name_Id := Get_Identifier (Get_Type_Declarator (Arr_Type));
 
       F_Info : Operator_Info_Acc;
       Interface_List : O_Inter_List;
-      Var_Res        : O_Dnode;
       Name           : O_Ident;
+   begin
+      F_Info := Add_Info (Subprg, Kind_Operator);
+      --Chap2.Clear_Instance_Data (F_Info.Subprg_Instance);
+      F_Info.Operator_Stack2 := True;
+
+      case Iir_Predefined_Shift_Functions (Get_Implicit_Definition (Subprg)) is
+         when Iir_Predefined_Array_Sll
+            | Iir_Predefined_Array_Srl =>
+            --  Shift logical.
+            Name := Create_Identifier (Id, "_SHL");
+         when Iir_Predefined_Array_Sla
+            | Iir_Predefined_Array_Sra =>
+            --  Shift arithmetic.
+            Name := Create_Identifier (Id, "_SHA");
+         when Iir_Predefined_Array_Rol
+            | Iir_Predefined_Array_Ror =>
+            --  Rotation
+            Name := Create_Identifier (Id, "_ROT");
+      end case;
+
+      --  Create function.
+      Start_Procedure_Decl (Interface_List, Name, Global_Storage);
+      --  Note: contrary to user function which returns composite value
+      --  via a result record, a shift returns its value without
+      --  the use of the record.
+      New_Interface_Decl (Interface_List, F_Info.Operator_Res,
+                          Wki_Res, Arr_Ptr_Type);
+      New_Interface_Decl (Interface_List, F_Info.Operator_Left,
+                          Wki_Left, Arr_Ptr_Type);
+      New_Interface_Decl (Interface_List, F_Info.Operator_Right,
+                          Wki_Right, Int_Type);
+      Finish_Subprogram_Decl (Interface_List, F_Info.Operator_Node);
+   end Translate_Predefined_Array_Shift_Spec;
+
+   procedure Translate_Predefined_Array_Shift_Body (Subprg : Iir)
+   is
+      Inter : constant Iir := Get_Interface_Declaration_Chain (Subprg);
+      Int_Info : constant Type_Info_Acc :=
+        Get_Info (Get_Type (Get_Chain (Inter)));
+      Int_Type : constant O_Tnode := Int_Info.Ortho_Type (Mode_Value);
+
+      --  Info for the array type.
+      Arr_Type : constant Iir_Array_Type_Definition := Get_Type (Inter);
+      Tinfo : constant Type_Info_Acc := Get_Info (Arr_Type);
+
+      F_Info : constant Operator_Info_Acc := Get_Info (Subprg);
 
       type Shift_Kind is (Sh_Logical, Sh_Arith, Rotation);
       Shift : Shift_Kind;
@@ -5143,45 +5231,24 @@ package body Trans.Chap7 is
          Finish_Loop_Stmt (Label);
       end Do_Shift;
    begin
-      F_Info := Add_Info (Subprg, Kind_Operator);
-      --Chap2.Clear_Instance_Data (F_Info.Subprg_Instance);
-      F_Info.Operator_Stack2 := True;
+      if Global_Storage = O_Storage_External then
+         return;
+      end if;
 
-      case Get_Implicit_Definition (Subprg) is
+      case Iir_Predefined_Shift_Functions (Get_Implicit_Definition (Subprg)) is
          when Iir_Predefined_Array_Sll
             | Iir_Predefined_Array_Srl =>
             --  Shift logical.
-            Name := Create_Identifier (Id, "_SHL");
             Shift := Sh_Logical;
          when Iir_Predefined_Array_Sla
             | Iir_Predefined_Array_Sra =>
             --  Shift arithmetic.
-            Name := Create_Identifier (Id, "_SHA");
             Shift := Sh_Arith;
          when Iir_Predefined_Array_Rol
             | Iir_Predefined_Array_Ror =>
             --  Rotation
-            Name := Create_Identifier (Id, "_ROT");
             Shift := Rotation;
-         when others =>
-            raise Internal_Error;
       end case;
-
-      --  Create function.
-      Start_Procedure_Decl (Interface_List, Name, Global_Storage);
-      --  Note: contrary to user function which returns composite value
-      --  via a result record, a shift returns its value without
-      --  the use of the record.
-      New_Interface_Decl (Interface_List, Var_Res, Wki_Res, Arr_Ptr_Type);
-      New_Interface_Decl (Interface_List, F_Info.Operator_Left,
-                          Wki_Left, Arr_Ptr_Type);
-      New_Interface_Decl (Interface_List, F_Info.Operator_Right,
-                          Wki_Right, Int_Type);
-      Finish_Subprogram_Decl (Interface_List, F_Info.Operator_Node);
-
-      if Global_Storage = O_Storage_External then
-         return;
-      end if;
 
       --  Body
       Start_Subprogram_Body (F_Info.Operator_Node);
@@ -5195,16 +5262,16 @@ package body Trans.Chap7 is
       New_Var_Decl (Var_I1, Get_Identifier ("I1"), O_Storage_Local,
                     Ghdl_Index_Type);
       New_Var_Decl (Var_Res_Base, Get_Identifier ("res_base"),
-                    O_Storage_Local, Info.B.Base_Ptr_Type (Mode_Value));
+                    O_Storage_Local, Tinfo.B.Base_Ptr_Type (Mode_Value));
       New_Var_Decl (Var_L_Base, Get_Identifier ("l_base"),
-                    O_Storage_Local, Info.B.Base_Ptr_Type (Mode_Value));
+                    O_Storage_Local, Tinfo.B.Base_Ptr_Type (Mode_Value));
       if Shift = Sh_Arith then
          New_Var_Decl (Var_E, Get_Identifier ("E"), O_Storage_Local,
                        Get_Info (Get_Element_Subtype (Arr_Type)).
                          Ortho_Type (Mode_Value));
       end if;
-      Res := Dp2M (Var_Res, Info, Mode_Value);
-      L := Dp2M (F_Info.Operator_Left, Info, Mode_Value);
+      Res := Dp2M (F_Info.Operator_Res, Tinfo, Mode_Value);
+      L := Dp2M (F_Info.Operator_Left, Tinfo, Mode_Value);
 
       --  LRM93 7.2.3
       --  The index subtypes of the return values of all shift operators is
@@ -5241,7 +5308,7 @@ package body Trans.Chap7 is
       New_Assign_Stmt
         (New_Obj (Var_Res_Base),
          Gen_Alloc (Alloc_Return, New_Obj_Value (Var_Length),
-                    Info.B.Base_Ptr_Type (Mode_Value)));
+                    Tinfo.B.Base_Ptr_Type (Mode_Value)));
       New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Base (Res)),
                        New_Obj_Value (Var_Res_Base));
 
@@ -5348,9 +5415,9 @@ package body Trans.Chap7 is
          Finish_Loop_Stmt (Label);
       end if;
       Finish_Subprogram_Body;
-   end Translate_Predefined_Array_Shift;
+   end Translate_Predefined_Array_Shift_Body;
 
-   procedure Translate_File_Subprogram (Subprg : Iir; File_Type : Iir)
+   procedure Translate_File_Subprogram_Spec (Subprg : Iir; File_Type : Iir)
    is
       Etype      : constant Iir := Get_Type (Get_File_Type_Mark (File_Type));
       Tinfo      : constant Type_Info_Acc := Get_Info (Etype);
@@ -5359,7 +5426,51 @@ package body Trans.Chap7 is
       Name       : O_Ident;
       Inter_List : O_Inter_List;
       Id         : Name_Id;
---      Var_File   : O_Dnode;
+   begin
+      if Tinfo.Type_Mode in Type_Mode_Scalar then
+         --  Intrinsic.
+         return;
+      end if;
+
+      F_Info := Add_Info (Subprg, Kind_Operator);
+      --Chap2.Clear_Instance_Data (F_Info.Subprg_Instance);
+      F_Info.Operator_Stack2 := False;
+
+      Id := Get_Identifier (Get_Type_Declarator (File_Type));
+      Kind := Get_Implicit_Definition (Subprg);
+      case Kind is
+         when Iir_Predefined_Write =>
+            Name := Create_Identifier (Id, "_WRITE");
+         when Iir_Predefined_Read
+            | Iir_Predefined_Read_Length =>
+            Name := Create_Identifier (Id, "_READ");
+         when others =>
+            raise Internal_Error;
+      end case;
+
+      --  Create function.
+      if Kind = Iir_Predefined_Read_Length then
+         Start_Function_Decl
+           (Inter_List, Name, Global_Storage, Std_Integer_Otype);
+      else
+         Start_Procedure_Decl (Inter_List, Name, Global_Storage);
+      end if;
+      Create_Operator_Instance (Inter_List, F_Info);
+
+      New_Interface_Decl (Inter_List, F_Info.Operator_Left,
+                          Get_Identifier ("FILE"), Ghdl_File_Index_Type);
+      New_Interface_Decl (Inter_List, F_Info.Operator_Right,
+                          Wki_Val, Tinfo.Ortho_Ptr_Type (Mode_Value));
+      Finish_Subprogram_Decl (Inter_List, F_Info.Operator_Node);
+   end Translate_File_Subprogram_Spec;
+
+   procedure Translate_File_Subprogram_Body (Subprg : Iir; File_Type : Iir)
+   is
+      Etype      : constant Iir := Get_Type (Get_File_Type_Mark (File_Type));
+      Tinfo      : constant Type_Info_Acc := Get_Info (Etype);
+      F_Info     : constant Operator_Info_Acc := Get_Info (Subprg);
+      Kind       : constant Iir_Predefined_Functions
+        := Get_Implicit_Definition (Subprg);
 
       procedure Translate_Rw (Val : Mnode; Val_Type : Iir; Proc : O_Dnode);
 
@@ -5465,41 +5576,9 @@ package body Trans.Chap7 is
 
       Var : Mnode;
    begin
-      if Tinfo.Type_Mode in Type_Mode_Scalar then
-         --  Intrinsic.
+      if F_Info = null then
          return;
       end if;
-
-      F_Info := Add_Info (Subprg, Kind_Operator);
-      --Chap2.Clear_Instance_Data (F_Info.Subprg_Instance);
-      F_Info.Operator_Stack2 := False;
-
-      Id := Get_Identifier (Get_Type_Declarator (File_Type));
-      Kind := Get_Implicit_Definition (Subprg);
-      case Kind is
-         when Iir_Predefined_Write =>
-            Name := Create_Identifier (Id, "_WRITE");
-         when Iir_Predefined_Read
-            | Iir_Predefined_Read_Length =>
-            Name := Create_Identifier (Id, "_READ");
-         when others =>
-            raise Internal_Error;
-      end case;
-
-      --  Create function.
-      if Kind = Iir_Predefined_Read_Length then
-         Start_Function_Decl
-           (Inter_List, Name, Global_Storage, Std_Integer_Otype);
-      else
-         Start_Procedure_Decl (Inter_List, Name, Global_Storage);
-      end if;
-      Create_Operator_Instance (Inter_List, F_Info);
-
-      New_Interface_Decl (Inter_List, F_Info.Operator_Left,
-                          Get_Identifier ("FILE"), Ghdl_File_Index_Type);
-      New_Interface_Decl (Inter_List, F_Info.Operator_Right,
-                          Wki_Val, Tinfo.Ortho_Ptr_Type (Mode_Value));
-      Finish_Subprogram_Decl (Inter_List, F_Info.Operator_Node);
 
       if Global_Storage = O_Storage_External then
          return;
@@ -5558,7 +5637,7 @@ package body Trans.Chap7 is
       Finish_Operator_Instance_Use (F_Info);
       Pop_Local_Factory;
       Finish_Subprogram_Body;
-   end Translate_File_Subprogram;
+   end Translate_File_Subprogram_Body;
 
    procedure Init_Implicit_Subprogram_Infos
      (Infos : out Implicit_Subprogram_Infos) is
@@ -5573,18 +5652,13 @@ package body Trans.Chap7 is
       Infos.Arr_Rot_Info := null;
    end Init_Implicit_Subprogram_Infos;
 
-   procedure Translate_Implicit_Subprogram
+   procedure Translate_Implicit_Subprogram_Spec
      (Subprg : Iir; Infos : in out Implicit_Subprogram_Infos)
    is
       Kind : constant Iir_Predefined_Functions :=
         Get_Implicit_Definition (Subprg);
    begin
-      if Predefined_To_Onop (Kind) /= ON_Nil then
-         --  Intrinsic.
-         return;
-      end if;
-
-      case Kind is
+      case Get_Implicit_Definition (Subprg) is
          when Iir_Predefined_Error
            | Iir_Predefined_Explicit =>
             raise Internal_Error;
@@ -5708,7 +5782,7 @@ package body Trans.Chap7 is
          when Iir_Predefined_Record_Equality
             | Iir_Predefined_Record_Inequality =>
             if Infos.Rec_Eq_Info = null then
-               Translate_Predefined_Record_Equality (Subprg);
+               Translate_Predefined_Record_Equality_Spec (Subprg);
                Infos.Rec_Eq_Info := Get_Info (Subprg);
             else
                Set_Info (Subprg, Infos.Rec_Eq_Info);
@@ -5719,7 +5793,7 @@ package body Trans.Chap7 is
             | Iir_Predefined_Bit_Array_Match_Equality
             | Iir_Predefined_Bit_Array_Match_Inequality =>
             if Infos.Arr_Eq_Info = null then
-               Translate_Predefined_Array_Equality (Subprg);
+               Translate_Predefined_Array_Equality_Spec (Subprg);
                Infos.Arr_Eq_Info := Get_Info (Subprg);
             else
                Set_Info (Subprg, Infos.Arr_Eq_Info);
@@ -5732,7 +5806,7 @@ package body Trans.Chap7 is
             | Iir_Predefined_Array_Minimum
             | Iir_Predefined_Array_Maximum =>
             if Infos.Arr_Cmp_Info = null then
-               Translate_Predefined_Array_Compare (Subprg);
+               Translate_Predefined_Array_Compare_Spec (Subprg);
                Infos.Arr_Cmp_Info := Get_Info (Subprg);
             else
                Set_Info (Subprg, Infos.Arr_Cmp_Info);
@@ -5755,7 +5829,7 @@ package body Trans.Chap7 is
             | Iir_Predefined_TF_Array_Xor
             | Iir_Predefined_TF_Array_Xnor
             | Iir_Predefined_TF_Array_Not =>
-            Translate_Predefined_Array_Logical (Subprg);
+            Translate_Predefined_Array_Logical_Spec (Subprg);
 
          when Iir_Predefined_TF_Reduction_And
             | Iir_Predefined_TF_Reduction_Or
@@ -5781,7 +5855,7 @@ package body Trans.Chap7 is
          when Iir_Predefined_Array_Sll
             | Iir_Predefined_Array_Srl =>
             if Infos.Arr_Shl_Info = null then
-               Translate_Predefined_Array_Shift (Subprg);
+               Translate_Predefined_Array_Shift_Spec (Subprg);
                Infos.Arr_Shl_Info := Get_Info (Subprg);
             else
                Set_Info (Subprg, Infos.Arr_Shl_Info);
@@ -5790,7 +5864,7 @@ package body Trans.Chap7 is
          when Iir_Predefined_Array_Sla
             | Iir_Predefined_Array_Sra =>
             if Infos.Arr_Sha_Info = null then
-               Translate_Predefined_Array_Shift (Subprg);
+               Translate_Predefined_Array_Shift_Spec (Subprg);
                Infos.Arr_Sha_Info := Get_Info (Subprg);
             else
                Set_Info (Subprg, Infos.Arr_Sha_Info);
@@ -5799,7 +5873,7 @@ package body Trans.Chap7 is
          when Iir_Predefined_Array_Rol
             | Iir_Predefined_Array_Ror =>
             if Infos.Arr_Rot_Info = null then
-               Translate_Predefined_Array_Shift (Subprg);
+               Translate_Predefined_Array_Shift_Spec (Subprg);
                Infos.Arr_Rot_Info := Get_Info (Subprg);
             else
                Set_Info (Subprg, Infos.Arr_Rot_Info);
@@ -5825,13 +5899,12 @@ package body Trans.Chap7 is
             | Iir_Predefined_Read_Length
             | Iir_Predefined_Read =>
             declare
-               Param     : Iir;
-               File_Type : Iir;
+               Param : constant Iir :=
+                 Get_Interface_Declaration_Chain (Subprg);
+               File_Type : constant Iir := Get_Type (Param);
             begin
-               Param := Get_Interface_Declaration_Chain (Subprg);
-               File_Type := Get_Type (Param);
                if not Get_Text_File_Flag (File_Type) then
-                  Translate_File_Subprogram (Subprg, File_Type);
+                  Translate_File_Subprogram_Spec (Subprg, File_Type);
                end if;
             end;
 
@@ -5856,5 +5929,70 @@ package body Trans.Chap7 is
             --                 & Iir_Predefined_Functions'Image (Kind) & ")",
             --                 Subprg);
       end case;
-   end Translate_Implicit_Subprogram;
+   end Translate_Implicit_Subprogram_Spec;
+
+   procedure Translate_Implicit_Subprogram_Body (Subprg : Iir)
+   is
+      Info : constant Operator_Info_Acc := Get_Info (Subprg);
+   begin
+      if Info = null or else Info.Operator_Body then
+         return;
+      end if;
+
+      --  Translate only once.
+      Info.Operator_Body := True;
+
+      case Get_Implicit_Definition (Subprg) is
+         when Iir_Predefined_Record_Equality
+            | Iir_Predefined_Record_Inequality =>
+            Translate_Predefined_Record_Equality_Body (Subprg);
+
+         when Iir_Predefined_Array_Equality
+            | Iir_Predefined_Array_Inequality
+            | Iir_Predefined_Bit_Array_Match_Equality
+            | Iir_Predefined_Bit_Array_Match_Inequality =>
+            Translate_Predefined_Array_Equality_Body (Subprg);
+
+         when Iir_Predefined_Array_Greater
+            | Iir_Predefined_Array_Greater_Equal
+            | Iir_Predefined_Array_Less
+            | Iir_Predefined_Array_Less_Equal
+            | Iir_Predefined_Array_Minimum
+            | Iir_Predefined_Array_Maximum =>
+            Translate_Predefined_Array_Compare_Body (Subprg);
+
+         when Iir_Predefined_TF_Array_And
+            | Iir_Predefined_TF_Array_Or
+            | Iir_Predefined_TF_Array_Nand
+            | Iir_Predefined_TF_Array_Nor
+            | Iir_Predefined_TF_Array_Xor
+            | Iir_Predefined_TF_Array_Xnor
+            | Iir_Predefined_TF_Array_Not =>
+            Translate_Predefined_Array_Logical_Body (Subprg);
+
+         when Iir_Predefined_Array_Sll
+           | Iir_Predefined_Array_Srl
+           | Iir_Predefined_Array_Sla
+           | Iir_Predefined_Array_Sra
+           | Iir_Predefined_Array_Rol
+           | Iir_Predefined_Array_Ror =>
+            Translate_Predefined_Array_Shift_Body (Subprg);
+
+         when Iir_Predefined_Write
+            | Iir_Predefined_Read_Length
+            | Iir_Predefined_Read =>
+            declare
+               Param : constant Iir :=
+                 Get_Interface_Declaration_Chain (Subprg);
+               File_Type : constant Iir := Get_Type (Param);
+            begin
+               if not Get_Text_File_Flag (File_Type) then
+                  Translate_File_Subprogram_Body (Subprg, File_Type);
+               end if;
+            end;
+
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Translate_Implicit_Subprogram_Body;
 end Trans.Chap7;

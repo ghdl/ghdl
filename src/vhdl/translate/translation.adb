@@ -1884,14 +1884,14 @@ package body Translation is
       pragma Assert (Get_Kind (Decl) in Iir_Kinds_Type_Declaration);
       Decl := Get_Chain (Decl);
 
-      Chap7.Init_Implicit_Subprogram_Infos (Infos);
-
       --  Implicit subprograms are immediately follow the type declaration.
+      Chap7.Init_Implicit_Subprogram_Infos (Infos);
       while Decl /= Null_Iir loop
          if Get_Kind (Decl) in Iir_Kinds_Subprogram_Declaration
            and then Is_Implicit_Subprogram (Decl)
          then
-            Chap7.Translate_Implicit_Subprogram (Decl, Infos);
+            Chap7.Translate_Implicit_Subprogram_Spec (Decl, Infos);
+            Chap7.Translate_Implicit_Subprogram_Body (Decl);
             Decl := Get_Chain (Decl);
          else
             exit;

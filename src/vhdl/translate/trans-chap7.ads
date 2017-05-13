@@ -119,8 +119,9 @@ package Trans.Chap7 is
    type Implicit_Subprogram_Infos is private;
    procedure Init_Implicit_Subprogram_Infos
      (Infos : out Implicit_Subprogram_Infos);
-   procedure Translate_Implicit_Subprogram
+   procedure Translate_Implicit_Subprogram_Spec
      (Subprg : Iir; Infos : in out Implicit_Subprogram_Infos);
+   procedure Translate_Implicit_Subprogram_Body (Subprg : Iir);
 
    --  Assign EXPR to TARGET.  LOC is the location used to report errors.
    --  FIXME: do the checks.

@@ -4725,6 +4725,16 @@ package Iirs is
      Iir_Predefined_Deallocate ..
      Iir_Predefined_Functions'Pred (Iir_Predefined_None);
 
+   subtype Iir_Predefined_TF_Array_Functions
+      is Iir_Predefined_Functions range
+     Iir_Predefined_TF_Array_And ..
+   --Iir_Predefined_TF_Array_Or
+   --Iir_Predefined_TF_Array_Nand
+   --Iir_Predefined_TF_Array_Nor
+   --Iir_Predefined_TF_Array_Xor
+   --Iir_Predefined_TF_Array_Xnor
+     Iir_Predefined_TF_Array_Not;
+
    subtype Iir_Predefined_Dyadic_TF_Array_Functions
    is Iir_Predefined_Functions range
      Iir_Predefined_TF_Array_And ..

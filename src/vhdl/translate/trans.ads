@@ -1259,7 +1259,11 @@ package Trans is
             --  subprograms.
 
             --  Use secondary stack (not referenced).
-            Operator_Stack2 : Boolean;
+            Operator_Stack2 : Boolean := False;
+
+            --  True if the body was generated.  Many operators share the same
+            --  subprogram.
+            Operator_Body : Boolean := False;
 
             --  Subprogram declaration node.
             Operator_Node : O_Dnode;
@@ -1270,6 +1274,7 @@ package Trans is
 
             --  Parameters
             Operator_Left, Operator_Right : O_Dnode;
+            Operator_Res : O_Dnode;
 
          when Kind_Call =>
             Call_State_Scope : aliased Var_Scope_Type;

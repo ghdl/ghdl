@@ -2341,12 +2341,15 @@ package body Trans.Chap4 is
                           | Iir_Predefined_Record_Equality =>
                            --  Used implicitly in case statement or other
                            --  predefined equality.
-                           Chap7.Translate_Implicit_Subprogram (El, Infos);
+                           Chap7.Translate_Implicit_Subprogram_Spec
+                             (El, Infos);
+                           Chap7.Translate_Implicit_Subprogram_Body (El);
                         when others =>
                            null;
                      end case;
                   else
-                     Chap7.Translate_Implicit_Subprogram (El, Infos);
+                     Chap7.Translate_Implicit_Subprogram_Spec (El, Infos);
+                     Chap7.Translate_Implicit_Subprogram_Body (El);
                   end if;
                else
                   --  Translate only if used.
