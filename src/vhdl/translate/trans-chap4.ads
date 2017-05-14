@@ -24,6 +24,26 @@ package Trans.Chap4 is
    procedure Translate_Subtype_Declaration (Decl : Iir_Subtype_Declaration);
    procedure Translate_Bool_Type_Declaration (Decl : Iir_Type_Declaration);
 
+   --  Translation of declarations occurs in three phases:
+   --  1) instance is built by putting objects in a record.
+   --  2) subprograms are declared (using instance as the first parameter).
+   --  3) subprogram bodies are translated.
+   --
+   --  In some cases (non nested packages), no instance is needed, thus the
+   --  first phase directly creates objects.
+   --  Phase 1 and phase 2 could theorically be merged, but the instance
+   --  pointer is generally created at the end of the phase 1.
+   --
+   --  Phase 2 and phase 3 were merged, but there is at least one case where it
+   --  is not possible: instantiation of a package INST in package
+   --  declaration PKG.  Subprograms declared in INST must have access to the
+   --  INST body but also (indirectly) to the PKG body if they call a
+   --  subprogram declared in PKG (and passed as a subprogram interface).  So
+   --  INST instance is the instance for PKG body.  Therefore they must be
+   --  translated during PKG body translation (that's because INST body appears
+   --  at the instantiation point instead of the end of PKG body as described
+   --  in the LRM).
+
    --  Translate declaration DECL, which must not be a subprogram
    --  specification.
    procedure Translate_Declaration (Decl : Iir);
