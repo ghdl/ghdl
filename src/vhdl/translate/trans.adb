@@ -76,14 +76,17 @@ package body Trans is
          end if;
       end Add_Subprg_Instance_Interfaces;
 
-      procedure Add_Subprg_Instance_Field (Field : out O_Fnode) is
+      procedure Add_Subprg_Instance_Field
+        (Field : out O_Fnode; Prev_Scope : out Var_Scope_Acc) is
       begin
          if Has_Current_Subprg_Instance then
             Field := Add_Instance_Factory_Field
               (Current_Subprg_Instance.Ident,
                Current_Subprg_Instance.Ptr_Type);
+            Prev_Scope := Current_Subprg_Instance.Scope;
          else
             Field := O_Fnode_Null;
+            Prev_Scope := null;
          end if;
       end Add_Subprg_Instance_Field;
 
@@ -113,7 +116,7 @@ package body Trans is
         (Var : O_Dnode; Field : O_Fnode; Vars : Subprg_Instance_Type)
       is
       begin
-         if Has_Subprg_Instance (Vars) then
+         if Has_Subprg_Instance (Vars) and then Field /= O_Fnode_Null then
             New_Assign_Stmt (New_Selected_Acc_Value (New_Obj (Var), Field),
                              New_Obj_Value (Vars.Inter));
          end if;
@@ -134,19 +137,19 @@ package body Trans is
       end Finish_Subprg_Instance_Use;
 
       procedure Start_Prev_Subprg_Instance_Use_Via_Field
-        (Prev : Subprg_Instance_Stack; Field : O_Fnode) is
+        (Prev_Scope : Var_Scope_Acc; Field : O_Fnode) is
       begin
          if Field /= O_Fnode_Null then
-            Set_Scope_Via_Field_Ptr (Prev.Scope.all, Field,
+            Set_Scope_Via_Field_Ptr (Prev_Scope.all, Field,
                                      Current_Subprg_Instance.Scope);
          end if;
       end Start_Prev_Subprg_Instance_Use_Via_Field;
 
       procedure Finish_Prev_Subprg_Instance_Use_Via_Field
-        (Prev : Subprg_Instance_Stack; Field : O_Fnode) is
+        (Prev_Scope : Var_Scope_Acc; Field : O_Fnode) is
       begin
          if Field /= O_Fnode_Null then
-            Clear_Scope (Prev.Scope.all);
+            Clear_Scope (Prev_Scope.all);
          end if;
       end Finish_Prev_Subprg_Instance_Use_Via_Field;
 

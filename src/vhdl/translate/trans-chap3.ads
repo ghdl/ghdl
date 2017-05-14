@@ -58,7 +58,8 @@ package Trans.Chap3 is
    procedure Call_Ghdl_Protected_Procedure (Type_Def : Iir; Proc : O_Dnode);
 
    procedure Translate_Protected_Type_Body (Bod : Iir);
-   procedure Translate_Protected_Type_Body_Subprograms (Bod : Iir);
+   procedure Translate_Protected_Type_Body_Subprograms_Spec (Bod : Iir);
+   procedure Translate_Protected_Type_Body_Subprograms_Body (Bod : Iir);
 
    --  Translate_type_definition_Elab do 4 and 6.
    --  It generates code to do type elaboration.

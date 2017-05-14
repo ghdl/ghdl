@@ -426,6 +426,7 @@ package body Trans.Chap2 is
 
       Frame_Ptr_Type : O_Tnode;
       Upframe_Field  : O_Fnode;
+      Upframe_Scope  : Var_Scope_Acc;
 
       Frame     : O_Dnode;
       Frame_Ptr : O_Dnode;
@@ -457,7 +458,7 @@ package body Trans.Chap2 is
          --  Unnest subprograms.
          --  Create an instance for the local declarations.
          Push_Instance_Factory (Info.Subprg_Frame_Scope'Access);
-         Add_Subprg_Instance_Field (Upframe_Field);
+         Add_Subprg_Instance_Field (Upframe_Field, Upframe_Scope);
 
          if Info.Subprg_Params_Ptr /= O_Tnode_Null then
             --  Field for the parameters structure
@@ -526,14 +527,14 @@ package body Trans.Chap2 is
             Wki_Upframe, Prev_Subprg_Instances);
          --  Link to previous frame
          Subprgs.Start_Prev_Subprg_Instance_Use_Via_Field
-           (Prev_Subprg_Instances, Upframe_Field);
+           (Upframe_Scope, Upframe_Field);
 
          Chap4.Translate_Declaration_Chain_Subprograms
            (Subprg, Subprg_Translate_Spec_And_Body);
 
          --  Link to previous frame
          Subprgs.Finish_Prev_Subprg_Instance_Use_Via_Field
-           (Prev_Subprg_Instances, Upframe_Field);
+           (Upframe_Scope, Upframe_Field);
          --  Local frame
          Subprgs.Pop_Subprg_Instance (Wki_Upframe, Prev_Subprg_Instances);
       end if;
@@ -796,24 +797,18 @@ package body Trans.Chap2 is
          Chap2.Declare_Inst_Type_And_Ptr
            (Info.Package_Body_Scope'Access, Info.Package_Body_Ptr_Type);
 
-         if not Get_Need_Body (Decl)
-           and then Get_Package_Body (Decl) = Null_Iir
-         then
-            --  Generic package without a body.
-            --  Create an empty body instance.
-            Push_Package_Instance_Factory (Decl);
-            Pop_Package_Instance_Factory (Decl);
-
-            Set_Scope_Via_Field (Info.Package_Spec_Scope,
-                                 Info.Package_Spec_Field,
-                                 Info.Package_Body_Scope'Access);
-         end if;
-
          --  Each subprogram has a body instance argument (because subprogram
          --  bodys can access to body declarations).
          Subprgs.Push_Subprg_Instance
            (Info.Package_Body_Scope'Access, Info.Package_Body_Ptr_Type,
             Wki_Instance, Prev_Subprg_Instance);
+
+         if not Is_Nested then
+            --  For nested package, this will be translated when translating
+            --  subprograms.
+            Chap4.Translate_Declaration_Chain_Subprograms
+              (Decl, Subprg_Translate_Only_Spec);
+         end if;
       else
          if Header /= Null_Iir then
             Chap4.Translate_Generic_Chain (Header);
@@ -823,39 +818,14 @@ package body Trans.Chap2 is
             Info.Package_Elab_Var := Create_Var
               (Create_Var_Identifier ("ELABORATED"), Ghdl_Bool_Type);
          end if;
-      end if;
 
-      --  Translate subprograms declarations.
-      if not Is_Nested then
-         --  For nested package, this will be translated when translating
-         --  subprograms.
-         Chap4.Translate_Declaration_Chain_Subprograms
-           (Decl, Subprg_Translate_Spec_And_Body);
-      end if;
-
-      --  Declare elaborator for the body.
-      if not Is_Nested then
-         Start_Procedure_Decl
-           (Interface_List, Create_Identifier ("ELAB_BODY"), Global_Storage);
-         Subprgs.Add_Subprg_Instance_Interfaces
-           (Interface_List, Info.Package_Elab_Body_Instance);
-         Finish_Subprogram_Decl
-           (Interface_List, Info.Package_Elab_Body_Subprg);
-      end if;
-
-      if Is_Uninstantiated then
-         Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
-
-         if not Get_Need_Body (Decl)
-           and then Get_Package_Body (Decl) = Null_Iir
-         then
-            Clear_Scope (Info.Package_Spec_Scope);
+         --  Translate subprograms declarations.
+         if not Is_Nested then
+            --  For nested package, this will be translated when translating
+            --  subprograms.
+            Chap4.Translate_Declaration_Chain_Subprograms
+              (Decl, Subprg_Translate_Spec_And_Body);
          end if;
-
-         --  The spec elaborator has a spec instance argument.
-         Subprgs.Push_Subprg_Instance
-           (Info.Package_Spec_Scope'Access, Info.Package_Spec_Ptr_Type,
-            Wki_Instance, Prev_Subprg_Instance);
       end if;
 
       if not Is_Nested then
@@ -867,19 +837,54 @@ package body Trans.Chap2 is
          Finish_Subprogram_Decl
            (Interface_List, Info.Package_Elab_Spec_Subprg);
 
+         --  Declare elaborator for the body.
+         Start_Procedure_Decl
+           (Interface_List, Create_Identifier ("ELAB_BODY"), Global_Storage);
+         Subprgs.Add_Subprg_Instance_Interfaces
+           (Interface_List, Info.Package_Elab_Body_Instance);
+         Finish_Subprogram_Decl
+           (Interface_List, Info.Package_Elab_Body_Subprg);
+
          if Flag_Rti then
             --  Generate RTI.
             Rtis.Generate_Unit (Decl);
          end if;
-
-         if Global_Storage /= O_Storage_External then
-            --  Create elaboration procedure for the spec
-            Elab_Package (Decl, Header);
-         end if;
       end if;
 
       if Is_Uninstantiated then
+         if not Get_Need_Body (Decl)
+           and then Get_Package_Body (Decl) = Null_Iir
+         then
+            --  Generic package without a body.
+            --  Create an empty body instance.
+            Push_Package_Instance_Factory (Decl);
+            Pop_Package_Instance_Factory (Decl);
+
+            Set_Scope_Via_Field (Info.Package_Spec_Scope,
+                                 Info.Package_Spec_Field,
+                                 Info.Package_Body_Scope'Access);
+
+            if not Is_Nested
+              and then Global_Storage /= O_Storage_External
+            then
+               --  For nested package, this will be translated when translating
+               --  subprograms.
+               Chap4.Translate_Declaration_Chain_Subprograms
+                 (Decl, Subprg_Translate_Only_Body);
+
+               --  Create elaboration procedure for the spec
+               Elab_Package (Decl, Header);
+            end if;
+         end if;
+
          Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
+      else
+         if not Is_Nested
+           and then Global_Storage /= O_Storage_External
+         then
+            --  Create elaboration procedure for the spec
+            Elab_Package (Decl, Header);
+         end if;
       end if;
       Save_Local_Identifier (Info.Package_Local_Id);
 
@@ -971,8 +976,12 @@ package body Trans.Chap2 is
       end if;
 
       if Is_Spec_Decl and then Is_Uninstantiated_Package (Spec) then
-         Clear_Scope (Info.Package_Spec_Scope);
          Subprgs.Pop_Subprg_Instance (Wki_Instance, Prev_Subprg_Instance);
+         if not Is_Nested then
+            Chap4.Translate_Declaration_Chain_Subprograms
+              (Spec, Subprg_Translate_Only_Body);
+            Elab_Package (Spec, Get_Package_Header (Spec));
+         end if;
       end if;
 
       if not Is_Nested then
@@ -1055,12 +1064,6 @@ package body Trans.Chap2 is
       Push_Local_Factory;
       Subprgs.Start_Subprg_Instance_Use (Info.Package_Elab_Body_Instance);
 
-      if Is_Spec_Decl and then Is_Uninstantiated_Package (Spec) then
-         Set_Scope_Via_Field (Info.Package_Spec_Scope,
-                              Info.Package_Spec_Field,
-                              Info.Package_Body_Scope'Access);
-      end if;
-
       --  If the package was already elaborated, return now,
       --  else mark the package as elaborated.
       Start_If_Stmt (If_Blk, New_Value (Get_Var (Info.Package_Elab_Var)));
@@ -1080,10 +1083,6 @@ package body Trans.Chap2 is
          Open_Temp;
          Chap4.Elab_Declaration_Chain (Bod, Final);
          Close_Temp;
-      end if;
-
-      if Is_Spec_Decl and then Is_Uninstantiated_Package (Spec) then
-         Clear_Scope (Info.Package_Spec_Scope);
       end if;
 
       Subprgs.Finish_Subprg_Instance_Use (Info.Package_Elab_Body_Instance);
@@ -1542,13 +1541,9 @@ package body Trans.Chap2 is
       Set_Scope_Via_Var (Pkg_Info.Package_Body_Scope,
                          Info.Package_Instance_Body_Var);
 
-      Set_Scope_Via_Field (Pkg_Info.Package_Spec_Scope,
-                           Pkg_Info.Package_Spec_Field,
-                           Pkg_Info.Package_Body_Scope'Access);
       Chap5.Elab_Generic_Map_Aspect
         (Get_Package_Header (Spec), Inst,
          (Pkg_Info.Package_Body_Scope'Access, Pkg_Info.Package_Body_Scope));
-      Clear_Scope (Pkg_Info.Package_Spec_Scope);
 
       --  Call the elaborator of the generic.  The generic must be
       --  temporary associated with the instance variable.

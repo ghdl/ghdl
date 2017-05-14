@@ -1609,7 +1609,8 @@ package body Trans.Chap3 is
       --  Create the object type
       Push_Instance_Factory (Info.B.Prot_Scope'Unrestricted_Access);
       --  First, the previous instance.
-      Subprgs.Add_Subprg_Instance_Field (Info.B.Prot_Subprg_Instance_Field);
+      Subprgs.Add_Subprg_Instance_Field
+        (Info.B.Prot_Subprg_Instance_Field, Info.B.Prot_Prev_Scope);
       --  Then the object lock
       Info.B.Prot_Lock_Field := Add_Instance_Factory_Field
         (Get_Identifier ("LOCK"), Ghdl_Ptr_Type);
@@ -1638,13 +1639,12 @@ package body Trans.Chap3 is
       New_Procedure_Call (Assoc);
    end Call_Ghdl_Protected_Procedure;
 
-   procedure Translate_Protected_Type_Body_Subprograms (Bod : Iir)
+   procedure Translate_Protected_Type_Body_Subprograms_Spec (Bod : Iir)
    is
       Mark  : Id_Mark_Type;
       Decl  : constant Iir := Get_Protected_Type_Declaration (Bod);
       Info  : constant Type_Info_Acc := Get_Info (Decl);
       Prev_Subprg_Instance : Subprgs.Subprg_Instance_Stack;
-      Final : Boolean;
    begin
       Push_Identifier_Prefix (Mark, Get_Identifier (Bod));
 
@@ -1653,23 +1653,32 @@ package body Trans.Chap3 is
                                     Info.Ortho_Ptr_Type (Mode_Value),
                                     Wki_Obj,
                                     Prev_Subprg_Instance);
+
+      --  Environment is referenced through the object.
       Subprgs.Start_Prev_Subprg_Instance_Use_Via_Field
-        (Prev_Subprg_Instance, Info.B.Prot_Subprg_Instance_Field);
+        (Info.B.Prot_Prev_Scope, Info.B.Prot_Subprg_Instance_Field);
 
       Chap4.Translate_Declaration_Chain_Subprograms
         (Bod, Subprg_Translate_Spec_And_Body);
 
-      Subprgs.Finish_Prev_Subprg_Instance_Use_Via_Field
-        (Prev_Subprg_Instance, Info.B.Prot_Subprg_Instance_Field);
       Subprgs.Pop_Subprg_Instance (Wki_Obj, Prev_Subprg_Instance);
 
-      Pop_Identifier_Prefix (Mark);
+      Subprgs.Finish_Prev_Subprg_Instance_Use_Via_Field
+        (Info.B.Prot_Prev_Scope, Info.B.Prot_Subprg_Instance_Field);
 
-      if Global_Storage = O_Storage_External then
-         return;
-      end if;
+      Pop_Identifier_Prefix (Mark);
+   end Translate_Protected_Type_Body_Subprograms_Spec;
+
+   procedure Translate_Protected_Type_Body_Subprograms_Body (Bod : Iir)
+   is
+      Decl  : constant Iir := Get_Protected_Type_Declaration (Bod);
+      Info  : constant Type_Info_Acc := Get_Info (Decl);
+      Final : Boolean;
+   begin
+      pragma Assert (Global_Storage /= O_Storage_External);
 
       --  Init subprogram
+      --  Contrary to other subprograms, no object is passed to it.
       declare
          Var_Obj : O_Dnode;
       begin
@@ -1709,6 +1718,9 @@ package body Trans.Chap3 is
          Finish_Subprogram_Body;
       end;
 
+--      Chap4.Translate_Declaration_Chain_Subprograms
+--        (Bod, Subprg_Translate_Only_Body);
+
       --  Fini subprogram
       begin
          Start_Subprogram_Body (Info.B.Prot_Final_Subprg);
@@ -1725,7 +1737,8 @@ package body Trans.Chap3 is
          Subprgs.Finish_Subprg_Instance_Use (Info.B.Prot_Final_Instance);
          Finish_Subprogram_Body;
       end;
-   end Translate_Protected_Type_Body_Subprograms;
+
+   end Translate_Protected_Type_Body_Subprograms_Body;
 
    ---------------
    --  Scalars  --
@@ -2360,7 +2373,9 @@ package body Trans.Chap3 is
          when Iir_Kind_Incomplete_Type_Definition =>
             return;
          when Iir_Kind_Protected_Type_Declaration =>
-            Translate_Protected_Type_Subprograms_Spec (Def);
+            if Kind in Subprg_Translate_Spec then
+               Translate_Protected_Type_Subprograms_Spec (Def);
+            end if;
             return;
          when Iir_Kind_Record_Type_Definition
            | Iir_Kind_Array_Type_Definition =>
