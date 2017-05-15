@@ -1121,6 +1121,32 @@ package body Trans.Chap2 is
       end case;
    end Instantiate_Iir_List_Info;
 
+   --  B must be passed by reference.
+   procedure Adjust_Info_Basetype (B : access Ortho_Info_Basetype_Type;
+                                   Orig : access Ortho_Info_Basetype_Type) is
+   begin
+      case B.Kind is
+         when Kind_Type_Scalar =>
+            null;
+         when Kind_Type_Array
+           | Kind_Type_Record =>
+            null;
+         when Kind_Type_File =>
+            null;
+         when Kind_Type_Protected =>
+            B.Prot_Scope := Instantiate_Var_Scope (B.Prot_Scope);
+            Push_Instantiate_Var_Scope
+              (B.Prot_Scope'Unrestricted_access,
+               Orig.Prot_Scope'Unrestricted_access);
+            B.Prot_Prev_Scope := Instantiated_Var_Scope
+              (B.Prot_Prev_Scope);
+            B.Prot_Init_Instance := Instantiate_Subprg_Instance
+              (B.Prot_Init_Instance);
+            B.Prot_Final_Instance := Instantiate_Subprg_Instance
+              (B.Prot_Final_Instance);
+      end case;
+   end Adjust_Info_Basetype;
+
    function Copy_Info_Subtype (Src : Ortho_Info_Subtype_Type)
                               return Ortho_Info_Subtype_Type
    is
@@ -1155,6 +1181,8 @@ package body Trans.Chap2 is
                          B => Src.B,
                          S => Copy_Info_Subtype (Src.S),
                          Type_Rti => Src.Type_Rti);
+            Adjust_Info_Basetype (Dest.B'Unrestricted_Access,
+                                 Src.B'Unrestricted_Access);
             if Src.C /= null then
                Dest.C := new Complex_Type_Arr_Info'
                  (Mode_Value =>
@@ -1311,6 +1339,8 @@ package body Trans.Chap2 is
                   Push_Instantiate_Var_Scope
                     (Info.Subprg_Frame_Scope'Access,
                      Orig_Info.Subprg_Frame_Scope'Access);
+               when Kind_Type =>
+                  null;
                when others =>
                   null;
             end case;
@@ -1393,6 +1423,14 @@ package body Trans.Chap2 is
                when Kind_Subprg =>
                   Pop_Instantiate_Var_Scope
                     (Info.Subprg_Frame_Scope'Access);
+               when Kind_Type =>
+                  case Info.B.Kind is
+                     when Kind_Type_Protected =>
+                        Pop_Instantiate_Var_Scope
+                          (Info.B.Prot_Scope'Unrestricted_access);
+                     when others =>
+                        null;
+                  end case;
                when others =>
                   null;
             end case;

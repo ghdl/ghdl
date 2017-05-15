@@ -357,20 +357,17 @@ package body Sem_Inst is
          Fields : constant Fields_Array := Get_Fields (Kind);
          F : Fields_Enum;
       begin
-         Res := Get_Instance (N);
-
-         if Kind = Iir_Kind_Interface_Constant_Declaration
-           and then Get_Identifier (N) = Null_Identifier
-           and then Res /= Null_Iir
-         then
-            --  Anonymous constant interface declarations are the only nodes
-            --  that can be shared.  Handle that very special case.
-            return Res;
-         end if;
-
-         --  RES is null_iir unless RES is also an instance (and therefore has
-         --  an origin).
-         --  pragma Assert (Res = Null_Iir);
+         --  In general, Get_Instance (N) is Null_Iir.  There are two
+         --  exceptions:
+         --  - N is also an instance (instance within an uninstantiated
+         --    package).  As instances and origin share the same table,
+         --    Get_Instance returns the origin.  During instantiation, the old
+         --    value of Origin is saved so this case is correctly handled.
+         --  - N is shared, so it was already instantiated.  This happends only
+         --    for interface_constant of implicit operators.  In that case,
+         --    multiple instances are created for the same node, which is not
+         --    ideal.  That's still ok (if no infos are attached to the
+         --    interface) and is the price to pay for this optimization.
 
          --  Create a new node.
          Res := Create_Iir (Kind);
