@@ -496,8 +496,8 @@ package body Ghdlcomp is
    begin
       Disp_Config_Prefixes;
 
-      Put_Line ("default library pathes:");
-      for I in 2 .. Get_Nbr_Pathes loop
+      Put_Line ("default library paths:");
+      for I in 2 .. Get_Nbr_Paths loop
          Put (' ');
          Put_Line (Name_Table.Image (Get_Path (I)));
       end loop;

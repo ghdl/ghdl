@@ -1835,7 +1835,7 @@ package body Sem_Names is
          Res_List := Create_Iir_List;
          N := 0;
          --  The SEEN_FLAG is used to get only one meaning which can be reached
-         --  through several pathes (such as aliases).
+         --  through several paths (such as aliases).
          while Valid_Interpretation (Interpretation) loop
             if Keep_Alias then
                Res := Get_Declaration (Interpretation);

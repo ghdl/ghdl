@@ -45,8 +45,8 @@ package body Libraries is
    --  A location for any implicit declarations (such as library WORK).
    Implicit_Location: Location_Type;
 
-   --  Table of library pathes.
-   package Pathes is new Tables
+   --  Table of library paths.
+   package Paths is new Tables
      (Table_Index_Type => Integer,
       Table_Component_Type => Name_Id,
       Table_Low_Bound => 1,
@@ -63,18 +63,18 @@ package body Libraries is
       Report_Msg (Msgid_Error, Library, No_Location, Msg, (1 => Arg1));
    end Error_Lib_Msg;
 
-   --  Initialize pathes table.
+   --  Initialize paths table.
    --  Set the local path.
-   procedure Init_Pathes
+   procedure Init_Paths
    is
    begin
       --  Always look in current directory first.
       Name_Nil := Get_Identifier ("");
-      Pathes.Append (Name_Nil);
+      Paths.Append (Name_Nil);
 
       Local_Directory := Name_Nil;
       Work_Directory := Name_Nil;
-   end Init_Pathes;
+   end Init_Paths;
 
    function Path_To_Id (Path : String) return Name_Id is
    begin
@@ -96,21 +96,21 @@ package body Libraries is
          Error_Lib_Msg ("argument of -P is too long");
          return;
       end if;
-      Pathes.Append (Path_To_Id (Path));
+      Paths.Append (Path_To_Id (Path));
    end Add_Library_Path;
 
-   function Get_Nbr_Pathes return Natural is
+   function Get_Nbr_Paths return Natural is
    begin
-      return Pathes.Last;
-   end Get_Nbr_Pathes;
+      return Paths.Last;
+   end Get_Nbr_Paths;
 
    function Get_Path (N : Natural) return Name_Id is
    begin
-      if N not in Pathes.First .. Pathes.Last then
+      if N not in Paths.First .. Paths.Last then
          raise Constraint_Error;
       end if;
 
-      return Pathes.Table (N);
+      return Paths.Table (N);
    end Get_Path;
 
    -- Transform a library identifier into a file name.
@@ -141,8 +141,8 @@ package body Libraries is
       L : Natural;
       Path_Len : Natural;
    begin
-      for I in Pathes.First .. Pathes.Last loop
-         Image (Pathes.Table (I));
+      for I in Paths.First .. Paths.Last loop
+         Image (Paths.Table (I));
          Path_Len := Nam_Length;
 
          --  Try PATH/LIBxxx.cf
@@ -150,7 +150,7 @@ package body Libraries is
          Nam_Buffer (Path_Len + 1 .. L) := File_Name;
          Nam_Buffer (L + 1) := Character'Val (0);
          if GNAT.OS_Lib.Is_Regular_File (Nam_Buffer'Address) then
-            Set_Library_Directory (Library, Pathes.Table (I));
+            Set_Library_Directory (Library, Paths.Table (I));
             exit;
          end if;
 

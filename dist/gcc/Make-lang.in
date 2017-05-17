@@ -86,32 +86,32 @@ else
   VHDL_SOEXT=.so
 endif
 
-vhdl/default_pathes.ads: Makefile
-	echo "--  DO NOT EDIT" > tmp-dpathes.ads
-	echo "--  This file is created by Makefile" >> tmp-dpathes.ads
-	echo "package Default_Pathes is" >> tmp-dpathes.ads
-	echo "   --  Accept long lines."  >> tmp-dpathes.ads
-	echo "   pragma Style_Checks (\"M999\");"  >> tmp-dpathes.ads
-	echo "   Install_Prefix : constant String :=" >> tmp-dpathes.ads
-	echo "     \"$(exec_prefix)\";" >> tmp-dpathes.ads
+vhdl/default_paths.ads: Makefile
+	echo "--  DO NOT EDIT" > tmp-dpaths.ads
+	echo "--  This file is created by Makefile" >> tmp-dpaths.ads
+	echo "package Default_Paths is" >> tmp-dpaths.ads
+	echo "   --  Accept long lines."  >> tmp-dpaths.ads
+	echo "   pragma Style_Checks (\"M999\");"  >> tmp-dpaths.ads
+	echo "   Install_Prefix : constant String :=" >> tmp-dpaths.ads
+	echo "     \"$(exec_prefix)\";" >> tmp-dpaths.ads
 	suffix=`expr @"$(libexecdir)" : @"$(prefix)/\(.*\)"`; \
 	if test x"$$suffix" = x; then suffix="$(libexecdir)"; fi; \
-	echo "   Compiler_Gcc   : constant String :=" >> tmp-dpathes.ads; \
-	echo "     \"$$suffix/gcc/$(target_noncanonical)/$(version)/ghdl1$(exeext)\";" >> tmp-dpathes.ads
-	echo "   Compiler_Debug : constant String := \"\";" >> tmp-dpathes.ads
-	echo "   Compiler_Mcode : constant String := \"\";" >> tmp-dpathes.ads
-	echo "   Compiler_Llvm  : constant String := \"\";" >> tmp-dpathes.ads
-	echo "   Post_Processor : constant String := \"\";" >> tmp-dpathes.ads
-	echo "   Lib_Prefix     : constant String :=">> tmp-dpathes.ads
-	echo "     \"lib/ghdl\";" >> tmp-dpathes.ads
-	echo "   Shared_Library_Extension : constant String :=">> tmp-dpathes.ads
-	echo "     \"$(VHDL_SOEXT)\";" >> tmp-dpathes.ads
-	echo "   Default_Pie : constant Boolean := False;" >> tmp-dpathes.ads
-	echo "end Default_Pathes;" >> tmp-dpathes.ads
-	$(srcdir)/../move-if-change tmp-dpathes.ads $@
+	echo "   Compiler_Gcc   : constant String :=" >> tmp-dpaths.ads; \
+	echo "     \"$$suffix/gcc/$(target_noncanonical)/$(version)/ghdl1$(exeext)\";" >> tmp-dpaths.ads
+	echo "   Compiler_Debug : constant String := \"\";" >> tmp-dpaths.ads
+	echo "   Compiler_Mcode : constant String := \"\";" >> tmp-dpaths.ads
+	echo "   Compiler_Llvm  : constant String := \"\";" >> tmp-dpaths.ads
+	echo "   Post_Processor : constant String := \"\";" >> tmp-dpaths.ads
+	echo "   Lib_Prefix     : constant String :=">> tmp-dpaths.ads
+	echo "     \"lib/ghdl\";" >> tmp-dpaths.ads
+	echo "   Shared_Library_Extension : constant String :=">> tmp-dpaths.ads
+	echo "     \"$(VHDL_SOEXT)\";" >> tmp-dpaths.ads
+	echo "   Default_Pie : constant Boolean := False;" >> tmp-dpaths.ads
+	echo "end Default_Paths;" >> tmp-dpaths.ads
+	$(srcdir)/../move-if-change tmp-dpaths.ads $@
 
 # The driver for ghdl.  Depends on ghdl1 to use object files in vhdl/ subdir.
-ghdl$(exeext): ghdl1$(exeext) vhdl/default_pathes.ads force
+ghdl$(exeext): ghdl1$(exeext) vhdl/default_paths.ads force
 	$(GNATMAKE) -o $@ -aI$(srcdir)/vhdl -aI$(srcdir)/vhdl/ghdldrv \
 	 -aIvhdl -aOvhdl ghdl_gcc \
 	 -bargs -E -cargs $(ADA_CFLAGS) $(GHDL_ADAFLAGS) -largs $(LIBS)
@@ -180,10 +180,10 @@ vhdl.uninstall:
 
 vhdl.mostlyclean:
 	-$(RM) vhdl/*$(objext) vhdl/*.ali vhdl/b~*.ad?
-	-$(RM) vhdl/default_pathes.ads
+	-$(RM) vhdl/default_paths.ads
 vhdl.clean:
 	-$(RM) vhdl/*$(objext)
-	-$(RM) vhdl/default_pathes.ads
+	-$(RM) vhdl/default_paths.ads
 vhdl.distclean:
 	-$(RM) vhdl/Makefile
 	-$(RM) ghdl$(exeext)

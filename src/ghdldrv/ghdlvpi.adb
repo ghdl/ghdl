@@ -21,7 +21,7 @@ with GNAT.OS_Lib; use GNAT.OS_Lib;
 with Ada.Command_Line; use Ada.Command_Line;
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal;
-with Default_Pathes; use Default_Pathes;
+with Default_Paths; use Default_Paths;
 
 package body Ghdlvpi is
 

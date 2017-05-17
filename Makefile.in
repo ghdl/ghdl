@@ -450,7 +450,7 @@ clean: force
 	$(RM) -rf lib
 
 distclean: clean
-	$(RM) -f default_pathes.ads ortho_code-x86-flags.ads
+	$(RM) -f default_paths.ads ortho_code-x86-flags.ads
 	$(RM) -f grt/grt-backtrace-impl.ads
 	$(RM) -f Makefile config.status ghdl.gpr
 

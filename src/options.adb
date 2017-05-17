@@ -32,7 +32,7 @@ package body Options is
    procedure Initialize is
    begin
       Std_Names.Std_Names_Initialize;
-      Libraries.Init_Pathes;
+      Libraries.Init_Paths;
       PSL.Nodes.Init;
       PSL.Dump_Tree.Dump_Hdl_Node := Disp_Tree.Disp_Tree_For_Psl'Access;
    end Initialize;

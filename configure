@@ -279,10 +279,10 @@ if test $backend = mcode; then
     } > elf_arch.ads
 fi
 
-# Generate default_pathes.ads
-# Also update dist/mcode/windows/default_pathes.ads if you change this
+# Generate default_paths.ads
+# Also update dist/windows/mcode/default_paths.ads if you change this
 # template.
-echo "Generate default_pathes.ads"
+echo "Generate default_paths.ads"
 curdir=`pwd`
 sed -e "s%@COMPILER_GCC@%ghdl1-gcc$EXEEXT%" \
     -e "s%@COMPILER_DEBUG@%ghdl1-debug$EXEEXT%" \
@@ -293,6 +293,6 @@ sed -e "s%@COMPILER_GCC@%ghdl1-gcc$EXEEXT%" \
     -e "s%@LIB_PREFIX@%$libdirsuffix%" \
     -e "s%@SOEXT@%$SOEXT%" \
     -e "s%@default_pie@%$default_pie%" \
-    < $srcdir/src/ghdldrv/default_pathes.ads.in > default_pathes.ads
+    < $srcdir/src/ghdldrv/default_paths.ads.in > default_paths.ads
 
 exit 0

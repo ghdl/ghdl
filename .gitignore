@@ -21,7 +21,7 @@ lib/
 # Generated files on Linux
 ./Makefile
 config.status
-default_pathes.ads
+default_paths.ads
 elf_arch.ads
 ghdl.gpr
 ghdl1-*

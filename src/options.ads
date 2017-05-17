@@ -18,7 +18,7 @@
 
 package Options is
    -- Return true if opt is recognize by flags.
-   --  Note: std_names.std_names_initialize and files_map.init_pathes must have
+   --  Note: std_names.std_names_initialize and files_map.init_paths must have
    --  been called before this subprogram.
    function Parse_Option (Option : String) return Boolean;
 

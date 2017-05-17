@@ -49,7 +49,7 @@ package Libraries is
    Work_Library_Name : Name_Id := Std_Names.Name_Work;
 
    --  Directory of the work library.
-   --  Set by default by INIT_PATHES to the local directory.
+   --  Set by default by INIT_PATHS to the local directory.
    Work_Directory : Name_Id;
 
    --  Local (current) directory.
@@ -62,15 +62,15 @@ package Libraries is
    --  Chain of obsoleted design units.
    Obsoleted_Design_Units : Iir := Null_Iir;
 
-   --  Initialize library pathes table.
+   --  Initialize library paths table.
    --  Set the local path.
-   procedure Init_Pathes;
+   procedure Init_Paths;
 
    --  Add PATH in the search path.
    procedure Add_Library_Path (Path : String);
 
-   --  Get the number of path in the search pathes.
-   function Get_Nbr_Pathes return Natural;
+   --  Get the number of path in the search paths.
+   function Get_Nbr_Paths return Natural;
 
    --  Get path N.
    function Get_Path (N : Natural) return Name_Id;

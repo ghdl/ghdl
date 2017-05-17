@@ -13,25 +13,25 @@ GRTSRCDIR=grt
 
 ####grt Makefile.inc
 
-ghdl_mcode: default_pathes.ads $(GRT_ADD_OBJS) mmap_binding.o force 
+ghdl_mcode: default_paths.ads $(GRT_ADD_OBJS) mmap_binding.o force 
 	gnatmake -aIghdldrv -aIghdl -aIortho -aIgrt $(GNATFLAGS) ghdl_mcode $(GNAT_BARGS) -largs mmap_binding.o $(GNAT_LARGS) $(GRT_ADD_OBJS) $(GRT_EXTRA_LIB) -Wl,--version-script=$(GRTSRCDIR)/grt.ver -Wl,--export-dynamic
 
 mmap_binding.o: ortho/mmap_binding.c
 	$(CC) -c -g -o $@ $<
 
-default_pathes.ads: Makefile
-	echo "--  DO NOT EDIT" > tmp-dpathes.ads
-	echo "--  This file is created by Makefile" >> tmp-dpathes.ads
-	echo "package Default_Pathes is" >> tmp-dpathes.ads
-	echo "   Prefix : constant String :=">> tmp-dpathes.ads
-	echo "     \"$(PREFIX)/lib/ghdl/\";" >> tmp-dpathes.ads
-	echo "end Default_Pathes;" >> tmp-dpathes.ads
-	if test -r $@ && cmp tmp-dpathes.ads $@; then \
+default_paths.ads: Makefile
+	echo "--  DO NOT EDIT" > tmp-dpaths.ads
+	echo "--  This file is created by Makefile" >> tmp-dpaths.ads
+	echo "package Default_Paths is" >> tmp-dpaths.ads
+	echo "   Prefix : constant String :=">> tmp-dpaths.ads
+	echo "     \"$(PREFIX)/lib/ghdl/\";" >> tmp-dpaths.ads
+	echo "end Default_Paths;" >> tmp-dpaths.ads
+	if test -r $@ && cmp tmp-dpaths.ads $@; then \
 	  echo "$@ unchanged"; \
         else \
-	  mv tmp-dpathes.ads $@; \
+	  mv tmp-dpaths.ads $@; \
         fi
-	$(RM) tmp-dpathes.ads
+	$(RM) tmp-dpaths.ads
 
 force:
 

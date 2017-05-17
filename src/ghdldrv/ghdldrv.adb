@@ -28,7 +28,7 @@ with Types; use Types;
 with Iirs; use Iirs;
 with Files_Map;
 with Configuration;
-with Default_Pathes;
+with Default_Paths;
 with Interfaces.C_Streams;
 with System;
 with Ghdlmain; use Ghdlmain;
@@ -196,7 +196,7 @@ package body Ghdldrv is
 
          --  Add -fpic for gcc/llvm.
          if not Flag_Postprocess
-           and then Default_Pathes.Default_Pie
+           and then Default_Paths.Default_Pie
          then
             case Backend is
                when Backend_Gcc
@@ -432,20 +432,20 @@ package body Ghdldrv is
       --  Set tools name.
       if Compiler_Cmd = null then
          if Flag_Postprocess then
-            Compiler_Cmd := new String'(Default_Pathes.Compiler_Debug);
+            Compiler_Cmd := new String'(Default_Paths.Compiler_Debug);
          else
             case Backend is
                when Backend_Gcc =>
-                  Compiler_Cmd := new String'(Default_Pathes.Compiler_Gcc);
+                  Compiler_Cmd := new String'(Default_Paths.Compiler_Gcc);
                when Backend_Mcode =>
-                  Compiler_Cmd := new String'(Default_Pathes.Compiler_Mcode);
+                  Compiler_Cmd := new String'(Default_Paths.Compiler_Mcode);
                when Backend_Llvm =>
-                  Compiler_Cmd := new String'(Default_Pathes.Compiler_Llvm);
+                  Compiler_Cmd := new String'(Default_Paths.Compiler_Llvm);
             end case;
          end if;
       end if;
       if Post_Processor_Cmd = null then
-         Post_Processor_Cmd := new String'(Default_Pathes.Post_Processor);
+         Post_Processor_Cmd := new String'(Default_Paths.Post_Processor);
       end if;
       if Assembler_Cmd = null then
          Assembler_Cmd := new String'("as");
@@ -477,7 +477,7 @@ package body Ghdldrv is
          --  Try configured prefix
          declare
             Path : constant String :=
-              Default_Pathes.Install_Prefix & Directory_Separator & Toolname;
+              Default_Paths.Install_Prefix & Directory_Separator & Toolname;
          begin
             if Is_Executable_File (Path) then
                return new String'(Path);
@@ -535,7 +535,7 @@ package body Ghdldrv is
       Set_Tools_Name;
       Setup_Libraries (Load);
       Locate_Tools;
-      for I in 2 .. Get_Nbr_Pathes loop
+      for I in 2 .. Get_Nbr_Paths loop
          Add_Argument (Compiler_Args,
                        new String'("-P" & Image (Get_Path (I))));
       end loop;
@@ -726,7 +726,7 @@ package body Ghdldrv is
       end if;
 
       Set_Tools_Name;
-      Put_Line ("Pathes at configuration:");
+      Put_Line ("Paths at configuration:");
       Put ("compiler command: ");
       Put_Line (Compiler_Cmd.all);
       if Flag_Postprocess then
@@ -743,7 +743,7 @@ package body Ghdldrv is
       end case;
       Put ("linker command: ");
       Put_Line (Linker_Cmd.all);
-      Put_Line ("default lib prefix: " & Default_Pathes.Lib_Prefix);
+      Put_Line ("default lib prefix: " & Default_Paths.Lib_Prefix);
 
       New_Line;
 
@@ -769,8 +769,8 @@ package body Ghdldrv is
 
       New_Line;
 
-      Put_Line ("default library pathes:");
-      for I in 2 .. Get_Nbr_Pathes loop
+      Put_Line ("default library paths:");
+      for I in 2 .. Get_Nbr_Paths loop
          Put (' ');
          Put_Line (Image (Get_Path (I)));
       end loop;

@@ -1,4 +1,4 @@
---  GHDL driver pathes  -*- ada -*-.
+--  GHDL driver paths  -*- ada -*-.
 --  Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-package Default_Pathes is
+package Default_Paths is
 
    --  Accept long lines.
    pragma Style_Checks ("M999");
@@ -40,4 +40,4 @@ package Default_Pathes is
    Shared_Library_Extension : constant String :=
      "@SOEXT@";
    Default_Pie : constant Boolean := "@default_pie@" = String'("yes");
-end Default_Pathes;
+end Default_Paths;

@@ -25,7 +25,7 @@ with Flags;
 with Name_Table;
 with Std_Names;
 with Disp_Vhdl;
-with Default_Pathes;
+with Default_Paths;
 with Scanner;
 with Errorout;
 with Configuration;
@@ -34,7 +34,7 @@ with Options;
 with Iirs_Utils; use Iirs_Utils;
 
 package body Ghdllocal is
-   --  Version of the IEEE library to use.  This just change pathes.
+   --  Version of the IEEE library to use.  This just change paths.
    type Ieee_Lib_Kind is (Lib_Standard, Lib_None, Lib_Synopsys, Lib_Mentor);
    Flag_Ieee : Ieee_Lib_Kind;
 
@@ -349,22 +349,22 @@ package body Ghdllocal is
       end if;
       --  Else try default path.
       if Lib_Prefix_Path = null then
-         if Is_Absolute_Path (Default_Pathes.Lib_Prefix) then
-            Lib_Prefix_Path := new String'(Default_Pathes.Lib_Prefix);
+         if Is_Absolute_Path (Default_Paths.Lib_Prefix) then
+            Lib_Prefix_Path := new String'(Default_Paths.Lib_Prefix);
          else
             if Exec_Prefix /= null then
                Lib_Prefix_Path := new
                  String'(Exec_Prefix.all & Directory_Separator
-                           & Default_Pathes.Lib_Prefix);
+                           & Default_Paths.Lib_Prefix);
             end if;
             if Lib_Prefix_Path = null
               or else not Is_Directory (Lib_Prefix_Path.all)
             then
                Free (Lib_Prefix_Path);
                Lib_Prefix_Path := new
-                 String'(Default_Pathes.Install_Prefix
+                 String'(Default_Paths.Install_Prefix
                            & Directory_Separator
-                           & Default_Pathes.Lib_Prefix);
+                           & Default_Paths.Lib_Prefix);
             end if;
          end if;
       else
@@ -372,7 +372,7 @@ package body Ghdllocal is
          Flag_32bit := False;
       end if;
 
-      --  Add pathes for predefined libraries.
+      --  Add paths for predefined libraries.
       if not Flags.Bootstrap then
          Add_Library_Path ("std");
          case Flag_Ieee is

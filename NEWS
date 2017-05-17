@@ -253,8 +253,8 @@ New in 0.16 (2005-01-02)
 * command -r (run) added.
 
 New in 0.15 (2004-10-13)
-* library file format modified to handle relative pathes.
-* install fixed to use relative pathes.
+* library file format modified to handle relative paths.
+* install fixed to use relative paths.
 * internal change: ortho API modified (constant are not anymore expressions).
 
 New in 0.14 (2004-08-29)
