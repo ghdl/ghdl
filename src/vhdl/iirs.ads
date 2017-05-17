@@ -897,7 +897,7 @@ package Iirs is
    --  type.
    --   Get/Set_Macro_Expanded_Flag (Flag2)
    --
-   --  True if the package declaration at least one package instantiation
+   --  True if the package declaration has least one package instantiation
    --  declaration whose uninstantiated declaration needs both a body and
    --  macro-expansion.  In that case, the instantiation needs macro-expansion
    --  of their body.

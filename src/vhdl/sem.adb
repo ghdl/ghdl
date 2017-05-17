@@ -2506,7 +2506,7 @@ package body Sem is
    --  Return true if package declaration DECL needs a body.
    --  Ie, it contains subprogram specification or deferred constants.
    function Package_Need_Body_P (Decl: Iir_Package_Declaration)
-     return Boolean
+                                return Boolean
    is
       El: Iir;
       Def : Iir;
@@ -2641,11 +2641,10 @@ package body Sem is
    --  LRM 2.5  Package Declarations.
    procedure Sem_Package_Declaration (Decl: Iir_Package_Declaration)
    is
-      Unit : Iir_Design_Unit;
-      Implicit : Implicit_Signal_Declaration_Type;
+      Unit : constant Iir_Design_Unit := Get_Design_Unit (Decl);
       Header : constant Iir := Get_Package_Header (Decl);
+      Implicit : Implicit_Signal_Declaration_Type;
    begin
-      Unit := Get_Design_Unit (Decl);
       Sem_Scopes.Add_Name (Decl);
       Set_Visible_Flag (Decl, True);
       Xref_Decl (Decl);
@@ -2715,7 +2714,9 @@ package body Sem is
 
       Pop_Signals_Declarative_Part (Implicit);
       Close_Declarative_Region;
+
       Set_Need_Body (Decl, Package_Need_Body_P (Decl));
+
       if Vhdl_Std >= Vhdl_08 then
          Set_Need_Instance_Bodies
            (Decl, Package_Need_Instance_Bodies_P (Decl));

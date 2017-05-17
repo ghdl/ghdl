@@ -1250,6 +1250,9 @@ package body Trans.Chap2 is
                Subprg_Local_Id => Src.Subprg_Local_Id,
                Subprg_Exit => Src.Subprg_Exit,
                Subprg_Result => Src.Subprg_Result);
+            Push_Instantiate_Var_Scope
+              (Dest.Subprg_Frame_Scope'Access,
+               Src.Subprg_Frame_Scope'Access);
          when Kind_Operator =>
             Dest.all :=
               (Kind => Kind_Operator,
@@ -1333,17 +1336,6 @@ package body Trans.Chap2 is
             Info := Add_Info (N, Orig_Info.Kind);
 
             Copy_Info (Info, Orig_Info);
-
-            case Info.Kind is
-               when Kind_Subprg =>
-                  Push_Instantiate_Var_Scope
-                    (Info.Subprg_Frame_Scope'Access,
-                     Orig_Info.Subprg_Frame_Scope'Access);
-               when Kind_Type =>
-                  null;
-               when others =>
-                  null;
-            end case;
          end if;
 
          for I in Fields'Range loop
@@ -1419,6 +1411,7 @@ package body Trans.Chap2 is
          end loop;
 
          if Info /= null then
+            --  Pop scope instantiations created in copy_info.
             case Info.Kind is
                when Kind_Subprg =>
                   Pop_Instantiate_Var_Scope
