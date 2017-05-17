@@ -2267,8 +2267,14 @@ package body Ortho_Code.X86.Emits is
                   Gen_Mul (Stmt, Sz_32);
                when Mode_I32 =>
                   Gen_Grp3_Insn (Opc2_Grp3_Imul, Get_Expr_Right (Stmt), Sz_32);
+                  if Kind = OE_Mul_Ov then
+                     Gen_Check_Overflow (Mode);
+                  end if;
                when Mode_I64 =>
                   Gen_Grp3_Insn (Opc2_Grp3_Imul, Get_Expr_Right (Stmt), Sz_64);
+                  if Kind = OE_Mul_Ov then
+                     Gen_Check_Overflow (Mode);
+                  end if;
                when Mode_U64 =>
                   pragma Assert (Flags.M64);
                   Gen_Mul (Stmt, Sz_64);
