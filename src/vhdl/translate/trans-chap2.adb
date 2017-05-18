@@ -1528,11 +1528,13 @@ package body Trans.Chap2 is
       Info           : constant Ortho_Info_Acc := Get_Info (Inst);
       Constr         : O_Assoc_List;
    begin
+      --  Macro-expanded instances are handled like a regular package.
       if Get_Macro_Expanded_Flag (Spec) then
          Elab_Package (Inst, Inst);
          return;
       end if;
 
+      --  Package body is reachable through the instance.
       Set_Scope_Via_Var (Pkg_Info.Package_Body_Scope,
                          Info.Package_Instance_Body_Var);
 
