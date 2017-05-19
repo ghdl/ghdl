@@ -281,8 +281,7 @@ package body Trans.Chap4 is
       Pkg_Info : constant Ortho_Info_Acc := Get_Info (Pkg);
       Info     : Ortho_Info_Acc;
    begin
-      Chap2.Instantiate_Info_Package (Inter);
-      Info := Get_Info (Inter);
+      Info := Add_Info (Inter, Kind_Package_Instance);
 
       --  The spec
       Info.Package_Instance_Spec_Var :=
@@ -299,6 +298,8 @@ package body Trans.Chap4 is
       Set_Scope_Via_Var_Ptr
         (Info.Package_Instance_Body_Scope,
          Info.Package_Instance_Body_Var);
+
+      Chap2.Instantiate_Info_Package (Inter);
    end Create_Package_Interface;
 
    procedure Allocate_Complex_Object (Obj_Type   : Iir;
