@@ -18,6 +18,7 @@ backtrace_lib=
 llvm_be=llvm
 build=
 build_mode=
+enable_werror=true
 EXEEXT=
 SOEXT=.so
 PIC_FLAGS=-fPIC
@@ -25,7 +26,7 @@ PIC_FLAGS=-fPIC
 show_help=no
 progname=$0
 
-subst_vars="CC CXX GNATMAKE CFLAGS LDFLAGS build srcdir abs_srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config llvm_be backtrace_lib build_mode EXEEXT SOEXT PIC_FLAGS default_pie"
+subst_vars="CC CXX GNATMAKE CFLAGS LDFLAGS build srcdir abs_srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config llvm_be backtrace_lib build_mode EXEEXT SOEXT PIC_FLAGS default_pie enable_werror"
 
 # Find srcdir
 srcdir=`dirname $progname`
@@ -70,6 +71,8 @@ for opt do
       --with-llvm-config) llvm_config="llvm-config"; backend=llvm;;
       --with-llvm-config=*) llvm_config="$optarg"; backend=llvm;;
       --with-backtrace-lib=*) backtrace_lib="$optarg";;
+      --enable-werror) enable_werror=true;;
+      --disable-werror) enable_werror=false;;
       --enable-coverage) build_mode="coverage";;
       -h|-help|--help) show_help=yes;;
       *) echo "$0: unknown option $opt; try $0 --help"
@@ -90,6 +93,7 @@ Options [defaults in brackets]:
   --with-llvm-config=PATH     use llvm from PATH (needs llvm 3.5 - 3.9)
   --with-backtrace-lib=LIB.a  link with libbacktrace LIB.a to display a
                               backtrace on errors (only for llvm).
+  --disable-werror            warnings don't stop build
 EOF
 exit 0
 fi

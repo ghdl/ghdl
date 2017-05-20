@@ -34,6 +34,7 @@ LDFLAGS=@LDFLAGS@
 LIBBACKTRACE=@backtrace_lib@
 llvm_be=@llvm_be@
 build_mode=@build_mode@
+enable_werror=@enable_werror@
 
 INSTALL_PROGRAM=install -m 755
 INSTALL_DATA=install -m 644
@@ -78,7 +79,9 @@ WARN_CFLAGS=-Wall
 GNAT_BARGS=-bargs -E
 
 # Warnings as errors.  Comment this line if a warning looks not valid.
+ifeq "$(enable_werror)" "true"
 GNATFLAGS+=-gnatwe
+endif
 
 target=$(build)
 #target=i686-pc-linux-gnu
