@@ -1300,6 +1300,11 @@ package body Sem_Names is
             Error_Msg_Sem
               (+Actual, "%n cannot be a type conversion operand", +Actual);
             return Conv;
+         when Iir_Kind_Range_Expression =>
+            --  Try to nicely handle expression like NAME (A to B).
+            Error_Msg_Sem
+              (+Actual, "subtype indication not allowed in an expression");
+            return Conv;
          when others =>
             -- LRM93 7.3.5
             -- The type of the operand of a type conversion must be
