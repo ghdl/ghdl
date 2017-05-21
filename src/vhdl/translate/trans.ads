@@ -779,8 +779,13 @@ package Trans is
             Nocheck_Low : Boolean := False;
             Nocheck_Hi  : Boolean := False;
 
+            --  For scalar types:
+            --  Range_Var is the same as its type mark (there is no need to
+            --  create a new range var if the range is the same).
+            Same_Range : Boolean := False;
+
             --  Tree for the range record declaration.
-            Range_Var : Var_Type;
+            Range_Var : Var_Type := Null_Var;
 
          when Kind_Type_Array
            | Kind_Type_Record =>

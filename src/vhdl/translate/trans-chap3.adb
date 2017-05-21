@@ -40,8 +40,8 @@ package body Trans.Chap3 is
 
    --  For scalar subtypes: creates info from the base type.
    procedure Create_Subtype_Info_From_Type (Def          : Iir;
-                                            Subtype_Info : Type_Info_Acc;
-                                            Base_Info    : Type_Info_Acc);
+                                            Base         : Iir;
+                                            Subtype_Info : Type_Info_Acc);
 
    --  Finish a type definition: declare the type, define and declare a
    --   pointer to the type.
@@ -937,7 +937,7 @@ package body Trans.Chap3 is
             begin
                El_Info := Add_Info (El_Type, Kind_Type);
                Create_Subtype_Info_From_Type
-                 (El_Type, El_Info, Get_Info (Tm_El_Type));
+                 (El_Type, Tm_El_Type, El_Info);
             end;
          when others =>
             Error_Kind ("translate_array_subtype_element_subtype", El_Type);
@@ -1817,9 +1817,12 @@ package body Trans.Chap3 is
    begin
       case Get_Kind (Def) is
          when Iir_Kind_Enumeration_Type_Definition
-            | Iir_Kinds_Scalar_Subtype_Definition =>
-            Target := Get_Var (Get_Info (Def).S.Range_Var);
-            Create_Scalar_Type_Range (Def, Target);
+           | Iir_Kinds_Scalar_Subtype_Definition =>
+            Info := Get_Info (Def);
+            if not Info.S.Same_Range then
+               Target := Get_Var (Info.S.Range_Var);
+               Create_Scalar_Type_Range (Def, Target);
+            end if;
 
          when Iir_Kind_Array_Subtype_Definition =>
             if Get_Constraint_State (Def) = Fully_Constrained then
@@ -1959,10 +1962,11 @@ package body Trans.Chap3 is
 
    --  For scalar subtypes: creates info from the base type.
    procedure Create_Subtype_Info_From_Type (Def          : Iir;
-                                            Subtype_Info : Type_Info_Acc;
-                                            Base_Info    : Type_Info_Acc)
+                                            Base         : Iir;
+                                            Subtype_Info : Type_Info_Acc)
    is
-      Rng    : Iir;
+      Base_Info : constant Type_Info_Acc := Get_Info (Base);
+      Rng    : constant Iir := Get_Range_Constraint (Def);
       Lo, Hi : Iir;
    begin
       Subtype_Info.Ortho_Type := Base_Info.Ortho_Type;
@@ -1971,7 +1975,32 @@ package body Trans.Chap3 is
       Subtype_Info.B := Base_Info.B;
       Subtype_Info.S := Base_Info.S;
 
-      Rng := Get_Range_Constraint (Def);
+      --  If the range is the same as its parent (its type_mark), set
+      --  Same_Range and return (so that no new range variable would be
+      --  created).
+      if Get_Kind (Base) in Iir_Kinds_Scalar_Subtype_Definition then
+         declare
+            Tm_Rng : constant Iir := Get_Range_Constraint (Base);
+         begin
+            if Tm_Rng = Rng then
+               Subtype_Info.S.Same_Range := True;
+               return;
+            elsif Get_Kind (Rng) = Iir_Kind_Range_Expression
+              and then Get_Kind (Tm_Rng) = Iir_Kind_Range_Expression
+              and then Get_Left_Limit (Rng) = Get_Left_Limit (Tm_Rng)
+              and then Get_Right_Limit (Rng) = Get_Right_Limit (Tm_Rng)
+              and then Get_Direction (Rng) = Get_Direction (Tm_Rng)
+            then
+               Subtype_Info.S.Same_Range := True;
+               return;
+            end if;
+         end;
+      end if;
+
+      --  So range is not the same.
+      Subtype_Info.S.Same_Range := False;
+      Subtype_Info.S.Range_Var := Null_Var;
+
       if Get_Expr_Staticness (Rng) /= Locally then
          --  Bounds are not known.
          --  Do the checks.
@@ -2105,6 +2134,8 @@ package body Trans.Chap3 is
       Val       : O_Cnode;
       Suffix    : String (1 .. 3) := "xTR";
    begin
+      pragma Assert (Info.S.Range_Var = Null_Var);
+
       case Get_Kind (Def) is
          when Iir_Kinds_Subtype_Definition =>
             Suffix (1) := 'S'; -- "STR";
@@ -2253,12 +2284,18 @@ package body Trans.Chap3 is
             Create_Scalar_Type_Range_Type (Def, False);
 
          when Iir_Kinds_Scalar_Subtype_Definition =>
-            Create_Subtype_Info_From_Type (Def, Info, Base_Info);
-            if With_Vars then
-               Create_Type_Range_Var (Def);
-            else
-               Info.S.Range_Var := Null_Var;
-            end if;
+            declare
+               Tm : constant Iir := Get_Denoted_Type_Mark (Def);
+            begin
+               if Is_Valid (Tm) then
+                  Create_Subtype_Info_From_Type (Def, Tm, Info);
+               else
+                  Create_Subtype_Info_From_Type (Def, Base_Type, Info);
+               end if;
+               if With_Vars and then not Info.S.Same_Range then
+                  Create_Type_Range_Var (Def);
+               end if;
+            end;
 
          when Iir_Kind_Array_Type_Definition =>
             declare

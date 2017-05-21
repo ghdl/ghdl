@@ -2116,6 +2116,7 @@ package body Sem_Types is
               (+Resolution, "resolution indication must be a function name");
          else
             Sem_Resolution_Function (Resolution, Res);
+            Location_Copy (Res, Resolution);
          end if;
       end if;
       return Res;
