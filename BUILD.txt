@@ -50,7 +50,7 @@ Building with the gcc backend
 *****************************
 
 You need to download and untar the sources of
-gcc version 4.9.x, 5.x or 6.x
+gcc version 4.9.x, 5.x, 6.x or 7.x
 
 First configure ghdl, specify gcc source dir and prefix.
 (replace /usr/local by your prefix directory):
@@ -121,4 +121,8 @@ $ make ghdl_gcc		     # To build the driver
 $ make libs.vhdl.local_gcc   # To compile the vhdl libraries
 $ make grt-all		     # To build the ghdl runtime
 $ make grt.links	     # To locally install the ghdl runtime
-TODO: gcc object dir
+
+In src/ortho/gcc, create a Makefile.conf file that sets the following
+variables:
+AGCC_GCCSRC_DIR=/path/to/gcc/sources
+AGCC_GCCOBJ_DIR=/path/to/gcc/build
