@@ -66,6 +66,7 @@ package Trans.Helpers2 is
          return O_Enode;
    procedure Gen_Oenode_Finish_Data_Composite (Data : in out Mnode);
 
+   --  Just the line from TARGET location.
    function Get_Line_Number (Target: Iir) return Natural;
 
    procedure Assoc_Filename_Line (Assoc : in out O_Assoc_List;

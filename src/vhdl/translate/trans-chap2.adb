@@ -29,7 +29,7 @@ with Trans.Chap5;
 with Trans.Chap6;
 with Trans.Chap8;
 with Trans.Rtis;
-with Trans.Helpers2;
+with Trans.Helpers2; use Trans.Helpers2;
 with Trans_Decls; use Trans_Decls;
 with Translation; use Translation;
 
@@ -416,7 +416,6 @@ package body Trans.Chap2 is
       Mark           : Id_Mark_Type;
       Final          : Boolean;
 
-
       --  Set for a public method.  In this case, the lock must be acquired
       --  and retained.
       Is_Prot : Boolean := False;
@@ -539,9 +538,10 @@ package body Trans.Chap2 is
          Subprgs.Pop_Subprg_Instance (Wki_Upframe, Prev_Subprg_Instances);
       end if;
 
-      --  Create the body
+      --  Create the body.  Add a line very early, before any statement.
 
       Start_Subprogram_Body (Info.Subprg_Node);
+      New_Debug_Line_Stmt (Get_Line_Number (Subprg));
 
       Start_Subprg_Instance_Use (Spec);
 
@@ -577,7 +577,7 @@ package body Trans.Chap2 is
             --  Initial state: allocate frame.
             New_Assign_Stmt
               (New_Obj (Frame_Ptr),
-               Helpers2.Gen_Alloc
+               Gen_Alloc
                  (Alloc_Return,
                   New_Lit
                     (New_Sizeof (Get_Scope_Type (Info.Subprg_Frame_Scope),
