@@ -384,6 +384,8 @@ install.grt: libgrt.a grt.lst install.dirs
 	$(INSTALL_DATA) libgrt.a $(DESTDIR)$(VHDL_LIB_DIR)/libgrt.a
 	$(INSTALL_DATA) grt.lst $(DESTDIR)$(VHDL_LIB_DIR)/grt.lst
 	$(INSTALL_DATA) $(GRTSRCDIR)/grt.ver $(DESTDIR)$(VHDL_LIB_DIR)/grt.ver
+	test "x$(LIBBACKTRACE)" = x || $(INSTALL_DATA) $(LIBBACKTRACE) \
+	  $(DESTDIR)$(VHDL_LIB_DIR)/libbacktrace.a
 
 ################ VPI #####################################################
 
