@@ -99,6 +99,15 @@ else ifeq ($(SOEXT),.dylib)
 SHLIB_FLAGS=-Wl,-install_name,@rpath/$@
 endif
 
+# Flags for libraries
+LIBSRC_DIR:=$(srcdir)/libraries
+LIBDST_DIR:=$(libdirsuffix)
+
+LIBVHDL_FLAGS_TO_PASS=\
+ LIBSRC_DIR="$(LIBSRC_DIR)" \
+ LIBDST_DIR="$(LIBDST_DIR)" \
+ LN="$(LN)" CP="$(CP)" MKDIR="$(MKDIR)"
+
 all: Makefile all.$(backend)
 
 install: install.$(backend)
@@ -154,7 +163,8 @@ ghdl_mcode$(EXEEXT): $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) $(ORTHO_DEPS) \
 memsegs_c.o: $(srcdir)/src/ortho/mcode/memsegs_c.c
 	$(CC) -c $(OPT_FLAGS) -o $@ $<
 
-libs.vhdl.mcode: vhdl.libs.all
+libs.vhdl.mcode: force
+	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL=$(PWD)/ghdl_mcode$(EXEEXT) GHDL_FLAGS="" VHDL_COPY_OBJS=no vhdl.libs.all
 
 install.mcode.program: install.dirs ghdl_mcode$(EXEEXT)
 	$(INSTALL_PROGRAM) ghdl_mcode$(EXEEXT) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
@@ -212,7 +222,7 @@ copy-sources.gcc: version.ads
 	$(CP) -p $(srcdir)/dist/gcc/lang-specs.h $(gcc_vhdl_dir)
 
 libs.vhdl.gcc:
-	$(MAKE) GHDL=$(bindir)/ghdl$(EXEEXT) vhdl.libs.all libs.vhdl.standard
+	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL=$(bindir)/ghdl$(EXEEXT) GHDL_FLAGS="$(LIB_CFLAGS)" vhdl.libs.all libs.vhdl.standard
 
 ghdllib: libs.vhdl.gcc libgrt.a
 
@@ -241,7 +251,7 @@ grt.links:
 	fi
 
 libs.vhdl.local_gcc: ghdl_gcc$(EXEEXT) ghdl1-gcc$(EXEEXT)
-	$(MAKE) GHDL=$(PWD)/ghdl_gcc$(EXEEXT) ANALYZE_OPTS="--GHDL1=ghdl1-gcc$(EXEEXT)" STD_GHDL_FLAGS="--GHDL1=$(PWD)/ghdl1-gcc$(EXEEXT)" vhdl.libs.all libs.vhdl.standard
+	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL=$(PWD)/ghdl_gcc$(EXEEXT) GHDL_FLAGS="--GHDL1=$(PWD)/ghdl1-gcc$(EXEEXT) $(LIB_CFLAGS)" vhdl.libs.all libs.vhdl.standard
 
 ghdl1-debug$(EXEEXT): version.ads force
 	$(MAKE) -f $(srcdir)/src/ortho/debug/Makefile \
@@ -275,10 +285,10 @@ llvm-cbindings.o: $(srcdir)/src/ortho/$(llvm_be)/llvm-cbindings.cpp
 	  $(OPT_FLAGS) -o $@ $<
 
 libs.vhdl.llvmjit: ghdl_llvm_jit$(EXEEXT)
-	$(MAKE) GHDL=$(PWD)/ghdl_llvm_jit$(EXEEXT) vhdl.libs.all
+	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL=$(PWD)/ghdl_llvm$(EXEEXT) GHDL_FLAGS="" VHDLLIBS_COPY_OBJS=no vhdl.libs.all
 
 libs.vhdl.llvm: ghdl_llvm$(EXEEXT) ghdl1-llvm$(EXEEXT)
-	$(MAKE) GHDL=$(PWD)/ghdl_llvm$(EXEEXT) ANALYZE_OPTS="--GHDL1=ghdl1-llvm$(EXEEXT)" vhdl.libs.all libs.vhdl.standard
+	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL=$(PWD)/ghdl_llvm$(EXEEXT) GHDL_FLAGS="--GHDL1=$(PWD)/ghdl1-llvm$(EXEEXT) $(LIB_CFLAGS)" vhdl.libs.all libs.vhdl.standard
 
 ghdl_llvm$(EXEEXT): version.ads force
 	$(GNATMAKE) $(GHDL_LLVM_INCFLAGS) -aI$(srcdir)/src/ghdldrv $(GNATFLAGS)\
@@ -312,7 +322,7 @@ ghdl_simul$(EXEEXT): $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) version.ads force
 	$(GNATMAKE) $(GHDL_SIMUL_INCFLAGS) $(GNATFLAGS) -gnat12 ghdl_simul $(GNAT_BARGS) -largs $(GNAT_LARGS) $(GRT_ADD_OBJS) $(subst @,$(GRTSRCDIR),$(GRT_EXTRA_LIB))
 
 libs.vhdl.simul: ghdl_simul$(EXEEXT)
-	$(MAKE) GHDL=$(PWD)/ghdl_simul$(EXEEXT) vhdl.libs.all
+	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL=$(PWD)/ghdl_simul$(EXEEXT) GHDL_FLAGS="" VHDLLIBS_COPY_OBJS=no vhdl.libs.all
 
 ################ mhdlsim (library for the vhdl part) ####################
 
@@ -395,39 +405,10 @@ install.vpi: all.vpi install.dirs
 LIBSRC_DIR:=$(srcdir)/libraries
 LIBDST_DIR:=$(libdirsuffix)
 
-ANALYZE_DEP:=ghdl_$(backend)$(EXEEXT)
-GHDL=$(PWD)/$(ANALYZE_DEP)
-ANALYZE_OPTS:=
-ANALYZE:=$(GHDL) -a $(ANALYZE_OPTS) $(LIB_CFLAGS)
-
-# TODO?: don't include, make it separate
-include $(srcdir)/libraries/Makefile.inc
-
-# TODO?: move std_standard in libraries/Makefile
-ifeq "$(backend)" "gcc"
-  # ghdl with gcc backend is already installed, no need to specify ghdl1
-  # (and we don't know where it is).
-  STD_GHDL_FLAGS=
-else
-  # Specify ghdl1 path, as it is spawned by ghdl.
-  STD_GHDL_FLAGS=--GHDL1=$(PWD)/ghdl1-$(backend)$(EXEEXT)
-endif
-
-$(LIB93_DIR)/std/std_standard.o: $(GHDL) std.v93
-	cd $(LIB93_DIR)/std; \
-	 $(GHDL) --bootstrap-standard $(STD_GHDL_FLAGS) --std=93 $(LIB_CFLAGS)
-
-$(LIB87_DIR)/std/std_standard.o: $(GHDL) std.v87
-	cd $(LIB87_DIR)/std; \
-	 $(GHDL) --bootstrap-standard $(STD_GHDL_FLAGS) --std=87 $(LIB_CFLAGS)
-
-$(LIB08_DIR)/std/std_standard.o: $(GHDL) std.v08
-	cd $(LIB08_DIR)/std; \
-	 $(GHDL) --bootstrap-standard $(STD_GHDL_FLAGS) --std=08 $(LIB_CFLAGS)
-
-libs.vhdl.standard: $(LIB93_DIR)/std/std_standard.o \
- $(LIB87_DIR)/std/std_standard.o \
- $(LIB08_DIR)/std/std_standard.o
+VHDLLIB_SUBDIRS= src/std src/ieee src/vital95 src/vital2000 src/synopsys src/mentor src/ieee2008 \
+  v87/std v87/ieee v87/synopsys \
+  v93/std v93/ieee v93/mentor v93/synopsys \
+  v08/std v08/ieee v08/synopsys \
 
 install.dirs:
 #	Use -p to create parents and to avoid error if existing.
@@ -456,7 +437,7 @@ install.vhdllib: install.dirs
 ####################### clean ############################################
 
 clean: force
-	$(RM) -f *.o *.ali b~*.ad? *~ *.d b__*.ad? *.a *.so *.deps *.bexch version.*
+	$(RM) -f *.o *.ali b~*.ad? *~ *.d b__*.ad? *.a *.so *.deps *.bexch version.* *.dll *.dylib
 	$(RM) -f ghdl_gcc$(EXEEXT) ghdl_mcode$(EXEEXT) ghdl$(EXEEXT) ghdl_llvm$(EXEEXT) ghdl_llvm_jit$(EXEEXT) ghdl_simul$(EXEEXT)
 	$(RM) -f ghdl1-gcc$(EXEEXT) ghdl1-llvm$(EXEEXT) ghdl1-debug$(EXEEXT)
 	$(RM) -f run-bind.ad? grt.lst grt-files grt-files.in

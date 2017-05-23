@@ -19,7 +19,8 @@
 # Variable to be defined:
 # LIBSRC_DIR: path to the libraries sources
 # LIBDST_DIR: path to the build/destination dir.
-# ANALYZE
+# GHDL
+# GHDL_FLAGS
 # LN
 # CP
 # MKDIR
@@ -31,10 +32,8 @@ vhdl.libs.v93: std.v93 ieee.v93 synopsys.v93 mentor.v93
 vhdl.libs.v87: std.v87 ieee.v87 synopsys.v87
 vhdl.libs.v08: std.v08 ieee.v08 synopsys.v08
 
-VHDLLIB_SUBDIRS= src/std src/ieee src/vital95 src/vital2000 src/synopsys src/mentor src/ieee2008 \
-  v87/std v87/ieee v87/synopsys \
-  v93/std v93/ieee v93/mentor v93/synopsys \
-  v08/std v08/ieee v08/synopsys \
+ANALYZE=$(GHDL) -a $(GHDL_FLAGS)
+ANALYZE_DEP=$(GHDL)
 
 STD_SRCS := std/textio.vhdl std/textio_body.vhdl
 IEEE_SRCS := ieee/std_logic_1164.vhdl ieee/std_logic_1164_body.vhdl \
@@ -177,7 +176,7 @@ $(SYN87_DIR)/ieee-obj87.cf: $(ANALYZE_DEP) $(LIB87_DIR) $(SYNOPSYS87_SRCS) $(SYN
 	for i in $(IEEE_SRCS) $(VITAL95_SRCS); do \
 	  b=`basename $$i .vhdl`; \
 	  if [ -f ../ieee/$$b.o ]; then \
-	    $(LN) ../ieee/$$b.o $$b.o || exit 1; \
+	    $(RM) -f $$b.o; $(LN) ../ieee/$$b.o $$b.o || exit 1; \
 	  fi; \
 	done; \
 	for i in $(SYNOPSYS87_BSRCS); do \
@@ -237,7 +236,7 @@ $(SYN93_DIR)/ieee-obj93.cf: $(ANALYZE_DEP) $(LIB93_DIR) $(SYNOPSYS93_SRCS) $(SYN
 	for i in $(IEEE_SRCS) $(MATH_SRCS) $(VITAL2000_SRCS); do \
 	  b=`basename $$i .vhdl`; \
 	  if [ -f ../ieee/$$b.o ]; then \
-	    $(LN) ../ieee/$$b.o $$b.o || exit 1; \
+	    $(RM) -f $$b.o; $(LN) ../ieee/$$b.o $$b.o || exit 1; \
 	  fi; \
 	done; \
 	for i in $(SYNOPSYS93_BSRCS); do \
@@ -258,7 +257,7 @@ $(MENTOR93_DIR)/ieee-obj93.cf: $(ANALYZE_DEP) $(LIB93_DIR) $(MENTOR93_SRCS) $(ME
 	for i in $(IEEE_SRCS) $(MATH_SRCS) $(VITAL2000_SRCS); do \
 	  b=`basename $$i .vhdl`; \
 	  if [ -f ../ieee/$$b.o ]; then \
-	    $(LN) ../ieee/$$b.o $$b.o || exit 1; \
+	    $(RM) -f $$b.o; $(LN) ../ieee/$$b.o $$b.o || exit 1; \
 	  fi; \
 	done ; \
 	for i in $(MENTOR93_BSRCS); do \
@@ -320,10 +319,27 @@ $(SYN08_DIR)/ieee-obj08.cf: $(ANALYZE_DEP) $(LIB08_DIR) $(SYNOPSYS08_SRCS) $(SYN
 	for i in $(IEEE08_SRCS) $(VITAL2000_SRCS); do \
 	  b=`basename $$i .vhdl`; \
 	  if [ -f ../ieee/$$b.o ]; then \
-	    $(LN) ../ieee/$$b.o $$b.o || exit 1; \
+	    $(RM) -f $$b.o; $(LN) ../ieee/$$b.o $$b.o || exit 1; \
 	  fi; \
 	done; \
 	for i in $(SYNOPSYS08_BSRCS); do \
           cmd="$(ANALYZE_IEEE08) ../../src/$$i"; \
 	  echo $$cmd; eval $$cmd || exit 1; \
 	done
+
+##############################################################################
+
+ANALYZE_STD=$(GHDL) --bootstrap-standard $(GHDL_FLAGS)
+
+$(LIB93_DIR)/std/std_standard.o: $(GHDL) std.v93
+	cd $(LIB93_DIR)/std; $(ANALYZE_STD) --std=93
+
+$(LIB87_DIR)/std/std_standard.o: $(GHDL) std.v87
+	cd $(LIB87_DIR)/std; $(ANALYZE_STD) --std=87
+
+$(LIB08_DIR)/std/std_standard.o: $(GHDL) std.v08
+	cd $(LIB08_DIR)/std; $(ANALYZE_STD) --std=08
+
+libs.vhdl.standard: $(LIB93_DIR)/std/std_standard.o \
+ $(LIB87_DIR)/std/std_standard.o \
+ $(LIB08_DIR)/std/std_standard.o
