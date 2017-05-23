@@ -413,15 +413,15 @@ else
   STD_GHDL_FLAGS=--GHDL1=$(PWD)/ghdl1-$(backend)$(EXEEXT)
 endif
 
-$(LIB93_DIR)/std/std_standard.o: $(GHDL)
+$(LIB93_DIR)/std/std_standard.o: $(GHDL) std.v93
 	cd $(LIB93_DIR)/std; \
 	 $(GHDL) --bootstrap-standard $(STD_GHDL_FLAGS) --std=93 $(LIB_CFLAGS)
 
-$(LIB87_DIR)/std/std_standard.o: $(GHDL)
+$(LIB87_DIR)/std/std_standard.o: $(GHDL) std.v87
 	cd $(LIB87_DIR)/std; \
 	 $(GHDL) --bootstrap-standard $(STD_GHDL_FLAGS) --std=87 $(LIB_CFLAGS)
 
-$(LIB08_DIR)/std/std_standard.o: $(GHDL)
+$(LIB08_DIR)/std/std_standard.o: $(GHDL) std.v08
 	cd $(LIB08_DIR)/std; \
 	 $(GHDL) --bootstrap-standard $(STD_GHDL_FLAGS) --std=08 $(LIB_CFLAGS)
 
@@ -430,12 +430,12 @@ libs.vhdl.standard: $(LIB93_DIR)/std/std_standard.o \
  $(LIB08_DIR)/std/std_standard.o
 
 install.dirs:
-	[ -d $(DESTDIR)$(prefix) ] || $(MKDIR) -p $(DESTDIR)$(prefix)
-	[ -d $(DESTDIR)$(bindir) ] || $(MKDIR) -p $(DESTDIR)$(bindir)
-	[ -d $(DESTDIR)$(libdir) ] || $(MKDIR) -p $(DESTDIR)$(libdir)
-	[ -d $(DESTDIR)$(prefix)/$(libdirsuffix) ] || \
-	  $(MKDIR) -p $(DESTDIR)$(prefix)/$(libdirsuffix)
-	[ -d $(DESTDIR)$(incdir) ] || $(MKDIR) -p $(DESTDIR)$(incdir)
+#	Use -p to create parents and to avoid error if existing.
+	$(MKDIR) -p $(DESTDIR)$(prefix)
+	$(MKDIR) -p $(DESTDIR)$(bindir)
+	$(MKDIR) -p $(DESTDIR)$(libdir)
+	$(MKDIR) -p $(DESTDIR)$(prefix)/$(libdirsuffix)
+	$(MKDIR) -p $(DESTDIR)$(incdir)
 
 install.vhdllib: install.dirs
 	for d in $(VHDLLIB_SUBDIRS); do \
@@ -443,10 +443,10 @@ install.vhdllib: install.dirs
 	  $(INSTALL_DATA) -p \
 	    $(LIBDST_DIR)/$$d/* $(DESTDIR)$(VHDL_LIB_DIR)/$$d; \
 	done
-	    # ANSI color
+#	ANSI color
 	$(INSTALL_DATA) -p \
 	    $(srcdir)/dist/ansi_color.sh $(DESTDIR)$(VHDL_LIB_DIR)/;
-        # Vendors scripts
+#	Vendors scripts
 	$(MKDIR) -p $(DESTDIR)$(VHDL_LIB_DIR)/vendors
 	$(INSTALL_DATA) -p \
 	    $(LIBSRC_DIR)/vendors/* $(DESTDIR)$(VHDL_LIB_DIR)/vendors/
