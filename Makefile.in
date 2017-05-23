@@ -224,7 +224,7 @@ copy-sources.gcc: version.ads
 libs.vhdl.gcc:
 	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL=$(bindir)/ghdl$(EXEEXT) GHDL_FLAGS="$(LIB_CFLAGS)" vhdl.libs.all libs.vhdl.standard
 
-ghdllib: libs.vhdl.gcc libgrt.a
+ghdllib: libs.vhdl.gcc $(libdirsuffix)/libgrt.a
 
 install.gcc: install.vhdllib install.grt install.vpi
 
@@ -240,15 +240,6 @@ ghdl1-gcc$(EXEEXT): version.ads force
 ghdl_gcc$(EXEEXT): version.ads force
 	$(GNATMAKE) $(GHDL_GCC_INCFLAGS) -aI$(srcdir)/src/ghdldrv \
 	 $(GNATFLAGS) ghdl_gcc $(GNAT_BARGS) -largs $(GNAT_LARGS)
-
-grt.links:
-	cd $(libdirsuffix); \
-	ln -sf $(libdirreverse)/grt.lst .; \
-	ln -sf $(libdirreverse)/libgrt.a .; \
-	ln -sf $(libdirreverse)/grt.ver .; \
-	if test "x$(LIBBACKTRACE)" != x; then \
-	  ln -sf $(libdirreverse)/libbacktrace.a .; \
-	fi
 
 libs.vhdl.local_gcc: ghdl_gcc$(EXEEXT) ghdl1-gcc$(EXEEXT)
 	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL=$(PWD)/ghdl_gcc$(EXEEXT) GHDL_FLAGS="--GHDL1=$(PWD)/ghdl1-gcc$(EXEEXT) $(LIB_CFLAGS)" vhdl.libs.all libs.vhdl.standard
@@ -380,9 +371,9 @@ ghwlib.o: $(srcdir)/src/grt/ghwlib.c $(srcdir)/src/grt/ghwlib.h
 
 ############### grt #####################################################
 
-install.grt: libgrt.a grt.lst install.dirs
-	$(INSTALL_DATA) libgrt.a $(DESTDIR)$(VHDL_LIB_DIR)/libgrt.a
-	$(INSTALL_DATA) grt.lst $(DESTDIR)$(VHDL_LIB_DIR)/grt.lst
+install.grt: $(libdirsuffix)/libgrt.a $(libdirsuffix)/grt.lst install.dirs
+	$(INSTALL_DATA) $(libdirsuffix)/libgrt.a $(DESTDIR)$(VHDL_LIB_DIR)/libgrt.a
+	$(INSTALL_DATA) $(libdirsuffix)/grt.lst $(DESTDIR)$(VHDL_LIB_DIR)/grt.lst
 	$(INSTALL_DATA) $(GRTSRCDIR)/grt.ver $(DESTDIR)$(VHDL_LIB_DIR)/grt.ver
 	test "x$(LIBBACKTRACE)" = x || $(INSTALL_DATA) $(LIBBACKTRACE) \
 	  $(DESTDIR)$(VHDL_LIB_DIR)/libbacktrace.a
@@ -442,7 +433,8 @@ clean: force
 	$(RM) -f *.o *.ali b~*.ad? *~ *.d b__*.ad? *.a *.so *.deps *.bexch version.* *.dll *.dylib
 	$(RM) -f ghdl_gcc$(EXEEXT) ghdl_mcode$(EXEEXT) ghdl$(EXEEXT) ghdl_llvm$(EXEEXT) ghdl_llvm_jit$(EXEEXT) ghdl_simul$(EXEEXT)
 	$(RM) -f ghdl1-gcc$(EXEEXT) ghdl1-llvm$(EXEEXT) ghdl1-debug$(EXEEXT)
-	$(RM) -f run-bind.ad? grt.lst grt-files grt-files.in
+	$(RM) -f grt/run-bind.ad? grt.lst grt/grt-files grt/grt-files.in
+	$(RM) -f grt/*.o grt/*.ali
 	$(RM) -rf lib
 	$(MAKE) create-dirs
 

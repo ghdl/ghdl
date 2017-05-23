@@ -95,9 +95,9 @@ GRT_PRAGMA_FLAG=-gnatec$(GRTSRCDIR)/grt.adc -gnat05 -gnatdY
 # Rule to compile an Ada file.
 GRT_ADACOMPILE=$(GNATMAKE) -u -c $(GRT_FLAGS) $(GRT_PRAGMA_FLAG)
 
-grt-all: libgrt.a $(GRT_LIBBACKTRACE) grt.lst
+grt-all: $(libdirsuffix)/libgrt.a $(libdirsuffix)/$(GRT_LIBBACKTRACE) $(libdirsuffix)/grt.lst $(libdirsuffix)/grt.ver
 
-libgrt.a: $(GRT_ADD_OBJS) grt/run-bind.o grt/main.o grt/grt-files
+$(libdirsuffix)/libgrt.a: $(GRT_ADD_OBJS) grt/run-bind.o grt/main.o grt/grt-files
 	$(RM) -f $@
 	$(AR) rcv $@ `sed -e "/^-/d" -e "s!^!grt/!" < grt/grt-files` \
 	 $(GRT_ADD_OBJS) grt/run-bind.o grt/main.o
@@ -208,7 +208,7 @@ grt/grt-files.in: grt/grt-files
 	sed -e "\!^.[/\\]!d" -e "/-shared/d" -e "/-static/d" -e "/-lgnat/d" \
 	  -e "\X-L/Xd" < $< > $@
 
-grt.lst: grt/grt-files.in
+$(libdirsuffix)/grt.lst: grt/grt-files.in
 	echo "@/libgrt.a" > $@
 ifdef GRT_EXTRA_LIB
 	for i in $(GRT_EXTRA_LIB); do echo $$i >> $@; done
@@ -217,6 +217,9 @@ ifneq ($(LIBBACKTRACE),)
 	echo "@/libbacktrace.a" >> $@
 endif
 	cat $< >> $@
+
+$(libdirsuffix)/grt.ver: $(GRTSRCDIR)/grt.ver
+	cp $< $@
 
 ifneq ($(GRT_LIBBACKTRACE),)
 $(GRT_LIBBACKTRACE): $(LIBBACKTRACE)
