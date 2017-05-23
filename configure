@@ -264,6 +264,9 @@ if ! sh ./config.status; then
     exit 1
 fi
 
+# Create dirs
+make create-dirs
+
 # Generate ortho_code-x86-flags
 if test $backend = mcode; then
     case "$build" in
