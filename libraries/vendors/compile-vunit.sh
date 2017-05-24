@@ -186,17 +186,19 @@ if [ "$COMPILE_VUNIT" == "TRUE" ]; then
 	Library="vunit_lib"
 	VHDLVersion="v08"
 	Files=(
-		run/src/stop_api.vhd
-		vhdl/src/lib/std/textio.vhd
+		core/src/stop_api.vhd
 		vhdl/src/lang/lang.vhd
 		com/src/com_types.vhd
-		run/src/stop_body_2008.vhd
+		core/src/stop_body_2008.vhd
+		core/src/core_pkg.vhd
 		com/src/com_api.vhd
 		string_ops/src/string_ops.vhd
 		path/src/path.vhd
 		logging/src/log_types.vhd
 		logging/src/log_formatting.vhd
 		logging/src/log_special_types200x.vhd
+		array/src/integer_vector_ptr_pkg.vhd
+		array/src/integer_array_pkg.vhd
 		array/src/array_pkg.vhd
 		logging/src/log_base_api.vhd
 		logging/src/log_base.vhd
