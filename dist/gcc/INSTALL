@@ -12,13 +12,10 @@ default location, unless you set links.
 You must be root to install this distribution.
 
 To install ghdl:
-$ su 
+$ su
 # tar -C / -jxvf @TARFILE@.tar.bz2
 
 Note: you must also have a C compiler and zlib installed.
-
-There is a mailing list for any questions.  You can subscribe via:
-  https://mail.gna.org/listinfo/ghdl-discuss/
 
 Tristan Gingold.
 

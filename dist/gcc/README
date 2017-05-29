@@ -29,9 +29,7 @@ Building GHDL from sources:
 
 See BUILD.txt
 
-There is a mailing list for any questions.  You can subscribe via:
-  https://mail.gna.org/listinfo/ghdl-discuss/
-Please report bugs on https://github.com/tgingold/ghdl/issues
+Please report bugs and issues on https://github.com/tgingold/ghdl/issues
 
 If you cannot compile, please report the gcc version, GNAT version and gcc
 source version.
