@@ -221,8 +221,13 @@ copy-sources.gcc: version.ads
 	$(CP) -p $(srcdir)/dist/gcc/lang-options.h $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/dist/gcc/lang-specs.h $(gcc_vhdl_dir)
 
+# To build vhdl libs using a non-installed ghdl, define GHDL_GCC_BIN to the
+# path of ghdl and GHDL1_GCC_BIN to path of ghdl1
+GHDL_GCC_BIN=$(bindir)/ghdl$(EXEEXT)
+GHDL1_GCC_BIN=  # --GHDL1=/path/to/ghdl1
+
 libs.vhdl.gcc:
-	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL=$(bindir)/ghdl$(EXEEXT) GHDL_FLAGS="$(LIB_CFLAGS)" vhdl.libs.all libs.vhdl.standard
+	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL="$(GHDL_GCC_BIN)" GHDL_FLAGS="$(GHDL1_GCC_BIN) $(LIB_CFLAGS)" vhdl.libs.all libs.vhdl.standard
 
 ghdllib: libs.vhdl.gcc $(libdirsuffix)/libgrt.a
 
