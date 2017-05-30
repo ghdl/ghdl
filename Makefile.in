@@ -448,7 +448,6 @@ clean-c: force
 	$(RM) -f fstapi.o fastlz.o lz4.o
 
 create-dirs: force
-	$(MKDIR) -p $(VHDL_LIB_DIR)
 	for d in $(VHDLLIB_SUBDIRS); do \
 	  $(MKDIR) -p $(LIBDST_DIR)/$$d; \
 	done
