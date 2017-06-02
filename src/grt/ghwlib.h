@@ -65,8 +65,8 @@ enum ghdl_rtik {
   ghdl_rtik_type_file,
   ghdl_rtik_subtype_scalar,
   ghdl_rtik_subtype_array,	/* 35 */
-  ghdl_rtik_subtype_array_ptr,
-  ghdl_rtik_subtype_unconstrained_array,
+  ghdl_rtik_subtype_array_ptr,             /* Obsolete.  */
+  ghdl_rtik_subtype_unconstrained_array,   /* Obsolete.  */
   ghdl_rtik_subtype_record,
   ghdl_rtik_subtype_access,
   ghdl_rtik_type_protected,
@@ -191,7 +191,7 @@ struct ghw_subtype_array
   const char *name;
 
   struct ghw_type_array *base;
-  int nbr_el;
+  int nbr_scalars;
   union ghw_range **rngs;
 };
 
@@ -216,8 +216,8 @@ struct ghw_type_record
   const char *name;
 
   unsigned int nbr_fields;
-  int nbr_el;	/* Number of scalar signals.  */
-  struct ghw_record_element *el;
+  int nbr_scalars;	/* Number of scalar elements (ie nbr of signals).  */
+  struct ghw_record_element *els;
 };
 
 struct ghw_subtype_record
@@ -226,6 +226,8 @@ struct ghw_subtype_record
   const char *name;
 
   struct ghw_type_record *base;
+  int nbr_scalars;	/* Number of scalar elements (ie nbr of signals).  */
+  struct ghw_record_element *els;
 };
 
 union ghw_type

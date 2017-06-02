@@ -1260,7 +1260,8 @@ package body Grt.Disp_Rti is
            | Ghdl_Rtik_Type_Unbounded_Record =>
             Disp_Type_Record
               (To_Ghdl_Rtin_Type_Record_Acc (Rti), Ctxt, Indent);
-         when Ghdl_Rtik_Subtype_Record =>
+         when Ghdl_Rtik_Subtype_Record
+           | Ghdl_Rtik_Subtype_Unbounded_Record =>
             Disp_Subtype_Record_Decl
               (To_Ghdl_Rtin_Subtype_Composite_Acc (Rti), Ctxt, Indent);
          when Ghdl_Rtik_Type_Protected =>

@@ -613,9 +613,9 @@ package body Grt.Waves is
          when Ghdl_Rtik_Type_B1
            | Ghdl_Rtik_Type_E8 =>
             declare
-               Enum : Ghdl_Rtin_Type_Enum_Acc;
+               Enum : constant Ghdl_Rtin_Type_Enum_Acc :=
+                 To_Ghdl_Rtin_Type_Enum_Acc (Rti);
             begin
-               Enum := To_Ghdl_Rtin_Type_Enum_Acc (Rti);
                Create_String_Id (Enum.Name);
                for I in 1 .. Enum.Nbr loop
                   Create_String_Id (Enum.Names (I - 1));
@@ -658,18 +658,18 @@ package body Grt.Waves is
            | Ghdl_Rtik_Type_I64
            | Ghdl_Rtik_Type_F64 =>
             declare
-               Base : Ghdl_Rtin_Type_Scalar_Acc;
+               Base : constant Ghdl_Rtin_Type_Scalar_Acc :=
+                 To_Ghdl_Rtin_Type_Scalar_Acc (Rti);
             begin
-               Base := To_Ghdl_Rtin_Type_Scalar_Acc (Rti);
                Create_String_Id (Base.Name);
             end;
          when Ghdl_Rtik_Type_P32
            | Ghdl_Rtik_Type_P64 =>
             declare
-               Base : Ghdl_Rtin_Type_Physical_Acc;
+               Base : constant Ghdl_Rtin_Type_Physical_Acc :=
+                 To_Ghdl_Rtin_Type_Physical_Acc (Rti);
                Unit_Name : Ghdl_C_String;
             begin
-               Base := To_Ghdl_Rtin_Type_Physical_Acc (Rti);
                Create_String_Id (Base.Name);
                for I in 1 .. Base.Nbr loop
                   Unit_Name :=
@@ -677,12 +677,13 @@ package body Grt.Waves is
                   Create_String_Id (Unit_Name);
                end loop;
             end;
-         when Ghdl_Rtik_Type_Record =>
+         when Ghdl_Rtik_Type_Record
+           | Ghdl_Rtik_Type_Unbounded_Record =>
             declare
-               Rec : Ghdl_Rtin_Type_Record_Acc;
+               Rec : constant Ghdl_Rtin_Type_Record_Acc :=
+                 To_Ghdl_Rtin_Type_Record_Acc (Rti);
                El : Ghdl_Rtin_Element_Acc;
             begin
-               Rec := To_Ghdl_Rtin_Type_Record_Acc (Rti);
                Create_String_Id (Rec.Name);
                for I in 1 .. Rec.Nbrel loop
                   El := To_Ghdl_Rtin_Element_Acc (Rec.Elements (I - 1));
@@ -723,12 +724,16 @@ package body Grt.Waves is
       Rti := Avhpi_Get_Rti (Obj_Type);
       Create_Type (Rti, Avhpi_Get_Context (Obj_Type));
 
-      --  The the signal type is an unconstrained array, also put the object
-      --  in the type AVL.
+      --  The the signal type is an unbounded type, also put the object
+      --  in the type AVL.  This is for unbounded ports.
       --  The real type will be written to the file.
-      if Rti.Kind = Ghdl_Rtik_Type_Array then
-         Add_Type (Avhpi_Get_Rti (Obj), Avhpi_Get_Context (Obj));
-      end if;
+      case Rti.Kind is
+         when Ghdl_Rtik_Type_Array
+           | Ghdl_Rtik_Type_Unbounded_Record =>
+            Add_Type (Avhpi_Get_Rti (Obj), Avhpi_Get_Context (Obj));
+         when others =>
+            null;
+      end case;
    end Create_Object_Type;
 
    procedure Write_Object_Type (Obj : VhpiHandleT)
@@ -744,11 +749,13 @@ package body Grt.Waves is
          return;
       end if;
       Rti := Avhpi_Get_Rti (Obj_Type);
-      if Rti.Kind = Ghdl_Rtik_Type_Array then
-         Write_Type_Id (Avhpi_Get_Rti (Obj), Avhpi_Get_Context (Obj));
-      else
-         Write_Type_Id (Rti, Avhpi_Get_Context (Obj_Type));
-      end if;
+      case Rti.Kind is
+         when Ghdl_Rtik_Type_Array
+           | Ghdl_Rtik_Type_Unbounded_Record =>
+            Write_Type_Id (Avhpi_Get_Rti (Obj), Avhpi_Get_Context (Obj));
+         when others =>
+            Write_Type_Id (Rti, Avhpi_Get_Context (Obj_Type));
+      end case;
    end Write_Object_Type;
 
    procedure Create_Generate_Type (Gen : VhpiHandleT)
@@ -1206,7 +1213,8 @@ package body Grt.Waves is
             return Ghw_Rtik_Subtype_Array;
          when Ghdl_Rtik_Type_Array =>
             return Ghw_Rtik_Type_Array;
-         when Ghdl_Rtik_Type_Record =>
+         when Ghdl_Rtik_Type_Record
+           | Ghdl_Rtik_Type_Unbounded_Record =>
             return Ghw_Rtik_Type_Record;
          when Ghdl_Rtik_Subtype_Record =>
             return Ghw_Rtik_Subtype_Record;
@@ -1267,17 +1275,52 @@ package body Grt.Waves is
       end case;
    end Write_Range;
 
+   procedure Write_Array_Bounds (Arr : Ghdl_Rtin_Type_Array_Acc;
+                                 Bounds : in out Address)
+   is
+      Rng : Ghdl_Range_Ptr;
+      Index_Type : Ghdl_Rti_Access;
+   begin
+      for I in 0 .. Arr.Nbr_Dim - 1 loop
+         Index_Type := Get_Base_Type (Arr.Indexes (I));
+         Extract_Range (Bounds, Index_Type, Rng);
+         Write_Range (Index_Type, Rng);
+      end loop;
+   end Write_Array_Bounds;
+
+   procedure Write_Record_Bounds (Rec : Ghdl_Rtin_Type_Record_Acc;
+                                  Bounds : in out Address)
+   is
+      El : Ghdl_Rtin_Element_Acc;
+   begin
+      for I in 1 .. Rec.Nbrel loop
+         El := To_Ghdl_Rtin_Element_Acc (Rec.Elements (I - 1));
+         case El.Eltype.Kind is
+            when Ghdl_Rtik_Type_Array =>
+               Write_Array_Bounds
+                 (To_Ghdl_Rtin_Type_Array_Acc (El.Eltype), Bounds);
+            when Ghdl_Rtik_Type_Unbounded_Record =>
+               Write_Record_Bounds
+                 (To_Ghdl_Rtin_Type_Record_Acc (El.Eltype), Bounds);
+            when others =>
+               null;
+         end case;
+      end loop;
+   end Write_Record_Bounds;
+
    procedure Write_Types
    is
       Rti : Ghdl_Rti_Access;
       Ctxt : Rti_Context;
    begin
+      --  Types header.
       Wave_Section ("TYP" & NUL);
       Wave_Put_Byte (0);
       Wave_Put_Byte (0);
       Wave_Put_Byte (0);
       Wave_Put_Byte (0);
       Wave_Put_I32 (Ghdl_I32 (Types_Table.Last));
+
       for I in Types_Table.First .. Types_Table.Last loop
          Rti := Types_Table.Table (I).Type_Rti;
          Ctxt := Types_Table.Table (I).Context;
@@ -1286,23 +1329,26 @@ package body Grt.Waves is
             declare
                Obj_Rti : constant Ghdl_Rtin_Object_Acc :=
                  To_Ghdl_Rtin_Object_Acc (Rti);
-               Arr : constant Ghdl_Rtin_Type_Array_Acc :=
-                 To_Ghdl_Rtin_Type_Array_Acc (Obj_Rti.Obj_Type);
-               Addr : Ghdl_Uc_Array_Acc;
             begin
-               Wave_Put_Byte (Ghw_Rtik'Pos (Ghw_Rtik_Subtype_Array));
-               Write_String_Id (null);
-               Write_Type_Id (Obj_Rti.Obj_Type, Ctxt);
-               Addr := To_Ghdl_Uc_Array_Acc
-                 (Loc_To_Addr (Rti.Depth, Obj_Rti.Loc, Ctxt));
-               declare
-                  Rngs : Ghdl_Range_Array (0 .. Arr.Nbr_Dim - 1);
-               begin
-                  Bound_To_Range (Addr.Bounds, Arr, Rngs);
-                  for I in Rngs'Range loop
-                     Write_Range (Arr.Indexes (I), Rngs (I));
-                  end loop;
-               end;
+               case Obj_Rti.Obj_Type.Kind is
+                  when Ghdl_Rtik_Type_Array =>
+                     declare
+                        Arr : constant Ghdl_Rtin_Type_Array_Acc :=
+                          To_Ghdl_Rtin_Type_Array_Acc (Obj_Rti.Obj_Type);
+                        Addr : Ghdl_Uc_Array_Acc;
+                        Bounds : Address;
+                     begin
+                        Wave_Put_Byte (Ghw_Rtik'Pos (Ghw_Rtik_Subtype_Array));
+                        Write_String_Id (null);
+                        Write_Type_Id (Obj_Rti.Obj_Type, Ctxt);
+                        Addr := To_Ghdl_Uc_Array_Acc
+                          (Loc_To_Addr (Rti.Depth, Obj_Rti.Loc, Ctxt));
+                        Bounds := Addr.Bounds;
+                        Write_Array_Bounds (Arr, Bounds);
+                     end;
+                  when others =>
+                     Internal_Error ("waves.write_types: unhandled obj kind");
+               end case;
             end;
          else
             --  Kind.
@@ -1331,14 +1377,10 @@ package body Grt.Waves is
                      declare
                         Bt : constant Ghdl_Rtin_Type_Array_Acc :=
                           To_Ghdl_Rtin_Type_Array_Acc (Arr.Basetype);
-                        Rngs : Ghdl_Range_Array (0 .. Bt.Nbr_Dim - 1);
+                        Bounds : Address;
                      begin
-                        Bound_To_Range
-                          (Loc_To_Addr (Rti.Depth, Arr.Bounds, Ctxt),
-                           Bt, Rngs);
-                        for I in Rngs'Range loop
-                           Write_Range (Bt.Indexes (I), Rngs (I));
-                        end loop;
+                        Bounds := Loc_To_Addr (Rti.Depth, Arr.Bounds, Ctxt);
+                        Write_Array_Bounds (Bt, Bounds);
                      end;
                   end;
                when Ghdl_Rtik_Type_Array =>
@@ -1353,7 +1395,8 @@ package body Grt.Waves is
                         Write_Type_Id (Arr.Indexes (I - 1), Ctxt);
                      end loop;
                   end;
-               when Ghdl_Rtik_Type_Record =>
+               when Ghdl_Rtik_Type_Record
+                 | Ghdl_Rtik_Type_Unbounded_Record =>
                   declare
                      Rec : constant Ghdl_Rtin_Type_Record_Acc :=
                        To_Ghdl_Rtin_Type_Record_Acc (Rti);
@@ -1369,11 +1412,19 @@ package body Grt.Waves is
                   end;
                when Ghdl_Rtik_Subtype_Record =>
                   declare
-                     Arr : constant Ghdl_Rtin_Subtype_Composite_Acc :=
+                     Rec : constant Ghdl_Rtin_Subtype_Composite_Acc :=
                        To_Ghdl_Rtin_Subtype_Composite_Acc (Rti);
+                     Base : constant Ghdl_Rtin_Type_Record_Acc :=
+                       To_Ghdl_Rtin_Type_Record_Acc (Rec.Basetype);
+                     Bounds : Address;
                   begin
-                     Write_String_Id (Arr.Name);
-                     Write_Type_Id (Arr.Basetype, Ctxt);
+                     Write_String_Id (Rec.Name);
+                     Write_Type_Id (Rec.Basetype, Ctxt);
+                     if Base.Common.Kind = Ghdl_Rtik_Type_Unbounded_Record then
+                        Bounds := Loc_To_Addr
+                          (Rec.Common.Depth, Rec.Bounds, Ctxt);
+                        Write_Record_Bounds (Base, Bounds);
+                     end if;
                   end;
                when Ghdl_Rtik_Subtype_Scalar =>
                   declare

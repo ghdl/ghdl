@@ -391,7 +391,8 @@ ghw_get_base_type (union ghw_type *t)
     }
 }
 
-int
+/* Return -1 for unbounded types.  */
+static int
 get_nbr_elements (union ghw_type *t)
 {
   switch (t->kind)
@@ -406,20 +407,21 @@ get_nbr_elements (union ghw_type *t)
     case ghdl_rtik_type_p64:
     case ghdl_rtik_subtype_scalar:
       return 1;
+    case ghdl_rtik_type_array:
+      return -1;
     case ghdl_rtik_subtype_array:
-    case ghdl_rtik_subtype_array_ptr:
-      return t->sa.nbr_el;
+      return t->sa.nbr_scalars;
     case ghdl_rtik_type_record:
-      return t->rec.nbr_el;
+      return t->rec.nbr_scalars;
     case ghdl_rtik_subtype_record:
-      return t->sr.base->nbr_el;
+      return t->sr.nbr_scalars;
     default:
       fprintf (stderr, "get_nbr_elements: unhandled type %d\n", t->kind);
       abort ();
     }
 }
 
-int
+static int
 get_range_length (union ghw_range *rng)
 {
   switch (rng->kind)
@@ -443,6 +445,91 @@ get_range_length (union ghw_range *rng)
       fprintf (stderr, "get_range_length: unhandled kind %d\n", rng->kind);
       abort ();
     }
+}
+
+/* Create an array subtype using BASE and ranges read from H.  */
+
+struct ghw_subtype_array *
+ghw_read_array_subtype (struct ghw_handler *h, struct ghw_type_array *base)
+{
+  struct ghw_subtype_array *sa;
+  int j;
+  int nbr_scalars;
+
+  sa = malloc (sizeof (struct ghw_subtype_array));
+  sa->kind = ghdl_rtik_subtype_array;
+  sa->name = NULL;
+  sa->base = base;
+  nbr_scalars = get_nbr_elements (base->el);
+  sa->rngs = malloc (base->nbr_dim * sizeof (union ghw_range *));
+  for (j = 0; j < base->nbr_dim; j++)
+    {
+      sa->rngs[j] = ghw_read_range (h);
+      nbr_scalars *= get_range_length (sa->rngs[j]);
+    }
+  sa->nbr_scalars = nbr_scalars;
+  return sa;
+}
+
+struct ghw_subtype_record *
+ghw_read_record_subtype (struct ghw_handler *h, struct ghw_type_record *base)
+{
+  struct ghw_subtype_record *sr;
+
+  sr = malloc (sizeof (struct ghw_subtype_record));
+  sr->kind = ghdl_rtik_subtype_record;
+  sr->name = NULL;
+  sr->base = base;
+  if (base->nbr_scalars >= 0)
+    {
+      /* Record base type is bounded.  */
+      sr->nbr_scalars = base->nbr_scalars;
+      sr->els = base->els;
+    }
+  else
+    {
+      /* Read subtypes.  */
+      int j;
+      int nbr_scalars;
+
+      sr->els = malloc (base->nbr_fields * sizeof (struct ghw_record_element));
+      nbr_scalars = 0;
+      for (j = 0; j < base->nbr_fields; j++)
+	{
+	  union ghw_type *btype = base->els[j].type;
+	  int el_nbr_scalars = get_nbr_elements (btype);
+
+	  sr->els[j].name = base->els[j].name;
+	  if (el_nbr_scalars >= 0)
+	    {
+	      /* Element is constrained.  */
+	      sr->els[j].type = btype;
+	    }
+	  else
+	    {
+	      switch (btype->kind)
+		{
+		case ghdl_rtik_type_array:
+		  sr->els[j].type = (union ghw_type *)
+		    ghw_read_array_subtype (h, &btype->ar);
+		  break;
+		case ghdl_rtik_type_record:
+		  sr->els[j].type = (union ghw_type *)
+		    ghw_read_record_subtype (h, &btype->rec);
+		  break;
+		default:
+		  fprintf
+		    (stderr, "ghw_read_record_subtype: unhandled kind %d\n",
+		     btype->kind);
+		  return NULL;
+		}
+	      el_nbr_scalars = get_nbr_elements (sr->els[j].type);
+	    }
+	  nbr_scalars += el_nbr_scalars;
+	}
+      sr->nbr_scalars = nbr_scalars;
+    }
+  return sr;
 }
 
 int
@@ -574,66 +661,71 @@ ghw_read_type (struct ghw_handler *h)
 	  }
 	  break;
 	case ghdl_rtik_subtype_array:
-	case ghdl_rtik_subtype_array_ptr:
 	  {
 	    struct ghw_subtype_array *sa;
-	    int j;
-	    int nbr_el;
+	    const char *name;
+	    struct ghw_type_array *base;
 
-	    sa = malloc (sizeof (struct ghw_subtype_array));
-	    sa->kind = t;
-	    sa->name = ghw_read_strid (h);
-	    sa->base = (struct ghw_type_array *)ghw_read_typeid (h);
-	    nbr_el = get_nbr_elements (sa->base->el);
-	    sa->rngs = malloc (sa->base->nbr_dim * sizeof (union ghw_range *));
-	    for (j = 0; j < sa->base->nbr_dim; j++)
-	      {
-		sa->rngs[j] = ghw_read_range (h);
-		nbr_el *= get_range_length (sa->rngs[j]);
-	      }
-	    sa->nbr_el = nbr_el;
-	    if (h->flag_verbose > 1)
-	      printf ("subtype array: %s (nbr_el=%d)\n", sa->name, sa->nbr_el);
+	    name = ghw_read_strid (h);
+	    base = (struct ghw_type_array *)ghw_read_typeid (h);
+
+	    sa = ghw_read_array_subtype (h, base);
+	    sa->name = name;
 	    h->types[i] = (union ghw_type *)sa;
+	    if (h->flag_verbose > 1)
+	      printf ("subtype array: %s (nbr_scalars=%d)\n",
+		      sa->name, sa->nbr_scalars);
 	  }
 	  break;
 	case ghdl_rtik_type_record:
 	  {
 	    struct ghw_type_record *rec;
 	    int j;
-	    int nbr_el;
+	    int nbr_scalars;
 
 	    rec = malloc (sizeof (struct ghw_type_record));
 	    rec->kind = t;
 	    rec->name = ghw_read_strid (h);
 	    if (ghw_read_uleb128 (h, &rec->nbr_fields) != 0)
 	      return -1;
-	    rec->el = malloc
+	    rec->els = malloc
 	      (rec->nbr_fields * sizeof (struct ghw_record_element));
-	    nbr_el = 0;
+	    nbr_scalars = 0;
 	    for (j = 0; j < rec->nbr_fields; j++)
 	      {
-		rec->el[j].name = ghw_read_strid (h);
-		rec->el[j].type = ghw_read_typeid (h);
-		nbr_el += get_nbr_elements (rec->el[j].type);
+		rec->els[j].name = ghw_read_strid (h);
+		rec->els[j].type = ghw_read_typeid (h);
+		if (nbr_scalars != -1)
+		  {
+		    int field_nbr_scalars = get_nbr_elements (rec->els[j].type);
+		    if (field_nbr_scalars == -1)
+		      nbr_scalars = -1;
+		    else
+		      nbr_scalars += field_nbr_scalars;
+		  }
 	      }
-	    rec->nbr_el = nbr_el;
+	    rec->nbr_scalars = nbr_scalars;
 	    if (h->flag_verbose > 1)
-	      printf ("record type: %s (nbr_el=%d)\n", rec->name, rec->nbr_el);
+	      printf ("record type: %s (nbr_scalars=%d)\n",
+		      rec->name, rec->nbr_scalars);
 	    h->types[i] = (union ghw_type *)rec;
 	  }
 	  break;
 	case ghdl_rtik_subtype_record:
 	  {
 	    struct ghw_subtype_record *sr;
+	    const char *name;
+	    struct ghw_type_record *base;
 
-	    sr = malloc (sizeof (struct ghw_subtype_record));
-	    sr->kind = t;
-	    sr->name = ghw_read_strid (h);
-	    sr->base = (struct ghw_type_record *)ghw_read_typeid (h);
-	    if (h->flag_verbose > 1)
-	      printf ("subtype record: %s\n", sr->name);
+	    name = ghw_read_strid (h);
+	    base = (struct ghw_type_record *)ghw_read_typeid (h);
+
+	    sr = ghw_read_record_subtype (h, base);
+	    sr->name = name;
 	    h->types[i] = (union ghw_type *)sr;
+	    if (h->flag_verbose > 1)
+	      printf ("subtype record: %s (nbr_scalars=%d)\n",
+		      sr->name, sr->nbr_scalars);
 	  }
 	  break;
 	default:
@@ -710,13 +802,12 @@ ghw_read_signal (struct ghw_handler *h, unsigned int *sigs, union ghw_type *t)
       }
       return 0;
     case ghdl_rtik_subtype_array:
-    case ghdl_rtik_subtype_array_ptr:
       {
 	int i;
 	int stride;
 	int len;
 
-	len = t->sa.nbr_el;
+	len = t->sa.nbr_scalars;
 	stride = get_nbr_elements (t->sa.base->el);
 
 	for (i = 0; i < len; i += stride)
@@ -726,20 +817,36 @@ ghw_read_signal (struct ghw_handler *h, unsigned int *sigs, union ghw_type *t)
       return 0;
     case ghdl_rtik_type_record:
       {
+	struct ghw_type_record *r = &t->rec;
+	int nbr_fields = r->nbr_fields;
 	int i;
 	int off;
 
 	off = 0;
-	for (i = 0; i < t->rec.nbr_fields; i++)
+	for (i = 0; i < nbr_fields; i++)
 	  {
-	    if (ghw_read_signal (h, &sigs[off], t->rec.el[i].type) < 0)
+	    if (ghw_read_signal (h, &sigs[off], r->els[i].type) < 0)
 	      return -1;
-	    off += get_nbr_elements (t->rec.el[i].type);
+	    off += get_nbr_elements (r->els[i].type);
 	  }
       }
       return 0;
     case ghdl_rtik_subtype_record:
-      return ghw_read_signal (h, sigs, (union ghw_type *)t->sr.base);
+      {
+	struct ghw_subtype_record *sr = &t->sr;
+	int nbr_fields = sr->base->nbr_fields;
+	int i;
+	int off;
+
+	off = 0;
+	for (i = 0; i < nbr_fields; i++)
+	  {
+	    if (ghw_read_signal (h, &sigs[off], sr->els[i].type) < 0)
+	      return -1;
+	    off += get_nbr_elements (sr->els[i].type);
+	  }
+      }
+      return 0;
     default:
       fprintf (stderr, "ghw_read_signal: type kind %d unhandled\n", t->kind);
       abort ();
@@ -1765,6 +1872,57 @@ ghw_disp_range (union ghw_type *type, union ghw_range *rng)
 }
 
 static void
+ghw_disp_array_subtype_bounds (struct ghw_subtype_array *a)
+{
+  int i;
+  
+  printf (" (");
+  for (i = 0; i < a->base->nbr_dim; i++)
+    {
+      if (i != 0)
+	printf (", ");
+      ghw_disp_range (a->base->dims[i], a->rngs[i]);
+    }
+  printf (")");
+}
+
+static void
+ghw_disp_record_subtype_bounds (struct ghw_subtype_record *sr)
+{
+  struct ghw_type_record *base = sr->base;
+  int is_first = 1;
+  int i;
+
+  for (i = 0; i < base->nbr_fields; i++)
+    {
+      if (sr->els[i].type != base->els[i].type)
+	{
+	  if (is_first)
+	    {
+	      printf ("(");
+	      is_first = 0;
+	    }
+	  else
+	    printf (", ");
+	  printf ("%s", base->els[i].name);
+	  switch (sr->els[i].type->kind)
+	    {
+	    case ghdl_rtik_subtype_array:
+	      ghw_disp_array_subtype_bounds (&sr->els[i].type->sa);
+	      break;
+	    case ghdl_rtik_subtype_record:
+	      ghw_disp_record_subtype_bounds (&sr->els[i].type->sr);
+	      break;
+	    default:
+	      printf ("??? (%d)", sr->els[i].type->kind);
+	    }
+	}
+    }
+  if (!is_first)
+    printf (")");
+}
+
+static void
 ghw_disp_subtype_definition (struct ghw_handler *h, union ghw_type *t)
 {
   switch (t->kind)
@@ -1778,24 +1936,20 @@ ghw_disp_subtype_definition (struct ghw_handler *h, union ghw_type *t)
       }
       break;
     case ghdl_rtik_subtype_array:
-    case ghdl_rtik_subtype_array_ptr:
       {
 	struct ghw_subtype_array *a = &t->sa;
-	int i;
 
 	ghw_disp_typename (h, (union ghw_type *)a->base);
-	printf (" (");
-	for (i = 0; i < a->base->nbr_dim; i++)
-	  {
-	    if (i != 0)
-	      printf (", ");
-	    ghw_disp_range (a->base->dims[i], a->rngs[i]);
-	  }
-	printf (")");
+	ghw_disp_array_subtype_bounds (a);
       }
       break;
     case ghdl_rtik_subtype_record:
-      ghw_disp_typename (h, (union ghw_type *)t->sr.base);
+      {
+	struct ghw_subtype_record *sr = &t->sr;
+
+	ghw_disp_typename (h, (union ghw_type *)sr->base);
+	ghw_disp_record_subtype_bounds (sr);
+      }
       break;
     default:
       printf ("ghw_disp_subtype_definition: unhandled type kind %d\n",
@@ -1893,15 +2047,14 @@ ghw_disp_type (struct ghw_handler *h, union ghw_type *t)
 	printf ("type %s is record\n", r->name);
 	for (i = 0; i < r->nbr_fields; i++)
 	  {
-	    printf ("  %s: ", r->el[i].name);
-	    ghw_disp_subtype_indication (h, r->el[i].type);
+	    printf ("  %s: ", r->els[i].name);
+	    ghw_disp_subtype_indication (h, r->els[i].type);
 	    printf (";\n");
 	  }
 	printf ("end record;\n");
       }
       break;
     case ghdl_rtik_subtype_array:
-    case ghdl_rtik_subtype_array_ptr:
     case ghdl_rtik_subtype_scalar:
     case ghdl_rtik_subtype_record:
       {
