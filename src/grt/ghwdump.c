@@ -37,6 +37,7 @@ usage (void)
 	  " -H  display hierarchy with full pathnames\n"
 	  " -T  display time\n"
 	  " -s  display signals (and time)\n"
+	  " -S  display strings\n"
 	  " -f  <lst> list of signals to display (default: all, example: -f 1,3,5-7,21-33)\n"
 	  " -l  display list of sections\n"
 	  " -v  verbose\n");
@@ -126,6 +127,16 @@ add_signals (int **signalSet, int *nbSignals, const char *arg)
     }
 }
 
+static void
+disp_string_table (struct ghw_handler *hp)
+{
+  int i;
+  printf ("String table:\n");
+
+  for (i = 1; i < hp->nbr_str; i++)
+    printf (" %s\n", hp->str_table[i]);
+}
+
 int
 main (int argc, char **argv)
 {
@@ -134,6 +145,7 @@ main (int argc, char **argv)
   int flag_disp_hierarchy;
   int flag_disp_time;
   int flag_disp_signals;
+  int flag_disp_strings;
   int flag_full_names;
   int flag_list;
   int flag_verbose;
@@ -149,6 +161,7 @@ main (int argc, char **argv)
   flag_full_names = 0;
   flag_disp_time = 0;
   flag_disp_signals = 0;
+  flag_disp_strings = 0;
   flag_list = 0;
   flag_verbose = 0;
   nb_signals = 0;
@@ -159,7 +172,7 @@ main (int argc, char **argv)
     {
       int c;
 
-      c = getopt (argc, argv, "thHTslvf:");
+      c = getopt (argc, argv, "thHTsSlvf:");
       if (c == -1)
 	break;
       switch (c)
@@ -181,8 +194,11 @@ main (int argc, char **argv)
 	  flag_disp_signals = 1;
 	  flag_disp_time = 1;
 	  break;
+	case 'S':
+	  flag_disp_strings = 1;
+	  break;
 	case 'f':
-	  add_signals(&signal_set, &nb_signals, optarg);
+	  add_signals (&signal_set, &nb_signals, optarg);
 	  break;
 	case 'l':
 	  flag_list = 1;
@@ -218,6 +234,7 @@ main (int argc, char **argv)
 	{
 	  while (1)
 	    {
+	      const char *section_name;
 	      int section;
 
 	      section = ghw_read_section (hp);
@@ -236,9 +253,15 @@ main (int argc, char **argv)
 		  printf ("Unknown section\n");
 		  break;
 		}
-	      printf ("Section %s\n", ghw_sections[section].name);
+	      section_name = ghw_sections[section].name;
+	      printf ("Section %s\n", section_name);
 	      if ((*ghw_sections[section].handler)(hp) < 0)
 		break;
+
+	      if (flag_disp_strings && strcmp (section_name, "STR") == 0)
+		disp_string_table (hp);
+	      else if (flag_disp_types && strcmp (section_name, "TYP") == 0)
+		ghw_disp_types (hp);
 	    }
 	}
       else
@@ -247,14 +270,6 @@ main (int argc, char **argv)
 	    {
 	      fprintf (stderr, "cannot read ghw file\n");
 	      return 2;
-	    }
-	  if (0)
-	    {
-	      int i;
-	      printf ("String table:\n");
-
-	      for (i = 1; i < hp->nbr_str; i++)
-		printf (" %s\n", hp->str_table[i]);
 	    }
 	  if (flag_disp_types)
 	    ghw_disp_types (hp);
