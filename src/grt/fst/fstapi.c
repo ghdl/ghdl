@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2009-2014 Tony Bybell.
+ * Copyright (c) 2009-2015 Tony Bybell.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -279,7 +279,6 @@ return(ftruncate(fd, length));
 static char *fstRealpath(const char *path, char *resolved_path)
 {
 #if defined __USE_BSD || defined __USE_XOPEN_EXTENDED || defined __CYGWIN__ || defined HAVE_REALPATH
-
 #if (defined(__MACH__) && defined(__APPLE__))
 if(!resolved_path)
         {
@@ -297,6 +296,8 @@ if(!resolved_path)
         }
 return(_fullpath(resolved_path, path, PATH_MAX));
 #else
+(void)path;
+(void)resolved_path;
 return(NULL);
 #endif
 #endif
@@ -1449,12 +1450,12 @@ for(i=0;i<xc->maxhandle;i++)
                                         PPvoid_t pv = JudyHSIns(&PJHSArray, dmem, destlen, NULL);
                                         if(*pv)
                                                 {
-                                                uint32_t pvi = (long)(*pv);
+                                                uint32_t pvi = (intptr_t)(*pv);
                                                 vm4ip[2] = -pvi;
                                                 }
                                                 else
                                                 {
-                                                *pv = (void *)(long)(i+1);
+                                                *pv = (void *)(intptr_t)(i+1);
 #endif
                                                 fpos += fstWriterVarint(f, wrlen);
                                                 fpos += destlen;
@@ -1469,12 +1470,12 @@ for(i=0;i<xc->maxhandle;i++)
                                         PPvoid_t pv = JudyHSIns(&PJHSArray, scratchpnt, wrlen, NULL);
                                         if(*pv)
                                                 {
-                                                uint32_t pvi = (long)(*pv);
+                                                uint32_t pvi = (intptr_t)(*pv);
                                                 vm4ip[2] = -pvi;
                                                 }
                                                 else
                                                 {
-                                                *pv = (void *)(long)(i+1);
+                                                *pv = (void *)(intptr_t)(i+1);
 #endif
                                                 fpos += fstWriterVarint(f, 0);
                                                 fpos += wrlen;
@@ -1504,12 +1505,12 @@ for(i=0;i<xc->maxhandle;i++)
                                         PPvoid_t pv = JudyHSIns(&PJHSArray, dmem, rc, NULL);
                                         if(*pv)
                                                 {
-                                                uint32_t pvi = (long)(*pv);
+                                                uint32_t pvi = (intptr_t)(*pv);
                                                 vm4ip[2] = -pvi;
                                                 }
                                                 else
                                                 {
-                                                *pv = (void *)(long)(i+1);
+                                                *pv = (void *)(intptr_t)(i+1);
 #endif
                                                 fpos += fstWriterVarint(f, wrlen);
                                                 fpos += rc;
@@ -1524,12 +1525,12 @@ for(i=0;i<xc->maxhandle;i++)
                                         PPvoid_t pv = JudyHSIns(&PJHSArray, scratchpnt, wrlen, NULL);
                                         if(*pv)
                                                 {
-                                                uint32_t pvi = (long)(*pv);
+                                                uint32_t pvi = (intptr_t)(*pv);
                                                 vm4ip[2] = -pvi;
                                                 }
                                                 else
                                                 {
-                                                *pv = (void *)(long)(i+1);
+                                                *pv = (void *)(intptr_t)(i+1);
 #endif
                                                 fpos += fstWriterVarint(f, 0);
                                                 fpos += wrlen;
@@ -1546,12 +1547,12 @@ for(i=0;i<xc->maxhandle;i++)
                         PPvoid_t pv = JudyHSIns(&PJHSArray, scratchpnt, wrlen, NULL);
                         if(*pv)
                                 {
-                                uint32_t pvi = (long)(*pv);
+                                uint32_t pvi = (intptr_t)(*pv);
                                 vm4ip[2] = -pvi;
                                 }
                                 else
                                 {
-                                *pv = (void *)(long)(i+1);
+                                *pv = (void *)(intptr_t)(i+1);
 #endif
                                 fpos += fstWriterVarint(f, 0);
                                 fpos += wrlen;
@@ -2299,22 +2300,24 @@ if(xc && path && path[0])
 #ifndef _WAVE_HAVE_JUDY
         const uint32_t hashmask = FST_PATH_HASHMASK;
         const unsigned char *path2 = (const unsigned char *)path;
+	PPvoid_t pv;
 #else
         char *path2 = alloca(slen + 1); /* judy lacks const qualifier in its JudyHSIns definition */
+	PPvoid_t pv;
         strcpy(path2, path);
 #endif
 
-        PPvoid_t pv = JudyHSIns(&(xc->path_array), path2, slen, NULL);
+        pv = JudyHSIns(&(xc->path_array), path2, slen, NULL);
         if(*pv)
                 {
-                sidx = (long)(*pv);
+                sidx = (intptr_t)(*pv);
                 }
                 else
                 {
                 char *rp = NULL;
 
                 sidx = ++xc->path_array_count;
-                *pv = (void *)(long)(xc->path_array_count);
+                *pv = (void *)(intptr_t)(xc->path_array_count);
 
                 if(use_realpath)
                         {
@@ -2357,6 +2360,12 @@ fstWriterSetSourceStem_2(ctx, path, line, use_realpath, FST_MT_SOURCEISTEM);
 void fstWriterSetComment(void *ctx, const char *comm)
 {
 fstWriterSetAttrGeneric(ctx, comm, FST_MT_COMMENT, 0);
+}
+
+
+void fstWriterSetValueList(void *ctx, const char *vl)
+{
+fstWriterSetAttrGeneric(ctx, vl, FST_MT_VALUELIST, 0);
 }
 
 
@@ -3065,6 +3074,7 @@ uint32_t *rvat_chain_table_lengths;
 uint64_t rvat_vc_maxhandle;
 off_t rvat_vc_start;
 uint32_t *rvat_sig_offs;
+int rvat_packtype;
 
 uint32_t rvat_chain_len;
 unsigned char *rvat_chain_mem;
@@ -5877,6 +5887,7 @@ if(frame_uclen == frame_clen)
 
 xc->rvat_vc_maxhandle = fstReaderVarint64(xc->f);
 xc->rvat_vc_start = ftello(xc->f);      /* points to '!' character */
+xc->rvat_packtype = fgetc(xc->f);
 
 #ifdef FST_DEBUG
 fprintf(stderr, "\tframe_uclen: %d, frame_clen: %d, frame_maxhandle: %d\n",
@@ -5901,37 +5912,84 @@ xc->rvat_chain_table_lengths = calloc((xc->rvat_vc_maxhandle+1), sizeof(uint32_t
 pnt = chain_cmem;
 idx = 0;
 pval = 0;
-do
+
+if(sectype == FST_BL_VCDATA_DYN_ALIAS2)
         {
-        int skiplen;
-        uint64_t val = fstGetVarint32(pnt, &skiplen);
-
-        if(!val)
-                {
-                pnt += skiplen;
-                val = fstGetVarint32(pnt, &skiplen);
-                xc->rvat_chain_table[idx] = 0;
-                xc->rvat_chain_table_lengths[idx] = -val;
-                idx++;
-                }
-        else
-        if(val&1)
-                {
-                pval = xc->rvat_chain_table[idx] = pval + (val >> 1);
-                if(idx) { xc->rvat_chain_table_lengths[pidx] = pval - xc->rvat_chain_table[pidx]; }
-                pidx = idx++;
-                }
-                else
-                {
-                fstHandle loopcnt = val >> 1;
-                for(i=0;i<loopcnt;i++)
+        uint32_t prev_alias = 0;
+                                 
+        do      {
+                int skiplen;
+ 
+                if(*pnt & 0x01)
                         {
-                        xc->rvat_chain_table[idx++] = 0;
+                        int64_t shval = fstGetSVarint64(pnt, &skiplen) >> 1;
+                        if(shval > 0)
+                                {
+                                pval = xc->rvat_chain_table[idx] = pval + shval;
+                                if(idx) { xc->rvat_chain_table_lengths[pidx] = pval - xc->rvat_chain_table[pidx]; }
+                                pidx = idx++;
+                                }
+                        else if(shval < 0)
+                                {
+                                xc->rvat_chain_table[idx] = 0;                                   /* need to explicitly zero as calloc above might not run */
+                                xc->rvat_chain_table_lengths[idx] = prev_alias = shval;          /* because during this loop iter would give stale data! */
+                                idx++;
+                                } 
+                        else
+                                {
+                                xc->rvat_chain_table[idx] = 0;                                   /* need to explicitly zero as calloc above might not run */
+                                xc->rvat_chain_table_lengths[idx] = prev_alias;                  /* because during this loop iter would give stale data! */
+                                idx++;
+                                }
                         }
-                }
-
-        pnt += skiplen;
-        } while (pnt != (chain_cmem + chain_clen));
+                        else
+                        {
+                        uint64_t val = fstGetVarint32(pnt, &skiplen);
+        
+                        fstHandle loopcnt = val >> 1;
+                        for(i=0;i<loopcnt;i++)
+                                {
+                                xc->rvat_chain_table[idx++] = 0;
+                                }
+                        }
+                        
+                pnt += skiplen;
+                } while (pnt != (chain_cmem + chain_clen));
+        }
+        else
+	{
+	do
+	        {
+	        int skiplen;
+	        uint64_t val = fstGetVarint32(pnt, &skiplen);
+	
+	        if(!val)
+	                {
+	                pnt += skiplen;
+	                val = fstGetVarint32(pnt, &skiplen);
+	                xc->rvat_chain_table[idx] = 0;
+	                xc->rvat_chain_table_lengths[idx] = -val;
+	                idx++;
+	                }
+	        else
+	        if(val&1)
+	                {
+	                pval = xc->rvat_chain_table[idx] = pval + (val >> 1);
+	                if(idx) { xc->rvat_chain_table_lengths[pidx] = pval - xc->rvat_chain_table[pidx]; }
+	                pidx = idx++;
+	                }
+	                else
+	                {
+	                fstHandle loopcnt = val >> 1;
+	                for(i=0;i<loopcnt;i++)
+	                        {
+	                        xc->rvat_chain_table[idx++] = 0;
+	                        }
+	                }
+	
+	        pnt += skiplen;
+	        } while (pnt != (chain_cmem + chain_clen));
+	}
 
 free(chain_cmem);
 xc->rvat_chain_table[idx] = indx_pos - xc->rvat_vc_start;
@@ -5995,10 +6053,20 @@ if(!xc->rvat_chain_mem)
                 unsigned char *mc = malloc(xc->rvat_chain_table_lengths[facidx]);
                 unsigned long destlen = xc->rvat_chain_len;
                 unsigned long sourcelen = xc->rvat_chain_table_lengths[facidx];
-                int rc;
+                int rc = Z_OK;
 
                 fstFread(mc, xc->rvat_chain_table_lengths[facidx], 1, xc->f);
-                rc = uncompress(mu, &destlen, mc, sourcelen);
+
+                switch(xc->rvat_packtype)
+			{
+                        case '4': rc = (destlen == (unsigned long)LZ4_decompress_safe_partial((char *)mc, (char *)mu, sourcelen, destlen, destlen)) ? Z_OK : Z_DATA_ERROR;
+                        	break;
+                        case 'F': fastlz_decompress(mc, sourcelen, mu, destlen); /* rc appears unreliable */
+                        	break;
+                        default:  rc = uncompress(mu, &destlen, mc, sourcelen);
+                        	break;
+                        }
+
                 free(mc);
 
                 if(rc != Z_OK)
