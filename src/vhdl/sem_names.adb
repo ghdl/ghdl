@@ -2830,6 +2830,10 @@ package body Sem_Names is
             Error_Msg_Sem (+Attr, "prefix of user defined attribute cannot be "
                              & "an anonymous object");
             return Error_Mark;
+         when Iir_Kind_Attribute_Declaration =>
+            Error_Msg_Sem (+Attr, "prefix of user defined attribute cannot be "
+                             & "an attribute");
+            return Error_Mark;
          when Iir_Kinds_Object_Declaration
            | Iir_Kind_Type_Declaration
            | Iir_Kind_Subtype_Declaration
