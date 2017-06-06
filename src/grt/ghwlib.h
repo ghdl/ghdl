@@ -320,20 +320,20 @@ struct ghw_handler
 
   /* String table.  */
   /* Number of strings.  */
-  int nbr_str;
+  unsigned nbr_str;
   /* Size of the strings (without nul).  */
-  int str_size;
+  unsigned str_size;
   /* String table.  */
   char **str_table;
   /* Array containing strings.  */
   char *str_content;
 
   /* Type table.  */
-  int nbr_types;
+  unsigned nbr_types;
   union ghw_type **types;
 
   /* Non-composite (or basic) signals.  */
-  int nbr_sigs;
+  unsigned nbr_sigs;
   char *skip_sigs;
   int flag_full_names;
   struct ghw_sig *sigs;
@@ -349,11 +349,15 @@ struct ghw_handler
    Return < 0 in case of error. */
 int ghw_open (struct ghw_handler *h, const char *filename);
 
+/* Return base type of T.  */
 union ghw_type *ghw_get_base_type (union ghw_type *t);
+
+/* Return length of RNG.  */
+int ghw_get_range_length (union ghw_range *rng);
 
 /* Put the ASCII representation of VAL into BUF, whose size if LEN.
    A NUL is always written to BUF.  */
-void ghw_get_value (char *buf, int len, 
+void ghw_get_value (char *buf, int len,
 		    union ghw_val *val, union ghw_type *type);
 
 const char *ghw_get_hie_name (struct ghw_hie *h);
