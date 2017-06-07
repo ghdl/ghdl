@@ -321,10 +321,12 @@ struct ghw_hie
 struct ghw_handler
 {
   FILE *stream;
+  /* True if STREAM was popen, else was fopen.  */
+  unsigned char stream_ispipe;
   /* True if words are big-endian.  */
-  int word_be;
-  int word_len;
-  int off_len;
+  unsigned char word_be;
+  unsigned char word_len;
+  unsigned char off_len;
   /* Minor version.  */
   int version;
 

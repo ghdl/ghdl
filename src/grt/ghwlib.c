@@ -25,6 +25,27 @@
 
 #include "ghwlib.h"
 
+/* Reopen H through decompressor DECOMP.  */
+
+static int
+ghw_openz (struct ghw_handler *h, const char *decomp, const char *filename)
+{
+  int plen = strlen (decomp) + 1 + strlen(filename) + 1;
+  char *p = malloc (plen);
+
+  snprintf (p, plen, "%s %s", decomp, filename);
+  fclose (h->stream);
+  h->stream = popen(p, "r");
+  free (p);
+
+  if (h->stream == NULL)
+    return -1;
+
+  h->stream_ispipe = 1;
+
+  return 0;
+}
+
 int
 ghw_open (struct ghw_handler *h, const char *filename)
 {
@@ -36,6 +57,27 @@ ghw_open (struct ghw_handler *h, const char *filename)
 
   if (fread (hdr, sizeof (hdr), 1, h->stream) != 1)
     return -1;
+
+  /* Check compression layer.  */
+  if (!memcmp (hdr, "\x1f\x8b", 2))
+    {
+      if (ghw_openz (h, "gzip -cd", filename) < 0)
+	return -1;
+      if (fread (hdr, sizeof (hdr), 1, h->stream) != 1)
+	return -1;
+    }
+  else if (!memcmp (hdr, "BZ", 2))
+    {
+      if (ghw_openz (h, "bzip2 -cd", filename) < 0)
+	return -1;
+      if (fread (hdr, sizeof (hdr), 1, h->stream) != 1)
+	return -1;
+    }
+  else
+    {
+      h->stream_ispipe = 0;
+    }
+
   /* Check magic.  */
   if (memcmp (hdr, "GHDLwave\n", 9) != 0)
     return -2;
@@ -1872,7 +1914,11 @@ ghw_close (struct ghw_handler *h)
 {
   if (h->stream)
     {
-      fclose (h->stream);
+      if (h->stream_ispipe)
+	pclose (h->stream);
+      else
+	fclose (h->stream);
+
       h->stream = NULL;
     }
 }
