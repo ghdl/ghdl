@@ -332,8 +332,8 @@ ghw_read_str (struct ghw_handler *h)
 
   if (h->flag_verbose)
     {
-      printf ("Number of strings: %d\n", h->nbr_str - 1);
-      printf ("String table size: %d\n", h->str_size);
+      printf ("Number of strings: %u\n", h->nbr_str - 1);
+      printf ("String table size: %u\n", h->str_size);
     }
 
   h->str_table[0] = "<anon>";
@@ -364,7 +364,7 @@ ghw_read_str (struct ghw_handler *h)
       *p++ = 0;
 
       if (h->flag_verbose > 1)
-	printf (" string %d (pl=%d): %s\n", i, prev_len, h->str_table[i]);
+	printf (" string %u (pl=%d): %s\n", i, prev_len, h->str_table[i]);
 
       prev_len = c & 0x1f;
       sh = 5;
@@ -482,7 +482,7 @@ ghw_read_array_subtype (struct ghw_handler *h, struct ghw_type_array *base)
   for (j = 0; j < base->nbr_dim; j++)
     {
       sa->rngs[j] = ghw_read_range (h);
-      nbr_scalars *= get_range_length (sa->rngs[j]);
+      nbr_scalars *= ghw_get_range_length (sa->rngs[j]);
     }
   sa->nbr_scalars = nbr_scalars;
   return sa;
@@ -745,7 +745,7 @@ ghw_read_type (struct ghw_handler *h)
 	  err_record:
 	    free (rec->els);
 	    free (rec);
-	    return NULL;
+	    return -1;
 	  }
 	  break;
 	case ghdl_rtik_subtype_record:
@@ -970,7 +970,7 @@ ghw_read_hie (struct ghw_handler *h)
   h->nbr_sigs = ghw_get_i32 (h, &hdr[12]);
 
   if (h->flag_verbose)
-    printf ("%d scopes, %d signals, %d signal elements\n",
+    printf ("%u scopes, %u signals, %u signal elements\n",
 	    nbr_scopes, nbr_sigs, h->nbr_sigs);
 
   blk = (struct ghw_hie *)malloc (sizeof (struct ghw_hie));
@@ -1355,7 +1355,7 @@ ghw_read_snapshot (struct ghw_handler *h)
     return -1;
   h->snap_time = ghw_get_i64 (h, &hdr[4]);
   if (h->flag_verbose > 1)
-    printf ("Time is %lld fs\n", h->snap_time);
+    printf ("Time is " GHWPRI64 " fs\n", h->snap_time);
 
   for (i = 0; i < h->nbr_sigs; i++)
     {
@@ -1363,7 +1363,7 @@ ghw_read_snapshot (struct ghw_handler *h)
       if (s->type != NULL)
 	{
 	  if (h->flag_verbose > 1)
-	    printf ("read type %d for sig %d\n", s->type->kind, i);
+	    printf ("read type %d for sig %u\n", s->type->kind, i);
 	  if (ghw_read_signal_value (h, s) < 0)
 	    return -1;
 	}
@@ -1470,7 +1470,7 @@ ghw_get_lit (union ghw_type *type, unsigned e)
 static void
 ghw_disp_lit (union ghw_type *type, unsigned e)
 {
-  printf ("%s (%d)", ghw_get_lit (type, e), e);
+  printf ("%s (%u)", ghw_get_lit (type, e), e);
 }
 
 void
@@ -1485,10 +1485,10 @@ ghw_disp_value (union ghw_val *val, union ghw_type *type)
       ghw_disp_lit (type, val->e8);
       break;
     case ghdl_rtik_type_i32:
-      printf ("%d", val->i32);
+      printf (GHWPRI32, val->i32);
       break;
     case ghdl_rtik_type_p64:
-      printf ("%lld", val->i64);
+      printf (GHWPRI64, val->i64);
       break;
     case ghdl_rtik_type_f64:
       printf ("%g", val->f64);
@@ -1533,10 +1533,10 @@ ghw_get_value (char *buf, int len, union ghw_val *val, union ghw_type *type)
 	}
       break;
     case ghdl_rtik_type_i32:
-      snprintf (buf, len, "%d", val->i32);
+      snprintf (buf, len, GHWPRI32, val->i32);
       break;
     case ghdl_rtik_type_p64:
-      snprintf (buf, len, "%lld", val->i64);
+      snprintf (buf, len, GHWPRI64, val->i64);
       break;
     case ghdl_rtik_type_f64:
       snprintf (buf, len, "%g", val->f64);
@@ -1598,7 +1598,7 @@ ghw_disp_values (struct ghw_handler *h)
       int skip = (0 != h->skip_sigs && (0 != h->skip_sigs[i]));
       if (s->type != NULL && !skip)
 	{
-	  printf ("#%d: ", i);
+	  printf ("#%u: ", i);
 	  ghw_disp_value (s->val, s->type);
 	  printf ("\n");
 	}
@@ -1734,7 +1734,7 @@ ghw_read_sm (struct ghw_handler *h, enum ghw_sm_type *sm)
 	  break;
 	case ghw_sm_cycle:
 	  if (0)
-	    printf ("Time is %lld fs\n", h->snap_time);
+	    printf ("Time is " GHWPRI64 " fs\n", h->snap_time);
 	  if (0)
 	    ghw_disp_values (h);
 
@@ -1772,7 +1772,7 @@ ghw_read_cycle (struct ghw_handler *h)
 	return res;
 
       if (0)
-	printf ("Time is %lld fs\n", h->snap_time);
+	printf ("Time is " GHWPRI64 " fs\n", h->snap_time);
       if (0)
 	ghw_disp_values (h);
 
@@ -1898,12 +1898,12 @@ ghw_disp_range (union ghw_type *type, union ghw_range *rng)
       break;
     case ghdl_rtik_type_i32:
     case ghdl_rtik_type_p32:
-      printf ("%d %s %d",
+      printf (GHWPRI32 " %s " GHWPRI32,
 	      rng->i32.left, ghw_get_dir (rng->i32.dir), rng->i32.right);
       break;
     case ghdl_rtik_type_i64:
     case ghdl_rtik_type_p64:
-      printf ("%lld %s %lld",
+      printf (GHWPRI64 " %s " GHWPRI64,
 	      rng->i64.left, ghw_get_dir (rng->i64.dir), rng->i64.right);
       break;
     case ghdl_rtik_type_f64:
@@ -2060,7 +2060,8 @@ ghw_disp_type (struct ghw_handler *h, union ghw_type *t)
 	for (i = 0; i < p->nbr_units; i++)
 	  {
 	    struct ghw_unit *u = &p->units[i];
-	    printf ("  %s = %lld %s;\n", u->name, u->val, p->units[0].name);
+	    printf ("  %s = " GHWPRI64 " %s;\n",
+		    u->name, u->val, p->units[0].name);
 	  }
 	printf ("end units\n");
       }

@@ -1,5 +1,5 @@
 /*  GHDL Wavefile reader library.
-    Copyright (C) 2005 Tristan Gingold
+    Copyright (C) 2005-2017 Tristan Gingold
 
     GHDL is free software; you can redistribute it and/or modify it under
     the terms of the GNU General Public License as published by the Free
@@ -24,8 +24,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef __GNUC__
-#include <stdint.h>
+/* The ghwlib uses the standard c99 int32_t and int64_t.  They are declared
+   in stdint.h.  Header inttypes.h includes stdint.h and provides macro for
+   printf and co specifiers.  Use it if known to be available.  */
+
+#if defined(__cplusplus) \
+  || (defined (__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)) \
+  || defined(HAVE_INTTYPES_H)
+/* Use C99 standard header.  */
+# include <inttypes.h>
+# define GHWPRI64 "%"PRId64
+# define GHWPRI32 "%"PRId32
+#else
+# include <stdint.h>
+# define GHWPRI64 "%lld"
+# define GHWPRI32 "%d"
 #endif
 
 enum ghdl_rtik {
