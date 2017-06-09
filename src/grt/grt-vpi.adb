@@ -1464,7 +1464,7 @@ package body Grt.Vpi is
          exit when Err /= AvhpiErrorOk;
 
          El_Name := Avhpi_Get_Base_Name (Res);
-         exit when Strcasecmp (Name, El_Name);
+         exit when El_Name /= null and then Strcasecmp (Name, El_Name);
       end loop;
    end Find_By_Name;
 
