@@ -1315,7 +1315,7 @@ package body Grt.Vpi is
                Call_Callback'Access, To_Address (Res));
          when cbNextSimTime =>
             Register_Callback
-              (Cb_Next_Time_Step, Res.Cb_Handle, Repeat,
+              (Cb_Next_Time_Step, Res.Cb_Handle, Oneshot,
                Call_Callback'Access, To_Address (Res));
          when others =>
             dbgPut_Line ("vpi_register_cb: unknown reason");
@@ -1330,6 +1330,46 @@ package body Grt.Vpi is
       return Res;
    end vpi_register_cb;
 
+   -- int vpi_remove_cb(vpiHandle ref)
+   function vpi_remove_cb (Ref : vpiHandle) return Integer
+   is
+      Ref_Copy : vpiHandle;
+      Res : Integer;
+   begin
+      if Flag_Trace then
+         Trace_Start ("vpi_remove_cb (");
+         Trace (Ref);
+         Trace (") = ");
+      end if;
+
+      Res := 1;
+      Ref_Copy := Ref;
+      case Ref.Cb.Reason is
+         when cbValueChange =>
+            Delete_Callback (Ref.Cb_Handle);
+         when cbReadWriteSynch
+           | cbReadOnlySynch =>
+            Delete_Callback (Ref.Cb_Handle);
+         when others =>
+            Res := 0;
+            Ref_Copy := null;
+      end case;
+
+      if Flag_Trace then
+         if Ref_Copy = null then
+            Trace ("[not free] ");
+         else
+            Trace ("[free] ");
+         end if;
+         Trace (Res);
+         Trace_Newline;
+      end if;
+
+      Free (Ref_Copy);
+
+      return Res;
+   end vpi_remove_cb;
+
    -- int vpi_free_object(vpiHandle ref)
    function vpi_free_object (aRef: vpiHandle) return integer
    is
@@ -1342,7 +1382,7 @@ package body Grt.Vpi is
          Trace_Newline;
       end if;
       Ref_Copy := aRef;
-      Free(Ref_Copy);
+      Free (Ref_Copy);
       return 1;
    end vpi_free_object;
 
@@ -1550,40 +1590,6 @@ package body Grt.Vpi is
       end if;
       return null;
    end vpi_register_systf;
-
-   -- int vpi_remove_cb(vpiHandle ref)
-   function vpi_remove_cb (Ref : vpiHandle) return Integer
-   is
-      Ref_Copy : vpiHandle;
-      Res : Integer;
-   begin
-      if Flag_Trace then
-         Trace_Start ("vpi_remove_cb (");
-         Trace (Ref);
-         Trace (") = ");
-      end if;
-
-      Res := 1;
-      Ref_Copy := Ref;
-      case Ref.Cb.Reason is
-         when cbValueChange =>
-            Delete_Callback (Ref.Cb_Handle);
-         when cbReadWriteSynch
-           | cbReadOnlySynch =>
-            Delete_Callback (Ref.Cb_Handle);
-         when others =>
-            Res := 0;
-            Ref_Copy := null;
-      end case;
-      Free (Ref_Copy);
-
-      if Flag_Trace then
-         Trace (Res);
-         Trace_Newline;
-      end if;
-
-      return Res;
-   end vpi_remove_cb;
 
    -- missing here, see grt-cvpi.c:
    --    vpi_mcd_open_x
