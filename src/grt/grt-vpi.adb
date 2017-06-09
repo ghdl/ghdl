@@ -1186,9 +1186,9 @@ package body Grt.Vpi is
    begin
       if Flag_Trace then
          Trace_Start ("vpi call callback ");
-         Trace_Cb_Reason (Hand.Cb.Reason);
-         Trace (" ");
          Trace (Hand);
+         Trace (" ");
+         Trace_Cb_Reason (Hand.Cb.Reason);
          Trace_Newline;
          Trace_Indent := Trace_Indent + 1;
       end if;
