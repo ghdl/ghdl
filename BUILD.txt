@@ -35,6 +35,10 @@ I recommend to use GNAT GPL from http://libre.adacore.com (free).
 GHDL was tested with GNAT GPL 2014.  Any later version should work.
 The only other dependency is zlib (On ubuntu/debian, install zlib1g-dev).
 
+On UNIX and MinGW systems, you also need standard utilities like sh,
+cmp or make.  On MSYS2 packages msys/diffutils and msys/make must be
+installed.
+
 Building with mcode backend
 ***************************
 
