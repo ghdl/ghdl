@@ -101,7 +101,13 @@ fi
 # Set abs_srcdir (absolute srcdir)
 case $srcdir in
     /*) abs_srcdir=$srcdir;;
-    *) abs_srcdir=`pwd`/$srcdir ;;
+    *)
+        # Use a Windows path on windows.
+        case "$OS" in
+            Windows_NT) abs_srcdir=`pwd -W`/$srcdir ;;
+            *) abs_srcdir=`pwd`/$srcdir ;;
+        esac
+        ;;
 esac
 
 # Sanity checks
