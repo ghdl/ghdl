@@ -47,7 +47,7 @@ function Restore-NativeCommandStream
 }
 
 $GHDL_BUILD_DIR =  "$($env:APPVEYOR_BUILD_FOLDER)\build\$($env:BUILD_MINGW)-$($env:BUILD_BACKEND)"
-$GHDL_PREFIX_DIR = "/c/Tools/GHDL/0.34-dev-$($env:BUILD_MINGW)-$($env:BUILD_BACKEND)"
+$GHDL_PREFIX_DIR = "c:/Tools/GHDL/0.34-dev-$($env:BUILD_MINGW)-$($env:BUILD_BACKEND)"
 
 $env:GHDL_BUILD_DIR =  $GHDL_BUILD_DIR
 $env:GHDL_PREFIX_DIR = $GHDL_PREFIX_DIR
