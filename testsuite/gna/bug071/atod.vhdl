@@ -35,10 +35,10 @@ begin
     end loop;
 
     v := csts (2);
-    assert to_string (v, "%a") = "0x1.dcd0089c1314ep+218" severity failure;
+    assert to_string (v, "%.13a") = "0x1.dcd0089c1314ep+218" severity failure;
 
     v := csts (3);
-    assert to_string (v, "%a") = "0x1.62644c61d41aap+885" severity failure;
+    assert to_string (v, "%.13a") = "0x1.62644c61d41aap+885" severity failure;
     wait;
   end process;
 end behav;
