@@ -36,12 +36,23 @@ package body Trans.Chap5 is
               Scope => Scope_Ptr.all);
    end Save_Map_Env;
 
-   procedure Set_Map_Env (Env : Map_Env)
+   procedure Restore_Map_Env (Env : Map_Env)
    is
       --  Avoid potential compiler bug with discriminant check.
       pragma Suppress (Discriminant_Check);
    begin
       Env.Scope_Ptr.all := Env.Scope;
+   end Restore_Map_Env;
+
+   procedure Set_Map_Env (Env : Map_Env) is
+   begin
+      --  In some cases, the previous environment is still needed (for example
+      --  an implicit array conversion accesses to both the formal and the
+      --  actual type).  Set ENV only if it is not null, in order not to erase
+      --  the previous env.
+      if not Is_Null (Env.Scope) then
+         Restore_Map_Env (Env);
+      end if;
    end Set_Map_Env;
 
    procedure Translate_Attribute_Specification
@@ -742,7 +753,7 @@ package body Trans.Chap5 is
          end;
          Next_Association_Interface (Assoc, Inter);
       end loop;
-      Set_Map_Env (Actual_Env);
+      Restore_Map_Env (Actual_Env);
    end Elab_Port_Map_Aspect;
 
    procedure Elab_Generic_Map_Aspect
@@ -855,6 +866,7 @@ package body Trans.Chap5 is
          Close_Temp;
          Next_Association_Interface (Assoc, Inter);
       end loop;
+      Restore_Map_Env (Actual_Env);
    end Elab_Generic_Map_Aspect;
 
    procedure Elab_Map_Aspect

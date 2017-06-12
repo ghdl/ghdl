@@ -432,6 +432,11 @@ package body Trans is
          Scope := (Scope_Type => Scope.Scope_Type, Kind => Var_Scope_None);
       end Clear_Scope;
 
+      function Is_Null (Scope : Var_Scope_Type) return Boolean is
+      begin
+         return Scope.Kind = Var_Scope_None;
+      end Is_Null;
+
       function Create_Global_Var
         (Name : O_Ident; Vtype : O_Tnode; Storage : O_Storage)
          return Var_Type

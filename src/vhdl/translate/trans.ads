@@ -324,6 +324,9 @@ package Trans is
       --  before being set.
       procedure Clear_Scope (Scope : in out Var_Scope_Type);
 
+      --  True if SCOPE is a null-scope (eg. was cleared).
+      function Is_Null (Scope : Var_Scope_Type) return Boolean;
+
       --  Reset the identifier.
       type Id_Mark_Type is limited private;
       type Local_Identifier_Type is private;
