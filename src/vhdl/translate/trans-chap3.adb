@@ -1939,16 +1939,8 @@ package body Trans.Chap3 is
                end if;
             end;
          when Type_Mode_F64 =>
-            declare
-               V : Iir_Fp64;
-            begin
-               V := Get_Fp_Value (Lit);
-               if Is_Hi then
-                  return V = Iir_Fp64'Last;
-               else
-                  return V = Iir_Fp64'First;
-               end if;
-            end;
+            --  Don't include +/- Inf
+            return False;
          when others =>
             Error_Kind ("is_equal_limit " & Type_Mode_Type'Image (Mode),
                         Lit);
