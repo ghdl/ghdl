@@ -221,17 +221,15 @@ package body Trans.Chap3 is
    procedure Translate_Enumeration_Type
      (Def : Iir_Enumeration_Type_Definition)
    is
-      El_List  : Iir_List;
+      El_List  : constant Iir_List := Get_Enumeration_Literal_List (Def);
+      Nbr      : constant Natural := Get_Nbr_Elements (El_List);
+      Info     : constant Type_Info_Acc := Get_Info (Def);
       El       : Iir_Enumeration_Literal;
       Constr   : O_Enum_List;
       Lit_Name : O_Ident;
       Val      : O_Cnode;
-      Info     : Type_Info_Acc;
-      Nbr      : Natural;
       Size     : Natural;
    begin
-      El_List := Get_Enumeration_Literal_List (Def);
-      Nbr := Get_Nbr_Elements (El_List);
       if Nbr <= 256 then
          Size := 8;
       else
@@ -246,7 +244,6 @@ package body Trans.Chap3 is
          New_Enum_Literal (Constr, Lit_Name, Val);
          Set_Ortho_Expr (El, Val);
       end loop;
-      Info := Get_Info (Def);
       Finish_Enum_Type (Constr, Info.Ortho_Type (Mode_Value));
       if Nbr <= 256 then
          Info.Type_Mode := Type_Mode_E8;
@@ -291,11 +288,11 @@ package body Trans.Chap3 is
    type Type_Precision is (Precision_32, Precision_64);
    function Get_Type_Precision (Def : Iir) return Type_Precision
    is
-      St     : Iir;
+      St     : constant Iir :=
+        Get_Subtype_Definition (Get_Type_Declarator (Def));
       L, H   : Iir;
       Lv, Hv : Iir_Int64;
    begin
-      St := Get_Subtype_Definition (Get_Type_Declarator (Def));
       Get_Low_High_Limit (Get_Range_Constraint (St), L, H);
       Lv := Get_Value (L);
       Hv := Get_Value (H);
@@ -313,9 +310,8 @@ package body Trans.Chap3 is
 
    procedure Translate_Integer_Type (Def : Iir_Integer_Type_Definition)
    is
-      Info : Type_Info_Acc;
+      Info : constant Type_Info_Acc := Get_Info (Def);
    begin
-      Info := Get_Info (Def);
       case Get_Type_Precision (Def) is
          when Precision_32 =>
             Info.Ortho_Type (Mode_Value) := New_Signed_Type (32);
@@ -337,10 +333,9 @@ package body Trans.Chap3 is
 
    procedure Translate_Floating_Type (Def : Iir_Floating_Type_Definition)
    is
-      Info : Type_Info_Acc;
+      Info : constant Type_Info_Acc := Get_Info (Def);
    begin
       --  FIXME: should check precision
-      Info := Get_Info (Def);
       Info.Type_Mode := Type_Mode_F64;
       Info.Ortho_Type (Mode_Value) := New_Float_Type;
       --  Reals are always in their ranges.
