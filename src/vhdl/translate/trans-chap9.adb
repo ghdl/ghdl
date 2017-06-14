@@ -1585,8 +1585,13 @@ package body Trans.Chap9 is
                           (Sig_Node, Get_Type (Sig), Init_Node);
                      else
                         Sig_Node := Chap6.Translate_Name (Sig, Mode_Signal);
+
+                        --  At least GNAT GPL 2017 reports this warning:
+                        --   'others choices is redundant'
+                        pragma Warnings (Off);
                         Gen_Add_Port_Driver_Default
                           (Sig_Node, Get_Type (Sig), (others => <>));
+                        pragma Warnings (On);
                      end if;
                   else
                      Register_Signal (Chap6.Translate_Name (Sig, Mode_Signal),
