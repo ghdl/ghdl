@@ -1691,7 +1691,7 @@ package body Sem_Decls is
       Ind := Sem_Subtype_Indication (Ind);
       Set_Subtype_Indication (Decl, Ind);
       Def := Get_Type_Of_Subtype_Indication (Ind);
-      if Def = Null_Iir then
+      if Def = Null_Iir or else Is_Error (Def) then
          return;
       end if;
 
