@@ -582,6 +582,13 @@ package body Trans.Chap4 is
    begin
       Elab_Object_Storage (Obj);
       Elab_Object_Init (Name, Obj, Value, Alloc_Kind);
+
+      if Alloc_Kind = Alloc_Return then
+         --  If the object is allocated on the return stack, avoid
+         --  deallocation.  Deallocation must be done manually (this concerns
+         --  procedures with suspension).
+         Disable_Stack2_Release;
+      end if;
    end Elab_Object_Value;
 
    --  Create code to elaborate OBJ.

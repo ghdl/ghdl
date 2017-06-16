@@ -456,7 +456,7 @@ package body Trans.Chap2 is
       if Has_Nested or else Has_Suspend then
          --  Unnest subprograms.
          --  Create an instance for the local declarations.
-         Push_Instance_Factory (Info.Subprg_Frame_Scope'Access);
+         Push_Frame_Factory (Info.Subprg_Frame_Scope'Access);
          Add_Subprg_Instance_Field (Upframe_Field, Upframe_Scope);
 
          if Info.Subprg_Params_Ptr /= O_Tnode_Null then
@@ -510,7 +510,7 @@ package body Trans.Chap2 is
             Add_Scope_Field (Wki_Locvars, Info.Subprg_Locvars_Scope);
          end if;
 
-         Pop_Instance_Factory (Info.Subprg_Frame_Scope'Access);
+         Pop_Frame_Factory (Info.Subprg_Frame_Scope'Access);
 
          New_Type_Decl (Create_Identifier ("_FRAMETYPE"),
                         Get_Scope_Type (Info.Subprg_Frame_Scope));

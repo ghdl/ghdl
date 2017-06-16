@@ -129,8 +129,7 @@ package body Trans.Helpers2 is
    end Gen_Memcpy;
 
    function Gen_Alloc
-     (Kind : Allocation_Kind; Size : O_Enode; Ptype : O_Tnode)
-         return O_Enode
+     (Kind : Allocation_Kind; Size : O_Enode; Ptype : O_Tnode) return O_Enode
    is
       Constr : O_Assoc_List;
    begin

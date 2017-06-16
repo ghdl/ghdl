@@ -259,6 +259,9 @@ package Trans is
       --  record type, that will be completed.
       procedure Push_Instance_Factory (Scope : Var_Scope_Acc);
 
+      --  Likewise but for a frame.
+      procedure Push_Frame_Factory (Scope : Var_Scope_Acc);
+
       --  Manually add a field to the current instance being built.
       function Add_Instance_Factory_Field (Name : O_Ident; Ftype : O_Tnode)
                                            return O_Fnode;
@@ -276,6 +279,7 @@ package Trans is
       --  Finish the building of the current instance and return the type
       --  built.
       procedure Pop_Instance_Factory (Scope : Var_Scope_Acc);
+      procedure Pop_Frame_Factory (Scope : Var_Scope_Acc);
 
       --  Create a new scope, in which variable are created locally
       --  (ie, on the stack).  Always created unlocked.
@@ -473,7 +477,7 @@ package Trans is
       --  are translated into functions.  The first argument of these functions
       --  is a pointer to the instance.
 
-      type Inst_Build_Kind_Type is (Local, Global, Instance);
+      type Inst_Build_Kind_Type is (Local, Global, Frame, Instance);
       type Inst_Build_Type (Kind : Inst_Build_Kind_Type);
       type Inst_Build_Acc is access Inst_Build_Type;
       type Inst_Build_Type (Kind : Inst_Build_Kind_Type) is record
@@ -485,7 +489,7 @@ package Trans is
                Prev_Global_Storage : O_Storage;
             when Global =>
                null;
-            when Instance =>
+            when Instance | Frame =>
                Scope               : Var_Scope_Acc;
                Elements            : O_Element_List;
          end case;
@@ -506,6 +510,9 @@ package Trans is
                | Var_Local =>
                E       : O_Dnode;
             when Var_Scope =>
+               --  To remember allocator for this variable.
+               I_Build_Kind : Inst_Build_Kind_Type;
+
                I_Field : O_Fnode;
                I_Scope : Var_Scope_Acc;
          end case;
@@ -1300,7 +1307,7 @@ package Trans is
          when Kind_Call =>
             Call_State_Scope : aliased Var_Scope_Type;
             Call_State_Mark : Var_Type := Null_Var;
-            Call_Frame_Var : Var_Type := Null_Var;
+            Call_Params_Var : Var_Type := Null_Var;
 
          when Kind_Call_Assoc =>
             --  Variable containing a reference to the actual, for scalar

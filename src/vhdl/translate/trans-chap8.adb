@@ -2120,7 +2120,7 @@ package body Trans.Chap8 is
       Push_Instance_Factory (Info.Call_State_Scope'Access);
 
       --  Variable for the frame.
-      Info.Call_Frame_Var := Create_Var (Create_Var_Identifier ("FRAME"),
+      Info.Call_Params_Var := Create_Var (Create_Var_Identifier ("PARAMS"),
                                          Get_Info (Imp).Subprg_Params_Type,
                                          O_Storage_Local);
       Info.Call_State_Mark := Create_Var (Create_Var_Identifier ("MARK"),
@@ -2581,7 +2581,7 @@ package body Trans.Chap8 is
          --  Save Stack2 mark.  Callee allocate its frame on stack2.
          if Is_Suspendable then
             --  The caller is suspendable.
-            Params_Var := Call_Info.Call_Frame_Var;
+            Params_Var := Call_Info.Call_Params_Var;
             Mark_Var := Call_Info.Call_State_Mark;
             --  There might be temporary variables created before the
             --  suspension, eg for range checks.

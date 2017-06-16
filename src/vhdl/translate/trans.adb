@@ -241,6 +241,20 @@ package body Trans is
          New_Type_Decl (Name, Ptr_Type);
       end Declare_Scope_Acc;
 
+      --  Common routine for instance and frame.
+      procedure Start_Instance_Factory (Inst : Inst_Build_Acc) is
+      begin
+         Identifier_Start := Identifier_Len + 1;
+
+         if Inst.Scope.Scope_Type /= O_Tnode_Null then
+            Start_Uncomplete_Record_Type
+              (Inst.Scope.Scope_Type, Inst.Elements);
+         else
+            Start_Record_Type (Inst.Elements);
+         end if;
+         Inst_Build := Inst;
+      end Start_Instance_Factory;
+
       procedure Push_Instance_Factory (Scope : Var_Scope_Acc)
       is
          Inst : Inst_Build_Acc;
@@ -250,15 +264,20 @@ package body Trans is
          Inst.Prev_Id_Start := Identifier_Start;
          Inst.Scope := Scope;
 
-         Identifier_Start := Identifier_Len + 1;
-
-         if Scope.Scope_Type /= O_Tnode_Null then
-            Start_Uncomplete_Record_Type (Scope.Scope_Type, Inst.Elements);
-         else
-            Start_Record_Type (Inst.Elements);
-         end if;
-         Inst_Build := Inst;
+         Start_Instance_Factory (Inst);
       end Push_Instance_Factory;
+
+      procedure Push_Frame_Factory (Scope : Var_Scope_Acc)
+      is
+         Inst : Inst_Build_Acc;
+      begin
+         Inst := new Inst_Build_Type (Frame);
+         Inst.Prev := Inst_Build;
+         Inst.Prev_Id_Start := Identifier_Start;
+         Inst.Scope := Scope;
+
+         Start_Instance_Factory (Inst);
+      end Push_Frame_Factory;
 
       function Add_Instance_Factory_Field (Name : O_Ident; Ftype : O_Tnode)
                                            return O_Fnode
@@ -285,18 +304,30 @@ package body Trans is
                               Child.Field, Otype);
       end Get_Scope_Offset;
 
-      procedure Pop_Instance_Factory (Scope : in Var_Scope_Acc)
+      procedure Finish_Instance_Factory (Scope : in Var_Scope_Acc)
       is
          Res : O_Tnode;
       begin
-         if Inst_Build.Kind /= Instance then
-            --  Not matching.
-            raise Internal_Error;
-         end if;
          Finish_Record_Type (Inst_Build.Elements, Res);
          Pop_Build_Instance;
          Scope.Scope_Type := Res;
+      end Finish_Instance_Factory;
+
+      procedure Pop_Instance_Factory (Scope : in Var_Scope_Acc) is
+      begin
+         --  Not matching.
+         pragma Assert (Inst_Build.Kind = Instance);
+
+         Finish_Instance_Factory (Scope);
       end Pop_Instance_Factory;
+
+      procedure Pop_Frame_Factory (Scope : in Var_Scope_Acc) is
+      begin
+         --  Not matching.
+         pragma Assert (Inst_Build.Kind = Frame);
+
+         Finish_Instance_Factory (Scope);
+      end Pop_Frame_Factory;
 
       procedure Push_Local_Factory
       is
@@ -335,7 +366,8 @@ package body Trans is
          end if;
          case Inst_Build.Kind is
             when Local
-               | Instance =>
+              | Instance
+              | Frame =>
                return True;
             when Global =>
                return False;
@@ -496,11 +528,11 @@ package body Trans is
                --  Create a var.
                New_Var_Decl (Res, Name.Id, O_Storage_Local, Vtype);
                return Var_Type'(Kind => Var_Local, E => Res);
-            when Instance =>
+            when Instance | Frame =>
                --  Create a field.
                New_Record_Field (Inst_Build.Elements, Field, Name.Id, Vtype);
-               return Var_Type'(Kind => Var_Scope, I_Field => Field,
-                                I_Scope => Inst_Build.Scope);
+               return Var_Type'(Kind => Var_Scope, I_Build_Kind => K,
+                                I_Field => Field, I_Scope => Inst_Build.Scope);
          end case;
       end Create_Var;
 
@@ -592,9 +624,17 @@ package body Trans is
          case Var.Kind is
             when Var_Local =>
                return Alloc_Stack;
-            when Var_Global
-               | Var_Scope =>
+            when Var_Global =>
                return Alloc_System;
+            when Var_Scope =>
+               case Var.I_Build_Kind is
+                  when Frame =>
+                     return Alloc_Return;
+                  when Instance =>
+                     return Alloc_System;
+                  when others =>
+                     raise Internal_Error;
+               end case;
             when Var_None =>
                raise Internal_Error;
          end case;
@@ -1052,6 +1092,7 @@ package body Trans is
             when Var_Scope =>
                return Var_Type'
                  (Kind => Var_Scope,
+                  I_Build_Kind => Var.I_Build_Kind,
                   I_Field => Var.I_Field,
                   I_Scope => Instantiated_Var_Scope (Var.I_Scope));
          end case;
@@ -1906,7 +1947,6 @@ package body Trans is
 
       procedure Disable_Stack2_Release is
       begin
-         pragma Assert (not Temp_Level.No_Stack2_Mark);
          Temp_Level.No_Stack2_Mark := True;
       end Disable_Stack2_Release;
 
