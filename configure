@@ -104,7 +104,7 @@ case $srcdir in
     *)
         # Use a Windows path on windows.
         case "$OS" in
-            Windows_NT) abs_srcdir=`pwd -W`/$srcdir ;;
+            Windows_NT) abs_srcdir="`pwd -W`/$srcdir" ;;
             *) abs_srcdir=`pwd`/$srcdir ;;
         esac
         ;;
