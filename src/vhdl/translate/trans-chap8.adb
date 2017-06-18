@@ -2460,7 +2460,7 @@ package body Trans.Chap8 is
                end;
             when Iir_Kind_Type_Conversion =>
                return Chap7.Translate_Type_Conversion
-                 (Src, Get_Type (Expr), Get_Type (Conv), Null_Iir);
+                 (Src, Get_Type (Expr), Get_Type (Conv), Conv);
             when others =>
                Error_Kind ("do_conversion", Conv);
          end case;
