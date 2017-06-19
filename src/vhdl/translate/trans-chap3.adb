@@ -1350,10 +1350,8 @@ package body Trans.Chap3 is
               and then El_Tinfo.C (Kind).Builder_Need_Func
             then
                --  This type needs a builder, call it.
-               Start_Declare_Stmt;
-               New_Var_Decl
-                 (Ptr_Var, Get_Identifier ("var_ptr"),
-                  O_Storage_Local, El_Tinfo.Ortho_Ptr_Type (Kind));
+               Open_Temp;
+               Ptr_Var := Create_Temp (El_Tinfo.Ortho_Ptr_Type (Kind));
 
                New_Assign_Stmt
                  (New_Obj (Ptr_Var),
@@ -1367,7 +1365,7 @@ package body Trans.Chap3 is
                                  Gen_Call_Type_Builder
                                    (Dp2M (Ptr_Var, El_Tinfo, Kind), El_Type)));
 
-               Finish_Declare_Stmt;
+               Close_Temp;
             else
                if Is_Unbounded_Type (El_Tinfo) then
                   Sub_Bound := Bounds_To_Element_Bounds
