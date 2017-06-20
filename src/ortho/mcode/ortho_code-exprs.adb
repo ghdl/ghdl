@@ -909,7 +909,7 @@ package body Ortho_Code.Exprs is
          --  FIXME: may recycle previous index?
          Sz := New_Const_U32 (Get_Expr_Low (Index) * El_Size, In_Type);
       else
-         if Is_Pow2 (El_Size) then
+         if Is_Pow2 (El_Size) and then El_Size /= 0 then
             Sz := New_Const_U32 (Extract_Pow2 (El_Size), In_Type);
             Sz := New_Enode (OE_Shl, In_Type, Index, Sz);
          else
