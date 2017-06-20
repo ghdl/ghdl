@@ -79,8 +79,10 @@ package body Ortho_Code.X86.Abi is
                raise Program_Error;
          end case;
          if Reg = R_None then
+            --  Passed on the stack, need 8 bytes.
             Size := 8;
          else
+            --  Passed by a register.
             Size := 0;
          end if;
       else

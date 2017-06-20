@@ -1230,7 +1230,8 @@ package body Ortho_Code.X86.Insns is
       --  Generate code for arguments (if any).
       Gen_Call_Arg (Get_Arg_Link (Stmt), Get_Subprg_Interfaces (Subprg), Pnum);
 
-      --  Clobber registers.
+      --  Clobber registers.  They are saved in reserved slots (at the top
+      --  of the frame).
       if Flags.M64 then
          Clobber_Caller_Saved_Registers_64 (Get_Arg_Link (Stmt), Subprg, Pnum);
       else

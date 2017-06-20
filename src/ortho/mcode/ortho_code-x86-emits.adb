@@ -1391,6 +1391,7 @@ package body Ortho_Code.X86.Emits is
       Gen_Call (Sym);
 
       if Abi.Flag_Sse2 and then not Flags.M64 and then Mode in Mode_Fp then
+         --  Convert return value from St0 to Xmm0.
          declare
             Sslot : constant Int32 := -Int32 (Cur_Subprg.Target.Fp_Slot);
          begin
