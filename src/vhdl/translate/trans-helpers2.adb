@@ -30,8 +30,8 @@ package body Trans.Helpers2 is
    begin
       New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Base (D)),
                        M2Addr (Chap3.Get_Composite_Base (S)));
-      New_Assign_Stmt (M2Lp (Chap3.Get_Array_Bounds (D)),
-                       M2Addr (Chap3.Get_Array_Bounds (S)));
+      New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Bounds (D)),
+                       M2Addr (Chap3.Get_Composite_Bounds (S)));
    end Copy_Fat_Pointer;
 
    --  Convert NAME into a STRING_CST.

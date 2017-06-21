@@ -533,7 +533,7 @@ package body Trans.Chap4 is
                Chap3.Create_Array_Subtype (Aggr_Type);
                Name_Node := Stabilize (Name);
                New_Assign_Stmt
-                 (M2Lp (Chap3.Get_Array_Bounds (Name_Node)),
+                 (M2Lp (Chap3.Get_Composite_Bounds (Name_Node)),
                   M2Addr (Chap3.Get_Array_Type_Bounds (Aggr_Type)));
                Chap3.Allocate_Fat_Array_Base
                  (Alloc_Kind, Name_Node, Get_Base_Type (Aggr_Type));
@@ -560,7 +560,7 @@ package body Trans.Chap4 is
                else
                   Chap3.Translate_Object_Allocation
                     (Name_Node, Alloc_Kind, Obj_Type,
-                     Chap3.Get_Array_Bounds (S));
+                     Chap3.Get_Composite_Bounds (S));
                   Chap3.Translate_Object_Copy
                     (Name_Node, M2Addr (S), Obj_Type);
                end if;
@@ -644,7 +644,7 @@ package body Trans.Chap4 is
             V := Chap6.Translate_Name (Obj, Mode_Value);
             Stabilize (V);
             Chap3.Gen_Deallocate
-              (New_Value (M2Lp (Chap3.Get_Array_Bounds (V))));
+              (New_Value (M2Lp (Chap3.Get_Composite_Bounds (V))));
             Chap3.Gen_Deallocate
               (New_Value (M2Lp (Chap3.Get_Composite_Base (V))));
             Close_Temp;
@@ -1103,8 +1103,8 @@ package body Trans.Chap4 is
          Name_Node := Stabilize (Name_Node);
          --  Copy bounds from signal.
          New_Assign_Stmt
-           (M2Lp (Chap3.Get_Array_Bounds (Name_Node)),
-            M2Addr (Chap3.Get_Array_Bounds
+           (M2Lp (Chap3.Get_Composite_Bounds (Name_Node)),
+            M2Addr (Chap3.Get_Composite_Bounds
                       (Chap6.Translate_Name (Decl, Mode_Signal))));
          --  Allocate base.
          Chap3.Allocate_Fat_Array_Base (Alloc_System, Name_Node, Sig_Type);

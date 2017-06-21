@@ -780,8 +780,8 @@ package body Trans.Chap7 is
          New_Convert_Ov (M2Addr (Chap3.Get_Composite_Base (Stable_Expr)),
            Type_Info.B.Base_Ptr_Type (Kind)));
       New_Assign_Stmt
-        (M2Lp (Chap3.Get_Array_Bounds (Res)),
-         M2Addr (Chap3.Get_Array_Bounds (Stable_Expr)));
+        (M2Lp (Chap3.Get_Composite_Bounds (Res)),
+         M2Addr (Chap3.Get_Composite_Bounds (Stable_Expr)));
       return Res;
    end Convert_Constrained_To_Unconstrained;
 
@@ -859,7 +859,7 @@ package body Trans.Chap7 is
       Start_Loop_Stmt (Failure_Label);
 
       Convert_To_Constrained_Check
-        (Chap3.Get_Array_Bounds (Expr_Stable), Expr_Type,
+        (Chap3.Get_Composite_Bounds (Expr_Stable), Expr_Type,
          Atype, Failure_Label);
 
       New_Exit_Stmt (Success_Label);
@@ -1430,8 +1430,8 @@ package body Trans.Chap7 is
          V_Arr := Create_Temp (Info.Ortho_Type (Mode_Value));
          Var_Sub_Arr := Dv2M (V_Arr, Info, Mode_Value);
          New_Assign_Stmt
-           (M2Lp (Chap3.Get_Array_Bounds (Var_Sub_Arr)),
-            M2Addr (Chap3.Get_Array_Bounds (M)));
+           (M2Lp (Chap3.Get_Composite_Bounds (Var_Sub_Arr)),
+            M2Addr (Chap3.Get_Composite_Bounds (M)));
          New_Assign_Stmt
            (M2Lp (Chap3.Get_Composite_Base (Var_Sub_Arr)),
             M2Addr (Chap3.Slice_Base (Var_Arr,
@@ -1530,9 +1530,9 @@ package body Trans.Chap7 is
                                                        Expr_Type),
                                New_Lit (Ghdl_Index_0),
                                Ghdl_Bool_Type));
-            Copy_Bounds_V87
-              (Chap3.Bounds_To_Range
-                 (Chap3.Get_Array_Bounds (Dyn_Mnodes (Dyn_I)), Expr_Type, 1));
+            Copy_Bounds_V87 (Chap3.Bounds_To_Range
+                               (Chap3.Get_Composite_Bounds
+                                  (Dyn_Mnodes (Dyn_I)), Expr_Type, 1));
             New_Else_Stmt (Assign_Bounds_Ifs (Dyn_I));
          end if;
       end Assign_Bounds_Arr_V87;
@@ -1555,7 +1555,7 @@ package body Trans.Chap7 is
 
       --  Set result bounds.
       New_Assign_Stmt
-        (M2Lp (Chap3.Get_Array_Bounds (Res)), M2Addr (Var_Bounds));
+        (M2Lp (Chap3.Get_Composite_Bounds (Res)), M2Addr (Var_Bounds));
 
       --  Evaluate all dynamic expressions
       Dyn_I := 0;
@@ -1693,7 +1693,7 @@ package body Trans.Chap7 is
                Copy_Range
                  (Get_Res_Range,
                   Chap3.Bounds_To_Range
-                    (Chap3.Get_Array_Bounds (Dyn_Mnodes (Last_Dyn_Expr)),
+                    (Chap3.Get_Composite_Bounds (Dyn_Mnodes (Last_Dyn_Expr)),
                      Expr_Type, 1));
             end if;
 
@@ -1959,8 +1959,8 @@ package body Trans.Chap7 is
       Res := Create_Temp (Res_Info, Mode_Value);
       New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Base (Res)),
                        New_Obj_Value (Base));
-      New_Assign_Stmt (M2Lp (Chap3.Get_Array_Bounds (Res)),
-                       M2Addr (Chap3.Get_Array_Bounds (Arr)));
+      New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Bounds (Res)),
+                       M2Addr (Chap3.Get_Composite_Bounds (Arr)));
 
       return Translate_Implicit_Conv (M2E (Res), Res_Btype, Res_Type,
                                       Mode_Value, Loc);
@@ -3251,7 +3251,7 @@ package body Trans.Chap7 is
       Open_Temp;
       Targ := Stabilize (Target);
       Base := Stabilize (Chap3.Get_Composite_Base (Targ));
-      Bounds := Stabilize (Chap3.Get_Array_Bounds (Targ));
+      Bounds := Stabilize (Chap3.Get_Composite_Bounds (Targ));
       Aggr_Info := Get_Aggregate_Info (Aggr);
 
       --  Check type
@@ -3431,7 +3431,7 @@ package body Trans.Chap7 is
                Val_Size := Create_Temp_Init
                  (Ghdl_Index_Type,
                   Chap3.Get_Subtype_Size
-                    (D_Type, Chap3.Get_Array_Bounds (Val_M), Mode_Value));
+                    (D_Type, Chap3.Get_Composite_Bounds (Val_M), Mode_Value));
 
                --  Size of the bounds.
                Bounds_Size :=
@@ -3449,7 +3449,8 @@ package body Trans.Chap7 is
 
                --  Copy bounds.
                Gen_Memcpy
-                 (New_Obj_Value (Res), M2Addr (Chap3.Get_Array_Bounds (Val_M)),
+                 (New_Obj_Value (Res),
+                  M2Addr (Chap3.Get_Composite_Bounds (Val_M)),
                   New_Lit (Bounds_Size));
 
                --  Copy values.
@@ -3483,7 +3484,7 @@ package body Trans.Chap7 is
                    D_Info, Mode_Value);
 
       New_Assign_Stmt
-        (M2Lp (Chap3.Get_Array_Bounds (Res)),
+        (M2Lp (Chap3.Get_Composite_Bounds (Res)),
          New_Convert_Ov (New_Obj_Value (Ptr), D_Info.B.Bounds_Ptr_Type));
       New_Assign_Stmt
         (M2Lp (Chap3.Get_Composite_Base (Res)),
@@ -3707,14 +3708,14 @@ package body Trans.Chap7 is
            Res_Info.B.Base_Ptr_Type (Mode_Value)));
       --  Set bounds.
       New_Assign_Stmt
-        (M2Lp (Chap3.Get_Array_Bounds (Res)),
+        (M2Lp (Chap3.Get_Composite_Bounds (Res)),
          New_Address (New_Obj (Bounds), Res_Info.B.Bounds_Ptr_Type));
 
       --  Convert bounds.
       Translate_Type_Conversion_Bounds
         (Dv2M (Bounds, Res_Info, Mode_Value,
                Res_Info.B.Bounds_Type, Res_Info.B.Bounds_Ptr_Type),
-         Stabilize (Chap3.Get_Array_Bounds (E)),
+         Stabilize (Chap3.Get_Composite_Bounds (E)),
          Res_Type, Expr_Type, Loc);
 
       Close_Temp;
@@ -3804,8 +3805,8 @@ package body Trans.Chap7 is
 
                --  Copy bounds.
                New_Assign_Stmt
-                 (M2Lp (Chap3.Get_Array_Bounds (Res)),
-                  M2Addr (Chap3.Get_Array_Bounds (Var_Val)));
+                 (M2Lp (Chap3.Get_Composite_Bounds (Res)),
+                  M2Addr (Chap3.Get_Composite_Bounds (Var_Val)));
 
                --  Allocate base.
                Chap3.Allocate_Fat_Array_Base (Alloc_Stack, Res, Sig_Type);
@@ -4986,7 +4987,7 @@ package body Trans.Chap7 is
       Res := Dp2M (F_Info.Operator_Res, Tinfo, Mode_Value);
       Chap3.Translate_Object_Allocation
         (Res, Alloc_Return, Arr_Type,
-         Chap3.Get_Array_Bounds
+         Chap3.Get_Composite_Bounds
            (Dp2M (F_Info.Operator_Left, Tinfo, Mode_Value)));
       New_Assign_Stmt
         (New_Obj (Var_Base), M2Addr (Chap3.Get_Composite_Base (Res)));
@@ -5277,8 +5278,8 @@ package body Trans.Chap7 is
       --  The index subtypes of the return values of all shift operators is
       --  the same as the index subtype of their left arguments.
       New_Assign_Stmt
-        (M2Lp (Chap3.Get_Array_Bounds (Res)),
-         M2Addr (Chap3.Get_Array_Bounds (L)));
+        (M2Lp (Chap3.Get_Composite_Bounds (Res)),
+         M2Addr (Chap3.Get_Composite_Bounds (L)));
 
       --  Get length of LEFT.
       New_Assign_Stmt (New_Obj (Var_Length),

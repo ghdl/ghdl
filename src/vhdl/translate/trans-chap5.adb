@@ -553,7 +553,7 @@ package body Trans.Chap5 is
          else
             --  Actual type is unconstrained, but as this is an object reads
             --  bounds from the object.
-            return Chap3.Get_Array_Bounds
+            return Chap3.Get_Composite_Bounds
               (Chap6.Translate_Name (Actual, Mode_Signal));
          end if;
       end Get_Actual_Bounds;
@@ -647,7 +647,7 @@ package body Trans.Chap5 is
            (--  Note: this works only because it is not stabilized, and
             --  therefore the bounds field is returned and not a pointer to
             --  the bounds.
-            M2Lp (Chap3.Get_Array_Bounds (Act_Node)),
+            M2Lp (Chap3.Get_Composite_Bounds (Act_Node)),
             M2Addr (Bounds));
       end loop;
 
@@ -655,7 +655,8 @@ package body Trans.Chap5 is
       Info := Get_Info (Port);
       if Info.Signal_Val /= Null_Var then
          New_Assign_Stmt
-           (M2Lp (Chap3.Get_Array_Bounds (Chap6.Get_Port_Init_Value (Port))),
+           (M2Lp (Chap3.Get_Composite_Bounds
+                    (Chap6.Get_Port_Init_Value (Port))),
             M2Addr (Bounds));
       end if;
       Close_Temp;

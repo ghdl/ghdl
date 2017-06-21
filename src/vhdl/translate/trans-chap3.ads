@@ -143,8 +143,8 @@ package Trans.Chap3 is
    --  Get the base of array or record ARR.
    function Get_Composite_Base (Arr : Mnode) return Mnode;
 
-   --  Get the bounds of array ARR.
-   function Get_Array_Bounds (Arr : Mnode) return Mnode;
+   --  Get the bounds of composite ARR (an array or an unbounded record).
+   function Get_Composite_Bounds (Arr : Mnode) return Mnode;
 
    --  Get the range ot ATYPE.
    function Type_To_Range (Atype : Iir) return Mnode;

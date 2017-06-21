@@ -167,7 +167,7 @@ package body Trans.Chap3 is
         (Assoc, M2Addr (Chap3.Unbox_Record (Chap3.Get_Composite_Base (Var))));
 
       if Binfo.Type_Mode in Type_Mode_Unbounded then
-         New_Association (Assoc, M2Addr (Chap3.Get_Array_Bounds (Var)));
+         New_Association (Assoc, M2Addr (Chap3.Get_Composite_Bounds (Var)));
       end if;
 
       return New_Function_Call (Assoc);
@@ -1359,7 +1359,7 @@ package body Trans.Chap3 is
                   if Is_Unbounded_Type (Info) then
                      Base2 := Create_Temp (Info, Kind);
                      New_Assign_Stmt
-                       (M2Lp (Get_Array_Bounds (Base2)),
+                       (M2Lp (Get_Composite_Bounds (Base2)),
                         New_Obj_Value (Info.C (Kind).Builder_Bound_Param));
                      New_Assign_Stmt
                        (M2Lp (Get_Composite_Base (Base2)),
@@ -2678,7 +2678,7 @@ package body Trans.Chap3 is
       return Get_Array_Type_Bounds (Get_Info (Atype));
    end Get_Array_Type_Bounds;
 
-   function Get_Array_Bounds (Arr : Mnode) return Mnode
+   function Get_Composite_Bounds (Arr : Mnode) return Mnode
    is
       Info : constant Type_Info_Acc := Get_Type_Info (Arr);
    begin
@@ -2704,12 +2704,12 @@ package body Trans.Chap3 is
          when others =>
             raise Internal_Error;
       end case;
-   end Get_Array_Bounds;
+   end Get_Composite_Bounds;
 
    function Get_Array_Range (Arr : Mnode; Atype : Iir; Dim : Positive)
                              return Mnode is
    begin
-      return Bounds_To_Range (Get_Array_Bounds (Arr), Atype, Dim);
+      return Bounds_To_Range (Get_Composite_Bounds (Arr), Atype, Dim);
    end Get_Array_Range;
 
    function Get_Bounds_Length (Bounds : Mnode; Atype : Iir) return O_Enode
@@ -2762,7 +2762,7 @@ package body Trans.Chap3 is
       if Type_Info.Type_Locally_Constrained then
          return New_Lit (Get_Thin_Array_Length (Atype));
       else
-         return Get_Bounds_Length (Get_Array_Bounds (Arr), Atype);
+         return Get_Bounds_Length (Get_Composite_Bounds (Arr), Atype);
       end if;
    end Get_Array_Length;
 
@@ -3048,7 +3048,7 @@ package body Trans.Chap3 is
       Kind      : constant Object_Kind_Type := Get_Object_Kind (Obj);
    begin
       if Type_Info.Type_Mode in Type_Mode_Unbounded then
-         return Get_Subtype_Size (Obj_Type, Get_Array_Bounds (Obj), Kind);
+         return Get_Subtype_Size (Obj_Type, Get_Composite_Bounds (Obj), Kind);
       else
          return Get_Subtype_Size (Obj_Type, Mnode_Null, Kind);
       end if;
@@ -3080,14 +3080,14 @@ package body Trans.Chap3 is
       if Dinfo.Type_Mode in Type_Mode_Unbounded then
          --  Allocate memory for bounds.
          New_Assign_Stmt
-           (M2Lp (Chap3.Get_Array_Bounds (Res)),
+           (M2Lp (Chap3.Get_Composite_Bounds (Res)),
             Gen_Alloc (Alloc_Kind,
                        New_Lit (New_Sizeof (Dinfo.B.Bounds_Type,
                                             Ghdl_Index_Type)),
                        Dinfo.B.Bounds_Ptr_Type));
 
          --  Copy bounds to the allocated area.
-         Copy_Bounds (Chap3.Get_Array_Bounds (Res), Bounds, Obj_Type);
+         Copy_Bounds (Chap3.Get_Composite_Bounds (Res), Bounds, Obj_Type);
 
          --  Allocate base.
          Allocate_Fat_Array_Base (Alloc_Kind, Res, Obj_Type);
