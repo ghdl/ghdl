@@ -1359,12 +1359,10 @@ package body Trans.Chap3 is
                   if Is_Unbounded_Type (Info) then
                      Base2 := Create_Temp (Info, Kind);
                      New_Assign_Stmt
-                       (New_Selected_Element (M2Lv (Base2),
-                                              Info.B.Bounds_Field (Kind)),
+                       (M2Lp (Get_Array_Bounds (Base2)),
                         New_Obj_Value (Info.C (Kind).Builder_Bound_Param));
                      New_Assign_Stmt
-                       (New_Selected_Element (M2Lv (Base2),
-                                              Info.B.Base_Field (Kind)),
+                       (M2Lp (Get_Composite_Base (Base2)),
                         New_Obj_Value (Info.C (Kind).Builder_Base_Param));
                   else
                      Base2 := Dp2M (Base, Info, Kind);

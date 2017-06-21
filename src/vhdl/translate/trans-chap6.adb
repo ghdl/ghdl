@@ -841,8 +841,7 @@ package body Trans.Chap6 is
          --  Result is a fat pointer, create it and set bounds.
          Fat_Res := Create_Temp (El_Tinfo, Kind);
          New_Assign_Stmt
-           (New_Selected_Element (M2Lv (Fat_Res),
-                                  El_Tinfo.B.Bounds_Field (Kind)),
+           (M2Lp (Chap3.Get_Array_Bounds (Fat_Res)),
             New_Address
               (New_Selected_Element
                  (M2Lv (Chap3.Get_Array_Bounds (Stable_Prefix)),
