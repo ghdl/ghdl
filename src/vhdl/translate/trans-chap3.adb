@@ -1298,8 +1298,8 @@ package body Trans.Chap3 is
       El   : Iir_Element_Declaration;
 
       Off_Var    : O_Dnode;
-      Ptr_Var    : O_Dnode;
       Off_Val    : O_Enode;
+      El_Off     : O_Enode;
       Sub_Bound  : Mnode;
       El_Type    : Iir;
       Inner_Type : Iir;
@@ -1346,26 +1346,39 @@ package body Trans.Chap3 is
                Get_Info (El).Field_Node (Kind)),
                New_Obj_Value (Off_Var));
 
+            Open_Temp;
+
             if Is_Complex_Type (El_Tinfo)
               and then El_Tinfo.C (Kind).Builder_Need_Func
             then
                --  This type needs a builder, call it.
-               Open_Temp;
-               Ptr_Var := Create_Temp (El_Tinfo.Ortho_Ptr_Type (Kind));
+               declare
+                  Base2 : Mnode;
+                  Ptr_Var    : O_Dnode;
+               begin
+                  if Is_Unbounded_Type (Info) then
+                     Base2 := Create_Temp (Info, Kind);
+                     New_Assign_Stmt
+                       (New_Selected_Element (M2Lv (Base2),
+                                              Info.B.Bounds_Field (Kind)),
+                        New_Obj_Value (Info.C (Kind).Builder_Bound_Param));
+                     New_Assign_Stmt
+                       (New_Selected_Element (M2Lv (Base2),
+                                              Info.B.Base_Field (Kind)),
+                        New_Obj_Value (Info.C (Kind).Builder_Base_Param));
+                  else
+                     Base2 := Dp2M (Base, Info, Kind);
+                  end if;
 
-               New_Assign_Stmt
-                 (New_Obj (Ptr_Var),
-                  M2E (Chap6.Translate_Selected_Element
-                    (Dp2M (Base, Info, Kind), El)));
+                  Ptr_Var := Create_Temp (El_Tinfo.Ortho_Ptr_Type (Kind));
 
-               New_Assign_Stmt
-                 (New_Obj (Off_Var),
-                  New_Dyadic_Op (ON_Add_Ov,
-                                 New_Obj_Value (Off_Var),
-                                 Gen_Call_Type_Builder
-                                   (Dp2M (Ptr_Var, El_Tinfo, Kind), El_Type)));
+                  New_Assign_Stmt
+                    (New_Obj (Ptr_Var),
+                     M2E (Chap6.Translate_Selected_Element (Base2, El)));
 
-               Close_Temp;
+                  El_Off := Gen_Call_Type_Builder
+                    (Dp2M (Ptr_Var, El_Tinfo, Kind), El_Type);
+               end;
             else
                if Is_Unbounded_Type (El_Tinfo) then
                   Sub_Bound := Bounds_To_Element_Bounds
@@ -1378,13 +1391,15 @@ package body Trans.Chap3 is
                end if;
 
                --  Allocate memory.
-               New_Assign_Stmt
-                 (New_Obj (Off_Var),
-                  New_Dyadic_Op
-                    (ON_Add_Ov,
-                     New_Obj_Value (Off_Var),
-                     Get_Subtype_Size (El_Type, Sub_Bound, Kind)));
+               El_Off := Get_Subtype_Size (El_Type, Sub_Bound, Kind);
             end if;
+
+            New_Assign_Stmt
+              (New_Obj (Off_Var),
+               New_Dyadic_Op (ON_Add_Ov,
+                              New_Obj_Value (Off_Var), El_Off));
+
+            Close_Temp;
          end if;
       end loop;
 
