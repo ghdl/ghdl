@@ -332,6 +332,18 @@ package body Canon is
       end loop;
    end Canon_Extract_Sensitivity_Procedure_Call;
 
+   procedure Canon_Extract_Sensitivity_Waveform (Chain : Iir; List : Iir_List)
+   is
+      We: Iir_Waveform_Element;
+   begin
+      We := Chain;
+      while We /= Null_Iir loop
+         Canon_Extract_Sensitivity (Get_We_Value (We), List);
+         Canon_Extract_Sensitivity_If_Not_Null (Get_Time (We), List);
+         We := Get_Chain (We);
+      end loop;
+   end Canon_Extract_Sensitivity_Waveform;
+
    procedure Canon_Extract_Sequential_Statement_Chain_Sensitivity
      (Chain : Iir; List : Iir_List)
    is
@@ -384,13 +396,22 @@ package body Canon is
                Canon_Extract_Sensitivity (Get_Target (Stmt), List, True);
                Canon_Extract_Sensitivity_If_Not_Null
                  (Get_Reject_Time_Expression (Stmt), List);
+               Canon_Extract_Sensitivity_Waveform
+                 (Get_Waveform_Chain (Stmt), List);
+            when Iir_Kind_Conditional_Signal_Assignment_Statement =>
+               Canon_Extract_Sensitivity (Get_Target (Stmt), List, True);
+               Canon_Extract_Sensitivity_If_Not_Null
+                 (Get_Reject_Time_Expression (Stmt), List);
                declare
-                  We: Iir_Waveform_Element;
+                  Cwe : Iir;
                begin
-                  We := Get_Waveform_Chain (Stmt);
-                  while We /= Null_Iir loop
-                     Canon_Extract_Sensitivity (Get_We_Value (We), List);
-                     We := Get_Chain (We);
+                  Cwe := Get_Conditional_Waveform_Chain (Stmt);
+                  while Cwe /= Null_Iir loop
+                     Canon_Extract_Sensitivity_If_Not_Null
+                       (Get_Condition (Cwe), List);
+                     Canon_Extract_Sensitivity_Waveform
+                       (Get_Waveform_Chain (Cwe), List);
+                     Cwe := Get_Chain (Cwe);
                   end loop;
                end;
             when Iir_Kind_If_Statement =>
@@ -1558,7 +1579,6 @@ package body Canon is
          Cond_Wf := Get_Chain (Cond_Wf);
       end loop;
 
-      Set_Target (Conc_Stmt, Null_Iir);
       return Stmt;
    end Canon_Conditional_Signal_Assignment;
 
