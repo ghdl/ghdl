@@ -1260,13 +1260,14 @@ package body Sem_Assocs is
 
    --  ASSOC is an association element not analyzed and whose formal is a
    --  parenthesis name.  Try to extract a conversion function/type.  In case
-   --  of success, return a new association element.  In case of failure,
-   --  return NULL_IIR.
+   --  of success, modify the association to represent the conversion and
+   --  returns the parenthesis_name node (to be freed or to revert the change).
+   --  In case of failure, return NULL_IIR.
    function Sem_Formal_Conversion (Assoc : Iir) return Iir
    is
       Formal : constant Iir := Get_Formal (Assoc);
+      pragma Assert (Get_Kind (Formal) = Iir_Kind_Parenthesis_Name);
       Assoc_Chain : constant Iir := Get_Association_Chain (Formal);
-      Res : Iir;
       Conv : Iir;
       Name : Iir;
       Conv_Func : Iir;
@@ -1303,13 +1304,19 @@ package body Sem_Assocs is
       end if;
       Set_Type (Conv, Conv_Type);
 
-      --  Create a new association with a conversion function.
-      Res := Create_Iir (Iir_Kind_Association_Element_By_Expression);
-      Set_Out_Conversion (Res, Conv);
-      Set_Formal (Res, Name);
-      Set_Actual (Res, Get_Actual (Assoc));
-      return Res;
+      Set_Out_Conversion (Assoc, Conv);
+      Set_Formal (Assoc, Name);
+
+      return Formal;
    end Sem_Formal_Conversion;
+
+   procedure Revert_Formal_Conversion (Assoc : Iir; Saved_Assoc : Iir) is
+   begin
+      Sem_Name_Clean (Get_Out_Conversion (Assoc));
+      Set_Out_Conversion (Assoc, Null_Iir);
+      Sem_Name_Clean (Get_Formal (Assoc));
+      Set_Formal (Assoc, Saved_Assoc);
+   end Revert_Formal_Conversion;
 
    --  NAME is the formal name of an association, without any conversion
    --  function or type.
@@ -1495,7 +1502,7 @@ package body Sem_Assocs is
             return Is_Valid_Conversion (Get_Named_Entity (Func),
                                         Res_Base_Type, Param_Base_Type);
          when others =>
-            Error_Kind ("is_valid_conversion(2)", Func);
+            return False;
       end case;
    end Is_Valid_Conversion;
 
@@ -2316,6 +2323,13 @@ package body Sem_Assocs is
       end case;
    end Sem_Association;
 
+   procedure Revert_Sem_Association (Assoc : Iir) is
+   begin
+      pragma Assert
+        (Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression);
+      Sem_Name_Clean (Get_Formal (Assoc));
+   end Revert_Sem_Association;
+
    procedure Sem_Association_Chain
      (Interface_Chain : Iir;
       Assoc_Chain: in out Iir;
@@ -2360,7 +2374,7 @@ package body Sem_Assocs is
 
       Interface_1 : Iir;
       Pos_1 : Integer;
-      Assoc_1 : Iir;
+      Saved_Assoc : Iir;
    begin
       Match := Fully_Compatible;
       Has_Individual := False;
@@ -2406,46 +2420,66 @@ package body Sem_Assocs is
          else
             -- FIXME: directly search the formal if finish is true.
             -- Find the Interface.
-            case Get_Kind (Formal) is
-               when Iir_Kind_Parenthesis_Name =>
-                  Assoc_1 := Sem_Formal_Conversion (Assoc);
-                  if Assoc_1 /= Null_Iir then
-                     Search_Interface (Assoc_1, Interface_1, Pos_1);
-                     --  LRM 4.3.2.2  Association Lists
-                     --  The formal part of a named element association may be
-                     --  in the form of a function call, [...], if and only
-                     --  if the mode of the formal is OUT, INOUT, BUFFER, or
-                     --  LINKAGE, and the actual is not OPEN.
-                     if Interface_1 = Null_Iir
-                       or else Get_Mode (Interface_1) = Iir_In_Mode
-                     then
-                        Sem_Name_Clean (Get_Out_Conversion (Assoc_1));
-                        Free_Iir (Assoc_1);
-                        Assoc_1 := Null_Iir;
-                     end if;
+
+            --  Try as 'normal' or individual assoc.
+            Search_Interface (Assoc, Inter, Pos);
+
+            if Get_Kind (Formal) = Iir_Kind_Parenthesis_Name then
+               --  Try as formal conversion.
+               Revert_Sem_Association (Assoc);
+               Saved_Assoc := Sem_Formal_Conversion (Assoc);
+
+               if Saved_Assoc /= Null_Iir then
+                  --  ASSOC could be interpreted as a formal conversion.
+                  Search_Interface (Assoc, Interface_1, Pos_1);
+                  --  LRM 4.3.2.2  Association Lists
+                  --  The formal part of a named element association may be
+                  --  in the form of a function call, [...], if and only
+                  --  if the mode of the formal is OUT, INOUT, BUFFER, or
+                  --  LINKAGE, and the actual is not OPEN.
+                  if Interface_1 = Null_Iir
+                    or else Get_Mode (Interface_1) = Iir_In_Mode
+                  then
+                     --  Failed to analyze the out conversion.
+                     Revert_Formal_Conversion (Assoc, Saved_Assoc);
+                     Interface_1 := Null_Iir;
                   end if;
-                  Search_Interface (Assoc, Inter, Pos);
-                  if Inter = Null_Iir then
-                     if Assoc_1 /= Null_Iir then
-                        Inter := Interface_1;
-                        Pos := Pos_1;
+               else
+                  Interface_1 := Null_Iir;
+               end if;
+
+               if Inter = Null_Iir then
+                  --  FORMAL cannot be interpreted as an individual assoc.
+                  if Interface_1 /= Null_Iir then
+                     --  But can be interpreted as a formal conversion.
+                     Inter := Interface_1;
+                     Pos := Pos_1;
+
+                     if Finish then
+                        --  Free the now unused parenthesis_name.
                         Free_Parenthesis_Name
-                          (Get_Formal (Assoc), Get_Out_Conversion (Assoc_1));
-                        Set_Formal (Assoc, Get_Formal (Assoc_1));
-                        Set_Out_Conversion
-                          (Assoc, Get_Out_Conversion (Assoc_1));
-                        Set_Whole_Association_Flag
-                          (Assoc, Get_Whole_Association_Flag (Assoc_1));
-                        Free_Iir (Assoc_1);
-                     end if;
-                  else
-                     if Assoc_1 /= Null_Iir then
-                        raise Internal_Error;
+                          (Saved_Assoc, Get_Out_Conversion (Assoc));
+                     else
+                        Revert_Formal_Conversion (Assoc, Saved_Assoc);
                      end if;
                   end if;
-               when others =>
-                  Search_Interface (Assoc, Inter, Pos);
-            end case;
+               else
+                  --  FORMAL cannot be interpreted as an individual assoc.
+                  if Interface_1 /= Null_Iir then
+                     --  But also as a formal conversion.
+
+                     --  FIXME: todo.
+                     raise Internal_Error;
+                  else
+                     declare
+                        I_Match : Compatibility_Level;
+                     begin
+                        Sem_Association (Assoc, Inter, False, I_Match);
+                        pragma Assert (I_Match /= Not_Compatible);
+                     end;
+                  end if;
+               end if;
+            end if;
 
             if Inter /= Null_Iir then
                if Get_Whole_Association_Flag (Assoc) then

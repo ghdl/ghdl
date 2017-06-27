@@ -3729,42 +3729,45 @@ package body Sem_Names is
       end case;
    end Sem_Name_Soft;
 
-   procedure Sem_Name_Clean (Name : Iir)
+   procedure Sem_Name_Clean_1 (Name : Iir)
    is
-      N : Iir;
-      Next_N : Iir;
       Named_Entity : Iir;
       Atype : Iir;
    begin
-      N := Name;
-      while N /= Null_Iir loop
-         case Get_Kind (N) is
-            when Iir_Kind_Simple_Name
-              | Iir_Kind_Operator_Symbol =>
-               Next_N := Null_Iir;
-            when others =>
-               Error_Kind ("sem_name_clean", N);
-         end case;
+      if Name = Null_Iir then
+         return;
+      end if;
 
-         --  Clear and free overload lists of Named_entity and type.
-         Named_Entity := Get_Named_Entity (N);
-         Set_Named_Entity (N, Null_Iir);
-         if Named_Entity /= Null_Iir
-           and then Is_Overload_List (Named_Entity)
-         then
-            Free_Iir (Named_Entity);
-         end if;
+      --  Clear and free overload lists of Named_entity and type.
+      Named_Entity := Get_Named_Entity (Name);
+      Set_Named_Entity (Name, Null_Iir);
+      if Named_Entity /= Null_Iir
+        and then Is_Overload_List (Named_Entity)
+      then
+         Free_Iir (Named_Entity);
+      end if;
 
-         Atype := Get_Type (N);
-         Set_Type (N, Null_Iir);
-         if Atype /= Null_Iir
-           and then Is_Overload_List (Atype)
-         then
-            Free_Iir (Atype);
-         end if;
+      Atype := Get_Type (Name);
+      Set_Type (Name, Null_Iir);
+      if Atype /= Null_Iir
+        and then Is_Overload_List (Atype)
+      then
+         Free_Iir (Atype);
+      end if;
+   end Sem_Name_Clean_1;
 
-         N := Next_N;
-      end loop;
+   procedure Sem_Name_Clean (Name : Iir) is
+   begin
+      case Get_Kind (Name) is
+         when Iir_Kind_Simple_Name
+           | Iir_Kind_Operator_Symbol =>
+            Sem_Name_Clean_1 (Name);
+         when Iir_Kind_Parenthesis_Name =>
+            Sem_Name_Clean_1 (Get_Prefix (Name));
+            Sem_Name_Clean_1 (Name);
+         when others =>
+            Error_Kind ("sem_name_clean", Name);
+      end case;
    end Sem_Name_Clean;
 
    --  Remove procedure specification from LIST.
