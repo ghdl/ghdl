@@ -906,39 +906,6 @@ package body Trans.Chap3 is
       end if;
    end Translate_Array_Subtype_Definition;
 
-   procedure Translate_Array_Subtype_Element_Subtype
-     (Def : Iir_Array_Subtype_Definition)
-   is
-      El_Type    : constant Iir := Get_Element_Subtype (Def);
-      Type_Mark  : constant Iir := Get_Denoted_Type_Mark (Def);
-      Tm_El_Type : Iir;
-   begin
-      if Type_Mark = Null_Iir then
-         --  Array subtype for constained array definition.  Same element
-         --  subtype as the base type.
-         return;
-      end if;
-
-      Tm_El_Type := Get_Element_Subtype (Type_Mark);
-      if El_Type = Tm_El_Type then
-         --  Same element subtype as the type mark.
-         return;
-      end if;
-
-      case Get_Kind (El_Type) is
-         when Iir_Kinds_Scalar_Subtype_Definition =>
-            declare
-               El_Info : Ortho_Info_Acc;
-            begin
-               El_Info := Add_Info (El_Type, Kind_Type);
-               Create_Subtype_Info_From_Type
-                 (El_Type, Tm_El_Type, El_Info);
-            end;
-         when others =>
-            Error_Kind ("translate_array_subtype_element_subtype", El_Type);
-      end case;
-   end Translate_Array_Subtype_Element_Subtype;
-
    procedure Create_Array_Type_Builder
      (Def : Iir_Array_Type_Definition; Kind : Object_Kind_Type)
    is
@@ -2221,6 +2188,18 @@ package body Trans.Chap3 is
       end case;
    end Handle_Anonymous_Subtypes;
 
+   procedure Translate_Array_Element_Definition (Def : Iir)
+   is
+      El_Type : constant Iir := Get_Element_Subtype (Def);
+      Mark    : Id_Mark_Type;
+   begin
+      if Get_Info (El_Type) = null then
+         Push_Identifier_Prefix (Mark, "ET");
+         Translate_Type_Definition (El_Type);
+         Pop_Identifier_Prefix (Mark);
+      end if;
+   end Translate_Array_Element_Definition;
+
    --  Note: boolean types are translated by translate_bool_type_definition!
    procedure Translate_Type_Definition (Def : Iir; With_Vars : Boolean := True)
    is
@@ -2296,19 +2275,11 @@ package body Trans.Chap3 is
             end;
 
          when Iir_Kind_Array_Type_Definition =>
-            declare
-               El_Type : constant Iir := Get_Element_Subtype (Def);
-               Mark    : Id_Mark_Type;
-            begin
-               if Get_Info (El_Type) = null then
-                  Push_Identifier_Prefix (Mark, "ET");
-                  Translate_Type_Definition (El_Type);
-                  Pop_Identifier_Prefix (Mark);
-               end if;
-            end;
+            Translate_Array_Element_Definition (Def);
             Translate_Array_Type_Definition (Def);
 
          when Iir_Kind_Array_Subtype_Definition =>
+            Translate_Array_Element_Definition (Def);
             if Get_Index_Constraint_Flag (Def) then
                if Base_Info = null or else Base_Info.Type_Incomplete then
                   declare
@@ -2332,7 +2303,6 @@ package body Trans.Chap3 is
                Free_Info (Def);
                Set_Info (Def, Base_Info);
             end if;
-            Translate_Array_Subtype_Element_Subtype (Def);
 
          when Iir_Kind_Record_Type_Definition =>
             Info.B := Ortho_Info_Basetype_Record_Init;
