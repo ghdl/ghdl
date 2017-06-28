@@ -167,9 +167,23 @@ package Ortho_Code.X86 is
 
    type O_Reg_Array is array (Natural range <>) of O_Reg;
 
+   type O_Reg_Bitmap is array (O_Reg range <>) of Boolean;
+   pragma Pack (O_Reg_Bitmap);
+
+   subtype Regs_R32_Bitmap is O_Reg_Bitmap (Regs_R32);
+   subtype Regs_R64_Bitmap is O_Reg_Bitmap (Regs_R64);
+   subtype Regs_Xmm64_Bitmap is O_Reg_Bitmap (Regs_X86_64_Xmm);
+
    --  Registers preserved accross calls.
-   Preserved_Regs_32 : constant O_Reg_Array :=
-     (R_Di, R_Si, R_Bx);
-   Preserved_Regs_64 : constant O_Reg_Array :=
-     (R_Bx, R_R12, R_R13, R_R14, R_R15);
+   Preserved_Regs_32 : constant Regs_R32_Bitmap :=
+     (R_Di | R_Si | R_Bx => True, others => False);
+   Preserved_Regs_Lin64 : constant Regs_R64_Bitmap :=
+     (R_Bx | R_R12 | R_R13 | R_R14 | R_R15 => True, others => False);
+   Preserved_Regs_Win64 : constant Regs_R64_Bitmap :=
+     (R_Di | R_Si | R_Bx | R_R12 | R_R13 | R_R14 | R_R15 => True,
+      others => False);
+   Preserved_Xmm_Win64 : constant Regs_Xmm64_Bitmap :=
+     (R_Xmm6 | R_Xmm7 | R_Xmm8 | R_Xmm9 | R_Xmm1 | R_Xmm11
+        | R_Xmm12 | R_Xmm13 | R_Xmm14 | R_Xmm15 => True,
+      others => False);
 end Ortho_Code.X86;

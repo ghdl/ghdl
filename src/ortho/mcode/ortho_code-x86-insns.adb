@@ -1051,15 +1051,35 @@ package body Ortho_Code.X86.Insns is
       end loop;
 
       --  Mark caller saved registers as clobbered.
-      for R in R_Ax .. R_Dx loop
-         Clobber_Gp (R);
-      end loop;
-      for R in R_Si .. R_R11 loop
-         Clobber_Gp (R);
-      end loop;
-      for R in Regs_Xmm loop
-         Clobber_Xmm (R);
-      end loop;
+      if Flags.Win64 then
+         --  R12-R15, RSI, RDI, RBX, RBP are preserved by callee.
+         for R in Preserved_Regs_Win64'Range loop
+            if not Preserved_Regs_Win64 (R) then
+               Clobber_Gp (R);
+            end if;
+         end loop;
+      else
+         --  RBX, R12-R15 are callee-saved (preserved)
+         for R in Preserved_Regs_Lin64'Range loop
+            if not Preserved_Regs_Lin64 (R) then
+               Clobber_Gp (R);
+            end if;
+         end loop;
+      end if;
+
+      if Flags.Win64 then
+         --  Xmm6 - xmm15 are preserved.
+         for R in Preserved_Xmm_Win64'Range loop
+            if not Preserved_Xmm_Win64 (R) then
+               Clobber_Xmm (R);
+            end if;
+         end loop;
+      else
+         --  All Xmm registers are for arguments or volatile.
+         for R in Regs_Xmm loop
+            Clobber_Xmm (R);
+         end loop;
+      end if;
    end Clobber_Caller_Saved_Registers_64;
 
    --  Insert an argument for an intrinsic call.
