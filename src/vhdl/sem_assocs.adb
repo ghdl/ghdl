@@ -2424,8 +2424,12 @@ package body Sem_Assocs is
             --  Try as 'normal' or individual assoc.
             Search_Interface (Assoc, Inter, Pos);
 
-            if Get_Kind (Formal) = Iir_Kind_Parenthesis_Name then
-               --  Try as formal conversion.
+            if Get_Kind (Formal) = Iir_Kind_Parenthesis_Name
+              and then
+              Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression
+            then
+               --  Try as formal conversion, only if the actual is not open
+               --  according to LRM08 6.5.7 Association lists.
                Revert_Sem_Association (Assoc);
                Saved_Assoc := Sem_Formal_Conversion (Assoc);
 
