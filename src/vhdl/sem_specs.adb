@@ -1568,6 +1568,19 @@ package body Sem_Specs is
      (Comp : Iir; Entity : Iir; Kind : Map_Kind_Type; Parent : Iir)
      return Iir
    is
+      Error : Boolean;
+
+      procedure Error_Header is
+      begin
+         if Error then
+            return;
+         end if;
+         Error_Msg_Sem
+           (+Parent, "for default port binding of %n:",
+            (1 => +Parent), Cont => True);
+         Error := True;
+      end Error_Header;
+
       Res, Last : Iir;
       Comp_El, Ent_El : Iir;
       Assoc : Iir;
@@ -1575,7 +1588,6 @@ package body Sem_Specs is
       Found : Natural;
       Comp_Chain : Iir;
       Ent_Chain : Iir;
-      Error : Boolean;
    begin
       case Kind is
          when Map_Generic =>
@@ -1585,11 +1597,6 @@ package body Sem_Specs is
             Ent_Chain := Get_Port_Chain (Entity);
             Comp_Chain := Get_Port_Chain (Comp);
       end case;
-
-      --  If no formal, then there is no association list.
-      if Ent_Chain = Null_Iir then
-         return Null_Iir;
-      end if;
 
       --  No error found yet.
       Error := False;
@@ -1605,26 +1612,18 @@ package body Sem_Specs is
             Location_Copy (Assoc, Parent);
          else
             if Are_Nodes_Compatible (Comp_El, Ent_El) = Not_Compatible then
-               if not Error then
-                  Error_Msg_Sem
-                    (+Parent, "for default port binding of %n:",
-                     (1 => +Parent), Cont => True);
-               end if;
+               Error_Header;
                Error_Msg_Sem
                  (+Parent, "type of %n declared at %l",
                   (+Comp_El, +Comp_El), Cont => True);
                Error_Msg_Sem
                  (+Parent, "not compatible with type of %n declared at %l",
                   (+Ent_El, +Ent_El));
-               Error := True;
             elsif Kind = Map_Port
               and then not Check_Port_Association_Mode_Restrictions
               (Ent_El, Comp_El, Null_Iir)
             then
-               if not Error then
-                  Error_Msg_Sem (+Parent, "for default port binding of %n",
-                                 (1 => +Parent), Cont => True);
-               end if;
+               Error_Header;
                Error_Msg_Sem (+Parent, "cannot associate "
                                 & Get_Mode_Name (Get_Mode (Ent_El))
                                 & " %n declared at %l",
@@ -1632,7 +1631,6 @@ package body Sem_Specs is
                Error_Msg_Sem (+Parent, "with actual port of mode "
                                 & Get_Mode_Name (Get_Mode (Comp_El))
                                 & " declared at %l", +Comp_El);
-               Error := True;
             end if;
             Assoc := Create_Iir (Iir_Kind_Association_Element_By_Expression);
             Location_Copy (Assoc, Parent);
@@ -1667,12 +1665,13 @@ package body Sem_Specs is
       if Iir_Chains.Get_Chain_Length (Comp_Chain) /= Found then
          --  At least one component generic/port cannot be associated with
          --  the entity one.
-         Error := True;
+
          --  Disp unassociated interfaces.
          Comp_El := Comp_Chain;
          while Comp_El /= Null_Iir loop
             Ent_El := Find_Name_In_Chain (Ent_Chain, Get_Identifier (Comp_El));
             if Ent_El = Null_Iir then
+               Error_Header;
                Error_Msg_Sem (+Parent, "%n has no association in %n",
                               (+Comp_El, +Entity));
             end if;
