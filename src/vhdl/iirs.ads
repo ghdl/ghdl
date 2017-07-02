@@ -1769,9 +1769,9 @@ package Iirs is
    --
    --   Get/Set_Type (Field1)
    --
+   --  Corresponding element_declaration.  FIXME: remove as supersided by
+   --  element_position.
    --   Get/Set_Element_Declaration (Field5)
-   --   Corresponding element_declaration.  FIXME: remove as supersided by
-   --   element_position.
    --
    --   Get/Set_Identifier (Field3)
    --
@@ -6851,7 +6851,7 @@ package Iirs is
    function Get_Generate_Else_Clause (Target : Iir) return Iir;
    procedure Set_Generate_Else_Clause (Target : Iir; Clause : Iir);
 
-   --  Condition of a conditionam_waveform, if_statement, elsif,
+   --  Condition of a conditional_waveform, if_statement, elsif,
    --  while_loop_statement, next_statement or exit_statement.
    --  Field: Field1
    function Get_Condition (Target : Iir) return Iir;
