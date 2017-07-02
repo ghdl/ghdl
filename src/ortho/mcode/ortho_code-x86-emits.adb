@@ -2658,6 +2658,9 @@ package body Ortho_Code.X86.Emits is
             null;
 
          when OE_Arg =>
+            --  Only arguments passed on the stack are represented by OE_Arg.
+            --  Arguments passed by registers (for x86-64) are simply
+            --  pre-computed.
             case Mode is
                when Mode_U32
                  | Mode_I32
@@ -2847,6 +2850,14 @@ package body Ortho_Code.X86.Emits is
       Gen_Push_Pop_Reg (Opc_Pop_Reg, Reg, Sz_Ptr);
    end Pop_Reg;
 
+   procedure Gen_Sub_Sp (Imm : Int32) is
+   begin
+      Start_Insn;
+      Init_Modrm_Reg (R_Sp, Sz_Ptr);
+      Gen_Insn_Grp1 (Opc2_Grp1_Sub, Imm);
+      End_Insn;
+   end Gen_Sub_Sp;
+
    procedure Emit_Prologue (Subprg : Subprogram_Data_Acc)
    is
       use Ortho_Code.Decls;
@@ -2944,10 +2955,7 @@ package body Ortho_Code.X86.Emits is
          if not X86.Flags.Flag_Alloca_Call
             or else Frame_Size <= 4096
          then
-            Start_Insn;
-            Init_Modrm_Reg (R_Sp, Sz_Ptr);
-            Gen_Insn_Grp1 (Opc2_Grp1_Sub, Int32 (Frame_Size));
-            End_Insn;
+            Gen_Sub_Sp (Int32 (Frame_Size));
          else
             pragma Assert (not Flags.M64);
             --  mov stack_size,%eax
@@ -2955,6 +2963,7 @@ package body Ortho_Code.X86.Emits is
             Gen_8 (Opc_Movl_Imm_Reg + To_Reg32 (R_Ax));
             Gen_32 (Frame_Size);
             End_Insn;
+
             Gen_Call (Chkstk_Symbol);
          end if;
       end if;
