@@ -49,7 +49,9 @@ VITAL2000_BSRCS := vital2000/timing_p.vhdl vital2000/timing_b.vhdl \
 SYNOPSYS_BSRCS := synopsys/std_logic_arith.vhdl \
   synopsys/std_logic_unsigned.vhdl \
   synopsys/std_logic_signed.vhdl
-SYNOPSYS8793_BSRCS := synopsys/std_logic_textio.vhdl synopsys/std_logic_misc.vhdl synopsys/std_logic_misc-body.vhdl
+SYNOPSYS_V_BSRCS := synopsys/std_logic_misc.vhdl \
+  synopsys/std_logic_misc-body.vhdl
+SYNOPSYS8793_BSRCS := synopsys/std_logic_textio.vhdl
 MENTOR_BSRCS := mentor/std_logic_arith.vhdl mentor/std_logic_arith_body.vhdl
 IEEE08_BSRCS := \
   ieee2008/std_logic_1164.vhdl ieee2008/std_logic_1164-body.vhdl \
@@ -72,9 +74,9 @@ STD93_BSRCS := $(STD_SRCS:.vhdl=.v93)
 STD08_BSRCS := $(STD_SRCS:.vhdl=.v08) std/env.vhdl std/env_body.vhdl
 IEEE87_BSRCS := $(IEEE_SRCS:.vhdl=.v87)
 IEEE93_BSRCS := $(IEEE_SRCS:.vhdl=.v93) $(MATH_SRCS)
-SYNOPSYS87_BSRCS := $(SYNOPSYS_BSRCS) $(SYNOPSYS8793_BSRCS)
-SYNOPSYS93_BSRCS := $(SYNOPSYS_BSRCS) $(SYNOPSYS8793_BSRCS)
-SYNOPSYS08_BSRCS := $(SYNOPSYS_BSRCS)
+SYNOPSYS87_BSRCS := $(SYNOPSYS_BSRCS) $(SYNOPSYS_V_BSRCS) $(SYNOPSYS8793_BSRCS)
+SYNOPSYS93_BSRCS := $(SYNOPSYS_BSRCS) $(SYNOPSYS_V_BSRCS) $(SYNOPSYS8793_BSRCS)
+SYNOPSYS08_BSRCS := $(SYNOPSYS_BSRCS) $(SYNOPSYS_V_BSRCS:.vhdl=.v08)
 MENTOR93_BSRCS := $(MENTOR_BSRCS)
 
 .PREFIXES: .vhdl .v93 .v87 .v08
@@ -85,7 +87,8 @@ SED_V93:= sed -e '/--V87/s/^/  --/' \
 SED_V87:= sed -e '/--!V87/s/^/  --/' -e '/--START-!V87/,/--END-!V87/s/^/--/' \
  -e '/--START-V08/,/--END-V08/s/^/--/'
 
-SED_V08:= sed -e '/--V87/s/^/  --/'
+SED_V08:= sed -e '/--V87/s/^/  --/' -e '/--!V08/s/^/  --/' \
+ -e '/--START-!V08/,/--END-!V08/s/^/--/'
 
 LIB87_DIR:=$(LIBDST_DIR)/v87
 STD87_DIR:=$(LIB87_DIR)/std
@@ -288,6 +291,9 @@ $(IEEE08_DIR)/ieee-obj08.cf: $(ANALYZE_DEP) $(IEEE08_SRCS) $(STD08_DIR)/std-obj0
           cmd="$(ANALYZE_VITAL08) ../../src/$$i"; \
 	  echo $$cmd; eval $$cmd || exit 1; \
 	done
+
+$(LIBDST_DIR)/src/synopsys/%.v08: $(LIBSRC_DIR)/synopsys/%.vhdl
+	$(SED_V08) < $< > $@
 
 synopsys.v08: $(SYN08_DIR)/ieee-obj08.cf
 
