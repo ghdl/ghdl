@@ -490,6 +490,8 @@ package Iirs is
    --   Get/Set_Waveform_Chain (Field5)
    --
    --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Conditional_Expression (Short)
    --  LRM08 10.5.3
@@ -503,6 +505,8 @@ package Iirs is
    --   Get/Set_Expression (Field5)
    --
    --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Choice_By_Others (Short)
    -- Iir_Kind_Choice_By_None (Short)
@@ -2716,6 +2720,8 @@ package Iirs is
    --
    --  True if the target of the assignment is guarded
    --   Get/Set_Guarded_Target_State (State1)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Sensitized_Process_Statement (Medium)
    -- Iir_Kind_Process_Statement (Medium)
@@ -2731,16 +2737,16 @@ package Iirs is
    --
    --   Get/Set_Attribute_Value_Chain (Field4)
    --
+   --  The concurrent statement at the origin of that process.  This is
+   --  Null_Iir for a user process.
+   --   Get/Set_Process_Origin (Field8)
+   --
    --   Get/Set_Sequential_Statement_Chain (Field5)
    --
    -- Only for Iir_Kind_Sensitized_Process_Statement:
    --   Get/Set_Sensitivity_List (Field6)
    --
    --   Get/Set_Callees_List (Field7)
-   --
-   --  The concurrent statement at the origin of that process.  This is
-   --  Null_Iir for a user process.
-   --   Get/Set_Process_Origin (Field8)
    --
    --   Get/Set_Wait_State (State1)
    --
@@ -2982,6 +2988,8 @@ package Iirs is
    --   Get/Set_Generate_Else_Clause (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_If_Generate_Statement (Short)
    --
@@ -3006,6 +3014,8 @@ package Iirs is
    --   Get/Set_End_Has_Reserved_Id (Flag8)
    --
    --   Get/Set_End_Has_Identifier (Flag9)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Case_Generate_Statement (Short)
    --
@@ -3091,6 +3101,8 @@ package Iirs is
    --
    -- Only for Iir_Kind_If_Statement:
    --   Get/Set_Suspend_Flag (Flag11)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    --  LRM08 10.10 Loop statement / LRM93 8.9
    --
@@ -3147,6 +3159,8 @@ package Iirs is
    --   Get/Set_End_Has_Identifier (Flag9)
    --
    --   Get/Set_Suspend_Flag (Flag11)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Exit_Statement (Short)
    -- Iir_Kind_Next_Statement (Short)
@@ -3173,6 +3187,8 @@ package Iirs is
    --   Get/Set_Loop_Label (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Simple_Signal_Assignment_Statement (Short)
    -- Iir_Kind_Conditional_Signal_Assignment_Statement (Short)
@@ -3211,6 +3227,8 @@ package Iirs is
    --
    --  True if the target of the assignment is guarded
    --   Get/Set_Guarded_Target_State (State1)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Variable_Assignment_Statement (Short)
    --
@@ -3226,6 +3244,8 @@ package Iirs is
    --   Get/Set_Expression (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Conditional_Variable_Assignment_Statement (Short)
    --
@@ -3241,6 +3261,8 @@ package Iirs is
    --   Get/Set_Conditional_Expression (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Assertion_Statement (Short)
    --
@@ -6547,7 +6569,7 @@ package Iirs is
    function Get_Through_Type (Def : Iir) return Iir;
    procedure Set_Through_Type (Def : Iir; Atype : Iir);
 
-   --  Field: Field1
+   --  Field: Field1 Maybe_Ref
    function Get_Target (Target : Iir) return Iir;
    procedure Set_Target (Target : Iir; Atarget : Iir);
 
@@ -6853,7 +6875,7 @@ package Iirs is
 
    --  Condition of a conditional_waveform, if_statement, elsif,
    --  while_loop_statement, next_statement or exit_statement.
-   --  Field: Field1
+   --  Field: Field1 Maybe_Ref
    function Get_Condition (Target : Iir) return Iir;
    procedure Set_Condition (Target : Iir; Condition : Iir);
 

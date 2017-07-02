@@ -192,10 +192,11 @@ package Iirs_Utils is
    function Build_Simple_Name (Ref : Iir; Loc : Iir) return Iir;
 
    --  Create a name that referenced the same named entity as NAME.
+   --
+   --  This is mainly used by canon, when there is a need to reference an
+   --  existing name.  In some cases, it is not possible to use the name,
+   --  because it is already owned.
    function Build_Reference_Name (Name : Iir) return Iir;
-
-   --  Create a reference to a declaration (or aggregate).
-   function Build_Reference_Decl (Decl : Iir; Loc : Iir) return Iir;
 
    --  If N is a reference_name, return the corresponding node, otherwise
    --  return N.

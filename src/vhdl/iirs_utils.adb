@@ -974,22 +974,15 @@ package body Iirs_Utils is
    is
       Res : Iir;
    begin
+      pragma Assert (Get_Kind (Name) in Iir_Kinds_Denoting_Name);
+
       Res := Create_Iir (Iir_Kind_Reference_Name);
       Location_Copy (Res, Name);
       Set_Referenced_Name (Res, Name);
+      Set_Is_Forward_Ref (Res, True);
       Set_Named_Entity (Res, Get_Named_Entity (Name));
       return Res;
    end Build_Reference_Name;
-
-   function Build_Reference_Decl (Decl : Iir; Loc : Iir) return Iir
-   is
-      Res : Iir;
-   begin
-      Res := Create_Iir (Iir_Kind_Reference_Name);
-      Location_Copy (Res, Loc);
-      Set_Named_Entity (Res, Decl);
-      return Res;
-   end Build_Reference_Decl;
 
    function Strip_Reference_Name (N : Iir) return Iir is
    begin

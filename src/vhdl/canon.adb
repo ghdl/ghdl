@@ -1325,9 +1325,8 @@ package body Canon is
          Set_Sequential_Statement_Chain (Proc, If_Stmt);
          Location_Copy (If_Stmt, Stmt);
          Canon_Extract_Sensitivity (Get_Guard (Stmt), Sensitivity_List, False);
-         Set_Condition
-           (If_Stmt, Build_Reference_Decl (Get_Guard (Stmt), If_Stmt));
-         Set_Guard (Stmt, Null_Iir);
+         Set_Condition (If_Stmt, Get_Guard (Stmt));
+         Set_Is_Ref (If_Stmt, True);
          Chain := If_Stmt;
 
          declare
@@ -1346,7 +1345,8 @@ package body Canon is
                  Create_Iir (Iir_Kind_Simple_Signal_Assignment_Statement);
                Location_Copy (Dis_Stmt, Stmt);
                Set_Parent (Dis_Stmt, If_Stmt);
-               Set_Target (Dis_Stmt, Build_Reference_Decl (Target, Dis_Stmt));
+               Set_Target (Dis_Stmt, Target);
+               Set_Is_Ref (Dis_Stmt, True);
                Set_Sequential_Statement_Chain (Else_Clause, Dis_Stmt);
                --  XX
                Set_Waveform_Chain (Dis_Stmt, Null_Iir);
@@ -1445,7 +1445,6 @@ package body Canon is
                                   Is_First : Boolean)
                                  return Iir
    is
-      Target : Iir;
       Stmt : Iir;
       Sensitivity_List : Iir_List;
    begin
@@ -1469,11 +1468,10 @@ package body Canon is
          --    target <= [ delay_mechanism ] waveform_element1,
          --       waveform_element2, ..., waveform_elementN;
          Stmt := Create_Iir (Iir_Kind_Simple_Signal_Assignment_Statement);
-         Target := Get_Target (Orig_Stmt);
+         Set_Target (Stmt, Get_Target (Orig_Stmt));
          if not Is_First then
-            Target := Build_Reference_Decl (Target, Orig_Stmt);
+            Set_Is_Ref (Stmt, True);
          end if;
-         Set_Target (Stmt, Target);
          if Proc /= Null_Iir then
             Sensitivity_List := Get_Sensitivity_List (Proc);
             Extract_Waveform_Sensitivity (Waveform_Chain, Sensitivity_List);
@@ -1538,7 +1536,7 @@ package body Canon is
          --  Canon waveform.
          Wf := Get_Waveform_Chain (Cond_Wf);
          Wf := Canon_Wave_Transform
-           (Conc_Stmt, Wf, Proc, Cond_Wf = Cond_Wf_Chain);
+           (Conc_Stmt, Wf, Proc, False); -- Cond_Wf = Cond_Wf_Chain);
 
          if Expr = Null_Iir and Cond_Wf = Cond_Wf_Chain then
             --  A conditional assignment that is in fact a simple one.  Usual
