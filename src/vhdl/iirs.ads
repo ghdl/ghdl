@@ -522,7 +522,7 @@ package Iirs is
    --   Get/Set_Chain (Field2)
    --
    --  These are elements of an choice chain, which is used for
-   --  case_statement, concurrent_select_signal_assignment, aggregates.
+   --  case_statement, concurrent_selected_signal_assignment, aggregates.
    --
    --  Get/Set what is associated with the choice.  There are two different
    --  nodes, one for simple association and the other for chain association.
@@ -538,7 +538,7 @@ package Iirs is
    --   Get/Set_Associated_Block (Alias Field3)
    --
    --  For
-   --  * a waveform_chain for a concurrent_select_signal_assignment,
+   --  * a waveform_chain for a concurrent_selected_signal_assignment,
    --  * a sequential statement chain for a case_statement.
    --   Get/Set_Associated_Chain (Field4)
    --
