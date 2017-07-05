@@ -6,12 +6,24 @@ common_args="--std=93c $GHDL_FLAGS"
 # Test number.
 test_num="1"
 do_inter_clean="no"
+use_last_entity=no
 
 # Functions used by tests.
 setup_test_group() { echo "Test: $1 $2"; }
 end_test_group() { delete_lib work; echo "*** End of tests"; }
 create_lib() { echo "create library: $1"; }
 delete_lib() { echo "delete library: $1" && cmd="$GHDL --remove $common_args --work=$1" && echo $cmd && eval $cmd; }
+
+get_entity()
+{
+    if [ x$use_last_entity = x"no" ]; then
+	$GHDL --find-top $1
+    else
+	# Search for XXXent or XXXentw, keep only the last one
+	sed -n -E -e '/^ENTITY .*(ent|entw|cfg) IS$/s/ENTITY (.*) IS/\1/p' \
+	    $1 | tail -1
+    fi
+}
 
 # Usage: handle_test MODE FILE options...
 handle_test() {
@@ -59,10 +71,11 @@ handle_test() {
     run)
          eval $cmd
          if [ x$entity = "x" ]; then
-           entity=`$GET_ENTITIES $dir/$file`
+           entity=`get_entity $dir/$file`
 	 fi
          if [ "x$entity" = "x" ]; then
-           echo "Cannot elaborate or run : no top level entity";
+             echo "Cannot elaborate or run : no top level entity";
+	     exit 1
          else
            cmd="$GHDL --elab-run $entity $stop --assert-level=error";
            echo "$cmd";
@@ -80,7 +93,7 @@ handle_test() {
 #         ent=`sed -n -e "/^ENTITY \([a-zA-Z0-9]*\) IS$/p" < $dir/$file \
 #              | cut -f 2 -d ' '`
          if [ x$entity = "x" ]; then
-           entity=`$GET_ENTITIES $dir/$file`
+           entity=`get_entity $dir/$file`
 	 fi
          if [ "x$entity" = "x" ]; then
            echo "Cannot elaborate or run : no top level entity";
@@ -101,9 +114,9 @@ handle_test() {
     esac
 
     if [ $do_inter_clean = "yes" ]; then
-      if [ `expr $test_num % 16` = "0" ]; then
+#      if [ `expr $test_num % 16` = "0" ]; then
          delete_lib work;
-      fi
+#      fi
     fi
   else
     echo "skip";
@@ -138,11 +151,14 @@ done
 
 test_ashenden() {
   delete_lib work
+  use_last_entity=no
+  do_inter_clean="yes"
 
   dir=vhdl-93/clifton-labs/compliant
   . $dir/compliant1.exp
 
   # ashenden compliant
+  do_inter_clean="no"
   # OK
   dir=vhdl-93/ashenden/compliant
   . $dir/compliant.exp
@@ -153,6 +169,8 @@ test_ashenden() {
 }
 
 test_billowitch() {
+  use_last_entity=yes
+
   # OK.
   dir=vhdl-93/billowitch/compliant
   . $dir/compliant.exp
@@ -162,7 +180,7 @@ test_billowitch() {
   . $dir/non_compliant.exp
 
   run_non_compliant_test() { handle_test run_err $@; }
-  
+
   dir=vhdl-93/billowitch/non_compliant/simulator_failure
   . $dir/non_compliant.exp
 }
@@ -174,15 +192,15 @@ deletelibs() {
 }
 
 printf "$ANSI_BLUE[$TASK| GHDL - test] vests: ashenden $ANSI_NOCOLOR\n"
-test_ashenden 1>> ../../log.log 2>&1
+test_ashenden
 # Clean frequently the work library.
 do_inter_clean="yes"
 printf "$ANSI_BLUE[$TASK| GHDL - test] vests: billowitch $ANSI_NOCOLOR\n"
-test_billowitch 1>> ../../log.log 2>&1
+test_billowitch
 printf "$ANSI_BLUE[$TASK| GHDL - test] vests: delete libs $ANSI_NOCOLOR\n"
-deletelibs 1>> ../../log.log 2>&1
+deletelibs
 
 # Remove io files created by tests
 rm -f iofile.* *.file fopen*.out
 
-echo "Vests tests successful" 1>> ../../log.log 2>&1
+echo "Vests tests successful"

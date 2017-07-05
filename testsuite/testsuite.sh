@@ -33,9 +33,12 @@ do_gna() {
 
 # The VESTS testsuite: compliance testsuite, from: https://github.com/nickg/vests.git 388250486a
 do_vests() {
-  gnatmake get_entities 1>> ../log.log 2>&1
   cd vests
-  ./testsuite.sh
+  if [ $flag_log = yes ]; then
+      ./testsuite.sh 1>> ../../log.log 2>&1
+  else
+      ./testsuite.sh
+  fi
   cd ..
 }
 
