@@ -254,15 +254,15 @@ begin
     assert Sin8(0) = Sin8(4) report "assignment of Sin8(0) to Sin8(4) is invalid through entity port" severity failure;
     assert Sin9(0) = Sin9(4) report "assignment of Sin9(0) to Sin9(4) is invalid through entity port" severity failure;
     assert Sin10(0) = Sin10(4) report "assignment of Sin10(0) to Sin10(4) is invalid through entity port" severity failure;
-    assert Sin1(5) = '0' report "assignment of Sin1(5) to Sin1(4) is invalid through entity port" severity failure;
-    assert Sin2(5) = false report "assignment of Sin2(5) to Sin2(4) is invalid through entity port" severity failure;
-    assert Sin4(5) = error report "assignment of Sin4(5) to Sin4(4) is invalid through entity port" severity failure;
-    assert Sin5(5) = 6 report "assignment of Sin5(5) to Sin5(4) is invalid through entity port" severity failure;
-    assert Sin6(5) = 6.0 report "assignment of Sin6(5) to Sin6(4) is invalid through entity port" severity failure;
-    assert Sin7(5) = 6 ns report "assignment of Sin7(5) to Sin7(4) is invalid through entity port" severity failure;
-    assert Sin8(5) = 6 report "assignment of Sin8(5) to Sin8(4) is invalid through entity port" severity failure;
-    assert Sin9(5) = 6 report "assignment of Sin9(5) to Sin9(4) is invalid through entity port" severity failure;
-    assert Sin10(5) = (false,'0','h',error,6,6.0,6 ns,6,6) report "assignment of Sin15(5) to Sin15(4) is invalid through entity port" severity failure;
+    assert Sin1(5) = '1' report "assignment of Sin1(5) to Sin1(4) is invalid through entity port" severity failure;
+    assert Sin2(5) = true report "assignment of Sin2(5) to Sin2(4) is invalid through entity port" severity failure;
+    assert Sin4(5) = note report "assignment of Sin4(5) to Sin4(4) is invalid through entity port" severity failure;
+    assert Sin5(5) = 3 report "assignment of Sin5(5) to Sin5(4) is invalid through entity port" severity failure;
+    assert Sin6(5) = 3.0 report "assignment of Sin6(5) to Sin6(4) is invalid through entity port" severity failure;
+    assert Sin7(5) = 3 ns report "assignment of Sin7(5) to Sin7(4) is invalid through entity port" severity failure;
+    assert Sin8(5) = 1 report "assignment of Sin8(5) to Sin8(4) is invalid through entity port" severity failure;
+    assert Sin9(5) = 1 report "assignment of Sin9(5) to Sin9(4) is invalid through entity port" severity failure;
+    assert Sin10(5) = (true,'1','s',note,3,3.0,3 ns,1,1) report "assignment of Sin10(5) to Sin10(4) is invalid through entity port" severity failure;
     
     assert NOT(    Sin1(0) = sin1(4)   and
                    Sin2(0) = Sin2(4)   and
@@ -273,15 +273,15 @@ begin
                    Sin8(0) = Sin8(4)   and
                    Sin9(0) = Sin9(4)   and
                    Sin10(0)= Sin10(4)   and
-                   Sin1(5) = '0'      and
-                   Sin2(5) = FALSE      and
-                   Sin4(5) = error      and
-                   Sin5(5) = 6      and
-                   Sin6(5) = 6.0      and
-                   Sin7(5) = 6 ns      and
-                   Sin8(5) = 6      and
-                   Sin9(5) = 6      and
-                   Sin10(5)=(False,'0','h',error,6,6.0,6 ns,6,6))
+                   Sin1(5) = '1'      and
+                   Sin2(5) = TRUE      and
+                   Sin4(5) = note      and
+                   Sin5(5) = 3      and
+                   Sin6(5) = 3.0      and
+                   Sin7(5) = 3 ns      and
+                   Sin8(5) = 1      and
+                   Sin9(5) = 1      and
+                   Sin10(5)=(True,'1','s',note,3,3.0,3 ns,1,1))
       report "***PASSED TEST: c01s03b01x00p12n01i00871"
       severity NOTE;
     assert (    Sin1(0) = sin1(4)   and
@@ -293,15 +293,15 @@ begin
                 Sin8(0) = Sin8(4)   and
                 Sin9(0) = Sin9(4)   and
                 Sin10(0)= Sin10(4)   and
-                Sin1(5) = '0'      and
-                Sin2(5) = FALSE      and
-                Sin4(5) = error      and
-                Sin5(5) = 6      and
-                Sin6(5) = 6.0      and
-                Sin7(5) = 6 ns      and
-                Sin8(5) = 6      and
-                Sin9(5) = 6      and
-                Sin10(5)=(False,'0','h',error,6,6.0,6 ns,6,6))
+                Sin1(5) = '1'      and
+                Sin2(5) = TRUE      and
+                Sin4(5) = note      and
+                Sin5(5) = 3      and
+                Sin6(5) = 3.0      and
+                Sin7(5) = 3 ns      and
+                Sin8(5) = 1      and
+                Sin9(5) = 1      and
+                Sin10(5)=(True,'1','s',note,3,3.0,3 ns,1,1))
       report "***FAILED TEST: c01s03b01x00p12n01i00871 - If such a block configuration contains an index specification that is a discrete range, then the block configuration applies to those implicit block statements that are generated for the specified range of values of the corresponding generate index."
       severity ERROR;
     wait;
