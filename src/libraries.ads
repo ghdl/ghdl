@@ -187,6 +187,12 @@ package Libraries is
    --  Return null_iir if the design unit is not found.
    function Find_Design_Unit (Unit : Iir) return Iir_Design_Unit;
 
+   --  Search design file NAME in library LIB.  This is not very efficient as
+   --  this is a simple linear search.  NAME must correspond exactely to the
+   --  design file name.
+   function Find_Design_File (Lib : Iir_Library_Declaration; Name : Name_Id)
+                             return Iir;
+
    --  Find an entity whose name is NAME in any library.
    --  If there is no such entity, return NULL_IIR.
    --  If there are severals entities, return NULL_IIR;

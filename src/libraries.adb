@@ -1482,6 +1482,21 @@ package body Libraries is
       end case;
    end Find_Design_Unit;
 
+   function Find_Design_File (Lib : Iir_Library_Declaration; Name : Name_Id)
+                             return Iir
+   is
+      File : Iir;
+   begin
+      File := Get_Design_File_Chain (Lib);
+      while Is_Valid (File) loop
+         if Get_Design_File_Filename (File) = Name then
+            return File;
+         end if;
+         File := Get_Chain (File);
+      end loop;
+      return Null_Iir;
+   end Find_Design_File;
+
    function Is_Obsolete (Design_Unit : Iir_Design_Unit; Loc : Iir)
      return Boolean
    is

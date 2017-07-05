@@ -15,12 +15,15 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+
 with Libraries;
 with Errorout; use Errorout;
 with Std_Package;
 with Name_Table; use Name_Table;
 with Flags;
 with Iirs_Utils; use Iirs_Utils;
+with Iirs_Walk;
+with Sem_Scopes;
 with Canon;
 
 package body Configuration is
@@ -755,4 +758,199 @@ package body Configuration is
          El := Get_Chain (El);
       end loop;
    end Check_Entity_Declaration_Top;
+
+   package Top is
+      procedure Mark_Instantiated_Units (Lib : Iir_Library_Declaration);
+
+      Nbr_Top_Entities : Natural;
+      First_Top_Entity : Iir;
+
+      procedure Find_First_Top_Entity (Lib : Iir_Library_Declaration);
+   end Top;
+
+   package body Top is
+      use Iirs_Walk;
+
+      function Add_Entity_Cb (Design : Iir) return Walk_Status
+      is
+         Kind : constant Iir_Kind := Get_Kind (Get_Library_Unit (Design));
+      begin
+         if Get_Date (Design) < Date_Analyzed then
+            return Walk_Continue;
+         end if;
+
+         case Iir_Kinds_Library_Unit_Declaration (Kind) is
+            when Iir_Kind_Architecture_Body
+              | Iir_Kind_Configuration_Declaration =>
+               Libraries.Load_Design_Unit (Design, Null_Iir);
+            when Iir_Kind_Entity_Declaration =>
+               Libraries.Load_Design_Unit (Design, Null_Iir);
+               Sem_Scopes.Add_Name (Get_Library_Unit (Design));
+            when Iir_Kind_Package_Declaration
+              | Iir_Kind_Package_Instantiation_Declaration
+              | Iir_Kind_Package_Body
+              | Iir_Kind_Context_Declaration =>
+               null;
+         end case;
+         return Walk_Continue;
+      end Add_Entity_Cb;
+
+      procedure Mark_Aspect (Aspect : Iir)
+      is
+         Unit : Iir;
+      begin
+         case Iir_Kinds_Entity_Aspect (Get_Kind (Aspect)) is
+            when Iir_Kind_Entity_Aspect_Entity =>
+               Unit := Get_Entity (Aspect);
+               Set_Elab_Flag (Get_Parent (Unit), True);
+            when Iir_Kind_Entity_Aspect_Configuration
+              | Iir_Kind_Entity_Aspect_Open =>
+               null;
+         end case;
+      end Mark_Aspect;
+
+      function Mark_Instantiation_Cb (Stmt : Iir) return Walk_Status
+      is
+         Inst : Iir;
+      begin
+         if Get_Kind (Stmt) /= Iir_Kind_Component_Instantiation_Statement then
+            return Walk_Continue;
+         end if;
+
+         Inst := Get_Instantiated_Unit (Stmt);
+         case Get_Kind (Inst) is
+            when Iir_Kinds_Denoting_Name =>
+               --  TODO: look at default_binding_indication
+               --        or configuration_specification ?
+               declare
+                  Config : constant Iir :=
+                    Get_Configuration_Specification (Stmt);
+               begin
+                  if Is_Valid (Config) then
+                     Mark_Aspect
+                       (Get_Entity_Aspect (Get_Binding_Indication (Config)));
+                     return Walk_Continue;
+                  end if;
+               end;
+               declare
+                  use Sem_Scopes;
+                  Comp : constant Iir := Get_Named_Entity (Inst);
+                  Interp : constant Name_Interpretation_Type :=
+                    Get_Interpretation (Get_Identifier (Comp));
+                  Decl : Iir;
+               begin
+                  if Valid_Interpretation (Interp) then
+                     Decl := Get_Declaration (Interp);
+                     pragma Assert
+                       (Get_Kind (Decl) = Iir_Kind_Entity_Declaration);
+                     Set_Elab_Flag (Get_Design_Unit (Decl), True);
+                  else
+                     --  If there is no corresponding entity name for the
+                     --  component name, assume it belongs to a different
+                     --  library (or will be set by a configuration unit).
+                     null;
+                  end if;
+               end;
+            when Iir_Kinds_Entity_Aspect =>
+               Mark_Aspect (Inst);
+            when others =>
+               Error_Kind ("mark_instantiation_cb", Stmt);
+         end case;
+
+         return Walk_Continue;
+      end Mark_Instantiation_Cb;
+
+      function Mark_Units_Cb (Design : Iir) return Walk_Status
+      is
+         Unit : constant Iir := Get_Library_Unit (Design);
+         Status : Walk_Status;
+      begin
+         if Get_Date (Design) < Date_Analyzed then
+            return Walk_Continue;
+         end if;
+
+         case Iir_Kinds_Library_Unit_Declaration (Get_Kind (Unit)) is
+            when Iir_Kind_Architecture_Body =>
+               Status := Walk_Concurrent_Statements_Chain
+                 (Get_Concurrent_Statement_Chain (Unit),
+                  Mark_Instantiation_Cb'Access);
+               pragma Assert (Status = Walk_Continue);
+            when Iir_Kind_Configuration_Declaration =>
+               --  TODO
+               raise Program_Error;
+               --  Mark_Units_Of_Block_Configuration
+               --   (Get_Block_Configuration (Unit));
+            when Iir_Kind_Package_Declaration
+              | Iir_Kind_Package_Instantiation_Declaration
+              | Iir_Kind_Package_Body
+              | Iir_Kind_Entity_Declaration
+              | Iir_Kind_Context_Declaration =>
+               null;
+         end case;
+         return Walk_Continue;
+      end Mark_Units_Cb;
+
+      procedure Mark_Instantiated_Units (Lib : Iir_Library_Declaration)
+      is
+         Status : Walk_Status;
+      begin
+         --  Name table is used to map names to entities.
+         Sem_Scopes.Push_Interpretations;
+         Sem_Scopes.Open_Declarative_Region;
+
+         --  1. Add all design entities in the name table.
+         Status := Walk_Design_Units (Lib, Add_Entity_Cb'Access);
+         pragma Assert (Status = Walk_Continue);
+
+         --  2. Walk architecture and configurations, and mark instantiated
+         --     entities.
+         Status := Walk_Design_Units (Lib, Mark_Units_Cb'Access);
+         pragma Assert (Status = Walk_Continue);
+
+         Sem_Scopes.Close_Declarative_Region;
+         Sem_Scopes.Pop_Interpretations;
+      end Mark_Instantiated_Units;
+
+      function Extract_Entity_Cb (Design : Iir) return Walk_Status
+      is
+         Unit : constant Iir := Get_Library_Unit (Design);
+      begin
+         if Get_Kind (Unit) = Iir_Kind_Entity_Declaration then
+            if Get_Elab_Flag (Design) then
+               Set_Elab_Flag (Design, False);
+            else
+               Nbr_Top_Entities := Nbr_Top_Entities + 1;
+               if Nbr_Top_Entities = 1 then
+                  First_Top_Entity := Unit;
+               end if;
+            end if;
+         end if;
+         return Walk_Continue;
+      end Extract_Entity_Cb;
+
+      procedure Find_First_Top_Entity (Lib : Iir_Library_Declaration)
+      is
+         Status : Walk_Status;
+      begin
+         Nbr_Top_Entities := 0;
+         First_Top_Entity := Null_Iir;
+
+         Status := Walk_Design_Units (Lib, Extract_Entity_Cb'Access);
+         pragma Assert (Status = Walk_Continue);
+      end Find_First_Top_Entity;
+
+   end Top;
+
+   function Find_Top_Entity (From : Iir) return Iir is
+   begin
+      Top.Mark_Instantiated_Units (From);
+      Top.Find_First_Top_Entity (From);
+
+      if Top.Nbr_Top_Entities = 1 then
+         return Top.First_Top_Entity;
+      else
+         return Null_Iir;
+      end if;
+   end Find_Top_Entity;
+
 end Configuration;

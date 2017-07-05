@@ -1065,6 +1065,62 @@ package body Ghdllocal is
       Disp_Vhdl.Disp_Vhdl (Std_Package.Std_Standard_Unit);
    end Perform_Action;
 
+   --  Command --find-top.
+   type Command_Find_Top is new Command_Lib with null record;
+   function Decode_Command (Cmd : Command_Find_Top; Name : String)
+                           return Boolean;
+   function Get_Short_Help (Cmd : Command_Find_Top) return String;
+   procedure Perform_Action (Cmd : in out Command_Find_Top;
+                             Args : Argument_List);
+
+   function Decode_Command (Cmd : Command_Find_Top; Name : String)
+                           return Boolean
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      return Name = "--find-top";
+   end Decode_Command;
+
+   function Get_Short_Help (Cmd : Command_Find_Top) return String
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      return "--find-top         Disp possible top entity in work library";
+   end Get_Short_Help;
+
+   procedure Perform_Action (Cmd : in out Command_Find_Top;
+                             Args : Argument_List)
+   is
+      use Libraries;
+      pragma Unreferenced (Cmd);
+      From : Iir;
+      Top : Iir;
+   begin
+      Setup_Libraries (True);
+
+      if Args'Length = 0 then
+         From := Work_Library;
+      elsif Args'Length = 1 then
+         From := Find_Design_File
+           (Work_Library, Name_Table.Get_Identifier (Args (Args'First).all));
+         if not Is_Valid (From) then
+            Error ("cannot find '" & Args (Args'First).all & "' in library");
+            raise Option_Error;
+         end if;
+      else
+         Error ("command '--find-top' accepts at most one argument");
+         raise Option_Error;
+      end if;
+
+      Top := Configuration.Find_Top_Entity (From);
+
+      if Top = Null_Iir then
+         Error ("no top entity found");
+      else
+         Put_Line (Name_Table.Image (Get_Identifier (Top)));
+      end if;
+   end Perform_Action;
+
    --  Command --bug-box.
    type Command_Bug_Box is new Command_Type with null record;
    function Decode_Command (Cmd : Command_Bug_Box; Name : String)
@@ -1539,6 +1595,7 @@ package body Ghdllocal is
       Register_Command (new Command_Remove);
       Register_Command (new Command_Copy);
       Register_Command (new Command_Disp_Standard);
+      Register_Command (new Command_Find_Top);
       Register_Command (new Command_Bug_Box);
    end Register_Commands;
 end Ghdllocal;

@@ -42,4 +42,12 @@ package Iirs_Walk is
    --  Walk on all stmts and sub-stmts of CHAIN.
    function Walk_Sequential_Stmt_Chain (Chain : Iir; Cb : Walk_Cb)
                                        return Walk_Status;
+
+   --  Walk on all design units of library or design file PARENT.
+   function Walk_Design_Units (Parent : Iir; Cb : Walk_Cb) return Walk_Status;
+
+   --  Walk on all concurrent statements (and sub statements) of CHAIN.
+   function Walk_Concurrent_Statements_Chain (Chain : Iir; Cb : Walk_Cb)
+                                       return Walk_Status;
+
 end Iirs_Walk;
