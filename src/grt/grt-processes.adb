@@ -524,9 +524,14 @@ package body Grt.Processes is
          --  LRM93 8.1
          Error ("negative timeout clause");
       end if;
-      Proc.Timeout := Current_Time + Time;
       Proc.State := State_Delayed;
-      Update_Process_First_Timeout (Proc);
+      if Time <= Std_Time'Last - Current_Time then
+         Proc.Timeout := Current_Time + Time;
+         Update_Process_First_Timeout (Proc);
+      else
+         --  Delay past the end of the times.
+         Proc.Timeout := Std_Time'Last;
+      end if;
    end Ghdl_Process_Wait_Timeout;
 
    --  Verilog.
