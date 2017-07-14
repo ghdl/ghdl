@@ -1,0 +1,13 @@
+[size] 1000 600
+[pos] -1 -1
+*-51.000000 2510000000000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] top.
+[treeopen] top.tb_demo.
+@28
+top.tb_demo.clk
+top.tb_demo.reset
+top.tb_demo.load
+top.tb_demo.is5
+@22
+#qout[7:0] top.tb_demo.qout[7] top.tb_demo.qout[6] top.tb_demo.qout[5] top.tb_demo.qout[4] top.tb_demo.qout[3] top.tb_demo.qout[2] top.tb_demo.qout[1] top.tb_demo.qout[0]
+#load_val[7:0] top.tb_demo.load_val[7] top.tb_demo.load_val[6] top.tb_demo.load_val[5] top.tb_demo.load_val[4] top.tb_demo.load_val[3] top.tb_demo.load_val[2] top.tb_demo.load_val[1] top.tb_demo.load_val[0]
