@@ -1235,6 +1235,7 @@ package body Sem_Decls is
                Set_Identifier (Deallocate_Proc, Std_Names.Name_Deallocate);
                Set_Implicit_Definition
                  (Deallocate_Proc, Iir_Predefined_Deallocate);
+               Set_Parent (Deallocate_Proc, Get_Parent (Decl));
 
                Var_Interface :=
                  Create_Iir (Iir_Kind_Interface_Variable_Declaration);
