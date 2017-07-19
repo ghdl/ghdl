@@ -65,8 +65,7 @@ package body Libraries is
 
    --  Initialize paths table.
    --  Set the local path.
-   procedure Init_Paths
-   is
+   procedure Init_Paths is
    begin
       --  Always look in current directory first.
       Name_Nil := Get_Identifier ("");
@@ -211,7 +210,7 @@ package body Libraries is
       Id : Name_Id;
    begin
       Lib_Unit := Get_Library_Unit (Design_Unit);
-      case Get_Kind (Lib_Unit) is
+      case Iir_Kinds_Library_Unit_Declaration (Get_Kind (Lib_Unit)) is
          when Iir_Kind_Entity_Declaration
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Package_Declaration
@@ -222,8 +221,6 @@ package body Libraries is
          when Iir_Kind_Architecture_Body =>
             --  Architectures are put with the entity identifier.
             Id := Get_Entity_Identifier_Of_Architecture (Lib_Unit);
-         when others =>
-            Error_Kind ("get_Hash_Id_For_Unit", Lib_Unit);
       end case;
       return Id mod Unit_Hash_Length;
    end Get_Hash_Id_For_Unit;
@@ -388,28 +385,6 @@ package body Libraries is
       Design_Unit, Last_Design_Unit : Iir_Design_Unit;
       Lib_Ident : constant Name_Id := Get_Identifier (Library);
 
-      function Scan_Unit_List return Iir_List is
-      begin
-         if Current_Token = Tok_Left_Paren then
-            Scan_Expect (Tok_Identifier);
-            loop
-               Scan_Expect (Tok_Dot);
-               Scan_Expect (Tok_Identifier);
-               Scan;
-               if Current_Token = Tok_Left_Paren then
-                  --  This is an architecture.
-                  Scan_Expect (Tok_Identifier);
-                  Scan_Expect (Tok_Right_Paren);
-                  Scan;
-               end if;
-               exit when Current_Token /= Tok_Comma;
-               Scan;
-            end loop;
-            Scan;
-         end if;
-         return Null_Iir_List;
-      end Scan_Unit_List;
-
       Design_File: Iir_Design_File;
       Library_Unit: Iir;
       Line, Col: Int32;
@@ -544,7 +519,6 @@ package body Libraries is
                   Scan_Expect (Tok_Configuration);
                   Scan_Expect (Tok_Colon);
                   Scan;
-                  Set_Dependence_List (Design_Unit, Scan_Unit_List);
                   goto Next_Line;
                when Tok_Context =>
                   Library_Unit :=
@@ -600,9 +574,6 @@ package body Libraries is
                Put_Line ("line:" & Int32'Image (Line)
                          & ", pos:" & Source_Ptr'Image (Pos));
             end if;
-
-            -- Scan dependence list.
-            Set_Dependence_List (Design_Unit, Scan_Unit_List);
 
             -- Keep the position of the design unit.
             --Set_Location (Design_Unit, Location_Type (File));
@@ -780,40 +751,40 @@ package body Libraries is
       return Library;
    end Get_Library;
 
-   -- Return TRUE if LIBRARY_UNIT and UNIT have identifiers for the same
-   -- design unit identifier.
-   -- eg: 'entity A' and 'package A' returns TRUE.
-   function Is_Same_Library_Unit (Library_Unit, Unit: Iir) return Boolean
+   --  Return TRUE if UNIT1 and UNIT2 have identifiers for the same
+   --  design unit identifier.
+   --  eg: 'entity A' and 'package A' returns TRUE.
+   function Is_Same_Library_Unit (Unit1, Unit2 : Iir) return Boolean
    is
       Entity_Name1, Entity_Name2: Name_Id;
-      Library_Unit_Kind, Unit_Kind : Iir_Kind;
+      Unit1_Kind, Unit2_Kind : Iir_Kind;
    begin
-      if Get_Identifier (Unit) /= Get_Identifier (Library_Unit) then
+      if Get_Identifier (Unit1) /= Get_Identifier (Unit2) then
          return False;
       end if;
 
-      Library_Unit_Kind := Get_Kind (Library_Unit);
-      Unit_Kind := Get_Kind (Unit);
+      Unit1_Kind := Get_Kind (Unit1);
+      Unit2_Kind := Get_Kind (Unit2);
 
       --  Package and package body are never the same library unit.
-      if Library_Unit_Kind = Iir_Kind_Package_Declaration
-        and then Unit_Kind = Iir_Kind_Package_Body
+      if Unit1_Kind = Iir_Kind_Package_Declaration
+        and then Unit2_Kind = Iir_Kind_Package_Body
       then
          return False;
       end if;
-      if Unit_Kind = Iir_Kind_Package_Declaration
-        and then Library_Unit_Kind = Iir_Kind_Package_Body
+      if Unit2_Kind = Iir_Kind_Package_Declaration
+        and then Unit1_Kind = Iir_Kind_Package_Body
       then
          return False;
       end if;
 
       --  Two architecture declarations are identical only if they also have
       --  the same entity name.
-      if Unit_Kind = Iir_Kind_Architecture_Body
-        and then Library_Unit_Kind = Iir_Kind_Architecture_Body
+      if Unit1_Kind = Iir_Kind_Architecture_Body
+        and then Unit2_Kind = Iir_Kind_Architecture_Body
       then
-         Entity_Name1 := Get_Entity_Identifier_Of_Architecture (Unit);
-         Entity_Name2 := Get_Entity_Identifier_Of_Architecture (Library_Unit);
+         Entity_Name1 := Get_Entity_Identifier_Of_Architecture (Unit1);
+         Entity_Name2 := Get_Entity_Identifier_Of_Architecture (Unit2);
          if Entity_Name1 /= Entity_Name2 then
             return False;
          end if;
@@ -821,17 +792,221 @@ package body Libraries is
 
       --  An architecture declaration never conflits with a library unit that
       --  is not an architecture declaration.
-      if (Unit_Kind = Iir_Kind_Architecture_Body
-          and then Library_Unit_Kind /= Iir_Kind_Architecture_Body)
+      if (Unit1_Kind = Iir_Kind_Architecture_Body
+          and then Unit2_Kind /= Iir_Kind_Architecture_Body)
         or else
-        (Unit_Kind /= Iir_Kind_Architecture_Body
-         and then Library_Unit_Kind = Iir_Kind_Architecture_Body)
+        (Unit1_Kind /= Iir_Kind_Architecture_Body
+         and then Unit2_Kind = Iir_Kind_Architecture_Body)
       then
          return False;
       end if;
 
       return True;
    end Is_Same_Library_Unit;
+
+   --  Return true iff DEP (an element of a dependence list) is design unit
+   --  UNIT.
+   function Is_Design_Unit (Dep : Iir; Unit : Iir) return Boolean
+   is
+      Lib_Unit : Iir;
+   begin
+      case Get_Kind (Dep) is
+         when Iir_Kind_Design_Unit =>
+            return Dep = Unit;
+         when Iir_Kind_Selected_Name =>
+            declare
+               Lib : constant Iir := Get_Library (Get_Design_File (Unit));
+            begin
+               if Get_Identifier (Get_Prefix (Dep)) /= Get_Identifier (Lib)
+               then
+                  return False;
+               end if;
+            end;
+            Lib_Unit := Get_Library_Unit (Unit);
+            case Iir_Kinds_Library_Unit_Declaration (Get_Kind (Lib_Unit)) is
+               when Iir_Kind_Entity_Declaration
+                 | Iir_Kind_Configuration_Declaration
+                 | Iir_Kind_Package_Declaration
+                 | Iir_Kind_Package_Body
+                 | Iir_Kind_Package_Instantiation_Declaration
+                 | Iir_Kind_Context_Declaration =>
+                  return Get_Identifier (Dep) = Get_Identifier (Lib_Unit);
+               when Iir_Kind_Architecture_Body =>
+                  return False;
+            end case;
+         when Iir_Kind_Entity_Aspect_Entity =>
+            Lib_Unit := Get_Library_Unit (Unit);
+            if Get_Kind (Lib_Unit) /= Iir_Kind_Architecture_Body then
+               return False;
+            end if;
+            if Get_Identifier (Get_Architecture (Dep))
+              /= Get_Identifier (Lib_Unit)
+            then
+               return False;
+            end if;
+
+            if Get_Entity (Dep) /= Get_Entity (Lib_Unit) then
+               return False;
+            end if;
+
+            return True;
+
+         when others =>
+            Error_Kind ("is_design_unit", Dep);
+      end case;
+   end Is_Design_Unit;
+
+   function Find_Design_Unit (Unit : Iir) return Iir_Design_Unit is
+   begin
+      case Get_Kind (Unit) is
+         when Iir_Kind_Design_Unit =>
+            return Unit;
+         when Iir_Kind_Selected_Name =>
+            declare
+               Lib : Iir_Library_Declaration;
+            begin
+               Lib := Get_Library (Get_Identifier (Get_Prefix (Unit)),
+                                   Get_Location (Unit));
+               return Find_Primary_Unit (Lib, Get_Identifier (Unit));
+            end;
+         when Iir_Kind_Entity_Aspect_Entity =>
+            return Find_Secondary_Unit
+              (Get_Design_Unit (Get_Entity (Unit)),
+               Get_Identifier (Get_Architecture (Unit)));
+         when others =>
+            Error_Kind ("find_design_unit", Unit);
+      end case;
+   end Find_Design_Unit;
+
+   function Find_Design_File (Lib : Iir_Library_Declaration; Name : Name_Id)
+                             return Iir
+   is
+      File : Iir;
+   begin
+      File := Get_Design_File_Chain (Lib);
+      while Is_Valid (File) loop
+         if Get_Design_File_Filename (File) = Name then
+            return File;
+         end if;
+         File := Get_Chain (File);
+      end loop;
+      return Null_Iir;
+   end Find_Design_File;
+
+   procedure Error_Obsolete (Loc : Iir; Msg : String; Args : Earg_Arr) is
+   begin
+      if not Flags.Flag_Elaborate_With_Outdated then
+         if Loc = Null_Iir then
+            Error_Msg_Sem (Command_Line_Location, Msg, Args);
+         else
+            Error_Msg_Sem (+Loc, Msg, Args);
+         end if;
+      end if;
+   end Error_Obsolete;
+
+   --  Check if one of its dependency makes this unit obsolete.
+   function Check_Obsolete_Dependence (Design_Unit : Iir; Loc : Iir)
+                                      return Boolean
+   is
+      List : constant Iir_List := Get_Dependence_List (Design_Unit);
+      Du_Ts : constant Time_Stamp_Id :=
+        Get_Analysis_Time_Stamp (Get_Design_File (Design_Unit));
+      U_Ts : Time_Stamp_Id;
+      El : Iir;
+   begin
+      if List = Null_Iir_List then
+         return False;
+      end if;
+
+      for I in Natural loop
+         El := Get_Nth_Element (List, I);
+         exit when El = Null_Iir;
+         if Get_Kind (El) = Iir_Kind_Design_Unit then
+            U_Ts := Get_Analysis_Time_Stamp (Get_Design_File (El));
+            if Files_Map.Is_Gt (U_Ts, Du_Ts) then
+               Error_Obsolete
+                 (Loc, "%n is obsoleted by %n", (+Design_Unit, +El));
+               return True;
+            end if;
+         end if;
+      end loop;
+
+      return False;
+   end Check_Obsolete_Dependence;
+
+   procedure Explain_Obsolete (Design_Unit : Iir_Design_Unit; Loc : Iir)
+   is
+      List : Iir_List;
+      El : Iir;
+   begin
+      pragma Assert (Get_Date_State (Design_Unit) = Date_Analyze);
+      pragma Assert (Get_Date (Design_Unit) = Date_Obsolete);
+
+      List := Get_Dependence_List (Design_Unit);
+      if List = Null_Iir_List then
+         --  Argh, we don't know why.
+         Error_Obsolete (Loc, "%n is obsolete", (1 => +Design_Unit));
+         return;
+      end if;
+
+      for I in Natural loop
+         El := Get_Nth_Element (List, I);
+         exit when El = Null_Iir;
+         if Get_Date (El) = Date_Obsolete then
+            Error_Obsolete (Loc, "%n is obsoleted by %n", (+Design_Unit, +El));
+            return;
+         end if;
+      end loop;
+   end Explain_Obsolete;
+
+   --  Mark UNIT as obsolete.  Mark all units that depends on UNIT as
+   --  obsolete.
+   procedure Mark_Unit_Obsolete (Unit : Iir_Design_Unit)
+   is
+      Lib, File, Un : Iir;
+      List : Iir_List;
+      El : Iir;
+   begin
+      Set_Date (Unit, Date_Obsolete);
+
+      Lib := Libraries_Chain;
+      while Is_Valid (Lib) loop
+         File := Get_Design_File_Chain (Lib);
+         while Is_Valid (File) loop
+            Un := Get_First_Design_Unit (File);
+            while Is_Valid (Un) loop
+               List := Get_Dependence_List (Un);
+
+               if List /= Null_Iir_List
+                 and then Get_Date (Un) /= Date_Obsolete
+               then
+                  pragma Assert (Get_Date_State (Un) = Date_Analyze);
+
+                  for I in Natural loop
+                     El := Get_Nth_Element (List, I);
+                     exit when El = Null_Iir;
+
+                     if Is_Design_Unit (El, Unit) then
+
+                        --  Keep direct reference (for speed-up).
+                        if Get_Kind (El) /= Iir_Kind_Design_Unit then
+                           Iirs_Utils.Free_Recursive (El);
+                           Replace_Nth_Element (List, I, Unit);
+                        end if;
+
+                        --  Recurse.
+                        Mark_Unit_Obsolete (Un);
+                     end if;
+                  end loop;
+               end if;
+
+               Un := Get_Chain (Un);
+            end loop;
+            File := Get_Chain (File);
+         end loop;
+         Lib := Get_Chain (Lib);
+      end loop;
+   end Mark_Unit_Obsolete;
 
    procedure Free_Dependence_List (Design : Iir_Design_Unit)
    is
@@ -852,7 +1027,7 @@ package body Libraries is
    --  This procedure is called when the DESIGN_UNIT (either the stub created
    --  when a library is read or created from a previous unit in a source
    --  file) has been replaced by a new unit.  Free everything but DESIGN_UNIT,
-   --  has it may be referenced in other units (dependence...)
+   --  because it may be referenced in other units (dependence...)
    --  FIXME: Isn't the library unit also referenced too ?
    procedure Free_Design_Unit (Design_Unit : Iir_Design_Unit)
    is
@@ -986,8 +1161,9 @@ package body Libraries is
            and then Is_Same_Library_Unit (New_Library_Unit, Library_Unit)
          then
             --  LIBRARY_UNIT and UNIT designate the same design unit.
-            --  Remove the old one.
-            Set_Date (Design_Unit, Date_Obsolete);
+            Mark_Unit_Obsolete (Design_Unit);
+
+            --  Remove the old one from the hash table.
             declare
                Next_Design : Iir;
             begin
@@ -998,22 +1174,24 @@ package body Libraries is
                else
                   Set_Hash_Chain (Prev_Design_Unit, Next_Design);
                end if;
-
-               --  Remove DESIGN_UNIT from the design_file.
-               --  If KEEP_OBSOLETE is True, units that are obsoleted by units
-               --  in the same design file are kept.  This allows to process
-               --  (pretty print, xrefs, ...) all units of a design file.
-               --  But still remove units that are replaced (if a file was
-               --  already in the library).
-               if not Keep_Obsolete
-                 or else Get_Date_State (Design_Unit) = Date_Disk
-               then
-                  Remove_Unit_From_File (Design_Unit, Design_File);
-
-                  Set_Chain (Design_Unit, Obsoleted_Design_Units);
-                  Obsoleted_Design_Units := Design_Unit;
-               end if;
             end;
+
+            --  Remove DESIGN_UNIT from the design_file.
+            --  If KEEP_OBSOLETE is True, units that are obsoleted by units
+            --  in the same design file are kept.  This allows to process
+            --  (pretty print, xrefs, ...) all units of a design file.
+            --  But still remove units that are replaced (if a file was
+            --  already in the library).
+            if not Keep_Obsolete
+              or else Get_Date_State (Design_Unit) = Date_Disk
+            then
+               Remove_Unit_From_File (Design_Unit, Design_File);
+
+               --  Put removed units in a list so that they are still
+               --  referenced.
+               Set_Chain (Design_Unit, Obsoleted_Design_Units);
+               Obsoleted_Design_Units := Design_Unit;
+            end if;
 
             --  UNIT *must* replace library_unit if they don't belong
             --  to the same file.
@@ -1033,7 +1211,8 @@ package body Libraries is
                         (+Library_Unit, +Library_Unit, +New_Library_Unit));
                   end if;
                else
-                  --  Free the stub.
+                  --  Free the stub corresponding to the unit.  This is the
+                  --  common case when a unit is reanalyzed after a change.
                   if not Keep_Obsolete then
                      Free_Design_Unit (Design_Unit);
                   end if;
@@ -1091,17 +1270,17 @@ package body Libraries is
         and then not Files_Map.Is_Eq (New_Lib_Checksum,
                                       Get_File_Checksum (Design_File))
       then
-         -- FIXME: this test is not enough: what about reanalyzing
-         --  unmodified files (this works only because the order is not
-         --  changed).
-         -- Design file is updated.
-         -- Outdate all other units, overwrite the design_file.
+         --  FIXME: this test is not enough: what about reanalyzing
+         --   unmodified files (this works only because the order is not
+         --   changed).
+         --  Design file is updated.
+         --  Outdate all other units, overwrite the design_file.
          Set_File_Checksum (Design_File, New_Lib_Checksum);
          Design_Unit := Get_First_Design_Unit (Design_File);
          while Design_Unit /= Null_Iir loop
             if Design_Unit /= Unit then
                --  Mark other design unit as obsolete.
-               Set_Date (Design_Unit, Date_Obsolete);
+               Mark_Unit_Obsolete (Design_Unit);
                Remove_Unit_Hash (Design_Unit);
             else
                raise Internal_Error;
@@ -1109,6 +1288,7 @@ package body Libraries is
             Prev_Design_Unit := Design_Unit;
             Design_Unit := Get_Chain (Design_Unit);
 
+            --  Put it on the obsolete list so that it is always referenced.
             Set_Chain (Prev_Design_Unit, Obsoleted_Design_Units);
             Obsoleted_Design_Units := Prev_Design_Unit;
          end loop;
@@ -1133,14 +1313,10 @@ package body Libraries is
       --  Add DECL to DESIGN_FILE.
       Last_Unit := Get_Last_Design_Unit (Design_File);
       if Last_Unit = Null_Iir then
-         if Get_First_Design_Unit (Design_File) /= Null_Iir then
-            raise Internal_Error;
-         end if;
+         pragma Assert (Get_First_Design_Unit (Design_File) = Null_Iir);
          Set_First_Design_Unit (Design_File, Unit);
       else
-         if Get_First_Design_Unit (Design_File) = Null_Iir then
-            raise Internal_Error;
-         end if;
+         pragma Assert (Get_First_Design_Unit (Design_File) /= Null_Iir);
          Set_Chain (Last_Unit, Unit);
       end if;
       Set_Last_Design_Unit (Design_File, Unit);
@@ -1319,13 +1495,14 @@ package body Libraries is
             WR (") +");
             WR (Natural'Image (Off));
             WR (" on");
+            WR (Date_Type'Image (Get_Date (Design_Unit)));
             case Get_Date (Design_Unit) is
                when Date_Valid
+                 | Date_Obsolete
                  | Date_Analyzed
                  | Date_Parsed =>
-                  WR (Date_Type'Image (Get_Date (Design_Unit)));
+                  null;
                when others =>
-                  WR (Date_Type'Image (Get_Date (Design_Unit)));
                   raise Internal_Error;
             end case;
             if Get_Kind (Library_Unit) = Iir_Kind_Package_Declaration
@@ -1459,101 +1636,6 @@ package body Libraries is
       end if;
       return Load_File (Fe);
    end Load_File;
-
-   function Find_Design_Unit (Unit : Iir) return Iir_Design_Unit is
-   begin
-      case Get_Kind (Unit) is
-         when Iir_Kind_Design_Unit =>
-            return Unit;
-         when Iir_Kind_Selected_Name =>
-            declare
-               Lib : Iir_Library_Declaration;
-            begin
-               Lib := Get_Library (Get_Identifier (Get_Prefix (Unit)),
-                                   Get_Location (Unit));
-               return Find_Primary_Unit (Lib, Get_Identifier (Unit));
-            end;
-         when Iir_Kind_Entity_Aspect_Entity =>
-            return Find_Secondary_Unit
-              (Get_Design_Unit (Get_Entity (Unit)),
-               Get_Identifier (Get_Architecture (Unit)));
-         when others =>
-            Error_Kind ("find_design_unit", Unit);
-      end case;
-   end Find_Design_Unit;
-
-   function Find_Design_File (Lib : Iir_Library_Declaration; Name : Name_Id)
-                             return Iir
-   is
-      File : Iir;
-   begin
-      File := Get_Design_File_Chain (Lib);
-      while Is_Valid (File) loop
-         if Get_Design_File_Filename (File) = Name then
-            return File;
-         end if;
-         File := Get_Chain (File);
-      end loop;
-      return Null_Iir;
-   end Find_Design_File;
-
-   function Is_Obsolete (Design_Unit : Iir_Design_Unit; Loc : Iir)
-     return Boolean
-   is
-      procedure Error_Obsolete (Msg : String; Arg1 : Earg_Type) is
-      begin
-         if not Flags.Flag_Elaborate_With_Outdated then
-            if Loc = Null_Iir then
-               Error_Msg_Sem (Command_Line_Location, Msg, Arg1);
-            else
-               Error_Msg_Sem (+Loc, Msg, Arg1);
-            end if;
-         end if;
-      end Error_Obsolete;
-
-      procedure Error_Obsolete (Msg : String; Args : Earg_Arr) is
-      begin
-         if not Flags.Flag_Elaborate_With_Outdated then
-            if Loc = Null_Iir then
-               Error_Msg_Sem (Command_Line_Location, Msg, Args);
-            else
-               Error_Msg_Sem (+Loc, Msg, Args);
-            end if;
-         end if;
-      end Error_Obsolete;
-
-      List : Iir_List;
-      El : Iir;
-      Unit : Iir_Design_Unit;
-      U_Ts : Time_Stamp_Id;
-      Du_Ts : Time_Stamp_Id;
-   begin
-      if Get_Date (Design_Unit) = Date_Obsolete then
-         Error_Obsolete ("%n is obsolete", +Design_Unit);
-         return True;
-      end if;
-      List := Get_Dependence_List (Design_Unit);
-      if List = Null_Iir_List then
-         return False;
-      end if;
-      Du_Ts := Get_Analysis_Time_Stamp (Get_Design_File (Design_Unit));
-      for I in Natural loop
-         El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
-         Unit := Find_Design_Unit (El);
-         if Unit /= Null_Iir then
-            U_Ts := Get_Analysis_Time_Stamp (Get_Design_File (Unit));
-            if Files_Map.Is_Gt (U_Ts, Du_Ts) then
-               Error_Obsolete ("%n is obsoleted by %n", (+Design_Unit, +Unit));
-               return True;
-            elsif Is_Obsolete (Unit, Loc) then
-               Error_Obsolete ("%n depends on obsolete unit", +Design_Unit);
-               return True;
-            end if;
-         end if;
-      end loop;
-      return False;
-   end Is_Obsolete;
 
    procedure Finish_Compilation
      (Unit : Iir_Design_Unit; Main : Boolean := False)
@@ -1738,6 +1820,15 @@ package body Libraries is
 
          --  Restore warnings.
          Restore_Warnings_Setting (Warnings);
+
+         --  Check if one of its dependency makes this unit obsolete.
+         --  FIXME: to do when the dependency is added ?
+         if not Flags.Flag_Elaborate_With_Outdated
+           and then Check_Obsolete_Dependence (Design_Unit, Loc)
+         then
+            Set_Date (Design_Unit, Date_Obsolete);
+            return;
+         end if;
       end if;
 
       case Get_Date (Design_Unit) is
@@ -1757,18 +1848,11 @@ package body Libraries is
             null;
          when Date_Obsolete =>
             if not Flags.Flag_Elaborate_With_Outdated then
-               Error_Msg_Sem (+Loc, "%n is obsolete", +Design_Unit);
-               return;
+               Explain_Obsolete (Design_Unit, Loc);
             end if;
          when others =>
             raise Internal_Error;
       end case;
-
-      if not Flags.Flag_Elaborate_With_Outdated
-        and then Is_Obsolete (Design_Unit, Loc)
-      then
-         Set_Date (Design_Unit, Date_Obsolete);
-      end if;
    end Load_Design_Unit;
 
    --  Return the declaration of primary unit NAME of LIBRARY.
