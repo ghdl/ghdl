@@ -217,22 +217,15 @@ package body Ortho_Front is
       end if;
    end Decode_Option;
 
-
-   --  Add dependencies of UNIT in DEP_LIST.  If a UNIT or a unit it depends
-   --  on is obsolete, later units are not inserted and this function returns
-   --  FALSE.  UNIT is not added to DEP_LIST.
-   function Add_Dependence (Unit : Iir_Design_Unit; Dep_List : Iir_List)
-                           return Boolean
+   --  Add dependencies of UNIT to DEP_LIST.  UNIT is not added to DEP_LIST.
+   procedure Add_Dependence (Unit : Iir_Design_Unit; Dep_List : Iir_List)
    is
       List : Iir_List;
       El : Iir;
    begin
-      if Get_Date (Unit) = Date_Obsolete then
-         return False;
-      end if;
       List := Get_Dependence_List (Unit);
       if Is_Null_List (List) then
-         return True;
+         return;
       end if;
       for I in Natural loop
          El := Get_Nth_Element (List, I);
@@ -242,20 +235,13 @@ package body Ortho_Front is
 
          if not Get_Configuration_Mark_Flag (El) then
             --  EL is not in the list.
-            if not Add_Dependence (El, Dep_List) then
-               --  FIXME: Also mark UNIT to avoid walking again.
-               --  FIXME: this doesn't work as Libraries cannot write the .cf
-               --         file if a unit is obsolete.
-               --  Set_Date (Unit, Date_Obsolete);
-               return False;
-            end if;
+            Add_Dependence (El, Dep_List);
 
             --  Add to the list (only once).
             Set_Configuration_Mark_Flag (El, True);
             Append_Element (Dep_List, El);
          end if;
       end loop;
-      return True;
    end Add_Dependence;
 
    procedure Do_Compile (Vhdl_File : Name_Id)
@@ -264,14 +250,10 @@ package body Ortho_Front is
       New_Design_File : Iir_Design_File;
       Design : Iir_Design_Unit;
       Next_Design : Iir_Design_Unit;
+      Prev_Design : Iir_Design_Unit;
 
       --  List of dependencies.
       Dep_List : Iir_List;
-
-      --  List of units to be compiled.  It is generally the same units as the
-      --  one in the design_file, but some may be removed because a unit can be
-      --  obsoleted (directly or indirectly) by a later unit in the same file.
-      Units_List : Iir_List;
    begin
       --  Do not elaborate.
       Flags.Flag_Elaborate := False;
@@ -324,15 +306,30 @@ package body Ortho_Front is
       Set_Configuration_Done_Flag (Std_Package.Std_Standard_Unit, True);
 
       Dep_List := Create_Iir_List;
-      Units_List := Create_Iir_List;
 
       Design := Get_First_Design_Unit (New_Design_File);
+      Prev_Design := Null_Iir;
+      Set_First_Design_Unit (New_Design_File, Null_Iir);
+      Set_Last_Design_Unit (New_Design_File, Null_Iir);
       while Is_Valid (Design) loop
-         if Add_Dependence (Design, Dep_List) then
-            --  Discard obsolete units.
-            Append_Element (Units_List, Design);
+         --  Unlink.
+         Next_Design := Get_Chain (Design);
+         Set_Chain (Design, Null_Iir);
+
+         --  Discard obsolete units.
+         if Get_Date (Design) /= Date_Obsolete then
+            if Prev_Design = Null_Iir then
+               Set_First_Design_Unit (New_Design_File, Design);
+            else
+               Set_Last_Design_Unit (New_Design_File, Design);
+               Set_Chain (Prev_Design, Design);
+            end if;
+            Prev_Design := Design;
+
+            Add_Dependence (Design, Dep_List);
          end if;
-         Design := Get_Chain (Design);
+
+         Design := Next_Design;
       end loop;
 
       if Errorout.Nbr_Errors > 0 then
@@ -354,10 +351,8 @@ package body Ortho_Front is
 
       --  Compile only now.
       --  Note: the order of design unit is kept.
-      for I in Natural loop
-         Design := Get_Nth_Element (Units_List, I);
-         exit when Design = Null_Iir;
-
+      Design := Get_First_Design_Unit (New_Design_File);
+      while Is_Valid (Design) loop
          if Get_Kind (Get_Library_Unit (Design))
            = Iir_Kind_Configuration_Declaration
          then
@@ -377,7 +372,7 @@ package body Ortho_Front is
          Design := Get_Chain (Design);
       end loop;
 
-      -- Save the working library.
+      --  Save the working library.
       Libraries.Save_Work_Library;
    end Do_Compile;
 

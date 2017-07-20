@@ -1742,7 +1742,7 @@ package body Libraries is
                         +Get_Design_File_Filename (Design_File));
          raise Compilation_Error;
       elsif Get_Date (Design_Unit) = Date_Obsolete then
-         Error_Msg_Sem (+Design_Unit, "%n is not anymore its source file",
+         Error_Msg_Sem (+Design_Unit, "%n has been obsoleted",
                         +Get_Library_Unit (Design_Unit));
          raise Compilation_Error;
       end if;
