@@ -35,6 +35,7 @@ LIBBACKTRACE=@backtrace_lib@
 llvm_be=@llvm_be@
 build_mode=@build_mode@
 enable_werror=@enable_werror@
+enable_checks=@enable_checks@
 
 INSTALL_PROGRAM=install -m 755
 INSTALL_DATA=install -m 644
@@ -52,15 +53,17 @@ GRT_RANLIB=ranlib
 
 VHDL_LIB_DIR=$(prefix)/$(libdirsuffix)
 
-# Debug
-OPT_FLAGS=-g
-ADA_FLAGS=-gnata
-LIB_CFLAGS=
-
-# Optimize, do not forget to use MODE=--genfast for iirs.adb.
-#ADA_FLAGS+=-gnatpn
-#OPT_FLAGS+=-O
-#LIB_CFLAGS=-O
+ifeq "$(enable_checks)" "true"
+ # Debug + checks
+ OPT_FLAGS=-g
+ ADA_FLAGS=-gnata
+ LIB_CFLAGS=
+else
+ # Optimize + no checks
+ ADA_FLAGS+=-gnatpn
+ OPT_FLAGS+=-O
+ LIB_CFLAGS=-O
+endif
 
 # Profiling.
 #ADA_FLAGS+=-gnatn
