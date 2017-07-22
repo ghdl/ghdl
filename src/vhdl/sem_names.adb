@@ -2668,7 +2668,8 @@ package body Sem_Names is
          when Iir_Kinds_Process_Statement
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Type_Conversion
-           | Iir_Kind_Unit_Declaration =>
+           | Iir_Kind_Unit_Declaration
+           | Iir_Kind_Enumeration_Literal =>
             Error_Msg_Sem (+Name, "%n cannot be indexed or sliced", +Prefix);
             Res := Null_Iir;
 
