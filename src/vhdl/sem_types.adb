@@ -2257,9 +2257,13 @@ package body Sem_Types is
       Type_Mark_Name := Get_Subtype_Type_Mark (Def);
       Type_Mark_Name := Sem_Type_Mark (Type_Mark_Name);
       Set_Subtype_Type_Mark (Def, Type_Mark_Name);
+      if Is_Error (Type_Mark_Name) then
+         return Type_Mark_Name;
+      end if;
+
       Type_Mark := Get_Type (Type_Mark_Name);
       --  FIXME: incomplete type ?
-      if Get_Kind (Type_Mark) = Iir_Kind_Error then
+      if Is_Error (Type_Mark) then
          --  FIXME: handle inversion such as "subtype BASETYPE RESOLV", which
          --  should emit "resolution function must precede type name".
 
