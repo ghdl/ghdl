@@ -1208,6 +1208,16 @@ package body Iirs_Utils is
         and then R_Kind = Iir_Kind_Enumeration_Literal
       then
          return Get_Type (L1) = Get_Type (R1);
+      elsif L_Kind = Iir_Kind_Enumeration_Literal
+        and then R_Kind = Iir_Kind_Function_Declaration
+      then
+         return Get_Interface_Declaration_Chain (R1) = Null_Iir
+           and then Get_Base_Type (Get_Return_Type (R1)) = Get_Type (L1);
+      elsif L_Kind = Iir_Kind_Function_Declaration
+        and then R_Kind = Iir_Kind_Enumeration_Literal
+      then
+         return Get_Interface_Declaration_Chain (L1) = Null_Iir
+           and then Get_Base_Type (Get_Return_Type (L1)) = Get_Type (R1);
       else
          --  Kind mismatch.
          return False;
