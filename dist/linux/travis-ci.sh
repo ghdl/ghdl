@@ -1,15 +1,21 @@
-#! /bin/sh
+#! /bin/bash
 # This script is executed in the travis-ci environment.
 
-images=("ghdl/ghdl-tools:ubuntu-mcode" "ghdl/ghdl-tools:ubuntu1404-llvm" "ghdl/ghdl-tools:ubuntu1204-llvm" "ghdl/ghdl-tools:fedora-llvm-mcode")
+images=("ghdl/ghdl-tools:ubuntu-mcode"
+	"ghdl/ghdl-tools:ubuntu1404-llvm"
+	"ghdl/ghdl-tools:ubuntu1204-llvm"
+	"ghdl/ghdl-tools:fedora-llvm-mcode")
 
 #--- image + identifier + compiler
-	   
+
 regular="0+ubuntu+mcode 3+fedora+llvm"
 nightly="1+ubuntu1404+llvm-3.5 2+ubuntu1204+llvm-3.8 3+fedora+mcode"
 #release=()
 
 #---
+
+# Display env (to debug)
+env
 
 . dist/ansi_color.sh
 
