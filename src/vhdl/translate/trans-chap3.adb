@@ -836,6 +836,7 @@ package body Trans.Chap3 is
    is
       Indexes_List : constant Iir_List := Get_Index_Subtype_List (Def);
       Index        : Iir;
+      Idx_Len      : Iir_Int64;
       Len          : Iir_Int64;
    begin
       --  Check if the bounds of the array are locally static.
@@ -847,7 +848,17 @@ package body Trans.Chap3 is
          if Get_Type_Staticness (Index) /= Locally then
             return -1;
          end if;
-         Len := Len * Eval_Discrete_Type_Length (Index);
+         Idx_Len := Eval_Discrete_Type_Length (Index);
+
+         --  Do not consider very large arrays as static, to avoid overflow at
+         --  compile time.
+         if Idx_Len >= 2**31 then
+            return -1;
+         end if;
+         Len := Len * Idx_Len;
+         if Len >= 2**31 then
+            return -1;
+         end if;
       end loop;
       return Len;
    end Get_Array_Subtype_Length;
