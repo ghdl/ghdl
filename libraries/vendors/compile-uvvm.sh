@@ -16,6 +16,7 @@
 #
 # ==============================================================================
 #	Copyright (C) 2015-2017 Patrick Lehmann - Dresden, Germany
+#	Copyright (C) 2017 Patrick Lehmann - Freiburg, Germany
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -71,6 +72,46 @@ while [[ $# > 0 ]]; do
 		;;
 		--uvvm-vip)
 		COMPILE_UVVM_VIP=TRUE
+		NO_COMMAND=0
+		;;
+		--uvvm-utilities)
+		COMPILE_UVVM_UTILITIES=TRUE
+		NO_COMMAND=0
+		;;
+		--uvvm-vcc-framework)
+		COMPILE_UVVM_VVC_FRAMEWORK=TRUE
+		NO_COMMAND=0
+		;;
+		--uvvm-vip-avalon_mm)
+		COMPILE_UVVM_VIP_AVALON_MM=TRUE
+		NO_COMMAND=0
+		;;
+		--uvvm-vip-axi_lite)
+		COMPILE_UVVM_VIP_AXILITE=TRUE
+		NO_COMMAND=0
+		;;
+		--uvvm-vip-axi_stream)
+		COMPILE_UVVM_VIP_AXISTREAM=TRUE
+		NO_COMMAND=0
+		;;
+		--uvvm-vip-gpio)
+		COMPILE_UVVM_VIP_GPIO=TRUE
+		NO_COMMAND=0
+		;;
+		--uvvm-vip-i2c)
+		COMPILE_UVVM_VIP_I2C=TRUE
+		NO_COMMAND=0
+		;;
+		--uvvm-vip-sbi)
+		COMPILE_UVVM_VIP_SBI=TRUE
+		NO_COMMAND=0
+		;;
+		--uvvm-vip-spi)
+		COMPILE_UVVM_VIP_SPI=TRUE
+		NO_COMMAND=0
+		;;
+		--uvvm-vip-uart)
+		COMPILE_UVVM_VIP_UART=TRUE
 		NO_COMMAND=0
 		;;
 		-h|--help)
@@ -132,6 +173,20 @@ if [ "$HELP" == "TRUE" ]; then
 	echo "     --uvvm             Compile UVVM library packages."
 	echo "     --uvvm-vip         Compile UVVM Verification IPs (VIPs)."
 	echo ""
+	echo "Common Packages:"
+	echo "     --uvvm-utilities      "
+	echo "     --uvvm-vcc-framework  "
+	echo ""
+	echo "Verification IPs:"
+	echo "     --uvvm-vip-avalon_mm  "
+	echo "     --uvvm-vip-axi_lite   "
+	echo "     --uvvm-vip-axi_stream "
+	echo "     --uvvm-vip-gpio       "
+	echo "     --uvvm-vip-i2c        "
+	echo "     --uvvm-vip-sbi        "
+	echo "     --uvvm-vip-spi        "
+	echo "     --uvvm-vip-uart       "
+	echo ""
 	echo "Library compile options:"
 	echo "  -H --halt-on-error    Halt on error(s)."
 	echo ""
@@ -155,10 +210,13 @@ if [ "$COMPILE_UVVM" == "TRUE" ]; then
 	COMPILE_UVVM_VVC_FRAMEWORK=TRUE
 fi
 if [ "$COMPILE_UVVM_VIP" == "TRUE" ]; then
+	COMPILE_UVVM_VIP_AVALON_MM=TRUE
 	COMPILE_UVVM_VIP_AXILITE=TRUE
 	COMPILE_UVVM_VIP_AXISTREAM=TRUE
+	COMPILE_UVVM_VIP_GPIO=TRUE
 	COMPILE_UVVM_VIP_I2C=TRUE
 	COMPILE_UVVM_VIP_SBI=TRUE
+	COMPILE_UVVM_VIP_SPI=TRUE
 	COMPILE_UVVM_VIP_UART=TRUE
 fi
 
@@ -252,6 +310,31 @@ fi
 
 # Verification IPs
 # ==============================================================================
+# compile bitvis_vip_avalon_mm packages
+ERRORCOUNT=0
+if [ "$COMPILE_UVVM_VIP_AVALON_MM" == "TRUE" ]; then
+	Library="bitvis_vip_avalon_mm"
+	VHDLVersion="v08"
+	Files=(
+		bitvis_vip_avalon_mm/src/avalon_mm_bfm_pkg.vhd
+		bitvis_vip_avalon_mm/src/vvc_cmd_pkg.vhd
+		uvvm_vvc_framework/src_target_dependent/td_target_support_pkg.vhd
+		uvvm_vvc_framework/src_target_dependent/td_vvc_framework_common_methods_pkg.vhd
+		bitvis_vip_avalon_mm/src/vvc_methods_pkg.vhd
+		uvvm_vvc_framework/src_target_dependent/td_queue_pkg.vhd
+		uvvm_vvc_framework/src_target_dependent/td_vvc_entity_support_pkg.vhd
+		bitvis_vip_avalon_mm/src/avalon_mm_vvc.vhd
+	)
+
+	# append absolute source path
+	SourceFiles=()
+	for File in ${Files[@]}; do
+		SourceFiles+=("$SourceDirectory/$File")
+	done
+
+	GHDLCompilePackages
+fi
+
 # compile bitvis_vip_axilite packages
 ERRORCOUNT=0
 if [ "$COMPILE_UVVM_VIP_AXILITE" == "TRUE" ]; then
@@ -302,6 +385,31 @@ if [ "$COMPILE_UVVM_VIP_AXISTREAM" == "TRUE" ]; then
 	GHDLCompilePackages
 fi
 
+# compile bitvis_vip_gpio packages
+ERRORCOUNT=0
+if [ "$COMPILE_UVVM_VIP_GPIO" == "TRUE" ]; then
+	Library="bitvis_vip_gpio"
+	VHDLVersion="v08"
+	Files=(
+		bitvis_vip_gpio/src/gpio_bfm_pkg.vhd
+		bitvis_vip_gpio/src/vvc_cmd_pkg.vhd
+		uvvm_vvc_framework/src_target_dependent/td_target_support_pkg.vhd
+		uvvm_vvc_framework/src_target_dependent/td_vvc_framework_common_methods_pkg.vhd
+		bitvis_vip_gpio/src/vvc_methods_pkg.vhd
+		uvvm_vvc_framework/src_target_dependent/td_queue_pkg.vhd
+		uvvm_vvc_framework/src_target_dependent/td_vvc_entity_support_pkg.vhd
+		bitvis_vip_gpio/src/gpio_vvc.vhd
+	)
+
+	# append absolute source path
+	SourceFiles=()
+	for File in ${Files[@]}; do
+		SourceFiles+=("$SourceDirectory/$File")
+	done
+
+	GHDLCompilePackages
+fi
+
 # compile bitvis_vip_i2c packages
 ERRORCOUNT=0
 if [ "$COMPILE_UVVM_VIP_I2C" == "TRUE" ]; then
@@ -341,6 +449,31 @@ if [ "$COMPILE_UVVM_VIP_SBI" == "TRUE" ]; then
 		uvvm_vvc_framework/src_target_dependent/td_queue_pkg.vhd
 		uvvm_vvc_framework/src_target_dependent/td_vvc_entity_support_pkg.vhd
 		bitvis_vip_sbi/src/sbi_vvc.vhd
+	)
+
+	# append absolute source path
+	SourceFiles=()
+	for File in ${Files[@]}; do
+		SourceFiles+=("$SourceDirectory/$File")
+	done
+
+	GHDLCompilePackages
+fi
+
+# compile bitvis_vip_spi packages
+ERRORCOUNT=0
+if [ "$COMPILE_UVVM_VIP_SPI" == "TRUE" ]; then
+	Library="bitvis_vip_spi"
+	VHDLVersion="v08"
+	Files=(
+		bitvis_vip_spi/src/spi_bfm_pkg.vhd
+		bitvis_vip_spi/src/vvc_cmd_pkg.vhd
+		uvvm_vvc_framework/src_target_dependent/td_target_support_pkg.vhd
+		uvvm_vvc_framework/src_target_dependent/td_vvc_framework_common_methods_pkg.vhd
+		bitvis_vip_spi/src/vvc_methods_pkg.vhd
+		uvvm_vvc_framework/src_target_dependent/td_queue_pkg.vhd
+		uvvm_vvc_framework/src_target_dependent/td_vvc_entity_support_pkg.vhd
+		bitvis_vip_spi/src/spi_vvc.vhd
 	)
 
 	# append absolute source path
