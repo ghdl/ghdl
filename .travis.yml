@@ -24,3 +24,4 @@ deploy:
   file: "ghdl-*.tgz"
   on:
     tags: true
+    all_branches: true
