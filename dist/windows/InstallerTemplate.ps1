@@ -42,17 +42,22 @@
 # PS> .\install.ps1 -Install
 # 
 # # Advanced flow
-# PS> .\compile.ps1 -Install "C:\Tools\GHDL"
+# PS> .\compile.ps1 -AddToPath Machine -Install "C:\Tools\GHDL"
 #
 [CmdletBinding()]
 Param(
 	# install all files into a directory (xcopy deployment)
 	[switch]$Install = $false,
-	[parameter(mandatory=$false, ValueFromRemainingArguments=$true)]
-	[string]$InstallDir = "",
+	[Parameter(Mandatory=$false, ValueFromRemainingArguments=$true)]
+	[String]$InstallDir = "",
 	# update files
 	[switch]$Update,
 
+	# register GHDL in PATH
+	[Parameter(Mandatory=$false)]
+	[ValidateSet("Machine", "User", "Session", "Remove", "Pass")]
+	[String]$AddToPath = "",
+	
 	# display this help"
 	[switch]$Help
 )
@@ -81,16 +86,6 @@ Write-Host "====================================================================
 Write-Host "GHDL for Windows - GHDL install script" -ForegroundColor Magenta
 Write-Host "================================================================================" -ForegroundColor Magenta
 
-if ($Help)
-{	Get-Help $MYINVOCATION.InvocationName -Detailed
-	Exit-CompileScript
-}
-
-$EnvPath_ContainerMapping = @{
-	Machine =	[EnvironmentVariableTarget]::Machine
-	User =		[EnvironmentVariableTarget]::User
-}
-
 function Exit-Script
 {	[CmdletBinding()]
 	param(
@@ -98,6 +93,16 @@ function Exit-Script
 	)
 	cd $Script_WorkingDir
 	exit $ExitCode
+}
+
+if ($Help)
+{	Get-Help $MYINVOCATION.InvocationName -Detailed
+	Exit-Script
+}
+
+$EnvPath_ContainerMapping = @{
+	Machine =	[EnvironmentVariableTarget]::Machine
+	User =		[EnvironmentVariableTarget]::User
 }
 
 # GitHub user:            https://github.com/mkropat
@@ -210,16 +215,30 @@ if ($Install)
 
 	Remove-Item $TempFilePath
 	
-	Write-Host "  Install GHDL in PATH at machine level? [" -NoNewline -ForegroundColor DarkCyan
-	Write-Host "M" -NoNewline -ForegroundColor Cyan
-	Write-Host "achine/" -NoNewline -ForegroundColor DarkCyan
-	Write-Host "u" -NoNewline -ForegroundColor Cyan
-	Write-Host "ser/" -NoNewline -ForegroundColor DarkCyan
-	Write-Host "s" -NoNewline -ForegroundColor Cyan
-	Write-Host "ession/" -NoNewline -ForegroundColor DarkCyan
-	Write-Host "n" -NoNewline -ForegroundColor Cyan
-	Write-Host "o]: " -NoNewline -ForegroundColor DarkCyan
-	$InstallInPath = (Read-Host).ToLower()
+	
+	if ($AddToPath -eq "")
+	{	while($true)
+		{	Write-Host "  Install GHDL in PATH at machine level? [" -NoNewline -ForegroundColor DarkCyan
+			Write-Host "M" -NoNewline -ForegroundColor Cyan
+			Write-Host "achine/" -NoNewline -ForegroundColor DarkCyan
+			Write-Host "u" -NoNewline -ForegroundColor Cyan
+			Write-Host "ser/" -NoNewline -ForegroundColor DarkCyan
+			Write-Host "s" -NoNewline -ForegroundColor Cyan
+			Write-Host "ession]: " -NoNewline -ForegroundColor DarkCyan
+			$InstallInPath = (Read-Host).ToLower()
+			if ($InstallInPath -in "m","u","s")
+			{	break	}
+			else
+			{	Write-Host "[ERROR]: Unsupported choice: '$InstallInPath'." -ForegroundColor Red    }
+		}
+	}
+	elseif ($AddToPath -eq "Machine")
+	{	$InstallInPath = "m"     }
+	elseif ($AddToPath -eq "User")
+	{	$InstallInPath = "u"     }
+	elseif ($AddToPath -eq "Session")
+	{	$InstallInPath = "s"     }
+	
 	if (($InstallInPath -eq "") -or ($InstallInPath -eq "m"))
 	{	Write-Host "  Adding GHDL to PATH at machine level."
 		Add-EnvPath -Path "$InstallPath\bin" -Container "Machine"
@@ -244,24 +263,18 @@ if ($Install)
 }	# Install
 elseif ($Update)
 {	Write-Host "Updating GHDL $GHDLVersion for Windows..."
-	$InstallPath = $InstallDir.TrimEnd("\")
+	if ($InstallDir -eq "")
+	{	$InstallPath = $DefaultInstallPath
+	}
+	else
+	{	$InstallPath = $InstallDir			}
+	$InstallPath = $InstallPath.TrimEnd("\")
 	
 	Write-Host "  Install directory: $InstallPath"
 	if (Test-Path -Path $InstallPath)
 	{	Write-Host "  Cleaning up installation directory '$InstallPath'." -ForegroundColor Yellow
 		Get-ChildItem -Path $InstallPath -Depth 0 | foreach { Remove-Item $_.FullName -Recurse -Force }
 	}
-	
-	Write-Host "  Removing GHDL from PATH variables in Machine, User, Session ..." -ForegroundColor Yellow
-	foreach ($container in @("Machine", "User"))
-	{	foreach ($entry in (Get-EnvPath -Container $container))
-		{	if ($entry.ToLower().Contains("ghdl"))
-			{	Write-Host "    Removing '$entry' from $container level."
-				Remove-EnvPath -Path $entry -Container $container
-			}
-		}
-	}
-	Remove-EnvPath -Path $entry -Container "Session"
 	
 	Write-Host "  Creating directory sub-directories in '$InstallPath' ..."
 	
@@ -276,29 +289,63 @@ elseif ($Update)
 
 	Remove-Item $TempFilePath
 
-	Write-Host "  Install GHDL in PATH at machine level? [" -NoNewline -ForegroundColor DarkCyan
-	Write-Host "M" -NoNewline -ForegroundColor Cyan
-	Write-Host "achine/" -NoNewline -ForegroundColor DarkCyan
-	Write-Host "u" -NoNewline -ForegroundColor Cyan
-	Write-Host "ser/" -NoNewline -ForegroundColor DarkCyan
-	Write-Host "s" -NoNewline -ForegroundColor Cyan
-	Write-Host "ession/" -NoNewline -ForegroundColor DarkCyan
-	Write-Host "n" -NoNewline -ForegroundColor Cyan
-	Write-Host "o]: " -NoNewline -ForegroundColor DarkCyan
-	$InstallInPath = (Read-Host).ToLower()
-	if (($InstallInPath -eq "") -or ($InstallInPath -eq "m"))
-	{	Write-Host "  Adding GHDL to PATH at machine level."
-		Add-EnvPath -Path "$InstallPath\bin" -Container "Machine"
-		Add-EnvPath -Path "$InstallPath\bin" -Container "Session"
+	if ($AddToPath -eq "")
+	{	while($true)
+		{	Write-Host "  Install GHDL in PATH at machine level? [" -NoNewline -ForegroundColor DarkCyan
+			Write-Host "M" -NoNewline -ForegroundColor Cyan
+			Write-Host "achine/" -NoNewline -ForegroundColor DarkCyan
+			Write-Host "u" -NoNewline -ForegroundColor Cyan
+			Write-Host "ser/" -NoNewline -ForegroundColor DarkCyan
+			Write-Host "s" -NoNewline -ForegroundColor Cyan
+			Write-Host "ession/" -NoNewline -ForegroundColor DarkCyan
+			Write-Host "r" -NoNewline -ForegroundColor Cyan
+			Write-Host "emove/" -NoNewline -ForegroundColor DarkCyan
+			Write-Host "p" -NoNewline -ForegroundColor Cyan
+			Write-Host "ass]: " -NoNewline -ForegroundColor DarkCyan
+			$InstallInPath = (Read-Host).ToLower()
+			if ($InstallInPath -in "m","u","s","r","p")
+			{	break	}
+			else
+			{	Write-Host "[ERROR]: Unsupported choice: '$InstallInPath'." -ForegroundColor Red    }
+		}
 	}
-	elseif ($InstallInPath -eq "u")
-	{	Write-Host "  Adding GHDL to PATH at user level."
-		Add-EnvPath -Path "$InstallPath\bin" -Container "User"
-		Add-EnvPath -Path "$InstallPath\bin" -Container "Session"
-	}
-	elseif ($InstallInPath -eq "s")
-	{	Write-Host "  Adding GHDL to PATH at session level."
-		Add-EnvPath -Path "$InstallPath\bin" -Container "Session"
+	elseif ($AddToPath -eq "Machine")
+	{	$InstallInPath = "m"     }
+	elseif ($AddToPath -eq "User")
+	{	$InstallInPath = "u"     }
+	elseif ($AddToPath -eq "Session")
+	{	$InstallInPath = "s"     }
+	elseif ($AddToPath -eq "Remove")
+	{	$InstallInPath = "r"     }
+	elseif ($AddToPath -eq "Pass")
+	{	$InstallInPath = "p"     }
+	
+	if ($InstallInPath -ne "p")
+	{	Write-Host "  Removing GHDL from PATH variables in Machine, User, Session ..." -ForegroundColor Yellow
+		foreach ($container in @("Machine", "User"))
+		{	foreach ($entry in (Get-EnvPath -Container $container))
+			{	if ($entry.ToLower().Contains("ghdl"))
+				{	Write-Host "    Removing '$entry' from $container level."
+					Remove-EnvPath -Path $entry -Container $container
+				}
+			}
+		}
+		Remove-EnvPath -Path $entry -Container "Session"
+		
+		if (($InstallInPath -eq "") -or ($InstallInPath -eq "m"))
+		{	Write-Host "  Adding GHDL to PATH at machine level."
+			Add-EnvPath -Path "$InstallPath\bin" -Container "Machine"
+			Add-EnvPath -Path "$InstallPath\bin" -Container "Session"
+		}
+		elseif ($InstallInPath -eq "u")
+		{	Write-Host "  Adding GHDL to PATH at user level."
+			Add-EnvPath -Path "$InstallPath\bin" -Container "User"
+			Add-EnvPath -Path "$InstallPath\bin" -Container "Session"
+		}
+		elseif ($InstallInPath -eq "s")
+		{	Write-Host "  Adding GHDL to PATH at session level."
+			Add-EnvPath -Path "$InstallPath\bin" -Container "Session"
+		}
 	}
 	
 	Write-Host

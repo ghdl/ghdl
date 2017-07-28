@@ -14,6 +14,7 @@
 #
 # ==============================================================================
 #	Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
+#	Copyright (C) 2017 Patrick Lehmann - Freiburg, Germany
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -40,34 +41,47 @@ $Module_VendorToolName = $VendorToolName
 
 # Configure your tools here. Use absolute paths, without trailing directory
 #	delimiter. Empty strings indicate not installed tools
-$InstallationDirectories = @{
-	"AlteraQuartus" =		""		# "C:\Altera\16.0\quartus";
-	"LatticeDiamond" =	""		# "C:\Lattice\Diamond\3.8_x64"
-	"OSVVM" =						""		# "C:\git\GitHub\osvvm";
-	"UVVM" =						""		# "C:\git\GitHub\uvvm_all";
-	"VUnit" =						""		# "C:\git\GitHub\vunit"
-	"XilinxISE" =				""		# "C:\Xilinx\14.7\ISE_DS";
-	"XilinxVivado" =		""		# "C:\Xilinx\Vivado\2016.3";
-}
-
-$SourceDirectories = @{
-	"AlteraQuartus" =		"eda\sim_lib";
-	"LatticeDiamond" =	"cae_library\simulation\vhdl"
-	"OSVVM" =						".";
-	"UVVM" =						".";
-	"VUnit" =						"vunit\vhdl";
-	"XilinxISE" =				"ISE\vhdl\src";
-	"XilinxVivado" =		"data\vhdl\src"
-}
-
-$DestinationDirectories = @{
-	"AlteraQuartus" =		"altera";
-	"LatticeDiamond" =	"lattice";
-	"OSVVM" =						".";
-	"UVVM" =						".";
-	"VUnit" =						".";
-	"XilinxISE" =				"xilinx-ise";
-	"XilinxVivado" =		"xilinx-vivado"
+$Settings = @{
+	"AlteraQuartus" =		@{
+		"InstallationDirectory" = "";								# "C:\Altera\16.0\quartus";
+		"SourceDirectory" =       "eda\sim_lib";
+		"DestinationDirectory" =  "altera"
+	};
+	"IntelQuartus" =		@{
+		"InstallationDirectory" = "";								# "C:\IntelFPGA\17.0\quartus";
+		"SourceDirectory" =       "eda\sim_lib";
+		"DestinationDirectory" =  "intel"
+	};
+	"LatticeDiamond" =	@{
+		"InstallationDirectory" = "";								# "C:\Lattice\Diamond\3.8_x64";
+		"SourceDirectory" =       "cae_library\simulation\vhdl";
+		"DestinationDirectory" =  "lattice"
+	};
+	"OSVVM" =						@{
+		"InstallationDirectory" = "";								# "C:\git\GitHub\osvvm";
+		"SourceDirectory" =       ".";
+		"DestinationDirectory" =  "."
+	};
+	"UVVM" =						@{
+		"InstallationDirectory" = "";								# "C:\git\GitHub\uvvm_alls";
+		"SourceDirectory" =       ".";
+		"DestinationDirectory" =  "."
+	};
+	"VUnit" =						@{
+		"InstallationDirectory" = "";								# "C:\git\GitHub\vunit";
+		"SourceDirectory" =       "vunit\vhdl";
+		"DestinationDirectory" =  "."
+	};
+	"XilinxISE" =				@{
+		"InstallationDirectory" = "";								# "C:\Xilinx\14.7\ISE_DS";
+		"SourceDirectory" =       "ISE\vhdl\src";
+		"DestinationDirectory" =  "xilinx-ise"
+	};
+	"XilinxVivado" =		@{
+		"InstallationDirectory" = "";								# "C:\Xilinx\Vivado\2017.1";
+		"SourceDirectory" =       "data\vhdl\src";
+		"DestinationDirectory" =  "xilinx-vivado"
+	}
 }
 
 
@@ -79,7 +93,7 @@ function Get-VendorToolInstallationDirectory
 		.DESCRIPTION
 		Undocumented
 	#>
-	return $InstallationDirectories[$Module_VendorToolName]
+	return $Settings[$Module_VendorToolName]["InstallationDirectory"]
 }
 
 function Get-VendorToolSourceDirectory
@@ -90,7 +104,7 @@ function Get-VendorToolSourceDirectory
 		.DESCRIPTION
 		Undocumented
 	#>
-	return $SourceDirectories[$Module_VendorToolName]
+	return $Settings[$Module_VendorToolName]["SourceDirectory"]
 }
 
 function Get-VendorToolDestinationDirectory
@@ -101,7 +115,7 @@ function Get-VendorToolDestinationDirectory
 		.DESCRIPTION
 		Undocumented
 	#>
-	return $DestinationDirectories[$Module_VendorToolName]
+	return $Settings[$Module_VendorToolName]["DestinationDirectory"]
 }
 
 Export-ModuleMember -Function 'Get-VendorToolInstallationDirectory'
