@@ -16,6 +16,7 @@
 #
 # ==============================================================================
 #	Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
+#	Copyright (C) 2017 Patrick Lehmann - Freiburg, Germany
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -98,14 +99,14 @@ param(
 	
 	# Skip warning messages. (Show errors only.)
 	[switch]$SuppressWarnings = $false,
-	# Halt on errors
+	# Halt on errors.
 	[switch]$HaltOnError =			$false,
 	
-	# Set vendor library source directory
+	# Set vendor library source directory.
 	[string]$Source =			"",
-	# Set output directory name
+	# Set output directory name.
 	[string]$Output =			"",
-	# Set GHDL executable
+	# Set GHDL binary directory.
 	[string]$GHDL =				""
 )
 
@@ -114,11 +115,8 @@ param(
 $WorkingDir =		Get-Location
 
 # set default values
-$EnableVerbose =			$PSCmdlet.MyInvocation.BoundParameters["Verbose"]
-$EnableDebug =				$PSCmdlet.MyInvocation.BoundParameters["Debug"]
-if ($EnableVerbose -eq $null)	{	$EnableVerbose =	$false	}
-if ($EnableDebug	 -eq $null)	{	$EnableDebug =		$false	}
-if ($EnableDebug	 -eq $true)	{	$EnableVerbose =	$true		}
+$EnableDebug =		[bool]$PSCmdlet.MyInvocation.BoundParameters["Debug"]
+$EnableVerbose =	[bool]$PSCmdlet.MyInvocation.BoundParameters["Verbose"] -or $EnableDebug
 
 # load modules from GHDL's 'vendors' library directory
 Import-Module $PSScriptRoot\config.psm1 -Verbose:$false -Debug:$false -ArgumentList "LatticeDiamond"
