@@ -20,5 +20,6 @@ deploy:
   on:
     repo: tgingold/ghdl
     tags: true
+    all_branches: true
 after_deploy:
 - "echo deployed"

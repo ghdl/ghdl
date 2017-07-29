@@ -1,6 +1,6 @@
-# ==============================================================================
+# =============================================================================
 # General configuration
-# ==============================================================================
+# =============================================================================
 # Virtual Machine Image
 image: WMF 5
 # Build names
@@ -11,14 +11,11 @@ version: 0.34-dev-{build}
 #     - master
 #     - paebbels/appveyor
 
-# ==============================================================================
+# =============================================================================
 # Build matrix configuration
-# ==============================================================================
+# =============================================================================
 environment:
-#  global:
-#    connection_string: server=12;password=13;
-#    service_url: https://127.0.0.1:8090
-#
+  ver: 0.34
   matrix:
     - BUILD_MINGW: mingw32
       BUILD_BACKEND: mcode
@@ -33,9 +30,9 @@ environment:
 
 # clone_folder: c:\projects\ghdl
 
-# ==============================================================================
+# =============================================================================
 # Build flow configuration
-# ==============================================================================
+# =============================================================================
 # initialization scripts to run
 init:
   - ps: Write-Host "Initializing virtual machine ..."
@@ -75,25 +72,20 @@ test_script:
 # scripts to run after tests
 #after_test:
 
-# ==============================================================================
+# =============================================================================
 # Deployment configuration
-# ==============================================================================
-#deploy:
-#  - provider: GitHub
-#    release: GHDL-v$(appveyor_build_version)
-#    description: 'Release description'
-#    draft: false
-#    prerelease: false
-#    on:
-#      branch: master
-#      appveyor_repo_tag: true
-#    auth_token:
-#      secure: 7K/sSRV3kBk/Iw/d1NGd0pAv9Qf0+lGba3UWt9RDLcIsM8binjC2ogPINilWfy46
-#  - provider: Environment
-#    name: GitHub Paebbels/ghdl
-#    on:
-#      branch: master
-
+# =============================================================================
+deploy:
+  - provider: GitHub
+    release: GHDL-v$(appveyor_build_version)
+    description: 'Release'
+    draft: false
+    prerelease: false
+    artifact: /.*\.zip/
+    on:
+      appveyor_repo_tag: true
+    auth_token:
+      secure: Qli1B9/I6B1uTMeyGolw8N/zh/PRhLdT8fjUUTcd4Vp14UQki+YTjxKjAe+65Oqv
 
 # scripts to run before deployment
 #before_deploy:
