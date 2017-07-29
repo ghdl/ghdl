@@ -8,6 +8,8 @@ install: true
 services: docker
 script:
 - . ./dist/linux/travis-ci.sh
+before_deploy:
+- "echo ready to deploy"
 deploy:
   provider: releases
   skip_cleanup: true
@@ -17,4 +19,6 @@ deploy:
   file_glob: true
   on:
     repo: tgingold/ghdl
-    branch: ghdl-0.34
+    tags: true
+after_deploy:
+- "echo deployed"
