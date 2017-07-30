@@ -51,9 +51,9 @@ cd $env:GHDL_BUILD_DIR
 c:\msys64\usr\bin\make.exe install 2>&1 | Restore-NativeCommandStream | %{ "$_" }
 
 cd c:\Tools
-7z a "$($env:APPVEYOR_BUILD_FOLDER)\ghdl-0.34-dev-$($env:BUILD_MINGW)-$($env:BUILD_BACKEND).zip" -r "GHDL\0.34-dev-$($env:BUILD_MINGW)-$($env:BUILD_BACKEND)\"
+7z a "$($env:APPVEYOR_BUILD_FOLDER)\ghdl-$($env:ghdl_ver)-$($env:BUILD_MINGW)-$($env:BUILD_BACKEND).zip" -r "GHDL\$(env:ghdl_ver)-$($env:BUILD_MINGW)-$($env:BUILD_BACKEND)\"
 
 cd $env:APPVEYOR_BUILD_FOLDER
-Push-AppveyorArtifact "ghdl-0.34-dev-$($env:BUILD_MINGW)-$($env:BUILD_BACKEND).zip"
+Push-AppveyorArtifact "ghdl-$(env:ghdl_ver)-$($env:BUILD_MINGW)-$($env:BUILD_BACKEND).zip"
 
 exit 0

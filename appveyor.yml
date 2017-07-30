@@ -4,7 +4,7 @@
 # Virtual Machine Image
 image: WMF 5
 # Build names
-version: 0.34-dev-{build}
+version: $(ghdl_ver)
 # Branches to build
 # branches:
 #   only:
@@ -15,7 +15,7 @@ version: 0.34-dev-{build}
 # Build matrix configuration
 # =============================================================================
 environment:
-  ver: 0.34
+  ghdl_ver: 0.34
   matrix:
     - BUILD_MINGW: mingw32
       BUILD_BACKEND: mcode
