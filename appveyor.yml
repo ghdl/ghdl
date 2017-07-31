@@ -45,39 +45,24 @@ install:
   - ps: .\dist\windows\appveyor\info.ps1
 
 # Build flow
-# --------------------------------------
-# scripts to run before builds
-before_build:
-  - ps: .\dist\windows\appveyor\configure.ps1
-
 # Disable MSBuild
 build: off
 # build scripts to run
 build_script:
   - ps: .\dist\windows\appveyor\build.ps1
 
-# scripts to run after builds
-#after_build:
-
 # Test flow
-# --------------------------------------
-# scripts to run before tests
-before_test:
-  - ps: .\dist\windows\appveyor\setup.ps1
-
 # test scripts to run
 #test_script:
 #  - ps: .\dist\windows\appveyor\test.ps1
 
-# scripts to run after tests
-#after_test:
 
 # =============================================================================
 # Deployment configuration
 # =============================================================================
 deploy:
   - provider: GitHub
-    release: GHDL-v$(ghdl_ver)
+    release: "GHDL $(ghdl_ver)"
     description: 'Release'
     draft: false
     prerelease: false

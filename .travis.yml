@@ -23,7 +23,5 @@ deploy:
       all_branches: true
   - provider: script
     script: /bin/true
-    on:
-      tags: true
 after_deploy:
 - "echo deployed"
