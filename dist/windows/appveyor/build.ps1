@@ -46,8 +46,11 @@ function Restore-NativeCommandStream
 	}
 }
 
-$GHDL_BUILD_DIR =  "$($env:APPVEYOR_BUILD_FOLDER)\build\$($env:BUILD_MINGW)-$($env:BUILD_BACKEND)"
-$GHDL_PREFIX_DIR = "c:/Tools/GHDL/$($env:ghdl_ver)-$($env:BUILD_MINGW)-$($env:BUILD_BACKEND)"
+$BUILD_DIRNAME = "$($env:BUILD_MINGW)-$($env:BUILD_BACKEND)"
+$GHDL_BUILD_DIR =  "$($env:APPVEYOR_BUILD_FOLDER)\build\$BUILD_DIRNAME"
+$PREFIX_DIRNAME = "$($env:ghdl_ver)-$($env:BUILD_MINGW)-$($env:BUILD_BACKEND)"
+$GHDL_PREFIX_DIR = "c:/Tools/GHDL/$PREFIX_DIRNAME"
+$ZipFile = "ghdl-$PREFIX_DIRNAME.zip"
 
 $env:GHDL_BUILD_DIR =  $GHDL_BUILD_DIR
 $env:GHDL_PREFIX_DIR = $GHDL_PREFIX_DIR
@@ -80,9 +83,8 @@ if ($Err -eq 0)
 if ($Err -eq 0)
 {
   Write-Host "Building binary archives..." -Foreground Yellow
-  $ZipFile = "ghdl-$($env:ghdl_ver)-$($env:BUILD_MINGW)-$($env:BUILD_BACKEND).zip"
   cd c:\Tools
-  7z a "$($env:APPVEYOR_BUILD_FOLDER)\$ZipFile" -r "GHDL\$(env:ghdl_ver)-$($env:BUILD_MINGW)-$($env:BUILD_BACKEND)\"
+  7z a "$($env:APPVEYOR_BUILD_FOLDER)\$ZipFile" -r "GHDL\$PREFIX_DIRNAME\"
 
   cd $env:APPVEYOR_BUILD_FOLDER
   Push-AppveyorArtifact $ZipFile
