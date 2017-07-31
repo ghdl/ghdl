@@ -66,8 +66,8 @@ before_test:
   - ps: .\dist\windows\appveyor\setup.ps1
 
 # test scripts to run
-test_script:
-  - ps: .\dist\windows\appveyor\test.ps1
+#test_script:
+#  - ps: .\dist\windows\appveyor\test.ps1
 
 # scripts to run after tests
 #after_test:

@@ -24,6 +24,6 @@ deploy:
   - provider: script
     script: /bin/true
     on:
-      branch: ghdl-*
+      tags: true
 after_deploy:
 - "echo deployed"
