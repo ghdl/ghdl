@@ -166,13 +166,13 @@ $SourceFiles = @{
 		"prmtvs_p",							"prmtvs_b",
 		"memory_p",							"memory_b"
 	);
-	"synopsys8793" = @(
-		"std_logic_textio"
-	);
 	"synopsys" = @(
 		"std_logic_arith",
 		"std_logic_unsigned",
-		"std_logic_signed",
+		"std_logic_signed"
+	);
+	"synopsys8793" = @(
+		"std_logic_textio",
 		"std_logic_misc",				"std_logic_misc-body"
 	);
 	"mentor" = @(
