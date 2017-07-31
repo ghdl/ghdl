@@ -106,20 +106,20 @@ function Format-VHDLSourceFile
 	)
 	
 	begin
-	{	$State = 0
-		$VersionAsInt = switch ($Version)
-										{	"87"	{	87	}
-											"93"	{	93	}
-											"02"	{	2		}
-											"08"	{	8		}
-										}
+	{	$State = 1
+		$Version = switch ($Version)
+								{	"87"	{	87	}
+									"93"	{	93	}
+									"02"	{	2		}
+									"08"	{	8		}
+								}
 	}
 	
 	process
 	{	if ($InputObject -is [String])
 		{	$Line = $InputObject.ToString()
 			if ($Line.StartsWith("--START-V"))
-			{	$State =	switch ($Line.Substring(9, 2))
+			{	$State = switch ($Line.Substring(9, 2))
 									{	"87"	{	87	}
 										"93"	{	93	}
 										"02"	{	2		}
@@ -128,21 +128,19 @@ function Format-VHDLSourceFile
 			}
 			elseif ($Line.StartsWith("--START-!V"))
 			{	if ($Line.Substring(10, 2) -eq $Version)
-				{	$State = -1	}
+				{	$State = 2	}
 			}
 			elseif ($Line.StartsWith("--END-V") -or $Line.StartsWith("--END-!V"))
-			{	$State = 0		}
+			{	$State = 1		}
 			else
-			{	if ($State -eq 0)
+			{	if ($State -eq 1)
 				{	if ($Line.EndsWith("--V$Version"))
 					{	Write-Output $Line		}
 					elseif (-not (($Line -like "*--V??") -or ($Line.EndsWith("--!V$Version"))))
 					{	Write-Output $Line		}
 				}
-				elseif ($State -eq $VersionAsInt)
+				elseif ($State -eq $Version)
 				{	Write-Output $Line			}
-				# else
-				# {	Write-Host "Discard line: $Line" -ForegroundColor Red	}
 			}
 		}
 		else
