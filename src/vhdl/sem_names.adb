@@ -162,6 +162,7 @@ package body Sem_Names is
             when Iir_Kind_Enumeration_Literal
               | Iir_Kind_Function_Call
               | Iir_Kind_Indexed_Name
+              | Iir_Kind_Slice_Name
               | Iir_Kind_Selected_Element =>
                Add_Element (Res_List, Get_Type (Decl));
             when others =>
