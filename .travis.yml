@@ -7,7 +7,7 @@ sudo: required
 install: true
 services: docker
 script:
-- . ./dist/linux/travis-ci.sh
+- ./dist/linux/travis-ci.sh
 before_deploy:
 - "echo ready to deploy"
 deploy:
