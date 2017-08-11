@@ -66,10 +66,11 @@ t=0; for b in $blds; do
   # If it did not end with [$t|SUCCESSFUL], break the build
   if [ "${RESULT[$t]}" != "[$t|SUCCESSFUL]" ]; then EXITCODE=$(($t+1)); fi
   # Anyway, always print the full log
-  printf "$ANSI_YELLOW[TRAVIS] Print BUILD $t log $ANSI_NOCOLOR\n"
-  cat "log_$t.log"
+#  printf "$ANSI_YELLOW[TRAVIS] Print BUILD $t log $ANSI_NOCOLOR\n"
+#  cat "log_$t.log"
   t=$(($t+1));
 done
 
 # The exit code indicates the last broken build (1:bnum)
+echo "build exit status is $EXITCODE"
 exit $EXITCODE
