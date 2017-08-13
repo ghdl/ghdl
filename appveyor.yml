@@ -71,12 +71,3 @@ deploy:
       appveyor_repo_tag: true
     auth_token:
       secure: Qli1B9/I6B1uTMeyGolw8N/zh/PRhLdT8fjUUTcd4Vp14UQki+YTjxKjAe+65Oqv
-
-# scripts to run before deployment
-#before_deploy:
-
-# deployment scripts to run
-#deploy_script:
-
-# scripts to run after deployment
-#after_deploy:
