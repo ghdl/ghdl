@@ -53,8 +53,8 @@ build_script:
 
 # Test flow
 # test scripts to run
-#test_script:
-#  - ps: .\dist\windows\appveyor\test.ps1
+test_script:
+  - ps: .\dist\windows\appveyor\test.ps1
 
 
 # =============================================================================
@@ -62,9 +62,9 @@ build_script:
 # =============================================================================
 deploy:
   - provider: GitHub
-    release: "GHDL $(ghdl_ver)"
+    release: $(APPVEYOR_REPO_TAG_NAME)
     description: 'Release'
-    draft: false
+    draft: true
     prerelease: false
     artifact: /.*\.zip/
     on:

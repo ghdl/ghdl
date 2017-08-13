@@ -35,7 +35,6 @@ done
 
 printf "$ANSI_BLUE[$TASK| GHDL] Prepare $(pwd) $ANSI_NOCOLOR\n"
 CDIR=$(pwd)
-mkdir logs
 prefix="$CDIR/install-$BLD"
 mkdir "$prefix"
 mkdir "build-$BLD"
@@ -96,7 +95,7 @@ export ENABLECOLOR="$ENABLECOLOR"
 export TASK="$TASK"
 export GHDL="$CDIR/install-$BLD/bin/ghdl"
 cd testsuite
-# ./testsuite.sh
+./testsuite.sh
 cd ..
 
 #---
