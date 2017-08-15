@@ -35,7 +35,7 @@ fi
 
 cloned=$(pwd)
 
-#---
+#### Per build function
 
 task() {
   printf "$ANSI_YELLOW[$1| BUILD] $2 $ANSI_NOCOLOR\n"
@@ -50,7 +50,7 @@ task() {
   cd "$cloned"
 }
 
-#---
+#### Start builds
 
 printf "$ANSI_YELLOW[TRAVIS] Running matrix $thismatrix $ANSI_NOCOLOR\n"
 eval blds='${'$thismatrix'}'
@@ -59,8 +59,12 @@ t=0; for thisbuild in $blds; do
   t=$(($t+1));
 done
 
+#### Wait end of builds
+
 printf "$ANSI_YELLOW[TRAVIS] Waiting... $ANSI_NOCOLOR\n"
 wait
+
+#### Check results, disp logs
 
 EXITCODE=0;
 t=0; for b in $blds; do
@@ -78,7 +82,6 @@ t=0; for b in $blds; do
   else
       cp $workdir/ghdl-*.tgz .
   fi
-  # Anyway, always print the full log
   t=$(($t+1));
 done
 

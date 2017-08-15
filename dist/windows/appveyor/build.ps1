@@ -46,14 +46,28 @@ function Restore-NativeCommandStream
 	}
 }
 
+#### Environment
+
 $BUILD_DIRNAME = "$($env:BUILD_MINGW)-$($env:BUILD_BACKEND)"
 $GHDL_BUILD_DIR =  "$($env:APPVEYOR_BUILD_FOLDER)\build\$BUILD_DIRNAME"
+
+if ($env:APPVEYOR_REPO_TAG -eq "true")
+{
+  $PREFIX_DIRNAME = "$($env:APPVEYOR_REPO_TAG_NAME)-$BUILD_DIRNAME"
+}
+else
+{
+  $PREFIX_DIRNAME = "$($env:APPVEYOR_BUILD_VERSION)-$BUILD_DIRNAME"
+}
+
 $PREFIX_DIRNAME = "$($env:ghdl_ver)-$($env:BUILD_MINGW)-$($env:BUILD_BACKEND)"
 $GHDL_PREFIX_DIR = "c:/Tools/GHDL/$PREFIX_DIRNAME"
 $ZipFile = "ghdl-$PREFIX_DIRNAME.zip"
 
 $env:GHDL_BUILD_DIR =  $GHDL_BUILD_DIR
 $env:GHDL_PREFIX_DIR = $GHDL_PREFIX_DIR
+
+#### Build
 
 mkdir $GHDL_BUILD_DIR | cd
 
@@ -79,6 +93,8 @@ if ($Err -eq 0)
   c:\msys64\usr\bin\make.exe install 2>&1 | Restore-NativeCommandStream | %{ "$_" }
   $Err = $LastExitCode
 }
+
+#### Binaries
 
 if ($Err -eq 0)
 {
