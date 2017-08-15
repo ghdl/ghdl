@@ -60,7 +60,6 @@ else
   $PREFIX_DIRNAME = "$($env:APPVEYOR_BUILD_VERSION)-$BUILD_DIRNAME"
 }
 
-$PREFIX_DIRNAME = "$($env:ghdl_ver)-$($env:BUILD_MINGW)-$($env:BUILD_BACKEND)"
 $GHDL_PREFIX_DIR = "c:/Tools/GHDL/$PREFIX_DIRNAME"
 $ZipFile = "ghdl-$PREFIX_DIRNAME.zip"
 
