@@ -87,8 +87,6 @@ cd ..\..
 $TestFramework =  "VESTS"
 Write-Host "Running VESTS tests..." -Foreground Yellow
 
-c:\msys64\mingw64\bin\gnatmake.exe get_entities 2>&1 | Restore-NativeCommandStream | %{ "$_" }
-
 cd vests
 
 $TestName = "VESTS test:" # {0}" -f $Directory

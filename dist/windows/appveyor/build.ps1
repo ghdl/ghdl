@@ -46,11 +46,64 @@ function Restore-NativeCommandStream
 	}
 }
 
-Write-Host "Building GHDL and libraries..." -Foreground Yellow
-cd $env:GHDL_BUILD_DIR
+#### Environment
 
+$BUILD_DIRNAME = "$($env:BUILD_MINGW)-$($env:BUILD_BACKEND)"
+$GHDL_BUILD_DIR =  "$($env:APPVEYOR_BUILD_FOLDER)\build\$BUILD_DIRNAME"
+
+if ($env:APPVEYOR_REPO_TAG -eq "true")
+{
+  $PREFIX_DIRNAME = "$($env:APPVEYOR_REPO_TAG_NAME)-$BUILD_DIRNAME"
+}
+else
+{
+  $PREFIX_DIRNAME = "$($env:APPVEYOR_BUILD_VERSION)-$BUILD_DIRNAME"
+}
+
+$GHDL_PREFIX_DIR = "c:/Tools/GHDL/$PREFIX_DIRNAME"
+$ZipFile = "ghdl-$PREFIX_DIRNAME.zip"
+
+$env:GHDL_BUILD_DIR =  $GHDL_BUILD_DIR
+$env:GHDL_PREFIX_DIR = $GHDL_PREFIX_DIR
+
+#### Build
+
+mkdir $GHDL_BUILD_DIR | cd
+
+if ($env:BUILD_BACKEND -eq "mcode")
+{	Write-Host "Configuring GHDL for $($env:BUILD_MINGW), mcode..." -Foreground Yellow
+
+	c:\msys64\usr\bin\bash.exe -c "../../configure --prefix=$GHDL_PREFIX_DIR LDFLAGS=-static" 2>&1 | Restore-NativeCommandStream | %{ "$_" }
+}
+elseif ($env:BUILD_BACKEND -eq "llvm")
+{	Write-Host "Configuring GHDL for $($env:BUILD_MINGW), LLVM..." -Foreground Yellow
+
+	c:\msys64\usr\bin\bash.exe -c "../../configure --prefix=$GHDL_PREFIX_DIR --with-llvm-config LDFLAGS=-static CXX=g++" 2>&1 | Restore-NativeCommandStream | %{ "$_" }
+}
+
+
+Write-Host "Building GHDL and libraries..." -Foreground Yellow
 c:\msys64\usr\bin\make.exe 2>&1 | Restore-NativeCommandStream | %{ "$_" }
 $Err = $LastExitCode
+
+if ($Err -eq 0)
+{
+  Write-Host "Installing GHDL and libraries..." -Foreground Yellow
+  c:\msys64\usr\bin\make.exe install 2>&1 | Restore-NativeCommandStream | %{ "$_" }
+  $Err = $LastExitCode
+}
+
+#### Binaries
+
+if ($Err -eq 0)
+{
+  Write-Host "Building binary archives..." -Foreground Yellow
+  cd c:\Tools
+  7z a "$($env:APPVEYOR_BUILD_FOLDER)\$ZipFile" -r "GHDL\$PREFIX_DIRNAME\"
+
+  cd $env:APPVEYOR_BUILD_FOLDER
+  Push-AppveyorArtifact $ZipFile
+}
 
 cd $env:APPVEYOR_BUILD_FOLDER
 
