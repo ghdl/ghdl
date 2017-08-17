@@ -5,8 +5,10 @@
 #disable_color
 
 # Display env (to debug)
+echo -en "travis_fold:start:travis_env\r"
 printf "$ANSI_YELLOW[TRAVIS] Travis environment $ANSI_NOCOLOR\n"
 env | grep TRAVIS
+echo -en "travis_fold:end:travis_env\r"
 
 PKG_SHORTCOMMIT="$(printf $TRAVIS_COMMIT | cut -c1-10)"
 PKG_VER=`grep Ghdl_Ver src/version.in | sed -e 's/.*"\(.*\)";/\1/'`
