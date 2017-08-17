@@ -7,15 +7,17 @@ if [ -e gnat/etc/install_ok ]; then
     exit 0
 fi
 
+echo "Download and install gnat-gpl"
+
 # Download from libre.adacore.com
 tarfile=gnat-gpl-2017-x86_64-darwin-bin.tar.gz
-#curl -o $tarfile http://mirrors.cdn.adacore.com/art/591c9045c7a447af2deed24e
+curl -o $tarfile http://mirrors.cdn.adacore.com/art/591c9045c7a447af2deed24e
 
 # un tar
-#tar xf $tarfile
+tar xf $tarfile
 
 # Direct install
-#mv gnat-gpl-2017-x86_64-darwin-bin gnat
+mv gnat-gpl-2017-x86_64-darwin-bin gnat
 
 # Cleanup: remove components not needed
 rm -rf gnat/share/{themes,icons}
