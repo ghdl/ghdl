@@ -76,9 +76,9 @@ t=0; for b in $blds; do
   workdir="../wrk-$t"
   # Display log (with travis log folding commands)
   printf "$ANSI_YELLOW[TRAVIS] Print BUILD $t log $ANSI_NOCOLOR\n"
-  echo "travis_fold:start:log-$t"
+  echo "travis_fold:start:log.$t"
   cat $workdir/log.log
-  echo "travis_fold:end:log-$t"
+  echo "travis_fold:end:log.$t"
 
   # Read the last line of the log
   RESULT="$(tail -1 $workdir/log.log)"

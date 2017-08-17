@@ -11,7 +11,7 @@ matrix:
       sudo: required
       services: docker
     - os: osx
-      osx_image: xcode7.2
+      osx_image: xcode7.3
 
 install: true
 
@@ -32,8 +32,6 @@ deploy:
       repo: tgingold/ghdl
       tags: true
       all_branches: true
-  - provider: script
-    script: /bin/true
 
 after_deploy:
 - "echo deployed"
