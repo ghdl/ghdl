@@ -1,6 +1,11 @@
 #! /bin/bash
 # This script is executed in the travis-ci environment.
 
+if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+    echo "OS X build not yet supported"
+    exit
+fi
+
 # List of docker images
 
 images=("ghdl/ghdl-tools:ubuntu-mcode"
@@ -69,9 +74,11 @@ wait
 EXITCODE=0;
 t=0; for b in $blds; do
   workdir="../wrk-$t"
-  # Display log
+  # Display log (with travis log folding commands)
   printf "$ANSI_YELLOW[TRAVIS] Print BUILD $t log $ANSI_NOCOLOR\n"
+  echo "travis_fold:start:log-$t"
   cat $workdir/log.log
+  echo "travis_fold:end:log-$t"
 
   # Read the last line of the log
   RESULT="$(tail -1 $workdir/log.log)"

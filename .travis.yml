@@ -1,15 +1,26 @@
 branches:
   except:
   - appveyor
+
 language: c
-os: linux
-sudo: required
+
+matrix:
+  include:
+    - os: linux
+      dist: trusty
+      sudo: required
+      services: docker
+    - os: osx
+      osx_image: xcode7.2
+
 install: true
-services: docker
+
 script:
 - ./dist/linux/travis-ci.sh
+
 before_deploy:
 - "echo ready to deploy"
+
 deploy:
   - provider: releases
     skip_cleanup: true
@@ -23,5 +34,6 @@ deploy:
       all_branches: true
   - provider: script
     script: /bin/true
+
 after_deploy:
 - "echo deployed"
