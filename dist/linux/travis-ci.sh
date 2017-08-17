@@ -1,8 +1,28 @@
 #! /bin/bash
 # This script is executed in the travis-ci environment.
 
+. dist/ansi_color.sh
+#disable_color
+
+# Display env (to debug)
+printf "$ANSI_YELLOW[TRAVIS] Travis environment $ANSI_NOCOLOR\n"
+env | grep TRAVIS
+
+PKG_SHORTCOMMIT="$(printf $TRAVIS_COMMIT | cut -c1-10)"
+PKG_VER=`grep Ghdl_Ver src/version.in | sed -e 's/.*"\(.*\)";/\1/'`
+PKG_TAG="$TRAVIS_TAG"
+if [ -z "$TRAVIS_TAG" ]; then
+    PKG_TAG="$(date -u +%Y%m%d)-$PKG_SHORTCOMMIT";
+fi
+
+# OS-X
+
 if [ "$TRAVIS_OS_NAME" = "osx" ]; then
-    echo "OS X build not yet supported"
+    ./dist/macosx/install-ada.sh
+    PATH=$PWD/gnat/bin:$PATH
+    DBLD=mcode
+    DDIST=macosx
+    ./dist/linux/buildtest.sh $ENABLE_COLOR -t 0 -b "$DBLD" -f "ghdl-$PKG_TAG-$DBLD-$DDIST.tgz"
     exit
 fi
 
@@ -23,20 +43,6 @@ nightly="1+ubuntu1404+llvm-3.5 2+ubuntu1204+llvm-3.8 3+fedora+mcode"
 thismatrix=regular
 
 #---
-
-. dist/ansi_color.sh
-#disable_color
-
-# Display env (to debug)
-printf "$ANSI_YELLOW[TRAVIS] Travis environment $ANSI_NOCOLOR\n"
-env | grep TRAVIS
-
-PKG_SHORTCOMMIT="$(printf $TRAVIS_COMMIT | cut -c1-10)"
-PKG_VER=`grep Ghdl_Ver src/version.in | sed -e 's/.*"\(.*\)";/\1/'`
-PKG_TAG="$TRAVIS_TAG"
-if [ -z "$TRAVIS_TAG" ]; then
-    PKG_TAG="$(date -u +%Y%m%d)-$PKG_SHORTCOMMIT";
-fi
 
 cloned=$(pwd)
 

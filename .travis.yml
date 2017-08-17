@@ -15,6 +15,10 @@ matrix:
 
 install: true
 
+cache:
+  directories:
+    - gnat
+
 script:
 - ./dist/linux/travis-ci.sh
 

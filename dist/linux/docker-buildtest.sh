@@ -53,7 +53,7 @@ if [ -n "$GRAB_SRCS" ]; then
   p="$p && mv ghdl-master/* ./ && rm -rf ghdl-master"
 
   set +e
-  docker run --name ghdl_cmp -t "$DOCKER_IMG" sh -c "$p &&./dist/linux/buildtest.sh $ENABLECOLOR-t $TASK -b $BLD -f $PKG_FILE"
+  docker run --name ghdl_cmp -t "$DOCKER_IMG" sh -c "$p &&./dist/linux/buildtest.sh $ENABLECOLOR -t $TASK -b $BLD -f $PKG_FILE"
   docker cp "ghdl_cmp:/work/log.log" "./log.log"
   set -e
   docker cp "ghdl_cmp:/work/$PKG_FILE" ./
@@ -61,6 +61,6 @@ if [ -n "$GRAB_SRCS" ]; then
 
 else
 
-  docker run --rm -tv $(pwd):/work:Z -w="/work" "$DOCKER_IMG" sh -c "./dist/linux/buildtest.sh $ENABLECOLOR-t $TASK -b $BLD -f $PKG_FILE"
+  docker run --rm -tv $(pwd):/work:Z -w="/work" "$DOCKER_IMG" sh -c "./dist/linux/buildtest.sh $ENABLECOLOR -t $TASK -b $BLD -f $PKG_FILE"
 
 fi
