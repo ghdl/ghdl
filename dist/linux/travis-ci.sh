@@ -18,7 +18,7 @@ fi
 # OS-X
 
 if [ "$TRAVIS_OS_NAME" = "osx" ]; then
-    ./dist/macosx/install-ada.sh
+    ./dist/macosx/install-ada.sh || exit 1
     PATH=$PWD/gnat/bin:$PATH
     DBLD=mcode
     DDIST=macosx
@@ -81,10 +81,10 @@ EXITCODE=0;
 t=0; for b in $blds; do
   workdir="../wrk-$t"
   # Display log (with travis log folding commands)
-  echo -en "travis_fold:start:log.$t\r"
+  echo -e "travis_fold:start:log.$t\r\033[K"
   printf "$ANSI_YELLOW[TRAVIS] Print BUILD $t log $ANSI_NOCOLOR\n"
   cat $workdir/log.log
-  echo -en "travis_fold:end:log.$t\r"
+  echo -e "travis_fold:end:log.$t\r\033[K"
 
   # Read the last line of the log
   RESULT="$(tail -1 $workdir/log.log)"

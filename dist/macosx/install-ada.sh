@@ -8,6 +8,7 @@ if [ -e gnat/etc/install_ok ]; then
 fi
 
 echo "Download and install gnat-gpl"
+set -x
 
 # Download from libre.adacore.com
 tarfile=gnat-gpl-2017-x86_64-darwin-bin.tar.gz
