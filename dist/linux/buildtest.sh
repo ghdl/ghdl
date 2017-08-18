@@ -43,27 +43,27 @@ cd "build-$BLD"
 #---
 
 printf "$ANSI_BLUE[$TASK| GHDL] Environment $ANSI_NOCOLOR\n"
-env 1>> ../log.log 2>&1
+env
 
 #---
 
 printf "$ANSI_BLUE[$TASK| GHDL - build] Configure $ANSI_NOCOLOR\n"
 case "$BLD" in
   mcode)
-      ../configure "--prefix=$prefix" 1>> ../log.log 2>&1
+      ../configure "--prefix=$prefix"
       ;;
 
   llvm)
-      ../configure "--prefix=$prefix" "--with-llvm-config" 1>> ../log.log 2>&1
+      ../configure "--prefix=$prefix" "--with-llvm-config"
       ;;
 
   llvm-3.5)
-      ../configure "--prefix=$prefix" "--with-llvm-config=llvm-config-3.5" 1>> ../log.log 2>&1
+      ../configure "--prefix=$prefix" "--with-llvm-config=llvm-config-3.5"
       MAKEOPTS="CXX=clang++"
       ;;
 
   llvm-3.8)
-      ../configure "--prefix=$prefix" "--with-llvm-config=llvm-config-3.8"  1>> ../log.log 2>&1
+      ../configure "--prefix=$prefix" "--with-llvm-config=llvm-config-3.8"
       MAKEOPTS="CXX=clang++-3.8"
       ;;
 
@@ -78,16 +78,23 @@ esac
 
 #---
 
+echo "travis_fold:start:build.$TASK"
 printf "$ANSI_BLUE[$TASK| GHDL - build] Make $ANSI_NOCOLOR\n"
-make  $MAKEOPTS 1>> ../log.log 2>&1
+make  $MAKEOPTS
+echo "travis_fold:end:build.$TASK"
+
+echo "travis_fold:start:install.$TASK"
 printf "$ANSI_BLUE[$TASK| GHDL - build] Install $ANSI_NOCOLOR\n"
-make install 1>> ../log.log 2>&1
+make install
 cd ..
+echo "travis_fold:end:install.$TASK"
 
 #---
 
+echo "travis_fold:start:tar.$TASK"
 printf "$ANSI_BLUE[$TASK| GHDL] Create package $ANSI_DARKCYAN$PKG_FILE $ANSI_NOCOLOR\n"
-tar -zcvf "$PKG_FILE" -C "$prefix" . 1>> log.log 2>&1
+tar -zcvf "$PKG_FILE" -C "$prefix" .
+echo "travis_fold:end:tar.$TASK"
 
 #---
 
@@ -95,10 +102,25 @@ export ENABLECOLOR="$ENABLECOLOR"
 export TASK="$TASK"
 export GHDL="$CDIR/install-$BLD/bin/ghdl"
 cd testsuite
+
+echo "travis_fold:start:tests.gna.$TASK"
+printf "$ANSI_BLUE[$TASK| GHDL - test] gna $ANSI_NOCOLOR\n"
+cd gna
 ./testsuite.sh
+cd ..
+echo "travis_fold:end:tests.gna.$TASK"
+
+echo "travis_fold:start:tests.vests.$TASK"
+printf "$ANSI_BLUE[$TASK| GHDL - test] vests $ANSI_NOCOLOR\n"
+cd vests
+./testsuite.sh
+cd ..
+echo "travis_fold:end:tests.vests.$TASK"
+
+$GHDL --version
 cd ..
 
 #---
 
 # Do not remove this line, and don't write anything below, since it is used to identify successful builds
-echo "[$TASK|SUCCESSFUL]" 1>> log.log 2>&1
+echo "[$TASK|SUCCESSFUL]"

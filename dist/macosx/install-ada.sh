@@ -17,7 +17,8 @@ curl -o $tarfile http://mirrors.cdn.adacore.com/art/591c9045c7a447af2deed24e
 # un tar
 tar xf $tarfile
 
-# Direct install
+# Remove old gnat directory and install manually
+rm -rf gnat
 mv gnat-gpl-2017-x86_64-darwin-bin gnat
 
 # Cleanup: remove components not needed

@@ -61,6 +61,6 @@ if [ -n "$GRAB_SRCS" ]; then
 
 else
 
-  docker run --rm -tv $(pwd):/work:Z -w="/work" "$DOCKER_IMG" sh -c "./dist/linux/buildtest.sh $ENABLECOLOR -t $TASK -b $BLD -f $PKG_FILE"
+  docker run --rm -tv $(pwd):/work:Z -w="/work" "$DOCKER_IMG" sh -c "./dist/linux/buildtest.sh $ENABLECOLOR -t $TASK -b $BLD -f $PKG_FILE > log.log 2>&1"
 
 fi
