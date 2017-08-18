@@ -6,6 +6,8 @@ disable_color
 # Stop in case of error
 set -e
 
+echo "$@"
+
 # Transform long options to short ones
 for arg in "$@"; do
   shift
@@ -42,11 +44,14 @@ cd "build-$BLD"
 
 #---
 
+echo "travis_fold:start:env.$TASK"
 printf "$ANSI_BLUE[$TASK| GHDL] Environment $ANSI_NOCOLOR\n"
 env
+echo "travis_fold:end:env.$TASK"
 
 #---
 
+echo "travis_fold:start:configure.$TASK"
 printf "$ANSI_BLUE[$TASK| GHDL - build] Configure $ANSI_NOCOLOR\n"
 case "$BLD" in
   mcode)
@@ -75,6 +80,7 @@ case "$BLD" in
       printf "$ANSI_RED[$TASK| GHDL - build] Unknown build $BLD $ANSI_NOCOLOR\n"
       exit 1;;
 esac
+echo "travis_fold:end:configure.$TASK"
 
 #---
 
@@ -113,7 +119,14 @@ echo "travis_fold:end:tests.gna.$TASK"
 echo "travis_fold:start:tests.vests.$TASK"
 printf "$ANSI_BLUE[$TASK| GHDL - test] vests $ANSI_NOCOLOR\n"
 cd vests
-./testsuite.sh
+if ./testsuite.sh > vests.log 2>&1 ; then
+    echo "${ANSI_GREEN}Vests is OK$ANSI_NOCOLOR"
+    wc -l vests.log
+else
+    cat vests.log
+    echo "${ANSI_RED}Vests failure$ANSI_NOCOLOR"
+    exit 1
+fi
 cd ..
 echo "travis_fold:end:tests.vests.$TASK"
 
