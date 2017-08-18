@@ -13,7 +13,10 @@
 
 set -e
 
+# This is the only place where test dirs are specified.  Do not duplicate this
+# line
 dirs="bug* sr* deb* ticket* issue*"
+
 failures=""
 full=n
 
@@ -26,6 +29,7 @@ for opt; do
   --start-at=*) d=`echo $opt | sed -e 's/--start-at=//'`
             dirs=`echo "" $dirs | sed -e "s/^.* $d//"`
             dirs="$d $dirs" ;;
+  --list-tests) echo $dirs; exit 0;;
   *) echo "Unknown option $opt"
      exit 2
      ;;

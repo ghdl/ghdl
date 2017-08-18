@@ -24,7 +24,7 @@ if [ "$TRAVIS_OS_NAME" = "osx" ]; then
     PATH=$PWD/gnat/bin:$PATH
     DBLD=mcode
     DDIST=macosx
-    ./dist/linux/buildtest.sh $ENABLE_COLOR -t 0 -b "$DBLD" -f "ghdl-$PKG_TAG-$DBLD-$DDIST.tgz"
+    ./dist/linux/buildtest.sh $ENABLECOLOR -t 0 -b "$DBLD" -f "ghdl-$PKG_TAG-$DBLD-$DDIST.tgz"
     exit
 fi
 
@@ -59,7 +59,7 @@ task() {
   DIMG=${images[${REFS[0]}]}
   thisworkdir="../wrk-$1"
   cp -r ./ "$thisworkdir" && cd "$thisworkdir"
-  ./dist/linux/docker-buildtest.sh -i "$DIMG" $ENABLE_COLOR -t "$1" -b "$DBLD" -f "ghdl-$PKG_TAG-$DBLD-$DDIST.tgz"
+  ./dist/linux/docker-buildtest.sh -i "$DIMG" $ENABLECOLOR -t "$1" -b "$DBLD" -f "ghdl-$PKG_TAG-$DBLD-$DDIST.tgz"
   cd "$cloned"
 }
 
@@ -83,10 +83,10 @@ EXITCODE=0;
 t=0; for b in $blds; do
   workdir="../wrk-$t"
   # Display log (with travis log folding commands)
-  echo -e "travis_fold:start:log.$t\r\033[K"
+  echo "travis_fold:start:log.$t"
   printf "$ANSI_YELLOW[TRAVIS] Print BUILD $t log $ANSI_NOCOLOR\n"
   cat $workdir/log.log
-  echo -e "travis_fold:end:log.$t\r\033[K"
+  echo "travis_fold:end:log.$t"
 
   # Read the last line of the log
   RESULT="$(tail -1 $workdir/log.log)"
