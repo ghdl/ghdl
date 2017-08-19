@@ -28,14 +28,34 @@
 
 vhdl.libs.all: vhdl.libs.v87 vhdl.libs.v93 vhdl.libs.v08
 
-vhdl.libs.v93: std.v93 ieee.v93 synopsys.v93 mentor.v93
-vhdl.libs.v87: std.v87 ieee.v87 synopsys.v87
-vhdl.libs.v08: std.v08 ieee.v08 synopsys.v08
+ifeq ($(wildcard ieee), ieee)
+full_library=y
+else
+full_library=n
+endif
 
-ANALYZE=$(GHDL) -a $(GHDL_FLAGS)
-ANALYZE_DEP=$(GHDL)
+ifeq ($(full_library),y)
+# Full libraries
+vhdl.libs.v87: std.v87 ieee.v87 synopsys.v87
+vhdl.libs.v93: std.v93 ieee.v93 synopsys.v93 mentor.v93
+vhdl.libs.v08: std.v08 ieee.v08 synopsys.v08
+else
+# GPL compatible
+vhdl.libs.v87: std.v87 ieee.v87 synopsys.v87
+vhdl.libs.v93: std.v93 ieee.v93 synopsys.v93
+vhdl.libs.v08: std.v08
+endif
 
 STD_SRCS := std/textio.vhdl std/textio_body.vhdl
+SYNOPSYS_BSRCS := synopsys/std_logic_arith.vhdl \
+  synopsys/std_logic_unsigned.vhdl \
+  synopsys/std_logic_signed.vhdl
+SYNOPSYS_V_BSRCS := synopsys/std_logic_misc.vhdl \
+  synopsys/std_logic_misc-body.vhdl
+SYNOPSYS8793_BSRCS := synopsys/std_logic_textio.vhdl
+MENTOR_BSRCS := mentor/std_logic_arith.vhdl mentor/std_logic_arith_body.vhdl
+
+ifeq ($(full_library),y)
 IEEE_SRCS := ieee/std_logic_1164.vhdl ieee/std_logic_1164_body.vhdl \
   ieee/numeric_bit.vhdl ieee/numeric_bit-body.vhdl \
   ieee/numeric_std.vhdl ieee/numeric_std-body.vhdl
@@ -46,13 +66,6 @@ VITAL95_BSRCS := vital95/vital_timing.vhdl vital95/vital_timing_body.vhdl \
 VITAL2000_BSRCS := vital2000/timing_p.vhdl vital2000/timing_b.vhdl \
   vital2000/prmtvs_p.vhdl vital2000/prmtvs_b.vhdl \
   vital2000/memory_p.vhdl vital2000/memory_b.vhdl
-SYNOPSYS_BSRCS := synopsys/std_logic_arith.vhdl \
-  synopsys/std_logic_unsigned.vhdl \
-  synopsys/std_logic_signed.vhdl
-SYNOPSYS_V_BSRCS := synopsys/std_logic_misc.vhdl \
-  synopsys/std_logic_misc-body.vhdl
-SYNOPSYS8793_BSRCS := synopsys/std_logic_textio.vhdl
-MENTOR_BSRCS := mentor/std_logic_arith.vhdl mentor/std_logic_arith_body.vhdl
 IEEE08_BSRCS := \
   ieee2008/std_logic_1164.vhdl ieee2008/std_logic_1164-body.vhdl \
   ieee2008/std_logic_textio.vhdl \
@@ -68,6 +81,18 @@ IEEE08_BSRCS := \
   ieee2008/float_generic_pkg.vhdl ieee2008/float_generic_pkg-body.vhdl \
   ieee2008/float_pkg.vhdl \
   ieee2008/ieee_bit_context.vhdl ieee2008/ieee_std_context.vhdl
+else
+IEEE_SRCS := openieee/std_logic_1164.vhdl openieee/std_logic_1164-body.vhdl \
+  openieee/numeric_bit.vhdl openieee/numeric_bit-body.vhdl \
+  openieee/numeric_std.vhdl openieee/numeric_std-body.vhdl
+MATH_SRCS := openieee/math_real.vhdl openieee/math_real-body.vhdl
+VITAL95_BSRCS :=
+VITAL2000_BSRCS :=
+IEEE08_BSRCS :=
+endif
+
+ANALYZE=$(GHDL) -a $(GHDL_FLAGS)
+ANALYZE_DEP=$(GHDL)
 
 STD87_BSRCS := $(STD_SRCS:.vhdl=.v87)
 STD93_BSRCS := $(STD_SRCS:.vhdl=.v93)
@@ -142,6 +167,9 @@ $(STD87_DIR)/std-obj87.cf: $(ANALYZE_DEP) $(STD87_SRCS)
 $(LIBDST_DIR)/src/ieee/%.v87: $(LIBSRC_DIR)/ieee/%.vhdl
 	$(SED_V87) < $< > $@
 
+$(LIBDST_DIR)/src/openieee/%.v87: $(LIBSRC_DIR)/openieee/%.v87
+	$(CP) $< $@
+
 $(LIBDST_DIR)/src/vital95/%.vhdl: $(LIBSRC_DIR)/vital95/%.vhdl
 	$(CP) $< $@
 
@@ -198,6 +226,12 @@ $(LIBDST_DIR)/src/ieee/%.v93: $(LIBSRC_DIR)/ieee/%.vhdl
 	$(SED_V93) < $< > $@
 
 $(LIBDST_DIR)/src/ieee/%.vhdl: $(LIBSRC_DIR)/ieee/%.vhdl
+	$(CP) $< $@
+
+$(LIBDST_DIR)/src/openieee/%.vhdl: $(LIBSRC_DIR)/openieee/%.vhdl
+	$(CP) $< $@
+
+$(LIBDST_DIR)/src/openieee/%.v93: $(LIBSRC_DIR)/openieee/%.v93
 	$(CP) $< $@
 
 $(LIBDST_DIR)/src/vital2000/%.vhdl: $(LIBSRC_DIR)/vital2000/%.vhdl
