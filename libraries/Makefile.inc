@@ -28,13 +28,9 @@
 
 vhdl.libs.all: vhdl.libs.v87 vhdl.libs.v93 vhdl.libs.v08
 
-ifeq ($(wildcard ieee), ieee)
-full_library=y
-else
-full_library=n
-endif
+enable_openieee=false
 
-ifeq ($(full_library),y)
+ifeq ($(enable_openieee),false)
 # Full libraries
 vhdl.libs.v87: std.v87 ieee.v87 synopsys.v87
 vhdl.libs.v93: std.v93 ieee.v93 synopsys.v93 mentor.v93
@@ -55,7 +51,7 @@ SYNOPSYS_V_BSRCS := synopsys/std_logic_misc.vhdl \
 SYNOPSYS8793_BSRCS := synopsys/std_logic_textio.vhdl
 MENTOR_BSRCS := mentor/std_logic_arith.vhdl mentor/std_logic_arith_body.vhdl
 
-ifeq ($(full_library),y)
+ifeq ($(enable_openieee),false)
 IEEE_SRCS := ieee/std_logic_1164.vhdl ieee/std_logic_1164_body.vhdl \
   ieee/numeric_bit.vhdl ieee/numeric_bit-body.vhdl \
   ieee/numeric_std.vhdl ieee/numeric_std-body.vhdl

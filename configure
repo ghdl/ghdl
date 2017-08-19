@@ -20,6 +20,7 @@ build=
 build_mode=
 enable_werror=true
 enable_checks=true
+enable_openieee=unknown
 EXEEXT=
 SOEXT=.so
 PIC_FLAGS=-fPIC
@@ -27,7 +28,7 @@ PIC_FLAGS=-fPIC
 show_help=no
 progname=$0
 
-subst_vars="CC CXX GNATMAKE CFLAGS LDFLAGS build srcdir abs_srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config llvm_be backtrace_lib build_mode EXEEXT SOEXT PIC_FLAGS default_pie enable_werror enable_checks"
+subst_vars="CC CXX GNATMAKE CFLAGS LDFLAGS build srcdir abs_srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config llvm_be backtrace_lib build_mode EXEEXT SOEXT PIC_FLAGS default_pie enable_werror enable_checks enable_openieee"
 
 # Find srcdir
 srcdir=`dirname $progname`
@@ -76,6 +77,8 @@ for opt do
       --disable-werror) enable_werror=false;;
       --enable-checks) enable_checks=true;;
       --disable-checks) enable_checks=false;;
+      --enable-openieee) enable_openieee=true;;
+      --disable-openieee) enable_openieee=false;;
       --enable-coverage) build_mode="coverage";;
       -h|-help|--help) show_help=yes;;
       *) echo "$0: unknown option $opt; try $0 --help"
@@ -98,6 +101,7 @@ Options [defaults in brackets]:
                               backtrace on errors (only for llvm).
   --disable-werror            warnings don't stop build
   --disable-checks            disable internal checks
+  --enable-openieee           use gpl-compatible sources for ieee library
 EOF
 exit 0
 fi
@@ -140,6 +144,23 @@ fi
 if ! $CC -v 2> /dev/null; then
     echo "Sorry, you need a C compiler to build GHDL.  See the README"
     exit 1
+fi
+
+# Default for enable_openieee
+if [ "$enable_openieee" = "unknown" ]; then
+    if test -d $srcdir/libraries/ieee ; then
+	enable_openieee=false
+	echo "Use full IEEE library"
+    else
+	enable_openieee=true
+	echo "Use openieee source files for IEEE library (but partial)"
+    fi
+elif [ "$enable_openieee" = false ]; then
+    if ! test -d $srcdir/libraries/ieee ; then
+	echo "Sorry, full ieee library source files not present"
+	echo "consider --enable-openieee"
+	exit 1
+    fi
 fi
 
 # Compute build machine
