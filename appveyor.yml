@@ -4,7 +4,7 @@
 # Virtual Machine Image
 image: WMF 5
 # Build names
-version: $(APPVEYOR_REPO_BRANCH)-{build}
+version: {branch}-{build}
 # Branches to build
 branches:
   except:
