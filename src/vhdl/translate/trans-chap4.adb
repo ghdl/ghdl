@@ -2634,6 +2634,8 @@ package body Trans.Chap4 is
       Res         : Mnode;
       Imp         : Iir;
       Func        : Iir;
+      Obj         : Iir;  --  Method object for function conversion
+      Obj_Type    : Iir;  --  Valid only if OBJ is valid
    begin
       case Mode is
          when Conv_Mode_In =>
@@ -2660,6 +2662,15 @@ package body Trans.Chap4 is
       Chap3.Translate_Anonymous_Type_Definition (In_Type);
       Out_Info := Get_Info (Out_Type);
       In_Info := Get_Info (In_Type);
+
+      if Get_Kind (Imp) = Iir_Kind_Function_Call then
+         Obj := Get_Method_Object (Imp);
+         if Is_Valid (Obj) then
+            Obj_Type := Get_Type (Obj);
+         end if;
+      else
+         Obj := Null_Iir;
+      end if;
 
       --  Start record containing data for the conversion function.
       Start_Record_Type (El_List);
@@ -2688,6 +2699,14 @@ package body Trans.Chap4 is
       else
          Conv_Info.Instantiated_Entity := Null_Iir;
          Conv_Info.Instantiated_Field := O_Fnode_Null;
+      end if;
+
+      if Obj /= Null_Iir then
+         New_Record_Field
+           (El_List, Conv_Info.Method_Object, Get_Identifier ("obj"),
+            Get_Info (Obj_Type).Ortho_Ptr_Type (Mode_Value));
+      else
+         Conv_Info.Method_Object := O_Fnode_Null;
       end if;
 
       --  Add inputs, which is a pointer to the signal.
@@ -2816,8 +2835,17 @@ package body Trans.Chap4 is
                New_Association (Constr, M2E (Res));
             end if;
 
-            Subprgs.Add_Subprg_Instance_Assoc
-              (Constr, Subprg_Info.Subprg_Instance);
+            if Obj /= Null_Iir then
+               --  Protected object.
+               New_Association
+                 (Constr,
+                  New_Value (New_Selected_Acc_Value
+                               (New_Obj (Var_Data),
+                                Conv_Info.Method_Object)));
+            else
+               Subprgs.Add_Subprg_Instance_Assoc
+                 (Constr, Subprg_Info.Subprg_Instance);
+            end if;
 
             New_Association (Constr, R);
 
@@ -2923,6 +2951,7 @@ package body Trans.Chap4 is
 
    procedure Elab_Conversion (Sig_In     : Iir;
                               Sig_Out    : Iir;
+                              Conv       : Iir;
                               Reg_Subprg : O_Dnode;
                               Info       : Assoc_Conv_Info;
                               Dest_Sig   : out Mnode)
@@ -2969,9 +2998,17 @@ package body Trans.Chap4 is
             end if;
             New_Assign_Stmt
               (New_Selected_Acc_Value (New_Obj (Var_Data),
-               Info.Instantiated_Field),
+                                       Info.Instantiated_Field),
                Inst_Addr);
          end;
+      end if;
+
+      if Info.Method_Object /= O_Fnode_Null then
+         New_Assign_Stmt
+           (New_Selected_Acc_Value (New_Obj (Var_Data),
+                                    Info.Method_Object),
+            M2E (Chap6.Translate_Name
+                   (Get_Method_Object (Conv), Mode_Value)));
       end if;
 
       --  Set input.
@@ -3048,7 +3085,7 @@ package body Trans.Chap4 is
       Assoc_Info : constant Assoc_Info_Acc := Get_Info (Assoc);
    begin
       Elab_Conversion
-        (Get_Actual (Assoc), Formal,
+        (Get_Actual (Assoc), Formal, Get_In_Conversion (Assoc),
          Ghdl_Signal_In_Conversion, Assoc_Info.Assoc_In, Ndest);
    end Elab_In_Conversion;
 
@@ -3060,7 +3097,7 @@ package body Trans.Chap4 is
       Assoc_Info : constant Assoc_Info_Acc := Get_Info (Assoc);
    begin
       Elab_Conversion
-        (Formal, Get_Actual (Assoc),
+        (Formal, Get_Actual (Assoc), Get_Out_Conversion (Assoc),
          Ghdl_Signal_Out_Conversion, Assoc_Info.Assoc_Out, Ndest);
    end Elab_Out_Conversion;
 

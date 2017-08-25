@@ -1147,6 +1147,8 @@ package Trans is
       Instantiated_Entity : Iir;
       --   and its address.
       Instantiated_Field  : O_Fnode;
+      --  The object if the subprogram is a method
+      Method_Object       : O_Fnode;
       In_Sig_Field        : O_Fnode;
       In_Val_Field        : O_Fnode;
       Out_Sig_Field       : O_Fnode;

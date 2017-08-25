@@ -1564,6 +1564,7 @@ package body Sem_Assocs is
             Assoc := Get_Parameter_Association_Chain (Func);
             Free_Iir (Assoc);
             Set_Parameter_Association_Chain (Func, Null_Iir);
+            Name_To_Method_Object (Func, Conv);
             return Func;
          when Iir_Kind_Type_Conversion =>
             return Func;
@@ -1600,6 +1601,7 @@ package body Sem_Assocs is
             Set_Type (Res, Get_Return_Type (Func));
             Set_Expr_Staticness (Res, None);
             Mark_Subprogram_Used (Func);
+            Name_To_Method_Object (Res, Conv);
          when Iir_Kind_Subtype_Declaration
            | Iir_Kind_Type_Declaration =>
             Res := Create_Iir (Iir_Kind_Type_Conversion);

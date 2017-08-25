@@ -1872,7 +1872,8 @@ package body Sem_Names is
 
    --  LRM93 §6.3
    --  Selected Names.
-   procedure Sem_Selected_Name (Name: Iir; Keep_Alias : Boolean := False)
+   procedure Sem_Selected_Name
+     (Name: Iir; Keep_Alias : Boolean := False; Soft : Boolean := False)
    is
       Suffix : constant Name_Id := Get_Identifier (Name);
       Prefix_Name : constant Iir := Get_Prefix (Name);
@@ -2023,7 +2024,11 @@ package body Sem_Names is
       end Error_Unit_Not_Found;
    begin
       --  Analyze prefix.
-      Sem_Name (Prefix_Name);
+      if Soft then
+         Sem_Name_Soft (Prefix_Name);
+      else
+         Sem_Name (Prefix_Name);
+      end if;
       Prefix := Get_Named_Entity (Prefix_Name);
       if Prefix = Error_Mark then
          Set_Named_Entity (Name, Prefix);
@@ -2080,7 +2085,7 @@ package body Sem_Names is
                   end loop;
                end if;
             end;
-            if Res = Null_Iir then
+            if Res = Null_Iir and then not Soft then
                Error_Msg_Sem
                  (+Name, "no suffix %i for overloaded selected name", +Suffix);
             end if;
@@ -2094,11 +2099,11 @@ package body Sem_Names is
             --  particularly for an architecture body.
             --  GHDL: FIXME: error message more explicit
             Res := Libraries.Load_Primary_Unit (Prefix, Suffix, Name);
-            if Res = Null_Iir then
-               Error_Unit_Not_Found (Prefix);
-            else
+            if Res /= Null_Iir then
                Sem.Add_Dependence (Res);
                Res := Get_Library_Unit (Res);
+            elsif not Soft then
+               Error_Unit_Not_Found (Prefix);
             end if;
          when Iir_Kind_Process_Statement
            | Iir_Kind_Procedure_Declaration
@@ -2133,8 +2138,10 @@ package body Sem_Names is
             Res := Find_Declarations_In_List (Prefix, Name, Keep_Alias);
 
             if Res = Null_Iir then
-               Error_Msg_Sem
-                 (+Name, "no declaration for %i in %n", (+Suffix, +Prefix));
+               if not Soft then
+                  Error_Msg_Sem
+                    (+Name, "no declaration for %i in %n", (+Suffix, +Prefix));
+               end if;
             else
                --  LRM93 §6.3
                --  This form of expanded name is only allowed within the
@@ -2144,6 +2151,7 @@ package body Sem_Names is
                                Iir_Kind_Package_Declaration,
                                Iir_Kind_Package_Instantiation_Declaration)
                  and then not Get_Is_Within_Flag (Prefix)
+                 and then not Soft
                then
                   Error_Msg_Sem
                     (+Prefix_Loc,
@@ -2156,7 +2164,7 @@ package body Sem_Names is
             if Res = Null_Iir then
                Sem_As_Selected_Element (Prefix);
             end if;
-            if Res = Null_Iir then
+            if Res = Null_Iir and then not Soft then
                Error_Selected_Element (Get_Return_Type (Prefix));
             end if;
          when Iir_Kinds_Object_Declaration
@@ -2170,12 +2178,12 @@ package body Sem_Names is
               = Iir_Kind_Protected_Type_Declaration
             then
                Sem_As_Protected_Item (Prefix);
-               if Res = Null_Iir then
+               if Res = Null_Iir and then not Soft then
                   Error_Protected_Item (Prefix);
                end if;
             else
                Sem_As_Selected_Element (Prefix);
-               if Res = Null_Iir then
+               if Res = Null_Iir and then not Soft then
                   Error_Selected_Element (Get_Type (Prefix));
                end if;
             end if;
@@ -2185,8 +2193,10 @@ package body Sem_Names is
            | Iir_Kind_Component_Instantiation_Statement
            | Iir_Kind_Slice_Name
            | Iir_Kind_Procedure_Call_Statement =>
-            Error_Msg_Sem
-              (+Prefix_Loc, "%n cannot be selected by name", +Prefix);
+            if not Soft then
+               Error_Msg_Sem
+                 (+Prefix_Loc, "%n cannot be selected by name", +Prefix);
+            end if;
 
          when others =>
             Error_Kind ("sem_selected_name(2)", Prefix);
@@ -3732,6 +3742,8 @@ package body Sem_Names is
            | Iir_Kind_Operator_Symbol =>
             --  String_Literal may be a operator_symbol.
             Sem_Simple_Name (Name, False, Soft => True);
+         when Iir_Kind_Selected_Name =>
+            Sem_Selected_Name (Name, Keep_Alias => False, Soft => True);
          when others =>
             Error_Kind ("sem_name_soft", Name);
       end case;
