@@ -10,6 +10,22 @@ matrix:
       dist: trusty
       sudo: required
       services: docker
+      env: DOCKER_IMAGE=stretch+mcode
+    - os: linux
+      dist: trusty
+      sudo: required
+      services: docker
+      env: DOCKER_IMAGE=ubuntu14+mcode
+    - os: linux
+      dist: trusty
+      sudo: required
+      services: docker
+      env: DOCKER_IMAGE=ubuntu14+llvm-3.8
+    - os: linux
+      dist: trusty
+      sudo: required
+      services: docker
+      env: DOCKER_IMAGE=fedora26+mcode
     - os: osx
       osx_image: xcode7.3
       cache:

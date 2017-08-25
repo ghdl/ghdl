@@ -1,10 +1,16 @@
-#! /bin/sh
+#! /bin/bash
 
 . dist/ansi_color.sh
 disable_color
 
+echo "$0" "$@"
+
 # Stop in case of error
 set -e
+
+. dist/linux/travis-utils.sh
+
+rm -f build_ok
 
 # Transform long options to short ones
 for arg in "$@"; do
@@ -33,7 +39,7 @@ done
 
 #---
 
-printf "$ANSI_BLUE[$TASK| GHDL] Prepare $(pwd) $ANSI_NOCOLOR\n"
+printf "$ANSI_YELLOW[Prepare] $(pwd) $ANSI_NOCOLOR\n"
 CDIR=$(pwd)
 prefix="$CDIR/install-$BLD"
 mkdir "$prefix"
@@ -43,14 +49,14 @@ cd "build-$BLD"
 #--- Env
 
 echo "travis_fold:start:env.$TASK"
-printf "$ANSI_BLUE[$TASK| GHDL] Environment $ANSI_NOCOLOR\n"
+printf "$ANSI_YELLOW[Info] Environment $ANSI_NOCOLOR\n"
 env
 echo "travis_fold:end:env.$TASK"
 
 #--- Configure
 
 echo "travis_fold:start:configure.$TASK"
-printf "$ANSI_BLUE[$TASK| GHDL - build] Configure $ANSI_NOCOLOR\n"
+printf "$ANSI_YELLOW[GHDL] Configure $ANSI_NOCOLOR\n"
 case "$BLD" in
     mcode)
 	config_opts="" ;;
@@ -74,12 +80,14 @@ echo "travis_fold:end:configure.$TASK"
 #--- make
 
 echo "travis_fold:start:make.$TASK"
-printf "$ANSI_BLUE[$TASK| GHDL - build] Make $ANSI_NOCOLOR\n"
+travis_time_start
+printf "$ANSI_YELLOW[GHDL] Make $ANSI_NOCOLOR\n"
 make
+travis_time_finish
 echo "travis_fold:end:make.$TASK"
 
 echo "travis_fold:start:install.$TASK"
-printf "$ANSI_BLUE[$TASK| GHDL - build] Install $ANSI_NOCOLOR\n"
+printf "$ANSI_YELLOW[GHDL] Install $ANSI_NOCOLOR\n"
 make install
 cd ..
 echo "travis_fold:end:install.$TASK"
@@ -87,7 +95,7 @@ echo "travis_fold:end:install.$TASK"
 #--- package
 
 echo "travis_fold:start:tar.$TASK"
-printf "$ANSI_BLUE[$TASK| GHDL] Create package $ANSI_DARKCYAN$PKG_FILE $ANSI_NOCOLOR\n"
+printf "$ANSI_YELLOW[GHDL] Create package $ANSI_DARKCYAN$PKG_FILE $ANSI_NOCOLOR\n"
 tar -zcvf "$PKG_FILE" -C "$prefix" .
 echo "travis_fold:end:tar.$TASK"
 
@@ -99,7 +107,8 @@ cd testsuite
 failures=""
 
 echo "travis_fold:start:tests.gna.$TASK"
-printf "$ANSI_BLUE[$TASK| GHDL - test] gna $ANSI_NOCOLOR\n"
+travis_time_start
+printf "$ANSI_YELLOW[Test] gna $ANSI_NOCOLOR\n"
 cd gna
 dirs=`./testsuite.sh --list-tests`
 for d in $dirs; do
@@ -117,11 +126,13 @@ for d in $dirs; do
     [ "$failures" = "" ] || break
 done
 cd ..
+travis_time_finish
 echo "travis_fold:end:tests.gna.$TASK"
 [ "$failures" = "" ] || exit 1
 
 echo "travis_fold:start:tests.vests.$TASK"
-printf "$ANSI_BLUE[$TASK| GHDL - test] vests $ANSI_NOCOLOR\n"
+travis_time_start
+printf "$ANSI_YELLOW[Test] vests $ANSI_NOCOLOR\n"
 cd vests
 if ./testsuite.sh > vests.log 2>&1 ; then
     echo "${ANSI_GREEN}Vests is OK$ANSI_NOCOLOR"
@@ -132,6 +143,7 @@ else
     failures=vests
 fi
 cd ..
+travis_time_finish
 echo "travis_fold:end:tests.vests.$TASK"
 [ "$failures" = "" ] || exit 1
 
@@ -142,3 +154,4 @@ cd ..
 
 # Do not remove this line, and don't write anything below, since it is used to identify successful builds
 echo "[$TASK|SUCCESSFUL]"
+touch build_ok

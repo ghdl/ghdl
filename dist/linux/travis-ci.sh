@@ -1,6 +1,8 @@
 #! /bin/bash
 # This script is executed in the travis-ci environment.
 
+set -e
+
 . dist/ansi_color.sh
 #disable_color
 
@@ -28,76 +30,38 @@ if [ "$TRAVIS_OS_NAME" = "osx" ]; then
     exit
 fi
 
-# List of docker images
+if [ "$DOCKER_IMAGE" = "" ]; then
+    echo "DOCKER_IMAGE not defined"
+    exit 1
+fi
 
-images=("ghdl/ghdl-tools:ubuntu-mcode"
-	"ghdl/ghdl-tools:ubuntu1404-llvm"
-	"ghdl/ghdl-tools:ubuntu1204-llvm"
-	"ghdl/ghdl-tools:fedora-llvm-mcode")
+IFS='+' read -ra REFS <<< "$DOCKER_IMAGE"
+DBLD=${REFS[1]}
+DDIST=${REFS[0]}
 
-# docker image index + identifier + compiler
+. ./dist/linux/travis-utils.sh
 
-regular="0+ubuntu+mcode 3+fedora+llvm"
-nightly="1+ubuntu1404+llvm-3.5 2+ubuntu1204+llvm-3.8 3+fedora+mcode"
-#release=()
+# Execute build and test in docker container
+echo "travis_fold:start:create"
+travis_time_start
+printf "$ANSI_YELLOW[DOCKER build] Docker build $ANSI_NOCOLOR\n"
 
-# Selected build matrix
-thismatrix=regular
+DOCKERFILE="dist/linux/docker/build-$DOCKER_IMAGE"
+DOCKERCMD="./dist/linux/buildtest.sh $ENABLECOLOR -t 0 -b $DBLD -f ghdl-${PKG_TAG}-${DBLD}-${DDIST}.tgz"
 
-#---
+echo "dockerfile: $DOCKERFILE"
+echo "docker cmd: $DOCKERCMD"
+DOCKER_NAME=`echo $DOCKER_IMAGE | sed -e 's/+/-/g'`
 
-cloned=$(pwd)
+docker build -t $DOCKER_NAME - < $DOCKERFILE
+travis_time_finish
+echo "travis_fold:end:create"
 
-#### Per build function
+docker run --rm --tty --volume $(pwd):/work -w "/work" $DOCKER_NAME bash -c "$DOCKERCMD"
 
-task() {
-  printf "$ANSI_YELLOW[$1| BUILD] $2 $ANSI_NOCOLOR\n"
+ls -l ghdl-*
 
-  IFS='+' read -ra REFS <<< "$2"
-  DBLD=${REFS[2]}
-  DDIST=${REFS[1]}
-  DIMG=${images[${REFS[0]}]}
-  thisworkdir="../wrk-$1"
-  cp -r ./ "$thisworkdir" && cd "$thisworkdir"
-  ./dist/linux/docker-buildtest.sh -i "$DIMG" $ENABLECOLOR -t "$1" -b "$DBLD" -f "ghdl-$PKG_TAG-$DBLD-$DDIST.tgz"
-  cd "$cloned"
-}
-
-#### Start builds
-
-printf "$ANSI_YELLOW[TRAVIS] Running matrix $thismatrix $ANSI_NOCOLOR\n"
-eval blds='${'$thismatrix'}'
-t=0; for thisbuild in $blds; do
-  task "$t" "$thisbuild" &
-  t=$(($t+1));
-done
-
-#### Wait end of builds
-
-printf "$ANSI_YELLOW[TRAVIS] Waiting... $ANSI_NOCOLOR\n"
-wait
-
-#### Check results, disp logs
-
-EXITCODE=0;
-t=0; for b in $blds; do
-  workdir="../wrk-$t"
-  # Display log (with travis log folding commands)
-  echo "travis_fold:start:log.$t"
-  printf "$ANSI_YELLOW[TRAVIS] Print BUILD $t log $ANSI_NOCOLOR\n"
-  cat $workdir/log.log
-  echo "travis_fold:end:log.$t"
-
-  # Read the last line of the log
-  RESULT="$(tail -1 $workdir/log.log)"
-  # If it did not end with [$t|SUCCESSFUL], break the build
-  if [ "$RESULT" != "[$t|SUCCESSFUL]" ]; then
-      printf "$ANSI_RED[TRAVIS] BUILD $t failed $ANSI_NOCOLOR\n"
-      EXITCODE=1;
-  else
-      cp $workdir/ghdl-*.tgz .
-  fi
-  t=$(($t+1));
-done
-
-exit $EXITCODE
+if [ ! -f build_ok ]; then
+    printf "$ANSI_RED[TRAVIS] BUILD failed $ANSI_NOCOLOR\n"
+    exit 1
+fi
