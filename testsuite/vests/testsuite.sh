@@ -191,13 +191,13 @@ deletelibs() {
   delete_lib utilities
 }
 
-printf "$ANSI_BLUE[$TASK| GHDL - test] vests: ashenden $ANSI_NOCOLOR\n"
+printf "$ANSI_BLUE[GHDL - test] vests: ashenden $ANSI_NOCOLOR\n"
 test_ashenden
 # Clean frequently the work library.
 do_inter_clean="yes"
-printf "$ANSI_BLUE[$TASK| GHDL - test] vests: billowitch $ANSI_NOCOLOR\n"
+printf "$ANSI_BLUE[GHDL - test] vests: billowitch $ANSI_NOCOLOR\n"
 test_billowitch
-printf "$ANSI_BLUE[$TASK| GHDL - test] vests: delete libs $ANSI_NOCOLOR\n"
+printf "$ANSI_BLUE[GHDL - test] vests: delete libs $ANSI_NOCOLOR\n"
 deletelibs
 
 # Remove io files created by tests

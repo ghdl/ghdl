@@ -18,18 +18,18 @@ for arg in "$@"; do
   case "$arg" in
       "--color"|"-color")   set -- "$@" "-c";;
       "--build"|"-build")   set -- "$@" "-b";;
-      "--file"|"-file")     set -- "$@" "-f";;
-      "--taskid"|"-taskid") set -- "$@" "-t";;
+      "--pkg"|"-pkg")       set -- "$@" "-p";;
+      "--gpl"|"-gpl")       set -- "$@" "-g";;
     *) set -- "$@" "$arg"
   esac
 done
 # Parse args
-while getopts ":b:f:t:c" opt; do
+while getopts ":b:p:cg" opt; do
   case $opt in
     c) enable_color;;
     b) BLD=$OPTARG ;;
-    f) PKG_FILE=$OPTARG;;
-    t) TASK=$OPTARG;;
+    p) PKG_NAME=$OPTARG;;
+    g) ISGPL=true;;
     \?) printf "$ANSI_RED[GHDL] Invalid option: -$OPTARG $ANSI_NOCOLOR\n" >&2
 	exit 1 ;;
     :)  printf "$ANSI_RED[GHDL] Option -$OPTARG requires an argument. $ANSI_NOCOLOR\n" >&2
@@ -37,26 +37,40 @@ while getopts ":b:f:t:c" opt; do
   esac
 done
 
-#---
+#--- Env
 
-printf "$ANSI_YELLOW[Prepare] $(pwd) $ANSI_NOCOLOR\n"
+echo "travis_fold:start:env.docker"
+printf "$ANSI_YELLOW[Info] Environment $ANSI_NOCOLOR\n"
+env
+echo "travis_fold:end:env.docker"
+
+#--- GPL: gpl-ize sources
+
+if [ "$ISGPL" = "true" ]; then
+    echo "travis_fold:start:gpl.src"
+    printf "$ANSI_YELLOW[Source] create GPL sources $ANSI_NOCOLOR\n"
+    files=`echo *`
+    sed -e 's/@abs_srcdir@/./g' < Makefile.in > Makefile.tmp
+    make -f Makefile.tmp clean-pure-gpl
+    rm -f Makefile.tmp
+    mkdir ${PKG_NAME}
+    cp -pdrl $files ${PKG_NAME}
+    tar -zcf "${PKG_NAME}.tar.gz" ${PKG_NAME}
+    PKG_NAME="${PKG_NAME}-${BLD}"
+    echo "travis_fold:end:gpl.src"
+fi
+
+#--- Configure
+
+echo "travis_fold:start:configure"
+printf "$ANSI_YELLOW[GHDL] Configure $ANSI_NOCOLOR\n"
+
 CDIR=$(pwd)
 prefix="$CDIR/install-$BLD"
 mkdir "$prefix"
 mkdir "build-$BLD"
 cd "build-$BLD"
 
-#--- Env
-
-echo "travis_fold:start:env.$TASK"
-printf "$ANSI_YELLOW[Info] Environment $ANSI_NOCOLOR\n"
-env
-echo "travis_fold:end:env.$TASK"
-
-#--- Configure
-
-echo "travis_fold:start:configure.$TASK"
-printf "$ANSI_YELLOW[GHDL] Configure $ANSI_NOCOLOR\n"
 case "$BLD" in
     mcode)
 	config_opts="" ;;
@@ -70,34 +84,34 @@ case "$BLD" in
 	echo "Check docker container!"
 	exit 0;;
     *)
-	echo "$ANSI_RED[$TASK| GHDL - build] Unknown build $BLD $ANSI_NOCOLOR"
+	echo "$ANSI_RED[GHDL - build] Unknown build $BLD $ANSI_NOCOLOR"
 	exit 1;;
 esac
 echo "../configure --prefix=$prefix $config_opts"
 ../configure "--prefix=$prefix" $config_opts
-echo "travis_fold:end:configure.$TASK"
+echo "travis_fold:end:configure"
 
 #--- make
 
-echo "travis_fold:start:make.$TASK"
+echo "travis_fold:start:make"
 travis_time_start
 printf "$ANSI_YELLOW[GHDL] Make $ANSI_NOCOLOR\n"
 make
 travis_time_finish
-echo "travis_fold:end:make.$TASK"
+echo "travis_fold:end:make"
 
-echo "travis_fold:start:install.$TASK"
+echo "travis_fold:start:install"
 printf "$ANSI_YELLOW[GHDL] Install $ANSI_NOCOLOR\n"
 make install
 cd ..
-echo "travis_fold:end:install.$TASK"
+echo "travis_fold:end:install"
 
 #--- package
 
-echo "travis_fold:start:tar.$TASK"
-printf "$ANSI_YELLOW[GHDL] Create package $ANSI_DARKCYAN$PKG_FILE $ANSI_NOCOLOR\n"
-tar -zcvf "$PKG_FILE" -C "$prefix" .
-echo "travis_fold:end:tar.$TASK"
+echo "travis_fold:start:tar.bin"
+printf "$ANSI_YELLOW[GHDL] Create package ${ANSI_DARKCYAN}${PKG_NAME}.tgz $ANSI_NOCOLOR\n"
+tar -zcvf "${PKG_NAME}.tgz" -C "$prefix" .
+echo "travis_fold:end:tar.bin"
 
 #--- test
 
@@ -106,18 +120,17 @@ export GHDL="$prefix/bin/ghdl"
 cd testsuite
 failures=""
 
-echo "travis_fold:start:tests.gna.$TASK"
+echo "travis_fold:start:tests.sanity"
 travis_time_start
-printf "$ANSI_YELLOW[Test] gna $ANSI_NOCOLOR\n"
-cd gna
-dirs=`./testsuite.sh --list-tests`
-for d in $dirs; do
+printf "$ANSI_YELLOW[Test] sanity $ANSI_NOCOLOR\n"
+cd sanity
+for d in [0-9]*; do
     cd $d
     if ./testsuite.sh > test.log 2>&1 ; then
-	echo "gna $d: ok"
+	echo "sanity $d: ok"
 	# Don't disp log
     else
-	echo "${ANSI_RED}gna $d: failed${ANSI_NOCOLOR}"
+	echo "${ANSI_RED}sanity $d: failed${ANSI_NOCOLOR}"
 	cat test.log
 	failures="$failures $d"
     fi
@@ -127,10 +140,36 @@ for d in $dirs; do
 done
 cd ..
 travis_time_finish
-echo "travis_fold:end:tests.gna.$TASK"
+echo "travis_fold:end:tests.sanity"
 [ "$failures" = "" ] || exit 1
 
-echo "travis_fold:start:tests.vests.$TASK"
+if [ "$ISGPL" != "true" ]; then
+    echo "travis_fold:start:tests.gna"
+    travis_time_start
+    printf "$ANSI_YELLOW[Test] gna $ANSI_NOCOLOR\n"
+    cd gna
+    dirs=`./testsuite.sh --list-tests`
+    for d in $dirs; do
+	cd $d
+	if ./testsuite.sh > test.log 2>&1 ; then
+	    echo "gna $d: ok"
+	    # Don't disp log
+	else
+	    echo "${ANSI_RED}gna $d: failed${ANSI_NOCOLOR}"
+	    cat test.log
+	    failures="$failures $d"
+	fi
+	cd ..
+	# Stop at the first failure
+	[ "$failures" = "" ] || break
+    done
+    cd ..
+    travis_time_finish
+    echo "travis_fold:end:tests.gna"
+    [ "$failures" = "" ] || exit 1
+fi
+
+echo "travis_fold:start:tests.vests"
 travis_time_start
 printf "$ANSI_YELLOW[Test] vests $ANSI_NOCOLOR\n"
 cd vests
@@ -144,7 +183,7 @@ else
 fi
 cd ..
 travis_time_finish
-echo "travis_fold:end:tests.vests.$TASK"
+echo "travis_fold:end:tests.vests"
 [ "$failures" = "" ] || exit 1
 
 $GHDL --version
@@ -152,6 +191,5 @@ cd ..
 
 #---
 
-# Do not remove this line, and don't write anything below, since it is used to identify successful builds
-echo "[$TASK|SUCCESSFUL]"
+echo "[SUCCESSFUL]"
 touch build_ok

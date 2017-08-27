@@ -16,8 +16,6 @@ done
 
 if [ x$tests = x ]; then tests="gna vests"; fi
 
-printf "$ANSI_BLUE[$TASK| GHDL - test] Sourced the testsuite environment $ANSI_NOCOLOR\n"
-
 # The GNA testsuite: regression testsuite using reports/issues from gna.org
 do_gna() {
   cd gna

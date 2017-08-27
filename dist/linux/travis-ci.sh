@@ -6,11 +6,16 @@ set -e
 . dist/ansi_color.sh
 #disable_color
 
+
 # Display env (to debug)
+
 echo -en "travis_fold:start:travis_env\r"
 printf "$ANSI_YELLOW[TRAVIS] Travis environment $ANSI_NOCOLOR\n"
 env | grep TRAVIS
 echo -en "travis_fold:end:travis_env\r"
+
+
+# Compute package name
 
 PKG_SHORTCOMMIT="$(printf $TRAVIS_COMMIT | cut -c1-10)"
 PKG_VER=`grep Ghdl_Ver src/version.in | sed -e 's/.*"\(.*\)";/\1/'`
@@ -19,45 +24,60 @@ if [ -z "$TRAVIS_TAG" ]; then
     PKG_TAG="$(date -u +%Y%m%d)-$PKG_SHORTCOMMIT";
 fi
 
-# OS-X
-
-if [ "$TRAVIS_OS_NAME" = "osx" ]; then
-    ./dist/macosx/install-ada.sh || exit 1
-    PATH=$PWD/gnat/bin:$PATH
-    DBLD=mcode
-    DDIST=macosx
-    ./dist/linux/buildtest.sh $ENABLECOLOR -t 0 -b "$DBLD" -f "ghdl-$PKG_TAG-$DBLD-$DDIST.tgz"
-    exit
-fi
-
-if [ "$DOCKER_IMAGE" = "" ]; then
-    echo "DOCKER_IMAGE not defined"
+if [ "$IMAGE" = "" ]; then
+    echo "IMAGE not defined"
     exit 1
 fi
 
-IFS='+' read -ra REFS <<< "$DOCKER_IMAGE"
-DBLD=${REFS[1]}
+IFS='+' read -ra REFS <<< "$IMAGE"
 DDIST=${REFS[0]}
+DBLD=${REFS[1]}
+DGPL=${REFS[2]}
 
-. ./dist/linux/travis-utils.sh
+PKG_NAME="ghdl-${PKG_TAG}-${DBLD}-${DDIST}"
+BUILD_CMD="./dist/linux/buildtest.sh $ENABLECOLOR -b $DBLD"
+if [ "$DGPL" = "gpl" ]; then
+    BUILD_CMD="$BUILD_CMD --gpl"
+    PKG_NAME="ghdl-gpl-${PKG_TAG}"
+fi
+BUILD_CMD="${BUILD_CMD} -p $PKG_NAME"
 
-# Execute build and test in docker container
-echo "travis_fold:start:create"
-travis_time_start
-printf "$ANSI_YELLOW[DOCKER build] Docker build $ANSI_NOCOLOR\n"
+echo "build cmd: $BUILD_CMD"
 
-DOCKERFILE="dist/linux/docker/build-$DOCKER_IMAGE"
-DOCKERCMD="./dist/linux/buildtest.sh $ENABLECOLOR -t 0 -b $DBLD -f ghdl-${PKG_TAG}-${DBLD}-${DDIST}.tgz"
+# Build
 
-echo "dockerfile: $DOCKERFILE"
-echo "docker cmd: $DOCKERCMD"
-DOCKER_NAME=`echo $DOCKER_IMAGE | sed -e 's/+/-/g'`
+if [ "$TRAVIS_OS_NAME" = "osx" ]; then
+    # Install gnat compiler (use cache)
+    ./dist/macosx/install-ada.sh || exit 1
+    PATH=$PWD/gnat/bin:$PATH
 
-docker build -t $DOCKER_NAME - < $DOCKERFILE
-travis_time_finish
-echo "travis_fold:end:create"
+    bash -c "$BUILD_CMD"
+else
+    # Assume linux
 
-docker run --rm --tty --volume $(pwd):/work -w "/work" $DOCKER_NAME bash -c "$DOCKERCMD"
+    # Create docker image
+
+    . ./dist/linux/travis-utils.sh
+
+    echo "travis_fold:start:create"
+    travis_time_start
+    printf "$ANSI_YELLOW[DOCKER build] Docker build $ANSI_NOCOLOR\n"
+
+    DOCKERFILE="dist/linux/docker/build-$IMAGE"
+
+    echo "dockerfile: $DOCKERFILE"
+    DOCKER_NAME=`echo $IMAGE | sed -e 's/+/-/g'`
+
+    docker build -t $DOCKER_NAME - < $DOCKERFILE
+    travis_time_finish
+    echo "travis_fold:end:create"
+
+
+    # Run build+test in docker
+
+    docker run --rm --tty --volume $(pwd):/work -w "/work" $DOCKER_NAME bash -c "$BUILD_CMD"
+fi
+
 
 ls -l ghdl-*
 

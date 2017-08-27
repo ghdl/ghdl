@@ -10,24 +10,30 @@ matrix:
       dist: trusty
       sudo: required
       services: docker
-      env: DOCKER_IMAGE=stretch+mcode
+      env: IMAGE=stretch+mcode
     - os: linux
       dist: trusty
       sudo: required
       services: docker
-      env: DOCKER_IMAGE=ubuntu14+mcode
+      env: IMAGE=stretch+mcode+gpl
     - os: linux
       dist: trusty
       sudo: required
       services: docker
-      env: DOCKER_IMAGE=ubuntu14+llvm-3.8
+      env: IMAGE=ubuntu14+mcode
     - os: linux
       dist: trusty
       sudo: required
       services: docker
-      env: DOCKER_IMAGE=fedora26+mcode
+      env: IMAGE=ubuntu14+llvm-3.8
+    - os: linux
+      dist: trusty
+      sudo: required
+      services: docker
+      env: IMAGE=fedora26+mcode
     - os: osx
       osx_image: xcode7.3
+      env: IMAGE=macosx+mcode
       cache:
         directories:
           - gnat
