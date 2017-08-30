@@ -25,6 +25,7 @@
 with System.Storage_Elements; --  Work around GNAT bug.
 pragma Unreferenced (System.Storage_Elements);
 with Grt.Types; use Grt.Types;
+with Grt.Stdio;
 with Grt.Errors;
 with Grt.Processes;
 with Grt.Signals;
@@ -110,6 +111,9 @@ package body Grt.Main is
       Stop : Boolean;
       Status : Integer;
    begin
+      --  Set stream for error messages
+      Grt.Errors.Set_Out_Stream (Grt.Stdio.stdout);
+
       --  Register modules.
       --  They may insert hooks.
       Grt.Modules.Register_Modules;

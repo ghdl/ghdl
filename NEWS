@@ -1,6 +1,9 @@
 NEWS for ghdl (Dunoon Edition)
 
-New in 0.34 (XXXX-XX-XX)
+New in 0.35 (XXXX-XX-XX)
+* Assert and report messages are sent to stdout (#394)
+
+New in 0.34 (2017-08-15)
 * Display stack backtraces on errors or assert failures
 * Compile scripts for vendor libraries (Xilinx, Altera, osvvm, vunit)
 * Use SSE2 for mcode backend

@@ -24,9 +24,14 @@
 --  covered by the GNU Public License.
 with Grt.Types; use Grt.Types;
 with Grt.Hooks;
+with Grt.Stdio;
 
 package Grt.Errors is
    pragma Preelaborate (Grt.Errors);
+
+   --  Set the stream for error messages.  Must be called before using this
+   --  package.
+   procedure Set_Out_Stream (Stream : Grt.Stdio.FILEs);
 
    --  Multi-call error procedure.
    --  Start and continue with Error_C, finish by an Error_E.
