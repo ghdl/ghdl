@@ -479,12 +479,12 @@ package body Grt.Vpi is
          when vpiType =>
             Res := Ref.mType;
          when vpiTimePrecision =>
-            Res := -9; -- is this nano-seconds?
+            Res := -12; -- In ps.
          when vpiSize =>
             Res := Vpi_Get_Size (Ref);
          when vpiVector =>
             Res := Boolean'Pos (Vpi_Get_Vector (Ref));
-         when others=>
+         when others =>
             dbgPut_Line ("vpi_get: unknown property");
             Res := 0;
       end case;
