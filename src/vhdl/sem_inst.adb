@@ -910,7 +910,7 @@ package body Sem_Inst is
                when Iir_Kind_Association_Element_Type =>
                   Inter := Get_Association_Interface (Inst_El, Inter_El);
                   Set_Instance (Get_Type (Get_Origin (Inter)),
-                                Get_Type (Get_Actual (Inst_El)));
+                                Get_Actual_Type (Inst_El));
                   --  Implicit operators.
                   declare
                      Imp_Inter : Iir;
