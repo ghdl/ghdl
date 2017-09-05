@@ -118,7 +118,7 @@ all options available, including the debugging one.
   Disable buffering on stdout, stderr and files opened in write or append mode (TEXTIO).
 
 
-.. option:: --read-opt-file=<FILENAME>
+.. option:: --read-wave-opt=<FILENAME>
 
   Filter signals to be dumped to the wave file according to the wave option
   file provided.
@@ -152,7 +152,7 @@ all options available, including the debugging one.
      /**/sub3/*/*
 
 
-.. option:: --write-opt-file=<FILENAME>
+.. option:: --write-wave-opt=<FILENAME>
 
   If the wave option file doesn't exist, creates it with all the signals of
   the design. Otherwise throws an error, because it won't erase an existing
