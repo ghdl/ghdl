@@ -360,9 +360,9 @@ package body Canon is
                --    resulting sets.
                Canon_Extract_Sensitivity
                  (Get_Assertion_Condition (Stmt), List);
-               Canon_Extract_Sensitivity
+               Canon_Extract_Sensitivity_If_Not_Null
                  (Get_Severity_Expression (Stmt), List);
-               Canon_Extract_Sensitivity
+               Canon_Extract_Sensitivity_If_Not_Null
                  (Get_Report_Expression (Stmt), List);
             when Iir_Kind_Report_Statement =>
                --  LRM08 11.3
