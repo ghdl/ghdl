@@ -375,7 +375,7 @@ package body Canon is
               | Iir_Kind_Exit_Statement =>
                --  LRM08 11.3
                --  See assertion_statement case.
-               Canon_Extract_Sensitivity
+               Canon_Extract_Sensitivity_If_Not_Null
                  (Get_Condition (Stmt), List);
             when Iir_Kind_Return_Statement =>
                --  LRM08 11.3
