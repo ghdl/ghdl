@@ -2350,9 +2350,8 @@ package body Sem_Assocs is
          Inter := Interface_Chain;
          Pos := 0;
          while Inter /= Null_Iir loop
-            -- Formal assoc is not necessarily a simple name, it may
-            -- be a conversion function, or even an indexed or
-            -- selected name.
+            --  Formal assoc is not necessarily a simple name, it may be a
+            --  conversion function, or even an indexed or selected name.
             Sem_Association (Assoc, Inter, False, I_Match);
             if I_Match /= Not_Compatible then
                return;
@@ -2362,12 +2361,12 @@ package body Sem_Assocs is
          end loop;
       end Search_Interface;
 
-      Assoc: Iir;
-      Inter: Iir;
+      Assoc : Iir;
+      Inter : Iir;
 
       type Bool_Array is array (Natural range <>) of Param_Assoc_Type;
-      Nbr_Arg: constant Natural := Get_Chain_Length (Interface_Chain);
-      Arg_Matched: Bool_Array (0 .. Nbr_Arg - 1) := (others => None);
+      Nbr_Inter : constant Natural := Get_Chain_Length (Interface_Chain);
+      Inter_Matched : Bool_Array (0 .. Nbr_Inter - 1) := (others => None);
 
       Last_Individual : Iir;
       Has_Individual : Boolean;
@@ -2381,7 +2380,7 @@ package body Sem_Assocs is
       Match := Fully_Compatible;
       Has_Individual := False;
 
-      -- Loop on every assoc element, try to match it.
+      --  Loop on every assoc element, try to match it.
       Inter := Interface_Chain;
       Last_Individual := Null_Iir;
       Pos := 0;
@@ -2390,7 +2389,7 @@ package body Sem_Assocs is
       while Assoc /= Null_Iir loop
          Formal := Get_Formal (Assoc);
          if Formal = Null_Iir then
-            -- Positional argument.
+            --  Positional argument.
             if Pos < 0 then
                --  Positional after named argument.  Already caught by
                --  Sem_Actual_Of_Association_Chain (because it is called only
@@ -2399,7 +2398,7 @@ package body Sem_Assocs is
                Match := Not_Compatible;
                return;
             end if;
-            -- Try to match actual of ASSOC with the interface.
+            --  Try to match actual of ASSOC with the interface.
             if Inter = Null_Iir then
                if Finish then
                   Error_Msg_Sem (+Assoc, "too many actuals for %n", +Loc);
@@ -2412,16 +2411,16 @@ package body Sem_Assocs is
                return;
             end if;
             if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open then
-               Arg_Matched (Pos) := Open;
+               Inter_Matched (Pos) := Open;
             else
-               Arg_Matched (Pos) := Whole;
+               Inter_Matched (Pos) := Whole;
             end if;
             Set_Whole_Association_Flag (Assoc, True);
             Inter := Get_Chain (Inter);
             Pos := Pos + 1;
          else
-            -- FIXME: directly search the formal if finish is true.
-            -- Find the Interface.
+            --  FIXME: directly search the formal if finish is true.
+            --  Find the Interface.
 
             --  Try as 'normal' or individual assoc.
             Search_Interface (Assoc, Inter, Pos);
@@ -2491,12 +2490,12 @@ package body Sem_Assocs is
                if Get_Whole_Association_Flag (Assoc) then
                   --  Whole association.
                   Last_Individual := Null_Iir;
-                  if Arg_Matched (Pos) = None then
+                  if Inter_Matched (Pos) = None then
                      if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open
                      then
-                        Arg_Matched (Pos) := Open;
+                        Inter_Matched (Pos) := Open;
                      else
-                        Arg_Matched (Pos) := Whole;
+                        Inter_Matched (Pos) := Whole;
                      end if;
                   else
                      if Finish then
@@ -2509,9 +2508,9 @@ package body Sem_Assocs is
                else
                   --  Individual association.
                   Has_Individual := True;
-                  if Arg_Matched (Pos) /= Whole then
+                  if Inter_Matched (Pos) /= Whole then
                      if Finish
-                       and then Arg_Matched (Pos) = Individual
+                       and then Inter_Matched (Pos) = Individual
                        and then Last_Individual /= Inter
                      then
                         Error_Msg_Sem
@@ -2522,7 +2521,7 @@ package body Sem_Assocs is
                         return;
                      end if;
                      Last_Individual := Inter;
-                     Arg_Matched (Pos) := Individual;
+                     Inter_Matched (Pos) := Individual;
                   else
                      if Finish then
                         Error_Msg_Sem
@@ -2537,7 +2536,7 @@ package body Sem_Assocs is
                   --  MATCH can be Not_Compatible due to errors.
                end if;
             else
-               -- Not found.
+               --  Not found.
                if Finish then
                   --  FIXME: display the name of subprg or component/entity.
                   --  FIXME: fetch the interface (for parenthesis_name).
@@ -2589,7 +2588,7 @@ package body Sem_Assocs is
       Inter := Interface_Chain;
       Pos := 0;
       while Inter /= Null_Iir loop
-         if Arg_Matched (Pos) <= Open then
+         if Inter_Matched (Pos) <= Open then
             case Get_Kind (Inter) is
                when Iir_Kinds_Interface_Object_Declaration =>
                   if Get_Default_Value (Inter) = Null_Iir then
