@@ -106,8 +106,8 @@ package Nodes_Meta is
       Field_Designated_Entity,
       Field_Formal,
       Field_Actual,
-      Field_In_Conversion,
-      Field_Out_Conversion,
+      Field_Actual_Conversion,
+      Field_Formal_Conversion,
       Field_Whole_Association_Flag,
       Field_Collapse_Signal_Flag,
       Field_Artificial_Flag,
@@ -612,8 +612,8 @@ package Nodes_Meta is
    function Has_Designated_Entity (K : Iir_Kind) return Boolean;
    function Has_Formal (K : Iir_Kind) return Boolean;
    function Has_Actual (K : Iir_Kind) return Boolean;
-   function Has_In_Conversion (K : Iir_Kind) return Boolean;
-   function Has_Out_Conversion (K : Iir_Kind) return Boolean;
+   function Has_Actual_Conversion (K : Iir_Kind) return Boolean;
+   function Has_Formal_Conversion (K : Iir_Kind) return Boolean;
    function Has_Whole_Association_Flag (K : Iir_Kind) return Boolean;
    function Has_Collapse_Signal_Flag (K : Iir_Kind) return Boolean;
    function Has_Artificial_Flag (K : Iir_Kind) return Boolean;

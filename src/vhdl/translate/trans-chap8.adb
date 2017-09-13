@@ -2665,7 +2665,7 @@ package body Trans.Chap8 is
                   In_Conv := Null_Iir;
                when Iir_Kind_Association_Element_By_Expression =>
                   Act := Get_Actual (El);
-                  In_Conv := Get_In_Conversion (El);
+                  In_Conv := Get_Actual_Conversion (El);
                when Iir_Kind_Association_Element_By_Individual =>
                   Actual_Type := Get_Actual_Type (El);
 
@@ -3216,7 +3216,7 @@ package body Trans.Chap8 is
                   end case;
                end if;
 
-               Out_Conv := Get_Out_Conversion (El);
+               Out_Conv := Get_Formal_Conversion (El);
                if Out_Conv = Null_Iir then
                   Out_Expr := Formal;
                   Val := M2E (Param);

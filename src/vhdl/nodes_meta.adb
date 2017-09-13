@@ -66,8 +66,8 @@ package body Nodes_Meta is
       Field_Designated_Entity => Type_Iir,
       Field_Formal => Type_Iir,
       Field_Actual => Type_Iir,
-      Field_In_Conversion => Type_Iir,
-      Field_Out_Conversion => Type_Iir,
+      Field_Actual_Conversion => Type_Iir,
+      Field_Formal_Conversion => Type_Iir,
       Field_Whole_Association_Flag => Type_Boolean,
       Field_Collapse_Signal_Flag => Type_Boolean,
       Field_Artificial_Flag => Type_Boolean,
@@ -445,10 +445,10 @@ package body Nodes_Meta is
             return "formal";
          when Field_Actual =>
             return "actual";
-         when Field_In_Conversion =>
-            return "in_conversion";
-         when Field_Out_Conversion =>
-            return "out_conversion";
+         when Field_Actual_Conversion =>
+            return "actual_conversion";
+         when Field_Formal_Conversion =>
+            return "formal_conversion";
          when Field_Whole_Association_Flag =>
             return "whole_association_flag";
          when Field_Collapse_Signal_Flag =>
@@ -1637,9 +1637,9 @@ package body Nodes_Meta is
             return Attr_None;
          when Field_Actual =>
             return Attr_None;
-         when Field_In_Conversion =>
+         when Field_Actual_Conversion =>
             return Attr_None;
-         when Field_Out_Conversion =>
+         when Field_Formal_Conversion =>
             return Attr_None;
          when Field_Whole_Association_Flag =>
             return Attr_None;
@@ -2317,8 +2317,8 @@ package body Nodes_Meta is
       Field_Formal,
       Field_Chain,
       Field_Actual,
-      Field_In_Conversion,
-      Field_Out_Conversion,
+      Field_Actual_Conversion,
+      Field_Formal_Conversion,
       --  Iir_Kind_Association_Element_By_Individual
       Field_Whole_Association_Flag,
       Field_Collapse_Signal_Flag,
@@ -5014,10 +5014,10 @@ package body Nodes_Meta is
             return Get_Formal (N);
          when Field_Actual =>
             return Get_Actual (N);
-         when Field_In_Conversion =>
-            return Get_In_Conversion (N);
-         when Field_Out_Conversion =>
-            return Get_Out_Conversion (N);
+         when Field_Actual_Conversion =>
+            return Get_Actual_Conversion (N);
+         when Field_Formal_Conversion =>
+            return Get_Formal_Conversion (N);
          when Field_We_Value =>
             return Get_We_Value (N);
          when Field_Time =>
@@ -5412,10 +5412,10 @@ package body Nodes_Meta is
             Set_Formal (N, V);
          when Field_Actual =>
             Set_Actual (N, V);
-         when Field_In_Conversion =>
-            Set_In_Conversion (N, V);
-         when Field_Out_Conversion =>
-            Set_Out_Conversion (N, V);
+         when Field_Actual_Conversion =>
+            Set_Actual_Conversion (N, V);
+         when Field_Formal_Conversion =>
+            Set_Formal_Conversion (N, V);
          when Field_We_Value =>
             Set_We_Value (N, V);
          when Field_Time =>
@@ -6847,15 +6847,15 @@ package body Nodes_Meta is
       end case;
    end Has_Actual;
 
-   function Has_In_Conversion (K : Iir_Kind) return Boolean is
+   function Has_Actual_Conversion (K : Iir_Kind) return Boolean is
    begin
       return K = Iir_Kind_Association_Element_By_Expression;
-   end Has_In_Conversion;
+   end Has_Actual_Conversion;
 
-   function Has_Out_Conversion (K : Iir_Kind) return Boolean is
+   function Has_Formal_Conversion (K : Iir_Kind) return Boolean is
    begin
       return K = Iir_Kind_Association_Element_By_Expression;
-   end Has_Out_Conversion;
+   end Has_Formal_Conversion;
 
    function Has_Whole_Association_Flag (K : Iir_Kind) return Boolean is
    begin

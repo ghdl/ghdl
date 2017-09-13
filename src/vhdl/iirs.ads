@@ -445,14 +445,14 @@ package Iirs is
    --  A function call or a type conversion for the actual.
    --  FIXME: should be a name ?
    -- Only for Iir_Kind_Association_Element_By_Expression:
-   --   Get/Set_In_Conversion (Field4)
+   --   Get/Set_Actual_Conversion (Field4)
    --
    -- Only for Iir_Kind_Association_Element_Type:
    --   Get/Set_Subprogram_Association_Chain (Field4)
    --
    --  A function call or a type conversion for the formal.
    -- Only for Iir_Kind_Association_Element_By_Expression:
-   --   Get/Set_Out_Conversion (Field5)
+   --   Get/Set_Formal_Conversion (Field5)
    --
    --  Owner of Actual_Type if needed.
    -- Only for Iir_Kind_Association_Element_By_Individual:
@@ -5976,12 +5976,12 @@ package Iirs is
    procedure Set_Actual (Target : Iir; Actual : Iir);
 
    --  Field: Field4
-   function Get_In_Conversion (Target : Iir) return Iir;
-   procedure Set_In_Conversion (Target : Iir; Conv : Iir);
+   function Get_Actual_Conversion (Target : Iir) return Iir;
+   procedure Set_Actual_Conversion (Target : Iir; Conv : Iir);
 
    --  Field: Field5
-   function Get_Out_Conversion (Target : Iir) return Iir;
-   procedure Set_Out_Conversion (Target : Iir; Conv : Iir);
+   function Get_Formal_Conversion (Target : Iir) return Iir;
+   procedure Set_Formal_Conversion (Target : Iir; Conv : Iir);
 
    --  This flag is set when the formal is associated in whole (ie, not
    --  individually).

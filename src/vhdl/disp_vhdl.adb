@@ -2395,7 +2395,7 @@ package body Disp_Vhdl is
 
             --  Formal part.
             if Get_Kind (El) = Iir_Kind_Association_Element_By_Expression then
-               Conv := Get_Out_Conversion (El);
+               Conv := Get_Formal_Conversion (El);
                if Conv /= Null_Iir then
                   Disp_Conversion (Conv);
                   Put (" (");
@@ -2431,7 +2431,7 @@ package body Disp_Vhdl is
                  | Iir_Kind_Association_Element_Subprogram =>
                   Disp_Name (Get_Actual (El));
                when others =>
-                  Conv := Get_In_Conversion (El);
+                  Conv := Get_Actual_Conversion (El);
                   if Conv /= Null_Iir then
                      Disp_Conversion (Conv);
                      Put (" (");

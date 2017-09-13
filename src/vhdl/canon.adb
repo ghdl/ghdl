@@ -2346,10 +2346,12 @@ package body Canon is
                      null;
                   when Iir_Kind_Association_Element_By_Expression =>
                      Set_Actual (El, Sem_Inst.Copy_Tree (Get_Actual (Assoc)));
-                     Set_In_Conversion
-                       (El, Sem_Inst.Copy_Tree (Get_In_Conversion (Assoc)));
-                     Set_Out_Conversion
-                       (El, Sem_Inst.Copy_Tree (Get_Out_Conversion (Assoc)));
+                     Set_Actual_Conversion
+                       (El,
+                        Sem_Inst.Copy_Tree (Get_Actual_Conversion (Assoc)));
+                     Set_Formal_Conversion
+                       (El,
+                        Sem_Inst.Copy_Tree (Get_Formal_Conversion (Assoc)));
                      Set_Collapse_Signal_Flag
                        (Assoc,
                         Sem.Can_Collapse_Signals (Assoc, Get_Formal (Assoc)));

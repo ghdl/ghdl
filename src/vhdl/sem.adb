@@ -261,8 +261,8 @@ package body Sem is
       --  the same, and sharing is not possible.
       --  FIXME: optimize type conversions
       --    (unsigned <-> signed <-> std_ulogic_vector <-> ...)
-      if Get_In_Conversion (Assoc) /= Null_Iir
-        or else Get_Out_Conversion (Assoc) /= Null_Iir
+      if Get_Actual_Conversion (Assoc) /= Null_Iir
+        or else Get_Formal_Conversion (Assoc) /= Null_Iir
       then
          return False;
       end if;
@@ -552,7 +552,7 @@ package body Sem is
                --  Expression.
                Set_Collapse_Signal_Flag (Assoc, False);
 
-               pragma Assert (Is_Null (Get_In_Conversion (Assoc)));
+               pragma Assert (Is_Null (Get_Actual_Conversion (Assoc)));
                if Flags.Vhdl_Std >= Vhdl_93c then
                   --  LRM93 1.1.1.2 Ports
                   --  Moreover, the ports of a block may be associated
@@ -1467,10 +1467,10 @@ package body Sem is
          when Iir_Kind_Association_Element_By_Expression =>
             return Are_Trees_Equal (Get_Actual (Left), Get_Actual (Right))
               and then Are_Trees_Equal (Get_Formal (Left), Get_Formal (Right))
-              and then Are_Trees_Equal (Get_In_Conversion (Left),
-                                        Get_In_Conversion (Right))
-              and then Are_Trees_Equal (Get_Out_Conversion (Left),
-                                        Get_Out_Conversion (Right));
+              and then Are_Trees_Equal (Get_Actual_Conversion (Left),
+                                        Get_Actual_Conversion (Right))
+              and then Are_Trees_Equal (Get_Formal_Conversion (Left),
+                                        Get_Formal_Conversion (Right));
 
          when Iir_Kind_Type_Conversion =>
             return Are_Trees_Equal (Get_Type_Mark (Left),

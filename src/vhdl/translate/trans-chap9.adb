@@ -200,7 +200,7 @@ package body Trans.Chap9 is
       while Assoc /= Null_Iir loop
          if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression
          then
-            Conv := Get_In_Conversion (Assoc);
+            Conv := Get_Actual_Conversion (Assoc);
             In_Type := Get_Type (Get_Actual (Assoc));
             if Conv /= Null_Iir
               and then Is_Anonymous_Type_Definition (In_Type)

@@ -378,8 +378,8 @@ package body Trans.Chap5 is
         (Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression);
 
       Open_Temp;
-      if Get_In_Conversion (Assoc) = Null_Iir
-        and then Get_Out_Conversion (Assoc) = Null_Iir
+      if Get_Actual_Conversion (Assoc) = Null_Iir
+        and then Get_Formal_Conversion (Assoc) = Null_Iir
       then
          --  Usual case: without conversions.
          if Is_Signal_Name (Actual) then
@@ -476,7 +476,7 @@ package body Trans.Chap5 is
               (Formal_Sig, Formal_Type, Init_Node);
          end if;
       else
-         if Get_In_Conversion (Assoc) /= Null_Iir then
+         if Get_Actual_Conversion (Assoc) /= Null_Iir then
             Chap4.Elab_In_Conversion (Assoc, Formal, Actual_Sig);
             Set_Map_Env (Formal_Env);
             Formal_Sig := Chap6.Translate_Name (Formal, Mode_Signal);
@@ -487,7 +487,7 @@ package body Trans.Chap5 is
             Connect (Formal_Sig, Formal_Type, Data);
             Set_Map_Env (Actual_Env);
          end if;
-         if Get_Out_Conversion (Assoc) /= Null_Iir then
+         if Get_Formal_Conversion (Assoc) /= Null_Iir then
             --  flow: FORMAL to ACTUAL
             Chap4.Elab_Out_Conversion (Assoc, Formal, Formal_Sig);
             Set_Map_Env (Actual_Env);
@@ -526,8 +526,8 @@ package body Trans.Chap5 is
    is
       Actual : constant Iir := Get_Actual (Assoc);
       Actual_Type : constant Iir := Get_Type (Actual);
-      In_Conv : constant Iir := Get_In_Conversion (Assoc);
-      Out_Conv : constant Iir := Get_Out_Conversion (Assoc);
+      In_Conv : constant Iir := Get_Actual_Conversion (Assoc);
+      Out_Conv : constant Iir := Get_Formal_Conversion (Assoc);
 
       function Get_Actual_Bounds (Save : Boolean) return Mnode
       is

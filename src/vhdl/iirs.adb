@@ -1345,37 +1345,37 @@ package body Iirs is
       Set_Field3 (Target, Actual);
    end Set_Actual;
 
-   function Get_In_Conversion (Target : Iir) return Iir is
+   function Get_Actual_Conversion (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_In_Conversion (Get_Kind (Target)),
-                     "no field In_Conversion");
+      pragma Assert (Has_Actual_Conversion (Get_Kind (Target)),
+                     "no field Actual_Conversion");
       return Get_Field4 (Target);
-   end Get_In_Conversion;
+   end Get_Actual_Conversion;
 
-   procedure Set_In_Conversion (Target : Iir; Conv : Iir) is
+   procedure Set_Actual_Conversion (Target : Iir; Conv : Iir) is
    begin
       pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_In_Conversion (Get_Kind (Target)),
-                     "no field In_Conversion");
+      pragma Assert (Has_Actual_Conversion (Get_Kind (Target)),
+                     "no field Actual_Conversion");
       Set_Field4 (Target, Conv);
-   end Set_In_Conversion;
+   end Set_Actual_Conversion;
 
-   function Get_Out_Conversion (Target : Iir) return Iir is
+   function Get_Formal_Conversion (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_Out_Conversion (Get_Kind (Target)),
-                     "no field Out_Conversion");
+      pragma Assert (Has_Formal_Conversion (Get_Kind (Target)),
+                     "no field Formal_Conversion");
       return Get_Field5 (Target);
-   end Get_Out_Conversion;
+   end Get_Formal_Conversion;
 
-   procedure Set_Out_Conversion (Target : Iir; Conv : Iir) is
+   procedure Set_Formal_Conversion (Target : Iir; Conv : Iir) is
    begin
       pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_Out_Conversion (Get_Kind (Target)),
-                     "no field Out_Conversion");
+      pragma Assert (Has_Formal_Conversion (Get_Kind (Target)),
+                     "no field Formal_Conversion");
       Set_Field5 (Target, Conv);
-   end Set_Out_Conversion;
+   end Set_Formal_Conversion;
 
    function Get_Whole_Association_Flag (Target : Iir) return Boolean is
    begin

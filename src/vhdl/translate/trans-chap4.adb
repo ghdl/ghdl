@@ -2643,14 +2643,14 @@ package body Trans.Chap4 is
             Push_Identifier_Prefix (Mark2, "CONVIN");
             Out_Type := Get_Type (Formal);
             In_Type := Get_Type (Actual);
-            Imp := Get_In_Conversion (Assoc);
+            Imp := Get_Actual_Conversion (Assoc);
 
          when Conv_Mode_Out =>
             --  OUT: from formal to actual.
             Push_Identifier_Prefix (Mark2, "CONVOUT");
             In_Type := Get_Type (Formal);
             Out_Type := Get_Type (Actual);
-            Imp := Get_Out_Conversion (Assoc);
+            Imp := Get_Formal_Conversion (Assoc);
 
       end case;
       --  FIXME: individual assoc -> overload.
@@ -2930,13 +2930,13 @@ package body Trans.Chap4 is
          if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression
          then
             Info := null;
-            if Get_In_Conversion (Assoc) /= Null_Iir then
+            if Get_Actual_Conversion (Assoc) /= Null_Iir then
                Info := Add_Info (Assoc, Kind_Assoc);
                Translate_Association_Subprogram
                  (Stmt, Block, Assoc, Inter, Conv_Mode_In, Info.Assoc_In,
                   Base_Block, Entity);
             end if;
-            if Get_Out_Conversion (Assoc) /= Null_Iir then
+            if Get_Formal_Conversion (Assoc) /= Null_Iir then
                if Info = null then
                   Info := Add_Info (Assoc, Kind_Assoc);
                end if;
@@ -3085,7 +3085,7 @@ package body Trans.Chap4 is
       Assoc_Info : constant Assoc_Info_Acc := Get_Info (Assoc);
    begin
       Elab_Conversion
-        (Get_Actual (Assoc), Formal, Get_In_Conversion (Assoc),
+        (Get_Actual (Assoc), Formal, Get_Actual_Conversion (Assoc),
          Ghdl_Signal_In_Conversion, Assoc_Info.Assoc_In, Ndest);
    end Elab_In_Conversion;
 
@@ -3097,7 +3097,7 @@ package body Trans.Chap4 is
       Assoc_Info : constant Assoc_Info_Acc := Get_Info (Assoc);
    begin
       Elab_Conversion
-        (Formal, Get_Actual (Assoc), Get_Out_Conversion (Assoc),
+        (Formal, Get_Actual (Assoc), Get_Formal_Conversion (Assoc),
          Ghdl_Signal_Out_Conversion, Assoc_Info.Assoc_Out, Ndest);
    end Elab_Out_Conversion;
 

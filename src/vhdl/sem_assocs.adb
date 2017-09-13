@@ -324,8 +324,8 @@ package body Sem_Assocs is
                      --  conversion appears in either the formal part or the
                      --  actual part of an association element that associates
                      --  an actual signal with a formal signal parameter.
-                     if Get_In_Conversion (Assoc) /= Null_Iir
-                       or Get_Out_Conversion (Assoc) /= Null_Iir
+                     if Get_Actual_Conversion (Assoc) /= Null_Iir
+                       or Get_Formal_Conversion (Assoc) /= Null_Iir
                      then
                         Error_Msg_Sem
                           (+Assoc,
@@ -381,8 +381,8 @@ package body Sem_Assocs is
                      --  an actual with a formal parameter of a file type and
                      --  that association element contains a conversion
                      --  function or type conversion.
-                     if Get_In_Conversion (Assoc) /= Null_Iir
-                       or Get_Out_Conversion (Assoc) /= Null_Iir
+                     if Get_Actual_Conversion (Assoc) /= Null_Iir
+                       or Get_Formal_Conversion (Assoc) /= Null_Iir
                      then
                         Error_Msg_Sem (+Assoc, "conversion are not allowed "
                                          & "for file parameters");
@@ -568,8 +568,8 @@ package body Sem_Assocs is
 
       Ftype : constant Iir := Get_Type (Formal);
       Atype : constant Iir := Get_Type (Actual);
-      F_Conv : constant Iir := Get_Out_Conversion (Assoc);
-      A_Conv : constant Iir := Get_In_Conversion (Assoc);
+      F_Conv : constant Iir := Get_Formal_Conversion (Assoc);
+      A_Conv : constant Iir := Get_Actual_Conversion (Assoc);
       F2a_Type : Iir;
       A2f_Type : Iir;
    begin
@@ -1304,7 +1304,7 @@ package body Sem_Assocs is
       end if;
       Set_Type (Conv, Conv_Type);
 
-      Set_Out_Conversion (Assoc, Conv);
+      Set_Formal_Conversion (Assoc, Conv);
       Set_Formal (Assoc, Name);
 
       return Formal;
@@ -1312,8 +1312,8 @@ package body Sem_Assocs is
 
    procedure Revert_Formal_Conversion (Assoc : Iir; Saved_Assoc : Iir) is
    begin
-      Sem_Name_Clean (Get_Out_Conversion (Assoc));
-      Set_Out_Conversion (Assoc, Null_Iir);
+      Sem_Name_Clean (Get_Formal_Conversion (Assoc));
+      Set_Formal_Conversion (Assoc, Null_Iir);
       Sem_Name_Clean (Get_Formal (Assoc));
       Set_Formal (Assoc, Saved_Assoc);
    end Revert_Formal_Conversion;
@@ -2079,7 +2079,7 @@ package body Sem_Assocs is
          Set_Whole_Association_Flag (Assoc, Assoc_Kind = Whole);
          Formal := Get_Formal (Assoc);
 
-         Out_Conv := Get_Out_Conversion (Assoc);
+         Out_Conv := Get_Formal_Conversion (Assoc);
       else
          Set_Whole_Association_Flag (Assoc, True);
          Out_Conv := Null_Iir;
@@ -2215,7 +2215,7 @@ package body Sem_Assocs is
       --  The formal part of a named association element may be in the form of
       --  a function call [...] if and only if the formal is an interface
       --  object, the mode of the formal is OUT, INOUT, BUFFER or LINKAGE [...]
-      Set_Out_Conversion (Assoc, Out_Conv);
+      Set_Formal_Conversion (Assoc, Out_Conv);
       if Out_Conv /= Null_Iir
         and then Get_Mode (Inter) = Iir_In_Mode
       then
@@ -2227,7 +2227,7 @@ package body Sem_Assocs is
       --  The actual part of an association element may be in the form of a
       --  function call [...] if and only if the mode of the format is IN,
       --  INOUT or LINKAGE [...]
-      Set_In_Conversion (Assoc, In_Conv);
+      Set_Actual_Conversion (Assoc, In_Conv);
       if In_Conv /= Null_Iir
         and then Get_Mode (Inter) in Iir_Buffer_Mode .. Iir_Out_Mode
       then
@@ -2463,7 +2463,7 @@ package body Sem_Assocs is
                      if Finish then
                         --  Free the now unused parenthesis_name.
                         Free_Parenthesis_Name
-                          (Saved_Assoc, Get_Out_Conversion (Assoc));
+                          (Saved_Assoc, Get_Formal_Conversion (Assoc));
                      else
                         Revert_Formal_Conversion (Assoc, Saved_Assoc);
                      end if;
