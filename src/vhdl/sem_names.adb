@@ -2198,6 +2198,10 @@ package body Sem_Names is
                  (+Prefix_Loc, "%n cannot be selected by name", +Prefix);
             end if;
 
+         when Iir_Kind_Error =>
+            --  Let's propagate the error.
+            null;
+
          when others =>
             Error_Kind ("sem_selected_name(2)", Prefix);
       end case;
