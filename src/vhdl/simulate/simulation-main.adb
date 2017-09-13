@@ -1,3 +1,21 @@
+--  Interpreted simulation
+--  Copyright (C) 2014-2017 Tristan Gingold
+--
+--  GHDL is free software; you can redistribute it and/or modify it under
+--  the terms of the GNU General Public License as published by the Free
+--  Software Foundation; either version 2, or (at your option) any later
+--  version.
+--
+--  GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
+--  WARRANTY; without even the implied warranty of MERCHANTABILITY or
+--  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+--  for more details.
+--
+--  You should have received a copy of the GNU General Public License
+--  along with GHDL; see the file COPYING.  If not, write to the Free
+--  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+--  02111-1307, USA.
+
 with Ada.Unchecked_Conversion;
 with Ada.Text_IO; use Ada.Text_IO;
 with Types; use Types;
@@ -699,7 +717,7 @@ package body Simulation.Main is
            | Iir_Linkage_Mode =>
             --  FORMAL_EXPR is a source for LOCAL_EXPR.
             declare
-               Out_Conv : constant Iir := Get_Out_Conversion (Assoc);
+               Out_Conv : constant Iir := Get_Formal_Conversion (Assoc);
                Src : Iir_Value_Literal_Acc;
             begin
                if Out_Conv /= Null_Iir then
@@ -732,7 +750,7 @@ package body Simulation.Main is
            | Iir_Buffer_Mode
            | Iir_Linkage_Mode =>
             declare
-               In_Conv : constant Iir := Get_In_Conversion (Assoc);
+               In_Conv : constant Iir := Get_Actual_Conversion (Assoc);
                Src : Iir_Value_Literal_Acc;
             begin
                if In_Conv /= Null_Iir then

@@ -3558,7 +3558,7 @@ package body Execution is
                end if;
 
                if Mode = Iir_Out_Mode then
-                  if Get_Out_Conversion (Assoc) /= Null_Iir then
+                  if Get_Formal_Conversion (Assoc) /= Null_Iir then
                      --  For an OUT variable using an out conversion, don't
                      --  associate with the actual, create a temporary value.
                      Val := Create_Value_For_Type
@@ -3574,7 +3574,7 @@ package body Execution is
                   if Get_Kind (Assoc) =
                     Iir_Kind_Association_Element_By_Expression
                   then
-                     Conv := Get_In_Conversion (Assoc);
+                     Conv := Get_Actual_Conversion (Assoc);
                      if Conv /= Null_Iir then
                         Val := Execute_Assoc_Conversion
                           (Subprg_Block, Conv, Val);
@@ -3660,7 +3660,7 @@ package body Execution is
                         --  Extract for individual association.
                         Execute_Name_With_Base
                           (Instance, Formal, Base, Val, Is_Sig);
-                        Conv := Get_Out_Conversion (Assoc);
+                        Conv := Get_Formal_Conversion (Assoc);
                         if Conv /= Null_Iir then
                            Val := Execute_Assoc_Conversion
                              (Instance, Conv, Val);

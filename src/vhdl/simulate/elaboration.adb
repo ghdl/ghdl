@@ -1276,8 +1276,8 @@ package body Elaboration is
          Inter := Get_Association_Interface (Assoc, Port);
          case Get_Kind (Assoc) is
             when Iir_Kind_Association_Element_By_Expression =>
-               if Get_In_Conversion (Assoc) = Null_Iir
-                 and then Get_Out_Conversion (Assoc) = Null_Iir
+               if Get_Actual_Conversion (Assoc) = Null_Iir
+                 and then Get_Formal_Conversion (Assoc) = Null_Iir
                then
                   Actual := Get_Actual (Assoc);
                   Formal := Get_Formal (Assoc);
@@ -1311,8 +1311,8 @@ package body Elaboration is
                if Get_Whole_Association_Flag (Assoc)
                  and then Get_Collapse_Signal_Flag (Assoc)
                then
-                  pragma Assert (Get_In_Conversion (Assoc) = Null_Iir);
-                  pragma Assert (Get_Out_Conversion (Assoc) = Null_Iir);
+                  pragma Assert (Get_Actual_Conversion (Assoc) = Null_Iir);
+                  pragma Assert (Get_Formal_Conversion (Assoc) = Null_Iir);
                   pragma Assert (Is_Signal_Name (Get_Actual (Assoc)));
                   declare
                      Slot : constant Object_Slot_Type :=
