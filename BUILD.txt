@@ -30,7 +30,7 @@ Here is a short comparaison:
 + same advantages of gcc (good generated code, debuggable)
 + easier to build than gcc
 
-As GCC is written in Ada, you need to use the GNU Ada compiler (GNAT).
+As GHDL is written in Ada, you need to use the GNU Ada compiler (GNAT).
 I recommend to use GNAT GPL from http://libre.adacore.com (free).
 GHDL was tested with GNAT GPL 2014.  Any later version should work.
 The only other dependency is zlib (On ubuntu/debian, install zlib1g-dev).
