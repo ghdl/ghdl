@@ -2364,9 +2364,9 @@ package body Sem_Assocs is
       Assoc : Iir;
       Inter : Iir;
 
-      type Bool_Array is array (Natural range <>) of Param_Assoc_Type;
+      type Assoc_Array is array (Natural range <>) of Param_Assoc_Type;
       Nbr_Inter : constant Natural := Get_Chain_Length (Interface_Chain);
-      Inter_Matched : Bool_Array (0 .. Nbr_Inter - 1) := (others => None);
+      Inter_Matched : Assoc_Array (0 .. Nbr_Inter - 1) := (others => None);
 
       Last_Individual : Iir;
       Has_Individual : Boolean;
@@ -2385,40 +2385,52 @@ package body Sem_Assocs is
       Last_Individual := Null_Iir;
       Pos := 0;
 
+      --  First positional associations
       Assoc := Assoc_Chain;
       while Assoc /= Null_Iir loop
          Formal := Get_Formal (Assoc);
-         if Formal = Null_Iir then
-            --  Positional argument.
-            if Pos < 0 then
+         exit when Formal /= Null_Iir;
+
+         --  Try to match actual of ASSOC with the interface.
+         if Inter = Null_Iir then
+            if Finish then
+               Error_Msg_Sem (+Assoc, "too many actuals for %n", +Loc);
+            end if;
+            Match := Not_Compatible;
+            return;
+         end if;
+         Sem_Association (Assoc, Inter, Finish, Match);
+         if Match = Not_Compatible then
+            return;
+         end if;
+         if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open then
+            Inter_Matched (Pos) := Open;
+         else
+            Inter_Matched (Pos) := Whole;
+         end if;
+         Set_Whole_Association_Flag (Assoc, True);
+         Inter := Get_Chain (Inter);
+
+         Pos := Pos + 1;
+         Assoc := Get_Chain (Assoc);
+      end loop;
+
+      if Match = Not_Compatible then
+         return;
+      end if;
+
+      --  Then association by name.
+      if Assoc /= Null_Iir then
+         loop
+            if Formal = Null_Iir then
                --  Positional after named argument.  Already caught by
                --  Sem_Actual_Of_Association_Chain (because it is called only
                --  once, while sem_association_chain may be called several
                --  times).
                Match := Not_Compatible;
-               return;
+               exit;
             end if;
-            --  Try to match actual of ASSOC with the interface.
-            if Inter = Null_Iir then
-               if Finish then
-                  Error_Msg_Sem (+Assoc, "too many actuals for %n", +Loc);
-               end if;
-               Match := Not_Compatible;
-               return;
-            end if;
-            Sem_Association (Assoc, Inter, Finish, Match);
-            if Match = Not_Compatible then
-               return;
-            end if;
-            if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open then
-               Inter_Matched (Pos) := Open;
-            else
-               Inter_Matched (Pos) := Whole;
-            end if;
-            Set_Whole_Association_Flag (Assoc, True);
-            Inter := Get_Chain (Inter);
-            Pos := Pos + 1;
-         else
+
             --  FIXME: directly search the formal if finish is true.
             --  Find the Interface.
 
@@ -2503,7 +2515,7 @@ package body Sem_Assocs is
                           (+Assoc, "%n already associated", +Inter);
                      end if;
                      Match := Not_Compatible;
-                     return;
+                     exit;
                   end if;
                else
                   --  Individual association.
@@ -2518,7 +2530,7 @@ package body Sem_Assocs is
                            "non consecutive individual association for %n",
                            +Inter);
                         Match := Not_Compatible;
-                        return;
+                        exit;
                      end if;
                      Last_Individual := Inter;
                      Inter_Matched (Pos) := Individual;
@@ -2527,7 +2539,7 @@ package body Sem_Assocs is
                         Error_Msg_Sem
                           (+Assoc, "%n already associated", +Inter);
                         Match := Not_Compatible;
-                        return;
+                        exit;
                      end if;
                   end if;
                end if;
@@ -2544,11 +2556,19 @@ package body Sem_Assocs is
                                  +Get_Formal (Assoc));
                end if;
                Match := Not_Compatible;
-               return;
+               exit;
             end if;
+
+            Assoc := Get_Chain (Assoc);
+            exit when Assoc = Null_Iir;
+            Formal := Get_Formal (Assoc);
+         end loop;
+
+         if Match = Not_Compatible then
+            --  FIXME: do a clean-up if FINISH is not set ?
+            return;
          end if;
-         Assoc := Get_Chain (Assoc);
-      end loop;
+      end if;
 
       if Finish and then Has_Individual then
          Sem_Individual_Association (Assoc_Chain);
