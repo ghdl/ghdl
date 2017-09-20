@@ -67,7 +67,7 @@ package Sem_Names is
    --  * do not set xrefs
    --  Currently, only simple names (and expanded names) are handled.
    --  This is to be used during sem of associations.  Because there is no side
-   --  effect, NAME is not modified.
+   --  effect, NAME is not modified (but is decorated with Named_Entity)
    procedure Sem_Name_Soft (Name : Iir);
 
    --  Remove every named_entity of NAME.

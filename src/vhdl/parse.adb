@@ -6762,6 +6762,7 @@ package body Parse is
          when Iir_Kind_Parenthesis_Name =>
             --  Could be an indexed name, so nothing to check within the
             --  parenthesis.
+            Set_In_Formal_Flag (Get_Association_Chain (Formal), True);
             return Formal;
          when Iir_Kind_String_Literal8 =>
             --  Operator designator

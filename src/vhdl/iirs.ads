@@ -471,6 +471,8 @@ package Iirs is
    -- Only for Iir_Kind_Association_Element_Open:
    --   Get/Set_Artificial_Flag (Flag3)
    --
+   --   Get/Set_In_Formal_Flag (Flag4)
+   --
    -- Only for Iir_Kind_Association_Element_By_Individual:
    --  Must be Locally unless there is an error on one choice.
    --   Get/Set_Choice_Staticness (State1)
@@ -5050,6 +5052,10 @@ package Iirs is
    --Iir_Kind_Interface_Signal_Declaration
      Iir_Kind_Interface_File_Declaration;
 
+   subtype Iir_Kinds_Interface_Subprogram_Declaration is Iir_Kind range
+     Iir_Kind_Interface_Function_Declaration ..
+     Iir_Kind_Interface_Procedure_Declaration;
+
    subtype Iir_Kinds_Interface_Declaration is Iir_Kind range
      Iir_Kind_Interface_Constant_Declaration ..
    --Iir_Kind_Interface_Variable_Declaration
@@ -5072,10 +5078,6 @@ package Iirs is
    --Iir_Kind_Interface_Variable_Declaration
    --Iir_Kind_Interface_Signal_Declaration
      Iir_Kind_Interface_File_Declaration;
-
-   subtype Iir_Kinds_Interface_Subprogram_Declaration is Iir_Kind range
-     Iir_Kind_Interface_Function_Declaration ..
-     Iir_Kind_Interface_Procedure_Declaration;
 
    subtype Iir_Kinds_Branch_Quantity_Declaration is Iir_Kind range
      Iir_Kind_Across_Quantity_Declaration ..
@@ -7004,6 +7006,13 @@ package Iirs is
    --  Field: Field5
    function Get_Pathname_Expression (Path : Iir) return Iir;
    procedure Set_Pathname_Expression (Path : Iir; Expr : Iir);
+
+   --  True if the name appears in a formal_part.  In that case, some
+   --  checks must be disabled (eg: the expression of a type conversion can
+   --  be a write-only interface).
+   --  Field: Flag4
+   function Get_In_Formal_Flag (Name : Iir) return Boolean;
+   procedure Set_In_Formal_Flag (Name : Iir; Flag : Boolean);
 
    --  The subtype of a slice.  Contrary to the Type field, this is not a
    --  reference.

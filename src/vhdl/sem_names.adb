@@ -1269,16 +1269,17 @@ package body Sem_Names is
       return True;
    end Are_Types_Closely_Related;
 
-   function Sem_Type_Conversion (Loc : Iir; Type_Mark : Iir; Actual : Iir)
-                                return Iir
+   function Sem_Type_Conversion
+     (Name : Iir; Type_Mark : Iir; Actual : Iir; In_Formal : Boolean)
+     return Iir
    is
       Conv_Type : constant Iir := Get_Type (Type_Mark);
-      Conv: Iir_Type_Conversion;
-      Expr: Iir;
+      Conv : Iir_Type_Conversion;
+      Expr : Iir;
       Staticness : Iir_Staticness;
    begin
       Conv := Create_Iir (Iir_Kind_Type_Conversion);
-      Location_Copy (Conv, Loc);
+      Location_Copy (Conv, Name);
       Set_Type_Mark (Conv, Type_Mark);
       Set_Type (Conv, Conv_Type);
       Set_Expression (Conv, Actual);
@@ -1356,7 +1357,11 @@ package body Sem_Names is
             --  Avoid error storm in evaluation.
             Set_Expr_Staticness (Conv, None);
          else
-            Check_Read (Expr);
+            --  Unless the type conversion appears in the formal part of an
+            --  association, the expression must be readable.
+            if not In_Formal then
+               Check_Read (Expr);
+            end if;
          end if;
       end if;
       return Conv;
@@ -2538,16 +2543,23 @@ package body Sem_Names is
                   Iir_Kind_Subtype_Declaration)
       then
          --  A type conversion.  The prefix is a type mark.
+         declare
+            In_Formal : Boolean;
+         begin
+            if Actual = Null_Iir then
+               --  More than one actual.  Keep only the first.
+               Error_Msg_Sem
+                 (+Name, "type conversion allows only one expression");
+               In_Formal := False;
+            else
+               In_Formal := Get_In_Formal_Flag (Assoc_Chain);
+            end if;
 
-         if Actual = Null_Iir then
-            --  More than one actual.  Keep only the first.
-            Error_Msg_Sem
-              (+Name, "type conversion allows only one expression");
-         end if;
-
-         --  This is certainly the easiest case: the prefix is not overloaded,
-         --  so the result can be computed.
-         Set_Named_Entity (Name, Sem_Type_Conversion (Name, Prefix, Actual));
+            --  This is certainly the easiest case: the prefix is not
+            --  overloaded, so the result can be computed.
+            Set_Named_Entity
+              (Name, Sem_Type_Conversion (Name, Prefix, Actual, In_Formal));
+         end;
          return;
       end if;
 

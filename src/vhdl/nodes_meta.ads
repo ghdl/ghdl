@@ -309,6 +309,7 @@ package Nodes_Meta is
       Field_External_Pathname,
       Field_Pathname_Suffix,
       Field_Pathname_Expression,
+      Field_In_Formal_Flag,
       Field_Slice_Subtype,
       Field_Suffix,
       Field_Index_Subtype,
@@ -819,6 +820,7 @@ package Nodes_Meta is
    function Has_External_Pathname (K : Iir_Kind) return Boolean;
    function Has_Pathname_Suffix (K : Iir_Kind) return Boolean;
    function Has_Pathname_Expression (K : Iir_Kind) return Boolean;
+   function Has_In_Formal_Flag (K : Iir_Kind) return Boolean;
    function Has_Slice_Subtype (K : Iir_Kind) return Boolean;
    function Has_Suffix (K : Iir_Kind) return Boolean;
    function Has_Index_Subtype (K : Iir_Kind) return Boolean;

@@ -4625,6 +4625,22 @@ package body Iirs is
       Set_Field5 (Path, Expr);
    end Set_Pathname_Expression;
 
+   function Get_In_Formal_Flag (Name : Iir) return Boolean is
+   begin
+      pragma Assert (Name /= Null_Iir);
+      pragma Assert (Has_In_Formal_Flag (Get_Kind (Name)),
+                     "no field In_Formal_Flag");
+      return Get_Flag4 (Name);
+   end Get_In_Formal_Flag;
+
+   procedure Set_In_Formal_Flag (Name : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Name /= Null_Iir);
+      pragma Assert (Has_In_Formal_Flag (Get_Kind (Name)),
+                     "no field In_Formal_Flag");
+      Set_Flag4 (Name, Flag);
+   end Set_In_Formal_Flag;
+
    function Get_Slice_Subtype (Slice : Iir) return Iir is
    begin
       pragma Assert (Slice /= Null_Iir);
