@@ -1088,11 +1088,16 @@ package body Files_Map is
    end Extract_Expanded_Line;
 
    -- Debug procedures.
-   procedure Debug_Source_Lines (File: Source_File_Entry);
-   pragma Unreferenced (Debug_Source_Lines);
-
-   procedure Debug_Source_File;
-   pragma Unreferenced (Debug_Source_File);
+   procedure Debug_Source_Loc (Loc : Location_Type)
+   is
+      File : Source_File_Entry;
+      Line_Pos : Source_Ptr;
+      Line : Natural;
+      Offset : Natural;
+   begin
+      Location_To_Coord (Loc, File, Line_Pos, Line, Offset);
+      Put_Line (Extract_Expanded_Line (File, Line_Pos));
+   end Debug_Source_Loc;
 
    --  Disp sources lines of a file.
    procedure Debug_Source_Lines (File: Source_File_Entry) is
@@ -1131,6 +1136,10 @@ package body Files_Map is
          end;
       end loop;
    end Debug_Source_File;
+
+   pragma Unreferenced (Debug_Source_Lines);
+   pragma Unreferenced (Debug_Source_File);
+   pragma Unreferenced (Debug_Source_Loc);
 
    procedure Initialize is
    begin
