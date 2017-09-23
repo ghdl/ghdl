@@ -2114,30 +2114,6 @@ package body Sem_Assocs is
       Loc : Iir;
       Match : out Compatibility_Level)
    is
-      First_Named_Assoc : Iir;
-      Last_Named_Assoc : Iir;
-
-      procedure Cleanup_Formals
-      is
-         Assoc : Iir;
-         Formal : Iir;
-      begin
-         if Finish or First_Named_Assoc = Null_Iir then
-            return;
-         end if;
-         Assoc := First_Named_Assoc;
-         while Assoc /= Null_Iir loop
-            Formal := Get_Formal (Assoc);
-            --  User may have used by position assoc after named
-            --  assocs.
-            if Is_Valid (Formal) then
-               Sem_Name_Clean (Formal);
-            end if;
-            exit when Assoc = Last_Named_Assoc;
-            Assoc := Get_Chain (Assoc);
-         end loop;
-      end Cleanup_Formals;
-
       Assoc : Iir;
       Inter : Iir;
 
@@ -2151,6 +2127,9 @@ package body Sem_Assocs is
       Has_Individual : Boolean;
       Pos : Integer;
       Formal : Iir;
+
+      First_Named_Assoc : Iir;
+      Last_Named_Assoc : Iir;
 
       Formal_Name : Iir;
       Formal_Conv : Iir;
@@ -2479,17 +2458,33 @@ package body Sem_Assocs is
 
          Sem_Scopes.Close_Declarative_Region;
 
+         if Finish and Has_Individual and Match /= Not_Compatible then
+            Sem_Individual_Association (Assoc_Chain);
+         end if;
+
+         if not Finish then
+            --  Always cleanup if not finishing: there can be other tries in
+            --  case of overloading.
+            Assoc := First_Named_Assoc;
+            while Assoc /= Null_Iir loop
+               Formal := Get_Formal (Assoc);
+               --  User may have used by position assoc after named
+               --  assocs.
+               if Is_Valid (Formal) then
+                  Sem_Name_Clean (Formal);
+               end if;
+               exit when Assoc = Last_Named_Assoc;
+               Assoc := Get_Chain (Assoc);
+            end loop;
+         end if;
+
          if Match = Not_Compatible then
-            Cleanup_Formals;
             return;
          end if;
       end if;
 
-      if Finish and then Has_Individual then
-         Sem_Individual_Association (Assoc_Chain);
-      end if;
-
       if Missing = Missing_Allowed then
+         --  No need to check for missing associations.
          return;
       end if;
 
@@ -2533,7 +2528,6 @@ package body Sem_Assocs is
                            if Finish then
                               Error_Msg_Sem (+Loc, "no actual for %n", +Inter);
                            end if;
-                           Cleanup_Formals;
                            Match := Not_Compatible;
                            return;
                         when Missing_Port =>
@@ -2575,7 +2569,6 @@ package body Sem_Assocs is
                  | Iir_Kind_Interface_Function_Declaration
                  | Iir_Kind_Interface_Procedure_Declaration =>
                   Error_Msg_Sem (+Loc, "%n must be associated", +Inter);
-                  Cleanup_Formals;
                   Match := Not_Compatible;
                when others =>
                   Error_Kind ("sem_association_chain", Inter);
