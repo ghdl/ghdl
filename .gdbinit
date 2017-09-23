@@ -32,6 +32,10 @@ define pl
 call disp_iir_list ($arg0, 0, 0)
 end
 
+define psrc
+  call debug_source_loc (nodes.get_location ($arg0))
+end
+
 document pl
 Print the list of iirs that is $arg0.
 end
