@@ -1499,8 +1499,10 @@ package body Sem_Scopes is
          if Is_Potentially_Visible (Inter) then
             Put (" (use)");
          end if;
-         Put (": ");
+         Put (":");
          Decl := Get_Declaration (Inter);
+         Put (Iir'Image (Decl));
+         Put (':');
          Put (Iir_Kind'Image (Get_Kind (Decl)));
          Put_Line (", loc: " & Image (Get_Location (Decl)));
          if Get_Kind (Decl) in Iir_Kinds_Subprogram_Declaration then
