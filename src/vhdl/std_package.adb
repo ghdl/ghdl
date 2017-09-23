@@ -339,6 +339,7 @@ package body Std_Package is
          Set_Identifier (Inter, Std_Names.Name_Value);
          Set_Type (Inter, Inter_Type);
          Set_Mode (Inter, Iir_In_Mode);
+         Set_Visible_Flag (Inter, True);
          Set_Interface_Declaration_Chain (Decl, Inter);
 
          if Inter2_Id /= Null_Identifier then
@@ -346,6 +347,7 @@ package body Std_Package is
             Set_Identifier (Inter2, Inter2_Id);
             Set_Type (Inter2, Inter2_Type);
             Set_Mode (Inter2, Iir_In_Mode);
+            Set_Visible_Flag (Inter2, True);
             Set_Chain (Inter, Inter2);
          end if;
 
@@ -371,6 +373,7 @@ package body Std_Package is
          Set_Identifier (Inter, Std_Names.Name_S);
          Set_Type (Inter, Inter_Type);
          Set_Mode (Inter, Iir_In_Mode);
+         Set_Visible_Flag (Inter, True);
          Set_Interface_Declaration_Chain (Decl, Inter);
 
          Sem.Compute_Subprogram_Hash (Decl);
