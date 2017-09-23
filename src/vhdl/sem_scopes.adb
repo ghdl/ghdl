@@ -1171,11 +1171,19 @@ package body Sem_Scopes is
 
    procedure Add_Declarations_From_Interface_Chain (Chain : Iir)
    is
-      El: Iir;
+      El : Iir;
+      Id : Name_Id;
    begin
       El := Chain;
       while El /= Null_Iir loop
-         Add_Name (El, Get_Identifier (El), False);
+         Id := Get_Identifier (El);
+
+         --  The chain may be from an implicitely declared subprograms, with
+         --  anonymous identifiers.  In that case, all interfaces are
+         --  anonymous and there is no need to iterate.
+         exit when Id = Null_Identifier;
+
+         Add_Name (El, Id, False);
          El := Get_Chain (El);
       end loop;
    end Add_Declarations_From_Interface_Chain;
