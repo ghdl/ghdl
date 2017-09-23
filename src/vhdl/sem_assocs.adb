@@ -2114,6 +2114,30 @@ package body Sem_Assocs is
       Loc : Iir;
       Match : out Compatibility_Level)
    is
+      First_Named_Assoc : Iir;
+      Last_Named_Assoc : Iir;
+
+      procedure Cleanup_Formals
+      is
+         Assoc : Iir;
+         Formal : Iir;
+      begin
+         if Finish or First_Named_Assoc = Null_Iir then
+            return;
+         end if;
+         Assoc := First_Named_Assoc;
+         while Assoc /= Null_Iir loop
+            Formal := Get_Formal (Assoc);
+            --  User may have used by position assoc after named
+            --  assocs.
+            if Is_Valid (Formal) then
+               Sem_Name_Clean (Formal);
+            end if;
+            exit when Assoc = Last_Named_Assoc;
+            Assoc := Get_Chain (Assoc);
+         end loop;
+      end Cleanup_Formals;
+
       Assoc : Iir;
       Inter : Iir;
 
@@ -2128,11 +2152,11 @@ package body Sem_Assocs is
       Pos : Integer;
       Formal : Iir;
 
-      First_Named_Assoc : Iir;
       Formal_Name : Iir;
       Formal_Conv : Iir;
    begin
       Match := Fully_Compatible;
+      First_Named_Assoc := Null_Iir;
       Has_Individual := False;
 
       --  Loop on every assoc element, try to match it.
@@ -2215,6 +2239,9 @@ package body Sem_Assocs is
                exit;
             end if;
 
+            --  Last assoc to be cleaned up.
+            Last_Named_Assoc := Assoc;
+
             if Finish then
                Sem_Name (Formal);
             else
@@ -2247,6 +2274,10 @@ package body Sem_Assocs is
                        or else Get_Formal (Call_Assoc) /= Null_Iir
                        or else Get_Actual_Conversion (Call_Assoc) /= Null_Iir
                      then
+                        if Finish then
+                           Error_Msg_Sem
+                             (+Assoc, "ill-formed formal conversion");
+                        end if;
                         Match := Not_Compatible;
                         exit;
                      end if;
@@ -2270,18 +2301,56 @@ package body Sem_Assocs is
                  | Iir_Kind_Indexed_Name =>
                   Inter := Get_Base_Name (Formal_Name);
                   Set_Whole_Association_Flag (Assoc, False);
-               when Iir_Kind_Simple_Name =>
+               when Iir_Kind_Simple_Name
+                 | Iir_Kind_Operator_Symbol =>
                   Inter := Get_Named_Entity (Formal_Name);
                   Formal_Name := Inter;
                   Set_Whole_Association_Flag (Assoc, True);
                when others =>
                   --  Error
+                  if Finish then
+                     Error_Msg_Sem (+Assoc, "formal is not a name");
+                  end if;
                   Match := Not_Compatible;
                   exit;
             end case;
+
+            --  Simplify overload list (for interface subprogram).
+            --  FIXME: Interface must hide previous subprogram declarations, so
+            --   there should be no need to filter.
+            if Is_Overload_List (Inter) then
+               declare
+                  List : constant Iir_List := Get_Overload_List (Inter);
+                  Filtered_Inter : Iir;
+                  El : Iir;
+               begin
+                  Filtered_Inter := Null_Iir;
+                  for I in Natural loop
+                     El := Get_Nth_Element (List, I);
+                     exit when El = Null_Iir;
+                     if Get_Kind (El) in Iir_Kinds_Interface_Declaration
+                       and then Get_Parent (El) = Get_Parent (Interface_Chain)
+                     then
+                        Add_Result (Filtered_Inter, El);
+                     end if;
+                  end loop;
+                  Free_Overload_List (Inter);
+                  Inter := Filtered_Inter;
+                  if Is_Overload_List (Inter) then
+                     if Finish then
+                        Error_Msg_Sem (+Assoc, "ambiguous formal name");
+                     end if;
+                     Match := Not_Compatible;
+                     exit;
+                  end if;
+               end;
+            end if;
             if Get_Kind (Inter) not in Iir_Kinds_Interface_Declaration
               or else Get_Parent (Inter) /= Get_Parent (Interface_Chain)
             then
+               if Finish then
+                  Error_Msg_Sem (+Assoc, "formal is not an interface name");
+               end if;
                Match := Not_Compatible;
                exit;
             end if;
@@ -2296,6 +2365,12 @@ package body Sem_Assocs is
               (Get_Kind (Inter) not in Iir_Kinds_Interface_Object_Declaration
                  or else Get_Mode (Inter) = Iir_In_Mode)
             then
+               if Finish then
+                  Error_Msg_Sem
+                    (+Assoc,
+                     "formal conversion allowed only for inerface object",
+                     +Formal_Conv);
+               end if;
                Match := Not_Compatible;
                exit;
             end if;
@@ -2312,6 +2387,10 @@ package body Sem_Assocs is
                   Pos := Pos + 1;
                end loop;
                if Inter1 = Null_Iir then
+                  if Finish then
+                     Error_Msg_Sem
+                       (+Assoc, "no corresponding interface for %i", +Inter);
+                  end if;
                   Match := Not_Compatible;
                   exit;
                end if;
@@ -2401,24 +2480,7 @@ package body Sem_Assocs is
          Sem_Scopes.Close_Declarative_Region;
 
          if Match = Not_Compatible then
-            --  Clean-up.
-            if not Finish then
-               declare
-                  Last_Assoc : constant Iir := Assoc;
-               begin
-                  Assoc := First_Named_Assoc;
-                  while Assoc /= Null_Iir loop
-                     Formal := Get_Formal (Assoc);
-                     --  User may have used by position assoc after named
-                     --  assocs.
-                     if Is_Valid (Formal) then
-                        Sem_Name_Clean (Formal);
-                     end if;
-                     exit when Assoc = Last_Assoc;
-                     Assoc := Get_Chain (Assoc);
-                  end loop;
-               end;
-            end if;
+            Cleanup_Formals;
             return;
          end if;
       end if;
@@ -2471,6 +2533,7 @@ package body Sem_Assocs is
                            if Finish then
                               Error_Msg_Sem (+Loc, "no actual for %n", +Inter);
                            end if;
+                           Cleanup_Formals;
                            Match := Not_Compatible;
                            return;
                         when Missing_Port =>
@@ -2512,6 +2575,7 @@ package body Sem_Assocs is
                  | Iir_Kind_Interface_Function_Declaration
                  | Iir_Kind_Interface_Procedure_Declaration =>
                   Error_Msg_Sem (+Loc, "%n must be associated", +Inter);
+                  Cleanup_Formals;
                   Match := Not_Compatible;
                when others =>
                   Error_Kind ("sem_association_chain", Inter);
