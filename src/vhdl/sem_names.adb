@@ -3760,6 +3760,9 @@ package body Sem_Names is
             Sem_Simple_Name (Name, False, Soft => True);
          when Iir_Kind_Selected_Name =>
             Sem_Selected_Name (Name, Keep_Alias => False, Soft => True);
+         when Iir_Kind_Parenthesis_Name =>
+            --  FIXME: SOFT!!
+            Sem_Parenthesis_Name (Name);
          when others =>
             Error_Kind ("sem_name_soft", Name);
       end case;
