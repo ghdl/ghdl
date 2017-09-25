@@ -1322,7 +1322,9 @@ package body Sem_Assocs is
    procedure Sem_Association_Open
      (Assoc : Iir;
       Finish : Boolean;
-      Match : out Compatibility_Level) is
+      Match : out Compatibility_Level)
+   is
+      Formal : Iir;
    begin
       if Finish then
          --  LRM 4.3.3.2  Associations lists
@@ -1331,6 +1333,11 @@ package body Sem_Assocs is
          if Get_Whole_Association_Flag (Assoc) = False then
             Error_Msg_Sem
               (+Assoc, "cannot associate individually with open");
+         end if;
+
+         Formal := Get_Formal (Assoc);
+         if Formal /= Null_Iir then
+            Set_Formal (Assoc, Finish_Sem_Name (Formal));
          end if;
       end if;
       Match := Fully_Compatible;
@@ -1363,9 +1370,8 @@ package body Sem_Assocs is
    begin
       if Formal /= Null_Iir then
          pragma Assert (Get_Identifier (Formal) = Get_Identifier (Inter));
-         Set_Named_Entity (Formal, Inter);
-         Set_Base_Name (Formal, Inter);
-         Xrefs.Xref_Ref (Formal, Inter);
+         pragma Assert (Get_Named_Entity (Formal) = Inter);
+         Set_Formal (Assoc, Finish_Sem_Name (Formal));
       end if;
    end Sem_Association_Package_Type_Finish;
 
@@ -1858,6 +1864,41 @@ package body Sem_Assocs is
          return;
       end if;
 
+      if Formal_Name /= Null_Iir then
+         declare
+            Formal : Iir;
+            Conv_Assoc : Iir;
+         begin
+            Formal := Finish_Sem_Name (Get_Formal (Assoc));
+            case Get_Kind (Formal) is
+               when Iir_Kind_Function_Call =>
+                  pragma Assert (Formal_Conv /= Null_Iir);
+                  Set_Formal_Conversion (Assoc, Formal);
+                  Conv_Assoc := Get_Parameter_Association_Chain (Formal);
+                  Set_Parameter_Association_Chain (Formal, Null_Iir);
+                  Formal := Get_Actual (Conv_Assoc);
+                  Free_Iir (Conv_Assoc);
+                  --  Name_To_Method_Object (Func, Conv);
+               when Iir_Kind_Type_Conversion =>
+                  pragma Assert (Formal_Conv /= Null_Iir);
+                  Set_Formal_Conversion (Assoc, Formal);
+                  Formal := Get_Expression (Formal);
+               when others =>
+                  pragma Assert (Formal_Conv = Null_Iir);
+                  null;
+            end case;
+            Set_Formal (Assoc, Formal);
+
+            --  Use the type of the formal to analyze the actual.  In
+            --  particular, the formal may be constrained while the actual is
+            --  not.
+            Formal_Type := Get_Type (Formal);
+            if Out_Conv = Null_Iir and In_Conv = Null_Iir then
+               Res_Type := Formal_Type;
+            end if;
+         end;
+      end if;
+
       --  LRM08 6.5.7 Association lists
       --  The formal part of a named association element may be in the form of
       --  a function call [...] if and only if the formal is an interface
@@ -2181,6 +2222,12 @@ package body Sem_Assocs is
                   end loop;
                   Free_Overload_List (Inter);
                   Inter := Filtered_Inter;
+
+                  pragma Assert
+                    (Get_Kind (Formal) = Iir_Kind_Simple_Name
+                       or else Get_Kind (Formal) = Iir_Kind_Operator_Symbol);
+                  Set_Named_Entity (Formal, Inter);
+
                   if Is_Overload_List (Inter) then
                      if Finish then
                         Error_Msg_Sem (+Assoc, "ambiguous formal name");
@@ -2244,33 +2291,6 @@ package body Sem_Assocs is
             Sem_Association
               (Assoc, Inter, Formal_Name, Formal_Conv, Finish, Match);
             exit when Match = Not_Compatible;
-
-            if Finish then
-               Formal_Name := Finish_Sem_Name (Formal);
-               case Get_Kind (Formal_Name) is
-                  when Iir_Kind_Function_Call =>
-                     pragma Assert (Formal_Conv /= Null_Iir);
-                     declare
-                        Conv_Assoc : Iir;
-                     begin
-                        Set_Formal_Conversion (Assoc, Formal_Name);
-                        Conv_Assoc :=
-                          Get_Parameter_Association_Chain (Formal_Name);
-                        Set_Formal (Assoc, Get_Actual (Conv_Assoc));
-                        Free_Iir (Conv_Assoc);
-                        Set_Parameter_Association_Chain
-                          (Formal_Name, Null_Iir);
-                        --  Name_To_Method_Object (Func, Conv);
-                     end;
-                  when Iir_Kind_Type_Conversion =>
-                     pragma Assert (Formal_Conv /= Null_Iir);
-                     Set_Formal_Conversion (Assoc, Formal_Name);
-                     Set_Formal (Assoc, Get_Expression (Formal_Name));
-                  when others =>
-                     pragma Assert (Formal_Conv = Null_Iir);
-                     Set_Formal (Assoc, Formal_Name);
-               end case;
-            end if;
 
             if Get_Whole_Association_Flag (Assoc) then
                --  Whole association.
