@@ -2,8 +2,7 @@
 
 . ../../testenv.sh
 
-analyze e.vhdl
-elab_simulate e
+analyze_failure e.vhdl
 
 clean
 
