@@ -23,4 +23,4 @@ package body upf is
     return true;
   end supply_off;
 
-end package body upf;
+end upf;

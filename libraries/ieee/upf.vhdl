@@ -16,4 +16,4 @@ package upf is
     constant supply_name : string)
     return boolean;
 
-end package upf;
+end upf;
