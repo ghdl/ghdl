@@ -16,6 +16,8 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Interfaces;
+with System;
+with Ada.Unchecked_Conversion;
 
 package Types is
    pragma Preelaborate (Types);
@@ -53,6 +55,13 @@ package Types is
    type String_Acc is access String;
    type String_Cst is access constant String;
    type String_Acc_Array is array (Natural range <>) of String_Acc;
+
+   --  Fat strings, for compatibility with C.
+   subtype Fat_String is String (Positive);
+   type Fat_String_Acc is access Fat_String;
+   pragma Convention (C, Fat_String_Acc);
+   function To_Fat_String_Acc is new Ada.Unchecked_Conversion
+     (System.Address, Fat_String_Acc);
 
    --  The name table is defined in Name_Table package.  This is an hash table
    --  that associate a uniq Name_Id to a string.  Name_Id are allocated in

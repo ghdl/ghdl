@@ -39,7 +39,7 @@ package Name_Table is
    --    backslashes are simplified.
    function Get_Identifier (Str: String) return Name_Id;
 
-   --  Get the string associed to a name.
+   --  Get the string associed to a name.  The first bound is 1.
    --  If the name is a character, then single quote are added.
    function Image (Id: Name_Id) return String;
 
@@ -71,7 +71,9 @@ package Name_Table is
 
    --  Like GET_IDENTIFIER, but return NULL_IDENTIFIER if the identifier
    --  is not found (and do not create an entry for it).
-   function Get_Identifier_No_Create return Name_Id;
+   function Get_Identifier_No_Create (Str : String) return Name_Id;
+   function Get_Identifier_No_Create_With_Len
+     (Str : Fat_String_Acc; Len : Natural) return Name_Id;
 
    --  Get and set the info field associated with each identifier.
    --  Used to store interpretations of the name.
