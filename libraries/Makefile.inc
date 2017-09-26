@@ -54,7 +54,8 @@ MENTOR_BSRCS := mentor/std_logic_arith.vhdl mentor/std_logic_arith_body.vhdl
 ifeq ($(enable_openieee),false)
 IEEE_SRCS := ieee/std_logic_1164.vhdl ieee/std_logic_1164_body.vhdl \
   ieee/numeric_bit.vhdl ieee/numeric_bit-body.vhdl \
-  ieee/numeric_std.vhdl ieee/numeric_std-body.vhdl
+  ieee/numeric_std.vhdl ieee/numeric_std-body.vhdl \
+  ieee/upf.vhdl ieee/upf-body.vhdl
 MATH_SRCS := ieee/math_real.vhdl ieee/math_real-body.vhdl \
   ieee/math_complex.vhdl ieee/math_complex-body.vhdl
 VITAL95_BSRCS := vital95/vital_timing.vhdl vital95/vital_timing_body.vhdl \
@@ -76,7 +77,8 @@ IEEE08_BSRCS := \
   ieee2008/fixed_pkg.vhdl \
   ieee2008/float_generic_pkg.vhdl ieee2008/float_generic_pkg-body.vhdl \
   ieee2008/float_pkg.vhdl \
-  ieee2008/ieee_bit_context.vhdl ieee2008/ieee_std_context.vhdl
+  ieee2008/ieee_bit_context.vhdl ieee2008/ieee_std_context.vhdl \
+  ieee2008/upf.vhdl ieee2008/upf-body.vhdl
 else
 IEEE_SRCS := openieee/std_logic_1164.vhdl openieee/std_logic_1164-body.vhdl \
   openieee/numeric_bit.vhdl openieee/numeric_bit-body.vhdl \
