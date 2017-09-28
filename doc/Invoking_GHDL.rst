@@ -730,6 +730,20 @@ Generate a Makefile to build a design unit::
 This command works like the make command (see :ref:`Make_command`), but only a
 makefile is generated on the standard output.
 
+Generate dependency file command
+-------------------------
+
+.. index:: --gen-depends command
+
+Generate a Makefile containing only dependencies to build a design unit::
+
+  ghdl --gen-depends [options] primary [secondary]
+
+
+This command works like the make and gen-makefile commands (see :ref:`Make_command`),
+but instead of a full makefile only dependencies without rules are generated on the standard output.
+Theses rules can then be integrated in another Makefile.
+
 Library commands
 ================
 

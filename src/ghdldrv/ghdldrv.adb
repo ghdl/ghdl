@@ -1625,6 +1625,9 @@ package body Ghdldrv is
          end if;
    end Perform_Action;
 
+   -- helper for --gen-makefile and --gen-depends
+   procedure Gen_Makefile (Args : Argument_List; Only_Depends : Boolean);
+
    --  Command Gen_Makefile.
    type Command_Gen_Makefile is new Command_Comp with null record;
    function Decode_Command (Cmd : Command_Gen_Makefile; Name : String)
@@ -1660,7 +1663,46 @@ package body Ghdldrv is
                              Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
+   begin
+      Gen_Makefile(Args, False);
+   end Perform_Action;
 
+   --  Command Gen_Depends.
+   type Command_Gen_Depends is new Command_Comp with null record;
+   function Decode_Command (Cmd : Command_Gen_Depends; Name : String)
+                           return Boolean;
+   function Get_Short_Help (Cmd : Command_Gen_Depends) return String;
+   procedure Perform_Action (Cmd : in out Command_Gen_Depends;
+                             Args : Argument_List);
+
+   function Decode_Command (Cmd : Command_Gen_Depends; Name : String)
+                           return Boolean
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      return Name = "--gen-depends";
+   end Decode_Command;
+
+   function Get_Short_Help (Cmd : Command_Gen_Depends) return String
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      return "--gen-depends [OPTS] UNIT [ARCH]"
+        & "Generate dependencies of UNIT";
+   end Get_Short_Help;
+
+   procedure Perform_Action (Cmd : in out Command_Gen_Depends;
+                             Args : Argument_List)
+   is
+      pragma Unreferenced (Cmd);
+   begin
+      Gen_Makefile(Args, True);
+   end Perform_Action;
+
+   procedure Gen_Makefile (Args : Argument_List; Only_Depends : Boolean)
+      -- generate a makefile on stdout
+      -- for --gen-depends (Only_Depends) rules and phony targets are omittted
+   is
       HT : constant Character := Ada.Characters.Latin_1.HT;
       Files_List : Iir_List;
       File : Iir_Design_File;
@@ -1671,7 +1713,12 @@ package body Ghdldrv is
       Dep_List : Iir_List;
       Dep_File : Iir;
    begin
-      Set_Elab_Units ("--gen-makefile", Args);
+      if Only_Depends then
+         Set_Elab_Units ("--gen-depends", Args);
+      else
+         Set_Elab_Units ("--gen-makefile", Args);
+      end if;
+
       Setup_Libraries (True);
       Files_List := Build_Dependence (Prim_Name, Sec_Name);
 
@@ -1694,36 +1741,39 @@ package body Ghdldrv is
 
       New_Line;
 
-      Put ("GHDL=");
-      Put_Line (Command_Name);
+      -- omit variables
+      if not Only_Depends then
+         Put ("GHDL=");
+         Put_Line (Command_Name);
 
-      --  Extract options for command line.
-      Put ("GHDLFLAGS=");
-      for I in 2 .. Argument_Count loop
-         declare
-            Arg : constant String := Argument (I);
-         begin
-            if Arg (1) = '-' then
-               if (Arg'Length > 10 and then Arg (1 .. 10) = "--workdir=")
-                 or else (Arg'Length > 7 and then Arg (1 .. 7) = "--ieee=")
-                 or else (Arg'Length > 6 and then Arg (1 .. 6) = "--std=")
-                 or else (Arg'Length > 7 and then Arg (1 .. 7) = "--work=")
-                 or else (Arg'Length > 2 and then Arg (1 .. 2) = "-P")
-               then
-                  Put (" ");
-                  Put (Arg);
+         --  Extract options for command line.
+         Put ("GHDLFLAGS=");
+         for I in 2 .. Argument_Count loop
+            declare
+               Arg : constant String := Argument (I);
+            begin
+               if Arg (1) = '-' then
+                  if (Arg'Length > 10 and then Arg (1 .. 10) = "--workdir=")
+                    or else (Arg'Length > 7 and then Arg (1 .. 7) = "--ieee=")
+                    or else (Arg'Length > 6 and then Arg (1 .. 6) = "--std=")
+                    or else (Arg'Length > 7 and then Arg (1 .. 7) = "--work=")
+                    or else (Arg'Length > 2 and then Arg (1 .. 2) = "-P")
+                  then
+                     Put (" ");
+                     Put (Arg);
+                  end if;
                end if;
-            end if;
-         end;
-      end loop;
-      New_Line;
+            end;
+         end loop;
+         New_Line;
 
-      New_Line;
+         New_Line;
 
-      Put_Line ("# Default target");
-      Put ("all: ");
-      Put_Line (Base_Name.all);
-      New_Line;
+         Put_Line ("# Default target");
+         Put ("all: ");
+         Put_Line (Base_Name.all);
+         New_Line;
+      end if;
 
       Put_Line ("# Elaboration target");
       Put (Base_Name.all);
@@ -1737,13 +1787,19 @@ package body Ghdldrv is
          end if;
       end loop;
       New_Line;
-      Put_Line (HT & "$(GHDL) -e $(GHDLFLAGS) $@");
+      -- omit rule
+      if not Only_Depends then
+         Put_Line (HT & "$(GHDL) -e $(GHDLFLAGS) $@");
+      end if;
       New_Line;
 
-      Put_Line ("# Run target");
-      Put_Line ("run: " & Base_Name.all);
-      Put_Line (HT & "$(GHDL) -r " & Base_Name.all & " $(GHDLRUNFLAGS)");
-      New_Line;
+      -- omit phony target
+      if not Only_Depends then
+         Put_Line ("# Run target");
+         Put_Line ("run: " & Base_Name.all);
+         Put_Line (HT & "$(GHDL) -r " & Base_Name.all & " $(GHDLRUNFLAGS)");
+         New_Line;
+      end if;
 
       Put_Line ("# Targets to analyze files");
       for I in Natural loop
@@ -1761,28 +1817,34 @@ package body Ghdldrv is
                Put (Image (Get_Design_File_Filename (File)));
                New_Line;
 
-               Put_Line
-                 (HT & "@echo ""This file was not locally built ($<)""");
-               Put_Line (HT & "exit 1");
+               -- omit dummy rule
+               if not Only_Depends then
+                  Put_Line
+                    (HT & "@echo ""This file was not locally built ($<)""");
+                  Put_Line (HT & "exit 1");
+               end if;
             else
                Put (Image (Get_Design_File_Filename (File)));
                New_Line;
 
-               Put (HT & "$(GHDL) -a $(GHDLFLAGS)");
-               Lib := Get_Library (File);
-               if Lib /= Libraries.Work_Library then
-                  --  Overwrite some options.
-                  Put (" --work=");
-                  Put (Image (Get_Identifier (Lib)));
-                  Dir_Id := Get_Library_Directory (Lib);
-                  Put (" --workdir=");
-                  if Dir_Id = Libraries.Local_Directory then
-                     Put (".");
-                  else
-                     Put (Image (Dir_Id));
+               -- omit rule
+               if not Only_Depends then
+                  Put (HT & "$(GHDL) -a $(GHDLFLAGS)");
+                  Lib := Get_Library (File);
+                  if Lib /= Libraries.Work_Library then
+                     --  Overwrite some options.
+                     Put (" --work=");
+                     Put (Image (Get_Identifier (Lib)));
+                     Dir_Id := Get_Library_Directory (Lib);
+                     Put (" --workdir=");
+                     if Dir_Id = Libraries.Local_Directory then
+                        Put (".");
+                     else
+                        Put (Image (Dir_Id));
+                     end if;
                   end if;
+                  Put_Line (" $<");
                end if;
-               Put_Line (" $<");
             end if;
          end if;
       end loop;
@@ -1810,7 +1872,7 @@ package body Ghdldrv is
             New_Line;
          end if;
       end loop;
-   end Perform_Action;
+   end Gen_Makefile;
 
    procedure Register_Commands is
    begin
@@ -1824,6 +1886,7 @@ package body Ghdldrv is
       Register_Command (new Command_Anaelab);
       Register_Command (new Command_Make);
       Register_Command (new Command_Gen_Makefile);
+      Register_Command (new Command_Gen_Depends);
       Register_Command (new Command_Dispconfig);
       Register_Command (new Command_Bootstrap);
    end Register_Commands;
