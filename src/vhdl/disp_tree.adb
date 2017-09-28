@@ -139,8 +139,7 @@ package body Disp_Tree is
       use Name_Table;
    begin
       if Ident /= Null_Identifier then
-         Image (Ident);
-         return ''' & Nam_Buffer (1 .. Nam_Length) & ''';
+         return ''' & Image (Ident) & ''';
       else
          return "<anonymous>";
       end if;
