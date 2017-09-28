@@ -2228,6 +2228,15 @@ package body Sem_Assocs is
                        or else Get_Kind (Formal) = Iir_Kind_Operator_Symbol);
                   Set_Named_Entity (Formal, Inter);
 
+                  if Inter = Null_Iir then
+                     if Finish then
+                        Error_Msg_Sem (+Assoc, "no interface %i for %n",
+                                       (+Formal, +Loc));
+                     end if;
+                     Match := Not_Compatible;
+                     exit;
+                  end if;
+
                   if Is_Overload_List (Inter) then
                      if Finish then
                         Error_Msg_Sem (+Assoc, "ambiguous formal name");
