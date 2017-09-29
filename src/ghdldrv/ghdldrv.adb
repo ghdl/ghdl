@@ -1664,7 +1664,7 @@ package body Ghdldrv is
    is
       pragma Unreferenced (Cmd);
    begin
-      Gen_Makefile(Args, False);
+      Gen_Makefile (Args, False);
    end Perform_Action;
 
    --  Command Gen_Depends.
@@ -1688,7 +1688,7 @@ package body Ghdldrv is
       pragma Unreferenced (Cmd);
    begin
       return "--gen-depends [OPTS] UNIT [ARCH]"
-        & "Generate dependencies of UNIT";
+        & "  Generate dependencies of UNIT";
    end Get_Short_Help;
 
    procedure Perform_Action (Cmd : in out Command_Gen_Depends;
@@ -1696,12 +1696,12 @@ package body Ghdldrv is
    is
       pragma Unreferenced (Cmd);
    begin
-      Gen_Makefile(Args, True);
+      Gen_Makefile (Args, True);
    end Perform_Action;
 
+   -- generate a makefile on stdout
+   -- for --gen-depends (Only_Depends) rules and phony targets are omittted
    procedure Gen_Makefile (Args : Argument_List; Only_Depends : Boolean)
-      -- generate a makefile on stdout
-      -- for --gen-depends (Only_Depends) rules and phony targets are omittted
    is
       HT : constant Character := Ada.Characters.Latin_1.HT;
       Files_List : Iir_List;
@@ -1741,7 +1741,7 @@ package body Ghdldrv is
 
       New_Line;
 
-      -- omit variables
+      -- Omit variables.
       if not Only_Depends then
          Put ("GHDL=");
          Put_Line (Command_Name);
@@ -1787,13 +1787,13 @@ package body Ghdldrv is
          end if;
       end loop;
       New_Line;
-      -- omit rule
+      -- Omit rule.
       if not Only_Depends then
          Put_Line (HT & "$(GHDL) -e $(GHDLFLAGS) $@");
       end if;
       New_Line;
 
-      -- omit phony target
+      -- Omit phony target.
       if not Only_Depends then
          Put_Line ("# Run target");
          Put_Line ("run: " & Base_Name.all);
@@ -1817,7 +1817,7 @@ package body Ghdldrv is
                Put (Image (Get_Design_File_Filename (File)));
                New_Line;
 
-               -- omit dummy rule
+               -- Omit dummy rule.
                if not Only_Depends then
                   Put_Line
                     (HT & "@echo ""This file was not locally built ($<)""");
@@ -1827,7 +1827,7 @@ package body Ghdldrv is
                Put (Image (Get_Design_File_Filename (File)));
                New_Line;
 
-               -- omit rule
+               -- Omit rule.
                if not Only_Depends then
                   Put (HT & "$(GHDL) -a $(GHDLFLAGS)");
                   Lib := Get_Library (File);
