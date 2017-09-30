@@ -382,12 +382,15 @@ package body Libraries is
          return Get_Identifier;
       end String_To_Name_Id;
 
+      Trace_Library_Load : constant Boolean := False;
+
       Design_Unit, Last_Design_Unit : Iir_Design_Unit;
       Lib_Ident : constant Name_Id := Get_Identifier (Library);
 
       Design_File: Iir_Design_File;
       Library_Unit: Iir;
       Line, Col: Int32;
+      File_Id : Name_Id;
       File_Dir : Name_Id;
       Pos: Source_Ptr;
       Date: Date_Type;
@@ -397,7 +400,7 @@ package body Libraries is
       -- Check the library was not already loaded.
       pragma Assert (Get_Design_File_Chain (Library) = Null_Iir);
 
-      if False then
+      if Trace_Library_Load then
          Ada.Text_IO.Put_Line ("Load library " & Image (Lib_Ident));
       end if;
 
@@ -413,8 +416,13 @@ package body Libraries is
          return False;
       end if;
 
-      File := Files_Map.Load_Source_File
-        (Dir, Get_Identifier (Library_To_File_Name (Library)));
+      File_Id := Get_Identifier (Library_To_File_Name (Library));
+      if Trace_Library_Load then
+         Ada.Text_IO.Put_Line
+           ("  from " & Image (Dir) & Image (File_Id));
+      end if;
+
+      File := Files_Map.Load_Source_File (Dir, File_Id);
       if File = No_Source_File_Entry then
          --  Not found.
          Set_Date (Library, Date_Valid'First);
@@ -693,7 +701,6 @@ package body Libraries is
       else
          Work_Library := Create_Iir (Iir_Kind_Library_Declaration);
          Set_Location (Work_Library, Implicit_Location);
-         --Set_Visible_Flag (Work_Library, True);
          Set_Library_Directory (Work_Library, Work_Directory);
 
          Set_Identifier (Work_Library, Work_Library_Name);
