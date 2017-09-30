@@ -23,7 +23,6 @@ with Ada.Characters.Latin_1;
 with Ada.Text_IO;
 
 with Types;
-with Iirs; use Iirs;
 with Flags;
 with Sem;
 with Name_Table;
@@ -204,6 +203,53 @@ package body Ghdlcomp is
          Design := Next_Design;
       end loop;
    end Compile_Analyze_File;
+
+   function Compile_Analyze_File2 (File : String) return Iir
+   is
+      use Types;
+      Id : constant Name_Id := Name_Table.Get_Identifier (File);
+      Design_File : Iir_Design_File;
+      New_Design_File : Iir_Design_File;
+      Unit : Iir;
+      Next_Unit : Iir;
+   begin
+      Design_File := Libraries.Load_File (Id);
+      if Design_File = Null_Iir or else Errorout.Nbr_Errors > 0 then
+         --  Stop now in case of error (file not found or parse error).
+         return Design_File;
+      end if;
+
+      Unit := Get_First_Design_Unit (Design_File);
+      while Unit /= Null_Iir loop
+         Libraries.Finish_Compilation (Unit, True);
+
+         Next_Unit := Get_Chain (Unit);
+
+         if Errorout.Nbr_Errors = 0 then
+            Set_Chain (Unit, Null_Iir);
+            Libraries.Add_Design_Unit_Into_Library (Unit);
+            New_Design_File := Get_Design_File (Unit);
+         end if;
+
+         Unit := Next_Unit;
+      end loop;
+
+      if Errorout.Nbr_Errors > 0 then
+         return Design_File;
+      end if;
+
+      Free_Iir (Design_File);
+
+      --  Do late analysis checks.
+      Unit := Get_First_Design_Unit (New_Design_File);
+      while Unit /= Null_Iir loop
+         Sem.Sem_Analysis_Checks_List
+           (Unit, Is_Warning_Enabled (Warnid_Delayed_Checks));
+         Unit := Get_Chain (Unit);
+      end loop;
+
+      return New_Design_File;
+   end Compile_Analyze_File2;
 
    procedure Compile_Elaborate (Unit_Name : String_Access)
    is
