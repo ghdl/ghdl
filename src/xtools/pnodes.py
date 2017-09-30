@@ -534,7 +534,7 @@ def funcs_of_node(n):
     return sorted([fv.name for fv in n.fields.values() if fv])
 
 def gen_has_func_spec(name, suff):
-    spec='   function Has_' + f.name + ' (K : ' + type_name + ')'
+    spec='   function Has_' + name + ' (K : ' + type_name + ')'
     ret=' return Boolean' + suff;
     if len(spec) < 60:
         print spec + ret
@@ -542,71 +542,22 @@ def gen_has_func_spec(name, suff):
         print spec
         print '     ' + ret
 
-parser = argparse.ArgumentParser(description='Meta-grammar processor')
-parser.add_argument('action', choices=['disp-nodes', 'disp-kinds',
-                                       'disp-formats', 'disp-funcs',
-                                       'disp-types',
-                                       'get_format', 'body',
-                                       'meta_specs', 'meta_body'],
-                    default='disp-nodes')
-parser.add_argument('--field-file', dest='field_file',
-                    default='nodes.ads',
-                    help='specify file which defines fields')
-parser.add_argument('--spec-file', dest='spec_file',
-                    default='iirs.ads',
-                    help='specify file which defines nodes')
-parser.add_argument('--template-file', dest='template_file',
-                    default='iirs.adb.in',
-                    help='specify template body file')
-parser.add_argument('--meta-basename', dest='meta_basename',
-                    default='nodes_meta',
-                    help='specify base name of meta files')
-parser.add_argument('--kind-type', dest='kind_type',
-                    default='Iir_Kind',
-                    help='name of kind type')
-parser.add_argument('--kind-prefix', dest='kind_prefix',
-                    default='Iir_Kind_',
-                    help='prefix for kind literals')
-parser.add_argument('--node-type', dest='node_type',
-                    default='Iir',
-                    help='name of the node type')
-parser.add_argument('--keep-order', dest='flag_keep_order',
-                    action='store_true',
-                    help='keep field order of nodes')
-parser.set_defaults(flag_keep_order=False)
-args = parser.parse_args()
-
-field_file=args.field_file
-spec_file=args.spec_file
-type_name=args.kind_type
-prefix_name=args.kind_prefix
-template_file=args.template_file
-node_type=args.node_type
-meta_base_file=args.meta_basename
-flag_keep_order=args.flag_keep_order
-
-try:
-    (formats, fields) = read_fields(field_file)
-    (kinds, kinds_ranges, funcs) = read_kinds(spec_file)
-    nodes = read_nodes(spec_file,kinds,kinds_ranges,fields,funcs)
-
-except ParseError as e:
-    print >> sys.stderr, e
-    print >> sys.stderr, \
-          "in {0}:{1}:{2}".format(e.lr.filename, e.lr.lineno, e.lr.l)
-    sys.exit(1)
-
-if args.action == 'disp-formats':
+def do_disp_formats():
+#if args.action == 'disp-formats':
     for fmt in fields:
         print "Fields of Format_"+fmt
         fld=fields[fmt]
         for k in fld:
             print '  ' + k + ' (' + fld[k] + ')'
-elif args.action == 'disp-kinds':
+
+def do_disp_kinds():
+#elif args.action == 'disp-kinds':
     print "Kinds are:"
     for k in kinds:
         print '  ' + prefix_name + k
-elif args.action == 'disp-funcs':
+
+def do_disp_funcs():
+#elif args.action == 'disp-funcs':
     print "Functions are:"
     for f in funcs:
         s = '{0} ({1}: {2}'.format(f.name, f.field, f.rtype)
@@ -616,23 +567,31 @@ elif args.action == 'disp-funcs':
             s += ' conv:' + f.conv
         s += ')'
         print s
-elif args.action == 'disp-types':
+
+def do_disp_types():
+#elif args.action == 'disp-types':
     print "Types are:"
     s = set([])
     for f in funcs:
         s |= set([f.rtype])
     for t in sorted(s):
         print '  ' + t
-elif args.action == 'disp-nodes':
+
+def do_disp_nodes():
+#elif args.action == 'disp-nodes':
     for k in kinds:
         v = nodes[k]
         print prefix_name + k + ' (' + v.format + ')'
         flds = [fk for fk, fv in v.fields.items() if fv]
         for fk in sorted(flds):
             print '  ' + fk + ': '+ v.fields[fk].name
-elif args.action == 'get_format':
+
+def do_get_format():
+#elif args.action == 'get_format':
     gen_get_format(formats, nodes)
-elif args.action == 'body':
+
+def do_body():
+#elif args.action == 'body':
     lr = linereader(template_file)
     while True:
         l = lr.get().rstrip()
@@ -644,29 +603,39 @@ elif args.action == 'body':
                 gen_get_set(f, nodes, fields)
         if l[0:3] == 'end':
             break
-elif args.action == 'meta_specs':
-    lr = linereader(meta_base_file + '.ads.in')
-    # Build list of types
+
+def get_types():
     s = set([])
     for f in funcs:
         s |= set([f.rtype])
-    types = [t for t in sorted(s)]
+    return [t for t in sorted(s)]
+
+def get_attributes():
+    s = set([])
+    for f in funcs:
+        s |= set([f.acc])
+    return [t for t in sorted(s)]
+
+def gen_enum(prefix, vals):
+    last = None
+    for v in vals:
+        if last:
+            print last + ','
+        last = prefix + v
+    print last
+
+def do_meta_specs():
+#elif args.action == 'meta_specs':
+    lr = linereader(meta_base_file + '.ads.in')
+    types = get_types()
     while True:
         l = lr.get().rstrip()
         if l == '      --  TYPES':
-            last = None
-            for t in types:
-                if last:
-                    print last + ','
-                last = '      Type_' + t
-            print last
+            gen_enum('      Type_', types)
         elif l == '      --  FIELDS':
-            last = None
-            for f in funcs:
-                if last:
-                    print last + ','
-                last = '      Field_' + f.name
-            print last
+            gen_enum('      Field_', [f.name for f in funcs])
+        elif l == '      --  ATTRS':
+            gen_enum('      Field_', get_attributes())
         elif l == '   --  FUNCS':
             for t in types:
                 print '   function Get_' + t
@@ -683,7 +652,9 @@ elif args.action == 'meta_specs':
             break
         else:
             print l
-elif args.action == 'meta_body':
+
+def do_meta_body():
+#elif args.action == 'meta_body':
     lr = linereader(meta_base_file + '.adb.in')
     while True:
         l = lr.get().rstrip()
@@ -817,3 +788,80 @@ elif args.action == 'meta_body':
             break
         else:
             print l
+
+actions = { 'disp-nodes' : do_disp_nodes,
+            'disp-kinds' : do_disp_kinds,
+            'disp-formats' : do_disp_formats,
+            'disp-funcs' : do_disp_funcs,
+            'disp-types' : do_disp_types,
+            'get_format' : do_get_format,
+            'body' : do_body,
+            'meta_specs' : do_meta_specs,
+            'meta_body' : do_meta_body }
+
+def main():
+    parser = argparse.ArgumentParser(description='Meta-grammar processor')
+    parser.add_argument('action', choices=actions.keys(),
+                        default='disp-nodes')
+    parser.add_argument('--field-file', dest='field_file',
+                        default='nodes.ads',
+                        help='specify file which defines fields')
+    parser.add_argument('--spec-file', dest='spec_file',
+                        default='iirs.ads',
+                        help='specify file which defines nodes')
+    parser.add_argument('--template-file', dest='template_file',
+                        default='iirs.adb.in',
+                        help='specify template body file')
+    parser.add_argument('--meta-basename', dest='meta_basename',
+                        default='nodes_meta',
+                        help='specify base name of meta files')
+    parser.add_argument('--kind-type', dest='kind_type',
+                        default='Iir_Kind',
+                        help='name of kind type')
+    parser.add_argument('--kind-prefix', dest='kind_prefix',
+                        default='Iir_Kind_',
+                        help='prefix for kind literals')
+    parser.add_argument('--node-type', dest='node_type',
+                        default='Iir',
+                        help='name of the node type')
+    parser.add_argument('--keep-order', dest='flag_keep_order',
+                        action='store_true',
+                        help='keep field order of nodes')
+    parser.set_defaults(flag_keep_order=False)
+    args = parser.parse_args()
+
+    # At some point, it would be simpler to create a class...
+    global formats, fields, nodes, kinds, kinds_ranges, funcs
+
+    global type_name, prefix_name, template_file, node_type, meta_base_file
+    global flag_keep_order
+
+    type_name=args.kind_type
+    prefix_name=args.kind_prefix
+    template_file=args.template_file
+    node_type=args.node_type
+    meta_base_file=args.meta_basename
+    flag_keep_order=args.flag_keep_order
+
+    field_file=args.field_file
+    spec_file=args.spec_file
+
+    try:
+        (formats, fields) = read_fields(field_file)
+        (kinds, kinds_ranges, funcs) = read_kinds(spec_file)
+        nodes = read_nodes(spec_file,kinds,kinds_ranges,fields,funcs)
+
+    except ParseError as e:
+        print >> sys.stderr, e
+        print >> sys.stderr, \
+              "in {0}:{1}:{2}".format(e.lr.filename, e.lr.lineno, e.lr.l)
+        sys.exit(1)
+
+    f = actions.get(args.action, None)
+    if not f:
+        print >> sys.stderr, "Action {0} is unknown".format(args.action)
+        sys.exit(1)
+    f()
+
+if __name__ == '__main__':
+    main()
