@@ -73,7 +73,7 @@ package Name_Table is
    --  is not found (and do not create an entry for it).
    function Get_Identifier_No_Create (Str : String) return Name_Id;
    function Get_Identifier_No_Create_With_Len
-     (Str : Fat_String_Acc; Len : Natural) return Name_Id;
+     (Str : Thin_String_Ptr; Len : Natural) return Name_Id;
 
    --  Get and set the info field associated with each identifier.
    --  Used to store interpretations of the name.

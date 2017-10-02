@@ -88,6 +88,9 @@ package Files_Map is
    --  Return a buffer (access to the contents of the file) for a file entry.
    function Get_File_Source (File : Source_File_Entry) return File_Buffer_Acc;
 
+   --  Likewise but return a pointer.  To be used only from non-Ada code.
+   function Get_File_Buffer (File : Source_File_Entry) return File_Buffer_Ptr;
+
    --  Return the length of the file (which is the size of the file buffer).
    function Get_File_Length (File : Source_File_Entry) return Source_Ptr;
 
@@ -128,6 +131,15 @@ package Files_Map is
    --  The new entry must be the next one after the last entry.
    procedure File_Add_Line_Number
      (File : Source_File_Entry; Line : Natural; Pos : Source_Ptr);
+
+   --  Convert LOCATION to a source file.  Return No_Source_File_Entry if
+   --  LOCATION is incorrect.
+   function Location_To_File (Location : Location_Type)
+                             return Source_File_Entry;
+
+   --  Convert LOCATION and FILE to a position (offset) into the source file.
+   function Location_File_To_Pos
+     (Location : Location_Type; File : Source_File_Entry) return Source_Ptr;
 
    --  Convert LOCATION into a source file FILE and an offset POS in the
    --  file.

@@ -79,7 +79,7 @@ package body Name_Table is
 
    --  Allocate place in the strings_table, and store the name_buffer into it.
    --  Also append a NUL.
-   function Store (Str : Fat_String_Acc; Len : Natural) return Natural
+   function Store (Str : Thin_String_Ptr; Len : Natural) return Natural
    is
       Res: Natural;
    begin
@@ -146,7 +146,7 @@ package body Name_Table is
 
    --  Compute the hash value of a string.  In case of algorithm change, check
    --  the performance using Disp_Stats.
-   function Compute_Hash (Str : Fat_String_Acc; Len : Natural)
+   function Compute_Hash (Str : Thin_String_Ptr; Len : Natural)
                          return Hash_Value_Type
    is
       use Interfaces;
@@ -239,7 +239,7 @@ package body Name_Table is
 
    --  Compare ID with Str / Len.  Length of ID must be equal to Len.
    function Compare_Name_Buffer_With_Name
-     (Id : Name_Id; Str : Fat_String_Acc; Len : Natural) return Boolean
+     (Id : Name_Id; Str : Thin_String_Ptr; Len : Natural) return Boolean
    is
       Ne: Identifier renames Names_Table.Table (Id);
    begin
@@ -280,7 +280,7 @@ package body Name_Table is
    end Expand;
 
    --  Get or create an entry in the name table.
-   function Get_Identifier_With_Len (Str : Fat_String_Acc; Len : Natural)
+   function Get_Identifier_With_Len (Str : Thin_String_Ptr; Len : Natural)
                                     return Name_Id
    is
       Hash_Value : Hash_Value_Type;
@@ -324,11 +324,11 @@ package body Name_Table is
    function Get_Identifier return Name_Id is
    begin
       return Get_Identifier_With_Len
-        (To_Fat_String_Acc (Nam_Buffer'Address), Nam_Length);
+        (To_Thin_String_Ptr (Nam_Buffer'Address), Nam_Length);
    end Get_Identifier;
 
    function Get_Identifier_No_Create_With_Len
-     (Str : Fat_String_Acc; Len : Natural) return Name_Id
+     (Str : Thin_String_Ptr; Len : Natural) return Name_Id
    is
       Hash_Value : Hash_Value_Type;
       Hash_Index : Hash_Value_Type;
@@ -353,14 +353,14 @@ package body Name_Table is
    function Get_Identifier_No_Create (Str : String) return Name_Id is
    begin
       return Get_Identifier_No_Create_With_Len
-        (To_Fat_String_Acc (Str'Address), Str'Length);
+        (To_Thin_String_Ptr (Str'Address), Str'Length);
    end Get_Identifier_No_Create;
 
    --  Get or create an entry in the name table.
    function Get_Identifier (Str : String) return Name_Id is
    begin
       return Get_Identifier_With_Len
-        (To_Fat_String_Acc (Str'Address), Str'Length);
+        (To_Thin_String_Ptr (Str'Address), Str'Length);
    end Get_Identifier;
 
    function Get_Identifier (Char : Character) return Name_Id is

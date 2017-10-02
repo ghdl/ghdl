@@ -127,9 +127,8 @@ package body Files_Map is
       return Home_Dir;
    end Get_Home_Directory;
 
-   procedure Location_To_File_Pos (Location : Location_Type;
-                                   File : out Source_File_Entry;
-                                   Pos : out Source_Ptr) is
+   function Location_To_File (Location : Location_Type)
+                             return Source_File_Entry is
    begin
       --  FIXME: use a cache
       --  FIXME: dicotomy
@@ -140,14 +139,29 @@ package body Files_Map is
             if Location >= F.First_Location
               and then Location <= F.Last_Location
             then
-               File := I;
-               Pos := Source_Ptr (Location - F.First_Location);
-               return;
+               return I;
             end if;
          end;
       end loop;
-      --  File not found, location must be bad...
-      raise Internal_Error;
+      return No_Source_File_Entry;
+   end Location_To_File;
+
+   function Location_File_To_Pos
+     (Location : Location_Type; File : Source_File_Entry) return Source_Ptr is
+   begin
+      return Source_Ptr (Location - Source_Files.Table (File).First_Location);
+   end Location_File_To_Pos;
+
+   procedure Location_To_File_Pos (Location : Location_Type;
+                                   File : out Source_File_Entry;
+                                   Pos : out Source_Ptr) is
+   begin
+      File := Location_To_File (Location);
+      if File = No_Source_File_Entry then
+         --  File not found, location must be correct.
+         raise Internal_Error;
+      end if;
+      Pos := Location_File_To_Pos (Location, File);
    end Location_To_File_Pos;
 
    function File_Pos_To_Location (File : Source_File_Entry; Pos : Source_Ptr)
@@ -873,6 +887,13 @@ package body Files_Map is
       Check_File (File);
       return Source_Files.Table (File).Source;
    end Get_File_Source;
+
+   function Get_File_Buffer (File : Source_File_Entry)
+                            return File_Buffer_Ptr is
+   begin
+      return To_File_Buffer_Ptr
+        (Source_Files.Table (File).Source (Source_Ptr_Org)'Address);
+   end Get_File_Buffer;
 
    --  Return the length of the file (which is the size of the file buffer).
    function Get_File_Length (File: Source_File_Entry) return Source_Ptr is

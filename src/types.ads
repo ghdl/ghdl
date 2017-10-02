@@ -57,11 +57,10 @@ package Types is
    type String_Acc_Array is array (Natural range <>) of String_Acc;
 
    --  Fat strings, for compatibility with C.
-   subtype Fat_String is String (Positive);
-   type Fat_String_Acc is access Fat_String;
-   pragma Convention (C, Fat_String_Acc);
-   function To_Fat_String_Acc is new Ada.Unchecked_Conversion
-     (System.Address, Fat_String_Acc);
+   type Thin_String_Ptr is access String (Positive);
+   pragma Convention (C, Thin_String_Ptr);
+   function To_Thin_String_Ptr is new Ada.Unchecked_Conversion
+     (System.Address, Thin_String_Ptr);
 
    --  The name table is defined in Name_Table package.  This is an hash table
    --  that associate a uniq Name_Id to a string.  Name_Id are allocated in
@@ -108,6 +107,10 @@ package Types is
    --  Type of a file buffer.
    type File_Buffer is array (Source_Ptr range <>) of Character;
    type File_Buffer_Acc is access File_Buffer;
+   type File_Buffer_Ptr is access File_Buffer (Source_Ptr);
+
+   function To_File_Buffer_Ptr is new Ada.Unchecked_Conversion
+     (System.Address, File_Buffer_Ptr);
 
    --  This type contains everything necessary to get a file name, a line
    --  number and a column number.
