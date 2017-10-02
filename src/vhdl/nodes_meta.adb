@@ -4370,7 +4370,7 @@ package body Nodes_Meta is
       Field_Base_Name
      );
 
-   Fields_Of_Iir_Last : constant array (Iir_Kind) of Integer :=
+   Fields_Of_Iir_Last : constant array (Iir_Kind) of Fields_Index_Extended :=
      (
       Iir_Kind_Unused => -1,
       Iir_Kind_Error => 7,
@@ -4642,17 +4642,30 @@ package body Nodes_Meta is
       Iir_Kind_Attribute_Name => 1902
      );
 
-   function Get_Fields (K : Iir_Kind) return Fields_Array
-   is
-      First : Natural;
-      Last : Integer;
+   function Get_Fields_First (K : Iir_Kind) return Fields_Index is
    begin
       if K = Iir_Kind'First then
-         First := Fields_Of_Iir'First;
+         return Fields_Of_Iir'First;
       else
-         First := Fields_Of_Iir_Last (Iir_Kind'Pred (K)) + 1;
+         return Fields_Of_Iir_Last (Iir_Kind'Pred (K)) + 1;
       end if;
-      Last := Fields_Of_Iir_Last (K);
+   end Get_Fields_First;
+
+   function Get_Fields_Last (K : Iir_Kind) return Fields_Index is
+   begin
+      return Fields_Of_Iir_Last (K);
+   end Get_Fields_Last;
+
+   function Get_Field_By_Index (Idx : Fields_Index) return Fields_Enum is
+   begin
+      return Fields_Of_Iir (Idx);
+   end Get_Field_By_Index;
+
+   function Get_Fields (K : Iir_Kind) return Fields_Array
+   is
+      First : constant Fields_Index := Get_Fields_First (K);
+      Last : constant Fields_Index := Fields_Of_Iir_Last (K);
+   begin
       return Fields_Of_Iir (First .. Last);
    end Get_Fields;
 

@@ -613,8 +613,11 @@ def get_types():
 def get_attributes():
     s = set([])
     for f in funcs:
-        s |= set([f.acc])
-    return [t for t in sorted(s)]
+        if f.acc:
+            s |= set([f.acc])
+    res = [t for t in sorted(s)]
+    res.insert(0, 'None')
+    return res
 
 def gen_enum(prefix, vals):
     last = None
@@ -635,7 +638,7 @@ def do_meta_specs():
         elif l == '      --  FIELDS':
             gen_enum('      Field_', [f.name for f in funcs])
         elif l == '      --  ATTRS':
-            gen_enum('      Field_', get_attributes())
+            gen_enum('      Attr_', get_attributes())
         elif l == '   --  FUNCS':
             for t in types:
                 print '   function Get_' + t

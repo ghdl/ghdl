@@ -398,21 +398,34 @@ package Nodes_Meta is
    type Field_Attribute is
      (
       Attr_None,
-      Attr_Ref, Attr_Maybe_Ref,
-      Attr_Forward_Ref, Attr_Maybe_Forward_Ref,
-      Attr_Of_Ref, Attr_Of_Maybe_Ref,
-      Attr_Chain, Attr_Chain_Next
+      Attr_Chain,
+      Attr_Chain_Next,
+      Attr_Forward_Ref,
+      Attr_Maybe_Forward_Ref,
+      Attr_Maybe_Ref,
+      Attr_Of_Maybe_Ref,
+      Attr_Of_Ref,
+      Attr_Ref
      );
 
    --  Get the attribute of a field.
    function Get_Field_Attribute (F : Fields_Enum) return Field_Attribute;
 
-   type Fields_Array is array (Natural range <>) of Fields_Enum;
+   type Fields_Index_Extended is new Int32;
+   subtype Fields_Index is Fields_Index_Extended
+     range 0 .. Fields_Index_Extended'Last;
+
+   type Fields_Array is array (Fields_Index range <>) of Fields_Enum;
 
    --  Return the list of fields for node K.  The fields are sorted: first
    --  the non nodes/list of nodes, then the nodes/lists that aren't reference,
    --  and then the reference.
    function Get_Fields (K : Iir_Kind) return Fields_Array;
+
+   --  Likewise, but without using arrays (for interfacing with C).
+   function Get_Fields_First (K : Iir_Kind) return Fields_Index;
+   function Get_Fields_Last (K : Iir_Kind) return Fields_Index;
+   function Get_Field_By_Index (Idx : Fields_Index) return Fields_Enum;
 
    --  Get/Set a field.
    function Get_Boolean
