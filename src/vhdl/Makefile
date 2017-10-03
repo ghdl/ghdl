@@ -21,10 +21,12 @@
 # regenerate them (and don't need to have python installed).
 
 PNODES=../xtools/pnodes.py
+PNODESPY=python/pnodespy.py
 
 DEPS=iirs.ads nodes.ads $(PNODES)
 
-GEN_FILES=iirs.adb nodes_meta.ads nodes_meta.adb
+GEN_FILES=iirs.adb nodes_meta.ads nodes_meta.adb \
+  python/libghdl/iirs.py python/libghdl/nodes_meta.py
 
 all: $(GEN_FILES)
 
@@ -42,6 +44,17 @@ nodes_meta.adb: nodes_meta.adb.in $(DEPS)
 	$(RM) $@
 	$(PNODES) meta_body > $@
 	chmod -w $@
+
+python/libghdl/iirs.py: $(DEPS) $(PNODESPY)
+	$(RM) $@
+	$(PNODESPY) libghdl-iirs > $@
+	chmod -w $@
+
+python/libghdl/nodes_meta.py: $(DEPS) $(PNODESPY)
+	$(RM) $@
+	$(PNODESPY) libghdl-meta > $@
+	chmod -w $@
+
 
 clean:
 	$(RM) -f $(GEN_FILES)
