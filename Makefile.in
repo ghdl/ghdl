@@ -325,17 +325,12 @@ ghdl_simul$(EXEEXT): $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) version.ads force
 libs.vhdl.simul: ghdl_simul$(EXEEXT)
 	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL=$(PWD)/ghdl_simul$(EXEEXT) GHDL_FLAGS="" VHDLLIBS_COPY_OBJS=no vhdl.libs.all
 
-################ mhdlsim (library for the vhdl part) ####################
+################ libghdl (library for the vhdl part) ####################
 
-GHDL_MHDLSIM_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/mhdlsim -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/vhdl/simulate
+LIBGHDL_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/vhdl/python -aI$(srcdir)/src/ghdldrv
 
-libmhdlsimvhdl.a:  $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) version.ads force
-	$(GNATMAKE) -c mhdlsim $(GNATFLAGS) $(GHDL_MHDLSIM_INCFLAGS)
-	gnatbind -Lmhdlsim_vhdl_ mhdlsim.ali -O > mhdlsim.files
-	gnatbind -Lmhdlsim_vhdl_ mhdlsim.ali -K -Z > mhdlsim.link
-	$(GNATMAKE) -c b~mhdlsim.adb
-	$(RM) -f $@
-	ar rc $@ b~mhdlsim.o `cat mhdlsim.files` $(GRT_ADD_OBJS)
+libghdl$(SOEXT): $(GRT_SRC_DEPS) version.ads force
+	$(GNATMAKE) -I- -aI. -D pic -z libghdl -o $@ $(GNATFLAGS) $(PIC_FLAGS) -gnat05 $(LIBGHDL_INCFLAGS) -bargs -shared -Llibghdl_ -largs -shared $(SHLIB_FLAGS)
 
 ################ ghdlsynth library ######################################
 
