@@ -680,6 +680,7 @@ package body Libraries is
          --  Add the standard_file into the library.
          --  This is done after Load_Library, because it checks there is no
          --  previous files in the library.
+         Set_Location (Std_Library, Get_Location (Standard_Package));
          Set_Parent (Std_Standard_File, Std_Library);
          Set_Chain (Std_Standard_File, Get_Design_File_Chain (Std_Library));
          Set_Design_File_Chain (Std_Library, Std_Standard_File);

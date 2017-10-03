@@ -55,6 +55,42 @@ package body Ghdllocal is
       Compile_Init;
    end Init;
 
+   function Decode_Driver_Option (Option : String) return Boolean
+   is
+      subtype Opt_String is String (1 .. Option'Length);
+      Opt : Opt_String renames Option;
+   begin
+      if Opt = "-v" and then Flag_Verbose = False then
+         Flag_Verbose := True;
+         return True;
+      elsif Opt'Length > 9 and then Opt (1 .. 9) = "--PREFIX=" then
+         Switch_Prefix_Path := new String'(Opt (10 .. Opt'Last));
+         return True;
+      elsif Opt = "--ieee=synopsys" then
+         Flag_Ieee := Lib_Synopsys;
+         return True;
+      elsif Opt = "--ieee=mentor" then
+         Flag_Ieee := Lib_Mentor;
+         return True;
+      elsif Opt = "--ieee=none" then
+         Flag_Ieee := Lib_None;
+         return True;
+      elsif Opt = "--ieee=standard" then
+         Flag_Ieee := Lib_Standard;
+         return True;
+      elsif Opt = "-m32" then
+         Flag_32bit := True;
+         return True;
+      elsif Opt'Length >= 2
+        and then (Opt (2) = 'g' or Opt (2) = 'O')
+      then
+         --  Silently accept -g and -O.
+         return True;
+      else
+         return Options.Parse_Option (Opt);
+      end if;
+   end Decode_Driver_Option;
+
    procedure Decode_Option (Cmd : in out Command_Lib;
                             Option : String;
                             Arg : String;
@@ -62,39 +98,11 @@ package body Ghdllocal is
    is
       pragma Unreferenced (Cmd);
       pragma Unreferenced (Arg);
-      Opt : constant String (1 .. Option'Length) := Option;
    begin
-      Res := Option_Bad;
-      if Opt = "-v" and then Flag_Verbose = False then
-         Flag_Verbose := True;
-         Res := Option_Ok;
-      elsif Opt'Length > 9 and then Opt (1 .. 9) = "--PREFIX=" then
-         Switch_Prefix_Path := new String'(Opt (10 .. Opt'Last));
-         Res := Option_Ok;
-      elsif Opt = "--ieee=synopsys" then
-         Flag_Ieee := Lib_Synopsys;
-         Res := Option_Ok;
-      elsif Opt = "--ieee=mentor" then
-         Flag_Ieee := Lib_Mentor;
-         Res := Option_Ok;
-      elsif Opt = "--ieee=none" then
-         Flag_Ieee := Lib_None;
-         Res := Option_Ok;
-      elsif Opt = "--ieee=standard" then
-         Flag_Ieee := Lib_Standard;
-         Res := Option_Ok;
-      elsif Opt = "-m32" then
-         Flag_32bit := True;
-         Res := Option_Ok;
-      elsif Opt'Length >= 2
-        and then (Opt (2) = 'g' or Opt (2) = 'O')
-      then
-         --  Silently accept -g and -O.
+      if Decode_Driver_Option (Option) then
          Res := Option_Ok;
       else
-         if Options.Parse_Option (Opt) then
-            Res := Option_Ok;
-         end if;
+         Res := Option_Bad;
       end if;
    end Decode_Option;
 

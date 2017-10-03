@@ -23,13 +23,16 @@ package Ghdllocal is
    --  Init procedure for the functionnal interface.
    procedure Compile_Init;
 
+   --  Handle:
+   --  --std=xx, --work=xx, -Pxxx, --workdir=x, --ieee=x, -Px, and -v
+   function Decode_Driver_Option (Option : String) return Boolean;
+
    type Command_Lib is abstract new Command_Type with null record;
 
    --  Setup GHDL.  Same as Compile_Init.
    procedure Init (Cmd : in out Command_Lib);
 
-   --  Handle:
-   --  --std=xx, --work=xx, -Pxxx, --workdir=x, --ieee=x, -Px, and -v
+   --  Handle driver options.
    procedure Decode_Option (Cmd : in out Command_Lib;
                             Option : String;
                             Arg : String;

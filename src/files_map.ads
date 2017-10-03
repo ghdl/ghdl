@@ -141,6 +141,15 @@ package Files_Map is
    function Location_File_To_Pos
      (Location : Location_Type; File : Source_File_Entry) return Source_Ptr;
 
+   --  Convert LOCATION and FILE to a line number.
+   function Location_File_To_Line
+     (Location : Location_Type; File : Source_File_Entry) return Natural;
+
+   --  Get logical column (with HT expanded) from LOC, FILE and LINE.
+   function Location_File_Line_To_Col
+     (Loc : Location_Type; File : Source_File_Entry; Line : Natural)
+     return Natural;
+
    --  Convert LOCATION into a source file FILE and an offset POS in the
    --  file.
    procedure Location_To_File_Pos (Location : Location_Type;
@@ -202,4 +211,10 @@ package Files_Map is
 
    --  Free all memory and reinitialize.
    procedure Initialize;
+
+private
+   --  Debug procedures.
+
+   --  Disp info about all source files
+   procedure Debug_Source_Files;
 end Files_Map;

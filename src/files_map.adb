@@ -146,12 +146,6 @@ package body Files_Map is
       return No_Source_File_Entry;
    end Location_To_File;
 
-   function Location_File_To_Pos
-     (Location : Location_Type; File : Source_File_Entry) return Source_Ptr is
-   begin
-      return Source_Ptr (Location - Source_Files.Table (File).First_Location);
-   end Location_File_To_Pos;
-
    procedure Location_To_File_Pos (Location : Location_Type;
                                    File : out Source_File_Entry;
                                    Pos : out Source_Ptr) is
@@ -278,18 +272,15 @@ package body Files_Map is
    --  A HT (tabulation) moves the cursor to the next position multiple of the
    --  tab stop.
    --  The first character is at position 1 and at offset 0.
-   procedure Coord_To_Position (File : Source_File_Entry;
-                                Line_Pos : Source_Ptr;
-                                Offset : Natural;
-                                Name : out Name_Id;
-                                Col : out Natural)
+   function Coord_To_Col (File : Source_File_Entry;
+                          Line_Pos : Source_Ptr;
+                          Offset : Natural) return Natural
    is
       Source_File: Source_File_Record renames Source_Files.Table (File);
       Res : Positive := 1;
    begin
-      Name := Source_File.File_Name;
       if Offset = 0 then
-         Col := Res;
+         return Res;
       else
          for I in Line_Pos .. Line_Pos + Source_Ptr (Offset) - 1 loop
             if Source_File.Source (I) = ASCII.HT then
@@ -298,8 +289,18 @@ package body Files_Map is
                Res := Res + 1;
             end if;
          end loop;
-         Col := Res;
+         return Res;
       end if;
+   end Coord_To_Col;
+
+   procedure Coord_To_Position (File : Source_File_Entry;
+                                Line_Pos : Source_Ptr;
+                                Offset : Natural;
+                                Name : out Name_Id;
+                                Col : out Natural) is
+   begin
+      Name := Source_Files.Table (File).File_Name;
+      Col := Coord_To_Col (File, Line_Pos, Offset);
    end Coord_To_Position;
 
    --  Should only be called by Location_To_Coord.
@@ -435,7 +436,7 @@ package body Files_Map is
       << Found >> null;
 
       Line_Pos := Source_File.Lines_Table (Line);
-      Offset := Natural (Pos - Source_File.Lines_Table (Line));
+      Offset := Natural (Pos - Line_Pos);
 
       --  Update cache.
       Source_File.Cache_Pos := Pos;
@@ -484,6 +485,36 @@ package body Files_Map is
             end;
       end case;
    end Location_To_Coord;
+
+   function Location_File_To_Pos
+     (Location : Location_Type; File : Source_File_Entry) return Source_Ptr is
+   begin
+      return Source_Ptr (Location - Source_Files.Table (File).First_Location);
+   end Location_File_To_Pos;
+
+   function Location_File_To_Line
+     (Location : Location_Type; File : Source_File_Entry) return Natural
+   is
+      Line_Pos : Source_Ptr;
+      Line     : Natural;
+      Offset   :  Natural;
+   begin
+      Location_To_Coord
+        (Source_Files.Table (File), Location_File_To_Pos (Location, File),
+         Line_Pos, Line, Offset);
+      return Line;
+   end Location_File_To_Line;
+
+   function Location_File_Line_To_Col
+     (Loc : Location_Type; File : Source_File_Entry; Line : Natural)
+     return Natural
+   is
+      F : Source_File_Record renames Source_Files.Table (File);
+      Line_Pos : constant Source_Ptr := F.Lines_Table (Line);
+      Pos : constant Source_Ptr := Location_File_To_Pos (Loc, File);
+   begin
+      return Coord_To_Col (File, Line_Pos, Natural (Pos - Line_Pos));
+   end Location_File_Line_To_Col;
 
    -- Convert the first digit of VAL into a character (base 10).
    function Digit_To_Char (Val: Natural) return Character is
@@ -1131,7 +1162,7 @@ package body Files_Map is
       end loop;
    end Debug_Source_Lines;
 
-   procedure Debug_Source_File is
+   procedure Debug_Source_Files is
    begin
       for I in Source_Files.First .. Source_Files.Last loop
          declare
@@ -1142,8 +1173,12 @@ package body Files_Map is
             Put (" dir:" & Image (F.Directory));
             Put (" length:" & Natural'Image (F.File_Length));
             New_Line;
+            Put (" location:" & Location_Type'Image (F.First_Location)
+                   & " -" & Location_Type'Image (F.Last_Location));
+            New_Line;
             if F.Checksum /= No_File_Checksum_Id then
                Put (" checksum: " & Get_File_Checksum_String (F.Checksum));
+               New_Line;
             end if;
             case F.Kind is
                when Source_File_File =>
@@ -1156,10 +1191,9 @@ package body Files_Map is
             end case;
          end;
       end loop;
-   end Debug_Source_File;
+   end Debug_Source_Files;
 
    pragma Unreferenced (Debug_Source_Lines);
-   pragma Unreferenced (Debug_Source_File);
    pragma Unreferenced (Debug_Source_Loc);
 
    procedure Initialize is
