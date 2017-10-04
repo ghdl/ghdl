@@ -394,6 +394,7 @@ package body Grt.Processes is
    begin
       if Time < 0 then
          --  LRM93 8.1
+         Disp_Process_Name (Get_Error_Stream, Proc);
          Error ("negative timeout clause");
       end if;
       Proc.Timeout := Current_Time + Time;
@@ -522,6 +523,7 @@ package body Grt.Processes is
       end if;
       if Time < 0 then
          --  LRM93 8.1
+         Disp_Process_Name (Get_Error_Stream, Proc);
          Error ("negative timeout clause");
       end if;
       Proc.State := State_Delayed;
