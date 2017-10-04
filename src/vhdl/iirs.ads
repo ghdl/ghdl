@@ -2050,6 +2050,8 @@ package Iirs is
    --
    --   Get/Set_Only_Characters_Flag (Flag4)
    --
+   --   Get/Set_Is_Character_Type (Flag5)
+   --
    --   Get/Set_Is_Ref (Flag12)
    --
    --   Get/Set_Type_Staticness (State1)
@@ -6497,6 +6499,11 @@ package Iirs is
    --  Field: Flag4
    function Get_Only_Characters_Flag (Atype : Iir) return Boolean;
    procedure Set_Only_Characters_Flag (Atype : Iir; Flag : Boolean);
+
+   --  True if enumeration type ATYPE is a character type.
+   --  Field: Flag5
+   function Get_Is_Character_Type (Atype : Iir) return Boolean;
+   procedure Set_Is_Character_Type (Atype : Iir; Flag : Boolean);
 
    --  Field: State1 (pos)
    function Get_Type_Staticness (Atype : Iir) return Iir_Staticness;

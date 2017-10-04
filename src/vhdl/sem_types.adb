@@ -760,8 +760,9 @@ package body Sem_Types is
       declare
          El: Iir;
          Literal_List: Iir_List;
-         Only_Characters : Boolean := True;
+         Only_Characters : Boolean;
       begin
+         Only_Characters := True;
          Literal_List := Get_Enumeration_Literal_List (Def);
          for I in Natural loop
             El := Get_Nth_Element (Literal_List, I);
@@ -773,9 +774,13 @@ package body Sem_Types is
             Sem_Scopes.Add_Name (El);
             Name_Visible (El);
             Xref_Decl (El);
-            if Only_Characters
-              and then not Name_Table.Is_Character (Get_Identifier (El))
-            then
+
+            --  LRM93 3.1.1 Enumeration types
+            --  An enumeration type is said to be a character type if at least
+            --  one of its enumeration literals is a character literal.
+            if Name_Table.Is_Character (Get_Identifier (El)) then
+               Set_Is_Character_Type (Def, True);
+            else
                Only_Characters := False;
             end if;
          end loop;

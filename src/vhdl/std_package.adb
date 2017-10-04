@@ -477,6 +477,7 @@ package body Std_Package is
          Set_Enumeration_Literal_List
            (Bit_Type_Definition, Create_Iir_List);
          Set_Base_Type (Bit_Type_Definition, Bit_Type_Definition);
+         Set_Is_Character_Type (Bit_Type_Definition, True);
          Bit_0 := Create_Std_Literal
            (Get_Std_Character ('0'), Bit_Type_Definition);
          Bit_1 := Create_Std_Literal
@@ -513,6 +514,7 @@ package body Std_Package is
          Character_Type_Definition :=
            Create_Std_Iir (Iir_Kind_Enumeration_Type_Definition);
          Set_Base_Type (Character_Type_Definition, Character_Type_Definition);
+         Set_Is_Character_Type (Character_Type_Definition, True);
          Set_Enumeration_Literal_List
            (Character_Type_Definition, Create_Iir_List);
 

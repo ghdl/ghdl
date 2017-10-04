@@ -3006,6 +3006,22 @@ package body Iirs is
       Set_Flag4 (Atype, Flag);
    end Set_Only_Characters_Flag;
 
+   function Get_Is_Character_Type (Atype : Iir) return Boolean is
+   begin
+      pragma Assert (Atype /= Null_Iir);
+      pragma Assert (Has_Is_Character_Type (Get_Kind (Atype)),
+                     "no field Is_Character_Type");
+      return Get_Flag5 (Atype);
+   end Get_Is_Character_Type;
+
+   procedure Set_Is_Character_Type (Atype : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Atype /= Null_Iir);
+      pragma Assert (Has_Is_Character_Type (Get_Kind (Atype)),
+                     "no field Is_Character_Type");
+      Set_Flag5 (Atype, Flag);
+   end Set_Is_Character_Type;
+
    function Get_Type_Staticness (Atype : Iir) return Iir_Staticness is
    begin
       pragma Assert (Atype /= Null_Iir);
