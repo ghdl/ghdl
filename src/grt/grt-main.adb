@@ -112,7 +112,7 @@ package body Grt.Main is
       Status : Integer;
    begin
       --  Set stream for error messages
-      Grt.Errors.Set_Out_Stream (Grt.Stdio.stdout);
+      Grt.Errors.Set_Error_Stream (Grt.Stdio.stdout);
 
       --  Register modules.
       --  They may insert hooks.
