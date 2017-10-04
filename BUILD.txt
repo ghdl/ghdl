@@ -96,13 +96,6 @@ $ cd /path/to/ghdl/source/dir
 $ make ghdllib
 $ make install
 
-For GCC6.x on Debian, the compiler default settings appear to have changed regarding
--fPIC, so adding the --enable-default-pie to the gcc configuration may be required,
-for example:
-
-../gcc-6-6.3.0/src/configure --prefix=/opt/ghdl/gcc --enable-languages=c,c++,vhdl \
-  --disable-bootstrap --disable-lto --disable-multilib --enable-default-pie
-
 Building with the llvm backend
 ******************************
 
