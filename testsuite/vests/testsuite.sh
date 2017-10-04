@@ -7,12 +7,21 @@ common_args="--std=93c $GHDL_FLAGS"
 test_num="1"
 do_inter_clean="no"
 use_last_entity=no
+dry=false
+
+do_run()
+{
+    echo $*
+    if [ "$dry" != true ]; then
+	eval $*
+    fi
+}
 
 # Functions used by tests.
 setup_test_group() { echo "Test: $1 $2"; }
 end_test_group() { delete_lib work; echo "*** End of tests"; }
 create_lib() { echo "create library: $1"; }
-delete_lib() { echo "delete library: $1" && cmd="$GHDL --remove $common_args --work=$1" && echo $cmd && eval $cmd; }
+delete_lib() { echo "delete library: $1" && cmd="$GHDL --remove $common_args --work=$1" && do_run $cmd; }
 
 get_entity()
 {
@@ -61,56 +70,58 @@ handle_test() {
   done
   cmd="$GHDL -a $args $dir/$file"
   echo "Test: $test_num"
-  echo $cmd
 
   if [ $test_num -gt $skip ]; then
     case $mode in
     compile)
-         eval $cmd;
-         ;;
+        do_run $cmd;
+        ;;
     run)
-         eval $cmd
-         if [ x$entity = "x" ]; then
-           entity=`get_entity $dir/$file`
-	 fi
-         if [ "x$entity" = "x" ]; then
-             echo "Cannot elaborate or run : no top level entity";
-	     exit 1
-         else
-           cmd="$GHDL --elab-run $entity $stop --assert-level=error";
-           echo "$cmd";
-           eval $cmd;
-         fi
-         ;;
+        do_run $cmd
+	if [ $dry = true ]; then
+	    return
+	fi
+        if [ x$entity = "x" ]; then
+            entity=`get_entity $dir/$file`
+	fi
+        if [ "x$entity" = "x" ]; then
+            echo "Cannot elaborate or run : no top level entity";
+	    exit 1
+        else
+            cmd="$GHDL --elab-run $entity $stop --assert-level=error";
+            do_run "$cmd";
+        fi
+        ;;
     ana_err)
-         if eval $cmd; then
-           echo "Analyze error expected";
-           exit 1;
-         fi
-         ;;
+        if do_run $cmd; then
+	    if [ $dry = true ]; then
+		return;
+	    fi
+            echo "Analyze error expected";
+            exit 1;
+        fi
+        ;;
     run_err)
-         eval $cmd
+        do_run $cmd
 #         ent=`sed -n -e "/^ENTITY \([a-zA-Z0-9]*\) IS$/p" < $dir/$file \
 #              | cut -f 2 -d ' '`
-         if [ x$entity = "x" ]; then
-           entity=`get_entity $dir/$file`
-	 fi
-         if [ "x$entity" = "x" ]; then
-           echo "Cannot elaborate or run : no top level entity";
-           exit 1;
-         else
-           cmd="$GHDL -e $entity";
-           echo "$cmd";
-           eval $cmd;
-           cmd="$GHDL -r $entity $stop --expect-failure --assert-level=error";
-           echo "$cmd";
-           eval $cmd;
-         fi
-         ;;
+        if [ x$entity = "x" ]; then
+            entity=`get_entity $dir/$file`
+	fi
+        if [ "x$entity" = "x" ]; then
+            echo "Cannot elaborate or run : no top level entity";
+            exit 1;
+        else
+            cmd="$GHDL -e $entity";
+            do_run "$cmd";
+            cmd="$GHDL -r $entity $stop --expect-failure --assert-level=error";
+            do_run "$cmd";
+        fi
+        ;;
     *)
-         echo "Unknown mode '$mode'";
-         exit 4;
-         ;;
+        echo "Unknown mode '$mode'";
+        exit 4;
+        ;;
     esac
 
     if [ $do_inter_clean = "yes" ]; then
@@ -141,6 +152,8 @@ do
     -j)  shift;
          skip=$1;
          ;;
+    -n)  dry=true
+	 ;;
     *) exit 1;
          ;;
   esac
