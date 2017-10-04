@@ -77,6 +77,8 @@ directory must be the same as the one used to configure ghdl.
 If you have manually built gmp/mpfr/mpc (without using the script
 in contrib) and if you have installed them in a non-standard
 directory, you may need to add --with-gmp=GMP_INSTALL_DIR.
+If your system gcc was configured with --enable-default-pie (check if
+that option appears in the output of gcc -v), you should also add it.
 
 $ mkdir gcc-objs; cd gcc-objs
 $ ../gcc-4.9.3/configure --prefix=/usr/local --enable-languages=c,vhdl \
