@@ -230,7 +230,7 @@ $(libdirsuffix)/grt.ver: $(GRTSRCDIR)/grt.ver
 	cp $< $@
 
 ifneq ($(GRT_LIBBACKTRACE),)
-$(GRT_LIBBACKTRACE): $(LIBBACKTRACE)
+$(libdirsuffix)/$(GRT_LIBBACKTRACE): $(LIBBACKTRACE)
 	cp $< $@
 endif
 
