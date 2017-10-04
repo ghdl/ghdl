@@ -31,7 +31,8 @@ package Grt.Errors is
 
    --  Set the stream for error messages.  Must be called before using this
    --  package.
-   procedure Set_Out_Stream (Stream : Grt.Stdio.FILEs);
+   procedure Set_Error_Stream (Stream : Grt.Stdio.FILEs);
+   function Get_Error_Stream return Grt.Stdio.FILEs;
 
    --  Multi-call error procedure.
    --  Start and continue with Error_C, finish by an Error_E.
