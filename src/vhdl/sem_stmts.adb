@@ -1075,8 +1075,9 @@ package body Sem_Stmts is
                return;
             end if;
             El_Type := Get_Base_Type (Get_Element_Subtype (Choice_Type));
-            if Get_Kind (El_Type) /= Iir_Kind_Enumeration_Type_Definition then
-               --  FIXME: check character.
+            if Get_Kind (El_Type) /= Iir_Kind_Enumeration_Type_Definition
+              or else not Get_Is_Character_Type (El_Type)
+            then
                Error_Msg_Sem
                  (+Choice,
                   "element type of the expression must be a character type");

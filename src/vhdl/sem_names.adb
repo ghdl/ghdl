@@ -3801,7 +3801,8 @@ package body Sem_Names is
          when Iir_Kind_Simple_Name
            | Iir_Kind_Operator_Symbol =>
             Sem_Name_Clean_1 (Name);
-         when Iir_Kind_Parenthesis_Name =>
+         when Iir_Kind_Parenthesis_Name
+           | Iir_Kind_Selected_Name =>
             Sem_Name_Clean_1 (Get_Prefix (Name));
             Sem_Name_Clean_1 (Name);
          when others =>

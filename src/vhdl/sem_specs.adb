@@ -1637,7 +1637,7 @@ package body Sem_Specs is
             Name := Build_Simple_Name (Comp_El, Parent);
             Set_Type (Name, Get_Type (Comp_El));
             Set_Actual (Assoc, Name);
-            if Kind = Map_Port then
+            if Kind = Map_Port and then not Error then
                Check_Port_Association_Bounds_Restrictions
                  (Ent_El, Comp_El, Assoc);
             end if;

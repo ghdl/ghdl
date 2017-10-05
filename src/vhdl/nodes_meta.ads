@@ -208,6 +208,7 @@ package Nodes_Meta is
       Field_Simultaneous_Right,
       Field_Text_File_Flag,
       Field_Only_Characters_Flag,
+      Field_Is_Character_Type,
       Field_Type_Staticness,
       Field_Constraint_State,
       Field_Index_Subtype_List,
@@ -729,6 +730,7 @@ package Nodes_Meta is
    function Has_Simultaneous_Right (K : Iir_Kind) return Boolean;
    function Has_Text_File_Flag (K : Iir_Kind) return Boolean;
    function Has_Only_Characters_Flag (K : Iir_Kind) return Boolean;
+   function Has_Is_Character_Type (K : Iir_Kind) return Boolean;
    function Has_Type_Staticness (K : Iir_Kind) return Boolean;
    function Has_Constraint_State (K : Iir_Kind) return Boolean;
    function Has_Index_Subtype_List (K : Iir_Kind) return Boolean;
