@@ -6,6 +6,7 @@ import sys
 sys.path.append("../xtools")
 
 import pnodes
+import re
 
 libname = 'libghdl'
 
@@ -94,9 +95,53 @@ get_field_attribute = libghdl.nodes_meta__get_field_attribute"""
     do_has_subprg()
 
 
+def do_libghdl_names():
+    pat_name_first = re.compile(
+        '   Name_(\w+)\s+: constant Name_Id := (\d+);')
+    pat_name_def = re.compile(
+        '   Name_(\w+)\s+:\s+constant Name_Id :=\s+Name_(\w+)( \+ (\d+))?;')
+    dict = {}
+    lr = pnodes.linereader('../std_names.ads')
+    while True:
+        line = lr.get()
+        m = pat_name_first.match(line)
+        if m:
+            name_def = m.group(1)
+            val = int(m.group(2))
+            dict[name_def] = val
+            res = [(name_def, val)]
+            break
+    val_max = 1
+    while True:
+        line = lr.get()
+        if line == 'end Std_Names;\n':
+            break
+        if line.endswith(':=\n'):
+            line = line.rstrip() + lr.get()
+        m = pat_name_def.match(line)
+        if m:
+            name_def = m.group(1)
+            name_ref = m.group(2)
+            val = m.group(3)
+            if not val:
+                val = 0
+            val_ref = dict.get(name_ref, None)
+            if not val_ref:
+                raise pnodes.ParseError(
+                    lr, "name {0} not found".format(name_ref))
+            val = val_ref + int(val)
+            val_max = max(val_max, val)
+            dict[name_def] = val
+            res.append((name_def, val))
+    print 'class Name:'
+    for n, v in res:
+        print '  {0} = {1}'.format(n, v)
+
+
 pnodes.actions.update({'class-kinds': do_class_kinds,
                        'libghdl-iirs': do_libghdl_iirs,
-                       'libghdl-meta': do_libghdl_meta})
+                       'libghdl-meta': do_libghdl_meta,
+                       'libghdl-names': do_libghdl_names})
 
 
 pnodes.main()
