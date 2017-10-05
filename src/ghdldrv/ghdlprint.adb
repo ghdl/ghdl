@@ -886,7 +886,7 @@ package body Ghdlprint is
       for I in Args'Range loop
          --  Load the file.
          Id := Get_Identifier (Args (I).all);
-         Fe := Files_Map.Load_Source_File (Local_Id, Id);
+         Fe := Files_Map.Read_Source_File (Local_Id, Id);
          if Fe = No_Source_File_Entry then
             Error ("cannot open file " & Args (I).all);
             raise Compile_Error;
@@ -1080,7 +1080,7 @@ package body Ghdlprint is
       for I in Args'Range loop
          --  Load the file.
          Id := Get_Identifier (Args (I).all);
-         Fe := Files_Map.Load_Source_File (Local_Id, Id);
+         Fe := Files_Map.Read_Source_File (Local_Id, Id);
          if Fe = No_Source_File_Entry then
             Error ("cannot open file " & Args (I).all);
             raise Compile_Error;
@@ -1206,7 +1206,7 @@ package body Ghdlprint is
 
       for I in Files'Range loop
          Id := Get_Identifier (Files (I).all);
-         Fe := Files_Map.Load_Source_File (Local_Id, Id);
+         Fe := Files_Map.Read_Source_File (Local_Id, Id);
          if Fe = No_Source_File_Entry then
             Error ("cannot open file " & Files (I).all);
             raise Compile_Error;
@@ -1350,7 +1350,7 @@ package body Ghdlprint is
       --  Parse all files.
       for I in Files'Range loop
          Id := Get_Identifier (Files_Name (I).all);
-         File := Files_Map.Load_Source_File (Libraries.Local_Directory, Id);
+         File := Files_Map.Read_Source_File (Libraries.Local_Directory, Id);
          if File = No_Source_File_Entry then
             Error ("cannot open " & Image (Id));
             return;
@@ -1583,7 +1583,7 @@ package body Ghdlprint is
       --  Parse all files.
       for I in Files'Range loop
          Id := Get_Identifier (Files_Name (I).all);
-         File := Load_Source_File (Libraries.Local_Directory, Id);
+         File := Read_Source_File (Libraries.Local_Directory, Id);
          if File = No_Source_File_Entry then
             Error ("cannot open " & Image (Id));
             return;

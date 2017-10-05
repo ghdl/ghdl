@@ -491,7 +491,7 @@ package body Ghdlxml is
       --  Parse all files.
       for I in Files'Range loop
          Id := Get_Identifier (Files_Name (I).all);
-         File := Load_Source_File (Libraries.Local_Directory, Id);
+         File := Read_Source_File (Libraries.Local_Directory, Id);
          if File = No_Source_File_Entry then
             Error ("cannot open " & Image (Id));
             return;

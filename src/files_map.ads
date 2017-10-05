@@ -45,7 +45,7 @@ package Files_Map is
    --  current directory.
    --  Load the filename if necessary.
    --  Return No_Source_File_Entry if the file does not exist.
-   function Load_Source_File (Directory : Name_Id; Name : Name_Id)
+   function Read_Source_File (Directory : Name_Id; Name : Name_Id)
                               return Source_File_Entry;
 
    --  Each file in memory has two terminal EOT.

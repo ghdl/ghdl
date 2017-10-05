@@ -422,7 +422,7 @@ package body Libraries is
            ("  from " & Image (Dir) & Image (File_Id));
       end if;
 
-      File := Files_Map.Load_Source_File (Dir, File_Id);
+      File := Files_Map.Read_Source_File (Dir, File_Id);
       if File = No_Source_File_Entry then
          --  Not found.
          Set_Date (Library, Date_Valid'First);
@@ -1637,7 +1637,7 @@ package body Libraries is
    is
       Fe : Source_File_Entry;
    begin
-      Fe := Files_Map.Load_Source_File (Local_Directory, File_Name);
+      Fe := Files_Map.Read_Source_File (Local_Directory, File_Name);
       if Fe = No_Source_File_Entry then
          Error_Msg_Option ("cannot open " & Image (File_Name));
          return Null_Iir;
@@ -1732,7 +1732,7 @@ package body Libraries is
 
       --  Load the file in memory.
       Design_File := Get_Design_File (Design_Unit);
-      Fe := Files_Map.Load_Source_File
+      Fe := Files_Map.Read_Source_File
         (Get_Design_File_Directory (Design_File),
          Get_Design_File_Filename (Design_File));
       if Fe = No_Source_File_Entry then

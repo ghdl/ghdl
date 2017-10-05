@@ -1201,7 +1201,7 @@ package body Ghdllocal is
          File := Get_Design_File_Chain (Lib);
          while File /= Null_Iir loop
             Next_File := Get_Chain (File);
-            Fe := Load_Source_File (Get_Design_File_Directory (File),
+            Fe := Read_Source_File (Get_Design_File_Directory (File),
                                     Get_Design_File_Filename (File));
             if Fe = No_Source_File_Entry then
                --  FIXME: should remove all the design file from the library.
@@ -1327,7 +1327,7 @@ package body Ghdllocal is
             File := Get_Design_File_Chain (Libraries.Work_Library);
             while File /= Null_Iir loop
                Next_File := Get_Chain (File);
-               Fe := Load_Source_File (Get_Design_File_Directory (File),
+               Fe := Read_Source_File (Get_Design_File_Directory (File),
                                        Get_Design_File_Filename (File));
                if Fe = No_Source_File_Entry then
                   --  FIXME: should remove all the design file from
@@ -1408,7 +1408,7 @@ package body Ghdllocal is
       Fe : Source_File_Entry;
    begin
       --  2) file has been modified.
-      Fe := Load_Source_File (Get_Design_File_Directory (File),
+      Fe := Read_Source_File (Get_Design_File_Directory (File),
                               Get_Design_File_Filename (File));
       if not Is_Eq (Get_File_Checksum (Fe),
                     Get_File_Checksum (File))

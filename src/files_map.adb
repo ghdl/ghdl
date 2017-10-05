@@ -791,7 +791,7 @@ package body Files_Map is
 
    --  Return an entry for a filename.
    --  Load the filename if necessary.
-   function Load_Source_File (Directory : Name_Id; Name: Name_Id)
+   function Read_Source_File (Directory : Name_Id; Name: Name_Id)
                               return Source_File_Entry
    is
       use GNAT.OS_Lib;
@@ -839,7 +839,7 @@ package body Files_Map is
       Buffer (Source_Ptr_Org + Length + 1) := EOT;
       Close (Fd);
 
-      --  Load_Source_File call must follow its Create_Source_File.
+      --  Read_Source_File call must follow its Create_Source_File.
       pragma Assert (Source_Files.Table (Res).First_Location = Next_Location);
 
       --  Compute the SHA1.
@@ -871,7 +871,7 @@ package body Files_Map is
       Source_Files.Table (Res).File_Length := Integer (Length);
 
       return Res;
-   end Load_Source_File;
+   end Read_Source_File;
 
    procedure Free_Source_File (File : Source_File_Entry)
    is
