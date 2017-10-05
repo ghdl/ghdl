@@ -124,7 +124,9 @@ package Grt.Processes is
    procedure Ghdl_Process_Wait_Exit;
 
    --  Wait for a timeout (without sensitivity): wait for X;
-   procedure Ghdl_Process_Wait_Timeout (Time : Std_Time);
+   procedure Ghdl_Process_Wait_Timeout (Time : Std_Time;
+                                        Filename : Ghdl_C_String;
+                                        Line : Ghdl_I32);
 
    --  Full wait statement:
    --  1. Call Ghdl_Process_Wait_Set_Timeout (if there is a timeout)
@@ -135,7 +137,9 @@ package Grt.Processes is
    --  4. Call Ghdl_Process_Wait_Close
 
    --  Add a timeout for a wait.
-   procedure Ghdl_Process_Wait_Set_Timeout (Time : Std_Time);
+   procedure Ghdl_Process_Wait_Set_Timeout (Time : Std_Time;
+                                            Filename : Ghdl_C_String;
+                                            Line : Ghdl_I32);
    --  Add a sensitivity for a wait.
    procedure Ghdl_Process_Wait_Add_Sensitivity (Sig : Ghdl_Signal_Ptr);
    --  Wait until timeout or sensitivity.

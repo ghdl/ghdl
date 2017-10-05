@@ -989,6 +989,13 @@ package body Translation is
       Rec : O_Element_List;
       Param : O_Dnode;
       Info : Type_Info_Acc;
+
+      procedure Start_Procedure_Decl (Name : String) is
+      begin
+         Start_Procedure_Decl
+              (Interfaces, Get_Identifier (Name), O_Storage_External);
+      end Start_Procedure_Decl;
+
    begin
       New_Debug_Comment_Decl ("internal declarations, part 2");
 
@@ -1019,8 +1026,7 @@ package body Translation is
          procedure Create_Report_Subprg (Name : String; Subprg : out O_Dnode)
          is
          begin
-            Start_Procedure_Decl
-              (Interfaces, Get_Identifier (Name), O_Storage_External);
+            Start_Procedure_Decl (Name);
             New_Interface_Decl
               (Interfaces, Param, Get_Identifier ("msg"), Std_String_Ptr_Node);
             New_Interface_Decl
@@ -1045,8 +1051,7 @@ package body Translation is
 
       --  procedure __ghdl_text_write (file : __ghdl_file_index;
       --                               str  : std_string_ptr);
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_text_write"), O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_text_write");
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("file"),
                           Ghdl_File_Index_Type);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("str"),
@@ -1068,9 +1073,7 @@ package body Translation is
       --  procedure __ghdl_write_scalar (file : __ghdl_file_index;
       --                                 ptr : __ghdl_ptr_type;
       --                                 length : __ghdl_index_type);
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_write_scalar"),
-         O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_write_scalar");
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("file"),
                           Ghdl_File_Index_Type);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("ptr"),
@@ -1081,9 +1084,7 @@ package body Translation is
       --  procedure __ghdl_read_scalar (file : __ghdl_file_index;
       --                                ptr : __ghdl_ptr_type;
       --                                length : __ghdl_index_type);
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_read_scalar"),
-         O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_read_scalar");
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("file"),
                           Ghdl_File_Index_Type);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("ptr"),
@@ -1168,9 +1169,7 @@ package body Translation is
       --  procedure __ghdl_text_file_open (file : file_index_type;
       --                                   mode : Ghdl_I32_Type;
       --                                   str : std__standard__string_PTR);
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_text_file_open"),
-         O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_text_file_open");
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("file"),
                           Ghdl_File_Index_Type);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("mode"),
@@ -1182,9 +1181,7 @@ package body Translation is
       --  procedure __ghdl_file_open (file : file_index_type;
       --                              mode : Ghdl_I32_Type;
       --                              str : std__standard__string_PTR);
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_file_open"),
-         O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_file_open");
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("file"),
                           Ghdl_File_Index_Type);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("mode"),
@@ -1233,23 +1230,19 @@ package body Translation is
       Finish_Subprogram_Decl (Interfaces, Ghdl_File_Endfile);
 
       --  procedure __ghdl_text_file_close (file : file_index_type);
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_text_file_close"),
-         O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_text_file_close");
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("file"),
                           Ghdl_File_Index_Type);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Text_File_Close);
 
       --  procedure __ghdl_file_close (file : file_index_type);
-      Start_Procedure_Decl (Interfaces, Get_Identifier ("__ghdl_file_close"),
-                            O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_file_close");
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("file"),
                           Ghdl_File_Index_Type);
       Finish_Subprogram_Decl (Interfaces, Ghdl_File_Close);
 
       --  procedure __ghdl_file_flush (file : file_index_type);
-      Start_Procedure_Decl (Interfaces, Get_Identifier ("__ghdl_file_flush"),
-                            O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_file_flush");
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("file"),
                           Ghdl_File_Index_Type);
       Finish_Subprogram_Decl (Interfaces, Ghdl_File_Flush);
@@ -1263,9 +1256,7 @@ package body Translation is
       --     instance : ghdl_ptr_type;
       --     sig : ghdl_ptr_type;
       --     nbr_sig : ghdl_index_type);
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_signal_create_resolution"),
-         O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_signal_create_resolution");
       New_Interface_Decl
         (Interfaces, Param, Get_Identifier ("func"), Ghdl_Ptr_Type);
       New_Interface_Decl (Interfaces, Param, Wki_Instance, Ghdl_Ptr_Type);
@@ -1317,18 +1308,14 @@ package body Translation is
 
       --  procedure __ghdl_signal_merge_rti
       --       (sig : ghdl_signal_ptr; rti : ghdl_rti_access)
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_signal_merge_rti"),
-         O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_signal_merge_rti");
       New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       New_Interface_Decl (Interfaces, Param, Wki_Rti, Rtis.Ghdl_Rti_Access);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Signal_Merge_Rti);
 
       --  procedure __ghdl_signal_add_source (targ : __ghdl_signal_ptr;
       --                                      src : __ghdl_signal_ptr);
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_signal_add_source"),
-         O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_signal_add_source");
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("targ"),
                           Ghdl_Signal_Ptr);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("src"),
@@ -1337,9 +1324,7 @@ package body Translation is
 
       --  procedure __ghdl_signal_effective_value (targ : __ghdl_signal_ptr;
       --                                           src : __ghdl_signal_ptr);
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_signal_effective_value"),
-         O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_signal_effective_value");
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("targ"),
                           Ghdl_Signal_Ptr);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("src"),
@@ -1348,18 +1333,14 @@ package body Translation is
 
       --  procedure __ghdl_signal_set_disconnect (sig : __ghdl_signal_ptr;
       --                                          val : std_time);
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_signal_set_disconnect"),
-         O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_signal_set_disconnect");
       New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       New_Interface_Decl
         (Interfaces, Param, Get_Identifier ("time"), Std_Time_Otype);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Signal_Set_Disconnect);
 
       --  procedure __ghdl_signal_disconnect (sig : __ghdl_signal_ptr);
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_signal_disconnect"),
-         O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_signal_disconnect");
       New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Signal_Disconnect);
 
@@ -1412,9 +1393,7 @@ package body Translation is
       --              (sig : __ghdl_signal_ptr;
       --               filename : char_ptr_type;
       --               line : ghdl_i32);
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_signal_simple_assign_error"),
-         O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_signal_simple_assign_error");
       New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       New_Interface_Decl (Interfaces, Param, Wki_Filename, Char_Ptr_Type);
       New_Interface_Decl (Interfaces, Param, Wki_Line, Ghdl_I32_Type);
@@ -1425,9 +1404,7 @@ package body Translation is
       --                                              after : std_time;
       --                                              filename : char_ptr_type;
       --                                              line : ghdl_i32);
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_signal_start_assign_error"),
-         O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_signal_start_assign_error");
       New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("reject"),
                           Std_Time_Otype);
@@ -1441,9 +1418,7 @@ package body Translation is
       --                                             after : std_time;
       --                                             filename : char_ptr_type;
       --                                             line : ghdl_i32);
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_signal_next_assign_error"),
-         O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_signal_next_assign_error");
       New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("after"),
                           Std_Time_Otype);
@@ -1454,9 +1429,7 @@ package body Translation is
       --  procedure __ghdl_signal_start_assign_null (sig : __ghdl_signal_ptr;
       --                                             reject : std_time;
       --                                             after : std_time);
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_signal_start_assign_null"),
-         O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_signal_start_assign_null");
       New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("reject"),
                           Std_Time_Otype);
@@ -1466,9 +1439,7 @@ package body Translation is
 
       --  procedure __ghdl_signal_next_assign_null (sig : __ghdl_signal_ptr;
       --                                            after : std_time);
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_signal_next_assign_null"),
-         O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_signal_next_assign_null");
       New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("after"),
                           Std_Time_Otype);
@@ -1549,24 +1520,18 @@ package body Translation is
       end if;
 
       --  procedure __ghdl_process_add_sensitivity (sig : __ghdl_signal_ptr);
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_process_add_sensitivity"),
-         O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_process_add_sensitivity");
       New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Process_Add_Sensitivity);
 
       --  procedure __ghdl_process_add_driver (sig : __ghdl_signal_ptr);
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_process_add_driver"),
-         O_Storage_External);
+      Start_Procedure_Decl("__ghdl_process_add_driver");
       New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Process_Add_Driver);
 
       --  procedure __ghdl_signal_add_direct_driver (sig : __ghdl_signal_ptr;
       --                                             Drv : Ghdl_Ptr_type);
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_signal_add_direct_driver"),
-         O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_signal_add_direct_driver");
       New_Interface_Decl
         (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       New_Interface_Decl
@@ -1574,9 +1539,7 @@ package body Translation is
       Finish_Subprogram_Decl (Interfaces, Ghdl_Signal_Add_Direct_Driver);
 
       --  procedure __ghdl_signal_direct_assign (sig : __ghdl_signal_ptr);
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_signal_direct_assign"),
-         O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_signal_direct_assign");
       New_Interface_Decl
         (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Signal_Direct_Assign);
@@ -1585,8 +1548,7 @@ package body Translation is
          procedure Create_Signal_Conversion (Name : String; Res : out O_Dnode)
          is
          begin
-            Start_Procedure_Decl
-              (Interfaces, Get_Identifier (Name), O_Storage_External);
+            Start_Procedure_Decl (Name);
             New_Interface_Decl
               (Interfaces, Param, Get_Identifier ("func"), Ghdl_Ptr_Type);
             New_Interface_Decl
@@ -1654,10 +1616,7 @@ package body Translation is
 
       --  procedure __ghdl_signal_attribute_register_prefix
       --    (sig : __ghdl_signal_ptr);
-      Start_Procedure_Decl
-        (Interfaces,
-         Get_Identifier ("__ghdl_signal_attribute_register_prefix"),
-         O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_signal_attribute_register_prefix");
       New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       Finish_Subprogram_Decl
         (Interfaces, Ghdl_Signal_Attribute_Register_Prefix);
@@ -1694,45 +1653,37 @@ package body Translation is
       Finish_Subprogram_Decl (Interfaces, Ghdl_Signal_Create_Guard);
 
       --  procedure __ghdl_signal_guard_dependence (sig : __ghdl_signal_ptr);
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_signal_guard_dependence"),
-         O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_signal_guard_dependence");
       New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Signal_Guard_Dependence);
 
       --  procedure __ghdl_process_wait_exit (void);
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_process_wait_exit"),
-         O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_process_wait_exit");
       Finish_Subprogram_Decl (Interfaces, Ghdl_Process_Wait_Exit);
 
       --  void __ghdl_process_wait_timeout (time : std_time);
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_process_wait_timeout"),
-         O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_process_wait_timeout");
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("time"),
                           Std_Time_Otype);
+      New_Interface_Decl (Interfaces, Param, Wki_Filename, Char_Ptr_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Line, Ghdl_I32_Type);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Process_Wait_Timeout);
 
       --  void __ghdl_process_wait_set_timeout (time : std_time);
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_process_wait_set_timeout"),
-         O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_process_wait_set_timeout");
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("time"),
                           Std_Time_Otype);
+      New_Interface_Decl (Interfaces, Param, Wki_Filename, Char_Ptr_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Line, Ghdl_I32_Type);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Process_Wait_Set_Timeout);
 
       --  void __ghdl_process_wait_add_sensitivity (sig : __ghdl_signal_ptr);
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_process_wait_add_sensitivity"),
-         O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_process_wait_add_sensitivity");
       New_Interface_Decl (Interfaces, Param, Wki_Sig, Ghdl_Signal_Ptr);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Process_Wait_Add_Sensitivity);
 
       --  procedure __ghdl_process_wait_suspend (void);
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_process_wait_suspend"),
-         O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_process_wait_suspend");
       Finish_Subprogram_Decl (Interfaces, Ghdl_Process_Wait_Suspend);
 
       --  function __ghdl_process_wait_timed_out return __ghdl_bool_type;
@@ -1742,17 +1693,14 @@ package body Translation is
       Finish_Subprogram_Decl (Interfaces, Ghdl_Process_Wait_Timed_Out);
 
       --  void __ghdl_process_wait_close (void);
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_process_wait_close"),
-         O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_process_wait_close");
       Finish_Subprogram_Decl (Interfaces, Ghdl_Process_Wait_Close);
 
       declare
          procedure Create_Get_Name (Name : String; Res : out O_Dnode)
          is
          begin
-            Start_Procedure_Decl
-              (Interfaces, Get_Identifier (Name), O_Storage_External);
+            Start_Procedure_Decl (Name);
             New_Interface_Decl
               (Interfaces, Param, Wki_Res, Std_String_Ptr_Node);
             New_Interface_Decl (Interfaces, Param, Get_Identifier ("ctxt"),
@@ -1778,17 +1726,13 @@ package body Translation is
       end;
 
       --  procedure __ghdl_rti_add_package (rti : ghdl_rti_access)
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_rti_add_package"),
-         O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_rti_add_package");
       New_Interface_Decl (Interfaces, Param, Wki_Rti, Rtis.Ghdl_Rti_Access);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Rti_Add_Package);
 
       --  procedure __ghdl_rti_add_top (max_pkgs : ghdl_index_type;
       --                                pkgs : ghdl_rti_arr_acc);
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_rti_add_top"),
-         O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_rti_add_top");
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("max_pkgs"),
                           Ghdl_Index_Type);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("pkgs"),
@@ -1799,9 +1743,7 @@ package body Translation is
       Finish_Subprogram_Decl (Interfaces, Ghdl_Rti_Add_Top);
 
       --  procedure __ghdl_init_top_generics();
-      Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_init_top_generics"),
-         O_Storage_External);
+      Start_Procedure_Decl ("__ghdl_init_top_generics");
       Finish_Subprogram_Decl (Interfaces, Ghdl_Init_Top_Generics);
 
       --  Create match subprograms for std_ulogic type.
