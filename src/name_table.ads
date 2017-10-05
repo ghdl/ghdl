@@ -39,6 +39,10 @@ package Name_Table is
    --    backslashes are simplified.
    function Get_Identifier (Str: String) return Name_Id;
 
+   --  Likewise, but with a C compatible interface.
+   function Get_Identifier_With_Len (Str : Thin_String_Ptr; Len : Natural)
+                                    return Name_Id;
+
    --  Get the string associed to a name.  The first bound is 1.
    --  If the name is a character, then single quote are added.
    function Image (Id: Name_Id) return String;

@@ -42,12 +42,21 @@ location_File_Line_To_Col = libghdl.files_map__location_file_line_to_col
 Get_File_Buffer = libghdl.files_map__get_file_buffer
 Get_File_Buffer.restype = c_char_p
 
+Read_Source_File = libghdl.files_map__read_source_file
+
+No_Source_File_Entry = 0
+
 # Names
 
 Get_Name_Length = libghdl.name_table__get_name_length
 
 Get_Name_Ptr = libghdl.name_table__get_name_ptr
 Get_Name_Ptr.restype = c_char_p
+
+_Get_Identifier_With_Len = libghdl.name_table__get_identifier_with_len
+
+def Get_Identifier(s):
+    return _Get_Identifier_With_Len(c_char_p(s), len(s))
 
 # std.standard
 
