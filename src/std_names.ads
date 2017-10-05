@@ -23,9 +23,8 @@ with Types; use Types;
 package Std_Names is
    -- Predefined names.
    Name_First_Character : constant Name_Id := 1;
-   Name_Last_Character : constant Name_Id :=
-     Name_First_Character + Character'Pos (Character'Last)
-     - Character'Pos (Character'First);
+   Name_Last_Character : constant Name_Id := Name_First_Character + 255;
+
    subtype Name_Characters is Name_Id
      range Name_First_Character .. Name_Last_Character;
 
