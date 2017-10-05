@@ -388,14 +388,15 @@ package body Grt.Processes is
       Proc.Timeout_Chain_Prev := null;
    end Remove_Process_From_Timeout_Chain;
 
-   procedure Ghdl_Process_Wait_Set_Timeout (Time : Std_Time)
+   procedure Ghdl_Process_Wait_Set_Timeout (Time : Std_Time;
+                                            Filename : Ghdl_C_String;
+                                            Line : Ghdl_I32)
    is
       Proc : constant Process_Acc := Get_Current_Process;
    begin
       if Time < 0 then
          --  LRM93 8.1
-         Disp_Process_Name (Get_Error_Stream, Proc);
-         Error ("negative timeout clause");
+         Error ("negative timeout clause", Filename, Line);
       end if;
       Proc.Timeout := Current_Time + Time;
       Update_Process_First_Timeout (Proc);
@@ -514,7 +515,9 @@ package body Grt.Processes is
       Proc.State := State_Dead;
    end Ghdl_Process_Wait_Exit;
 
-   procedure Ghdl_Process_Wait_Timeout (Time : Std_Time)
+   procedure Ghdl_Process_Wait_Timeout (Time : Std_Time;
+                                        Filename : Ghdl_C_String;
+                                        Line : Ghdl_I32);
    is
       Proc : constant Process_Acc := Get_Current_Process;
    begin
@@ -523,8 +526,7 @@ package body Grt.Processes is
       end if;
       if Time < 0 then
          --  LRM93 8.1
-         Disp_Process_Name (Get_Error_Stream, Proc);
-         Error ("negative timeout clause");
+         Error ("negative timeout clause", Filename, Line);
       end if;
       Proc.State := State_Delayed;
       if Time <= Std_Time'Last - Current_Time then

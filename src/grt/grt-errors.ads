@@ -58,6 +58,11 @@ package Grt.Errors is
    procedure Error (Str : String);
    pragma No_Return (Error);
 
+   procedure Error (Str : String;
+                    Filename : Ghdl_C_String;
+                    Line : Ghdl_I32);
+   pragma No_Return (Error);
+
    --  Warning message.
    procedure Warning (Str : String);
 
