@@ -254,6 +254,20 @@ package body Grt.Errors is
       Fatal_Error;
    end Error;
 
+   procedure Error (Str : String;
+                    Filename : Ghdl_C_String;
+                    Line : Ghdl_I32) is
+   begin
+      Error_H;
+      Put_Err (Str);
+      Put_Err (" at ");
+      Put_Err (Filename);
+      Put_Err (" line ");
+      Put_I32 (Error_Stream, Line);
+      Newline_Err;
+      Fatal_Error;
+   end Error;
+
    procedure Info (Str : String) is
    begin
       Put_Err (Progname);

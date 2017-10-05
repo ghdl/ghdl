@@ -3309,6 +3309,7 @@ package body Trans.Chap8 is
             Start_Association (Constr, Ghdl_Process_Wait_Timeout);
             New_Association (Constr, Chap7.Translate_Expression
                              (Timeout, Time_Type_Definition));
+            Assoc_Filename_Line (Constr, Get_Line_Number (Stmt));
             New_Procedure_Call (Constr);
             Close_Temp;
          end if;
@@ -3333,6 +3334,7 @@ package body Trans.Chap8 is
          Start_Association (Constr, Ghdl_Process_Wait_Set_Timeout);
          New_Association (Constr, Chap7.Translate_Expression
                           (Timeout, Time_Type_Definition));
+         Assoc_Filename_Line (Constr, Get_Line_Number (Stmt));
          New_Procedure_Call (Constr);
       end if;
 

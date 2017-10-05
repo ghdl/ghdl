@@ -1712,6 +1712,8 @@ package body Translation is
          O_Storage_External);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("time"),
                           Std_Time_Otype);
+      New_Interface_Decl (Interfaces, Param, Wki_Filename, Char_Ptr_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Line, Ghdl_I32_Type);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Process_Wait_Timeout);
 
       --  void __ghdl_process_wait_set_timeout (time : std_time);
@@ -1720,6 +1722,8 @@ package body Translation is
          O_Storage_External);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("time"),
                           Std_Time_Otype);
+      New_Interface_Decl (Interfaces, Param, Wki_Filename, Char_Ptr_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Line, Ghdl_I32_Type);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Process_Wait_Set_Timeout);
 
       --  void __ghdl_process_wait_add_sensitivity (sig : __ghdl_signal_ptr);
