@@ -46,10 +46,16 @@ Get_File_Buffer.restype = c_char_p
 
 Get_Name_Length = libghdl.name_table__get_name_length
 
+Get_Name_Ptr = libghdl.name_table__get_name_ptr
+Get_Name_Ptr.restype = c_char_p
+
 # std.standard
 
 Standard_Package = c_int32.in_dll(libghdl, "std_package__standard_package")
 
+# libraries
+
+Get_Libraries_Chain = libghdl.libraries__get_libraries_chain
 
 Null_Iir = 0
 Null_Iir_List = 0
