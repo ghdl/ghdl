@@ -27,7 +27,7 @@ DEPS=iirs.ads nodes.ads $(PNODES)
 
 GEN_FILES=iirs.adb nodes_meta.ads nodes_meta.adb \
   python/libghdl/iirs.py python/libghdl/nodes_meta.py \
-  python/libghdl/std_names.py
+  python/libghdl/std_names.py python/libghdl/tokens.py
 
 all: $(GEN_FILES)
 
@@ -56,9 +56,14 @@ python/libghdl/nodes_meta.py: $(DEPS) $(PNODESPY)
 	$(PNODESPY) libghdl-meta > $@
 	chmod -w $@
 
-python/libghdl/std_names.py: $(PNODESPY)
+python/libghdl/std_names.py: $(PNODESPY) ../std_names.ads
 	$(RM) $@
 	$(PNODESPY) libghdl-names > $@
+	chmod -w $@
+
+python/libghdl/tokens.py: $(PNODESPY) tokens.ads
+	$(RM) $@
+	$(PNODESPY) libghdl-tokens > $@
 	chmod -w $@
 
 clean:

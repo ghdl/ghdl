@@ -134,13 +134,28 @@ def do_libghdl_names():
             res.append((name_def, val))
     print 'class Name:'
     for n, v in res:
-        print '  {0} = {1}'.format(n, v)
+        print '    {0} = {1}'.format(n, v)
+
+
+def do_libghdl_tokens():
+    pat_token = re.compile('       Tok_(\w+),?\s*(--.*)?$')
+    lr = pnodes.linereader('tokens.ads')
+    toks = []
+    while True:
+        line = lr.get()
+        if line == '      );\n':
+            break
+        m = pat_token.match(line)
+        if m:
+            toks.append(m.group(1))
+    print_enum("Tok", toks)
 
 
 pnodes.actions.update({'class-kinds': do_class_kinds,
                        'libghdl-iirs': do_libghdl_iirs,
                        'libghdl-meta': do_libghdl_meta,
-                       'libghdl-names': do_libghdl_names})
+                       'libghdl-names': do_libghdl_names,
+                       'libghdl-tokens': do_libghdl_tokens})
 
 
 pnodes.main()
