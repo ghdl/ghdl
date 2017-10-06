@@ -56,6 +56,7 @@ package Name_Table is
    --  table).
    --  The string is NUL-terminated (this is done by get_identifier).
    function Get_Address (Id: Name_Id) return System.Address;
+   function Get_Name_Ptr (Id : Name_Id) return Thin_String_Ptr;
 
    --  Get the length of ID.
    function Get_Name_Length (Id: Name_Id) return Natural;

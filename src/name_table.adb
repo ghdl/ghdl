@@ -201,6 +201,14 @@ package body Name_Table is
       return Strings_Table.Table (Name_Entry.Name)'Address;
    end Get_Address;
 
+   function Get_Name_Ptr (Id : Name_Id) return Thin_String_Ptr
+   is
+      Name_Entry: Identifier renames Names_Table.Table(Id);
+   begin
+      return To_Thin_String_Ptr
+        (Strings_Table.Table (Name_Entry.Name)'Address);
+   end Get_Name_Ptr;
+
    function Get_Name_Length (Id : Name_Id) return Natural
    is
       pragma Assert (Id < Names_Table.Last);

@@ -12,13 +12,11 @@ libname = 'libghdl'
 
 
 def print_enum(name, vals):
-    n = 0
     print
     print
     print 'class {0}:'.format(name)
-    for k in vals:
+    for n, k in enumerate(vals):
         print '    {0} = {1}'.format(k, n)
-        n += 1
 
 
 def do_class_kinds():
@@ -78,6 +76,7 @@ def do_libghdl_meta():
     print 'from libghdl import libghdl'
     print """
 
+
 # From nodes_meta
 get_fields_first = libghdl.nodes_meta__get_fields_first
 
@@ -97,9 +96,9 @@ get_field_attribute = libghdl.nodes_meta__get_field_attribute"""
 
 def do_libghdl_names():
     pat_name_first = re.compile(
-        '   Name_(\w+)\s+: constant Name_Id := (\d+);')
+        r'   Name_(\w+)\s+: constant Name_Id := (\d+);')
     pat_name_def = re.compile(
-        '   Name_(\w+)\s+:\s+constant Name_Id :=\s+Name_(\w+)( \+ (\d+))?;')
+        r'   Name_(\w+)\s+:\s+constant Name_Id :=\s+Name_(\w+)( \+ (\d+))?;')
     dict = {}
     lr = pnodes.linereader('../std_names.ads')
     while True:

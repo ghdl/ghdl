@@ -1,9 +1,11 @@
 from libghdl import libghdl
-from ctypes import (c_char_p, c_int32)
+from ctypes import (c_char_p, c_int32, c_int, c_bool, sizeof)
 import iirs
 import nodes_meta
 from nodes_meta import (Attr, types)
 # from libghdl_defs import (fields, Iir_Kind, types, Attr)
+
+assert sizeof(c_bool) == 1
 
 # libghdl
 
@@ -39,8 +41,12 @@ Location_File_To_Line = libghdl.files_map__location_file_to_line
 
 location_File_Line_To_Col = libghdl.files_map__location_file_line_to_col
 
+Get_File_Name = libghdl.files_map__get_file_name
+
 Get_File_Buffer = libghdl.files_map__get_file_buffer
 Get_File_Buffer.restype = c_char_p
+
+Get_File_Length = libghdl.files_map__get_file_length
 
 Read_Source_File = libghdl.files_map__read_source_file
 
@@ -55,8 +61,34 @@ Get_Name_Ptr.restype = c_char_p
 
 _Get_Identifier_With_Len = libghdl.name_table__get_identifier_with_len
 
+
 def Get_Identifier(s):
     return _Get_Identifier_With_Len(c_char_p(s), len(s))
+
+
+# Scanner
+class Scanner:
+    Set_File = libghdl.scanner__set_file
+
+    Scan = libghdl.scanner__scan
+
+    # This is a c_int, so you want to use its .value
+    Current_Token = c_int.in_dll(libghdl, "scanner__current_token")
+
+    Flag_Comment = c_bool.in_dll(libghdl, "scanner__flag_comment")
+
+    Get_Current_Line = libghdl.scanner__get_current_line
+
+    Get_Token_Column = libghdl.scanner__get_token_column
+
+    Get_Token_Position = libghdl.scanner__get_token_position
+
+    Get_Position = libghdl.scanner__get_position
+
+
+class Parse:
+    Parse_Design_File = libghdl.parse__parse_design_file
+
 
 # std.standard
 
@@ -126,6 +158,11 @@ def chain_iter(n):
     while n != Null_Iir:
         yield n
         n = iirs.Get_Chain(n)
+
+
+def chain_to_list(n):
+    """Convert a chain headed by node n to a python list"""
+    return [e  for e in chain_iter(n)]
 
 
 def nodes_iter(n):
