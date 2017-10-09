@@ -3733,6 +3733,8 @@ package Iirs is
    --
    --   Get/Set_Selected_Element (Field2)
    --
+   --   Get/Set_Identifier (Field3)
+   --
    --   Get/Set_Base_Name (Field5)
    --
    --   Get/Set_Expr_Staticness (State1)

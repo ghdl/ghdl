@@ -1950,6 +1950,7 @@ package body Sem_Names is
          Location_Copy (Se, Name);
          Set_Prefix (Se, R);
          Set_Type (Se, Get_Type (Rec_El));
+         Set_Identifier (Se, Suffix);
          Set_Selected_Element (Se, Rec_El);
          Set_Base_Name (Se, Get_Object_Prefix (R, False));
          Add_Result (Res, Se);
