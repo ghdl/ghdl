@@ -1,5 +1,5 @@
 from libghdl import libghdl
-from ctypes import (c_char_p, c_int32, c_int, c_bool, sizeof)
+from ctypes import (c_char_p, c_int32, c_int, c_bool, sizeof, c_void_p)
 import iirs
 import nodes_meta
 from nodes_meta import (Attr, types)
@@ -44,7 +44,7 @@ location_File_Line_To_Col = libghdl.files_map__location_file_line_to_col
 Get_File_Name = libghdl.files_map__get_file_name
 
 Get_File_Buffer = libghdl.files_map__get_file_buffer
-Get_File_Buffer.restype = c_char_p
+Get_File_Buffer.restype = c_void_p
 
 Get_File_Length = libghdl.files_map__get_file_length
 
@@ -92,11 +92,26 @@ class Parse:
 
 # std.standard
 
+# Use .value
 Standard_Package = c_int32.in_dll(libghdl, "std_package__standard_package")
+
+# Use .value
+Character_Type_Definition = c_int32.in_dll(
+    libghdl, "std_package__character_type_definition")
 
 # libraries
 
 Get_Libraries_Chain = libghdl.libraries__get_libraries_chain
+
+Add_Design_Unit_Into_Library = libghdl.libraries__add_design_unit_into_library
+
+Finish_Compilation = libghdl.libraries__finish_compilation
+
+Library_Location = c_int32.in_dll(libghdl, "libraries__library_location")
+
+#
+
+Disp_Iir = libghdl.disp_tree__disp_iir
 
 Null_Iir = 0
 Null_Iir_List = 0

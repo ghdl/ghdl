@@ -66,9 +66,28 @@ def do_class_fields():
     print_enum('fields', [f.name for f in pnodes.funcs])
 
 
+def read_spec_enum(type_name, prefix, class_name):
+    """Read an enumeration declaration from iirs.ads"""
+    pat_decl = re.compile(r'   type {0} is$'.format(type_name))
+    pat_enum = re.compile(r'       {0}_(\w+),?(-- .*)?$'.format(prefix))
+    lr = pnodes.linereader(pnodes.spec_file)
+    while not pat_decl.match(lr.get()):
+        pass
+    toks = []
+    while True:
+        line = lr.get()
+        if line == '      );\n':
+            break
+        m = pat_enum.match(line)
+        if m:
+            toks.append(m.group(1))
+    print_enum(class_name, toks)
+
+
 def do_libghdl_iirs():
     print 'from libghdl import libghdl'
     do_class_kinds()
+    read_spec_enum('Iir_Mode', 'Iir', 'Iir_Mode')
     do_iirs_subprg()
 
 
@@ -138,7 +157,7 @@ def do_libghdl_names():
 
 
 def do_libghdl_tokens():
-    pat_token = re.compile('       Tok_(\w+),?\s*(--.*)?$')
+    pat_token = re.compile(r'       Tok_(\w+),?\s*(--.*)?$')
     lr = pnodes.linereader('tokens.ads')
     toks = []
     while True:
