@@ -34,7 +34,6 @@ package body Disp_Tree is
    Max_Depth : Natural := 10;
    pragma Warnings (On);
 
-   procedure Disp_Iir (N : Iir; Indent : Natural; Depth : Natural);
    procedure Disp_Header (N : Iir);
 
    procedure Disp_Tree_List_Flat (Tree_List: Iir_List; Tab: Natural);
