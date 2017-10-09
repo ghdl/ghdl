@@ -36,6 +36,9 @@ package Libraries is
    --  Location for a command line.
    Command_Line_Location : Location_Type;
 
+   --  A location for library declarations (such as library WORK).
+   Library_Location: Location_Type;
+
    --  Library declaration for the std library.
    --  This is also the first library of the libraries chain.
    Std_Library : Iir_Library_Declaration := Null_Iir;
