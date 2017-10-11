@@ -242,7 +242,7 @@ package body Parse is
    --  precond : next token
    --  postcond: next token
    --
-   --  [ LRM 4.3.1.2 ]
+   --  [ LRM93 4.3.1.2 ]
    --  signal_kind ::= REGISTER | BUS
    --
    --  If there is no signal_kind, then no_signal_kind is returned.
@@ -278,10 +278,10 @@ package body Parse is
    -- If left is null_iir, the current token is used to create the left limit
    -- expression.
    --
-   --  [ 3.1 ]
+   --  [ LRM93 3.1 ]
    --  range_constraint ::= RANGE range
    --
-   --  [ 3.1 ]
+   --  [ LRM93 3.1 ]
    --  range ::= RANGE_attribute_name
    --         | simple_expression direction simple_expression
    --
@@ -368,7 +368,7 @@ package body Parse is
    --  precond:  next token
    --  postcond: next token
    --
-   --  [ 3.2.1 ]
+   --  [ LRM93 3.2.1 ]
    --  discrete_range ::= discrete_subtype_indication | range
    function Parse_Discrete_Range return Iir
    is
@@ -660,7 +660,7 @@ package body Parse is
    --  precond : next token
    --  postcond: next token
    --
-   --  [ §6.1 ]
+   --  [ LRM93 6.1 ]
    --  name ::= simple_name
    --         | operator_symbol
    --         | selected_name
@@ -668,40 +668,40 @@ package body Parse is
    --         | slice_name
    --         | attribute_name
    --
-   --  [ §6.2 ]
+   --  [ LRM93 6.2 ]
    --  simple_name ::= identifier
    --
-   --  [ §6.5 ]
+   --  [ LRM93 6.5 ]
    --  slice_name ::= prefix ( discrete_range )
    --
-   --  [ §6.3 ]
+   --  [ LRM93 6.3 ]
    --  selected_name ::= prefix . suffix
    --
-   --  [ §6.1 ]
+   --  [ LRM93 6.1 ]
    --  prefix ::= name
    --           | function_call
    --
-   --  [ §6.3 ]
+   --  [ LRM93 6.3 ]
    --  suffix ::= simple_name
    --           | character_literal
    --           | operator_symbol
    --           | ALL
    --
-   --  [ §3.2.1 ]
+   --  [ LRM93 3.2.1 ]
    --  discrete_range ::= DISCRETE_subtype_indication | range
    --
-   --  [ §3.1 ]
+   --  [ LRM93 3.1 ]
    --  range ::= RANGE_attribute_name
    --          | simple_expression direction simple_expression
    --
-   --  [ §3.1 ]
+   --  [ LRM93 3.1 ]
    --  direction ::= TO | DOWNTO
    --
-   --  [ §6.6 ]
+   --  [ LRM93 6.6 ]
    --  attribute_name ::=
    --      prefix [ signature ] ' attribute_designator [ ( expression ) ]
    --
-   --  [ §6.6 ]
+   --  [ LRM93 6.6 ]
    --  attribute_designator ::= ATTRIBUTE_simple_name
    --
    --  Note: in order to simplify the parsing, this function may return a
@@ -1734,10 +1734,10 @@ package body Parse is
    --  precond : PORT
    --  postcond: next token
    --
-   --  [ §1.1.1 ]
+   --  [ LRM93 1.1.1 ]
    --  port_clause ::= PORT ( port_list ) ;
    --
-   --  [ §1.1.1.2 ]
+   --  [ LRM93 1.1.1.2 ]
    --  port_list ::= PORT_interface_list
    procedure Parse_Port_Clause (Parent : Iir)
    is
@@ -1788,12 +1788,12 @@ package body Parse is
    --  precond : a token.
    --  postcond: next token
    --
-   --  [ §1.1.1 ]
+   --  [ LRM93 1.1.1 ]
    --  entity_header ::=
    --      [ FORMAL_generic_clause ]
    --      [ FORMAL_port_clause ]
    --
-   --  [ §4.5 ]
+   --  [ LRM93 4.5 ]
    --          [ LOCAL_generic_clause ]
    --          [ LOCAL_port_clause ]
    procedure Parse_Generic_Port_Clauses (Parent : Iir)
@@ -2755,7 +2755,7 @@ package body Parse is
    --  precond : SUBTYPE
    --  postcond: ';'
    --
-   --  [ §4.2 ]
+   --  [ LRM93 4.2 ]
    --  subtype_declaration ::= SUBTYPE identifier IS subtype_indication ;
    function Parse_Subtype_Declaration (Parent : Iir)
                                       return Iir_Subtype_Declaration
@@ -2786,16 +2786,16 @@ package body Parse is
    --  precond : NATURE
    --  postcond: a token
    --
-   --  [ §4.8 ]
+   --  [ LRM93 4.8 ]
    --  nature_definition ::= scalar_nature_definition
    --                    | composite_nature_definition
    --
-   --  [ §3.5.1 ]
+   --  [ LRM93 3.5.1 ]
    --  scalar_nature_definition ::= type_mark ACROSS
    --                               type_mark THROUGH
    --                               identifier REFERENCE
    --
-   --  [ §3.5.2 ]
+   --  [ LRM93 3.5.2 ]
    --  composite_nature_definition ::= array_nature_definition
    --                              | record_nature_definition
    function Parse_Nature_Declaration return Iir
@@ -3520,7 +3520,7 @@ package body Parse is
    --  precond : FOR
    --  postcond: ';'
    --
-   --  [ §5.2 ]
+   --  [ LRM93 5.2 ]
    --  configuration_specification ::=
    --      FOR component_specification binding_indication ;
    function Parse_Configuration_Specification
@@ -3541,7 +3541,7 @@ package body Parse is
    --  precond : next token
    --  postcond: next token
    --
-   --  [ § 5.2 ]
+   --  [ LRM93 5.2 ]
    --  entity_class := ENTITY | ARCHITECTURE | CONFIGURATION | PROCEDURE
    --                | FUNCTION | PACKAGE | TYPE | SUBTYPE | CONSTANT
    --                | SIGNAL | VARIABLE | COMPONENT | LABEL | LITERAL
@@ -3591,7 +3591,7 @@ package body Parse is
    --  precond : next token
    --  postcond: next token
    --
-   --  [ §5.1 ]
+   --  [ LRM93 5.1 ]
    --  entity_designator ::= entity_tag [ signature ]
    --
    --  entity_tag ::= simple_name | character_literal | operator_symbol
@@ -3629,7 +3629,7 @@ package body Parse is
    --  precond : next token
    --  postcond: IS
    --
-   --  [ §5.1 ]
+   --  [ LRM93 5.1 ]
    --  entity_name_list ::= entity_designator { , entity_designator }
    --                     | OTHERS
    --                     | ALL
@@ -3742,7 +3742,7 @@ package body Parse is
    --  precond : GROUP
    --  postcond: ';'
    --
-   --  [ §4.6 ]
+   --  [ LRM93 4.6 ]
    --  group_template_declaration ::=
    --     GROUP identifier IS (entity_class_entry_list) ;
    --
@@ -3826,7 +3826,7 @@ package body Parse is
    --  precond : next token
    --  postcond: ':'
    --
-   --  [ §5.4 ]
+   --  [ LRM93 5.4 ]
    --  signal_list ::= signal_name { , signal_name }
    --                | OTHERS
    --                | ALL
@@ -3856,7 +3856,7 @@ package body Parse is
    --  precond : DISCONNECT
    --  postcond: ';'
    --
-   --  [ §5.4 ]
+   --  [ LRM93 5.4 ]
    --  disconnection_specification ::=
    --      DISCONNECT guarded_signal_specification AFTER time_expression ;
    function Parse_Disconnection_Specification
@@ -4484,7 +4484,7 @@ package body Parse is
    --  precond : ENTITY
    --  postcond: ';'
    --
-   --  [ §1.1 ]
+   --  [ LRM93 1.1 ]
    --  entity_declaration ::=
    --      ENTITY identifier IS
    --          entiy_header
@@ -4493,7 +4493,7 @@ package body Parse is
    --          entity_statement_part ]
    --      END [ ENTITY ] [ ENTITY_simple_name ]
    --
-   --  [ §1.1.1 ]
+   --  [ LRM93 1.1.1 ]
    --  entity_header ::=
    --      [ FORMAL_generic_clause ]
    --      [ FORMAL_port_clause ]
@@ -5088,7 +5088,7 @@ package body Parse is
    --  precond : next token
    --  postcond: next token
    --
-   --  [ §7.1 ]
+   --  [ LRM93 7.1 ]
    --  factor ::= primary [ ** primary ]
    --           | ABS primary
    --           | NOT primary
@@ -5171,10 +5171,10 @@ package body Parse is
    --  precond : next token
    --  postcond: next token
    --
-   --  [ §7.1 ]
+   --  [ LRM93 7.1 ]
    --  term ::= factor { multiplying_operator factor }
    --
-   --  [ §7.2 ]
+   --  [ LRM93 7.2 ]
    --  multiplying_operator ::= * | / | MOD | REM
    function Parse_Term (Primary : Iir) return Iir_Expression is
       Res, Tmp: Iir_Expression;
@@ -5205,13 +5205,13 @@ package body Parse is
    --  precond : next token
    --  postcond: next token
    --
-   --  [ §7.1 ]
+   --  [ LRM93 7.1 ]
    --  simple_expression ::= [ sign ] term { adding_operator term }
    --
-   --  [ §7.2 ]
+   --  [ LRM93 7.2 ]
    --  sign ::= + | -
    --
-   --  [ §7.2 ]
+   --  [ LRM93 7.2 ]
    --  adding_operator ::= + | - | &
    function Parse_Simple_Expression (Primary : Iir := Null_Iir)
                                     return Iir_Expression
@@ -5258,11 +5258,11 @@ package body Parse is
    --  precond : next token
    --  postcond: next token
    --
-   --  [ §7.1 ]
+   --  [ LRM93 7.1 ]
    --  shift_expression ::=
    --      simple_expression [ shift_operator simple_expression ]
    --
-   --  [ §7.2 ]
+   --  [ LRM93 7.2 ]
    --  shift_operator ::= SLL | SRL | SLA | SRA | ROL | ROR
    function Parse_Shift_Expression return Iir_Expression is
       Res, Tmp: Iir_Expression;
@@ -5299,7 +5299,7 @@ package body Parse is
    --  precond : next token (relational_operator)
    --  postcond: next token
    --
-   --  [ §7.1 ]
+   --  [ LRM93 7.1 ]
    --     relational_operator shift_expression
    function Parse_Relation_Rhs (Left : Iir) return Iir
    is
@@ -5353,10 +5353,10 @@ package body Parse is
    --  precond : next token
    --  postcond: next token
    --
-   --  [ §7.1 ]
+   --  [ LRM93 7.1 ]
    --  relation ::= shift_expression [ relational_operator shift_expression ]
    --
-   --  [ §7.2 ]
+   --  [ LRM93 7.2 ]
    --  relational_operator ::= = | /= | < | <= | > | >=
    --                        | ?= | ?/= | ?< | ?<= | ?> | ?>=
    function Parse_Relation return Iir
@@ -5374,7 +5374,7 @@ package body Parse is
    --  precond : next token
    --  postcond: next token
    --
-   --  [ §7.1 ]
+   --  [ LRM93 7.1 ]
    --  expression ::= relation { AND relation }
    --               | relation { OR relation }
    --               | relation { XOR relation }
@@ -5685,12 +5685,12 @@ package body Parse is
    --  precond : WITH
    --  postcond: ';'
    --
-   --  [ §9.5.2 ]
+   --  [ LRM93 9.5.2 ]
    --  selected_signal_assignment ::=
    --      WITH expresion SELECT
    --          target <= options selected_waveforms ;
    --
-   --  [ §9.5.2 ]
+   --  [ LRM93 9.5.2 ]
    --  selected_waveforms ::=
    --      { waveform WHEN choices , }
    --      waveform WHEN choices
@@ -5739,7 +5739,7 @@ package body Parse is
    --  precond : next token
    --  postcond: next token.
    --
-   --  [ §8.1 ]
+   --  [ LRM93 8.1 ]
    --  sensitivity_list ::= SIGNAL_name { , SIGNAL_name }
    procedure Parse_Sensitivity_List (List: Iir_Designator_List)
    is
@@ -5770,7 +5770,7 @@ package body Parse is
    --  postcond: next token
    --  Note: this fill an sequential or a concurrent statement.
    --
-   --  [ §8.2 ]
+   --  [ LRM93 8.2 ]
    --  assertion ::= ASSERT condition
    --      [ REPORT expression ] [ SEVERITY expression ]
    procedure Parse_Assertion (Stmt: Iir) is
@@ -5821,18 +5821,18 @@ package body Parse is
    -- precond : WAIT
    -- postcond: ';'
    --
-   --  [ §8.1 ]
+   --  [ LRM93 8.1 ]
    --  wait_statement ::=
    --      [ label : ] WAIT [ sensitivity_clause ] [ condition_clause ]
    --          [ timeout_clause ] ;
    --
-   --  [ §8.1 ]
+   --  [ LRM93 8.1 ]
    --  sensitivity_clause ::= ON sensitivity_list
    --
-   --  [ §8.1 ]
+   --  [ LRM93 8.1 ]
    --  condition_clause ::= UNTIL conditiion
    --
-   --  [ §8.1 ]
+   --  [ LRM93 8.1 ]
    --  timeout_clause ::= FOR TIME_expression
    function Parse_Wait_Statement return Iir_Wait_Statement
    is
@@ -5901,7 +5901,7 @@ package body Parse is
    --  precond : IF
    --  postcond: next token.
    --
-   --  [ §8.7 ]
+   --  [ LRM93 8.7 ]
    --  if_statement ::=
    --    [ IF_label : ]
    --        IF condition THEN
@@ -6481,16 +6481,16 @@ package body Parse is
    --  precond : PROCEDURE, FUNCTION, PURE or IMPURE.
    --  postcond: ';'
    --
-   --  [ §2.1 ]
+   --  [ LRM93 2.1 ]
    --  subprogram_declaration ::= subprogram_specification ;
    --
-   --  [ §2.1 ]
+   --  [ LRM93 2.1 ]
    --  subprogram_specification ::=
    --      PROCEDURE designator [ ( formal_parameter_list ) ]
    --    | [ PURE | IMPURE ] FUNCTION designator [ ( formal_parameter_list ) ]
    --          RETURN type_mark
    --
-   --  [ §2.2 ]
+   --  [ LRM93 2.2 ]
    --  subprogram_body ::=
    --      subprogram_specification IS
    --          subprogram_declarative_part
@@ -6498,10 +6498,10 @@ package body Parse is
    --          subprogram_statement_part
    --      END [ subprogram_kind ] [ designator ] ;
    --
-   --  [ §2.1 ]
+   --  [ LRM93 2.1 ]
    --  designator ::= identifier | operator_symbol
    --
-   --  [ §2.1 ]
+   --  [ LRM93 2.1 ]
    --  operator_symbol ::= string_literal
    function Parse_Subprogram_Declaration return Iir
    is
@@ -6927,7 +6927,7 @@ package body Parse is
    --  precond : PORT
    --  postcond: next token
    --
-   --  [ §5.2.1.2 ]
+   --  [ LRM93 5.2.1.2 ]
    --  port_map_aspect ::= PORT MAP ( PORT_association_list )
    function Parse_Port_Map_Aspect return Iir is
    begin
@@ -7011,7 +7011,7 @@ package body Parse is
    --  precond : next token
    --  postcond: next token
    --
-   --  [ §9.1 ]
+   --  [ LRM93 9.1 ]
    --  block_header ::= [ generic_clause [ generic_map_aspect ; ] ]
    --                   [ port_clause [ port_map_aspect ; ] ]
    function Parse_Block_Header return Iir_Block_Header is
@@ -7039,7 +7039,7 @@ package body Parse is
    --  precond : BLOCK
    --  postcond: ';'
    --
-   --  [ §9.1 ]
+   --  [ LRM93 9.1 ]
    --  block_statement ::=
    --      BLOCK_label :
    --          BLOCK [ ( GUARD_expression ) ] [ IS ]
@@ -7049,10 +7049,10 @@ package body Parse is
    --              block_statement_part
    --          END BLOCK [ BLOCK_label ] ;
    --
-   --  [ §9.1 ]
+   --  [ LRM93 9.1 ]
    --  block_declarative_part ::= { block_declarative_item }
    --
-   --  [ §9.1 ]
+   --  [ LRM93 9.1 ]
    --  block_statement_part ::= { concurrent_statement }
    function Parse_Block_Statement (Label: Name_Id; Loc : Location_Type)
      return Iir_Block_Statement
@@ -7941,7 +7941,7 @@ package body Parse is
    --  precond : USE
    --  postcond: ;
    --
-   --  [ §10.4 ]
+   --  [ LRM93 10.4 ]
    --  use_clause ::= USE selected_name { , selected_name }
    --
    --  FIXME: should be a list.
@@ -7977,7 +7977,7 @@ package body Parse is
    --  precond : ARCHITECTURE
    --  postcond: ';'
    --
-   --  [ §1.2 ]
+   --  [ LRM93 1.2 ]
    --  architecture_body ::=
    --      ARCHITECTURE identifier OF ENTITY_name IS
    --          architecture_declarative_part
@@ -8030,7 +8030,7 @@ package body Parse is
    --  precond : next token
    --  postcond: a token
    --
-   --  [ §5.2 ]
+   --  [ LRM93 5.2 ]
    --  instantiation_list ::= INSTANTIATION_label { , INSTANTIATION_label }
    --                       | OTHERS
    --                       | ALL
@@ -8064,7 +8064,7 @@ package body Parse is
    --  precond : next token
    --  postcond: next token
    --
-   --  [ §5.2 ]
+   --  [ LRM93 5.2 ]
    --  component_specification ::= instantiation_list : COMPONENT_name
    procedure Parse_Component_Specification (Res : Iir)
    is
@@ -8080,7 +8080,7 @@ package body Parse is
    --  precond : next token
    --  postcond: next token
    --
-   --  [ §5.2.1.1 ]
+   --  [ LRM93 5.2.1.1 ]
    --  entity_aspect ::= ENTITY ENTITY_name [ ( ARCHITECTURE_identifier ) ]
    --                  | CONFIGURATION CONFIGURATION_name
    --                  | OPEN
@@ -8121,7 +8121,7 @@ package body Parse is
    --  precond : next token
    --  postcond: next token
    --
-   --  [ §5.2.1 ]
+   --  [ LRM93 5.2.1 ]
    --  binding_indication ::=
    --      [ USE entity_aspect ]
    --      [ generic_map_aspect ]
@@ -8156,7 +8156,7 @@ package body Parse is
    --  precond : ':' after instantiation_list.
    --  postcond: ';'
    --
-   --  [ §1.3.2 ]
+   --  [ LRM93 1.3.2 ]
    --  component_configuration ::=
    --      FOR component_specification
    --          [ binding_indication ; ]
@@ -8200,14 +8200,14 @@ package body Parse is
    --  precond : FOR
    --  postcond: ';'
    --
-   --  [ 1.3.1 ]
+   --  [ LRM93 1.3.1 ]
    --  block_configuration ::=
    --      FOR block_specification
    --          { use_clause }
    --          { configuration_item }
    --      END FOR ;
    --
-   --  [ 1.3.1 ]
+   --  [ LRM93 1.3.1 ]
    --  block_specification ::=
    --      ARCHITECTURE_name
    --    | BLOCK_STATEMENT_label
@@ -8271,7 +8271,7 @@ package body Parse is
    --  precond : FOR
    --  postcond: ';'
    --
-   --  [ §1.3.1 ]
+   --  [ LRM93 1.3.1 ]
    --  configuration_item ::= block_configuration
    --                       | component_configuration
    function Parse_Configuration_Item return Iir
@@ -8335,10 +8335,10 @@ package body Parse is
    --  precond : next token
    --  postcond: next token
    --
-   --  [§ 1.3]
+   --  [ LRM93 1.3]
    --  configuration_declarative_part ::= { configuration_declarative_item }
    --
-   --  [§ 1.3]
+   --  [ LRM93 1.3]
    --  configuration_declarative_item ::= use_clause
    --                                   | attribute_specification
    --                                   | group_declaration
@@ -8440,9 +8440,9 @@ package body Parse is
          Scan;
       end if;
 
-      -- LRM93 1.3
-      -- If a simple name appears at the end of a configuration declaration, it
-      -- must repeat the identifier of the configuration declaration.
+      --  LRM93 1.3
+      --  If a simple name appears at the end of a configuration declaration,
+      --  it must repeat the identifier of the configuration declaration.
       Check_End_Name (Res);
       Expect (Tok_Semi_Colon);
       Set_Library_Unit (Unit, Res);
@@ -8451,7 +8451,7 @@ package body Parse is
    --  precond : generic
    --  postcond: next token
    --
-   --  LRM08 4.7
+   --  [ LRM08 4.7 ]
    --  package_header ::=
    --      [ generic_clause               -- LRM08 6.5.6.2
    --      [ generic_map aspect ; ] ]
@@ -8656,8 +8656,7 @@ package body Parse is
    --  Precond:  next token
    --  Postcond: next token
    --
-   --  LRM93 11.3
-   --  LRM08 13.4 Context clauses
+   --  [ LRM93 11.3, LRM08 13.4 Context clauses ]
    --  context_clause ::= { context_item }
    --
    --  context_item ::= library_clause | use_clause | context_reference
@@ -8711,7 +8710,7 @@ package body Parse is
 
    --  Precond:  IS
    --
-   --  LRM08 13.13 Context declarations
+   --  [ LRM08 13.13 Context declarations ]
    --  context_declaration ::=
    --    CONTEXT identifier IS
    --       context_clause
@@ -8745,7 +8744,7 @@ package body Parse is
    --  Precond:  next token after selected_name.
    --  Postcond: ;
    --
-   --  LRM08 13.4 Context clauses
+   --  [ LRM08 13.4 Context clauses ]
    --
    --  context_reference ::=
    --     CONTEXT selected_name { , selected_name }
@@ -8817,17 +8816,17 @@ package body Parse is
    -- The lexical scanner must have been initialized, but without a
    -- current_token.
    --
-   --  [ §11.1 ]
+   --  [ LRM93 11.1 ]
    --  design_unit ::= context_clause library_unit
    function Parse_Design_Unit return Iir_Design_Unit
    is
       Res: Iir_Design_Unit;
       Unit: Iir;
    begin
-      -- Internal check: there must be no current_token.
-      if Current_Token /= Tok_Invalid then
-         raise Internal_Error;
-      end if;
+      --  Internal check: there must be no current_token.
+      pragma Assert (Current_Token = Tok_Invalid);
+
+      --  Read the first token.
       Scan;
       if Current_Token = Tok_Eof then
          return Null_Iir;
@@ -8870,7 +8869,7 @@ package body Parse is
          raise Compilation_Error;
    end Parse_Design_Unit;
 
-   --  [ §11.1 ]
+   --  [ LRM93 11.1 ]
    --  design_file ::= design_unit { design_unit }
    function Parse_Design_File return Iir_Design_File
    is
