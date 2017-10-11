@@ -61,6 +61,15 @@ Get_Name_Ptr.restype = c_char_p
 
 _Get_Identifier_With_Len = libghdl.name_table__get_identifier_with_len
 
+# Ieee
+
+# Get value
+Std_Logic_Type = c_int.in_dll(libghdl, "ieee__std_logic_1164__std_logic_type")
+
+# Get value
+Std_Logic_Vector_Type = c_int.in_dll(
+    libghdl, "ieee__std_logic_1164__std_logic_vector_type")
+
 
 def Get_Identifier(s):
     return _Get_Identifier_With_Len(c_char_p(s), len(s))
@@ -107,7 +116,13 @@ Add_Design_Unit_Into_Library = libghdl.libraries__add_design_unit_into_library
 
 Finish_Compilation = libghdl.libraries__finish_compilation
 
+# Use .value
 Library_Location = c_int32.in_dll(libghdl, "libraries__library_location")
+
+# Use .value
+Work_Library = c_int32.in_dll(libghdl, "libraries__work_library")
+
+Purge_Design_File = libghdl.libraries__purge_design_file
 
 #
 
@@ -177,7 +192,7 @@ def chain_iter(n):
 
 def chain_to_list(n):
     """Convert a chain headed by node n to a python list"""
-    return [e  for e in chain_iter(n)]
+    return [e for e in chain_iter(n)]
 
 
 def nodes_iter(n):
