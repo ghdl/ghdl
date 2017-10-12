@@ -2247,10 +2247,12 @@ package body Sem_Assocs is
                end;
             end if;
             if Get_Kind (Inter) not in Iir_Kinds_Interface_Declaration
+              or else Interface_Chain = Null_Iir
               or else Get_Parent (Inter) /= Get_Parent (Interface_Chain)
             then
                if Finish then
-                  Error_Msg_Sem (+Assoc, "formal is not an interface name");
+                  Error_Msg_Sem
+                    (+Assoc, "formal %i is not an interface name", +Inter);
                end if;
                Match := Not_Compatible;
                exit;
