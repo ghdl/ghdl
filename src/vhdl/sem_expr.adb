@@ -2166,6 +2166,7 @@ package body Sem_Expr is
       procedure Sem_Simple_Choice (Choice : Iir)
       is
          Expr : Iir;
+         Choice_Len : Iir_Int64;
       begin
          --  LRM93 8.8
          --  In such case, each choice appearing in any of the case statement
@@ -2189,13 +2190,19 @@ package body Sem_Expr is
             Error_Msg_Sem
               (+Expr, "bound error during evaluation of choice expression");
             Has_Length_Error := True;
-         elsif Eval_Discrete_Type_Length
-           (Get_String_Type_Bound_Type (Get_Type (Expr))) /= Sel_Length
-         then
-            Has_Length_Error := True;
-            Error_Msg_Sem
-              (+Expr, "value not of the same length of the case expression");
             return;
+         end if;
+
+         Choice_Len := Eval_Discrete_Type_Length
+           (Get_String_Type_Bound_Type (Get_Type (Expr)));
+         if Sel_Length = -1 then
+            Sel_Length := Choice_Len;
+         else
+            if Choice_Len /= Sel_Length then
+               Has_Length_Error := True;
+               Error_Msg_Sem (+Expr, "incorrect length for the choice value");
+               return;
+            end if;
          end if;
       end Sem_Simple_Choice;
 
@@ -2218,12 +2225,22 @@ package body Sem_Expr is
             "expression must be discrete or one-dimension array subtype");
          return;
       end if;
-      if Get_Type_Staticness (Sel_Type) /= Locally then
-         Error_Msg_Sem (+Sel, "array type must be locally static");
-         return;
+      if Get_Type_Staticness (Sel_Type) = Locally then
+         Sel_Length := Eval_Discrete_Type_Length
+           (Get_String_Type_Bound_Type (Sel_Type));
+      else
+         --  LRM08 10.9 Case statement
+         --  If the expression is of a one-dimensional character array type and
+         --  is not described by either of the preceding two paragraphs, then
+         --  the values of all of the choices, except the OTHERS choice, if
+         --  present, shall be of the same length.
+         if Flags.Vhdl_Std >= Vhdl_08 then
+            Sel_Length := -1;
+         else
+            Error_Msg_Sem (+Sel, "array type must be locally static");
+            return;
+         end if;
       end if;
-      Sel_Length := Eval_Discrete_Type_Length
-        (Get_String_Type_Bound_Type (Sel_Type));
       Sel_El_Type := Get_Element_Subtype (Sel_Type);
       Sel_El_Length := Eval_Discrete_Type_Length (Sel_El_Type);
 

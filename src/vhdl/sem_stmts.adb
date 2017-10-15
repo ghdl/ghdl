@@ -1054,14 +1054,13 @@ package body Sem_Stmts is
          return True;
       end Check_Odcat_Expression;
 
-      Choice_Type : Iir;
+      Choice_Type : constant Iir := Get_Type (Choice);
       Low, High : Iir;
       El_Type : Iir;
    begin
       --  LRM 8.8  Case Statement
       --  The expression must be of a discrete type, or of a one-dimensional
       --  array type whose element base type is a character type.
-      Choice_Type := Get_Type (Choice);
       case Get_Kind (Choice_Type) is
          when Iir_Kinds_Discrete_Type_Definition =>
             Sem_Choices_Range
@@ -1083,8 +1082,13 @@ package body Sem_Stmts is
                   "element type of the expression must be a character type");
                return;
             end if;
-            if not Check_Odcat_Expression (Choice) then
-               return;
+            if Flags.Vhdl_Std >= Vhdl_08 then
+               --  No specific restrictions in vhdl 2008.
+               null;
+            else
+               if not Check_Odcat_Expression (Choice) then
+                  return;
+               end if;
             end if;
             Sem_String_Choices_Range (Chain, Choice);
          when others =>

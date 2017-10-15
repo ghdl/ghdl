@@ -1114,15 +1114,22 @@ package body Trans.Chap8 is
    end Translate_Simple_String_Choice;
 
    --  Helper to evaluate the selector and preparing a choice variable.
+   --  LEN_TYPE is the type that contains the locally static bounds.  It is in
+   --  general the type of the expression (selector) or of the first choice if
+   --  the selector type is not locally static.
    procedure Translate_String_Case_Statement_Common
-     (Stmt      : Iir_Case_Statement;
-      Expr_Type : out Iir;
-      Tinfo     : out Type_Info_Acc;
-      Expr_Node : out O_Dnode;
-      C_Node    : out O_Dnode)
+     (Stmt       : Iir_Case_Statement;
+      Choices    : Iir;
+      Len_Type   : out Iir;
+      Tinfo      : out Type_Info_Acc;
+      Expr_Node  : out O_Dnode;
+      C_Node     : out O_Dnode)
    is
-      Expr      : constant Iir := Get_Expression (Stmt);
-      Base_Type : Iir;
+      Expr       : constant Iir := Get_Expression (Stmt);
+      Expr_Type  : Iir;
+      Base_Type  : Iir;
+      Sel_Length : Iir_Int64;
+      Cond       : O_Enode;
    begin
       --  Translate into if/elsif statements.
       --  FIXME: if the number of literals ** length of the array < 256,
@@ -1130,6 +1137,7 @@ package body Trans.Chap8 is
       Expr_Type := Get_Type (Expr);
       Base_Type := Get_Base_Type (Expr_Type);
       Tinfo := Get_Info (Base_Type);
+      Len_Type := Expr_Type;
 
       --  Translate selector.
       Expr_Node := Create_Temp_Init
@@ -1143,6 +1151,26 @@ package body Trans.Chap8 is
          Tinfo.B.Bounds_Field (Mode_Value)),
          New_Value_Selected_Acc_Value
            (New_Obj (Expr_Node), Tinfo.B.Bounds_Field (Mode_Value)));
+
+      --  LRM08 10.9 Case statement
+      --  In all cases, it is an error if the value of the expression is not of
+      --  the same length as the values of the choices.
+      if Get_Type_Staticness (Len_Type) /= Locally
+        and then Get_Kind (Choices) = Iir_Kind_Choice_By_Expression
+      then
+         Len_Type := Get_Type (Get_Choice_Expression (Choices));
+         pragma Assert (Get_Base_Type (Len_Type) = Base_Type);
+         Sel_Length := Eval_Discrete_Type_Length
+           (Get_String_Type_Bound_Type (Len_Type));
+         Cond := New_Compare_Op
+           (ON_Neq,
+            Chap3.Get_Array_Length
+              (Dp2M (Expr_Node, Get_Info (Expr_Type), Mode_Value),
+               Expr_Type),
+            New_Lit (New_Index_Lit (Unsigned_64 (Sel_Length))),
+            Ghdl_Bool_Type);
+         Chap6.Check_Bound_Error (Cond, Expr, 0);
+      end if;
    end Translate_String_Case_Statement_Common;
 
    --  Translate a string case statement using a dichotomy.
@@ -1175,16 +1203,16 @@ package body Trans.Chap8 is
       El : Choice_Id;
 
       --  Selector.
-      Expr_Type : Iir;
       Tinfo     : Type_Info_Acc;
       Expr_Node : O_Dnode;
       C_Node    : O_Dnode;
       Var_Idx   : O_Dnode;
       Others_Lit : O_Cnode;
 
-      Choice        : Iir;
-      Has_Others    : Boolean;
-      Func          : Iir;
+      Len_Type   : Iir;
+      Choice     : Iir;
+      Has_Others : Boolean;
+      Func       : Iir;
 
       --  Number of associations.
       Nbr_Assocs  : Natural;
@@ -1301,11 +1329,12 @@ package body Trans.Chap8 is
 
       Open_Temp;
       Translate_String_Case_Statement_Common
-        (Stmt, Expr_Type, Tinfo, Expr_Node, C_Node);
+        (Stmt, Choices_Chain, Len_Type, Tinfo, Expr_Node, C_Node);
 
       --  Generate the sorted array of choices.
       Sel_Length := Eval_Discrete_Type_Length
-        (Get_String_Type_Bound_Type (Expr_Type));
+        (Get_String_Type_Bound_Type (Len_Type));
+
       String_Type := New_Constrained_Array_Type
         (Tinfo.B.Base_Type (Mode_Value),
          New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (Sel_Length)));
@@ -1323,7 +1352,7 @@ package body Trans.Chap8 is
       El := First;
       while El /= No_Choice_Id loop
          New_Array_Aggr_El (List, Chap7.Translate_Static_Expression
-                              (Choices_Info (El).Choice_Expr, Expr_Type));
+                              (Choices_Info (El).Choice_Expr, Len_Type));
          El := Choices_Info (El).Choice_Chain;
       end loop;
       Finish_Array_Aggr (List, Table_Cst);
@@ -1380,7 +1409,7 @@ package body Trans.Chap8 is
                                            Unsigned_64 (Nbr_Choices - 1))));
 
          Func := Chap7.Find_Predefined_Function
-           (Get_Base_Type (Expr_Type), Iir_Predefined_Array_Greater);
+           (Get_Base_Type (Len_Type), Iir_Predefined_Array_Greater);
 
          if Has_Others then
             Others_Lit := New_Unsigned_Literal
@@ -1553,7 +1582,7 @@ package body Trans.Chap8 is
    procedure Translate_String_Case_Statement_Linear
      (Stmt : Iir; Choices : Iir; Handler : in out Case_Handler'Class)
    is
-      Expr_Type : Iir;
+      Len_Type  : Iir;
       --  Node containing the address of the selector.
       Expr_Node : O_Dnode;
       --  Node containing the current choice.
@@ -1621,10 +1650,10 @@ package body Trans.Chap8 is
    begin
       Open_Temp;
       Translate_String_Case_Statement_Common
-        (Stmt, Expr_Type, Tinfo, Expr_Node, Val_Node);
+        (Stmt, Choices, Len_Type, Tinfo, Expr_Node, Val_Node);
 
       Func := Chap7.Find_Predefined_Function
-        (Get_Base_Type (Expr_Type), Iir_Predefined_Array_Equality);
+        (Get_Base_Type (Len_Type), Iir_Predefined_Array_Equality);
 
       Cond_Var := Create_Temp (Std_Boolean_Type_Node);
 
@@ -1676,7 +1705,7 @@ package body Trans.Chap8 is
             Error_Kind ("translate_case", N);
       end case;
 
-      if Get_Kind (Expr_Type) = Iir_Kind_Array_Subtype_Definition then
+      if Get_Kind (Expr_Type) in Iir_Kinds_Array_Type_Definition then
          --  Expression is a one-dimensional array.
          declare
             Nbr_Choices : Natural := 0;
