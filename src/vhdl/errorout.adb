@@ -763,6 +763,14 @@ package body Errorout is
       Error_Msg_Elab (Loc, Msg, Earg_Arr'(1 => Arg1));
    end Error_Msg_Elab;
 
+   procedure Error_Msg_Elab_Relaxed (Loc : Iir;
+                                     Id : Msgid_Warnings;
+                                     Msg : String;
+                                     Args : Earg_Arr := No_Eargs) is
+   begin
+      Error_Msg_Relaxed (Elaboration, Id, Msg, Loc, Args);
+   end Error_Msg_Elab_Relaxed;
+
    -- Disp a bug message.
    procedure Error_Internal (Expr: in Iir; Msg: String := "")
    is

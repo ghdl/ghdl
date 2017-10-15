@@ -59,6 +59,9 @@ package Errorout is
       --  Unbound component.
       Warnid_Binding,
 
+      --  Unconnected IN port without defaults (in relaxed mode).
+      Warnid_Port,
+
       --  Vhdl93 reserved word is used as a vhdl87 identifier.
       Warnid_Reserved_Word,
 
@@ -240,6 +243,12 @@ package Errorout is
    procedure Error_Msg_Elab
      (Loc: Iir; Msg: String; Arg1 : Earg_Type);
 
+   --  Like Error_Msg_Elab, but a warning if -frelaxed or --std=93c.
+   procedure Error_Msg_Elab_Relaxed (Loc : Iir;
+                                     Id : Msgid_Warnings;
+                                     Msg : String;
+                                     Args : Earg_Arr := No_Eargs);
+
    --  Disp a warning durig elaboration (or configuration).
    procedure Warning_Msg_Elab (Id : Msgid_Warnings;
                                Loc : Iir;
@@ -328,9 +337,7 @@ private
    type Warnings_Setting is array (Msgid_Warnings) of Warning_Control_Type;
 
    Default_Warnings : constant Warnings_Setting :=
-     (Warnid_Binding
-        | Warnid_Library => (Enabled => True, Error => False),
-      Warnid_Shared
-        | Warnid_Pure    => (Enabled => True, Error => False),
+     (Warnid_Binding | Warnid_Library | Warnid_Shared | Warnid_Pure
+        | Warnid_Port    => (Enabled => True, Error => False),
       others             => (Enabled => False, Error => False));
 end Errorout;

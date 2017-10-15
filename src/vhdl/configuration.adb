@@ -375,12 +375,15 @@ package body Configuration is
    begin
       case Get_Mode (Port) is
          when Iir_In_Mode =>
-            --  LRM 1.1.1.2 Ports
+            --  LRM93 1.1.1.2 Ports
             --  A port of mode IN may be unconnected or unassociated only if
             --  its declaration includes a default expression.
             if Get_Default_Value (Port) = Null_Iir then
                if Loc /= Null_Iir then
-                  Error_Msg_Elab (Loc, "IN %n must be connected", +Port);
+                  Error_Msg_Elab_Relaxed
+                    (Loc, Warnid_Port,
+                     "IN %n must be connected (or have a default value)",
+                     (1 => +Port));
                end if;
                return True;
             end if;
@@ -388,7 +391,7 @@ package body Configuration is
            | Iir_Inout_Mode
            | Iir_Buffer_Mode
            | Iir_Linkage_Mode =>
-            --  LRM 1.1.1.2  Ports
+            --  LRM93 1.1.1.2  Ports
             --  A port of any mode other than IN may be unconnected or
             --  unassociated as long as its type is not an unconstrained array
             --  type.
