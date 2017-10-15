@@ -1,7 +1,5 @@
 # Gdb commands useful to debug ghdl
 
-catch exception
-
 define pt
 call disp_tree.disp_iir ($arg0, 1, 10)
 end
@@ -73,3 +71,8 @@ Print the location for iir $.
 end
 
 set lang ada
+
+# Must be the last command: some distributions use a shared libgnat by default,
+# and don't have the minimal required set of debug info to support this command.
+# As a result, this command fails and stop this script.
+catch exception
