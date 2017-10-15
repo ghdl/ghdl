@@ -797,8 +797,9 @@ package body Sem_Specs is
                   --  It is an error if the class of those names is not the
                   --  same as that denoted by entity class.
                   if not Sem_Named_Entities (Scope, El, Spec, True, True) then
-                     Error_Msg_Sem
-                       (+El, "no named entities %i in declarative part", +El);
+                     Error_Msg_Sem_Relaxed
+                       (El, Warnid_Specs,
+                        "no %i for attribute specification", (1 => +El));
                   end if;
                end if;
             end loop;
