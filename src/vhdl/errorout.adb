@@ -1559,9 +1559,12 @@ package body Errorout is
          "(" & Disp_Node (Callee) & " is defined here)", Callee);
    end Error_Pure;
 
-   procedure Error_Not_Match (Expr: Iir; A_Type: Iir)
-   is
+   procedure Error_Not_Match (Expr: Iir; A_Type: Iir) is
    begin
+      if Get_Kind (A_Type) = Iir_Kind_Error then
+         --  Cascade error message.
+         return;
+      end if;
       Error_Msg_Sem ("can't match " & Disp_Node (Expr) & " with type "
                      & Disp_Node (A_Type), Expr);
    end Error_Not_Match;
