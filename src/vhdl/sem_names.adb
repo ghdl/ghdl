@@ -1902,7 +1902,7 @@ package body Sem_Names is
          end if;
       end Sem_As_Expanded_Name;
 
-      --  LRM93 §6.3
+      --  LRM93 6.3
       --  For a selected name that is used to denote a record element,
       --  the suffix must be a simple name denoting an element of a
       --  record object or value.  The prefix must be appropriate for the
@@ -1927,6 +1927,7 @@ package body Sem_Names is
             Ptr_Type := Null_Iir;
          end if;
 
+         --  Only records have elements.
          if not Kind_In (Name_Type, Iir_Kind_Record_Type_Definition,
                          Iir_Kind_Record_Subtype_Definition)
          then
@@ -1936,6 +1937,7 @@ package body Sem_Names is
          Rec_El := Find_Name_In_List
            (Get_Elements_Declaration_List (Name_Type), Suffix);
          if Rec_El = Null_Iir then
+            --  No such element in the record type.
             return;
          end if;
 

@@ -362,15 +362,14 @@ package body Sem_Specs is
       end if;
    end Attribute_A_Decl;
 
-   --  IS_DESIGNATORS if true if the entity name list is a list of designators.
+   --  IS_DESIGNATORS is true if the entity name list is a list of designators.
    --  Return TRUE if an entity was attributed.
-   function Sem_Named_Entities
-     (Scope : Iir;
-      Name : Iir;
-      Attr : Iir_Attribute_Specification;
-      Is_Designators : Boolean;
-      Check_Defined : Boolean)
-     return Boolean
+   function Sem_Named_Entities (Scope : Iir;
+                                Name : Iir;
+                                Attr : Iir_Attribute_Specification;
+                                Is_Designators : Boolean;
+                                Check_Defined : Boolean)
+                               return Boolean
    is
       Res : Boolean;
 
@@ -537,6 +536,7 @@ package body Sem_Specs is
          end loop;
       end Sem_Named_Entity_Chain;
    begin
+      --  The attribute specification was not yet applied.
       Res := False;
 
       --  LRM 5.1  Attribute specification

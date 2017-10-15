@@ -1337,7 +1337,7 @@ package Iirs is
    --  function_specification ::=
    --     [ PURE | IMPURE ] FUNCTION designator
    --        subprogram_header
-   --        [ [ PARAMETER ] ( formal_parameter_list ) ] return type_mark
+   --        [ [ PARAMETER ] ( formal_parameter_list ) ] RETURN type_mark
    --
    --  designator ::= identifier | operator_symbol
    --
@@ -1478,7 +1478,7 @@ package Iirs is
    --
    --  interface_function_specification ::=
    --     [ PURE | IMPURE ] FUNCTION designator
-   --        [ [ PARAMETER ] ( formal_parameter_list ) ] return type_mark
+   --        [ [ PARAMETER ] ( formal_parameter_list ) ] RETURN type_mark
    --
    --   Get/Set_Parent (Field0)
    --
