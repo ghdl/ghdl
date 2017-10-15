@@ -189,6 +189,8 @@ test_billowitch() {
   . $dir/compliant.exp
 
   # OK but FIXMEs
+  common_args="--std=93 $GHDL_FLAGS"
+
   dir=vhdl-93/billowitch/non_compliant/analyzer_failure
   . $dir/non_compliant.exp
 
