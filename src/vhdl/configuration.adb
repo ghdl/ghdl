@@ -544,9 +544,11 @@ package body Configuration is
       if Bind = Null_Iir then
          if Is_Warning_Enabled (Warnid_Binding) then
             Inst := Get_First_Element (Get_Instantiation_List (Conf));
+            Inst := Strip_Denoting_Name (Inst);
             Warning_Msg_Elab
               (Warnid_Binding, Conf,
-               "%n is not bound", +Inst, Cont => True);
+               "%n of %n is not bound",
+               (+Inst, +Get_Instantiated_Unit (Inst)), Cont => True);
             Warning_Msg_Elab
               (Warnid_Binding, Current_Configuration,
                "(in %n)", +Current_Configuration);
