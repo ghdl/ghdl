@@ -290,6 +290,9 @@ package body Sem_Names is
               | Iir_Kind_Procedure_Declaration
               | Iir_Kind_Enumeration_Literal =>
                null;
+            when Iir_Kind_Interface_Function_Declaration
+              | Iir_Kind_Interface_Procedure_Declaration =>
+               null;
             when Iir_Kinds_Denoting_Name =>
                null;
             when others =>
