@@ -4336,22 +4336,22 @@ package Iirs is
    pragma Inline (Kind_In);
 
    type Iir_Signal_Kind is
-      (
-       Iir_Register_Kind,
-       Iir_Bus_Kind
-      );
+     (
+      Iir_Register_Kind,
+      Iir_Bus_Kind
+     );
 
    --  If the order of elements in IIR_MODE is modified, also modify the
    --  order in GRT (types and rtis).
    type Iir_Mode is
-      (
-       Iir_Unknown_Mode,
-       Iir_Linkage_Mode,
-       Iir_Buffer_Mode,
-       Iir_Out_Mode,
-       Iir_Inout_Mode,
-       Iir_In_Mode
-      );
+     (
+      Iir_Unknown_Mode,
+      Iir_Linkage_Mode,
+      Iir_Buffer_Mode,
+      Iir_Out_Mode,
+      Iir_Inout_Mode,
+      Iir_In_Mode
+     );
 
    subtype Iir_In_Modes is Iir_Mode range Iir_Inout_Mode .. Iir_In_Mode;
    subtype Iir_Out_Modes is Iir_Mode range Iir_Out_Mode .. Iir_Inout_Mode;
@@ -4390,356 +4390,356 @@ package Iirs is
 
    --  List of predefined operators and functions.
    type Iir_Predefined_Functions is
-      (
-       Iir_Predefined_Error,
+     (
+      Iir_Predefined_Error,
 
-       --  Predefined operators for BOOLEAN type
+      --  Predefined operators for BOOLEAN type
 
-       --  LRM08 9.2.2 Logical Operators
-       Iir_Predefined_Boolean_And,
-       Iir_Predefined_Boolean_Or,
-       Iir_Predefined_Boolean_Nand,
-       Iir_Predefined_Boolean_Nor,
-       Iir_Predefined_Boolean_Xor,
-       Iir_Predefined_Boolean_Xnor,
-       Iir_Predefined_Boolean_Not,
+      --  LRM08 9.2.2 Logical Operators
+      Iir_Predefined_Boolean_And,
+      Iir_Predefined_Boolean_Or,
+      Iir_Predefined_Boolean_Nand,
+      Iir_Predefined_Boolean_Nor,
+      Iir_Predefined_Boolean_Xor,
+      Iir_Predefined_Boolean_Xnor,
+      Iir_Predefined_Boolean_Not,
 
-       --  LRM08 5.2.6 Predefined operations on scalar types.
-       Iir_Predefined_Boolean_Rising_Edge,
-       Iir_Predefined_Boolean_Falling_Edge,
+      --  LRM08 5.2.6 Predefined operations on scalar types.
+      Iir_Predefined_Boolean_Rising_Edge,
+      Iir_Predefined_Boolean_Falling_Edge,
 
-       --  Predefined operators for any enumeration type.
+      --  Predefined operators for any enumeration type.
 
-       --  LRM08 9.2.3 Relational Operators
-       Iir_Predefined_Enum_Equality,
-       Iir_Predefined_Enum_Inequality,
-       Iir_Predefined_Enum_Less,
-       Iir_Predefined_Enum_Less_Equal,
-       Iir_Predefined_Enum_Greater,
-       Iir_Predefined_Enum_Greater_Equal,
+      --  LRM08 9.2.3 Relational Operators
+      Iir_Predefined_Enum_Equality,
+      Iir_Predefined_Enum_Inequality,
+      Iir_Predefined_Enum_Less,
+      Iir_Predefined_Enum_Less_Equal,
+      Iir_Predefined_Enum_Greater,
+      Iir_Predefined_Enum_Greater_Equal,
 
-       --  LRM08 5.2.6 Predefined operations on scalar types.
-       Iir_Predefined_Enum_Minimum,
-       Iir_Predefined_Enum_Maximum,
-       Iir_Predefined_Enum_To_String,
+      --  LRM08 5.2.6 Predefined operations on scalar types.
+      Iir_Predefined_Enum_Minimum,
+      Iir_Predefined_Enum_Maximum,
+      Iir_Predefined_Enum_To_String,
 
-       --  Predefined operators for BIT type.
+      --  Predefined operators for BIT type.
 
-       --  LRM08 9.2.2 Logical Operators
-       Iir_Predefined_Bit_And,
-       Iir_Predefined_Bit_Or,
-       Iir_Predefined_Bit_Nand,
-       Iir_Predefined_Bit_Nor,
-       Iir_Predefined_Bit_Xor,
-       Iir_Predefined_Bit_Xnor,
-       Iir_Predefined_Bit_Not,
+      --  LRM08 9.2.2 Logical Operators
+      Iir_Predefined_Bit_And,
+      Iir_Predefined_Bit_Or,
+      Iir_Predefined_Bit_Nand,
+      Iir_Predefined_Bit_Nor,
+      Iir_Predefined_Bit_Xor,
+      Iir_Predefined_Bit_Xnor,
+      Iir_Predefined_Bit_Not,
 
-       --  LRM08 9.2.3 Relational Operators
-       Iir_Predefined_Bit_Match_Equality,
-       Iir_Predefined_Bit_Match_Inequality,
-       Iir_Predefined_Bit_Match_Less,
-       Iir_Predefined_Bit_Match_Less_Equal,
-       Iir_Predefined_Bit_Match_Greater,
-       Iir_Predefined_Bit_Match_Greater_Equal,
+      --  LRM08 9.2.3 Relational Operators
+      Iir_Predefined_Bit_Match_Equality,
+      Iir_Predefined_Bit_Match_Inequality,
+      Iir_Predefined_Bit_Match_Less,
+      Iir_Predefined_Bit_Match_Less_Equal,
+      Iir_Predefined_Bit_Match_Greater,
+      Iir_Predefined_Bit_Match_Greater_Equal,
 
-       --  LRM08 9.2.9 Condition operator
-       Iir_Predefined_Bit_Condition,
+      --  LRM08 9.2.9 Condition operator
+      Iir_Predefined_Bit_Condition,
 
-       --  LRM08 5.2.6 Predefined operations on scalar types.
-       Iir_Predefined_Bit_Rising_Edge,
-       Iir_Predefined_Bit_Falling_Edge,
+      --  LRM08 5.2.6 Predefined operations on scalar types.
+      Iir_Predefined_Bit_Rising_Edge,
+      Iir_Predefined_Bit_Falling_Edge,
 
-       --  Predefined operators for any integer type.
+      --  Predefined operators for any integer type.
 
-       --  LRM08 9.2.3 Relational Operators
-       Iir_Predefined_Integer_Equality,
-       Iir_Predefined_Integer_Inequality,
-       Iir_Predefined_Integer_Less,
-       Iir_Predefined_Integer_Less_Equal,
-       Iir_Predefined_Integer_Greater,
-       Iir_Predefined_Integer_Greater_Equal,
+      --  LRM08 9.2.3 Relational Operators
+      Iir_Predefined_Integer_Equality,
+      Iir_Predefined_Integer_Inequality,
+      Iir_Predefined_Integer_Less,
+      Iir_Predefined_Integer_Less_Equal,
+      Iir_Predefined_Integer_Greater,
+      Iir_Predefined_Integer_Greater_Equal,
 
-       --  LRM08 9.2.6 Sign operators
-       Iir_Predefined_Integer_Identity,
-       Iir_Predefined_Integer_Negation,
+      --  LRM08 9.2.6 Sign operators
+      Iir_Predefined_Integer_Identity,
+      Iir_Predefined_Integer_Negation,
 
-       --  LRM08 9.2.8 Miscellaneous operators
-       Iir_Predefined_Integer_Absolute,
+      --  LRM08 9.2.8 Miscellaneous operators
+      Iir_Predefined_Integer_Absolute,
 
-       --  LRM08 9.2.5 Adding operators
-       Iir_Predefined_Integer_Plus,
-       Iir_Predefined_Integer_Minus,
+      --  LRM08 9.2.5 Adding operators
+      Iir_Predefined_Integer_Plus,
+      Iir_Predefined_Integer_Minus,
 
-       --  LRM08 9.2.7 Multiplying operators
-       Iir_Predefined_Integer_Mul,
-       Iir_Predefined_Integer_Div,
-       Iir_Predefined_Integer_Mod,
-       Iir_Predefined_Integer_Rem,
+      --  LRM08 9.2.7 Multiplying operators
+      Iir_Predefined_Integer_Mul,
+      Iir_Predefined_Integer_Div,
+      Iir_Predefined_Integer_Mod,
+      Iir_Predefined_Integer_Rem,
 
-       --  LRM08 9.2.8 Miscellaneous operators
-       Iir_Predefined_Integer_Exp,
+      --  LRM08 9.2.8 Miscellaneous operators
+      Iir_Predefined_Integer_Exp,
 
-       --  LRM08 5.2.6 Predefined operations on scalar types.
-       Iir_Predefined_Integer_Minimum,
-       Iir_Predefined_Integer_Maximum,
-       Iir_Predefined_Integer_To_String,
+      --  LRM08 5.2.6 Predefined operations on scalar types.
+      Iir_Predefined_Integer_Minimum,
+      Iir_Predefined_Integer_Maximum,
+      Iir_Predefined_Integer_To_String,
 
-       --  Predefined operators for any floating type.
+      --  Predefined operators for any floating type.
 
-       --  LRM08 9.2.3 Relational Operators
-       Iir_Predefined_Floating_Equality,
-       Iir_Predefined_Floating_Inequality,
-       Iir_Predefined_Floating_Less,
-       Iir_Predefined_Floating_Less_Equal,
-       Iir_Predefined_Floating_Greater,
-       Iir_Predefined_Floating_Greater_Equal,
+      --  LRM08 9.2.3 Relational Operators
+      Iir_Predefined_Floating_Equality,
+      Iir_Predefined_Floating_Inequality,
+      Iir_Predefined_Floating_Less,
+      Iir_Predefined_Floating_Less_Equal,
+      Iir_Predefined_Floating_Greater,
+      Iir_Predefined_Floating_Greater_Equal,
 
-       --  LRM08 9.2.6 Sign operators
-       Iir_Predefined_Floating_Identity,
-       Iir_Predefined_Floating_Negation,
+      --  LRM08 9.2.6 Sign operators
+      Iir_Predefined_Floating_Identity,
+      Iir_Predefined_Floating_Negation,
 
-       --  LRM08 9.2.8 Miscellaneous operators
-       Iir_Predefined_Floating_Absolute,
+      --  LRM08 9.2.8 Miscellaneous operators
+      Iir_Predefined_Floating_Absolute,
 
-       --  LRM08 9.2.5 Adding operators
-       Iir_Predefined_Floating_Plus,
-       Iir_Predefined_Floating_Minus,
+      --  LRM08 9.2.5 Adding operators
+      Iir_Predefined_Floating_Plus,
+      Iir_Predefined_Floating_Minus,
 
-       --  LRM08 9.2.7 Multiplying operators
-       Iir_Predefined_Floating_Mul,
-       Iir_Predefined_Floating_Div,
+      --  LRM08 9.2.7 Multiplying operators
+      Iir_Predefined_Floating_Mul,
+      Iir_Predefined_Floating_Div,
 
-       --  LRM08 9.2.8 Miscellaneous operators
-       Iir_Predefined_Floating_Exp,
+      --  LRM08 9.2.8 Miscellaneous operators
+      Iir_Predefined_Floating_Exp,
 
-       --  LRM08 5.2.6 Predefined operations on scalar types.
-       Iir_Predefined_Floating_Minimum,
-       Iir_Predefined_Floating_Maximum,
-       Iir_Predefined_Floating_To_String,
-       Iir_Predefined_Real_To_String_Digits,
-       Iir_Predefined_Real_To_String_Format,
+      --  LRM08 5.2.6 Predefined operations on scalar types.
+      Iir_Predefined_Floating_Minimum,
+      Iir_Predefined_Floating_Maximum,
+      Iir_Predefined_Floating_To_String,
+      Iir_Predefined_Real_To_String_Digits,
+      Iir_Predefined_Real_To_String_Format,
 
-       --  Predefined operator for universal types.
+      --  Predefined operator for universal types.
 
-       --  LRM08 9.2.7 Multiplying operators
-       Iir_Predefined_Universal_R_I_Mul,
-       Iir_Predefined_Universal_I_R_Mul,
-       Iir_Predefined_Universal_R_I_Div,
+      --  LRM08 9.2.7 Multiplying operators
+      Iir_Predefined_Universal_R_I_Mul,
+      Iir_Predefined_Universal_I_R_Mul,
+      Iir_Predefined_Universal_R_I_Div,
 
-       --  Predefined operators for physical types.
+      --  Predefined operators for physical types.
 
-       --  LRM08 9.2.3 Relational Operators
-       Iir_Predefined_Physical_Equality,
-       Iir_Predefined_Physical_Inequality,
-       Iir_Predefined_Physical_Less,
-       Iir_Predefined_Physical_Less_Equal,
-       Iir_Predefined_Physical_Greater,
-       Iir_Predefined_Physical_Greater_Equal,
+      --  LRM08 9.2.3 Relational Operators
+      Iir_Predefined_Physical_Equality,
+      Iir_Predefined_Physical_Inequality,
+      Iir_Predefined_Physical_Less,
+      Iir_Predefined_Physical_Less_Equal,
+      Iir_Predefined_Physical_Greater,
+      Iir_Predefined_Physical_Greater_Equal,
 
-       --  LRM08 9.2.6 Sign operators
-       Iir_Predefined_Physical_Identity,
-       Iir_Predefined_Physical_Negation,
+      --  LRM08 9.2.6 Sign operators
+      Iir_Predefined_Physical_Identity,
+      Iir_Predefined_Physical_Negation,
 
-       --  LRM08 9.2.8 Miscellaneous operators
-       Iir_Predefined_Physical_Absolute,
+      --  LRM08 9.2.8 Miscellaneous operators
+      Iir_Predefined_Physical_Absolute,
 
-       --  LRM08 9.2.5 Adding operators
-       Iir_Predefined_Physical_Plus,
-       Iir_Predefined_Physical_Minus,
+      --  LRM08 9.2.5 Adding operators
+      Iir_Predefined_Physical_Plus,
+      Iir_Predefined_Physical_Minus,
 
-       --  LRM08 9.2.7 Multiplying operators
-       Iir_Predefined_Physical_Integer_Mul,
-       Iir_Predefined_Physical_Real_Mul,
-       Iir_Predefined_Integer_Physical_Mul,
-       Iir_Predefined_Real_Physical_Mul,
-       Iir_Predefined_Physical_Integer_Div,
-       Iir_Predefined_Physical_Real_Div,
-       Iir_Predefined_Physical_Physical_Div,
+      --  LRM08 9.2.7 Multiplying operators
+      Iir_Predefined_Physical_Integer_Mul,
+      Iir_Predefined_Physical_Real_Mul,
+      Iir_Predefined_Integer_Physical_Mul,
+      Iir_Predefined_Real_Physical_Mul,
+      Iir_Predefined_Physical_Integer_Div,
+      Iir_Predefined_Physical_Real_Div,
+      Iir_Predefined_Physical_Physical_Div,
 
-       --  LRM08 5.2.6 Predefined operations on scalar types.
-       Iir_Predefined_Physical_Minimum,
-       Iir_Predefined_Physical_Maximum,
-       Iir_Predefined_Physical_To_String,
-       Iir_Predefined_Time_To_String_Unit,
+      --  LRM08 5.2.6 Predefined operations on scalar types.
+      Iir_Predefined_Physical_Minimum,
+      Iir_Predefined_Physical_Maximum,
+      Iir_Predefined_Physical_To_String,
+      Iir_Predefined_Time_To_String_Unit,
 
-       --  Predefined operators for access.
+      --  Predefined operators for access.
 
-       --  LRM08 9.2.3 Relational Operators
-       Iir_Predefined_Access_Equality,
-       Iir_Predefined_Access_Inequality,
+      --  LRM08 9.2.3 Relational Operators
+      Iir_Predefined_Access_Equality,
+      Iir_Predefined_Access_Inequality,
 
-       --  Predefined operators for record.
+      --  Predefined operators for record.
 
-       --  LRM08 9.2.3 Relational Operators
-       Iir_Predefined_Record_Equality,
-       Iir_Predefined_Record_Inequality,
+      --  LRM08 9.2.3 Relational Operators
+      Iir_Predefined_Record_Equality,
+      Iir_Predefined_Record_Inequality,
 
-       --  Predefined operators for array.
+      --  Predefined operators for array.
 
-       --  LRM08 9.2.3 Relational Operators
-       Iir_Predefined_Array_Equality,
-       Iir_Predefined_Array_Inequality,
-       Iir_Predefined_Array_Less,
-       Iir_Predefined_Array_Less_Equal,
-       Iir_Predefined_Array_Greater,
-       Iir_Predefined_Array_Greater_Equal,
+      --  LRM08 9.2.3 Relational Operators
+      Iir_Predefined_Array_Equality,
+      Iir_Predefined_Array_Inequality,
+      Iir_Predefined_Array_Less,
+      Iir_Predefined_Array_Less_Equal,
+      Iir_Predefined_Array_Greater,
+      Iir_Predefined_Array_Greater_Equal,
 
-       --  LRM08 9.2.5 Adding operators
-       Iir_Predefined_Array_Array_Concat,
-       Iir_Predefined_Array_Element_Concat,
-       Iir_Predefined_Element_Array_Concat,
-       Iir_Predefined_Element_Element_Concat,
+      --  LRM08 9.2.5 Adding operators
+      Iir_Predefined_Array_Array_Concat,
+      Iir_Predefined_Array_Element_Concat,
+      Iir_Predefined_Element_Array_Concat,
+      Iir_Predefined_Element_Element_Concat,
 
-       --  LRM08 5.3.2.4 Predefined operations on array types
-       Iir_Predefined_Array_Minimum,
-       Iir_Predefined_Array_Maximum,
-       Iir_Predefined_Vector_Minimum,
-       Iir_Predefined_Vector_Maximum,
+      --  LRM08 5.3.2.4 Predefined operations on array types
+      Iir_Predefined_Array_Minimum,
+      Iir_Predefined_Array_Maximum,
+      Iir_Predefined_Vector_Minimum,
+      Iir_Predefined_Vector_Maximum,
 
-       --  LRM08 9.2.4 Shift operators
-       Iir_Predefined_Array_Sll,
-       Iir_Predefined_Array_Srl,
-       Iir_Predefined_Array_Sla,
-       Iir_Predefined_Array_Sra,
-       Iir_Predefined_Array_Rol,
-       Iir_Predefined_Array_Ror,
+      --  LRM08 9.2.4 Shift operators
+      Iir_Predefined_Array_Sll,
+      Iir_Predefined_Array_Srl,
+      Iir_Predefined_Array_Sla,
+      Iir_Predefined_Array_Sra,
+      Iir_Predefined_Array_Rol,
+      Iir_Predefined_Array_Ror,
 
-       --  LRM08 9.2.2 Logical operators
-       --  Predefined operators for one dimensional array.
-       --  For bit and boolean type, the operations are the same.  To be
-       --  neutral, we use TF (for True/False) instead of Bit, Boolean or
-       --  Logic.
-       Iir_Predefined_TF_Array_And,
-       Iir_Predefined_TF_Array_Or,
-       Iir_Predefined_TF_Array_Nand,
-       Iir_Predefined_TF_Array_Nor,
-       Iir_Predefined_TF_Array_Xor,
-       Iir_Predefined_TF_Array_Xnor,
-       Iir_Predefined_TF_Array_Not,
+      --  LRM08 9.2.2 Logical operators
+      --  Predefined operators for one dimensional array.
+      --  For bit and boolean type, the operations are the same.  To be
+      --  neutral, we use TF (for True/False) instead of Bit, Boolean or
+      --  Logic.
+      Iir_Predefined_TF_Array_And,
+      Iir_Predefined_TF_Array_Or,
+      Iir_Predefined_TF_Array_Nand,
+      Iir_Predefined_TF_Array_Nor,
+      Iir_Predefined_TF_Array_Xor,
+      Iir_Predefined_TF_Array_Xnor,
+      Iir_Predefined_TF_Array_Not,
 
-       --  LRM08 9.2.2 Logical operators
-       Iir_Predefined_TF_Reduction_And,
-       Iir_Predefined_TF_Reduction_Or,
-       Iir_Predefined_TF_Reduction_Nand,
-       Iir_Predefined_TF_Reduction_Nor,
-       Iir_Predefined_TF_Reduction_Xor,
-       Iir_Predefined_TF_Reduction_Xnor,
-       Iir_Predefined_TF_Reduction_Not,
+      --  LRM08 9.2.2 Logical operators
+      Iir_Predefined_TF_Reduction_And,
+      Iir_Predefined_TF_Reduction_Or,
+      Iir_Predefined_TF_Reduction_Nand,
+      Iir_Predefined_TF_Reduction_Nor,
+      Iir_Predefined_TF_Reduction_Xor,
+      Iir_Predefined_TF_Reduction_Xnor,
+      Iir_Predefined_TF_Reduction_Not,
 
-       --  LRM08 9.2.2 Logical operators
-       Iir_Predefined_TF_Array_Element_And,
-       Iir_Predefined_TF_Element_Array_And,
-       Iir_Predefined_TF_Array_Element_Or,
-       Iir_Predefined_TF_Element_Array_Or,
-       Iir_Predefined_TF_Array_Element_Nand,
-       Iir_Predefined_TF_Element_Array_Nand,
-       Iir_Predefined_TF_Array_Element_Nor,
-       Iir_Predefined_TF_Element_Array_Nor,
-       Iir_Predefined_TF_Array_Element_Xor,
-       Iir_Predefined_TF_Element_Array_Xor,
-       Iir_Predefined_TF_Array_Element_Xnor,
-       Iir_Predefined_TF_Element_Array_Xnor,
+      --  LRM08 9.2.2 Logical operators
+      Iir_Predefined_TF_Array_Element_And,
+      Iir_Predefined_TF_Element_Array_And,
+      Iir_Predefined_TF_Array_Element_Or,
+      Iir_Predefined_TF_Element_Array_Or,
+      Iir_Predefined_TF_Array_Element_Nand,
+      Iir_Predefined_TF_Element_Array_Nand,
+      Iir_Predefined_TF_Array_Element_Nor,
+      Iir_Predefined_TF_Element_Array_Nor,
+      Iir_Predefined_TF_Array_Element_Xor,
+      Iir_Predefined_TF_Element_Array_Xor,
+      Iir_Predefined_TF_Array_Element_Xnor,
+      Iir_Predefined_TF_Element_Array_Xnor,
 
-       --  LRM08 9.2.3 Relational Operators
-       Iir_Predefined_Bit_Array_Match_Equality,
-       Iir_Predefined_Bit_Array_Match_Inequality,
+      --  LRM08 9.2.3 Relational Operators
+      Iir_Predefined_Bit_Array_Match_Equality,
+      Iir_Predefined_Bit_Array_Match_Inequality,
 
-       --  LRM08 5.3.2.4 Predefined operations on array types
-       Iir_Predefined_Array_Char_To_String,
-       Iir_Predefined_Bit_Vector_To_Ostring,
-       Iir_Predefined_Bit_Vector_To_Hstring,
+      --  LRM08 5.3.2.4 Predefined operations on array types
+      Iir_Predefined_Array_Char_To_String,
+      Iir_Predefined_Bit_Vector_To_Ostring,
+      Iir_Predefined_Bit_Vector_To_Hstring,
 
-       --  LRM08 9.2.3 Relational Operators
-       --  IEEE.Std_Logic_1164.Std_Ulogic
-       Iir_Predefined_Std_Ulogic_Match_Equality,
-       Iir_Predefined_Std_Ulogic_Match_Inequality,
-       Iir_Predefined_Std_Ulogic_Match_Less,
-       Iir_Predefined_Std_Ulogic_Match_Less_Equal,
-       Iir_Predefined_Std_Ulogic_Match_Greater,
-       Iir_Predefined_Std_Ulogic_Match_Greater_Equal,
+      --  LRM08 9.2.3 Relational Operators
+      --  IEEE.Std_Logic_1164.Std_Ulogic
+      Iir_Predefined_Std_Ulogic_Match_Equality,
+      Iir_Predefined_Std_Ulogic_Match_Inequality,
+      Iir_Predefined_Std_Ulogic_Match_Less,
+      Iir_Predefined_Std_Ulogic_Match_Less_Equal,
+      Iir_Predefined_Std_Ulogic_Match_Greater,
+      Iir_Predefined_Std_Ulogic_Match_Greater_Equal,
 
-       --  LRM08 9.2.3 Relational Operators
-       Iir_Predefined_Std_Ulogic_Array_Match_Equality,
-       Iir_Predefined_Std_Ulogic_Array_Match_Inequality,
+      --  LRM08 9.2.3 Relational Operators
+      Iir_Predefined_Std_Ulogic_Array_Match_Equality,
+      Iir_Predefined_Std_Ulogic_Array_Match_Inequality,
 
-       --  --  Predefined attribute functions.
-       --  Iir_Predefined_Attribute_Image,
-       --  Iir_Predefined_Attribute_Value,
-       --  Iir_Predefined_Attribute_Pos,
-       --  Iir_Predefined_Attribute_Val,
-       --  Iir_Predefined_Attribute_Succ,
-       --  Iir_Predefined_Attribute_Pred,
-       --  Iir_Predefined_Attribute_Leftof,
-       --  Iir_Predefined_Attribute_Rightof,
-       --  Iir_Predefined_Attribute_Left,
-       --  Iir_Predefined_Attribute_Right,
-       --  Iir_Predefined_Attribute_Event,
-       --  Iir_Predefined_Attribute_Active,
-       --  Iir_Predefined_Attribute_Last_Event,
-       --  Iir_Predefined_Attribute_Last_Active,
-       --  Iir_Predefined_Attribute_Last_Value,
-       --  Iir_Predefined_Attribute_Driving,
-       --  Iir_Predefined_Attribute_Driving_Value,
+      --  --  Predefined attribute functions.
+      --  Iir_Predefined_Attribute_Image,
+      --  Iir_Predefined_Attribute_Value,
+      --  Iir_Predefined_Attribute_Pos,
+      --  Iir_Predefined_Attribute_Val,
+      --  Iir_Predefined_Attribute_Succ,
+      --  Iir_Predefined_Attribute_Pred,
+      --  Iir_Predefined_Attribute_Leftof,
+      --  Iir_Predefined_Attribute_Rightof,
+      --  Iir_Predefined_Attribute_Left,
+      --  Iir_Predefined_Attribute_Right,
+      --  Iir_Predefined_Attribute_Event,
+      --  Iir_Predefined_Attribute_Active,
+      --  Iir_Predefined_Attribute_Last_Event,
+      --  Iir_Predefined_Attribute_Last_Active,
+      --  Iir_Predefined_Attribute_Last_Value,
+      --  Iir_Predefined_Attribute_Driving,
+      --  Iir_Predefined_Attribute_Driving_Value,
 
-       --  Impure subprograms.
+      --  Impure subprograms.
 
-       --  LRM08 5.4.3 Allocation and deallocation of objects
-       Iir_Predefined_Deallocate,
+      --  LRM08 5.4.3 Allocation and deallocation of objects
+      Iir_Predefined_Deallocate,
 
-       --  LRM08 5.5.2 File operations
-       Iir_Predefined_File_Open,
-       Iir_Predefined_File_Open_Status,
-       Iir_Predefined_File_Close,
-       Iir_Predefined_Read,
-       Iir_Predefined_Read_Length,
-       Iir_Predefined_Flush,
-       Iir_Predefined_Write,
-       Iir_Predefined_Endfile,
+      --  LRM08 5.5.2 File operations
+      Iir_Predefined_File_Open,
+      Iir_Predefined_File_Open_Status,
+      Iir_Predefined_File_Close,
+      Iir_Predefined_Read,
+      Iir_Predefined_Read_Length,
+      Iir_Predefined_Flush,
+      Iir_Predefined_Write,
+      Iir_Predefined_Endfile,
 
-       --  Misc impure functions.
-       Iir_Predefined_Now_Function,
+      --  Misc impure functions.
+      Iir_Predefined_Now_Function,
 
-       --  A not predefined and not known function.  User function.
-       Iir_Predefined_None,
+      --  A not predefined and not known function.  User function.
+      Iir_Predefined_None,
 
-       --  Defined in package ieee.std_logic_1164
+      --  Defined in package ieee.std_logic_1164
 
-       --  Std_Ulogic operations.
-       Iir_Predefined_Ieee_1164_Scalar_And,
-       Iir_Predefined_Ieee_1164_Scalar_Nand,
-       Iir_Predefined_Ieee_1164_Scalar_Or,
-       Iir_Predefined_Ieee_1164_Scalar_Nor,
-       Iir_Predefined_Ieee_1164_Scalar_Xor,
-       Iir_Predefined_Ieee_1164_Scalar_Xnor,
-       Iir_Predefined_Ieee_1164_Scalar_Not,
+      --  Std_Ulogic operations.
+      Iir_Predefined_Ieee_1164_Scalar_And,
+      Iir_Predefined_Ieee_1164_Scalar_Nand,
+      Iir_Predefined_Ieee_1164_Scalar_Or,
+      Iir_Predefined_Ieee_1164_Scalar_Nor,
+      Iir_Predefined_Ieee_1164_Scalar_Xor,
+      Iir_Predefined_Ieee_1164_Scalar_Xnor,
+      Iir_Predefined_Ieee_1164_Scalar_Not,
 
-       --  Std_Logic_Vector or Std_Ulogic_Vector operations.
-       --  Length of the result is the length of the left operand.
-       Iir_Predefined_Ieee_1164_Vector_And,
-       Iir_Predefined_Ieee_1164_Vector_Nand,
-       Iir_Predefined_Ieee_1164_Vector_Or,
-       Iir_Predefined_Ieee_1164_Vector_Nor,
-       Iir_Predefined_Ieee_1164_Vector_Xor,
-       Iir_Predefined_Ieee_1164_Vector_Xnor,
-       Iir_Predefined_Ieee_1164_Vector_Not,
+      --  Std_Logic_Vector or Std_Ulogic_Vector operations.
+      --  Length of the result is the length of the left operand.
+      Iir_Predefined_Ieee_1164_Vector_And,
+      Iir_Predefined_Ieee_1164_Vector_Nand,
+      Iir_Predefined_Ieee_1164_Vector_Or,
+      Iir_Predefined_Ieee_1164_Vector_Nor,
+      Iir_Predefined_Ieee_1164_Vector_Xor,
+      Iir_Predefined_Ieee_1164_Vector_Xnor,
+      Iir_Predefined_Ieee_1164_Vector_Not,
 
-       --  Numeric_Std.
-       --  Abbreviations:
-       --  Uns: Unsigned, Sgn: Signed, Nat: Natural, Int: Integer.
-       Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns,
-       Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat,
-       Iir_Predefined_Ieee_Numeric_Std_Add_Nat_Uns,
-       Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Sgn,
-       Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Int,
-       Iir_Predefined_Ieee_Numeric_Std_Add_Int_Sgn,
+      --  Numeric_Std.
+      --  Abbreviations:
+      --  Uns: Unsigned, Sgn: Signed, Nat: Natural, Int: Integer.
+      Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Add_Nat_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Sgn,
+      Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Int,
+      Iir_Predefined_Ieee_Numeric_Std_Add_Int_Sgn,
 
-       Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Uns,
-       Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Nat,
-       Iir_Predefined_Ieee_Numeric_Std_Eq_Nat_Uns,
-       Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Sgn,
-       Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Int,
-       Iir_Predefined_Ieee_Numeric_Std_Eq_Int_Sgn
-);
+      Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Eq_Nat_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Sgn,
+      Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Int,
+      Iir_Predefined_Ieee_Numeric_Std_Eq_Int_Sgn
+     );
 
    --  Return TRUE iff FUNC is a short-cut predefined function.
    function Iir_Predefined_Shortcut_P (Func : Iir_Predefined_Functions)
