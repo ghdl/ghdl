@@ -39,7 +39,7 @@ Location_File_To_Pos = libghdl.files_map__location_file_to_pos
 
 Location_File_To_Line = libghdl.files_map__location_file_to_line
 
-location_File_Line_To_Col = libghdl.files_map__location_file_line_to_col
+Location_File_Line_To_Col = libghdl.files_map__location_file_line_to_col
 
 Get_File_Name = libghdl.files_map__get_file_name
 
@@ -51,6 +51,8 @@ Get_File_Length = libghdl.files_map__get_file_length
 Read_Source_File = libghdl.files_map__read_source_file
 
 No_Source_File_Entry = 0
+
+No_Location = 0
 
 # Names
 
@@ -78,6 +80,8 @@ def Get_Identifier(s):
 # Scanner
 class Scanner:
     Set_File = libghdl.scanner__set_file
+
+    Close_File = libghdl.scanner__close_file
 
     Scan = libghdl.scanner__scan
 
@@ -124,9 +128,18 @@ Work_Library = c_int32.in_dll(libghdl, "libraries__work_library")
 
 Purge_Design_File = libghdl.libraries__purge_design_file
 
-#
+# Disp_Tree
 
 Disp_Iir = libghdl.disp_tree__disp_iir
+
+# Iirs_Utils
+
+class Iirs_Utils:
+    Get_Entity = libghdl.iirs_utils__get_entity
+
+    Is_Second_Subprogram_Specification = \
+        libghdl.iirs_utils__is_second_subprogram_specification
+
 
 Null_Iir = 0
 Null_Iir_List = 0
@@ -202,7 +215,6 @@ def nodes_iter(n):
         return
 #    print 'nodes_iter for {0}'.format(n)
     yield n
-    chain_next = None
     for f in fields_iter(n):
         typ = nodes_meta.get_field_type(f)
 #        print ' {0}: field {1} (type: {2})'.format(
@@ -226,10 +238,8 @@ def nodes_iter(n):
             attr = nodes_meta.get_field_attribute(f)
             if attr == Attr.ANone:
                 for n1 in list_iter(nodes_meta.Get_Iir_List(n, f)):
-                    yield n1
-    if chain_next:
-        for n1 in nodes_iter(chain_next):
-            yield n1
+                    for n2 in nodes_iter(n1):
+                        yield n2
 
 
 def list_iter(lst):
@@ -238,3 +248,87 @@ def list_iter(lst):
         return
     for i in range(Get_Nbr_Elements(lst)):
         yield Get_Nth_Element(lst, i)
+
+def declarations_iter(n):
+    """Iterator on all declarations in n."""
+    k = iirs.Get_Kind(n)
+    if nodes_meta.Has_Generic_Chain(k):
+        for n1 in chain_iter(iirs.Get_Generic_Chain(n)):
+            yield n1
+    if nodes_meta.Has_Port_Chain(k):
+        for n1 in chain_iter(iirs.Get_Port_Chain(n)):
+            yield n1
+    if nodes_meta.Has_Interface_Declaration_Chain(k):
+        for n1 in chain_iter(iirs.Get_Interface_Declaration_Chain(n)):
+            yield n1
+    if nodes_meta.Has_Declaration_Chain(k):
+        for n1 in chain_iter(iirs.Get_Declaration_Chain(n)):
+            yield n1
+            # There can be nested declarations (subprograms, record elements)
+            for n2 in declarations_iter(n1):
+                yield n2
+    if nodes_meta.Has_Concurrent_Statement_Chain(k):
+        for n1 in chain_iter(iirs.Get_Concurrent_Statement_Chain(n)):
+            for n2 in declarations_iter(n1):
+                yield n2
+    if nodes_meta.Has_Sequential_Statement_Chain(k):
+        for n1 in chain_iter(iirs.Get_Sequential_Statement_Chain(n)):
+            for n2 in declarations_iter(n1):
+                yield n2
+    if nodes_meta.Has_Parameter_Specification(k):
+        yield iirs.Get_Parameter_Specification(n)
+    if nodes_meta.Has_Generate_Statement_Body(k):
+        for n1 in declarations_iter(iirs.Get_Generate_Statement_Body(n)):
+            yield n1
+    if nodes_meta.Has_Else_Clause(k):
+        n1 = iirs.Get_Else_Clause(n)
+        if n1 != Null_Iir:
+            for n2 in declarations_iter(n1):
+                yield n2
+    if nodes_meta.Has_Generate_Else_Clause(k):
+        n1 = iirs.Get_Generate_Else_Clause(n)
+        if n1 != Null_Iir:
+            for n2 in declarations_iter(n1):
+                yield n2
+    if nodes_meta.Has_Block_Header(k):
+        n1 = iirs.Get_Block_Header(n)
+        if n1 != Null_Iir:
+            for n2 in declarations_iter(n1):
+                yield n2
+    if k in [iirs.Iir_Kind.Entity_Declaration,
+             iirs.Iir_Kind.Architecture_Body,
+             iirs.Iir_Kind.Package_Body,
+             iirs.Iir_Kind.Process_Statement,
+             iirs.Iir_Kind.Sensitized_Process_Statement,
+             iirs.Iir_Kind.Block_Statement,
+             iirs.Iir_Kind.For_Generate_Statement,
+             iirs.Iir_Kind.If_Generate_Statement,
+             iirs.Iir_Kind.Generate_Statement_Body,
+             iirs.Iir_Kind.Assertion_Statement,
+             iirs.Iir_Kind.Wait_Statement,
+             iirs.Iir_Kind.Simple_Signal_Assignment_Statement,
+             iirs.Iir_Kind.Variable_Assignment_Statement,
+             iirs.Iir_Kind.For_Loop_Statement,
+             iirs.Iir_Kind.Case_Statement,
+             iirs.Iir_Kind.Null_Statement,
+             iirs.Iir_Kind.Exit_Statement,
+             iirs.Iir_Kind.Next_Statement,
+             iirs.Iir_Kind.Procedure_Call_Statement,
+             iirs.Iir_Kind.Signal_Declaration,
+             iirs.Iir_Kind.Constant_Declaration,
+             iirs.Iir_Kind.Variable_Declaration,
+             iirs.Iir_Kind.Object_Alias_Declaration,
+             iirs.Iir_Kind.If_Statement,
+             iirs.Iir_Kind.Elsif,
+             iirs.Iir_Kind.Return_Statement,
+             iirs.Iir_Kind.Type_Declaration,
+             iirs.Iir_Kind.Anonymous_Type_Declaration,
+             iirs.Iir_Kind.Subtype_Declaration,
+             iirs.Iir_Kind.Function_Declaration,
+             iirs.Iir_Kind.Function_Body,
+             iirs.Iir_Kind.Procedure_Declaration,
+             iirs.Iir_Kind.Procedure_Body,
+             iirs.Iir_Kind.Component_Instantiation_Statement,
+             ]:
+        return
+    assert False, "unknown node of kind {}".format(kind_image(k))
