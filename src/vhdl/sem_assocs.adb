@@ -1161,7 +1161,9 @@ package body Sem_Assocs is
                Location_Copy (Iassoc, Assoc);
                Set_Choice_Staticness (Iassoc, Locally);
                pragma Assert (Cur_Iface /= Null_Iir);
-               Set_Formal (Iassoc, Build_Simple_Name (Cur_Iface, Iassoc));
+               Set_Formal
+                 (Iassoc,
+                  Build_Simple_Name (Cur_Iface, Get_Location (Formal)));
                --  Insert IASSOC.
                if Prev_Assoc = Null_Iir then
                   Assoc_Chain := Iassoc;
