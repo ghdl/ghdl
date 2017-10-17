@@ -5,7 +5,8 @@ import sys
 import argparse
 
 field_file = "nodes.ads"
-spec_file = "iirs.ads"
+kind_file = "iirs.ads"
+node_file = "iirs.ads"
 template_file = "iirs.adb.in"
 meta_base_file = "nodes_meta"
 prefix_name = "Iir_Kind_"
@@ -160,7 +161,7 @@ def read_fields(file):
     return (formats, fields)
 
 
-# Read kinds, kinds ranges and methods
+# Read kinds and kinds ranges.
 def read_kinds(filename):
     lr = linereader(filename)
     kinds = []
@@ -233,8 +234,11 @@ def read_kinds(filename):
                         break
                     raise ParseError(lr, "unhandled line in subtype")
             kinds_ranges[name] = kinds[first:last+1]
+    return (kinds, kinds_ranges)
 
-    # Read functions
+# Read functions
+def read_methods(filename):
+    lr = linereader(filename)
     funcs = []
     pat_field = re.compile(r'   --  Field: ([\w,]+)( \w+)?( \(\w+\))?\n')
     pat_conv = re.compile(r'^ \((\w+)\)$')
@@ -243,6 +247,11 @@ def read_kinds(filename):
     pat_proc = re.compile(
         r'   procedure Set_(\w+) \((\w+) : (\w+); (\w+) : (\w+)\);\n')
     pat_end = re.compile('end [A-Za-z.]+;\n')
+    while True:
+        l = lr.get()
+        # Start of methods
+        if l == '   -- General methods.\n':
+            break
     while True:
         l = lr.get()
         if pat_end.match(l):
@@ -292,7 +301,7 @@ def read_kinds(filename):
                                   mp.group(2), mp.group(3),
                                   mp.group(4), mp.group(5)))
 
-    return (kinds, kinds_ranges, funcs)
+    return funcs
 
 
 # Read description for one node
@@ -308,7 +317,7 @@ def read_nodes_fields(lr, names, fields, nodes, funcs_dict):
     cur_nodes = []
     for (nm, fmt) in names:
         if fmt not in fields:
-            raise ParseError(lr, 'unknown format')
+            raise ParseError(lr, 'unknown format "{}"'.format(fmt))
         n = NodeDesc(nm, fmt, {x: None for x in fields[fmt]}, {})
         nodes[nm] = n
         cur_nodes.append(n)
@@ -831,9 +840,12 @@ def main():
     parser.add_argument('--field-file', dest='field_file',
                         default='nodes.ads',
                         help='specify file which defines fields')
-    parser.add_argument('--spec-file', dest='spec_file',
+    parser.add_argument('--kind-file', dest='kind_file',
                         default='iirs.ads',
-                        help='specify file which defines nodes')
+                        help='specify file which defines nodes kind')
+    parser.add_argument('--node-file', dest='node_file',
+                        default='iirs.ads',
+                        help='specify file which defines nodes and methods')
     parser.add_argument('--template-file', dest='template_file',
                         default='iirs.adb.in',
                         help='specify template body file')
@@ -869,12 +881,14 @@ def main():
     flag_keep_order = args.flag_keep_order
 
     field_file = args.field_file
-    spec_file = args.spec_file
+    kind_file = args.kind_file
+    node_file = args.node_file
 
     try:
         (formats, fields) = read_fields(field_file)
-        (kinds, kinds_ranges, funcs) = read_kinds(spec_file)
-        nodes = read_nodes(spec_file, kinds, kinds_ranges, fields, funcs)
+        (kinds, kinds_ranges) = read_kinds(kind_file)
+        funcs = read_methods(node_file)
+        nodes = read_nodes(node_file, kinds, kinds_ranges, fields, funcs)
 
     except ParseError as e:
         print >> sys.stderr, e
