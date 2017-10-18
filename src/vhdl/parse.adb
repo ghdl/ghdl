@@ -6589,6 +6589,14 @@ package body Parse is
 
             when Tok_Wait =>
                Stmt := Parse_Wait_Statement;
+
+            when Tok_Semi_Colon =>
+               Error_Msg_Parse ("extra ';' ignored");
+
+               --  Eat ';'
+               Scan;
+
+               goto Again;
             when others =>
                return First_Stmt;
          end case;
@@ -6612,6 +6620,8 @@ package body Parse is
             Set_Chain (Last_Stmt, Stmt);
          end if;
          Last_Stmt := Stmt;
+
+         <<Again>> null;
       end loop;
    end Parse_Sequential_Statements;
 
