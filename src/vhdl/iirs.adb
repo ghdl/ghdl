@@ -203,16 +203,6 @@ package body Iirs is
       return Iir (P);
    end Source_Ptr_To_Iir;
 
-   function Iir_To_Location_Type (N : Iir) return Location_Type is
-   begin
-      return Location_Type (N);
-   end Iir_To_Location_Type;
-
-   function Location_Type_To_Iir (L : Location_Type) return Iir is
-   begin
-      return Iir (L);
-   end Location_Type_To_Iir;
-
    function Boolean_To_Iir_Delay_Mechanism is new Ada.Unchecked_Conversion
      (Source => Boolean, Target => Iir_Delay_Mechanism);
    function Iir_Delay_Mechanism_To_Boolean is new Ada.Unchecked_Conversion
@@ -5368,22 +5358,6 @@ package body Iirs is
                      "no field Protected_Type_Declaration");
       Set_Field4 (Target, Decl);
    end Set_Protected_Type_Declaration;
-
-   function Get_End_Location (Target : Iir) return Location_Type is
-   begin
-      pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_End_Location (Get_Kind (Target)),
-                     "no field End_Location");
-      return Iir_To_Location_Type (Get_Field6 (Target));
-   end Get_End_Location;
-
-   procedure Set_End_Location (Target : Iir; Loc : Location_Type) is
-   begin
-      pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_End_Location (Get_Kind (Target)),
-                     "no field End_Location");
-      Set_Field6 (Target, Location_Type_To_Iir (Loc));
-   end Set_End_Location;
 
    function Get_Use_Flag (Decl : Iir) return Boolean is
    begin

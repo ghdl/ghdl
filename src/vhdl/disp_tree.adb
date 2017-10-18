@@ -515,9 +515,6 @@ package body Disp_Tree is
                when Type_Iir_Direction =>
                   Put_Line (Image_Iir_Direction
                               (Get_Iir_Direction (N, F)));
-               when Type_Location_Type =>
-                  Put_Line (Image_Location_Type
-                              (Get_Location_Type (N, F)));
                when Type_Iir_Int32 =>
                   Put_Line (Iir_Int32'Image (Get_Iir_Int32 (N, F)));
                when Type_Int32 =>

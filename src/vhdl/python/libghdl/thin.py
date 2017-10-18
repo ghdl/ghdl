@@ -77,6 +77,11 @@ def Get_Identifier(s):
     return _Get_Identifier_With_Len(c_char_p(s), len(s))
 
 
+# Flags
+class Flags:
+    Flag_Elocations = c_bool.in_dll(libghdl, "flags__flag_elocations")
+
+
 # Scanner
 class Scanner:
     Set_File = libghdl.scanner__set_file

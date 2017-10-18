@@ -26,8 +26,13 @@ PNODESPY=python/pnodespy.py
 DEPS=iirs.ads nodes.ads $(PNODES)
 
 GEN_FILES=iirs.adb nodes_meta.ads nodes_meta.adb \
+  elocations.adb elocations_meta.ads elocations_meta.adb \
   python/libghdl/iirs.py python/libghdl/nodes_meta.py \
-  python/libghdl/std_names.py python/libghdl/tokens.py
+  python/libghdl/std_names.py python/libghdl/tokens.py \
+  python/libghdl/elocations.py
+
+ELOCATIONS_FLAGS=--node-file=elocations.ads --field-file=elocations.adb.in \
+  --template-file=elocations.adb.in --meta-basename=elocations_meta
 
 all: $(GEN_FILES)
 
@@ -44,6 +49,21 @@ nodes_meta.ads: nodes_meta.ads.in $(DEPS)
 nodes_meta.adb: nodes_meta.adb.in $(DEPS)
 	$(RM) $@
 	$(PNODES) meta_body > $@
+	chmod -w $@
+
+elocations.adb: elocations.adb.in elocations.ads $(DEPS)
+	$(RM) $@
+	$(PNODES) $(ELOCATIONS_FLAGS) body > $@
+	chmod -w $@
+
+elocations_meta.ads: elocations_meta.ads.in elocations.ads $(DEPS)
+	$(RM) $@
+	$(PNODES) $(ELOCATIONS_FLAGS) meta_specs > $@
+	chmod -w $@
+
+elocations_meta.adb: elocations_meta.adb.in elocations.ads $(DEPS)
+	$(RM) $@
+	$(PNODES) $(ELOCATIONS_FLAGS) meta_body > $@
 	chmod -w $@
 
 python/libghdl/iirs.py: $(DEPS) $(PNODESPY)
@@ -64,6 +84,11 @@ python/libghdl/std_names.py: $(PNODESPY) ../std_names.ads
 python/libghdl/tokens.py: $(PNODESPY) tokens.ads
 	$(RM) $@
 	$(PNODESPY) libghdl-tokens > $@
+	chmod -w $@
+
+python/libghdl/elocations.py: $(PNODESPY) elocations.ads
+	$(RM) $@
+	$(PNODESPY) $(ELOCATIONS_FLAGS) libghdl-elocs > $@
 	chmod -w $@
 
 clean:

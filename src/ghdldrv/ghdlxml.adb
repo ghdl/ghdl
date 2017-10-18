@@ -346,14 +346,6 @@ package body Ghdlxml is
                when Type_Iir_Direction =>
                   Put_Field (F, Image_Iir_Direction
                                (Get_Iir_Direction (N, F)));
-               when Type_Location_Type =>
-                  declare
-                     Loc : constant Location_Type := Get_Location_Type (N, F);
-                  begin
-                     if Loc /= No_Location then
-                        Put_Field (F, Image_Location_Type (Loc));
-                     end if;
-                  end;
                when Type_Iir_Int32 =>
                   Put_Field
                     (F, Strip (Iir_Int32'Image (Get_Iir_Int32 (N, F))));

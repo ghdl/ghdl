@@ -203,16 +203,6 @@ package body Iirs is
       return Iir (P);
    end Source_Ptr_To_Iir;
 
-   function Iir_To_Location_Type (N : Iir) return Location_Type is
-   begin
-      return Location_Type (N);
-   end Iir_To_Location_Type;
-
-   function Location_Type_To_Iir (L : Location_Type) return Iir is
-   begin
-      return Iir (L);
-   end Location_Type_To_Iir;
-
    function Boolean_To_Iir_Delay_Mechanism is new Ada.Unchecked_Conversion
      (Source => Boolean, Target => Iir_Delay_Mechanism);
    function Iir_Delay_Mechanism_To_Boolean is new Ada.Unchecked_Conversion

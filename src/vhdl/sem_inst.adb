@@ -314,9 +314,6 @@ package body Sem_Inst is
               (Res, F, Get_Iir_Predefined_Functions (N, F));
          when Type_Iir_Direction =>
             Set_Iir_Direction (Res, F, Get_Iir_Direction (N, F));
-         when Type_Location_Type =>
-            Set_Location_Type
-              (Res, F, Relocate (Get_Location_Type (N, F)));
          when Type_Iir_Int32 =>
             Set_Iir_Int32 (Res, F, Get_Iir_Int32 (N, F));
          when Type_Int32 =>

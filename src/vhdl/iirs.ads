@@ -233,8 +233,6 @@ package Iirs is
    --  a package, a package body or a configuration.
    --   Get/Set_Library_Unit (Field5)
    --
-   --   Get/Set_End_Location (Field6)
-   --
    --  Collision chain for units.
    --   Get/Set_Hash_Chain (Field7)
    --
@@ -516,6 +514,12 @@ package Iirs is
    -- Iir_Kind_Choice_By_Name (Short)
    -- Iir_Kind_Choice_By_Expression (Short)
    --  (Iir_Kinds_Choice)
+   --
+   --
+   --  The location of the first alternative is set on:
+   --  'when' for case statement, selected assignment and case generate,
+   --  '(' or ',' for aggregates.
+   --  The location of the following alternatives is set on '|'.
    --
    --   Get/Set_Parent (Field0)
    --
@@ -1967,6 +1971,8 @@ package Iirs is
    --  use_clause ::=
    --     USE selected_name { , selected_name } ;
    --
+   --  Location is on 'USE'.
+   --
    --   Get/Set_Parent (Field0)
    --
    --   Get/Set_Selected_Name (Field1)
@@ -2729,6 +2735,8 @@ package Iirs is
 
    -- Iir_Kind_Sensitized_Process_Statement (Medium)
    -- Iir_Kind_Process_Statement (Medium)
+   --
+   --  Location is on the label, or 'postponed' or 'process'.
    --
    --   Get/Set_Parent (Field0)
    --
@@ -7248,11 +7256,6 @@ package Iirs is
    --  Field: Field4 Ref
    function Get_Protected_Type_Declaration (Target : Iir) return Iir;
    procedure Set_Protected_Type_Declaration (Target : Iir; Decl : Iir);
-
-   --  Location of the 'end' token.
-   --  Field: Field6 (uc)
-   function Get_End_Location (Target : Iir) return Location_Type;
-   procedure Set_End_Location (Target : Iir; Loc : Location_Type);
 
    --  For a declaration: true if the declaration is used somewhere.
    --  Field: Flag6

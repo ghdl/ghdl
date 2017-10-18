@@ -36,6 +36,7 @@ with Xrefs;
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
 with Disp_Vhdl;
+with Elocations;
 
 package body Ghdlprint is
    type Html_Format_Type is (Html_2, Html_Css);
@@ -681,6 +682,7 @@ package body Ghdlprint is
       Len : Natural;
    begin
       Flags.Bootstrap := True;
+      Flags.Flag_Elocations := True;
       --  Load word library.
       Libraries.Load_Std_Library;
       Libraries.Load_Work_Library;
@@ -763,7 +765,7 @@ package body Ghdlprint is
                Lib := Get_Library_Unit (Unit);
 
                Location_To_File_Pos
-                 (Get_End_Location (Unit), File_Entry, Lend);
+                 (Elocations.Get_End_Location (Lib), File_Entry, Lend);
                if Lend < First then
                   raise Internal_Error;
                end if;

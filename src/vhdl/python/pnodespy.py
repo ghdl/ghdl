@@ -39,6 +39,19 @@ def do_iirs_subprg():
             k.name, libname, classname, k.name.lower(), k.pname, k.rname)
 
 
+def do_libghdl_elocations():
+    classname = 'elocations'
+    print 'from libghdl import libghdl'
+    print
+    for k in pnodes.funcs:
+        print
+        print 'Get_{0} = {1}.{2}__get_{3}'.format(
+            k.name, libname, classname, k.name.lower())
+        print
+        print 'Set_{0} = {1}.{2}__set_{3}'.format(
+            k.name, libname, classname, k.name.lower(), k.pname, k.rname)
+
+
 def do_class_types():
     print_enum('types', pnodes.get_types())
 
@@ -178,7 +191,8 @@ pnodes.actions.update({'class-kinds': do_class_kinds,
                        'libghdl-iirs': do_libghdl_iirs,
                        'libghdl-meta': do_libghdl_meta,
                        'libghdl-names': do_libghdl_names,
-                       'libghdl-tokens': do_libghdl_tokens})
+                       'libghdl-tokens': do_libghdl_tokens,
+                       'libghdl-elocs': do_libghdl_elocations})
 
 
 pnodes.main()
