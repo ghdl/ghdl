@@ -365,6 +365,7 @@ package Nodes_Meta is
       Field_Has_Pure,
       Field_Has_Body,
       Field_Has_Parameter,
+      Field_Has_Component,
       Field_Has_Identifier_List,
       Field_Has_Mode,
       Field_Has_Class,
@@ -885,6 +886,7 @@ package Nodes_Meta is
    function Has_Has_Pure (K : Iir_Kind) return Boolean;
    function Has_Has_Body (K : Iir_Kind) return Boolean;
    function Has_Has_Parameter (K : Iir_Kind) return Boolean;
+   function Has_Has_Component (K : Iir_Kind) return Boolean;
    function Has_Has_Identifier_List (K : Iir_Kind) return Boolean;
    function Has_Has_Mode (K : Iir_Kind) return Boolean;
    function Has_Has_Class (K : Iir_Kind) return Boolean;

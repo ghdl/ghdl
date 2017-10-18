@@ -7100,9 +7100,9 @@ package body Parse is
    --  postcond : next_token
    --
    --  instantiated_unit ::=
-   --      [ COMPONENT ] component_name
-   --      ENTITY entity_name [ ( architecture_identifier ) ]
-   --      CONFIGURATION configuration_name
+   --        [ COMPONENT ] component_name
+   --      | ENTITY entity_name [ ( architecture_identifier ) ]
+   --      | CONFIGURATION configuration_name
    function Parse_Instantiated_Unit return Iir
    is
       Res : Iir;
@@ -7116,12 +7116,18 @@ package body Parse is
 
       case Current_Token is
          when Tok_Component =>
+            --  Eat 'component'.
             Scan;
+
             return Parse_Name (False);
+
          when Tok_Entity =>
             Res := Create_Iir (Iir_Kind_Entity_Aspect_Entity);
             Set_Location (Res);
+
+            --  Eat 'entity'.
             Scan;
+
             Set_Entity_Name (Res, Parse_Name (False));
             if Current_Token = Tok_Left_Paren then
                Scan_Expect (Tok_Identifier);
@@ -7130,12 +7136,14 @@ package body Parse is
                Scan;
             end if;
             return Res;
+
          when Tok_Configuration =>
             Res := Create_Iir (Iir_Kind_Entity_Aspect_Configuration);
             Set_Location (Res);
             Scan_Expect (Tok_Identifier);
             Set_Configuration_Name (Res, Parse_Name (False));
             return Res;
+
          when others =>
             raise Internal_Error;
       end case;
@@ -8034,9 +8042,12 @@ package body Parse is
                Postponed_Not_Allowed;
                declare
                   Unit : Iir;
+                  Has_Component : constant Boolean :=
+                    Current_Token = Tok_Component;
                begin
                   Unit := Parse_Instantiated_Unit;
                   Stmt := Parse_Component_Instantiation (Unit);
+                  Set_Has_Component (Stmt, Has_Component);
                end;
             when Tok_Psl_Default =>
                Postponed_Not_Allowed;

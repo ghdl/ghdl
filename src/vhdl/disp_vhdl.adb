@@ -2491,6 +2491,10 @@ package body Disp_Vhdl is
    begin
       Disp_Label (Stmt);
       if Get_Kind (Component) in Iir_Kinds_Denoting_Name then
+         if Get_Has_Component (Stmt) then
+            Put ("component");
+            Put (" ");
+         end if;
          Disp_Name (Component);
       else
          Disp_Entity_Aspect (Component);

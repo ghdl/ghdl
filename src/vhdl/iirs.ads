@@ -2901,6 +2901,8 @@ package Iirs is
    --   Get/Set_Component_Configuration (Field6)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Has_Component (Flag5)
 
    -- Iir_Kind_Block_Statement (Medium)
    --
@@ -7311,6 +7313,11 @@ package Iirs is
    --  Field: Flag10
    function Get_Has_Parameter (Decl : Iir) return Boolean;
    procedure Set_Has_Parameter (Decl : Iir; Flag : Boolean);
+
+   --  Layout flag: true if 'component' reserved identifier is present.
+   --  Field: Flag5
+   function Get_Has_Component (Decl : Iir) return Boolean;
+   procedure Set_Has_Component (Decl : Iir; Flag : Boolean);
 
    --  Layout flag for object declaration.  If True, the identifier of this
    --  declaration is followed by an identifier (and separated by a comma).
