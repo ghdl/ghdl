@@ -362,15 +362,16 @@ package body Sem_Specs is
       end if;
    end Attribute_A_Decl;
 
-   --  IS_DESIGNATORS is true if the entity name list is a list of designators.
-   --  Return TRUE if an entity was attributed.
+   --  Return TRUE if a named entity was attributed.
    function Sem_Named_Entities (Scope : Iir;
                                 Name : Iir;
                                 Attr : Iir_Attribute_Specification;
-                                Is_Designators : Boolean;
                                 Check_Defined : Boolean)
                                return Boolean
    is
+      --  Name is set (ie neither ALL nor OTHERS).
+      Is_Designator : constant Boolean := Name /= Null_Iir;
+
       Res : Boolean;
 
       --  If declaration DECL matches then named entity ENT, apply attribute
@@ -380,16 +381,17 @@ package body Sem_Specs is
       is
          Ent_Id : constant Name_Id := Get_Identifier (Ent);
       begin
-         if (Name = Null_Iir or else Ent_Id = Get_Identifier (Name))
+         if (not Is_Designator or else Ent_Id = Get_Identifier (Name))
            and then Ent_Id /= Null_Identifier
          then
-            if Is_Designators then
+            if Is_Designator then
+               Set_Named_Entity (Name, Ent);
                Xref_Ref (Name, Ent);
             end if;
             if Get_Visible_Flag (Ent) = False then
                Error_Msg_Sem (+Attr, "%n is not yet visible", +Ent);
             else
-               Attribute_A_Decl (Decl, Attr, Is_Designators, Check_Defined);
+               Attribute_A_Decl (Decl, Attr, Is_Designator, Check_Defined);
                return True;
             end if;
          end if;
@@ -557,7 +559,7 @@ package body Sem_Specs is
       --  NOTE: therefore, ALL/OTHERS do not apply to named entities declared
       --  beyond the immediate declarative part, such as design unit or
       --  interfaces.
-      if Is_Designators then
+      if Is_Designator then
          --  LRM 5.1  Attribute specification
          --  An attribute specification for an attribute of a design unit
          --  (i.e. an entity declaration, an architecture, a configuration
@@ -761,7 +763,7 @@ package body Sem_Specs is
          --  specification applies to all named entities of the specified
          --  class that are declared in the immediatly enclosing
          --  declarative part.
-         Res := Sem_Named_Entities (Scope, Null_Iir, Spec, False, True);
+         Res := Sem_Named_Entities (Scope, Null_Iir, Spec, True);
          if Res = False and then Is_Warning_Enabled (Warnid_Specs) then
             Warning_Msg_Sem
               (Warnid_Specs, +Spec,
@@ -774,7 +776,7 @@ package body Sem_Specs is
          --  part, provided that each such entity is not explicitly named
          --  in the entity name list of a previous attribute specification
          --  for the given attribute.
-         Res := Sem_Named_Entities (Scope, Null_Iir, Spec, False, False);
+         Res := Sem_Named_Entities (Scope, Null_Iir, Spec, False);
          if Res = False and then Is_Warning_Enabled (Warnid_Specs) then
             Warning_Msg_Sem
               (Warnid_Specs, +Spec,
@@ -796,7 +798,7 @@ package body Sem_Specs is
                   --  LRM 5.1
                   --  It is an error if the class of those names is not the
                   --  same as that denoted by entity class.
-                  if not Sem_Named_Entities (Scope, El, Spec, True, True) then
+                  if not Sem_Named_Entities (Scope, El, Spec, True) then
                      Error_Msg_Sem_Relaxed
                        (El, Warnid_Specs,
                         "no %i for attribute specification", (1 => +El));
