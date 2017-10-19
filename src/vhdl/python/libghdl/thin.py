@@ -268,10 +268,13 @@ def declarations_iter(n):
             yield n1
     if nodes_meta.Has_Declaration_Chain(k):
         for n1 in chain_iter(iirs.Get_Declaration_Chain(n)):
-            yield n1
-            # There can be nested declarations (subprograms, record elements)
-            for n2 in declarations_iter(n1):
-                yield n2
+            k1 = iirs.Get_Kind(n1)
+            if k1 != iirs.Iir_Kind.Attribute_Specification:
+                yield n1
+                # There can be nested declarations (subprograms,
+                # record elements)
+                for n2 in declarations_iter(n1):
+                    yield n2
     if nodes_meta.Has_Concurrent_Statement_Chain(k):
         for n1 in chain_iter(iirs.Get_Concurrent_Statement_Chain(n)):
             for n2 in declarations_iter(n1):
@@ -323,6 +326,7 @@ def declarations_iter(n):
              iirs.Iir_Kind.Constant_Declaration,
              iirs.Iir_Kind.Variable_Declaration,
              iirs.Iir_Kind.Object_Alias_Declaration,
+             iirs.Iir_Kind.Attribute_Declaration,
              iirs.Iir_Kind.If_Statement,
              iirs.Iir_Kind.Elsif,
              iirs.Iir_Kind.Return_Statement,
