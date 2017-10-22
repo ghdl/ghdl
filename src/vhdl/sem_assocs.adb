@@ -621,21 +621,20 @@ package body Sem_Assocs is
 
    --  Handle indexed name
    --  FORMAL is the formal name to be handled.
-   --  SUB_ASSOC is an association_by_individual in which the formal will be
+   --  BASE_ASSOC is an association_by_individual in which the formal will be
    --   inserted.
-   --  Update SUB_ASSOC so that it designates FORMAL.
    procedure Add_Individual_Assoc_Indexed_Name
-     (Sub_Assoc : in out Iir; Formal : Iir)
+     (Choice : out Iir; Base_Assoc : Iir; Formal : Iir)
    is
-      Base_Assoc : constant Iir := Sub_Assoc;
       Index_List : constant Iir_List := Get_Index_List (Formal);
       Nbr : constant Natural := Get_Nbr_Elements (Index_List);
-      Choice : Iir;
       Last_Choice : Iir;
       Index : Iir;
       Staticness : Iir_Staticness;
+      Sub_Assoc : Iir;
    begin
       --  Find element.
+      Sub_Assoc := Base_Assoc;
       for I in 0 .. Nbr - 1 loop
          Index := Get_Nth_Element (Index_List, I);
 
@@ -693,6 +692,7 @@ package body Sem_Assocs is
          << Found >> null;
 
          if I < Nbr - 1 then
+            --  Create an intermediate assoc by individual.
             Sub_Assoc := Get_Associated_Expr (Choice);
             if Sub_Assoc = Null_Iir then
                Sub_Assoc := Create_Iir
@@ -701,16 +701,13 @@ package body Sem_Assocs is
                Set_Associated_Expr (Choice, Sub_Assoc);
                Set_Choice_Staticness (Sub_Assoc, Locally);
             end if;
-         else
-            Sub_Assoc := Choice;
          end if;
       end loop;
    end Add_Individual_Assoc_Indexed_Name;
 
    procedure Add_Individual_Assoc_Slice_Name
-     (Sub_Assoc : in out Iir; Formal : Iir)
+     (Choice : out Iir; Sub_Assoc : Iir; Formal : Iir)
    is
-      Choice : Iir;
       Index : Iir;
       Staticness : Iir_Staticness;
    begin
@@ -735,46 +732,62 @@ package body Sem_Assocs is
       Set_Chain (Choice, Get_Individual_Association_Chain (Sub_Assoc));
       Set_Choice_Staticness (Choice, Staticness);
       Set_Individual_Association_Chain (Sub_Assoc, Choice);
-
-      Sub_Assoc := Choice;
    end Add_Individual_Assoc_Slice_Name;
 
    procedure Add_Individual_Assoc_Selected_Name
-     (Sub_Assoc : in out Iir; Formal : Iir)
+     (Choice : out Iir; Sub_Assoc : Iir; Formal : Iir)
    is
-      Choice : Iir;
+      Element : constant Iir := Get_Selected_Element (Formal);
+      Last_Choice : Iir;
    begin
-      --  FIXME: If the name already exists ?
+      --  Try to find the existing choice.
+      Last_Choice := Null_Iir;
+      Choice := Get_Individual_Association_Chain (Sub_Assoc);
+      while Choice /= Null_Iir loop
+         if Get_Choice_Name (Choice) = Element then
+            return;
+         end if;
+         Last_Choice := Choice;
+         Choice := Get_Chain (Choice);
+      end loop;
+
+      --  If not found, append it.
       Choice := Create_Iir (Iir_Kind_Choice_By_Name);
       Location_Copy (Choice, Formal);
-      Set_Choice_Name (Choice, Get_Selected_Element (Formal));
-      Set_Chain (Choice, Get_Individual_Association_Chain (Sub_Assoc));
-      Set_Individual_Association_Chain (Sub_Assoc, Choice);
-
-      Sub_Assoc := Choice;
+      Set_Choice_Name (Choice, Element);
+      if Last_Choice = Null_Iir then
+         Set_Individual_Association_Chain (Sub_Assoc, Choice);
+      else
+         Set_Chain (Last_Choice, Choice);
+      end if;
    end Add_Individual_Assoc_Selected_Name;
 
    --  Subroutine of Add_Individual_Association.
    --  Search/build the tree of choices for FORMAL, starting for IASSOC.
-   procedure Add_Individual_Association_1 (Iassoc : in out Iir; Formal : Iir)
+   --  The root of the tree is an association by individual node.  Each node
+   --  points to a chain of choices, whose associated expression is either an
+   --  association by individual (and the tree continue) or an association
+   --  by expression coming from the initial association (and this is a leaf).
+   procedure Add_Individual_Association_1
+     (Iassoc : in out Iir; Formal : Iir; Last : Boolean)
    is
       Base_Assoc : constant Iir := Iassoc;
       Formal_Object : constant Iir := Name_To_Object (Formal);
       Sub : Iir;
+      Choice : Iir;
    begin
       pragma Assert
-        (Get_Kind (Base_Assoc) = Iir_Kind_Association_Element_By_Individual);
+        (Get_Kind (Iassoc) = Iir_Kind_Association_Element_By_Individual);
 
       --  Recurse to start from the basename of the formal.
       case Get_Kind (Formal_Object) is
          when Iir_Kind_Indexed_Name
            | Iir_Kind_Slice_Name
            | Iir_Kind_Selected_Element =>
-            Add_Individual_Association_1 (Iassoc, Get_Prefix (Formal_Object));
+            Add_Individual_Association_1
+              (Iassoc, Get_Prefix (Formal_Object), False);
          when Iir_Kinds_Interface_Object_Declaration =>
             --  At the root of the formal.
-            pragma Assert
-              (Get_Kind (Iassoc) = Iir_Kind_Association_Element_By_Individual);
             pragma Assert
               (Formal_Object = Get_Named_Entity (Get_Formal (Iassoc)));
             return;
@@ -782,55 +795,58 @@ package body Sem_Assocs is
             Error_Kind ("add_individual_association_1", Formal);
       end case;
 
-      case Get_Kind (Iassoc) is
-         when Iir_Kind_Association_Element_By_Individual =>
-            null;
-         when Iir_Kind_Choice_By_Expression
-           | Iir_Kind_Choice_By_Name =>
-            Sub := Get_Associated_Expr (Iassoc);
-            if Sub = Null_Iir then
-               Sub := Create_Iir (Iir_Kind_Association_Element_By_Individual);
-               Location_Copy (Sub, Formal);
-               Set_Choice_Staticness (Sub, Locally);
-               Set_Formal (Sub, Iassoc);
-               Set_Associated_Expr (Iassoc, Sub);
-               Iassoc := Sub;
-            else
-               case Get_Kind (Sub) is
-                  when Iir_Kind_Association_Element_By_Individual =>
-                     Iassoc := Sub;
-                  when others =>
-                     Error_Msg_Sem
-                       (+Formal, "individual association of %n"
-                          & " conflicts with that at %l",
-                        (+Get_Interface_Of_Formal (Get_Formal (Iassoc)),
-                         +Sub));
-                     return;
-               end case;
-            end if;
-         when others =>
-            Error_Kind ("add_individual_association_1(2)", Iassoc);
-      end case;
-
-      Sub := Iassoc;
+      --  Add the choices for the indexes/slice/element.
       case Get_Kind (Formal_Object) is
          when Iir_Kind_Indexed_Name =>
-            Add_Individual_Assoc_Indexed_Name (Iassoc, Formal_Object);
+            Add_Individual_Assoc_Indexed_Name (Choice, Iassoc, Formal_Object);
          when Iir_Kind_Slice_Name =>
-            Add_Individual_Assoc_Slice_Name (Iassoc, Formal_Object);
+            Add_Individual_Assoc_Slice_Name (Choice, Iassoc, Formal_Object);
          when Iir_Kind_Selected_Element =>
-            Add_Individual_Assoc_Selected_Name (Iassoc, Formal_Object);
+            Add_Individual_Assoc_Selected_Name (Choice, Iassoc, Formal_Object);
          when others =>
             Error_Kind ("add_individual_association_1(3)", Formal);
       end case;
 
-      if Get_Choice_Staticness (Sub) /= Locally then
-         --  Propagate error.
-         Set_Choice_Staticness (Base_Assoc, None);
+      Sub := Get_Associated_Expr (Choice);
+      if Sub = Null_Iir then
+         if not Last then
+            --  Create the individual association for the choice.
+            Sub := Create_Iir (Iir_Kind_Association_Element_By_Individual);
+            Location_Copy (Sub, Formal);
+            Set_Choice_Staticness (Sub, Locally);
+            Set_Formal (Sub, Formal);
+            Set_Associated_Expr (Choice, Sub);
+         end if;
+      else
+         if Last
+           or else Get_Kind (Sub) /= Iir_Kind_Association_Element_By_Individual
+         then
+            --  A final association.
+            pragma Assert
+              (Get_Kind (Sub) = Iir_Kind_Association_Element_By_Expression);
+            Error_Msg_Sem
+              (+Formal, "individual association of %n"
+                 & " conflicts with that at %l",
+               (+Get_Interface_Of_Formal (Get_Formal (Iassoc)),
+                +Sub));
+         else
+            if Get_Choice_Staticness (Sub) /= Locally then
+               --  Propagate error.
+               Set_Choice_Staticness (Base_Assoc, None);
+            end if;
+         end if;
+      end if;
+
+      if Last then
+         Iassoc := Choice;
+      else
+         Iassoc := Sub;
       end if;
    end Add_Individual_Association_1;
 
    --  Insert ASSOC into the tree of individual assoc rooted by IASSOC.
+   --  This is done so that duplicate or missing associations are found (using
+   --  the same routine for aggregate/case statement).
    procedure Add_Individual_Association (Iassoc : Iir; Assoc : Iir)
    is
       Formal : constant Iir := Get_Formal (Assoc);
@@ -839,14 +855,10 @@ package body Sem_Assocs is
    begin
       --  Create the individual association for the formal.
       Res_Iass := Iassoc;
-      Add_Individual_Association_1 (Res_Iass, Formal);
+      Add_Individual_Association_1 (Res_Iass, Formal, True);
 
       Prev := Get_Associated_Expr (Res_Iass);
-      if Prev /= Null_Iir then
-         Error_Msg_Sem
-           (+Assoc, "individual association of %n conflicts with that at %l",
-            (+Get_Interface_Of_Formal (Get_Formal (Assoc)), +Prev));
-      else
+      if Prev = Null_Iir then
          Set_Associated_Expr (Res_Iass, Assoc);
       end if;
    end Add_Individual_Association;
