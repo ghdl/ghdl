@@ -100,7 +100,7 @@ Building with the llvm backend
 ******************************
 
 You need to build and install llvm.  The supported versions are 3.5
-till 3.9, but only debugging is only supported with llvm 3.5
+till 5.x, but only debugging is only supported with llvm 3.5
 (Usually llvm also depends on libedit).
 
 First configure ghdl with '--with-llvm-config'
@@ -126,7 +126,6 @@ $ make ghdl1-gcc     	     # To build the compiler
 $ make ghdl_gcc		     # To build the driver
 $ make libs.vhdl.local_gcc   # To compile the vhdl libraries
 $ make grt-all		     # To build the ghdl runtime
-$ make grt.links	     # To locally install the ghdl runtime
 
 In src/ortho/gcc, create a Makefile.conf file that sets the following
 variables:
