@@ -38,7 +38,7 @@ procedure Ortho_Code_Main is
 
    type Output_Kind_Type is (Output_Llvm, Output_Bytecode,
                              Output_Assembly, Output_Object);
-   Output_Kind : Output_Kind_Type := Output_Llvm;
+   Output_Kind : Output_Kind_Type := Output_Object;
 
    --  True if the LLVM output must be displayed (set by '--dump-llvm')
    Flag_Dump_Llvm : Boolean := False;
