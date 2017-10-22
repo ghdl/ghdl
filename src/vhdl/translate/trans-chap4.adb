@@ -65,7 +65,7 @@ package body Trans.Chap4 is
    function Get_Object_Ptr_Type
      (Tinfo : Type_Info_Acc; Kind : Object_Kind_Type) return O_Tnode is
    begin
-      if Tinfo.Type_Mode = Type_Mode_Fat_Array then
+      if Tinfo.Type_Mode in Type_Mode_Unbounded then
          --  Fat pointers are already pointers, no need to create an
          --  additional indirection.
          return Tinfo.Ortho_Type (Kind);
@@ -87,7 +87,7 @@ package body Trans.Chap4 is
    begin
       if (Mode = Mode_Signal
             and then Tinfo.Type_Mode in Type_Mode_Scalar)
-        or else Tinfo.Type_Mode = Type_Mode_Fat_Array
+        or else Tinfo.Type_Mode in Type_Mode_Unbounded
       then
          return Lv2M (Obj_Ptr, Tinfo, Mode);
       else
@@ -102,7 +102,7 @@ package body Trans.Chap4 is
    begin
       pragma Assert (Mode = Get_Object_Kind (Src));
       pragma Assert (Tinfo.Type_Mode = Get_Type_Info (Src).Type_Mode);
-      if Tinfo.Type_Mode = Type_Mode_Fat_Array then
+      if Tinfo.Type_Mode in Type_Mode_Unbounded then
          Copy_Fat_Pointer (Stabilize (Dest), Stabilize (Src));
       else
          if Mode = Mode_Signal

@@ -750,7 +750,7 @@ package body Trans.Chap6 is
                return Get_Var (Info.Signal_Sig, Type_Info, Mode_Signal);
             else
                pragma Assert (Info.Signal_Valp /= Null_Var);
-               if Type_Info.Type_Mode = Type_Mode_Fat_Array then
+               if Type_Info.Type_Mode in Type_Mode_Unbounded then
                   return Get_Var (Info.Signal_Valp, Type_Info, Mode_Value);
                else
                   return Get_Varp (Info.Signal_Valp, Type_Info, Mode_Value);

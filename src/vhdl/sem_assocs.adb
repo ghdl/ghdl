@@ -1066,7 +1066,8 @@ package body Sem_Assocs is
       end if;
    end Finish_Individual_Assoc_Record;
 
-   --  Free recursively all the choices of ASSOC.
+   --  Free recursively all the choices of ASSOC.  Once the type is computed
+   --  this is not needed anymore.
    procedure Clean_Individual_Association (Assoc : Iir)
    is
       El, N_El : Iir;
