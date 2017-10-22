@@ -744,6 +744,7 @@ package body Sem_Assocs is
    is
       Choice : Iir;
    begin
+      --  FIXME: If the name already exists ?
       Choice := Create_Iir (Iir_Kind_Choice_By_Name);
       Location_Copy (Choice, Formal);
       Set_Choice_Name (Choice, Get_Selected_Element (Formal));
@@ -771,6 +772,11 @@ package body Sem_Assocs is
            | Iir_Kind_Selected_Element =>
             Add_Individual_Association_1 (Iassoc, Get_Prefix (Formal_Object));
          when Iir_Kinds_Interface_Object_Declaration =>
+            --  At the root of the formal.
+            pragma Assert
+              (Get_Kind (Iassoc) = Iir_Kind_Association_Element_By_Individual);
+            pragma Assert
+              (Formal_Object = Get_Named_Entity (Get_Formal (Iassoc)));
             return;
          when others =>
             Error_Kind ("add_individual_association_1", Formal);
@@ -779,7 +785,8 @@ package body Sem_Assocs is
       case Get_Kind (Iassoc) is
          when Iir_Kind_Association_Element_By_Individual =>
             null;
-         when Iir_Kind_Choice_By_Expression =>
+         when Iir_Kind_Choice_By_Expression
+           | Iir_Kind_Choice_By_Name =>
             Sub := Get_Associated_Expr (Iassoc);
             if Sub = Null_Iir then
                Sub := Create_Iir (Iir_Kind_Association_Element_By_Individual);
@@ -1148,14 +1155,18 @@ package body Sem_Assocs is
             Formal := Get_Object_Prefix (Formal);
          end if;
          if Formal = Null_Iir or else Formal /= Cur_Iface then
-            --  New formal name, sem the current assoc.
+            --  New formal name, analyze the current individual association
+            --  (if any).
             Finish_Individual_Association (Iassoc);
             Cur_Iface := Formal;
             Iassoc := Null_Iir;
          end if;
+
          if Get_Whole_Association_Flag (Assoc) = False then
-            --  New individual association.
+            --  Individual association.
             if Iassoc = Null_Iir then
+               --  The first one for the interface: create a new individual
+               --  association.
                Iassoc :=
                  Create_Iir (Iir_Kind_Association_Element_By_Individual);
                Location_Copy (Iassoc, Assoc);
@@ -1172,6 +1183,8 @@ package body Sem_Assocs is
                end if;
                Set_Chain (Iassoc, Assoc);
             end if;
+
+            --  Add this individual association to the tree.
             Add_Individual_Association (Iassoc, Assoc);
          end if;
          Prev_Assoc := Assoc;
@@ -1181,8 +1194,7 @@ package body Sem_Assocs is
       Finish_Individual_Association (Iassoc);
    end Sem_Individual_Association;
 
-   function Is_Conversion_Function (Assoc_Chain : Iir) return Boolean
-   is
+   function Is_Conversion_Function (Assoc_Chain : Iir) return Boolean is
    begin
       --  [...] whose single parameter of the function [...]
       if not Is_Chain_Length_One (Assoc_Chain) then
@@ -2432,9 +2444,8 @@ package body Sem_Assocs is
                         when Missing_Port =>
                            case Get_Mode (Inter) is
                               when Iir_In_Mode =>
-                                 if not Finish then
-                                    raise Internal_Error;
-                                 end if;
+                                 --  No overloading for components/entities.
+                                 pragma Assert (Finish);
                                  Error_Msg_Sem
                                    (+Loc,
                                     "%n of mode IN must be connected", +Inter);
@@ -2444,9 +2455,8 @@ package body Sem_Assocs is
                                 | Iir_Linkage_Mode
                                 | Iir_Inout_Mode
                                 | Iir_Buffer_Mode =>
-                                 if not Finish then
-                                    raise Internal_Error;
-                                 end if;
+                                 --  No overloading for components/entities.
+                                 pragma Assert (Finish);
                                  if not Is_Fully_Constrained_Type
                                    (Get_Type (Inter))
                                  then
