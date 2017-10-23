@@ -225,7 +225,6 @@ package body Elocations is
            | Iir_Kind_Subtype_Definition
            | Iir_Kind_Scalar_Nature_Definition
            | Iir_Kind_Overload_List
-           | Iir_Kind_Anonymous_Type_Declaration
            | Iir_Kind_Nature_Declaration
            | Iir_Kind_Subnature_Declaration
            | Iir_Kind_Unit_Declaration
@@ -302,12 +301,9 @@ package body Elocations is
            | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Psl_Assert_Statement
            | Iir_Kind_Psl_Cover_Statement
-           | Iir_Kind_If_Generate_Statement
            | Iir_Kind_Case_Generate_Statement
-           | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Psl_Default_Clock
            | Iir_Kind_Simple_Simultaneous_Statement
-           | Iir_Kind_If_Generate_Else_Clause
            | Iir_Kind_Simple_Signal_Assignment_Statement
            | Iir_Kind_Conditional_Signal_Assignment_Statement
            | Iir_Kind_Selected_Waveform_Assignment_Statement
@@ -318,7 +314,6 @@ package body Elocations is
            | Iir_Kind_Variable_Assignment_Statement
            | Iir_Kind_Conditional_Variable_Assignment_Statement
            | Iir_Kind_Return_Statement
-           | Iir_Kind_While_Loop_Statement
            | Iir_Kind_Next_Statement
            | Iir_Kind_Exit_Statement
            | Iir_Kind_Procedure_Call_Statement
@@ -379,6 +374,7 @@ package body Elocations is
            | Iir_Kind_Attribute_Name =>
             return Format_None;
          when Iir_Kind_Library_Clause
+           | Iir_Kind_Anonymous_Type_Declaration
            | Iir_Kind_Attribute_Declaration
            | Iir_Kind_Group_Template_Declaration
            | Iir_Kind_Group_Declaration
@@ -419,9 +415,13 @@ package body Elocations is
            | Iir_Kind_Sensitized_Process_Statement
            | Iir_Kind_Process_Statement
            | Iir_Kind_Block_Statement
+           | Iir_Kind_If_Generate_Statement
+           | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Component_Instantiation_Statement
            | Iir_Kind_Generate_Statement_Body
+           | Iir_Kind_If_Generate_Else_Clause
            | Iir_Kind_For_Loop_Statement
+           | Iir_Kind_While_Loop_Statement
            | Iir_Kind_If_Statement
            | Iir_Kind_Elsif =>
             return Format_L3;
@@ -528,6 +528,22 @@ package body Elocations is
                      "no field Loop_Location");
       Set_Field3 (N, Loc);
    end Set_Loop_Location;
+
+   function Get_Generate_Location (N : Iir) return Location_Type is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Generate_Location (Get_Kind (N)),
+                     "no field Generate_Location");
+      return Get_Field3 (N);
+   end Get_Generate_Location;
+
+   procedure Set_Generate_Location (N : Iir; Loc : Location_Type) is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Generate_Location (Get_Kind (N)),
+                     "no field Generate_Location");
+      Set_Field3 (N, Loc);
+   end Set_Generate_Location;
 
    function Get_Generic_Location (N : Iir) return Location_Type is
    begin

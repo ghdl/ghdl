@@ -189,7 +189,9 @@ package Elocations is
    --
    --   Get/Set_Start_Location (Field1)
 
-   -- Iir_Kind_Anonymous_Type_Declaration (None)
+   -- Iir_Kind_Anonymous_Type_Declaration (L1)
+   --
+   --   Get/Set_Start_Location (Field1)
 
    -- Iir_Kind_Type_Declaration (L2)
    --
@@ -411,11 +413,22 @@ package Elocations is
    --
    --   Get/Set_Begin_Location (Field3)
 
-   -- Iir_Kind_For_Generate_Statement (None)
+   -- Iir_Kind_For_Generate_Statement (L3)
+   --
+   --   Get/Set_Start_Location (Field1)
+   --
+   --   Get/Set_End_Location (Field2)
+   --
+   --   Get/Set_Generate_Location (Field3)
 
-   -- Iir_Kind_If_Generate_Else_Clause (None)
-
-   -- Iir_Kind_If_Generate_Statement (None)
+   -- Iir_Kind_If_Generate_Else_Clause (L3)
+   -- Iir_Kind_If_Generate_Statement (L3)
+   --
+   --   Get/Set_Start_Location (Field1)
+   --
+   --   Get/Set_End_Location (Field2)
+   --
+   --   Get/Set_Generate_Location (Field3)
 
    -- Iir_Kind_Case_Generate_Statement (None)
 
@@ -437,14 +450,13 @@ package Elocations is
    --   Get/Set_Then_Location (Field3)
 
    -- Iir_Kind_For_Loop_Statement (L3)
+   -- Iir_Kind_While_Loop_Statement (L3)
    --
    --   Get/Set_Start_Location (Field1)
    --
    --   Get/Set_End_Location (Field2)
    --
    --   Get/Set_Loop_Location (Field3)
-
-   -- Iir_Kind_While_Loop_Statement (None)
 
    -- Iir_Kind_Exit_Statement (None)
    -- Iir_Kind_Next_Statement (None)
@@ -628,6 +640,10 @@ package Elocations is
    --  Field: Field3
    function Get_Loop_Location (N : Iir) return Location_Type;
    procedure Set_Loop_Location (N : Iir; Loc : Location_Type);
+
+   --  Field: Field3
+   function Get_Generate_Location (N : Iir) return Location_Type;
+   procedure Set_Generate_Location (N : Iir; Loc : Location_Type);
 
    --  Field: Field4
    function Get_Generic_Location (N : Iir) return Location_Type;

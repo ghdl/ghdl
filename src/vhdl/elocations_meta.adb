@@ -34,6 +34,8 @@ package body Elocations_Meta is
             return "then_location";
          when Field_Loop_Location =>
             return "loop_location";
+         when Field_Generate_Location =>
+            return "generate_location";
          when Field_Generic_Location =>
             return "generic_location";
          when Field_Port_Location =>
@@ -73,6 +75,8 @@ package body Elocations_Meta is
             return Get_Then_Location (N);
          when Field_Loop_Location =>
             return Get_Loop_Location (N);
+         when Field_Generate_Location =>
+            return Get_Generate_Location (N);
          when Field_Generic_Location =>
             return Get_Generic_Location (N);
          when Field_Port_Location =>
@@ -103,6 +107,8 @@ package body Elocations_Meta is
             Set_Then_Location (N, V);
          when Field_Loop_Location =>
             Set_Loop_Location (N, V);
+         when Field_Generate_Location =>
+            Set_Generate_Location (N, V);
          when Field_Generic_Location =>
             Set_Generic_Location (N, V);
          when Field_Port_Location =>
@@ -124,6 +130,7 @@ package body Elocations_Meta is
            | Iir_Kind_Record_Type_Definition
            | Iir_Kind_Protected_Type_Body
            | Iir_Kind_Type_Declaration
+           | Iir_Kind_Anonymous_Type_Declaration
            | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Instantiation_Declaration
@@ -158,8 +165,12 @@ package body Elocations_Meta is
            | Iir_Kind_Concurrent_Simple_Signal_Assignment
            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
            | Iir_Kind_Concurrent_Selected_Signal_Assignment
+           | Iir_Kind_If_Generate_Statement
+           | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Generate_Statement_Body
+           | Iir_Kind_If_Generate_Else_Clause
            | Iir_Kind_For_Loop_Statement
+           | Iir_Kind_While_Loop_Statement
            | Iir_Kind_If_Statement
            | Iir_Kind_Elsif =>
             return True;
@@ -187,8 +198,12 @@ package body Elocations_Meta is
            | Iir_Kind_Sensitized_Process_Statement
            | Iir_Kind_Process_Statement
            | Iir_Kind_Block_Statement
+           | Iir_Kind_If_Generate_Statement
+           | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Generate_Statement_Body
+           | Iir_Kind_If_Generate_Else_Clause
            | Iir_Kind_For_Loop_Statement
+           | Iir_Kind_While_Loop_Statement
            | Iir_Kind_Case_Statement
            | Iir_Kind_If_Statement
            | Iir_Kind_Elsif =>
@@ -239,8 +254,26 @@ package body Elocations_Meta is
 
    function Has_Loop_Location (K : Iir_Kind) return Boolean is
    begin
-      return K = Iir_Kind_For_Loop_Statement;
+      case K is
+         when Iir_Kind_For_Loop_Statement
+           | Iir_Kind_While_Loop_Statement =>
+            return True;
+         when others =>
+            return False;
+      end case;
    end Has_Loop_Location;
+
+   function Has_Generate_Location (K : Iir_Kind) return Boolean is
+   begin
+      case K is
+         when Iir_Kind_If_Generate_Statement
+           | Iir_Kind_For_Generate_Statement
+           | Iir_Kind_If_Generate_Else_Clause =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Has_Generate_Location;
 
    function Has_Generic_Location (K : Iir_Kind) return Boolean is
    begin

@@ -29,6 +29,7 @@ package Elocations_Meta is
       Field_Begin_Location,
       Field_Then_Location,
       Field_Loop_Location,
+      Field_Generate_Location,
       Field_Generic_Location,
       Field_Port_Location,
       Field_Generic_Map_Location,
@@ -52,6 +53,7 @@ package Elocations_Meta is
    function Has_Begin_Location (K : Iir_Kind) return Boolean;
    function Has_Then_Location (K : Iir_Kind) return Boolean;
    function Has_Loop_Location (K : Iir_Kind) return Boolean;
+   function Has_Generate_Location (K : Iir_Kind) return Boolean;
    function Has_Generic_Location (K : Iir_Kind) return Boolean;
    function Has_Port_Location (K : Iir_Kind) return Boolean;
    function Has_Generic_Map_Location (K : Iir_Kind) return Boolean;
