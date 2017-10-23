@@ -1601,10 +1601,18 @@ package body Scanner is
             if Flag_Psl then
                Current_Token := Tok_Exclam_Mark;
             else
-               --  LRM93 13.10
-               --  A vertical line (|) can be replaced by an exclamation
-               --  mark (!)  where used as a delimiter.
-               Current_Token := Tok_Bar;
+               if Source (Pos + 1) = '=' then
+                  --  != is not allowed in VHDL, but be friendly with C users.
+                  Error_Msg_Scan
+                    (Get_Token_Location, "Use '/=' for inequality in vhdl");
+                  Current_Token := Tok_Not_Equal;
+                  Pos := Pos + 1;
+               else
+                  --  LRM93 13.10
+                  --  A vertical line (|) can be replaced by an exclamation
+                  --  mark (!) where used as a delimiter.
+                  Current_Token := Tok_Bar;
+               end if;
             end if;
             Pos := Pos + 1;
             return;
