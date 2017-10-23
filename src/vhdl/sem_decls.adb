@@ -1253,6 +1253,7 @@ package body Sem_Decls is
                  Create_Iir (Iir_Kind_Interface_Variable_Declaration);
                Location_Copy (Var_Interface, Decl);
                Set_Identifier (Var_Interface, Std_Names.Name_P);
+               Set_Parent (Var_Interface, Deallocate_Proc);
                Set_Type (Var_Interface, Type_Definition);
                Set_Mode (Var_Interface, Iir_Inout_Mode);
                --Set_Purity_State (Deallocate_Proc, Impure);
