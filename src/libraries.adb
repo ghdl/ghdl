@@ -1912,13 +1912,12 @@ package body Libraries is
    function Find_Secondary_Unit (Primary: Iir_Design_Unit; Name: Name_Id)
       return Iir_Design_Unit
    is
+      Lib_Prim : constant Iir := Get_Library (Get_Design_File (Primary));
+      Primary_Ident : constant Name_Id :=
+        Get_Identifier (Get_Library_Unit (Primary));
       Design_Unit: Iir_Design_Unit;
       Library_Unit: Iir;
-      Primary_Ident: Name_Id;
-      Lib_Prim : Iir;
    begin
-      Lib_Prim := Get_Library (Get_Design_File (Primary));
-      Primary_Ident := Get_Identifier (Get_Library_Unit (Primary));
       Design_Unit := Unit_Hash_Table (Primary_Ident mod Unit_Hash_Length);
       while Design_Unit /= Null_Iir loop
          Library_Unit := Get_Library_Unit (Design_Unit);
@@ -1958,7 +1957,7 @@ package body Libraries is
    -- Load an secondary unit and analyse it.
    function Load_Secondary_Unit
      (Primary: Iir_Design_Unit; Name: Name_Id; Loc : Iir)
-      return Iir_Design_Unit
+     return Iir_Design_Unit
    is
       Design_Unit: Iir_Design_Unit;
    begin
