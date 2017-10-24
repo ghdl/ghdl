@@ -523,7 +523,8 @@ package body Simulation is
          Expr := Get_Timeout_Clause (Stmt);
          if Expr /= Null_Iir then
             Res := Execute_Expression (Instance, Expr);
-            Grt.Processes.Ghdl_Process_Wait_Set_Timeout (Std_Time (Res.I64));
+            Grt.Processes.Ghdl_Process_Wait_Set_Timeout
+              (Std_Time (Res.I64), null, 0);
          end if;
 
          -- LRM93 8.1

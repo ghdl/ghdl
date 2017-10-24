@@ -465,13 +465,16 @@ package body Elaboration is
          if Get_Kind (Design) = Iir_Kind_Entity_Aspect_Entity then
             --  During Sem, the architecture may be still unknown, and the
             --  dependency is therefore the aspect.
-            Library_Unit := Get_Architecture (Design);
-            if Get_Kind (Library_Unit) in Iir_Kinds_Denoting_Name then
-               Design := Get_Named_Entity (Library_Unit);
-               Library_Unit := Get_Library_Unit (Design);
-            else
-               Design := Get_Design_Unit (Library_Unit);
-            end if;
+            Library_Unit := Strip_Denoting_Name (Get_Architecture (Design));
+            case Get_Kind (Library_Unit) is
+               when Iir_Kind_Architecture_Body =>
+                  Design := Get_Design_Unit (Library_Unit);
+               when Iir_Kind_Design_Unit =>
+                  Design := Library_Unit;
+                  Library_Unit := Get_Library_Unit (Design);
+               when others =>
+                  Error_Kind ("elaborate_dependence(1)", Library_Unit);
+            end case;
          else
             Library_Unit := Get_Library_Unit (Design);
          end if;
@@ -1206,16 +1209,17 @@ package body Elaboration is
      (Formal_Instance : Block_Instance_Acc;
       Local_Instance : Block_Instance_Acc;
       Actual_Expr : Iir_Value_Literal_Acc;
-      Assoc : Iir_Association_Element_By_Expression)
+      Assoc : Iir_Association_Element_By_Expression;
+      Inter : Iir)
    is
-      Inter : Iir;
+      Formal : Iir;
       Actual : Iir;
       Local_Expr : Iir_Value_Literal_Acc;
       Formal_Expr : Iir_Value_Literal_Acc;
    begin
-      Inter := Get_Formal (Assoc);
+      Formal := Get_Association_Formal (Assoc, Inter);
       Actual := Get_Actual (Assoc);
-      Formal_Expr := Execute_Name (Formal_Instance, Inter, True);
+      Formal_Expr := Execute_Name (Formal_Instance, Formal, True);
       Formal_Expr := Unshare_Bounds (Formal_Expr, Global_Pool'Access);
       if Actual_Expr = null then
          Local_Expr := Execute_Name (Local_Instance, Actual, True);
@@ -1280,7 +1284,7 @@ package body Elaboration is
                  and then Get_Formal_Conversion (Assoc) = Null_Iir
                then
                   Actual := Get_Actual (Assoc);
-                  Formal := Get_Formal (Assoc);
+                  Formal := Get_Association_Formal (Assoc, Inter);
                   if Is_Signal_Name (Actual) then
                      --  Association with a signal
                      Init_Expr := Execute_Signal_Init_Value
@@ -1353,8 +1357,8 @@ package body Elaboration is
                   --  or slice thereof designated by the formal part is then
                   --  associated with the signal or expression designated
                   --  by the actual part.
-                  Elab_Connect
-                    (Formal_Instance, Actual_Instance, Actual_Expr, Assoc);
+                  Elab_Connect (Formal_Instance, Actual_Instance, Actual_Expr,
+                                Assoc, Inter);
                end if;
 
             when Iir_Kind_Association_Element_Open =>
@@ -1969,7 +1973,8 @@ package body Elaboration is
          when Iir_Kind_Entity_Aspect_Entity =>
             Entity := Get_Entity (Aspect);
             if Get_Architecture (Aspect) /= Null_Iir then
-               Arch_Name := Get_Identifier (Get_Architecture (Aspect));
+               Arch_Name := Get_Identifier
+                 (Strip_Denoting_Name (Get_Architecture (Aspect)));
             end if;
          when Iir_Kind_Entity_Aspect_Configuration =>
             if Sub_Conf /= Null_Iir then

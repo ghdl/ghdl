@@ -20,6 +20,7 @@ with Iirs; use Iirs;
 with Iir_Values; use Iir_Values;
 with Elaboration; use Elaboration;
 with Grt.Files; use Grt.Files;
+with Grt.Types; use Grt.Types;
 
 package File_Operation is
    Null_File : constant Natural := 0;
@@ -77,5 +78,13 @@ package File_Operation is
 
    --  Test end of FILE is reached.
    function Endfile (File : Iir_Value_Literal_Acc; Stmt : Iir)
-     return Boolean;
+                    return Boolean;
+
+   --  Fp to string
+   procedure Textio_Write_Real (Str : Iir_Value_Literal_Acc;
+                                Len : Iir_Value_Literal_Acc;
+                                Val : Ghdl_F64;
+                                Ndigits : Std_Integer);
+
+   function Textio_Read_Real (Str : Iir_Value_Literal_Acc) return Ghdl_F64;
 end File_Operation;

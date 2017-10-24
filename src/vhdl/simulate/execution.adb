@@ -573,7 +573,9 @@ package body Execution is
    is
       pragma Unsuppress (Overflow_Check);
 
-      Func : Iir_Predefined_Functions;
+      Imp : constant Iir := Strip_Denoting_Name (Get_Implementation (Expr));
+      Func : constant Iir_Predefined_Functions :=
+        Get_Implicit_Definition (Imp);
 
       --  Rename definition for monadic operations.
       Left, Right: Iir_Value_Literal_Acc;
@@ -596,15 +598,7 @@ package body Execution is
          --  Need to copy as the result is modified.
          Result := Unshare (Left, Expr_Pool'Access);
       end Eval_Array;
-
-      Imp : Iir;
    begin
-      Imp := Get_Implementation (Expr);
-      if Get_Kind (Imp) in Iir_Kinds_Denoting_Name then
-         Imp := Get_Named_Entity (Imp);
-      end if;
-      Func := Get_Implicit_Definition (Imp);
-
       --  Eval left operand.
       case Func is
          when Iir_Predefined_Now_Function =>
@@ -1566,6 +1560,9 @@ package body Execution is
             Grt.Lib.Ghdl_Control_Simulation
               (Args (0).B1, Args (1).B1, Std_Integer (Args (2).I64));
             --  Do not return.
+         when Std_Names.Name_Textio_Write_Real =>
+            File_Operation.Textio_Write_Real
+              (Args (0), Args (1), Args (2).F64, Std_Integer (Args (3).I64));
          when others =>
             Error_Msg_Exec ("unsupported foreign procedure call", Stmt);
       end case;
@@ -3479,8 +3476,8 @@ package body Execution is
       Assoc_Inter := Inter_Chain;
       Assoc_Idx := 1;
       while Assoc /= Null_Iir loop
-         Formal := Get_Formal (Assoc);
          Inter := Get_Association_Interface (Assoc, Assoc_Inter);
+         Formal := Get_Association_Formal (Assoc, Inter);
 
          --  Extract the actual value.
          case Get_Kind (Assoc) is
@@ -3635,8 +3632,9 @@ package body Execution is
       Assoc_Idx := 1;
       while Assoc /= Null_Iir loop
          if Get_Kind (Assoc) /= Iir_Kind_Association_Element_By_Individual then
-            Formal := Get_Formal (Assoc);
             Inter := Get_Association_Interface (Assoc, Assoc_Inter);
+            Formal := Get_Association_Formal (Assoc, Inter);
+
             case Get_Kind (Inter) is
                when Iir_Kind_Interface_Variable_Declaration =>
                   if Get_Mode (Inter) /= Iir_In_Mode
@@ -3703,17 +3701,20 @@ package body Execution is
      (Block: Block_Instance_Acc; Expr : Iir; Imp : Iir)
       return Iir_Value_Literal_Acc
    is
-      pragma Unreferenced (Block);
+      Res : Iir_Value_Literal_Acc;
    begin
       case Get_Identifier (Imp) is
          when Std_Names.Name_Get_Resolution_Limit =>
-            return Create_I64_Value
+            Res := Create_I64_Value
               (Ghdl_I64
                  (Evaluation.Get_Physical_Value (Std_Package.Time_Base)));
+         when Std_Names.Name_Textio_Read_Real =>
+            Res := Create_F64_Value
+              (File_Operation.Textio_Read_Real (Block.Objects (1)));
          when others =>
             Error_Msg_Exec ("unsupported foreign function call", Expr);
       end case;
-      return null;
+      return Res;
    end Execute_Foreign_Function_Call;
 
    -- BLOCK is the block instance in which the function call appears.

@@ -20,8 +20,8 @@ with Types; use Types;
 with Annotations; use Annotations;
 with Execution; use Execution;
 with Debugger; use Debugger;
-with Grt.Types; use Grt.Types;
 with Grt_Interface; use Grt_Interface;
+with Grt.Lib;
 
 package body File_Operation is
    --  Open a file.
@@ -342,4 +342,43 @@ package body File_Operation is
    begin
       Ghdl_File_Flush (File.File);
    end Flush;
+
+   procedure Textio_Write_Real (Str : Iir_Value_Literal_Acc;
+                                Len : Iir_Value_Literal_Acc;
+                                Val : Ghdl_F64;
+                                Ndigits : Std_Integer)
+   is
+      Len_Arg : aliased Std_Integer;
+      Str_Len : constant Ghdl_Index_Type :=
+        Ghdl_Index_Type (Str.Bounds.D (1).Length);
+      Str_Str : aliased Std_String_Uncons (1 .. Str_Len);
+      Str_Bnd : aliased Std_String_Bound := Build_Bound (Str);
+      Str_Arg : aliased Std_String := (To_Std_String_Basep (Str_Str'Address),
+                                       To_Std_String_Boundp (Str_Bnd'Address));
+   begin
+      Grt.Lib.Textio_Write_Real
+        (Str_Arg'Unrestricted_Access, Len_Arg'Unrestricted_Access,
+         Val, Ndigits);
+      for I in 1 .. Len_Arg loop
+         Str.Val_Array.V (Iir_Index32 (I)).E8 :=
+           Character'Pos (Str_Str (Ghdl_Index_Type (I)));
+      end loop;
+      Len.I64 := Ghdl_I64 (Len_Arg);
+   end Textio_Write_Real;
+
+   function Textio_Read_Real (Str : Iir_Value_Literal_Acc) return Ghdl_F64
+   is
+      Str_Len : constant Ghdl_Index_Type :=
+        Ghdl_Index_Type (Str.Bounds.D (1).Length);
+      Str_Str : aliased Std_String_Uncons (1 .. Str_Len);
+      Str_Bnd : aliased Std_String_Bound := Build_Bound (Str);
+      Str_Arg : aliased Std_String := (To_Std_String_Basep (Str_Str'Address),
+                                       To_Std_String_Boundp (Str_Bnd'Address));
+   begin
+      for I in Str.Val_Array.V'Range loop
+         Str_Str (Ghdl_Index_Type (I)) :=
+           Character'Val (Str.Val_Array.V (I).E8);
+      end loop;
+      return Grt.Lib.Textio_Read_Real (Str_Arg'Unrestricted_Access);
+   end Textio_Read_Real;
 end File_Operation;

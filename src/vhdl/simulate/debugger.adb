@@ -137,7 +137,6 @@ package body Debugger is
    procedure Error_Msg_Exec (Msg: String; Loc: in Iir) is
    begin
       Disp_Iir_Location (Loc);
-      Put (Standard_Error, ' ');
       Put_Line (Standard_Error, Msg);
       Grt.Errors.Fatal_Error;
    end Error_Msg_Exec;
