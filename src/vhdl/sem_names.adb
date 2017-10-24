@@ -3272,6 +3272,7 @@ package body Sem_Names is
    begin
       Prefix := Get_Named_Entity (Get_Prefix (Attr));
       Res := Create_Iir (Kind);
+      Location_Copy (Res, Attr);
       if Kind = Iir_Kind_Delayed_Attribute then
          Set_Type (Res, Get_Type (Prefix));
       elsif Kind = Iir_Kind_Transaction_Attribute then
