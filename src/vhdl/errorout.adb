@@ -575,7 +575,7 @@ package body Errorout is
         and then (File /= No_Source_File_Entry and Line /= 0)
       then
          Put_Line (Extract_Expanded_Line (File, Line));
-         Put_Line ((1 .. Col => ' ') & '^');
+         Put_Line ((1 .. Col - 1 => ' ') & '^');
       end if;
    end Report_Msg;
 
