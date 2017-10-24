@@ -7064,6 +7064,7 @@ package body Parse is
       Actual: Iir;
       Nbr_Assocs : Natural;
       Loc : Location_Type;
+      Comma_Loc : Location_Type;
    begin
       Sub_Chain_Init (Res, Last);
 
@@ -7083,8 +7084,7 @@ package body Parse is
             case Current_Token is
                when Tok_To
                  | Tok_Downto =>
-                  --  To/downto can appear in slice name (which are parsed as
-                  --  function call).
+                  --  To/downto can appear in slice name.
 
                   if Actual = Null_Iir then
                      --  Left expression is missing ie: (downto x).
@@ -7129,8 +7129,17 @@ package body Parse is
 
          Sub_Chain_Append (Res, Last, El);
          exit when Current_Token = Tok_Right_Paren;
+
+         -- Eat ','.
+         Comma_Loc := Get_Token_Location;
          Expect (Tok_Comma);
          Scan;
+
+         if Current_Token = Tok_Right_Paren then
+            Error_Msg_Parse (Comma_Loc, "extra ',' ignored");
+            exit;
+         end if;
+
          Nbr_Assocs := Nbr_Assocs + 1;
       end loop;
 
