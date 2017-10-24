@@ -129,8 +129,14 @@ def declarations_iter(n):
     if nodes_meta.Has_Declaration_Chain(k):
         for n1 in chain_iter(iirs.Get_Declaration_Chain(n)):
             k1 = iirs.Get_Kind(n1)
-            if k1 not in iirs.Iir_Kinds.Specification \
-               and k1 != iirs.Iir_Kind.Use_Clause:
+            if k1 in iirs.Iir_Kinds.Specification \
+               or k1 == iirs.Iir_Kind.Use_Clause:
+                # Not a declaration
+                pass
+            elif k1 == iirs.Iir_Kind.Signal_Attribute_Declaration:
+                # Not a declaration
+                pass
+            else:
                 yield n1
                 # There can be nested declarations (subprograms,
                 # record elements)
@@ -197,6 +203,7 @@ def declarations_iter(n):
              iirs.Iir_Kind.Object_Alias_Declaration,
              iirs.Iir_Kind.Attribute_Declaration,
              iirs.Iir_Kind.Component_Declaration,
+             iirs.Iir_Kind.Use_Clause,
              iirs.Iir_Kind.If_Statement,
              iirs.Iir_Kind.Elsif,
              iirs.Iir_Kind.Return_Statement,
