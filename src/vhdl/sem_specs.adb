@@ -1056,6 +1056,7 @@ package body Sem_Specs is
                Arch_Name : Iir;
                Arch_Unit : Iir;
             begin
+               --  The entity.
                Entity_Name := Sem_Denoting_Name (Get_Entity_Name (Aspect));
                Set_Entity_Name (Aspect, Entity_Name);
                Entity := Get_Named_Entity (Entity_Name);
@@ -1073,8 +1074,13 @@ package body Sem_Specs is
                if Arch_Name /= Null_Iir then
                   Arch_Unit := Libraries.Find_Secondary_Unit
                     (Get_Design_Unit (Entity), Get_Identifier (Arch_Name));
-                  Set_Named_Entity (Arch_Name, Arch_Unit);
                   if Arch_Unit /= Null_Iir then
+                     --  The architecture is known.
+                     if Get_Date_State (Arch_Unit) >= Date_Parse then
+                        --  And loaded!
+                        Arch_Unit := Get_Library_Unit (Arch_Unit);
+                     end if;
+                     Set_Named_Entity (Arch_Name, Arch_Unit);
                      Xref_Ref (Arch_Name, Arch_Unit);
                   end if;
 

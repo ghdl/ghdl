@@ -568,8 +568,10 @@ package Iirs is
    --
    --   Get/Set_Entity_Name (Field2)
    --
-   --  parse: a simple name.
-   --  sem: an architecture declaration or NULL_IIR.
+   --  A simple name for the architecture.  The named entity can be:
+   --  * Null_Iir if the architecture is not known.
+   --  * a design unit if the architecture is known but not loaded.
+   --  * an architecture body if the architecture is loaded.
    --   Get/Set_Architecture (Field3)
 
    -- Iir_Kind_Entity_Aspect_Open (Short)
