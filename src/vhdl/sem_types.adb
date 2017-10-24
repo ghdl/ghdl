@@ -1393,6 +1393,7 @@ package body Sem_Types is
          Set_Type (New_El, Get_Type (El));
          Set_Base_Element_Declaration (New_El,
                                        Get_Base_Element_Declaration (El));
+         Set_Element_Position (New_El, Get_Element_Position (El));
          Append_Element (New_El_List, New_El);
       end loop;
    end Copy_Record_Elements_Declaration_List;
