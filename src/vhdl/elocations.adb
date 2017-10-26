@@ -286,7 +286,6 @@ package body Elocations is
            | Iir_Kind_Exponentiation_Operator
            | Iir_Kind_Function_Call
            | Iir_Kind_Aggregate
-           | Iir_Kind_Parenthesis_Expression
            | Iir_Kind_Qualified_Expression
            | Iir_Kind_Type_Conversion
            | Iir_Kind_Allocator_By_Expression
@@ -393,6 +392,7 @@ package body Elocations is
            | Iir_Kind_Interface_File_Declaration
            | Iir_Kind_Interface_Type_Declaration
            | Iir_Kind_Interface_Package_Declaration
+           | Iir_Kind_Parenthesis_Expression
            | Iir_Kind_Concurrent_Simple_Signal_Assignment
            | Iir_Kind_Concurrent_Conditional_Signal_Assignment
            | Iir_Kind_Concurrent_Selected_Signal_Assignment =>
@@ -448,6 +448,22 @@ package body Elocations is
                      "no field Start_Location");
       Set_Field1 (N, Loc);
    end Set_Start_Location;
+
+   function Get_Right_Paren_Location (N : Iir) return Location_Type is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Right_Paren_Location (Get_Kind (N)),
+                     "no field Right_Paren_Location");
+      return Get_Field1 (N);
+   end Get_Right_Paren_Location;
+
+   procedure Set_Right_Paren_Location (N : Iir; Loc : Location_Type) is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Right_Paren_Location (Get_Kind (N)),
+                     "no field Right_Paren_Location");
+      Set_Field1 (N, Loc);
+   end Set_Right_Paren_Location;
 
    function Get_End_Location (N : Iir) return Location_Type is
    begin

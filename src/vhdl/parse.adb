@@ -4717,7 +4717,7 @@ package body Parse is
       Res: Iir;
       Last : Iir;
       Assoc: Iir;
-      Loc : Location_Type;
+      Loc, Right_Loc : Location_Type;
    begin
       Loc := Get_Token_Location;
 
@@ -4734,6 +4734,8 @@ package body Parse is
                null;
             when Tok_Right_Paren =>
                --  This was just a braced expression.
+
+               Right_Loc := Get_Token_Location;
 
                --  Skip ')'.
                Scan;
@@ -4752,6 +4754,12 @@ package body Parse is
                Res := Create_Iir (Iir_Kind_Parenthesis_Expression);
                Set_Location (Res, Loc);
                Set_Expression (Res, Expr);
+
+               if Flag_Elocations then
+                  Create_Elocations (Res);
+                  Set_Right_Paren_Location (Res, Right_Loc);
+               end if;
+
                return Res;
 
             when Tok_Semi_Colon =>

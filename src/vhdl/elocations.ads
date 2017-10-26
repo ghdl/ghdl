@@ -502,7 +502,9 @@ package Elocations is
 
    -- Iir_Kind_Aggregate_Info (None)
 
-   -- Iir_Kind_Parenthesis_Expression (None)
+   -- Iir_Kind_Parenthesis_Expression (L1)
+   --
+   --   Get/Set_Right_Paren_Location (Field1)
 
    -- Iir_Kind_Qualified_Expression (None)
 
@@ -620,6 +622,10 @@ package Elocations is
    --  Field: Field1
    function Get_Start_Location (N : Iir) return Location_Type;
    procedure Set_Start_Location (N : Iir; Loc : Location_Type);
+
+   --  Field: Field1
+   function Get_Right_Paren_Location (N : Iir) return Location_Type;
+   procedure Set_Right_Paren_Location (N : Iir; Loc : Location_Type);
 
    --  Field: Field2
    function Get_End_Location (N : Iir) return Location_Type;

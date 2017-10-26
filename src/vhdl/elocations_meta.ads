@@ -24,6 +24,7 @@ package Elocations_Meta is
    type Fields_Enum is
      (
       Field_Start_Location,
+      Field_Right_Paren_Location,
       Field_End_Location,
       Field_Is_Location,
       Field_Begin_Location,
@@ -48,6 +49,7 @@ package Elocations_Meta is
       (N : Iir; F : Fields_Enum; V: Location_Type);
 
    function Has_Start_Location (K : Iir_Kind) return Boolean;
+   function Has_Right_Paren_Location (K : Iir_Kind) return Boolean;
    function Has_End_Location (K : Iir_Kind) return Boolean;
    function Has_Is_Location (K : Iir_Kind) return Boolean;
    function Has_Begin_Location (K : Iir_Kind) return Boolean;

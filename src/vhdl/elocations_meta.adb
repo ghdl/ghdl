@@ -24,6 +24,8 @@ package body Elocations_Meta is
       case F is
          when Field_Start_Location =>
             return "start_location";
+         when Field_Right_Paren_Location =>
+            return "right_paren_location";
          when Field_End_Location =>
             return "end_location";
          when Field_Is_Location =>
@@ -65,6 +67,8 @@ package body Elocations_Meta is
       case F is
          when Field_Start_Location =>
             return Get_Start_Location (N);
+         when Field_Right_Paren_Location =>
+            return Get_Right_Paren_Location (N);
          when Field_End_Location =>
             return Get_End_Location (N);
          when Field_Is_Location =>
@@ -97,6 +101,8 @@ package body Elocations_Meta is
       case F is
          when Field_Start_Location =>
             Set_Start_Location (N, V);
+         when Field_Right_Paren_Location =>
+            Set_Right_Paren_Location (N, V);
          when Field_End_Location =>
             Set_End_Location (N, V);
          when Field_Is_Location =>
@@ -178,6 +184,11 @@ package body Elocations_Meta is
             return False;
       end case;
    end Has_Start_Location;
+
+   function Has_Right_Paren_Location (K : Iir_Kind) return Boolean is
+   begin
+      return K = Iir_Kind_Parenthesis_Expression;
+   end Has_Right_Paren_Location;
 
    function Has_End_Location (K : Iir_Kind) return Boolean is
    begin
