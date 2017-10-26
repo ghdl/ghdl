@@ -2698,6 +2698,10 @@ package body Trans.Chap8 is
                when Iir_Kind_Association_Element_By_Individual =>
                   Actual_Type := Get_Actual_Type (El);
 
+                  --  Save the object as it will be used by the following
+                  --  associations.
+                  Last_Individual := Pos;
+
                   for Mode in Mode_Value .. Formal_Object_Kind loop
                      --  For individual associations, create a variable
                      --  containing the whole actual.  Each individual
@@ -2731,6 +2735,8 @@ package body Trans.Chap8 is
                         if Ftype_Info.Type_Mode in Type_Mode_Unbounded then
                            --  Create the constraints and then the object.
                            --  FIXME: do not allocate bounds.
+                           pragma Assert
+                             (Get_Type_Staticness (Actual_Type) >= Globally);
                            Chap3.Create_Array_Subtype (Actual_Type);
                            Bounds := Chap3.Get_Array_Type_Bounds (Actual_Type);
                            Chap3.Translate_Object_Allocation
@@ -2742,9 +2748,6 @@ package body Trans.Chap8 is
                         end if;
                      end;
 
-                     --  Save the object as it will be used by the following
-                     --  associations.
-                     Last_Individual := Pos;
                      --  In case of signals, don't keep value, only keep
                      --  signal (so override the value).
                      Params (Pos) := Param;
