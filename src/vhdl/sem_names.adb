@@ -1399,6 +1399,7 @@ package body Sem_Names is
       Subprg : constant Iir := Sem_Stmts.Get_Current_Subprogram;
       Subprg_Body : Iir;
       Parent : Iir;
+      Decl : Iir;
    begin
       --  Apply only in subprograms.
       if Subprg = Null_Iir then
@@ -1421,10 +1422,18 @@ package body Sem_Names is
             Error_Kind ("sem_check_pure", Subprg);
       end case;
 
+      --  Follow aliases.
+      if Get_Kind (Obj) = Iir_Kind_Object_Alias_Declaration then
+         Decl := Get_Object_Prefix (Get_Name (Obj));
+      else
+         Decl := Obj;
+      end if;
+
       --  Not all objects are impure.
-      case Get_Kind (Obj) is
-         when Iir_Kind_Object_Alias_Declaration
-           | Iir_Kind_Guard_Signal_Declaration
+      case Get_Kind (Decl) is
+         when Iir_Kind_Object_Alias_Declaration =>
+            raise Program_Error;
+         when Iir_Kind_Guard_Signal_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Interface_File_Declaration =>
@@ -1433,7 +1442,7 @@ package body Sem_Names is
            | Iir_Kind_Interface_Signal_Declaration =>
             --  When referenced as a formal name (FIXME: this is an
             --  approximation), the rules don't apply.
-            if not Get_Is_Within_Flag (Get_Parent (Obj)) then
+            if not Get_Is_Within_Flag (Get_Parent (Decl)) then
                return;
             end if;
          when Iir_Kind_File_Declaration =>
@@ -1456,8 +1465,8 @@ package body Sem_Names is
             return;
       end case;
 
-      --  OBJ is declared in the immediate declarative part of the subprogram.
-      Parent := Get_Parent (Obj);
+      --  DECL is declared in the immediate declarative part of the subprogram.
+      Parent := Get_Parent (Decl);
       Subprg_Body := Get_Subprogram_Body (Subprg);
       if Parent = Subprg or else Parent = Subprg_Body then
          return;
