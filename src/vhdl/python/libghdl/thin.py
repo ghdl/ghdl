@@ -121,13 +121,19 @@ class Scanner:
 class Parse:
     Parse_Design_File = libghdl.parse__parse_design_file
 
+    Flag_Parse_Parenthesis = c_bool.in_dll(
+        libghdl, "parse__flag_parse_parenthesis")
+
 
 class Canon:
     Flag_Concurrent_Stmts = c_bool.in_dll(
-        libghdl, "canon__canon_flag_concurrent_stmts");
+        libghdl, "canon__canon_flag_concurrent_stmts")
 
     Flag_Configurations = c_bool.in_dll(
-        libghdl, "canon__canon_flag_configurations");
+        libghdl, "canon__canon_flag_configurations")
+
+    Flag_Associations = c_bool.in_dll(
+        libghdl, "canon__canon_flag_associations")
 
     Extract_Sequential_Statement_Chain_Sensitivity = \
         libghdl.canon__canon_extract_sequential_statement_chain_sensitivity
@@ -172,6 +178,11 @@ class Iirs_Utils:
     Is_Second_Subprogram_Specification = \
         libghdl.iirs_utils__is_second_subprogram_specification
 
+    Get_Entity_From_Entity_Aspect = \
+        libghdl.iirs_utils__get_entity_from_entity_aspect
+
+    Get_Interface_Of_Formal = \
+        libghdl.iirs_utils__get_interface_of_formal
 
 Null_Iir = 0
 Null_Iir_List = 0
