@@ -2885,7 +2885,7 @@ package body Trans.Chap8 is
                           (Assoc_Info.Call_Assoc_Fat (Mode) /= Null_Var);
                         --  Allocate array base
                         Param := Fat;
-                        Chap3.Allocate_Fat_Array_Base
+                        Chap3.Allocate_Unbounded_Composite_Base
                           (Alloc_Return, Fat, Formal_Type);
                         --  NOTE: Call_Assoc_Value is not used, the base is
                         --  directly allocated in the fat pointer.

@@ -535,7 +535,7 @@ package body Trans.Chap4 is
                New_Assign_Stmt
                  (M2Lp (Chap3.Get_Composite_Bounds (Name_Node)),
                   M2Addr (Chap3.Get_Array_Type_Bounds (Aggr_Type)));
-               Chap3.Allocate_Fat_Array_Base
+               Chap3.Allocate_Unbounded_Composite_Base
                  (Alloc_Kind, Name_Node, Get_Base_Type (Aggr_Type));
             end;
          else
@@ -636,7 +636,7 @@ package body Trans.Chap4 is
       Obj_Type  : constant Iir := Get_Type (Obj);
       Type_Info : constant Type_Info_Acc := Get_Info (Obj_Type);
    begin
-      if Type_Info.Type_Mode = Type_Mode_Fat_Array then
+      if Type_Info.Type_Mode in Type_Mode_Unbounded then
          declare
             V : Mnode;
          begin
@@ -1040,15 +1040,20 @@ package body Trans.Chap4 is
             Chap6.Translate_Signal_Name (Decl, Name_Sig, Name_Val);
          end if;
          Name_Sig := Stabilize (Name_Sig);
-         Chap3.Allocate_Fat_Array_Base (Alloc_System, Name_Sig, Sig_Type);
+
+         Chap3.Allocate_Unbounded_Composite_Base
+           (Alloc_System, Name_Sig, Sig_Type);
+
          if Name_Val /= Mnode_Null then
             Name_Val := Stabilize (Name_Val);
-            Chap3.Allocate_Fat_Array_Base (Alloc_System, Name_Val, Sig_Type);
+            Chap3.Allocate_Unbounded_Composite_Base
+              (Alloc_System, Name_Val, Sig_Type);
          end if;
          if Is_Port and then Get_Default_Value (Decl) /= Null_Iir then
             Name_Val := Chap6.Get_Port_Init_Value (Decl);
             Name_Val := Stabilize (Name_Val);
-            Chap3.Allocate_Fat_Array_Base (Alloc_System, Name_Val, Sig_Type);
+            Chap3.Allocate_Unbounded_Composite_Base
+              (Alloc_System, Name_Val, Sig_Type);
          end if;
       elsif Is_Complex_Type (Type_Info) then
          if Has_Copy then
@@ -1098,7 +1103,7 @@ package body Trans.Chap4 is
    begin
       Open_Temp;
 
-      if Type_Info.Type_Mode = Type_Mode_Fat_Array then
+      if Type_Info.Type_Mode in Type_Mode_Unbounded then
          Name_Node := Get_Var (Sig_Info.Signal_Driver, Type_Info, Mode_Value);
          Name_Node := Stabilize (Name_Node);
          --  Copy bounds from signal.
@@ -1107,7 +1112,8 @@ package body Trans.Chap4 is
             M2Addr (Chap3.Get_Composite_Bounds
                       (Chap6.Translate_Name (Decl, Mode_Signal))));
          --  Allocate base.
-         Chap3.Allocate_Fat_Array_Base (Alloc_System, Name_Node, Sig_Type);
+         Chap3.Allocate_Unbounded_Composite_Base
+           (Alloc_System, Name_Node, Sig_Type);
       elsif Is_Complex_Type (Type_Info) then
          Name_Node := Get_Var (Sig_Info.Signal_Driver, Type_Info, Mode_Value);
          Allocate_Complex_Object (Sig_Type, Alloc_System, Name_Node);
@@ -1522,7 +1528,7 @@ package body Trans.Chap4 is
       Tinfo := Get_Info (Decl_Type);
       for Mode in Mode_Value .. Info.Alias_Kind loop
          case Tinfo.Type_Mode is
-            when Type_Mode_Fat_Array =>
+            when Type_Mode_Unbounded =>
                --  create an object.
                --  At elaboration: copy base from name, copy bounds from type,
                --   check for matching bounds.
@@ -1587,7 +1593,7 @@ package body Trans.Chap4 is
             Alias_Node : Mnode;
          begin
             case Tinfo.Type_Mode is
-               when Type_Mode_Fat_Array =>
+               when Type_Mode_Unbounded =>
                   Stabilize (N);
                   Alias_Node := Stabilize (Get_Var (A, Tinfo, Mode));
                   Copy_Fat_Pointer (Alias_Node, N);
@@ -2038,7 +2044,7 @@ package body Trans.Chap4 is
          New_Address (New_Obj (Var_Bound), Base_Info.B.Bounds_Ptr_Type));
 
       --  Allocate the array.
-      Chap3.Allocate_Fat_Array_Base
+      Chap3.Allocate_Unbounded_Composite_Base
         (Alloc_Stack, Dv2M (Var_Array, Base_Info, Mode_Value), Base_Type);
 
       --  Fill the array

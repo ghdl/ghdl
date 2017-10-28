@@ -2882,9 +2882,9 @@ package body Trans.Chap3 is
       end if;
    end Maybe_Call_Type_Builder;
 
-   procedure Allocate_Fat_Array_Base (Alloc_Kind : Allocation_Kind;
-                                      Res        : Mnode;
-                                      Arr_Type   : Iir)
+   procedure Allocate_Unbounded_Composite_Base (Alloc_Kind : Allocation_Kind;
+                                                Res        : Mnode;
+                                                Arr_Type   : Iir)
    is
       Dinfo  : constant Type_Info_Acc :=
         Get_Info (Get_Base_Type (Arr_Type));
@@ -2899,7 +2899,7 @@ package body Trans.Chap3 is
          Gen_Alloc (Alloc_Kind, Length, Dinfo.B.Base_Ptr_Type (Kind)));
 
       Maybe_Call_Type_Builder (Res, Arr_Type);
-   end Allocate_Fat_Array_Base;
+   end Allocate_Unbounded_Composite_Base;
 
    procedure Create_Array_Subtype (Sub_Type : Iir)
    is
@@ -3071,7 +3071,7 @@ package body Trans.Chap3 is
          Copy_Bounds (Chap3.Get_Composite_Bounds (Res), Bounds, Obj_Type);
 
          --  Allocate base.
-         Allocate_Fat_Array_Base (Alloc_Kind, Res, Obj_Type);
+         Allocate_Unbounded_Composite_Base (Alloc_Kind, Res, Obj_Type);
       else
          New_Assign_Stmt
            (M2Lp (Res),

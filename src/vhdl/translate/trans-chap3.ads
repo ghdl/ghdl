@@ -218,14 +218,14 @@ package Trans.Chap3 is
    --  If needed call the procedure to build OBJ.
    procedure Maybe_Call_Type_Builder (Obj : Mnode; Obj_Type : Iir);
 
-   --  Allocate the base of a fat array, whose length is determined from
-   --  the bounds.
-   --  RES_PTR is a pointer to the fat pointer (must be a variable that
+   --  Allocate the base of an unbounded composite, whose length is
+   --  determined from the bounds (already set).
+   --  RES_PTR is a pointer to the fat pointer (must be a stable variable: it
    --  can be referenced several times).
-   --  ARR_TYPE is the type of the array.
-   procedure Allocate_Fat_Array_Base (Alloc_Kind : Allocation_Kind;
-                                      Res        : Mnode;
-                                      Arr_Type   : Iir);
+   --  ARR_TYPE is the type of the composite.
+   procedure Allocate_Unbounded_Composite_Base (Alloc_Kind : Allocation_Kind;
+                                                Res        : Mnode;
+                                                Arr_Type   : Iir);
 
    --  Create the bounds for SUB_TYPE.
    --  SUB_TYPE is expected to be a non-static, anonymous array type.

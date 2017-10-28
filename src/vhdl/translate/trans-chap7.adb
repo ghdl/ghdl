@@ -3727,7 +3727,7 @@ package body Trans.Chap7 is
    is
       pragma Unreferenced (Targ, Targ_Type);
    begin
-      if Get_Type_Info (Data).Type_Mode = Type_Mode_Fat_Array then
+      if Get_Type_Info (Data).Type_Mode in Type_Mode_Unbounded then
          return Stabilize (Chap3.Get_Composite_Base (Data));
       else
          return Stabilize (Data);
@@ -3798,7 +3798,7 @@ package body Trans.Chap7 is
             Var_Val : Mnode;
          begin
             --  allocate result array
-            if Tinfo.Type_Mode = Type_Mode_Fat_Array then
+            if Tinfo.Type_Mode in Type_Mode_Unbounded then
                Res := Create_Temp (Tinfo);
 
                Var_Val := Stabilize (E2M (Sig, Tinfo, Mode_Signal));
@@ -3809,7 +3809,8 @@ package body Trans.Chap7 is
                   M2Addr (Chap3.Get_Composite_Bounds (Var_Val)));
 
                --  Allocate base.
-               Chap3.Allocate_Fat_Array_Base (Alloc_Stack, Res, Sig_Type);
+               Chap3.Allocate_Unbounded_Composite_Base
+                 (Alloc_Stack, Res, Sig_Type);
             elsif Is_Complex_Type (Tinfo) then
                Res := Create_Temp (Tinfo);
                Chap4.Allocate_Complex_Object (Sig_Type, Alloc_Stack, Res);
@@ -3819,7 +3820,7 @@ package body Trans.Chap7 is
 
             Open_Temp;
 
-            if Tinfo.Type_Mode /= Type_Mode_Fat_Array then
+            if Tinfo.Type_Mode not in Type_Mode_Unbounded then
                Var_Val := Stabilize (E2M (Sig, Tinfo, Mode_Signal));
             end if;
 
