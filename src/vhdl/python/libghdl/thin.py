@@ -74,6 +74,9 @@ def Get_Identifier(s):
 # Ieee
 
 class Ieee:
+    Std_Logic_1164_Pkg = c_int.in_dll(
+        libghdl, "ieee__std_logic_1164__std_logic_1164_pkg")
+
     # Get value
     Std_Logic_Type = c_int.in_dll(
         libghdl, "ieee__std_logic_1164__std_logic_type")

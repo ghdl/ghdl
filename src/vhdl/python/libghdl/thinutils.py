@@ -136,10 +136,17 @@ def declarations_iter(n):
             elif k1 == iirs.Iir_Kind.Signal_Attribute_Declaration:
                 # Not a declaration
                 pass
+            elif k1 in [iirs.Iir_Kind.Type_Declaration,
+                        iirs.Iir_Kind.Anonymous_Type_Declaration]:
+                yield n1
+                # Handle nested declarations: record elements, physical units,
+                # enumeration literals...
+                typ = iirs.Get_Type_Definition(n1)
+                for n2 in declarations_iter(n1):
+                    yield n2
             else:
                 yield n1
-                # There can be nested declarations (subprograms,
-                # record elements)
+                # There can be nested declarations (subprograms)
                 for n2 in declarations_iter(n1):
                     yield n2
     if nodes_meta.Has_Concurrent_Statement_Chain(k):
@@ -172,6 +179,7 @@ def declarations_iter(n):
                 yield n2
     if k in [iirs.Iir_Kind.Entity_Declaration,
              iirs.Iir_Kind.Architecture_Body,
+             iirs.Iir_Kind.Package_Declaration,
              iirs.Iir_Kind.Package_Body,
              iirs.Iir_Kind.Process_Statement,
              iirs.Iir_Kind.Sensitized_Process_Statement,
