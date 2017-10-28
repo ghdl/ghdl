@@ -2901,6 +2901,27 @@ package body Trans.Chap3 is
       Maybe_Call_Type_Builder (Res, Arr_Type);
    end Allocate_Unbounded_Composite_Base;
 
+   procedure Allocate_Unbounded_Composite_Bounds_And_Copy
+     (Alloc_Kind : Allocation_Kind;
+      Res        : in out Mnode;
+      Obj_Type   : Iir;
+      Bounds     : Mnode)
+   is
+      Tinfo : constant Type_Info_Acc := Get_Info (Obj_Type);
+   begin
+      pragma Assert (Tinfo.Type_Mode in Type_Mode_Unbounded);
+      --  Allocate memory for bounds.
+      New_Assign_Stmt
+        (M2Lp (Chap3.Get_Composite_Bounds (Res)),
+         Gen_Alloc (Alloc_Kind,
+                    New_Lit (New_Sizeof (Tinfo.B.Bounds_Type,
+                                         Ghdl_Index_Type)),
+                    Tinfo.B.Bounds_Ptr_Type));
+
+      --  Copy bounds to the allocated area.
+      Copy_Bounds (Chap3.Get_Composite_Bounds (Res), Bounds, Obj_Type);
+   end Allocate_Unbounded_Composite_Bounds_And_Copy;
+
    procedure Create_Array_Subtype (Sub_Type : Iir)
    is
       Mark : Id_Mark_Type;
@@ -3055,29 +3076,22 @@ package body Trans.Chap3 is
       Obj_Type   : Iir;
       Bounds     : Mnode)
    is
-      Dinfo : constant Type_Info_Acc := Get_Info (Obj_Type);
+      Tinfo : constant Type_Info_Acc := Get_Info (Obj_Type);
       Kind  : constant Object_Kind_Type := Get_Object_Kind (Res);
    begin
-      if Dinfo.Type_Mode in Type_Mode_Unbounded then
-         --  Allocate memory for bounds.
-         New_Assign_Stmt
-           (M2Lp (Chap3.Get_Composite_Bounds (Res)),
-            Gen_Alloc (Alloc_Kind,
-                       New_Lit (New_Sizeof (Dinfo.B.Bounds_Type,
-                                            Ghdl_Index_Type)),
-                       Dinfo.B.Bounds_Ptr_Type));
-
-         --  Copy bounds to the allocated area.
-         Copy_Bounds (Chap3.Get_Composite_Bounds (Res), Bounds, Obj_Type);
-
+      if Tinfo.Type_Mode in Type_Mode_Unbounded then
+         --  Allocate bounds and copy.
+         Allocate_Unbounded_Composite_Bounds_And_Copy
+           (Alloc_Kind, Res, Obj_Type, Bounds);
          --  Allocate base.
-         Allocate_Unbounded_Composite_Base (Alloc_Kind, Res, Obj_Type);
+         Allocate_Unbounded_Composite_Base
+           (Alloc_Kind, Res, Obj_Type);
       else
          New_Assign_Stmt
            (M2Lp (Res),
             Gen_Alloc (Alloc_Kind,
                        Chap3.Get_Object_Size (T2M (Obj_Type, Kind), Obj_Type),
-                       Dinfo.Ortho_Ptr_Type (Kind)));
+                       Tinfo.Ortho_Ptr_Type (Kind)));
 
          Maybe_Call_Type_Builder (Res, Obj_Type);
       end if;
@@ -3113,8 +3127,8 @@ package body Trans.Chap3 is
 
    function Not_In_Range (Value : O_Dnode; Atype : Iir) return O_Enode
    is
-      Constr : Iir;
-      Info   : Type_Info_Acc;
+      Constr : constant Iir := Get_Range_Constraint (Atype);
+      Info   : constant Type_Info_Acc := Get_Info (Atype);
 
       function Gen_Compare (Low : O_Enode; Hi : O_Enode) return O_Enode
       is
@@ -3158,23 +3172,12 @@ package body Trans.Chap3 is
             Chap14.Translate_Left_Type_Attribute (Atype));
       end Gen_Compare_Downto;
 
-      --Low, High : Iir;
       Var_Res : O_Dnode;
       If_Blk  : O_If_Block;
    begin
-      Constr := Get_Range_Constraint (Atype);
-      Info := Get_Info (Atype);
-
       if Get_Kind (Constr) = Iir_Kind_Range_Expression then
          --  Constraint is a range expression, therefore, direction is
          --  known.
-         if Get_Expr_Staticness (Constr) = Locally then
-            --  Range constraint is locally static
-            --  FIXME: check low and high if they are not limits...
-            --Low := Get_Low_Limit (Constr);
-            --High := Get_High_Limit (Constr);
-            null;
-         end if;
          case Get_Direction (Constr) is
             when Iir_To =>
                return Gen_Compare_To;
@@ -3240,8 +3243,7 @@ package body Trans.Chap3 is
    end Check_Range;
 
    function Insert_Scalar_Check
-     (Value : O_Enode; Expr : Iir; Atype : Iir; Loc : Iir)
-      return O_Enode
+     (Value : O_Enode; Expr : Iir; Atype : Iir; Loc : Iir) return O_Enode
    is
       Var : O_Dnode;
    begin
@@ -3252,8 +3254,7 @@ package body Trans.Chap3 is
    end Insert_Scalar_Check;
 
    function Maybe_Insert_Scalar_Check
-     (Value : O_Enode; Expr : Iir; Atype : Iir)
-      return O_Enode
+     (Value : O_Enode; Expr : Iir; Atype : Iir) return O_Enode
    is
       Expr_Type : constant Iir := Get_Type (Expr);
    begin
