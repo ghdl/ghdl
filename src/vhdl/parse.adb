@@ -3535,8 +3535,10 @@ package body Parse is
    is
       Res: Iir;
       Ident : Name_Id;
+      Start_Loc : Location_Type;
    begin
       --  Skip 'alias'.
+      Start_Loc := Get_Token_Location;
       Scan;
 
       Res := Create_Iir (Iir_Kind_Object_Alias_Declaration);
@@ -3560,6 +3562,7 @@ package body Parse is
       Scan;
 
       if Current_Token = Tok_Colon then
+         --  Skip ':'.
          Scan;
          Set_Subtype_Indication (Res, Parse_Subtype_Indication);
       end if;
@@ -3568,6 +3571,11 @@ package body Parse is
       Expect (Tok_Is);
       Scan;
       Set_Name (Res, Parse_Name);
+
+      if Flag_Elocations then
+         Create_Elocations (Res);
+         Set_Start_Location (Res, Start_Loc);
+      end if;
 
       return Res;
    end Parse_Alias_Declaration;
@@ -3585,8 +3593,11 @@ package body Parse is
    begin
       Res := Create_Iir (Iir_Kind_Configuration_Specification);
       Set_Location (Res);
+
+      --  Eat 'for'.
       Expect (Tok_For);
       Scan;
+
       Parse_Component_Specification (Res);
       Set_Binding_Indication (Res, Parse_Binding_Indication);
       Expect (Tok_Semi_Colon);
@@ -3735,11 +3746,17 @@ package body Parse is
    --
    function Parse_Attribute return Iir
    is
-      Loc : Location_Type;
       Ident : Name_Id;
+      Res : Iir;
+      Designator : Iir;
+      Loc, Start_Loc : Location_Type;
    begin
       Expect (Tok_Attribute);
+
+      --  Eat 'attribute'.
+      Start_Loc := Get_Token_Location;
       Scan_Expect (Tok_Identifier);
+
       Loc := Get_Token_Location;
       Ident := Current_Identifier;
 
@@ -3748,50 +3765,47 @@ package body Parse is
 
       case Current_Token is
          when Tok_Colon =>
-            declare
-               Res : Iir_Attribute_Declaration;
-            begin
-               Res := Create_Iir (Iir_Kind_Attribute_Declaration);
-               Set_Location (Res, Loc);
-               Set_Identifier (Res, Ident);
+            Res := Create_Iir (Iir_Kind_Attribute_Declaration);
+            Set_Location (Res, Loc);
+            Set_Identifier (Res, Ident);
 
-               --  Skip ':'.
-               Scan;
+            --  Skip ':'.
+            Scan;
 
-               Set_Type_Mark (Res, Parse_Type_Mark (Check_Paren => True));
-               Expect (Tok_Semi_Colon);
-               return Res;
-            end;
+            Set_Type_Mark (Res, Parse_Type_Mark (Check_Paren => True));
+            Expect (Tok_Semi_Colon);
 
          when Tok_Of =>
-            declare
-               Res : Iir_Attribute_Specification;
-               Designator : Iir_Simple_Name;
-            begin
-               Res := Create_Iir (Iir_Kind_Attribute_Specification);
-               Set_Location (Res, Loc);
-               Designator := Create_Iir (Iir_Kind_Simple_Name);
-               Set_Location (Designator, Loc);
-               Set_Identifier (Designator, Ident);
-               Set_Attribute_Designator (Res, Designator);
+            Res := Create_Iir (Iir_Kind_Attribute_Specification);
+            Set_Location (Res, Loc);
+            Designator := Create_Iir (Iir_Kind_Simple_Name);
+            Set_Location (Designator, Loc);
+            Set_Identifier (Designator, Ident);
+            Set_Attribute_Designator (Res, Designator);
 
-               --  Skip 'of'.
-               Scan;
+            --  Skip 'of'.
+            Scan;
 
-               Parse_Entity_Name_List (Res);
-               Expect (Tok_Is);
+            Parse_Entity_Name_List (Res);
+            Expect (Tok_Is);
 
-               --  Skip 'is'.
-               Scan;
+            --  Skip 'is'.
+            Scan;
 
-               Set_Expression (Res, Parse_Expression);
-               Expect (Tok_Semi_Colon);
-               return Res;
-            end;
+            Set_Expression (Res, Parse_Expression);
+            Expect (Tok_Semi_Colon);
+
          when others =>
             Error_Msg_Parse ("':' or 'of' expected after identifier");
             return Null_Iir;
       end case;
+
+      if Flag_Elocations then
+         Create_Elocations (Res);
+         Set_Start_Location (Res, Start_Loc);
+      end if;
+
+      return Res;
    end Parse_Attribute;
 
    --  precond : GROUP

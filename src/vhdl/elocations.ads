@@ -98,7 +98,9 @@ package Elocations is
 
    -- Iir_Kind_Entity_Class (None)
 
-   -- Iir_Kind_Attribute_Specification (None)
+   -- Iir_Kind_Attribute_Specification (L1)
+   --
+   --   Get/Set_Start_Location (Field1)
 
    -- Iir_Kind_Attribute_Value (None)
 
@@ -185,9 +187,7 @@ package Elocations is
    --
    --   Get/Set_Start_Location (Field1)
 
-   -- Iir_Kind_Non_Object_Alias_Declaration (L1)
-   --
-   --   Get/Set_Start_Location (Field1)
+   -- Iir_Kind_Non_Object_Alias_Declaration (None)
 
    -- Iir_Kind_Anonymous_Type_Declaration (L1)
    --

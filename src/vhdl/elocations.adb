@@ -201,7 +201,6 @@ package body Elocations is
            | Iir_Kind_Array_Element_Resolution
            | Iir_Kind_Record_Resolution
            | Iir_Kind_Record_Element_Resolution
-           | Iir_Kind_Attribute_Specification
            | Iir_Kind_Disconnection_Specification
            | Iir_Kind_Configuration_Specification
            | Iir_Kind_Access_Type_Definition
@@ -230,6 +229,7 @@ package body Elocations is
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Library_Declaration
            | Iir_Kind_Element_Declaration
+           | Iir_Kind_Non_Object_Alias_Declaration
            | Iir_Kind_Psl_Declaration
            | Iir_Kind_Psl_Endpoint_Declaration
            | Iir_Kind_Terminal_Declaration
@@ -373,11 +373,11 @@ package body Elocations is
            | Iir_Kind_Attribute_Name =>
             return Format_None;
          when Iir_Kind_Library_Clause
+           | Iir_Kind_Attribute_Specification
            | Iir_Kind_Anonymous_Type_Declaration
            | Iir_Kind_Attribute_Declaration
            | Iir_Kind_Group_Template_Declaration
            | Iir_Kind_Group_Declaration
-           | Iir_Kind_Non_Object_Alias_Declaration
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Procedure_Declaration
            | Iir_Kind_Object_Alias_Declaration

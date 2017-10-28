@@ -642,6 +642,8 @@ package Iirs is
    --   | OTHERS
    --   | ALL
    --
+   --  The location points to 'for'.
+   --
    --  The declaration containing this type declaration.
    --   Get/Set_Parent (Field0)
    --

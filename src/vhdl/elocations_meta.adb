@@ -132,6 +132,7 @@ package body Elocations_Meta is
    begin
       case K is
          when Iir_Kind_Library_Clause
+           | Iir_Kind_Attribute_Specification
            | Iir_Kind_Protected_Type_Declaration
            | Iir_Kind_Record_Type_Definition
            | Iir_Kind_Protected_Type_Body
@@ -149,7 +150,6 @@ package body Elocations_Meta is
            | Iir_Kind_Attribute_Declaration
            | Iir_Kind_Group_Template_Declaration
            | Iir_Kind_Group_Declaration
-           | Iir_Kind_Non_Object_Alias_Declaration
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Procedure_Declaration
            | Iir_Kind_Function_Body
