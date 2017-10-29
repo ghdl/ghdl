@@ -4,7 +4,7 @@ end;
 
 architecture behav of child2 is
 begin
-  assert i = (i'range => '0');
+  assert i = "10";
 end behav;
 
 entity repro2 is
