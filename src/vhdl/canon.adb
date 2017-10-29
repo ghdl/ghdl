@@ -2304,14 +2304,16 @@ package body Canon is
       Comp_Conf : Iir_Component_Configuration;
       Parent : Iir)
    is
+      --  Merge associations from FIRST_CHAIN and SEC_CHAIN.
       function Merge_Association_Chain
-        (Inter_Chain : Iir; First_Chain : Iir; Sec_Chain : Iir)
-        return Iir
+        (Inter_Chain : Iir; First_Chain : Iir; Sec_Chain : Iir) return Iir
       is
          --  Result (chain).
          First, Last : Iir;
 
-         --  Copy an association and append new elements to FIRST/LAST.
+         --  Copy an association and append new elements to FIRST/LAST.  In
+         --  case of individual associations, all associations for the
+         --  interface are copied.
          procedure Copy_Association
            (Assoc : in out Iir; Inter : in out Iir; Copy_Inter : Iir)
          is
@@ -2336,8 +2338,10 @@ package body Canon is
                   else
                      Formal := Sem_Inst.Copy_Tree (Formal);
                   end if;
+                  Set_Formal (El, Formal);
+               else
+                  Formal := Inter;
                end if;
-               Set_Formal (El, Formal);
                Set_Whole_Association_Flag
                  (El, Get_Whole_Association_Flag (Assoc));
 
@@ -2354,7 +2358,7 @@ package body Canon is
                         Sem_Inst.Copy_Tree (Get_Formal_Conversion (Assoc)));
                      Set_Collapse_Signal_Flag
                        (Assoc,
-                        Sem.Can_Collapse_Signals (Assoc, Get_Formal (Assoc)));
+                        Sem.Can_Collapse_Signals (Assoc, Formal));
                   when Iir_Kind_Association_Element_By_Individual =>
                      Set_Actual_Type (El, Get_Actual_Type (Assoc));
                   when others =>
@@ -2394,17 +2398,19 @@ package body Canon is
             --  Consistency check.
             pragma Assert (Get_Association_Interface (F_El, F_Inter) = Inter);
 
-            --  Find the associated in the second chain.
+            --  Find the association in the second chain.
             S_El := Find_First_Association_For_Interface
               (Sec_Chain, Inter_Chain, Inter);
 
             if S_El /= Null_Iir
               and then Get_Kind (S_El) /= Iir_Kind_Association_Element_Open
             then
+               --  Exists and not open: use it.
                S_Inter := Inter;
                Copy_Association (S_El, S_Inter, Inter);
                Advance (F_El, F_Inter, Inter);
             else
+               --  Does not exist: use the one from first chain.
                Copy_Association (F_El, F_Inter, Inter);
             end if;
             Inter := Get_Chain (Inter);
