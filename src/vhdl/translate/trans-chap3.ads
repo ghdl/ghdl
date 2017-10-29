@@ -227,6 +227,13 @@ package Trans.Chap3 is
                                                 Res        : Mnode;
                                                 Arr_Type   : Iir);
 
+   --  Allocate the bounds for type OBJ_TYPE and assign it to unbounded object
+   --  RES.  Then copy bounds from BOUNDS to the object.
+   procedure Allocate_Unbounded_Composite_Bounds
+     (Alloc_Kind : Allocation_Kind;
+      Res        : Mnode;
+      Obj_Type   : Iir);
+
    --  Create the bounds for SUB_TYPE.
    --  SUB_TYPE is expected to be a non-static, anonymous array type.
    procedure Create_Array_Subtype (Sub_Type : Iir);

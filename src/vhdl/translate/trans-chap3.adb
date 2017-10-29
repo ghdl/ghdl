@@ -2901,11 +2901,10 @@ package body Trans.Chap3 is
       Maybe_Call_Type_Builder (Res, Arr_Type);
    end Allocate_Unbounded_Composite_Base;
 
-   procedure Allocate_Unbounded_Composite_Bounds_And_Copy
+   procedure Allocate_Unbounded_Composite_Bounds
      (Alloc_Kind : Allocation_Kind;
-      Res        : in out Mnode;
-      Obj_Type   : Iir;
-      Bounds     : Mnode)
+      Res        : Mnode;
+      Obj_Type   : Iir)
    is
       Tinfo : constant Type_Info_Acc := Get_Info (Obj_Type);
    begin
@@ -2917,10 +2916,7 @@ package body Trans.Chap3 is
                     New_Lit (New_Sizeof (Tinfo.B.Bounds_Type,
                                          Ghdl_Index_Type)),
                     Tinfo.B.Bounds_Ptr_Type));
-
-      --  Copy bounds to the allocated area.
-      Copy_Bounds (Chap3.Get_Composite_Bounds (Res), Bounds, Obj_Type);
-   end Allocate_Unbounded_Composite_Bounds_And_Copy;
+   end Allocate_Unbounded_Composite_Bounds;
 
    procedure Create_Array_Subtype (Sub_Type : Iir)
    is
@@ -3081,8 +3077,8 @@ package body Trans.Chap3 is
    begin
       if Tinfo.Type_Mode in Type_Mode_Unbounded then
          --  Allocate bounds and copy.
-         Allocate_Unbounded_Composite_Bounds_And_Copy
-           (Alloc_Kind, Res, Obj_Type, Bounds);
+         Allocate_Unbounded_Composite_Bounds (Alloc_Kind, Res, Obj_Type);
+         Copy_Bounds (Chap3.Get_Composite_Bounds (Res), Bounds, Obj_Type);
          --  Allocate base.
          Allocate_Unbounded_Composite_Base
            (Alloc_Kind, Res, Obj_Type);

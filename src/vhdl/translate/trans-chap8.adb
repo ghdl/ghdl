@@ -2550,6 +2550,10 @@ package body Trans.Chap8 is
       --  suspendable, but cannot suspend.
       Is_Suspendable : constant Boolean := Call_Info /= null;
 
+      --  Where to allocate to store parameters (return stack for suspendable
+      --  procedure, stack otherwise).
+      Alloc : Allocation_Kind;
+
       type Mnode_Array is array (Natural range <>) of Mnode;
       type O_Enode_Array is array (Natural range <>) of O_Enode;
       Nbr_Assoc : constant Natural :=
@@ -2574,6 +2578,50 @@ package body Trans.Chap8 is
       --  Index of the last individual association (needed because it holds
       --  the actual).
       Last_Individual : Natural;
+
+      Dynamic_Individual_Assoc : Iir;
+      Saved_Val : Mnode_Array (0 .. Nbr_Assoc - 1);
+      Saved_Sig : Mnode_Array (0 .. Nbr_Assoc - 1);
+
+      --  Individual association: assign the individual actual of
+      --  the whole actual.
+      procedure Trans_Individual_Assign
+        (Assoc : Iir; Val : O_Enode; Sig : O_Enode)
+      is
+         Formal : constant Iir := Get_Formal (Assoc);
+         Formal_Type : constant Iir := Get_Type (Formal);
+         Base_Formal : constant Iir := Get_Interface_Of_Formal (Formal);
+         Formal_Info : constant Interface_Info_Acc := Get_Info (Base_Formal);
+         Formal_Object_Kind : constant Object_Kind_Type :=
+           Get_Interface_Kind (Base_Formal);
+         Act : constant Iir := Get_Actual (Assoc);
+         Assoc_Info : Call_Assoc_Info_Acc;
+         Param : Mnode;
+      begin
+         Param := Translate_Individual_Association_Formal
+           (Formal, Formal_Info, Params (Last_Individual),
+            Formal_Object_Kind);
+         if Formal_Object_Kind = Mode_Value then
+            Chap7.Translate_Assign (Param, Val, Act, Formal_Type, Assoc);
+         else
+            Chap3.Translate_Object_Copy (Param, Sig, Formal_Type);
+            if Is_Suspendable then
+               --  Keep reference to the value to update the whole object
+               --  at each call.
+               Assoc_Info := Get_Info (Assoc);
+               New_Assign_Stmt
+                 (Get_Var (Assoc_Info.Call_Assoc_Value (Mode_Value)),
+                  Val);
+            else
+               --  Assign the value to the whole object, as there is
+               --  only one call.
+               Param := Translate_Individual_Association_Formal
+                 (Formal, Formal_Info, Params (Last_Individual),
+                  Mode_Value);
+               Chap3.Translate_Object_Copy (Param, Val, Formal_Type);
+            end if;
+         end if;
+      end Trans_Individual_Assign;
 
       --  Evaluate the actual of ASSOC/INTER (whose index is POS), do the
       --  actual conversion and save the result (either copy it to a variable
@@ -2600,6 +2648,7 @@ package body Trans.Chap8 is
          Mval : Mnode;
          Mode : Iir_Mode;
          Bounds : Mnode;
+         Next_Assoc : Iir;
 
          --  Assign PARAMS field for formal to V.
          procedure Assign_Params_Field (V : O_Enode; Mode : Object_Kind_Type)
@@ -2658,30 +2707,43 @@ package body Trans.Chap8 is
                      end;
                   end if;
 
-                  declare
-                     Alloc : Allocation_Kind;
-                  begin
-                     if Does_Callee_Suspend then
-                        Alloc := Alloc_Return;
-                     else
-                        Alloc := Alloc_Stack;
-                     end if;
+                  if Ftype_Info.Type_Mode in Type_Mode_Unbounded then
+                     --  Create the constraints and then the object.
+                     --  FIXME: do not allocate bounds if static.
+                     if Mode = Mode_Value then
+                        if Get_Type_Staticness (Actual_Type) >= Globally then
+                           Chap3.Create_Array_Subtype (Actual_Type);
+                           Bounds := Chap3.Get_Array_Type_Bounds (Actual_Type);
+                           Chap3.Translate_Object_Allocation
+                             (Param, Alloc, Formal_Type, Bounds);
+                        else
+                           --  The bounds of the formal are not known (will be
+                           --  determined by the actuals).  Just allocate the
+                           --  bounds.
+                           Chap3.Allocate_Unbounded_Composite_Bounds
+                             (Alloc, Param, Formal_Type);
 
-                     if Ftype_Info.Type_Mode in Type_Mode_Unbounded then
-                        --  Create the constraints and then the object.
-                        --  FIXME: do not allocate bounds.
-                        pragma Assert
-                          (Get_Type_Staticness (Actual_Type) >= Globally);
-                        Chap3.Create_Array_Subtype (Actual_Type);
-                        Bounds := Chap3.Get_Array_Type_Bounds (Actual_Type);
-                        Chap3.Translate_Object_Allocation
-                          (Param, Alloc, Formal_Type, Bounds);
+                           Saved_Val (Pos) := Param;
+
+                           pragma Assert (Dynamic_Individual_Assoc = Null_Iir);
+                           Dynamic_Individual_Assoc := Assoc;
+                        end if;
                      else
-                        --  Create the object.
-                        Chap4.Allocate_Complex_Object
-                          (Formal_Type, Alloc, Param);
+                        --  Use the bounds of the value for the signal.
+                        New_Assign_Stmt
+                          (M2Lp (Chap3.Get_Composite_Bounds (Param)),
+                           M2Addr (Chap3.Get_Composite_Bounds (Params (Pos))));
+
+                        --  Allocate the base.
+                        Chap3.Allocate_Unbounded_Composite_Base
+                          (Alloc, Param, Formal_Type);
+
+                        Saved_Sig (Pos) := Param;
                      end if;
-                  end;
+                  else
+                     --  Create the object.
+                     Chap4.Allocate_Complex_Object (Formal_Type, Alloc, Param);
+                  end if;
 
                   --  In case of signals, don't keep value, only keep
                   --  signal (so override the value).
@@ -2795,30 +2857,70 @@ package body Trans.Chap8 is
 
          --  Assign actual, if needed.
          if Base_Formal /= Formal then
-            --  Individual association: assign the individual actual of
-            --  the whole actual.
-            Param := Translate_Individual_Association_Formal
-              (Formal, Formal_Info, Params (Last_Individual),
-               Formal_Object_Kind);
-            if Formal_Object_Kind = Mode_Value then
-               Chap7.Translate_Assign (Param, Val, Act, Formal_Type, Assoc);
-            else
-               Chap7.Translate_Assign (Param, Sig, Act, Formal_Type, Assoc);
-               if Is_Suspendable then
-                  --  Keep reference to the value to update the whole object
-                  --  at each call.
-                  New_Assign_Stmt
-                    (Get_Var (Assoc_Info.Call_Assoc_Value (Mode_Value)), Val);
-               else
-                  --  Assign the value to the whole object, as there is
-                  --  only one call.
-                  Param := Translate_Individual_Association_Formal
-                    (Formal, Formal_Info, Params (Last_Individual),
-                     Mode_Value);
-                  Chap7.Translate_Assign (Param, Val, Act, Formal_Type, Assoc);
-               end if;
-            end if;
+            --  Individual association.
+            if Dynamic_Individual_Assoc /= Null_Iir then
+               --  With dynamic bounds.
+               --  FIXME: only records are supported.
+               pragma Assert (Get_Kind (Formal) = Iir_Kind_Selected_Element);
 
+               --  Save the actual.
+               Saved_Val (Pos) := E2M (Val, Ftype_Info, Mode_Value);
+               if Formal_Object_Kind = Mode_Signal then
+                  Saved_Sig (Pos) := E2M (Sig, Ftype_Info, Mode_Signal);
+               end if;
+
+               --  If the record element is dynamic, copy the bounds.
+               if Is_Unbounded_Type (Ftype_Info) then
+                  Stabilize (Saved_Val (Pos));
+
+                  Chap3.Copy_Bounds
+                    (Chap3.Bounds_To_Element_Bounds
+                       (Chap3.Get_Composite_Bounds
+                          (Params (Last_Individual)),
+                        Get_Selected_Element (Formal)),
+                     Chap3.Get_Composite_Bounds (Saved_Val (Pos)),
+                     Formal_Type);
+               end if;
+
+               --  If this is the last association for the interface:
+               Next_Assoc := Get_Chain (Assoc);
+               if Next_Assoc = Null_Iir
+                 or else Get_Formal (Next_Assoc) = Null_Iir
+                 or else (Get_Interface_Of_Formal (Get_Formal (Next_Assoc))
+                            /= Base_Formal)
+               then
+                  --  * allocate base
+                  Chap3.Allocate_Unbounded_Composite_Base
+                    (Alloc, Saved_Val (Last_Individual),
+                     Get_Type (Base_Formal));
+                  if Formal_Object_Kind = Mode_Signal then
+                     Chap3.Allocate_Unbounded_Composite_Base
+                       (Alloc, Saved_Sig (Last_Individual),
+                        Get_Type (Base_Formal));
+                  end if;
+
+                  --  * copy all elements
+                  Next_Assoc := Dynamic_Individual_Assoc;
+                  for I in Last_Individual + 1 .. Pos loop
+                     Next_Assoc := Get_Chain (Next_Assoc);
+                     if Formal_Object_Kind = Mode_Signal then
+                        Trans_Individual_Assign
+                          (Next_Assoc,
+                           M2E (Saved_Val (I)), M2E (Saved_Sig (I)));
+                     else
+                        Trans_Individual_Assign
+                          (Next_Assoc, M2E (Saved_Val (I)), O_Enode_Null);
+                     end if;
+                  end loop;
+
+                  --  * clear the flag.
+                  Dynamic_Individual_Assoc := Null_Iir;
+               end if;
+            else
+               --  Individual association: assign the individual actual of
+               --  the whole actual.
+               Trans_Individual_Assign (Assoc, Val, Sig);
+            end if;
          elsif Assoc_Info /= null then
             --  For suspendable caller, write the actual to the state
             --  record.  In some cases (like expressions), the value has
@@ -2992,10 +3094,18 @@ package body Trans.Chap8 is
          Set_Stack2_Mark (Get_Var (Mark_Var));
       end if;
 
+      --  Set Alloc.
+      if Does_Callee_Suspend then
+         Alloc := Alloc_Return;
+      else
+         Alloc := Alloc_Stack;
+      end if;
+
       --  Evaluate in-out parameters and parameters passed by ref, since
       --  they can add declarations.
       --  Non-composite in-out parameters address are saved in order to
       --  be able to assignate the result.
+      Dynamic_Individual_Assoc := Null_Iir;
       El := Assoc_Chain;
       Inter := Inter_Chain;
       Pos := 0;
@@ -3035,10 +3145,11 @@ package body Trans.Chap8 is
             Base_Formal : Iir;
             Formal : Iir;
             Formal_Info : Interface_Info_Acc;
+            Formal_Type : Iir;
             Assoc_Info : Call_Assoc_Info_Acc;
             Base_Param : Mnode;
             Param : Mnode;
-            Val : O_Lnode;
+            Val : Mnode;
          begin
             Open_Temp;
             El := Assoc_Chain;
@@ -3066,19 +3177,19 @@ package body Trans.Chap8 is
                      then
                         Formal := Strip_Denoting_Name (Get_Formal (El));
                         Formal_Info := Get_Info (Base_Formal);
+                        Formal_Type := Get_Type (Formal);
                         Assoc_Info := Get_Info (El);
                         --  Reference the individual sub-elements of the
                         --  whole value.
                         Param := Translate_Individual_Association_Formal
                           (Formal, Formal_Info, Base_Param, Mode_Value);
-                        Val := Get_Var
-                          (Assoc_Info.Call_Assoc_Value (Mode_Value));
-                        --  FIXME: that's for scalar.  Use Mnode.
-                        Val := New_Acc_Value (Val);
+                        Val := Get_Varp
+                          (Assoc_Info.Call_Assoc_Value (Mode_Value),
+                           Get_Info (Formal_Type), Mode_Value);
                         --  Update.
                         Chap7.Translate_Assign
-                          (Param, New_Value (Val), Get_Actual (El),
-                           Get_Type (Formal), El);
+                          (Param, M2E (Val), Get_Actual (El),
+                           Formal_Type, El);
                      end if;
                   when others =>
                      null;
