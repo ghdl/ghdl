@@ -461,6 +461,7 @@ package body Iirs_Utils is
          case Get_Kind (El) is
             when Iir_Kind_Simple_Name
               | Iir_Kind_Operator_Symbol =>
+               --  Operator is for subprogram interfaces.
                return Get_Named_Entity (El);
             when Iir_Kinds_Interface_Declaration =>
                return El;
