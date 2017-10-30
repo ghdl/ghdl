@@ -2172,215 +2172,232 @@ package body Sem_Assocs is
                exit;
             end if;
 
-            --  Extract conversion
-            Formal_Conv := Null_Iir;
-            case Get_Kind (Formal_Name) is
-               when Iir_Kind_Function_Call =>
-                  --  Only one actual
-                  declare
-                     Call_Assoc : constant Iir :=
-                       Get_Parameter_Association_Chain (Formal_Name);
-                  begin
-                     if (Get_Kind (Call_Assoc)
-                           /= Iir_Kind_Association_Element_By_Expression)
-                       or else Get_Chain (Call_Assoc) /= Null_Iir
-                       or else Get_Formal (Call_Assoc) /= Null_Iir
-                       or else Get_Actual_Conversion (Call_Assoc) /= Null_Iir
-                     then
-                        if Finish then
-                           Error_Msg_Sem
-                             (+Assoc, "ill-formed formal conversion");
-                        end if;
-                        Match := Not_Compatible;
-                        exit;
-                     end if;
-                     Formal_Conv := Formal_Name;
-                     Formal_Name := Get_Actual (Call_Assoc);
-                  end;
-               when Iir_Kind_Type_Conversion =>
-                  Formal_Conv := Formal_Name;
-                  Formal_Name := Get_Expression (Formal_Name);
-               when Iir_Kind_Slice_Name
-                 | Iir_Kind_Indexed_Name
-                 | Iir_Kind_Selected_Element
-                 | Iir_Kind_Simple_Name =>
-                  null;
-               when others =>
-                  Formal_Name := Formal;
-            end case;
-            case Get_Kind (Formal_Name) is
-               when Iir_Kind_Selected_Element
-                 | Iir_Kind_Slice_Name
-                 | Iir_Kind_Indexed_Name =>
-                  Inter := Get_Base_Name (Formal_Name);
-                  Set_Whole_Association_Flag (Assoc, False);
-               when Iir_Kind_Simple_Name
-                 | Iir_Kind_Operator_Symbol =>
-                  Inter := Get_Named_Entity (Formal_Name);
-                  Formal_Name := Inter;
-                  Set_Whole_Association_Flag (Assoc, True);
-               when others =>
-                  --  Error
-                  if Finish then
-                     Error_Msg_Sem (+Assoc, "formal is not a name");
-                  end if;
-                  Match := Not_Compatible;
-                  exit;
-            end case;
-
-            --  Simplify overload list (for interface subprogram).
-            --  FIXME: Interface must hide previous subprogram declarations, so
-            --   there should be no need to filter.
-            if Is_Overload_List (Inter) then
-               declare
-                  List : constant Iir_List := Get_Overload_List (Inter);
-                  Filtered_Inter : Iir;
-                  El : Iir;
-               begin
-                  Filtered_Inter := Null_Iir;
-                  for I in Natural loop
-                     El := Get_Nth_Element (List, I);
-                     exit when El = Null_Iir;
-                     if Get_Kind (El) in Iir_Kinds_Interface_Declaration
-                       and then Get_Parent (El) = Get_Parent (Interface_Chain)
-                     then
-                        Add_Result (Filtered_Inter, El);
-                     end if;
-                  end loop;
-                  Free_Overload_List (Inter);
-                  Inter := Filtered_Inter;
-
-                  pragma Assert
-                    (Get_Kind (Formal) = Iir_Kind_Simple_Name
-                       or else Get_Kind (Formal) = Iir_Kind_Operator_Symbol);
-                  Set_Named_Entity (Formal, Inter);
-
-                  if Inter = Null_Iir then
-                     if Finish then
-                        Error_Msg_Sem (+Assoc, "no interface %i for %n",
-                                       (+Formal, +Loc));
-                     end if;
-                     Match := Not_Compatible;
-                     exit;
-                  end if;
-
-                  if Is_Overload_List (Inter) then
-                     if Finish then
-                        Error_Msg_Sem (+Assoc, "ambiguous formal name");
-                     end if;
-                     Match := Not_Compatible;
-                     exit;
-                  end if;
-               end;
-            end if;
-            if Get_Kind (Inter) not in Iir_Kinds_Interface_Declaration
-              or else Interface_Chain = Null_Iir
-              or else Get_Parent (Inter) /= Get_Parent (Interface_Chain)
-            then
-               if Finish then
-                  Error_Msg_Sem
-                    (+Assoc, "formal %i is not an interface name", +Inter);
-               end if;
-               Match := Not_Compatible;
-               exit;
-            end if;
-
-            --  LRM 4.3.2.2  Association Lists
-            --  The formal part of a named element association may be
-            --  in the form of a function call, [...], if and only
-            --  if the mode of the formal is OUT, INOUT, BUFFER, or
-            --  LINKAGE, and the actual is not OPEN.
-            if Formal_Conv /= Null_Iir
-              and then
-              (Get_Kind (Inter) not in Iir_Kinds_Interface_Object_Declaration
-                 or else Get_Mode (Inter) = Iir_In_Mode)
-            then
-               if Finish then
-                  Error_Msg_Sem
-                    (+Assoc,
-                     "formal conversion allowed only for inerface object",
-                     +Formal_Conv);
-               end if;
-               Match := Not_Compatible;
-               exit;
-            end if;
-
-            --  Find the Interface.
-            declare
-               Inter1 : Iir;
-            begin
-               Inter1 := Interface_Chain;
-               Pos := 0;
-               while Inter1 /= Null_Iir loop
-                  exit when Inter = Inter1;
-                  Inter1 := Get_Chain (Inter1);
-                  Pos := Pos + 1;
-               end loop;
-               if Inter1 = Null_Iir then
-                  if Finish then
-                     Error_Msg_Sem
-                       (+Assoc, "no corresponding interface for %i", +Inter);
-                  end if;
-                  Match := Not_Compatible;
-                  exit;
-               end if;
-            end;
-
-            Sem_Association
-              (Assoc, Inter, Formal_Name, Formal_Conv, Finish, Match);
-            exit when Match = Not_Compatible;
-
-            if Get_Whole_Association_Flag (Assoc) then
-               --  Whole association.
-               Last_Individual := Null_Iir;
-               if Inter_Matched (Pos) = None then
-                  if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open
-                  then
-                     Inter_Matched (Pos) := Open;
-                  else
-                     Inter_Matched (Pos) := Whole;
-                  end if;
-               else
-                  if Finish then
-                     Error_Msg_Sem
-                       (+Assoc, "%n already associated", +Inter);
-                  end if;
-                  Match := Not_Compatible;
-                  exit;
-               end if;
-            else
-               --  Individual association.
-               Has_Individual := True;
-               if Inter_Matched (Pos) /= Whole then
-                  if Finish
-                    and then Inter_Matched (Pos) = Individual
-                    and then Last_Individual /= Inter
-                  then
-                     Error_Msg_Sem
-                       (+Assoc,
-                        "non consecutive individual association for %n",
-                        +Inter);
-                     Match := Not_Compatible;
-                     exit;
-                  end if;
-                  Last_Individual := Inter;
-                  Inter_Matched (Pos) := Individual;
-               else
-                  if Finish then
-                     Error_Msg_Sem
-                       (+Assoc, "%n already associated", +Inter);
-                     Match := Not_Compatible;
-                     exit;
-                  end if;
-               end if;
-            end if;
-
             Assoc := Get_Chain (Assoc);
             exit when Assoc = Null_Iir;
             Formal := Get_Formal (Assoc);
          end loop;
 
+         --  Remove visibility by selection of interfaces.  This is needed
+         --  to correctly analyze actuals.
          Sem_Scopes.Close_Declarative_Region;
+
+         if Match /= Not_Compatible then
+            Assoc := First_Named_Assoc;
+            loop
+               Formal := Get_Formal (Assoc);
+               Formal_Name := Get_Named_Entity (Formal);
+
+               --  Extract conversion
+               Formal_Conv := Null_Iir;
+               case Get_Kind (Formal_Name) is
+                  when Iir_Kind_Function_Call =>
+                     --  Only one actual
+                     declare
+                        Call_Assoc : constant Iir :=
+                          Get_Parameter_Association_Chain (Formal_Name);
+                     begin
+                        if (Get_Kind (Call_Assoc)
+                              /= Iir_Kind_Association_Element_By_Expression)
+                          or else Get_Chain (Call_Assoc) /= Null_Iir
+                          or else Get_Formal (Call_Assoc) /= Null_Iir
+                          or else (Get_Actual_Conversion (Call_Assoc)
+                                     /= Null_Iir)
+                        then
+                           if Finish then
+                              Error_Msg_Sem
+                                (+Assoc, "ill-formed formal conversion");
+                           end if;
+                           Match := Not_Compatible;
+                           exit;
+                        end if;
+                        Formal_Conv := Formal_Name;
+                        Formal_Name := Get_Actual (Call_Assoc);
+                     end;
+                  when Iir_Kind_Type_Conversion =>
+                     Formal_Conv := Formal_Name;
+                     Formal_Name := Get_Expression (Formal_Name);
+                  when Iir_Kind_Slice_Name
+                    | Iir_Kind_Indexed_Name
+                    | Iir_Kind_Selected_Element
+                    | Iir_Kind_Simple_Name =>
+                     null;
+                  when others =>
+                     Formal_Name := Formal;
+               end case;
+               case Get_Kind (Formal_Name) is
+                  when Iir_Kind_Selected_Element
+                    | Iir_Kind_Slice_Name
+                    | Iir_Kind_Indexed_Name =>
+                     Inter := Get_Base_Name (Formal_Name);
+                     Set_Whole_Association_Flag (Assoc, False);
+                  when Iir_Kind_Simple_Name
+                    | Iir_Kind_Operator_Symbol =>
+                     Inter := Get_Named_Entity (Formal_Name);
+                     Formal_Name := Inter;
+                     Set_Whole_Association_Flag (Assoc, True);
+                  when others =>
+                     --  Error
+                     if Finish then
+                        Error_Msg_Sem (+Assoc, "formal is not a name");
+                     end if;
+                     Match := Not_Compatible;
+                     exit;
+               end case;
+
+               --  Simplify overload list (for interface subprogram).
+               --  FIXME: Interface must hide previous subprogram declarations,
+               --  so there should be no need to filter.
+               if Is_Overload_List (Inter) then
+                  declare
+                     List : constant Iir_List := Get_Overload_List (Inter);
+                     Filtered_Inter : Iir;
+                     El : Iir;
+                  begin
+                     Filtered_Inter := Null_Iir;
+                     for I in Natural loop
+                        El := Get_Nth_Element (List, I);
+                        exit when El = Null_Iir;
+                        if Get_Kind (El) in Iir_Kinds_Interface_Declaration
+                          and then
+                          Get_Parent (El) = Get_Parent (Interface_Chain)
+                        then
+                           Add_Result (Filtered_Inter, El);
+                        end if;
+                     end loop;
+                     Free_Overload_List (Inter);
+                     Inter := Filtered_Inter;
+
+                     pragma Assert
+                       (Get_Kind (Formal) = Iir_Kind_Simple_Name
+                          or else
+                          Get_Kind (Formal) = Iir_Kind_Operator_Symbol);
+                     Set_Named_Entity (Formal, Inter);
+
+                     if Inter = Null_Iir then
+                        if Finish then
+                           Error_Msg_Sem (+Assoc, "no interface %i for %n",
+                                          (+Formal, +Loc));
+                        end if;
+                        Match := Not_Compatible;
+                        exit;
+                     end if;
+
+                     if Is_Overload_List (Inter) then
+                        if Finish then
+                           Error_Msg_Sem (+Assoc, "ambiguous formal name");
+                        end if;
+                        Match := Not_Compatible;
+                        exit;
+                     end if;
+                  end;
+               end if;
+               if Get_Kind (Inter) not in Iir_Kinds_Interface_Declaration
+                 or else Interface_Chain = Null_Iir
+                 or else Get_Parent (Inter) /= Get_Parent (Interface_Chain)
+               then
+                  if Finish then
+                     Error_Msg_Sem
+                       (+Assoc, "formal %i is not an interface name", +Inter);
+                  end if;
+                  Match := Not_Compatible;
+                  exit;
+               end if;
+
+               --  LRM 4.3.2.2  Association Lists
+               --  The formal part of a named element association may be
+               --  in the form of a function call, [...], if and only
+               --  if the mode of the formal is OUT, INOUT, BUFFER, or
+               --  LINKAGE, and the actual is not OPEN.
+               if Formal_Conv /= Null_Iir
+                 and then (Get_Kind (Inter)
+                             not in Iir_Kinds_Interface_Object_Declaration
+                             or else Get_Mode (Inter) = Iir_In_Mode)
+               then
+                  if Finish then
+                     Error_Msg_Sem
+                       (+Assoc,
+                        "formal conversion allowed only for interface object",
+                        +Formal_Conv);
+                  end if;
+                  Match := Not_Compatible;
+                  exit;
+               end if;
+
+               --  Find the Interface.
+               declare
+                  Inter1 : Iir;
+               begin
+                  Inter1 := Interface_Chain;
+                  Pos := 0;
+                  while Inter1 /= Null_Iir loop
+                     exit when Inter = Inter1;
+                     Inter1 := Get_Chain (Inter1);
+                     Pos := Pos + 1;
+                  end loop;
+                  if Inter1 = Null_Iir then
+                     if Finish then
+                        Error_Msg_Sem
+                          (+Assoc,
+                           "no corresponding interface for %i", +Inter);
+                     end if;
+                     Match := Not_Compatible;
+                     exit;
+                  end if;
+               end;
+
+               Sem_Association
+                 (Assoc, Inter, Formal_Name, Formal_Conv, Finish, Match);
+               exit when Match = Not_Compatible;
+
+               if Get_Whole_Association_Flag (Assoc) then
+                  --  Whole association.
+                  Last_Individual := Null_Iir;
+                  if Inter_Matched (Pos) = None then
+                     if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open
+                     then
+                        Inter_Matched (Pos) := Open;
+                     else
+                        Inter_Matched (Pos) := Whole;
+                     end if;
+                  else
+                     if Finish then
+                        Error_Msg_Sem
+                          (+Assoc, "%n already associated", +Inter);
+                     end if;
+                     Match := Not_Compatible;
+                     exit;
+                  end if;
+               else
+                  --  Individual association.
+                  Has_Individual := True;
+                  if Inter_Matched (Pos) /= Whole then
+                     if Finish
+                       and then Inter_Matched (Pos) = Individual
+                       and then Last_Individual /= Inter
+                     then
+                        Error_Msg_Sem
+                          (+Assoc,
+                           "non consecutive individual association for %n",
+                           +Inter);
+                        Match := Not_Compatible;
+                        exit;
+                     end if;
+                     Last_Individual := Inter;
+                     Inter_Matched (Pos) := Individual;
+                  else
+                     if Finish then
+                        Error_Msg_Sem
+                          (+Assoc, "%n already associated", +Inter);
+                        Match := Not_Compatible;
+                        exit;
+                     end if;
+                  end if;
+               end if;
+
+               Assoc := Get_Chain (Assoc);
+               exit when Assoc = Null_Iir;
+            end loop;
+         end if;
 
          if Finish and Has_Individual and Match /= Not_Compatible then
             Sem_Individual_Association (Assoc_Chain);
