@@ -285,13 +285,26 @@ package body Nodes_GC is
                when Iir_Kind_Entity_Aspect_Entity =>
                   declare
                      Ent : constant Iir := Get_Entity_Name (El);
-                     Arch : constant Iir := Get_Architecture (El);
+                     Arch_Name : constant Iir := Get_Architecture (El);
+                     Arch : Iir;
                   begin
                      Mark_Unit (Get_Design_Unit (Get_Named_Entity (Ent)));
-                     if Is_Valid (Arch)
-                       and then Is_Valid (Get_Named_Entity (Arch))
-                     then
-                        Mark_Unit (Get_Named_Entity (Arch));
+
+                     --  Architecture is optional.
+                     if Is_Valid (Arch_Name) then
+                        Arch := Get_Named_Entity (Arch_Name);
+                        --  There are many possibilities for the architecture.
+                        if Is_Valid (Arch) then
+                           case Get_Kind (Arch) is
+                              when Iir_Kind_Design_Unit =>
+                                 null;
+                              when Iir_Kind_Architecture_Body =>
+                                 Arch := Get_Design_Unit (Arch);
+                              when others =>
+                                 Error_Kind ("mark_unit", Arch);
+                           end case;
+                           Mark_Unit (Arch);
+                        end if;
                      end if;
                   end;
                when others =>
