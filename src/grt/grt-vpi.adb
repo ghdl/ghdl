@@ -645,15 +645,15 @@ package body Grt.Vpi is
       end if;
 
       case Property is
-         when vpiFullName=>
+         when vpiFullName =>
             Prop := VhpiFullNameP;
-         when vpiName=>
+         when vpiName =>
             Prop := VhpiNameP;
          when vpiType =>
             Tmpstring2 (1 .. 4) := "???" & NUL;
             return To_Ghdl_C_String (Tmpstring2'Address);
-         when others=>
-            dbgPut_Line ("vpi_get_str: undefined property");
+         when others =>
+            dbgPut_Line ("vpi_get_str: unhandled property");
             return null;
       end case;
       Vhpi_Get_Str (Prop, Ref.Ref, Tmpstring2, Len);
