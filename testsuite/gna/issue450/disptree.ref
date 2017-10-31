@@ -16,4 +16,4 @@ Simple module name (vpiName): 		gen_for(3)
 Full module name (vpiFullName): 	disptree.gen_for(4)
 Simple module name (vpiName): 		gen_for(4)
 Full module name (vpiFullName): 	disptree.gen_if
-Simple module name (vpiName): 		B1
+Simple module name (vpiName): 		gen_if

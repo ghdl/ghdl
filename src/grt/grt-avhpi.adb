@@ -692,8 +692,7 @@ package body Grt.Avhpi is
                  | VhpiArchBodyK
                  | VhpiEntityDeclK
                  | VhpiProcessStmtK
-                 | VhpiBlockStmtK
-                 | VhpiIfGenerateK =>
+                 | VhpiBlockStmtK =>
                   Add (To_Ghdl_Rtin_Block_Acc (Obj.Ctxt.Block).Name);
                when VhpiRootInstK =>
                   declare
@@ -709,6 +708,10 @@ package body Grt.Avhpi is
                  | VhpiPortDeclK
                  | VhpiGenericDeclK =>
                   Add (Obj.Obj.Name);
+               when VhpiIfGenerateK =>
+                  Add (To_Ghdl_Rtin_Generate_Acc
+                         (To_Ghdl_Rtin_Block_Acc
+                            (Obj.Ctxt.Block).Parent).Name);
                when VhpiForGenerateK =>
                   declare
                      Blk : constant Ghdl_Rtin_Block_Acc :=
