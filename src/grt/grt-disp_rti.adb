@@ -309,7 +309,8 @@ package body Grt.Disp_Rti is
                --  FIXME: update OBJ (not very useful since never in a
                --   composite type).
             end;
-         when Ghdl_Rtik_Type_Record =>
+         when Ghdl_Rtik_Type_Record
+           | Ghdl_Rtik_Type_Unbounded_Record =>
             Disp_Record_Value
               (Stream, To_Ghdl_Rtin_Type_Record_Acc (Rti), Ctxt,
                Obj, Bounds, Is_Sig);
@@ -661,7 +662,8 @@ package body Grt.Disp_Rti is
          when Ghdl_Rtik_Type_File
            | Ghdl_Rtik_Type_Access =>
             Disp_Name (To_Ghdl_Rtin_Type_Fileacc_Acc (Def).Name);
-         when Ghdl_Rtik_Type_Record =>
+         when Ghdl_Rtik_Type_Record
+           | Ghdl_Rtik_Type_Unbounded_Record =>
             Disp_Name (To_Ghdl_Rtin_Type_Record_Acc (Def).Name);
          when Ghdl_Rtik_Subtype_Record =>
             declare
