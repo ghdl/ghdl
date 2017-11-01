@@ -1,0 +1,25 @@
+  type address_channel is record
+    awaddr  : bit_vector;
+    awvalid : bit;
+  end record;
+
+  type t_if is record
+    write_channel  : address_channel;
+  end record;
+
+  subtype ST_IF_32 is t_if  (write_channel (awaddr(31 downto 0)));
+
+
+TYPE work__repro2__ARCH__behav__address_channel__SIGBASE IS RECORD 
+  awaddr: __ghdl_index_type; 
+  awvalid: __ghdl_signal_ptr; 
+END RECORD;
+
+TYPE work__repro2__ARCH__behav__t_if__SIGBASE IS RECORD 
+  write_channel: __ghdl_index_type; 
+END RECORD;
+
+TYPE work__repro2__ARCH__behav__st_if_32__SIG IS RECORD 
+  BASE: work__repro2__ARCH__behav__t_if__SIGBASE; 
+  write_channel: work__repro2__ARCH__behav__st_if_32__write_channel__SIG; 
+END RECORD;
