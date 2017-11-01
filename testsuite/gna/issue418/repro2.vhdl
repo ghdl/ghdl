@@ -2,7 +2,7 @@ entity repro2 is
 end;
 
 architecture behav of repro2 is
-   -- AXI-Lite Interface signals    
+   -- AXI-Lite Interface signals
   type address_channel is record
     --DUT inputs
     awaddr  : bit_vector;
@@ -31,5 +31,4 @@ begin
     assert s.write_channel.awaddr(14) = '1';
     wait;
   end process;
-    
 end;
