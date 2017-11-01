@@ -1013,14 +1013,17 @@ package body Trans.Chap3 is
    --  Align VALUE (of unsigned type) for type ATYPE.
    --  The formulae is: (V + (A - 1)) and not (A - 1), where A is the
    --  alignment for ATYPE in bytes.
-   function Realign (Value : O_Enode; Atype : Iir) return O_Enode
-   is
-      Tinfo : constant Type_Info_Acc := Get_Info (Atype);
+   function Realign (Value : O_Enode; Atype : O_Tnode) return O_Enode is
    begin
       return New_Dyadic_Op
         (ON_And,
-         New_Dyadic_Op (ON_Add_Ov, Value, Get_Type_Alignmask (Tinfo)),
-         New_Monadic_Op (ON_Not, Get_Type_Alignmask (Tinfo)));
+         New_Dyadic_Op (ON_Add_Ov, Value, Get_Type_Alignmask (Atype)),
+         New_Monadic_Op (ON_Not, Get_Type_Alignmask (Atype)));
+   end Realign;
+
+   function Realign (Value : O_Enode; Atype : Iir) return O_Enode is
+   begin
+      return Realign (Value, Get_Info (Atype).Ortho_Type (Mode_Value));
    end Realign;
 
    function Realign (Value : O_Enode; Mask : O_Dnode) return O_Enode is
@@ -1292,9 +1295,13 @@ package body Trans.Chap3 is
 
       --  Reserve memory for the record, ie:
       --  OFF = SIZEOF (record).
-      New_Assign_Stmt
-        (New_Obj (Off_Var),
-         New_Lit (New_Sizeof (Info.B.Base_Type (Kind), Ghdl_Index_Type)));
+      --  Align for signals, as the base type may contain a single index.
+      Off_Val := New_Lit
+        (New_Sizeof (Info.B.Base_Type (Kind), Ghdl_Index_Type));
+      if Kind = Mode_Signal then
+         Off_Val := Realign (Off_Val, Ghdl_Signal_Ptr);
+      end if;
+      New_Assign_Stmt (New_Obj (Off_Var), Off_Val);
 
       --  Set memory for each complex element.
       List := Get_Elements_Declaration_List (Def);
