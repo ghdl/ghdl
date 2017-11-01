@@ -2023,12 +2023,15 @@ package body Trans.Chap3 is
 
       --  Start with alignment of the record.
       --  ALIGN = ALIGNOF (record)
-      if Kind = Mode_Value then
-         Align_Var := Create_Temp (Ghdl_Index_Type);
-         New_Assign_Stmt
-           (New_Obj (Align_Var),
-            Get_Type_Alignmask (Info.B.Base_Type (Kind)));
-      end if;
+      case Kind is
+         when Mode_Value =>
+            Align_Var := Create_Temp (Ghdl_Index_Type);
+            New_Assign_Stmt
+              (New_Obj (Align_Var),
+               Get_Type_Alignmask (Info.B.Base_Type (Kind)));
+         when Mode_Signal =>
+            Res := Realign (Res, Ghdl_Signal_Ptr);
+      end case;
 
       for I in Natural loop
          El := Get_Nth_Element (List, I);
