@@ -2734,9 +2734,12 @@ package body Trans.Chap8 is
                           (M2Lp (Chap3.Get_Composite_Bounds (Param)),
                            M2Addr (Chap3.Get_Composite_Bounds (Params (Pos))));
 
-                        --  Allocate the base.
-                        Chap3.Allocate_Unbounded_Composite_Base
-                          (Alloc, Param, Formal_Type);
+                        if Get_Type_Staticness (Actual_Type) >= Globally then
+                           --  Allocate the base (only if the bounds are
+                           --  known).
+                           Chap3.Allocate_Unbounded_Composite_Base
+                             (Alloc, Param, Formal_Type);
+                        end if;
 
                         Saved_Sig (Pos) := Param;
                      end if;
