@@ -575,6 +575,15 @@ ortho_truthvalue_conversion (tree expr)
     }
 }
 
+/* Do not deal with alias set.  In particular, it doesn't work well with
+   incomplete type, and universal pointers are not expressed in ortho.  */
+
+static alias_set_type
+ortho_get_alias_set (tree type)
+{
+  return 0;
+}
+
 /* The following function has been copied and modified from c-convert.c.  */
 
 /* Change of width--truncation and extension of integers or reals--
@@ -745,6 +754,9 @@ type_for_mode (enum machine_mode mode, int unsignedp)
 #define set_block lhd_do_nothing_t
 #undef LANG_HOOKS_GETDECLS
 #define LANG_HOOKS_GETDECLS hook_tree_void_null
+
+#undef  LANG_HOOKS_GET_ALIAS_SET
+#define LANG_HOOKS_GET_ALIAS_SET ortho_get_alias_set
 
 struct lang_hooks lang_hooks = LANG_HOOKS_INITIALIZER;
 
