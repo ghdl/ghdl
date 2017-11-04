@@ -79,17 +79,17 @@ begin
       when Type_Mode_Record
         | Type_Mode_Unbounded_Record =>
          declare
+            List           : constant Iir_List :=
+              Get_Elements_Declaration_List (Targ_Type);
             Var_Record     : Mnode;
             Sub_Data       : Data_Type;
             Composite_Data : Composite_Data_Type;
-            List           : Iir_List;
             El             : Iir_Element_Declaration;
          begin
             Open_Temp;
             Var_Record := Stabilize (Targ);
             Composite_Data :=
               Prepare_Data_Record (Var_Record, Targ_Type, Data);
-            List := Get_Elements_Declaration_List (Targ_Type);
             for I in Natural loop
                El := Get_Nth_Element (List, I);
                exit when El = Null_Iir;
