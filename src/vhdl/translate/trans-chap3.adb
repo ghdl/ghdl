@@ -1004,12 +1004,6 @@ package body Trans.Chap3 is
          New_Lit (Ghdl_Index_1));
    end Get_Type_Alignmask;
 
-   --  Get the alignment mask for type INFO (Mode_Value).
-   function Get_Type_Alignmask (Info : Type_Info_Acc) return O_Enode is
-   begin
-      return Get_Type_Alignmask (Info.Ortho_Type (Mode_Value));
-   end Get_Type_Alignmask;
-
    --  Align VALUE (of unsigned type) for type ATYPE.
    --  The formulae is: (V + (A - 1)) and not (A - 1), where A is the
    --  alignment for ATYPE in bytes.
@@ -2009,10 +2003,8 @@ package body Trans.Chap3 is
       El_Type     : Iir;
       El_Tinfo    : Type_Info_Acc;
       Inner_Type  : Iir;
-      Inner_Tinfo : Type_Info_Acc;
       Res         : O_Enode;
       Align_Var   : O_Dnode;
-      If_Blk      : O_If_Block;
    begin
       Open_Temp;
 
@@ -2046,19 +2038,14 @@ package body Trans.Chap3 is
             --  Align (only for Mode_Value) the size,
             --  and add the size of the element.
             if Kind = Mode_Value then
-               Inner_Tinfo := Get_Info (Inner_Type);
-               --  If alignmask (Inner_Type) > alignmask then
-               --    alignmask = alignmask (Inner_type);
-               --  end if;
-               Start_If_Stmt
-                 (If_Blk,
-                  New_Compare_Op (ON_Gt,
-                    Get_Type_Alignmask (Inner_Tinfo),
-                    New_Obj_Value (Align_Var),
-                    Ghdl_Bool_Type));
+               --  Largest alignment.
                New_Assign_Stmt
-                 (New_Obj (Align_Var), Get_Type_Alignmask (Inner_Tinfo));
-               Finish_If_Stmt (If_Blk);
+                 (New_Obj (Align_Var),
+                  New_Dyadic_Op
+                    (ON_Or,
+                     New_Obj_Value (Align_Var),
+                     Get_Type_Alignmask
+                       (Get_Ortho_Type (Inner_Type, Mode_Value))));
                Res := Realign (Res, Inner_Type);
             end if;
             Res := New_Dyadic_Op
