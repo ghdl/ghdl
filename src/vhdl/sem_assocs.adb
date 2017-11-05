@@ -1896,6 +1896,9 @@ package body Sem_Assocs is
             Formal : Iir;
             Conv_Assoc : Iir;
          begin
+            --  Extract formal from the conversion (and unlink it from the
+            --  conversion, as the owner of the formal is the association, not
+            --  the conversion).
             Formal := Finish_Sem_Name (Get_Formal (Assoc));
             case Get_Kind (Formal) is
                when Iir_Kind_Function_Call =>
@@ -1908,8 +1911,10 @@ package body Sem_Assocs is
                   --  Name_To_Method_Object (Func, Conv);
                when Iir_Kind_Type_Conversion =>
                   pragma Assert (Formal_Conv /= Null_Iir);
+                  Conv_Assoc := Formal;
                   Set_Formal_Conversion (Assoc, Formal);
                   Formal := Get_Expression (Formal);
+                  Set_Expression (Conv_Assoc, Null_Iir);
                when others =>
                   pragma Assert (Formal_Conv = Null_Iir);
                   null;
