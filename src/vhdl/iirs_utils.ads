@@ -232,6 +232,8 @@ package Iirs_Utils is
 
    --  Return true if array/record bounds are locally static.  Only fully
    --  constrained records or arrays are allowed.
+   --  It is possible to have non-locally static types with locally bounds (eg:
+   --  a constrained array of type).
    function Are_Bounds_Locally_Static (Def : Iir) return Boolean;
 
    --  Return the type or subtype definition of the SUBTYP type mark.

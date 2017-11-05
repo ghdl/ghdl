@@ -1079,53 +1079,52 @@ package body Iirs_Utils is
       return True;
    end Are_Array_Indexes_Locally_Static;
 
-   --  Return true if array/record bounds are locally static.
-   function Are_Bounds_Locally_Static (Def : Iir) return Boolean
-   is
-      pragma Assert (Get_Constraint_State (Def) = Fully_Constrained);
+   function Are_Bounds_Locally_Static (Def : Iir) return Boolean is
    begin
-      case Get_Kind (Def) is
-         when Iir_Kind_Array_Subtype_Definition =>
-            declare
-               El_Btype : Iir;
-            begin
-               --  Indexes.
-               if not Are_Array_Indexes_Locally_Static (Def) then
-                  return False;
-               end if;
+      if Get_Type_Staticness (Def) = Locally then
+         return True;
+      end if;
 
-               --  Element.
-               El_Btype := Get_Element_Subtype (Get_Base_Type (Def));
-               if not Is_Fully_Constrained_Type (El_Btype) then
-                  return Are_Bounds_Locally_Static (Get_Element_Subtype (Def));
-               else
-                  --  Element was fully constrained.
-                  return True;
-               end if;
-            end;
-         when Iir_Kind_Record_Subtype_Definition =>
+      case Iir_Kinds_Type_And_Subtype_Definition (Get_Kind (Def)) is
+         when Iir_Kind_Array_Subtype_Definition =>
+            pragma Assert (Get_Constraint_State (Def) = Fully_Constrained);
+
+            --  Indexes.
+            if not Are_Array_Indexes_Locally_Static (Def) then
+               return False;
+            end if;
+
+            --  Element.
+            return Are_Bounds_Locally_Static (Get_Element_Subtype (Def));
+         when Iir_Kind_Array_Type_Definition =>
+            return False;
+         when Iir_Kind_Record_Subtype_Definition
+           | Iir_Kind_Record_Type_Definition =>
+            pragma Assert (Get_Constraint_State (Def) = Fully_Constrained);
+
             declare
-               Base_Type : constant Iir := Get_Base_Type (Def);
                El_List : constant Iir_List :=
                  Get_Elements_Declaration_List (Def);
-               El_Blist : constant Iir_List :=
-                 Get_Elements_Declaration_List (Base_Type);
-               El, Bel : Iir;
+               El : Iir;
             begin
                for I in Natural loop
-                  Bel := Get_Nth_Element (El_Blist, I);
-                  exit when Bel = Null_Iir;
-                  if not Is_Fully_Constrained_Type (Get_Type (Bel)) then
-                     El := Get_Nth_Element (El_List, I);
-                     if not Are_Bounds_Locally_Static (Get_Type (El)) then
-                        return False;
-                     end if;
+                  El := Get_Nth_Element (El_List, I);
+                  exit when El = Null_Iir;
+                  if not Are_Bounds_Locally_Static (Get_Type (El)) then
+                     return False;
                   end if;
                end loop;
                return True;
             end;
-         when others =>
-            Error_Kind ("get_bounds_staticness", Def);
+         when Iir_Kinds_Scalar_Type_And_Subtype_Definition
+           | Iir_Kind_Protected_Type_Declaration
+           | Iir_Kind_Access_Type_Definition
+           | Iir_Kind_Access_Subtype_Definition =>
+            return True;
+         when Iir_Kind_Incomplete_Type_Definition
+           | Iir_Kind_File_Type_Definition
+           | Iir_Kind_Interface_Type_Definition =>
+            Error_Kind ("are_bounds_locally_static", Def);
       end case;
    end Are_Bounds_Locally_Static;
 

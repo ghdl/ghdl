@@ -719,6 +719,7 @@ package body Trans.Chap3 is
            (Create_Identifier ("STB"),
             Base_Info.B.Bounds_Type, Global_Storage, Val);
       else
+         pragma Assert (Get_Type_Staticness (Def) /= Locally);
          Info.S.Static_Bounds := False;
          Info.S.Composite_Bounds := Create_Var
            (Create_Var_Identifier ("STB"), Base_Info.B.Bounds_Type);
