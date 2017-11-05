@@ -19,6 +19,9 @@ if ghdl_has_feature repro2 ghw; then
   # How to test the ghw ?  Use ghwdump ?
 fi
 
+analyze repro3.vhdl
+elab_simulate repro3
+
 clean
 rm -f repro.ghw repro2.ghw tc749.ghw
 

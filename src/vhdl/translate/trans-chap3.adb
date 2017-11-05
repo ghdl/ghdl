@@ -1219,44 +1219,44 @@ package body Trans.Chap3 is
       --  Base type is complex (unbounded record)
       Copy_Complex_Type (Info, Base_Info);
 
-      --  Then create the record type.
-      if Get_Type_Staticness (Def) = Locally then
-         --  Record is locally constrained: create a new record, containing the
-         --  base record and all the fields.
-         Info.Ortho_Type (Mode_Signal) := O_Tnode_Null;
-         for Kind in Mode_Value .. Type_To_Last_Object_Kind (Def) loop
-            Start_Record_Type (Rec);
-            New_Record_Field (Rec, Info.S.Box_Field (Kind), Wki_Base,
-                              Info.B.Base_Type (Kind));
-            for I in Natural loop
-               B_El := Get_Nth_Element (El_Blist, I);
-               exit when B_El = Null_Iir;
+      --  Then create the record type, containing the base record and the
+      --  fields.
+      Info.Ortho_Type (Mode_Signal) := O_Tnode_Null;
+      for Kind in Mode_Value .. Type_To_Last_Object_Kind (Def) loop
+         Start_Record_Type (Rec);
+         New_Record_Field (Rec, Info.S.Box_Field (Kind), Wki_Base,
+                           Info.B.Base_Type (Kind));
+         for I in Natural loop
+            B_El := Get_Nth_Element (El_Blist, I);
+            exit when B_El = Null_Iir;
 
-               if Is_Unbounded_Type (Get_Info (Get_Type (B_El))) then
-                  El := Get_Nth_Element (El_List, I);
-                  if Kind = Mode_Value then
-                     Field_Info := Add_Info (El, Kind_Field);
-                  else
-                     Field_Info := Get_Info (El);
-                  end if;
-                  El := Get_Nth_Element (El_List, I);
-                  El_Tinfo := Get_Info (Get_Type (El));
-                  El_Tnode := El_Tinfo.Ortho_Type (Kind);
-                  New_Record_Field (Rec, Field_Info.Field_Node (Kind),
-                                    Create_Identifier_Without_Prefix (El),
-                                    El_Tnode);
+            El := Get_Nth_Element (El_List, I);
+
+            --  This element has been locally constrained.
+            if Is_Unbounded_Type (Get_Info (Get_Type (B_El)))
+              and then
+              Get_Type_Staticness (Get_Type(El)) = Locally
+            then
+               if Kind = Mode_Value then
+                  Field_Info := Add_Info (El, Kind_Field);
+               else
+                  Field_Info := Get_Info (El);
                end if;
-            end loop;
-            Finish_Record_Type (Rec, Info.Ortho_Type (Kind));
+               El := Get_Nth_Element (El_List, I);
+               El_Tinfo := Get_Info (Get_Type (El));
+               El_Tnode := El_Tinfo.Ortho_Type (Kind);
+               New_Record_Field (Rec, Field_Info.Field_Node (Kind),
+                                 Create_Identifier_Without_Prefix (El),
+                                 El_Tnode);
+            end if;
          end loop;
+         Finish_Record_Type (Rec, Info.Ortho_Type (Kind));
+      end loop;
 
-         Finish_Type_Definition (Info);
-      else
-         --  Not locally constrained, but still constrained.
-         --  Objects have to be dynamically allocated and built.
+      Finish_Type_Definition (Info);
+
+      if Get_Type_Staticness (Def) /= Locally then
          Create_Size_Var (Def, Info);
-         Info.Ortho_Type := Info.B.Base_Type;
-         Info.Ortho_Ptr_Type := Info.B.Base_Ptr_Type;
       end if;
 
       if With_Vars then
@@ -2011,7 +2011,7 @@ package body Trans.Chap3 is
       --  Start with the size of the 'base' record, that
       --  contains all non-complex types and an offset for
       --  each complex types.
-      Res := New_Lit (New_Sizeof (Info.B.Base_Type (Kind), Ghdl_Index_Type));
+      Res := New_Lit (New_Sizeof (Info.Ortho_Type (Kind), Ghdl_Index_Type));
 
       --  Start with alignment of the record.
       --  ALIGN = ALIGNOF (record)
@@ -2020,7 +2020,7 @@ package body Trans.Chap3 is
             Align_Var := Create_Temp (Ghdl_Index_Type);
             New_Assign_Stmt
               (New_Obj (Align_Var),
-               Get_Type_Alignmask (Info.B.Base_Type (Kind)));
+               Get_Type_Alignmask (Info.Ortho_Type (Kind)));
          when Mode_Signal =>
             Res := Realign (Res, Ghdl_Signal_Ptr);
       end case;
@@ -2030,8 +2030,10 @@ package body Trans.Chap3 is
          exit when El = Null_Iir;
          El_Type := Get_Type (El);
          El_Tinfo := Get_Info (El_Type);
-         if Is_Complex_Type (El_Tinfo)
-           or else Get_Kind (El) = Iir_Kind_Record_Element_Constraint
+         if Get_Type_Staticness (El_Type) /= Locally
+           and then
+           (Is_Complex_Type (El_Tinfo)
+              or else Get_Kind (El) = Iir_Kind_Record_Element_Constraint)
          then
             Inner_Type := Get_Innermost_Non_Array_Element (El_Type);
 
@@ -2048,10 +2050,10 @@ package body Trans.Chap3 is
                        (Get_Ortho_Type (Inner_Type, Mode_Value))));
                Res := Realign (Res, Inner_Type);
             end if;
+
             Res := New_Dyadic_Op
               (ON_Add_Ov,
-               New_Value (Get_Var (El_Tinfo.C (Kind).Size_Var)),
-               Res);
+               Res, New_Value (Get_Var (El_Tinfo.C (Kind).Size_Var)));
          end if;
       end loop;
       if Kind = Mode_Value then

@@ -855,11 +855,22 @@ package body Trans.Chap6 is
       Base_Tinfo := Get_Type_Info (Base);
       Box_Field := Base_Tinfo.S.Box_Field (Kind);
 
-      if Box_Field = O_Fnode_Null
+      if (Box_Field = O_Fnode_Null
+            or else Get_Type_Staticness (El_Type) /= Locally)
         and then (Is_Complex_Type (El_Tinfo) or Is_Unbounded_Type (El_Tinfo))
       then
-         --  The element is complex: it's an offset.
          Stabilize (Base);
+
+         if Box_Field /= O_Fnode_Null
+           and then Get_Type_Staticness (El_Type) /= Locally
+         then
+            --  Unbox.
+            B := New_Selected_Element (M2Lv (Base), Box_Field);
+         else
+            B := M2Lv (Base);
+         end if;
+
+         --  The element is complex: it's an offset.
          Res := E2M
            (New_Unchecked_Address
               (New_Slice
@@ -867,7 +878,7 @@ package body Trans.Chap6 is
                         (New_Unchecked_Address (M2Lv (Base), Char_Ptr_Type)),
                     Chararray_Type,
                     New_Value
-                      (New_Selected_Element (M2Lv (Base),
+                      (New_Selected_Element (B,
                        El_Info.Field_Node (Kind)))),
                El_Tinfo.B.Base_Ptr_Type (Kind)),
             El_Tinfo, Kind);
