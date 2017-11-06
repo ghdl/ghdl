@@ -78,7 +78,7 @@ while [[ $# > 0 ]]; do
 		COMPILE_UVVM_UTILITIES=TRUE
 		NO_COMMAND=0
 		;;
-		--uvvm-vcc-framework)
+		--uvvm-vvc-framework)
 		COMPILE_UVVM_VVC_FRAMEWORK=TRUE
 		NO_COMMAND=0
 		;;
@@ -175,7 +175,7 @@ if [ "$HELP" == "TRUE" ]; then
 	echo ""
 	echo "Common Packages:"
 	echo "     --uvvm-utilities      "
-	echo "     --uvvm-vcc-framework  "
+	echo "     --uvvm-vvc-framework  "
 	echo ""
 	echo "Verification IPs:"
 	echo "     --uvvm-vip-avalon_mm  "
@@ -260,7 +260,7 @@ fi
 # ==============================================================================
 # compile uvvm_util packages
 ERRORCOUNT=0
-if [ "$COMPILE_UVVM" == "TRUE" ]; then
+if [ "$COMPILE_UVVM_UTILITIES" == "TRUE" ]; then
 	Library="uvvm_util"
 	VHDLVersion="v08"
 	Files=(
@@ -287,7 +287,7 @@ fi
 
 # compile uvvm_vvc_framework packages
 ERRORCOUNT=0
-if [ "$COMPILE_UVVM" == "TRUE" ]; then
+if [ "$COMPILE_UVVM_VVC_FRAMEWORK" == "TRUE" ]; then
 	Library="uvvm_vvc_framework"
 	VHDLVersion="v08"
 	Files=(
