@@ -108,7 +108,6 @@ package body Canon is
      (Expr: Iir; Sensitivity_List: Iir_List; Is_Target: Boolean := False)
    is
       El : Iir;
-      List: Iir_List;
    begin
       if Get_Expr_Staticness (Expr) /= None then
          return;
@@ -162,12 +161,15 @@ package body Canon is
                Canon_Extract_Sensitivity (Get_Prefix (Expr),
                                           Sensitivity_List,
                                           Is_Target);
-               List := Get_Index_List (Expr);
-               for I in Natural loop
-                  El := Get_Nth_Element (List, I);
-                  exit when El = Null_Iir;
-                  Canon_Extract_Sensitivity (El, Sensitivity_List, False);
-               end loop;
+               declare
+                  Flist : constant Iir_Flist := Get_Index_List (Expr);
+                  El : Iir;
+               begin
+                  for I in Flist_First .. Flist_Last (Flist) loop
+                     El := Get_Nth_Element (Flist, I);
+                     Canon_Extract_Sensitivity (El, Sensitivity_List, False);
+                  end loop;
+               end;
             end if;
 
          when Iir_Kind_Function_Call =>
@@ -643,10 +645,7 @@ package body Canon is
    end Canon_Aggregate_Expression;
 
    -- canon on expressions, mainly for function calls.
-   procedure Canon_Expression (Expr: Iir)
-   is
-      El : Iir;
-      List: Iir_List;
+   procedure Canon_Expression (Expr: Iir) is
    begin
       if Expr = Null_Iir then
          return;
@@ -669,12 +668,15 @@ package body Canon is
 
          when Iir_Kind_Indexed_Name =>
             Canon_Expression (Get_Prefix (Expr));
-            List := Get_Index_List (Expr);
-            for I in Natural loop
-               El := Get_Nth_Element (List, I);
-               exit when El = Null_Iir;
-               Canon_Expression (El);
-            end loop;
+            declare
+               Flist : constant Iir_Flist := Get_Index_List (Expr);
+               El : Iir;
+            begin
+               for I in Flist_First .. Flist_Last (Flist) loop
+                  El := Get_Nth_Element (Flist, I);
+                  Canon_Expression (El);
+               end loop;
+            end;
 
          when Iir_Kind_Selected_Element =>
             Canon_Expression (Get_Prefix (Expr));
@@ -2634,12 +2636,11 @@ package body Canon is
       case Get_Kind (Def) is
          when Iir_Kind_Array_Subtype_Definition =>
             declare
-               Indexes : constant Iir_List := Get_Index_Subtype_List (Def);
+               Indexes : constant Iir_Flist := Get_Index_Subtype_List (Def);
                Index : Iir;
             begin
-               for I in Natural loop
+               for I in Flist_First .. Flist_Last (Indexes) loop
                   Index := Get_Index_Type (Indexes, I);
-                  exit when Index = Null_Iir;
                   Canon_Subtype_Indication_If_Anonymous (Index);
                end loop;
             end;
@@ -3056,7 +3057,7 @@ package body Canon is
                         Set_Parent (Res, Conf);
                         Blk_Spec := Create_Iir (Iir_Kind_Indexed_Name);
                         Location_Copy (Blk_Spec, Res);
-                        Set_Index_List (Blk_Spec, Iir_List_Others);
+                        Set_Index_List (Blk_Spec, Iir_Flist_Others);
                         Set_Base_Name (Blk_Spec, El);
                         Set_Prefix (Blk_Spec, Build_Simple_Name (Bod, Res));
                         Set_Block_Specification (Res, Blk_Spec);

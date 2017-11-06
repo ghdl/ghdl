@@ -156,6 +156,11 @@ package body Iirs is
    function Iir_List_To_Iir is new Ada.Unchecked_Conversion
      (Source => Iir_List, Target => Iir);
 
+   function Iir_To_Iir_Flist is new Ada.Unchecked_Conversion
+     (Source => Iir, Target => Iir_Flist);
+   function Iir_Flist_To_Iir is new Ada.Unchecked_Conversion
+     (Source => Iir_Flist, Target => Iir);
+
    function Iir_To_Token_Type (N : Iir) return Token_Type is
    begin
       return Token_Type'Val (N);
@@ -3044,36 +3049,36 @@ package body Iirs is
       Set_State2 (Atype, Iir_Constraint'Pos (State));
    end Set_Constraint_State;
 
-   function Get_Index_Subtype_List (Decl : Iir) return Iir_List is
+   function Get_Index_Subtype_List (Decl : Iir) return Iir_Flist is
    begin
       pragma Assert (Decl /= Null_Iir);
       pragma Assert (Has_Index_Subtype_List (Get_Kind (Decl)),
                      "no field Index_Subtype_List");
-      return Iir_To_Iir_List (Get_Field9 (Decl));
+      return Iir_To_Iir_Flist (Get_Field9 (Decl));
    end Get_Index_Subtype_List;
 
-   procedure Set_Index_Subtype_List (Decl : Iir; List : Iir_List) is
+   procedure Set_Index_Subtype_List (Decl : Iir; List : Iir_Flist) is
    begin
       pragma Assert (Decl /= Null_Iir);
       pragma Assert (Has_Index_Subtype_List (Get_Kind (Decl)),
                      "no field Index_Subtype_List");
-      Set_Field9 (Decl, Iir_List_To_Iir (List));
+      Set_Field9 (Decl, Iir_Flist_To_Iir (List));
    end Set_Index_Subtype_List;
 
-   function Get_Index_Subtype_Definition_List (Def : Iir) return Iir_List is
+   function Get_Index_Subtype_Definition_List (Def : Iir) return Iir_Flist is
    begin
       pragma Assert (Def /= Null_Iir);
       pragma Assert (Has_Index_Subtype_Definition_List (Get_Kind (Def)),
                      "no field Index_Subtype_Definition_List");
-      return Iir_To_Iir_List (Get_Field6 (Def));
+      return Iir_To_Iir_Flist (Get_Field6 (Def));
    end Get_Index_Subtype_Definition_List;
 
-   procedure Set_Index_Subtype_Definition_List (Def : Iir; Idx : Iir_List) is
+   procedure Set_Index_Subtype_Definition_List (Def : Iir; Idx : Iir_Flist) is
    begin
       pragma Assert (Def /= Null_Iir);
       pragma Assert (Has_Index_Subtype_Definition_List (Get_Kind (Def)),
                      "no field Index_Subtype_Definition_List");
-      Set_Field6 (Def, Iir_List_To_Iir (Idx));
+      Set_Field6 (Def, Iir_Flist_To_Iir (Idx));
    end Set_Index_Subtype_Definition_List;
 
    function Get_Element_Subtype_Indication (Decl : Iir) return Iir is
@@ -3108,20 +3113,20 @@ package body Iirs is
       Set_Field1 (Decl, Sub_Type);
    end Set_Element_Subtype;
 
-   function Get_Index_Constraint_List (Def : Iir) return Iir_List is
+   function Get_Index_Constraint_List (Def : Iir) return Iir_Flist is
    begin
       pragma Assert (Def /= Null_Iir);
       pragma Assert (Has_Index_Constraint_List (Get_Kind (Def)),
                      "no field Index_Constraint_List");
-      return Iir_To_Iir_List (Get_Field6 (Def));
+      return Iir_To_Iir_Flist (Get_Field6 (Def));
    end Get_Index_Constraint_List;
 
-   procedure Set_Index_Constraint_List (Def : Iir; List : Iir_List) is
+   procedure Set_Index_Constraint_List (Def : Iir; List : Iir_Flist) is
    begin
       pragma Assert (Def /= Null_Iir);
       pragma Assert (Has_Index_Constraint_List (Get_Kind (Def)),
                      "no field Index_Constraint_List");
-      Set_Field6 (Def, Iir_List_To_Iir (List));
+      Set_Field6 (Def, Iir_Flist_To_Iir (List));
    end Set_Index_Constraint_List;
 
    function Get_Array_Element_Constraint (Def : Iir) return Iir is
@@ -3188,20 +3193,20 @@ package body Iirs is
       Set_Field5 (Target, Dtype);
    end Set_Designated_Subtype_Indication;
 
-   function Get_Index_List (Decl : Iir) return Iir_List is
+   function Get_Index_List (Decl : Iir) return Iir_Flist is
    begin
       pragma Assert (Decl /= Null_Iir);
       pragma Assert (Has_Index_List (Get_Kind (Decl)),
                      "no field Index_List");
-      return Iir_To_Iir_List (Get_Field2 (Decl));
+      return Iir_To_Iir_Flist (Get_Field2 (Decl));
    end Get_Index_List;
 
-   procedure Set_Index_List (Decl : Iir; List : Iir_List) is
+   procedure Set_Index_List (Decl : Iir; List : Iir_Flist) is
    begin
       pragma Assert (Decl /= Null_Iir);
       pragma Assert (Has_Index_List (Get_Kind (Decl)),
                      "no field Index_List");
-      Set_Field2 (Decl, Iir_List_To_Iir (List));
+      Set_Field2 (Decl, Iir_Flist_To_Iir (List));
    end Set_Index_List;
 
    function Get_Reference (Def : Iir) return Iir is

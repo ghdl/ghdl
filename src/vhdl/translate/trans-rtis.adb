@@ -1398,7 +1398,7 @@ package body Trans.Rtis is
    procedure Generate_Array_Type_Indexes
      (Atype : Iir; Res : out O_Dnode; Max_Depth : in out Rti_Depth_Type)
    is
-      List        : constant Iir_List := Get_Index_Subtype_List (Atype);
+      List        : constant Iir_Flist := Get_Index_Subtype_List (Atype);
       Nbr_Indexes : constant Natural := Get_Nbr_Elements (List);
       Index       : Iir;
       Tmp         : O_Dnode;
@@ -1456,7 +1456,7 @@ package body Trans.Rtis is
       Info      : Type_Info_Acc;
       Aggr      : O_Record_Aggr_List;
       Val       : O_Cnode;
-      List      : Iir_List;
+      List      : Iir_Flist;
       Arr       : O_Dnode;
       Element   : Iir;
       Name      : O_Dnode;

@@ -134,7 +134,7 @@ package body Sem_Stmts is
    --   prefix to suffix.
    function Is_Disjoint (N1, N2: Iir) return Boolean
    is
-      List1, List2 : Iir_List;
+      List1, List2 : Iir_Flist;
       El1, El2 : Iir;
    begin
       if N1 = N2 then
@@ -149,14 +149,13 @@ package body Sem_Stmts is
          --  Check indexes.
          List1 := Get_Index_List (N1);
          List2 := Get_Index_List (N2);
-         for I in Natural loop
+         for I in Flist_First .. Flist_Last (List1) loop
             El1 := Get_Nth_Element (List1, I);
             El2 := Get_Nth_Element (List2, I);
-            exit when El1 = Null_Iir;
             El1 := Eval_Expr (El1);
-            Replace_Nth_Element (List1, I, El1);
+            Set_Nth_Element (List1, I, El1);
             El2 := Eval_Expr (El2);
-            Replace_Nth_Element (List2, I, El2);
+            Set_Nth_Element (List2, I, El2);
             --  EL are of discrete type.
             if Get_Value (El1) /= Get_Value (El2) then
                return True;
@@ -992,8 +991,8 @@ package body Sem_Stmts is
                --  must be locally static.  So I don't check this in 93c.
                if Flags.Vhdl_Std /= Vhdl_93c
                  and then
-                 Get_Expr_Staticness (Get_First_Element
-                                      (Get_Index_List (Expr))) /= Locally
+                 (Get_Expr_Staticness
+                    (Get_Nth_Element (Get_Index_List (Expr), 0)) /= Locally)
                then
                   Error_Msg_Sem
                     (+Expr, "indexing expression must be locally static");

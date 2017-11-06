@@ -615,7 +615,7 @@ package body Sem_Names is
    is
       Prefix : constant Iir := Get_Prefix (Expr);
       Prefix_Type : constant Iir := Get_Type (Prefix);
-      Index_List : constant Iir_List := Get_Index_List (Expr);
+      Index_List : constant Iir_Flist := Get_Index_List (Expr);
       Index_Subtype : Iir;
       Index : Iir;
       Expr_Staticness : Iir_Staticness;
@@ -626,10 +626,9 @@ package body Sem_Names is
       -- position of the array and each expression must be of the
       -- type of the corresponding index.
       -- Loop on the indexes.
-      for I in Natural loop
-         Index_Subtype := Get_Index_Type (Prefix_Type, I);
-         exit when Index_Subtype = Null_Iir;
+      for I in Flist_First .. Flist_Last (Index_List) loop
          Index := Get_Nth_Element (Index_List, I);
+         Index_Subtype := Get_Index_Type (Prefix_Type, I);
          -- The index_subtype can be an unconstrained index type.
          Index := Check_Is_Expression (Index, Index);
          if Index /= Null_Iir then
@@ -641,7 +640,7 @@ package body Sem_Names is
             then
                Index := Eval_Expr_Check (Index, Index_Subtype);
             end if;
-            Replace_Nth_Element (Get_Index_List (Expr), I, Index);
+            Set_Nth_Element (Index_List, I, Index);
             Expr_Staticness := Min (Expr_Staticness,
                                     Get_Expr_Staticness (Index));
          else
@@ -689,7 +688,7 @@ package body Sem_Names is
       Prefix_Type : constant Iir := Get_Type (Prefix);
       Prefix_Base_Type : Iir;
       Prefix_Bt : constant Iir := Get_Base_Type (Prefix_Type);
-      Index_List: Iir_List;
+      Index_List: Iir_Flist;
       Index_Type: Iir;
       Suffix: Iir;
       Slice_Type : Iir;
@@ -801,14 +800,14 @@ package body Sem_Names is
 
       Expr_Type := Create_Iir (Iir_Kind_Array_Subtype_Definition);
       Set_Location (Expr_Type, Get_Location (Suffix));
-      Set_Index_Subtype_List (Expr_Type, Create_Iir_List);
+      Set_Index_Subtype_List (Expr_Type, Create_Iir_Flist (1));
       Set_Index_Constraint_List (Expr_Type,
                                  Get_Index_Subtype_List (Expr_Type));
       Prefix_Base_Type := Get_Base_Type (Prefix_Type);
       Set_Base_Type (Expr_Type, Prefix_Base_Type);
       Set_Signal_Type_Flag (Expr_Type,
                             Get_Signal_Type_Flag (Prefix_Base_Type));
-      Append_Element (Get_Index_Subtype_List (Expr_Type), Slice_Type);
+      Set_Nth_Element (Get_Index_Subtype_List (Expr_Type), 0, Slice_Type);
       Set_Element_Subtype (Expr_Type, Get_Element_Subtype (Prefix_Type));
       if Get_Kind (Prefix_Type) = Iir_Kind_Array_Subtype_Definition then
          Set_Resolution_Indication
@@ -1008,7 +1007,7 @@ package body Sem_Names is
 
       declare
          Dim : Iir_Int64;
-         Indexes_List : constant Iir_List :=
+         Indexes_List : constant Iir_Flist :=
            Get_Index_Subtype_List (Prefix_Type);
       begin
          if Is_Null (Parameter)
@@ -1218,7 +1217,7 @@ package body Sem_Names is
       Base_Type1 : constant Iir := Get_Base_Type (Type1);
       Base_Type2 : constant Iir := Get_Base_Type (Type2);
       Ant1, Ant2 : Boolean;
-      Index_List1, Index_List2 : Iir_List;
+      Index_List1, Index_List2 : Iir_Flist;
       El1, El2 : Iir;
    begin
       --  LRM 7.3.5
@@ -1261,9 +1260,8 @@ package body Sem_Names is
       then
          return False;
       end if;
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (Index_List1) loop
          El1 := Get_Index_Type (Index_List1, I);
-         exit when El1 = Null_Iir;
          El2 := Get_Index_Type (Index_List2, I);
          if not Are_Types_Closely_Related (El1, El2) then
             return False;
@@ -2334,8 +2332,8 @@ package body Sem_Names is
             if Get_Expr_Staticness (Actual) < Globally then
                Error_Msg_Sem (+Name, "index must be a static expression");
             end if;
-            Set_Index_List (Res, Create_Iir_List);
-            Append_Element (Get_Index_List (Res), Actual);
+            Set_Index_List (Res, Create_Iir_Flist (1));
+            Set_Nth_Element (Get_Index_List (Res), 0, Actual);
          when Iir_Kind_Slice_Name =>
             Actual := Sem_Discrete_Range_Expression (Actual, Itype, False);
             if Actual = Null_Iir then
@@ -2421,7 +2419,7 @@ package body Sem_Names is
          --  The FINISH = True case will be handled by Finish_Sem_Indexed_Name.
          if Slice_Index_Kind = Iir_Kind_Indexed_Name and then not Finish then
             declare
-               Type_Index_List : constant Iir_List :=
+               Type_Index_List : constant Iir_Flist :=
                  Get_Index_Subtype_List (Base_Type);
                Type_Index : Iir;
                Assoc : Iir;
@@ -2472,12 +2470,12 @@ package body Sem_Names is
                   Idx_List : Iir_List;
                begin
                   Idx_List := Create_Iir_List;
-                  Set_Index_List (R, Idx_List);
                   Idx_El := Assoc_Chain;
                   while Idx_El /= Null_Iir loop
                      Append_Element (Idx_List, Get_Actual (Idx_El));
                      Idx_El := Get_Chain (Idx_El);
                   end loop;
+                  Set_Index_List (R, List_To_Flist (Idx_List));
                end;
                Set_Type (R, Get_Element_Subtype (Base_Type));
             when others =>

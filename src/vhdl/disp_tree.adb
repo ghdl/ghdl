@@ -86,6 +86,27 @@ package body Disp_Tree is
       end if;
    end Disp_Iir_List;
 
+   procedure Disp_Iir_Flist
+     (Tree_Flist : Iir_Flist; Tab : Natural; Depth : Natural)
+   is
+      El: Iir;
+   begin
+      if Tree_Flist = Null_Iir_Flist then
+         Put_Line ("null-flist");
+      elsif Tree_Flist = Iir_Flist_All then
+         Put_Line ("flist-all");
+      elsif Tree_Flist = Iir_Flist_Others then
+         Put_Line ("flist-others");
+      else
+         New_Line;
+         for I in Flist_First .. Flist_Last (Tree_Flist) loop
+            El := Get_Nth_Element (Tree_Flist, I);
+            Put_Indent (Tab);
+            Disp_Iir (El, Tab + 1, Depth);
+         end loop;
+      end if;
+   end Disp_Iir_Flist;
+
    procedure Disp_Chain (Tree_Chain: Iir; Indent: Natural; Depth : Natural)
    is
       El: Iir;
@@ -462,6 +483,24 @@ package body Disp_Tree is
                         raise Internal_Error;
                   end case;
                   Disp_Iir_List (Get_Iir_List (N, F), Sub_Indent, Ndepth);
+               when Type_Iir_Flist =>
+                  case Get_Field_Attribute (F) is
+                     when Attr_None =>
+                        Ndepth := Depth - 1;
+                     when Attr_Of_Ref =>
+                        Ndepth := 0;
+                     when Attr_Ref =>
+                        Ndepth := 0;
+                     when Attr_Of_Maybe_Ref =>
+                        if Get_Is_Ref (N) then
+                           Ndepth := 0;
+                        else
+                           Ndepth := Depth - 1;
+                        end if;
+                     when others =>
+                        raise Internal_Error;
+                  end case;
+                  Disp_Iir_Flist (Get_Iir_Flist (N, F), Sub_Indent, Ndepth);
                when Type_PSL_NFA =>
                   Disp_PSL_NFA (Get_PSL_NFA (N, F), Sub_Indent);
                when Type_String8_Id =>

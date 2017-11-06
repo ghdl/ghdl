@@ -33,6 +33,7 @@ package Nodes_Meta is
       Type_Iir_Constraint,
       Type_Iir_Delay_Mechanism,
       Type_Iir_Direction,
+      Type_Iir_Flist,
       Type_Iir_Fp64,
       Type_Iir_Index32,
       Type_Iir_Int32,
@@ -472,6 +473,11 @@ package Nodes_Meta is
       (N : Iir; F : Fields_Enum) return Iir_Direction;
    procedure Set_Iir_Direction
       (N : Iir; F : Fields_Enum; V: Iir_Direction);
+
+   function Get_Iir_Flist
+      (N : Iir; F : Fields_Enum) return Iir_Flist;
+   procedure Set_Iir_Flist
+      (N : Iir; F : Fields_Enum; V: Iir_Flist);
 
    function Get_Iir_Fp64
       (N : Iir; F : Fields_Enum) return Iir_Fp64;

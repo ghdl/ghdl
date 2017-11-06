@@ -1127,6 +1127,23 @@ package body Trans.Chap9 is
       end case;
    end Destroy_Types_In_List;
 
+   procedure Destroy_Types_In_Flist (L : Iir_Flist)
+   is
+      El : Iir;
+   begin
+      case L is
+         when Null_Iir_Flist
+            | Iir_Flist_All
+            | Iir_Flist_Others =>
+            return;
+         when others =>
+            for I in Flist_First .. Flist_Last (L) loop
+               El := Get_Nth_Element (L, I);
+               Destroy_Types (El);
+            end loop;
+      end case;
+   end Destroy_Types_In_Flist;
+
    procedure Destroy_Types (N : Iir) is
    begin
       --  Nothing to do for null node.
@@ -1187,6 +1204,20 @@ package body Trans.Chap9 is
                      when Attr_Of_Maybe_Ref =>
                         if not Get_Is_Ref (N) then
                            Destroy_Types_In_List (Get_Iir_List (N, F));
+                        end if;
+                     when Attr_Ref
+                        | Attr_Of_Ref =>
+                        null;
+                     when others =>
+                        raise Internal_Error;
+                  end case;
+               when Type_Iir_Flist =>
+                  case Get_Field_Attribute (F) is
+                     when Attr_None =>
+                        Destroy_Types_In_Flist (Get_Iir_Flist (N, F));
+                     when Attr_Of_Maybe_Ref =>
+                        if not Get_Is_Ref (N) then
+                           Destroy_Types_In_Flist (Get_Iir_Flist (N, F));
                         end if;
                      when Attr_Ref
                         | Attr_Of_Ref =>

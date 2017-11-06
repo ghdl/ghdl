@@ -20,6 +20,7 @@ with Types; use Types;
 with Tokens; use Tokens;
 with Nodes;
 with Lists;
+with Flists;
 
 package Iirs is
    --  This package defines the semantic tree and functions to handle it.
@@ -5400,6 +5401,26 @@ package Iirs is
      renames Lists.Get_Last_Element;
    function "=" (L, R : Iir_List) return Boolean renames Lists."=";
 
+   subtype Iir_Flist is Flists.Flist_Type;
+   Null_Iir_Flist   : constant Iir_Flist := Flists.Null_Flist;
+   Iir_Flist_Others : constant Iir_Flist := Flists.Flist_Others;
+   Iir_Flist_All    : constant Iir_Flist := Flists.Flist_All;
+
+   Flist_First : constant Natural := Flists.Ffirst;
+   function Flist_Last (Flist : Iir_Flist) return Natural
+     renames Flists.Flast;
+   function Create_Iir_Flist (Len : Natural) return Iir_Flist
+     renames Flists.Create_Flist;
+   function Get_Nth_Element (Flist : Iir_Flist; N : Natural) return Iir
+     renames Flists.Get_Nth_Element;
+   procedure Set_Nth_Element (Flist : Iir_Flist; N : Natural; El : Iir)
+     renames Flists.Set_Nth_Element;
+   function Get_Nbr_Elements (Flist : Iir_Flist) return Natural
+     renames Flists.Length;
+   procedure Destroy_Iir_Flist (Flist : in out Iir_Flist)
+     renames Flists.Destroy_Flist;
+   function "=" (L, R : Iir_Flist) return Boolean renames Flists."=";
+
    -- This is used only for lists.
    type Iir_Array is array (Natural range <>) of Iir;
    type Iir_Array_Acc is access Iir_Array;
@@ -5569,7 +5590,7 @@ package Iirs is
 
    -- Lists.
 
-   subtype Iir_Index_List is Iir_List;
+   subtype Iir_Index_List is Iir_Flist;
 
    subtype Iir_Design_Unit_List is Iir_List;
 
@@ -6534,13 +6555,13 @@ package Iirs is
    --  the index_sutype is constrained (to differentiate with unconstrained
    --  index type).
    --  Field: Field9 Ref (uc)
-   function Get_Index_Subtype_List (Decl : Iir) return Iir_List;
-   procedure Set_Index_Subtype_List (Decl : Iir; List : Iir_List);
+   function Get_Index_Subtype_List (Decl : Iir) return Iir_Flist;
+   procedure Set_Index_Subtype_List (Decl : Iir; List : Iir_Flist);
 
    --  List of type marks for indexes type of array types.
    --  Field: Field6 (uc)
-   function Get_Index_Subtype_Definition_List (Def : Iir) return Iir_List;
-   procedure Set_Index_Subtype_Definition_List (Def : Iir; Idx : Iir_List);
+   function Get_Index_Subtype_Definition_List (Def : Iir) return Iir_Flist;
+   procedure Set_Index_Subtype_Definition_List (Def : Iir; Idx : Iir_Flist);
 
    --  The subtype_indication as it appears in a array type declaration.
    --  Field: Field2
@@ -6552,8 +6573,8 @@ package Iirs is
    procedure Set_Element_Subtype (Decl : Iir; Sub_Type : Iir);
 
    --  Field: Field6 (uc)
-   function Get_Index_Constraint_List (Def : Iir) return Iir_List;
-   procedure Set_Index_Constraint_List (Def : Iir; List : Iir_List);
+   function Get_Index_Constraint_List (Def : Iir) return Iir_Flist;
+   procedure Set_Index_Constraint_List (Def : Iir; List : Iir_Flist);
 
    --  Field: Field8
    function Get_Array_Element_Constraint (Def : Iir) return Iir;
@@ -6574,8 +6595,8 @@ package Iirs is
 
    --  List of indexes for indexed name.
    --  Field: Field2 (uc)
-   function Get_Index_List (Decl : Iir) return Iir_List;
-   procedure Set_Index_List (Decl : Iir; List : Iir_List);
+   function Get_Index_List (Decl : Iir) return Iir_Flist;
+   procedure Set_Index_List (Decl : Iir; List : Iir_Flist);
 
    --  The terminal declaration for the reference (ground) of a nature
    --  Field: Field2

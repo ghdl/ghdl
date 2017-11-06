@@ -57,6 +57,23 @@ package body Iirs_Utils is
       return Get_Kind (N) = Iir_Kind_Overflow_Literal;
    end Is_Overflow_Literal;
 
+   function List_To_Flist (L : Iir_List) return Iir_Flist
+   is
+      Len : constant Natural := Get_Nbr_Elements (L);
+      Temp_L : Iir_List;
+      Res : Iir_Flist;
+   begin
+      Res := Create_Iir_Flist (Len);
+      for I in 0 .. Len - 1 loop
+         Set_Nth_Element (Res, I, Get_Nth_Element (L, I));
+      end loop;
+
+      Temp_L := L;
+      Destroy_Iir_List (Temp_L);
+
+      return Res;
+   end List_To_Flist;
+
    function Get_Operator_Name (Op : Iir) return Name_Id is
    begin
       case Get_Kind (Op) is
@@ -814,6 +831,16 @@ package body Iirs_Utils is
       end loop;
    end Free_Recursive_List;
 
+   procedure Free_Recursive_Flist (List : Iir_Flist)
+   is
+      El : Iir;
+   begin
+      for I in Flist_First .. Flist_Last (List) loop
+         El := Get_Nth_Element (List, I);
+         Free_Recursive (El);
+      end loop;
+   end Free_Recursive_Flist;
+
    procedure Free_Recursive (Node : Iir; Free_List : Boolean := False)
    is
       N : Iir;
@@ -867,7 +894,7 @@ package body Iirs_Utils is
                return;
             end if;
          when Iir_Kind_Array_Subtype_Definition =>
-            Free_Recursive_List (Get_Index_List (N));
+            Free_Recursive_Flist (Get_Index_List (N));
             Free_Recursive (Get_Base_Type (N));
          when Iir_Kind_Entity_Aspect_Entity =>
             Free_Recursive (Get_Entity (N));
@@ -1043,7 +1070,7 @@ package body Iirs_Utils is
       end case;
    end Get_Type_Of_Subtype_Indication;
 
-   function Get_Index_Type (Indexes : Iir_List; Idx : Natural) return Iir
+   function Get_Index_Type (Indexes : Iir_Flist; Idx : Natural) return Iir
    is
       Index : constant Iir := Get_Nth_Element (Indexes, Idx);
    begin
@@ -1066,12 +1093,11 @@ package body Iirs_Utils is
 
    function Are_Array_Indexes_Locally_Static (Array_Type : Iir) return Boolean
    is
-      Indexes : constant Iir_List := Get_Index_Subtype_List (Array_Type);
+      Indexes : constant Iir_Flist := Get_Index_Subtype_List (Array_Type);
       Index : Iir;
    begin
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (Indexes) loop
          Index := Get_Index_Type (Indexes, I);
-         exit when Index = Null_Iir;
          if Get_Type_Staticness (Index) /= Locally then
             return False;
          end if;
@@ -1376,7 +1402,7 @@ package body Iirs_Utils is
       if Get_Kind (Sub_Type) /= Iir_Kind_Array_Subtype_Definition then
          Error_Kind ("get_string_type_bound_type", Sub_Type);
       end if;
-      return Get_First_Element (Get_Index_Subtype_List (Sub_Type));
+      return Get_Nth_Element (Get_Index_Subtype_List (Sub_Type), 0);
    end Get_String_Type_Bound_Type;
 
    procedure Get_Low_High_Limit (Arange : Iir_Range_Expression;
@@ -1449,7 +1475,7 @@ package body Iirs_Utils is
       Base_Type : constant Iir := Get_Base_Type (Arr_Type);
       El_Type : constant Iir := Get_Element_Subtype (Base_Type);
       Res : Iir_Array_Subtype_Definition;
-      List : Iir_List;
+      List : Iir_Flist;
    begin
       Res := Create_Iir (Iir_Kind_Array_Subtype_Definition);
       Set_Location (Res, Loc);
@@ -1461,7 +1487,7 @@ package body Iirs_Utils is
       Set_Resolved_Flag (Res, Get_Resolved_Flag (Arr_Type));
       Set_Signal_Type_Flag (Res, Get_Signal_Type_Flag (Arr_Type));
       Set_Type_Staticness (Res, Get_Type_Staticness (El_Type));
-      List := Create_Iir_List;
+      List := Create_Iir_Flist (Get_Nbr_Dimensions (Base_Type));
       Set_Index_Subtype_List (Res, List);
       Set_Index_Constraint_List (Res, List);
       return Res;

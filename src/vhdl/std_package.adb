@@ -291,7 +291,7 @@ package body Std_Package is
       procedure Create_Array_Type
         (Def : out Iir; Decl : out Iir; El_Decl : Iir; Name : Name_Id)
       is
-         Index_List : Iir_List;
+         Index_List : Iir_Flist;
          Index : Iir;
          Element : Iir;
       begin
@@ -301,10 +301,10 @@ package body Std_Package is
          Def := Create_Std_Iir (Iir_Kind_Array_Type_Definition);
          Set_Base_Type (Def, Def);
 
-         Index_List := Create_Iir_List;
+         Index_List := Create_Iir_Flist (1);
          Set_Index_Subtype_Definition_List (Def, Index_List);
          Set_Index_Subtype_List (Def, Index_List);
-         Append_Element (Index_List, Index);
+         Set_Nth_Element (Index_List, 0, Index);
 
          Set_Element_Subtype_Indication (Def, Element);
          Set_Element_Subtype (Def, Get_Type (El_Decl));
@@ -1054,15 +1054,15 @@ package body Std_Package is
       -- type string is array (positive range <>) of character;
       declare
          Element : Iir;
-         Index_List : Iir_List;
+         Index_List : Iir_Flist;
       begin
          Element := Create_Std_Type_Mark (Character_Type_Declaration);
 
          String_Type_Definition :=
            Create_Std_Iir (Iir_Kind_Array_Type_Definition);
          Set_Base_Type (String_Type_Definition, String_Type_Definition);
-         Index_List := Create_Iir_List;
-         Append_Element (Index_List,
+         Index_List := Create_Iir_Flist (1);
+         Set_Nth_Element (Index_List, 0,
                          Create_Std_Type_Mark (Positive_Subtype_Declaration));
          Set_Index_Subtype_Definition_List (String_Type_Definition,
                                             Index_List);

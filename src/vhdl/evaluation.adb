@@ -422,7 +422,7 @@ package body Evaluation is
       Res : Iir_Array_Subtype_Definition;
    begin
       Res := Create_Array_Subtype (Base_Type, Get_Location (Loc));
-      Append_Element (Get_Index_Subtype_List (Res), Index_Type);
+      Set_Nth_Element (Get_Index_Subtype_List (Res), 0, Index_Type);
       Set_Type_Staticness (Res, Min (Get_Type_Staticness (Res),
                                      Get_Type_Staticness (Index_Type)));
       Set_Constraint_State (Res, Fully_Constrained);
@@ -2255,9 +2255,10 @@ package body Evaluation is
 
    function Eval_Indexed_Aggregate (Prefix : Iir; Expr : Iir) return Iir
    is
-      Indexes : constant Iir_List := Get_Index_List (Expr);
+      Indexes : constant Iir_Flist := Get_Index_List (Expr);
       Prefix_Type : constant Iir := Get_Type (Prefix);
-      Indexes_Type : constant Iir_List := Get_Index_Subtype_List (Prefix_Type);
+      Indexes_Type : constant Iir_Flist :=
+        Get_Index_Subtype_List (Prefix_Type);
       Idx : Iir;
       Assoc : Iir;
       Assoc_Expr : Iir;
@@ -2268,7 +2269,7 @@ package body Evaluation is
    begin
       Aggr := Prefix;
 
-      for Dim in 0 .. Get_Nbr_Elements (Indexes) - 1 loop
+      for Dim in Flist_First .. Flist_Last (Indexes) loop
          Idx := Get_Nth_Element (Indexes, Dim);
 
          --  Find Idx in choices.
@@ -2318,7 +2319,7 @@ package body Evaluation is
       Index_Type : constant Iir := Get_Index_Type (Str_Type, 0);
       Index_Range : constant Iir := Eval_Static_Range (Index_Type);
 
-      Indexes : constant Iir_List := Get_Index_List (Expr);
+      Indexes : constant Iir_Flist := Get_Index_List (Expr);
 
       Id : constant String8_Id := Get_String8_Id (Str);
 
@@ -2339,7 +2340,7 @@ package body Evaluation is
       Index_Type : constant Iir := Get_Index_Type (Aggr_Type, 0);
       Index_Range : constant Iir := Eval_Static_Range (Index_Type);
 
-      Indexes : constant Iir_List := Get_Index_List (Expr);
+      Indexes : constant Iir_Flist := Get_Index_List (Expr);
 
       Idx : Iir;
       Pos : Iir_Index32;
@@ -2361,20 +2362,19 @@ package body Evaluation is
 
       declare
          Prefix_Type : constant Iir := Get_Type (Prefix);
-         Indexes_Type : constant Iir_List :=
+         Indexes_Type : constant Iir_Flist :=
            Get_Index_Subtype_List (Prefix_Type);
-         Indexes_List : constant Iir_List := Get_Index_List (Expr);
+         Indexes_List : constant Iir_Flist := Get_Index_List (Expr);
          Prefix_Index : Iir;
          Index : Iir;
       begin
-         for I in Natural loop
+         for I in Flist_First .. Flist_Last (Indexes_Type) loop
             Prefix_Index := Get_Nth_Element (Indexes_Type, I);
-            exit when Prefix_Index = Null_Iir;
 
             --  Eval index.
             Index := Get_Nth_Element (Indexes_List, I);
             Index := Eval_Static_Expr (Index);
-            Replace_Nth_Element (Indexes_List, I, Index);
+            Set_Nth_Element (Indexes_List, I, Index);
 
             --  Return overflow if out of range.
             if Get_Kind (Index) = Iir_Kind_Overflow_Literal
@@ -2771,7 +2771,7 @@ package body Evaluation is
    function Is_Small_Composite_Value (Expr : Iir) return Boolean
    is
       Expr_Type : constant Iir := Get_Type (Expr);
-      Indexes : Iir_List;
+      Indexes : Iir_Flist;
       Len : Iir_Int64;
    begin
       --  Consider only arrays.  Records are never composite.
@@ -3128,17 +3128,16 @@ package body Evaluation is
                   return True;
                end if;
                declare
-                  E_Indexes : constant Iir_List :=
+                  E_Indexes : constant Iir_Flist :=
                     Get_Index_Subtype_List (Val_Type);
-                  T_Indexes : constant Iir_List :=
+                  T_Indexes : constant Iir_Flist :=
                     Get_Index_Subtype_List (Sub_Type);
                   E_El : Iir;
                   T_El : Iir;
                begin
-                  for I in Natural loop
+                  for I in Flist_First .. Flist_Last (E_Indexes) loop
                      E_El := Get_Index_Type (E_Indexes, I);
                      T_El := Get_Index_Type (T_Indexes, I);
-                     exit when E_El = Null_Iir and T_El = Null_Iir;
 
                      if Get_Type_Staticness (E_El) = Locally
                        and then Get_Type_Staticness (T_El) = Locally

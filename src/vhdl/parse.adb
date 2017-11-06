@@ -2028,11 +2028,12 @@ package body Parse is
          --  Sem_Type will create the array type.
          Res_Type := Create_Iir (Iir_Kind_Array_Subtype_Definition);
          Set_Array_Element_Constraint (Res_Type, Element_Subtype);
-         Set_Index_Constraint_List (Res_Type, Index_List);
+         Set_Index_Constraint_List (Res_Type, List_To_Flist (Index_List));
       else
          Res_Type := Create_Iir (Iir_Kind_Array_Type_Definition);
          Set_Element_Subtype_Indication (Res_Type, Element_Subtype);
-         Set_Index_Subtype_Definition_List (Res_Type, Index_List);
+         Set_Index_Subtype_Definition_List (Res_Type,
+                                            List_To_Flist (Index_List));
       end if;
       Set_Location (Res_Type, Loc);
 
@@ -2637,7 +2638,6 @@ package body Parse is
          Scan;
       else
          Index_List := Create_Iir_List;
-         Set_Index_Constraint_List (Def, Index_List);
          --  index_constraint ::= (discrete_range {, discrete_range} )
          loop
             El := Parse_Discrete_Range;
@@ -2649,6 +2649,7 @@ package body Parse is
             Expect (Tok_Comma);
             Scan;
          end loop;
+         Set_Index_Constraint_List (Def, List_To_Flist (Index_List));
       end if;
 
       --  Eat ')'

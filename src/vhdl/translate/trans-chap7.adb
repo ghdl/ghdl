@@ -797,7 +797,7 @@ package body Trans.Chap7 is
          when Iir_Kind_Array_Type_Definition
            | Iir_Kind_Array_Subtype_Definition =>
             declare
-               Expr_Indexes  : constant Iir_List :=
+               Expr_Indexes  : constant Iir_Flist :=
                  Get_Index_Subtype_List (Expr_Type);
             begin
                for I in 1 .. Get_Nbr_Elements (Expr_Indexes) loop
@@ -2889,7 +2889,7 @@ package body Trans.Chap7 is
       Dim        : Natural;
       Var_Index  : O_Dnode)
    is
-      Index_List : Iir_List;
+      Index_List : Iir_Flist;
       Expr_Type  : Iir;
       Final      : Boolean;
 
@@ -3199,9 +3199,9 @@ package body Trans.Chap7 is
      (Target : Mnode; Target_Type : Iir; Aggr : Iir)
    is
       Aggr_Type       : constant Iir := Get_Type (Aggr);
-      Index_List      : constant Iir_List :=
+      Index_List      : constant Iir_Flist :=
         Get_Index_Subtype_List (Aggr_Type);
-      Targ_Index_List : constant Iir_List :=
+      Targ_Index_List : constant Iir_Flist :=
         Get_Index_Subtype_List (Target_Type);
 
       Aggr_Info : Iir_Aggregate_Info;
@@ -3255,9 +3255,8 @@ package body Trans.Chap7 is
       Aggr_Info := Get_Aggregate_Info (Aggr);
 
       --  Check type
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (Index_List) loop
          Subaggr_Type := Get_Index_Type (Index_List, I);
-         exit when Subaggr_Type = Null_Iir;
          Subtarg_Type := Get_Index_Type (Targ_Index_List, I);
 
          Bt := Get_Base_Type (Subaggr_Type);
@@ -3633,23 +3632,22 @@ package body Trans.Chap7 is
    procedure Translate_Type_Conversion_Bounds
      (Res : Mnode; Src : Mnode; Res_Type : Iir; Src_Type : Iir; Loc : Iir)
    is
-      Res_Indexes  : constant Iir_List := Get_Index_Subtype_List (Res_Type);
-      Src_Indexes : constant Iir_List := Get_Index_Subtype_List (Src_Type);
+      Res_Indexes  : constant Iir_Flist := Get_Index_Subtype_List (Res_Type);
+      Src_Indexes : constant Iir_Flist := Get_Index_Subtype_List (Src_Type);
       Res_Base_Type     : constant Iir := Get_Base_Type (Res_Type);
       Src_Base_Type    : constant Iir := Get_Base_Type (Src_Type);
-      Res_Base_Indexes  : constant Iir_List :=
+      Res_Base_Indexes  : constant Iir_Flist :=
         Get_Index_Subtype_List (Res_Base_Type);
-      Src_Base_Indexes : constant Iir_List :=
+      Src_Base_Indexes : constant Iir_Flist :=
         Get_Index_Subtype_List (Src_Base_Type);
 
       R_El              : Iir;
       S_El              : Iir;
    begin
       --  Convert bounds.
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (Src_Indexes) loop
          R_El := Get_Index_Type (Res_Indexes, I);
          S_El := Get_Index_Type (Src_Indexes, I);
-         exit when S_El = Null_Iir;
          declare
             Rb_Ptr          : Mnode;
             Sb_Ptr          : Mnode;
@@ -4712,7 +4710,7 @@ package body Trans.Chap7 is
       Info           : constant Type_Info_Acc := Get_Info (Arr_Type);
       F_Info         : constant Operator_Info_Acc := Get_Info (Subprg);
       L, R           : Mnode;
-      Indexes        : constant Iir_List := Get_Index_Subtype_List (Arr_Type);
+      Indexes        : constant Iir_Flist := Get_Index_Subtype_List (Arr_Type);
       Nbr_Indexes    : constant Natural := Get_Nbr_Elements (Indexes);
       If_Blk         : O_If_Block;
       Var_I          : O_Dnode;

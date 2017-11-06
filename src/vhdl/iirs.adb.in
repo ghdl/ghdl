@@ -156,6 +156,11 @@ package body Iirs is
    function Iir_List_To_Iir is new Ada.Unchecked_Conversion
      (Source => Iir_List, Target => Iir);
 
+   function Iir_To_Iir_Flist is new Ada.Unchecked_Conversion
+     (Source => Iir, Target => Iir_Flist);
+   function Iir_Flist_To_Iir is new Ada.Unchecked_Conversion
+     (Source => Iir_Flist, Target => Iir);
+
    function Iir_To_Token_Type (N : Iir) return Token_Type is
    begin
       return Token_Type'Val (N);

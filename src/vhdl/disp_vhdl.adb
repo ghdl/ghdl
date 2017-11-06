@@ -887,13 +887,12 @@ package body Disp_Vhdl is
          when Iir_Kind_Array_Type_Definition =>
             declare
                St : constant Iir := Get_Subtype_Definition (Decl);
-               Indexes : constant Iir_List := Get_Index_Subtype_List (St);
+               Indexes : constant Iir_Flist := Get_Index_Subtype_List (St);
                Index : Iir;
             begin
                Put ("array (");
-               for I in Natural loop
+               for I in Flist_First .. Flist_Last (Indexes) loop
                   Index := Get_Nth_Element (Indexes, I);
-                  exit when Index = Null_Iir;
                   if I /= 0 then
                      Put (", ");
                   end if;
@@ -2525,15 +2524,14 @@ package body Disp_Vhdl is
 
    procedure Disp_Indexed_Name (Indexed: Iir)
    is
-      List : Iir_List;
+      List : Iir_Flist;
       El: Iir;
    begin
       Disp_Expression (Get_Prefix (Indexed));
       Put (" (");
       List := Get_Index_List (Indexed);
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (List) loop
          El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
          if I /= 0 then
             Put (", ");
          end if;
@@ -3389,14 +3387,14 @@ package body Disp_Vhdl is
             Disp_Name_Of (Spec);
          when Iir_Kind_Indexed_Name =>
             declare
-               Index_List : constant Iir_List := Get_Index_List (Spec);
+               Index_List : constant Iir_Flist := Get_Index_List (Spec);
             begin
                Disp_Name_Of (Get_Prefix (Spec));
                Put (" (");
-               if Index_List = Iir_List_Others then
+               if Index_List = Iir_Flist_Others then
                   Put ("others");
                else
-                  Disp_Expression (Get_First_Element (Index_List));
+                  Disp_Expression (Get_Nth_Element (Index_List, 0));
                end if;
                Put (")");
             end;

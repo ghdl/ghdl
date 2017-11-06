@@ -350,8 +350,8 @@ package body Trans.Chap6 is
    is
       Prefix_Type : constant Iir := Get_Type (Get_Prefix (Expr));
       Prefix_Info : constant Type_Info_Acc := Get_Info (Prefix_Type);
-      Index_List  : constant Iir_List := Get_Index_List (Expr);
-      Type_List   : constant Iir_List := Get_Index_Subtype_List (Prefix_Type);
+      Index_List  : constant Iir_Flist := Get_Index_List (Expr);
+      Type_List   : constant Iir_Flist := Get_Index_Subtype_List (Prefix_Type);
       Nbr_Dim     : constant Natural := Get_Nbr_Elements (Index_List);
       Prefix      : Mnode;
       Index       : Iir;

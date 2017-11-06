@@ -709,7 +709,7 @@ package body Configuration is
                   return False;
                end if;
                declare
-                  Indexes : constant Iir_List :=
+                  Indexes : constant Iir_Flist :=
                     Get_Index_Subtype_List (Gen_Type);
                begin
                   if Get_Nbr_Elements (Indexes) /= 1 then

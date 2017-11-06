@@ -186,6 +186,27 @@ package body Sem_Inst is
       end case;
    end Instantiate_Iir_List;
 
+   function Instantiate_Iir_Flist (L : Iir_Flist; Is_Ref : Boolean)
+                                  return Iir_Flist
+   is
+      Res : Iir_Flist;
+      El : Iir;
+   begin
+      case L is
+         when Null_Iir_Flist
+           | Iir_Flist_All
+           | Iir_Flist_Others =>
+            return L;
+         when others =>
+            Res := Create_Iir_Flist (Get_Nbr_Elements (L));
+            for I in Flist_First .. Flist_Last (L) loop
+               El := Get_Nth_Element (L, I);
+               Set_Nth_Element (Res, I, Instantiate_Iir (El, Is_Ref));
+            end loop;
+            return Res;
+      end case;
+   end Instantiate_Iir_Flist;
+
    --  Instantiate a chain.  This is a special case to reduce stack depth.
    function Instantiate_Iir_Chain (N : Iir) return Iir
    is
@@ -270,6 +291,27 @@ package body Sem_Inst is
                end case;
                R := Instantiate_Iir_List (S, Ref);
                Set_Iir_List (Res, F, R);
+            end;
+         when Type_Iir_Flist =>
+            declare
+               S : constant Iir_Flist := Get_Iir_Flist (N, F);
+               R : Iir_Flist;
+               Ref : Boolean;
+            begin
+               case Get_Field_Attribute (F) is
+                  when Attr_None =>
+                     Ref := False;
+                  when Attr_Of_Ref =>
+                     Ref := True;
+                  when Attr_Of_Maybe_Ref =>
+                     Ref := Get_Is_Ref (N);
+                  when others =>
+                     --  Ref is specially handled in Instantiate_Iir.
+                     --  Others cannot appear for lists.
+                     raise Internal_Error;
+               end case;
+               R := Instantiate_Iir_Flist (S, Ref);
+               Set_Iir_Flist (Res, F, R);
             end;
          when Type_PSL_NFA
            | Type_PSL_Node =>
@@ -387,14 +429,14 @@ package body Sem_Inst is
                   --  the instance of the referenced list.  This is a special
                   --  case because there is no origins for list.
                   declare
-                     List : Iir_List;
+                     List : Iir_Flist;
                   begin
                      case Kind is
                         when Iir_Kind_Array_Type_Definition =>
                            List := Get_Index_Subtype_Definition_List (Res);
                         when Iir_Kind_Array_Subtype_Definition =>
                            List := Get_Index_Constraint_List (Res);
-                           if List = Null_Iir_List then
+                           if List = Null_Iir_Flist then
                               List := Get_Index_Subtype_List
                                 (Get_Denoted_Type_Mark (Res));
                            end if;

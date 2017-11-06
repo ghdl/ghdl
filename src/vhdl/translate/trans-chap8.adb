@@ -3907,7 +3907,7 @@ package body Trans.Chap8 is
       Idx         : O_Dnode;
       Dim         : Natural)
    is
-      Index_List : constant Iir_List :=
+      Index_List : constant Iir_Flist :=
         Get_Index_Subtype_List (Target_Type);
       Nbr_Dim    : constant Natural := Get_Nbr_Elements (Index_List);
       Sub_Aggr   : Mnode;

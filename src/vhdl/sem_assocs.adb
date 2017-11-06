@@ -55,7 +55,6 @@ package body Sem_Assocs is
                   Set_Subtype_Type_Mark (N_Actual, Get_Prefix (Actual));
                   Sub_Assoc := Get_Association_Chain (Actual);
                   Indexes := Create_Iir_List;
-                  Set_Index_Constraint_List (N_Actual, Indexes);
                   while Is_Valid (Sub_Assoc) loop
                      if Get_Kind (Sub_Assoc)
                        /= Iir_Kind_Association_Element_By_Expression
@@ -75,6 +74,8 @@ package body Sem_Assocs is
                   end loop;
                   Old := Actual;
                   Free_Iir (Old);
+                  Set_Index_Constraint_List
+                    (N_Actual, List_To_Flist (Indexes));
                   Actual := N_Actual;
                end;
             end if;
@@ -626,7 +627,7 @@ package body Sem_Assocs is
    procedure Add_Individual_Assoc_Indexed_Name
      (Choice : out Iir; Base_Assoc : Iir; Formal : Iir)
    is
-      Index_List : constant Iir_List := Get_Index_List (Formal);
+      Index_List : constant Iir_Flist := Get_Index_List (Formal);
       Nbr : constant Natural := Get_Nbr_Elements (Index_List);
       Last_Choice : Iir;
       Index : Iir;
@@ -642,7 +643,7 @@ package body Sem_Assocs is
          Staticness := Get_Expr_Staticness (Index);
          if Staticness = Locally then
             Index := Eval_Expr (Index);
-            Replace_Nth_Element (Index_List, I, Index);
+            Set_Nth_Element (Index_List, I, Index);
          else
             Error_Msg_Sem (+Index, "index expression must be locally static");
             Set_Choice_Staticness (Base_Assoc, None);
@@ -866,7 +867,7 @@ package body Sem_Assocs is
    procedure Finish_Individual_Assoc_Array_Subtype
      (Assoc : Iir; Atype : Iir; Dim : Positive)
    is
-      Index_Tlist : constant Iir_List := Get_Index_Subtype_List (Atype);
+      Index_Tlist : constant Iir_Flist := Get_Index_Subtype_List (Atype);
       Nbr_Dims : constant Natural := Get_Nbr_Elements (Index_Tlist);
       Index_Type : constant Iir := Get_Nth_Element (Index_Tlist, Dim - 1);
       Low, High : Iir;
@@ -891,14 +892,13 @@ package body Sem_Assocs is
    procedure Finish_Individual_Assoc_Array
      (Actual : Iir; Assoc : Iir; Dim : Natural)
    is
-      Actual_Type : Iir;
+      Actual_Type : constant Iir := Get_Actual_Type (Actual);
       Actual_Index : Iir;
       Base_Type : Iir;
       Base_Index : Iir;
       Low, High : Iir;
       Chain : Iir;
    begin
-      Actual_Type := Get_Actual_Type (Actual);
       Actual_Index := Get_Nth_Element (Get_Index_Subtype_List (Actual_Type),
                                        Dim - 1);
       if Actual_Index /= Null_Iir then
@@ -958,8 +958,8 @@ package body Sem_Assocs is
                   Set_Right_Limit_Expr (Index_Subtype_Constraint, Low);
             end case;
             Set_Expr_Staticness (Index_Subtype_Constraint, Locally);
-            Append_Element (Get_Index_Subtype_List (Actual_Type),
-                            Actual_Index);
+            Set_Nth_Element (Get_Index_Subtype_List (Actual_Type), Dim - 1,
+                             Actual_Index);
          end;
       else
          declare

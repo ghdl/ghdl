@@ -708,10 +708,10 @@ package body Trans.Chap1 is
             Apply_To_All_Others_Blocks (True);
          when Iir_Kind_Indexed_Name =>
             declare
-               Index_List : constant Iir_List := Get_Index_List (Spec);
+               Index_List : constant Iir_Flist := Get_Index_List (Spec);
                Rng        : Mnode;
             begin
-               if Index_List = Iir_List_Others then
+               if Index_List = Iir_Flist_Others then
                   Apply_To_All_Others_Blocks (False);
                else
                   Open_Temp;

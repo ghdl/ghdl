@@ -564,13 +564,12 @@ package body Trans.Chap3 is
       case Get_Kind (Def) is
          when Iir_Kind_Array_Subtype_Definition =>
             declare
-               Indexes_List : constant Iir_List :=
+               Indexes_List : constant Iir_Flist :=
                  Get_Index_Subtype_List (Def);
                Index : Iir;
             begin
-               for I in Natural loop
+               for I in Flist_First .. Flist_Last (Indexes_List) loop
                   Index := Get_Index_Type (Indexes_List, I);
-                  exit when Index = Null_Iir;
                   New_Record_Aggr_El
                     (List, Create_Static_Type_Definition_Type_Range (Index));
                end loop;
@@ -621,18 +620,17 @@ package body Trans.Chap3 is
       case Get_Kind (Def) is
          when Iir_Kind_Array_Subtype_Definition =>
             declare
-               Indexes_List : constant Iir_List :=
+               Indexes_List : constant Iir_Flist :=
                  Get_Index_Subtype_List (Def);
-               Indexes_Def_List : constant Iir_List :=
+               Indexes_Def_List : constant Iir_Flist :=
                  Get_Index_Subtype_Definition_List (Base_Type);
                Index : Iir;
             begin
                if Get_Nbr_Elements (Indexes_List) > 1 then
                   Targ := Stabilize (Targ);
                end if;
-               for I in Natural loop
+               for I in Flist_First .. Flist_Last (Indexes_List) loop
                   Index := Get_Index_Type (Indexes_List, I);
-                  exit when Index = Null_Iir;
                   declare
                      Index_Type : constant Iir := Get_Base_Type (Index);
                      Index_Info : constant Type_Info_Acc :=
@@ -737,7 +735,7 @@ package body Trans.Chap3 is
    procedure Translate_Array_Type_Bounds
      (Def : Iir_Array_Type_Definition; Info : Type_Info_Acc)
    is
-      Indexes_List    : constant Iir_List :=
+      Indexes_List    : constant Iir_Flist :=
         Get_Index_Subtype_Definition_List (Def);
       Constr          : O_Element_List;
       Dim             : String (1 .. 8);
@@ -748,9 +746,8 @@ package body Trans.Chap3 is
       Index_Type_Mark : Iir;
    begin
       Start_Record_Type (Constr);
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (Indexes_List) loop
          Index_Type_Mark := Get_Nth_Element (Indexes_List, I);
-         exit when Index_Type_Mark = Null_Iir;
          Index := Get_Index_Type (Index_Type_Mark);
 
          --  Index comes from a type mark.
@@ -835,16 +832,15 @@ package body Trans.Chap3 is
    function Get_Array_Subtype_Length (Def : Iir_Array_Subtype_Definition)
                                       return Iir_Int64
    is
-      Indexes_List : constant Iir_List := Get_Index_Subtype_List (Def);
+      Indexes_List : constant Iir_Flist := Get_Index_Subtype_List (Def);
       Index        : Iir;
       Idx_Len      : Iir_Int64;
       Len          : Iir_Int64;
    begin
       --  Check if the bounds of the array are locally static.
       Len := 1;
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (Indexes_List) loop
          Index := Get_Index_Type (Indexes_List, I);
-         exit when Index = Null_Iir;
 
          if Get_Type_Staticness (Index) /= Locally then
             return -1;
@@ -1817,13 +1813,12 @@ package body Trans.Chap3 is
 
          when Iir_Kind_Array_Type_Definition =>
             declare
-               Index_List : constant Iir_List :=
+               Index_List : constant Iir_Flist :=
                  Get_Index_Subtype_List (Def);
                Index      : Iir;
             begin
-               for I in Natural loop
+               for I in Flist_First .. Flist_Last (Index_List) loop
                   Index := Get_Index_Type (Index_List, I);
-                  exit when Index = Null_Iir;
                   if Is_Anonymous_Type_Definition (Index) then
                      Create_Type_Definition_Type_Range (Index);
                   end if;
@@ -2540,7 +2535,7 @@ package body Trans.Chap3 is
 
    function Get_Thin_Array_Length (Atype : Iir) return O_Cnode
    is
-      Indexes_List : constant Iir_List := Get_Index_Subtype_List (Atype);
+      Indexes_List : constant Iir_Flist := Get_Index_Subtype_List (Atype);
       Nbr_Dim      : constant Natural := Get_Nbr_Elements (Indexes_List);
       Index        : Iir;
       Val          : Iir_Int64;
@@ -2558,7 +2553,7 @@ package body Trans.Chap3 is
    function Bounds_To_Range (B : Mnode; Atype : Iir; Dim : Positive)
                              return Mnode
    is
-      Indexes_List    : constant Iir_List :=
+      Indexes_List    : constant Iir_Flist :=
         Get_Index_Subtype_Definition_List (Get_Base_Type (Atype));
       Index_Type_Mark : constant Iir :=
         Get_Nth_Element (Indexes_List, Dim - 1);
@@ -2696,7 +2691,7 @@ package body Trans.Chap3 is
    function Get_Bounds_Length (Bounds : Mnode; Atype : Iir) return O_Enode
    is
       Type_Info     : constant Type_Info_Acc := Get_Info (Atype);
-      Index_List    : constant Iir_List := Get_Index_Subtype_List (Atype);
+      Index_List    : constant Iir_Flist := Get_Index_Subtype_List (Atype);
       Nbr_Dim       : constant Natural := Get_Nbr_Elements (Index_List);
       Dim_Length    : O_Enode;
       Res           : O_Enode;
@@ -3266,15 +3261,14 @@ package body Trans.Chap3 is
 
    function Locally_Array_Match (L_Type, R_Type : Iir) return Boolean
    is
-      L_Indexes : constant Iir_List := Get_Index_Subtype_List (L_Type);
-      R_Indexes : constant Iir_List := Get_Index_Subtype_List (R_Type);
+      L_Indexes : constant Iir_Flist := Get_Index_Subtype_List (L_Type);
+      R_Indexes : constant Iir_Flist := Get_Index_Subtype_List (R_Type);
       L_El      : Iir;
       R_El      : Iir;
    begin
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (L_Indexes) loop
          L_El := Get_Index_Type (L_Indexes, I);
          R_El := Get_Index_Type (R_Indexes, I);
-         exit when L_El = Null_Iir and R_El = Null_Iir;
          if Eval_Discrete_Type_Length (L_El)
            /= Eval_Discrete_Type_Length (R_El)
          then
@@ -3308,23 +3302,20 @@ package body Trans.Chap3 is
       else
          --  Check length match.
          declare
-            Index_List : constant Iir_List :=
+            Index_List : constant Iir_Flist :=
               Get_Index_Subtype_List (L_Type);
-            Index      : Iir;
             Cond       : O_Enode;
             Sub_Cond   : O_Enode;
          begin
-            for I in Natural loop
-               Index := Get_Nth_Element (Index_List, I);
-               exit when Index = Null_Iir;
+            for I in 1 .. Get_Nbr_Elements (Index_List) loop
                Sub_Cond := New_Compare_Op
                  (ON_Neq,
                   M2E (Range_To_Length
-                    (Get_Array_Range (L_Node, L_Type, I + 1))),
+                    (Get_Array_Range (L_Node, L_Type, I))),
                   M2E (Range_To_Length
-                    (Get_Array_Range (R_Node, R_Type, I + 1))),
+                    (Get_Array_Range (R_Node, R_Type, I))),
                   Ghdl_Bool_Type);
-               if I = 0 then
+               if I = 1 then
                   Cond := Sub_Cond;
                else
                   Cond := New_Dyadic_Op (ON_Or, Cond, Sub_Cond);

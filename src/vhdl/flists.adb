@@ -20,7 +20,7 @@ with Tables;
 
 package body Flists is
    --  Index of elements.
-   type El_Index_Type is new Nat32;
+   type El_Index_Type is new Int32;
 
    --  Describe an flist.
    type Entry_Type is record
@@ -137,9 +137,7 @@ package body Flists is
    is
       E : Entry_Type renames Flistt.Table (Flist);
    begin
-      if N >= Natural (E.Len) then
-         return Null_Node;
-      end if;
+      pragma Assert (N < Natural (E.Len));
       return Els.Table (E.Els + El_Index_Type (N));
    end Get_Nth_Element;
 

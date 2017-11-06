@@ -571,7 +571,7 @@ package body Ieee.Vital_Timing is
          elsif Get_Kind (Ptype) = Iir_Kind_Array_Subtype_Definition
            and then Get_Base_Type (Ptype) = Std_Logic_Vector_Type
          then
-            Itype := Get_First_Element (Get_Index_Subtype_List (Ptype));
+            Itype := Get_Nth_Element (Get_Index_Subtype_List (Ptype), 0);
             if Get_Type_Staticness (Itype) /= Locally then
                return Port_Length_Unknown;
             end if;
@@ -640,8 +640,8 @@ package body Ieee.Vital_Timing is
       is
          Itype : Iir;
       begin
-         Itype := Get_First_Element
-           (Get_Index_Subtype_List (Get_Type (Gen_Decl)));
+         Itype := Get_Nth_Element
+           (Get_Index_Subtype_List (Get_Type (Gen_Decl)), 0);
          if Get_Type_Staticness (Itype) /= Locally then
             return Port_Length_Unknown;
          else

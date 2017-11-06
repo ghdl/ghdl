@@ -1134,6 +1134,23 @@ package body Trans.Chap2 is
       end case;
    end Instantiate_Iir_List_Info;
 
+   procedure Instantiate_Iir_Flist_Info (L : Iir_Flist)
+   is
+      El : Iir;
+   begin
+      case L is
+         when Null_Iir_Flist
+            | Iir_Flist_All
+            | Iir_Flist_Others =>
+            return;
+         when others =>
+            for I in Flist_First .. Flist_Last (L) loop
+               El := Get_Nth_Element (L, I);
+               Instantiate_Iir_Info (El);
+            end loop;
+      end case;
+   end Instantiate_Iir_Flist_Info;
+
    --  B must be passed by reference.
    procedure Adjust_Info_Basetype (B : access Ortho_Info_Basetype_Type;
                                    Orig : access Ortho_Info_Basetype_Type) is
@@ -1415,6 +1432,20 @@ package body Trans.Chap2 is
                      when Attr_Of_Maybe_Ref =>
                         if not Get_Is_Ref (N) then
                            Instantiate_Iir_List_Info (Get_Iir_List (N, F));
+                        end if;
+                     when Attr_Ref
+                        | Attr_Of_Ref =>
+                        null;
+                     when others =>
+                        raise Internal_Error;
+                  end case;
+               when Type_Iir_Flist =>
+                  case Get_Field_Attribute (F) is
+                     when Attr_None =>
+                        Instantiate_Iir_Flist_Info (Get_Iir_Flist (N, F));
+                     when Attr_Of_Maybe_Ref =>
+                        if not Get_Is_Ref (N) then
+                           Instantiate_Iir_Flist_Info (Get_Iir_Flist (N, F));
                         end if;
                      when Attr_Ref
                         | Attr_Of_Ref =>

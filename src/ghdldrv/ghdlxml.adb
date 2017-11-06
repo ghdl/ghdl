@@ -197,6 +197,17 @@ package body Ghdlxml is
       Put_Empty_Stag_End;
    end Disp_Iir_List_Ref;
 
+   procedure Disp_Iir_Flist_Ref (Id : String; L : Iir_Flist) is
+   begin
+      if L = Null_Iir_Flist then
+         return;
+      end if;
+
+      Put_Stag (Id);
+      Put_Attribute ("flist-ref", Strip (Iir_Flist'Image (L)));
+      Put_Empty_Stag_End;
+   end Disp_Iir_Flist_Ref;
+
    procedure Disp_Iir_Chain_Elements (Chain : Iir)
    is
       El : Iir;
@@ -256,6 +267,41 @@ package body Ghdlxml is
       Put_Etag (Id);
    end Disp_Iir_List;
 
+   procedure Disp_Iir_Flist (Id : String; L : Iir_Flist; Ref : Boolean)
+   is
+      El : Iir;
+   begin
+      if L = Null_Iir_Flist then
+         return;
+      end if;
+
+      Put_Stag (Id);
+      case L is
+         when Iir_Flist_All =>
+            Put_Attribute ("flist-id", "all");
+            Put_Empty_Stag_End;
+            return;
+         when Iir_Flist_Others =>
+            Put_Attribute ("flist-id", "others");
+            Put_Empty_Stag_End;
+            return;
+         when others =>
+            Put_Attribute ("flist-id", Strip (Iir_Flist'Image (L)));
+            Put_Stag_End;
+      end case;
+
+      for I in Flist_First .. Flist_Last (L) loop
+         El := Get_Nth_Element (L, I);
+         if Ref then
+            Disp_Iir_Ref ("el", El);
+         else
+            Disp_Iir ("el", El);
+         end if;
+      end loop;
+
+      Put_Etag (Id);
+   end Disp_Iir_Flist;
+
    procedure Disp_Iir (Id : String; N : Iir) is
    begin
       if N = Null_Iir then
@@ -292,6 +338,8 @@ package body Ghdlxml is
                when Type_Iir =>
                   null;
                when Type_Iir_List =>
+                  null;
+               when Type_Iir_Flist =>
                   null;
                when Type_String8_Id =>
                   null;
@@ -411,6 +459,24 @@ package body Ghdlxml is
                            Disp_Iir_List (Img, L, Get_Is_Ref (N));
                         when Attr_Ref =>
                            Disp_Iir_List_Ref (Img, L);
+                        when others =>
+                           raise Internal_Error;
+                     end case;
+                  end;
+               when Type_Iir_Flist =>
+                  declare
+                     L : constant Iir_Flist := Get_Iir_Flist (N, F);
+                     Img : constant String := Get_Field_Image (F);
+                  begin
+                     case Get_Field_Attribute (F) is
+                        when Attr_None =>
+                           Disp_Iir_Flist (Img, L, False);
+                        when Attr_Of_Ref =>
+                           Disp_Iir_Flist (Img, L, True);
+                        when Attr_Of_Maybe_Ref =>
+                           Disp_Iir_Flist (Img, L, Get_Is_Ref (N));
+                        when Attr_Ref =>
+                           Disp_Iir_Flist_Ref (Img, L);
                         when others =>
                            raise Internal_Error;
                      end case;

@@ -715,7 +715,8 @@ def do_meta_body():
                 print '            return Attr_' + attr + ';'
         elif l == '      --  FIELDS_ARRAY':
             last = None
-            nodes_types = [node_type, node_type + '_List']
+            nodes_types = [node_type,
+                           node_type + '_List', node_type + '_Flist']
             for k in kinds:
                 v = nodes[k]
                 if last:

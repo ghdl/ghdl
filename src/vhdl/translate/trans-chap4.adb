@@ -1978,7 +1978,7 @@ package body Trans.Chap4 is
       Arr_Type := Get_Type (Get_Interface_Declaration_Chain (Func));
       Base_Type := Get_Base_Type (Arr_Type);
       Index_Info := Get_Info
-        (Get_First_Element (Get_Index_Subtype_Definition_List (Base_Type)));
+        (Get_Nth_Element (Get_Index_Subtype_Definition_List (Base_Type), 0));
       Base_Info := Get_Info (Base_Type);
 
       El_Type := Get_Element_Subtype (Arr_Type);
