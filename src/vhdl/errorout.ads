@@ -68,6 +68,9 @@ package Errorout is
       --  Start of block comment ('/*') appears in a block comment.
       Warnid_Nested_Comment,
 
+      --  Use of a tool directive.
+      Warnid_Directive,
+
       --  Weird use of parenthesis.
       Warnid_Parenthesis,
 

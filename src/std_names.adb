@@ -503,6 +503,11 @@ package body Std_Names is
       Def ("include",      Name_Include);
       Def ("timescale",    Name_Timescale);
       Def ("undef",        Name_Undef);
+      Def ("protect",      Name_Protect);
+      Def ("begin_protected", Name_Begin_Protected);
+      Def ("end_protected",   Name_End_Protected);
+      Def ("key_block",       Name_Key_Block);
+      Def ("data_block",      Name_Data_Block);
 
       --  Verilog system tasks
       Def ("display", Name_Display);

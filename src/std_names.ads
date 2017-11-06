@@ -583,7 +583,12 @@ package Std_Names is
    Name_Include :        constant Name_Id := Name_First_Directive + 03;
    Name_Timescale :      constant Name_Id := Name_First_Directive + 04;
    Name_Undef :          constant Name_Id := Name_First_Directive + 05;
-   Name_Last_Directive : constant Name_Id := Name_Undef;
+   Name_Protect :        constant Name_Id := Name_First_Directive + 06;
+   Name_Begin_Protected : constant Name_Id := Name_First_Directive + 07;
+   Name_End_Protected :  constant Name_Id := Name_First_Directive + 08;
+   Name_Key_Block :      constant Name_Id := Name_First_Directive + 09;
+   Name_Data_Block :     constant Name_Id := Name_First_Directive + 10;
+   Name_Last_Directive : constant Name_Id := Name_Data_Block;
 
    --  Verilog system tasks.
    Name_First_Systask :  constant Name_Id := Name_Last_Directive + 1;
