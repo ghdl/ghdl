@@ -2794,7 +2794,8 @@ package body Sem_Expr is
      return boolean
    is
       Base_Type : constant Iir := Get_Base_Type (A_Type);
-      El_List : constant Iir_List := Get_Elements_Declaration_List (Base_Type);
+      El_List : constant Iir_Flist :=
+        Get_Elements_Declaration_List (Base_Type);
 
       --  Type of the element.
       El_Type : Iir;
@@ -2843,7 +2844,7 @@ package body Sem_Expr is
             Ok := False;
             return Ass;
          end if;
-         Aggr_El := Find_Name_In_List (El_List, Get_Identifier (Expr));
+         Aggr_El := Find_Name_In_Flist (El_List, Get_Identifier (Expr));
          if Aggr_El = Null_Iir then
             Error_Msg_Sem (+Ass, "record has no such element %n", +Ass);
             Ok := False;

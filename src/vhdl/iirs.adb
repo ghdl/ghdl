@@ -3145,20 +3145,20 @@ package body Iirs is
       Set_Field8 (Def, El);
    end Set_Array_Element_Constraint;
 
-   function Get_Elements_Declaration_List (Decl : Iir) return Iir_List is
+   function Get_Elements_Declaration_List (Decl : Iir) return Iir_Flist is
    begin
       pragma Assert (Decl /= Null_Iir);
       pragma Assert (Has_Elements_Declaration_List (Get_Kind (Decl)),
                      "no field Elements_Declaration_List");
-      return Iir_To_Iir_List (Get_Field1 (Decl));
+      return Iir_To_Iir_Flist (Get_Field1 (Decl));
    end Get_Elements_Declaration_List;
 
-   procedure Set_Elements_Declaration_List (Decl : Iir; List : Iir_List) is
+   procedure Set_Elements_Declaration_List (Decl : Iir; List : Iir_Flist) is
    begin
       pragma Assert (Decl /= Null_Iir);
       pragma Assert (Has_Elements_Declaration_List (Get_Kind (Decl)),
                      "no field Elements_Declaration_List");
-      Set_Field1 (Decl, Iir_List_To_Iir (List));
+      Set_Field1 (Decl, Iir_Flist_To_Iir (List));
    end Set_Elements_Declaration_List;
 
    function Get_Designated_Type (Target : Iir) return Iir is

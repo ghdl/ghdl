@@ -1619,7 +1619,7 @@ package body Trans.Rtis is
    procedure Generate_Record_Type_Definition (Atype : Iir)
    is
       Info      : constant Type_Info_Acc := Get_Info (Atype);
-      El_List   : Iir_List;
+      El_List   : Iir_Flist;
       El        : Iir;
       Prev      : Rti_Block;
       El_Arr    : O_Dnode;
@@ -1636,9 +1636,8 @@ package body Trans.Rtis is
 
       --  Generate elements.
       Push_Rti_Node (Prev, False);
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (El_List) loop
          El := Get_Nth_Element (El_List, I);
-         exit when El = Null_Iir;
          declare
             El_Type    : constant Iir := Get_Type (El);
             Field_Info : constant Field_Info_Acc := Get_Info (El);

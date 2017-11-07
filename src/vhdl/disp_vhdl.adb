@@ -518,13 +518,12 @@ package body Disp_Vhdl is
 
    procedure Disp_Record_Element_Constraint (Def : Iir)
    is
-      El_List : constant Iir_List := Get_Elements_Declaration_List (Def);
+      El_List : constant Iir_Flist := Get_Elements_Declaration_List (Def);
       El : Iir;
       Has_El : Boolean := False;
    begin
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (El_List) loop
          El := Get_Nth_Element (El_List, I);
-         exit when El = Null_Iir;
          if Get_Kind (El) = Iir_Kind_Record_Element_Constraint
            and then Get_Parent (El) = Def
          then
@@ -762,17 +761,15 @@ package body Disp_Vhdl is
    procedure Disp_Record_Type_Definition
      (Def: Iir_Record_Type_Definition; Indent: Count)
    is
-      List : Iir_List;
+      List : constant Iir_Flist := Get_Elements_Declaration_List (Def);
       El: Iir_Element_Declaration;
       Reindent : Boolean;
    begin
       Put_Line ("record");
       Set_Col (Indent);
-      List := Get_Elements_Declaration_List (Def);
       Reindent := True;
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (List) loop
          El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
          if Reindent then
             Set_Col (Indent + Indentation);
          end if;

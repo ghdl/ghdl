@@ -1399,14 +1399,14 @@ package body Sem is
                return False;
             end if;
             declare
-               L_Left, L_Right : Iir_List;
+               L_Left : constant Iir_Flist :=
+                 Get_Elements_Declaration_List (Left);
+               L_Right : constant Iir_Flist :=
+                 Get_Elements_Declaration_List (Right);
             begin
-               L_Left := Get_Elements_Declaration_List (Left);
-               L_Right := Get_Elements_Declaration_List (Right);
-               for I in Natural loop
+               for I in Flist_First .. Flist_Last (L_Left) loop
                   El_Left := Get_Nth_Element (L_Left, I);
                   El_Right := Get_Nth_Element (L_Right, I);
-                  exit when El_Left = Null_Iir;
                   if not Are_Trees_Equal (El_Left, El_Right) then
                      return False;
                   end if;

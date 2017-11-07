@@ -101,13 +101,12 @@ package body Sem_Types is
          when Iir_Kind_Record_Type_Definition
            | Iir_Kind_Record_Subtype_Definition =>
             declare
-               El_List : constant Iir_List :=
+               El_List : constant Iir_Flist :=
                  Get_Elements_Declaration_List (Atype);
                El : Iir;
             begin
-               for I in Natural loop
+               for I in Flist_First .. Flist_Last (El_List) loop
                   El := Get_Nth_Element (El_List, I);
-                  exit when El = Null_Iir;
                   Set_Type_Has_Signal (Get_Type (El));
                end loop;
             end;
@@ -806,8 +805,8 @@ package body Sem_Types is
       --  Analyzed type of previous element
       Last_Type : Iir;
 
-      El_List : constant Iir_List := Get_Elements_Declaration_List (Def);
-      El: Iir;
+      El_List : constant Iir_Flist := Get_Elements_Declaration_List (Def);
+      El : Iir;
       El_Type : Iir;
       Resolved_Flag : Boolean;
       Type_Staticness : Iir_Staticness;
@@ -823,10 +822,8 @@ package body Sem_Types is
       Constraint := Fully_Constrained;
       Set_Signal_Type_Flag (Def, True);
 
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (El_List) loop
          El := Get_Nth_Element (El_List, I);
-         exit when El = Null_Iir;
-
          El_Type := Get_Subtype_Indication (El);
          if El_Type /= Null_Iir then
             --  Be careful for a declaration list (r,g,b: integer).
@@ -1373,16 +1370,14 @@ package body Sem_Types is
    --  Create a copy of elements_declaration_list of SRC and set it to DST.
    procedure Copy_Record_Elements_Declaration_List (Dst : Iir; Src : Iir)
    is
-      El_List, New_El_List : Iir_List;
+      El_List : constant Iir_Flist := Get_Elements_Declaration_List (Src);
+      New_El_List : Iir_Flist;
       El, New_El : Iir;
    begin
-      New_El_List := Create_Iir_List;
+      New_El_List := Create_Iir_Flist (Get_Nbr_Elements (El_List));
       Set_Elements_Declaration_List (Dst, New_El_List);
-      El_List := Get_Elements_Declaration_List (Src);
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (El_List) loop
          El := Get_Nth_Element (El_List, I);
-         exit when El = Null_Iir;
-
          New_El := Create_Iir (Iir_Kind_Element_Declaration);
          Location_Copy (New_El, El);
          Set_Parent (New_El, Dst);
@@ -1391,7 +1386,7 @@ package body Sem_Types is
          Set_Base_Element_Declaration (New_El,
                                        Get_Base_Element_Declaration (El));
          Set_Element_Position (New_El, Get_Element_Position (El));
-         Append_Element (New_El_List, New_El);
+         Set_Nth_Element (New_El_List, I, New_El);
       end loop;
    end Copy_Record_Elements_Declaration_List;
 
@@ -1755,13 +1750,10 @@ package body Sem_Types is
       El_List : Iir_List;
       El : Iir;
    begin
-      if Get_Prefix (Def) /= Null_Iir then
-         raise Internal_Error;
-      end if;
+      pragma Assert (Get_Prefix (Def) = Null_Iir);
       Res := Create_Iir (Iir_Kind_Record_Subtype_Definition);
       Location_Copy (Res, Def);
       El_List := Create_Iir_List;
-      Set_Elements_Declaration_List (Res, El_List);
       Chain := Get_Association_Chain (Def);
       while Chain /= Null_Iir loop
          if Get_Kind (Chain) /= Iir_Kind_Association_Element_By_Expression
@@ -1776,6 +1768,7 @@ package body Sem_Types is
          end if;
          Chain := Get_Chain (Chain);
       end loop;
+      Set_Elements_Declaration_List (Res, List_To_Flist (El_List));
       return Res;
    end Reparse_As_Record_Constraint;
 
@@ -1842,12 +1835,12 @@ package body Sem_Types is
      (Def : Iir; Type_Mark : Iir; Resolution : Iir) return Iir
    is
       Res : Iir;
-      El_List, Tm_El_List : Iir_List;
+      El_List, Tm_El_List : Iir_Flist;
       El : Iir;
       Tm_El : Iir;
       Tm_El_Type : Iir;
       El_Type : Iir;
-      Res_List : Iir_List;
+      Res_List : Iir_Flist;
 
       Index_List : Iir_Flist;
       Index_El : Iir;
@@ -1865,20 +1858,18 @@ package body Sem_Types is
             Free_Name (Def);
             Set_Signal_Type_Flag (Res, Get_Signal_Type_Flag (Type_Mark));
             Set_Constraint_State (Res, Get_Constraint_State (Type_Mark));
-            El_List := Null_Iir_List;
+            El_List := Null_Iir_Flist;
 
          when Iir_Kind_Array_Subtype_Definition =>
             --  Record constraints are parsed as array constraints.
             pragma Assert (Get_Kind (Def) = Iir_Kind_Array_Subtype_Definition);
             Index_List := Get_Index_Constraint_List (Def);
-            El_List := Create_Iir_List;
+            El_List := Create_Iir_Flist (Get_Nbr_Elements (Index_List));
             Set_Elements_Declaration_List (Res, El_List);
             for I in Flist_First .. Flist_Last (Index_List) loop
                Index_El := Get_Nth_Element (Index_List, I);
                El := Reparse_As_Record_Element_Constraint (Index_El);
-               if El /= Null_Iir then
-                  Append_Element (El_List, El);
-               end if;
+               Set_Nth_Element (El_List, I, El);
             end loop;
 
          when Iir_Kind_Record_Subtype_Definition =>
@@ -1889,7 +1880,7 @@ package body Sem_Types is
             Error_Kind ("sem_record_constraint", Def);
       end case;
 
-      Res_List := Null_Iir_List;
+      Res_List := Null_Iir_Flist;
       if Resolution /= Null_Iir then
          case Get_Kind (Resolution) is
             when Iir_Kinds_Denoting_Name =>
@@ -1906,7 +1897,7 @@ package body Sem_Types is
       end if;
 
       Tm_El_List := Get_Elements_Declaration_List (Type_Mark);
-      if El_List /= Null_Iir_List or Res_List /= Null_Iir_List then
+      if El_List /= Null_Iir_Flist or Res_List /= Null_Iir_Flist then
          --  Constraints (either range or resolution) have been added.
          declare
             Nbr_Els : constant Natural := Get_Nbr_Elements (Tm_El_List);
@@ -1917,11 +1908,11 @@ package body Sem_Types is
             Staticness : Iir_Staticness;
          begin
             --  Fill ELS with record constraints.
-            if El_List /= Null_Iir_List then
-               for I in Natural loop
+            if El_List /= Null_Iir_Flist then
+               for I in Flist_First .. Flist_Last (El_List) loop
                   El := Get_Nth_Element (El_List, I);
-                  exit when El = Null_Iir;
-                  Tm_El := Find_Name_In_List (Tm_El_List, Get_Identifier (El));
+                  Tm_El :=
+                    Find_Name_In_Flist (Tm_El_List, Get_Identifier (El));
                   if Tm_El = Null_Iir then
                      --  Constraint element references an element name that
                      --  doesn't exist.
@@ -1963,15 +1954,15 @@ package body Sem_Types is
                   end if;
                end loop;
                --  Record element constraints are now in Els.
-               Destroy_Iir_List (El_List);
+               Destroy_Iir_Flist (El_List);
             end if;
 
             --  Fill Res_Els (handle resolution constraints).
-            if Res_List /= Null_Iir_List then
-               for I in Natural loop
+            if Res_List /= Null_Iir_Flist then
+               for I in Flist_First .. Flist_Last (Res_List) loop
                   El := Get_Nth_Element (Res_List, I);
-                  exit when El = Null_Iir;
-                  Tm_El := Find_Name_In_List (Tm_El_List, Get_Identifier (El));
+                  Tm_El :=
+                    Find_Name_In_Flist (Tm_El_List, Get_Identifier (El));
                   if Tm_El = Null_Iir then
                      Error_Msg_Sem (+El, "%n has no %n", (+Type_Mark, +El));
                   else
@@ -1987,11 +1978,11 @@ package body Sem_Types is
                   end if;
                   --Free_Iir (El);
                end loop;
-               Destroy_Iir_List (Res_List);
+               Destroy_Iir_Flist (Res_List);
             end if;
 
             --  Build elements list.
-            El_List := Create_Iir_List;
+            El_List := Create_Iir_Flist (Nbr_Els);
             Set_Elements_Declaration_List (Res, El_List);
             Constraint := Fully_Constrained;
             Staticness := Locally;
@@ -2021,7 +2012,7 @@ package body Sem_Types is
                                                      Res_Els (I));
                   Set_Type (El, El_Type);
                end if;
-               Append_Element (El_List, El);
+               Set_Nth_Element (El_List, I, El);
                Constraint := Update_Record_Constraint (Constraint, El_Type);
                Staticness := Min (Staticness, Get_Type_Staticness (El_Type));
             end loop;

@@ -6582,8 +6582,8 @@ package Iirs is
 
    --  Chains of elements of a record.
    --  Field: Field1 (uc)
-   function Get_Elements_Declaration_List (Decl : Iir) return Iir_List;
-   procedure Set_Elements_Declaration_List (Decl : Iir; List : Iir_List);
+   function Get_Elements_Declaration_List (Decl : Iir) return Iir_Flist;
+   procedure Set_Elements_Declaration_List (Decl : Iir; List : Iir_Flist);
 
    --  Field: Field1 Forward_Ref
    function Get_Designated_Type (Target : Iir) return Iir;

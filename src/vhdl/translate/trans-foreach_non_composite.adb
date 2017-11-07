@@ -79,7 +79,7 @@ begin
       when Type_Mode_Record
         | Type_Mode_Unbounded_Record =>
          declare
-            List           : constant Iir_List :=
+            List           : constant Iir_Flist :=
               Get_Elements_Declaration_List (Targ_Type);
             Var_Record     : Mnode;
             Sub_Data       : Data_Type;
@@ -90,9 +90,8 @@ begin
             Var_Record := Stabilize (Targ);
             Composite_Data :=
               Prepare_Data_Record (Var_Record, Targ_Type, Data);
-            for I in Natural loop
+            for I in Flist_First .. Flist_Last (List) loop
                El := Get_Nth_Element (List, I);
-               exit when El = Null_Iir;
                Sub_Data := Update_Data_Record (Composite_Data, Targ_Type, El);
                Foreach_Non_Composite
                  (Chap6.Translate_Selected_Element (Var_Record, El),

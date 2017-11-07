@@ -979,8 +979,9 @@ package body Sem_Assocs is
 
    procedure Finish_Individual_Assoc_Record (Assoc : Iir; Atype : Iir)
    is
-      El_List : constant Iir_List := Get_Elements_Declaration_List (Atype);
-      Matches : Iir_Array (0 .. Get_Nbr_Elements (El_List) - 1);
+      El_List : constant Iir_Flist := Get_Elements_Declaration_List (Atype);
+      Nbr_El : constant Natural := Get_Nbr_Elements (El_List);
+      Matches : Iir_Array (0 .. Nbr_El - 1);
       Ch : Iir;
       Pos : Natural;
       Rec_El : Iir;
@@ -1012,7 +1013,7 @@ package body Sem_Assocs is
          --  Some (sub-)elements are unbounded, create a bounded subtype.
          declare
             Ntype : Iir;
-            Nel_List : Iir_List;
+            Nel_List : Iir_Flist;
             Nrec_El : Iir;
             Rec_El_Type : Iir;
             Staticness : Iir_Staticness;
@@ -1024,7 +1025,7 @@ package body Sem_Assocs is
                Set_Resolution_Indication
                  (Ntype, Get_Resolution_Indication (Atype));
             end if;
-            Nel_List := Create_Iir_List;
+            Nel_List := Create_Iir_Flist (Nbr_El);
             Set_Elements_Declaration_List (Ntype, Nel_List);
 
             Staticness := Locally;
@@ -1054,7 +1055,7 @@ package body Sem_Assocs is
                end if;
                Staticness := Min (Staticness,
                                   Get_Type_Staticness (Get_Type (Nrec_El)));
-               Append_Element (Nel_List, Nrec_El);
+               Set_Nth_Element (Nel_List, I, Nrec_El);
             end loop;
             Set_Type_Staticness (Ntype, Staticness);
             Set_Constraint_State (Ntype, Fully_Constrained);

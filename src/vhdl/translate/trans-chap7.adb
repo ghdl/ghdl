@@ -815,16 +815,15 @@ package body Trans.Chap7 is
          when Iir_Kind_Record_Type_Definition
            | Iir_Kind_Record_Subtype_Definition =>
             declare
-               Expr_Els : constant Iir_List :=
+               Expr_Els : constant Iir_Flist :=
                  Get_Elements_Declaration_List (Expr_Type);
-               Atype_Els : constant Iir_List :=
+               Atype_Els : constant Iir_Flist :=
                  Get_Elements_Declaration_List (Atype);
                Expr_El, Atype_El : Iir;
                Expr_El_Type, Atype_El_Type : Iir;
             begin
-               for I in Natural loop
+               for I in Flist_First .. Flist_Last (Expr_Els) loop
                   Expr_El := Get_Nth_Element (Expr_Els, I);
-                  exit when Expr_El = Null_Iir;
                   Atype_El := Get_Nth_Element (Atype_Els, I);
                   Expr_El_Type := Get_Type (Expr_El);
                   Atype_El_Type := Get_Type (Atype_El);
@@ -3139,7 +3138,7 @@ package body Trans.Chap7 is
       Aggr_Type      : constant Iir := Get_Type (Aggr);
       Aggr_Base_Type : constant Iir_Record_Type_Definition :=
         Get_Base_Type (Aggr_Type);
-      El_List        : constant Iir_List :=
+      El_List        : constant Iir_Flist :=
         Get_Elements_Declaration_List (Aggr_Base_Type);
       El_Index       : Natural;
       Nbr_El         : constant Natural := Get_Nbr_Elements (El_List);
@@ -4808,7 +4807,7 @@ package body Trans.Chap7 is
       If_Blk         : O_If_Block;
       Le, Re         : Mnode;
 
-      El_List : Iir_List;
+      El_List : Iir_Flist;
       El      : Iir_Element_Declaration;
    begin
       if Global_Storage = O_Storage_External then
@@ -4823,9 +4822,8 @@ package body Trans.Chap7 is
 
       --   Compare each element.
       El_List := Get_Elements_Declaration_List (Rec_Type);
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (El_List) loop
          El := Get_Nth_Element (El_List, I);
-         exit when El = Null_Iir;
          Open_Temp;
          Le := Chap6.Translate_Selected_Element (L, El);
          Re := Chap6.Translate_Selected_Element (R, El);
@@ -5518,17 +5516,15 @@ package body Trans.Chap7 is
                New_Procedure_Call (Assocs);
             when Type_Mode_Record =>
                declare
-                  El_List : Iir_List;
+                  El_List : constant Iir_Flist :=
+                    Get_Elements_Declaration_List (Get_Base_Type (Val_Type));
                   El      : Iir;
                   Val1    : Mnode;
                begin
                   Open_Temp;
                   Val1 := Stabilize (Val);
-                  El_List := Get_Elements_Declaration_List
-                    (Get_Base_Type (Val_Type));
-                  for I in Natural loop
+                  for I in Flist_First .. Flist_Last (El_List) loop
                      El := Get_Nth_Element (El_List, I);
-                     exit when El = Null_Iir;
                      Translate_Rw
                        (Chap6.Translate_Selected_Element (Val1, El),
                         Get_Type (El), Proc);

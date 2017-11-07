@@ -2154,7 +2154,6 @@ package body Parse is
       Res := Create_Iir (Iir_Kind_Record_Type_Definition);
       Set_Location (Res);
       El_List := Create_Iir_List;
-      Set_Elements_Declaration_List (Res, El_List);
 
       --  Skip 'record'
       Scan;
@@ -2200,6 +2199,8 @@ package body Parse is
          Scan_Semi_Colon ("element declaration");
          exit when Current_Token = Tok_End;
       end loop;
+
+      Set_Elements_Declaration_List (Res, List_To_Flist (El_List));
 
       --  Skip 'end'
       Scan_Expect (Tok_Record);

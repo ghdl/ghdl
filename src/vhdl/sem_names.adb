@@ -1944,7 +1944,7 @@ package body Sem_Names is
             return;
          end if;
 
-         Rec_El := Find_Name_In_List
+         Rec_El := Find_Name_In_Flist
            (Get_Elements_Declaration_List (Name_Type), Suffix);
          if Rec_El = Null_Iir then
             --  No such element in the record type.

@@ -449,16 +449,15 @@ package body Trans.Chap4 is
             Init_Array_Object (Obj, Obj_Type);
          when Type_Mode_Records =>
             declare
-               List : constant Iir_List :=
+               List : constant Iir_Flist :=
                  Get_Elements_Declaration_List (Obj_Type);
                Sobj : Mnode;
                El   : Iir_Element_Declaration;
             begin
                Open_Temp;
                Sobj := Stabilize (Obj);
-               for I in Natural loop
+               for I in Flist_First .. Flist_Last (List) loop
                   El := Get_Nth_Element (List, I);
-                  exit when El = Null_Iir;
                   Init_Object (Chap6.Translate_Selected_Element (Sobj, El),
                                Get_Type (El));
                end loop;
@@ -696,7 +695,7 @@ package body Trans.Chap4 is
             end;
          when Type_Mode_Records =>
             declare
-               List   : constant Iir_List :=
+               List   : constant Iir_Flist :=
                  Get_Elements_Declaration_List (Get_Base_Type (Sig_Type));
                El     : Iir;
                Res    : O_Enode;
@@ -706,9 +705,8 @@ package body Trans.Chap4 is
             begin
                Ssig := Stabilize (Sig);
                Res := O_Enode_Null;
-               for I in Natural loop
+               for I in Flist_First .. Flist_Last (List) loop
                   El := Get_Nth_Element (List, I);
-                  exit when El = Null_Iir;
                   Sig_El := Chap6.Translate_Selected_Element (Ssig, El);
                   E := Get_Nbr_Signals (Sig_El, Get_Type (El));
                   if Res /= O_Enode_Null then
@@ -758,11 +756,10 @@ package body Trans.Chap4 is
                Res_Type := Get_Element_Subtype (Res_Type);
             when Type_Mode_Records =>
                declare
-                  Element : Iir;
+                  El_List : constant Iir_Flist :=
+                    Get_Elements_Declaration_List (Get_Base_Type (Res_Type));
+                  Element : constant Iir := Get_Nth_Element (El_List, 0);
                begin
-                  Element := Get_First_Element
-                    (Get_Elements_Declaration_List
-                       (Get_Base_Type (Res_Type)));
                   Res := Chap6.Translate_Selected_Element (Res, Element);
                   Res_Type := Get_Type (Element);
                end;

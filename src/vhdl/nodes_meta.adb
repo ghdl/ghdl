@@ -177,7 +177,7 @@ package body Nodes_Meta is
       Field_Element_Subtype => Type_Iir,
       Field_Index_Constraint_List => Type_Iir_Flist,
       Field_Array_Element_Constraint => Type_Iir,
-      Field_Elements_Declaration_List => Type_Iir_List,
+      Field_Elements_Declaration_List => Type_Iir_Flist,
       Field_Designated_Type => Type_Iir,
       Field_Designated_Subtype_Indication => Type_Iir,
       Field_Index_List => Type_Iir_Flist,
@@ -5917,6 +5917,8 @@ package body Nodes_Meta is
             return Get_Index_Subtype_Definition_List (N);
          when Field_Index_Constraint_List =>
             return Get_Index_Constraint_List (N);
+         when Field_Elements_Declaration_List =>
+            return Get_Elements_Declaration_List (N);
          when Field_Index_List =>
             return Get_Index_List (N);
          when Field_Type_Marks_List =>
@@ -5939,6 +5941,8 @@ package body Nodes_Meta is
             Set_Index_Subtype_Definition_List (N, V);
          when Field_Index_Constraint_List =>
             Set_Index_Constraint_List (N, V);
+         when Field_Elements_Declaration_List =>
+            Set_Elements_Declaration_List (N, V);
          when Field_Index_List =>
             Set_Index_List (N, V);
          when Field_Type_Marks_List =>
@@ -6083,8 +6087,6 @@ package body Nodes_Meta is
             return Get_Enumeration_Literal_List (N);
          when Field_Group_Constituent_List =>
             return Get_Group_Constituent_List (N);
-         when Field_Elements_Declaration_List =>
-            return Get_Elements_Declaration_List (N);
          when Field_Sensitivity_List =>
             return Get_Sensitivity_List (N);
          when Field_Callees_List =>
@@ -6121,8 +6123,6 @@ package body Nodes_Meta is
             Set_Enumeration_Literal_List (N, V);
          when Field_Group_Constituent_List =>
             Set_Group_Constituent_List (N, V);
-         when Field_Elements_Declaration_List =>
-            Set_Elements_Declaration_List (N, V);
          when Field_Sensitivity_List =>
             Set_Sensitivity_List (N, V);
          when Field_Callees_List =>

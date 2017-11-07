@@ -574,7 +574,8 @@ package body Iirs_Utils is
       end case;
    end Is_Parameter;
 
-   function Find_Name_In_List (List: Iir_List; Lit: Name_Id) return Iir is
+   function Find_Name_In_List (List: Iir_List; Lit: Name_Id) return Iir
+   is
       El: Iir;
       Ident: Name_Id;
    begin
@@ -588,6 +589,19 @@ package body Iirs_Utils is
       end loop;
       return Null_Iir;
    end Find_Name_In_List;
+
+   function Find_Name_In_Flist (List : Iir_Flist; Lit : Name_Id) return Iir
+   is
+      El : Iir;
+   begin
+      for I in Flist_First .. Flist_Last (List) loop
+         El := Get_Nth_Element (List, I);
+         if Get_Identifier (El) = Lit then
+            return El;
+         end if;
+      end loop;
+      return Null_Iir;
+   end Find_Name_In_Flist;
 
    function Find_Name_In_Chain (Chain: Iir; Lit: Name_Id) return Iir
    is
@@ -1129,13 +1143,12 @@ package body Iirs_Utils is
             pragma Assert (Get_Constraint_State (Def) = Fully_Constrained);
 
             declare
-               El_List : constant Iir_List :=
+               El_List : constant Iir_Flist :=
                  Get_Elements_Declaration_List (Def);
                El : Iir;
             begin
-               for I in Natural loop
+               for I in Flist_First .. Flist_Last (El_List) loop
                   El := Get_Nth_Element (El_List, I);
-                  exit when El = Null_Iir;
                   if not Are_Bounds_Locally_Static (Get_Type (El)) then
                      return False;
                   end if;
