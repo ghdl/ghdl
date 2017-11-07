@@ -487,6 +487,7 @@ package body Disp_Vhdl is
       Tm_El : constant Iir := Get_Element_Subtype (Type_Mark);
       Has_Index : constant Boolean := Get_Index_Constraint_Flag (Def);
       Has_Own_Element_Subtype : constant Boolean := Def_El /= Tm_El;
+      Indexes : Iir_Flist;
       Index : Iir;
    begin
       if not Has_Index and not Has_Own_Element_Subtype then
@@ -496,10 +497,10 @@ package body Disp_Vhdl is
       if Get_Constraint_State (Type_Mark) /= Fully_Constrained
         and then Has_Index
       then
+         Indexes := Get_Index_Subtype_List (Def);
          Put (" (");
-         for I in Natural loop
-            Index := Get_Nth_Element (Get_Index_Subtype_List (Def), I);
-            exit when Index = Null_Iir;
+         for I in Flist_First .. Flist_Last (Indexes) loop
+            Index := Get_Nth_Element (Indexes, I);
             if I /= 0 then
                Put (", ");
             end if;
@@ -641,15 +642,15 @@ package body Disp_Vhdl is
    procedure Disp_Enumeration_Type_Definition
      (Def: Iir_Enumeration_Type_Definition)
    is
+      Lits : constant Iir_Flist := Get_Enumeration_Literal_List (Def);
       Len : Count;
       Start_Col: Count;
       Decl: Name_Id;
       A_Lit: Iir; --Enumeration_Literal_Acc;
    begin
-      for I in Natural loop
-         A_Lit := Get_Nth_Element (Get_Enumeration_Literal_List (Def), I);
-         exit when A_Lit = Null_Iir;
-         if I = Natural'first then
+      for I in Flist_First .. Flist_Last (Lits) loop
+         A_Lit := Get_Nth_Element (Lits, I);
+         if I = 0 then
             Put ("(");
             Start_Col := Col;
          else
@@ -691,14 +692,14 @@ package body Disp_Vhdl is
 
    procedure Disp_Array_Subtype_Definition (Def: Iir_Array_Subtype_Definition)
    is
+      Indexes : constant Iir_Flist := Get_Index_Subtype_List (Def);
       Index: Iir;
    begin
       Disp_Resolution_Indication (Def);
 
       Put ("array (");
-      for I in Natural loop
-         Index := Get_Nth_Element (Get_Index_Subtype_List (Def), I);
-         exit when Index = Null_Iir;
+      for I in Flist_First .. Flist_Last (Indexes) loop
+         Index := Get_Nth_Element (Indexes, I);
          if I /= 0 then
             Put (", ");
          end if;
@@ -708,13 +709,14 @@ package body Disp_Vhdl is
       Disp_Subtype_Indication (Get_Element_Subtype (Def));
    end Disp_Array_Subtype_Definition;
 
-   procedure Disp_Array_Type_Definition (Def: Iir_Array_Type_Definition) is
+   procedure Disp_Array_Type_Definition (Def: Iir_Array_Type_Definition)
+   is
+      Indexes : constant Iir_Flist := Get_Index_Subtype_List (Def);
       Index: Iir;
    begin
       Put ("array (");
-      for I in Natural loop
-         Index := Get_Nth_Element (Get_Index_Subtype_List (Def), I);
-         exit when Index = Null_Iir;
+      for I in Flist_First .. Flist_Last (Indexes) loop
+         Index := Get_Nth_Element (Indexes, I);
          if I /= 0 then
             Put (", ");
          end if;
