@@ -2716,8 +2716,7 @@ package body Sem_Decls is
    end Sem_Alias_Declaration;
 
    procedure Sem_Group_Template_Declaration
-     (Decl : Iir_Group_Template_Declaration)
-   is
+     (Decl : Iir_Group_Template_Declaration) is
    begin
       Sem_Scopes.Add_Name (Decl);
       Sem_Scopes.Name_Visible (Decl);
@@ -2728,7 +2727,7 @@ package body Sem_Decls is
    is
       use Tokens;
 
-      Constituent_List : Iir_Group_Constituent_List;
+      Constituent_List : Iir_Flist;
       Template : Iir_Group_Template_Declaration;
       Template_Name : Iir;
       Class, Prev_Class : Token_Type;
@@ -2749,9 +2748,8 @@ package body Sem_Decls is
       Constituent_List := Get_Group_Constituent_List (Group);
       El_Entity := Get_Entity_Class_Entry_Chain (Template);
       Prev_Class := Tok_Eof;
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (Constituent_List) loop
          El := Get_Nth_Element (Constituent_List, I);
-         exit when El = Null_Iir;
 
          Sem_Name (El);
 
@@ -2780,7 +2778,7 @@ package body Sem_Decls is
             Error_Overload (El_Name);
          else
             El := Finish_Sem_Name (El);
-            Replace_Nth_Element (Constituent_List, I, El);
+            Set_Nth_Element (Constituent_List, I, El);
             El_Name := Get_Named_Entity (El);
 
             --  Statements are textually afer the group declaration.  To avoid

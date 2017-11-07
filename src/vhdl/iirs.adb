@@ -2648,20 +2648,20 @@ package body Iirs is
       Set_Field1 (Target, Chain);
    end Set_Entity_Class_Entry_Chain;
 
-   function Get_Group_Constituent_List (Group : Iir) return Iir_List is
+   function Get_Group_Constituent_List (Group : Iir) return Iir_Flist is
    begin
       pragma Assert (Group /= Null_Iir);
       pragma Assert (Has_Group_Constituent_List (Get_Kind (Group)),
                      "no field Group_Constituent_List");
-      return Iir_To_Iir_List (Get_Field1 (Group));
+      return Iir_To_Iir_Flist (Get_Field1 (Group));
    end Get_Group_Constituent_List;
 
-   procedure Set_Group_Constituent_List (Group : Iir; List : Iir_List) is
+   procedure Set_Group_Constituent_List (Group : Iir; List : Iir_Flist) is
    begin
       pragma Assert (Group /= Null_Iir);
       pragma Assert (Has_Group_Constituent_List (Get_Kind (Group)),
                      "no field Group_Constituent_List");
-      Set_Field1 (Group, Iir_List_To_Iir (List));
+      Set_Field1 (Group, Iir_Flist_To_Iir (List));
    end Set_Group_Constituent_List;
 
    function Get_Unit_Chain (Target : Iir) return Iir is

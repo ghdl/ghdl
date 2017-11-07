@@ -6433,8 +6433,8 @@ package Iirs is
    procedure Set_Entity_Class_Entry_Chain (Target : Iir; Chain : Iir);
 
    --  Field: Field1 (uc)
-   function Get_Group_Constituent_List (Group : Iir) return Iir_List;
-   procedure Set_Group_Constituent_List (Group : Iir; List : Iir_List);
+   function Get_Group_Constituent_List (Group : Iir) return Iir_Flist;
+   procedure Set_Group_Constituent_List (Group : Iir; List : Iir_Flist);
 
    --  Chain of physical type units.
    --  The first unit is the primary unit.  If you really need the primary

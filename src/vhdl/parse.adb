@@ -3875,20 +3875,30 @@ package body Parse is
                Res := Create_Iir (Iir_Kind_Group_Declaration);
                Set_Location (Res, Loc);
                Set_Identifier (Res, Ident);
+
+               --  Skip ':'.
                Scan;
+
                Set_Group_Template_Name
                  (Res, Parse_Name (Allow_Indexes => False));
+
+               --  Skip '('.
                Expect (Tok_Left_Paren);
                Scan;
                List := Create_Iir_List;
-               Set_Group_Constituent_List (Res, List);
                loop
                   Append_Element (List, Parse_Name (Allow_Indexes => False));
                   exit when Current_Token = Tok_Right_Paren;
+
+                  --  Skip ','.
                   Expect (Tok_Comma);
                   Scan;
                end loop;
+
+               --  Skip ')'.
                Scan_Expect (Tok_Semi_Colon);
+
+               Set_Group_Constituent_List (Res, List_To_Flist (List));
                return Res;
             end;
          when others =>

@@ -1682,7 +1682,7 @@ package body Disp_Vhdl is
 
    procedure Disp_Group_Declaration (Decl : Iir)
    is
-      List : Iir_List;
+      List : Iir_Flist;
       El : Iir;
    begin
       Put ("group ");
@@ -1691,9 +1691,8 @@ package body Disp_Vhdl is
       Disp_Name (Get_Group_Template_Name (Decl));
       Put (" (");
       List := Get_Group_Constituent_List (Decl);
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (List) loop
          El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
          if I /= 0 then
             Put (", ");
          end if;
