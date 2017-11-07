@@ -306,7 +306,7 @@ package body Nodes_Meta is
       Field_Has_Disconnect_Flag => Type_Boolean,
       Field_Has_Active_Flag => Type_Boolean,
       Field_Is_Within_Flag => Type_Boolean,
-      Field_Type_Marks_List => Type_Iir_List,
+      Field_Type_Marks_List => Type_Iir_Flist,
       Field_Implicit_Alias_Flag => Type_Boolean,
       Field_Alias_Signature => Type_Iir,
       Field_Attribute_Signature => Type_Iir,
@@ -5919,6 +5919,8 @@ package body Nodes_Meta is
             return Get_Index_Constraint_List (N);
          when Field_Index_List =>
             return Get_Index_List (N);
+         when Field_Type_Marks_List =>
+            return Get_Type_Marks_List (N);
          when others =>
             raise Internal_Error;
       end case;
@@ -5939,6 +5941,8 @@ package body Nodes_Meta is
             Set_Index_Constraint_List (N, V);
          when Field_Index_List =>
             Set_Index_List (N, V);
+         when Field_Type_Marks_List =>
+            Set_Type_Marks_List (N, V);
          when others =>
             raise Internal_Error;
       end case;
@@ -6089,8 +6093,6 @@ package body Nodes_Meta is
             return Get_Guard_Sensitivity_List (N);
          when Field_Instantiation_List =>
             return Get_Instantiation_List (N);
-         when Field_Type_Marks_List =>
-            return Get_Type_Marks_List (N);
          when Field_Overload_List =>
             return Get_Overload_List (N);
          when Field_PSL_Clock_Sensitivity =>
@@ -6129,8 +6131,6 @@ package body Nodes_Meta is
             Set_Guard_Sensitivity_List (N, V);
          when Field_Instantiation_List =>
             Set_Instantiation_List (N, V);
-         when Field_Type_Marks_List =>
-            Set_Type_Marks_List (N, V);
          when Field_Overload_List =>
             Set_Overload_List (N, V);
          when Field_PSL_Clock_Sensitivity =>

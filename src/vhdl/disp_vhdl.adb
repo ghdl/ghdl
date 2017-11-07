@@ -1258,7 +1258,7 @@ package body Disp_Vhdl is
    procedure Disp_Signature (Sig : Iir)
    is
       Prefix : constant Iir := Get_Signature_Prefix (Sig);
-      List : Iir_List;
+      List : constant Iir_Flist := Get_Type_Marks_List (Sig);
       El : Iir;
    begin
       if Is_Valid (Prefix) then
@@ -1266,11 +1266,9 @@ package body Disp_Vhdl is
          Disp_Name (Prefix);
       end if;
       Put (" [");
-      List := Get_Type_Marks_List (Sig);
-      if List /= Null_Iir_List then
-         for I in Natural loop
+      if List /= Null_Iir_Flist then
+         for I in Flist_First .. Flist_Last (List) loop
             El := Get_Nth_Element (List, I);
-            exit when El = Null_Iir;
             if I /= 0 then
                Put (", ");
             end if;

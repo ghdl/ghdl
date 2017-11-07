@@ -7245,8 +7245,8 @@ package Iirs is
 
    --  List of type_mark for an Iir_Kind_Signature
    --  Field: Field2 (uc)
-   function Get_Type_Marks_List (Target : Iir) return Iir_List;
-   procedure Set_Type_Marks_List (Target : Iir; List : Iir_List);
+   function Get_Type_Marks_List (Target : Iir) return Iir_Flist;
+   procedure Set_Type_Marks_List (Target : Iir; List : Iir_Flist);
 
    --  Field: Flag1
    function Get_Implicit_Alias_Flag (Decl : Iir) return Boolean;

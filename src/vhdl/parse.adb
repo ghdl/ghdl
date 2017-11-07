@@ -3498,12 +3498,14 @@ package body Parse is
       --  List of type_marks.
       if Current_Token = Tok_Identifier then
          List := Create_Iir_List;
-         Set_Type_Marks_List (Res, List);
          loop
             Append_Element (List, Parse_Type_Mark (Check_Paren => True));
             exit when Current_Token /= Tok_Comma;
+
+            --  Skip ','.
             Scan;
          end loop;
+         Set_Type_Marks_List (Res, List_To_Flist (List));
       end if;
 
       if Current_Token = Tok_Return then

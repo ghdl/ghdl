@@ -5220,20 +5220,20 @@ package body Iirs is
       Set_Flag5 (Target, Val);
    end Set_Is_Within_Flag;
 
-   function Get_Type_Marks_List (Target : Iir) return Iir_List is
+   function Get_Type_Marks_List (Target : Iir) return Iir_Flist is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Type_Marks_List (Get_Kind (Target)),
                      "no field Type_Marks_List");
-      return Iir_To_Iir_List (Get_Field2 (Target));
+      return Iir_To_Iir_Flist (Get_Field2 (Target));
    end Get_Type_Marks_List;
 
-   procedure Set_Type_Marks_List (Target : Iir; List : Iir_List) is
+   procedure Set_Type_Marks_List (Target : Iir; List : Iir_Flist) is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Type_Marks_List (Get_Kind (Target)),
                      "no field Type_Marks_List");
-      Set_Field2 (Target, Iir_List_To_Iir (List));
+      Set_Field2 (Target, Iir_Flist_To_Iir (List));
    end Set_Type_Marks_List;
 
    function Get_Implicit_Alias_Flag (Decl : Iir) return Boolean is

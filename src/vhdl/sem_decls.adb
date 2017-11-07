@@ -2248,11 +2248,10 @@ package body Sem_Decls is
    function Signature_Match (N_Entity : Iir; Sig : Iir_Signature)
                             return Boolean
    is
-      List : Iir_List;
+      List : constant Iir_Flist := Get_Type_Marks_List (Sig);
       Inter : Iir;
       El : Iir;
    begin
-      List := Get_Type_Marks_List (Sig);
       case Get_Kind (N_Entity) is
          when Iir_Kind_Enumeration_Literal =>
             --  LRM93 2.3.2  Signatures
@@ -2264,9 +2263,9 @@ package body Sem_Decls is
             if Get_Return_Type_Mark (Sig) = Null_Iir then
                return False;
             end if;
-            return List = Null_Iir_List
-              and then Get_Type (N_Entity)
-              = Get_Type (Get_Return_Type_Mark (Sig));
+            return List = Null_Iir_Flist
+              and then (Get_Type (N_Entity)
+                          = Get_Type (Get_Return_Type_Mark (Sig)));
          when Iir_Kind_Function_Declaration
            | Iir_Kind_Interface_Function_Declaration =>
             --  LRM93 2.3.2  Signatures
@@ -2305,15 +2304,13 @@ package body Sem_Decls is
       --    mark of the signature is the same as the base type of the
       --    corresponding formal parameter of the subprogram; [and finally, ]
       Inter := Get_Interface_Declaration_Chain (N_Entity);
-      if List = Null_Iir_List then
+      if List = Null_Iir_Flist then
          return Inter = Null_Iir;
       end if;
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (List) loop
          El := Get_Nth_Element (List, I);
-         if El = Null_Iir and Inter = Null_Iir then
-            return True;
-         end if;
-         if El = Null_Iir or Inter = Null_Iir then
+         if Inter = Null_Iir then
+            --  More type marks in the signature than in the interface.
             return False;
          end if;
          if Get_Base_Type (Get_Type (Inter)) /= Get_Type (El) then
@@ -2321,26 +2318,24 @@ package body Sem_Decls is
          end if;
          Inter := Get_Chain (Inter);
       end loop;
-      --  Avoid a spurious warning.
-      return False;
+      --  Match only if the number of type marks is the same.
+      return Inter = Null_Iir;
    end Signature_Match;
 
    --  Extract from NAME the named entity whose profile matches with SIG.
    function Sem_Signature (Name : Iir; Sig : Iir_Signature) return Iir
    is
+      List : constant Iir_Flist := Get_Type_Marks_List (Sig);
       Res : Iir;
       El : Iir;
-      List : Iir_List;
       Error : Boolean;
    begin
       --  Sem signature.
-      List := Get_Type_Marks_List (Sig);
-      if List /= Null_Iir_List then
-         for I in Natural loop
+      if List /= Null_Iir_Flist then
+         for I in Flist_First .. Flist_Last (List) loop
             El := Get_Nth_Element (List, I);
-            exit when El = Null_Iir;
             El := Sem_Type_Mark (El);
-            Replace_Nth_Element (List, I, El);
+            Set_Nth_Element (List, I, El);
 
             --  Reuse the Type field of the name for the base type.  This is
             --  a deviation from the use of Type in a name, but restricted to
