@@ -750,41 +750,36 @@ package body Sem_Types is
 
    function Sem_Enumeration_Type_Definition  (Def: Iir; Decl: Iir) return Iir
    is
+      Literal_List : constant Iir_Flist := Get_Enumeration_Literal_List (Def);
+      El: Iir;
+      Only_Characters : Boolean;
    begin
       Set_Base_Type (Def, Def);
       Set_Type_Staticness (Def, Locally);
       Set_Signal_Type_Flag (Def, True);
 
       --  Makes all literal visible.
-      declare
-         El: Iir;
-         Literal_List: Iir_List;
-         Only_Characters : Boolean;
-      begin
-         Only_Characters := True;
-         Literal_List := Get_Enumeration_Literal_List (Def);
-         for I in Natural loop
-            El := Get_Nth_Element (Literal_List, I);
-            exit when El = Null_Iir;
-            Set_Expr_Staticness (El, Locally);
-            Set_Name_Staticness (El, Locally);
-            Set_Type (El, Def);
-            Sem.Compute_Subprogram_Hash (El);
-            Sem_Scopes.Add_Name (El);
-            Name_Visible (El);
-            Xref_Decl (El);
+      Only_Characters := True;
+      for I in Flist_First .. Flist_Last (Literal_List) loop
+         El := Get_Nth_Element (Literal_List, I);
+         Set_Expr_Staticness (El, Locally);
+         Set_Name_Staticness (El, Locally);
+         Set_Type (El, Def);
+         Sem.Compute_Subprogram_Hash (El);
+         Sem_Scopes.Add_Name (El);
+         Name_Visible (El);
+         Xref_Decl (El);
 
-            --  LRM93 3.1.1 Enumeration types
-            --  An enumeration type is said to be a character type if at least
-            --  one of its enumeration literals is a character literal.
-            if Name_Table.Is_Character (Get_Identifier (El)) then
-               Set_Is_Character_Type (Def, True);
-            else
-               Only_Characters := False;
-            end if;
-         end loop;
-         Set_Only_Characters_Flag (Def, Only_Characters);
-      end;
+         --  LRM93 3.1.1 Enumeration types
+         --  An enumeration type is said to be a character type if at least
+         --  one of its enumeration literals is a character literal.
+         if Name_Table.Is_Character (Get_Identifier (El)) then
+            Set_Is_Character_Type (Def, True);
+         else
+            Only_Characters := False;
+         end if;
+      end loop;
+      Set_Only_Characters_Flag (Def, Only_Characters);
       Set_Resolved_Flag (Def, False);
 
       Create_Range_Constraint_For_Enumeration_Type (Def);

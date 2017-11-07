@@ -1849,7 +1849,6 @@ package body Parse is
       Enum_Type := Create_Iir (Iir_Kind_Enumeration_Type_Definition);
       Set_Location (Enum_Type);
       Enum_List := Create_Iir_List;
-      Set_Enumeration_Literal_List (Enum_Type, Enum_List);
 
       --  LRM93 3.1.1
       --  The position number of the first listed enumeration literal is zero.
@@ -1906,6 +1905,8 @@ package body Parse is
 
       --  Skip ')'.
       Scan;
+
+      Set_Enumeration_Literal_List (Enum_Type, List_To_Flist (Enum_List));
 
       return Enum_Type;
    end Parse_Enumeration_Type_Definition;

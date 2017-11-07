@@ -38,7 +38,6 @@ package Iirs_Utils is
    --  Find LIT in the list of identifiers or characters LIST.
    --  Return the literal (whose name is LIT) or null_iir if not found.
    function Find_Name_In_Chain (Chain: Iir; Lit: Name_Id) return Iir;
-   function Find_Name_In_List (List : Iir_List; Lit: Name_Id) return Iir;
    function Find_Name_In_Flist (List : Iir_Flist; Lit: Name_Id) return Iir;
 
    --  Return TRUE if EL in an element of chain CHAIN.

@@ -640,6 +640,7 @@ package body Sem_Inst is
 
    procedure Set_Instance_On_Chain (Chain : Iir; Inst_Chain : Iir);
    procedure Set_Instance_On_Iir_List (N : Iir_List; Inst : Iir_List);
+   procedure Set_Instance_On_Iir_Flist (N : Iir_Flist; Inst : Iir_Flist);
 
    procedure Set_Instance_On_Iir (N : Iir; Inst : Iir) is
    begin
@@ -719,6 +720,28 @@ package body Sem_Inst is
                            raise Internal_Error;
                      end case;
                   end;
+               when Type_Iir_Flist =>
+                  declare
+                     S : constant Iir_Flist := Get_Iir_Flist (N, F);
+                     S_Inst : constant Iir_Flist := Get_Iir_Flist (Inst, F);
+                  begin
+                     case Get_Field_Attribute (F) is
+                        when Attr_None =>
+                           Set_Instance_On_Iir_Flist (S, S_Inst);
+                        when Attr_Of_Maybe_Ref =>
+                           if not Get_Is_Ref (N) then
+                              Set_Instance_On_Iir_Flist (S, S_Inst);
+                           end if;
+                        when Attr_Of_Ref
+                          | Attr_Ref
+                          | Attr_Forward_Ref =>
+                           null;
+                        when others =>
+                           --  Ref is specially handled in Instantiate_Iir.
+                           --  Others cannot appear for lists.
+                           raise Internal_Error;
+                     end case;
+                  end;
                when others =>
                   null;
             end case;
@@ -749,6 +772,28 @@ package body Sem_Inst is
             pragma Assert (El_Inst = Null_Iir);
       end case;
    end Set_Instance_On_Iir_List;
+
+   procedure Set_Instance_On_Iir_Flist (N : Iir_Flist; Inst : Iir_Flist)
+   is
+      El : Iir;
+      El_Inst : Iir;
+   begin
+      case N is
+         when Null_Iir_Flist
+           | Iir_Flist_All
+           | Iir_Flist_Others =>
+            pragma Assert (Inst = N);
+            return;
+         when others =>
+            pragma Assert (Get_Nbr_Elements (N) = Get_Nbr_Elements (Inst));
+            for I in Flist_First .. Flist_Last (N) loop
+               El := Get_Nth_Element (N, I);
+               El_Inst := Get_Nth_Element (Inst, I);
+
+               Set_Instance_On_Iir (El, El_Inst);
+            end loop;
+      end case;
+   end Set_Instance_On_Iir_Flist;
 
    procedure Set_Instance_On_Chain (Chain : Iir; Inst_Chain : Iir)
    is

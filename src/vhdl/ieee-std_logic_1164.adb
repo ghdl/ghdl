@@ -147,7 +147,7 @@ package body Ieee.Std_Logic_1164 is
       --  Get node of some literals.
       declare
          use Name_Table;
-         Lit_List : constant Iir_List := Get_Enumeration_Literal_List (Def);
+         Lit_List : constant Iir_Flist := Get_Enumeration_Literal_List (Def);
       begin
          if Get_Nbr_Elements (Lit_List) /= 9 then
             raise Error;

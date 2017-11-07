@@ -2408,7 +2408,7 @@ package body Sem_Decls is
       Type_Decl : constant Iir := Get_Type_Declarator (Def);
       Last : Iir;
       El : Iir;
-      Enum_List : Iir_Enumeration_Literal_List;
+      Enum_List : Iir_Flist;
 
       --  Append an implicit alias
       procedure Add_Implicit_Alias (Decl : Iir)
@@ -2453,9 +2453,8 @@ package body Sem_Decls is
          --      of the literals of the base type immediately follows the
          --      alias declaration for the enumeration type; [...]
          Enum_List := Get_Enumeration_Literal_List (Def);
-         for I in Natural loop
+         for I in Flist_First .. Flist_Last (Enum_List) loop
             El := Get_Nth_Element (Enum_List, I);
-            exit when El = Null_Iir;
             --  LRM93 4.3.3.2  Non-Object Aliases
             --      [...] each such implicit declaration has, as its alias
             --      designator, the simple name or character literal of the

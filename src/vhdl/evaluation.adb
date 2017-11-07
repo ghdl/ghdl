@@ -98,7 +98,7 @@ package body Evaluation is
      return Iir_Enumeration_Literal
    is
       Enum_Type : constant Iir := Get_Base_Type (Get_Type (Origin));
-      Enum_List : constant Iir_List :=
+      Enum_List : constant Iir_Flist :=
         Get_Enumeration_Literal_List (Enum_Type);
       Lit : constant Iir_Enumeration_Literal :=
         Get_Nth_Element (Enum_List, Integer (Val));
@@ -270,7 +270,7 @@ package body Evaluation is
                               return Iir_Enumeration_Literal
    is
       Enum_Type : constant Iir := Get_Base_Type (Get_Type (Origin));
-      Enum_List : constant Iir_List :=
+      Enum_List : constant Iir_Flist :=
         Get_Enumeration_Literal_List (Enum_Type);
    begin
       return Get_Nth_Element (Enum_List, Integer (Val));
@@ -280,7 +280,7 @@ package body Evaluation is
                               return Iir_Enumeration_Literal
    is
       Enum_Type : constant Iir := Get_Base_Type (Get_Type (Origin));
-      Enum_List : constant Iir_List :=
+      Enum_List : constant Iir_Flist :=
         Get_Enumeration_Literal_List (Enum_Type);
    begin
       return Get_Nth_Element (Enum_List, Boolean'Pos (Val));
@@ -465,7 +465,7 @@ package body Evaluation is
    is
       Element_Type : constant Iir := Get_Base_Type
         (Get_Element_Subtype (Get_Base_Type (Get_Type (Str))));
-      Literal_List : constant Iir_List :=
+      Literal_List : constant Iir_Flist :=
         Get_Enumeration_Literal_List (Element_Type);
 
       Len : constant Nat32 := Get_String_Length (Str);
@@ -908,10 +908,10 @@ package body Evaluation is
          when Iir_Predefined_Array_Sll
            | Iir_Predefined_Array_Srl =>
             declare
-               Enum_List : Iir_List;
-            begin
-               Enum_List := Get_Enumeration_Literal_List
+               Enum_List : constant Iir_Flist :=
+                 Get_Enumeration_Literal_List
                  (Get_Base_Type (Get_Element_Subtype (Get_Type (Left))));
+            begin
                E := Get_Nth_Element (Enum_List, 0);
             end;
          when Iir_Predefined_Array_Sla
@@ -1812,7 +1812,7 @@ package body Evaluation is
 
    function Build_Enumeration_Value (Val : String; Enum, Expr : Iir) return Iir
    is
-      List  : constant Iir_List := Get_Enumeration_Literal_List (Enum);
+      List  : constant Iir_Flist := Get_Enumeration_Literal_List (Enum);
       Value : String (Val'range);
       Id : Name_Id;
       Res : Iir;
@@ -1828,7 +1828,7 @@ package body Evaluation is
          end loop;
          Id := Get_Identifier (Value);
       end if;
-      Res := Find_Name_In_List (List, Id);
+      Res := Find_Name_In_Flist (List, Id);
       if Res /= Null_Iir then
          return Build_Constant (Res, Expr);
       else

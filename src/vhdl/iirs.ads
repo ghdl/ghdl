@@ -6425,8 +6425,8 @@ package Iirs is
    procedure Set_Associated_Type (Def : Iir; Atype : Iir);
 
    --  Field: Field2 (uc)
-   function Get_Enumeration_Literal_List (Target : Iir) return Iir_List;
-   procedure Set_Enumeration_Literal_List (Target : Iir; List : Iir_List);
+   function Get_Enumeration_Literal_List (Target : Iir) return Iir_Flist;
+   procedure Set_Enumeration_Literal_List (Target : Iir; List : Iir_Flist);
 
    --  Field: Field1 Chain
    function Get_Entity_Class_Entry_Chain (Target : Iir) return Iir;

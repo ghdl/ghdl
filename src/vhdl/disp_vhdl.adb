@@ -2676,7 +2676,7 @@ package body Disp_Vhdl is
    is
       Str_Id : constant String8_Id := Get_String8_Id (Str);
       Len : constant Nat32 := Get_String_Length (Str);
-      Literal_List : constant Iir_List :=
+      Literal_List : constant Iir_Flist :=
         Get_Enumeration_Literal_List (Get_Base_Type (El_Type));
       Pos : Nat8;
       Lit : Iir;

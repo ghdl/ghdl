@@ -326,21 +326,21 @@ package body Trans.Chap14 is
             | Type_Mode_E32 =>
             --  Should check it is not the last.
             declare
-               List : constant Iir_List := Get_Enumeration_Literal_List
+               List : constant Iir_Flist := Get_Enumeration_Literal_List
                  (Get_Base_Type (Expr_Type));
-               Limit : Iir;
+               Limit : Natural;
                L : O_Dnode;
             begin
                L := Create_Temp_Init (Ttype, Expr);
                if Is_Inc then
-                  Limit := Get_Last_Element (List);
+                  Limit := Get_Nbr_Elements (List) - 1;
                else
-                  Limit := Get_First_Element (List);
+                  Limit := 0;
                end if;
                Chap6.Check_Bound_Error
                  (New_Compare_Op (ON_Eq,
                   New_Obj_Value (L),
-                  New_Lit (Get_Ortho_Expr (Limit)),
+                  New_Lit (Get_Ortho_Expr (Get_Nth_Element (List, Limit))),
                   Ghdl_Bool_Type),
                   Attr, 0);
                return New_Convert_Ov

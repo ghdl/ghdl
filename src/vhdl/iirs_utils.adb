@@ -574,22 +574,6 @@ package body Iirs_Utils is
       end case;
    end Is_Parameter;
 
-   function Find_Name_In_List (List: Iir_List; Lit: Name_Id) return Iir
-   is
-      El: Iir;
-      Ident: Name_Id;
-   begin
-      for I in Natural loop
-         El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
-         Ident := Get_Identifier (El);
-         if Ident = Lit then
-            return El;
-         end if;
-      end loop;
-      return Null_Iir;
-   end Find_Name_In_List;
-
    function Find_Name_In_Flist (List : Iir_Flist; Lit : Name_Id) return Iir
    is
       El : Iir;
@@ -767,15 +751,19 @@ package body Iirs_Utils is
      (Def : Iir_Enumeration_Type_Definition)
    is
       Range_Expr : Iir_Range_Expression;
-      Literal_List : constant Iir_List := Get_Enumeration_Literal_List (Def);
+      Literal_List : constant Iir_Flist := Get_Enumeration_Literal_List (Def);
    begin
       --  Create a constraint.
       Range_Expr := Create_Iir (Iir_Kind_Range_Expression);
       Location_Copy (Range_Expr, Def);
       Set_Type (Range_Expr, Def);
       Set_Direction (Range_Expr, Iir_To);
-      Set_Left_Limit (Range_Expr, Get_First_Element (Literal_List));
-      Set_Right_Limit (Range_Expr, Get_Last_Element (Literal_List));
+      Set_Left_Limit
+        (Range_Expr,
+         Get_Nth_Element (Literal_List, 0));
+      Set_Right_Limit
+        (Range_Expr,
+         Get_Nth_Element (Literal_List, Get_Nbr_Elements (Literal_List) - 1));
       Set_Expr_Staticness (Range_Expr, Locally);
       Set_Range_Constraint (Def, Range_Expr);
    end Create_Range_Constraint_For_Enumeration_Type;

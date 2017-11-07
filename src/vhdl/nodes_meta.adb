@@ -144,7 +144,7 @@ package body Nodes_Meta is
       Field_Complete_Type_Definition => Type_Iir,
       Field_Incomplete_Type_Ref_Chain => Type_Iir,
       Field_Associated_Type => Type_Iir,
-      Field_Enumeration_Literal_List => Type_Iir_List,
+      Field_Enumeration_Literal_List => Type_Iir_Flist,
       Field_Entity_Class_Entry_Chain => Type_Iir,
       Field_Group_Constituent_List => Type_Iir_List,
       Field_Unit_Chain => Type_Iir,
@@ -5911,6 +5911,8 @@ package body Nodes_Meta is
       case F is
          when Field_Simple_Aggregate_List =>
             return Get_Simple_Aggregate_List (N);
+         when Field_Enumeration_Literal_List =>
+            return Get_Enumeration_Literal_List (N);
          when Field_Index_Subtype_List =>
             return Get_Index_Subtype_List (N);
          when Field_Index_Subtype_Definition_List =>
@@ -5935,6 +5937,8 @@ package body Nodes_Meta is
       case F is
          when Field_Simple_Aggregate_List =>
             Set_Simple_Aggregate_List (N, V);
+         when Field_Enumeration_Literal_List =>
+            Set_Enumeration_Literal_List (N, V);
          when Field_Index_Subtype_List =>
             Set_Index_Subtype_List (N, V);
          when Field_Index_Subtype_Definition_List =>
@@ -6083,8 +6087,6 @@ package body Nodes_Meta is
             return Get_Entity_Name_List (N);
          when Field_Signal_List =>
             return Get_Signal_List (N);
-         when Field_Enumeration_Literal_List =>
-            return Get_Enumeration_Literal_List (N);
          when Field_Group_Constituent_List =>
             return Get_Group_Constituent_List (N);
          when Field_Sensitivity_List =>
@@ -6119,8 +6121,6 @@ package body Nodes_Meta is
             Set_Entity_Name_List (N, V);
          when Field_Signal_List =>
             Set_Signal_List (N, V);
-         when Field_Enumeration_Literal_List =>
-            Set_Enumeration_Literal_List (N, V);
          when Field_Group_Constituent_List =>
             Set_Group_Constituent_List (N, V);
          when Field_Sensitivity_List =>

@@ -221,7 +221,7 @@ package body Trans.Chap3 is
    procedure Translate_Enumeration_Type
      (Def : Iir_Enumeration_Type_Definition)
    is
-      El_List  : constant Iir_List := Get_Enumeration_Literal_List (Def);
+      El_List  : constant Iir_Flist := Get_Enumeration_Literal_List (Def);
       Nbr      : constant Natural := Get_Nbr_Elements (El_List);
       Info     : constant Type_Info_Acc := Get_Info (Def);
       El       : Iir_Enumeration_Literal;
@@ -236,9 +236,8 @@ package body Trans.Chap3 is
          Size := 32;
       end if;
       Start_Enum_Type (Constr, Size);
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (El_List) loop
          El := Get_Nth_Element (El_List, I);
-         exit when El = Null_Iir;
 
          Lit_Name := Translate_Enumeration_Literal (El);
          New_Enum_Literal (Constr, Lit_Name, Val);
@@ -259,7 +258,7 @@ package body Trans.Chap3 is
    procedure Translate_Bool_Type (Def : Iir_Enumeration_Type_Definition)
    is
       Info    : constant Type_Info_Acc := Get_Info (Def);
-      El_List : constant Iir_List := Get_Enumeration_Literal_List (Def);
+      El_List : constant Iir_Flist := Get_Enumeration_Literal_List (Def);
       pragma Assert (Get_Nbr_Elements (El_List) = 2);
 
       False_Lit : constant Iir := Get_Nth_Element (El_List, 0);

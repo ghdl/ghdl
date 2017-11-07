@@ -348,7 +348,7 @@ package body Disp_Tree is
       else
          declare
             El : constant Iir := Get_Base_Type (Get_Element_Subtype (T));
-            Lits : constant Iir_List := Get_Enumeration_Literal_List (El);
+            Lits : constant Iir_Flist := Get_Enumeration_Literal_List (El);
             Res : String (1 .. Natural (Len));
             C : Natural;
          begin

@@ -3948,9 +3948,9 @@ package body Sem_Names is
                  and then Kind_In (Name, Iir_Kind_Simple_Name,
                                    Iir_Kind_Character_Literal)
                then
-                  Res := Find_Name_In_List (Get_Enumeration_Literal_List
-                                              (Get_Base_Type (A_Type)),
-                                            Get_Identifier (Name));
+                  Res := Find_Name_In_Flist (Get_Enumeration_Literal_List
+                                               (Get_Base_Type (A_Type)),
+                                             Get_Identifier (Name));
                   if Res /= Null_Iir then
                      Error_Msg_Sem
                        (+Name, "enumeration literal %i is not visible "

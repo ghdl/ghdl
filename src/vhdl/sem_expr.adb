@@ -1944,7 +1944,7 @@ package body Sem_Expr is
          --  be visible at the place of the string literal.
 
          --  Character C is not visible...
-         if Find_Name_In_List (Get_Enumeration_Literal_List (Etype), Id)
+         if Find_Name_In_Flist (Get_Enumeration_Literal_List (Etype), Id)
            = Null_Iir
          then
             --  ... because it is not defined.

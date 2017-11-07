@@ -170,7 +170,7 @@ package body Trans.Chap7 is
    is
       use Name_Table;
 
-      Literal_List : constant Iir_List :=
+      Literal_List : constant Iir_Flist :=
         Get_Enumeration_Literal_List (Get_Base_Type (El_Type));
       Len          : constant Nat32 := Get_String_Length (Str);
       Id           : constant String8_Id := Get_String8_Id (Str);
@@ -421,7 +421,8 @@ package body Trans.Chap7 is
    is
       use Name_Table;
 
-      Literal_List : Iir_List;
+      Literal_List : constant Iir_Flist :=
+        Get_Enumeration_Literal_List (Character_Type_Definition);
       Lit          : Iir;
       List         : O_Array_Aggr_List;
       Res          : O_Cnode;
@@ -430,7 +431,6 @@ package body Trans.Chap7 is
 
       Start_Array_Aggr (List, Get_Ortho_Type (Str_Type, Mode_Value));
 
-      Literal_List := Get_Enumeration_Literal_List (Character_Type_Definition);
       Image (Str_Ident);
       for I in 1 .. Nam_Length loop
          Lit := Get_Nth_Element (Literal_List,
@@ -506,10 +506,10 @@ package body Trans.Chap7 is
          when Iir_Kind_Enumeration_Literal =>
             declare
                Enum_Type : constant Iir := Get_Base_Type (Get_Type (Expr));
-               Lit_List : Iir_List;
+               Lit_List : constant Iir_Flist :=
+                 Get_Enumeration_Literal_List (Enum_Type);
                Enum : Iir;
             begin
-               Lit_List := Get_Enumeration_Literal_List (Enum_Type);
                Enum := Get_Nth_Element
                  (Lit_List, Natural (Get_Enum_Pos (Expr)));
                return Get_Ortho_Expr (Enum);
@@ -1968,7 +1968,7 @@ package body Trans.Chap7 is
      (Op : ON_Op_Kind; Operand : Iir; Res_Type : Iir) return O_Enode
    is
       Arr_Type  : constant Iir := Get_Type (Operand);
-      Enums     : constant Iir_List :=
+      Enums     : constant Iir_Flist :=
         Get_Enumeration_Literal_List (Get_Base_Type (Res_Type));
       Init_Enum : Iir;
 
@@ -2073,7 +2073,7 @@ package body Trans.Chap7 is
    function Translate_Predefined_TF_Edge (Is_Rising : Boolean; Left : Iir)
                                          return O_Enode
    is
-      Enums : constant Iir_List :=
+      Enums : constant Iir_Flist :=
         Get_Enumeration_Literal_List (Get_Base_Type (Get_Type (Left)));
       Sig  : Mnode;
       Val  : Mnode;
@@ -5208,12 +5208,12 @@ package body Trans.Chap7 is
          case Shift is
             when Sh_Logical =>
                declare
-                  Enum_List : Iir_List;
-               begin
-                  Enum_List := Get_Enumeration_Literal_List
+                  Enum_List : constant Iir_Flist :=
+                    Get_Enumeration_Literal_List
                     (Get_Base_Type (Get_Element_Subtype (Arr_Type)));
+               begin
                   Tmp := New_Lit
-                    (Get_Ortho_Expr (Get_First_Element (Enum_List)));
+                    (Get_Ortho_Expr (Get_Nth_Element (Enum_List, 0)));
                end;
             when Sh_Arith =>
                Tmp := New_Obj_Value (Var_E);

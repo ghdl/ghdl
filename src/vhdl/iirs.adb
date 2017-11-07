@@ -2616,20 +2616,20 @@ package body Iirs is
       Set_Field5 (Def, Atype);
    end Set_Associated_Type;
 
-   function Get_Enumeration_Literal_List (Target : Iir) return Iir_List is
+   function Get_Enumeration_Literal_List (Target : Iir) return Iir_Flist is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Enumeration_Literal_List (Get_Kind (Target)),
                      "no field Enumeration_Literal_List");
-      return Iir_To_Iir_List (Get_Field2 (Target));
+      return Iir_To_Iir_Flist (Get_Field2 (Target));
    end Get_Enumeration_Literal_List;
 
-   procedure Set_Enumeration_Literal_List (Target : Iir; List : Iir_List) is
+   procedure Set_Enumeration_Literal_List (Target : Iir; List : Iir_Flist) is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Enumeration_Literal_List (Get_Kind (Target)),
                      "no field Enumeration_Literal_List");
-      Set_Field2 (Target, Iir_List_To_Iir (List));
+      Set_Field2 (Target, Iir_Flist_To_Iir (List));
    end Set_Enumeration_Literal_List;
 
    function Get_Entity_Class_Entry_Chain (Target : Iir) return Iir is

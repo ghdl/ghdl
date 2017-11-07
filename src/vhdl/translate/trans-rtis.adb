@@ -1079,9 +1079,9 @@ package body Trans.Rtis is
       end if;
 
       declare
-         Lit_List : constant Iir_List :=
+         Lit_List : constant Iir_Flist :=
            Get_Enumeration_Literal_List (Atype);
-         Nbr_Lit  : constant Integer := Get_Nbr_Elements (Lit_List);
+         Nbr_Lit  : constant Natural := Get_Nbr_Elements (Lit_List);
          Lit      : Iir;
 
          type Dnode_Array is array (Natural range <>) of O_Dnode;

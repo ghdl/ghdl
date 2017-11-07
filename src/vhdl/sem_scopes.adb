@@ -988,7 +988,7 @@ package body Sem_Scopes is
          when Iir_Kind_Type_Declaration =>
             declare
                Def : constant Iir := Get_Type_Definition (Decl);
-               List : Iir_List;
+               List : Iir_Flist;
                El : Iir;
             begin
                -- Handle incomplete type declaration.
@@ -1000,9 +1000,8 @@ package body Sem_Scopes is
 
                if Get_Kind (Def) = Iir_Kind_Enumeration_Type_Definition then
                   List := Get_Enumeration_Literal_List (Def);
-                  for I in Natural loop
+                  for I in Flist_First .. Flist_Last (List) loop
                      El := Get_Nth_Element (List, I);
-                     exit when El = Null_Iir;
                      Handle_Decl (El, Arg);
                   end loop;
                end if;
@@ -1327,13 +1326,12 @@ package body Sem_Scopes is
             --    an enumeration type, the enumeration literals of the base
             --    type
             declare
-               List : constant Iir_List :=
+               List : constant Iir_Flist :=
                  Get_Enumeration_Literal_List (Base_Type);
                El : Iir;
             begin
-               for I in Natural loop
+               for I in Flist_First .. Flist_Last (List) loop
                   El := Get_Nth_Element (List, I);
-                  exit when El = Null_Iir;
                   Potentially_Add_Name (El);
                end loop;
             end;

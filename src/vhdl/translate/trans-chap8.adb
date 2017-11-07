@@ -400,9 +400,9 @@ package body Trans.Chap8 is
                  (Get_Ortho_Type (Base_Type, Mode_Value), Integer_64 (Val)));
          when Iir_Kind_Enumeration_Type_Definition =>
             declare
-               List : Iir_List;
+               List : constant Iir_Flist :=
+                 Get_Enumeration_Literal_List (Base_Type);
             begin
-               List := Get_Enumeration_Literal_List (Base_Type);
                --  FIXME: what about type E is ('T') ??
                if Natural (Val) > Get_Nbr_Elements (List) then
                   raise Internal_Error;

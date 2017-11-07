@@ -479,13 +479,12 @@ package body Sem_Specs is
                   Def := Get_Type_Definition (El);
                   if Get_Kind (Def) = Iir_Kind_Enumeration_Type_Definition then
                      declare
-                        List : Iir_List;
+                        List : constant Iir_Flist :=
+                          Get_Enumeration_Literal_List (Def);
                         El1 : Iir;
                      begin
-                        List := Get_Enumeration_Literal_List (Def);
-                        for I in Natural loop
+                        for I in Flist_First .. Flist_Last (List) loop
                            El1 := Get_Nth_Element (List, I);
-                           exit when El1 = Null_Iir;
                            Sem_Named_Entity (El1);
                         end loop;
                      end;
