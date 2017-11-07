@@ -98,6 +98,42 @@ package body Nodes_GC is
       end case;
    end Mark_Iir_List_Ref;
 
+   procedure Mark_Iir_Flist (N : Iir_Flist)
+   is
+      El : Iir;
+   begin
+      case N is
+         when Null_Iir_Flist
+           | Iir_Flist_All
+           | Iir_Flist_Others =>
+            null;
+         when others =>
+            for I in Flist_First .. Flist_Last (N) loop
+               El := Get_Nth_Element (N, I);
+               Mark_Iir (El);
+            end loop;
+      end case;
+   end Mark_Iir_Flist;
+
+   procedure Mark_Iir_Flist_Ref (N : Iir_Flist; F : Fields_Enum)
+   is
+      El : Iir;
+   begin
+      case N is
+         when Null_Iir_Flist
+           | Iir_Flist_All
+           | Iir_Flist_Others =>
+            null;
+         when others =>
+            for I in Flist_First .. Flist_Last (N) loop
+               El := Get_Nth_Element (N, I);
+               if not Markers (El) then
+                  Report_Early_Reference (El, F);
+               end if;
+            end loop;
+      end case;
+   end Mark_Iir_Flist_Ref;
+
    procedure Mark_PSL_Node (N : PSL_Node) is
    begin
       null;
@@ -240,6 +276,28 @@ package body Nodes_GC is
                         Mark_Iir_List_Ref (Get_Iir_List (N, F), F);
                      else
                         Mark_Iir_List (Get_Iir_List (N, F));
+                     end if;
+                  end;
+               when Type_Iir_Flist =>
+                  declare
+                     Ref : Boolean;
+                  begin
+                     case Get_Field_Attribute (F) is
+                        when Attr_None =>
+                           Ref := False;
+                        when Attr_Of_Ref =>
+                           Ref := True;
+                        when Attr_Of_Maybe_Ref =>
+                           Ref := Get_Is_Ref (N);
+                        when Attr_Ref =>
+                           Ref := True;
+                        when others =>
+                           raise Internal_Error;
+                     end case;
+                     if Ref then
+                        Mark_Iir_Flist_Ref (Get_Iir_Flist (N, F), F);
+                     else
+                        Mark_Iir_Flist (Get_Iir_Flist (N, F));
                      end if;
                   end;
                when Type_PSL_Node =>
