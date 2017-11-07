@@ -88,17 +88,13 @@ package body Translation is
             end;
          when Iir_Kind_Simple_Aggregate =>
             declare
-               List : Iir_List;
+               List : constant Iir_Flist := Get_Simple_Aggregate_List (Expr);
                El : Iir;
             begin
-               List := Get_Simple_Aggregate_List (Expr);
                Nam_Length := 0;
-               for I in Natural loop
+               for I in Flist_First .. Flist_Last (List) loop
                   El := Get_Nth_Element (List, I);
-                  exit when El = Null_Iir;
-                  if Get_Kind (El) /= Iir_Kind_Enumeration_Literal then
-                     raise Internal_Error;
-                  end if;
+                  pragma Assert (Get_Kind (El) = Iir_Kind_Enumeration_Literal);
                   Nam_Length := Nam_Length + 1;
                   Nam_Buffer (Nam_Length) :=
                     Character'Val (Get_Enum_Pos (El));

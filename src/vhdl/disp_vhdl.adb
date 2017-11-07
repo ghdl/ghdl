@@ -2625,15 +2625,13 @@ package body Disp_Vhdl is
 
    procedure Disp_Simple_Aggregate (Aggr: Iir_Simple_Aggregate)
    is
-      List : Iir_List;
+      List : constant Iir_Flist := Get_Simple_Aggregate_List (Aggr);
       El : Iir;
       First : Boolean := True;
    begin
       Put ("(");
-      List := Get_Simple_Aggregate_List (Aggr);
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (List) loop
          El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
          if First then
             First := False;
          else

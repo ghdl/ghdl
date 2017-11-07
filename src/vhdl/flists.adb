@@ -50,10 +50,10 @@ package body Flists is
    --  Linked list of free flist.  For length less than the last index, the
    --  index corresponds to the length.  All free lists whose length is equal
    --  or greater than the last index are grouped to the last index.
-   Free_Flists : Flist_Array (1 .. 16) := (others => Null_Flist);
+   Free_Flists : Flist_Array (0 .. 16) := (others => Null_Flist);
 
-   --  Get the chain for a free flist.  It is stored at the first element of
-   --  the list.
+   --  Get the chain for a free flist for large length.  It is stored at the
+   --  first element of the list.
    function Free_Next (Flist : Flist_Type) return Flist_Type is
    begin
       return Flist_Type (Els.Table (Flistt.Table (Flist).Els));
@@ -61,15 +61,15 @@ package body Flists is
 
    function Create_Flist (Len : Natural) return Flist_Type
    is
-      pragma Assert (Len > 0);
       Res : Flist_Type;
       Prev : Flist_Type;
       Next : Flist_Type;
    begin
       if Len >= Free_Flists'Last then
+         --  Large length.
          Res := Free_Flists (Free_Flists'Last);
          Prev := Null_Flist;
-         while Res /= Null_Flist and Length (Res) /= Len loop
+         while Res /= Null_Flist and then Length (Res) /= Len loop
             Prev := Res;
             Res := Free_Next (Res);
          end loop;
@@ -82,9 +82,16 @@ package body Flists is
             end if;
          end if;
       else
+         --  Small length.  The Len field contains the next free list.
          Res := Free_Flists (Len);
          if Res /= Null_Flist then
-            Free_Flists (Len) := Free_Next (Res);
+            Free_Flists (Len) := Flist_Type (Flistt.Table (Res).Len);
+            Flistt.Table (Res).Len := Nat32 (Len);
+         elsif Len = 0 then
+            --  Quick case for len = 0.
+            Res := Flistt.Allocate (1);
+            Flistt.Table (Res) := (Els => 0, Len => 0);
+            return Res;
          end if;
       end if;
 
@@ -114,12 +121,15 @@ package body Flists is
       if Len >= Free_Flists'Last then
          Prev := Free_Flists (Free_Flists'Last);
          Free_Flists (Free_Flists'Last) := Flist;
+
+         Els.Table (Flistt.Table (Flist).Els) := Node_Type (Prev);
       else
          Prev := Free_Flists (Len);
          Free_Flists (Len) := Flist;
+
+         Flistt.Table (Flist).Len := Nat32 (Prev);
       end if;
 
-      Els.Table (Flistt.Table (Flist).Els) := Node_Type (Prev);
       Flist := Null_Flist;
    end Destroy_Flist;
 

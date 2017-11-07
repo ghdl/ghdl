@@ -5922,8 +5922,8 @@ package Iirs is
 
    --  List of elements of a simple aggregate.
    --  Field: Field4 Ref (uc)
-   function Get_Simple_Aggregate_List (Target : Iir) return Iir_List;
-   procedure Set_Simple_Aggregate_List (Target : Iir; List : Iir_List);
+   function Get_Simple_Aggregate_List (Target : Iir) return Iir_Flist;
+   procedure Set_Simple_Aggregate_List (Target : Iir; List : Iir_Flist);
 
    --  For a string literal: the string identifier.
    --  Field: Field5 (uc)

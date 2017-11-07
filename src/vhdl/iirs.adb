@@ -997,20 +997,20 @@ package body Iirs is
       Set_Field5 (Lit, Conv.Field5);
    end Set_Fp_Value;
 
-   function Get_Simple_Aggregate_List (Target : Iir) return Iir_List is
+   function Get_Simple_Aggregate_List (Target : Iir) return Iir_Flist is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Simple_Aggregate_List (Get_Kind (Target)),
                      "no field Simple_Aggregate_List");
-      return Iir_To_Iir_List (Get_Field4 (Target));
+      return Iir_To_Iir_Flist (Get_Field4 (Target));
    end Get_Simple_Aggregate_List;
 
-   procedure Set_Simple_Aggregate_List (Target : Iir; List : Iir_List) is
+   procedure Set_Simple_Aggregate_List (Target : Iir; List : Iir_Flist) is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Simple_Aggregate_List (Get_Kind (Target)),
                      "no field Simple_Aggregate_List");
-      Set_Field4 (Target, Iir_List_To_Iir (List));
+      Set_Field4 (Target, Iir_Flist_To_Iir (List));
    end Set_Simple_Aggregate_List;
 
    function Get_String8_Id (Lit : Iir) return String8_Id is

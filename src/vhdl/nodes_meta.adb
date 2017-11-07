@@ -46,7 +46,7 @@ package body Nodes_Meta is
       Field_Enum_Pos => Type_Iir_Int32,
       Field_Physical_Literal => Type_Iir,
       Field_Fp_Value => Type_Iir_Fp64,
-      Field_Simple_Aggregate_List => Type_Iir_List,
+      Field_Simple_Aggregate_List => Type_Iir_Flist,
       Field_String8_Id => Type_String8_Id,
       Field_String_Length => Type_Int32,
       Field_Bit_String_Base => Type_Number_Base_Type,
@@ -5909,6 +5909,8 @@ package body Nodes_Meta is
    begin
       pragma Assert (Fields_Type (F) = Type_Iir_Flist);
       case F is
+         when Field_Simple_Aggregate_List =>
+            return Get_Simple_Aggregate_List (N);
          when Field_Index_Subtype_List =>
             return Get_Index_Subtype_List (N);
          when Field_Index_Subtype_Definition_List =>
@@ -5927,6 +5929,8 @@ package body Nodes_Meta is
    begin
       pragma Assert (Fields_Type (F) = Type_Iir_Flist);
       case F is
+         when Field_Simple_Aggregate_List =>
+            Set_Simple_Aggregate_List (N, V);
          when Field_Index_Subtype_List =>
             Set_Index_Subtype_List (N, V);
          when Field_Index_Subtype_Definition_List =>
@@ -6067,8 +6071,6 @@ package body Nodes_Meta is
             return Get_Dependence_List (N);
          when Field_Analysis_Checks_List =>
             return Get_Analysis_Checks_List (N);
-         when Field_Simple_Aggregate_List =>
-            return Get_Simple_Aggregate_List (N);
          when Field_Entity_Name_List =>
             return Get_Entity_Name_List (N);
          when Field_Signal_List =>
@@ -6109,8 +6111,6 @@ package body Nodes_Meta is
             Set_Dependence_List (N, V);
          when Field_Analysis_Checks_List =>
             Set_Analysis_Checks_List (N, V);
-         when Field_Simple_Aggregate_List =>
-            Set_Simple_Aggregate_List (N, V);
          when Field_Entity_Name_List =>
             Set_Entity_Name_List (N, V);
          when Field_Signal_List =>

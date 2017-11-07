@@ -184,7 +184,7 @@ package Evaluation is
                Id : String8_Id;
             when False =>
                --  A simple aggregate.  List of elements.
-               List : Iir_List;
+               List : Iir_Flist;
          end case;
       end record;
 

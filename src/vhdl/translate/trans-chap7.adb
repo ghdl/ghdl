@@ -251,7 +251,7 @@ package body Trans.Chap7 is
    function Translate_Static_Simple_Aggregate (Aggr : Iir) return O_Cnode
    is
       Aggr_Type : constant Iir := Get_Type (Aggr);
-      El_List   : constant Iir_List := Get_Simple_Aggregate_List (Aggr);
+      El_List   : constant Iir_Flist := Get_Simple_Aggregate_List (Aggr);
       El_Type   : constant Iir := Get_Element_Subtype (Aggr_Type);
       El        : Iir;
       List      : O_Array_Aggr_List;
@@ -260,9 +260,8 @@ package body Trans.Chap7 is
       Chap3.Translate_Anonymous_Type_Definition (Aggr_Type);
       Start_Array_Aggr (List, Get_Ortho_Type (Aggr_Type, Mode_Value));
 
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (El_List) loop
          El := Get_Nth_Element (El_List, I);
-         exit when El = Null_Iir;
          New_Array_Aggr_El
            (List, Translate_Static_Expression (El, El_Type));
       end loop;
