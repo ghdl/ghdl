@@ -472,7 +472,7 @@ package body Synth.Expr is
    is
       Pfx : constant Value_Acc :=
         Synth_Expression (Syn_Inst, Get_Prefix (Name));
-      Indexes : constant Iir_List := Get_Index_List (Name);
+      Indexes : constant Iir_Flist := Get_Index_List (Name);
       Idx_Val : constant Value_Acc :=
         Synth_Expression (Syn_Inst, Get_Nth_Element (Indexes, 0));
       Rng : Value_Range_Acc;

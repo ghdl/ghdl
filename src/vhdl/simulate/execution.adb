@@ -278,7 +278,7 @@ package body Execution is
          when Iir_Kind_Enumeration_Type_Definition
            | Iir_Kind_Enumeration_Subtype_Definition =>
             declare
-               Lits : constant Iir_List :=
+               Lits : constant Iir_Flist :=
                  Get_Enumeration_Literal_List (Get_Base_Type (Expr_Type));
                Pos : Natural;
             begin
@@ -682,7 +682,7 @@ package body Execution is
                   Result := Create_Array_Value (Len, 1);
                   Result.Bounds.D (1) := Create_Bounds_From_Length
                     (Block,
-                     Get_First_Element (Get_Index_Subtype_List (Res_Type)),
+                     Get_Nth_Element (Get_Index_Subtype_List (Res_Type), 0),
                      Len);
                end if;
 
@@ -1275,7 +1275,7 @@ package body Execution is
                use Name_Table;
                Base_Type : constant Iir :=
                  Get_Base_Type (Get_Type (Left_Param));
-               Lits : constant Iir_List :=
+               Lits : constant Iir_Flist :=
                  Get_Enumeration_Literal_List (Base_Type);
                Pos : constant Natural := Get_Enum_Pos (Left);
                Id : Name_Id;
@@ -1319,11 +1319,11 @@ package body Execution is
 
          when Iir_Predefined_Array_Char_To_String =>
             declare
-               Str : String (1 .. Natural (Left.Bounds.D (1).Length));
-               Lits : constant Iir_List :=
+               Lits : constant Iir_Flist :=
                  Get_Enumeration_Literal_List
                  (Get_Base_Type
                     (Get_Element_Subtype (Get_Type (Left_Param))));
+               Str : String (1 .. Natural (Left.Bounds.D (1).Length));
                Pos : Natural;
             begin
                for I in Left.Val_Array.V'Range loop
@@ -1667,15 +1667,14 @@ package body Execution is
       Create_Val_Array : Boolean)
      return Iir_Value_Literal_Acc
    is
-      Res : Iir_Value_Literal_Acc;
-      Index_List : Iir_List;
-      Len : Iir_Index32;
-      Bound : Iir_Value_Literal_Acc;
-   begin
       --  Only for constrained subtypes.
       pragma Assert (Get_Kind (A_Type) /= Iir_Kind_Array_Type_Definition);
 
-      Index_List := Get_Index_Subtype_List (A_Type);
+      Index_List : constant Iir_Flist := Get_Index_Subtype_List (A_Type);
+      Res : Iir_Value_Literal_Acc;
+      Len : Iir_Index32;
+      Bound : Iir_Value_Literal_Acc;
+   begin
       Res := Create_Array_Value
         (Iir_Index32 (Get_Nbr_Elements (Index_List)));
       Len := 1;
@@ -1749,9 +1748,9 @@ package body Execution is
    function String_To_Enumeration_Array (Block: Block_Instance_Acc; Str: Iir)
       return Iir_Value_Literal_Acc
    is
-      Res : Iir_Value_Literal_Acc;
       Array_Type: constant Iir := Get_Type (Str);
-      Index_Types : constant Iir_List := Get_Index_Subtype_List (Array_Type);
+      Index_Types : constant Iir_Flist := Get_Index_Subtype_List (Array_Type);
+      Res : Iir_Value_Literal_Acc;
    begin
       --  Array must be unidimensional.
       pragma Assert (Get_Nbr_Elements (Index_Types) = 1);
@@ -1769,7 +1768,7 @@ package body Execution is
                                Res.Val_Array.Len);
       else
          Res.Bounds.D (1) :=
-           Execute_Bounds (Block, Get_First_Element (Index_Types));
+           Execute_Bounds (Block, Get_Nth_Element (Index_Types, 0));
       end if;
 
       --  The range may not be statically constant.
@@ -1939,7 +1938,7 @@ package body Execution is
    is
       Aggr_Type : constant Iir := Get_Type (Aggregate);
       El_Type : constant Iir := Get_Element_Subtype (Aggr_Type);
-      Index_List : constant Iir_List := Get_Index_Subtype_List (Aggr_Type);
+      Index_List : constant Iir_Flist := Get_Index_Subtype_List (Aggr_Type);
       Nbr_Dim : constant Iir_Index32 :=
         Iir_Index32 (Get_Nbr_Elements (Index_List));
       Step : Iir_Index32;
@@ -1954,7 +1953,7 @@ package body Execution is
                                       Aggregate_Type: Iir)
                                      return Iir_Value_Literal_Acc
    is
-      List : constant Iir_List :=
+      List : constant Iir_Flist :=
         Get_Elements_Declaration_List (Get_Base_Type (Aggregate_Type));
 
       Res: Iir_Value_Literal_Acc;
@@ -2031,7 +2030,7 @@ package body Execution is
                                      return Iir_Value_Literal_Acc
    is
       Res : Iir_Value_Literal_Acc;
-      List : constant Iir_List := Get_Simple_Aggregate_List (Aggr);
+      List : constant Iir_Flist := Get_Simple_Aggregate_List (Aggr);
    begin
       Res := Create_Array_Bounds_From_Type (Block, Get_Type (Aggr), True);
       for I in Res.Val_Array.V'Range loop
@@ -2111,7 +2110,7 @@ package body Execution is
       Aggregate_Type: Iir)
       return Iir_Value_Literal_Acc
    is
-      List : constant Iir_List :=
+      List : constant Iir_Flist :=
         Get_Elements_Declaration_List (Get_Base_Type (Aggregate_Type));
       Res: Iir_Value_Literal_Acc;
       Expr : Iir;
@@ -2159,12 +2158,12 @@ package body Execution is
          when Iir_Kind_Array_Type_Definition
            | Iir_Kind_Array_Subtype_Definition =>
             declare
-               Res : Iir_Value_Literal_Acc;
                El_Type : constant Iir := Get_Element_Subtype (Aggregate_Type);
-               Index_List : constant Iir_List :=
+               Index_List : constant Iir_Flist :=
                  Get_Index_Subtype_List (Aggregate_Type);
                Nbr_Dim : constant Iir_Index32 :=
                  Iir_Index32 (Get_Nbr_Elements (Index_List));
+               Res : Iir_Value_Literal_Acc;
                Step : Iir_Index32;
             begin
                Res := Create_Array_Bounds_From_Type
@@ -2344,7 +2343,7 @@ package body Execution is
                Implicit_Array_Conversion (Block, Res, Target_Type, Loc);
             else
                declare
-                  Idx_List : constant Iir_List :=
+                  Idx_List : constant Iir_Flist :=
                     Get_Index_Subtype_List (Target_Type);
                   Idx_Type : Iir;
                begin
@@ -2482,7 +2481,7 @@ package body Execution is
                                    Pos : out Iir_Index32)
    is
       pragma Assert (Get_Kind (Expr) = Iir_Kind_Indexed_Name);
-      Index_List : constant Iir_List := Get_Index_List (Expr);
+      Index_List : constant Iir_Flist := Get_Index_List (Expr);
       Nbr_Dimensions : constant Iir_Index32 :=
         Iir_Index32 (Get_Nbr_Elements (Index_List));
       Index: Iir;
@@ -2777,10 +2776,10 @@ package body Execution is
          when Iir_Kind_Enumeration_Type_Definition
            | Iir_Kind_Enumeration_Subtype_Definition =>
             declare
+               Enums : constant Iir_Flist :=
+                 Get_Enumeration_Literal_List (Get_Base_Type (Expr_Type));
                Lit_Start : Ghdl_Index_Type;
                Lit_End : Ghdl_Index_Type;
-               Enums : constant Iir_List :=
-                 Get_Enumeration_Literal_List (Get_Base_Type (Expr_Type));
                Enum : Iir;
                Lit_Id : Name_Id;
                Enum_Id : Name_Id;
@@ -3822,8 +3821,8 @@ package body Execution is
       Def: Iir;
       Expr: Iir)
    is
-      Index_List: Iir_List;
-      Element_Subtype: Iir;
+      Index_List : Iir_Flist;
+      Element_Subtype : Iir;
       New_Bounds : Iir_Value_Literal_Acc;
    begin
       --  Nothing to check for unconstrained arrays.
@@ -3922,13 +3921,12 @@ package body Execution is
          when Iir_Kind_Record_Type_Definition
            | Iir_Kind_Record_Subtype_Definition =>
             declare
-               El: Iir_Element_Declaration;
-               List : Iir_List;
+               List : constant Iir_Flist :=
+                 Get_Elements_Declaration_List (Get_Base_Type (Def));
+               El : Iir_Element_Declaration;
             begin
-               List := Get_Elements_Declaration_List (Get_Base_Type (Def));
-               for I in Natural loop
+               for I in Flist_First .. Flist_Last (List) loop
                   El := Get_Nth_Element (List, I);
-                  exit when El = Null_Iir;
                   Check_Constraints
                     (Instance,
                      Value.Val_Record.V (Get_Element_Position (El) + 1),

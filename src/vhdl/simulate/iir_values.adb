@@ -959,7 +959,7 @@ package body Iir_Values is
       type Last_Enum_Type is (None, Char, Identifier);
       Last_Enum: Last_Enum_Type;
       El_Type: Iir;
-      Enum_List: Iir_List;
+      Enum_List: Iir_Flist;
       El_Id : Name_Id;
       El_Pos : Natural;
    begin
@@ -1036,10 +1036,10 @@ package body Iir_Values is
      (Value: Iir_Value_Literal_Acc; A_Type: Iir)
    is
       use Ada.Text_IO;
+      List : constant Iir_Flist :=
+        Get_Elements_Declaration_List (Get_Base_Type (A_Type));
       El : Iir_Element_Declaration;
-      List : Iir_List;
    begin
-      List := Get_Elements_Declaration_List (Get_Base_Type (A_Type));
       Put ("(");
       for I in Value.Val_Record.V'Range loop
          El := Get_Nth_Element (List, Natural (I - 1));

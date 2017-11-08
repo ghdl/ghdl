@@ -167,15 +167,14 @@ package body Annotations is
          when Iir_Kind_Record_Type_Definition
            | Iir_Kind_Record_Subtype_Definition =>
             declare
+               List : constant Iir_Flist :=
+                 Get_Elements_Declaration_List (Get_Base_Type (Def));
                El : Iir;
                Res : Natural;
-               List : Iir_List;
             begin
                Res := 2;
-               List := Get_Elements_Declaration_List (Get_Base_Type (Def));
-               for I in Natural loop
+               for I in Flist_First .. Flist_Last (List) loop
                   El := Get_Nth_Element (List, I);
-                  exit when El = Null_Iir;
                   Res := Res + Get_File_Signature_Length (Get_Type (El));
                end loop;
                return Res;
@@ -206,15 +205,14 @@ package body Annotations is
          when Iir_Kind_Record_Type_Definition
            | Iir_Kind_Record_Subtype_Definition =>
             declare
+               List : constant Iir_Flist :=
+                 Get_Elements_Declaration_List (Get_Base_Type (Def));
                El : Iir;
-               List : Iir_List;
             begin
                Res (Off) := '<';
                Off := Off + 1;
-               List := Get_Elements_Declaration_List (Get_Base_Type (Def));
-               for I in Natural loop
+               for I in Flist_First .. Flist_Last (List) loop
                   El := Get_Nth_Element (List, I);
-                  exit when El = Null_Iir;
                   Get_File_Signature (Get_Type (El), Res, Off);
                end loop;
                Res (Off) := '>';
@@ -371,22 +369,21 @@ package body Annotations is
 
          when Iir_Kind_Array_Subtype_Definition =>
             declare
-               List : constant Iir_List := Get_Index_Subtype_List (Def);
+               List : constant Iir_Flist := Get_Index_Subtype_List (Def);
             begin
-               for I in Natural loop
+               for I in Flist_First .. Flist_Last (List) loop
                   El := Get_Index_Type (List, I);
-                  exit when El = Null_Iir;
                   Annotate_Anonymous_Type_Definition (Block_Info, El);
                end loop;
             end;
 
          when Iir_Kind_Record_Type_Definition =>
             declare
-               List : constant Iir_List := Get_Elements_Declaration_List (Def);
+               List : constant Iir_Flist :=
+                 Get_Elements_Declaration_List (Def);
             begin
-               for I in Natural loop
+               for I in Flist_First .. Flist_Last (List) loop
                   El := Get_Nth_Element (List, I);
-                  exit when El = Null_Iir;
                   Annotate_Anonymous_Type_Definition
                     (Block_Info, Get_Type (El));
                end loop;

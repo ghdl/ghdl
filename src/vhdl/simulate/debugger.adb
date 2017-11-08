@@ -348,10 +348,10 @@ package body Debugger is
 
    procedure Disp_Signal_Record (Value : Iir_Value_Literal_Acc; A_Type : Iir)
    is
+      List : constant Iir_Flist :=
+        Get_Elements_Declaration_List (Get_Base_Type (A_Type));
       El : Iir_Element_Declaration;
-      List : Iir_List;
    begin
-      List := Get_Elements_Declaration_List (Get_Base_Type (A_Type));
       Put ("(");
       for I in Value.Val_Record.V'Range loop
          El := Get_Nth_Element (List, Natural (I - 1));

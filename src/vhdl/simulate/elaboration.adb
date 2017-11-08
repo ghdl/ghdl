@@ -631,16 +631,15 @@ package body Elaboration is
          when Iir_Kind_Record_Type_Definition
            | Iir_Kind_Record_Subtype_Definition =>
             declare
-               El : Iir_Element_Declaration;
-               List : constant Iir_List :=
+               List : constant Iir_Flist :=
                  Get_Elements_Declaration_List (Get_Base_Type (Decl));
+               El : Iir_Element_Declaration;
             begin
                Res := Create_Record_Value
                  (Iir_Index32 (Get_Nbr_Elements (List)));
 
-               for I in Natural loop
+               for I in Flist_First .. Flist_Last (List) loop
                   El := Get_Nth_Element (List, I);
-                  exit when El = Null_Iir;
                   Res.Val_Record.V (1 + Get_Element_Position (El)) :=
                     Create_Value_For_Type (Block, Get_Type (El), Init);
                end loop;
@@ -687,13 +686,12 @@ package body Elaboration is
          when Iir_Kind_Record_Type_Definition
            | Iir_Kind_Record_Subtype_Definition =>
             declare
-               El : Iir_Element_Declaration;
-               List : constant Iir_List :=
+               List : constant Iir_Flist :=
                  Get_Elements_Declaration_List (Get_Base_Type (Atype));
+               El : Iir_Element_Declaration;
             begin
-               for I in Natural loop
+               for I in Flist_First .. Flist_Last (List) loop
                   El := Get_Nth_Element (List, I);
-                  exit when El = Null_Iir;
                   Init_To_Default (Targ.Val_Record.V (1 + Iir_Index32 (I)),
                                    Block, Get_Type (El));
                end loop;
@@ -882,12 +880,11 @@ package body Elaboration is
             --  declaration of each of the discrete ranges in the index
             --  constraint in some order that is not defined by the language.
             declare
-               St_Indexes : constant Iir_List := Get_Index_Subtype_List (Ind);
+               St_Indexes : constant Iir_Flist := Get_Index_Subtype_List (Ind);
                St_El : Iir;
             begin
-               for I in Natural loop
+               for I in Flist_First .. Flist_Last (St_Indexes) loop
                   St_El := Get_Index_Type (St_Indexes, I);
-                  exit when St_El = Null_Iir;
                   Elaborate_Subtype_Indication_If_Anonymous (Instance, St_El);
                end loop;
                Elaborate_Subtype_Indication_If_Anonymous
@@ -952,13 +949,12 @@ package body Elaboration is
             --  elaboration of the equivalent single element declarations in
             --  the given order.
             declare
+               List : constant Iir_Flist :=
+                 Get_Elements_Declaration_List (Def);
                El : Iir_Element_Declaration;
-               List : Iir_List;
             begin
-               List := Get_Elements_Declaration_List (Def);
-               for I in Natural loop
+               for I in Flist_First .. Flist_Last (List) loop
                   El := Get_Nth_Element (List, I);
-                  exit when El = Null_Iir;
                   --  Elaboration of an element declaration consists of
                   --  elaboration of the element subtype indication.
                   Elaborate_Subtype_Indication_If_Anonymous
@@ -2095,13 +2091,13 @@ package body Elaboration is
                     (Item, Sub_Instances (Ind + I - 1));
                end loop;
             when Iir_Kind_Indexed_Name =>
-               if Get_Index_List (Spec) = Iir_List_Others then
+               if Get_Index_List (Spec) = Iir_Flist_Others then
                   --  Must be the only default block configuration
                   pragma Assert (Default_Item = Null_Iir);
                   Default_Item := Item;
                else
                   Expr := Execute_Expression
-                    (Instance, Get_First_Element (Get_Index_List (Spec)));
+                    (Instance, Get_Nth_Element (Get_Index_List (Spec), 0));
                   Ind := Instance_Slot_Type
                     (Get_Index_Offset (Expr, Bounds, Spec));
                   Sub_Conf (Ind) := True;
@@ -2215,17 +2211,16 @@ package body Elaboration is
 
             when Iir_Kind_Component_Configuration =>
                declare
-                  List : constant Iir_List :=
+                  List : constant Iir_Flist :=
                     Get_Instantiation_List (Item);
                   El : Iir;
                   Info : Sim_Info_Acc;
                begin
-                  if List = Iir_List_All or else List = Iir_List_Others then
+                  if List = Iir_Flist_All or else List = Iir_Flist_Others then
                      raise Internal_Error;
                   end if;
-                  for I in Natural loop
+                  for I in Flist_First .. Flist_Last (List) loop
                      El := Get_Nth_Element (List, I);
-                     exit when El = Null_Iir;
                      Info := Get_Info (Get_Named_Entity (El));
                      pragma Assert (Sub_Conf (Info.Inst_Slot) = Null_Iir);
                      Sub_Conf (Info.Inst_Slot) := Item;
@@ -2310,7 +2305,7 @@ package body Elaboration is
    is
       Time_Val : Iir_Value_Literal_Acc;
       Time : Iir_Value_Time;
-      List : Iir_List;
+      List : Iir_Flist;
       Sig : Iir;
       Val : Iir_Value_Literal_Acc;
    begin
@@ -2339,13 +2334,12 @@ package body Elaboration is
       --     signals.
       List := Get_Signal_List (Decl);
       case List is
-         when Iir_List_All
-           | Iir_List_Others =>
+         when Iir_Flist_All
+           | Iir_Flist_Others =>
             Error_Kind ("elaborate_disconnection_specification", Decl);
          when others =>
-            for I in Natural loop
+            for I in Flist_First .. Flist_Last (List) loop
                Sig := Get_Nth_Element (List, I);
-               exit when Sig = Null_Iir;
                Val := Execute_Name (Instance, Sig, True);
                Disconnection_Table.Append ((Sig => Val, Time => Time));
             end loop;

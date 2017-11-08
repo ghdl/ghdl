@@ -659,7 +659,7 @@ package body Simulation is
       Arr := Create_Array_Value (Len, 1);
       Arr.Bounds.D (1) := Create_Bounds_From_Length
         (Instance.Block,
-         Get_First_Element (Get_Index_Subtype_List (Arr_Type)),
+         Get_Nth_Element (Get_Index_Subtype_List (Arr_Type), 0),
          Len);
 
       --  First ports

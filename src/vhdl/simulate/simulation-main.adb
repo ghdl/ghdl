@@ -997,11 +997,10 @@ package body Simulation.Main is
                end;
             when Iir_Value_Record =>
                declare
-                  El : Iir_Element_Declaration;
-                  List : Iir_List;
-               begin
-                  List := Get_Elements_Declaration_List
+                  List : constant Iir_Flist := Get_Elements_Declaration_List
                     (Get_Base_Type (Sig_Type));
+                  El : Iir_Element_Declaration;
+               begin
                   for I in Val.Val_Record.V'Range loop
                      El := Get_Nth_Element (List, Natural (I - 1));
                      Create_Signal (Val.Val_Record.V (I), Sig.Val_Record.V (I),
