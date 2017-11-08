@@ -133,9 +133,9 @@ package body Flists is
       Flist := Null_Flist;
    end Destroy_Flist;
 
-   function Flast (Flist : Flist_Type) return Natural is
+   function Flast (Flist : Flist_Type) return Integer is
    begin
-      return Natural (Flistt.Table (Flist).Len - 1);
+      return Integer (Flistt.Table (Flist).Len - 1);
    end Flast;
 
    function Length (Flist : Flist_Type) return Natural is

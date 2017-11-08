@@ -38,7 +38,7 @@ package Flists is
 
    --  First and last index of FLIST.  Could be used to iterate.
    Ffirst : constant Natural := 0;
-   function Flast (Flist : Flist_Type) return Natural;
+   function Flast (Flist : Flist_Type) return Integer;
 
    --  Return the length of FLIST.
    function Length (Flist : Flist_Type) return Natural;

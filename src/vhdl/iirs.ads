@@ -5406,6 +5406,9 @@ package Iirs is
    Iir_Flist_Others : constant Iir_Flist := Flists.Flist_Others;
    Iir_Flist_All    : constant Iir_Flist := Flists.Flist_All;
 
+   subtype Iir_Flists_All_Others is Iir_Flist
+     range Iir_Flist_Others .. Iir_Flist_All;
+
    Flist_First : constant Natural := Flists.Ffirst;
    function Flist_Last (Flist : Iir_Flist) return Natural
      renames Flists.Flast;
@@ -6001,8 +6004,8 @@ package Iirs is
    procedure Set_Attribute_Specification (Val : Iir; Attr : Iir);
 
    --  Field: Field3 Of_Maybe_Ref (uc)
-   function Get_Signal_List (Target : Iir) return Iir_List;
-   procedure Set_Signal_List (Target : Iir; List : Iir_List);
+   function Get_Signal_List (Target : Iir) return Iir_Flist;
+   procedure Set_Signal_List (Target : Iir; List : Iir_Flist);
 
    --  Field: Field3 Forward_Ref
    function Get_Designated_Entity (Val : Iir_Attribute_Value) return Iir;
@@ -6952,8 +6955,8 @@ package Iirs is
    procedure Set_Component_Name (Target : Iir; Name : Iir);
 
    --  Field: Field1 (uc)
-   function Get_Instantiation_List (Target : Iir) return Iir_List;
-   procedure Set_Instantiation_List (Target : Iir; List : Iir_List);
+   function Get_Instantiation_List (Target : Iir) return Iir_Flist;
+   procedure Set_Instantiation_List (Target : Iir; List : Iir_Flist);
 
    --  Field: Field3
    function Get_Entity_Aspect (Target : Iir_Binding_Indication) return Iir;

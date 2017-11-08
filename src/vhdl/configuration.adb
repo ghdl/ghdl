@@ -425,7 +425,7 @@ package body Configuration is
       Inst_Inter_Chain : Iir;
       Err : Boolean;
       Inst : Iir;
-      Inst_List : Iir_List;
+      Inst_List : Iir_Flist;
       Formal : Iir;
       Assoc_1 : Iir;
       Inter_1 : Iir;
@@ -460,9 +460,8 @@ package body Configuration is
 
       --  Second pass: check for port connected to open in instantiation.
       Inst_List := Get_Instantiation_List (Conf);
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (Inst_List) loop
          Inst := Get_Nth_Element (Inst_List, I);
-         exit when Inst = Null_Iir;
          Inst := Get_Named_Entity (Inst);
          Err := False;
 
@@ -543,7 +542,7 @@ package body Configuration is
    begin
       if Bind = Null_Iir then
          if Is_Warning_Enabled (Warnid_Binding) then
-            Inst := Get_First_Element (Get_Instantiation_List (Conf));
+            Inst := Get_Nth_Element (Get_Instantiation_List (Conf), 0);
             Inst := Strip_Denoting_Name (Inst);
             Warning_Msg_Elab
               (Warnid_Binding, Conf,

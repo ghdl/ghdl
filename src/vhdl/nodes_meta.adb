@@ -62,7 +62,7 @@ package body Nodes_Meta is
       Field_Attribute_Designator => Type_Iir,
       Field_Attribute_Specification_Chain => Type_Iir,
       Field_Attribute_Specification => Type_Iir,
-      Field_Signal_List => Type_Iir_List,
+      Field_Signal_List => Type_Iir_Flist,
       Field_Designated_Entity => Type_Iir,
       Field_Formal => Type_Iir,
       Field_Actual => Type_Iir,
@@ -248,7 +248,7 @@ package body Nodes_Meta is
       Field_Parent => Type_Iir,
       Field_Loop_Label => Type_Iir,
       Field_Component_Name => Type_Iir,
-      Field_Instantiation_List => Type_Iir_List,
+      Field_Instantiation_List => Type_Iir_Flist,
       Field_Entity_Aspect => Type_Iir,
       Field_Default_Entity_Aspect => Type_Iir,
       Field_Binding_Indication => Type_Iir,
@@ -5911,6 +5911,8 @@ package body Nodes_Meta is
       case F is
          when Field_Simple_Aggregate_List =>
             return Get_Simple_Aggregate_List (N);
+         when Field_Signal_List =>
+            return Get_Signal_List (N);
          when Field_Enumeration_Literal_List =>
             return Get_Enumeration_Literal_List (N);
          when Field_Group_Constituent_List =>
@@ -5925,6 +5927,8 @@ package body Nodes_Meta is
             return Get_Elements_Declaration_List (N);
          when Field_Index_List =>
             return Get_Index_List (N);
+         when Field_Instantiation_List =>
+            return Get_Instantiation_List (N);
          when Field_Type_Marks_List =>
             return Get_Type_Marks_List (N);
          when others =>
@@ -5939,6 +5943,8 @@ package body Nodes_Meta is
       case F is
          when Field_Simple_Aggregate_List =>
             Set_Simple_Aggregate_List (N, V);
+         when Field_Signal_List =>
+            Set_Signal_List (N, V);
          when Field_Enumeration_Literal_List =>
             Set_Enumeration_Literal_List (N, V);
          when Field_Group_Constituent_List =>
@@ -5953,6 +5959,8 @@ package body Nodes_Meta is
             Set_Elements_Declaration_List (N, V);
          when Field_Index_List =>
             Set_Index_List (N, V);
+         when Field_Instantiation_List =>
+            Set_Instantiation_List (N, V);
          when Field_Type_Marks_List =>
             Set_Type_Marks_List (N, V);
          when others =>
@@ -6089,16 +6097,12 @@ package body Nodes_Meta is
             return Get_Analysis_Checks_List (N);
          when Field_Entity_Name_List =>
             return Get_Entity_Name_List (N);
-         when Field_Signal_List =>
-            return Get_Signal_List (N);
          when Field_Sensitivity_List =>
             return Get_Sensitivity_List (N);
          when Field_Callees_List =>
             return Get_Callees_List (N);
          when Field_Guard_Sensitivity_List =>
             return Get_Guard_Sensitivity_List (N);
-         when Field_Instantiation_List =>
-            return Get_Instantiation_List (N);
          when Field_Overload_List =>
             return Get_Overload_List (N);
          when Field_PSL_Clock_Sensitivity =>
@@ -6121,16 +6125,12 @@ package body Nodes_Meta is
             Set_Analysis_Checks_List (N, V);
          when Field_Entity_Name_List =>
             Set_Entity_Name_List (N, V);
-         when Field_Signal_List =>
-            Set_Signal_List (N, V);
          when Field_Sensitivity_List =>
             Set_Sensitivity_List (N, V);
          when Field_Callees_List =>
             Set_Callees_List (N, V);
          when Field_Guard_Sensitivity_List =>
             Set_Guard_Sensitivity_List (N, V);
-         when Field_Instantiation_List =>
-            Set_Instantiation_List (N, V);
          when Field_Overload_List =>
             Set_Overload_List (N, V);
          when Field_PSL_Clock_Sensitivity =>

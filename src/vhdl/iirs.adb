@@ -1275,20 +1275,20 @@ package body Iirs is
       Set_Field4 (Val, Attr);
    end Set_Attribute_Specification;
 
-   function Get_Signal_List (Target : Iir) return Iir_List is
+   function Get_Signal_List (Target : Iir) return Iir_Flist is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Signal_List (Get_Kind (Target)),
                      "no field Signal_List");
-      return Iir_To_Iir_List (Get_Field3 (Target));
+      return Iir_To_Iir_Flist (Get_Field3 (Target));
    end Get_Signal_List;
 
-   procedure Set_Signal_List (Target : Iir; List : Iir_List) is
+   procedure Set_Signal_List (Target : Iir; List : Iir_Flist) is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Signal_List (Get_Kind (Target)),
                      "no field Signal_List");
-      Set_Field3 (Target, Iir_List_To_Iir (List));
+      Set_Field3 (Target, Iir_Flist_To_Iir (List));
    end Set_Signal_List;
 
    function Get_Designated_Entity (Val : Iir_Attribute_Value) return Iir is
@@ -4283,20 +4283,20 @@ package body Iirs is
       Set_Field4 (Target, Name);
    end Set_Component_Name;
 
-   function Get_Instantiation_List (Target : Iir) return Iir_List is
+   function Get_Instantiation_List (Target : Iir) return Iir_Flist is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Instantiation_List (Get_Kind (Target)),
                      "no field Instantiation_List");
-      return Iir_To_Iir_List (Get_Field1 (Target));
+      return Iir_To_Iir_Flist (Get_Field1 (Target));
    end Get_Instantiation_List;
 
-   procedure Set_Instantiation_List (Target : Iir; List : Iir_List) is
+   procedure Set_Instantiation_List (Target : Iir; List : Iir_Flist) is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Instantiation_List (Get_Kind (Target)),
                      "no field Instantiation_List");
-      Set_Field1 (Target, Iir_List_To_Iir (List));
+      Set_Field1 (Target, Iir_Flist_To_Iir (List));
    end Set_Instantiation_List;
 
    function Get_Entity_Aspect (Target : Iir_Binding_Indication) return Iir is

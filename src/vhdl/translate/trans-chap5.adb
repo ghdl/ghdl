@@ -160,15 +160,14 @@ package body Trans.Chap5 is
      (Spec : Iir_Disconnection_Specification)
    is
       Val  : O_Dnode;
-      List : constant Iir_List := Get_Signal_List (Spec);
+      List : constant Iir_Flist := Get_Signal_List (Spec);
       El   : Iir;
    begin
       Val := Create_Temp_Init
         (Std_Time_Otype,
          Chap7.Translate_Expression (Get_Expression (Spec)));
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (List) loop
          El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
          Gen_Elab_Disconnect (Chap6.Translate_Name (El, Mode_Signal),
                               Get_Type (El), Val);
       end loop;

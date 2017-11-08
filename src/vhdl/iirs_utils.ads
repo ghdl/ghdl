@@ -46,6 +46,9 @@ package Iirs_Utils is
    --  Convert a list L to an Flist, and free L.
    function List_To_Flist (L : Iir_List) return Iir_Flist;
 
+   --  Return a copy of the LEN first elements of L.  L is destroyed.
+   function Truncate_Flist (L : Iir_Flist; Len : Natural) return Iir_Flist;
+
    --  Convert an operator node to a name.
    function Get_Operator_Name (Op : Iir) return Name_Id;
 

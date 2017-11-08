@@ -74,6 +74,20 @@ package body Iirs_Utils is
       return Res;
    end List_To_Flist;
 
+   function Truncate_Flist (L : Iir_Flist; Len : Natural) return Iir_Flist
+   is
+      Res : Iir_Flist;
+      Temp_L : Iir_Flist;
+   begin
+      Res := Create_Iir_Flist (Len);
+      for I in 0 .. Len - 1 loop
+         Set_Nth_Element (Res, I, Get_Nth_Element (L, I));
+      end loop;
+      Temp_L := L;
+      Destroy_Iir_Flist (Temp_L);
+      return Res;
+   end Truncate_Flist;
+
    function Get_Operator_Name (Op : Iir) return Name_Id is
    begin
       case Get_Kind (Op) is

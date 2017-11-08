@@ -1525,18 +1525,17 @@ package body Disp_Vhdl is
       end if;
    end Disp_Subprogram_Body;
 
-   procedure Disp_Instantiation_List (Insts: Iir_List) is
+   procedure Disp_Instantiation_List (Insts: Iir_Flist) is
       El : Iir;
    begin
-      if Insts = Iir_List_All then
+      if Insts = Iir_Flist_All then
          Put ("all");
-      elsif Insts = Iir_List_Others then
+      elsif Insts = Iir_Flist_Others then
          Put ("others");
       else
-         for I in Natural loop
+         for I in Flist_First .. Flist_Last (Insts) loop
             El := Get_Nth_Element (Insts, I);
-            exit when El = Null_Iir;
-            if I /= Natural'First then
+            if I /= Flist_First then
                Put (", ");
             end if;
             Disp_Name (El);

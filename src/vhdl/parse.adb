@@ -3914,26 +3914,35 @@ package body Parse is
    --  signal_list ::= signal_name { , signal_name }
    --                | OTHERS
    --                | ALL
-   function Parse_Signal_List return Iir_List
+   function Parse_Signal_List return Iir_Flist
    is
       Res : Iir_List;
    begin
       case Current_Token is
          when Tok_Others =>
+            --  Skip 'others'.
             Scan;
-            return Iir_List_Others;
+
+            return Iir_Flist_Others;
+
          when Tok_All =>
+            --  Skip 'all'.
             Scan;
-            return Iir_List_All;
+
+            return Iir_Flist_All;
+
          when others =>
             Res := Create_Iir_List;
             loop
                Append_Element (Res, Parse_Name);
                exit when Current_Token = Tok_Colon;
+
+               --  Skip ','
                Expect (Tok_Comma);
                Scan;
             end loop;
-            return Res;
+
+            return List_To_Flist (Res);
       end case;
    end Parse_Signal_List;
 
@@ -8435,30 +8444,43 @@ package body Parse is
    --  instantiation_list ::= INSTANTIATION_label { , INSTANTIATION_label }
    --                       | OTHERS
    --                       | ALL
-   function Parse_Instantiation_List return Iir_List
+   --
+   --  FIXME: merge with parse_signal_list ?
+   function Parse_Instantiation_List return Iir_Flist
    is
       Res : Iir_List;
    begin
       case Current_Token is
          when Tok_All =>
+            --  Skip 'all'.
             Scan;
-            return Iir_List_All;
+
+            return Iir_Flist_All;
+
          when Tok_Others =>
+            --  Skip 'others'.
             Scan;
-            return Iir_List_Others;
+
+            return Iir_Flist_Others;
+
          when Tok_Identifier =>
             Res := Create_Iir_List;
             loop
                Append_Element (Res, Current_Text);
+               --  Skip identifier.
                Scan;
+
                exit when Current_Token /= Tok_Comma;
+
+               --  Skip ','.
                Expect (Tok_Comma);
                Scan;
             end loop;
-            return Res;
+            return List_To_Flist (Res);
+
          when others =>
             Error_Msg_Parse ("instantiation list expected");
-            return Null_Iir_List;
+            return Null_Iir_Flist;
       end case;
    end Parse_Instantiation_List;
 
@@ -8469,7 +8491,7 @@ package body Parse is
    --  component_specification ::= instantiation_list : COMPONENT_name
    procedure Parse_Component_Specification (Res : Iir)
    is
-      List : Iir_List;
+      List : Iir_Flist;
    begin
       List := Parse_Instantiation_List;
       Set_Instantiation_List (Res, List);
@@ -8564,7 +8586,7 @@ package body Parse is
    --          [ block_configuration ]
    --      END FOR ;
    function Parse_Component_Configuration (Loc : Location_Type;
-                                           Inst_List : Iir_List)
+                                           Inst_List : Iir_Flist)
      return Iir_Component_Configuration
    is
       Res : Iir_Component_Configuration;
@@ -8679,6 +8701,7 @@ package body Parse is
    is
       Loc : Location_Type;
       List : Iir_List;
+      Flist : Iir_Flist;
       El : Iir;
    begin
       Loc := Get_Token_Location;
@@ -8690,19 +8713,19 @@ package body Parse is
       case Current_Token is
          when Tok_All =>
             Scan;
-            return Parse_Component_Configuration (Loc, Iir_List_All);
+            return Parse_Component_Configuration (Loc, Iir_Flist_All);
          when Tok_Others =>
             Scan;
-            return Parse_Component_Configuration (Loc, Iir_List_Others);
+            return Parse_Component_Configuration (Loc, Iir_Flist_Others);
          when Tok_Identifier =>
             El := Current_Text;
             Scan;
             case Current_Token is
                when Tok_Colon =>
                   --  The identifier was a label from an instantiation list.
-                  List := Create_Iir_List;
-                  Append_Element (List, El);
-                  return Parse_Component_Configuration (Loc, List);
+                  Flist := Create_Iir_Flist (1);
+                  Set_Nth_Element (Flist, 0, El);
+                  return Parse_Component_Configuration (Loc, Flist);
                when Tok_Comma =>
                   --  The identifier was a label from an instantiation list.
                   List := Create_Iir_List;
@@ -8713,7 +8736,8 @@ package body Parse is
                      Scan;
                      exit when Current_Token /= Tok_Comma;
                   end loop;
-                  return Parse_Component_Configuration (Loc, List);
+                  Flist := List_To_Flist (List);
+                  return Parse_Component_Configuration (Loc, Flist);
                when Tok_Left_Paren =>
                   El := Parse_Name_Suffix (El);
                   return Parse_Block_Configuration_Suffix (Loc, El);

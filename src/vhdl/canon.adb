@@ -2216,7 +2216,7 @@ package body Canon is
 
       Bind : Iir;
       Comp : Iir;
-      Instances : Iir_List;
+      Instances : Iir_Flist;
       Entity_Aspect : Iir;
       Block : Iir_Block_Configuration;
       Map_Chain : Iir;
@@ -2229,9 +2229,9 @@ package body Canon is
          Instances := Get_Instantiation_List (Cfg);
          --  Designator_all and designator_others must have been replaced
          --  by a list during canon.
-         pragma Assert (Instances not in Iir_Lists_All_Others);
+         pragma Assert (Instances not in Iir_Flists_All_Others);
          Bind := Get_Default_Binding_Indication
-           (Get_Named_Entity (Get_First_Element (Instances)));
+           (Get_Named_Entity (Get_Nth_Element (Instances, 0)));
          if Bind = Null_Iir then
             --  Component is not bound.
             return;
@@ -2429,7 +2429,7 @@ package body Canon is
       Res_Binding : Iir_Binding_Indication;
       Entity : Iir;
       Instance_List : Iir_List;
-      Conf_Instance_List : Iir_List;
+      Conf_Instance_List : Iir_Flist;
       Instance : Iir;
       Instance_Name : Iir;
       N_Nbr : Natural;
@@ -2479,10 +2479,9 @@ package body Canon is
       --   replace component_configuration of them
       --   remove them in the instance list of COMP_CONF
       Instance_List := Create_Iir_List;
-      Set_Instantiation_List (Res, Instance_List);
       Conf_Instance_List := Get_Instantiation_List (Comp_Conf);
       N_Nbr := 0;
-      for I in 0 .. Get_Nbr_Elements (Conf_Instance_List) - 1 loop
+      for I in Flist_First .. Flist_Last (Conf_Instance_List) loop
          Instance_Name := Get_Nth_Element (Conf_Instance_List, I);
          Instance := Get_Named_Entity (Instance_Name);
          if Get_Component_Configuration (Instance) = Conf_Spec then
@@ -2490,11 +2489,13 @@ package body Canon is
             Set_Component_Configuration (Instance, Res);
             Append_Element (Instance_List, Instance_Name);
          else
-            Replace_Nth_Element (Conf_Instance_List, N_Nbr, Instance_Name);
+            Set_Nth_Element (Conf_Instance_List, N_Nbr, Instance_Name);
             N_Nbr := N_Nbr + 1;
          end if;
       end loop;
-      Set_Nbr_Elements (Conf_Instance_List, N_Nbr);
+      Set_Instantiation_List (Comp_Conf,
+                              Truncate_Flist (Conf_Instance_List, N_Nbr));
+      Set_Instantiation_List (Res, List_To_Flist (Instance_List));
 
       --  Insert RES.
       Set_Chain (Res, Get_Chain (Comp_Conf));
@@ -2502,7 +2503,7 @@ package body Canon is
    end Canon_Incremental_Binding;
 
    procedure Canon_Component_Specification_All_Others
-     (Conf : Iir; Parent : Iir; Spec : Iir_List; List : Iir_List; Comp : Iir)
+     (Conf : Iir; Parent : Iir; Spec : Iir_Flist; List : Iir_List; Comp : Iir)
    is
       El : Iir;
       Comp_Conf : Iir;
@@ -2526,14 +2527,14 @@ package body Canon is
                --  The component is already configured.
                --  Handle incremental configuration.
                if Get_Kind (Comp_Conf) = Iir_Kind_Configuration_Specification
-                 and then Spec = Iir_List_All
+                 and then Spec = Iir_Flist_All
                then
                   --  FIXME: handle incremental configuration.
                   raise Internal_Error;
                end if;
                --  Several component configuration for an instance.
                --  Must have been caught by sem.
-               pragma Assert (Spec = Iir_List_Others);
+               pragma Assert (Spec = Iir_Flist_Others);
             end if;
          end if;
          El := Get_Chain (El);
@@ -2541,15 +2542,14 @@ package body Canon is
    end Canon_Component_Specification_All_Others;
 
    procedure Canon_Component_Specification_List
-     (Conf : Iir; Parent : Iir; Spec : Iir_List)
+     (Conf : Iir; Parent : Iir; Spec : Iir_Flist)
    is
       El : Iir;
       Comp_Conf : Iir;
    begin
       --  Already has a designator list.
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (Spec) loop
          El := Get_Nth_Element (Spec, I);
-         exit when El = Null_Iir;
          El := Get_Named_Entity (El);
          Comp_Conf := Get_Component_Configuration (El);
          if Comp_Conf /= Null_Iir and then Comp_Conf /= Conf then
@@ -2567,15 +2567,15 @@ package body Canon is
    --  PARENT is the parent for the chain of concurrent statements.
    procedure Canon_Component_Specification (Conf : Iir; Parent : Iir)
    is
-      Spec : constant Iir_List := Get_Instantiation_List (Conf);
+      Spec : constant Iir_Flist := Get_Instantiation_List (Conf);
       List : Iir_Designator_List;
    begin
-      if Spec in Iir_Lists_All_Others then
+      if Spec in Iir_Flists_All_Others then
          List := Create_Iir_List;
          Canon_Component_Specification_All_Others
            (Conf, Parent, Spec, List,
             Get_Named_Entity (Get_Component_Name (Conf)));
-         Set_Instantiation_List (Conf, List);
+         Set_Instantiation_List (Conf, List_To_Flist (List));
       else
          --  Has Already a designator list.
          Canon_Component_Specification_List (Conf, Parent, Spec);
@@ -2586,7 +2586,7 @@ package body Canon is
    procedure Canon_Disconnection_Specification
      (Dis : Iir_Disconnection_Specification; Decl_Parent : Iir)
    is
-      Signal_List : Iir_List;
+      Signal_List : Iir_Flist;
       Force : Boolean;
       El : Iir;
       N_List : Iir_Designator_List;
@@ -2598,9 +2598,9 @@ package body Canon is
 
       if Canon_Flag_Specification_Lists then
          Signal_List := Get_Signal_List (Dis);
-         if Signal_List = Iir_List_All then
+         if Signal_List = Iir_Flist_All then
             Force := True;
-         elsif Signal_List = Iir_List_Others then
+         elsif Signal_List = Iir_Flist_Others then
             Force := False;
          else
             --  User list: nothing to do.
@@ -2609,7 +2609,6 @@ package body Canon is
 
          Dis_Type := Get_Type (Get_Type_Mark (Dis));
          N_List := Create_Iir_List;
-         Set_Signal_List (Dis, N_List);
          Set_Is_Ref (Dis, True);
          El := Get_Declaration_Chain (Decl_Parent);
          while El /= Null_Iir loop
@@ -2628,6 +2627,7 @@ package body Canon is
             end if;
             El := Get_Chain (El);
          end loop;
+         Set_Signal_List (Dis, List_To_Flist (N_List));
       end if;
    end Canon_Disconnection_Specification;
 
@@ -2941,7 +2941,7 @@ package body Canon is
                   Comp_Conf : Iir;
                   Res : Iir_Component_Configuration;
                   Designator_List : Iir_List;
-                  Inst_List : Iir_List;
+                  Inst_List : Iir_Flist;
                   Inst : Iir;
                   Inst_Name : Iir;
                begin
@@ -2960,7 +2960,8 @@ package body Canon is
                         Designator_List := Create_Iir_List;
                         Append_Element
                           (Designator_List, Build_Simple_Name (El, El));
-                        Set_Instantiation_List (Res, Designator_List);
+                        Set_Instantiation_List
+                          (Res, List_To_Flist (Designator_List));
                         Append (Last_Item, Conf, Res);
                      end if;
                   elsif Get_Kind (Comp_Conf)
@@ -2978,7 +2979,7 @@ package body Canon is
                      --  statements parts (vhdl-87 generate issue).
                      Inst_List := Get_Instantiation_List (Comp_Conf);
                      Designator_List := Create_Iir_List;
-                     for I in 0 .. Get_Nbr_Elements (Inst_List) - 1 loop
+                     for I in Flist_First .. Flist_Last (Inst_List) loop
                         Inst_Name := Get_Nth_Element (Inst_List, I);
                         Inst := Get_Named_Entity (Inst_Name);
                         if Get_Component_Configuration (Inst) = Comp_Conf
@@ -2989,7 +2990,8 @@ package body Canon is
                                            Build_Reference_Name (Inst_Name));
                         end if;
                      end loop;
-                     Set_Instantiation_List (Res, Designator_List);
+                     Set_Instantiation_List
+                       (Res, List_To_Flist (Designator_List));
                      Set_Binding_Indication
                        (Res, Get_Binding_Indication (Comp_Conf));
                      Set_Is_Ref (Res, True);

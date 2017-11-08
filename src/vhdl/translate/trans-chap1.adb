@@ -568,13 +568,12 @@ package body Trans.Chap1 is
 
       --  Call the subprogram for the instantiation list.
       declare
-         List : Iir_List;
+         List : Iir_Flist;
          El   : Iir;
       begin
          List := Get_Instantiation_List (Cfg);
-         for I in Natural loop
+         for I in Flist_First .. Flist_Last (List) loop
             El := Get_Nth_Element (List, I);
-            exit when El = Null_Iir;
             El := Get_Named_Entity (El);
             case Get_Kind (El) is
                when Iir_Kind_Component_Instantiation_Statement =>
