@@ -3007,7 +3007,7 @@ package body Sem_Decls is
                Sem_Attribute_Declaration (Decl);
             when Iir_Kind_Attribute_Specification =>
                Sem_Attribute_Specification (Decl, Parent);
-               if Get_Entity_Name_List (Decl) in Iir_Lists_All_Others then
+               if Get_Entity_Name_List (Decl) in Iir_Flists_All_Others then
                   Set_Attribute_Specification_Chain (Decl, Attr_Spec_Chain);
                   Attr_Spec_Chain := Decl;
                end if;

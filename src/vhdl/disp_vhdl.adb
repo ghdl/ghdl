@@ -1607,19 +1607,18 @@ package body Disp_Vhdl is
       Put (Tokens.Image (Tok));
    end Disp_Entity_Kind;
 
-   procedure Disp_Entity_Name_List (List : Iir_List)
+   procedure Disp_Entity_Name_List (List : Iir_Flist)
    is
       El : Iir;
    begin
-      if List = Iir_List_All then
+      if List = Iir_Flist_All then
          Put ("all");
-      elsif List = Iir_List_Others then
+      elsif List = Iir_Flist_Others then
          Put ("others");
       else
-         for I in Natural loop
+         for I in Flist_First .. Flist_Last (List) loop
             El := Get_Nth_Element (List, I);
-            exit when El = Null_Iir;
-            if I /= 0 then
+            if I /= Flist_First then
                Put (", ");
             end if;
             if Get_Kind (El) = Iir_Kind_Signature then

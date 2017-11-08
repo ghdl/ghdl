@@ -705,7 +705,7 @@ package body Sem_Specs is
       Name : Iir;
       Attr : Iir_Attribute_Declaration;
       Attr_Type : Iir;
-      List : Iir_List;
+      List : Iir_Flist;
       Expr : Iir;
       Res : Boolean;
    begin
@@ -766,7 +766,7 @@ package body Sem_Specs is
       --  implicitly and explicitly defined, that inherit the attribute, as
       --  defined below:
       List := Get_Entity_Name_List (Spec);
-      if List = Iir_List_All then
+      if List = Iir_Flist_All then
          --  o If the reserved word ALL is supplied, then the attribute
          --  specification applies to all named entities of the specified
          --  class that are declared in the immediatly enclosing
@@ -777,7 +777,7 @@ package body Sem_Specs is
               (Warnid_Specs, +Spec,
                "attribute specification apply to no named entity");
          end if;
-      elsif List = Iir_List_Others then
+      elsif List = Iir_Flist_Others then
          --  o If the reserved word OTHERS is supplied, then the attribute
          --  specification applies to named entities of the specified class
          --  that are declared in the immediately enclosing declarative
@@ -797,9 +797,8 @@ package body Sem_Specs is
          declare
             El : Iir;
          begin
-            for I in Natural loop
+            for I in Flist_First .. Flist_Last (List) loop
                El := Get_Nth_Element (List, I);
-               exit when El = Null_Iir;
                if Get_Kind (El) = Iir_Kind_Signature then
                   Sem_Signature_Entity_Designator (El, Spec);
                else
@@ -892,7 +891,7 @@ package body Sem_Specs is
          Spec := Get_Attribute_Specification_Chain (Spec);
       end if;
       while Spec /= Null_Iir loop
-         pragma Assert (Get_Entity_Name_List (Spec) in Iir_Lists_All_Others);
+         pragma Assert (Get_Entity_Name_List (Spec) in Iir_Flists_All_Others);
          Ent_Class := Get_Entity_Class (Spec);
          if Ent_Class = Decl_Class or Ent_Class = Decl_Class2 then
             Has_Error := False;

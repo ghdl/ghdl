@@ -58,7 +58,7 @@ package body Nodes_Meta is
       Field_Literal_Subtype => Type_Iir,
       Field_Allocator_Subtype => Type_Iir,
       Field_Entity_Class => Type_Token_Type,
-      Field_Entity_Name_List => Type_Iir_List,
+      Field_Entity_Name_List => Type_Iir_Flist,
       Field_Attribute_Designator => Type_Iir,
       Field_Attribute_Specification_Chain => Type_Iir,
       Field_Attribute_Specification => Type_Iir,
@@ -5911,6 +5911,8 @@ package body Nodes_Meta is
       case F is
          when Field_Simple_Aggregate_List =>
             return Get_Simple_Aggregate_List (N);
+         when Field_Entity_Name_List =>
+            return Get_Entity_Name_List (N);
          when Field_Signal_List =>
             return Get_Signal_List (N);
          when Field_Enumeration_Literal_List =>
@@ -5943,6 +5945,8 @@ package body Nodes_Meta is
       case F is
          when Field_Simple_Aggregate_List =>
             Set_Simple_Aggregate_List (N, V);
+         when Field_Entity_Name_List =>
+            Set_Entity_Name_List (N, V);
          when Field_Signal_List =>
             Set_Signal_List (N, V);
          when Field_Enumeration_Literal_List =>
@@ -6095,8 +6099,6 @@ package body Nodes_Meta is
             return Get_Dependence_List (N);
          when Field_Analysis_Checks_List =>
             return Get_Analysis_Checks_List (N);
-         when Field_Entity_Name_List =>
-            return Get_Entity_Name_List (N);
          when Field_Sensitivity_List =>
             return Get_Sensitivity_List (N);
          when Field_Callees_List =>
@@ -6123,8 +6125,6 @@ package body Nodes_Meta is
             Set_Dependence_List (N, V);
          when Field_Analysis_Checks_List =>
             Set_Analysis_Checks_List (N, V);
-         when Field_Entity_Name_List =>
-            Set_Entity_Name_List (N, V);
          when Field_Sensitivity_List =>
             Set_Sensitivity_List (N, V);
          when Field_Callees_List =>

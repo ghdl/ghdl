@@ -3708,14 +3708,15 @@ package body Parse is
      (Attribute : Iir_Attribute_Specification)
    is
       List : Iir_List;
+      Flist : Iir_Flist;
       El : Iir;
    begin
       case Current_Token is
          when Tok_All =>
-            List := Iir_List_All;
+            Flist := Iir_Flist_All;
             Scan;
          when Tok_Others =>
-            List := Iir_List_Others;
+            Flist := Iir_Flist_Others;
             Scan;
          when others =>
             List := Create_Iir_List;
@@ -3725,8 +3726,9 @@ package body Parse is
                exit when Current_Token /= Tok_Comma;
                Scan;
             end loop;
+            Flist := List_To_Flist (List);
       end case;
-      Set_Entity_Name_List (Attribute, List);
+      Set_Entity_Name_List (Attribute, Flist);
       if Current_Token = Tok_Colon then
          Scan;
          Set_Entity_Class (Attribute, Parse_Entity_Class);

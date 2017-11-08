@@ -5985,8 +5985,8 @@ package Iirs is
    procedure Set_Entity_Class (Target : Iir; Kind : Token_Type);
 
    --  Field: Field8 (uc)
-   function Get_Entity_Name_List (Target : Iir) return Iir_List;
-   procedure Set_Entity_Name_List (Target : Iir; Names : Iir_List);
+   function Get_Entity_Name_List (Target : Iir) return Iir_Flist;
+   procedure Set_Entity_Name_List (Target : Iir; Names : Iir_Flist);
 
    --  Field: Field6
    function Get_Attribute_Designator (Target : Iir) return Iir;
