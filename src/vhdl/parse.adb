@@ -3872,7 +3872,7 @@ package body Parse is
          when Tok_Colon =>
             declare
                Res : Iir_Group_Declaration;
-               List : Iir_Group_Constituent_List;
+               List : Iir_List;
             begin
                Res := Create_Iir (Iir_Kind_Group_Declaration);
                Set_Location (Res, Loc);
@@ -5888,7 +5888,7 @@ package body Parse is
    --
    --  [ LRM93 8.1 ]
    --  sensitivity_list ::= SIGNAL_name { , SIGNAL_name }
-   procedure Parse_Sensitivity_List (List: Iir_Designator_List)
+   procedure Parse_Sensitivity_List (List: Iir_List)
    is
       El : Iir;
    begin

@@ -5593,19 +5593,11 @@ package Iirs is
 
    -- Lists.
 
-   subtype Iir_Index_List is Iir_Flist;
-
    subtype Iir_Design_Unit_List is Iir_List;
-
-   subtype Iir_Enumeration_Literal_List is Iir_List;
-
-   subtype Iir_Designator_List is Iir_List;
 
    subtype Iir_Attribute_Value_Chain is Iir_List;
 
    subtype Iir_Overload_List is Iir;
-
-   subtype Iir_Group_Constituent_List is Iir_List;
 
    subtype Iir_Callees_List is Iir_List;
 

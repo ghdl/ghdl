@@ -2568,7 +2568,7 @@ package body Canon is
    procedure Canon_Component_Specification (Conf : Iir; Parent : Iir)
    is
       Spec : constant Iir_Flist := Get_Instantiation_List (Conf);
-      List : Iir_Designator_List;
+      List : Iir_List;
    begin
       if Spec in Iir_Flists_All_Others then
          List := Create_Iir_List;
@@ -2589,7 +2589,7 @@ package body Canon is
       Signal_List : Iir_Flist;
       Force : Boolean;
       El : Iir;
-      N_List : Iir_Designator_List;
+      N_List : Iir_List;
       Dis_Type : Iir;
    begin
       if Canon_Flag_Expressions then

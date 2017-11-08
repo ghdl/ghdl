@@ -1121,7 +1121,7 @@ package body Sem_Stmts is
    end Sem_Case_Statement;
 
    --  Sem the sensitivity list LIST.
-   procedure Sem_Sensitivity_List (List: Iir_Designator_List)
+   procedure Sem_Sensitivity_List (List: Iir_List)
    is
       El: Iir;
       Res: Iir;
