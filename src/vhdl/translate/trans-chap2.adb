@@ -1122,8 +1122,7 @@ package body Trans.Chap2 is
    begin
       case L is
          when Null_Iir_List
-            | Iir_List_All
-            | Iir_List_Others =>
+            | Iir_List_All =>
             return;
          when others =>
             for I in Natural loop

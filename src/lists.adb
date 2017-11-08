@@ -32,7 +32,7 @@ package body Lists is
    package Listt is new Tables
      (Table_Component_Type => List_Record,
       Table_Index_Type => List_Type,
-      Table_Low_Bound => 4,
+      Table_Low_Bound => 2,
       Table_Initial => 128);
 
    --function Get_Max_Nbr_Elements (List : List_Type) return Natural;
@@ -127,17 +127,6 @@ package body Lists is
    end Append_Element;
 
    -- Return the last element of the list, or null.
-   function Get_Last_Element (List: List_Type) return Node_Type
-   is
-      L : List_Record renames Listt.Table (List);
-   begin
-      if L.Nbr = 0 then
-         return Null_Node;
-      else
-         return L.Els (L.Nbr - 1);
-      end if;
-   end Get_Last_Element;
-
    -- Return the first element of the list, or null.
    function Get_First_Element (List: List_Type) return Node_Type is
    begin
@@ -169,28 +158,6 @@ package body Lists is
       end if;
       List_Set_Nbr_Elements (List, N);
    end Set_Nbr_Elements;
-
-   -- Return the position of the last element.
-   -- Return -1 if the list is empty.
-   function Get_Last_Element_Position (List: List_Type) return Integer is
-   begin
-      return Get_Nbr_Elements (List) - 1;
-   end Get_Last_Element_Position;
-
-   function Get_Nbr_Elements_Safe (List: List_Type) return Natural is
-   begin
-      if List = Null_List then
-         return 0;
-      else
-         return Get_Nbr_Elements (List);
-      end if;
-   end Get_Nbr_Elements_Safe;
-
-   -- Empty the list
-   procedure Empty_List (List: List_Type) is
-   begin
-      Set_Nbr_Elements (List, 0);
-   end Empty_List;
 
    --  Chain of unused lists.
    Free_Chain : List_Type := Null_List;

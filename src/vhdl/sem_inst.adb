@@ -172,8 +172,7 @@ package body Sem_Inst is
    begin
       case L is
          when Null_Iir_List
-           | Iir_List_All
-           | Iir_List_Others =>
+           | Iir_List_All =>
             return L;
          when others =>
             Res := Create_Iir_List;
@@ -756,8 +755,7 @@ package body Sem_Inst is
    begin
       case N is
          when Null_Iir_List
-           | Iir_List_All
-           | Iir_List_Others =>
+           | Iir_List_All =>
             pragma Assert (Inst = N);
             return;
          when others =>
@@ -1126,8 +1124,7 @@ package body Sem_Inst is
    begin
       case L is
          when Null_Iir_List
-           | Iir_List_All
-           | Iir_List_Others =>
+           | Iir_List_All =>
             return;
          when others =>
             for I in Natural loop

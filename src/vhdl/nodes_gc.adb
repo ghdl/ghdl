@@ -66,8 +66,7 @@ package body Nodes_GC is
    begin
       case N is
          when Null_Iir_List
-           | Iir_List_All
-           | Iir_List_Others =>
+           | Iir_List_All =>
             null;
          when others =>
             for I in Natural loop
@@ -84,8 +83,7 @@ package body Nodes_GC is
    begin
       case N is
          when Null_Iir_List
-           | Iir_List_All
-           | Iir_List_Others =>
+           | Iir_List_All =>
             null;
          when others =>
             for I in Natural loop

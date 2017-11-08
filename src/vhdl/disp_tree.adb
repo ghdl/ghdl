@@ -69,21 +69,20 @@ package body Disp_Tree is
    is
       El: Iir;
    begin
-      if Tree_List = Null_Iir_List then
-         Put_Line ("null-list");
-      elsif Tree_List = Iir_List_All then
-         Put_Line ("list-all");
-      elsif Tree_List = Iir_List_Others then
-         Put_Line ("list-others");
-      else
-         New_Line;
-         for I in Natural loop
-            El := Get_Nth_Element (Tree_List, I);
-            exit when El = Null_Iir;
-            Put_Indent (Tab);
-            Disp_Iir (El, Tab + 1, Depth);
-         end loop;
-      end if;
+      case Tree_List is
+         when Null_Iir_List =>
+            Put_Line ("null-list");
+         when Iir_List_All =>
+            Put_Line ("list-all");
+         when others =>
+            New_Line;
+            for I in Natural loop
+               El := Get_Nth_Element (Tree_List, I);
+               exit when El = Null_Iir;
+               Put_Indent (Tab);
+               Disp_Iir (El, Tab + 1, Depth);
+            end loop;
+      end case;
    end Disp_Iir_List;
 
    procedure Disp_Iir_Flist
@@ -136,22 +135,20 @@ package body Disp_Tree is
    is
       El: Iir;
    begin
-      if Tree_List = Null_Iir_List then
-         Put_Indent (Tab);
-         Put_Line (" null-list");
-      elsif Tree_List = Iir_List_All then
-         Put_Indent (Tab);
-         Put_Line (" list-all");
-      elsif Tree_List = Iir_List_Others then
-         Put_Indent (Tab);
-         Put_Line (" list-others");
-      else
-         for I in Natural loop
-            El := Get_Nth_Element (Tree_List, I);
-            exit when El = Null_Iir;
-            Disp_Iir (El, Tab, 0);
-         end loop;
-      end if;
+      case Tree_List is
+         when Null_Iir_List =>
+            Put_Indent (Tab);
+            Put_Line (" null-list");
+         when Iir_List_All =>
+            Put_Indent (Tab);
+            Put_Line (" list-all");
+         when others =>
+            for I in Natural loop
+               El := Get_Nth_Element (Tree_List, I);
+               exit when El = Null_Iir;
+               Disp_Iir (El, Tab, 0);
+            end loop;
+      end case;
    end Disp_Tree_List_Flat;
 
    function Image_Name_Id (Ident: Name_Id) return String

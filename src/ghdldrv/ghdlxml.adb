@@ -235,36 +235,32 @@ package body Ghdlxml is
    is
       El : Iir;
    begin
-      if L = Null_Iir_List then
-         return;
-      end if;
-
-      Put_Stag (Id);
       case L is
+         when  Null_Iir_List =>
+            null;
+
          when Iir_List_All =>
+            Put_Stag (Id);
             Put_Attribute ("list-id", "all");
             Put_Empty_Stag_End;
-            return;
-         when Iir_List_Others =>
-            Put_Attribute ("list-id", "others");
-            Put_Empty_Stag_End;
-            return;
+
          when others =>
+            Put_Stag (Id);
             Put_Attribute ("list-id", Strip (Iir_List'Image (L)));
             Put_Stag_End;
-      end case;
 
-      for I in Natural loop
-         El := Get_Nth_Element (L, I);
-         exit when El = Null_Iir;
-         if Ref then
+            for I in Natural loop
+               El := Get_Nth_Element (L, I);
+               exit when El = Null_Iir;
+               if Ref then
             Disp_Iir_Ref ("el", El);
-         else
-            Disp_Iir ("el", El);
-         end if;
-      end loop;
+               else
+                  Disp_Iir ("el", El);
+               end if;
+            end loop;
 
-      Put_Etag (Id);
+            Put_Etag (Id);
+      end case;
    end Disp_Iir_List;
 
    procedure Disp_Iir_Flist (Id : String; L : Iir_Flist; Ref : Boolean)

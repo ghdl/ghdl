@@ -5358,9 +5358,6 @@ package Iirs is
    subtype Iir_List is Lists.List_Type;
    Null_Iir_List : constant Iir_List := Lists.Null_List;
    Iir_List_All : constant Iir_List := Lists.List_All;
-   Iir_List_Others : constant Iir_List := Lists.List_Others;
-   subtype Iir_Lists_All_Others is Iir_List
-     range Iir_List_Others .. Iir_List_All;
 
    Null_Iir : constant Iir := Nodes.Null_Node;
 
@@ -5397,8 +5394,6 @@ package Iirs is
      renames Lists.Set_Nbr_Elements;
    function Get_First_Element (L : Iir_List) return Iir
      renames Lists.Get_First_Element;
-   function Get_Last_Element (L : Iir_List) return Iir
-     renames Lists.Get_Last_Element;
    function "=" (L, R : Iir_List) return Boolean renames Lists."=";
 
    subtype Iir_Flist is Flists.Flist_Type;

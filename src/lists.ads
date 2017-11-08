@@ -23,9 +23,7 @@ package Lists is
    for List_Type'Size use 32;
 
    Null_List : constant List_Type := 0;
-
-   List_Others : constant List_Type := 1;
-   List_All : constant List_Type := 2;
+   List_All : constant List_Type := 1;
 
    -----------
    -- Lists --
@@ -81,8 +79,6 @@ package Lists is
    -- Return the element or null_iir, if beyond bounds.
    function Get_Nth_Element (List: List_Type; N: Natural) return Node_Type;
 
-   function Get_Last_Element (List: List_Type) return Node_Type;
-
    function Get_First_Element (List: List_Type) return Node_Type;
 
    procedure Replace_Nth_Element (List: List_Type; N: Natural; El: Node_Type);
@@ -94,17 +90,9 @@ package Lists is
    function Get_Nbr_Elements (List: List_Type) return Natural;
    pragma Inline (Get_Nbr_Elements);
 
-   --  Same as get_nbr_elements but returns 0 if LIST is NULL_IIR.
-   function Get_Nbr_Elements_Safe (List : List_Type) return Natural;
-
    -- Set the number of elements in the list.
    -- Can be used only to shrink the list.
    procedure Set_Nbr_Elements (List: List_Type; N: Natural);
-
-   function Get_Last_Element_Position (List: List_Type) return Integer;
-
-   --  Clear the list.
-   procedure Empty_List (List: List_Type);
 
    --  Create a list.
    function Create_List return List_Type;
