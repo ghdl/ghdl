@@ -449,19 +449,16 @@ package body Elaboration is
    -- FIXME: handle pathological cases of recursion.
    -- Due to the rules of analysis, it is not possible to have a circulare
    -- dependence.
-   procedure Elaborate_Dependence (Design_Unit: Iir_Design_Unit) is
-      Depend_List: Iir_Design_Unit_List;
+   procedure Elaborate_Dependence (Design_Unit: Iir_Design_Unit)
+   is
+      Depend_List : constant Iir_List := Get_Dependence_List (Design_Unit);
+      Depend_It : List_Iterator;
       Design: Iir;
       Library_Unit: Iir;
    begin
-      Depend_List := Get_Dependence_List (Design_Unit);
-      if Depend_List = Null_Iir_List then
-         return;
-      end if;
-
-      for I in Natural loop
-         Design := Get_Nth_Element (Depend_List, I);
-         exit when Design = Null_Iir;
+      Depend_It := List_Iterate_Safe (Depend_List);
+      while Is_Valid (Depend_It) loop
+         Design := Get_Element (Depend_It);
          if Get_Kind (Design) = Iir_Kind_Entity_Aspect_Entity then
             --  During Sem, the architecture may be still unknown, and the
             --  dependency is therefore the aspect.
@@ -545,6 +542,7 @@ package body Elaboration is
             when others =>
                Error_Kind ("elaborate_dependence", Library_Unit);
          end case;
+         Next (Depend_It);
       end loop;
    end Elaborate_Dependence;
 

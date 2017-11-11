@@ -180,6 +180,7 @@ package body Simulation.Main is
    procedure Elaborate_Drivers (Instance: Block_Instance_Acc; Proc: Iir)
    is
       Driver_List: Iir_List;
+      It : List_Iterator;
       El: Iir;
       Val: Iir_Value_Literal_Acc;
       Marker : Mark_Type;
@@ -193,13 +194,9 @@ package body Simulation.Main is
       Driver_List := Trans_Analyzes.Extract_Drivers (Proc);
 
       -- Some processes have no driver list (assertion).
-      if Driver_List = Null_Iir_List then
-         return;
-      end if;
-
-      for I in Natural loop
-         El := Get_Nth_Element (Driver_List, I);
-         exit when El = Null_Iir;
+      It := List_Iterate_Safe (Driver_List);
+      while Is_Valid (It) loop
+         El := Get_Element (It);
          if Trace_Drivers then
             Put_Line (' ' & Disp_Node (El));
          end if;
@@ -208,6 +205,8 @@ package body Simulation.Main is
          Val := Execute_Name (Instance, El, True);
          Add_Source (Instance, Val, Proc);
          Release (Marker, Expr_Pool);
+
+         Next (It);
       end loop;
    end Elaborate_Drivers;
 
@@ -234,15 +233,17 @@ package body Simulation.Main is
    procedure Register_Sensitivity
      (Instance : Block_Instance_Acc; List : Iir_List)
    is
+      It : List_Iterator;
       Sig : Iir;
       Marker : Mark_Type;
    begin
-      for J in Natural loop
-         Sig := Get_Nth_Element (List, J);
-         exit when Sig = Null_Iir;
+      It := List_Iterate (List);
+      while Is_Valid (It) loop
+         Sig := Get_Element (It);
          Mark (Marker, Expr_Pool);
          Process_Add_Sensitivity (Execute_Name (Instance, Sig, True));
          Release (Marker, Expr_Pool);
+         Next (It);
       end loop;
    end Register_Sensitivity;
 
@@ -847,6 +848,7 @@ package body Simulation.Main is
       end Add_Guard_Sensitivity;
 
       Dep_List : Iir_List;
+      Dep_It : List_Iterator;
       Dep : Iir;
       Data : Guard_Instance_Acc;
    begin
@@ -856,10 +858,11 @@ package body Simulation.Main is
         (To_Ghdl_Value_Ptr (Val_Guard.B1'Address),
          Data.all'Address, Guard_Func'Access);
       Dep_List := Get_Guard_Sensitivity_List (Guard);
-      for I in Natural loop
-         Dep := Get_Nth_Element (Dep_List, I);
-         exit when Dep = Null_Iir;
+      Dep_It := List_Iterate (Dep_List);
+      while Is_Valid (Dep_It) loop
+         Dep := Get_Element (Dep_It);
          Add_Guard_Sensitivity (Execute_Name (Instance, Dep, True));
+         Next (Dep_It);
       end loop;
 
       --  FIXME: free mem

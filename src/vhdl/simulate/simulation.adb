@@ -510,6 +510,7 @@ package body Simulation is
       Expr: Iir;
       El : Iir;
       List: Iir_List;
+      It : List_Iterator;
       Res: Iir_Value_Literal_Acc;
       Status : Boolean;
       Marker : Mark_Type;
@@ -532,13 +533,12 @@ package body Simulation is
          -- occuring on any signal in the sensitivity set of the wait
          -- statement.
          List := Get_Sensitivity_List (Stmt);
-         if List /= Null_Iir_List then
-            for J in Natural loop
-               El := Get_Nth_Element (List, J);
-               exit when El = Null_Iir;
-               Wait_Add_Sensitivity (Execute_Name (Instance, El, True));
-            end loop;
-         end if;
+         It := List_Iterate_Safe (List);
+         while Is_Valid (It) loop
+            El := Get_Element (It);
+            Wait_Add_Sensitivity (Execute_Name (Instance, El, True));
+            Next (It);
+         end loop;
 
          --  LRM93 8.1
          --  It also causes the execution of the corresponding process
