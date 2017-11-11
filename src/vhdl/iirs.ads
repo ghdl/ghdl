@@ -5396,8 +5396,6 @@ package Iirs is
      renames Lists.Iterate_Safe;
    function Is_Valid (It : List_Iterator) return Boolean
      renames Lists.Is_Valid;
-   function Is_First (It : List_Iterator) return Boolean
-     renames Lists.Is_First;
    procedure Next (It : in out List_Iterator)
      renames Lists.Next;
    function Get_Element (It : List_Iterator) return Iir

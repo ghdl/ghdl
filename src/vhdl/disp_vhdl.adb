@@ -794,6 +794,7 @@ package body Disp_Vhdl is
    is
       El : Iir;
       It : List_Iterator;
+      Is_First : Boolean;
    begin
       case List is
          when Null_Iir_List =>
@@ -802,10 +803,13 @@ package body Disp_Vhdl is
             Put ("all");
          when others =>
             It := List_Iterate (List);
+            Is_First := True;
             while Is_Valid (It) loop
                El := Get_Element (It);
-               if not Is_First (It) then
+               if not Is_First then
                   Put (", ");
+               else
+                  Is_First := False;
                end if;
                Disp_Expression (El);
                Next (It);

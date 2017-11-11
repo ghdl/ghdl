@@ -88,10 +88,6 @@ package Lists is
    --  True if LIST is empty.
    function Is_Empty (List : List_Type) return Boolean;
 
-   -- Set the number of elements in the list.
-   -- Can be used only to shrink the list.
-   procedure Set_Nbr_Elements (List: List_Type; N: Natural);
-
    --  Iterator.  The idiomatic way to iterate is:
    --  It := Iterate (List);
    --  while Is_Valid (It) loop
@@ -103,21 +99,31 @@ package Lists is
 
    function Iterate (List : List_Type) return Iterator;
    function Is_Valid (It : Iterator) return Boolean;
-   function Is_First (It : Iterator) return Boolean;
    procedure Next (It : in out Iterator);
    function Get_Element (It : Iterator) return Node_Type;
    procedure Set_Element (It : Iterator; El : Node_Type);
-
-   procedure Truncate (It : Iterator);
 
    --  Like Iterate, but if LIST is Null_List, it returns an iterator that is
    --  never valid.
    function Iterate_Safe (List : List_Type) return Iterator;
 private
+   type Chunk_Index_Type is new Int32;
+   No_Chunk_Index : constant Chunk_Index_Type := 0;
+
+   Chunk_Len : constant := 7;
+
+   type Node_Type_Array is
+     array (Nat32 range 0 .. Chunk_Len - 1) of Node_Type;
+
+   type Chunk_Type is record
+      Next : Chunk_Index_Type;
+      Els : Node_Type_Array;
+   end record;
+
    type Iterator is record
-      List : List_Type;
-      Len : Natural;
-      Idx : Natural;
+      Chunk : Chunk_Index_Type;
+      Chunk_Idx : Nat32;
+      Remains : Natural;
    end record;
 
    pragma Inline (Is_Valid);
