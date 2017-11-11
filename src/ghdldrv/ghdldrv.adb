@@ -1443,6 +1443,7 @@ package body Ghdldrv is
       In_Work : Boolean;
 
       Files_List : Iir_List;
+      Files_It : List_Iterator;
 
       --  Set when a design file has been compiled.
       Has_Compiled : Boolean;
@@ -1478,41 +1479,42 @@ package body Ghdldrv is
       end if;
       if Cmd.Flag_Depend_Unit then
          Put_Line ("File analysis order:");
-         for I in Natural loop
-            File := Get_Nth_Element (Files_List, I);
-            exit when File = Null_Iir;
+         Files_It := List_Iterate (Files_List);
+         while Is_Valid (Files_It) loop
+            File := Get_Element (Files_It);
             Image (Get_Design_File_Filename (File));
             Put ("  ");
             Put (Nam_Buffer (1 .. Nam_Length));
             if Flag_Verbose then
                Put_Line (":");
                declare
-                  Dep_List : Iir_List;
+                  Dep_List : constant Iir_List :=
+                    Get_File_Dependence_List (File);
+                  Dep_It : List_Iterator;
                   Dep_File : Iir;
                begin
-                  Dep_List := Get_File_Dependence_List (File);
-                  if Dep_List /= Null_Iir_List then
-                     for J in Natural loop
-                        Dep_File := Get_Nth_Element (Dep_List, J);
-                        exit when Dep_File = Null_Iir;
-                        Image (Get_Design_File_Filename (Dep_File));
-                        Put ("    ");
-                        Put_Line (Nam_Buffer (1 .. Nam_Length));
-                     end loop;
-                  end if;
+                  Dep_It := List_Iterate_Safe (Dep_List);
+                  while Is_Valid (Dep_It) loop
+                     Dep_File := Get_Element (Dep_It);
+                     Image (Get_Design_File_Filename (Dep_File));
+                     Put ("    ");
+                     Put_Line (Nam_Buffer (1 .. Nam_Length));
+                     Next (Dep_It);
+                  end loop;
                end;
             else
                New_Line;
             end if;
+            Next (Files_It);
          end loop;
       end if;
 
       Has_Compiled := False;
       Last_Stamp := Invalid_Time;
 
-      for I in Natural loop
-         File := Get_Nth_Element (Files_List, I);
-         exit when File = Null_Iir;
+      Files_It := List_Iterate (Files_List);
+      while Is_Valid (Files_It) loop
+         File := Get_Element (Files_It);
 
          if File = Std_Package.Std_Standard_File then
             Need_Analyze := False;
@@ -1573,6 +1575,7 @@ package body Ghdldrv is
             --  analyzed.
             Set_Analysis_Time_Stamp (File, Files_Map.Get_Os_Time_Stamp);
          end if;
+         Next (Files_It);
       end loop;
 
       Need_Elaboration := False;
@@ -1705,12 +1708,14 @@ package body Ghdldrv is
    is
       HT : constant Character := Ada.Characters.Latin_1.HT;
       Files_List : Iir_List;
+      Files_It : List_Iterator;
       File : Iir_Design_File;
 
       Lib : Iir_Library_Declaration;
       Dir_Id : Name_Id;
 
       Dep_List : Iir_List;
+      Dep_It : List_Iterator;
       Dep_File : Iir;
    begin
       if Only_Depends then
@@ -1778,13 +1783,14 @@ package body Ghdldrv is
       Put_Line ("# Elaboration target");
       Put (Base_Name.all);
       Put (":");
-      for I in Natural loop
-         File := Get_Nth_Element (Files_List, I);
-         exit when File = Null_Iir;
+      Files_It := List_Iterate (Files_List);
+      while Is_Valid (Files_It) loop
+         File := Get_Element (Files_It);
          if Is_Makeable_File (File) then
             Put (" ");
             Put (Get_Object_Filename (File));
          end if;
+         Next (Files_It);
       end loop;
       New_Line;
       -- Omit rule.
@@ -1802,9 +1808,9 @@ package body Ghdldrv is
       end if;
 
       Put_Line ("# Targets to analyze files");
-      for I in Natural loop
-         File := Get_Nth_Element (Files_List, I);
-         exit when File = Null_Iir;
+      Files_It := List_Iterate (Files_List);
+      while Is_Valid (Files_It) loop
+         File := Get_Element (Files_It);
          Dir_Id := Get_Design_File_Directory (File);
          if not Is_Makeable_File (File) then
             --  Builtin file.
@@ -1847,30 +1853,31 @@ package body Ghdldrv is
                end if;
             end if;
          end if;
+         Next (Files_It);
       end loop;
       New_Line;
 
       Put_Line ("# Files dependences");
-      for I in Natural loop
-         File := Get_Nth_Element (Files_List, I);
-         exit when File = Null_Iir;
+      Files_It := List_Iterate (Files_List);
+      while Is_Valid (Files_It) loop
+         File := Get_Element (Files_It);
          if Is_Makeable_File (File) then
             Put (Get_Object_Filename (File));
             Put (": ");
             Dep_List := Get_File_Dependence_List (File);
-            if Dep_List /= Null_Iir_List then
-               for J in Natural loop
-                  Dep_File := Get_Nth_Element (Dep_List, J);
-                  exit when Dep_File = Null_Iir;
-                  if Dep_File /= File and then Is_Makeable_File (Dep_File)
-                  then
-                     Put (" ");
-                     Put (Get_Object_Filename (Dep_File));
-                  end if;
-                  end loop;
-            end if;
+            Dep_It := List_Iterate_Safe (Dep_List);
+            while Is_Valid (Dep_It) loop
+               Dep_File := Get_Element (Dep_It);
+               if Dep_File /= File and then Is_Makeable_File (Dep_File)
+               then
+                  Put (" ");
+                  Put (Get_Object_Filename (Dep_File));
+               end if;
+               Next (Dep_It);
+            end loop;
             New_Line;
          end if;
+         Next (Files_It);
       end loop;
    end Gen_Makefile;
 
