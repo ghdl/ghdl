@@ -1124,6 +1124,7 @@ package body Sem_Stmts is
    procedure Sem_Sensitivity_List (List: Iir_List)
    is
       El: Iir;
+      It : List_Iterator;
       Res: Iir;
       Prefix : Iir;
    begin
@@ -1131,10 +1132,10 @@ package body Sem_Stmts is
          return;
       end if;
 
-      for I in Natural loop
+      It := List_Iterate (List);
+      while Is_Valid (It) loop
          -- El is an iir_identifier.
-         El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
+         El := Get_Element (It);
 
          Sem_Name (El);
 
@@ -1175,8 +1176,10 @@ package body Sem_Stmts is
                  (+El, "sensitivity element %n must be a static name", +Res);
             end if;
 
-            Replace_Nth_Element (List, I, Res);
+            Set_Element (It, Res);
          end if;
+
+         Next (It);
       end loop;
    end Sem_Sensitivity_List;
 

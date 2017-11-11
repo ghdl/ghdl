@@ -1510,27 +1510,29 @@ package body Errorout is
       elsif Get_Kind (A_Type) = Iir_Kind_Overload_List then
          declare
             use Ada.Strings.Unbounded;
+            List : constant Iir_List := Get_Overload_List (A_Type);
+            Nbr : constant Natural := Get_Nbr_Elements (List);
             Res : Unbounded_String;
-            List : Iir_List;
             El : Iir;
-            Nbr : Natural;
+            It : List_Iterator;
          begin
-            List := Get_Overload_List (A_Type);
-            Nbr := Get_Nbr_Elements (List);
             if Nbr = 0 then
                return "unknown";
             elsif Nbr = 1 then
                return Disp_Type_Name (Get_First_Element (List));
             else
                Append (Res, "one of ");
+               It := List_Iterate (List);
                for I in 0 .. Nbr - 1 loop
-                  El := Get_Nth_Element (List, I);
+                  pragma Assert (Is_Valid (It));
+                  El := Get_Element (It);
                   Append (Res, Disp_Type_Name (El));
                   if I < Nbr - 2 then
                      Append (Res, ", ");
                   elsif I = Nbr - 2 then
                      Append (Res, " or ");
                   end if;
+                  Next (It);
                end loop;
                return To_String (Res);
             end if;

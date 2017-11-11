@@ -211,19 +211,18 @@ package body Trans.Helpers2 is
 
    procedure Register_Signal_List (List : Iir_List; Proc : O_Dnode)
    is
+      It : List_Iterator;
       El  : Iir;
       Sig : Mnode;
    begin
-      if List = Null_Iir_List then
-         return;
-      end if;
-      for I in Natural loop
-         El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
+      It := List_Iterate_Safe (List);
+      while Is_Valid (It) loop
+         El := Get_Element (It);
          Open_Temp;
          Sig := Chap6.Translate_Name (El, Mode_Signal);
          Register_Signal (Sig, Get_Type (El), Proc);
          Close_Temp;
+         Next (It);
       end loop;
    end Register_Signal_List;
 

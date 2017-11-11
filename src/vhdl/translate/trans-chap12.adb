@@ -436,6 +436,7 @@ package body Trans.Chap12 is
          Dep_List : Iir_List;
          Dep : Iir;
          Dep_Unit : Iir_Design_Unit;
+         Dep_It : List_Iterator;
          Lib_Unit : Iir;
       begin
          --  Load the unit in memory to compute the dependence list.
@@ -475,15 +476,16 @@ package body Trans.Chap12 is
          end case;
 
          Dep_List := Get_Dependence_List (Unit);
-         for I in Natural loop
-            Dep := Get_Nth_Element (Dep_List, I);
-            exit when Dep = Null_Iir;
+         Dep_It := List_Iterate (Dep_List);
+         while Is_Valid (Dep_It) loop
+            Dep := Get_Element (Dep_It);
             Dep_Unit := Libraries.Find_Design_Unit (Dep);
             if Dep_Unit = Null_Iir then
                Error_Msg_Elab ("could not find design unit %n", +Dep);
             elsif not Get_Elab_Flag (Dep_Unit) then
                Add_Unit_Dependences (Dep_Unit);
             end if;
+            Next (Dep_It);
          end loop;
       end Add_Unit_Dependences;
 

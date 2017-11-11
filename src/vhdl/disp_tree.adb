@@ -67,7 +67,7 @@ package body Disp_Tree is
    procedure Disp_Iir_List
      (Tree_List : Iir_List; Tab : Natural; Depth : Natural)
    is
-      El: Iir;
+      It : List_Iterator;
    begin
       case Tree_List is
          when Null_Iir_List =>
@@ -76,11 +76,11 @@ package body Disp_Tree is
             Put_Line ("list-all");
          when others =>
             New_Line;
-            for I in Natural loop
-               El := Get_Nth_Element (Tree_List, I);
-               exit when El = Null_Iir;
+            It := List_Iterate (Tree_List);
+            while Is_Valid (It) loop
                Put_Indent (Tab);
-               Disp_Iir (El, Tab + 1, Depth);
+               Disp_Iir (Get_Element (It), Tab + 1, Depth);
+               Next (It);
             end loop;
       end case;
    end Disp_Iir_List;
@@ -131,9 +131,9 @@ package body Disp_Tree is
    end Disp_Tree_Flat_Chain;
    pragma Unreferenced (Disp_Tree_Flat_Chain);
 
-   procedure Disp_Tree_List_Flat (Tree_List: Iir_List; Tab: Natural)
+   procedure Disp_Tree_List_Flat (Tree_List : Iir_List; Tab : Natural)
    is
-      El: Iir;
+      It : List_Iterator;
    begin
       case Tree_List is
          when Null_Iir_List =>
@@ -143,10 +143,10 @@ package body Disp_Tree is
             Put_Indent (Tab);
             Put_Line (" list-all");
          when others =>
-            for I in Natural loop
-               El := Get_Nth_Element (Tree_List, I);
-               exit when El = Null_Iir;
-               Disp_Iir (El, Tab, 0);
+            It := List_Iterate (Tree_List);
+            while Is_Valid (It) loop
+               Disp_Iir (Get_Element (It), Tab, 0);
+               Next (It);
             end loop;
       end case;
    end Disp_Tree_List_Flat;

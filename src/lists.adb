@@ -54,6 +54,11 @@ package body Lists is
       Listt.Table (List).Nbr := Nbr;
    end List_Set_Nbr_Elements;
 
+   function Is_Empty (List : List_Type) return Boolean is
+   begin
+      return Listt.Table (List).Nbr = 0;
+   end Is_Empty;
+
    --function Get_Max_Nbr_Elements (List : List_Type) return Natural is
    --begin
    --   return Listt.Table (List).Max;
@@ -207,4 +212,50 @@ package body Lists is
       Listt.Init;
    end Initialize;
 
+   function Iterate (List : List_Type) return Iterator is
+   begin
+      return Iterator'(List => List,
+                       Len => Get_Nbr_Elements (List),
+                       Idx => 0);
+   end Iterate;
+
+   function Iterate_Safe (List : List_Type) return Iterator is
+   begin
+      if List = Null_List then
+         return Iterator'(List => Null_List,
+                          Len => 0,
+                          Idx => 0);
+      end if;
+      return Iterate (List);
+   end Iterate_Safe;
+
+   function Is_Valid (It : Iterator) return Boolean is
+   begin
+      return It.Idx < It.Len;
+   end Is_Valid;
+
+   function Is_First (It : Iterator) return Boolean is
+   begin
+      return It.Idx = 0;
+   end Is_First;
+
+   procedure Next (It : in out Iterator) is
+   begin
+      It.Idx := It.Idx + 1;
+   end Next;
+
+   function Get_Element (It : Iterator) return Node_Type is
+   begin
+      return Get_Nth_Element (It.List, It.Idx);
+   end Get_Element;
+
+   procedure Set_Element (It : Iterator; El : Node_Type) is
+   begin
+      Replace_Nth_Element (It.List, It.Idx, El);
+   end Set_Element;
+
+   procedure Truncate (It : Iterator) is
+   begin
+      Set_Nbr_Elements (It.List, It.Idx);
+   end Truncate;
 end Lists;

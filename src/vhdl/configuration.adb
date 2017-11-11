@@ -40,6 +40,7 @@ package body Configuration is
    procedure Add_Design_Unit (Unit : Iir_Design_Unit; From : Iir)
    is
       List : Iir_List;
+      It : List_Iterator;
       El : Iir;
       Lib_Unit : Iir;
       File : Iir_Design_File;
@@ -111,9 +112,9 @@ package body Configuration is
       --  Note: a design unit may be referenced but unused.
       --  (eg: component specification which does not apply).
       List := Get_Dependence_List (Unit);
-      for I in Natural loop
-         El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
+      It := List_Iterate (List);
+      while Is_Valid (It) loop
+         El := Get_Element (It);
          El := Libraries.Find_Design_Unit (El);
          if El /= Null_Iir then
             Lib_Unit := Get_Library_Unit (El);
@@ -129,6 +130,7 @@ package body Configuration is
                end case;
             end if;
          end if;
+         Next (It);
       end loop;
 
       --  Lib_Unit may have changed.

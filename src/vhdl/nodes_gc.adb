@@ -62,17 +62,17 @@ package body Nodes_GC is
 
    procedure Mark_Iir_List (N : Iir_List)
    is
-      El : Iir;
+      It : List_Iterator;
    begin
       case N is
          when Null_Iir_List
            | Iir_List_All =>
             null;
          when others =>
-            for I in Natural loop
-               El := Get_Nth_Element (N, I);
-               exit when El = Null_Iir;
-               Mark_Iir (El);
+            It := List_Iterate (N);
+            while Is_Valid (It) loop
+               Mark_Iir (Get_Element (It));
+               Next (It);
             end loop;
       end case;
    end Mark_Iir_List;
@@ -80,18 +80,20 @@ package body Nodes_GC is
    procedure Mark_Iir_List_Ref (N : Iir_List; F : Fields_Enum)
    is
       El : Iir;
+      It : List_Iterator;
    begin
       case N is
          when Null_Iir_List
            | Iir_List_All =>
             null;
          when others =>
-            for I in Natural loop
-               El := Get_Nth_Element (N, I);
-               exit when El = Null_Iir;
+            It := List_Iterate (N);
+            while Is_Valid (It) loop
+               El := Get_Element (It);
                if not Markers (El) then
                   Report_Early_Reference (El, F);
                end if;
+               Next (It);
             end loop;
       end case;
    end Mark_Iir_List_Ref;
@@ -312,6 +314,7 @@ package body Nodes_GC is
    procedure Mark_Unit (Unit : Iir)
    is
       List : Iir_List;
+      It : List_Iterator;
       El : Iir;
    begin
       pragma Assert (Get_Kind (Unit) = Iir_Kind_Design_Unit);
@@ -331,10 +334,9 @@ package body Nodes_GC is
       --  First mark dependences
       List := Get_Dependence_List (Unit);
       if List /= Null_Iir_List then
-         for I in Natural loop
-            El := Get_Nth_Element (List, I);
-            exit when El = Null_Iir;
-
+         It := List_Iterate (List);
+         while Is_Valid (It) loop
+            El := Get_Element (It);
             case Get_Kind (El) is
                when Iir_Kind_Design_Unit =>
                   Mark_Unit (El);
@@ -366,6 +368,7 @@ package body Nodes_GC is
                when others =>
                   Error_Kind ("mark_unit", El);
             end case;
+            Next (It);
          end loop;
       end if;
 

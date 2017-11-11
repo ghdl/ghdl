@@ -2329,6 +2329,8 @@ package body Sem_Decls is
       Res : Iir;
       El : Iir;
       Error : Boolean;
+      Ov_List : Iir_List;
+      Ov_It : List_Iterator;
    begin
       --  Sem signature.
       if List /= Null_Iir_Flist then
@@ -2355,9 +2357,10 @@ package body Sem_Decls is
       Res := Null_Iir;
       Error := False;
       if Is_Overload_List (Name) then
-         for I in Natural loop
-            El := Get_Nth_Element (Get_Overload_List (Name), I);
-            exit when El = Null_Iir;
+         Ov_List := Get_Overload_List (Name);
+         Ov_It := List_Iterate (Ov_List);
+         while Is_Valid (Ov_It) loop
+            El := Get_Element (Ov_It);
             if Signature_Match (El, Sig) then
                if Res = Null_Iir then
                   Res := El;
@@ -2373,6 +2376,7 @@ package body Sem_Decls is
                   Error_Msg_Sem (+El, "found: %n", +El);
                end if;
             end if;
+            Next (Ov_It);
          end loop;
 
          --  Free the overload list (with a workaround as only variables can

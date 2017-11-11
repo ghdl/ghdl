@@ -61,38 +61,6 @@ package Lists is
    -- Set the number of elements in the list.
    -- Can be used only to shrink the list.
    --   procedure Set_Nbr_Elements (List: in Iir_List; N: Natural);
-   --
-   -- Return the position of the last element.
-   -- Return -1 if the list is empty.
-   --   function Get_Last_Element_Position (List: in Iir_List) return Integer;
-   --
-   -- Empty the list.
-   -- This is also set_nbr_elements (list, 0);
-   --   procedure Empty_List (List: in Iir_List);
-   --
-   -- Alias a list.  TARGET must be empty.
-   --   procedure Alias_List (Target: in out Iir; Source: in Iir);
-
-   procedure Append_Element (List: List_Type; Element: Node_Type);
-
-   -- Get the N th element in list, starting from 0.
-   -- Return the element or null_iir, if beyond bounds.
-   function Get_Nth_Element (List: List_Type; N: Natural) return Node_Type;
-
-   function Get_First_Element (List: List_Type) return Node_Type;
-
-   procedure Replace_Nth_Element (List: List_Type; N: Natural; El: Node_Type);
-
-   procedure Add_Element (List: List_Type; El: Node_Type);
-
-   -- Return the number of elements in the list.
-   -- This is also 1 + the position of the last element.
-   function Get_Nbr_Elements (List: List_Type) return Natural;
-   pragma Inline (Get_Nbr_Elements);
-
-   -- Set the number of elements in the list.
-   -- Can be used only to shrink the list.
-   procedure Set_Nbr_Elements (List: List_Type; N: Natural);
 
    --  Create a list.
    function Create_List return List_Type;
@@ -103,4 +71,56 @@ package Lists is
    --  Free all the lists and reset to initial state.
    --  Must be used to free the memory used by the lists.
    procedure Initialize;
+
+   --  Append ELEMENT to the list.
+   procedure Append_Element (List : List_Type; Element : Node_Type);
+
+   --  Return the first element of the list.
+   function Get_First_Element (List : List_Type) return Node_Type;
+
+   procedure Add_Element (List : List_Type; El : Node_Type);
+
+   -- Return the number of elements in the list.
+   -- This is also 1 + the position of the last element.
+   function Get_Nbr_Elements (List: List_Type) return Natural;
+   pragma Inline (Get_Nbr_Elements);
+
+   --  True if LIST is empty.
+   function Is_Empty (List : List_Type) return Boolean;
+
+   -- Set the number of elements in the list.
+   -- Can be used only to shrink the list.
+   procedure Set_Nbr_Elements (List: List_Type; N: Natural);
+
+   --  Iterator.  The idiomatic way to iterate is:
+   --  It := Iterate (List);
+   --  while Is_Valid (It) loop
+   --     El := Get_Element (It);
+   --     ...
+   --     Next (It);
+   --  end loop;
+   type Iterator is private;
+
+   function Iterate (List : List_Type) return Iterator;
+   function Is_Valid (It : Iterator) return Boolean;
+   function Is_First (It : Iterator) return Boolean;
+   procedure Next (It : in out Iterator);
+   function Get_Element (It : Iterator) return Node_Type;
+   procedure Set_Element (It : Iterator; El : Node_Type);
+
+   procedure Truncate (It : Iterator);
+
+   --  Like Iterate, but if LIST is Null_List, it returns an iterator that is
+   --  never valid.
+   function Iterate_Safe (List : List_Type) return Iterator;
+private
+   type Iterator is record
+      List : List_Type;
+      Len : Natural;
+      Idx : Natural;
+   end record;
+
+   pragma Inline (Is_Valid);
+   pragma Inline (Next);
+   pragma Inline (Get_Element);
 end Lists;

@@ -1136,15 +1136,17 @@ package body Sem_Scopes is
 
    procedure Iterator_Decl_List (Decl_List : Iir_List; Arg : Arg_Type)
    is
-      Decl: Iir;
+      Decl : Iir;
+      It : List_Iterator;
    begin
       if Decl_List = Null_Iir_List then
          return;
       end if;
-      for I in Natural loop
-         Decl := Get_Nth_Element (Decl_List, I);
-         exit when Decl = Null_Iir;
+      It := List_Iterate (Decl_List);
+      while Is_Valid (It) loop
+         Decl := Get_Element (It);
          Handle_Decl (Decl, Arg);
+         Next (It);
       end loop;
    end Iterator_Decl_List;
 

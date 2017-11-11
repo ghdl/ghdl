@@ -241,6 +241,7 @@ package body Trans.Chap9 is
       Info : Ortho_Info_Acc;
 
       Drivers     : Iir_List;
+      It          : List_Iterator;
       Nbr_Drivers : Natural;
       Sig         : Iir;
    begin
@@ -273,8 +274,10 @@ package body Trans.Chap9 is
 
          Nbr_Drivers := Get_Nbr_Elements (Drivers);
          Info.Process_Drivers := new Direct_Driver_Arr (1 .. Nbr_Drivers);
+         It := List_Iterate (Drivers);
          for I in 1 .. Nbr_Drivers loop
-            Sig := Get_Nth_Element (Drivers, I - 1);
+            pragma Assert (Is_Valid (It));
+            Sig := Get_Element (It);
             Info.Process_Drivers (I) := (Sig => Sig, Var => Null_Var);
             Sig := Get_Object_Prefix (Sig);
             pragma Assert
@@ -288,7 +291,9 @@ package body Trans.Chap9 is
                --  Do not create driver severals times.
                Set_After_Drivers_Flag (Sig, True);
             end if;
+            Next (It);
          end loop;
+         pragma Assert (not Is_Valid (It));
          Trans_Analyzes.Free_Drivers_List (Drivers);
       end if;
       Pop_Instance_Factory (Info.Process_Scope'Access);
@@ -1112,16 +1117,18 @@ package body Trans.Chap9 is
    procedure Destroy_Types_In_List (L : Iir_List)
    is
       El : Iir;
+      It : List_Iterator;
    begin
       case L is
          when Null_Iir_List
             | Iir_List_All =>
             return;
          when others =>
-            for I in Natural loop
-               El := Get_Nth_Element (L, I);
-               exit when El = Null_Iir;
+            It := List_Iterate (L);
+            while Is_Valid (It) loop
+               El := Get_Element (It);
                Destroy_Types (El);
+               Next (It);
             end loop;
       end case;
    end Destroy_Types_In_List;

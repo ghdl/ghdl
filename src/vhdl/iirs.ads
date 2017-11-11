@@ -5349,15 +5349,9 @@ package Iirs is
    --Iir_Kind_Disconnection_Specification
      Iir_Kind_Configuration_Specification;
 
-   -------------------------------------
-   -- Types and subtypes declarations --
-   -------------------------------------
+   --  Nodes and lists.
 
-   -- Level 1 base class.
    subtype Iir is Nodes.Node_Type;
-   subtype Iir_List is Lists.List_Type;
-   Null_Iir_List : constant Iir_List := Lists.Null_List;
-   Iir_List_All : constant Iir_List := Lists.List_All;
 
    Null_Iir : constant Iir := Nodes.Null_Node;
 
@@ -5369,19 +5363,20 @@ package Iirs is
    function Is_Valid (Node : Iir) return Boolean;
    pragma Inline (Is_Valid);
 
-   function Is_Null_List (Node : Iir_List) return Boolean;
-   pragma Inline (Is_Null_List);
-
    function "=" (L, R : Iir) return Boolean renames Nodes."=";
 
    function Get_Last_Node return Iir renames Nodes.Get_Last_Node;
 
+   subtype Iir_List is Lists.List_Type;
+   Null_Iir_List : constant Iir_List := Lists.Null_List;
+   Iir_List_All : constant Iir_List := Lists.List_All;
+
+   subtype List_Iterator is Lists.Iterator;
+   function Is_Null_List (Node : Iir_List) return Boolean;
+   pragma Inline (Is_Null_List);
+
    function Create_Iir_List return Iir_List
      renames Lists.Create_List;
-   function Get_Nth_Element (L : Iir_List; N : Natural) return Iir
-     renames Lists.Get_Nth_Element;
-   procedure Replace_Nth_Element (L : Iir_List; N : Natural; El : Iir)
-     renames Lists.Replace_Nth_Element;
    procedure Append_Element (L : Iir_List; E : Iir)
      renames Lists.Append_Element;
    procedure Add_Element (L : Iir_List; E : Iir)
@@ -5390,10 +5385,26 @@ package Iirs is
      renames Lists.Destroy_List;
    function Get_Nbr_Elements (L : Iir_List) return Natural
      renames Lists.Get_Nbr_Elements;
-   procedure Set_Nbr_Elements (L : Iir_List; Nbr : Natural)
-     renames Lists.Set_Nbr_Elements;
    function Get_First_Element (L : Iir_List) return Iir
      renames Lists.Get_First_Element;
+   function Is_Empty (L : Iir_List) return Boolean
+     renames Lists.Is_Empty;
+
+   function List_Iterate (List : Iir_List) return List_Iterator
+     renames Lists.Iterate;
+   function List_Iterate_Safe (List : Iir_List) return List_Iterator
+     renames Lists.Iterate_Safe;
+   function Is_Valid (It : List_Iterator) return Boolean
+     renames Lists.Is_Valid;
+   function Is_First (It : List_Iterator) return Boolean
+     renames Lists.Is_First;
+   procedure Next (It : in out List_Iterator)
+     renames Lists.Next;
+   function Get_Element (It : List_Iterator) return Iir
+     renames Lists.Get_Element;
+   procedure Set_Element (It : List_Iterator; El : Iir)
+     renames Lists.Set_Element;
+
    function "=" (L, R : Iir_List) return Boolean renames Lists."=";
 
    subtype Iir_Flist is Flists.Flist_Type;

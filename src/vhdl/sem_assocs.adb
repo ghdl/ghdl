@@ -1271,6 +1271,7 @@ package body Sem_Assocs is
      (Conv : Iir; Res_Type : Iir; Param_Type : Iir; Loc : Iir) return Iir
    is
       List : Iir_List;
+      It : List_Iterator;
       Res_Base_Type : Iir;
       Param_Base_Type : Iir;
       El : Iir;
@@ -1285,9 +1286,9 @@ package body Sem_Assocs is
       if Is_Overload_List (Conv) then
          List := Get_Overload_List (Conv);
          Res := Null_Iir;
-         for I in Natural loop
-            El := Get_Nth_Element (List, I);
-            exit when El = Null_Iir;
+         It := List_Iterate (List);
+         while Is_Valid (It) loop
+            El := Get_Element (It);
             if Is_Valid_Conversion (El, Res_Base_Type, Param_Base_Type) then
                if Res /= Null_Iir then
                   raise Internal_Error;
@@ -1295,6 +1296,7 @@ package body Sem_Assocs is
                Free_Iir (Conv);
                Res := El;
             end if;
+            Next (It);
          end loop;
       else
          if Is_Valid_Conversion (Conv, Res_Base_Type, Param_Base_Type) then
@@ -1705,14 +1707,15 @@ package body Sem_Assocs is
             declare
                Nbr_Errors : Natural;
                List : Iir_List;
+               It : List_Iterator;
                El, R : Iir;
             begin
                Nbr_Errors := 0;
                R := Null_Iir;
                List := Get_Overload_List (Res);
-               for I in Natural loop
-                  El := Get_Nth_Element (List, I);
-                  exit when El = Null_Iir;
+               It := List_Iterate (List);
+               while Is_Valid (It) loop
+                  El := Get_Element (It);
                   if Has_Interface_Subprogram_Profile (Inter, El) then
                      if Is_Null (R) then
                         R := El;
@@ -1731,6 +1734,7 @@ package body Sem_Assocs is
                         Nbr_Errors := Nbr_Errors + 1;
                      end if;
                   end if;
+                  Next (It);
                end loop;
                if Is_Null (R) then
                   Error_Msg_Sem
@@ -1738,11 +1742,12 @@ package body Sem_Assocs is
                   if True then
                      Error_Msg_Sem
                        (+Assoc, " these names were incompatible:");
-                     for I in Natural loop
-                        El := Get_Nth_Element (List, I);
-                        exit when El = Null_Iir;
+                     It := List_Iterate (List);
+                     while Is_Valid (It) loop
+                        El := Get_Element (It);
                         Error_Msg_Sem
                           (+Assoc, " %n declared at %l", (+El, +El));
+                        Next (It);
                      end loop;
                   end if;
                   return;
@@ -2256,19 +2261,21 @@ package body Sem_Assocs is
                if Is_Overload_List (Inter) then
                   declare
                      List : constant Iir_List := Get_Overload_List (Inter);
+                     It : List_Iterator;
                      Filtered_Inter : Iir;
                      El : Iir;
                   begin
                      Filtered_Inter := Null_Iir;
-                     for I in Natural loop
-                        El := Get_Nth_Element (List, I);
-                        exit when El = Null_Iir;
+                     It := List_Iterate (List);
+                     while Is_Valid (It) loop
+                        El := Get_Element (It);
                         if Get_Kind (El) in Iir_Kinds_Interface_Declaration
                           and then
                           Get_Parent (El) = Get_Parent (Interface_Chain)
                         then
                            Add_Result (Filtered_Inter, El);
                         end if;
+                        Next (It);
                      end loop;
                      Free_Overload_List (Inter);
                      Inter := Filtered_Inter;

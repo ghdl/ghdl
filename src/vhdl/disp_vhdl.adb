@@ -790,24 +790,27 @@ package body Disp_Vhdl is
       Disp_End (Def, "record");
    end Disp_Record_Type_Definition;
 
-   procedure Disp_Designator_List (List: Iir_List) is
-      El: Iir;
+   procedure Disp_Designator_List (List: Iir_List)
+   is
+      El : Iir;
+      It : List_Iterator;
    begin
-      if List = Null_Iir_List then
-         return;
-      elsif List = Iir_List_All then
-         Put ("all");
-         return;
-      end if;
-      for I in Natural loop
-         El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
-         if I > 0 then
-            Put (", ");
-         end if;
-         Disp_Expression (El);
-         --Disp_Text_Literal (El);
-      end loop;
+      case List is
+         when Null_Iir_List =>
+            null;
+         when Iir_List_All =>
+            Put ("all");
+         when others =>
+            It := List_Iterate (List);
+            while Is_Valid (It) loop
+               El := Get_Element (It);
+               if not Is_First (It) then
+                  Put (", ");
+               end if;
+               Disp_Expression (El);
+               Next (It);
+            end loop;
+      end case;
    end Disp_Designator_List;
 
    -- Display the full definition of a type, ie the sequence that can create

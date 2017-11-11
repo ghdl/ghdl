@@ -1118,17 +1118,17 @@ package body Trans.Chap2 is
 
    procedure Instantiate_Iir_List_Info (L : Iir_List)
    is
-      El : Iir;
+      It : List_Iterator;
    begin
       case L is
          when Null_Iir_List
             | Iir_List_All =>
             return;
          when others =>
-            for I in Natural loop
-               El := Get_Nth_Element (L, I);
-               exit when El = Null_Iir;
-               Instantiate_Iir_Info (El);
+            It := List_Iterate (L);
+            while Is_Valid (It) loop
+               Instantiate_Iir_Info (Get_Element (It));
+               Next (It);
             end loop;
       end case;
    end Instantiate_Iir_List_Info;
@@ -1704,15 +1704,14 @@ package body Trans.Chap2 is
 
    procedure Elab_Dependence (Design_Unit: Iir_Design_Unit)
    is
-      Depend_List : Iir_Design_Unit_List;
+      Depend_List : constant Iir_List := Get_Dependence_List (Design_Unit);
+      It : List_Iterator;
       Design      : Iir;
       Library_Unit: Iir;
    begin
-      Depend_List := Get_Dependence_List (Design_Unit);
-
-      for I in Natural loop
-         Design := Get_Nth_Element (Depend_List, I);
-         exit when Design = Null_Iir;
+      It := List_Iterate (Depend_List);
+      while Is_Valid (It) loop
+         Design := Get_Element (It);
          if Get_Kind (Design) = Iir_Kind_Design_Unit then
             Library_Unit := Get_Library_Unit (Design);
             case Get_Kind (Library_Unit) is
@@ -1737,6 +1736,7 @@ package body Trans.Chap2 is
                   Error_Kind ("elab_dependence", Library_Unit);
             end case;
          end if;
+         Next (It);
       end loop;
    end Elab_Dependence;
 

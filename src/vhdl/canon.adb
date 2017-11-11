@@ -240,12 +240,12 @@ package body Canon is
          when Iir_Kind_Psl_Endpoint_Declaration =>
             declare
                List : constant Iir_List := Get_PSL_Clock_Sensitivity (Expr);
-               El : Iir;
+               It : List_Iterator;
             begin
-               for I in Natural loop
-                  El := Get_Nth_Element (List, I);
-                  exit when El = Null_Iir;
-                  Add_Element (Sensitivity_List, El);
+               It := List_Iterate (List);
+               while Is_Valid (It) loop
+                  Add_Element (Sensitivity_List, Get_Element (It));
+                  Next (It);
                end loop;
             end;
 
@@ -504,6 +504,7 @@ package body Canon is
      (Callees_List : Iir_List; Sensitivity_List : Iir_List)
    is
       Callee : Iir;
+      It : List_Iterator;
       Bod : Iir;
    begin
       --  LRM08 11.3
@@ -516,9 +517,9 @@ package body Canon is
       if Callees_List = Null_Iir_List then
          return;
       end if;
-      for I in Natural loop
-         Callee := Get_Nth_Element (Callees_List, I);
-         exit when Callee = Null_Iir;
+      It := List_Iterate (Callees_List);
+      while Is_Valid (It) loop
+         Callee := Get_Element (It);
          if not Get_Seen_Flag (Callee) then
             Set_Seen_Flag (Callee, True);
             case Get_All_Sensitized_State (Callee) is
@@ -541,6 +542,7 @@ package body Canon is
                   raise Internal_Error;
             end case;
          end if;
+         Next (It);
       end loop;
    end Canon_Extract_Sensitivity_From_Callees;
 

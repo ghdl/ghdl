@@ -918,14 +918,15 @@ package body Libraries is
         Get_Analysis_Time_Stamp (Get_Design_File (Design_Unit));
       U_Ts : Time_Stamp_Id;
       El : Iir;
+      It : List_Iterator;
    begin
       if List = Null_Iir_List then
          return False;
       end if;
 
-      for I in Natural loop
-         El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
+      It := List_Iterate (List);
+      while Is_Valid (It) loop
+         El := Get_Element (It);
          if Get_Kind (El) = Iir_Kind_Design_Unit then
             U_Ts := Get_Analysis_Time_Stamp (Get_Design_File (El));
             if Files_Map.Is_Gt (U_Ts, Du_Ts) then
@@ -934,6 +935,7 @@ package body Libraries is
                return True;
             end if;
          end if;
+         Next (It);
       end loop;
 
       return False;
@@ -942,6 +944,7 @@ package body Libraries is
    procedure Explain_Obsolete (Design_Unit : Iir_Design_Unit; Loc : Iir)
    is
       List : Iir_List;
+      It : List_Iterator;
       El : Iir;
    begin
       pragma Assert (Get_Date_State (Design_Unit) = Date_Analyze);
@@ -954,13 +957,14 @@ package body Libraries is
          return;
       end if;
 
-      for I in Natural loop
-         El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
+      It := List_Iterate (List);
+      while Is_Valid (It) loop
+         El := Get_Element (It);
          if Get_Date (El) = Date_Obsolete then
             Error_Obsolete (Loc, "%n is obsoleted by %n", (+Design_Unit, +El));
             return;
          end if;
+         Next (It);
       end loop;
    end Explain_Obsolete;
 
@@ -970,6 +974,7 @@ package body Libraries is
    is
       Lib, File, Un : Iir;
       List : Iir_List;
+      It : List_Iterator;
       El : Iir;
    begin
       Set_Date (Unit, Date_Obsolete);
@@ -987,21 +992,22 @@ package body Libraries is
                then
                   pragma Assert (Get_Date_State (Un) = Date_Analyze);
 
-                  for I in Natural loop
-                     El := Get_Nth_Element (List, I);
-                     exit when El = Null_Iir;
+                  It := List_Iterate (List);
+                  while Is_Valid (It) loop
+                     El := Get_Element (It);
 
                      if Is_Design_Unit (El, Unit) then
 
                         --  Keep direct reference (for speed-up).
                         if Get_Kind (El) /= Iir_Kind_Design_Unit then
                            Iirs_Utils.Free_Recursive (El);
-                           Replace_Nth_Element (List, I, Unit);
+                           Set_Element (It, Unit);
                         end if;
 
                         --  Recurse.
                         Mark_Unit_Obsolete (Un);
                      end if;
+                     Next (It);
                   end loop;
                end if;
 
@@ -1016,15 +1022,10 @@ package body Libraries is
    procedure Free_Dependence_List (Design : Iir_Design_Unit)
    is
       List : Iir_List;
-      El : Iir;
    begin
       List := Get_Dependence_List (Design);
       if List /= Null_Iir_List then
-         for I in Natural loop
-            El := Get_Nth_Element (List, I);
-            exit when El = Null_Iir;
-            Iirs_Utils.Free_Recursive (El);
-         end loop;
+         Free_Recursive_List (List);
          Destroy_Iir_List (List);
       end if;
    end Free_Dependence_List;

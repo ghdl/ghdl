@@ -234,6 +234,7 @@ package body Ghdlxml is
    procedure Disp_Iir_List (Id : String; L : Iir_List; Ref : Boolean)
    is
       El : Iir;
+      It : List_Iterator;
    begin
       case L is
          when  Null_Iir_List =>
@@ -249,14 +250,15 @@ package body Ghdlxml is
             Put_Attribute ("list-id", Strip (Iir_List'Image (L)));
             Put_Stag_End;
 
-            for I in Natural loop
-               El := Get_Nth_Element (L, I);
-               exit when El = Null_Iir;
+            It := List_Iterate (L);
+            while Is_Valid (It) loop
+               El := Get_Element (It);
                if Ref then
-            Disp_Iir_Ref ("el", El);
+                  Disp_Iir_Ref ("el", El);
                else
                   Disp_Iir ("el", El);
                end if;
+               Next (It);
             end loop;
 
             Put_Etag (Id);

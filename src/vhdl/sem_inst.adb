@@ -168,6 +168,7 @@ package body Sem_Inst is
                                  return Iir_List
    is
       Res : Iir_List;
+      It : List_Iterator;
       El : Iir;
    begin
       case L is
@@ -176,10 +177,11 @@ package body Sem_Inst is
             return L;
          when others =>
             Res := Create_Iir_List;
-            for I in Natural loop
-               El := Get_Nth_Element (L, I);
-               exit when El = Null_Iir;
+            It := List_Iterate (L);
+            while Is_Valid (It) loop
+               El := Get_Element (It);
                Append_Element (Res, Instantiate_Iir (El, Is_Ref));
+               Next (It);
             end loop;
             return Res;
       end case;
@@ -752,6 +754,7 @@ package body Sem_Inst is
    is
       El : Iir;
       El_Inst : Iir;
+      It, It_Inst : List_Iterator;
    begin
       case N is
          when Null_Iir_List
@@ -759,15 +762,19 @@ package body Sem_Inst is
             pragma Assert (Inst = N);
             return;
          when others =>
-            for I in Natural loop
-               El := Get_Nth_Element (N, I);
-               El_Inst := Get_Nth_Element (Inst, I);
-               exit when El = Null_Iir;
-               pragma Assert (El_Inst /= Null_Iir);
+            It := List_Iterate (N);
+            It_Inst := List_Iterate (Inst);
+            while Is_Valid (It) loop
+               pragma Assert (Is_Valid (It_Inst));
+               El := Get_Element (It);
+               El_Inst := Get_Element (It_Inst);
 
                Set_Instance_On_Iir (El, El_Inst);
+
+               Next (It);
+               Next (It_Inst);
             end loop;
-            pragma Assert (El_Inst = Null_Iir);
+            pragma Assert (not Is_Valid (It_Inst));
       end case;
    end Set_Instance_On_Iir_List;
 
@@ -1120,18 +1127,17 @@ package body Sem_Inst is
 
    procedure Substitute_On_Iir_List (L : Iir_List; E : Iir; Rep : Iir)
    is
-      El : Iir;
+      It : List_Iterator;
    begin
       case L is
          when Null_Iir_List
            | Iir_List_All =>
             return;
          when others =>
-            for I in Natural loop
-               El := Get_Nth_Element (L, I);
-               exit when El = Null_Iir;
-
-               Substitute_On_Iir (El, E, Rep);
+            It := List_Iterate (L);
+            while Is_Valid (It) loop
+               Substitute_On_Iir (Get_Element (It), E, Rep);
+               Next (It);
             end loop;
       end case;
    end Substitute_On_Iir_List;

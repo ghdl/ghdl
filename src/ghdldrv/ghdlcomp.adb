@@ -594,6 +594,7 @@ package body Ghdlcomp is
 
       Files_List : Iir_List;
       File : Iir_Design_File;
+      It : List_Iterator;
 
       Next_Arg : Natural;
       Date : Date_Type;
@@ -614,9 +615,9 @@ package body Ghdlcomp is
       end loop;
 
       Date := Get_Date (Libraries.Work_Library);
-      for I in Natural loop
-         File := Get_Nth_Element (Files_List, I);
-         exit when File = Null_Iir;
+      It := List_Iterate (Files_List);
+      while Is_Valid (It) loop
+         File := Get_Element (It);
 
          if File = Std_Package.Std_Standard_File then
             null;
@@ -645,6 +646,8 @@ package body Ghdlcomp is
             --  Need to be written to disk.
             Set_Elab_Flag (Lib, True);
          end if;
+
+         Next (It);
       end loop;
 
       --  Save modified libraries.
@@ -730,6 +733,7 @@ package body Ghdlcomp is
       HT : constant Character := Ada.Characters.Latin_1.HT;
       Files_List : Iir_List;
       File : Iir_Design_File;
+      Files_It : List_Iterator;
 
       Lib : Iir_Library_Declaration;
       Dir_Id : Name_Id;
@@ -820,9 +824,9 @@ package body Ghdlcomp is
 
       Put_Line ("# Targets to analyze libraries");
       Put_Line ("init: force");
-      for I in Natural loop
-         File := Get_Nth_Element (Files_List, I);
-         exit when File = Null_Iir;
+      Files_It := List_Iterate (Files_List);
+      while Is_Valid (Files_It) loop
+         File := Get_Element (Files_It);
          Dir_Id := Get_Design_File_Directory (File);
          if not Is_Makeable_File (File) then
             --  Builtin file.
@@ -853,6 +857,7 @@ package body Ghdlcomp is
             Put (Image (Get_Design_File_Filename (File)));
             New_Line;
          end if;
+         Next (Files_It);
       end loop;
       New_Line;
 

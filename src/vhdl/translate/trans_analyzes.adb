@@ -217,12 +217,12 @@ package body Trans_Analyzes is
 
    procedure Free_Drivers_List (List : in out Iir_List)
    is
-      El : Iir;
+      It : List_Iterator;
    begin
-      for I in Natural loop
-         El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
-         Set_After_Drivers_Flag (Get_Object_Prefix (El), False);
+      It := List_Iterate (List);
+      while Is_Valid (It) loop
+         Set_After_Drivers_Flag (Get_Object_Prefix (Get_Element (It)), False);
+         Next (It);
       end loop;
       Destroy_Iir_List (List);
    end Free_Drivers_List;
@@ -232,14 +232,15 @@ package body Trans_Analyzes is
       use Ada.Text_IO;
       use Errorout;
       El : Iir;
+      It : List_Iterator;
    begin
       Report_Msg (Msgid_Note, Semantic, +Proc,
                   "List of drivers for %n:", (1 => +Proc));
       Report_Msg (Msgid_Note, Semantic, +Proc,
                   " (declared at %l)", (1 => +Proc));
-      for I in Natural loop
-         El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
+      It := List_Iterate (List);
+      while Is_Valid (It) loop
+         El := Get_Element (It);
          if Get_After_Drivers_Flag (Get_Object_Prefix (El)) then
             Put ("*  ");
          else
@@ -247,6 +248,7 @@ package body Trans_Analyzes is
          end if;
          Disp_Vhdl.Disp_Vhdl (El);
          New_Line;
+         Next (It);
       end loop;
    end Dump_Drivers;
 

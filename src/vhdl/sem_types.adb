@@ -1299,6 +1299,7 @@ package body Sem_Types is
       Res: Iir;
       El : Iir;
       List : Iir_List;
+      It : List_Iterator;
       Has_Error : Boolean;
       Name1 : Iir;
    begin
@@ -1314,9 +1315,9 @@ package body Sem_Types is
       if Is_Overload_List (Func) then
          List := Get_Overload_List (Func);
          Has_Error := False;
-         for I in Natural loop
-            El := Get_Nth_Element (List, I);
-            exit when El = Null_Iir;
+         It := List_Iterate (List);
+         while Is_Valid (It) loop
+            El := Get_Element (It);
             if Is_A_Resolution_Function (El, Atype) then
                if Res /= Null_Iir then
                   if not Has_Error then
@@ -1333,6 +1334,7 @@ package body Sem_Types is
                   Res := El;
                end if;
             end if;
+            Next (It);
          end loop;
          Free_Overload_List (Func);
          if Has_Error then

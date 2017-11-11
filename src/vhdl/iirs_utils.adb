@@ -60,13 +60,18 @@ package body Iirs_Utils is
    function List_To_Flist (L : Iir_List) return Iir_Flist
    is
       Len : constant Natural := Get_Nbr_Elements (L);
+      It : List_Iterator;
       Temp_L : Iir_List;
       Res : Iir_Flist;
    begin
       Res := Create_Iir_Flist (Len);
+      It := List_Iterate (L);
       for I in 0 .. Len - 1 loop
-         Set_Nth_Element (Res, I, Get_Nth_Element (L, I));
+         pragma Assert (Is_Valid (It));
+         Set_Nth_Element (Res, I, Get_Element (It));
+         Next (It);
       end loop;
+      pragma Assert (not Is_Valid (It));
 
       Temp_L := L;
       Destroy_Iir_List (Temp_L);
@@ -838,12 +843,12 @@ package body Iirs_Utils is
 
    procedure Free_Recursive_List (List : Iir_List)
    is
-      El : Iir;
+      It : List_Iterator;
    begin
-      for I in Natural loop
-         El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
-         Free_Recursive (El);
+      It := List_Iterate (List);
+      while Is_Valid (It) loop
+         Free_Recursive (Get_Element (It));
+         Next (It);
       end loop;
    end Free_Recursive_List;
 
@@ -959,18 +964,20 @@ package body Iirs_Utils is
    procedure Clear_Seen_Flag (Top : Iir)
    is
       Callees_List : Iir_Callees_List;
+      It : List_Iterator;
       El: Iir;
    begin
       if Get_Seen_Flag (Top) then
          Set_Seen_Flag (Top, False);
          Callees_List := Get_Callees_List (Get_Callees_List_Holder (Top));
          if Callees_List /= Null_Iir_List then
-            for I in Natural loop
-               El := Get_Nth_Element (Callees_List, I);
-               exit when El = Null_Iir;
+            It := List_Iterate (Callees_List);
+            while Is_Valid (It) loop
+               El := Get_Element (It);
                if Get_Seen_Flag (El) = False then
                   Clear_Seen_Flag (El);
                end if;
+               Next (It);
             end loop;
          end if;
       end if;

@@ -2077,39 +2077,38 @@ package body Sem is
             --  Update wait state if the state of all callees is known.
             if Get_Wait_State (Spec) = Unknown then
                declare
-                  Callees : Iir_List;
+                  Callees : constant Iir_List := Get_Callees_List (Subprg);
+                  Callees_It : List_Iterator;
                   Callee : Iir;
                   State : Tri_State_Type;
                begin
-                  Callees := Get_Callees_List (Subprg);
                   --  Per default, has no wait.
                   Set_Wait_State (Spec, False);
-                  if Callees /= Null_Iir_List then
-                     for I in Natural loop
-                        Callee := Get_Nth_Element (Callees, I);
-                        exit when Callee = Null_Iir;
-                        case Get_Kind (Callee) is
-                           when Iir_Kind_Function_Declaration =>
-                              null;
-                           when Iir_Kind_Procedure_Declaration =>
-                              State := Get_Wait_State (Callee);
-                              case State is
-                                 when False =>
-                                    null;
-                                 when Unknown =>
-                                    --  Yet unknown, but can be TRUE.
-                                    Set_Wait_State (Spec, Unknown);
-                                 when True =>
-                                    --  Can this happen ?
-                                    raise Internal_Error;
-                                    --Set_Wait_State (Spec, True);
-                                    --exit;
-                              end case;
-                           when others =>
-                              Error_Kind ("sem_subprogram_body(2)", Callee);
-                        end case;
-                     end loop;
-                  end if;
+                  Callees_It := List_Iterate_Safe (Callees);
+                  while Is_Valid (Callees_It) loop
+                     Callee := Get_Element (Callees_It);
+                     case Get_Kind (Callee) is
+                        when Iir_Kind_Function_Declaration =>
+                           null;
+                        when Iir_Kind_Procedure_Declaration =>
+                           State := Get_Wait_State (Callee);
+                           case State is
+                              when False =>
+                                 null;
+                              when Unknown =>
+                                 --  Yet unknown, but can be TRUE.
+                                 Set_Wait_State (Spec, Unknown);
+                              when True =>
+                                 --  Can this happen ?
+                                 raise Internal_Error;
+                                 --Set_Wait_State (Spec, True);
+                                 --exit;
+                           end case;
+                        when others =>
+                           Error_Kind ("sem_subprogram_body(2)", Callee);
+                     end case;
+                     Next (Callees_It);
+                  end loop;
                end;
             end if;
 
@@ -2162,6 +2161,7 @@ package body Sem is
 
       Callees_List : Iir_List;
       Callees_List_Holder : Iir;
+      Callees_It : List_Iterator;
       Callee : Iir;
       Callee_Orig : Iir;
       Callee_Bod : Iir;
@@ -2171,7 +2171,7 @@ package body Sem is
       Depth : Iir_Int32;
       Depth_Callee : Iir_Int32;
       Has_Wait_Errors : Boolean := False;
-      Npos : Natural;
+      New_List : Iir_List;
       Res, Res1 : Update_Pure_Status;
    begin
       case Get_Kind (Subprg) is
@@ -2240,10 +2240,10 @@ package body Sem is
       --  First loop: check without recursion.
       --  Second loop: recurse if necessary.
       for J in 0 .. 1 loop
-         Npos := 0;
-         for I in Natural loop
-            Callee := Get_Nth_Element (Callees_List, I);
-            exit when Callee = Null_Iir;
+         New_List := Create_Iir_List;
+         Callees_It := List_Iterate (Callees_List);
+         while Is_Valid (Callees_It) loop
+            Callee := Get_Element (Callees_It);
 
             --  Note:
             --  Pure functions should not be in the list.
@@ -2368,15 +2368,16 @@ package body Sem is
                  (Get_All_Sensitized_State (Callee) = Unknown
                     or else Get_All_Sensitized_State (Callee) = Read_Signal))
             then
-               Replace_Nth_Element (Callees_List, Npos, Callee);
-               Npos := Npos + 1;
+               Append_Element (New_List, Callee);
             end if;
+            Next (Callees_It);
          end loop;
 
          --  End of callee loop.
-         if Npos = 0 then
+         if Is_Empty (New_List) then
             Destroy_Iir_List (Callees_List);
             Callees_List := Null_Iir_List;
+            Destroy_Iir_List (New_List);
             if Kind = K_Procedure then
                if Get_Purity_State (Subprg) = Unknown then
                   Set_Purity_State (Subprg, Maybe_Impure);
@@ -2393,11 +2394,12 @@ package body Sem is
             Res := Update_Pure_Done;
             exit;
          else
-            Set_Nbr_Elements (Callees_List, Npos);
+            Destroy_Iir_List (Callees_List);
+            Callees_List := New_List;
          end if;
       end loop;
 
-      Set_Callees_List (Callees_List_Holder, Callees_List);
+      Set_Callees_List (Callees_List_Holder, New_List);
 
       return Res;
    end Update_And_Check_Pure_Wait;
@@ -2438,22 +2440,22 @@ package body Sem is
    procedure Sem_Analysis_Checks_List (Unit : Iir_Design_Unit;
                                        Emit_Warnings : Boolean)
    is
-      List : Iir_List := Get_Analysis_Checks_List (Unit);
+      List : Iir_List;
       El : Iir;
-      Npos : Natural;
+      It : List_Iterator;
       Keep : Boolean;
-      Callees : Iir_List;
-      Callee : Iir;
+      New_List : Iir_List;
    begin
+      List := Get_Analysis_Checks_List (Unit);
       if List = Null_Iir_List then
          --  Return now if there is nothing to check.
          return;
       end if;
 
-      Npos := 0;
-      for I in Natural loop
-         El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
+      New_List := Create_Iir_List;
+      It := List_Iterate (List);
+      while Is_Valid (It) loop
+         El := Get_Element (It);
          Keep := False;
          case Get_Kind (El) is
             when Iir_Kind_Function_Declaration =>
@@ -2461,21 +2463,24 @@ package body Sem is
                if not Root_Update_And_Check_Pure_Wait (El) then
                   Keep := True;
                   if Emit_Warnings then
-                     Callees := Get_Callees_List (El);
-                     pragma Assert (Callees /= Null_Iir_List);
-                     Warning_Msg_Sem
-                       (Warnid_Delayed_Checks, +El,
-                        "can't assert that all calls in %n"
-                          & " are pure or have not wait;"
-                          & " will be checked at elaboration",
-                        +El, Cont => True);
-                     Callee := Get_Nth_Element (Callees, 0);
-                     --  FIXME: could improve this message by displaying the
-                     --  chain of calls until the first subprograms in
-                     --  unknown state.
-                     Warning_Msg_Sem
-                       (Warnid_Delayed_Checks, +Callee,
-                        "(first such call is to %n)", +Callee);
+                     declare
+                        Callees : constant Iir_List := Get_Callees_List (El);
+                        pragma Assert (Callees /= Null_Iir_List);
+                        Callee : constant Iir := Get_First_Element (Callees);
+                     begin
+                        Warning_Msg_Sem
+                          (Warnid_Delayed_Checks, +El,
+                           "can't assert that all calls in %n"
+                             & " are pure or have not wait;"
+                             & " will be checked at elaboration",
+                           +El, Cont => True);
+                        --  FIXME: could improve this message by displaying
+                        --  the chain of calls until the first subprograms in
+                        --  unknown state.
+                        Warning_Msg_Sem
+                          (Warnid_Delayed_Checks, +Callee,
+                           "(first such call is to %n)", +Callee);
+                     end;
                   end if;
                end if;
             when Iir_Kind_Sensitized_Process_Statement =>
@@ -2492,16 +2497,16 @@ package body Sem is
                Error_Kind ("sem_analysis_checks_list", El);
          end case;
          if Keep then
-            Replace_Nth_Element (List, Npos, El);
-            Npos := Npos + 1;
+            Append_Element (New_List, El);
          end if;
+         Next (It);
       end loop;
-      if Npos = 0 then
-         Destroy_Iir_List (List);
-         Set_Analysis_Checks_List (Unit, Null_Iir_List);
-      else
-         Set_Nbr_Elements (List, Npos);
+      if Is_Empty (New_List) then
+         Destroy_Iir_List (New_List);
+         New_List := Null_Iir_List;  --  OK, redundant but clearer.
       end if;
+      Destroy_Iir_List (List);
+      Set_Analysis_Checks_List (Unit, New_List);
    end Sem_Analysis_Checks_List;
 
    --  Return true if package declaration DECL needs a body.

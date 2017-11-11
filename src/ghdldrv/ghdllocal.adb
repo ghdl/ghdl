@@ -1274,6 +1274,7 @@ package body Ghdllocal is
       is
          El : Iir_Design_File;
          Depend_List : Iir_List;
+         Depend_It : List_Iterator;
       begin
          if Get_Elab_Flag (File) then
             return;
@@ -1282,10 +1283,11 @@ package body Ghdllocal is
          Set_Elab_Flag (File, True);
          Depend_List := Get_File_Dependence_List (File);
          if Depend_List /= Null_Iir_List then
-            for I in Natural loop
-               El := Get_Nth_Element (Depend_List, I);
-               exit when El = Null_Iir;
+            Depend_It := List_Iterate (Depend_List);
+            while Is_Valid (Depend_It) loop
+               El := Get_Element (Depend_It);
                Build_Dependence_List (El, List);
+               Next (Depend_It);
             end loop;
          end if;
          Append_Element (List, File);
@@ -1450,14 +1452,15 @@ package body Ghdllocal is
                Depends : constant Iir_List := Get_Dependence_List (Unit);
                Stamp : constant Time_Stamp_Id :=
                  Get_Analysis_Time_Stamp (File);
+               Depends_It : List_Iterator;
                El : Iir;
                Dep : Iir_Design_Unit;
                Dep_File : Iir_Design_File;
             begin
                if Depends /= Null_Iir_List then
-                  for I in Natural loop
-                     El := Get_Nth_Element (Depends, I);
-                     exit when El = Null_Iir;
+                  Depends_It := List_Iterate (Depends);
+                  while Is_Valid (Depends_It) loop
+                     El := Get_Element (Depends_It);
                      Dep := Libraries.Find_Design_Unit (El);
                      if Dep = Null_Iir then
                         if Flag_Verbose then
@@ -1483,6 +1486,7 @@ package body Ghdllocal is
                         end if;
                         return True;
                      end if;
+                     Next (Depends_It);
                   end loop;
                end if;
             end;
