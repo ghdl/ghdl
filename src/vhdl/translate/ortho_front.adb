@@ -220,17 +220,13 @@ package body Ortho_Front is
    --  Add dependencies of UNIT to DEP_LIST.  UNIT is not added to DEP_LIST.
    procedure Add_Dependence (Unit : Iir_Design_Unit; Dep_List : Iir_List)
    is
-      List : Iir_List;
+      List : constant Iir_List := Get_Dependence_List (Unit);
+      It : List_Iterator;
       El : Iir;
    begin
-      List := Get_Dependence_List (Unit);
-      if Is_Null_List (List) then
-         return;
-      end if;
-      for I in Natural loop
-         El := Get_Nth_Element (List, I);
-         exit when Is_Null (El);
-
+      It := List_Iterate_Safe (List);
+      while Is_Valid (It) loop
+         El := Get_Element (It);
          El := Get_Unit_From_Dependence (El);
 
          if not Get_Configuration_Mark_Flag (El) then
@@ -241,6 +237,7 @@ package body Ortho_Front is
             Set_Configuration_Mark_Flag (El, True);
             Append_Element (Dep_List, El);
          end if;
+         Next (It);
       end loop;
    end Add_Dependence;
 
@@ -254,6 +251,7 @@ package body Ortho_Front is
 
       --  List of dependencies.
       Dep_List : Iir_List;
+      Dep_It : List_Iterator;
    begin
       --  Do not elaborate.
       Flags.Flag_Elaborate := False;
@@ -339,14 +337,15 @@ package body Ortho_Front is
 
       --  Translate declarations of dependencies.
       Translation.Translate_Standard (False);
-      for I in Natural loop
-         Design := Get_Nth_Element (Dep_List, I);
-         exit when Design = Null_Iir;
+      Dep_It := List_Iterate (Dep_List);
+      while Is_Valid (Dep_It) loop
+         Design := Get_Element (Dep_It);
          if Get_Design_File (Design) /= New_Design_File then
             --  Do not yet translate units to be compiled.  They can appear as
             --  dependencies.
             Translation.Translate (Design, False);
          end if;
+         Next (Dep_It);
       end loop;
 
       --  Compile only now.
