@@ -26,18 +26,25 @@ package body Dyn_Tables is
 
    --  Expand the table by doubling its size.  The table must have been
    --  initialized.
-   procedure Expand (T : in out Instance; Num : Natural)
+   procedure Expand (T : in out Instance; Num : Unsigned)
    is
       --  For efficiency, directly call realloc.
       function Crealloc (Ptr : Table_Thin_Ptr; Size : size_t)
                         return Table_Thin_Ptr;
       pragma Import (C, Crealloc, "realloc");
+
+      New_Len : Unsigned;
+      New_Last : Unsigned;
    begin
       pragma Assert (T.Priv.Length /= 0);
       pragma Assert (T.Table /= null);
 
       --  Expand the bound.
-      T.Priv.Last_Pos := T.Priv.Last_Pos + Num;
+      New_Last := T.Priv.Last_Pos + Num;
+      if New_Last < T.Priv.Last_Pos then
+         raise Constraint_Error;
+      end if;
+      T.Priv.Last_Pos := New_Last;
 
       --  Check if need to reallocate.
       if T.Priv.Last_Pos < T.Priv.Length then
@@ -45,12 +52,22 @@ package body Dyn_Tables is
       else
          --  Double the length.
          loop
-            T.Priv.Length := T.Priv.Length * 2;
-            exit when T.Priv.Length > T.Priv.Last_Pos;
+            New_Len := T.Priv.Length * 2;
+
+            --  Check overflow.
+            if New_Len < T.Priv.Length then
+               raise Constraint_Error;
+            end if;
+
+            T.Priv.Length := New_Len;
+            exit when New_Len > T.Priv.Last_Pos;
          end loop;
       end if;
 
       --  Realloc and check result.
+      if size_t (T.Priv.Length) > size_t'Last / El_Size then
+         raise Constraint_Error;
+      end if;
       T.Table := Crealloc (T.Table, size_t (T.Priv.Length) * El_Size);
       if T.Table = null then
          raise Storage_Error;
@@ -59,7 +76,7 @@ package body Dyn_Tables is
 
    procedure Allocate (T : in out Instance; Num : Natural := 1) is
    begin
-      Expand (T, Num);
+      Expand (T, Unsigned (Num));
    end Allocate;
 
    procedure Increment_Last (T : in out Instance) is
@@ -75,7 +92,7 @@ package body Dyn_Tables is
 
    procedure Set_Last (T : in out Instance; Index : Table_Index_Type)
    is
-      New_Last : constant Natural :=
+      New_Last : constant Unsigned :=
         (Table_Index_Type'Pos (Index)
            - Table_Index_Type'Pos (Table_Low_Bound) + 1);
    begin
@@ -96,7 +113,7 @@ package body Dyn_Tables is
    begin
       if T.Table = null then
          --  Allocate memory if not already allocated.
-         T.Priv.Length := Table_Initial;
+         T.Priv.Length := Unsigned (Table_Initial);
          T.Table := Cmalloc (size_t (T.Priv.Length) * El_Size);
       end if;
 
@@ -107,8 +124,15 @@ package body Dyn_Tables is
    function Last (T : Instance) return Table_Index_Type is
    begin
       return Table_Index_Type'Val
-        (Table_Index_Type'Pos (Table_Low_Bound) + T.Priv.Last_Pos - 1);
+        (Table_Index_Type'Pos (Table_Low_Bound)
+           + Unsigned'Pos (T.Priv.Last_Pos) - 1);
    end Last;
+
+   function Next (T : Instance) return Table_Index_Type is
+   begin
+      return Table_Index_Type'Val
+        (Table_Index_Type'Pos (Table_Low_Bound) + T.Priv.Last_Pos);
+   end Next;
 
    procedure Free (T : in out Instance) is
       --  Direct interface to free.

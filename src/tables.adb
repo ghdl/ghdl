@@ -19,8 +19,7 @@
 package body Tables is
    function Allocate (Num : Natural := 1) return Table_Index_Type
    is
-      Res : constant Table_Index_Type := Table_Index_Type'Val
-        (Table_Index_Type'Pos (Last) + 1);
+      Res : constant Table_Index_Type := Dyn_Table.Next (T);
    begin
       Dyn_Table.Allocate (T, Num);
 
@@ -62,7 +61,6 @@ package body Tables is
    begin
       Dyn_Table.Append (T, Val);
    end Append;
-
 begin
    Init;
 end Tables;

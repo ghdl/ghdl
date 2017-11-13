@@ -71,6 +71,9 @@ package Dyn_Tables is
    function Last (T : Instance) return Table_Index_Type;
    pragma Inline (Last);
 
+   --  Return the index of the next bound after last.
+   function Next (T : Instance) return Table_Index_Type;
+
    --  Deallocate all the memory.  Makes the array unusable until the next
    --  call to Init.
    procedure Free (T : in out Instance);
@@ -95,11 +98,13 @@ package Dyn_Tables is
    procedure Allocate (T : in out Instance; Num : Natural := 1);
 
 private
+   type Unsigned is mod 2**32;
+
    type Instance_Private is record
       --  Number of allocated elements in the table.
-      Length : Natural := 0;
+      Length : Unsigned := 0;
 
       --  Number of used elements in the table.
-      Last_Pos : Natural := 0;
+      Last_Pos : Unsigned := 0;
    end record;
 end Dyn_Tables;
