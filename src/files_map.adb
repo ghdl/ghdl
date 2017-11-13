@@ -797,10 +797,12 @@ package body Files_Map is
       use GNAT.OS_Lib;
       Fd : File_Descriptor;
 
-      Res: Source_File_Entry;
+      Res : Source_File_Entry;
 
-      Length: Source_Ptr;
-      Buffer: File_Buffer_Acc;
+      Raw_Length : Long_Integer;
+      Length : Source_Ptr;
+
+      Buffer : File_Buffer_Acc;
    begin
       --  If the file is already loaded, nothing to do!
       Res := Find_Source_File (Directory, Name);
@@ -822,9 +824,20 @@ package body Files_Map is
          end if;
       end;
 
+      Raw_Length := File_Length (Fd);
+
+      --  Check for too large files.  Use 'Pos (ie universal integer) to avoid
+      --  errors in conversions.
+      if Long_Integer'Pos (Raw_Length) > Source_Ptr'Pos (Source_Ptr'Last)
+        or else Long_Integer'Pos (Raw_Length) > Integer'Pos (Integer'Last)
+      then
+         Close (Fd);
+         return No_Source_File_Entry;
+      end if;
+
       Res := Create_Source_File_Entry (Directory, Name);
 
-      Length := Source_Ptr (File_Length (Fd));
+      Length := Source_Ptr (Raw_Length);
 
       Buffer :=
         new File_Buffer (Source_Ptr_Org .. Source_Ptr_Org + Length + 1);
