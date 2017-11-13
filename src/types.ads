@@ -78,7 +78,7 @@ package Types is
    --  have a 32 bit type to represent a string (contrary to pointers that
    --  could be 32 or 64 bit - in general - or to an access type which can be
    --  even wider in Ada).
-   type String8_Id is new Nat32;
+   type String8_Id is new Uns32;
    for String8_Id'Size use 32;
 
    Null_String8 : constant String8_Id := 0;
