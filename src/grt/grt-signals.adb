@@ -647,7 +647,8 @@ package body Grt.Signals is
          --  AFTER > 0.
          --  Put SIGN on the future list.
          if Sign.Flink = null then
-            Sign.Flink := Grt.Threads.Atomic_Insert (Future_List'access, Sign);
+            Sign.Flink := Future_List;
+            Future_List := Sign;
          end if;
       end if;
 
@@ -2892,7 +2893,6 @@ package body Grt.Signals is
       Ntime : Std_Time;
       Trans : Transaction_Acc;
       Last : Transaction_Acc;
-      Prev : Transaction_Acc;
       Val : Value_Union;
    begin
       if Pfx.Event then
@@ -2906,9 +2906,7 @@ package body Grt.Signals is
 
          --  Find the last transaction.
          Last := Sig.S.Attr_Trans;
-         Prev := Last;
          while Last.Next /= null loop
-            Prev := Last;
             Last := Last.Next;
          end loop;
 
@@ -2929,7 +2927,7 @@ package body Grt.Signals is
                                       Val => Val);
 
             --  Append the transaction.
-            Prev.Next := Trans;
+            Last.Next := Trans;
          end if;
 
          if Sig.S.Time = 0 then
