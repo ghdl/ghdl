@@ -218,29 +218,37 @@ package body Grt.Disp_Signals is
             Put_I32 (stdout, Ghdl_I32 (Sig.Nbr_Ports));
             Put (" ports");
          end if;
-         if Sig.S.Mode_Sig in Mode_Signal_User then
-            if Sig.S.Resolv /= null then
-               Put (stdout, " res func ");
-               Put (stdout, To_Address(Sig.S.Resolv));
-            end if;
-            if Sig.S.Nbr_Drivers = 0 then
-               Put ("; no driver");
-            elsif Sig.S.Nbr_Drivers = 1 then
-               Put ("; trans=");
-               Disp_Transaction
-                 (Sig.S.Drivers (0).First_Trans, Sig_Type, Sig.Mode);
-            else
-               for I in 0 .. Sig.S.Nbr_Drivers - 1 loop
-                  New_Line;
-                  Put ("   ");
-                  Disp_Context
-                    (Processes.Get_Rti_Context (Sig.S.Drivers (I).Proc));
-                  Put (": ");
+         case Sig.S.Mode_Sig is
+            when Mode_Signal_User =>
+               if Sig.S.Resolv /= null then
+                  Put (stdout, " res func ");
+                  Put (stdout, To_Address(Sig.S.Resolv));
+               end if;
+               if Sig.S.Nbr_Drivers = 0 then
+                  Put ("; no driver");
+               elsif Sig.S.Nbr_Drivers = 1 then
+                  Put ("; trans=");
                   Disp_Transaction
-                    (Sig.S.Drivers (I).First_Trans, Sig_Type, Sig.Mode);
-               end loop;
-            end if;
-         end if;
+                    (Sig.S.Drivers (0).First_Trans, Sig_Type, Sig.Mode);
+               else
+                  for I in 0 .. Sig.S.Nbr_Drivers - 1 loop
+                     New_Line;
+                     Put ("   ");
+                     Disp_Context
+                       (Processes.Get_Rti_Context (Sig.S.Drivers (I).Proc));
+                     Put (": ");
+                     Disp_Transaction
+                       (Sig.S.Drivers (I).First_Trans, Sig_Type, Sig.Mode);
+                  end loop;
+               end if;
+
+            when Mode_Delayed =>
+               Put ("; trans=");
+               Disp_Transaction (Sig.S.Attr_Trans, Sig_Type, Sig.Mode);
+
+            when others =>
+               null;
+         end case;
       end if;
       New_Line;
    end Disp_Simple_Signal;
