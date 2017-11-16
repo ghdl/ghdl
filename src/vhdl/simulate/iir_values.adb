@@ -340,15 +340,24 @@ package body Iir_Values is
    function To_Value_Bounds_Array_Acc is new Ada.Unchecked_Conversion
      (System.Address, Value_Bounds_Array_Acc);
 
+   Last_Sig_Id : Signal_Index_Type := 0;
+
+   function Get_Last_Signal_Index return Signal_Index_Type is
+   begin
+      return Last_Sig_Id;
+   end Get_Last_Signal_Index;
+
    function Create_Signal_Value (Sig : Ghdl_Signal_Ptr)
                                 return Iir_Value_Literal_Acc
    is
       subtype Signal_Value is Iir_Value_Literal (Iir_Value_Signal);
       function Alloc is new Alloc_On_Pool_Addr (Signal_Value);
    begin
+      Last_Sig_Id := Last_Sig_Id + 1;
       return To_Iir_Value_Literal_Acc
         (Alloc (Global_Pool'Access,
-                (Kind => Iir_Value_Signal, Sig => Sig)));
+                (Kind => Iir_Value_Signal,
+                 Sig => Sig, Sig_Id => Last_Sig_Id)));
    end Create_Signal_Value;
 
    function Create_Terminal_Value (Terminal : Terminal_Index_Type)

@@ -114,8 +114,11 @@ package Iir_Values is
       Iir_Value_Quantity,
       Iir_Value_Environment);
 
-   type Protected_Index_Type is new Natural;
+   --  Uniq identifier for scalar signal.  First identifier is 'First + 1.
+   type Signal_Index_Type is new Natural;
+   function Get_Last_Signal_Index return Signal_Index_Type;
 
+   type Protected_Index_Type is new Natural;
    type Quantity_Index_Type is new Natural;
    type Terminal_Index_Type is new Natural;
    type Environment_Index_Type is new Natural;
@@ -133,6 +136,9 @@ package Iir_Values is
    --  Abstrace numeric types.
    subtype Iir_Value_Numerics is
      Iir_Value_Kind range Iir_Value_I64 .. Iir_Value_F64;
+
+   subtype Iir_Value_Physicals is
+     Iir_Value_Kind range Iir_Value_I64 .. Iir_Value_I64;
 
    type Iir_Value_Literal (Kind: Iir_Value_Kind);
 
@@ -180,6 +186,8 @@ package Iir_Values is
             Val_Record: Value_Array_Acc; -- range 1 .. N
          when Iir_Value_Signal =>
             Sig : Ghdl_Signal_Ptr;
+            --  Each signal has a uniq identifier.
+            Sig_Id : Signal_Index_Type;
          when Iir_Value_Protected =>
             Prot : Protected_Index_Type;
          when Iir_Value_Quantity =>

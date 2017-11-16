@@ -52,6 +52,7 @@ package Elaboration is
       --  Flag for wait statement: true if not yet executed.
       In_Wait_Flag : Boolean;
 
+      --  Uniq number for a block instance.
       Id : Block_Instance_Id;
 
       -- Useful informations for a dynamic block (ie, a frame).
