@@ -108,7 +108,8 @@ package body Annotations is
            | Kind_Process
            | Kind_Frame
            | Kind_Scalar_Type
-           | Kind_File_Type =>
+           | Kind_File_Type
+           | Kind_Extra =>
             raise Internal_Error;
       end case;
       Set_Info (Obj, Info);
@@ -1257,10 +1258,13 @@ package body Annotations is
    -- Disp annotations for an iir node.
    procedure Disp_Vhdl_Info (Node: Iir) is
       use Ada.Text_IO;
-      Indent: Count;
-      Info: Sim_Info_Acc;
+      Info : constant Sim_Info_Acc := Get_Info (Node);
+      Indent : Count;
    begin
-      Info := Get_Info (Node);
+      if Info = null then
+         return;
+      end if;
+
       Indent := Col;
       case Info.Kind is
          when Kind_Block =>
@@ -1281,7 +1285,8 @@ package body Annotations is
             Put_Line ("-- slot:" & Object_Slot_Type'Image (Info.Slot)
                       & ", scope:" & Image (Info.Obj_Scope));
          when Kind_Scalar_Type
-           | Kind_File_Type =>
+           | Kind_File_Type
+           | Kind_Extra =>
             null;
       end case;
    end Disp_Vhdl_Info;
@@ -1313,7 +1318,9 @@ package body Annotations is
            | Kind_Terminal | Kind_Quantity | Kind_Environment
            | Kind_PSL =>
             Put_Line ("slot:" & Object_Slot_Type'Image (Info.Slot)
-                      & ", scope:" & Image (Info.Obj_Scope));
+                        & ", scope:" & Image (Info.Obj_Scope));
+         when Kind_Extra =>
+            Put_Line ("extra:" & Extra_Slot_Type'Image (Info.Extra_Slot));
          when Kind_Scalar_Type =>
             Put_Line ("scalar type: "
                         & Iir_Value_Kind'Image (Info.Scalar_Mode));

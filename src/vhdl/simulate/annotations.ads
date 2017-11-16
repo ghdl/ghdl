@@ -36,6 +36,10 @@ package Annotations is
    type Pkg_Index_Type is new Natural;
    Nbr_Packages : Pkg_Index_Type := 0;
 
+   --  For Kind_Extra: a number.  Kind_Extra is not used by annotations, and
+   --  is free for another pass like preelab.
+   type Extra_Slot_Type is new Natural;
+
    -- Annotations are used to collect informations for elaboration and to
    -- locate iir_value_literal for signals, variables or constants.
 
@@ -47,7 +51,8 @@ package Annotations is
       Kind_File,
       Kind_Terminal, Kind_Quantity,
       Kind_Environment,
-      Kind_PSL);
+      Kind_PSL,
+      Kind_Extra);
 
    type Sim_Info_Type (Kind: Sim_Info_Kind);
    type Sim_Info_Acc is access all Sim_Info_Type;
@@ -127,6 +132,9 @@ package Annotations is
 
          when Kind_File_Type =>
             File_Signature : String_Acc;
+
+         when Kind_Extra =>
+            Extra_Slot : Extra_Slot_Type;
       end case;
    end record;
 
