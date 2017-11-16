@@ -80,6 +80,9 @@ package Elaboration is
       Children: Block_Instance_Acc;
       Brother: Block_Instance_Acc;
 
+      --  Port association map for this block, if any.
+      Ports_Map : Iir;
+
       --  Pool marker for the child (only for subprograms and processes).
       Marker : Areapools.Mark_Type;
 

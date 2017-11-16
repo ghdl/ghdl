@@ -350,6 +350,7 @@ package body Elaboration is
          Parent => Father,
          Children => null,
          Brother => null,
+         Ports_Map => Null_Iir,
          Marker => Empty_Marker,
          Objects => (others => null),
          Elab_Objects => 0,
@@ -1246,6 +1247,9 @@ package body Elaboration is
       Actual : Iir;
       Formal : Iir;
    begin
+      pragma Assert (Formal_Instance.Ports_Map = Null_Iir);
+      Formal_Instance.Ports_Map := Map;
+
       if Ports = Null_Iir then
          return;
       end if;
@@ -2138,27 +2142,32 @@ package body Elaboration is
 
       Item : Iir;
    begin
-      --  Gather block children.
+      --  Gather children and reverse the list.
       declare
-         Child : Block_Instance_Acc;
-         Child_Info : Sim_Info_Acc;
+         Child, Prev, First : Block_Instance_Acc;
       begin
          Child := Instance.Children;
+         First := null;
          while Child /= null loop
-            Child_Info := Get_Info (Child.Label);
-            if Child_Info.Kind = Kind_Block then
-               declare
-                  Slot : constant Instance_Slot_Type := Child_Info.Inst_Slot;
-               begin
-                  --  Skip processes (they have no slot).
-                  if Slot /= Invalid_Instance_Slot then
-                     pragma Assert (Sub_Instances (Slot) = null);
-                     Sub_Instances (Slot) := Child;
-                  end if;
-               end;
-            end if;
-            Child := Child.Brother;
+            declare
+               Slot : constant Instance_Slot_Type :=
+                 Get_Info (Child.Label).Inst_Slot;
+            begin
+               --  Skip processes (they have no slot).
+               if Slot /= Invalid_Instance_Slot then
+                  pragma Assert (Sub_Instances (Slot) = null);
+                  Sub_Instances (Slot) := Child;
+               end if;
+            end;
+
+            --  Reverse
+            Prev := Child.Brother;
+            Child.Brother := First;
+            First := Child;
+
+            Child := Prev;
          end loop;
+         Instance.Children := First;
       end;
 
       --  Associate configuration items with subinstance.  Gather items for

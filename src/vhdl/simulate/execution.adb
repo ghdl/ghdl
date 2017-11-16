@@ -3302,6 +3302,7 @@ package body Execution is
                                  Parent => Instance,
                                  Children => null,
                                  Brother => null,
+                                 Ports_Map => Null_Iir,
                                  Marker => Empty_Marker,
                                  Objects => (others => null),
                                  Elab_Objects => 0,
