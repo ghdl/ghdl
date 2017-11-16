@@ -253,6 +253,12 @@ package body Ortho_Mcode is
         (Ortho_Code.Consts.New_Null_Access (Ortho_Code.O_Tnode (Ltype)));
    end New_Null_Access;
 
+   function New_Default_Value (Ltype : O_Tnode) return O_Cnode is
+   begin
+      return O_Cnode
+        (Ortho_Code.Consts.New_Default_Value (Ortho_Code.O_Tnode (Ltype)));
+   end New_Default_Value;
+
    procedure Start_Record_Aggr (List : out O_Record_Aggr_List;
                                 Atype : O_Tnode) is
    begin

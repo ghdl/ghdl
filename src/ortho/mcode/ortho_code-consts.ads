@@ -19,6 +19,7 @@ with Interfaces; use Interfaces;
 
 package Ortho_Code.Consts is
    type OC_Kind is (OC_Signed, OC_Unsigned, OC_Float, OC_Lit, OC_Null,
+                    OC_Zero,
                     OC_Array, OC_Record, OC_Union,
                     OC_Subprg_Address, OC_Address,
                     OC_Sizeof, OC_Alignof);
@@ -78,6 +79,7 @@ package Ortho_Code.Consts is
    function New_Null_Access (Ltype : O_Tnode) return O_Cnode;
    function New_Global_Unchecked_Address (Decl : O_Dnode; Atype : O_Tnode)
                                          return O_Cnode;
+   function New_Default_Value (Ltype : O_Tnode) return O_Cnode;
    function New_Global_Address (Decl : O_Dnode; Atype : O_Tnode)
                                return O_Cnode;
    function New_Subprogram_Address (Subprg : O_Dnode; Atype : O_Tnode)

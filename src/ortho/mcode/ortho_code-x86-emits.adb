@@ -3183,6 +3183,10 @@ package body Ortho_Code.X86.Emits is
                   Emit_Const (E);
                end loop;
             end;
+         when OC_Zero =>
+            for I in 1 .. Get_Type_Size (Get_Const_Type (Val)) loop
+               Gen_8 (0);
+            end loop;
          when OC_Sizeof
            | OC_Alignof
            | OC_Union =>

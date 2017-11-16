@@ -219,6 +219,13 @@ package body Ortho_Code.Consts is
       return Cnodes.Last;
    end New_Null_Access;
 
+   function New_Default_Value (Ltype : O_Tnode) return O_Cnode is
+   begin
+      Cnodes.Append (Cnode_Common'(Kind => OC_Zero,
+                                   Lit_Type => Ltype));
+      return Cnodes.Last;
+   end New_Default_Value;
+
    function To_Cnode_Common is new Ada.Unchecked_Conversion
      (Source => Cnode_Addr, Target => Cnode_Common);
 
@@ -525,7 +532,8 @@ package body Ortho_Code.Consts is
            | OC_Sizeof
            | OC_Alignof
            | OC_Address
-           | OC_Subprg_Address =>
+           | OC_Subprg_Address
+           | OC_Zero =>
             raise Syntax_Error;
       end case;
    end Get_Const_Bytes;

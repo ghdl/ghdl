@@ -721,7 +721,8 @@ package body Ortho_Code.Exprs is
               | OC_Record
               | OC_Union
               | OC_Sizeof
-              | OC_Alignof =>
+              | OC_Alignof
+              | OC_Zero =>
                raise Syntax_Error;
          end case;
       end if;
