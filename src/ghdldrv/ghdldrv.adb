@@ -81,6 +81,17 @@ package body Ghdldrv is
    --  True if failure expected.
    Flag_Expect_Failure : Boolean;
 
+   --  Elaboration mode.
+   type Elab_Mode_Type is
+     (--  Static elaboration (or pre-elaboration).
+      Elab_Static,
+
+      --  Dynamic elaboration: design is elaborated just before being run.
+      Elab_Dynamic);
+
+   --  Default elaboration mode is dynamic.
+   Elab_Mode : Elab_Mode_Type := Elab_Dynamic;
+
    --  Argument table for the tools.
    --  Each table low bound is 1 so that the length of a table is equal to
    --  the last bound.
@@ -651,6 +662,12 @@ package body Ghdldrv is
          --  for -C.  Done before Flags.Parse_Option.
          Add_Argument (Compiler_Args, new String'("--mb-comments"));
          Res := Option_Ok;
+      elsif Opt = "--pre-elab" then
+         Elab_Mode := Elab_Static;
+         Res := Option_Ok;
+      elsif Opt = "--dyn-elab" then
+         Elab_Mode := Elab_Dynamic;
+         Res := Option_Ok;
       elsif Options.Parse_Option (Opt) then
          if Opt'Length > 2 and then Opt (1 .. 2) = "-P" then
             --  Discard -Pxxx switches, as they are already added to
@@ -911,10 +928,17 @@ package body Ghdldrv is
    procedure Bind
    is
       Comp_List : Argument_List (1 .. 4);
+      Elab_Cmd : String_Access;
    begin
       Filelist_Name := new String'(Elab_Name.all & List_Suffix);
 
-      Comp_List (1) := new String'("--elab");
+      case Elab_Mode is
+         when Elab_Static =>
+            Elab_Cmd := new String'("--pre-elab");
+         when Elab_Dynamic =>
+            Elab_Cmd := new String'("--elab");
+      end case;
+      Comp_List (1) := Elab_Cmd;
       Comp_List (2) := Unit_Name;
       Comp_List (3) := new String'("-l");
       Comp_List (4) := Filelist_Name;

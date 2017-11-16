@@ -38,8 +38,11 @@ package body Ortho_Front is
       --  Normal mode: compile a design file.
       Action_Compile,
 
-      --  Elaborate a design unit.
+      --  Generate code to elaborate a design unit.
       Action_Elaborate,
+
+      --  Elaborate a design.
+      Action_Pre_Elaborate,
 
       --  Analyze files and elaborate unit.
       Action_Anaelab,
@@ -80,13 +83,14 @@ package body Ortho_Front is
       Flag_Expect_Failure := False;
    end Init;
 
-   function Decode_Elab_Option (Arg : String_Acc) return Natural is
+   function Decode_Elab_Option (Arg : String_Acc; Cmd : String)
+                               return Natural is
    begin
       Elab_Architecture := null;
       --  Entity (+ architecture) to elaborate
       if Arg = null then
          Error_Msg_Option
-           ("entity or configuration name required after --elab");
+           ("entity or configuration name required after " & Cmd);
          return 0;
       end if;
       if Arg (Arg.all'Last) = ')' then
@@ -101,7 +105,7 @@ package body Ortho_Front is
             Len := P - Arg.all'First + 1;
             --  Must be at least 'e(a)'.
             if Len < 4 then
-               Error_Msg_Option ("ill-formed name after --elab");
+               Error_Msg_Option ("ill-formed name after " & Cmd);
                return 0;
             end if;
             --  Handle extended name.
@@ -113,7 +117,7 @@ package body Ortho_Front is
             end if;
             loop
                if P = Arg.all'First then
-                  Error_Msg_Option ("ill-formed name after --elab");
+                  Error_Msg_Option ("ill-formed name after " & Cmd);
                   return 0;
                end if;
                exit when Arg (P) = '(' and Is_Ext = False;
@@ -124,7 +128,7 @@ package body Ortho_Front is
                      P := P - 1;
                      exit;
                   else
-                     Error_Msg_Option ("ill-formed name after --elab");
+                     Error_Msg_Option ("ill-formed name after " & Cmd);
                      return 0;
                   end if;
                else
@@ -154,14 +158,21 @@ package body Ortho_Front is
             return 0;
          end if;
          Action := Action_Elaborate;
-         return Decode_Elab_Option (Arg);
+         return Decode_Elab_Option (Arg, "--elab");
+      elsif Opt.all = "--pre-elab" then
+         if Action /= Action_Compile then
+            Error_Msg_Option ("several --pre-elab options");
+            return 0;
+         end if;
+         Action := Action_Pre_Elaborate;
+         return Decode_Elab_Option (Arg, "--pre-elab");
       elsif Opt.all = "--anaelab" then
          if Action /= Action_Compile then
             Error_Msg_Option ("several --anaelab options");
             return 0;
          end if;
          Action := Action_Anaelab;
-         return Decode_Elab_Option (Arg);
+         return Decode_Elab_Option (Arg, "--anaelab");
       elsif Opt'Length > 14
         and then Opt (Opt'First .. Opt'First + 13) = "--ghdl-source="
       then
@@ -414,6 +425,14 @@ package body Ortho_Front is
                --  This may happen (bad entity for example).
                raise Compilation_Error;
             end if;
+         when Action_Pre_Elaborate =>
+            Flags.Flag_Elaborate := True;
+            Flags.Flag_Only_Elab_Warnings := True;
+            if Elab_Filelist = null then
+               Error_Msg_Option ("missing -l for --pre-elab");
+               raise Option_Error;
+            end if;
+            raise Program_Error;
          when Action_Anaelab =>
             --  Parse files.
             if Anaelab_Files = null then
