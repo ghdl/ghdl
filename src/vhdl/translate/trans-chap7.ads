@@ -61,8 +61,10 @@ package Trans.Chap7 is
    --  type must be RES_TYPE.  Therefore, an implicite conversion might
    --  occurs.
    function Translate_Static_Expression (Expr : Iir; Res_Type : Iir)
-                                            return O_Cnode;
+                                        return O_Cnode;
    function Translate_Numeric_Literal (Expr : Iir; Res_Type : O_Tnode)
+                                      return O_Cnode;
+   function Translate_Enumeration_Literal (Atype : Iir; Pos : Natural)
                                           return O_Cnode;
 
    --  Convert (if necessary) EXPR of type EXPR_TYPE to type ATYPE.

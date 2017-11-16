@@ -495,6 +495,16 @@ package body Trans.Chap7 is
       end if;
    end Translate_Composite_Literal;
 
+   function Translate_Enumeration_Literal (Atype : Iir; Pos : Natural)
+                                          return O_Cnode
+   is
+      Lit_List : constant Iir_Flist :=
+        Get_Enumeration_Literal_List (Get_Base_Type (Atype));
+      Enum : constant Iir := Get_Nth_Element (Lit_List, Pos);
+   begin
+      return Get_Ortho_Expr (Enum);
+   end Translate_Enumeration_Literal;
+
    function Translate_Numeric_Literal (Expr : Iir; Res_Type : O_Tnode)
                                       return O_Cnode is
    begin
@@ -504,16 +514,8 @@ package body Trans.Chap7 is
               (Res_Type, Integer_64 (Get_Value (Expr)));
 
          when Iir_Kind_Enumeration_Literal =>
-            declare
-               Enum_Type : constant Iir := Get_Base_Type (Get_Type (Expr));
-               Lit_List : constant Iir_Flist :=
-                 Get_Enumeration_Literal_List (Enum_Type);
-               Enum : Iir;
-            begin
-               Enum := Get_Nth_Element
-                 (Lit_List, Natural (Get_Enum_Pos (Expr)));
-               return Get_Ortho_Expr (Enum);
-            end;
+            return Translate_Enumeration_Literal
+              (Get_Type (Expr), Natural (Get_Enum_Pos (Expr)));
 
          when Iir_Kind_Floating_Point_Literal =>
             return New_Float_Literal
