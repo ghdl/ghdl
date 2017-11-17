@@ -1498,16 +1498,22 @@ package body Sem_Types is
       --  array type with no index constraint applying to the index
       --  subtypes, or an access type whose designated type is such
       --  a type.
-      if Get_Kind (Type_Mark) = Iir_Kind_Array_Subtype_Definition
-        and then Get_Index_Constraint_Flag (Type_Mark)
-      then
-         Error_Msg_Sem (+Def, "constrained array cannot be re-constrained");
-      end if;
       if Subtype_Index_List = Null_Iir_Flist then
-         --  Array is not constrained.
-         Set_Index_Constraint_Flag (Def, False);
+         --  Array is not constrained, but the type mark may already have
+         --  constrained on indexes.
+         if Get_Kind (Type_Mark) = Iir_Kind_Array_Subtype_Definition then
+            Set_Index_Constraint_Flag
+              (Def, Get_Index_Constraint_Flag (Type_Mark));
+         else
+            Set_Index_Constraint_Flag (Def, False);
+         end if;
          Set_Index_Subtype_List (Def, Type_Index_List);
       else
+         if Get_Kind (Type_Mark) = Iir_Kind_Array_Subtype_Definition
+           and then Get_Index_Constraint_Flag (Type_Mark)
+         then
+            Error_Msg_Sem (+Def, "constrained array cannot be re-constrained");
+         end if;
          Type_Nbr_Dim := Get_Nbr_Elements (Type_Index_List);
          Subtype_Nbr_Dim := Get_Nbr_Elements (Subtype_Index_List);
 
