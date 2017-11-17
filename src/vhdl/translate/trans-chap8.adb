@@ -4375,11 +4375,12 @@ package body Trans.Chap8 is
    end record;
 
    procedure Case_Association_Cb
-     (Assoc : Iir; Handler : in out Selected_Assignment_Handler)
-   is
+     (Assoc : Iir; Handler : in out Selected_Assignment_Handler) is
    begin
+      Open_Temp;
       Translate_Waveform_Assignment
         (Handler.Stmt, Handler.Mechanism, Assoc, Handler.Targ, Handler.Drv);
+      Close_Temp;
    end Case_Association_Cb;
 
    procedure Translate_Selected_Waveform_Assignment_Statement (Stmt : Iir)
