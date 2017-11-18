@@ -2145,20 +2145,17 @@ package body Elaboration is
       --  Gather children and reverse the list.
       declare
          Child, Prev, First : Block_Instance_Acc;
+         Info : Sim_Info_Acc;
       begin
          Child := Instance.Children;
          First := null;
          while Child /= null loop
-            declare
-               Slot : constant Instance_Slot_Type :=
-                 Get_Info (Child.Label).Inst_Slot;
-            begin
-               --  Skip processes (they have no slot).
-               if Slot /= Invalid_Instance_Slot then
-                  pragma Assert (Sub_Instances (Slot) = null);
-                  Sub_Instances (Slot) := Child;
-               end if;
-            end;
+            Info := Get_Info (Child.Label);
+            if Info.Kind = Kind_Block then
+               pragma Assert (Info.Inst_Slot /= Invalid_Instance_Slot);
+               pragma Assert (Sub_Instances (Info.Inst_Slot) = null);
+               Sub_Instances (Info.Inst_Slot) := Child;
+            end if;
 
             --  Reverse
             Prev := Child.Brother;
