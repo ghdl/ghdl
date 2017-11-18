@@ -863,6 +863,11 @@ package body Canon is
    is
       We : Iir_Waveform_Element;
    begin
+      if Get_Kind (Waveform) = Iir_Kind_Unaffected_Waveform then
+         pragma Assert (Get_Chain (Waveform) = Null_Iir);
+         return;
+      end if;
+
       We := Waveform;
       while We /= Null_Iir loop
          Canon_Expression (Get_We_Value (We));
