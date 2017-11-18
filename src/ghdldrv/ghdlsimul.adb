@@ -42,6 +42,7 @@ with Ghdlcomp;
 with Grt.Types;
 with Grt.Options;
 with Grt.Errors;
+with Grt.Stdio;
 with Grtlink;
 
 package body Ghdlsimul is
@@ -130,6 +131,7 @@ package body Ghdlsimul is
       --  Set progname (used for grt error messages)
       Argv0 := new String'(Ada.Command_Line.Command_Name & ASCII.Nul);
       Grt.Options.Progname := Grt.Types.To_Ghdl_C_String (Argv0.all'Address);
+      Grt.Errors.Set_Error_Stream (Grt.Stdio.stdout);
 
       for I in Args'Range loop
          Arg := Args (I);
