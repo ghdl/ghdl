@@ -4610,9 +4610,7 @@ package body Execution is
       --  an aggregate, then the aggregate may be contrained by the
       --  target.
       if Get_Kind (Expr) = Iir_Kind_Aggregate
-        and then Get_Type_Staticness (Expr_Type) < Locally
-        and then Get_Kind (Expr_Type)
-        in Iir_Kinds_Array_Type_Definition
+        and then Get_Kind (Expr_Type) in Iir_Kinds_Array_Type_Definition
       then
          Res := Copy_Array_Bound (Target_Val);
          Fill_Array_Aggregate (Instance, Expr, Res);
