@@ -82,10 +82,10 @@ package Name_Table is
 
    --  Get and set the info field associated with each identifier.
    --  Used to store interpretations of the name.
-   function Get_Info (Id: Name_Id) return Int32;
-   pragma Inline (Get_Info);
-   procedure Set_Info (Id: Name_Id; Info: Int32);
-   pragma Inline (Set_Info);
+   function Get_Name_Info (Id : Name_Id) return Int32;
+   pragma Inline (Get_Name_Info);
+   procedure Set_Name_Info (Id : Name_Id; Info: Int32);
+   pragma Inline (Set_Name_Info);
 
    --  Return the latest name_id used.  This is only for debugging or stats.
    function Last_Name_Id return Name_Id;

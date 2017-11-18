@@ -142,13 +142,13 @@ package body Sem_Scopes is
    function Get_Interpretation_Raw (Id : Name_Id)
                                    return Name_Interpretation_Type is
    begin
-      return Name_Interpretation_Type (Name_Table.Get_Info (Id));
+      return Name_Interpretation_Type (Name_Table.Get_Name_Info (Id));
    end Get_Interpretation_Raw;
 
    procedure Set_Interpretation
      (Id : Name_Id; Inter : Name_Interpretation_Type) is
    begin
-      Name_Table.Set_Info (Id, Int32 (Inter));
+      Name_Table.Set_Name_Info (Id, Int32 (Inter));
    end Set_Interpretation;
 
    function Get_Interpretation_From_Raw (Inter : Name_Interpretation_Type)

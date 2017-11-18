@@ -27,6 +27,8 @@ package body Name_Table is
    --  Type for the hash value.
    type Hash_Value_Type is mod 2**32;
 
+   type Str_Idx is new Nat32;
+
    --  An entry in the name table.
    type Identifier is record
       --  Hash value of the identifier.
@@ -39,7 +41,7 @@ package body Name_Table is
       --  The name is always NUL terminated, but the length can be computed
       --  from the name of the next identifier.  Indeed, names are put in
       --  Strings_Table in the same order as identifiers.
-      Name : Natural;
+      Name : Str_Idx;
 
       --  User infos.
       Info : Int32;
@@ -72,21 +74,21 @@ package body Name_Table is
 
    --  The table to store all the strings.  Strings are always NUL terminated.
    package Strings_Table is new Tables
-     (Table_Index_Type => Natural,
+     (Table_Index_Type => Str_Idx,
       Table_Component_Type => Character,
-      Table_Low_Bound => Natural'First,
+      Table_Low_Bound => Str_Idx'First,
       Table_Initial => 4096);
 
    --  Allocate place in the strings_table, and store the name_buffer into it.
    --  Also append a NUL.
-   function Store (Str : Thin_String_Ptr; Len : Natural) return Natural
+   function Store (Str : Thin_String_Ptr; Len : Natural) return Str_Idx
    is
-      Res: Natural;
+      Res : Str_Idx;
    begin
       Res := Strings_Table.Allocate (Len + 1);
-      Strings_Table.Table (Res .. Res + Len - 1) :=
+      Strings_Table.Table (Res .. Res + Str_Idx (Len) - 1) :=
         Strings_Table.Table_Type (Str (1 .. Len));
-      Strings_Table.Table (Res + Len) := NUL;
+      Strings_Table.Table (Res + Str_Idx (Len)) := NUL;
       return Res;
    end Store;
 
@@ -172,7 +174,7 @@ package body Name_Table is
             subtype Result_Type is String (1 .. Len);
          begin
             return Result_Type
-              (Strings_Table.Table (Ent.Name .. Ent.Name + Len - 1));
+              (Strings_Table.Table (Ent.Name .. Ent.Name + Str_Idx (Len) - 1));
          end;
       end if;
    end Image;
@@ -188,7 +190,7 @@ package body Name_Table is
          Nam_Length := Get_Name_Length (Id);
          Nam_Buffer (1 .. Nam_Length) := String
            (Strings_Table.Table
-            (Name_Entry.Name .. Name_Entry.Name + Nam_Length - 1));
+            (Name_Entry.Name .. Name_Entry.Name + Str_Idx (Nam_Length) - 1));
       end if;
    end Image;
 
@@ -212,11 +214,11 @@ package body Name_Table is
    function Get_Name_Length (Id : Name_Id) return Natural
    is
       pragma Assert (Id < Names_Table.Last);
-      Id_Name : constant Natural := Names_Table.Table (Id).Name;
-      Id1_Name : constant Natural := Names_Table.Table (Id + 1).Name;
+      Id_Name : constant Str_Idx := Names_Table.Table (Id).Name;
+      Id1_Name : constant Str_Idx := Names_Table.Table (Id + 1).Name;
    begin
       --  Do not count NUL terminator.
-      return Id1_Name - Id_Name - 1;
+      return Natural (Id1_Name - Id_Name - 1);
    end Get_Name_Length;
 
    function Is_Character (Id : Name_Id) return Boolean is
@@ -235,15 +237,15 @@ package body Name_Table is
 
    --  Get and set the info field associated with each identifier.
    --  Used to store interpretations of the name.
-   function Get_Info (Id : Name_Id) return Int32 is
+   function Get_Name_Info (Id : Name_Id) return Int32 is
    begin
       return Names_Table.Table (Id).Info;
-   end Get_Info;
+   end Get_Name_Info;
 
-   procedure Set_Info (Id : Name_Id; Info : Int32) is
+   procedure Set_Name_Info (Id : Name_Id; Info : Int32) is
    begin
       Names_Table.Table (Id).Info := Info;
-   end Set_Info;
+   end Set_Name_Info;
 
    --  Compare ID with Str / Len.  Length of ID must be equal to Len.
    function Compare_Name_Buffer_With_Name
@@ -251,7 +253,8 @@ package body Name_Table is
    is
       Ne: Identifier renames Names_Table.Table (Id);
    begin
-      return String (Strings_Table.Table (Ne.Name .. Ne.Name + Len - 1))
+      return String
+        (Strings_Table.Table (Ne.Name .. Ne.Name + Str_Idx (Len) - 1))
         = Str (1 .. Len);
    end Compare_Name_Buffer_With_Name;
 
@@ -382,7 +385,7 @@ package body Name_Table is
       Err : Boolean := False;
    begin
       for I in Names_Table.First .. Names_Table.Last loop
-         if Get_Info (I) /= 0 then
+         if Get_Name_Info (I) /= 0 then
             Err := True;
             Put_Line ("still infos in" & Name_Id'Image (I) & ", ie: "
                       & Image (I) & ", info ="
@@ -408,13 +411,13 @@ package body Name_Table is
 
    procedure Dump
    is
-      First: Natural;
+      First : Str_Idx;
    begin
       Put_Line ("strings_table:");
       First := 0;
       for I in 0 .. Strings_Table.Last loop
          if Strings_Table.Table(I) = NUL then
-            Put_Line (Natural'Image (First) & ": "
+            Put_Line (Str_Idx'Image (First) & ": "
                       & String (Strings_Table.Table (First .. I - 1)));
             First := I + 1;
          end if;
@@ -442,7 +445,7 @@ package body Name_Table is
    begin
       Put_Line ("Name table statistics:");
       Put_Line (" number of identifiers: " & Name_Id'Image (Last_Name_Id));
-      Put_Line (" size of strings: " & Natural'Image (Strings_Table.Last));
+      Put_Line (" size of strings: " & Str_Idx'Image (Strings_Table.Last));
       Put_Line (" hash array length: "
                   & Hash_Value_Type'Image (Hash_Table_Size));
       Put_Line (" hash distribution (number of entries per length):");
