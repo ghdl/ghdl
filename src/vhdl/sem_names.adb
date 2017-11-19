@@ -2091,7 +2091,8 @@ package body Sem_Names is
                while Is_Valid (It) loop
                   El := Get_Element (It);
                   case Get_Kind (El) is
-                     when Iir_Kind_Function_Call =>
+                     when Iir_Kind_Function_Call
+                       | Iir_Kind_Selected_Element =>
                         --  Not an expanded name.
                         null;
                      when others =>
