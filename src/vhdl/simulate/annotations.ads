@@ -21,14 +21,12 @@ with Iir_Values; use Iir_Values;
 with Types; use Types;
 
 package Annotations is
-   Trace_Annotation : Boolean := False;
+   --  Decorate the tree in order to be usable with the internal simulator.
+   procedure Annotate (Unit : Iir_Design_Unit);
 
-   -- Decorate the tree in order to be usable with the internal simulator.
-   procedure Annotate (Tree: Iir_Design_Unit);
-
-   -- Disp annotations for an iir node.
-   procedure Disp_Vhdl_Info (Node: Iir);
-   procedure Disp_Tree_Info (Node: Iir);
+   --  Disp annotations for an iir node.
+   procedure Disp_Vhdl_Info (Node : Iir);
+   procedure Disp_Tree_Info (Node : Iir);
 
    type Object_Slot_Type is new Natural;
    subtype Parameter_Slot_Type is Object_Slot_Type range 0 .. 2**15;
@@ -54,7 +52,7 @@ package Annotations is
       Kind_PSL,
       Kind_Extra);
 
-   type Sim_Info_Type (Kind: Sim_Info_Kind);
+   type Sim_Info_Type (Kind : Sim_Info_Kind);
    type Sim_Info_Acc is access all Sim_Info_Type;
 
    -- Scope corresponding to an object.
@@ -139,9 +137,9 @@ package Annotations is
    end record;
 
    -- Get/Set annotation fied from/to an iir.
-   procedure Set_Info (Target: Iir; Info: Sim_Info_Acc);
+   procedure Set_Info (Target : Iir; Info : Sim_Info_Acc);
    pragma Inline (Set_Info);
-   function Get_Info (Target: Iir) return Sim_Info_Acc;
+   function Get_Info (Target : Iir) return Sim_Info_Acc;
    pragma Inline (Get_Info);
 
    --  Expand the annotation table.  This is automatically done by Annotate,

@@ -144,8 +144,6 @@ package body Ghdlsimul is
             Elaboration.Trace_Elaboration := True;
          elsif Arg.all = "--trace-drivers" then
             Elaboration.Trace_Drivers := True;
-         elsif Arg.all = "--trace-annotation" then
-            Annotations.Trace_Annotation := True;
          elsif Arg.all = "--trace-simu" then
             Simulation.Trace_Simulation := True;
          elsif Arg.all = "--trace-stmt" then

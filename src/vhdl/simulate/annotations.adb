@@ -286,8 +286,7 @@ package body Annotations is
 
       Current_Scope := Prot_Info.Frame_Scope;
 
-      Annotate_Declaration_List
-        (Prot_Info, Get_Declaration_Chain (Prot));
+      Annotate_Declaration_List (Prot_Info, Get_Declaration_Chain (Prot));
 
       Current_Scope := Prev_Scope;
    end Annotate_Protected_Type_Body;
@@ -570,11 +569,10 @@ package body Annotations is
       Current_Scope := Prev_Scope;
    end Annotate_Subprogram_Body;
 
-   procedure Annotate_Component_Declaration
-     (Comp: Iir_Component_Declaration)
+   procedure Annotate_Component_Declaration (Comp: Iir_Component_Declaration)
    is
-      Info: Sim_Info_Acc;
       Prev_Scope : constant Scope_Type := Current_Scope;
+      Info : Sim_Info_Acc;
    begin
       Current_Scope := (Kind => Scope_Kind_Component);
 
@@ -924,8 +922,8 @@ package body Annotations is
    procedure Annotate_Process_Statement (Block_Info : Sim_Info_Acc; Stmt : Iir)
    is
       pragma Unreferenced (Block_Info);
-      Info: Sim_Info_Acc;
       Prev_Scope : constant Scope_Type := Current_Scope;
+      Info : Sim_Info_Acc;
    begin
       Increment_Current_Scope;
 
@@ -945,7 +943,7 @@ package body Annotations is
    procedure Annotate_Concurrent_Statements_List
      (Block_Info: Sim_Info_Acc; Stmt_Chain : Iir)
    is
-      El: Iir;
+      El : Iir;
    begin
       El := Stmt_Chain;
       while El /= Null_Iir loop
@@ -1196,18 +1194,13 @@ package body Annotations is
    end Annotate_Expand_Table;
 
    -- Decorate the tree in order to be usable with the internal simulator.
-   procedure Annotate (Tree: Iir_Design_Unit)
+   procedure Annotate (Unit : Iir_Design_Unit)
    is
-      El: Iir;
+      El : constant Iir := Get_Library_Unit (Unit);
    begin
       --  Expand info table.
       Annotate_Expand_Table;
 
-      El := Get_Library_Unit (Tree);
-      if Trace_Annotation then
-         Report_Msg (Msgid_Note, Semantic, No_Location,
-                     "annotating %n", (1 => +El));
-      end if;
       case Get_Kind (El) is
          when Iir_Kind_Entity_Declaration =>
             Annotate_Entity (El);
