@@ -103,11 +103,20 @@ package Lists is
    function Get_Element (It : Iterator) return Node_Type;
    procedure Set_Element (It : Iterator; El : Node_Type);
 
+   --  Use the C convention for all these subprograms, so that the Iterator is
+   --  always passed by reference.
+   pragma Convention (C, Is_Valid);
+   pragma Convention (C, Next);
+   pragma Convention (C, Get_Element);
+   pragma Convention (C, Set_Element);
+
    --  Like Iterate, but if LIST is Null_List, it returns an iterator that is
    --  never valid.
    function Iterate_Safe (List : List_Type) return Iterator;
+
 private
    type Chunk_Index_Type is new Int32;
+   for Chunk_Index_Type'Size use 32;
    No_Chunk_Index : constant Chunk_Index_Type := 0;
 
    Chunk_Len : constant := 7;
@@ -123,9 +132,11 @@ private
    type Iterator is record
       Chunk : Chunk_Index_Type;
       Chunk_Idx : Nat32;
-      Remains : Natural;
+      Remain : Nat32;
    end record;
+   pragma Convention (C, Iterator);
 
+   pragma Inline (Iterate);
    pragma Inline (Is_Valid);
    pragma Inline (Next);
    pragma Inline (Get_Element);

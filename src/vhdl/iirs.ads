@@ -4826,7 +4826,13 @@ package Iirs is
      Iir_Predefined_Functions'Last;
 
    --  Staticness as defined by LRM93 6.1 and 7.4
-   type Iir_Staticness is (Unknown, None, Globally, Locally);
+   type Iir_Staticness is
+     (
+      Unknown,
+      None,
+      Globally,
+      Locally
+     );
 
    -- Staticness as defined by LRM93 6.1 and 7.4
    function Min (L,R: Iir_Staticness) return Iir_Staticness renames
@@ -4870,13 +4876,20 @@ package Iirs is
    --  Constraint state of a type.
    --  See LRM08 5.1 for definition.
    type Iir_Constraint is
-     (Unconstrained, Partially_Constrained, Fully_Constrained);
+     (
+      Unconstrained,
+      Partially_Constrained,
+      Fully_Constrained
+     );
 
    --  The kind of an inteface list.
-   type Interface_Kind_Type is (Generic_Interface_List,
-                                Port_Interface_List,
-                                Procedure_Parameter_Interface_List,
-                                Function_Parameter_Interface_List);
+   type Interface_Kind_Type is
+     (
+      Generic_Interface_List,
+      Port_Interface_List,
+      Procedure_Parameter_Interface_List,
+      Function_Parameter_Interface_List
+     );
    subtype Parameter_Interface_List is Interface_Kind_Type range
      Procedure_Parameter_Interface_List ..
      Function_Parameter_Interface_List;

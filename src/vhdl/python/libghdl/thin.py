@@ -1,5 +1,6 @@
 from libghdl import libghdl
-from ctypes import (c_char_p, c_int32, c_int, c_bool, sizeof, c_void_p)
+from ctypes import (c_char_p, c_int32, c_int, c_bool, sizeof, c_void_p,
+                    POINTER, Structure)
 import libghdl.iirs as iirs
 import libghdl.nodes_meta as nodes_meta
 from libghdl.nodes_meta import (Attr, types)
@@ -27,13 +28,50 @@ def analyze_file(filename):
 
 # Lists
 
-Get_Nbr_Elements = libghdl.lists__get_nbr_elements
 
-Get_Nth_Element = libghdl.lists__get_nth_element
+class Lists:
+    List_Type = c_int32
 
-Create_Iir_List = libghdl.lists__create_list
+    class Iterator(Structure):
+        _fields_ = [("chunk", c_int32),
+                    ("chunk_idx", c_int32),
+                    ("remain", c_int32)]
 
-Destroy_Iir_List = libghdl.lists__destroy_list
+    Iterate = libghdl.lists__iterate
+    Iterate.argstype = [List_Type]
+    Iterate.restype = Iterator
+
+    Is_Valid = libghdl.lists__is_valid
+    Is_Valid.argstype = [POINTER(Iterator)]
+    Is_Valid.restype = c_bool
+
+    Next = libghdl.lists__next
+    Next.argstype = [POINTER(Iterator)]
+    Next.restype = None
+
+    Get_Element = libghdl.lists__get_element
+    Get_Element.argstype = [POINTER(Iterator)]
+    Get_Element.restype = c_int32
+
+    Get_Nbr_Elements = libghdl.lists__get_nbr_elements
+    Get_Nbr_Elements.argtype = [List_Type]
+    Get_Nbr_Elements.restype = c_int32
+
+    Create_Iir_List = libghdl.lists__create_list
+
+    Destroy_Iir_List = libghdl.lists__destroy_list
+
+
+class Flists:
+    Flist_Type = c_int32
+
+    Ffirst = 0
+    Flast = libghdl.flists__flast
+
+    Length = libghdl.flists__length
+
+    Get_Nth_Element = libghdl.flists__get_nth_element
+
 
 # Files
 
@@ -189,5 +227,8 @@ class Iirs_Utils:
 
 Null_Iir = 0
 Null_Iir_List = 0
-Iir_List_Others = 1
-Iir_List_All = 2
+Iir_List_All = 1
+
+Null_Iir_Flist = 0
+Iir_Flist_Others = 1
+Iir_Flist_All = 2

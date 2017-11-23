@@ -173,7 +173,7 @@ package body Lists is
    begin
       return Iterator'(Chunk => L.First,
                        Chunk_Idx => 0,
-                       Remains => L.Nbr);
+                       Remain => Int32 (L.Nbr));
    end Iterate;
 
    function Iterate_Safe (List : List_Type) return Iterator is
@@ -181,14 +181,14 @@ package body Lists is
       if List = Null_List then
          return Iterator'(Chunk => No_Chunk_Index,
                           Chunk_Idx => 0,
-                          Remains => 0);
+                          Remain => 0);
       end if;
       return Iterate (List);
    end Iterate_Safe;
 
    function Is_Valid (It : Iterator) return Boolean is
    begin
-      return It.Remains > 0;
+      return It.Remain > 0;
    end Is_Valid;
 
    procedure Next (It : in out Iterator) is
@@ -198,7 +198,7 @@ package body Lists is
          It.Chunk := Chunkt.Table (It.Chunk).Next;
          It.Chunk_Idx := 0;
       end if;
-      It.Remains := It.Remains - 1;
+      It.Remain := It.Remain - 1;
    end Next;
 
    function Get_Element (It : Iterator) return Node_Type is

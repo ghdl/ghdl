@@ -1,5 +1,5 @@
 from libghdl import libghdl
-from ctypes import (c_char_p, c_int32, c_int, c_bool, sizeof, c_void_p)
+from ctypes import (c_char_p, c_int32, c_int, c_bool, sizeof, c_void_p, byref)
 import libghdl.iirs as iirs
 import libghdl.thin as thin
 import libghdl.nodes_meta as nodes_meta
@@ -105,14 +105,31 @@ def nodes_iter(n):
                 for n1 in list_iter(nodes_meta.Get_Iir_List(n, f)):
                     for n2 in nodes_iter(n1):
                         yield n2
+        elif typ == types.Iir_Flist:
+            attr = nodes_meta.get_field_attribute(f)
+            if attr == Attr.ANone:
+                for n1 in flist_iter(nodes_meta.Get_Iir_Flist(n, f)):
+                    for n2 in nodes_iter(n1):
+                        yield n2
 
 
 def list_iter(lst):
     """Iterate of all element of Iir_List lst."""
     if lst <= thin.Iir_List_All:
         return
-    for i in range(thin.Get_Nbr_Elements(lst)):
-        yield thin.Get_Nth_Element(lst, i)
+    iter = thin.Lists.Iterate(lst)
+    while thin.Lists.Is_Valid(byref(iter)):
+        yield thin.Lists.Get_Element(byref(iter))
+        thin.Lists.Next(byref(iter))
+
+
+def flist_iter(lst):
+    """Iterate of all element of Iir_List lst."""
+    if lst <= thin.Iir_Flist_All:
+        return
+    for i in range(thin.Flists.Flast(lst) + 1):
+        yield thin.Flists.Get_Nth_Element(lst, i)
+
 
 def declarations_iter(n):
     """Iterator on all declarations in n."""

@@ -99,7 +99,7 @@ def do_class_fields():
 def read_spec_enum(type_name, prefix, class_name):
     """Read an enumeration declaration from iirs.ads"""
     pat_decl = re.compile(r'   type {0} is$'.format(type_name))
-    pat_enum = re.compile(r'      {0}_(\w+),?(-- .*)?$'.format(prefix))
+    pat_enum = re.compile(r'      {0}(\w+),?(-- .*)?$'.format(prefix))
     lr = pnodes.linereader(pnodes.kind_file)
     while not pat_decl.match(lr.get()):
         pass
@@ -117,10 +117,12 @@ def read_spec_enum(type_name, prefix, class_name):
 def do_libghdl_iirs():
     print('from libghdl import libghdl')
     do_class_kinds()
-    read_spec_enum('Iir_Mode', 'Iir', 'Iir_Mode')
-    read_spec_enum('Date_State_Type', 'Date', 'Date_State')
+    read_spec_enum('Iir_Mode', 'Iir_', 'Iir_Mode')
+    read_spec_enum('Iir_Staticness', '', 'Iir_Staticness')
+    read_spec_enum('Iir_Constraint', '', 'Iir_Constraint')
+    read_spec_enum('Date_State_Type', 'Date_', 'Date_State')
     read_spec_enum('Iir_Predefined_Functions',
-                   'Iir_Predefined', 'Iir_Predefined')
+                   'Iir_Predefined_', 'Iir_Predefined')
     do_iirs_subprg()
 
 
