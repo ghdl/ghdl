@@ -17,13 +17,13 @@
 --  02111-1307, USA.
 
 with Types; use Types;
-with Annotations; use Annotations;
-with Execution; use Execution;
-with Debugger; use Debugger;
-with Grt_Interface; use Grt_Interface;
+with Simul.Annotations; use Simul.Annotations;
+with Simul.Execution; use Simul.Execution;
+with Simul.Debugger; use Simul.Debugger;
+with Simul.Grt_Interface; use Simul.Grt_Interface;
 with Grt.Lib;
 
-package body File_Operation is
+package body Simul.File_Operation is
    --  Open a file.
    --  See LRM93 3.4.1 for definition of arguments.
    --  IS_TEXT is true if the file format is text.
@@ -381,4 +381,4 @@ package body File_Operation is
       end loop;
       return Grt.Lib.Textio_Read_Real (Str_Arg'Unrestricted_Access);
    end Textio_Read_Real;
-end File_Operation;
+end Simul.File_Operation;

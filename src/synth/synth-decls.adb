@@ -25,8 +25,8 @@ with Errorout; use Errorout;
 with Synth.Context; use Synth.Context;
 with Synth.Types; use Synth.Types;
 with Synth.Environment; use Synth.Environment;
-with Iir_Values; use Iir_Values;
-with Annotations; use Annotations;
+with Simul.Environments; use Simul.Environments;
+with Simul.Annotations; use Simul.Annotations;
 
 package body Synth.Decls is
    procedure Create_Var_Wire

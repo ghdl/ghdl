@@ -1,5 +1,5 @@
---  Interpreter AMS simulation
---  Copyright (C) 2014 Tristan Gingold
+--  Interpreted simulation base package.
+--  Copyright (C) 2017 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
 --  the terms of the GNU General Public License as published by the Free
@@ -16,13 +16,6 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Elaboration.AMS; use Elaboration.AMS;
-
-package Debugger.AMS is
-   procedure Disp_Quantity_Name (Quantity : Quantity_Index_Type);
-
-   procedure Disp_Characteristic_Expression
-     (Ce : Characteristic_Expressions_Index);
-
-   procedure Disp_Characteristic_Expressions;
-end Debugger.AMS;
+package Simul is
+   pragma Pure (Simul);
+end Simul;

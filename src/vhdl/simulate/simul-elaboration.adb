@@ -20,18 +20,18 @@ with Ada.Text_IO;
 with Str_Table;
 with Errorout; use Errorout;
 with Evaluation;
-with Execution; use Execution;
+with Simul.Execution; use Simul.Execution;
 with Iirs_Utils; use Iirs_Utils;
 with Libraries;
 with Name_Table;
-with File_Operation;
+with Simul.File_Operation;
 with Iir_Chains; use Iir_Chains;
-with Elaboration.AMS; use Elaboration.AMS;
+with Simul.Elaboration.AMS; use Simul.Elaboration.AMS;
 with Areapools; use Areapools;
 with Grt.Errors;
 with Grt.Options;
 
-package body Elaboration is
+package body Simul.Elaboration is
 
    procedure Elaborate_Dependence (Design_Unit: Iir_Design_Unit);
 
@@ -2976,4 +2976,4 @@ package body Elaboration is
       pragma Assert (Is_Empty (Expr_Pool));
    end Elaborate_Design;
 
-end Elaboration;
+end Simul.Elaboration;

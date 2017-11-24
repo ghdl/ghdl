@@ -18,7 +18,7 @@
 
 with Tables;
 
-package Elaboration.AMS is
+package Simul.Elaboration.AMS is
    --  AMS expressions
    --
    --  At many places during elaboration, the LRM defines characteristic
@@ -160,4 +160,4 @@ package Elaboration.AMS is
       Table_Component_Type => Scalar_Quantity,
       Table_Low_Bound => 1,
       Table_Initial => 128);
-end Elaboration.AMS;
+end Simul.Elaboration.AMS;

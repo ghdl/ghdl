@@ -25,19 +25,19 @@ with PSL.Nodes;
 with PSL.NFAs;
 with Std_Package;
 with Trans_Analyzes;
-with Elaboration; use Elaboration;
-with Execution; use Execution;
+with Simul.Elaboration; use Simul.Elaboration;
+with Simul.Execution; use Simul.Execution;
 with Ieee.Std_Logic_1164;
 with Grt.Main;
-with Debugger; use Debugger;
-with Debugger.AMS;
+with Simul.Debugger; use Simul.Debugger;
+with Simul.Debugger.AMS;
 with Grt.Errors;
 with Grt.Rtis;
 with Grt.Processes;
 with Grt.Signals;
 with Areapools; use Areapools;
 
-package body Simulation.Main is
+package body Simul.Simulation.Main is
    --  Configuration for the whole design
    Top_Config : Iir_Design_Unit;
 
@@ -1142,4 +1142,4 @@ package body Simulation.Main is
       when Simulation_Finished =>
          null;
    end Simulation_Entity;
-end Simulation.Main;
+end Simul.Simulation.Main;

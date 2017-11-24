@@ -17,10 +17,10 @@
 --  02111-1307, USA.
 
 with Iirs; use Iirs;
-with Iir_Values; use Iir_Values;
+with Simul.Environments; use Simul.Environments;
 with Types; use Types;
 
-package Annotations is
+package Simul.Annotations is
    --  Decorate the tree in order to be usable with the internal simulator.
    procedure Annotate (Unit : Iir_Design_Unit);
 
@@ -117,4 +117,4 @@ package Annotations is
 
    --  For debugging.
    function Image (Scope : Scope_Type) return String;
-end Annotations;
+end Simul.Annotations;

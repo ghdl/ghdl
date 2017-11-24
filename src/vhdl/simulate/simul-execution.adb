@@ -25,20 +25,20 @@ with Errorout; use Errorout;
 with Std_Package;
 with Evaluation;
 with Iirs_Utils; use Iirs_Utils;
-with Annotations; use Annotations;
+with Simul.Annotations; use Simul.Annotations;
 with Name_Table;
-with File_Operation;
-with Debugger; use Debugger;
+with Simul.File_Operation;
+with Simul.Debugger; use Simul.Debugger;
 with Std_Names;
 with Str_Table;
 with Files_Map;
 with Iir_Chains; use Iir_Chains;
-with Simulation; use Simulation;
+with Simul.Simulation; use Simul.Simulation;
 with Grt.Astdio;
 with Grt.Stdio;
 with Grt.Options;
 with Grt.Vstrings;
-with Grt_Interface;
+with Simul.Grt_Interface;
 with Grt.Values;
 with Grt.Errors;
 with Grt.Std_Logic_1164;
@@ -46,7 +46,7 @@ with Grt.Lib;
 with Grt.Strings;
 with Sem_Inst;
 
-package body Execution is
+package body Simul.Execution is
 
    function Execute_Function_Call
      (Block: Block_Instance_Acc; Expr: Iir; Imp : Iir)
@@ -4828,4 +4828,4 @@ package body Execution is
          end case;
       end loop;
    end Execute_Sequential_Statements;
-end Execution;
+end Simul.Execution;

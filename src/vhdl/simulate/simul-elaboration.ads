@@ -19,13 +19,13 @@
 with Tables;
 with Types; use Types;
 with Iirs; use Iirs;
-with Iir_Values; use Iir_Values;
+with Simul.Environments; use Simul.Environments;
 with Grt.Types; use Grt.Types;
-with Annotations; use Annotations;
+with Simul.Annotations; use Simul.Annotations;
 
 --  This package elaborates design hierarchy.
 
-package Elaboration is
+package Simul.Elaboration is
    Trace_Elaboration : Boolean := False;
    Trace_Drivers : Boolean := False;
 
@@ -184,4 +184,4 @@ package Elaboration is
       Table_Index_Type => PSL_Index_Type,
       Table_Low_Bound => 1,
       Table_Initial => 2);
-end Elaboration;
+end Simul.Elaboration;

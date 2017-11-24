@@ -20,9 +20,9 @@ with System;
 with Ada.Unchecked_Conversion;
 with GNAT.Debug_Utilities;
 with Name_Table;
-with Debugger; use Debugger;
+with Simul.Debugger; use Simul.Debugger;
 
-package body Iir_Values is
+package body Simul.Environments is
 
    -- Functions for iir_value_literal
    function Is_Equal (Left, Right: Iir_Value_Literal_Acc) return Boolean is
@@ -1124,4 +1124,4 @@ package body Iir_Values is
             Put ("[environment]");
       end case;
    end Disp_Iir_Value;
-end Iir_Values;
+end Simul.Environments;

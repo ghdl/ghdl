@@ -17,9 +17,9 @@
 --  02111-1307, USA.
 
 with Errorout; use Errorout;
-with Execution;
+with Simul.Execution;
 
-package body Elaboration.AMS is
+package body Simul.Elaboration.AMS is
    function Create_Characteristic_Expression
      (Kind : Characteristic_Expr_Kind) return Characteristic_Expressions_Index
    is
@@ -196,4 +196,4 @@ package body Elaboration.AMS is
          Compute_Dependencies (I);
       end loop;
    end Create_Tables;
-end Elaboration.AMS;
+end Simul.Elaboration.AMS;

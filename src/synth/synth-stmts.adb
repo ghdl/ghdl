@@ -37,10 +37,10 @@ with Synth.Expr; use Synth.Expr;
 with Synth.Context; use Synth.Context;
 with Synth.Environment; use Synth.Environment;
 
-with Iir_Values; use Iir_Values;
-with Annotations;
-with Execution;
-with Elaboration; use Elaboration;
+with Simul.Environments; use Simul.Environments;
+with Simul.Annotations;
+with Simul.Execution;
+with Simul.Elaboration; use Simul.Elaboration;
 
 with Netlists; use Netlists;
 with Netlists.Builders; use Netlists.Builders;
@@ -622,7 +622,7 @@ package body Synth.Stmts is
       Inter_Chain : Iir;
       Assoc_Chain : Iir)
    is
-      use Annotations;
+      use Simul.Annotations;
       Inter : Iir;
       Assoc : Iir;
       Assoc_Inter : Iir;
@@ -648,9 +648,9 @@ package body Synth.Stmts is
             when Iir_Kind_Interface_Constant_Declaration
               | Iir_Kind_Interface_Variable_Declaration =>
                --  FIXME: Arguments are passed by copy.
-               Elaboration.Create_Object (Subprg_Inst.Sim, Inter);
+               Simul.Elaboration.Create_Object (Subprg_Inst.Sim, Inter);
             when Iir_Kind_Interface_Signal_Declaration =>
-               Elaboration.Create_Signal (Subprg_Inst.Sim, Inter);
+               Simul.Elaboration.Create_Signal (Subprg_Inst.Sim, Inter);
             when Iir_Kind_Interface_File_Declaration =>
                raise Internal_Error;
          end case;
@@ -678,7 +678,7 @@ package body Synth.Stmts is
       Inter_Chain : Iir;
       Assoc_Chain : Iir)
    is
-      use Annotations;
+      use Simul.Annotations;
       Inter : Iir;
       Assoc : Iir;
       Assoc_Inter : Iir;
@@ -722,7 +722,7 @@ package body Synth.Stmts is
 
       Areapools.Mark (Syn_Inst.Sim.Marker, Instance_Pool.all);
       Sub_Sim_Inst :=
-        Execution.Create_Subprogram_Instance (Syn_Inst.Sim, null, Imp);
+        Simul.Execution.Create_Subprogram_Instance (Syn_Inst.Sim, null, Imp);
       Sub_Syn_Inst := Make_Instance (Sub_Sim_Inst);
 
       Synth_Subprogram_Association

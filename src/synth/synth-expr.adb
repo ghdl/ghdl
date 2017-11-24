@@ -24,7 +24,7 @@ with Std_Names;
 with Ieee.Std_Logic_1164;
 with Std_Package;
 with Errorout; use Errorout;
-with Execution;
+with Simul.Execution;
 with Grt.Types; use Grt.Types;
 
 with Synth.Errors; use Synth.Errors;
@@ -251,7 +251,7 @@ package body Synth.Expr is
                Res : Value_Acc;
             begin
                --  Create bounds.
-               Bnd := Execution.Create_Array_Bounds_From_Type
+               Bnd := Simul.Execution.Create_Array_Bounds_From_Type
                  (Syn_Inst.Sim, Aggr_Type, False);
                --  Allocate result
                Res := Create_Array_Value (Bnd.Bounds);
@@ -699,7 +699,7 @@ package body Synth.Expr is
            | Iir_Kind_Integer_Literal
            | Iir_Kind_String_Literal8 =>
             return Create_Value_Lit
-              (Execution.Execute_Expression (Syn_Inst.Sim, Expr),
+              (Simul.Execution.Execute_Expression (Syn_Inst.Sim, Expr),
                Get_Base_Type (Get_Type (Expr)));
          when Iir_Kind_Type_Conversion =>
             return Synth_Type_Conversion (Syn_Inst, Expr);

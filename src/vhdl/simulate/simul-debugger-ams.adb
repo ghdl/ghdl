@@ -20,7 +20,7 @@ with Iirs_Utils; use Iirs_Utils;
 with Ada.Text_IO; use Ada.Text_IO;
 with Disp_Vhdl;
 
-package body Debugger.AMS is
+package body Simul.Debugger.AMS is
    procedure Disp_Quantity_Name (Quantity : Quantity_Index_Type)
    is
       Obj : Scalar_Quantity renames Scalar_Quantities.Table (Quantity);
@@ -82,4 +82,4 @@ package body Debugger.AMS is
          Disp_Characteristic_Expression (I);
       end loop;
    end Disp_Characteristic_Expressions;
-end Debugger.AMS;
+end Simul.Debugger.AMS;

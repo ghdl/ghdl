@@ -19,9 +19,9 @@
 with System;
 with Grt.Types; use Grt.Types;
 with Iirs; use Iirs;
-with Iir_Values; use Iir_Values;
+with Simul.Environments; use Simul.Environments;
 
-package Simulation is
+package Simul.Simulation is
    Trace_Simulation : Boolean := False;
    Disp_Tree : Boolean := False;
    Disp_Stats : Boolean := False;
@@ -133,4 +133,4 @@ private
    procedure Execute_Write_Signal (Sig: Iir_Value_Literal_Acc;
                                    Val : Iir_Value_Literal_Acc;
                                    Attr : Write_Signal_Enum);
-end Simulation;
+end Simul.Simulation;

@@ -17,14 +17,14 @@
 --  02111-1307, USA.
 
 with Types; use Types;
-with Execution; use Execution;
+with Simul.Execution; use Simul.Execution;
 with Areapools; use Areapools;
 with Grt.Signals;
 with Grt.Processes;
 with Grtlink;
 pragma Unreferenced (Grtlink);
 
-package body Simulation is
+package body Simul.Simulation is
 
    function Value_To_Iir_Value (Mode : Mode_Type; Val : Value_Union)
                                return Iir_Value_Literal_Acc is
@@ -713,4 +713,4 @@ package body Simulation is
 
       return Ghdl_B1'Val (Boolean'Pos (Val));
    end Guard_Func;
-end Simulation;
+end Simul.Simulation;

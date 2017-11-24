@@ -19,7 +19,7 @@
 --  MA 02110-1301, USA.
 
 with Types; use Types;
-with Iir_Values; use Iir_Values;
+with Simul.Environments; use Simul.Environments;
 with Synth.Values; use Synth.Values;
 with Iirs; use Iirs;
 

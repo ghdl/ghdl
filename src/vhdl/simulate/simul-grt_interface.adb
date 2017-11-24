@@ -19,7 +19,7 @@
 with Iirs; use Iirs;
 with Types; use Types;
 
-package body Grt_Interface is
+package body Simul.Grt_Interface is
    To_Dir : constant array (Iir_Direction) of Ghdl_Dir_Type :=
      (Iir_To => Dir_To, Iir_Downto => Dir_Downto);
 
@@ -41,4 +41,4 @@ package body Grt_Interface is
            Character'Val (Val.Val_Array.V (I).E8);
       end loop;
    end Set_Std_String_From_Iir_Value;
-end Grt_Interface;
+end Simul.Grt_Interface;

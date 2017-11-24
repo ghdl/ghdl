@@ -1,4 +1,4 @@
---  Interpreted simulation
+--  Interpreter AMS simulation
 --  Copyright (C) 2014 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
@@ -16,12 +16,13 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Grt.Types; use Grt.Types;
-with Iir_Values; use Iir_Values;
+with Simul.Elaboration.AMS; use Simul.Elaboration.AMS;
 
-package Grt_Interface is
-   procedure Set_Std_String_From_Iir_Value (Str : Std_String;
-                                            Val : Iir_Value_Literal_Acc);
+package Simul.Debugger.AMS is
+   procedure Disp_Quantity_Name (Quantity : Quantity_Index_Type);
 
-   function Build_Bound (Arr : Iir_Value_Literal_Acc) return Std_String_Bound;
-end Grt_Interface;
+   procedure Disp_Characteristic_Expression
+     (Ce : Characteristic_Expressions_Index);
+
+   procedure Disp_Characteristic_Expressions;
+end Simul.Debugger.AMS;

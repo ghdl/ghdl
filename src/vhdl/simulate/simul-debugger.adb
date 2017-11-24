@@ -32,13 +32,12 @@ with Canon;
 with Std_Names;
 with Libraries;
 with Std_Package;
-with Annotations; use Annotations;
-with Elaboration; use Elaboration;
+with Simul.Annotations; use Simul.Annotations;
+with Simul.Elaboration; use Simul.Elaboration;
 with Iirs_Utils; use Iirs_Utils;
 with Errorout; use Errorout;
 with Disp_Vhdl;
-with Execution; use Execution;
---with Simulation; use Simulation;
+with Simul.Execution; use Simul.Execution;
 with Iirs_Walk; use Iirs_Walk;
 with Areapools; use Areapools;
 with Grt.Types;
@@ -47,7 +46,7 @@ with Grt.Readline;
 with Grt.Errors;
 with Grt.Disp_Signals;
 
-package body Debugger is
+package body Simul.Debugger is
    --  This exception can be raised by a debugger command to directly return
    --  to the prompt.
    Command_Error : exception;
@@ -2281,4 +2280,4 @@ package body Debugger is
    begin
       Debug (Reason_Error);
    end Debug_Error;
-end Debugger;
+end Simul.Debugger;

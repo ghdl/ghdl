@@ -17,11 +17,11 @@
 --  02111-1307, USA.
 
 with Iirs; use Iirs;
-with Iir_Values; use Iir_Values;
+with Simul.Environments; use Simul.Environments;
 with Grt.Files; use Grt.Files;
 with Grt.Types; use Grt.Types;
 
-package File_Operation is
+package Simul.File_Operation is
    Null_File : constant Natural := 0;
 
    --  Open a file.
@@ -86,4 +86,4 @@ package File_Operation is
                                 Ndigits : Std_Integer);
 
    function Textio_Read_Real (Str : Iir_Value_Literal_Acc) return Ghdl_F64;
-end File_Operation;
+end Simul.File_Operation;

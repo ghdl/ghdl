@@ -18,11 +18,11 @@
 
 with Types; use Types;
 with Iirs; use Iirs;
-with Iir_Values; use Iir_Values;
-with Elaboration; use Elaboration;
+with Simul.Environments; use Simul.Environments;
+with Simul.Elaboration; use Simul.Elaboration;
 with Areapools; use Areapools;
 
-package Execution is
+package Simul.Execution is
    Trace_Statements : Boolean := False;
 
    -- If true, disp current time in assert message.
@@ -189,4 +189,4 @@ package Execution is
    function Execute_Image_Attribute (Val : Iir_Value_Literal_Acc;
                                      Expr_Type : Iir)
                                     return String;
-end Execution;
+end Simul.Execution;

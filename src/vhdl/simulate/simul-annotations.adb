@@ -22,7 +22,7 @@ with Std_Package;
 with Errorout; use Errorout;
 with Iirs_Utils; use Iirs_Utils;
 
-package body Annotations is
+package body Simul.Annotations is
    --  Current scope.  Used when an object is created to indicate which scope
    --  it belongs to.
    Current_Scope: Scope_Type := (Kind => Scope_Kind_None);
@@ -1342,4 +1342,4 @@ package body Annotations is
    begin
       return Info_Node.Table (Target);
    end Get_Info;
-end Annotations;
+end Simul.Annotations;

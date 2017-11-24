@@ -17,9 +17,9 @@
 --  02111-1307, USA.
 
 with Iirs; use Iirs;
-with Iir_Values; use Iir_Values;
+with Simul.Environments; use Simul.Environments;
 
-package Debugger is
+package Simul.Debugger is
    Flag_Debugger : Boolean := False;
    Flag_Interractive : Boolean := False;
 
@@ -88,4 +88,4 @@ package Debugger is
 
    --  Call the debugger in case of error.
    procedure Debug_Error;
-end Debugger;
+end Simul.Debugger;

@@ -26,7 +26,7 @@ with Grt.Files;
 with Areapools; use Areapools;
 -- with System.Debug_Pools;
 
-package Iir_Values is
+package Simul.Environments is
    -- During simulation, all values are contained into objects of type
    -- iir_value_literal.  The annotation pass creates such objects for every
    -- literal of units.  The elaboration pass creates such objects for
@@ -478,4 +478,4 @@ package Iir_Values is
 
    -- Disp a value_literal in readable form.
    procedure Disp_Iir_Value (Value: Iir_Value_Literal_Acc; A_Type: Iir);
-end Iir_Values;
+end Simul.Environments;
