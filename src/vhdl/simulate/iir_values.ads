@@ -17,6 +17,7 @@
 --  02111-1307, USA.
 
 with Ada.Text_IO;
+with Ada.Unchecked_Deallocation;
 with Types; use Types;
 with Iirs; use Iirs;
 with Grt.Types; use Grt.Types;
@@ -163,6 +164,11 @@ package Iir_Values is
 
    type Value_Array_Acc is access Value_Array;
 
+   -- A block instance with its architecture/entity declaration is an
+   -- instancied entity.
+   type Block_Instance_Type;
+   type Block_Instance_Acc is access Block_Instance_Type;
+
    type Iir_Value_Literal (Kind: Iir_Value_Kind) is record
       case Kind is
          when Iir_Value_B1 =>
@@ -204,8 +210,105 @@ package Iir_Values is
       end case;
    end record;
 
+   type Object_Slot_Type is new Natural;
+   subtype Parameter_Slot_Type is Object_Slot_Type range 0 .. 2**15;
+
+   type Pkg_Index_Type is new Natural;
+
+   -- Scope corresponding to an object.
+   type Scope_Kind_Type is
+     (
+      --  For a package, the depth is
+      Scope_Kind_Package,
+      Scope_Kind_Component,
+      Scope_Kind_Frame,
+      Scope_Kind_Pkg_Inst,
+      Scope_Kind_None
+     );
+   type Scope_Depth_Type is range 0 .. 2**15;
+   type Scope_Type (Kind : Scope_Kind_Type := Scope_Kind_None) is record
+      case Kind is
+         when Scope_Kind_Package =>
+            Pkg_Index : Pkg_Index_Type;
+         when Scope_Kind_Component =>
+            null;
+         when Scope_Kind_Frame =>
+            Depth : Scope_Depth_Type;
+         when Scope_Kind_Pkg_Inst =>
+            Pkg_Param : Parameter_Slot_Type;
+            --  Pkg_Parent : Sim_Info_Acc;
+         when Scope_Kind_None =>
+            null;
+      end case;
+   end record;
+
+   type Block_Instance_Id is new Natural;
+   No_Block_Instance_Id : constant Block_Instance_Id := 0;
+
+   type Objects_Array is array (Object_Slot_Type range <>) of
+     Iir_Value_Literal_Acc;
+
+   type Block_Instance_Type (Max_Objs : Object_Slot_Type) is record
+      --  Flag for wait statement: true if not yet executed.
+      In_Wait_Flag : Boolean;
+
+      --  Uniq number for a block instance.
+      Id : Block_Instance_Id;
+
+      -- Useful informations for a dynamic block (ie, a frame).
+      -- The scope level and an access to the block of upper scope level.
+      Block_Scope : Scope_Type;
+      Up_Block : Block_Instance_Acc;
+
+      --  Block, architecture, package, process, component instantiation for
+      --  this instance.
+      Label : Iir;
+
+      --  For blocks: corresponding block (different from label for direct
+      --  component instantiation statement and generate iterator).
+      --  For packages: Null_Iir
+      --  For subprograms and processes: statement being executed.
+      Stmt : Iir;
+
+      --  Instanciation tree.
+
+      --  Parent is always set (but null for top-level block and packages)
+      Parent: Block_Instance_Acc;
+
+      --  Chain of children.  They are in declaration order after elaboration.
+      --  (in reverse order during elaboration).
+      --  Not null only for blocks and processes.
+      Children: Block_Instance_Acc;
+      Brother: Block_Instance_Acc;
+
+      --  Port association map for this block, if any.
+      Ports_Map : Iir;
+
+      --  Pool marker for the child (only for subprograms and processes).
+      Marker : Areapools.Mark_Type;
+
+      --  Reference to the actuals, for copy-out when returning from a
+      --  procedure.
+      Actuals_Ref : Value_Array_Acc;
+
+      -- Only for function frame; contains the result.
+      Result: Iir_Value_Literal_Acc;
+
+      --  Last object elaborated (or number of objects elaborated).
+      --  Note: this is generally the slot index of the next object to be
+      --  elaborated (this may be wrong for dynamic objects due to execution
+      --  branches).
+      Elab_Objects : Object_Slot_Type := 0;
+
+      --  Values of the objects in that frame.
+      Objects : Objects_Array (1 .. Max_Objs);
+   end record;
+
+   procedure Free is new Ada.Unchecked_Deallocation
+     (Object => Block_Instance_Type, Name => Block_Instance_Acc);
+
+
    -- What is chosen for time.
-   -- Currently only int32 is available, but time should use an int64.
    subtype Iir_Value_Time is Ghdl_I64;
 
    Global_Pool : aliased Areapool;

@@ -16,14 +16,12 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Ada.Unchecked_Deallocation;
 with Tables;
 with Types; use Types;
 with Iirs; use Iirs;
 with Iir_Values; use Iir_Values;
 with Grt.Types; use Grt.Types;
 with Annotations; use Annotations;
-with Areapools;
 
 --  This package elaborates design hierarchy.
 
@@ -31,81 +29,11 @@ package Elaboration is
    Trace_Elaboration : Boolean := False;
    Trace_Drivers : Boolean := False;
 
-   -- A block instance with its architecture/entity declaration is an
-   -- instancied entity.
-   type Block_Instance_Type;
-   type Block_Instance_Acc is access Block_Instance_Type;
-
-   type Objects_Array is array (Object_Slot_Type range <>) of
-     Iir_Value_Literal_Acc;
-
-   type Block_Instance_Id is new Natural;
-   No_Block_Instance_Id : constant Block_Instance_Id := 0;
-
    --  Number of block instances and also Id of the last one.
    Nbr_Block_Instances : Block_Instance_Id := 0;
 
    -- A block instance with its architecture/entity declaration is an
    -- instancied entity.
-
-   type Block_Instance_Type (Max_Objs : Object_Slot_Type) is record
-      --  Flag for wait statement: true if not yet executed.
-      In_Wait_Flag : Boolean;
-
-      --  Uniq number for a block instance.
-      Id : Block_Instance_Id;
-
-      -- Useful informations for a dynamic block (ie, a frame).
-      -- The scope level and an access to the block of upper scope level.
-      Block_Scope : Scope_Type;
-      Up_Block : Block_Instance_Acc;
-
-      --  Block, architecture, package, process, component instantiation for
-      --  this instance.
-      Label : Iir;
-
-      --  For blocks: corresponding block (different from label for direct
-      --  component instantiation statement and generate iterator).
-      --  For packages: Null_Iir
-      --  For subprograms and processes: statement being executed.
-      Stmt : Iir;
-
-      --  Instanciation tree.
-
-      --  Parent is always set (but null for top-level block and packages)
-      Parent: Block_Instance_Acc;
-
-      --  Chain of children.  They are in declaration order after elaboration.
-      --  (in reverse order during elaboration).
-      --  Not null only for blocks and processes.
-      Children: Block_Instance_Acc;
-      Brother: Block_Instance_Acc;
-
-      --  Port association map for this block, if any.
-      Ports_Map : Iir;
-
-      --  Pool marker for the child (only for subprograms and processes).
-      Marker : Areapools.Mark_Type;
-
-      --  Reference to the actuals, for copy-out when returning from a
-      --  procedure.
-      Actuals_Ref : Value_Array_Acc;
-
-      -- Only for function frame; contains the result.
-      Result: Iir_Value_Literal_Acc;
-
-      --  Last object elaborated (or number of objects elaborated).
-      --  Note: this is generally the slot index of the next object to be
-      --  elaborated (this may be wrong for dynamic objects due to execution
-      --  branches).
-      Elab_Objects : Object_Slot_Type := 0;
-
-      --  Values of the objects in that frame.
-      Objects : Objects_Array (1 .. Max_Objs);
-   end record;
-
-   procedure Free is new Ada.Unchecked_Deallocation
-     (Object => Block_Instance_Type, Name => Block_Instance_Acc);
 
    procedure Elaborate_Design (Design: Iir_Design_Unit);
 

@@ -21,8 +21,6 @@
 with Types; use Types;
 with Netlists; use Netlists;
 with Synth.Environment; use Synth.Environment;
-with Annotations; use Annotations;
-with Elaboration; use Elaboration;
 with Iir_Values; use Iir_Values;
 with Iirs; use Iirs;
 

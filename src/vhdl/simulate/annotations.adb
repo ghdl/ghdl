@@ -57,8 +57,7 @@ package body Annotations is
             --  For a subprogram in a package
             Current_Scope := (Scope_Kind_Frame, Scope_Depth_Type'First);
          when Scope_Kind_Frame =>
-            Current_Scope := (Scope_Kind_Frame,
-                                    Current_Scope.Depth + 1);
+            Current_Scope := (Scope_Kind_Frame, Current_Scope.Depth + 1);
          when Scope_Kind_Component =>
             raise Internal_Error;
       end case;
@@ -468,8 +467,8 @@ package body Annotations is
       Package_Info := Get_Info (Inter);
 
       Current_Scope := (Kind => Scope_Kind_Pkg_Inst,
-                        Pkg_Param => 0,
-                        Pkg_Parent => Package_Info);
+                        Pkg_Param => 0);
+--                        Pkg_Parent => Package_Info);
 
       Annotate_Interface_List
         (Package_Info, Get_Generic_Chain (Inter), True);

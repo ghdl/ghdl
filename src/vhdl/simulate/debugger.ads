@@ -16,8 +16,8 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Elaboration; use Elaboration;
 with Iirs; use Iirs;
+with Iir_Values; use Iir_Values;
 
 package Debugger is
    Flag_Debugger : Boolean := False;

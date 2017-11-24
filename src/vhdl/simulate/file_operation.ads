@@ -18,7 +18,6 @@
 
 with Iirs; use Iirs;
 with Iir_Values; use Iir_Values;
-with Elaboration; use Elaboration;
 with Grt.Files; use Grt.Files;
 with Grt.Types; use Grt.Types;
 

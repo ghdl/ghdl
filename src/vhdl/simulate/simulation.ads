@@ -20,7 +20,6 @@ with System;
 with Grt.Types; use Grt.Types;
 with Iirs; use Iirs;
 with Iir_Values; use Iir_Values;
-with Elaboration; use Elaboration;
 
 package Simulation is
    Trace_Simulation : Boolean := False;

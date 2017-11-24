@@ -26,7 +26,6 @@ with Errorout; use Errorout;
 
 with Annotations; use Annotations;
 with Execution;
-with Iir_Values; use Iir_Values;
 
 with Netlists.Builders; use Netlists.Builders;
 

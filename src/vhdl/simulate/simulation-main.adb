@@ -25,6 +25,7 @@ with PSL.Nodes;
 with PSL.NFAs;
 with Std_Package;
 with Trans_Analyzes;
+with Elaboration; use Elaboration;
 with Execution; use Execution;
 with Ieee.Std_Logic_1164;
 with Grt.Main;

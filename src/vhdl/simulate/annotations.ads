@@ -28,15 +28,11 @@ package Annotations is
    procedure Disp_Vhdl_Info (Node : Iir);
    procedure Disp_Tree_Info (Node : Iir);
 
-   type Object_Slot_Type is new Natural;
-   subtype Parameter_Slot_Type is Object_Slot_Type range 0 .. 2**15;
-
-   type Pkg_Index_Type is new Natural;
-   Nbr_Packages : Pkg_Index_Type := 0;
-
    --  For Kind_Extra: a number.  Kind_Extra is not used by annotations, and
    --  is free for another pass like preelab.
    type Extra_Slot_Type is new Natural;
+
+   Nbr_Packages : Pkg_Index_Type := 0;
 
    -- Annotations are used to collect informations for elaboration and to
    -- locate iir_value_literal for signals, variables or constants.
@@ -54,33 +50,6 @@ package Annotations is
 
    type Sim_Info_Type (Kind : Sim_Info_Kind);
    type Sim_Info_Acc is access all Sim_Info_Type;
-
-   -- Scope corresponding to an object.
-   type Scope_Kind_Type is
-     (
-      --  For a package, the depth is
-      Scope_Kind_Package,
-      Scope_Kind_Component,
-      Scope_Kind_Frame,
-      Scope_Kind_Pkg_Inst,
-      Scope_Kind_None
-     );
-   type Scope_Depth_Type is range 0 .. 2**15;
-   type Scope_Type (Kind : Scope_Kind_Type := Scope_Kind_None) is record
-      case Kind is
-         when Scope_Kind_Package =>
-            Pkg_Index : Pkg_Index_Type;
-         when Scope_Kind_Component =>
-            null;
-         when Scope_Kind_Frame =>
-            Depth : Scope_Depth_Type;
-         when Scope_Kind_Pkg_Inst =>
-            Pkg_Param : Parameter_Slot_Type;
-            Pkg_Parent : Sim_Info_Acc;
-         when Scope_Kind_None =>
-            null;
-      end case;
-   end record;
 
    type Instance_Slot_Type is new Integer;
    Invalid_Instance_Slot : constant Instance_Slot_Type := -1;
