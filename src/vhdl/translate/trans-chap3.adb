@@ -164,7 +164,7 @@ package body Trans.Chap3 is
       --  Note: a fat array can only be at the top of a complex type;
       --  the bounds must have been set.
       New_Association
-        (Assoc, M2Addr (Chap3.Unbox_Record (Chap3.Get_Composite_Base (Var))));
+        (Assoc, M2Addr (Chap3.Get_Composite_Base (Var)));
 
       if Binfo.Type_Mode in Type_Mode_Unbounded then
          New_Association (Assoc, M2Addr (Chap3.Get_Composite_Bounds (Var)));
@@ -2744,9 +2744,10 @@ package body Trans.Chap3 is
                   Info, Kind,
                   Info.B.Base_Type (Kind), Info.B.Base_Ptr_Type (Kind));
             end;
-         when Type_Mode_Array
-           | Type_Mode_Record =>
+         when Type_Mode_Array =>
             return Arr;
+         when Type_Mode_Record =>
+            return Unbox_Record (Arr);
          when others =>
             raise Internal_Error;
       end case;

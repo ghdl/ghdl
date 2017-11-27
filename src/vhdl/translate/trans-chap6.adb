@@ -851,7 +851,14 @@ package body Trans.Chap6 is
          Stable_Prefix := Prefix;
       end if;
 
-      Base := Chap3.Get_Composite_Base (Stable_Prefix);
+      if Get_Type_Info (Stable_Prefix).Type_Mode = Type_Mode_Unbounded_Record
+      then
+         --  Get the base.
+         Base := Chap3.Get_Composite_Base (Stable_Prefix);
+      else
+         --  Might be a boxed subtype; keep the box to optimize the access.
+         Base := Stable_Prefix;
+      end if;
       Base_Tinfo := Get_Type_Info (Base);
       Box_Field := Base_Tinfo.S.Box_Field (Kind);
 
@@ -879,7 +886,7 @@ package body Trans.Chap6 is
                     Chararray_Type,
                     New_Value
                       (New_Selected_Element (B,
-                       El_Info.Field_Node (Kind)))),
+                                             El_Info.Field_Node (Kind)))),
                El_Tinfo.B.Base_Ptr_Type (Kind)),
             El_Tinfo, Kind);
       else

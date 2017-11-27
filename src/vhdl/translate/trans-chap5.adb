@@ -420,7 +420,7 @@ package body Trans.Chap5 is
                Chap6.Translate_Signal_Name (Formal, Formal_Sig, Formal_Val);
 
                --  Copy pointer to the values.
-               if Get_Info (Formal_Type).Type_Mode in Type_Mode_Arrays then
+               if Get_Info (Formal_Type).Type_Mode in Type_Mode_Composite then
                   New_Assign_Stmt
                     (M2Lp (Chap3.Get_Composite_Base (Formal_Val)),
                      M2Addr (Chap3.Get_Composite_Base (Actual_Val)));
