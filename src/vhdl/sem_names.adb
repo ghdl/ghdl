@@ -2017,7 +2017,9 @@ package body Sem_Names is
                  | Iir_Kind_Use_Clause =>
                   null;
                when others =>
-                  Error_Kind ("sem_as_protected_item", Method);
+                  --  Declarations not allowed in protected types.
+                  --  Just ignore them.
+                  null;
             end case;
             Method := Get_Chain (Method);
          end loop;

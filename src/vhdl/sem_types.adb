@@ -597,9 +597,14 @@ package body Sem_Types is
                      end if;
                   end if;
                end;
+            when Iir_Kind_Anonymous_Type_Declaration =>
+               --  This is an error, but an anonynmous type declaration is
+               --  followed by a subtype declaration, which is also an error.
+               --  Avoid duplicate messages.
+               null;
             when others =>
                Error_Msg_Sem
-                 (+El, "%n are not allowed in protected type declaration",
+                 (+El, "%n is not allowed in protected type declaration",
                   +El);
          end case;
          El := Get_Chain (El);
