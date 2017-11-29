@@ -4487,7 +4487,7 @@ package body Sem_Expr is
       Expr_Type := Get_Type (Expr);
       pragma Assert (Expr_Type /= Null_Iir);
       Result_Type := Compatible_Types_Intersect (Atype, Expr_Type);
-      if Is_Overload_List (Atype) then
+      if Atype /= Null_Iir and then Is_Overload_List (Atype) then
          Free_Overload_List (Atype);
       end if;
       if Result_Type /= Null_Iir then
