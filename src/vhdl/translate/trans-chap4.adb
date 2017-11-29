@@ -565,7 +565,7 @@ package body Trans.Chap4 is
                end if;
             end;
          else
-            Chap3.Translate_Object_Copy (Name, Value_Node, Obj_Type);
+            Chap7.Translate_Assign (Name, Value_Node, Value, Obj_Type, Obj);
          end if;
       end if;
    end Elab_Object_Init;
