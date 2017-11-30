@@ -39,6 +39,13 @@ On UNIX and MinGW systems, you also need standard utilities like sh,
 cmp or make.  On MSYS2 packages msys/diffutils and msys/make must be
 installed.
 
+In these instructions, the configure script is executed in the source
+directory; but you can execute in a different directory too, like
+this:
+$ mkdir ghdl-objs
+$ cd ghdl-objs
+$ ../path/to/ghdl/configure ...
+
 Building with mcode backend
 ***************************
 
