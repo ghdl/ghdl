@@ -680,6 +680,8 @@ package body Ghdllocal is
    procedure Perform_Action (Cmd : in out Command_Import; Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
+      use Errorout;
+
       Id : Name_Id;
       Design_File : Iir_Design_File;
       Unit : Iir;
@@ -711,6 +713,10 @@ package body Ghdllocal is
          end if;
       end loop;
 
+      if Nbr_Errors > 0 then
+         raise Compilation_Error;
+      end if;
+
       --  Analyze all files.
       if False then
          Design_File := Get_Design_File_Chain (Libraries.Work_Library);
@@ -734,7 +740,7 @@ package body Ghdllocal is
 
       Libraries.Save_Work_Library;
    exception
-      when Errorout.Compilation_Error =>
+      when Compilation_Error =>
          Error ("importation has failed due to compilation error");
          raise;
    end Perform_Action;
