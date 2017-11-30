@@ -7,7 +7,7 @@ This directory contains the sources of GHDL, the VHDL simulator.
 GHDL is not an interpreter: it generates machine code from your design,
 the only way for high speed simulation.
 
-GHDL fully supports IEEE 1076-1987, IEEE 1076-1993, IEE 1076-2002 and
+GHDL fully supports IEEE 1076-1987, IEEE 1076-1993, IEEE 1076-2002 and
 partially the 1076-2008 version of VHDL.
 
 Main features are:
