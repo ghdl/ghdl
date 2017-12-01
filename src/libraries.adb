@@ -1787,10 +1787,15 @@ package body Libraries is
    end Load_Parse_Design_Unit;
 
    -- Load, parse, analyze, back-end a design_unit if necessary.
-   procedure Load_Design_Unit (Design_Unit: Iir_Design_Unit; Loc : Iir)
+   procedure Load_Design_Unit (Design_Unit : Iir_Design_Unit; Loc : Iir)
    is
       Warnings : Warnings_Setting;
    begin
+      if Get_Date (Design_Unit) = Date_Replacing then
+         Error_Msg_Sem (+Loc, "circular reference of %n", +Design_Unit);
+         return;
+      end if;
+
       if Get_Date_State (Design_Unit) = Date_Disk then
          Load_Parse_Design_Unit (Design_Unit, Loc);
       end if;

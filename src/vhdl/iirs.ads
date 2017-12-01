@@ -5479,15 +5479,14 @@ package Iirs is
    type Date_Type is new Nat32;
 
    --  The unit is obsoleted (ie replaced) by a more recently analyzed design
-   --  unit.another design unit.
+   --  unit.
    --  If another design unit depends (directly or not) on an obseleted design
    --  unit, it is also obsolete, and cannot be defined.
    Date_Obsolete      : constant Date_Type := 0;
+   --  A unit with the same name (could also be the same unit) is being
+   --  analyzed.  Used to detect circular dependencies.
+   Date_Replacing     : constant Date_Type := 1;
    --  The unit was not analyzed.
-   Date_Not_Analyzed  : constant Date_Type := 1;
-   --  The unit has been analyzed but it has bad dependences.
-   Date_Bad_Analyze   : constant Date_Type := 2;
-   --  The unit has been parsed but not analyzed.
    Date_Parsed        : constant Date_Type := 4;
    --  The unit is being analyzed.
    Date_Analyzing     : constant Date_Type := 5;

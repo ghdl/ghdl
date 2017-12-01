@@ -3172,10 +3172,12 @@ package body Sem is
    end Get_Current_Design_Unit;
 
    --  LRM 11.1  Design units.
-   procedure Semantic (Design_Unit: Iir_Design_Unit)
+   procedure Semantic (Design_Unit : Iir_Design_Unit)
    is
-      El: Iir;
-      Old_Design_Unit: Iir_Design_Unit;
+      Library_Unit : constant Iir := Get_Library_Unit (Design_Unit);
+      Library : constant Iir := Get_Library (Get_Design_File (Design_Unit));
+      Prev_Unit : Iir;
+      Old_Design_Unit : Iir_Design_Unit;
       Implicit : Implicit_Signal_Declaration_Type;
    begin
       --  Sanity check: can analyze either previously analyzed unit or just
@@ -3193,7 +3195,17 @@ package body Sem is
             raise Internal_Error;
       end case;
 
-      -- Save and set current_design_unit.
+      --  If there is already a unit with the same name, mark it as being
+      --  replaced.
+      if Get_Kind (Library_Unit) in Iir_Kinds_Primary_Unit then
+         Prev_Unit := Libraries.Find_Primary_Unit
+           (Library, Get_Identifier (Library_Unit));
+         if Is_Valid (Prev_Unit) and then Prev_Unit /= Design_Unit then
+            Set_Date (Prev_Unit, Date_Replacing);
+         end if;
+      end if;
+
+      --  Save and set current_design_unit.
       Old_Design_Unit := Current_Design_Unit;
       Current_Design_Unit := Design_Unit;
       Push_Signals_Declarative_Part (Implicit, Null_Iir);
@@ -3214,45 +3226,37 @@ package body Sem is
       --    due to reasons given by LCS 3 (VHDL Issue # 1028).
       Open_Declarative_Region;
 
-      -- Set_Dependence_List (Design_Unit,
---                            Create_Iir (Iir_Kind_Design_Unit_List));
-
       --  LRM 11.2
       --  Every design unit is assumed to contain the following implicit
       --  context items as part of its context clause:
       --    library STD, WORK; use STD.STANDARD.all;
       Sem_Scopes.Add_Name (Libraries.Std_Library, Std_Names.Name_Std, False);
-      Sem_Scopes.Add_Name (Get_Library (Get_Design_File (Design_Unit)),
-                           Std_Names.Name_Work,
-                           False);
+      Sem_Scopes.Add_Name (Library, Std_Names.Name_Work, False);
       Sem_Scopes.Use_All_Names (Standard_Package);
       if Get_Dependence_List (Design_Unit) = Null_Iir_List then
          Set_Dependence_List (Design_Unit, Create_Iir_List);
       end if;
       Add_Dependence (Std_Standard_Unit);
 
-      -- Semantic on context clauses.
+      --  Analyze context clauses.
       Sem_Context_Clauses (Design_Unit);
 
-      -- semantic on the library unit.
-      El := Get_Library_Unit (Design_Unit);
-      case Get_Kind (El) is
+      --  Analyze the library unit.
+      case Iir_Kinds_Library_Unit (Get_Kind (Library_Unit)) is
          when Iir_Kind_Entity_Declaration =>
-            Sem_Entity_Declaration (El);
+            Sem_Entity_Declaration (Library_Unit);
          when Iir_Kind_Architecture_Body =>
-            Sem_Architecture_Body (El);
+            Sem_Architecture_Body (Library_Unit);
          when Iir_Kind_Package_Declaration =>
-            Sem_Package_Declaration (El);
+            Sem_Package_Declaration (Library_Unit);
          when Iir_Kind_Package_Body =>
-            Sem_Package_Body (El);
+            Sem_Package_Body (Library_Unit);
          when Iir_Kind_Configuration_Declaration =>
-            Sem_Configuration_Declaration (El);
+            Sem_Configuration_Declaration (Library_Unit);
          when Iir_Kind_Package_Instantiation_Declaration =>
-            Sem_Package_Instantiation_Declaration (El);
+            Sem_Package_Instantiation_Declaration (Library_Unit);
          when Iir_Kind_Context_Declaration =>
-            Sem_Context_Declaration (El);
-         when others =>
-            Error_Kind ("semantic", El);
+            Sem_Context_Declaration (Library_Unit);
       end case;
 
       Close_Declarative_Region;
@@ -3267,7 +3271,7 @@ package body Sem is
          Sem_Analysis_Checks_List (Design_Unit, False);
       end if;
 
-      -- Restore current_design_unit.
+      --  Restore current_design_unit.
       Current_Design_Unit := Old_Design_Unit;
       Pop_Signals_Declarative_Part (Implicit);
    end Semantic;
