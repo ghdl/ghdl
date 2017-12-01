@@ -20,7 +20,10 @@ dist/mcode/lib/
 lib/
 
 # Generated files on Linux
-./Makefile
+/Makefile
+libghdlvpi.so
+version.ads
+version.tmp
 config.status
 default_paths.ads
 elf_arch.ads
