@@ -4372,9 +4372,17 @@ package Iirs is
    subtype Iir_Out_Modes is Iir_Mode range Iir_Out_Mode .. Iir_Inout_Mode;
    subtype Iir_Parameter_Modes is Iir_Mode range Iir_Out_Mode .. Iir_In_Mode;
 
-   type Iir_Delay_Mechanism is (Iir_Inertial_Delay, Iir_Transport_Delay);
+   type Iir_Delay_Mechanism is
+     (
+      Iir_Inertial_Delay,
+      Iir_Transport_Delay
+     );
 
-   type Iir_Direction is (Iir_To, Iir_Downto);
+   type Iir_Direction is
+     (
+      Iir_To,
+      Iir_Downto
+     );
 
    --  LRM93 2.7 (conformance rules).
    --  To keep this simple, the layout is stored as a bit-string.

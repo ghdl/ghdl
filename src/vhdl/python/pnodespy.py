@@ -120,6 +120,8 @@ def do_libghdl_iirs():
     read_spec_enum('Iir_Mode', 'Iir_', 'Iir_Mode')
     read_spec_enum('Iir_Staticness', '', 'Iir_Staticness')
     read_spec_enum('Iir_Constraint', '', 'Iir_Constraint')
+    read_spec_enum('Iir_Direction', 'Iir_', 'Iir_Direction')
+    read_spec_enum('Iir_Delay_Mechanism', 'Iir_', 'Iir_Delay_Mechanism')
     read_spec_enum('Date_State_Type', 'Date_', 'Date_State')
     read_spec_enum('Iir_Predefined_Functions',
                    'Iir_Predefined_', 'Iir_Predefined')
