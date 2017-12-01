@@ -139,13 +139,13 @@ package body Elocations_Meta is
            | Iir_Kind_Type_Declaration
            | Iir_Kind_Anonymous_Type_Declaration
            | Iir_Kind_Subtype_Declaration
+           | Iir_Kind_Entity_Declaration
+           | Iir_Kind_Configuration_Declaration
+           | Iir_Kind_Context_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Package_Body
-           | Iir_Kind_Configuration_Declaration
-           | Iir_Kind_Entity_Declaration
            | Iir_Kind_Architecture_Body
-           | Iir_Kind_Context_Declaration
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Attribute_Declaration
            | Iir_Kind_Group_Template_Declaration
@@ -196,13 +196,13 @@ package body Elocations_Meta is
          when Iir_Kind_Protected_Type_Declaration
            | Iir_Kind_Record_Type_Definition
            | Iir_Kind_Protected_Type_Body
+           | Iir_Kind_Entity_Declaration
+           | Iir_Kind_Configuration_Declaration
+           | Iir_Kind_Context_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Package_Body
-           | Iir_Kind_Configuration_Declaration
-           | Iir_Kind_Entity_Declaration
            | Iir_Kind_Architecture_Body
-           | Iir_Kind_Context_Declaration
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Function_Body
            | Iir_Kind_Procedure_Body

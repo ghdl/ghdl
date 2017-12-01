@@ -200,20 +200,15 @@ package body Libraries is
 
    --  Get the hash value for DESIGN_UNIT.
    --  Architectures use the entity name.
-   function Get_Hash_Id_For_Unit (Design_Unit : Iir_Design_Unit)
-                                 return Hash_Id
+   function Get_Hash_Id_For_Unit (Design_Unit : Iir_Design_Unit) return Hash_Id
    is
       Lib_Unit : Iir;
       Id : Name_Id;
    begin
       Lib_Unit := Get_Library_Unit (Design_Unit);
-      case Iir_Kinds_Library_Unit_Declaration (Get_Kind (Lib_Unit)) is
-         when Iir_Kind_Entity_Declaration
-           | Iir_Kind_Configuration_Declaration
-           | Iir_Kind_Package_Declaration
-           | Iir_Kind_Package_Body
-           | Iir_Kind_Package_Instantiation_Declaration
-           | Iir_Kind_Context_Declaration =>
+      case Iir_Kinds_Library_Unit (Get_Kind (Lib_Unit)) is
+         when Iir_Kinds_Primary_Unit
+           | Iir_Kind_Package_Body =>
             Id := Get_Identifier (Lib_Unit);
          when Iir_Kind_Architecture_Body =>
             --  Architectures are put with the entity identifier.
@@ -828,13 +823,9 @@ package body Libraries is
                end if;
             end;
             Lib_Unit := Get_Library_Unit (Unit);
-            case Iir_Kinds_Library_Unit_Declaration (Get_Kind (Lib_Unit)) is
-               when Iir_Kind_Entity_Declaration
-                 | Iir_Kind_Configuration_Declaration
-                 | Iir_Kind_Package_Declaration
-                 | Iir_Kind_Package_Body
-                 | Iir_Kind_Package_Instantiation_Declaration
-                 | Iir_Kind_Context_Declaration =>
+            case Iir_Kinds_Library_Unit (Get_Kind (Lib_Unit)) is
+               when Iir_Kinds_Primary_Unit
+                 | Iir_Kind_Package_Body =>
                   return Get_Identifier (Dep) = Get_Identifier (Lib_Unit);
                when Iir_Kind_Architecture_Body =>
                   return False;
@@ -1873,19 +1864,12 @@ package body Libraries is
          if Get_Identifier (Unit) = Name
            and then Get_Library (Get_Design_File (Unit)) = Library
          then
-            case Get_Kind (Get_Library_Unit (Unit)) is
-               when Iir_Kind_Package_Declaration
-                 | Iir_Kind_Package_Instantiation_Declaration
-                 | Iir_Kind_Entity_Declaration
-                 | Iir_Kind_Configuration_Declaration
-                 | Iir_Kind_Context_Declaration =>
+            case Iir_Kinds_Library_Unit (Get_Kind (Get_Library_Unit (Unit))) is
+               when Iir_Kinds_Primary_Unit =>
                   --  Only return a primary unit.
                   return Unit;
-               when Iir_Kind_Package_Body
-                 | Iir_Kind_Architecture_Body =>
+               when Iir_Kinds_Secondary_Unit =>
                   null;
-               when others =>
-                  raise Internal_Error;
             end case;
          end if;
          Unit := Get_Hash_Chain (Unit);

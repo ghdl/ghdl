@@ -785,7 +785,7 @@ package body Configuration is
             return Walk_Continue;
          end if;
 
-         case Iir_Kinds_Library_Unit_Declaration (Kind) is
+         case Iir_Kinds_Library_Unit (Kind) is
             when Iir_Kind_Architecture_Body
               | Iir_Kind_Configuration_Declaration =>
                Libraries.Load_Design_Unit (Design, Null_Iir);
@@ -875,7 +875,7 @@ package body Configuration is
             return Walk_Continue;
          end if;
 
-         case Iir_Kinds_Library_Unit_Declaration (Get_Kind (Unit)) is
+         case Iir_Kinds_Library_Unit (Get_Kind (Unit)) is
             when Iir_Kind_Architecture_Body =>
                Status := Walk_Concurrent_Statements_Chain
                  (Get_Concurrent_Statement_Chain (Unit),

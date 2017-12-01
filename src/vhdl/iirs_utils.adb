@@ -304,7 +304,7 @@ package body Iirs_Utils is
               | Iir_Kind_Use_Clause
               | Iir_Kind_Context_Reference
               | Iir_Kind_Library_Declaration
-              | Iir_Kinds_Library_Unit_Declaration
+              | Iir_Kinds_Library_Unit
               | Iir_Kind_Component_Declaration
               | Iir_Kind_Function_Declaration
               | Iir_Kind_Procedure_Declaration

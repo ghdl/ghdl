@@ -402,10 +402,10 @@ package body Elocations is
            | Iir_Kind_Protected_Type_Body
            | Iir_Kind_Type_Declaration
            | Iir_Kind_Subtype_Declaration
-           | Iir_Kind_Package_Declaration
-           | Iir_Kind_Package_Body
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Context_Declaration
+           | Iir_Kind_Package_Declaration
+           | Iir_Kind_Package_Body
            | Iir_Kind_Case_Statement =>
             return Format_L2;
          when Iir_Kind_Package_Instantiation_Declaration

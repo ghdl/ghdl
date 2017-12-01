@@ -1163,20 +1163,20 @@ package body Nodes_Meta is
             return "nature_declaration";
          when Iir_Kind_Subnature_Declaration =>
             return "subnature_declaration";
+         when Iir_Kind_Entity_Declaration =>
+            return "entity_declaration";
+         when Iir_Kind_Configuration_Declaration =>
+            return "configuration_declaration";
+         when Iir_Kind_Context_Declaration =>
+            return "context_declaration";
          when Iir_Kind_Package_Declaration =>
             return "package_declaration";
          when Iir_Kind_Package_Instantiation_Declaration =>
             return "package_instantiation_declaration";
          when Iir_Kind_Package_Body =>
             return "package_body";
-         when Iir_Kind_Configuration_Declaration =>
-            return "configuration_declaration";
-         when Iir_Kind_Entity_Declaration =>
-            return "entity_declaration";
          when Iir_Kind_Architecture_Body =>
             return "architecture_body";
-         when Iir_Kind_Context_Declaration =>
-            return "context_declaration";
          when Iir_Kind_Package_Header =>
             return "package_header";
          when Iir_Kind_Unit_Declaration =>
@@ -2769,6 +2769,36 @@ package body Nodes_Meta is
       Field_Parent,
       Field_Nature,
       Field_Chain,
+      --  Iir_Kind_Entity_Declaration
+      Field_Identifier,
+      Field_Has_Begin,
+      Field_Visible_Flag,
+      Field_Is_Within_Flag,
+      Field_End_Has_Reserved_Id,
+      Field_End_Has_Identifier,
+      Field_Parent,
+      Field_Generic_Chain,
+      Field_Port_Chain,
+      Field_Declaration_Chain,
+      Field_Concurrent_Statement_Chain,
+      Field_Attribute_Value_Chain,
+      --  Iir_Kind_Configuration_Declaration
+      Field_Identifier,
+      Field_Visible_Flag,
+      Field_End_Has_Reserved_Id,
+      Field_End_Has_Identifier,
+      Field_Parent,
+      Field_Declaration_Chain,
+      Field_Entity_Name,
+      Field_Attribute_Value_Chain,
+      Field_Block_Configuration,
+      --  Iir_Kind_Context_Declaration
+      Field_Identifier,
+      Field_Visible_Flag,
+      Field_End_Has_Reserved_Id,
+      Field_End_Has_Identifier,
+      Field_Parent,
+      Field_Context_Items,
       --  Iir_Kind_Package_Declaration
       Field_Identifier,
       Field_Need_Body,
@@ -2807,29 +2837,6 @@ package body Nodes_Meta is
       Field_Chain,
       Field_Attribute_Value_Chain,
       Field_Package,
-      --  Iir_Kind_Configuration_Declaration
-      Field_Identifier,
-      Field_Visible_Flag,
-      Field_End_Has_Reserved_Id,
-      Field_End_Has_Identifier,
-      Field_Parent,
-      Field_Declaration_Chain,
-      Field_Entity_Name,
-      Field_Attribute_Value_Chain,
-      Field_Block_Configuration,
-      --  Iir_Kind_Entity_Declaration
-      Field_Identifier,
-      Field_Has_Begin,
-      Field_Visible_Flag,
-      Field_Is_Within_Flag,
-      Field_End_Has_Reserved_Id,
-      Field_End_Has_Identifier,
-      Field_Parent,
-      Field_Generic_Chain,
-      Field_Port_Chain,
-      Field_Declaration_Chain,
-      Field_Concurrent_Statement_Chain,
-      Field_Attribute_Value_Chain,
       --  Iir_Kind_Architecture_Body
       Field_Identifier,
       Field_Foreign_Flag,
@@ -2843,13 +2850,6 @@ package body Nodes_Meta is
       Field_Concurrent_Statement_Chain,
       Field_Attribute_Value_Chain,
       Field_Default_Configuration_Declaration,
-      --  Iir_Kind_Context_Declaration
-      Field_Identifier,
-      Field_Visible_Flag,
-      Field_End_Has_Reserved_Id,
-      Field_End_Has_Identifier,
-      Field_Parent,
-      Field_Context_Items,
       --  Iir_Kind_Package_Header
       Field_Generic_Chain,
       Field_Generic_Map_Aspect_Chain,
@@ -4457,13 +4457,13 @@ package body Nodes_Meta is
       Iir_Kind_Subtype_Declaration => 476,
       Iir_Kind_Nature_Declaration => 482,
       Iir_Kind_Subnature_Declaration => 488,
-      Iir_Kind_Package_Declaration => 502,
-      Iir_Kind_Package_Instantiation_Declaration => 515,
-      Iir_Kind_Package_Body => 523,
-      Iir_Kind_Configuration_Declaration => 532,
-      Iir_Kind_Entity_Declaration => 544,
-      Iir_Kind_Architecture_Body => 556,
-      Iir_Kind_Context_Declaration => 562,
+      Iir_Kind_Entity_Declaration => 500,
+      Iir_Kind_Configuration_Declaration => 509,
+      Iir_Kind_Context_Declaration => 515,
+      Iir_Kind_Package_Declaration => 529,
+      Iir_Kind_Package_Instantiation_Declaration => 542,
+      Iir_Kind_Package_Body => 550,
+      Iir_Kind_Architecture_Body => 562,
       Iir_Kind_Package_Header => 564,
       Iir_Kind_Unit_Declaration => 572,
       Iir_Kind_Library_Declaration => 579,
@@ -7055,11 +7055,11 @@ package body Nodes_Meta is
    function Has_Attribute_Value_Chain (K : Iir_Kind) return Boolean is
    begin
       case K is
-         when Iir_Kind_Package_Declaration
+         when Iir_Kind_Entity_Declaration
+           | Iir_Kind_Configuration_Declaration
+           | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Package_Body
-           | Iir_Kind_Configuration_Declaration
-           | Iir_Kind_Entity_Declaration
            | Iir_Kind_Architecture_Body
            | Iir_Kind_Function_Body
            | Iir_Kind_Procedure_Body
@@ -7285,8 +7285,8 @@ package body Nodes_Meta is
    begin
       case K is
          when Iir_Kind_Block_Header
-           | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Entity_Declaration
+           | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Package_Header
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Function_Declaration
@@ -7781,13 +7781,13 @@ package body Nodes_Meta is
    function Has_Design_Unit (K : Iir_Kind) return Boolean is
    begin
       case K is
-         when Iir_Kind_Package_Declaration
+         when Iir_Kind_Entity_Declaration
+           | Iir_Kind_Configuration_Declaration
+           | Iir_Kind_Context_Declaration
+           | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Package_Body
-           | Iir_Kind_Configuration_Declaration
-           | Iir_Kind_Entity_Declaration
-           | Iir_Kind_Architecture_Body
-           | Iir_Kind_Context_Declaration =>
+           | Iir_Kind_Architecture_Body =>
             return True;
          when others =>
             return False;
@@ -7811,11 +7811,11 @@ package body Nodes_Meta is
          when Iir_Kind_Block_Configuration
            | Iir_Kind_Protected_Type_Declaration
            | Iir_Kind_Protected_Type_Body
+           | Iir_Kind_Entity_Declaration
+           | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Package_Body
-           | Iir_Kind_Configuration_Declaration
-           | Iir_Kind_Entity_Declaration
            | Iir_Kind_Architecture_Body
            | Iir_Kind_Function_Body
            | Iir_Kind_Procedure_Body
@@ -7981,13 +7981,13 @@ package body Nodes_Meta is
            | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Nature_Declaration
            | Iir_Kind_Subnature_Declaration
+           | Iir_Kind_Entity_Declaration
+           | Iir_Kind_Configuration_Declaration
+           | Iir_Kind_Context_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Package_Body
-           | Iir_Kind_Configuration_Declaration
-           | Iir_Kind_Entity_Declaration
            | Iir_Kind_Architecture_Body
-           | Iir_Kind_Context_Declaration
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Library_Declaration
            | Iir_Kind_Component_Declaration
@@ -8118,12 +8118,12 @@ package body Nodes_Meta is
            | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Nature_Declaration
            | Iir_Kind_Subnature_Declaration
+           | Iir_Kind_Entity_Declaration
+           | Iir_Kind_Configuration_Declaration
+           | Iir_Kind_Context_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Instantiation_Declaration
-           | Iir_Kind_Configuration_Declaration
-           | Iir_Kind_Entity_Declaration
            | Iir_Kind_Architecture_Body
-           | Iir_Kind_Context_Declaration
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Library_Declaration
            | Iir_Kind_Component_Declaration
@@ -9178,13 +9178,13 @@ package body Nodes_Meta is
            | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Nature_Declaration
            | Iir_Kind_Subnature_Declaration
+           | Iir_Kind_Entity_Declaration
+           | Iir_Kind_Configuration_Declaration
+           | Iir_Kind_Context_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Package_Body
-           | Iir_Kind_Configuration_Declaration
-           | Iir_Kind_Entity_Declaration
            | Iir_Kind_Architecture_Body
-           | Iir_Kind_Context_Declaration
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Attribute_Declaration
@@ -10291,13 +10291,13 @@ package body Nodes_Meta is
            | Iir_Kind_Record_Type_Definition
            | Iir_Kind_Physical_Type_Definition
            | Iir_Kind_Protected_Type_Body
+           | Iir_Kind_Entity_Declaration
+           | Iir_Kind_Configuration_Declaration
+           | Iir_Kind_Context_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Package_Body
-           | Iir_Kind_Configuration_Declaration
-           | Iir_Kind_Entity_Declaration
            | Iir_Kind_Architecture_Body
-           | Iir_Kind_Context_Declaration
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Function_Body
            | Iir_Kind_Procedure_Body
@@ -10320,13 +10320,13 @@ package body Nodes_Meta is
            | Iir_Kind_Record_Type_Definition
            | Iir_Kind_Physical_Type_Definition
            | Iir_Kind_Protected_Type_Body
+           | Iir_Kind_Entity_Declaration
+           | Iir_Kind_Configuration_Declaration
+           | Iir_Kind_Context_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Package_Body
-           | Iir_Kind_Configuration_Declaration
-           | Iir_Kind_Entity_Declaration
            | Iir_Kind_Architecture_Body
-           | Iir_Kind_Context_Declaration
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Function_Body
            | Iir_Kind_Procedure_Body

@@ -1609,7 +1609,7 @@ package body Sem_Names is
       Name_Res : Iir;
    begin
       case Get_Kind (Res) is
-         when Iir_Kinds_Library_Unit_Declaration =>
+         when Iir_Kinds_Library_Unit =>
             return Finish_Sem_Denoting_Name (Name, Res);
          when Iir_Kinds_Sequential_Statement
            | Iir_Kinds_Concurrent_Statement =>
@@ -2742,7 +2742,7 @@ package body Sem_Names is
            | Iir_Kind_Psl_Endpoint_Declaration =>
             Res := Sem_Psl.Sem_Psl_Name (Name);
 
-         when Iir_Kinds_Library_Unit_Declaration =>
+         when Iir_Kinds_Library_Unit =>
             Error_Msg_Sem (+Name, "function name is a design unit");
 
          when Iir_Kind_Error =>
@@ -2908,7 +2908,7 @@ package body Sem_Names is
            | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Component_Declaration
-           | Iir_Kinds_Library_Unit_Declaration =>
+           | Iir_Kinds_Library_Unit =>
             --  FIXME: to complete
             null;
          when Iir_Kinds_Sequential_Statement
@@ -3545,7 +3545,7 @@ package body Sem_Names is
            | Iir_Kind_Group_Declaration
            | Iir_Kind_Group_Template_Declaration
            | Iir_Kind_File_Declaration
-           | Iir_Kinds_Library_Unit_Declaration
+           | Iir_Kinds_Library_Unit
            | Iir_Kind_Non_Object_Alias_Declaration =>
             null;
 

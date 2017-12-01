@@ -410,7 +410,7 @@ package body Sem_Specs is
       procedure Sem_Named_Entity (Ent : Iir) is
       begin
          case Get_Kind (Ent) is
-            when Iir_Kinds_Library_Unit_Declaration
+            when Iir_Kinds_Library_Unit
               | Iir_Kinds_Concurrent_Statement
               | Iir_Kinds_Sequential_Statement
               | Iir_Kinds_Non_Alias_Object_Declaration

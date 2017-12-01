@@ -4133,13 +4133,13 @@ package Iirs is
       Iir_Kind_Subtype_Declaration,
       Iir_Kind_Nature_Declaration,
       Iir_Kind_Subnature_Declaration,
+      Iir_Kind_Entity_Declaration,
+      Iir_Kind_Configuration_Declaration,
+      Iir_Kind_Context_Declaration,
       Iir_Kind_Package_Declaration,
       Iir_Kind_Package_Instantiation_Declaration,
       Iir_Kind_Package_Body,
-      Iir_Kind_Configuration_Declaration,
-      Iir_Kind_Entity_Declaration,
       Iir_Kind_Architecture_Body,
-      Iir_Kind_Context_Declaration,
       Iir_Kind_Package_Header,
       Iir_Kind_Unit_Declaration,
       Iir_Kind_Library_Declaration,
@@ -4907,18 +4907,25 @@ package Iirs is
    -- * comments line
    -- * the last line must be the highest bound of the range, followed by ";"
 
---   subtype Iir_Kinds_List is Iir_Kind range
---     Iir_Kind_List ..
---     Iir_Kind_Callees_List;
-
-   subtype Iir_Kinds_Library_Unit_Declaration is Iir_Kind range
-     Iir_Kind_Package_Declaration ..
+   subtype Iir_Kinds_Library_Unit is Iir_Kind range
+     Iir_Kind_Entity_Declaration ..
+   --Iir_Kind_Configuration_Declaration
+   --Iir_Kind_Context_Declaration
+   --Iir_Kind_Package_Declaration
    --Iir_Kind_Package_Instantiation_Declaration
    --Iir_Kind_Package_Body
+     Iir_Kind_Architecture_Body;
+
+   subtype Iir_Kinds_Primary_Unit is Iir_Kind range
+     Iir_Kind_Entity_Declaration ..
    --Iir_Kind_Configuration_Declaration
-   --Iir_Kind_Entity_Declaration
-   --Iir_Kind_Architecture_Body
-     Iir_Kind_Context_Declaration;
+   --Iir_Kind_Context_Declaration
+   --Iir_Kind_Package_Declaration
+     Iir_Kind_Package_Instantiation_Declaration;
+
+   subtype Iir_Kinds_Secondary_Unit is Iir_Kind range
+     Iir_Kind_Package_Body ..
+     Iir_Kind_Architecture_Body;
 
    subtype Iir_Kinds_Package_Declaration is Iir_Kind range
      Iir_Kind_Package_Declaration ..

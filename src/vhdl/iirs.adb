@@ -310,9 +310,9 @@ package body Iirs is
            | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Nature_Declaration
            | Iir_Kind_Subnature_Declaration
-           | Iir_Kind_Package_Body
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Context_Declaration
+           | Iir_Kind_Package_Body
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Library_Declaration
            | Iir_Kind_Attribute_Declaration
@@ -481,9 +481,9 @@ package body Iirs is
            | Iir_Kind_Floating_Subtype_Definition
            | Iir_Kind_Subtype_Definition
            | Iir_Kind_Scalar_Nature_Definition
+           | Iir_Kind_Entity_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Instantiation_Declaration
-           | Iir_Kind_Entity_Declaration
            | Iir_Kind_Architecture_Body
            | Iir_Kind_Package_Header
            | Iir_Kind_Component_Declaration
