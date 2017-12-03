@@ -380,7 +380,7 @@ package body Simul.Elaboration is
    begin
       Instance := Create_Block_Instance (null, Decl, Decl);
 
-      Package_Instances (Package_Info.Frame_Scope.Pkg_Index) := Instance;
+      Package_Instances (Package_Info.Pkg_Slot) := Instance;
 
       if Trace_Elaboration then
          Report_Msg (Msgid_Note, Errorout.Elaboration, No_Location,
@@ -414,7 +414,7 @@ package body Simul.Elaboration is
       Package_Info : constant Sim_Info_Acc := Get_Info (Decl);
       Instance : Block_Instance_Acc;
    begin
-      Instance := Package_Instances (Package_Info.Frame_Scope.Pkg_Index);
+      Instance := Package_Instances (Package_Info.Pkg_Slot);
 
       if Trace_Elaboration then
          Report_Msg (Msgid_Note, Errorout.Elaboration, No_Location,
@@ -438,7 +438,7 @@ package body Simul.Elaboration is
 
       Instance := Create_Block_Instance (null, Decl, Decl);
 
-      Package_Instances (Config_Info.Frame_Scope.Pkg_Index) := Instance;
+      Package_Instances (Config_Info.Pkg_Slot) := Instance;
 
       -- Elaborate objects declarations.
       Elaborate_Declarative_Part (Instance, Get_Declaration_Chain (Decl));
@@ -485,8 +485,7 @@ package body Simul.Elaboration is
                   Body_Design: Iir_Design_Unit;
                begin
                   if not Is_Uninstantiated_Package (Library_Unit)
-                    and then
-                    Package_Instances (Info.Frame_Scope.Pkg_Index) = null
+                    and then Package_Instances (Info.Pkg_Slot) = null
                   then
                      --  Package not yet elaborated.
 
@@ -531,8 +530,7 @@ package body Simul.Elaboration is
                declare
                   Info : constant Sim_Info_Acc := Get_Info (Library_Unit);
                begin
-                  if Package_Instances (Info.Frame_Scope.Pkg_Index) = null
-                  then
+                  if Package_Instances (Info.Pkg_Slot) = null then
                      --  Package not yet elaborated.
 
                      --  First the packages on which DESIGN depends.
@@ -2910,7 +2908,8 @@ package body Simul.Elaboration is
       Generic_Map : Iir;
       Port_Map : Iir;
    begin
-      Package_Instances := new Package_Instances_Array (1 .. Nbr_Packages);
+      Package_Instances :=
+        new Package_Instances_Array (1 .. Global_Info.Nbr_Objects);
 
       --  Use a 'fake' process to execute code during elaboration.
       Current_Process := No_Process;

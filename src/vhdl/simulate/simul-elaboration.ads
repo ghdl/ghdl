@@ -82,7 +82,7 @@ package Simul.Elaboration is
    type Block_Instance_Acc_Array is array (Instance_Slot_Type range <>) of
      Block_Instance_Acc;
 
-   type Package_Instances_Array is array (Pkg_Index_Type range <>) of
+   type Package_Instances_Array is array (Object_Slot_Type range <>) of
      Block_Instance_Acc;
    type Package_Instances_Array_Acc is access Package_Instances_Array;
 

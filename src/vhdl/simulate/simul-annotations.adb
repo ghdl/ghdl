@@ -107,6 +107,7 @@ package body Simul.Annotations is
          when Kind_Block
            | Kind_Process
            | Kind_Frame
+           | Kind_Package
            | Kind_Scalar_Type
            | Kind_File_Type
            | Kind_Extra =>
@@ -1043,29 +1044,24 @@ package body Simul.Annotations is
       Current_Scope := (Kind => Scope_Kind_None);
    end Annotate_Architecture;
 
-   procedure Annotate_Package (Decl: Iir_Package_Declaration)
+   procedure Annotate_Package
+     (Block_Info : Sim_Info_Acc; Decl: Iir_Package_Declaration)
    is
       Prev_Scope : constant Scope_Type := Current_Scope;
-      Package_Info: Sim_Info_Acc;
+      Package_Info : Sim_Info_Acc;
       Header : Iir;
    begin
       pragma Assert (Current_Scope.Kind = Scope_Kind_None);
 
-      if Get_Kind (Decl) = Iir_Kind_Package_Instantiation_Declaration
-        or else not Is_Uninstantiated_Package (Decl)
-      then
-         Nbr_Packages := Nbr_Packages + 1;
-         Current_Scope := (Scope_Kind_Package, Nbr_Packages);
-      else
-         Increment_Current_Scope;
-      end if;
+      Increment_Current_Scope;
 
+      Block_Info.Nbr_Objects := Block_Info.Nbr_Objects + 1;
       Package_Info := new Sim_Info_Type'
-        (Kind => Kind_Block,
-         Inst_Slot => Invalid_Instance_Slot,
+        (Kind => Kind_Package,
          Frame_Scope => Current_Scope,
          Nbr_Objects => 0,
-         Nbr_Instances => 0);
+         Pkg_Slot => Block_Info.Nbr_Objects,
+         Pkg_Parent => Block_Info);
 
       Set_Info (Decl, Package_Info);
 
@@ -1146,22 +1142,19 @@ package body Simul.Annotations is
    end Annotate_Block_Configuration;
 
    procedure Annotate_Configuration_Declaration
-     (Decl : Iir_Configuration_Declaration)
+     (Block_Info : Sim_Info_Acc; Decl : Iir_Configuration_Declaration)
    is
       Config_Info: Sim_Info_Acc;
    begin
       pragma Assert (Current_Scope.Kind = Scope_Kind_None);
 
-      Nbr_Packages := Nbr_Packages + 1;
-      Current_Scope := (Scope_Kind_Package, Nbr_Packages);
-
+      Block_Info.Nbr_Objects := Block_Info.Nbr_Objects + 1;
       Config_Info := new Sim_Info_Type'
-        (Kind => Kind_Block,
-         Inst_Slot => Invalid_Instance_Slot,
+        (Kind => Kind_Package,
          Frame_Scope => Current_Scope,
          Nbr_Objects => 0,
-         Nbr_Instances => 0);
-
+         Pkg_Slot => Block_Info.Nbr_Objects,
+         Pkg_Parent => Block_Info);
       Set_Info (Decl, Config_Info);
 
       Annotate_Declaration_List (Config_Info, Get_Declaration_Chain (Decl));
@@ -1202,24 +1195,34 @@ package body Simul.Annotations is
          when Iir_Kind_Architecture_Body =>
             Annotate_Architecture (El);
          when Iir_Kind_Package_Declaration =>
-            Annotate_Package (El);
             declare
                use Std_Package;
             begin
                if El = Standard_Package then
+                  pragma Assert (Global_Info = null);
+                  Global_Info :=
+                    new Sim_Info_Type'(Kind => Kind_Block,
+                                       Frame_Scope => Current_Scope,
+                                       Nbr_Objects => 0,
+                                       Inst_Slot => Invalid_Instance_Slot,
+                                       Nbr_Instances => 0);
+                  Annotate_Package (Global_Info, El);
                   --  These types are not in std.standard!
                   Annotate_Type_Definition
                     (Get_Info (El), Convertible_Integer_Type_Definition);
                   Annotate_Type_Definition
                     (Get_Info (El), Convertible_Real_Type_Definition);
+               else
+                  pragma Assert (Global_Info /= null);
+                  Annotate_Package (Global_Info, El);
                end if;
             end;
          when Iir_Kind_Package_Body =>
             Annotate_Package_Body (El);
          when Iir_Kind_Configuration_Declaration =>
-            Annotate_Configuration_Declaration (El);
+            Annotate_Configuration_Declaration (Global_Info, El);
          when Iir_Kind_Package_Instantiation_Declaration =>
-            Annotate_Package (El);
+            Annotate_Package (Global_Info, El);
          when Iir_Kind_Context_Declaration =>
             null;
          when others =>
@@ -1259,7 +1262,9 @@ package body Simul.Annotations is
             Put_Line
               ("-- nbr objects:" & Object_Slot_Type'Image (Info.Nbr_Objects));
 
-         when Kind_Frame | Kind_Process  =>
+         when Kind_Frame
+           | Kind_Process
+           | Kind_Package =>
             Put_Line ("-- scope:" & Image (Info.Frame_Scope));
             Set_Col (Indent);
             Put_Line
@@ -1291,17 +1296,25 @@ package body Simul.Annotations is
          return;
       end if;
       case Info.Kind is
-         when Kind_Block | Kind_Frame | Kind_Process =>
+         when Kind_Block
+           | Kind_Frame
+           | Kind_Process
+           | Kind_Package =>
             Put_Line ("scope:" & Image (Info.Frame_Scope));
-            Set_Col (Indent);
-            Put_Line ("inst_slot:"
-                        & Instance_Slot_Type'Image (Info.Inst_Slot));
             Set_Col (Indent);
             Put_Line ("nbr objects:"
                         & Object_Slot_Type'Image (Info.Nbr_Objects));
-            Set_Col (Indent);
-            Put_Line ("nbr instance:"
-                      & Instance_Slot_Type'Image (Info.Nbr_Instances));
+            case Info.Kind is
+               when Kind_Block =>
+                  Set_Col (Indent);
+                  Put_Line ("inst_slot:"
+                              & Instance_Slot_Type'Image (Info.Inst_Slot));
+                  Set_Col (Indent);
+                  Put_Line ("nbr instance:"
+                              & Instance_Slot_Type'Image (Info.Nbr_Instances));
+               when others =>
+                  null;
+            end case;
          when Kind_Object | Kind_Signal | Kind_File
            | Kind_Terminal | Kind_Quantity | Kind_Environment
            | Kind_PSL =>

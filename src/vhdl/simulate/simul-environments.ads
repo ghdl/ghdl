@@ -254,7 +254,7 @@ package Simul.Environments is
 
    -- The annotation depends on the kind of the node.
    type Sim_Info_Kind is
-     (Kind_Block, Kind_Process, Kind_Frame,
+     (Kind_Block, Kind_Process, Kind_Frame, Kind_Package,
       Kind_Scalar_Type, Kind_File_Type,
       Kind_Object, Kind_Signal,
       Kind_File,
@@ -275,6 +275,7 @@ package Simul.Environments is
          when Kind_Block
            | Kind_Frame
            | Kind_Process
+           | Kind_Package
            | Kind_Environment =>
             --  Scope level for this frame.
             Frame_Scope : Scope_Type;
@@ -292,6 +293,10 @@ package Simul.Environments is
 
                when Kind_Environment =>
                   Env_Slot : Object_Slot_Type;
+
+               when Kind_Package =>
+                  Pkg_Slot : Object_Slot_Type;
+                  Pkg_Parent : Sim_Info_Acc;
 
                when others =>
                   null;

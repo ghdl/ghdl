@@ -27,7 +27,7 @@ package Simul.Annotations is
    procedure Disp_Vhdl_Info (Node : Iir);
    procedure Disp_Tree_Info (Node : Iir);
 
-   Nbr_Packages : Pkg_Index_Type := 0;
+   Global_Info : Sim_Info_Acc;
 
    -- Annotations are used to collect informations for elaboration and to
    -- locate iir_value_literal for signals, variables or constants.

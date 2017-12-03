@@ -68,38 +68,35 @@ package body Simul.Execution is
      (Instance: Block_Instance_Acc; Scope: Sim_Info_Acc)
      return Block_Instance_Acc is
    begin
-      case Scope.Frame_Scope.Kind is
-         when Scope_Kind_Frame =>
+      case Scope.Kind is
+         when Kind_Block
+           | Kind_Frame
+           | Kind_Process =>
             declare
                Current : Block_Instance_Acc;
-               Last : Block_Instance_Acc;
+               --  Last : Block_Instance_Acc;
             begin
                Current := Instance;
                while Current /= null loop
                   if Current.Block_Scope = Scope then
                      return Current;
                   end if;
-                  Last := Current;
+               --  Last := Current;
                   Current := Current.Up_Block;
                end loop;
-               if Scope.Frame_Scope.Depth = 0
-                 and then (Last.Block_Scope.Frame_Scope.Kind
-                             = Scope_Kind_Package)
-               then
-                  --  For instantiated packages.
-                  return Last;
-               end if;
+               --  if Scope.Frame_Scope.Depth = 0
+               --    and then (Last.Block_Scope.Frame_Scope.Kind
+               --                = Scope_Kind_Package)
+               --  then
+               --     --  For instantiated packages.
+               --     return Last;
+               --  end if;
                raise Internal_Error;
             end;
-         when Scope_Kind_Package =>
-            --  Global scope (packages)
-            return Package_Instances (Scope.Frame_Scope.Pkg_Index);
-         when Scope_Kind_Component =>
-            pragma Assert (Current_Component /= null);
-            return Current_Component;
-         when Scope_Kind_None =>
-            raise Internal_Error;
-         when Scope_Kind_Pkg_Inst =>
+         when Kind_Package =>
+            pragma Assert (Scope.Pkg_Parent = Global_Info);
+            return Package_Instances (Scope.Pkg_Slot);
+         when others =>
             raise Internal_Error;
       end case;
    end Get_Instance_By_Scope;
