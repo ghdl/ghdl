@@ -458,6 +458,7 @@ package body Simul.Simulation is
            | Iir_Value_Protected
            | Iir_Value_Quantity
            | Iir_Value_Terminal
+           | Iir_Value_Instance
            | Iir_Value_Environment =>
             raise Internal_Error;
       end case;

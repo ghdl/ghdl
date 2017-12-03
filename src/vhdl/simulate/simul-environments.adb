@@ -87,6 +87,7 @@ package body Simul.Environments is
            | Iir_Value_Protected
            | Iir_Value_Quantity
            | Iir_Value_Terminal
+           | Iir_Value_Instance
            | Iir_Value_Environment =>
             raise Internal_Error;
       end case;
@@ -194,6 +195,7 @@ package body Simul.Environments is
            | Iir_Value_Protected
            | Iir_Value_Quantity
            | Iir_Value_Terminal
+           | Iir_Value_Instance
            | Iir_Value_Environment =>
             raise Internal_Error;
       end case;
@@ -237,6 +239,7 @@ package body Simul.Environments is
            | Iir_Value_Protected
            | Iir_Value_Quantity
            | Iir_Value_Terminal
+           | Iir_Value_Instance
            | Iir_Value_Environment =>
             raise Internal_Error;
       end case;
@@ -285,6 +288,7 @@ package body Simul.Environments is
          when Iir_Value_Range
            | Iir_Value_Quantity
            | Iir_Value_Terminal
+           | Iir_Value_Instance
            | Iir_Value_Environment =>
             raise Internal_Error;
       end case;
@@ -328,6 +332,7 @@ package body Simul.Environments is
            | Iir_Value_Protected
            | Iir_Value_Quantity
            | Iir_Value_Terminal
+           | Iir_Value_Instance
            | Iir_Value_Environment =>
             raise Internal_Error;
       end case;
@@ -393,8 +398,19 @@ package body Simul.Environments is
                 (Kind => Iir_Value_Environment, Environment => Env)));
    end Create_Environment_Value;
 
-   function Create_Protected_Value (Prot : Protected_Index_Type)
+   function Create_Instance_Value (Inst : Block_Instance_Acc)
                                   return Iir_Value_Literal_Acc
+   is
+      subtype Instance_Value is Iir_Value_Literal (Iir_Value_Instance);
+      function Alloc is new Alloc_On_Pool_Addr (Instance_Value);
+   begin
+      return To_Iir_Value_Literal_Acc
+        (Alloc (Global_Pool'Access,
+                (Kind => Iir_Value_Instance, Instance => Inst)));
+   end Create_Instance_Value;
+
+   function Create_Protected_Value (Prot : Protected_Index_Type)
+                                   return Iir_Value_Literal_Acc
    is
       subtype Protected_Value is Iir_Value_Literal (Iir_Value_Protected);
       function Alloc is new Alloc_On_Pool_Addr (Protected_Value);
@@ -691,7 +707,8 @@ package body Simul.Environments is
             return Create_Environment_Value (Src.Environment);
 
          when Iir_Value_Quantity
-           | Iir_Value_Terminal =>
+           | Iir_Value_Terminal
+           | Iir_Value_Instance =>
             raise Internal_Error;
       end case;
    end Copy;
@@ -791,6 +808,7 @@ package body Simul.Environments is
            | Iir_Value_Protected
            | Iir_Value_Terminal
            | Iir_Value_Quantity
+           | Iir_Value_Instance
            | Iir_Value_Environment =>
             raise Internal_Error;
       end case;
@@ -915,6 +933,8 @@ package body Simul.Environments is
             Put_Line ("quantity");
          when Iir_Value_Terminal =>
             Put_Line ("terminal");
+         when Iir_Value_Instance =>
+            Put_Line ("instance");
          when Iir_Value_Environment =>
             Put_Line ("environment");
       end case;
@@ -935,6 +955,7 @@ package body Simul.Environments is
            | Iir_Value_Protected
            | Iir_Value_Quantity
            | Iir_Value_Terminal
+           | Iir_Value_Instance
            | Iir_Value_Environment =>
             return False;
          when Iir_Value_Range =>
@@ -1120,6 +1141,8 @@ package body Simul.Environments is
             Put ("[signal]");
          when Iir_Value_Protected =>
             Put ("[protected]");
+         when Iir_Value_Instance =>
+            Put ("[instance]");
          when Iir_Value_Environment =>
             Put ("[environment]");
       end case;

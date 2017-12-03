@@ -95,7 +95,7 @@ package body Simul.Execution is
             end;
          when Kind_Package =>
             pragma Assert (Scope.Pkg_Parent = Global_Info);
-            return Package_Instances (Scope.Pkg_Slot);
+            return Global_Instances.Objects (Scope.Pkg_Slot).Instance;
          when others =>
             raise Internal_Error;
       end case;

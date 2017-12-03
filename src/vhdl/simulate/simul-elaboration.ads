@@ -77,16 +77,11 @@ package Simul.Elaboration is
    procedure Create_Object (Instance : Block_Instance_Acc; Decl : Iir);
    procedure Create_Signal (Instance : Block_Instance_Acc; Decl : Iir);
 
+   Global_Instances : Block_Instance_Acc;
    Top_Instance: Block_Instance_Acc;
 
    type Block_Instance_Acc_Array is array (Instance_Slot_Type range <>) of
      Block_Instance_Acc;
-
-   type Package_Instances_Array is array (Object_Slot_Type range <>) of
-     Block_Instance_Acc;
-   type Package_Instances_Array_Acc is access Package_Instances_Array;
-
-   Package_Instances : Package_Instances_Array_Acc;
 
    --  Disconnections.  For each disconnection specification, the elaborator
    --  adds an entry in the table.

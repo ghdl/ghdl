@@ -64,10 +64,9 @@ package body Simul.Elaboration is
                                     Port_Map : Iir)
      return Block_Instance_Acc;
 
-   procedure Create_Object
-     (Instance : Block_Instance_Acc;
-      Slot : Object_Slot_Type;
-      Num : Object_Slot_Type := 1) is
+   procedure Create_Object (Instance : Block_Instance_Acc;
+                            Slot : Object_Slot_Type;
+                            Num : Object_Slot_Type := 1) is
    begin
       --  Check elaboration order.
       --  Note: this is not done for package since objects from package are
@@ -150,6 +149,7 @@ package body Simul.Elaboration is
               | Iir_Value_Protected
               | Iir_Value_Quantity
               | Iir_Value_Terminal
+              | Iir_Value_Instance
               | Iir_Value_Environment =>
                raise Internal_Error;
          end case;
@@ -373,14 +373,17 @@ package body Simul.Elaboration is
       return Res;
    end Create_Block_Instance;
 
-   procedure Elaborate_Package (Decl: Iir)
+   procedure Elaborate_Package (Block : Block_Instance_Acc; Decl : Iir)
    is
       Package_Info : constant Sim_Info_Acc := Get_Info (Decl);
       Instance : Block_Instance_Acc;
    begin
-      Instance := Create_Block_Instance (null, Decl, Decl);
+      Instance := Create_Block_Instance (Block, Decl, Decl);
 
-      Package_Instances (Package_Info.Pkg_Slot) := Instance;
+      pragma Assert (Block.Block_Scope = Package_Info.Pkg_Parent);
+      pragma Assert (Block.Objects (Package_Info.Pkg_Slot) = null);
+      Block.Objects (Package_Info.Pkg_Slot) :=
+        Create_Instance_Value (Instance);
 
       if Trace_Elaboration then
          Report_Msg (Msgid_Note, Errorout.Elaboration, No_Location,
@@ -409,13 +412,12 @@ package body Simul.Elaboration is
       end if;
    end Elaborate_Package;
 
-   procedure Elaborate_Package_Body (Decl: Iir)
+   procedure Elaborate_Package_Body (Block : Block_Instance_Acc; Decl: Iir)
    is
       Package_Info : constant Sim_Info_Acc := Get_Info (Decl);
-      Instance : Block_Instance_Acc;
+      Instance : constant Block_Instance_Acc :=
+        Block.Objects (Package_Info.Pkg_Slot).Instance;
    begin
-      Instance := Package_Instances (Package_Info.Pkg_Slot);
-
       if Trace_Elaboration then
          Report_Msg (Msgid_Note, Errorout.Elaboration, No_Location,
                      "elaborating %n", (1 => +Decl));
@@ -436,9 +438,10 @@ package body Simul.Elaboration is
          return;
       end if;
 
-      Instance := Create_Block_Instance (null, Decl, Decl);
+      Instance := Create_Block_Instance (Global_Instances, Decl, Decl);
 
-      Package_Instances (Config_Info.Pkg_Slot) := Instance;
+      Global_Instances.Objects (Config_Info.Pkg_Slot) :=
+        Create_Instance_Value (Instance);
 
       -- Elaborate objects declarations.
       Elaborate_Declarative_Part (Instance, Get_Declaration_Chain (Decl));
@@ -485,7 +488,7 @@ package body Simul.Elaboration is
                   Body_Design: Iir_Design_Unit;
                begin
                   if not Is_Uninstantiated_Package (Library_Unit)
-                    and then Package_Instances (Info.Pkg_Slot) = null
+                    and then Global_Instances.Objects (Info.Pkg_Slot) = null
                   then
                      --  Package not yet elaborated.
 
@@ -508,7 +511,7 @@ package body Simul.Elaboration is
                      Elaborate_Dependence (Design);
 
                      --  Then the declaration.
-                     Elaborate_Package (Library_Unit);
+                     Elaborate_Package (Global_Instances, Library_Unit);
 
                      --  And then the body (if any).
                      if Body_Design = Null_Iir then
@@ -522,7 +525,7 @@ package body Simul.Elaboration is
                         Elaborate_Dependence (Body_Design);
 
                         Elaborate_Package_Body
-                          (Get_Library_Unit (Body_Design));
+                          (Global_Instances, Get_Library_Unit (Body_Design));
                      end if;
                   end if;
                end;
@@ -530,14 +533,14 @@ package body Simul.Elaboration is
                declare
                   Info : constant Sim_Info_Acc := Get_Info (Library_Unit);
                begin
-                  if Package_Instances (Info.Pkg_Slot) = null then
+                  if Global_Instances.Objects (Info.Pkg_Slot) = null then
                      --  Package not yet elaborated.
 
                      --  First the packages on which DESIGN depends.
                      Elaborate_Dependence (Design);
 
                      --  Then the declaration.
-                     Elaborate_Package (Library_Unit);
+                     Elaborate_Package (Global_Instances, Library_Unit);
                   end if;
                end;
             when Iir_Kind_Entity_Declaration
@@ -2908,8 +2911,23 @@ package body Simul.Elaboration is
       Generic_Map : Iir;
       Port_Map : Iir;
    begin
-      Package_Instances :=
-        new Package_Instances_Array (1 .. Global_Info.Nbr_Objects);
+      Global_Instances :=
+        new Block_Instance_Type'(Max_Objs => Global_Info.Nbr_Objects,
+                                 In_Wait_Flag => False,
+                                 Id => 0,
+                                 Block_Scope => Global_Info,
+                                 Up_Block => null,
+                                 Label => Null_Iir,
+                                 Stmt => Null_Iir,
+                                 Parent => null,
+                                 Children => null,
+                                 Brother => null,
+                                 Ports_Map => Null_Iir,
+                                 Marker => Empty_Marker,
+                                 Actuals_Ref => null,
+                                 Result => null,
+                                 Elab_Objects => 0,
+                                 Objects => (others => null));
 
       --  Use a 'fake' process to execute code during elaboration.
       Current_Process := No_Process;

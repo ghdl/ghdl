@@ -113,6 +113,7 @@ package Simul.Environments is
       Iir_Value_Signal,
       Iir_Value_Terminal,
       Iir_Value_Quantity,
+      Iir_Value_Instance,
       Iir_Value_Environment);
 
    --  Uniq identifier for scalar signal.  First identifier is 'First + 1.
@@ -200,6 +201,8 @@ package Simul.Environments is
             Quantity : Quantity_Index_Type;
          when Iir_Value_Terminal =>
             Terminal : Terminal_Index_Type;
+         when Iir_Value_Instance =>
+            Instance : Block_Instance_Acc;
          when Iir_Value_Environment =>
             Environment : Environment_Index_Type;
          when Iir_Value_Range =>
@@ -375,6 +378,8 @@ package Simul.Environments is
                                   return Iir_Value_Literal_Acc;
    function Create_Environment_Value (Env : Environment_Index_Type)
                                      return Iir_Value_Literal_Acc;
+   function Create_Instance_Value (Inst : Block_Instance_Acc)
+                                  return Iir_Value_Literal_Acc;
 
    function Create_B1_Value (Val : Ghdl_B1) return Iir_Value_Literal_Acc;
    function Create_E8_Value (Val : Ghdl_E8) return Iir_Value_Literal_Acc;
