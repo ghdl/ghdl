@@ -24,10 +24,6 @@ with Iirs_Utils; use Iirs_Utils;
 with Types; use Types;
 
 package body Simul.Annotations is
-   --  Current scope.  Used when an object is created to indicate which scope
-   --  it belongs to.
-   Current_Scope: Scope_Type := (Kind => Scope_Kind_None);
-
    procedure Annotate_Declaration_List
      (Block_Info: Sim_Info_Acc; Decl_Chain: Iir);
    procedure Annotate_Sequential_Statement_Chain
@@ -48,21 +44,6 @@ package body Simul.Annotations is
    --  Annotate type definition DEF only if it is anonymous.
    procedure Annotate_Anonymous_Type_Definition
      (Block_Info: Sim_Info_Acc; Def: Iir);
-
-   procedure Increment_Current_Scope is
-   begin
-      case Current_Scope.Kind is
-         when Scope_Kind_None
-           | Scope_Kind_Package
-           | Scope_Kind_Pkg_Inst =>
-            --  For a subprogram in a package
-            Current_Scope := (Scope_Kind_Frame, Scope_Depth_Type'First);
-         when Scope_Kind_Frame =>
-            Current_Scope := (Scope_Kind_Frame, Current_Scope.Depth + 1);
-         when Scope_Kind_Component =>
-            raise Internal_Error;
-      end case;
-   end Increment_Current_Scope;
 
    -- Add an annotation to object OBJ.
    procedure Create_Object_Info (Block_Info : Sim_Info_Acc;
@@ -102,7 +83,6 @@ package body Simul.Annotations is
          when Kind_Environment =>
             Info := new Sim_Info_Type'(Kind => Kind_Environment,
                                        Env_Slot => Block_Info.Nbr_Objects,
-                                       Frame_Scope => Current_Scope,
                                        Nbr_Objects => 0);
          when Kind_Block
            | Kind_Process
@@ -228,7 +208,6 @@ package body Simul.Annotations is
    procedure Annotate_Protected_Type_Declaration (Block_Info : Sim_Info_Acc;
                                                   Prot: Iir)
    is
-      Prev_Scope : constant Scope_Type := Current_Scope;
       Decl : Iir;
       Prot_Info: Sim_Info_Acc;
    begin
@@ -248,14 +227,8 @@ package body Simul.Annotations is
          Decl := Get_Chain (Decl);
       end loop;
 
-      --  Then the interfaces object.  Increment the scope to reserve a scope
-      --  for the protected object.
-      Increment_Current_Scope;
-
-      Prot_Info :=
-        new Sim_Info_Type'(Kind => Kind_Frame,
-                           Frame_Scope => Current_Scope,
-                           Nbr_Objects => 0);
+      Prot_Info := new Sim_Info_Type'(Kind => Kind_Frame,
+                                      Nbr_Objects => 0);
       Set_Info (Prot, Prot_Info);
 
       Decl := Get_Declaration_Chain (Prot);
@@ -271,25 +244,18 @@ package body Simul.Annotations is
          end case;
          Decl := Get_Chain (Decl);
       end loop;
-
-      Current_Scope := Prev_Scope;
    end Annotate_Protected_Type_Declaration;
 
    procedure Annotate_Protected_Type_Body (Block_Info : Sim_Info_Acc;
                                            Prot: Iir)
    is
       pragma Unreferenced (Block_Info);
-      Prot_Info: Sim_Info_Acc;
-      Prev_Scope : constant Scope_Type := Current_Scope;
+      Prot_Info : constant Sim_Info_Acc :=
+        Get_Info (Get_Protected_Type_Declaration (Prot));
    begin
-      Prot_Info := Get_Info (Get_Protected_Type_Declaration (Prot));
       Set_Info (Prot, Prot_Info);
 
-      Current_Scope := Prot_Info.Frame_Scope;
-
       Annotate_Declaration_List (Prot_Info, Get_Declaration_Chain (Prot));
-
-      Current_Scope := Prev_Scope;
    end Annotate_Protected_Type_Body;
 
    procedure Annotate_Type_Definition (Block_Info: Sim_Info_Acc; Def: Iir)
@@ -462,21 +428,14 @@ package body Simul.Annotations is
    procedure Annotate_Interface_Package_Declaration
      (Block_Info: Sim_Info_Acc; Inter : Iir)
    is
-      Prev_Scope : constant Scope_Type := Current_Scope;
       Package_Info : Sim_Info_Acc;
    begin
       Create_Object_Info (Block_Info, Inter, Kind_Environment);
       Package_Info := Get_Info (Inter);
 
-      Current_Scope := (Kind => Scope_Kind_Pkg_Inst,
-                        Pkg_Param => 0);
---                        Pkg_Parent => Package_Info);
-
       Annotate_Interface_List
         (Package_Info, Get_Generic_Chain (Inter), True);
       Annotate_Declaration_List (Package_Info, Get_Declaration_Chain (Inter));
-
-      Current_Scope := Prev_Scope;
    end Annotate_Interface_Package_Declaration;
 
    procedure Annotate_Interface_List
@@ -529,19 +488,12 @@ package body Simul.Annotations is
       pragma Unreferenced (Block_Info);
       Subprg_Info: Sim_Info_Acc;
       Interfaces : constant Iir := Get_Interface_Declaration_Chain (Subprg);
-      Prev_Scope : constant Scope_Type := Current_Scope;
    begin
-      Increment_Current_Scope;
-
-      Subprg_Info :=
-        new Sim_Info_Type'(Kind => Kind_Frame,
-                           Frame_Scope => Current_Scope,
-                           Nbr_Objects => 0);
+      Subprg_Info := new Sim_Info_Type'(Kind => Kind_Frame,
+                                        Nbr_Objects => 0);
       Set_Info (Subprg, Subprg_Info);
 
       Annotate_Interface_List (Subprg_Info, Interfaces, False);
-
-      Current_Scope := Prev_Scope;
    end Annotate_Subprogram_Specification;
 
    procedure Annotate_Subprogram_Body
@@ -550,7 +502,6 @@ package body Simul.Annotations is
       pragma Unreferenced (Block_Info);
       Spec : constant Iir := Get_Subprogram_Specification (Subprg);
       Subprg_Info : constant Sim_Info_Acc := Get_Info (Spec);
-      Prev_Scope : constant Scope_Type := Current_Scope;
    begin
       --  Do not annotate body of foreign subprograms.
       if Get_Foreign_Flag (Spec) then
@@ -559,26 +510,18 @@ package body Simul.Annotations is
 
       Set_Info (Subprg, Subprg_Info);
 
-      Current_Scope := Subprg_Info.Frame_Scope;
-
       Annotate_Declaration_List
         (Subprg_Info, Get_Declaration_Chain (Subprg));
 
       Annotate_Sequential_Statement_Chain
         (Subprg_Info, Get_Sequential_Statement_Chain (Subprg));
-
-      Current_Scope := Prev_Scope;
    end Annotate_Subprogram_Body;
 
    procedure Annotate_Component_Declaration (Comp: Iir_Component_Declaration)
    is
-      Prev_Scope : constant Scope_Type := Current_Scope;
       Info : Sim_Info_Acc;
    begin
-      Current_Scope := (Kind => Scope_Kind_Component);
-
       Info := new Sim_Info_Type'(Kind => Kind_Block,
-                                 Frame_Scope => Current_Scope,
                                  Inst_Slot => Invalid_Instance_Slot,
                                  Nbr_Objects => 0,
                                  Nbr_Instances => 1); --  For the instance.
@@ -586,8 +529,6 @@ package body Simul.Annotations is
 
       Annotate_Interface_List (Info, Get_Generic_Chain (Comp), True);
       Annotate_Interface_List (Info, Get_Port_Chain (Comp), True);
-
-      Current_Scope := Prev_Scope;
    end Annotate_Component_Declaration;
 
    procedure Annotate_Declaration (Block_Info: Sim_Info_Acc; Decl: Iir) is
@@ -822,13 +763,9 @@ package body Simul.Annotations is
       Info : Sim_Info_Acc;
       Header : Iir_Block_Header;
       Guard : Iir;
-      Prev_Scope : constant Scope_Type := Current_Scope;
    begin
-      Increment_Current_Scope;
-
       Info := new Sim_Info_Type'(Kind => Kind_Block,
                                  Inst_Slot => Block_Info.Nbr_Instances,
-                                 Frame_Scope => Current_Scope,
                                  Nbr_Objects => 0,
                                  Nbr_Instances => 0);
       Set_Info (Block, Info);
@@ -847,21 +784,15 @@ package body Simul.Annotations is
       Annotate_Declaration_List (Info, Get_Declaration_Chain (Block));
       Annotate_Concurrent_Statements_List
         (Info, Get_Concurrent_Statement_Chain (Block));
-
-      Current_Scope := Prev_Scope;
    end Annotate_Block_Statement;
 
    procedure Annotate_Generate_Statement_Body
      (Block_Info : Sim_Info_Acc; Bod : Iir; It : Iir)
    is
       Info : Sim_Info_Acc;
-      Prev_Scope : constant Scope_Type := Current_Scope;
    begin
-      Increment_Current_Scope;
-
       Info := new Sim_Info_Type'(Kind => Kind_Block,
                                  Inst_Slot => Block_Info.Nbr_Instances,
-                                 Frame_Scope => Current_Scope,
                                  Nbr_Objects => 0,
                                  Nbr_Instances => 0);
       Set_Info (Bod, Info);
@@ -874,8 +805,6 @@ package body Simul.Annotations is
       Annotate_Declaration_List (Info, Get_Declaration_Chain (Bod));
       Annotate_Concurrent_Statements_List
         (Info, Get_Concurrent_Statement_Chain (Bod));
-
-      Current_Scope := Prev_Scope;
    end Annotate_Generate_Statement_Body;
 
    procedure Annotate_If_Generate_Statement
@@ -904,32 +833,22 @@ package body Simul.Annotations is
      (Block_Info : Sim_Info_Acc; Stmt : Iir)
    is
       Info: Sim_Info_Acc;
-      Prev_Scope : constant Scope_Type := Current_Scope;
    begin
-      Increment_Current_Scope;
-
       --  Add a slot just to put the instance.
       Info := new Sim_Info_Type'(Kind => Kind_Block,
                                  Inst_Slot => Block_Info.Nbr_Instances,
-                                 Frame_Scope => Current_Scope,
                                  Nbr_Objects => 0,
                                  Nbr_Instances => 1);
       Set_Info (Stmt, Info);
       Block_Info.Nbr_Instances := Block_Info.Nbr_Instances + 1;
-
-      Current_Scope := Prev_Scope;
    end Annotate_Component_Instantiation_Statement;
 
    procedure Annotate_Process_Statement (Block_Info : Sim_Info_Acc; Stmt : Iir)
    is
       pragma Unreferenced (Block_Info);
-      Prev_Scope : constant Scope_Type := Current_Scope;
       Info : Sim_Info_Acc;
    begin
-      Increment_Current_Scope;
-
       Info := new Sim_Info_Type'(Kind => Kind_Process,
-                                 Frame_Scope => Current_Scope,
                                  Nbr_Objects => 0);
       Set_Info (Stmt, Info);
 
@@ -937,8 +856,6 @@ package body Simul.Annotations is
         (Info, Get_Declaration_Chain (Stmt));
       Annotate_Sequential_Statement_Chain
         (Info, Get_Sequential_Statement_Chain (Stmt));
-
-      Current_Scope := Prev_Scope;
    end Annotate_Process_Statement;
 
    procedure Annotate_Concurrent_Statements_List
@@ -991,13 +908,9 @@ package body Simul.Annotations is
    is
       Entity_Info: Sim_Info_Acc;
    begin
-      pragma Assert (Current_Scope.Kind = Scope_Kind_None);
-      Increment_Current_Scope;
-
       Entity_Info :=
         new Sim_Info_Type'(Kind => Kind_Block,
                            Inst_Slot => Invalid_Instance_Slot,
-                           Frame_Scope => Current_Scope,
                            Nbr_Objects => 0,
                            Nbr_Instances => 0);
       Set_Info (Decl, Entity_Info);
@@ -1014,20 +927,15 @@ package body Simul.Annotations is
       -- processes.
       Annotate_Concurrent_Statements_List
         (Entity_Info, Get_Concurrent_Statement_Chain (Decl));
-
-      Current_Scope := (Kind => Scope_Kind_None);
    end Annotate_Entity;
 
    procedure Annotate_Architecture (Decl: Iir_Architecture_Body)
    is
       Entity_Info : constant Sim_Info_Acc := Get_Info (Get_Entity (Decl));
-      Arch_Info: Sim_Info_Acc;
       Saved_Info : constant Sim_Info_Type (Kind_Block) := Entity_Info.all;
+      Arch_Info: Sim_Info_Acc;
    begin
-      pragma Assert (Current_Scope.Kind = Scope_Kind_None);
-      Current_Scope := Entity_Info.Frame_Scope;
-
-      --  No blocks nor instantiation in entities.
+      --  No blocks no instantiation in entities.
       pragma Assert (Entity_Info.Nbr_Instances = 0);
 
       --  Annotate architecture using the entity as the architecture extend
@@ -1040,25 +948,17 @@ package body Simul.Annotations is
       Arch_Info := new Sim_Info_Type'(Entity_Info.all);
       Entity_Info.all := Saved_Info;
       Set_Info (Decl, Arch_Info);
-
-      Current_Scope := (Kind => Scope_Kind_None);
    end Annotate_Architecture;
 
    procedure Annotate_Package
      (Block_Info : Sim_Info_Acc; Decl: Iir_Package_Declaration)
    is
-      Prev_Scope : constant Scope_Type := Current_Scope;
       Package_Info : Sim_Info_Acc;
       Header : Iir;
    begin
-      pragma Assert (Current_Scope.Kind = Scope_Kind_None);
-
-      Increment_Current_Scope;
-
       Block_Info.Nbr_Objects := Block_Info.Nbr_Objects + 1;
       Package_Info := new Sim_Info_Type'
         (Kind => Kind_Package,
-         Frame_Scope => Current_Scope,
          Nbr_Objects => 0,
          Pkg_Slot => Block_Info.Nbr_Objects,
          Pkg_Parent => Block_Info);
@@ -1088,26 +988,17 @@ package body Simul.Annotations is
             Package_Info.Nbr_Objects := Uninst_Info.Nbr_Objects;
          end;
       end if;
-
-      Current_Scope := Prev_Scope;
    end Annotate_Package;
 
    procedure Annotate_Package_Body (Decl: Iir)
    is
-      Package_Info: Sim_Info_Acc;
+      Package_Info : constant Sim_Info_Acc := Get_Info (Get_Package (Decl));
    begin
-      pragma Assert (Current_Scope.Kind = Scope_Kind_None);
-
-      -- Set info field of package body declaration.
-      Package_Info := Get_Info (Get_Package (Decl));
+      --  Set info field of package body declaration.
       Set_Info (Decl, Package_Info);
-
-      Current_Scope := Package_Info.Frame_Scope;
 
       -- declarations
       Annotate_Declaration_List (Package_Info, Get_Declaration_Chain (Decl));
-
-      Current_Scope := (Kind => Scope_Kind_None);
    end Annotate_Package_Body;
 
    procedure Annotate_Component_Configuration
@@ -1146,12 +1037,9 @@ package body Simul.Annotations is
    is
       Config_Info: Sim_Info_Acc;
    begin
-      pragma Assert (Current_Scope.Kind = Scope_Kind_None);
-
       Block_Info.Nbr_Objects := Block_Info.Nbr_Objects + 1;
       Config_Info := new Sim_Info_Type'
         (Kind => Kind_Package,
-         Frame_Scope => Current_Scope,
          Nbr_Objects => 0,
          Pkg_Slot => Block_Info.Nbr_Objects,
          Pkg_Parent => Block_Info);
@@ -1159,8 +1047,6 @@ package body Simul.Annotations is
 
       Annotate_Declaration_List (Config_Info, Get_Declaration_Chain (Decl));
       Annotate_Block_Configuration (Get_Block_Configuration (Decl));
-
-      Current_Scope := (Kind => Scope_Kind_None);
    end Annotate_Configuration_Declaration;
 
    package Info_Node is new Tables
@@ -1202,7 +1088,6 @@ package body Simul.Annotations is
                   pragma Assert (Global_Info = null);
                   Global_Info :=
                     new Sim_Info_Type'(Kind => Kind_Block,
-                                       Frame_Scope => Current_Scope,
                                        Nbr_Objects => 0,
                                        Inst_Slot => Invalid_Instance_Slot,
                                        Nbr_Instances => 0);
@@ -1230,33 +1115,16 @@ package body Simul.Annotations is
       end case;
    end Annotate;
 
-   function Image (Scope : Scope_Type) return String is
-   begin
-      case Scope.Kind is
-         when Scope_Kind_None =>
-            return "none";
-         when Scope_Kind_Component =>
-            return "component";
-         when Scope_Kind_Frame =>
-            return "frame" & Scope_Depth_Type'Image (Scope.Depth);
-         when Scope_Kind_Package =>
-            return "package" & Pkg_Index_Type'Image (Scope.Pkg_Index);
-         when Scope_Kind_Pkg_Inst =>
-            return "pkg inst" & Parameter_Slot_Type'Image (Scope.Pkg_Param);
-      end case;
-   end Image;
-
    -- Disp annotations for an iir node.
-   procedure Disp_Vhdl_Info (Node: Iir) is
+   procedure Disp_Vhdl_Info (Node: Iir)
+   is
       use Ada.Text_IO;
       Info : constant Sim_Info_Acc := Get_Info (Node);
-      Indent : Count;
    begin
       if Info = null then
          return;
       end if;
 
-      Indent := Col;
       case Info.Kind is
          when Kind_Block =>
             Put_Line
@@ -1265,8 +1133,6 @@ package body Simul.Annotations is
          when Kind_Frame
            | Kind_Process
            | Kind_Package =>
-            Put_Line ("-- scope:" & Image (Info.Frame_Scope));
-            Set_Col (Indent);
             Put_Line
               ("-- nbr objects:" & Object_Slot_Type'Image (Info.Nbr_Objects));
 
@@ -1275,8 +1141,7 @@ package body Simul.Annotations is
            | Kind_Quantity
            | Kind_Environment
            | Kind_PSL =>
-            Put_Line ("-- slot:" & Object_Slot_Type'Image (Info.Slot)
-                      & ", scope:" & Image (Info.Obj_Scope.Frame_Scope));
+            Put_Line ("-- slot:" & Object_Slot_Type'Image (Info.Slot));
          when Kind_Scalar_Type
            | Kind_File_Type
            | Kind_Extra =>
@@ -1300,8 +1165,6 @@ package body Simul.Annotations is
            | Kind_Frame
            | Kind_Process
            | Kind_Package =>
-            Put_Line ("scope:" & Image (Info.Frame_Scope));
-            Set_Col (Indent);
             Put_Line ("nbr objects:"
                         & Object_Slot_Type'Image (Info.Nbr_Objects));
             case Info.Kind is
@@ -1318,8 +1181,7 @@ package body Simul.Annotations is
          when Kind_Object | Kind_Signal | Kind_File
            | Kind_Terminal | Kind_Quantity | Kind_Environment
            | Kind_PSL =>
-            Put_Line ("slot:" & Object_Slot_Type'Image (Info.Slot)
-                        & ", scope:" & Image (Info.Obj_Scope.Frame_Scope));
+            Put_Line ("slot:" & Object_Slot_Type'Image (Info.Slot));
          when Kind_Extra =>
             Put_Line ("extra:" & Extra_Slot_Type'Image (Info.Extra_Slot));
          when Kind_Scalar_Type =>

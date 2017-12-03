@@ -215,33 +215,6 @@ package Simul.Environments is
 
    type Pkg_Index_Type is new Natural;
 
-   -- Scope corresponding to an object.
-   type Scope_Kind_Type is
-     (
-      --  For a package, the depth is
-      Scope_Kind_Package,
-      Scope_Kind_Component,
-      Scope_Kind_Frame,
-      Scope_Kind_Pkg_Inst,
-      Scope_Kind_None
-     );
-   type Scope_Depth_Type is range 0 .. 2**15;
-   type Scope_Type (Kind : Scope_Kind_Type := Scope_Kind_None) is record
-      case Kind is
-         when Scope_Kind_Package =>
-            Pkg_Index : Pkg_Index_Type;
-         when Scope_Kind_Component =>
-            null;
-         when Scope_Kind_Frame =>
-            Depth : Scope_Depth_Type;
-         when Scope_Kind_Pkg_Inst =>
-            Pkg_Param : Parameter_Slot_Type;
-            --  Pkg_Parent : Sim_Info_Acc;
-         when Scope_Kind_None =>
-            null;
-      end case;
-   end record;
-
    type Block_Instance_Id is new Natural;
    No_Block_Instance_Id : constant Block_Instance_Id := 0;
 
@@ -277,9 +250,6 @@ package Simul.Environments is
            | Kind_Process
            | Kind_Package
            | Kind_Environment =>
-            --  Scope level for this frame.
-            Frame_Scope : Scope_Type;
-
             --  Number of objects/signals.
             Nbr_Objects : Object_Slot_Type;
 

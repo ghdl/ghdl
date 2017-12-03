@@ -41,7 +41,4 @@ package Simul.Annotations is
    --  Expand the annotation table.  This is automatically done by Annotate,
    --  to be used only by debugger.
    procedure Annotate_Expand_Table;
-
-   --  For debugging.
-   function Image (Scope : Scope_Type) return String;
 end Simul.Annotations;
