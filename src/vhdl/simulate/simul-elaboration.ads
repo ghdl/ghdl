@@ -21,7 +21,6 @@ with Types; use Types;
 with Iirs; use Iirs;
 with Simul.Environments; use Simul.Environments;
 with Grt.Types; use Grt.Types;
-with Simul.Annotations; use Simul.Annotations;
 
 --  This package elaborates design hierarchy.
 

@@ -26,6 +26,7 @@ with Libraries;
 with Name_Table;
 with Simul.File_Operation;
 with Iir_Chains; use Iir_Chains;
+with Simul.Annotations; use Simul.Annotations;
 with Simul.Elaboration.AMS; use Simul.Elaboration.AMS;
 with Areapools; use Areapools;
 with Grt.Errors;
@@ -343,7 +344,7 @@ package body Simul.Elaboration is
       Res := new Block_Instance_Type'
         (Max_Objs => Obj_Info.Nbr_Objects,
          Id => Nbr_Block_Instances,
-         Block_Scope => Obj_Info.Frame_Scope,
+         Block_Scope => Obj_Info,
          Up_Block => Father,
          Label => Stmt,
          Stmt => Obj,
@@ -1144,8 +1145,7 @@ package body Simul.Elaboration is
                   Info : constant Sim_Info_Acc := Get_Info (Actual);
                   Pkg_Block : Block_Instance_Acc;
                begin
-                  Pkg_Block := Get_Instance_By_Scope
-                    (Local_Instance, Info.Frame_Scope);
+                  Pkg_Block := Get_Instance_By_Scope (Local_Instance, Info);
                   Environment_Table.Append (Pkg_Block);
                   Val := Create_Environment_Value (Environment_Table.Last);
                   Target_Instance.Objects (Get_Info (Inter).Env_Slot) :=
@@ -2747,6 +2747,7 @@ package body Simul.Elaboration is
       end if;
 
       Instance := Create_Block_Instance (Parent_Instance, Arch, Stmt);
+      Instance.Block_Scope := Get_Info (Entity);
       Instance.Up_Block := null; -- Packages_Instance;
 
       --  LRM93 §12.1

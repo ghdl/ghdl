@@ -248,6 +248,78 @@ package Simul.Environments is
    type Objects_Array is array (Object_Slot_Type range <>) of
      Iir_Value_Literal_Acc;
 
+   --  For Kind_Extra: a number.  Kind_Extra is not used by annotations, and
+   --  is free for another pass like preelab.
+   type Extra_Slot_Type is new Natural;
+
+   -- The annotation depends on the kind of the node.
+   type Sim_Info_Kind is
+     (Kind_Block, Kind_Process, Kind_Frame,
+      Kind_Scalar_Type, Kind_File_Type,
+      Kind_Object, Kind_Signal,
+      Kind_File,
+      Kind_Terminal, Kind_Quantity,
+      Kind_Environment,
+      Kind_PSL,
+      Kind_Extra);
+
+   type Instance_Slot_Type is new Integer;
+   Invalid_Instance_Slot : constant Instance_Slot_Type := -1;
+
+   type Sim_Info_Type (Kind : Sim_Info_Kind);
+   type Sim_Info_Acc is access all Sim_Info_Type;
+
+   -- Annotation for an iir node in order to be able to simulate it.
+   type Sim_Info_Type (Kind: Sim_Info_Kind) is record
+      case Kind is
+         when Kind_Block
+           | Kind_Frame
+           | Kind_Process
+           | Kind_Environment =>
+            --  Scope level for this frame.
+            Frame_Scope : Scope_Type;
+
+            --  Number of objects/signals.
+            Nbr_Objects : Object_Slot_Type;
+
+            case Kind is
+               when Kind_Block =>
+                  --  Slot number in the parent (for blocks).
+                  Inst_Slot : Instance_Slot_Type;
+
+                  --  Number of children (blocks, generate, instantiation).
+                  Nbr_Instances : Instance_Slot_Type;
+
+               when Kind_Environment =>
+                  Env_Slot : Object_Slot_Type;
+
+               when others =>
+                  null;
+            end case;
+
+         when Kind_Object
+           | Kind_Signal
+           | Kind_File
+           | Kind_Terminal
+           | Kind_Quantity
+           | Kind_PSL =>
+            --  Block in which this object is declared in.
+            Obj_Scope : Sim_Info_Acc;
+
+            --  Variable index in the block.
+            Slot: Object_Slot_Type;
+
+         when Kind_Scalar_Type =>
+            Scalar_Mode : Iir_Value_Kind;
+
+         when Kind_File_Type =>
+            File_Signature : String_Acc;
+
+         when Kind_Extra =>
+            Extra_Slot : Extra_Slot_Type;
+      end case;
+   end record;
+
    type Block_Instance_Type (Max_Objs : Object_Slot_Type) is record
       --  Flag for wait statement: true if not yet executed.
       In_Wait_Flag : Boolean;
@@ -257,7 +329,7 @@ package Simul.Environments is
 
       -- Useful informations for a dynamic block (ie, a frame).
       -- The scope level and an access to the block of upper scope level.
-      Block_Scope : Scope_Type;
+      Block_Scope : Sim_Info_Acc;
       Up_Block : Block_Instance_Acc;
 
       --  Block, architecture, package, process, component instantiation for

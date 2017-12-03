@@ -313,7 +313,7 @@ package body Simul.Debugger is
    --  Used to debug.
    procedure Disp_Block_Instance (Instance: Block_Instance_Acc) is
    begin
-      Put_Line ("scope:" & Image (Instance.Block_Scope));
+      Put_Line ("scope:" & Image (Instance.Block_Scope.Frame_Scope));
       Put_Line ("Objects:");
       for I in Instance.Objects'Range loop
          Put (Object_Slot_Type'Image (I) & ": ");

@@ -102,7 +102,7 @@ package Simul.Execution is
       Default_Severity : Natural);
 
    function Execute_Resolution_Function
-     (Block: Block_Instance_Acc; Imp : Iir; Arr : Iir_Value_Literal_Acc)
+     (Block: Block_Instance_Acc; Imp :  Iir; Arr : Iir_Value_Literal_Acc)
       return Iir_Value_Literal_Acc;
 
    function Execute_Assoc_Conversion
@@ -126,7 +126,7 @@ package Simul.Execution is
                               return Iir_Value_Literal_Acc;
 
    function Get_Instance_By_Scope
-     (Instance: Block_Instance_Acc; Scope: Scope_Type)
+     (Instance: Block_Instance_Acc; Scope: Sim_Info_Acc)
      return Block_Instance_Acc;
 
    function Get_Instance_For_Slot (Instance: Block_Instance_Acc; Decl: Iir)

@@ -21,6 +21,7 @@ with Ada.Text_IO;
 with Std_Package;
 with Errorout; use Errorout;
 with Iirs_Utils; use Iirs_Utils;
+with Types; use Types;
 
 package body Simul.Annotations is
    --  Current scope.  Used when an object is created to indicate which scope
@@ -74,29 +75,29 @@ package body Simul.Annotations is
       case Obj_Kind is
          when Kind_Object =>
             Info := new Sim_Info_Type'(Kind => Kind_Object,
-                                       Obj_Scope => Current_Scope,
+                                       Obj_Scope => Block_Info,
                                        Slot => Block_Info.Nbr_Objects);
          when Kind_File =>
             Info := new Sim_Info_Type'(Kind => Kind_File,
-                                       Obj_Scope => Current_Scope,
+                                       Obj_Scope => Block_Info,
                                        Slot => Block_Info.Nbr_Objects);
          when Kind_Signal =>
             Info := new Sim_Info_Type'(Kind => Kind_Signal,
-                                       Obj_Scope => Current_Scope,
+                                       Obj_Scope => Block_Info,
                                        Slot => Block_Info.Nbr_Objects);
             --  Reserve one more slot for value.
             Block_Info.Nbr_Objects := Block_Info.Nbr_Objects + 1;
          when Kind_Terminal =>
             Info := new Sim_Info_Type'(Kind => Kind_Terminal,
-                                       Obj_Scope => Current_Scope,
+                                       Obj_Scope => Block_Info,
                                        Slot => Block_Info.Nbr_Objects);
          when Kind_Quantity =>
             Info := new Sim_Info_Type'(Kind => Kind_Quantity,
-                                       Obj_Scope => Current_Scope,
+                                       Obj_Scope => Block_Info,
                                        Slot => Block_Info.Nbr_Objects);
          when Kind_PSL =>
             Info := new Sim_Info_Type'(Kind => Kind_PSL,
-                                       Obj_Scope => Current_Scope,
+                                       Obj_Scope => Block_Info,
                                        Slot => Block_Info.Nbr_Objects);
          when Kind_Environment =>
             Info := new Sim_Info_Type'(Kind => Kind_Environment,
@@ -1020,6 +1021,7 @@ package body Simul.Annotations is
    is
       Entity_Info : constant Sim_Info_Acc := Get_Info (Get_Entity (Decl));
       Arch_Info: Sim_Info_Acc;
+      Saved_Info : constant Sim_Info_Type (Kind_Block) := Entity_Info.all;
    begin
       pragma Assert (Current_Scope.Kind = Scope_Kind_None);
       Current_Scope := Entity_Info.Frame_Scope;
@@ -1027,22 +1029,16 @@ package body Simul.Annotations is
       --  No blocks nor instantiation in entities.
       pragma Assert (Entity_Info.Nbr_Instances = 0);
 
-      Arch_Info := new Sim_Info_Type'
-        (Kind => Kind_Block,
-         Inst_Slot => 0, --  Slot for a component
-         Frame_Scope => Current_Scope,
-         Nbr_Objects => Entity_Info.Nbr_Objects,
-         Nbr_Instances => Entity_Info.Nbr_Instances); --  Should be 0.
-      Set_Info (Decl, Arch_Info);
+      --  Annotate architecture using the entity as the architecture extend
+      --  the scope of the entity, and the entity is the reference.
 
-      --  FIXME: annotate the default configuration for the arch ?
-
-      -- declarations
-      Annotate_Declaration_List (Arch_Info, Get_Declaration_Chain (Decl));
-
-      -- processes.
+      Annotate_Declaration_List (Entity_Info, Get_Declaration_Chain (Decl));
       Annotate_Concurrent_Statements_List
-        (Arch_Info, Get_Concurrent_Statement_Chain (Decl));
+        (Entity_Info, Get_Concurrent_Statement_Chain (Decl));
+
+      Arch_Info := new Sim_Info_Type'(Entity_Info.all);
+      Entity_Info.all := Saved_Info;
+      Set_Info (Decl, Arch_Info);
 
       Current_Scope := (Kind => Scope_Kind_None);
    end Annotate_Architecture;
@@ -1275,7 +1271,7 @@ package body Simul.Annotations is
            | Kind_Environment
            | Kind_PSL =>
             Put_Line ("-- slot:" & Object_Slot_Type'Image (Info.Slot)
-                      & ", scope:" & Image (Info.Obj_Scope));
+                      & ", scope:" & Image (Info.Obj_Scope.Frame_Scope));
          when Kind_Scalar_Type
            | Kind_File_Type
            | Kind_Extra =>
@@ -1310,7 +1306,7 @@ package body Simul.Annotations is
            | Kind_Terminal | Kind_Quantity | Kind_Environment
            | Kind_PSL =>
             Put_Line ("slot:" & Object_Slot_Type'Image (Info.Slot)
-                        & ", scope:" & Image (Info.Obj_Scope));
+                        & ", scope:" & Image (Info.Obj_Scope.Frame_Scope));
          when Kind_Extra =>
             Put_Line ("extra:" & Extra_Slot_Type'Image (Info.Extra_Slot));
          when Kind_Scalar_Type =>

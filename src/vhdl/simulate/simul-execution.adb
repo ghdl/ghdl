@@ -65,10 +65,10 @@ package body Simul.Execution is
                                        Stmt: Iir);
 
    function Get_Instance_By_Scope
-     (Instance: Block_Instance_Acc; Scope: Scope_Type)
+     (Instance: Block_Instance_Acc; Scope: Sim_Info_Acc)
      return Block_Instance_Acc is
    begin
-      case Scope.Kind is
+      case Scope.Frame_Scope.Kind is
          when Scope_Kind_Frame =>
             declare
                Current : Block_Instance_Acc;
@@ -82,8 +82,9 @@ package body Simul.Execution is
                   Last := Current;
                   Current := Current.Up_Block;
                end loop;
-               if Scope.Depth = 0
-                 and then Last.Block_Scope.Kind = Scope_Kind_Package
+               if Scope.Frame_Scope.Depth = 0
+                 and then (Last.Block_Scope.Frame_Scope.Kind
+                             = Scope_Kind_Package)
                then
                   --  For instantiated packages.
                   return Last;
@@ -92,7 +93,7 @@ package body Simul.Execution is
             end;
          when Scope_Kind_Package =>
             --  Global scope (packages)
-            return Package_Instances (Scope.Pkg_Index);
+            return Package_Instances (Scope.Frame_Scope.Pkg_Index);
          when Scope_Kind_Component =>
             pragma Assert (Current_Component /= null);
             return Current_Component;
@@ -108,6 +109,16 @@ package body Simul.Execution is
    begin
       return Get_Instance_By_Scope (Instance, Get_Info (Decl).Obj_Scope);
    end Get_Instance_For_Slot;
+
+   function Get_Info_For_Scope (Scope : Iir) return Sim_Info_Acc is
+   begin
+      --  The info for an architecture is in fact the entity.
+      if Get_Kind (Scope) = Iir_Kind_Architecture_Body then
+         return Get_Info (Get_Entity (Scope));
+      else
+         return Get_Info (Scope);
+      end if;
+   end Get_Info_For_Scope;
 
    procedure Create_Right_Bound_From_Length
      (Bounds : Iir_Value_Literal_Acc; Len : Iir_Index32)
@@ -339,7 +350,7 @@ package body Simul.Execution is
       end if;
 
       Instance := Get_Instance_By_Scope
-        (Block, Get_Info (Name.Path_Instance).Frame_Scope);
+        (Block, Get_Info_For_Scope (Name.Path_Instance));
 
       loop
          case Get_Kind (Instance.Label) is
@@ -3247,6 +3258,7 @@ package body Simul.Execution is
                                        return Block_Instance_Acc
    is
       Func_Info : constant Sim_Info_Acc := Get_Info (Imp);
+      Parent : constant Iir := Get_Parent (Imp);
 
       subtype Block_Type is Block_Instance_Type (Func_Info.Nbr_Objects);
       function To_Block_Instance_Acc is new
@@ -3268,8 +3280,8 @@ package body Simul.Execution is
          Up_Block := Prot_Obj;
          Label := Imp;
       else
-         Up_Info := Get_Info (Get_Parent (Imp));
-         Up_Block := Get_Instance_By_Scope (Instance, Up_Info.Frame_Scope);
+         Up_Info := Get_Info_For_Scope (Parent);
+         Up_Block := Get_Instance_By_Scope (Instance, Up_Info);
 
          Origin := Sem_Inst.Get_Origin (Imp);
          if Origin /= Null_Iir then
@@ -3295,7 +3307,7 @@ package body Simul.Execution is
            (Instance_Pool,
             Block_Instance_Type'(Max_Objs => Func_Info.Nbr_Objects,
                                  Id => No_Block_Instance_Id,
-                                 Block_Scope => Get_Info (Label).Frame_Scope,
+                                 Block_Scope => Get_Info (Label),
                                  Up_Block => Up_Block,
                                  Label => Label,
                                  Stmt => Null_Iir,
