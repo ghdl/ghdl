@@ -373,7 +373,8 @@ package body Simul.Elaboration is
       return Res;
    end Create_Block_Instance;
 
-   procedure Elaborate_Package (Block : Block_Instance_Acc; Decl : Iir)
+   procedure Elaborate_Package_Declaration
+     (Block : Block_Instance_Acc; Decl : Iir)
    is
       Package_Info : constant Sim_Info_Acc := Get_Info (Decl);
       Instance : Block_Instance_Acc;
@@ -410,7 +411,7 @@ package body Simul.Elaboration is
               (Instance, Get_Declaration_Chain (Get_Package_Body (Uninst)));
          end;
       end if;
-   end Elaborate_Package;
+   end Elaborate_Package_Declaration;
 
    procedure Elaborate_Package_Body (Block : Block_Instance_Acc; Decl: Iir)
    is
@@ -511,7 +512,8 @@ package body Simul.Elaboration is
                      Elaborate_Dependence (Design);
 
                      --  Then the declaration.
-                     Elaborate_Package (Global_Instances, Library_Unit);
+                     Elaborate_Package_Declaration
+                       (Global_Instances, Library_Unit);
 
                      --  And then the body (if any).
                      if Body_Design = Null_Iir then
@@ -540,7 +542,8 @@ package body Simul.Elaboration is
                      Elaborate_Dependence (Design);
 
                      --  Then the declaration.
-                     Elaborate_Package (Global_Instances, Library_Unit);
+                     Elaborate_Package_Declaration
+                       (Global_Instances, Library_Unit);
                   end if;
                end;
             when Iir_Kind_Entity_Declaration
@@ -2619,6 +2622,11 @@ package body Simul.Elaboration is
             null;
          when Iir_Kind_Protected_Type_Body =>
             null;
+
+         when Iir_Kind_Package_Declaration =>
+            Elaborate_Package_Declaration (Instance, Decl);
+         when Iir_Kind_Package_Body =>
+            Elaborate_Package_Body (Instance, Decl);
 
          when Iir_Kind_Nature_Declaration =>
             Elaborate_Nature_Definition (Instance, Get_Nature (Decl));

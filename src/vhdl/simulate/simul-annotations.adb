@@ -531,9 +531,65 @@ package body Simul.Annotations is
       Annotate_Interface_List (Info, Get_Port_Chain (Comp), True);
    end Annotate_Component_Declaration;
 
+   procedure Annotate_Package_Declaration
+     (Block_Info : Sim_Info_Acc; Decl: Iir_Package_Declaration)
+   is
+      Package_Info : Sim_Info_Acc;
+      Header : Iir;
+   begin
+      Block_Info.Nbr_Objects := Block_Info.Nbr_Objects + 1;
+      Package_Info := new Sim_Info_Type'
+        (Kind => Kind_Package,
+         Nbr_Objects => 0,
+         Pkg_Slot => Block_Info.Nbr_Objects,
+         Pkg_Parent => Block_Info);
+
+      Set_Info (Decl, Package_Info);
+
+      if Get_Kind (Decl) = Iir_Kind_Package_Instantiation_Declaration then
+         Annotate_Interface_List
+           (Package_Info, Get_Generic_Chain (Decl), True);
+      else
+         Header := Get_Package_Header (Decl);
+         if Header /= Null_Iir then
+            Annotate_Interface_List
+              (Package_Info, Get_Generic_Chain (Header), True);
+         end if;
+      end if;
+      -- declarations
+      Annotate_Declaration_List (Package_Info, Get_Declaration_Chain (Decl));
+
+      if Get_Kind (Decl) = Iir_Kind_Package_Instantiation_Declaration then
+         declare
+            Uninst : constant Iir := Get_Uninstantiated_Package_Decl (Decl);
+            Uninst_Info : constant Sim_Info_Acc := Get_Info (Uninst);
+         begin
+            --  There is not corresponding body for an instantiation, so
+            --  also add objects for the shared body.
+            Package_Info.Nbr_Objects := Uninst_Info.Nbr_Objects;
+         end;
+      end if;
+   end Annotate_Package_Declaration;
+
+   procedure Annotate_Package_Body (Decl: Iir)
+   is
+      Package_Info : constant Sim_Info_Acc := Get_Info (Get_Package (Decl));
+   begin
+      --  Set info field of package body declaration.
+      Set_Info (Decl, Package_Info);
+
+      -- declarations
+      Annotate_Declaration_List (Package_Info, Get_Declaration_Chain (Decl));
+   end Annotate_Package_Body;
+
    procedure Annotate_Declaration (Block_Info: Sim_Info_Acc; Decl: Iir) is
    begin
       case Get_Kind (Decl) is
+         when Iir_Kind_Package_Declaration =>
+            Annotate_Package_Declaration (Block_Info, Decl);
+         when Iir_Kind_Package_Body =>
+            Annotate_Package_Body (Decl);
+
          when Iir_Kind_Signal_Attribute_Declaration =>
             declare
                Attr : Iir;
@@ -950,57 +1006,6 @@ package body Simul.Annotations is
       Set_Info (Decl, Arch_Info);
    end Annotate_Architecture;
 
-   procedure Annotate_Package
-     (Block_Info : Sim_Info_Acc; Decl: Iir_Package_Declaration)
-   is
-      Package_Info : Sim_Info_Acc;
-      Header : Iir;
-   begin
-      Block_Info.Nbr_Objects := Block_Info.Nbr_Objects + 1;
-      Package_Info := new Sim_Info_Type'
-        (Kind => Kind_Package,
-         Nbr_Objects => 0,
-         Pkg_Slot => Block_Info.Nbr_Objects,
-         Pkg_Parent => Block_Info);
-
-      Set_Info (Decl, Package_Info);
-
-      if Get_Kind (Decl) = Iir_Kind_Package_Instantiation_Declaration then
-         Annotate_Interface_List
-           (Package_Info, Get_Generic_Chain (Decl), True);
-      else
-         Header := Get_Package_Header (Decl);
-         if Header /= Null_Iir then
-            Annotate_Interface_List
-              (Package_Info, Get_Generic_Chain (Header), True);
-         end if;
-      end if;
-      -- declarations
-      Annotate_Declaration_List (Package_Info, Get_Declaration_Chain (Decl));
-
-      if Get_Kind (Decl) = Iir_Kind_Package_Instantiation_Declaration then
-         declare
-            Uninst : constant Iir := Get_Uninstantiated_Package_Decl (Decl);
-            Uninst_Info : constant Sim_Info_Acc := Get_Info (Uninst);
-         begin
-            --  There is not corresponding body for an instantiation, so
-            --  also add objects for the shared body.
-            Package_Info.Nbr_Objects := Uninst_Info.Nbr_Objects;
-         end;
-      end if;
-   end Annotate_Package;
-
-   procedure Annotate_Package_Body (Decl: Iir)
-   is
-      Package_Info : constant Sim_Info_Acc := Get_Info (Get_Package (Decl));
-   begin
-      --  Set info field of package body declaration.
-      Set_Info (Decl, Package_Info);
-
-      -- declarations
-      Annotate_Declaration_List (Package_Info, Get_Declaration_Chain (Decl));
-   end Annotate_Package_Body;
-
    procedure Annotate_Component_Configuration
      (Conf : Iir_Component_Configuration)
    is
@@ -1091,7 +1096,7 @@ package body Simul.Annotations is
                                        Nbr_Objects => 0,
                                        Inst_Slot => Invalid_Instance_Slot,
                                        Nbr_Instances => 0);
-                  Annotate_Package (Global_Info, El);
+                  Annotate_Package_Declaration (Global_Info, El);
                   --  These types are not in std.standard!
                   Annotate_Type_Definition
                     (Get_Info (El), Convertible_Integer_Type_Definition);
@@ -1099,7 +1104,7 @@ package body Simul.Annotations is
                     (Get_Info (El), Convertible_Real_Type_Definition);
                else
                   pragma Assert (Global_Info /= null);
-                  Annotate_Package (Global_Info, El);
+                  Annotate_Package_Declaration (Global_Info, El);
                end if;
             end;
          when Iir_Kind_Package_Body =>
@@ -1107,7 +1112,7 @@ package body Simul.Annotations is
          when Iir_Kind_Configuration_Declaration =>
             Annotate_Configuration_Declaration (Global_Info, El);
          when Iir_Kind_Package_Instantiation_Declaration =>
-            Annotate_Package (Global_Info, El);
+            Annotate_Package_Declaration (Global_Info, El);
          when Iir_Kind_Context_Declaration =>
             null;
          when others =>
