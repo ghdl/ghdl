@@ -1662,6 +1662,15 @@ package body Simul.Elaboration is
       end if;
    end Elaborate_Component_Instantiation;
 
+   procedure Elaborate_Generate_Statement_Body
+     (Instance : Block_Instance_Acc; Bod : Iir)is
+   begin
+      Elaborate_Declarative_Part
+        (Instance, Get_Declaration_Chain (Bod));
+      Elaborate_Statement_Part
+        (Instance, Get_Concurrent_Statement_Chain (Bod));
+   end Elaborate_Generate_Statement_Body;
+
    --  LRM93 12.4.2 Generate Statements
    procedure Elaborate_If_Generate_Statement
      (Instance : Block_Instance_Acc; Generate : Iir_Generate_Statement)
@@ -1695,10 +1704,7 @@ package body Simul.Elaboration is
             --      statement.
             Bod := Get_Generate_Statement_Body (Clause);
             Ninstance := Create_Block_Instance (Instance, Bod, Bod);
-            Elaborate_Declarative_Part
-              (Ninstance, Get_Declaration_Chain (Bod));
-            Elaborate_Statement_Part
-              (Ninstance, Get_Concurrent_Statement_Chain (Bod));
+            Elaborate_Generate_Statement_Body (Ninstance, Bod);
 
             exit;
          end if;
@@ -1747,16 +1753,40 @@ package body Simul.Elaboration is
          --  Store index.
          Store (Sub_Instance.Objects (Get_Info (Iter).Slot), Index);
 
-         Elaborate_Declarative_Part
-           (Sub_Instance, Get_Declaration_Chain (Bod));
-         Elaborate_Statement_Part
-           (Sub_Instance, Get_Concurrent_Statement_Chain (Bod));
+         Elaborate_Generate_Statement_Body (Sub_Instance, Bod);
 
          exit when Is_Equal (Index, Bound.Right);
          Update_Loop_Index (Index, Bound);
       end loop;
       --  FIXME: destroy index ?
    end Elaborate_For_Generate_Statement;
+
+   procedure Elaborate_Case_Generate_Statement
+     (Instance : Block_Instance_Acc; Stmt : Iir)
+   is
+      Lit : Iir_Value_Literal_Acc;
+      Assoc : Iir;
+      Bod : Iir;
+      Ninstance : Block_Instance_Acc;
+   begin
+      Lit := Execute_Expression (Instance, Get_Expression (Stmt));
+      Assoc := Get_Case_Statement_Alternative_Chain (Stmt);
+
+      while Assoc /= Null_Iir loop
+         if not Get_Same_Alternative_Flag (Assoc) then
+            Bod := Get_Associated_Block (Assoc);
+         end if;
+
+         if Is_In_Choice (Instance, Assoc, Lit) then
+            Ninstance := Create_Block_Instance (Instance, Bod, Bod);
+            Elaborate_Generate_Statement_Body (Ninstance, Bod);
+            return;
+         end if;
+
+         Assoc := Get_Chain (Assoc);
+      end loop;
+      raise Internal_Error;
+   end Elaborate_Case_Generate_Statement;
 
    procedure Elaborate_Process_Statement
      (Instance : Block_Instance_Acc; Stmt : Iir)
@@ -1810,6 +1840,9 @@ package body Simul.Elaboration is
 
             when Iir_Kind_For_Generate_Statement =>
                Elaborate_For_Generate_Statement (Instance, Stmt);
+
+            when Iir_Kind_Case_Generate_Statement =>
+               Elaborate_Case_Generate_Statement (Instance, Stmt);
 
             when Iir_Kind_Simple_Simultaneous_Statement =>
                Add_Characteristic_Expression
@@ -2269,7 +2302,8 @@ package body Simul.Elaboration is
                            Apply_Block_Configuration_To_Iterative_Generate
                              (Stmt, Sub_Conf (I), Sub_Inst);
                         when Iir_Kind_If_Generate_Statement
-                          | Iir_Kind_If_Generate_Else_Clause =>
+                          | Iir_Kind_If_Generate_Else_Clause
+                          | Iir_Kind_Case_Generate_Statement =>
                            Elaborate_Block_Configuration
                              (Sub_Conf (I), Sub_Inst);
                         when others =>

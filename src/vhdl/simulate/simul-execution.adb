@@ -4200,11 +4200,10 @@ package body Simul.Execution is
       Release (Marker, Expr_Pool);
    end Execute_Failed_Assertion;
 
-   function Is_In_Choice
-     (Instance: Block_Instance_Acc;
-      Choice: Iir;
-      Expr: Iir_Value_Literal_Acc)
-      return Boolean
+   function Is_In_Choice (Instance : Block_Instance_Acc;
+                          Choice : Iir;
+                          Expr : Iir_Value_Literal_Acc)
+                         return Boolean
    is
       Res : Boolean;
    begin

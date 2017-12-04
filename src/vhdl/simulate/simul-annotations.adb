@@ -885,6 +885,19 @@ package body Simul.Annotations is
          Get_Parameter_Specification (Stmt));
    end Annotate_For_Generate_Statement;
 
+   procedure Annotate_Case_Generate_Statement
+     (Block_Info : Sim_Info_Acc; Stmt : Iir)
+   is
+      Assoc : Iir;
+   begin
+      Assoc := Get_Case_Statement_Alternative_Chain (Stmt);
+      while Assoc /= Null_Iir loop
+         Annotate_Generate_Statement_Body
+           (Block_Info, Get_Associated_Block (Assoc), Null_Iir);
+         Assoc := Get_Chain (Assoc);
+      end loop;
+   end Annotate_Case_Generate_Statement;
+
    procedure Annotate_Component_Instantiation_Statement
      (Block_Info : Sim_Info_Acc; Stmt : Iir)
    is
@@ -936,6 +949,8 @@ package body Simul.Annotations is
                Annotate_If_Generate_Statement (Block_Info, El);
             when Iir_Kind_For_Generate_Statement =>
                Annotate_For_Generate_Statement (Block_Info, El);
+            when Iir_Kind_Case_Generate_Statement =>
+               Annotate_Case_Generate_Statement (Block_Info, El);
 
             when Iir_Kind_Psl_Default_Clock
               | Iir_Kind_Psl_Declaration =>

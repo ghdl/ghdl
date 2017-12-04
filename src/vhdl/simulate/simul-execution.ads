@@ -125,6 +125,12 @@ package Simul.Execution is
    function Execute_Low_Limit (Bounds : Iir_Value_Literal_Acc)
                               return Iir_Value_Literal_Acc;
 
+   --  Return True iff EXPR is covered by CHOICE.
+   function Is_In_Choice (Instance : Block_Instance_Acc;
+                          Choice : Iir;
+                          Expr : Iir_Value_Literal_Acc)
+                         return Boolean;
+
    function Get_Instance_By_Scope
      (Instance: Block_Instance_Acc; Scope: Sim_Info_Acc)
      return Block_Instance_Acc;
