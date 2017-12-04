@@ -94,8 +94,12 @@ package body Simul.Execution is
                raise Internal_Error;
             end;
          when Kind_Package =>
-            pragma Assert (Scope.Pkg_Parent = Global_Info);
-            return Global_Instances.Objects (Scope.Pkg_Slot).Instance;
+            declare
+               Parent : Block_Instance_Acc;
+            begin
+               Parent := Get_Instance_By_Scope (Instance, Scope.Pkg_Parent);
+               return Parent.Objects (Scope.Pkg_Slot).Instance;
+            end;
          when others =>
             raise Internal_Error;
       end case;

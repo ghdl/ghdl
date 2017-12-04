@@ -2749,7 +2749,7 @@ package body Simul.Elaboration is
 
       Instance := Create_Block_Instance (Parent_Instance, Arch, Stmt);
       Instance.Block_Scope := Get_Info (Entity);
-      Instance.Up_Block := null; -- Packages_Instance;
+      Instance.Up_Block := Global_Instances;
 
       --  LRM93 §12.1
       --  Elaboration of a block statement involves first elaborating each not
