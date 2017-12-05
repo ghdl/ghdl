@@ -4520,6 +4520,7 @@ package body Simul.Execution is
    is
       Instance : constant Block_Instance_Acc := Proc.Instance;
       Stmt : constant Iir := Instance.Stmt;
+      Expr : constant Iir := Get_Expression (Stmt);
       Value: Iir_Value_Literal_Acc;
       Assoc: Iir;
       Stmt_Chain : Iir;
@@ -4527,8 +4528,23 @@ package body Simul.Execution is
    begin
       Mark (Marker, Expr_Pool);
 
-      Value := Execute_Expression (Instance, Get_Expression (Stmt));
+      Value := Execute_Expression (Instance, Expr);
       Assoc := Get_Case_Statement_Alternative_Chain (Stmt);
+      if Get_Type_Staticness (Get_Type (Expr)) /= Locally
+        and then Get_Kind (Assoc) = Iir_Kind_Choice_By_Expression
+      then
+         declare
+            Choice_Type : constant Iir :=
+              Get_Type (Get_Choice_Expression (Assoc));
+            Choice_Len : Iir_Int64;
+         begin
+            Choice_Len := Evaluation.Eval_Discrete_Type_Length
+              (Get_String_Type_Bound_Type (Choice_Type));
+            if Choice_Len /= Iir_Int64 (Value.Bounds.D (1).Length) then
+               Error_Msg_Constraint (Expr);
+            end if;
+         end;
+      end if;
 
       while Assoc /= Null_Iir loop
          if not Get_Same_Alternative_Flag (Assoc) then
