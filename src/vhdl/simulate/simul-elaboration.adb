@@ -404,15 +404,21 @@ package body Simul.Elaboration is
 
       if Get_Kind (Decl) = Iir_Kind_Package_Instantiation_Declaration then
          --  Elaborate the body now.
-         declare
-            Uninst : constant Iir := Get_Uninstantiated_Package_Decl (Decl);
-            Uninst_Info : constant Sim_Info_Acc := Get_Info (Uninst);
-            Bod : constant Iir := Get_Package_Body (Uninst);
-         begin
-            Instance.Uninst_Scope := Uninst_Info;
+         if Get_Package_Body (Decl) /= Null_Iir then
+            --  Macro-expanded.
             Elaborate_Declarative_Part
-              (Instance, Get_Declaration_Chain (Bod));
-         end;
+              (Instance, Get_Declaration_Chain (Get_Package_Body (Decl)));
+         else
+            --  Shared body.
+            declare
+               Uninst : constant Iir := Get_Uninstantiated_Package_Decl (Decl);
+               Bod : constant Iir := Get_Package_Body (Uninst);
+            begin
+               Instance.Uninst_Scope := Get_Info (Uninst);
+               Elaborate_Declarative_Part
+                 (Instance, Get_Declaration_Chain (Bod));
+            end;
+         end if;
       end if;
    end Elaborate_Package_Declaration;
 
@@ -1060,6 +1066,9 @@ package body Simul.Elaboration is
                --  to determine the value of the constant.
             when Iir_Kind_Interface_Package_Declaration =>
                Create_Object (Instance, Get_Info (Decl).Pkg_Slot);
+            when Iir_Kinds_Interface_Subprogram_Declaration =>
+               --  Macro-expanded.
+               null;
             when others =>
                Error_Kind ("elaborate_generic_clause", Decl);
          end case;
@@ -1157,6 +1166,8 @@ package body Simul.Elaboration is
                     Create_Instance_Value (Pkg_Block);
                end;
 
+               goto Continue;
+            when Iir_Kind_Association_Element_Subprogram =>
                goto Continue;
             when others =>
                Error_Kind ("elaborate_generic_map_aspect", Assoc);

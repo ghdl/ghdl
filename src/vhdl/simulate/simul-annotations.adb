@@ -415,7 +415,7 @@ package body Simul.Annotations is
               | Iir_Kind_Interface_File_Declaration =>
                Annotate_Anonymous_Type_Definition (Block_Info, Get_Type (El));
             when others =>
-               Error_Kind ("annotate_interface_list", El);
+               Error_Kind ("annotate_interface_list_subtype", El);
          end case;
          El := Get_Chain (El);
       end loop;
@@ -460,6 +460,9 @@ package body Simul.Annotations is
                Create_Object_Info (Block_Info, Decl);
             when Iir_Kind_Interface_Package_Declaration =>
                Annotate_Interface_Package_Declaration (Block_Info, Decl);
+            when Iir_Kinds_Interface_Subprogram_Declaration =>
+               --  Macro-expanded
+               null;
             when others =>
                Error_Kind ("annotate_interface_list", Decl);
          end case;

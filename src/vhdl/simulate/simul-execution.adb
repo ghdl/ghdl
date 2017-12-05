@@ -3301,8 +3301,9 @@ package body Simul.Execution is
          Up_Info := Get_Info_For_Scope (Parent);
          Up_Block := Get_Instance_By_Scope (Instance, Up_Info);
 
-         Origin := Sem_Inst.Get_Origin (Imp);
-         if Origin /= Null_Iir then
+         if Up_Block.Uninst_Scope /= null then
+            Origin := Sem_Inst.Get_Origin (Imp);
+            pragma Assert (Origin /= Null_Iir);
             --  Call to a subprogram of an instantiated package.
             --  For a generic package, only the spec is instantiated, the body
             --  is shared by all the instances.
