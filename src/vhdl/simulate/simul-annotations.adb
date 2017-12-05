@@ -906,8 +906,10 @@ package body Simul.Annotations is
    begin
       Assoc := Get_Case_Statement_Alternative_Chain (Stmt);
       while Assoc /= Null_Iir loop
-         Annotate_Generate_Statement_Body
-           (Block_Info, Get_Associated_Block (Assoc), Null_Iir);
+         if not Get_Same_Alternative_Flag (Assoc) then
+            Annotate_Generate_Statement_Body
+              (Block_Info, Get_Associated_Block (Assoc), Null_Iir);
+         end if;
          Assoc := Get_Chain (Assoc);
       end loop;
    end Annotate_Case_Generate_Statement;
