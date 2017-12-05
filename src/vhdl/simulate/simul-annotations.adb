@@ -80,10 +80,6 @@ package body Simul.Annotations is
             Info := new Sim_Info_Type'(Kind => Kind_PSL,
                                        Obj_Scope => Block_Info,
                                        Slot => Block_Info.Nbr_Objects);
-         when Kind_Environment =>
-            Info := new Sim_Info_Type'(Kind => Kind_Environment,
-                                       Env_Slot => Block_Info.Nbr_Objects,
-                                       Nbr_Objects => 0);
          when Kind_Block
            | Kind_Process
            | Kind_Frame
@@ -430,8 +426,13 @@ package body Simul.Annotations is
    is
       Package_Info : Sim_Info_Acc;
    begin
-      Create_Object_Info (Block_Info, Inter, Kind_Environment);
-      Package_Info := Get_Info (Inter);
+      Block_Info.Nbr_Objects := Block_Info.Nbr_Objects + 1;
+      Package_Info := new Sim_Info_Type'
+        (Kind => Kind_Package,
+         Nbr_Objects => 0,
+         Pkg_Slot => Block_Info.Nbr_Objects,
+         Pkg_Parent => Block_Info);
+      Set_Info (Inter, Package_Info);
 
       Annotate_Interface_List
         (Package_Info, Get_Generic_Chain (Inter), True);
@@ -1166,7 +1167,6 @@ package body Simul.Annotations is
          when Kind_Object | Kind_Signal | Kind_File
            | Kind_Terminal
            | Kind_Quantity
-           | Kind_Environment
            | Kind_PSL =>
             Put_Line ("-- slot:" & Object_Slot_Type'Image (Info.Slot));
          when Kind_Scalar_Type
@@ -1206,7 +1206,7 @@ package body Simul.Annotations is
                   null;
             end case;
          when Kind_Object | Kind_Signal | Kind_File
-           | Kind_Terminal | Kind_Quantity | Kind_Environment
+           | Kind_Terminal | Kind_Quantity
            | Kind_PSL =>
             Put_Line ("slot:" & Object_Slot_Type'Image (Info.Slot));
          when Kind_Extra =>

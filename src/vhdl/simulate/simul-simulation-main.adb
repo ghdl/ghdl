@@ -570,8 +570,7 @@ package body Simul.Simulation.Main is
            | Iir_Value_Terminal
            | Iir_Value_Quantity
            | Iir_Value_File
-           | Iir_Value_Instance
-           | Iir_Value_Environment =>
+           | Iir_Value_Instance =>
             raise Internal_Error;
       end case;
    end Create_Shadow_Signal;
@@ -1041,8 +1040,7 @@ package body Simul.Simulation.Main is
               | Iir_Value_Protected
               | Iir_Value_Quantity
               | Iir_Value_Terminal
-              | Iir_Value_Instance
-              | Iir_Value_Environment =>
+              | Iir_Value_Instance =>
                raise Internal_Error;
          end case;
       end Create_Signal;

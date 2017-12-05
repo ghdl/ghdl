@@ -386,8 +386,7 @@ package body Simul.Debugger is
            | Iir_Value_Protected
            | Iir_Value_Quantity
            | Iir_Value_Terminal
-           | Iir_Value_Instance
-           | Iir_Value_Environment =>
+           | Iir_Value_Instance =>
             raise Internal_Error;
       end case;
    end Disp_Signal;

@@ -87,8 +87,7 @@ package body Simul.Environments is
            | Iir_Value_Protected
            | Iir_Value_Quantity
            | Iir_Value_Terminal
-           | Iir_Value_Instance
-           | Iir_Value_Environment =>
+           | Iir_Value_Instance =>
             raise Internal_Error;
       end case;
    end Is_Equal;
@@ -195,8 +194,7 @@ package body Simul.Environments is
            | Iir_Value_Protected
            | Iir_Value_Quantity
            | Iir_Value_Terminal
-           | Iir_Value_Instance
-           | Iir_Value_Environment =>
+           | Iir_Value_Instance =>
             raise Internal_Error;
       end case;
    end Compare_Value;
@@ -239,8 +237,7 @@ package body Simul.Environments is
            | Iir_Value_Protected
            | Iir_Value_Quantity
            | Iir_Value_Terminal
-           | Iir_Value_Instance
-           | Iir_Value_Environment =>
+           | Iir_Value_Instance =>
             raise Internal_Error;
       end case;
    end Increment;
@@ -288,8 +285,7 @@ package body Simul.Environments is
          when Iir_Value_Range
            | Iir_Value_Quantity
            | Iir_Value_Terminal
-           | Iir_Value_Instance
-           | Iir_Value_Environment =>
+           | Iir_Value_Instance =>
             raise Internal_Error;
       end case;
    end Store;
@@ -332,8 +328,7 @@ package body Simul.Environments is
            | Iir_Value_Protected
            | Iir_Value_Quantity
            | Iir_Value_Terminal
-           | Iir_Value_Instance
-           | Iir_Value_Environment =>
+           | Iir_Value_Instance =>
             raise Internal_Error;
       end case;
    end Check_Bounds;
@@ -386,17 +381,6 @@ package body Simul.Environments is
         (Alloc (Global_Pool'Access,
                 (Kind => Iir_Value_Quantity, Quantity => Quantity)));
    end Create_Quantity_Value;
-
-   function Create_Environment_Value (Env : Environment_Index_Type)
-                                     return Iir_Value_Literal_Acc
-   is
-      subtype Environment_Value is Iir_Value_Literal (Iir_Value_Environment);
-      function Alloc is new Alloc_On_Pool_Addr (Environment_Value);
-   begin
-      return To_Iir_Value_Literal_Acc
-        (Alloc (Global_Pool'Access,
-                (Kind => Iir_Value_Environment, Environment => Env)));
-   end Create_Environment_Value;
 
    function Create_Instance_Value (Inst : Block_Instance_Acc)
                                   return Iir_Value_Literal_Acc
@@ -703,9 +687,6 @@ package body Simul.Environments is
             pragma Assert (Src.Sig = null);
             return Create_Signal_Value (Src.Sig);
 
-         when Iir_Value_Environment =>
-            return Create_Environment_Value (Src.Environment);
-
          when Iir_Value_Quantity
            | Iir_Value_Terminal
            | Iir_Value_Instance =>
@@ -808,8 +789,7 @@ package body Simul.Environments is
            | Iir_Value_Protected
            | Iir_Value_Terminal
            | Iir_Value_Quantity
-           | Iir_Value_Instance
-           | Iir_Value_Environment =>
+           | Iir_Value_Instance =>
             raise Internal_Error;
       end case;
    end Get_Nbr_Of_Scalars;
@@ -935,8 +915,6 @@ package body Simul.Environments is
             Put_Line ("terminal");
          when Iir_Value_Instance =>
             Put_Line ("instance");
-         when Iir_Value_Environment =>
-            Put_Line ("environment");
       end case;
    end Disp_Value_Tab;
 
@@ -955,8 +933,7 @@ package body Simul.Environments is
            | Iir_Value_Protected
            | Iir_Value_Quantity
            | Iir_Value_Terminal
-           | Iir_Value_Instance
-           | Iir_Value_Environment =>
+           | Iir_Value_Instance =>
             return False;
          when Iir_Value_Range =>
             return Is_Indirect (Value.Left)
@@ -1143,8 +1120,6 @@ package body Simul.Environments is
             Put ("[protected]");
          when Iir_Value_Instance =>
             Put ("[instance]");
-         when Iir_Value_Environment =>
-            Put ("[environment]");
       end case;
    end Disp_Iir_Value;
 end Simul.Environments;

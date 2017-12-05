@@ -3309,12 +3309,6 @@ package body Simul.Execution is
 
             --  Execute code of the 'shared' body
             Label := Origin;
-
-            --  Get the real instance for package interface.
-            if Up_Info.Kind = Kind_Environment then
-               Up_Block := Environment_Table.Table
-                 (Up_Block.Objects (Up_Info.Env_Slot).Environment);
-            end if;
          else
             Label := Imp;
          end if;

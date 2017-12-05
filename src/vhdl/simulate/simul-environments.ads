@@ -113,8 +113,7 @@ package Simul.Environments is
       Iir_Value_Signal,
       Iir_Value_Terminal,
       Iir_Value_Quantity,
-      Iir_Value_Instance,
-      Iir_Value_Environment);
+      Iir_Value_Instance);
 
    --  Uniq identifier for scalar signal.  First identifier is 'First + 1.
    type Signal_Index_Type is new Natural;
@@ -123,7 +122,6 @@ package Simul.Environments is
    type Protected_Index_Type is new Natural;
    type Quantity_Index_Type is new Natural;
    type Terminal_Index_Type is new Natural;
-   type Environment_Index_Type is new Natural;
 
    --  Scalar values.  Only these ones can be signals.
    subtype Iir_Value_Scalars is
@@ -203,8 +201,6 @@ package Simul.Environments is
             Terminal : Terminal_Index_Type;
          when Iir_Value_Instance =>
             Instance : Block_Instance_Acc;
-         when Iir_Value_Environment =>
-            Environment : Environment_Index_Type;
          when Iir_Value_Range =>
             Dir: Iir_Direction;
             Length : Iir_Index32;
@@ -239,7 +235,6 @@ package Simul.Environments is
       Kind_Object, Kind_Signal,
       Kind_File,
       Kind_Terminal, Kind_Quantity,
-      Kind_Environment,
       Kind_PSL,
       Kind_Extra);
 
@@ -255,8 +250,7 @@ package Simul.Environments is
          when Kind_Block
            | Kind_Frame
            | Kind_Process
-           | Kind_Package
-           | Kind_Environment =>
+           | Kind_Package =>
             --  Number of objects/signals.
             Nbr_Objects : Object_Slot_Type;
 
@@ -267,9 +261,6 @@ package Simul.Environments is
 
                   --  Number of children (blocks, generate, instantiation).
                   Nbr_Instances : Instance_Slot_Type;
-
-               when Kind_Environment =>
-                  Env_Slot : Object_Slot_Type;
 
                when Kind_Package =>
                   Pkg_Slot : Object_Slot_Type;
@@ -381,8 +372,6 @@ package Simul.Environments is
                                   return Iir_Value_Literal_Acc;
    function Create_Quantity_Value (Quantity : Quantity_Index_Type)
                                   return Iir_Value_Literal_Acc;
-   function Create_Environment_Value (Env : Environment_Index_Type)
-                                     return Iir_Value_Literal_Acc;
    function Create_Instance_Value (Inst : Block_Instance_Acc)
                                   return Iir_Value_Literal_Acc;
 

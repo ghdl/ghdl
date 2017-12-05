@@ -155,12 +155,6 @@ package Simul.Elaboration is
       Table_Low_Bound => 1,
       Table_Initial => 2);
 
-   package Environment_Table is new Tables
-     (Table_Component_Type => Block_Instance_Acc,
-      Table_Index_Type => Environment_Index_Type,
-      Table_Low_Bound => 1,
-      Table_Initial => 2);
-
    type Boolean_Vector is array (Nat32 range <>) of Boolean;
    type Boolean_Vector_Acc is access Boolean_Vector;
 

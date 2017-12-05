@@ -149,8 +149,7 @@ package body Simul.Elaboration is
               | Iir_Value_Protected
               | Iir_Value_Quantity
               | Iir_Value_Terminal
-              | Iir_Value_Instance
-              | Iir_Value_Environment =>
+              | Iir_Value_Instance =>
                raise Internal_Error;
          end case;
          return Res;
@@ -1060,7 +1059,7 @@ package body Simul.Elaboration is
                --  expression associated with the generic constant is evaluated
                --  to determine the value of the constant.
             when Iir_Kind_Interface_Package_Declaration =>
-               Create_Object (Instance, Get_Info (Decl).Env_Slot);
+               Create_Object (Instance, Get_Info (Decl).Pkg_Slot);
             when others =>
                Error_Kind ("elaborate_generic_clause", Decl);
          end case;
@@ -1154,10 +1153,8 @@ package body Simul.Elaboration is
                   Pkg_Block : Block_Instance_Acc;
                begin
                   Pkg_Block := Get_Instance_By_Scope (Local_Instance, Info);
-                  Environment_Table.Append (Pkg_Block);
-                  Val := Create_Environment_Value (Environment_Table.Last);
-                  Target_Instance.Objects (Get_Info (Inter).Env_Slot) :=
-                    Unshare (Val, Instance_Pool);
+                  Target_Instance.Objects (Get_Info (Inter).Pkg_Slot) :=
+                    Create_Instance_Value (Pkg_Block);
                end;
 
                goto Continue;
