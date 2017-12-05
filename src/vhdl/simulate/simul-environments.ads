@@ -214,6 +214,10 @@ package Simul.Environments is
    end record;
 
    type Object_Slot_Type is new Natural;
+
+   --  This slot is not used.
+   Invalid_Object_Slot : constant Object_Slot_Type := 0;
+
    subtype Parameter_Slot_Type is Object_Slot_Type range 0 .. 2**15;
 
    type Pkg_Index_Type is new Natural;
@@ -308,6 +312,7 @@ package Simul.Environments is
       -- Useful informations for a dynamic block (ie, a frame).
       -- The scope level and an access to the block of upper scope level.
       Block_Scope : Sim_Info_Acc;
+      Uninst_Scope : Sim_Info_Acc;
       Up_Block : Block_Instance_Acc;
 
       --  Block, architecture, package, process, component instantiation for

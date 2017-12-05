@@ -345,6 +345,7 @@ package body Simul.Elaboration is
         (Max_Objs => Obj_Info.Nbr_Objects,
          Id => Nbr_Block_Instances,
          Block_Scope => Obj_Info,
+         Uninst_Scope => null,
          Up_Block => Father,
          Label => Stmt,
          Stmt => Obj,
@@ -406,9 +407,12 @@ package body Simul.Elaboration is
          --  Elaborate the body now.
          declare
             Uninst : constant Iir := Get_Uninstantiated_Package_Decl (Decl);
+            Uninst_Info : constant Sim_Info_Acc := Get_Info (Uninst);
+            Bod : constant Iir := Get_Package_Body (Uninst);
          begin
+            Instance.Uninst_Scope := Uninst_Info;
             Elaborate_Declarative_Part
-              (Instance, Get_Declaration_Chain (Get_Package_Body (Uninst)));
+              (Instance, Get_Declaration_Chain (Bod));
          end;
       end if;
    end Elaborate_Package_Declaration;
@@ -2958,6 +2962,7 @@ package body Simul.Elaboration is
                                  In_Wait_Flag => False,
                                  Id => 0,
                                  Block_Scope => Global_Info,
+                                 Uninst_Scope => null,
                                  Up_Block => null,
                                  Label => Null_Iir,
                                  Stmt => Null_Iir,

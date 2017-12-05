@@ -531,18 +531,25 @@ package body Simul.Annotations is
       Annotate_Interface_List (Info, Get_Port_Chain (Comp), True);
    end Annotate_Component_Declaration;
 
+   --  For package declaration or package instantiation declaration.
    procedure Annotate_Package_Declaration
-     (Block_Info : Sim_Info_Acc; Decl: Iir_Package_Declaration)
+     (Block_Info : Sim_Info_Acc; Decl: Iir)
    is
       Package_Info : Sim_Info_Acc;
       Header : Iir;
    begin
-      Block_Info.Nbr_Objects := Block_Info.Nbr_Objects + 1;
       Package_Info := new Sim_Info_Type'
         (Kind => Kind_Package,
          Nbr_Objects => 0,
-         Pkg_Slot => Block_Info.Nbr_Objects,
-         Pkg_Parent => Block_Info);
+         Pkg_Slot => Invalid_Object_Slot,
+         Pkg_Parent => null);
+      if Get_Kind (Decl) = Iir_Kind_Package_Instantiation_Declaration
+        or else not Is_Uninstantiated_Package (Decl)
+      then
+         Block_Info.Nbr_Objects := Block_Info.Nbr_Objects + 1;
+         Package_Info.Pkg_Slot := Block_Info.Nbr_Objects;
+         Package_Info.Pkg_Parent := Block_Info;
+      end if;
 
       Set_Info (Decl, Package_Info);
 

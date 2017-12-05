@@ -94,12 +94,29 @@ package body Simul.Execution is
                raise Internal_Error;
             end;
          when Kind_Package =>
-            declare
-               Parent : Block_Instance_Acc;
-            begin
-               Parent := Get_Instance_By_Scope (Instance, Scope.Pkg_Parent);
-               return Parent.Objects (Scope.Pkg_Slot).Instance;
-            end;
+            if Scope.Pkg_Parent = null then
+               --  This is a scope for an uninstantiated package.
+               declare
+                  Current : Block_Instance_Acc;
+               begin
+                  Current := Instance;
+                  while Current /= null loop
+                     if Current.Uninst_Scope = Scope then
+                        return Current;
+                     end if;
+                     Current := Current.Up_Block;
+                  end loop;
+                  raise Internal_Error;
+               end;
+            else
+               --  Instantiated package.
+               declare
+                  Parent : Block_Instance_Acc;
+               begin
+                  Parent := Get_Instance_By_Scope (Instance, Scope.Pkg_Parent);
+                  return Parent.Objects (Scope.Pkg_Slot).Instance;
+               end;
+            end if;
          when others =>
             raise Internal_Error;
       end case;
@@ -3309,6 +3326,7 @@ package body Simul.Execution is
             Block_Instance_Type'(Max_Objs => Func_Info.Nbr_Objects,
                                  Id => No_Block_Instance_Id,
                                  Block_Scope => Get_Info (Label),
+                                 Uninst_Scope => null,
                                  Up_Block => Up_Block,
                                  Label => Label,
                                  Stmt => Null_Iir,
