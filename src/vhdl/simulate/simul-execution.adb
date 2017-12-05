@@ -4021,6 +4021,8 @@ package body Simul.Execution is
          Disconnect_Signal (Rdest);
          Release (Marker, Expr_Pool);
          return;
+      elsif Get_Kind (Wf) = Iir_Kind_Unaffected_Waveform then
+         return;
       end if;
 
       Transactions.Stmt := Stmt;

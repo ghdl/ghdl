@@ -717,6 +717,9 @@ package body Simul.Annotations is
          when Iir_Kind_Nature_Declaration =>
             null;
 
+         when Iir_Kind_Psl_Default_Clock =>
+            null;
+
          when others =>
             Error_Kind ("annotate_declaration", Decl);
       end case;

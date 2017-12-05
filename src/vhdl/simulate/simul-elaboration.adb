@@ -2684,6 +2684,9 @@ package body Simul.Elaboration is
          when Iir_Kinds_Branch_Quantity_Declaration =>
             Elaborate_Branch_Quantity_Declaration (Instance, Decl);
 
+         when Iir_Kind_Psl_Default_Clock =>
+            null;
+
          when others =>
             Error_Kind ("elaborate_declaration", Decl);
       end case;
