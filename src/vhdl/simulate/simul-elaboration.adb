@@ -379,10 +379,14 @@ package body Simul.Elaboration is
       Package_Info : constant Sim_Info_Acc := Get_Info (Decl);
       Instance : Block_Instance_Acc;
    begin
+      if Block /= Global_Instances then
+         --  Packages in library unit can be elaborated in a different order.
+         Create_Object (Block, Package_Info.Pkg_Slot);
+      end if;
+
       Instance := Create_Block_Instance (Block, Decl, Decl);
 
       pragma Assert (Block.Block_Scope = Package_Info.Pkg_Parent);
-      pragma Assert (Block.Objects (Package_Info.Pkg_Slot) = null);
       Block.Objects (Package_Info.Pkg_Slot) :=
         Create_Instance_Value (Instance);
 
