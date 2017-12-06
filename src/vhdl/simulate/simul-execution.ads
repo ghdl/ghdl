@@ -28,8 +28,6 @@ package Simul.Execution is
    -- If true, disp current time in assert message.
    Disp_Time_Before_Values: Boolean := False;
 
-   Current_Component : Block_Instance_Acc := null;
-
    -- State associed with each process.
    type Process_State_Type is record
       --  The process instance.

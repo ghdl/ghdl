@@ -1629,7 +1629,6 @@ package body Simul.Elaboration is
             --  component instance and [...]
             Frame := Create_Block_Instance (Instance, Component, Stmt);
 
-            Current_Component := Frame;
             Elaborate_Generic_Clause (Frame, Get_Generic_Chain (Component));
             Elaborate_Generic_Map_Aspect
               (Frame, Instance,
@@ -1639,7 +1638,6 @@ package body Simul.Elaboration is
             Elaborate_Port_Map_Aspect
               (Frame, Instance,
                Get_Port_Chain (Component), Get_Port_Map_Aspect_Chain (Stmt));
-            Current_Component := null;
          end;
       else
          --  Direct instantiation
@@ -2812,20 +2810,18 @@ package body Simul.Elaboration is
       Instance.Block_Scope := Get_Info (Entity);
       Instance.Up_Block := Global_Instances;
 
-      --  LRM93 §12.1
+      --  LRM93 12.1
       --  Elaboration of a block statement involves first elaborating each not
       --  yet elaborated package containing declarations referenced by the
       --  block.
       Elaborate_Dependence (Get_Design_Unit (Arch));
 
-      Current_Component := Parent_Instance;
       Elaborate_Generic_Clause (Instance, Get_Generic_Chain (Entity));
       Elaborate_Generic_Map_Aspect (Instance, Parent_Instance,
                                     Get_Generic_Chain (Entity), Generic_Map);
       Elaborate_Port_Clause (Instance, Get_Port_Chain (Entity));
       Elaborate_Port_Map_Aspect (Instance, Parent_Instance,
                                  Get_Port_Chain (Entity), Port_Map);
-      Current_Component := null;
 
       Elaborate_Declarative_Part
         (Instance, Get_Declaration_Chain (Entity));
@@ -2855,8 +2851,7 @@ package body Simul.Elaboration is
            | Iir_Kind_Enumeration_Type_Definition =>
             Res := Eval_Value_Attribute (Str, Formal_Type, Formal);
             if not Eval_Is_In_Bound (Res, Formal_Type) then
-               Error_Msg_Elab
-                 ("override for %n is out of bounds", +Formal);
+               Error_Msg_Elab ("override for %n is out of bounds", +Formal);
                return Null_Iir;
             end if;
             return Res;
@@ -2914,8 +2909,7 @@ package body Simul.Elaboration is
          end loop;
 
          if Gen = Null_Iir then
-            Error_Msg_Elab
-              ("no generic '" & Name_Table.Image (Id) & "' for -g");
+            Error_Msg_Elab ("no generic %n for -g", +Id);
          else
             --  Replace the association with one for the override value.
             Val := Override_Generic (Get_Formal (Map), Over.Value.all);
