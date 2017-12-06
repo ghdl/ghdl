@@ -3,7 +3,11 @@
 . ../../testenv.sh
 
 analyze *.vhd
-elab_simulate tb --stop-time=4us
+if ghdl_is_interpretation; then
+    elab_simulate tb --stop-time=1us
+else
+    elab_simulate tb --stop-time=4us
+fi
 
 clean
 
