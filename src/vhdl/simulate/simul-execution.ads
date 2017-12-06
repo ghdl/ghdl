@@ -81,6 +81,12 @@ package Simul.Execution is
                                      Res : out Iir_Value_Literal_Acc;
                                      Is_Sig : out Boolean);
 
+   function Execute_Association_Expression
+     (Actual_Instance : Block_Instance_Acc;
+      Actual : Iir;
+      Formal_Instance : Block_Instance_Acc)
+     return Iir_Value_Literal_Acc;
+
    --  Return the initial value (default value) of signal name EXPR.  To be
    --  used only during (non-dynamic) elaboration.
    function Execute_Signal_Init_Value (Block : Block_Instance_Acc; Expr : Iir)

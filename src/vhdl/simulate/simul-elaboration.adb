@@ -1149,7 +1149,8 @@ package body Simul.Elaboration is
                end if;
             when Iir_Kind_Association_Element_By_Expression =>
                Value := Get_Actual (Assoc);
-               Val := Execute_Expression (Local_Instance, Value);
+               Val := Execute_Association_Expression
+                 (Local_Instance, Value, Target_Instance);
             when Iir_Kind_Association_Element_By_Individual =>
                Val := Create_Value_For_Type
                  (Local_Instance, Get_Actual_Type (Assoc), Init_Value_Any);
@@ -1324,8 +1325,8 @@ package body Simul.Elaboration is
                      Actual_Expr := null;
                   else
                      --  Association with an expression
-                     Init_Expr := Execute_Expression
-                       (Actual_Instance, Actual);
+                     Init_Expr := Execute_Association_Expression
+                       (Actual_Instance, Actual, Formal_Instance);
                      Implicit_Array_Conversion
                        (Formal_Instance, Init_Expr, Get_Type (Formal), Actual);
                      Init_Expr := Unshare (Init_Expr, Global_Pool'Access);

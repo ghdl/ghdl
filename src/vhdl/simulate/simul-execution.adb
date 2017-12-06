@@ -1774,8 +1774,8 @@ package body Simul.Execution is
    end String_To_Enumeration_Array_1;
 
    --  Create a literal for a string or a bit_string
-   function String_To_Enumeration_Array (Block: Block_Instance_Acc; Str: Iir)
-      return Iir_Value_Literal_Acc
+   function Execute_String_Literal (Str: Iir; Block_Type : Block_Instance_Acc)
+                                   return Iir_Value_Literal_Acc
    is
       Array_Type: constant Iir := Get_Type (Str);
       Index_Types : constant Iir_Flist := Get_Index_Subtype_List (Array_Type);
@@ -1797,7 +1797,7 @@ package body Simul.Execution is
                                Res.Val_Array.Len);
       else
          Res.Bounds.D (1) :=
-           Execute_Bounds (Block, Get_Nth_Element (Index_Types, 0));
+           Execute_Bounds (Block_Type, Get_Nth_Element (Index_Types, 0));
       end if;
 
       --  The range may not be statically constant.
@@ -1806,7 +1806,7 @@ package body Simul.Execution is
       end if;
 
       return Res;
-   end String_To_Enumeration_Array;
+   end Execute_String_Literal;
 
    --  Fill LENGTH elements of RES, starting at ORIG by steps of STEP.
    --  Use expressions from (BLOCK, AGGREGATE) to fill the elements.
@@ -2032,6 +2032,7 @@ package body Simul.Execution is
 
    function Execute_Aggregate (Block: Block_Instance_Acc;
                                Aggregate: Iir;
+                               Block_Type : Block_Instance_Acc;
                                Aggregate_Type: Iir)
                               return Iir_Value_Literal_Acc is
    begin
@@ -2042,18 +2043,37 @@ package body Simul.Execution is
                Res : Iir_Value_Literal_Acc;
             begin
                Res := Create_Array_Bounds_From_Type
-                 (Block, Aggregate_Type, True);
+                 (Block_Type, Aggregate_Type, True);
                Fill_Array_Aggregate (Block, Aggregate, Res);
                return Res;
             end;
          when Iir_Kind_Record_Type_Definition
            | Iir_Kind_Record_Subtype_Definition =>
-            return Execute_Record_Aggregate
-              (Block, Aggregate, Aggregate_Type);
+            return Execute_Record_Aggregate (Block, Aggregate, Aggregate_Type);
          when others =>
             Error_Kind ("execute_aggregate", Aggregate_Type);
       end case;
    end Execute_Aggregate;
+
+   function Execute_Association_Expression
+     (Actual_Instance : Block_Instance_Acc;
+      Actual : Iir;
+      Formal_Instance : Block_Instance_Acc)
+     return Iir_Value_Literal_Acc
+   is
+   begin
+      case Get_Kind (Actual) is
+         when Iir_Kind_String_Literal8 =>
+            return Execute_String_Literal (Actual, Formal_Instance);
+         when Iir_Kind_Aggregate =>
+            return Execute_Aggregate
+              (Actual_Instance, Actual, Formal_Instance, Get_Type (Actual));
+         when others =>
+            null;
+      end case;
+      return Execute_Expression (Actual_Instance, Actual);
+   end Execute_Association_Expression;
+
 
    function Execute_Simple_Aggregate (Block: Block_Instance_Acc; Aggr : Iir)
                                      return Iir_Value_Literal_Acc
@@ -2472,7 +2492,7 @@ package body Simul.Execution is
       if Get_Kind (Expr) = Iir_Kind_Aggregate
         and then not Is_Fully_Constrained_Type (Get_Type (Expr))
       then
-         return Execute_Aggregate (Block, Expr, Expr_Type);
+         return Execute_Aggregate (Block, Expr, Block, Expr_Type);
       else
          Res := Execute_Expression (Block, Expr);
          Implicit_Array_Conversion (Block, Res, Expr_Type, Expr);
@@ -2922,7 +2942,7 @@ package body Simul.Execution is
             return Execute_Expression (Block, Get_Named_Entity (Expr));
 
          when Iir_Kind_Aggregate =>
-            return Execute_Aggregate (Block, Expr, Get_Type (Expr));
+            return Execute_Aggregate (Block, Expr, Block, Get_Type (Expr));
          when Iir_Kind_Simple_Aggregate =>
             return Execute_Simple_Aggregate (Block, Expr);
 
@@ -3013,7 +3033,7 @@ package body Simul.Execution is
               (Ghdl_I64 (Evaluation.Get_Physical_Value (Expr)));
 
          when Iir_Kind_String_Literal8 =>
-            return String_To_Enumeration_Array (Block, Expr);
+            return Execute_String_Literal (Expr, Block);
 
          when Iir_Kind_Null_Literal =>
             return Null_Lit;
