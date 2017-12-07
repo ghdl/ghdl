@@ -18,6 +18,7 @@
 with Ghdlmain;
 with Ghdllocal;
 with Ghdlprint;
+with Ghdlxml;
 with Ghdlsimul;
 
 with Ghdlsynth;
@@ -31,6 +32,7 @@ begin
    Ghdlsynth.Register_Commands;
    Ghdllocal.Register_Commands;
    Ghdlprint.Register_Commands;
+   Ghdlxml.Register_Commands;
    Ghdlmain.Register_Commands;
    Ghdlmain.Main;
 end Ghdl_Simul;
