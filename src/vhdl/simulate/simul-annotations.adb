@@ -573,12 +573,23 @@ package body Simul.Annotations is
 
       if Get_Kind (Decl) = Iir_Kind_Package_Instantiation_Declaration then
          declare
-            Uninst : constant Iir := Get_Uninstantiated_Package_Decl (Decl);
-            Uninst_Info : constant Sim_Info_Acc := Get_Info (Uninst);
+            Bod : constant Iir := Get_Package_Body (Decl);
          begin
-            --  There is not corresponding body for an instantiation, so
-            --  also add objects for the shared body.
-            Package_Info.Nbr_Objects := Uninst_Info.Nbr_Objects;
+            if Bod /= Null_Iir then
+               Set_Info (Bod, Package_Info);
+               Annotate_Declaration_List
+                 (Package_Info, Get_Declaration_Chain (Bod));
+            else
+               declare
+                  Uninst : constant Iir :=
+                    Get_Uninstantiated_Package_Decl (Decl);
+                  Uninst_Info : constant Sim_Info_Acc := Get_Info (Uninst);
+               begin
+                  --  There is not corresponding body for an instantiation, so
+                  --  also add objects for the shared body.
+                  Package_Info.Nbr_Objects := Uninst_Info.Nbr_Objects;
+               end;
+            end if;
          end;
       end if;
    end Annotate_Package_Declaration;
