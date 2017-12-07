@@ -378,6 +378,7 @@ package body Simul.Elaboration is
    is
       Package_Info : constant Sim_Info_Acc := Get_Info (Decl);
       Instance : Block_Instance_Acc;
+      Hdr : Iir;
    begin
       if Block /= Global_Instances then
          --  Packages in library unit can be elaborated in a different order.
@@ -395,12 +396,18 @@ package body Simul.Elaboration is
                      "elaborating %n", (1 => +Decl));
       end if;
 
-      if Get_Kind (Decl) = Iir_Kind_Package_Instantiation_Declaration then
-         Elaborate_Generic_Clause (Instance, Get_Generic_Chain (Decl));
+      case Iir_Kinds_Package_Declaration (Get_Kind (Decl)) is
+         when Iir_Kind_Package_Instantiation_Declaration =>
+            Hdr := Decl;
+         when Iir_Kind_Package_Declaration =>
+            Hdr := Get_Package_Header (Decl);
+      end case;
+      if Hdr /= Null_Iir then
+         Elaborate_Generic_Clause (Instance, Get_Generic_Chain (Hdr));
          Elaborate_Generic_Map_Aspect
            (Instance, Instance,
-            Get_Generic_Chain (Decl),
-            Get_Generic_Map_Aspect_Chain (Decl));
+            Get_Generic_Chain (Hdr),
+            Get_Generic_Map_Aspect_Chain (Hdr));
       end if;
 
       -- Elaborate objects declarations.
