@@ -1077,7 +1077,8 @@ package body Simul.Elaboration is
                --  to determine the value of the constant.
             when Iir_Kind_Interface_Package_Declaration =>
                Create_Object (Instance, Get_Info (Decl).Pkg_Slot);
-            when Iir_Kinds_Interface_Subprogram_Declaration =>
+            when Iir_Kinds_Interface_Subprogram_Declaration
+              | Iir_Kind_Interface_Type_Declaration =>
                --  Macro-expanded.
                null;
             when others =>
@@ -1179,7 +1180,8 @@ package body Simul.Elaboration is
                end;
 
                goto Continue;
-            when Iir_Kind_Association_Element_Subprogram =>
+            when Iir_Kind_Association_Element_Subprogram
+              | Iir_Kind_Association_Element_Type =>
                goto Continue;
             when others =>
                Error_Kind ("elaborate_generic_map_aspect", Assoc);

@@ -460,7 +460,8 @@ package body Simul.Annotations is
                Create_Object_Info (Block_Info, Decl);
             when Iir_Kind_Interface_Package_Declaration =>
                Annotate_Interface_Package_Declaration (Block_Info, Decl);
-            when Iir_Kinds_Interface_Subprogram_Declaration =>
+            when Iir_Kinds_Interface_Subprogram_Declaration
+              | Iir_Kind_Interface_Type_Declaration =>
                --  Macro-expanded
                null;
             when others =>
