@@ -426,8 +426,11 @@ package body Simul.Elaboration is
                Bod : constant Iir := Get_Package_Body (Uninst);
             begin
                Instance.Uninst_Scope := Get_Info (Uninst);
-               Elaborate_Declarative_Part
-                 (Instance, Get_Declaration_Chain (Bod));
+               if Is_Valid (Bod) then
+                  --  Body is optional.
+                  Elaborate_Declarative_Part
+                    (Instance, Get_Declaration_Chain (Bod));
+               end if;
             end;
          end if;
       end if;
