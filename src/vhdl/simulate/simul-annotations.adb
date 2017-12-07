@@ -596,8 +596,10 @@ package body Simul.Annotations is
    procedure Annotate_Declaration (Block_Info: Sim_Info_Acc; Decl: Iir) is
    begin
       case Get_Kind (Decl) is
-         when Iir_Kind_Package_Declaration =>
+         when Iir_Kind_Package_Declaration
+           | Iir_Kind_Package_Instantiation_Declaration =>
             Annotate_Package_Declaration (Block_Info, Decl);
+
          when Iir_Kind_Package_Body =>
             Annotate_Package_Body (Decl);
 

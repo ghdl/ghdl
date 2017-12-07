@@ -2672,7 +2672,8 @@ package body Simul.Elaboration is
          when Iir_Kind_Protected_Type_Body =>
             null;
 
-         when Iir_Kind_Package_Declaration =>
+         when Iir_Kind_Package_Declaration
+           | Iir_Kind_Package_Instantiation_Declaration =>
             Elaborate_Package_Declaration (Instance, Decl);
          when Iir_Kind_Package_Body =>
             Elaborate_Package_Body (Instance, Decl);
