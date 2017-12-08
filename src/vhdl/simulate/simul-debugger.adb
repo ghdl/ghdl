@@ -937,6 +937,18 @@ package body Simul.Debugger is
       New_Line;
    end Disp_A_Frame;
 
+   procedure Debug_Bt (Instance : Block_Instance_Acc)
+   is
+      Inst : Block_Instance_Acc;
+   begin
+      Inst := Instance;
+      while Inst /= null loop
+         Disp_A_Frame (Inst);
+         Inst := Inst.Parent;
+      end loop;
+   end Debug_Bt;
+   pragma Unreferenced (Debug_Bt);
+
    procedure Disp_Current_Lines
    is
       use Files_Map;
