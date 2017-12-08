@@ -3295,18 +3295,10 @@ package body Simul.Execution is
                                         Imp : Iir)
                                        return Block_Instance_Acc
    is
-      Func_Info : constant Sim_Info_Acc := Get_Info (Imp);
       Parent : constant Iir := Get_Parent (Imp);
-
-      subtype Block_Type is Block_Instance_Type (Func_Info.Nbr_Objects);
-      function To_Block_Instance_Acc is new
-        Ada.Unchecked_Conversion (System.Address, Block_Instance_Acc);
-      function Alloc_Block_Instance is new
-        Alloc_On_Pool_Addr (Block_Type);
 
       Up_Block: Block_Instance_Acc;
       Up_Info : Sim_Info_Acc;
-      Res : Block_Instance_Acc;
 
       Origin : Iir;
       Label : Iir;
@@ -3335,27 +3327,44 @@ package body Simul.Execution is
          end if;
       end if;
 
-      Res := To_Block_Instance_Acc
-        (Alloc_Block_Instance
-           (Instance_Pool,
-            Block_Instance_Type'(Max_Objs => Func_Info.Nbr_Objects,
-                                 Id => No_Block_Instance_Id,
-                                 Block_Scope => Get_Info (Label),
-                                 Uninst_Scope => null,
-                                 Up_Block => Up_Block,
-                                 Label => Label,
-                                 Stmt => Null_Iir,
-                                 Parent => Instance,
-                                 Children => null,
-                                 Brother => null,
-                                 Ports_Map => Null_Iir,
-                                 Marker => Empty_Marker,
-                                 Objects => (others => null),
-                                 Elab_Objects => 0,
-                                 In_Wait_Flag => False,
-                                 Actuals_Ref => null,
-                                 Result => null)));
-      return Res;
+      --  Extract the info from the body, as it is complete (has slot for
+      --  internal declarations).  Usually, body and spec share the same info,
+      --  but there are exceptions: there can be multiple spec for the same
+      --  body for shared generic packages.
+      declare
+         Bod : constant Iir := Get_Subprogram_Body (Label);
+         Func_Info : constant Sim_Info_Acc := Get_Info (Bod);
+
+         subtype Block_Type is Block_Instance_Type (Func_Info.Nbr_Objects);
+         function To_Block_Instance_Acc is new
+           Ada.Unchecked_Conversion (System.Address, Block_Instance_Acc);
+         function Alloc_Block_Instance is new
+           Alloc_On_Pool_Addr (Block_Type);
+
+         Res : Block_Instance_Acc;
+      begin
+         Res := To_Block_Instance_Acc
+           (Alloc_Block_Instance
+              (Instance_Pool,
+               Block_Instance_Type'(Max_Objs => Func_Info.Nbr_Objects,
+                                    Id => No_Block_Instance_Id,
+                                    Block_Scope => Get_Info (Label),
+                                    Uninst_Scope => null,
+                                    Up_Block => Up_Block,
+                                    Label => Label,
+                                    Stmt => Null_Iir,
+                                    Parent => Instance,
+                                    Children => null,
+                                    Brother => null,
+                                    Ports_Map => Null_Iir,
+                                    Marker => Empty_Marker,
+                                    Objects => (others => null),
+                                    Elab_Objects => 0,
+                                    In_Wait_Flag => False,
+                                    Actuals_Ref => null,
+                                    Result => null)));
+         return Res;
+      end;
    end Create_Subprogram_Instance;
 
    -- Destroy a dynamic block_instance.
