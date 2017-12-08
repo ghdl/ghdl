@@ -189,7 +189,7 @@ package Evaluation is
       end record;
 
       --  Fill Res from EL.  This is used to speed up Lt and Eq operations.
-      function Get_Info (Expr : Iir) return Str_Info;
+      function Get_Str_Info (Expr : Iir) return Str_Info;
 
       --  Return the position of element IDX of STR.
       function Get_Pos (Str : Str_Info; Idx : Nat32) return Iir_Int32;

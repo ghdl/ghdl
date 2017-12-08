@@ -3561,8 +3561,7 @@ package body Evaluation is
 
    package body String_Utils is
       --  Fill Res from EL.  This is used to speed up Lt and Eq operations.
-      function Get_Info (Expr : Iir) return Str_Info
-      is
+      function Get_Str_Info (Expr : Iir) return Str_Info is
       begin
          case Get_Kind (Expr) is
             when Iir_Kind_Simple_Aggregate =>
@@ -3581,7 +3580,7 @@ package body Evaluation is
             when others =>
                Error_Kind ("string_utils.get_info", Expr);
          end case;
-      end Get_Info;
+      end Get_Str_Info;
 
       --  Return the position of element IDX of STR.
       function Get_Pos (Str : Str_Info; Idx : Nat32) return Iir_Int32
@@ -3603,8 +3602,8 @@ package body Evaluation is
    function Compare_String_Literals (L, R : Iir) return Compare_Type
    is
       use String_Utils;
-      L_Info : constant Str_Info := Get_Info (L);
-      R_Info : constant Str_Info := Get_Info (R);
+      L_Info : constant Str_Info := Get_Str_Info (L);
+      R_Info : constant Str_Info := Get_Str_Info (R);
       L_Pos, R_Pos : Iir_Int32;
    begin
       if L_Info.Len /= R_Info.Len then

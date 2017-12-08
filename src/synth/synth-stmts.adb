@@ -199,9 +199,8 @@ package body Synth.Stmts is
          declare
             use Evaluation.String_Utils;
 
-            Info : Str_Info;
+            Info : constant Str_Info := Get_Str_Info (Expr);
          begin
-            Info := Get_Info (Expr);
             if Info.Len > 64 then
                raise Internal_Error;
             end if;
