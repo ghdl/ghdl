@@ -6139,6 +6139,7 @@ package body Parse is
    is
       Res: Iir;
       Call : Iir_Procedure_Call;
+      Prefix : Iir;
    begin
       Res := Create_Iir (Kind);
       Location_Copy (Res, Name);
@@ -6147,7 +6148,12 @@ package body Parse is
       Set_Procedure_Call (Res, Call);
       case Get_Kind (Name) is
          when Iir_Kind_Parenthesis_Name =>
-            Set_Prefix (Call, Get_Prefix (Name));
+            Prefix := Get_Prefix (Name);
+            if Get_Kind (Prefix) = Iir_Kind_Operator_Symbol then
+               Error_Msg_Parse
+                 (+Prefix, "operator cannot be used as procedure call");
+            end if;
+            Set_Prefix (Call, Prefix);
             Set_Parameter_Association_Chain
               (Call, Get_Association_Chain (Name));
             Free_Iir (Name);
@@ -6156,6 +6162,9 @@ package body Parse is
             Set_Prefix (Call, Name);
          when Iir_Kind_Attribute_Name =>
             Error_Msg_Parse ("attribute cannot be used as procedure call");
+         when Iir_Kind_String_Literal8 =>
+            Error_Msg_Parse
+              ("string or operator cannot be used as procedure call");
          when others =>
             Error_Kind ("parenthesis_name_to_procedure_call", Name);
       end case;
