@@ -1,14 +1,17 @@
-**v0.34-dev**
+**0.35-dev** (XXXX-XX-XX)
+* Assert and report messages are sent to stdout (#394)
+
+**0.34** (2017-08-15)
 - Display stack backtraces on errors or assert failures
 - Compile scripts for vendor libraries (Xilinx, Altera, osvvm, vunit)
 - Use SSE2 for mcode backend
-- Mode backend ported to `x86_64`
+- mcode backend ported to `x86_64`
 - Support cocotb [potentialventures/cocotb](https://github.com/potentialventures/cocotb)
 - Main repository is now on github: [github.com/tgingold/ghdl](https://github.com/tgingold/ghdl)
 - Docs available on rtd: [ghdl.readthedocks.org](https://ghdl.readthedocs.org/en/latest/)
 - Speed improved.
 - New option `--psl-report`, to report status of PSL assert and cover.
-- VHDL2008: support nested packages
+- VHDL2008: support nested package
 
 **v0.33** (2015-10-04)
 - Improve support of VHDL2008
@@ -95,7 +98,7 @@ Never released, swith to Dunoon Edition.
 - `math_real` now works under windows.
 - documentation updated for windows.
 - filename/line number displayed for range error during signal update.
-- bug fix: 
+- bug fix:
 	- ieee math libraries available when `--ieee=synopsys`.
 	- `'image` in package bodies.
 	- scan of fp literals.

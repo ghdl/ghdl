@@ -31,21 +31,6 @@ GHDL is free software:
 
 Periodically (not regularly), several binary distributions are made available through the [releases](https://github.com/tgingold/ghdl/releases) tab. If you can't find the one matching the platform and versions you need, you can build it yourself!
 
-### Docker containers
-
-If you don't want to install the dependencies in your own filesystem, [Docker](https://www.docker.com/) containers can be used. You can have the latest version compiled and automatically placed in your current path with:
-
-```
-wget "https://raw.githubusercontent.com/tgingold/ghdl/master/dist/linux/docker-buildtest.sh"
-chmod +x docker-buildtest.sh
-./docker-buildtest.sh -i "ghdl/ghdl-tools:fedora-llvm-cmp" -b "mcode" -f "ghdl-mcode.tgz" -g
-```
-
-See '[Docker](http://ghdl.readthedocs.io/en/latest/getting/Docker.html)' for a list of available images and compiler options. You will also find images with GHDL installed already, so that you can directly start using it without caring about the platform!
-
-*If you are new to docker, keep in mind that it's not significantly different from the traditional way. Exactly the same commands are executed, but it's done in a box similar to a virtual machine.*
->>>>>>> README.md, index, WhatIsVHDL, WhatIsGHDL ready for review.
-
 ### Building GHDL
 
 In order to follow the traditional way to `configure` and `make`, you need the GNU Ada compiler, GNAT GPL, 2014 (or later) for x86 (32 or 64 bits). GNAT GPL can be downloaded anonymously from [libre.adacore.com](http://libre.adacore.com/tools/gnat-gpl-edition/). Then, untar and run the *doinstall* script.
@@ -82,4 +67,4 @@ Furthermore, each supported compiler has its pros and cons. Here is a short comp
 
 LLVM has the same pros/cons as GCC, but it is easier to build. However, coverage (`gcov`) is unique to GCC.
 
-You can find specific instructions for each of the options in '[Building](http://ghdl.readthedocs.io/en/latest/building/index.html)'.
+You can find specific instructions for each of the options in '[Building](http://ghdl.readthedocs.io/en/latest/building/Building.html)'.

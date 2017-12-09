@@ -56,16 +56,16 @@ Re-analyzes all the configurations, entities, architectures and package declarat
 	* a configuration unit
 	* an entity unit
 	* an entity unit followed by a name of an architecture unit
-	
+
 Name of the units must be a simple name, without any dot.  You can select the name of the `WORK` library with the :option:`--work=NAME` option, as described in :ref:`GHDL_options`. See section ':ref:`Top_entity`', for the restrictions on the root design of a hierarchy.
-		
+
 * If the GCC/LLVM backend was enabled during the compilation of GHDL, the elaboration command creates an executable containing the code of the VHDL sources, the elaboration code and simulation code to execute a design hierarchy. The executable is created in the current directory and the the filename is the name of the primary unit, or for the later case, the concatenation of the name of the primary unit, a dash, and the name of the secondary unit (or architecture). Option :option:`-o` followed by a filename can override the default executable filename.
 
 * If mcode is used, this command elaborates the design but does not generate anything. Since the run command also elaborates the design, this con be skipped.
 
 
 .. index:: cmd run
- 
+
 Run [``-r``]
 ----------------
 
@@ -188,6 +188,17 @@ Generate Makefile [``--gen-makefile``]
 
 This command works like the make command (see :option:`-m`), but only a makefile is generated on the standard output.
 
+.. index:: --gen-depends command
+
+Generate dependency file command [``--gen-depends``]
+-------------------------
+
+.. option:: --gen-depends <[options] primary [secondary]>
+
+Generate a Makefile containing only dependencies to build a design unit.
+
+This command works like the make and gen-makefile commands (see :option:`-m`), but instead of a full makefile only dependencies without rules are generated on the standard output.
+Theses rules can then be integrated in another Makefile.
 
 Options
 =======

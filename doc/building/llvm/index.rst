@@ -11,11 +11,17 @@ LLVM Backend
 
   * 3.5
   * 3.8
+  * 3.9
+  * 4.0
+  * 5.0
 
 * CLANG (Compiler front-end for LLVM)
 
   * 3.5
   * 3.8
+  * 3.9
+  * 4.0
+  * 5.0
 
 .. rubric:: Supported platforms
 

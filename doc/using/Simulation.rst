@@ -102,16 +102,24 @@ all options available, including the debugging one.
 
   See section ':ref:`Backannotation`', for more details.
 
+.. option:: --vpi<=FILENAME>
+
+Load VPI module.
+
+.. option:: --vpi-trace<=FILE>
+
+Trace vpi calls to FILE.
+
 .. option:: --help
 
   Display a short description of the options accepted by the runtime library.
 
 .. _export_waves:
-  
+
 Export waveforms
 ================
 
-.. option:: --read-opt-file<=FILENAME>
+.. option:: --read-wave-opt=<FILENAME>
 
   Filter signals to be dumped to the wave file according to the wave option
   file provided.
@@ -144,7 +152,7 @@ Export waveforms
      # those of sub3)
      /**/sub3/*/*
 
-.. option:: --write-opt-file<=FILENAME>
+.. option:: --write-wave-opt=<FILENAME>
 
   If the wave option file doesn't exist, creates it with all the signals of
   the design. Otherwise throws an error, because it won't erase an existing
@@ -206,7 +214,7 @@ Export waveforms
 .. option:: --vcd-nodate
 
   Do not write date in VCD file
-  
+
 .. option:: --fst<=FILENAME>
 
   Write the waveforms into a `fst`, that can be displayed by
@@ -223,16 +231,10 @@ Export waveforms
   It may change slightly.  The ``gtkwave`` tool can read the GHW files.
 
   Contrary to VCD files, any VHDL type can be dumped into a GHW file.
- 
-.. TODO::
 
-  - Brief explanation on why these three formats where chosen only. Explain why other formats add no functionality.
-  - Interactive simulation (GtkWave) is only possible with VCD.
-  - `Source code annotation is currently not available for VHDL, however all of GTKWave's other debug features are readily accessible. VHDL support is planned for a future release`. That's something that could be added in the future, but I have no plan for it.
-  
 Export hierarchy and references
 ===============================
-  
+
 .. option:: --disp-tree<[=KIND]>
 
   .. index:: display design hierarchy
@@ -257,7 +259,7 @@ Export hierarchy and references
 
 .. option:: --no-run
 
-  Stop the simulation before the first cycle. This may be used with :option:`--disp-tree` to display the tree without simulating the whole design. This option actually elaborates the design, so it will catch any bound error in port maps. 
+  Stop the simulation before the first cycle. This may be used with :option:`--disp-tree` to display the tree without simulating the whole design. This option actually elaborates the design, so it will catch any bound error in port maps.
 
 .. option:: --xref-html <[options] file...>
 
@@ -268,16 +270,13 @@ The set of ``file`` are analyzed, and then, if the analysis is successful, html 
 * If the option :option:`--format=html2` is specified, then the generated html files follow the HTML 2.0 standard, and colours are specified with `<FONT>` tags. However, colours are hard-coded.
 
 * If the option :option:`--format=css` is specified, then the generated html files follow the HTML 4.0 standard, and use the CSS-1 file :file:`ghdl.css` to specify colours. This file is generated only if it does not already exist (it is never overwritten) and can be customized by the user to change colours or appearance. Refer to a generated file and its comments for more information.
- 
+
 .. option:: --psl-report<=FILENAME>
 
 Write a report for PSL at the end of simulation. For each PSL cover and assert statements, the name, source location and whether it passed or failed is reported. The file is written using the JSON format, but still being human readable.
- 
-.. TODO::
-   * Maybe worth adding a small example of how to generate a JSON file?
- 
+
 .. option:: --file-to-xml
-  
+
 Outputs an XML representation of the decorated syntax tree for the input file and its dependencies. It can be used for VHDL tooling using semantic information, like style checkers, documentation extraction, complexity estimation...
 
 .. WARNING::
@@ -286,7 +285,7 @@ Outputs an XML representation of the decorated syntax tree for the input file an
 
 
 .. index:: debugging
-	
+
 Debugging
 =========
 

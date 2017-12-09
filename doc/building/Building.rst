@@ -7,20 +7,12 @@ Building GHDL from Sources
 
 GHDL can be downloaded as a `zip-file <https://github.com/tgingold/ghdl/archive/master.zip>`_
 (latest 'master' branch) or cloned with ``git clone`` from GitHub. GitHub
-offers HTTPS and SSH as transfer protocols. See the :ref:`Download <GETTING:Download>`
+offers HTTPS and SSH as transfer protocols. See the :ref:`RELEASE:Sources`
 page for further details. The installation directory is referred to as ``GHDLRoot``.
-
-+----------+-----------------------------------------------------------+
-| Protocol | Git Clone Command                                         |
-+==========+===========================================================+
-| HTTPS    | ``git clone https://github.com/tgingold/ghdl.git ghdl``   |
-+----------+-----------------------------------------------------------+
-| SSH      | ``git clone ssh://git@github.com:tgingold/ghdl.git ghdl`` |
-+----------+-----------------------------------------------------------+
 
 .. rubric:: Available back-ends
 
-GHDL currently supports three supported different back-ends (code generators):
+GHDL currently supports three different back-ends (code generators):
 
 * mcode - built-in x86(or x86_64) code generator,
 * `GCC - Gnu Compiler Collection <http://gcc.gnu.org/>`_, and
@@ -43,10 +35,10 @@ Here is a short comparison, so that you can choose the one you want to use:
 |                            | * Generated code can be debugged (with ``-g``)                             | * Analysis can take time (particularly for large units) |
 |                            | * Ported to many platforms (x86, x86_64, PowerPC, SPARC)                   | * Code coverage collection (``gcov``) is unique to GCC  |
 +----------------------------+----------------------------------------------------------------------------+---------------------------------------------------------+
-  
+
 .. toctree::
    :hidden:
-   
+
    Directories
    With mcode Backend <mcode/index>
    With LLVM Backend <llvm/index>
@@ -69,14 +61,3 @@ created.
    (32 or 64 bits). `GNAT GPL` can be downloaded anonymously from `libre.adacore.com <http://libre.adacore.com/tools/gnat-gpl-edition/>`_.
    Then, untar and run the doinstall script. Alternatively, most GNU/Linux
    provide a package named ``gcc-ada`` or ``gcc-gnat``.
-
-.. TODO::
-
-   * @1138 Backtraces optional -patchable-
-   * Very briefly, why is mcode faster for analysis and GCC/LLVM for simulation?
-   * The only other dependency is zlib (On ubuntu/debian, install zlib1g-dev).
-   * From :ghdlsharp:`279`:
-   * GCC: GHDL generates an intermediate representation for GCC, which creates an executable. So GHDL acts a a new language frontend like C for the GCC and uses the existing backend to generated e.g. x86(-64) binary code.
-   * LLVM: GHDL generates instructions for the LLVM abstract register machine, which then generates x86(-64) instructions for the host system.
-   * mcode: GHDL generates the x86(-64) instructions in memory and executes the model.
-     * gcc is currently only supported on Linux, because you need to compile a complete GCC from zero and add GHDL as a frontend into the GCC. Compiling the complete GCC suite plus GHDL takes a lot of time. I think it's not possible to finish the compile task in the bounds of a Travis-CI run.

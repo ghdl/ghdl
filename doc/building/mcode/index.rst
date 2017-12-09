@@ -1,6 +1,6 @@
 .. _BUILD:mcode:
 
-Mcode Backend
+mcode Backend
 #############
 
 The mcode backend is available for all supported platforms and is also the most

@@ -17,14 +17,17 @@ LRM) is a plus.
    News
    ****
 
+   15.08.2017 - GHDL 0.34 was released.
+   ====================================
+
    23.10.2015 - GHDL 0.33 was released.
    ====================================
 
 .. only:: latex
 
-   .. rubric:: 23.10.2015 - GHDL 0.33 was released.
+   .. rubric:: 15.08.2017 - GHDL 0.34 was released.
 
-Lorem ipsum dolor sit amet...
+   .. rubric:: 23.10.2015 - GHDL 0.33 was released.
 
 .. |docdate| date:: %b %d, %Y - %H:%M
 
@@ -36,11 +39,9 @@ Lorem ipsum dolor sit amet...
    :caption: Introduction
    :hidden:
 
-   intro/WhatIsVHDL
-   intro/WhatIsGHDL
-   intro/Contributing
-   intro/Copyrights
-   License/gpl-2.0
+   about
+   contribute
+   licenses
 
 .. raw:: latex
 
@@ -63,7 +64,7 @@ Lorem ipsum dolor sit amet...
    :hidden:
 
    getting/Releases
-   Building GHDL building/building>
+   Building GHDL <building/Building>
    building/PrecompileVendorPrimitives
 
 .. raw:: latex
@@ -88,6 +89,5 @@ Lorem ipsum dolor sit amet...
    :hidden:
 
    appendix/Roadmap
-   appendix/Changelog
    appendix/Meta
    genindex
