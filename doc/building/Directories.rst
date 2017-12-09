@@ -16,21 +16,21 @@ Directory Structure
     computer. These are located in ``libraries/vendor``.
     See Vendor Primitives <VendorPrimitives.html> for information on how to
     use them.
-	
+
 * ``dist``: scripts and auxiliar files to build GHDL in different
   environments:
-  
+
   * ``gcc``: header and configuration files to build GHDL with GCC (all the
     platforms).
   * ``linux``: build and test script written in shell, and other auxiliary
     files used to i) launch docker containers and ii) automate multiple builds
     in `Travis CI <https://travis-ci.org/>`_.
-  
+
   * ``windows``:
-    
+
     * ``mcode``:
-    * ``appveyor``: 
-  	
+    * ``appveyor``:
+
 * ``doc``: `Markdown` and `reStructuredText` sources and auxiliary files to
   build the documentation with `Sphinx <http://www.sphinx-doc.org>`_. Indeed,
   `Read the docs <http://readthedocs.org>`_ (RTD) is used to automatically build
@@ -48,12 +48,3 @@ Directory Structure
   (GNAT project file).
 
 * Text files: ``COPYING.md``, ``NEWS.md`` and ``README.md``.
-
-
-.. TODO::
-
-	- [@1138-4EB|@Paebbels] Replace link to VendorPrimitives, when the file is translated from md to rst.
-	
-	- [@Paebbels] Add brief description of how the content in dist/windows is ordered. From :ghdlsharp:`279`:
-		- The content in dist/appveyor is for the AppVeyor flow. AppVeyor is a continuous integration service like Travis-CI, but is offers a Windows Server 2012 R2 machine. The AppVeyor flow has more scripts than the Travis-CI flow, so we put them into a separate directory.
-		- The code in dist/windows/mcode is special code needed to build mcode in windows. mcode is supported on Linux (32/64-bit) and Windows (32-bit).

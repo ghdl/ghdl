@@ -216,13 +216,3 @@ Unless you are only studying VHDL, you will work with larger designs than the on
    * Remove the :file:`work/` directory: ``rm -rf work``. Only the executable is kept. If you want to rebuild the design, create the :file:`work/` directory, import the sources, and make the design.
 
 .. WARNING:: Sometimes, a design does not fully follow the VHDL standards. For example it uses the badly engineered ``std_logic_unsigned`` package. GHDL supports this VHDL dialect through some options: ``--ieee=synopsys -fexplicit``. See section ':ref:`IEEE_library_pitfalls`', for more details.
-
-Further examples
-=======================
-
-.. TODO::
-
-  * Add references to examples/tutorials with GHDL.
-  * Shall `René Doß <https://mail.gna.org/public/ghdl-discuss/2017-01/msg00000.html>` want to contribute adapting his article to RST?
-  * https://github.com/Obijuan/open-fpga-verilog-tutorial/wiki
->>>>>>> doc/changelog renamed to doc/appendix

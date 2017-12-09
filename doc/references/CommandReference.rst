@@ -11,8 +11,6 @@ Environment variables
 
 .. envvar:: GHDL_PREFIX
 
-	.. TODO:: Add short description to :option:`GHDL_PREFIX`
-
 Misc commands
 =============
 
@@ -34,7 +32,7 @@ for this later command are displayed::
   ghdl -h command
 
 .. index:: cmd display configuration
-  
+
 Display config [``--disp-config``]
 --------------------------------------
 
@@ -136,7 +134,7 @@ Link [``--link``]
 ---------------------
 
 .. option:: --link <[options] primary_unit [secondary_unit]>
-  
+
 Performs only the second stage of the elaboration command: the executable is created by linking the files of the object files list. This command is available only for completeness. The elaboration command is equivalent to the bind command followed by the link command.
 
 .. index:: cmd GCC/LLVM list link
@@ -176,7 +174,7 @@ Use ``COMMAND`` as the command name for the assembler.  If ``COMMAND`` is not a 
 .. option:: --LINK<=COMMAND>
 
 Use ``COMMAND`` as the linker driver.  If ``COMMAND`` is not a path, then it is searched in the path.  The default is ``gcc``.
-  
+
 Passing options to other programs
 =================================
 
