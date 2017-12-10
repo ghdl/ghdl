@@ -142,8 +142,8 @@ include $(srcdir)/src/grt/Makefile.inc
 
 version.tmp: $(srcdir)/src/version.in force
 #	Create version.tmp from version.in, using git date/hash
-	if [ -d $(srcdir)/.git ]; then \
-	  desc=`cd $(srcdir); git describe --dirty`; \
+	if test -d $(srcdir)/.git \
+	   && desc=`cd $(srcdir); git describe --dirty`; then \
 	  $(SED) -e "s/[(].*[)]/($$desc)/" < $< > $@; \
 	else \
 	  $(CP) $< $@; \

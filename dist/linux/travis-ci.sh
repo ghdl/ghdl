@@ -14,6 +14,11 @@ printf "$ANSI_YELLOW[TRAVIS] Travis environment $ANSI_NOCOLOR\n"
 env | grep TRAVIS
 echo -en "travis_fold:end:travis_env\r"
 
+# Build version.tmp and replace version.in with it (so that the version is
+# correctly set).
+git fetch --unshallow
+make -f Makefile.in srcdir=. version.tmp
+cp version.tmp src/version.in
 
 # Compute package name
 
