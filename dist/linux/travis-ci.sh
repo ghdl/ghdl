@@ -14,9 +14,12 @@ printf "$ANSI_YELLOW[TRAVIS] Travis environment $ANSI_NOCOLOR\n"
 env | grep TRAVIS
 echo -en "travis_fold:end:travis_env\r"
 
+# The command 'git describe' (used for version) needs the history. Get it.
+# But the following command fails if the repository is complete.
+git fetch --unshallow || true
+
 # Build version.tmp and replace version.in with it (so that the version is
 # correctly set).
-git fetch --unshallow
 make -f Makefile.in srcdir=. version.tmp
 cp version.tmp src/version.in
 
