@@ -74,7 +74,8 @@ else
 
 
     # Run build+test in docker
-
+    git fetch --unshallow
+    make -f Makefile.in version.tmp
     docker run --rm --tty --volume $(pwd):/work -w "/work" $DOCKER_NAME bash -c "$BUILD_CMD"
 fi
 
