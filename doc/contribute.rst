@@ -18,12 +18,10 @@ if someone already told us about it. You might find a solution there. To get a b
 :ref:`Roadmap <CHANGE>`.
 
 If you found no information on your topic, please, report so that we are aware! You can reach us through various ways:
-|SHIELD:gitter|, open a |SHIELD:issues-new| and/or subscribe to |SHIELD:mailing|
+|SHIELD:gitter| or open a |SHIELD:issues-new|.
 
 .. HINT::
    Since the development of GHDL started fifteen years ago, multiple platforms have been used as a support for both distribution and getting feedback. However, the development is now centralized in |SHIELD:gh-logo|.
-
-   Therefore it is suggested to use the channels listed above instead of `gna.org/bugs/?=group=ghdl <https://gna.org/bugs/?group=ghdl>`_ or `sourceforge.net/p/ghdl-updates/tickets <https://sourceforge.net/p/ghdl-updates/tickets/>`_ . Still, these are checked from time to time.
 
 .. TIP::
    `How To Ask Questions The Smart Way <www.catb.org/~esr/faqs/smart-questions.html>`_
@@ -68,9 +66,9 @@ assign developers to them. You can track the issue’s state and see how it’s 
 Requesting enhancements
 =======================
 
-|SHIELD:issues-new| |SHIELD:gitter| |SHIELD:mailing|
+|SHIELD:issues-new| |SHIELD:gitter|
 
-All enhancements and feature requests are welcome. Please `open a new issue <https://github.com/tgingold/ghdl/issues/new>`_ to report any, so you can track the request's status and implementation. Depending on the complexity of the request, you may want to `chat on Gitter <https://gitter.im/ghdl/ghdl1>`_, to polish it before opening an issue. If you don't have a `GitHub <https://github.com>`_ user account, you can reach the developers through the `mailing-list <https://mail.gna.org/listinfo/ghdl-discuss/>`_ .
+All enhancements and feature requests are welcome. Please `open a new issue <https://github.com/tgingold/ghdl/issues/new>`_ to report any, so you can track the request's status and implementation. Depending on the complexity of the request, you may want to `chat on Gitter <https://gitter.im/ghdl/ghdl1>`_, to polish it before opening an issue.
 
 Improving the documentation
 ===========================

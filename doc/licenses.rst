@@ -70,7 +70,7 @@ van Rantwijk, Joris        Debian packaging
 
 Only those who made substantial contributions are shown in the table above, but many others contributed with minor patches. You can find a list at |SHIELD:contributors|
 
-With apologies to anyone who ought to be either on this table or in the GitHub contributor list, but isn't. Thanks also to all those who have reported bugs and support issues, and often patches and testcases to either `gna.org/bugs/?=group=ghdl <https://gna.org/bugs/?group=ghdl>`_ or `sourceforge.net/p/ghdl-updates/tickets <https://sourceforge.net/p/ghdl-updates/tickets/>`_ .
+With apologies to anyone who ought to be either on this table or in the GitHub contributor list, but isn't. Thanks also to all those who have reported bugs and support issues, and often patches and testcases to either the late gna! website or `sourceforge.net/p/ghdl-updates/tickets <https://sourceforge.net/p/ghdl-updates/tickets/>`_ .
 
 --------------------------------------------------------------------------------
 

@@ -5,7 +5,7 @@ Coding Style
 
 Ada subset: use only a simple (VHDL like) subset of Ada: no tasking, no
 controlled types...  VHDL users should easily understand that subset.
-Allowed Ada93 features: the standard library, child packages.
+Allowed Ada95 features: the standard library, child packages.
 Use assertions.
 
 We try to follow the 'GNU Coding Standards' when possible: comments before

@@ -31,9 +31,6 @@
    :target: Licenses.html
    :alt: Creative Commons Attribution-ShareAlike 4.0
   
-.. |SHIELD:mailing| image:: https://img.shields.io/badge/mail.gna.org-ghdl--discuss-ff69b4.svg?style=flat
-   :target: https://mail.gna.org/listinfo/ghdl-discuss/
-  
 .. |SHIELD:gitter| image:: https://img.shields.io/gitter/room/ghdl1/Lobby.svg?colorB=4cb696
    :target: https://gitter.im/ghdl1/Lobby
    :alt: Talk to us on Gitter
