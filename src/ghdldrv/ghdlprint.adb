@@ -506,7 +506,9 @@ package body Ghdlprint is
    begin
       Put_Line ("<p>");
       Put ("<small>This page was generated using ");
-      Put ("<a href=""http://ghdl.free.fr"">");
+      Put ("<a href=""http://ghdl.free.fr"">GHDL ");
+      Put (Version.Ghdl_Ver);
+      Put (' ');
       Put (Version.Ghdl_Release);
       Put ("</a>, a program written by");
       Put (" Tristan Gingold");
