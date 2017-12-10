@@ -50,9 +50,7 @@ if [ "$ISGPL" = "true" ]; then
     echo "travis_fold:start:gpl.src"
     printf "$ANSI_YELLOW[Source] create GPL sources $ANSI_NOCOLOR\n"
     files=`echo *`
-    sed -e 's/@abs_srcdir@/./g' < Makefile.in > Makefile.tmp
-    make -f Makefile.tmp clean-pure-gpl
-    rm -f Makefile.tmp
+    make -f Makefile.in srcdir=. clean-pure-gpl
     mkdir ${PKG_NAME}
     cp -pdrl $files ${PKG_NAME}
     tar -zcf "${PKG_NAME}.tar.gz" ${PKG_NAME}
