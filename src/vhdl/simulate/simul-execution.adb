@@ -3301,6 +3301,20 @@ package body Simul.Execution is
         Unshare (Val, Instance_Pool);
    end Execute_Monadic_Association;
 
+   --  Like Get_Subprogram_Body, but also works for instances, where
+   --  instantiated nodes have no bodies.
+   --  FIXME: maybe fix the issue directly in Sem_Inst ?
+   function Get_Subprogram_Body_Origin (Spec : Iir) return Iir
+   is
+      Orig : constant Iir := Sem_Inst.Get_Origin (Spec);
+   begin
+      if Orig /= Null_Iir then
+         return Get_Subprogram_Body_Origin (Orig);
+      else
+         return Get_Subprogram_Body (Spec);
+      end if;
+   end Get_Subprogram_Body_Origin;
+
    --  Create a block instance for subprogram IMP.
    function Create_Subprogram_Instance (Instance : Block_Instance_Acc;
                                         Prot_Obj : Block_Instance_Acc;
@@ -3318,7 +3332,7 @@ package body Simul.Execution is
    begin
       case Get_Kind (Imp) is
          when Iir_Kinds_Subprogram_Declaration =>
-            Bod := Get_Subprogram_Body (Imp);
+            Bod := Get_Subprogram_Body_Origin (Imp);
          when Iir_Kind_Protected_Type_Body =>
             Bod := Imp;
          when others =>
