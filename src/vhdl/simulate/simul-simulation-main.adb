@@ -761,7 +761,7 @@ package body Simul.Simulation.Main is
                     (new Convert_Instance_Type'
                        (Mode => Convert_In,
                         Instance => Local_Instance,
-                        Func => Get_Implementation (In_Conv),
+                        Func => In_Conv,
                         Src => Local_Expr,
                         Dst => Src));
                else
