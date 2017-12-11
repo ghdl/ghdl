@@ -2321,6 +2321,9 @@ package body Simul.Execution is
          when Iir_Kinds_Denoting_Name =>
             return Execute_Bounds (Block, Get_Named_Entity (Prefix));
 
+         when Iir_Kind_Subtype_Attribute =>
+            return Execute_Bounds (Block, Get_Type (Prefix));
+
          when others =>
             -- Error_Kind ("execute_bounds", Get_Kind (Prefix));
             declare
