@@ -4638,8 +4638,7 @@ package body Simul.Execution is
       Release (Proc.Instance.Marker, Instance_Pool.all);
    end Finish_Procedure_Frame;
 
-   procedure Execute_If_Statement
-     (Proc : Process_State_Acc; Stmt: Iir_Wait_Statement)
+   procedure Execute_If_Statement (Proc : Process_State_Acc; Stmt : Iir)
    is
       Clause: Iir;
       Cond: Boolean;

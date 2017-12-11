@@ -18,6 +18,7 @@
 
 with Types; use Types;
 with Simul.Execution; use Simul.Execution;
+with Simul.Debugger; use Simul.Debugger;
 with Areapools; use Areapools;
 with Grt.Signals;
 with Grt.Processes;
@@ -524,6 +525,9 @@ package body Simul.Simulation is
          Expr := Get_Timeout_Clause (Stmt);
          if Expr /= Null_Iir then
             Res := Execute_Expression (Instance, Expr);
+            if Res.I64 < 0 then
+               Error_Msg_Exec ("negative timeout clause", Stmt);
+            end if;
             Grt.Processes.Ghdl_Process_Wait_Set_Timeout
               (Std_Time (Res.I64), null, 0);
          end if;
