@@ -669,7 +669,7 @@ package body Simul.Elaboration is
            | Iir_Kind_Record_Subtype_Definition =>
             declare
                List : constant Iir_Flist :=
-                 Get_Elements_Declaration_List (Get_Base_Type (Decl));
+                 Get_Elements_Declaration_List (Decl);
                El : Iir_Element_Declaration;
             begin
                Res := Create_Record_Value
