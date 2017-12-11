@@ -4160,34 +4160,33 @@ package body Simul.Execution is
       -- The error message consists of at least:
 
       -- 4: name of the design unit containing the assertion.
-      Put (Standard_Error, Disp_Location (Stmt));
+      Put (Standard_Output, Disp_Location (Stmt));
+
+      Put (Standard_Output, ":@");
+      Grt.Astdio.Put_Time (Grt.Stdio.stdout, Current_Time);
 
       -- 1: an indication that this message is from an assertion.
-      Put (Standard_Error, '(');
-      Put (Standard_Error, Msg);
-      Put (Standard_Error, ' ');
+      Put (Standard_Output, ":(");
+      Put (Standard_Output, Msg);
+      Put (Standard_Output, ' ');
 
       -- 2: the value of the severity level.
       case Severity is
          when 0 =>
-            Put (Standard_Error, "note");
+            Put (Standard_Output, "note");
          when 1 =>
-            Put (Standard_Error, "warning");
+            Put (Standard_Output, "warning");
          when 2 =>
-            Put (Standard_Error, "error");
+            Put (Standard_Output, "error");
          when 3 =>
-            Put (Standard_Error, "failure");
+            Put (Standard_Output, "failure");
          when others =>
             Error_Internal (Null_Iir, "execute_failed_assertion");
       end case;
-      if Disp_Time_Before_Values then
-         Put (Standard_Error, " at ");
-         Grt.Astdio.Put_Time (Grt.Stdio.stderr, Current_Time);
-      end if;
-      Put (Standard_Error, "): ");
+      Put (Standard_Output, "): ");
 
       -- 3: the value of the message string.
-      Put_Line (Standard_Error, Report);
+      Put_Line (Standard_Output, Report);
 
       -- Stop execution if the severity is too high.
       if Severity >= Grt.Options.Severity_Level then
