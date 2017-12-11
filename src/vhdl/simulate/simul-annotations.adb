@@ -508,12 +508,12 @@ package body Simul.Annotations is
       Spec : constant Iir := Get_Subprogram_Specification (Subprg);
       Subprg_Info : constant Sim_Info_Acc := Get_Info (Spec);
    begin
+      Set_Info (Subprg, Subprg_Info);
+
       --  Do not annotate body of foreign subprograms.
       if Get_Foreign_Flag (Spec) then
          return;
       end if;
-
-      Set_Info (Subprg, Subprg_Info);
 
       Annotate_Declaration_List
         (Subprg_Info, Get_Declaration_Chain (Subprg));
