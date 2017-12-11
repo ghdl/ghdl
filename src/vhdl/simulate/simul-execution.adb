@@ -3297,6 +3297,7 @@ package body Simul.Execution is
                                        return Block_Instance_Acc
    is
       Parent : constant Iir := Get_Parent (Imp);
+      Bod : Iir;
 
       Up_Block: Block_Instance_Acc;
       Up_Info : Sim_Info_Acc;
@@ -3304,8 +3305,14 @@ package body Simul.Execution is
       Origin : Iir;
       Label : Iir;
    begin
-      pragma Assert (Get_Kind (Imp) in Iir_Kinds_Subprogram_Declaration
-                       or else Get_Kind (Imp) = Iir_Kind_Protected_Type_Body);
+      case Get_Kind (Imp) is
+         when Iir_Kinds_Subprogram_Declaration =>
+            Bod := Get_Subprogram_Body (Imp);
+         when Iir_Kind_Protected_Type_Body =>
+            Bod := Imp;
+         when others =>
+            Error_Kind ("create_subprogram_instance", Imp);
+      end case;
 
       if Prot_Obj /= null then
          Up_Block := Prot_Obj;
@@ -3333,7 +3340,6 @@ package body Simul.Execution is
       --  but there are exceptions: there can be multiple spec for the same
       --  body for shared generic packages.
       declare
-         Bod : constant Iir := Get_Subprogram_Body (Label);
          Func_Info : constant Sim_Info_Acc := Get_Info (Bod);
 
          subtype Block_Type is Block_Instance_Type (Func_Info.Nbr_Objects);
