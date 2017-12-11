@@ -929,6 +929,12 @@ package body Simul.Debugger is
 
    procedure Disp_A_Frame (Instance: Block_Instance_Acc) is
    begin
+      if Instance = Global_Instances then
+         pragma Assert (Instance.Label = Null_Iir);
+         Put_Line ("global instances");
+         return;
+      end if;
+
       Put (Disp_Node (Instance.Label));
       if Instance.Stmt /= Null_Iir then
          Put (" at ");
@@ -948,6 +954,18 @@ package body Simul.Debugger is
       end loop;
    end Debug_Bt;
    pragma Unreferenced (Debug_Bt);
+
+   procedure Debug_Upblock (Instance : Block_Instance_Acc)
+   is
+      Inst : Block_Instance_Acc;
+   begin
+      Inst := Instance;
+      while Inst /= null loop
+         Disp_A_Frame (Inst);
+         Inst := Inst.Up_Block;
+      end loop;
+   end Debug_Upblock;
+   pragma Unreferenced (Debug_Upblock);
 
    procedure Disp_Current_Lines
    is
