@@ -657,6 +657,10 @@ package body Simul.Execution is
             Eval_Right;
 
             declare
+               --  Type of the index.
+               Idx_Type : constant Iir :=
+                 Get_Nth_Element (Get_Index_Subtype_List (Res_Type), 0);
+
                -- Array length of the result.
                Len: Iir_Index32;
 
@@ -714,10 +718,10 @@ package body Simul.Execution is
                   --  Create the array result.
                   Result := Create_Array_Value (Len, 1);
                   Result.Bounds.D (1) := Create_Bounds_From_Length
-                    (Block,
-                     Get_Nth_Element (Get_Index_Subtype_List (Res_Type), 0),
-                     Len);
+                    (Block, Idx_Type, Len);
                end if;
+               Check_Range_Constraints
+                 (Block, Result.Bounds.D (1), Idx_Type, Expr);
 
                -- Fill the result: left.
                case Func is
@@ -3867,6 +3871,17 @@ package body Simul.Execution is
       Ref_Value.Val_Array.V := Value.Val_Array.V;
       Value := Ref_Value;
    end Implicit_Array_Conversion;
+
+   procedure Check_Range_Constraints (Instance : Block_Instance_Acc;
+                                      Rng : Iir_Value_Literal_Acc;
+                                      Rng_Type : Iir;
+                                      Loc : Iir) is
+   begin
+      if not Is_Null_Range (Rng) then
+         Check_Constraints (Instance, Rng.Left, Get_Type (Rng_Type), Loc);
+         Check_Constraints (Instance, Rng.Right, Get_Type (Rng_Type), Loc);
+      end if;
+   end Check_Range_Constraints;
 
    procedure Check_Array_Constraints
      (Instance: Block_Instance_Acc;

@@ -139,6 +139,13 @@ package Simul.Execution is
      (Instance: Block_Instance_Acc; Scope: Sim_Info_Acc)
      return Block_Instance_Acc;
 
+   --  Check that bounds of RNG belong to RNG_TYPE (unless this is a null
+   --  range).
+   procedure Check_Range_Constraints (Instance : Block_Instance_Acc;
+                                      Rng : Iir_Value_Literal_Acc;
+                                      Rng_Type : Iir;
+                                      Loc : Iir);
+
    -- Check VALUE follows the constraints of DEF.
    -- INSTANCE,DEF is the definition of a subtype.
    -- EXPR is just used in case of error to display the location
