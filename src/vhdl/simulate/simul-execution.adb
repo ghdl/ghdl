@@ -1516,19 +1516,30 @@ package body Simul.Execution is
    is
       Imp : constant Iir := Get_Implementation (Stmt);
       Assoc_Chain : constant Iir := Get_Parameter_Association_Chain (Stmt);
+      Inter_Chain : constant Iir := Get_Interface_Declaration_Chain (Imp);
       Assoc: Iir;
+      Formal : Iir;
+      Val : Iir;
       Args: Iir_Value_Literal_Array (0 .. 3);
-      Inter_Chain : Iir;
       Expr_Mark : Mark_Type;
    begin
       Mark (Expr_Mark, Expr_Pool);
       Assoc := Assoc_Chain;
+      Formal := Inter_Chain;
       for I in Iir_Index32 loop
          exit when Assoc = Null_Iir;
-         Args (I) := Execute_Expression (Block, Get_Actual (Assoc));
+         case Get_Kind (Assoc) is
+            when Iir_Kind_Association_Element_By_Expression =>
+               Val := Get_Actual (Assoc);
+            when Iir_Kind_Association_Element_Open =>
+               Val := Get_Default_Value (Formal);
+            when others =>
+               raise Internal_Error;
+         end case;
+         Args (I) := Execute_Expression (Block, Val);
          Assoc := Get_Chain (Assoc);
+         Formal := Get_Chain (Formal);
       end loop;
-      Inter_Chain := Get_Interface_Declaration_Chain (Imp);
       case Get_Implicit_Definition (Imp) is
          when Iir_Predefined_Deallocate =>
             if Args (0).Val_Access /= null then
