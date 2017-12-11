@@ -2802,7 +2802,7 @@ package body Simul.Execution is
                if Unit = Null_Iir then
                   Error_Msg_Exec ("incorrect unit name", Expr);
                end if;
-               Mult := Ghdl_I64 (Get_Value (Get_Physical_Unit (Unit)));
+               Mult := Ghdl_I64 (Get_Value (Get_Physical_Literal (Unit)));
 
                Str_Bnd.Dim_1.Length := Lit_End;
                if Is_Real then
