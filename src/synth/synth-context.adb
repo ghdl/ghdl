@@ -215,12 +215,12 @@ package body Synth.Context is
 
    function Get_Value (Inst : Synth_Instance_Acc; Obj : Iir) return Value_Acc
    is
-      Slot : constant Object_Slot_Type := Get_Info (Obj).Slot;
+      Info : constant Sim_Info_Acc := Get_Info (Obj);
       Sim_Inst : constant Block_Instance_Acc :=
-        Simul.Execution.Get_Instance_For_Slot (Inst.Sim, Obj);
+        Simul.Execution.Get_Instance_By_Scope (Inst.Sim, Info.Obj_Scope);
       Val : Value_Acc;
    begin
-      Val := Instance_Map (Sim_Inst.Id).Objects (Slot);
+      Val := Instance_Map (Sim_Inst.Id).Objects (Info.Slot);
       pragma Assert (Val /= null);
       return Val;
    end Get_Value;

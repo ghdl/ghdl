@@ -122,11 +122,15 @@ package body Simul.Execution is
       end case;
    end Get_Instance_By_Scope;
 
-   function Get_Instance_For_Slot (Instance: Block_Instance_Acc; Decl: Iir)
-                                  return Block_Instance_Acc is
+   function Get_Instance_Object (Instance: Block_Instance_Acc; Obj : Iir)
+                                return Iir_Value_Literal_Acc
+   is
+      Info : constant Sim_Info_Acc := Get_Info (Obj);
+      Obj_Inst : Block_Instance_Acc;
    begin
-      return Get_Instance_By_Scope (Instance, Get_Info (Decl).Obj_Scope);
-   end Get_Instance_For_Slot;
+      Obj_Inst := Get_Instance_By_Scope (Instance, Info.Obj_Scope);
+      return Obj_Inst.Objects (Info.Slot);
+   end Get_Instance_Object;
 
    function Get_Info_For_Scope (Scope : Iir) return Sim_Info_Acc is
    begin
@@ -2278,8 +2282,7 @@ package body Simul.Execution is
                      Execute_Expression (Block, Get_Right_Limit (Prefix)),
                      Get_Direction (Prefix));
                elsif Info.Kind = Kind_Object then
-                  Bound := Get_Instance_For_Slot
-                    (Block, Prefix).Objects (Info.Slot);
+                  Bound := Get_Instance_Object (Block, Prefix);
                else
                   raise Internal_Error;
                end if;
@@ -2592,9 +2595,7 @@ package body Simul.Execution is
                                      Expr: Iir;
                                      Base : Iir_Value_Literal_Acc;
                                      Res : out Iir_Value_Literal_Acc;
-                                     Is_Sig : out Boolean)
-   is
-      Slot_Block: Block_Instance_Acc;
+                                     Is_Sig : out Boolean) is
    begin
       --  Default value
       Is_Sig := False;
@@ -2611,8 +2612,7 @@ package body Simul.Execution is
             if Base /= null then
                Res := Base;
             else
-               Slot_Block := Get_Instance_For_Slot (Block, Expr);
-               Res := Slot_Block.Objects (Get_Info (Expr).Slot);
+               Res := Get_Instance_Object (Block, Expr);
             end if;
 
          when Iir_Kind_Object_Alias_Declaration =>
@@ -2621,8 +2621,7 @@ package body Simul.Execution is
             if Base /= null then
                Res := Base;
             else
-               Slot_Block := Get_Instance_For_Slot (Block, Expr);
-               Res := Slot_Block.Objects (Get_Info (Expr).Slot);
+               Res := Get_Instance_Object (Block, Expr);
             end if;
 
          when Iir_Kind_Interface_Constant_Declaration
@@ -2638,12 +2637,7 @@ package body Simul.Execution is
             if Base /= null then
                Res := Base;
             else
-               declare
-                  Info : constant Sim_Info_Acc := Get_Info (Expr);
-               begin
-                  Slot_Block := Get_Instance_By_Scope (Block, Info.Obj_Scope);
-                  Res := Slot_Block.Objects (Info.Slot);
-               end;
+               Res := Get_Instance_Object (Block, Expr);
             end if;
 
          when Iir_Kind_Indexed_Name =>

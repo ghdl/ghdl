@@ -139,9 +139,6 @@ package Simul.Execution is
      (Instance: Block_Instance_Acc; Scope: Sim_Info_Acc)
      return Block_Instance_Acc;
 
-   function Get_Instance_For_Slot (Instance: Block_Instance_Acc; Decl: Iir)
-                                   return Block_Instance_Acc;
-
    -- Check VALUE follows the constraints of DEF.
    -- INSTANCE,DEF is the definition of a subtype.
    -- EXPR is just used in case of error to display the location
