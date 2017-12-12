@@ -1,0 +1,16 @@
+# [build] Ubuntu 18
+
+FROM ubuntu:bionic AS mcode
+
+RUN apt-get update -qq \
+  && apt-get -y install --no-install-recommends \
+            gnat gcc make zlib1g-dev \
+  && apt-get autoclean && apt-get clean && apt-get autoremove
+
+
+FROM mcode AS llvm-5.0
+
+RUN apt-get update -qq \
+  && apt-get -y install --no-install-recommends \
+            llvm-5.0-dev clang-5.0 \
+  && apt-get autoclean && apt-get clean && apt-get autoremove

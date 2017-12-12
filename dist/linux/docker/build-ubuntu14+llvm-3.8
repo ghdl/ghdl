@@ -1,7 +1,0 @@
-# Ubuntu 14
-FROM ubuntu:trusty
-
-RUN apt-get update -qq \
-  && apt-get -y install --no-install-recommends \
-            gnat gcc make zlib1g-dev llvm-3.8-dev clang-3.8 \
-  && apt-get clean

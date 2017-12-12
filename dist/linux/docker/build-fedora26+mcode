@@ -1,5 +1,0 @@
-# Fedora 26
-FROM fedora:26
-
-RUN dnf --nodocs -y install gcc-gnat zlib-devel make \
-  && dnf clean all
