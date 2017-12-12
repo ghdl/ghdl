@@ -2,49 +2,13 @@ branches:
   except:
   - appveyor
 
-language: c
-
-matrix:
-  include:
-    - os: linux
-      dist: trusty
-      sudo: required
-      services: docker
-      env: IMAGE=stretch+mcode
-    - os: linux
-      dist: trusty
-      sudo: required
-      services: docker
-      env: IMAGE=stretch+mcode+gpl
-    - os: linux
-      dist: trusty
-      sudo: required
-      services: docker
-      env: IMAGE=ubuntu14+mcode
-    - os: linux
-      dist: trusty
-      sudo: required
-      services: docker
-      env: IMAGE=ubuntu14+llvm-3.8
-    - os: linux
-      dist: trusty
-      sudo: required
-      services: docker
-      env: IMAGE=fedora26+mcode
-    - os: osx
-      osx_image: xcode7.3
-      env: IMAGE=macosx+mcode
-      cache:
-        directories:
-          - gnat
-
-install: true
-
-script:
-- ./dist/linux/travis-ci.sh
-
-before_deploy:
-- "echo ready to deploy"
+os: linux
+dist: trusty
+sudo: required
+services: docker
+language: minimal
+install: skip
+script: "./dist/linux/travis-ci.sh"
 
 deploy:
   - provider: releases
@@ -58,5 +22,23 @@ deploy:
       tags: true
       all_branches: true
 
-after_deploy:
-- "echo deployed"
+# For each linux build, a different job/instance (with the constraints above) is executed in parallel.
+env:
+  matrix:
+    - IMAGE=stretch+mcode
+    - IMAGE=stretch+mcode+gpl
+    - IMAGE=ubuntu14+mcode
+    - IMAGE=ubuntu14+llvm-3.8
+    - IMAGE=fedora26+mcode
+
+# A single additional job is described for the macos build. The constraints above are used, except explicitly overriden.
+jobs:
+  include:
+  - os: osx
+    osx_image: xcode7.3
+    language: c
+    install: true
+    env: IMAGE=macosx+mcode
+    cache:
+      directories:
+        - gnat
