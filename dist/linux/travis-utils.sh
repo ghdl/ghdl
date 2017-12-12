@@ -1,7 +1,8 @@
 # This is a trimmed down copy of
 # https://github.com/travis-ci/travis-build/blob/master/lib/travis/build/templates/header.sh
 travis_time_start() {
-  travis_timer_id=$RANDOM
+  # `date +%N` returns the date in nanoseconds. It is used as a replacement for $RANDOM, which is only available in bash.
+  travis_timer_id=`date +%N`
   travis_start_time=$(travis_nanoseconds)
   echo "travis_time:start:$travis_timer_id"
 }

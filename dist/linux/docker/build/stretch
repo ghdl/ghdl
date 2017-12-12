@@ -1,0 +1,11 @@
+# [build] Debian 9
+
+FROM debian:stretch-slim AS mcode
+
+RUN apt-get update -qq \
+  && apt-get -y install --no-install-recommends \
+            gnat gcc make zlib1g-dev \
+  && apt-get autoclean && apt-get clean && apt-get autoremove
+
+
+FROM mcode AS mcode-gpl

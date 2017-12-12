@@ -1,0 +1,12 @@
+# [build] Fedora 26
+
+FROM fedora:26 AS mcode
+
+RUN dnf --nodocs -y install gcc-gnat zlib-devel make \
+  && dnf clean all --enablerepo=\*
+
+
+FROM mcode AS llvm
+
+RUN dnf --nodocs -y install llvm-devel gcc-c++ clang \
+    && dnf clean all --enablerepo=\*

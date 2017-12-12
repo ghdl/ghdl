@@ -1,6 +1,6 @@
 branches:
   except:
-  - appveyor
+    - appveyor
 
 os: linux
 dist: trusty
@@ -10,8 +10,21 @@ language: minimal
 install: skip
 script: "./dist/linux/travis-ci.sh"
 
+addons:
+  apt:
+    packages:
+      - docker-ce
+
 deploy:
-  - provider: releases
+  - &deploy-docker
+    provider: script
+    skip_cleanup: true
+    script: ./dist/linux/deploy2dockerhub.sh "$IMAGE" "$TRAVIS_COMMIT_MESSAGE"
+    on:
+      repo: 1138-4EB/ghdl
+      branch: master
+  - &deploy-releases
+    provider: releases
     skip_cleanup: true
     api_key:
       secure: ji6LXOmD5V2N+ELHZr4oJsmxPhedk+8W6jfCqQdEbewQ42N+fKOq3lgqJni7ZdfpZaulB9OHPTApv3bwOjXjtN9rfBGmq//U9CwvzHmUeomdQv6WQOVevaWSXl3DNL9fk3yKynyFrsv4pvr45L8GIjaHLggKcYhNFPJ2rrnJlDoFT9MqQNpmP7Bg/LnwVQiv+ZDPkLlMWQzrXzLamdQILARPQka+kCdXl/sHH6OKvLgRvu9yvyXYSSfbyAHP+THISS5gDciizSBeWGlU75kgj/N+mkV+8NvtTTfEIgG8y49WJz6aBooTmRzk/jZW1dKMbDR6c5bpTmRvMZSzeSBuAR6WLhr6HevgCPi/1fX1y3pkVSrgBUF5KcxPgWCZp0I05QjaJOdvQDl1hH4TlVwpT18lM2+cWrui9fS7spnk/AuNKX882C5QWWRy28lIPasCVnwfeKX8a9KAwY9OqVOenoLC1yx7NJOGfH1bjuSYYxyR4XgLiGTHKALAuknCyD9QL0o378IwqxHMcsN0Gsd+GndMu0/b8GvSqfzDpV1XknqabQFwkZLs+Yydw0snfBUzXw9TfOk78IiPYEgXAxsQKBAkK7qvO36HIxLlSQXglXU1D4IDtQYDUel6vKll4pgu0WMxStQCbj51yDVJKvRhzwiBNC6Pwgzt2JTrpwM/T/U=
@@ -19,26 +32,50 @@ deploy:
     file_glob: true
     on:
       repo: tgingold/ghdl
-      tags: true
       all_branches: true
+      tags: true
 
-# For each linux build, a different job/instance (with the constraints above) is executed in parallel.
+# For each linux build, a different job/instance (with the constraints above) is executed in parallel in stage 'test'.
 env:
   matrix:
     - IMAGE=stretch+mcode
     - IMAGE=stretch+mcode+gpl
+#    - IMAGE=buster+mcode
+#    - IMAGE=buster+mcode+gpl
     - IMAGE=ubuntu14+mcode
     - IMAGE=ubuntu14+llvm-3.8
+#    - IMAGE=ubuntu16+mcode
+#    - IMAGE=ubuntu16+llvm-3.9
+#    - IMAGE=ubuntu18+mcode
+#    - IMAGE=ubuntu18+llvm-5.0
     - IMAGE=fedora26+mcode
+#    - IMAGE=fedora26+llvm
+  global:
+    - secure: "MZHtYkWdYK+SeYzJvWD8I0tbkdHGjmWyNDn70a2RrNYFu363Zt51ZvksEtkjrS7kdje6l6VPfLjilX5UtywIM1Mg6nt/rsw4p62+bGhMyhfXiqS3eqEfH2sThjosy773X8iotm2sW0ax0oHX07ZLcuTbZ+TK2cMGarZ+LzNT8IiMaeaWu4W7aE5LRxSmVRwcACUOa3NiC7GY/qC7vU2C8QNdXSlU3fSp17K5eccrkkBuiEhRTsdr3ZIhjOjrYzqHKWC3a0uHn/fJsbepsVM6FGt+zAwo0VqdXXCE2ts8EOATvFgEaCGxUgfGd/yvNsAG7sjF3nweR9Z11dpMbBE+TjxlLCXQ31v1Oj7pH6vcgjCYV69cZiLbsDhxTJFQ08qbm3xK8dmTUXFy1scrMSd8D/Q3Uf0LjHkH5Q5dL8TOyqejs57fUTIBtBUpCTvvGOErdZQAOWJc93sC9RQB7BuCDR2yR7rPTJr4KUwspe1uScA/H9cQS2p42SeJ4+Yyjtwod3IQWjr6+/pdNPoImleOP0dXSDCXpAIsbv6TR9curS3geLJuTmu5UnLzbURDr7Whtop3lCPbiN0H9jThSuyIxWUI+6JDGDG89RXbCyZvGz97sIShYstWg0U0xLWmw9IDez2HtK5VKuTT/hE7gDicZ0erN6r1dlix3SpuCtH1MlA=" #U
+    - secure: "kIA09oCHzoHMK4LsfwcaVaMuoAFpd1M+M8tW3b9Rvki/hEB3y46edlb88lWVM7RgkNoCaIPwAZD7Wf3Xiq9Y7wWmqRsWQNRaorC0xke5SuyMwCSQSNo9S5jAu9SM5uxENCH9yucJl/vm2juYitJCHyYYMb4x17fy3sHKULNJ+JBqnrgOuTBYM1JOIkJVO1P5LqEXmqTtr6KgQgiTMtlvnM7hxjapgoyM3J1376f+Kfky0hUoDD7LFLXu8yQCn5Fnar8wR3czK6Qknafmckt5yWJxGOZobMDfKwOdA0fpU+XiArNQ/1NM80fGXq4YOGK5ycVQkO2ACxDqHYfQRYLlIfrUGp75BoXWwN6O1GoOrFcF7ZIoSaLoK3hZdvzRFT7dpUQFlosn00Y7VzqbosQM5QS5TBBqO+DExnkb399OpXI7o0lrlr232kjAeYqEb6N1n3M9BpiNW9Je4plJa/RDKwYsnC8Qak4G08PVTe6V711W1UtqMPd6efWFYTNvRW9tjO3v1lFGaGJ99ABP0AYLIDYWV3zfgvp0UzQOKFdWJj7dMQxdLMQ/bIETKn8P7NFjOWic4pgtp3zekZCL27blhc0fyHm62HUiVLT+VGFOI/nyclzBIZStSVuxPj2LvmAIiMnUNmWwds1ZqIZ21eiNykkn+k52ddTRHXIh2fhvWfg=" #P
 
-# A single additional job is described for the macos build. The constraints above are used, except explicitly overriden.
+stages:
+  - create ghdl/build and ghdl/run images
+  - test
+
 jobs:
   include:
-  - os: osx
-    osx_image: xcode7.3
-    language: c
-    install: true
-    env: IMAGE=macosx+mcode
-    cache:
-      directories:
-        - gnat
+    # A single job is described in its own stage, to create and push ghdl/build and ghdl/run images.
+    - stage: create ghdl/build and ghdl/run images
+      env: IMAGE=""
+      script: if echo "$TRAVIS_COMMIT_MESSAGE" | grep -F -q "[ci images]"; then ./dist/linux/create.sh; fi;
+      deploy:
+        - <<: *deploy-docker
+    # A single additional job is described in stage 'test' for the macos build.
+    # The constraints above are used, except explicitly overriden.
+    - stage: test
+      os: osx
+      language: c
+      osx_image: xcode7.3
+      install: true
+      cache:
+        directories:
+          - gnat
+      env: IMAGE=macosx+mcode
+      deploy:
+        - <<: *deploy-releases
