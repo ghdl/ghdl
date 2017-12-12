@@ -1502,19 +1502,25 @@ package body Trans.Chap2 is
    begin
       Inter := Chain;
       while Inter /= Null_Iir loop
-         case Get_Kind (Inter) is
-            when Iir_Kind_Interface_Constant_Declaration
-              | Iir_Kind_Interface_Package_Declaration =>
-               Orig := Sem_Inst.Get_Origin (Inter);
-               Orig_Info := Get_Info (Orig);
+         Orig := Sem_Inst.Get_Origin (Inter);
+         Orig_Info := Get_Info (Orig);
 
-               Info := Add_Info (Inter, Orig_Info.Kind);
-               Copy_Info (Info, Orig_Info);
-               Clean_Copy_Info (Info);
+         Info := Add_Info (Inter, Orig_Info.Kind);
+         Copy_Info (Info, Orig_Info);
+
+         case Get_Kind (Inter) is
+            when Iir_Kind_Interface_Constant_Declaration =>
+               null;
+
+            when Iir_Kind_Interface_Package_Declaration =>
+               Instantiate_Iir_Generic_Chain_Info (Get_Generic_Chain (Inter));
+               Instantiate_Iir_Chain_Info (Get_Declaration_Chain (Inter));
 
             when others =>
                raise Internal_Error;
          end case;
+
+         Clean_Copy_Info (Info);
 
          Inter := Get_Chain (Inter);
       end loop;

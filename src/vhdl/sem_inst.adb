@@ -617,6 +617,11 @@ package body Sem_Inst is
             when Iir_Kind_Interface_Package_Declaration =>
                Set_Uninstantiated_Package_Decl
                  (Res, Get_Uninstantiated_Package_Decl (Inter));
+               Set_Generic_Chain
+                 (Res,
+                  Instantiate_Generic_Chain (Res, Get_Generic_Chain (Inter)));
+               Set_Declaration_Chain
+                 (Res, Instantiate_Iir_Chain (Get_Declaration_Chain (Inter)));
             when Iir_Kind_Interface_Type_Declaration =>
                Set_Type (Res, Get_Type (Inter));
             when Iir_Kinds_Interface_Subprogram_Declaration =>
