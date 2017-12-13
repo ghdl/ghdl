@@ -76,25 +76,12 @@ author = u'Tristan Gingold and contributors'
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
-def _IsUnderGitControl():
-	return (subprocess.check_output(["git", "rev-parse", "--is-inside-work-tree"], universal_newlines=True).strip() == "true")
-
-def _LatestTagName():
-	return subprocess.check_output(["git", "describe", "--abbrev=0", "--tags"], universal_newlines=True).strip()
-
 try:
-	if _IsUnderGitControl:
-		descr = _LatestTagName()
-		if descr.startswith('v'):
-			version = descr[1:]	 # remove prefix "v"
-		else:
-			version = descr
-	else:
-		with open('../src/version.in') as verin:
-			for line in verin:
-				line = re.findall(r'Ghdl_Ver.+\"(.+)\";', line)
-				if line:
-					version=line[0]
+	with open('../src/version.in') as verin:
+		for line in verin:
+			line = re.findall(r'Ghdl_Ver.+\"(.+)\";', line)
+			if line:
+				version=line[0]
 except Exception, e:
 	print "cannot extract version: %s" % e
 	version = "latest"
