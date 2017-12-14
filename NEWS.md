@@ -1,4 +1,6 @@
-**0.35** (2017-12-XX)
+**0.36** (XXXX-XX-XX)
+
+**0.35** (2017-12-14)
 - Assert and report messages are sent to stdout (#394)
 - Improve support for unbounded records
 - Bugs fixed
