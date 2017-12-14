@@ -16,9 +16,9 @@ options.
 
 .. rubric:: Supported platforms
 
-* :ref:`GNU/Linux with GCC <BUILD:mcode:GNULinux-GNAT>`
-* :ref:`Windows (x86_64) with GNAT GPL (x86) <BUILD:mcode:Windows-GNATGPL>`
-* :ref:`Windows (x86_64) with MinGW32/MinGW64 <BUILD:mcode:Windows-WinGW-GNAT>`
+* :doc:`GNULinux-GNAT`
+* :doc:`Windows-GNATGPL`
+* :doc:`Windows-MinGW-GNAT`
 
 .. toctree::
    :hidden:

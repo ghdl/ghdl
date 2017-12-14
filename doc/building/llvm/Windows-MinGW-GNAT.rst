@@ -1,7 +1,7 @@
 .. _BUILD:llvm:Windows-MinGW-GNAT:
 
-GHDL with LLVM backend build on Windows with GCC/GNAT (MinGW)
-#############################################################
+LLVM Backend on Windows with GCC/GNAT (MinGW)
+#############################################
 
 On Windows with MinGW, GHDL is configured by ``configure`` and build by ``make``.
 
@@ -17,10 +17,10 @@ On Windows with MinGW, GHDL is configured by ``configure`` and build by ``make``
 .. rubric:: Example:
 
 .. code-block:: Bash
-   
-   cd <ghdl>
-   mkdir build
-   cd build
-   ../configure --prefix=PREFIX
-   make
-   make install
+
+   $ cd <ghdl>
+   $ mkdir build
+   $ cd build
+   $ ../configure --prefix=PREFIX
+   $ make
+   $ make install

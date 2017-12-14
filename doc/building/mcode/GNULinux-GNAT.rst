@@ -1,7 +1,7 @@
 .. _BUILD:mcode:GNULinux-GNAT:
 
-GHDL with mcode backend build on GNU/Linux with GCC/GNAT
-########################################################
+mcode Backend on GNU/Linux with GCC/GNAT
+########################################
 
 On Linux, GHDL is configured by ``configure`` and build by ``make``.
 
@@ -18,10 +18,10 @@ On Linux, GHDL is configured by ``configure`` and build by ``make``.
 .. rubric:: Example:
 
 .. code-block:: Bash
-   
-   cd <ghdl>
-   mkdir build
-   cd build
-   ../configure --prefix=PREFIX
-   make
-   sudo make install
+
+   $ cd <ghdl>
+   $ mkdir build
+   $ cd build
+   $ ../configure --prefix=PREFIX
+   $ make
+   $ make install

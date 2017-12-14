@@ -1,26 +1,23 @@
-.. _BUILD:mcode:GNULinux-GNAT:
+.. _BUILD:llvm:GNULinux-GNAT:
 
-GNU/Linux with GCC/GNAT
-#######################
+LLVM Backend on GNU/Linux with GCC/GNAT
+#######################################
 
-On Linux, GHDL is configured by ``configure`` and build by ``make``.
+.. HINT:: You need to install LLVM (usually depends on ``libedit``, see :ghdlsharp:`29`). The supported versions are 3.5 till 5.0, but debugging is only supported with LLVM 3.5.
 
-* First, GHDL needs to be configured. It is common to specify a PREFIX
-  (installation directory like ``/usr/local`` or ``/opt/ghdl``). Without any
-  other option, ``configure`` select `mcode` as backend.
+* First configure GHDL with the proper arg ``./configure --with-llvm-config``. If ``llvm-config`` is not in your path, you can specify it: ``./configure --with-llvm-config=LLVM_INSTALL/bin/llvm-config``.
 
-* Next, ``make`` starts the compilation process.
-
-* Finally, ``make install`` installs GHDL into the installation directory
-  specified by PREFIX. You may need super user privileges (``sudo ...``).
+* Then, build with ``make`` and install with ``make install``.
 
 .. rubric:: Example:
 
 .. code-block:: Bash
 
-   cd <ghdl>
-   mkdir build
-   cd build
-   ../configure --prefix=PREFIX
-   make
-   sudo make install
+   $ cd <ghdl>
+   $ mkdir build
+   $ cd build
+   $ ../configure --with-llvm-config --prefix=PREFIX
+   $ make
+   $ make install
+
+.. HINT:: If you want to have stack backtraces on errors (like assert failure or index of out bounds), you need to configure and build ``libbacktrace`` from GCC (you don't need to configure GCC). Then add the following arg to configure: ``--with-backtrace-lib=/path-to-gcc-build/libbacktrace/.libs/libbacktrace.a``
