@@ -1,5 +1,5 @@
 SRCS= \
-conf.py \
+conf.py ../src/version.in \
 prolog.inc shields.inc shieldswho.inc \
 about.rst \
 appendix/Meta.rst appendix/Roadmap.rst \
