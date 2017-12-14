@@ -61,3 +61,13 @@ created.
    (32 or 64 bits). `GNAT GPL` can be downloaded anonymously from `libre.adacore.com <http://libre.adacore.com/tools/gnat-gpl-edition/>`_.
    Then, untar and run the doinstall script. Alternatively, most GNU/Linux
    provide a package named ``gcc-ada`` or ``gcc-gnat``.
+
+.. HINT::
+  In these instructions, the configure script is executed in the source directory; but you can execute in a different
+  directory too, like this:
+
+	.. CODE:: Bash
+
+		$ mkdir ghdl-objs
+		$ cd ghdl-objs
+		$ ../path/to/ghdl/configure ...

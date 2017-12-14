@@ -7,15 +7,7 @@ LLVM Backend
 
 * GCC (Gnu Compiler Collection)
 * GNAT (Ada compiler for GCC)
-* LLVM (Low-Level-Virtual Machine)
-
-  * 3.5
-  * 3.8
-  * 3.9
-  * 4.0
-  * 5.0
-
-* CLANG (Compiler front-end for LLVM)
+* LLVM (Low-Level-Virtual Machine) and CLANG (Compiler front-end for LLVM)
 
   * 3.5
   * 3.8
@@ -25,9 +17,9 @@ LLVM Backend
 
 .. rubric:: Supported platforms
 
-* :ref:`GNU/Linux with GCC <BUILD:llvm:GNULinux-GNAT>`
+* :doc:`GNULinux-GNAT`
+* :doc:`Windows-MinGW-GNAT`
 * Mac OS
-* :ref:`Windows (x86_64) with MinGW32/MinGW64 <BUILD:llvm:Windows-WinGW-GNAT>`
 
 .. toctree::
    :hidden:

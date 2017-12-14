@@ -1,7 +1,7 @@
 .. _BUILD:mcode:Windows-GNATGPL:
 
-GHDL with mcode backend build on Windows with GNAT GPL
-######################################################
+mcode Backend on Windows with GNAT GPL
+######################################
 
 Requirements
 ============

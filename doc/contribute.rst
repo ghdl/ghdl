@@ -14,8 +14,7 @@ If you are more familiar with GHDL, you might start asking yourself how it works
 While using GHDL, you might find flaws, such as bugs, missing features, typos in the documentation or topics which are
 still not covered. In order to improve GHDL, we welcome bug reports, suggestions and contributions for any aspect of
 GHDL. Either if it's a bug or an enhancement, have a look at the |SHIELD:issues-open| and |SHIELD:issues-closed| to see
-if someone already told us about it. You might find a solution there. To get a broader view, you can also check the
-:ref:`Roadmap <CHANGE>`.
+if someone already told us about it. You might find a solution there.
 
 If you found no information on your topic, please, report so that we are aware! You can reach us through various ways:
 |SHIELD:gitter| or open a |SHIELD:issues-new|.
@@ -100,8 +99,9 @@ write access to our repositories, the project is hosted at GitHub, which follows
 5. Last, the maintainers will merge your branch. You will be notified, the PR will be closed, and you'll be allowed to delete the branch, if you want.
 
 .. TIP::
-	* It is recommended to read `A successful Git branching model <http://nvie.com/posts/a-successful-git-branching-model/>`_ for a reference on how maintainers expect to handle multiple branches. However, our actual model is not as exhaustive as explained there.
-	* Some commit messages can `automatically close <https://help.github.com/articles/closing-issues-via-commit-messages/>`_ issues. This is a very useful feature, which you are not required to use. However beware that using `fix` anywhere in the commit message can have side effects. If you closed any issue unexpectedly, just reply to it (even if it's closed) so that maintainers can check it.
+  * It is recommended to read `A successful Git branching model <http://nvie.com/posts/a-successful-git-branching-model/>`_ for a reference on how maintainers expect to handle multiple branches. However, our actual model is not as exhaustive as explained there.
+  * Some commit messages can `automatically close <https://help.github.com/articles/closing-issues-via-commit-messages/>`_ issues. This is a very useful feature, which you are not required to use. However beware that using `fix` anywhere in the commit message can have side effects. If you closed any issue unexpectedly, just reply to it (even if it's closed) so that maintainers can check it.
+  * It is recommended to read :ref:`REF:Style` before contributing modifications to Ada sources.
 
 Related interesting projects
 ============================

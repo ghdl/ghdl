@@ -14,7 +14,7 @@ Directory Structure
     not be shipped with GHDL, but we offer prepared compile scripts to
     pre-compile the vendor libraries, if the vendor tool is present on the
     computer. These are located in ``libraries/vendor``.
-    See Vendor Primitives <VendorPrimitives.html> for information on how to
+    See :ref:`GETTING:PrecompVendor` for information on how to
     use them.
 
 * ``dist``: scripts and auxiliar files to build GHDL in different
