@@ -1,5 +1,5 @@
 package Version is
-   Ghdl_Ver : constant String := "0.35rc2";
+   Ghdl_Ver : constant String := "0.35";
    Ghdl_Release : constant String :=
       "(tarball) [Dunoon edition]";
 end Version;

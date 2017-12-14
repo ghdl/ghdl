@@ -21,7 +21,7 @@
 
 @copying
 @quotation
-GHDL 0.35rc1, Dec 14, 2017
+GHDL 0.35, Dec 14, 2017
 
 Tristan Gingold and contributors
 
@@ -83,7 +83,7 @@ LRM) is a plus.
 
 
 
-This document was generated on Dec 14, 2017 - 05:28.
+This document was generated on Dec 14, 2017 - 06:39.
 
 @c # preload commonly known graphical characters like (c)
 
