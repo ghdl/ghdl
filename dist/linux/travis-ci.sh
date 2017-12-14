@@ -29,7 +29,11 @@ PKG_SHORTCOMMIT="$(printf $TRAVIS_COMMIT | cut -c1-10)"
 PKG_VER=`grep Ghdl_Ver src/version.in | sed -e 's/.*"\(.*\)";/\1/'`
 PKG_TAG="$TRAVIS_TAG"
 if [ -z "$TRAVIS_TAG" ]; then
+    # No tag: use date + commit id
     PKG_TAG="$(date -u +%Y%m%d)-$PKG_SHORTCOMMIT";
+elif expr "$TRAVIS_TAG" : 'v[0-9].*'; then
+    # Remove leading 'v' in tags in the filenames.
+    PKG_TAG="$(echo $TAVIS_TAG | cut -c2-)"
 fi
 
 if [ "$IMAGE" = "" ]; then
