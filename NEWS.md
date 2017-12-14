@@ -1,5 +1,7 @@
-**0.35-dev** (XXXX-XX-XX)
-* Assert and report messages are sent to stdout (#394)
+**0.35** (2017-12-XX)
+- Assert and report messages are sent to stdout (#394)
+- Improve support for unbounded records
+- Bugs fixed
 
 **0.34** (2017-08-15)
 - Display stack backtraces on errors or assert failures
