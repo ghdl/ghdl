@@ -1951,7 +1951,10 @@ package body Sem_Types is
                            when Iir_Kind_Record_Type_Definition
                              | Iir_Kind_Record_Subtype_Definition =>
                               El_Type :=
-                                Reparse_As_Record_Constraint (El_Type);
+                                Reparse_As_Record_Constraint
+                                (El_Type);
+                           when Iir_Kind_Error =>
+                              null;
                            when others =>
                               Error_Msg_Sem
                                 (+El_Type,
@@ -2243,6 +2246,9 @@ package body Sem_Types is
                return Type_Mark;
             end if;
             Free_Name (Def);
+            return Type_Mark;
+
+         when Iir_Kind_Error =>
             return Type_Mark;
 
          when others =>
