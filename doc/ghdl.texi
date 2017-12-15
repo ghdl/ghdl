@@ -21,7 +21,7 @@
 
 @copying
 @quotation
-GHDL 0.35, Dec 14, 2017
+GHDL 0.36-dev, Dec 15, 2017
 
 Tristan Gingold and contributors
 
@@ -72,7 +72,6 @@ Copyright @copyright{} 2015-2017, Tristan Gingold and contributors
 
 
 
-
 __________________________________________________________________
 
 
@@ -83,7 +82,7 @@ LRM) is a plus.
 
 
 
-This document was generated on Dec 14, 2017 - 06:39.
+This document was generated on Dec 15, 2017 - 06:26.
 
 @c # preload commonly known graphical characters like (c)
 
@@ -95,9 +94,6 @@ This document was generated on Dec 14, 2017 - 06:39.
 @c <http://docutils.sourceforge.net>.
 
 @c # define a hard kine break for HTML
-
-
-
 
 
 
@@ -229,11 +225,11 @@ Building GHDL from Sources
 
 mcode Backend
 
-* GHDL with mcode backend build on GNU/Linux with GCC/GNAT:: 
-* GHDL with mcode backend build on Windows with GNAT GPL:: 
-* GHDL with mcode backend build on Windows with GCC/GNAT (MinGW): GHDL with mcode backend build on Windows with GCC/GNAT MinGW. 
+* mcode Backend on GNU/Linux with GCC/GNAT:: 
+* mcode Backend on Windows with GNAT GPL:: 
+* mcode Backend on Windows with GCC/GNAT (MinGW): mcode Backend on Windows with GCC/GNAT MinGW. 
 
-GHDL with mcode backend build on Windows with GNAT GPL
+mcode Backend on Windows with GNAT GPL
 
 * Requirements:: 
 * Scripts and Parameters:: 
@@ -244,13 +240,13 @@ Scripts and Parameters
 
 LLVM Backend
 
-* GNU/Linux with GCC/GNAT:: 
-* GHDL with LLVM backend build on Windows with GCC/GNAT (MinGW): GHDL with LLVM backend build on Windows with GCC/GNAT MinGW. 
+* LLVM Backend on GNU/Linux with GCC/GNAT:: 
+* LLVM Backend on Windows with GCC/GNAT (MinGW): LLVM Backend on Windows with GCC/GNAT MinGW. 
 
 GCC Backend
 
-* GNU/Linux with GCC/GNAT: GNU/Linux with GCC/GNAT<2>. 
-* GHDL with GCC backend build on Windows with GCC/GNAT (MinGW): GHDL with GCC backend build on Windows with GCC/GNAT MinGW. 
+* GCC Backend on GNU/Linux with GCC/GNAT:: 
+* GCC Backend on Windows with GCC/GNAT (MinGW): GCC Backend on Windows with GCC/GNAT MinGW. 
 
 Precompile Vendor Primitives
 
@@ -384,74 +380,6 @@ Several third party projects are supported: VUnit@footnote{https://vunit.github.
 
 
 
-@multitable {xxxxxxxxxxxxxxxxxxxxx} {xxxxxxxxxxxxxxxxxxxxxx} {xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx} {xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx} 
-@headitem
-
-Project hub
-
-@tab
-
-Documentation
-
-@tab
-
-Name
-
-@tab
-
-Brief description
-
-@item
-
->>|SHIELD:gh-poc|<<
-
-@tab
-
->>|SHIELD:rtd-poc|<<
-
-@tab
-
-PoC-Library@footnote{https://github.com/VLSI-EDA/PoC}
-
-@tab
-
-A Vendor-Independent, Open-Source IP Core and Utility Library.
-
-@item
-
->>|SHIELD:gh-vunit|<<
-
-@tab
-
-
-
-@tab
-
-VUnit@footnote{http://vunit.github.io/}
-
-@tab
-
-A unit testing framework for VHDL/SystemVerilog
-
-@item
-
->>|SHIELD:gl-p1076|<<
-
-@tab
-
->>|SHIELD:tw-p1076|<<
-
-@tab
-
-IEEE P1076 WG@footnote{http://www.eda-twiki.org/vasg/}
-
-@tab
-
-IEEE P1076 Working Group [VASG]
-
-@end multitable
-
-
 @c # preload commonly known graphical characters like (c)
 
 @c This data file has been placed in the public domain.
@@ -474,7 +402,6 @@ IEEE P1076 Working Group [VASG]
 
 
 
-
 @node Contributing,Copyrights | Licenses,About GHDL,Top
 @anchor{contribute contributing}@anchor{a}@anchor{contribute doc}@anchor{b}@anchor{contribute intro-contributing}@anchor{c}
 @chapter Contributing
@@ -490,15 +417,14 @@ If you are more familiar with GHDL, you might start asking yourself how it works
 While using GHDL, you might find flaws, such as bugs, missing features, typos in the documentation or topics which are
 still not covered. In order to improve GHDL, we welcome bug reports, suggestions and contributions for any aspect of
 GHDL. Either if it’s a bug or an enhancement, have a look at the  and  to see
-if someone already told us about it. You might find a solution there. To get a broader view, you can also check the
-Roadmap@footnote{http://poc-library.readthedocs.io/en/release/ChangeLog/index.html#change}.
+if someone already told us about it. You might find a solution there.
 
 If you found no information on your topic, please, report so that we are aware! You can reach us through various ways:
  or open a .
 
 @cartouche
 @quotation Hint 
-Since the development of GHDL started fifteen years ago, multiple platforms have been used as a support for both distribution and getting feedback. However, the development is now centralized in >>|SHIELD:gh-logo|<<.
+Since the development of GHDL started fifteen years ago, multiple platforms have been used as a support for both distribution and getting feedback. However, the development is now centralized in github.
 @end quotation
 @end cartouche
 
@@ -671,12 +597,15 @@ It is recommended to read A successful Git branching model@footnote{http://nvie.
 
 @item 
 Some commit messages can automatically close@footnote{https://help.github.com/articles/closing-issues-via-commit-messages/} issues. This is a very useful feature, which you are not required to use. However beware that using @cite{fix} anywhere in the commit message can have side effects. If you closed any issue unexpectedly, just reply to it (even if it’s closed) so that maintainers can check it.
+
+@item 
+It is recommended to read @ref{1b,,Coding Style} before contributing modifications to Ada sources.
 @end itemize
 @end quotation
 @end cartouche
 
 @node Related interesting projects,,Fork modify and pull-request,Contributing
-@anchor{contribute related-interesting-projects}@anchor{1b}
+@anchor{contribute related-interesting-projects}@anchor{1c}
 @section Related interesting projects
 
 
@@ -704,9 +633,8 @@ If you have an interesting project, please send us feedback or get listed on our
 
 
 
-
 @node Copyrights | Licenses,Quick Start Guide,Contributing,Top
-@anchor{licenses copyrights-licenses}@anchor{1c}@anchor{licenses doc}@anchor{1d}@anchor{licenses intro-copyrights}@anchor{1e}
+@anchor{licenses copyrights-licenses}@anchor{1d}@anchor{licenses doc}@anchor{1e}@anchor{licenses intro-copyrights}@anchor{1f}
 @chapter Copyrights | Licenses
 
 
@@ -714,10 +642,10 @@ If you have an interesting project, please send us feedback or get listed on our
 @itemize -
 
 @item 
-The GHDL front-end, package @code{std.textio} and the runtime library, @code{grt}, are given under @ref{1f,,GNU GPLv2}.
+The GHDL front-end, package @code{std.textio} and the runtime library, @code{grt}, are given under @ref{20,,GNU GPLv2}.
 
 @item 
-The documentation is given under @ref{20,,CC-BY-SA}.
+The documentation is given under @ref{21,,CC-BY-SA}.
 @end itemize
 
 @cartouche
@@ -783,7 +711,7 @@ The following sources may be used and distributed without restriction, provided 
 @end menu
 
 @node GNU GPLv2,CC-BY-SA,,Copyrights | Licenses
-@anchor{licenses lic-gplv2}@anchor{1f}@anchor{licenses gnu-gplv2}@anchor{21}
+@anchor{licenses lic-gplv2}@anchor{20}@anchor{licenses gnu-gplv2}@anchor{22}
 @section GNU GPLv2
 
 
@@ -794,7 +722,7 @@ This program is free software; you can redistribute it and/or modify it under th
 This program is distributed in the hope that it will be useful, but @strong{WITHOUT ANY WARRANTY}; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License@footnote{https://www.gnu.org/licenses/old-licenses/gpl-2.0.html} for more details.
 
 @node CC-BY-SA,List of Contributors,GNU GPLv2,Copyrights | Licenses
-@anchor{licenses lic-cc-by-sa}@anchor{20}@anchor{licenses cc-by-sa}@anchor{22}
+@anchor{licenses lic-cc-by-sa}@anchor{21}@anchor{licenses cc-by-sa}@anchor{23}
 @section CC-BY-SA
 
 
@@ -816,7 +744,7 @@ No additional restrictions: you may not apply legal terms or technological measu
 See CC-BY-SA-4.0 Legal Code@footnote{https://creativecommons.org/licenses/by-sa/4.0/legalcode.txt} for more details.
 
 @node List of Contributors,,CC-BY-SA,Copyrights | Licenses
-@anchor{licenses lic-contributors}@anchor{23}@anchor{licenses list-of-contributors}@anchor{24}
+@anchor{licenses lic-contributors}@anchor{24}@anchor{licenses list-of-contributors}@anchor{25}
 @section List of Contributors
 
 
@@ -945,7 +873,7 @@ __________________________________________________________________
 @c # define a hard kine break for HTML
 
 @node Quick Start Guide,Invoking GHDL,Copyrights | Licenses,Top
-@anchor{using/QuickStartGuide quick-start-guide}@anchor{25}@anchor{using/QuickStartGuide using-quickstart}@anchor{d}@anchor{using/QuickStartGuide doc}@anchor{26}
+@anchor{using/QuickStartGuide quick-start-guide}@anchor{26}@anchor{using/QuickStartGuide using-quickstart}@anchor{d}@anchor{using/QuickStartGuide doc}@anchor{27}
 @chapter Quick Start Guide
 
 
@@ -960,7 +888,7 @@ In this chapter, you will learn how to use @cite{GHDL} by working on a few examp
 @end menu
 
 @node The ‘Hello world’ program,The heartbeat program,,Quick Start Guide
-@anchor{using/QuickStartGuide the-hello-world-program}@anchor{27}
+@anchor{using/QuickStartGuide the-hello-world-program}@anchor{28}
 @section The @cite{‘Hello world’} program
 
 
@@ -995,7 +923,7 @@ end behaviour;
 Both @code{.vhdl} and @code{.vhd} extensions are used for VHDL source files, while @code{.v} is used for Verilog.
 
 @item 
-Unless you use especial characters, either @cite{UTF-8} or @cite{ISO-8859-1} encodings can be used. However, if you do, the latter should be used. The standard defines ASCII (7-bit encoding) or ISO Latin-1 (ISO-8859-1) as default. However, GHDL has a relaxing option, @ref{28,,--mb-comments} (multi byte), to allow UTF-8 or other encodings in comments.
+Unless you use especial characters, either @cite{UTF-8} or @cite{ISO-8859-1} encodings can be used. However, if you do, the latter should be used. The standard defines ASCII (7-bit encoding) or ISO Latin-1 (ISO-8859-1) as default. However, GHDL has a relaxing option, @ref{29,,--mb-comments} (multi byte), to allow UTF-8 or other encodings in comments.
 @end itemize
 @end quotation
 @end cartouche
@@ -1007,7 +935,7 @@ Unless you use especial characters, either @cite{UTF-8} or @cite{ISO-8859-1} enc
 First, you have to compile the file; this is called @cite{analysis} of a design file in @cite{VHDL} terms. Run @code{ghdl -a hello.vhdl} in the @cite{shell}. This command creates or updates a file @code{work-obj93.cf}, which describes the library @code{work}.
 
 @item 
-Then, run @code{ghdl -e hello_world} in the @cite{shell}. Option @ref{29,,-e} means @emph{elaborate}, which is used to build a design, with the @code{hello_world} entity at the top of the hierarchy.
+Then, run @code{ghdl -e hello_world} in the @cite{shell}. Option @ref{2a,,-e} means @emph{elaborate}, which is used to build a design, with the @code{hello_world} entity at the top of the hierarchy.
 
 @item 
 Last, you can directly launch the simulation running @code{ghdl -r hello_world} in the @cite{shell}. The result of the simulation will be shown on screen:
@@ -1031,19 +959,19 @@ If a GCC/LLVM variant of @cite{GHDL} is used:
 The elaboration step is compulsory after the analysis and prior to launching the simulation; This wil generate an executable binary named @code{hello_world}.
 
 @item 
-As a result, @ref{2a,,-r} is just a passthrough to the binary generated in the @cite{elaboration}. Therefore, the executable can be run directly, @code{./hello_world}. See @ref{2a,,-r} for more informartion.
+As a result, @ref{2b,,-r} is just a passthrough to the binary generated in the @cite{elaboration}. Therefore, the executable can be run directly, @code{./hello_world}. See @ref{2b,,-r} for more informartion.
 @end itemize
 @end quotation
 @end cartouche
 
 @cartouche
 @quotation Hint 
-@ref{29,,-e} can be bypassed with mcode, since @ref{2a,,-r} actually elaborates the design and saves it on memory before running the simulation. But you can still use it to check for some elaboration problems.
+@ref{2a,,-e} can be bypassed with mcode, since @ref{2b,,-r} actually elaborates the design and saves it on memory before running the simulation. But you can still use it to check for some elaboration problems.
 @end quotation
 @end cartouche
 
 @node The heartbeat program,A full adder,The ‘Hello world’ program,Quick Start Guide
-@anchor{using/QuickStartGuide the-heartbeat-program}@anchor{2b}
+@anchor{using/QuickStartGuide the-heartbeat-program}@anchor{2c}
 @section The @cite{heartbeat} program
 
 
@@ -1066,7 +994,7 @@ end behaviour;
 @end example
 
 @node A full adder,Starting with a design,The heartbeat program,Quick Start Guide
-@anchor{using/QuickStartGuide a-full-adder}@anchor{2c}
+@anchor{using/QuickStartGuide a-full-adder}@anchor{2d}
 @section A full adder
 
 
@@ -1165,14 +1093,14 @@ Now, it is time to run the testbench, @code{ghdl -r adder_tb}, and check the res
 adder_tb.vhdl:52:7:(assertion note): end of test
 @end example
 
-If your design is rather complex, you’d like to inspect signals. Signal values can be dumped using multiple formats (see section ‘@ref{2d,,Export waveforms}’ for more information). The resulting file can be read with a wave viewer such as GtkWave@footnote{http://gtkwave.sourceforge.net/}.
+If your design is rather complex, you’d like to inspect signals. Signal values can be dumped using multiple formats (see section ‘@ref{2e,,Export waveforms}’ for more information). The resulting file can be read with a wave viewer such as GtkWave@footnote{http://gtkwave.sourceforge.net/}.
 
 As explained in the manual@footnote{http://gtkwave.sourceforge.net/gtkwave.pdf}, GtkWave @emph{‘relies on a post-mortem approach through the use of dumpfiles’}. Therefore, you should first simulate your design and dump a waveform file, say VCD: @code{ghdl -r adder_tb --vcd=adder.vcd}. Then, you can view the dump: @code{gtkwave adder.vcd}.
 
-See section ‘@ref{2e,,Simulation options}’, for more details on other runtime options.
+See section ‘@ref{2f,,Simulation options}’, for more details on other runtime options.
 
 @node Starting with a design,,A full adder,Quick Start Guide
-@anchor{using/QuickStartGuide starting-with-a-design}@anchor{2f}
+@anchor{using/QuickStartGuide starting-with-a-design}@anchor{30}
 @section Starting with a design
 
 
@@ -1270,7 +1198,7 @@ Sometimes, a design does not fully follow the VHDL standards. For example it use
 @c # define a hard kine break for HTML
 
 @node Invoking GHDL,Simulation and runtime,Quick Start Guide,Top
-@anchor{using/InvokingGHDL using-invoking}@anchor{e}@anchor{using/InvokingGHDL doc}@anchor{30}@anchor{using/InvokingGHDL invoking-ghdl}@anchor{31}
+@anchor{using/InvokingGHDL using-invoking}@anchor{e}@anchor{using/InvokingGHDL doc}@anchor{31}@anchor{using/InvokingGHDL invoking-ghdl}@anchor{32}
 @chapter Invoking GHDL
 
 
@@ -1314,13 +1242,13 @@ the @code{--PREFIX} command line option
 the 
 @geindex GHDL_PREFIX
 @geindex environment variable; GHDL_PREFIX
-@ref{32,,GHDL_PREFIX} environment variable
+@ref{33,,GHDL_PREFIX} environment variable
 
 @item 
 a built-in default path. It is a hard-coded path on GNU/Linux, and it corresponds to the value of the @code{HKLM\Software\Ghdl\Install_Dir} registry entry on Windows.
 @end itemize
 
-You should use the @ref{33,,--disp-config} command to display and debug installation problems.
+You should use the @ref{34,,--disp-config} command to display and debug installation problems.
 @end quotation
 @end quotation
 @end cartouche
@@ -1338,7 +1266,7 @@ You should use the @ref{33,,--disp-config} command to display and debug installa
 @end menu
 
 @node Design building commands,Design rebuilding commands,,Invoking GHDL
-@anchor{using/InvokingGHDL design-building-commands}@anchor{34}
+@anchor{using/InvokingGHDL design-building-commands}@anchor{35}
 @section Design building commands
 
 
@@ -1357,12 +1285,12 @@ The mostly used commands of GHDL are those to analyze and elaborate a design.
 @end menu
 
 @node Analysis [-a],Elaboration [-e],,Design building commands
-@anchor{using/InvokingGHDL analysis-a}@anchor{35}
+@anchor{using/InvokingGHDL analysis-a}@anchor{36}
 @subsection Analysis [@code{-a}]
 
 
 @geindex ghdl command line option; -a <[options...] file...>
-@anchor{using/InvokingGHDL cmdoption-ghdl-a}@anchor{36}
+@anchor{using/InvokingGHDL cmdoption-ghdl-a}@anchor{37}
 @deffn {Option} @w{-}a <[options...] file...>
 @end deffn
 
@@ -1373,12 +1301,12 @@ See GHDL_options, for details on the GHDL options. For example, to produce debug
 @geindex cmd elaboration
 
 @node Elaboration [-e],Run [-r],Analysis [-a],Design building commands
-@anchor{using/InvokingGHDL elaboration-e}@anchor{37}
+@anchor{using/InvokingGHDL elaboration-e}@anchor{38}
 @subsection Elaboration [@code{-e}]
 
 
 @geindex ghdl command line option; -e <[options...] primary_unit [secondary_unit]>
-@anchor{using/InvokingGHDL cmdoption-ghdl-e}@anchor{29}
+@anchor{using/InvokingGHDL cmdoption-ghdl-e}@anchor{2a}
 @deffn {Option} @w{-}e <[options...] primary_unit [secondary_unit]>
 @end deffn
 
@@ -1388,7 +1316,7 @@ Re-analyzes all the configurations, entities, architectures and package declarat
 @itemize *
 
 @item 
-The elaboration command, @ref{29,,-e}, must be followed by a name of either:
+The elaboration command, @ref{2a,,-e}, must be followed by a name of either:
 
 @quotation
 
@@ -1407,7 +1335,7 @@ an entity unit followed by a name of an architecture unit
 @end quotation
 @end itemize
 
-Name of the units must be a simple name, without any dot.  You can select the name of the @cite{WORK} library with the @code{--work=NAME} option, as described in GHDL_options. See section ‘@ref{38,,Top entity}’, for the restrictions on the root design of a hierarchy.
+Name of the units must be a simple name, without any dot.  You can select the name of the @cite{WORK} library with the @code{--work=NAME} option, as described in GHDL_options. See section ‘@ref{39,,Top entity}’, for the restrictions on the root design of a hierarchy.
 
 
 @itemize *
@@ -1422,12 +1350,12 @@ If mcode is used, this command elaborates the design but does not generate anyth
 @geindex cmd run
 
 @node Run [-r],Elaborate and run [--elab-run],Elaboration [-e],Design building commands
-@anchor{using/InvokingGHDL run-r}@anchor{39}
+@anchor{using/InvokingGHDL run-r}@anchor{3a}
 @subsection Run [@code{-r}]
 
 
 @geindex ghdl command line option; -r <[options...] primary_unit [secondary_unit] [simulation_options...]>
-@anchor{using/InvokingGHDL cmdoption-ghdl-r}@anchor{2a}
+@anchor{using/InvokingGHDL cmdoption-ghdl-r}@anchor{2b}
 @deffn {Option} @w{-}r <[options...] primary_unit [secondary_unit] [simulation_options...]>
 @end deffn
 
@@ -1452,37 +1380,37 @@ This command exists for three reasons:
 You are using GCC/LLVM, but you don’t need to create the executable program name.
 
 @item 
-It is coherent with the @ref{36,,-a} and @ref{29,,-e} commands.
+It is coherent with the @ref{37,,-a} and @ref{2a,,-e} commands.
 
 @item 
 It works with mcode implementation, where the executable code is generated in memory.
 @end itemize
 
-See section ‘@ref{3a,,Simulation and runtime}’, for details on options.
+See section ‘@ref{3b,,Simulation and runtime}’, for details on options.
 
 @geindex cmd elaborate and run
 
 @node Elaborate and run [--elab-run],Check syntax [-s],Run [-r],Design building commands
-@anchor{using/InvokingGHDL elaborate-and-run-elab-run}@anchor{3b}
+@anchor{using/InvokingGHDL elaborate-and-run-elab-run}@anchor{3c}
 @subsection Elaborate and run [@code{--elab-run}]
 
 
 @geindex ghdl command line option; --elab-run <[elab_options...] primary_unit [secondary_unit] [run_options...]>
-@anchor{using/InvokingGHDL cmdoption-ghdl-elab-run}@anchor{3c}
+@anchor{using/InvokingGHDL cmdoption-ghdl-elab-run}@anchor{3d}
 @deffn {Option} @w{-}@w{-}elab@w{-}run <[elab_options...] primary_unit [secondary_unit] [run_options...]>
 @end deffn
 
-Acts like the elaboration command (see @ref{29,,-e}) followed by the run command (see @ref{2a,,-r}).
+Acts like the elaboration command (see @ref{2a,,-e}) followed by the run command (see @ref{2b,,-r}).
 
 @geindex cmd checking syntax
 
 @node Check syntax [-s],Analyze and elaborate [-c],Elaborate and run [--elab-run],Design building commands
-@anchor{using/InvokingGHDL check-syntax-s}@anchor{3d}
+@anchor{using/InvokingGHDL check-syntax-s}@anchor{3e}
 @subsection Check syntax [@code{-s}]
 
 
 @geindex ghdl command line option; -s <[options] files>
-@anchor{using/InvokingGHDL cmdoption-ghdl-s}@anchor{3e}
+@anchor{using/InvokingGHDL cmdoption-ghdl-s}@anchor{3f}
 @deffn {Option} @w{-}s <[options] files>
 @end deffn
 
@@ -1491,22 +1419,22 @@ Analyze files but do not generate code. This command may be used to check the sy
 @geindex cmd analyze and elaborate
 
 @node Analyze and elaborate [-c],,Check syntax [-s],Design building commands
-@anchor{using/InvokingGHDL analyze-and-elaborate-c}@anchor{3f}
+@anchor{using/InvokingGHDL analyze-and-elaborate-c}@anchor{40}
 @subsection Analyze and elaborate [@code{-c}]
 
 
 @geindex ghdl command line option; -c <[options] file... -<e|r> primary_unit [secondary_unit]>
-@anchor{using/InvokingGHDL cmdoption-ghdl-c}@anchor{40}
+@anchor{using/InvokingGHDL cmdoption-ghdl-c}@anchor{41}
 @deffn {Option} @w{-}c <[options] file... @w{-}<e|r> primary_unit [secondary_unit]>
 @end deffn
 
 @cartouche
 @quotation Hint 
-With GCC/LLVM, @ref{29,,-e} should be used, and @ref{2a,,-r} with mcode.
+With GCC/LLVM, @ref{2a,,-e} should be used, and @ref{2b,,-r} with mcode.
 @end quotation
 @end cartouche
 
-The files are first parsed, and then a elaboration is performed, which drives an analysis. Effectively, analysis and elaboration are combined, but there is no explicit call to @ref{36,,-a}. With GCC/LLVM, code is generated during the elaboration. With mcode, the simulation is launched after the elaboration.
+The files are first parsed, and then a elaboration is performed, which drives an analysis. Effectively, analysis and elaboration are combined, but there is no explicit call to @ref{37,,-a}. With GCC/LLVM, code is generated during the elaboration. With mcode, the simulation is launched after the elaboration.
 
 All the units of the files are put into the @cite{work} library. But, the work library is neither read from disk nor saved. Therefore, you must give all the files of the @cite{work} library your design needs.
 
@@ -1541,7 +1469,7 @@ This command is still under development. In case of problems, you should go back
 @end cartouche
 
 @node Design rebuilding commands,Options,Design building commands,Invoking GHDL
-@anchor{using/InvokingGHDL design-rebuilding-commands}@anchor{41}
+@anchor{using/InvokingGHDL design-rebuilding-commands}@anchor{42}
 @section Design rebuilding commands
 
 
@@ -1558,12 +1486,12 @@ Analyzing and elaborating a design consisting in several files can be tricky, du
 @end menu
 
 @node Import [-i],Make [-m],,Design rebuilding commands
-@anchor{using/InvokingGHDL import-i}@anchor{42}
+@anchor{using/InvokingGHDL import-i}@anchor{43}
 @subsection Import [@code{-i}]
 
 
 @geindex ghdl command line option; -i <[options] file...>
-@anchor{using/InvokingGHDL cmdoption-ghdl-i}@anchor{43}
+@anchor{using/InvokingGHDL cmdoption-ghdl-i}@anchor{44}
 @deffn {Option} @w{-}i <[options] file...>
 @end deffn
 
@@ -1583,17 +1511,17 @@ Since the files are parsed, there must be correct files. However, since they are
 @end quotation
 @end cartouche
 
-See @ref{44,,-m}, to actually build the design.
+See @ref{45,,-m}, to actually build the design.
 
 @geindex cmd make
 
 @node Make [-m],Generate Makefile [--gen-makefile],Import [-i],Design rebuilding commands
-@anchor{using/InvokingGHDL make-m}@anchor{45}
+@anchor{using/InvokingGHDL make-m}@anchor{46}
 @subsection Make [@code{-m}]
 
 
 @geindex ghdl command line option; -m <[options] primary [secondary]>
-@anchor{using/InvokingGHDL cmdoption-ghdl-m}@anchor{44}
+@anchor{using/InvokingGHDL cmdoption-ghdl-m}@anchor{45}
 @deffn {Option} @w{-}m <[options] primary [secondary]>
 @end deffn
 
@@ -1603,10 +1531,10 @@ Analyze automatically outdated files and elaborate a design. The primary unit de
 @itemize *
 
 @item 
-With option @ref{46,,--bind}, GHDL will stop before the final linking step. This is useful when the main entry point is not GHDL and you’re linking GHDL object files into a foreign program.
+With option @ref{47,,--bind}, GHDL will stop before the final linking step. This is useful when the main entry point is not GHDL and you’re linking GHDL object files into a foreign program.
 
 @item 
-With option @ref{47,,-f} (force), GHDL analyzes all the units of the work library needed to create the design hierarchy. Not outdated units are recompiled.  This is useful if you want to compile a design hierarchy with new compilation flags (for example, to add the @emph{-g} debugging option).
+With option @ref{48,,-f} (force), GHDL analyzes all the units of the work library needed to create the design hierarchy. Not outdated units are recompiled.  This is useful if you want to compile a design hierarchy with new compilation flags (for example, to add the @emph{-g} debugging option).
 @end itemize
 
 The make command will only re-analyze design units in the work library. GHDL fails if it has to analyze an outdated unit from another library.
@@ -1622,36 +1550,36 @@ This is not perfect, since the default architecture (the most recently analyzed 
 @geindex cmd generate makefile
 
 @node Generate Makefile [--gen-makefile],Generate dependency file command [--gen-depends],Make [-m],Design rebuilding commands
-@anchor{using/InvokingGHDL generate-makefile-gen-makefile}@anchor{48}
+@anchor{using/InvokingGHDL generate-makefile-gen-makefile}@anchor{49}
 @subsection Generate Makefile [@code{--gen-makefile}]
 
 
 @geindex ghdl command line option; --gen-makefile <[options] primary [secondary]>
-@anchor{using/InvokingGHDL cmdoption-ghdl-gen-makefile}@anchor{49}
+@anchor{using/InvokingGHDL cmdoption-ghdl-gen-makefile}@anchor{4a}
 @deffn {Option} @w{-}@w{-}gen@w{-}makefile <[options] primary [secondary]>
 @end deffn
 
-This command works like the make command (see @ref{44,,-m}), but only a makefile is generated on the standard output.
+This command works like the make command (see @ref{45,,-m}), but only a makefile is generated on the standard output.
 
 @geindex --gen-depends command
 
 @node Generate dependency file command [--gen-depends],,Generate Makefile [--gen-makefile],Design rebuilding commands
-@anchor{using/InvokingGHDL generate-dependency-file-command-gen-depends}@anchor{4a}
+@anchor{using/InvokingGHDL generate-dependency-file-command-gen-depends}@anchor{4b}
 @subsection Generate dependency file command [@code{--gen-depends}]
 
 
 @geindex ghdl command line option; --gen-depends <[options] primary [secondary]>
-@anchor{using/InvokingGHDL cmdoption-ghdl-gen-depends}@anchor{4b}
+@anchor{using/InvokingGHDL cmdoption-ghdl-gen-depends}@anchor{4c}
 @deffn {Option} @w{-}@w{-}gen@w{-}depends <[options] primary [secondary]>
 @end deffn
 
 Generate a Makefile containing only dependencies to build a design unit.
 
-This command works like the make and gen-makefile commands (see @ref{44,,-m}), but instead of a full makefile only dependencies without rules are generated on the standard output.
+This command works like the make and gen-makefile commands (see @ref{45,,-m}), but instead of a full makefile only dependencies without rules are generated on the standard output.
 Theses rules can then be integrated in another Makefile.
 
 @node Options,Warnings,Design rebuilding commands,Invoking GHDL
-@anchor{using/InvokingGHDL options}@anchor{4c}
+@anchor{using/InvokingGHDL options}@anchor{4d}
 @section Options
 
 
@@ -1665,14 +1593,14 @@ Theses rules can then be integrated in another Makefile.
 
 @cartouche
 @quotation Hint 
-Besides the options described below, @cite{GHDL} passes any debugging options (those that begin with -g@footnote{http://poc-library.readthedocs.io/en/release/References/CmdRefs/PoC.html#cmdoption-poc-py-xsim-g}) and optimizations options (those that begin with -O@footnote{https://docs.python.org/3.6/using/cmdline.html#cmdoption-o} or @ref{47,,-f}) to @cite{GCC}.  Refer to the @cite{GCC} manual for details.
+Besides the options described below, @cite{GHDL} passes any debugging options (those that begin with -g@footnote{http://poc-library.readthedocs.io/en/release/References/CmdRefs/PoC.html#cmdoption-poc-py-xsim-g}) and optimizations options (those that begin with -O@footnote{https://docs.python.org/3.6/using/cmdline.html#cmdoption-o} or @ref{48,,-f}) to @cite{GCC}.  Refer to the @cite{GCC} manual for details.
 @end quotation
 @end cartouche
 
 @geindex WORK library
 
 @geindex ghdl command line option; --work<=NAME>
-@anchor{using/InvokingGHDL cmdoption-ghdl-work}@anchor{4d}
+@anchor{using/InvokingGHDL cmdoption-ghdl-work}@anchor{4e}
 @deffn {Option} @w{-}@w{-}work<=NAME>
 
 Specify the name of the @code{WORK} library.  Analyzed units are always placed in the library logically named @code{WORK}.  With this option, you can set its name.  By default, the name is @code{work}.
@@ -1683,7 +1611,7 @@ Specify the name of the @code{WORK} library.  Analyzed units are always placed i
 @end deffn
 
 @geindex ghdl command line option; --workdir<=DIR>
-@anchor{using/InvokingGHDL cmdoption-ghdl-workdir}@anchor{4e}
+@anchor{using/InvokingGHDL cmdoption-ghdl-workdir}@anchor{4f}
 @deffn {Option} @w{-}@w{-}workdir<=DIR>
 
 Specify the directory where the @code{WORK} library is located. When this option is not present, the @code{WORK} library is in the current directory.  The object files created by the compiler are always placed in the same directory as the @code{WORK} library.
@@ -1692,14 +1620,14 @@ Use option @code{-P} to specify where libraries other than @code{WORK} are place
 @end deffn
 
 @geindex ghdl command line option; --std<=STD>
-@anchor{using/InvokingGHDL cmdoption-ghdl-std}@anchor{4f}
+@anchor{using/InvokingGHDL cmdoption-ghdl-std}@anchor{50}
 @deffn {Option} @w{-}@w{-}std<=STD>
 
-Specify the standard to use.  By default, the standard is @code{93c}, which means VHDL-93 accepting VHDL-87 syntax.  For details on @code{STD} values see section ‘@ref{50,,VHDL standards}’.
+Specify the standard to use.  By default, the standard is @code{93c}, which means VHDL-93 accepting VHDL-87 syntax.  For details on @code{STD} values see section ‘@ref{51,,VHDL standards}’.
 @end deffn
 
 @geindex ghdl command line option; --ieee<=VER>
-@anchor{using/InvokingGHDL cmdoption-ghdl-ieee}@anchor{51}
+@anchor{using/InvokingGHDL cmdoption-ghdl-ieee}@anchor{52}
 @deffn {Option} @w{-}@w{-}ieee<=VER>
 
 @geindex ieee library
@@ -1727,7 +1655,7 @@ packages @code{std_logic_1164} defined by IEEE 1164, the synthesis
 packages , @code{numeric_bit} and @code{numeric_std} defined by IEEE
 1076.3, and the @code{vital} packages @code{vital_timing} and
 @code{vital_primitives}, defined by IEEE 1076.4.  The version of these
-packages is defined by the VHDL standard used.  See section ‘@ref{52,,VITAL packages}’,
+packages is defined by the VHDL standard used.  See section ‘@ref{53,,VITAL packages}’,
 for more details.
 
 @item synopsys
@@ -1752,7 +1680,7 @@ your design, and during elaboration.
 @end deffn
 
 @geindex ghdl command line option; -P<DIRECTORY>
-@anchor{using/InvokingGHDL cmdoption-ghdl-p-directory}@anchor{53}
+@anchor{using/InvokingGHDL cmdoption-ghdl-p-directory}@anchor{54}
 @deffn {Option} @w{-}P<DIRECTORY>
 
 Add @cite{DIRECTORY} to the end of the list of directories to be searched for
@@ -1766,7 +1694,7 @@ option is not specified.
 @end deffn
 
 @geindex ghdl command line option; -fexplicit
-@anchor{using/InvokingGHDL cmdoption-ghdl-fexplicit}@anchor{54}
+@anchor{using/InvokingGHDL cmdoption-ghdl-fexplicit}@anchor{55}
 @deffn {Option} @w{-}fexplicit
 
 When two operators are overloaded, give preference to the explicit declaration.
@@ -1781,7 +1709,7 @@ This option is not set by default. I don’t think this option is a good feature
 @end cartouche
 
 @geindex ghdl command line option; -frelaxed-rules
-@anchor{using/InvokingGHDL cmdoption-ghdl-frelaxed-rules}@anchor{55}
+@anchor{using/InvokingGHDL cmdoption-ghdl-frelaxed-rules}@anchor{56}
 @deffn {Option} @w{-}frelaxed@w{-}rules
 
 Within an object declaration, allow to reference the name (which references the hidden declaration).  This ignores the error in the following code:
@@ -1805,44 +1733,44 @@ This option also relaxes the rules about pure functions. Violations result in wa
 @end deffn
 
 @geindex ghdl command line option; -fpsl
-@anchor{using/InvokingGHDL cmdoption-ghdl-fpsl}@anchor{56}
+@anchor{using/InvokingGHDL cmdoption-ghdl-fpsl}@anchor{57}
 @deffn {Option} @w{-}fpsl
 
-Enable parsing of PSL assertions within comments.  See section ‘@ref{57,,PSL implementation}’ for more details.
+Enable parsing of PSL assertions within comments.  See section ‘@ref{58,,PSL implementation}’ for more details.
 @end deffn
 
 @geindex ghdl command line option; --no-vital-checks
-@anchor{using/InvokingGHDL cmdoption-ghdl-no-vital-checks}@anchor{58}
+@anchor{using/InvokingGHDL cmdoption-ghdl-no-vital-checks}@anchor{59}
 @deffn {Option} @w{-}@w{-}no@w{-}vital@w{-}checks
 @end deffn
 
 @geindex ghdl command line option; --vital-checks
-@anchor{using/InvokingGHDL cmdoption-ghdl-vital-checks}@anchor{59}
+@anchor{using/InvokingGHDL cmdoption-ghdl-vital-checks}@anchor{5a}
 @deffn {Option} @w{-}@w{-}vital@w{-}checks
 
 Disable or enable checks of restriction on VITAL units. Checks are enabled by default.
 
 Checks are performed only when a design unit is decorated by a VITAL attribute. The VITAL attributes are @code{VITAL_Level0} and @code{VITAL_Level1}, both declared in the @code{ieee.VITAL_Timing} package.
 
-Currently, VITAL checks are only partially implemented. See section ‘@ref{5a,,VHDL restrictions for VITAL}’ for more details.
+Currently, VITAL checks are only partially implemented. See section ‘@ref{5b,,VHDL restrictions for VITAL}’ for more details.
 @end deffn
 
 @geindex ghdl command line option; --PREFIX<=PATH>
-@anchor{using/InvokingGHDL cmdoption-ghdl-prefix}@anchor{5b}
+@anchor{using/InvokingGHDL cmdoption-ghdl-prefix}@anchor{5c}
 @deffn {Option} @w{-}@w{-}PREFIX<=PATH>
 
 Use @code{PATH} as the prefix path to find commands and pre-installed (@code{std} and @code{ieee}) libraries.
 @end deffn
 
 @geindex ghdl command line option; -v
-@anchor{using/InvokingGHDL cmdoption-ghdl-v}@anchor{5c}
+@anchor{using/InvokingGHDL cmdoption-ghdl-v}@anchor{5d}
 @deffn {Option} @w{-}v
 
 Be verbose. For example, for analysis, elaboration and make commands, GHDL displays the commands executed.
 @end deffn
 
 @node Warnings,Diagnostics Control,Options,Invoking GHDL
-@anchor{using/InvokingGHDL warnings}@anchor{5d}
+@anchor{using/InvokingGHDL warnings}@anchor{5e}
 @section Warnings
 
 
@@ -1855,21 +1783,21 @@ You could disable a warning by using the @code{--warn-no-XXX} or @code{-Wno-XX} 
 @end cartouche
 
 @geindex ghdl command line option; --warn-reserved
-@anchor{using/InvokingGHDL cmdoption-ghdl-warn-reserved}@anchor{5e}
+@anchor{using/InvokingGHDL cmdoption-ghdl-warn-reserved}@anchor{5f}
 @deffn {Option} @w{-}@w{-}warn@w{-}reserved
 
 Emit a warning if an identifier is a reserved word in a later VHDL standard.
 @end deffn
 
 @geindex ghdl command line option; --warn-default-binding
-@anchor{using/InvokingGHDL cmdoption-ghdl-warn-default-binding}@anchor{5f}
+@anchor{using/InvokingGHDL cmdoption-ghdl-warn-default-binding}@anchor{60}
 @deffn {Option} @w{-}@w{-}warn@w{-}default@w{-}binding
 
-During analyze, warns if a component instantiation has neither configuration specification nor default binding.  This may be useful if you want to detect during analyze possibly unbound component if you don’t use configuration. See section ‘@ref{50,,VHDL standards}’ for more details about default binding rules.
+During analyze, warns if a component instantiation has neither configuration specification nor default binding.  This may be useful if you want to detect during analyze possibly unbound component if you don’t use configuration. See section ‘@ref{51,,VHDL standards}’ for more details about default binding rules.
 @end deffn
 
 @geindex ghdl command line option; --warn-binding
-@anchor{using/InvokingGHDL cmdoption-ghdl-warn-binding}@anchor{60}
+@anchor{using/InvokingGHDL cmdoption-ghdl-warn-binding}@anchor{61}
 @deffn {Option} @w{-}@w{-}warn@w{-}binding
 
 During elaboration, warns if a component instantiation is not bound (and not explicitly left unbound).  Also warns if a port of an entity is not bound in a configuration specification or in a component configuration. This warning is enabled by default, since default binding rules are somewhat complex and an unbound component is most often unexpected.
@@ -1878,14 +1806,14 @@ However, warnings are even emitted if a component instantiation is inside a gene
 @end deffn
 
 @geindex ghdl command line option; --warn-library
-@anchor{using/InvokingGHDL cmdoption-ghdl-warn-library}@anchor{61}
+@anchor{using/InvokingGHDL cmdoption-ghdl-warn-library}@anchor{62}
 @deffn {Option} @w{-}@w{-}warn@w{-}library
 
 Warns if a design unit replaces another design unit with the same name.
 @end deffn
 
 @geindex ghdl command line option; --warn-vital-generic
-@anchor{using/InvokingGHDL cmdoption-ghdl-warn-vital-generic}@anchor{62}
+@anchor{using/InvokingGHDL cmdoption-ghdl-warn-vital-generic}@anchor{63}
 @deffn {Option} @w{-}@w{-}warn@w{-}vital@w{-}generic
 
 Warns if a generic name of a vital entity is not a vital generic name.  This
@@ -1893,7 +1821,7 @@ is set by default.
 @end deffn
 
 @geindex ghdl command line option; --warn-delayed-checks
-@anchor{using/InvokingGHDL cmdoption-ghdl-warn-delayed-checks}@anchor{63}
+@anchor{using/InvokingGHDL cmdoption-ghdl-warn-delayed-checks}@anchor{64}
 @deffn {Option} @w{-}@w{-}warn@w{-}delayed@w{-}checks
 
 Warns for checks that cannot be done during analysis time and are postponed to elaboration time.  This is because not all procedure bodies are available during analysis (either because a package body has not yet been analysed or because @cite{GHDL} doesn’t read not required package bodies).
@@ -1902,49 +1830,49 @@ These are checks for no wait statement in a procedure called in a sensitized pro
 @end deffn
 
 @geindex ghdl command line option; --warn-body
-@anchor{using/InvokingGHDL cmdoption-ghdl-warn-body}@anchor{64}
+@anchor{using/InvokingGHDL cmdoption-ghdl-warn-body}@anchor{65}
 @deffn {Option} @w{-}@w{-}warn@w{-}body
 
 Emit a warning if a package body which is not required is analyzed.  If a package does not declare a subprogram or a deferred constant, the package does not require a body.
 @end deffn
 
 @geindex ghdl command line option; --warn-specs
-@anchor{using/InvokingGHDL cmdoption-ghdl-warn-specs}@anchor{65}
+@anchor{using/InvokingGHDL cmdoption-ghdl-warn-specs}@anchor{66}
 @deffn {Option} @w{-}@w{-}warn@w{-}specs
 
 Emit a warning if an all or others specification does not apply.
 @end deffn
 
 @geindex ghdl command line option; --warn-unused
-@anchor{using/InvokingGHDL cmdoption-ghdl-warn-unused}@anchor{66}
+@anchor{using/InvokingGHDL cmdoption-ghdl-warn-unused}@anchor{67}
 @deffn {Option} @w{-}@w{-}warn@w{-}unused
 
 Emit a warning when a subprogram is never used.
 @end deffn
 
 @geindex ghdl command line option; --warn-error
-@anchor{using/InvokingGHDL cmdoption-ghdl-warn-error}@anchor{67}
+@anchor{using/InvokingGHDL cmdoption-ghdl-warn-error}@anchor{68}
 @deffn {Option} @w{-}@w{-}warn@w{-}error
 
 When this option is set, warnings are considered as errors.
 @end deffn
 
 @geindex ghdl command line option; --warn-nested-comment
-@anchor{using/InvokingGHDL cmdoption-ghdl-warn-nested-comment}@anchor{68}
+@anchor{using/InvokingGHDL cmdoption-ghdl-warn-nested-comment}@anchor{69}
 @deffn {Option} @w{-}@w{-}warn@w{-}nested@w{-}comment
 
 Emit a warning if a @code{/*} appears within a block comment (vhdl 2008).
 @end deffn
 
 @geindex ghdl command line option; --warn-parenthesis
-@anchor{using/InvokingGHDL cmdoption-ghdl-warn-parenthesis}@anchor{69}
+@anchor{using/InvokingGHDL cmdoption-ghdl-warn-parenthesis}@anchor{6a}
 @deffn {Option} @w{-}@w{-}warn@w{-}parenthesis
 
 Emit a warning in case of weird use of parenthesis
 @end deffn
 
 @geindex ghdl command line option; --warn-runtime-error
-@anchor{using/InvokingGHDL cmdoption-ghdl-warn-runtime-error}@anchor{6a}
+@anchor{using/InvokingGHDL cmdoption-ghdl-warn-runtime-error}@anchor{6b}
 @deffn {Option} @w{-}@w{-}warn@w{-}runtime@w{-}error
 
 Emit a warning in case of runtime error that is detected during
@@ -1952,39 +1880,39 @@ analysis.
 @end deffn
 
 @node Diagnostics Control,Library commands,Warnings,Invoking GHDL
-@anchor{using/InvokingGHDL diagnostics-control}@anchor{6b}
+@anchor{using/InvokingGHDL diagnostics-control}@anchor{6c}
 @section Diagnostics Control
 
 
 @geindex ghdl command line option; -fcolor-diagnostics
-@anchor{using/InvokingGHDL cmdoption-ghdl-fcolor-diagnostics}@anchor{6c}
+@anchor{using/InvokingGHDL cmdoption-ghdl-fcolor-diagnostics}@anchor{6d}
 @deffn {Option} @w{-}fcolor@w{-}diagnostics
 @end deffn
 
 @geindex ghdl command line option; -fno-color-diagnostics
-@anchor{using/InvokingGHDL cmdoption-ghdl-fno-color-diagnostics}@anchor{6d}
+@anchor{using/InvokingGHDL cmdoption-ghdl-fno-color-diagnostics}@anchor{6e}
 @deffn {Option} @w{-}fno@w{-}color@w{-}diagnostics
 
 Control whether diagnostic messages are displayed in color. The default is on when the standard output is a terminal.
 @end deffn
 
 @geindex ghdl command line option; -fdiagnostics-show-option
-@anchor{using/InvokingGHDL cmdoption-ghdl-fdiagnostics-show-option}@anchor{6e}
+@anchor{using/InvokingGHDL cmdoption-ghdl-fdiagnostics-show-option}@anchor{6f}
 @deffn {Option} @w{-}fdiagnostics@w{-}show@w{-}option
 @end deffn
 
 @geindex ghdl command line option; -fno-diagnostics-show-option
-@anchor{using/InvokingGHDL cmdoption-ghdl-fno-diagnostics-show-option}@anchor{6f}
+@anchor{using/InvokingGHDL cmdoption-ghdl-fno-diagnostics-show-option}@anchor{70}
 @deffn {Option} @w{-}fno@w{-}diagnostics@w{-}show@w{-}option
 
 Control whether the warning option is displayed at the end of warning messages, so that user can easily know how to disable it.
 @end deffn
 
 @node Library commands,VPI build commands,Diagnostics Control,Invoking GHDL
-@anchor{using/InvokingGHDL library-commands}@anchor{70}
+@anchor{using/InvokingGHDL library-commands}@anchor{71}
 @section Library commands
 
-@anchor{using/InvokingGHDL create-a-library}@anchor{71}
+@anchor{using/InvokingGHDL create-a-library}@anchor{72}
 @geindex create your own library
 
 A new library is created implicitly, by compiling entities (packages etc.) into it: @code{ghdl -a --work=my_custom_lib my_file.vhd}.
@@ -2004,12 +1932,12 @@ Furthermore, GHDL provides a few commands which act on a library:
 @end menu
 
 @node Directory [--dir],Clean [--clean],,Library commands
-@anchor{using/InvokingGHDL directory-dir}@anchor{72}
+@anchor{using/InvokingGHDL directory-dir}@anchor{73}
 @subsection Directory [@code{--dir}]
 
 
 @geindex ghdl command line option; --dir <[options] [libs]>
-@anchor{using/InvokingGHDL cmdoption-ghdl-dir}@anchor{73}
+@anchor{using/InvokingGHDL cmdoption-ghdl-dir}@anchor{74}
 @deffn {Option} @w{-}@w{-}dir <[options] [libs]>
 @end deffn
 
@@ -2018,12 +1946,12 @@ Displays the content of the design libraries (by default the @code{work} library
 @geindex cmd library clean
 
 @node Clean [--clean],Remove [--remove],Directory [--dir],Library commands
-@anchor{using/InvokingGHDL clean-clean}@anchor{74}
+@anchor{using/InvokingGHDL clean-clean}@anchor{75}
 @subsection Clean [@code{--clean}]
 
 
 @geindex ghdl command line option; --clean <[options]>
-@anchor{using/InvokingGHDL cmdoption-ghdl-clean}@anchor{75}
+@anchor{using/InvokingGHDL cmdoption-ghdl-clean}@anchor{76}
 @deffn {Option} @w{-}@w{-}clean <[options]>
 @end deffn
 
@@ -2032,12 +1960,12 @@ Try to remove any object, executable or temporary file it could have created. So
 @geindex cmd library remove
 
 @node Remove [--remove],Copy [--copy],Clean [--clean],Library commands
-@anchor{using/InvokingGHDL remove-remove}@anchor{76}
+@anchor{using/InvokingGHDL remove-remove}@anchor{77}
 @subsection Remove [@code{--remove}]
 
 
 @geindex ghdl command line option; --remove <[options]>
-@anchor{using/InvokingGHDL cmdoption-ghdl-remove}@anchor{77}
+@anchor{using/InvokingGHDL cmdoption-ghdl-remove}@anchor{78}
 @deffn {Option} @w{-}@w{-}remove <[options]>
 @end deffn
 
@@ -2047,12 +1975,12 @@ known anymore by GHDL.
 @geindex cmd library copy
 
 @node Copy [--copy],,Remove [--remove],Library commands
-@anchor{using/InvokingGHDL copy-copy}@anchor{78}
+@anchor{using/InvokingGHDL copy-copy}@anchor{79}
 @subsection Copy [@code{--copy}]
 
 
 @geindex ghdl command line option; --copy <--work=name [options]>
-@anchor{using/InvokingGHDL cmdoption-ghdl-copy}@anchor{79}
+@anchor{using/InvokingGHDL cmdoption-ghdl-copy}@anchor{7a}
 @deffn {Option} @w{-}@w{-}copy <@w{-}@w{-}work=name [options]>
 @end deffn
 
@@ -2064,7 +1992,7 @@ ghdl -a --work=ieee numeric_unsigned.vhd
 @end example
 
 @node VPI build commands,IEEE library pitfalls,Library commands,Invoking GHDL
-@anchor{using/InvokingGHDL vpi-build-commands}@anchor{7a}
+@anchor{using/InvokingGHDL vpi-build-commands}@anchor{7b}
 @section VPI build commands
 
 
@@ -2084,12 +2012,12 @@ command before its execution.
 @end menu
 
 @node compile [--vpi-compile],link [--vpi-link],,VPI build commands
-@anchor{using/InvokingGHDL compile-vpi-compile}@anchor{7b}
+@anchor{using/InvokingGHDL compile-vpi-compile}@anchor{7c}
 @subsection compile [@code{--vpi-compile}]
 
 
 @geindex ghdl command line option; --vpi-compile <command>
-@anchor{using/InvokingGHDL cmdoption-ghdl-vpi-compile}@anchor{7c}
+@anchor{using/InvokingGHDL cmdoption-ghdl-vpi-compile}@anchor{7d}
 @deffn {Option} @w{-}@w{-}vpi@w{-}compile <command>
 @end deffn
 
@@ -2116,16 +2044,16 @@ executes:
 @example
 gcc -c vpi1.c -fPIC -Ixxx/include
 @end example
-@anchor{using/InvokingGHDL vpi-link-command}@anchor{7d}
+@anchor{using/InvokingGHDL vpi-link-command}@anchor{7e}
 @geindex cmd VPI link
 
 @node link [--vpi-link],cflags [--vpi-cflags],compile [--vpi-compile],VPI build commands
-@anchor{using/InvokingGHDL link-vpi-link}@anchor{7e}
+@anchor{using/InvokingGHDL link-vpi-link}@anchor{7f}
 @subsection link [@code{--vpi-link}]
 
 
 @geindex ghdl command line option; --vpi-link <command>
-@anchor{using/InvokingGHDL cmdoption-ghdl-vpi-link}@anchor{7f}
+@anchor{using/InvokingGHDL cmdoption-ghdl-vpi-link}@anchor{80}
 @deffn {Option} @w{-}@w{-}vpi@w{-}link <command>
 @end deffn
 
@@ -2152,44 +2080,44 @@ executes:
 @example
 gcc -o vpi1.vpi vpi1.o --shared -Lxxx/lib -lghdlvpi
 @end example
-@anchor{using/InvokingGHDL vpi-cflags-command}@anchor{80}
+@anchor{using/InvokingGHDL vpi-cflags-command}@anchor{81}
 @geindex cmd VPI cflags
 
 @node cflags [--vpi-cflags],ldflags [--vpi-ldflags],link [--vpi-link],VPI build commands
-@anchor{using/InvokingGHDL cflags-vpi-cflags}@anchor{81}
+@anchor{using/InvokingGHDL cflags-vpi-cflags}@anchor{82}
 @subsection cflags [@code{--vpi-cflags}]
 
 
 @geindex ghdl command line option; --vpi-cflags
-@anchor{using/InvokingGHDL cmdoption-ghdl-vpi-cflags}@anchor{82}
+@anchor{using/InvokingGHDL cmdoption-ghdl-vpi-cflags}@anchor{83}
 @deffn {Option} @w{-}@w{-}vpi@w{-}cflags
 @end deffn
 
-Display flags added by @ref{7c,,--vpi-compile}.
+Display flags added by @ref{7d,,--vpi-compile}.
 
 @geindex cmd VPI ldflags
 
 @node ldflags [--vpi-ldflags],include dir [--vpi-include-dir],cflags [--vpi-cflags],VPI build commands
-@anchor{using/InvokingGHDL ldflags-vpi-ldflags}@anchor{83}
+@anchor{using/InvokingGHDL ldflags-vpi-ldflags}@anchor{84}
 @subsection ldflags [@code{--vpi-ldflags}]
 
 
 @geindex ghdl command line option; --vpi-ldflags
-@anchor{using/InvokingGHDL cmdoption-ghdl-vpi-ldflags}@anchor{84}
+@anchor{using/InvokingGHDL cmdoption-ghdl-vpi-ldflags}@anchor{85}
 @deffn {Option} @w{-}@w{-}vpi@w{-}ldflags
 @end deffn
 
-Display flags added by @ref{7f,,--vpi-link}.
+Display flags added by @ref{80,,--vpi-link}.
 
 @geindex cmd VPI include dir
 
 @node include dir [--vpi-include-dir],library dir [--vpi-library-dir],ldflags [--vpi-ldflags],VPI build commands
-@anchor{using/InvokingGHDL include-dir-vpi-include-dir}@anchor{85}
+@anchor{using/InvokingGHDL include-dir-vpi-include-dir}@anchor{86}
 @subsection include dir [@code{--vpi-include-dir}]
 
 
 @geindex ghdl command line option; --vpi-include-dir
-@anchor{using/InvokingGHDL cmdoption-ghdl-vpi-include-dir}@anchor{86}
+@anchor{using/InvokingGHDL cmdoption-ghdl-vpi-include-dir}@anchor{87}
 @deffn {Option} @w{-}@w{-}vpi@w{-}include@w{-}dir
 @end deffn
 
@@ -2198,19 +2126,19 @@ Display the include directory added by the compile flags.
 @geindex cmd VPI library dir
 
 @node library dir [--vpi-library-dir],,include dir [--vpi-include-dir],VPI build commands
-@anchor{using/InvokingGHDL library-dir-vpi-library-dir}@anchor{87}
+@anchor{using/InvokingGHDL library-dir-vpi-library-dir}@anchor{88}
 @subsection library dir [@code{--vpi-library-dir}]
 
 
 @geindex ghdl command line option; --vpi-library-dir
-@anchor{using/InvokingGHDL cmdoption-ghdl-vpi-library-dir}@anchor{88}
+@anchor{using/InvokingGHDL cmdoption-ghdl-vpi-library-dir}@anchor{89}
 @deffn {Option} @w{-}@w{-}vpi@w{-}library@w{-}dir
 @end deffn
 
 Display the library directory added by the link flags.
 
 @node IEEE library pitfalls,,VPI build commands,Invoking GHDL
-@anchor{using/InvokingGHDL ieee-library-pitfalls}@anchor{14}@anchor{using/InvokingGHDL id1}@anchor{89}
+@anchor{using/InvokingGHDL ieee-library-pitfalls}@anchor{14}@anchor{using/InvokingGHDL id1}@anchor{8a}
 @section IEEE library pitfalls
 
 
@@ -2346,7 +2274,7 @@ The @code{ieee} math packages (@code{math_real} and @code{math_complex}) provide
 @c # define a hard kine break for HTML
 
 @node Simulation and runtime,Releases and sources,Invoking GHDL,Top
-@anchor{using/Simulation using-simulation}@anchor{3a}@anchor{using/Simulation simulation-and-runtime}@anchor{8a}@anchor{using/Simulation doc}@anchor{8b}
+@anchor{using/Simulation using-simulation}@anchor{3b}@anchor{using/Simulation simulation-and-runtime}@anchor{8b}@anchor{using/Simulation doc}@anchor{8c}
 @chapter Simulation and runtime
 
 
@@ -2359,7 +2287,7 @@ The @code{ieee} math packages (@code{math_real} and @code{math_complex}) provide
 @end menu
 
 @node Simulation options,Export waveforms,,Simulation and runtime
-@anchor{using/Simulation simulation-options}@anchor{2e}@anchor{using/Simulation id1}@anchor{8c}
+@anchor{using/Simulation simulation-options}@anchor{2f}@anchor{using/Simulation id1}@anchor{8d}
 @section Simulation options
 
 
@@ -2379,11 +2307,11 @@ simulation completes, or @code{EXIT_FAILURE} (1) in case of error
 (assertion failure, overflow or any constraint error).
 
 Here is the list of the most useful options.  Some debugging options are
-also available, but not described here.  The @ref{8d,,--help} options lists
+also available, but not described here.  The @ref{8e,,--help} options lists
 all options available, including the debugging one.
 
 @geindex ghdl command line option; --assert-level<=LEVEL>
-@anchor{using/Simulation cmdoption-ghdl-assert-level}@anchor{8e}
+@anchor{using/Simulation cmdoption-ghdl-assert-level}@anchor{8f}
 @deffn {Option} @w{-}@w{-}assert@w{-}level<=LEVEL>
 
 Select the assertion level at which an assertion violation stops the
@@ -2404,7 +2332,7 @@ simulation.
 @end deffn
 
 @geindex ghdl command line option; --ieee-asserts<=POLICY>
-@anchor{using/Simulation cmdoption-ghdl-ieee-asserts}@anchor{8f}
+@anchor{using/Simulation cmdoption-ghdl-ieee-asserts}@anchor{90}
 @deffn {Option} @w{-}@w{-}ieee@w{-}asserts<=POLICY>
 
 Select how the assertions from @code{ieee} units are
@@ -2417,7 +2345,7 @@ This option can be useful to avoid assertion message from
 @end deffn
 
 @geindex ghdl command line option; --stop-time<=TIME>
-@anchor{using/Simulation cmdoption-ghdl-stop-time}@anchor{90}
+@anchor{using/Simulation cmdoption-ghdl-stop-time}@anchor{91}
 @deffn {Option} @w{-}@w{-}stop@w{-}time<=TIME>
 
 Stop the simulation after @code{TIME}.  @code{TIME} is expressed as a time
@@ -2433,7 +2361,7 @@ $ ./my_design --stop-time=ps
 @end deffn
 
 @geindex ghdl command line option; --stop-delta<=N>
-@anchor{using/Simulation cmdoption-ghdl-stop-delta}@anchor{91}
+@anchor{using/Simulation cmdoption-ghdl-stop-delta}@anchor{92}
 @deffn {Option} @w{-}@w{-}stop@w{-}delta<=N>
 
 Stop the simulation after @cite{N} delta cycles in the same current time.
@@ -2442,21 +2370,21 @@ Stop the simulation after @cite{N} delta cycles in the same current time.
 @end deffn
 
 @geindex ghdl command line option; --disp-time
-@anchor{using/Simulation cmdoption-ghdl-disp-time}@anchor{92}
+@anchor{using/Simulation cmdoption-ghdl-disp-time}@anchor{93}
 @deffn {Option} @w{-}@w{-}disp@w{-}time
 
 Display the time and delta cycle number as simulation advances.
 @end deffn
 
 @geindex ghdl command line option; --unbuffered
-@anchor{using/Simulation cmdoption-ghdl-unbuffered}@anchor{93}
+@anchor{using/Simulation cmdoption-ghdl-unbuffered}@anchor{94}
 @deffn {Option} @w{-}@w{-}unbuffered
 
 Disable buffering on stdout, stderr and files opened in write or append mode (TEXTIO).
 @end deffn
 
 @geindex ghdl command line option; --sdf<=PATH=FILENAME>
-@anchor{using/Simulation cmdoption-ghdl-sdf}@anchor{94}
+@anchor{using/Simulation cmdoption-ghdl-sdf}@anchor{95}
 @deffn {Option} @w{-}@w{-}sdf<=PATH=FILENAME>
 
 Do VITAL annotation on @cite{PATH} with SDF file @code{FILENAME}.
@@ -2478,37 +2406,37 @@ If the option contains a type of delay, that is @code{min=},
 typical or maximum values.  If the option does not contain a type of delay,
 the annotator use the typical delay.
 
-See section ‘@ref{95,,Backannotation}’, for more details.
+See section ‘@ref{96,,Backannotation}’, for more details.
 @end deffn
 
 @geindex ghdl command line option; --vpi<=FILENAME>
-@anchor{using/Simulation cmdoption-ghdl-vpi}@anchor{96}
+@anchor{using/Simulation cmdoption-ghdl-vpi}@anchor{97}
 @deffn {Option} @w{-}@w{-}vpi<=FILENAME>
 @end deffn
 
 Load VPI module.
 
 @geindex ghdl command line option; --vpi-trace<=FILE>
-@anchor{using/Simulation cmdoption-ghdl-vpi-trace}@anchor{97}
+@anchor{using/Simulation cmdoption-ghdl-vpi-trace}@anchor{98}
 @deffn {Option} @w{-}@w{-}vpi@w{-}trace<=FILE>
 @end deffn
 
 Trace vpi calls to FILE.
 
 @geindex ghdl command line option; --help
-@anchor{using/Simulation cmdoption-ghdl-help}@anchor{8d}
+@anchor{using/Simulation cmdoption-ghdl-help}@anchor{8e}
 @deffn {Option} @w{-}@w{-}help
 
 Display a short description of the options accepted by the runtime library.
 @end deffn
 
 @node Export waveforms,Export hierarchy and references,Simulation options,Simulation and runtime
-@anchor{using/Simulation export-waveforms}@anchor{98}@anchor{using/Simulation export-waves}@anchor{2d}
+@anchor{using/Simulation export-waveforms}@anchor{99}@anchor{using/Simulation export-waves}@anchor{2e}
 @section Export waveforms
 
 
 @geindex ghdl command line option; --read-wave-opt=<FILENAME>
-@anchor{using/Simulation cmdoption-ghdl-read-wave-opt}@anchor{99}
+@anchor{using/Simulation cmdoption-ghdl-read-wave-opt}@anchor{9a}
 @deffn {Option} @w{-}@w{-}read@w{-}wave@w{-}opt=<FILENAME>
 
 Filter signals to be dumped to the wave file according to the wave option
@@ -2546,7 +2474,7 @@ my_pkg.global_signal_a
 @end deffn
 
 @geindex ghdl command line option; --write-wave-opt=<FILENAME>
-@anchor{using/Simulation cmdoption-ghdl-write-wave-opt}@anchor{9a}
+@anchor{using/Simulation cmdoption-ghdl-write-wave-opt}@anchor{9b}
 @deffn {Option} @w{-}@w{-}write@w{-}wave@w{-}opt=<FILENAME>
 
 If the wave option file doesn’t exist, creates it with all the signals of
@@ -2555,12 +2483,12 @@ file.
 @end deffn
 
 @geindex ghdl command line option; --vcd<=FILENAME>
-@anchor{using/Simulation cmdoption-ghdl-vcd}@anchor{9b}
+@anchor{using/Simulation cmdoption-ghdl-vcd}@anchor{9c}
 @deffn {Option} @w{-}@w{-}vcd<=FILENAME>
 @end deffn
 
 @geindex ghdl command line option; --vcdgz<=FILENAME>
-@anchor{using/Simulation cmdoption-ghdl-vcdgz}@anchor{9c}
+@anchor{using/Simulation cmdoption-ghdl-vcdgz}@anchor{9d}
 @deffn {Option} @w{-}@w{-}vcdgz<=FILENAME>
 
 @geindex vcd
@@ -2627,14 +2555,14 @@ please mail me (@ref{12,,Reporting bugs}).
 @end deffn
 
 @geindex ghdl command line option; --vcd-nodate
-@anchor{using/Simulation cmdoption-ghdl-vcd-nodate}@anchor{9d}
+@anchor{using/Simulation cmdoption-ghdl-vcd-nodate}@anchor{9e}
 @deffn {Option} @w{-}@w{-}vcd@w{-}nodate
 
 Do not write date in VCD file
 @end deffn
 
 @geindex ghdl command line option; --fst<=FILENAME>
-@anchor{using/Simulation cmdoption-ghdl-fst}@anchor{9e}
+@anchor{using/Simulation cmdoption-ghdl-fst}@anchor{9f}
 @deffn {Option} @w{-}@w{-}fst<=FILENAME>
 
 Write the waveforms into a @cite{fst}, that can be displayed by
@@ -2643,7 +2571,7 @@ Write the waveforms into a @cite{fst}, that can be displayed by
 @end deffn
 
 @geindex ghdl command line option; --wave<=FILENAME>
-@anchor{using/Simulation cmdoption-ghdl-wave}@anchor{9f}
+@anchor{using/Simulation cmdoption-ghdl-wave}@anchor{a0}
 @deffn {Option} @w{-}@w{-}wave<=FILENAME>
 
 Write the waveforms into a @cite{ghw} (GHdl Waveform) file.  Currently, all
@@ -2657,12 +2585,12 @@ Contrary to VCD files, any VHDL type can be dumped into a GHW file.
 @end deffn
 
 @node Export hierarchy and references,Debugging,Export waveforms,Simulation and runtime
-@anchor{using/Simulation export-hierarchy-and-references}@anchor{a0}
+@anchor{using/Simulation export-hierarchy-and-references}@anchor{a1}
 @section Export hierarchy and references
 
 
 @geindex ghdl command line option; --disp-tree<[=KIND]>
-@anchor{using/Simulation cmdoption-ghdl-disp-tree}@anchor{a1}
+@anchor{using/Simulation cmdoption-ghdl-disp-tree}@anchor{a2}
 @deffn {Option} @w{-}@w{-}disp@w{-}tree<[=KIND]>
 
 @geindex display design hierarchy
@@ -2695,14 +2623,14 @@ If @cite{KIND} is not specified, the hierarchy is displayed with the
 @end deffn
 
 @geindex ghdl command line option; --no-run
-@anchor{using/Simulation cmdoption-ghdl-no-run}@anchor{a2}
+@anchor{using/Simulation cmdoption-ghdl-no-run}@anchor{a3}
 @deffn {Option} @w{-}@w{-}no@w{-}run
 
 Stop the simulation before the first cycle. This may be used with @code{--disp-tree} to display the tree without simulating the whole design. This option actually elaborates the design, so it will catch any bound error in port maps.
 @end deffn
 
 @geindex ghdl command line option; --xref-html <[options] file...>
-@anchor{using/Simulation cmdoption-ghdl-xref-html}@anchor{a3}
+@anchor{using/Simulation cmdoption-ghdl-xref-html}@anchor{a4}
 @deffn {Option} @w{-}@w{-}xref@w{-}html <[options] file...>
 @end deffn
 
@@ -2721,14 +2649,14 @@ If the option @code{--format=css} is specified, then the generated html files fo
 @end itemize
 
 @geindex ghdl command line option; --psl-report<=FILENAME>
-@anchor{using/Simulation cmdoption-ghdl-psl-report}@anchor{a4}
+@anchor{using/Simulation cmdoption-ghdl-psl-report}@anchor{a5}
 @deffn {Option} @w{-}@w{-}psl@w{-}report<=FILENAME>
 @end deffn
 
 Write a report for PSL at the end of simulation. For each PSL cover and assert statements, the name, source location and whether it passed or failed is reported. The file is written using the JSON format, but still being human readable.
 
 @geindex ghdl command line option; --file-to-xml
-@anchor{using/Simulation cmdoption-ghdl-file-to-xml}@anchor{a5}
+@anchor{using/Simulation cmdoption-ghdl-file-to-xml}@anchor{a6}
 @deffn {Option} @w{-}@w{-}file@w{-}to@w{-}xml
 @end deffn
 
@@ -2751,89 +2679,89 @@ Note that at this time there is no XML dump of the elaborated design.
 @geindex debugging
 
 @node Debugging,,Export hierarchy and references,Simulation and runtime
-@anchor{using/Simulation debugging}@anchor{a6}
+@anchor{using/Simulation debugging}@anchor{a7}
 @section Debugging
 
 
 @geindex ghdl command line option; --trace-signals
-@anchor{using/Simulation cmdoption-ghdl-trace-signals}@anchor{a7}
+@anchor{using/Simulation cmdoption-ghdl-trace-signals}@anchor{a8}
 @deffn {Option} @w{-}@w{-}trace@w{-}signals
 @end deffn
 
 Display signals after each cycle.
 
 @geindex ghdl command line option; --trace-processes
-@anchor{using/Simulation cmdoption-ghdl-trace-processes}@anchor{a8}
+@anchor{using/Simulation cmdoption-ghdl-trace-processes}@anchor{a9}
 @deffn {Option} @w{-}@w{-}trace@w{-}processes
 @end deffn
 
 Display process name before each cycle.
 
 @geindex ghdl command line option; --stats
-@anchor{using/Simulation cmdoption-ghdl-stats}@anchor{a9}
+@anchor{using/Simulation cmdoption-ghdl-stats}@anchor{aa}
 @deffn {Option} @w{-}@w{-}stats
 @end deffn
 
 Display run-time statistics.
 
 @geindex ghdl command line option; --disp-order
-@anchor{using/Simulation cmdoption-ghdl-disp-order}@anchor{aa}
+@anchor{using/Simulation cmdoption-ghdl-disp-order}@anchor{ab}
 @deffn {Option} @w{-}@w{-}disp@w{-}order
 @end deffn
 
 Display signals order.
 
 @geindex ghdl command line option; --disp-sources
-@anchor{using/Simulation cmdoption-ghdl-disp-sources}@anchor{ab}
+@anchor{using/Simulation cmdoption-ghdl-disp-sources}@anchor{ac}
 @deffn {Option} @w{-}@w{-}disp@w{-}sources
 @end deffn
 
 Display sources while displaying signals.
 
 @geindex ghdl command line option; --disp-sig-types
-@anchor{using/Simulation cmdoption-ghdl-disp-sig-types}@anchor{ac}
+@anchor{using/Simulation cmdoption-ghdl-disp-sig-types}@anchor{ad}
 @deffn {Option} @w{-}@w{-}disp@w{-}sig@w{-}types
 @end deffn
 
 Display signal types.
 
 @geindex ghdl command line option; --disp-signals-map
-@anchor{using/Simulation cmdoption-ghdl-disp-signals-map}@anchor{ad}
+@anchor{using/Simulation cmdoption-ghdl-disp-signals-map}@anchor{ae}
 @deffn {Option} @w{-}@w{-}disp@w{-}signals@w{-}map
 @end deffn
 
 Display map bw declared signals and internal signals.
 
 @geindex ghdl command line option; --disp-signals-table
-@anchor{using/Simulation cmdoption-ghdl-disp-signals-table}@anchor{ae}
+@anchor{using/Simulation cmdoption-ghdl-disp-signals-table}@anchor{af}
 @deffn {Option} @w{-}@w{-}disp@w{-}signals@w{-}table
 @end deffn
 
 Display internal signals.
 
 @geindex ghdl command line option; --checks
-@anchor{using/Simulation cmdoption-ghdl-checks}@anchor{af}
+@anchor{using/Simulation cmdoption-ghdl-checks}@anchor{b0}
 @deffn {Option} @w{-}@w{-}checks
 @end deffn
 
 Do internal checks after each process run.
 
 @geindex ghdl command line option; --activity<=LEVEL>
-@anchor{using/Simulation cmdoption-ghdl-activity}@anchor{b0}
+@anchor{using/Simulation cmdoption-ghdl-activity}@anchor{b1}
 @deffn {Option} @w{-}@w{-}activity<=LEVEL>
 @end deffn
 
 Watch activity of LEVEL signals: LEVEL is all, min (default) or none (unsafe).
 
 @geindex ghdl command line option; --dump-rti
-@anchor{using/Simulation cmdoption-ghdl-dump-rti}@anchor{b1}
+@anchor{using/Simulation cmdoption-ghdl-dump-rti}@anchor{b2}
 @deffn {Option} @w{-}@w{-}dump@w{-}rti
 @end deffn
 
 Dump Run Time Information (RTI).
 
 @geindex ghdl command line option; --bootstrap
-@anchor{using/Simulation cmdoption-ghdl-bootstrap}@anchor{b2}
+@anchor{using/Simulation cmdoption-ghdl-bootstrap}@anchor{b3}
 @deffn {Option} @w{-}@w{-}bootstrap
 @end deffn
 
@@ -2845,7 +2773,7 @@ Allow @code{--work=std}
 @end menu
 
 @node GNU Debugger GDB,,,Debugging
-@anchor{using/Simulation gnu-debugger-gdb}@anchor{b3}
+@anchor{using/Simulation gnu-debugger-gdb}@anchor{b4}
 @subsection GNU Debugger (GDB)
 
 
@@ -2879,7 +2807,7 @@ When the breakpoint is hit, use the @code{where} or @code{bt} command to display
 @c # define a hard kine break for HTML
 
 @node Releases and sources,Building GHDL from Sources,Simulation and runtime,Top
-@anchor{getting/Releases release}@anchor{b4}@anchor{getting/Releases releases-and-sources}@anchor{b5}@anchor{getting/Releases doc}@anchor{b6}
+@anchor{getting/Releases release}@anchor{b5}@anchor{getting/Releases releases-and-sources}@anchor{b6}@anchor{getting/Releases doc}@anchor{b7}
 @chapter Releases and sources
 
 
@@ -2890,7 +2818,7 @@ When the breakpoint is hit, use the @code{where} or @code{bt} command to display
 @end menu
 
 @node Downloading pre-built packages,Downloading Source Files,,Releases and sources
-@anchor{getting/Releases release-packages}@anchor{b7}@anchor{getting/Releases downloading-pre-built-packages}@anchor{b8}
+@anchor{getting/Releases release-packages}@anchor{b8}@anchor{getting/Releases downloading-pre-built-packages}@anchor{b9}
 @section Downloading pre-built packages
 
 
@@ -2996,7 +2924,7 @@ mcode
 
 
 @node Downloading Source Files,,Downloading pre-built packages,Releases and sources
-@anchor{getting/Releases downloading-source-files}@anchor{b9}@anchor{getting/Releases release-sources}@anchor{ba}
+@anchor{getting/Releases downloading-source-files}@anchor{ba}@anchor{getting/Releases release-sources}@anchor{bb}
 @section Downloading Source Files
 
 
@@ -3007,7 +2935,7 @@ mcode
 @end menu
 
 @node Downloading from GitHub,Downloading via git clone,,Downloading Source Files
-@anchor{getting/Releases downloading-from-github}@anchor{bb}@anchor{getting/Releases release-sources-zip}@anchor{bc}
+@anchor{getting/Releases downloading-from-github}@anchor{bc}@anchor{getting/Releases release-sources-zip}@anchor{bd}
 @subsection Downloading from GitHub
 
 
@@ -3048,7 +2976,7 @@ zip-file
 
 
 @node Downloading via git clone,,Downloading from GitHub,Downloading Source Files
-@anchor{getting/Releases release-sources-gitclone}@anchor{bd}@anchor{getting/Releases downloading-via-git-clone}@anchor{be}
+@anchor{getting/Releases release-sources-gitclone}@anchor{be}@anchor{getting/Releases downloading-via-git-clone}@anchor{bf}
 @subsection Downloading via @code{git clone}
 
 
@@ -3097,7 +3025,7 @@ SSH
 @end menu
 
 @node On Linux,On OS X,,Downloading via git clone
-@anchor{getting/Releases on-linux}@anchor{bf}
+@anchor{getting/Releases on-linux}@anchor{c0}
 @subsubsection On Linux
 
 
@@ -3122,14 +3050,14 @@ git remote rename origin github
 @end example
 
 @node On OS X,On Windows,On Linux,Downloading via git clone
-@anchor{getting/Releases on-os-x}@anchor{c0}
+@anchor{getting/Releases on-os-x}@anchor{c1}
 @subsubsection On OS X
 
 
 Please see the Linux instructions.
 
 @node On Windows,,On OS X,Downloading via git clone
-@anchor{getting/Releases on-windows}@anchor{c1}
+@anchor{getting/Releases on-windows}@anchor{c2}
 @subsubsection On Windows
 
 
@@ -3175,7 +3103,7 @@ git remote rename origin github
 @c # define a hard kine break for HTML
 
 @node Building GHDL from Sources,Precompile Vendor Primitives,Releases and sources,Top
-@anchor{building/Building doc}@anchor{c2}@anchor{building/Building build}@anchor{c3}@anchor{building/Building building-ghdl-from-sources}@anchor{c4}
+@anchor{building/Building doc}@anchor{c3}@anchor{building/Building build}@anchor{c4}@anchor{building/Building building-ghdl-from-sources}@anchor{c5}
 @chapter Building GHDL from Sources
 
 
@@ -3184,7 +3112,7 @@ git remote rename origin github
 
 GHDL can be downloaded as a zip-file@footnote{https://github.com/tgingold/ghdl/archive/master.zip}
 (latest ‘master’ branch) or cloned with @code{git clone} from GitHub. GitHub
-offers HTTPS and SSH as transfer protocols. See the @ref{ba,,Downloading Source Files}
+offers HTTPS and SSH as transfer protocols. See the @ref{bb,,Downloading Source Files}
 page for further details. The installation directory is referred to as @code{GHDLRoot}.
 
 @subheading Available back-ends
@@ -3223,7 +3151,7 @@ Cons
 
 @item
 
-@ref{c5,,mcode}
+@ref{c6,,mcode}
 
 @tab
 
@@ -3254,7 +3182,7 @@ x86_64/i386 only
 
 @item
 
-@ref{c6,,LLVM}
+@ref{c7,,LLVM}
 
 @tab
 
@@ -3282,7 +3210,7 @@ Build is more complex
 
 @item
 
-@ref{c7,,GCC}
+@ref{c8,,GCC}
 
 @tab
 
@@ -3337,7 +3265,7 @@ Code coverage collection (@code{gcov}) is unique to GCC
 @end menu
 
 @node Directory Structure,mcode Backend,,Building GHDL from Sources
-@anchor{building/Directories directory-structure}@anchor{c8}@anchor{building/Directories doc}@anchor{c9}@anchor{building/Directories build-dir-structure}@anchor{1a}
+@anchor{building/Directories directory-structure}@anchor{c9}@anchor{building/Directories doc}@anchor{ca}@anchor{building/Directories build-dir-structure}@anchor{1a}
 @section Directory Structure
 
 
@@ -3361,7 +3289,7 @@ especially for FPGA primitives, soft and hard macros. These libraries can
 not be shipped with GHDL, but we offer prepared compile scripts to
 pre-compile the vendor libraries, if the vendor tool is present on the
 computer. These are located in @code{libraries/vendor}.
-See Vendor Primitives <VendorPrimitives.html> for information on how to
+See @ref{cb,,Precompile Vendor Primitives} for information on how to
 use them.
 @end itemize
 
@@ -3432,7 +3360,7 @@ Text files: @code{COPYING.md}, @code{NEWS.md} and @code{README.md}.
 @c # define a hard kine break for HTML
 
 @node mcode Backend,LLVM Backend,Directory Structure,Building GHDL from Sources
-@anchor{building/mcode/index mcode-backend}@anchor{ca}@anchor{building/mcode/index build-mcode}@anchor{c5}@anchor{building/mcode/index doc}@anchor{cb}
+@anchor{building/mcode/index mcode-backend}@anchor{cc}@anchor{building/mcode/index build-mcode}@anchor{c6}@anchor{building/mcode/index doc}@anchor{cd}
 @section mcode Backend
 
 
@@ -3460,13 +3388,13 @@ GNAT (Ada compiler for GCC)
 @itemize *
 
 @item 
-@ref{cc,,GNU/Linux with GCC}
+@ref{ce,,mcode Backend on GNU/Linux with GCC/GNAT}
 
 @item 
-@ref{cd,,Windows (x86_64) with GNAT GPL (x86)}
+@ref{cf,,mcode Backend on Windows with GNAT GPL}
 
 @item 
-Windows (x86_64) with MinGW32/MinGW64
+@ref{d0,,mcode Backend on Windows with GCC/GNAT (MinGW)}
 @end itemize
 
 @c # preload commonly known graphical characters like (c)
@@ -3481,15 +3409,15 @@ Windows (x86_64) with MinGW32/MinGW64
 @c # define a hard kine break for HTML
 
 @menu
-* GHDL with mcode backend build on GNU/Linux with GCC/GNAT:: 
-* GHDL with mcode backend build on Windows with GNAT GPL:: 
-* GHDL with mcode backend build on Windows with GCC/GNAT (MinGW): GHDL with mcode backend build on Windows with GCC/GNAT MinGW. 
+* mcode Backend on GNU/Linux with GCC/GNAT:: 
+* mcode Backend on Windows with GNAT GPL:: 
+* mcode Backend on Windows with GCC/GNAT (MinGW): mcode Backend on Windows with GCC/GNAT MinGW. 
 
 @end menu
 
-@node GHDL with mcode backend build on GNU/Linux with GCC/GNAT,GHDL with mcode backend build on Windows with GNAT GPL,,mcode Backend
-@anchor{building/mcode/GNULinux-GNAT build-mcode-gnulinux-gnat}@anchor{cc}@anchor{building/mcode/GNULinux-GNAT doc}@anchor{ce}@anchor{building/mcode/GNULinux-GNAT ghdl-with-mcode-backend-build-on-gnu-linux-with-gcc-gnat}@anchor{cf}
-@subsection GHDL with mcode backend build on GNU/Linux with GCC/GNAT
+@node mcode Backend on GNU/Linux with GCC/GNAT,mcode Backend on Windows with GNAT GPL,,mcode Backend
+@anchor{building/mcode/GNULinux-GNAT build-mcode-gnulinux-gnat}@anchor{d1}@anchor{building/mcode/GNULinux-GNAT mcode-backend-on-gnu-linux-with-gcc-gnat}@anchor{d2}@anchor{building/mcode/GNULinux-GNAT doc}@anchor{ce}
+@subsection mcode Backend on GNU/Linux with GCC/GNAT
 
 
 On Linux, GHDL is configured by @code{configure} and build by @code{make}.
@@ -3514,12 +3442,12 @@ specified by @code{PREFIX}. You may need super user privileges (@code{sudo ...})
 
 
 @example
-cd <ghdl>
-mkdir build
-cd build
-../configure --prefix=PREFIX
-make
-sudo make install
+$ cd <ghdl>
+$ mkdir build
+$ cd build
+$ ../configure --prefix=PREFIX
+$ make
+$ make install
 @end example
 
 @c # preload commonly known graphical characters like (c)
@@ -3533,9 +3461,9 @@ sudo make install
 
 @c # define a hard kine break for HTML
 
-@node GHDL with mcode backend build on Windows with GNAT GPL,GHDL with mcode backend build on Windows with GCC/GNAT MinGW,GHDL with mcode backend build on GNU/Linux with GCC/GNAT,mcode Backend
-@anchor{building/mcode/Windows-GNATGPL build-mcode-windows-gnatgpl}@anchor{cd}@anchor{building/mcode/Windows-GNATGPL doc}@anchor{d0}@anchor{building/mcode/Windows-GNATGPL ghdl-with-mcode-backend-build-on-windows-with-gnat-gpl}@anchor{d1}
-@subsection GHDL with mcode backend build on Windows with GNAT GPL
+@node mcode Backend on Windows with GNAT GPL,mcode Backend on Windows with GCC/GNAT MinGW,mcode Backend on GNU/Linux with GCC/GNAT,mcode Backend
+@anchor{building/mcode/Windows-GNATGPL build-mcode-windows-gnatgpl}@anchor{d3}@anchor{building/mcode/Windows-GNATGPL doc}@anchor{cf}@anchor{building/mcode/Windows-GNATGPL mcode-backend-on-windows-with-gnat-gpl}@anchor{d4}
+@subsection mcode Backend on Windows with GNAT GPL
 
 
 @menu
@@ -3544,8 +3472,8 @@ sudo make install
 
 @end menu
 
-@node Requirements,Scripts and Parameters,,GHDL with mcode backend build on Windows with GNAT GPL
-@anchor{building/mcode/Windows-GNATGPL requirements}@anchor{d2}
+@node Requirements,Scripts and Parameters,,mcode Backend on Windows with GNAT GPL
+@anchor{building/mcode/Windows-GNATGPL requirements}@anchor{d5}
 @subsubsection Requirements
 
 
@@ -3562,8 +3490,8 @@ PowerShell 4
 PowerShell Community Extensions (PSCX)
 @end itemize
 
-@node Scripts and Parameters,,Requirements,GHDL with mcode backend build on Windows with GNAT GPL
-@anchor{building/mcode/Windows-GNATGPL scripts-and-parameters}@anchor{d3}
+@node Scripts and Parameters,,Requirements,mcode Backend on Windows with GNAT GPL
+@anchor{building/mcode/Windows-GNATGPL scripts-and-parameters}@anchor{d6}
 @subsubsection Scripts and Parameters
 
 
@@ -3573,7 +3501,7 @@ PowerShell Community Extensions (PSCX)
 @end menu
 
 @node compile ps1,,,Scripts and Parameters
-@anchor{building/mcode/Windows-GNATGPL compile-ps1}@anchor{d4}
+@anchor{building/mcode/Windows-GNATGPL compile-ps1}@anchor{d7}
 @subsubsection @cite{compile.ps1}
 
 
@@ -3606,9 +3534,9 @@ CreatePackage options:
 
 @c # define a hard kine break for HTML
 
-@node GHDL with mcode backend build on Windows with GCC/GNAT MinGW,,GHDL with mcode backend build on Windows with GNAT GPL,mcode Backend
-@anchor{building/mcode/Windows-MinGW-GNAT ghdl-with-mcode-backend-build-on-windows-with-gcc-gnat-mingw}@anchor{d5}@anchor{building/mcode/Windows-MinGW-GNAT build-mcode-windows-mingw-gnat}@anchor{d6}@anchor{building/mcode/Windows-MinGW-GNAT doc}@anchor{d7}
-@subsection GHDL with mcode backend build on Windows with GCC/GNAT (MinGW)
+@node mcode Backend on Windows with GCC/GNAT MinGW,,mcode Backend on Windows with GNAT GPL,mcode Backend
+@anchor{building/mcode/Windows-MinGW-GNAT mcode-backend-on-windows-with-gcc-gnat-mingw}@anchor{d8}@anchor{building/mcode/Windows-MinGW-GNAT build-mcode-windows-mingw-gnat}@anchor{d9}@anchor{building/mcode/Windows-MinGW-GNAT doc}@anchor{d0}
+@subsection mcode Backend on Windows with GCC/GNAT (MinGW)
 
 
 On Windows with MinGW, GHDL is configured by @code{configure} and build by @code{make}.
@@ -3633,12 +3561,12 @@ specified by @code{PREFIX}.
 
 
 @example
-cd <ghdl>
-mkdir build
-cd build
-../configure --prefix=PREFIX
-make
-make install
+$ cd <ghdl>
+$ mkdir build
+$ cd build
+$ ../configure --prefix=PREFIX
+$ make
+$ make install
 @end example
 
 @c # preload commonly known graphical characters like (c)
@@ -3653,7 +3581,7 @@ make install
 @c # define a hard kine break for HTML
 
 @node LLVM Backend,GCC Backend,mcode Backend,Building GHDL from Sources
-@anchor{building/llvm/index build-llvm}@anchor{c6}@anchor{building/llvm/index doc}@anchor{d8}@anchor{building/llvm/index llvm-backend}@anchor{d9}
+@anchor{building/llvm/index build-llvm}@anchor{c7}@anchor{building/llvm/index doc}@anchor{da}@anchor{building/llvm/index llvm-backend}@anchor{db}
 @section LLVM Backend
 
 
@@ -3670,29 +3598,7 @@ GCC (Gnu Compiler Collection)
 GNAT (Ada compiler for GCC)
 
 @item 
-LLVM (Low-Level-Virtual Machine)
-
-
-@itemize *
-
-@item 
-3.5
-
-@item 
-3.8
-
-@item 
-3.9
-
-@item 
-4.0
-
-@item 
-5.0
-@end itemize
-
-@item 
-CLANG (Compiler front-end for LLVM)
+LLVM (Low-Level-Virtual Machine) and CLANG (Compiler front-end for LLVM)
 
 
 @itemize *
@@ -3721,13 +3627,13 @@ CLANG (Compiler front-end for LLVM)
 @itemize *
 
 @item 
-GNU/Linux with GCC
+@ref{dc,,LLVM Backend on GNU/Linux with GCC/GNAT}
+
+@item 
+@ref{dd,,LLVM Backend on Windows with GCC/GNAT (MinGW)}
 
 @item 
 Mac OS
-
-@item 
-Windows (x86_64) with MinGW32/MinGW64
 @end itemize
 
 @c # preload commonly known graphical characters like (c)
@@ -3742,45 +3648,49 @@ Windows (x86_64) with MinGW32/MinGW64
 @c # define a hard kine break for HTML
 
 @menu
-* GNU/Linux with GCC/GNAT:: 
-* GHDL with LLVM backend build on Windows with GCC/GNAT (MinGW): GHDL with LLVM backend build on Windows with GCC/GNAT MinGW. 
+* LLVM Backend on GNU/Linux with GCC/GNAT:: 
+* LLVM Backend on Windows with GCC/GNAT (MinGW): LLVM Backend on Windows with GCC/GNAT MinGW. 
 
 @end menu
 
-@node GNU/Linux with GCC/GNAT,GHDL with LLVM backend build on Windows with GCC/GNAT MinGW,,LLVM Backend
-@anchor{building/llvm/GNULinux-GNAT build-mcode-gnulinux-gnat}@anchor{da}@anchor{building/llvm/GNULinux-GNAT gnu-linux-with-gcc-gnat}@anchor{db}@anchor{building/llvm/GNULinux-GNAT doc}@anchor{dc}
-@subsection GNU/Linux with GCC/GNAT
+@node LLVM Backend on GNU/Linux with GCC/GNAT,LLVM Backend on Windows with GCC/GNAT MinGW,,LLVM Backend
+@anchor{building/llvm/GNULinux-GNAT llvm-backend-on-gnu-linux-with-gcc-gnat}@anchor{de}@anchor{building/llvm/GNULinux-GNAT doc}@anchor{dc}@anchor{building/llvm/GNULinux-GNAT build-llvm-gnulinux-gnat}@anchor{df}
+@subsection LLVM Backend on GNU/Linux with GCC/GNAT
 
 
-On Linux, GHDL is configured by @code{configure} and build by @code{make}.
+@cartouche
+@quotation Hint 
+You need to install LLVM (usually depends on @code{libedit}, see #29@footnote{https://github.com/tgingold/ghdl/issues/29}). The supported versions are 3.5 till 5.0, but debugging is only supported with LLVM 3.5.
+@end quotation
+@end cartouche
 
 
 @itemize *
 
 @item 
-First, GHDL needs to be configured. It is common to specify a PREFIX
-(installation directory like @code{/usr/local} or @code{/opt/ghdl}). Without any
-other option, @code{configure} select @cite{mcode} as backend.
+First configure GHDL with the proper arg @code{./configure --with-llvm-config}. If @code{llvm-config} is not in your path, you can specify it: @code{./configure --with-llvm-config=LLVM_INSTALL/bin/llvm-config}.
 
 @item 
-Next, @code{make} starts the compilation process.
-
-@item 
-Finally, @code{make install} installs GHDL into the installation directory
-specified by PREFIX. You may need super user privileges (@code{sudo ...}).
+Then, build with @code{make} and install with @code{make install}.
 @end itemize
 
 @subsubheading Example:
 
 
 @example
-cd <ghdl>
-mkdir build
-cd build
-../configure --prefix=PREFIX
-make
-sudo make install
+$ cd <ghdl>
+$ mkdir build
+$ cd build
+$ ../configure --with-llvm-config --prefix=PREFIX
+$ make
+$ make install
 @end example
+
+@cartouche
+@quotation Hint 
+If you want to have stack backtraces on errors (like assert failure or index of out bounds), you need to configure and build @code{libbacktrace} from GCC (you don’t need to configure GCC). Then add the following arg to configure: @code{--with-backtrace-lib=/path-to-gcc-build/libbacktrace/.libs/libbacktrace.a}
+@end quotation
+@end cartouche
 
 @c # preload commonly known graphical characters like (c)
 
@@ -3793,9 +3703,9 @@ sudo make install
 
 @c # define a hard kine break for HTML
 
-@node GHDL with LLVM backend build on Windows with GCC/GNAT MinGW,,GNU/Linux with GCC/GNAT,LLVM Backend
-@anchor{building/llvm/Windows-MinGW-GNAT ghdl-with-llvm-backend-build-on-windows-with-gcc-gnat-mingw}@anchor{dd}@anchor{building/llvm/Windows-MinGW-GNAT build-llvm-windows-mingw-gnat}@anchor{de}@anchor{building/llvm/Windows-MinGW-GNAT doc}@anchor{df}
-@subsection GHDL with LLVM backend build on Windows with GCC/GNAT (MinGW)
+@node LLVM Backend on Windows with GCC/GNAT MinGW,,LLVM Backend on GNU/Linux with GCC/GNAT,LLVM Backend
+@anchor{building/llvm/Windows-MinGW-GNAT build-llvm-windows-mingw-gnat}@anchor{e0}@anchor{building/llvm/Windows-MinGW-GNAT doc}@anchor{dd}@anchor{building/llvm/Windows-MinGW-GNAT llvm-backend-on-windows-with-gcc-gnat-mingw}@anchor{e1}
+@subsection LLVM Backend on Windows with GCC/GNAT (MinGW)
 
 
 On Windows with MinGW, GHDL is configured by @code{configure} and build by @code{make}.
@@ -3820,12 +3730,12 @@ specified by @code{PREFIX}.
 
 
 @example
-cd <ghdl>
-mkdir build
-cd build
-../configure --prefix=PREFIX
-make
-make install
+$ cd <ghdl>
+$ mkdir build
+$ cd build
+$ ../configure --prefix=PREFIX
+$ make
+$ make install
 @end example
 
 @c # preload commonly known graphical characters like (c)
@@ -3840,7 +3750,7 @@ make install
 @c # define a hard kine break for HTML
 
 @node GCC Backend,,LLVM Backend,Building GHDL from Sources
-@anchor{building/gcc/index gcc-backend}@anchor{e0}@anchor{building/gcc/index build-gcc}@anchor{c7}@anchor{building/gcc/index doc}@anchor{e1}
+@anchor{building/gcc/index gcc-backend}@anchor{e2}@anchor{building/gcc/index build-gcc}@anchor{c8}@anchor{building/gcc/index doc}@anchor{e3}
 @section GCC Backend
 
 
@@ -3854,10 +3764,10 @@ make install
 GCC (Gnu Compiler Collection)
 
 @item 
-GCC source files
+GNAT (Ada compiler for GCC)
 
 @item 
-GNAT (Ada compiler for GCC)
+GCC source files. Download and untar the sources of version 4.9.x, 5.x, 6.x or 7.x
 @end itemize
 
 @subsubheading Supported platforms
@@ -3867,11 +3777,50 @@ GNAT (Ada compiler for GCC)
 @itemize *
 
 @item 
-GNU/Linux with GCC
+@ref{e4,,GCC Backend on GNU/Linux with GCC/GNAT}
 
 @item 
-Windows (x86_64) with MinGW32/MinGW64
+@ref{e5,,GCC Backend on Windows with GCC/GNAT (MinGW)}
 @end itemize
+
+@cartouche
+@quotation Hint 
+Once GCC (with GHDL) has been built once, it is possible to work on the GHDL source tree without copying it in the GCC tree. Commands are:
+
+@example
+$ make ghdl1-gcc           # Build the compiler
+$ make ghdl_gcc            # Build the driver
+$ make libs.vhdl.local_gcc # Compile the vhdl libraries
+$ make grt-all             # Build the GHDL runtime
+$ make grt.links           # Locally install the GHDL runtime
+@end example
+
+In @code{src/ortho/gcc}, create a @code{Makefile.conf} file that sets the following
+variables:
+
+@example
+AGCC_GCCSRC_DIR=/path/to/gcc/sources
+AGCC_GCCOBJ_DIR=/path/to/gcc/build
+@end example
+@end quotation
+@end cartouche
+
+@cartouche
+@quotation Hint 
+For ppc64 (and AIX ?) platform, the object file format contains an identifier for the source language. Because gcc doesn’t know about the VHDL, gcc crashes very early. This could be fixed with a very simple change in @code{gcc/config/rs6000/rs6000.c}, @code{function rs6000_output_function_epilogue} (as of gcc 4.8):
+
+@example
+else if (! strcmp (language_string, "GNU Objective-C"))
+        i = 14;
+else
+-  gcc_unreachable ();
++  i = 0;
+fprintf (file, "%d,", i);
+
+/* 8 single bit fields: global linkage (not set for C extern linkage),
+@end example
+@end quotation
+@end cartouche
 
 @c # preload commonly known graphical characters like (c)
 
@@ -3885,45 +3834,77 @@ Windows (x86_64) with MinGW32/MinGW64
 @c # define a hard kine break for HTML
 
 @menu
-* GNU/Linux with GCC/GNAT: GNU/Linux with GCC/GNAT<2>. 
-* GHDL with GCC backend build on Windows with GCC/GNAT (MinGW): GHDL with GCC backend build on Windows with GCC/GNAT MinGW. 
+* GCC Backend on GNU/Linux with GCC/GNAT:: 
+* GCC Backend on Windows with GCC/GNAT (MinGW): GCC Backend on Windows with GCC/GNAT MinGW. 
 
 @end menu
 
-@node GNU/Linux with GCC/GNAT<2>,GHDL with GCC backend build on Windows with GCC/GNAT MinGW,,GCC Backend
-@anchor{building/gcc/GNULinux-GNAT build-mcode-gnulinux-gnat}@anchor{e2}@anchor{building/gcc/GNULinux-GNAT gnu-linux-with-gcc-gnat}@anchor{e3}@anchor{building/gcc/GNULinux-GNAT doc}@anchor{e4}
-@subsection GNU/Linux with GCC/GNAT
+@node GCC Backend on GNU/Linux with GCC/GNAT,GCC Backend on Windows with GCC/GNAT MinGW,,GCC Backend
+@anchor{building/gcc/GNULinux-GNAT gcc-backend-on-gnu-linux-with-gcc-gnat}@anchor{e6}@anchor{building/gcc/GNULinux-GNAT doc}@anchor{e4}@anchor{building/gcc/GNULinux-GNAT build-gcc-gnulinux-gnat}@anchor{e7}
+@subsection GCC Backend on GNU/Linux with GCC/GNAT
 
 
-On Linux, GHDL is configured by @code{configure} and build by @code{make}.
+@cartouche
+@quotation Hint 
+There are some dependencies for building GCC (@code{gmp}, @code{mpfr} and @code{mpc}). If you have not them installed on your system, you can either build them manually or use the @code{download_prerequisites} script provided in the GCC source tree (recommended): @code{cd /path/to/gcc/source/dir && ./contrib/download_prerequisites}.
+@end quotation
+@end cartouche
 
 
 @itemize *
 
 @item 
-First, GHDL needs to be configured. It is common to specify a PREFIX
-(installation directory like @code{/usr/local} or @code{/opt/ghdl}). Without any
-other option, @code{configure} select @cite{mcode} as backend.
+First configure GHDL, specify GCC source directory and @code{PREFIX} (installation directory like  @code{/usr/local} or @code{/opt/ghdl}).
 
 @item 
-Next, @code{make} starts the compilation process.
+Next, invoke @code{make} to copy GHDL sources in the source directory.
 
 @item 
-Finally, @code{make install} installs GHDL into the installation directory
-specified by PREFIX. You may need super user privileges (@code{sudo ...}).
+Then, configure GCC. The list of @code{--disable} configure options can be adjusted to your needs. GHDL does not require all these optional libraries and disabling them will speed-up the build.
+
+@item 
+Now, build and install GCC with @code{make}.
+
+@item 
+Last, build and install GHDL libraries.
 @end itemize
 
 @subsubheading Example:
 
 
 @example
-cd <ghdl>
-mkdir build
-cd build
-../configure --prefix=PREFIX
-make
-sudo make install
+$ cd <ghdl>
+$ mkdir build
+$ cd build
+$ ../configure --with-gcc=/path/to/gcc/source/dir --prefix=PREFIX
+$ make copy-sources
+$ mkdir gcc-objs; cd gcc-objs
+$ /path/to/gcc/source/dir/configure --prefix=/usr/local --enable-languages=c,vhdl \
+--disable-bootstrap --disable-lto --disable-multilib --disable-libssp \
+--disable-libgomp --disable-libquadmath
+$ make -j2 && make install
+$ cd /path/to/ghdl/source/dir
+$ make ghdllib
+$ make install
 @end example
+
+@cartouche
+@quotation Hint 
+Note that the prefix directory must be the same as the one used to configure GHDL. If you have manually built @code{gmp}/@code{mpfr}/@code{mpc} (without using the script in @code{contrib}) and if you have installed them in a non-standard directory, you may need to add @code{--with-gmp=GMP_INSTALL_DIR}.
+@end quotation
+@end cartouche
+
+@cartouche
+@quotation Hint 
+If your system gcc was configured with @code{--enable-default-pie} (check if that option appears in the output of @code{gcc -v}), you should also add it.
+@end quotation
+@end cartouche
+
+@cartouche
+@quotation Hint 
+If you don’t want to install @code{makeinfo}, do @code{make install MAKEINFO=false} instead.
+@end quotation
+@end cartouche
 
 @c # preload commonly known graphical characters like (c)
 
@@ -3936,9 +3917,9 @@ sudo make install
 
 @c # define a hard kine break for HTML
 
-@node GHDL with GCC backend build on Windows with GCC/GNAT MinGW,,GNU/Linux with GCC/GNAT<2>,GCC Backend
-@anchor{building/gcc/Windows-MinGW-GNAT build-gcc-windows-mingw-gnat}@anchor{e5}@anchor{building/gcc/Windows-MinGW-GNAT doc}@anchor{e6}@anchor{building/gcc/Windows-MinGW-GNAT ghdl-with-gcc-backend-build-on-windows-with-gcc-gnat-mingw}@anchor{e7}
-@subsection GHDL with GCC backend build on Windows with GCC/GNAT (MinGW)
+@node GCC Backend on Windows with GCC/GNAT MinGW,,GCC Backend on GNU/Linux with GCC/GNAT,GCC Backend
+@anchor{building/gcc/Windows-MinGW-GNAT build-gcc-windows-mingw-gnat}@anchor{e8}@anchor{building/gcc/Windows-MinGW-GNAT doc}@anchor{e5}@anchor{building/gcc/Windows-MinGW-GNAT gcc-backend-on-windows-with-gcc-gnat-mingw}@anchor{e9}
+@subsection GCC Backend on Windows with GCC/GNAT (MinGW)
 
 
 @cartouche
@@ -3963,12 +3944,12 @@ Under investigation on how to build that beast.
 @c 
 @c .. code-block:: Bash
 @c 
-@c    cd <ghdl>
-@c    mkdir build
-@c    cd build
-@c    ../configure --prefix=PREFIX
-@c    make
-@c    make install
+@c    $ cd <ghdl>
+@c    $ mkdir build
+@c    $ cd build
+@c    $ ../configure --prefix=PREFIX
+@c    $ make
+@c    $ make install
 
 @cartouche
 @quotation Hint 
@@ -3993,6 +3974,22 @@ provide a package named @code{gcc-ada} or @code{gcc-gnat}.
 @end quotation
 @end cartouche
 
+@cartouche
+@quotation Hint 
+In these instructions, the configure script is executed in the source directory; but you can execute in a different
+directory too, like this:
+
+@quotation
+
+@example
+$ mkdir ghdl-objs
+$ cd ghdl-objs
+$ ../path/to/ghdl/configure ...
+@end example
+@end quotation
+@end quotation
+@end cartouche
+
 @c # preload commonly known graphical characters like (c)
 
 @c This data file has been placed in the public domain.
@@ -4005,7 +4002,7 @@ provide a package named @code{gcc-ada} or @code{gcc-gnat}.
 @c # define a hard kine break for HTML
 
 @node Precompile Vendor Primitives,Command Reference,Building GHDL from Sources,Top
-@anchor{building/PrecompileVendorPrimitives precompile-vendor-primitives}@anchor{e8}@anchor{building/PrecompileVendorPrimitives getting-precompvendor}@anchor{e9}@anchor{building/PrecompileVendorPrimitives doc}@anchor{ea}
+@anchor{building/PrecompileVendorPrimitives precompile-vendor-primitives}@anchor{ea}@anchor{building/PrecompileVendorPrimitives getting-precompvendor}@anchor{cb}@anchor{building/PrecompileVendorPrimitives doc}@anchor{eb}
 @chapter Precompile Vendor Primitives
 
 
@@ -4039,7 +4036,7 @@ Generic Colourizer @indicateurl{http://kassiopeia.juls.savba.sk/~garabik/softwar
 @end menu
 
 @node Supported Vendors Libraries,Supported Simulation and Verification Libraries,,Precompile Vendor Primitives
-@anchor{building/PrecompileVendorPrimitives supported-vendors-libraries}@anchor{eb}
+@anchor{building/PrecompileVendorPrimitives supported-vendors-libraries}@anchor{ec}
 @section Supported Vendors Libraries
 
 
@@ -4142,7 +4139,7 @@ Xilinx Vivado (2014.1 or later):
 @end itemize
 
 @node Supported Simulation and Verification Libraries,Script Configuration,Supported Vendors Libraries,Precompile Vendor Primitives
-@anchor{building/PrecompileVendorPrimitives supported-simulation-and-verification-libraries}@anchor{ec}
+@anchor{building/PrecompileVendorPrimitives supported-simulation-and-verification-libraries}@anchor{ed}
 @section Supported Simulation and Verification Libraries
 
 
@@ -4190,7 +4187,7 @@ __________________________________________________________________
 
 
 @node Script Configuration,Compiling on Linux,Supported Simulation and Verification Libraries,Precompile Vendor Primitives
-@anchor{building/PrecompileVendorPrimitives script-configuration}@anchor{ed}
+@anchor{building/PrecompileVendorPrimitives script-configuration}@anchor{ee}
 @section Script Configuration
 
 
@@ -4218,7 +4215,7 @@ __________________________________________________________________
 
 
 @node Compiling on Linux,Compiling on Windows,Script Configuration,Precompile Vendor Primitives
-@anchor{building/PrecompileVendorPrimitives compiling-on-linux}@anchor{ee}
+@anchor{building/PrecompileVendorPrimitives compiling-on-linux}@anchor{ef}
 @section Compiling on Linux
 
 
@@ -4286,7 +4283,7 @@ __________________________________________________________________
 
 
 @node Compiling on Windows,Configuration Files,Compiling on Linux,Precompile Vendor Primitives
-@anchor{building/PrecompileVendorPrimitives compiling-on-windows}@anchor{ef}
+@anchor{building/PrecompileVendorPrimitives compiling-on-windows}@anchor{f0}
 @section Compiling on Windows
 
 
@@ -4342,7 +4339,7 @@ __________________________________________________________________
 
 
 @node Configuration Files,,Compiling on Windows,Precompile Vendor Primitives
-@anchor{building/PrecompileVendorPrimitives configuration-files}@anchor{f0}
+@anchor{building/PrecompileVendorPrimitives configuration-files}@anchor{f1}
 @section Configuration Files
 
 
@@ -4355,7 +4352,7 @@ __________________________________________________________________
 @end menu
 
 @node For Linux config sh,For Windows config psm1,,Configuration Files
-@anchor{building/PrecompileVendorPrimitives for-linux-config-sh}@anchor{f1}
+@anchor{building/PrecompileVendorPrimitives for-linux-config-sh}@anchor{f2}
 @subsection For Linux: @cite{config.sh}
 
 
@@ -4376,7 +4373,7 @@ InstallationDirectory[XilinxVivado]="/opt/Xilinx/Vivado/2016.3"
 @end example
 
 @node For Windows config psm1,Selectable Options for the Bash Scripts,For Linux config sh,Configuration Files
-@anchor{building/PrecompileVendorPrimitives for-windows-config-psm1}@anchor{f2}
+@anchor{building/PrecompileVendorPrimitives for-windows-config-psm1}@anchor{f3}
 @subsection For Windows: @cite{config.psm1}
 
 
@@ -4398,7 +4395,7 @@ $InstallationDirectory = @@@{
 @end example
 
 @node Selectable Options for the Bash Scripts,Selectable Options for the PowerShell Scripts,For Windows config psm1,Configuration Files
-@anchor{building/PrecompileVendorPrimitives selectable-options-for-the-bash-scripts}@anchor{f3}
+@anchor{building/PrecompileVendorPrimitives selectable-options-for-the-bash-scripts}@anchor{f4}
 @subsection Selectable Options for the Bash Scripts:
 
 
@@ -4513,7 +4510,7 @@ Selectable libraries:
 @end itemize
 
 @node Selectable Options for the PowerShell Scripts,,Selectable Options for the Bash Scripts,Configuration Files
-@anchor{building/PrecompileVendorPrimitives selectable-options-for-the-powershell-scripts}@anchor{f4}
+@anchor{building/PrecompileVendorPrimitives selectable-options-for-the-powershell-scripts}@anchor{f5}
 @subsection Selectable Options for the PowerShell Scripts:
 
 
@@ -4640,7 +4637,7 @@ __________________________________________________________________
 @c # define a hard kine break for HTML
 
 @node Command Reference,Coding Style,Precompile Vendor Primitives,Top
-@anchor{references/CommandReference ref-command}@anchor{f}@anchor{references/CommandReference command-reference}@anchor{f5}@anchor{references/CommandReference doc}@anchor{f6}
+@anchor{references/CommandReference ref-command}@anchor{f}@anchor{references/CommandReference command-reference}@anchor{f6}@anchor{references/CommandReference doc}@anchor{f7}
 @chapter Command Reference
 
 
@@ -4661,17 +4658,17 @@ The most common commands and options are shown in section @ref{e,,Invoking GHDL}
 @end menu
 
 @node Environment variables,Misc commands,,Command Reference
-@anchor{references/CommandReference environment-variables}@anchor{f7}
+@anchor{references/CommandReference environment-variables}@anchor{f8}
 @section Environment variables
 
 
 @geindex environment variable; GHDL_PREFIX
-@anchor{references/CommandReference envvar-GHDL_PREFIX}@anchor{32}
+@anchor{references/CommandReference envvar-GHDL_PREFIX}@anchor{33}
 @deffn {Environment Variable} GHDL_PREFIX
 @end deffn
 
 @node Misc commands,File commands,Environment variables,Command Reference
-@anchor{references/CommandReference misc-commands}@anchor{f8}
+@anchor{references/CommandReference misc-commands}@anchor{f9}
 @section Misc commands
 
 
@@ -4688,12 +4685,12 @@ There are a few GHDL commands which are seldom useful.
 @end menu
 
 @node Help [-h],Display config [--disp-config],,Misc commands
-@anchor{references/CommandReference help-h}@anchor{f9}
+@anchor{references/CommandReference help-h}@anchor{fa}
 @subsection Help [@code{-h}]
 
 
 @geindex ghdl command line option; --help@comma{} -h
-@anchor{references/CommandReference cmdoption-ghdl-help}@anchor{fa}
+@anchor{references/CommandReference cmdoption-ghdl-help}@anchor{fb}
 @deffn {Option} @w{-}@w{-}help, @w{-}h
 @end deffn
 
@@ -4710,12 +4707,12 @@ ghdl -h command
 @geindex cmd display configuration
 
 @node Display config [--disp-config],Display standard [--disp-standard],Help [-h],Misc commands
-@anchor{references/CommandReference display-config-disp-config}@anchor{fb}
+@anchor{references/CommandReference display-config-disp-config}@anchor{fc}
 @subsection Display config [@code{--disp-config}]
 
 
 @geindex ghdl command line option; --disp-config <[options]>
-@anchor{references/CommandReference cmdoption-ghdl-disp-config}@anchor{33}
+@anchor{references/CommandReference cmdoption-ghdl-disp-config}@anchor{34}
 @deffn {Option} @w{-}@w{-}disp@w{-}config <[options]>
 @end deffn
 
@@ -4726,12 +4723,12 @@ Display the program paths and options used by GHDL. This may be useful to track 
 @geindex display `@w{`}std.standard`@w{`}
 
 @node Display standard [--disp-standard],Version [--version],Display config [--disp-config],Misc commands
-@anchor{references/CommandReference display-standard-disp-standard}@anchor{fc}
+@anchor{references/CommandReference display-standard-disp-standard}@anchor{fd}
 @subsection Display standard [@code{--disp-standard}]
 
 
 @geindex ghdl command line option; --disp-standard <[options]>
-@anchor{references/CommandReference cmdoption-ghdl-disp-standard}@anchor{fd}
+@anchor{references/CommandReference cmdoption-ghdl-disp-standard}@anchor{fe}
 @deffn {Option} @w{-}@w{-}disp@w{-}standard <[options]>
 @end deffn
 
@@ -4740,19 +4737,19 @@ Display the @code{std.standard} package.
 @geindex cmd version
 
 @node Version [--version],,Display standard [--disp-standard],Misc commands
-@anchor{references/CommandReference version-version}@anchor{fe}
+@anchor{references/CommandReference version-version}@anchor{ff}
 @subsection Version [@code{--version}]
 
 
 @geindex ghdl command line option; --version@comma{} -v
-@anchor{references/CommandReference cmdoption-ghdl-version}@anchor{ff}
+@anchor{references/CommandReference cmdoption-ghdl-version}@anchor{100}
 @deffn {Option} @w{-}@w{-}version, @w{-}v
 @end deffn
 
 Display the GHDL version and exit.
 
 @node File commands,GCC/LLVM only commands,Misc commands,Command Reference
-@anchor{references/CommandReference file-commands}@anchor{100}
+@anchor{references/CommandReference file-commands}@anchor{101}
 @section File commands
 
 
@@ -4771,12 +4768,12 @@ The following commands act on one or several files. These are not analyzed, ther
 @end menu
 
 @node Pretty print [--pp-html],Find [-f],,File commands
-@anchor{references/CommandReference pretty-print-pp-html}@anchor{101}
+@anchor{references/CommandReference pretty-print-pp-html}@anchor{102}
 @subsection Pretty print [@code{--pp-html}]
 
 
 @geindex ghdl command line option; --pp-html <[options] file...>
-@anchor{references/CommandReference cmdoption-ghdl-pp-html}@anchor{102}
+@anchor{references/CommandReference cmdoption-ghdl-pp-html}@anchor{103}
 @deffn {Option} @w{-}@w{-}pp@w{-}html <[options] file...>
 @end deffn
 
@@ -4797,12 +4794,12 @@ When the @code{--format=css} option is specified, the output is an HTML 4.0 file
 @geindex cmd file find
 
 @node Find [-f],Chop [--chop],Pretty print [--pp-html],File commands
-@anchor{references/CommandReference find-f}@anchor{103}
+@anchor{references/CommandReference find-f}@anchor{104}
 @subsection Find [@code{-f}]
 
 
 @geindex ghdl command line option; -f <file...>
-@anchor{references/CommandReference cmdoption-ghdl-f}@anchor{47}
+@anchor{references/CommandReference cmdoption-ghdl-f}@anchor{48}
 @deffn {Option} @w{-}f <file...>
 @end deffn
 
@@ -4811,12 +4808,12 @@ The files are scanned, parsed and the names of design units are displayed. Desig
 @geindex cmd file chop
 
 @node Chop [--chop],Lines [--lines],Find [-f],File commands
-@anchor{references/CommandReference chop-chop}@anchor{104}
+@anchor{references/CommandReference chop-chop}@anchor{105}
 @subsection Chop [@code{--chop}]
 
 
 @geindex ghdl command line option; --chop <files...>
-@anchor{references/CommandReference cmdoption-ghdl-chop}@anchor{105}
+@anchor{references/CommandReference cmdoption-ghdl-chop}@anchor{106}
 @deffn {Option} @w{-}@w{-}chop <files...>
 @end deffn
 
@@ -4844,19 +4841,19 @@ This command may be useful to split big files, if your computer has not enough m
 @geindex cmd file lines
 
 @node Lines [--lines],,Chop [--chop],File commands
-@anchor{references/CommandReference lines-lines}@anchor{106}
+@anchor{references/CommandReference lines-lines}@anchor{107}
 @subsection Lines [@code{--lines}]
 
 
 @geindex ghdl command line option; --lines <files...>
-@anchor{references/CommandReference cmdoption-ghdl-lines}@anchor{107}
+@anchor{references/CommandReference cmdoption-ghdl-lines}@anchor{108}
 @deffn {Option} @w{-}@w{-}lines <files...>
 @end deffn
 
 Display on the standard output lines of files preceded by line number.
 
 @node GCC/LLVM only commands,Options<2>,File commands,Command Reference
-@anchor{references/CommandReference gcc-llvm-only-commands}@anchor{108}
+@anchor{references/CommandReference gcc-llvm-only-commands}@anchor{109}
 @section GCC/LLVM only commands
 
 
@@ -4870,12 +4867,12 @@ Display on the standard output lines of files preceded by line number.
 @end menu
 
 @node Bind [--bind],Link [--link],,GCC/LLVM only commands
-@anchor{references/CommandReference bind-bind}@anchor{109}
+@anchor{references/CommandReference bind-bind}@anchor{10a}
 @subsection Bind [@code{--bind}]
 
 
 @geindex ghdl command line option; --bind <[options] primary_unit [secondary_unit]>
-@anchor{references/CommandReference cmdoption-ghdl-bind}@anchor{46}
+@anchor{references/CommandReference cmdoption-ghdl-bind}@anchor{47}
 @deffn {Option} @w{-}@w{-}bind <[options] primary_unit [secondary_unit]>
 @end deffn
 
@@ -4884,12 +4881,12 @@ Performs only the first stage of the elaboration command; the list of objects fi
 @geindex cmd GCC/LLVM linking
 
 @node Link [--link],List link [--list-link],Bind [--bind],GCC/LLVM only commands
-@anchor{references/CommandReference link-link}@anchor{10a}
+@anchor{references/CommandReference link-link}@anchor{10b}
 @subsection Link [@code{--link}]
 
 
 @geindex ghdl command line option; --link <[options] primary_unit [secondary_unit]>
-@anchor{references/CommandReference cmdoption-ghdl-link}@anchor{10b}
+@anchor{references/CommandReference cmdoption-ghdl-link}@anchor{10c}
 @deffn {Option} @w{-}@w{-}link <[options] primary_unit [secondary_unit]>
 @end deffn
 
@@ -4898,31 +4895,31 @@ Performs only the second stage of the elaboration command: the executable is cre
 @geindex cmd GCC/LLVM list link
 
 @node List link [--list-link],,Link [--link],GCC/LLVM only commands
-@anchor{references/CommandReference list-link-list-link}@anchor{10c}
+@anchor{references/CommandReference list-link-list-link}@anchor{10d}
 @subsection List link [@code{--list-link}]
 
 
 @geindex ghdl command line option; --list-link <primary_unit [secondary_unit]>
-@anchor{references/CommandReference cmdoption-ghdl-list-link}@anchor{10d}
+@anchor{references/CommandReference cmdoption-ghdl-list-link}@anchor{10e}
 @deffn {Option} @w{-}@w{-}list@w{-}link <primary_unit [secondary_unit]>
 @end deffn
 
 This command may be used only after a bind command. GHDL displays all the files which will be linked to create an executable. This command is intended to add object files in a link of a foreign program.
 
 @node Options<2>,Passing options to other programs,GCC/LLVM only commands,Command Reference
-@anchor{references/CommandReference options}@anchor{10e}
+@anchor{references/CommandReference options}@anchor{10f}
 @section Options
 
 
 @geindex ghdl command line option; --mb-comments@comma{} -C
-@anchor{references/CommandReference cmdoption-ghdl-mb-comments}@anchor{28}
+@anchor{references/CommandReference cmdoption-ghdl-mb-comments}@anchor{29}
 @deffn {Option} @w{-}@w{-}mb@w{-}comments, @w{-}C
 @end deffn
 
 Allow multi-bytes chars in a comment
 
 @geindex ghdl command line option; --syn-binding
-@anchor{references/CommandReference cmdoption-ghdl-syn-binding}@anchor{10f}
+@anchor{references/CommandReference cmdoption-ghdl-syn-binding}@anchor{110}
 @deffn {Option} @w{-}@w{-}syn@w{-}binding
 @end deffn
 
@@ -4935,28 +4932,28 @@ There are two key points: normal VHDL LRM rules are tried first and entities are
 This option is only useful during elaboration.
 
 @geindex ghdl command line option; --GHDL1<=COMMAND>
-@anchor{references/CommandReference cmdoption-ghdl-ghdl1}@anchor{110}
+@anchor{references/CommandReference cmdoption-ghdl-ghdl1}@anchor{111}
 @deffn {Option} @w{-}@w{-}GHDL1<=COMMAND>
 @end deffn
 
 Use @code{COMMAND} as the command name for the compiler.  If @code{COMMAND} is not a path, then it is searched in the path.
 
 @geindex ghdl command line option; --AS<=COMMAND>
-@anchor{references/CommandReference cmdoption-ghdl-as}@anchor{111}
+@anchor{references/CommandReference cmdoption-ghdl-as}@anchor{112}
 @deffn {Option} @w{-}@w{-}AS<=COMMAND>
 @end deffn
 
 Use @code{COMMAND} as the command name for the assembler.  If @code{COMMAND} is not a path, then it is searched in the path.  The default is @code{as}.
 
 @geindex ghdl command line option; --LINK<=COMMAND>
-@anchor{references/CommandReference id1}@anchor{112}
+@anchor{references/CommandReference id1}@anchor{113}
 @deffn {Option} @w{-}@w{-}LINK<=COMMAND>
 @end deffn
 
 Use @code{COMMAND} as the linker driver.  If @code{COMMAND} is not a path, then it is searched in the path.  The default is @code{gcc}.
 
 @node Passing options to other programs,,Options<2>,Command Reference
-@anchor{references/CommandReference passing-options-to-other-programs}@anchor{113}
+@anchor{references/CommandReference passing-options-to-other-programs}@anchor{114}
 @section Passing options to other programs
 
 
@@ -4971,21 +4968,21 @@ For many commands, GHDL acts as a driver: it invokes programs to perform the com
 Both the compiler and the linker are in fact GCC programs. See the GCC manual for details on GCC options.
 
 @geindex ghdl command line option; -Wc@comma{}<OPTION>
-@anchor{references/CommandReference cmdoption-ghdl-wc-option}@anchor{114}
+@anchor{references/CommandReference cmdoption-ghdl-wc-option}@anchor{115}
 @deffn {Option} @w{-}Wc,<OPTION>
 @end deffn
 
 Pass @cite{OPTION} as an option to the compiler.
 
 @geindex ghdl command line option; -Wa@comma{}<OPTION>
-@anchor{references/CommandReference cmdoption-ghdl-wa-option}@anchor{115}
+@anchor{references/CommandReference cmdoption-ghdl-wa-option}@anchor{116}
 @deffn {Option} @w{-}Wa,<OPTION>
 @end deffn
 
 Pass @cite{OPTION} as an option to the assembler.
 
 @geindex ghdl command line option; -Wl@comma{}<OPTION>
-@anchor{references/CommandReference cmdoption-ghdl-wl-option}@anchor{116}
+@anchor{references/CommandReference cmdoption-ghdl-wl-option}@anchor{117}
 @deffn {Option} @w{-}Wl,<OPTION>
 @end deffn
 
@@ -5003,7 +5000,7 @@ Pass @cite{OPTION} as an option to the linker.
 @c # define a hard kine break for HTML
 
 @node Coding Style,Implementation of VHDL,Command Reference,Top
-@anchor{references/CodingStyle coding-style}@anchor{117}@anchor{references/CodingStyle doc}@anchor{118}@anchor{references/CodingStyle ref-style}@anchor{119}
+@anchor{references/CodingStyle coding-style}@anchor{118}@anchor{references/CodingStyle doc}@anchor{119}@anchor{references/CodingStyle ref-style}@anchor{1b}
 @chapter Coding Style
 
 
@@ -5218,7 +5215,7 @@ This chapter describes several implementation defined aspect of VHDL in GHDL.
 @end menu
 
 @node VHDL standards,PSL implementation,,Implementation of VHDL
-@anchor{references/ImplementationOfVHDL vhdl-standards}@anchor{50}@anchor{references/ImplementationOfVHDL id1}@anchor{11c}
+@anchor{references/ImplementationOfVHDL vhdl-standards}@anchor{51}@anchor{references/ImplementationOfVHDL id1}@anchor{11c}
 @section VHDL standards
 
 
@@ -5342,7 +5339,7 @@ elaborate a design mixing these standards.  However, 87, 93 and 08 are
 not compatible.
 
 @node PSL implementation,Source representation,VHDL standards,Implementation of VHDL
-@anchor{references/ImplementationOfVHDL id2}@anchor{11d}@anchor{references/ImplementationOfVHDL psl-implementation}@anchor{57}
+@anchor{references/ImplementationOfVHDL id2}@anchor{11d}@anchor{references/ImplementationOfVHDL psl-implementation}@anchor{58}
 @section PSL implementation
 
 
@@ -5428,7 +5425,7 @@ design units, as well as the location and the dependencies.
 The format may change with the next version of GHDL.
 
 @node Top entity,Using vendor libraries,Library database,Implementation of VHDL
-@anchor{references/ImplementationOfVHDL top-entity}@anchor{38}@anchor{references/ImplementationOfVHDL id4}@anchor{121}
+@anchor{references/ImplementationOfVHDL top-entity}@anchor{39}@anchor{references/ImplementationOfVHDL id4}@anchor{121}
 @section Top entity
 
 
@@ -5794,7 +5791,7 @@ really in a preliminary stage.  Do not expect too much of it as now.
 @end menu
 
 @node VITAL packages,VHDL restrictions for VITAL,,Implementation of VITAL
-@anchor{references/ImplementationOfVITAL vital-packages}@anchor{52}@anchor{references/ImplementationOfVITAL id1}@anchor{130}
+@anchor{references/ImplementationOfVITAL vital-packages}@anchor{53}@anchor{references/ImplementationOfVITAL id1}@anchor{130}
 @section VITAL packages
 
 
@@ -5812,7 +5809,7 @@ the VHDL 1993 standard (a few functions are made pure and a few one
 impure).
 
 @node VHDL restrictions for VITAL,Backannotation,VITAL packages,Implementation of VITAL
-@anchor{references/ImplementationOfVITAL id2}@anchor{131}@anchor{references/ImplementationOfVITAL vhdl-restrictions-for-vital}@anchor{5a}
+@anchor{references/ImplementationOfVITAL id2}@anchor{131}@anchor{references/ImplementationOfVITAL vhdl-restrictions-for-vital}@anchor{5b}
 @section VHDL restrictions for VITAL
 
 
@@ -5835,7 +5832,7 @@ checks of VITAL restrictions with the @emph{–no-vital-checks}.  Even when
 restrictions are not checked, SDF annotation can be performed.
 
 @node Backannotation,Negative constraint calculation,VHDL restrictions for VITAL,Implementation of VITAL
-@anchor{references/ImplementationOfVITAL backannotation}@anchor{95}@anchor{references/ImplementationOfVITAL id3}@anchor{132}
+@anchor{references/ImplementationOfVITAL backannotation}@anchor{96}@anchor{references/ImplementationOfVITAL id3}@anchor{132}
 @section Backannotation
 
 

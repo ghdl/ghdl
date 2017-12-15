@@ -20,7 +20,7 @@ If you found no information on your topic, please, report so that we are aware! 
 |SHIELD:gitter| or open a |SHIELD:issues-new|.
 
 .. HINT::
-   Since the development of GHDL started fifteen years ago, multiple platforms have been used as a support for both distribution and getting feedback. However, the development is now centralized in |SHIELD:gh-logo|.
+   Since the development of GHDL started fifteen years ago, multiple platforms have been used as a support for both distribution and getting feedback. However, the development is now centralized in github.
 
 .. TIP::
    `How To Ask Questions The Smart Way <www.catb.org/~esr/faqs/smart-questions.html>`_
