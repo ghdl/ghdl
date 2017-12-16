@@ -1154,6 +1154,7 @@ package body Trans.Chap3 is
       El_Btype   : Iir;
 
       Has_New_Constraints : Boolean;
+      Has_Boxed_Elements : Boolean;
 
       Rec        : O_Element_List;
       Field_Info : Ortho_Info_Acc;
@@ -1171,6 +1172,7 @@ package body Trans.Chap3 is
          El_Tm_List := El_Blist;
       end if;
       Has_New_Constraints := False;
+      Has_Boxed_Elements := False;
       for I in Flist_First .. Flist_Last (El_List) loop
          El := Get_Nth_Element (El_List, I);
          El_Type := Get_Type (El);
@@ -1178,6 +1180,9 @@ package body Trans.Chap3 is
             El_Btype := Get_Type (Get_Nth_Element (El_Tm_List, I));
             if not Is_Fully_Constrained_Type (El_Btype) then
                Has_New_Constraints := True;
+               if Get_Type_Staticness (El_Type) = Locally then
+                  Has_Boxed_Elements := True;
+               end if;
                Push_Identifier_Prefix (Mark, Get_Identifier (El));
                Translate_Type_Definition (El_Type);
                Pop_Identifier_Prefix (Mark);
@@ -1195,7 +1200,7 @@ package body Trans.Chap3 is
         or else not Has_New_Constraints
       then
          --  The subtype is not completly constrained: it cannot be used to
-         --    create objects, so wait until it is compltely constrained.
+         --    create objects, so wait until it is completly constrained.
          --  The subtype is simply an alias.
          --  In both cases, use the same representation as its type mark.
          return;
@@ -1209,37 +1214,43 @@ package body Trans.Chap3 is
 
       --  Then create the record type, containing the base record and the
       --  fields.
-      Info.Ortho_Type (Mode_Signal) := O_Tnode_Null;
-      for Kind in Mode_Value .. Type_To_Last_Object_Kind (Def) loop
-         Start_Record_Type (Rec);
-         New_Record_Field (Rec, Info.S.Box_Field (Kind), Wki_Base,
-                           Info.B.Base_Type (Kind));
-         for I in Flist_First .. Flist_Last (El_Blist) loop
-            B_El := Get_Nth_Element (El_Blist, I);
-            El := Get_Nth_Element (El_List, I);
-
-            --  This element has been locally constrained.
-            if Is_Unbounded_Type (Get_Info (Get_Type (B_El)))
-              and then
-              Get_Type_Staticness (Get_Type(El)) = Locally
-            then
-               if Kind = Mode_Value then
-                  Field_Info := Add_Info (El, Kind_Field);
-               else
-                  Field_Info := Get_Info (El);
-               end if;
+      if Has_Boxed_Elements then
+         Info.Ortho_Type (Mode_Signal) := O_Tnode_Null;
+         for Kind in Mode_Value .. Type_To_Last_Object_Kind (Def) loop
+            Start_Record_Type (Rec);
+            New_Record_Field (Rec, Info.S.Box_Field (Kind), Wki_Base,
+                              Info.B.Base_Type (Kind));
+            for I in Flist_First .. Flist_Last (El_Blist) loop
+               B_El := Get_Nth_Element (El_Blist, I);
                El := Get_Nth_Element (El_List, I);
-               El_Tinfo := Get_Info (Get_Type (El));
-               El_Tnode := El_Tinfo.Ortho_Type (Kind);
-               New_Record_Field (Rec, Field_Info.Field_Node (Kind),
-                                 Create_Identifier_Without_Prefix (El),
-                                 El_Tnode);
-            end if;
-         end loop;
-         Finish_Record_Type (Rec, Info.Ortho_Type (Kind));
-      end loop;
 
-      Finish_Type_Definition (Info);
+               --  This element has been locally constrained.
+               if Is_Unbounded_Type (Get_Info (Get_Type (B_El)))
+                 and then Get_Type_Staticness (Get_Type(El)) = Locally
+               then
+                  if Kind = Mode_Value then
+                     Field_Info := Add_Info (El, Kind_Field);
+                  else
+                     Field_Info := Get_Info (El);
+                  end if;
+                  El := Get_Nth_Element (El_List, I);
+                  El_Tinfo := Get_Info (Get_Type (El));
+                  El_Tnode := El_Tinfo.Ortho_Type (Kind);
+                  New_Record_Field (Rec, Field_Info.Field_Node (Kind),
+                                    Create_Identifier_Without_Prefix (El),
+                                    El_Tnode);
+               end if;
+            end loop;
+            Finish_Record_Type (Rec, Info.Ortho_Type (Kind));
+         end loop;
+
+         Finish_Type_Definition (Info);
+      else
+         --  This is a complex type as the size is not known at compile
+         --  time.
+         Info.Ortho_Type := Base_Info.B.Base_Type;
+         Info.Ortho_Ptr_Type := Base_Info.B.Base_Ptr_Type;
+      end if;
 
       if Get_Type_Staticness (Def) /= Locally then
          Create_Size_Var (Def, Info);

@@ -1950,8 +1950,7 @@ package body Sem_Types is
                                 (El_Type, Tm_El_Type);
                            when Iir_Kind_Record_Type_Definition
                              | Iir_Kind_Record_Subtype_Definition =>
-                              El_Type :=
-                                Reparse_As_Record_Constraint
+                              El_Type := Reparse_As_Record_Constraint
                                 (El_Type);
                            when Iir_Kind_Error =>
                               null;
