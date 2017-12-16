@@ -101,10 +101,6 @@ case "$BLD" in
 	      echo "$ANSI_RED[GHDL - build] Unknown build $BLD $ANSI_NOCOLOR"
 	      exit 1;;
 esac
-DEP_CLANG=""
-if [ "$CXX" != "" ]; then
-    DEP_CLANG="`$CXX --version | grep 'clang'`"
-fi
 echo "../configure --prefix=$prefix $config_opts"
 ../configure "--prefix=$prefix" $config_opts
 echo "travis_fold:end:configure"
@@ -133,10 +129,14 @@ echo "travis_fold:end:tar.bin"
 
 #--- build tools versions
 
-printf "%s\n" \
-   "`make --version | grep 'Make'`" \
-   "`gnat --version | grep 'GNAT'`" \
-   "`gcc --version | grep 'gcc'`" "$DEP_CLANG" > BUILD_TOOLS
+{
+    make --version | grep 'Make'
+    gnatls --version | grep 'GNATLS'
+    gcc --version | grep 'gcc'
+    if [ "$CXX" != "" ]; then
+	$CXX --version | grep 'clang'
+    fi
+} > BUILD_TOOLS
 
 #---
 

@@ -67,6 +67,7 @@ elif expr "$TRAVIS_TAG" : 'v[0-9].*' > /dev/null; then
     # Remove leading 'v' in tags in the filenames.
     PKG_TAG="$(echo $TRAVIS_TAG | cut -c2-)"
 else
+    # Regular tag (like snapshots), nothing to change.
     PKG_TAG="$TRAVIS_TAG"
 fi
 

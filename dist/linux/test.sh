@@ -32,7 +32,7 @@ done
 
 rm -f test_ok
 
-export ENABLECOLOR TASK
+export ENABLECOLOR
 if [ "$GHDL" = "" ]; then
     export GHDL="$prefix/bin/ghdl"
 fi

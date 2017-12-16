@@ -35,7 +35,8 @@ deploy:
       all_branches: true
       tags: true
 
-# For each linux build, a different job/instance (with the constraints above) is executed in parallel in stage 'test'.
+# For each linux build, a different job/instance (with the constraints
+# above) is executed in parallel in stage 'test'.
 env:
   matrix:
     - IMAGE=stretch+mcode
