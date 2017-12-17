@@ -21,6 +21,7 @@ build=@build@
 srcdir=@srcdir@
 abs_srcdir=@abs_srcdir@
 GNATMAKE=@GNATMAKE@
+MAKE=@MAKE@
 prefix=@prefix@
 backend=@backend@
 libdirsuffix=@libdirsuffix@
