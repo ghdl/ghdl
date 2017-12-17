@@ -8,6 +8,7 @@ CC=${CC:-gcc}
 CXX=${CXX:-clang++}
 CFLAGS=${CFLAGS:--g}
 GNATMAKE=${GNATMAKE:-gnatmake}
+MAKE=${MAKE:-make}
 LDFLAGS=
 prefix=/usr/local
 libdirsuffix=lib/ghdl
@@ -299,7 +300,7 @@ if ! sh ./config.status; then
 fi
 
 # Create dirs
-make create-dirs
+$MAKE create-dirs
 
 # Generate ortho_code-x86-flags
 if test $backend = mcode; then
