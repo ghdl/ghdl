@@ -212,7 +212,7 @@ package body Ghdllocal is
          --  Simplify path:
          --    /xxx/../ => /
          --  Do it forward as xxx/../../ must not be simplified as xxx/
-         --  This is done after the previous simplication to avoid to deal
+         --  This is done after the previous simplification to avoid to deal
          --  with cases like /xxx//../ or /xxx/./../
          Pos := Pathname'First;
          while Pos <= Last - 3 loop

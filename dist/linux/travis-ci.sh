@@ -71,12 +71,13 @@ else
     PKG_TAG="$TRAVIS_TAG"
 fi
 
+# Extract from IMAGE (defined in .travis.yml)
 IFS='+' read -ra REFS <<< "$IMAGE"
-DDIST=${REFS[0]}
-DBLD=${REFS[1]}
-DGPL=${REFS[2]}
+DDIST=${REFS[0]}  # Linux distro (eg: ubuntuXX, fedoraXX)
+DBLD=${REFS[1]}   # Build/backend (eg: mcode, llvm)
+DGPL=${REFS[2]}   # GPL or not
 
-PKG_NAME="ghdl-${PKG_TAG}-${DBLD}-${DDIST}"
+PKG_NAME="ghdl-${PKG_TAG}-${DDIST}-${DBLD}"
 BUILD_CMD_OPTS="$ENABLECOLOR -b $DBLD"
 if [ "$DGPL" = "gpl" ]; then
     BUILD_CMD_OPTS="$BUILD_CMD_OPTS --gpl"
