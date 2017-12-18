@@ -1605,6 +1605,8 @@ package body Simul.Execution is
             File_Operation.Untruncated_Text_Read
               (Args (0), Args (1), Args (2));
          when Std_Names.Name_Control_Simulation =>
+            --  FIXME: handle stop properly.
+            --  FIXME: this is the only place where longjump is called.
             Grt.Lib.Ghdl_Control_Simulation
               (Args (0).B1, Args (1).B1, Std_Integer (Args (2).I64));
             --  Do not return.

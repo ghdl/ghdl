@@ -1072,7 +1072,7 @@ package body Grt.Processes is
       end if;
    end Simulation_Cycle;
 
-   procedure Simulation_Init
+   function Simulation_Init return Integer
    is
       use Options;
    begin
@@ -1097,6 +1097,8 @@ package body Grt.Processes is
          --  zero after initialization.
          Grt.Hooks.Call_Cycle_Hooks;
       end if;
+
+      return 0;
    end Simulation_Init;
 
    function Has_Simulation_Timeout return Boolean
@@ -1164,7 +1166,8 @@ package body Grt.Processes is
       use Grt.Options;
       Status : Integer;
    begin
-      Simulation_Init;
+      Status := Simulation_Init;
+      pragma Assert (Status = 0);
 
       Status := Simulation_Main_Loop;
 

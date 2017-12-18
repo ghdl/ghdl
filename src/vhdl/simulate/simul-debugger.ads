@@ -18,6 +18,7 @@
 
 with Iirs; use Iirs;
 with Simul.Environments; use Simul.Environments;
+with Grt.Types;
 
 package Simul.Debugger is
    Flag_Debugger : Boolean := False;
@@ -71,6 +72,9 @@ package Simul.Debugger is
       --  At end of elaboration, for an interractive session
       Reason_Elab,
 
+      --  Simulation time limit reached.
+      Reason_Time,
+
       --  Before execution of a statement.
       Reason_Break,
 
@@ -82,6 +86,9 @@ package Simul.Debugger is
      );
 
    Debugger_Quit : exception;
+
+   --  Time at which simulation must stop and return to user interraction.
+   Break_Time : Grt.Types.Std_Time;
 
    --  Interractive debugger.
    procedure Debug (Reason: Debug_Reason);

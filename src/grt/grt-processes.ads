@@ -44,7 +44,7 @@ package Grt.Processes is
    function Simulation return Integer;
 
    --  Broken down version of Simulation.
-   procedure Simulation_Init;
+   function Simulation_Init return Integer;
    function Simulation_Cycle return Integer;
    procedure Simulation_Finish;
 

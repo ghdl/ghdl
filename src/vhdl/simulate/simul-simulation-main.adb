@@ -1127,9 +1127,12 @@ package body Simul.Simulation.Main is
 
    procedure Simulation_Entity (Top_Conf : Iir_Design_Unit)
    is
+      use Grt.Errors;
       Stop : Boolean;
       Status : Integer;
    begin
+      Break_Time := Std_Time'Last;
+
       Top_Config := Top_Conf;
 
       Grt.Errors.Error_Hook := Debug_Error'Access;
@@ -1143,13 +1146,23 @@ package body Simul.Simulation.Main is
          return;
       end if;
 
-      Grt.Processes.Simulation_Init;
-
       Status := Grt.Main.Run_Through_Longjump
-        (Grt.Processes.Simulation_Main_Loop'Access);
+        (Grt.Processes.Simulation_Init'Access);
 
-      if Status = Grt.Errors.Run_Limit then
-         Grt.Processes.Simulation_Explain_Limit;
+      if Status = 0 then
+         loop
+            Status := Grt.Main.Run_Through_Longjump
+              (Grt.Processes.Simulation_Cycle'Access);
+            exit when Status < 0 or Status = Run_Stop or Status = Run_Finished;
+
+            if Grt.Processes.Next_Time >= Break_Time
+              and then Break_Time /= Std_Time'Last
+            then
+               Debug (Reason_Time);
+            end if;
+
+            exit when Grt.Processes.Has_Simulation_Timeout;
+         end loop;
       end if;
 
       Grt.Processes.Simulation_Finish;

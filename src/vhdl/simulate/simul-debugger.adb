@@ -40,11 +40,12 @@ with Disp_Vhdl;
 with Simul.Execution; use Simul.Execution;
 with Iirs_Walk; use Iirs_Walk;
 with Areapools; use Areapools;
-with Grt.Types;
 with Grt.Disp;
 with Grt.Readline;
 with Grt.Errors;
 with Grt.Disp_Signals;
+with Grt.Processes;
+with Grt.Options;
 
 package body Simul.Debugger is
    --  This exception can be raised by a debugger command to directly return
@@ -1859,8 +1860,7 @@ package body Simul.Debugger is
       raise Debugger_Quit;
    end Quit_Proc;
 
-   procedure Cont_Proc (Line : String) is
-      pragma Unreferenced (Line);
+   procedure Prepare_Continue is
    begin
       Command_Status := Status_Quit;
 
@@ -1870,6 +1870,30 @@ package body Simul.Debugger is
          Flag_Need_Debug := True;
          exit;
       end loop;
+   end Prepare_Continue;
+
+   procedure Run_Proc (Line : String)
+   is
+      use Grt.Types;
+      Delta_Time : Std_Time;
+      P : Positive;
+   begin
+      P := Skip_Blanks (Line);
+      if P <= Line'Last then
+         Delta_Time := Grt.Options.Parse_Time (Line (P .. Line'Last));
+         if Delta_Time = -1 then
+            return;
+         end if;
+         Break_Time := Grt.Processes.Next_Time + Delta_Time;
+      end if;
+
+      Prepare_Continue;
+   end Run_Proc;
+
+   procedure Cont_Proc (Line : String) is
+      pragma Unreferenced (Line);
+   begin
+      Prepare_Continue;
    end Cont_Proc;
 
    Menu_Info_Instances : aliased Menu_Entry :=
@@ -2016,10 +2040,16 @@ package body Simul.Debugger is
       Next => Menu_Print'Access,
       Proc => Cont_Proc'Access);
 
+   Menu_Run : aliased Menu_Entry :=
+     (Kind => Menu_Command,
+      Name => new String'("r*un"),
+      Next => Menu_Cont'Access,
+      Proc => Run_Proc'Access);
+
    Menu_Quit : aliased Menu_Entry :=
      (Kind => Menu_Command,
       Name => new String'("q*uit"),
-      Next => Menu_Cont'Access,
+      Next => Menu_Run'Access,
       Proc => Quit_Proc'Access);
 
    Menu_Help1 : aliased Menu_Entry :=
@@ -2175,7 +2205,8 @@ package body Simul.Debugger is
             if not Flag_Interractive then
                return;
             end if;
-         when Reason_Break =>
+         when Reason_Break
+           | Reason_Time =>
             null;
       end case;
 
@@ -2194,6 +2225,9 @@ package body Simul.Debugger is
             else
                Set_Top_Frame (Current_Process.Instance);
             end if;
+         when Reason_Time =>
+            Break_Time := Grt.Types.Std_Time'Last;
+            Exec_State := Exec_Run;
          when Reason_Break =>
             case Exec_State is
                when Exec_Run =>
