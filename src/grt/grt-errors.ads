@@ -127,8 +127,10 @@ package Grt.Errors is
    Run_Resumed : constant Integer := 2;
    --  Simulation is finished.
    Run_Finished : constant Integer := 3;
+   --  Simulation finished because of a user-defined time or delta limit.
+   Run_Limit : constant Integer := 4;
    --  Stop/finish request from user (via std.env).
-   Run_Stop : constant Integer := 4;
+   Run_Stop : constant Integer := 5;
 
    --  Hook called in case of error.
    Error_Hook : Grt.Hooks.Proc_Hook_Type := null;

@@ -22,11 +22,9 @@
 --  covered by the GNU General Public License. This exception does not
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
-with System.Storage_Elements; --  Work around GNAT bug.
-pragma Unreferenced (System.Storage_Elements);
 with Grt.Types; use Grt.Types;
 with Grt.Stdio;
-with Grt.Errors;
+with Grt.Errors; use Grt.Errors;
 with Grt.Processes;
 with Grt.Signals;
 with Grt.Options; use Grt.Options;
@@ -105,11 +103,7 @@ package body Grt.Main is
       end if;
    end Check_Flag_String;
 
-   procedure Run
-   is
-      use Grt.Errors;
-      Stop : Boolean;
-      Status : Integer;
+   procedure Run_Elab (Stop : out Boolean) is
    begin
       --  Set stream for error messages
       Grt.Errors.Set_Error_Stream (Grt.Stdio.stdout);
@@ -149,6 +143,7 @@ package body Grt.Main is
       --  Elaboration.  Run through longjump to catch errors.
       if Run_Through_Longjump (Ghdl_Elaborate_Wrapper'Access) < 0 then
          Grt.Errors.Error ("error during elaboration");
+         Stop := True;
          return;
       end if;
 
@@ -173,11 +168,23 @@ package body Grt.Main is
          if Disp_Sensitivity then
             Grt.Disp_Signals.Disp_All_Sensitivity;
          end if;
-
-         --  Do the simulation.
-         Status := Run_Through_Longjump (Grt.Processes.Simulation'Access);
       end if;
 
+      --  Can continue.
+      Stop := False;
+   end Run_Elab;
+
+   function Run_Simul return Integer is
+   begin
+      if Flag_No_Run then
+         return 0;
+      end if;
+
+      return Run_Through_Longjump (Grt.Processes.Simulation'Access);
+   end Run_Simul;
+
+   procedure Run_Finish (Status : Integer) is
+   begin
       Grt.Hooks.Call_Finish_Hooks;
 
       if Flag_Stats then
@@ -194,6 +201,21 @@ package body Grt.Main is
             Error ("simulation failed");
          end if;
       end if;
+   end Run_Finish;
+
+   procedure Run
+   is
+      Stop : Boolean;
+      Status : Integer;
+   begin
+      Run_Elab (Stop);
+      if Stop then
+         return;
+      end if;
+
+      Status := Run_Simul;
+
+      Run_Finish (Status);
    end Run;
 
 end Grt.Main;

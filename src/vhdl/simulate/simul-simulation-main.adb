@@ -1125,7 +1125,10 @@ package body Simul.Simulation.Main is
       end if;
    end Ghdl_Elaborate;
 
-   procedure Simulation_Entity (Top_Conf : Iir_Design_Unit) is
+   procedure Simulation_Entity (Top_Conf : Iir_Design_Unit)
+   is
+      Stop : Boolean;
+      Status : Integer;
    begin
       Top_Config := Top_Conf;
 
@@ -1135,7 +1138,23 @@ package body Simul.Simulation.Main is
          Debug (Reason_Start);
       end if;
 
-      Grt.Main.Run;
+      Grt.Main.Run_Elab (Stop);
+      if Stop then
+         return;
+      end if;
+
+      Grt.Processes.Simulation_Init;
+
+      Status := Grt.Main.Run_Through_Longjump
+        (Grt.Processes.Simulation_Main_Loop'Access);
+
+      if Status = Grt.Errors.Run_Limit then
+         Grt.Processes.Simulation_Explain_Limit;
+      end if;
+
+      Grt.Processes.Simulation_Finish;
+
+      Grt.Main.Run_Finish (Status);
    exception
       when Debugger_Quit =>
          null;

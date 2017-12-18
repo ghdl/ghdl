@@ -43,6 +43,19 @@ package Grt.Processes is
    --  < 0 in case of failure or stop request.
    function Simulation return Integer;
 
+   --  Broken down version of Simulation.
+   procedure Simulation_Init;
+   function Simulation_Cycle return Integer;
+   procedure Simulation_Finish;
+
+   --  True if simulation has reached a user timeout (--stop-time or
+   --  --stop-delta).  Emit an info message as a side effect.
+   function Has_Simulation_Timeout return Boolean;
+
+   --  Updated by Initialization_Phase and Simulation_Cycle to the time of the
+   --  next cycle.  Unchanged in case of delta-cycle.
+   Next_Time : Std_Time;
+
    --  Number of delta cycles.
    Nbr_Delta_Cycles : Integer;
    --  Number of non-delta cycles.
