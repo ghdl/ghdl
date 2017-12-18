@@ -144,6 +144,11 @@ package Grt.Options is
    -- or append_mode (TEXTIO)
    Unbuffered_Writes : Boolean := False;
 
+   --  Helper: extract time from STR (a number followed by a unit, without
+   --  spaces; the number is optionnal).  In case of error, display an error
+   --  message and returns -1.
+   function Parse_Time (Str : String) return Std_Time;
+
    --  Set the time resolution.
    --  Only call this subprogram if you are allowed to set the time resolution.
    procedure Set_Time_Resolution (Res : Character);

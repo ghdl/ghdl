@@ -217,6 +217,57 @@ package body Grt.Options is
       end loop;
    end Extract_Integer;
 
+   function Parse_Time (Str : String) return Std_Time
+   is
+      Ok : Boolean;
+      Pos : Natural;
+      Time : Integer_64;
+      Unit : String (1 .. 3);
+   begin
+      Extract_Integer (Str, Ok, Time, Pos);
+      if not Ok then
+         Time := 1;
+      end if;
+
+      --  Check unit length and convert it to lower case.
+      if Str'Last = Pos + 1 then
+         Unit (3) := ' ';
+      elsif Str'Last = Pos + 2 then
+         Unit (3) := To_Lower (Str (Pos + 2));
+      else
+         Error_C ("bad unit for '");
+         Error_C (Str);
+         Error_E ("'");
+         return -1;
+      end if;
+      Unit (1) := To_Lower (Str (Pos));
+      Unit (2) := To_Lower (Str (Pos + 1));
+
+      if Unit = "fs " then
+         null;
+      elsif Unit = "ps " then
+         Time := Time * (10 ** 3);
+      elsif Unit = "ns " then
+         Time := Time * (10 ** 6);
+      elsif Unit = "us " then
+         Time := Time * (10 ** 9);
+      elsif Unit = "ms " then
+         Time := Time * (10 ** 12);
+      elsif Unit = "sec" then
+         Time := Time * (10 ** 15);
+      elsif Unit = "min" then
+         Time := Time * (10 ** 15) * 60;
+      elsif Unit = "hr " then
+         Time := Time * (10 ** 15) * 3600;
+      else
+         Error_C ("bad unit name for '");
+         Error_C (Str);
+         Error_E ("'");
+         return -1;
+      end if;
+      return Std_Time (Time);
+   end Parse_Time;
+
    procedure Decode_Option
      (Option : String; Status : out Decode_Option_Status)
    is
@@ -317,52 +368,11 @@ package body Grt.Options is
             end if;
          end;
       elsif Len > 12 and then Option (1 .. 12) = "--stop-time=" then
-         declare
-            Ok : Boolean;
-            Pos : Natural;
-            Time : Integer_64;
-            Unit : String (1 .. 3);
-         begin
-            Extract_Integer (Option (13 .. Len), Ok, Time, Pos);
-            if not Ok then
-               Time := 1;
-            end if;
-            if (Len - Pos + 1) not in 2 .. 3 then
-               Error_C ("bad unit for '");
-               Error_C (Option);
-               Error_E ("'");
-               return;
-            end if;
-            Unit (1) := To_Lower (Option (Pos));
-            Unit (2) := To_Lower (Option (Pos + 1));
-            if Len = Pos + 2 then
-               Unit (3) := To_Lower (Option (Pos + 2));
-            else
-               Unit (3) := ' ';
-            end if;
-            if Unit = "fs " then
-               null;
-            elsif Unit = "ps " then
-               Time := Time * (10 ** 3);
-            elsif Unit = "ns " then
-               Time := Time * (10 ** 6);
-            elsif Unit = "us " then
-               Time := Time * (10 ** 9);
-            elsif Unit = "ms " then
-               Time := Time * (10 ** 12);
-            elsif Unit = "sec" then
-               Time := Time * (10 ** 15);
-            elsif Unit = "min" then
-               Time := Time * (10 ** 15) * 60;
-            elsif Unit = "hr " then
-               Time := Time * (10 ** 15) * 3600;
-            else
-               Error_C ("bad unit name for '");
-               Error_C (Option);
-               Error_E ("'");
-            end if;
-            Stop_Time := Std_Time (Time);
-         end;
+         Stop_Time := Parse_Time (Option (13 .. Len));
+         if Stop_Time = -1 then
+            --  In case of error...
+            return;
+         end if;
       elsif Len > 13 and then Option (1 .. 13) = "--stop-delta=" then
          declare
             Ok : Boolean;
