@@ -1246,13 +1246,11 @@ package body Simul.Elaboration is
       Assoc : Iir_Association_Element_By_Expression;
       Inter : Iir)
    is
-      Formal : Iir;
-      Actual : Iir;
+      Formal : constant Iir := Get_Association_Formal (Assoc, Inter);
+      Actual : constant Iir := Get_Actual (Assoc);
       Local_Expr : Iir_Value_Literal_Acc;
       Formal_Expr : Iir_Value_Literal_Acc;
    begin
-      Formal := Get_Association_Formal (Assoc, Inter);
-      Actual := Get_Actual (Assoc);
       Formal_Expr := Execute_Name (Formal_Instance, Formal, True);
       Formal_Expr := Unshare_Bounds (Formal_Expr, Global_Pool'Access);
       if Actual_Expr = null then
