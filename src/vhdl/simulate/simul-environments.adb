@@ -18,6 +18,7 @@
 
 with System;
 with Ada.Unchecked_Conversion;
+with Ada.Text_IO;
 with GNAT.Debug_Utilities;
 with Name_Table;
 with Simul.Debugger; use Simul.Debugger;
@@ -808,13 +809,20 @@ package body Simul.Environments is
       end case;
    end Get_Enum_Pos;
 
+   procedure Put_Indent (Indent : Natural)
+   is
+      use Ada.Text_IO;
+   begin
+      Put ((1 .. 2 * Indent => ' '));
+   end Put_Indent;
+
    procedure Disp_Value_Tab (Value: Iir_Value_Literal_Acc;
-                             Tab: Ada.Text_IO.Count)
+                             Indent : Natural)
    is
       use Ada.Text_IO;
       use GNAT.Debug_Utilities;
    begin
-      Set_Col (Tab);
+      Put_Indent (Indent);
       if Value = null then
          Put_Line ("*NULL*");
          return;
@@ -851,51 +859,51 @@ package body Simul.Environments is
                Put_Line ("array, length: "
                          & Iir_Index32'Image (Value.Val_Array.Len));
                declare
-                  Ntab: constant Count := Tab + Indentation;
+                  Nindent: constant Natural := Indent + 1;
                begin
-                  Set_Col (Ntab);
+                  Put_Indent (Nindent);
                   if Value.Bounds /= null then
                      Put_Line ("bounds 1 .."
                                & Iir_Index32'Image (Value.Bounds.Nbr_Dims)
                                & ':');
                      for I in Value.Bounds.D'Range loop
-                        Disp_Value_Tab (Value.Bounds.D (I), Ntab);
+                        Disp_Value_Tab (Value.Bounds.D (I), Nindent);
                      end loop;
                   else
                      Put_Line ("bounds = null");
                   end if;
-                  Set_Col (Ntab);
+                  Put_Indent (Nindent);
                   Put_Line ("values 1 .."
                             & Iir_Index32'Image (Value.Val_Array.Len)
                             & ':');
                   for I in Value.Val_Array.V'Range loop
-                     Disp_Value_Tab (Value.Val_Array.V (I), Ntab);
+                     Disp_Value_Tab (Value.Val_Array.V (I), Nindent);
                   end loop;
                end;
             end if;
 
          when Iir_Value_Range =>
             Put_Line ("range:");
-            Set_Col (Tab);
+            Put_Indent (Indent);
             Put (" direction: ");
             Put (Iir_Direction'Image (Value.Dir));
             Put (", length:");
             Put_Line (Iir_Index32'Image (Value.Length));
             if Value.Left /= null then
-               Set_Col (Tab);
+               Put_Indent (Indent);
                Put (" left bound: ");
-               Disp_Value_Tab (Value.Left, Col);
+               Disp_Value_Tab (Value.Left, 0);
             end if;
             if Value.Right /= null then
-               Set_Col (Tab);
+               Put_Indent (Indent);
                Put (" right bound: ");
-               Disp_Value_Tab (Value.Right, Col);
+               Disp_Value_Tab (Value.Right, 0);
             end if;
 
          when Iir_Value_Record =>
             Put_Line ("record:");
             for I in Value.Val_Record.V'Range loop
-               Disp_Value_Tab (Value.Val_Record.V (I), Tab + Indentation);
+               Disp_Value_Tab (Value.Val_Record.V (I), Indent + 1);
             end loop;
          when Iir_Value_Signal =>
             Put ("signal: ");
@@ -920,7 +928,7 @@ package body Simul.Environments is
 
    procedure Disp_Value (Value: Iir_Value_Literal_Acc) is
    begin
-      Disp_Value_Tab (Value, 1);
+      Disp_Value_Tab (Value, 0);
    end Disp_Value;
 
    --  Return TRUE if VALUE has an indirect value.

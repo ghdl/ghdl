@@ -16,7 +16,6 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Ada.Text_IO;
 with Ada.Unchecked_Deallocation;
 with Types; use Types;
 with Iirs; use Iirs;
@@ -520,7 +519,10 @@ package Simul.Environments is
    -- Disp a value_literal in raw form.
    procedure Disp_Value (Value: Iir_Value_Literal_Acc);
    procedure Disp_Value_Tab (Value: Iir_Value_Literal_Acc;
-                             Tab: Ada.Text_IO.Count);
+                             Indent : Natural);
+
+   -- Disp literal of an enumerated type.
+   procedure Disp_Iir_Value_Enum (Pos : Natural; A_Type : Iir);
 
    -- Disp a value_literal in readable form.
    procedure Disp_Iir_Value (Value: Iir_Value_Literal_Acc; A_Type: Iir);

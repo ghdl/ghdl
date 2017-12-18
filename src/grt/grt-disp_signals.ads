@@ -37,6 +37,9 @@ package Grt.Disp_Signals is
 
    procedure Disp_Mode_Signal (Mode : Mode_Signal_Type);
 
+   --  Disp attributes of SIG.
+   procedure Disp_Single_Signal_Attributes (Sig : Ghdl_Signal_Ptr);
+
    --  Disp informations on signal SIG.
    --  To be used inside the debugger.
    procedure Disp_A_Signal (Sig : Ghdl_Signal_Ptr);

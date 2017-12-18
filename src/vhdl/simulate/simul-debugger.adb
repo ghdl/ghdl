@@ -17,7 +17,7 @@
 --  02111-1307, USA.
 
 with System;
-with Ada.Text_IO; use Ada.Text_IO;
+--  with Ada.Text_IO; use Ada.Text_IO;
 with Tables;
 with Types; use Types;
 with Name_Table;
@@ -34,18 +34,22 @@ with Libraries;
 with Std_Package;
 with Simul.Annotations; use Simul.Annotations;
 with Simul.Elaboration; use Simul.Elaboration;
+with Simul.Execution; use Simul.Execution;
 with Iirs_Utils; use Iirs_Utils;
 with Errorout; use Errorout;
 with Disp_Vhdl;
-with Simul.Execution; use Simul.Execution;
 with Iirs_Walk; use Iirs_Walk;
 with Areapools; use Areapools;
+with Grt.Types; use Grt.Types;
 with Grt.Disp;
 with Grt.Readline;
 with Grt.Errors;
 with Grt.Disp_Signals;
+with Grt.Signals; use Grt.Signals;
 with Grt.Processes;
 with Grt.Options;
+with Grt.Stdio; use Grt.Stdio;
+with Grt.Astdio; use Grt.Astdio;
 
 package body Simul.Debugger is
    --  This exception can be raised by a debugger command to directly return
@@ -126,26 +130,26 @@ package body Simul.Debugger is
    procedure Disp_Iir_Location (N : Iir) is
    begin
       if N = Null_Iir then
-         Put (Standard_Error, "??:??:??");
+         Put (stderr, "??:??:??");
       else
-         Put (Standard_Error, Disp_Location (N));
+         Put (stderr, Disp_Location (N));
       end if;
-      Put (Standard_Error, ": ");
+      Put (stderr, ": ");
    end Disp_Iir_Location;
 
    -- Disp a message during execution.
    procedure Error_Msg_Exec (Msg: String; Loc: in Iir) is
    begin
       Disp_Iir_Location (Loc);
-      Put_Line (Standard_Error, Msg);
+      Put_Line (stderr, Msg);
       Grt.Errors.Fatal_Error;
    end Error_Msg_Exec;
 
    procedure Warning_Msg_Exec (Msg: String; Loc: Iir) is
    begin
       Disp_Iir_Location (Loc);
-      Put (Standard_Error, "warning: ");
-      Put_Line (Standard_Error, Msg);
+      Put (stderr, "warning: ");
+      Put_Line (stderr, Msg);
    end Warning_Msg_Exec;
 
    -- Disp a message for a constraint error.
@@ -154,20 +158,20 @@ package body Simul.Debugger is
       if Expr /= Null_Iir then
          Disp_Iir_Location (Expr);
       end if;
-      Put (Standard_Error, "constraint violation");
+      Put (stderr, "constraint violation");
       if Expr /= Null_Iir then
          case Get_Kind (Expr) is
             when Iir_Kind_Addition_Operator =>
-               Put_Line (Standard_Error, " in the ""+"" operation");
+               Put_Line (stderr, " in the ""+"" operation");
             when Iir_Kind_Substraction_Operator =>
-               Put_Line (Standard_Error, " in the ""-"" operation");
+               Put_Line (stderr, " in the ""-"" operation");
             when Iir_Kind_Integer_Literal =>
-               Put_Line (Standard_Error, ", literal out of range");
+               Put_Line (stderr, ", literal out of range");
             when Iir_Kind_Interface_Signal_Declaration
               | Iir_Kind_Signal_Declaration =>
-               Put_Line (Standard_Error, " for " & Disp_Node (Expr));
+               Put_Line (stderr, " for " & Disp_Node (Expr));
             when others =>
-               New_Line (Standard_Error);
+               New_Line (stderr);
          end case;
       end if;
       Grt.Errors.Fatal_Error;
@@ -364,6 +368,54 @@ package body Simul.Debugger is
       Put (")");
    end Disp_Signal_Record;
 
+   procedure Disp_Signal_Value
+     (Val : Value_Union; Mode : Mode_Type; Sig_Type : Iir) is
+   begin
+      case Mode is
+         when Mode_I64 =>
+            Put (Ghdl_I64'Image (Val.I64));
+         when Mode_I32 =>
+            Put (Ghdl_I32'Image (Val.I32));
+         when Mode_F64 =>
+            Put (Ghdl_F64'Image (Val.F64));
+         when Mode_E32 =>
+            Disp_Iir_Value_Enum (Ghdl_E32'Pos (Val.E32), Sig_Type);
+         when Mode_E8 =>
+            Disp_Iir_Value_Enum (Ghdl_E8'Pos (Val.E8), Sig_Type);
+         when Mode_B1 =>
+            Disp_Iir_Value_Enum (Ghdl_B1'Pos (Val.B1), Sig_Type);
+      end case;
+   end Disp_Signal_Value;
+
+   procedure Disp_Transaction
+     (Head : Transaction_Acc; Mode : Mode_Type; Sig_Type : Iir)
+   is
+      Trans : Transaction_Acc;
+   begin
+      Trans := Head;
+      loop
+         case Trans.Kind is
+            when Trans_Value =>
+               Disp_Signal_Value (Trans.Val, Mode, Sig_Type);
+            when Trans_Direct =>
+               Disp_Signal_Value (Trans.Val_Ptr.all, Mode, Sig_Type);
+            when Trans_Null =>
+               Put ("NULL");
+            when Trans_Error =>
+               Put ("ERROR");
+         end case;
+         if Trans.Kind = Trans_Direct then
+            Put ("[DIRECT]");
+         else
+            Put ("@");
+            Put_Time (stdout, Trans.Time);
+         end if;
+         Trans := Trans.Next;
+         exit when Trans = null;
+         Put (", ");
+      end loop;
+   end Disp_Transaction;
+
    procedure Disp_Signal (Value : Iir_Value_Literal_Acc; A_Type : Iir) is
    begin
       if Value = null then
@@ -382,7 +434,21 @@ package body Simul.Debugger is
             -- FIXME.
             raise Internal_Error;
          when Iir_Value_Signal =>
-            Grt.Disp_Signals.Disp_A_Signal (Value.Sig);
+            declare
+               Sig : constant Ghdl_Signal_Ptr := Value.Sig;
+            begin
+               Disp_Signal_Value (Sig.Value_Ptr.all, Sig.Mode, A_Type);
+               Grt.Disp_Signals.Disp_Single_Signal_Attributes (Value.Sig);
+               New_Line;
+               if Sig.S.Mode_Sig in Mode_Signal_User then
+                  for I in 1 .. Sig.S.Nbr_Drivers loop
+                     Put ("    ");
+                     Disp_Transaction (Sig.S.Drivers (I - 1).First_Trans,
+                                       Sig.Mode, A_Type);
+                     New_Line;
+                  end loop;
+               end if;
+            end;
          when Iir_Value_File
            | Iir_Value_Protected
            | Iir_Value_Quantity
@@ -437,12 +503,21 @@ package body Simul.Debugger is
                  (Instance, Get_Port_Chain (Ent));
                Disp_Instance_Signals_Of_Chain
                  (Instance, Get_Declaration_Chain (Ent));
+               Disp_Instance_Signals_Of_Chain
+                 (Instance, Get_Declaration_Chain (Blk));
             end;
          when Iir_Kind_Block_Statement =>
             Disp_Instance_Name (Instance);
             Put_Line (" [block]:");
 
-            --  FIXME: ports.
+            declare
+               Header : constant Iir := Get_Block_Header (Blk);
+            begin
+               if Header /= Null_Iir then
+                  Disp_Instance_Signals_Of_Chain
+                    (Instance, Get_Port_Chain (Header));
+               end if;
+            end;
             Disp_Instance_Signals_Of_Chain
               (Instance, Get_Declaration_Chain (Blk));
 
@@ -639,7 +714,6 @@ package body Simul.Debugger is
 
    procedure Disp_Signals_Stats
    is
-      use Grt.Types;
       type Counters_Type is array (Mode_Signal_Type) of Natural;
       Counters : Counters_Type := (others => 0);
       Nbr_User_Signals : Natural := 0;
@@ -1563,32 +1637,61 @@ package body Simul.Debugger is
       end case;
    end Disp_Declared_Signals;
 
-   procedure Info_Signals_Proc (Line : String) is
-      pragma Unreferenced (Line);
+   procedure Info_Signals_Proc (Line : String)
+   is
+      Verbose : Boolean;
+      P : Natural;
+      E : Natural;
    begin
-      if False then
-         Check_Current_Process;
-         Disp_Declared_Signals
-           (Current_Process.Proc, Current_Process.Top_Instance);
-      elsif True then
-         for I in Signals_Table.First .. Signals_Table.Last loop
-            declare
-               S : Signal_Entry renames Signals_Table.Table (I);
-            begin
-               Disp_Instance_Name (S.Instance, False);
-               Put ('.');
-               if S.Kind in Grt.Types.Mode_Signal_User then
-                  Put (Name_Table.Image (Get_Identifier (S.Decl)));
-                  Disp_Value (S.Sig);
-                  Disp_Value (S.Val);
-               else
-                  Disp_Declaration_Object (S.Instance, S.Decl);
+      Verbose := False;
+
+      P := Skip_Blanks (Line);
+      loop
+         E := Get_Word (Line (P .. Line'Last));
+         exit when P > Line'Last;
+         if Line (P .. E) = "-v" then
+            Verbose := True;
+         elsif Line (P .. E) = "-l" then
+            --  Local signals
+            Check_Current_Process;
+            Disp_Declared_Signals
+              (Current_Process.Proc, Current_Process.Top_Instance);
+            return;
+         elsif Line (P .. E) = "-t" then
+            Disp_Signals_Value;
+            return;
+         elsif Line (P .. E) = "-T" then
+            Grt.Disp_Signals.Disp_Signals_Table;
+            return;
+         else
+            Put_Line ("options: -v(erbose) -l(ocal) -t(ree) -T(able)");
+            return;
+         end if;
+         P := E + 1;
+      end loop;
+
+      for I in Signals_Table.First .. Signals_Table.Last loop
+         declare
+            S : Signal_Entry renames Signals_Table.Table (I);
+         begin
+            Disp_Instance_Name (S.Instance, False);
+            Put ('.');
+            if S.Kind in Grt.Types.Mode_Signal_User then
+               Put (Name_Table.Image (Get_Identifier (S.Decl)));
+               New_Line;
+               Put (" sig: ");
+               Disp_Value (S.Sig);
+               Put (" val: ");
+               Disp_Value (S.Val);
+               if Verbose then
+                  --  Dummy to keep compiler happy.
+                  Verbose := False;
                end if;
-            end;
-         end loop;
-      else
-         Disp_Signals_Value;
-      end if;
+            else
+               Disp_Declaration_Object (S.Instance, S.Decl);
+            end if;
+         end;
+      end loop;
    end Info_Signals_Proc;
 
    type Handle_Scope_Type is access procedure (N : Iir);
@@ -1874,7 +1977,6 @@ package body Simul.Debugger is
 
    procedure Run_Proc (Line : String)
    is
-      use Grt.Types;
       Delta_Time : Std_Time;
       P : Positive;
    begin
@@ -2181,7 +2283,7 @@ package body Simul.Debugger is
    end Breakpoint_Hit;
 
    Prompt_Debug : constant String := "debug> " & ASCII.NUL;
-   Prompt_Crash : constant String := "crash> " & ASCII.NUL;
+   Prompt_Error : constant String := "error> " & ASCII.NUL;
    Prompt_Init  : constant String := "init> " & ASCII.NUL;
    Prompt_Elab  : constant String := "elab> " & ASCII.NUL;
 
@@ -2263,11 +2365,11 @@ package body Simul.Debugger is
             end;
          when Reason_Assert =>
             Set_Top_Frame (Current_Process.Instance);
-            Prompt := Prompt_Crash'Address;
+            Prompt := Prompt_Error'Address;
             Put_Line ("assertion failure, enterring in debugger");
          when Reason_Error =>
             Set_Top_Frame (Current_Process.Instance);
-            Prompt := Prompt_Crash'Address;
+            Prompt := Prompt_Error'Address;
             Put_Line ("error occurred, enterring in debugger");
       end case;
 
