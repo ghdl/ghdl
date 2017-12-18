@@ -44,16 +44,12 @@ if [ "$IMAGE" = "" ]; then
 fi
 
 
-echo "travis_fold:start:patch_version"
+echo "travis_fold:start:fetch"
 # The command 'git describe' (used for version) needs the history. Get it.
 # But the following command fails if the repository is complete.
 git fetch --unshallow || true
 
-# Build version.tmp and replace version.in with it (so that the version is
-# correctly set).
-make -f Makefile.in srcdir=. version.tmp
-cp version.tmp src/version.in
-echo "travis_fold:end:patch_version"
+echo "travis_fold:end:fetch"
 
 
 # Compute package name
@@ -98,6 +94,14 @@ if [ "$TRAVIS_OS_NAME" = "osx" ]; then
     bash -c "${scriptdir}/build.sh $BUILD_CMD_OPTS"
 else
     # Assume linux
+
+    # Build version.tmp and replace version.in with it (so that the version is
+    # correctly set).
+    # This is a little bit hack-ish, as it assumes that 'git' is not
+    # available in docker (otherwise it will describe as -dirty
+    # because this modifies the source file version.in).
+    make -f Makefile.in srcdir=. version.tmp
+    cp version.tmp src/version.in
 
     # Run build in docker
     IMAGE_TAG=`echo $IMAGE | sed -e 's/+/-/g'`
