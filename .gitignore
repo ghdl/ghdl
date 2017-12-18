@@ -12,9 +12,7 @@ b~*.ad?
 testsuite/get_entities
 
 # Generated files on windows.
-./build/
-./dist/mcode/build/
-./dist/mcode/lib/
+/build/
 
 # Generated directories on Linux
 lib/
