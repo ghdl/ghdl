@@ -108,7 +108,7 @@ package body Simul.Elaboration is
    is
       Slot : constant Object_Slot_Type := Get_Info (Decl).Slot;
    begin
-      Create_Object (Instance, Slot, 2);
+      Create_Object (Instance, Slot, 3);
    end Create_Signal;
 
    -- Create a new signal, using DEFAULT as initial value.
@@ -155,17 +155,19 @@ package body Simul.Elaboration is
          return Res;
       end Create_Signal;
 
+      Slot : constant Object_Slot_Type := Get_Info (Signal).Slot;
       Sig : Iir_Value_Literal_Acc;
       Def : Iir_Value_Literal_Acc;
-      Slot : constant Object_Slot_Type := Get_Info (Signal).Slot;
    begin
       Sig := Create_Signal (Default);
       Def := Unshare (Default, Global_Pool'Access);
       Block.Objects (Slot) := Sig;
       Block.Objects (Slot + 1) := Def;
+      Block.Objects (Slot + 2) := Unshare (Default, Global_Pool'Access);
 
       case Get_Kind (Signal) is
          when Iir_Kind_Interface_Signal_Declaration =>
+            --  Driver.
             case Get_Mode (Signal) is
                when Iir_Unknown_Mode =>
                   raise Internal_Error;
@@ -311,7 +313,7 @@ package body Simul.Elaboration is
       Create_Signal (Instance, Signal);
       Instance.Objects (Info.Slot) := Sig;
 
-      Init := Execute_Signal_Init_Value (Instance, Get_Prefix (Signal));
+      Init := Execute_Signal_Name (Instance, Get_Prefix (Signal), Signal_Val);
       Init := Unshare (Init, Global_Pool'Access); --  Create a full copy.
       Instance.Objects (Info.Slot + 1) := Init;
 
@@ -1322,8 +1324,8 @@ package body Simul.Elaboration is
                   Formal := Get_Association_Formal (Assoc, Inter);
                   if Is_Signal_Name (Actual) then
                      --  Association with a signal
-                     Init_Expr := Execute_Signal_Init_Value
-                       (Actual_Instance, Actual);
+                     Init_Expr := Execute_Signal_Name
+                       (Actual_Instance, Actual, Signal_Val);
                      Implicit_Array_Conversion
                        (Formal_Instance, Init_Expr, Get_Type (Formal), Actual);
                      Init_Expr := Unshare_Bounds
@@ -1374,12 +1376,17 @@ package body Simul.Elaboration is
                            Val := Execute_Expression_With_Type
                              (Formal_Instance, Default_Value,
                               Get_Type (Inter));
-                           Store (Formal_Instance.Objects (Slot + 1), Val);
+                           Val := Unshare (Val, Global_Pool'Access);
                         else
+                           Val := Unshare (Init_Expr, Global_Pool'Access);
                            Init_To_Default
-                             (Formal_Instance.Objects (Slot + 1),
-                              Formal_Instance, Get_Type (Inter));
+                             (Val, Formal_Instance, Get_Type (Inter));
                         end if;
+                        Formal_Instance.Objects (Slot + 2) := Val;
+                        Store (Formal_Instance.Objects (Slot + 1), Val);
+                     else
+                        -- Always set a value to the driver.
+                        Formal_Instance.Objects (Slot + 2) := Init_Expr;
                      end if;
                   end;
                else

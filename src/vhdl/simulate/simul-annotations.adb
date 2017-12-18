@@ -66,8 +66,8 @@ package body Simul.Annotations is
             Info := new Sim_Info_Type'(Kind => Kind_Signal,
                                        Obj_Scope => Block_Info,
                                        Slot => Block_Info.Nbr_Objects);
-            --  Reserve one more slot for value.
-            Block_Info.Nbr_Objects := Block_Info.Nbr_Objects + 1;
+            --  Reserve one more slot for value, and initial driver value.
+            Block_Info.Nbr_Objects := Block_Info.Nbr_Objects + 2;
          when Kind_Terminal =>
             Info := new Sim_Info_Type'(Kind => Kind_Terminal,
                                        Obj_Scope => Block_Info,

@@ -87,10 +87,15 @@ package Simul.Execution is
       Formal_Instance : Block_Instance_Acc)
      return Iir_Value_Literal_Acc;
 
-   --  Return the initial value (default value) of signal name EXPR.  To be
-   --  used only during (non-dynamic) elaboration.
-   function Execute_Signal_Init_Value (Block : Block_Instance_Acc; Expr : Iir)
-                                      return Iir_Value_Literal_Acc;
+   --  There are up to three slots per instance for signals:
+   --  Signal_Sig: the signal (as handled by grt), with all its attribute
+   --  Signal_Val: the value of the signal (as assigned by grt).
+   --  Signal_Init: the initial value of drivers, only defined for ports.
+   type Signal_Slot is (Signal_Sig, Signal_Val, Signal_Init);
+
+   function Execute_Signal_Name
+     (Block : Block_Instance_Acc; Expr : Iir; Kind : Signal_Slot)
+     return Iir_Value_Literal_Acc;
 
    function Execute_Expression_With_Type
      (Block: Block_Instance_Acc;

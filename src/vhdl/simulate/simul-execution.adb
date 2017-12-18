@@ -2524,27 +2524,37 @@ package body Simul.Execution is
       end if;
    end Execute_Expression_With_Type;
 
-   function Execute_Signal_Init_Value (Block : Block_Instance_Acc; Expr : Iir)
-                                      return Iir_Value_Literal_Acc
+   function Execute_Signal_Name
+     (Block : Block_Instance_Acc; Expr : Iir; Kind : Signal_Slot)
+     return Iir_Value_Literal_Acc
    is
       Base : constant Iir := Get_Object_Prefix (Expr, False);
       Info : constant Sim_Info_Acc := Get_Info (Base);
       Bblk : Block_Instance_Acc;
+      Slot : Object_Slot_Type;
       Base_Val : Iir_Value_Literal_Acc;
       Res : Iir_Value_Literal_Acc;
       Is_Sig : Boolean;
    begin
       if Get_Kind (Base) = Iir_Kind_Object_Alias_Declaration then
          Bblk := Get_Instance_By_Scope (Block, Info.Obj_Scope);
-         Base_Val := Execute_Signal_Init_Value (Bblk, Get_Name (Base));
+         Base_Val := Execute_Signal_Name (Bblk, Get_Name (Base), Kind);
       else
          Bblk := Get_Instance_By_Scope (Block, Info.Obj_Scope);
-         Base_Val := Bblk.Objects (Info.Slot + 1);
+         case Kind is
+            when Signal_Sig =>
+               Slot := Info.Slot;
+            when Signal_Val =>
+               Slot := Info.Slot + 1;
+            when Signal_Init =>
+               Slot := Info.Slot + 2;
+         end case;
+         Base_Val := Bblk.Objects (Slot);
       end if;
       Execute_Name_With_Base (Block, Expr, Base_Val, Res, Is_Sig);
       pragma Assert (Is_Sig);
       return Res;
-   end Execute_Signal_Init_Value;
+   end Execute_Signal_Name;
 
    --  Indexed element will be at Pfx.Val_Array.V (Pos + 1)
    procedure Execute_Indexed_Name (Block: Block_Instance_Acc;
@@ -2728,7 +2738,6 @@ package body Simul.Execution is
 
          when Iir_Kind_Aggregate =>
             Res := Execute_Name_Aggregate (Block, Expr, Get_Type (Expr));
-            --  FIXME: is_sig ?
 
          when Iir_Kind_Image_Attribute =>
             Res := Execute_Image_Attribute (Block, Expr);

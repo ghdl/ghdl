@@ -152,24 +152,29 @@ package body Simul.Simulation.Main is
    -- Add a driver for signal designed by VAL (via index field) for instance
    -- INSTANCE of process PROC.
    -- FIXME: default value.
-   procedure Add_Source
-     (Instance: Block_Instance_Acc; Val: Iir_Value_Literal_Acc; Proc: Iir)
-   is
+   procedure Add_Source (Instance : Block_Instance_Acc;
+                         Sig : Iir_Value_Literal_Acc;
+                         Val : Iir_Value_Literal_Acc) is
    begin
       case Val.Kind is
-         when Iir_Value_Signal =>
-            if Proc = Null_Iir then
-               -- Can this happen ?
-               raise Internal_Error;
-            end if;
-            Grt.Signals.Ghdl_Process_Add_Driver (Val.Sig);
+         when Iir_Value_B1 =>
+            Grt.Signals.Ghdl_Signal_Add_Port_Driver_B1 (Sig.Sig, Val.B1);
+         when Iir_Value_E8 =>
+            Grt.Signals.Ghdl_Signal_Add_Port_Driver_E8 (Sig.Sig, Val.E8);
+         when Iir_Value_E32 =>
+            Grt.Signals.Ghdl_Signal_Add_Port_Driver_E32 (Sig.Sig, Val.E32);
+         when Iir_Value_I64 =>
+            Grt.Signals.Ghdl_Signal_Add_Port_Driver_I64 (Sig.Sig, Val.I64);
+         when Iir_Value_F64 =>
+            Grt.Signals.Ghdl_Signal_Add_Port_Driver_F64 (Sig.Sig, Val.F64);
          when Iir_Value_Array =>
-            for I in Val.Val_Array.V'Range loop
-               Add_Source (Instance, Val.Val_Array.V (I), Proc);
+            for I in Sig.Val_Array.V'Range loop
+               Add_Source (Instance, Sig.Val_Array.V (I), Val.Val_Array.V (I));
             end loop;
          when Iir_Value_Record =>
-            for I in Val.Val_Record.V'Range loop
-               Add_Source (Instance, Val.Val_Record.V (I), Proc);
+            for I in Sig.Val_Record.V'Range loop
+               Add_Source
+                 (Instance, Sig.Val_Record.V (I), Val.Val_Record.V (I));
             end loop;
          when others =>
             raise Internal_Error;
@@ -183,7 +188,8 @@ package body Simul.Simulation.Main is
       Driver_List: Iir_List;
       It : List_Iterator;
       El: Iir;
-      Val: Iir_Value_Literal_Acc;
+      Val : Iir_Value_Literal_Acc;
+      Sig : Iir_Value_Literal_Acc;
       Marker : Mark_Type;
    begin
       if Trace_Drivers then
@@ -203,8 +209,11 @@ package body Simul.Simulation.Main is
          end if;
 
          Mark (Marker, Expr_Pool);
-         Val := Execute_Name (Instance, El, True);
-         Add_Source (Instance, Val, Proc);
+         --  The signal name is evaluated twice, but as it is globally static,
+         --  it shouldn't have any side-effect.  So not optimized but safe.
+         Sig := Execute_Signal_Name (Instance, El, Signal_Sig);
+         Val := Execute_Signal_Name (Instance, El, Signal_Init);
+         Add_Source (Instance, Sig, Val);
          Release (Marker, Expr_Pool);
 
          Next (It);
@@ -795,8 +804,7 @@ package body Simul.Simulation.Main is
    end Create_Connects;
 
    procedure Set_Disconnection (Val : Iir_Value_Literal_Acc;
-                                Time : Iir_Value_Time)
-   is
+                                Time : Iir_Value_Time) is
    begin
       case Val.Kind is
          when Iir_Value_Signal =>
