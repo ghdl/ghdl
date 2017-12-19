@@ -1007,9 +1007,17 @@ package body Trans.Chap3 is
          New_Monadic_Op (ON_Not, Get_Type_Alignmask (Atype)));
    end Realign;
 
-   function Realign (Value : O_Enode; Atype : Iir) return O_Enode is
+   function Realign (Value : O_Enode; Atype : Iir) return O_Enode
+   is
+      Tinfo : constant Type_Info_Acc := Get_Info (Atype);
+      Otype : O_Tnode;
    begin
-      return Realign (Value, Get_Info (Atype).Ortho_Type (Mode_Value));
+      if Is_Unbounded_Type (Tinfo) then
+         Otype := Tinfo.B.Base_Type (Mode_Value);
+      else
+         Otype := Tinfo.Ortho_Type (Mode_Value);
+      end if;
+      return Realign (Value, Otype);
    end Realign;
 
    function Realign (Value : O_Enode; Mask : O_Dnode) return O_Enode is
