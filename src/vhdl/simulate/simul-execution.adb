@@ -2663,7 +2663,8 @@ package body Simul.Execution is
            | Iir_Kind_Attribute_Value
            | Iir_Kind_Iterator_Declaration
            | Iir_Kind_Terminal_Declaration
-           | Iir_Kinds_Quantity_Declaration =>
+           | Iir_Kinds_Quantity_Declaration
+           | Iir_Kind_Psl_Endpoint_Declaration =>
             if Base /= null then
                Res := Base;
             else
@@ -2957,7 +2958,8 @@ package body Simul.Execution is
            | Iir_Kind_Slice_Name
            | Iir_Kind_Selected_Element
            | Iir_Kind_Dereference
-           | Iir_Kind_Implicit_Dereference =>
+           | Iir_Kind_Implicit_Dereference
+           | Iir_Kind_Psl_Endpoint_Declaration =>
             return Execute_Name (Block, Expr);
 
          when Iir_Kinds_Denoting_Name

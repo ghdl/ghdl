@@ -784,7 +784,8 @@ package body Canon is
            | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_File_Declaration
            | Iir_Kind_Interface_File_Declaration
-           | Iir_Kind_Object_Alias_Declaration =>
+           | Iir_Kind_Object_Alias_Declaration
+           | Iir_Kind_Psl_Endpoint_Declaration =>
             null;
 
          when Iir_Kind_Enumeration_Literal

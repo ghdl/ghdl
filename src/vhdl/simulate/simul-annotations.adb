@@ -989,6 +989,8 @@ package body Simul.Annotations is
 
             when Iir_Kind_Psl_Cover_Statement
               | Iir_Kind_Psl_Assert_Statement =>
+               null;
+            when Iir_Kind_Psl_Endpoint_Declaration =>
                Create_Object_Info (Block_Info, El, Kind_PSL);
 
             when Iir_Kind_Simple_Simultaneous_Statement =>

@@ -27,6 +27,7 @@ with Std_Package;
 with Trans_Analyzes;
 with Simul.Elaboration; use Simul.Elaboration;
 with Simul.Execution; use Simul.Execution;
+with Simul.Annotations; use Simul.Annotations;
 with Ieee.Std_Logic_1164;
 with Grt.Main;
 with Simul.Debugger; use Simul.Debugger;
@@ -429,9 +430,13 @@ package body Simul.Simulation.Main is
       Release (Marker, Expr_Pool);
       if V then
          Nvec := (others => False);
-         if Get_Kind (E.Stmt) = Iir_Kind_Psl_Cover_Statement then
-            Nvec (0) := True;
-         end if;
+         case Get_Kind (E.Stmt) is
+            when Iir_Kind_Psl_Cover_Statement
+              | Iir_Kind_Psl_Endpoint_Declaration =>
+               Nvec (0) := True;
+            when others =>
+               null;
+         end case;
 
          --  For each state: if set, evaluate all outgoing edges.
          NFA := Get_PSL_NFA (E.Stmt);
@@ -466,23 +471,31 @@ package body Simul.Simulation.Main is
          S := Get_Final_State (NFA);
          S_Num := Get_State_Label (S);
          pragma Assert (S_Num = Get_PSL_Nbr_States (E.Stmt) - 1);
-         if Nvec (S_Num) then
-            case Get_Kind (E.Stmt) is
-               when Iir_Kind_Psl_Assert_Statement =>
+         case Get_Kind (E.Stmt) is
+            when Iir_Kind_Psl_Assert_Statement =>
+               if Nvec (S_Num) then
                   Execute_Failed_Assertion
                     (E.Instance, "psl assertion", E.Stmt,
                      "assertion violation", 2);
-               when Iir_Kind_Psl_Cover_Statement =>
+               end if;
+            when Iir_Kind_Psl_Cover_Statement =>
+               if Nvec (S_Num) then
                   if Get_Report_Expression (E.Stmt) /= Null_Iir then
                      Execute_Failed_Assertion
                        (E.Instance, "psl cover", E.Stmt,
                         "sequence covered", 0);
                   end if;
                   E.Done := True;
-               when others =>
-                  Error_Kind ("PSL_Process_Executer", E.Stmt);
-            end case;
-         end if;
+               end if;
+            when Iir_Kind_Psl_Endpoint_Declaration =>
+               declare
+                  Info : constant Sim_Info_Acc := Get_Info (E.Stmt);
+               begin
+                  E.Instance.Objects (Info.Slot).B1 := Ghdl_B1 (Nvec (S_Num));
+               end;
+            when others =>
+               Error_Kind ("PSL_Process_Executer", E.Stmt);
+         end case;
 
          E.States.all := Nvec;
       end if;

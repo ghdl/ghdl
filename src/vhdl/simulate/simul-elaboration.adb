@@ -874,10 +874,9 @@ package body Simul.Elaboration is
    procedure Elaborate_Type_Range
      (Instance : Block_Instance_Acc; Rc: Iir_Range_Expression)
    is
-      Range_Info : Sim_Info_Acc;
+      Range_Info : constant Sim_Info_Acc := Get_Info (Rc);
       Val : Iir_Value_Literal_Acc;
    begin
-      Range_Info := Get_Info (Rc);
       Create_Object (Instance, Rc);
       Val := Create_Range_Value
         (Execute_Expression (Instance, Get_Left_Limit (Rc)),
@@ -1838,6 +1837,16 @@ package body Simul.Elaboration is
       --  Create the process
       --  Create the finalizer
       PSL_Table.Append (PSL_Entry'(Instance, Stmt, null, False));
+
+      if Get_Kind (Stmt) = Iir_Kind_Psl_Endpoint_Declaration then
+         declare
+            Info : constant Sim_Info_Acc := Get_Info (Stmt);
+         begin
+            Create_Object (Instance, Info.Slot);
+            Instance.Objects (Info.Slot) :=
+              Unshare (Lit_Boolean_False, Instance_Pool);
+         end;
+      end if;
    end Elaborate_Psl_Directive;
 
    --  LRM93 §12.4  Elaboration of a Statement Part.
@@ -1885,7 +1894,8 @@ package body Simul.Elaboration is
                null;
 
             when Iir_Kind_Psl_Cover_Statement
-              | Iir_Kind_Psl_Assert_Statement =>
+              | Iir_Kind_Psl_Assert_Statement
+              | Iir_Kind_Psl_Endpoint_Declaration =>
                Elaborate_Psl_Directive (Instance, Stmt);
 
             when Iir_Kind_Concurrent_Simple_Signal_Assignment =>
