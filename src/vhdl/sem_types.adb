@@ -2011,16 +2011,18 @@ package body Sem_Types is
                      Set_Element_Declaration (El, Tm_El);
                      Set_Base_Element_Declaration
                        (El, Get_Base_Element_Declaration (Tm_El));
-                     Set_Element_Position (El, Get_Element_Position (Tm_El));
                      El_Type := Null_Iir;
                   else
                      El := Els (I);
                      El_Type := Get_Type (El);
+                     pragma Assert
+                       (Get_Kind (El) = Iir_Kind_Record_Element_Constraint);
                   end if;
                   El_Type := Sem_Subtype_Constraint (El_Type,
                                                      Get_Type (Tm_El),
                                                      Res_Els (I));
                   Set_Type (El, El_Type);
+                  Set_Element_Position (El, Get_Element_Position (Tm_El));
                end if;
                Set_Nth_Element (El_List, I, El);
                Constraint := Update_Record_Constraint (Constraint, El_Type);
