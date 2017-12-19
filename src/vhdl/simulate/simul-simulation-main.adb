@@ -473,9 +473,11 @@ package body Simul.Simulation.Main is
                     (E.Instance, "psl assertion", E.Stmt,
                      "assertion violation", 2);
                when Iir_Kind_Psl_Cover_Statement =>
-                  Execute_Failed_Assertion
-                    (E.Instance, "psl cover", E.Stmt,
-                     "sequence covered", 0);
+                  if Get_Report_Expression (E.Stmt) /= Null_Iir then
+                     Execute_Failed_Assertion
+                       (E.Instance, "psl cover", E.Stmt,
+                        "sequence covered", 0);
+                  end if;
                   E.Done := True;
                when others =>
                   Error_Kind ("PSL_Process_Executer", E.Stmt);
