@@ -405,6 +405,11 @@ install.vpi: all.vpi install.dirs
 	$(INSTALL_DATA) -p libghdlvpi$(SOEXT) $(DESTDIR)$(libdir)/
 	$(INSTALL_DATA) -p $(GRTSRCDIR)/vpi_user.h $(DESTDIR)$(incdir)/
 
+install.vpi.local: all.vpi
+	$(MKDIR) -p include lib
+	$(INSTALL_DATA) -p $(GRTSRCDIR)/vpi_user.h include/
+	$(INSTALL_DATA) -p libghdlvpi$(SOEXT) lib/
+
 ################ Libraries ###############################################
 
 LIBSRC_DIR:=$(srcdir)/libraries

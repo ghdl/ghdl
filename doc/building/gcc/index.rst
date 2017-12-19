@@ -23,7 +23,7 @@ GCC Backend
   $ make ghdl_gcc            # Build the driver
   $ make libs.vhdl.local_gcc # Compile the vhdl libraries
   $ make grt-all             # Build the GHDL runtime
-  $ make grt.links           # Locally install the GHDL runtime
+  $ make install.vpi.local   # Locally install vpi files
 
   In ``src/ortho/gcc``, create a ``Makefile.conf`` file that sets the following
   variables:
