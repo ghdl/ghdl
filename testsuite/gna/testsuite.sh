@@ -9,7 +9,7 @@
 # srXXX is for support reported on https://gna.org/support/?group=ghdl
 # debXX is for bugs report on https://www.debian.org/Bugs/
 # ticketXX is from https://sourceforge.net/p/ghdl-updates/tickets/
-# issueXXX is from https://github.com/tgingold/ghdl/issues
+# issueXXX is from https://github.com/ghdl/ghdl/issues
 
 set -e
 

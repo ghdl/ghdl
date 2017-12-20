@@ -69,7 +69,7 @@ package body Bug is
          "******************** GHDL Bug occured ****************************");
       Put_Line
         (Standard_Error,
-         "Please report this bug on https://github.com/tgingold/ghdl/issues");
+         "Please report this bug on https://github.com/ghdl/ghdl/issues");
       Put_Line (Standard_Error,
                 "GHDL release: " & Ghdl_Ver & ' ' & Ghdl_Release);
       Put_Line (Standard_Error, "Compiled with " & Get_Gnat_Version);

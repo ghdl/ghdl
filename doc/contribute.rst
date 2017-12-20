@@ -67,7 +67,7 @@ Requesting enhancements
 
 |SHIELD:issues-new| |SHIELD:gitter|
 
-All enhancements and feature requests are welcome. Please `open a new issue <https://github.com/tgingold/ghdl/issues/new>`_ to report any, so you can track the request's status and implementation. Depending on the complexity of the request, you may want to `chat on Gitter <https://gitter.im/ghdl/ghdl1>`_, to polish it before opening an issue.
+All enhancements and feature requests are welcome. Please `open a new issue <https://github.com/ghdl/ghdl/issues/new>`_ to report any, so you can track the request's status and implementation. Depending on the complexity of the request, you may want to `chat on Gitter <https://gitter.im/ghdl/ghdl1>`_, to polish it before opening an issue.
 
 Improving the documentation
 ===========================

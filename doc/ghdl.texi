@@ -531,7 +531,7 @@ If you don’t know the LRM, be aware that an issue claimed as bug report may be
 
  
 
-All enhancements and feature requests are welcome. Please open a new issue@footnote{https://github.com/tgingold/ghdl/issues/new} to report any, so you can track the request’s status and implementation. Depending on the complexity of the request, you may want to chat on Gitter@footnote{https://gitter.im/ghdl/ghdl1}, to polish it before opening an issue.
+All enhancements and feature requests are welcome. Please open a new issue@footnote{https://github.com/ghdl/ghdl/issues/new} to report any, so you can track the request’s status and implementation. Depending on the complexity of the request, you may want to chat on Gitter@footnote{https://gitter.im/ghdl/ghdl1}, to polish it before opening an issue.
 
 @node Improving the documentation,Fork modify and pull-request,Requesting enhancements,Contributing
 @anchor{contribute improving-the-documentation}@anchor{17}
@@ -3004,7 +3004,7 @@ HTTPS
 
 @tab
 
-@indicateurl{https://github.com/tgingold/ghdl.git}
+@indicateurl{https://github.com/ghdl/ghdl.git}
 
 @item
 
@@ -3012,7 +3012,7 @@ SSH
 
 @tab
 
-@indicateurl{ssh://git@@github.com:tgingold/ghdl.git}
+@indicateurl{ssh://git@@github.com:ghdl/ghdl.git}
 
 @end multitable
 
@@ -3034,7 +3034,7 @@ protocol:
 
 @example
 cd GitRoot
-git clone "https://github.com/tgingold/ghdl.git" ghdl
+git clone "https://github.com/ghdl/ghdl.git" ghdl
 cd ghdl
 git remote rename origin github
 @end example
@@ -3044,7 +3044,7 @@ protocol:
 
 @example
 cd GitRoot
-git clone "ssh://git@@github.com:tgingold/ghdl.git" ghdl
+git clone "ssh://git@@github.com:ghdl/ghdl.git" ghdl
 cd ghdl
 git remote rename origin github
 @end example
@@ -3076,7 +3076,7 @@ protocol:
 
 @example
 cd GitRoot
-git clone "https://github.com/tgingold/ghdl.git" ghdl
+git clone "https://github.com/ghdl/ghdl.git" ghdl
 cd ghdl
 git remote rename origin github
 @end example
@@ -3086,7 +3086,7 @@ protocol:
 
 @example
 cd GitRoot
-git clone "ssh://git@@github.com:tgingold/ghdl.git" ghdl
+git clone "ssh://git@@github.com:ghdl/ghdl.git" ghdl
 cd ghdl
 git remote rename origin github
 @end example
@@ -3110,7 +3110,7 @@ git remote rename origin github
 @subheading Download
 
 
-GHDL can be downloaded as a zip-file@footnote{https://github.com/tgingold/ghdl/archive/master.zip}
+GHDL can be downloaded as a zip-file@footnote{https://github.com/ghdl/ghdl/archive/master.zip}
 (latest ‘master’ branch) or cloned with @code{git clone} from GitHub. GitHub
 offers HTTPS and SSH as transfer protocols. See the @ref{bb,,Downloading Source Files}
 page for further details. The installation directory is referred to as @code{GHDLRoot}.
@@ -3660,7 +3660,7 @@ Mac OS
 
 @cartouche
 @quotation Hint 
-You need to install LLVM (usually depends on @code{libedit}, see #29@footnote{https://github.com/tgingold/ghdl/issues/29}). The supported versions are 3.5 till 5.0, but debugging is only supported with LLVM 3.5.
+You need to install LLVM (usually depends on @code{libedit}, see #29@footnote{https://github.com/ghdl/ghdl/issues/29}). The supported versions are 3.5 till 5.0, but debugging is only supported with LLVM 3.5.
 @end quotation
 @end cartouche
 
@@ -6073,19 +6073,19 @@ The goal is to also explain what a user is installing and what the few lines in 
 @itemize *
 
 @item 
-Python snippet for Sphinx’s @cite{conf.py} to extract the current version number from Git (latest tag name). [#200@footnote{https://github.com/tgingold/ghdl/issues/200}, #221@footnote{https://github.com/tgingold/ghdl/issues/221}]
+Python snippet for Sphinx’s @cite{conf.py} to extract the current version number from Git (latest tag name). [#200@footnote{https://github.com/ghdl/ghdl/issues/200}, #221@footnote{https://github.com/ghdl/ghdl/issues/221}]
 
 @item 
-Reference @code{genindex.html} from the navigation bar. [#200@footnote{https://github.com/tgingold/ghdl/issues/200}]
+Reference @code{genindex.html} from the navigation bar. [#200@footnote{https://github.com/ghdl/ghdl/issues/200}]
 
 @item 
-Create “parts” (LaTeX terminology / chapter headlines) in navigation bar. [#200@footnote{https://github.com/tgingold/ghdl/issues/200}]
+Create “parts” (LaTeX terminology / chapter headlines) in navigation bar. [#200@footnote{https://github.com/ghdl/ghdl/issues/200}]
 
 @item 
 
 @table @asis
 
-@item Intersphinx files [#200@footnote{https://github.com/tgingold/ghdl/issues/200}]
+@item Intersphinx files [#200@footnote{https://github.com/ghdl/ghdl/issues/200}]
 
 
 @itemize *
@@ -6120,10 +6120,10 @@ External ref to option (no link):
 @itemize *
 
 @item 
-The indentation of the elements in the side menu have been modified. They are fixed por levels 1, 2 and 3 (#294@footnote{https://github.com/tgingold/ghdl/pull/294#issuecomment-281555760}) and 4 (later).
+The indentation of the elements in the side menu have been modified. They are fixed por levels 1, 2 and 3 (#294@footnote{https://github.com/ghdl/ghdl/pull/294#issuecomment-281555760}) and 4 (later).
 
 @item 
-The RTD menu (bottom-left) has been modified (#294@footnote{https://github.com/tgingold/ghdl/pull/294#issuecomment-281513494}):
+The RTD menu (bottom-left) has been modified (#294@footnote{https://github.com/ghdl/ghdl/pull/294#issuecomment-281513494}):
 
 @quotation
 
