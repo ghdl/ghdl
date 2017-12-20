@@ -345,8 +345,8 @@ intersphinx_mapping = {
 # ==============================================================================
 extlinks = {
    'wikipedia': ('https://en.wikipedia.org/wiki/%s', None),
-   'ghdlsharp': ('https://github.com/tgingold/ghdl/issues/%s', '#'),
-   'ghdlissue': ('https://github.com/tgingold/ghdl/issues/%s', 'issue #'),
-   'ghdlpull':  ('https://github.com/tgingold/ghdl/pull/%s', 'pull request #'),
-   'ghdlsrc':   ('https://github.com/tgingold/ghdl/blob/master/src/%s', None)
+   'ghdlsharp': ('https://github.com/ghdl/ghdl/issues/%s', '#'),
+   'ghdlissue': ('https://github.com/ghdl/ghdl/issues/%s', 'issue #'),
+   'ghdlpull':  ('https://github.com/ghdl/ghdl/pull/%s', 'pull request #'),
+   'ghdlsrc':   ('https://github.com/ghdl/ghdl/blob/master/src/%s', None)
 }

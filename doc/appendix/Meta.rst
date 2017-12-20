@@ -97,9 +97,9 @@ Documentation configuration
 CSS
 ***
 
-* The indentation of the elements in the side menu have been modified. They are fixed por levels 1, 2 and 3 (`#294 <https://github.com/tgingold/ghdl/pull/294#issuecomment-281555760>`_) and 4 (later).
+* The indentation of the elements in the side menu have been modified. They are fixed por levels 1, 2 and 3 (`#294 <https://github.com/ghdl/ghdl/pull/294#issuecomment-281555760>`_) and 4 (later).
 
-* The RTD menu (bottom-left) has been modified (`#294 <https://github.com/tgingold/ghdl/pull/294#issuecomment-281513494>`_):
+* The RTD menu (bottom-left) has been modified (`#294 <https://github.com/ghdl/ghdl/pull/294#issuecomment-281513494>`_):
 
    * No headlines are shown. It is not possible to remove only one of them with CSS only (JS would be required). However, because the content in most of the lines is self-explained, it is preferred not to show any.
    * The Search box is removed.

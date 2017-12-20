@@ -19,16 +19,25 @@ LRM) is a plus.
    News
    ****
 
-   14.12.2017 - GHDL 0.35 was released.
+   20.12.2017 - A new GitHub organization was created.
+   ===================================================
+
+   A new GitHub organization is created and the main repo is moved from github.com/tgingold/ghdl to
+   github.com/ghdl/ghdl. Old refs will continue working, because permanent redirects are set up. However, we suggest
+   every contributor to update the remote URLs in their local clones.
+
+   14.12.2017 - `GHDL 0.35 was released <https://github.com/ghdl/ghdl/milestone/3?closed=1>`_.
    ====================================
 
-   15.08.2017 - GHDL 0.34 was released.
+   15.08.2017 - `GHDL 0.34 was released <https://github.com/ghdl/ghdl/milestone/1?closed=1>`_.
    ====================================
 
    23.10.2015 - GHDL 0.33 was released.
    ====================================
 
 .. only:: latex
+
+   .. rubric:: 20.12.2017 - GHDL 0.35 was released.
 
    .. rubric:: 15.08.2017 - GHDL 0.34 was released.
 
