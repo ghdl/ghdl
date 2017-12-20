@@ -31,7 +31,7 @@ deploy:
     file: "ghdl-*.tgz"
     file_glob: true
     on:
-      repo: tgingold/ghdl
+      repo: ghdl/ghdl
       all_branches: true
       tags: true
 
