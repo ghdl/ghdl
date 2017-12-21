@@ -83,6 +83,7 @@ package body Simul.Annotations is
          when Kind_Block
            | Kind_Process
            | Kind_Frame
+           | Kind_Protected
            | Kind_Package
            | Kind_Scalar_Type
            | Kind_File_Type
@@ -223,7 +224,10 @@ package body Simul.Annotations is
          Decl := Get_Chain (Decl);
       end loop;
 
-      Prot_Info := new Sim_Info_Type'(Kind => Kind_Frame,
+      --  Note: if this protected type declaration appears in a generic
+      --  package declaration that is shared, the instances will always get
+      --  Nbr_Objects as 0...
+      Prot_Info := new Sim_Info_Type'(Kind => Kind_Protected,
                                       Nbr_Objects => 0);
       Set_Info (Prot, Prot_Info);
 
@@ -1184,6 +1188,7 @@ package body Simul.Annotations is
               ("-- nbr objects:" & Object_Slot_Type'Image (Info.Nbr_Objects));
 
          when Kind_Frame
+           | Kind_Protected
            | Kind_Process
            | Kind_Package =>
             Put_Line
@@ -1215,6 +1220,7 @@ package body Simul.Annotations is
       case Info.Kind is
          when Kind_Block
            | Kind_Frame
+           | Kind_Protected
            | Kind_Process
            | Kind_Package =>
             Put_Line ("nbr objects:"

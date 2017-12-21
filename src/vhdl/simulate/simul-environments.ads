@@ -229,7 +229,7 @@ package Simul.Environments is
 
    -- The annotation depends on the kind of the node.
    type Sim_Info_Kind is
-     (Kind_Block, Kind_Process, Kind_Frame, Kind_Package,
+     (Kind_Block, Kind_Process, Kind_Frame, Kind_Protected, Kind_Package,
       Kind_Scalar_Type, Kind_File_Type,
       Kind_Object, Kind_Signal,
       Kind_File,
@@ -248,6 +248,7 @@ package Simul.Environments is
       case Kind is
          when Kind_Block
            | Kind_Frame
+           | Kind_Protected
            | Kind_Process
            | Kind_Package =>
             --  Number of objects/signals.

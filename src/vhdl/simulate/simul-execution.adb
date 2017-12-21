@@ -74,23 +74,29 @@ package body Simul.Execution is
            | Kind_Process =>
             declare
                Current : Block_Instance_Acc;
-               --  Last : Block_Instance_Acc;
             begin
                Current := Instance;
                while Current /= null loop
                   if Current.Block_Scope = Scope then
                      return Current;
                   end if;
-               --  Last := Current;
                   Current := Current.Up_Block;
                end loop;
-               --  if Scope.Frame_Scope.Depth = 0
-               --    and then (Last.Block_Scope.Frame_Scope.Kind
-               --                = Scope_Kind_Package)
-               --  then
-               --     --  For instantiated packages.
-               --     return Last;
-               --  end if;
+               raise Internal_Error;
+            end;
+         when Kind_Protected =>
+            declare
+               Current : Block_Instance_Acc;
+            begin
+               Current := Instance;
+               while Current /= null loop
+                  if Current.Block_Scope = Scope
+                    or Current.Uninst_Scope = Scope
+                  then
+                     return Current;
+                  end if;
+                  Current := Current.Up_Block;
+               end loop;
                raise Internal_Error;
             end;
          when Kind_Package =>
