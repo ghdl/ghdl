@@ -3650,12 +3650,12 @@ package body Simul.Execution is
               | Iir_Kind_Interface_File_Declaration =>
                Val := Execute_Expression (Out_Block, Actual);
                Implicit_Array_Conversion
-                 (Subprg_Block, Val, Get_Type (Formal), Assoc);
-               Check_Constraints (Subprg_Block, Val, Get_Type (Formal), Assoc);
+                 (Out_Block, Val, Get_Type (Formal), Assoc);
+               Check_Constraints (Out_Block, Val, Get_Type (Formal), Assoc);
             when Iir_Kind_Interface_Signal_Declaration =>
                Val := Execute_Name (Out_Block, Actual, True);
                Implicit_Array_Conversion
-                 (Subprg_Block, Val, Get_Type (Formal), Assoc);
+                 (Out_Block, Val, Get_Type (Formal), Assoc);
             when Iir_Kind_Interface_Variable_Declaration =>
                Mode := Get_Mode (Inter);
                if Mode = Iir_In_Mode then
@@ -3711,7 +3711,7 @@ package body Simul.Execution is
                      Conv := Get_Actual_Conversion (Assoc);
                      if Conv /= Null_Iir then
                         Val := Execute_Assoc_Conversion
-                          (Subprg_Block, Conv, Val);
+                          (Out_Block, Conv, Val);
                      end if;
                   end if;
 
@@ -3719,7 +3719,7 @@ package body Simul.Execution is
                end if;
 
                Implicit_Array_Conversion
-                 (Subprg_Block, Val, Get_Type (Formal), Assoc);
+                 (Out_Block, Val, Get_Type (Formal), Assoc);
 
             when others =>
                Error_Kind ("execute_association(2)", Inter);
