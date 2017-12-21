@@ -507,6 +507,9 @@ package body Disp_Tree is
                     (Get_PSL_Node (N, F), Sub_Indent, Depth - 1);
                when Type_Source_Ptr =>
                   Put_Line (Source_Ptr'Image (Get_Source_Ptr (N, F)));
+               when Type_Source_File_Entry =>
+                  Put_Line (Source_File_Entry'Image
+                              (Get_Source_File_Entry (N, F)));
                when Type_Date_Type =>
                   Put_Line (Date_Type'Image (Get_Date_Type (N, F)));
                when Type_Number_Base_Type =>

@@ -160,6 +160,17 @@ package body Sem_Inst is
       end if;
    end Relocate;
 
+   procedure Create_Relocation (Inst : Iir; Orig : Iir)
+   is
+      use Files_Map;
+      Orig_File : Source_File_Entry;
+      Pos : Source_Ptr;
+   begin
+      Location_To_File_Pos (Get_Location (Orig), Orig_File, Pos);
+      Instance_File := Create_Instance_Source_File
+        (Orig_File, Get_Location (Inst), Inst);
+   end Create_Relocation;
+
    function Instantiate_Iir (N : Iir; Is_Ref : Boolean) return Iir;
 
    --  Instantiate a list.  Simply create a new list and instantiate nodes of
@@ -322,6 +333,8 @@ package body Sem_Inst is
             Set_String8_Id (Res, F, Get_String8_Id (N, F));
          when Type_Source_Ptr =>
             Set_Source_Ptr (Res, F, Get_Source_Ptr (N, F));
+         when Type_Source_File_Entry =>
+            Set_Source_File_Entry (Res, F, Get_Source_File_Entry (N, F));
          when Type_Date_Type
            | Type_Date_State_Type
            | Type_Time_Stamp_Id
@@ -561,6 +574,29 @@ package body Sem_Inst is
                when Field_Subtype_Definition =>
                   --  TODO
                   null;
+
+               when Field_Instance_Source_File =>
+                  Set_Instance_Source_File
+                    (Res, Files_Map.Create_Instance_Source_File
+                       (Get_Instance_Source_File (N),
+                        Get_Location (Res), Res));
+
+               when Field_Generic_Chain
+                 | Field_Declaration_Chain =>
+                  if Kind = Iir_Kind_Package_Instantiation_Declaration then
+                     declare
+                        Prev_Instance_File : constant Source_File_Entry :=
+                          Instance_File;
+                     begin
+                        --  Also relocate the instantiated declarations.
+                        Instance_File := Get_Instance_Source_File (Res);
+                        pragma Assert (Instance_File /= No_Source_File_Entry);
+                        Instantiate_Iir_Field (Res, N, F);
+                        Instance_File := Prev_Instance_File;
+                     end;
+                  else
+                     Instantiate_Iir_Field (Res, N, F);
+                  end if;
 
                when others =>
                   --  Common case.
@@ -924,17 +960,6 @@ package body Sem_Inst is
       return Res;
    end Copy_Tree;
 
-   procedure Create_Relocation (Inst : Iir; Orig : Iir)
-   is
-      use Files_Map;
-      Orig_File : Source_File_Entry;
-      Pos : Source_Ptr;
-   begin
-      Location_To_File_Pos (Get_Location (Orig), Orig_File, Pos);
-      Instance_File := Create_Instance_Source_File
-        (Orig_File, Get_Location (Inst), Inst);
-   end Create_Relocation;
-
    procedure Instantiate_Package_Declaration (Inst : Iir; Pkg : Iir)
    is
       Header : constant Iir := Get_Package_Header (Pkg);
@@ -942,6 +967,7 @@ package body Sem_Inst is
       Mark : constant Instance_Index_Type := Prev_Instance_Table.Last;
    begin
       Create_Relocation (Inst, Pkg);
+      Set_Instance_Source_File (Inst, Instance_File);
 
       --  Be sure Get_Origin_Priv can be called on existing nodes.
       Expand_Origin_Table;

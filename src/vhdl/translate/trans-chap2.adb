@@ -1464,6 +1464,7 @@ package body Trans.Chap2 is
                   raise Internal_Error;
                when Type_String8_Id
                   | Type_Source_Ptr
+                  | Type_Source_File_Entry
                   | Type_Number_Base_Type
                   | Type_Iir_Constraint
                   | Type_Iir_Mode

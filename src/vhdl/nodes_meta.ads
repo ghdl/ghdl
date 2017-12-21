@@ -49,6 +49,7 @@ package Nodes_Meta is
       Type_Number_Base_Type,
       Type_PSL_NFA,
       Type_PSL_Node,
+      Type_Source_File_Entry,
       Type_Source_Ptr,
       Type_String8_Id,
       Type_Time_Stamp_Id,
@@ -278,6 +279,7 @@ package Nodes_Meta is
       Field_Block_Header,
       Field_Uninstantiated_Package_Name,
       Field_Uninstantiated_Package_Decl,
+      Field_Instance_Source_File,
       Field_Generate_Block_Configuration,
       Field_Generate_Statement_Body,
       Field_Alternative_Label,
@@ -554,6 +556,11 @@ package Nodes_Meta is
    procedure Set_PSL_Node
       (N : Iir; F : Fields_Enum; V: PSL_Node);
 
+   function Get_Source_File_Entry
+      (N : Iir; F : Fields_Enum) return Source_File_Entry;
+   procedure Set_Source_File_Entry
+      (N : Iir; F : Fields_Enum; V: Source_File_Entry);
+
    function Get_Source_Ptr
       (N : Iir; F : Fields_Enum) return Source_Ptr;
    procedure Set_Source_Ptr
@@ -803,6 +810,7 @@ package Nodes_Meta is
    function Has_Block_Header (K : Iir_Kind) return Boolean;
    function Has_Uninstantiated_Package_Name (K : Iir_Kind) return Boolean;
    function Has_Uninstantiated_Package_Decl (K : Iir_Kind) return Boolean;
+   function Has_Instance_Source_File (K : Iir_Kind) return Boolean;
    function Has_Generate_Block_Configuration (K : Iir_Kind) return Boolean;
    function Has_Generate_Statement_Body (K : Iir_Kind) return Boolean;
    function Has_Alternative_Label (K : Iir_Kind) return Boolean;

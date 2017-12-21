@@ -208,6 +208,11 @@ package body Iirs is
       return Iir (P);
    end Source_Ptr_To_Iir;
 
+   function Iir_To_Source_File_Entry is new Ada.Unchecked_Conversion
+     (Source => Iir, Target => Source_File_Entry);
+   function Source_File_Entry_To_Iir is new Ada.Unchecked_Conversion
+     (Source => Source_File_Entry, Target => Iir);
+
    function Boolean_To_Iir_Delay_Mechanism is new Ada.Unchecked_Conversion
      (Source => Boolean, Target => Iir_Delay_Mechanism);
    function Iir_Delay_Mechanism_To_Boolean is new Ada.Unchecked_Conversion

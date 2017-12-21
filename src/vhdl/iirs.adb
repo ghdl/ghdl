@@ -208,6 +208,11 @@ package body Iirs is
       return Iir (P);
    end Source_Ptr_To_Iir;
 
+   function Iir_To_Source_File_Entry is new Ada.Unchecked_Conversion
+     (Source => Iir, Target => Source_File_Entry);
+   function Source_File_Entry_To_Iir is new Ada.Unchecked_Conversion
+     (Source => Source_File_Entry, Target => Iir);
+
    function Boolean_To_Iir_Delay_Mechanism is new Ada.Unchecked_Conversion
      (Source => Boolean, Target => Iir_Delay_Mechanism);
    function Iir_Delay_Mechanism_To_Boolean is new Ada.Unchecked_Conversion
@@ -4122,6 +4127,23 @@ package body Iirs is
                      "no field Uninstantiated_Package_Decl");
       Set_Field9 (Inst, Pkg);
    end Set_Uninstantiated_Package_Decl;
+
+   function Get_Instance_Source_File (Inst : Iir) return Source_File_Entry is
+   begin
+      pragma Assert (Inst /= Null_Iir);
+      pragma Assert (Has_Instance_Source_File (Get_Kind (Inst)),
+                     "no field Instance_Source_File");
+      return Iir_To_Source_File_Entry (Get_Field10 (Inst));
+   end Get_Instance_Source_File;
+
+   procedure Set_Instance_Source_File (Inst : Iir; File : Source_File_Entry)
+   is
+   begin
+      pragma Assert (Inst /= Null_Iir);
+      pragma Assert (Has_Instance_Source_File (Get_Kind (Inst)),
+                     "no field Instance_Source_File");
+      Set_Field10 (Inst, Source_File_Entry_To_Iir (File));
+   end Set_Instance_Source_File;
 
    function Get_Generate_Block_Configuration (Target : Iir) return Iir is
    begin

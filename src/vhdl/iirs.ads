@@ -961,6 +961,8 @@ package Iirs is
    --  The uninstantiated package declaration.
    --   Get/Set_Uninstantiated_Package_Decl (Field9)
    --
+   --   Get/Set_Instance_Source_File (Field10)
+   --
    --   Get/Set_Generic_Chain (Field6)
    --
    --   Get/Set_Generic_Map_Aspect_Chain (Field8)
@@ -1313,6 +1315,8 @@ package Iirs is
    --   Get/Set_Uninstantiated_Package_Name (Field7)
    --
    --   Get/Set_Uninstantiated_Package_Decl (Field9)
+   --
+   --   Get/Set_Instance_Source_File (Field10)
    --
    --   Get/Set_Generic_Chain (Field6)
    --
@@ -6925,6 +6929,12 @@ package Iirs is
    --  Field: Field9 Ref
    function Get_Uninstantiated_Package_Decl (Inst : Iir) return Iir;
    procedure Set_Uninstantiated_Package_Decl (Inst : Iir; Pkg : Iir);
+
+   --  The created pseudo-file for relocating the instantiated nodes
+   --  (generics and declarations).
+   --  Field: Field10 (uc)
+   function Get_Instance_Source_File (Inst : Iir) return Source_File_Entry;
+   procedure Set_Instance_Source_File (Inst : Iir; File : Source_File_Entry);
 
    --  Get/Set the block_configuration (there may be several
    --  block_configuration through the use of prev_configuration singly linked

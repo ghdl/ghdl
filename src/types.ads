@@ -85,7 +85,7 @@ package Types is
 
    --  Index type is the source file table.
    --  This table is defined in the files_map package.
-   type Source_File_Entry is new Nat32;
+   type Source_File_Entry is new Uns32;
    No_Source_File_Entry: constant Source_File_Entry := 0;
 
    --  Index into a file buffer.

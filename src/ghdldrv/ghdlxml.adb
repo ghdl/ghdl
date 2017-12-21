@@ -409,6 +409,8 @@ package body Ghdlxml is
                   Put_Field (F, Image_Token_Type (Get_Token_Type (N, F)));
                when Type_Name_Id =>
                   Put_Field (F, XML_Image (Get_Name_Id (N, F)));
+               when Type_Source_File_Entry =>
+                  null;
             end case;
          end loop;
 
