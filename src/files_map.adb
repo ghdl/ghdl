@@ -1181,6 +1181,7 @@ package body Files_Map is
          declare
             F : Source_File_Record renames Source_Files.Table(I);
          begin
+            Put ('*');
             Put (Source_File_Entry'Image (I));
             Put (" name: " & Image (F.File_Name));
             Put (" dir:" & Image (F.Directory));
@@ -1199,8 +1200,13 @@ package body Files_Map is
                   Put (" lines_table_max:"
                          & Natural'Image (F.Lines_Table_Max));
                   New_Line;
-               when others =>
+               when Source_File_String =>
                   null;
+               when Source_File_Instance =>
+                  Put (" instance from:" & Source_File_Entry'Image (F.Ref));
+                  Put (", base:" & Source_File_Entry'Image (F.Base));
+                  Put (", loc:" & Image (F.Instance_Loc));
+                  New_Line;
             end case;
          end;
       end loop;
