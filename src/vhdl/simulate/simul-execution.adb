@@ -3412,6 +3412,20 @@ package body Simul.Execution is
       end;
    end Create_Subprogram_Instance;
 
+   function Get_Protected_Object_Instance
+     (Block : Block_Instance_Acc; Call : Iir) return Block_Instance_Acc
+   is
+      Meth_Obj : constant Iir := Get_Method_Object (Call);
+      Obj : Iir_Value_Literal_Acc;
+   begin
+      if Meth_Obj = Null_Iir then
+         return null;
+      else
+         Obj := Execute_Name (Block, Meth_Obj, True);
+         return Protected_Table.Table (Obj.Prot);
+      end if;
+   end Get_Protected_Object_Instance;
+
    -- Destroy a dynamic block_instance.
    procedure Execute_Subprogram_Call_Final (Instance : Block_Instance_Acc)
    is
@@ -3455,7 +3469,10 @@ package body Simul.Execution is
    end Execute_Function_Body;
 
    function Execute_Assoc_Function_Conversion
-     (Block : Block_Instance_Acc; Func : Iir; Val : Iir_Value_Literal_Acc)
+     (Block : Block_Instance_Acc;
+      Func : Iir;
+      Prot_Block : Block_Instance_Acc;
+      Val : Iir_Value_Literal_Acc)
      return Iir_Value_Literal_Acc
    is
       Inter : Iir;
@@ -3466,7 +3483,7 @@ package body Simul.Execution is
       Mark (Marker, Instance_Pool.all);
 
       -- Create an instance for this function.
-      Instance := Create_Subprogram_Instance (Block, null, Func);
+      Instance := Create_Subprogram_Instance (Block, Prot_Block, Func);
 
       Inter := Get_Interface_Declaration_Chain (Func);
       Elaboration.Create_Object (Instance, Inter);
@@ -3484,12 +3501,14 @@ package body Simul.Execution is
      return Iir_Value_Literal_Acc
    is
       Ent : Iir;
+      Prot_Block : Block_Instance_Acc;
    begin
       case Get_Kind (Conv) is
          when Iir_Kind_Function_Call =>
             --  FIXME: shouldn't CONV always be a denoting_name ?
+            Prot_Block := Get_Protected_Object_Instance (Block, Conv);
             return Execute_Assoc_Function_Conversion
-              (Block, Get_Implementation (Conv), Val);
+              (Block, Get_Implementation (Conv), Prot_Block, Val);
          when Iir_Kind_Type_Conversion =>
             --  FIXME: shouldn't CONV always be a denoting_name ?
             return Execute_Type_Conversion (Block, Val, Get_Type (Conv), Conv);
@@ -3497,7 +3516,8 @@ package body Simul.Execution is
            | Iir_Kind_Function_Declaration =>
             Ent := Strip_Denoting_Name (Conv);
             if Get_Kind (Ent) = Iir_Kind_Function_Declaration then
-               return Execute_Assoc_Function_Conversion (Block, Ent, Val);
+               return Execute_Assoc_Function_Conversion
+                 (Block, Ent, null, Val);
             elsif Get_Kind (Ent) in Iir_Kinds_Type_Declaration then
                return Execute_Type_Conversion
                  (Block, Val, Get_Type (Ent), Ent);
@@ -3782,20 +3802,6 @@ package body Simul.Execution is
          Assoc_Idx := Assoc_Idx + 1;
       end loop;
    end Execute_Back_Association;
-
-   function Get_Protected_Object_Instance
-     (Block : Block_Instance_Acc; Call : Iir) return Block_Instance_Acc
-   is
-      Meth_Obj : constant Iir := Get_Method_Object (Call);
-      Obj : Iir_Value_Literal_Acc;
-   begin
-      if Meth_Obj = Null_Iir then
-         return null;
-      else
-         Obj := Execute_Name (Block, Meth_Obj, True);
-         return Protected_Table.Table (Obj.Prot);
-      end if;
-   end Get_Protected_Object_Instance;
 
    function Execute_Foreign_Function_Call
      (Block: Block_Instance_Acc; Expr : Iir; Imp : Iir)
