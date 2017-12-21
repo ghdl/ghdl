@@ -349,6 +349,7 @@ package body Simul.Elaboration is
          Uninst_Scope => null,
          Up_Block => Father,
          Label => Stmt,
+         Bod => Null_Iir,
          Stmt => Obj,
          Parent => Father,
          Children => null,
@@ -590,14 +591,18 @@ package body Simul.Elaboration is
    function Create_Protected_Object (Block: Block_Instance_Acc; Decl: Iir)
                                     return Iir_Value_Literal_Acc
    is
-      Bod : constant Iir := Get_Protected_Type_Body (Decl);
+      Bod : constant Iir := Execution.Get_Protected_Type_Body_Origin (Decl);
+      Bod_Info : constant Sim_Info_Acc := Get_Info (Bod);
       Inst : Block_Instance_Acc;
       Res : Iir_Value_Literal_Acc;
    begin
       Protected_Table.Increment_Last;
       Res := Create_Protected_Value (Protected_Table.Last);
 
-      Inst := Create_Subprogram_Instance (Block, null, Bod);
+      Inst := Create_Subprogram_Instance (Block, null, Decl);
+      if Bod_Info /= Get_Info (Decl) then
+         Inst.Uninst_Scope := Bod_Info;
+      end if;
       Protected_Table.Table (Res.Prot) := Inst;
 
       --  Temporary put the instancce on the stack in case of function calls
@@ -2999,6 +3004,7 @@ package body Simul.Elaboration is
                                  Uninst_Scope => null,
                                  Up_Block => null,
                                  Label => Null_Iir,
+                                 Bod => Null_Iir,
                                  Stmt => Null_Iir,
                                  Parent => null,
                                  Children => null,

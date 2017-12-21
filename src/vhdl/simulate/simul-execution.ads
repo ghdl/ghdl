@@ -208,4 +208,10 @@ package Simul.Execution is
    function Execute_Image_Attribute (Val : Iir_Value_Literal_Acc;
                                      Expr_Type : Iir)
                                     return String;
+
+   --  Like Get_Protected_Type_Body, but also works for instances, where
+   --  instantiated nodes have no bodies.
+   --  FIXME: maybe fix the issue directly in Sem_Inst ?
+   function Get_Protected_Type_Body_Origin (Spec : Iir) return Iir;
+
 end Simul.Execution;

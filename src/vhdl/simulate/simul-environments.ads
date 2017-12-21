@@ -313,6 +313,9 @@ package Simul.Environments is
       --  this instance.
       Label : Iir;
 
+      --  For subprograms: the body.
+      Bod : Iir;
+
       --  For blocks: corresponding block (different from label for direct
       --  component instantiation statement and generate iterator).
       --  For packages: Null_Iir
