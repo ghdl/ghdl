@@ -245,6 +245,9 @@ package Simul.Environments is
 
    -- Annotation for an iir node in order to be able to simulate it.
    type Sim_Info_Type (Kind: Sim_Info_Kind) is record
+      --  Redundant, to be used only for debugging.
+      Ref : Iir;
+
       case Kind is
          when Kind_Block
            | Kind_Frame
