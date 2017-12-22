@@ -100,6 +100,11 @@ package Trans is
    Ghdl_Bool_Array_Type : O_Tnode;
    Ghdl_Bool_Array_Ptr  : O_Tnode;
 
+   --  Size record
+   Ghdl_Sizes_Type : O_Tnode;
+   Ghdl_Sizes_Val : O_Fnode;
+   Ghdl_Sizes_Sig : O_Fnode;
+
    --  Comparaison type.
    Ghdl_Compare_Type : O_Tnode;
    Ghdl_Compare_Lt   : O_Cnode;

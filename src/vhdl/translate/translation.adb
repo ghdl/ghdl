@@ -508,6 +508,24 @@ package body Translation is
       New_Type_Decl
         (Get_Identifier ("__ghdl_bool_array_ptr"), Ghdl_Bool_Array_Ptr);
 
+      --  Create:
+      --  type __ghdl_sizes_type is record
+      --     size_val : ghdl_index_type;
+      --     size_sig : ghdl_index_type;
+      --  end record;
+      declare
+         Constr : O_Element_List;
+      begin
+         Start_Record_Type (Constr);
+         New_Record_Field (Constr, Ghdl_Sizes_Val,
+                           Get_Identifier ("size_val"), Ghdl_Index_Type);
+         New_Record_Field (Constr, Ghdl_Sizes_Sig,
+                           Get_Identifier ("size_sig"), Ghdl_Index_Type);
+         Finish_Record_Type (Constr, Ghdl_Sizes_Type);
+         New_Type_Decl (Get_Identifier ("__ghdl_sizes_type"),
+                        Ghdl_Sizes_Type);
+      end;
+
       --  Create type ghdl_compare_type is (lt, eq, ge);
       declare
          Constr : O_Enum_List;
