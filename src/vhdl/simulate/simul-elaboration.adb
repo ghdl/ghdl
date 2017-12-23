@@ -354,7 +354,6 @@ package body Simul.Elaboration is
          Parent => Father,
          Children => null,
          Brother => null,
-         Ports_Map => Null_Iir,
          Marker => Empty_Marker,
          Objects => (others => null),
          Elab_Objects => 0,
@@ -1290,9 +1289,6 @@ package body Simul.Elaboration is
       Actual : Iir;
       Formal : Iir;
    begin
-      pragma Assert (Formal_Instance.Ports_Map = Null_Iir);
-      Formal_Instance.Ports_Map := Map;
-
       if Ports = Null_Iir then
          return;
       end if;
@@ -3009,7 +3005,6 @@ package body Simul.Elaboration is
                                  Parent => null,
                                  Children => null,
                                  Brother => null,
-                                 Ports_Map => Null_Iir,
                                  Marker => Empty_Marker,
                                  Actuals_Ref => null,
                                  Result => null,
