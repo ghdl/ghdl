@@ -732,6 +732,8 @@ package body Trans.Chap3 is
    is
       Indexes_List    : constant Iir_Flist :=
         Get_Index_Subtype_Definition_List (Def);
+      El_Type         : constant Iir := Get_Element_Subtype (Def);
+      El_Info         : constant Type_Info_Acc := Get_Info (El_Type);
       Constr          : O_Element_List;
       Dim             : String (1 .. 8);
       N               : Natural;
@@ -766,6 +768,15 @@ package body Trans.Chap3 is
                            Get_Identifier (Dim (P .. Dim'Last)),
                            Get_Info (Get_Base_Type (Index)).B.Range_Type);
       end loop;
+
+      if Is_Unbounded_Type (El_Info) then
+         --  Bounds and size for element.
+         New_Record_Field (Constr, Info.B.El_Bounds,
+                           Get_Identifier ("el_bound"), El_Info.B.Bounds_Type);
+         New_Record_Field (Constr, Info.B.El_Size, Get_Identifier ("el_size"),
+                           Ghdl_Sizes_Type);
+      end if;
+
       Finish_Record_Type (Constr, Info.B.Bounds_Type);
       Finish_Unbounded_Type_Bounds (Info);
    end Translate_Array_Type_Bounds;
@@ -2293,6 +2304,7 @@ package body Trans.Chap3 is
             Translate_Array_Element_Definition (Def);
             if Get_Index_Constraint_Flag (Def) then
                if Base_Info = null or else Base_Info.Type_Incomplete then
+                  --  This subtype also declare the base type.  Create it.
                   declare
                      Mark : Id_Mark_Type;
                   begin

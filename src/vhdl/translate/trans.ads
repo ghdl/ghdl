@@ -759,6 +759,11 @@ package Trans is
             Bounds_Type     : O_Tnode;
             Bounds_Ptr_Type : O_Tnode;
 
+            --  Only for unbounded arrays: element size and bounds in
+            --  the bounds record
+            El_Size : O_Fnode;
+            El_Bounds : O_Fnode;
+
             --  The ortho type is a fat pointer to the base and the bounds.
             --  These are the fields of the fat pointer.
             Base_Field   : O_Fnode_Array;
@@ -839,6 +844,8 @@ package Trans is
       Base_Ptr_Type => (O_Tnode_Null, O_Tnode_Null),
       Bounds_Type => O_Tnode_Null,
       Bounds_Ptr_Type => O_Tnode_Null,
+      El_Size => O_Fnode_Null,
+      El_Bounds => O_Fnode_Null,
       Base_Field => (O_Fnode_Null, O_Fnode_Null),
       Bounds_Field => (O_Fnode_Null, O_Fnode_Null));
 
@@ -855,6 +862,8 @@ package Trans is
       Base_Ptr_Type => (O_Tnode_Null, O_Tnode_Null),
       Bounds_Type => O_Tnode_Null,
       Bounds_Ptr_Type => O_Tnode_Null,
+      El_Size => O_Fnode_Null,
+      El_Bounds => O_Fnode_Null,
       Base_Field => (O_Fnode_Null, O_Fnode_Null),
       Bounds_Field => (O_Fnode_Null, O_Fnode_Null));
 
@@ -1218,7 +1227,8 @@ package Trans is
             Incomplete_Type  : Iir;
 
          when Kind_Index =>
-            --  Field declaration for array dimension.
+            --  For index_subtype_declaration, the field containing
+            --  the bounds of that index, in the array bounds record.
             Index_Field : O_Fnode;
 
          when Kind_Field =>
