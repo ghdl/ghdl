@@ -786,12 +786,8 @@ package body Trans.Chap3 is
       Info     : Type_Info_Acc)
    is
       El_Type   : constant Iir := Get_Element_Subtype (Def);
-      El_Tinfo  : Type_Info_Acc;
+      El_Tinfo  : constant Type_Info_Acc := Get_Info (El_Type);
    begin
-      --  Be sure the element type is translated.
-      Translate_Type_Definition (El_Type, True);
-      El_Tinfo := Get_Info (El_Type);
-
       if Is_Complex_Type (El_Tinfo) then
          if El_Tinfo.Type_Mode = Type_Mode_Array then
             Info.B.Base_Type := El_Tinfo.B.Base_Ptr_Type;
