@@ -571,6 +571,28 @@ package body Trans.Chap3 is
                     (List, Create_Static_Type_Definition_Type_Range (Index));
                end loop;
             end;
+            if Binfo.B.El_Size /= O_Fnode_Null then
+               --  For arrays of unbounded type.
+               declare
+                  El_Type : constant Iir := Get_Element_Subtype (Def);
+                  El_Info : constant Type_Info_Acc := Get_Info (El_Type);
+                  Sz_List : O_Record_Aggr_List;
+                  Sz_Res : O_Cnode;
+               begin
+                  New_Record_Aggr_El
+                    (List, Create_Static_Composite_Subtype_Bounds (El_Type));
+
+                  Start_Record_Aggr (Sz_List, Ghdl_Sizes_Type);
+                  New_Record_Aggr_El
+                    (Sz_List, New_Sizeof (El_Info.Ortho_Type (Mode_Value),
+                                          Ghdl_Index_Type));
+                  New_Record_Aggr_El
+                    (Sz_List, New_Sizeof (El_Info.Ortho_Type (Mode_Signal),
+                                          Ghdl_Index_Type));
+                  Finish_Record_Aggr (Sz_List, Sz_Res);
+                  New_Record_Aggr_El (List, Sz_Res);
+               end;
+            end if;
 
          when Iir_Kind_Record_Subtype_Definition =>
             declare
@@ -788,8 +810,8 @@ package body Trans.Chap3 is
       El_Type   : constant Iir := Get_Element_Subtype (Def);
       El_Tinfo  : constant Type_Info_Acc := Get_Info (El_Type);
    begin
-      if Is_Complex_Type (El_Tinfo) then
-         if El_Tinfo.Type_Mode = Type_Mode_Array then
+      if Is_Complex_Type (El_Tinfo) or else Is_Unbounded_Type (El_Tinfo) then
+         if El_Tinfo.Type_Mode in Type_Mode_Arrays then
             Info.B.Base_Type := El_Tinfo.B.Base_Ptr_Type;
             Info.B.Base_Ptr_Type := El_Tinfo.B.Base_Ptr_Type;
          else
@@ -2298,18 +2320,19 @@ package body Trans.Chap3 is
 
          when Iir_Kind_Array_Subtype_Definition =>
             Translate_Array_Element_Definition (Def);
-            if Get_Index_Constraint_Flag (Def) then
-               if Base_Info = null or else Base_Info.Type_Incomplete then
-                  --  This subtype also declare the base type.  Create it.
-                  declare
-                     Mark : Id_Mark_Type;
-                  begin
-                     Push_Identifier_Prefix (Mark, "BT");
-                     Translate_Type_Definition (Base_Type);
-                     Pop_Identifier_Prefix (Mark);
-                     Base_Info := Get_Info (Base_Type);
-                  end;
-               end if;
+            if Base_Info = null or else Base_Info.Type_Incomplete then
+               --  This subtype also declare the base type.  Create it.
+               declare
+                  Mark : Id_Mark_Type;
+               begin
+                  Push_Identifier_Prefix (Mark, "BT");
+                  Translate_Type_Definition (Base_Type);
+                  Pop_Identifier_Prefix (Mark);
+                  Base_Info := Get_Info (Base_Type);
+               end;
+            end if;
+
+            if Get_Constraint_State (Def) = Fully_Constrained then
                Translate_Array_Subtype_Definition (Def);
                Info.B := Base_Info.B;
                Info.S := Base_Info.S;
@@ -2595,6 +2618,19 @@ package body Trans.Chap3 is
          El_Tinfo.B.Bounds_Type, El_Tinfo.B.Bounds_Ptr_Type);
    end Bounds_To_Element_Bounds;
 
+   function Array_Bounds_To_Element_Bounds (B : Mnode; Atype : Iir)
+                                           return Mnode
+   is
+      Arr_Tinfo : constant Type_Info_Acc := Get_Info (Atype);
+      El_Type : constant Iir := Get_Element_Subtype (Atype);
+      El_Tinfo : constant Type_Info_Acc := Get_Info (El_Type);
+   begin
+      return Lv2M
+        (New_Selected_Element (M2Lv (B), Arr_Tinfo.B.El_Bounds),
+         El_Tinfo, Mode_Value,
+         El_Tinfo.B.Bounds_Type, El_Tinfo.B.Bounds_Ptr_Type);
+   end Array_Bounds_To_Element_Bounds;
+
    function Type_To_Range (Atype : Iir) return Mnode
    is
       Info : constant Type_Info_Acc := Get_Info (Atype);
@@ -2810,6 +2846,38 @@ package body Trans.Chap3 is
       end case;
    end Unbox_Record;
 
+   function Create_Maybe_Fat_Array_Element (Arr : Mnode; Arr_Type : Iir)
+                                           return Mnode
+   is
+      El_Type : constant Iir := Get_Element_Subtype (Arr_Type);
+      El_Info : constant Type_Info_Acc := Get_Info (El_Type);
+      El_Unbounded : constant Boolean := Is_Unbounded_Type (El_Info);
+      Kind : constant Object_Kind_Type := Get_Object_Kind (Arr);
+      Var_El : Mnode;
+   begin
+      if El_Unbounded then
+         Var_El := Create_Temp (El_Info, Kind);
+         New_Assign_Stmt
+           (M2Lp (Chap3.Get_Composite_Bounds (Var_El)),
+            M2Addr (Chap3.Array_Bounds_To_Element_Bounds
+                      (Chap3.Get_Composite_Bounds (Arr), Arr_Type)));
+         return Var_El;
+      else
+         return Mnode_Null;
+      end if;
+   end Create_Maybe_Fat_Array_Element;
+
+   function Assign_Maybe_Fat_Array_Element (Var : Mnode; El : Mnode)
+                                           return Mnode is
+   begin
+      if Var = Mnode_Null then
+         return El;
+      else
+         New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Base (Var)), M2Addr (El));
+         return Var;
+      end if;
+   end Assign_Maybe_Fat_Array_Element;
+
    function Get_Bounds_Acc_Base
      (Acc : O_Enode; D_Type : Iir) return O_Enode
    is
@@ -2847,7 +2915,11 @@ package body Trans.Chap3 is
       El_Tinfo : constant Type_Info_Acc := Get_Info (El_Type);
       Kind     : constant Object_Kind_Type := Get_Object_Kind (Base);
    begin
-      if Is_Complex_Type (El_Tinfo) then
+      if Is_Unbounded_Type (El_Tinfo) then
+         --  return Reindex_Unbounded_Array (Base, Atype, Index, El_Tinfo);
+         --  TODO
+         raise Internal_Error;
+      elsif Is_Complex_Type (El_Tinfo) then
          return Reindex_Complex_Array (Base, Atype, Index, El_Tinfo);
       else
          return Lv2M (New_Indexed_Element (M2Lv (Base), Index),

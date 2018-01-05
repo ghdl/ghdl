@@ -4716,7 +4716,8 @@ package body Trans.Chap7 is
       Var_I          : O_Dnode;
       Var_Len        : O_Dnode;
       Label          : O_Snode;
-      Le, Re         : Mnode;
+      Base_Le, Base_Re : Mnode;
+      Var_L, Var_R   : Mnode;
    begin
       if Global_Storage = O_Storage_External then
          return;
@@ -4749,29 +4750,36 @@ package body Trans.Chap7 is
       New_Assign_Stmt (New_Obj (Var_Len),
                        Chap3.Get_Array_Length (L, Arr_Type));
       Close_Temp;
+      Open_Temp;
+      Var_L := Chap3.Create_Maybe_Fat_Array_Element (L, Arr_Type);
+      Var_R := Chap3.Create_Maybe_Fat_Array_Element (R, Arr_Type);
       Init_Var (Var_I);
       Start_Loop_Stmt (Label);
       --  If the end of the array is reached, return TRUE.
       Start_If_Stmt (If_Blk,
                      New_Compare_Op (ON_Ge,
-                       New_Obj_Value (Var_I),
-                       New_Obj_Value (Var_Len),
-                       Ghdl_Bool_Type));
+                                     New_Obj_Value (Var_I),
+                                     New_Obj_Value (Var_Len),
+                                     Ghdl_Bool_Type));
       New_Return_Stmt (New_Lit (Std_Boolean_True_Node));
       Finish_If_Stmt (If_Blk);
       Open_Temp;
-      Le := Chap3.Index_Base (Chap3.Get_Composite_Base (L), Arr_Type,
-                              New_Obj_Value (Var_I));
-      Re := Chap3.Index_Base (Chap3.Get_Composite_Base (R), Arr_Type,
-                              New_Obj_Value (Var_I));
+      Base_Le := Chap3.Index_Base (Chap3.Get_Composite_Base (L), Arr_Type,
+                                   New_Obj_Value (Var_I));
+      Base_Le := Chap3.Assign_Maybe_Fat_Array_Element (Var_L, Base_Le);
+      Base_Re := Chap3.Index_Base (Chap3.Get_Composite_Base (R), Arr_Type,
+                                   New_Obj_Value (Var_I));
+      Base_Re := Chap3.Assign_Maybe_Fat_Array_Element (Var_R, Base_Re);
       Start_If_Stmt
         (If_Blk,
-         New_Monadic_Op (ON_Not, Translate_Equality (Le, Re, El_Type)));
+         New_Monadic_Op (ON_Not,
+                         Translate_Equality (Base_Le, Base_Re, El_Type)));
       New_Return_Stmt (New_Lit (Std_Boolean_False_Node));
       Finish_If_Stmt (If_Blk);
       Close_Temp;
       Inc_Var (Var_I);
       Finish_Loop_Stmt (Label);
+      Close_Temp;
       Finish_Operator_Instance_Use (F_Info);
       Finish_Subprogram_Body;
    end Translate_Predefined_Array_Equality_Body;

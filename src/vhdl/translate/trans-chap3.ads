@@ -120,15 +120,28 @@ package Trans.Chap3 is
    --    number of dimensions; these fields are a structure describing the
    --    range of the dimension.
 
+   --  If the element subtype of ARR_TYPE is unbounded, create a fat pointer,
+   --  set the bounds of it (from ARR), and return it.
+   --  Otherwise, return a null mnode.
+   --  Used to build a var for a subelement of ARR.
+   function Create_Maybe_Fat_Array_Element (Arr : Mnode; Arr_Type : Iir)
+                                           return Mnode;
+
+   --  If the element subtype of the array is unbounded, set the base of VAR
+   --  from EL, and return it.
+   --  Otherwise directly return EL (VAR must be null).
+   function Assign_Maybe_Fat_Array_Element (Var : Mnode; El : Mnode)
+                                           return Mnode;
+
    --  Index array BASE of type ATYPE with INDEX.
    --  INDEX must be of type ghdl_index_type, thus no bounds checks are
    --  performed.
    function Index_Base (Base : Mnode; Atype : Iir; Index : O_Enode)
-                           return Mnode;
+                       return Mnode;
 
    --  Same for for slicing.
    function Slice_Base (Base : Mnode; Atype : Iir; Index : O_Enode)
-                           return Mnode;
+                       return Mnode;
 
    --  Get the length of the array (the number of elements).
    function Get_Array_Length (Arr : Mnode; Atype : Iir) return O_Enode;
@@ -178,6 +191,11 @@ package Trans.Chap3 is
    --  From an unbounded record bounds B, get the bounds for (unbounded)
    --  element EL.
    function Bounds_To_Element_Bounds (B : Mnode; El : Iir) return Mnode;
+
+   --  From an unbounded array bounds B, get the bounds for the (unbounded)
+   --  element.
+   function Array_Bounds_To_Element_Bounds (B : Mnode; Atype : Iir)
+                                           return Mnode;
 
    --  Deallocate OBJ.
    procedure Gen_Deallocate (Obj : O_Enode);
