@@ -572,6 +572,10 @@ package body Sem_Types is
                   Inter : Iir;
                   Inter_Type : Iir;
                begin
+                  --  LRM08 3.5.1 Protected type declarations
+                  --  Such formal parameters must not be of an access type or
+                  --  a file type; moreover, they must not have a subelement
+                  --  that is an access type of a file type.
                   Inter := Get_Interface_Declaration_Chain (El);
                   while Inter /= Null_Iir loop
                      Inter_Type := Get_Type (Inter);
@@ -586,14 +590,19 @@ package body Sem_Types is
                      end if;
                      Inter := Get_Chain (Inter);
                   end loop;
+
+                  --  LRM08 3.5.1 Protected type declarations
+                  --  Additionally, in the case of a function subprogram, the
+                  --  return type of the function must not be of an access type
+                  --  or file type; moreover, it must not have a subelement
+                  --  that is an access type of a file type.
                   if Get_Kind (El) = Iir_Kind_Function_Declaration then
                      Inter_Type := Get_Return_Type (El);
                      if Inter_Type /= Null_Iir
                        and then Get_Signal_Type_Flag (Inter_Type) = False
                      then
                         Error_Msg_Sem
-                          (+El,
-                           "method return type must not be access of file");
+                          (+El, "method cannot return an access or a file");
                      end if;
                   end if;
                end;
