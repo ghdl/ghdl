@@ -924,9 +924,9 @@ package Trans is
       Type_Mode_Record,
       --  Record with unbounded component(s).
       Type_Mode_Unbounded_Record,
-      --  Unbounded array type (used for unconstrained array).
+      --  Unbounded array type (used for unconstrained arrays).
       Type_Mode_Unbounded_Array,
-      --  Constrained array type (length is known at compile-time).
+      --  Constrained array type (for constrained arrays).
       Type_Mode_Array,
       --  Protected type
       Type_Mode_Protected);
@@ -1797,6 +1797,12 @@ package Trans is
    --  Creation of Mnodes.
 
    function E2M (E : O_Enode; T : Type_Info_Acc; Kind : Object_Kind_Type)
+                return Mnode;
+   function E2M (E : O_Enode;
+                 T : Type_Info_Acc;
+                 Kind  : Object_Kind_Type;
+                 Vtype : O_Tnode;
+                 Ptype : O_Tnode)
                 return Mnode;
 
    --  From a Lnode, general form (can be used for ranges, bounds, base...)

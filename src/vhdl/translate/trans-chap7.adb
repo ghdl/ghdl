@@ -4764,11 +4764,9 @@ package body Trans.Chap7 is
       New_Return_Stmt (New_Lit (Std_Boolean_True_Node));
       Finish_If_Stmt (If_Blk);
       Open_Temp;
-      Base_Le := Chap3.Index_Base (Chap3.Get_Composite_Base (L), Arr_Type,
-                                   New_Obj_Value (Var_I));
+      Base_Le := Chap3.Index_Array (L, Arr_Type, New_Obj_Value (Var_I));
       Base_Le := Chap3.Assign_Maybe_Fat_Array_Element (Var_L, Base_Le);
-      Base_Re := Chap3.Index_Base (Chap3.Get_Composite_Base (R), Arr_Type,
-                                   New_Obj_Value (Var_I));
+      Base_Re := Chap3.Index_Array (R, Arr_Type, New_Obj_Value (Var_I));
       Base_Re := Chap3.Assign_Maybe_Fat_Array_Element (Var_R, Base_Re);
       Start_If_Stmt
         (If_Blk,

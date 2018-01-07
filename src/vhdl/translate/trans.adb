@@ -1504,6 +1504,18 @@ package body Trans is
                            Ptype => T.Ortho_Ptr_Type (Kind)));
    end E2M;
 
+   function E2M (E : O_Enode;
+                 T : Type_Info_Acc;
+                 Kind  : Object_Kind_Type;
+                 Vtype : O_Tnode;
+                 Ptype : O_Tnode)
+                return Mnode is
+   begin
+      return Mnode'(M1 => (State => Mstate_E,
+                           K => Kind, T => T, E => E,
+                           Vtype => Vtype, Ptype => Ptype));
+   end E2M;
+
    function Lv2M (L : O_Lnode; T : Type_Info_Acc; Kind : Object_Kind_Type)
                   return Mnode is
    begin

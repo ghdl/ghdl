@@ -139,6 +139,10 @@ package Trans.Chap3 is
    function Index_Base (Base : Mnode; Atype : Iir; Index : O_Enode)
                        return Mnode;
 
+   --  Index array ARR of type ATYPE with INDEX.
+   function Index_Array (Arr : Mnode; Atype : Iir; Index : O_Enode)
+                        return Mnode;
+
    --  Same for for slicing.
    function Slice_Base (Base : Mnode; Atype : Iir; Index : O_Enode)
                        return Mnode;

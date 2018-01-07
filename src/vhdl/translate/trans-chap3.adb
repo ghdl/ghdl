@@ -919,6 +919,9 @@ package body Trans.Chap3 is
 
          --  Type is bounded, but not statically.
          Create_Size_Var (Def, Info);
+      elsif Get_Array_Element_Constraint (Def) /= Null_Iir then
+         --  Length is known, element is static.
+         raise Internal_Error;
       else
          --  Length is known.  Create a constrained array.
          Info.Ortho_Type (Mode_Signal) := O_Tnode_Null;
@@ -931,8 +934,7 @@ package body Trans.Chap3 is
                   Id := Create_Identifier ("SIG");
             end case;
             Info.Ortho_Type (I) := New_Constrained_Array_Type
-              (Binfo.B.Base_Type (I),
-               New_Unsigned_Literal (Ghdl_Index_Type, Unsigned_64 (Len)));
+              (Binfo.B.Base_Type (I), New_Index_Lit (Unsigned_64 (Len)));
             New_Type_Decl (Id, Info.Ortho_Type (I));
          end loop;
       end if;
@@ -2631,6 +2633,24 @@ package body Trans.Chap3 is
          El_Tinfo.B.Bounds_Type, El_Tinfo.B.Bounds_Ptr_Type);
    end Array_Bounds_To_Element_Bounds;
 
+   function Array_Bounds_To_Element_Size (B : Mnode; Atype : Iir)
+                                           return O_Lnode
+   is
+      Arr_Tinfo : constant Type_Info_Acc := Get_Info (Atype);
+      Sizes : O_Lnode;
+      Field : O_Fnode;
+   begin
+      Sizes := New_Selected_Element (M2Lv (B), Arr_Tinfo.B.El_Size);
+      case Get_Object_Kind (B) is
+         when Mode_Value =>
+            Field := Ghdl_Sizes_Val;
+         when Mode_Signal =>
+            Field := Ghdl_Sizes_Sig;
+      end case;
+      Sizes := New_Selected_Element (Sizes, Field);
+      return Sizes;
+   end Array_Bounds_To_Element_Size;
+
    function Type_To_Range (Atype : Iir) return Mnode
    is
       Info : constant Type_Info_Acc := Get_Info (Atype);
@@ -2889,6 +2909,19 @@ package body Trans.Chap3 is
          D_Info.B.Base_Ptr_Type (Mode_Value));
    end Get_Bounds_Acc_Base;
 
+   function Reindex_Array
+     (Base : Mnode; Atype : Iir; Index : O_Enode; Stride : O_Enode)
+     return O_Enode
+   is
+      El_Type  : constant Iir := Get_Element_Subtype (Atype);
+      El_Tinfo : constant Type_Info_Acc := Get_Info (El_Type);
+      Kind     : constant Object_Kind_Type := Get_Object_Kind (Base);
+   begin
+      return Add_Pointer (M2E (Base),
+                          New_Dyadic_Op (ON_Mul_Ov, Stride, Index),
+                          El_Tinfo.Ortho_Ptr_Type (Kind));
+   end Reindex_Array;
+
    function Reindex_Complex_Array
      (Base : Mnode; Atype : Iir; Index : O_Enode; Res_Info : Type_Info_Acc)
       return Mnode
@@ -2897,15 +2930,11 @@ package body Trans.Chap3 is
       El_Tinfo : constant Type_Info_Acc := Get_Info (El_Type);
       Kind     : constant Object_Kind_Type := Get_Object_Kind (Base);
    begin
-      pragma Assert (Is_Complex_Type (El_Tinfo));
-      return E2M
-        (Add_Pointer
-           (M2E (Base),
-            New_Dyadic_Op (ON_Mul_Ov,
-                           New_Value (Get_Var (El_Tinfo.C (Kind).Size_Var)),
-                           Index),
-            El_Tinfo.Ortho_Ptr_Type (Kind)),
-         Res_Info, Kind);
+      return E2M (Reindex_Array
+                    (Base, Atype,
+                     Index,
+                     New_Value (Get_Var (El_Tinfo.C (Kind).Size_Var))),
+                  Res_Info, Kind);
    end Reindex_Complex_Array;
 
    function Index_Base (Base : Mnode; Atype : Iir; Index : O_Enode)
@@ -2926,6 +2955,36 @@ package body Trans.Chap3 is
                       El_Tinfo, Kind);
       end if;
    end Index_Base;
+
+   function Index_Array (Arr : Mnode; Atype : Iir; Index : O_Enode)
+                        return Mnode
+   is
+      El_Type  : constant Iir := Get_Element_Subtype (Atype);
+      El_Tinfo : constant Type_Info_Acc := Get_Info (El_Type);
+      Kind     : constant Object_Kind_Type := Get_Object_Kind (Arr);
+   begin
+      if Is_Unbounded_Type (El_Tinfo) then
+         return E2M
+           (Add_Pointer
+              (M2E (Get_Composite_Base (Arr)),
+               New_Dyadic_Op
+                 (ON_Mul_Ov,
+                  Index,
+                  New_Value (Array_Bounds_To_Element_Size
+                               (Get_Composite_Bounds (Arr), Atype))),
+               El_Tinfo.B.Base_Ptr_Type (Kind)),
+            El_Tinfo, Kind,
+            El_Tinfo.B.Base_Type (Kind),
+            El_Tinfo.B.Base_Ptr_Type (Kind));
+      elsif Is_Complex_Type (El_Tinfo) then
+         return Reindex_Complex_Array
+           (Get_Composite_Base (Arr), Atype, Index, El_Tinfo);
+      else
+         return Lv2M
+           (New_Indexed_Element (M2Lv (Get_Composite_Base (Arr)), Index),
+            El_Tinfo, Kind);
+      end if;
+   end Index_Array;
 
    function Slice_Base (Base : Mnode; Atype : Iir; Index : O_Enode)
                         return Mnode
