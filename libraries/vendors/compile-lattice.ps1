@@ -157,8 +157,8 @@ function Get-LatticeDiamondDirectory
 	{	return $FOUNDRY + "\..\" + (Get-VendorToolSourceDirectory)		}
 	else
 	{	$EnvSourceDir = ""
-		foreach ($Drive in Get-DriveInfo)
-		{	$Path = $Drive.Name + "Lattice\Diamond"
+		foreach ($Drive in Get-PSDrive -PSProvider 'FileSystem')
+		{	$Path = $Drive.Name + ":\" + "Lattice\Diamond"
 			if (Test-Path $Path -PathType Container)
 			{	foreach ($Major in 4..3)
 				{	foreach ($Minor in 9..0)

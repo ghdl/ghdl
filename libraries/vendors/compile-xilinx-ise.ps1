@@ -127,8 +127,8 @@ function Get-XilinxISEDirectory
 	{	return $XILINX + "\" + (Get-VendorToolSourceDirectory)		}
 	else
 	{	$EnvSourceDir = ""
-		foreach ($Drive in Get-DriveInfo)
-		{	$Path = $Drive.Name + "Xilinx"
+		foreach ($Drive in Get-PSDrive -PSProvider 'FileSystem')
+		{	$Path = $Drive.Name + ":\" + "Xilinx"
 			if (Test-Path $Path -PathType Container)
 			{	foreach ($Major in 14..12)
 				{	foreach ($Minor in 7..1)

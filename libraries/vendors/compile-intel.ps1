@@ -135,8 +135,8 @@ function Get-AlteraQuartusDirectory
 	{	return $QUARTUS_ROOTDIR + "\" + (Get-VendorToolSourceDirectory)		}
 	else
 	{	$EnvSourceDir = ""
-		foreach ($Drive in Get-DriveInfo)
-		{	$Path = $Drive.Name + "Altera"
+		foreach ($Drive in Get-PSDrive -PSProvider 'FileSystem')
+		{	$Path = $Drive.Name + ":\" + "Altera"
 			if (Test-Path $Path -PathType Container)
 			{	foreach ($Major in 16..13)
 				{	foreach ($Minor in 3..0)
