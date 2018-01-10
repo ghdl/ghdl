@@ -113,7 +113,7 @@ function Get-XilinxVivadoDirectory
 	{	return $XILINX_VIVADO + "\" + (Get-VendorToolSourceDirectory)		}
 	else
 	{	$EnvSourceDir = ""
-		foreach ($Drive in gdr -PSProvider 'FileSystem')
+		foreach ($Drive in Get-PSDrive -PSProvider 'FileSystem')
 		{	$Path = $Drive.Name + ":\" + "Xilinx\Vivado"
 			if (Test-Path $Path -PathType Container)
 			{	foreach ($Major in 2018..2014)
