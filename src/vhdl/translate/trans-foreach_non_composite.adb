@@ -31,8 +31,7 @@ begin
    case Type_Info.Type_Mode is
       when Type_Mode_Scalar =>
          Do_Non_Composite (Targ, Targ_Type, Data);
-      when Type_Mode_Unbounded_Array
-        | Type_Mode_Array =>
+      when Type_Mode_Arrays =>
          declare
             El_Type : constant Iir := Get_Element_Subtype (Targ_Type);
             Var_El         : Mnode;
@@ -81,8 +80,7 @@ begin
             Finish_Data_Array (Composite_Data);
             Close_Temp;
          end;
-      when Type_Mode_Record
-        | Type_Mode_Unbounded_Record =>
+      when Type_Mode_Records =>
          declare
             List           : constant Iir_Flist :=
               Get_Elements_Declaration_List (Targ_Type);

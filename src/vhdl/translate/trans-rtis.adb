@@ -1436,10 +1436,11 @@ package body Trans.Rtis is
       Finish_Init_Value (Res, Val);
    end Generate_Array_Type_Indexes;
 
-   function Type_To_Mode (Atype : Iir) return Natural is
+   function Type_To_Mode (Atype : Iir) return Natural
+   is
       Res : Natural := 0;
    begin
-      if Is_Complex_Type (Get_Info (Atype)) then
+      if not Is_Static_Type (Get_Info (Atype)) then
          Res := Res + 1;
       end if;
       if Is_Anonymous_Type_Definition (Atype)
@@ -1541,11 +1542,11 @@ package body Trans.Rtis is
       Start_Init_Value (Info.Type_Rti);
       Start_Record_Aggr (Aggr, Ghdl_Rtin_Subtype_Composite);
       case Info.Type_Mode is
-         when Type_Mode_Array =>
+         when Type_Mode_Bounded_Arrays =>
             Kind := Ghdl_Rtik_Subtype_Array;
          when Type_Mode_Unbounded_Array =>
             Kind := Ghdl_Rtik_Subtype_Unconstrained_Array;
-         when Type_Mode_Record =>
+         when Type_Mode_Bounded_Records =>
             Kind := Ghdl_Rtik_Subtype_Record;
          when Type_Mode_Unbounded_Record =>
             Kind := Ghdl_Rtik_Subtype_Unbounded_Record;
@@ -1566,18 +1567,21 @@ package body Trans.Rtis is
       New_Record_Aggr_El (Aggr, Val);
       for I in Mode_Value .. Mode_Signal loop
          case Info.Type_Mode is
-            when Type_Mode_Array
-              | Type_Mode_Record =>
-               Val := Get_Null_Loc;
+            when Type_Mode_Static_Array
+              | Type_Mode_Static_Record =>
                if Info.Ortho_Type (I) /= O_Tnode_Null then
-                  if Is_Complex_Type (Info) then
-                     if Info.C (I).Size_Var /= Null_Var then
-                        Val := Var_Acc_To_Loc (Info.C (I).Size_Var);
-                     end if;
-                  else
-                     Val := New_Sizeof (Info.Ortho_Type (I),
-                                        Ghdl_Ptr_Type);
-                  end if;
+                  Val := New_Sizeof (Info.Ortho_Type (I), Ghdl_Ptr_Type);
+               else
+                  Val := Get_Null_Loc;
+               end if;
+            when Type_Mode_Complex_Array
+              | Type_Mode_Complex_Record =>
+               if Info.Ortho_Type (I) /= O_Tnode_Null
+                 and then Info.C (I).Size_Var /= Null_Var
+               then
+                  Val := Var_Acc_To_Loc (Info.C (I).Size_Var);
+               else
+                  Val := Get_Null_Loc;
                end if;
             when Type_Mode_Unbounded_Array
               | Type_Mode_Unbounded_Record =>

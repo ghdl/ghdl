@@ -133,7 +133,7 @@ package body Trans.Chap3 is
       case Info.Type_Mode is
          when Type_Mode_Unbounded =>
             Ptype := Info.B.Base_Ptr_Type (Kind);
-         when Type_Mode_Record =>
+         when Type_Mode_Complex_Record =>
             Ptype := Info.Ortho_Ptr_Type (Kind);
          when others =>
             raise Internal_Error;
@@ -898,13 +898,13 @@ package body Trans.Chap3 is
       --  Note: info of indexes subtype are not created!
 
       Len := Get_Array_Subtype_Length (Def);
-      Info.Type_Mode := Type_Mode_Array;
       Info.Type_Locally_Constrained := (Len >= 0);
       if Is_Complex_Type (Binfo)
         or else not Info.Type_Locally_Constrained
       then
          --  This is a complex type as the size is not known at compile
          --  time.
+         Info.Type_Mode := Type_Mode_Complex_Array;
          Info.Ortho_Type := Binfo.B.Base_Ptr_Type;
          Info.Ortho_Ptr_Type := Binfo.B.Base_Ptr_Type;
 
@@ -924,6 +924,7 @@ package body Trans.Chap3 is
          raise Internal_Error;
       else
          --  Length is known.  Create a constrained array.
+         Info.Type_Mode := Type_Mode_Static_Array;
          Info.Ortho_Type (Mode_Signal) := O_Tnode_Null;
          Info.Ortho_Ptr_Type := Binfo.B.Base_Ptr_Type;
          for I in Mode_Value .. Type_To_Last_Object_Kind (Def) loop
@@ -978,7 +979,7 @@ package body Trans.Chap3 is
                                            Def)));
 
       --  Find the innermost non-array element.
-      while El_Info.Type_Mode = Type_Mode_Array loop
+      while El_Info.Type_Mode = Type_Mode_Complex_Array loop
          El_Type := Get_Element_Subtype (El_Type);
          El_Info := Get_Info (El_Type);
       end loop;
@@ -1125,9 +1126,7 @@ package body Trans.Chap3 is
             Translate_Type_Definition (El_Type);
             Pop_Identifier_Prefix (Mark);
          end if;
-         if not Need_Size and then Is_Complex_Type (Get_Info (El_Type)) then
-            Need_Size := True;
-         end if;
+         Need_Size := Need_Size or else Is_Complex_Type (Get_Info (El_Type));
          Field_Info := Add_Info (El, Kind_Field);
       end loop;
 
@@ -1155,6 +1154,7 @@ package body Trans.Chap3 is
          end loop;
          Finish_Record_Type (El_List, Info.B.Base_Type (Kind));
       end loop;
+
       if Is_Unbounded then
          Info.Type_Mode := Type_Mode_Unbounded_Record;
          Finish_Unbounded_Type_Base (Info);
@@ -1166,7 +1166,11 @@ package body Trans.Chap3 is
          --  must be built.
          Set_Complex_Type (Info, True);
       else
-         Info.Type_Mode := Type_Mode_Record;
+         if Need_Size then
+            Info.Type_Mode := Type_Mode_Complex_Record;
+         else
+            Info.Type_Mode := Type_Mode_Static_Record;
+         end if;
          Info.Ortho_Type := Info.B.Base_Type;
          Finish_Type_Definition (Info);
          Info.B.Base_Ptr_Type := Info.Ortho_Ptr_Type;
@@ -1246,7 +1250,11 @@ package body Trans.Chap3 is
       end if;
 
       --  Record is constrained.
-      Info.Type_Mode := Type_Mode_Record;
+      if Get_Type_Staticness (Def) = Locally then
+         Info.Type_Mode := Type_Mode_Static_Record;
+      else
+         Info.Type_Mode := Type_Mode_Complex_Record;
+      end if;
 
       --  Base type is complex (unbounded record)
       Copy_Complex_Type (Info, Base_Info);
@@ -2125,9 +2133,13 @@ package body Trans.Chap3 is
                  | Type_Mode_Unknown
                  | Type_Mode_Protected =>
                   raise Internal_Error;
-               when Type_Mode_Record =>
+               when Type_Mode_Static_Record
+                 | Type_Mode_Static_Array =>
+                  --  No need to create a size var, the size is known.
+                  raise Internal_Error;
+               when Type_Mode_Complex_Record =>
                   Create_Record_Size_Var (Def, Kind);
-               when Type_Mode_Array =>
+               when Type_Mode_Complex_Array =>
                   Create_Array_Size_Var (Def, Kind);
             end case;
          end if;
@@ -2705,10 +2717,10 @@ package body Trans.Chap3 is
    is
    begin
       case Info.Type_Mode is
-         when Type_Mode_Fat_Array =>
+         when Type_Mode_Unbounded =>
             raise Internal_Error;
-         when Type_Mode_Array
-           | Type_Mode_Record =>
+         when Type_Mode_Bounded_Arrays
+           | Type_Mode_Bounded_Records =>
             return Varv2M (Info.S.Composite_Bounds,
                            Info, Mode_Value,
                            Info.B.Bounds_Type,
@@ -2741,8 +2753,8 @@ package body Trans.Chap3 is
                   Info.B.Bounds_Type,
                   Info.B.Bounds_Ptr_Type);
             end;
-         when Type_Mode_Array
-           | Type_Mode_Record =>
+         when Type_Mode_Bounded_Arrays
+           | Type_Mode_Bounded_Records =>
             return Get_Array_Type_Bounds (Info);
          when Type_Mode_Bounds_Acc =>
             return Lp2M (M2Lv (Arr), Info, Mode_Value);
@@ -2827,9 +2839,9 @@ package body Trans.Chap3 is
                   Info, Kind,
                   Info.B.Base_Type (Kind), Info.B.Base_Ptr_Type (Kind));
             end;
-         when Type_Mode_Array =>
+         when Type_Mode_Bounded_Arrays =>
             return Arr;
-         when Type_Mode_Record =>
+         when Type_Mode_Bounded_Records =>
             return Unbox_Record (Arr);
          when others =>
             raise Internal_Error;
@@ -2841,12 +2853,11 @@ package body Trans.Chap3 is
       Info : constant Type_Info_Acc := Get_Type_Info (Arr);
    begin
       case Info.Type_Mode is
-         when Type_Mode_Unbounded_Array
-           | Type_Mode_Unbounded_Record =>
+         when Type_Mode_Arrays =>
             return Arr;
-         when Type_Mode_Array =>
+         when Type_Mode_Unbounded_Record =>
             return Arr;
-         when Type_Mode_Record =>
+         when Type_Mode_Bounded_Records =>
             declare
                Kind : constant Object_Kind_Type := Get_Object_Kind (Arr);
                Box_Field : constant O_Fnode := Info.S.Box_Field (Kind);
@@ -3097,8 +3108,8 @@ package body Trans.Chap3 is
             Gen_Memcpy (M2Addr (Get_Composite_Base (D)),
                         M2Addr (Get_Composite_Base (E2M (Src, Info, Kind))),
                         Get_Object_Size (D, Obj_Type));
-         when Type_Mode_Array
-            | Type_Mode_Record =>
+         when Type_Mode_Bounded_Arrays
+            | Type_Mode_Bounded_Records =>
             D := Stabilize (Dest);
             Gen_Memcpy (M2Addr (D), Src, Get_Object_Size (D, Obj_Type));
          when Type_Mode_Unknown
@@ -3112,18 +3123,18 @@ package body Trans.Chap3 is
    is
       Type_Info : constant Type_Info_Acc := Get_Info (Atype);
    begin
-      --  The length is pre-computed for a complex type (except for unbounded
-      --  types).
-      if Is_Complex_Type (Type_Info)
-        and then Type_Info.C (Kind).Size_Var /= Null_Var
-      then
-         return New_Value (Get_Var (Type_Info.C (Kind).Size_Var));
-      end if;
-
       case Type_Info.Type_Mode is
+         when Type_Mode_Complex_Array
+           | Type_Mode_Complex_Record =>
+            --  The length is pre-computed for a complex bounded type.
+            if Type_Info.C (Kind).Size_Var /= Null_Var then
+               return New_Value (Get_Var (Type_Info.C (Kind).Size_Var));
+            else
+               raise Internal_Error;
+            end if;
          when Type_Mode_Non_Composite
-            | Type_Mode_Array
-            | Type_Mode_Record =>
+            | Type_Mode_Static_Array
+            | Type_Mode_Static_Record =>
             return New_Lit (New_Sizeof (Type_Info.Ortho_Type (Kind),
                                         Ghdl_Index_Type));
          when Type_Mode_Unbounded_Array =>
@@ -3428,14 +3439,13 @@ package body Trans.Chap3 is
                                 R_Node : Mnode;
                                 Loc    : Iir)
    is
-      L_Tinfo, R_Tinfo : Type_Info_Acc;
+      L_Tinfo : constant Type_Info_Acc := Get_Info (L_Type);
+      R_Tinfo : constant Type_Info_Acc := Get_Info (R_Type);
    begin
-      L_Tinfo := Get_Info (L_Type);
-      R_Tinfo := Get_Info (R_Type);
       --  FIXME: optimize for a statically bounded array of a complex type.
-      if L_Tinfo.Type_Mode = Type_Mode_Array
+      if L_Tinfo.Type_Mode in Type_Mode_Arrays
         and then L_Tinfo.Type_Locally_Constrained
-        and then R_Tinfo.Type_Mode = Type_Mode_Array
+        and then R_Tinfo.Type_Mode in Type_Mode_Arrays
         and then R_Tinfo.Type_Locally_Constrained
       then
          --  Both left and right are thin array.

@@ -362,13 +362,11 @@ package body Trans.Chap6 is
       Ibasetype   : Iir;
       Range_Ptr   : Mnode;
    begin
-      case Prefix_Info.Type_Mode is
-         when Type_Mode_Fat_Array =>
+      case Type_Mode_Arrays (Prefix_Info.Type_Mode) is
+         when Type_Mode_Unbounded_Array =>
             Prefix := Stabilize (Prefix_Orig);
-         when Type_Mode_Array =>
+         when Type_Mode_Bounded_Arrays =>
             Prefix := Prefix_Orig;
-         when others =>
-            raise Internal_Error;
       end case;
       Offset := Create_Temp (Ghdl_Index_Type);
       for Dim in 1 .. Nbr_Dim loop
@@ -378,14 +376,14 @@ package body Trans.Chap6 is
          Open_Temp;
          --  Compute index for the current dimension.
          case Prefix_Info.Type_Mode is
-            when Type_Mode_Fat_Array =>
+            when Type_Mode_Unbounded_Array =>
                Range_Ptr := Stabilize
                  (Chap3.Get_Array_Range (Prefix, Prefix_Type, Dim));
                R := Translate_Index_To_Offset
                  (Range_Ptr,
                   Chap7.Translate_Expression (Index, Ibasetype),
                   Null_Iir, Itype, Index);
-            when Type_Mode_Array =>
+            when Type_Mode_Bounded_Arrays =>
                if Prefix_Info.Type_Locally_Constrained then
                   R := Translate_Thin_Index_Offset (Itype, Dim, Index);
                else
@@ -505,9 +503,9 @@ package body Trans.Chap6 is
       Prefix_Info := Get_Info (Prefix_Type);
       Slice_Info := Get_Info (Slice_Type);
 
-      if Slice_Info.Type_Mode = Type_Mode_Array
+      if Slice_Info.Type_Mode = Type_Mode_Static_Array
         and then Slice_Info.Type_Locally_Constrained
-        and then Prefix_Info.Type_Mode = Type_Mode_Array
+        and then Prefix_Info.Type_Mode = Type_Mode_Static_Array
         and then Prefix_Info.Type_Locally_Constrained
       then
          Data.Is_Off := True;
@@ -699,7 +697,7 @@ package body Trans.Chap6 is
       else
          --  Create the result (fat array) and assign the bounds field.
          case Slice_Info.Type_Mode is
-            when Type_Mode_Fat_Array =>
+            when Type_Mode_Unbounded_Array =>
                Res_D := Create_Temp (Slice_Info.Ortho_Type (Kind));
                New_Assign_Stmt
                  (New_Selected_Element (New_Obj (Res_D),
@@ -713,7 +711,7 @@ package body Trans.Chap6 is
                          Slice_Type,
                          New_Obj_Value (Data.Unsigned_Diff))));
                return Dv2M (Res_D, Slice_Info, Kind);
-            when Type_Mode_Array =>
+            when Type_Mode_Bounded_Arrays =>
                return Chap3.Slice_Base
                  (Chap3.Get_Composite_Base (Prefix),
                   Slice_Type,
@@ -986,12 +984,12 @@ package body Trans.Chap6 is
       --  Alias_Var is not like an object variable, since it is
       --  always a pointer to the aliased object.
       case Type_Info.Type_Mode is
-         when Type_Mode_Fat_Array =>
+         when Type_Mode_Unbounded_Array =>
             --  Get_Var for Mnode is ok here as an unbounded object is always
             --  a pointer (and so is an alias).
             return Get_Var (Name_Info.Alias_Var (Mode), Type_Info, Mode);
-         when Type_Mode_Array
-           | Type_Mode_Record
+         when Type_Mode_Bounded_Arrays
+           | Type_Mode_Bounded_Records
            | Type_Mode_Acc
            | Type_Mode_Bounds_Acc =>
             R := Get_Var (Name_Info.Alias_Var (Mode));
@@ -1048,11 +1046,11 @@ package body Trans.Chap6 is
             begin
                pragma Assert (Mode <= Name_Info.Alias_Kind);
                case Type_Info.Type_Mode is
-                  when Type_Mode_Fat_Array =>
+                  when Type_Mode_Unbounded_Array =>
                      return Get_Var (Name_Info.Alias_Var (Mode), Type_Info,
                                      Mode);
-                  when Type_Mode_Array
-                     | Type_Mode_Record
+                  when Type_Mode_Bounded_Arrays
+                     | Type_Mode_Bounded_Records
                      | Type_Mode_Acc
                      | Type_Mode_Bounds_Acc =>
                      R := Get_Var (Name_Info.Alias_Var (Mode));

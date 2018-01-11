@@ -42,22 +42,15 @@ package body Trans.Chap4 is
    function Get_Object_Type (Tinfo : Type_Info_Acc; Kind : Object_Kind_Type)
                                 return O_Tnode is
    begin
-      if Is_Complex_Type (Tinfo) then
-         case Tinfo.Type_Mode is
-            when Type_Mode_Unbounded_Array
-              | Type_Mode_Unbounded_Record =>
-               return Tinfo.Ortho_Type (Kind);
-            when Type_Mode_Record
-               | Type_Mode_Array
-               | Type_Mode_Protected =>
-               --  For a complex type, use a pointer.
-               return Tinfo.Ortho_Ptr_Type (Kind);
-            when others =>
-               raise Internal_Error;
-         end case;
-      else
-         return Tinfo.Ortho_Type (Kind);
-      end if;
+      case Tinfo.Type_Mode is
+         when Type_Mode_Complex_Record
+           | Type_Mode_Complex_Array
+           | Type_Mode_Protected =>
+            --  For a complex type, use a pointer.
+            return Tinfo.Ortho_Ptr_Type (Kind);
+         when others =>
+            return Tinfo.Ortho_Type (Kind);
+      end case;
    end Get_Object_Type;
 
    --  Return the pointer type for Tinfo.
@@ -309,6 +302,7 @@ package body Trans.Chap4 is
       Type_Info : constant Type_Info_Acc := Get_Type_Info (Var);
       Kind      : constant Object_Kind_Type := Get_Object_Kind (Var);
       Targ      : Mnode;
+      Has_Ref   : Boolean;
    begin
       --  Cannot allocate unconstrained object (since size is unknown).
       pragma Assert (Type_Info.Type_Mode not in Type_Mode_Unbounded);
@@ -318,27 +312,33 @@ package body Trans.Chap4 is
          return;
       end if;
 
-      if Type_Info.C (Kind).Builder_Need_Func
-        and then not Is_Stable (Var)
-      then
-         Targ := Create_Temp (Type_Info, Kind);
-      else
-         Targ := Var;
-      end if;
+      Has_Ref := False;
+      Targ := Var;
 
-      --  Allocate variable.
-      New_Assign_Stmt (M2Lp (Targ),
-                       Gen_Alloc (Alloc_Kind,
-                                  Chap3.Get_Object_Size (Var, Obj_Type),
-                                  Type_Info.Ortho_Ptr_Type (Kind)));
+      if not Is_Static_Type (Type_Info) then
+         if Type_Info.C (Kind).Builder_Need_Func
+           and then not Is_Stable (Var)
+         then
+            --  Need a stable reference...
+            Targ := Create_Temp (Type_Info, Kind);
+            Has_Ref := True;
+         end if;
+
+         --  Allocate variable.
+         New_Assign_Stmt (M2Lp (Targ),
+                          Gen_Alloc (Alloc_Kind,
+                                     Chap3.Get_Object_Size (Var, Obj_Type),
+                                     Type_Info.Ortho_Ptr_Type (Kind)));
+      end if;
 
       if Type_Info.C (Kind).Builder_Need_Func then
          --  Build the type.
          Chap3.Gen_Call_Type_Builder (Targ, Obj_Type);
-         if not Is_Stable (Var) then
-            New_Assign_Stmt (M2Lp (Var), M2Addr (Targ));
-            Var := Targ;
-         end if;
+      end if;
+
+      if Has_Ref then
+         New_Assign_Stmt (M2Lp (Var), M2Addr (Targ));
+         Var := Targ;
       end if;
    end Allocate_Complex_Object;
 
@@ -367,12 +367,13 @@ package body Trans.Chap4 is
       else
          Sobj := Obj;
       end if;
-      Upper_Limit := Chap3.Get_Array_Length (Sobj, Obj_Type);
 
-      if Type_Info.Type_Mode /= Type_Mode_Array then
-         Upper_Var := Create_Temp_Init (Ghdl_Index_Type, Upper_Limit);
-      else
+      Upper_Limit := Chap3.Get_Array_Length (Sobj, Obj_Type);
+      if Type_Info.Type_Mode = Type_Mode_Static_Array then
          Upper_Var := O_Dnode_Null;
+      else
+         --  Hoist the computation of the limit before the loop.
+         Upper_Var := Create_Temp_Init (Ghdl_Index_Type, Upper_Limit);
       end if;
 
       Index := Create_Temp (Ghdl_Index_Type);
@@ -491,12 +492,11 @@ package body Trans.Chap4 is
 
       if Type_Info.Type_Mode = Type_Mode_Protected then
          --  Protected object will be created by its INIT function.
-         return;
-      end if;
-
-      if Is_Complex_Type (Type_Info)
-        and then Type_Info.Type_Mode not in Type_Mode_Unbounded
-      then
+         null;
+      elsif Is_Unbounded_Type (Type_Info) then
+         --  Allocated during initialization.
+         null;
+      elsif Is_Complex_Type (Type_Info) then
          --  FIXME: avoid allocation if the value is a string and
          --  the object is a constant
          Name_Node := Get_Var (Obj_Info.Object_Var, Type_Info, Mode_Value);
@@ -1297,7 +1297,7 @@ package body Trans.Chap4 is
       Res : Delayed_Signal_Data;
    begin
       Res.Param := Data.Param;
-      if Get_Type_Info (Targ).Type_Mode = Type_Mode_Record then
+      if Get_Type_Info (Targ).Type_Mode in Type_Mode_Bounded_Records then
          Res.Targ_Val := Stabilize (Data.Targ_Val);
          Res.Pfx := Stabilize (Data.Pfx);
       else
@@ -1530,7 +1530,8 @@ package body Trans.Chap4 is
                --  At elaboration: copy base from name, copy bounds from type,
                --   check for matching bounds.
                Atype := Get_Ortho_Type (Decl_Type, Mode);
-            when Type_Mode_Array
+            when Type_Mode_Bounded_Arrays
+              | Type_Mode_Bounded_Records
               | Type_Mode_Acc
               | Type_Mode_Bounds_Acc =>
                --  Create an object pointer.
@@ -1543,10 +1544,6 @@ package body Trans.Chap4 is
                   when Mode_Value =>
                      Atype := Tinfo.Ortho_Ptr_Type (Mode_Value);
                end case;
-            when Type_Mode_Record =>
-               --  Create an object pointer.
-               --  At elaboration: copy base from name.
-               Atype := Tinfo.Ortho_Ptr_Type (Mode);
             when others =>
                raise Internal_Error;
          end case;
@@ -1594,7 +1591,7 @@ package body Trans.Chap4 is
                   Stabilize (N);
                   Alias_Node := Stabilize (Get_Var (A, Tinfo, Mode));
                   Copy_Fat_Pointer (Alias_Node, N);
-               when Type_Mode_Array =>
+               when Type_Mode_Bounded_Arrays =>
                   Stabilize (N);
                   New_Assign_Stmt (Get_Var (A),
                                    M2E (Chap3.Get_Composite_Base (N)));
@@ -1610,7 +1607,7 @@ package body Trans.Chap4 is
                      when Mode_Signal =>
                         New_Assign_Stmt (Get_Var (A), M2E (N));
                   end case;
-               when Type_Mode_Record =>
+               when Type_Mode_Bounded_Records =>
                   Stabilize (N);
                   New_Assign_Stmt (Get_Var (A), M2Addr (N));
                when others =>

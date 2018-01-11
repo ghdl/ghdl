@@ -1154,21 +1154,20 @@ package body Trans is
             else
                return Lv2M (L, Vtype, Mode);
             end if;
-         when Type_Mode_Array
-            | Type_Mode_Record
+         when Type_Mode_Complex_Array
+            | Type_Mode_Complex_Record
             | Type_Mode_Protected =>
-            if Is_Complex_Type (Vtype) then
-               if Stable then
-                  return Dp2M (D, Vtype, Mode);
-               else
-                  return Lp2M (L, Vtype, Mode);
-               end if;
+            if Stable then
+               return Dp2M (D, Vtype, Mode);
             else
-               if Stable then
-                  return Dv2M (D, Vtype, Mode);
-               else
-                  return Lv2M (L, Vtype, Mode);
-               end if;
+               return Lp2M (L, Vtype, Mode);
+            end if;
+         when Type_Mode_Static_Array
+            | Type_Mode_Static_Record =>
+            if Stable then
+               return Dv2M (D, Vtype, Mode);
+            else
+               return Lv2M (L, Vtype, Mode);
             end if;
          when Type_Mode_Unknown =>
             raise Internal_Error;
@@ -1425,6 +1424,25 @@ package body Trans is
    begin
       return Tinfo.C /= null;
    end Is_Complex_Type;
+
+   function Is_Static_Type (Tinfo : Type_Info_Acc) return Boolean is
+   begin
+      case Tinfo.Type_Mode is
+         when Type_Mode_Non_Composite =>
+            return True;
+         when Type_Mode_Static_Record
+           | Type_Mode_Static_Array =>
+            return True;
+         when Type_Mode_Complex_Record
+           | Type_Mode_Complex_Array
+           | Type_Mode_Unbounded_Record
+           | Type_Mode_Unbounded_Array
+           | Type_Mode_Protected =>
+            return False;
+         when Type_Mode_Unknown =>
+            return False;
+      end case;
+   end Is_Static_Type;
 
    function Is_Unbounded_Type (Tinfo : Type_Info_Acc) return Boolean is
    begin
@@ -1807,14 +1825,13 @@ package body Trans is
            | Type_Mode_Unbounded_Record
            | Type_Mode_Bounds_Acc =>
             return Lv2M (L, Vtype, Mode);
-         when Type_Mode_Array
-           | Type_Mode_Record
+         when Type_Mode_Complex_Array
+           | Type_Mode_Complex_Record
            | Type_Mode_Protected =>
-            if Is_Complex_Type (Vtype) then
-               return Lp2M (L, Vtype, Mode);
-            else
-               return Lv2M (L, Vtype, Mode);
-            end if;
+            return Lp2M (L, Vtype, Mode);
+         when Type_Mode_Static_Array
+           | Type_Mode_Static_Record =>
+            return Lv2M (L, Vtype, Mode);
          when Type_Mode_Unknown =>
             raise Internal_Error;
       end case;
@@ -1831,14 +1848,13 @@ package body Trans is
            | Type_Mode_Unbounded_Record
            | Type_Mode_Bounds_Acc =>
             return Dv2M (D, Vtype, Mode);
-         when Type_Mode_Array
-           | Type_Mode_Record
+         when Type_Mode_Complex_Array
+           | Type_Mode_Complex_Record
            | Type_Mode_Protected =>
-            if Is_Complex_Type (Vtype) then
-               return Dp2M (D, Vtype, Mode);
-            else
-               return Dv2M (D, Vtype, Mode);
-            end if;
+            return Dp2M (D, Vtype, Mode);
+         when Type_Mode_Static_Array
+           | Type_Mode_Static_Record =>
+            return Dv2M (D, Vtype, Mode);
          when Type_Mode_Unknown =>
             raise Internal_Error;
       end case;

@@ -917,18 +917,27 @@ package Trans is
       --  Thin access.
       Type_Mode_Acc,
 
-      --  Access to an unbounded type.
+      --  Access to an unbounded type (this is a thin pointer to bounds
+      --  followed by values).
       Type_Mode_Bounds_Acc,
 
-      --  Record.
-      Type_Mode_Record,
+      --  Record whose size is known at compile-time.  Can be a boxed record
+      --  if the base type is unbounded.
+      Type_Mode_Static_Record,
+      --  Constrained record, but size is not known at compile time.  Can be
+      --  a boxed record if the base type is unbounded.
+      Type_Mode_Complex_Record,
       --  Record with unbounded component(s).
       Type_Mode_Unbounded_Record,
+
       --  Unbounded array type (used for unconstrained arrays).
       Type_Mode_Unbounded_Array,
-      --  Constrained array type (for constrained arrays).
-      Type_Mode_Array,
-      --  Protected type
+      --  Constrainted array type, with size known at compile-time.
+      Type_Mode_Static_Array,
+      --  Constrained array type (for constrained arrays), but size is
+      --  not known at compile time.
+      Type_Mode_Complex_Array,
+      --  Protected type (always handled as a complex type).
       Type_Mode_Protected);
 
    --  For backward source compatibility, to be removed (TODO).
@@ -942,26 +951,33 @@ package Trans is
 
    --  Composite types, with the vhdl meaning: record and arrays.
    subtype Type_Mode_Composite is Type_Mode_Type range
-     Type_Mode_Record .. Type_Mode_Protected;
+     Type_Mode_Static_Record .. Type_Mode_Protected;
 
    subtype Type_Mode_Non_Composite is Type_Mode_Type range
      Type_Mode_B1 .. Type_Mode_Bounds_Acc;
 
    --  Array types.
    subtype Type_Mode_Arrays is Type_Mode_Type range
-     Type_Mode_Unbounded_Array .. Type_Mode_Array;
+     Type_Mode_Unbounded_Array .. Type_Mode_Complex_Array;
+
+   subtype Type_Mode_Bounded_Arrays is Type_Mode_Type range
+     Type_Mode_Static_Array .. Type_Mode_Complex_Array;
 
    --  Record types.
    subtype Type_Mode_Records is Type_Mode_Type range
-     Type_Mode_Record .. Type_Mode_Unbounded_Record;
+     Type_Mode_Static_Record .. Type_Mode_Unbounded_Record;
+
+   subtype Type_Mode_Bounded_Records is Type_Mode_Type range
+     Type_Mode_Static_Record .. Type_Mode_Complex_Record;
 
    --  Thin types, ie types whose length is a scalar.
    subtype Type_Mode_Thin is Type_Mode_Type range
      Type_Mode_B1 .. Type_Mode_Bounds_Acc;
 
-   --  Fat types, ie types whose length is longer than a scalar.
-   subtype Type_Mode_Fat is Type_Mode_Type range
-     Type_Mode_Record .. Type_Mode_Protected;
+   --  Aggregate types, ie types whose length is longer than a scalar.
+   subtype Type_Mode_Aggregate is Type_Mode_Type range
+     Type_Mode_Static_Record .. Type_Mode_Protected;
+   subtype Type_Mode_Fat is Type_Mode_Aggregate;
 
    subtype Type_Mode_Unbounded is Type_Mode_Type range
      Type_Mode_Unbounded_Record .. Type_Mode_Unbounded_Array;
@@ -999,13 +1015,11 @@ package Trans is
 
    --  These parameters are passed by copy, ie the argument of the subprogram
    --  is the value of the object.
-   subtype Type_Mode_Pass_By_Copy is Type_Mode_Type range
-     Type_Mode_B1 .. Type_Mode_Bounds_Acc;
+   subtype Type_Mode_Pass_By_Copy is Type_Mode_Thin;
 
    --  The parameters are passed by address, ie the argument of the
    --  subprogram is an address to the object.
-   subtype Type_Mode_Pass_By_Address is Type_Mode_Type range
-     Type_Mode_Record .. Type_Mode_Protected;
+   subtype Type_Mode_Pass_By_Address is Type_Mode_Aggregate;
 
    --  Call conventions.
    subtype Type_Mode_Call_By_Value is Type_Mode_Non_Composite;
@@ -1666,8 +1680,12 @@ package Trans is
    function Is_Composite (Info : Type_Info_Acc) return Boolean;
    pragma Inline (Is_Composite);
 
+   --  Type needs to be built.
    function Is_Complex_Type (Tinfo : Type_Info_Acc) return Boolean;
    pragma Inline (Is_Complex_Type);
+
+   --  Type size is known at compile-time.
+   function Is_Static_Type (Tinfo : Type_Info_Acc) return Boolean;
 
    --  True iff TINFO is base + bounds.
    function Is_Unbounded_Type (Tinfo : Type_Info_Acc) return Boolean;

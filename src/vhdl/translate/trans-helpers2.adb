@@ -237,11 +237,9 @@ package body Trans.Helpers2 is
       Type_Info := Get_Info (Targ_Type);
       Res := E2M (Val, Type_Info, Mode_Value);
       case Type_Info.Type_Mode is
-         when Type_Mode_Array
-            | Type_Mode_Unbounded_Array =>
+         when Type_Mode_Arrays =>
             Res := Chap3.Get_Composite_Base (Res);
-         when Type_Mode_Record
-           | Type_Mode_Unbounded_Record =>
+         when Type_Mode_Records =>
             Res := Stabilize (Res);
          when others =>
             --  Not a composite type!

@@ -396,7 +396,7 @@ package body Trans.Chap7 is
          Val := Create_Global_Const
            (Create_Uniq_Identifier, Type_Info.Ortho_Type (Mode_Value),
             O_Storage_Private, Res);
-      elsif Type_Info.Type_Mode = Type_Mode_Array then
+      elsif Type_Info.Type_Mode in Type_Mode_Bounded_Arrays then
          --  Type of string literal isn't statically known; check the
          --  length.
          Chap6.Check_Bound_Error
@@ -904,17 +904,14 @@ package body Trans.Chap7 is
                when Type_Mode_Unbounded_Array =>
                   --  unconstrained to unconstrained.
                   return Expr;
-               when Type_Mode_Array =>
+               when Type_Mode_Bounded_Arrays =>
                   --  constrained to unconstrained.
                   return Convert_Constrained_To_Unconstrained (Expr, Res_Type);
                when others =>
                   raise Internal_Error;
             end case;
-         when Type_Mode_Array =>
-            --  X to constrained.
-            if Einfo.Type_Locally_Constrained
-              and then Ainfo.Type_Locally_Constrained
-            then
+         when Type_Mode_Static_Array =>
+            if Einfo.Type_Mode = Type_Mode_Static_Array then
                --  FIXME: optimize static vs non-static
                --  constrained to constrained.
                if not Chap3.Locally_Array_Match (Expr_Type, Res_Type) then
@@ -926,9 +923,10 @@ package body Trans.Chap7 is
                return Expr;
             else
                --  Unbounded/bounded array to bounded array.
-               return Convert_To_Constrained
-                 (Expr, Expr_Type, Res_Type, Loc);
+               return Convert_To_Constrained (Expr, Expr_Type, Res_Type, Loc);
             end if;
+         when Type_Mode_Complex_Array =>
+            return Convert_To_Constrained (Expr, Expr_Type, Res_Type, Loc);
          when others =>
             raise Internal_Error;
       end case;
@@ -953,22 +951,22 @@ package body Trans.Chap7 is
                when Type_Mode_Unbounded_Record =>
                   --  unbounded to unbounded
                   return Expr;
-               when Type_Mode_Record =>
+               when Type_Mode_Bounded_Records =>
                   --  bounded to unconstrained.
                   return Convert_Constrained_To_Unconstrained (Expr, Res_Type);
                when others =>
                   raise Internal_Error;
             end case;
-         when Type_Mode_Record =>
+         when Type_Mode_Bounded_Records =>
             --  X to bounded
             case Einfo.Type_Mode is
                when Type_Mode_Unbounded_Record =>
                   --  unbounded to bounded.
                   return Convert_To_Constrained
                     (Expr, Expr_Type, Res_Type, Loc);
-               when Type_Mode_Record =>
+               when Type_Mode_Bounded_Records =>
                   --  bounded to bounded.
-                  --  TODO: likewise ?
+                  --  TODO: likewise ? check bounds ?
                   return Expr;
                when others =>
                   raise Internal_Error;
@@ -2756,11 +2754,11 @@ package body Trans.Chap7 is
                Chap3.Translate_Object_Copy
                  (T, New_Obj_Value (E), Target_Type);
             end;
-         when Type_Mode_Array =>
+         when Type_Mode_Bounded_Arrays =>
             --  Source is of type TARGET_TYPE, so no length check is
             --  necessary.
             Chap3.Translate_Object_Copy (Target, Val, Target_Type);
-         when Type_Mode_Record =>
+         when Type_Mode_Bounded_Records =>
             Chap3.Translate_Object_Copy (Target, Val, Target_Type);
          when Type_Mode_Unbounded_Record =>
             --  TODO
@@ -2842,11 +2840,11 @@ package body Trans.Chap7 is
 
       Info := Get_Info (Target_Type);
       case Info.Type_Mode is
-         when Type_Mode_Fat_Array =>
+         when Type_Mode_Unbounded_Array =>
             Arr_Var := Stabilize (Target);
             Base_Ptr := Stabilize (Chap3.Get_Composite_Base (Arr_Var));
             Len_Val := Chap3.Get_Array_Length (Arr_Var, Target_Type);
-         when Type_Mode_Array =>
+         when Type_Mode_Bounded_Arrays =>
             Base_Ptr := Stabilize (Chap3.Get_Composite_Base (Target));
             Len_Val := Chap3.Get_Array_Type_Length (Target_Type);
          when others =>
@@ -3576,7 +3574,7 @@ package body Trans.Chap7 is
    begin
       E := Stabilize (E2M (Expr, Expr_Info, Mode_Value));
       case Res_Info.Type_Mode is
-         when Type_Mode_Array =>
+         when Type_Mode_Bounded_Arrays =>
             Chap3.Check_Array_Match
               (Res_Type, T2M (Res_Type, Mode_Value),
                Expr_Type, E,
@@ -3584,7 +3582,7 @@ package body Trans.Chap7 is
             return New_Convert_Ov
               (M2Addr (Chap3.Get_Composite_Base (E)),
                Res_Info.Ortho_Ptr_Type (Mode_Value));
-         when Type_Mode_Fat_Array =>
+         when Type_Mode_Unbounded_Array =>
             declare
                Res : Mnode;
             begin
@@ -4643,8 +4641,7 @@ package body Trans.Chap7 is
             return New_Compare_Op (ON_Eq, M2E (L), M2E (R),
                                    Ghdl_Bool_Type);
 
-         when Type_Mode_Array
-           | Type_Mode_Unbounded_Array =>
+         when Type_Mode_Arrays =>
             declare
                Base_Type : constant Iir_Array_Type_Definition
                  := Get_Base_Type (Etype);
@@ -4660,8 +4657,7 @@ package body Trans.Chap7 is
                return Translate_Predefined_Lib_Operator (Lc, Rc, Func);
             end;
 
-         when Type_Mode_Record
-           | Type_Mode_Unbounded_Record =>
+         when Type_Mode_Records =>
             declare
                Func : Iir;
             begin
@@ -5522,7 +5518,7 @@ package body Trans.Chap7 is
                     Ghdl_Index_Type)));
                --    call a predefined procedure
                New_Procedure_Call (Assocs);
-            when Type_Mode_Record =>
+            when Type_Mode_Bounded_Records =>
                declare
                   El_List : constant Iir_Flist :=
                     Get_Elements_Declaration_List (Get_Base_Type (Val_Type));
@@ -5539,7 +5535,7 @@ package body Trans.Chap7 is
                   end loop;
                   Close_Temp;
                end;
-            when Type_Mode_Array =>
+            when Type_Mode_Bounded_Arrays =>
                declare
                   Var_Max : O_Dnode;
                begin
