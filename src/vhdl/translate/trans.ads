@@ -265,7 +265,8 @@ package Trans is
       procedure Push_Instance_Factory (Scope : Var_Scope_Acc);
 
       --  Likewise but for a frame.
-      procedure Push_Frame_Factory (Scope : Var_Scope_Acc);
+      procedure Push_Frame_Factory (Scope : Var_Scope_Acc;
+                                    Persistant : Boolean);
 
       --  Manually add a field to the current instance being built.
       function Add_Instance_Factory_Field (Name : O_Ident; Ftype : O_Tnode)
@@ -482,7 +483,29 @@ package Trans is
       --  are translated into functions.  The first argument of these functions
       --  is a pointer to the instance.
 
-      type Inst_Build_Kind_Type is (Local, Global, Frame, Instance);
+      type Inst_Build_Kind_Type is
+        (
+         --  Variables are declared locally.
+         Local,
+
+         --  Variables are global.
+         Global,
+
+         --  A record frame is created, whose lifetime is the lifetime of the
+         --  subprogram.  Variables become fields of the record frame, and
+         --  dynamic memory is allocated from the stack.
+         Stack_Frame,
+
+         --  A record frame is created, whose lifetime is longer than the
+         --  lifetime of the subprogram (for subprogram with suspension).
+         --  Variables become fields, and dynamic memory is allocated from the
+         --  secondary stack.
+         Persistant_Frame,
+
+         --  An instance record is created, which is never free.  Dynamic
+         --  memory is allocated from the heap.
+         Instance);
+
       type Inst_Build_Type (Kind : Inst_Build_Kind_Type);
       type Inst_Build_Acc is access Inst_Build_Type;
       type Inst_Build_Type (Kind : Inst_Build_Kind_Type) is record
@@ -494,7 +517,7 @@ package Trans is
                Prev_Global_Storage : O_Storage;
             when Global =>
                null;
-            when Instance | Frame =>
+            when Instance | Stack_Frame | Persistant_Frame =>
                Scope               : Var_Scope_Acc;
                Elements            : O_Element_List;
          end case;

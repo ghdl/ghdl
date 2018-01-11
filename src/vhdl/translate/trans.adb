@@ -244,6 +244,9 @@ package body Trans is
       --  Common routine for instance and frame.
       procedure Start_Instance_Factory (Inst : Inst_Build_Acc) is
       begin
+         Inst.Prev := Inst_Build;
+         Inst.Prev_Id_Start := Identifier_Start;
+
          Identifier_Start := Identifier_Len + 1;
 
          if Inst.Scope.Scope_Type /= O_Tnode_Null then
@@ -260,20 +263,21 @@ package body Trans is
          Inst : Inst_Build_Acc;
       begin
          Inst := new Inst_Build_Type (Instance);
-         Inst.Prev := Inst_Build;
-         Inst.Prev_Id_Start := Identifier_Start;
          Inst.Scope := Scope;
 
          Start_Instance_Factory (Inst);
       end Push_Instance_Factory;
 
-      procedure Push_Frame_Factory (Scope : Var_Scope_Acc)
+      procedure Push_Frame_Factory (Scope : Var_Scope_Acc;
+                                    Persistant : Boolean)
       is
          Inst : Inst_Build_Acc;
       begin
-         Inst := new Inst_Build_Type (Frame);
-         Inst.Prev := Inst_Build;
-         Inst.Prev_Id_Start := Identifier_Start;
+         if Persistant then
+            Inst := new Inst_Build_Type (Persistant_Frame);
+         else
+            Inst := new Inst_Build_Type (Stack_Frame);
+         end if;
          Inst.Scope := Scope;
 
          Start_Instance_Factory (Inst);
@@ -324,7 +328,7 @@ package body Trans is
       procedure Pop_Frame_Factory (Scope : in Var_Scope_Acc) is
       begin
          --  Not matching.
-         pragma Assert (Inst_Build.Kind = Frame);
+         pragma Assert (Inst_Build.Kind in Stack_Frame .. Persistant_Frame);
 
          Finish_Instance_Factory (Scope);
       end Pop_Frame_Factory;
@@ -367,7 +371,8 @@ package body Trans is
          case Inst_Build.Kind is
             when Local
               | Instance
-              | Frame =>
+              | Stack_Frame
+              | Persistant_Frame =>
                return True;
             when Global =>
                return False;
@@ -528,7 +533,7 @@ package body Trans is
                --  Create a var.
                New_Var_Decl (Res, Name.Id, O_Storage_Local, Vtype);
                return Var_Type'(Kind => Var_Local, E => Res);
-            when Instance | Frame =>
+            when Instance | Stack_Frame | Persistant_Frame =>
                --  Create a field.
                New_Record_Field (Inst_Build.Elements, Field, Name.Id, Vtype);
                return Var_Type'(Kind => Var_Scope, I_Build_Kind => K,
@@ -628,7 +633,9 @@ package body Trans is
                return Alloc_System;
             when Var_Scope =>
                case Var.I_Build_Kind is
-                  when Frame =>
+                  when Stack_Frame =>
+                     return Alloc_Stack;
+                  when Persistant_Frame =>
                      return Alloc_Return;
                   when Instance =>
                      return Alloc_System;

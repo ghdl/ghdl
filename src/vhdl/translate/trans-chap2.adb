@@ -456,7 +456,7 @@ package body Trans.Chap2 is
       if Has_Nested or else Has_Suspend then
          --  Unnest subprograms.
          --  Create an instance for the local declarations.
-         Push_Frame_Factory (Info.Subprg_Frame_Scope'Access);
+         Push_Frame_Factory (Info.Subprg_Frame_Scope'Access, Has_Suspend);
          Add_Subprg_Instance_Field (Upframe_Field, Upframe_Scope);
 
          if Info.Subprg_Params_Ptr /= O_Tnode_Null then
