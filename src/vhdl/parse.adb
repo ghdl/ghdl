@@ -8513,6 +8513,34 @@ package body Parse is
 
    --  precond : next token
    --  postcond: next token
+   function Parse_Entity_Aspect_Entity return Iir
+   is
+      Res : Iir;
+   begin
+      Res := Create_Iir (Iir_Kind_Entity_Aspect_Entity);
+      Set_Location (Res);
+
+      if Current_Token = Tok_Entity then
+         --  Eat 'entity' (but only if present).
+         Scan;
+      end if;
+
+      Expect (Tok_Identifier);
+      Set_Entity_Name (Res, Parse_Name (False));
+
+      --  Optional architecture
+      if Current_Token = Tok_Left_Paren then
+         Scan_Expect (Tok_Identifier);
+         Set_Architecture (Res, Current_Text);
+         Scan_Expect (Tok_Right_Paren);
+         Scan;
+      end if;
+
+      return Res;
+   end Parse_Entity_Aspect_Entity;
+
+   --  precond : next token
+   --  postcond: next token
    --
    --  [ LRM93 5.2.1.1 ]
    --  entity_aspect ::= ENTITY ENTITY_name [ ( ARCHITECTURE_identifier ) ]
@@ -8524,16 +8552,7 @@ package body Parse is
    begin
       case Current_Token is
          when Tok_Entity =>
-            Res := Create_Iir (Iir_Kind_Entity_Aspect_Entity);
-            Set_Location (Res);
-            Scan_Expect (Tok_Identifier);
-            Set_Entity_Name (Res, Parse_Name (False));
-            if Current_Token = Tok_Left_Paren then
-               Scan_Expect (Tok_Identifier);
-               Set_Architecture (Res, Current_Text);
-               Scan_Expect (Tok_Right_Paren);
-               Scan;
-            end if;
+            Res := Parse_Entity_Aspect_Entity;
          when Tok_Configuration =>
             Res := Create_Iir (Iir_Kind_Entity_Aspect_Configuration);
             Set_Location (Res);
@@ -8544,10 +8563,9 @@ package body Parse is
             Set_Location (Res);
             Scan;
          when others =>
-            --  FIXME: if the token is an identifier, try as if the 'entity'
-            --  keyword is missing.
-            Error_Msg_Parse
-              ("'entity', 'configuration' or 'open' keyword expected");
+            Error_Msg_Parse ("'entity', 'configuration' or 'open' expected");
+            --  Assume 'entity' is missing (common case).
+            Res := Parse_Entity_Aspect_Entity;
       end case;
       return Res;
    end Parse_Entity_Aspect;
