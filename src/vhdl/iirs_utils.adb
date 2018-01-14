@@ -1051,6 +1051,7 @@ package body Iirs_Utils is
       if Ind /= Null_Iir
         and then Get_Kind (Ind) in Iir_Kinds_Denoting_Name
       then
+         --  A resolution indication can be an array/record element resolution.
          return Get_Named_Entity (Ind);
       else
          return Null_Iir;
