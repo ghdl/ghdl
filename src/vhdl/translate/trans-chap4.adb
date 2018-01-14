@@ -1695,6 +1695,7 @@ package body Trans.Chap4 is
          when Iir_Kind_Component_Declaration =>
             Chap4.Translate_Component_Declaration (Decl);
          when Iir_Kind_Type_Declaration =>
+            --  A type declaration can be in fact a subtype declaration.
             Chap4.Translate_Type_Declaration (Decl);
          when Iir_Kind_Anonymous_Type_Declaration =>
             Chap4.Translate_Anonymous_Type_Declaration (Decl);

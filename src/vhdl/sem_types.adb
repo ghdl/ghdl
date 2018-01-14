@@ -48,6 +48,15 @@ package body Sem_Types is
       --  Maybe the type is resolved through its elements.
       if Func /= Null_Iir then
          Set_Resolution_Function_Flag (Func, True);
+
+         --  For internal reasons of translation, the element subtype has
+         --  to be translated for signals.
+         --  FIXME: maybe move the whole Has_Signal flag generation in
+         --  translation, as this is needed only for translation.
+         --  FIXME: how to deal with incorrect function ?  Use an Error node ?
+         Set_Type_Has_Signal
+           (Get_Element_Subtype
+              (Get_Type (Get_Interface_Declaration_Chain (Func))));
       end if;
    end Mark_Resolution_Function;
 

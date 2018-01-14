@@ -894,6 +894,9 @@ package body Trans.Chap3 is
       Len : Iir_Int64;
 
       Id : O_Ident;
+      El_Constrained : Boolean;
+      El_Tinfo : Type_Info_Acc;
+      Base : O_Tnode;
    begin
       --  Note: info of indexes subtype are not created!
 
@@ -919,15 +922,42 @@ package body Trans.Chap3 is
 
          --  Type is bounded, but not statically.
          Create_Size_Var (Def, Info);
-      elsif Get_Array_Element_Constraint (Def) /= Null_Iir then
-         --  Length is known, element is static.
-         raise Internal_Error;
       else
          --  Length is known.  Create a constrained array.
+         El_Constrained := Get_Array_Element_Constraint (Def) /= Null_Iir;
+         if El_Constrained then
+            El_Tinfo := Get_Info (Get_Element_Subtype (Def));
+         end if;
          Info.Type_Mode := Type_Mode_Static_Array;
          Info.Ortho_Type (Mode_Signal) := O_Tnode_Null;
-         Info.Ortho_Ptr_Type := Binfo.B.Base_Ptr_Type;
+         Info.Ortho_Ptr_Type (Mode_Signal) := O_Tnode_Null;
          for I in Mode_Value .. Type_To_Last_Object_Kind (Def) loop
+            if El_Constrained then
+               --  Element has been constrained by this subtype, so create the
+               --  base array (and the pointer).
+               case I is
+                  when Mode_Value =>
+                     Id := Create_Identifier ("BARR");
+                  when Mode_Signal =>
+                     Id := Create_Identifier ("BARRSIG");
+               end case;
+               Base := New_Array_Type
+                 (El_Tinfo.Ortho_Type (I), Ghdl_Index_Type);
+               New_Type_Decl (Id, Base);
+
+               case I is
+                  when Mode_Value =>
+                     Id := Create_Identifier ("BARRPTR");
+                  when Mode_Signal =>
+                     Id := Create_Identifier ("BARRSIGPTR");
+               end case;
+               Info.Ortho_Ptr_Type (I) := New_Access_Type (Base);
+               New_Type_Decl (Id, Info.Ortho_Ptr_Type (I));
+            else
+               Base := Binfo.B.Base_Type (I);
+               Info.Ortho_Ptr_Type (I) := Binfo.B.Base_Ptr_Type (I);
+            end if;
+
             case I is
                when Mode_Value =>
                   Id := Create_Identifier;
@@ -935,7 +965,7 @@ package body Trans.Chap3 is
                   Id := Create_Identifier ("SIG");
             end case;
             Info.Ortho_Type (I) := New_Constrained_Array_Type
-              (Binfo.B.Base_Type (I), New_Index_Lit (Unsigned_64 (Len)));
+              (Base, New_Index_Lit (Unsigned_64 (Len)));
             New_Type_Decl (Id, Info.Ortho_Type (I));
          end loop;
       end if;
