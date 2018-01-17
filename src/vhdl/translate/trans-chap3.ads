@@ -57,6 +57,8 @@ package Trans.Chap3 is
    procedure Translate_Protected_Type_Body_Subprograms_Spec (Bod : Iir);
    procedure Translate_Protected_Type_Body_Subprograms_Body (Bod : Iir);
 
+   --  DEF derives (using the Ada meaning) of PARENT_TYPE, ie DEF has new
+   --  constraints on PARENT_TYPE.
    procedure Translate_Subtype_Definition
      (Def : Iir; Parent_Type : Iir; With_Vars : Boolean := True);
 

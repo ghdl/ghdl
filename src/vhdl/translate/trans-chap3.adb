@@ -2403,8 +2403,7 @@ package body Trans.Chap3 is
      (Def : Iir; Parent_Type : Iir; With_Vars : Boolean := True)
    is
       Info          : Ortho_Info_Acc;
-      Base_Info     : Type_Info_Acc;
-      Base_Type     : Iir;
+      Parent_Info   : Type_Info_Acc;
       Complete_Info : Incomplete_Type_Info_Acc;
    begin
       --  If the definition is already translated, return now.
@@ -2426,9 +2425,6 @@ package body Trans.Chap3 is
       end if;
 
       Info := Add_Info (Def, Kind_Type);
-
-      Base_Type := Get_Base_Type (Def);
-      Base_Info := Get_Info (Base_Type);
 
       case Get_Kind (Def) is
          when Iir_Kinds_Scalar_Subtype_Definition =>
@@ -2452,23 +2448,11 @@ package body Trans.Chap3 is
                end if;
             end;
 
-            if Base_Info = null or else Base_Info.Type_Incomplete then
-               --  This subtype also declare the base type.  Create it.
-               declare
-                  Mark : Id_Mark_Type;
-               begin
-                  Push_Identifier_Prefix (Mark, "BT");
-                  Translate_Type_Definition (Base_Type);
-                  Pop_Identifier_Prefix (Mark);
-                  Base_Info := Get_Info (Base_Type);
-               end;
-               raise Internal_Error;
-            end if;
-
+            Parent_Info := Get_Info (Parent_Type);
             if Get_Constraint_State (Def) = Fully_Constrained then
                Translate_Array_Subtype_Definition (Def);
-               Info.B := Base_Info.B;
-               Info.S := Base_Info.S;
+               Info.B := Parent_Info.B;
+               Info.S := Parent_Info.S;
                if With_Vars then
                   Create_Composite_Subtype_Bounds_Var (Def, False);
                end if;
@@ -2476,7 +2460,7 @@ package body Trans.Chap3 is
                --  An unconstrained array subtype.  Use same infos as base
                --  type.
                Free_Info (Def);
-               Set_Info (Def, Base_Info);
+               Set_Info (Def, Parent_Info);
             end if;
 
          when Iir_Kind_Record_Subtype_Definition =>
@@ -2485,7 +2469,7 @@ package body Trans.Chap3 is
          when Iir_Kind_Access_Subtype_Definition =>
             --  Like the access type.
             Free_Info (Def);
-            Set_Info (Def, Base_Info);
+            Set_Info (Def, Get_Info (Parent_Type));
 
          when others =>
             Error_Kind ("translate_subtype_definition", Def);
