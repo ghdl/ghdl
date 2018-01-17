@@ -1153,7 +1153,7 @@ package body Trans.Chap3 is
          El_Type := Get_Type (El);
          if Get_Info (El_Type) = null then
             Push_Identifier_Prefix (Mark, Get_Identifier (El));
-            Translate_Type_Definition (El_Type);
+            Translate_Subtype_Indication (El_Type, True);
             Pop_Identifier_Prefix (Mark);
          end if;
          Need_Size := Need_Size or else Is_Complex_Type (Get_Info (El_Type));
@@ -1257,7 +1257,7 @@ package body Trans.Chap3 is
                   Has_Boxed_Elements := True;
                end if;
                Push_Identifier_Prefix (Mark, Get_Identifier (El));
-               Translate_Type_Definition (El_Type);
+               Translate_Subtype_Definition (El_Type, El_Btype, With_Vars);
                Pop_Identifier_Prefix (Mark);
             end if;
          end if;
@@ -2279,17 +2279,15 @@ package body Trans.Chap3 is
    begin
       if Get_Info (El_Type) = null then
          Push_Identifier_Prefix (Mark, "ET");
-         Translate_Type_Definition (El_Type);
+         Translate_Subtype_Indication (El_Type, True);
          Pop_Identifier_Prefix (Mark);
       end if;
    end Translate_Array_Element_Definition;
 
    --  Note: boolean types are translated by translate_bool_type_definition!
-   procedure Translate_Type_Definition (Def : Iir; With_Vars : Boolean := True)
+   procedure Translate_Type_Definition (Def : Iir)
    is
       Info          : Ortho_Info_Acc;
-      Base_Info     : Type_Info_Acc;
-      Base_Type     : Iir;
       Complete_Info : Incomplete_Type_Info_Acc;
    begin
       --  Handle the special case of incomplete type.
@@ -2318,9 +2316,6 @@ package body Trans.Chap3 is
 
       Info := Add_Info (Def, Kind_Type);
 
-      Base_Type := Get_Base_Type (Def);
-      Base_Info := Get_Info (Base_Type);
-
       case Get_Kind (Def) is
          when Iir_Kind_Enumeration_Type_Definition =>
             Translate_Enumeration_Type (Def);
@@ -2334,7 +2329,7 @@ package body Trans.Chap3 is
          when Iir_Kind_Physical_Type_Definition =>
             Translate_Physical_Type (Def);
             Create_Scalar_Type_Range_Type (Def, False);
-            if With_Vars and Get_Type_Staticness (Def) /= Locally then
+            if Get_Type_Staticness (Def) /= Locally then
                Translate_Physical_Units (Def);
             else
                Info.S.Range_Var := Null_Var;
@@ -2344,71 +2339,24 @@ package body Trans.Chap3 is
             Translate_Floating_Type (Def);
             Create_Scalar_Type_Range_Type (Def, False);
 
-         when Iir_Kinds_Scalar_Subtype_Definition =>
-            declare
-               Tm : constant Iir := Get_Denoted_Type_Mark (Def);
-            begin
-               if Is_Valid (Tm) then
-                  Create_Subtype_Info_From_Type (Def, Tm, Info);
-               else
-                  Create_Subtype_Info_From_Type (Def, Base_Type, Info);
-               end if;
-               if With_Vars and then not Info.S.Same_Range then
-                  Create_Type_Range_Var (Def);
-               end if;
-            end;
-
          when Iir_Kind_Array_Type_Definition =>
             Translate_Array_Element_Definition (Def);
             Translate_Array_Type_Definition (Def);
-
-         when Iir_Kind_Array_Subtype_Definition =>
-            Translate_Array_Element_Definition (Def);
-            if Base_Info = null or else Base_Info.Type_Incomplete then
-               --  This subtype also declare the base type.  Create it.
-               declare
-                  Mark : Id_Mark_Type;
-               begin
-                  Push_Identifier_Prefix (Mark, "BT");
-                  Translate_Type_Definition (Base_Type);
-                  Pop_Identifier_Prefix (Mark);
-                  Base_Info := Get_Info (Base_Type);
-               end;
-            end if;
-
-            if Get_Constraint_State (Def) = Fully_Constrained then
-               Translate_Array_Subtype_Definition (Def);
-               Info.B := Base_Info.B;
-               Info.S := Base_Info.S;
-               if With_Vars then
-                  Create_Composite_Subtype_Bounds_Var (Def, False);
-               end if;
-            else
-               --  An unconstrained array subtype.  Use same infos as base
-               --  type.
-               Free_Info (Def);
-               Set_Info (Def, Base_Info);
-            end if;
 
          when Iir_Kind_Record_Type_Definition =>
             Info.B := Ortho_Info_Basetype_Record_Init;
             Translate_Record_Type (Def);
 
-         when Iir_Kind_Record_Subtype_Definition =>
-            Translate_Record_Subtype (Def, With_Vars);
-
-         when Iir_Kind_Access_Subtype_Definition =>
-            --  Like the access type.
-            Free_Info (Def);
-            Set_Info (Def, Base_Info);
-
          when Iir_Kind_Access_Type_Definition =>
             declare
                Dtype : constant Iir := Get_Designated_Type (Def);
+               Mark : Id_Mark_Type;
             begin
                --  Translate the subtype
                if Is_Anonymous_Type_Definition (Dtype) then
-                  Translate_Type_Definition (Dtype);
+                  Push_Identifier_Prefix (Mark, "AT");
+                  Translate_Subtype_Indication (Dtype, True);
+                  Pop_Identifier_Prefix (Mark);
                end if;
                Translate_Access_Type (Def);
             end;
@@ -2416,9 +2364,7 @@ package body Trans.Chap3 is
          when Iir_Kind_File_Type_Definition =>
             Info.B := Ortho_Info_Basetype_File_Init;
             Translate_File_Type (Def);
-            if With_Vars then
-               Create_File_Type_Var (Def);
-            end if;
+            Create_File_Type_Var (Def);
 
          when Iir_Kind_Protected_Type_Declaration =>
             Info.B := Ortho_Info_Basetype_Prot_Init;
@@ -2452,6 +2398,103 @@ package body Trans.Chap3 is
       --  types are not handled by translate_type_definition.
       Create_Scalar_Type_Range_Type (Def, True);
    end Translate_Bool_Type_Definition;
+
+   procedure Translate_Subtype_Definition
+     (Def : Iir; Parent_Type : Iir; With_Vars : Boolean := True)
+   is
+      Info          : Ortho_Info_Acc;
+      Base_Info     : Type_Info_Acc;
+      Base_Type     : Iir;
+      Complete_Info : Incomplete_Type_Info_Acc;
+   begin
+      --  If the definition is already translated, return now.
+      Info := Get_Info (Def);
+      if Info /= null then
+         case Info.Kind is
+            when Kind_Type =>
+               --  The subtype was already translated.
+               return;
+            when Kind_Incomplete_Type =>
+               --  Type is being completed.
+               Complete_Info := Info;
+               Clear_Info (Def);
+            when others =>
+               raise Internal_Error;
+         end case;
+      else
+         Complete_Info := null;
+      end if;
+
+      Info := Add_Info (Def, Kind_Type);
+
+      Base_Type := Get_Base_Type (Def);
+      Base_Info := Get_Info (Base_Type);
+
+      case Get_Kind (Def) is
+         when Iir_Kinds_Scalar_Subtype_Definition =>
+            Create_Subtype_Info_From_Type (Def, Parent_Type, Info);
+            if With_Vars and then not Info.S.Same_Range then
+               Create_Type_Range_Var (Def);
+            end if;
+
+         when Iir_Kind_Array_Subtype_Definition =>
+            declare
+               El_Type : constant Iir := Get_Element_Subtype (Def);
+               Parent_El_Type : constant Iir :=
+                 Get_Element_Subtype (Parent_Type);
+               Mark : Id_Mark_Type;
+            begin
+               if El_Type /= Parent_El_Type then
+                  Push_Identifier_Prefix (Mark, "ET");
+                  Translate_Subtype_Definition
+                    (El_Type, Parent_El_Type, With_Vars);
+                  Pop_Identifier_Prefix (Mark);
+               end if;
+            end;
+
+            if Base_Info = null or else Base_Info.Type_Incomplete then
+               --  This subtype also declare the base type.  Create it.
+               declare
+                  Mark : Id_Mark_Type;
+               begin
+                  Push_Identifier_Prefix (Mark, "BT");
+                  Translate_Type_Definition (Base_Type);
+                  Pop_Identifier_Prefix (Mark);
+                  Base_Info := Get_Info (Base_Type);
+               end;
+               raise Internal_Error;
+            end if;
+
+            if Get_Constraint_State (Def) = Fully_Constrained then
+               Translate_Array_Subtype_Definition (Def);
+               Info.B := Base_Info.B;
+               Info.S := Base_Info.S;
+               if With_Vars then
+                  Create_Composite_Subtype_Bounds_Var (Def, False);
+               end if;
+            else
+               --  An unconstrained array subtype.  Use same infos as base
+               --  type.
+               Free_Info (Def);
+               Set_Info (Def, Base_Info);
+            end if;
+
+         when Iir_Kind_Record_Subtype_Definition =>
+            Translate_Record_Subtype (Def, With_Vars);
+
+         when Iir_Kind_Access_Subtype_Definition =>
+            --  Like the access type.
+            Free_Info (Def);
+            Set_Info (Def, Base_Info);
+
+         when others =>
+            Error_Kind ("translate_subtype_definition", Def);
+      end case;
+
+      if Complete_Info /= null then
+         Translate_Complete_Type (Complete_Info);
+      end if;
+   end Translate_Subtype_Definition;
 
    procedure Translate_Type_Subprograms
      (Decl : Iir; Kind : Subprg_Translate_Kind)
@@ -2558,16 +2601,27 @@ package body Trans.Chap3 is
       Create_Type_Definition_Size_Var (Def);
    end Elab_Type_Definition;
 
-   procedure Translate_Named_Type_Definition (Def : Iir; Id : Name_Id)
+   procedure Translate_Subtype_Indication (Def : Iir; With_Vars : Boolean)
+   is
+      Parent_Type : Iir;
+   begin
+      Parent_Type := Get_Subtype_Type_Mark (Def);
+      pragma Assert (Parent_Type /= Null_Iir);
+      Parent_Type := Get_Type (Get_Named_Entity (Parent_Type));
+      Translate_Subtype_Definition (Def, Parent_Type, With_Vars);
+   end Translate_Subtype_Indication;
+
+   procedure Translate_Named_Subtype_Definition (Def : Iir; Id : Name_Id)
    is
       Mark : Id_Mark_Type;
    begin
       Push_Identifier_Prefix (Mark, Id);
-      Chap3.Translate_Type_Definition (Def);
+      Chap3.Translate_Subtype_Indication (Def, True);
       Pop_Identifier_Prefix (Mark);
-   end Translate_Named_Type_Definition;
+   end Translate_Named_Subtype_Definition;
 
-   procedure Translate_Anonymous_Type_Definition (Def : Iir)
+   procedure Translate_Anonymous_Subtype_Definition
+     (Def : Iir; With_Vars : Boolean)
    is
       Type_Info : constant Type_Info_Acc := Get_Info (Def);
       Mark      : Id_Mark_Type;
@@ -2576,21 +2630,34 @@ package body Trans.Chap3 is
          return;
       end if;
       Push_Identifier_Prefix_Uniq (Mark);
-      Chap3.Translate_Type_Definition (Def, False);
+      Chap3.Translate_Subtype_Definition
+        (Def, Get_Base_Type (Def), With_Vars);
       Pop_Identifier_Prefix (Mark);
-   end Translate_Anonymous_Type_Definition;
+   end Translate_Anonymous_Subtype_Definition;
 
    procedure Translate_Object_Subtype (Decl      : Iir;
                                        With_Vars : Boolean := True)
    is
       Def : constant Iir := Get_Type (Decl);
+      Parent_Type : Iir;
       Mark  : Id_Mark_Type;
       Mark2 : Id_Mark_Type;
    begin
       if Is_Anonymous_Type_Definition (Def) then
          Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
          Push_Identifier_Prefix (Mark2, "OT");
-         Chap3.Translate_Type_Definition (Def, With_Vars);
+         Parent_Type := Get_Subtype_Type_Mark (Def);
+         if Parent_Type /= Null_Iir then
+            Parent_Type := Get_Type (Get_Named_Entity (Parent_Type));
+         else
+            Parent_Type := Get_Base_Type (Def);
+            --  Parent_Type should be integer_type_definition for iterators,
+            --  or the subtype indication for constant (in the case the
+            --  default value constrains the subtype indication), or an
+            --  object alias, or anywhere because of 'Subtype applied on one
+            --  of the above object...
+         end if;
+         Chap3.Translate_Subtype_Definition (Def, Parent_Type, With_Vars);
          Pop_Identifier_Prefix (Mark2);
          Pop_Identifier_Prefix (Mark);
       end if;
@@ -3106,7 +3173,8 @@ package body Trans.Chap3 is
       Push_Identifier_Prefix_Uniq (Mark);
       if Get_Info (Sub_Type) = null then
          --  Minimal subtype creation.
-         Translate_Type_Definition (Sub_Type, False);
+         Translate_Subtype_Definition
+           (Sub_Type, Get_Base_Type (Sub_Type), False);
       end if;
       --  Force creation of variables.
       Chap3.Create_Composite_Subtype_Bounds_Var (Sub_Type, True);

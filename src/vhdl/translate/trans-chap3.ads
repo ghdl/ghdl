@@ -37,11 +37,7 @@ package Trans.Chap3 is
    --  4. Create bounds constructor
    --  5. Create type descriptor declaration
    --  6. Create type descriptor constructor
-   procedure Translate_Type_Definition
-     (Def : Iir; With_Vars : Boolean := True);
-
-   procedure Translate_Named_Type_Definition (Def : Iir; Id : Name_Id);
-   procedure Translate_Anonymous_Type_Definition (Def : Iir);
+   procedure Translate_Type_Definition (Def : Iir);
 
    --  Translate subprograms for types.
    procedure Translate_Type_Subprograms
@@ -60,6 +56,19 @@ package Trans.Chap3 is
    procedure Translate_Protected_Type_Body (Bod : Iir);
    procedure Translate_Protected_Type_Body_Subprograms_Spec (Bod : Iir);
    procedure Translate_Protected_Type_Body_Subprograms_Body (Bod : Iir);
+
+   procedure Translate_Subtype_Definition
+     (Def : Iir; Parent_Type : Iir; With_Vars : Boolean := True);
+
+   --  Translate a proper subtype indication.
+   procedure Translate_Subtype_Indication (Def : Iir; With_Vars : Boolean);
+
+   procedure Translate_Named_Subtype_Definition (Def : Iir; Id : Name_Id);
+
+   --  When there is no name for the subtype (eg: the subtype of a string or
+   --  of an aggregate).  There is also no type mark.
+   procedure Translate_Anonymous_Subtype_Definition
+     (Def : Iir; With_Vars : Boolean);
 
    --  Translate_type_definition_Elab do 4 and 6.
    --  It generates code to do type elaboration.

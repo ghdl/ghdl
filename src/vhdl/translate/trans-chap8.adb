@@ -973,7 +973,7 @@ package body Trans.Chap8 is
             E    : O_Enode;
             Temp : Mnode;
          begin
-            Chap3.Translate_Anonymous_Type_Definition (Targ_Type);
+            Chap3.Translate_Anonymous_Subtype_Definition (Targ_Type, False);
 
             --  Use a temporary variable, to avoid overlap.
             Temp := Create_Temp (Get_Info (Targ_Type));
@@ -2767,7 +2767,7 @@ package body Trans.Chap8 is
          --  For individual associations, be sure the type is translated.
          --  That's required for slices in case of array conversion.
          if Formal /= Base_Formal then
-            Chap3.Translate_Anonymous_Type_Definition (Formal_Type);
+            Chap3.Translate_Anonymous_Subtype_Definition (Formal_Type, False);
          end if;
 
          --  Evaluate the actual.
@@ -4187,7 +4187,7 @@ package body Trans.Chap8 is
       Target_Type : constant Iir := Get_Type (Target);
    begin
       if Get_Kind (Target) = Iir_Kind_Aggregate then
-         Chap3.Translate_Anonymous_Type_Definition (Target_Type);
+         Chap3.Translate_Anonymous_Subtype_Definition (Target_Type, False);
          Targ := Create_Temp (Get_Info (Target_Type), Mode_Signal);
          Chap4.Allocate_Complex_Object (Target_Type, Alloc_Stack, Targ);
          Translate_Signal_Target_Aggr (Targ, Target, Target_Type);

@@ -1470,10 +1470,20 @@ package body Trans.Chap4 is
       Close_Temp;
    end Final_File_Declaration;
 
-   procedure Translate_Type_Declaration (Decl : Iir) is
+   procedure Translate_Type_Declaration (Decl : Iir)
+   is
+      Def : constant Iir := Get_Type_Definition (Decl);
+      Mark  : Id_Mark_Type;
    begin
-      Chap3.Translate_Named_Type_Definition (Get_Type_Definition (Decl),
-                                             Get_Identifier (Decl));
+      Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
+      case Get_Kind (Def) is
+         when Iir_Kinds_Subtype_Definition =>
+            Chap3.Translate_Subtype_Indication (Def, True);
+            raise Internal_Error;
+         when others =>
+            Chap3.Translate_Type_Definition (Def);
+      end case;
+      Pop_Identifier_Prefix (Mark);
    end Translate_Type_Declaration;
 
    procedure Translate_Anonymous_Type_Declaration (Decl : Iir)
@@ -1490,9 +1500,21 @@ package body Trans.Chap4 is
 
    procedure Translate_Subtype_Declaration (Decl : Iir_Subtype_Declaration)
    is
+      Def : constant Iir := Get_Type (Decl);
+      Mark  : Id_Mark_Type;
+      Parent_Type : Iir;
    begin
-      Chap3.Translate_Named_Type_Definition (Get_Type (Decl),
-                                             Get_Identifier (Decl));
+      Push_Identifier_Prefix (Mark, Get_Identifier (Decl));
+      Parent_Type := Get_Subtype_Type_Mark (Def);
+      if Parent_Type /= Null_Iir then
+         --  For normal user subtype declaration.
+         Parent_Type := Get_Type (Get_Named_Entity (Parent_Type));
+      else
+         --  For implicit subtype declaration of a type declaration.
+         Parent_Type := Get_Base_Type (Def);
+      end if;
+      Chap3.Translate_Subtype_Definition (Def, Parent_Type, True);
+      Pop_Identifier_Prefix (Mark);
    end Translate_Subtype_Declaration;
 
    procedure Translate_Bool_Type_Declaration (Decl : Iir_Type_Declaration)
@@ -1513,7 +1535,7 @@ package body Trans.Chap4 is
       Atype     : O_Tnode;
       Id        : Var_Ident_Type;
    begin
-      Chap3.Translate_Named_Type_Definition (Decl_Type, Get_Identifier (Decl));
+      Chap3.Translate_Object_Subtype (Decl, True);
 
       Info := Add_Info (Decl, Kind_Alias);
       if Is_Signal_Name (Decl) then
@@ -2659,8 +2681,8 @@ package body Trans.Chap4 is
         (Mark3, Get_Identifier (Get_Association_Interface (Assoc, Inter)));
 
       --  Handle anonymous subtypes.
-      Chap3.Translate_Anonymous_Type_Definition (Out_Type);
-      Chap3.Translate_Anonymous_Type_Definition (In_Type);
+      Chap3.Translate_Anonymous_Subtype_Definition (Out_Type, False);
+      Chap3.Translate_Anonymous_Subtype_Definition (In_Type, False);
       Out_Info := Get_Info (Out_Type);
       In_Info := Get_Info (In_Type);
 

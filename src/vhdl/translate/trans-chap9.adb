@@ -164,7 +164,7 @@ package body Trans.Chap9 is
       Ports : Iir;
 
       Mark, Mark2 : Id_Mark_Type;
-      Assoc, Inter, Conv, In_Type : Iir;
+      Assoc, Inter : Iir;
       Has_Conv_Record      : Boolean := False;
    begin
       Info := Add_Info (Inst, Kind_Block);
@@ -200,25 +200,29 @@ package body Trans.Chap9 is
       while Assoc /= Null_Iir loop
          if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression
          then
-            Conv := Get_Actual_Conversion (Assoc);
-            In_Type := Get_Type (Get_Actual (Assoc));
-            if Conv /= Null_Iir
-              and then Is_Anonymous_Type_Definition (In_Type)
-            then
-               --  Lazy creation of the record.
-               if not Has_Conv_Record then
-                  Has_Conv_Record := True;
-                  Push_Instance_Factory (Info.Block_Scope'Access);
-               end if;
+            declare
+               Conv : constant Iir := Get_Actual_Conversion (Assoc);
+               In_Type : constant Iir := Get_Type (Get_Actual (Assoc));
+            begin
+               if Conv /= Null_Iir
+                 and then Is_Anonymous_Type_Definition (In_Type)
+               then
+                  --  Lazy creation of the record.
+                  if not Has_Conv_Record then
+                     Has_Conv_Record := True;
+                     Push_Instance_Factory (Info.Block_Scope'Access);
+                  end if;
 
-               --  FIXME: handle with overload multiple case on the same
-               --  formal.
-               Push_Identifier_Prefix
-                 (Mark2,
-                  Get_Identifier (Get_Association_Interface (Assoc, Inter)));
-               Chap3.Translate_Type_Definition (In_Type, True);
-               Pop_Identifier_Prefix (Mark2);
-            end if;
+                  --  FIXME: handle with overload multiple case on the same
+                  --  formal.
+                  Push_Identifier_Prefix
+                    (Mark2,
+                     Get_Identifier
+                       (Get_Association_Interface (Assoc, Inter)));
+                  Chap3.Translate_Anonymous_Subtype_Definition (In_Type, True);
+                  Pop_Identifier_Prefix (Mark2);
+               end if;
+            end;
          end if;
          Next_Association_Interface (Assoc, Inter);
       end loop;
