@@ -940,15 +940,9 @@ package body Errorout is
          when Iir_Kind_Procedure_Call =>
             return "procedure call";
          when Iir_Kind_Selected_Name =>
-            Name_Table.Image (Get_Identifier (Node));
-            return '''
-              & Name_Table.Nam_Buffer (1 .. Name_Table.Nam_Length)
-              & ''';
+            return ''' & Name_Table.Image (Get_Identifier (Node)) & ''';
          when Iir_Kind_Simple_Name =>
-            Name_Table.Image (Get_Identifier (Node));
-            return '''
-              & Name_Table.Nam_Buffer (1 .. Name_Table.Nam_Length)
-              & ''';
+            return ''' & Name_Table.Image (Get_Identifier (Node)) & ''';
          when Iir_Kind_Reference_Name =>
             --  Shouldn't happen.
             return "name";
@@ -1410,8 +1404,7 @@ package body Errorout is
                return;
             end if;
          end if;
-         Image (Get_Identifier (Decl));
-         Append (Res, Nam_Buffer (1 .. Nam_Length));
+         Append (Res, Image (Get_Identifier (Decl)));
       end Append_Type;
 
    begin
@@ -1433,17 +1426,16 @@ package body Errorout is
 
          Id : constant Name_Id := Get_Identifier (Subprg);
       begin
-         Image (Id);
          case Id is
             when Std_Names.Name_Id_Operators
               | Std_Names.Name_Word_Operators
               | Std_Names.Name_Xnor
               | Std_Names.Name_Shift_Operators =>
                Append (Res, """");
-               Append (Res, Nam_Buffer (1 .. Nam_Length));
+               Append (Res, Image (Id));
                Append (Res, """");
             when others =>
-               Append (Res, Nam_Buffer (1 .. Nam_Length));
+               Append (Res, Image (Id));
          end case;
       end;
 
