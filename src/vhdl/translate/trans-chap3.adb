@@ -885,11 +885,10 @@ package body Trans.Chap3 is
    end Get_Array_Subtype_Length;
 
    procedure Translate_Array_Subtype_Definition
-     (Def : Iir_Array_Subtype_Definition)
+     (Def : Iir_Array_Subtype_Definition; Parent_Type : Iir)
    is
       Info      : constant Type_Info_Acc := Get_Info (Def);
-      Base_Type : constant Iir := Get_Base_Type (Def);
-      Binfo     : constant Type_Info_Acc := Get_Info (Base_Type);
+      Pinfo     : constant Type_Info_Acc := Get_Info (Parent_Type);
 
       Len : Iir_Int64;
 
@@ -902,20 +901,20 @@ package body Trans.Chap3 is
 
       Len := Get_Array_Subtype_Length (Def);
       Info.Type_Locally_Constrained := (Len >= 0);
-      if Is_Complex_Type (Binfo)
+      if Is_Complex_Type (Pinfo)
         or else not Info.Type_Locally_Constrained
       then
          --  This is a complex type as the size is not known at compile
          --  time.
          Info.Type_Mode := Type_Mode_Complex_Array;
-         Info.Ortho_Type := Binfo.B.Base_Ptr_Type;
-         Info.Ortho_Ptr_Type := Binfo.B.Base_Ptr_Type;
+         Info.Ortho_Type := Pinfo.B.Base_Ptr_Type;
+         Info.Ortho_Ptr_Type := Pinfo.B.Base_Ptr_Type;
 
          --  If the base type need a builder, so does the subtype.
-         if Is_Complex_Type (Binfo)
-           and then Binfo.C (Mode_Value).Builder_Need_Func
+         if Is_Complex_Type (Pinfo)
+           and then Pinfo.C (Mode_Value).Builder_Need_Func
          then
-            Copy_Complex_Type (Info, Binfo);
+            Copy_Complex_Type (Info, Pinfo);
          else
             Set_Complex_Type (Info, False);
          end if;
@@ -954,8 +953,8 @@ package body Trans.Chap3 is
                Info.Ortho_Ptr_Type (I) := New_Access_Type (Base);
                New_Type_Decl (Id, Info.Ortho_Ptr_Type (I));
             else
-               Base := Binfo.B.Base_Type (I);
-               Info.Ortho_Ptr_Type (I) := Binfo.B.Base_Ptr_Type (I);
+               Base := Pinfo.B.Base_Type (I);
+               Info.Ortho_Ptr_Type (I) := Pinfo.B.Base_Ptr_Type (I);
             end if;
 
             case I is
@@ -2403,7 +2402,6 @@ package body Trans.Chap3 is
      (Def : Iir; Parent_Type : Iir; With_Vars : Boolean := True)
    is
       Info          : Ortho_Info_Acc;
-      Parent_Info   : Type_Info_Acc;
       Complete_Info : Incomplete_Type_Info_Acc;
    begin
       --  If the definition is already translated, return now.
@@ -2434,7 +2432,9 @@ package body Trans.Chap3 is
             end if;
 
          when Iir_Kind_Array_Subtype_Definition =>
+            --  Handle element subtype.
             declare
+               Parent_Info : constant Type_Info_Acc := Get_Info (Parent_Type);
                El_Type : constant Iir := Get_Element_Subtype (Def);
                Parent_El_Type : constant Iir :=
                  Get_Element_Subtype (Parent_Type);
@@ -2446,22 +2446,25 @@ package body Trans.Chap3 is
                     (El_Type, Parent_El_Type, With_Vars);
                   Pop_Identifier_Prefix (Mark);
                end if;
-            end;
 
-            Parent_Info := Get_Info (Parent_Type);
-            if Get_Constraint_State (Def) = Fully_Constrained then
-               Translate_Array_Subtype_Definition (Def);
-               Info.B := Parent_Info.B;
-               Info.S := Parent_Info.S;
-               if With_Vars then
-                  Create_Composite_Subtype_Bounds_Var (Def, False);
+               if Get_Constraint_State (Def) = Fully_Constrained then
+                  Translate_Array_Subtype_Definition (Def, Parent_Type);
+                  Info.B := Parent_Info.B;
+                  Info.S := Parent_Info.S;
+                  if With_Vars then
+                     Create_Composite_Subtype_Bounds_Var (Def, False);
+                  end if;
+               elsif Is_Fully_Constrained_Type (El_Type)
+                 and then not Is_Fully_Constrained_Type (Parent_El_Type)
+               then
+                  raise Internal_Error;
+               else
+                  --  An unconstrained array subtype.  Use same infos as base
+                  --  type.
+                  Free_Info (Def);
+                  Set_Info (Def, Parent_Info);
                end if;
-            else
-               --  An unconstrained array subtype.  Use same infos as base
-               --  type.
-               Free_Info (Def);
-               Set_Info (Def, Parent_Info);
-            end if;
+            end;
 
          when Iir_Kind_Record_Subtype_Definition =>
             Translate_Record_Subtype (Def, With_Vars);
