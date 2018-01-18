@@ -1297,7 +1297,7 @@ package body Scanner is
       Current_Token := Tok_Identifier;
    end Scan_Extended_Identifier;
 
-   procedure Convert_Identifier
+   procedure Convert_Identifier (Str : in out String)
    is
       procedure Error_Bad is
       begin
@@ -1311,36 +1311,38 @@ package body Scanner is
 
       use Name_Table;
       C : Character;
+      subtype Id_Subtype is String (1 .. Str'Length);
+      Id : Id_Subtype renames Str;
    begin
-      if Nam_Length = 0 then
+      if Id'Length = 0 then
          Error_Msg_Option ("identifier required");
          return;
       end if;
 
-      if Nam_Buffer (1) = '\' then
+      if Id (1) = '\' then
          --  Extended identifier.
          if Vhdl_Std = Vhdl_87 then
             Error_Msg_Option ("extended identifiers not allowed in vhdl87");
             return;
          end if;
 
-         if Nam_Length < 3 then
+         if Id'Length < 3 then
             Error_Msg_Option ("extended identifier is too short");
             return;
          end if;
-         if Nam_Buffer (Nam_Length) /= '\' then
+         if Id (Id'Last) /= '\' then
             Error_Msg_Option ("extended identifier must finish with a '\'");
             return;
          end if;
-         for I in 2 .. Nam_Length - 1 loop
-            C := Nam_Buffer (I);
+         for I in 2 .. Id'Last - 1 loop
+            C := Id (I);
             case Characters_Kind (C) is
                when Format_Effector =>
                   Error_Msg_Option ("format effector in extended identifier");
                   return;
                when Graphic_Character =>
                   if C = '\' then
-                     if Nam_Buffer (I + 1) /= '\'
+                     if Id (I + 1) /= '\'
                        or else I = Nam_Length - 1
                      then
                         Error_Msg_Option ("anti-slash must be doubled "
@@ -1354,14 +1356,14 @@ package body Scanner is
          end loop;
       else
          --  Identifier
-         for I in 1 .. Nam_Length loop
-            C := Nam_Buffer (I);
+         for I in 1 .. Id'Length loop
+            C := Id (I);
             case Characters_Kind (C) is
                when Upper_Case_Letter =>
                   if Vhdl_Std = Vhdl_87 and C > 'Z' then
                      Error_8bit;
                   end if;
-                  Nam_Buffer (I) := To_Lower_Map (C);
+                  Id (I) := To_Lower_Map (C);
                when Lower_Case_Letter | Digit =>
                   if Vhdl_Std = Vhdl_87 and C > 'z' then
                      Error_8bit;
@@ -1374,12 +1376,12 @@ package body Scanner is
                           ("identifier cannot start with an underscore");
                         return;
                      end if;
-                     if Nam_Buffer (I - 1) = '_' then
+                     if Id (I - 1) = '_' then
                         Error_Msg_Option
                           ("two underscores can't be consecutive");
                         return;
                      end if;
-                     if I = Nam_Length then
+                     if I = Id'Last then
                         Error_Msg_Option
                           ("identifier cannot finish with an underscore");
                         return;

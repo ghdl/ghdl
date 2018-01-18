@@ -1507,18 +1507,18 @@ package body Ghdllocal is
 
       function Is_Bad_Unit_Name return Boolean is
       begin
-         if Nam_Length = 0 then
+         if Name'Length = 0 then
             return True;
          end if;
          --  Don't try to handle extended identifier.
-         if Nam_Buffer (1) = '\' then
+         if Name (Name'First) = '\' then
             return False;
          end if;
          --  Look for suspicious characters.
          --  Do not try to be exhaustive as the correct check will be done
          --  by convert_identifier.
-         for I in 1 .. Nam_Length loop
-            case Nam_Buffer (I) is
+         for I in Name'Range loop
+            case Name (I) is
                when '.' | '/' | '\' =>
                   return True;
                when others =>
@@ -1531,36 +1531,35 @@ package body Ghdllocal is
       function Is_A_File_Name return Boolean is
       begin
          --  Check .vhd
-         if Nam_Length > 4
-           and then Nam_Buffer (Nam_Length - 3 .. Nam_Length) = ".vhd"
+         if Name'Length > 4
+           and then Name (Name'Last - 3 .. Name'Last) = ".vhd"
          then
             return True;
          end if;
          --  Check .vhdl
-         if Nam_Length > 5
-           and then Nam_Buffer (Nam_Length - 4 .. Nam_Length) = ".vhdl"
+         if Name'Length > 5
+           and then Name (Name'Last - 4 .. Name'Last) = ".vhdl"
          then
             return True;
          end if;
          --  Check ../
-         if Nam_Length > 3
-           and then Nam_Buffer (1 .. 3) = "../"
+         if Name'Length > 3
+           and then Name (Name'First .. Name'First + 2) = "../"
          then
             return True;
          end if;
          --  Check ..\
-         if Nam_Length > 3
-           and then Nam_Buffer (1 .. 3) = "..\"
+         if Name'Length > 3
+           and then Name (Name'First .. Name'First + 2) = "..\"
          then
             return True;
          end if;
          --  Should try to find the file ?
          return False;
       end Is_A_File_Name;
-   begin
-      Nam_Length := Name'Length;
-      Nam_Buffer (1 .. Nam_Length) := Name.all;
 
+      Res : String_Access;
+   begin
       --  Try to identifier bad names (such as file names), so that
       --  friendly message can be displayed.
       if Is_Bad_Unit_Name then
@@ -1571,8 +1570,9 @@ package body Ghdllocal is
          end if;
          raise Option_Error;
       end if;
-      Scanner.Convert_Identifier;
-      return new String'(Nam_Buffer (1 .. Nam_Length));
+      Res := new String'(Name.all);
+      Scanner.Convert_Identifier (Res.all);
+      return Res;
    end Convert_Name;
 
    procedure Extract_Elab_Unit

@@ -119,7 +119,7 @@ package Scanner is
    --  given in the command line.
    --  Errors are directly reported through error_msg_option.
    --  Also, Vhdl_Std should be set.
-   procedure Convert_Identifier;
+   procedure Convert_Identifier (Str : in out String);
 
    --  Return TRUE iff C is a whitespace.
    --  LRM93 13.2 Lexical elements, separators, and delimiters
