@@ -16,7 +16,6 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Name_Table;
 with Std_Names;
 with Std_Package; use Std_Package;
 with Errorout; use Errorout;
@@ -247,8 +246,7 @@ package body Trans.Chap2 is
                Id := Create_Identifier;
             when Foreign_Vhpidirect =>
                Id := Get_Identifier
-                 (Name_Table.Nam_Buffer (Foreign.Subprg_First
-                  .. Foreign.Subprg_Last));
+                 (Foreign.Subprg_Name (1 .. Foreign.Subprg_Len));
          end case;
          Storage := O_Storage_External;
       else

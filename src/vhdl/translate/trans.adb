@@ -744,6 +744,12 @@ package body Trans is
          Add_String (Len, Num (P .. Num'Last));
       end Add_Nat;
 
+      type Bool_Array_Type is array (Character) of Boolean;
+      pragma Pack (Bool_Array_Type);
+      Is_Extended_Char : constant Bool_Array_Type :=
+        ('0' .. '9' | 'A' .. 'Z' | 'a' .. 'z' => False,
+         others => True);
+
       --  Convert name_id NAME to a string stored to
       --  NAME_BUFFER (1 .. NAME_LENGTH).
       --
@@ -754,79 +760,77 @@ package body Trans is
       --  Non extended character [0-9a-zA-Z] are left as is,
       --  others are encoded to _XX, where XX is the character position in hex.
       --  They finish with "__".
-      procedure Name_Id_To_String (Name : Name_Id)
-      is
-         use Name_Table;
-
-         type Bool_Array_Type is array (Character) of Boolean;
-         pragma Pack (Bool_Array_Type);
-         Is_Extended_Char : constant Bool_Array_Type :=
-           ('0' .. '9' | 'A' .. 'Z' | 'a' .. 'z' => False,
-            others => True);
-
-         N_Len : Natural;
-         P     : Natural;
-         C     : Character;
+      function Name_Id_To_String (Name : Name_Id) return String  is
       begin
-         if Is_Character (Name) then
-            P := Character'Pos (Name_Table.Get_Character (Name));
-            Nam_Buffer (1) := 'C';
-            Nam_Buffer (2) := N2hex (P / 16);
-            Nam_Buffer (3) := N2hex (P mod 16);
-            Nam_Length := 3;
-            return;
+         if Name_Table.Is_Character (Name) then
+            declare
+               P : constant Natural :=
+                 Character'Pos (Name_Table.Get_Character (Name));
+               Res : String (1 .. 3);
+            begin
+               Res (1) := 'C';
+               Res (2) := N2hex (P / 16);
+               Res (3) := N2hex (P mod 16);
+               return Res;
+            end;
          else
-            Image (Name);
-         end if;
-         if Nam_Buffer (1) /= '\' then
-            return;
-         end if;
-         --  Extended identifier.
-         --  Supress trailing backslash.
-         Nam_Length := Nam_Length - 1;
+            declare
+               Img   : constant String := Name_Table.Image (Name);
+               N_Len : Natural;
+            begin
+               if Img (Img'First) /= '\' then
+                  return Img;
+               end if;
 
-         --  Count number of characters in the extended string.
-         N_Len := Nam_Length;
-         for I in 2 .. Nam_Length loop
-            if Is_Extended_Char (Nam_Buffer (I)) then
-               N_Len := N_Len + 2;
-            end if;
-         end loop;
+               --  Extended identifier.
 
-         --  Convert.
-         Nam_Buffer (1) := 'X';
-         P := N_Len;
-         for J in reverse 2 .. Nam_Length loop
-            C := Nam_Buffer (J);
-            if Is_Extended_Char (C) then
-               Nam_Buffer (P - 0) := N2hex (Character'Pos (C) mod 16);
-               Nam_Buffer (P - 1) := N2hex (Character'Pos (C) / 16);
-               Nam_Buffer (P - 2) := '_';
-               P := P - 3;
-            else
-               Nam_Buffer (P) := C;
-               P := P - 1;
-            end if;
-         end loop;
-         Nam_Buffer (N_Len + 1) := '_';
-         Nam_Buffer (N_Len + 2) := '_';
-         Nam_Length := N_Len + 2;
+               --  Count number of characters in the extended string.
+               N_Len := 3;
+               for I in Img'First + 1 .. Img'Last - 1 loop
+                  if Is_Extended_Char (Img (I)) then
+                     N_Len := N_Len + 3;
+                  else
+                     N_Len := N_Len + 1;
+                  end if;
+               end loop;
+
+               declare
+                  Img2 : String (1 .. N_Len);
+                  P     : Natural;
+                  C     : Character;
+               begin
+                  --  Convert (without the trailing backslash).
+                  Img2 (1) := 'X';
+                  P := 1;
+                  for I in Img'First + 1 .. Img'Last - 1 loop
+                     C := Img (I);
+                     if Is_Extended_Char (C) then
+                        Img2 (P + 1) := '_';
+                        Img2 (P + 2) := N2hex (Character'Pos (C) / 16);
+                        Img2 (P + 3) := N2hex (Character'Pos (C) mod 16);
+                        P := P + 3;
+                     else
+                        Img2 (P + 1) := C;
+                        P := P + 1;
+                     end if;
+                  end loop;
+                  Img2 (P + 1) := '_';
+                  Img2 (P + 2) := '_';
+                  pragma Assert (N_Len = P + 2);
+                  return Img2;
+               end;
+            end;
+         end if;
       end Name_Id_To_String;
 
-      function Identifier_To_String (N : Iir) return String
-      is
-         use Name_Table;
+      function Identifier_To_String (N : Iir) return String is
       begin
-         Name_Id_To_String (Get_Identifier (N));
-         return Nam_Buffer (1 .. Nam_Length);
+         return Name_Id_To_String (Get_Identifier (N));
       end Identifier_To_String;
 
-      procedure Add_Name (Len : in out Natural; Name : Name_Id)
-      is
-         use Name_Table;
+      procedure Add_Name (Len : in out Natural; Name : Name_Id) is
       begin
-         Name_Id_To_String (Name);
-         Add_String (Len, Nam_Buffer (1 .. Nam_Length));
+         Add_String (Len, Name_Id_To_String (Name));
       end Add_Name;
 
       procedure Push_Identifier_Prefix (Mark : out Id_Mark_Type;
@@ -850,12 +854,13 @@ package body Trans is
 
       --  Add a suffix to the prefix (!!!).
       procedure Push_Identifier_Prefix
-        (Mark : out Id_Mark_Type; Name : Name_Id; Val : Iir_Int32 := 0)
-      is
-         use Name_Table;
+        (Mark : out Id_Mark_Type; Name : Name_Id; Val : Iir_Int32 := 0) is
       begin
-         Name_Id_To_String (Name);
-         Push_Identifier_Prefix (Mark, Nam_Buffer (1 .. Nam_Length), Val);
+         if Name = Null_Identifier then
+            Push_Identifier_Prefix (Mark, "", Val);
+         else
+            Push_Identifier_Prefix (Mark, Name_Id_To_String (Name), Val);
+         end if;
       end Push_Identifier_Prefix;
 
       procedure Push_Identifier_Prefix_Uniq (Mark : out Id_Mark_Type)
@@ -875,22 +880,19 @@ package body Trans is
       end Add_Identifier;
 
       --  Create an identifier from IIR node ID without the prefix.
-      function Create_Identifier_Without_Prefix (Id : Iir) return O_Ident
-      is
-         use Name_Table;
+      function Create_Identifier_Without_Prefix (Id : Iir) return O_Ident is
       begin
-         Name_Id_To_String (Get_Identifier (Id));
-         return Get_Identifier (Nam_Buffer (1 .. Nam_Length));
+         return Get_Identifier (Name_Id_To_String (Get_Identifier (Id)));
       end Create_Identifier_Without_Prefix;
 
       function Create_Identifier_Without_Prefix (Id : Name_Id; Str : String)
-                                                 return O_Ident
-      is
-         use Name_Table;
+                                                 return O_Ident is
       begin
-         Name_Id_To_String (Id);
-         Nam_Buffer (Nam_Length + 1 .. Nam_Length + Str'Length) := Str;
-         return Get_Identifier (Nam_Buffer (1 .. Nam_Length + Str'Length));
+         if Str'Length = 0 then
+            return Get_Identifier (Name_Id_To_String (Id));
+         else
+            return Get_Identifier (Name_Id_To_String (Id) & Str);
+         end if;
       end Create_Identifier_Without_Prefix;
 
       function Create_Identifier_Without_Prefix

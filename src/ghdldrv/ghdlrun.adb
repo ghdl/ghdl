@@ -193,8 +193,7 @@ package body Ghdlrun is
          when Foreign_Vhpidirect =>
             declare
                Name : constant String :=
-                 Name_Table.Nam_Buffer (Info.Subprg_First
-                                           .. Info.Subprg_Last);
+                 Info.Subprg_Name (1 .. Info.Subprg_Len);
             begin
                Res := Foreigns.Find_Foreign (Name);
                if Res /= Null_Address then
@@ -205,10 +204,10 @@ package body Ghdlrun is
                end if;
             end;
          when Foreign_Intrinsic =>
-            Name_Table.Image (Get_Identifier (Decl));
+
             declare
                Name : constant String :=
-                 Name_Table.Nam_Buffer (1 .. Name_Table.Nam_Length);
+                 Name_Table.Image (Get_Identifier (Decl));
             begin
                if Name = "untruncated_text_read" then
                   Def (Ortho, Grt.Files.Ghdl_Untruncated_Text_Read'Address);
