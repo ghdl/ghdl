@@ -87,11 +87,6 @@ package body Libraries is
       if Path'Length = 0 then
          return;
       end if;
-      --  Nice message instead of constraint_error.
-      if Path'Length + 2 >= Nam_Buffer'Length then
-         Error_Lib_Msg ("argument of -P is too long");
-         return;
-      end if;
       Paths.Append (Path_To_Id (Path));
    end Add_Library_Path;
 
@@ -134,45 +129,50 @@ package body Libraries is
       File_Name : constant String := Library_To_File_Name (Library);
       Library_Id : constant Name_Id := Get_Identifier (Library);
       Id_Len : constant Natural := Get_Name_Length (Library_Id);
-      L : Natural;
-      Path_Len : Natural;
    begin
       for I in Paths.First .. Paths.Last loop
-         Image (Paths.Table (I));
-         Path_Len := Nam_Length;
-
          --  Try PATH/LIBxxx.cf
-         L := Path_Len + File_Name'Length;
-         Nam_Buffer (Path_Len + 1 .. L) := File_Name;
-         Nam_Buffer (L + 1) := Character'Val (0);
-         if GNAT.OS_Lib.Is_Regular_File (Nam_Buffer'Address) then
-            Set_Library_Directory (Library, Paths.Table (I));
-            exit;
-         end if;
+         declare
+            Path : constant String :=
+              Image (Paths.Table (I)) & File_Name & ASCII.NUL;
+         begin
+            if GNAT.OS_Lib.Is_Regular_File (Path'Address) then
+               Set_Library_Directory (Library, Paths.Table (I));
+               exit;
+            end if;
+         end;
 
          --  Try PATH/LIB/vNN/LIBxxx.cf
-         L := Path_Len + Id_Len;
-         Nam_Buffer (Path_Len + 1 .. L) := Image (Library_Id);
-         Nam_Buffer (L + 1) := GNAT.OS_Lib.Directory_Separator;
-         case Vhdl_Std is
-            when Vhdl_87 =>
-               Nam_Buffer (L + 2 .. L + 4) := "v87";
-            when Vhdl_93c | Vhdl_93 | Vhdl_00 | Vhdl_02 =>
-               Nam_Buffer (L + 2 .. L + 4) := "v93";
-            when Vhdl_08 =>
-               Nam_Buffer (L + 2 .. L + 4) := "v08";
-         end case;
-         L := L + 5;
-         Nam_Buffer (L) := GNAT.OS_Lib.Directory_Separator;
-         Nam_Buffer (L + 1 .. L + File_Name'Length) := File_Name;
-         Nam_Buffer (L + File_Name'Length + 1) := Character'Val (0);
-         if GNAT.OS_Lib.Is_Regular_File (Nam_Buffer'Address) then
-            --  For Get_Identifier: keep only the path part (including the
-            --  trailing path separator).
-            Nam_Length := L;
-            Set_Library_Directory (Library, Get_Identifier);
-            exit;
-         end if;
+         declare
+            Pfx : constant String := Image (Paths.Table (I));
+            Pfx_Len : constant Natural := Pfx'Length;
+            L : Natural;
+            Path : String (1 .. Pfx_Len + Id_Len + 5 + File_Name'Length + 1);
+         begin
+            L := Pfx_Len;
+            Path (1 .. L) := Pfx;
+            Path (L + 1 .. L + Id_Len) := Image (Library_Id);
+            L := L + Id_Len;
+            Path (L + 1) := GNAT.OS_Lib.Directory_Separator;
+            case Vhdl_Std is
+               when Vhdl_87 =>
+                  Path (L + 2 .. L + 4) := "v87";
+               when Vhdl_93c | Vhdl_93 | Vhdl_00 | Vhdl_02 =>
+                  Path (L + 2 .. L + 4) := "v93";
+               when Vhdl_08 =>
+                  Path (L + 2 .. L + 4) := "v08";
+            end case;
+            L := L + 5;
+            Path (L) := GNAT.OS_Lib.Directory_Separator;
+            Path (L + 1 .. L + File_Name'Length) := File_Name;
+            Path (L + File_Name'Length + 1) := Character'Val (0);
+            if GNAT.OS_Lib.Is_Regular_File (Path'Address) then
+               --  For Get_Identifier: keep only the path part (including the
+               --  trailing path separator).
+               Set_Library_Directory (Library, Get_Identifier (Path (1 .. L)));
+               exit;
+            end if;
+         end;
       end loop;
    end Search_Library_In_Path;
 
@@ -364,14 +364,13 @@ package body Libraries is
       is
          Len : constant Nat32 := Current_String_Length;
          Str_Id : constant String8_Id := Current_String_Id;
+         Buf : String (1 .. Natural (Len));
       begin
          for I in 1 .. Len loop
-            Name_Table.Nam_Buffer (Natural (I)) :=
-              Str_Table.Char_String8 (Str_Id, I);
+            Buf (Natural (I)) := Str_Table.Char_String8 (Str_Id, I);
          end loop;
-         Name_Table.Nam_Length := Natural (Len);
          --  FIXME: should remove last string.
-         return Get_Identifier;
+         return Get_Identifier (Buf);
       end String_To_Name_Id;
 
       Trace_Library_Load : constant Boolean := False;
@@ -1138,8 +1137,7 @@ package body Libraries is
                                          File, Pos);
          New_Lib_Checksum := Files_Map.Get_File_Checksum (File);
          File_Name := Files_Map.Get_File_Name (File);
-         Image (File_Name);
-         if GNAT.OS_Lib.Is_Absolute_Path (Nam_Buffer (1 .. Nam_Length)) then
+         if GNAT.OS_Lib.Is_Absolute_Path (Image (File_Name)) then
             Dir_Name := Null_Identifier;
          else
             Dir_Name := Files_Map.Get_Home_Directory;
@@ -1427,14 +1425,12 @@ package body Libraries is
                --  it.  This allows to move the library file.
                WR (".");
             else
-               Image (Dir);
                WR ("""");
-               WR (Nam_Buffer (1 .. Nam_Length));
+               WR (Image (Dir));
                WR ("""");
             end if;
             WR (" """);
-            Image (Get_Design_File_Filename (Design_File));
-            WR (Nam_Buffer (1 .. Nam_Length));
+            WR (Image (Get_Design_File_Filename (Design_File)));
             WR (""" """);
             WR (Files_Map.Get_File_Checksum_String
                   (Get_File_Checksum (Design_File)));
