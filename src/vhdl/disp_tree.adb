@@ -155,10 +155,12 @@ package body Disp_Tree is
    is
       use Name_Table;
    begin
-      if Ident /= Null_Identifier then
-         return ''' & Image (Ident) & ''';
-      else
+      if Ident = Null_Identifier then
          return "<anonymous>";
+      elsif Is_Character (Ident) then
+         return Image (Ident);
+      else
+         return '"' & Image (Ident) & '"';
       end if;
    end Image_Name_Id;
 
