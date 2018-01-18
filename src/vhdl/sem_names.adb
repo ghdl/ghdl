@@ -3578,15 +3578,19 @@ package body Sem_Names is
 
       case Get_Identifier (Attr) is
          when Name_Simple_Name =>
-            Res := Create_Iir (Iir_Kind_Simple_Name_Attribute);
-            Eval_Simple_Name (Get_Identifier (Prefix));
-            Set_Simple_Name_Identifier (Res, Name_Table.Get_Identifier);
-            Attr_Type := Create_Unidim_Array_By_Length
-              (String_Type_Definition,
-               Iir_Int64 (Name_Table.Nam_Length),
-               Attr);
-            Set_Simple_Name_Subtype (Res, Attr_Type);
-            Set_Expr_Staticness (Res, Locally);
+            declare
+               Id : constant Name_Id := Name_Table.Get_Identifier
+                 (Eval_Simple_Name (Get_Identifier (Prefix)));
+            begin
+               Res := Create_Iir (Iir_Kind_Simple_Name_Attribute);
+               Set_Simple_Name_Identifier (Res, Id);
+               Attr_Type := Create_Unidim_Array_By_Length
+                 (String_Type_Definition,
+                  Iir_Int64 (Name_Table.Get_Name_Length (Id)),
+                  Attr);
+               Set_Simple_Name_Subtype (Res, Attr_Type);
+               Set_Expr_Staticness (Res, Locally);
+            end;
 
          when Name_Path_Name =>
             Res := Create_Iir (Iir_Kind_Path_Name_Attribute);

@@ -1941,30 +1941,32 @@ package body Evaluation is
          --  LRM08 5.7 String representations
          --  - [...] otherwise, the string representation is the sequence of
          --    characters in the identifier that is the given value.
-         --  FIXME: extended identifier.
-         Image (Id);
-         if Nam_Buffer (1) /= '\' then
-            Append_String8_String (Nam_Buffer (1 .. Nam_Length));
-            Len := Nam_Length;
-         else
-            declare
-               Skip : Boolean;
-               C : Character;
-            begin
-               Len := 0;
-               Skip := False;
-               for I in 2 .. Nam_Length - 1 loop
-                  if Skip then
-                     Skip := False;
-                  else
-                     C := Nam_Buffer (I);
-                     Append_String8_Char (C);
-                     Skip := C = '\';
-                     Len := Len + 1;
-                  end if;
-               end loop;
-            end;
-         end if;
+         declare
+            Img : constant String := Image (Id);
+         begin
+            if Img (Img'First) /= '\' then
+               Append_String8_String (Img);
+               Len := Img'Length;
+            else
+               declare
+                  Skip : Boolean;
+                  C : Character;
+               begin
+                  Len := 0;
+                  Skip := False;
+                  for I in Img'First + 1 .. Img'Last - 1 loop
+                     if Skip then
+                        Skip := False;
+                     else
+                        C := Img (I);
+                        Append_String8_Char (C);
+                        Skip := C = '\';
+                        Len := Len + 1;
+                     end if;
+                  end loop;
+               end;
+            end if;
+         end;
       end if;
       return Build_String (Image_Id, Nat32 (Len), Orig);
    end Eval_Enum_To_String;
@@ -2700,14 +2702,15 @@ package body Evaluation is
          when Iir_Kind_Simple_Name_Attribute =>
             declare
                use Str_Table;
+               Img : constant String :=
+                 Image (Get_Simple_Name_Identifier (Expr));
                Id : String8_Id;
             begin
                Id := Create_String8;
-               Image (Get_Simple_Name_Identifier (Expr));
-               for I in 1 .. Nam_Length loop
-                  Append_String8_Char (Nam_Buffer (I));
+               for I in Img'Range loop
+                  Append_String8_Char (Img (I));
                end loop;
-               return Build_String (Id, Nat32 (Nam_Length), Expr);
+               return Build_String (Id, Nat32 (Img'Length), Expr);
             end;
 
          when Iir_Kind_Null_Literal =>
@@ -3500,63 +3503,33 @@ package body Evaluation is
       end case;
    end Eval_Is_Eq;
 
-   procedure Eval_Operator_Symbol_Name (Id : Name_Id)
-   is
+   function Eval_Operator_Symbol_Name (Id : Name_Id) return String is
    begin
-      Image (Id);
-      Nam_Buffer (2 .. Nam_Length + 1) := Nam_Buffer (1 .. Nam_Length);
-      Nam_Buffer (1) := '"'; --"
-      Nam_Length := Nam_Length + 2;
-      Nam_Buffer (Nam_Length) := '"'; --"
+      return '"' & Image (Id) & '"';
    end Eval_Operator_Symbol_Name;
 
-   procedure Eval_Simple_Name (Id : Name_Id)
-   is
+   function Eval_Simple_Name (Id : Name_Id) return String is
    begin
       --  LRM 14.1
       --  E'SIMPLE_NAME
       --    Result: [...] but with apostrophes (in the case of a character
       --            literal)
       if Is_Character (Id) then
-         Nam_Buffer (1) := ''';
-         Nam_Buffer (2) := Get_Character (Id);
-         Nam_Buffer (3) := ''';
-         Nam_Length := 3;
-         return;
+         return ''' & Get_Character (Id) & ''';
       end if;
       case Id is
          when Std_Names.Name_Word_Operators
            | Std_Names.Name_First_Operator .. Std_Names.Name_Last_Operator =>
-            Eval_Operator_Symbol_Name (Id);
-            return;
+            return Eval_Operator_Symbol_Name (Id);
          when Std_Names.Name_Xnor
            | Std_Names.Name_Shift_Operators =>
             if Flags.Vhdl_Std > Vhdl_87 then
-               Eval_Operator_Symbol_Name (Id);
-               return;
+               return Eval_Operator_Symbol_Name (Id);
             end if;
          when others =>
             null;
       end case;
-      Image (Id);
---       if Name_Buffer (1) = '\' then
---          declare
---             I : Natural;
---          begin
---             I := 2;
---             while I <= Name_Length loop
---                if Name_Buffer (I) = '\' then
---                   Name_Length := Name_Length + 1;
---                   Name_Buffer (I + 1 .. Name_Length) :=
---                     Name_Buffer (I .. Name_Length - 1);
---                   I := I + 1;
---                end if;
---                I := I + 1;
---             end loop;
---             Name_Length := Name_Length + 1;
---             Name_Buffer (Name_Length) := '\';
---          end;
---       end if;
+      return Image (Id);
    end Eval_Simple_Name;
 
    package body String_Utils is
@@ -3669,11 +3642,9 @@ package body Evaluation is
 
       procedure Path_Add_Type_Name (Atype : Iir)
       is
-         Adecl : Iir;
+         Adecl : constant Iir := Get_Type_Declarator (Atype);
       begin
-         Adecl := Get_Type_Declarator (Atype);
-         Image (Get_Identifier (Adecl));
-         Path_Add (Nam_Buffer (1 .. Nam_Length));
+         Path_Add (Image (Get_Identifier (Adecl)));
       end Path_Add_Type_Name;
 
       procedure Path_Add_Signature (Subprg : Iir)
@@ -3700,12 +3671,13 @@ package body Evaluation is
          Path_Add ("]");
       end Path_Add_Signature;
 
-      procedure Path_Add_Name (N : Iir) is
+      procedure Path_Add_Name (N : Iir)
+      is
+         Img : constant String := Eval_Simple_Name (Get_Identifier (N));
       begin
-         Eval_Simple_Name (Get_Identifier (N));
-         if Nam_Buffer (1) /= 'P' then
+         if Img (Img'First) /= 'P' then
             --  Skip anonymous processes.
-            Path_Add (Nam_Buffer (1 .. Nam_Length));
+            Path_Add (Img);
          end if;
       end Path_Add_Name;
 
