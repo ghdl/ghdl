@@ -386,6 +386,7 @@ package body Std_Names is
       Def ("l",                     Name_L);
       Def ("r",                     Name_R);
       Def ("s",                     Name_S);
+      Def ("v",                     Name_V);
       Def ("external_name",         Name_External_Name);
       Def ("open_kind",             Name_Open_Kind);
       Def ("status",                Name_Status);

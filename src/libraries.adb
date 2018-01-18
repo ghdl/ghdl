@@ -425,7 +425,7 @@ package body Libraries is
       --  Parse header.
       Scan;
       if Current_Token /= Tok_Identifier
-        or else Nam_Length /= 1 or else Nam_Buffer (1) /= 'v'
+        or else Current_Identifier /= Std_Names.Name_V
       then
          Bad_Library_Format;
       end if;
