@@ -32,9 +32,7 @@ package Files_Map is
    --  Create the path from DIRECTORY and NAME:
    --  If NAME is an absolute pathname, then return NAME.
    --  Otherwise, return the concatenation of DIRECTORY and NAME.
-   --  If ADD_NUL is TRUE, then a trailing '\0' is appended.
-   function Get_Pathname
-     (Directory : Name_Id; Name : Name_Id; Add_Nul : Boolean) return String;
+   function Get_Pathname (Directory : Name_Id; Name : Name_Id) return String;
 
    --  If NAME contains a directory separator, move it to the DIRECTORY name.
    --  At the return point, NAME has no directory components.

@@ -272,8 +272,7 @@ package body Translation is
       declare
          Pathname : constant String := Files_Map.Get_Pathname
            (Get_Design_File_Directory (Design_File),
-            Get_Design_File_Filename (Design_File),
-            False);
+            Get_Design_File_Filename (Design_File));
       begin
          New_Debug_Filename_Decl (Pathname);
       end;

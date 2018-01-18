@@ -121,8 +121,11 @@ package body Files_Map is
    function Get_Home_Directory return Name_Id is
    begin
       if Home_Dir = Null_Identifier then
-         GNAT.Directory_Operations.Get_Current_Dir (Nam_Buffer, Nam_Length);
-         Home_Dir := Get_Identifier;
+         declare
+            Dir : constant String := GNAT.Directory_Operations.Get_Current_Dir;
+         begin
+            Home_Dir := Get_Identifier (Dir);
+         end;
       end if;
       return Home_Dir;
    end Get_Home_Directory;
@@ -579,30 +582,22 @@ package body Files_Map is
       return Res;
    end Get_Os_Time_Stamp;
 
-   function Get_Pathname
-     (Directory : Name_Id; Name : Name_Id; Add_Nul : Boolean) return String
+   function Get_Pathname (Directory : Name_Id; Name : Name_Id) return String
    is
-      L : Natural;
+      Filename : constant String := Image (Name);
    begin
-      Image (Name);
-      if not GNAT.OS_Lib.Is_Absolute_Path (Nam_Buffer (1 .. Nam_Length)) then
-         L := Nam_Length;
-         Image (Directory);
-         Nam_Buffer (Nam_Length + 1 .. Nam_Length + L) := Image (Name);
-         Nam_Length := Nam_Length + L;
+      if not GNAT.OS_Lib.Is_Absolute_Path (Filename) then
+         return Image (Directory) & Filename;
+      else
+         return Filename;
       end if;
-      if Add_Nul then
-         Nam_Length := Nam_Length + 1;
-         Nam_Buffer (Nam_Length) := Character'Val (0);
-      end if;
-      return Nam_Buffer (1 .. Nam_Length);
    end Get_Pathname;
 
    procedure Normalize_Pathname
      (Directory : in out Name_Id; Name : in out Name_Id)
    is
-      Separator_Pos : Natural;
       Filename : constant String := Image (Name);
+      Separator_Pos : Natural;
    begin
       --  Find a directory part in NAME, return now if none.
       Separator_Pos := 0;
@@ -616,16 +611,16 @@ package body Files_Map is
       end if;
 
       --  Move the directory part to DIRECTORY.
-      if Directory /= Null_Identifier then
-         Image (Directory);
-      else
-         Nam_Length := 0;
-      end if;
-      for I in Filename'First .. Separator_Pos loop
-         Nam_Length := Nam_Length + 1;
-         Nam_Buffer (Nam_Length) := Filename (I);
-      end loop;
-      Directory := Get_Identifier;
+      declare
+         File_Dir : constant String :=
+           Filename (Filename'First .. Separator_Pos);
+      begin
+         if Directory /= Null_Identifier then
+            Directory := Get_Identifier (Image (Directory) & File_Dir);
+         else
+            Directory := Get_Identifier (File_Dir);
+         end if;
+      end;
       Name := Get_Identifier (Filename (Separator_Pos + 1 .. Filename'Last));
    end Normalize_Pathname;
 
@@ -813,12 +808,13 @@ package body Files_Map is
 
       --  Open the file (punt on non regular files).
       declare
-         Filename : String := Get_Pathname (Directory, Name, True);
+         Filename : constant String := Get_Pathname (Directory, Name);
+         Filename0 : constant String := Filename & ASCII.NUL;
       begin
          if not Is_Regular_File (Filename) then
             return No_Source_File_Entry;
          end if;
-         Fd := Open_Read (Filename'Address, Binary);
+         Fd := Open_Read (Filename0'Address, Binary);
          if Fd = Invalid_FD then
             return No_Source_File_Entry;
          end if;
