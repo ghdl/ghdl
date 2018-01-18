@@ -1330,32 +1330,36 @@ package body Simul.Execution is
                   if Is_Character (Id) then
                      Result := String_To_Iir_Value ((1 => Get_Character (Id)));
                   else
-                     Image (Id);
-                     if Nam_Buffer (1) = '\' then
-                        --  Reformat extended identifiers for to_image.
-                        pragma Assert (Nam_Buffer (Nam_Length) = '\');
-                        declare
-                           Npos : Natural;
-                           K : Natural;
-                           C : Character;
-                        begin
-                           Npos := 1;
-                           K := 2;
-                           while K < Nam_Length loop
-                              C := Nam_Buffer (K);
-                              Nam_Buffer (Npos) := C;
-                              Npos := Npos + 1;
-                              if C = '\' then
-                                 K := K + 2;
-                              else
-                                 K := K + 1;
-                              end if;
-                           end loop;
-                           Nam_Length := Npos - 1;
-                        end;
-                     end if;
-                     Result :=
-                       String_To_Iir_Value (Nam_Buffer (1 .. Nam_Length));
+                     declare
+                        Img : String := Image (Id);
+                     begin
+                        if Img (Img'First) = '\' then
+                           --  Reformat extended identifiers for to_image.
+                           pragma Assert (Img (Img'Last) = '\');
+                           declare
+                              Npos : Natural;
+                              K : Natural;
+                              C : Character;
+                           begin
+                              Npos := Img'First;
+                              K := Npos + 1;
+                              while K < Img'Last loop
+                                 C := Img (K);
+                                 Img (Npos) := C;
+                                 Npos := Npos + 1;
+                                 if C = '\' then
+                                    K := K + 2;
+                                 else
+                                    K := K + 1;
+                                 end if;
+                              end loop;
+                              Result := String_To_Iir_Value
+                                (Img (Img'First .. Npos - 1));
+                           end;
+                        else
+                           Result := String_To_Iir_Value (Img);
+                        end if;
+                     end;
                   end if;
                end if;
             end;
