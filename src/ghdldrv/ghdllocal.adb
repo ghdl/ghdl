@@ -461,18 +461,15 @@ package body Ghdllocal is
             Put ("???");
             return;
       end case;
-      Image (Id);
-      Put (Nam_Buffer (1 .. Nam_Length));
+      Put (Image (Id));
       case Get_Kind (Unit) is
          when Iir_Kind_Architecture_Body =>
             Put (" of ");
-            Image (Get_Entity_Identifier_Of_Architecture (Unit));
-            Put (Nam_Buffer (1 .. Nam_Length));
+            Put (Image (Get_Entity_Identifier_Of_Architecture (Unit)));
          when Iir_Kind_Configuration_Declaration =>
             if Id = Null_Identifier then
                Put ("<default> of entity ");
-               Image (Get_Entity_Identifier_Of_Architecture (Unit));
-               Put (Nam_Buffer (1 .. Nam_Length));
+               Put (Image (Get_Entity_Identifier_Of_Architecture (Unit)));
             end if;
          when others =>
             null;

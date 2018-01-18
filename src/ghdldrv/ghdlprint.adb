@@ -612,18 +612,14 @@ package body Ghdlprint is
               | Iir_Kind_Entity_Declaration
               | Iir_Kind_Package_Declaration
               | Iir_Kind_Package_Instantiation_Declaration =>
-               Image (Id);
-               Append (Nam_Buffer (1 .. Nam_Length));
+               Append (Image (Id));
             when Iir_Kind_Package_Body =>
-               Image (Id);
-               Append (Nam_Buffer (1 .. Nam_Length));
+               Append (Image (Id));
                Append ("-body");
             when Iir_Kind_Architecture_Body =>
-               Image (Get_Entity_Identifier_Of_Architecture (Lib));
-               Append (Nam_Buffer (1 .. Nam_Length));
+               Append (Image (Get_Entity_Identifier_Of_Architecture (Lib)));
                Append ("-");
-               Image (Id);
-               Append (Nam_Buffer (1 .. Nam_Length));
+               Append (Image (Id));
             when others =>
                raise Internal_Error;
          end case;
@@ -1652,11 +1648,9 @@ package body Ghdlprint is
                   Put ("XFILE: ");
                   Dir := Get_Source_File_Directory (Cur_File);
                   if Dir /= Null_Identifier then
-                     Image (Dir);
-                     Put (Nam_Buffer (1 .. Nam_Length));
+                     Put (Image (Dir));
                   end if;
-                  Image (Get_File_Name (Cur_File));
-                  Put (Nam_Buffer (1 .. Nam_Length));
+                  Put (Image (Get_File_Name (Cur_File)));
                   New_Line;
                end if;
 
@@ -1718,8 +1712,7 @@ package body Ghdlprint is
                     | Iir_Kind_Procedure_Body =>
                      null;
                   when others =>
-                     Image (Get_Identifier (N));
-                     Put (Nam_Buffer (1 .. Nam_Length));
+                     Put (Image (Get_Identifier (N)));
                end case;
             end Emit_Decl;
 
