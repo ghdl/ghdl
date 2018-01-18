@@ -419,8 +419,7 @@ package body Trans.Chap7 is
    function Translate_Static_String (Str_Type : Iir; Str_Ident : Name_Id)
                                     return O_Cnode
    is
-      use Name_Table;
-
+      Img : constant String := Name_Table.Image (Str_Ident);
       Literal_List : constant Iir_Flist :=
         Get_Enumeration_Literal_List (Character_Type_Definition);
       Lit          : Iir;
@@ -431,10 +430,8 @@ package body Trans.Chap7 is
 
       Start_Array_Aggr (List, Get_Ortho_Type (Str_Type, Mode_Value));
 
-      Image (Str_Ident);
-      for I in 1 .. Nam_Length loop
-         Lit := Get_Nth_Element (Literal_List,
-                                 Character'Pos (Nam_Buffer (I)));
+      for I in Img'Range loop
+         Lit := Get_Nth_Element (Literal_List, Character'Pos (Img (I)));
          New_Array_Aggr_El (List, Get_Ortho_Expr (Lit));
       end loop;
 

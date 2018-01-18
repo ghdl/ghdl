@@ -88,15 +88,12 @@ package body Trans.Helpers2 is
    end Create_String;
 
    function Create_String (Str : Name_Id; Id : O_Ident; Storage : O_Storage)
-                              return O_Dnode
+                          return O_Dnode
    is
       use Name_Table;
    begin
-      if Name_Table.Is_Character (Str) then
-         raise Internal_Error;
-      end if;
-      Image (Str);
-      return Create_String (Nam_Buffer (1 .. Nam_Length), Id, Storage);
+      pragma Assert (not Name_Table.Is_Character (Str));
+      return Create_String (Image (Str), Id, Storage);
    end Create_String;
 
    function Create_String_Len (Str : String; Id : O_Ident) return O_Cnode

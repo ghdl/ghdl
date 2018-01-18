@@ -986,19 +986,15 @@ package body Trans.Rtis is
    function Generate_Name (Node : Iir) return O_Dnode
    is
       use Name_Table;
-      Id : Name_Id;
+      Node_Id : constant Name_Id := Get_Identifier (Node);
+      Id : O_Ident;
    begin
-      Id := Get_Identifier (Node);
-      if Is_Character (Id) then
-         Nam_Buffer (1) := ''';
-         Nam_Buffer (2) := Get_Character (Id);
-         Nam_Buffer (3) := ''';
-         Nam_Length := 3;
+      Id := Create_Identifier ("RTISTR");
+      if Is_Character (Node_Id) then
+         return Create_String (''' & Get_Character (Node_Id) & ''', Id);
       else
-         Image (Id);
+         return Create_String (Image (Node_Id), Id);
       end if;
-      return Create_String (Nam_Buffer (1 .. Nam_Length),
-                            Create_Identifier ("RTISTR"));
    end Generate_Name;
 
    function Get_Null_Loc return O_Cnode is
@@ -2823,10 +2819,8 @@ package body Trans.Rtis is
                       Storage, Ghdl_Rtin_Type_Scalar);
 
       if Public then
-         Image (Id);
          Name := Create_String
-           (Nam_Buffer (1 .. Nam_Length),
-            Create_Identifier_Without_Prefix (Id, "__RTISTR"));
+           (Image (Id), Create_Identifier_Without_Prefix (Id, "__RTISTR"));
          Start_Init_Value (Info.Library_Rti_Const);
          Start_Record_Aggr (Aggr, Ghdl_Rtin_Type_Scalar);
          New_Record_Aggr_El (Aggr, Generate_Common (Ghdl_Rtik_Library));
