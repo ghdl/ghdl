@@ -933,7 +933,7 @@ package body Scanner is
    procedure Scan_Identifier (Allow_PSL : Boolean)
    is
       use Name_Table;
-      Buffer : String (1 .. Max_Nam_Length);
+      Buffer : String (1 .. Max_Name_Length);
       C : Character;
       Len : Natural;
    begin
@@ -1250,7 +1250,7 @@ package body Scanner is
    procedure Scan_Extended_Identifier
    is
       use Name_Table;
-      Buffer : String (1 .. Max_Nam_Length);
+      Buffer : String (1 .. Max_Name_Length);
       Len : Natural;
    begin
       -- LRM93 13.3.2
@@ -1455,7 +1455,7 @@ package body Scanner is
    procedure Scan_Comment_Identifier (Id : out Name_Id)
    is
       use Name_Table;
-      Buffer : String (1 .. Max_Nam_Length);
+      Buffer : String (1 .. Max_Name_Length);
       Len : Natural;
       C : Character;
    begin

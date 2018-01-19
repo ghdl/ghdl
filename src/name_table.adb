@@ -179,21 +179,6 @@ package body Name_Table is
       end if;
    end Image;
 
-   procedure Image (Id : Name_Id)
-   is
-      Name_Entry : Identifier renames Names_Table.Table (Id);
-   begin
-      if Is_Character (Id) then
-         Nam_Buffer (1) := Get_Character (Id);
-         Nam_Length := 1;
-      else
-         Nam_Length := Get_Name_Length (Id);
-         Nam_Buffer (1 .. Nam_Length) := String
-           (Strings_Table.Table
-            (Name_Entry.Name .. Name_Entry.Name + Str_Idx (Nam_Length) - 1));
-      end if;
-   end Image;
-
    --  Get the address of the first character of ID.
    --  The string is NUL-terminated (this is done by get_identifier).
    function Get_Address (Id : Name_Id) return System.Address
@@ -331,12 +316,6 @@ package body Name_Table is
 
       return Res;
    end Get_Identifier_With_Len;
-
-   function Get_Identifier return Name_Id is
-   begin
-      return Get_Identifier_With_Len
-        (To_Thin_String_Ptr (Nam_Buffer'Address), Nam_Length);
-   end Get_Identifier;
 
    function Get_Identifier_No_Create_With_Len
      (Str : Thin_String_Ptr; Len : Natural) return Name_Id
