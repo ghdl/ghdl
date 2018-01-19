@@ -150,6 +150,8 @@ package body Scanner is
       File_Len: Source_Ptr;
       Token: Token_Type;
       Prev_Token: Token_Type;
+      Bit_Str_Base : Character;
+      Bit_Str_Sign : Character;
       Str_Id : String8_Id;
       Str_Len : Nat32;
       Identifier: Name_Id;
@@ -170,6 +172,8 @@ package body Scanner is
                                      Token => Tok_Invalid,
                                      Prev_Token => Tok_Invalid,
                                      Identifier => Null_Identifier,
+                                     Bit_Str_Base => ' ',
+                                     Bit_Str_Sign => ' ',
                                      Str_Id => Null_String8,
                                      Str_Len => 0,
                                      Int64 => 0,
@@ -208,6 +212,16 @@ package body Scanner is
    begin
       return Current_Context.Str_Len;
    end Current_String_Length;
+
+   function Get_Bit_String_Base return Character is
+   begin
+      return Current_Context.Bit_Str_Base;
+   end Get_Bit_String_Base;
+
+   function Get_Bit_String_Sign return Character is
+   begin
+      return Current_Context.Bit_Str_Sign;
+   end Get_Bit_String_Sign;
 
    function Current_Iir_Int64 return Iir_Int64 is
    begin
@@ -282,6 +296,8 @@ package body Scanner is
                           Token => Tok_Invalid,
                           Prev_Token => Tok_Invalid,
                           Identifier => Null_Identifier,
+                          Bit_Str_Base => ' ',
+                          Bit_Str_Sign => ' ',
                           Str_Id => Null_String8,
                           Str_Len => 0,
                           Int64 => -1,
@@ -917,6 +933,7 @@ package body Scanner is
    procedure Scan_Identifier (Allow_PSL : Boolean)
    is
       use Name_Table;
+      Buffer : String (1 .. Max_Nam_Length);
       C : Character;
       Len : Natural;
    begin
@@ -967,7 +984,7 @@ package body Scanner is
          --  Put character in name buffer.  FIXME: compute the hash at the same
          --  time ?
          Len := Len + 1;
-         Nam_Buffer (Len) := C;
+         Buffer (Len) := C;
 
          --  Next character.
          Pos := Pos + 1;
@@ -983,7 +1000,6 @@ package body Scanner is
          Len := Len - 1;
          C := '_';
       end if;
-      Nam_Length := Len;
 
       -- LRM93 13.2
       -- At least one separator is required between an identifier or an
@@ -1019,9 +1035,10 @@ package body Scanner is
                --  with the same meaning.
                declare
                   Base : Nat32;
-                  Cl : constant Character := Nam_Buffer (Len);
-                  Cf : constant Character := Nam_Buffer (1);
+                  Cl : constant Character := Buffer (Len);
+                  Cf : constant Character := Buffer (1);
                begin
+                  Current_Context.Bit_Str_Base := Cl;
                   if Cl = 'b' then
                      Base := 1;
                   elsif Cl = 'o' then
@@ -1029,6 +1046,7 @@ package body Scanner is
                   elsif Cl = 'x' then
                      Base := 4;
                   elsif Vhdl_Std >= Vhdl_08 and Len = 1 and Cf = 'd' then
+                     Current_Context.Bit_Str_Sign := ' ';
                      Scan_Dec_Bit_String;
                      return;
                   else
@@ -1036,11 +1054,13 @@ package body Scanner is
                   end if;
                   if Base > 0 then
                      if Len = 1 then
+                        Current_Context.Bit_Str_Sign := ' ';
                         Scan_Bit_String (Base);
                         return;
                      elsif Vhdl_Std >= Vhdl_08
                        and then (Cf = 's' or Cf = 'u')
                      then
+                        Current_Context.Bit_Str_Sign := Cf;
                         Scan_Bit_String (Base);
                         return;
                      end if;
@@ -1057,7 +1077,7 @@ package body Scanner is
             --  quote marks, there are invalid character (in the 128-160
             --  range).
             if C = Character'Val (16#80#)
-              and then Nam_Buffer (Len) = Character'Val (16#e2#)
+              and then Buffer (Len) = Character'Val (16#e2#)
               and then (Source (Pos + 1) = Character'Val (16#98#)
                           or else Source (Pos + 1) = Character'Val (16#99#))
             then
@@ -1067,7 +1087,7 @@ package body Scanner is
                   --  error will be detected as the next byte (0x80) is
                   --  invalid.  Remove the first byte from the identifier, and
                   --  let's catch the error later.
-                  Nam_Length := Len - 1;
+                  Len := Len - 1;
                   Pos := Pos - 1;
                else
                   Error_Msg_Scan ("invalid use of UTF8 character for '");
@@ -1105,7 +1125,7 @@ package body Scanner is
       end case;
 
       -- Hash it.
-      Current_Context.Identifier := Name_Table.Get_Identifier;
+      Current_Context.Identifier := Get_Identifier (Buffer (1 .. Len));
       Current_Token := Tok_Identifier;
    end Scan_Identifier;
 
@@ -1230,13 +1250,15 @@ package body Scanner is
    procedure Scan_Extended_Identifier
    is
       use Name_Table;
+      Buffer : String (1 .. Max_Nam_Length);
+      Len : Natural;
    begin
       -- LRM93 13.3.2
       --   Moreover, every extended identifiers is distinct from any basic
       --   identifier.
       -- This is satisfied by storing '\' in the name table.
-      Nam_Length := 1;
-      Nam_Buffer (1) := '\';
+      Len := 1;
+      Buffer (1) := '\';
       loop
          --  Next character.
          Pos := Pos + 1;
@@ -1247,8 +1269,8 @@ package body Scanner is
             -- of an extended literal, it must be doubled.
             -- LRM93 13.3.2
             -- (a doubled backslash couting as one character)
-            Nam_Length := Nam_Length + 1;
-            Nam_Buffer (Nam_Length) := '\';
+            Len := Len + 1;
+            Buffer (Len) := '\';
 
             Pos := Pos + 1;
 
@@ -1265,14 +1287,15 @@ package body Scanner is
             when Invalid =>
                Error_Msg_Scan ("invalid character in extended identifier");
          end case;
-         Nam_Length := Nam_Length + 1;
+         Len := Len + 1;
+
          -- LRM93 13.3.2
          -- Extended identifiers differing only in the use of corresponding
          -- upper and lower case letters are distinct.
-         Nam_Buffer (Nam_Length) := Source (Pos);
+         Buffer (Len) := Source (Pos);
       end loop;
 
-      if Nam_Length <= 2 then
+      if Len <= 2 then
          Error_Msg_Scan ("empty extended identifier is not allowed");
       end if;
 
@@ -1293,7 +1316,7 @@ package body Scanner is
       end case;
 
       -- Hash it.
-      Current_Context.Identifier := Name_Table.Get_Identifier;
+      Current_Context.Identifier := Get_Identifier (Buffer (1 .. Len));
       Current_Token := Tok_Identifier;
    end Scan_Extended_Identifier;
 
@@ -1343,7 +1366,7 @@ package body Scanner is
                when Graphic_Character =>
                   if C = '\' then
                      if Id (I + 1) /= '\'
-                       or else I = Nam_Length - 1
+                       or else I = Id'Last - 1
                      then
                         Error_Msg_Option ("anti-slash must be doubled "
                                             & "in extended identifier");
@@ -1429,17 +1452,19 @@ package body Scanner is
 
    --  Scan an identifier within a comment.  Only lower case letters are
    --  allowed.
-   function Scan_Comment_Identifier return Boolean
+   procedure Scan_Comment_Identifier (Id : out Name_Id)
    is
       use Name_Table;
+      Buffer : String (1 .. Max_Nam_Length);
       Len : Natural;
       C : Character;
    begin
+      Id := Null_Identifier;
       Skip_Spaces;
 
       --  The identifier shall start with a lower case letter.
       if Source (Pos) not in 'a' .. 'z' then
-         return False;
+         return;
       end if;
 
       --  Scan the identifier (in lower cases).
@@ -1448,17 +1473,16 @@ package body Scanner is
          C := Source (Pos);
          exit when C not in 'a' .. 'z' and C /= '_';
          Len := Len + 1;
-         Nam_Buffer (Len) := C;
+         Buffer (Len) := C;
          Pos := Pos + 1;
       end loop;
 
       --  Shall be followed by a space or a new line.
       if not (C = ' ' or else C = HT or else Is_EOL (C)) then
-         return False;
+         return;
       end if;
 
-      Nam_Length := Len;
-      return True;
+      Id := Get_Identifier (Buffer (1 .. Len));
    end Scan_Comment_Identifier;
 
    package Directive_Protect is
@@ -1518,12 +1542,11 @@ package body Scanner is
       use Std_Names;
       Id : Name_Id;
    begin
-      if not Scan_Comment_Identifier then
+      Scan_Comment_Identifier (Id);
+
+      if Id = Null_Identifier then
          return False;
       end if;
-
-      -- Hash it.
-      Id := Name_Table.Get_Identifier;
 
       case Id is
          when Name_Psl =>

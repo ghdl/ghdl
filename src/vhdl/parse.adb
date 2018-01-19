@@ -23,7 +23,6 @@ with Errorout; use Errorout;
 with Std_Names; use Std_Names;
 with Flags; use Flags;
 with Parse_Psl;
-with Name_Table;
 with Str_Table;
 with Xrefs;
 with Elocations; use Elocations;
@@ -4907,33 +4906,27 @@ package body Parse is
    --  Simply create the node for a bit string.
    function Parse_Bit_String return Iir
    is
-      use Name_Table;
+      use Str_Table;
       Res : Iir;
-      C : Character;
       B : Number_Base_Type;
    begin
       Res := Create_Iir (Iir_Kind_String_Literal8);
       Set_Location (Res);
       Set_String8_Id (Res, Current_String_Id);
       Set_String_Length (Res, Current_String_Length);
-      if Nam_Buffer (1) = 's' then
-         Set_Has_Sign (Res, True);
-         Set_Has_Signed (Res, True);
-         pragma Assert (Nam_Length = 2);
-         C := Name_Table.Nam_Buffer (2);
-      elsif Nam_Buffer (1) = 'u' then
-         Set_Has_Sign (Res, True);
-         Set_Has_Signed (Res, False);
-         pragma Assert (Nam_Length = 2);
-         C := Nam_Buffer (2);
-      else
-         Set_Has_Sign (Res, False);
-         Set_Has_Signed (Res, False);
-         pragma Assert (Nam_Length = 1);
-         C := Nam_Buffer (1);
-      end if;
+      case Get_Bit_String_Sign is
+         when 's' =>
+            Set_Has_Sign (Res, True);
+            Set_Has_Signed (Res, True);
+         when 'u' =>
+            Set_Has_Sign (Res, True);
+            Set_Has_Signed (Res, False);
+         when others =>
+            Set_Has_Sign (Res, False);
+            Set_Has_Signed (Res, False);
+      end case;
 
-      case C is
+      case Get_Bit_String_Base is
          when 'b' =>
             B := Base_2;
          when 'o' =>

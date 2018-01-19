@@ -42,6 +42,13 @@ package Scanner is
    pragma Inline (Current_String_Id);
    pragma Inline (Current_String_Length);
 
+   --  When the current token is Tok_Bit_String, return the base ('b', 'o',
+   --  'x' or 'd') and the sign ('s', 'u', or ' ' for none).
+   function Get_Bit_String_Base return Character;
+   function Get_Bit_String_Sign return Character;
+   pragma Inline (Get_Bit_String_Base);
+   pragma Inline (Get_Bit_String_Sign);
+
    -- Set Current_identifier to null_identifier.
    -- Can be used to catch bugs.
    procedure Invalidate_Current_Identifier;
