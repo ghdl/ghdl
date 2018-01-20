@@ -187,6 +187,8 @@ package body Trans is
       Identifier_Buffer : String (1 .. 512);
       Identifier_Len    : Natural := 0;
       Identifier_Start  : Natural := 1;
+
+      --  Per scope unique id.
       Identifier_Local  : Local_Identifier_Type := 0;
 
 
@@ -204,6 +206,7 @@ package body Trans is
          Old : Inst_Build_Acc;
       begin
          Old := Inst_Build;
+         pragma Assert (Old.Prev_Id_Start <= Identifier_Start);
          Identifier_Start := Old.Prev_Id_Start;
          Inst_Build := Old.Prev;
          Unchecked_Deallocation (Old);
@@ -699,24 +702,22 @@ package body Trans is
 
       procedure Restore_Local_Identifier (Id : Local_Identifier_Type) is
       begin
-         if Identifier_Local > Id then
-            --  If the value is restored with a smaller value, some identifiers
-            --  will be reused.  This is certainly an internal error.
-            raise Internal_Error;
-         end if;
+         --  If the value is restored with a smaller value, some identifiers
+         --  will be reused.  This is certainly an internal error.
+         pragma Assert (Identifier_Local <= Id);
          Identifier_Local := Id;
       end Restore_Local_Identifier;
 
       --  Reset the identifier.
       procedure Reset_Identifier_Prefix is
       begin
-         if Identifier_Len /= 0 or else Identifier_Local /= 0 then
-            raise Internal_Error;
-         end if;
+         pragma Assert (Identifier_Len = 0 and Identifier_Local = 0);
+         null;
       end Reset_Identifier_Prefix;
 
       procedure Pop_Identifier_Prefix (Mark : in Id_Mark_Type) is
       begin
+         pragma Assert (Mark.Len <= Identifier_Len);
          Identifier_Len := Mark.Len;
          Identifier_Local := Mark.Local_Id;
       end Pop_Identifier_Prefix;
@@ -867,6 +868,7 @@ package body Trans is
       is
          Str : String := Local_Identifier_Type'Image (Identifier_Local);
       begin
+         --  Increment local identifier, as the value has been used.
          Identifier_Local := Identifier_Local + 1;
          Str (1) := 'U';
          Push_Identifier_Prefix (Mark, Str, 0);
