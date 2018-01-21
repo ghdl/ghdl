@@ -1736,6 +1736,9 @@ package body Sem_Names is
            | Iir_Kind_Instance_Name_Attribute =>
             Free_Iir (Name);
             return Res;
+         when Iir_Kinds_External_Name =>
+            pragma Assert (Name = Res);
+            return Res;
          when Iir_Kind_Psl_Expression =>
             return Res;
          when Iir_Kind_Psl_Declaration =>
@@ -3776,6 +3779,8 @@ package body Sem_Names is
             Sem_Selected_By_All_Name (Name);
          when Iir_Kind_Attribute_Name =>
             Sem_Attribute_Name (Name);
+         when Iir_Kinds_External_Name =>
+            Sem_External_Name (Name);
          when others =>
             Error_Kind ("sem_name", Name);
       end case;
@@ -4235,6 +4240,17 @@ package body Sem_Names is
       end if;
 
       Set_Type (Name, Atype);
+
+      --  LRM08 8.1 Names
+      --  A name is said to be a static name if and only if one of the
+      --  following condition holds:
+      --  - The name is an external name.
+      Set_Name_Staticness (Name, Globally);
+
+      Set_Expr_Staticness (Name, None);
+
+      --  Consider the node as analyzed.
+      Set_Named_Entity (Name, Name);
    end Sem_External_Name;
 
    function Sem_Terminal_Name (Name : Iir) return Iir

@@ -3681,6 +3681,29 @@ package Iirs is
    --
    --   Get/Set_Name_Staticness (State2)
 
+   -- Iir_Kind_External_Constant_Name (Short)
+   -- Iir_Kind_External_Signal_Name (Short)
+   -- Iir_Kind_External_Variable_Name (Short)
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Type (Field1)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_External_Pathname (Field3)
+   --
+   --   Get/Set_Named_Entity (Field4)
+   --
+   --   Get/Set_Subtype_Indication (Field5)
+   --
+   --  Only for Iir_Kind_External_Variable_Name:
+   --   Get/Set_Shared_Flag (Flag2)
+   --
+   --   Get/Set_Expr_Staticness (State1)
+   --
+   --   Get/Set_Name_Staticness (State2)
+
    -- Iir_Kind_Selected_By_All_Name (Short)
    --
    --   Get/Set_Prefix (Field0)
@@ -3769,27 +3792,6 @@ package Iirs is
    --   Get/Set_Type (Field1)
    --
    --   Get/Set_Base_Name (Field5)
-   --
-   --   Get/Set_Expr_Staticness (State1)
-   --
-   --   Get/Set_Name_Staticness (State2)
-
-   -- Iir_Kind_External_Constant_Name (Short)
-   -- Iir_Kind_External_Signal_Name (Short)
-   -- Iir_Kind_External_Variable_Name (Short)
-   --
-   --   Get/Set_Parent (Field0)
-   --
-   --   Get/Set_Type (Field1)
-   --
-   --   Get/Set_Chain (Field2)
-   --
-   --   Get/Set_External_Pathname (Field3)
-   --
-   --   Get/Set_Subtype_Indication (Field5)
-   --
-   --  Only for Iir_Kind_External_Variable_Name:
-   --   Get/Set_Shared_Flag (Flag2)
    --
    --   Get/Set_Expr_Staticness (State1)
    --
@@ -4293,12 +4295,12 @@ package Iirs is
       Iir_Kind_Operator_Symbol,                --  denoting_name
       Iir_Kind_Reference_Name,                 --  denoting_name
 
-      Iir_Kind_Selected_By_All_Name,
-      Iir_Kind_Parenthesis_Name,
-
       Iir_Kind_External_Constant_Name,
       Iir_Kind_External_Signal_Name,
       Iir_Kind_External_Variable_Name,
+
+      Iir_Kind_Selected_By_All_Name,
+      Iir_Kind_Parenthesis_Name,
 
       Iir_Kind_Package_Pathname,
       Iir_Kind_Absolute_Pathname,
@@ -5193,6 +5195,16 @@ package Iirs is
    --Iir_Kind_Selected_Name
    --Iir_Kind_Operator_Symbol
      Iir_Kind_Reference_Name;
+
+   subtype Iir_Kinds_Denoting_And_External_Name is Iir_Kind range
+     Iir_Kind_Character_Literal ..
+   --Iir_Kind_Simple_Name
+   --Iir_Kind_Selected_Name
+   --Iir_Kind_Operator_Symbol
+   --Iir_Kind_Reference_Name
+   --Iir_Kind_External_Constant_Name
+   --Iir_Kind_External_Signal_Name
+     Iir_Kind_External_Variable_Name;
 
    subtype Iir_Kinds_Name is Iir_Kind range
      Iir_Kind_Character_Literal ..

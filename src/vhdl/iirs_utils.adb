@@ -436,6 +436,9 @@ package body Iirs_Utils is
             --  GHDL: in particular, names can denote objects.
             return Name_To_Object (Get_Named_Entity (Name));
 
+         when Iir_Kinds_External_Name =>
+            return Name;
+
          when others =>
             return Null_Iir;
       end case;

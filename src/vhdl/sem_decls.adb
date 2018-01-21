@@ -2216,6 +2216,16 @@ package body Sem_Decls is
                  (+Alias, "base type of aliased name and name mismatch");
             end if;
          end if;
+
+         --  LRM08 6.6.2 Object aliases
+         --  The following rules apply yo object aliases:
+         --  b) If the name is an external name, a subtype indication shall not
+         --     appear in the alias declaration.
+         if Get_Kind (N_Name) in Iir_Kinds_External_Name then
+            Error_Msg_Sem
+              (+Alias,
+               "subtype indication not allowed in alias of external name");
+         end if;
       end if;
 
       --  LRM93 4.3.3.1
@@ -2699,11 +2709,11 @@ package body Sem_Decls is
 
          Free_Iir (Alias);
 
-         if Get_Kind (Name) in Iir_Kinds_Denoting_Name then
+         if Get_Kind (Name) in Iir_Kinds_Denoting_And_External_Name then
             Sem_Non_Object_Alias_Declaration (Res);
          else
             Error_Msg_Sem
-              (+Name, "name of nonobject alias is not a declaration");
+              (+Name, "name of nonobject alias is not a name");
 
             --  Create a simple name to an error node.
             N_Entity := Create_Error (Name);
