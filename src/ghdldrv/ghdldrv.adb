@@ -997,8 +997,8 @@ package body Ghdldrv is
          if Add_Std then
             Std_File := new
               String'(Get_Machine_Path_Prefix & Directory_Separator
-                      & Get_Version_Path & Directory_Separator
                       & "std" & Directory_Separator
+                      & Get_Version_Path & Directory_Separator
                       & "std_standard" & Link_Obj_Suffix.all);
             P := P + 1;
             Args (P) := Std_File;

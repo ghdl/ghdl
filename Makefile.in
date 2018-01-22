@@ -416,13 +416,13 @@ LIBSRC_DIR:=$(srcdir)/libraries
 LIBDST_DIR:=$(libdirsuffix)
 
 VHDLLIB_SUBDIRS_COMMON= src/std src/synopsys src/openieee \
-  v87/std v87/ieee v87/synopsys \
-  v93/std v93/ieee v93/synopsys \
-  v08/std
+  std/v87 ieee/v87 synopsys/v87 \
+  std/v93 ieee/v93 synopsys/v93 \
+  std/v08
 
 VHDLLIB_SUBDIRS_FULL= src/ieee src/vital95 src/vital2000 src/mentor \
   src/ieee2008 \
-  v93/mentor v08/ieee v08/synopsys
+  mentor/v93 ieee/v08 synopsys/v08
 
 ifeq ($(enable_openieee),false)
 VHDLLIB_SUBDIRS=$(VHDLLIB_SUBDIRS_COMMON) $(VHDLLIB_SUBDIRS_FULL)

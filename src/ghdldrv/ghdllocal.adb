@@ -323,17 +323,17 @@ package body Ghdllocal is
       end if;
    end Get_Machine_Path_Prefix;
 
-   procedure Add_Library_Path (Name : String)
+   procedure Add_Library_Name (Name : String)
    is
       Path : constant String := Get_Machine_Path_Prefix & Directory_Separator
-        & Get_Version_Path & Directory_Separator & Name & Directory_Separator;
+        & Name & Directory_Separator & Get_Version_Path & Directory_Separator;
    begin
       if not Is_Directory (Path) then
          Warning
            ("library " & Name & " does not exists for " & Get_Version_Path);
       end if;
       Libraries.Add_Library_Path (Path);
-   end Add_Library_Path;
+   end Add_Library_Name;
 
    procedure Setup_Libraries (Load : Boolean)
    is
@@ -382,21 +382,24 @@ package body Ghdllocal is
 
       --  Add paths for predefined libraries.
       if not Flags.Bootstrap then
-         Add_Library_Path ("std");
          case Flag_Ieee is
             when Lib_Standard =>
-               Add_Library_Path ("ieee");
+               Add_Library_Name ("ieee");
             when Lib_Synopsys =>
-               Add_Library_Path ("synopsys");
+               Add_Library_Name ("synopsys");
             when Lib_Mentor =>
                if Vhdl_Std >= Vhdl_08 then
                   Warning ("--ieee=mentor is ignored for --std=08");
                else
-                  Add_Library_Path ("mentor");
+                  Add_Library_Name ("mentor");
                end if;
             when Lib_None =>
                null;
          end case;
+
+         --  For std: just add the library prefix.
+         Libraries.Add_Library_Path
+           (Get_Machine_Path_Prefix & Directory_Separator);
       end if;
       if Load then
          Libraries.Load_Std_Library;
