@@ -2557,6 +2557,7 @@ package body Evaluation is
             begin
                Param := Get_Parameter (Expr);
                Param := Eval_Static_Expr (Param);
+               Eval_Check_Bound (Param, Get_Type (Get_Prefix (Expr)));
                Set_Parameter (Expr, Param);
 
                --  Special case for overflow.
