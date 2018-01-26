@@ -91,6 +91,13 @@ package body Sem_Types is
            | Iir_Kind_Record_Subtype_Definition =>
             Set_Type_Has_Signal (Get_Base_Type (Atype));
             Mark_Resolution_Function (Atype);
+            declare
+               Tm : constant Iir := Get_Subtype_Type_Mark (Atype);
+            begin
+               if Tm /= Null_Iir then
+                  Set_Type_Has_Signal (Get_Type (Get_Named_Entity (Tm)));
+               end if;
+            end;
          when others =>
             null;
       end case;
