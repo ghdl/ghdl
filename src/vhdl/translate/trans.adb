@@ -1462,60 +1462,47 @@ package body Trans is
 
    procedure Free_Node_Infos
    is
-      Info      : Ortho_Info_Acc;
-      Prev_Info : Ortho_Info_Acc;
+      Info : Ortho_Info_Acc;
    begin
-      Prev_Info := null;
+      --  Check each node is not marked.
       for I in Node_Infos.First .. Node_Infos.Last loop
          Info := Get_Info (I);
-         if Info /= null and then Info /= Prev_Info then
-            case Get_Kind (I) is
-               when Iir_Kind_Constant_Declaration =>
-                  if Get_Deferred_Declaration_Flag (I) = False
-                    and then Get_Deferred_Declaration (I) /= Null_Iir
-                  then
-                     --  Info are copied from incomplete constant declaration
-                     --  to full constant declaration.
-                     Clear_Info (I);
+         pragma Assert (Info = null or else not Info.Mark);
+      end loop;
+
+      --  Clear duplicated nodes
+      for I in Node_Infos.First .. Node_Infos.Last loop
+         Info := Get_Info (I);
+         if Info /= null then
+            if Info.Mark then
+               --  This info is shared by another node and was already seen.
+               --  Unreference it.
+               Clear_Info (I);
+            else
+               Info.Mark := True;
+               if Info.Kind = Kind_Type and then Info.C /= null then
+                  if Info.C (Mode_Value).Mark then
+                     Info.C := null;
                   else
-                     Free_Info (I);
+                     Info.C (Mode_Value).Mark := True;
                   end if;
-               when Iir_Kind_Record_Subtype_Definition
-                  | Iir_Kind_Access_Subtype_Definition =>
-                  null;
-               when Iir_Kind_Enumeration_Type_Definition
-                  | Iir_Kind_Array_Type_Definition
-                  | Iir_Kind_Integer_Subtype_Definition
-                  | Iir_Kind_Floating_Subtype_Definition
-                  | Iir_Kind_Physical_Subtype_Definition
-                  | Iir_Kind_Enumeration_Subtype_Definition =>
-                  Free_Type_Info (Info);
-               when Iir_Kind_Array_Subtype_Definition =>
-                  if Get_Index_Constraint_Flag (I) then
-                     Info.B := Ortho_Info_Basetype_Array_Init;
-                     Info.S := Ortho_Info_Subtype_Array_Init;
-                     Free_Type_Info (Info);
-                  end if;
-               when Iir_Kind_Function_Declaration =>
-                  case Get_Implicit_Definition (I) is
-                     when Iir_Predefined_Bit_Array_Match_Equality
-                        |  Iir_Predefined_Bit_Array_Match_Inequality =>
-                        --  Not in sequence.
-                        null;
-                     when others =>
-                        --  By default, info are not shared.
-                        --  The exception is infos for implicit subprograms,
-                        --  but they are always consecutive and not free twice
-                        --  due to prev_info mechanism.
-                        Free_Info (I);
-                  end case;
-               when others =>
-                  --  By default, info are not shared.
-                  Free_Info (I);
-            end case;
-            Prev_Info := Info;
+               end if;
+            end if;
          end if;
       end loop;
+
+      --  Free infos
+      for I in Node_Infos.First .. Node_Infos.Last loop
+         Info := Get_Info (I);
+         if Info /= null then
+            if Info.Kind = Kind_Type then
+               Free_Type_Info (Info);
+            else
+               Free_Info (I);
+            end if;
+         end if;
+      end loop;
+
       Node_Infos.Free;
    end Free_Node_Infos;
 

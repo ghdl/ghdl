@@ -1168,12 +1168,15 @@ package Trans is
 
    --  Additional info for complex types.
    type Complex_Type_Info is record
+      --  For a simple memory management: use mark and sweep to free all infos.
+      Mark : Boolean := False;
+
+      Builder_Need_Func : Boolean := False;
+
       --  Variable containing the size of the type.
       --  This is defined only for types whose size is only known at
       --  running time (and not a compile-time).
       Size_Var : Var_Type := Null_Var;
-
-      Builder_Need_Func : Boolean := False;
 
       --  Parameters for type builders.
       --  NOTE: this is only set for types (and *not* for subtypes).
@@ -1219,6 +1222,9 @@ package Trans is
    type Ortho_Info_Acc is access Ortho_Info_Type;
 
    type Ortho_Info_Type (Kind : Ortho_Info_Kind) is record
+      --  For a simple memory management: use mark and sweep to free all infos.
+      Mark : Boolean := False;
+
       case Kind is
          when Kind_Type =>
             --  Mode of the type.

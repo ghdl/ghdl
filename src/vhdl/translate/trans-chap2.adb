@@ -1198,6 +1198,7 @@ package body Trans.Chap2 is
       case Src.Kind is
          when Kind_Type =>
             Dest.all := (Kind => Kind_Type,
+                         Mark => False,
                          Type_Mode => Src.Type_Mode,
                          Type_Incomplete => Src.Type_Incomplete,
                          Type_Locally_Constrained =>
@@ -1213,7 +1214,8 @@ package body Trans.Chap2 is
             if Src.C /= null then
                Dest.C := new Complex_Type_Arr_Info'
                  (Mode_Value =>
-                    (Size_Var => Instantiate_Var
+                    (Mark => False,
+                     Size_Var => Instantiate_Var
                        (Src.C (Mode_Value).Size_Var),
                      Builder_Need_Func =>
                        Src.C (Mode_Value).Builder_Need_Func,
@@ -1226,7 +1228,8 @@ package body Trans.Chap2 is
                      Builder_Func =>
                        Src.C (Mode_Value).Builder_Func),
                   Mode_Signal =>
-                    (Size_Var => Instantiate_Var
+                    (Mark => False,
+                     Size_Var => Instantiate_Var
                        (Src.C (Mode_Signal).Size_Var),
                      Builder_Need_Func =>
                        Src.C (Mode_Signal).Builder_Need_Func,
@@ -1242,6 +1245,7 @@ package body Trans.Chap2 is
          when Kind_Object =>
             Dest.all :=
               (Kind => Kind_Object,
+               Mark => False,
                Object_Static => Src.Object_Static,
                Object_Var => Instantiate_Var (Src.Object_Var),
                Object_Rti => Src.Object_Rti);
@@ -1250,6 +1254,7 @@ package body Trans.Chap2 is
             pragma Assert (Src.Signal_Function = O_Dnode_Null);
             Dest.all :=
               (Kind => Kind_Signal,
+               Mark => False,
                Signal_Val => Instantiate_Var (Src.Signal_Val),
                Signal_Valp => Instantiate_Var (Src.Signal_Valp),
                Signal_Sig => Instantiate_Var (Src.Signal_Sig),
@@ -1261,6 +1266,7 @@ package body Trans.Chap2 is
               Instantiate_Var_Scope (Src.Subprg_Frame_Scope);
             Dest.all :=
               (Kind => Kind_Subprg,
+               Mark => False,
                Use_Stack2 => Src.Use_Stack2,
                Subprg_Node => Src.Subprg_Node,
                Res_Interface => Src.Res_Interface,
@@ -1283,6 +1289,7 @@ package body Trans.Chap2 is
          when Kind_Operator =>
             Dest.all :=
               (Kind => Kind_Operator,
+               Mark => False,
                Operator_Stack2 => Src.Operator_Stack2,
                Operator_Body => Src.Operator_Body,
                Operator_Node => Src.Operator_Node,
@@ -1293,18 +1300,22 @@ package body Trans.Chap2 is
                Operator_Res => Src.Operator_Res);
          when Kind_Interface =>
             Dest.all := (Kind => Kind_Interface,
+                         Mark => False,
                          Interface_Mechanism => Src.Interface_Mechanism,
                          Interface_Decl => Src.Interface_Decl,
                          Interface_Field => Src.Interface_Field);
          when Kind_Index =>
             Dest.all := (Kind => Kind_Index,
+                         Mark => False,
                          Index_Field => Src.Index_Field);
          when Kind_Expr =>
             Dest.all := (Kind => Kind_Expr,
+                         Mark => False,
                          Expr_Node => Src.Expr_Node);
          when Kind_Package_Instance =>
             Dest.all :=
               (Kind => Kind_Package_Instance,
+               Mark => False,
                Package_Instance_Spec_Var =>
                  Instantiate_Var (Src.Package_Instance_Spec_Var),
                Package_Instance_Body_Var =>
@@ -1324,12 +1335,14 @@ package body Trans.Chap2 is
 
          when Kind_Field =>
             Dest.all := (Kind => Kind_Field,
+                         Mark => False,
                          Field_Node => Src.Field_Node,
                          Field_Bound => Src.Field_Bound);
 
          when Kind_Package =>
             Dest.all :=
               (Kind => Kind_Package,
+               Mark => False,
                Package_Elab_Spec_Subprg => Src.Package_Elab_Spec_Subprg,
                Package_Elab_Body_Subprg => Src.Package_Elab_Body_Subprg,
                Package_Elab_Spec_Instance =>
