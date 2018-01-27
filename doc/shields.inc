@@ -13,8 +13,8 @@
       :target: https://travis-ci.org/ghdl/ghdl
       :alt: Build status by Travis-CI
 
-.. |SHIELD:appveyor| image:: https://ci.appveyor.com/api/projects/status/rsq60m5wcly3og8j?svg=true
-   :target: https://ci.appveyor.com/project/tgingold/ghdl/branch/master
+.. |SHIELD:appveyor| image:: https://ci.appveyor.com/api/projects/status/7hx4kfbhidv06sin?svg=true
+   :target: https://ci.appveyor.com/project/tgingold/ghdl-psgys/branch/master
    :alt: Build status by AppVeyor
 
 .. |SHIELD:release| image:: https://img.shields.io/github/release/ghdl/ghdl.svg?label=latest%20release&style=flat
