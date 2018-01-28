@@ -1,5 +1,3 @@
-.. _CHANGE:Roadmap:
-
 Meta
 ####
 
@@ -12,42 +10,41 @@ General guidelines to edit the documentation
    4) Please underline all headlines with at least as many characters as the headline is long. Following the Python pattern for headlines the levels are:
 
       .. code::
-	  
+
          ############
          ************ (sometimes skipped in small documents)
          ============
          -------------------
          ‘’’’’’’’’’’’’’’’’’’’’’’’
-	  
+
    5) It’s not required to write
-   
+
       .. code::
-	    
-		 :samp:`code`
-	   
+
+		:samp:`code`
+
       The default role for
-	   
+
 	  .. code::
 	   
-	     ``code``
+		``code``
 		  
       is samp. ``:samp:`` is only required when you want to write italic text in code text.
-	  
+
 	  .. code::
 
-         :samp:`print 1+{variable}`
+           :samp:`print 1+{variable}`
 
       Now, variable becomes italic.
 
       Please simplify all usages of ``:samp:`code``` to ````code```` for readability. Here are the regular expressions for an editor like Notepad++:
-	  
+
       - Search pattern:: :samp:`(.+?)`
-		 
-      - Replace pattern:: ``\1`` 
+      - Replace pattern:: ``\1``
 
-   6) Each backend has one folder and each platform/compiler has one file. Please note that page headlines are different from ToC headlines: 
+   6) Each backend has one folder and each platform/compiler has one file. Please note that page headlines are different from ToC headline:
 
-      .. code::   
+      .. code::
 
          .. toctree::
             :hidden:
@@ -58,7 +55,6 @@ General guidelines to edit the documentation
    7) Documentation should not use “you”, “we”, …, because it’s not an interactive conversation or informal letter. It’s like a thesis, everything is structured and formal. However, to make it more friendly to newcomers, we agree to allow informal language in the section :ref:`USING:QuickStart`.
 
    8) Please keep errors to a minimum.
-	  
 
 Guidelines to edit section 'Building'
 *************************************
@@ -73,24 +69,24 @@ We would like to see a list like:
 * ...
 
 The goal is also to explain what a user is installing and what the few lines in the build description do. Now they know the name, can search for similar names if they have another package manager or distro or can ask Google/Wikipedia. We often find many build receipts with cryptic shell code and to execute this unknown stuff with sudo is not comfortable. We would like to know what it does before hitting enter.
-	  
+
 Documentation configuration
 ***************************
-	  
+
 * Python snippet for Sphinx's `conf.py` to extract the current version number from Git (latest tag name). [:ghdlsharp:`200`, :ghdlsharp:`221`]
 
 * Reference ``genindex.html`` from the navigation bar. [:ghdlsharp:`200`]
 
 * Create "parts" (LaTeX terminology / chapter headlines) in navigation bar. [:ghdlsharp:`200`]
-	
+
 * Intersphinx files [:ghdlsharp:`200`]
 	* To decompress the inventory file: `curl -s http://ghdl.readthedocs.io/en/latest/objects.inv | tail -n+5 | openssl zlib -d`. From `how-to-uncompress-zlib-data-in-unix <http://unix.stackexchange.com/questions/22834/how-to-uncompress-zlib-data-in-unix>`_.
 	* External ref and link to section::
-	
+
 		:ref:`GHDL Roadmap <ghdl:CHANGE:Roadmap>`
-		
+
 	* External ref to option (no link)::
-	
+
 		:ghdl:option:`--ieee`
 		:option:`ghdl:--ieee`
 
@@ -103,7 +99,7 @@ CSS
 
    * No headlines are shown. It is not possible to remove only one of them with CSS only (JS would be required). However, because the content in most of the lines is self-explained, it is preferred not to show any.
    * The Search box is removed.
-	
+
 Dist
 ****
 		

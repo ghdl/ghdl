@@ -108,9 +108,9 @@ later instructions or on other pages in this documentation.
 +----------+----------------------------------------+
 | Protocol | GitHub Repository URL                  |
 +==========+========================================+
-| HTTPS    | https://github.com/ghdl/ghdl.git   |
+| HTTPS    | https://github.com/ghdl/ghdl.git       |
 +----------+----------------------------------------+
-| SSH      | ssh://git@github.com:ghdl/ghdl.git |
+| SSH      | ssh://git@github.com:ghdl/ghdl.git     |
 +----------+----------------------------------------+
 
 

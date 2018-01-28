@@ -3,8 +3,6 @@
 GCC Backend
 ###########
 
-.. HINT::
-
 .. rubric:: Requirements
 
 * GCC (Gnu Compiler Collection)

@@ -43,7 +43,6 @@ Here is a short comparison, so that you can choose the one you want to use:
    With mcode Backend <mcode/index>
    With LLVM Backend <llvm/index>
    With GCC Backend <gcc/index>
-   TestSuites
 
 .. HINT::
    The output of both GCC and LLVM is an executable file, but `mcode` does not
