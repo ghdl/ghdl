@@ -884,6 +884,45 @@ package body Trans.Chap3 is
       return Len;
    end Get_Array_Subtype_Length;
 
+   --  Create ortho unconstrained arrays for DEF, whose element subtype was
+   --  newly constrained.  The element subtype must be a static type, so that
+   --  an array can indeed be created.
+   procedure Create_Array_For_Array_Subtype
+     (Def : Iir_Array_Subtype_Definition;
+      Base : out O_Tnode_Array;
+      Ptr : out O_Tnode_Array)
+   is
+      El_Tinfo : constant Type_Info_Acc :=
+        Get_Info (Get_Element_Subtype (Def));
+      pragma Assert (Is_Static_Type (El_Tinfo));
+      Id : O_Ident;
+   begin
+      Base (Mode_Signal) := O_Tnode_Null;
+      Ptr (Mode_Signal) := O_Tnode_Null;
+      for I in Mode_Value .. Type_To_Last_Object_Kind (Def) loop
+         --  Element has been constrained by this subtype, so create the
+         --  base array (and the pointer).
+         case I is
+            when Mode_Value =>
+               Id := Create_Identifier ("BARR");
+            when Mode_Signal =>
+               Id := Create_Identifier ("BARRSIG");
+         end case;
+         Base (I) := New_Array_Type
+           (El_Tinfo.Ortho_Type (I), Ghdl_Index_Type);
+         New_Type_Decl (Id, Base (I));
+
+         case I is
+            when Mode_Value =>
+               Id := Create_Identifier ("BARRPTR");
+            when Mode_Signal =>
+               Id := Create_Identifier ("BARRSIGPTR");
+         end case;
+         Ptr (I) := New_Access_Type (Base (I));
+         New_Type_Decl (Id, Ptr (I));
+      end loop;
+   end Create_Array_For_Array_Subtype;
+
    procedure Translate_Array_Subtype_Definition
      (Def : Iir_Array_Subtype_Definition; Parent_Type : Iir)
    is
@@ -894,13 +933,14 @@ package body Trans.Chap3 is
 
       Id : O_Ident;
       El_Constrained : Boolean;
-      El_Tinfo : Type_Info_Acc;
-      Base : O_Tnode;
+      Base : O_Tnode_Array;
    begin
       --  Note: info of indexes subtype are not created!
 
       Len := Get_Array_Subtype_Length (Def);
       Info.Type_Locally_Constrained := (Len >= 0);
+      Info.B := Pinfo.B;
+      Info.S := Pinfo.S;
       if Is_Complex_Type (Pinfo)
         or else not Info.Type_Locally_Constrained
       then
@@ -924,39 +964,18 @@ package body Trans.Chap3 is
       else
          --  Length is known.  Create a constrained array.
          El_Constrained := Get_Array_Element_Constraint (Def) /= Null_Iir;
-         if El_Constrained then
-            El_Tinfo := Get_Info (Get_Element_Subtype (Def));
-         end if;
          Info.Type_Mode := Type_Mode_Static_Array;
          Info.Ortho_Type (Mode_Signal) := O_Tnode_Null;
          Info.Ortho_Ptr_Type (Mode_Signal) := O_Tnode_Null;
+         if El_Constrained then
+            --  Element has been constrained by this subtype, so create the
+            --  base array (and the pointer).
+            Create_Array_For_Array_Subtype (Def, Base, Info.Ortho_Ptr_Type);
+         else
+            Base := Pinfo.B.Base_Type;
+            Info.Ortho_Ptr_Type := Pinfo.B.Base_Ptr_Type;
+         end if;
          for I in Mode_Value .. Type_To_Last_Object_Kind (Def) loop
-            if El_Constrained then
-               --  Element has been constrained by this subtype, so create the
-               --  base array (and the pointer).
-               case I is
-                  when Mode_Value =>
-                     Id := Create_Identifier ("BARR");
-                  when Mode_Signal =>
-                     Id := Create_Identifier ("BARRSIG");
-               end case;
-               Base := New_Array_Type
-                 (El_Tinfo.Ortho_Type (I), Ghdl_Index_Type);
-               New_Type_Decl (Id, Base);
-
-               case I is
-                  when Mode_Value =>
-                     Id := Create_Identifier ("BARRPTR");
-                  when Mode_Signal =>
-                     Id := Create_Identifier ("BARRSIGPTR");
-               end case;
-               Info.Ortho_Ptr_Type (I) := New_Access_Type (Base);
-               New_Type_Decl (Id, Info.Ortho_Ptr_Type (I));
-            else
-               Base := Pinfo.B.Base_Type (I);
-               Info.Ortho_Ptr_Type (I) := Pinfo.B.Base_Ptr_Type (I);
-            end if;
-
             case I is
                when Mode_Value =>
                   Id := Create_Identifier;
@@ -964,11 +983,39 @@ package body Trans.Chap3 is
                   Id := Create_Identifier ("SIG");
             end case;
             Info.Ortho_Type (I) := New_Constrained_Array_Type
-              (Base, New_Index_Lit (Unsigned_64 (Len)));
+              (Base (I), New_Index_Lit (Unsigned_64 (Len)));
             New_Type_Decl (Id, Info.Ortho_Type (I));
          end loop;
       end if;
    end Translate_Array_Subtype_Definition;
+
+   procedure Translate_Array_Subtype_Definition_Constrained_Element
+     (Def : Iir_Array_Subtype_Definition; Parent_Type : Iir)
+   is
+      Info      : constant Type_Info_Acc := Get_Info (Def);
+      Pinfo     : constant Type_Info_Acc := Get_Info (Parent_Type);
+   begin
+      --  Note: info of indexes subtype are not created!
+      Info.Type_Locally_Constrained := False;
+      Info.Ortho_Type := Pinfo.Ortho_Type;
+      Info.Ortho_Ptr_Type := Pinfo.Ortho_Ptr_Type;
+      Info.B := Pinfo.B;
+      Info.S := Pinfo.S;
+
+      --  This is a complex type as the size is not known at compile time.
+      Info.Type_Mode := Type_Mode_Unbounded_Array;
+      Create_Array_For_Array_Subtype
+        (Def, Info.B.Base_Type, Info.B.Base_Ptr_Type);
+
+      --  If the base type need a builder, so does the subtype.
+      if Is_Complex_Type (Pinfo) then
+         if Pinfo.C (Mode_Value).Builder_Need_Func then
+            Copy_Complex_Type (Info, Pinfo);
+         else
+            Set_Complex_Type (Info, False);
+         end if;
+      end if;
+   end Translate_Array_Subtype_Definition_Constrained_Element;
 
    procedure Create_Array_Type_Builder
      (Def : Iir_Array_Type_Definition; Kind : Object_Kind_Type)
@@ -2434,7 +2481,6 @@ package body Trans.Chap3 is
          when Iir_Kind_Array_Subtype_Definition =>
             --  Handle element subtype.
             declare
-               Parent_Info : constant Type_Info_Acc := Get_Info (Parent_Type);
                El_Type : constant Iir := Get_Element_Subtype (Def);
                Parent_El_Type : constant Iir :=
                  Get_Element_Subtype (Parent_Type);
@@ -2449,20 +2495,23 @@ package body Trans.Chap3 is
 
                if Get_Constraint_State (Def) = Fully_Constrained then
                   Translate_Array_Subtype_Definition (Def, Parent_Type);
-                  Info.B := Parent_Info.B;
-                  Info.S := Parent_Info.S;
                   if With_Vars then
                      Create_Composite_Subtype_Bounds_Var (Def, False);
                   end if;
                elsif Is_Fully_Constrained_Type (El_Type)
                  and then not Is_Fully_Constrained_Type (Parent_El_Type)
+                 and then Is_Static_Type (Get_Info (El_Type))
                then
-                  raise Internal_Error;
+                  --  The array subtype is not constrained, but the element
+                  --  subtype was just contrained.  Create an array for
+                  --  ortho, if the element subtype is static.
+                  Translate_Array_Subtype_Definition_Constrained_Element
+                    (Def, Parent_Type);
                else
                   --  An unconstrained array subtype.  Use same infos as base
                   --  type.
                   Free_Info (Def);
-                  Set_Info (Def, Parent_Info);
+                  Set_Info (Def, Get_Info (Parent_Type));
                end if;
             end;
 
