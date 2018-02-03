@@ -491,12 +491,16 @@ package body Std_Names is
       Def ("tri",          Name_Tri);
       Def ("tri0",         Name_Tri0);
       Def ("tri1",         Name_Tri1);
+      Def ("triand",       Name_Triand);
+      Def ("trior",        Name_Trior);
       Def ("trireg",       Name_Trireg);
       Def ("wand",         Name_Wand);
       Def ("weak0",        Name_Weak0);
       Def ("weak1",        Name_Weak1);
       Def ("wire",         Name_Wire);
       Def ("wor",          Name_Wor);
+
+      Def ("localparam",   Name_Localparam);
 
       Def ("define",       Name_Define);
       Def ("endif",        Name_Endif);

@@ -568,16 +568,23 @@ package Std_Names is
    Name_Tri :            constant Name_Id := Name_First_Verilog + 61;
    Name_Tri0 :           constant Name_Id := Name_First_Verilog + 62;
    Name_Tri1 :           constant Name_Id := Name_First_Verilog + 63;
-   Name_Trireg :         constant Name_Id := Name_First_Verilog + 64;
-   Name_Wand :           constant Name_Id := Name_First_Verilog + 65;
-   Name_Weak0 :          constant Name_Id := Name_First_Verilog + 66;
-   Name_Weak1 :          constant Name_Id := Name_First_Verilog + 67;
-   Name_Wire :           constant Name_Id := Name_First_Verilog + 68;
-   Name_Wor :            constant Name_Id := Name_First_Verilog + 69;
+   Name_Triand :         constant Name_Id := Name_First_Verilog + 64;
+   Name_Trior :          constant Name_Id := Name_First_Verilog + 65;
+   Name_Trireg :         constant Name_Id := Name_First_Verilog + 66;
+   Name_Wand :           constant Name_Id := Name_First_Verilog + 67;
+   Name_Weak0 :          constant Name_Id := Name_First_Verilog + 68;
+   Name_Weak1 :          constant Name_Id := Name_First_Verilog + 69;
+   Name_Wire :           constant Name_Id := Name_First_Verilog + 70;
+   Name_Wor :            constant Name_Id := Name_First_Verilog + 71;
    Name_Last_Verilog :   constant Name_Id := Name_Wor;
 
+   --  Verilog 2001
+   Name_First_V2001 :    constant Name_Id := Name_Last_Verilog + 1;
+   Name_Localparam :     constant Name_Id := Name_First_V2001;
+   Name_Last_V2001 :     constant Name_Id := Name_First_V2001 + 0;
+
    --  Verilog Directives.
-   Name_First_Directive : constant Name_Id := Name_Last_Verilog + 1;
+   Name_First_Directive : constant Name_Id := Name_Last_V2001 + 1;
    Name_Define :         constant Name_Id := Name_First_Directive + 00;
    Name_Endif :          constant Name_Id := Name_First_Directive + 01;
    Name_Ifdef :          constant Name_Id := Name_First_Directive + 02;
