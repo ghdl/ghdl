@@ -2122,6 +2122,11 @@ package body Disp_Vhdl is
 
    procedure Disp_Monadic_Operator (Expr: Iir) is
    begin
+      if Get_Kind (Expr) = Iir_Kind_Implicit_Condition_Operator then
+         Disp_Expression (Get_Operand (Expr));
+         return;
+      end if;
+
       Put (Name_Table.Image (Iirs_Utils.Get_Operator_Name (Expr)));
       Put (' ');
       if Flag_Parenthesis then

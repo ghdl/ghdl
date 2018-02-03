@@ -1849,7 +1849,14 @@ package body Sem_Expr is
          --  The list of possible implementations was computed.
          case Get_Nbr_Elements (Overload_List) is
             when 0 =>
-               Error_Msg_Sem (+Expr, "no function declarations for %n", +Expr);
+               if Get_Kind (Expr) = Iir_Kind_Implicit_Condition_Operator then
+                  --  TODO: display expression type.
+                  Error_Msg_Sem (+Expr, "cannot convert expression to boolean "
+                                   & "(no ""??"" found)");
+               else
+                  Error_Msg_Sem (+Expr,
+                                 "no function declarations for %n", +Expr);
+               end if;
                Destroy_Iir_List (Overload_List);
                return Null_Iir;
 
@@ -4730,7 +4737,7 @@ package body Sem_Expr is
       Op : Iir;
       Res : Iir;
    begin
-      Op := Create_Iir (Iir_Kind_Condition_Operator);
+      Op := Create_Iir (Iir_Kind_Implicit_Condition_Operator);
       Location_Copy (Op, Cond);
       Set_Operand (Op, Cond);
 
@@ -4778,7 +4785,7 @@ package body Sem_Expr is
                Check_Read (Res);
                return Res;
             end if;
-         else
+         elsif Get_Type (Res) /= Null_Iir then
             --  Many interpretations.
             declare
                Res_List : constant Iir_List :=

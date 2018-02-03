@@ -177,7 +177,8 @@ package body Iirs_Utils is
             return Name_Op_Plus;
          when Iir_Kind_Absolute_Operator =>
             return Name_Abs;
-         when Iir_Kind_Condition_Operator =>
+         when Iir_Kind_Condition_Operator
+           | Iir_Kind_Implicit_Condition_Operator =>
             return Name_Op_Condition;
          when others =>
             raise Internal_Error;

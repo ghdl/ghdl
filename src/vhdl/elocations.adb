@@ -245,6 +245,7 @@ package body Elocations is
            | Iir_Kind_Negation_Operator
            | Iir_Kind_Absolute_Operator
            | Iir_Kind_Not_Operator
+           | Iir_Kind_Implicit_Condition_Operator
            | Iir_Kind_Condition_Operator
            | Iir_Kind_Reduction_And_Operator
            | Iir_Kind_Reduction_Or_Operator
@@ -321,11 +322,11 @@ package body Elocations is
            | Iir_Kind_Selected_Name
            | Iir_Kind_Operator_Symbol
            | Iir_Kind_Reference_Name
-           | Iir_Kind_Selected_By_All_Name
-           | Iir_Kind_Parenthesis_Name
            | Iir_Kind_External_Constant_Name
            | Iir_Kind_External_Signal_Name
            | Iir_Kind_External_Variable_Name
+           | Iir_Kind_Selected_By_All_Name
+           | Iir_Kind_Parenthesis_Name
            | Iir_Kind_Package_Pathname
            | Iir_Kind_Absolute_Pathname
            | Iir_Kind_Relative_Pathname
