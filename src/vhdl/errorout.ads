@@ -340,7 +340,8 @@ private
    type Warnings_Setting is array (Msgid_Warnings) of Warning_Control_Type;
 
    Default_Warnings : constant Warnings_Setting :=
-     (Warnid_Binding | Warnid_Library | Warnid_Shared | Warnid_Pure
+     (Warnid_Binding | Warnid_Library | Warnid_Shared
+        | Warnid_Pure | Warnid_Specs
         | Warnid_Port    => (Enabled => True, Error => False),
       others             => (Enabled => False, Error => False));
 end Errorout;

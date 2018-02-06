@@ -700,6 +700,38 @@ package body Sem_Specs is
    procedure Sem_Attribute_Specification
      (Spec : Iir_Attribute_Specification; Scope : Iir)
    is
+      --  Emit an error message when NAME is not found.
+      procedure Error_Attribute_Specification (Name : Iir)
+      is
+         Inter : Name_Interpretation_Type;
+         Decl : Iir;
+      begin
+         if Flag_Relaxed_Rules or Vhdl_Std = Vhdl_93c then
+            --  Some (clueless ?) vendors put attribute specifications in
+            --  architectures for ports (declared in entities).  This is not
+            --  valid according to the LRM (eg: LRM02 5.1 Attribute
+            --  specification).  Be tolerant.
+            Inter := Get_Interpretation (Get_Identifier (Name));
+            if Valid_Interpretation (Inter) then
+               Decl := Get_Declaration (Inter);
+               if Get_Kind (Decl) = Iir_Kind_Interface_Signal_Declaration
+                 and then (Get_Kind (Get_Parent (Decl))
+                             = Iir_Kind_Entity_Declaration)
+                 and then Get_Kind (Scope) = Iir_Kind_Architecture_Body
+               then
+                  Warning_Msg_Sem
+                    (Warnid_Specs, +Name,
+                     "attribute for port %i must be specified in the entity",
+                     (1 => +Name));
+                  return;
+               end if;
+            end if;
+         end if;
+
+         Error_Msg_Sem
+           (+Name, "no %i for attribute specification", (1 => +Name));
+      end Error_Attribute_Specification;
+
       use Tokens;
 
       Name : Iir;
@@ -806,9 +838,7 @@ package body Sem_Specs is
                   --  It is an error if the class of those names is not the
                   --  same as that denoted by entity class.
                   if not Sem_Named_Entities (Scope, El, Spec, True) then
-                     Error_Msg_Sem_Relaxed
-                       (El, Warnid_Specs,
-                        "no %i for attribute specification", (1 => +El));
+                     Error_Attribute_Specification (El);
                   end if;
                end if;
             end loop;
