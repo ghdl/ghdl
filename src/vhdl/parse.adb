@@ -2202,6 +2202,11 @@ package body Parse is
 
       Set_Elements_Declaration_List (Res, List_To_Flist (El_List));
 
+      if Flag_Elocations then
+         Create_Elocations (Res);
+         Set_End_Location (Res, Get_Token_Location);
+      end if;
+
       --  Skip 'end'
       Scan_Expect (Tok_Record);
       Set_End_Has_Reserved_Id (Res, True);
@@ -7114,6 +7119,7 @@ package body Parse is
       Actual: Iir;
       Nbr_Assocs : Natural;
       Loc : Location_Type;
+      Arrow_Loc : Location_Type;
       Comma_Loc : Location_Type;
    begin
       Sub_Chain_Init (Res, Last);
@@ -7127,6 +7133,7 @@ package body Parse is
       loop
          --  Parse formal and actual.
          Loc := Get_Token_Location;
+         Arrow_Loc := No_Location;
          Formal := Null_Iir;
 
          if Current_Token /= Tok_Open then
@@ -7150,6 +7157,7 @@ package body Parse is
                when Tok_Double_Arrow =>
                   --  Check that FORMAL is a name and not an expression.
                   Formal := Check_Formal_Form (Actual);
+                  Arrow_Loc := Get_Token_Location;
 
                   --  Skip '=>'
                   Scan;
@@ -7176,6 +7184,11 @@ package body Parse is
             Set_Actual (El, Actual);
          end if;
          Set_Formal (El, Formal);
+
+         if Flag_Elocations then
+            Create_Elocations (El);
+            Set_Arrow_Location (El, Arrow_Loc);
+         end if;
 
          Sub_Chain_Append (Res, Last, El);
          exit when Current_Token = Tok_Right_Paren;

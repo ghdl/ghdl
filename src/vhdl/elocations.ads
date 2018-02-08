@@ -52,12 +52,14 @@ package Elocations is
    --  Tuples --
    -------------
 
-   -- Iir_Kind_Association_Element_By_Expression (None)
-   -- Iir_Kind_Association_Element_Open (None)
-   -- Iir_Kind_Association_Element_By_Individual (None)
-   -- Iir_Kind_Association_Element_Package (None)
-   -- Iir_Kind_Association_Element_Type (None)
-   -- Iir_Kind_Association_Element_Subprogram (None)
+   -- Iir_Kind_Association_Element_By_Expression (L1)
+   -- Iir_Kind_Association_Element_Open (L1)
+   -- Iir_Kind_Association_Element_By_Individual (L1)
+   -- Iir_Kind_Association_Element_Package (L1)
+   -- Iir_Kind_Association_Element_Type (L1)
+   -- Iir_Kind_Association_Element_Subprogram (L1)
+   --
+   --   Get/Set_Arrow_Location (Field1)
 
    -- Iir_Kind_Waveform_Element (None)
 
@@ -310,8 +312,6 @@ package Elocations is
    -- Iir_Kind_Array_Type_Definition (None)
 
    -- Iir_Kind_Record_Type_Definition (L2)
-   --
-   --   Get/Set_Start_Location (Field1)
    --
    --   Get/Set_End_Location (Field2)
 
@@ -666,4 +666,8 @@ package Elocations is
    --  Field: Field2
    function Get_Port_Map_Location (N : Iir) return Location_Type;
    procedure Set_Port_Map_Location (N : Iir; Loc : Location_Type);
+
+   --  Field: Field1
+   function Get_Arrow_Location (N : Iir) return Location_Type;
+   procedure Set_Arrow_Location (N : Iir; Loc : Location_Type);
 end Elocations;

@@ -46,6 +46,8 @@ package body Elocations_Meta is
             return "generic_map_location";
          when Field_Port_Map_Location =>
             return "port_map_location";
+         when Field_Arrow_Location =>
+            return "arrow_location";
       end case;
    end Get_Field_Image;
 
@@ -89,6 +91,8 @@ package body Elocations_Meta is
             return Get_Generic_Map_Location (N);
          when Field_Port_Map_Location =>
             return Get_Port_Map_Location (N);
+         when Field_Arrow_Location =>
+            return Get_Arrow_Location (N);
          when others =>
             raise Internal_Error;
       end case;
@@ -123,6 +127,8 @@ package body Elocations_Meta is
             Set_Generic_Map_Location (N, V);
          when Field_Port_Map_Location =>
             Set_Port_Map_Location (N, V);
+         when Field_Arrow_Location =>
+            Set_Arrow_Location (N, V);
          when others =>
             raise Internal_Error;
       end case;
@@ -134,7 +140,6 @@ package body Elocations_Meta is
          when Iir_Kind_Library_Clause
            | Iir_Kind_Attribute_Specification
            | Iir_Kind_Protected_Type_Declaration
-           | Iir_Kind_Record_Type_Definition
            | Iir_Kind_Protected_Type_Body
            | Iir_Kind_Type_Declaration
            | Iir_Kind_Anonymous_Type_Declaration
@@ -334,6 +339,21 @@ package body Elocations_Meta is
             return False;
       end case;
    end Has_Port_Map_Location;
+
+   function Has_Arrow_Location (K : Iir_Kind) return Boolean is
+   begin
+      case K is
+         when Iir_Kind_Association_Element_By_Expression
+           | Iir_Kind_Association_Element_By_Individual
+           | Iir_Kind_Association_Element_Open
+           | Iir_Kind_Association_Element_Package
+           | Iir_Kind_Association_Element_Type
+           | Iir_Kind_Association_Element_Subprogram =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Has_Arrow_Location;
 
 
    pragma Warnings (On, """others"" choice is redundant");

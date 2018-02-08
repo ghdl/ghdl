@@ -63,7 +63,7 @@ package Dyn_Tables is
       Priv : Instance_Private;
    end record;
 
-   --  Initialize the table.  This is done automatically at elaboration.
+   --  Initialize the table.  This must be done by users.
    procedure Init (T : in out Instance);
 
    --  Logical bounds of the array.
