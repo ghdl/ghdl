@@ -194,6 +194,7 @@ def declarations_iter(n):
         if n1 != Null_Iir:
             for n2 in declarations_iter(n1):
                 yield n2
+    # All these nodes are handled:
     if k in [iirs.Iir_Kind.Entity_Declaration,
              iirs.Iir_Kind.Architecture_Body,
              iirs.Iir_Kind.Package_Declaration,
@@ -248,7 +249,11 @@ def declarations_iter(n):
 def concurrent_stmts_iter(n):
     """Iterator on concurrent statements in n."""
     k = iirs.Get_Kind(n)
-    if k == iirs.Iir_Kind.Design_Unit:
+    if k == iirs.Iir_Kind.Design_File:
+        for n1 in chain_iter(iirs.Get_First_Design_Unit(n)):
+            for n2 in concurrent_stmts_iter(n1):
+                yield n2
+    elif k == iirs.Iir_Kind.Design_Unit:
         for n1 in concurrent_stmts_iter(iirs.Get_Library_Unit(n)):
             yield n1
     elif k == iirs.Iir_Kind.Entity_Declaration \

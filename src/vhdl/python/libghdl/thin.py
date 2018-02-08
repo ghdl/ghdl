@@ -108,6 +108,7 @@ _Get_Identifier_With_Len = libghdl.name_table__get_identifier_with_len
 def Get_Identifier(s):
     return _Get_Identifier_With_Len(c_char_p(s), len(s))
 
+Null_Identifier = 0
 
 # Ieee
 
