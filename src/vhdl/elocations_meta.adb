@@ -233,7 +233,14 @@ package body Elocations_Meta is
    begin
       case K is
          when Iir_Kind_Type_Declaration
-           | Iir_Kind_Subtype_Declaration =>
+           | Iir_Kind_Subtype_Declaration
+           | Iir_Kind_Entity_Declaration
+           | Iir_Kind_Architecture_Body
+           | Iir_Kind_Function_Body
+           | Iir_Kind_Procedure_Body
+           | Iir_Kind_Sensitized_Process_Statement
+           | Iir_Kind_Process_Statement
+           | Iir_Kind_Block_Statement =>
             return True;
          when others =>
             return False;

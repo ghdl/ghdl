@@ -4626,9 +4626,12 @@ package body Parse is
       Parse_Declarative_Part (Res);
 
       if Current_Token = Tok_Begin then
-         Set_Has_Begin (Res, True);
-         Scan;
          Begin_Loc := Get_Token_Location;
+         Set_Has_Begin (Res, True);
+
+         --  Skip 'begin'.
+         Scan;
+
          Parse_Concurrent_Statements (Res);
       else
          Begin_Loc := No_Location;
@@ -4638,7 +4641,9 @@ package body Parse is
       Expect (Tok_End);
       End_Loc := Get_Token_Location;
 
+      --  Skip 'end'.
       Scan;
+
       if Current_Token = Tok_Entity then
          if Flags.Vhdl_Std = Vhdl_87 then
             Error_Msg_Parse ("'entity' keyword not allowed here by vhdl 87");
@@ -6787,7 +6792,7 @@ package body Parse is
       Kind : Iir_Kind;
       Subprg: Iir;
       Subprg_Body : Iir;
-      Start_Loc, Begin_Loc, End_Loc : Location_Type;
+      Start_Loc, Is_Loc, Begin_Loc, End_Loc : Location_Type;
    begin
       --  Create the node.
       Start_Loc := Get_Token_Location;
@@ -6863,6 +6868,7 @@ package body Parse is
       Set_Chain (Subprg, Subprg_Body);
 
       --  Skip 'is'.
+      Is_Loc := Get_Token_Location;
       Expect (Tok_Is);
       Scan;
 
@@ -6883,6 +6889,7 @@ package body Parse is
 
       if Flag_Elocations then
          Create_Elocations (Subprg_Body);
+         Set_Is_Location (Subprg_Body, Is_Loc);
          Set_Begin_Location (Subprg_Body, Begin_Loc);
          Set_End_Location (Subprg_Body, End_Loc);
       end if;
@@ -7497,6 +7504,10 @@ package body Parse is
       Set_Has_Label (Bod, Label /= Null_Identifier);
       End_Loc := No_Location;
 
+      if Flag_Elocations then
+         Create_Elocations (Bod);
+      end if;
+
       --  Check for a block declarative item.
       case Current_Token is
          when
@@ -7544,6 +7555,10 @@ package body Parse is
             Expect (Tok_Begin);
             Set_Has_Begin (Bod, True);
 
+            if Flag_Elocations then
+               Set_Begin_Location (Bod, Get_Token_Location);
+            end if;
+
             --  Skip 'begin'
             Scan;
          when others =>
@@ -7565,6 +7580,10 @@ package body Parse is
       if Vhdl_Std >= Vhdl_08 and then Current_Token /= Tok_Generate then
          --  This is the 'end' of the generate_statement_body.
          Set_Has_End (Bod, True);
+         if Flag_Elocations then
+            Set_End_Location (Bod, End_Loc);
+         end if;
+
          Check_End_Name (Label, Bod);
          Scan_Semi_Colon ("generate statement body");
 

@@ -2914,6 +2914,16 @@ package Iirs is
    --   Get/Set_Has_Component (Flag5)
 
    -- Iir_Kind_Block_Statement (Medium)
+   --  LRM08 11.2 Block statement
+   --
+   --  block_statement ::=
+   --    block_label :
+   --      BLOCK [ ( guard_condition ) ] [ IS ]
+   --        block_header
+   --        block_declarative_part
+   --      BEGIN
+   --        block_statement_part
+   --      END BLOCK [ block_label ] ;
    --
    --   Get/Set_Parent (Field0)
    --

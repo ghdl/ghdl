@@ -29,7 +29,9 @@ package body Elocations is
       Format_L1,
       Format_L2,
       Format_L3,
-      Format_L5
+      Format_L4,
+      Format_L5,
+      Format_L6
      );
 
    -- Common fields are:
@@ -48,12 +50,26 @@ package body Elocations is
    --   Field2 : Location_Type
    --   Field3 : Location_Type
 
+   -- Fields of Format_L4:
+   --   Field1 : Location_Type
+   --   Field2 : Location_Type
+   --   Field3 : Location_Type
+   --   Field4 : Location_Type
+
    -- Fields of Format_L5:
    --   Field1 : Location_Type
    --   Field2 : Location_Type
    --   Field3 : Location_Type
    --   Field4 : Location_Type
    --   Field5 : Location_Type
+
+   -- Fields of Format_L6:
+   --   Field1 : Location_Type
+   --   Field2 : Location_Type
+   --   Field3 : Location_Type
+   --   Field4 : Location_Type
+   --   Field5 : Location_Type
+   --   Field6 : Location_Type
 
    function Get_Format (Kind : Iir_Kind) return Format_Type;
 
@@ -100,8 +116,12 @@ package body Elocations is
             Len := 2;
          when Format_L3 =>
             Len := 3;
+         when Format_L4 =>
+            Len := 4;
          when Format_L5 =>
             Len := 5;
+         when Format_L6 =>
+            Len := 6;
       end case;
 
       Idx := Elocations_Table.Last + 1;
@@ -152,6 +172,9 @@ package body Elocations is
 
    function Get_Field5 is new Get_FieldX (5);
    procedure Set_Field5 is new Set_FieldX (5);
+
+   function Get_Field6 is new Get_FieldX (6);
+   procedure Set_Field6 is new Set_FieldX (6);
 
    --  Subprograms
    function Get_Format (Kind : Iir_Kind) return Format_Type is
@@ -401,8 +424,6 @@ package body Elocations is
          when Iir_Kind_Protected_Type_Declaration
            | Iir_Kind_Record_Type_Definition
            | Iir_Kind_Protected_Type_Body
-           | Iir_Kind_Type_Declaration
-           | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Context_Declaration
            | Iir_Kind_Package_Declaration
@@ -410,12 +431,6 @@ package body Elocations is
            | Iir_Kind_Case_Statement =>
             return Format_L2;
          when Iir_Kind_Package_Instantiation_Declaration
-           | Iir_Kind_Architecture_Body
-           | Iir_Kind_Function_Body
-           | Iir_Kind_Procedure_Body
-           | Iir_Kind_Sensitized_Process_Statement
-           | Iir_Kind_Process_Statement
-           | Iir_Kind_Block_Statement
            | Iir_Kind_If_Generate_Statement
            | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Component_Instantiation_Statement
@@ -426,11 +441,21 @@ package body Elocations is
            | Iir_Kind_If_Statement
            | Iir_Kind_Elsif =>
             return Format_L3;
+         when Iir_Kind_Type_Declaration
+           | Iir_Kind_Subtype_Declaration
+           | Iir_Kind_Architecture_Body
+           | Iir_Kind_Function_Body
+           | Iir_Kind_Procedure_Body
+           | Iir_Kind_Sensitized_Process_Statement
+           | Iir_Kind_Process_Statement
+           | Iir_Kind_Block_Statement =>
+            return Format_L4;
+         when Iir_Kind_Package_Header =>
+            return Format_L5;
          when Iir_Kind_Block_Header
            | Iir_Kind_Entity_Declaration
-           | Iir_Kind_Package_Header
            | Iir_Kind_Component_Declaration =>
-            return Format_L5;
+            return Format_L6;
       end case;
    end Get_Format;
 
@@ -487,7 +512,7 @@ package body Elocations is
       pragma Assert (N /= Null_Iir);
       pragma Assert (Has_Is_Location (Get_Kind (N)),
                      "no field Is_Location");
-      return Get_Field2 (N);
+      return Get_Field4 (N);
    end Get_Is_Location;
 
    procedure Set_Is_Location (N : Iir; Loc : Location_Type) is
@@ -495,7 +520,7 @@ package body Elocations is
       pragma Assert (N /= Null_Iir);
       pragma Assert (Has_Is_Location (Get_Kind (N)),
                      "no field Is_Location");
-      Set_Field2 (N, Loc);
+      Set_Field4 (N, Loc);
    end Set_Is_Location;
 
    function Get_Begin_Location (N : Iir) return Location_Type is
@@ -567,7 +592,7 @@ package body Elocations is
       pragma Assert (N /= Null_Iir);
       pragma Assert (Has_Generic_Location (Get_Kind (N)),
                      "no field Generic_Location");
-      return Get_Field4 (N);
+      return Get_Field5 (N);
    end Get_Generic_Location;
 
    procedure Set_Generic_Location (N : Iir; Loc : Location_Type) is
@@ -575,7 +600,7 @@ package body Elocations is
       pragma Assert (N /= Null_Iir);
       pragma Assert (Has_Generic_Location (Get_Kind (N)),
                      "no field Generic_Location");
-      Set_Field4 (N, Loc);
+      Set_Field5 (N, Loc);
    end Set_Generic_Location;
 
    function Get_Port_Location (N : Iir) return Location_Type is
@@ -583,7 +608,7 @@ package body Elocations is
       pragma Assert (N /= Null_Iir);
       pragma Assert (Has_Port_Location (Get_Kind (N)),
                      "no field Port_Location");
-      return Get_Field5 (N);
+      return Get_Field6 (N);
    end Get_Port_Location;
 
    procedure Set_Port_Location (N : Iir; Loc : Location_Type) is
@@ -591,7 +616,7 @@ package body Elocations is
       pragma Assert (N /= Null_Iir);
       pragma Assert (Has_Port_Location (Get_Kind (N)),
                      "no field Port_Location");
-      Set_Field5 (N, Loc);
+      Set_Field6 (N, Loc);
    end Set_Port_Location;
 
    function Get_Generic_Map_Location (N : Iir) return Location_Type is

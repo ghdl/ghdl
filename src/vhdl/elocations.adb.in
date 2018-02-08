@@ -29,7 +29,9 @@ package body Elocations is
       Format_L1,
       Format_L2,
       Format_L3,
-      Format_L5
+      Format_L4,
+      Format_L5,
+      Format_L6
      );
 
    -- Common fields are:
@@ -48,12 +50,26 @@ package body Elocations is
    --   Field2 : Location_Type
    --   Field3 : Location_Type
 
+   -- Fields of Format_L4:
+   --   Field1 : Location_Type
+   --   Field2 : Location_Type
+   --   Field3 : Location_Type
+   --   Field4 : Location_Type
+
    -- Fields of Format_L5:
    --   Field1 : Location_Type
    --   Field2 : Location_Type
    --   Field3 : Location_Type
    --   Field4 : Location_Type
    --   Field5 : Location_Type
+
+   -- Fields of Format_L6:
+   --   Field1 : Location_Type
+   --   Field2 : Location_Type
+   --   Field3 : Location_Type
+   --   Field4 : Location_Type
+   --   Field5 : Location_Type
+   --   Field6 : Location_Type
 
    function Get_Format (Kind : Iir_Kind) return Format_Type;
 
@@ -100,8 +116,12 @@ package body Elocations is
             Len := 2;
          when Format_L3 =>
             Len := 3;
+         when Format_L4 =>
+            Len := 4;
          when Format_L5 =>
             Len := 5;
+         when Format_L6 =>
+            Len := 6;
       end case;
 
       Idx := Elocations_Table.Last + 1;
@@ -152,6 +172,9 @@ package body Elocations is
 
    function Get_Field5 is new Get_FieldX (5);
    procedure Set_Field5 is new Set_FieldX (5);
+
+   function Get_Field6 is new Get_FieldX (6);
+   procedure Set_Field6 is new Set_FieldX (6);
 
    --  Subprograms
 end Elocations;
