@@ -280,3 +280,66 @@ def concurrent_stmts_iter(n):
                 for n2 in concurrent_stmts_iter(
                         iirs.Get_Generate_Statement_Body(n)):
                     yield n2
+
+
+def constructs_iter(n):
+    """Iterator on library unit, concurrent statements and declarations
+       that appear directly within a declarative part."""
+    if n == thin.Null_Iir:
+        return
+    k = iirs.Get_Kind(n)
+    if k == iirs.Iir_Kind.Design_File:
+        for n1 in chain_iter(iirs.Get_First_Design_Unit(n)):
+            for n2 in constructs_iter(n1):
+                yield n2
+    elif k == iirs.Iir_Kind.Design_Unit:
+        n1 = iirs.Get_Library_Unit(n)
+        yield n1
+        for n2 in constructs_iter(n1):
+            yield n2
+    elif k in [iirs.Iir_Kind.Entity_Declaration,
+               iirs.Iir_Kind.Architecture_Body,
+               iirs.Iir_Kind.Block_Statement,
+               iirs.Iir_Kind.Generate_Statement_Body]:
+        for n1 in chain_iter(iirs.Get_Declaration_Chain(n)):
+            yield n1
+            for n2 in constructs_iter(n1):
+                yield n2
+        for n1 in chain_iter(iirs.Get_Concurrent_Statement_Chain(n)):
+            yield n1
+            for n2 in constructs_iter(n1):
+                yield n2
+    elif k in [iirs.Iir_Kind.Configuration_Declaration,
+               iirs.Iir_Kind.Package_Declaration,
+               iirs.Iir_Kind.Package_Body,
+               iirs.Iir_Kind.Function_Body,
+               iirs.Iir_Kind.Procedure_Body,
+               iirs.Iir_Kind.Protected_Type_Declaration,
+               iirs.Iir_Kind.Protected_Type_Body,
+               iirs.Iir_Kind.Process_Statement,
+               iirs.Iir_Kind.Sensitized_Process_Statement]:
+        for n1 in chain_iter(iirs.Get_Declaration_Chain(n)):
+            yield n1
+            for n2 in constructs_iter(n1):
+                yield n2
+    elif k == iirs.Iir_Kind.For_Generate_Statement:
+        n1 = iirs.Get_Generate_Statement_Body(n)
+        yield n1
+        for n2 in constructs_iter(n1):
+            yield n2
+    elif k == iirs.Iir_Kind.If_Generate_Statement:
+        while n != Null_Iir:
+            n1 = iirs.Get_Generate_Statement_Body(n)
+            yield n1
+            for n2 in constructs_iter(n1):
+                yield n2
+            n = iirs.Get_Generate_Else_Clause(n)
+    elif k == iirs.Iir_Kind.Case_Generate_Statement:
+        alt = iirs.Get_Case_Statement_Alternative_Chain(n)
+        for n1 in chain_iter(alt):
+            blk = iirs.Get_Associated_Block(n1)
+            if blk != Null_Iir:
+                n2 = iirs.Get_Generate_Statement_Body(blk)
+                yield n2
+                for n3 in constructs_iter(n2):
+                    yield n3
