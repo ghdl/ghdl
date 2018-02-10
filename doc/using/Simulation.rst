@@ -186,19 +186,15 @@ Export waveforms
 
   * types defined in the ``std.standard`` package:
 
-  * ``bit``
-
-  * ``bit_vector``
+    * ``bit``
+    * ``bit_vector``
 
   * types defined in the ``ieee.std_logic_1164`` package:
 
-  * ``std_ulogic``
-
-  * ``std_logic`` (because it is a subtype of ``std_ulogic``)
-
-  * ``std_ulogic_vector``
-
-  * ``std_logic_vector``
+    * ``std_ulogic``
+    * ``std_logic`` (because it is a subtype of ``std_ulogic``)
+    * ``std_ulogic_vector``
+    * ``std_logic_vector``
 
   * any integer type
 
