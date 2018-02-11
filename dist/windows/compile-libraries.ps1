@@ -87,11 +87,8 @@ $Script_WorkingDir =	Get-Location
 $GHDLRootDir =				Convert-Path (Resolve-Path ($PSScriptRoot + "\" + $RelPathToRoot))
 
 # set default values
-$EnableVerbose =			$PSCmdlet.MyInvocation.BoundParameters["Verbose"]
-$EnableDebug =				$PSCmdlet.MyInvocation.BoundParameters["Debug"]
-if ($EnableVerbose -eq $null)	{	$EnableVerbose =	$false	}
-if ($EnableDebug	 -eq $null)	{	$EnableDebug =		$false	}
-if ($EnableDebug	 -eq $true)	{	$EnableVerbose =	$true		}
+$EnableDebug =        [bool]$PSCmdlet.MyInvocation.BoundParameters["Debug"]
+$EnableVerbose =      [bool]$PSCmdlet.MyInvocation.BoundParameters["Verbose"] -or $EnableDebug
 
 # load modules from GHDL's 'libraries' directory
 Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -Debug:$false -ArgumentList "$Script_WorkingDir", $Hosted
@@ -254,7 +251,6 @@ if ($VHDL87 -or $VHDL93 -or $VHDL2008)
 # ============================================================================
 if ($VHDL87)
 {	$VHDLVersion =				"87"
-	$VersionedDirectory =	"$VHDLDestinationLibraryDirectory\v$VHDLVersion"
 	Write-Host "Compiling libraries for VHDL-$VHDLVersion" -ForegroundColor Cyan
 	
 	# ----------------------------------------------------------------------
@@ -263,7 +259,7 @@ if ($VHDL87)
 	$VHDLLibrary =				"std"
 	Write-Host "  Compiling library '$VHDLLibrary'..." -ForegroundColor DarkCyan
 	
-	$LibraryDirectory = "$VersionedDirectory\$VHDLLibrary"
+	$LibraryDirectory = "$VHDLDestinationLibraryDirectory\$VHDLLibrary\v$VHDLVersion"
 	New-LibraryDirectory $LibraryDirectory	# $EnableVerbose
 	Set-Location $LibraryDirectory
 	
@@ -298,7 +294,7 @@ if ($VHDL87)
 	$VHDLFlavor =		"ieee"
 	Write-Host "  Compiling library '$VHDLLibrary'..." -ForegroundColor DarkCyan
 	
-	$LibraryDirectory = "$VersionedDirectory\$VHDLFlavor"
+	$LibraryDirectory = "$VHDLDestinationLibraryDirectory\$VHDLFlavor\v$VHDLVersion"
 	New-LibraryDirectory $LibraryDirectory	# $EnableVerbose
 	Set-Location $LibraryDirectory
 	
@@ -333,7 +329,7 @@ if ($VHDL87)
 	$VHDLFlavor =		"synopsys"
 	Write-Host "  Compiling library '$VHDLLibrary' ($VHDLFlavor)..." -ForegroundColor DarkCyan
 	
-	$LibraryDirectory = "$VersionedDirectory\$VHDLFlavor"
+	$LibraryDirectory = "$VHDLDestinationLibraryDirectory\$VHDLFlavor\v$VHDLVersion"
 	New-LibraryDirectory $LibraryDirectory	# $EnableVerbose
 	Set-Location $LibraryDirectory
 	
@@ -412,7 +408,6 @@ if ($VHDL87)
 # ============================================================================
 if ($VHDL93)
 {	$VHDLVersion =				"93"
-	$VersionedDirectory =	"$VHDLDestinationLibraryDirectory\v$VHDLVersion"
 	Write-Host "Compiling libraries for VHDL-$VHDLVersion" -ForegroundColor Cyan
 	
 	# ----------------------------------------------------------------------
@@ -421,7 +416,7 @@ if ($VHDL93)
 	$VHDLLibrary =				"std"
 	Write-Host "  Compiling library '$VHDLLibrary'..." -ForegroundColor DarkCyan
 	
-	$LibraryDirectory = "$VersionedDirectory\$VHDLLibrary"
+	$LibraryDirectory = "$VHDLDestinationLibraryDirectory\$VHDLLibrary\v$VHDLVersion"
 	New-LibraryDirectory $LibraryDirectory	# $EnableVerbose
 	Set-Location $LibraryDirectory
 	
@@ -456,7 +451,7 @@ if ($VHDL93)
 	$VHDLFlavor =		"ieee"
 	Write-Host "  Compiling library '$VHDLLibrary'..." -ForegroundColor DarkCyan
 	
-	$LibraryDirectory = "$VersionedDirectory\$VHDLFlavor"
+	$LibraryDirectory = "$VHDLDestinationLibraryDirectory\$VHDLFlavor\v$VHDLVersion"
 	New-LibraryDirectory $LibraryDirectory	# $EnableVerbose
 	Set-Location $LibraryDirectory
 	
@@ -515,7 +510,7 @@ if ($VHDL93)
 	$VHDLFlavor =		"synopsys"
 	Write-Host "  Compiling library '$VHDLLibrary' ($VHDLFlavor)..." -ForegroundColor DarkCyan
 	
-	$LibraryDirectory = "$VersionedDirectory\$VHDLFlavor"
+	$LibraryDirectory = "$VHDLDestinationLibraryDirectory\$VHDLFlavor\v$VHDLVersion"
 	New-LibraryDirectory $LibraryDirectory	# $EnableVerbose
 	Set-Location $LibraryDirectory
 	
@@ -597,7 +592,7 @@ if ($VHDL93)
 	$VHDLFlavor =		"mentor"
 	Write-Host "  Compiling library '$VHDLLibrary' ($VHDLFlavor)..." -ForegroundColor DarkCyan
 	
-	$LibraryDirectory = "$VersionedDirectory\$VHDLFlavor"
+	$LibraryDirectory = "$VHDLDestinationLibraryDirectory\$VHDLFlavor\v$VHDLVersion"
 	New-LibraryDirectory $LibraryDirectory	# $EnableVerbose
 	Set-Location $LibraryDirectory
 	
@@ -677,7 +672,6 @@ if ($VHDL93)
 # ==============================================================================
 if ($VHDL2008)
 {	$VHDLVersion =				"08"
-	$VersionedDirectory =	"$VHDLDestinationLibraryDirectory\v$VHDLVersion"
 	Write-Host "Compiling libraries for VHDL-$VHDLVersion" -ForegroundColor Cyan
 	
 	# ----------------------------------------------------------------------
@@ -686,7 +680,7 @@ if ($VHDL2008)
 	$VHDLLibrary =				"std"
 	Write-Host "  Compiling library '$VHDLLibrary'..." -ForegroundColor DarkCyan
 	
-	$LibraryDirectory = "$VersionedDirectory\$VHDLLibrary"
+	$LibraryDirectory = "$VHDLDestinationLibraryDirectory\$VHDLLibrary\v$VHDLVersion"
 	New-LibraryDirectory $LibraryDirectory	# $EnableVerbose
 	Set-Location $LibraryDirectory
 	
@@ -721,7 +715,7 @@ if ($VHDL2008)
 	$VHDLFlavor =		"ieee"
 	Write-Host "  Compiling library '$VHDLLibrary'..." -ForegroundColor DarkCyan
 	
-	$LibraryDirectory = "$VersionedDirectory\$VHDLFlavor"
+	$LibraryDirectory = "$VHDLDestinationLibraryDirectory\$VHDLFlavor\v$VHDLVersion"
 	New-LibraryDirectory $LibraryDirectory	# $EnableVerbose
 	Set-Location $LibraryDirectory
 	
@@ -780,7 +774,7 @@ if ($VHDL2008)
 	$VHDLFlavor =		"synopsys"
 	Write-Host "  Compiling library '$VHDLLibrary' ($VHDLFlavor)..." -ForegroundColor DarkCyan
 	
-	$LibraryDirectory = "$VersionedDirectory\$VHDLFlavor"
+	$LibraryDirectory = "$VHDLDestinationLibraryDirectory\$VHDLFlavor\v$VHDLVersion"
 	New-LibraryDirectory $LibraryDirectory	# $EnableVerbose
 	Set-Location $LibraryDirectory
 	
