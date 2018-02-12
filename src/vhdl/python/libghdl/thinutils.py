@@ -343,3 +343,52 @@ def constructs_iter(n):
                 yield n2
                 for n3 in constructs_iter(n2):
                     yield n3
+
+def sequential_iter(n):
+    """Iterator on sequential statements.  The first node must be either
+       a process or a subprogram body."""
+    if n == thin.Null_Iir:
+        return
+    k = iirs.Get_Kind(n)
+    if k in [iirs.Iir_Kind.Process_Statement,
+             iirs.Iir_Kind.Sensitized_Process_Statement,
+             iirs.Iir_Kind.Function_Body,
+             iirs.Iir_Kind.Procedure_Body]:
+        for n1 in chain_iter(iirs.Get_Sequential_Statement_Chain(n)):
+            yield n1
+            for n2 in sequential_iter(n1):
+                yield n2
+    elif k == iirs.Iir_Kind.If_Statement:
+        while True:
+            n = iirs.Get_Chain(n)
+            if n == thin.Null_Iir:
+                break
+            yield n
+            for n1 in sequential_iter(n):
+                yield n1
+    elif k == iirs.Iir_Kind.Case_Statement:
+        for ch in chain_iter(iirs.Get_Case_Statement_Alternative_Chain(n)):
+            stmt = iirs.Get_Associated_Chain(ch)
+            if stmt != thin.Null_Iir:
+                for n1 in chain_iter(stmt):
+                    yield n1
+                    for n2 in sequential_iter(n1):
+                        yield n2
+    elif k in [iirs.Iir_Kind.For_Loop_Statement,
+               iirs.Iir_Kind.While_Loop_Statement]:
+        for n1 in chain_iter(iirs.Get_Sequential_Statement_Chain(n)):
+            yield n1
+            for n2 in sequential_iter(n1):
+                yield n2
+    elif k in [iirs.Iir_Kind.Assertion_Statement,
+               iirs.Iir_Kind.Wait_Statement,
+               iirs.Iir_Kind.Null_Statement,
+               iirs.Iir_Kind.Exit_Statement,
+               iirs.Iir_Kind.Next_Statement,
+               iirs.Iir_Kind.Return_Statement,
+               iirs.Iir_Kind.Variable_Assignment_Statement,
+               iirs.Iir_Kind.Simple_Signal_Assignment_Statement,
+               iirs.Iir_Kind.Procedure_Call_Statement]:
+        return
+    else:
+        assert False, "unknown node of kind {}".format(kind_image(k))
