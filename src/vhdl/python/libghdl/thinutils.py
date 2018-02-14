@@ -50,6 +50,17 @@ def attr_image(a):
     return _attr_image[a]
 
 
+def leftest_location(n):
+    while True:
+        if n == Null_Iir:
+            return No_Location
+        k = iirs.Get_Kind(n)
+        if k == iirs.Iir_Kind.Array_Subtype_Definition:
+            n = iirs.Get_Subtype_Type_Mark(n)
+        else:
+            return iirs.Get_Location(n)
+
+
 def fields_iter(n):
     """Iterate on fields of node n"""
     if n == Null_Iir:
