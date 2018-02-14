@@ -35,7 +35,9 @@ package Elocations_Meta is
       Field_Port_Location,
       Field_Generic_Map_Location,
       Field_Port_Map_Location,
-      Field_Arrow_Location
+      Field_Arrow_Location,
+      Field_Colon_Location,
+      Field_Assign_Location
      );
    pragma Discard_Names (Fields_Enum);
 
@@ -62,4 +64,6 @@ package Elocations_Meta is
    function Has_Generic_Map_Location (K : Iir_Kind) return Boolean;
    function Has_Port_Map_Location (K : Iir_Kind) return Boolean;
    function Has_Arrow_Location (K : Iir_Kind) return Boolean;
+   function Has_Colon_Location (K : Iir_Kind) return Boolean;
+   function Has_Assign_Location (K : Iir_Kind) return Boolean;
 end Elocations_Meta;

@@ -215,12 +215,16 @@ package Elocations is
 
    -- Iir_Kind_Subnature_Declaration (None)
 
-   -- Iir_Kind_Interface_Signal_Declaration (L1)
-   -- Iir_Kind_Interface_Constant_Declaration (L1)
-   -- Iir_Kind_Interface_Variable_Declaration (L1)
-   -- Iir_Kind_Interface_File_Declaration (L1)
+   -- Iir_Kind_Interface_Signal_Declaration (L3)
+   -- Iir_Kind_Interface_Constant_Declaration (L3)
+   -- Iir_Kind_Interface_Variable_Declaration (L3)
+   -- Iir_Kind_Interface_File_Declaration (L3)
    --
    --   Get/Set_Start_Location (Field1)
+   --
+   --   Get/Set_Colon_Location (Field2)
+   --
+   --   Get/Set_Assign_Location (Field3)
 
    -- Iir_Kind_Interface_Type_Declaration (L1)
    --
@@ -627,6 +631,10 @@ package Elocations is
    --  Allocate memory to store elocations for node N.  Must be called once.
    procedure Create_Elocations (N : Iir);
 
+   --  Delete locations.  Memory is not yet reclaimed (but doesn't happen
+   --  frequently).
+   procedure Delete_Elocations (N : Iir);
+
    -- General methods.
 
    --  Field: Field1
@@ -680,4 +688,12 @@ package Elocations is
    --  Field: Field1
    function Get_Arrow_Location (N : Iir) return Location_Type;
    procedure Set_Arrow_Location (N : Iir; Loc : Location_Type);
+
+   --  Field: Field2
+   function Get_Colon_Location (N : Iir) return Location_Type;
+   procedure Set_Colon_Location (N : Iir; Loc : Location_Type);
+
+   --  Field: Field3
+   function Get_Assign_Location (N : Iir) return Location_Type;
+   procedure Set_Assign_Location (N : Iir; Loc : Location_Type);
 end Elocations;

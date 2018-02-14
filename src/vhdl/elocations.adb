@@ -130,6 +130,14 @@ package body Elocations is
       Elocations_Table.Table (Idx .. Idx + Len - 1) := (others => No_Location);
    end Create_Elocations;
 
+   procedure Delete_Elocations (N : Iir) is
+   begin
+      --  Clear the corresponding index.
+      Elocations_Index_Table.Table (N) := No_Location_Index;
+
+      --  FIXME: keep free slots in chained list ?
+   end Delete_Elocations;
+
    generic
       Off : Location_Index_Type;
    function Get_FieldX (N : Iir) return Location_Type;
@@ -410,10 +418,6 @@ package body Elocations is
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Constant_Declaration
            | Iir_Kind_Iterator_Declaration
-           | Iir_Kind_Interface_Constant_Declaration
-           | Iir_Kind_Interface_Variable_Declaration
-           | Iir_Kind_Interface_Signal_Declaration
-           | Iir_Kind_Interface_File_Declaration
            | Iir_Kind_Interface_Type_Declaration
            | Iir_Kind_Interface_Package_Declaration
            | Iir_Kind_Parenthesis_Expression
@@ -431,6 +435,10 @@ package body Elocations is
            | Iir_Kind_Case_Statement =>
             return Format_L2;
          when Iir_Kind_Package_Instantiation_Declaration
+           | Iir_Kind_Interface_Constant_Declaration
+           | Iir_Kind_Interface_Variable_Declaration
+           | Iir_Kind_Interface_Signal_Declaration
+           | Iir_Kind_Interface_File_Declaration
            | Iir_Kind_If_Generate_Statement
            | Iir_Kind_For_Generate_Statement
            | Iir_Kind_Component_Instantiation_Statement
@@ -666,5 +674,37 @@ package body Elocations is
                      "no field Arrow_Location");
       Set_Field1 (N, Loc);
    end Set_Arrow_Location;
+
+   function Get_Colon_Location (N : Iir) return Location_Type is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Colon_Location (Get_Kind (N)),
+                     "no field Colon_Location");
+      return Get_Field2 (N);
+   end Get_Colon_Location;
+
+   procedure Set_Colon_Location (N : Iir; Loc : Location_Type) is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Colon_Location (Get_Kind (N)),
+                     "no field Colon_Location");
+      Set_Field2 (N, Loc);
+   end Set_Colon_Location;
+
+   function Get_Assign_Location (N : Iir) return Location_Type is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Assign_Location (Get_Kind (N)),
+                     "no field Assign_Location");
+      return Get_Field3 (N);
+   end Get_Assign_Location;
+
+   procedure Set_Assign_Location (N : Iir; Loc : Location_Type) is
+   begin
+      pragma Assert (N /= Null_Iir);
+      pragma Assert (Has_Assign_Location (Get_Kind (N)),
+                     "no field Assign_Location");
+      Set_Field3 (N, Loc);
+   end Set_Assign_Location;
 
 end Elocations;

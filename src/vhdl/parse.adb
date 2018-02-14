@@ -1134,8 +1134,8 @@ package body Parse is
                                                return Iir
    is
       Kind : Iir_Kind;
-      Res, Last : Iir;
-      First, Prev_First : Iir;
+      Last : Iir;
+      First : Iir;
       Inter: Iir;
       Is_Default : Boolean;
       Interface_Mode: Iir_Mode;
@@ -1146,9 +1146,6 @@ package body Parse is
       Has_Mode : Boolean;
       Has_Class : Boolean;
    begin
-      Res := Null_Iir;
-      Last := Null_Iir;
-
       --  LRM08 6.5.2 Interface object declarations
       --  Interface obejcts include interface constants that appear as
       --  generics of a design entity, a component, a block, a package or
@@ -1198,7 +1195,12 @@ package body Parse is
             Kind := Iir_Kind_Interface_Variable_Declaration;
       end case;
 
-      Inter := Create_Iir (Kind);
+      First := Create_Iir (Kind);
+
+      if Flag_Elocations then
+         Create_Elocations (First);
+         Set_Start_Location (First, Get_Token_Location);
+      end if;
 
       if Current_Token = Tok_Identifier then
          Is_Default := True;
@@ -1211,21 +1213,14 @@ package body Parse is
          Scan;
       end if;
 
-      Prev_First := Last;
-      First := Inter;
+      Inter := First;
+      Last := First;
       loop
          if Current_Token /= Tok_Identifier then
             Expect (Tok_Identifier);
          end if;
          Set_Identifier (Inter, Current_Identifier);
          Set_Location (Inter);
-
-         if Res = Null_Iir then
-            Res := Inter;
-         else
-            Set_Chain (Last, Inter);
-         end if;
-         Last := Inter;
 
          --  Skip identifier
          Scan;
@@ -1237,11 +1232,22 @@ package body Parse is
          Scan;
 
          Inter := Create_Iir (Kind);
+
+         if Flag_Elocations then
+            Create_Elocations (Inter);
+            Set_Start_Location (Inter, Get_Start_Location (First));
+         end if;
+
+         Set_Chain (Last, Inter);
+         Last := Inter;
       end loop;
 
       Expect (Tok_Colon, "':' must follow the interface element identifier");
 
       --  Skip ':'
+      if Flag_Elocations then
+         Set_Colon_Location (First, Get_Token_Location);
+      end if;
       Scan;
 
       --  Parse mode.
@@ -1277,17 +1283,26 @@ package body Parse is
                Location_Copy (N_Interface, O_Interface);
                Set_Identifier (N_Interface,
                                Get_Identifier (O_Interface));
-               if Prev_First = Null_Iir then
-                  Res := N_Interface;
-               else
-                  Set_Chain (Prev_First, N_Interface);
+
+               if Flag_Elocations then
+                  Create_Elocations (N_Interface);
+                  Set_Start_Location
+                    (N_Interface, Get_Start_Location (O_Interface));
+                  Set_Colon_Location
+                    (N_Interface, Get_Colon_Location (O_Interface));
                end if;
-               Prev_First := N_Interface;
+
                if O_Interface = First then
                   First := N_Interface;
+               else
+                  Set_Chain (Last, N_Interface);
                end if;
                Last := N_Interface;
+
                Inter := Get_Chain (O_Interface);
+               if Flag_Elocations then
+                  Delete_Elocations (O_Interface);
+               end if;
                Free_Iir (O_Interface);
                O_Interface := Inter;
             end loop;
@@ -1338,6 +1353,9 @@ package body Parse is
          end if;
 
          --  Skip ':='
+         if Flag_Elocations then
+            Set_Assign_Location (First, Get_Token_Location);
+         end if;
          Scan;
 
          Default_Value := Parse_Expression;
@@ -1366,7 +1384,7 @@ package body Parse is
          Inter := Get_Chain (Inter);
       end loop;
 
-      return Res;
+      return First;
    end Parse_Interface_Object_Declaration;
 
    --  Precond : 'package'

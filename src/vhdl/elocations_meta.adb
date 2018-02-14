@@ -48,6 +48,10 @@ package body Elocations_Meta is
             return "port_map_location";
          when Field_Arrow_Location =>
             return "arrow_location";
+         when Field_Colon_Location =>
+            return "colon_location";
+         when Field_Assign_Location =>
+            return "assign_location";
       end case;
    end Get_Field_Image;
 
@@ -93,6 +97,10 @@ package body Elocations_Meta is
             return Get_Port_Map_Location (N);
          when Field_Arrow_Location =>
             return Get_Arrow_Location (N);
+         when Field_Colon_Location =>
+            return Get_Colon_Location (N);
+         when Field_Assign_Location =>
+            return Get_Assign_Location (N);
          when others =>
             raise Internal_Error;
       end case;
@@ -129,6 +137,10 @@ package body Elocations_Meta is
             Set_Port_Map_Location (N, V);
          when Field_Arrow_Location =>
             Set_Arrow_Location (N, V);
+         when Field_Colon_Location =>
+            Set_Colon_Location (N, V);
+         when Field_Assign_Location =>
+            Set_Assign_Location (N, V);
          when others =>
             raise Internal_Error;
       end case;
@@ -361,6 +373,32 @@ package body Elocations_Meta is
             return False;
       end case;
    end Has_Arrow_Location;
+
+   function Has_Colon_Location (K : Iir_Kind) return Boolean is
+   begin
+      case K is
+         when Iir_Kind_Interface_Constant_Declaration
+           | Iir_Kind_Interface_Variable_Declaration
+           | Iir_Kind_Interface_Signal_Declaration
+           | Iir_Kind_Interface_File_Declaration =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Has_Colon_Location;
+
+   function Has_Assign_Location (K : Iir_Kind) return Boolean is
+   begin
+      case K is
+         when Iir_Kind_Interface_Constant_Declaration
+           | Iir_Kind_Interface_Variable_Declaration
+           | Iir_Kind_Interface_Signal_Declaration
+           | Iir_Kind_Interface_File_Declaration =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Has_Assign_Location;
 
 
    pragma Warnings (On, """others"" choice is redundant");

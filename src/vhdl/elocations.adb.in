@@ -130,6 +130,14 @@ package body Elocations is
       Elocations_Table.Table (Idx .. Idx + Len - 1) := (others => No_Location);
    end Create_Elocations;
 
+   procedure Delete_Elocations (N : Iir) is
+   begin
+      --  Clear the corresponding index.
+      Elocations_Index_Table.Table (N) := No_Location_Index;
+
+      --  FIXME: keep free slots in chained list ?
+   end Delete_Elocations;
+
    generic
       Off : Location_Index_Type;
    function Get_FieldX (N : Iir) return Location_Type;
