@@ -552,8 +552,7 @@ package body Canon is
    end Canon_Extract_Sensitivity_From_Callees;
 
    function Canon_Extract_Process_Sensitivity
-     (Proc : Iir_Sensitized_Process_Statement)
-     return Iir_List
+     (Proc : Iir_Sensitized_Process_Statement) return Iir_List
    is
       Res : Iir_List;
    begin
