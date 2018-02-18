@@ -2630,6 +2630,7 @@ package body Trans.Chap4 is
       Inter      : Iir;
       Mode       : Conv_Mode;
       Conv_Info  : in out Assoc_Conv_Info;
+      Num        : Iir_Int32;
       Base_Block : Iir;
       Entity     : Iir)
    is
@@ -2678,7 +2679,8 @@ package body Trans.Chap4 is
       end case;
       --  FIXME: individual assoc -> overload.
       Push_Identifier_Prefix
-        (Mark3, Get_Identifier (Get_Association_Interface (Assoc, Inter)));
+        (Mark3, Get_Identifier (Get_Association_Interface (Assoc, Inter)),
+         Num);
 
       --  Handle anonymous subtypes.
       Chap3.Translate_Anonymous_Subtype_Definition (Out_Type, False);
@@ -2942,8 +2944,10 @@ package body Trans.Chap4 is
       Assoc : Iir;
       Inter : Iir;
       Info  : Assoc_Info_Acc;
+      Num : Iir_Int32;
    begin
       Assoc := Get_Port_Map_Aspect_Chain (Stmt);
+      Num := 0;
       if Is_Null (Entity) then
          Inter := Get_Port_Chain (Stmt);
       else
@@ -2957,7 +2961,8 @@ package body Trans.Chap4 is
                Info := Add_Info (Assoc, Kind_Assoc);
                Translate_Association_Subprogram
                  (Stmt, Block, Assoc, Inter, Conv_Mode_In, Info.Assoc_In,
-                  Base_Block, Entity);
+                  Num, Base_Block, Entity);
+               Num := Num + 1;
             end if;
             if Get_Formal_Conversion (Assoc) /= Null_Iir then
                if Info = null then
@@ -2965,7 +2970,8 @@ package body Trans.Chap4 is
                end if;
                Translate_Association_Subprogram
                  (Stmt, Block, Assoc, Inter, Conv_Mode_Out, Info.Assoc_Out,
-                  Base_Block, Entity);
+                  Num, Base_Block, Entity);
+               Num := Num + 1;
             end if;
          end if;
          Next_Association_Interface (Assoc, Inter);
