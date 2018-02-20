@@ -437,11 +437,11 @@ package body Trans.Chap5 is
 
          else
             --  Association by value.  The formal cannot be referenced in the
-            --  actual.
+            --  actual, but the type of the formal may be used by the actual.
             Set_Map_Env (Formal_Env);
+            Chap6.Translate_Signal_Name (Formal, Formal_Sig, Formal_Val);
             Actual_En := Chap7.Translate_Expression (Actual, Formal_Type);
             Actual_Sig := E2M (Actual_En, Get_Info (Formal_Type), Mode_Value);
-            Chap6.Translate_Signal_Name (Formal, Formal_Sig, Formal_Val);
             Mode := Connect_Value;
 --            raise Internal_Error;
          end if;
