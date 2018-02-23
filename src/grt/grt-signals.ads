@@ -221,7 +221,9 @@ package Grt.Signals is
    --  Signals on different nets have no direct relation-ship, and thus may
    --  be updated without order.
    --  Net NO_SIGNAL_NET is special: it groups all lonely signals.
-   type Signal_Net_Type is new Integer;
+   type Signal_Net_Type is new Integer range -3 .. Integer'Last;
+   subtype Signal_Net_Defined is Signal_Net_Type
+     range 1 .. Signal_Net_Type'Last;
    No_Signal_Net : constant Signal_Net_Type := 0;
    Net_One_Driver : constant Signal_Net_Type := -1;
    Net_One_Direct : constant Signal_Net_Type := -2;

@@ -575,7 +575,7 @@ package body Grt.Signals is
 
    --  Return TRUE iff SIG has a future transaction for the current time,
    --  ie iff SIG will be active in the next delta cycle.  This is used to
-   --  recompute wether SIG must be in the active chain.  SIG must be a user
+   --  recompute whether SIG must be in the active chain.  SIG must be a user
    --  signal.
    function Has_Transaction_In_Next_Delta (Sig : Ghdl_Signal_Ptr)
                                           return Boolean  is
@@ -2777,7 +2777,9 @@ package body Grt.Signals is
       Create_Nets;
    end Order_All_Signals;
 
-   --  Add SIG in active_chain.
+   --  Add SIG in active_chain while the signal is being assigned while
+   --  processes are executed.  So SIG has to be considered during the update
+   --  phase.
    procedure Add_Active_Chain (Sig : Ghdl_Signal_Ptr);
    pragma Inline (Add_Active_Chain);
 
@@ -2792,7 +2794,10 @@ package body Grt.Signals is
 
    Clear_List : Ghdl_Signal_Ptr := null;
 
-   --  Mark SIG as active and put it on Clear_List (if not already).
+   --  Mark SIG as active (set 'Active and 'Last_Active).
+   --  This procedure is called while signals are updated.
+   --  Put SIG on Clear_List (if not already) so that 'Active will be cleared
+   --  at the end of the delta cycle.
    procedure Mark_Active (Sig : Ghdl_Signal_Ptr);
    pragma Inline (Mark_Active);
 
@@ -2993,14 +2998,25 @@ package body Grt.Signals is
       end loop;
    end Set_Effective_Value;
 
-   procedure Run_Propagation (Start : Signal_Net_Type)
+   procedure Run_Propagation (Sig_Net : Ghdl_Signal_Ptr)
    is
+      Net : constant Signal_Net_Type := Sig_Net.Net;
       I : Signal_Net_Type;
       Sig : Ghdl_Signal_Ptr;
       Trans : Transaction_Acc;
       First_Trans : Transaction_Acc;
    begin
-      I := Start;
+      pragma Assert (Net in Signal_Net_Defined);
+
+      if Propagation.Table (Net).Updated then
+         --  Propagation was already run.
+         return;
+      end if;
+
+      Propagation.Table (Net).Updated := True;
+      Add_Active_Chain (Sig_Net);
+
+      I := Net + 1;
       loop
          --  First: the driving value.
          case Propagation.Table (I).Kind is
@@ -3360,15 +3376,10 @@ package body Grt.Signals is
             when No_Signal_Net =>
                Internal_Error ("update_signals: no_signal_net");
 
-            when others =>
+            when Signal_Net_Defined =>
+               --  Mark_Active (Sig);
                Sig.Flags.Is_Direct_Active := False;
-               if not Propagation.Table (Sig.Net).Updated then
-                  Propagation.Table (Sig.Net).Updated := True;
-                  Run_Propagation (Sig.Net + 1);
-
-                  --  Put it on the list, so that updated flag will be cleared.
-                  Add_Active_Chain (Sig);
-               end if;
+               Run_Propagation (Sig);
          end case;
 
          Sig := Next_Sig;
@@ -3381,13 +3392,7 @@ package body Grt.Signals is
          Ghdl_Implicit_Signal_Active_Chain := Sig.Link;
          Sig.Link := null;
 
-         if not Propagation.Table (Sig.Net).Updated then
-            Propagation.Table (Sig.Net).Updated := True;
-            Run_Propagation (Sig.Net + 1);
-
-            --  Put it on the list, so that updated flag will be cleared.
-            Add_Active_Chain (Sig);
-         end if;
+         Run_Propagation (Sig);
       end loop;
 
       --  Un-mark updated.
