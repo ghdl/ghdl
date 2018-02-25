@@ -1483,13 +1483,9 @@ package body Sem_Assocs is
          Inter : Iir;
       begin
          --  A function declaration.
-         case Get_Kind (Decl) is
-            when Iir_Kind_Function_Declaration
-              | Iir_Kind_Interface_Function_Declaration =>
-               null;
-            when others =>
-               return False;
-         end case;
+         if not Is_Function_Declaration (Decl) then
+            return False;
+         end if;
          --  That returns a boolean.
          if (Get_Base_Type (Get_Return_Type (Decl))
                /= Std_Package.Boolean_Type_Definition)

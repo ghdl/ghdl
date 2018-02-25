@@ -1781,8 +1781,7 @@ package body Sem_Expr is
             Decl := Get_Non_Alias_Declaration (Interpretation);
 
             --  It is compatible with operand types ?
-            pragma Assert (Kind_In (Decl, Iir_Kind_Function_Declaration,
-                                    Iir_Kind_Interface_Function_Declaration));
+            pragma Assert (Is_Function_Declaration (Decl));
 
             --  LRM08 12.3 Visibility
             --  [...] or all visible declarations denote the same named entity.
