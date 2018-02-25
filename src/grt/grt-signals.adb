@@ -3324,15 +3324,21 @@ package body Grt.Signals is
                Sig := Fv.Sig;
                --  FIXME: Implement the full semantic of force: really force,
                --  only set driving/effective value, release...
+               Mark_Active (Sig);
                case Fv.Kind is
                   when Force_Driving =>
-                     Mark_Active (Sig);
                      Sig.Driving_Value := Fv.Val;
-                     Set_Effective_Value (Sig, Sig.Driving_Value'Access);
                   when Force_Effective =>
-                     Mark_Active (Sig);
-                     Set_Effective_Value (Sig, Fv.Val'Access);
+                     null;
                end case;
+               Set_Effective_Value (Sig, Fv.Val'Access);
+
+               if Sig.Net in Signal_Net_Defined then
+                  --  HACK: mark SIG as active so that propagation will execute
+                  --  just below.
+                  Add_Active_Chain (Sig);
+               end if;
+
                Next_Fv := Fv.Next;
                Free (Fv);
                Fv := Next_Fv;
