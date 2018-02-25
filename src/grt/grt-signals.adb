@@ -2146,6 +2146,7 @@ package body Grt.Signals is
                   --  Not resolved (so at most one source).
                   if Sig.S.Nbr_Drivers = 1 then
                      --  Not resolved, 1 source : a driver.
+                     pragma Assert (Sig.Nbr_Ports = 0);
                      if Is_Eff_Drv (Sig) then
                         Add_Propagation ((Kind => Eff_One_Driver, Sig => Sig));
                         Sig.Flags.Propag := Propag_Done;
@@ -2156,6 +2157,8 @@ package body Grt.Signals is
                   else
                      Sig.Flags.Propag := Propag_Being_Driving;
                      --  not resolved, 1 source : Source is a port.
+                     pragma Assert (Sig.Nbr_Ports = 1);
+                     pragma Assert (Sig.S.Nbr_Drivers = 0);
                      Order_Signal (Sig.Ports (0), Propag_Driving);
                      if Is_Eff_Drv (Sig) then
                         Add_Propagation ((Kind => Eff_One_Port, Sig => Sig));
@@ -2672,6 +2675,9 @@ package body Grt.Signals is
                   else
                      Sig.Net := Net_One_Driver;
                   end if;
+               else
+                  pragma Assert (Sig.S.Nbr_Drivers = 0);
+                  null;
                end if;
             else
                Sig.Net := Offs (Sig.Net);
@@ -2780,6 +2786,9 @@ package body Grt.Signals is
    --  Add SIG in active_chain while the signal is being assigned while
    --  processes are executed.  So SIG has to be considered during the update
    --  phase.
+   --
+   --  It is also used internally by Run_Propagation to keep the list of nets
+   --  whose update flag has to be cleared.
    procedure Add_Active_Chain (Sig : Ghdl_Signal_Ptr);
    pragma Inline (Add_Active_Chain);
 
@@ -3013,7 +3022,10 @@ package body Grt.Signals is
          return;
       end if;
 
+      --  Set the updated flag, so that propagation is run only once.
       Propagation.Table (Net).Updated := True;
+      --  And put it on the active chain to clear the update flag (this is not
+      --  the regular use of the active chain).
       Add_Active_Chain (Sig_Net);
 
       I := Net + 1;
@@ -3171,17 +3183,27 @@ package body Grt.Signals is
             when Imp_Stable
               | Imp_Quiet =>
                Sig := Propagation.Table (I).Sig;
+               --  Mark Sig active if one of its source is active (Imp_Quiet)
+               --  or has an event (Imp_Stable).
                Set_Stable_Quiet_Activity (Propagation.Table (I).Kind, Sig);
                if Sig.Active then
+                  --  Set driver.
+                  --  LRM02 12.6.3
+                  --  If an event has occurred on signal S, then S'Stable(T) is
+                  --  updated by assigning the value FALSE to the variable
+                  --  representing the current value of S'Table(T), ...
                   Sig.Driving_Value :=
                     Value_Union'(Mode => Mode_B1, B1 => False);
-                  --  Set driver.
+                  --  LRM02 12.6.3
+                  --  ... and the driver of S'Stable(T) is a assigned the
+                  --  waveform TRUE after T.
                   Trans := new Transaction'
                     (Kind => Trans_Value,
                      Line => 0,
                      Time => Current_Time + Sig.S.Time,
                      Next => null,
                      Val => Value_Union'(Mode => Mode_B1, B1 => True));
+                  --  Remove previous transaction.
                   if Sig.S.Attr_Trans.Next /= null then
                      Free (Sig.S.Attr_Trans.Next);
                   end if;
@@ -3192,6 +3214,11 @@ package body Grt.Signals is
                      Add_Active_Chain (Sig);
                   end if;
                else
+                  --  LRM02 12.6.3
+                  --  Otherwise, if the driver of S'Stable(T) is active, then
+                  --  S'Stable(T) is updated by assigning the current value of
+                  --  the driver to the variable representing the current value
+                  --  of S'Stable(T).
                   Trans := Sig.S.Attr_Trans.Next;
                   if Trans /= null and then Trans.Time = Current_Time then
                      Mark_Active (Sig);
@@ -3282,7 +3309,8 @@ package body Grt.Signals is
       Trans : Transaction_Acc;
    begin
       --  LRM93 12.6.2
-      --  1) Reset active flag.
+      --  1) Reset active flag: all signals active in the previous cycle are
+      --     not anymore active.
       Reset_Active_Flag;
 
       --  Forced signals.
@@ -3314,9 +3342,11 @@ package body Grt.Signals is
          end;
       end if;
 
-      --  For each active signals
+      --  Extract and reset the chain of active signals.
       Sig := Ghdl_Signal_Active_Chain;
       Ghdl_Signal_Active_Chain := Signal_End;
+
+      --  For each active signals.
       while Sig.S.Mode_Sig /= Mode_End loop
          Next_Sig := Sig.Link;
          Sig.Link := null;
@@ -3377,7 +3407,6 @@ package body Grt.Signals is
                Internal_Error ("update_signals: no_signal_net");
 
             when Signal_Net_Defined =>
-               --  Mark_Active (Sig);
                Sig.Flags.Is_Direct_Active := False;
                Run_Propagation (Sig);
          end case;

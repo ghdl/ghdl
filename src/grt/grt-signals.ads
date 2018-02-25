@@ -224,6 +224,7 @@ package Grt.Signals is
    type Signal_Net_Type is new Integer range -3 .. Integer'Last;
    subtype Signal_Net_Defined is Signal_Net_Type
      range 1 .. Signal_Net_Type'Last;
+   --  No propagation for the signals on these nets:
    No_Signal_Net : constant Signal_Net_Type := 0;
    Net_One_Driver : constant Signal_Net_Type := -1;
    Net_One_Direct : constant Signal_Net_Type := -2;
