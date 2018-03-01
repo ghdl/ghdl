@@ -361,6 +361,11 @@ package body Ghdlcomp is
       Unit : Iir;
       Next_Unit : Iir;
    begin
+      if Args'Length = 0 then
+         Error ("no file to analyze");
+         raise Compilation_Error;
+      end if;
+
       Setup_Libraries (True);
 
       Hooks.Compile_Init.all (True);
