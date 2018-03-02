@@ -864,9 +864,6 @@ package body Grt.Processes is
             Next_Time := Compute_Next_Time;
          end if;
       end if;
-      if Next_Time /= 0 then
-         Update_Active_Chain;
-      end if;
 
       --  Clear current_delta, will be set by Simulation_Cycle.
       Current_Delta := 0;
@@ -1046,7 +1043,6 @@ package body Grt.Processes is
             Tn := Compute_Next_Time;
          end if;
 
-         Update_Active_Chain;
          Next_Time := Tn;
          Current_Delta := 0;
 

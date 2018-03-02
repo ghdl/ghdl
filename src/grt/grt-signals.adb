@@ -655,10 +655,6 @@ package body Grt.Signals is
 
    --  Update_Clear_List : Ghdl_Signal_Ptr;
 
-   --  Updated by Find_Next_Time to the list of signal that would be active
-   --  at the time returned (if not current_time).
-   Next_Signal_Active_Chain : Ghdl_Signal_Ptr;
-
    --  List of signals which have projected waveforms in the future (beyond
    --  the next delta cycle).
    --  Currently signals are never removed from this list.
@@ -1923,7 +1919,7 @@ package body Grt.Signals is
       Next_Sig : Ghdl_Signal_Ptr;
    begin
       --  Free active_chain.
-      Sig := Next_Signal_Active_Chain;
+      Sig := Ghdl_Signal_Active_Chain;
       loop
          Next_Sig := Sig.Link;
          exit when Next_Sig = null;
@@ -1931,15 +1927,8 @@ package body Grt.Signals is
          Sig := Next_Sig;
       end loop;
       pragma Assert (Sig = Signal_End);
-      Next_Signal_Active_Chain := Sig;
+      Ghdl_Signal_Active_Chain := Sig;
    end Flush_Active_Chain;
-
-   procedure Update_Active_Chain is
-   begin
-      pragma Assert (Ghdl_Signal_Active_Chain.Link = null);
-      Ghdl_Signal_Active_Chain := Next_Signal_Active_Chain;
-      Next_Signal_Active_Chain := Signal_End;
-   end Update_Active_Chain;
 
    function Find_Next_Time (Tn : Std_Time) return Std_Time
    is
@@ -1953,20 +1942,18 @@ package body Grt.Signals is
             return;
          end if;
 
-         if Trans.Time = Res and Sig.Link = null then
+         if Trans.Time = Res then
             --  Put to active list.
-            Sig.Link := Next_Signal_Active_Chain;
-            Next_Signal_Active_Chain := Sig;
+            Add_Active_Chain (Sig);
          elsif Trans.Time < Res then
             --  A transaction is scheduled before all the previous one.  Clear
             --  the active chain, and put simply Sig on it.
             Flush_Active_Chain;
 
-            --  Put sig on the list.
-            Sig.Link := Next_Signal_Active_Chain;
-            Next_Signal_Active_Chain := Sig;
-
             Res := Trans.Time;
+
+            --  Put sig on the list.
+            Add_Active_Chain (Sig);
          end if;
          if Res = Current_Time then
             --  Must have been in the active list.
@@ -3662,7 +3649,6 @@ package body Grt.Signals is
       Ghdl_Signal_Active_Chain := Signal_End;
       Ghdl_Implicit_Signal_Active_Chain := Signal_End;
       Future_List := Signal_End;
-      Next_Signal_Active_Chain := Signal_End;
    end Init;
 
 end Grt.Signals;

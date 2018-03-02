@@ -482,16 +482,11 @@ package Grt.Signals is
    procedure Init_Signals;
 
    --  Return the next time at which a driver becomes active.
-   --  SIDE EFFECT: this function updates the next_signal_active_chain.
-   --  Note: the next_signal_active_chain must be empty before running
+   --  SIDE EFFECT: this function updates the ghdl_signal_active_chain.
+   --  Note: the ghdl_signal_active_chain must be emptied before running
    --  processes as they assume that if signals are on a list, they are on the
-   --  ghdl_signal_active_chain (and not on next_signal_active_chain).  Use one
-   --  of Update_Active_Chain or Flush_Active_Chain for that effect.
+   --  ghdl_signal_active_chain.
    function Find_Next_Time (Tn : Std_Time) return Std_Time;
-
-   --  To be called after Find_Next_Time to update the chain of active signals,
-   --  only if the next cycle is not a delta cycle.
-   procedure Update_Active_Chain;
 
    --  Empty the next_signal_active_chain.
    procedure Flush_Active_Chain;
