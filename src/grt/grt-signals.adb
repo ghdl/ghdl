@@ -599,6 +599,9 @@ package body Grt.Signals is
       return False;
    end Has_Transaction_In_Next_Delta;
 
+   --  Unique signal used to end lists.  Lists are not null-terminated so that
+   --  it is easy to check if a signal is on the list: test if Link is
+   --  not null.
    Signal_End_Decl : Ghdl_Signal := (Value_Ptr => null,
                                      Driving_Value => (Mode => Mode_B1,
                                                        B1 => False),
@@ -641,7 +644,7 @@ package body Grt.Signals is
      Signal_End_Decl'Unrestricted_access;
 
    --  List of signals that will be active in the next delta cycle.
-   Ghdl_Signal_Active_Chain : aliased Ghdl_Signal_Ptr;
+   Ghdl_Signal_Active_Chain : Ghdl_Signal_Ptr;
 
    --  List of implicit signals that will be active in the next cycle.
    --  They are put in a different chain (other than ghdl_signal_active_chain),
@@ -653,13 +656,14 @@ package body Grt.Signals is
    --  beginning of the next cycle.
    Active_Clear_List : Ghdl_Signal_Ptr := null;
 
+   --  List of signals whose Update flag on the net has to be cleared.
    --  Update_Clear_List : Ghdl_Signal_Ptr;
 
    --  List of signals which have projected waveforms in the future (beyond
    --  the next delta cycle).
    --  Currently signals are never removed from this list.
    --  TODO: maybe remove signals when they have no transaction in the future?
-   Future_List : aliased Ghdl_Signal_Ptr;
+   Future_List : Ghdl_Signal_Ptr;
 
    --  Insert SIG on the Future_List, if not already inserted.
    procedure Insert_Future_List (Sig : Ghdl_Signal_Ptr) is
@@ -682,6 +686,7 @@ package body Grt.Signals is
    procedure Add_Active_Chain (Sig : Ghdl_Signal_Ptr) is
    begin
       if Sig.Link = null then
+         --  Use Grt.Threads.Atomic_Insert ?
          Sig.Link := Ghdl_Signal_Active_Chain;
          Ghdl_Signal_Active_Chain := Sig;
       end if;
@@ -920,10 +925,7 @@ package body Grt.Signals is
 
    procedure Ghdl_Signal_Direct_Assign (Sign : Ghdl_Signal_Ptr) is
    begin
-      if Sign.Link = null then
-         Sign.Link := Grt.Threads.Atomic_Insert
-           (Ghdl_Signal_Active_Chain'access, Sign);
-      end if;
+      Add_Active_Chain (Sign);
 
       --  Must be always set (as Sign.Link may be set by a regular driver).
       Sign.Flags.Is_Direct_Active := True;
