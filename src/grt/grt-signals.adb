@@ -599,13 +599,46 @@ package body Grt.Signals is
       return False;
    end Has_Transaction_In_Next_Delta;
 
+   Signal_End_Decl : Ghdl_Signal := (Value_Ptr => null,
+                                     Driving_Value => (Mode => Mode_B1,
+                                                       B1 => False),
+                                     Last_Value => (Mode => Mode_B1,
+                                                    B1 => False),
+                                     Last_Event => 0,
+                                     Last_Active => 0,
+                                     Event => False,
+                                     Active => False,
+                                     Has_Active => False,
+                                     Mode => Mode_B1,
+
+                                     Flags => (Propag => Propag_None,
+                                               Sig_Kind => Kind_Signal_No,
+                                               Is_Direct_Active => False,
+                                               Is_Dumped => False,
+                                               RO_Event => False,
+                                               Seen => False),
+
+                                     Net => No_Signal_Net,
+                                     Link => null,
+                                     Alink => null,
+                                     Flink => null,
+
+                                     Event_List => null,
+
+                                     Nbr_Ports => 0,
+                                     Ports => null,
+
+                                     S => (Mode_Sig => Mode_End));
+
+
    --  Unused but well-known signal which always terminate
    --    ghdl_signal_active_chain.
    --  As a consequence, every element of the chain has a link field set to
    --  a non-null value (this is of course not true for SIGNAL_END).  This may
    --  be used to quickly check if a signal is in the list.
    --  This signal is not in the signal table.
-   Signal_End : Ghdl_Signal_Ptr;
+   Signal_End : constant Ghdl_Signal_Ptr :=
+     Signal_End_Decl'Unrestricted_access;
 
    --  List of signals that will be active in the next delta cycle.
    Ghdl_Signal_Active_Chain : aliased Ghdl_Signal_Ptr;
@@ -614,6 +647,17 @@ package body Grt.Signals is
    --  They are put in a different chain (other than ghdl_signal_active_chain),
    --  because their handling is different.  FIXME: try to merge them ?
    Ghdl_Implicit_Signal_Active_Chain : Ghdl_Signal_Ptr;
+
+   --  List of signals whose 'Active flag must be cleared.  A signal is added
+   --  to this list by Mark_Active and removed by Reset_Active_Flag at the
+   --  beginning of the next cycle.
+   Active_Clear_List : Ghdl_Signal_Ptr := null;
+
+   --  Update_Clear_List : Ghdl_Signal_Ptr;
+
+   --  Updated by Find_Next_Time to the list of signal that would be active
+   --  at the time returned (if not current_time).
+   Next_Signal_Active_Chain : Ghdl_Signal_Ptr;
 
    --  List of signals which have projected waveforms in the future (beyond
    --  the next delta cycle).
@@ -629,6 +673,23 @@ package body Grt.Signals is
          Future_List := Sig;
       end if;
    end Insert_Future_List;
+
+   --  Add SIG in active_chain while the signal is being assigned while
+   --  processes are executed.  So SIG has to be considered during the update
+   --  phase.
+   --
+   --  It is also used internally by Run_Propagation to keep the list of nets
+   --  whose update flag has to be cleared.
+   procedure Add_Active_Chain (Sig : Ghdl_Signal_Ptr);
+   pragma Inline (Add_Active_Chain);
+
+   procedure Add_Active_Chain (Sig : Ghdl_Signal_Ptr) is
+   begin
+      if Sig.Link = null then
+         Sig.Link := Ghdl_Signal_Active_Chain;
+         Ghdl_Signal_Active_Chain := Sig;
+      end if;
+   end Add_Active_Chain;
 
    procedure Ghdl_Signal_Start_Assign (Sign : Ghdl_Signal_Ptr;
                                        Reject : Std_Time;
@@ -650,10 +711,7 @@ package body Grt.Signals is
       if After = 0 then
          --  Put SIGN on the active list if the transaction is scheduled
          --   for the next delta cycle.
-         if Sign.Link = null then
-            Sign.Link := Grt.Threads.Atomic_Insert
-              (Ghdl_Signal_Active_Chain'access, Sign);
-         end if;
+         Add_Active_Chain (Sign);
       else
          --  AFTER > 0.
          --  Put SIGN on the future list.
@@ -1856,10 +1914,6 @@ package body Grt.Signals is
                                                    E8 => Val)));
    end Ghdl_Signal_Force_Effective_E8;
 
-   --  Updated by Find_Next_Time to the list of signal that would be active
-   --  at the time returned (if not current_time).
-   Next_Signal_Active_Chain : Ghdl_Signal_Ptr;
-
    --  Remove all (but Signal_End) signals in the next active chain.
    --  Called when a transaction/event will occur before the time for this
    --  chain.
@@ -1876,8 +1930,16 @@ package body Grt.Signals is
          Sig.Link := null;
          Sig := Next_Sig;
       end loop;
+      pragma Assert (Sig = Signal_End);
       Next_Signal_Active_Chain := Sig;
    end Flush_Active_Chain;
+
+   procedure Update_Active_Chain is
+   begin
+      pragma Assert (Ghdl_Signal_Active_Chain.Link = null);
+      Ghdl_Signal_Active_Chain := Next_Signal_Active_Chain;
+      Next_Signal_Active_Chain := Signal_End;
+   end Update_Active_Chain;
 
    function Find_Next_Time (Tn : Std_Time) return Std_Time
    is
@@ -1944,13 +2006,6 @@ package body Grt.Signals is
       end loop;
       return Res;
    end Find_Next_Time;
-
-   procedure Update_Active_Chain is
-   begin
-      pragma Assert (Ghdl_Signal_Active_Chain.Link = null);
-      Ghdl_Signal_Active_Chain := Next_Signal_Active_Chain;
-      Next_Signal_Active_Chain := Signal_End;
-   end Update_Active_Chain;
 
 --    function Get_Nbr_Non_Null_Source (Sig : Ghdl_Signal_Ptr)
 --                                     return Natural
@@ -2790,28 +2845,6 @@ package body Grt.Signals is
       Create_Nets;
    end Order_All_Signals;
 
-   --  Add SIG in active_chain while the signal is being assigned while
-   --  processes are executed.  So SIG has to be considered during the update
-   --  phase.
-   --
-   --  It is also used internally by Run_Propagation to keep the list of nets
-   --  whose update flag has to be cleared.
-   procedure Add_Active_Chain (Sig : Ghdl_Signal_Ptr);
-   pragma Inline (Add_Active_Chain);
-
-   procedure Add_Active_Chain (Sig : Ghdl_Signal_Ptr)
-   is
-   begin
-      if Sig.Link = null then
-         Sig.Link := Ghdl_Signal_Active_Chain;
-         Ghdl_Signal_Active_Chain := Sig;
-      end if;
-   end Add_Active_Chain;
-
-   --  List of signals whose 'Active flag must be cleared.  A signal is added
-   --  to this list by Mark_Active and removed by Reset_Active_Flag.
-   Active_Clear_List : Ghdl_Signal_Ptr := null;
-
    --  Mark SIG as active (set 'Active and 'Last_Active).
    --  This procedure is called while signals are updated.
    --  Put SIG on Active_Clear_List (if not already) so that 'Active will be
@@ -2819,26 +2852,18 @@ package body Grt.Signals is
    procedure Mark_Active (Sig : Ghdl_Signal_Ptr);
    pragma Inline (Mark_Active);
 
-   procedure Mark_Active (Sig : Ghdl_Signal_Ptr)
-   is
+   procedure Mark_Active (Sig : Ghdl_Signal_Ptr) is
    begin
       if not Sig.Active then
+         --  Sig is active...
          Sig.Active := True;
          Sig.Last_Active := Current_Time;
+         --  ... but only for one cycle.  It has to be cleared before the next
+         --  cycle.
          Sig.Alink := Active_Clear_List;
          Active_Clear_List := Sig;
       end if;
    end Mark_Active;
-
-   procedure Set_Guard_Activity (Sig : Ghdl_Signal_Ptr) is
-   begin
-      for I in 1 .. Sig.Nbr_Ports loop
-         if Sig.Ports (I - 1).Active then
-            Mark_Active (Sig);
-            return;
-         end if;
-      end loop;
-   end Set_Guard_Activity;
 
    procedure Set_Stable_Quiet_Activity
      (Mode : Propagation_Kind_Type; Sig : Ghdl_Signal_Ptr) is
@@ -2852,9 +2877,10 @@ package body Grt.Signals is
                end if;
             end loop;
          when Imp_Quiet
-           | Imp_Transaction =>
-            for I in 0 .. Sig.Nbr_Ports - 1 loop
-               if Sig.Ports (I).Active then
+           | Imp_Transaction
+           | Imp_Guard =>
+            for I in 1 .. Sig.Nbr_Ports loop
+               if Sig.Ports (I - 1).Active then
                   Mark_Active (Sig);
                   return;
                end if;
@@ -3019,6 +3045,7 @@ package body Grt.Signals is
    procedure Run_Propagation (Sig_Net : Ghdl_Signal_Ptr)
    is
       Net : constant Signal_Net_Type := Sig_Net.Net;
+      Propagation_Kind : Propagation_Kind_Type;
       I : Signal_Net_Type;
       Sig : Ghdl_Signal_Ptr;
       Trans : Transaction_Acc;
@@ -3027,7 +3054,7 @@ package body Grt.Signals is
       pragma Assert (Net in Signal_Net_Defined);
 
       if Propagation.Table (Net).Updated then
-         --  Propagation was already run.
+         --  Propagation was already run for this net.
          return;
       end if;
 
@@ -3039,8 +3066,10 @@ package body Grt.Signals is
 
       I := Net + 1;
       loop
+         Propagation_Kind := Propagation.Table (I).Kind;
+
          --  First: the driving value.
-         case Propagation.Table (I).Kind is
+         case Propagation_Kind is
             when Drv_One_Driver
               | Eff_One_Driver =>
                Sig := Propagation.Table (I).Sig;
@@ -3142,7 +3171,7 @@ package body Grt.Signals is
          end case;
 
          --  Second: the effective value.
-         case Propagation.Table (I).Kind is
+         case Propagation_Kind is
             when Drv_One_Driver
               | Drv_One_Port
               | Drv_One_Resolved
@@ -3182,7 +3211,7 @@ package body Grt.Signals is
             when Imp_Guard =>
                --  Guard signal is active iff one of its dependence is active.
                Sig := Propagation.Table (I).Sig;
-               Set_Guard_Activity (Sig);
+               Set_Stable_Quiet_Activity (Imp_Guard, Sig);
                if Sig.Active then
                   Sig.Driving_Value.B1 :=
                     Sig.S.Guard_Func.all (Sig.S.Guard_Instance);
@@ -3194,7 +3223,7 @@ package body Grt.Signals is
                Sig := Propagation.Table (I).Sig;
                --  Mark Sig active if one of its source is active (Imp_Quiet)
                --  or has an event (Imp_Stable).
-               Set_Stable_Quiet_Activity (Propagation.Table (I).Kind, Sig);
+               Set_Stable_Quiet_Activity (Propagation_Kind, Sig);
                if Sig.Active then
                   --  Set driver.
                   --  LRM02 12.6.3
@@ -3290,6 +3319,9 @@ package body Grt.Signals is
       Sig := Active_Clear_List;
       Active_Clear_List := null;
       while Sig /= null loop
+         Sig.Active := False;
+         Sig.Event := False;
+
          if Options.Flag_Stats then
             if Sig.Active then
                Nbr_Active := Nbr_Active + 1;
@@ -3298,9 +3330,6 @@ package body Grt.Signals is
                Nbr_Events := Nbr_Events + 1;
             end if;
          end if;
-         Sig.Active := False;
-         Sig.Event := False;
-
          Sig := Sig.Alink;
       end loop;
 
@@ -3434,6 +3463,10 @@ package body Grt.Signals is
       end loop;
 
       --  Implicit signals (forwarded).
+      --  The list may not be initially empty: signals were appended (by
+      --  forwarder) during propagation just above (because a signal is
+      --  active), and signals may have been appended during the previous
+      --  cycle (because a signal is not anymore active).
       loop
          Sig := Ghdl_Implicit_Signal_Active_Chain;
          exit when Sig.Link = null;
@@ -3626,37 +3659,6 @@ package body Grt.Signals is
 
    procedure Init is
    begin
-      Signal_End := new Ghdl_Signal'(Value_Ptr => null,
-                                     Driving_Value => (Mode => Mode_B1,
-                                                       B1 => False),
-                                     Last_Value => (Mode => Mode_B1,
-                                                    B1 => False),
-                                     Last_Event => 0,
-                                     Last_Active => 0,
-                                     Event => False,
-                                     Active => False,
-                                     Has_Active => False,
-                                     Mode => Mode_B1,
-
-                                     Flags => (Propag => Propag_None,
-                                               Sig_Kind => Kind_Signal_No,
-                                               Is_Direct_Active => False,
-                                               Is_Dumped => False,
-                                               RO_Event => False,
-                                               Seen => False),
-
-                                     Net => No_Signal_Net,
-                                     Link => null,
-                                     Alink => null,
-                                     Flink => null,
-
-                                     Event_List => null,
-
-                                     Nbr_Ports => 0,
-                                     Ports => null,
-
-                                     S => (Mode_Sig => Mode_End));
-
       Ghdl_Signal_Active_Chain := Signal_End;
       Ghdl_Implicit_Signal_Active_Chain := Signal_End;
       Future_List := Signal_End;
