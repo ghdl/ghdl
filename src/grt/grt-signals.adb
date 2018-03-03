@@ -254,6 +254,7 @@ package body Grt.Signals is
                                         Is_Direct_Active => False,
                                         Is_Dumped => False,
                                         RO_Event => False,
+                                        Implicit_Active_Next => False,
                                         Seen => False),
 
                               Net => No_Signal_Net,
@@ -619,6 +620,7 @@ package body Grt.Signals is
                                                Is_Direct_Active => False,
                                                Is_Dumped => False,
                                                RO_Event => False,
+                                               Implicit_Active_Next => False,
                                                Seen => False),
 
                                      Net => No_Signal_Net,
@@ -643,13 +645,10 @@ package body Grt.Signals is
    Signal_End : constant Ghdl_Signal_Ptr :=
      Signal_End_Decl'Unrestricted_access;
 
-   --  List of signals that will be active in the next delta cycle.
+   --  List of signals that will be active in the next delta cycle.  Signals
+   --  are inserted on this chain while processes are scheduling a transaction
+   --  with a delay of 0.
    Signal_Active_Chain : Ghdl_Signal_Ptr;
-
-   --  List of implicit signals that will be active in the next cycle.
-   --  They are put in a different chain (other than signal_active_chain),
-   --  because their handling is different.  FIXME: try to merge them ?
-   Implicit_Signal_Active_Chain : Ghdl_Signal_Ptr;
 
    --  List of signals whose 'Active flag must be cleared.  A signal is added
    --  to this list by Mark_Active and removed by Reset_Active_Flag at the
@@ -1981,9 +1980,6 @@ package body Grt.Signals is
       if Force_Value_First /= null then
          return Current_Time;
       end if;
-      if Implicit_Signal_Active_Chain.Link /= null then
-         return Current_Time;
-      end if;
 
       Res := Tn;
       Sig := Future_List;
@@ -2978,7 +2974,8 @@ package body Grt.Signals is
          end if;
 
          if Sig.S.Time = 0 then
-            Insert_Update_Clear_Chain (Sig);
+            --  FIXME: the signal should also be active this cycle ??
+            Sig.Flags.Implicit_Active_Next := True;
          end if;
       end if;
    end Delayed_Implicit_Process;
@@ -3145,10 +3142,7 @@ package body Grt.Signals is
                null;
             when Imp_Forward =>
                Sig := Propagation.Table (I).Sig;
-               if Sig.Link = null then
-                  Sig.Link := Implicit_Signal_Active_Chain;
-                  Implicit_Signal_Active_Chain := Sig;
-               end if;
+               Insert_Active_Chain (Sig);
             when Imp_Delayed =>
                Sig := Propagation.Table (I).Sig;
                Trans := Sig.S.Attr_Trans.Next;
@@ -3249,7 +3243,7 @@ package body Grt.Signals is
                   if Sig.S.Time = 0 then
                      --  Signal is active in the next cycle.  If Time > 0, it
                      --  has been put in Future_List during creation.
-                     Insert_Update_Clear_Chain (Sig);
+                     Sig.Flags.Implicit_Active_Next := True;
                   end if;
                else
                   --  LRM02 12.6.3
@@ -3388,13 +3382,17 @@ package body Grt.Signals is
          end;
       end if;
 
-      --  Extract and reset the chain of active signals.
-      Sig := Signal_Active_Chain;
-      Signal_Active_Chain := Signal_End;
-
-      --  For each active signals.
-      while Sig.S.Mode_Sig /= Mode_End loop
+      --  For each active signal.
+      loop
+         --  Extract an active signal.
+         Sig := Signal_Active_Chain;
          Next_Sig := Sig.Link;
+
+         --  Leave Signal_End.
+         exit when Next_Sig = null;
+
+         --  (Remove it from the chain).
+         Signal_Active_Chain := Next_Sig;
          Sig.Link := null;
 
          case Sig.Net is
@@ -3460,21 +3458,7 @@ package body Grt.Signals is
          Sig := Next_Sig;
       end loop;
 
-      --  Implicit signals (forwarded).
-      --  The list may not be initially empty: signals were appended (by
-      --  forwarder) during propagation just above (because a signal is
-      --  active), and signals may have been appended during the previous
-      --  cycle (because a signal is not anymore active).
-      loop
-         Sig := Implicit_Signal_Active_Chain;
-         exit when Sig.Link = null;
-         Implicit_Signal_Active_Chain := Sig.Link;
-         Sig.Link := null;
-
-         Run_Propagation (Sig);
-      end loop;
-
-      --  Un-mark updated.
+      --  Un-mark updated nets.
       Sig := Update_Clear_Chain;
       Update_Clear_Chain := Signal_End;
       while Sig.Link /= null loop
@@ -3485,22 +3469,12 @@ package body Grt.Signals is
          --  Maybe put SIG in the active list, if it will be active during
          --  the next cycle.
          --  This can happen only for 'quiet, 'stable or 'delayed.
-         case Sig.S.Mode_Sig is
-            when Mode_Stable
-              | Mode_Quiet
-              | Mode_Delayed =>
-               declare
-                  Trans : Transaction_Acc;
-               begin
-                  Trans := Sig.S.Attr_Trans.Next;
-                  if Trans /= null and then Trans.Time = Current_Time then
-                     Sig.Link := Implicit_Signal_Active_Chain;
-                     Implicit_Signal_Active_Chain := Sig;
-                  end if;
-               end;
-            when others =>
-               null;
-         end case;
+         --  FIXME: not the case for 'Delayed.
+         if Sig.Flags.Implicit_Active_Next then
+            pragma Assert (Sig.S.Mode_Sig in Mode_Signal_Forward);
+            Sig.Flags.Implicit_Active_Next := False;
+            Insert_Active_Chain (Sig);
+         end if;
 
          Sig := Next_Sig;
       end loop;
@@ -3658,7 +3632,6 @@ package body Grt.Signals is
    procedure Init is
    begin
       Signal_Active_Chain := Signal_End;
-      Implicit_Signal_Active_Chain := Signal_End;
       Future_List := Signal_End;
       Update_Clear_Chain := Signal_End;
    end Init;
