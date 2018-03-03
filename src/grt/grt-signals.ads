@@ -704,7 +704,7 @@ package Grt.Signals is
    --
    --  Assignment using direct driver:
    --  * the driver value is set
-   --  * put the signal on the ghdl_signal_active_chain, if the signal will
+   --  * put the signal on the signal_active_chain, if the signal will
    --    be active and if not already on the chain.
    procedure Ghdl_Signal_Add_Direct_Driver (Sign : Ghdl_Signal_Ptr;
                                             Drv : Ghdl_Value_Ptr);
