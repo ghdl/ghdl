@@ -2974,7 +2974,7 @@ package body Grt.Signals is
          end if;
 
          if Sig.S.Time = 0 then
-            --  FIXME: the signal should also be active this cycle ??
+            --  The signal will be active on the next cycle.
             Sig.Flags.Implicit_Active_Next := True;
          end if;
       end if;
@@ -3055,8 +3055,7 @@ package body Grt.Signals is
 
       --  Set the updated flag, so that propagation is run only once.
       Propagation.Table (Net).Updated := True;
-      --  And put it on the active chain to clear the update flag (this is not
-      --  the regular use of the active chain).
+      --  And put it on the Update_Clear_Chain to clear the update flag.
       Insert_Update_Clear_Chain (Sig_Net);
 
       I := Net + 1;
@@ -3469,7 +3468,6 @@ package body Grt.Signals is
          --  Maybe put SIG in the active list, if it will be active during
          --  the next cycle.
          --  This can happen only for 'quiet, 'stable or 'delayed.
-         --  FIXME: not the case for 'Delayed.
          if Sig.Flags.Implicit_Active_Next then
             pragma Assert (Sig.S.Mode_Sig in Mode_Signal_Forward);
             Sig.Flags.Implicit_Active_Next := False;
