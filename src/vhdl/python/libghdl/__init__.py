@@ -9,7 +9,7 @@ _ext = {'linux': '.so',
         'cygwin': '.dll'}
 
 # Load the DLL.
-_basedir = os.path.join(os.path.dirname(__file__), '..')
+_basedir = os.path.dirname(__file__)
 libghdl = ctypes.CDLL(os.path.join(
     _basedir, 'libghdl' + _ext.get(sys.platform, '.so')))
 
