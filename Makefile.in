@@ -38,6 +38,7 @@ build_mode=@build_mode@
 enable_werror=@enable_werror@
 enable_checks=@enable_checks@
 enable_openieee=@enable_openieee@
+enable_python=@enable_python@
 
 INSTALL_PROGRAM=install -m 755
 INSTALL_DATA=install -m 644
@@ -114,7 +115,7 @@ LIBVHDL_FLAGS_TO_PASS=\
  enable_openieee="$(enable_openieee)" \
  LN="$(LN)" CP="$(CP)" MKDIR="$(MKDIR)"
 
-all: Makefile all.$(backend)
+all: Makefile all.$(backend) all.libghdl.$(enable_python)
 
 install: install.$(backend)
 
@@ -338,6 +339,9 @@ LIBGHDL_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/vhdl/python -aI$(srcdi
 
 libghdl$(SOEXT): $(GRT_SRC_DEPS) version.ads force
 	$(GNATMAKE) -I- -aI. -D pic -z libghdl -o $@ $(GNATFLAGS) $(PIC_FLAGS) -gnat05 $(LIBGHDL_INCFLAGS) -bargs -shared -Llibghdl_ -largs -shared $(SHLIB_FLAGS)
+
+all.libghdl.true: libghdl$(SOEXT)
+all.libghdl.false:
 
 ################ ghdlsynth library ######################################
 

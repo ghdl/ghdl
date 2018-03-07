@@ -22,6 +22,7 @@ build_mode=
 enable_werror=true
 enable_checks=true
 enable_openieee=unknown
+enable_python=false
 EXEEXT=
 SOEXT=.so
 PIC_FLAGS=-fPIC
@@ -29,7 +30,7 @@ PIC_FLAGS=-fPIC
 show_help=no
 progname=$0
 
-subst_vars="CC CXX GNATMAKE MAKE CFLAGS LDFLAGS build srcdir abs_srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config llvm_be backtrace_lib build_mode EXEEXT SOEXT PIC_FLAGS default_pie enable_werror enable_checks enable_openieee"
+subst_vars="CC CXX GNATMAKE MAKE CFLAGS LDFLAGS build srcdir abs_srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config llvm_be backtrace_lib build_mode EXEEXT SOEXT PIC_FLAGS default_pie enable_werror enable_checks enable_openieee enable_python"
 
 # Find srcdir
 srcdir=`dirname $progname`
@@ -80,6 +81,8 @@ for opt do
       --disable-checks) enable_checks=false;;
       --enable-openieee) enable_openieee=true;;
       --disable-openieee) enable_openieee=false;;
+      --enable-python) enable_python=true;;
+      --disable-python) enable_python=false;;
       --enable-coverage) build_mode="coverage";;
       -h|-help|--help) show_help=yes;;
       *) echo "$0: unknown option $opt; try $0 --help"
@@ -103,6 +106,7 @@ Options [defaults in brackets]:
   --disable-werror            warnings don't stop build
   --disable-checks            disable internal checks
   --enable-openieee           use gpl-compatible sources for ieee library
+  --enable-python             build python libghdl
 EOF
 exit 0
 fi
@@ -283,10 +287,14 @@ for v in $subst_vars; do
     echo $v=\"$vval\"
 done
 sed_opts=`echo $subst_vars | sed -e "s/\\([a-zA-Z_]*\\)/ -e \"s%@\1@%\$\1%g\"/g"`
-echo 'echo "Creating ghdl.gpr"'
-echo sed $sed_opts '< $srcdir/ghdl.gpr.in > ghdl.gpr'
-echo 'echo "Creating Makefile"'
-echo sed $sed_opts '< $srcdir/Makefile.in > Makefile'
+subst_files="ghdl.gpr Makefile"
+if [ "$enable_python" = true ]; then
+    subst_files="$subst_files setup.py"
+fi
+echo "for f in $subst_files; do"
+echo '  echo "Creating $f"'
+echo "  sed $sed_opts" '< $srcdir/${f}.in > $f'
+echo "done"
 } > config.status || \
 {
   echo "$progname: cannot create config.status"
