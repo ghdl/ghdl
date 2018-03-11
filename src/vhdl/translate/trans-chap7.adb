@@ -170,7 +170,7 @@ package body Trans.Chap7 is
    is
       use Name_Table;
 
-      Literal_List : constant Iir_List :=
+      Literal_List : constant Iir_Flist :=
         Get_Enumeration_Literal_List (Get_Base_Type (El_Type));
       Len          : constant Nat32 := Get_String_Length (Str);
       Id           : constant String8_Id := Get_String8_Id (Str);
@@ -240,7 +240,7 @@ package body Trans.Chap7 is
       List      : O_Array_Aggr_List;
       Res       : O_Cnode;
    begin
-      Chap3.Translate_Anonymous_Type_Definition (Aggr_Type);
+      Chap3.Translate_Anonymous_Subtype_Definition (Aggr_Type, False);
       Start_Array_Aggr (List, Get_Ortho_Type (Aggr_Type, Mode_Value));
 
       Translate_Static_Array_Aggregate_1 (List, Aggr, Aggr_Type, 1);
@@ -251,18 +251,17 @@ package body Trans.Chap7 is
    function Translate_Static_Simple_Aggregate (Aggr : Iir) return O_Cnode
    is
       Aggr_Type : constant Iir := Get_Type (Aggr);
-      El_List   : constant Iir_List := Get_Simple_Aggregate_List (Aggr);
+      El_List   : constant Iir_Flist := Get_Simple_Aggregate_List (Aggr);
       El_Type   : constant Iir := Get_Element_Subtype (Aggr_Type);
       El        : Iir;
       List      : O_Array_Aggr_List;
       Res       : O_Cnode;
    begin
-      Chap3.Translate_Anonymous_Type_Definition (Aggr_Type);
+      Chap3.Translate_Anonymous_Subtype_Definition (Aggr_Type, False);
       Start_Array_Aggr (List, Get_Ortho_Type (Aggr_Type, Mode_Value));
 
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (El_List) loop
          El := Get_Nth_Element (El_List, I);
-         exit when El = Null_Iir;
          New_Array_Aggr_El
            (List, Translate_Static_Expression (El, El_Type));
       end loop;
@@ -281,7 +280,7 @@ package body Trans.Chap7 is
       List         : O_Array_Aggr_List;
       Res          : O_Cnode;
    begin
-      Chap3.Translate_Anonymous_Type_Definition (Lit_Type);
+      Chap3.Translate_Anonymous_Subtype_Definition (Lit_Type, False);
       Arr_Type := Get_Ortho_Type (Lit_Type, Mode_Value);
 
       Start_Array_Aggr (List, Arr_Type);
@@ -397,7 +396,7 @@ package body Trans.Chap7 is
          Val := Create_Global_Const
            (Create_Uniq_Identifier, Type_Info.Ortho_Type (Mode_Value),
             O_Storage_Private, Res);
-      elsif Type_Info.Type_Mode = Type_Mode_Array then
+      elsif Type_Info.Type_Mode in Type_Mode_Bounded_Arrays then
          --  Type of string literal isn't statically known; check the
          --  length.
          Chap6.Check_Bound_Error
@@ -420,22 +419,19 @@ package body Trans.Chap7 is
    function Translate_Static_String (Str_Type : Iir; Str_Ident : Name_Id)
                                     return O_Cnode
    is
-      use Name_Table;
-
-      Literal_List : Iir_List;
+      Img : constant String := Name_Table.Image (Str_Ident);
+      Literal_List : constant Iir_Flist :=
+        Get_Enumeration_Literal_List (Character_Type_Definition);
       Lit          : Iir;
       List         : O_Array_Aggr_List;
       Res          : O_Cnode;
    begin
-      Chap3.Translate_Anonymous_Type_Definition (Str_Type);
+      Chap3.Translate_Anonymous_Subtype_Definition (Str_Type, False);
 
       Start_Array_Aggr (List, Get_Ortho_Type (Str_Type, Mode_Value));
 
-      Literal_List := Get_Enumeration_Literal_List (Character_Type_Definition);
-      Image (Str_Ident);
-      for I in 1 .. Nam_Length loop
-         Lit := Get_Nth_Element (Literal_List,
-                                 Character'Pos (Nam_Buffer (I)));
+      for I in Img'Range loop
+         Lit := Get_Nth_Element (Literal_List, Character'Pos (Img (I)));
          New_Array_Aggr_El (List, Get_Ortho_Expr (Lit));
       end loop;
 
@@ -496,6 +492,16 @@ package body Trans.Chap7 is
       end if;
    end Translate_Composite_Literal;
 
+   function Translate_Enumeration_Literal (Atype : Iir; Pos : Natural)
+                                          return O_Cnode
+   is
+      Lit_List : constant Iir_Flist :=
+        Get_Enumeration_Literal_List (Get_Base_Type (Atype));
+      Enum : constant Iir := Get_Nth_Element (Lit_List, Pos);
+   begin
+      return Get_Ortho_Expr (Enum);
+   end Translate_Enumeration_Literal;
+
    function Translate_Numeric_Literal (Expr : Iir; Res_Type : O_Tnode)
                                       return O_Cnode is
    begin
@@ -505,16 +511,8 @@ package body Trans.Chap7 is
               (Res_Type, Integer_64 (Get_Value (Expr)));
 
          when Iir_Kind_Enumeration_Literal =>
-            declare
-               Enum_Type : constant Iir := Get_Base_Type (Get_Type (Expr));
-               Lit_List : Iir_List;
-               Enum : Iir;
-            begin
-               Lit_List := Get_Enumeration_Literal_List (Enum_Type);
-               Enum := Get_Nth_Element
-                 (Lit_List, Natural (Get_Enum_Pos (Expr)));
-               return Get_Ortho_Expr (Enum);
-            end;
+            return Translate_Enumeration_Literal
+              (Get_Type (Expr), Natural (Get_Enum_Pos (Expr)));
 
          when Iir_Kind_Floating_Point_Literal =>
             return New_Float_Literal
@@ -780,8 +778,8 @@ package body Trans.Chap7 is
          New_Convert_Ov (M2Addr (Chap3.Get_Composite_Base (Stable_Expr)),
            Type_Info.B.Base_Ptr_Type (Kind)));
       New_Assign_Stmt
-        (M2Lp (Chap3.Get_Array_Bounds (Res)),
-         M2Addr (Chap3.Get_Array_Bounds (Stable_Expr)));
+        (M2Lp (Chap3.Get_Composite_Bounds (Res)),
+         M2Addr (Chap3.Get_Composite_Bounds (Stable_Expr)));
       return Res;
    end Convert_Constrained_To_Unconstrained;
 
@@ -797,7 +795,7 @@ package body Trans.Chap7 is
          when Iir_Kind_Array_Type_Definition
            | Iir_Kind_Array_Subtype_Definition =>
             declare
-               Expr_Indexes  : constant Iir_List :=
+               Expr_Indexes  : constant Iir_Flist :=
                  Get_Index_Subtype_List (Expr_Type);
             begin
                for I in 1 .. Get_Nbr_Elements (Expr_Indexes) loop
@@ -816,16 +814,15 @@ package body Trans.Chap7 is
          when Iir_Kind_Record_Type_Definition
            | Iir_Kind_Record_Subtype_Definition =>
             declare
-               Expr_Els : constant Iir_List :=
+               Expr_Els : constant Iir_Flist :=
                  Get_Elements_Declaration_List (Expr_Type);
-               Atype_Els : constant Iir_List :=
+               Atype_Els : constant Iir_Flist :=
                  Get_Elements_Declaration_List (Atype);
                Expr_El, Atype_El : Iir;
                Expr_El_Type, Atype_El_Type : Iir;
             begin
-               for I in Natural loop
+               for I in Flist_First .. Flist_Last (Expr_Els) loop
                   Expr_El := Get_Nth_Element (Expr_Els, I);
-                  exit when Expr_El = Null_Iir;
                   Atype_El := Get_Nth_Element (Atype_Els, I);
                   Expr_El_Type := Get_Type (Expr_El);
                   Atype_El_Type := Get_Type (Atype_El);
@@ -859,7 +856,7 @@ package body Trans.Chap7 is
       Start_Loop_Stmt (Failure_Label);
 
       Convert_To_Constrained_Check
-        (Chap3.Get_Array_Bounds (Expr_Stable), Expr_Type,
+        (Chap3.Get_Composite_Bounds (Expr_Stable), Expr_Type,
          Atype, Failure_Label);
 
       New_Exit_Stmt (Success_Label);
@@ -904,17 +901,14 @@ package body Trans.Chap7 is
                when Type_Mode_Unbounded_Array =>
                   --  unconstrained to unconstrained.
                   return Expr;
-               when Type_Mode_Array =>
+               when Type_Mode_Bounded_Arrays =>
                   --  constrained to unconstrained.
                   return Convert_Constrained_To_Unconstrained (Expr, Res_Type);
                when others =>
                   raise Internal_Error;
             end case;
-         when Type_Mode_Array =>
-            --  X to constrained.
-            if Einfo.Type_Locally_Constrained
-              and then Ainfo.Type_Locally_Constrained
-            then
+         when Type_Mode_Static_Array =>
+            if Einfo.Type_Mode = Type_Mode_Static_Array then
                --  FIXME: optimize static vs non-static
                --  constrained to constrained.
                if not Chap3.Locally_Array_Match (Expr_Type, Res_Type) then
@@ -926,9 +920,10 @@ package body Trans.Chap7 is
                return Expr;
             else
                --  Unbounded/bounded array to bounded array.
-               return Convert_To_Constrained
-                 (Expr, Expr_Type, Res_Type, Loc);
+               return Convert_To_Constrained (Expr, Expr_Type, Res_Type, Loc);
             end if;
+         when Type_Mode_Complex_Array =>
+            return Convert_To_Constrained (Expr, Expr_Type, Res_Type, Loc);
          when others =>
             raise Internal_Error;
       end case;
@@ -953,22 +948,22 @@ package body Trans.Chap7 is
                when Type_Mode_Unbounded_Record =>
                   --  unbounded to unbounded
                   return Expr;
-               when Type_Mode_Record =>
+               when Type_Mode_Bounded_Records =>
                   --  bounded to unconstrained.
                   return Convert_Constrained_To_Unconstrained (Expr, Res_Type);
                when others =>
                   raise Internal_Error;
             end case;
-         when Type_Mode_Record =>
+         when Type_Mode_Bounded_Records =>
             --  X to bounded
             case Einfo.Type_Mode is
                when Type_Mode_Unbounded_Record =>
                   --  unbounded to bounded.
                   return Convert_To_Constrained
                     (Expr, Expr_Type, Res_Type, Loc);
-               when Type_Mode_Record =>
+               when Type_Mode_Bounded_Records =>
                   --  bounded to bounded.
-                  --  TODO: likewise ?
+                  --  TODO: likewise ? check bounds ?
                   return Expr;
                when others =>
                   raise Internal_Error;
@@ -1430,8 +1425,8 @@ package body Trans.Chap7 is
          V_Arr := Create_Temp (Info.Ortho_Type (Mode_Value));
          Var_Sub_Arr := Dv2M (V_Arr, Info, Mode_Value);
          New_Assign_Stmt
-           (M2Lp (Chap3.Get_Array_Bounds (Var_Sub_Arr)),
-            M2Addr (Chap3.Get_Array_Bounds (M)));
+           (M2Lp (Chap3.Get_Composite_Bounds (Var_Sub_Arr)),
+            M2Addr (Chap3.Get_Composite_Bounds (M)));
          New_Assign_Stmt
            (M2Lp (Chap3.Get_Composite_Base (Var_Sub_Arr)),
             M2Addr (Chap3.Slice_Base (Var_Arr,
@@ -1530,9 +1525,9 @@ package body Trans.Chap7 is
                                                        Expr_Type),
                                New_Lit (Ghdl_Index_0),
                                Ghdl_Bool_Type));
-            Copy_Bounds_V87
-              (Chap3.Bounds_To_Range
-                 (Chap3.Get_Array_Bounds (Dyn_Mnodes (Dyn_I)), Expr_Type, 1));
+            Copy_Bounds_V87 (Chap3.Bounds_To_Range
+                               (Chap3.Get_Composite_Bounds
+                                  (Dyn_Mnodes (Dyn_I)), Expr_Type, 1));
             New_Else_Stmt (Assign_Bounds_Ifs (Dyn_I));
          end if;
       end Assign_Bounds_Arr_V87;
@@ -1555,7 +1550,7 @@ package body Trans.Chap7 is
 
       --  Set result bounds.
       New_Assign_Stmt
-        (M2Lp (Chap3.Get_Array_Bounds (Res)), M2Addr (Var_Bounds));
+        (M2Lp (Chap3.Get_Composite_Bounds (Res)), M2Addr (Var_Bounds));
 
       --  Evaluate all dynamic expressions
       Dyn_I := 0;
@@ -1693,7 +1688,7 @@ package body Trans.Chap7 is
                Copy_Range
                  (Get_Res_Range,
                   Chap3.Bounds_To_Range
-                    (Chap3.Get_Array_Bounds (Dyn_Mnodes (Last_Dyn_Expr)),
+                    (Chap3.Get_Composite_Bounds (Dyn_Mnodes (Last_Dyn_Expr)),
                      Expr_Type, 1));
             end if;
 
@@ -1959,8 +1954,8 @@ package body Trans.Chap7 is
       Res := Create_Temp (Res_Info, Mode_Value);
       New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Base (Res)),
                        New_Obj_Value (Base));
-      New_Assign_Stmt (M2Lp (Chap3.Get_Array_Bounds (Res)),
-                       M2Addr (Chap3.Get_Array_Bounds (Arr)));
+      New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Bounds (Res)),
+                       M2Addr (Chap3.Get_Composite_Bounds (Arr)));
 
       return Translate_Implicit_Conv (M2E (Res), Res_Btype, Res_Type,
                                       Mode_Value, Loc);
@@ -1970,7 +1965,7 @@ package body Trans.Chap7 is
      (Op : ON_Op_Kind; Operand : Iir; Res_Type : Iir) return O_Enode
    is
       Arr_Type  : constant Iir := Get_Type (Operand);
-      Enums     : constant Iir_List :=
+      Enums     : constant Iir_Flist :=
         Get_Enumeration_Literal_List (Get_Base_Type (Res_Type));
       Init_Enum : Iir;
 
@@ -2075,7 +2070,7 @@ package body Trans.Chap7 is
    function Translate_Predefined_TF_Edge (Is_Rising : Boolean; Left : Iir)
                                          return O_Enode
    is
-      Enums : constant Iir_List :=
+      Enums : constant Iir_Flist :=
         Get_Enumeration_Literal_List (Get_Base_Type (Get_Type (Left)));
       Sig  : Mnode;
       Val  : Mnode;
@@ -2756,11 +2751,11 @@ package body Trans.Chap7 is
                Chap3.Translate_Object_Copy
                  (T, New_Obj_Value (E), Target_Type);
             end;
-         when Type_Mode_Array =>
+         when Type_Mode_Bounded_Arrays =>
             --  Source is of type TARGET_TYPE, so no length check is
             --  necessary.
             Chap3.Translate_Object_Copy (Target, Val, Target_Type);
-         when Type_Mode_Record =>
+         when Type_Mode_Bounded_Records =>
             Chap3.Translate_Object_Copy (Target, Val, Target_Type);
          when Type_Mode_Unbounded_Record =>
             --  TODO
@@ -2842,11 +2837,11 @@ package body Trans.Chap7 is
 
       Info := Get_Info (Target_Type);
       case Info.Type_Mode is
-         when Type_Mode_Fat_Array =>
+         when Type_Mode_Unbounded_Array =>
             Arr_Var := Stabilize (Target);
             Base_Ptr := Stabilize (Chap3.Get_Composite_Base (Arr_Var));
             Len_Val := Chap3.Get_Array_Length (Arr_Var, Target_Type);
-         when Type_Mode_Array =>
+         when Type_Mode_Bounded_Arrays =>
             Base_Ptr := Stabilize (Chap3.Get_Composite_Base (Target));
             Len_Val := Chap3.Get_Array_Type_Length (Target_Type);
          when others =>
@@ -2889,7 +2884,7 @@ package body Trans.Chap7 is
       Dim        : Natural;
       Var_Index  : O_Dnode)
    is
-      Index_List : Iir_List;
+      Index_List : Iir_Flist;
       Expr_Type  : Iir;
       Final      : Boolean;
 
@@ -3140,7 +3135,7 @@ package body Trans.Chap7 is
       Aggr_Type      : constant Iir := Get_Type (Aggr);
       Aggr_Base_Type : constant Iir_Record_Type_Definition :=
         Get_Base_Type (Aggr_Type);
-      El_List        : constant Iir_List :=
+      El_List        : constant Iir_Flist :=
         Get_Elements_Declaration_List (Aggr_Base_Type);
       El_Index       : Natural;
       Nbr_El         : constant Natural := Get_Nbr_Elements (El_List);
@@ -3199,9 +3194,9 @@ package body Trans.Chap7 is
      (Target : Mnode; Target_Type : Iir; Aggr : Iir)
    is
       Aggr_Type       : constant Iir := Get_Type (Aggr);
-      Index_List      : constant Iir_List :=
+      Index_List      : constant Iir_Flist :=
         Get_Index_Subtype_List (Aggr_Type);
-      Targ_Index_List : constant Iir_List :=
+      Targ_Index_List : constant Iir_Flist :=
         Get_Index_Subtype_List (Target_Type);
 
       Aggr_Info : Iir_Aggregate_Info;
@@ -3251,13 +3246,12 @@ package body Trans.Chap7 is
       Open_Temp;
       Targ := Stabilize (Target);
       Base := Stabilize (Chap3.Get_Composite_Base (Targ));
-      Bounds := Stabilize (Chap3.Get_Array_Bounds (Targ));
+      Bounds := Stabilize (Chap3.Get_Composite_Bounds (Targ));
       Aggr_Info := Get_Aggregate_Info (Aggr);
 
       --  Check type
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (Index_List) loop
          Subaggr_Type := Get_Index_Type (Index_List, I);
-         exit when Subaggr_Type = Null_Iir;
          Subtarg_Type := Get_Index_Type (Targ_Index_List, I);
 
          Bt := Get_Base_Type (Subaggr_Type);
@@ -3270,7 +3264,8 @@ package body Trans.Chap7 is
                A_Range : Mnode;
             begin
                --  Evaluate the range.
-               Chap3.Translate_Anonymous_Type_Definition (Subaggr_Type);
+               Chap3.Translate_Anonymous_Subtype_Definition
+                 (Subaggr_Type, False);
 
                A_Range :=
                  Dv2M (Create_Temp (Rinfo.B.Range_Type), Rinfo, Mode_Value,
@@ -3377,7 +3372,7 @@ package body Trans.Chap7 is
 
       --  FIXME: creating aggregate subtype is expensive and rarely used.
       --  (one of the current use - only ? - is check_array_match).
-      Chap3.Translate_Anonymous_Type_Definition (Aggr_Type);
+      Chap3.Translate_Anonymous_Subtype_Definition (Aggr_Type, False);
    end Translate_Array_Aggregate;
 
    procedure Translate_Aggregate
@@ -3431,7 +3426,7 @@ package body Trans.Chap7 is
                Val_Size := Create_Temp_Init
                  (Ghdl_Index_Type,
                   Chap3.Get_Subtype_Size
-                    (D_Type, Chap3.Get_Array_Bounds (Val_M), Mode_Value));
+                    (D_Type, Chap3.Get_Composite_Bounds (Val_M), Mode_Value));
 
                --  Size of the bounds.
                Bounds_Size :=
@@ -3449,7 +3444,8 @@ package body Trans.Chap7 is
 
                --  Copy bounds.
                Gen_Memcpy
-                 (New_Obj_Value (Res), M2Addr (Chap3.Get_Array_Bounds (Val_M)),
+                 (New_Obj_Value (Res),
+                  M2Addr (Chap3.Get_Composite_Bounds (Val_M)),
                   New_Lit (Bounds_Size));
 
                --  Copy values.
@@ -3483,7 +3479,7 @@ package body Trans.Chap7 is
                    D_Info, Mode_Value);
 
       New_Assign_Stmt
-        (M2Lp (Chap3.Get_Array_Bounds (Res)),
+        (M2Lp (Chap3.Get_Composite_Bounds (Res)),
          New_Convert_Ov (New_Obj_Value (Ptr), D_Info.B.Bounds_Ptr_Type));
       New_Assign_Stmt
         (M2Lp (Chap3.Get_Composite_Base (Res)),
@@ -3576,7 +3572,7 @@ package body Trans.Chap7 is
    begin
       E := Stabilize (E2M (Expr, Expr_Info, Mode_Value));
       case Res_Info.Type_Mode is
-         when Type_Mode_Array =>
+         when Type_Mode_Bounded_Arrays =>
             Chap3.Check_Array_Match
               (Res_Type, T2M (Res_Type, Mode_Value),
                Expr_Type, E,
@@ -3584,7 +3580,7 @@ package body Trans.Chap7 is
             return New_Convert_Ov
               (M2Addr (Chap3.Get_Composite_Base (E)),
                Res_Info.Ortho_Ptr_Type (Mode_Value));
-         when Type_Mode_Fat_Array =>
+         when Type_Mode_Unbounded_Array =>
             declare
                Res : Mnode;
             begin
@@ -3632,23 +3628,22 @@ package body Trans.Chap7 is
    procedure Translate_Type_Conversion_Bounds
      (Res : Mnode; Src : Mnode; Res_Type : Iir; Src_Type : Iir; Loc : Iir)
    is
-      Res_Indexes  : constant Iir_List := Get_Index_Subtype_List (Res_Type);
-      Src_Indexes : constant Iir_List := Get_Index_Subtype_List (Src_Type);
+      Res_Indexes  : constant Iir_Flist := Get_Index_Subtype_List (Res_Type);
+      Src_Indexes : constant Iir_Flist := Get_Index_Subtype_List (Src_Type);
       Res_Base_Type     : constant Iir := Get_Base_Type (Res_Type);
       Src_Base_Type    : constant Iir := Get_Base_Type (Src_Type);
-      Res_Base_Indexes  : constant Iir_List :=
+      Res_Base_Indexes  : constant Iir_Flist :=
         Get_Index_Subtype_List (Res_Base_Type);
-      Src_Base_Indexes : constant Iir_List :=
+      Src_Base_Indexes : constant Iir_Flist :=
         Get_Index_Subtype_List (Src_Base_Type);
 
       R_El              : Iir;
       S_El              : Iir;
    begin
       --  Convert bounds.
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (Src_Indexes) loop
          R_El := Get_Index_Type (Res_Indexes, I);
          S_El := Get_Index_Type (Src_Indexes, I);
-         exit when S_El = Null_Iir;
          declare
             Rb_Ptr          : Mnode;
             Sb_Ptr          : Mnode;
@@ -3707,14 +3702,14 @@ package body Trans.Chap7 is
            Res_Info.B.Base_Ptr_Type (Mode_Value)));
       --  Set bounds.
       New_Assign_Stmt
-        (M2Lp (Chap3.Get_Array_Bounds (Res)),
+        (M2Lp (Chap3.Get_Composite_Bounds (Res)),
          New_Address (New_Obj (Bounds), Res_Info.B.Bounds_Ptr_Type));
 
       --  Convert bounds.
       Translate_Type_Conversion_Bounds
         (Dv2M (Bounds, Res_Info, Mode_Value,
                Res_Info.B.Bounds_Type, Res_Info.B.Bounds_Ptr_Type),
-         Stabilize (Chap3.Get_Array_Bounds (E)),
+         Stabilize (Chap3.Get_Composite_Bounds (E)),
          Res_Type, Expr_Type, Loc);
 
       Close_Temp;
@@ -3726,7 +3721,7 @@ package body Trans.Chap7 is
    is
       pragma Unreferenced (Targ, Targ_Type);
    begin
-      if Get_Type_Info (Data).Type_Mode = Type_Mode_Fat_Array then
+      if Get_Type_Info (Data).Type_Mode in Type_Mode_Unbounded then
          return Stabilize (Chap3.Get_Composite_Base (Data));
       else
          return Stabilize (Data);
@@ -3797,18 +3792,19 @@ package body Trans.Chap7 is
             Var_Val : Mnode;
          begin
             --  allocate result array
-            if Tinfo.Type_Mode = Type_Mode_Fat_Array then
+            if Tinfo.Type_Mode in Type_Mode_Unbounded then
                Res := Create_Temp (Tinfo);
 
                Var_Val := Stabilize (E2M (Sig, Tinfo, Mode_Signal));
 
                --  Copy bounds.
                New_Assign_Stmt
-                 (M2Lp (Chap3.Get_Array_Bounds (Res)),
-                  M2Addr (Chap3.Get_Array_Bounds (Var_Val)));
+                 (M2Lp (Chap3.Get_Composite_Bounds (Res)),
+                  M2Addr (Chap3.Get_Composite_Bounds (Var_Val)));
 
                --  Allocate base.
-               Chap3.Allocate_Fat_Array_Base (Alloc_Stack, Res, Sig_Type);
+               Chap3.Allocate_Unbounded_Composite_Base
+                 (Alloc_Stack, Res, Sig_Type);
             elsif Is_Complex_Type (Tinfo) then
                Res := Create_Temp (Tinfo);
                Chap4.Allocate_Complex_Object (Sig_Type, Alloc_Stack, Res);
@@ -3818,7 +3814,7 @@ package body Trans.Chap7 is
 
             Open_Temp;
 
-            if Tinfo.Type_Mode /= Type_Mode_Fat_Array then
+            if Tinfo.Type_Mode not in Type_Mode_Unbounded then
                Var_Val := Stabilize (E2M (Sig, Tinfo, Mode_Signal));
             end if;
 
@@ -4643,8 +4639,7 @@ package body Trans.Chap7 is
             return New_Compare_Op (ON_Eq, M2E (L), M2E (R),
                                    Ghdl_Bool_Type);
 
-         when Type_Mode_Array
-           | Type_Mode_Unbounded_Array =>
+         when Type_Mode_Arrays =>
             declare
                Base_Type : constant Iir_Array_Type_Definition
                  := Get_Base_Type (Etype);
@@ -4660,8 +4655,7 @@ package body Trans.Chap7 is
                return Translate_Predefined_Lib_Operator (Lc, Rc, Func);
             end;
 
-         when Type_Mode_Record
-           | Type_Mode_Unbounded_Record =>
+         when Type_Mode_Records =>
             declare
                Func : Iir;
             begin
@@ -4710,13 +4704,14 @@ package body Trans.Chap7 is
       Info           : constant Type_Info_Acc := Get_Info (Arr_Type);
       F_Info         : constant Operator_Info_Acc := Get_Info (Subprg);
       L, R           : Mnode;
-      Indexes        : constant Iir_List := Get_Index_Subtype_List (Arr_Type);
+      Indexes        : constant Iir_Flist := Get_Index_Subtype_List (Arr_Type);
       Nbr_Indexes    : constant Natural := Get_Nbr_Elements (Indexes);
       If_Blk         : O_If_Block;
       Var_I          : O_Dnode;
       Var_Len        : O_Dnode;
       Label          : O_Snode;
-      Le, Re         : Mnode;
+      Base_Le, Base_Re : Mnode;
+      Var_L, Var_R   : Mnode;
    begin
       if Global_Storage = O_Storage_External then
          return;
@@ -4749,29 +4744,34 @@ package body Trans.Chap7 is
       New_Assign_Stmt (New_Obj (Var_Len),
                        Chap3.Get_Array_Length (L, Arr_Type));
       Close_Temp;
+      Open_Temp;
+      Var_L := Chap3.Create_Maybe_Fat_Array_Element (L, Arr_Type);
+      Var_R := Chap3.Create_Maybe_Fat_Array_Element (R, Arr_Type);
       Init_Var (Var_I);
       Start_Loop_Stmt (Label);
       --  If the end of the array is reached, return TRUE.
       Start_If_Stmt (If_Blk,
                      New_Compare_Op (ON_Ge,
-                       New_Obj_Value (Var_I),
-                       New_Obj_Value (Var_Len),
-                       Ghdl_Bool_Type));
+                                     New_Obj_Value (Var_I),
+                                     New_Obj_Value (Var_Len),
+                                     Ghdl_Bool_Type));
       New_Return_Stmt (New_Lit (Std_Boolean_True_Node));
       Finish_If_Stmt (If_Blk);
       Open_Temp;
-      Le := Chap3.Index_Base (Chap3.Get_Composite_Base (L), Arr_Type,
-                              New_Obj_Value (Var_I));
-      Re := Chap3.Index_Base (Chap3.Get_Composite_Base (R), Arr_Type,
-                              New_Obj_Value (Var_I));
+      Base_Le := Chap3.Index_Array (L, Arr_Type, New_Obj_Value (Var_I));
+      Base_Le := Chap3.Assign_Maybe_Fat_Array_Element (Var_L, Base_Le);
+      Base_Re := Chap3.Index_Array (R, Arr_Type, New_Obj_Value (Var_I));
+      Base_Re := Chap3.Assign_Maybe_Fat_Array_Element (Var_R, Base_Re);
       Start_If_Stmt
         (If_Blk,
-         New_Monadic_Op (ON_Not, Translate_Equality (Le, Re, El_Type)));
+         New_Monadic_Op (ON_Not,
+                         Translate_Equality (Base_Le, Base_Re, El_Type)));
       New_Return_Stmt (New_Lit (Std_Boolean_False_Node));
       Finish_If_Stmt (If_Blk);
       Close_Temp;
       Inc_Var (Var_I);
       Finish_Loop_Stmt (Label);
+      Close_Temp;
       Finish_Operator_Instance_Use (F_Info);
       Finish_Subprogram_Body;
    end Translate_Predefined_Array_Equality_Body;
@@ -4809,7 +4809,7 @@ package body Trans.Chap7 is
       If_Blk         : O_If_Block;
       Le, Re         : Mnode;
 
-      El_List : Iir_List;
+      El_List : Iir_Flist;
       El      : Iir_Element_Declaration;
    begin
       if Global_Storage = O_Storage_External then
@@ -4824,9 +4824,8 @@ package body Trans.Chap7 is
 
       --   Compare each element.
       El_List := Get_Elements_Declaration_List (Rec_Type);
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (El_List) loop
          El := Get_Nth_Element (El_List, I);
-         exit when El = Null_Iir;
          Open_Temp;
          Le := Chap6.Translate_Selected_Element (L, El);
          Re := Chap6.Translate_Selected_Element (R, El);
@@ -4986,7 +4985,7 @@ package body Trans.Chap7 is
       Res := Dp2M (F_Info.Operator_Res, Tinfo, Mode_Value);
       Chap3.Translate_Object_Allocation
         (Res, Alloc_Return, Arr_Type,
-         Chap3.Get_Array_Bounds
+         Chap3.Get_Composite_Bounds
            (Dp2M (F_Info.Operator_Left, Tinfo, Mode_Value)));
       New_Assign_Stmt
         (New_Obj (Var_Base), M2Addr (Chap3.Get_Composite_Base (Res)));
@@ -5211,12 +5210,12 @@ package body Trans.Chap7 is
          case Shift is
             when Sh_Logical =>
                declare
-                  Enum_List : Iir_List;
-               begin
-                  Enum_List := Get_Enumeration_Literal_List
+                  Enum_List : constant Iir_Flist :=
+                    Get_Enumeration_Literal_List
                     (Get_Base_Type (Get_Element_Subtype (Arr_Type)));
+               begin
                   Tmp := New_Lit
-                    (Get_Ortho_Expr (Get_First_Element (Enum_List)));
+                    (Get_Ortho_Expr (Get_Nth_Element (Enum_List, 0)));
                end;
             when Sh_Arith =>
                Tmp := New_Obj_Value (Var_E);
@@ -5277,8 +5276,8 @@ package body Trans.Chap7 is
       --  The index subtypes of the return values of all shift operators is
       --  the same as the index subtype of their left arguments.
       New_Assign_Stmt
-        (M2Lp (Chap3.Get_Array_Bounds (Res)),
-         M2Addr (Chap3.Get_Array_Bounds (L)));
+        (M2Lp (Chap3.Get_Composite_Bounds (Res)),
+         M2Addr (Chap3.Get_Composite_Bounds (L)));
 
       --  Get length of LEFT.
       New_Assign_Stmt (New_Obj (Var_Length),
@@ -5517,26 +5516,24 @@ package body Trans.Chap7 is
                     Ghdl_Index_Type)));
                --    call a predefined procedure
                New_Procedure_Call (Assocs);
-            when Type_Mode_Record =>
+            when Type_Mode_Bounded_Records =>
                declare
-                  El_List : Iir_List;
+                  El_List : constant Iir_Flist :=
+                    Get_Elements_Declaration_List (Get_Base_Type (Val_Type));
                   El      : Iir;
                   Val1    : Mnode;
                begin
                   Open_Temp;
                   Val1 := Stabilize (Val);
-                  El_List := Get_Elements_Declaration_List
-                    (Get_Base_Type (Val_Type));
-                  for I in Natural loop
+                  for I in Flist_First .. Flist_Last (El_List) loop
                      El := Get_Nth_Element (El_List, I);
-                     exit when El = Null_Iir;
                      Translate_Rw
                        (Chap6.Translate_Selected_Element (Val1, El),
                         Get_Type (El), Proc);
                   end loop;
                   Close_Temp;
                end;
-            when Type_Mode_Array =>
+            when Type_Mode_Bounded_Arrays =>
                declare
                   Var_Max : O_Dnode;
                begin

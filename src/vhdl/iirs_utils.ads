@@ -38,10 +38,16 @@ package Iirs_Utils is
    --  Find LIT in the list of identifiers or characters LIST.
    --  Return the literal (whose name is LIT) or null_iir if not found.
    function Find_Name_In_Chain (Chain: Iir; Lit: Name_Id) return Iir;
-   function Find_Name_In_List (List : Iir_List; Lit: Name_Id) return Iir;
+   function Find_Name_In_Flist (List : Iir_Flist; Lit: Name_Id) return Iir;
 
    --  Return TRUE if EL in an element of chain CHAIN.
    function Is_In_Chain (Chain : Iir; El : Iir) return Boolean;
+
+   --  Convert a list L to an Flist, and free L.
+   function List_To_Flist (L : Iir_List) return Iir_Flist;
+
+   --  Return a copy of the LEN first elements of L.  L is destroyed.
+   function Truncate_Flist (L : Iir_Flist; Len : Natural) return Iir_Flist;
 
    --  Convert an operator node to a name.
    function Get_Operator_Name (Op : Iir) return Name_Id;
@@ -131,6 +137,9 @@ package Iirs_Utils is
    --  Free NODE and its sub-nodes.
    procedure Free_Recursive (Node : Iir; Free_List : Boolean := False);
 
+   --  Free nodes in LIST.
+   procedure Free_Recursive_List (List : Iir_List);
+
    --  Name of FUNC.
    function Get_Predefined_Function_Name (Func : Iir_Predefined_Functions)
      return String;
@@ -192,10 +201,11 @@ package Iirs_Utils is
    function Build_Simple_Name (Ref : Iir; Loc : Iir) return Iir;
 
    --  Create a name that referenced the same named entity as NAME.
+   --
+   --  This is mainly used by canon, when there is a need to reference an
+   --  existing name.  In some cases, it is not possible to use the name,
+   --  because it is already owned.
    function Build_Reference_Name (Name : Iir) return Iir;
-
-   --  Create a reference to a declaration (or aggregate).
-   function Build_Reference_Decl (Decl : Iir; Loc : Iir) return Iir;
 
    --  If N is a reference_name, return the corresponding node, otherwise
    --  return N.
@@ -218,7 +228,7 @@ package Iirs_Utils is
    --  index_constraint INDEXES.  Return Null_Iir if IDX is out of dimension
    --  bounds, so that this function can be used to iterator over indexes of
    --  a type (or subtype).  Note that IDX starts at 0.
-   function Get_Index_Type (Indexes : Iir_List; Idx : Natural) return Iir;
+   function Get_Index_Type (Indexes : Iir_Flist; Idx : Natural) return Iir;
 
    --  Likewise but for array type or subtype ARRAY_TYPE.
    function Get_Index_Type (Array_Type : Iir; Idx : Natural) return Iir;
@@ -231,6 +241,8 @@ package Iirs_Utils is
 
    --  Return true if array/record bounds are locally static.  Only fully
    --  constrained records or arrays are allowed.
+   --  It is possible to have non-locally static types with locally bounds (eg:
+   --  a constrained array of type).
    function Are_Bounds_Locally_Static (Def : Iir) return Boolean;
 
    --  Return the type or subtype definition of the SUBTYP type mark.

@@ -694,7 +694,7 @@ package body Ortho_Debug.Disp is
          Disp_Ident (El.Ident);
          Put (": ");
          Disp_Tnode (El.Ftype, False);
-         Put_Line ("; ");
+         Put_Line (";");
          El := El.Next;
       end loop;
       Rem_Tab;
@@ -762,7 +762,7 @@ package body Ortho_Debug.Disp is
             end if;
          when ON_Record_Type =>
             Put_Keyword ("record");
-            Put_Line (" ");
+            New_Line;
             Disp_Fnodes (Atype.Elements);
             Put_Keyword ("end");
             Put (" ");

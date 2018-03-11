@@ -16,6 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with GNAT.OS_Lib; use GNAT.OS_Lib;
+with Iirs; use Iirs;
 
 package Ghdlcomp is
    --  This procedure is called at start of commands which call
@@ -72,6 +73,7 @@ package Ghdlcomp is
    --  Must be first initialized by Compile_Init
    procedure Compile_Analyze_Init (Load_Work : Boolean := True);
    procedure Compile_Analyze_File (File : String);
+   function Compile_Analyze_File2 (File : String) return Iir;
    procedure Compile_Elaborate (Unit_Name : String_Access);
    procedure Compile_Run;
 end Ghdlcomp;

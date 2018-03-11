@@ -1,0 +1,75 @@
+###############################################################################
+# Copyright (c) 2014 Potential Ventures Ltd
+# All rights reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+#     * Redistributions of source code must retain the above copyright
+#       notice, this list of conditions and the following disclaimer.
+#     * Redistributions in binary form must reproduce the above copyright
+#       notice, this list of conditions and the following disclaimer in the
+#       documentation and/or other materials provided with the distribution.
+#     * Neither the name of Potential Ventures Ltd,
+#       SolarFlare Communications Inc nor the
+#       names of its contributors may be used to endorse or promote products
+#       derived from this software without specific prior written permission.
+#
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+# DISCLAIMED. IN NO EVENT SHALL POTENTIAL VENTURES LTD BE LIABLE FOR ANY
+# DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+# (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+# LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+# ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+###############################################################################
+
+ifneq ($(VERILOG_SOURCES),)
+
+results.xml:
+	@echo "Skipping simulation as Verilog is not supported on simulator=$(SIM)"
+clean::
+
+else
+
+CMD_BIN := ghdl
+
+ifdef GHDL_BIN_DIR
+    CMD := $(shell which $(GHDL_BIN_DIR)/$(CMD_BIN) 2>/dev/null)
+else
+    # auto-detect bin dir from system path
+    CMD := $(shell which $(CMD_BIN) 2>/dev/null)
+endif
+
+ifeq (, $(CMD))
+    $(error "Unable to locate command >$(CMD_BIN)<")
+else
+	GHDL_BIN_DIR := $(shell dirname $(CMD))
+    export GHDL_BIN_DIR
+endif
+
+RTL_LIBRARY ?= work
+
+ifdef VHDL_VERSION
+	GHDL_STD = --std=$(VHDL_VERSION)
+endif
+
+.PHONY: analyse
+
+# Compilation phase
+analyse: $(VHDL_SOURCES) $(SIM_BUILD)
+	cd $(SIM_BUILD); \
+	$(CMD) -i $(GHDL_STD) --ieee=synopsys --mb-comments -fexplicit -frelaxed-rules --work=$(RTL_LIBRARY) -P$(UNISIM_DIR) $(VHDL_SOURCES); \
+	$(CMD) -m $(GHDL_STD) $(ELABORATE_ARGS) --ieee=synopsys -frelaxed-rules --work=$(RTL_LIBRARY) -P$(UNISIM_DIR) $(TOPLEVEL)
+
+results.xml: analyse  $(COCOTB_LIBS) $(COCOTB_VPI_LIB)
+	cd $(SIM_BUILD); \
+	PYTHONPATH=$(PYTHON_SIM_MODULES_PATH):$(LIB_DIR):$(SIM_ROOT):$(PWD):$(PYTHONPATH) LD_LIBRARY_PATH=$(GHDL_BIN_DIR)/../lib:$(LIB_DIR):$(LD_LIBRARY_PATH) MODULE=$(MODULE) \
+        TESTCASE=$(TESTCASE) TOPLEVEL=$(TOPLEVEL) TOPLEVEL_LANG=$(TOPLEVEL_LANG) \
+	$(CMD) -r --ieee=synopsys -frelaxed-rules -P$(UNISIM_DIR) $(GHDL_STD) $(TOPLEVEL) --vpi=$(LIB_DIR)/libvpi.$(LIB_EXT) $(SIM_ARGS)
+
+clean::
+	-@rm -rf $(SIM_BUILD)
+endif

@@ -9,11 +9,14 @@
 # srXXX is for support reported on https://gna.org/support/?group=ghdl
 # debXX is for bugs report on https://www.debian.org/Bugs/
 # ticketXX is from https://sourceforge.net/p/ghdl-updates/tickets/
-# issueXXX is from https://github.com/tgingold/ghdl/issues
+# issueXXX is from https://github.com/ghdl/ghdl/issues
 
 set -e
 
+# This is the only place where test dirs are specified.  Do not duplicate this
+# line
 dirs="bug* sr* deb* ticket* issue*"
+
 failures=""
 full=n
 
@@ -26,6 +29,7 @@ for opt; do
   --start-at=*) d=`echo $opt | sed -e 's/--start-at=//'`
             dirs=`echo "" $dirs | sed -e "s/^.* $d//"`
             dirs="$d $dirs" ;;
+  --list-tests) echo $dirs; exit 0;;
   *) echo "Unknown option $opt"
      exit 2
      ;;

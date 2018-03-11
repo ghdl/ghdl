@@ -362,16 +362,16 @@ package body Sem_Specs is
       end if;
    end Attribute_A_Decl;
 
-   --  IS_DESIGNATORS if true if the entity name list is a list of designators.
-   --  Return TRUE if an entity was attributed.
-   function Sem_Named_Entities
-     (Scope : Iir;
-      Name : Iir;
-      Attr : Iir_Attribute_Specification;
-      Is_Designators : Boolean;
-      Check_Defined : Boolean)
-     return Boolean
+   --  Return TRUE if a named entity was attributed.
+   function Sem_Named_Entities (Scope : Iir;
+                                Name : Iir;
+                                Attr : Iir_Attribute_Specification;
+                                Check_Defined : Boolean)
+                               return Boolean
    is
+      --  Name is set (ie neither ALL nor OTHERS).
+      Is_Designator : constant Boolean := Name /= Null_Iir;
+
       Res : Boolean;
 
       --  If declaration DECL matches then named entity ENT, apply attribute
@@ -379,18 +379,28 @@ package body Sem_Specs is
       --  Note: ENT and DECL are different for aliases.
       function Sem_Named_Entity1 (Ent : Iir; Decl : Iir) return Boolean
       is
+         use Tokens;
          Ent_Id : constant Name_Id := Get_Identifier (Ent);
       begin
-         if (Name = Null_Iir or else Ent_Id = Get_Identifier (Name))
+         if (not Is_Designator or else Ent_Id = Get_Identifier (Name))
            and then Ent_Id /= Null_Identifier
          then
-            if Is_Designators then
+            if Is_Designator then
+               --  The designator is neither ALL nor OTHERS.
+               Set_Named_Entity (Name, Ent);
                Xref_Ref (Name, Ent);
+
+               if Get_Entity_Class (Attr) = Tok_Label then
+                  --  Concurrent or sequential statements appear later in the
+                  --  AST, but their label are considered to appear before
+                  --  other items in the declarative part.
+                  Set_Is_Forward_Ref (Name, True);
+               end if;
             end if;
             if Get_Visible_Flag (Ent) = False then
                Error_Msg_Sem (+Attr, "%n is not yet visible", +Ent);
             else
-               Attribute_A_Decl (Decl, Attr, Is_Designators, Check_Defined);
+               Attribute_A_Decl (Decl, Attr, Is_Designator, Check_Defined);
                return True;
             end if;
          end if;
@@ -400,7 +410,7 @@ package body Sem_Specs is
       procedure Sem_Named_Entity (Ent : Iir) is
       begin
          case Get_Kind (Ent) is
-            when Iir_Kinds_Library_Unit_Declaration
+            when Iir_Kinds_Library_Unit
               | Iir_Kinds_Concurrent_Statement
               | Iir_Kinds_Sequential_Statement
               | Iir_Kinds_Non_Alias_Object_Declaration
@@ -469,13 +479,12 @@ package body Sem_Specs is
                   Def := Get_Type_Definition (El);
                   if Get_Kind (Def) = Iir_Kind_Enumeration_Type_Definition then
                      declare
-                        List : Iir_List;
+                        List : constant Iir_Flist :=
+                          Get_Enumeration_Literal_List (Def);
                         El1 : Iir;
                      begin
-                        List := Get_Enumeration_Literal_List (Def);
-                        for I in Natural loop
+                        for I in Flist_First .. Flist_Last (List) loop
                            El1 := Get_Nth_Element (List, I);
-                           exit when El1 = Null_Iir;
                            Sem_Named_Entity (El1);
                         end loop;
                      end;
@@ -537,6 +546,7 @@ package body Sem_Specs is
          end loop;
       end Sem_Named_Entity_Chain;
    begin
+      --  The attribute specification was not yet applied.
       Res := False;
 
       --  LRM 5.1  Attribute specification
@@ -557,7 +567,7 @@ package body Sem_Specs is
       --  NOTE: therefore, ALL/OTHERS do not apply to named entities declared
       --  beyond the immediate declarative part, such as design unit or
       --  interfaces.
-      if Is_Designators then
+      if Is_Designator then
          --  LRM 5.1  Attribute specification
          --  An attribute specification for an attribute of a design unit
          --  (i.e. an entity declaration, an architecture, a configuration
@@ -690,12 +700,44 @@ package body Sem_Specs is
    procedure Sem_Attribute_Specification
      (Spec : Iir_Attribute_Specification; Scope : Iir)
    is
+      --  Emit an error message when NAME is not found.
+      procedure Error_Attribute_Specification (Name : Iir)
+      is
+         Inter : Name_Interpretation_Type;
+         Decl : Iir;
+      begin
+         if Flag_Relaxed_Rules or Vhdl_Std = Vhdl_93c then
+            --  Some (clueless ?) vendors put attribute specifications in
+            --  architectures for ports (declared in entities).  This is not
+            --  valid according to the LRM (eg: LRM02 5.1 Attribute
+            --  specification).  Be tolerant.
+            Inter := Get_Interpretation (Get_Identifier (Name));
+            if Valid_Interpretation (Inter) then
+               Decl := Get_Declaration (Inter);
+               if Get_Kind (Decl) = Iir_Kind_Interface_Signal_Declaration
+                 and then (Get_Kind (Get_Parent (Decl))
+                             = Iir_Kind_Entity_Declaration)
+                 and then Get_Kind (Scope) = Iir_Kind_Architecture_Body
+               then
+                  Warning_Msg_Sem
+                    (Warnid_Specs, +Name,
+                     "attribute for port %i must be specified in the entity",
+                     (1 => +Name));
+                  return;
+               end if;
+            end if;
+         end if;
+
+         Error_Msg_Sem
+           (+Name, "no %i for attribute specification", (1 => +Name));
+      end Error_Attribute_Specification;
+
       use Tokens;
 
       Name : Iir;
       Attr : Iir_Attribute_Declaration;
       Attr_Type : Iir;
-      List : Iir_List;
+      List : Iir_Flist;
       Expr : Iir;
       Res : Boolean;
    begin
@@ -756,25 +798,25 @@ package body Sem_Specs is
       --  implicitly and explicitly defined, that inherit the attribute, as
       --  defined below:
       List := Get_Entity_Name_List (Spec);
-      if List = Iir_List_All then
+      if List = Iir_Flist_All then
          --  o If the reserved word ALL is supplied, then the attribute
          --  specification applies to all named entities of the specified
          --  class that are declared in the immediatly enclosing
          --  declarative part.
-         Res := Sem_Named_Entities (Scope, Null_Iir, Spec, False, True);
+         Res := Sem_Named_Entities (Scope, Null_Iir, Spec, True);
          if Res = False and then Is_Warning_Enabled (Warnid_Specs) then
             Warning_Msg_Sem
               (Warnid_Specs, +Spec,
                "attribute specification apply to no named entity");
          end if;
-      elsif List = Iir_List_Others then
+      elsif List = Iir_Flist_Others then
          --  o If the reserved word OTHERS is supplied, then the attribute
          --  specification applies to named entities of the specified class
          --  that are declared in the immediately enclosing declarative
          --  part, provided that each such entity is not explicitly named
          --  in the entity name list of a previous attribute specification
          --  for the given attribute.
-         Res := Sem_Named_Entities (Scope, Null_Iir, Spec, False, False);
+         Res := Sem_Named_Entities (Scope, Null_Iir, Spec, False);
          if Res = False and then Is_Warning_Enabled (Warnid_Specs) then
             Warning_Msg_Sem
               (Warnid_Specs, +Spec,
@@ -787,18 +829,16 @@ package body Sem_Specs is
          declare
             El : Iir;
          begin
-            for I in Natural loop
+            for I in Flist_First .. Flist_Last (List) loop
                El := Get_Nth_Element (List, I);
-               exit when El = Null_Iir;
                if Get_Kind (El) = Iir_Kind_Signature then
                   Sem_Signature_Entity_Designator (El, Spec);
                else
                   --  LRM 5.1
                   --  It is an error if the class of those names is not the
                   --  same as that denoted by entity class.
-                  if not Sem_Named_Entities (Scope, El, Spec, True, True) then
-                     Error_Msg_Sem
-                       (+El, "no named entities %i in declarative part", +El);
+                  if not Sem_Named_Entities (Scope, El, Spec, True) then
+                     Error_Attribute_Specification (El);
                   end if;
                end if;
             end loop;
@@ -881,7 +921,7 @@ package body Sem_Specs is
          Spec := Get_Attribute_Specification_Chain (Spec);
       end if;
       while Spec /= Null_Iir loop
-         pragma Assert (Get_Entity_Name_List (Spec) in Iir_Lists_All_Others);
+         pragma Assert (Get_Entity_Name_List (Spec) in Iir_Flists_All_Others);
          Ent_Class := Get_Entity_Class (Spec);
          if Ent_Class = Decl_Class or Ent_Class = Decl_Class2 then
             Has_Error := False;
@@ -948,7 +988,7 @@ package body Sem_Specs is
       Type_Mark : Iir;
       Atype : Iir;
       Time_Expr : Iir;
-      List : Iir_List;
+      List : Iir_Flist;
       El : Iir;
       Sig : Iir;
       Prefix : Iir;
@@ -973,17 +1013,16 @@ package body Sem_Specs is
       end if;
 
       List := Get_Signal_List (Dis);
-      if List = Iir_List_All or List = Iir_List_Others then
+      if List in Iir_Flists_All_Others then
          --  FIXME: checks todo
          null;
       else
-         for I in Natural loop
+         for I in Flist_First .. Flist_Last (List) loop
             El := Get_Nth_Element (List, I);
-            exit when El = Null_Iir;
 
             Sem_Name (El);
             El := Finish_Sem_Name (El);
-            Replace_Nth_Element (List, I, El);
+            Set_Nth_Element (List, I, El);
 
             Sig := Get_Named_Entity (El);
             Sig := Name_To_Object (Sig);
@@ -1053,6 +1092,7 @@ package body Sem_Specs is
                Arch_Name : Iir;
                Arch_Unit : Iir;
             begin
+               --  The entity.
                Entity_Name := Sem_Denoting_Name (Get_Entity_Name (Aspect));
                Set_Entity_Name (Aspect, Entity_Name);
                Entity := Get_Named_Entity (Entity_Name);
@@ -1070,8 +1110,13 @@ package body Sem_Specs is
                if Arch_Name /= Null_Iir then
                   Arch_Unit := Libraries.Find_Secondary_Unit
                     (Get_Design_Unit (Entity), Get_Identifier (Arch_Name));
-                  Set_Named_Entity (Arch_Name, Arch_Unit);
                   if Arch_Unit /= Null_Iir then
+                     --  The architecture is known.
+                     if Get_Date_State (Arch_Unit) >= Date_Parse then
+                        --  And loaded!
+                        Arch_Unit := Get_Library_Unit (Arch_Unit);
+                     end if;
+                     Set_Named_Entity (Arch_Name, Arch_Unit);
                      Xref_Ref (Arch_Name, Arch_Unit);
                   end if;
 
@@ -1304,7 +1349,7 @@ package body Sem_Specs is
          return Res;
       end Apply_Component_Specification;
 
-      List : Iir_List;
+      List : Iir_Flist;
       El : Iir;
       Inter : Sem_Scopes.Name_Interpretation_Type;
       Comp : Iir;
@@ -1322,7 +1367,7 @@ package body Sem_Specs is
       end if;
 
       List := Get_Instantiation_List (Spec);
-      if List = Iir_List_All then
+      if List = Iir_Flist_All then
          --  LRM93 5.2
          --  * If the reserved word ALL is supplied, then the configuration
          --    specification applies to all instances of the specified
@@ -1337,7 +1382,7 @@ package body Sem_Specs is
             Warning_Msg_Sem (Warnid_Specs, +Spec,
                              "component specification applies to no instance");
          end if;
-      elsif List = Iir_List_Others then
+      elsif List = Iir_Flist_Others then
          --  LRM93 5.2
          --  * If the reserved word OTHERS is supplied, then the
          --    configuration specification applies to instances of the
@@ -1369,9 +1414,8 @@ package body Sem_Specs is
          --    instantiation statement whose corresponding instantiated unit
          --    does not name a component.
          -- FIXME: error message are *really* cryptic.
-         for I in Natural loop
+         for I in Flist_First .. Flist_Last (List) loop
             El := Get_Nth_Element (List, I);
-            exit when El = Null_Iir;
             Inter := Sem_Scopes.Get_Interpretation (Get_Identifier (El));
             if not Valid_Interpretation (Inter) then
                Error_Msg_Sem
@@ -1568,6 +1612,19 @@ package body Sem_Specs is
      (Comp : Iir; Entity : Iir; Kind : Map_Kind_Type; Parent : Iir)
      return Iir
    is
+      Error : Boolean;
+
+      procedure Error_Header is
+      begin
+         if Error then
+            return;
+         end if;
+         Error_Msg_Sem
+           (+Parent, "for default port binding of %n:",
+            (1 => +Parent), Cont => True);
+         Error := True;
+      end Error_Header;
+
       Res, Last : Iir;
       Comp_El, Ent_El : Iir;
       Assoc : Iir;
@@ -1575,7 +1632,6 @@ package body Sem_Specs is
       Found : Natural;
       Comp_Chain : Iir;
       Ent_Chain : Iir;
-      Error : Boolean;
    begin
       case Kind is
          when Map_Generic =>
@@ -1585,11 +1641,6 @@ package body Sem_Specs is
             Ent_Chain := Get_Port_Chain (Entity);
             Comp_Chain := Get_Port_Chain (Comp);
       end case;
-
-      --  If no formal, then there is no association list.
-      if Ent_Chain = Null_Iir then
-         return Null_Iir;
-      end if;
 
       --  No error found yet.
       Error := False;
@@ -1605,26 +1656,18 @@ package body Sem_Specs is
             Location_Copy (Assoc, Parent);
          else
             if Are_Nodes_Compatible (Comp_El, Ent_El) = Not_Compatible then
-               if not Error then
-                  Error_Msg_Sem
-                    (+Parent, "for default port binding of %n:",
-                     (1 => +Parent), Cont => True);
-               end if;
+               Error_Header;
                Error_Msg_Sem
                  (+Parent, "type of %n declared at %l",
                   (+Comp_El, +Comp_El), Cont => True);
                Error_Msg_Sem
                  (+Parent, "not compatible with type of %n declared at %l",
                   (+Ent_El, +Ent_El));
-               Error := True;
             elsif Kind = Map_Port
               and then not Check_Port_Association_Mode_Restrictions
               (Ent_El, Comp_El, Null_Iir)
             then
-               if not Error then
-                  Error_Msg_Sem (+Parent, "for default port binding of %n",
-                                 (1 => +Parent), Cont => True);
-               end if;
+               Error_Header;
                Error_Msg_Sem (+Parent, "cannot associate "
                                 & Get_Mode_Name (Get_Mode (Ent_El))
                                 & " %n declared at %l",
@@ -1632,14 +1675,13 @@ package body Sem_Specs is
                Error_Msg_Sem (+Parent, "with actual port of mode "
                                 & Get_Mode_Name (Get_Mode (Comp_El))
                                 & " declared at %l", +Comp_El);
-               Error := True;
             end if;
             Assoc := Create_Iir (Iir_Kind_Association_Element_By_Expression);
             Location_Copy (Assoc, Parent);
             Name := Build_Simple_Name (Comp_El, Parent);
             Set_Type (Name, Get_Type (Comp_El));
             Set_Actual (Assoc, Name);
-            if Kind = Map_Port then
+            if Kind = Map_Port and then not Error then
                Check_Port_Association_Bounds_Restrictions
                  (Ent_El, Comp_El, Assoc);
             end if;
@@ -1667,12 +1709,13 @@ package body Sem_Specs is
       if Iir_Chains.Get_Chain_Length (Comp_Chain) /= Found then
          --  At least one component generic/port cannot be associated with
          --  the entity one.
-         Error := True;
+
          --  Disp unassociated interfaces.
          Comp_El := Comp_Chain;
          while Comp_El /= Null_Iir loop
             Ent_El := Find_Name_In_Chain (Ent_Chain, Get_Identifier (Comp_El));
             if Ent_El = Null_Iir then
+               Error_Header;
                Error_Msg_Sem (+Parent, "%n has no association in %n",
                               (+Comp_El, +Entity));
             end if;

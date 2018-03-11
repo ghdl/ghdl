@@ -156,6 +156,11 @@ package body Iirs is
    function Iir_List_To_Iir is new Ada.Unchecked_Conversion
      (Source => Iir_List, Target => Iir);
 
+   function Iir_To_Iir_Flist is new Ada.Unchecked_Conversion
+     (Source => Iir, Target => Iir_Flist);
+   function Iir_Flist_To_Iir is new Ada.Unchecked_Conversion
+     (Source => Iir_Flist, Target => Iir);
+
    function Iir_To_Token_Type (N : Iir) return Token_Type is
    begin
       return Token_Type'Val (N);
@@ -203,15 +208,10 @@ package body Iirs is
       return Iir (P);
    end Source_Ptr_To_Iir;
 
-   function Iir_To_Location_Type (N : Iir) return Location_Type is
-   begin
-      return Location_Type (N);
-   end Iir_To_Location_Type;
-
-   function Location_Type_To_Iir (L : Location_Type) return Iir is
-   begin
-      return Iir (L);
-   end Location_Type_To_Iir;
+   function Iir_To_Source_File_Entry is new Ada.Unchecked_Conversion
+     (Source => Iir, Target => Source_File_Entry);
+   function Source_File_Entry_To_Iir is new Ada.Unchecked_Conversion
+     (Source => Source_File_Entry, Target => Iir);
 
    function Boolean_To_Iir_Delay_Mechanism is new Ada.Unchecked_Conversion
      (Source => Boolean, Target => Iir_Delay_Mechanism);

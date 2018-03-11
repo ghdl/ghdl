@@ -1,0 +1,5 @@
+elaborate and simulate bug
+1
+bug.vhdl:18:5:@0ms:(report note): 2
+3
+bug.vhdl:20:5:@0ms:(report note): 4

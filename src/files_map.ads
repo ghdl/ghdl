@@ -32,9 +32,7 @@ package Files_Map is
    --  Create the path from DIRECTORY and NAME:
    --  If NAME is an absolute pathname, then return NAME.
    --  Otherwise, return the concatenation of DIRECTORY and NAME.
-   --  If ADD_NUL is TRUE, then a trailing '\0' is appended.
-   function Get_Pathname
-     (Directory : Name_Id; Name : Name_Id; Add_Nul : Boolean) return String;
+   function Get_Pathname (Directory : Name_Id; Name : Name_Id) return String;
 
    --  If NAME contains a directory separator, move it to the DIRECTORY name.
    --  At the return point, NAME has no directory components.
@@ -45,7 +43,7 @@ package Files_Map is
    --  current directory.
    --  Load the filename if necessary.
    --  Return No_Source_File_Entry if the file does not exist.
-   function Load_Source_File (Directory : Name_Id; Name : Name_Id)
+   function Read_Source_File (Directory : Name_Id; Name : Name_Id)
                               return Source_File_Entry;
 
    --  Each file in memory has two terminal EOT.
@@ -88,6 +86,9 @@ package Files_Map is
    --  Return a buffer (access to the contents of the file) for a file entry.
    function Get_File_Source (File : Source_File_Entry) return File_Buffer_Acc;
 
+   --  Likewise but return a pointer.  To be used only from non-Ada code.
+   function Get_File_Buffer (File : Source_File_Entry) return File_Buffer_Ptr;
+
    --  Return the length of the file (which is the size of the file buffer).
    function Get_File_Length (File : Source_File_Entry) return Source_Ptr;
 
@@ -128,6 +129,24 @@ package Files_Map is
    --  The new entry must be the next one after the last entry.
    procedure File_Add_Line_Number
      (File : Source_File_Entry; Line : Natural; Pos : Source_Ptr);
+
+   --  Convert LOCATION to a source file.  Return No_Source_File_Entry if
+   --  LOCATION is incorrect.
+   function Location_To_File (Location : Location_Type)
+                             return Source_File_Entry;
+
+   --  Convert LOCATION and FILE to a position (offset) into the source file.
+   function Location_File_To_Pos
+     (Location : Location_Type; File : Source_File_Entry) return Source_Ptr;
+
+   --  Convert LOCATION and FILE to a line number.
+   function Location_File_To_Line
+     (Location : Location_Type; File : Source_File_Entry) return Natural;
+
+   --  Get logical column (with HT expanded) from LOC, FILE and LINE.
+   function Location_File_Line_To_Col
+     (Loc : Location_Type; File : Source_File_Entry; Line : Natural)
+     return Natural;
 
    --  Convert LOCATION into a source file FILE and an offset POS in the
    --  file.
@@ -190,4 +209,10 @@ package Files_Map is
 
    --  Free all memory and reinitialize.
    procedure Initialize;
+
+private
+   --  Debug procedures.
+
+   --  Disp info about all source files
+   procedure Debug_Source_Files;
 end Files_Map;

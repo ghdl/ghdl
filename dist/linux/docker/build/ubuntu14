@@ -1,0 +1,16 @@
+# [build] Ubuntu 14
+
+FROM ubuntu:trusty AS mcode
+
+RUN apt-get update -qq \
+  && apt-get -y install --no-install-recommends \
+            gnat gcc make zlib1g-dev \
+  && apt-get autoclean && apt-get clean && apt-get autoremove
+
+
+FROM mcode AS llvm-3.8
+
+RUN apt-get update -qq \
+  && apt-get -y install --no-install-recommends \
+            llvm-3.8-dev clang-3.8 \
+  && apt-get autoclean && apt-get clean && apt-get autoremove

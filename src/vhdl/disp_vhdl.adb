@@ -487,6 +487,7 @@ package body Disp_Vhdl is
       Tm_El : constant Iir := Get_Element_Subtype (Type_Mark);
       Has_Index : constant Boolean := Get_Index_Constraint_Flag (Def);
       Has_Own_Element_Subtype : constant Boolean := Def_El /= Tm_El;
+      Indexes : Iir_Flist;
       Index : Iir;
    begin
       if not Has_Index and not Has_Own_Element_Subtype then
@@ -496,10 +497,10 @@ package body Disp_Vhdl is
       if Get_Constraint_State (Type_Mark) /= Fully_Constrained
         and then Has_Index
       then
+         Indexes := Get_Index_Subtype_List (Def);
          Put (" (");
-         for I in Natural loop
-            Index := Get_Nth_Element (Get_Index_Subtype_List (Def), I);
-            exit when Index = Null_Iir;
+         for I in Flist_First .. Flist_Last (Indexes) loop
+            Index := Get_Nth_Element (Indexes, I);
             if I /= 0 then
                Put (", ");
             end if;
@@ -518,13 +519,12 @@ package body Disp_Vhdl is
 
    procedure Disp_Record_Element_Constraint (Def : Iir)
    is
-      El_List : constant Iir_List := Get_Elements_Declaration_List (Def);
+      El_List : constant Iir_Flist := Get_Elements_Declaration_List (Def);
       El : Iir;
       Has_El : Boolean := False;
    begin
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (El_List) loop
          El := Get_Nth_Element (El_List, I);
-         exit when El = Null_Iir;
          if Get_Kind (El) = Iir_Kind_Record_Element_Constraint
            and then Get_Parent (El) = Def
          then
@@ -642,15 +642,15 @@ package body Disp_Vhdl is
    procedure Disp_Enumeration_Type_Definition
      (Def: Iir_Enumeration_Type_Definition)
    is
+      Lits : constant Iir_Flist := Get_Enumeration_Literal_List (Def);
       Len : Count;
       Start_Col: Count;
       Decl: Name_Id;
       A_Lit: Iir; --Enumeration_Literal_Acc;
    begin
-      for I in Natural loop
-         A_Lit := Get_Nth_Element (Get_Enumeration_Literal_List (Def), I);
-         exit when A_Lit = Null_Iir;
-         if I = Natural'first then
+      for I in Flist_First .. Flist_Last (Lits) loop
+         A_Lit := Get_Nth_Element (Lits, I);
+         if I = 0 then
             Put ("(");
             Start_Col := Col;
          else
@@ -692,14 +692,14 @@ package body Disp_Vhdl is
 
    procedure Disp_Array_Subtype_Definition (Def: Iir_Array_Subtype_Definition)
    is
+      Indexes : constant Iir_Flist := Get_Index_Subtype_List (Def);
       Index: Iir;
    begin
       Disp_Resolution_Indication (Def);
 
       Put ("array (");
-      for I in Natural loop
-         Index := Get_Nth_Element (Get_Index_Subtype_List (Def), I);
-         exit when Index = Null_Iir;
+      for I in Flist_First .. Flist_Last (Indexes) loop
+         Index := Get_Nth_Element (Indexes, I);
          if I /= 0 then
             Put (", ");
          end if;
@@ -709,13 +709,14 @@ package body Disp_Vhdl is
       Disp_Subtype_Indication (Get_Element_Subtype (Def));
    end Disp_Array_Subtype_Definition;
 
-   procedure Disp_Array_Type_Definition (Def: Iir_Array_Type_Definition) is
+   procedure Disp_Array_Type_Definition (Def: Iir_Array_Type_Definition)
+   is
+      Indexes : constant Iir_Flist := Get_Index_Subtype_List (Def);
       Index: Iir;
    begin
       Put ("array (");
-      for I in Natural loop
-         Index := Get_Nth_Element (Get_Index_Subtype_List (Def), I);
-         exit when Index = Null_Iir;
+      for I in Flist_First .. Flist_Last (Indexes) loop
+         Index := Get_Nth_Element (Indexes, I);
          if I /= 0 then
             Put (", ");
          end if;
@@ -762,17 +763,15 @@ package body Disp_Vhdl is
    procedure Disp_Record_Type_Definition
      (Def: Iir_Record_Type_Definition; Indent: Count)
    is
-      List : Iir_List;
+      List : constant Iir_Flist := Get_Elements_Declaration_List (Def);
       El: Iir_Element_Declaration;
       Reindent : Boolean;
    begin
       Put_Line ("record");
       Set_Col (Indent);
-      List := Get_Elements_Declaration_List (Def);
       Reindent := True;
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (List) loop
          El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
          if Reindent then
             Set_Col (Indent + Indentation);
          end if;
@@ -791,24 +790,31 @@ package body Disp_Vhdl is
       Disp_End (Def, "record");
    end Disp_Record_Type_Definition;
 
-   procedure Disp_Designator_List (List: Iir_List) is
-      El: Iir;
+   procedure Disp_Designator_List (List: Iir_List)
+   is
+      El : Iir;
+      It : List_Iterator;
+      Is_First : Boolean;
    begin
-      if List = Null_Iir_List then
-         return;
-      elsif List = Iir_List_All then
-         Put ("all");
-         return;
-      end if;
-      for I in Natural loop
-         El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
-         if I > 0 then
-            Put (", ");
-         end if;
-         Disp_Expression (El);
-         --Disp_Text_Literal (El);
-      end loop;
+      case List is
+         when Null_Iir_List =>
+            null;
+         when Iir_List_All =>
+            Put ("all");
+         when others =>
+            It := List_Iterate (List);
+            Is_First := True;
+            while Is_Valid (It) loop
+               El := Get_Element (It);
+               if not Is_First then
+                  Put (", ");
+               else
+                  Is_First := False;
+               end if;
+               Disp_Expression (El);
+               Next (It);
+            end loop;
+      end case;
    end Disp_Designator_List;
 
    -- Display the full definition of a type, ie the sequence that can create
@@ -887,13 +893,12 @@ package body Disp_Vhdl is
          when Iir_Kind_Array_Type_Definition =>
             declare
                St : constant Iir := Get_Subtype_Definition (Decl);
-               Indexes : constant Iir_List := Get_Index_Subtype_List (St);
+               Indexes : constant Iir_Flist := Get_Index_Subtype_List (St);
                Index : Iir;
             begin
                Put ("array (");
-               for I in Natural loop
+               for I in Flist_First .. Flist_Last (Indexes) loop
                   Index := Get_Nth_Element (Indexes, I);
-                  exit when Index = Null_Iir;
                   if I /= 0 then
                      Put (", ");
                   end if;
@@ -1259,7 +1264,7 @@ package body Disp_Vhdl is
    procedure Disp_Signature (Sig : Iir)
    is
       Prefix : constant Iir := Get_Signature_Prefix (Sig);
-      List : Iir_List;
+      List : constant Iir_Flist := Get_Type_Marks_List (Sig);
       El : Iir;
    begin
       if Is_Valid (Prefix) then
@@ -1267,11 +1272,9 @@ package body Disp_Vhdl is
          Disp_Name (Prefix);
       end if;
       Put (" [");
-      List := Get_Type_Marks_List (Sig);
-      if List /= Null_Iir_List then
-         for I in Natural loop
+      if List /= Null_Iir_Flist then
+         for I in Flist_First .. Flist_Last (List) loop
             El := Get_Nth_Element (List, I);
-            exit when El = Null_Iir;
             if I /= 0 then
                Put (", ");
             end if;
@@ -1529,18 +1532,17 @@ package body Disp_Vhdl is
       end if;
    end Disp_Subprogram_Body;
 
-   procedure Disp_Instantiation_List (Insts: Iir_List) is
+   procedure Disp_Instantiation_List (Insts: Iir_Flist) is
       El : Iir;
    begin
-      if Insts = Iir_List_All then
+      if Insts = Iir_Flist_All then
          Put ("all");
-      elsif Insts = Iir_List_Others then
+      elsif Insts = Iir_Flist_Others then
          Put ("others");
       else
-         for I in Natural loop
+         for I in Flist_First .. Flist_Last (Insts) loop
             El := Get_Nth_Element (Insts, I);
-            exit when El = Null_Iir;
-            if I /= Natural'First then
+            if I /= Flist_First then
                Put (", ");
             end if;
             Disp_Name (El);
@@ -1612,19 +1614,18 @@ package body Disp_Vhdl is
       Put (Tokens.Image (Tok));
    end Disp_Entity_Kind;
 
-   procedure Disp_Entity_Name_List (List : Iir_List)
+   procedure Disp_Entity_Name_List (List : Iir_Flist)
    is
       El : Iir;
    begin
-      if List = Iir_List_All then
+      if List = Iir_Flist_All then
          Put ("all");
-      elsif List = Iir_List_Others then
+      elsif List = Iir_Flist_Others then
          Put ("others");
       else
-         for I in Natural loop
+         for I in Flist_First .. Flist_Last (List) loop
             El := Get_Nth_Element (List, I);
-            exit when El = Null_Iir;
-            if I /= 0 then
+            if I /= Flist_First then
                Put (", ");
             end if;
             if Get_Kind (El) = Iir_Kind_Signature then
@@ -1688,7 +1689,7 @@ package body Disp_Vhdl is
 
    procedure Disp_Group_Declaration (Decl : Iir)
    is
-      List : Iir_List;
+      List : Iir_Flist;
       El : Iir;
    begin
       Put ("group ");
@@ -1697,9 +1698,8 @@ package body Disp_Vhdl is
       Disp_Name (Get_Group_Template_Name (Decl));
       Put (" (");
       List := Get_Group_Constituent_List (Decl);
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (List) loop
          El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
          if I /= 0 then
             Put (", ");
          end if;
@@ -2122,6 +2122,11 @@ package body Disp_Vhdl is
 
    procedure Disp_Monadic_Operator (Expr: Iir) is
    begin
+      if Get_Kind (Expr) = Iir_Kind_Implicit_Condition_Operator then
+         Disp_Expression (Get_Operand (Expr));
+         return;
+      end if;
+
       Put (Name_Table.Image (Iirs_Utils.Get_Operator_Name (Expr)));
       Put (' ');
       if Flag_Parenthesis then
@@ -2395,7 +2400,7 @@ package body Disp_Vhdl is
 
             --  Formal part.
             if Get_Kind (El) = Iir_Kind_Association_Element_By_Expression then
-               Conv := Get_Out_Conversion (El);
+               Conv := Get_Formal_Conversion (El);
                if Conv /= Null_Iir then
                   Disp_Conversion (Conv);
                   Put (" (");
@@ -2431,7 +2436,7 @@ package body Disp_Vhdl is
                  | Iir_Kind_Association_Element_Subprogram =>
                   Disp_Name (Get_Actual (El));
                when others =>
-                  Conv := Get_In_Conversion (El);
+                  Conv := Get_Actual_Conversion (El);
                   if Conv /= Null_Iir then
                      Disp_Conversion (Conv);
                      Put (" (");
@@ -2491,6 +2496,10 @@ package body Disp_Vhdl is
    begin
       Disp_Label (Stmt);
       if Get_Kind (Component) in Iir_Kinds_Denoting_Name then
+         if Get_Has_Component (Stmt) then
+            Put ("component");
+            Put (" ");
+         end if;
          Disp_Name (Component);
       else
          Disp_Entity_Aspect (Component);
@@ -2521,15 +2530,14 @@ package body Disp_Vhdl is
 
    procedure Disp_Indexed_Name (Indexed: Iir)
    is
-      List : Iir_List;
+      List : Iir_Flist;
       El: Iir;
    begin
       Disp_Expression (Get_Prefix (Indexed));
       Put (" (");
       List := Get_Index_List (Indexed);
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (List) loop
          El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
          if I /= 0 then
             Put (", ");
          end if;
@@ -2623,15 +2631,13 @@ package body Disp_Vhdl is
 
    procedure Disp_Simple_Aggregate (Aggr: Iir_Simple_Aggregate)
    is
-      List : Iir_List;
+      List : constant Iir_Flist := Get_Simple_Aggregate_List (Aggr);
       El : Iir;
       First : Boolean := True;
    begin
       Put ("(");
-      List := Get_Simple_Aggregate_List (Aggr);
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (List) loop
          El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
          if First then
             First := False;
          else
@@ -2681,7 +2687,7 @@ package body Disp_Vhdl is
    is
       Str_Id : constant String8_Id := Get_String8_Id (Str);
       Len : constant Nat32 := Get_String_Length (Str);
-      Literal_List : constant Iir_List :=
+      Literal_List : constant Iir_Flist :=
         Get_Enumeration_Literal_List (Get_Base_Type (El_Type));
       Pos : Nat8;
       Lit : Iir;
@@ -3385,14 +3391,14 @@ package body Disp_Vhdl is
             Disp_Name_Of (Spec);
          when Iir_Kind_Indexed_Name =>
             declare
-               Index_List : constant Iir_List := Get_Index_List (Spec);
+               Index_List : constant Iir_Flist := Get_Index_List (Spec);
             begin
                Disp_Name_Of (Get_Prefix (Spec));
                Put (" (");
-               if Index_List = Iir_List_Others then
+               if Index_List = Iir_Flist_Others then
                   Put ("others");
                else
-                  Disp_Expression (Get_First_Element (Index_List));
+                  Disp_Expression (Get_Nth_Element (Index_List, 0));
                end if;
                Put (")");
             end;

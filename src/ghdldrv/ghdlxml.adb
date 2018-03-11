@@ -197,6 +197,17 @@ package body Ghdlxml is
       Put_Empty_Stag_End;
    end Disp_Iir_List_Ref;
 
+   procedure Disp_Iir_Flist_Ref (Id : String; L : Iir_Flist) is
+   begin
+      if L = Null_Iir_Flist then
+         return;
+      end if;
+
+      Put_Stag (Id);
+      Put_Attribute ("flist-ref", Strip (Iir_Flist'Image (L)));
+      Put_Empty_Stag_End;
+   end Disp_Iir_Flist_Ref;
+
    procedure Disp_Iir_Chain_Elements (Chain : Iir)
    is
       El : Iir;
@@ -223,29 +234,62 @@ package body Ghdlxml is
    procedure Disp_Iir_List (Id : String; L : Iir_List; Ref : Boolean)
    is
       El : Iir;
+      It : List_Iterator;
    begin
-      if L = Null_Iir_List then
+      case L is
+         when  Null_Iir_List =>
+            null;
+
+         when Iir_List_All =>
+            Put_Stag (Id);
+            Put_Attribute ("list-id", "all");
+            Put_Empty_Stag_End;
+
+         when others =>
+            Put_Stag (Id);
+            Put_Attribute ("list-id", Strip (Iir_List'Image (L)));
+            Put_Stag_End;
+
+            It := List_Iterate (L);
+            while Is_Valid (It) loop
+               El := Get_Element (It);
+               if Ref then
+                  Disp_Iir_Ref ("el", El);
+               else
+                  Disp_Iir ("el", El);
+               end if;
+               Next (It);
+            end loop;
+
+            Put_Etag (Id);
+      end case;
+   end Disp_Iir_List;
+
+   procedure Disp_Iir_Flist (Id : String; L : Iir_Flist; Ref : Boolean)
+   is
+      El : Iir;
+   begin
+      if L = Null_Iir_Flist then
          return;
       end if;
 
       Put_Stag (Id);
       case L is
-         when Iir_List_All =>
-            Put_Attribute ("list-id", "all");
+         when Iir_Flist_All =>
+            Put_Attribute ("flist-id", "all");
             Put_Empty_Stag_End;
             return;
-         when Iir_List_Others =>
-            Put_Attribute ("list-id", "others");
+         when Iir_Flist_Others =>
+            Put_Attribute ("flist-id", "others");
             Put_Empty_Stag_End;
             return;
          when others =>
-            Put_Attribute ("list-id", Strip (Iir_List'Image (L)));
+            Put_Attribute ("flist-id", Strip (Iir_Flist'Image (L)));
             Put_Stag_End;
       end case;
 
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (L) loop
          El := Get_Nth_Element (L, I);
-         exit when El = Null_Iir;
          if Ref then
             Disp_Iir_Ref ("el", El);
          else
@@ -254,7 +298,7 @@ package body Ghdlxml is
       end loop;
 
       Put_Etag (Id);
-   end Disp_Iir_List;
+   end Disp_Iir_Flist;
 
    procedure Disp_Iir (Id : String; N : Iir) is
    begin
@@ -292,6 +336,8 @@ package body Ghdlxml is
                when Type_Iir =>
                   null;
                when Type_Iir_List =>
+                  null;
+               when Type_Iir_Flist =>
                   null;
                when Type_String8_Id =>
                   null;
@@ -346,14 +392,6 @@ package body Ghdlxml is
                when Type_Iir_Direction =>
                   Put_Field (F, Image_Iir_Direction
                                (Get_Iir_Direction (N, F)));
-               when Type_Location_Type =>
-                  declare
-                     Loc : constant Location_Type := Get_Location_Type (N, F);
-                  begin
-                     if Loc /= No_Location then
-                        Put_Field (F, Image_Location_Type (Loc));
-                     end if;
-                  end;
                when Type_Iir_Int32 =>
                   Put_Field
                     (F, Strip (Iir_Int32'Image (Get_Iir_Int32 (N, F))));
@@ -371,6 +409,8 @@ package body Ghdlxml is
                   Put_Field (F, Image_Token_Type (Get_Token_Type (N, F)));
                when Type_Name_Id =>
                   Put_Field (F, XML_Image (Get_Name_Id (N, F)));
+               when Type_Source_File_Entry =>
+                  null;
             end case;
          end loop;
 
@@ -419,6 +459,24 @@ package body Ghdlxml is
                            Disp_Iir_List (Img, L, Get_Is_Ref (N));
                         when Attr_Ref =>
                            Disp_Iir_List_Ref (Img, L);
+                        when others =>
+                           raise Internal_Error;
+                     end case;
+                  end;
+               when Type_Iir_Flist =>
+                  declare
+                     L : constant Iir_Flist := Get_Iir_Flist (N, F);
+                     Img : constant String := Get_Field_Image (F);
+                  begin
+                     case Get_Field_Attribute (F) is
+                        when Attr_None =>
+                           Disp_Iir_Flist (Img, L, False);
+                        when Attr_Of_Ref =>
+                           Disp_Iir_Flist (Img, L, True);
+                        when Attr_Of_Maybe_Ref =>
+                           Disp_Iir_Flist (Img, L, Get_Is_Ref (N));
+                        when Attr_Ref =>
+                           Disp_Iir_Flist_Ref (Img, L);
                         when others =>
                            raise Internal_Error;
                      end case;
@@ -491,7 +549,7 @@ package body Ghdlxml is
       --  Parse all files.
       for I in Files'Range loop
          Id := Get_Identifier (Files_Name (I).all);
-         File := Load_Source_File (Libraries.Local_Directory, Id);
+         File := Read_Source_File (Libraries.Local_Directory, Id);
          if File = No_Source_File_Entry then
             Error ("cannot open " & Image (Id));
             return;

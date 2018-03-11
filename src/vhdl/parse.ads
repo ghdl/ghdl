@@ -22,12 +22,12 @@ package Parse is
    --  If True, create nodes for parenthesis expressions.
    Flag_Parse_Parenthesis : Boolean := False;
 
-   -- Parse an expression.
-   -- (Used by PSL).
+   --  Parse an expression.
+   --  (Used by PSL).
    function Parse_Expression return Iir;
    function Parse_Expression_Rhs (Left : Iir) return Iir;
 
-   -- Parse an relationnal operator and its rhs.
+   --  Parse an relationnal operator and its rhs.
    function Parse_Relation_Rhs (Left : Iir) return Iir;
 
    --  Convert the STR (0 .. LEN - 1) into a operator symbol identifier.
@@ -40,16 +40,16 @@ package Parse is
    --  Emit an error message if the string is not an operator name.
    function String_To_Operator_Symbol (Str : Iir) return Iir;
 
-   -- Parse a single design unit.
-   -- The scanner must have been initialized, however, the current_token
-   -- shouldn't have been set.
-   -- At return, the last token accepted is the semi_colon that terminates
-   -- the library unit.
-   -- Return Null_Iir when end of file.
+   --  Parse a single design unit.
+   --  The scanner must have been initialized, however, the current_token
+   --  shouldn't have been set.
+   --  At return, the last token accepted is the semi_colon that terminates
+   --  the library unit.
+   --  Return Null_Iir when end of file.
    function Parse_Design_Unit return Iir_Design_Unit;
 
    --  Parse a file.
-   --  The scanner must habe been initialized as for parse_design_unit.
+   --  The scanner must have been initialized as for parse_design_unit.
    --  Return Null_Iir in case of error.
    function Parse_Design_File return Iir_Design_File;
 end Parse;

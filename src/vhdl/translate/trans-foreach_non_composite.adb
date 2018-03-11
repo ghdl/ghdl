@@ -31,9 +31,11 @@ begin
    case Type_Info.Type_Mode is
       when Type_Mode_Scalar =>
          Do_Non_Composite (Targ, Targ_Type, Data);
-      when Type_Mode_Unbounded_Array
-        | Type_Mode_Array =>
+      when Type_Mode_Arrays =>
          declare
+            El_Type : constant Iir := Get_Element_Subtype (Targ_Type);
+            Var_El         : Mnode;
+            El_Base        : Mnode;
             Var_Array      : Mnode;
             Var_Base       : Mnode;
             Var_Length     : O_Dnode;
@@ -57,6 +59,8 @@ begin
                New_Var_Decl
                  (Var_I, Wki_I, O_Storage_Local, Ghdl_Index_Type);
             end if;
+            Var_El :=
+              Chap3.Create_Maybe_Fat_Array_Element (Var_Array, Targ_Type);
             Init_Var (Var_I);
             Start_Loop_Stmt (Label);
             Gen_Exit_When
@@ -66,33 +70,31 @@ begin
                                       Ghdl_Bool_Type));
             Sub_Data := Update_Data_Array
               (Composite_Data, Targ_Type, Var_I);
+            El_Base := Chap3.Index_Base (Var_Base, Targ_Type,
+                                         New_Value (New_Obj (Var_I)));
             Foreach_Non_Composite
-              (Chap3.Index_Base (Var_Base, Targ_Type,
-                                 New_Value (New_Obj (Var_I))),
-               Get_Element_Subtype (Targ_Type),
-               Sub_Data);
+              (Chap3.Assign_Maybe_Fat_Array_Element (Var_El, El_Base),
+               El_Type, Sub_Data);
             Inc_Var (Var_I);
             Finish_Loop_Stmt (Label);
             Finish_Data_Array (Composite_Data);
             Close_Temp;
          end;
-      when Type_Mode_Record
-        | Type_Mode_Unbounded_Record =>
+      when Type_Mode_Records =>
          declare
+            List           : constant Iir_Flist :=
+              Get_Elements_Declaration_List (Targ_Type);
             Var_Record     : Mnode;
             Sub_Data       : Data_Type;
             Composite_Data : Composite_Data_Type;
-            List           : Iir_List;
             El             : Iir_Element_Declaration;
          begin
             Open_Temp;
             Var_Record := Stabilize (Targ);
             Composite_Data :=
               Prepare_Data_Record (Var_Record, Targ_Type, Data);
-            List := Get_Elements_Declaration_List (Targ_Type);
-            for I in Natural loop
+            for I in Flist_First .. Flist_Last (List) loop
                El := Get_Nth_Element (List, I);
-               exit when El = Null_Iir;
                Sub_Data := Update_Data_Record (Composite_Data, Targ_Type, El);
                Foreach_Non_Composite
                  (Chap6.Translate_Selected_Element (Var_Record, El),

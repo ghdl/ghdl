@@ -16,6 +16,8 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Interfaces;
+with System;
+with Ada.Unchecked_Conversion;
 
 package Types is
    pragma Preelaborate (Types);
@@ -54,6 +56,12 @@ package Types is
    type String_Cst is access constant String;
    type String_Acc_Array is array (Natural range <>) of String_Acc;
 
+   --  Fat strings, for compatibility with C.
+   type Thin_String_Ptr is access String (Positive);
+   pragma Convention (C, Thin_String_Ptr);
+   function To_Thin_String_Ptr is new Ada.Unchecked_Conversion
+     (System.Address, Thin_String_Ptr);
+
    --  The name table is defined in Name_Table package.  This is an hash table
    --  that associate a uniq Name_Id to a string.  Name_Id are allocated in
    --  increasing numbers, so it is possible to create a parallel table
@@ -70,21 +78,15 @@ package Types is
    --  have a 32 bit type to represent a string (contrary to pointers that
    --  could be 32 or 64 bit - in general - or to an access type which can be
    --  even wider in Ada).
-   type String8_Id is new Nat32;
+   type String8_Id is new Uns32;
    for String8_Id'Size use 32;
 
    Null_String8 : constant String8_Id := 0;
 
    --  Index type is the source file table.
    --  This table is defined in the files_map package.
-   type Source_File_Entry is new Nat32;
+   type Source_File_Entry is new Uns32;
    No_Source_File_Entry: constant Source_File_Entry := 0;
-
-   --  FIXME: additional source file entries to create:
-   --  *std.standard*: for those created in std.standard
-   --  *error*: for erroneous one
-   --  *command-line*: used for identifiers from command line
-   --    (eg: unit to elab)
 
    --  Index into a file buffer.
    type Source_Ptr is new Uns32;
@@ -99,6 +101,10 @@ package Types is
    --  Type of a file buffer.
    type File_Buffer is array (Source_Ptr range <>) of Character;
    type File_Buffer_Acc is access File_Buffer;
+   type File_Buffer_Ptr is access File_Buffer (Source_Ptr);
+
+   function To_File_Buffer_Ptr is new Ada.Unchecked_Conversion
+     (System.Address, File_Buffer_Ptr);
 
    --  This type contains everything necessary to get a file name, a line
    --  number and a column number.

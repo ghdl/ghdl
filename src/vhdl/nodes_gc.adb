@@ -62,18 +62,17 @@ package body Nodes_GC is
 
    procedure Mark_Iir_List (N : Iir_List)
    is
-      El : Iir;
+      It : List_Iterator;
    begin
       case N is
          when Null_Iir_List
-           | Iir_List_All
-           | Iir_List_Others =>
+           | Iir_List_All =>
             null;
          when others =>
-            for I in Natural loop
-               El := Get_Nth_Element (N, I);
-               exit when El = Null_Iir;
-               Mark_Iir (El);
+            It := List_Iterate (N);
+            while Is_Valid (It) loop
+               Mark_Iir (Get_Element (It));
+               Next (It);
             end loop;
       end case;
    end Mark_Iir_List;
@@ -81,22 +80,59 @@ package body Nodes_GC is
    procedure Mark_Iir_List_Ref (N : Iir_List; F : Fields_Enum)
    is
       El : Iir;
+      It : List_Iterator;
    begin
       case N is
          when Null_Iir_List
-           | Iir_List_All
-           | Iir_List_Others =>
+           | Iir_List_All =>
             null;
          when others =>
-            for I in Natural loop
+            It := List_Iterate (N);
+            while Is_Valid (It) loop
+               El := Get_Element (It);
+               if not Markers (El) then
+                  Report_Early_Reference (El, F);
+               end if;
+               Next (It);
+            end loop;
+      end case;
+   end Mark_Iir_List_Ref;
+
+   procedure Mark_Iir_Flist (N : Iir_Flist)
+   is
+      El : Iir;
+   begin
+      case N is
+         when Null_Iir_Flist
+           | Iir_Flist_All
+           | Iir_Flist_Others =>
+            null;
+         when others =>
+            for I in Flist_First .. Flist_Last (N) loop
                El := Get_Nth_Element (N, I);
-               exit when El = Null_Iir;
+               Mark_Iir (El);
+            end loop;
+      end case;
+   end Mark_Iir_Flist;
+
+   procedure Mark_Iir_Flist_Ref (N : Iir_Flist; F : Fields_Enum)
+   is
+      El : Iir;
+   begin
+      case N is
+         when Null_Iir_Flist
+           | Iir_Flist_All
+           | Iir_Flist_Others =>
+            null;
+         when others =>
+            for I in Flist_First .. Flist_Last (N) loop
+               El := Get_Nth_Element (N, I);
                if not Markers (El) then
                   Report_Early_Reference (El, F);
                end if;
             end loop;
       end case;
-   end Mark_Iir_List_Ref;
+   end Mark_Iir_Flist_Ref;
 
    procedure Mark_PSL_Node (N : PSL_Node) is
    begin
@@ -242,6 +278,28 @@ package body Nodes_GC is
                         Mark_Iir_List (Get_Iir_List (N, F));
                      end if;
                   end;
+               when Type_Iir_Flist =>
+                  declare
+                     Ref : Boolean;
+                  begin
+                     case Get_Field_Attribute (F) is
+                        when Attr_None =>
+                           Ref := False;
+                        when Attr_Of_Ref =>
+                           Ref := True;
+                        when Attr_Of_Maybe_Ref =>
+                           Ref := Get_Is_Ref (N);
+                        when Attr_Ref =>
+                           Ref := True;
+                        when others =>
+                           raise Internal_Error;
+                     end case;
+                     if Ref then
+                        Mark_Iir_Flist_Ref (Get_Iir_Flist (N, F), F);
+                     else
+                        Mark_Iir_Flist (Get_Iir_Flist (N, F));
+                     end if;
+                  end;
                when Type_PSL_Node =>
                   Mark_PSL_Node (Get_PSL_Node (N, F));
                when Type_PSL_NFA =>
@@ -256,6 +314,7 @@ package body Nodes_GC is
    procedure Mark_Unit (Unit : Iir)
    is
       List : Iir_List;
+      It : List_Iterator;
       El : Iir;
    begin
       pragma Assert (Get_Kind (Unit) = Iir_Kind_Design_Unit);
@@ -275,28 +334,41 @@ package body Nodes_GC is
       --  First mark dependences
       List := Get_Dependence_List (Unit);
       if List /= Null_Iir_List then
-         for I in Natural loop
-            El := Get_Nth_Element (List, I);
-            exit when El = Null_Iir;
-
+         It := List_Iterate (List);
+         while Is_Valid (It) loop
+            El := Get_Element (It);
             case Get_Kind (El) is
                when Iir_Kind_Design_Unit =>
                   Mark_Unit (El);
                when Iir_Kind_Entity_Aspect_Entity =>
                   declare
                      Ent : constant Iir := Get_Entity_Name (El);
-                     Arch : constant Iir := Get_Architecture (El);
+                     Arch_Name : constant Iir := Get_Architecture (El);
+                     Arch : Iir;
                   begin
                      Mark_Unit (Get_Design_Unit (Get_Named_Entity (Ent)));
-                     if Is_Valid (Arch)
-                       and then Is_Valid (Get_Named_Entity (Arch))
-                     then
-                        Mark_Unit (Get_Named_Entity (Arch));
+
+                     --  Architecture is optional.
+                     if Is_Valid (Arch_Name) then
+                        Arch := Get_Named_Entity (Arch_Name);
+                        --  There are many possibilities for the architecture.
+                        if Is_Valid (Arch) then
+                           case Get_Kind (Arch) is
+                              when Iir_Kind_Design_Unit =>
+                                 null;
+                              when Iir_Kind_Architecture_Body =>
+                                 Arch := Get_Design_Unit (Arch);
+                              when others =>
+                                 Error_Kind ("mark_unit", Arch);
+                           end case;
+                           Mark_Unit (Arch);
+                        end if;
                      end if;
                   end;
                when others =>
                   Error_Kind ("mark_unit", El);
             end case;
+            Next (It);
          end loop;
       end if;
 

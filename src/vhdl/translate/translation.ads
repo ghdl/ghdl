@@ -91,11 +91,10 @@ package Translation is
          when Foreign_Unknown =>
             null;
          when Foreign_Vhpidirect =>
-            --  Positions in name_table.name_buffer.
-            Lib_First : Natural;
-            Lib_Last : Natural;
-            Subprg_First : Natural;
-            Subprg_Last : Natural;
+            Lib_Name : String (1 .. 32);
+            Lib_Len : Natural;
+            Subprg_Name : String (1 .. 64);
+            Subprg_Len : Natural;
          when Foreign_Intrinsic =>
             null;
       end case;

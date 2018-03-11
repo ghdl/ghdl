@@ -160,6 +160,17 @@ package body Sem_Inst is
       end if;
    end Relocate;
 
+   procedure Create_Relocation (Inst : Iir; Orig : Iir)
+   is
+      use Files_Map;
+      Orig_File : Source_File_Entry;
+      Pos : Source_Ptr;
+   begin
+      Location_To_File_Pos (Get_Location (Orig), Orig_File, Pos);
+      Instance_File := Create_Instance_Source_File
+        (Orig_File, Get_Location (Inst), Inst);
+   end Create_Relocation;
+
    function Instantiate_Iir (N : Iir; Is_Ref : Boolean) return Iir;
 
    --  Instantiate a list.  Simply create a new list and instantiate nodes of
@@ -168,23 +179,45 @@ package body Sem_Inst is
                                  return Iir_List
    is
       Res : Iir_List;
+      It : List_Iterator;
       El : Iir;
    begin
       case L is
          when Null_Iir_List
-           | Iir_List_All
-           | Iir_List_Others =>
+           | Iir_List_All =>
             return L;
          when others =>
             Res := Create_Iir_List;
-            for I in Natural loop
-               El := Get_Nth_Element (L, I);
-               exit when El = Null_Iir;
+            It := List_Iterate (L);
+            while Is_Valid (It) loop
+               El := Get_Element (It);
                Append_Element (Res, Instantiate_Iir (El, Is_Ref));
+               Next (It);
             end loop;
             return Res;
       end case;
    end Instantiate_Iir_List;
+
+   function Instantiate_Iir_Flist (L : Iir_Flist; Is_Ref : Boolean)
+                                  return Iir_Flist
+   is
+      Res : Iir_Flist;
+      El : Iir;
+   begin
+      case L is
+         when Null_Iir_Flist
+           | Iir_Flist_All
+           | Iir_Flist_Others =>
+            return L;
+         when others =>
+            Res := Create_Iir_Flist (Get_Nbr_Elements (L));
+            for I in Flist_First .. Flist_Last (L) loop
+               El := Get_Nth_Element (L, I);
+               Set_Nth_Element (Res, I, Instantiate_Iir (El, Is_Ref));
+            end loop;
+            return Res;
+      end case;
+   end Instantiate_Iir_Flist;
 
    --  Instantiate a chain.  This is a special case to reduce stack depth.
    function Instantiate_Iir_Chain (N : Iir) return Iir
@@ -271,6 +304,27 @@ package body Sem_Inst is
                R := Instantiate_Iir_List (S, Ref);
                Set_Iir_List (Res, F, R);
             end;
+         when Type_Iir_Flist =>
+            declare
+               S : constant Iir_Flist := Get_Iir_Flist (N, F);
+               R : Iir_Flist;
+               Ref : Boolean;
+            begin
+               case Get_Field_Attribute (F) is
+                  when Attr_None =>
+                     Ref := False;
+                  when Attr_Of_Ref =>
+                     Ref := True;
+                  when Attr_Of_Maybe_Ref =>
+                     Ref := Get_Is_Ref (N);
+                  when others =>
+                     --  Ref is specially handled in Instantiate_Iir.
+                     --  Others cannot appear for lists.
+                     raise Internal_Error;
+               end case;
+               R := Instantiate_Iir_Flist (S, Ref);
+               Set_Iir_Flist (Res, F, R);
+            end;
          when Type_PSL_NFA
            | Type_PSL_Node =>
             --  TODO
@@ -279,6 +333,8 @@ package body Sem_Inst is
             Set_String8_Id (Res, F, Get_String8_Id (N, F));
          when Type_Source_Ptr =>
             Set_Source_Ptr (Res, F, Get_Source_Ptr (N, F));
+         when Type_Source_File_Entry =>
+            Set_Source_File_Entry (Res, F, Get_Source_File_Entry (N, F));
          when Type_Date_Type
            | Type_Date_State_Type
            | Type_Time_Stamp_Id
@@ -314,9 +370,6 @@ package body Sem_Inst is
               (Res, F, Get_Iir_Predefined_Functions (N, F));
          when Type_Iir_Direction =>
             Set_Iir_Direction (Res, F, Get_Iir_Direction (N, F));
-         when Type_Location_Type =>
-            Set_Location_Type
-              (Res, F, Relocate (Get_Location_Type (N, F)));
          when Type_Iir_Int32 =>
             Set_Iir_Int32 (Res, F, Get_Iir_Int32 (N, F));
          when Type_Int32 =>
@@ -390,14 +443,14 @@ package body Sem_Inst is
                   --  the instance of the referenced list.  This is a special
                   --  case because there is no origins for list.
                   declare
-                     List : Iir_List;
+                     List : Iir_Flist;
                   begin
                      case Kind is
                         when Iir_Kind_Array_Type_Definition =>
                            List := Get_Index_Subtype_Definition_List (Res);
                         when Iir_Kind_Array_Subtype_Definition =>
                            List := Get_Index_Constraint_List (Res);
-                           if List = Null_Iir_List then
+                           if List = Null_Iir_Flist then
                               List := Get_Index_Subtype_List
                                 (Get_Denoted_Type_Mark (Res));
                            end if;
@@ -522,6 +575,29 @@ package body Sem_Inst is
                   --  TODO
                   null;
 
+               when Field_Instance_Source_File =>
+                  Set_Instance_Source_File
+                    (Res, Files_Map.Create_Instance_Source_File
+                       (Get_Instance_Source_File (N),
+                        Get_Location (Res), Res));
+
+               when Field_Generic_Chain
+                 | Field_Declaration_Chain =>
+                  if Kind = Iir_Kind_Package_Instantiation_Declaration then
+                     declare
+                        Prev_Instance_File : constant Source_File_Entry :=
+                          Instance_File;
+                     begin
+                        --  Also relocate the instantiated declarations.
+                        Instance_File := Get_Instance_Source_File (Res);
+                        pragma Assert (Instance_File /= No_Source_File_Entry);
+                        Instantiate_Iir_Field (Res, N, F);
+                        Instance_File := Prev_Instance_File;
+                     end;
+                  else
+                     Instantiate_Iir_Field (Res, N, F);
+                  end if;
+
                when others =>
                   --  Common case.
                   Instantiate_Iir_Field (Res, N, F);
@@ -577,6 +653,11 @@ package body Sem_Inst is
             when Iir_Kind_Interface_Package_Declaration =>
                Set_Uninstantiated_Package_Decl
                  (Res, Get_Uninstantiated_Package_Decl (Inter));
+               Set_Generic_Chain
+                 (Res,
+                  Instantiate_Generic_Chain (Res, Get_Generic_Chain (Inter)));
+               Set_Declaration_Chain
+                 (Res, Instantiate_Iir_Chain (Get_Declaration_Chain (Inter)));
             when Iir_Kind_Interface_Type_Declaration =>
                Set_Type (Res, Get_Type (Inter));
             when Iir_Kinds_Interface_Subprogram_Declaration =>
@@ -601,6 +682,7 @@ package body Sem_Inst is
 
    procedure Set_Instance_On_Chain (Chain : Iir; Inst_Chain : Iir);
    procedure Set_Instance_On_Iir_List (N : Iir_List; Inst : Iir_List);
+   procedure Set_Instance_On_Iir_Flist (N : Iir_Flist; Inst : Iir_Flist);
 
    procedure Set_Instance_On_Iir (N : Iir; Inst : Iir) is
    begin
@@ -680,6 +762,28 @@ package body Sem_Inst is
                            raise Internal_Error;
                      end case;
                   end;
+               when Type_Iir_Flist =>
+                  declare
+                     S : constant Iir_Flist := Get_Iir_Flist (N, F);
+                     S_Inst : constant Iir_Flist := Get_Iir_Flist (Inst, F);
+                  begin
+                     case Get_Field_Attribute (F) is
+                        when Attr_None =>
+                           Set_Instance_On_Iir_Flist (S, S_Inst);
+                        when Attr_Of_Maybe_Ref =>
+                           if not Get_Is_Ref (N) then
+                              Set_Instance_On_Iir_Flist (S, S_Inst);
+                           end if;
+                        when Attr_Of_Ref
+                          | Attr_Ref
+                          | Attr_Forward_Ref =>
+                           null;
+                        when others =>
+                           --  Ref is specially handled in Instantiate_Iir.
+                           --  Others cannot appear for lists.
+                           raise Internal_Error;
+                     end case;
+                  end;
                when others =>
                   null;
             end case;
@@ -691,25 +795,51 @@ package body Sem_Inst is
    is
       El : Iir;
       El_Inst : Iir;
+      It, It_Inst : List_Iterator;
    begin
       case N is
          when Null_Iir_List
-           | Iir_List_All
-           | Iir_List_Others =>
+           | Iir_List_All =>
             pragma Assert (Inst = N);
             return;
          when others =>
-            for I in Natural loop
+            It := List_Iterate (N);
+            It_Inst := List_Iterate (Inst);
+            while Is_Valid (It) loop
+               pragma Assert (Is_Valid (It_Inst));
+               El := Get_Element (It);
+               El_Inst := Get_Element (It_Inst);
+
+               Set_Instance_On_Iir (El, El_Inst);
+
+               Next (It);
+               Next (It_Inst);
+            end loop;
+            pragma Assert (not Is_Valid (It_Inst));
+      end case;
+   end Set_Instance_On_Iir_List;
+
+   procedure Set_Instance_On_Iir_Flist (N : Iir_Flist; Inst : Iir_Flist)
+   is
+      El : Iir;
+      El_Inst : Iir;
+   begin
+      case N is
+         when Null_Iir_Flist
+           | Iir_Flist_All
+           | Iir_Flist_Others =>
+            pragma Assert (Inst = N);
+            return;
+         when others =>
+            pragma Assert (Get_Nbr_Elements (N) = Get_Nbr_Elements (Inst));
+            for I in Flist_First .. Flist_Last (N) loop
                El := Get_Nth_Element (N, I);
                El_Inst := Get_Nth_Element (Inst, I);
-               exit when El = Null_Iir;
-               pragma Assert (El_Inst /= Null_Iir);
 
                Set_Instance_On_Iir (El, El_Inst);
             end loop;
-            pragma Assert (El_Inst = Null_Iir);
       end case;
-   end Set_Instance_On_Iir_List;
+   end Set_Instance_On_Iir_Flist;
 
    procedure Set_Instance_On_Chain (Chain : Iir; Inst_Chain : Iir)
    is
@@ -830,17 +960,6 @@ package body Sem_Inst is
       return Res;
    end Copy_Tree;
 
-   procedure Create_Relocation (Inst : Iir; Orig : Iir)
-   is
-      use Files_Map;
-      Orig_File : Source_File_Entry;
-      Pos : Source_Ptr;
-   begin
-      Location_To_File_Pos (Get_Location (Orig), Orig_File, Pos);
-      Instance_File := Create_Instance_Source_File
-        (Orig_File, Get_Location (Inst), Inst);
-   end Create_Relocation;
-
    procedure Instantiate_Package_Declaration (Inst : Iir; Pkg : Iir)
    is
       Header : constant Iir := Get_Package_Header (Pkg);
@@ -848,6 +967,7 @@ package body Sem_Inst is
       Mark : constant Instance_Index_Type := Prev_Instance_Table.Last;
    begin
       Create_Relocation (Inst, Pkg);
+      Set_Instance_Source_File (Inst, Instance_File);
 
       --  Be sure Get_Origin_Priv can be called on existing nodes.
       Expand_Origin_Table;
@@ -910,7 +1030,7 @@ package body Sem_Inst is
                when Iir_Kind_Association_Element_Type =>
                   Inter := Get_Association_Interface (Inst_El, Inter_El);
                   Set_Instance (Get_Type (Get_Origin (Inter)),
-                                Get_Type (Get_Actual (Inst_El)));
+                                Get_Actual_Type (Inst_El));
                   --  Implicit operators.
                   declare
                      Imp_Inter : Iir;
@@ -1038,19 +1158,17 @@ package body Sem_Inst is
 
    procedure Substitute_On_Iir_List (L : Iir_List; E : Iir; Rep : Iir)
    is
-      El : Iir;
+      It : List_Iterator;
    begin
       case L is
          when Null_Iir_List
-           | Iir_List_All
-           | Iir_List_Others =>
+           | Iir_List_All =>
             return;
          when others =>
-            for I in Natural loop
-               El := Get_Nth_Element (L, I);
-               exit when El = Null_Iir;
-
-               Substitute_On_Iir (El, E, Rep);
+            It := List_Iterate (L);
+            while Is_Valid (It) loop
+               Substitute_On_Iir (Get_Element (It), E, Rep);
+               Next (It);
             end loop;
       end case;
    end Substitute_On_Iir_List;

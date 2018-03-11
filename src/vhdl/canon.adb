@@ -108,7 +108,6 @@ package body Canon is
      (Expr: Iir; Sensitivity_List: Iir_List; Is_Target: Boolean := False)
    is
       El : Iir;
-      List: Iir_List;
    begin
       if Get_Expr_Staticness (Expr) /= None then
          return;
@@ -162,12 +161,15 @@ package body Canon is
                Canon_Extract_Sensitivity (Get_Prefix (Expr),
                                           Sensitivity_List,
                                           Is_Target);
-               List := Get_Index_List (Expr);
-               for I in Natural loop
-                  El := Get_Nth_Element (List, I);
-                  exit when El = Null_Iir;
-                  Canon_Extract_Sensitivity (El, Sensitivity_List, False);
-               end loop;
+               declare
+                  Flist : constant Iir_Flist := Get_Index_List (Expr);
+                  El : Iir;
+               begin
+                  for I in Flist_First .. Flist_Last (Flist) loop
+                     El := Get_Nth_Element (Flist, I);
+                     Canon_Extract_Sensitivity (El, Sensitivity_List, False);
+                  end loop;
+               end;
             end if;
 
          when Iir_Kind_Function_Call =>
@@ -193,6 +195,10 @@ package body Canon is
               (Get_Expression (Expr), Sensitivity_List, False);
 
          when Iir_Kind_Allocator_By_Subtype =>
+            null;
+
+         when Iir_Kind_External_Variable_Name
+           | Iir_Kind_External_Constant_Name =>
             null;
 
          when Iir_Kinds_Monadic_Operator =>
@@ -222,7 +228,8 @@ package body Canon is
          when Iir_Kind_Interface_Signal_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Guard_Signal_Declaration
-           | Iir_Kinds_Signal_Attribute =>
+           | Iir_Kinds_Signal_Attribute
+           | Iir_Kind_External_Signal_Name =>
             --  LRM 8.1
             --  A simple name that denotes a signal, add the longuest static
             --  prefix of the name to the sensitivity set;
@@ -238,12 +245,12 @@ package body Canon is
          when Iir_Kind_Psl_Endpoint_Declaration =>
             declare
                List : constant Iir_List := Get_PSL_Clock_Sensitivity (Expr);
-               El : Iir;
+               It : List_Iterator;
             begin
-               for I in Natural loop
-                  El := Get_Nth_Element (List, I);
-                  exit when El = Null_Iir;
-                  Add_Element (Sensitivity_List, El);
+               It := List_Iterate (List);
+               while Is_Valid (It) loop
+                  Add_Element (Sensitivity_List, Get_Element (It));
+                  Next (It);
                end loop;
             end;
 
@@ -332,6 +339,18 @@ package body Canon is
       end loop;
    end Canon_Extract_Sensitivity_Procedure_Call;
 
+   procedure Canon_Extract_Sensitivity_Waveform (Chain : Iir; List : Iir_List)
+   is
+      We: Iir_Waveform_Element;
+   begin
+      We := Chain;
+      while We /= Null_Iir loop
+         Canon_Extract_Sensitivity (Get_We_Value (We), List);
+         Canon_Extract_Sensitivity_If_Not_Null (Get_Time (We), List);
+         We := Get_Chain (We);
+      end loop;
+   end Canon_Extract_Sensitivity_Waveform;
+
    procedure Canon_Extract_Sequential_Statement_Chain_Sensitivity
      (Chain : Iir; List : Iir_List)
    is
@@ -348,14 +367,14 @@ package body Canon is
                --    resulting sets.
                Canon_Extract_Sensitivity
                  (Get_Assertion_Condition (Stmt), List);
-               Canon_Extract_Sensitivity
+               Canon_Extract_Sensitivity_If_Not_Null
                  (Get_Severity_Expression (Stmt), List);
-               Canon_Extract_Sensitivity
+               Canon_Extract_Sensitivity_If_Not_Null
                  (Get_Report_Expression (Stmt), List);
             when Iir_Kind_Report_Statement =>
                --  LRM08 11.3
                --  See assertion_statement case.
-               Canon_Extract_Sensitivity
+               Canon_Extract_Sensitivity_If_Not_Null
                  (Get_Severity_Expression (Stmt), List);
                Canon_Extract_Sensitivity
                  (Get_Report_Expression (Stmt), List);
@@ -363,7 +382,7 @@ package body Canon is
               | Iir_Kind_Exit_Statement =>
                --  LRM08 11.3
                --  See assertion_statement case.
-               Canon_Extract_Sensitivity
+               Canon_Extract_Sensitivity_If_Not_Null
                  (Get_Condition (Stmt), List);
             when Iir_Kind_Return_Statement =>
                --  LRM08 11.3
@@ -384,13 +403,22 @@ package body Canon is
                Canon_Extract_Sensitivity (Get_Target (Stmt), List, True);
                Canon_Extract_Sensitivity_If_Not_Null
                  (Get_Reject_Time_Expression (Stmt), List);
+               Canon_Extract_Sensitivity_Waveform
+                 (Get_Waveform_Chain (Stmt), List);
+            when Iir_Kind_Conditional_Signal_Assignment_Statement =>
+               Canon_Extract_Sensitivity (Get_Target (Stmt), List, True);
+               Canon_Extract_Sensitivity_If_Not_Null
+                 (Get_Reject_Time_Expression (Stmt), List);
                declare
-                  We: Iir_Waveform_Element;
+                  Cwe : Iir;
                begin
-                  We := Get_Waveform_Chain (Stmt);
-                  while We /= Null_Iir loop
-                     Canon_Extract_Sensitivity (Get_We_Value (We), List);
-                     We := Get_Chain (We);
+                  Cwe := Get_Conditional_Waveform_Chain (Stmt);
+                  while Cwe /= Null_Iir loop
+                     Canon_Extract_Sensitivity_If_Not_Null
+                       (Get_Condition (Cwe), List);
+                     Canon_Extract_Sensitivity_Waveform
+                       (Get_Waveform_Chain (Cwe), List);
+                     Cwe := Get_Chain (Cwe);
                   end loop;
                end;
             when Iir_Kind_If_Statement =>
@@ -481,6 +509,7 @@ package body Canon is
      (Callees_List : Iir_List; Sensitivity_List : Iir_List)
    is
       Callee : Iir;
+      It : List_Iterator;
       Bod : Iir;
    begin
       --  LRM08 11.3
@@ -493,9 +522,9 @@ package body Canon is
       if Callees_List = Null_Iir_List then
          return;
       end if;
-      for I in Natural loop
-         Callee := Get_Nth_Element (Callees_List, I);
-         exit when Callee = Null_Iir;
+      It := List_Iterate (Callees_List);
+      while Is_Valid (It) loop
+         Callee := Get_Element (It);
          if not Get_Seen_Flag (Callee) then
             Set_Seen_Flag (Callee, True);
             case Get_All_Sensitized_State (Callee) is
@@ -518,12 +547,12 @@ package body Canon is
                   raise Internal_Error;
             end case;
          end if;
+         Next (It);
       end loop;
    end Canon_Extract_Sensitivity_From_Callees;
 
    function Canon_Extract_Process_Sensitivity
-     (Proc : Iir_Sensitized_Process_Statement)
-     return Iir_List
+     (Proc : Iir_Sensitized_Process_Statement) return Iir_List
    is
       Res : Iir_List;
    begin
@@ -622,10 +651,7 @@ package body Canon is
    end Canon_Aggregate_Expression;
 
    -- canon on expressions, mainly for function calls.
-   procedure Canon_Expression (Expr: Iir)
-   is
-      El : Iir;
-      List: Iir_List;
+   procedure Canon_Expression (Expr: Iir) is
    begin
       if Expr = Null_Iir then
          return;
@@ -648,12 +674,15 @@ package body Canon is
 
          when Iir_Kind_Indexed_Name =>
             Canon_Expression (Get_Prefix (Expr));
-            List := Get_Index_List (Expr);
-            for I in Natural loop
-               El := Get_Nth_Element (List, I);
-               exit when El = Null_Iir;
-               Canon_Expression (El);
-            end loop;
+            declare
+               Flist : constant Iir_Flist := Get_Index_List (Expr);
+               El : Iir;
+            begin
+               for I in Flist_First .. Flist_Last (Flist) loop
+                  El := Get_Nth_Element (Flist, I);
+                  Canon_Expression (El);
+               end loop;
+            end;
 
          when Iir_Kind_Selected_Element =>
             Canon_Expression (Get_Prefix (Expr));
@@ -759,7 +788,8 @@ package body Canon is
            | Iir_Kind_Interface_Variable_Declaration
            | Iir_Kind_File_Declaration
            | Iir_Kind_Interface_File_Declaration
-           | Iir_Kind_Object_Alias_Declaration =>
+           | Iir_Kind_Object_Alias_Declaration
+           | Iir_Kind_Psl_Endpoint_Declaration =>
             null;
 
          when Iir_Kind_Enumeration_Literal
@@ -838,6 +868,11 @@ package body Canon is
    is
       We : Iir_Waveform_Element;
    begin
+      if Get_Kind (Waveform) = Iir_Kind_Unaffected_Waveform then
+         pragma Assert (Get_Chain (Waveform) = Null_Iir);
+         return;
+      end if;
+
       We := Waveform;
       while We /= Null_Iir loop
          Canon_Expression (Get_We_Value (We));
@@ -1304,9 +1339,8 @@ package body Canon is
          Set_Sequential_Statement_Chain (Proc, If_Stmt);
          Location_Copy (If_Stmt, Stmt);
          Canon_Extract_Sensitivity (Get_Guard (Stmt), Sensitivity_List, False);
-         Set_Condition
-           (If_Stmt, Build_Reference_Decl (Get_Guard (Stmt), If_Stmt));
-         Set_Guard (Stmt, Null_Iir);
+         Set_Condition (If_Stmt, Get_Guard (Stmt));
+         Set_Is_Ref (If_Stmt, True);
          Chain := If_Stmt;
 
          declare
@@ -1325,7 +1359,8 @@ package body Canon is
                  Create_Iir (Iir_Kind_Simple_Signal_Assignment_Statement);
                Location_Copy (Dis_Stmt, Stmt);
                Set_Parent (Dis_Stmt, If_Stmt);
-               Set_Target (Dis_Stmt, Build_Reference_Decl (Target, Dis_Stmt));
+               Set_Target (Dis_Stmt, Target);
+               Set_Is_Ref (Dis_Stmt, True);
                Set_Sequential_Statement_Chain (Else_Clause, Dis_Stmt);
                --  XX
                Set_Waveform_Chain (Dis_Stmt, Null_Iir);
@@ -1424,7 +1459,6 @@ package body Canon is
                                   Is_First : Boolean)
                                  return Iir
    is
-      Target : Iir;
       Stmt : Iir;
       Sensitivity_List : Iir_List;
    begin
@@ -1448,11 +1482,10 @@ package body Canon is
          --    target <= [ delay_mechanism ] waveform_element1,
          --       waveform_element2, ..., waveform_elementN;
          Stmt := Create_Iir (Iir_Kind_Simple_Signal_Assignment_Statement);
-         Target := Get_Target (Orig_Stmt);
+         Set_Target (Stmt, Get_Target (Orig_Stmt));
          if not Is_First then
-            Target := Build_Reference_Decl (Target, Orig_Stmt);
+            Set_Is_Ref (Stmt, True);
          end if;
-         Set_Target (Stmt, Target);
          if Proc /= Null_Iir then
             Sensitivity_List := Get_Sensitivity_List (Proc);
             Extract_Waveform_Sensitivity (Waveform_Chain, Sensitivity_List);
@@ -1517,7 +1550,7 @@ package body Canon is
          --  Canon waveform.
          Wf := Get_Waveform_Chain (Cond_Wf);
          Wf := Canon_Wave_Transform
-           (Conc_Stmt, Wf, Proc, Cond_Wf = Cond_Wf_Chain);
+           (Conc_Stmt, Wf, Proc, False); -- Cond_Wf = Cond_Wf_Chain);
 
          if Expr = Null_Iir and Cond_Wf = Cond_Wf_Chain then
             --  A conditional assignment that is in fact a simple one.  Usual
@@ -1558,7 +1591,6 @@ package body Canon is
          Cond_Wf := Get_Chain (Cond_Wf);
       end loop;
 
-      Set_Target (Conc_Stmt, Null_Iir);
       return Stmt;
    end Canon_Conditional_Signal_Assignment;
 
@@ -2196,7 +2228,7 @@ package body Canon is
 
       Bind : Iir;
       Comp : Iir;
-      Instances : Iir_List;
+      Instances : Iir_Flist;
       Entity_Aspect : Iir;
       Block : Iir_Block_Configuration;
       Map_Chain : Iir;
@@ -2209,9 +2241,9 @@ package body Canon is
          Instances := Get_Instantiation_List (Cfg);
          --  Designator_all and designator_others must have been replaced
          --  by a list during canon.
-         pragma Assert (Instances not in Iir_Lists_All_Others);
+         pragma Assert (Instances not in Iir_Flists_All_Others);
          Bind := Get_Default_Binding_Indication
-           (Get_Named_Entity (Get_First_Element (Instances)));
+           (Get_Named_Entity (Get_Nth_Element (Instances, 0)));
          if Bind = Null_Iir then
             --  Component is not bound.
             return;
@@ -2286,14 +2318,16 @@ package body Canon is
       Comp_Conf : Iir_Component_Configuration;
       Parent : Iir)
    is
+      --  Merge associations from FIRST_CHAIN and SEC_CHAIN.
       function Merge_Association_Chain
-        (Inter_Chain : Iir; First_Chain : Iir; Sec_Chain : Iir)
-        return Iir
+        (Inter_Chain : Iir; First_Chain : Iir; Sec_Chain : Iir) return Iir
       is
          --  Result (chain).
          First, Last : Iir;
 
-         --  Copy an association and append new elements to FIRST/LAST.
+         --  Copy an association and append new elements to FIRST/LAST.  In
+         --  case of individual associations, all associations for the
+         --  interface are copied.
          procedure Copy_Association
            (Assoc : in out Iir; Inter : in out Iir; Copy_Inter : Iir)
          is
@@ -2318,8 +2352,10 @@ package body Canon is
                   else
                      Formal := Sem_Inst.Copy_Tree (Formal);
                   end if;
+                  Set_Formal (El, Formal);
+               else
+                  Formal := Inter;
                end if;
-               Set_Formal (El, Formal);
                Set_Whole_Association_Flag
                  (El, Get_Whole_Association_Flag (Assoc));
 
@@ -2328,13 +2364,15 @@ package body Canon is
                      null;
                   when Iir_Kind_Association_Element_By_Expression =>
                      Set_Actual (El, Sem_Inst.Copy_Tree (Get_Actual (Assoc)));
-                     Set_In_Conversion
-                       (El, Sem_Inst.Copy_Tree (Get_In_Conversion (Assoc)));
-                     Set_Out_Conversion
-                       (El, Sem_Inst.Copy_Tree (Get_Out_Conversion (Assoc)));
+                     Set_Actual_Conversion
+                       (El,
+                        Sem_Inst.Copy_Tree (Get_Actual_Conversion (Assoc)));
+                     Set_Formal_Conversion
+                       (El,
+                        Sem_Inst.Copy_Tree (Get_Formal_Conversion (Assoc)));
                      Set_Collapse_Signal_Flag
                        (Assoc,
-                        Sem.Can_Collapse_Signals (Assoc, Get_Formal (Assoc)));
+                        Sem.Can_Collapse_Signals (Assoc, Formal));
                   when Iir_Kind_Association_Element_By_Individual =>
                      Set_Actual_Type (El, Get_Actual_Type (Assoc));
                   when others =>
@@ -2374,17 +2412,19 @@ package body Canon is
             --  Consistency check.
             pragma Assert (Get_Association_Interface (F_El, F_Inter) = Inter);
 
-            --  Find the associated in the second chain.
+            --  Find the association in the second chain.
             S_El := Find_First_Association_For_Interface
               (Sec_Chain, Inter_Chain, Inter);
 
             if S_El /= Null_Iir
               and then Get_Kind (S_El) /= Iir_Kind_Association_Element_Open
             then
+               --  Exists and not open: use it.
                S_Inter := Inter;
                Copy_Association (S_El, S_Inter, Inter);
                Advance (F_El, F_Inter, Inter);
             else
+               --  Does not exist: use the one from first chain.
                Copy_Association (F_El, F_Inter, Inter);
             end if;
             Inter := Get_Chain (Inter);
@@ -2401,7 +2441,7 @@ package body Canon is
       Res_Binding : Iir_Binding_Indication;
       Entity : Iir;
       Instance_List : Iir_List;
-      Conf_Instance_List : Iir_List;
+      Conf_Instance_List : Iir_Flist;
       Instance : Iir;
       Instance_Name : Iir;
       N_Nbr : Natural;
@@ -2451,10 +2491,9 @@ package body Canon is
       --   replace component_configuration of them
       --   remove them in the instance list of COMP_CONF
       Instance_List := Create_Iir_List;
-      Set_Instantiation_List (Res, Instance_List);
       Conf_Instance_List := Get_Instantiation_List (Comp_Conf);
       N_Nbr := 0;
-      for I in 0 .. Get_Nbr_Elements (Conf_Instance_List) - 1 loop
+      for I in Flist_First .. Flist_Last (Conf_Instance_List) loop
          Instance_Name := Get_Nth_Element (Conf_Instance_List, I);
          Instance := Get_Named_Entity (Instance_Name);
          if Get_Component_Configuration (Instance) = Conf_Spec then
@@ -2462,11 +2501,13 @@ package body Canon is
             Set_Component_Configuration (Instance, Res);
             Append_Element (Instance_List, Instance_Name);
          else
-            Replace_Nth_Element (Conf_Instance_List, N_Nbr, Instance_Name);
+            Set_Nth_Element (Conf_Instance_List, N_Nbr, Instance_Name);
             N_Nbr := N_Nbr + 1;
          end if;
       end loop;
-      Set_Nbr_Elements (Conf_Instance_List, N_Nbr);
+      Set_Instantiation_List (Comp_Conf,
+                              Truncate_Flist (Conf_Instance_List, N_Nbr));
+      Set_Instantiation_List (Res, List_To_Flist (Instance_List));
 
       --  Insert RES.
       Set_Chain (Res, Get_Chain (Comp_Conf));
@@ -2474,7 +2515,7 @@ package body Canon is
    end Canon_Incremental_Binding;
 
    procedure Canon_Component_Specification_All_Others
-     (Conf : Iir; Parent : Iir; Spec : Iir_List; List : Iir_List; Comp : Iir)
+     (Conf : Iir; Parent : Iir; Spec : Iir_Flist; List : Iir_List; Comp : Iir)
    is
       El : Iir;
       Comp_Conf : Iir;
@@ -2498,14 +2539,14 @@ package body Canon is
                --  The component is already configured.
                --  Handle incremental configuration.
                if Get_Kind (Comp_Conf) = Iir_Kind_Configuration_Specification
-                 and then Spec = Iir_List_All
+                 and then Spec = Iir_Flist_All
                then
                   --  FIXME: handle incremental configuration.
                   raise Internal_Error;
                end if;
                --  Several component configuration for an instance.
                --  Must have been caught by sem.
-               pragma Assert (Spec = Iir_List_Others);
+               pragma Assert (Spec = Iir_Flist_Others);
             end if;
          end if;
          El := Get_Chain (El);
@@ -2513,15 +2554,14 @@ package body Canon is
    end Canon_Component_Specification_All_Others;
 
    procedure Canon_Component_Specification_List
-     (Conf : Iir; Parent : Iir; Spec : Iir_List)
+     (Conf : Iir; Parent : Iir; Spec : Iir_Flist)
    is
       El : Iir;
       Comp_Conf : Iir;
    begin
       --  Already has a designator list.
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (Spec) loop
          El := Get_Nth_Element (Spec, I);
-         exit when El = Null_Iir;
          El := Get_Named_Entity (El);
          Comp_Conf := Get_Component_Configuration (El);
          if Comp_Conf /= Null_Iir and then Comp_Conf /= Conf then
@@ -2539,15 +2579,15 @@ package body Canon is
    --  PARENT is the parent for the chain of concurrent statements.
    procedure Canon_Component_Specification (Conf : Iir; Parent : Iir)
    is
-      Spec : constant Iir_List := Get_Instantiation_List (Conf);
-      List : Iir_Designator_List;
+      Spec : constant Iir_Flist := Get_Instantiation_List (Conf);
+      List : Iir_List;
    begin
-      if Spec in Iir_Lists_All_Others then
+      if Spec in Iir_Flists_All_Others then
          List := Create_Iir_List;
          Canon_Component_Specification_All_Others
            (Conf, Parent, Spec, List,
             Get_Named_Entity (Get_Component_Name (Conf)));
-         Set_Instantiation_List (Conf, List);
+         Set_Instantiation_List (Conf, List_To_Flist (List));
       else
          --  Has Already a designator list.
          Canon_Component_Specification_List (Conf, Parent, Spec);
@@ -2558,10 +2598,10 @@ package body Canon is
    procedure Canon_Disconnection_Specification
      (Dis : Iir_Disconnection_Specification; Decl_Parent : Iir)
    is
-      Signal_List : Iir_List;
+      Signal_List : Iir_Flist;
       Force : Boolean;
       El : Iir;
-      N_List : Iir_Designator_List;
+      N_List : Iir_List;
       Dis_Type : Iir;
    begin
       if Canon_Flag_Expressions then
@@ -2570,9 +2610,9 @@ package body Canon is
 
       if Canon_Flag_Specification_Lists then
          Signal_List := Get_Signal_List (Dis);
-         if Signal_List = Iir_List_All then
+         if Signal_List = Iir_Flist_All then
             Force := True;
-         elsif Signal_List = Iir_List_Others then
+         elsif Signal_List = Iir_Flist_Others then
             Force := False;
          else
             --  User list: nothing to do.
@@ -2581,7 +2621,6 @@ package body Canon is
 
          Dis_Type := Get_Type (Get_Type_Mark (Dis));
          N_List := Create_Iir_List;
-         Set_Signal_List (Dis, N_List);
          Set_Is_Ref (Dis, True);
          El := Get_Declaration_Chain (Decl_Parent);
          while El /= Null_Iir loop
@@ -2600,6 +2639,7 @@ package body Canon is
             end if;
             El := Get_Chain (El);
          end loop;
+         Set_Signal_List (Dis, List_To_Flist (N_List));
       end if;
    end Canon_Disconnection_Specification;
 
@@ -2608,12 +2648,11 @@ package body Canon is
       case Get_Kind (Def) is
          when Iir_Kind_Array_Subtype_Definition =>
             declare
-               Indexes : constant Iir_List := Get_Index_Subtype_List (Def);
+               Indexes : constant Iir_Flist := Get_Index_Subtype_List (Def);
                Index : Iir;
             begin
-               for I in Natural loop
+               for I in Flist_First .. Flist_Last (Indexes) loop
                   Index := Get_Index_Type (Indexes, I);
-                  exit when Index = Null_Iir;
                   Canon_Subtype_Indication_If_Anonymous (Index);
                end loop;
             end;
@@ -2914,7 +2953,7 @@ package body Canon is
                   Comp_Conf : Iir;
                   Res : Iir_Component_Configuration;
                   Designator_List : Iir_List;
-                  Inst_List : Iir_List;
+                  Inst_List : Iir_Flist;
                   Inst : Iir;
                   Inst_Name : Iir;
                begin
@@ -2933,7 +2972,8 @@ package body Canon is
                         Designator_List := Create_Iir_List;
                         Append_Element
                           (Designator_List, Build_Simple_Name (El, El));
-                        Set_Instantiation_List (Res, Designator_List);
+                        Set_Instantiation_List
+                          (Res, List_To_Flist (Designator_List));
                         Append (Last_Item, Conf, Res);
                      end if;
                   elsif Get_Kind (Comp_Conf)
@@ -2951,7 +2991,7 @@ package body Canon is
                      --  statements parts (vhdl-87 generate issue).
                      Inst_List := Get_Instantiation_List (Comp_Conf);
                      Designator_List := Create_Iir_List;
-                     for I in 0 .. Get_Nbr_Elements (Inst_List) - 1 loop
+                     for I in Flist_First .. Flist_Last (Inst_List) loop
                         Inst_Name := Get_Nth_Element (Inst_List, I);
                         Inst := Get_Named_Entity (Inst_Name);
                         if Get_Component_Configuration (Inst) = Comp_Conf
@@ -2962,7 +3002,8 @@ package body Canon is
                                            Build_Reference_Name (Inst_Name));
                         end if;
                      end loop;
-                     Set_Instantiation_List (Res, Designator_List);
+                     Set_Instantiation_List
+                       (Res, List_To_Flist (Designator_List));
                      Set_Binding_Indication
                        (Res, Get_Binding_Indication (Comp_Conf));
                      Set_Is_Ref (Res, True);
@@ -3030,7 +3071,7 @@ package body Canon is
                         Set_Parent (Res, Conf);
                         Blk_Spec := Create_Iir (Iir_Kind_Indexed_Name);
                         Location_Copy (Blk_Spec, Res);
-                        Set_Index_List (Blk_Spec, Iir_List_Others);
+                        Set_Index_List (Blk_Spec, Iir_Flist_Others);
                         Set_Base_Name (Blk_Spec, El);
                         Set_Prefix (Blk_Spec, Build_Simple_Name (Bod, Res));
                         Set_Block_Specification (Res, Blk_Spec);

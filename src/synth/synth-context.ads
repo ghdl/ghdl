@@ -20,7 +20,7 @@
 
 with Synth.Environment; use Synth.Environment;
 with Synth.Values; use Synth.Values;
-with Elaboration; use Elaboration;
+with Simul.Environments; use Simul.Environments;
 with Netlists; use Netlists;
 with Netlists.Builders;
 with Iirs; use Iirs;

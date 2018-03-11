@@ -142,13 +142,13 @@ package body Sem_Scopes is
    function Get_Interpretation_Raw (Id : Name_Id)
                                    return Name_Interpretation_Type is
    begin
-      return Name_Interpretation_Type (Name_Table.Get_Info (Id));
+      return Name_Interpretation_Type (Name_Table.Get_Name_Info (Id));
    end Get_Interpretation_Raw;
 
    procedure Set_Interpretation
      (Id : Name_Id; Inter : Name_Interpretation_Type) is
    begin
-      Name_Table.Set_Info (Id, Int32 (Inter));
+      Name_Table.Set_Name_Info (Id, Int32 (Inter));
    end Set_Interpretation;
 
    function Get_Interpretation_From_Raw (Inter : Name_Interpretation_Type)
@@ -988,7 +988,7 @@ package body Sem_Scopes is
          when Iir_Kind_Type_Declaration =>
             declare
                Def : constant Iir := Get_Type_Definition (Decl);
-               List : Iir_List;
+               List : Iir_Flist;
                El : Iir;
             begin
                -- Handle incomplete type declaration.
@@ -1000,9 +1000,8 @@ package body Sem_Scopes is
 
                if Get_Kind (Def) = Iir_Kind_Enumeration_Type_Definition then
                   List := Get_Enumeration_Literal_List (Def);
-                  for I in Natural loop
+                  for I in Flist_First .. Flist_Last (List) loop
                      El := Get_Nth_Element (List, I);
-                     exit when El = Null_Iir;
                      Handle_Decl (El, Arg);
                   end loop;
                end if;
@@ -1137,15 +1136,17 @@ package body Sem_Scopes is
 
    procedure Iterator_Decl_List (Decl_List : Iir_List; Arg : Arg_Type)
    is
-      Decl: Iir;
+      Decl : Iir;
+      It : List_Iterator;
    begin
       if Decl_List = Null_Iir_List then
          return;
       end if;
-      for I in Natural loop
-         Decl := Get_Nth_Element (Decl_List, I);
-         exit when Decl = Null_Iir;
+      It := List_Iterate (Decl_List);
+      while Is_Valid (It) loop
+         Decl := Get_Element (It);
          Handle_Decl (Decl, Arg);
+         Next (It);
       end loop;
    end Iterator_Decl_List;
 
@@ -1171,11 +1172,19 @@ package body Sem_Scopes is
 
    procedure Add_Declarations_From_Interface_Chain (Chain : Iir)
    is
-      El: Iir;
+      El : Iir;
+      Id : Name_Id;
    begin
       El := Chain;
       while El /= Null_Iir loop
-         Add_Name (El, Get_Identifier (El), False);
+         Id := Get_Identifier (El);
+
+         --  The chain may be from an implicitely declared subprograms, with
+         --  anonymous identifiers.  In that case, all interfaces are
+         --  anonymous and there is no need to iterate.
+         exit when Id = Null_Identifier;
+
+         Add_Name (El, Id, False);
          El := Get_Chain (El);
       end loop;
    end Add_Declarations_From_Interface_Chain;
@@ -1319,13 +1328,12 @@ package body Sem_Scopes is
             --    an enumeration type, the enumeration literals of the base
             --    type
             declare
-               List : constant Iir_List :=
+               List : constant Iir_Flist :=
                  Get_Enumeration_Literal_List (Base_Type);
                El : Iir;
             begin
-               for I in Natural loop
+               for I in Flist_First .. Flist_Last (List) loop
                   El := Get_Nth_Element (List, I);
-                  exit when El = Null_Iir;
                   Potentially_Add_Name (El);
                end loop;
             end;
@@ -1499,8 +1507,10 @@ package body Sem_Scopes is
          if Is_Potentially_Visible (Inter) then
             Put (" (use)");
          end if;
-         Put (": ");
+         Put (":");
          Decl := Get_Declaration (Inter);
+         Put (Iir'Image (Decl));
+         Put (':');
          Put (Iir_Kind'Image (Get_Kind (Decl)));
          Put_Line (", loc: " & Image (Get_Location (Decl)));
          if Get_Kind (Decl) in Iir_Kinds_Subprogram_Declaration then

@@ -43,6 +43,19 @@ package Grt.Processes is
    --  < 0 in case of failure or stop request.
    function Simulation return Integer;
 
+   --  Broken down version of Simulation.
+   function Simulation_Init return Integer;
+   function Simulation_Cycle return Integer;
+   procedure Simulation_Finish;
+
+   --  True if simulation has reached a user timeout (--stop-time or
+   --  --stop-delta).  Emit an info message as a side effect.
+   function Has_Simulation_Timeout return Boolean;
+
+   --  Updated by Initialization_Phase and Simulation_Cycle to the time of the
+   --  next cycle.  Unchanged in case of delta-cycle.
+   Next_Time : Std_Time;
+
    --  Number of delta cycles.
    Nbr_Delta_Cycles : Integer;
    --  Number of non-delta cycles.
@@ -124,7 +137,9 @@ package Grt.Processes is
    procedure Ghdl_Process_Wait_Exit;
 
    --  Wait for a timeout (without sensitivity): wait for X;
-   procedure Ghdl_Process_Wait_Timeout (Time : Std_Time);
+   procedure Ghdl_Process_Wait_Timeout (Time : Std_Time;
+                                        Filename : Ghdl_C_String;
+                                        Line : Ghdl_I32);
 
    --  Full wait statement:
    --  1. Call Ghdl_Process_Wait_Set_Timeout (if there is a timeout)
@@ -135,7 +150,9 @@ package Grt.Processes is
    --  4. Call Ghdl_Process_Wait_Close
 
    --  Add a timeout for a wait.
-   procedure Ghdl_Process_Wait_Set_Timeout (Time : Std_Time);
+   procedure Ghdl_Process_Wait_Set_Timeout (Time : Std_Time;
+                                            Filename : Ghdl_C_String;
+                                            Line : Ghdl_I32);
    --  Add a sensitivity for a wait.
    procedure Ghdl_Process_Wait_Add_Sensitivity (Sig : Ghdl_Signal_Ptr);
    --  Wait until timeout or sensitivity.

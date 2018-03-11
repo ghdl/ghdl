@@ -575,7 +575,7 @@ package body Errorout is
         and then (File /= No_Source_File_Entry and Line /= 0)
       then
          Put_Line (Extract_Expanded_Line (File, Line));
-         Put_Line ((1 .. Col => ' ') & '^');
+         Put_Line ((1 .. Col - 1 => ' ') & '^');
       end if;
    end Report_Msg;
 
@@ -763,6 +763,14 @@ package body Errorout is
       Error_Msg_Elab (Loc, Msg, Earg_Arr'(1 => Arg1));
    end Error_Msg_Elab;
 
+   procedure Error_Msg_Elab_Relaxed (Loc : Iir;
+                                     Id : Msgid_Warnings;
+                                     Msg : String;
+                                     Args : Earg_Arr := No_Eargs) is
+   begin
+      Error_Msg_Relaxed (Elaboration, Id, Msg, Loc, Args);
+   end Error_Msg_Elab_Relaxed;
+
    -- Disp a bug message.
    procedure Error_Internal (Expr: in Iir; Msg: String := "")
    is
@@ -932,15 +940,9 @@ package body Errorout is
          when Iir_Kind_Procedure_Call =>
             return "procedure call";
          when Iir_Kind_Selected_Name =>
-            Name_Table.Image (Get_Identifier (Node));
-            return '''
-              & Name_Table.Nam_Buffer (1 .. Name_Table.Nam_Length)
-              & ''';
+            return ''' & Name_Table.Image (Get_Identifier (Node)) & ''';
          when Iir_Kind_Simple_Name =>
-            Name_Table.Image (Get_Identifier (Node));
-            return '''
-              & Name_Table.Nam_Buffer (1 .. Name_Table.Nam_Length)
-              & ''';
+            return ''' & Name_Table.Image (Get_Identifier (Node)) & ''';
          when Iir_Kind_Reference_Name =>
             --  Shouldn't happen.
             return "name";
@@ -1402,8 +1404,7 @@ package body Errorout is
                return;
             end if;
          end if;
-         Image (Get_Identifier (Decl));
-         Append (Res, Nam_Buffer (1 .. Nam_Length));
+         Append (Res, Image (Get_Identifier (Decl)));
       end Append_Type;
 
    begin
@@ -1425,17 +1426,16 @@ package body Errorout is
 
          Id : constant Name_Id := Get_Identifier (Subprg);
       begin
-         Image (Id);
          case Id is
             when Std_Names.Name_Id_Operators
               | Std_Names.Name_Word_Operators
               | Std_Names.Name_Xnor
               | Std_Names.Name_Shift_Operators =>
                Append (Res, """");
-               Append (Res, Nam_Buffer (1 .. Nam_Length));
+               Append (Res, Image (Id));
                Append (Res, """");
             when others =>
-               Append (Res, Nam_Buffer (1 .. Nam_Length));
+               Append (Res, Image (Id));
          end case;
       end;
 
@@ -1502,27 +1502,29 @@ package body Errorout is
       elsif Get_Kind (A_Type) = Iir_Kind_Overload_List then
          declare
             use Ada.Strings.Unbounded;
+            List : constant Iir_List := Get_Overload_List (A_Type);
+            Nbr : constant Natural := Get_Nbr_Elements (List);
             Res : Unbounded_String;
-            List : Iir_List;
             El : Iir;
-            Nbr : Natural;
+            It : List_Iterator;
          begin
-            List := Get_Overload_List (A_Type);
-            Nbr := Get_Nbr_Elements (List);
             if Nbr = 0 then
                return "unknown";
             elsif Nbr = 1 then
                return Disp_Type_Name (Get_First_Element (List));
             else
                Append (Res, "one of ");
+               It := List_Iterate (List);
                for I in 0 .. Nbr - 1 loop
-                  El := Get_Nth_Element (List, I);
+                  pragma Assert (Is_Valid (It));
+                  El := Get_Element (It);
                   Append (Res, Disp_Type_Name (El));
                   if I < Nbr - 2 then
                      Append (Res, ", ");
                   elsif I = Nbr - 2 then
                      Append (Res, " or ");
                   end if;
+                  Next (It);
                end loop;
                return To_String (Res);
             end if;
@@ -1551,9 +1553,12 @@ package body Errorout is
          "(" & Disp_Node (Callee) & " is defined here)", Callee);
    end Error_Pure;
 
-   procedure Error_Not_Match (Expr: Iir; A_Type: Iir)
-   is
+   procedure Error_Not_Match (Expr: Iir; A_Type: Iir) is
    begin
+      if Get_Kind (A_Type) = Iir_Kind_Error then
+         --  Cascade error message.
+         return;
+      end if;
       Error_Msg_Sem ("can't match " & Disp_Node (Expr) & " with type "
                      & Disp_Node (A_Type), Expr);
    end Error_Not_Match;

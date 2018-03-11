@@ -187,6 +187,8 @@ package body Trans is
       Identifier_Buffer : String (1 .. 512);
       Identifier_Len    : Natural := 0;
       Identifier_Start  : Natural := 1;
+
+      --  Per scope unique id.
       Identifier_Local  : Local_Identifier_Type := 0;
 
 
@@ -204,6 +206,7 @@ package body Trans is
          Old : Inst_Build_Acc;
       begin
          Old := Inst_Build;
+         pragma Assert (Old.Prev_Id_Start <= Identifier_Start);
          Identifier_Start := Old.Prev_Id_Start;
          Inst_Build := Old.Prev;
          Unchecked_Deallocation (Old);
@@ -241,24 +244,47 @@ package body Trans is
          New_Type_Decl (Name, Ptr_Type);
       end Declare_Scope_Acc;
 
+      --  Common routine for instance and frame.
+      procedure Start_Instance_Factory (Inst : Inst_Build_Acc) is
+      begin
+         Inst.Prev := Inst_Build;
+         Inst.Prev_Id_Start := Identifier_Start;
+
+         Identifier_Start := Identifier_Len + 1;
+
+         if Inst.Scope.Scope_Type /= O_Tnode_Null then
+            Start_Uncomplete_Record_Type
+              (Inst.Scope.Scope_Type, Inst.Elements);
+         else
+            Start_Record_Type (Inst.Elements);
+         end if;
+         Inst_Build := Inst;
+      end Start_Instance_Factory;
+
       procedure Push_Instance_Factory (Scope : Var_Scope_Acc)
       is
          Inst : Inst_Build_Acc;
       begin
          Inst := new Inst_Build_Type (Instance);
-         Inst.Prev := Inst_Build;
-         Inst.Prev_Id_Start := Identifier_Start;
          Inst.Scope := Scope;
 
-         Identifier_Start := Identifier_Len + 1;
-
-         if Scope.Scope_Type /= O_Tnode_Null then
-            Start_Uncomplete_Record_Type (Scope.Scope_Type, Inst.Elements);
-         else
-            Start_Record_Type (Inst.Elements);
-         end if;
-         Inst_Build := Inst;
+         Start_Instance_Factory (Inst);
       end Push_Instance_Factory;
+
+      procedure Push_Frame_Factory (Scope : Var_Scope_Acc;
+                                    Persistant : Boolean)
+      is
+         Inst : Inst_Build_Acc;
+      begin
+         if Persistant then
+            Inst := new Inst_Build_Type (Persistant_Frame);
+         else
+            Inst := new Inst_Build_Type (Stack_Frame);
+         end if;
+         Inst.Scope := Scope;
+
+         Start_Instance_Factory (Inst);
+      end Push_Frame_Factory;
 
       function Add_Instance_Factory_Field (Name : O_Ident; Ftype : O_Tnode)
                                            return O_Fnode
@@ -285,18 +311,30 @@ package body Trans is
                               Child.Field, Otype);
       end Get_Scope_Offset;
 
-      procedure Pop_Instance_Factory (Scope : in Var_Scope_Acc)
+      procedure Finish_Instance_Factory (Scope : in Var_Scope_Acc)
       is
          Res : O_Tnode;
       begin
-         if Inst_Build.Kind /= Instance then
-            --  Not matching.
-            raise Internal_Error;
-         end if;
          Finish_Record_Type (Inst_Build.Elements, Res);
          Pop_Build_Instance;
          Scope.Scope_Type := Res;
+      end Finish_Instance_Factory;
+
+      procedure Pop_Instance_Factory (Scope : in Var_Scope_Acc) is
+      begin
+         --  Not matching.
+         pragma Assert (Inst_Build.Kind = Instance);
+
+         Finish_Instance_Factory (Scope);
       end Pop_Instance_Factory;
+
+      procedure Pop_Frame_Factory (Scope : in Var_Scope_Acc) is
+      begin
+         --  Not matching.
+         pragma Assert (Inst_Build.Kind in Stack_Frame .. Persistant_Frame);
+
+         Finish_Instance_Factory (Scope);
+      end Pop_Frame_Factory;
 
       procedure Push_Local_Factory
       is
@@ -335,7 +373,9 @@ package body Trans is
          end if;
          case Inst_Build.Kind is
             when Local
-               | Instance =>
+              | Instance
+              | Stack_Frame
+              | Persistant_Frame =>
                return True;
             when Global =>
                return False;
@@ -432,6 +472,11 @@ package body Trans is
          Scope := (Scope_Type => Scope.Scope_Type, Kind => Var_Scope_None);
       end Clear_Scope;
 
+      function Is_Null (Scope : Var_Scope_Type) return Boolean is
+      begin
+         return Scope.Kind = Var_Scope_None;
+      end Is_Null;
+
       function Create_Global_Var
         (Name : O_Ident; Vtype : O_Tnode; Storage : O_Storage)
          return Var_Type
@@ -491,11 +536,11 @@ package body Trans is
                --  Create a var.
                New_Var_Decl (Res, Name.Id, O_Storage_Local, Vtype);
                return Var_Type'(Kind => Var_Local, E => Res);
-            when Instance =>
+            when Instance | Stack_Frame | Persistant_Frame =>
                --  Create a field.
                New_Record_Field (Inst_Build.Elements, Field, Name.Id, Vtype);
-               return Var_Type'(Kind => Var_Scope, I_Field => Field,
-                                I_Scope => Inst_Build.Scope);
+               return Var_Type'(Kind => Var_Scope, I_Build_Kind => K,
+                                I_Field => Field, I_Scope => Inst_Build.Scope);
          end case;
       end Create_Var;
 
@@ -587,9 +632,19 @@ package body Trans is
          case Var.Kind is
             when Var_Local =>
                return Alloc_Stack;
-            when Var_Global
-               | Var_Scope =>
+            when Var_Global =>
                return Alloc_System;
+            when Var_Scope =>
+               case Var.I_Build_Kind is
+                  when Stack_Frame =>
+                     return Alloc_Stack;
+                  when Persistant_Frame =>
+                     return Alloc_Return;
+                  when Instance =>
+                     return Alloc_System;
+                  when others =>
+                     raise Internal_Error;
+               end case;
             when Var_None =>
                raise Internal_Error;
          end case;
@@ -647,24 +702,22 @@ package body Trans is
 
       procedure Restore_Local_Identifier (Id : Local_Identifier_Type) is
       begin
-         if Identifier_Local > Id then
-            --  If the value is restored with a smaller value, some identifiers
-            --  will be reused.  This is certainly an internal error.
-            raise Internal_Error;
-         end if;
+         --  If the value is restored with a smaller value, some identifiers
+         --  will be reused.  This is certainly an internal error.
+         pragma Assert (Identifier_Local <= Id);
          Identifier_Local := Id;
       end Restore_Local_Identifier;
 
       --  Reset the identifier.
       procedure Reset_Identifier_Prefix is
       begin
-         if Identifier_Len /= 0 or else Identifier_Local /= 0 then
-            raise Internal_Error;
-         end if;
+         pragma Assert (Identifier_Len = 0 and Identifier_Local = 0);
+         null;
       end Reset_Identifier_Prefix;
 
       procedure Pop_Identifier_Prefix (Mark : in Id_Mark_Type) is
       begin
+         pragma Assert (Mark.Len <= Identifier_Len);
          Identifier_Len := Mark.Len;
          Identifier_Local := Mark.Local_Id;
       end Pop_Identifier_Prefix;
@@ -692,6 +745,12 @@ package body Trans is
          Add_String (Len, Num (P .. Num'Last));
       end Add_Nat;
 
+      type Bool_Array_Type is array (Character) of Boolean;
+      pragma Pack (Bool_Array_Type);
+      Is_Extended_Char : constant Bool_Array_Type :=
+        ('0' .. '9' | 'A' .. 'Z' | 'a' .. 'z' => False,
+         others => True);
+
       --  Convert name_id NAME to a string stored to
       --  NAME_BUFFER (1 .. NAME_LENGTH).
       --
@@ -702,79 +761,77 @@ package body Trans is
       --  Non extended character [0-9a-zA-Z] are left as is,
       --  others are encoded to _XX, where XX is the character position in hex.
       --  They finish with "__".
-      procedure Name_Id_To_String (Name : Name_Id)
-      is
-         use Name_Table;
-
-         type Bool_Array_Type is array (Character) of Boolean;
-         pragma Pack (Bool_Array_Type);
-         Is_Extended_Char : constant Bool_Array_Type :=
-           ('0' .. '9' | 'A' .. 'Z' | 'a' .. 'z' => False,
-            others => True);
-
-         N_Len : Natural;
-         P     : Natural;
-         C     : Character;
+      function Name_Id_To_String (Name : Name_Id) return String  is
       begin
-         if Is_Character (Name) then
-            P := Character'Pos (Name_Table.Get_Character (Name));
-            Nam_Buffer (1) := 'C';
-            Nam_Buffer (2) := N2hex (P / 16);
-            Nam_Buffer (3) := N2hex (P mod 16);
-            Nam_Length := 3;
-            return;
+         if Name_Table.Is_Character (Name) then
+            declare
+               P : constant Natural :=
+                 Character'Pos (Name_Table.Get_Character (Name));
+               Res : String (1 .. 3);
+            begin
+               Res (1) := 'C';
+               Res (2) := N2hex (P / 16);
+               Res (3) := N2hex (P mod 16);
+               return Res;
+            end;
          else
-            Image (Name);
-         end if;
-         if Nam_Buffer (1) /= '\' then
-            return;
-         end if;
-         --  Extended identifier.
-         --  Supress trailing backslash.
-         Nam_Length := Nam_Length - 1;
+            declare
+               Img   : constant String := Name_Table.Image (Name);
+               N_Len : Natural;
+            begin
+               if Img (Img'First) /= '\' then
+                  return Img;
+               end if;
 
-         --  Count number of characters in the extended string.
-         N_Len := Nam_Length;
-         for I in 2 .. Nam_Length loop
-            if Is_Extended_Char (Nam_Buffer (I)) then
-               N_Len := N_Len + 2;
-            end if;
-         end loop;
+               --  Extended identifier.
 
-         --  Convert.
-         Nam_Buffer (1) := 'X';
-         P := N_Len;
-         for J in reverse 2 .. Nam_Length loop
-            C := Nam_Buffer (J);
-            if Is_Extended_Char (C) then
-               Nam_Buffer (P - 0) := N2hex (Character'Pos (C) mod 16);
-               Nam_Buffer (P - 1) := N2hex (Character'Pos (C) / 16);
-               Nam_Buffer (P - 2) := '_';
-               P := P - 3;
-            else
-               Nam_Buffer (P) := C;
-               P := P - 1;
-            end if;
-         end loop;
-         Nam_Buffer (N_Len + 1) := '_';
-         Nam_Buffer (N_Len + 2) := '_';
-         Nam_Length := N_Len + 2;
+               --  Count number of characters in the extended string.
+               N_Len := 3;
+               for I in Img'First + 1 .. Img'Last - 1 loop
+                  if Is_Extended_Char (Img (I)) then
+                     N_Len := N_Len + 3;
+                  else
+                     N_Len := N_Len + 1;
+                  end if;
+               end loop;
+
+               declare
+                  Img2 : String (1 .. N_Len);
+                  P     : Natural;
+                  C     : Character;
+               begin
+                  --  Convert (without the trailing backslash).
+                  Img2 (1) := 'X';
+                  P := 1;
+                  for I in Img'First + 1 .. Img'Last - 1 loop
+                     C := Img (I);
+                     if Is_Extended_Char (C) then
+                        Img2 (P + 1) := '_';
+                        Img2 (P + 2) := N2hex (Character'Pos (C) / 16);
+                        Img2 (P + 3) := N2hex (Character'Pos (C) mod 16);
+                        P := P + 3;
+                     else
+                        Img2 (P + 1) := C;
+                        P := P + 1;
+                     end if;
+                  end loop;
+                  Img2 (P + 1) := '_';
+                  Img2 (P + 2) := '_';
+                  pragma Assert (N_Len = P + 2);
+                  return Img2;
+               end;
+            end;
+         end if;
       end Name_Id_To_String;
 
-      function Identifier_To_String (N : Iir) return String
-      is
-         use Name_Table;
+      function Identifier_To_String (N : Iir) return String is
       begin
-         Name_Id_To_String (Get_Identifier (N));
-         return Nam_Buffer (1 .. Nam_Length);
+         return Name_Id_To_String (Get_Identifier (N));
       end Identifier_To_String;
 
-      procedure Add_Name (Len : in out Natural; Name : Name_Id)
-      is
-         use Name_Table;
+      procedure Add_Name (Len : in out Natural; Name : Name_Id) is
       begin
-         Name_Id_To_String (Name);
-         Add_String (Len, Nam_Buffer (1 .. Nam_Length));
+         Add_String (Len, Name_Id_To_String (Name));
       end Add_Name;
 
       procedure Push_Identifier_Prefix (Mark : out Id_Mark_Type;
@@ -798,18 +855,20 @@ package body Trans is
 
       --  Add a suffix to the prefix (!!!).
       procedure Push_Identifier_Prefix
-        (Mark : out Id_Mark_Type; Name : Name_Id; Val : Iir_Int32 := 0)
-      is
-         use Name_Table;
+        (Mark : out Id_Mark_Type; Name : Name_Id; Val : Iir_Int32 := 0) is
       begin
-         Name_Id_To_String (Name);
-         Push_Identifier_Prefix (Mark, Nam_Buffer (1 .. Nam_Length), Val);
+         if Name = Null_Identifier then
+            Push_Identifier_Prefix (Mark, "", Val);
+         else
+            Push_Identifier_Prefix (Mark, Name_Id_To_String (Name), Val);
+         end if;
       end Push_Identifier_Prefix;
 
       procedure Push_Identifier_Prefix_Uniq (Mark : out Id_Mark_Type)
       is
          Str : String := Local_Identifier_Type'Image (Identifier_Local);
       begin
+         --  Increment local identifier, as the value has been used.
          Identifier_Local := Identifier_Local + 1;
          Str (1) := 'U';
          Push_Identifier_Prefix (Mark, Str, 0);
@@ -823,22 +882,19 @@ package body Trans is
       end Add_Identifier;
 
       --  Create an identifier from IIR node ID without the prefix.
-      function Create_Identifier_Without_Prefix (Id : Iir) return O_Ident
-      is
-         use Name_Table;
+      function Create_Identifier_Without_Prefix (Id : Iir) return O_Ident is
       begin
-         Name_Id_To_String (Get_Identifier (Id));
-         return Get_Identifier (Nam_Buffer (1 .. Nam_Length));
+         return Get_Identifier (Name_Id_To_String (Get_Identifier (Id)));
       end Create_Identifier_Without_Prefix;
 
       function Create_Identifier_Without_Prefix (Id : Name_Id; Str : String)
-                                                 return O_Ident
-      is
-         use Name_Table;
+                                                 return O_Ident is
       begin
-         Name_Id_To_String (Id);
-         Nam_Buffer (Nam_Length + 1 .. Nam_Length + Str'Length) := Str;
-         return Get_Identifier (Nam_Buffer (1 .. Nam_Length + Str'Length));
+         if Str'Length = 0 then
+            return Get_Identifier (Name_Id_To_String (Id));
+         else
+            return Get_Identifier (Name_Id_To_String (Id) & Str);
+         end if;
       end Create_Identifier_Without_Prefix;
 
       function Create_Identifier_Without_Prefix
@@ -1047,6 +1103,7 @@ package body Trans is
             when Var_Scope =>
                return Var_Type'
                  (Kind => Var_Scope,
+                  I_Build_Kind => Var.I_Build_Kind,
                   I_Field => Var.I_Field,
                   I_Scope => Instantiated_Var_Scope (Var.I_Scope));
          end case;
@@ -1108,21 +1165,20 @@ package body Trans is
             else
                return Lv2M (L, Vtype, Mode);
             end if;
-         when Type_Mode_Array
-            | Type_Mode_Record
+         when Type_Mode_Complex_Array
+            | Type_Mode_Complex_Record
             | Type_Mode_Protected =>
-            if Is_Complex_Type (Vtype) then
-               if Stable then
-                  return Dp2M (D, Vtype, Mode);
-               else
-                  return Lp2M (L, Vtype, Mode);
-               end if;
+            if Stable then
+               return Dp2M (D, Vtype, Mode);
             else
-               if Stable then
-                  return Dv2M (D, Vtype, Mode);
-               else
-                  return Lv2M (L, Vtype, Mode);
-               end if;
+               return Lp2M (L, Vtype, Mode);
+            end if;
+         when Type_Mode_Static_Array
+            | Type_Mode_Static_Record =>
+            if Stable then
+               return Dv2M (D, Vtype, Mode);
+            else
+               return Lv2M (L, Vtype, Mode);
             end if;
          when Type_Mode_Unknown =>
             raise Internal_Error;
@@ -1380,6 +1436,25 @@ package body Trans is
       return Tinfo.C /= null;
    end Is_Complex_Type;
 
+   function Is_Static_Type (Tinfo : Type_Info_Acc) return Boolean is
+   begin
+      case Tinfo.Type_Mode is
+         when Type_Mode_Non_Composite =>
+            return True;
+         when Type_Mode_Static_Record
+           | Type_Mode_Static_Array =>
+            return True;
+         when Type_Mode_Complex_Record
+           | Type_Mode_Complex_Array
+           | Type_Mode_Unbounded_Record
+           | Type_Mode_Unbounded_Array
+           | Type_Mode_Protected =>
+            return False;
+         when Type_Mode_Unknown =>
+            return False;
+      end case;
+   end Is_Static_Type;
+
    function Is_Unbounded_Type (Tinfo : Type_Info_Acc) return Boolean is
    begin
       return Tinfo.Type_Mode in Type_Mode_Unbounded;
@@ -1387,60 +1462,47 @@ package body Trans is
 
    procedure Free_Node_Infos
    is
-      Info      : Ortho_Info_Acc;
-      Prev_Info : Ortho_Info_Acc;
+      Info : Ortho_Info_Acc;
    begin
-      Prev_Info := null;
+      --  Check each node is not marked.
       for I in Node_Infos.First .. Node_Infos.Last loop
          Info := Get_Info (I);
-         if Info /= null and then Info /= Prev_Info then
-            case Get_Kind (I) is
-               when Iir_Kind_Constant_Declaration =>
-                  if Get_Deferred_Declaration_Flag (I) = False
-                    and then Get_Deferred_Declaration (I) /= Null_Iir
-                  then
-                     --  Info are copied from incomplete constant declaration
-                     --  to full constant declaration.
-                     Clear_Info (I);
+         pragma Assert (Info = null or else not Info.Mark);
+      end loop;
+
+      --  Clear duplicated nodes
+      for I in Node_Infos.First .. Node_Infos.Last loop
+         Info := Get_Info (I);
+         if Info /= null then
+            if Info.Mark then
+               --  This info is shared by another node and was already seen.
+               --  Unreference it.
+               Clear_Info (I);
+            else
+               Info.Mark := True;
+               if Info.Kind = Kind_Type and then Info.C /= null then
+                  if Info.C (Mode_Value).Mark then
+                     Info.C := null;
                   else
-                     Free_Info (I);
+                     Info.C (Mode_Value).Mark := True;
                   end if;
-               when Iir_Kind_Record_Subtype_Definition
-                  | Iir_Kind_Access_Subtype_Definition =>
-                  null;
-               when Iir_Kind_Enumeration_Type_Definition
-                  | Iir_Kind_Array_Type_Definition
-                  | Iir_Kind_Integer_Subtype_Definition
-                  | Iir_Kind_Floating_Subtype_Definition
-                  | Iir_Kind_Physical_Subtype_Definition
-                  | Iir_Kind_Enumeration_Subtype_Definition =>
-                  Free_Type_Info (Info);
-               when Iir_Kind_Array_Subtype_Definition =>
-                  if Get_Index_Constraint_Flag (I) then
-                     Info.B := Ortho_Info_Basetype_Array_Init;
-                     Info.S := Ortho_Info_Subtype_Array_Init;
-                     Free_Type_Info (Info);
-                  end if;
-               when Iir_Kind_Function_Declaration =>
-                  case Get_Implicit_Definition (I) is
-                     when Iir_Predefined_Bit_Array_Match_Equality
-                        |  Iir_Predefined_Bit_Array_Match_Inequality =>
-                        --  Not in sequence.
-                        null;
-                     when others =>
-                        --  By default, info are not shared.
-                        --  The exception is infos for implicit subprograms,
-                        --  but they are always consecutive and not free twice
-                        --  due to prev_info mechanism.
-                        Free_Info (I);
-                  end case;
-               when others =>
-                  --  By default, info are not shared.
-                  Free_Info (I);
-            end case;
-            Prev_Info := Info;
+               end if;
+            end if;
          end if;
       end loop;
+
+      --  Free infos
+      for I in Node_Infos.First .. Node_Infos.Last loop
+         Info := Get_Info (I);
+         if Info /= null then
+            if Info.Kind = Kind_Type then
+               Free_Type_Info (Info);
+            else
+               Free_Info (I);
+            end if;
+         end if;
+      end loop;
+
       Node_Infos.Free;
    end Free_Node_Infos;
 
@@ -1456,6 +1518,18 @@ package body Trans is
                            K => Kind, T => T, E => E,
                            Vtype => T.Ortho_Type (Kind),
                            Ptype => T.Ortho_Ptr_Type (Kind)));
+   end E2M;
+
+   function E2M (E : O_Enode;
+                 T : Type_Info_Acc;
+                 Kind  : Object_Kind_Type;
+                 Vtype : O_Tnode;
+                 Ptype : O_Tnode)
+                return Mnode is
+   begin
+      return Mnode'(M1 => (State => Mstate_E,
+                           K => Kind, T => T, E => E,
+                           Vtype => Vtype, Ptype => Ptype));
    end E2M;
 
    function Lv2M (L : O_Lnode; T : Type_Info_Acc; Kind : Object_Kind_Type)
@@ -1749,14 +1823,13 @@ package body Trans is
            | Type_Mode_Unbounded_Record
            | Type_Mode_Bounds_Acc =>
             return Lv2M (L, Vtype, Mode);
-         when Type_Mode_Array
-           | Type_Mode_Record
+         when Type_Mode_Complex_Array
+           | Type_Mode_Complex_Record
            | Type_Mode_Protected =>
-            if Is_Complex_Type (Vtype) then
-               return Lp2M (L, Vtype, Mode);
-            else
-               return Lv2M (L, Vtype, Mode);
-            end if;
+            return Lp2M (L, Vtype, Mode);
+         when Type_Mode_Static_Array
+           | Type_Mode_Static_Record =>
+            return Lv2M (L, Vtype, Mode);
          when Type_Mode_Unknown =>
             raise Internal_Error;
       end case;
@@ -1773,14 +1846,13 @@ package body Trans is
            | Type_Mode_Unbounded_Record
            | Type_Mode_Bounds_Acc =>
             return Dv2M (D, Vtype, Mode);
-         when Type_Mode_Array
-           | Type_Mode_Record
+         when Type_Mode_Complex_Array
+           | Type_Mode_Complex_Record
            | Type_Mode_Protected =>
-            if Is_Complex_Type (Vtype) then
-               return Dp2M (D, Vtype, Mode);
-            else
-               return Dv2M (D, Vtype, Mode);
-            end if;
+            return Dp2M (D, Vtype, Mode);
+         when Type_Mode_Static_Array
+           | Type_Mode_Static_Record =>
+            return Dv2M (D, Vtype, Mode);
          when Type_Mode_Unknown =>
             raise Internal_Error;
       end case;
@@ -1901,7 +1973,6 @@ package body Trans is
 
       procedure Disable_Stack2_Release is
       begin
-         pragma Assert (not Temp_Level.No_Stack2_Mark);
          Temp_Level.No_Stack2_Mark := True;
       end Disable_Stack2_Release;
 

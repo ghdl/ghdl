@@ -47,7 +47,7 @@ package Canon is
    --  are converted (by an aggregate) into array.
    Canon_Concatenation : Boolean := False;
 
-   -- Do canonicalization:
+   --  Do canonicalization:
    --  Transforms concurrent statements into sensitized process statements
    --   (all but component instanciation and block).
    --  This computes sensivity list.
@@ -77,12 +77,16 @@ package Canon is
    function Canon_Conditional_Signal_Assignment_Statement (Stmt : Iir)
                                                           return Iir;
 
-   -- Compute the sensivity list of EXPR and add it to SENSIVITY_LIST.
-   -- If IS_TARGET is true, the longuest static prefix of the signal name
-   -- is not added to the sensitivity list, but other static prefix (such
-   -- as indexes of an indexed name) are added.
+   --  Compute the sensivity list of EXPR and add it to SENSIVITY_LIST.
+   --  If IS_TARGET is true, the longuest static prefix of the signal name
+   --  is not added to the sensitivity list, but other static prefix (such
+   --  as indexes of an indexed name) are added.
    procedure Canon_Extract_Sensitivity
      (Expr: Iir; Sensitivity_List: Iir_List; Is_Target: Boolean := False);
+
+   --  Likewise, but for all expressions appearing in statements CHAIN.
+   procedure Canon_Extract_Sequential_Statement_Chain_Sensitivity
+     (Chain : Iir; List : Iir_List);
 
    --  Compute the sensitivity list of all-sensitized process PROC.
    --  Used for vhdl 08.

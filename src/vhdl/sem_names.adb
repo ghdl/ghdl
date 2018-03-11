@@ -59,11 +59,12 @@ package body Sem_Names is
    procedure Disp_Overload_List (List : Iir_List; Loc : Iir)
    is
       El : Iir;
+      It : List_Iterator;
    begin
       Error_Msg_Sem (+Loc, "possible interpretations are:", Cont => True);
-      for I in Natural loop
-         El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
+      It := List_Iterate (List);
+      while Is_Valid (It) loop
+         El := Get_Element (It);
          case Get_Kind (El) is
             when Iir_Kind_Function_Declaration
               | Iir_Kind_Procedure_Declaration =>
@@ -74,6 +75,7 @@ package body Sem_Names is
             when others =>
                Error_Msg_Sem (+El, "%n", +El);
          end case;
+         Next (It);
       end loop;
    end Disp_Overload_List;
 
@@ -150,23 +152,26 @@ package body Sem_Names is
    is
       Res_List : Iir_List;
       Decl : Iir;
+      It : List_Iterator;
    begin
       --  Create the list of possible return types.
       Res_List := Create_Iir_List;
-      for I in Natural loop
-         Decl := Get_Nth_Element (List, I);
-         exit when Decl = Null_Iir;
+      It := List_Iterate (List);
+      while Is_Valid (It) loop
+         Decl := Get_Element (It);
          case Get_Kind (Decl) is
             when Iir_Kind_Function_Declaration =>
                Add_Element (Res_List, Get_Return_Type (Decl));
             when Iir_Kind_Enumeration_Literal
               | Iir_Kind_Function_Call
               | Iir_Kind_Indexed_Name
+              | Iir_Kind_Slice_Name
               | Iir_Kind_Selected_Element =>
                Add_Element (Res_List, Get_Type (Decl));
             when others =>
                Error_Kind ("create_list_of_types", Decl);
          end case;
+         Next (It);
       end loop;
       return Simplify_Overload_List (Res_List);
    end Create_List_Of_Types;
@@ -201,15 +206,16 @@ package body Sem_Names is
    is
       pragma Assert (Is_Overload_List (Res));
       List : constant Iir_List := Get_Overload_List (Res);
+      It : List_Iterator;
       Call : Iir;
       El : Iir;
       Imp : Iir;
       Inter : Iir;
    begin
       Call := Null_Iir;
-      for I in Natural loop
-         El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
+      It := List_Iterate (List);
+      while Is_Valid (It) loop
+         El := Get_Element (It);
          if Get_Kind (El) = Iir_Kind_Function_Call then
             Imp := Get_Implementation (El);
             Inter := Get_Interface_Declaration_Chain (Imp);
@@ -232,6 +238,7 @@ package body Sem_Names is
          else
             return Null_Iir;
          end if;
+         Next (It);
       end loop;
 
       return Call;
@@ -247,6 +254,7 @@ package body Sem_Names is
       El : Iir;
       List_List : Iir_List;
       Res_List : Iir_List;
+      It : List_Iterator;
    begin
       if Res = Null_Iir then
          Res := List;
@@ -262,10 +270,10 @@ package body Sem_Names is
          end if;
          List_List := Get_Overload_List (List);
          Res_List := Get_Overload_List (Res);
-         for I in Natural loop
-            El := Get_Nth_Element (List_List, I);
-            exit when El = Null_Iir;
-            Append_Element (Res_List, El);
+         It := List_Iterate (List_List);
+         while Is_Valid (It) loop
+            Append_Element (Res_List, Get_Element (It));
+            Next (It);
          end loop;
          Free_Iir (List);
       end if;
@@ -289,6 +297,9 @@ package body Sem_Names is
               | Iir_Kind_Procedure_Declaration
               | Iir_Kind_Enumeration_Literal =>
                null;
+            when Iir_Kind_Interface_Function_Declaration
+              | Iir_Kind_Interface_Procedure_Declaration =>
+               null;
             when Iir_Kinds_Denoting_Name =>
                null;
             when others =>
@@ -298,6 +309,7 @@ package body Sem_Names is
 
       El : Iir;
       List_List : Iir_List;
+      It : List_Iterator;
    begin
       if List = Null_Iir then
          return;
@@ -307,12 +319,13 @@ package body Sem_Names is
          end if;
       else
          List_List := Get_Overload_List (List);
-         for I in Natural loop
-            El := Get_Nth_Element (List_List, I);
-            exit when El = Null_Iir;
+         It := List_Iterate (List_List);
+         while Is_Valid (It) loop
+            El := Get_Element (It);
             if El /= Keep then
                Sem_Name_Free (El);
             end if;
+            Next (It);
          end loop;
          Free_Iir (List);
       end if;
@@ -611,7 +624,7 @@ package body Sem_Names is
    is
       Prefix : constant Iir := Get_Prefix (Expr);
       Prefix_Type : constant Iir := Get_Type (Prefix);
-      Index_List : constant Iir_List := Get_Index_List (Expr);
+      Index_List : constant Iir_Flist := Get_Index_List (Expr);
       Index_Subtype : Iir;
       Index : Iir;
       Expr_Staticness : Iir_Staticness;
@@ -622,10 +635,9 @@ package body Sem_Names is
       -- position of the array and each expression must be of the
       -- type of the corresponding index.
       -- Loop on the indexes.
-      for I in Natural loop
-         Index_Subtype := Get_Index_Type (Prefix_Type, I);
-         exit when Index_Subtype = Null_Iir;
+      for I in Flist_First .. Flist_Last (Index_List) loop
          Index := Get_Nth_Element (Index_List, I);
+         Index_Subtype := Get_Index_Type (Prefix_Type, I);
          -- The index_subtype can be an unconstrained index type.
          Index := Check_Is_Expression (Index, Index);
          if Index /= Null_Iir then
@@ -637,7 +649,7 @@ package body Sem_Names is
             then
                Index := Eval_Expr_Check (Index, Index_Subtype);
             end if;
-            Replace_Nth_Element (Get_Index_List (Expr), I, Index);
+            Set_Nth_Element (Index_List, I, Index);
             Expr_Staticness := Min (Expr_Staticness,
                                     Get_Expr_Staticness (Index));
          else
@@ -685,7 +697,7 @@ package body Sem_Names is
       Prefix_Type : constant Iir := Get_Type (Prefix);
       Prefix_Base_Type : Iir;
       Prefix_Bt : constant Iir := Get_Base_Type (Prefix_Type);
-      Index_List: Iir_List;
+      Index_List: Iir_Flist;
       Index_Type: Iir;
       Suffix: Iir;
       Slice_Type : Iir;
@@ -797,14 +809,14 @@ package body Sem_Names is
 
       Expr_Type := Create_Iir (Iir_Kind_Array_Subtype_Definition);
       Set_Location (Expr_Type, Get_Location (Suffix));
-      Set_Index_Subtype_List (Expr_Type, Create_Iir_List);
+      Set_Index_Subtype_List (Expr_Type, Create_Iir_Flist (1));
       Set_Index_Constraint_List (Expr_Type,
                                  Get_Index_Subtype_List (Expr_Type));
       Prefix_Base_Type := Get_Base_Type (Prefix_Type);
       Set_Base_Type (Expr_Type, Prefix_Base_Type);
       Set_Signal_Type_Flag (Expr_Type,
                             Get_Signal_Type_Flag (Prefix_Base_Type));
-      Append_Element (Get_Index_Subtype_List (Expr_Type), Slice_Type);
+      Set_Nth_Element (Get_Index_Subtype_List (Expr_Type), 0, Slice_Type);
       Set_Element_Subtype (Expr_Type, Get_Element_Subtype (Prefix_Type));
       if Get_Kind (Prefix_Type) = Iir_Kind_Array_Subtype_Definition then
          Set_Resolution_Indication
@@ -1004,7 +1016,7 @@ package body Sem_Names is
 
       declare
          Dim : Iir_Int64;
-         Indexes_List : constant Iir_List :=
+         Indexes_List : constant Iir_Flist :=
            Get_Index_Subtype_List (Prefix_Type);
       begin
          if Is_Null (Parameter)
@@ -1214,7 +1226,7 @@ package body Sem_Names is
       Base_Type1 : constant Iir := Get_Base_Type (Type1);
       Base_Type2 : constant Iir := Get_Base_Type (Type2);
       Ant1, Ant2 : Boolean;
-      Index_List1, Index_List2 : Iir_List;
+      Index_List1, Index_List2 : Iir_Flist;
       El1, El2 : Iir;
    begin
       --  LRM 7.3.5
@@ -1257,9 +1269,8 @@ package body Sem_Names is
       then
          return False;
       end if;
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (Index_List1) loop
          El1 := Get_Index_Type (Index_List1, I);
-         exit when El1 = Null_Iir;
          El2 := Get_Index_Type (Index_List2, I);
          if not Are_Types_Closely_Related (El1, El2) then
             return False;
@@ -1268,16 +1279,17 @@ package body Sem_Names is
       return True;
    end Are_Types_Closely_Related;
 
-   function Sem_Type_Conversion (Loc : Iir; Type_Mark : Iir; Actual : Iir)
-                                return Iir
+   function Sem_Type_Conversion
+     (Name : Iir; Type_Mark : Iir; Actual : Iir; In_Formal : Boolean)
+     return Iir
    is
       Conv_Type : constant Iir := Get_Type (Type_Mark);
-      Conv: Iir_Type_Conversion;
-      Expr: Iir;
+      Conv : Iir_Type_Conversion;
+      Expr : Iir;
       Staticness : Iir_Staticness;
    begin
       Conv := Create_Iir (Iir_Kind_Type_Conversion);
-      Location_Copy (Conv, Loc);
+      Location_Copy (Conv, Name);
       Set_Type_Mark (Conv, Type_Mark);
       Set_Type (Conv, Conv_Type);
       Set_Expression (Conv, Actual);
@@ -1355,7 +1367,11 @@ package body Sem_Names is
             --  Avoid error storm in evaluation.
             Set_Expr_Staticness (Conv, None);
          else
-            Check_Read (Expr);
+            --  Unless the type conversion appears in the formal part of an
+            --  association, the expression must be readable.
+            if not In_Formal then
+               Check_Read (Expr);
+            end if;
          end if;
       end if;
       return Conv;
@@ -1390,6 +1406,7 @@ package body Sem_Names is
       Subprg : constant Iir := Sem_Stmts.Get_Current_Subprogram;
       Subprg_Body : Iir;
       Parent : Iir;
+      Decl : Iir;
    begin
       --  Apply only in subprograms.
       if Subprg = Null_Iir then
@@ -1412,10 +1429,18 @@ package body Sem_Names is
             Error_Kind ("sem_check_pure", Subprg);
       end case;
 
+      --  Follow aliases.
+      if Get_Kind (Obj) = Iir_Kind_Object_Alias_Declaration then
+         Decl := Get_Object_Prefix (Get_Name (Obj));
+      else
+         Decl := Obj;
+      end if;
+
       --  Not all objects are impure.
-      case Get_Kind (Obj) is
-         when Iir_Kind_Object_Alias_Declaration
-           | Iir_Kind_Guard_Signal_Declaration
+      case Get_Kind (Decl) is
+         when Iir_Kind_Object_Alias_Declaration =>
+            raise Program_Error;
+         when Iir_Kind_Guard_Signal_Declaration
            | Iir_Kind_Signal_Declaration
            | Iir_Kind_Variable_Declaration
            | Iir_Kind_Interface_File_Declaration =>
@@ -1424,7 +1449,7 @@ package body Sem_Names is
            | Iir_Kind_Interface_Signal_Declaration =>
             --  When referenced as a formal name (FIXME: this is an
             --  approximation), the rules don't apply.
-            if not Get_Is_Within_Flag (Get_Parent (Obj)) then
+            if not Get_Is_Within_Flag (Get_Parent (Decl)) then
                return;
             end if;
          when Iir_Kind_File_Declaration =>
@@ -1447,8 +1472,8 @@ package body Sem_Names is
             return;
       end case;
 
-      --  OBJ is declared in the immediate declarative part of the subprogram.
-      Parent := Get_Parent (Obj);
+      --  DECL is declared in the immediate declarative part of the subprogram.
+      Parent := Get_Parent (Decl);
       Subprg_Body := Get_Subprogram_Body (Subprg);
       if Parent = Subprg or else Parent = Subprg_Body then
          return;
@@ -1584,7 +1609,7 @@ package body Sem_Names is
       Name_Res : Iir;
    begin
       case Get_Kind (Res) is
-         when Iir_Kinds_Library_Unit_Declaration =>
+         when Iir_Kinds_Library_Unit =>
             return Finish_Sem_Denoting_Name (Name, Res);
          when Iir_Kinds_Sequential_Statement
            | Iir_Kinds_Concurrent_Statement =>
@@ -1711,6 +1736,9 @@ package body Sem_Names is
            | Iir_Kind_Instance_Name_Attribute =>
             Free_Iir (Name);
             return Res;
+         when Iir_Kinds_External_Name =>
+            pragma Assert (Name = Res);
+            return Res;
          when Iir_Kind_Psl_Expression =>
             return Res;
          when Iir_Kind_Psl_Declaration =>
@@ -1788,6 +1816,7 @@ package body Sem_Names is
       Interpretation: Name_Interpretation_Type;
       Res: Iir;
       Res_List : Iir_List;
+      Res_It : List_Iterator;
       N : Natural;
    begin
       Interpretation := Get_Interpretation (Id);
@@ -1858,9 +1887,10 @@ package body Sem_Names is
          --  FIXME: there can be only one element (a function and its alias!).
 
          --  Clear SEEN_FLAG.
-         for I in 0 .. N - 1 loop
-            Res := Get_Nth_Element (Res_List, I);
-            Set_Seen_Flag (Res, False);
+         Res_It := List_Iterate (Res_List);
+         while Is_Valid (Res_It) loop
+            Set_Seen_Flag (Get_Element (Res_It), False);
+            Next (Res_It);
          end loop;
 
          Res := Create_Overload_List (Res_List);
@@ -1871,7 +1901,8 @@ package body Sem_Names is
 
    --  LRM93 §6.3
    --  Selected Names.
-   procedure Sem_Selected_Name (Name: Iir; Keep_Alias : Boolean := False)
+   procedure Sem_Selected_Name
+     (Name: Iir; Keep_Alias : Boolean := False; Soft : Boolean := False)
    is
       Suffix : constant Name_Id := Get_Identifier (Name);
       Prefix_Name : constant Iir := Get_Prefix (Name);
@@ -1895,7 +1926,7 @@ package body Sem_Names is
          end if;
       end Sem_As_Expanded_Name;
 
-      --  LRM93 §6.3
+      --  LRM93 6.3
       --  For a selected name that is used to denote a record element,
       --  the suffix must be a simple name denoting an element of a
       --  record object or value.  The prefix must be appropriate for the
@@ -1910,7 +1941,6 @@ package body Sem_Names is
          R : Iir;
          Se : Iir;
       begin
-         --  FIXME: if not is_expr (sub_name) return.
          Name_Type := Get_Type (Sub_Name);
          if Kind_In (Name_Type, Iir_Kind_Access_Type_Definition,
                      Iir_Kind_Access_Subtype_Definition)
@@ -1921,15 +1951,17 @@ package body Sem_Names is
             Ptr_Type := Null_Iir;
          end if;
 
+         --  Only records have elements.
          if not Kind_In (Name_Type, Iir_Kind_Record_Type_Definition,
                          Iir_Kind_Record_Subtype_Definition)
          then
             return;
          end if;
 
-         Rec_El := Find_Name_In_List
+         Rec_El := Find_Name_In_Flist
            (Get_Elements_Declaration_List (Name_Type), Suffix);
          if Rec_El = Null_Iir then
+            --  No such element in the record type.
             return;
          end if;
 
@@ -1944,6 +1976,7 @@ package body Sem_Names is
          Location_Copy (Se, Name);
          Set_Prefix (Se, R);
          Set_Type (Se, Get_Type (Rec_El));
+         Set_Identifier (Se, Suffix);
          Set_Selected_Element (Se, Rec_El);
          Set_Base_Name (Se, Get_Object_Prefix (R, False));
          Add_Result (Res, Se);
@@ -1987,7 +2020,9 @@ package body Sem_Names is
                  | Iir_Kind_Use_Clause =>
                   null;
                when others =>
-                  Error_Kind ("sem_as_protected_item", Method);
+                  --  Declarations not allowed in protected types.
+                  --  Just ignore them.
+                  null;
             end case;
             Method := Get_Chain (Method);
          end loop;
@@ -2023,7 +2058,11 @@ package body Sem_Names is
       end Error_Unit_Not_Found;
    begin
       --  Analyze prefix.
-      Sem_Name (Prefix_Name);
+      if Soft then
+         Sem_Name_Soft (Prefix_Name);
+      else
+         Sem_Name (Prefix_Name);
+      end if;
       Prefix := Get_Named_Entity (Prefix_Name);
       if Prefix = Error_Mark then
          Set_Named_Entity (Name, Prefix);
@@ -2048,32 +2087,43 @@ package body Sem_Names is
             --  of the prefix as a function call are considered.
             declare
                Prefix_List : Iir_List;
+               It : List_Iterator;
                El : Iir;
             begin
                --  So, first try as expanded name.
                Prefix_List := Get_Overload_List (Prefix);
-               for I in Natural loop
-                  El := Get_Nth_Element (Prefix_List, I);
-                  exit when El = Null_Iir;
+               It := List_Iterate (Prefix_List);
+               while Is_Valid (It) loop
+                  El := Get_Element (It);
                   case Get_Kind (El) is
-                     when Iir_Kind_Function_Call =>
+                     when Iir_Kind_Function_Call
+                       | Iir_Kind_Selected_Element =>
                         --  Not an expanded name.
                         null;
                      when others =>
                         Sem_As_Expanded_Name (El);
                   end case;
+                  Next (It);
                end loop;
 
                --  If no expanded name are found, try as selected element.
                if Res = Null_Iir then
-                  for I in Natural loop
-                     El := Get_Nth_Element (Prefix_List, I);
-                     exit when El = Null_Iir;
-                     Sem_As_Selected_Element (El);
+                  It := List_Iterate (Prefix_List);
+                  while Is_Valid (It) loop
+                     El := Get_Element (It);
+                     case Get_Kind (El) is
+                        when Iir_Kind_Procedure_Declaration =>
+                           --  A procedure cannot be the prefix of a selected
+                           --  element.
+                           null;
+                        when others =>
+                           Sem_As_Selected_Element (El);
+                     end case;
+                     Next (It);
                   end loop;
                end if;
             end;
-            if Res = Null_Iir then
+            if Res = Null_Iir and then not Soft then
                Error_Msg_Sem
                  (+Name, "no suffix %i for overloaded selected name", +Suffix);
             end if;
@@ -2087,11 +2137,11 @@ package body Sem_Names is
             --  particularly for an architecture body.
             --  GHDL: FIXME: error message more explicit
             Res := Libraries.Load_Primary_Unit (Prefix, Suffix, Name);
-            if Res = Null_Iir then
-               Error_Unit_Not_Found (Prefix);
-            else
+            if Res /= Null_Iir then
                Sem.Add_Dependence (Res);
                Res := Get_Library_Unit (Res);
+            elsif not Soft then
+               Error_Unit_Not_Found (Prefix);
             end if;
          when Iir_Kind_Process_Statement
            | Iir_Kind_Procedure_Declaration
@@ -2126,8 +2176,10 @@ package body Sem_Names is
             Res := Find_Declarations_In_List (Prefix, Name, Keep_Alias);
 
             if Res = Null_Iir then
-               Error_Msg_Sem
-                 (+Name, "no declaration for %i in %n", (+Suffix, +Prefix));
+               if not Soft then
+                  Error_Msg_Sem
+                    (+Name, "no declaration for %i in %n", (+Suffix, +Prefix));
+               end if;
             else
                --  LRM93 §6.3
                --  This form of expanded name is only allowed within the
@@ -2137,6 +2189,7 @@ package body Sem_Names is
                                Iir_Kind_Package_Declaration,
                                Iir_Kind_Package_Instantiation_Declaration)
                  and then not Get_Is_Within_Flag (Prefix)
+                 and then not Soft
                then
                   Error_Msg_Sem
                     (+Prefix_Loc,
@@ -2149,7 +2202,7 @@ package body Sem_Names is
             if Res = Null_Iir then
                Sem_As_Selected_Element (Prefix);
             end if;
-            if Res = Null_Iir then
+            if Res = Null_Iir and then not Soft then
                Error_Selected_Element (Get_Return_Type (Prefix));
             end if;
          when Iir_Kinds_Object_Declaration
@@ -2163,12 +2216,12 @@ package body Sem_Names is
               = Iir_Kind_Protected_Type_Declaration
             then
                Sem_As_Protected_Item (Prefix);
-               if Res = Null_Iir then
+               if Res = Null_Iir and then not Soft then
                   Error_Protected_Item (Prefix);
                end if;
             else
                Sem_As_Selected_Element (Prefix);
-               if Res = Null_Iir then
+               if Res = Null_Iir and then not Soft then
                   Error_Selected_Element (Get_Type (Prefix));
                end if;
             end if;
@@ -2178,8 +2231,14 @@ package body Sem_Names is
            | Iir_Kind_Component_Instantiation_Statement
            | Iir_Kind_Slice_Name
            | Iir_Kind_Procedure_Call_Statement =>
-            Error_Msg_Sem
-              (+Prefix_Loc, "%n cannot be selected by name", +Prefix);
+            if not Soft then
+               Error_Msg_Sem
+                 (+Prefix_Loc, "%n cannot be selected by name", +Prefix);
+            end if;
+
+         when Iir_Kind_Error =>
+            --  Let's propagate the error.
+            null;
 
          when others =>
             Error_Kind ("sem_selected_name(2)", Prefix);
@@ -2293,8 +2352,8 @@ package body Sem_Names is
             if Get_Expr_Staticness (Actual) < Globally then
                Error_Msg_Sem (+Name, "index must be a static expression");
             end if;
-            Set_Index_List (Res, Create_Iir_List);
-            Append_Element (Get_Index_List (Res), Actual);
+            Set_Index_List (Res, Create_Iir_Flist (1));
+            Set_Nth_Element (Get_Index_List (Res), 0, Actual);
          when Iir_Kind_Slice_Name =>
             Actual := Sem_Discrete_Range_Expression (Actual, Itype, False);
             if Actual = Null_Iir then
@@ -2380,7 +2439,7 @@ package body Sem_Names is
          --  The FINISH = True case will be handled by Finish_Sem_Indexed_Name.
          if Slice_Index_Kind = Iir_Kind_Indexed_Name and then not Finish then
             declare
-               Type_Index_List : constant Iir_List :=
+               Type_Index_List : constant Iir_Flist :=
                  Get_Index_Subtype_List (Base_Type);
                Type_Index : Iir;
                Assoc : Iir;
@@ -2431,12 +2490,12 @@ package body Sem_Names is
                   Idx_List : Iir_List;
                begin
                   Idx_List := Create_Iir_List;
-                  Set_Index_List (R, Idx_List);
                   Idx_El := Assoc_Chain;
                   while Idx_El /= Null_Iir loop
                      Append_Element (Idx_List, Get_Actual (Idx_El));
                      Idx_El := Get_Chain (Idx_El);
                   end loop;
+                  Set_Index_List (R, List_To_Flist (Idx_List));
                end;
                Set_Type (R, Get_Element_Subtype (Base_Type));
             when others =>
@@ -2517,16 +2576,23 @@ package body Sem_Names is
                   Iir_Kind_Subtype_Declaration)
       then
          --  A type conversion.  The prefix is a type mark.
+         declare
+            In_Formal : Boolean;
+         begin
+            if Actual = Null_Iir then
+               --  More than one actual.  Keep only the first.
+               Error_Msg_Sem
+                 (+Name, "type conversion allows only one expression");
+               In_Formal := False;
+            else
+               In_Formal := Get_In_Formal_Flag (Assoc_Chain);
+            end if;
 
-         if Actual = Null_Iir then
-            --  More than one actual.  Keep only the first.
-            Error_Msg_Sem
-              (+Name, "type conversion allows only one expression");
-         end if;
-
-         --  This is certainly the easiest case: the prefix is not overloaded,
-         --  so the result can be computed.
-         Set_Named_Entity (Name, Sem_Type_Conversion (Name, Prefix, Actual));
+            --  This is certainly the easiest case: the prefix is not
+            --  overloaded, so the result can be computed.
+            Set_Named_Entity
+              (Name, Sem_Type_Conversion (Name, Prefix, Actual, In_Formal));
+         end;
          return;
       end if;
 
@@ -2579,12 +2645,14 @@ package body Sem_Names is
             declare
                El : Iir;
                Prefix_List : Iir_List;
+               It : List_Iterator;
             begin
                Prefix_List := Get_Overload_List (Prefix);
-               for I in Natural loop
-                  El := Get_Nth_Element (Prefix_List, I);
-                  exit when El = Null_Iir;
+               It := List_Iterate (Prefix_List);
+               while Is_Valid (It) loop
+                  El := Get_Element (It);
                   Sem_Parenthesis_Function (El);
+                  Next (It);
                end loop;
                --  Some prefixes may have been removed, replace with the
                --  rebuilt prefix list.
@@ -2667,7 +2735,9 @@ package body Sem_Names is
 
          when Iir_Kinds_Process_Statement
            | Iir_Kind_Component_Declaration
-           | Iir_Kind_Type_Conversion =>
+           | Iir_Kind_Type_Conversion
+           | Iir_Kind_Unit_Declaration
+           | Iir_Kind_Enumeration_Literal =>
             Error_Msg_Sem (+Name, "%n cannot be indexed or sliced", +Prefix);
             Res := Null_Iir;
 
@@ -2675,7 +2745,7 @@ package body Sem_Names is
            | Iir_Kind_Psl_Endpoint_Declaration =>
             Res := Sem_Psl.Sem_Psl_Name (Name);
 
-         when Iir_Kinds_Library_Unit_Declaration =>
+         when Iir_Kinds_Library_Unit =>
             Error_Msg_Sem (+Name, "function name is a design unit");
 
          when Iir_Kind_Error =>
@@ -2735,14 +2805,13 @@ package body Sem_Names is
       case Get_Kind (Prefix) is
          when Iir_Kind_Overload_List =>
             declare
-               Prefix_List : Iir_List;
-               El : Iir;
+               Prefix_List : constant Iir_List := Get_Overload_List (Prefix);
+               It : List_Iterator;
             begin
-               Prefix_List := Get_Overload_List (Prefix);
-               for I in Natural loop
-                  El := Get_Nth_Element (Prefix_List, I);
-                  exit when El = Null_Iir;
-                  Sem_As_Selected_By_All_Name (El);
+               It := List_Iterate (Prefix_List);
+               while Is_Valid (It) loop
+                  Sem_As_Selected_By_All_Name (Get_Element (It));
+                  Next (It);
                end loop;
             end;
          when Iir_Kinds_Object_Declaration
@@ -2830,6 +2899,10 @@ package body Sem_Names is
             Error_Msg_Sem (+Attr, "prefix of user defined attribute cannot be "
                              & "an anonymous object");
             return Error_Mark;
+         when Iir_Kind_Attribute_Declaration =>
+            Error_Msg_Sem (+Attr, "prefix of user defined attribute cannot be "
+                             & "an attribute");
+            return Error_Mark;
          when Iir_Kinds_Object_Declaration
            | Iir_Kind_Type_Declaration
            | Iir_Kind_Subtype_Declaration
@@ -2838,7 +2911,7 @@ package body Sem_Names is
            | Iir_Kind_Enumeration_Literal
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Component_Declaration
-           | Iir_Kinds_Library_Unit_Declaration =>
+           | Iir_Kinds_Library_Unit =>
             --  FIXME: to complete
             null;
          when Iir_Kinds_Sequential_Statement
@@ -3227,6 +3300,7 @@ package body Sem_Names is
    begin
       Prefix := Get_Named_Entity (Get_Prefix (Attr));
       Res := Create_Iir (Kind);
+      Location_Copy (Res, Attr);
       if Kind = Iir_Kind_Delayed_Attribute then
          Set_Type (Res, Get_Type (Prefix));
       elsif Kind = Iir_Kind_Transaction_Attribute then
@@ -3474,7 +3548,7 @@ package body Sem_Names is
            | Iir_Kind_Group_Declaration
            | Iir_Kind_Group_Template_Declaration
            | Iir_Kind_File_Declaration
-           | Iir_Kinds_Library_Unit_Declaration
+           | Iir_Kinds_Library_Unit
            | Iir_Kind_Non_Object_Alias_Declaration =>
             null;
 
@@ -3507,15 +3581,19 @@ package body Sem_Names is
 
       case Get_Identifier (Attr) is
          when Name_Simple_Name =>
-            Res := Create_Iir (Iir_Kind_Simple_Name_Attribute);
-            Eval_Simple_Name (Get_Identifier (Prefix));
-            Set_Simple_Name_Identifier (Res, Name_Table.Get_Identifier);
-            Attr_Type := Create_Unidim_Array_By_Length
-              (String_Type_Definition,
-               Iir_Int64 (Name_Table.Nam_Length),
-               Attr);
-            Set_Simple_Name_Subtype (Res, Attr_Type);
-            Set_Expr_Staticness (Res, Locally);
+            declare
+               Id : constant Name_Id := Name_Table.Get_Identifier
+                 (Eval_Simple_Name (Get_Identifier (Prefix)));
+            begin
+               Res := Create_Iir (Iir_Kind_Simple_Name_Attribute);
+               Set_Simple_Name_Identifier (Res, Id);
+               Attr_Type := Create_Unidim_Array_By_Length
+                 (String_Type_Definition,
+                  Iir_Int64 (Name_Table.Get_Name_Length (Id)),
+                  Attr);
+               Set_Simple_Name_Subtype (Res, Attr_Type);
+               Set_Expr_Staticness (Res, Locally);
+            end;
 
          when Name_Path_Name =>
             Res := Create_Iir (Iir_Kind_Path_Name_Attribute);
@@ -3701,6 +3779,8 @@ package body Sem_Names is
             Sem_Selected_By_All_Name (Name);
          when Iir_Kind_Attribute_Name =>
             Sem_Attribute_Name (Name);
+         when Iir_Kinds_External_Name =>
+            Sem_External_Name (Name);
          when others =>
             Error_Kind ("sem_name", Name);
       end case;
@@ -3719,87 +3799,99 @@ package body Sem_Names is
            | Iir_Kind_Operator_Symbol =>
             --  String_Literal may be a operator_symbol.
             Sem_Simple_Name (Name, False, Soft => True);
+         when Iir_Kind_Selected_Name =>
+            Sem_Selected_Name (Name, Keep_Alias => False, Soft => True);
+         when Iir_Kind_Parenthesis_Name =>
+            --  FIXME: SOFT!!
+            Sem_Parenthesis_Name (Name);
          when others =>
             Error_Kind ("sem_name_soft", Name);
       end case;
    end Sem_Name_Soft;
 
-   procedure Sem_Name_Clean (Name : Iir)
+   procedure Sem_Name_Clean_1 (Name : Iir)
    is
-      N : Iir;
-      Next_N : Iir;
       Named_Entity : Iir;
       Atype : Iir;
    begin
-      N := Name;
-      while N /= Null_Iir loop
-         case Get_Kind (N) is
-            when Iir_Kind_Simple_Name
-              | Iir_Kind_Operator_Symbol =>
-               Next_N := Null_Iir;
-            when others =>
-               Error_Kind ("sem_name_clean", N);
-         end case;
+      if Name = Null_Iir then
+         return;
+      end if;
 
-         --  Clear and free overload lists of Named_entity and type.
-         Named_Entity := Get_Named_Entity (N);
-         Set_Named_Entity (N, Null_Iir);
-         if Named_Entity /= Null_Iir
-           and then Is_Overload_List (Named_Entity)
-         then
-            Free_Iir (Named_Entity);
-         end if;
+      --  Clear and free overload lists of Named_entity and type.
+      Named_Entity := Get_Named_Entity (Name);
+      Set_Named_Entity (Name, Null_Iir);
+      if Named_Entity /= Null_Iir
+        and then Is_Overload_List (Named_Entity)
+      then
+         Free_Iir (Named_Entity);
+      end if;
 
-         Atype := Get_Type (N);
-         Set_Type (N, Null_Iir);
-         if Atype /= Null_Iir
-           and then Is_Overload_List (Atype)
-         then
-            Free_Iir (Atype);
-         end if;
+      Atype := Get_Type (Name);
+      Set_Type (Name, Null_Iir);
+      if Atype /= Null_Iir
+        and then Is_Overload_List (Atype)
+      then
+         Free_Iir (Atype);
+      end if;
+   end Sem_Name_Clean_1;
 
-         N := Next_N;
-      end loop;
+   procedure Sem_Name_Clean (Name : Iir) is
+   begin
+      case Get_Kind (Name) is
+         when Iir_Kind_Simple_Name
+           | Iir_Kind_Operator_Symbol =>
+            Sem_Name_Clean_1 (Name);
+         when Iir_Kind_Parenthesis_Name
+           | Iir_Kind_Selected_Name =>
+            Sem_Name_Clean_1 (Get_Prefix (Name));
+            Sem_Name_Clean_1 (Name);
+         when others =>
+            Error_Kind ("sem_name_clean", Name);
+      end case;
    end Sem_Name_Clean;
 
    --  Remove procedure specification from LIST.
    function Remove_Procedures_From_List (Expr : Iir) return Iir
    is
       El : Iir;
-      P : Natural;
       List : Iir_List;
+      It : List_Iterator;
+      New_List : Iir_List;
    begin
       if not Is_Overload_List (Expr) then
          return Expr;
       end if;
       List := Get_Overload_List (Expr);
-      P := 0;
-      for I in Natural loop
-         El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
+      New_List := Create_Iir_List;
+      It := List_Iterate (List);
+      while Is_Valid (It) loop
+         El := Get_Element (It);
          case Get_Kind (El) is
             when Iir_Kind_Procedure_Declaration =>
                null;
             when Iir_Kind_Function_Declaration =>
                if Maybe_Function_Call (El) then
-                  Replace_Nth_Element (List, P, El);
-                  P := P + 1;
+                  Append_Element (New_List, El);
                end if;
             when others =>
-               Replace_Nth_Element (List, P, El);
-               P := P + 1;
+               Append_Element (New_List, El);
          end case;
+         Next (It);
       end loop;
-      case P is
+      case Get_Nbr_Elements (New_List) is
          when 0 =>
             Free_Iir (Expr);
+            Destroy_Iir_List (New_List);
             return Null_Iir;
          when 1 =>
-            El := Get_First_Element (List);
             Free_Iir (Expr);
+            El := Get_First_Element (New_List);
+            Destroy_Iir_List (New_List);
             return El;
          when others =>
-            Set_Nbr_Elements (List, P);
+            Set_Overload_List (Expr, New_List);
+            Destroy_Iir_List (List);
             return Expr;
       end case;
    end Remove_Procedures_From_List;
@@ -3825,6 +3917,7 @@ package body Sem_Names is
       Res_Type : Iir;
       Expr : Iir;
       Expr_List : Iir_List;
+      Expr_It : List_Iterator;
       Res : Iir;
       Res1 : Iir;
       El : Iir;
@@ -3868,15 +3961,16 @@ package body Sem_Names is
          if A_Type /= Null_Iir then
             --  Find the name returning A_TYPE.
             Res := Null_Iir;
-            for I in Natural loop
-               El := Get_Nth_Element (Expr_List, I);
-               exit when El = Null_Iir;
+            Expr_It := List_Iterate (Expr_List);
+            while Is_Valid (Expr_It) loop
+               El := Get_Element (Expr_It);
                if Are_Basetypes_Compatible (Get_Base_Type (Get_Type (El)),
                                             A_Type)
                  /= Not_Compatible
                then
                   Add_Result (Res, El);
                end if;
+               Next (Expr_It);
             end loop;
             if Res = Null_Iir then
                --  Specific error message for a non-visible enumeration
@@ -3886,9 +3980,9 @@ package body Sem_Names is
                  and then Kind_In (Name, Iir_Kind_Simple_Name,
                                    Iir_Kind_Character_Literal)
                then
-                  Res := Find_Name_In_List (Get_Enumeration_Literal_List
-                                              (Get_Base_Type (A_Type)),
-                                            Get_Identifier (Name));
+                  Res := Find_Name_In_Flist (Get_Enumeration_Literal_List
+                                               (Get_Base_Type (A_Type)),
+                                             Get_Identifier (Name));
                   if Res /= Null_Iir then
                      Error_Msg_Sem
                        (+Name, "enumeration literal %i is not visible "
@@ -4060,6 +4154,9 @@ package body Sem_Names is
            | Iir_Kind_Element_Attribute
            | Iir_Kind_Base_Attribute =>
             return Get_Type (Name);
+         when Iir_Kinds_Expression_Attribute =>
+            Error_Msg_Sem (+Name, "%n is not a valid type mark", +Name);
+            return Create_Error_Type (Name);
          when others =>
             if not Is_Error (Name) then
                Error_Msg_Sem
@@ -4143,6 +4240,17 @@ package body Sem_Names is
       end if;
 
       Set_Type (Name, Atype);
+
+      --  LRM08 8.1 Names
+      --  A name is said to be a static name if and only if one of the
+      --  following condition holds:
+      --  - The name is an external name.
+      Set_Name_Staticness (Name, Globally);
+
+      Set_Expr_Staticness (Name, None);
+
+      --  Consider the node as analyzed.
+      Set_Named_Entity (Name, Name);
    end Sem_External_Name;
 
    function Sem_Terminal_Name (Name : Iir) return Iir

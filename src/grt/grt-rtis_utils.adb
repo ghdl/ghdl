@@ -416,7 +416,8 @@ package body Grt.Rtis_Utils is
 --                --  FIXME: update OBJ (not very useful since never in a
 --                --   composite type).
 --             end;
-            when Ghdl_Rtik_Type_Record =>
+            when Ghdl_Rtik_Type_Record
+              | Ghdl_Rtik_Type_Unbounded_Record =>
                Handle_Record (To_Ghdl_Rtin_Type_Record_Acc (Rti));
             when Ghdl_Rtik_Subtype_Record =>
                declare

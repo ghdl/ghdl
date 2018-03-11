@@ -490,6 +490,7 @@ package body Sem_Decls is
    procedure Sem_Interface_Subprogram_Declaration (Inter : Iir) is
    begin
       Sem_Subprogram_Specification (Inter);
+      Sem_Scopes.Add_Name (Inter);
       Xref_Decl (Inter);
    end Sem_Interface_Subprogram_Declaration;
 
@@ -626,6 +627,7 @@ package body Sem_Decls is
                   Set_Type (Inter,
                             Std_Package.File_Open_Status_Type_Definition);
                   Set_Mode (Inter, Iir_Out_Mode);
+                  Set_Visible_Flag (Inter, True);
                   Append (Last_Interface, Proc, Inter);
             end case;
             --  File F : FT
@@ -634,6 +636,7 @@ package body Sem_Decls is
             Set_Identifier (Inter, Std_Names.Name_F);
             Set_Type (Inter, Type_Definition);
             Set_Mode (Inter, Iir_Inout_Mode);
+            Set_Visible_Flag (Inter, True);
             Append (Last_Interface, Proc, Inter);
             --  External_Name : in STRING
             Inter := Create_Iir (Iir_Kind_Interface_Constant_Declaration);
@@ -641,6 +644,7 @@ package body Sem_Decls is
             Set_Identifier (Inter, Std_Names.Name_External_Name);
             Set_Type (Inter, Std_Package.String_Type_Definition);
             Set_Mode (Inter, Iir_In_Mode);
+            Set_Visible_Flag (Inter, True);
             Append (Last_Interface, Proc, Inter);
             --  Open_Kind : in File_Open_Kind := Read_Mode.
             Inter := Create_Iir (Iir_Kind_Interface_Constant_Declaration);
@@ -651,6 +655,7 @@ package body Sem_Decls is
             Set_Default_Value
               (Inter,
                Build_Simple_Name (Std_Package.File_Open_Kind_Read_Mode, Loc));
+            Set_Visible_Flag (Inter, True);
             Append (Last_Interface, Proc, Inter);
             Compute_Subprogram_Hash (Proc);
             -- Add it to the list.
@@ -671,6 +676,7 @@ package body Sem_Decls is
          Set_Location (Inter, Loc);
          Set_Type (Inter, Type_Definition);
          Set_Mode (Inter, Iir_Inout_Mode);
+         Set_Visible_Flag (Inter, True);
          Append (Last_Interface, Proc, Inter);
          Compute_Subprogram_Hash (Proc);
          -- Add it to the list.
@@ -696,6 +702,7 @@ package body Sem_Decls is
       Set_Location (Inter, Loc);
       Set_Type (Inter, Type_Definition);
       Set_Mode (Inter, Iir_In_Mode);
+      Set_Visible_Flag (Inter, True);
       Append (Last_Interface, Proc, Inter);
       Inter := Create_Iir (Iir_Kind_Interface_Variable_Declaration);
       Set_Identifier (Inter, Std_Names.Name_Value);
@@ -703,6 +710,7 @@ package body Sem_Decls is
       Set_Subtype_Indication (Inter, Build_Simple_Name (Decl, Loc));
       Set_Type (Inter, Type_Mark_Type);
       Set_Mode (Inter, Iir_Out_Mode);
+      Set_Visible_Flag (Inter, True);
       Append (Last_Interface, Proc, Inter);
       if Get_Kind (Type_Mark_Type) in Iir_Kinds_Array_Type_Definition
         and then Get_Constraint_State (Type_Mark_Type) /= Fully_Constrained
@@ -712,6 +720,7 @@ package body Sem_Decls is
          Set_Location (Inter, Loc);
          Set_Type (Inter, Std_Package.Natural_Subtype_Definition);
          Set_Mode (Inter, Iir_Out_Mode);
+         Set_Visible_Flag (Inter, True);
          Append (Last_Interface, Proc, Inter);
          Set_Implicit_Definition (Proc, Iir_Predefined_Read_Length);
       else
@@ -736,6 +745,7 @@ package body Sem_Decls is
       Set_Mode (Inter, Iir_Out_Mode);
       Set_Name_Staticness (Inter, Locally);
       Set_Expr_Staticness (Inter, None);
+      Set_Visible_Flag (Inter, True);
       Append (Last_Interface, Proc, Inter);
       Inter := Create_Iir (Iir_Kind_Interface_Constant_Declaration);
       Set_Identifier (Inter, Std_Names.Name_Value);
@@ -743,6 +753,7 @@ package body Sem_Decls is
       Set_Subtype_Indication (Inter, Build_Simple_Name (Decl, Loc));
       Set_Type (Inter, Type_Mark_Type);
       Set_Mode (Inter, Iir_In_Mode);
+      Set_Visible_Flag (Inter, True);
       Append (Last_Interface, Proc, Inter);
       Set_Implicit_Definition (Proc, Iir_Predefined_Write);
       Compute_Subprogram_Hash (Proc);
@@ -764,6 +775,7 @@ package body Sem_Decls is
          Set_Type (Inter, Type_Definition);
          Set_Name_Staticness (Inter, Locally);
          Set_Expr_Staticness (Inter, None);
+         Set_Visible_Flag (Inter, True);
          Append (Last_Interface, Proc, Inter);
          Set_Implicit_Definition (Proc, Iir_Predefined_Flush);
          Compute_Subprogram_Hash (Proc);
@@ -782,6 +794,7 @@ package body Sem_Decls is
       Set_Location (Inter, Loc);
       Set_Type (Inter, Type_Definition);
       Set_Mode (Inter, Iir_In_Mode);
+      Set_Visible_Flag (Inter, True);
       Append (Last_Interface, Func, Inter);
       Set_Return_Type (Func, Std_Package.Boolean_Type_Definition);
       Set_Implicit_Definition (Func, Iir_Predefined_Endfile);
@@ -1235,11 +1248,13 @@ package body Sem_Decls is
                Set_Identifier (Deallocate_Proc, Std_Names.Name_Deallocate);
                Set_Implicit_Definition
                  (Deallocate_Proc, Iir_Predefined_Deallocate);
+               Set_Parent (Deallocate_Proc, Get_Parent (Decl));
 
                Var_Interface :=
                  Create_Iir (Iir_Kind_Interface_Variable_Declaration);
                Location_Copy (Var_Interface, Decl);
                Set_Identifier (Var_Interface, Std_Names.Name_P);
+               Set_Parent (Var_Interface, Deallocate_Proc);
                Set_Type (Var_Interface, Type_Definition);
                Set_Mode (Var_Interface, Iir_Inout_Mode);
                --Set_Purity_State (Deallocate_Proc, Impure);
@@ -1691,7 +1706,7 @@ package body Sem_Decls is
       Ind := Sem_Subtype_Indication (Ind);
       Set_Subtype_Indication (Decl, Ind);
       Def := Get_Type_Of_Subtype_Indication (Ind);
-      if Def = Null_Iir then
+      if Def = Null_Iir or else Is_Error (Def) then
          return;
       end if;
 
@@ -2201,6 +2216,16 @@ package body Sem_Decls is
                  (+Alias, "base type of aliased name and name mismatch");
             end if;
          end if;
+
+         --  LRM08 6.6.2 Object aliases
+         --  The following rules apply yo object aliases:
+         --  b) If the name is an external name, a subtype indication shall not
+         --     appear in the alias declaration.
+         if Get_Kind (N_Name) in Iir_Kinds_External_Name then
+            Error_Msg_Sem
+              (+Alias,
+               "subtype indication not allowed in alias of external name");
+         end if;
       end if;
 
       --  LRM93 4.3.3.1
@@ -2233,11 +2258,10 @@ package body Sem_Decls is
    function Signature_Match (N_Entity : Iir; Sig : Iir_Signature)
                             return Boolean
    is
-      List : Iir_List;
+      List : constant Iir_Flist := Get_Type_Marks_List (Sig);
       Inter : Iir;
       El : Iir;
    begin
-      List := Get_Type_Marks_List (Sig);
       case Get_Kind (N_Entity) is
          when Iir_Kind_Enumeration_Literal =>
             --  LRM93 2.3.2  Signatures
@@ -2249,10 +2273,11 @@ package body Sem_Decls is
             if Get_Return_Type_Mark (Sig) = Null_Iir then
                return False;
             end if;
-            return List = Null_Iir_List
-              and then Get_Type (N_Entity)
-              = Get_Type (Get_Return_Type_Mark (Sig));
-         when Iir_Kind_Function_Declaration =>
+            return List = Null_Iir_Flist
+              and then (Get_Type (N_Entity)
+                          = Get_Type (Get_Return_Type_Mark (Sig)));
+         when Iir_Kind_Function_Declaration
+           | Iir_Kind_Interface_Function_Declaration =>
             --  LRM93 2.3.2  Signatures
             --  * if the reserved word RETURN is present, the subprogram is
             --    a function and the base type of the type mark following
@@ -2266,7 +2291,8 @@ package body Sem_Decls is
             then
                return False;
             end if;
-         when Iir_Kind_Procedure_Declaration =>
+         when Iir_Kind_Procedure_Declaration
+           | Iir_Kind_Interface_Procedure_Declaration =>
             --  LRM93 2.3.2  Signatures
             --  * [...] or the reserved word RETURN is absent and the
             --    subprogram is a procedure.
@@ -2288,15 +2314,13 @@ package body Sem_Decls is
       --    mark of the signature is the same as the base type of the
       --    corresponding formal parameter of the subprogram; [and finally, ]
       Inter := Get_Interface_Declaration_Chain (N_Entity);
-      if List = Null_Iir_List then
+      if List = Null_Iir_Flist then
          return Inter = Null_Iir;
       end if;
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (List) loop
          El := Get_Nth_Element (List, I);
-         if El = Null_Iir and Inter = Null_Iir then
-            return True;
-         end if;
-         if El = Null_Iir or Inter = Null_Iir then
+         if Inter = Null_Iir then
+            --  More type marks in the signature than in the interface.
             return False;
          end if;
          if Get_Base_Type (Get_Type (Inter)) /= Get_Type (El) then
@@ -2304,26 +2328,26 @@ package body Sem_Decls is
          end if;
          Inter := Get_Chain (Inter);
       end loop;
-      --  Avoid a spurious warning.
-      return False;
+      --  Match only if the number of type marks is the same.
+      return Inter = Null_Iir;
    end Signature_Match;
 
    --  Extract from NAME the named entity whose profile matches with SIG.
    function Sem_Signature (Name : Iir; Sig : Iir_Signature) return Iir
    is
+      List : constant Iir_Flist := Get_Type_Marks_List (Sig);
       Res : Iir;
       El : Iir;
-      List : Iir_List;
       Error : Boolean;
+      Ov_List : Iir_List;
+      Ov_It : List_Iterator;
    begin
       --  Sem signature.
-      List := Get_Type_Marks_List (Sig);
-      if List /= Null_Iir_List then
-         for I in Natural loop
+      if List /= Null_Iir_Flist then
+         for I in Flist_First .. Flist_Last (List) loop
             El := Get_Nth_Element (List, I);
-            exit when El = Null_Iir;
             El := Sem_Type_Mark (El);
-            Replace_Nth_Element (List, I, El);
+            Set_Nth_Element (List, I, El);
 
             --  Reuse the Type field of the name for the base type.  This is
             --  a deviation from the use of Type in a name, but restricted to
@@ -2343,9 +2367,10 @@ package body Sem_Decls is
       Res := Null_Iir;
       Error := False;
       if Is_Overload_List (Name) then
-         for I in Natural loop
-            El := Get_Nth_Element (Get_Overload_List (Name), I);
-            exit when El = Null_Iir;
+         Ov_List := Get_Overload_List (Name);
+         Ov_It := List_Iterate (Ov_List);
+         while Is_Valid (Ov_It) loop
+            El := Get_Element (Ov_It);
             if Signature_Match (El, Sig) then
                if Res = Null_Iir then
                   Res := El;
@@ -2361,6 +2386,7 @@ package body Sem_Decls is
                   Error_Msg_Sem (+El, "found: %n", +El);
                end if;
             end if;
+            Next (Ov_It);
          end loop;
 
          --  Free the overload list (with a workaround as only variables can
@@ -2396,7 +2422,7 @@ package body Sem_Decls is
       Type_Decl : constant Iir := Get_Type_Declarator (Def);
       Last : Iir;
       El : Iir;
-      Enum_List : Iir_Enumeration_Literal_List;
+      Enum_List : Iir_Flist;
 
       --  Append an implicit alias
       procedure Add_Implicit_Alias (Decl : Iir)
@@ -2441,9 +2467,8 @@ package body Sem_Decls is
          --      of the literals of the base type immediately follows the
          --      alias declaration for the enumeration type; [...]
          Enum_List := Get_Enumeration_Literal_List (Def);
-         for I in Natural loop
+         for I in Flist_First .. Flist_Last (Enum_List) loop
             El := Get_Nth_Element (Enum_List, I);
-            exit when El = Null_Iir;
             --  LRM93 4.3.3.2  Non-Object Aliases
             --      [...] each such implicit declaration has, as its alias
             --      designator, the simple name or character literal of the
@@ -2533,8 +2558,8 @@ package body Sem_Decls is
       Id : Name_Id;
    begin
       case Get_Kind (N_Entity) is
-         when Iir_Kind_Function_Declaration
-           | Iir_Kind_Procedure_Declaration =>
+         when Iir_Kinds_Subprogram_Declaration
+           | Iir_Kinds_Interface_Subprogram_Declaration =>
             --  LRM93 4.3.3.2  Non-Object Aliases
             --  2.  A signature is required if the name denotes a subprogram
             --      (including an operator) or enumeration literal.
@@ -2684,11 +2709,11 @@ package body Sem_Decls is
 
          Free_Iir (Alias);
 
-         if Get_Kind (Name) in Iir_Kinds_Denoting_Name then
+         if Get_Kind (Name) in Iir_Kinds_Denoting_And_External_Name then
             Sem_Non_Object_Alias_Declaration (Res);
          else
             Error_Msg_Sem
-              (+Name, "name of nonobject alias is not a declaration");
+              (+Name, "name of nonobject alias is not a name");
 
             --  Create a simple name to an error node.
             N_Entity := Create_Error (Name);
@@ -2705,8 +2730,7 @@ package body Sem_Decls is
    end Sem_Alias_Declaration;
 
    procedure Sem_Group_Template_Declaration
-     (Decl : Iir_Group_Template_Declaration)
-   is
+     (Decl : Iir_Group_Template_Declaration) is
    begin
       Sem_Scopes.Add_Name (Decl);
       Sem_Scopes.Name_Visible (Decl);
@@ -2717,7 +2741,7 @@ package body Sem_Decls is
    is
       use Tokens;
 
-      Constituent_List : Iir_Group_Constituent_List;
+      Constituent_List : Iir_Flist;
       Template : Iir_Group_Template_Declaration;
       Template_Name : Iir;
       Class, Prev_Class : Token_Type;
@@ -2738,9 +2762,8 @@ package body Sem_Decls is
       Constituent_List := Get_Group_Constituent_List (Group);
       El_Entity := Get_Entity_Class_Entry_Chain (Template);
       Prev_Class := Tok_Eof;
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (Constituent_List) loop
          El := Get_Nth_Element (Constituent_List, I);
-         exit when El = Null_Iir;
 
          Sem_Name (El);
 
@@ -2769,7 +2792,7 @@ package body Sem_Decls is
             Error_Overload (El_Name);
          else
             El := Finish_Sem_Name (El);
-            Replace_Nth_Element (Constituent_List, I, El);
+            Set_Nth_Element (Constituent_List, I, El);
             El_Name := Get_Named_Entity (El);
 
             --  Statements are textually afer the group declaration.  To avoid
@@ -2998,7 +3021,7 @@ package body Sem_Decls is
                Sem_Attribute_Declaration (Decl);
             when Iir_Kind_Attribute_Specification =>
                Sem_Attribute_Specification (Decl, Parent);
-               if Get_Entity_Name_List (Decl) in Iir_Lists_All_Others then
+               if Get_Entity_Name_List (Decl) in Iir_Flists_All_Others then
                   Set_Attribute_Specification_Chain (Decl, Attr_Spec_Chain);
                   Attr_Spec_Chain := Decl;
                end if;

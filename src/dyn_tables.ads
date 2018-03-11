@@ -63,13 +63,16 @@ package Dyn_Tables is
       Priv : Instance_Private;
    end record;
 
-   --  Initialize the table.  This is done automatically at elaboration.
+   --  Initialize the table.  This must be done by users.
    procedure Init (T : in out Instance);
 
    --  Logical bounds of the array.
    First : constant Table_Index_Type := Table_Low_Bound;
    function Last (T : Instance) return Table_Index_Type;
    pragma Inline (Last);
+
+   --  Return the index of the next bound after last.
+   function Next (T : Instance) return Table_Index_Type;
 
    --  Deallocate all the memory.  Makes the array unusable until the next
    --  call to Init.
@@ -95,11 +98,13 @@ package Dyn_Tables is
    procedure Allocate (T : in out Instance; Num : Natural := 1);
 
 private
+   type Unsigned is mod 2**32;
+
    type Instance_Private is record
       --  Number of allocated elements in the table.
-      Length : Natural := 0;
+      Length : Unsigned := 0;
 
       --  Number of used elements in the table.
-      Last_Pos : Natural := 0;
+      Last_Pos : Unsigned := 0;
    end record;
 end Dyn_Tables;

@@ -568,13 +568,12 @@ package body Trans.Chap1 is
 
       --  Call the subprogram for the instantiation list.
       declare
-         List : Iir_List;
+         List : Iir_Flist;
          El   : Iir;
       begin
          List := Get_Instantiation_List (Cfg);
-         for I in Natural loop
+         for I in Flist_First .. Flist_Last (List) loop
             El := Get_Nth_Element (List, I);
-            exit when El = Null_Iir;
             El := Get_Named_Entity (El);
             case Get_Kind (El) is
                when Iir_Kind_Component_Instantiation_Statement =>
@@ -708,10 +707,10 @@ package body Trans.Chap1 is
             Apply_To_All_Others_Blocks (True);
          when Iir_Kind_Indexed_Name =>
             declare
-               Index_List : constant Iir_List := Get_Index_List (Spec);
+               Index_List : constant Iir_Flist := Get_Index_List (Spec);
                Rng        : Mnode;
             begin
-               if Index_List = Iir_List_Others then
+               if Index_List = Iir_Flist_Others then
                   Apply_To_All_Others_Blocks (False);
                else
                   Open_Temp;

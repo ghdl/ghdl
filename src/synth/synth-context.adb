@@ -23,16 +23,15 @@ with Ada.Unchecked_Deallocation;
 with Types; use Types;
 with Grt.Types; use Grt.Types;
 with Errorout; use Errorout;
+with Iirs_Utils;
 
-with Annotations; use Annotations;
-with Execution;
-with Iir_Values; use Iir_Values;
-
-with Netlists.Builders; use Netlists.Builders;
-
-with Iirs_Utils; use Iirs_Utils;
 with Std_Package;
 with Ieee.Std_Logic_1164;
+
+with Simul.Annotations; use Simul.Annotations;
+with Simul.Execution;
+
+with Netlists.Builders; use Netlists.Builders;
 
 with Synth.Types; use Synth.Types;
 with Synth.Errors; use Synth.Errors;
@@ -98,7 +97,7 @@ package body Synth.Context is
                  (Kind, Obj, Bounds_To_Range (Val.Bounds.D (1)));
             end if;
             if Is_Bit_Type (Get_Element_Subtype (Btype))
-              and then Get_Nbr_Dimensions (Btype) = 1
+              and then Iirs_Utils.Get_Nbr_Dimensions (Btype) = 1
             then
                --  A vector of bits.
                return Alloc_Wire
@@ -216,12 +215,12 @@ package body Synth.Context is
 
    function Get_Value (Inst : Synth_Instance_Acc; Obj : Iir) return Value_Acc
    is
-      Slot : constant Object_Slot_Type := Get_Info (Obj).Slot;
+      Info : constant Sim_Info_Acc := Get_Info (Obj);
       Sim_Inst : constant Block_Instance_Acc :=
-        Execution.Get_Instance_For_Slot (Inst.Sim, Obj);
+        Simul.Execution.Get_Instance_By_Scope (Inst.Sim, Info.Obj_Scope);
       Val : Value_Acc;
    begin
-      Val := Instance_Map (Sim_Inst.Id).Objects (Slot);
+      Val := Instance_Map (Sim_Inst.Id).Objects (Info.Slot);
       pragma Assert (Val /= null);
       return Val;
    end Get_Value;

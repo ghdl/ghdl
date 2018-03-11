@@ -20,6 +20,7 @@ with Types; use Types;
 with Tokens; use Tokens;
 with Nodes;
 with Lists;
+with Flists;
 
 package Iirs is
    --  This package defines the semantic tree and functions to handle it.
@@ -233,8 +234,6 @@ package Iirs is
    --  a package, a package body or a configuration.
    --   Get/Set_Library_Unit (Field5)
    --
-   --   Get/Set_End_Location (Field6)
-   --
    --  Collision chain for units.
    --   Get/Set_Hash_Chain (Field7)
    --
@@ -445,14 +444,14 @@ package Iirs is
    --  A function call or a type conversion for the actual.
    --  FIXME: should be a name ?
    -- Only for Iir_Kind_Association_Element_By_Expression:
-   --   Get/Set_In_Conversion (Field4)
+   --   Get/Set_Actual_Conversion (Field4)
    --
    -- Only for Iir_Kind_Association_Element_Type:
    --   Get/Set_Subprogram_Association_Chain (Field4)
    --
    --  A function call or a type conversion for the formal.
    -- Only for Iir_Kind_Association_Element_By_Expression:
-   --   Get/Set_Out_Conversion (Field5)
+   --   Get/Set_Formal_Conversion (Field5)
    --
    --  Owner of Actual_Type if needed.
    -- Only for Iir_Kind_Association_Element_By_Individual:
@@ -470,6 +469,8 @@ package Iirs is
    --
    -- Only for Iir_Kind_Association_Element_Open:
    --   Get/Set_Artificial_Flag (Flag3)
+   --
+   --   Get/Set_In_Formal_Flag (Flag4)
    --
    -- Only for Iir_Kind_Association_Element_By_Individual:
    --  Must be Locally unless there is an error on one choice.
@@ -490,6 +491,8 @@ package Iirs is
    --   Get/Set_Waveform_Chain (Field5)
    --
    --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Conditional_Expression (Short)
    --  LRM08 10.5.3
@@ -503,6 +506,8 @@ package Iirs is
    --   Get/Set_Expression (Field5)
    --
    --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Choice_By_Others (Short)
    -- Iir_Kind_Choice_By_None (Short)
@@ -511,6 +516,12 @@ package Iirs is
    -- Iir_Kind_Choice_By_Expression (Short)
    --  (Iir_Kinds_Choice)
    --
+   --
+   --  The location of the first alternative is set on:
+   --  'when' for case statement, selected assignment and case generate,
+   --  '(' or ',' for aggregates.
+   --  The location of the following alternatives is set on '|'.
+   --
    --   Get/Set_Parent (Field0)
    --
    --  For a list of choices, only the first one is associated, the following
@@ -518,7 +529,7 @@ package Iirs is
    --   Get/Set_Chain (Field2)
    --
    --  These are elements of an choice chain, which is used for
-   --  case_statement, concurrent_select_signal_assignment, aggregates.
+   --  case_statement, concurrent_selected_signal_assignment, aggregates.
    --
    --  Get/Set what is associated with the choice.  There are two different
    --  nodes, one for simple association and the other for chain association.
@@ -534,7 +545,7 @@ package Iirs is
    --   Get/Set_Associated_Block (Alias Field3)
    --
    --  For
-   --  * a waveform_chain for a concurrent_select_signal_assignment,
+   --  * a waveform_chain for a concurrent_selected_signal_assignment,
    --  * a sequential statement chain for a case_statement.
    --   Get/Set_Associated_Chain (Field4)
    --
@@ -558,8 +569,10 @@ package Iirs is
    --
    --   Get/Set_Entity_Name (Field2)
    --
-   --  parse: a simple name.
-   --  sem: an architecture declaration or NULL_IIR.
+   --  A simple name for the architecture.  The named entity can be:
+   --  * Null_Iir if the architecture is not known.
+   --  * a design unit if the architecture is known but not loaded.
+   --  * an architecture body if the architecture is loaded.
    --   Get/Set_Architecture (Field3)
 
    -- Iir_Kind_Entity_Aspect_Open (Short)
@@ -629,6 +642,8 @@ package Iirs is
    --     instantiation_label { , instantiation_label }
    --   | OTHERS
    --   | ALL
+   --
+   --  The location points to 'for'.
    --
    --  The declaration containing this type declaration.
    --   Get/Set_Parent (Field0)
@@ -945,6 +960,8 @@ package Iirs is
    --
    --  The uninstantiated package declaration.
    --   Get/Set_Uninstantiated_Package_Decl (Field9)
+   --
+   --   Get/Set_Instance_Source_File (Field10)
    --
    --   Get/Set_Generic_Chain (Field6)
    --
@@ -1299,6 +1316,8 @@ package Iirs is
    --
    --   Get/Set_Uninstantiated_Package_Decl (Field9)
    --
+   --   Get/Set_Instance_Source_File (Field10)
+   --
    --   Get/Set_Generic_Chain (Field6)
    --
    --   Get/Set_Generic_Map_Aspect_Chain (Field8)
@@ -1331,7 +1350,7 @@ package Iirs is
    --  function_specification ::=
    --     [ PURE | IMPURE ] FUNCTION designator
    --        subprogram_header
-   --        [ [ PARAMETER ] ( formal_parameter_list ) ] return type_mark
+   --        [ [ PARAMETER ] ( formal_parameter_list ) ] RETURN type_mark
    --
    --  designator ::= identifier | operator_symbol
    --
@@ -1472,7 +1491,7 @@ package Iirs is
    --
    --  interface_function_specification ::=
    --     [ PURE | IMPURE ] FUNCTION designator
-   --        [ [ PARAMETER ] ( formal_parameter_list ) ] return type_mark
+   --        [ [ PARAMETER ] ( formal_parameter_list ) ] RETURN type_mark
    --
    --   Get/Set_Parent (Field0)
    --
@@ -1769,9 +1788,9 @@ package Iirs is
    --
    --   Get/Set_Type (Field1)
    --
+   --  Corresponding element_declaration.  FIXME: remove as supersided by
+   --  element_position.
    --   Get/Set_Element_Declaration (Field5)
-   --   Corresponding element_declaration.  FIXME: remove as supersided by
-   --   element_position.
    --
    --   Get/Set_Identifier (Field3)
    --
@@ -1961,6 +1980,8 @@ package Iirs is
    --  use_clause ::=
    --     USE selected_name { , selected_name } ;
    --
+   --  Location is on 'USE'.
+   --
    --   Get/Set_Parent (Field0)
    --
    --   Get/Set_Selected_Name (Field1)
@@ -2043,6 +2064,8 @@ package Iirs is
    --   Get/Set_Has_Signal_Flag (Flag3)
    --
    --   Get/Set_Only_Characters_Flag (Flag4)
+   --
+   --   Get/Set_Is_Character_Type (Flag5)
    --
    --   Get/Set_Is_Ref (Flag12)
    --
@@ -2716,9 +2739,13 @@ package Iirs is
    --
    --  True if the target of the assignment is guarded
    --   Get/Set_Guarded_Target_State (State1)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Sensitized_Process_Statement (Medium)
    -- Iir_Kind_Process_Statement (Medium)
+   --
+   --  Location is on the label, or 'postponed' or 'process'.
    --
    --   Get/Set_Parent (Field0)
    --
@@ -2731,16 +2758,16 @@ package Iirs is
    --
    --   Get/Set_Attribute_Value_Chain (Field4)
    --
+   --  The concurrent statement at the origin of that process.  This is
+   --  Null_Iir for a user process.
+   --   Get/Set_Process_Origin (Field8)
+   --
    --   Get/Set_Sequential_Statement_Chain (Field5)
    --
    -- Only for Iir_Kind_Sensitized_Process_Statement:
    --   Get/Set_Sensitivity_List (Field6)
    --
    --   Get/Set_Callees_List (Field7)
-   --
-   --  The concurrent statement at the origin of that process.  This is
-   --  Null_Iir for a user process.
-   --   Get/Set_Process_Origin (Field8)
    --
    --   Get/Set_Wait_State (State1)
    --
@@ -2883,8 +2910,20 @@ package Iirs is
    --   Get/Set_Component_Configuration (Field6)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Has_Component (Flag5)
 
    -- Iir_Kind_Block_Statement (Medium)
+   --  LRM08 11.2 Block statement
+   --
+   --  block_statement ::=
+   --    block_label :
+   --      BLOCK [ ( guard_condition ) ] [ IS ]
+   --        block_header
+   --        block_declarative_part
+   --      BEGIN
+   --        block_statement_part
+   --      END BLOCK [ block_label ] ;
    --
    --   Get/Set_Parent (Field0)
    --
@@ -2982,6 +3021,8 @@ package Iirs is
    --   Get/Set_Generate_Else_Clause (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_If_Generate_Statement (Short)
    --
@@ -3006,6 +3047,8 @@ package Iirs is
    --   Get/Set_End_Has_Reserved_Id (Flag8)
    --
    --   Get/Set_End_Has_Identifier (Flag9)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Case_Generate_Statement (Short)
    --
@@ -3091,6 +3134,8 @@ package Iirs is
    --
    -- Only for Iir_Kind_If_Statement:
    --   Get/Set_Suspend_Flag (Flag11)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    --  LRM08 10.10 Loop statement / LRM93 8.9
    --
@@ -3147,6 +3192,8 @@ package Iirs is
    --   Get/Set_End_Has_Identifier (Flag9)
    --
    --   Get/Set_Suspend_Flag (Flag11)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Exit_Statement (Short)
    -- Iir_Kind_Next_Statement (Short)
@@ -3173,6 +3220,8 @@ package Iirs is
    --   Get/Set_Loop_Label (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Simple_Signal_Assignment_Statement (Short)
    -- Iir_Kind_Conditional_Signal_Assignment_Statement (Short)
@@ -3211,6 +3260,8 @@ package Iirs is
    --
    --  True if the target of the assignment is guarded
    --   Get/Set_Guarded_Target_State (State1)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Variable_Assignment_Statement (Short)
    --
@@ -3226,6 +3277,8 @@ package Iirs is
    --   Get/Set_Expression (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Conditional_Variable_Assignment_Statement (Short)
    --
@@ -3241,6 +3294,8 @@ package Iirs is
    --   Get/Set_Conditional_Expression (Field5)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Assertion_Statement (Short)
    --
@@ -3636,6 +3691,29 @@ package Iirs is
    --
    --   Get/Set_Name_Staticness (State2)
 
+   -- Iir_Kind_External_Constant_Name (Short)
+   -- Iir_Kind_External_Signal_Name (Short)
+   -- Iir_Kind_External_Variable_Name (Short)
+   --
+   --   Get/Set_Parent (Field0)
+   --
+   --   Get/Set_Type (Field1)
+   --
+   --   Get/Set_Chain (Field2)
+   --
+   --   Get/Set_External_Pathname (Field3)
+   --
+   --   Get/Set_Named_Entity (Field4)
+   --
+   --   Get/Set_Subtype_Indication (Field5)
+   --
+   --  Only for Iir_Kind_External_Variable_Name:
+   --   Get/Set_Shared_Flag (Flag2)
+   --
+   --   Get/Set_Expr_Staticness (State1)
+   --
+   --   Get/Set_Name_Staticness (State2)
+
    -- Iir_Kind_Selected_By_All_Name (Short)
    --
    --   Get/Set_Prefix (Field0)
@@ -3707,6 +3785,8 @@ package Iirs is
    --
    --   Get/Set_Selected_Element (Field2)
    --
+   --   Get/Set_Identifier (Field3)
+   --
    --   Get/Set_Base_Name (Field5)
    --
    --   Get/Set_Expr_Staticness (State1)
@@ -3722,27 +3802,6 @@ package Iirs is
    --   Get/Set_Type (Field1)
    --
    --   Get/Set_Base_Name (Field5)
-   --
-   --   Get/Set_Expr_Staticness (State1)
-   --
-   --   Get/Set_Name_Staticness (State2)
-
-   -- Iir_Kind_External_Constant_Name (Short)
-   -- Iir_Kind_External_Signal_Name (Short)
-   -- Iir_Kind_External_Variable_Name (Short)
-   --
-   --   Get/Set_Parent (Field0)
-   --
-   --   Get/Set_Type (Field1)
-   --
-   --   Get/Set_Chain (Field2)
-   --
-   --   Get/Set_External_Pathname (Field3)
-   --
-   --   Get/Set_Subtype_Indication (Field5)
-   --
-   --  Only for Iir_Kind_External_Variable_Name:
-   --   Get/Set_Shared_Flag (Flag2)
    --
    --   Get/Set_Expr_Staticness (State1)
    --
@@ -4090,13 +4149,13 @@ package Iirs is
       Iir_Kind_Subtype_Declaration,
       Iir_Kind_Nature_Declaration,
       Iir_Kind_Subnature_Declaration,
+      Iir_Kind_Entity_Declaration,
+      Iir_Kind_Configuration_Declaration,
+      Iir_Kind_Context_Declaration,
       Iir_Kind_Package_Declaration,
       Iir_Kind_Package_Instantiation_Declaration,
       Iir_Kind_Package_Body,
-      Iir_Kind_Configuration_Declaration,
-      Iir_Kind_Entity_Declaration,
       Iir_Kind_Architecture_Body,
-      Iir_Kind_Context_Declaration,
       Iir_Kind_Package_Header,
       Iir_Kind_Unit_Declaration,
       Iir_Kind_Library_Declaration,
@@ -4143,6 +4202,7 @@ package Iirs is
       Iir_Kind_Negation_Operator,
       Iir_Kind_Absolute_Operator,
       Iir_Kind_Not_Operator,
+      Iir_Kind_Implicit_Condition_Operator,
       Iir_Kind_Condition_Operator,
       Iir_Kind_Reduction_And_Operator,
       Iir_Kind_Reduction_Or_Operator,
@@ -4246,12 +4306,12 @@ package Iirs is
       Iir_Kind_Operator_Symbol,                --  denoting_name
       Iir_Kind_Reference_Name,                 --  denoting_name
 
-      Iir_Kind_Selected_By_All_Name,
-      Iir_Kind_Parenthesis_Name,
-
       Iir_Kind_External_Constant_Name,
       Iir_Kind_External_Signal_Name,
       Iir_Kind_External_Variable_Name,
+
+      Iir_Kind_Selected_By_All_Name,
+      Iir_Kind_Parenthesis_Name,
 
       Iir_Kind_Package_Pathname,
       Iir_Kind_Absolute_Pathname,
@@ -4308,30 +4368,38 @@ package Iirs is
    pragma Inline (Kind_In);
 
    type Iir_Signal_Kind is
-      (
-       Iir_Register_Kind,
-       Iir_Bus_Kind
-      );
+     (
+      Iir_Register_Kind,
+      Iir_Bus_Kind
+     );
 
    --  If the order of elements in IIR_MODE is modified, also modify the
    --  order in GRT (types and rtis).
    type Iir_Mode is
-      (
-       Iir_Unknown_Mode,
-       Iir_Linkage_Mode,
-       Iir_Buffer_Mode,
-       Iir_Out_Mode,
-       Iir_Inout_Mode,
-       Iir_In_Mode
-      );
+     (
+      Iir_Unknown_Mode,
+      Iir_Linkage_Mode,
+      Iir_Buffer_Mode,
+      Iir_Out_Mode,
+      Iir_Inout_Mode,
+      Iir_In_Mode
+     );
 
    subtype Iir_In_Modes is Iir_Mode range Iir_Inout_Mode .. Iir_In_Mode;
    subtype Iir_Out_Modes is Iir_Mode range Iir_Out_Mode .. Iir_Inout_Mode;
    subtype Iir_Parameter_Modes is Iir_Mode range Iir_Out_Mode .. Iir_In_Mode;
 
-   type Iir_Delay_Mechanism is (Iir_Inertial_Delay, Iir_Transport_Delay);
+   type Iir_Delay_Mechanism is
+     (
+      Iir_Inertial_Delay,
+      Iir_Transport_Delay
+     );
 
-   type Iir_Direction is (Iir_To, Iir_Downto);
+   type Iir_Direction is
+     (
+      Iir_To,
+      Iir_Downto
+     );
 
    --  LRM93 2.7 (conformance rules).
    --  To keep this simple, the layout is stored as a bit-string.
@@ -4362,356 +4430,356 @@ package Iirs is
 
    --  List of predefined operators and functions.
    type Iir_Predefined_Functions is
-      (
-       Iir_Predefined_Error,
+     (
+      Iir_Predefined_Error,
 
-       --  Predefined operators for BOOLEAN type
+      --  Predefined operators for BOOLEAN type
 
-       --  LRM08 9.2.2 Logical Operators
-       Iir_Predefined_Boolean_And,
-       Iir_Predefined_Boolean_Or,
-       Iir_Predefined_Boolean_Nand,
-       Iir_Predefined_Boolean_Nor,
-       Iir_Predefined_Boolean_Xor,
-       Iir_Predefined_Boolean_Xnor,
-       Iir_Predefined_Boolean_Not,
+      --  LRM08 9.2.2 Logical Operators
+      Iir_Predefined_Boolean_And,
+      Iir_Predefined_Boolean_Or,
+      Iir_Predefined_Boolean_Nand,
+      Iir_Predefined_Boolean_Nor,
+      Iir_Predefined_Boolean_Xor,
+      Iir_Predefined_Boolean_Xnor,
+      Iir_Predefined_Boolean_Not,
 
-       --  LRM08 5.2.6 Predefined operations on scalar types.
-       Iir_Predefined_Boolean_Rising_Edge,
-       Iir_Predefined_Boolean_Falling_Edge,
+      --  LRM08 5.2.6 Predefined operations on scalar types.
+      Iir_Predefined_Boolean_Rising_Edge,
+      Iir_Predefined_Boolean_Falling_Edge,
 
-       --  Predefined operators for any enumeration type.
+      --  Predefined operators for any enumeration type.
 
-       --  LRM08 9.2.3 Relational Operators
-       Iir_Predefined_Enum_Equality,
-       Iir_Predefined_Enum_Inequality,
-       Iir_Predefined_Enum_Less,
-       Iir_Predefined_Enum_Less_Equal,
-       Iir_Predefined_Enum_Greater,
-       Iir_Predefined_Enum_Greater_Equal,
+      --  LRM08 9.2.3 Relational Operators
+      Iir_Predefined_Enum_Equality,
+      Iir_Predefined_Enum_Inequality,
+      Iir_Predefined_Enum_Less,
+      Iir_Predefined_Enum_Less_Equal,
+      Iir_Predefined_Enum_Greater,
+      Iir_Predefined_Enum_Greater_Equal,
 
-       --  LRM08 5.2.6 Predefined operations on scalar types.
-       Iir_Predefined_Enum_Minimum,
-       Iir_Predefined_Enum_Maximum,
-       Iir_Predefined_Enum_To_String,
+      --  LRM08 5.2.6 Predefined operations on scalar types.
+      Iir_Predefined_Enum_Minimum,
+      Iir_Predefined_Enum_Maximum,
+      Iir_Predefined_Enum_To_String,
 
-       --  Predefined operators for BIT type.
+      --  Predefined operators for BIT type.
 
-       --  LRM08 9.2.2 Logical Operators
-       Iir_Predefined_Bit_And,
-       Iir_Predefined_Bit_Or,
-       Iir_Predefined_Bit_Nand,
-       Iir_Predefined_Bit_Nor,
-       Iir_Predefined_Bit_Xor,
-       Iir_Predefined_Bit_Xnor,
-       Iir_Predefined_Bit_Not,
+      --  LRM08 9.2.2 Logical Operators
+      Iir_Predefined_Bit_And,
+      Iir_Predefined_Bit_Or,
+      Iir_Predefined_Bit_Nand,
+      Iir_Predefined_Bit_Nor,
+      Iir_Predefined_Bit_Xor,
+      Iir_Predefined_Bit_Xnor,
+      Iir_Predefined_Bit_Not,
 
-       --  LRM08 9.2.3 Relational Operators
-       Iir_Predefined_Bit_Match_Equality,
-       Iir_Predefined_Bit_Match_Inequality,
-       Iir_Predefined_Bit_Match_Less,
-       Iir_Predefined_Bit_Match_Less_Equal,
-       Iir_Predefined_Bit_Match_Greater,
-       Iir_Predefined_Bit_Match_Greater_Equal,
+      --  LRM08 9.2.3 Relational Operators
+      Iir_Predefined_Bit_Match_Equality,
+      Iir_Predefined_Bit_Match_Inequality,
+      Iir_Predefined_Bit_Match_Less,
+      Iir_Predefined_Bit_Match_Less_Equal,
+      Iir_Predefined_Bit_Match_Greater,
+      Iir_Predefined_Bit_Match_Greater_Equal,
 
-       --  LRM08 9.2.9 Condition operator
-       Iir_Predefined_Bit_Condition,
+      --  LRM08 9.2.9 Condition operator
+      Iir_Predefined_Bit_Condition,
 
-       --  LRM08 5.2.6 Predefined operations on scalar types.
-       Iir_Predefined_Bit_Rising_Edge,
-       Iir_Predefined_Bit_Falling_Edge,
+      --  LRM08 5.2.6 Predefined operations on scalar types.
+      Iir_Predefined_Bit_Rising_Edge,
+      Iir_Predefined_Bit_Falling_Edge,
 
-       --  Predefined operators for any integer type.
+      --  Predefined operators for any integer type.
 
-       --  LRM08 9.2.3 Relational Operators
-       Iir_Predefined_Integer_Equality,
-       Iir_Predefined_Integer_Inequality,
-       Iir_Predefined_Integer_Less,
-       Iir_Predefined_Integer_Less_Equal,
-       Iir_Predefined_Integer_Greater,
-       Iir_Predefined_Integer_Greater_Equal,
+      --  LRM08 9.2.3 Relational Operators
+      Iir_Predefined_Integer_Equality,
+      Iir_Predefined_Integer_Inequality,
+      Iir_Predefined_Integer_Less,
+      Iir_Predefined_Integer_Less_Equal,
+      Iir_Predefined_Integer_Greater,
+      Iir_Predefined_Integer_Greater_Equal,
 
-       --  LRM08 9.2.6 Sign operators
-       Iir_Predefined_Integer_Identity,
-       Iir_Predefined_Integer_Negation,
+      --  LRM08 9.2.6 Sign operators
+      Iir_Predefined_Integer_Identity,
+      Iir_Predefined_Integer_Negation,
 
-       --  LRM08 9.2.8 Miscellaneous operators
-       Iir_Predefined_Integer_Absolute,
+      --  LRM08 9.2.8 Miscellaneous operators
+      Iir_Predefined_Integer_Absolute,
 
-       --  LRM08 9.2.5 Adding operators
-       Iir_Predefined_Integer_Plus,
-       Iir_Predefined_Integer_Minus,
+      --  LRM08 9.2.5 Adding operators
+      Iir_Predefined_Integer_Plus,
+      Iir_Predefined_Integer_Minus,
 
-       --  LRM08 9.2.7 Multiplying operators
-       Iir_Predefined_Integer_Mul,
-       Iir_Predefined_Integer_Div,
-       Iir_Predefined_Integer_Mod,
-       Iir_Predefined_Integer_Rem,
+      --  LRM08 9.2.7 Multiplying operators
+      Iir_Predefined_Integer_Mul,
+      Iir_Predefined_Integer_Div,
+      Iir_Predefined_Integer_Mod,
+      Iir_Predefined_Integer_Rem,
 
-       --  LRM08 9.2.8 Miscellaneous operators
-       Iir_Predefined_Integer_Exp,
+      --  LRM08 9.2.8 Miscellaneous operators
+      Iir_Predefined_Integer_Exp,
 
-       --  LRM08 5.2.6 Predefined operations on scalar types.
-       Iir_Predefined_Integer_Minimum,
-       Iir_Predefined_Integer_Maximum,
-       Iir_Predefined_Integer_To_String,
+      --  LRM08 5.2.6 Predefined operations on scalar types.
+      Iir_Predefined_Integer_Minimum,
+      Iir_Predefined_Integer_Maximum,
+      Iir_Predefined_Integer_To_String,
 
-       --  Predefined operators for any floating type.
+      --  Predefined operators for any floating type.
 
-       --  LRM08 9.2.3 Relational Operators
-       Iir_Predefined_Floating_Equality,
-       Iir_Predefined_Floating_Inequality,
-       Iir_Predefined_Floating_Less,
-       Iir_Predefined_Floating_Less_Equal,
-       Iir_Predefined_Floating_Greater,
-       Iir_Predefined_Floating_Greater_Equal,
+      --  LRM08 9.2.3 Relational Operators
+      Iir_Predefined_Floating_Equality,
+      Iir_Predefined_Floating_Inequality,
+      Iir_Predefined_Floating_Less,
+      Iir_Predefined_Floating_Less_Equal,
+      Iir_Predefined_Floating_Greater,
+      Iir_Predefined_Floating_Greater_Equal,
 
-       --  LRM08 9.2.6 Sign operators
-       Iir_Predefined_Floating_Identity,
-       Iir_Predefined_Floating_Negation,
+      --  LRM08 9.2.6 Sign operators
+      Iir_Predefined_Floating_Identity,
+      Iir_Predefined_Floating_Negation,
 
-       --  LRM08 9.2.8 Miscellaneous operators
-       Iir_Predefined_Floating_Absolute,
+      --  LRM08 9.2.8 Miscellaneous operators
+      Iir_Predefined_Floating_Absolute,
 
-       --  LRM08 9.2.5 Adding operators
-       Iir_Predefined_Floating_Plus,
-       Iir_Predefined_Floating_Minus,
+      --  LRM08 9.2.5 Adding operators
+      Iir_Predefined_Floating_Plus,
+      Iir_Predefined_Floating_Minus,
 
-       --  LRM08 9.2.7 Multiplying operators
-       Iir_Predefined_Floating_Mul,
-       Iir_Predefined_Floating_Div,
+      --  LRM08 9.2.7 Multiplying operators
+      Iir_Predefined_Floating_Mul,
+      Iir_Predefined_Floating_Div,
 
-       --  LRM08 9.2.8 Miscellaneous operators
-       Iir_Predefined_Floating_Exp,
+      --  LRM08 9.2.8 Miscellaneous operators
+      Iir_Predefined_Floating_Exp,
 
-       --  LRM08 5.2.6 Predefined operations on scalar types.
-       Iir_Predefined_Floating_Minimum,
-       Iir_Predefined_Floating_Maximum,
-       Iir_Predefined_Floating_To_String,
-       Iir_Predefined_Real_To_String_Digits,
-       Iir_Predefined_Real_To_String_Format,
+      --  LRM08 5.2.6 Predefined operations on scalar types.
+      Iir_Predefined_Floating_Minimum,
+      Iir_Predefined_Floating_Maximum,
+      Iir_Predefined_Floating_To_String,
+      Iir_Predefined_Real_To_String_Digits,
+      Iir_Predefined_Real_To_String_Format,
 
-       --  Predefined operator for universal types.
+      --  Predefined operator for universal types.
 
-       --  LRM08 9.2.7 Multiplying operators
-       Iir_Predefined_Universal_R_I_Mul,
-       Iir_Predefined_Universal_I_R_Mul,
-       Iir_Predefined_Universal_R_I_Div,
+      --  LRM08 9.2.7 Multiplying operators
+      Iir_Predefined_Universal_R_I_Mul,
+      Iir_Predefined_Universal_I_R_Mul,
+      Iir_Predefined_Universal_R_I_Div,
 
-       --  Predefined operators for physical types.
+      --  Predefined operators for physical types.
 
-       --  LRM08 9.2.3 Relational Operators
-       Iir_Predefined_Physical_Equality,
-       Iir_Predefined_Physical_Inequality,
-       Iir_Predefined_Physical_Less,
-       Iir_Predefined_Physical_Less_Equal,
-       Iir_Predefined_Physical_Greater,
-       Iir_Predefined_Physical_Greater_Equal,
+      --  LRM08 9.2.3 Relational Operators
+      Iir_Predefined_Physical_Equality,
+      Iir_Predefined_Physical_Inequality,
+      Iir_Predefined_Physical_Less,
+      Iir_Predefined_Physical_Less_Equal,
+      Iir_Predefined_Physical_Greater,
+      Iir_Predefined_Physical_Greater_Equal,
 
-       --  LRM08 9.2.6 Sign operators
-       Iir_Predefined_Physical_Identity,
-       Iir_Predefined_Physical_Negation,
+      --  LRM08 9.2.6 Sign operators
+      Iir_Predefined_Physical_Identity,
+      Iir_Predefined_Physical_Negation,
 
-       --  LRM08 9.2.8 Miscellaneous operators
-       Iir_Predefined_Physical_Absolute,
+      --  LRM08 9.2.8 Miscellaneous operators
+      Iir_Predefined_Physical_Absolute,
 
-       --  LRM08 9.2.5 Adding operators
-       Iir_Predefined_Physical_Plus,
-       Iir_Predefined_Physical_Minus,
+      --  LRM08 9.2.5 Adding operators
+      Iir_Predefined_Physical_Plus,
+      Iir_Predefined_Physical_Minus,
 
-       --  LRM08 9.2.7 Multiplying operators
-       Iir_Predefined_Physical_Integer_Mul,
-       Iir_Predefined_Physical_Real_Mul,
-       Iir_Predefined_Integer_Physical_Mul,
-       Iir_Predefined_Real_Physical_Mul,
-       Iir_Predefined_Physical_Integer_Div,
-       Iir_Predefined_Physical_Real_Div,
-       Iir_Predefined_Physical_Physical_Div,
+      --  LRM08 9.2.7 Multiplying operators
+      Iir_Predefined_Physical_Integer_Mul,
+      Iir_Predefined_Physical_Real_Mul,
+      Iir_Predefined_Integer_Physical_Mul,
+      Iir_Predefined_Real_Physical_Mul,
+      Iir_Predefined_Physical_Integer_Div,
+      Iir_Predefined_Physical_Real_Div,
+      Iir_Predefined_Physical_Physical_Div,
 
-       --  LRM08 5.2.6 Predefined operations on scalar types.
-       Iir_Predefined_Physical_Minimum,
-       Iir_Predefined_Physical_Maximum,
-       Iir_Predefined_Physical_To_String,
-       Iir_Predefined_Time_To_String_Unit,
+      --  LRM08 5.2.6 Predefined operations on scalar types.
+      Iir_Predefined_Physical_Minimum,
+      Iir_Predefined_Physical_Maximum,
+      Iir_Predefined_Physical_To_String,
+      Iir_Predefined_Time_To_String_Unit,
 
-       --  Predefined operators for access.
+      --  Predefined operators for access.
 
-       --  LRM08 9.2.3 Relational Operators
-       Iir_Predefined_Access_Equality,
-       Iir_Predefined_Access_Inequality,
+      --  LRM08 9.2.3 Relational Operators
+      Iir_Predefined_Access_Equality,
+      Iir_Predefined_Access_Inequality,
 
-       --  Predefined operators for record.
+      --  Predefined operators for record.
 
-       --  LRM08 9.2.3 Relational Operators
-       Iir_Predefined_Record_Equality,
-       Iir_Predefined_Record_Inequality,
+      --  LRM08 9.2.3 Relational Operators
+      Iir_Predefined_Record_Equality,
+      Iir_Predefined_Record_Inequality,
 
-       --  Predefined operators for array.
+      --  Predefined operators for array.
 
-       --  LRM08 9.2.3 Relational Operators
-       Iir_Predefined_Array_Equality,
-       Iir_Predefined_Array_Inequality,
-       Iir_Predefined_Array_Less,
-       Iir_Predefined_Array_Less_Equal,
-       Iir_Predefined_Array_Greater,
-       Iir_Predefined_Array_Greater_Equal,
+      --  LRM08 9.2.3 Relational Operators
+      Iir_Predefined_Array_Equality,
+      Iir_Predefined_Array_Inequality,
+      Iir_Predefined_Array_Less,
+      Iir_Predefined_Array_Less_Equal,
+      Iir_Predefined_Array_Greater,
+      Iir_Predefined_Array_Greater_Equal,
 
-       --  LRM08 9.2.5 Adding operators
-       Iir_Predefined_Array_Array_Concat,
-       Iir_Predefined_Array_Element_Concat,
-       Iir_Predefined_Element_Array_Concat,
-       Iir_Predefined_Element_Element_Concat,
+      --  LRM08 9.2.5 Adding operators
+      Iir_Predefined_Array_Array_Concat,
+      Iir_Predefined_Array_Element_Concat,
+      Iir_Predefined_Element_Array_Concat,
+      Iir_Predefined_Element_Element_Concat,
 
-       --  LRM08 5.3.2.4 Predefined operations on array types
-       Iir_Predefined_Array_Minimum,
-       Iir_Predefined_Array_Maximum,
-       Iir_Predefined_Vector_Minimum,
-       Iir_Predefined_Vector_Maximum,
+      --  LRM08 5.3.2.4 Predefined operations on array types
+      Iir_Predefined_Array_Minimum,
+      Iir_Predefined_Array_Maximum,
+      Iir_Predefined_Vector_Minimum,
+      Iir_Predefined_Vector_Maximum,
 
-       --  LRM08 9.2.4 Shift operators
-       Iir_Predefined_Array_Sll,
-       Iir_Predefined_Array_Srl,
-       Iir_Predefined_Array_Sla,
-       Iir_Predefined_Array_Sra,
-       Iir_Predefined_Array_Rol,
-       Iir_Predefined_Array_Ror,
+      --  LRM08 9.2.4 Shift operators
+      Iir_Predefined_Array_Sll,
+      Iir_Predefined_Array_Srl,
+      Iir_Predefined_Array_Sla,
+      Iir_Predefined_Array_Sra,
+      Iir_Predefined_Array_Rol,
+      Iir_Predefined_Array_Ror,
 
-       --  LRM08 9.2.2 Logical operators
-       --  Predefined operators for one dimensional array.
-       --  For bit and boolean type, the operations are the same.  To be
-       --  neutral, we use TF (for True/False) instead of Bit, Boolean or
-       --  Logic.
-       Iir_Predefined_TF_Array_And,
-       Iir_Predefined_TF_Array_Or,
-       Iir_Predefined_TF_Array_Nand,
-       Iir_Predefined_TF_Array_Nor,
-       Iir_Predefined_TF_Array_Xor,
-       Iir_Predefined_TF_Array_Xnor,
-       Iir_Predefined_TF_Array_Not,
+      --  LRM08 9.2.2 Logical operators
+      --  Predefined operators for one dimensional array.
+      --  For bit and boolean type, the operations are the same.  To be
+      --  neutral, we use TF (for True/False) instead of Bit, Boolean or
+      --  Logic.
+      Iir_Predefined_TF_Array_And,
+      Iir_Predefined_TF_Array_Or,
+      Iir_Predefined_TF_Array_Nand,
+      Iir_Predefined_TF_Array_Nor,
+      Iir_Predefined_TF_Array_Xor,
+      Iir_Predefined_TF_Array_Xnor,
+      Iir_Predefined_TF_Array_Not,
 
-       --  LRM08 9.2.2 Logical operators
-       Iir_Predefined_TF_Reduction_And,
-       Iir_Predefined_TF_Reduction_Or,
-       Iir_Predefined_TF_Reduction_Nand,
-       Iir_Predefined_TF_Reduction_Nor,
-       Iir_Predefined_TF_Reduction_Xor,
-       Iir_Predefined_TF_Reduction_Xnor,
-       Iir_Predefined_TF_Reduction_Not,
+      --  LRM08 9.2.2 Logical operators
+      Iir_Predefined_TF_Reduction_And,
+      Iir_Predefined_TF_Reduction_Or,
+      Iir_Predefined_TF_Reduction_Nand,
+      Iir_Predefined_TF_Reduction_Nor,
+      Iir_Predefined_TF_Reduction_Xor,
+      Iir_Predefined_TF_Reduction_Xnor,
+      Iir_Predefined_TF_Reduction_Not,
 
-       --  LRM08 9.2.2 Logical operators
-       Iir_Predefined_TF_Array_Element_And,
-       Iir_Predefined_TF_Element_Array_And,
-       Iir_Predefined_TF_Array_Element_Or,
-       Iir_Predefined_TF_Element_Array_Or,
-       Iir_Predefined_TF_Array_Element_Nand,
-       Iir_Predefined_TF_Element_Array_Nand,
-       Iir_Predefined_TF_Array_Element_Nor,
-       Iir_Predefined_TF_Element_Array_Nor,
-       Iir_Predefined_TF_Array_Element_Xor,
-       Iir_Predefined_TF_Element_Array_Xor,
-       Iir_Predefined_TF_Array_Element_Xnor,
-       Iir_Predefined_TF_Element_Array_Xnor,
+      --  LRM08 9.2.2 Logical operators
+      Iir_Predefined_TF_Array_Element_And,
+      Iir_Predefined_TF_Element_Array_And,
+      Iir_Predefined_TF_Array_Element_Or,
+      Iir_Predefined_TF_Element_Array_Or,
+      Iir_Predefined_TF_Array_Element_Nand,
+      Iir_Predefined_TF_Element_Array_Nand,
+      Iir_Predefined_TF_Array_Element_Nor,
+      Iir_Predefined_TF_Element_Array_Nor,
+      Iir_Predefined_TF_Array_Element_Xor,
+      Iir_Predefined_TF_Element_Array_Xor,
+      Iir_Predefined_TF_Array_Element_Xnor,
+      Iir_Predefined_TF_Element_Array_Xnor,
 
-       --  LRM08 9.2.3 Relational Operators
-       Iir_Predefined_Bit_Array_Match_Equality,
-       Iir_Predefined_Bit_Array_Match_Inequality,
+      --  LRM08 9.2.3 Relational Operators
+      Iir_Predefined_Bit_Array_Match_Equality,
+      Iir_Predefined_Bit_Array_Match_Inequality,
 
-       --  LRM08 5.3.2.4 Predefined operations on array types
-       Iir_Predefined_Array_Char_To_String,
-       Iir_Predefined_Bit_Vector_To_Ostring,
-       Iir_Predefined_Bit_Vector_To_Hstring,
+      --  LRM08 5.3.2.4 Predefined operations on array types
+      Iir_Predefined_Array_Char_To_String,
+      Iir_Predefined_Bit_Vector_To_Ostring,
+      Iir_Predefined_Bit_Vector_To_Hstring,
 
-       --  LRM08 9.2.3 Relational Operators
-       --  IEEE.Std_Logic_1164.Std_Ulogic
-       Iir_Predefined_Std_Ulogic_Match_Equality,
-       Iir_Predefined_Std_Ulogic_Match_Inequality,
-       Iir_Predefined_Std_Ulogic_Match_Less,
-       Iir_Predefined_Std_Ulogic_Match_Less_Equal,
-       Iir_Predefined_Std_Ulogic_Match_Greater,
-       Iir_Predefined_Std_Ulogic_Match_Greater_Equal,
+      --  LRM08 9.2.3 Relational Operators
+      --  IEEE.Std_Logic_1164.Std_Ulogic
+      Iir_Predefined_Std_Ulogic_Match_Equality,
+      Iir_Predefined_Std_Ulogic_Match_Inequality,
+      Iir_Predefined_Std_Ulogic_Match_Less,
+      Iir_Predefined_Std_Ulogic_Match_Less_Equal,
+      Iir_Predefined_Std_Ulogic_Match_Greater,
+      Iir_Predefined_Std_Ulogic_Match_Greater_Equal,
 
-       --  LRM08 9.2.3 Relational Operators
-       Iir_Predefined_Std_Ulogic_Array_Match_Equality,
-       Iir_Predefined_Std_Ulogic_Array_Match_Inequality,
+      --  LRM08 9.2.3 Relational Operators
+      Iir_Predefined_Std_Ulogic_Array_Match_Equality,
+      Iir_Predefined_Std_Ulogic_Array_Match_Inequality,
 
-       --  --  Predefined attribute functions.
-       --  Iir_Predefined_Attribute_Image,
-       --  Iir_Predefined_Attribute_Value,
-       --  Iir_Predefined_Attribute_Pos,
-       --  Iir_Predefined_Attribute_Val,
-       --  Iir_Predefined_Attribute_Succ,
-       --  Iir_Predefined_Attribute_Pred,
-       --  Iir_Predefined_Attribute_Leftof,
-       --  Iir_Predefined_Attribute_Rightof,
-       --  Iir_Predefined_Attribute_Left,
-       --  Iir_Predefined_Attribute_Right,
-       --  Iir_Predefined_Attribute_Event,
-       --  Iir_Predefined_Attribute_Active,
-       --  Iir_Predefined_Attribute_Last_Event,
-       --  Iir_Predefined_Attribute_Last_Active,
-       --  Iir_Predefined_Attribute_Last_Value,
-       --  Iir_Predefined_Attribute_Driving,
-       --  Iir_Predefined_Attribute_Driving_Value,
+      --  --  Predefined attribute functions.
+      --  Iir_Predefined_Attribute_Image,
+      --  Iir_Predefined_Attribute_Value,
+      --  Iir_Predefined_Attribute_Pos,
+      --  Iir_Predefined_Attribute_Val,
+      --  Iir_Predefined_Attribute_Succ,
+      --  Iir_Predefined_Attribute_Pred,
+      --  Iir_Predefined_Attribute_Leftof,
+      --  Iir_Predefined_Attribute_Rightof,
+      --  Iir_Predefined_Attribute_Left,
+      --  Iir_Predefined_Attribute_Right,
+      --  Iir_Predefined_Attribute_Event,
+      --  Iir_Predefined_Attribute_Active,
+      --  Iir_Predefined_Attribute_Last_Event,
+      --  Iir_Predefined_Attribute_Last_Active,
+      --  Iir_Predefined_Attribute_Last_Value,
+      --  Iir_Predefined_Attribute_Driving,
+      --  Iir_Predefined_Attribute_Driving_Value,
 
-       --  Impure subprograms.
+      --  Impure subprograms.
 
-       --  LRM08 5.4.3 Allocation and deallocation of objects
-       Iir_Predefined_Deallocate,
+      --  LRM08 5.4.3 Allocation and deallocation of objects
+      Iir_Predefined_Deallocate,
 
-       --  LRM08 5.5.2 File operations
-       Iir_Predefined_File_Open,
-       Iir_Predefined_File_Open_Status,
-       Iir_Predefined_File_Close,
-       Iir_Predefined_Read,
-       Iir_Predefined_Read_Length,
-       Iir_Predefined_Flush,
-       Iir_Predefined_Write,
-       Iir_Predefined_Endfile,
+      --  LRM08 5.5.2 File operations
+      Iir_Predefined_File_Open,
+      Iir_Predefined_File_Open_Status,
+      Iir_Predefined_File_Close,
+      Iir_Predefined_Read,
+      Iir_Predefined_Read_Length,
+      Iir_Predefined_Flush,
+      Iir_Predefined_Write,
+      Iir_Predefined_Endfile,
 
-       --  Misc impure functions.
-       Iir_Predefined_Now_Function,
+      --  Misc impure functions.
+      Iir_Predefined_Now_Function,
 
-       --  A not predefined and not known function.  User function.
-       Iir_Predefined_None,
+      --  A not predefined and not known function.  User function.
+      Iir_Predefined_None,
 
-       --  Defined in package ieee.std_logic_1164
+      --  Defined in package ieee.std_logic_1164
 
-       --  Std_Ulogic operations.
-       Iir_Predefined_Ieee_1164_Scalar_And,
-       Iir_Predefined_Ieee_1164_Scalar_Nand,
-       Iir_Predefined_Ieee_1164_Scalar_Or,
-       Iir_Predefined_Ieee_1164_Scalar_Nor,
-       Iir_Predefined_Ieee_1164_Scalar_Xor,
-       Iir_Predefined_Ieee_1164_Scalar_Xnor,
-       Iir_Predefined_Ieee_1164_Scalar_Not,
+      --  Std_Ulogic operations.
+      Iir_Predefined_Ieee_1164_Scalar_And,
+      Iir_Predefined_Ieee_1164_Scalar_Nand,
+      Iir_Predefined_Ieee_1164_Scalar_Or,
+      Iir_Predefined_Ieee_1164_Scalar_Nor,
+      Iir_Predefined_Ieee_1164_Scalar_Xor,
+      Iir_Predefined_Ieee_1164_Scalar_Xnor,
+      Iir_Predefined_Ieee_1164_Scalar_Not,
 
-       --  Std_Logic_Vector or Std_Ulogic_Vector operations.
-       --  Length of the result is the length of the left operand.
-       Iir_Predefined_Ieee_1164_Vector_And,
-       Iir_Predefined_Ieee_1164_Vector_Nand,
-       Iir_Predefined_Ieee_1164_Vector_Or,
-       Iir_Predefined_Ieee_1164_Vector_Nor,
-       Iir_Predefined_Ieee_1164_Vector_Xor,
-       Iir_Predefined_Ieee_1164_Vector_Xnor,
-       Iir_Predefined_Ieee_1164_Vector_Not,
+      --  Std_Logic_Vector or Std_Ulogic_Vector operations.
+      --  Length of the result is the length of the left operand.
+      Iir_Predefined_Ieee_1164_Vector_And,
+      Iir_Predefined_Ieee_1164_Vector_Nand,
+      Iir_Predefined_Ieee_1164_Vector_Or,
+      Iir_Predefined_Ieee_1164_Vector_Nor,
+      Iir_Predefined_Ieee_1164_Vector_Xor,
+      Iir_Predefined_Ieee_1164_Vector_Xnor,
+      Iir_Predefined_Ieee_1164_Vector_Not,
 
-       --  Numeric_Std.
-       --  Abbreviations:
-       --  Uns: Unsigned, Sgn: Signed, Nat: Natural, Int: Integer.
-       Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns,
-       Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat,
-       Iir_Predefined_Ieee_Numeric_Std_Add_Nat_Uns,
-       Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Sgn,
-       Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Int,
-       Iir_Predefined_Ieee_Numeric_Std_Add_Int_Sgn,
+      --  Numeric_Std.
+      --  Abbreviations:
+      --  Uns: Unsigned, Sgn: Signed, Nat: Natural, Int: Integer.
+      Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Add_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Add_Nat_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Sgn,
+      Iir_Predefined_Ieee_Numeric_Std_Add_Sgn_Int,
+      Iir_Predefined_Ieee_Numeric_Std_Add_Int_Sgn,
 
-       Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Uns,
-       Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Nat,
-       Iir_Predefined_Ieee_Numeric_Std_Eq_Nat_Uns,
-       Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Sgn,
-       Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Int,
-       Iir_Predefined_Ieee_Numeric_Std_Eq_Int_Sgn
-);
+      Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Eq_Uns_Nat,
+      Iir_Predefined_Ieee_Numeric_Std_Eq_Nat_Uns,
+      Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Sgn,
+      Iir_Predefined_Ieee_Numeric_Std_Eq_Sgn_Int,
+      Iir_Predefined_Ieee_Numeric_Std_Eq_Int_Sgn
+     );
 
    --  Return TRUE iff FUNC is a short-cut predefined function.
    function Iir_Predefined_Shortcut_P (Func : Iir_Predefined_Functions)
@@ -4783,7 +4851,13 @@ package Iirs is
      Iir_Predefined_Functions'Last;
 
    --  Staticness as defined by LRM93 6.1 and 7.4
-   type Iir_Staticness is (Unknown, None, Globally, Locally);
+   type Iir_Staticness is
+     (
+      Unknown,
+      None,
+      Globally,
+      Locally
+     );
 
    -- Staticness as defined by LRM93 6.1 and 7.4
    function Min (L,R: Iir_Staticness) return Iir_Staticness renames
@@ -4827,13 +4901,20 @@ package Iirs is
    --  Constraint state of a type.
    --  See LRM08 5.1 for definition.
    type Iir_Constraint is
-     (Unconstrained, Partially_Constrained, Fully_Constrained);
+     (
+      Unconstrained,
+      Partially_Constrained,
+      Fully_Constrained
+     );
 
    --  The kind of an inteface list.
-   type Interface_Kind_Type is (Generic_Interface_List,
-                                Port_Interface_List,
-                                Procedure_Parameter_Interface_List,
-                                Function_Parameter_Interface_List);
+   type Interface_Kind_Type is
+     (
+      Generic_Interface_List,
+      Port_Interface_List,
+      Procedure_Parameter_Interface_List,
+      Function_Parameter_Interface_List
+     );
    subtype Parameter_Interface_List is Interface_Kind_Type range
      Procedure_Parameter_Interface_List ..
      Function_Parameter_Interface_List;
@@ -4851,18 +4932,25 @@ package Iirs is
    -- * comments line
    -- * the last line must be the highest bound of the range, followed by ";"
 
---   subtype Iir_Kinds_List is Iir_Kind range
---     Iir_Kind_List ..
---     Iir_Kind_Callees_List;
-
-   subtype Iir_Kinds_Library_Unit_Declaration is Iir_Kind range
-     Iir_Kind_Package_Declaration ..
+   subtype Iir_Kinds_Library_Unit is Iir_Kind range
+     Iir_Kind_Entity_Declaration ..
+   --Iir_Kind_Configuration_Declaration
+   --Iir_Kind_Context_Declaration
+   --Iir_Kind_Package_Declaration
    --Iir_Kind_Package_Instantiation_Declaration
    --Iir_Kind_Package_Body
+     Iir_Kind_Architecture_Body;
+
+   subtype Iir_Kinds_Primary_Unit is Iir_Kind range
+     Iir_Kind_Entity_Declaration ..
    --Iir_Kind_Configuration_Declaration
-   --Iir_Kind_Entity_Declaration
-   --Iir_Kind_Architecture_Body
-     Iir_Kind_Context_Declaration;
+   --Iir_Kind_Context_Declaration
+   --Iir_Kind_Package_Declaration
+     Iir_Kind_Package_Instantiation_Declaration;
+
+   subtype Iir_Kinds_Secondary_Unit is Iir_Kind range
+     Iir_Kind_Package_Body ..
+     Iir_Kind_Architecture_Body;
 
    subtype Iir_Kinds_Package_Declaration is Iir_Kind range
      Iir_Kind_Package_Declaration ..
@@ -4964,6 +5052,7 @@ package Iirs is
    --Iir_Kind_Negation_Operator
    --Iir_Kind_Absolute_Operator
    --Iir_Kind_Not_Operator
+   --Iir_Kind_Implicit_Condition_Operator
    --Iir_Kind_Condition_Operator
    --Iir_Kind_Reduction_And_Operator
    --Iir_Kind_Reduction_Or_Operator
@@ -5028,6 +5117,10 @@ package Iirs is
    --Iir_Kind_Interface_Signal_Declaration
      Iir_Kind_Interface_File_Declaration;
 
+   subtype Iir_Kinds_Interface_Subprogram_Declaration is Iir_Kind range
+     Iir_Kind_Interface_Function_Declaration ..
+     Iir_Kind_Interface_Procedure_Declaration;
+
    subtype Iir_Kinds_Interface_Declaration is Iir_Kind range
      Iir_Kind_Interface_Constant_Declaration ..
    --Iir_Kind_Interface_Variable_Declaration
@@ -5050,10 +5143,6 @@ package Iirs is
    --Iir_Kind_Interface_Variable_Declaration
    --Iir_Kind_Interface_Signal_Declaration
      Iir_Kind_Interface_File_Declaration;
-
-   subtype Iir_Kinds_Interface_Subprogram_Declaration is Iir_Kind range
-     Iir_Kind_Interface_Function_Declaration ..
-     Iir_Kind_Interface_Procedure_Declaration;
 
    subtype Iir_Kinds_Branch_Quantity_Declaration is Iir_Kind range
      Iir_Kind_Across_Quantity_Declaration ..
@@ -5119,12 +5208,25 @@ package Iirs is
    --Iir_Kind_Operator_Symbol
      Iir_Kind_Reference_Name;
 
+   subtype Iir_Kinds_Denoting_And_External_Name is Iir_Kind range
+     Iir_Kind_Character_Literal ..
+   --Iir_Kind_Simple_Name
+   --Iir_Kind_Selected_Name
+   --Iir_Kind_Operator_Symbol
+   --Iir_Kind_Reference_Name
+   --Iir_Kind_External_Constant_Name
+   --Iir_Kind_External_Signal_Name
+     Iir_Kind_External_Variable_Name;
+
    subtype Iir_Kinds_Name is Iir_Kind range
      Iir_Kind_Character_Literal ..
    --Iir_Kind_Simple_Name
    --Iir_Kind_Selected_Name
    --Iir_Kind_Operator_Symbol
    --Iir_Kind_Reference_Name
+   --Iir_Kind_External_Constant_Name
+   --Iir_Kind_External_Signal_Name
+   --Iir_Kind_External_Variable_Name
    --Iir_Kind_Selected_By_All_Name
      Iir_Kind_Parenthesis_Name;
 
@@ -5306,18 +5408,9 @@ package Iirs is
    --Iir_Kind_Disconnection_Specification
      Iir_Kind_Configuration_Specification;
 
-   -------------------------------------
-   -- Types and subtypes declarations --
-   -------------------------------------
+   --  Nodes and lists.
 
-   -- Level 1 base class.
    subtype Iir is Nodes.Node_Type;
-   subtype Iir_List is Lists.List_Type;
-   Null_Iir_List : constant Iir_List := Lists.Null_List;
-   Iir_List_All : constant Iir_List := Lists.List_All;
-   Iir_List_Others : constant Iir_List := Lists.List_Others;
-   subtype Iir_Lists_All_Others is Iir_List
-     range Iir_List_Others .. Iir_List_All;
 
    Null_Iir : constant Iir := Nodes.Null_Node;
 
@@ -5329,19 +5422,20 @@ package Iirs is
    function Is_Valid (Node : Iir) return Boolean;
    pragma Inline (Is_Valid);
 
-   function Is_Null_List (Node : Iir_List) return Boolean;
-   pragma Inline (Is_Null_List);
-
    function "=" (L, R : Iir) return Boolean renames Nodes."=";
 
    function Get_Last_Node return Iir renames Nodes.Get_Last_Node;
 
+   subtype Iir_List is Lists.List_Type;
+   Null_Iir_List : constant Iir_List := Lists.Null_List;
+   Iir_List_All : constant Iir_List := Lists.List_All;
+
+   subtype List_Iterator is Lists.Iterator;
+   function Is_Null_List (Node : Iir_List) return Boolean;
+   pragma Inline (Is_Null_List);
+
    function Create_Iir_List return Iir_List
      renames Lists.Create_List;
-   function Get_Nth_Element (L : Iir_List; N : Natural) return Iir
-     renames Lists.Get_Nth_Element;
-   procedure Replace_Nth_Element (L : Iir_List; N : Natural; El : Iir)
-     renames Lists.Replace_Nth_Element;
    procedure Append_Element (L : Iir_List; E : Iir)
      renames Lists.Append_Element;
    procedure Add_Element (L : Iir_List; E : Iir)
@@ -5350,13 +5444,48 @@ package Iirs is
      renames Lists.Destroy_List;
    function Get_Nbr_Elements (L : Iir_List) return Natural
      renames Lists.Get_Nbr_Elements;
-   procedure Set_Nbr_Elements (L : Iir_List; Nbr : Natural)
-     renames Lists.Set_Nbr_Elements;
    function Get_First_Element (L : Iir_List) return Iir
      renames Lists.Get_First_Element;
-   function Get_Last_Element (L : Iir_List) return Iir
-     renames Lists.Get_Last_Element;
+   function Is_Empty (L : Iir_List) return Boolean
+     renames Lists.Is_Empty;
+
+   function List_Iterate (List : Iir_List) return List_Iterator
+     renames Lists.Iterate;
+   function List_Iterate_Safe (List : Iir_List) return List_Iterator
+     renames Lists.Iterate_Safe;
+   function Is_Valid (It : List_Iterator) return Boolean
+     renames Lists.Is_Valid;
+   procedure Next (It : in out List_Iterator)
+     renames Lists.Next;
+   function Get_Element (It : List_Iterator) return Iir
+     renames Lists.Get_Element;
+   procedure Set_Element (It : List_Iterator; El : Iir)
+     renames Lists.Set_Element;
+
    function "=" (L, R : Iir_List) return Boolean renames Lists."=";
+
+   subtype Iir_Flist is Flists.Flist_Type;
+   Null_Iir_Flist   : constant Iir_Flist := Flists.Null_Flist;
+   Iir_Flist_Others : constant Iir_Flist := Flists.Flist_Others;
+   Iir_Flist_All    : constant Iir_Flist := Flists.Flist_All;
+
+   subtype Iir_Flists_All_Others is Iir_Flist
+     range Iir_Flist_Others .. Iir_Flist_All;
+
+   Flist_First : constant Natural := Flists.Ffirst;
+   function Flist_Last (Flist : Iir_Flist) return Natural
+     renames Flists.Flast;
+   function Create_Iir_Flist (Len : Natural) return Iir_Flist
+     renames Flists.Create_Flist;
+   function Get_Nth_Element (Flist : Iir_Flist; N : Natural) return Iir
+     renames Flists.Get_Nth_Element;
+   procedure Set_Nth_Element (Flist : Iir_Flist; N : Natural; El : Iir)
+     renames Flists.Set_Nth_Element;
+   function Get_Nbr_Elements (Flist : Iir_Flist) return Natural
+     renames Flists.Length;
+   procedure Destroy_Iir_Flist (Flist : in out Iir_Flist)
+     renames Flists.Destroy_Flist;
+   function "=" (L, R : Iir_Flist) return Boolean renames Flists."=";
 
    -- This is used only for lists.
    type Iir_Array is array (Natural range <>) of Iir;
@@ -5389,15 +5518,14 @@ package Iirs is
    type Date_Type is new Nat32;
 
    --  The unit is obsoleted (ie replaced) by a more recently analyzed design
-   --  unit.another design unit.
+   --  unit.
    --  If another design unit depends (directly or not) on an obseleted design
    --  unit, it is also obsolete, and cannot be defined.
    Date_Obsolete      : constant Date_Type := 0;
+   --  A unit with the same name (could also be the same unit) is being
+   --  analyzed.  Used to detect circular dependencies.
+   Date_Replacing     : constant Date_Type := 1;
    --  The unit was not analyzed.
-   Date_Not_Analyzed  : constant Date_Type := 1;
-   --  The unit has been analyzed but it has bad dependences.
-   Date_Bad_Analyze   : constant Date_Type := 2;
-   --  The unit has been parsed but not analyzed.
    Date_Parsed        : constant Date_Type := 4;
    --  The unit is being analyzed.
    Date_Analyzing     : constant Date_Type := 5;
@@ -5527,19 +5655,11 @@ package Iirs is
 
    -- Lists.
 
-   subtype Iir_Index_List is Iir_List;
-
    subtype Iir_Design_Unit_List is Iir_List;
-
-   subtype Iir_Enumeration_Literal_List is Iir_List;
-
-   subtype Iir_Designator_List is Iir_List;
 
    subtype Iir_Attribute_Value_Chain is Iir_List;
 
    subtype Iir_Overload_List is Iir;
-
-   subtype Iir_Group_Constituent_List is Iir_List;
 
    subtype Iir_Callees_List is Iir_List;
 
@@ -5859,8 +5979,8 @@ package Iirs is
 
    --  List of elements of a simple aggregate.
    --  Field: Field4 Ref (uc)
-   function Get_Simple_Aggregate_List (Target : Iir) return Iir_List;
-   procedure Set_Simple_Aggregate_List (Target : Iir; List : Iir_List);
+   function Get_Simple_Aggregate_List (Target : Iir) return Iir_Flist;
+   procedure Set_Simple_Aggregate_List (Target : Iir; List : Iir_Flist);
 
    --  For a string literal: the string identifier.
    --  Field: Field5 (uc)
@@ -5919,8 +6039,8 @@ package Iirs is
    procedure Set_Entity_Class (Target : Iir; Kind : Token_Type);
 
    --  Field: Field8 (uc)
-   function Get_Entity_Name_List (Target : Iir) return Iir_List;
-   procedure Set_Entity_Name_List (Target : Iir; Names : Iir_List);
+   function Get_Entity_Name_List (Target : Iir) return Iir_Flist;
+   procedure Set_Entity_Name_List (Target : Iir; Names : Iir_Flist);
 
    --  Field: Field6
    function Get_Attribute_Designator (Target : Iir) return Iir;
@@ -5938,8 +6058,8 @@ package Iirs is
    procedure Set_Attribute_Specification (Val : Iir; Attr : Iir);
 
    --  Field: Field3 Of_Maybe_Ref (uc)
-   function Get_Signal_List (Target : Iir) return Iir_List;
-   procedure Set_Signal_List (Target : Iir; List : Iir_List);
+   function Get_Signal_List (Target : Iir) return Iir_Flist;
+   procedure Set_Signal_List (Target : Iir; List : Iir_Flist);
 
    --  Field: Field3 Forward_Ref
    function Get_Designated_Entity (Val : Iir_Attribute_Value) return Iir;
@@ -5954,12 +6074,12 @@ package Iirs is
    procedure Set_Actual (Target : Iir; Actual : Iir);
 
    --  Field: Field4
-   function Get_In_Conversion (Target : Iir) return Iir;
-   procedure Set_In_Conversion (Target : Iir; Conv : Iir);
+   function Get_Actual_Conversion (Target : Iir) return Iir;
+   procedure Set_Actual_Conversion (Target : Iir; Conv : Iir);
 
    --  Field: Field5
-   function Get_Out_Conversion (Target : Iir) return Iir;
-   procedure Set_Out_Conversion (Target : Iir; Conv : Iir);
+   function Get_Formal_Conversion (Target : Iir) return Iir;
+   procedure Set_Formal_Conversion (Target : Iir; Conv : Iir);
 
    --  This flag is set when the formal is associated in whole (ie, not
    --  individually).
@@ -6362,16 +6482,16 @@ package Iirs is
    procedure Set_Associated_Type (Def : Iir; Atype : Iir);
 
    --  Field: Field2 (uc)
-   function Get_Enumeration_Literal_List (Target : Iir) return Iir_List;
-   procedure Set_Enumeration_Literal_List (Target : Iir; List : Iir_List);
+   function Get_Enumeration_Literal_List (Target : Iir) return Iir_Flist;
+   procedure Set_Enumeration_Literal_List (Target : Iir; List : Iir_Flist);
 
    --  Field: Field1 Chain
    function Get_Entity_Class_Entry_Chain (Target : Iir) return Iir;
    procedure Set_Entity_Class_Entry_Chain (Target : Iir; Chain : Iir);
 
    --  Field: Field1 (uc)
-   function Get_Group_Constituent_List (Group : Iir) return Iir_List;
-   procedure Set_Group_Constituent_List (Group : Iir; List : Iir_List);
+   function Get_Group_Constituent_List (Group : Iir) return Iir_Flist;
+   procedure Set_Group_Constituent_List (Group : Iir; List : Iir_Flist);
 
    --  Chain of physical type units.
    --  The first unit is the primary unit.  If you really need the primary
@@ -6474,6 +6594,11 @@ package Iirs is
    function Get_Only_Characters_Flag (Atype : Iir) return Boolean;
    procedure Set_Only_Characters_Flag (Atype : Iir; Flag : Boolean);
 
+   --  True if enumeration type ATYPE is a character type.
+   --  Field: Flag5
+   function Get_Is_Character_Type (Atype : Iir) return Boolean;
+   procedure Set_Is_Character_Type (Atype : Iir; Flag : Boolean);
+
    --  Field: State1 (pos)
    function Get_Type_Staticness (Atype : Iir) return Iir_Staticness;
    procedure Set_Type_Staticness (Atype : Iir; Static : Iir_Staticness);
@@ -6487,13 +6612,13 @@ package Iirs is
    --  the index_sutype is constrained (to differentiate with unconstrained
    --  index type).
    --  Field: Field9 Ref (uc)
-   function Get_Index_Subtype_List (Decl : Iir) return Iir_List;
-   procedure Set_Index_Subtype_List (Decl : Iir; List : Iir_List);
+   function Get_Index_Subtype_List (Decl : Iir) return Iir_Flist;
+   procedure Set_Index_Subtype_List (Decl : Iir; List : Iir_Flist);
 
    --  List of type marks for indexes type of array types.
    --  Field: Field6 (uc)
-   function Get_Index_Subtype_Definition_List (Def : Iir) return Iir_List;
-   procedure Set_Index_Subtype_Definition_List (Def : Iir; Idx : Iir_List);
+   function Get_Index_Subtype_Definition_List (Def : Iir) return Iir_Flist;
+   procedure Set_Index_Subtype_Definition_List (Def : Iir; Idx : Iir_Flist);
 
    --  The subtype_indication as it appears in a array type declaration.
    --  Field: Field2
@@ -6505,8 +6630,8 @@ package Iirs is
    procedure Set_Element_Subtype (Decl : Iir; Sub_Type : Iir);
 
    --  Field: Field6 (uc)
-   function Get_Index_Constraint_List (Def : Iir) return Iir_List;
-   procedure Set_Index_Constraint_List (Def : Iir; List : Iir_List);
+   function Get_Index_Constraint_List (Def : Iir) return Iir_Flist;
+   procedure Set_Index_Constraint_List (Def : Iir; List : Iir_Flist);
 
    --  Field: Field8
    function Get_Array_Element_Constraint (Def : Iir) return Iir;
@@ -6514,8 +6639,8 @@ package Iirs is
 
    --  Chains of elements of a record.
    --  Field: Field1 (uc)
-   function Get_Elements_Declaration_List (Decl : Iir) return Iir_List;
-   procedure Set_Elements_Declaration_List (Decl : Iir; List : Iir_List);
+   function Get_Elements_Declaration_List (Decl : Iir) return Iir_Flist;
+   procedure Set_Elements_Declaration_List (Decl : Iir; List : Iir_Flist);
 
    --  Field: Field1 Forward_Ref
    function Get_Designated_Type (Target : Iir) return Iir;
@@ -6527,8 +6652,8 @@ package Iirs is
 
    --  List of indexes for indexed name.
    --  Field: Field2 (uc)
-   function Get_Index_List (Decl : Iir) return Iir_List;
-   procedure Set_Index_List (Decl : Iir; List : Iir_List);
+   function Get_Index_List (Decl : Iir) return Iir_Flist;
+   procedure Set_Index_List (Decl : Iir; List : Iir_Flist);
 
    --  The terminal declaration for the reference (ground) of a nature
    --  Field: Field2
@@ -6547,7 +6672,7 @@ package Iirs is
    function Get_Through_Type (Def : Iir) return Iir;
    procedure Set_Through_Type (Def : Iir; Atype : Iir);
 
-   --  Field: Field1
+   --  Field: Field1 Maybe_Ref
    function Get_Target (Target : Iir) return Iir;
    procedure Set_Target (Target : Iir; Atarget : Iir);
 
@@ -6832,6 +6957,12 @@ package Iirs is
    function Get_Uninstantiated_Package_Decl (Inst : Iir) return Iir;
    procedure Set_Uninstantiated_Package_Decl (Inst : Iir; Pkg : Iir);
 
+   --  The created pseudo-file for relocating the instantiated nodes
+   --  (generics and declarations).
+   --  Field: Field10 (uc)
+   function Get_Instance_Source_File (Inst : Iir) return Source_File_Entry;
+   procedure Set_Instance_Source_File (Inst : Iir; File : Source_File_Entry);
+
    --  Get/Set the block_configuration (there may be several
    --  block_configuration through the use of prev_configuration singly linked
    --  list) that apply to this generate statement.
@@ -6851,9 +6982,9 @@ package Iirs is
    function Get_Generate_Else_Clause (Target : Iir) return Iir;
    procedure Set_Generate_Else_Clause (Target : Iir; Clause : Iir);
 
-   --  Condition of a conditionam_waveform, if_statement, elsif,
+   --  Condition of a conditional_waveform, if_statement, elsif,
    --  while_loop_statement, next_statement or exit_statement.
-   --  Field: Field1
+   --  Field: Field1 Maybe_Ref
    function Get_Condition (Target : Iir) return Iir;
    procedure Set_Condition (Target : Iir; Condition : Iir);
 
@@ -6884,8 +7015,8 @@ package Iirs is
    procedure Set_Component_Name (Target : Iir; Name : Iir);
 
    --  Field: Field1 (uc)
-   function Get_Instantiation_List (Target : Iir) return Iir_List;
-   procedure Set_Instantiation_List (Target : Iir; List : Iir_List);
+   function Get_Instantiation_List (Target : Iir) return Iir_Flist;
+   procedure Set_Instantiation_List (Target : Iir; List : Iir_Flist);
 
    --  Field: Field3
    function Get_Entity_Aspect (Target : Iir_Binding_Indication) return Iir;
@@ -6982,6 +7113,13 @@ package Iirs is
    --  Field: Field5
    function Get_Pathname_Expression (Path : Iir) return Iir;
    procedure Set_Pathname_Expression (Path : Iir; Expr : Iir);
+
+   --  True if the name appears in a formal_part.  In that case, some
+   --  checks must be disabled (eg: the expression of a type conversion can
+   --  be a write-only interface).
+   --  Field: Flag4
+   function Get_In_Formal_Flag (Name : Iir) return Boolean;
+   procedure Set_In_Formal_Flag (Name : Iir; Flag : Boolean);
 
    --  The subtype of a slice.  Contrary to the Type field, this is not a
    --  reference.
@@ -7170,8 +7308,8 @@ package Iirs is
 
    --  List of type_mark for an Iir_Kind_Signature
    --  Field: Field2 (uc)
-   function Get_Type_Marks_List (Target : Iir) return Iir_List;
-   procedure Set_Type_Marks_List (Target : Iir; List : Iir_List);
+   function Get_Type_Marks_List (Target : Iir) return Iir_Flist;
+   procedure Set_Type_Marks_List (Target : Iir; List : Iir_Flist);
 
    --  Field: Flag1
    function Get_Implicit_Alias_Flag (Decl : Iir) return Boolean;
@@ -7208,11 +7346,6 @@ package Iirs is
    --  Field: Field4 Ref
    function Get_Protected_Type_Declaration (Target : Iir) return Iir;
    procedure Set_Protected_Type_Declaration (Target : Iir; Decl : Iir);
-
-   --  Location of the 'end' token.
-   --  Field: Field6 (uc)
-   function Get_End_Location (Target : Iir) return Location_Type;
-   procedure Set_End_Location (Target : Iir; Loc : Location_Type);
 
    --  For a declaration: true if the declaration is used somewhere.
    --  Field: Flag6
@@ -7268,6 +7401,11 @@ package Iirs is
    --  Field: Flag10
    function Get_Has_Parameter (Decl : Iir) return Boolean;
    procedure Set_Has_Parameter (Decl : Iir; Flag : Boolean);
+
+   --  Layout flag: true if 'component' reserved identifier is present.
+   --  Field: Flag5
+   function Get_Has_Component (Decl : Iir) return Boolean;
+   procedure Set_Has_Component (Decl : Iir; Flag : Boolean);
 
    --  Layout flag for object declaration.  If True, the identifier of this
    --  declaration is followed by an identifier (and separated by a comma).

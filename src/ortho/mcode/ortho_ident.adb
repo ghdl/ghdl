@@ -37,9 +37,12 @@ package body Ortho_Ident is
    begin
       Start := Strs.Allocate (Str'Length + 1);
       for I in Str'Range loop
+         --  Identifiers are NULL terminated, so they cannot have any
+         --  embedded NULL.
+         pragma Assert (Str (I) /= ASCII.NUL);
          Strs.Table (Start + I - Str'First) := Str (I);
       end loop;
-      Strs.Table (Start + Str'Length) := ASCII.Nul;
+      Strs.Table (Start + Str'Length) := ASCII.NUL;
       Ids.Append (Start);
       return Ids.Last;
    end Get_Identifier;

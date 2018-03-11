@@ -24,9 +24,15 @@
 --  covered by the GNU Public License.
 with Grt.Types; use Grt.Types;
 with Grt.Hooks;
+with Grt.Stdio;
 
 package Grt.Errors is
    pragma Preelaborate (Grt.Errors);
+
+   --  Set the stream for error messages.  Must be called before using this
+   --  package.
+   procedure Set_Error_Stream (Stream : Grt.Stdio.FILEs);
+   function Get_Error_Stream return Grt.Stdio.FILEs;
 
    --  Multi-call error procedure.
    --  Start and continue with Error_C, finish by an Error_E.
@@ -50,6 +56,11 @@ package Grt.Errors is
 
    --  Complete error message.
    procedure Error (Str : String);
+   pragma No_Return (Error);
+
+   procedure Error (Str : String;
+                    Filename : Ghdl_C_String;
+                    Line : Ghdl_I32);
    pragma No_Return (Error);
 
    --  Warning message.
@@ -116,8 +127,10 @@ package Grt.Errors is
    Run_Resumed : constant Integer := 2;
    --  Simulation is finished.
    Run_Finished : constant Integer := 3;
+   --  Simulation finished because of a user-defined time or delta limit.
+   Run_Limit : constant Integer := 4;
    --  Stop/finish request from user (via std.env).
-   Run_Stop : constant Integer := 4;
+   Run_Stop : constant Integer := 5;
 
    --  Hook called in case of error.
    Error_Hook : Grt.Hooks.Proc_Hook_Type := null;

@@ -36,6 +36,9 @@ package Libraries is
    --  Location for a command line.
    Command_Line_Location : Location_Type;
 
+   --  A location for library declarations (such as library WORK).
+   Library_Location: Location_Type;
+
    --  Library declaration for the std library.
    --  This is also the first library of the libraries chain.
    Std_Library : Iir_Library_Declaration := Null_Iir;
@@ -186,6 +189,12 @@ package Libraries is
    --     or an entity_aspect_entity to designate an architectrure.
    --  Return null_iir if the design unit is not found.
    function Find_Design_Unit (Unit : Iir) return Iir_Design_Unit;
+
+   --  Search design file NAME in library LIB.  This is not very efficient as
+   --  this is a simple linear search.  NAME must correspond exactely to the
+   --  design file name.
+   function Find_Design_File (Lib : Iir_Library_Declaration; Name : Name_Id)
+                             return Iir;
 
    --  Find an entity whose name is NAME in any library.
    --  If there is no such entity, return NULL_IIR.

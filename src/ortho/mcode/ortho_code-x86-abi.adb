@@ -42,11 +42,15 @@ package body Ortho_Code.X86.Abi is
       Abi := (Offset => Subprg_Stack_Init, Inum => 0, Fnum => 0);
    end Start_Subprogram;
 
-   type Regs_List is array (Natural range <>) of O_Reg;
+   type Regs_List is array (Boolean range <>, Natural range <>) of O_Reg;
    Int_Regs : constant Regs_List :=
-     (R_Di, R_Si, R_Dx, R_Cx, R_R8, R_R9);
+     (False => (R_Di, R_Si, R_Dx, R_Cx, R_R8, R_R9),
+      True  => (R_Cx, R_Dx, R_R8, R_R9, R_None, R_None));
    Sse_Regs : constant Regs_List :=
-     (R_Xmm0, R_Xmm1, R_Xmm2, R_Xmm3, R_Xmm4, R_Xmm5, R_Xmm6, R_Xmm7);
+     (False => (R_Xmm0, R_Xmm1, R_Xmm2, R_Xmm3,
+                R_Xmm4, R_Xmm5, R_Xmm6, R_Xmm7),
+      True => (R_Xmm0, R_Xmm1, R_Xmm2, R_Xmm3,
+               R_None, R_None, R_None, R_None));
 
    procedure New_Interface (Inter : O_Dnode; Abi : in out O_Abi_Subprg)
    is
@@ -59,26 +63,28 @@ package body Ortho_Code.X86.Abi is
       if Flags.M64 then
          --  AMD64 ABI 3.2.3 Parameter passing
          --  The size of each argument gets rounded up to eight bytes.
-         Size := 0;
          case Get_Type_Mode (Itype) is
             when Mode_Int | Mode_Uns | Mode_B2 | Mode_P64 =>
-               if Abi.Inum <= Int_Regs'Last then
-                  Reg := Int_Regs (Abi.Inum);
+               if Abi.Inum <= Int_Regs'Last (2) then
+                  Reg := Int_Regs (Flags.Win64, Abi.Inum);
                   Abi.Inum := Abi.Inum + 1;
-               else
-                  Size := 8;
                end if;
             when Mode_Fp =>
-               if Abi.Fnum <= Sse_Regs'Last then
-                  Reg := Sse_Regs (Abi.Fnum);
+               if Abi.Fnum <= Sse_Regs'Last (2) then
+                  Reg := Sse_Regs (Flags.Win64, Abi.Fnum);
                   Abi.Fnum := Abi.Fnum + 1;
-               else
-                  Size := 8;
                end if;
             when others =>
                --  Parameters are scalars.
                raise Program_Error;
          end case;
+         if Reg = R_None then
+            --  Passed on the stack, need 8 bytes.
+            Size := 8;
+         else
+            --  Passed by a register.
+            Size := 0;
+         end if;
       else
          Size := Get_Type_Size (Itype);
          Size := (Size + 3) and not 3;

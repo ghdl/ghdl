@@ -16,7 +16,6 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Name_Table;
 with Std_Names;
 with Std_Package; use Std_Package;
 with Errorout; use Errorout;
@@ -247,8 +246,7 @@ package body Trans.Chap2 is
                Id := Create_Identifier;
             when Foreign_Vhpidirect =>
                Id := Get_Identifier
-                 (Name_Table.Nam_Buffer (Foreign.Subprg_First
-                  .. Foreign.Subprg_Last));
+                 (Foreign.Subprg_Name (1 .. Foreign.Subprg_Len));
          end case;
          Storage := O_Storage_External;
       else
@@ -456,7 +454,7 @@ package body Trans.Chap2 is
       if Has_Nested or else Has_Suspend then
          --  Unnest subprograms.
          --  Create an instance for the local declarations.
-         Push_Instance_Factory (Info.Subprg_Frame_Scope'Access);
+         Push_Frame_Factory (Info.Subprg_Frame_Scope'Access, Has_Suspend);
          Add_Subprg_Instance_Field (Upframe_Field, Upframe_Scope);
 
          if Info.Subprg_Params_Ptr /= O_Tnode_Null then
@@ -510,7 +508,7 @@ package body Trans.Chap2 is
             Add_Scope_Field (Wki_Locvars, Info.Subprg_Locvars_Scope);
          end if;
 
-         Pop_Instance_Factory (Info.Subprg_Frame_Scope'Access);
+         Pop_Frame_Factory (Info.Subprg_Frame_Scope'Access);
 
          New_Type_Decl (Create_Identifier ("_FRAMETYPE"),
                         Get_Scope_Type (Info.Subprg_Frame_Scope));
@@ -1118,21 +1116,37 @@ package body Trans.Chap2 is
 
    procedure Instantiate_Iir_List_Info (L : Iir_List)
    is
-      El : Iir;
+      It : List_Iterator;
    begin
       case L is
          when Null_Iir_List
-            | Iir_List_All
-            | Iir_List_Others =>
+            | Iir_List_All =>
             return;
          when others =>
-            for I in Natural loop
-               El := Get_Nth_Element (L, I);
-               exit when El = Null_Iir;
-               Instantiate_Iir_Info (El);
+            It := List_Iterate (L);
+            while Is_Valid (It) loop
+               Instantiate_Iir_Info (Get_Element (It));
+               Next (It);
             end loop;
       end case;
    end Instantiate_Iir_List_Info;
+
+   procedure Instantiate_Iir_Flist_Info (L : Iir_Flist)
+   is
+      El : Iir;
+   begin
+      case L is
+         when Null_Iir_Flist
+            | Iir_Flist_All
+            | Iir_Flist_Others =>
+            return;
+         when others =>
+            for I in Flist_First .. Flist_Last (L) loop
+               El := Get_Nth_Element (L, I);
+               Instantiate_Iir_Info (El);
+            end loop;
+      end case;
+   end Instantiate_Iir_Flist_Info;
 
    --  B must be passed by reference.
    procedure Adjust_Info_Basetype (B : access Ortho_Info_Basetype_Type;
@@ -1184,6 +1198,7 @@ package body Trans.Chap2 is
       case Src.Kind is
          when Kind_Type =>
             Dest.all := (Kind => Kind_Type,
+                         Mark => False,
                          Type_Mode => Src.Type_Mode,
                          Type_Incomplete => Src.Type_Incomplete,
                          Type_Locally_Constrained =>
@@ -1199,7 +1214,8 @@ package body Trans.Chap2 is
             if Src.C /= null then
                Dest.C := new Complex_Type_Arr_Info'
                  (Mode_Value =>
-                    (Size_Var => Instantiate_Var
+                    (Mark => False,
+                     Size_Var => Instantiate_Var
                        (Src.C (Mode_Value).Size_Var),
                      Builder_Need_Func =>
                        Src.C (Mode_Value).Builder_Need_Func,
@@ -1212,7 +1228,8 @@ package body Trans.Chap2 is
                      Builder_Func =>
                        Src.C (Mode_Value).Builder_Func),
                   Mode_Signal =>
-                    (Size_Var => Instantiate_Var
+                    (Mark => False,
+                     Size_Var => Instantiate_Var
                        (Src.C (Mode_Signal).Size_Var),
                      Builder_Need_Func =>
                        Src.C (Mode_Signal).Builder_Need_Func,
@@ -1228,6 +1245,7 @@ package body Trans.Chap2 is
          when Kind_Object =>
             Dest.all :=
               (Kind => Kind_Object,
+               Mark => False,
                Object_Static => Src.Object_Static,
                Object_Var => Instantiate_Var (Src.Object_Var),
                Object_Rti => Src.Object_Rti);
@@ -1236,6 +1254,7 @@ package body Trans.Chap2 is
             pragma Assert (Src.Signal_Function = O_Dnode_Null);
             Dest.all :=
               (Kind => Kind_Signal,
+               Mark => False,
                Signal_Val => Instantiate_Var (Src.Signal_Val),
                Signal_Valp => Instantiate_Var (Src.Signal_Valp),
                Signal_Sig => Instantiate_Var (Src.Signal_Sig),
@@ -1247,6 +1266,7 @@ package body Trans.Chap2 is
               Instantiate_Var_Scope (Src.Subprg_Frame_Scope);
             Dest.all :=
               (Kind => Kind_Subprg,
+               Mark => False,
                Use_Stack2 => Src.Use_Stack2,
                Subprg_Node => Src.Subprg_Node,
                Res_Interface => Src.Res_Interface,
@@ -1269,6 +1289,7 @@ package body Trans.Chap2 is
          when Kind_Operator =>
             Dest.all :=
               (Kind => Kind_Operator,
+               Mark => False,
                Operator_Stack2 => Src.Operator_Stack2,
                Operator_Body => Src.Operator_Body,
                Operator_Node => Src.Operator_Node,
@@ -1279,18 +1300,22 @@ package body Trans.Chap2 is
                Operator_Res => Src.Operator_Res);
          when Kind_Interface =>
             Dest.all := (Kind => Kind_Interface,
+                         Mark => False,
                          Interface_Mechanism => Src.Interface_Mechanism,
                          Interface_Decl => Src.Interface_Decl,
                          Interface_Field => Src.Interface_Field);
          when Kind_Index =>
             Dest.all := (Kind => Kind_Index,
+                         Mark => False,
                          Index_Field => Src.Index_Field);
          when Kind_Expr =>
             Dest.all := (Kind => Kind_Expr,
+                         Mark => False,
                          Expr_Node => Src.Expr_Node);
          when Kind_Package_Instance =>
             Dest.all :=
               (Kind => Kind_Package_Instance,
+               Mark => False,
                Package_Instance_Spec_Var =>
                  Instantiate_Var (Src.Package_Instance_Spec_Var),
                Package_Instance_Body_Var =>
@@ -1310,12 +1335,14 @@ package body Trans.Chap2 is
 
          when Kind_Field =>
             Dest.all := (Kind => Kind_Field,
+                         Mark => False,
                          Field_Node => Src.Field_Node,
                          Field_Bound => Src.Field_Bound);
 
          when Kind_Package =>
             Dest.all :=
               (Kind => Kind_Package,
+               Mark => False,
                Package_Elab_Spec_Subprg => Src.Package_Elab_Spec_Subprg,
                Package_Elab_Body_Subprg => Src.Package_Elab_Body_Subprg,
                Package_Elab_Spec_Instance =>
@@ -1422,6 +1449,20 @@ package body Trans.Chap2 is
                      when others =>
                         raise Internal_Error;
                   end case;
+               when Type_Iir_Flist =>
+                  case Get_Field_Attribute (F) is
+                     when Attr_None =>
+                        Instantiate_Iir_Flist_Info (Get_Iir_Flist (N, F));
+                     when Attr_Of_Maybe_Ref =>
+                        if not Get_Is_Ref (N) then
+                           Instantiate_Iir_Flist_Info (Get_Iir_Flist (N, F));
+                        end if;
+                     when Attr_Ref
+                        | Attr_Of_Ref =>
+                        null;
+                     when others =>
+                        raise Internal_Error;
+                  end case;
                when Type_PSL_NFA
                   | Type_PSL_Node =>
                   --  TODO
@@ -1434,6 +1475,7 @@ package body Trans.Chap2 is
                   raise Internal_Error;
                when Type_String8_Id
                   | Type_Source_Ptr
+                  | Type_Source_File_Entry
                   | Type_Number_Base_Type
                   | Type_Iir_Constraint
                   | Type_Iir_Mode
@@ -1448,7 +1490,6 @@ package body Trans.Chap2 is
                   | Type_Iir_Delay_Mechanism
                   | Type_Iir_Predefined_Functions
                   | Type_Iir_Direction
-                  | Type_Location_Type
                   | Type_Iir_Int32
                   | Type_Int32
                   | Type_Iir_Fp64
@@ -1473,19 +1514,25 @@ package body Trans.Chap2 is
    begin
       Inter := Chain;
       while Inter /= Null_Iir loop
-         case Get_Kind (Inter) is
-            when Iir_Kind_Interface_Constant_Declaration
-              | Iir_Kind_Interface_Package_Declaration =>
-               Orig := Sem_Inst.Get_Origin (Inter);
-               Orig_Info := Get_Info (Orig);
+         Orig := Sem_Inst.Get_Origin (Inter);
+         Orig_Info := Get_Info (Orig);
 
-               Info := Add_Info (Inter, Orig_Info.Kind);
-               Copy_Info (Info, Orig_Info);
-               Clean_Copy_Info (Info);
+         Info := Add_Info (Inter, Orig_Info.Kind);
+         Copy_Info (Info, Orig_Info);
+
+         case Get_Kind (Inter) is
+            when Iir_Kind_Interface_Constant_Declaration =>
+               null;
+
+            when Iir_Kind_Interface_Package_Declaration =>
+               Instantiate_Iir_Generic_Chain_Info (Get_Generic_Chain (Inter));
+               Instantiate_Iir_Chain_Info (Get_Declaration_Chain (Inter));
 
             when others =>
                raise Internal_Error;
          end case;
+
+         Clean_Copy_Info (Info);
 
          Inter := Get_Chain (Inter);
       end loop;
@@ -1675,15 +1722,14 @@ package body Trans.Chap2 is
 
    procedure Elab_Dependence (Design_Unit: Iir_Design_Unit)
    is
-      Depend_List : Iir_Design_Unit_List;
+      Depend_List : constant Iir_List := Get_Dependence_List (Design_Unit);
+      It : List_Iterator;
       Design      : Iir;
       Library_Unit: Iir;
    begin
-      Depend_List := Get_Dependence_List (Design_Unit);
-
-      for I in Natural loop
-         Design := Get_Nth_Element (Depend_List, I);
-         exit when Design = Null_Iir;
+      It := List_Iterate (Depend_List);
+      while Is_Valid (It) loop
+         Design := Get_Element (It);
          if Get_Kind (Design) = Iir_Kind_Design_Unit then
             Library_Unit := Get_Library_Unit (Design);
             case Get_Kind (Library_Unit) is
@@ -1708,6 +1754,7 @@ package body Trans.Chap2 is
                   Error_Kind ("elab_dependence", Library_Unit);
             end case;
          end if;
+         Next (It);
       end loop;
    end Elab_Dependence;
 

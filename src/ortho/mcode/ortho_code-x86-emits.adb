@@ -1391,6 +1391,7 @@ package body Ortho_Code.X86.Emits is
       Gen_Call (Sym);
 
       if Abi.Flag_Sse2 and then not Flags.M64 and then Mode in Mode_Fp then
+         --  Convert return value from St0 to Xmm0.
          declare
             Sslot : constant Int32 := -Int32 (Cur_Subprg.Target.Fp_Slot);
          begin
@@ -2657,6 +2658,9 @@ package body Ortho_Code.X86.Emits is
             null;
 
          when OE_Arg =>
+            --  Only arguments passed on the stack are represented by OE_Arg.
+            --  Arguments passed by registers (for x86-64) are simply
+            --  pre-computed.
             case Mode is
                when Mode_U32
                  | Mode_I32
@@ -2820,35 +2824,39 @@ package body Ortho_Code.X86.Emits is
       end case;
    end Emit_Insn;
 
-   function Get_Preserved_Regs return O_Reg_Array is
+   function Get_Preserved_Regs return O_Reg_Bitmap is
    begin
       if Flags.M64 then
-         return Preserved_Regs_64;
+         if Flags.Win64 then
+            return Preserved_Regs_Win64;
+         else
+            return Preserved_Regs_Lin64;
+         end if;
       else
          return Preserved_Regs_32;
       end if;
    end Get_Preserved_Regs;
 
    --  List of registers preserved accross calls.
-   Preserved_Regs : constant O_Reg_Array := Get_Preserved_Regs;
+   Preserved_Regs : constant O_Reg_Bitmap := Get_Preserved_Regs;
 
-   procedure Push_Reg_If_Used (Reg : Regs_R64)
-   is
-      use Ortho_Code.X86.Insns;
+   procedure Push_Reg (Reg : Regs_R64) is
    begin
-      if Reg_Used (Reg) then
-         Gen_Push_Pop_Reg (Opc_Push_Reg, Reg, Sz_Ptr);
-      end if;
-   end Push_Reg_If_Used;
+      Gen_Push_Pop_Reg (Opc_Push_Reg, Reg, Sz_Ptr);
+   end Push_Reg;
 
-   procedure Pop_Reg_If_Used (Reg : Regs_R64)
-   is
-      use Ortho_Code.X86.Insns;
+   procedure Pop_Reg (Reg : Regs_R64) is
    begin
-      if Reg_Used (Reg) then
-         Gen_Push_Pop_Reg (Opc_Pop_Reg, Reg, Sz_Ptr);
-      end if;
-   end Pop_Reg_If_Used;
+      Gen_Push_Pop_Reg (Opc_Pop_Reg, Reg, Sz_Ptr);
+   end Pop_Reg;
+
+   procedure Gen_Sub_Sp (Imm : Int32) is
+   begin
+      Start_Insn;
+      Init_Modrm_Reg (R_Sp, Sz_Ptr);
+      Gen_Insn_Grp1 (Opc2_Grp1_Sub, Imm);
+      End_Insn;
+   end Gen_Sub_Sp;
 
    procedure Emit_Prologue (Subprg : Subprogram_Data_Acc)
    is
@@ -2867,6 +2875,7 @@ package body Ortho_Code.X86.Emits is
       Set_Current_Section (Sect_Text);
       Gen_Pow_Align (2);
 
+      --  Set symbol.
       Subprg_Decl := Subprg.D_Decl;
       Sym := Get_Decl_Symbol (Subprg_Decl);
       case Get_Decl_Storage (Subprg_Decl) is
@@ -2882,8 +2891,8 @@ package body Ortho_Code.X86.Emits is
 
       --  Return address and saved frame pointer are preserved.
       Saved_Regs_Size := 2;
-      for I in Preserved_Regs'Range loop
-         if Reg_Used (Preserved_Regs (I)) then
+      for R in Preserved_Regs'Range loop
+         if Preserved_Regs (R) and Reg_Used (R) then
             Saved_Regs_Size := Saved_Regs_Size + 1;
          end if;
       end loop;
@@ -2894,6 +2903,8 @@ package body Ortho_Code.X86.Emits is
       end if;
 
       --  Compute frame size.
+      --  Saved_Regs_Size must be added and substracted as the stack boundary
+      --  can be larger than a reg size.
       Frame_Size := Unsigned_32 (Subprg.Stack_Max) + Saved_Regs_Size;
       --  Align.
       Frame_Size := (Frame_Size + X86.Flags.Stack_Boundary - 1)
@@ -2903,7 +2914,7 @@ package body Ortho_Code.X86.Emits is
 
       --  Emit prolog.
       --  push %ebp / push %rbp
-      Gen_Push_Pop_Reg (Opc_Push_Reg, R_Bp, Sz_Ptr);
+      Push_Reg (R_Bp);
       --  movl %esp, %ebp / movl %rsp, %rbp
       Start_Insn;
       Gen_Rex (16#48#);
@@ -2911,7 +2922,7 @@ package body Ortho_Code.X86.Emits is
       Gen_8 (2#11_100_101#);
       End_Insn;
 
-      --  Save int registers.
+      --  Save int arguments (only on x86-64).
       Has_Fp_Inter := False;
       if Flags.M64 then
          declare
@@ -2922,9 +2933,13 @@ package body Ortho_Code.X86.Emits is
             while Inter /= O_Dnode_Null loop
                R := Get_Decl_Reg (Inter);
                if R in Regs_R64 then
-                  Gen_Push_Pop_Reg (Opc_Push_Reg, R, Sz_Ptr);
+                  Push_Reg (R);
+                  --  Space for arguments was already counted in frame size.
+                  --  As the space is allocated by the push, don't allocate it
+                  --  later.
                   Frame_Size := Frame_Size - 8;
                elsif R in Regs_Xmm then
+                  --  Need to save Xmm registers, but later.
                   Has_Fp_Inter := True;
                else
                   pragma Assert (R = R_None);
@@ -2940,10 +2955,7 @@ package body Ortho_Code.X86.Emits is
          if not X86.Flags.Flag_Alloca_Call
             or else Frame_Size <= 4096
          then
-            Start_Insn;
-            Init_Modrm_Reg (R_Sp, Sz_Ptr);
-            Gen_Insn_Grp1 (Opc2_Grp1_Sub, Int32 (Frame_Size));
-            End_Insn;
+            Gen_Sub_Sp (Int32 (Frame_Size));
          else
             pragma Assert (not Flags.M64);
             --  mov stack_size,%eax
@@ -2951,10 +2963,12 @@ package body Ortho_Code.X86.Emits is
             Gen_8 (Opc_Movl_Imm_Reg + To_Reg32 (R_Ax));
             Gen_32 (Frame_Size);
             End_Insn;
+
             Gen_Call (Chkstk_Symbol);
          end if;
       end if;
 
+      --  Save XMM arguments.
       if Flags.M64 and Has_Fp_Inter then
          declare
             Inter : O_Dnode;
@@ -2970,6 +2984,7 @@ package body Ortho_Code.X86.Emits is
                   Gen_SSE_Opc (Opc_Movsd_M64_Xmm);
                   Gen_Mod_Rm_Reg;
                   End_Insn;
+                  --  No need to adjust frame_size, it was already allocated.
                end if;
                Inter := Get_Interface_Chain (Inter);
             end loop;
@@ -2980,9 +2995,11 @@ package body Ortho_Code.X86.Emits is
          Gen_Call (Mcount_Symbol);
       end if;
 
-      --  Save registers.
-      for I in Preserved_Regs'Range loop
-         Push_Reg_If_Used (Preserved_Regs (I));
+      --  Save preserved registers that are used in the function.
+      for R in Preserved_Regs'Range loop
+         if Preserved_Regs (R) and Reg_Used (R) then
+            Push_Reg (R);
+         end if;
       end loop;
    end Emit_Prologue;
 
@@ -2991,12 +3008,15 @@ package body Ortho_Code.X86.Emits is
       use Ortho_Code.Decls;
       use Ortho_Code.Types;
       use Ortho_Code.Flags;
+      use Ortho_Code.X86.Insns;
       Decl : O_Dnode;
       Mode : Mode_Type;
    begin
       --  Restore registers.
-      for I in reverse Preserved_Regs'Range loop
-         Pop_Reg_If_Used (Preserved_Regs (I));
+      for R in reverse Preserved_Regs'Range loop
+         if Preserved_Regs (R) and Reg_Used (R) then
+            Pop_Reg (R);
+         end if;
       end loop;
 
       Decl := Subprg.D_Decl;
@@ -3163,6 +3183,10 @@ package body Ortho_Code.X86.Emits is
                   Emit_Const (E);
                end loop;
             end;
+         when OC_Zero =>
+            for I in 1 .. Get_Type_Size (Get_Const_Type (Val)) loop
+               Gen_8 (0);
+            end loop;
          when OC_Sizeof
            | OC_Alignof
            | OC_Union =>

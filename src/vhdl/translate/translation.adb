@@ -63,66 +63,68 @@ package body Translation is
       end if;
    end Get_Resolv_Ortho_Decl;
 
-   function Translate_Foreign_Id (Decl : Iir) return Foreign_Info_Type
-   is
-      use Name_Table;
-      Attr : Iir_Attribute_Value;
-      Spec : Iir_Attribute_Specification;
-      Expr : Iir;
+   function Get_String_As_String (Expr : Iir) return String is
    begin
-      --  Look for 'FOREIGN.
-      Attr := Sem_Specs.Find_Attribute_Value (Decl, Std_Names.Name_Foreign);
-      pragma Assert (Attr /= Null_Iir);
-
-      Spec := Get_Attribute_Specification (Attr);
-      Expr := Get_Expression (Spec);
       case Get_Kind (Expr) is
          when Iir_Kind_String_Literal8 =>
             declare
+               Len : constant Natural := Natural (Get_String_Length (Expr));
                Id : constant String8_Id := Get_String8_Id (Expr);
+               Res : String (1 .. Len);
             begin
-               Nam_Length := Natural (Get_String_Length (Expr));
-               for I in 1 .. Nam_Length loop
-                  Nam_Buffer (I) := Str_Table.Char_String8 (Id, Pos32 (I));
+               for I in 1 .. Len loop
+                  Res (I) := Str_Table.Char_String8 (Id, Pos32 (I));
                end loop;
+               return Res;
             end;
          when Iir_Kind_Simple_Aggregate =>
             declare
-               List : Iir_List;
+               List : constant Iir_Flist := Get_Simple_Aggregate_List (Expr);
+               Len : constant Natural := Get_Nbr_Elements (List);
+               Res : String (1 .. Len);
                El : Iir;
             begin
-               List := Get_Simple_Aggregate_List (Expr);
-               Nam_Length := 0;
-               for I in Natural loop
+               for I in Flist_First .. Flist_Last (List) loop
                   El := Get_Nth_Element (List, I);
-                  exit when El = Null_Iir;
-                  if Get_Kind (El) /= Iir_Kind_Enumeration_Literal then
-                     raise Internal_Error;
-                  end if;
-                  Nam_Length := Nam_Length + 1;
-                  Nam_Buffer (Nam_Length) :=
+                  pragma Assert (Get_Kind (El) = Iir_Kind_Enumeration_Literal);
+                  Res (I - Flist_First + 1) :=
                     Character'Val (Get_Enum_Pos (El));
                end loop;
+               return Res;
             end;
          when others =>
             if Get_Expr_Staticness (Expr) /= Locally then
                Error_Msg_Sem
                  (+Expr, "value of FOREIGN attribute must be locally static");
-               Nam_Length := 0;
+               return "";
             else
                raise Internal_Error;
             end if;
       end case;
+   end Get_String_As_String;
 
-      if Nam_Length = 0 then
+   function Translate_Foreign_Id (Decl : Iir) return Foreign_Info_Type
+   is
+      use Name_Table;
+      --  Look for 'FOREIGN.
+      Attr : constant Iir_Attribute_Value :=
+        Sem_Specs.Find_Attribute_Value (Decl, Std_Names.Name_Foreign);
+      pragma Assert (Attr /= Null_Iir);
+      Spec : constant Iir_Attribute_Specification :=
+        Get_Attribute_Specification (Attr);
+      Name : constant String := Get_String_As_String (Get_Expression (Spec));
+      Length : constant Natural := Name'Length;
+   begin
+      if Length = 0 then
          return Foreign_Bad;
       end if;
 
+      pragma Assert (Name'First = 1);
+
       --  Only 'VHPIDIRECT' is recognized.
-      if Nam_Length >= 10
-        and then Nam_Buffer (1 .. 10) = "VHPIDIRECT"
-      then
+      if Length >= 10 and then Name (1 .. 10) = "VHPIDIRECT" then
          declare
+            Info : Foreign_Info_Type (Foreign_Vhpidirect);
             P : Natural;
             Sf, Sl : Natural;
             Lf, Ll : Natural;
@@ -130,50 +132,50 @@ package body Translation is
             P := 11;
 
             --  Skip spaces.
-            while P <= Nam_Length and then Nam_Buffer (P) = ' ' loop
+            while P <= Length and then Name (P) = ' ' loop
                P := P + 1;
             end loop;
-            if P > Nam_Length then
+            if P > Length then
                Error_Msg_Sem
                  (+Spec, "missing subprogram/library name after VHPIDIRECT");
             end if;
             --  Extract library.
             Lf := P;
-            while P < Nam_Length and then Nam_Buffer (P) /= ' ' loop
+            while P < Length and then Name (P) /= ' ' loop
                P := P + 1;
             end loop;
             Ll := P;
             --  Extract subprogram.
             P := P + 1;
-            while P <= Nam_Length and then Nam_Buffer (P) = ' ' loop
+            while P <= Length and then Name (P) = ' ' loop
                P := P + 1;
             end loop;
             Sf := P;
-            while P < Nam_Length and then Nam_Buffer (P) /= ' ' loop
+            while P < Length and then Name (P) /= ' ' loop
                P := P + 1;
             end loop;
             Sl := P;
-            if P < Nam_Length then
+            if P < Length then
                Error_Msg_Sem (+Spec, "garbage at end of VHPIDIRECT");
             end if;
 
             --  Accept empty library.
-            if Sf > Nam_Length then
+            if Sf > Length then
                Sf := Lf;
                Sl := Ll;
-               Lf := 0;
+               Lf := 1;
                Ll := 0;
             end if;
 
-            return Foreign_Info_Type'
-              (Kind => Foreign_Vhpidirect,
-               Lib_First => Lf,
-               Lib_Last => Ll,
-               Subprg_First => Sf,
-               Subprg_Last => Sl);
+            Info.Lib_Len := Ll - Lf + 1;
+            Info.Lib_Name (1 .. Info.Lib_Len) := Name (Lf .. Ll);
+
+            Info.Subprg_Len := Sl - Sf + 1;
+            Info.Subprg_Name (1 .. Info.Subprg_Len) := Name (Sf .. Sl);
+            return Info;
          end;
-      elsif Nam_Length = 14
-        and then Nam_Buffer (1 .. 14) = "GHDL intrinsic"
+      elsif Length = 14
+        and then Name (1 .. 14) = "GHDL intrinsic"
       then
          return Foreign_Info_Type'(Kind => Foreign_Intrinsic);
       else
@@ -276,8 +278,7 @@ package body Translation is
       declare
          Pathname : constant String := Files_Map.Get_Pathname
            (Get_Design_File_Directory (Design_File),
-            Get_Design_File_Filename (Design_File),
-            False);
+            Get_Design_File_Filename (Design_File));
       begin
          New_Debug_Filename_Decl (Pathname);
       end;
@@ -511,6 +512,24 @@ package body Translation is
       Ghdl_Bool_Array_Ptr := New_Access_Type (Ghdl_Bool_Array_Type);
       New_Type_Decl
         (Get_Identifier ("__ghdl_bool_array_ptr"), Ghdl_Bool_Array_Ptr);
+
+      --  Create:
+      --  type __ghdl_sizes_type is record
+      --     size_val : ghdl_index_type;
+      --     size_sig : ghdl_index_type;
+      --  end record;
+      declare
+         Constr : O_Element_List;
+      begin
+         Start_Record_Type (Constr);
+         New_Record_Field (Constr, Ghdl_Sizes_Val,
+                           Get_Identifier ("size_val"), Ghdl_Index_Type);
+         New_Record_Field (Constr, Ghdl_Sizes_Sig,
+                           Get_Identifier ("size_sig"), Ghdl_Index_Type);
+         Finish_Record_Type (Constr, Ghdl_Sizes_Type);
+         New_Type_Decl (Get_Identifier ("__ghdl_sizes_type"),
+                        Ghdl_Sizes_Type);
+      end;
 
       --  Create type ghdl_compare_type is (lt, eq, ge);
       declare
@@ -1712,6 +1731,8 @@ package body Translation is
          O_Storage_External);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("time"),
                           Std_Time_Otype);
+      New_Interface_Decl (Interfaces, Param, Wki_Filename, Char_Ptr_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Line, Ghdl_I32_Type);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Process_Wait_Timeout);
 
       --  void __ghdl_process_wait_set_timeout (time : std_time);
@@ -1720,6 +1741,8 @@ package body Translation is
          O_Storage_External);
       New_Interface_Decl (Interfaces, Param, Get_Identifier ("time"),
                           Std_Time_Otype);
+      New_Interface_Decl (Interfaces, Param, Wki_Filename, Char_Ptr_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Line, Ghdl_I32_Type);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Process_Wait_Set_Timeout);
 
       --  void __ghdl_process_wait_add_sensitivity (sig : __ghdl_signal_ptr);

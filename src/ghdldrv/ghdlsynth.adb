@@ -25,7 +25,7 @@ with Libraries;
 with Flags;
 with Canon;
 
-with Elaboration;
+with Simul.Elaboration;
 
 with Synthesis;
 with Netlists.Dump;
@@ -95,7 +95,7 @@ package body Ghdlsynth is
 
       --  Hooks.Set_Run_Options (Args (Opt_Arg .. Args'Last));
 
-      Elaboration.Elaborate_Design (Ghdlsimul.Get_Top_Config);
+      Simul.Elaboration.Elaborate_Design (Ghdlsimul.Get_Top_Config);
 
       return Synthesis.Synth_Design (Ghdlsimul.Get_Top_Config);
       --  Hooks.Run.all;

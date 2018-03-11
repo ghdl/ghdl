@@ -261,8 +261,8 @@ package body Sem is
       --  the same, and sharing is not possible.
       --  FIXME: optimize type conversions
       --    (unsigned <-> signed <-> std_ulogic_vector <-> ...)
-      if Get_In_Conversion (Assoc) /= Null_Iir
-        or else Get_Out_Conversion (Assoc) /= Null_Iir
+      if Get_Actual_Conversion (Assoc) /= Null_Iir
+        or else Get_Formal_Conversion (Assoc) /= Null_Iir
       then
          return False;
       end if;
@@ -552,7 +552,7 @@ package body Sem is
                --  Expression.
                Set_Collapse_Signal_Flag (Assoc, False);
 
-               pragma Assert (Is_Null (Get_In_Conversion (Assoc)));
+               pragma Assert (Is_Null (Get_Actual_Conversion (Assoc)));
                if Flags.Vhdl_Std >= Vhdl_93c then
                   --  LRM93 1.1.1.2 Ports
                   --  Moreover, the ports of a block may be associated
@@ -1374,14 +1374,15 @@ package body Sem is
                return False;
             end if;
             declare
-               L_Left, L_Right : Iir_List;
+               L_Left : constant Iir_Flist := Get_Index_Subtype_List (Left);
+               L_Right : constant Iir_Flist := Get_Index_Subtype_List (Right);
             begin
-               L_Left := Get_Index_Subtype_List (Left);
-               L_Right := Get_Index_Subtype_List (Right);
-               for I in Natural loop
+               if Get_Nbr_Elements (L_Left) /= Get_Nbr_Elements (L_Right) then
+                  return False;
+               end if;
+               for I in Flist_First .. Flist_Last (L_Left) loop
                   El_Left := Get_Nth_Element (L_Left, I);
                   El_Right := Get_Nth_Element (L_Right, I);
-                  exit when El_Left = Null_Iir;
                   if not Are_Trees_Equal (El_Left, El_Right) then
                      return False;
                   end if;
@@ -1398,14 +1399,14 @@ package body Sem is
                return False;
             end if;
             declare
-               L_Left, L_Right : Iir_List;
+               L_Left : constant Iir_Flist :=
+                 Get_Elements_Declaration_List (Left);
+               L_Right : constant Iir_Flist :=
+                 Get_Elements_Declaration_List (Right);
             begin
-               L_Left := Get_Elements_Declaration_List (Left);
-               L_Right := Get_Elements_Declaration_List (Right);
-               for I in Natural loop
+               for I in Flist_First .. Flist_Last (L_Left) loop
                   El_Left := Get_Nth_Element (L_Left, I);
                   El_Right := Get_Nth_Element (L_Right, I);
-                  exit when El_Left = Null_Iir;
                   if not Are_Trees_Equal (El_Left, El_Right) then
                      return False;
                   end if;
@@ -1467,10 +1468,10 @@ package body Sem is
          when Iir_Kind_Association_Element_By_Expression =>
             return Are_Trees_Equal (Get_Actual (Left), Get_Actual (Right))
               and then Are_Trees_Equal (Get_Formal (Left), Get_Formal (Right))
-              and then Are_Trees_Equal (Get_In_Conversion (Left),
-                                        Get_In_Conversion (Right))
-              and then Are_Trees_Equal (Get_Out_Conversion (Left),
-                                        Get_Out_Conversion (Right));
+              and then Are_Trees_Equal (Get_Actual_Conversion (Left),
+                                        Get_Actual_Conversion (Right))
+              and then Are_Trees_Equal (Get_Formal_Conversion (Left),
+                                        Get_Formal_Conversion (Right));
 
          when Iir_Kind_Type_Conversion =>
             return Are_Trees_Equal (Get_Type_Mark (Left),
@@ -2076,47 +2077,39 @@ package body Sem is
             --  Update wait state if the state of all callees is known.
             if Get_Wait_State (Spec) = Unknown then
                declare
-                  Callees : Iir_List;
+                  Callees : constant Iir_List := Get_Callees_List (Subprg);
+                  Callees_It : List_Iterator;
                   Callee : Iir;
                   State : Tri_State_Type;
                begin
-                  Callees := Get_Callees_List (Subprg);
                   --  Per default, has no wait.
                   Set_Wait_State (Spec, False);
-                  if Callees /= Null_Iir_List then
-                     for I in Natural loop
-                        Callee := Get_Nth_Element (Callees, I);
-                        exit when Callee = Null_Iir;
-                        case Get_Kind (Callee) is
-                           when Iir_Kind_Function_Declaration =>
-                              null;
-                           when Iir_Kind_Procedure_Declaration =>
-                              State := Get_Wait_State (Callee);
-                              case State is
-                                 when False =>
-                                    null;
-                                 when Unknown =>
-                                    --  Yet unknown, but can be TRUE.
-                                    Set_Wait_State (Spec, Unknown);
-                                 when True =>
-                                    --  Can this happen ?
-                                    raise Internal_Error;
-                                    --Set_Wait_State (Spec, True);
-                                    --exit;
-                              end case;
-                           when others =>
-                              Error_Kind ("sem_subprogram_body(2)", Callee);
-                        end case;
-                     end loop;
-                  end if;
+                  Callees_It := List_Iterate_Safe (Callees);
+                  while Is_Valid (Callees_It) loop
+                     Callee := Get_Element (Callees_It);
+                     case Get_Kind (Callee) is
+                        when Iir_Kind_Function_Declaration =>
+                           null;
+                        when Iir_Kind_Procedure_Declaration =>
+                           State := Get_Wait_State (Callee);
+                           case State is
+                              when False =>
+                                 null;
+                              when Unknown =>
+                                 --  Yet unknown, but can be TRUE.
+                                 Set_Wait_State (Spec, Unknown);
+                              when True =>
+                                 --  Can this happen ?
+                                 raise Internal_Error;
+                                 --Set_Wait_State (Spec, True);
+                                 --exit;
+                           end case;
+                        when others =>
+                           Error_Kind ("sem_subprogram_body(2)", Callee);
+                     end case;
+                     Next (Callees_It);
+                  end loop;
                end;
-            end if;
-
-            --  Set All_Sensitized_State in trivial cases.
-            if Get_All_Sensitized_State (Spec) = Unknown
-              and then Get_Callees_List (Subprg) = Null_Iir_List
-            then
-               Set_All_Sensitized_State (Spec, No_Signal);
             end if;
 
             --  Do not add to Analysis_Check_List as procedures can't
@@ -2131,6 +2124,13 @@ package body Sem is
          when others =>
             Error_Kind ("sem_subprogram_body", Spec);
       end case;
+
+      --  Set All_Sensitized_State in trivial cases.
+      if Get_All_Sensitized_State (Spec) = Unknown
+        and then Get_Callees_List (Subprg) = Null_Iir_List
+      then
+         Set_All_Sensitized_State (Spec, No_Signal);
+      end if;
    end Sem_Subprogram_Body;
 
    --  Status of Update_And_Check_Pure_Wait.
@@ -2161,6 +2161,7 @@ package body Sem is
 
       Callees_List : Iir_List;
       Callees_List_Holder : Iir;
+      Callees_It : List_Iterator;
       Callee : Iir;
       Callee_Orig : Iir;
       Callee_Bod : Iir;
@@ -2170,7 +2171,7 @@ package body Sem is
       Depth : Iir_Int32;
       Depth_Callee : Iir_Int32;
       Has_Wait_Errors : Boolean := False;
-      Npos : Natural;
+      New_List : Iir_List;
       Res, Res1 : Update_Pure_Status;
    begin
       case Get_Kind (Subprg) is
@@ -2239,10 +2240,10 @@ package body Sem is
       --  First loop: check without recursion.
       --  Second loop: recurse if necessary.
       for J in 0 .. 1 loop
-         Npos := 0;
-         for I in Natural loop
-            Callee := Get_Nth_Element (Callees_List, I);
-            exit when Callee = Null_Iir;
+         New_List := Create_Iir_List;
+         Callees_It := List_Iterate (Callees_List);
+         while Is_Valid (Callees_It) loop
+            Callee := Get_Element (Callees_It);
 
             --  Note:
             --  Pure functions should not be in the list.
@@ -2367,15 +2368,16 @@ package body Sem is
                  (Get_All_Sensitized_State (Callee) = Unknown
                     or else Get_All_Sensitized_State (Callee) = Read_Signal))
             then
-               Replace_Nth_Element (Callees_List, Npos, Callee);
-               Npos := Npos + 1;
+               Append_Element (New_List, Callee);
             end if;
+            Next (Callees_It);
          end loop;
 
          --  End of callee loop.
-         if Npos = 0 then
+         if Is_Empty (New_List) then
             Destroy_Iir_List (Callees_List);
             Callees_List := Null_Iir_List;
+            Destroy_Iir_List (New_List);
             if Kind = K_Procedure then
                if Get_Purity_State (Subprg) = Unknown then
                   Set_Purity_State (Subprg, Maybe_Impure);
@@ -2392,11 +2394,12 @@ package body Sem is
             Res := Update_Pure_Done;
             exit;
          else
-            Set_Nbr_Elements (Callees_List, Npos);
+            Destroy_Iir_List (Callees_List);
+            Callees_List := New_List;
          end if;
       end loop;
 
-      Set_Callees_List (Callees_List_Holder, Callees_List);
+      Set_Callees_List (Callees_List_Holder, New_List);
 
       return Res;
    end Update_And_Check_Pure_Wait;
@@ -2437,22 +2440,22 @@ package body Sem is
    procedure Sem_Analysis_Checks_List (Unit : Iir_Design_Unit;
                                        Emit_Warnings : Boolean)
    is
-      List : Iir_List := Get_Analysis_Checks_List (Unit);
+      List : Iir_List;
       El : Iir;
-      Npos : Natural;
+      It : List_Iterator;
       Keep : Boolean;
-      Callees : Iir_List;
-      Callee : Iir;
+      New_List : Iir_List;
    begin
+      List := Get_Analysis_Checks_List (Unit);
       if List = Null_Iir_List then
          --  Return now if there is nothing to check.
          return;
       end if;
 
-      Npos := 0;
-      for I in Natural loop
-         El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
+      New_List := Create_Iir_List;
+      It := List_Iterate (List);
+      while Is_Valid (It) loop
+         El := Get_Element (It);
          Keep := False;
          case Get_Kind (El) is
             when Iir_Kind_Function_Declaration =>
@@ -2460,21 +2463,24 @@ package body Sem is
                if not Root_Update_And_Check_Pure_Wait (El) then
                   Keep := True;
                   if Emit_Warnings then
-                     Callees := Get_Callees_List (El);
-                     pragma Assert (Callees /= Null_Iir_List);
-                     Warning_Msg_Sem
-                       (Warnid_Delayed_Checks, +El,
-                        "can't assert that all calls in %n"
-                          & " are pure or have not wait;"
-                          & " will be checked at elaboration",
-                        +El, Cont => True);
-                     Callee := Get_Nth_Element (Callees, 0);
-                     --  FIXME: could improve this message by displaying the
-                     --  chain of calls until the first subprograms in
-                     --  unknown state.
-                     Warning_Msg_Sem
-                       (Warnid_Delayed_Checks, +Callee,
-                        "(first such call is to %n)", +Callee);
+                     declare
+                        Callees : constant Iir_List := Get_Callees_List (El);
+                        pragma Assert (Callees /= Null_Iir_List);
+                        Callee : constant Iir := Get_First_Element (Callees);
+                     begin
+                        Warning_Msg_Sem
+                          (Warnid_Delayed_Checks, +El,
+                           "can't assert that all calls in %n"
+                             & " are pure or have not wait;"
+                             & " will be checked at elaboration",
+                           +El, Cont => True);
+                        --  FIXME: could improve this message by displaying
+                        --  the chain of calls until the first subprograms in
+                        --  unknown state.
+                        Warning_Msg_Sem
+                          (Warnid_Delayed_Checks, +Callee,
+                           "(first such call is to %n)", +Callee);
+                     end;
                   end if;
                end if;
             when Iir_Kind_Sensitized_Process_Statement =>
@@ -2491,16 +2497,16 @@ package body Sem is
                Error_Kind ("sem_analysis_checks_list", El);
          end case;
          if Keep then
-            Replace_Nth_Element (List, Npos, El);
-            Npos := Npos + 1;
+            Append_Element (New_List, El);
          end if;
+         Next (It);
       end loop;
-      if Npos = 0 then
-         Destroy_Iir_List (List);
-         Set_Analysis_Checks_List (Unit, Null_Iir_List);
-      else
-         Set_Nbr_Elements (List, Npos);
+      if Is_Empty (New_List) then
+         Destroy_Iir_List (New_List);
+         New_List := Null_Iir_List;  --  OK, redundant but clearer.
       end if;
+      Destroy_Iir_List (List);
+      Set_Analysis_Checks_List (Unit, New_List);
    end Sem_Analysis_Checks_List;
 
    --  Return true if package declaration DECL needs a body.
@@ -3166,10 +3172,12 @@ package body Sem is
    end Get_Current_Design_Unit;
 
    --  LRM 11.1  Design units.
-   procedure Semantic (Design_Unit: Iir_Design_Unit)
+   procedure Semantic (Design_Unit : Iir_Design_Unit)
    is
-      El: Iir;
-      Old_Design_Unit: Iir_Design_Unit;
+      Library_Unit : constant Iir := Get_Library_Unit (Design_Unit);
+      Library : constant Iir := Get_Library (Get_Design_File (Design_Unit));
+      Prev_Unit : Iir;
+      Old_Design_Unit : Iir_Design_Unit;
       Implicit : Implicit_Signal_Declaration_Type;
    begin
       --  Sanity check: can analyze either previously analyzed unit or just
@@ -3187,7 +3195,17 @@ package body Sem is
             raise Internal_Error;
       end case;
 
-      -- Save and set current_design_unit.
+      --  If there is already a unit with the same name, mark it as being
+      --  replaced.
+      if Get_Kind (Library_Unit) in Iir_Kinds_Primary_Unit then
+         Prev_Unit := Libraries.Find_Primary_Unit
+           (Library, Get_Identifier (Library_Unit));
+         if Is_Valid (Prev_Unit) and then Prev_Unit /= Design_Unit then
+            Set_Date (Prev_Unit, Date_Replacing);
+         end if;
+      end if;
+
+      --  Save and set current_design_unit.
       Old_Design_Unit := Current_Design_Unit;
       Current_Design_Unit := Design_Unit;
       Push_Signals_Declarative_Part (Implicit, Null_Iir);
@@ -3208,45 +3226,37 @@ package body Sem is
       --    due to reasons given by LCS 3 (VHDL Issue # 1028).
       Open_Declarative_Region;
 
-      -- Set_Dependence_List (Design_Unit,
---                            Create_Iir (Iir_Kind_Design_Unit_List));
-
       --  LRM 11.2
       --  Every design unit is assumed to contain the following implicit
       --  context items as part of its context clause:
       --    library STD, WORK; use STD.STANDARD.all;
       Sem_Scopes.Add_Name (Libraries.Std_Library, Std_Names.Name_Std, False);
-      Sem_Scopes.Add_Name (Get_Library (Get_Design_File (Design_Unit)),
-                           Std_Names.Name_Work,
-                           False);
+      Sem_Scopes.Add_Name (Library, Std_Names.Name_Work, False);
       Sem_Scopes.Use_All_Names (Standard_Package);
       if Get_Dependence_List (Design_Unit) = Null_Iir_List then
          Set_Dependence_List (Design_Unit, Create_Iir_List);
       end if;
       Add_Dependence (Std_Standard_Unit);
 
-      -- Semantic on context clauses.
+      --  Analyze context clauses.
       Sem_Context_Clauses (Design_Unit);
 
-      -- semantic on the library unit.
-      El := Get_Library_Unit (Design_Unit);
-      case Get_Kind (El) is
+      --  Analyze the library unit.
+      case Iir_Kinds_Library_Unit (Get_Kind (Library_Unit)) is
          when Iir_Kind_Entity_Declaration =>
-            Sem_Entity_Declaration (El);
+            Sem_Entity_Declaration (Library_Unit);
          when Iir_Kind_Architecture_Body =>
-            Sem_Architecture_Body (El);
+            Sem_Architecture_Body (Library_Unit);
          when Iir_Kind_Package_Declaration =>
-            Sem_Package_Declaration (El);
+            Sem_Package_Declaration (Library_Unit);
          when Iir_Kind_Package_Body =>
-            Sem_Package_Body (El);
+            Sem_Package_Body (Library_Unit);
          when Iir_Kind_Configuration_Declaration =>
-            Sem_Configuration_Declaration (El);
+            Sem_Configuration_Declaration (Library_Unit);
          when Iir_Kind_Package_Instantiation_Declaration =>
-            Sem_Package_Instantiation_Declaration (El);
+            Sem_Package_Instantiation_Declaration (Library_Unit);
          when Iir_Kind_Context_Declaration =>
-            Sem_Context_Declaration (El);
-         when others =>
-            Error_Kind ("semantic", El);
+            Sem_Context_Declaration (Library_Unit);
       end case;
 
       Close_Declarative_Region;
@@ -3261,7 +3271,7 @@ package body Sem is
          Sem_Analysis_Checks_List (Design_Unit, False);
       end if;
 
-      -- Restore current_design_unit.
+      --  Restore current_design_unit.
       Current_Design_Unit := Old_Design_Unit;
       Pop_Signals_Declarative_Part (Implicit);
    end Semantic;

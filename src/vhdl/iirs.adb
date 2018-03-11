@@ -156,6 +156,11 @@ package body Iirs is
    function Iir_List_To_Iir is new Ada.Unchecked_Conversion
      (Source => Iir_List, Target => Iir);
 
+   function Iir_To_Iir_Flist is new Ada.Unchecked_Conversion
+     (Source => Iir, Target => Iir_Flist);
+   function Iir_Flist_To_Iir is new Ada.Unchecked_Conversion
+     (Source => Iir_Flist, Target => Iir);
+
    function Iir_To_Token_Type (N : Iir) return Token_Type is
    begin
       return Token_Type'Val (N);
@@ -203,15 +208,10 @@ package body Iirs is
       return Iir (P);
    end Source_Ptr_To_Iir;
 
-   function Iir_To_Location_Type (N : Iir) return Location_Type is
-   begin
-      return Location_Type (N);
-   end Iir_To_Location_Type;
-
-   function Location_Type_To_Iir (L : Location_Type) return Iir is
-   begin
-      return Iir (L);
-   end Location_Type_To_Iir;
+   function Iir_To_Source_File_Entry is new Ada.Unchecked_Conversion
+     (Source => Iir, Target => Source_File_Entry);
+   function Source_File_Entry_To_Iir is new Ada.Unchecked_Conversion
+     (Source => Source_File_Entry, Target => Iir);
 
    function Boolean_To_Iir_Delay_Mechanism is new Ada.Unchecked_Conversion
      (Source => Boolean, Target => Iir_Delay_Mechanism);
@@ -315,9 +315,9 @@ package body Iirs is
            | Iir_Kind_Subtype_Declaration
            | Iir_Kind_Nature_Declaration
            | Iir_Kind_Subnature_Declaration
-           | Iir_Kind_Package_Body
            | Iir_Kind_Configuration_Declaration
            | Iir_Kind_Context_Declaration
+           | Iir_Kind_Package_Body
            | Iir_Kind_Unit_Declaration
            | Iir_Kind_Library_Declaration
            | Iir_Kind_Attribute_Declaration
@@ -342,6 +342,7 @@ package body Iirs is
            | Iir_Kind_Negation_Operator
            | Iir_Kind_Absolute_Operator
            | Iir_Kind_Not_Operator
+           | Iir_Kind_Implicit_Condition_Operator
            | Iir_Kind_Condition_Operator
            | Iir_Kind_Reduction_And_Operator
            | Iir_Kind_Reduction_Or_Operator
@@ -423,11 +424,11 @@ package body Iirs is
            | Iir_Kind_Selected_Name
            | Iir_Kind_Operator_Symbol
            | Iir_Kind_Reference_Name
-           | Iir_Kind_Selected_By_All_Name
-           | Iir_Kind_Parenthesis_Name
            | Iir_Kind_External_Constant_Name
            | Iir_Kind_External_Signal_Name
            | Iir_Kind_External_Variable_Name
+           | Iir_Kind_Selected_By_All_Name
+           | Iir_Kind_Parenthesis_Name
            | Iir_Kind_Package_Pathname
            | Iir_Kind_Absolute_Pathname
            | Iir_Kind_Relative_Pathname
@@ -486,9 +487,9 @@ package body Iirs is
            | Iir_Kind_Floating_Subtype_Definition
            | Iir_Kind_Subtype_Definition
            | Iir_Kind_Scalar_Nature_Definition
+           | Iir_Kind_Entity_Declaration
            | Iir_Kind_Package_Declaration
            | Iir_Kind_Package_Instantiation_Declaration
-           | Iir_Kind_Entity_Declaration
            | Iir_Kind_Architecture_Body
            | Iir_Kind_Package_Header
            | Iir_Kind_Component_Declaration
@@ -1002,20 +1003,20 @@ package body Iirs is
       Set_Field5 (Lit, Conv.Field5);
    end Set_Fp_Value;
 
-   function Get_Simple_Aggregate_List (Target : Iir) return Iir_List is
+   function Get_Simple_Aggregate_List (Target : Iir) return Iir_Flist is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Simple_Aggregate_List (Get_Kind (Target)),
                      "no field Simple_Aggregate_List");
-      return Iir_To_Iir_List (Get_Field4 (Target));
+      return Iir_To_Iir_Flist (Get_Field4 (Target));
    end Get_Simple_Aggregate_List;
 
-   procedure Set_Simple_Aggregate_List (Target : Iir; List : Iir_List) is
+   procedure Set_Simple_Aggregate_List (Target : Iir; List : Iir_Flist) is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Simple_Aggregate_List (Get_Kind (Target)),
                      "no field Simple_Aggregate_List");
-      Set_Field4 (Target, Iir_List_To_Iir (List));
+      Set_Field4 (Target, Iir_Flist_To_Iir (List));
    end Set_Simple_Aggregate_List;
 
    function Get_String8_Id (Lit : Iir) return String8_Id is
@@ -1216,20 +1217,20 @@ package body Iirs is
       Set_Field3 (Target, Token_Type_To_Iir (Kind));
    end Set_Entity_Class;
 
-   function Get_Entity_Name_List (Target : Iir) return Iir_List is
+   function Get_Entity_Name_List (Target : Iir) return Iir_Flist is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Entity_Name_List (Get_Kind (Target)),
                      "no field Entity_Name_List");
-      return Iir_To_Iir_List (Get_Field8 (Target));
+      return Iir_To_Iir_Flist (Get_Field8 (Target));
    end Get_Entity_Name_List;
 
-   procedure Set_Entity_Name_List (Target : Iir; Names : Iir_List) is
+   procedure Set_Entity_Name_List (Target : Iir; Names : Iir_Flist) is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Entity_Name_List (Get_Kind (Target)),
                      "no field Entity_Name_List");
-      Set_Field8 (Target, Iir_List_To_Iir (Names));
+      Set_Field8 (Target, Iir_Flist_To_Iir (Names));
    end Set_Entity_Name_List;
 
    function Get_Attribute_Designator (Target : Iir) return Iir is
@@ -1280,20 +1281,20 @@ package body Iirs is
       Set_Field4 (Val, Attr);
    end Set_Attribute_Specification;
 
-   function Get_Signal_List (Target : Iir) return Iir_List is
+   function Get_Signal_List (Target : Iir) return Iir_Flist is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Signal_List (Get_Kind (Target)),
                      "no field Signal_List");
-      return Iir_To_Iir_List (Get_Field3 (Target));
+      return Iir_To_Iir_Flist (Get_Field3 (Target));
    end Get_Signal_List;
 
-   procedure Set_Signal_List (Target : Iir; List : Iir_List) is
+   procedure Set_Signal_List (Target : Iir; List : Iir_Flist) is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Signal_List (Get_Kind (Target)),
                      "no field Signal_List");
-      Set_Field3 (Target, Iir_List_To_Iir (List));
+      Set_Field3 (Target, Iir_Flist_To_Iir (List));
    end Set_Signal_List;
 
    function Get_Designated_Entity (Val : Iir_Attribute_Value) return Iir is
@@ -1345,37 +1346,37 @@ package body Iirs is
       Set_Field3 (Target, Actual);
    end Set_Actual;
 
-   function Get_In_Conversion (Target : Iir) return Iir is
+   function Get_Actual_Conversion (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_In_Conversion (Get_Kind (Target)),
-                     "no field In_Conversion");
+      pragma Assert (Has_Actual_Conversion (Get_Kind (Target)),
+                     "no field Actual_Conversion");
       return Get_Field4 (Target);
-   end Get_In_Conversion;
+   end Get_Actual_Conversion;
 
-   procedure Set_In_Conversion (Target : Iir; Conv : Iir) is
+   procedure Set_Actual_Conversion (Target : Iir; Conv : Iir) is
    begin
       pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_In_Conversion (Get_Kind (Target)),
-                     "no field In_Conversion");
+      pragma Assert (Has_Actual_Conversion (Get_Kind (Target)),
+                     "no field Actual_Conversion");
       Set_Field4 (Target, Conv);
-   end Set_In_Conversion;
+   end Set_Actual_Conversion;
 
-   function Get_Out_Conversion (Target : Iir) return Iir is
+   function Get_Formal_Conversion (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_Out_Conversion (Get_Kind (Target)),
-                     "no field Out_Conversion");
+      pragma Assert (Has_Formal_Conversion (Get_Kind (Target)),
+                     "no field Formal_Conversion");
       return Get_Field5 (Target);
-   end Get_Out_Conversion;
+   end Get_Formal_Conversion;
 
-   procedure Set_Out_Conversion (Target : Iir; Conv : Iir) is
+   procedure Set_Formal_Conversion (Target : Iir; Conv : Iir) is
    begin
       pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_Out_Conversion (Get_Kind (Target)),
-                     "no field Out_Conversion");
+      pragma Assert (Has_Formal_Conversion (Get_Kind (Target)),
+                     "no field Formal_Conversion");
       Set_Field5 (Target, Conv);
-   end Set_Out_Conversion;
+   end Set_Formal_Conversion;
 
    function Get_Whole_Association_Flag (Target : Iir) return Boolean is
    begin
@@ -2621,20 +2622,20 @@ package body Iirs is
       Set_Field5 (Def, Atype);
    end Set_Associated_Type;
 
-   function Get_Enumeration_Literal_List (Target : Iir) return Iir_List is
+   function Get_Enumeration_Literal_List (Target : Iir) return Iir_Flist is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Enumeration_Literal_List (Get_Kind (Target)),
                      "no field Enumeration_Literal_List");
-      return Iir_To_Iir_List (Get_Field2 (Target));
+      return Iir_To_Iir_Flist (Get_Field2 (Target));
    end Get_Enumeration_Literal_List;
 
-   procedure Set_Enumeration_Literal_List (Target : Iir; List : Iir_List) is
+   procedure Set_Enumeration_Literal_List (Target : Iir; List : Iir_Flist) is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Enumeration_Literal_List (Get_Kind (Target)),
                      "no field Enumeration_Literal_List");
-      Set_Field2 (Target, Iir_List_To_Iir (List));
+      Set_Field2 (Target, Iir_Flist_To_Iir (List));
    end Set_Enumeration_Literal_List;
 
    function Get_Entity_Class_Entry_Chain (Target : Iir) return Iir is
@@ -2653,20 +2654,20 @@ package body Iirs is
       Set_Field1 (Target, Chain);
    end Set_Entity_Class_Entry_Chain;
 
-   function Get_Group_Constituent_List (Group : Iir) return Iir_List is
+   function Get_Group_Constituent_List (Group : Iir) return Iir_Flist is
    begin
       pragma Assert (Group /= Null_Iir);
       pragma Assert (Has_Group_Constituent_List (Get_Kind (Group)),
                      "no field Group_Constituent_List");
-      return Iir_To_Iir_List (Get_Field1 (Group));
+      return Iir_To_Iir_Flist (Get_Field1 (Group));
    end Get_Group_Constituent_List;
 
-   procedure Set_Group_Constituent_List (Group : Iir; List : Iir_List) is
+   procedure Set_Group_Constituent_List (Group : Iir; List : Iir_Flist) is
    begin
       pragma Assert (Group /= Null_Iir);
       pragma Assert (Has_Group_Constituent_List (Get_Kind (Group)),
                      "no field Group_Constituent_List");
-      Set_Field1 (Group, Iir_List_To_Iir (List));
+      Set_Field1 (Group, Iir_Flist_To_Iir (List));
    end Set_Group_Constituent_List;
 
    function Get_Unit_Chain (Target : Iir) return Iir is
@@ -3006,6 +3007,22 @@ package body Iirs is
       Set_Flag4 (Atype, Flag);
    end Set_Only_Characters_Flag;
 
+   function Get_Is_Character_Type (Atype : Iir) return Boolean is
+   begin
+      pragma Assert (Atype /= Null_Iir);
+      pragma Assert (Has_Is_Character_Type (Get_Kind (Atype)),
+                     "no field Is_Character_Type");
+      return Get_Flag5 (Atype);
+   end Get_Is_Character_Type;
+
+   procedure Set_Is_Character_Type (Atype : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Atype /= Null_Iir);
+      pragma Assert (Has_Is_Character_Type (Get_Kind (Atype)),
+                     "no field Is_Character_Type");
+      Set_Flag5 (Atype, Flag);
+   end Set_Is_Character_Type;
+
    function Get_Type_Staticness (Atype : Iir) return Iir_Staticness is
    begin
       pragma Assert (Atype /= Null_Iir);
@@ -3038,36 +3055,36 @@ package body Iirs is
       Set_State2 (Atype, Iir_Constraint'Pos (State));
    end Set_Constraint_State;
 
-   function Get_Index_Subtype_List (Decl : Iir) return Iir_List is
+   function Get_Index_Subtype_List (Decl : Iir) return Iir_Flist is
    begin
       pragma Assert (Decl /= Null_Iir);
       pragma Assert (Has_Index_Subtype_List (Get_Kind (Decl)),
                      "no field Index_Subtype_List");
-      return Iir_To_Iir_List (Get_Field9 (Decl));
+      return Iir_To_Iir_Flist (Get_Field9 (Decl));
    end Get_Index_Subtype_List;
 
-   procedure Set_Index_Subtype_List (Decl : Iir; List : Iir_List) is
+   procedure Set_Index_Subtype_List (Decl : Iir; List : Iir_Flist) is
    begin
       pragma Assert (Decl /= Null_Iir);
       pragma Assert (Has_Index_Subtype_List (Get_Kind (Decl)),
                      "no field Index_Subtype_List");
-      Set_Field9 (Decl, Iir_List_To_Iir (List));
+      Set_Field9 (Decl, Iir_Flist_To_Iir (List));
    end Set_Index_Subtype_List;
 
-   function Get_Index_Subtype_Definition_List (Def : Iir) return Iir_List is
+   function Get_Index_Subtype_Definition_List (Def : Iir) return Iir_Flist is
    begin
       pragma Assert (Def /= Null_Iir);
       pragma Assert (Has_Index_Subtype_Definition_List (Get_Kind (Def)),
                      "no field Index_Subtype_Definition_List");
-      return Iir_To_Iir_List (Get_Field6 (Def));
+      return Iir_To_Iir_Flist (Get_Field6 (Def));
    end Get_Index_Subtype_Definition_List;
 
-   procedure Set_Index_Subtype_Definition_List (Def : Iir; Idx : Iir_List) is
+   procedure Set_Index_Subtype_Definition_List (Def : Iir; Idx : Iir_Flist) is
    begin
       pragma Assert (Def /= Null_Iir);
       pragma Assert (Has_Index_Subtype_Definition_List (Get_Kind (Def)),
                      "no field Index_Subtype_Definition_List");
-      Set_Field6 (Def, Iir_List_To_Iir (Idx));
+      Set_Field6 (Def, Iir_Flist_To_Iir (Idx));
    end Set_Index_Subtype_Definition_List;
 
    function Get_Element_Subtype_Indication (Decl : Iir) return Iir is
@@ -3102,20 +3119,20 @@ package body Iirs is
       Set_Field1 (Decl, Sub_Type);
    end Set_Element_Subtype;
 
-   function Get_Index_Constraint_List (Def : Iir) return Iir_List is
+   function Get_Index_Constraint_List (Def : Iir) return Iir_Flist is
    begin
       pragma Assert (Def /= Null_Iir);
       pragma Assert (Has_Index_Constraint_List (Get_Kind (Def)),
                      "no field Index_Constraint_List");
-      return Iir_To_Iir_List (Get_Field6 (Def));
+      return Iir_To_Iir_Flist (Get_Field6 (Def));
    end Get_Index_Constraint_List;
 
-   procedure Set_Index_Constraint_List (Def : Iir; List : Iir_List) is
+   procedure Set_Index_Constraint_List (Def : Iir; List : Iir_Flist) is
    begin
       pragma Assert (Def /= Null_Iir);
       pragma Assert (Has_Index_Constraint_List (Get_Kind (Def)),
                      "no field Index_Constraint_List");
-      Set_Field6 (Def, Iir_List_To_Iir (List));
+      Set_Field6 (Def, Iir_Flist_To_Iir (List));
    end Set_Index_Constraint_List;
 
    function Get_Array_Element_Constraint (Def : Iir) return Iir is
@@ -3134,20 +3151,20 @@ package body Iirs is
       Set_Field8 (Def, El);
    end Set_Array_Element_Constraint;
 
-   function Get_Elements_Declaration_List (Decl : Iir) return Iir_List is
+   function Get_Elements_Declaration_List (Decl : Iir) return Iir_Flist is
    begin
       pragma Assert (Decl /= Null_Iir);
       pragma Assert (Has_Elements_Declaration_List (Get_Kind (Decl)),
                      "no field Elements_Declaration_List");
-      return Iir_To_Iir_List (Get_Field1 (Decl));
+      return Iir_To_Iir_Flist (Get_Field1 (Decl));
    end Get_Elements_Declaration_List;
 
-   procedure Set_Elements_Declaration_List (Decl : Iir; List : Iir_List) is
+   procedure Set_Elements_Declaration_List (Decl : Iir; List : Iir_Flist) is
    begin
       pragma Assert (Decl /= Null_Iir);
       pragma Assert (Has_Elements_Declaration_List (Get_Kind (Decl)),
                      "no field Elements_Declaration_List");
-      Set_Field1 (Decl, Iir_List_To_Iir (List));
+      Set_Field1 (Decl, Iir_Flist_To_Iir (List));
    end Set_Elements_Declaration_List;
 
    function Get_Designated_Type (Target : Iir) return Iir is
@@ -3182,20 +3199,20 @@ package body Iirs is
       Set_Field5 (Target, Dtype);
    end Set_Designated_Subtype_Indication;
 
-   function Get_Index_List (Decl : Iir) return Iir_List is
+   function Get_Index_List (Decl : Iir) return Iir_Flist is
    begin
       pragma Assert (Decl /= Null_Iir);
       pragma Assert (Has_Index_List (Get_Kind (Decl)),
                      "no field Index_List");
-      return Iir_To_Iir_List (Get_Field2 (Decl));
+      return Iir_To_Iir_Flist (Get_Field2 (Decl));
    end Get_Index_List;
 
-   procedure Set_Index_List (Decl : Iir; List : Iir_List) is
+   procedure Set_Index_List (Decl : Iir; List : Iir_Flist) is
    begin
       pragma Assert (Decl /= Null_Iir);
       pragma Assert (Has_Index_List (Get_Kind (Decl)),
                      "no field Index_List");
-      Set_Field2 (Decl, Iir_List_To_Iir (List));
+      Set_Field2 (Decl, Iir_Flist_To_Iir (List));
    end Set_Index_List;
 
    function Get_Reference (Def : Iir) return Iir is
@@ -4112,6 +4129,23 @@ package body Iirs is
       Set_Field9 (Inst, Pkg);
    end Set_Uninstantiated_Package_Decl;
 
+   function Get_Instance_Source_File (Inst : Iir) return Source_File_Entry is
+   begin
+      pragma Assert (Inst /= Null_Iir);
+      pragma Assert (Has_Instance_Source_File (Get_Kind (Inst)),
+                     "no field Instance_Source_File");
+      return Iir_To_Source_File_Entry (Get_Field10 (Inst));
+   end Get_Instance_Source_File;
+
+   procedure Set_Instance_Source_File (Inst : Iir; File : Source_File_Entry)
+   is
+   begin
+      pragma Assert (Inst /= Null_Iir);
+      pragma Assert (Has_Instance_Source_File (Get_Kind (Inst)),
+                     "no field Instance_Source_File");
+      Set_Field10 (Inst, Source_File_Entry_To_Iir (File));
+   end Set_Instance_Source_File;
+
    function Get_Generate_Block_Configuration (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);
@@ -4272,20 +4306,20 @@ package body Iirs is
       Set_Field4 (Target, Name);
    end Set_Component_Name;
 
-   function Get_Instantiation_List (Target : Iir) return Iir_List is
+   function Get_Instantiation_List (Target : Iir) return Iir_Flist is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Instantiation_List (Get_Kind (Target)),
                      "no field Instantiation_List");
-      return Iir_To_Iir_List (Get_Field1 (Target));
+      return Iir_To_Iir_Flist (Get_Field1 (Target));
    end Get_Instantiation_List;
 
-   procedure Set_Instantiation_List (Target : Iir; List : Iir_List) is
+   procedure Set_Instantiation_List (Target : Iir; List : Iir_Flist) is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Instantiation_List (Get_Kind (Target)),
                      "no field Instantiation_List");
-      Set_Field1 (Target, Iir_List_To_Iir (List));
+      Set_Field1 (Target, Iir_Flist_To_Iir (List));
    end Set_Instantiation_List;
 
    function Get_Entity_Aspect (Target : Iir_Binding_Indication) return Iir is
@@ -4624,6 +4658,22 @@ package body Iirs is
                      "no field Pathname_Expression");
       Set_Field5 (Path, Expr);
    end Set_Pathname_Expression;
+
+   function Get_In_Formal_Flag (Name : Iir) return Boolean is
+   begin
+      pragma Assert (Name /= Null_Iir);
+      pragma Assert (Has_In_Formal_Flag (Get_Kind (Name)),
+                     "no field In_Formal_Flag");
+      return Get_Flag4 (Name);
+   end Get_In_Formal_Flag;
+
+   procedure Set_In_Formal_Flag (Name : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Name /= Null_Iir);
+      pragma Assert (Has_In_Formal_Flag (Get_Kind (Name)),
+                     "no field In_Formal_Flag");
+      Set_Flag4 (Name, Flag);
+   end Set_In_Formal_Flag;
 
    function Get_Slice_Subtype (Slice : Iir) return Iir is
    begin
@@ -5193,20 +5243,20 @@ package body Iirs is
       Set_Flag5 (Target, Val);
    end Set_Is_Within_Flag;
 
-   function Get_Type_Marks_List (Target : Iir) return Iir_List is
+   function Get_Type_Marks_List (Target : Iir) return Iir_Flist is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Type_Marks_List (Get_Kind (Target)),
                      "no field Type_Marks_List");
-      return Iir_To_Iir_List (Get_Field2 (Target));
+      return Iir_To_Iir_Flist (Get_Field2 (Target));
    end Get_Type_Marks_List;
 
-   procedure Set_Type_Marks_List (Target : Iir; List : Iir_List) is
+   procedure Set_Type_Marks_List (Target : Iir; List : Iir_Flist) is
    begin
       pragma Assert (Target /= Null_Iir);
       pragma Assert (Has_Type_Marks_List (Get_Kind (Target)),
                      "no field Type_Marks_List");
-      Set_Field2 (Target, Iir_List_To_Iir (List));
+      Set_Field2 (Target, Iir_Flist_To_Iir (List));
    end Set_Type_Marks_List;
 
    function Get_Implicit_Alias_Flag (Decl : Iir) return Boolean is
@@ -5336,22 +5386,6 @@ package body Iirs is
                      "no field Protected_Type_Declaration");
       Set_Field4 (Target, Decl);
    end Set_Protected_Type_Declaration;
-
-   function Get_End_Location (Target : Iir) return Location_Type is
-   begin
-      pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_End_Location (Get_Kind (Target)),
-                     "no field End_Location");
-      return Iir_To_Location_Type (Get_Field6 (Target));
-   end Get_End_Location;
-
-   procedure Set_End_Location (Target : Iir; Loc : Location_Type) is
-   begin
-      pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_End_Location (Get_Kind (Target)),
-                     "no field End_Location");
-      Set_Field6 (Target, Location_Type_To_Iir (Loc));
-   end Set_End_Location;
 
    function Get_Use_Flag (Decl : Iir) return Boolean is
    begin
@@ -5528,6 +5562,22 @@ package body Iirs is
                      "no field Has_Parameter");
       Set_Flag10 (Decl, Flag);
    end Set_Has_Parameter;
+
+   function Get_Has_Component (Decl : Iir) return Boolean is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Has_Component (Get_Kind (Decl)),
+                     "no field Has_Component");
+      return Get_Flag5 (Decl);
+   end Get_Has_Component;
+
+   procedure Set_Has_Component (Decl : Iir; Flag : Boolean) is
+   begin
+      pragma Assert (Decl /= Null_Iir);
+      pragma Assert (Has_Has_Component (Get_Kind (Decl)),
+                     "no field Has_Component");
+      Set_Flag5 (Decl, Flag);
+   end Set_Has_Component;
 
    function Get_Has_Identifier_List (Decl : Iir) return Boolean is
    begin

@@ -30,8 +30,8 @@ package body Trans.Helpers2 is
    begin
       New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Base (D)),
                        M2Addr (Chap3.Get_Composite_Base (S)));
-      New_Assign_Stmt (M2Lp (Chap3.Get_Array_Bounds (D)),
-                       M2Addr (Chap3.Get_Array_Bounds (S)));
+      New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Bounds (D)),
+                       M2Addr (Chap3.Get_Composite_Bounds (S)));
    end Copy_Fat_Pointer;
 
    --  Convert NAME into a STRING_CST.
@@ -88,15 +88,12 @@ package body Trans.Helpers2 is
    end Create_String;
 
    function Create_String (Str : Name_Id; Id : O_Ident; Storage : O_Storage)
-                              return O_Dnode
+                          return O_Dnode
    is
       use Name_Table;
    begin
-      if Name_Table.Is_Character (Str) then
-         raise Internal_Error;
-      end if;
-      Image (Str);
-      return Create_String (Nam_Buffer (1 .. Nam_Length), Id, Storage);
+      pragma Assert (not Name_Table.Is_Character (Str));
+      return Create_String (Image (Str), Id, Storage);
    end Create_String;
 
    function Create_String_Len (Str : String; Id : O_Ident) return O_Cnode
@@ -129,8 +126,7 @@ package body Trans.Helpers2 is
    end Gen_Memcpy;
 
    function Gen_Alloc
-     (Kind : Allocation_Kind; Size : O_Enode; Ptype : O_Tnode)
-         return O_Enode
+     (Kind : Allocation_Kind; Size : O_Enode; Ptype : O_Tnode) return O_Enode
    is
       Constr : O_Assoc_List;
    begin
@@ -212,19 +208,18 @@ package body Trans.Helpers2 is
 
    procedure Register_Signal_List (List : Iir_List; Proc : O_Dnode)
    is
+      It : List_Iterator;
       El  : Iir;
       Sig : Mnode;
    begin
-      if List = Null_Iir_List then
-         return;
-      end if;
-      for I in Natural loop
-         El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
+      It := List_Iterate_Safe (List);
+      while Is_Valid (It) loop
+         El := Get_Element (It);
          Open_Temp;
          Sig := Chap6.Translate_Name (El, Mode_Signal);
          Register_Signal (Sig, Get_Type (El), Proc);
          Close_Temp;
+         Next (It);
       end loop;
    end Register_Signal_List;
 
@@ -239,10 +234,9 @@ package body Trans.Helpers2 is
       Type_Info := Get_Info (Targ_Type);
       Res := E2M (Val, Type_Info, Mode_Value);
       case Type_Info.Type_Mode is
-         when Type_Mode_Array
-            | Type_Mode_Fat_Array =>
+         when Type_Mode_Arrays =>
             Res := Chap3.Get_Composite_Base (Res);
-         when Type_Mode_Record =>
+         when Type_Mode_Records =>
             Res := Stabilize (Res);
          when others =>
             --  Not a composite type!

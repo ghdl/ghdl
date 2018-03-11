@@ -144,7 +144,7 @@ package body Ghdlmain is
          Put_Line ("Also see --options-help for analyzer options.");
          New_Line;
          Put_Line ("Please, refer to the GHDL manual for more information.");
-         Put_Line ("Report issues on https://github.com/tgingold/ghdl");
+         Put_Line ("Report issues on https://github.com/ghdl/ghdl");
       elsif Args'Length = 1 then
          C := Find_Command (Args (1).all);
          if C = null then
@@ -223,6 +223,9 @@ package body Ghdlmain is
       pragma Unreferenced (Cmd);
       use Ada.Text_IO;
    begin
+      Put ("GHDL ");
+      Put (Version.Ghdl_Ver);
+      Put (' ');
       Put_Line (Version.Ghdl_Release);
       Put_Line (" Compiled with " & Bug.Get_Gnat_Version);
       if Version_String /= null then

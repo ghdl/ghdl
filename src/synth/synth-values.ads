@@ -21,9 +21,7 @@
 with Types; use Types;
 with Netlists; use Netlists;
 with Synth.Environment; use Synth.Environment;
-with Annotations; use Annotations;
-with Elaboration; use Elaboration;
-with Iir_Values; use Iir_Values;
+with Simul.Environments; use Simul.Environments;
 with Iirs; use Iirs;
 
 package Synth.Values is
@@ -65,7 +63,7 @@ package Synth.Values is
             W : Wire_Id;
             W_Range : Value_Range_Acc;
          when Value_Lit =>
-            Lit : Iir_Values.Iir_Value_Literal_Acc;
+            Lit : Simul.Environments.Iir_Value_Literal_Acc;
             Lit_Type : Iir;
          when Value_Array =>
             Arr : Value_Array_Acc;

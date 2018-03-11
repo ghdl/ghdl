@@ -16,7 +16,6 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Ada.Characters.Latin_1; use Ada.Characters.Latin_1;
-with Ada.Characters.Handling;
 with Errorout; use Errorout;
 with Name_Table;
 with Files_Map; use Files_Map;
@@ -33,28 +32,35 @@ package body Scanner is
 
    type Character_Kind_Type is
       (
-   -- Neither a format effector nor a graphic character.
+       -- Neither a format effector nor a graphic character.
        Invalid,
        Format_Effector,
+       Lower_Case_Letter,
        Upper_Case_Letter,
        Digit,
        Special_Character,
        Space_Character,
-       Lower_Case_Letter,
-       Other_Special_Character);
+       Other_Special_Character
+      );
 
-   -- LRM93 13.1
-   -- BASIC_GRAPHIC_CHARACTER ::=
-   --   UPPER_CASE_LETTER | DIGIT | SPECIAL_CHARACTER | SPACE_CHARACTER
+   --  LRM93 13.1
+   --  basic_graphic_character ::=
+   --    upper_case_letter | digit | special_character | space_character
+   --
    --subtype Basic_Graphic_Character is
    --  Character_Kind_Type range Upper_Case_Letter .. Space_Character;
 
-   -- LRM93 13.1
-   -- GRAPHIC_CHARACTER ::=
-   --   BASIC_GRAPHIC_CHARACTER | LOWER_CASE_LETTER | OTHER_SPECIAL_CHARACTER
-   -- Note: There is 191 graphic character.
+   --  LRM93 13.1
+   --  graphic_character ::=
+   --    basic_graphic_character | lower_case_letter | other_special_character
+   --
+   --  Note: There are 191 graphic characters.
    subtype Graphic_Character is
-     Character_Kind_Type range Upper_Case_Letter .. Other_Special_Character;
+     Character_Kind_Type range Lower_Case_Letter .. Other_Special_Character;
+
+   --  letter ::= upper_case_letter | lower_case_letter
+   subtype Letter is
+     Character_Kind_Type range Lower_Case_Letter .. Upper_Case_Letter;
 
    -- LRM93 13.1
    -- The characters included in each of the categories of basic graphic
@@ -144,6 +150,8 @@ package body Scanner is
       File_Len: Source_Ptr;
       Token: Token_Type;
       Prev_Token: Token_Type;
+      Bit_Str_Base : Character;
+      Bit_Str_Sign : Character;
       Str_Id : String8_Id;
       Str_Len : Nat32;
       Identifier: Name_Id;
@@ -164,6 +172,8 @@ package body Scanner is
                                      Token => Tok_Invalid,
                                      Prev_Token => Tok_Invalid,
                                      Identifier => Null_Identifier,
+                                     Bit_Str_Base => ' ',
+                                     Bit_Str_Sign => ' ',
                                      Str_Id => Null_String8,
                                      Str_Len => 0,
                                      Int64 => 0,
@@ -202,6 +212,16 @@ package body Scanner is
    begin
       return Current_Context.Str_Len;
    end Current_String_Length;
+
+   function Get_Bit_String_Base return Character is
+   begin
+      return Current_Context.Bit_Str_Base;
+   end Get_Bit_String_Base;
+
+   function Get_Bit_String_Sign return Character is
+   begin
+      return Current_Context.Bit_Str_Sign;
+   end Get_Bit_String_Sign;
 
    function Current_Iir_Int64 return Iir_Int64 is
    begin
@@ -276,6 +296,8 @@ package body Scanner is
                           Token => Tok_Invalid,
                           Prev_Token => Tok_Invalid,
                           Identifier => Null_Identifier,
+                          Bit_Str_Base => ' ',
+                          Bit_Str_Sign => ' ',
                           Str_Id => Null_String8,
                           Str_Len => 0,
                           Int64 => -1,
@@ -765,6 +787,140 @@ package body Scanner is
       Current_Context.Str_Len := Length;
    end Scan_Dec_Bit_String;
 
+   --  LRM08 15.2 Character set
+   --  For each uppercase letter, there is a corresponding lowercase letter;
+   --  and for each lowercase letter except [y diaeresis] and [german sharp s],
+   --  there is a corresponding uppercase letter.
+   type Character_Map is array (Character) of Character;
+   To_Lower_Map : constant Character_Map :=
+     (
+      --  Uppercase ASCII letters.
+      'A' => 'a',
+      'B' => 'b',
+      'C' => 'c',
+      'D' => 'd',
+      'E' => 'e',
+      'F' => 'f',
+      'G' => 'g',
+      'H' => 'h',
+      'I' => 'i',
+      'J' => 'j',
+      'K' => 'k',
+      'L' => 'l',
+      'M' => 'm',
+      'N' => 'n',
+      'O' => 'o',
+      'P' => 'p',
+      'Q' => 'q',
+      'R' => 'r',
+      'S' => 's',
+      'T' => 't',
+      'U' => 'u',
+      'V' => 'v',
+      'W' => 'w',
+      'X' => 'x',
+      'Y' => 'y',
+      'Z' => 'z',
+
+      --  Lowercase ASCII letters.
+      'a' => 'a',
+      'b' => 'b',
+      'c' => 'c',
+      'd' => 'd',
+      'e' => 'e',
+      'f' => 'f',
+      'g' => 'g',
+      'h' => 'h',
+      'i' => 'i',
+      'j' => 'j',
+      'k' => 'k',
+      'l' => 'l',
+      'm' => 'm',
+      'n' => 'n',
+      'o' => 'o',
+      'p' => 'p',
+      'q' => 'q',
+      'r' => 'r',
+      's' => 's',
+      't' => 't',
+      'u' => 'u',
+      'v' => 'v',
+      'w' => 'w',
+      'x' => 'x',
+      'y' => 'y',
+      'z' => 'z',
+
+      --  Uppercase Latin-1 letters.
+      UC_A_Grave          => LC_A_Grave,
+      UC_A_Acute          => LC_A_Acute,
+      UC_A_Circumflex     => LC_A_Circumflex,
+      UC_A_Tilde          => LC_A_Tilde,
+      UC_A_Diaeresis      => LC_A_Diaeresis,
+      UC_A_Ring           => LC_A_Ring,
+      UC_AE_Diphthong     => LC_AE_Diphthong,
+      UC_C_Cedilla        => LC_C_Cedilla,
+      UC_E_Grave          => LC_E_Grave,
+      UC_E_Acute          => LC_E_Acute,
+      UC_E_Circumflex     => LC_E_Circumflex,
+      UC_E_Diaeresis      => LC_E_Diaeresis,
+      UC_I_Grave          => LC_I_Grave,
+      UC_I_Acute          => LC_I_Acute,
+      UC_I_Circumflex     => LC_I_Circumflex,
+      UC_I_Diaeresis      => LC_I_Diaeresis,
+      UC_Icelandic_Eth    => LC_Icelandic_Eth,
+      UC_N_Tilde          => LC_N_Tilde,
+      UC_O_Grave          => LC_O_Grave,
+      UC_O_Acute          => LC_O_Acute,
+      UC_O_Circumflex     => LC_O_Circumflex,
+      UC_O_Tilde          => LC_O_Tilde,
+      UC_O_Diaeresis      => LC_O_Diaeresis,
+      UC_O_Oblique_Stroke => LC_O_Oblique_Stroke,
+      UC_U_Grave          => LC_U_Grave,
+      UC_U_Acute          => LC_U_Acute,
+      UC_U_Circumflex     => LC_U_Circumflex,
+      UC_U_Diaeresis      => LC_U_Diaeresis,
+      UC_Y_Acute          => LC_Y_Acute,
+      UC_Icelandic_Thorn  => LC_Icelandic_Thorn,
+
+      --  Lowercase Latin-1 letters.
+      LC_A_Grave          => LC_A_Grave,
+      LC_A_Acute          => LC_A_Acute,
+      LC_A_Circumflex     => LC_A_Circumflex,
+      LC_A_Tilde          => LC_A_Tilde,
+      LC_A_Diaeresis      => LC_A_Diaeresis,
+      LC_A_Ring           => LC_A_Ring,
+      LC_AE_Diphthong     => LC_AE_Diphthong,
+      LC_C_Cedilla        => LC_C_Cedilla,
+      LC_E_Grave          => LC_E_Grave,
+      LC_E_Acute          => LC_E_Acute,
+      LC_E_Circumflex     => LC_E_Circumflex,
+      LC_E_Diaeresis      => LC_E_Diaeresis,
+      LC_I_Grave          => LC_I_Grave,
+      LC_I_Acute          => LC_I_Acute,
+      LC_I_Circumflex     => LC_I_Circumflex,
+      LC_I_Diaeresis      => LC_I_Diaeresis,
+      LC_Icelandic_Eth    => LC_Icelandic_Eth,
+      LC_N_Tilde          => LC_N_Tilde,
+      LC_O_Grave          => LC_O_Grave,
+      LC_O_Acute          => LC_O_Acute,
+      LC_O_Circumflex     => LC_O_Circumflex,
+      LC_O_Tilde          => LC_O_Tilde,
+      LC_O_Diaeresis      => LC_O_Diaeresis,
+      LC_O_Oblique_Stroke => LC_O_Oblique_Stroke,
+      LC_U_Grave          => LC_U_Grave,
+      LC_U_Acute          => LC_U_Acute,
+      LC_U_Circumflex     => LC_U_Circumflex,
+      LC_U_Diaeresis      => LC_U_Diaeresis,
+      LC_Y_Acute          => LC_Y_Acute,
+      LC_Icelandic_Thorn  => LC_Icelandic_Thorn,
+
+      --  Lowercase latin-1 characters without corresponding uppercase one.
+      LC_Y_Diaeresis      => LC_Y_Diaeresis,
+      LC_German_Sharp_S   => LC_German_Sharp_S,
+
+      --  Not a letter.
+      others => NUL);
+
    -- LRM93 13.3.1
    -- Basic Identifiers
    -- A basic identifier consists only of letters, digits, and underlines.
@@ -774,9 +930,10 @@ package body Scanner is
    --
    -- NB: At the call of this procedure, the current character must be a legal
    -- character for a basic identifier.
-   procedure Scan_Identifier
+   procedure Scan_Identifier (Allow_PSL : Boolean)
    is
       use Name_Table;
+      Buffer : String (1 .. Max_Name_Length);
       C : Character;
       Len : Natural;
    begin
@@ -815,7 +972,8 @@ package body Scanner is
                      if Vhdl_Std = Vhdl_87 then
                         Error_8bit;
                      end if;
-                     C := Ada.Characters.Handling.To_Lower (C);
+                     C := To_Lower_Map (C);
+                     pragma Assert (C /= NUL);
                   when Digit =>
                      raise Internal_Error;
                   when others =>
@@ -826,14 +984,14 @@ package body Scanner is
          --  Put character in name buffer.  FIXME: compute the hash at the same
          --  time ?
          Len := Len + 1;
-         Nam_Buffer (Len) := C;
+         Buffer (Len) := C;
 
          --  Next character.
          Pos := Pos + 1;
       end loop;
 
       if Source (Pos - 1) = '_' then
-         if not Flag_Psl then
+         if not Allow_PSL then
             --  Some PSL reserved words finish with '_'.  This case is handled
             --  later.
             Error_Msg_Scan ("identifier cannot finish with '_'");
@@ -842,7 +1000,6 @@ package body Scanner is
          Len := Len - 1;
          C := '_';
       end if;
-      Nam_Length := Len;
 
       -- LRM93 13.2
       -- At least one separator is required between an identifier or an
@@ -878,9 +1035,10 @@ package body Scanner is
                --  with the same meaning.
                declare
                   Base : Nat32;
-                  Cl : constant Character := Nam_Buffer (Len);
-                  Cf : constant Character := Nam_Buffer (1);
+                  Cl : constant Character := Buffer (Len);
+                  Cf : constant Character := Buffer (1);
                begin
+                  Current_Context.Bit_Str_Base := Cl;
                   if Cl = 'b' then
                      Base := 1;
                   elsif Cl = 'o' then
@@ -888,6 +1046,7 @@ package body Scanner is
                   elsif Cl = 'x' then
                      Base := 4;
                   elsif Vhdl_Std >= Vhdl_08 and Len = 1 and Cf = 'd' then
+                     Current_Context.Bit_Str_Sign := ' ';
                      Scan_Dec_Bit_String;
                      return;
                   else
@@ -895,11 +1054,13 @@ package body Scanner is
                   end if;
                   if Base > 0 then
                      if Len = 1 then
+                        Current_Context.Bit_Str_Sign := ' ';
                         Scan_Bit_String (Base);
                         return;
                      elsif Vhdl_Std >= Vhdl_08
                        and then (Cf = 's' or Cf = 'u')
                      then
+                        Current_Context.Bit_Str_Sign := Cf;
                         Scan_Bit_String (Base);
                         return;
                      end if;
@@ -916,7 +1077,7 @@ package body Scanner is
             --  quote marks, there are invalid character (in the 128-160
             --  range).
             if C = Character'Val (16#80#)
-              and then Nam_Buffer (Len) = Character'Val (16#e2#)
+              and then Buffer (Len) = Character'Val (16#e2#)
               and then (Source (Pos + 1) = Character'Val (16#98#)
                           or else Source (Pos + 1) = Character'Val (16#99#))
             then
@@ -926,7 +1087,7 @@ package body Scanner is
                   --  error will be detected as the next byte (0x80) is
                   --  invalid.  Remove the first byte from the identifier, and
                   --  let's catch the error later.
-                  Nam_Length := Len - 1;
+                  Len := Len - 1;
                   Pos := Pos - 1;
                else
                   Error_Msg_Scan ("invalid use of UTF8 character for '");
@@ -964,7 +1125,12 @@ package body Scanner is
       end case;
 
       -- Hash it.
-      Current_Context.Identifier := Name_Table.Get_Identifier;
+      Current_Context.Identifier := Get_Identifier (Buffer (1 .. Len));
+      Current_Token := Tok_Identifier;
+   end Scan_Identifier;
+
+   procedure Identifier_To_Token is
+   begin
       if Current_Identifier in Std_Names.Name_Id_Keywords then
          -- LRM93 13.9
          --   The identifiers listed below are called reserved words and are
@@ -1068,14 +1234,12 @@ package body Scanner is
                Current_Token := Tok_Until;
             when others =>
                Current_Token := Tok_Identifier;
-               if C = '_' then
+               if Source (Pos - 1) = '_' then
                   Error_Msg_Scan ("identifiers cannot finish with '_'");
                end if;
          end case;
-      else
-         Current_Token := Tok_Identifier;
       end if;
-   end Scan_Identifier;
+   end Identifier_To_Token;
 
    --  LRM93 13.3.2
    --  EXTENDED_IDENTIFIER ::= \ GRAPHIC_CHARACTER { GRAPHIC_CHARACTER } \
@@ -1086,13 +1250,15 @@ package body Scanner is
    procedure Scan_Extended_Identifier
    is
       use Name_Table;
+      Buffer : String (1 .. Max_Name_Length);
+      Len : Natural;
    begin
       -- LRM93 13.3.2
       --   Moreover, every extended identifiers is distinct from any basic
       --   identifier.
       -- This is satisfied by storing '\' in the name table.
-      Nam_Length := 1;
-      Nam_Buffer (1) := '\';
+      Len := 1;
+      Buffer (1) := '\';
       loop
          --  Next character.
          Pos := Pos + 1;
@@ -1103,8 +1269,8 @@ package body Scanner is
             -- of an extended literal, it must be doubled.
             -- LRM93 13.3.2
             -- (a doubled backslash couting as one character)
-            Nam_Length := Nam_Length + 1;
-            Nam_Buffer (Nam_Length) := '\';
+            Len := Len + 1;
+            Buffer (Len) := '\';
 
             Pos := Pos + 1;
 
@@ -1121,14 +1287,15 @@ package body Scanner is
             when Invalid =>
                Error_Msg_Scan ("invalid character in extended identifier");
          end case;
-         Nam_Length := Nam_Length + 1;
+         Len := Len + 1;
+
          -- LRM93 13.3.2
          -- Extended identifiers differing only in the use of corresponding
          -- upper and lower case letters are distinct.
-         Nam_Buffer (Nam_Length) := Source (Pos);
+         Buffer (Len) := Source (Pos);
       end loop;
 
-      if Nam_Length <= 2 then
+      if Len <= 2 then
          Error_Msg_Scan ("empty extended identifier is not allowed");
       end if;
 
@@ -1149,11 +1316,11 @@ package body Scanner is
       end case;
 
       -- Hash it.
-      Current_Context.Identifier := Name_Table.Get_Identifier;
+      Current_Context.Identifier := Get_Identifier (Buffer (1 .. Len));
       Current_Token := Tok_Identifier;
    end Scan_Extended_Identifier;
 
-   procedure Convert_Identifier
+   procedure Convert_Identifier (Str : in out String)
    is
       procedure Error_Bad is
       begin
@@ -1167,37 +1334,39 @@ package body Scanner is
 
       use Name_Table;
       C : Character;
+      subtype Id_Subtype is String (1 .. Str'Length);
+      Id : Id_Subtype renames Str;
    begin
-      if Nam_Length = 0 then
+      if Id'Length = 0 then
          Error_Msg_Option ("identifier required");
          return;
       end if;
 
-      if Nam_Buffer (1) = '\' then
+      if Id (1) = '\' then
          --  Extended identifier.
          if Vhdl_Std = Vhdl_87 then
             Error_Msg_Option ("extended identifiers not allowed in vhdl87");
             return;
          end if;
 
-         if Nam_Length < 3 then
+         if Id'Length < 3 then
             Error_Msg_Option ("extended identifier is too short");
             return;
          end if;
-         if Nam_Buffer (Nam_Length) /= '\' then
+         if Id (Id'Last) /= '\' then
             Error_Msg_Option ("extended identifier must finish with a '\'");
             return;
          end if;
-         for I in 2 .. Nam_Length - 1 loop
-            C := Nam_Buffer (I);
+         for I in 2 .. Id'Last - 1 loop
+            C := Id (I);
             case Characters_Kind (C) is
                when Format_Effector =>
                   Error_Msg_Option ("format effector in extended identifier");
                   return;
                when Graphic_Character =>
                   if C = '\' then
-                     if Nam_Buffer (I + 1) /= '\'
-                       or else I = Nam_Length - 1
+                     if Id (I + 1) /= '\'
+                       or else I = Id'Last - 1
                      then
                         Error_Msg_Option ("anti-slash must be doubled "
                                             & "in extended identifier");
@@ -1210,14 +1379,14 @@ package body Scanner is
          end loop;
       else
          --  Identifier
-         for I in 1 .. Nam_Length loop
-            C := Nam_Buffer (I);
+         for I in 1 .. Id'Length loop
+            C := Id (I);
             case Characters_Kind (C) is
                when Upper_Case_Letter =>
                   if Vhdl_Std = Vhdl_87 and C > 'Z' then
                      Error_8bit;
                   end if;
-                  Nam_Buffer (I) := Ada.Characters.Handling.To_Lower (C);
+                  Id (I) := To_Lower_Map (C);
                when Lower_Case_Letter | Digit =>
                   if Vhdl_Std = Vhdl_87 and C > 'z' then
                      Error_8bit;
@@ -1230,12 +1399,12 @@ package body Scanner is
                           ("identifier cannot start with an underscore");
                         return;
                      end if;
-                     if Nam_Buffer (I - 1) = '_' then
+                     if Id (I - 1) = '_' then
                         Error_Msg_Option
                           ("two underscores can't be consecutive");
                         return;
                      end if;
-                     if I = Nam_Length then
+                     if I = Id'Last then
                         Error_Msg_Option
                           ("identifier cannot finish with an underscore");
                         return;
@@ -1250,22 +1419,52 @@ package body Scanner is
       end if;
    end Convert_Identifier;
 
-   --  Scan an identifier within a comment.  Only lower case letters are
-   --  allowed.
-   function Scan_Comment_Identifier return Boolean
-   is
-      use Name_Table;
-      Len : Natural;
-      C : Character;
+   --  Internal scanner function: return True if C must be considered as a line
+   --  terminator.  This also includes EOT (which terminates the file or is
+   --  invalid).
+   function Is_EOL (C : Character) return Boolean is
    begin
-      --  Skip spaces.
+      case C is
+         when CR | LF | VT | FF | Files_Map.EOT =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Is_EOL;
+
+   --  Advance scanner till the first non-space character.
+   procedure Skip_Spaces is
+   begin
       while Source (Pos) = ' ' or Source (Pos) = HT loop
          Pos := Pos + 1;
       end loop;
+   end Skip_Spaces;
+
+   --  Eat all characters until end-of-line (not included).
+   procedure Skip_Until_EOL is
+   begin
+      while not Is_EOL (Source (Pos)) loop
+         --  Don't warn about invalid character, it's somewhat out of the
+         --  scope.
+         Pos := Pos + 1;
+      end loop;
+   end Skip_Until_EOL;
+
+   --  Scan an identifier within a comment.  Only lower case letters are
+   --  allowed.
+   procedure Scan_Comment_Identifier (Id : out Name_Id)
+   is
+      use Name_Table;
+      Buffer : String (1 .. Max_Name_Length);
+      Len : Natural;
+      C : Character;
+   begin
+      Id := Null_Identifier;
+      Skip_Spaces;
 
       --  The identifier shall start with a lower case letter.
       if Source (Pos) not in 'a' .. 'z' then
-         return False;
+         return;
       end if;
 
       --  Scan the identifier (in lower cases).
@@ -1274,21 +1473,67 @@ package body Scanner is
          C := Source (Pos);
          exit when C not in 'a' .. 'z' and C /= '_';
          Len := Len + 1;
-         Nam_Buffer (Len) := C;
+         Buffer (Len) := C;
          Pos := Pos + 1;
       end loop;
 
       --  Shall be followed by a space or a new line.
-      case C is
-         when ' ' | HT | LF | CR =>
-            null;
-         when others =>
-            return False;
-      end case;
+      if not (C = ' ' or else C = HT or else Is_EOL (C)) then
+         return;
+      end if;
 
-      Nam_Length := Len;
-      return True;
+      Id := Get_Identifier (Buffer (1 .. Len));
    end Scan_Comment_Identifier;
+
+   package Directive_Protect is
+      --  Called to scan a protect tool directive.
+      procedure Scan_Protect_Directive;
+   end Directive_Protect;
+
+   --  Body is put in a separate file to avoid pollution.
+   package body Directive_Protect is separate;
+
+   --  Called to scan a tool directive.
+   procedure Scan_Tool_Directive
+   is
+      procedure Error_Missing_Directive is
+      begin
+         Error_Msg_Scan
+           ("tool directive required after '`'");
+         Skip_Until_EOL;
+      end Error_Missing_Directive;
+
+      C : Character;
+   begin
+      --  The current character is '`'.
+      Pos := Pos + 1;
+      Skip_Spaces;
+
+      --  Check and scan identifier.
+      C := Source (Pos);
+      if Characters_Kind (C) not in Letter then
+         Error_Missing_Directive;
+         return;
+      end if;
+
+      Scan_Identifier (False);
+
+      if Current_Token /= Tok_Identifier then
+         Error_Missing_Directive;
+         return;
+      end if;
+
+      Skip_Spaces;
+
+      --  Dispatch according to the identifier.
+      if Current_Identifier = Std_Names.Name_Protect then
+         Directive_Protect.Scan_Protect_Directive;
+      else
+         Error_Msg_Scan
+           ("unknown tool directive %i ignored", +Current_Identifier);
+         Skip_Until_EOL;
+      end if;
+   end Scan_Tool_Directive;
 
    --  Scan tokens within a comment.  Return TRUE if Current_Token was set,
    --  return FALSE to discard the comment (ie treat it like a real comment).
@@ -1297,12 +1542,11 @@ package body Scanner is
       use Std_Names;
       Id : Name_Id;
    begin
-      if not Scan_Comment_Identifier then
+      Scan_Comment_Identifier (Id);
+
+      if Id = Null_Identifier then
          return False;
       end if;
-
-      -- Hash it.
-      Id := Name_Table.Get_Identifier;
 
       case Id is
          when Name_Psl =>
@@ -1383,6 +1627,7 @@ package body Scanner is
       << Again >> null;
 
       --  Skip commonly used separators.
+      --  (Like Skip_Spaces but manually inlined for speed).
       while Source (Pos) = ' ' or Source (Pos) = HT loop
          Pos := Pos + 1;
       end loop;
@@ -1448,11 +1693,21 @@ package body Scanner is
                --  In any case, a sequence of one or more format
                --  effectors other than horizontal tabulation must
                --  cause at least one end of line.
-               while Source (Pos) /= CR and Source (Pos) /= LF and
-                 Source (Pos) /= VT and Source (Pos) /= FF and
-                 Source (Pos) /= Files_Map.EOT
-               loop
-                  if not Flags.Mb_Comment
+               while not Is_EOL (Source (Pos)) loop
+                  --  LRM93 13.1
+                  --  The only characters allowed in the text of a VHDL
+                  --  description are the graphic characters and the format
+                  --  effectors.
+
+                  --  LRM02 13.1 Character set
+                  --  The only characters allowed in the text of a VHDL
+                  --  description (except within comments -- see 13.8) [...]
+                  --
+                  --  LRM02 13.8 Comments
+                  --  A comment [...] may contain any character except the
+                  --  format effectors vertical tab, carriage return, line
+                  --  feed and form feed.
+                  if not (Flags.Mb_Comment or Vhdl_Std >= Vhdl_02)
                     and then Characters_Kind (Source (Pos)) = Invalid
                   then
                      Error_Msg_Scan ("invalid character, even in a comment");
@@ -1588,10 +1843,18 @@ package body Scanner is
             if Flag_Psl then
                Current_Token := Tok_Exclam_Mark;
             else
-               --  LRM93 13.10
-               --  A vertical line (|) can be replaced by an exclamation
-               --  mark (!)  where used as a delimiter.
-               Current_Token := Tok_Bar;
+               if Source (Pos + 1) = '=' then
+                  --  != is not allowed in VHDL, but be friendly with C users.
+                  Error_Msg_Scan
+                    (Get_Token_Location, "Use '/=' for inequality in vhdl");
+                  Current_Token := Tok_Not_Equal;
+                  Pos := Pos + 1;
+               else
+                  --  LRM93 13.10
+                  --  A vertical line (|) can be replaced by an exclamation
+                  --  mark (!) where used as a delimiter.
+                  Current_Token := Tok_Bar;
+               end if;
             end if;
             Pos := Pos + 1;
             return;
@@ -1883,7 +2146,16 @@ package body Scanner is
                end if;
             end if;
             return;
-         when '$' | '`'
+         when '`' =>
+            if Vhdl_Std >= Vhdl_08 then
+               Scan_Tool_Directive;
+            else
+               Warning_Msg_Scan (Warnid_Directive,
+                                 "tool directives are ignored");
+               Skip_Until_EOL;
+            end if;
+            goto Again;
+         when '$'
            | Inverted_Exclamation .. Inverted_Question
            | Multiplication_Sign | Division_Sign =>
             Error_Msg_Scan
@@ -1908,23 +2180,19 @@ package body Scanner is
             Pos := Pos + 1;
             goto Again;
          when 'A' .. 'Z' | 'a' .. 'z' =>
-            Scan_Identifier;
+            Scan_Identifier (Flag_Psl);
+            Identifier_To_Token;
             return;
          when UC_A_Grave .. UC_O_Diaeresis
-           | UC_O_Oblique_Stroke .. UC_Icelandic_Thorn =>
-            if Vhdl_Std = Vhdl_87 then
-               Error_Msg_Scan
-                 ("upper case letters above 128 are not allowed in vhdl87");
-            end if;
-            Scan_Identifier;
-            return;
-         when LC_German_Sharp_S .. LC_O_Diaeresis
+           | UC_O_Oblique_Stroke .. UC_Icelandic_Thorn
+           | LC_German_Sharp_S .. LC_O_Diaeresis
            | LC_O_Oblique_Stroke .. LC_Y_Diaeresis =>
             if Vhdl_Std = Vhdl_87 then
                Error_Msg_Scan
-                 ("lower case letters above 128 are not allowed in vhdl87");
+                 ("non 7-bit latin-1 letters are not allowed in vhdl87");
             end if;
-            Scan_Identifier;
+            Scan_Identifier (False);
+            --  Not a reserved word.
             return;
          when NUL .. ETX | ENQ .. BS | SO .. US | DEL .. APC =>
             Error_Msg_Scan

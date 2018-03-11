@@ -34,7 +34,6 @@ package body Disp_Tree is
    Max_Depth : Natural := 10;
    pragma Warnings (On);
 
-   procedure Disp_Iir (N : Iir; Indent : Natural; Depth : Natural);
    procedure Disp_Header (N : Iir);
 
    procedure Disp_Tree_List_Flat (Tree_List: Iir_List; Tab: Natural);
@@ -68,24 +67,44 @@ package body Disp_Tree is
    procedure Disp_Iir_List
      (Tree_List : Iir_List; Tab : Natural; Depth : Natural)
    is
+      It : List_Iterator;
+   begin
+      case Tree_List is
+         when Null_Iir_List =>
+            Put_Line ("null-list");
+         when Iir_List_All =>
+            Put_Line ("list-all");
+         when others =>
+            New_Line;
+            It := List_Iterate (Tree_List);
+            while Is_Valid (It) loop
+               Put_Indent (Tab);
+               Disp_Iir (Get_Element (It), Tab + 1, Depth);
+               Next (It);
+            end loop;
+      end case;
+   end Disp_Iir_List;
+
+   procedure Disp_Iir_Flist
+     (Tree_Flist : Iir_Flist; Tab : Natural; Depth : Natural)
+   is
       El: Iir;
    begin
-      if Tree_List = Null_Iir_List then
-         Put_Line ("null-list");
-      elsif Tree_List = Iir_List_All then
-         Put_Line ("list-all");
-      elsif Tree_List = Iir_List_Others then
-         Put_Line ("list-others");
+      if Tree_Flist = Null_Iir_Flist then
+         Put_Line ("null-flist");
+      elsif Tree_Flist = Iir_Flist_All then
+         Put_Line ("flist-all");
+      elsif Tree_Flist = Iir_Flist_Others then
+         Put_Line ("flist-others");
       else
          New_Line;
-         for I in Natural loop
-            El := Get_Nth_Element (Tree_List, I);
-            exit when El = Null_Iir;
+         for I in Flist_First .. Flist_Last (Tree_Flist) loop
+            El := Get_Nth_Element (Tree_Flist, I);
             Put_Indent (Tab);
             Disp_Iir (El, Tab + 1, Depth);
          end loop;
       end if;
-   end Disp_Iir_List;
+   end Disp_Iir_Flist;
 
    procedure Disp_Chain (Tree_Chain: Iir; Indent: Natural; Depth : Natural)
    is
@@ -112,37 +131,36 @@ package body Disp_Tree is
    end Disp_Tree_Flat_Chain;
    pragma Unreferenced (Disp_Tree_Flat_Chain);
 
-   procedure Disp_Tree_List_Flat (Tree_List: Iir_List; Tab: Natural)
+   procedure Disp_Tree_List_Flat (Tree_List : Iir_List; Tab : Natural)
    is
-      El: Iir;
+      It : List_Iterator;
    begin
-      if Tree_List = Null_Iir_List then
-         Put_Indent (Tab);
-         Put_Line (" null-list");
-      elsif Tree_List = Iir_List_All then
-         Put_Indent (Tab);
-         Put_Line (" list-all");
-      elsif Tree_List = Iir_List_Others then
-         Put_Indent (Tab);
-         Put_Line (" list-others");
-      else
-         for I in Natural loop
-            El := Get_Nth_Element (Tree_List, I);
-            exit when El = Null_Iir;
-            Disp_Iir (El, Tab, 0);
-         end loop;
-      end if;
+      case Tree_List is
+         when Null_Iir_List =>
+            Put_Indent (Tab);
+            Put_Line (" null-list");
+         when Iir_List_All =>
+            Put_Indent (Tab);
+            Put_Line (" list-all");
+         when others =>
+            It := List_Iterate (Tree_List);
+            while Is_Valid (It) loop
+               Disp_Iir (Get_Element (It), Tab, 0);
+               Next (It);
+            end loop;
+      end case;
    end Disp_Tree_List_Flat;
 
    function Image_Name_Id (Ident: Name_Id) return String
    is
       use Name_Table;
    begin
-      if Ident /= Null_Identifier then
-         Image (Ident);
-         return ''' & Nam_Buffer (1 .. Nam_Length) & ''';
-      else
+      if Ident = Null_Identifier then
          return "<anonymous>";
+      elsif Is_Character (Ident) then
+         return Image (Ident);
+      else
+         return '"' & Image (Ident) & '"';
       end if;
    end Image_Name_Id;
 
@@ -329,7 +347,7 @@ package body Disp_Tree is
       else
          declare
             El : constant Iir := Get_Base_Type (Get_Element_Subtype (T));
-            Lits : constant Iir_List := Get_Enumeration_Literal_List (El);
+            Lits : constant Iir_Flist := Get_Enumeration_Literal_List (El);
             Res : String (1 .. Natural (Len));
             C : Natural;
          begin
@@ -464,6 +482,24 @@ package body Disp_Tree is
                         raise Internal_Error;
                   end case;
                   Disp_Iir_List (Get_Iir_List (N, F), Sub_Indent, Ndepth);
+               when Type_Iir_Flist =>
+                  case Get_Field_Attribute (F) is
+                     when Attr_None =>
+                        Ndepth := Depth - 1;
+                     when Attr_Of_Ref =>
+                        Ndepth := 0;
+                     when Attr_Ref =>
+                        Ndepth := 0;
+                     when Attr_Of_Maybe_Ref =>
+                        if Get_Is_Ref (N) then
+                           Ndepth := 0;
+                        else
+                           Ndepth := Depth - 1;
+                        end if;
+                     when others =>
+                        raise Internal_Error;
+                  end case;
+                  Disp_Iir_Flist (Get_Iir_Flist (N, F), Sub_Indent, Ndepth);
                when Type_PSL_NFA =>
                   Disp_PSL_NFA (Get_PSL_NFA (N, F), Sub_Indent);
                when Type_String8_Id =>
@@ -473,6 +509,9 @@ package body Disp_Tree is
                     (Get_PSL_Node (N, F), Sub_Indent, Depth - 1);
                when Type_Source_Ptr =>
                   Put_Line (Source_Ptr'Image (Get_Source_Ptr (N, F)));
+               when Type_Source_File_Entry =>
+                  Put_Line (Source_File_Entry'Image
+                              (Get_Source_File_Entry (N, F)));
                when Type_Date_Type =>
                   Put_Line (Date_Type'Image (Get_Date_Type (N, F)));
                when Type_Number_Base_Type =>
@@ -517,9 +556,6 @@ package body Disp_Tree is
                when Type_Iir_Direction =>
                   Put_Line (Image_Iir_Direction
                               (Get_Iir_Direction (N, F)));
-               when Type_Location_Type =>
-                  Put_Line (Image_Location_Type
-                              (Get_Location_Type (N, F)));
                when Type_Iir_Int32 =>
                   Put_Line (Iir_Int32'Image (Get_Iir_Int32 (N, F)));
                when Type_Int32 =>

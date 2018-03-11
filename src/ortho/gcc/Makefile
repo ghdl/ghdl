@@ -1,5 +1,6 @@
 ortho_srcdir=..
 orthobe_srcdir=$(ortho_srcdir)/gcc
+ortho_lang_c=ortho-lang-7.c
 agcc_objdir=.
 agcc_srcdir=$(ortho_srcdir)/gcc
 SED=sed
@@ -37,7 +38,7 @@ AGCC_INC_FLAGS=-I$(AGCC_GCCOBJ_DIR)/gcc -I$(AGCC_GCCSRC_DIR)/include \
  -I$(AGCC_GCCSRC_DIR)/libcpp/include $(GMPINC)
 AGCC_CFLAGS=-DIN_GCC_FRONTEND -Wall -DIN_GCC -DHAVE_CONFIG_H $(AGCC_INC_FLAGS)
 
-ortho-lang.o: $(agcc_srcdir)/ortho-lang.c \
+ortho-lang.o: $(agcc_srcdir)/$(ortho_lang_c) \
  $(AGCC_GCCOBJ_DIR)gcc/gtype-vhdl.h \
  $(AGCC_GCCOBJ_DIR)gcc/gt-vhdl-ortho-lang.h
 	$(COMPILER) -c -o $@ $< $(AGCC_CFLAGS) $(CXXFLAGS) $(INCLUDES)

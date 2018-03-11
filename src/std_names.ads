@@ -23,9 +23,8 @@ with Types; use Types;
 package Std_Names is
    -- Predefined names.
    Name_First_Character : constant Name_Id := 1;
-   Name_Last_Character : constant Name_Id :=
-     Name_First_Character + Character'Pos (Character'Last)
-     - Character'Pos (Character'First);
+   Name_Last_Character : constant Name_Id := Name_First_Character + 255;
+
    subtype Name_Characters is Name_Id
      range Name_First_Character .. Name_Last_Character;
 
@@ -460,22 +459,23 @@ package Std_Names is
    Name_L :              constant Name_Id := Name_First_Misc + 010;
    Name_R :              constant Name_Id := Name_First_Misc + 011;
    Name_S :              constant Name_Id := Name_First_Misc + 012;
-   Name_External_Name :  constant Name_Id := Name_First_Misc + 013;
-   Name_Open_Kind :      constant Name_Id := Name_First_Misc + 014;
-   Name_Status :         constant Name_Id := Name_First_Misc + 015;
-   Name_First :          constant Name_Id := Name_First_Misc + 016;
-   Name_Last :           constant Name_Id := Name_First_Misc + 017;
-   Name_Textio :         constant Name_Id := Name_First_Misc + 018;
-   Name_Work :           constant Name_Id := Name_First_Misc + 019;
-   Name_Text :           constant Name_Id := Name_First_Misc + 020;
-   Name_To_String :      constant Name_Id := Name_First_Misc + 021;
-   Name_Minimum :        constant Name_Id := Name_First_Misc + 022;
-   Name_Maximum :        constant Name_Id := Name_First_Misc + 023;
-   Name_Untruncated_Text_Read : constant Name_Id := Name_First_Misc + 024;
-   Name_Textio_Read_Real :      constant Name_Id := Name_First_Misc + 025;
-   Name_Textio_Write_Real :     constant Name_Id := Name_First_Misc + 026;
-   Name_Get_Resolution_Limit :  constant Name_Id := Name_First_Misc + 027;
-   Name_Control_Simulation :    constant Name_Id := Name_First_Misc + 028;
+   Name_V :              constant Name_Id := Name_First_Misc + 013;
+   Name_External_Name :  constant Name_Id := Name_First_Misc + 014;
+   Name_Open_Kind :      constant Name_Id := Name_First_Misc + 015;
+   Name_Status :         constant Name_Id := Name_First_Misc + 016;
+   Name_First :          constant Name_Id := Name_First_Misc + 017;
+   Name_Last :           constant Name_Id := Name_First_Misc + 018;
+   Name_Textio :         constant Name_Id := Name_First_Misc + 019;
+   Name_Work :           constant Name_Id := Name_First_Misc + 020;
+   Name_Text :           constant Name_Id := Name_First_Misc + 021;
+   Name_To_String :      constant Name_Id := Name_First_Misc + 022;
+   Name_Minimum :        constant Name_Id := Name_First_Misc + 023;
+   Name_Maximum :        constant Name_Id := Name_First_Misc + 024;
+   Name_Untruncated_Text_Read : constant Name_Id := Name_First_Misc + 025;
+   Name_Textio_Read_Real :      constant Name_Id := Name_First_Misc + 026;
+   Name_Textio_Write_Real :     constant Name_Id := Name_First_Misc + 027;
+   Name_Get_Resolution_Limit :  constant Name_Id := Name_First_Misc + 028;
+   Name_Control_Simulation :    constant Name_Id := Name_First_Misc + 029;
    Name_Last_Misc :      constant Name_Id := Name_Control_Simulation;
 
    Name_First_Ieee         : constant Name_Id := Name_Last_Misc + 1;
@@ -492,14 +492,12 @@ package Std_Names is
    Name_VITAL_Level1       : constant Name_Id := Name_First_Ieee + 010;
    Name_Numeric_Std        : constant Name_Id := Name_First_Ieee + 011;
    Name_Numeric_Bit        : constant Name_Id := Name_First_Ieee + 012;
-   Name_Unsigned           : constant Name_Id := Name_First_Ieee + 013;
-   Name_Signed             : constant Name_Id := Name_First_Ieee + 014;
-   Name_Unresolved_Unsigned : constant Name_Id := Name_First_Ieee + 015;
-   Name_Unresolved_Signed  : constant Name_Id := Name_First_Ieee + 016;
-   Name_Std_Logic_Arith    : constant Name_Id := Name_First_Ieee + 017;
-   Name_Std_Logic_Signed   : constant Name_Id := Name_First_Ieee + 018;
-   Name_Std_Logic_Textio   : constant Name_Id := Name_First_Ieee + 019;
-   Name_Std_Logic_Unsigned : constant Name_Id := Name_First_Ieee + 020;
+   Name_Unresolved_Unsigned : constant Name_Id := Name_First_Ieee + 013;
+   Name_Unresolved_Signed  : constant Name_Id := Name_First_Ieee + 014;
+   Name_Std_Logic_Arith    : constant Name_Id := Name_First_Ieee + 015;
+   Name_Std_Logic_Signed   : constant Name_Id := Name_First_Ieee + 016;
+   Name_Std_Logic_Textio   : constant Name_Id := Name_First_Ieee + 017;
+   Name_Std_Logic_Unsigned : constant Name_Id := Name_First_Ieee + 018;
    Name_Last_Ieee          : constant Name_Id := Name_Std_Logic_Unsigned;
 
    --  Verilog keywords.
@@ -568,23 +566,40 @@ package Std_Names is
    Name_Tri :            constant Name_Id := Name_First_Verilog + 61;
    Name_Tri0 :           constant Name_Id := Name_First_Verilog + 62;
    Name_Tri1 :           constant Name_Id := Name_First_Verilog + 63;
-   Name_Trireg :         constant Name_Id := Name_First_Verilog + 64;
-   Name_Wand :           constant Name_Id := Name_First_Verilog + 65;
-   Name_Weak0 :          constant Name_Id := Name_First_Verilog + 66;
-   Name_Weak1 :          constant Name_Id := Name_First_Verilog + 67;
-   Name_Wire :           constant Name_Id := Name_First_Verilog + 68;
-   Name_Wor :            constant Name_Id := Name_First_Verilog + 69;
+   Name_Triand :         constant Name_Id := Name_First_Verilog + 64;
+   Name_Trior :          constant Name_Id := Name_First_Verilog + 65;
+   Name_Trireg :         constant Name_Id := Name_First_Verilog + 66;
+   Name_Wand :           constant Name_Id := Name_First_Verilog + 67;
+   Name_Weak0 :          constant Name_Id := Name_First_Verilog + 68;
+   Name_Weak1 :          constant Name_Id := Name_First_Verilog + 69;
+   Name_Wire :           constant Name_Id := Name_First_Verilog + 70;
+   Name_Wor :            constant Name_Id := Name_First_Verilog + 71;
    Name_Last_Verilog :   constant Name_Id := Name_Wor;
 
+   --  Verilog 2001
+   Name_First_V2001 :    constant Name_Id := Name_Last_Verilog + 1;
+   Name_Automatic :      constant Name_Id := Name_First_V2001 + 0;
+   Name_Endgenerate :    constant Name_Id := Name_First_V2001 + 1;
+   Name_Genvar :         constant Name_Id := Name_First_V2001 + 2;
+   Name_Localparam :     constant Name_Id := Name_First_V2001 + 3;
+   Name_Unsigned :       constant Name_Id := Name_First_V2001 + 4;
+   Name_Signed :         constant Name_Id := Name_First_V2001 + 5;
+   Name_Last_V2001 :     constant Name_Id := Name_First_V2001 + 5;
+
    --  Verilog Directives.
-   Name_First_Directive : constant Name_Id := Name_Last_Verilog + 1;
+   Name_First_Directive : constant Name_Id := Name_Last_V2001 + 1;
    Name_Define :         constant Name_Id := Name_First_Directive + 00;
    Name_Endif :          constant Name_Id := Name_First_Directive + 01;
    Name_Ifdef :          constant Name_Id := Name_First_Directive + 02;
    Name_Include :        constant Name_Id := Name_First_Directive + 03;
    Name_Timescale :      constant Name_Id := Name_First_Directive + 04;
    Name_Undef :          constant Name_Id := Name_First_Directive + 05;
-   Name_Last_Directive : constant Name_Id := Name_Undef;
+   Name_Protect :        constant Name_Id := Name_First_Directive + 06;
+   Name_Begin_Protected : constant Name_Id := Name_First_Directive + 07;
+   Name_End_Protected :  constant Name_Id := Name_First_Directive + 08;
+   Name_Key_Block :      constant Name_Id := Name_First_Directive + 09;
+   Name_Data_Block :     constant Name_Id := Name_First_Directive + 10;
+   Name_Last_Directive : constant Name_Id := Name_Data_Block;
 
    --  Verilog system tasks.
    Name_First_Systask :  constant Name_Id := Name_Last_Directive + 1;

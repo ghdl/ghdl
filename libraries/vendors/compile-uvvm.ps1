@@ -15,6 +15,7 @@
 #
 # ==============================================================================
 #	Copyright (C) 2015-2017 Patrick Lehmann - Dresden, Germany
+#	Copyright (C) 2017 Patrick Lehmann - Freiburg, Germany
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -56,14 +57,20 @@ param(
 	[switch]$UVVM_VCC_Framework =	$true,
 	# Compile all UVVM Verification IPs (VIPs).
 	[switch]$UVVM_VIP =								$true,
+		# Compile VIP: Avalon_MM
+		[switch]$UVVM_VIP_Avalon_MM =		$true,
 		# Compile VIP: AXI-Lite
 		[switch]$UVVM_VIP_AXI_Lite =		$true,
 		# Compile VIP: AXI-Stream
 		[switch]$UVVM_VIP_AXI_Stream =	$true,
+		# Compile VIP: GPIO
+		[switch]$UVVM_VIP_GPIO =				$true,
 		# Compile VIP: I2C
 		[switch]$UVVM_VIP_I2C =					$true,
 		# Compile VIP: SBI (Simple Byte Interface)
 		[switch]$UVVM_VIP_SBI =					$true,
+		# Compile VIP: SPI
+		[switch]$UVVM_VIP_SPI =					$true,
 		# Compile VIP: UART
 		[switch]$UVVM_VIP_UART =				$true,
 	
@@ -79,7 +86,7 @@ param(
 	[string]$Source =							"",
 	# Set output directory name.
 	[string]$Output =							"",
-	# Set GHDL executable.
+	# Set GHDL binary directory.
 	[string]$GHDL =								""
 )
 
@@ -98,7 +105,8 @@ Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -Debug:$false -ArgumentL
 # Display help if no command was selected
 if ($Help -or (-not ($All -or $Clean -or
 										($UVVM -or			($UVVM_Utilities -or $UVVM_VVC_Framework)) -or
-										($UVVM_VIP -or	($UVVM_VIP_AXI_Lite -or $UVVM_VIP_AXI_Stream -or $UVVM_VIP_I2C -or $UVVM_VIP_SBI -or $UVVM_VIP_UART))		)))
+										($UVVM_VIP -or	($UVVM_VIP_Avalon_MM -or $UVVM_VIP_AXI_Lite -or $UVVM_VIP_AXI_Stream -or $UVVM_VIP_GPIO -or $UVVM_VIP_I2C -or
+										 $UVVM_VIP_SBI -or $UVVM_VIP_SPI -or $UVVM_VIP_UART))		)))
 {	Get-Help $MYINVOCATION.InvocationName -Detailed
 	Exit-CompileScript
 }
@@ -112,10 +120,13 @@ if ($UVVM)
 	$UVVM_VCC_Framework =		$true
 }
 if ($UVVM_VIP)
-{	$UVVM_VIP_AXI_Lite =		$true
+{	$UVVM_VIP_Avalon_MM =		$true
+	$UVVM_VIP_AXI_Lite =		$true
 	$UVVM_VIP_AXI_Stream =	$true
+	$UVVM_VIP_GPIO =				$true
 	$UVVM_VIP_I2C =					$true
 	$UVVM_VIP_SBI =					$true
+	$UVVM_VIP_SPI =					$true
 	$UVVM_VIP_UART =				$true
 }
 
@@ -124,7 +135,7 @@ $SourceDirectory =			Get-SourceDirectory $Source ""
 $DestinationDirectory =	Get-DestinationDirectory $Output
 $GHDLBinary =						Get-GHDLBinary $GHDL
 
-# create "Altera" directory and change to it
+# create "uvvm" directory and change to it
 New-DestinationDirectory $DestinationDirectory
 cd $DestinationDirectory
 
@@ -169,80 +180,29 @@ $UVVM_VVC_Files = @(
 	"uvvm_vvc_framework\src\ti_data_stack_pkg.vhd"
 	"uvvm_vvc_framework\src\ti_uvvm_engine.vhd"
 )
-$VIP_Files = @{
-	"AXILite" = @{
-		"Variable" =	"UVVM_VIP_AXI_Lite";
-		"Library" =		"bitvis_vip_axilite";
-		"Files" =			@(
-			"bitvis_vip_axilite\src\axilite_bfm_pkg.vhd",
-			"bitvis_vip_axilite\src\vvc_cmd_pkg.vhd",
-			"uvvm_vvc_framework\src_target_dependent\td_target_support_pkg.vhd",
-			"uvvm_vvc_framework\src_target_dependent\td_vvc_framework_common_methods_pkg.vhd",
-			"bitvis_vip_axilite\src\vvc_methods_pkg.vhd",
-			"uvvm_vvc_framework\src_target_dependent\td_queue_pkg.vhd",
-			"uvvm_vvc_framework\src_target_dependent\td_vvc_entity_support_pkg.vhd",
-			"bitvis_vip_axilite\src\axilite_vvc.vhd"
-		)
-	};
-	"AXIStream" = @{
-		"Variable" =	"UVVM_VIP_AXI_Stream";
-		"Library" =		"bitvis_vip_axistream";
-		"Files" =			@(
-			"bitvis_vip_axistream\src\axistream_bfm_pkg.vhd",
-			"bitvis_vip_axistream\src\vvc_cmd_pkg.vhd",
-			"uvvm_vvc_framework\src_target_dependent\td_target_support_pkg.vhd",
-			"uvvm_vvc_framework\src_target_dependent\td_vvc_framework_common_methods_pkg.vhd",
-			"bitvis_vip_axistream\src\vvc_methods_pkg.vhd",
-			"uvvm_vvc_framework\src_target_dependent\td_queue_pkg.vhd",
-			"uvvm_vvc_framework\src_target_dependent\td_vvc_entity_support_pkg.vhd",
-			"bitvis_vip_axistream\src\axistream_vvc.vhd"
-		)
-	};
-	"I2C" = @{
-		"Variable" =	"UVVM_VIP_I2C";
-		"Library" =		"bitvis_vip_i2c";
-		"Files" =			@(
-			"bitvis_vip_i2c\src\i2c_bfm_pkg.vhd",
-			"bitvis_vip_i2c\src\vvc_cmd_pkg.vhd",
-			"uvvm_vvc_framework\src_target_dependent\td_target_support_pkg.vhd",
-			"uvvm_vvc_framework\src_target_dependent\td_vvc_framework_common_methods_pkg.vhd",
-			"bitvis_vip_i2c\src\vvc_methods_pkg.vhd",
-			"uvvm_vvc_framework\src_target_dependent\td_queue_pkg.vhd",
-			"uvvm_vvc_framework\src_target_dependent\td_vvc_entity_support_pkg.vhd",
-			"bitvis_vip_i2c\src\i2c_vvc.vhd"
-		)
-	};
-	"SBI" = @{
-		"Variable" =	"UVVM_VIP_SBI";
-		"Library" =		"bitvis_vip_sbi";
-		"Files" =			@(
-			"bitvis_vip_sbi/src/sbi_bfm_pkg.vhd",
-			"bitvis_vip_sbi/src/vvc_cmd_pkg.vhd",
-			"uvvm_vvc_framework/src_target_dependent/td_target_support_pkg.vhd",
-			"uvvm_vvc_framework/src_target_dependent/td_vvc_framework_common_methods_pkg.vhd",
-			"bitvis_vip_sbi/src/vvc_methods_pkg.vhd",
-			"uvvm_vvc_framework/src_target_dependent/td_queue_pkg.vhd",
-			"uvvm_vvc_framework/src_target_dependent/td_vvc_entity_support_pkg.vhd",
-			"bitvis_vip_sbi/src/sbi_vvc.vhd"
-		)
-	};
-	"UART" = @{
-		"Variable" =	"UVVM_VIP_UART";
-		"Library" =		"bitvis_vip_uart";
-		"Files" =			@(
-			"bitvis_vip_uart\src\uart_bfm_pkg.vhd",
-			"bitvis_vip_uart\src\vvc_cmd_pkg.vhd",
-			"uvvm_vvc_framework\src_target_dependent\td_target_support_pkg.vhd",
-			"uvvm_vvc_framework\src_target_dependent\td_vvc_framework_common_methods_pkg.vhd",
-			"bitvis_vip_uart\src\vvc_methods_pkg.vhd",
-			"uvvm_vvc_framework\src_target_dependent\td_queue_pkg.vhd",
-			"uvvm_vvc_framework\src_target_dependent\td_vvc_entity_support_pkg.vhd",
-			"bitvis_vip_uart\src\uart_rx_vvc.vhd",
-			"bitvis_vip_uart\src\uart_tx_vvc.vhd",
-			"bitvis_vip_uart\src\uart_vvc.vhd"
-		)
+
+
+Write-Host "Reading VIP compile order files..." -ForegroundColor Yellow
+$VIP_Files = @{}
+foreach ($VIPDirectory in (Get-ChildItem -Path $SourceDirectory -Directory "*VIP*"))
+{	$VIPName =      $VIPDirectory.Name
+	$VIPVariable =  $VIPName.Substring(7).ToUpper().Replace("AXI", "AXI_")
+	
+	$EnableVerbose -and (Write-Host "  Found VIP: $VIPName"		-ForegroundColor Gray                                                                 ) | Out-Null
+	$EnableDebug -and   (Write-Host "    Reading compile order from '$SourceDirectory\$VIPName\script\compile_order.txt'" -ForegroundColor DarkGray	) | Out-Null
+
+	$VIPFiles = Get-Content "$SourceDirectory\$VIPName\script\compile_order.txt" | %{ Resolve-Path "$SourceDirectory\$VIPName\script\$_" }
+	if ($EnableDebug)
+	{	foreach ($File in $VIPFiles)
+		{	Write-Host "      $File" -ForegroundColor DarkGray }
 	}
+	$VIP_Files[$VIPName] = @{
+		"Variable" =	"UVVM_$VIPVariable";
+		"Library" =		$VIPName;
+		"Files" =			$VIPFiles
+	};
 }
+
 
 # UVVM packages
 # ==============================================================================
@@ -270,7 +230,7 @@ if ((-not $StopCompiling) -and $UVVM_VCC_Framework)
 foreach ($vip in $VIP_Files.Keys)
 {	if ((-not $StopCompiling) -and (Get-Variable $VIP_Files[$vip]["Variable"] -ValueOnly))
 	{	$Library =			$VIP_Files[$vip]["Library"]
-		$SourceFiles =	$VIP_Files[$vip]["Files"] | % { "$SourceDirectory\$_" }
+		$SourceFiles =	$VIP_Files[$vip]["Files"] #| % { "$SourceDirectory\$_" }
 
 		$ErrorCount += 0
 		Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug

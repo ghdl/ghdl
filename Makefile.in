@@ -21,6 +21,7 @@ build=@build@
 srcdir=@srcdir@
 abs_srcdir=@abs_srcdir@
 GNATMAKE=@GNATMAKE@
+MAKE=@MAKE@
 prefix=@prefix@
 backend=@backend@
 libdirsuffix=@libdirsuffix@
@@ -35,6 +36,9 @@ LIBBACKTRACE=@backtrace_lib@
 llvm_be=@llvm_be@
 build_mode=@build_mode@
 enable_werror=@enable_werror@
+enable_checks=@enable_checks@
+enable_openieee=@enable_openieee@
+enable_python=@enable_python@
 
 INSTALL_PROGRAM=install -m 755
 INSTALL_DATA=install -m 644
@@ -52,15 +56,17 @@ GRT_RANLIB=ranlib
 
 VHDL_LIB_DIR=$(prefix)/$(libdirsuffix)
 
-# Debug
-OPT_FLAGS=-g
-ADA_FLAGS=-gnata
-LIB_CFLAGS=
-
-# Optimize, do not forget to use MODE=--genfast for iirs.adb.
-#ADA_FLAGS+=-gnatpn
-#OPT_FLAGS+=-O
-#LIB_CFLAGS=-O
+ifeq "$(enable_checks)" "true"
+ # Debug + checks
+ OPT_FLAGS=-g
+ ADA_FLAGS=-gnata
+ LIB_CFLAGS=
+else
+ # Optimize + no checks
+ ADA_FLAGS+=-gnatpn
+ OPT_FLAGS+=-O
+ LIB_CFLAGS=-O
+endif
 
 # Profiling.
 #ADA_FLAGS+=-gnatn
@@ -106,9 +112,10 @@ LIBDST_DIR:=$(libdirsuffix)
 LIBVHDL_FLAGS_TO_PASS=\
  LIBSRC_DIR="$(LIBSRC_DIR)" \
  LIBDST_DIR="$(LIBDST_DIR)" \
+ enable_openieee="$(enable_openieee)" \
  LN="$(LN)" CP="$(CP)" MKDIR="$(MKDIR)"
 
-all: Makefile all.$(backend)
+all: Makefile all.$(backend) all.libghdl.$(enable_python)
 
 install: install.$(backend)
 
@@ -133,12 +140,12 @@ Makefile: $(srcdir)/Makefile.in ./config.status
 GHDL_COMMON_INCFLAGS=-aI$(srcdir)/src -aI$(srcdir)/src/vhdl -aI$(srcdir)/src/grt -aI$(srcdir)/src/psl -aI$(srcdir)/src/vhdl/translate
 
 GRTSRCDIR=$(abs_srcdir)/src/grt
-include $(GRTSRCDIR)/Makefile.inc
+include $(srcdir)/src/grt/Makefile.inc
 
 version.tmp: $(srcdir)/src/version.in force
 #	Create version.tmp from version.in, using git date/hash
-	if [ -d $(srcdir)/.git ]; then \
-	  desc=`cd $(srcdir); git describe --dirty`; \
+	if test -d $(srcdir)/.git \
+	   && desc=`cd $(srcdir); git describe --dirty`; then \
 	  $(SED) -e "s/[(].*[)]/($$desc)/" < $< > $@; \
 	else \
 	  $(CP) $< $@; \
@@ -182,10 +189,10 @@ gcc_vhdl_dir=$(gcc_src_dir)/gcc/vhdl
 
 all.gcc:
 	@echo "For installing sources in gcc, do:"
-	@echo "1) make copy-sources"
+	@echo "1) $(MAKE) copy-sources"
 	@echo "2) configure, build and install gcc"
-	@echo "3) make ghdllib"
-	@echo "4) make install"
+	@echo "3) $(MAKE) ghdllib"
+	@echo "4) $(MAKE) install"
 
 copy-sources.gcc: version.ads
 	$(RM) -rf $(gcc_vhdl_dir)
@@ -203,10 +210,10 @@ copy-sources.gcc: version.ads
 	$(CP) -p $(srcdir)/src/ortho/gcc/*.opt $(gcc_vhdl_dir)
 	base_ver=`cat $(gcc_src_dir)/gcc/BASE-VER`; \
 	case $$base_ver in \
-	 4.9*) gcc_ortho_lang=ortho-lang-49.c ;; \
-	 5.*)  gcc_ortho_lang=ortho-lang-5.c ;; \
-	 6.*)  gcc_ortho_lang=ortho-lang-6.c ;; \
-	 7.*)  gcc_ortho_lang=ortho-lang-7.c ;; \
+	 4.9*)     gcc_ortho_lang=ortho-lang-49.c ;; \
+	 5.*)      gcc_ortho_lang=ortho-lang-5.c ;; \
+	 6 | 6.*)  gcc_ortho_lang=ortho-lang-6.c ;; \
+	 7.*)      gcc_ortho_lang=ortho-lang-7.c ;; \
 	 *) echo "Mismatch gcc version from $(gcc_src_dir)"; \
 	    echo "Need gcc version 4.9.x, 5.x, 6.x or 7.x"; \
 	    exit 1 ;; \
@@ -221,8 +228,13 @@ copy-sources.gcc: version.ads
 	$(CP) -p $(srcdir)/dist/gcc/lang-options.h $(gcc_vhdl_dir)
 	$(CP) -p $(srcdir)/dist/gcc/lang-specs.h $(gcc_vhdl_dir)
 
+# To build vhdl libs using a non-installed ghdl, define GHDL_GCC_BIN to the
+# path of ghdl and GHDL1_GCC_BIN to path of ghdl1
+GHDL_GCC_BIN=$(bindir)/ghdl$(EXEEXT)
+GHDL1_GCC_BIN=  # --GHDL1=/path/to/ghdl1
+
 libs.vhdl.gcc:
-	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL=$(bindir)/ghdl$(EXEEXT) GHDL_FLAGS="$(LIB_CFLAGS)" vhdl.libs.all libs.vhdl.standard
+	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL="$(GHDL_GCC_BIN)" GHDL_FLAGS="$(GHDL1_GCC_BIN) $(LIB_CFLAGS)" vhdl.libs.all libs.vhdl.standard
 
 ghdllib: libs.vhdl.gcc $(libdirsuffix)/libgrt.a
 
@@ -289,7 +301,7 @@ ghdl1-llvm$(EXEEXT): version.ads force
 	$(MAKE) -f $(srcdir)/src/ortho/$(llvm_be)/Makefile \
 	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
 	 GNAT_FLAGS="$(GHDL_LLVM_INCFLAGS) $(GNATFLAGS)" LDFLAGS="$(LDFLAGS)" \
-	 LLVM_CONFIG="$(LLVM_CONFIG)" CXX="$(CXX)" \
+	 LLVM_CONFIG="$(LLVM_CONFIG)" CXX="$(CXX)" GNATMAKE="$(GNATMAKE)" \
 	 all
 
 oread-llvm$(EXEEXT): force
@@ -315,17 +327,21 @@ ghdl_simul$(EXEEXT): $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) version.ads force
 libs.vhdl.simul: ghdl_simul$(EXEEXT)
 	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL=$(PWD)/ghdl_simul$(EXEEXT) GHDL_FLAGS="" VHDLLIBS_COPY_OBJS=no vhdl.libs.all
 
-################ mhdlsim (library for the vhdl part) ####################
+install.simul.program: install.dirs ghdl_simul$(EXEEXT)
+	$(INSTALL_PROGRAM) ghdl_simul$(EXEEXT) $(DESTDIR)$(bindir)/ghdl$(EXEEXT)
 
-GHDL_MHDLSIM_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/mhdlsim -aI$(srcdir)/src/ghdldrv -aI$(srcdir)/src/vhdl/simulate
+install.simul: install.simul.program install.vhdllib
 
-libmhdlsimvhdl.a:  $(GRT_ADD_OBJS) $(GRT_SRC_DEPS) version.ads force
-	$(GNATMAKE) -c mhdlsim $(GNATFLAGS) $(GHDL_MHDLSIM_INCFLAGS)
-	gnatbind -Lmhdlsim_vhdl_ mhdlsim.ali -O > mhdlsim.files
-	gnatbind -Lmhdlsim_vhdl_ mhdlsim.ali -K -Z > mhdlsim.link
-	$(GNATMAKE) -c b~mhdlsim.adb
-	$(RM) -f $@
-	ar rc $@ b~mhdlsim.o `cat mhdlsim.files` $(GRT_ADD_OBJS)
+
+################ libghdl (library for the vhdl part) ####################
+
+LIBGHDL_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/vhdl/python -aI$(srcdir)/src/ghdldrv
+
+libghdl$(SOEXT): $(GRT_SRC_DEPS) version.ads force
+	$(GNATMAKE) -I- -aI. -D pic -z libghdl -o $@ $(GNATFLAGS) $(PIC_FLAGS) -gnat05 $(LIBGHDL_INCFLAGS) -bargs -shared -Llibghdl_ -largs -shared $(SHLIB_FLAGS)
+
+all.libghdl.true: libghdl$(SOEXT)
+all.libghdl.false:
 
 ################ ghdlsynth library ######################################
 
@@ -393,15 +409,30 @@ install.vpi: all.vpi install.dirs
 	$(INSTALL_DATA) -p libghdlvpi$(SOEXT) $(DESTDIR)$(libdir)/
 	$(INSTALL_DATA) -p $(GRTSRCDIR)/vpi_user.h $(DESTDIR)$(incdir)/
 
+install.vpi.local: all.vpi
+	$(MKDIR) -p include lib
+	$(INSTALL_DATA) -p $(GRTSRCDIR)/vpi_user.h include/
+	$(INSTALL_DATA) -p libghdlvpi$(SOEXT) lib/
+
 ################ Libraries ###############################################
 
 LIBSRC_DIR:=$(srcdir)/libraries
 LIBDST_DIR:=$(libdirsuffix)
 
-VHDLLIB_SUBDIRS= src/std src/ieee src/vital95 src/vital2000 src/synopsys src/mentor src/ieee2008 \
-  v87/std v87/ieee v87/synopsys \
-  v93/std v93/ieee v93/mentor v93/synopsys \
-  v08/std v08/ieee v08/synopsys \
+VHDLLIB_SUBDIRS_COMMON= src/std src/synopsys src/openieee \
+  std/v87 ieee/v87 synopsys/v87 \
+  std/v93 ieee/v93 synopsys/v93 \
+  std/v08
+
+VHDLLIB_SUBDIRS_FULL= src/ieee src/vital95 src/vital2000 src/mentor \
+  src/ieee2008 \
+  mentor/v93 ieee/v08 synopsys/v08
+
+ifeq ($(enable_openieee),false)
+VHDLLIB_SUBDIRS=$(VHDLLIB_SUBDIRS_COMMON) $(VHDLLIB_SUBDIRS_FULL)
+else
+VHDLLIB_SUBDIRS=$(VHDLLIB_SUBDIRS_COMMON)
+endif
 
 install.dirs:
 #	Use -p to create parents and to avoid error if existing.
@@ -412,6 +443,7 @@ install.dirs:
 	$(MKDIR) -p $(DESTDIR)$(incdir)
 
 install.vhdllib: install.dirs
+#	Libraries (only if not empty)
 	for d in $(VHDLLIB_SUBDIRS); do \
 	  $(MKDIR) -p $(DESTDIR)$(VHDL_LIB_DIR)/$$d; \
 	  $(INSTALL_DATA) -p \
@@ -446,13 +478,23 @@ distclean: clean
 clean-c: force
 	$(RM) -f memsegs_c.o chkstk.o jumps.o times.o grt-cbinding.o grt-cvpi.o
 	$(RM) -f fstapi.o fastlz.o lz4.o
+	$(RM) -f pic/times.o pic/grt-cvpi.o pic/jumps.o
 
 create-dirs: force
-	$(MKDIR) -p $(VHDL_LIB_DIR)
 	for d in $(VHDLLIB_SUBDIRS); do \
 	  $(MKDIR) -p $(LIBDST_DIR)/$$d; \
 	done
 
+# Remove non GPL compatible source files
+clean-pure-gpl:
+#       IEEE 1164 or vital libraries aren't GPL compatible
+	$(RM) -rf libraries/ieee libraries/ieee2008
+	$(RM) -rf libraries/vital95 libraries/vital2000
+#	Don't promote deprecated mentor libraries; synopsys one is ok
+	$(RM) -rf libraries/mentor
+#	The GNA testsuite contains open-source reproducer that may not be GPL.
+	$(RM) -rf testsuite/gna
+
 force:
 
-.PHONY: force clean distclean clean-c
+.PHONY: force clean distclean clean-c clean-pure-gpl

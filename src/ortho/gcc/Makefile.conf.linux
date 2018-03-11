@@ -2,3 +2,5 @@
 # Copy this file to Makefile.conf and edit as necessary for your platform
 
 HOST_LIBS = -ldl -lstdc++
+
+ortho_lang_c=ortho-lang-7.c

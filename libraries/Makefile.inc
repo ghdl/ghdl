@@ -28,14 +28,30 @@
 
 vhdl.libs.all: vhdl.libs.v87 vhdl.libs.v93 vhdl.libs.v08
 
-vhdl.libs.v93: std.v93 ieee.v93 synopsys.v93 mentor.v93
-vhdl.libs.v87: std.v87 ieee.v87 synopsys.v87
-vhdl.libs.v08: std.v08 ieee.v08 synopsys.v08
+enable_openieee=false
 
-ANALYZE=$(GHDL) -a $(GHDL_FLAGS)
-ANALYZE_DEP=$(GHDL)
+ifeq ($(enable_openieee),false)
+# Full libraries
+vhdl.libs.v87: std.v87 ieee.v87 synopsys.v87
+vhdl.libs.v93: std.v93 ieee.v93 synopsys.v93 mentor.v93
+vhdl.libs.v08: std.v08 ieee.v08 synopsys.v08
+else
+# GPL compatible
+vhdl.libs.v87: std.v87 ieee.v87 synopsys.v87
+vhdl.libs.v93: std.v93 ieee.v93 synopsys.v93
+vhdl.libs.v08: std.v08
+endif
 
 STD_SRCS := std/textio.vhdl std/textio_body.vhdl
+SYNOPSYS_BSRCS := synopsys/std_logic_arith.vhdl \
+  synopsys/std_logic_unsigned.vhdl \
+  synopsys/std_logic_signed.vhdl
+SYNOPSYS_V_BSRCS := synopsys/std_logic_misc.vhdl \
+  synopsys/std_logic_misc-body.vhdl
+SYNOPSYS8793_BSRCS := synopsys/std_logic_textio.vhdl
+MENTOR_BSRCS := mentor/std_logic_arith.vhdl mentor/std_logic_arith_body.vhdl
+
+ifeq ($(enable_openieee),false)
 IEEE_SRCS := ieee/std_logic_1164.vhdl ieee/std_logic_1164_body.vhdl \
   ieee/numeric_bit.vhdl ieee/numeric_bit-body.vhdl \
   ieee/numeric_std.vhdl ieee/numeric_std-body.vhdl
@@ -46,11 +62,6 @@ VITAL95_BSRCS := vital95/vital_timing.vhdl vital95/vital_timing_body.vhdl \
 VITAL2000_BSRCS := vital2000/timing_p.vhdl vital2000/timing_b.vhdl \
   vital2000/prmtvs_p.vhdl vital2000/prmtvs_b.vhdl \
   vital2000/memory_p.vhdl vital2000/memory_b.vhdl
-SYNOPSYS_BSRCS := synopsys/std_logic_arith.vhdl \
-  synopsys/std_logic_unsigned.vhdl \
-  synopsys/std_logic_signed.vhdl
-SYNOPSYS8793_BSRCS := synopsys/std_logic_textio.vhdl synopsys/std_logic_misc.vhdl synopsys/std_logic_misc-body.vhdl
-MENTOR_BSRCS := mentor/std_logic_arith.vhdl mentor/std_logic_arith_body.vhdl
 IEEE08_BSRCS := \
   ieee2008/std_logic_1164.vhdl ieee2008/std_logic_1164-body.vhdl \
   ieee2008/std_logic_textio.vhdl \
@@ -66,15 +77,27 @@ IEEE08_BSRCS := \
   ieee2008/float_generic_pkg.vhdl ieee2008/float_generic_pkg-body.vhdl \
   ieee2008/float_pkg.vhdl \
   ieee2008/ieee_bit_context.vhdl ieee2008/ieee_std_context.vhdl
+else
+IEEE_SRCS := openieee/std_logic_1164.vhdl openieee/std_logic_1164-body.vhdl \
+  openieee/numeric_bit.vhdl openieee/numeric_bit-body.vhdl \
+  openieee/numeric_std.vhdl openieee/numeric_std-body.vhdl
+MATH_SRCS := openieee/math_real.vhdl openieee/math_real-body.vhdl
+VITAL95_BSRCS :=
+VITAL2000_BSRCS :=
+IEEE08_BSRCS :=
+endif
+
+ANALYZE=$(GHDL) -a $(GHDL_FLAGS)
+ANALYZE_DEP=$(GHDL)
 
 STD87_BSRCS := $(STD_SRCS:.vhdl=.v87)
 STD93_BSRCS := $(STD_SRCS:.vhdl=.v93)
 STD08_BSRCS := $(STD_SRCS:.vhdl=.v08) std/env.vhdl std/env_body.vhdl
 IEEE87_BSRCS := $(IEEE_SRCS:.vhdl=.v87)
 IEEE93_BSRCS := $(IEEE_SRCS:.vhdl=.v93) $(MATH_SRCS)
-SYNOPSYS87_BSRCS := $(SYNOPSYS_BSRCS) $(SYNOPSYS8793_BSRCS)
-SYNOPSYS93_BSRCS := $(SYNOPSYS_BSRCS) $(SYNOPSYS8793_BSRCS)
-SYNOPSYS08_BSRCS := $(SYNOPSYS_BSRCS)
+SYNOPSYS87_BSRCS := $(SYNOPSYS_BSRCS) $(SYNOPSYS_V_BSRCS) $(SYNOPSYS8793_BSRCS)
+SYNOPSYS93_BSRCS := $(SYNOPSYS_BSRCS) $(SYNOPSYS_V_BSRCS) $(SYNOPSYS8793_BSRCS)
+SYNOPSYS08_BSRCS := $(SYNOPSYS_BSRCS) $(SYNOPSYS_V_BSRCS:.vhdl=.v08)
 MENTOR93_BSRCS := $(MENTOR_BSRCS)
 
 .PREFIXES: .vhdl .v93 .v87 .v08
@@ -85,23 +108,21 @@ SED_V93:= sed -e '/--V87/s/^/  --/' \
 SED_V87:= sed -e '/--!V87/s/^/  --/' -e '/--START-!V87/,/--END-!V87/s/^/--/' \
  -e '/--START-V08/,/--END-V08/s/^/--/'
 
-SED_V08:= sed -e '/--V87/s/^/  --/'
+SED_V08:= sed -e '/--V87/s/^/  --/' -e '/--!V08/s/^/  --/' \
+ -e '/--START-!V08/,/--END-!V08/s/^/--/'
 
-LIB87_DIR:=$(LIBDST_DIR)/v87
-STD87_DIR:=$(LIB87_DIR)/std
-IEEE87_DIR:=$(LIB87_DIR)/ieee
-SYN87_DIR:=$(LIB87_DIR)/synopsys
+STD87_DIR:=$(LIBDST_DIR)/std/v87
+IEEE87_DIR:=$(LIBDST_DIR)/ieee/v87
+SYN87_DIR:=$(LIBDST_DIR)/synopsys/v87
 
-LIB93_DIR:=$(LIBDST_DIR)/v93
-STD93_DIR:=$(LIB93_DIR)/std
-IEEE93_DIR:=$(LIB93_DIR)/ieee
-SYN93_DIR:=$(LIB93_DIR)/synopsys
-MENTOR93_DIR:=$(LIB93_DIR)/mentor
+STD93_DIR:=$(LIBDST_DIR)/std/v93
+IEEE93_DIR:=$(LIBDST_DIR)/ieee/v93
+SYN93_DIR:=$(LIBDST_DIR)/synopsys/v93
+MENTOR93_DIR:=$(LIBDST_DIR)/mentor/v93
 
-LIB08_DIR:=$(LIBDST_DIR)/v08
-STD08_DIR:=$(LIB08_DIR)/std
-IEEE08_DIR:=$(LIB08_DIR)/ieee
-SYN08_DIR:=$(LIB08_DIR)/synopsys
+STD08_DIR:=$(LIBDST_DIR)/std/v08
+IEEE08_DIR:=$(LIBDST_DIR)/ieee/v08
+SYN08_DIR:=$(LIBDST_DIR)/synopsys/v08
 
 ANALYZE87:=$(ANALYZE) --std=87
 ANALYZE93:=$(ANALYZE) --std=93
@@ -139,10 +160,13 @@ $(STD87_DIR)/std-obj87.cf: $(ANALYZE_DEP) $(STD87_SRCS)
 $(LIBDST_DIR)/src/ieee/%.v87: $(LIBSRC_DIR)/ieee/%.vhdl
 	$(SED_V87) < $< > $@
 
+$(LIBDST_DIR)/src/openieee/%.v87: $(LIBSRC_DIR)/openieee/%.v87
+	$(CP) $< $@
+
 $(LIBDST_DIR)/src/vital95/%.vhdl: $(LIBSRC_DIR)/vital95/%.vhdl
 	$(CP) $< $@
 
-ANALYZE_IEEE87=$(ANALYZE87) -P../std --work=ieee
+ANALYZE_IEEE87=$(ANALYZE87) -P../.. --work=ieee
 
 ieee.v87: $(IEEE87_DIR)/ieee-obj87.cf
 
@@ -162,12 +186,12 @@ synopsys.v87: $(SYN87_DIR)/ieee-obj87.cf
 $(SYN87_DIR)/ieee-obj87.cf: $(ANALYZE_DEP) $(SYNOPSYS87_SRCS) $(IEEE87_DIR)/ieee-obj87.cf
 	$(RM) -f $@
 	cd $(SYN87_DIR); \
-	$(CP) ../ieee/ieee-obj87.cf . ; \
+	$(CP) ../../ieee/v87/ieee-obj87.cf . ; \
 	test x$(VHDLLIBS_COPY_OBJS) = "xno" || \
 	for i in $(IEEE_SRCS) $(VITAL95_SRCS); do \
 	  b=`basename $$i .vhdl`; \
-	  if [ -f ../ieee/$$b.o ]; then \
-	    $(RM) -f $$b.o; $(LN) ../ieee/$$b.o $$b.o || exit 1; \
+	  if [ -f ../../ieee/v87/$$b.o ]; then \
+	    $(RM) -f $$b.o; $(LN) ../../ieee/v87/$$b.o $$b.o || exit 1; \
 	  fi; \
 	done; \
 	for i in $(SYNOPSYS87_BSRCS); do \
@@ -197,10 +221,16 @@ $(LIBDST_DIR)/src/ieee/%.v93: $(LIBSRC_DIR)/ieee/%.vhdl
 $(LIBDST_DIR)/src/ieee/%.vhdl: $(LIBSRC_DIR)/ieee/%.vhdl
 	$(CP) $< $@
 
+$(LIBDST_DIR)/src/openieee/%.vhdl: $(LIBSRC_DIR)/openieee/%.vhdl
+	$(CP) $< $@
+
+$(LIBDST_DIR)/src/openieee/%.v93: $(LIBSRC_DIR)/openieee/%.v93
+	$(CP) $< $@
+
 $(LIBDST_DIR)/src/vital2000/%.vhdl: $(LIBSRC_DIR)/vital2000/%.vhdl
 	$(CP) $< $@
 
-ANALYZE_IEEE93=$(ANALYZE93) -P../std --work=ieee
+ANALYZE_IEEE93=$(ANALYZE93) -P../.. --work=ieee
 
 ieee.v93: $(IEEE93_DIR)/ieee-obj93.cf
 
@@ -217,12 +247,12 @@ synopsys.v93: $(SYN93_DIR)/ieee-obj93.cf
 $(SYN93_DIR)/ieee-obj93.cf: $(ANALYZE_DEP) $(SYNOPSYS93_SRCS) $(IEEE93_DIR)/ieee-obj93.cf
 	$(RM) -f $@
 	cd $(SYN93_DIR); \
-	$(CP) ../ieee/ieee-obj93.cf .; \
+	$(CP) ../../ieee/v93/ieee-obj93.cf .; \
 	test x$(VHDLLIBS_COPY_OBJS) = "xno" || \
 	for i in $(IEEE_SRCS) $(MATH_SRCS) $(VITAL2000_SRCS); do \
 	  b=`basename $$i .vhdl`; \
-	  if [ -f ../ieee/$$b.o ]; then \
-	    $(RM) -f $$b.o; $(LN) ../ieee/$$b.o $$b.o || exit 1; \
+	  if [ -f ../../ieee/v93/$$b.o ]; then \
+	    $(RM) -f $$b.o; $(LN) ../../ieee/v93/$$b.o $$b.o || exit 1; \
 	  fi; \
 	done; \
 	for i in $(SYNOPSYS93_BSRCS); do \
@@ -238,12 +268,12 @@ mentor.v93: $(MENTOR93_DIR)/ieee-obj93.cf
 $(MENTOR93_DIR)/ieee-obj93.cf: $(ANALYZE_DEP) $(MENTOR93_SRCS) $(IEEE93_DIR)/ieee-obj93.cf
 	$(RM) -f $@
 	cd $(MENTOR93_DIR); \
-	$(CP) ../ieee/ieee-obj93.cf . ;\
+	$(CP) ../../ieee/v93/ieee-obj93.cf . ;\
 	test x$(VHDLLIBS_COPY_OBJS) = "xno" || \
 	for i in $(IEEE_SRCS) $(MATH_SRCS) $(VITAL2000_SRCS); do \
 	  b=`basename $$i .vhdl`; \
-	  if [ -f ../ieee/$$b.o ]; then \
-	    $(RM) -f $$b.o; $(LN) ../ieee/$$b.o $$b.o || exit 1; \
+	  if [ -f ../../ieee/v93/$$b.o ]; then \
+	    $(RM) -f $$b.o; $(LN) ../../ieee/v93/$$b.o $$b.o || exit 1; \
 	  fi; \
 	done ; \
 	for i in $(MENTOR93_BSRCS); do \
@@ -272,8 +302,8 @@ $(STD08_DIR)/std-obj08.cf: $(ANALYZE_DEP) $(STD08_SRCS)
 $(LIBDST_DIR)/src/ieee2008/%.vhdl: $(LIBSRC_DIR)/ieee2008/%.vhdl
 	$(CP) $< $@
 
-ANALYZE_IEEE08=$(ANALYZE08) -P../std --work=ieee
-ANALYZE_VITAL08=$(ANALYZE08) -P../std --work=ieee -frelaxed-rules
+ANALYZE_IEEE08=$(ANALYZE08) -P../.. --work=ieee
+ANALYZE_VITAL08=$(ANALYZE08) -P../.. --work=ieee -frelaxed-rules
 
 ieee.v08: $(IEEE08_DIR)/ieee-obj08.cf
 
@@ -289,17 +319,20 @@ $(IEEE08_DIR)/ieee-obj08.cf: $(ANALYZE_DEP) $(IEEE08_SRCS) $(STD08_DIR)/std-obj0
 	  echo $$cmd; eval $$cmd || exit 1; \
 	done
 
+$(LIBDST_DIR)/src/synopsys/%.v08: $(LIBSRC_DIR)/synopsys/%.vhdl
+	$(SED_V08) < $< > $@
+
 synopsys.v08: $(SYN08_DIR)/ieee-obj08.cf
 
 $(SYN08_DIR)/ieee-obj08.cf: $(ANALYZE_DEP) $(SYNOPSYS08_SRCS) $(IEEE08_DIR)/ieee-obj08.cf
 	$(RM) -f $@
 	cd $(SYN08_DIR); \
-	$(CP) ../ieee/ieee-obj08.cf .; \
+	$(CP) ../../ieee/v08/ieee-obj08.cf .; \
 	test x$(VHDLLIBS_COPY_OBJS) = "xno" || \
 	for i in $(IEEE08_SRCS) $(VITAL2000_SRCS); do \
 	  b=`basename $$i .vhdl`; \
-	  if [ -f ../ieee/$$b.o ]; then \
-	    $(RM) -f $$b.o; $(LN) ../ieee/$$b.o $$b.o || exit 1; \
+	  if [ -f ../../ieee/v08/$$b.o ]; then \
+	    $(RM) -f $$b.o; $(LN) ../../ieee/v08/$$b.o $$b.o || exit 1; \
 	  fi; \
 	done; \
 	for i in $(SYNOPSYS08_BSRCS); do \
@@ -311,15 +344,15 @@ $(SYN08_DIR)/ieee-obj08.cf: $(ANALYZE_DEP) $(SYNOPSYS08_SRCS) $(IEEE08_DIR)/ieee
 
 ANALYZE_STD=$(GHDL) --bootstrap-standard $(GHDL_FLAGS)
 
-$(LIB93_DIR)/std/std_standard.o: $(GHDL) std.v93
-	cd $(LIB93_DIR)/std; $(ANALYZE_STD) --std=93
+$(STD87_DIR)/std_standard.o: $(GHDL) std.v87
+	cd $(STD87_DIR); $(ANALYZE_STD) --std=87
 
-$(LIB87_DIR)/std/std_standard.o: $(GHDL) std.v87
-	cd $(LIB87_DIR)/std; $(ANALYZE_STD) --std=87
+$(STD93_DIR)/std_standard.o: $(GHDL) std.v93
+	cd $(STD93_DIR); $(ANALYZE_STD) --std=93
 
-$(LIB08_DIR)/std/std_standard.o: $(GHDL) std.v08
-	cd $(LIB08_DIR)/std; $(ANALYZE_STD) --std=08
+$(STD08_DIR)/std_standard.o: $(GHDL) std.v08
+	cd $(STD08_DIR); $(ANALYZE_STD) --std=08
 
-libs.vhdl.standard: $(LIB93_DIR)/std/std_standard.o \
- $(LIB87_DIR)/std/std_standard.o \
- $(LIB08_DIR)/std/std_standard.o
+libs.vhdl.standard: $(STD93_DIR)/std_standard.o \
+ $(STD87_DIR)/std_standard.o \
+ $(STD08_DIR)/std_standard.o

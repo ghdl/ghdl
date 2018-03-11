@@ -187,7 +187,7 @@ fi
 
 DefaultDirectories=("/opt/Xilinx/Vivado" "/opt/xilinx/Vivado")
 if [ ! -z $XILINX_VIVADO ]; then
-	EnvSourceDir=$XILINX_VIVADO/vhdl/src
+	EnvSourceDir=$XILINX_VIVADO/${SourceDirectories[XilinxVivado]}
 else
 	for DefaultDir in ${DefaultDirectories[@]}; do
 		for Major in 2017 2016 2015 2014; do

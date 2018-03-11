@@ -1,0 +1,16 @@
+# [run] Ubuntu 14
+
+FROM ubuntu:trusty AS mcode
+
+RUN apt-get update -qq \
+  && apt-get -y install --no-install-recommends \
+            libgnat-4.6 gcc libc6-dev \
+  && apt-get autoclean && apt-get clean && apt-get autoremove
+
+
+FROM mcode AS llvm-3.8
+
+RUN apt-get update -qq \
+  && apt-get -y install --no-install-recommends \
+            libllvm-3.8 zlib1g-dev \
+  && apt-get autoclean && apt-get clean && apt-get autoremove

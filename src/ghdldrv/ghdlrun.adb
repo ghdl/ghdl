@@ -66,6 +66,17 @@ with Foreigns;
 with Grtlink;
 
 package body Ghdlrun is
+   --  Elaboration mode.
+   type Elab_Mode_Type is
+     (--  Static elaboration (or pre-elaboration).
+      Elab_Static,
+
+      --  Dynamic elaboration: design is elaborated just before being run.
+      Elab_Dynamic);
+
+   --  Default elaboration mode is dynamic.
+   Elab_Mode : constant Elab_Mode_Type := Elab_Dynamic;
+
    procedure Foreign_Hook (Decl : Iir;
                            Info : Translation.Foreign_Info_Type;
                            Ortho : O_Dnode);
@@ -90,7 +101,16 @@ package body Ghdlrun is
       Ortho_Jit.Init;
 
       Translation.Initialize;
-      Canon.Canon_Flag_Add_Labels := True;
+
+      case Elab_Mode is
+         when Elab_Static =>
+            Canon.Canon_Flag_Add_Labels := True;
+            Canon.Canon_Flag_Sequentials_Stmts := True;
+            Canon.Canon_Flag_Expressions := True;
+            Canon.Canon_Flag_All_Sensitivity := True;
+         when Elab_Dynamic =>
+            Canon.Canon_Flag_Add_Labels := True;
+      end case;
    end Compile_Init;
 
    procedure Compile_Elab
@@ -103,7 +123,12 @@ package body Ghdlrun is
       end if;
 
       Flags.Flag_Elaborate := True;
-      Translation.Elaborate (Prim_Name.all, Sec_Name.all, "", True);
+      case Elab_Mode is
+         when Elab_Static =>
+            raise Program_Error;
+         when Elab_Dynamic =>
+            Translation.Elaborate (Prim_Name.all, Sec_Name.all, "", True);
+      end case;
 
       if Errorout.Nbr_Errors > 0 then
          --  This may happen (bad entity for example).
@@ -168,8 +193,7 @@ package body Ghdlrun is
          when Foreign_Vhpidirect =>
             declare
                Name : constant String :=
-                 Name_Table.Nam_Buffer (Info.Subprg_First
-                                           .. Info.Subprg_Last);
+                 Info.Subprg_Name (1 .. Info.Subprg_Len);
             begin
                Res := Foreigns.Find_Foreign (Name);
                if Res /= Null_Address then
@@ -180,10 +204,10 @@ package body Ghdlrun is
                end if;
             end;
          when Foreign_Intrinsic =>
-            Name_Table.Image (Get_Identifier (Decl));
+
             declare
                Name : constant String :=
-                 Name_Table.Nam_Buffer (1 .. Name_Table.Nam_Length);
+                 Name_Table.Image (Get_Identifier (Decl));
             begin
                if Name = "untruncated_text_read" then
                   Def (Ortho, Grt.Files.Ghdl_Untruncated_Text_Read'Address);

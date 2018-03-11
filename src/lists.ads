@@ -23,9 +23,7 @@ package Lists is
    for List_Type'Size use 32;
 
    Null_List : constant List_Type := 0;
-
-   List_Others : constant List_Type := 1;
-   List_All : constant List_Type := 2;
+   List_All : constant List_Type := 1;
 
    -----------
    -- Lists --
@@ -63,48 +61,6 @@ package Lists is
    -- Set the number of elements in the list.
    -- Can be used only to shrink the list.
    --   procedure Set_Nbr_Elements (List: in Iir_List; N: Natural);
-   --
-   -- Return the position of the last element.
-   -- Return -1 if the list is empty.
-   --   function Get_Last_Element_Position (List: in Iir_List) return Integer;
-   --
-   -- Empty the list.
-   -- This is also set_nbr_elements (list, 0);
-   --   procedure Empty_List (List: in Iir_List);
-   --
-   -- Alias a list.  TARGET must be empty.
-   --   procedure Alias_List (Target: in out Iir; Source: in Iir);
-
-   procedure Append_Element (List: List_Type; Element: Node_Type);
-
-   -- Get the N th element in list, starting from 0.
-   -- Return the element or null_iir, if beyond bounds.
-   function Get_Nth_Element (List: List_Type; N: Natural) return Node_Type;
-
-   function Get_Last_Element (List: List_Type) return Node_Type;
-
-   function Get_First_Element (List: List_Type) return Node_Type;
-
-   procedure Replace_Nth_Element (List: List_Type; N: Natural; El: Node_Type);
-
-   procedure Add_Element (List: List_Type; El: Node_Type);
-
-   -- Return the number of elements in the list.
-   -- This is also 1 + the position of the last element.
-   function Get_Nbr_Elements (List: List_Type) return Natural;
-   pragma Inline (Get_Nbr_Elements);
-
-   --  Same as get_nbr_elements but returns 0 if LIST is NULL_IIR.
-   function Get_Nbr_Elements_Safe (List : List_Type) return Natural;
-
-   -- Set the number of elements in the list.
-   -- Can be used only to shrink the list.
-   procedure Set_Nbr_Elements (List: List_Type; N: Natural);
-
-   function Get_Last_Element_Position (List: List_Type) return Integer;
-
-   --  Clear the list.
-   procedure Empty_List (List: List_Type);
 
    --  Create a list.
    function Create_List return List_Type;
@@ -115,4 +71,73 @@ package Lists is
    --  Free all the lists and reset to initial state.
    --  Must be used to free the memory used by the lists.
    procedure Initialize;
+
+   --  Append ELEMENT to the list.
+   procedure Append_Element (List : List_Type; Element : Node_Type);
+
+   --  Return the first element of the list.
+   function Get_First_Element (List : List_Type) return Node_Type;
+
+   procedure Add_Element (List : List_Type; El : Node_Type);
+
+   -- Return the number of elements in the list.
+   -- This is also 1 + the position of the last element.
+   function Get_Nbr_Elements (List: List_Type) return Natural;
+   pragma Inline (Get_Nbr_Elements);
+
+   --  True if LIST is empty.
+   function Is_Empty (List : List_Type) return Boolean;
+
+   --  Iterator.  The idiomatic way to iterate is:
+   --  It := Iterate (List);
+   --  while Is_Valid (It) loop
+   --     El := Get_Element (It);
+   --     ...
+   --     Next (It);
+   --  end loop;
+   type Iterator is private;
+
+   function Iterate (List : List_Type) return Iterator;
+   function Is_Valid (It : Iterator) return Boolean;
+   procedure Next (It : in out Iterator);
+   function Get_Element (It : Iterator) return Node_Type;
+   procedure Set_Element (It : Iterator; El : Node_Type);
+
+   --  Use the C convention for all these subprograms, so that the Iterator is
+   --  always passed by reference.
+   pragma Convention (C, Is_Valid);
+   pragma Convention (C, Next);
+   pragma Convention (C, Get_Element);
+   pragma Convention (C, Set_Element);
+
+   --  Like Iterate, but if LIST is Null_List, it returns an iterator that is
+   --  never valid.
+   function Iterate_Safe (List : List_Type) return Iterator;
+
+private
+   type Chunk_Index_Type is new Int32;
+   for Chunk_Index_Type'Size use 32;
+   No_Chunk_Index : constant Chunk_Index_Type := 0;
+
+   Chunk_Len : constant := 7;
+
+   type Node_Type_Array is
+     array (Nat32 range 0 .. Chunk_Len - 1) of Node_Type;
+
+   type Chunk_Type is record
+      Next : Chunk_Index_Type;
+      Els : Node_Type_Array;
+   end record;
+
+   type Iterator is record
+      Chunk : Chunk_Index_Type;
+      Chunk_Idx : Nat32;
+      Remain : Nat32;
+   end record;
+   pragma Convention (C, Iterator);
+
+   pragma Inline (Iterate);
+   pragma Inline (Is_Valid);
+   pragma Inline (Next);
+   pragma Inline (Get_Element);
 end Lists;

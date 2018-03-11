@@ -382,21 +382,21 @@ package body PSL.Nodes_Meta is
       Field_Chain,
       Field_Actual,
       --  N_Sequence_Instance
-      Field_Association_Chain,
       Field_Declaration,
+      Field_Association_Chain,
       --  N_Endpoint_Instance
-      Field_Association_Chain,
       Field_Declaration,
+      Field_Association_Chain,
       --  N_Property_Instance
-      Field_Association_Chain,
       Field_Declaration,
+      Field_Association_Chain,
       --  N_Actual
       Field_Chain,
       Field_Actual,
       Field_Formal,
       --  N_Clock_Event
-      Field_Boolean,
       Field_Property,
+      Field_Boolean,
       --  N_Always
       Field_Property,
       --  N_Never
@@ -431,23 +431,23 @@ package body PSL.Nodes_Meta is
       --  N_Next_Event
       Field_Strong_Flag,
       Field_Number,
-      Field_Boolean,
       Field_Property,
+      Field_Boolean,
       --  N_Next_Event_A
       Field_Strong_Flag,
       Field_Low_Bound,
       Field_High_Bound,
-      Field_Boolean,
       Field_Property,
+      Field_Boolean,
       --  N_Next_Event_E
       Field_Strong_Flag,
       Field_Low_Bound,
       Field_High_Bound,
-      Field_Boolean,
       Field_Property,
+      Field_Boolean,
       --  N_Abort
-      Field_Boolean,
       Field_Property,
+      Field_Boolean,
       --  N_Until
       Field_Strong_Flag,
       Field_Inclusive_Flag,
@@ -488,19 +488,19 @@ package body PSL.Nodes_Meta is
       Field_Left,
       Field_Right,
       --  N_Star_Repeat_Seq
+      Field_Sequence,
       Field_Low_Bound,
       Field_High_Bound,
-      Field_Sequence,
       --  N_Goto_Repeat_Seq
+      Field_Sequence,
       Field_Low_Bound,
       Field_High_Bound,
-      Field_Sequence,
       --  N_Plus_Repeat_Seq
       Field_Sequence,
       --  N_Equal_Repeat_Seq
+      Field_Sequence,
       Field_Low_Bound,
       Field_High_Bound,
-      Field_Sequence,
       --  N_Not_Bool
       Field_Hash,
       Field_Presence,

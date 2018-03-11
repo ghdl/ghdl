@@ -1,24 +1,19 @@
-# ==============================================================================
+# =============================================================================
 # General configuration
-# ==============================================================================
+# =============================================================================
 # Virtual Machine Image
 image: WMF 5
 # Build names
-version: 0.34-dev-{build}
+version: '{branch}-{build}'
 # Branches to build
-# branches:
-#   only:
-#     - master
-#     - paebbels/appveyor
+branches:
+  except:
+    - travis
 
-# ==============================================================================
+# =============================================================================
 # Build matrix configuration
-# ==============================================================================
+# =============================================================================
 environment:
-#  global:
-#    connection_string: server=12;password=13;
-#    service_url: https://127.0.0.1:8090
-#
   matrix:
     - BUILD_MINGW: mingw32
       BUILD_BACKEND: mcode
@@ -31,11 +26,9 @@ environment:
     - BUILD_MINGW: mingw64
       BUILD_BACKEND: llvm
 
-# clone_folder: c:\projects\ghdl
-
-# ==============================================================================
+# =============================================================================
 # Build flow configuration
-# ==============================================================================
+# =============================================================================
 # initialization scripts to run
 init:
   - ps: Write-Host "Initializing virtual machine ..."
@@ -48,58 +41,29 @@ install:
   - ps: .\dist\windows\appveyor\info.ps1
 
 # Build flow
-# --------------------------------------
-# scripts to run before builds
-before_build:
-  - ps: .\dist\windows\appveyor\configure.ps1
-
 # Disable MSBuild
 build: off
 # build scripts to run
 build_script:
   - ps: .\dist\windows\appveyor\build.ps1
 
-# scripts to run after builds
-#after_build:
-
 # Test flow
-# --------------------------------------
-# scripts to run before tests
-before_test:
-  - ps: .\dist\windows\appveyor\setup.ps1
-
 # test scripts to run
 test_script:
   - ps: .\dist\windows\appveyor\test.ps1
 
-# scripts to run after tests
-#after_test:
 
-# ==============================================================================
+# =============================================================================
 # Deployment configuration
-# ==============================================================================
-#deploy:
-#  - provider: GitHub
-#    release: GHDL-v$(appveyor_build_version)
-#    description: 'Release description'
-#    draft: false
-#    prerelease: false
-#    on:
-#      branch: master
-#      appveyor_repo_tag: true
-#    auth_token:
-#      secure: 7K/sSRV3kBk/Iw/d1NGd0pAv9Qf0+lGba3UWt9RDLcIsM8binjC2ogPINilWfy46
-#  - provider: Environment
-#    name: GitHub Paebbels/ghdl
-#    on:
-#      branch: master
-
-
-# scripts to run before deployment
-#before_deploy:
-
-# deployment scripts to run
-#deploy_script:
-
-# scripts to run after deployment
-#after_deploy:
+# =============================================================================
+deploy:
+  - provider: GitHub
+    release: $(APPVEYOR_REPO_TAG_NAME)
+    description: 'Release'
+    draft: true
+    prerelease: false
+    artifact: /.*\.zip/
+    on:
+      appveyor_repo_tag: true
+    auth_token:
+      secure: Qli1B9/I6B1uTMeyGolw8N/zh/PRhLdT8fjUUTcd4Vp14UQki+YTjxKjAe+65Oqv

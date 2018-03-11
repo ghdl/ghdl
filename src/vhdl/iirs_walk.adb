@@ -17,6 +17,7 @@
 --  02111-1307, USA.
 
 with Iirs_Utils; use Iirs_Utils;
+with Errorout; use Errorout;
 
 package body Iirs_Walk is
    function Walk_Chain (Chain : Iir; Cb : Walk_Cb) return Walk_Status
@@ -118,4 +119,59 @@ package body Iirs_Walk is
       end case;
       return Status;
    end Walk_Assignment_Target;
+
+   function Walk_Design_Units (Parent : Iir; Cb : Walk_Cb) return Walk_Status
+   is
+      El : Iir;
+      Status : Walk_Status := Walk_Continue;
+   begin
+      case Get_Kind (Parent) is
+         when Iir_Kind_Library_Declaration =>
+            El := Get_Design_File_Chain (Parent);
+            while Is_Valid (El) loop
+               Status := Walk_Design_Units (El, Cb);
+               exit when Status /= Walk_Continue;
+               El := Get_Chain (El);
+            end loop;
+            return Status;
+         when Iir_Kind_Design_File =>
+            El := Get_First_Design_Unit (Parent);
+            while Is_Valid (El) loop
+               Status := Cb.all (El);
+               exit when Status /= Walk_Continue;
+               El := Get_Chain (El);
+            end loop;
+            return Status;
+         when others =>
+            Error_Kind ("walk_library_units", Parent);
+      end case;
+   end Walk_Design_Units;
+
+   function Walk_Concurrent_Statements_Chain (Chain : Iir; Cb : Walk_Cb)
+                                       return Walk_Status
+   is
+      Status : Walk_Status;
+      El : Iir;
+   begin
+      El := Chain;
+      while Is_Valid (El) loop
+         case Iir_Kinds_Concurrent_Statement (Get_Kind (El)) is
+            when Iir_Kinds_Simple_Concurrent_Statement
+              | Iir_Kind_Component_Instantiation_Statement =>
+               return Cb.all (El);
+            when Iir_Kind_Block_Statement =>
+               Status := Cb.all (El);
+               if Status /= Walk_Continue then
+                  return Status;
+               end if;
+               return Walk_Concurrent_Statements_Chain
+                 (Get_Concurrent_Statement_Chain (El), Cb);
+            when others =>
+               Error_Kind ("walk_concurrent_statements_chain", El);
+         end case;
+         El := Get_Chain (El);
+      end loop;
+
+      return Walk_Continue;
+   end Walk_Concurrent_Statements_Chain;
 end Iirs_Walk;

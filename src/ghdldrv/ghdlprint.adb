@@ -36,6 +36,7 @@ with Xrefs;
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
 with Disp_Vhdl;
+with Elocations;
 
 package body Ghdlprint is
    type Html_Format_Type is (Html_2, Html_Css);
@@ -505,7 +506,9 @@ package body Ghdlprint is
    begin
       Put_Line ("<p>");
       Put ("<small>This page was generated using ");
-      Put ("<a href=""http://ghdl.free.fr"">");
+      Put ("<a href=""http://ghdl.free.fr"">GHDL ");
+      Put (Version.Ghdl_Ver);
+      Put (' ');
       Put (Version.Ghdl_Release);
       Put ("</a>, a program written by");
       Put (" Tristan Gingold");
@@ -609,18 +612,14 @@ package body Ghdlprint is
               | Iir_Kind_Entity_Declaration
               | Iir_Kind_Package_Declaration
               | Iir_Kind_Package_Instantiation_Declaration =>
-               Image (Id);
-               Append (Nam_Buffer (1 .. Nam_Length));
+               Append (Image (Id));
             when Iir_Kind_Package_Body =>
-               Image (Id);
-               Append (Nam_Buffer (1 .. Nam_Length));
+               Append (Image (Id));
                Append ("-body");
             when Iir_Kind_Architecture_Body =>
-               Image (Get_Entity_Identifier_Of_Architecture (Lib));
-               Append (Nam_Buffer (1 .. Nam_Length));
+               Append (Image (Get_Entity_Identifier_Of_Architecture (Lib)));
                Append ("-");
-               Image (Id);
-               Append (Nam_Buffer (1 .. Nam_Length));
+               Append (Image (Id));
             when others =>
                raise Internal_Error;
          end case;
@@ -681,6 +680,7 @@ package body Ghdlprint is
       Len : Natural;
    begin
       Flags.Bootstrap := True;
+      Flags.Flag_Elocations := True;
       --  Load word library.
       Libraries.Load_Std_Library;
       Libraries.Load_Work_Library;
@@ -763,7 +763,7 @@ package body Ghdlprint is
                Lib := Get_Library_Unit (Unit);
 
                Location_To_File_Pos
-                 (Get_End_Location (Unit), File_Entry, Lend);
+                 (Elocations.Get_End_Location (Lib), File_Entry, Lend);
                if Lend < First then
                   raise Internal_Error;
                end if;
@@ -886,7 +886,7 @@ package body Ghdlprint is
       for I in Args'Range loop
          --  Load the file.
          Id := Get_Identifier (Args (I).all);
-         Fe := Files_Map.Load_Source_File (Local_Id, Id);
+         Fe := Files_Map.Read_Source_File (Local_Id, Id);
          if Fe = No_Source_File_Entry then
             Error ("cannot open file " & Args (I).all);
             raise Compile_Error;
@@ -1080,7 +1080,7 @@ package body Ghdlprint is
       for I in Args'Range loop
          --  Load the file.
          Id := Get_Identifier (Args (I).all);
-         Fe := Files_Map.Load_Source_File (Local_Id, Id);
+         Fe := Files_Map.Read_Source_File (Local_Id, Id);
          if Fe = No_Source_File_Entry then
             Error ("cannot open file " & Args (I).all);
             raise Compile_Error;
@@ -1206,7 +1206,7 @@ package body Ghdlprint is
 
       for I in Files'Range loop
          Id := Get_Identifier (Files (I).all);
-         Fe := Files_Map.Load_Source_File (Local_Id, Id);
+         Fe := Files_Map.Read_Source_File (Local_Id, Id);
          if Fe = No_Source_File_Entry then
             Error ("cannot open file " & Files (I).all);
             raise Compile_Error;
@@ -1350,7 +1350,7 @@ package body Ghdlprint is
       --  Parse all files.
       for I in Files'Range loop
          Id := Get_Identifier (Files_Name (I).all);
-         File := Files_Map.Load_Source_File (Libraries.Local_Directory, Id);
+         File := Files_Map.Read_Source_File (Libraries.Local_Directory, Id);
          if File = No_Source_File_Entry then
             Error ("cannot open " & Image (Id));
             return;
@@ -1583,7 +1583,7 @@ package body Ghdlprint is
       --  Parse all files.
       for I in Files'Range loop
          Id := Get_Identifier (Files_Name (I).all);
-         File := Load_Source_File (Libraries.Local_Directory, Id);
+         File := Read_Source_File (Libraries.Local_Directory, Id);
          if File = No_Source_File_Entry then
             Error ("cannot open " & Image (Id));
             return;
@@ -1648,11 +1648,9 @@ package body Ghdlprint is
                   Put ("XFILE: ");
                   Dir := Get_Source_File_Directory (Cur_File);
                   if Dir /= Null_Identifier then
-                     Image (Dir);
-                     Put (Nam_Buffer (1 .. Nam_Length));
+                     Put (Image (Dir));
                   end if;
-                  Image (Get_File_Name (Cur_File));
-                  Put (Nam_Buffer (1 .. Nam_Length));
+                  Put (Image (Get_File_Name (Cur_File)));
                   New_Line;
                end if;
 
@@ -1714,8 +1712,7 @@ package body Ghdlprint is
                     | Iir_Kind_Procedure_Body =>
                      null;
                   when others =>
-                     Image (Get_Identifier (N));
-                     Put (Nam_Buffer (1 .. Nam_Length));
+                     Put (Image (Get_Identifier (N)));
                end case;
             end Emit_Decl;
 

@@ -23,6 +23,8 @@ package Disp_Tree is
    --  Disp TREE recursively.
    procedure Disp_Tree (Tree : Iir; Flat : Boolean := False);
 
+   procedure Disp_Iir (N : Iir; Indent : Natural; Depth : Natural);
+
    procedure Disp_Tree_For_Psl
      (N : Int32; Indent : Natural; Depth : Natural);
 

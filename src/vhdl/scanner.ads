@@ -27,6 +27,9 @@ package Scanner is
    -- It can be replaced by a function call.
    Current_Token: Token_Type := Tok_Invalid;
 
+   --  Maximal length for identifiers.
+   Max_Name_Length : constant Natural := 1024;
+
    -- Simply set current_token to tok_invalid.
    procedure Invalidate_Current_Token;
    pragma Inline (Invalidate_Current_Token);
@@ -41,6 +44,13 @@ package Scanner is
    function Current_String_Length return Nat32;
    pragma Inline (Current_String_Id);
    pragma Inline (Current_String_Length);
+
+   --  When the current token is Tok_Bit_String, return the base ('b', 'o',
+   --  'x' or 'd') and the sign ('s', 'u', or ' ' for none).
+   function Get_Bit_String_Base return Character;
+   function Get_Bit_String_Sign return Character;
+   pragma Inline (Get_Bit_String_Base);
+   pragma Inline (Get_Bit_String_Sign);
 
    -- Set Current_identifier to null_identifier.
    -- Can be used to catch bugs.
@@ -119,7 +129,7 @@ package Scanner is
    --  given in the command line.
    --  Errors are directly reported through error_msg_option.
    --  Also, Vhdl_Std should be set.
-   procedure Convert_Identifier;
+   procedure Convert_Identifier (Str : in out String);
 
    --  Return TRUE iff C is a whitespace.
    --  LRM93 13.2 Lexical elements, separators, and delimiters

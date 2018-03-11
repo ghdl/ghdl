@@ -94,6 +94,12 @@ package Flags is
    -- -v: disp phase of compilation.
    Verbose : Boolean := False;
 
+   --  If set to true, the parser builds extended locations (defined in
+   --  package elocations).  This saves possibly many locations per node, so
+   --  it uses more memory.  Useful when a tool (like a style checker) wants
+   --  to know the precise layout.  Not used to report errors.
+   Flag_Elocations : Boolean := False;
+
    --  If set to true, it means that analyze is done for elaboration.
    --  The purpose is to avoid spurious warning "will be checked
    --  at elaboration"

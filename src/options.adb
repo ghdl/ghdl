@@ -119,11 +119,11 @@ package body Options is
       elsif Opt'Length > 7 and then Opt (1 .. 7) = "--work=" then
          declare
             use Name_Table;
+            Name : String (1 .. Opt'Last - 8 + 1);
          begin
-            Nam_Length := Opt'Last - 8 + 1;
-            Nam_Buffer (1 .. Nam_Length) := Opt (8 .. Opt'Last);
-            Scanner.Convert_Identifier;
-            Libraries.Work_Library_Name := Get_Identifier;
+            Name := Opt (8 .. Opt'Last);
+            Scanner.Convert_Identifier (Name);
+            Libraries.Work_Library_Name := Get_Identifier (Name);
          end;
       elsif Opt = "-C" or else Opt = "--mb-comments" then
          Mb_Comment := True;

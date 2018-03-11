@@ -55,7 +55,6 @@ package body Sem_Assocs is
                   Set_Subtype_Type_Mark (N_Actual, Get_Prefix (Actual));
                   Sub_Assoc := Get_Association_Chain (Actual);
                   Indexes := Create_Iir_List;
-                  Set_Index_Constraint_List (N_Actual, Indexes);
                   while Is_Valid (Sub_Assoc) loop
                      if Get_Kind (Sub_Assoc)
                        /= Iir_Kind_Association_Element_By_Expression
@@ -75,6 +74,8 @@ package body Sem_Assocs is
                   end loop;
                   Old := Actual;
                   Free_Iir (Old);
+                  Set_Index_Constraint_List
+                    (N_Actual, List_To_Flist (Indexes));
                   Actual := N_Actual;
                end;
             end if;
@@ -324,8 +325,8 @@ package body Sem_Assocs is
                      --  conversion appears in either the formal part or the
                      --  actual part of an association element that associates
                      --  an actual signal with a formal signal parameter.
-                     if Get_In_Conversion (Assoc) /= Null_Iir
-                       or Get_Out_Conversion (Assoc) /= Null_Iir
+                     if Get_Actual_Conversion (Assoc) /= Null_Iir
+                       or Get_Formal_Conversion (Assoc) /= Null_Iir
                      then
                         Error_Msg_Sem
                           (+Assoc,
@@ -381,8 +382,8 @@ package body Sem_Assocs is
                      --  an actual with a formal parameter of a file type and
                      --  that association element contains a conversion
                      --  function or type conversion.
-                     if Get_In_Conversion (Assoc) /= Null_Iir
-                       or Get_Out_Conversion (Assoc) /= Null_Iir
+                     if Get_Actual_Conversion (Assoc) /= Null_Iir
+                       or Get_Formal_Conversion (Assoc) /= Null_Iir
                      then
                         Error_Msg_Sem (+Assoc, "conversion are not allowed "
                                          & "for file parameters");
@@ -391,7 +392,10 @@ package body Sem_Assocs is
                      --  LRM93 2.1.1
                      --  The actual designator associated with a formal of
                      --  class constant must be an expression.
-                     Check_Read (Actual);
+                     --  GHDL: unless this is in a formal_part.
+                     if not Get_In_Formal_Flag (Assoc) then
+                        Check_Read (Actual);
+                     end if;
                   when others =>
                      Error_Kind
                        ("check_subprogram_association(3)", Formal_Inter);
@@ -568,8 +572,8 @@ package body Sem_Assocs is
 
       Ftype : constant Iir := Get_Type (Formal);
       Atype : constant Iir := Get_Type (Actual);
-      F_Conv : constant Iir := Get_Out_Conversion (Assoc);
-      A_Conv : constant Iir := Get_In_Conversion (Assoc);
+      F_Conv : constant Iir := Get_Formal_Conversion (Assoc);
+      A_Conv : constant Iir := Get_Actual_Conversion (Assoc);
       F2a_Type : Iir;
       A2f_Type : Iir;
    begin
@@ -618,21 +622,20 @@ package body Sem_Assocs is
 
    --  Handle indexed name
    --  FORMAL is the formal name to be handled.
-   --  SUB_ASSOC is an association_by_individual in which the formal will be
+   --  BASE_ASSOC is an association_by_individual in which the formal will be
    --   inserted.
-   --  Update SUB_ASSOC so that it designates FORMAL.
    procedure Add_Individual_Assoc_Indexed_Name
-     (Sub_Assoc : in out Iir; Formal : Iir)
+     (Choice : out Iir; Base_Assoc : Iir; Formal : Iir)
    is
-      Base_Assoc : constant Iir := Sub_Assoc;
-      Index_List : constant Iir_List := Get_Index_List (Formal);
+      Index_List : constant Iir_Flist := Get_Index_List (Formal);
       Nbr : constant Natural := Get_Nbr_Elements (Index_List);
-      Choice : Iir;
       Last_Choice : Iir;
       Index : Iir;
       Staticness : Iir_Staticness;
+      Sub_Assoc : Iir;
    begin
       --  Find element.
+      Sub_Assoc := Base_Assoc;
       for I in 0 .. Nbr - 1 loop
          Index := Get_Nth_Element (Index_List, I);
 
@@ -640,7 +643,7 @@ package body Sem_Assocs is
          Staticness := Get_Expr_Staticness (Index);
          if Staticness = Locally then
             Index := Eval_Expr (Index);
-            Replace_Nth_Element (Index_List, I, Index);
+            Set_Nth_Element (Index_List, I, Index);
          else
             Error_Msg_Sem (+Index, "index expression must be locally static");
             Set_Choice_Staticness (Base_Assoc, None);
@@ -690,6 +693,7 @@ package body Sem_Assocs is
          << Found >> null;
 
          if I < Nbr - 1 then
+            --  Create an intermediate assoc by individual.
             Sub_Assoc := Get_Associated_Expr (Choice);
             if Sub_Assoc = Null_Iir then
                Sub_Assoc := Create_Iir
@@ -698,16 +702,13 @@ package body Sem_Assocs is
                Set_Associated_Expr (Choice, Sub_Assoc);
                Set_Choice_Staticness (Sub_Assoc, Locally);
             end if;
-         else
-            Sub_Assoc := Choice;
          end if;
       end loop;
    end Add_Individual_Assoc_Indexed_Name;
 
    procedure Add_Individual_Assoc_Slice_Name
-     (Sub_Assoc : in out Iir; Formal : Iir)
+     (Choice : out Iir; Sub_Assoc : Iir; Formal : Iir)
    is
-      Choice : Iir;
       Index : Iir;
       Staticness : Iir_Staticness;
    begin
@@ -732,95 +733,121 @@ package body Sem_Assocs is
       Set_Chain (Choice, Get_Individual_Association_Chain (Sub_Assoc));
       Set_Choice_Staticness (Choice, Staticness);
       Set_Individual_Association_Chain (Sub_Assoc, Choice);
-
-      Sub_Assoc := Choice;
    end Add_Individual_Assoc_Slice_Name;
 
    procedure Add_Individual_Assoc_Selected_Name
-     (Sub_Assoc : in out Iir; Formal : Iir)
+     (Choice : out Iir; Sub_Assoc : Iir; Formal : Iir)
    is
-      Choice : Iir;
+      Element : constant Iir := Get_Selected_Element (Formal);
+      Last_Choice : Iir;
    begin
+      --  Try to find the existing choice.
+      Last_Choice := Null_Iir;
+      Choice := Get_Individual_Association_Chain (Sub_Assoc);
+      while Choice /= Null_Iir loop
+         if Get_Choice_Name (Choice) = Element then
+            return;
+         end if;
+         Last_Choice := Choice;
+         Choice := Get_Chain (Choice);
+      end loop;
+
+      --  If not found, append it.
       Choice := Create_Iir (Iir_Kind_Choice_By_Name);
       Location_Copy (Choice, Formal);
-      Set_Choice_Name (Choice, Get_Selected_Element (Formal));
-      Set_Chain (Choice, Get_Individual_Association_Chain (Sub_Assoc));
-      Set_Individual_Association_Chain (Sub_Assoc, Choice);
-
-      Sub_Assoc := Choice;
+      Set_Choice_Name (Choice, Element);
+      if Last_Choice = Null_Iir then
+         Set_Individual_Association_Chain (Sub_Assoc, Choice);
+      else
+         Set_Chain (Last_Choice, Choice);
+      end if;
    end Add_Individual_Assoc_Selected_Name;
 
    --  Subroutine of Add_Individual_Association.
    --  Search/build the tree of choices for FORMAL, starting for IASSOC.
-   procedure Add_Individual_Association_1 (Iassoc : in out Iir; Formal : Iir)
+   --  The root of the tree is an association by individual node.  Each node
+   --  points to a chain of choices, whose associated expression is either an
+   --  association by individual (and the tree continue) or an association
+   --  by expression coming from the initial association (and this is a leaf).
+   procedure Add_Individual_Association_1
+     (Iassoc : in out Iir; Formal : Iir; Last : Boolean)
    is
       Base_Assoc : constant Iir := Iassoc;
       Formal_Object : constant Iir := Name_To_Object (Formal);
       Sub : Iir;
+      Choice : Iir;
    begin
       pragma Assert
-        (Get_Kind (Base_Assoc) = Iir_Kind_Association_Element_By_Individual);
+        (Get_Kind (Iassoc) = Iir_Kind_Association_Element_By_Individual);
 
       --  Recurse to start from the basename of the formal.
       case Get_Kind (Formal_Object) is
          when Iir_Kind_Indexed_Name
            | Iir_Kind_Slice_Name
            | Iir_Kind_Selected_Element =>
-            Add_Individual_Association_1 (Iassoc, Get_Prefix (Formal_Object));
+            Add_Individual_Association_1
+              (Iassoc, Get_Prefix (Formal_Object), False);
          when Iir_Kinds_Interface_Object_Declaration =>
+            --  At the root of the formal.
+            pragma Assert
+              (Formal_Object = Get_Named_Entity (Get_Formal (Iassoc)));
             return;
          when others =>
             Error_Kind ("add_individual_association_1", Formal);
       end case;
 
-      case Get_Kind (Iassoc) is
-         when Iir_Kind_Association_Element_By_Individual =>
-            null;
-         when Iir_Kind_Choice_By_Expression =>
-            Sub := Get_Associated_Expr (Iassoc);
-            if Sub = Null_Iir then
-               Sub := Create_Iir (Iir_Kind_Association_Element_By_Individual);
-               Location_Copy (Sub, Formal);
-               Set_Choice_Staticness (Sub, Locally);
-               Set_Formal (Sub, Iassoc);
-               Set_Associated_Expr (Iassoc, Sub);
-               Iassoc := Sub;
-            else
-               case Get_Kind (Sub) is
-                  when Iir_Kind_Association_Element_By_Individual =>
-                     Iassoc := Sub;
-                  when others =>
-                     Error_Msg_Sem
-                       (+Formal, "individual association of %n"
-                          & " conflicts with that at %l",
-                        (+Get_Interface_Of_Formal (Get_Formal (Iassoc)),
-                         +Sub));
-                     return;
-               end case;
-            end if;
-         when others =>
-            Error_Kind ("add_individual_association_1(2)", Iassoc);
-      end case;
-
-      Sub := Iassoc;
+      --  Add the choices for the indexes/slice/element.
       case Get_Kind (Formal_Object) is
          when Iir_Kind_Indexed_Name =>
-            Add_Individual_Assoc_Indexed_Name (Iassoc, Formal_Object);
+            Add_Individual_Assoc_Indexed_Name (Choice, Iassoc, Formal_Object);
          when Iir_Kind_Slice_Name =>
-            Add_Individual_Assoc_Slice_Name (Iassoc, Formal_Object);
+            Add_Individual_Assoc_Slice_Name (Choice, Iassoc, Formal_Object);
          when Iir_Kind_Selected_Element =>
-            Add_Individual_Assoc_Selected_Name (Iassoc, Formal_Object);
+            Add_Individual_Assoc_Selected_Name (Choice, Iassoc, Formal_Object);
          when others =>
             Error_Kind ("add_individual_association_1(3)", Formal);
       end case;
 
-      if Get_Choice_Staticness (Sub) /= Locally then
-         --  Propagate error.
-         Set_Choice_Staticness (Base_Assoc, None);
+      Sub := Get_Associated_Expr (Choice);
+      if Sub = Null_Iir then
+         if not Last then
+            --  Create the individual association for the choice.
+            Sub := Create_Iir (Iir_Kind_Association_Element_By_Individual);
+            Location_Copy (Sub, Formal);
+            Set_Choice_Staticness (Sub, Locally);
+            Set_Formal (Sub, Formal);
+            Set_Associated_Expr (Choice, Sub);
+         end if;
+      else
+         if Last
+           or else Get_Kind (Sub) /= Iir_Kind_Association_Element_By_Individual
+         then
+            --  A final association.
+            pragma Assert
+              (Get_Kind (Sub) = Iir_Kind_Association_Element_By_Expression);
+            Error_Msg_Sem
+              (+Formal, "individual association of %n"
+                 & " conflicts with that at %l",
+               (+Get_Interface_Of_Formal (Get_Formal (Iassoc)),
+                +Sub));
+         else
+            if Get_Choice_Staticness (Sub) /= Locally then
+               --  Propagate error.
+               Set_Choice_Staticness (Base_Assoc, None);
+            end if;
+         end if;
+      end if;
+
+      if Last then
+         Iassoc := Choice;
+      else
+         Iassoc := Sub;
       end if;
    end Add_Individual_Association_1;
 
    --  Insert ASSOC into the tree of individual assoc rooted by IASSOC.
+   --  This is done so that duplicate or missing associations are found (using
+   --  the same routine for aggregate/case statement).
    procedure Add_Individual_Association (Iassoc : Iir; Assoc : Iir)
    is
       Formal : constant Iir := Get_Formal (Assoc);
@@ -829,14 +856,10 @@ package body Sem_Assocs is
    begin
       --  Create the individual association for the formal.
       Res_Iass := Iassoc;
-      Add_Individual_Association_1 (Res_Iass, Formal);
+      Add_Individual_Association_1 (Res_Iass, Formal, True);
 
       Prev := Get_Associated_Expr (Res_Iass);
-      if Prev /= Null_Iir then
-         Error_Msg_Sem
-           (+Assoc, "individual association of %n conflicts with that at %l",
-            (+Get_Interface_Of_Formal (Get_Formal (Assoc)), +Prev));
-      else
+      if Prev = Null_Iir then
          Set_Associated_Expr (Res_Iass, Assoc);
       end if;
    end Add_Individual_Association;
@@ -844,7 +867,7 @@ package body Sem_Assocs is
    procedure Finish_Individual_Assoc_Array_Subtype
      (Assoc : Iir; Atype : Iir; Dim : Positive)
    is
-      Index_Tlist : constant Iir_List := Get_Index_Subtype_List (Atype);
+      Index_Tlist : constant Iir_Flist := Get_Index_Subtype_List (Atype);
       Nbr_Dims : constant Natural := Get_Nbr_Elements (Index_Tlist);
       Index_Type : constant Iir := Get_Nth_Element (Index_Tlist, Dim - 1);
       Low, High : Iir;
@@ -869,14 +892,13 @@ package body Sem_Assocs is
    procedure Finish_Individual_Assoc_Array
      (Actual : Iir; Assoc : Iir; Dim : Natural)
    is
-      Actual_Type : Iir;
+      Actual_Type : constant Iir := Get_Actual_Type (Actual);
       Actual_Index : Iir;
       Base_Type : Iir;
       Base_Index : Iir;
       Low, High : Iir;
       Chain : Iir;
    begin
-      Actual_Type := Get_Actual_Type (Actual);
       Actual_Index := Get_Nth_Element (Get_Index_Subtype_List (Actual_Type),
                                        Dim - 1);
       if Actual_Index /= Null_Iir then
@@ -936,8 +958,8 @@ package body Sem_Assocs is
                   Set_Right_Limit_Expr (Index_Subtype_Constraint, Low);
             end case;
             Set_Expr_Staticness (Index_Subtype_Constraint, Locally);
-            Append_Element (Get_Index_Subtype_List (Actual_Type),
-                            Actual_Index);
+            Set_Nth_Element (Get_Index_Subtype_List (Actual_Type), Dim - 1,
+                             Actual_Index);
          end;
       else
          declare
@@ -957,8 +979,9 @@ package body Sem_Assocs is
 
    procedure Finish_Individual_Assoc_Record (Assoc : Iir; Atype : Iir)
    is
-      El_List : constant Iir_List := Get_Elements_Declaration_List (Atype);
-      Matches : Iir_Array (0 .. Get_Nbr_Elements (El_List) - 1);
+      El_List : constant Iir_Flist := Get_Elements_Declaration_List (Atype);
+      Nbr_El : constant Natural := Get_Nbr_Elements (El_List);
+      Matches : Iir_Array (0 .. Nbr_El - 1);
       Ch : Iir;
       Pos : Natural;
       Rec_El : Iir;
@@ -990,7 +1013,7 @@ package body Sem_Assocs is
          --  Some (sub-)elements are unbounded, create a bounded subtype.
          declare
             Ntype : Iir;
-            Nel_List : Iir_List;
+            Nel_List : Iir_Flist;
             Nrec_El : Iir;
             Rec_El_Type : Iir;
             Staticness : Iir_Staticness;
@@ -1002,7 +1025,7 @@ package body Sem_Assocs is
                Set_Resolution_Indication
                  (Ntype, Get_Resolution_Indication (Atype));
             end if;
-            Nel_List := Create_Iir_List;
+            Nel_List := Create_Iir_Flist (Nbr_El);
             Set_Elements_Declaration_List (Ntype, Nel_List);
 
             Staticness := Locally;
@@ -1032,7 +1055,7 @@ package body Sem_Assocs is
                end if;
                Staticness := Min (Staticness,
                                   Get_Type_Staticness (Get_Type (Nrec_El)));
-               Append_Element (Nel_List, Nrec_El);
+               Set_Nth_Element (Nel_List, I, Nrec_El);
             end loop;
             Set_Type_Staticness (Ntype, Staticness);
             Set_Constraint_State (Ntype, Fully_Constrained);
@@ -1044,7 +1067,8 @@ package body Sem_Assocs is
       end if;
    end Finish_Individual_Assoc_Record;
 
-   --  Free recursively all the choices of ASSOC.
+   --  Free recursively all the choices of ASSOC.  Once the type is computed
+   --  this is not needed anymore.
    procedure Clean_Individual_Association (Assoc : Iir)
    is
       El, N_El : Iir;
@@ -1145,20 +1169,26 @@ package body Sem_Assocs is
             Formal := Get_Object_Prefix (Formal);
          end if;
          if Formal = Null_Iir or else Formal /= Cur_Iface then
-            --  New formal name, sem the current assoc.
+            --  New formal name, analyze the current individual association
+            --  (if any).
             Finish_Individual_Association (Iassoc);
             Cur_Iface := Formal;
             Iassoc := Null_Iir;
          end if;
+
          if Get_Whole_Association_Flag (Assoc) = False then
-            --  New individual association.
+            --  Individual association.
             if Iassoc = Null_Iir then
+               --  The first one for the interface: create a new individual
+               --  association.
                Iassoc :=
                  Create_Iir (Iir_Kind_Association_Element_By_Individual);
                Location_Copy (Iassoc, Assoc);
                Set_Choice_Staticness (Iassoc, Locally);
                pragma Assert (Cur_Iface /= Null_Iir);
-               Set_Formal (Iassoc, Build_Simple_Name (Cur_Iface, Iassoc));
+               Set_Formal
+                 (Iassoc,
+                  Build_Simple_Name (Cur_Iface, Get_Location (Formal)));
                --  Insert IASSOC.
                if Prev_Assoc = Null_Iir then
                   Assoc_Chain := Iassoc;
@@ -1167,6 +1197,8 @@ package body Sem_Assocs is
                end if;
                Set_Chain (Iassoc, Assoc);
             end if;
+
+            --  Add this individual association to the tree.
             Add_Individual_Association (Iassoc, Assoc);
          end if;
          Prev_Assoc := Assoc;
@@ -1176,8 +1208,7 @@ package body Sem_Assocs is
       Finish_Individual_Association (Iassoc);
    end Sem_Individual_Association;
 
-   function Is_Conversion_Function (Assoc_Chain : Iir) return Boolean
-   is
+   function Is_Conversion_Function (Assoc_Chain : Iir) return Boolean is
    begin
       --  [...] whose single parameter of the function [...]
       if not Is_Chain_Length_One (Assoc_Chain) then
@@ -1194,269 +1225,6 @@ package body Sem_Assocs is
 --       end if;
       return True;
    end Is_Conversion_Function;
-
-   function Is_Expanded_Name (Name : Iir) return Boolean
-   is
-      Pfx : Iir;
-   begin
-      Pfx := Name;
-      loop
-         case Get_Kind (Pfx) is
-            when Iir_Kind_Simple_Name =>
-               return True;
-            when Iir_Kind_Selected_Name =>
-               Pfx := Get_Prefix (Pfx);
-            when others =>
-               return False;
-         end case;
-      end loop;
-   end Is_Expanded_Name;
-
-   function Extract_Type_Of_Conversions (Convs : Iir) return Iir
-   is
-      --  Return TRUE iff FUNC is valid as a conversion function/type.
-      function Extract_Type_Of_Conversion (Func : Iir) return Iir is
-      begin
-         case Get_Kind (Func) is
-            when Iir_Kind_Function_Declaration =>
-               if Is_Chain_Length_One (Get_Interface_Declaration_Chain (Func))
-               then
-                  return Get_Type (Func);
-               else
-                  return Null_Iir;
-               end if;
-            when Iir_Kind_Type_Declaration
-              | Iir_Kind_Subtype_Declaration =>
-               if Flags.Vhdl_Std = Vhdl_87 then
-                  return Null_Iir;
-               end if;
-               return Get_Type (Func);
-            when others =>
-               return Null_Iir;
-         end case;
-      end Extract_Type_Of_Conversion;
-
-      Res_List : Iir_List;
-      Ov_List : Iir_List;
-      El : Iir;
-      Conv_Type : Iir;
-   begin
-      if not Is_Overload_List (Convs) then
-         return Extract_Type_Of_Conversion (Convs);
-      else
-         Ov_List := Get_Overload_List (Convs);
-         Res_List := Create_Iir_List;
-         for I in Natural loop
-            El := Get_Nth_Element (Ov_List, I);
-            exit when El = Null_Iir;
-            Conv_Type := Extract_Type_Of_Conversion (El);
-            if Conv_Type /= Null_Iir then
-               Add_Element (Res_List, Conv_Type);
-            end if;
-         end loop;
-         return Simplify_Overload_List (Res_List);
-      end if;
-   end Extract_Type_Of_Conversions;
-
-   --  ASSOC is an association element not analyzed and whose formal is a
-   --  parenthesis name.  Try to extract a conversion function/type.  In case
-   --  of success, return a new association element.  In case of failure,
-   --  return NULL_IIR.
-   function Sem_Formal_Conversion (Assoc : Iir) return Iir
-   is
-      Formal : constant Iir := Get_Formal (Assoc);
-      Assoc_Chain : constant Iir := Get_Association_Chain (Formal);
-      Res : Iir;
-      Conv : Iir;
-      Name : Iir;
-      Conv_Func : Iir;
-      Conv_Type : Iir;
-   begin
-      --  Nothing to do if the formal isn't a conversion.
-      if not Is_Conversion_Function (Assoc_Chain) then
-         return Null_Iir;
-      end if;
-
-      --  Both the conversion function and the formal name must be names.
-      Conv := Get_Prefix (Formal);
-      --  FIXME: what about operator names (such as "not").
-      if Get_Kind (Conv) /= Iir_Kind_Simple_Name
-        and then not Is_Expanded_Name (Conv)
-      then
-         return Null_Iir;
-      end if;
-      Name := Get_Actual (Assoc_Chain);
-      if Get_Kind (Name) not in Iir_Kinds_Name then
-         return Null_Iir;
-      end if;
-
-      Sem_Name_Soft (Conv);
-      Conv_Func := Get_Named_Entity (Conv);
-      if Get_Kind (Conv_Func) = Iir_Kind_Error then
-         Conv_Type := Null_Iir;
-      else
-         Conv_Type := Extract_Type_Of_Conversions (Conv_Func);
-      end if;
-      if Conv_Type = Null_Iir then
-         Sem_Name_Clean (Conv);
-         return Null_Iir;
-      end if;
-      Set_Type (Conv, Conv_Type);
-
-      --  Create a new association with a conversion function.
-      Res := Create_Iir (Iir_Kind_Association_Element_By_Expression);
-      Set_Out_Conversion (Res, Conv);
-      Set_Formal (Res, Name);
-      Set_Actual (Res, Get_Actual (Assoc));
-      return Res;
-   end Sem_Formal_Conversion;
-
-   --  NAME is the formal name of an association, without any conversion
-   --  function or type.
-   --  Try to analyze NAME with INTERFACE.
-   --  In case of success, set PREFIX to the most prefix of NAME and NAME_TYPE
-   --  to the type of NAME.
-   --  In case of failure, set NAME_TYPE to NULL_IIR.
-   procedure Sem_Formal_Name (Name : Iir;
-                              Inter : Iir;
-                              Prefix : out Iir;
-                              Name_Type : out Iir)
-   is
-      Base_Type : Iir;
-      Rec_El : Iir;
-   begin
-      case Get_Kind (Name) is
-         when Iir_Kind_Simple_Name =>
-            if Get_Identifier (Name) = Get_Identifier (Inter) then
-               Prefix := Name;
-               Name_Type := Get_Type (Inter);
-            else
-               Name_Type := Null_Iir;
-            end if;
-            return;
-         when Iir_Kind_Selected_Name =>
-            Sem_Formal_Name (Get_Prefix (Name), Inter, Prefix, Name_Type);
-            if Name_Type = Null_Iir then
-               return;
-            end if;
-            Base_Type := Get_Base_Type (Name_Type);
-            if Get_Kind (Base_Type) /= Iir_Kind_Record_Type_Definition then
-               Name_Type := Null_Iir;
-               return;
-            end if;
-            Rec_El := Find_Name_In_List
-              (Get_Elements_Declaration_List (Base_Type),
-               Get_Identifier (Name));
-            if Rec_El = Null_Iir then
-               Name_Type := Null_Iir;
-               return;
-            end if;
-            Name_Type := Get_Type (Rec_El);
-            return;
-         when Iir_Kind_Parenthesis_Name =>
-            --  More difficult: slice or indexed array.
-            Sem_Formal_Name (Get_Prefix (Name), Inter, Prefix, Name_Type);
-            if Name_Type = Null_Iir then
-               return;
-            end if;
-            Base_Type := Get_Base_Type (Name_Type);
-            if Get_Kind (Base_Type) /= Iir_Kind_Array_Type_Definition then
-               Name_Type := Null_Iir;
-               return;
-            end if;
-            declare
-               Chain : Iir;
-               Index_List : Iir_List;
-               Idx : Iir;
-            begin
-               Chain := Get_Association_Chain (Name);
-               Index_List := Get_Index_Subtype_List (Base_Type);
-               --  Check for matching length.
-               if Get_Chain_Length (Chain) /= Get_Nbr_Elements (Index_List)
-               then
-                  Name_Type := Null_Iir;
-                  return;
-               end if;
-               if Get_Kind (Chain)
-                 /= Iir_Kind_Association_Element_By_Expression
-               then
-                  Name_Type := Null_Iir;
-                  return;
-               end if;
-               Idx := Get_Actual (Chain);
-               if (not Is_Chain_Length_One (Chain))
-                 or else (Get_Kind (Idx) /= Iir_Kind_Range_Expression
-                          and then not Is_Range_Attribute_Name (Idx))
-               --  FIXME: what about subtype !
-               then
-                  --  Indexed name.
-                  Name_Type := Get_Element_Subtype (Base_Type);
-                  return;
-               end if;
-               --  Slice.
-               return;
-            end;
-         when others =>
-            Error_Kind ("sem_formal_name", Name);
-      end case;
-   end Sem_Formal_Name;
-
-   --  Return a type or a list of types for a formal expression FORMAL
-   --   corresponding to INTERFACE.  Possible cases are:
-   --  * FORMAL is the simple name with the same identifier as INTERFACE,
-   --    FORMAL_TYPE is set to the type of INTERFACE and CONV_TYPE is set
-   --    to NULL_IIR.
-   --  * FORMAL is a selected, indexed or slice name whose extreme prefix is
-   --    a simple name with the same identifier as INTERFACE, FORMAL_TYPE
-   --    is set to the type of the name, and CONV_TYPE is set to NULL_IIR.
-   --  * FORMAL is a function call, whose only argument is an
-   --    association_element_by_expression, whose actual is a name
-   --    whose prefix is the same identifier as INTERFACE (note, since FORMAL
-   --    is not analyzed, this is parenthesis name), CONV_TYPE is set to
-   --    the type or list of type of return type of conversion functions and
-   --    FORMAL_TYPE is set to the type of the name.
-   --  * otherwise, FORMAL cannot match INTERFACE and both FORMAL_TYPE and
-   --    CONV_TYPE are set to NULL_IIR.
-   --  If FINISH is true, the simple name is replaced by INTERFACE.
-
-   type Param_Assoc_Type is (None, Open, Individual, Whole);
-
-   function Sem_Formal (Formal : Iir; Inter : Iir) return Param_Assoc_Type
-   is
-      Prefix : Iir;
-      Formal_Type : Iir;
-   begin
-      case Get_Kind (Formal) is
-         when Iir_Kind_Simple_Name
-           | Iir_Kind_Operator_Symbol =>
-            --  Certainly the most common case: FORMAL_NAME => VAL.
-            --  It is also the easiest.  So, handle it completly now.
-            if Get_Identifier (Formal) = Get_Identifier (Inter) then
-               Formal_Type := Get_Type (Inter);
-               Set_Named_Entity (Formal, Inter);
-               Set_Type (Formal, Formal_Type);
-               Set_Base_Name (Formal, Inter);
-               return Whole;
-            end if;
-            return None;
-         when Iir_Kind_Selected_Name
-           | Iir_Kind_Slice_Name
-           | Iir_Kind_Parenthesis_Name =>
-            null;
-         when others =>
-            --  Should have been caught by sem_association_list.
-            Error_Kind ("sem_formal", Formal);
-      end case;
-      --  Check for a sub-element.
-      Sem_Formal_Name (Formal, Inter, Prefix, Formal_Type);
-      if Formal_Type /= Null_Iir then
-         Set_Type (Formal, Formal_Type);
-         Set_Named_Entity (Prefix, Inter);
-         return Individual;
-      else
-         return None;
-      end if;
-   end Sem_Formal;
 
    function Is_Valid_Conversion
      (Func : Iir; Res_Base_Type : Iir; Param_Base_Type : Iir) return Boolean
@@ -1495,7 +1263,7 @@ package body Sem_Assocs is
             return Is_Valid_Conversion (Get_Named_Entity (Func),
                                         Res_Base_Type, Param_Base_Type);
          when others =>
-            Error_Kind ("is_valid_conversion(2)", Func);
+            return False;
       end case;
    end Is_Valid_Conversion;
 
@@ -1503,6 +1271,7 @@ package body Sem_Assocs is
      (Conv : Iir; Res_Type : Iir; Param_Type : Iir; Loc : Iir) return Iir
    is
       List : Iir_List;
+      It : List_Iterator;
       Res_Base_Type : Iir;
       Param_Base_Type : Iir;
       El : Iir;
@@ -1517,9 +1286,9 @@ package body Sem_Assocs is
       if Is_Overload_List (Conv) then
          List := Get_Overload_List (Conv);
          Res := Null_Iir;
-         for I in Natural loop
-            El := Get_Nth_Element (List, I);
-            exit when El = Null_Iir;
+         It := List_Iterate (List);
+         while Is_Valid (It) loop
+            El := Get_Element (It);
             if Is_Valid_Conversion (El, Res_Base_Type, Param_Base_Type) then
                if Res /= Null_Iir then
                   raise Internal_Error;
@@ -1527,6 +1296,7 @@ package body Sem_Assocs is
                Free_Iir (Conv);
                Res := El;
             end if;
+            Next (It);
          end loop;
       else
          if Is_Valid_Conversion (Conv, Res_Base_Type, Param_Base_Type) then
@@ -1557,6 +1327,7 @@ package body Sem_Assocs is
             Assoc := Get_Parameter_Association_Chain (Func);
             Free_Iir (Assoc);
             Set_Parameter_Association_Chain (Func, Null_Iir);
+            Name_To_Method_Object (Func, Conv);
             return Func;
          when Iir_Kind_Type_Conversion =>
             return Func;
@@ -1569,84 +1340,35 @@ package body Sem_Assocs is
      (Conv : Iir; Res_Type : Iir; Param_Type : Iir) return Iir
    is
       Func : Iir;
-      Res : Iir;
    begin
       if Conv = Null_Iir then
          return Null_Iir;
       end if;
-      Func := Extract_Conversion (Get_Named_Entity (Conv),
-                                  Res_Type, Param_Type, Conv);
-      if Func = Null_Iir then
-         return Null_Iir;
-      end if;
-      pragma Assert (Get_Kind (Conv) in Iir_Kinds_Denoting_Name);
-      Set_Named_Entity (Conv, Func);
+      Func := Extract_Conversion (Conv, Res_Type, Param_Type, Conv);
 
-      case Get_Kind (Func) is
-         when Iir_Kind_Function_Declaration =>
-            Res := Create_Iir (Iir_Kind_Function_Call);
-            Location_Copy (Res, Conv);
-            Set_Implementation (Res, Func);
-            Set_Prefix (Res, Conv);
-            Set_Base_Name (Res, Res);
-            Set_Parameter_Association_Chain (Res, Null_Iir);
-            Set_Type (Res, Get_Return_Type (Func));
-            Set_Expr_Staticness (Res, None);
-            Mark_Subprogram_Used (Func);
-         when Iir_Kind_Subtype_Declaration
-           | Iir_Kind_Type_Declaration =>
-            Res := Create_Iir (Iir_Kind_Type_Conversion);
-            Location_Copy (Res, Conv);
-            Set_Type_Mark (Res, Conv);
-            Set_Type (Res, Get_Type (Func));
-            Set_Expression (Res, Null_Iir);
-            Set_Expr_Staticness (Res, None);
-         when others =>
-            Error_Kind ("extract_out_conversion", Res);
-      end case;
-      Xrefs.Xref_Name (Conv);
-      return Res;
+      return Func;
    end Extract_Out_Conversion;
 
    procedure Sem_Association_Open
      (Assoc : Iir;
-      Inter : Iir;
       Finish : Boolean;
       Match : out Compatibility_Level)
    is
       Formal : Iir;
-      Assoc_Kind : Param_Assoc_Type;
    begin
-      Formal := Get_Formal (Assoc);
-
-      if Formal /= Null_Iir then
-         Assoc_Kind := Sem_Formal (Formal, Inter);
-         if Assoc_Kind = None then
-            Match := Not_Compatible;
-            return;
+      if Finish then
+         --  LRM 4.3.3.2  Associations lists
+         --  It is an error if an actual of open is associated with a
+         --  formal that is associated individually.
+         if Get_Whole_Association_Flag (Assoc) = False then
+            Error_Msg_Sem
+              (+Assoc, "cannot associate individually with open");
          end if;
-         Set_Whole_Association_Flag (Assoc, Assoc_Kind = Whole);
-         if Finish then
-            Sem_Name (Formal);
-            Formal := Finish_Sem_Name (Formal);
-            Set_Formal (Assoc, Formal);
-            if Get_Kind (Formal) in Iir_Kinds_Denoting_Name
-              and then Is_Error (Get_Named_Entity (Formal))
-            then
-               Match := Not_Compatible;
-               return;
-            end if;
 
-            --  LRM 4.3.3.2  Associations lists
-            --  It is an error if an actual of open is associated with a
-            --  formal that is associated individually.
-            if Assoc_Kind = Individual then
-               Error_Msg_Sem
-                 (+Assoc, "cannot associate individually with open");
-            end if;
+         Formal := Get_Formal (Assoc);
+         if Formal /= Null_Iir then
+            Set_Formal (Assoc, Finish_Sem_Name (Formal));
          end if;
-      else
-         Set_Whole_Association_Flag (Assoc, True);
       end if;
       Match := Fully_Compatible;
    end Sem_Association_Open;
@@ -1678,9 +1400,8 @@ package body Sem_Assocs is
    begin
       if Formal /= Null_Iir then
          pragma Assert (Get_Identifier (Formal) = Get_Identifier (Inter));
-         Set_Named_Entity (Formal, Inter);
-         Set_Base_Name (Formal, Inter);
-         Xrefs.Xref_Ref (Formal, Inter);
+         pragma Assert (Get_Named_Entity (Formal) = Inter);
+         Set_Formal (Assoc, Finish_Sem_Name (Formal));
       end if;
    end Sem_Association_Package_Type_Finish;
 
@@ -1762,7 +1483,7 @@ package body Sem_Assocs is
          Inter : Iir;
       begin
          --  A function declaration.
-         if Get_Kind (Decl) /= Iir_Kind_Function_Declaration then
+         if not Is_Function_Declaration (Decl) then
             return False;
          end if;
          --  That returns a boolean.
@@ -1986,14 +1707,15 @@ package body Sem_Assocs is
             declare
                Nbr_Errors : Natural;
                List : Iir_List;
+               It : List_Iterator;
                El, R : Iir;
             begin
                Nbr_Errors := 0;
                R := Null_Iir;
                List := Get_Overload_List (Res);
-               for I in Natural loop
-                  El := Get_Nth_Element (List, I);
-                  exit when El = Null_Iir;
+               It := List_Iterate (List);
+               while Is_Valid (It) loop
+                  El := Get_Element (It);
                   if Has_Interface_Subprogram_Profile (Inter, El) then
                      if Is_Null (R) then
                         R := El;
@@ -2012,6 +1734,7 @@ package body Sem_Assocs is
                         Nbr_Errors := Nbr_Errors + 1;
                      end if;
                   end if;
+                  Next (It);
                end loop;
                if Is_Null (R) then
                   Error_Msg_Sem
@@ -2019,11 +1742,12 @@ package body Sem_Assocs is
                   if True then
                      Error_Msg_Sem
                        (+Assoc, " these names were incompatible:");
-                     for I in Natural loop
-                        El := Get_Nth_Element (List, I);
-                        exit when El = Null_Iir;
+                     It := List_Iterate (List);
+                     while Is_Valid (It) loop
+                        El := Get_Element (It);
                         Error_Msg_Sem
                           (+Assoc, " %n declared at %l", (+El, +El));
+                        Next (It);
                      end loop;
                   end if;
                   return;
@@ -2047,36 +1771,23 @@ package body Sem_Assocs is
    procedure Sem_Association_By_Expression
      (Assoc : Iir;
       Inter : Iir;
+      Formal_Name : Iir;
+      Formal_Conv : Iir;
       Finish : Boolean;
       Match : out Compatibility_Level)
    is
-      Formal : Iir;
       Formal_Type : Iir;
       Actual: Iir;
       Out_Conv, In_Conv : Iir;
       Expr : Iir;
       Res_Type : Iir;
-      Assoc_Kind : Param_Assoc_Type;
    begin
-      Formal := Get_Formal (Assoc);
-
-      --  Pre-analyze formal and extract out conversion.
-      if Formal /= Null_Iir then
-         Assoc_Kind := Sem_Formal (Formal, Inter);
-         if Assoc_Kind = None then
-            Match := Not_Compatible;
-            return;
-         end if;
-         Set_Whole_Association_Flag (Assoc, Assoc_Kind = Whole);
-         Formal := Get_Formal (Assoc);
-
-         Out_Conv := Get_Out_Conversion (Assoc);
+      Out_Conv := Formal_Conv;
+      if Formal_Name /= Null_Iir then
+         Formal_Type := Get_Type (Formal_Name);
       else
-         Set_Whole_Association_Flag (Assoc, True);
-         Out_Conv := Null_Iir;
-         Formal := Inter;
+         Formal_Type := Get_Type (Inter);
       end if;
-      Formal_Type := Get_Type (Formal);
 
       --  Extract conversion from actual.
       --  LRM08 6.5.7.1 Association lists
@@ -2186,27 +1897,50 @@ package body Sem_Assocs is
          return;
       end if;
 
-      --  Analyze formal.
-      if Get_Formal (Assoc) /= Null_Iir then
-         Set_Type (Formal, Null_Iir);
-         Sem_Name (Formal);
-         Expr := Get_Named_Entity (Formal);
-         if Get_Kind (Expr) = Iir_Kind_Error then
-            return;
-         end if;
-         Formal := Finish_Sem_Name (Formal);
-         Set_Formal (Assoc, Formal);
-         Formal_Type := Get_Type (Expr);
-         if Out_Conv = Null_Iir and In_Conv = Null_Iir then
-            Res_Type := Formal_Type;
-         end if;
+      if Formal_Name /= Null_Iir then
+         declare
+            Formal : Iir;
+            Conv_Assoc : Iir;
+         begin
+            --  Extract formal from the conversion (and unlink it from the
+            --  conversion, as the owner of the formal is the association, not
+            --  the conversion).
+            Formal := Finish_Sem_Name (Get_Formal (Assoc));
+            case Get_Kind (Formal) is
+               when Iir_Kind_Function_Call =>
+                  pragma Assert (Formal_Conv /= Null_Iir);
+                  Set_Formal_Conversion (Assoc, Formal);
+                  Conv_Assoc := Get_Parameter_Association_Chain (Formal);
+                  Set_Parameter_Association_Chain (Formal, Null_Iir);
+                  Formal := Get_Actual (Conv_Assoc);
+                  Free_Iir (Conv_Assoc);
+                  --  Name_To_Method_Object (Func, Conv);
+               when Iir_Kind_Type_Conversion =>
+                  pragma Assert (Formal_Conv /= Null_Iir);
+                  Conv_Assoc := Formal;
+                  Set_Formal_Conversion (Assoc, Formal);
+                  Formal := Get_Expression (Formal);
+                  Set_Expression (Conv_Assoc, Null_Iir);
+               when others =>
+                  pragma Assert (Formal_Conv = Null_Iir);
+                  null;
+            end case;
+            Set_Formal (Assoc, Formal);
+
+            --  Use the type of the formal to analyze the actual.  In
+            --  particular, the formal may be constrained while the actual is
+            --  not.
+            Formal_Type := Get_Type (Formal);
+            if Out_Conv = Null_Iir and In_Conv = Null_Iir then
+               Res_Type := Formal_Type;
+            end if;
+         end;
       end if;
 
       --  LRM08 6.5.7 Association lists
       --  The formal part of a named association element may be in the form of
       --  a function call [...] if and only if the formal is an interface
       --  object, the mode of the formal is OUT, INOUT, BUFFER or LINKAGE [...]
-      Set_Out_Conversion (Assoc, Out_Conv);
       if Out_Conv /= Null_Iir
         and then Get_Mode (Inter) = Iir_In_Mode
       then
@@ -2218,7 +1952,7 @@ package body Sem_Assocs is
       --  The actual part of an association element may be in the form of a
       --  function call [...] if and only if the mode of the format is IN,
       --  INOUT or LINKAGE [...]
-      Set_In_Conversion (Assoc, In_Conv);
+      Set_Actual_Conversion (Assoc, In_Conv);
       if In_Conv /= Null_Iir
         and then Get_Mode (Inter) in Iir_Buffer_Mode .. Iir_Out_Mode
       then
@@ -2292,27 +2026,28 @@ package body Sem_Assocs is
    --  This sets MATCH.
    procedure Sem_Association (Assoc : Iir;
                               Inter : Iir;
+                              Formal : Iir;
+                              Formal_Conv : Iir;
                               Finish : Boolean;
                               Match : out Compatibility_Level) is
    begin
-      case Get_Kind (Assoc) is
-         when Iir_Kind_Association_Element_Open =>
-            Sem_Association_Open (Assoc, Inter, Finish, Match);
+      case Iir_Kinds_Interface_Declaration (Get_Kind (Inter)) is
+         when Iir_Kinds_Interface_Object_Declaration =>
+            if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open then
+               Sem_Association_Open (Assoc, Finish, Match);
+            else
+               Sem_Association_By_Expression
+                 (Assoc, Inter, Formal, Formal_Conv, Finish, Match);
+            end if;
 
-         when Iir_Kind_Association_Element_By_Expression =>
-            Sem_Association_By_Expression (Assoc, Inter, Finish, Match);
-
-         when Iir_Kind_Association_Element_Package =>
+         when Iir_Kind_Interface_Package_Declaration =>
             Sem_Association_Package (Assoc, Inter, Finish, Match);
 
-         when Iir_Kind_Association_Element_Type =>
+         when Iir_Kind_Interface_Type_Declaration =>
             Sem_Association_Type (Assoc, Inter, Finish, Match);
 
-         when Iir_Kind_Association_Element_Subprogram =>
+         when Iir_Kinds_Interface_Subprogram_Declaration =>
             Sem_Association_Subprogram (Assoc, Inter, Finish, Match);
-
-         when others =>
-            Error_Kind ("sem_assocation", Assoc);
       end case;
    end Sem_Association;
 
@@ -2324,180 +2059,120 @@ package body Sem_Assocs is
       Loc : Iir;
       Match : out Compatibility_Level)
    is
-      --  Set POS and INTERFACE to *the* matching interface if any of ASSOC.
-      procedure Search_Interface (Assoc : Iir;
-                                  Inter : out Iir;
-                                  Pos : out Integer)
-      is
-         I_Match : Compatibility_Level;
-      begin
-         Inter := Interface_Chain;
-         Pos := 0;
-         while Inter /= Null_Iir loop
-            -- Formal assoc is not necessarily a simple name, it may
-            -- be a conversion function, or even an indexed or
-            -- selected name.
-            Sem_Association (Assoc, Inter, False, I_Match);
-            if I_Match /= Not_Compatible then
-               return;
-            end if;
-            Inter := Get_Chain (Inter);
-            Pos := Pos + 1;
-         end loop;
-      end Search_Interface;
+      Assoc : Iir;
+      Inter : Iir;
 
-      Assoc: Iir;
-      Inter: Iir;
+      type Param_Assoc_Type is (None, Open, Individual, Whole);
 
-      type Bool_Array is array (Natural range <>) of Param_Assoc_Type;
-      Nbr_Arg: constant Natural := Get_Chain_Length (Interface_Chain);
-      Arg_Matched: Bool_Array (0 .. Nbr_Arg - 1) := (others => None);
+      type Assoc_Array is array (Natural range <>) of Param_Assoc_Type;
+      Nbr_Inter : constant Natural := Get_Chain_Length (Interface_Chain);
+      Inter_Matched : Assoc_Array (0 .. Nbr_Inter - 1) := (others => None);
 
       Last_Individual : Iir;
       Has_Individual : Boolean;
       Pos : Integer;
       Formal : Iir;
 
-      Interface_1 : Iir;
-      Pos_1 : Integer;
-      Assoc_1 : Iir;
+      First_Named_Assoc : Iir;
+      Last_Named_Assoc : Iir;
+
+      Formal_Name : Iir;
+      Formal_Conv : Iir;
    begin
       Match := Fully_Compatible;
+      First_Named_Assoc := Null_Iir;
       Has_Individual := False;
 
-      -- Loop on every assoc element, try to match it.
+      --  Loop on every assoc element, try to match it.
       Inter := Interface_Chain;
       Last_Individual := Null_Iir;
       Pos := 0;
 
+      --  First positional associations
       Assoc := Assoc_Chain;
       while Assoc /= Null_Iir loop
          Formal := Get_Formal (Assoc);
-         if Formal = Null_Iir then
-            -- Positional argument.
-            if Pos < 0 then
+         exit when Formal /= Null_Iir;
+
+         --  Try to match actual of ASSOC with the interface.
+         if Inter = Null_Iir then
+            if Finish then
+               Error_Msg_Sem (+Assoc, "too many actuals for %n", +Loc);
+            end if;
+            Match := Not_Compatible;
+            return;
+         end if;
+         Set_Whole_Association_Flag (Assoc, True);
+         Sem_Association (Assoc, Inter, Null_Iir, Null_Iir, Finish, Match);
+         if Match = Not_Compatible then
+            return;
+         end if;
+         if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open then
+            Inter_Matched (Pos) := Open;
+         else
+            Inter_Matched (Pos) := Whole;
+         end if;
+         Set_Whole_Association_Flag (Assoc, True);
+         Inter := Get_Chain (Inter);
+
+         Pos := Pos + 1;
+         Assoc := Get_Chain (Assoc);
+      end loop;
+
+      --  Then association by name.
+      if Assoc /= Null_Iir then
+         --  Make interfaces visible
+         --
+         --  LRM08 12.3 Visibility
+         --  A declaration is visible by selection at places that are defined
+         --  as follows:
+         --  j) For a formal parameter declaration of a given subprogram
+         --     declaration: at the place of the formal part (before the
+         --     compound delimiter =>) of a named parameter association
+         --     element of a corresponding subprogram call.
+         --  k) For a local generic declaration of a given component
+         --     declaration ...
+         --  l) For a local port declaration of a given component declaration:
+         --     ...
+         --  m) For a formal generic declaration of a given entity declaration:
+         --     ...
+         --  n) For a formal port declaration of a given entity declaration:
+         --     ...
+         --  o) For a formal generic declaration or a formal port declaration
+         --     of a given block statement: ...
+         --  p) For a formal generic declaration of a given package
+         --     declaration: ...
+         --  q) For a formal generic declaration of a given subprogram
+         --     declarations: ...
+         --
+         --  At a place in which a given declaration is visible by selection,
+         --  every declaration with the same designator as the given
+         --  declaration and that would otherwise be directly visible is
+         --  hidden.
+         Sem_Scopes.Open_Declarative_Region;
+         Sem_Scopes.Add_Declarations_From_Interface_Chain (Interface_Chain);
+
+         First_Named_Assoc := Assoc;
+         loop
+            if Formal = Null_Iir then
                --  Positional after named argument.  Already caught by
                --  Sem_Actual_Of_Association_Chain (because it is called only
                --  once, while sem_association_chain may be called several
                --  times).
                Match := Not_Compatible;
-               return;
+               exit;
             end if;
-            -- Try to match actual of ASSOC with the interface.
-            if Inter = Null_Iir then
-               if Finish then
-                  Error_Msg_Sem (+Assoc, "too many actuals for %n", +Loc);
-               end if;
-               Match := Not_Compatible;
-               return;
-            end if;
-            Sem_Association (Assoc, Inter, Finish, Match);
-            if Match = Not_Compatible then
-               return;
-            end if;
-            if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open then
-               Arg_Matched (Pos) := Open;
-            else
-               Arg_Matched (Pos) := Whole;
-            end if;
-            Set_Whole_Association_Flag (Assoc, True);
-            Inter := Get_Chain (Inter);
-            Pos := Pos + 1;
-         else
-            -- FIXME: directly search the formal if finish is true.
-            -- Find the Interface.
-            case Get_Kind (Formal) is
-               when Iir_Kind_Parenthesis_Name =>
-                  Assoc_1 := Sem_Formal_Conversion (Assoc);
-                  if Assoc_1 /= Null_Iir then
-                     Search_Interface (Assoc_1, Interface_1, Pos_1);
-                     --  LRM 4.3.2.2  Association Lists
-                     --  The formal part of a named element association may be
-                     --  in the form of a function call, [...], if and only
-                     --  if the mode of the formal is OUT, INOUT, BUFFER, or
-                     --  LINKAGE, and the actual is not OPEN.
-                     if Interface_1 = Null_Iir
-                       or else Get_Mode (Interface_1) = Iir_In_Mode
-                     then
-                        Sem_Name_Clean (Get_Out_Conversion (Assoc_1));
-                        Free_Iir (Assoc_1);
-                        Assoc_1 := Null_Iir;
-                     end if;
-                  end if;
-                  Search_Interface (Assoc, Inter, Pos);
-                  if Inter = Null_Iir then
-                     if Assoc_1 /= Null_Iir then
-                        Inter := Interface_1;
-                        Pos := Pos_1;
-                        Free_Parenthesis_Name
-                          (Get_Formal (Assoc), Get_Out_Conversion (Assoc_1));
-                        Set_Formal (Assoc, Get_Formal (Assoc_1));
-                        Set_Out_Conversion
-                          (Assoc, Get_Out_Conversion (Assoc_1));
-                        Set_Whole_Association_Flag
-                          (Assoc, Get_Whole_Association_Flag (Assoc_1));
-                        Free_Iir (Assoc_1);
-                     end if;
-                  else
-                     if Assoc_1 /= Null_Iir then
-                        raise Internal_Error;
-                     end if;
-                  end if;
-               when others =>
-                  Search_Interface (Assoc, Inter, Pos);
-            end case;
 
-            if Inter /= Null_Iir then
-               if Get_Whole_Association_Flag (Assoc) then
-                  --  Whole association.
-                  Last_Individual := Null_Iir;
-                  if Arg_Matched (Pos) = None then
-                     if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open
-                     then
-                        Arg_Matched (Pos) := Open;
-                     else
-                        Arg_Matched (Pos) := Whole;
-                     end if;
-                  else
-                     if Finish then
-                        Error_Msg_Sem
-                          (+Assoc, "%n already associated", +Inter);
-                     end if;
-                     Match := Not_Compatible;
-                     return;
-                  end if;
-               else
-                  --  Individual association.
-                  Has_Individual := True;
-                  if Arg_Matched (Pos) /= Whole then
-                     if Finish
-                       and then Arg_Matched (Pos) = Individual
-                       and then Last_Individual /= Inter
-                     then
-                        Error_Msg_Sem
-                          (+Assoc,
-                           "non consecutive individual association for %n",
-                           +Inter);
-                        Match := Not_Compatible;
-                        return;
-                     end if;
-                     Last_Individual := Inter;
-                     Arg_Matched (Pos) := Individual;
-                  else
-                     if Finish then
-                        Error_Msg_Sem
-                          (+Assoc, "%n already associated", +Inter);
-                        Match := Not_Compatible;
-                        return;
-                     end if;
-                  end if;
-               end if;
-               if Finish then
-                  Sem_Association (Assoc, Inter, True, Match);
-                  --  MATCH can be Not_Compatible due to errors.
-               end if;
+            --  Last assoc to be cleaned up.
+            Last_Named_Assoc := Assoc;
+
+            if Finish then
+               Sem_Name (Formal);
             else
-               -- Not found.
+               Sem_Name_Soft (Formal);
+            end if;
+            Formal_Name := Get_Named_Entity (Formal);
+            if Is_Error (Formal_Name) then
                if Finish then
                   --  FIXME: display the name of subprg or component/entity.
                   --  FIXME: fetch the interface (for parenthesis_name).
@@ -2505,17 +2180,265 @@ package body Sem_Assocs is
                                  +Get_Formal (Assoc));
                end if;
                Match := Not_Compatible;
-               return;
+               exit;
             end if;
-         end if;
-         Assoc := Get_Chain (Assoc);
-      end loop;
 
-      if Finish and then Has_Individual then
-         Sem_Individual_Association (Assoc_Chain);
+            Assoc := Get_Chain (Assoc);
+            exit when Assoc = Null_Iir;
+            Formal := Get_Formal (Assoc);
+         end loop;
+
+         --  Remove visibility by selection of interfaces.  This is needed
+         --  to correctly analyze actuals.
+         Sem_Scopes.Close_Declarative_Region;
+
+         if Match /= Not_Compatible then
+            Assoc := First_Named_Assoc;
+            loop
+               Formal := Get_Formal (Assoc);
+               Formal_Name := Get_Named_Entity (Formal);
+
+               --  Extract conversion
+               Formal_Conv := Null_Iir;
+               case Get_Kind (Formal_Name) is
+                  when Iir_Kind_Function_Call =>
+                     --  Only one actual
+                     declare
+                        Call_Assoc : constant Iir :=
+                          Get_Parameter_Association_Chain (Formal_Name);
+                     begin
+                        if (Get_Kind (Call_Assoc)
+                              /= Iir_Kind_Association_Element_By_Expression)
+                          or else Get_Chain (Call_Assoc) /= Null_Iir
+                          or else Get_Formal (Call_Assoc) /= Null_Iir
+                          or else (Get_Actual_Conversion (Call_Assoc)
+                                     /= Null_Iir)
+                        then
+                           if Finish then
+                              Error_Msg_Sem
+                                (+Assoc, "ill-formed formal conversion");
+                           end if;
+                           Match := Not_Compatible;
+                           exit;
+                        end if;
+                        Formal_Conv := Formal_Name;
+                        Formal_Name := Get_Actual (Call_Assoc);
+                     end;
+                  when Iir_Kind_Type_Conversion =>
+                     Formal_Conv := Formal_Name;
+                     Formal_Name := Get_Expression (Formal_Name);
+                  when Iir_Kind_Slice_Name
+                    | Iir_Kind_Indexed_Name
+                    | Iir_Kind_Selected_Element
+                    | Iir_Kind_Simple_Name =>
+                     null;
+                  when others =>
+                     Formal_Name := Formal;
+               end case;
+               case Get_Kind (Formal_Name) is
+                  when Iir_Kind_Selected_Element
+                    | Iir_Kind_Slice_Name
+                    | Iir_Kind_Indexed_Name =>
+                     Inter := Get_Base_Name (Formal_Name);
+                     Set_Whole_Association_Flag (Assoc, False);
+                  when Iir_Kind_Simple_Name
+                    | Iir_Kind_Operator_Symbol =>
+                     Inter := Get_Named_Entity (Formal_Name);
+                     Formal_Name := Inter;
+                     Set_Whole_Association_Flag (Assoc, True);
+                  when others =>
+                     --  Error
+                     if Finish then
+                        Error_Msg_Sem (+Assoc, "formal is not a name");
+                     end if;
+                     Match := Not_Compatible;
+                     exit;
+               end case;
+
+               --  Simplify overload list (for interface subprogram).
+               --  FIXME: Interface must hide previous subprogram declarations,
+               --  so there should be no need to filter.
+               if Is_Overload_List (Inter) then
+                  declare
+                     List : constant Iir_List := Get_Overload_List (Inter);
+                     It : List_Iterator;
+                     Filtered_Inter : Iir;
+                     El : Iir;
+                  begin
+                     Filtered_Inter := Null_Iir;
+                     It := List_Iterate (List);
+                     while Is_Valid (It) loop
+                        El := Get_Element (It);
+                        if Get_Kind (El) in Iir_Kinds_Interface_Declaration
+                          and then
+                          Get_Parent (El) = Get_Parent (Interface_Chain)
+                        then
+                           Add_Result (Filtered_Inter, El);
+                        end if;
+                        Next (It);
+                     end loop;
+                     Free_Overload_List (Inter);
+                     Inter := Filtered_Inter;
+
+                     pragma Assert
+                       (Get_Kind (Formal) = Iir_Kind_Simple_Name
+                          or else
+                          Get_Kind (Formal) = Iir_Kind_Operator_Symbol);
+                     Set_Named_Entity (Formal, Inter);
+
+                     if Inter = Null_Iir then
+                        if Finish then
+                           Error_Msg_Sem (+Assoc, "no interface %i for %n",
+                                          (+Formal, +Loc));
+                        end if;
+                        Match := Not_Compatible;
+                        exit;
+                     end if;
+
+                     if Is_Overload_List (Inter) then
+                        if Finish then
+                           Error_Msg_Sem (+Assoc, "ambiguous formal name");
+                        end if;
+                        Match := Not_Compatible;
+                        exit;
+                     end if;
+                  end;
+               end if;
+               if Get_Kind (Inter) not in Iir_Kinds_Interface_Declaration
+                 or else Interface_Chain = Null_Iir
+                 or else Get_Parent (Inter) /= Get_Parent (Interface_Chain)
+               then
+                  if Finish then
+                     Error_Msg_Sem
+                       (+Assoc, "formal %i is not an interface name", +Inter);
+                  end if;
+                  Match := Not_Compatible;
+                  exit;
+               end if;
+
+               --  LRM 4.3.2.2  Association Lists
+               --  The formal part of a named element association may be
+               --  in the form of a function call, [...], if and only
+               --  if the mode of the formal is OUT, INOUT, BUFFER, or
+               --  LINKAGE, and the actual is not OPEN.
+               if Formal_Conv /= Null_Iir
+                 and then (Get_Kind (Inter)
+                             not in Iir_Kinds_Interface_Object_Declaration
+                             or else Get_Mode (Inter) = Iir_In_Mode)
+               then
+                  if Finish then
+                     Error_Msg_Sem
+                       (+Assoc,
+                        "formal conversion allowed only for interface object",
+                        +Formal_Conv);
+                  end if;
+                  Match := Not_Compatible;
+                  exit;
+               end if;
+
+               --  Find the Interface.
+               declare
+                  Inter1 : Iir;
+               begin
+                  Inter1 := Interface_Chain;
+                  Pos := 0;
+                  while Inter1 /= Null_Iir loop
+                     exit when Inter = Inter1;
+                     Inter1 := Get_Chain (Inter1);
+                     Pos := Pos + 1;
+                  end loop;
+                  if Inter1 = Null_Iir then
+                     if Finish then
+                        Error_Msg_Sem
+                          (+Assoc,
+                           "no corresponding interface for %i", +Inter);
+                     end if;
+                     Match := Not_Compatible;
+                     exit;
+                  end if;
+               end;
+
+               Sem_Association
+                 (Assoc, Inter, Formal_Name, Formal_Conv, Finish, Match);
+               exit when Match = Not_Compatible;
+
+               if Get_Whole_Association_Flag (Assoc) then
+                  --  Whole association.
+                  Last_Individual := Null_Iir;
+                  if Inter_Matched (Pos) = None then
+                     if Get_Kind (Assoc) = Iir_Kind_Association_Element_Open
+                     then
+                        Inter_Matched (Pos) := Open;
+                     else
+                        Inter_Matched (Pos) := Whole;
+                     end if;
+                  else
+                     if Finish then
+                        Error_Msg_Sem
+                          (+Assoc, "%n already associated", +Inter);
+                     end if;
+                     Match := Not_Compatible;
+                     exit;
+                  end if;
+               else
+                  --  Individual association.
+                  Has_Individual := True;
+                  if Inter_Matched (Pos) /= Whole then
+                     if Finish
+                       and then Inter_Matched (Pos) = Individual
+                       and then Last_Individual /= Inter
+                     then
+                        Error_Msg_Sem
+                          (+Assoc,
+                           "non consecutive individual association for %n",
+                           +Inter);
+                        Match := Not_Compatible;
+                        exit;
+                     end if;
+                     Last_Individual := Inter;
+                     Inter_Matched (Pos) := Individual;
+                  else
+                     if Finish then
+                        Error_Msg_Sem
+                          (+Assoc, "%n already associated", +Inter);
+                        Match := Not_Compatible;
+                        exit;
+                     end if;
+                  end if;
+               end if;
+
+               Assoc := Get_Chain (Assoc);
+               exit when Assoc = Null_Iir;
+            end loop;
+         end if;
+
+         if Finish and Has_Individual and Match /= Not_Compatible then
+            Sem_Individual_Association (Assoc_Chain);
+         end if;
+
+         if not Finish then
+            --  Always cleanup if not finishing: there can be other tries in
+            --  case of overloading.
+            Assoc := First_Named_Assoc;
+            while Assoc /= Null_Iir loop
+               Formal := Get_Formal (Assoc);
+               --  User may have used by position assoc after named
+               --  assocs.
+               if Is_Valid (Formal) then
+                  Sem_Name_Clean (Formal);
+               end if;
+               exit when Assoc = Last_Named_Assoc;
+               Assoc := Get_Chain (Assoc);
+            end loop;
+         end if;
+
+         if Match = Not_Compatible then
+            return;
+         end if;
       end if;
 
       if Missing = Missing_Allowed then
+         --  No need to check for missing associations.
          return;
       end if;
 
@@ -2549,7 +2472,7 @@ package body Sem_Assocs is
       Inter := Interface_Chain;
       Pos := 0;
       while Inter /= Null_Iir loop
-         if Arg_Matched (Pos) <= Open then
+         if Inter_Matched (Pos) <= Open then
             case Get_Kind (Inter) is
                when Iir_Kinds_Interface_Object_Declaration =>
                   if Get_Default_Value (Inter) = Null_Iir then
@@ -2564,9 +2487,8 @@ package body Sem_Assocs is
                         when Missing_Port =>
                            case Get_Mode (Inter) is
                               when Iir_In_Mode =>
-                                 if not Finish then
-                                    raise Internal_Error;
-                                 end if;
+                                 --  No overloading for components/entities.
+                                 pragma Assert (Finish);
                                  Error_Msg_Sem
                                    (+Loc,
                                     "%n of mode IN must be connected", +Inter);
@@ -2576,9 +2498,8 @@ package body Sem_Assocs is
                                 | Iir_Linkage_Mode
                                 | Iir_Inout_Mode
                                 | Iir_Buffer_Mode =>
-                                 if not Finish then
-                                    raise Internal_Error;
-                                 end if;
+                                 --  No overloading for components/entities.
+                                 pragma Assert (Finish);
                                  if not Is_Fully_Constrained_Type
                                    (Get_Type (Inter))
                                  then

@@ -134,7 +134,7 @@ package body Sem_Stmts is
    --   prefix to suffix.
    function Is_Disjoint (N1, N2: Iir) return Boolean
    is
-      List1, List2 : Iir_List;
+      List1, List2 : Iir_Flist;
       El1, El2 : Iir;
    begin
       if N1 = N2 then
@@ -149,14 +149,13 @@ package body Sem_Stmts is
          --  Check indexes.
          List1 := Get_Index_List (N1);
          List2 := Get_Index_List (N2);
-         for I in Natural loop
+         for I in Flist_First .. Flist_Last (List1) loop
             El1 := Get_Nth_Element (List1, I);
             El2 := Get_Nth_Element (List2, I);
-            exit when El1 = Null_Iir;
             El1 := Eval_Expr (El1);
-            Replace_Nth_Element (List1, I, El1);
+            Set_Nth_Element (List1, I, El1);
             El2 := Eval_Expr (El2);
-            Replace_Nth_Element (List2, I, El2);
+            Set_Nth_Element (List2, I, El2);
             --  EL are of discrete type.
             if Get_Value (El1) /= Get_Value (El2) then
                return True;
@@ -992,8 +991,8 @@ package body Sem_Stmts is
                --  must be locally static.  So I don't check this in 93c.
                if Flags.Vhdl_Std /= Vhdl_93c
                  and then
-                 Get_Expr_Staticness (Get_First_Element
-                                      (Get_Index_List (Expr))) /= Locally
+                 (Get_Expr_Staticness
+                    (Get_Nth_Element (Get_Index_List (Expr), 0)) /= Locally)
                then
                   Error_Msg_Sem
                     (+Expr, "indexing expression must be locally static");
@@ -1054,14 +1053,13 @@ package body Sem_Stmts is
          return True;
       end Check_Odcat_Expression;
 
-      Choice_Type : Iir;
+      Choice_Type : constant Iir := Get_Type (Choice);
       Low, High : Iir;
       El_Type : Iir;
    begin
       --  LRM 8.8  Case Statement
       --  The expression must be of a discrete type, or of a one-dimensional
       --  array type whose element base type is a character type.
-      Choice_Type := Get_Type (Choice);
       case Get_Kind (Choice_Type) is
          when Iir_Kinds_Discrete_Type_Definition =>
             Sem_Choices_Range
@@ -1075,15 +1073,21 @@ package body Sem_Stmts is
                return;
             end if;
             El_Type := Get_Base_Type (Get_Element_Subtype (Choice_Type));
-            if Get_Kind (El_Type) /= Iir_Kind_Enumeration_Type_Definition then
-               --  FIXME: check character.
+            if Get_Kind (El_Type) /= Iir_Kind_Enumeration_Type_Definition
+              or else not Get_Is_Character_Type (El_Type)
+            then
                Error_Msg_Sem
                  (+Choice,
                   "element type of the expression must be a character type");
                return;
             end if;
-            if not Check_Odcat_Expression (Choice) then
-               return;
+            if Flags.Vhdl_Std >= Vhdl_08 then
+               --  No specific restrictions in vhdl 2008.
+               null;
+            else
+               if not Check_Odcat_Expression (Choice) then
+                  return;
+               end if;
             end if;
             Sem_String_Choices_Range (Chain, Choice);
          when others =>
@@ -1117,9 +1121,10 @@ package body Sem_Stmts is
    end Sem_Case_Statement;
 
    --  Sem the sensitivity list LIST.
-   procedure Sem_Sensitivity_List (List: Iir_Designator_List)
+   procedure Sem_Sensitivity_List (List: Iir_List)
    is
       El: Iir;
+      It : List_Iterator;
       Res: Iir;
       Prefix : Iir;
    begin
@@ -1127,10 +1132,10 @@ package body Sem_Stmts is
          return;
       end if;
 
-      for I in Natural loop
+      It := List_Iterate (List);
+      while Is_Valid (It) loop
          -- El is an iir_identifier.
-         El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
+         El := Get_Element (It);
 
          Sem_Name (El);
 
@@ -1171,8 +1176,10 @@ package body Sem_Stmts is
                  (+El, "sensitivity element %n must be a static name", +Res);
             end if;
 
-            Replace_Nth_Element (List, I, Res);
+            Set_Element (It, Res);
          end if;
+
+         Next (It);
       end loop;
    end Sem_Sensitivity_List;
 

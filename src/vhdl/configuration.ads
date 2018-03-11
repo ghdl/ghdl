@@ -55,4 +55,9 @@ package Configuration is
    --  ENTITY has no ports or all ports type are constrained.
    --  If not, emit a elab error message.
    procedure Check_Entity_Declaration_Top (Entity : Iir_Entity_Declaration);
+
+   --  Use heuritics to find the top entity in FROM (either a library or
+   --  a design file): mark all instantiated units and return the unmarked
+   --  one if there is only one.
+   function Find_Top_Entity (From : Iir) return Iir;
 end Configuration;

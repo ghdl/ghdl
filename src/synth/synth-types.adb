@@ -23,8 +23,8 @@ with Std_Package;
 with Ieee.Std_Logic_1164;
 with Iirs_Utils; use Iirs_Utils;
 
-with Iir_Values; use Iir_Values;
-with Execution;
+with Simul.Environments; use Simul.Environments;
+with Simul.Execution;
 with Errorout; use Errorout;
 
 package body Synth.Types is
@@ -62,7 +62,7 @@ package body Synth.Types is
                declare
                   Bnd : Iir_Value_Literal_Acc;
                begin
-                  Bnd := Execution.Execute_Bounds
+                  Bnd := Simul.Execution.Execute_Bounds
                     (Syn_Inst.Sim,
                      Get_Nth_Element (Get_Index_Subtype_List (Atype), 0));
                   return Width (Bnd.Length);

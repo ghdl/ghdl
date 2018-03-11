@@ -164,11 +164,13 @@ package body Trans.Chap9 is
       Ports : Iir;
 
       Mark, Mark2 : Id_Mark_Type;
-      Assoc, Inter, Conv, In_Type : Iir;
+      Assoc, Inter : Iir;
+      Num : Iir_Int32;
       Has_Conv_Record      : Boolean := False;
    begin
       Info := Add_Info (Inst, Kind_Block);
       Push_Identifier_Prefix (Mark, Get_Label (Inst));
+      Num := 0;
 
       if Is_Component_Instantiation (Inst) then
          --  Via a component declaration.
@@ -191,7 +193,7 @@ package body Trans.Chap9 is
       end if;
 
       --  When conversions are used, the subtype of the actual (or of the
-      --  formal for out conversions) may not be yet translated.  This
+      --  formal for formal conversions) may not be yet translated.  This
       --  can happen if the name is a slice.
       --  We need to translate it and create variables in the instance
       --  because it will be referenced by the conversion subprogram.
@@ -200,25 +202,41 @@ package body Trans.Chap9 is
       while Assoc /= Null_Iir loop
          if Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression
          then
-            Conv := Get_In_Conversion (Assoc);
-            In_Type := Get_Type (Get_Actual (Assoc));
-            if Conv /= Null_Iir
-              and then Is_Anonymous_Type_Definition (In_Type)
-            then
-               --  Lazy creation of the record.
-               if not Has_Conv_Record then
-                  Has_Conv_Record := True;
-                  Push_Instance_Factory (Info.Block_Scope'Access);
-               end if;
+            declare
+               Act_Conv : constant Iir := Get_Actual_Conversion (Assoc);
+               Act_Type : constant Iir := Get_Type (Get_Actual (Assoc));
+               Form_Conv : constant Iir := Get_Formal_Conversion (Assoc);
+               Formal : constant Iir := Get_Formal (Assoc);
+               Need_Actual : constant Boolean := Act_Conv /= Null_Iir
+                 and then Is_Anonymous_Type_Definition (Act_Type);
+               Need_Formal : constant Boolean := Form_Conv /= Null_Iir
+                 and then Is_Anonymous_Type_Definition (Get_Type (Formal));
+            begin
+               if Need_Actual or Need_Formal then
+                  --  Lazy creation of the record.
+                  if not Has_Conv_Record then
+                     Has_Conv_Record := True;
+                     Push_Instance_Factory (Info.Block_Scope'Access);
+                  end if;
 
-               --  FIXME: handle with overload multiple case on the same
-               --  formal.
-               Push_Identifier_Prefix
-                 (Mark2,
-                  Get_Identifier (Get_Association_Interface (Assoc, Inter)));
-               Chap3.Translate_Type_Definition (In_Type, True);
-               Pop_Identifier_Prefix (Mark2);
-            end if;
+                  --  FIXME: handle with overload multiple case on the same
+                  --  formal.
+                  Push_Identifier_Prefix
+                    (Mark2,
+                     Get_Identifier
+                       (Get_Association_Interface (Assoc, Inter)), Num);
+                  Num := Num + 1;
+                  if Need_Actual then
+                     Chap3.Translate_Anonymous_Subtype_Definition
+                       (Act_Type, True);
+                  end if;
+                  if Need_Formal then
+                     Chap3.Translate_Anonymous_Subtype_Definition
+                       (Get_Type (Formal), True);
+                  end if;
+                  Pop_Identifier_Prefix (Mark2);
+               end if;
+            end;
          end if;
          Next_Association_Interface (Assoc, Inter);
       end loop;
@@ -241,6 +259,7 @@ package body Trans.Chap9 is
       Info : Ortho_Info_Acc;
 
       Drivers     : Iir_List;
+      It          : List_Iterator;
       Nbr_Drivers : Natural;
       Sig         : Iir;
    begin
@@ -273,8 +292,10 @@ package body Trans.Chap9 is
 
          Nbr_Drivers := Get_Nbr_Elements (Drivers);
          Info.Process_Drivers := new Direct_Driver_Arr (1 .. Nbr_Drivers);
+         It := List_Iterate (Drivers);
          for I in 1 .. Nbr_Drivers loop
-            Sig := Get_Nth_Element (Drivers, I - 1);
+            pragma Assert (Is_Valid (It));
+            Sig := Get_Element (It);
             Info.Process_Drivers (I) := (Sig => Sig, Var => Null_Var);
             Sig := Get_Object_Prefix (Sig);
             pragma Assert
@@ -288,7 +309,9 @@ package body Trans.Chap9 is
                --  Do not create driver severals times.
                Set_After_Drivers_Flag (Sig, True);
             end if;
+            Next (It);
          end loop;
+         pragma Assert (not Is_Valid (It));
          Trans_Analyzes.Free_Drivers_List (Drivers);
       end if;
       Pop_Instance_Factory (Info.Process_Scope'Access);
@@ -1112,20 +1135,38 @@ package body Trans.Chap9 is
    procedure Destroy_Types_In_List (L : Iir_List)
    is
       El : Iir;
+      It : List_Iterator;
    begin
       case L is
          when Null_Iir_List
-            | Iir_List_All
-            | Iir_List_Others =>
+            | Iir_List_All =>
             return;
          when others =>
-            for I in Natural loop
-               El := Get_Nth_Element (L, I);
-               exit when El = Null_Iir;
+            It := List_Iterate (L);
+            while Is_Valid (It) loop
+               El := Get_Element (It);
                Destroy_Types (El);
+               Next (It);
             end loop;
       end case;
    end Destroy_Types_In_List;
+
+   procedure Destroy_Types_In_Flist (L : Iir_Flist)
+   is
+      El : Iir;
+   begin
+      case L is
+         when Null_Iir_Flist
+            | Iir_Flist_All
+            | Iir_Flist_Others =>
+            return;
+         when others =>
+            for I in Flist_First .. Flist_Last (L) loop
+               El := Get_Nth_Element (L, I);
+               Destroy_Types (El);
+            end loop;
+      end case;
+   end Destroy_Types_In_Flist;
 
    procedure Destroy_Types (N : Iir) is
    begin
@@ -1194,6 +1235,20 @@ package body Trans.Chap9 is
                      when others =>
                         raise Internal_Error;
                   end case;
+               when Type_Iir_Flist =>
+                  case Get_Field_Attribute (F) is
+                     when Attr_None =>
+                        Destroy_Types_In_Flist (Get_Iir_Flist (N, F));
+                     when Attr_Of_Maybe_Ref =>
+                        if not Get_Is_Ref (N) then
+                           Destroy_Types_In_Flist (Get_Iir_Flist (N, F));
+                        end if;
+                     when Attr_Ref
+                        | Attr_Of_Ref =>
+                        null;
+                     when others =>
+                        raise Internal_Error;
+                  end case;
                when Type_PSL_NFA
                   | Type_PSL_Node =>
                   --  TODO
@@ -1204,6 +1259,7 @@ package body Trans.Chap9 is
                  | Type_File_Checksum_Id
                  | Type_String8_Id
                  | Type_Source_Ptr
+                 | Type_Source_File_Entry
                  | Type_Number_Base_Type
                  | Type_Iir_Constraint
                  | Type_Iir_Mode
@@ -1218,7 +1274,6 @@ package body Trans.Chap9 is
                  | Type_Iir_Delay_Mechanism
                  | Type_Iir_Predefined_Functions
                  | Type_Iir_Direction
-                 | Type_Location_Type
                  | Type_Iir_Int32
                  | Type_Int32
                  | Type_Iir_Fp64
@@ -1585,8 +1640,13 @@ package body Trans.Chap9 is
                           (Sig_Node, Get_Type (Sig), Init_Node);
                      else
                         Sig_Node := Chap6.Translate_Name (Sig, Mode_Signal);
+
+                        --  At least GNAT GPL 2017 reports this warning:
+                        --   'others choices is redundant'
+                        pragma Warnings (Off);
                         Gen_Add_Port_Driver_Default
                           (Sig_Node, Get_Type (Sig), (others => <>));
+                        pragma Warnings (On);
                      end if;
                   else
                      Register_Signal (Chap6.Translate_Name (Sig, Mode_Signal),

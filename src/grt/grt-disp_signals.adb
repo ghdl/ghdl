@@ -96,6 +96,12 @@ package body Grt.Disp_Signals is
       Blk : Ghdl_Rtin_Block_Acc;
       Nctxt : Rti_Context;
    begin
+      --  Avoid fault.
+      if Ctxt = Null_Context then
+         Put ('?');
+         return;
+      end if;
+
       Blk := To_Ghdl_Rtin_Block_Acc (Ctxt.Block);
       case Blk.Common.Kind is
          when Ghdl_Rtik_Block
@@ -159,15 +165,8 @@ package body Grt.Disp_Signals is
       end loop;
    end Disp_Transaction;
 
-   procedure Disp_Simple_Signal
-     (Sig : Ghdl_Signal_Ptr; Sig_Type : Ghdl_Rti_Access; Sources : Boolean)
-   is
-      function To_Address is new Ada.Unchecked_Conversion
-        (Source => Resolved_Signal_Acc, Target => Address);
+   procedure Disp_Single_Signal_Attributes (Sig : Ghdl_Signal_Ptr) is
    begin
-      Put (' ');
-      Put (stdout, Sig.all'Address);
-      Put (' ');
       Disp_Mode (Sig.Mode);
       Put (' ');
       if Sig.Active then
@@ -196,6 +195,18 @@ package body Grt.Disp_Signals is
          Put (" last_active=");
          Put_Time (stdout, Sig.Last_Active);
       end if;
+   end Disp_Single_Signal_Attributes;
+
+   procedure Disp_Simple_Signal
+     (Sig : Ghdl_Signal_Ptr; Sig_Type : Ghdl_Rti_Access; Sources : Boolean)
+   is
+      function To_Address is new Ada.Unchecked_Conversion
+        (Source => Resolved_Signal_Acc, Target => Address);
+   begin
+      Put (' ');
+      Put (stdout, Sig.all'Address);
+      Put (' ');
+      Disp_Single_Signal_Attributes (Sig);
       Put (" val=");
       declare
          Val : constant Value_Union := Read_Value (Sig.Value_Ptr, Sig.Mode);
@@ -218,29 +229,37 @@ package body Grt.Disp_Signals is
             Put_I32 (stdout, Ghdl_I32 (Sig.Nbr_Ports));
             Put (" ports");
          end if;
-         if Sig.S.Mode_Sig in Mode_Signal_User then
-            if Sig.S.Resolv /= null then
-               Put (stdout, " res func ");
-               Put (stdout, To_Address(Sig.S.Resolv));
-            end if;
-            if Sig.S.Nbr_Drivers = 0 then
-               Put ("; no driver");
-            elsif Sig.S.Nbr_Drivers = 1 then
-               Put ("; trans=");
-               Disp_Transaction
-                 (Sig.S.Drivers (0).First_Trans, Sig_Type, Sig.Mode);
-            else
-               for I in 0 .. Sig.S.Nbr_Drivers - 1 loop
-                  New_Line;
-                  Put ("   ");
-                  Disp_Context
-                    (Processes.Get_Rti_Context (Sig.S.Drivers (I).Proc));
-                  Put (": ");
+         case Sig.S.Mode_Sig is
+            when Mode_Signal_User =>
+               if Sig.S.Resolv /= null then
+                  Put (stdout, " resolver=");
+                  Put (stdout, To_Address(Sig.S.Resolv));
+               end if;
+               if Sig.S.Nbr_Drivers = 0 then
+                  Put ("; no driver");
+               elsif Sig.S.Nbr_Drivers = 1 then
+                  Put ("; trans=");
                   Disp_Transaction
-                    (Sig.S.Drivers (I).First_Trans, Sig_Type, Sig.Mode);
-               end loop;
-            end if;
-         end if;
+                    (Sig.S.Drivers (0).First_Trans, Sig_Type, Sig.Mode);
+               else
+                  for I in 0 .. Sig.S.Nbr_Drivers - 1 loop
+                     New_Line;
+                     Put ("   ");
+                     Disp_Context
+                       (Processes.Get_Rti_Context (Sig.S.Drivers (I).Proc));
+                     Put (": ");
+                     Disp_Transaction
+                       (Sig.S.Drivers (I).First_Trans, Sig_Type, Sig.Mode);
+                  end loop;
+               end if;
+
+            when Mode_Delayed =>
+               Put ("; trans=");
+               Disp_Transaction (Sig.S.Attr_Trans, Sig_Type, Sig.Mode);
+
+            when others =>
+               null;
+         end case;
       end if;
       New_Line;
    end Disp_Simple_Signal;

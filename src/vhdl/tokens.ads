@@ -276,7 +276,9 @@ package Tokens is
        Tok_Next_Event_E
       );
 
-   -- subtype Token_Relation_Type is Token_Type range Tok_And .. Tok_Xnor;
+   --  To ease interfacing
+   pragma Convention (C, Token_Type);
+
    subtype Token_Relational_Operator_Type is Token_Type range
      Tok_Equal .. Tok_Match_Greater_Equal;
    subtype Token_Shift_Operator_Type is Token_Type range

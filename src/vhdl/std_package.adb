@@ -152,22 +152,22 @@ package body Std_Package is
          return Res;
       end Create_Std_Range_Expr;
 
-      function Create_Std_Literal
-        (Name : Name_Id; Sub_Type : Iir_Enumeration_Type_Definition)
-        return Iir_Enumeration_Literal
+      function Create_Std_Literal (Name : Name_Id;
+                                   Pos : Natural;
+                                   Sub_Type : Iir_Enumeration_Type_Definition)
+                                  return Iir_Enumeration_Literal
       is
+         List : constant Iir_Flist := Get_Enumeration_Literal_List (Sub_Type);
          Res : Iir_Enumeration_Literal;
-         List : Iir_List;
       begin
          Res := Create_Std_Decl (Iir_Kind_Enumeration_Literal);
-         List := Get_Enumeration_Literal_List (Sub_Type);
          Set_Std_Identifier (Res, Name);
          Set_Type (Res, Sub_Type);
          Set_Expr_Staticness (Res, Locally);
          Set_Name_Staticness (Res, Locally);
-         Set_Enum_Pos (Res, Iir_Int32 (Get_Nbr_Elements (List)));
+         Set_Enum_Pos (Res, Iir_Int32 (Pos));
          Sem.Compute_Subprogram_Hash (Res);
-         Append_Element (List, Res);
+         Set_Nth_Element (List, Pos, Res);
          return Res;
       end Create_Std_Literal;
 
@@ -291,7 +291,7 @@ package body Std_Package is
       procedure Create_Array_Type
         (Def : out Iir; Decl : out Iir; El_Decl : Iir; Name : Name_Id)
       is
-         Index_List : Iir_List;
+         Index_List : Iir_Flist;
          Index : Iir;
          Element : Iir;
       begin
@@ -301,10 +301,10 @@ package body Std_Package is
          Def := Create_Std_Iir (Iir_Kind_Array_Type_Definition);
          Set_Base_Type (Def, Def);
 
-         Index_List := Create_Iir_List;
+         Index_List := Create_Iir_Flist (1);
          Set_Index_Subtype_Definition_List (Def, Index_List);
          Set_Index_Subtype_List (Def, Index_List);
-         Append_Element (Index_List, Index);
+         Set_Nth_Element (Index_List, 0, Index);
 
          Set_Element_Subtype_Indication (Def, Element);
          Set_Element_Subtype (Def, Get_Type (El_Decl));
@@ -339,6 +339,7 @@ package body Std_Package is
          Set_Identifier (Inter, Std_Names.Name_Value);
          Set_Type (Inter, Inter_Type);
          Set_Mode (Inter, Iir_In_Mode);
+         Set_Visible_Flag (Inter, True);
          Set_Interface_Declaration_Chain (Decl, Inter);
 
          if Inter2_Id /= Null_Identifier then
@@ -346,6 +347,7 @@ package body Std_Package is
             Set_Identifier (Inter2, Inter2_Id);
             Set_Type (Inter2, Inter2_Type);
             Set_Mode (Inter2, Iir_In_Mode);
+            Set_Visible_Flag (Inter2, True);
             Set_Chain (Inter, Inter2);
          end if;
 
@@ -371,6 +373,7 @@ package body Std_Package is
          Set_Identifier (Inter, Std_Names.Name_S);
          Set_Type (Inter, Inter_Type);
          Set_Mode (Inter, Iir_In_Mode);
+         Set_Visible_Flag (Inter, True);
          Set_Interface_Declaration_Chain (Decl, Inter);
 
          Sem.Compute_Subprogram_Hash (Decl);
@@ -437,11 +440,11 @@ package body Std_Package is
            Create_Std_Iir (Iir_Kind_Enumeration_Type_Definition);
          Set_Base_Type (Boolean_Type_Definition, Boolean_Type_Definition);
          Set_Enumeration_Literal_List
-           (Boolean_Type_Definition, Create_Iir_List);
+           (Boolean_Type_Definition, Create_Iir_Flist (2));
          Boolean_False := Create_Std_Literal
-           (Name_False, Boolean_Type_Definition);
+           (Name_False, 0, Boolean_Type_Definition);
          Boolean_True := Create_Std_Literal
-           (Name_True, Boolean_Type_Definition);
+           (Name_True, 1, Boolean_Type_Definition);
          Set_Type_Staticness (Boolean_Type_Definition, Locally);
          Set_Signal_Type_Flag (Boolean_Type_Definition, True);
          Set_Has_Signal_Flag (Boolean_Type_Definition,
@@ -472,12 +475,13 @@ package body Std_Package is
          Bit_Type_Definition :=
            Create_Std_Iir (Iir_Kind_Enumeration_Type_Definition);
          Set_Enumeration_Literal_List
-           (Bit_Type_Definition, Create_Iir_List);
+           (Bit_Type_Definition, Create_Iir_Flist (2));
          Set_Base_Type (Bit_Type_Definition, Bit_Type_Definition);
+         Set_Is_Character_Type (Bit_Type_Definition, True);
          Bit_0 := Create_Std_Literal
-           (Get_Std_Character ('0'), Bit_Type_Definition);
+           (Get_Std_Character ('0'), 0, Bit_Type_Definition);
          Bit_1 := Create_Std_Literal
-           (Get_Std_Character ('1'), Bit_Type_Definition);
+           (Get_Std_Character ('1'), 1, Bit_Type_Definition);
          Set_Type_Staticness (Bit_Type_Definition, Locally);
          Set_Signal_Type_Flag (Bit_Type_Definition, True);
          Set_Has_Signal_Flag (Bit_Type_Definition,
@@ -506,28 +510,39 @@ package body Std_Package is
       declare
          El: Iir;
          pragma Unreferenced (El);
+         Len : Natural;
       begin
          Character_Type_Definition :=
            Create_Std_Iir (Iir_Kind_Enumeration_Type_Definition);
          Set_Base_Type (Character_Type_Definition, Character_Type_Definition);
+         Set_Is_Character_Type (Character_Type_Definition, True);
+         if Vhdl_Std = Vhdl_87 then
+            Len := 128;
+         else
+            Len := 256;
+         end if;
          Set_Enumeration_Literal_List
-           (Character_Type_Definition, Create_Iir_List);
+           (Character_Type_Definition, Create_Iir_Flist (Len));
 
          for I in Name_Nul .. Name_Usp loop
-            El := Create_Std_Literal (I, Character_Type_Definition);
+            El := Create_Std_Literal
+              (I, Natural (I - Name_Nul), Character_Type_Definition);
          end loop;
          for I in Character'(' ') .. Character'('~') loop
             El := Create_Std_Literal
-              (Get_Std_Character (I), Character_Type_Definition);
+              (Get_Std_Character (I), Character'Pos (I),
+               Character_Type_Definition);
          end loop;
-         El := Create_Std_Literal (Name_Del, Character_Type_Definition);
+         El := Create_Std_Literal (Name_Del, 127, Character_Type_Definition);
          if Vhdl_Std /= Vhdl_87 then
             for I in Name_C128 .. Name_C159 loop
-               El := Create_Std_Literal (I, Character_Type_Definition);
+               El := Create_Std_Literal
+                 (I, 128 + Natural (I - Name_C128), Character_Type_Definition);
             end loop;
             for I in Character'Val (160) .. Character'Val (255) loop
                El := Create_Std_Literal
-                 (Get_Std_Character (I), Character_Type_Definition);
+                 (Get_Std_Character (I), Character'Pos (I),
+                  Character_Type_Definition);
             end loop;
          end if;
          Set_Type_Staticness (Character_Type_Definition, Locally);
@@ -553,16 +568,16 @@ package body Std_Package is
          Set_Base_Type (Severity_Level_Type_Definition,
                         Severity_Level_Type_Definition);
          Set_Enumeration_Literal_List
-           (Severity_Level_Type_Definition, Create_Iir_List);
+           (Severity_Level_Type_Definition, Create_Iir_Flist (4));
 
          Severity_Level_Note := Create_Std_Literal
-           (Name_Note, Severity_Level_Type_Definition);
+           (Name_Note, 0, Severity_Level_Type_Definition);
          Severity_Level_Warning := Create_Std_Literal
-           (Name_Warning, Severity_Level_Type_Definition);
+           (Name_Warning, 1, Severity_Level_Type_Definition);
          Severity_Level_Error := Create_Std_Literal
-           (Name_Error, Severity_Level_Type_Definition);
+           (Name_Error, 2, Severity_Level_Type_Definition);
          Severity_Level_Failure := Create_Std_Literal
-           (Name_Failure, Severity_Level_Type_Definition);
+           (Name_Failure, 3, Severity_Level_Type_Definition);
          Set_Type_Staticness (Severity_Level_Type_Definition, Locally);
          Set_Signal_Type_Flag (Severity_Level_Type_Definition, True);
          Set_Has_Signal_Flag (Severity_Level_Type_Definition,
@@ -1049,15 +1064,15 @@ package body Std_Package is
       -- type string is array (positive range <>) of character;
       declare
          Element : Iir;
-         Index_List : Iir_List;
+         Index_List : Iir_Flist;
       begin
          Element := Create_Std_Type_Mark (Character_Type_Declaration);
 
          String_Type_Definition :=
            Create_Std_Iir (Iir_Kind_Array_Type_Definition);
          Set_Base_Type (String_Type_Definition, String_Type_Definition);
-         Index_List := Create_Iir_List;
-         Append_Element (Index_List,
+         Index_List := Create_Iir_Flist (1);
+         Set_Nth_Element (Index_List, 0,
                          Create_Std_Type_Mark (Positive_Subtype_Declaration));
          Set_Index_Subtype_Definition_List (String_Type_Definition,
                                             Index_List);
@@ -1129,14 +1144,14 @@ package body Std_Package is
          Set_Base_Type (File_Open_Kind_Type_Definition,
                         File_Open_Kind_Type_Definition);
          Set_Enumeration_Literal_List
-           (File_Open_Kind_Type_Definition, Create_Iir_List);
+           (File_Open_Kind_Type_Definition, Create_Iir_Flist (3));
 
          File_Open_Kind_Read_Mode := Create_Std_Literal
-           (Name_Read_Mode, File_Open_Kind_Type_Definition);
+           (Name_Read_Mode, 0, File_Open_Kind_Type_Definition);
          File_Open_Kind_Write_Mode := Create_Std_Literal
-           (Name_Write_Mode, File_Open_Kind_Type_Definition);
+           (Name_Write_Mode, 1, File_Open_Kind_Type_Definition);
          File_Open_Kind_Append_Mode := Create_Std_Literal
-           (Name_Append_Mode, File_Open_Kind_Type_Definition);
+           (Name_Append_Mode, 2, File_Open_Kind_Type_Definition);
          Set_Type_Staticness (File_Open_Kind_Type_Definition, Locally);
          Set_Signal_Type_Flag (File_Open_Kind_Type_Definition, True);
          Set_Has_Signal_Flag (File_Open_Kind_Type_Definition,
@@ -1167,16 +1182,16 @@ package body Std_Package is
          Set_Base_Type (File_Open_Status_Type_Definition,
                         File_Open_Status_Type_Definition);
          Set_Enumeration_Literal_List
-           (File_Open_Status_Type_Definition, Create_Iir_List);
+           (File_Open_Status_Type_Definition, Create_Iir_Flist (4));
 
          File_Open_Status_Open_Ok := Create_Std_Literal
-           (Name_Open_Ok, File_Open_Status_Type_Definition);
+           (Name_Open_Ok, 0, File_Open_Status_Type_Definition);
          File_Open_Status_Status_Error := Create_Std_Literal
-           (Name_Status_Error, File_Open_Status_Type_Definition);
+           (Name_Status_Error, 1, File_Open_Status_Type_Definition);
          File_Open_Status_Name_Error := Create_Std_Literal
-           (Name_Name_Error, File_Open_Status_Type_Definition);
+           (Name_Name_Error, 2, File_Open_Status_Type_Definition);
          File_Open_Status_Mode_Error := Create_Std_Literal
-           (Name_Mode_Error, File_Open_Status_Type_Definition);
+           (Name_Mode_Error, 3, File_Open_Status_Type_Definition);
          Set_Type_Staticness (File_Open_Status_Type_Definition, Locally);
          Set_Signal_Type_Flag (File_Open_Status_Type_Definition, True);
          Set_Has_Signal_Flag (File_Open_Status_Type_Definition,

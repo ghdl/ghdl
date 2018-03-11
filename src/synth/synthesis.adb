@@ -25,7 +25,8 @@ with Netlists.Builders; use Netlists.Builders;
 with Netlists.Utils;
 
 with Iirs_Utils; use Iirs_Utils;
-with Elaboration; use Elaboration;
+with Simul.Environments; use Simul.Environments;
+with Simul.Elaboration; use Simul.Elaboration;
 
 with Synth.Environment; use Synth.Environment;
 with Synth.Values; use Synth.Values;

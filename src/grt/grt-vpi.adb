@@ -479,12 +479,12 @@ package body Grt.Vpi is
          when vpiType =>
             Res := Ref.mType;
          when vpiTimePrecision =>
-            Res := -9; -- is this nano-seconds?
+            Res := -12; -- In ps.
          when vpiSize =>
             Res := Vpi_Get_Size (Ref);
          when vpiVector =>
             Res := Boolean'Pos (Vpi_Get_Vector (Ref));
-         when others=>
+         when others =>
             dbgPut_Line ("vpi_get: unknown property");
             Res := 0;
       end case;
@@ -645,15 +645,15 @@ package body Grt.Vpi is
       end if;
 
       case Property is
-         when vpiFullName=>
+         when vpiFullName =>
             Prop := VhpiFullNameP;
-         when vpiName=>
+         when vpiName =>
             Prop := VhpiNameP;
          when vpiType =>
             Tmpstring2 (1 .. 4) := "???" & NUL;
             return To_Ghdl_C_String (Tmpstring2'Address);
-         when others=>
-            dbgPut_Line ("vpi_get_str: undefined property");
+         when others =>
+            dbgPut_Line ("vpi_get_str: unhandled property");
             return null;
       end case;
       Vhpi_Get_Str (Prop, Ref.Ref, Tmpstring2, Len);
@@ -924,10 +924,9 @@ package body Grt.Vpi is
                     Ghdl_B1 (Vec (J) = '1' or Vec (J) = 'H');
                begin
                   case Info.Val is
-                     when Vcd_Effective =>
-                        Ghdl_Signal_Force_Effective_B1
-                          (To_Signal_Arr_Ptr (Info.Ptr)(J), V);
-                     when Vcd_Driving =>
+                     when Vcd_Effective | Vcd_Driving =>
+                        --  Force_Driving sets both the driving and the
+                        --  effective value.
                         Ghdl_Signal_Force_Driving_B1
                           (To_Signal_Arr_Ptr (Info.Ptr)(J), V);
                      when Vcd_Variable =>
@@ -942,10 +941,9 @@ package body Grt.Vpi is
                   V : constant Ghdl_E8 := Std_Ulogic'Pos (Vec (J));
                begin
                   case Info.Val is
-                     when Vcd_Effective =>
-                        Ghdl_Signal_Force_Effective_E8
-                          (To_Signal_Arr_Ptr (Info.Ptr)(J), V);
-                     when Vcd_Driving =>
+                     when Vcd_Effective | Vcd_Driving =>
+                        --  Force_Driving sets both the driving and the
+                        --  effective value.
                         Ghdl_Signal_Force_Driving_E8
                           (To_Signal_Arr_Ptr (Info.Ptr)(J), V);
                      when Vcd_Variable =>
@@ -1186,9 +1184,9 @@ package body Grt.Vpi is
    begin
       if Flag_Trace then
          Trace_Start ("vpi call callback ");
-         Trace_Cb_Reason (Hand.Cb.Reason);
-         Trace (" ");
          Trace (Hand);
+         Trace (" ");
+         Trace_Cb_Reason (Hand.Cb.Reason);
          Trace_Newline;
          Trace_Indent := Trace_Indent + 1;
       end if;
@@ -1315,7 +1313,7 @@ package body Grt.Vpi is
                Call_Callback'Access, To_Address (Res));
          when cbNextSimTime =>
             Register_Callback
-              (Cb_Next_Time_Step, Res.Cb_Handle, Repeat,
+              (Cb_Next_Time_Step, Res.Cb_Handle, Oneshot,
                Call_Callback'Access, To_Address (Res));
          when others =>
             dbgPut_Line ("vpi_register_cb: unknown reason");
@@ -1330,6 +1328,46 @@ package body Grt.Vpi is
       return Res;
    end vpi_register_cb;
 
+   -- int vpi_remove_cb(vpiHandle ref)
+   function vpi_remove_cb (Ref : vpiHandle) return Integer
+   is
+      Ref_Copy : vpiHandle;
+      Res : Integer;
+   begin
+      if Flag_Trace then
+         Trace_Start ("vpi_remove_cb (");
+         Trace (Ref);
+         Trace (") = ");
+      end if;
+
+      Res := 1;
+      Ref_Copy := Ref;
+      case Ref.Cb.Reason is
+         when cbValueChange =>
+            Delete_Callback (Ref.Cb_Handle);
+         when cbReadWriteSynch
+           | cbReadOnlySynch =>
+            Delete_Callback (Ref.Cb_Handle);
+         when others =>
+            Res := 0;
+            Ref_Copy := null;
+      end case;
+
+      if Flag_Trace then
+         if Ref_Copy = null then
+            Trace ("[not free] ");
+         else
+            Trace ("[free] ");
+         end if;
+         Trace (Res);
+         Trace_Newline;
+      end if;
+
+      Free (Ref_Copy);
+
+      return Res;
+   end vpi_remove_cb;
+
    -- int vpi_free_object(vpiHandle ref)
    function vpi_free_object (aRef: vpiHandle) return integer
    is
@@ -1342,7 +1380,7 @@ package body Grt.Vpi is
          Trace_Newline;
       end if;
       Ref_Copy := aRef;
-      Free(Ref_Copy);
+      Free (Ref_Copy);
       return 1;
    end vpi_free_object;
 
@@ -1424,7 +1462,7 @@ package body Grt.Vpi is
          exit when Err /= AvhpiErrorOk;
 
          El_Name := Avhpi_Get_Base_Name (Res);
-         exit when Strcasecmp (Name, El_Name);
+         exit when El_Name /= null and then Strcasecmp (Name, El_Name);
       end loop;
    end Find_By_Name;
 
@@ -1550,40 +1588,6 @@ package body Grt.Vpi is
       end if;
       return null;
    end vpi_register_systf;
-
-   -- int vpi_remove_cb(vpiHandle ref)
-   function vpi_remove_cb (Ref : vpiHandle) return Integer
-   is
-      Ref_Copy : vpiHandle;
-      Res : Integer;
-   begin
-      if Flag_Trace then
-         Trace_Start ("vpi_remove_cb (");
-         Trace (Ref);
-         Trace (") = ");
-      end if;
-
-      Res := 1;
-      Ref_Copy := Ref;
-      case Ref.Cb.Reason is
-         when cbValueChange =>
-            Delete_Callback (Ref.Cb_Handle);
-         when cbReadWriteSynch
-           | cbReadOnlySynch =>
-            Delete_Callback (Ref.Cb_Handle);
-         when others =>
-            Res := 0;
-            Ref_Copy := null;
-      end case;
-      Free (Ref_Copy);
-
-      if Flag_Trace then
-         Trace (Res);
-         Trace_Newline;
-      end if;
-
-      return Res;
-   end vpi_remove_cb;
 
    -- missing here, see grt-cvpi.c:
    --    vpi_mcd_open_x

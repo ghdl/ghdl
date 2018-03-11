@@ -1,5 +1,5 @@
 /*  GHDL Wavefile reader library.
-    Copyright (C) 2005 Tristan Gingold
+    Copyright (C) 2005-2017 Tristan Gingold
 
     GHDL is free software; you can redistribute it and/or modify it under
     the terms of the GNU General Public License as published by the Free
@@ -24,8 +24,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef __GNUC__
-#include <stdint.h>
+/* The ghwlib uses the standard c99 int32_t and int64_t.  They are declared
+   in stdint.h.  Header inttypes.h includes stdint.h and provides macro for
+   printf and co specifiers.  Use it if known to be available.  */
+
+#if defined(__cplusplus) \
+  || (defined (__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)) \
+  || defined(HAVE_INTTYPES_H)
+/* Use C99 standard header.  */
+# include <inttypes.h>
+# define GHWPRI64 "%"PRId64
+# define GHWPRI32 "%"PRId32
+#else
+# include <stdint.h>
+# define GHWPRI64 "%lld"
+# define GHWPRI32 "%d"
 #endif
 
 enum ghdl_rtik {
@@ -65,8 +78,8 @@ enum ghdl_rtik {
   ghdl_rtik_type_file,
   ghdl_rtik_subtype_scalar,
   ghdl_rtik_subtype_array,	/* 35 */
-  ghdl_rtik_subtype_array_ptr,
-  ghdl_rtik_subtype_unconstrained_array,
+  ghdl_rtik_subtype_array_ptr,             /* Obsolete.  */
+  ghdl_rtik_subtype_unconstrained_array,   /* Obsolete.  */
   ghdl_rtik_subtype_record,
   ghdl_rtik_subtype_access,
   ghdl_rtik_type_protected,
@@ -191,7 +204,7 @@ struct ghw_subtype_array
   const char *name;
 
   struct ghw_type_array *base;
-  int nbr_el;
+  int nbr_scalars;
   union ghw_range **rngs;
 };
 
@@ -216,8 +229,8 @@ struct ghw_type_record
   const char *name;
 
   unsigned int nbr_fields;
-  int nbr_el;	/* Number of scalar signals.  */
-  struct ghw_record_element *el;
+  int nbr_scalars;	/* Number of scalar elements (ie nbr of signals).  */
+  struct ghw_record_element *els;
 };
 
 struct ghw_subtype_record
@@ -226,6 +239,8 @@ struct ghw_subtype_record
   const char *name;
 
   struct ghw_type_record *base;
+  int nbr_scalars;	/* Number of scalar elements (ie nbr of signals).  */
+  struct ghw_record_element *els;
 };
 
 union ghw_type
@@ -306,10 +321,12 @@ struct ghw_hie
 struct ghw_handler
 {
   FILE *stream;
+  /* True if STREAM was popen, else was fopen.  */
+  unsigned char stream_ispipe;
   /* True if words are big-endian.  */
-  int word_be;
-  int word_len;
-  int off_len;
+  unsigned char word_be;
+  unsigned char word_len;
+  unsigned char off_len;
   /* Minor version.  */
   int version;
 
@@ -318,20 +335,20 @@ struct ghw_handler
 
   /* String table.  */
   /* Number of strings.  */
-  int nbr_str;
+  unsigned nbr_str;
   /* Size of the strings (without nul).  */
-  int str_size;
+  unsigned str_size;
   /* String table.  */
   char **str_table;
   /* Array containing strings.  */
   char *str_content;
 
   /* Type table.  */
-  int nbr_types;
+  unsigned nbr_types;
   union ghw_type **types;
 
   /* Non-composite (or basic) signals.  */
-  int nbr_sigs;
+  unsigned nbr_sigs;
   char *skip_sigs;
   int flag_full_names;
   struct ghw_sig *sigs;
@@ -347,11 +364,15 @@ struct ghw_handler
    Return < 0 in case of error. */
 int ghw_open (struct ghw_handler *h, const char *filename);
 
+/* Return base type of T.  */
 union ghw_type *ghw_get_base_type (union ghw_type *t);
+
+/* Return length of RNG.  */
+int ghw_get_range_length (union ghw_range *rng);
 
 /* Put the ASCII representation of VAL into BUF, whose size if LEN.
    A NUL is always written to BUF.  */
-void ghw_get_value (char *buf, int len, 
+void ghw_get_value (char *buf, int len,
 		    union ghw_val *val, union ghw_type *type);
 
 const char *ghw_get_hie_name (struct ghw_hie *h);

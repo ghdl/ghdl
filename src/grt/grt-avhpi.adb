@@ -692,8 +692,7 @@ package body Grt.Avhpi is
                  | VhpiArchBodyK
                  | VhpiEntityDeclK
                  | VhpiProcessStmtK
-                 | VhpiBlockStmtK
-                 | VhpiIfGenerateK =>
+                 | VhpiBlockStmtK =>
                   Add (To_Ghdl_Rtin_Block_Acc (Obj.Ctxt.Block).Name);
                when VhpiRootInstK =>
                   declare
@@ -709,20 +708,25 @@ package body Grt.Avhpi is
                  | VhpiPortDeclK
                  | VhpiGenericDeclK =>
                   Add (Obj.Obj.Name);
+               when VhpiIfGenerateK =>
+                  Add (To_Ghdl_Rtin_Generate_Acc
+                         (To_Ghdl_Rtin_Block_Acc
+                            (Obj.Ctxt.Block).Parent).Name);
                when VhpiForGenerateK =>
                   declare
-                     Blk : Ghdl_Rtin_Block_Acc;
-                     Iter : Ghdl_Rtin_Object_Acc;
+                     Blk : constant Ghdl_Rtin_Block_Acc :=
+                       To_Ghdl_Rtin_Block_Acc (Obj.Ctxt.Block);
+                     Iter : constant Ghdl_Rtin_Object_Acc :=
+                       To_Ghdl_Rtin_Object_Acc (Blk.Children (0));
+                     Vptr : constant Ghdl_Value_Ptr := To_Ghdl_Value_Ptr
+                       (Loc_To_Addr (Iter.Common.Depth, Iter.Loc, Obj.Ctxt));
                      Iter_Type : Ghdl_Rti_Access;
-                     Vptr : Ghdl_Value_Ptr;
                      Buf : String (1 .. 12);
                      Buf_Len : Natural;
                   begin
-                     Blk := To_Ghdl_Rtin_Block_Acc (Obj.Ctxt.Block);
-                     Iter := To_Ghdl_Rtin_Object_Acc (Blk.Children (0));
-                     Vptr := To_Ghdl_Value_Ptr
-                       (Loc_To_Addr (Iter.Common.Depth, Iter.Loc, Obj.Ctxt));
-                     Add (Blk.Name);
+                     --  Add the name of the generate (need to skip the
+                     --  generate body).
+                     Add (To_Ghdl_Rtin_Generate_Acc (Blk.Parent).Name);
                      Add ('(');
                      Iter_Type := Iter.Obj_Type;
                      if Iter_Type.Kind = Ghdl_Rtik_Subtype_Scalar then

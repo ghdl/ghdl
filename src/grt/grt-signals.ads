@@ -221,7 +221,10 @@ package Grt.Signals is
    --  Signals on different nets have no direct relation-ship, and thus may
    --  be updated without order.
    --  Net NO_SIGNAL_NET is special: it groups all lonely signals.
-   type Signal_Net_Type is new Integer;
+   type Signal_Net_Type is new Integer range -3 .. Integer'Last;
+   subtype Signal_Net_Defined is Signal_Net_Type
+     range 1 .. Signal_Net_Type'Last;
+   --  No propagation for the signals on these nets:
    No_Signal_Net : constant Signal_Net_Type := 0;
    Net_One_Driver : constant Signal_Net_Type := -1;
    Net_One_Direct : constant Signal_Net_Type := -2;
@@ -282,6 +285,11 @@ package Grt.Signals is
       --  Set when an event occured.
       --  Only reset by GHW file dumper.
       RO_Event : Boolean;
+
+      --  Set only on an implicit signal when the signal will stay active on
+      --  the next cycle.  For example, 'Quiet(0ns) or 'Stable(0ns) are
+      --  generally active for 2 cycles, as they are first False and then True.
+      Implicit_Active_Next : Boolean;
 
       --  Set if the signal has already been visited.  When outside of the
       --  algorithm that use it, it must be cleared.
@@ -392,6 +400,8 @@ package Grt.Signals is
       Eff_Actual,
 
       --  Sig must be updated but does not belong to the same net.
+      --  Forward is needed because an implicit signal may be active or not
+      --  if one of its source is.
       Imp_Forward,
       Imp_Forward_Build,
 
@@ -479,16 +489,11 @@ package Grt.Signals is
    procedure Init_Signals;
 
    --  Return the next time at which a driver becomes active.
-   --  SIDE EFFECT: this function updates the next_signal_active_chain.
-   --  Note: the next_signal_active_chain must be empty before running
+   --  SIDE EFFECT: this function updates the ghdl_signal_active_chain.
+   --  Note: the ghdl_signal_active_chain must be emptied before running
    --  processes as they assume that if signals are on a list, they are on the
-   --  ghdl_signal_active_chain (and not on next_signal_active_chain).  Use one
-   --  of Update_Active_Chain or Flush_Active_Chain for that effect.
+   --  ghdl_signal_active_chain.
    function Find_Next_Time (Tn : Std_Time) return Std_Time;
-
-   --  To be called after Find_Next_Time to update the chain of active signals,
-   --  only if the next cycle is not a delta cycle.
-   procedure Update_Active_Chain;
 
    --  Empty the next_signal_active_chain.
    procedure Flush_Active_Chain;
@@ -706,7 +711,7 @@ package Grt.Signals is
    --
    --  Assignment using direct driver:
    --  * the driver value is set
-   --  * put the signal on the ghdl_signal_active_chain, if the signal will
+   --  * put the signal on the signal_active_chain, if the signal will
    --    be active and if not already on the chain.
    procedure Ghdl_Signal_Add_Direct_Driver (Sign : Ghdl_Signal_Ptr;
                                             Drv : Ghdl_Value_Ptr);

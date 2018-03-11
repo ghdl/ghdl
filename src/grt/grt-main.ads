@@ -27,6 +27,17 @@ package Grt.Main is
    --  Elaborate and simulate the design.
    procedure Run;
 
+   --  What Run does.
+
+   --  Elaborate the design.
+   procedure Run_Elab (Stop : out Boolean);
+
+   --  Do the whole simulation.
+   function Run_Simul return Integer;
+
+   --  Finalization.
+   procedure Run_Finish (Status : Integer);
+
    --  This function is called by elaboration code once default values have
    --  been assigned to generics, but before being used.
    procedure Ghdl_Init_Top_Generics;

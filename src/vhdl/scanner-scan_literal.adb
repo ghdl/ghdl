@@ -119,12 +119,12 @@ begin
 
    Has_Dot := False;
    Base := 10;
+   Scale := 0;
 
    C := Source (Pos);
    if C = '.' then
       --  Decimal integer.
       Has_Dot := True;
-      Scale := 0;
       Pos := Pos + 1;
       C := Source (Pos);
       if C not in '0' .. '9' then

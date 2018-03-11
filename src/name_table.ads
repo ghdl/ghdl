@@ -39,19 +39,20 @@ package Name_Table is
    --    backslashes are simplified.
    function Get_Identifier (Str: String) return Name_Id;
 
-   --  Get the string associed to a name.
+   --  Likewise, but with a C compatible interface.
+   function Get_Identifier_With_Len (Str : Thin_String_Ptr; Len : Natural)
+                                    return Name_Id;
+
+   --  Get the string associed to a name.  The first bound is 1.
    --  If the name is a character, then single quote are added.
    function Image (Id: Name_Id) return String;
-
-   --  Set NAME_BUFFER/NAME_LENGTH with the image of ID.  Characters aren't
-   --  quoted.
-   procedure Image (Id : Name_Id);
 
    --  Get the address of the first character of ID.  The address is valid
    --  until the next call to Get_Identifier (which may reallocate the string
    --  table).
    --  The string is NUL-terminated (this is done by get_identifier).
    function Get_Address (Id: Name_Id) return System.Address;
+   function Get_Name_Ptr (Id : Name_Id) return Thin_String_Ptr;
 
    --  Get the length of ID.
    function Get_Name_Length (Id: Name_Id) return Natural;
@@ -66,36 +67,24 @@ package Name_Table is
    function Is_Character (Id: Name_Id) return Boolean;
    pragma Inline (Is_Character);
 
-   --  Get or create an entry in the name table, use NAME_BUFFER/NAME_LENGTH.
-   function Get_Identifier return Name_Id;
-
    --  Like GET_IDENTIFIER, but return NULL_IDENTIFIER if the identifier
    --  is not found (and do not create an entry for it).
-   function Get_Identifier_No_Create return Name_Id;
+   function Get_Identifier_No_Create (Str : String) return Name_Id;
+   function Get_Identifier_No_Create_With_Len
+     (Str : Thin_String_Ptr; Len : Natural) return Name_Id;
 
    --  Get and set the info field associated with each identifier.
    --  Used to store interpretations of the name.
-   function Get_Info (Id: Name_Id) return Int32;
-   pragma Inline (Get_Info);
-   procedure Set_Info (Id: Name_Id; Info: Int32);
-   pragma Inline (Set_Info);
+   function Get_Name_Info (Id : Name_Id) return Int32;
+   pragma Inline (Get_Name_Info);
+   procedure Set_Name_Info (Id : Name_Id; Info: Int32);
+   pragma Inline (Set_Name_Info);
 
    --  Return the latest name_id used.  This is only for debugging or stats.
    function Last_Name_Id return Name_Id;
 
    --  Be sure all info fields have their default value.
    procedure Assert_No_Infos;
-
-   --  This buffer is used by get_token to set the name.
-   --  This can be seen as a copy buffer but this is necessary because names
-   --  case is 'normalized' as VHDL is case insensitive.
-   --  To avoid name clash with std_names, Nam_Buffer and Nam_Length are used
-   --  instead of Name_Buffer and Name_Length.
-   Max_Nam_Length : constant Natural := 1024;
-   Nam_Buffer : String (1 .. Max_Nam_Length);
-
-   --  The length of the name string.
-   Nam_Length: Natural range 0 .. Max_Nam_Length;
 
    --  Free all resources.  The package cannot be used anymore after calling
    --  this procedure.

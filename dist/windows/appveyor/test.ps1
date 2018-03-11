@@ -51,7 +51,10 @@ cd "$($env:APPVEYOR_BUILD_FOLDER)\testsuite"
 # Use a MinGW compatible path
 $env:GHDL="$($env:GHDL_PREFIX_DIR)/bin/ghdl.exe"
 
-# ==============================================================================
+# Exit status
+$Err = 0
+
+# =============================================================================
 $TestFramework =  "GNA"
 Write-Host "Running GNA tests..." -Foreground Yellow
 cd gna
@@ -75,15 +78,14 @@ foreach ($Directory in $Directories)
 	else
 	{	Write-Host "FAILED" -Foreground Red
 		Update-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome Failed -Duration $TotalMilliseconds
+		$Err = 1
 	}
 }
 cd ..\..
 
-# ==============================================================================
+# =============================================================================
 $TestFramework =  "VESTS"
 Write-Host "Running VESTS tests..." -Foreground Yellow
-
-c:\msys64\mingw64\bin\gnatmake.exe get_entities 2>&1 | Restore-NativeCommandStream | %{ "$_" }
 
 cd vests
 
@@ -109,10 +111,11 @@ else
 	else
 	{	Write-Host "FAILED" -Foreground Red
 		Update-AppveyorTest -Name $TestName -Framework $TestFramework -FileName $FileName -Outcome Failed -Duration $TotalMilliseconds
+		$Err = 1
 	}
 	cd ..
 }
 
-# ==============================================================================
+# =============================================================================
 cd $env:APPVEYOR_BUILD_FOLDER
-exit 0
+exit $Err

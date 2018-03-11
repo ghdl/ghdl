@@ -1,14 +1,33 @@
-SRC_FILES= \
- Copyrights.rst \
- Flaws_and_bugs_report.rst \
- GHDL_implementation_of_VHDL.rst \
- GHDL_implementation_of_VITAL.rst \
- Introduction.rst \
- Invoking_GHDL.rst \
- Simulation_and_runtime.rst \
- Starting_with_GHDL.rst \
- index.rst \
- conf.py
+SRCS= \
+conf.py ../src/version.in \
+prolog.inc shields.inc shieldswho.inc \
+about.rst \
+appendix/Meta.rst appendix/Roadmap.rst \
+building/Building.rst \
+building/Directories.rst \
+building/gcc/GNULinux-GNAT.rst \
+building/gcc/index.rst \
+building/gcc/Windows-MinGW-GNAT.rst \
+building/llvm/GNULinux-GNAT.rst \
+building/llvm/index.rst \
+building/llvm/Windows-MinGW-GNAT.rst \
+building/mcode/GNULinux-GNAT.rst \
+building/mcode/index.rst \
+building/mcode/Windows-GNATGPL.rst \
+building/mcode/Windows-MinGW-GNAT.rst \
+building/PrecompileVendorPrimitives.rst \
+contribute.rst \
+genindex.rst \
+getting/Releases.rst \
+index.rst \
+licenses.rst \
+references/CodingStyle.rst \
+references/CommandReference.rst \
+references/ImplementationOfVHDL.rst \
+references/ImplementationOfVITAL.rst \
+using/InvokingGHDL.rst \
+using/QuickStartGuide.rst \
+using/Simulation.rst
 
 CP=cp
 
@@ -42,7 +61,8 @@ ghdl.pdf: ghdl.dvi
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
 
-ghdl.texi: $(SRC_FILES)
+texi: ghdl.texi
+ghdl.texi: $(SRCS)
 	$(SPHINXBUILD) -b texinfo $(ALLSPHINXOPTS) $(BUILDDIR)/texinfo
 	$(CP) $(BUILDDIR)/texinfo/GHDL.texi $@
 

@@ -98,7 +98,7 @@ package body Evaluation is
      return Iir_Enumeration_Literal
    is
       Enum_Type : constant Iir := Get_Base_Type (Get_Type (Origin));
-      Enum_List : constant Iir_List :=
+      Enum_List : constant Iir_Flist :=
         Get_Enumeration_Literal_List (Enum_Type);
       Lit : constant Iir_Enumeration_Literal :=
         Get_Nth_Element (Enum_List, Integer (Val));
@@ -159,7 +159,7 @@ package body Evaluation is
    --  Build a simple aggregate composed of EL_LIST from ORIGIN.  STYPE is the
    --  type of the aggregate.  DEF_TYPE should be either Null_Iir or STYPE.  It
    --  is set only when a new subtype has been created for the aggregate.
-   function Build_Simple_Aggregate (El_List : Iir_List;
+   function Build_Simple_Aggregate (El_List : Iir_Flist;
                                     Origin : Iir;
                                     Stype : Iir;
                                     Def_Type : Iir := Null_Iir)
@@ -270,7 +270,7 @@ package body Evaluation is
                               return Iir_Enumeration_Literal
    is
       Enum_Type : constant Iir := Get_Base_Type (Get_Type (Origin));
-      Enum_List : constant Iir_List :=
+      Enum_List : constant Iir_Flist :=
         Get_Enumeration_Literal_List (Enum_Type);
    begin
       return Get_Nth_Element (Enum_List, Integer (Val));
@@ -280,7 +280,7 @@ package body Evaluation is
                               return Iir_Enumeration_Literal
    is
       Enum_Type : constant Iir := Get_Base_Type (Get_Type (Origin));
-      Enum_List : constant Iir_List :=
+      Enum_List : constant Iir_Flist :=
         Get_Enumeration_Literal_List (Enum_Type);
    begin
       return Get_Nth_Element (Enum_List, Boolean'Pos (Val));
@@ -422,7 +422,7 @@ package body Evaluation is
       Res : Iir_Array_Subtype_Definition;
    begin
       Res := Create_Array_Subtype (Base_Type, Get_Location (Loc));
-      Append_Element (Get_Index_Subtype_List (Res), Index_Type);
+      Set_Nth_Element (Get_Index_Subtype_List (Res), 0, Index_Type);
       Set_Type_Staticness (Res, Min (Get_Type_Staticness (Res),
                                      Get_Type_Staticness (Index_Type)));
       Set_Constraint_State (Res, Fully_Constrained);
@@ -452,11 +452,11 @@ package body Evaluation is
    --  Free the result RES of Eval_String_Literal called with ORIG, if created.
    procedure Free_Eval_String_Literal (Res : Iir; Orig : Iir)
    is
-      L : Iir_List;
+      L : Iir_Flist;
    begin
       if Res /= Orig then
          L := Get_Simple_Aggregate_List (Res);
-         Destroy_Iir_List (L);
+         Destroy_Iir_Flist (L);
          Free_Iir (Res);
       end if;
    end Free_Eval_String_Literal;
@@ -465,21 +465,21 @@ package body Evaluation is
    is
       Element_Type : constant Iir := Get_Base_Type
         (Get_Element_Subtype (Get_Base_Type (Get_Type (Str))));
-      Literal_List : constant Iir_List :=
+      Literal_List : constant Iir_Flist :=
         Get_Enumeration_Literal_List (Element_Type);
 
       Len : constant Nat32 := Get_String_Length (Str);
       Id : constant String8_Id := Get_String8_Id (Str);
 
-      List : Iir_List;
+      List : Iir_Flist;
       Lit : Iir;
    begin
-      List := Create_Iir_List;
+      List := Create_Iir_Flist (Natural (Len));
 
       for I in 1 .. Len loop
          Lit := Get_Nth_Element
            (Literal_List, Natural (Str_Table.Element_String8 (Id, I)));
-         Append_Element (List, Lit);
+         Set_Nth_Element (List, Natural (I - 1), Lit);
       end loop;
       return Build_Simple_Aggregate (List, Str, Get_Type (Str));
    end String_Literal8_To_Simple_Aggregate;
@@ -566,7 +566,7 @@ package body Evaluation is
       Len : constant Iir_Int64 := Eval_Discrete_Range_Length (Index_Range);
       Assocs : constant Iir := Get_Association_Choices_Chain (Aggr);
       Vect : Iir_Array (0 .. Integer (Len - 1));
-      List : Iir_List;
+      List : Iir_Flist;
       Assoc : Iir;
       Expr : Iir;
    begin
@@ -586,11 +586,11 @@ package body Evaluation is
 
       Build_Array_Choices_Vector (Vect, Index_Range, Assocs);
 
-      List := Create_Iir_List;
+      List := Create_Iir_Flist (Natural (Len));
       if Len > 0 then
          --  Workaround GNAT GPL2014 compiler bug.
          for I in Vect'Range loop
-            Append_Element (List, Get_Associated_Expr (Vect (I)));
+            Set_Nth_Element (List, I, Get_Associated_Expr (Vect (I)));
          end loop;
       end if;
 
@@ -657,18 +657,17 @@ package body Evaluation is
          when Iir_Predefined_TF_Array_Not =>
             declare
                Lit_Val : Iir;
-               O_List : Iir_List;
-               R_List : Iir_List;
+               O_List : Iir_Flist;
+               R_List : Iir_Flist;
                El : Iir;
                Lit : Iir;
             begin
                Lit_Val := Eval_String_Literal (Operand);
                O_List := Get_Simple_Aggregate_List (Lit_Val);
-               R_List := Create_Iir_List;
+               R_List := Create_Iir_Flist (Get_Nbr_Elements (O_List));
 
-               for I in Natural loop
+               for I in Flist_First .. Flist_Last (O_List) loop
                   El := Get_Nth_Element (O_List, I);
-                  exit when El = Null_Iir;
                   case Get_Enum_Pos (El) is
                      when 0 =>
                         Lit := Bit_1;
@@ -677,7 +676,7 @@ package body Evaluation is
                      when others =>
                         raise Internal_Error;
                   end case;
-                  Append_Element (R_List, Lit);
+                  Set_Nth_Element (R_List, I, Lit);
                end loop;
                Free_Eval_String_Literal (Lit_Val, Operand);
                return Build_Simple_Aggregate
@@ -694,7 +693,7 @@ package body Evaluation is
             --  LRM08 5.3.2.4 Predefined operations on array types
             declare
                Saggr : Iir;
-               Lits : Iir_List;
+               Lits : Iir_Flist;
                Res : Iir;
                El : Iir;
                Cmp : Compare_Type;
@@ -718,9 +717,8 @@ package body Evaluation is
                   end;
                else
                   Res := Get_Nth_Element (Lits, 0);
-                  for I in Positive loop
+                  for I in Flist_First .. Flist_Last (Lits) loop
                      El := Get_Nth_Element (Lits, I);
-                     exit when El = Null_Iir;
                      Cmp := Eval_Scalar_Compare (El, Res);
                      case Iir_Predefined_Vector_Minmax (Func) is
                         when Iir_Predefined_Vector_Minimum =>
@@ -876,17 +874,14 @@ package body Evaluation is
      (Left, Right : Iir; Origin : Iir; Func : Iir_Predefined_Shift_Functions)
      return Iir
    is
-      Count : Iir_Int64;
+      Count : constant Iir_Int64 := Get_Value (Right);
+      Arr_List : constant Iir_Flist := Get_Simple_Aggregate_List (Left);
+      Len : constant Natural := Get_Nbr_Elements (Arr_List);
       Cnt : Natural;
-      Len : Natural;
-      Arr_List : Iir_List;
-      Res_List : Iir_List;
+      Res_List : Iir_Flist;
       Dir_Left : Boolean;
       E : Iir;
    begin
-      Count := Get_Value (Right);
-      Arr_List := Get_Simple_Aggregate_List (Left);
-      Len := Get_Nbr_Elements (Arr_List);
       --  LRM93 7.2.3
       --  That is, if R is 0 or if L is a null array, the return value is L.
       if Count = 0 or Len = 0 then
@@ -913,10 +908,10 @@ package body Evaluation is
          when Iir_Predefined_Array_Sll
            | Iir_Predefined_Array_Srl =>
             declare
-               Enum_List : Iir_List;
-            begin
-               Enum_List := Get_Enumeration_Literal_List
+               Enum_List : constant Iir_Flist :=
+                 Get_Enumeration_Literal_List
                  (Get_Base_Type (Get_Element_Subtype (Get_Type (Left))));
+            begin
                E := Get_Nth_Element (Enum_List, 0);
             end;
          when Iir_Predefined_Array_Sla
@@ -934,7 +929,7 @@ package body Evaluation is
             end if;
       end case;
 
-      Res_List := Create_Iir_List;
+      Res_List := Create_Iir_Flist (Len);
 
       case Func is
          when Iir_Predefined_Array_Sll
@@ -944,32 +939,32 @@ package body Evaluation is
             if Dir_Left then
                if Cnt < Len then
                   for I in Cnt .. Len - 1 loop
-                     Append_Element
-                       (Res_List, Get_Nth_Element (Arr_List, I));
+                     Set_Nth_Element
+                       (Res_List, I - Cnt, Get_Nth_Element (Arr_List, I));
                   end loop;
                else
                   Cnt := Len;
                end if;
                for I in 0 .. Cnt - 1 loop
-                  Append_Element (Res_List, E);
+                  Set_Nth_Element (Res_List, Len - Cnt + I, E);
                end loop;
             else
                if Cnt > Len then
                   Cnt := Len;
                end if;
                for I in 0 .. Cnt - 1 loop
-                  Append_Element (Res_List, E);
+                  Set_Nth_Element (Res_List, I, E);
                end loop;
                for I in Cnt .. Len - 1 loop
-                  Append_Element
-                    (Res_List, Get_Nth_Element (Arr_List, I - Cnt));
+                  Set_Nth_Element
+                    (Res_List, I, Get_Nth_Element (Arr_List, I - Cnt));
                end loop;
             end if;
          when Iir_Predefined_Array_Rol
            | Iir_Predefined_Array_Ror =>
             for I in 1 .. Len loop
-               Append_Element
-                 (Res_List, Get_Nth_Element (Arr_List, Cnt));
+               Set_Nth_Element
+                 (Res_List, I - 1, Get_Nth_Element (Arr_List, Cnt));
                Cnt := Cnt + 1;
                if Cnt = Len then
                   Cnt := 0;
@@ -984,29 +979,50 @@ package body Evaluation is
      (Left, Right : Iir; Orig : Iir; Func : Iir_Predefined_Concat_Functions)
      return Iir
    is
-      Res_List : Iir_List;
-      L : Natural;
+      Res_List : Iir_Flist;
+      Res_Len : Natural;
       Res_Type : Iir;
       Origin_Type : Iir;
       Left_Aggr, Right_Aggr : Iir;
-      Left_List, Right_List : Iir_List;
-      Left_Len : Natural;
+      Left_List, Right_List : Iir_Flist;
+      Left_Len, Right_Len : Natural;
    begin
-      Res_List := Create_Iir_List;
-      --  Do the concatenation.
+      --  Compute length of the result.
       --  Left:
       case Func is
          when Iir_Predefined_Element_Array_Concat
            | Iir_Predefined_Element_Element_Concat =>
-            Append_Element (Res_List, Left);
             Left_Len := 1;
          when Iir_Predefined_Array_Element_Concat
            | Iir_Predefined_Array_Array_Concat =>
             Left_Aggr := Eval_String_Literal (Left);
             Left_List := Get_Simple_Aggregate_List (Left_Aggr);
             Left_Len := Get_Nbr_Elements (Left_List);
+      end case;
+      --  Right:
+      case Func is
+         when Iir_Predefined_Array_Element_Concat
+           | Iir_Predefined_Element_Element_Concat =>
+            Right_Len := 1;
+         when Iir_Predefined_Element_Array_Concat
+           | Iir_Predefined_Array_Array_Concat =>
+            Right_Aggr := Eval_String_Literal (Right);
+            Right_List := Get_Simple_Aggregate_List (Right_Aggr);
+            Right_Len := Get_Nbr_Elements (Right_List);
+      end case;
+
+      Res_Len := Left_Len + Right_Len;
+      Res_List := Create_Iir_Flist (Res_Len);
+      --  Do the concatenation.
+      --  Left:
+      case Func is
+         when Iir_Predefined_Element_Array_Concat
+           | Iir_Predefined_Element_Element_Concat =>
+            Set_Nth_Element (Res_List, 0, Left);
+         when Iir_Predefined_Array_Element_Concat
+           | Iir_Predefined_Array_Array_Concat =>
             for I in 0 .. Left_Len - 1 loop
-               Append_Element (Res_List, Get_Nth_Element (Left_List, I));
+               Set_Nth_Element (Res_List, I, Get_Nth_Element (Left_List, I));
             end loop;
             Free_Eval_String_Literal (Left_Aggr, Left);
       end case;
@@ -1014,18 +1030,15 @@ package body Evaluation is
       case Func is
          when Iir_Predefined_Array_Element_Concat
            | Iir_Predefined_Element_Element_Concat =>
-            Append_Element (Res_List, Right);
+            Set_Nth_Element (Res_List, Left_Len, Right);
          when Iir_Predefined_Element_Array_Concat
            | Iir_Predefined_Array_Array_Concat =>
-            Right_Aggr := Eval_String_Literal (Right);
-            Right_List := Get_Simple_Aggregate_List (Right_Aggr);
-            L := Get_Nbr_Elements (Right_List);
-            for I in 0 .. L - 1 loop
-               Append_Element (Res_List, Get_Nth_Element (Right_List, I));
+            for I in 0 .. Right_Len - 1 loop
+               Set_Nth_Element
+                 (Res_List, Left_Len + I, Get_Nth_Element (Right_List, I));
             end loop;
             Free_Eval_String_Literal (Right_Aggr, Right);
       end case;
-      L := Get_Nbr_Elements (Res_List);
 
       --  Compute subtype...
       Origin_Type := Get_Type (Orig);
@@ -1074,7 +1087,7 @@ package body Evaluation is
                Set_Left_Limit (A_Range, Get_Left_Limit (Left_Range));
                Set_Direction (A_Range, Get_Direction (Left_Range));
                Location_Copy (A_Range, Orig);
-               Set_Right_Limit_By_Length (A_Range, Iir_Int64 (L));
+               Set_Right_Limit_By_Length (A_Range, Iir_Int64 (Res_Len));
                Index_Type := Create_Range_Subtype_From_Type
                  (Left_Index, Get_Location (Orig));
                Set_Range_Constraint (Index_Type, A_Range);
@@ -1089,7 +1102,7 @@ package body Evaluation is
             --  concatenation is the direction of S, and the left bound of the
             --  result is S'LEFT.
             Res_Type := Create_Unidim_Array_By_Length
-              (Origin_Type, Iir_Int64 (L), Orig);
+              (Origin_Type, Iir_Int64 (Res_Len), Orig);
          end if;
       end if;
       --  FIXME: this is not necessarily a string, it may be an aggregate if
@@ -1209,7 +1222,7 @@ package body Evaluation is
          --  General case.
          declare
             Left_Val, Right_Val : Iir;
-            R_List, L_List : Iir_List;
+            R_List, L_List : Iir_Flist;
             R_Len, L_Len : Natural;
             P : Natural;
             Res : Compare_Type;
@@ -1799,7 +1812,7 @@ package body Evaluation is
 
    function Build_Enumeration_Value (Val : String; Enum, Expr : Iir) return Iir
    is
-      List  : constant Iir_List := Get_Enumeration_Literal_List (Enum);
+      List  : constant Iir_Flist := Get_Enumeration_Literal_List (Enum);
       Value : String (Val'range);
       Id : Name_Id;
       Res : Iir;
@@ -1815,7 +1828,7 @@ package body Evaluation is
          end loop;
          Id := Get_Identifier (Value);
       end if;
-      Res := Find_Name_In_List (List, Id);
+      Res := Find_Name_In_Flist (List, Id);
       if Res /= Null_Iir then
          return Build_Constant (Res, Expr);
       else
@@ -1928,30 +1941,32 @@ package body Evaluation is
          --  LRM08 5.7 String representations
          --  - [...] otherwise, the string representation is the sequence of
          --    characters in the identifier that is the given value.
-         --  FIXME: extended identifier.
-         Image (Id);
-         if Nam_Buffer (1) /= '\' then
-            Append_String8_String (Nam_Buffer (1 .. Nam_Length));
-            Len := Nam_Length;
-         else
-            declare
-               Skip : Boolean;
-               C : Character;
-            begin
-               Len := 0;
-               Skip := False;
-               for I in 2 .. Nam_Length - 1 loop
-                  if Skip then
-                     Skip := False;
-                  else
-                     C := Nam_Buffer (I);
-                     Append_String8_Char (C);
-                     Skip := C = '\';
-                     Len := Len + 1;
-                  end if;
-               end loop;
-            end;
-         end if;
+         declare
+            Img : constant String := Image (Id);
+         begin
+            if Img (Img'First) /= '\' then
+               Append_String8_String (Img);
+               Len := Img'Length;
+            else
+               declare
+                  Skip : Boolean;
+                  C : Character;
+               begin
+                  Len := 0;
+                  Skip := False;
+                  for I in Img'First + 1 .. Img'Last - 1 loop
+                     if Skip then
+                        Skip := False;
+                     else
+                        C := Img (I);
+                        Append_String8_Char (C);
+                        Skip := C = '\';
+                        Len := Len + 1;
+                     end if;
+                  end loop;
+               end;
+            end if;
+         end;
       end if;
       return Build_String (Image_Id, Nat32 (Len), Orig);
    end Eval_Enum_To_String;
@@ -2255,9 +2270,10 @@ package body Evaluation is
 
    function Eval_Indexed_Aggregate (Prefix : Iir; Expr : Iir) return Iir
    is
-      Indexes : constant Iir_List := Get_Index_List (Expr);
+      Indexes : constant Iir_Flist := Get_Index_List (Expr);
       Prefix_Type : constant Iir := Get_Type (Prefix);
-      Indexes_Type : constant Iir_List := Get_Index_Subtype_List (Prefix_Type);
+      Indexes_Type : constant Iir_Flist :=
+        Get_Index_Subtype_List (Prefix_Type);
       Idx : Iir;
       Assoc : Iir;
       Assoc_Expr : Iir;
@@ -2268,7 +2284,7 @@ package body Evaluation is
    begin
       Aggr := Prefix;
 
-      for Dim in 0 .. Get_Nbr_Elements (Indexes) - 1 loop
+      for Dim in Flist_First .. Flist_Last (Indexes) loop
          Idx := Get_Nth_Element (Indexes, Dim);
 
          --  Find Idx in choices.
@@ -2318,7 +2334,7 @@ package body Evaluation is
       Index_Type : constant Iir := Get_Index_Type (Str_Type, 0);
       Index_Range : constant Iir := Eval_Static_Range (Index_Type);
 
-      Indexes : constant Iir_List := Get_Index_List (Expr);
+      Indexes : constant Iir_Flist := Get_Index_List (Expr);
 
       Id : constant String8_Id := Get_String8_Id (Str);
 
@@ -2339,7 +2355,7 @@ package body Evaluation is
       Index_Type : constant Iir := Get_Index_Type (Aggr_Type, 0);
       Index_Range : constant Iir := Eval_Static_Range (Index_Type);
 
-      Indexes : constant Iir_List := Get_Index_List (Expr);
+      Indexes : constant Iir_Flist := Get_Index_List (Expr);
 
       Idx : Iir;
       Pos : Iir_Index32;
@@ -2361,20 +2377,19 @@ package body Evaluation is
 
       declare
          Prefix_Type : constant Iir := Get_Type (Prefix);
-         Indexes_Type : constant Iir_List :=
+         Indexes_Type : constant Iir_Flist :=
            Get_Index_Subtype_List (Prefix_Type);
-         Indexes_List : constant Iir_List := Get_Index_List (Expr);
+         Indexes_List : constant Iir_Flist := Get_Index_List (Expr);
          Prefix_Index : Iir;
          Index : Iir;
       begin
-         for I in Natural loop
+         for I in Flist_First .. Flist_Last (Indexes_Type) loop
             Prefix_Index := Get_Nth_Element (Indexes_Type, I);
-            exit when Prefix_Index = Null_Iir;
 
             --  Eval index.
             Index := Get_Nth_Element (Indexes_List, I);
             Index := Eval_Static_Expr (Index);
-            Replace_Nth_Element (Indexes_List, I, Index);
+            Set_Nth_Element (Indexes_List, I, Index);
 
             --  Return overflow if out of range.
             if Get_Kind (Index) = Iir_Kind_Overflow_Literal
@@ -2542,6 +2557,7 @@ package body Evaluation is
             begin
                Param := Get_Parameter (Expr);
                Param := Eval_Static_Expr (Param);
+               Eval_Check_Bound (Param, Get_Type (Get_Prefix (Expr)));
                Set_Parameter (Expr, Param);
 
                --  Special case for overflow.
@@ -2687,14 +2703,15 @@ package body Evaluation is
          when Iir_Kind_Simple_Name_Attribute =>
             declare
                use Str_Table;
+               Img : constant String :=
+                 Image (Get_Simple_Name_Identifier (Expr));
                Id : String8_Id;
             begin
                Id := Create_String8;
-               Image (Get_Simple_Name_Identifier (Expr));
-               for I in 1 .. Nam_Length loop
-                  Append_String8_Char (Nam_Buffer (I));
+               for I in Img'Range loop
+                  Append_String8_Char (Img (I));
                end loop;
-               return Build_String (Id, Nat32 (Nam_Length), Expr);
+               return Build_String (Id, Nat32 (Img'Length), Expr);
             end;
 
          when Iir_Kind_Null_Literal =>
@@ -2771,7 +2788,7 @@ package body Evaluation is
    function Is_Small_Composite_Value (Expr : Iir) return Boolean
    is
       Expr_Type : constant Iir := Get_Type (Expr);
-      Indexes : Iir_List;
+      Indexes : Iir_Flist;
       Len : Iir_Int64;
    begin
       --  Consider only arrays.  Records are never composite.
@@ -3128,17 +3145,16 @@ package body Evaluation is
                   return True;
                end if;
                declare
-                  E_Indexes : constant Iir_List :=
+                  E_Indexes : constant Iir_Flist :=
                     Get_Index_Subtype_List (Val_Type);
-                  T_Indexes : constant Iir_List :=
+                  T_Indexes : constant Iir_Flist :=
                     Get_Index_Subtype_List (Sub_Type);
                   E_El : Iir;
                   T_El : Iir;
                begin
-                  for I in Natural loop
+                  for I in Flist_First .. Flist_Last (E_Indexes) loop
                      E_El := Get_Index_Type (E_Indexes, I);
                      T_El := Get_Index_Type (T_Indexes, I);
-                     exit when E_El = Null_Iir and T_El = Null_Iir;
 
                      if Get_Type_Staticness (E_El) = Locally
                        and then Get_Type_Staticness (T_El) = Locally
@@ -3488,74 +3504,44 @@ package body Evaluation is
       end case;
    end Eval_Is_Eq;
 
-   procedure Eval_Operator_Symbol_Name (Id : Name_Id)
-   is
+   function Eval_Operator_Symbol_Name (Id : Name_Id) return String is
    begin
-      Image (Id);
-      Nam_Buffer (2 .. Nam_Length + 1) := Nam_Buffer (1 .. Nam_Length);
-      Nam_Buffer (1) := '"'; --"
-      Nam_Length := Nam_Length + 2;
-      Nam_Buffer (Nam_Length) := '"'; --"
+      return '"' & Image (Id) & '"';
    end Eval_Operator_Symbol_Name;
 
-   procedure Eval_Simple_Name (Id : Name_Id)
-   is
+   function Eval_Simple_Name (Id : Name_Id) return String is
    begin
       --  LRM 14.1
       --  E'SIMPLE_NAME
       --    Result: [...] but with apostrophes (in the case of a character
       --            literal)
       if Is_Character (Id) then
-         Nam_Buffer (1) := ''';
-         Nam_Buffer (2) := Get_Character (Id);
-         Nam_Buffer (3) := ''';
-         Nam_Length := 3;
-         return;
+         return ''' & Get_Character (Id) & ''';
       end if;
       case Id is
          when Std_Names.Name_Word_Operators
            | Std_Names.Name_First_Operator .. Std_Names.Name_Last_Operator =>
-            Eval_Operator_Symbol_Name (Id);
-            return;
+            return Eval_Operator_Symbol_Name (Id);
          when Std_Names.Name_Xnor
            | Std_Names.Name_Shift_Operators =>
             if Flags.Vhdl_Std > Vhdl_87 then
-               Eval_Operator_Symbol_Name (Id);
-               return;
+               return Eval_Operator_Symbol_Name (Id);
             end if;
          when others =>
             null;
       end case;
-      Image (Id);
---       if Name_Buffer (1) = '\' then
---          declare
---             I : Natural;
---          begin
---             I := 2;
---             while I <= Name_Length loop
---                if Name_Buffer (I) = '\' then
---                   Name_Length := Name_Length + 1;
---                   Name_Buffer (I + 1 .. Name_Length) :=
---                     Name_Buffer (I .. Name_Length - 1);
---                   I := I + 1;
---                end if;
---                I := I + 1;
---             end loop;
---             Name_Length := Name_Length + 1;
---             Name_Buffer (Name_Length) := '\';
---          end;
---       end if;
+      return Image (Id);
    end Eval_Simple_Name;
 
    package body String_Utils is
       --  Fill Res from EL.  This is used to speed up Lt and Eq operations.
-      function Get_Info (Expr : Iir) return Str_Info
-      is
+      function Get_Str_Info (Expr : Iir) return Str_Info is
       begin
          case Get_Kind (Expr) is
             when Iir_Kind_Simple_Aggregate =>
                declare
-                  List : constant Iir_List := Get_Simple_Aggregate_List (Expr);
+                  List : constant Iir_Flist :=
+                    Get_Simple_Aggregate_List (Expr);
                begin
                   return Str_Info'(Is_String => False,
                                    Len => Nat32 (Get_Nbr_Elements (List)),
@@ -3568,7 +3554,7 @@ package body Evaluation is
             when others =>
                Error_Kind ("string_utils.get_info", Expr);
          end case;
-      end Get_Info;
+      end Get_Str_Info;
 
       --  Return the position of element IDX of STR.
       function Get_Pos (Str : Str_Info; Idx : Nat32) return Iir_Int32
@@ -3590,8 +3576,8 @@ package body Evaluation is
    function Compare_String_Literals (L, R : Iir) return Compare_Type
    is
       use String_Utils;
-      L_Info : constant Str_Info := Get_Info (L);
-      R_Info : constant Str_Info := Get_Info (R);
+      L_Info : constant Str_Info := Get_Str_Info (L);
+      R_Info : constant Str_Info := Get_Str_Info (R);
       L_Pos, R_Pos : Iir_Int32;
    begin
       if L_Info.Len /= R_Info.Len then
@@ -3657,11 +3643,9 @@ package body Evaluation is
 
       procedure Path_Add_Type_Name (Atype : Iir)
       is
-         Adecl : Iir;
+         Adecl : constant Iir := Get_Type_Declarator (Atype);
       begin
-         Adecl := Get_Type_Declarator (Atype);
-         Image (Get_Identifier (Adecl));
-         Path_Add (Nam_Buffer (1 .. Nam_Length));
+         Path_Add (Image (Get_Identifier (Adecl)));
       end Path_Add_Type_Name;
 
       procedure Path_Add_Signature (Subprg : Iir)
@@ -3688,12 +3672,13 @@ package body Evaluation is
          Path_Add ("]");
       end Path_Add_Signature;
 
-      procedure Path_Add_Name (N : Iir) is
+      procedure Path_Add_Name (N : Iir)
+      is
+         Img : constant String := Eval_Simple_Name (Get_Identifier (N));
       begin
-         Eval_Simple_Name (Get_Identifier (N));
-         if Nam_Buffer (1) /= 'P' then
+         if Img (Img'First) /= 'P' then
             --  Skip anonymous processes.
-            Path_Add (Nam_Buffer (1 .. Nam_Length));
+            Path_Add (Img);
          end if;
       end Path_Add_Name;
 
@@ -3819,7 +3804,7 @@ package body Evaluation is
             Path_Add_Element (Get_Parent (Prefix), Is_Instance);
             Path_Add_Name (Prefix);
          when Iir_Kind_Library_Declaration
-           | Iir_Kinds_Library_Unit_Declaration
+           | Iir_Kinds_Library_Unit
            | Iir_Kind_Function_Declaration
            | Iir_Kind_Procedure_Declaration
            | Iir_Kinds_Concurrent_Statement

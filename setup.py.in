@@ -1,0 +1,43 @@
+#!/usr/bin/env python
+
+from distutils.core import setup, Extension
+import distutils.file_util
+import distutils.dir_util
+from distutils.command.build import build
+import os
+import os.path
+
+class GHDLBuild(build):
+    def my_copy_tree(self, src, dst):
+        """Tuned version of copy_tree: exclude .o files"""
+        distutils.dir_util.mkpath(dst, verbose=True)
+
+        for n in os.listdir(src):
+            src_name = os.path.join(src, n)
+            dst_name = os.path.join(dst, n)
+
+            if os.path.isdir(src_name):
+                self.my_copy_tree(src_name, dst_name)
+            elif not src_name.endswith(".o"):
+                distutils.file_util.copy_file(src_name, dst_name)
+
+    def run(self):
+        # Run original build code
+        build.run(self)
+
+        # Copy VHDL libraries & shared library
+        dstdir = os.path.join(self.build_lib, 'libghdl')
+        distutils.file_util.copy_file("libghdl" + "@SOEXT@", dstdir)
+        self.my_copy_tree(os.path.join("lib", "ghdl"),
+                          os.path.join(dstdir, "ghdl"))
+
+setup (name='libghdl',
+       version='0.35',
+       description = 'Interface to ghdl, a VHDL analyzer',
+       author = 'Tristan Gingold',
+       author_email = 'tgingold@free.fr',
+       url = 'github.com/ghdl/ghdl',
+       package_dir = {'libghdl' : 'src/vhdl/python/libghdl'},
+       packages = ['libghdl'],
+       cmdclass = {
+           'build': GHDLBuild})

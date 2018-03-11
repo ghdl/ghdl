@@ -38,8 +38,11 @@ package body Ortho_Front is
       --  Normal mode: compile a design file.
       Action_Compile,
 
-      --  Elaborate a design unit.
+      --  Generate code to elaborate a design unit.
       Action_Elaborate,
+
+      --  Elaborate a design.
+      Action_Pre_Elaborate,
 
       --  Analyze files and elaborate unit.
       Action_Anaelab,
@@ -80,13 +83,14 @@ package body Ortho_Front is
       Flag_Expect_Failure := False;
    end Init;
 
-   function Decode_Elab_Option (Arg : String_Acc) return Natural is
+   function Decode_Elab_Option (Arg : String_Acc; Cmd : String)
+                               return Natural is
    begin
       Elab_Architecture := null;
       --  Entity (+ architecture) to elaborate
       if Arg = null then
          Error_Msg_Option
-           ("entity or configuration name required after --elab");
+           ("entity or configuration name required after " & Cmd);
          return 0;
       end if;
       if Arg (Arg.all'Last) = ')' then
@@ -101,7 +105,7 @@ package body Ortho_Front is
             Len := P - Arg.all'First + 1;
             --  Must be at least 'e(a)'.
             if Len < 4 then
-               Error_Msg_Option ("ill-formed name after --elab");
+               Error_Msg_Option ("ill-formed name after " & Cmd);
                return 0;
             end if;
             --  Handle extended name.
@@ -113,7 +117,7 @@ package body Ortho_Front is
             end if;
             loop
                if P = Arg.all'First then
-                  Error_Msg_Option ("ill-formed name after --elab");
+                  Error_Msg_Option ("ill-formed name after " & Cmd);
                   return 0;
                end if;
                exit when Arg (P) = '(' and Is_Ext = False;
@@ -124,7 +128,7 @@ package body Ortho_Front is
                      P := P - 1;
                      exit;
                   else
-                     Error_Msg_Option ("ill-formed name after --elab");
+                     Error_Msg_Option ("ill-formed name after " & Cmd);
                      return 0;
                   end if;
                else
@@ -154,14 +158,21 @@ package body Ortho_Front is
             return 0;
          end if;
          Action := Action_Elaborate;
-         return Decode_Elab_Option (Arg);
+         return Decode_Elab_Option (Arg, "--elab");
+      elsif Opt.all = "--pre-elab" then
+         if Action /= Action_Compile then
+            Error_Msg_Option ("several --pre-elab options");
+            return 0;
+         end if;
+         Action := Action_Pre_Elaborate;
+         return Decode_Elab_Option (Arg, "--pre-elab");
       elsif Opt.all = "--anaelab" then
          if Action /= Action_Compile then
             Error_Msg_Option ("several --anaelab options");
             return 0;
          end if;
          Action := Action_Anaelab;
-         return Decode_Elab_Option (Arg);
+         return Decode_Elab_Option (Arg, "--anaelab");
       elsif Opt'Length > 14
         and then Opt (Opt'First .. Opt'First + 13) = "--ghdl-source="
       then
@@ -217,45 +228,28 @@ package body Ortho_Front is
       end if;
    end Decode_Option;
 
-
-   --  Add dependencies of UNIT in DEP_LIST.  If a UNIT or a unit it depends
-   --  on is obsolete, later units are not inserted and this function returns
-   --  FALSE.  UNIT is not added to DEP_LIST.
-   function Add_Dependence (Unit : Iir_Design_Unit; Dep_List : Iir_List)
-                           return Boolean
+   --  Add dependencies of UNIT to DEP_LIST.  UNIT is not added to DEP_LIST.
+   procedure Add_Dependence (Unit : Iir_Design_Unit; Dep_List : Iir_List)
    is
-      List : Iir_List;
+      List : constant Iir_List := Get_Dependence_List (Unit);
+      It : List_Iterator;
       El : Iir;
    begin
-      if Get_Date (Unit) = Date_Obsolete then
-         return False;
-      end if;
-      List := Get_Dependence_List (Unit);
-      if Is_Null_List (List) then
-         return True;
-      end if;
-      for I in Natural loop
-         El := Get_Nth_Element (List, I);
-         exit when Is_Null (El);
-
+      It := List_Iterate_Safe (List);
+      while Is_Valid (It) loop
+         El := Get_Element (It);
          El := Get_Unit_From_Dependence (El);
 
          if not Get_Configuration_Mark_Flag (El) then
             --  EL is not in the list.
-            if not Add_Dependence (El, Dep_List) then
-               --  FIXME: Also mark UNIT to avoid walking again.
-               --  FIXME: this doesn't work as Libraries cannot write the .cf
-               --         file if a unit is obsolete.
-               --  Set_Date (Unit, Date_Obsolete);
-               return False;
-            end if;
+            Add_Dependence (El, Dep_List);
 
             --  Add to the list (only once).
             Set_Configuration_Mark_Flag (El, True);
             Append_Element (Dep_List, El);
          end if;
+         Next (It);
       end loop;
-      return True;
    end Add_Dependence;
 
    procedure Do_Compile (Vhdl_File : Name_Id)
@@ -264,14 +258,11 @@ package body Ortho_Front is
       New_Design_File : Iir_Design_File;
       Design : Iir_Design_Unit;
       Next_Design : Iir_Design_Unit;
+      Prev_Design : Iir_Design_Unit;
 
       --  List of dependencies.
       Dep_List : Iir_List;
-
-      --  List of units to be compiled.  It is generally the same units as the
-      --  one in the design_file, but some may be removed because a unit can be
-      --  obsoleted (directly or indirectly) by a later unit in the same file.
-      Units_List : Iir_List;
+      Dep_It : List_Iterator;
    begin
       --  Do not elaborate.
       Flags.Flag_Elaborate := False;
@@ -324,15 +315,30 @@ package body Ortho_Front is
       Set_Configuration_Done_Flag (Std_Package.Std_Standard_Unit, True);
 
       Dep_List := Create_Iir_List;
-      Units_List := Create_Iir_List;
 
       Design := Get_First_Design_Unit (New_Design_File);
+      Prev_Design := Null_Iir;
+      Set_First_Design_Unit (New_Design_File, Null_Iir);
+      Set_Last_Design_Unit (New_Design_File, Null_Iir);
       while Is_Valid (Design) loop
-         if Add_Dependence (Design, Dep_List) then
-            --  Discard obsolete units.
-            Append_Element (Units_List, Design);
+         --  Unlink.
+         Next_Design := Get_Chain (Design);
+         Set_Chain (Design, Null_Iir);
+
+         --  Discard obsolete units.
+         if Get_Date (Design) /= Date_Obsolete then
+            if Prev_Design = Null_Iir then
+               Set_First_Design_Unit (New_Design_File, Design);
+            else
+               Set_Last_Design_Unit (New_Design_File, Design);
+               Set_Chain (Prev_Design, Design);
+            end if;
+            Prev_Design := Design;
+
+            Add_Dependence (Design, Dep_List);
          end if;
-         Design := Get_Chain (Design);
+
+         Design := Next_Design;
       end loop;
 
       if Errorout.Nbr_Errors > 0 then
@@ -342,22 +348,21 @@ package body Ortho_Front is
 
       --  Translate declarations of dependencies.
       Translation.Translate_Standard (False);
-      for I in Natural loop
-         Design := Get_Nth_Element (Dep_List, I);
-         exit when Design = Null_Iir;
+      Dep_It := List_Iterate (Dep_List);
+      while Is_Valid (Dep_It) loop
+         Design := Get_Element (Dep_It);
          if Get_Design_File (Design) /= New_Design_File then
             --  Do not yet translate units to be compiled.  They can appear as
             --  dependencies.
             Translation.Translate (Design, False);
          end if;
+         Next (Dep_It);
       end loop;
 
       --  Compile only now.
       --  Note: the order of design unit is kept.
-      for I in Natural loop
-         Design := Get_Nth_Element (Units_List, I);
-         exit when Design = Null_Iir;
-
+      Design := Get_First_Design_Unit (New_Design_File);
+      while Is_Valid (Design) loop
          if Get_Kind (Get_Library_Unit (Design))
            = Iir_Kind_Configuration_Declaration
          then
@@ -377,7 +382,7 @@ package body Ortho_Front is
          Design := Get_Chain (Design);
       end loop;
 
-      -- Save the working library.
+      --  Save the working library.
       Libraries.Save_Work_Library;
    end Do_Compile;
 
@@ -420,6 +425,14 @@ package body Ortho_Front is
                --  This may happen (bad entity for example).
                raise Compilation_Error;
             end if;
+         when Action_Pre_Elaborate =>
+            Flags.Flag_Elaborate := True;
+            Flags.Flag_Only_Elab_Warnings := True;
+            if Elab_Filelist = null then
+               Error_Msg_Option ("missing -l for --pre-elab");
+               raise Option_Error;
+            end if;
+            raise Program_Error;
          when Action_Anaelab =>
             --  Parse files.
             if Anaelab_Files = null then

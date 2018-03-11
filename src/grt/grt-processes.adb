@@ -388,13 +388,15 @@ package body Grt.Processes is
       Proc.Timeout_Chain_Prev := null;
    end Remove_Process_From_Timeout_Chain;
 
-   procedure Ghdl_Process_Wait_Set_Timeout (Time : Std_Time)
+   procedure Ghdl_Process_Wait_Set_Timeout (Time : Std_Time;
+                                            Filename : Ghdl_C_String;
+                                            Line : Ghdl_I32)
    is
       Proc : constant Process_Acc := Get_Current_Process;
    begin
       if Time < 0 then
          --  LRM93 8.1
-         Error ("negative timeout clause");
+         Error ("negative timeout clause", Filename, Line);
       end if;
       Proc.Timeout := Current_Time + Time;
       Update_Process_First_Timeout (Proc);
@@ -513,7 +515,9 @@ package body Grt.Processes is
       Proc.State := State_Dead;
    end Ghdl_Process_Wait_Exit;
 
-   procedure Ghdl_Process_Wait_Timeout (Time : Std_Time)
+   procedure Ghdl_Process_Wait_Timeout (Time : Std_Time;
+                                        Filename : Ghdl_C_String;
+                                        Line : Ghdl_I32)
    is
       Proc : constant Process_Acc := Get_Current_Process;
    begin
@@ -522,11 +526,16 @@ package body Grt.Processes is
       end if;
       if Time < 0 then
          --  LRM93 8.1
-         Error ("negative timeout clause");
+         Error ("negative timeout clause", Filename, Line);
       end if;
-      Proc.Timeout := Current_Time + Time;
       Proc.State := State_Delayed;
-      Update_Process_First_Timeout (Proc);
+      if Time <= Std_Time'Last - Current_Time then
+         Proc.Timeout := Current_Time + Time;
+         Update_Process_First_Timeout (Proc);
+      else
+         --  Delay past the end of the times.
+         Proc.Timeout := Std_Time'Last;
+      end if;
    end Ghdl_Process_Wait_Timeout;
 
    --  Verilog.
@@ -799,10 +808,6 @@ package body Grt.Processes is
       end if;
    end Run_Processes;
 
-   --  Updated by Initialization_Phase and Simulation_Cycle to the time of the
-   --  next cycle.  Unchanged in case of delta-cycle.
-   Next_Time : Std_Time;
-
    procedure Initialization_Phase
    is
       Status : Integer;
@@ -859,16 +864,12 @@ package body Grt.Processes is
             Next_Time := Compute_Next_Time;
          end if;
       end if;
-      if Next_Time /= 0 then
-         Update_Active_Chain;
-      end if;
 
       --  Clear current_delta, will be set by Simulation_Cycle.
       Current_Delta := 0;
    end Initialization_Phase;
 
    --  Launch a simulation cycle.
-   --  Set FINISHED to true if this is the last cycle.
    function Simulation_Cycle return Integer
    is
       Tn : Std_Time;
@@ -880,8 +881,11 @@ package body Grt.Processes is
       --  a) The current time, Tc is set equal to Tn.  Simulation is complete
       --     when Tn = TIME'HIGH and there are no active drivers or process
       --     resumptions at Tn.
-      --  GHDL: this is done at the last step of the cycle.
-      null;
+      --  GHDL: the check is done at the last step of the cycle.
+      Current_Time := Next_Time;
+      if Grt.Options.Disp_Time then
+         Grt.Disp.Disp_Now;
+      end if;
 
       --  b) The following actions occur in the indicated order:
       --     1) If the current simulation cycle is not a delta cycle, each
@@ -1039,9 +1043,15 @@ package body Grt.Processes is
             Tn := Compute_Next_Time;
          end if;
 
-         Update_Active_Chain;
          Next_Time := Tn;
          Current_Delta := 0;
+
+         --  Statistics.
+         Nbr_Cycles := Nbr_Cycles + 1;
+
+         --  For wave dumpers.
+         Grt.Hooks.Call_Cycle_Hooks;
+
          return Run_Resumed;
       end if;
 
@@ -1050,11 +1060,15 @@ package body Grt.Processes is
          return Run_Finished;
       else
          Current_Delta := Current_Delta + 1;
+
+         --  Statistics.
+         Nbr_Delta_Cycles := Nbr_Delta_Cycles + 1;
+
          return Run_Resumed;
       end if;
    end Simulation_Cycle;
 
-   procedure Simulation_Init
+   function Simulation_Init return Integer
    is
       use Options;
    begin
@@ -1079,7 +1093,30 @@ package body Grt.Processes is
          --  zero after initialization.
          Grt.Hooks.Call_Cycle_Hooks;
       end if;
+
+      return 0;
    end Simulation_Init;
+
+   function Has_Simulation_Timeout return Boolean
+   is
+      use Options;
+   begin
+      if Next_Time > Stop_Time
+        and then Next_Time /= Std_Time'Last
+      then
+         --  FIXME: Implement with a callback instead ?  This could be done
+         --  in 2 steps: an after_delay for the time and then a read_only
+         --  to finish the current cycle.  Note that no message should be
+         --  printed if the simulation is already finished at the stop time.
+         Info ("simulation stopped by --stop-time");
+         return True;
+      elsif Current_Delta >= Stop_Delta then
+         Info ("simulation stopped by --stop-delta");
+         return True;
+      else
+         return False;
+      end if;
+   end Has_Simulation_Timeout;
 
    function Simulation_Main_Loop return Integer
    is
@@ -1087,45 +1124,21 @@ package body Grt.Processes is
       Status : Integer;
    begin
       loop
-         --  Update time.  This is the only place where Current_Time is
-         --  updated.
-         Current_Time := Next_Time;
-         if Disp_Time then
-            Grt.Disp.Disp_Now;
-         end if;
-
          Status := Simulation_Cycle;
+
+         --  Simulation has been stopped/finished by vpi.
          exit when Status = Run_Stop;
 
          if Trace_Signals then
             Grt.Disp_Signals.Disp_All_Signals;
          end if;
 
-         --  Statistics.
-         if Current_Delta = 0 then
-            Nbr_Cycles := Nbr_Cycles + 1;
-         else
-            Nbr_Delta_Cycles := Nbr_Delta_Cycles + 1;
-         end if;
-
+         --  Simulation is finished.
          exit when Status = Run_Finished;
-         if Next_Time > Stop_Time
-           and then Next_Time /= Std_Time'Last
-         then
-            --  FIXME: Implement with a callback instead ?  This could be done
-            --  in 2 steps: an after_delay for the time and then a read_only
-            --  to finish the current cycle.  Note that no message should be
-            --  printed if the simulation is already finished at the stop time.
-            Info ("simulation stopped by --stop-time");
-            exit;
-         end if;
 
-         if Current_Delta = 0 then
-            Grt.Hooks.Call_Cycle_Hooks;
-         end if;
-
-         if Current_Delta >= Stop_Delta then
-            Error ("simulation stopped by --stop-delta");
+         --  Simulation is stopped by user timeout.
+         if Has_Simulation_Timeout then
+            Status := Run_Limit;
             exit;
          end if;
       end loop;
@@ -1146,9 +1159,11 @@ package body Grt.Processes is
 
    function Simulation return Integer
    is
+      use Grt.Options;
       Status : Integer;
    begin
-      Simulation_Init;
+      Status := Simulation_Init;
+      pragma Assert (Status = 0);
 
       Status := Simulation_Main_Loop;
 

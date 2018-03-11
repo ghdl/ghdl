@@ -172,6 +172,7 @@ package body Sem_Expr is
    is
       El : Iir;
       Right_List : Iir_List;
+      It : List_Iterator;
       Level : Compatibility_Level;
    begin
       pragma Assert (not Is_Overload_List (Left_Type));
@@ -179,14 +180,15 @@ package body Sem_Expr is
       if Is_Overload_List (Right_Types) then
          Right_List := Get_Overload_List (Right_Types);
          Level := Not_Compatible;
-         for I in Natural loop
-            El := Get_Nth_Element (Right_List, I);
-            exit when El = Null_Iir;
+         It := List_Iterate (Right_List);
+         while Is_Valid (It) loop
+            El := Get_Element (It);
             Level := Compatibility_Level'Max
               (Level, Are_Types_Compatible (Left_Type, El));
             if Level = Fully_Compatible then
                return Fully_Compatible;
             end if;
+            Next (It);
          end loop;
          return Level;
       else
@@ -432,6 +434,7 @@ package body Sem_Expr is
      return Iir
    is
       Type_List_List : Iir_List;
+      It : List_Iterator;
       El: Iir;
       Com : Iir;
       Res : Iir;
@@ -442,9 +445,9 @@ package body Sem_Expr is
       else
          Type_List_List := Get_Overload_List (Type_List);
          Res := Null_Iir;
-         for I in Natural loop
-            El := Get_Nth_Element (Type_List_List, I);
-            exit when El = Null_Iir;
+         It := List_Iterate (Type_List_List);
+         while Is_Valid (It) loop
+            El := Get_Element (It);
             Com := Get_Common_Basetype (Get_Base_Type (El),
                                         Get_Base_Type (A_Type));
             if Com /= Null_Iir then
@@ -455,6 +458,7 @@ package body Sem_Expr is
                   return Null_Iir;
                end if;
             end if;
+            Next (It);
          end loop;
          return Res;
       end if;
@@ -466,6 +470,7 @@ package body Sem_Expr is
    function Search_Compatible_Type (List1, List2 : Iir) return Iir
    is
       List1_List : Iir_List;
+      It : List_Iterator;
       Res : Iir;
       El : Iir;
       Tmp : Iir;
@@ -473,9 +478,9 @@ package body Sem_Expr is
       if Is_Overload_List (List1) then
          List1_List := Get_Overload_List (List1);
          Res := Null_Iir;
-         for I in Natural loop
-            El := Get_Nth_Element (List1_List, I);
-            exit when El = Null_Iir;
+         It := List_Iterate (List1_List);
+         while Is_Valid (It) loop
+            El := Get_Element (It);
             Tmp := Search_Overloaded_Type (List2, El);
             if Tmp /= Null_Iir then
                if Res = Null_Iir then
@@ -485,6 +490,7 @@ package body Sem_Expr is
                   return Null_Iir;
                end if;
             end if;
+            Next (It);
          end loop;
          return Res;
       else
@@ -1198,27 +1204,28 @@ package body Sem_Expr is
      (Expr : Iir; A_Type : Iir; Is_Func_Call : Boolean) return Iir
    is
       Imp : Iir;
-      Nbr_Inter: Natural;
       A_Func: Iir;
       Imp_List: Iir_List;
+      New_List : Iir_List;
       Assoc_Chain: Iir;
       Inter_Chain : Iir;
       Res_Type: Iir_List;
+      Imp_It : List_Iterator;
       Inter: Iir;
       Match : Compatibility_Level;
       Match_Max : Compatibility_Level;
    begin
       --  Sem_Name has gathered all the possible names for the prefix of this
       --  call.  Reduce this list to only names that match the types.
-      Nbr_Inter := 0;
       Imp := Get_Implementation (Expr);
       Imp_List := Get_Overload_List (Imp);
       Assoc_Chain := Get_Parameter_Association_Chain (Expr);
       Match_Max := Via_Conversion;
 
-      for I in Natural loop
-         A_Func := Get_Nth_Element (Imp_List, I);
-         exit when A_Func = Null_Iir;
+      New_List := Create_Iir_List;
+      Imp_It := List_Iterate (Imp_List);
+      while Is_Valid (Imp_It) loop
+         A_Func := Get_Element (Imp_It);
 
          case Get_Kind (A_Func) is
             when Iir_Kinds_Functions_And_Literals =>
@@ -1249,22 +1256,25 @@ package body Sem_Expr is
                --  compatible, and this one is fully compatible, discard
                --  previous and future Via_Conversion interpretations.
                if Match > Match_Max then
-                  Nbr_Inter := 0;
+                  Destroy_Iir_List (New_List);
+                  New_List := Create_Iir_List;
                   Match_Max := Match;
                end if;
-               Replace_Nth_Element (Imp_List, Nbr_Inter, A_Func);
-               Nbr_Inter := Nbr_Inter + 1;
+               Append_Element (New_List, A_Func);
             end if;
          end if;
 
          << Continue >> null;
+         Next (Imp_It);
       end loop;
-      Set_Nbr_Elements (Imp_List, Nbr_Inter);
+      Destroy_Iir_List (Imp_List);
+      Imp_List := New_List;
+      Set_Overload_List (Imp, Imp_List);
 
       -- Set_Implementation (Expr, Inter_List);
       -- A set of possible functions to call is in INTER_LIST.
       -- Create a set of possible return type in RES_TYPE.
-      case Nbr_Inter is
+      case Get_Nbr_Elements (Imp_List) is
          when 0 =>
             --  FIXME: display subprogram name.
             Error_Msg_Sem
@@ -1301,10 +1311,11 @@ package body Sem_Expr is
 
                --  Create the list of types for the result.
                Res_Type := Create_Iir_List;
-               for I in 0 .. Nbr_Inter - 1 loop
+               Imp_It := List_Iterate (Imp_List);
+               while Is_Valid (Imp_It) loop
                   Add_Element
-                    (Res_Type,
-                     Get_Return_Type (Get_Nth_Element (Imp_List, I)));
+                    (Res_Type, Get_Return_Type (Get_Element (Imp_It)));
+                  Next (Imp_It);
                end loop;
 
                if Get_Nbr_Elements (Res_Type) = 1 then
@@ -1336,6 +1347,8 @@ package body Sem_Expr is
       Inter: Iir;
       Assoc_Chain : Iir;
       Match : Compatibility_Level;
+      Overload_List : Iir_List;
+      Overload_It : List_Iterator;
    begin
       if Is_Func then
          Res_Type := Get_Type (Expr);
@@ -1412,21 +1425,23 @@ package body Sem_Expr is
       if Is_Overload_List (Inter_List) then
          -- INTER_LIST is a list of possible declaration to call.
          -- Find one, based on the return type A_TYPE.
-         for I in Natural loop
-            Inter := Get_Nth_Element (Get_Overload_List (Inter_List), I);
-            exit when Inter = Null_Iir;
+         Overload_List := Get_Overload_List (Inter_List);
+         Overload_It := List_Iterate (Overload_List);
+         while Is_Valid (Overload_It) loop
+            Inter := Get_Element (Overload_It);
             if Are_Basetypes_Compatible
               (A_Type, Get_Base_Type (Get_Return_Type (Inter)))
               /= Not_Compatible
             then
                if Res /= Null_Iir then
                   Error_Overload (Expr);
-                  Disp_Overload_List (Get_Overload_List (Inter_List), Expr);
+                  Disp_Overload_List (Overload_List, Expr);
                   return Null_Iir;
                else
                   Res := Inter;
                end if;
             end if;
+            Next (Overload_It);
          end loop;
       else
          if Are_Basetypes_Compatible
@@ -1565,6 +1580,7 @@ package body Sem_Expr is
    --  attributes, like: s'length = 0
    function Get_Non_Implicit_Subprogram (List : Iir_List) return Iir
    is
+      It : List_Iterator;
       El : Iir;
       Res : Iir;
       Ref_Type : Iir;
@@ -1573,9 +1589,9 @@ package body Sem_Expr is
       --  1. All the possible functions must return boolean.
       --  2. There is only one implicit function for universal or real.
       Res := Null_Iir;
-      for I in Natural loop
-         El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
+      It := List_Iterate (List);
+      while Is_Valid (It) loop
+         El := Get_Element (It);
 
          --  Only comparison operators need this special handling.
          if Get_Base_Type (Get_Return_Type (El)) /= Boolean_Type_Definition
@@ -1593,6 +1609,7 @@ package body Sem_Expr is
                Res := El;
             end if;
          end if;
+         Next (It);
       end loop;
       return Res;
    end Get_Non_Implicit_Subprogram;
@@ -1605,14 +1622,19 @@ package body Sem_Expr is
    is
       Sub1 : Iir;
       Sub2 : Iir;
+      It : List_Iterator;
       Res : Iir;
    begin
       if Get_Nbr_Elements (List) /= 2 then
          return Null_Iir;
       end if;
 
-      Sub1 := Get_Nth_Element (List, 0);
-      Sub2 := Get_Nth_Element (List, 1);
+      It := List_Iterate (List);
+      Sub1 := Get_Element (It);
+      Next (It);
+      Sub2 := Get_Element (It);
+      Next (It);
+      pragma Assert (not Is_Valid (It));
 
       --  One must be an implicit declaration, the other must be an explicit
       --  declaration.
@@ -1661,6 +1683,7 @@ package body Sem_Expr is
       Overload : Iir;
       Res_Type_List : Iir;
       Full_Compat : Iir;
+      It : List_Iterator;
 
       -- LEFT and RIGHT must be set.
       function Set_Uniq_Interpretation (Decl : Iir) return Iir
@@ -1758,15 +1781,14 @@ package body Sem_Expr is
             Decl := Get_Non_Alias_Declaration (Interpretation);
 
             --  It is compatible with operand types ?
-            pragma Assert (Kind_In (Decl, Iir_Kind_Function_Declaration,
-                                    Iir_Kind_Interface_Function_Declaration));
+            pragma Assert (Is_Function_Declaration (Decl));
 
             --  LRM08 12.3 Visibility
             --  [...] or all visible declarations denote the same named entity.
             --
             --  GHDL: If DECL has already been seen, then skip it.
             if Get_Seen_Flag (Decl) then
-               goto Next;
+               goto Continue;
             end if;
 
             --  Check return type.
@@ -1774,7 +1796,7 @@ package body Sem_Expr is
               and then (Are_Types_Compatible (Res_Type, Get_Return_Type (Decl))
                           = Not_Compatible)
             then
-               goto Next;
+               goto Continue;
             end if;
 
             Interface_Chain := Get_Interface_Declaration_Chain (Decl);
@@ -1790,21 +1812,21 @@ package body Sem_Expr is
             --  GHDL: So even in presence of default expression in a parameter,
             --  a unary operation has to match with a binary operator.
             if Iir_Chains.Get_Chain_Length (Interface_Chain) /= Arity then
-               goto Next;
+               goto Continue;
             end if;
 
             -- Check operands.
             if Is_Expr_Compatible (Get_Type (Interface_Chain), Left)
               = Not_Compatible
             then
-               goto Next;
+               goto Continue;
             end if;
             if Arity = 2 then
                if Is_Expr_Compatible (Get_Type (Get_Chain (Interface_Chain)),
                                       Right)
                  = Not_Compatible
                then
-                  goto Next;
+                  goto Continue;
                end if;
             end if;
 
@@ -1812,21 +1834,28 @@ package body Sem_Expr is
             Set_Seen_Flag (Decl, True);
             Append_Element (Overload_List, Decl);
 
-            << Next >> null;
+            << Continue >> null;
             Interpretation := Get_Next_Interpretation (Interpretation);
          end loop;
 
          --  Clear seen_flags.
-         for I in Natural loop
-            Decl := Get_Nth_Element (Overload_List, I);
-            exit when Decl = Null_Iir;
-            Set_Seen_Flag (Decl, False);
+         It := List_Iterate (Overload_List);
+         while Is_Valid (It) loop
+            Set_Seen_Flag (Get_Element (It), False);
+            Next (It);
          end loop;
 
          --  The list of possible implementations was computed.
          case Get_Nbr_Elements (Overload_List) is
             when 0 =>
-               Error_Msg_Sem (+Expr, "no function declarations for %n", +Expr);
+               if Get_Kind (Expr) = Iir_Kind_Implicit_Condition_Operator then
+                  --  TODO: display expression type.
+                  Error_Msg_Sem (+Expr, "cannot convert expression to boolean "
+                                   & "(no ""??"" found)");
+               else
+                  Error_Msg_Sem (+Expr,
+                                 "no function declarations for %n", +Expr);
+               end if;
                Destroy_Iir_List (Overload_List);
                return Null_Iir;
 
@@ -1892,9 +1921,9 @@ package body Sem_Expr is
          Overload := Get_Implementation (Expr);
          Overload_List := Get_Overload_List (Overload);
          Full_Compat := Null_Iir;
-         for I in Natural loop
-            Decl := Get_Nth_Element (Overload_List, I);
-            exit when Decl = Null_Iir;
+         It := List_Iterate (Overload_List);
+         while Is_Valid (It) loop
+            Decl := Get_Element (It);
             --  FIXME: wrong: compatibilty with return type and args.
             if Are_Types_Compatible (Get_Return_Type (Decl), Res_Type)
               /= Not_Compatible
@@ -1906,6 +1935,7 @@ package body Sem_Expr is
                   Full_Compat := Decl;
                end if;
             end if;
+            Next (It);
          end loop;
          Free_Iir (Overload);
          Overload := Get_Type (Expr);
@@ -1944,7 +1974,7 @@ package body Sem_Expr is
          --  be visible at the place of the string literal.
 
          --  Character C is not visible...
-         if Find_Name_In_List (Get_Enumeration_Literal_List (Etype), Id)
+         if Find_Name_In_Flist (Get_Enumeration_Literal_List (Etype), Id)
            = Null_Iir
          then
             --  ... because it is not defined.
@@ -2166,6 +2196,7 @@ package body Sem_Expr is
       procedure Sem_Simple_Choice (Choice : Iir)
       is
          Expr : Iir;
+         Choice_Len : Iir_Int64;
       begin
          --  LRM93 8.8
          --  In such case, each choice appearing in any of the case statement
@@ -2189,13 +2220,19 @@ package body Sem_Expr is
             Error_Msg_Sem
               (+Expr, "bound error during evaluation of choice expression");
             Has_Length_Error := True;
-         elsif Eval_Discrete_Type_Length
-           (Get_String_Type_Bound_Type (Get_Type (Expr))) /= Sel_Length
-         then
-            Has_Length_Error := True;
-            Error_Msg_Sem
-              (+Expr, "value not of the same length of the case expression");
             return;
+         end if;
+
+         Choice_Len := Eval_Discrete_Type_Length
+           (Get_String_Type_Bound_Type (Get_Type (Expr)));
+         if Sel_Length = -1 then
+            Sel_Length := Choice_Len;
+         else
+            if Choice_Len /= Sel_Length then
+               Has_Length_Error := True;
+               Error_Msg_Sem (+Expr, "incorrect length for the choice value");
+               return;
+            end if;
          end if;
       end Sem_Simple_Choice;
 
@@ -2218,12 +2255,22 @@ package body Sem_Expr is
             "expression must be discrete or one-dimension array subtype");
          return;
       end if;
-      if Get_Type_Staticness (Sel_Type) /= Locally then
-         Error_Msg_Sem (+Sel, "array type must be locally static");
-         return;
+      if Get_Type_Staticness (Sel_Type) = Locally then
+         Sel_Length := Eval_Discrete_Type_Length
+           (Get_String_Type_Bound_Type (Sel_Type));
+      else
+         --  LRM08 10.9 Case statement
+         --  If the expression is of a one-dimensional character array type and
+         --  is not described by either of the preceding two paragraphs, then
+         --  the values of all of the choices, except the OTHERS choice, if
+         --  present, shall be of the same length.
+         if Flags.Vhdl_Std >= Vhdl_08 then
+            Sel_Length := -1;
+         else
+            Error_Msg_Sem (+Sel, "array type must be locally static");
+            return;
+         end if;
       end if;
-      Sel_Length := Eval_Discrete_Type_Length
-        (Get_String_Type_Bound_Type (Sel_Type));
       Sel_El_Type := Get_Element_Subtype (Sel_Type);
       Sel_El_Length := Eval_Discrete_Type_Length (Sel_El_Type);
 
@@ -2777,7 +2824,8 @@ package body Sem_Expr is
      return boolean
    is
       Base_Type : constant Iir := Get_Base_Type (A_Type);
-      El_List : constant Iir_List := Get_Elements_Declaration_List (Base_Type);
+      El_List : constant Iir_Flist :=
+        Get_Elements_Declaration_List (Base_Type);
 
       --  Type of the element.
       El_Type : Iir;
@@ -2826,7 +2874,7 @@ package body Sem_Expr is
             Ok := False;
             return Ass;
          end if;
-         Aggr_El := Find_Name_In_List (El_List, Get_Identifier (Expr));
+         Aggr_El := Find_Name_In_Flist (El_List, Get_Identifier (Expr));
          if Aggr_El = Null_Iir then
             Error_Msg_Sem (+Ass, "record has no such element %n", +Ass);
             Ok := False;
@@ -3008,7 +3056,7 @@ package body Sem_Expr is
                                          Constrained : Boolean;
                                          Dim: Natural)
    is
-      Index_List : constant Iir_List := Get_Index_Subtype_List (A_Type);
+      Index_List : constant Iir_Flist := Get_Index_Subtype_List (A_Type);
 
       --  Type of the index (this is also the type of the choices).
       Index_Type : constant Iir := Get_Index_Type (Index_List, Dim - 1);
@@ -3402,7 +3450,7 @@ package body Sem_Expr is
    is
       A_Subtype: Iir;
       Base_Type : Iir;
-      Index_List : constant Iir_List := Get_Index_Subtype_List (Aggr_Type);
+      Index_List : constant Iir_Flist := Get_Index_Subtype_List (Aggr_Type);
       Nbr_Dim : constant Natural := Get_Nbr_Elements (Index_List);
       Infos : Array_Aggr_Info_Arr (1 .. Nbr_Dim);
       Aggr_Constrained : Boolean;
@@ -3434,8 +3482,8 @@ package body Sem_Expr is
          A_Subtype := Create_Array_Subtype (Base_Type, Get_Location (Aggr));
          Type_Staticness := Get_Type_Staticness (A_Subtype);
          for I in Infos'Range loop
-            Append_Element (Get_Index_Subtype_List (A_Subtype),
-                            Infos (I).Index_Subtype);
+            Set_Nth_Element (Get_Index_Subtype_List (A_Subtype), I - 1,
+                             Infos (I).Index_Subtype);
             Type_Staticness := Min
               (Type_Staticness, Get_Type_Staticness (Infos (I).Index_Subtype));
          end loop;
@@ -4234,6 +4282,7 @@ package body Sem_Expr is
                                                    return Iir
    is
       Types_List_List : Iir_List;
+      It : List_Iterator;
       El: Iir;
       Com : Iir;
       Res : Iir;
@@ -4243,13 +4292,14 @@ package body Sem_Expr is
       else
          Types_List_List := Get_Overload_List (Types_List);
          Res := Null_Iir;
-         for I in Natural loop
-            El := Get_Nth_Element (Types_List_List, I);
-            exit when El = Null_Iir;
+         It := List_Iterate (Types_List_List);
+         while Is_Valid (It) loop
+            El := Get_Element (It);
             Com := Compatible_Types_Intersect_Single (El, A_Type);
             if Com /= Null_Iir then
                Add_Result (Res, Com);
             end if;
+            Next (It);
          end loop;
          return Res;
       end if;
@@ -4258,6 +4308,7 @@ package body Sem_Expr is
    function Compatible_Types_Intersect (List1, List2 : Iir) return Iir
    is
       List1_List : Iir_List;
+      It1 : List_Iterator;
       Res : Iir;
       El : Iir;
       Tmp : Iir;
@@ -4269,13 +4320,14 @@ package body Sem_Expr is
       if Is_Overload_List (List1) then
          List1_List := Get_Overload_List (List1);
          Res := Null_Iir;
-         for I in Natural loop
-            El := Get_Nth_Element (List1_List, I);
-            exit when El = Null_Iir;
+         It1 := List_Iterate (List1_List);
+         while Is_Valid (It1) loop
+            El := Get_Element (It1);
             Tmp := Compatible_Types_Intersect_Single_List (El, List2);
             if Tmp /= Null_Iir then
                Add_Result (Res, Tmp);
             end if;
+            Next (It1);
          end loop;
          return Res;
       else
@@ -4441,7 +4493,7 @@ package body Sem_Expr is
       Expr_Type := Get_Type (Expr);
       pragma Assert (Expr_Type /= Null_Iir);
       Result_Type := Compatible_Types_Intersect (Atype, Expr_Type);
-      if Is_Overload_List (Atype) then
+      if Atype /= Null_Iir and then Is_Overload_List (Atype) then
          Free_Overload_List (Atype);
       end if;
       if Result_Type /= Null_Iir then
@@ -4533,16 +4585,18 @@ package body Sem_Expr is
       elsif Is_Overload_List (Get_Type (Res)) then
          declare
             List : constant Iir_List := Get_Overload_List (Get_Type (Res));
+            It : List_Iterator;
             Res_Type : Iir;
             Atype : Iir;
          begin
             Res_Type := Null_Iir;
-            for I in Natural loop
-               Atype := Get_Nth_Element (List, I);
-               exit when Atype = Null_Iir;
+            It := List_Iterate (List);
+            while Is_Valid (It) loop
+               Atype := Get_Element (It);
                if Is_Aggregate_Type (Atype) then
                   Add_Result (Res_Type, Atype);
                end if;
+               Next (It);
             end loop;
 
             if Res_Type = Null_Iir then
@@ -4571,6 +4625,7 @@ package body Sem_Expr is
       El : Iir;
       Res : Iir;
       List : Iir_List;
+      It : List_Iterator;
    begin
       Expr1 := Sem_Expression_Ov (Expr, Null_Iir);
       if Expr1 = Null_Iir then
@@ -4588,9 +4643,9 @@ package body Sem_Expr is
 
       List := Get_Overload_List (Expr_Type);
       Res := Null_Iir;
-      for I in Natural loop
-         El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
+      It := List_Iterate (List);
+      while Is_Valid (It) loop
+         El := Get_Element (It);
          if El = Universal_Integer_Type_Definition
            or El = Convertible_Integer_Type_Definition
            or El = Universal_Real_Type_Definition
@@ -4604,6 +4659,7 @@ package body Sem_Expr is
                return Null_Iir;
             end if;
          end if;
+         Next (It);
       end loop;
       if Res = Null_Iir then
          Error_Overload (Expr1);
@@ -4620,6 +4676,7 @@ package body Sem_Expr is
       El : Iir;
       Res : Iir;
       List : Iir_List;
+      It : List_Iterator;
    begin
       Expr1 := Sem_Expression_Ov (Expr, Null_Iir);
       if Expr1 = Null_Iir then
@@ -4650,9 +4707,9 @@ package body Sem_Expr is
       --  of a discrete type or a one-dimensional character array type.
       List := Get_Overload_List (Expr_Type);
       Res := Null_Iir;
-      for I in Natural loop
-         El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
+      It := List_Iterate (List);
+      while Is_Valid (It) loop
+         El := Get_Element (It);
          if Get_Kind (El) in Iir_Kinds_Discrete_Type_Definition
            or else Is_One_Dimensional_Array_Type (El)
          then
@@ -4664,6 +4721,7 @@ package body Sem_Expr is
                return Null_Iir;
             end if;
          end if;
+         Next (It);
       end loop;
       if Res = Null_Iir then
          Error_Overload (Expr1);
@@ -4678,7 +4736,7 @@ package body Sem_Expr is
       Op : Iir;
       Res : Iir;
    begin
-      Op := Create_Iir (Iir_Kind_Condition_Operator);
+      Op := Create_Iir (Iir_Kind_Implicit_Condition_Operator);
       Location_Copy (Op, Cond);
       Set_Operand (Op, Cond);
 
@@ -4726,25 +4784,27 @@ package body Sem_Expr is
                Check_Read (Res);
                return Res;
             end if;
-         else
+         elsif Get_Type (Res) /= Null_Iir then
             --  Many interpretations.
             declare
-               El : Iir;
                Res_List : constant Iir_List :=
                  Get_Overload_List (Get_Type (Res));
+               It : List_Iterator;
+               El : Iir;
                Nbr_Booleans : Natural;
             begin
                Nbr_Booleans := 0;
 
                --  Extract boolean interpretations.
-               for I in Natural loop
-                  El := Get_Nth_Element (Res_List, I);
-                  exit when El = Null_Iir;
+               It := List_Iterate (Res_List);
+               while Is_Valid (It) loop
+                  El := Get_Element (It);
                   if Are_Types_Compatible (El, Boolean_Type_Definition)
                     /= Not_Compatible
                   then
                      Nbr_Booleans := Nbr_Booleans + 1;
                   end if;
+                  Next (It);
                end loop;
 
                if Nbr_Booleans >= 1 then

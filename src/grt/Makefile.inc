@@ -70,8 +70,9 @@ endif
 GRT_FST_OBJS := fstapi.o lz4.o fastlz.o
 
 # Additionnal object files (C or asm files).
-GRT_ADD_OBJS:=$(GRT_TARGET_OBJS) grt-cbinding.o grt-cvpi.o $(GRT_FST_OBJS)
-GRT_ADD_SHOBJS:=$(patsubst %, pic/%, $(GRT_ADD_OBJS))
+GRT_BASE_C_OBJS:=$(GRT_TARGET_OBJS) grt-cbinding.o
+GRT_ADD_OBJS:=$(GRT_BASE_C_OBJS) grt-cvpi.o $(GRT_FST_OBJS)
+GRT_ADD_SHOBJS:=$(patsubst %, pic/%, $(GRT_BASE_C_OBJS))
 
 # Source files create by grt.
 GRT_SRC_DEPS:=grt-backtraces-impl.ads
@@ -87,6 +88,13 @@ GRT_LIBBACKTRACE=
 ifneq ($(LIBBACKTRACE),)
   GRT_LIBBACKTRACE=libbacktrace.a
 endif
+
+# MSYS2 tries to be clever with paths in command line: it replaces msys2 paths
+# by Windows paths.  So for example, /bin/ls becomes c:/mingw64/bin/ls
+# However, this is not always obvious to detect paths. In our case, msys2
+# transformed -aIc:/dir to -aIc:c:/dir, which was not understood by gnatmake.
+# So tell MSYS2 not try transform paths that follow -aI or -gnatec
+MSYS2_ARG=MSYS2_ARG_CONV_EXCL="-aI;-gnatec"
 
 # Configuration pragmas.
 # -gnatdY is required to force the use of __gnat_last_chance_handler.
@@ -104,21 +112,21 @@ $(libdirsuffix)/libgrt.a: $(GRT_ADD_OBJS) grt/run-bind.o grt/main.o grt/grt-file
 	$(GRT_RANLIB) $@
 
 grt/run-bind.adb: grt $(GRT_SRC_DEPS) grt-force
-	cd grt; $(GNATMAKE) -c -aI$(GRTSRCDIR) -aI.. $(GRT_PRAGMA_FLAG) \
-	  ghdl_main $(GRT_ADAFLAGS) -cargs $(GRT_FLAGS)
+	cd grt; $(MSYS2_ARG) $(GNATMAKE) -c -aI$(GRTSRCDIR) -aI.. \
+	  $(GRT_PRAGMA_FLAG) ghdl_main $(GRT_ADAFLAGS) -cargs $(GRT_FLAGS)
 # 	Set No Run-Time flag to suppress references to standard gnat library.
 	sed -e '/^P /s/P /P NR /' < grt/ghdl_main.ali > grt/ghdl_main-tmp.ali
 	$(MV) grt/ghdl_main-tmp.ali grt/ghdl_main.ali
-	cd grt; gnatbind -Lgrt_ -o run-bind.adb -n ghdl_main.ali
+	cd grt; $(GNATMAKE) -b ghdl_main.ali -bargs  -Lgrt_ -o run-bind.adb -n
 
 grt:
 	mkdir grt
 
 grt/run-bind.o: grt/run-bind.adb
-	cd grt; $(GRT_ADACOMPILE) -o run-bind.o run-bind.adb
+	cd grt; $(MSYS2_ARG) $(GRT_ADACOMPILE) -o run-bind.o run-bind.adb
 
 grt/main.o: $(GRTSRCDIR)/main.adb
-	cd grt; $(GRT_ADACOMPILE) -o main.o $< -Igrt
+	cd grt; $(MSYS2_ARG) $(GRT_ADACOMPILE) -o main.o $< -Igrt
 
 GRT_C_COMPILE = $(CC) -c $(GRT_FLAGS) -o $@ $<
 GRT_C_COMPILE_PIC = $(CC) -c $(GRT_FLAGS) $(PIC_FLAGS) -o $@ $<
@@ -222,7 +230,7 @@ $(libdirsuffix)/grt.ver: $(GRTSRCDIR)/grt.ver
 	cp $< $@
 
 ifneq ($(GRT_LIBBACKTRACE),)
-$(GRT_LIBBACKTRACE): $(LIBBACKTRACE)
+$(libdirsuffix)/$(GRT_LIBBACKTRACE): $(LIBBACKTRACE)
 	cp $< $@
 endif
 

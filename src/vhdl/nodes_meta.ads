@@ -33,6 +33,7 @@ package Nodes_Meta is
       Type_Iir_Constraint,
       Type_Iir_Delay_Mechanism,
       Type_Iir_Direction,
+      Type_Iir_Flist,
       Type_Iir_Fp64,
       Type_Iir_Index32,
       Type_Iir_Int32,
@@ -44,11 +45,11 @@ package Nodes_Meta is
       Type_Iir_Signal_Kind,
       Type_Iir_Staticness,
       Type_Int32,
-      Type_Location_Type,
       Type_Name_Id,
       Type_Number_Base_Type,
       Type_PSL_NFA,
       Type_PSL_Node,
+      Type_Source_File_Entry,
       Type_Source_Ptr,
       Type_String8_Id,
       Type_Time_Stamp_Id,
@@ -106,8 +107,8 @@ package Nodes_Meta is
       Field_Designated_Entity,
       Field_Formal,
       Field_Actual,
-      Field_In_Conversion,
-      Field_Out_Conversion,
+      Field_Actual_Conversion,
+      Field_Formal_Conversion,
       Field_Whole_Association_Flag,
       Field_Collapse_Signal_Flag,
       Field_Artificial_Flag,
@@ -208,6 +209,7 @@ package Nodes_Meta is
       Field_Simultaneous_Right,
       Field_Text_File_Flag,
       Field_Only_Characters_Flag,
+      Field_Is_Character_Type,
       Field_Type_Staticness,
       Field_Constraint_State,
       Field_Index_Subtype_List,
@@ -277,6 +279,7 @@ package Nodes_Meta is
       Field_Block_Header,
       Field_Uninstantiated_Package_Name,
       Field_Uninstantiated_Package_Decl,
+      Field_Instance_Source_File,
       Field_Generate_Block_Configuration,
       Field_Generate_Statement_Body,
       Field_Alternative_Label,
@@ -309,6 +312,7 @@ package Nodes_Meta is
       Field_External_Pathname,
       Field_Pathname_Suffix,
       Field_Pathname_Expression,
+      Field_In_Formal_Flag,
       Field_Slice_Subtype,
       Field_Suffix,
       Field_Index_Subtype,
@@ -353,7 +357,6 @@ package Nodes_Meta is
       Field_Simple_Name_Subtype,
       Field_Protected_Type_Body,
       Field_Protected_Type_Declaration,
-      Field_End_Location,
       Field_Use_Flag,
       Field_End_Has_Reserved_Id,
       Field_End_Has_Identifier,
@@ -365,6 +368,7 @@ package Nodes_Meta is
       Field_Has_Pure,
       Field_Has_Body,
       Field_Has_Parameter,
+      Field_Has_Component,
       Field_Has_Identifier_List,
       Field_Has_Mode,
       Field_Has_Class,
@@ -397,21 +401,34 @@ package Nodes_Meta is
    type Field_Attribute is
      (
       Attr_None,
-      Attr_Ref, Attr_Maybe_Ref,
-      Attr_Forward_Ref, Attr_Maybe_Forward_Ref,
-      Attr_Of_Ref, Attr_Of_Maybe_Ref,
-      Attr_Chain, Attr_Chain_Next
+      Attr_Chain,
+      Attr_Chain_Next,
+      Attr_Forward_Ref,
+      Attr_Maybe_Forward_Ref,
+      Attr_Maybe_Ref,
+      Attr_Of_Maybe_Ref,
+      Attr_Of_Ref,
+      Attr_Ref
      );
 
    --  Get the attribute of a field.
    function Get_Field_Attribute (F : Fields_Enum) return Field_Attribute;
 
-   type Fields_Array is array (Natural range <>) of Fields_Enum;
+   type Fields_Index_Extended is new Int32;
+   subtype Fields_Index is Fields_Index_Extended
+     range 0 .. Fields_Index_Extended'Last;
+
+   type Fields_Array is array (Fields_Index range <>) of Fields_Enum;
 
    --  Return the list of fields for node K.  The fields are sorted: first
    --  the non nodes/list of nodes, then the nodes/lists that aren't reference,
    --  and then the reference.
    function Get_Fields (K : Iir_Kind) return Fields_Array;
+
+   --  Likewise, but without using arrays (for interfacing with C).
+   function Get_Fields_First (K : Iir_Kind) return Fields_Index;
+   function Get_Fields_Last (K : Iir_Kind) return Fields_Index;
+   function Get_Field_By_Index (Idx : Fields_Index) return Fields_Enum;
 
    --  Get/Set a field.
    function Get_Boolean
@@ -458,6 +475,11 @@ package Nodes_Meta is
       (N : Iir; F : Fields_Enum) return Iir_Direction;
    procedure Set_Iir_Direction
       (N : Iir; F : Fields_Enum; V: Iir_Direction);
+
+   function Get_Iir_Flist
+      (N : Iir; F : Fields_Enum) return Iir_Flist;
+   procedure Set_Iir_Flist
+      (N : Iir; F : Fields_Enum; V: Iir_Flist);
 
    function Get_Iir_Fp64
       (N : Iir; F : Fields_Enum) return Iir_Fp64;
@@ -514,11 +536,6 @@ package Nodes_Meta is
    procedure Set_Int32
       (N : Iir; F : Fields_Enum; V: Int32);
 
-   function Get_Location_Type
-      (N : Iir; F : Fields_Enum) return Location_Type;
-   procedure Set_Location_Type
-      (N : Iir; F : Fields_Enum; V: Location_Type);
-
    function Get_Name_Id
       (N : Iir; F : Fields_Enum) return Name_Id;
    procedure Set_Name_Id
@@ -538,6 +555,11 @@ package Nodes_Meta is
       (N : Iir; F : Fields_Enum) return PSL_Node;
    procedure Set_PSL_Node
       (N : Iir; F : Fields_Enum; V: PSL_Node);
+
+   function Get_Source_File_Entry
+      (N : Iir; F : Fields_Enum) return Source_File_Entry;
+   procedure Set_Source_File_Entry
+      (N : Iir; F : Fields_Enum; V: Source_File_Entry);
 
    function Get_Source_Ptr
       (N : Iir; F : Fields_Enum) return Source_Ptr;
@@ -612,8 +634,8 @@ package Nodes_Meta is
    function Has_Designated_Entity (K : Iir_Kind) return Boolean;
    function Has_Formal (K : Iir_Kind) return Boolean;
    function Has_Actual (K : Iir_Kind) return Boolean;
-   function Has_In_Conversion (K : Iir_Kind) return Boolean;
-   function Has_Out_Conversion (K : Iir_Kind) return Boolean;
+   function Has_Actual_Conversion (K : Iir_Kind) return Boolean;
+   function Has_Formal_Conversion (K : Iir_Kind) return Boolean;
    function Has_Whole_Association_Flag (K : Iir_Kind) return Boolean;
    function Has_Collapse_Signal_Flag (K : Iir_Kind) return Boolean;
    function Has_Artificial_Flag (K : Iir_Kind) return Boolean;
@@ -715,6 +737,7 @@ package Nodes_Meta is
    function Has_Simultaneous_Right (K : Iir_Kind) return Boolean;
    function Has_Text_File_Flag (K : Iir_Kind) return Boolean;
    function Has_Only_Characters_Flag (K : Iir_Kind) return Boolean;
+   function Has_Is_Character_Type (K : Iir_Kind) return Boolean;
    function Has_Type_Staticness (K : Iir_Kind) return Boolean;
    function Has_Constraint_State (K : Iir_Kind) return Boolean;
    function Has_Index_Subtype_List (K : Iir_Kind) return Boolean;
@@ -787,6 +810,7 @@ package Nodes_Meta is
    function Has_Block_Header (K : Iir_Kind) return Boolean;
    function Has_Uninstantiated_Package_Name (K : Iir_Kind) return Boolean;
    function Has_Uninstantiated_Package_Decl (K : Iir_Kind) return Boolean;
+   function Has_Instance_Source_File (K : Iir_Kind) return Boolean;
    function Has_Generate_Block_Configuration (K : Iir_Kind) return Boolean;
    function Has_Generate_Statement_Body (K : Iir_Kind) return Boolean;
    function Has_Alternative_Label (K : Iir_Kind) return Boolean;
@@ -819,6 +843,7 @@ package Nodes_Meta is
    function Has_External_Pathname (K : Iir_Kind) return Boolean;
    function Has_Pathname_Suffix (K : Iir_Kind) return Boolean;
    function Has_Pathname_Expression (K : Iir_Kind) return Boolean;
+   function Has_In_Formal_Flag (K : Iir_Kind) return Boolean;
    function Has_Slice_Subtype (K : Iir_Kind) return Boolean;
    function Has_Suffix (K : Iir_Kind) return Boolean;
    function Has_Index_Subtype (K : Iir_Kind) return Boolean;
@@ -864,7 +889,6 @@ package Nodes_Meta is
    function Has_Simple_Name_Subtype (K : Iir_Kind) return Boolean;
    function Has_Protected_Type_Body (K : Iir_Kind) return Boolean;
    function Has_Protected_Type_Declaration (K : Iir_Kind) return Boolean;
-   function Has_End_Location (K : Iir_Kind) return Boolean;
    function Has_Use_Flag (K : Iir_Kind) return Boolean;
    function Has_End_Has_Reserved_Id (K : Iir_Kind) return Boolean;
    function Has_End_Has_Identifier (K : Iir_Kind) return Boolean;
@@ -876,6 +900,7 @@ package Nodes_Meta is
    function Has_Has_Pure (K : Iir_Kind) return Boolean;
    function Has_Has_Body (K : Iir_Kind) return Boolean;
    function Has_Has_Parameter (K : Iir_Kind) return Boolean;
+   function Has_Has_Component (K : Iir_Kind) return Boolean;
    function Has_Has_Identifier_List (K : Iir_Kind) return Boolean;
    function Has_Has_Mode (K : Iir_Kind) return Boolean;
    function Has_Has_Class (K : Iir_Kind) return Boolean;

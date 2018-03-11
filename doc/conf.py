@@ -18,28 +18,48 @@ import shlex
 import re
 import subprocess
 
+# http://docs.readthedocs.io/en/latest/getting_started.html#in-markdown
+from recommonmark.parser import CommonMarkParser
+source_parsers = { '.md': CommonMarkParser, }
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('.'))
+# sys.path.insert(0, os.path.abspath('../py'))
+sys.path.insert(0, os.path.abspath('_extensions'))
+# sys.path.insert(0, os.path.abspath('_themes/sphinx_rtd_theme'))
 
 # -- General configuration ------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
-#needs_sphinx = '1.0'
+needs_sphinx = '1.5'
 
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = []
+extensions = [
+# Standard Sphinx extensions
+	'sphinx.ext.extlinks',
+	'sphinx.ext.intersphinx',
+	'sphinx.ext.todo',
+	'sphinx.ext.graphviz',
+	'sphinx.ext.mathjax',
+	'sphinx.ext.ifconfig',
+	'sphinx.ext.viewcode',
+	# 'sphinx.ext.githubpages',
+# SphinxContrib extensions
+	# 'sphinxcontrib.textstyle',
+	# 'sphinxcontrib.spelling',
+]
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ['_templates', '_themes']
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 # source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = ['.rst', '.md']
 
 # The encoding of source files.
 #source_encoding = 'utf-8-sig'
@@ -49,32 +69,19 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'GHDL'
-copyright = u'2015, Tristan Gingold'
-author = u'Tristan Gingold'
+copyright = u'2015-2017, Tristan Gingold and contributors'
+author = u'Tristan Gingold and contributors'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
-def _IsUnderGitControl():
-	return (subprocess.check_output(["git", "rev-parse", "--is-inside-work-tree"], universal_newlines=True).strip() == "true")
-
-def _LatestTagName():
-	return subprocess.check_output(["git", "describe", "--abbrev=0", "--tags"], universal_newlines=True).strip()
-
 try:
-	if _IsUnderGitControl:
-		descr = _LatestTagName()
-		if descr.startswith('v'):
-			version = descr[1:]	 # remove prefix "v"
-		else:
-			version = descr
-	else:
-		with open('../src/version.in') as verin:
-			for line in verin:
-				line = re.findall(r'Ghdl_Ver.+\"(.+)\";', line)
-				if line:
-					version=line[0]
+	with open('../src/version.in') as verin:
+		for line in verin:
+			line = re.findall(r'Ghdl_Ver.+\"(.+)\";', line)
+			if line:
+				version=line[0]
 except Exception, e:
 	print "cannot extract version: %s" % e
 	version = "latest"
@@ -124,15 +131,33 @@ pygments_style = 'sphinx'
 #keep_warnings = False
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
-todo_include_todos = False
+todo_include_todos = True
+todo_link_only = True
 
+# reST settings
+prologPath = "prolog.inc"
+try:
+	with open(prologPath, "r") as prologFile:
+		rst_prolog = prologFile.read()
+except Exception as ex:
+	print("[ERROR:] While reading '{0!s}'.".format(prologPath))
+	print(ex)
+	rst_prolog = ""
 
 # -- Options for HTML output ----------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #html_theme = 'alabaster'
-html_theme = 'default'
+html_theme = "sphinx_rtd_theme"
+# Override default css to get a larger width for ReadTheDoc build            
+html_context = {                                                             
+    'css_files': [                                                           
+        'https://media.readthedocs.org/css/sphinx_rtd_theme.css',            
+        'https://media.readthedocs.org/css/readthedocs-doc-embed.css',       
+        '_static/theme_overrides.css',                                       
+    ],
+}
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -230,7 +255,7 @@ htmlhelp_basename = 'GHDLdoc'
 
 latex_elements = {
 # The paper size ('letterpaper' or 'a4paper').
-#'papersize': 'letterpaper',
+'papersize': 'a4paper',
 
 # The font size ('10pt', '11pt' or '12pt').
 #'pointsize': '10pt',
@@ -270,7 +295,6 @@ latex_documents = [
 # If false, no module index is generated.
 #latex_domain_indices = True
 
-
 # -- Options for manual page output ---------------------------------------
 
 # One entry per manual page. List of tuples
@@ -306,3 +330,23 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+# ==============================================================================
+# Sphinx.Ext.InterSphinx
+# ==============================================================================
+intersphinx_mapping = {
+   'python': ('https://docs.python.org/3.6/', None),
+   'poc': ('http://poc-library.readthedocs.io/en/release', None),
+#   'ghdl':   ('http://ghdl.readthedocs.io/en/latest', None)
+}
+
+# ==============================================================================
+# Sphinx.Ext.ExtLinks
+# ==============================================================================
+extlinks = {
+   'wikipedia': ('https://en.wikipedia.org/wiki/%s', None),
+   'ghdlsharp': ('https://github.com/ghdl/ghdl/issues/%s', '#'),
+   'ghdlissue': ('https://github.com/ghdl/ghdl/issues/%s', 'issue #'),
+   'ghdlpull':  ('https://github.com/ghdl/ghdl/pull/%s', 'pull request #'),
+   'ghdlsrc':   ('https://github.com/ghdl/ghdl/blob/master/src/%s', None)
+}

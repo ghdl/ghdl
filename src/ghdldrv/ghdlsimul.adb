@@ -31,17 +31,18 @@ with Libraries;
 with Canon;
 with Configuration;
 with Iirs_Utils;
-with Annotations;
-with Elaboration;
-with Simulation.Main;
-with Debugger;
-with Execution;
+with Simul.Annotations;
+with Simul.Elaboration;
+with Simul.Simulation.Main;
+with Simul.Debugger;
+with Simul.Execution;
 
 with Ghdlcomp;
 
 with Grt.Types;
 with Grt.Options;
 with Grt.Errors;
+with Grt.Stdio;
 with Grtlink;
 
 package body Ghdlsimul is
@@ -59,7 +60,7 @@ package body Ghdlsimul is
       Libraries.Load_Std_Library;
 
       -- Here, time_base can be set.
-      Annotations.Annotate (Std_Package.Std_Standard_Unit);
+      Simul.Annotations.Annotate (Std_Package.Std_Standard_Unit);
 
       Canon.Canon_Flag_Add_Labels := True;
       Canon.Canon_Flag_Sequentials_Stmts := True;
@@ -114,7 +115,7 @@ package body Ghdlsimul is
 
       --  Annotate all units.
       for I in Design_Units.First .. Design_Units.Last loop
-         Annotations.Annotate (Design_Units.Table (I));
+         Simul.Annotations.Annotate (Design_Units.Table (I));
       end loop;
    end Compile_Elab;
 
@@ -130,29 +131,28 @@ package body Ghdlsimul is
       --  Set progname (used for grt error messages)
       Argv0 := new String'(Ada.Command_Line.Command_Name & ASCII.Nul);
       Grt.Options.Progname := Grt.Types.To_Ghdl_C_String (Argv0.all'Address);
+      Grt.Errors.Set_Error_Stream (Grt.Stdio.stdout);
 
       for I in Args'Range loop
          Arg := Args (I);
          if Arg.all = "--disp-tree" then
-            Simulation.Disp_Tree := True;
+            Simul.Simulation.Disp_Tree := True;
          elsif Arg.all = "--expect-failure" then
             Decode_Option (Arg.all, Status);
             pragma Assert (Status = Decode_Option_Ok);
          elsif Arg.all = "--trace-elab" then
-            Elaboration.Trace_Elaboration := True;
+            Simul.Elaboration.Trace_Elaboration := True;
          elsif Arg.all = "--trace-drivers" then
-            Elaboration.Trace_Drivers := True;
-         elsif Arg.all = "--trace-annotation" then
-            Annotations.Trace_Annotation := True;
+            Simul.Elaboration.Trace_Drivers := True;
          elsif Arg.all = "--trace-simu" then
-            Simulation.Trace_Simulation := True;
+            Simul.Simulation.Trace_Simulation := True;
          elsif Arg.all = "--trace-stmt" then
-            Execution.Trace_Statements := True;
+            Simul.Execution.Trace_Statements := True;
          elsif Arg.all = "--stats" then
-            Simulation.Disp_Stats := True;
+            Simul.Simulation.Disp_Stats := True;
          elsif Arg.all = "-i" then
-            Debugger.Flag_Debugger := True;
-            Debugger.Flag_Interractive := True;
+            Simul.Debugger.Flag_Debugger := True;
+            Simul.Debugger.Flag_Interractive := True;
          else
             Decode_Option (Arg.all, Status);
             case Status is
@@ -181,7 +181,7 @@ package body Ghdlsimul is
 
       Grtlink.Flag_String := Flags.Flag_String;
 
-      Simulation.Main.Simulation_Entity (Top_Conf);
+      Simul.Simulation.Main.Simulation_Entity (Top_Conf);
 
       Set_Exit_Status (Exit_Status (Grt.Errors.Exit_Status));
    end Run;
@@ -190,7 +190,7 @@ package body Ghdlsimul is
    is
    begin
       if Option = "--debug" or Option = "-g" then
-         Debugger.Flag_Debugger := True;
+         Simul.Debugger.Flag_Debugger := True;
       else
          return False;
       end if;

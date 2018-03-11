@@ -29,6 +29,19 @@ with Grt.Hooks; use Grt.Hooks;
 with Grt.Backtraces;
 
 package body Grt.Errors is
+   --  Output stream to send error messages
+   Error_Stream : FILEs;
+
+   procedure Set_Error_Stream (Stream : Grt.Stdio.FILEs) is
+   begin
+      Error_Stream := Stream;
+   end Set_Error_Stream;
+
+   function Get_Error_Stream return Grt.Stdio.FILEs is
+   begin
+      return Error_Stream;
+   end Get_Error_Stream;
+
    --  Called in case of premature exit.
    --  CODE is 0 for success, 1 for failure.
    procedure Ghdl_Exit (Code : Integer);
@@ -74,27 +87,27 @@ package body Grt.Errors is
 
    procedure Put_Err (Str : String) is
    begin
-      Put (stderr, Str);
+      Put (Error_Stream, Str);
    end Put_Err;
 
    procedure Put_Err (C : Character) is
    begin
-      Put (stderr, C);
+      Put (Error_Stream, C);
    end Put_Err;
 
    procedure Put_Err (Str : Ghdl_C_String) is
    begin
-      Put (stderr, Str);
+      Put (Error_Stream, Str);
    end Put_Err;
 
    procedure Put_Err (N : Integer) is
    begin
-      Put_I32 (stderr, Ghdl_I32 (N));
+      Put_I32 (Error_Stream, Ghdl_I32 (N));
    end Put_Err;
 
    procedure Newline_Err is
    begin
-      New_Line (stderr);
+      New_Line (Error_Stream);
    end Newline_Err;
 
 --    procedure Put_Err (Str : Ghdl_Str_Len_Type)
@@ -133,7 +146,7 @@ package body Grt.Errors is
 
    procedure Report_Now_C is
    begin
-      Put_Time (stderr, Grt.Types.Current_Time);
+      Put_Time (Error_Stream, Grt.Types.Current_Time);
    end Report_Now_C;
 
    procedure Report_E (Str : String) is
@@ -237,6 +250,20 @@ package body Grt.Errors is
    begin
       Error_H;
       Put_Err (Str);
+      Newline_Err;
+      Fatal_Error;
+   end Error;
+
+   procedure Error (Str : String;
+                    Filename : Ghdl_C_String;
+                    Line : Ghdl_I32) is
+   begin
+      Error_H;
+      Put_Err (Str);
+      Put_Err (" at ");
+      Put_Err (Filename);
+      Put_Err (" line ");
+      Put_I32 (Error_Stream, Line);
       Newline_Err;
       Fatal_Error;
    end Error;

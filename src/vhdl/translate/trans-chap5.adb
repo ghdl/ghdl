@@ -36,12 +36,23 @@ package body Trans.Chap5 is
               Scope => Scope_Ptr.all);
    end Save_Map_Env;
 
-   procedure Set_Map_Env (Env : Map_Env)
+   procedure Restore_Map_Env (Env : Map_Env)
    is
       --  Avoid potential compiler bug with discriminant check.
       pragma Suppress (Discriminant_Check);
    begin
       Env.Scope_Ptr.all := Env.Scope;
+   end Restore_Map_Env;
+
+   procedure Set_Map_Env (Env : Map_Env) is
+   begin
+      --  In some cases, the previous environment is still needed (for example
+      --  an implicit array conversion accesses to both the formal and the
+      --  actual type).  Set ENV only if it is not null, in order not to erase
+      --  the previous env.
+      if not Is_Null (Env.Scope) then
+         Restore_Map_Env (Env);
+      end if;
    end Set_Map_Env;
 
    procedure Translate_Attribute_Specification
@@ -60,7 +71,8 @@ package body Trans.Chap5 is
       Push_Identifier_Prefix_Uniq (Mark);
       if Is_Anonymous_Type_Definition (Spec_Type) then
          Push_Identifier_Prefix (Mark2, "OT");
-         Chap3.Translate_Type_Definition (Spec_Type, True);
+         Chap3.Translate_Subtype_Definition
+           (Spec_Type, Get_Type (Attr), True);
          Pop_Identifier_Prefix (Mark2);
       end if;
 
@@ -149,15 +161,14 @@ package body Trans.Chap5 is
      (Spec : Iir_Disconnection_Specification)
    is
       Val  : O_Dnode;
-      List : constant Iir_List := Get_Signal_List (Spec);
+      List : constant Iir_Flist := Get_Signal_List (Spec);
       El   : Iir;
    begin
       Val := Create_Temp_Init
         (Std_Time_Otype,
          Chap7.Translate_Expression (Get_Expression (Spec)));
-      for I in Natural loop
+      for I in Flist_First .. Flist_Last (List) loop
          El := Get_Nth_Element (List, I);
-         exit when El = Null_Iir;
          Gen_Elab_Disconnect (Chap6.Translate_Name (El, Mode_Signal),
                               Get_Type (El), Val);
       end loop;
@@ -367,8 +378,8 @@ package body Trans.Chap5 is
         (Get_Kind (Assoc) = Iir_Kind_Association_Element_By_Expression);
 
       Open_Temp;
-      if Get_In_Conversion (Assoc) = Null_Iir
-        and then Get_Out_Conversion (Assoc) = Null_Iir
+      if Get_Actual_Conversion (Assoc) = Null_Iir
+        and then Get_Formal_Conversion (Assoc) = Null_Iir
       then
          --  Usual case: without conversions.
          if Is_Signal_Name (Actual) then
@@ -410,7 +421,7 @@ package body Trans.Chap5 is
                Chap6.Translate_Signal_Name (Formal, Formal_Sig, Formal_Val);
 
                --  Copy pointer to the values.
-               if Get_Info (Formal_Type).Type_Mode in Type_Mode_Arrays then
+               if Get_Info (Formal_Type).Type_Mode in Type_Mode_Composite then
                   New_Assign_Stmt
                     (M2Lp (Chap3.Get_Composite_Base (Formal_Val)),
                      M2Addr (Chap3.Get_Composite_Base (Actual_Val)));
@@ -426,11 +437,11 @@ package body Trans.Chap5 is
 
          else
             --  Association by value.  The formal cannot be referenced in the
-            --  actual.
+            --  actual, but the type of the formal may be used by the actual.
             Set_Map_Env (Formal_Env);
+            Chap6.Translate_Signal_Name (Formal, Formal_Sig, Formal_Val);
             Actual_En := Chap7.Translate_Expression (Actual, Formal_Type);
             Actual_Sig := E2M (Actual_En, Get_Info (Formal_Type), Mode_Value);
-            Chap6.Translate_Signal_Name (Formal, Formal_Sig, Formal_Val);
             Mode := Connect_Value;
 --            raise Internal_Error;
          end if;
@@ -465,7 +476,7 @@ package body Trans.Chap5 is
               (Formal_Sig, Formal_Type, Init_Node);
          end if;
       else
-         if Get_In_Conversion (Assoc) /= Null_Iir then
+         if Get_Actual_Conversion (Assoc) /= Null_Iir then
             Chap4.Elab_In_Conversion (Assoc, Formal, Actual_Sig);
             Set_Map_Env (Formal_Env);
             Formal_Sig := Chap6.Translate_Name (Formal, Mode_Signal);
@@ -476,7 +487,7 @@ package body Trans.Chap5 is
             Connect (Formal_Sig, Formal_Type, Data);
             Set_Map_Env (Actual_Env);
          end if;
-         if Get_Out_Conversion (Assoc) /= Null_Iir then
+         if Get_Formal_Conversion (Assoc) /= Null_Iir then
             --  flow: FORMAL to ACTUAL
             Chap4.Elab_Out_Conversion (Assoc, Formal, Formal_Sig);
             Set_Map_Env (Actual_Env);
@@ -515,8 +526,8 @@ package body Trans.Chap5 is
    is
       Actual : constant Iir := Get_Actual (Assoc);
       Actual_Type : constant Iir := Get_Type (Actual);
-      In_Conv : constant Iir := Get_In_Conversion (Assoc);
-      Out_Conv : constant Iir := Get_Out_Conversion (Assoc);
+      In_Conv : constant Iir := Get_Actual_Conversion (Assoc);
+      Out_Conv : constant Iir := Get_Formal_Conversion (Assoc);
 
       function Get_Actual_Bounds (Save : Boolean) return Mnode
       is
@@ -542,7 +553,7 @@ package body Trans.Chap5 is
          else
             --  Actual type is unconstrained, but as this is an object reads
             --  bounds from the object.
-            return Chap3.Get_Array_Bounds
+            return Chap3.Get_Composite_Bounds
               (Chap6.Translate_Name (Actual, Mode_Signal));
          end if;
       end Get_Actual_Bounds;
@@ -636,7 +647,7 @@ package body Trans.Chap5 is
            (--  Note: this works only because it is not stabilized, and
             --  therefore the bounds field is returned and not a pointer to
             --  the bounds.
-            M2Lp (Chap3.Get_Array_Bounds (Act_Node)),
+            M2Lp (Chap3.Get_Composite_Bounds (Act_Node)),
             M2Addr (Bounds));
       end loop;
 
@@ -644,7 +655,8 @@ package body Trans.Chap5 is
       Info := Get_Info (Port);
       if Info.Signal_Val /= Null_Var then
          New_Assign_Stmt
-           (M2Lp (Chap3.Get_Array_Bounds (Chap6.Get_Port_Init_Value (Port))),
+           (M2Lp (Chap3.Get_Composite_Bounds
+                    (Chap6.Get_Port_Init_Value (Port))),
             M2Addr (Bounds));
       end if;
       Close_Temp;
@@ -742,7 +754,7 @@ package body Trans.Chap5 is
          end;
          Next_Association_Interface (Assoc, Inter);
       end loop;
-      Set_Map_Env (Actual_Env);
+      Restore_Map_Env (Actual_Env);
    end Elab_Port_Map_Aspect;
 
    procedure Elab_Generic_Map_Aspect
@@ -855,6 +867,7 @@ package body Trans.Chap5 is
          Close_Temp;
          Next_Association_Interface (Assoc, Inter);
       end loop;
+      Restore_Map_Env (Actual_Env);
    end Elab_Generic_Map_Aspect;
 
    procedure Elab_Map_Aspect

@@ -19,7 +19,25 @@ Here are some tips for portability.
   compare expected output with a reference file.
 - don't forget that executable files have a .exe suffix on windows, but most
   cygwin tools transparently add the suffix.
-- For VPI tests, the directory containing the dll file must be added in PATH.
-  See issue98 for an example.
 - As a last resort, you can test if you are on Windows:
   if [ "$OS" = "Windows_NT" ]; then ...
+
+
+VPI tests: on windows the directory containing the DLL file must be added in
+PATH. From issue98:
+--------------------------------------------------
+if [ "$OS" = "Windows_NT" ]; then
+    vpi_lib=`$GHDL --vpi-library-dir | sed -e 's!\\\\!/!g' -e 's!^C:!/C!g'`
+    echo vpi_lib: $vpi_lib
+    PATH="$PATH:$vpi_lib"
+fi
+--------------------------------------------------
+
+GHDL could be configured without wave dump support. If you need to test ghw,
+you should test if the feature is supported.  From issue158:
+--------------------------------------------------
+if ghdl_has_feature repro ghw; then
+  simulate repro --wave=repro.ghw
+  # How to test the ghw ?  Use ghwdump ?
+fi
+--------------------------------------------------

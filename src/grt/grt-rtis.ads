@@ -45,7 +45,7 @@ package Grt.Rtis is
       Ghdl_Rtik_If_Generate,
       Ghdl_Rtik_Case_Generate,
 
-      Ghdl_Rtik_For_Generate, -- 10
+      Ghdl_Rtik_For_Generate,   -- 10
       Ghdl_Rtik_Generate_Body,
       Ghdl_Rtik_Instance,
       Ghdl_Rtik_Constant,
@@ -57,33 +57,33 @@ package Grt.Rtis is
       Ghdl_Rtik_Port,
       Ghdl_Rtik_Generic,
 
-      Ghdl_Rtik_Alias,        -- 20
+      Ghdl_Rtik_Alias,          -- 20
       Ghdl_Rtik_Guard,
       Ghdl_Rtik_Component,
       Ghdl_Rtik_Attribute,
-      Ghdl_Rtik_Type_B1,        --  Enum
+      Ghdl_Rtik_Type_B1,                      --  Rtin_Type_Enum
 
-      Ghdl_Rtik_Type_E8,
+      Ghdl_Rtik_Type_E8,                      --  Rtin_Type_Enum
       Ghdl_Rtik_Type_E32,
-      Ghdl_Rtik_Type_I32,       --  Scalar
-      Ghdl_Rtik_Type_I64,
-      Ghdl_Rtik_Type_F64,
+      Ghdl_Rtik_Type_I32,                     --  Rtin_Type_Scalar
+      Ghdl_Rtik_Type_I64,                     --  Rtin_Type_Scalar
+      Ghdl_Rtik_Type_F64,                     --  Rtin_Type_Scalar
 
-      Ghdl_Rtik_Type_P32,      -- 30
-      Ghdl_Rtik_Type_P64,
-      Ghdl_Rtik_Type_Access,
-      Ghdl_Rtik_Type_Array,
-      Ghdl_Rtik_Type_Record,
+      Ghdl_Rtik_Type_P32,       -- 30         --  Rtin_Type_Physical
+      Ghdl_Rtik_Type_P64,                     --  Rtin_Type_Physical
+      Ghdl_Rtik_Type_Access,                  --  Rtin_Type_Fileacc
+      Ghdl_Rtik_Type_Array,                   --  Rtin_Type_Array
+      Ghdl_Rtik_Type_Record,                  --  Rtin_Type_Record
 
-      Ghdl_Rtik_Type_Unbounded_Record,
-      Ghdl_Rtik_Type_File,
-      Ghdl_Rtik_Subtype_Scalar,
-      Ghdl_Rtik_Subtype_Array,
+      Ghdl_Rtik_Type_Unbounded_Record,        --  Rtin_Type_Record
+      Ghdl_Rtik_Type_File,                    --  Rtin_Type_Fileacc
+      Ghdl_Rtik_Subtype_Scalar,               --  Rtin_Subtype_Scalar
+      Ghdl_Rtik_Subtype_Array,                --  Rtin_Subtype_Composite
       Ghdl_Rtik_Subtype_Unconstrained_Array,
 
-      Ghdl_Rtik_Subtype_Record, -- 40
+      Ghdl_Rtik_Subtype_Record, -- 40         --  Rtin_Subtype_Composite
       Ghdl_Rtik_Subtype_Unbounded_Record,
-      Ghdl_Rtik_Subtype_Access,
+      Ghdl_Rtik_Subtype_Access,               --  Rtin_Type_Fileacc
       Ghdl_Rtik_Type_Protected,
       Ghdl_Rtik_Element,
 

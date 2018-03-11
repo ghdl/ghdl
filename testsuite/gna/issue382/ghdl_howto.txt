@@ -1,0 +1,55 @@
+Kurzanleitung für ghdl/gtkwave
+
+------------------------------------------------------------------------
+INSTALLATION
+
+== Linux ==
+
+Falls nicht in der Distri verfügbar:
+
+Für 80386 (32Bit)
+http://ghdl.free.fr/ghdl-0.26-i686-pc-linux.tar runterladen, auspacken und
+dem INSTALL folgen.
+
+Für 64Bit oder andere Architekturen muss man selber kompileren. Dazu ist
+gnat (GNU Ada) notwendig, ist etwas aufwendiger...
+
+Source zu GTKwave runterladen:
+
+http://home.nc.rr.com/gtkwave/gtkwave-current.tar.gz
+
+Es müssen die Developmentpakete zu gtk oder gtk2 und flex installiert sein!
+Dann den Installationsanweisungen in INSTALL.TXT folgen...
+
+== Windows ==
+
+Die Cygwin-Umgebung muss installiert sein (wg. gcc/make).
+
+http://ghdl.free.fr/ghdl-installer-0.25.exe
+
+http://www.dspia.com/gtkwave.html
+
+------------------------------------------------------------------------
+
+Ausführen der kleinen VHDL-Demo
+
+Folgende Files sind enthalten:
+
+- Makefile
+- tb_demo.vhd (Code für Testbench, Erzeugung von Stimuli)
+- demo.vhd (Code zum Testen, macht ein paar logische Operationen)
+- tb_demo.gtk (fertiges Setup zum Anzeigen der wichtigen Signale)
+
+Mit "make gsim" wird demo.vhd und tb_demo.vhd analysiert (=kompiliert),
+elaboriert (gelinked) und ein ausführbares Programm (tb_demo) erzeugt. 
+Das wird mit einer Zeitbegrenzung (300s) und der Datei zur Ausgabe der
+Signale (tb_demo.ghw) gestartet. Nach Simulationsende wird gtkwave zur
+Anzeige der Signalformen gestartet.
+
+Noch ein Hinweis:
+
+Eigene/neue Signale kann man in gtkwave mit dem Signal Search Tree (SST) in
+der Baustein-Hierarchie suchen und zur Anzeige hinzufügen. Mit "Write Save
+File" kann diese Einstellung in tb_demo.gtk abgespeichert werden.
+
+------------------------------------------------------------------------

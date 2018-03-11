@@ -1,0 +1,12 @@
+# [run] Fedora 26
+
+FROM fedora:26 AS mcode
+
+RUN dnf --nodocs -y install libgnat gcc \
+  && dnf clean all --enablerepo=\*
+
+
+FROM mcode AS llvm
+
+RUN dnf --nodocs -y install llvm-libs zlib-devel \
+  && dnf clean all --enablerepo=\*

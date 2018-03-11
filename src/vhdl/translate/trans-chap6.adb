@@ -350,8 +350,8 @@ package body Trans.Chap6 is
    is
       Prefix_Type : constant Iir := Get_Type (Get_Prefix (Expr));
       Prefix_Info : constant Type_Info_Acc := Get_Info (Prefix_Type);
-      Index_List  : constant Iir_List := Get_Index_List (Expr);
-      Type_List   : constant Iir_List := Get_Index_Subtype_List (Prefix_Type);
+      Index_List  : constant Iir_Flist := Get_Index_List (Expr);
+      Type_List   : constant Iir_Flist := Get_Index_Subtype_List (Prefix_Type);
       Nbr_Dim     : constant Natural := Get_Nbr_Elements (Index_List);
       Prefix      : Mnode;
       Index       : Iir;
@@ -362,13 +362,11 @@ package body Trans.Chap6 is
       Ibasetype   : Iir;
       Range_Ptr   : Mnode;
    begin
-      case Prefix_Info.Type_Mode is
-         when Type_Mode_Fat_Array =>
+      case Type_Mode_Arrays (Prefix_Info.Type_Mode) is
+         when Type_Mode_Unbounded_Array =>
             Prefix := Stabilize (Prefix_Orig);
-         when Type_Mode_Array =>
+         when Type_Mode_Bounded_Arrays =>
             Prefix := Prefix_Orig;
-         when others =>
-            raise Internal_Error;
       end case;
       Offset := Create_Temp (Ghdl_Index_Type);
       for Dim in 1 .. Nbr_Dim loop
@@ -378,14 +376,14 @@ package body Trans.Chap6 is
          Open_Temp;
          --  Compute index for the current dimension.
          case Prefix_Info.Type_Mode is
-            when Type_Mode_Fat_Array =>
+            when Type_Mode_Unbounded_Array =>
                Range_Ptr := Stabilize
                  (Chap3.Get_Array_Range (Prefix, Prefix_Type, Dim));
                R := Translate_Index_To_Offset
                  (Range_Ptr,
                   Chap7.Translate_Expression (Index, Ibasetype),
                   Null_Iir, Itype, Index);
-            when Type_Mode_Array =>
+            when Type_Mode_Bounded_Arrays =>
                if Prefix_Info.Type_Locally_Constrained then
                   R := Translate_Thin_Index_Offset (Itype, Dim, Index);
                else
@@ -505,9 +503,9 @@ package body Trans.Chap6 is
       Prefix_Info := Get_Info (Prefix_Type);
       Slice_Info := Get_Info (Slice_Type);
 
-      if Slice_Info.Type_Mode = Type_Mode_Array
+      if Slice_Info.Type_Mode = Type_Mode_Static_Array
         and then Slice_Info.Type_Locally_Constrained
-        and then Prefix_Info.Type_Mode = Type_Mode_Array
+        and then Prefix_Info.Type_Mode = Type_Mode_Static_Array
         and then Prefix_Info.Type_Locally_Constrained
       then
          Data.Is_Off := True;
@@ -699,7 +697,7 @@ package body Trans.Chap6 is
       else
          --  Create the result (fat array) and assign the bounds field.
          case Slice_Info.Type_Mode is
-            when Type_Mode_Fat_Array =>
+            when Type_Mode_Unbounded_Array =>
                Res_D := Create_Temp (Slice_Info.Ortho_Type (Kind));
                New_Assign_Stmt
                  (New_Selected_Element (New_Obj (Res_D),
@@ -713,7 +711,7 @@ package body Trans.Chap6 is
                          Slice_Type,
                          New_Obj_Value (Data.Unsigned_Diff))));
                return Dv2M (Res_D, Slice_Info, Kind);
-            when Type_Mode_Array =>
+            when Type_Mode_Bounded_Arrays =>
                return Chap3.Slice_Base
                  (Chap3.Get_Composite_Base (Prefix),
                   Slice_Type,
@@ -750,7 +748,7 @@ package body Trans.Chap6 is
                return Get_Var (Info.Signal_Sig, Type_Info, Mode_Signal);
             else
                pragma Assert (Info.Signal_Valp /= Null_Var);
-               if Type_Info.Type_Mode = Type_Mode_Fat_Array then
+               if Type_Info.Type_Mode in Type_Mode_Unbounded then
                   return Get_Var (Info.Signal_Valp, Type_Info, Mode_Value);
                else
                   return Get_Varp (Info.Signal_Valp, Type_Info, Mode_Value);
@@ -841,26 +839,43 @@ package body Trans.Chap6 is
          --  Result is a fat pointer, create it and set bounds.
          Fat_Res := Create_Temp (El_Tinfo, Kind);
          New_Assign_Stmt
-           (New_Selected_Element (M2Lv (Fat_Res),
-                                  El_Tinfo.B.Bounds_Field (Kind)),
+           (M2Lp (Chap3.Get_Composite_Bounds (Fat_Res)),
             New_Address
               (New_Selected_Element
-                 (M2Lv (Chap3.Get_Array_Bounds (Stable_Prefix)),
+                 (M2Lv (Chap3.Get_Composite_Bounds (Stable_Prefix)),
                   El_Info.Field_Bound),
                El_Tinfo.B.Bounds_Ptr_Type));
       else
          Stable_Prefix := Prefix;
       end if;
 
-      Base := Chap3.Get_Composite_Base (Stable_Prefix);
+      if Get_Type_Info (Stable_Prefix).Type_Mode = Type_Mode_Unbounded_Record
+      then
+         --  Get the base.
+         Base := Chap3.Get_Composite_Base (Stable_Prefix);
+      else
+         --  Might be a boxed subtype; keep the box to optimize the access.
+         Base := Stable_Prefix;
+      end if;
       Base_Tinfo := Get_Type_Info (Base);
       Box_Field := Base_Tinfo.S.Box_Field (Kind);
 
-      if Box_Field = O_Fnode_Null
+      if (Box_Field = O_Fnode_Null
+            or else Get_Type_Staticness (El_Type) /= Locally)
         and then (Is_Complex_Type (El_Tinfo) or Is_Unbounded_Type (El_Tinfo))
       then
-         --  The element is complex: it's an offset.
          Stabilize (Base);
+
+         if Box_Field /= O_Fnode_Null
+           and then Get_Type_Staticness (El_Type) /= Locally
+         then
+            --  Unbox.
+            B := New_Selected_Element (M2Lv (Base), Box_Field);
+         else
+            B := M2Lv (Base);
+         end if;
+
+         --  The element is complex: it's an offset.
          Res := E2M
            (New_Unchecked_Address
               (New_Slice
@@ -868,8 +883,8 @@ package body Trans.Chap6 is
                         (New_Unchecked_Address (M2Lv (Base), Char_Ptr_Type)),
                     Chararray_Type,
                     New_Value
-                      (New_Selected_Element (M2Lv (Base),
-                       El_Info.Field_Node (Kind)))),
+                      (New_Selected_Element (B,
+                                             El_Info.Field_Node (Kind)))),
                El_Tinfo.B.Base_Ptr_Type (Kind)),
             El_Tinfo, Kind);
       else
@@ -969,12 +984,12 @@ package body Trans.Chap6 is
       --  Alias_Var is not like an object variable, since it is
       --  always a pointer to the aliased object.
       case Type_Info.Type_Mode is
-         when Type_Mode_Fat_Array =>
+         when Type_Mode_Unbounded_Array =>
             --  Get_Var for Mnode is ok here as an unbounded object is always
             --  a pointer (and so is an alias).
             return Get_Var (Name_Info.Alias_Var (Mode), Type_Info, Mode);
-         when Type_Mode_Array
-           | Type_Mode_Record
+         when Type_Mode_Bounded_Arrays
+           | Type_Mode_Bounded_Records
            | Type_Mode_Acc
            | Type_Mode_Bounds_Acc =>
             R := Get_Var (Name_Info.Alias_Var (Mode));
@@ -1031,11 +1046,11 @@ package body Trans.Chap6 is
             begin
                pragma Assert (Mode <= Name_Info.Alias_Kind);
                case Type_Info.Type_Mode is
-                  when Type_Mode_Fat_Array =>
+                  when Type_Mode_Unbounded_Array =>
                      return Get_Var (Name_Info.Alias_Var (Mode), Type_Info,
                                      Mode);
-                  when Type_Mode_Array
-                     | Type_Mode_Record
+                  when Type_Mode_Bounded_Arrays
+                     | Type_Mode_Bounded_Records
                      | Type_Mode_Acc
                      | Type_Mode_Bounds_Acc =>
                      R := Get_Var (Name_Info.Alias_Var (Mode));
