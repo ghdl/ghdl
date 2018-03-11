@@ -7,8 +7,8 @@ Vendors like Altera, Lattice and Xilinx have their own simulation libraries,
 especially for FPGA primitives, soft and hard macros. These libraries can not
 be shipped with *GHDL*, but we offer prepared compile scripts to pre-compile
 the vendor libraries, if the vendor tool is present on the computer. There are
-also popular simulation and verification libraries like OSVVM [#f1]_, VUnit
-[#f2]_ or UVVM [#f3]_, which can be pre-compiled, too.
+also popular simulation and verification libraries like OSVVM [#f1]_ or
+UVVM [#f3]_, which can be pre-compiled, too.
 
 The compilation scripts are writen in the shell languages: *PowerShell* for
 *Windows* |trade| and *Bash* for *GNU/Linux*. The compile scripts can colorize
@@ -58,13 +58,18 @@ Supported Simulation and Verification Libraries
 
     * osvvm
 
-* VUnit (for VHDL-2008)
-
-    * vunit_lib
-
 * UVVM (for VHDL-2008)
 
-  * 
+  * uvvm-utilities
+  * uvvm-vvc-framework
+  * uvvm-vip-avalon_mm
+  * uvvm-vip-axi_lite
+  * uvvm-vip-axi_stream
+  * uvvm-vip-gpio
+  * uvvm-vip-i2c
+  * uvvm-vip-sbi
+  * uvvm-vip-spi
+  * uvvm-vip-uart
 
 ---------------------------------------------------------------------
 
@@ -114,7 +119,7 @@ Compiling on Linux
     $ /usr/local/lib/ghdl/vendors/compile-xilinx-ise.sh --all
     $ /usr/local/lib/ghdl/vendors/compile-xilinx-vivado.sh --all
     $ /usr/local/lib/ghdl/vendors/compile-osvvm.sh --all
-    $ /usr/local/lib/ghdl/vendors/compile-vunit.sh --all
+    $ /usr/local/lib/ghdl/vendors/compile-uvvm.sh --all
     ```
     
     In most cases GHDL is installed into `/usr/local/`. The scripts are
@@ -129,12 +134,12 @@ Compiling on Linux
 
     $ ls -ahl
     ...
-    drwxr-xr-x  2 <user> <group>  56K Nov 30 17:41 altera
-    drwxr-xr-x  2 <user> <group>  56K Nov 30 17:42 lattice
-    drwxr-xr-x  2 <user> <group>  56K Nov 30 17:48 osvvm
-    drwxr-xr-x  2 <user> <group>  56K Nov 30 17:58 vunit
-    drwxr-xr-x  2 <user> <group>  56K Nov 30 17:58 xilinx-ise
-    drwxr-xr-x  2 <user> <group>  56K Nov 30 17:48 xilinx-vivado
+    drwxr-xr-x  2 <user> <group>  56K Mar 09 17:41 altera
+    drwxr-xr-x  2 <user> <group>  56K Mar 09 17:42 lattice
+    drwxr-xr-x  2 <user> <group>  56K Mar 09 17:48 osvvm
+    drwxr-xr-x  2 <user> <group>  56K Mar 09 17:58 uvvm
+    drwxr-xr-x  2 <user> <group>  56K Mar 09 17:58 xilinx-ise
+    drwxr-xr-x  2 <user> <group>  56K Mar 09 17:48 xilinx-vivado
     ```
 
 
@@ -162,7 +167,7 @@ Compiling on Windows
      PS> <GHDL>\libraries\vendors\compile-xilinx-ise.ps1 -All
      PS> <GHDL>\libraries\vendors\compile-xilinx-vivado.ps1 -All
      PS> <GHDL>\libraries\vendors\compile-osvvm.ps1 -All
-     PS> <GHDL>\libraries\vendors\compile-vunit.ps1 -All
+     PS> <GHDL>\libraries\vendors\compile-uvvm.ps1 -All
 
 * **Step 3 - Viewing the result**
   This creates vendor directories in your current working directory and
@@ -175,12 +180,12 @@ Compiling on Windows
 
      Mode           LastWriteTime       Length Name
      ----           -------------       ------ ----
-     d----    20.11.2015    19:33        <DIR> altera
-     d----    20.11.2015    19:38        <DIR> lattice
-     d----    20.11.2015    19:38        <DIR> osvvm
-     d----    20.11.2015    19:45        <DIR> vunit_lib
-     d----    20.11.2015    19:06        <DIR> xilinx-ise
-     d----    20.11.2015    19:40        <DIR> xilinx-vivado
+     d----    09.03.2018    19:33        <DIR> altera
+     d----    09.03.2018    19:38        <DIR> lattice
+     d----    09.03.2018    19:38        <DIR> osvvm
+     d----    09.03.2018    19:45        <DIR> uvvm
+     d----    09.03.2018    19:06        <DIR> xilinx-ise
+     d----    09.03.2018    19:40        <DIR> xilinx-vivado
 
 
 ---------------------------------------------------------------------
@@ -200,12 +205,12 @@ directories. Use an empty string `""` for not installed tools.
 .. code-block:: Bash
    
    declare -A InstallationDirectory
-   InstallationDirectory[AlteraQuartus]="/opt/Altera/16.0"
-   InstallationDirectory[LatticeDiamond]="/opt/Diamond/3.8_x64"
+   InstallationDirectory[AlteraQuartus]="/opt/Altera/17.1"
+   InstallationDirectory[LatticeDiamond]="/opt/Diamond/3.9_x64"
    InstallationDirectory[OSVVM]="/home/<user>/git/GitHub/osvvm"
-   InstallationDirectory[VUnit]="/home/<user>/git/GitHub/vunit"
+   InstallationDirectory[UVVM]="/home/<user>/git/GitHub/uvvm_all"
    InstallationDirectory[XilinxISE]="/opt/Xilinx/14.7"
-   InstallationDirectory[XilinxVivado]="/opt/Xilinx/Vivado/2016.3"
+   InstallationDirectory[XilinxVivado]="/opt/Xilinx/Vivado/2017.4"
 
 
 For Windows: `config.psm1`
@@ -220,12 +225,12 @@ folder. Use an empty string `""` for not installed tools.
 .. code-block:: PowerShell
 
    $InstallationDirectory = @{
-     "AlteraQuartus" =   "C:\Altera\16.0";
-     "LatticeDiamond" =  "C:\Lattice\Diamond\3.8_x64";
+     "AlteraQuartus" =   "C:\Altera\17.1";
+     "LatticeDiamond" =  "C:\Lattice\Diamond\3.9_x64";
      "XilinxISE" =       "C:\Xilinx\14.7\ISE_DS";
-     "XilinxVivado" =    "C:\Xilinx\Vivado\2016.3";
+     "XilinxVivado" =    "C:\Xilinx\Vivado\2017.4";
      "OSVVM" =           "D:\git\GitHub\osvvm";
-     "VUnit" =           "D:\git\GitHub\vunit"
+     "UVVM" =            "D:\git\GitHub\uvvm_all"
    }
 
 
@@ -313,15 +318,6 @@ Selectable Options for the Bash Scripts:
      -a --all              Compile all.
         --osvvm            Compile the OSVVM library.
 
-* `compile-vunit.sh`
-
-  Selectable libraries:
-  
-  .. code-block:: raw
-	
-     -a --all              Compile all.
-        --osvvm            Compile the VUnit library.
-
 * `compile-uvvm.sh`
 
   Selectable libraries:
@@ -329,7 +325,7 @@ Selectable Options for the Bash Scripts:
   .. code-block:: raw
 	
      -a --all              Compile all.
-        --uvvm             Compile the VUnit library.
+        --uvvm             Compile the UVVM libraries.
 
 
 Selectable Options for the PowerShell Scripts:
@@ -410,15 +406,6 @@ Selectable Options for the PowerShell Scripts:
      -All                  Compile all.
      -OSVVM  		           Compile the OSVVM library.
 
-* `compile-vunit.ps1`
-
-  Selectable libraries:
-  
-  .. code-block:: raw
-
-     -All                  Compile all.
-     -VUnit  		           Compile the VUnit library.
-
 * `compile-uvvm.ps1`
 
   Selectable libraries:
@@ -435,6 +422,5 @@ Selectable Options for the PowerShell Scripts:
 	 .. rubric:: Footnotes
 
    .. [#f1] OSVVM http://github.com/OSVVM/OSVVM
-   .. [#f2] VUnit https://github.com/VUnit/vunit
    .. [#f3] UVVM https://github.com/UVVM/UVVM_All
    .. [#f4] Generic Colourizer http://kassiopeia.juls.savba.sk/~garabik/software/grc.html

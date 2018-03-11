@@ -14,7 +14,7 @@
 #
 # ==============================================================================
 #	Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
-#	Copyright (C) 2017 Patrick Lehmann - Freiburg, Germany
+#	Copyright (C) 2017-2018 Patrick Lehmann - Freiburg, Germany
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -48,7 +48,7 @@ $Settings = @{
 		"DestinationDirectory" =  "altera"
 	};
 	"IntelQuartus" =		@{
-		"InstallationDirectory" = "";								# "C:\IntelFPGA\17.0\quartus";
+		"InstallationDirectory" = "";								# "C:\IntelFPGA\17.1\quartus";
 		"SourceDirectory" =       "eda\sim_lib";
 		"DestinationDirectory" =  "intel"
 	};
@@ -67,18 +67,13 @@ $Settings = @{
 		"SourceDirectory" =       ".";
 		"DestinationDirectory" =  "."
 	};
-	"VUnit" =						@{
-		"InstallationDirectory" = "";								# "C:\git\GitHub\vunit";
-		"SourceDirectory" =       "vunit\vhdl";
-		"DestinationDirectory" =  "."
-	};
 	"XilinxISE" =				@{
 		"InstallationDirectory" = "";								# "C:\Xilinx\14.7\ISE_DS";
 		"SourceDirectory" =       "ISE\vhdl\src";
 		"DestinationDirectory" =  "xilinx-ise"
 	};
 	"XilinxVivado" =		@{
-		"InstallationDirectory" = "";								# "C:\Xilinx\Vivado\2017.1";
+		"InstallationDirectory" = "";								# "C:\Xilinx\Vivado\2017.4";
 		"SourceDirectory" =       "data\vhdl\src";
 		"DestinationDirectory" =  "xilinx-vivado"
 	}

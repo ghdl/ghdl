@@ -14,7 +14,7 @@
 #
 # ==============================================================================
 #	Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
-#	Copyright (C) 2017 Patrick Lehmann - Freiburg, Germany
+#	Copyright (C) 2017-2018 Patrick Lehmann - Freiburg, Germany
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -42,13 +42,12 @@
 # compile script. Empty strings means not configured.
 declare -A InstallationDirectories
 InstallationDirectories[AlteraQuartus]=""     # "/opt/altera/16.0/quartus"
-InstallationDirectories[IntelQuartus]=""      # "/opt/intelFPGA/17.0/quartus"
+InstallationDirectories[IntelQuartus]=""      # "/opt/intelFPGA/17.1/quartus"
 InstallationDirectories[LatticeDiamond]=""    # "/usr/local/diamond/3.7_x64"
 InstallationDirectories[OSVVM]=""	   					# "~/git/github/osvvm"
 InstallationDirectories[UVVM]=""	   					# "~/git/github/uvvm_all"
-InstallationDirectories[VUnit]=""	   					# "~/git/github/vunit"
 InstallationDirectories[XilinxISE]=""	  		  # "/opt/Xilinx/14.7/ISE_DS/ISE"
-InstallationDirectories[XilinxVivado]=""      # "/opt/Xilinx/Vivado/2016.2"
+InstallationDirectories[XilinxVivado]=""      # "/opt/Xilinx/Vivado/2017.4"
 
 # Configure preferred output directories for each library set:
 declare -A DestinationDirectories
@@ -57,7 +56,6 @@ DestinationDirectories[IntelQuartus]="intel"
 DestinationDirectories[LatticeDiamond]="lattice"
 DestinationDirectories[OSVVM]="."										# "osvvm"
 DestinationDirectories[UVVM]="."
-DestinationDirectories[VUnit]="."										# "vunit_lib"
 DestinationDirectories[XilinxISE]="xilinx-ise"
 DestinationDirectories[XilinxVivado]="xilinx-vivado"
 
@@ -68,7 +66,6 @@ SourceDirectories[IntelQuartus]="eda/sim_lib"
 SourceDirectories[LatticeDiamond]="cae_library/simulation/vhdl"
 SourceDirectories[OSVVM]="."
 SourceDirectories[UVVM]="."
-SourceDirectories[VUnit]="vunit/vhdl"
 SourceDirectories[XilinxISE]="vhdl/src"
 SourceDirectories[XilinxVivado]="data/vhdl/src"
 
