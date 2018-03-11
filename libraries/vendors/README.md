@@ -6,14 +6,14 @@ shipped with GHDL, but we offer prepared compile scripts to pre-compile the
 vendor libraries, if the vendor tool is present on the computer.
 
 There are also popular simulation and verification libraries like [OSVVM][osvvm]
-and [VUnit][vunit], which can be pre-compile, too.
+and [UVVM][uvvm], which can be pre-compile, too.
 
 The compilation scripts are writen in the shell languages: PowerShell for Windows
 and Bash for Linux. The compile scripts can colorize the GHDL warning and error
 lines with the help of grc/grcat ([generic colourizer][grc]).
 
  [osvvm]: http://osvvm.org/
- [vunit]: https://github.com/LarsAsplund/vunit
+ [uvvm]: https://github.com/UVVM/UVVM_All
  [grc]: http://kassiopeia.juls.savba.sk/~garabik/software/grc.html
 
 ##### Supported Vendors Libraries
@@ -49,8 +49,17 @@ lines with the help of grc/grcat ([generic colourizer][grc]).
 
  - OSVVM (for VHDL-2008)
      - osvvm
- - VUnit (for VHDL-2008)
-     - vunit_lib
+ - UVVM (for VHDL-2008)
+     - uvvm-utilities
+     - uvvm-vvc-framework
+     - uvvm-vip-avalon_mm
+     - uvvm-vip-axi_lite
+     - uvvm-vip-axi_stream
+     - uvvm-vip-gpio
+     - uvvm-vip-i2c
+     - uvvm-vip-sbi
+     - uvvm-vip-spi
+     - uvvm-vip-uart
 
 ---------------------------------------------------------------------
 ### Script Configuration
@@ -92,7 +101,7 @@ shortened to the essential parts.
     $ /usr/local/lib/ghdl/vendors/compile-xilinx-ise.sh --all
     $ /usr/local/lib/ghdl/vendors/compile-xilinx-vivado.sh --all
     $ /usr/local/lib/ghdl/vendors/compile-osvvm.sh --all
-    $ /usr/local/lib/ghdl/vendors/compile-vunit.sh --all
+    $ /usr/local/lib/ghdl/vendors/compile-uvvm.sh --all
     ```
     
     In most cases GHDL is installed into `/usr/local/`. The scripts are
@@ -108,7 +117,7 @@ shortened to the essential parts.
     drwxr-xr-x  2 <user> <group>  56K Nov 30 17:41 altera
     drwxr-xr-x  2 <user> <group>  56K Nov 30 17:42 lattice
     drwxr-xr-x  2 <user> <group>  56K Nov 30 17:48 osvvm
-    drwxr-xr-x  2 <user> <group>  56K Nov 30 17:58 vunit
+    drwxr-xr-x  2 <user> <group>  56K Nov 30 17:58 uvvm
     drwxr-xr-x  2 <user> <group>  56K Nov 30 17:58 xilinx-ise
     drwxr-xr-x  2 <user> <group>  56K Nov 30 17:48 xilinx-vivado
     ```
@@ -132,7 +141,7 @@ shortened to the essential parts.
     PS> <GHDL>\libraries\vendors\compile-xilinx-ise.ps1 -All
     PS> <GHDL>\libraries\vendors\compile-xilinx-vivado.ps1 -All
     PS> <GHDL>\libraries\vendors\compile-osvvm.ps1 -All
-    PS> <GHDL>\libraries\vendors\compile-vunit.ps1 -All
+    PS> <GHDL>\libraries\vendors\compile-uvvm.ps1 -All
     ```
 
  - **Step 3 - Viewing the result**
@@ -148,7 +157,7 @@ shortened to the essential parts.
     d----    20.11.2015    19:33        <DIR> altera
     d----    20.11.2015    19:38        <DIR> lattice
     d----    20.11.2015    19:38        <DIR> osvvm
-    d----    20.11.2015    19:45        <DIR> vunit_lib
+    d----    20.11.2015    19:45        <DIR> uvvm
     d----    20.11.2015    19:06        <DIR> xilinx-ise
     d----    20.11.2015    19:40        <DIR> xilinx-vivado
     ```
@@ -165,12 +174,12 @@ directories. Use an empty string `""` for not installed tools.
 `config.sh`:
 ```Bash
 declare -A InstallationDirectory
-InstallationDirectory[AlteraQuartus]="/opt/Altera/16.0"
+InstallationDirectory[AlteraQuartus]="/opt/Altera/17.1"
 InstallationDirectory[LatticeDiamond]="/opt/Diamond/3.8_x64"
 InstallationDirectory[OSVVM]="/home/<user>/git/GitHub/osvvm"
-InstallationDirectory[VUnit]="/home/<user>/git/GitHub/vunit"
+InstallationDirectory[UVVM]="/home/<user>/git/GitHub/uvvm_all"
 InstallationDirectory[XilinxISE]="/opt/Xilinx/14.7"
-InstallationDirectory[XilinxVivado]="/opt/Xilinx/Vivado/2016.3"
+InstallationDirectory[XilinxVivado]="/opt/Xilinx/Vivado/2017.4"
 ```
 
 #### For Windows: `config.psm1`
@@ -182,12 +191,12 @@ folder. Use an empty string `""` for not installed tools.
 `config.psm1`:
 ```PowerShell
 $InstallationDirectory = @{
-  "AlteraQuartus" =   "C:\Altera\16.0";
+  "AlteraQuartus" =   "C:\Altera\17.1";
   "LatticeDiamond" =  "C:\Lattice\Diamond\3.8_x64";
   "XilinxISE" =       "C:\Xilinx\14.7\ISE_DS";
-  "XilinxVivado" =    "C:\Xilinx\Vivado\2016.3";
+  "XilinxVivado" =    "C:\Xilinx\Vivado\2017.4";
   "OSVVM" =           "D:\git\GitHub\osvvm";
-  "VUnit" =           "D:\git\GitHub\vunit"
+  "UVVM" =            "D:\git\GitHub\uvvm_all"
 }
 ```
 
@@ -245,11 +254,11 @@ $InstallationDirectory = @{
 
         -a --all              Compile all.
            --osvvm            Compile the OSVVM library.
- - `compile-vunit.sh`
+ - `compile-uvvm.sh`
     Selectable libraries:
 
         -a --all              Compile all.
-           --osvvm            Compile the VUnit library.
+           --uvvm             Compile the UVVM library.
 
 ### Selectable Options for the PowerShell Scripts:
 
@@ -300,12 +309,12 @@ $InstallationDirectory = @{
 
         -All                  Compile all.
         -OSVVM  		          Compile the OSVVM library.
- - `compile-vunit.ps1`
+ - `compile-uvvm.ps1`
     Selectable libraries:
 
         -All                  Compile all.
-        -VUnit  		          Compile the VUnit library.
+        -UVVM  		            Compile the UVVM library.
 
 ------------------------
 Author: Patrick Lehmann  
-Last update: 28.10.2016
+Last update: 11.03.2018
