@@ -76,12 +76,12 @@ package body Grt.Processes is
    Postponed_Resume_Process_Table : Process_Acc_Array_Acc;
    Last_Postponed_Resume_Process : Natural := 0;
 
-   --  Number of postponed processes.
+   --  Number of processes.
    Nbr_Postponed_Processes : Natural := 0;
    Nbr_Non_Postponed_Processes : Natural := 0;
 
    --  Number of resumed processes.
-   Nbr_Resumed_Processes : Natural := 0;
+   Nbr_Resumed_Processes : Long_Long_Integer := 0;
 
    --  Earliest time out within non-sensitized processes.
    Process_First_Timeout : Std_Time := Last_Time;
@@ -123,7 +123,7 @@ package body Grt.Processes is
       return Res;
    end Get_Nbr_Sensitized_Processes;
 
-   function Get_Nbr_Resumed_Processes return Natural is
+   function Get_Nbr_Resumed_Processes return Long_Long_Integer is
    begin
       return Nbr_Resumed_Processes;
    end Get_Nbr_Resumed_Processes;
@@ -767,7 +767,8 @@ package body Grt.Processes is
          Last := Last_Resume_Process;
          Last_Resume_Process := 0;
       end if;
-      Nbr_Resumed_Processes := Nbr_Resumed_Processes + Last;
+      Nbr_Resumed_Processes :=
+        Nbr_Resumed_Processes + Long_Long_Integer (Last);
 
       if Options.Nbr_Threads = 1 then
          for I in 1 .. Last loop

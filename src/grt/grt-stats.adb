@@ -356,14 +356,16 @@ package body Grt.Stats is
       Put_I32 (stdout, Ghdl_I32 (Grt.Processes.Get_Nbr_Sensitized_Processes));
       New_Line;
       Put (stdout, "Number of resumed processes: ");
-      Put_I32 (stdout, Ghdl_I32 (Grt.Processes.Get_Nbr_Resumed_Processes));
+      Put_I64 (stdout, Ghdl_I64 (Grt.Processes.Get_Nbr_Resumed_Processes));
       New_Line;
       Put (stdout, "Average number of resumed processes per cycle: ");
       N := Processes.Nbr_Delta_Cycles + Processes.Nbr_Cycles;
       if N = 0 then
          Put (stdout, "-");
       else
-         Put_I32 (stdout, Ghdl_I32 (Processes.Get_Nbr_Resumed_Processes / N));
+         Put_I64
+           (stdout,
+            Ghdl_I64 (Processes.Get_Nbr_Resumed_Processes) / Ghdl_I64 (N));
       end if;
       New_Line;
    end Disp_Stats;
