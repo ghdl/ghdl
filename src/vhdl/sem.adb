@@ -198,6 +198,8 @@ package body Sem is
       --  considered to occur immediatly within the declarative region
       --  associated with the entity declaration corresponding to the given
       --  architecture body.
+      --
+      --  GHDL: this is only in vhdl-2002.
       if Vhdl_Std = Vhdl_02 then
          Open_Declarative_Region;
       end if;
