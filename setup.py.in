@@ -7,6 +7,9 @@ from distutils.command.build import build
 import os
 import os.path
 
+so_ext = "@SOEXT@"
+libghdl_version = "@libghdl_version@"
+
 class GHDLBuild(build):
     def my_copy_tree(self, src, dst):
         """Tuned version of copy_tree: exclude .o files"""
@@ -27,7 +30,10 @@ class GHDLBuild(build):
 
         # Copy VHDL libraries & shared library
         dstdir = os.path.join(self.build_lib, 'libghdl')
-        distutils.file_util.copy_file("libghdl" + "@SOEXT@", dstdir)
+        libghdl_filename = "libghdl-" + libghdl_version + so_ext
+        distutils.file_util.copy_file(libghdl_filename, dstdir)
+        with open(os.path.join(dstdir, "config.py"), 'w') as f:
+            f.write('libghdl_filename="{}"\n'.format(libghdl_filename))
         self.my_copy_tree(os.path.join("lib", "ghdl"),
                           os.path.join(dstdir, "ghdl"))
 

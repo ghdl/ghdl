@@ -1,17 +1,10 @@
 import ctypes
-import sys
 import os.path
-
-_ext = {'linux': '.so',
-        'linux2': '.so',
-        'darwin': '.dylib',
-        'win32': '.dll',
-        'cygwin': '.dll'}
+from libghdl.config import libghdl_filename
 
 # Load the DLL.
 _basedir = os.path.dirname(__file__)
-libghdl = ctypes.CDLL(os.path.join(
-    _basedir, 'libghdl' + _ext.get(sys.platform, '.so')))
+libghdl = ctypes.CDLL(os.path.join(_basedir, libghdl_filename))
 
 # Low-level initialization (elaboration).
 libghdl.libghdl_init()

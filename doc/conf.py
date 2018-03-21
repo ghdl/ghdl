@@ -77,9 +77,9 @@ author = u'Tristan Gingold and contributors'
 # built documents.
 #
 try:
-	with open('../src/version.in') as verin:
+	with open('../configure') as verin:
 		for line in verin:
-			line = re.findall(r'Ghdl_Ver.+\"(.+)\";', line)
+			line = re.findall(r'ghdl_version=\"(.+)\"', line)
 			if line:
 				version=line[0]
 except Exception, e:
@@ -150,12 +150,12 @@ except Exception as ex:
 # a list of builtin themes.
 #html_theme = 'alabaster'
 html_theme = "sphinx_rtd_theme"
-# Override default css to get a larger width for ReadTheDoc build            
-html_context = {                                                             
-    'css_files': [                                                           
-        'https://media.readthedocs.org/css/sphinx_rtd_theme.css',            
-        'https://media.readthedocs.org/css/readthedocs-doc-embed.css',       
-        '_static/theme_overrides.css',                                       
+# Override default css to get a larger width for ReadTheDoc build
+html_context = {
+    'css_files': [
+        'https://media.readthedocs.org/css/sphinx_rtd_theme.css',
+        'https://media.readthedocs.org/css/readthedocs-doc-embed.css',
+        '_static/theme_overrides.css',
     ],
 }
 

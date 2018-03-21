@@ -3,6 +3,13 @@
 # configure script for ghdl (c) 2014 Tristan Gingold
 #
 
+# Current version.  This is the only place where the version is written.
+# Any code that needs version should read it directly or indirectly from this
+# place.
+# Note the absence of spaces and the quotes.
+# Suffix "-dev" is used during development.
+ghdl_version="0.36-dev"
+
 backend=mcode
 CC=${CC:-gcc}
 CXX=${CXX:-clang++}
@@ -30,7 +37,7 @@ PIC_FLAGS=-fPIC
 show_help=no
 progname=$0
 
-subst_vars="CC CXX GNATMAKE MAKE CFLAGS LDFLAGS build srcdir abs_srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config llvm_be backtrace_lib build_mode EXEEXT SOEXT PIC_FLAGS default_pie enable_werror enable_checks enable_openieee enable_python"
+subst_vars="CC CXX GNATMAKE MAKE CFLAGS LDFLAGS build srcdir abs_srcdir prefix backend libdirsuffix libdirreverse gcc_src_dir llvm_config llvm_be backtrace_lib build_mode EXEEXT SOEXT PIC_FLAGS default_pie enable_werror enable_checks enable_openieee enable_python libghdl_version ghdl_version"
 
 # Find srcdir
 srcdir=`dirname $progname`
@@ -246,6 +253,9 @@ case "$build" in
     *darwin*) SOEXT=".dylib"; EXEEXT="";     PIC_FLAGS="";;
     *)        SOEXT=".so";    EXEEXT="";     PIC_FLAGS="-fPIC";;
 esac
+
+# Define libghdl_version
+libghdl_version=`echo $ghdl_version | sed -e 's/[-.]/_/g'`
 
 # Check if gcc was configured with --enable-default-pie.  In that case -fPIC
 # should be added.

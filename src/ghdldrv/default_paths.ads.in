@@ -37,7 +37,6 @@ package Default_Paths is
    Post_Processor : constant String :=
      "@POST_PROCESSOR@";
 
-   Shared_Library_Extension : constant String :=
-     "@SOEXT@";
+   Shared_Library_Extension : constant String := "@SOEXT@";
    Default_Pie : constant Boolean := "@default_pie@" = String'("yes");
 end Default_Paths;

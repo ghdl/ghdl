@@ -55,7 +55,7 @@ echo "travis_fold:end:fetch"
 # Compute package name
 
 PKG_SHORTCOMMIT="$(printf $TRAVIS_COMMIT | cut -c1-10)"
-PKG_VER=`grep Ghdl_Ver src/version.in | sed -e 's/.*"\(.*\)";/\1/'`
+PKG_VER=`grep "ghdl_version=" configure | sed -e 's/.*"\(.*\)";/\1/'`
 if [ -z "$TRAVIS_TAG" ]; then
     # No tag: use date + commit id
     PKG_TAG="$(date -u +%Y%m%d)-$PKG_SHORTCOMMIT";

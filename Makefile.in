@@ -35,6 +35,8 @@ LDFLAGS=@LDFLAGS@
 LIBBACKTRACE=@backtrace_lib@
 llvm_be=@llvm_be@
 build_mode=@build_mode@
+ghdl_version=@ghdl_version@
+libghdl_version=@libghdl_version@
 enable_werror=@enable_werror@
 enable_checks=@enable_checks@
 enable_openieee=@enable_openieee@
@@ -144,12 +146,12 @@ include $(srcdir)/src/grt/Makefile.inc
 
 version.tmp: $(srcdir)/src/version.in force
 #	Create version.tmp from version.in, using git date/hash
-	if test -d $(srcdir)/.git \
-	   && desc=`cd $(srcdir); git describe --dirty`; then \
-	  $(SED) -e "s/[(].*[)]/($$desc)/" < $< > $@; \
-	else \
-	  $(CP) $< $@; \
-	fi
+	if ! test -d $(srcdir)/.git \
+	   || ! desc=`cd $(srcdir); git describe --dirty`; then \
+	  desc="tarball"; \
+        fi; \
+	$(SED) -e "s/[(].*[)]/($$desc)/" \
+               -e "s/@VER@/$(ghdl_version)/" < $< > $@; \
 
 version.ads: version.tmp
 #	Change version.ads only if version.tmp has been modified to avoid
@@ -337,10 +339,12 @@ install.simul: install.simul.program install.vhdllib
 
 LIBGHDL_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/vhdl/python -aI$(srcdir)/src/ghdldrv
 
-libghdl$(SOEXT): $(GRT_SRC_DEPS) version.ads force
+libghdl_name=libghdl-$(libghdl_version)$(SOEXT)
+
+$(libghdl_name): $(GRT_SRC_DEPS) version.ads force
 	$(GNATMAKE) -I- -aI. -D pic -z libghdl -o $@ $(GNATFLAGS) $(PIC_FLAGS) -gnat05 $(LIBGHDL_INCFLAGS) -bargs -shared -Llibghdl_ -largs -shared $(SHLIB_FLAGS)
 
-all.libghdl.true: libghdl$(SOEXT)
+all.libghdl.true: $(libghdl_name)
 all.libghdl.false:
 
 ################ ghdlsynth library ######################################
