@@ -3585,6 +3585,8 @@ package body Sem_Expr is
                return Null_Iir;
             end if;
             return Expr;
+         when Iir_Kind_Error =>
+            return Null_Iir;
          when others =>
             Error_Msg_Sem (+Expr, "type %n is not composite", +A_Type);
             return Null_Iir;

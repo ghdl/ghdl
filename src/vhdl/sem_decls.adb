@@ -159,27 +159,32 @@ package body Sem_Decls is
    is
       Decl_Type : constant Iir := Get_Type (Decl);
    begin
-      if Get_Signal_Type_Flag (Decl_Type) = False then
-         Error_Msg_Sem (+Decl, "type of %n cannot be %n", (+Decl, +Decl_Type));
-         case Get_Kind (Decl_Type) is
-            when Iir_Kind_File_Type_Definition =>
-               null;
-            when Iir_Kind_Protected_Type_Declaration =>
-               null;
-            when Iir_Kind_Interface_Type_Definition =>
-               null;
-            when Iir_Kind_Access_Type_Definition
-              | Iir_Kind_Access_Subtype_Definition =>
-               null;
-            when Iir_Kinds_Array_Type_Definition
-              | Iir_Kind_Record_Type_Definition
-              | Iir_Kind_Record_Subtype_Definition =>
-               Error_Msg_Sem
-                 (+Decl, "(%n has an access subelement)", +Decl_Type);
-            when others =>
-               Error_Kind ("check_signal_type", Decl_Type);
-         end case;
+      if Get_Signal_Type_Flag (Decl_Type) then
+         return;
       end if;
+
+      if Is_Error (Decl_Type) then
+         return;
+      end if;
+
+      Error_Msg_Sem (+Decl, "type of %n cannot be %n", (+Decl, +Decl_Type));
+      case Get_Kind (Decl_Type) is
+         when Iir_Kind_File_Type_Definition =>
+            null;
+         when Iir_Kind_Protected_Type_Declaration =>
+            null;
+         when Iir_Kind_Interface_Type_Definition =>
+            null;
+         when Iir_Kind_Access_Type_Definition
+           | Iir_Kind_Access_Subtype_Definition =>
+            null;
+         when Iir_Kinds_Array_Type_Definition
+           | Iir_Kind_Record_Type_Definition
+           | Iir_Kind_Record_Subtype_Definition =>
+            Error_Msg_Sem (+Decl, "(%n has an access subelement)", +Decl_Type);
+         when others =>
+            Error_Kind ("check_signal_type", Decl_Type);
+      end case;
    end Check_Signal_Type;
 
    procedure Sem_Interface_Object_Declaration

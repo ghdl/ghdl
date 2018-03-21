@@ -2419,7 +2419,7 @@ package body Sem_Names is
          end if;
 
          if Get_Kind (Base_Type) /= Iir_Kind_Array_Type_Definition then
-            if Finish then
+            if Finish and then not Is_Error (Base_Type) then
                Error_Msg_Sem (+Name, "type of prefix is not an array");
             end if;
             return Null_Iir;
