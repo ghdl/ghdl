@@ -198,11 +198,11 @@ package body Sem is
       --  considered to occur immediatly within the declarative region
       --  associated with the entity declaration corresponding to the given
       --  architecture body.
-      if Vhdl_Std >= Vhdl_02 then
+      if Vhdl_Std = Vhdl_02 then
          Open_Declarative_Region;
       end if;
       Sem_Block (Arch);
-      if Vhdl_Std >= Vhdl_02 then
+      if Vhdl_Std = Vhdl_02 then
          Close_Declarative_Region;
       end if;
 
