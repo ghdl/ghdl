@@ -197,8 +197,10 @@ package body Sem_Psl is
                   Free_Iir (Name);
                end if;
                return Res;
-            when others =>
+            when Iir_Kind_Function_Call =>
                Expr := Name;
+            when others =>
+               Expr := Name_To_Expression (Expr, Null_Iir);
          end case;
       else
          Expr := Sem_Expr.Sem_Expression (Expr, Null_Iir);
