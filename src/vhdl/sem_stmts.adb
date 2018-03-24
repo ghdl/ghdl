@@ -503,6 +503,10 @@ package body Sem_Stmts is
                Set_We_Value (We, Expr);
 
                Merge_Wildcard_Type (Expr, Waveform_Type);
+            else
+               Expr := Get_We_Value (We);
+               Expr := Create_Error_Expr (Expr, Waveform_Type);
+               Set_We_Value (We, Expr);
             end if;
          end if;
 

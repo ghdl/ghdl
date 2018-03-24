@@ -810,7 +810,7 @@ package body Errorout is
       begin
          Decl := Get_Type_Declarator (Node);
          if Decl = Null_Iir then
-            return "the anonymous " & Str
+            return "anonymous " & Str
               & " defined at " & Disp_Location (Node);
          else
             return Disp_Identifier (Decl, Str);
