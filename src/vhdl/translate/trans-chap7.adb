@@ -364,11 +364,11 @@ package body Trans.Chap7 is
          New_Record_Aggr_El
            (Index_Aggr,
             New_Signed_Literal
-              (Index_Type_Info.Ortho_Type (Mode_Value), 0));
+              (Index_Type_Info.Ortho_Type (Mode_Value), 1));
          New_Record_Aggr_El
            (Index_Aggr,
             New_Signed_Literal (Index_Type_Info.Ortho_Type (Mode_Value),
-              Integer_64 (Len - 1)));
+              Integer_64 (Len)));
          New_Record_Aggr_El
            (Index_Aggr, Ghdl_Dir_To_Node);
          New_Record_Aggr_El
