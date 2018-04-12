@@ -889,8 +889,14 @@ package body Sem_Names is
       pragma Assert (Get_Type (Name) = Null_Iir);
 
       --  Analyze the name (if not already done).
-      if Get_Named_Entity (Name) = Null_Iir then
+      Res := Get_Named_Entity (Name);
+      if Res = Null_Iir then
          Sem_Name (Name);
+         Res := Get_Named_Entity (Name);
+      end if;
+      if Res /= Null_Iir and then Is_Overload_List (Res) then
+         Error_Msg_Sem (+Name, "name does not denote a type mark");
+         return Create_Error_Type (Name);
       end if;
       Res := Finish_Sem_Name (Name);
 
