@@ -100,7 +100,8 @@ else
     # This is a little bit hack-ish, as it assumes that 'git' is not
     # available in docker (otherwise it will describe as -dirty
     # because this modifies the source file version.in).
-    make -f Makefile.in srcdir=. version.tmp
+    ghdl_version_line=`grep -e '^ghdl_version' configure`
+    make -f Makefile.in srcdir=. $ghdl_version_line version.tmp
     cp version.tmp src/version.in
 
     # Run build in docker
