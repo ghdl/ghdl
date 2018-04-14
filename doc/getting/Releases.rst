@@ -72,7 +72,7 @@ Downloading from GitHub
 =======================
 
 GHDL can be downloaded as a zip-file from GitHub. See the following table, to
-choose your desired git branch.
+choose your desired format/version:
 
 .. only:: html
 
