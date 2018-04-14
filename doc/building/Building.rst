@@ -5,7 +5,7 @@ Building GHDL from Sources
 
 .. rubric:: Download
 
-GHDL can be downloaded as a `zip-file <https://github.com/ghdl/ghdl/archive/master.zip>`_
+GHDL can be downloaded as a `zip-file <https://github.com/ghdl/ghdl/archive/master.zip>`_/`tar-file <https://github.com/ghdl/ghdl/archive/master.tar.gz>`_
 (latest 'master' branch) or cloned with ``git clone`` from GitHub. GitHub
 offers HTTPS and SSH as transfer protocols. See the :ref:`RELEASE:Sources`
 page for further details. The installation directory is referred to as ``GHDLRoot``.
