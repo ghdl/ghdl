@@ -100,9 +100,8 @@ else
     # This is a little bit hack-ish, as it assumes that 'git' is not
     # available in docker (otherwise it will describe as -dirty
     # because this modifies the source file version.in).
-    ghdl_version_line=`grep -e '^ghdl_version' configure`
-    make -f Makefile.in srcdir=. $ghdl_version_line version.tmp
-    cp version.tmp src/version.in
+    make -f Makefile.in srcdir=. version.tmp
+    sed -e "s/@ghdl_version@/@VER@/" < version.tmp > src/version.in
 
     # Run build in docker
     IMAGE_TAG=`echo $IMAGE | sed -e 's/+/-/g'`
