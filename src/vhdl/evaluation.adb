@@ -3388,6 +3388,7 @@ package body Evaluation is
             when Iir_Kind_Range_Array_Attribute
               | Iir_Kind_Reverse_Range_Array_Attribute =>
                declare
+                  Indexes_List : Iir_Flist;
                   Prefix : Iir;
                   Res : Iir;
                   Dim : Natural;
@@ -3402,9 +3403,15 @@ package body Evaluation is
                      --  Unconstrained object.
                      return Null_Iir;
                   end if;
+                  Indexes_List := Get_Index_Subtype_List (Prefix);
                   Dim := Eval_Attribute_Parameter_Or_1 (Expr);
-                  Expr := Get_Nth_Element
-                    (Get_Index_Subtype_List (Prefix), Dim - 1);
+                  if Dim < 1
+                    or else Dim > Get_Nbr_Elements (Indexes_List)
+                  then
+                     --  Avoid cascaded errors.
+                     Dim := 1;
+                  end if;
+                  Expr := Get_Nth_Element (Indexes_List, Dim - 1);
                   if Kind = Iir_Kind_Reverse_Range_Array_Attribute then
                      Expr := Eval_Static_Range (Expr);
 
