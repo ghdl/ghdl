@@ -428,13 +428,13 @@ package body Sem_Scopes is
          Last_In_Region := Ident;
       end Add_New_Interpretation;
    begin
-      if not Valid_Interpretation (Current_Inter) then
+      if not Valid_Interpretation (Raw_Inter) then
          --  Very simple: no hidding, no overloading.
          Add_New_Interpretation (True);
          return;
       end if;
 
-      if Is_Conflict_Declaration (Current_Inter) then
+      if Is_Conflict_Declaration (Raw_Inter) then
          if Potentially then
             --  Yet another conflicting interpretation.
             return;
