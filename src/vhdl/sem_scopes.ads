@@ -105,6 +105,16 @@ package Sem_Scopes is
      return Boolean;
    pragma Inline (Is_In_Current_Declarative_Region);
 
+   --  Return the raw interpretation of ID.  To be used only in case of
+   --  invalid interpretation to clarify the issue: this may be due to
+   --  conflicting declarations.
+   function Get_Interpretation_Raw (Id : Name_Id)
+                                   return Name_Interpretation_Type;
+
+   --  Return True iff NI is a conflicting declaration.
+   function Is_Conflict_Declaration (Ni : Name_Interpretation_Type)
+                                    return Boolean;
+
    -- Push and pop all interpretations.
    -- This can be used to suspend name interpretation, in case of recursive
    -- semantics.

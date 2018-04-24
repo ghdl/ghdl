@@ -1830,7 +1830,15 @@ package body Sem_Names is
       if not Valid_Interpretation (Interpretation) then
          --  Unknown name.
          if not Soft then
-            Error_Msg_Sem (+Name, "no declaration for %i", +Name);
+            Interpretation := Get_Interpretation_Raw (Id);
+            if Valid_Interpretation (Interpretation)
+              and then Is_Conflict_Declaration (Interpretation)
+            then
+               Error_Msg_Sem
+                 (+Name, "no declaration for %i (due to conflicts)", +Name);
+            else
+               Error_Msg_Sem (+Name, "no declaration for %i", +Name);
+            end if;
          end if;
          Res := Error_Mark;
       elsif not Valid_Interpretation (Get_Next_Interpretation (Interpretation))
