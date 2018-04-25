@@ -54,10 +54,23 @@ package body Trans.Chap6 is
    begin
       Files_Map.Location_To_Position (Get_Location (Loc), Name, Line, Col);
 
-      Start_Association (Constr, Ghdl_Bound_Check_Failed_L1);
+      Start_Association (Constr, Ghdl_Bound_Check_Failed);
       Assoc_Filename_Line (Constr, Line);
       New_Procedure_Call (Constr);
    end Gen_Bound_Error;
+
+   procedure Gen_Direction_Error (Loc : Iir)
+   is
+      Constr    : O_Assoc_List;
+      Name      : Name_Id;
+      Line, Col : Natural;
+   begin
+      Files_Map.Location_To_Position (Get_Location (Loc), Name, Line, Col);
+
+      Start_Association (Constr, Ghdl_Direction_Check_Failed);
+      Assoc_Filename_Line (Constr, Line);
+      New_Procedure_Call (Constr);
+   end Gen_Direction_Error;
 
    procedure Gen_Program_Error (Loc : Iir; Code : Natural)
    is
@@ -91,6 +104,15 @@ package body Trans.Chap6 is
       Gen_Bound_Error (Loc);
       Finish_If_Stmt (If_Blk);
    end Check_Bound_Error;
+
+   procedure Check_Direction_Error (Cond : O_Enode; Loc : Iir)
+   is
+      If_Blk : O_If_Block;
+   begin
+      Start_If_Stmt (If_Blk, Cond);
+      Gen_Direction_Error (Loc);
+      Finish_If_Stmt (If_Blk);
+   end Check_Direction_Error;
 
    --  Return TRUE if an array whose index type is RNG_TYPE indexed by
    --  an expression of type EXPR_TYPE needs a bound check.
@@ -586,12 +608,12 @@ package body Trans.Chap6 is
         or else Get_Kind (Prefix_Type) /= Iir_Kind_Array_Subtype_Definition
       then
          --  Check same direction.
-         Check_Bound_Error
+         Check_Direction_Error
            (New_Compare_Op (ON_Neq,
-            M2E (Chap3.Range_To_Dir (Prefix_Range)),
-            M2E (Chap3.Range_To_Dir (Slice_Range)),
-            Ghdl_Bool_Type),
-            Expr, 1);
+                            M2E (Chap3.Range_To_Dir (Prefix_Range)),
+                            M2E (Chap3.Range_To_Dir (Slice_Range)),
+                            Ghdl_Bool_Type),
+            Expr);
       end if;
 
       Unsigned_Diff := Create_Temp (Ghdl_Index_Type);

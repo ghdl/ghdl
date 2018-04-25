@@ -601,22 +601,29 @@ package body Translation is
       Start_Procedure_Decl
         (Interfaces, Get_Identifier ("__ghdl_program_error"),
          O_Storage_External);
-      New_Interface_Decl
-        (Interfaces, Param, Wki_Filename, Char_Ptr_Type);
-      New_Interface_Decl
-        (Interfaces, Param, Wki_Line, Ghdl_I32_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Filename, Char_Ptr_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Line, Ghdl_I32_Type);
       New_Interface_Decl
         (Interfaces, Param, Get_Identifier ("code"), Ghdl_Index_Type);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Program_Error);
 
-      --  procedure __ghdl_bound_check_failed_l1 (filename : char_ptr_type;
-      --                                          line : ghdl_i32);
+      --  procedure __ghdl_bound_check_failed (filename : char_ptr_type;
+      --                                       line : ghdl_i32);
       Start_Procedure_Decl
-        (Interfaces, Get_Identifier ("__ghdl_bound_check_failed_l1"),
+        (Interfaces, Get_Identifier ("__ghdl_bound_check_failed"),
          O_Storage_External);
       New_Interface_Decl (Interfaces, Param, Wki_Filename, Char_Ptr_Type);
       New_Interface_Decl (Interfaces, Param, Wki_Line, Ghdl_I32_Type);
-      Finish_Subprogram_Decl (Interfaces, Ghdl_Bound_Check_Failed_L1);
+      Finish_Subprogram_Decl (Interfaces, Ghdl_Bound_Check_Failed);
+
+      --  procedure __ghdl_direction_check_failed (filename : char_ptr_type;
+      --                                           line : ghdl_i32);
+      Start_Procedure_Decl
+        (Interfaces, Get_Identifier ("__ghdl_direction_check_failed"),
+         O_Storage_External);
+      New_Interface_Decl (Interfaces, Param, Wki_Filename, Char_Ptr_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Line, Ghdl_I32_Type);
+      Finish_Subprogram_Decl (Interfaces, Ghdl_Direction_Check_Failed);
 
       --  Secondary stack subprograms.
       --  function __ghdl_stack2_allocate (size : ghdl_index_type)

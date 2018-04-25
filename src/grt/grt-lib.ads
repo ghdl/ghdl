@@ -55,8 +55,11 @@ package Grt.Lib is
    Error_Severity   : constant Integer := 2;
    Failure_Severity : constant Integer := 3;
 
-   procedure Ghdl_Bound_Check_Failed_L1 (Filename : Ghdl_C_String;
-                                         Line: Ghdl_I32);
+   --  Bound / Direction error.
+   procedure Ghdl_Bound_Check_Failed (Filename : Ghdl_C_String;
+                                      Line: Ghdl_I32);
+   procedure Ghdl_Direction_Check_Failed (Filename : Ghdl_C_String;
+                                          Line: Ghdl_I32);
 
    --  Program error has occured:
    --  * configuration of an already configured block.
@@ -113,8 +116,10 @@ private
    pragma Export (C, Ghdl_Psl_Cover_Failed, "__ghdl_psl_cover_failed");
    pragma Export (C, Ghdl_Report, "__ghdl_report");
 
-   pragma Export (C, Ghdl_Bound_Check_Failed_L1,
-                  "__ghdl_bound_check_failed_l1");
+   pragma Export (C, Ghdl_Bound_Check_Failed,
+                  "__ghdl_bound_check_failed");
+   pragma Export (C, Ghdl_Direction_Check_Failed,
+                  "__ghdl_direction_check_failed");
    pragma Export (C, Ghdl_Program_Error, "__ghdl_program_error");
 
    pragma Export (C, Ghdl_Malloc, "__ghdl_malloc");

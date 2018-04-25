@@ -164,8 +164,8 @@ package body Grt.Lib is
       Error_E ("");
    end Ghdl_Program_Error;
 
-   procedure Ghdl_Bound_Check_Failed_L1 (Filename : Ghdl_C_String;
-                                         Line: Ghdl_I32)
+   procedure Ghdl_Bound_Check_Failed (Filename : Ghdl_C_String;
+                                      Line: Ghdl_I32)
    is
       Bt : Backtrace_Addrs;
    begin
@@ -175,7 +175,20 @@ package body Grt.Lib is
       Error_C (":");
       Error_C (Integer (Line));
       Error_E_Call_Stack (Bt);
-   end Ghdl_Bound_Check_Failed_L1;
+   end Ghdl_Bound_Check_Failed;
+
+   procedure Ghdl_Direction_Check_Failed (Filename : Ghdl_C_String;
+                                          Line: Ghdl_I32)
+   is
+      Bt : Backtrace_Addrs;
+   begin
+      Save_Backtrace (Bt, 1);
+      Error_C ("slice direction doesn't match index direction at ");
+      Error_C (Filename);
+      Error_C (":");
+      Error_C (Integer (Line));
+      Error_E_Call_Stack (Bt);
+   end Ghdl_Direction_Check_Failed;
 
    function Ghdl_Integer_Exp (V : Ghdl_I32; E : Ghdl_I32)
      return Ghdl_I32
