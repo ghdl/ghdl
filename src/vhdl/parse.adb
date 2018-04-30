@@ -4807,7 +4807,9 @@ package body Parse is
                --  Skip ')'.
                Scan;
 
-               if Get_Kind (Expr) = Iir_Kind_Aggregate then
+               if Expr /= Null_Iir
+                 and then Get_Kind (Expr) = Iir_Kind_Aggregate
+               then
                   --  Parenthesis around aggregate is useless and change the
                   --  context for array aggregate.
                   Warning_Msg_Sem
@@ -9355,6 +9357,12 @@ package body Parse is
    --  design_unit ::= context_clause library_unit
    function Parse_Design_Unit return Iir_Design_Unit
    is
+      procedure Error_Empty is
+      begin
+         Error_Msg_Parse
+           ("missing entity, architecture, package or configuration");
+      end Error_Empty;
+
       Res: Iir_Design_Unit;
       Unit: Iir;
    begin
@@ -9385,10 +9393,16 @@ package body Parse is
                Set_Library_Unit (Res, Parse_Package (Res));
             when Tok_Configuration =>
                Parse_Configuration_Declaration (Res);
+            when Tok_Identifier =>
+               if Current_Identifier = Name_Context then
+                  Error_Msg_Parse
+                    ("context clause not allowed before vhdl 08");
+               else
+                  Error_Empty;
+               end if;
+               return Null_Iir;
             when others =>
-               Error_Msg_Parse
-                 ("entity, architecture, package or configuration "
-                    & "keyword expected");
+               Error_Empty;
                return Null_Iir;
          end case;
       end if;
