@@ -1523,7 +1523,6 @@ package body Libraries is
       --  FIXME: It may fail if they aren't on the same filesystem, but we
       --  could assume it doesn't happen (humm...)
       declare
-         use Files_Map;
          File_Name: constant String := Image (Work_Directory)
            & Library_To_File_Name (Library) & ASCII.NUL;
          Delete_Success : Boolean;

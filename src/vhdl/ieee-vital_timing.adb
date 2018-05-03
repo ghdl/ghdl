@@ -357,8 +357,6 @@ package body Ieee.Vital_Timing is
       --  Checks the port is an input port.
       function Check_Input_Port return Iir
       is
-         use Name_Table;
-
          Res : Iir;
       begin
          Res := Check_Port;
@@ -380,8 +378,6 @@ package body Ieee.Vital_Timing is
       --  Checks the port is an output port.
       function Check_Output_Port return Iir
       is
-         use Name_Table;
-
          Res : Iir;
       begin
          Res := Check_Port;
@@ -413,8 +409,6 @@ package body Ieee.Vital_Timing is
 
       function Get_Next_Suffix_Kind return Suffixes_Kind
       is
-         use Name_Table;
-
          Len : Natural;
          P : constant Natural := Gen_Name_Pos;
          C : Character;
@@ -792,7 +786,6 @@ package body Ieee.Vital_Timing is
         (Decl : Iir_Interface_Constant_Declaration; Prefix_Length : Natural)
         return Boolean
       is
-         use Name_Table;
       begin
          --  IEEE 1076.4 4.3.1
          --  It is an error for a model to use a timing generic prefix to begin

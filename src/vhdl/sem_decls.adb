@@ -2633,7 +2633,6 @@ package body Sem_Decls is
 
    function Sem_Alias_Declaration (Alias : Iir) return Iir
    is
-      use Std_Names;
       Name : Iir;
       Sig : Iir_Signature;
       N_Entity : Iir;

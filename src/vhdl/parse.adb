@@ -4936,7 +4936,6 @@ package body Parse is
    --  Simply create the node for a bit string.
    function Parse_Bit_String return Iir
    is
-      use Str_Table;
       Res : Iir;
       B : Number_Base_Type;
    begin

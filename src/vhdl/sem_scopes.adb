@@ -1493,7 +1493,6 @@ package body Sem_Scopes is
    procedure Disp_Detailed_Interpretations (Ident : Name_Id)
    is
       use Ada.Text_IO;
-      use Name_Table;
 
       Inter: Name_Interpretation_Type;
       Decl : Iir;
@@ -1559,7 +1558,6 @@ package body Sem_Scopes is
    procedure Dump_Interpretation (Inter : Name_Interpretation_Type)
    is
       use Ada.Text_IO;
-      use Name_Table;
 
       Decl : Iir;
    begin

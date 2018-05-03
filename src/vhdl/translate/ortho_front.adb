@@ -18,7 +18,7 @@
 with Types; use Types;
 with Name_Table;
 with Iirs; use Iirs;
-with Libraries; use Libraries;
+with Libraries;
 with Iirs_Utils; use Iirs_Utils;
 with Std_Package;
 with Flags;

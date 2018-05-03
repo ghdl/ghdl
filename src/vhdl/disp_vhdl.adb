@@ -3157,7 +3157,6 @@ package body Disp_Vhdl is
    procedure Disp_PSL_NFA (N : PSL.Nodes.NFA)
    is
       use PSL.NFAs;
-      use PSL.Nodes;
 
       procedure Disp_State (S : NFA_State) is
          Str : constant String := Int32'Image (Get_State_Label (S));

@@ -326,9 +326,6 @@ package body Trans.Chap9 is
 
    procedure Translate_Psl_Directive_Declarations (Stmt : Iir)
    is
-      use PSL.Nodes;
-      use PSL.NFAs;
-
       Mark : Id_Mark_Type;
       Info : Ortho_Info_Acc;
    begin

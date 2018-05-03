@@ -168,8 +168,6 @@ package body Trans.Chap7 is
       Str     : Iir;
       El_Type : Iir)
    is
-      use Name_Table;
-
       Literal_List : constant Iir_Flist :=
         Get_Enumeration_Literal_List (Get_Base_Type (El_Type));
       Len          : constant Nat32 := Get_String_Length (Str);
@@ -272,8 +270,6 @@ package body Trans.Chap7 is
 
    function Translate_Static_String_Literal8 (Str : Iir) return O_Cnode
    is
-      use Name_Table;
-
       Lit_Type     : constant Iir := Get_Type (Str);
       Element_Type : constant Iir := Get_Element_Subtype (Lit_Type);
       Arr_Type     : O_Tnode;
@@ -297,8 +293,6 @@ package body Trans.Chap7 is
    function Create_String_Literal_Var_Inner
      (Str : Iir; Element_Type : Iir; Str_Type : O_Tnode) return Var_Type
    is
-      use Name_Table;
-
       Val_Aggr : O_Array_Aggr_List;
       Res      : O_Cnode;
    begin
@@ -319,8 +313,6 @@ package body Trans.Chap7 is
    --  Create a variable (constant) for string or bit string literal STR.
    function Create_String_Literal_Var (Str : Iir) return Var_Type
    is
-      use Name_Table;
-
       Str_Type : constant Iir := Get_Type (Str);
       Arr_Type : O_Tnode;
    begin
@@ -339,8 +331,6 @@ package body Trans.Chap7 is
    --  because it is not so in VHDL!
    function Translate_Non_Static_String_Literal (Str : Iir) return O_Enode
    is
-      use Name_Table;
-
       Len             : constant Nat32 := Get_String_Length (Str);
       Lit_Type        : constant Iir := Get_Type (Str);
       Type_Info       : constant Type_Info_Acc := Get_Info (Lit_Type);

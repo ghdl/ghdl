@@ -105,7 +105,6 @@ package body Translation is
 
    function Translate_Foreign_Id (Decl : Iir) return Foreign_Info_Type
    is
-      use Name_Table;
       --  Look for 'FOREIGN.
       Attr : constant Iir_Attribute_Value :=
         Sem_Specs.Find_Attribute_Value (Decl, Std_Names.Name_Foreign);
