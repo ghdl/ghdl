@@ -1432,8 +1432,6 @@ package body Ghdldrv is
 
    function Missing_Object_File (Design_File : Iir_Design_File) return Boolean
    is
-      use Files_Map;
-
       Name : constant Name_Id := Get_Design_File_Filename (Design_File);
       Obj_Pathname : constant String := Get_Object_Filename (Design_File);
       Stamp : OS_Time;

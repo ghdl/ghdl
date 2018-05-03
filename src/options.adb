@@ -15,7 +15,7 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Text_IO;
 with Name_Table;
 with Errorout; use Errorout;
 with Libraries;
@@ -236,7 +236,7 @@ package body Options is
    -- Disp help about these options.
    procedure Disp_Options_Help
    is
-      procedure P (S : String) renames Put_Line;
+      procedure P (S : String) renames Ada.Text_IO.Put_Line;
    begin
       P ("Main options:");
       P ("  --work=LIB         use LIB as work library");

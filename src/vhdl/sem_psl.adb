@@ -524,7 +524,6 @@ package body Sem_Psl is
 
    procedure Sem_Psl_Endpoint_Declaration (Stmt : Iir)
    is
-      use Sem_Scopes;
       Decl : constant Node := Get_Psl_Declaration (Stmt);
       Prop : Node;
    begin

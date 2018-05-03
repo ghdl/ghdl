@@ -424,10 +424,7 @@ package body Trans.Chap12 is
    --  Write to file FILELIST all the files that are needed to link the design.
    procedure Gen_Stubs
    is
-      use Interfaces.C_Streams;
-      use System;
       use Configuration;
-      use Name_Table;
 
       --  Add all dependences of UNIT.
       --  UNIT is not used, but added during link.
@@ -595,7 +592,6 @@ package body Trans.Chap12 is
                         Filelist : String;
                         Whole : Boolean)
    is
-      use Name_Table;
       use Configuration;
 
       Unit : Iir_Design_Unit;

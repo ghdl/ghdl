@@ -1183,10 +1183,6 @@ package body Ghdlprint is
                              Files : Argument_List)
    is
       pragma Unreferenced (Cmd);
-      use Scanner;
-      use Tokens;
-      use Files_Map;
-      use Ada.Characters.Latin_1;
 
       Id : Name_Id;
       Fe : Source_File_Entry;

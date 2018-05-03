@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Ada.Text_IO; use Ada.Text_IO;
-with Ada.Command_Line; use Ada.Command_Line;
+with Ada.Command_Line;
 with GNAT.Directory_Operations;
 with Types; use Types;
 with Libraries;
@@ -1506,8 +1506,6 @@ package body Ghdllocal is
    --  Convert NAME to lower cases, unless it is an extended identifier.
    function Convert_Name (Name : String_Access) return String_Access
    is
-      use Name_Table;
-
       function Is_Bad_Unit_Name return Boolean is
       begin
          if Name'Length = 0 then

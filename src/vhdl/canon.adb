@@ -1722,7 +1722,6 @@ package body Canon is
    --  Size the NFA and extract clock sensitivity.
    procedure Canon_Psl_Clocked_NFA (Stmt : Iir)
    is
-      use PSL.Nodes;
       Fa : constant PSL_NFA := Get_PSL_NFA (Stmt);
       Num : Natural;
       List : Iir_List;
@@ -2083,7 +2082,6 @@ package body Canon is
 
             when Iir_Kind_Psl_Assert_Statement =>
                declare
-                  use PSL.Nodes;
                   Prop : PSL_Node;
                   Fa : PSL_NFA;
                begin
@@ -2100,7 +2098,6 @@ package body Canon is
 
             when Iir_Kind_Psl_Cover_Statement =>
                declare
-                  use PSL.Nodes;
                   Seq : PSL_Node;
                   Fa : PSL_NFA;
                begin

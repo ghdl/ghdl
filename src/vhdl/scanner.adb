@@ -1332,7 +1332,6 @@ package body Scanner is
          Error_Msg_Option ("8 bits characters not allowed in vhdl87");
       end Error_8bit;
 
-      use Name_Table;
       C : Character;
       subtype Id_Subtype is String (1 .. Str'Length);
       Id : Id_Subtype renames Str;

@@ -402,7 +402,6 @@ package body Std_Package is
       Set_Design_File_Filename (Std_Standard_File, Std_Filename);
 
       declare
-         use Str_Table;
          Std_Time_Stamp : constant Time_Stamp_String :=
            "20020601000000.000";
          Id : Time_Stamp_Id;
