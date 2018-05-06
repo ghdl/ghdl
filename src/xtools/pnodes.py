@@ -403,6 +403,9 @@ def read_nodes(filename, kinds, kinds_ranges, fields, funcs):
                     raise ParseError(lr, 'unknown node')
                 fmt = m.group(2)
                 names.append((name, fmt))
+                if name in nodes:
+                    raise ParseError(
+                        lr, 'node {} already described'.format(name));
                 # There might be several nodes described at once.
                 l = lr.get()
                 m = pat_decl.match(l)
