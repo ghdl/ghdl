@@ -189,8 +189,8 @@ def read_kinds(filename):
             raise ParseError(lr, 'Unknow line within kind declaration')
 
     # Check subtypes
-    pat_subtype = re.compile('   subtype ' + prefix_range_name
-                             + r'(\w+) is ' + type_name + ' range\n')
+    pat_subtype = re.compile('   subtype ' + r'(\w+) is '
+                              + type_name + ' range\n')
     pat_first = re.compile('     ' + prefix_name + r'(\w+) ..\n')
     pat_last = re.compile('     ' + prefix_name + r'(\w+);\n')
     pat_middle = re.compile('   --' + prefix_name + r'(\w+)\n')
@@ -205,6 +205,9 @@ def read_kinds(filename):
         if m:
             # Check first bound
             name = m.group(1)
+            if not name.startswith(prefix_range_name):
+                raise ParseError(lr, 'incorrect prefix for subtype')
+            name = name[len(prefix_range_name):]
             l = lr.get()
             mf = pat_first.match(l)
             if not mf:
@@ -220,7 +223,7 @@ def read_kinds(filename):
                     # Check element in the middle
                     if kinds.index(ml.group(1)) != idx + 1:
                         raise ParseError(
-                            lr, "missing " + kinds[idx] + " in subtype")
+                            lr, "missing " + kinds[idx + 1] + " in subtype")
                     has_middle = True
                     idx = idx + 1
                 else:
@@ -862,6 +865,9 @@ def main():
     parser.add_argument('--kind-prefix', dest='kind_prefix',
                         default='Iir_Kind_',
                         help='prefix for kind literals')
+    parser.add_argument('--kind-range-prefix', dest='kind_range_prefix',
+                        default='Iir_Kinds_',
+                        help='prefix for kind subtype (range)')
     parser.add_argument('--node-type', dest='node_type',
                         default='Iir',
                         help='name of the node type')
@@ -875,10 +881,11 @@ def main():
     global formats, fields, nodes, kinds, kinds_ranges, funcs
 
     global type_name, prefix_name, template_file, node_type, meta_base_file
-    global flag_keep_order
+    global prefix_range_name, flag_keep_order
 
     type_name = args.kind_type
     prefix_name = args.kind_prefix
+    prefix_range_name = args.kind_range_prefix
     template_file = args.template_file
     node_type = args.node_type
     meta_base_file = args.meta_basename
