@@ -205,7 +205,7 @@ grt-disp-config:
 
 grt/grt-files: grt/run-bind.adb
 	sed -e "1,/-- *BEGIN/d" -e "/-- *END/,\$$d" \
-	  -e "s/   --   //" < $< > $@
+	  -e "s/   --   //" < $< | tr -d '\r' > $@
 
 # Remove local files (they are now in the libgrt library).
 # Also, remove the -shared option, in order not to build a shared library
