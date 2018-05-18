@@ -9,11 +9,11 @@ In this chapter, you will learn how to use `GHDL` by working on a few examples.
 The `'Hello world'` program
 ===========================
 
-To illustrate the large purpose of `VHDL`, here is a commented `'Hello world'` program which saved in a file named :file:`hello.vhdl`:
+To illustrate the general purpose of `VHDL`, here is a commented `'Hello world'` program which is saved in a file named :file:`hello.vhdl`:
 
 .. code-block:: VHDL
 
-   --  Hello world program.
+   --  Hello world program
    use std.textio.all; -- Imports the standard textio package.
 
    --  Defines a design entity, without any ports.
@@ -48,7 +48,7 @@ To illustrate the large purpose of `VHDL`, here is a commented `'Hello world'` p
    If a GCC/LLVM variant of `GHDL` is used:
 
    * `Analysis` generates a file, :file:`hello.o`, which is the object file corresponding to your `VHDL` program.  This is not created with mcode.
-   * The elaboration step is compulsory after the analysis and prior to launching the simulation; This wil generate an executable binary named :file:`hello_world`.
+   * The elaboration step is mandatory after running the analysis and prior to launching the simulation. This wil generate an executable binary named :file:`hello_world`.
    * As a result, :option:`-r` is just a passthrough to the binary generated in the `elaboration`. Therefore, the executable can be run directly, ``./hello_world``. See :option:`-r` for more informartion.
 
 .. HINT:: :option:`-e` can be bypassed with mcode, since :option:`-r` actually elaborates the design and saves it on memory before running the simulation. But you can still use it to check for some elaboration problems.
@@ -58,38 +58,38 @@ The `heartbeat` program
 
 .. code-block:: VHDL
 
-  entity hello_world is
-    port ( clk: out std_logic; )
-  end hearbeat;
+   entity hello_world is
+      port ( clk: out std_logic; )
+   end hearbeat;
 
-  architecture behaviour of hello_world is
-  begin
-    -- Clock process definition
-    clk_process: process
-    begin
-      clk <= '0';
-      wait for clk_period/2;
-      clk <= '1';
-      wait for clk_period/2;
-    end process;
-  end behaviour;
+   architecture behaviour of hello_world is
+   begin
+      -- Clock process definition
+      clk_process: process
+      begin
+         clk <= '0';
+         wait for clk_period/2;
+         clk <= '1';
+         wait for clk_period/2;
+      end process;
+   end behaviour;
 
 A full adder
 ============
 
-VHDL is generally used for hardware design.  This example starts with a `full adder <https://en.wikipedia.org/wiki/Adder_(electronics)#Full_adder>`_ described in a file named :file:`adder.vhdl`:
+VHDL is generally used for hardware design. This example starts with a `full adder <https://en.wikipedia.org/wiki/Adder_(electronics)#Full_adder>`_ described in a file named :file:`adder.vhdl`:
 
 .. code-block:: VHDL
 
    entity adder is
-     -- `i0`, `i1` and the carry-in `ci` are inputs of the adder.
-     -- `s` is the sum output, `co` is the carry-out.
-     port (i0, i1 : in bit; ci : in bit; s : out bit; co : out bit);
+      -- `i0`, `i1`, and the carry-in `ci` are inputs of the adder.
+      -- `s` is the sum output, `co` is the carry-out.
+      port (i0, i1 : in bit; ci : in bit; s : out bit; co : out bit);
    end adder;
 
    architecture rtl of adder is
    begin
-      --  This full-adder architecture contains two concurrent assignment.
+      --  This full-adder architecture contains two concurrent assignments.
       --  Compute the sum.
       s <= i0 xor i1 xor ci;
       --  Compute the carry.
@@ -107,7 +107,7 @@ You can analyze this design file, ``ghdl -a adder.vhdl``, and try to execute the
    architecture behav of adder_tb is
       --  Declaration of the component that will be instantiated.
       component adder
-        port (i0, i1 : in bit; ci : in bit; s : out bit; co : out bit);
+         port (i0, i1 : in bit; ci : in bit; s : out bit; co : out bit);
       end component;
 
       --  Specifies which entity is bound with the component.
@@ -129,14 +129,14 @@ You can analyze this design file, ``ghdl -a adder.vhdl``, and try to execute the
          --  The patterns to apply.
          type pattern_array is array (natural range <>) of pattern_type;
          constant patterns : pattern_array :=
-           (('0', '0', '0', '0', '0'),
-            ('0', '0', '1', '1', '0'),
-            ('0', '1', '0', '1', '0'),
-            ('0', '1', '1', '0', '1'),
-            ('1', '0', '0', '1', '0'),
-            ('1', '0', '1', '0', '1'),
-            ('1', '1', '0', '0', '1'),
-            ('1', '1', '1', '1', '1'));
+            (('0', '0', '0', '0', '0'),
+             ('0', '0', '1', '1', '0'),
+             ('0', '1', '0', '1', '0'),
+             ('0', '1', '1', '0', '1'),
+             ('1', '0', '0', '1', '0'),
+             ('1', '0', '1', '0', '1'),
+             ('1', '1', '0', '0', '1'),
+             ('1', '1', '1', '1', '1'));
       begin
          --  Check each pattern.
          for i in patterns'range loop
@@ -190,7 +190,7 @@ Unless you are only studying VHDL, you will work with larger designs than the on
 
 * Then, we will run the ``dlx_test_behaviour`` design.  We need to analyze all the design units for the design hierarchy, in the correct order. GHDL provides an easy way to do this, by importing the sources, ``ghdl -i --workdir=work *.vhdl``.
 
-* GHDL knows all the design units of the DLX, but no one have been analyzed. Run the make option, ``ghdl -m --workdir=work dlx_test_behaviour``, which analyzes and elaborates a design. This creates many files in the :file:`work/` directory, and (GCC/LLVM only) the :file:`dlx_test_behaviour` executable in the current directory.
+* GHDL knows all the design units of the DLX, but none of them has been analyzed. Run the make option, ``ghdl -m --workdir=work dlx_test_behaviour``, which analyzes and elaborates a design. This creates many files in the :file:`work/` directory, and (GCC/LLVM only) the :file:`dlx_test_behaviour` executable in the current directory.
 
 .. HINT:: The simulation needs to have a DLX program contained in the file :file:`dlx.out`. This memory image will be loaded in the DLX memory. Just take one sample: ``cp test_loop.out dlx.out``.
 
@@ -201,7 +201,7 @@ Unless you are only studying VHDL, you will work with larger designs than the on
      dlx-behaviour.vhdl:395:11:(assertion note): TRAP instruction
       encountered, execution halted
 
-* Last, since the clock is still running, you have to manually stop the program with the :kbd:`C-c` key sequence.  This behavior prevents you from running the test bench in batch mode. However, you may force the simulator to stop when an assertion above or equal a certain severity level occurs. To do so, call run with this option instead: ``ghdl -r --workdir=work dlx_test_behaviour --assert-level=note```. With this option, the program stops just after the previous message:
+* Lastly, since the clock is still running, you have to manually stop the program with the :kbd:`C-c` key sequence.  This behavior prevents you from running the test bench in batch mode. However, you may force the simulator to stop when an assertion above or equal a certain severity level occurs. To do so, call run with this option instead: ``ghdl -r --workdir=work dlx_test_behaviour --assert-level=note```. With this option, the program stops just after the previous message:
 
   .. code-block:: shell
 
@@ -212,7 +212,7 @@ Unless you are only studying VHDL, you will work with larger designs than the on
 .. TIP:: If you want to make room on your hard drive, you can either:
 
    * Clean the design library with the GHDL command ``ghdl --clean --workdir=work``. This removes the executable and all the object files. If you want to rebuild the design at this point, just do the make command as shown above.
-   * Remove the design library with the GHDL command ``ghdl --remove --workdir=work``. This removes the executable, all the object files and the library file. If you want to rebuild the design, you have to import the sources again, and to make the design.
+   * Remove the design library with the GHDL command ``ghdl --remove --workdir=work``. This removes the executable, all the object files and the library file. If you want to rebuild the design, you have to import the sources again and make the design.
    * Remove the :file:`work/` directory: ``rm -rf work``. Only the executable is kept. If you want to rebuild the design, create the :file:`work/` directory, import the sources, and make the design.
 
-.. WARNING:: Sometimes, a design does not fully follow the VHDL standards. For example it uses the badly engineered ``std_logic_unsigned`` package. GHDL supports this VHDL dialect through some options: ``--ieee=synopsys -fexplicit``. See section ':ref:`IEEE_library_pitfalls`', for more details.
+.. WARNING:: Sometimes, a design does not fully follow the VHDL standards. For example it might use the badly engineered ``std_logic_unsigned`` package. GHDL supports this VHDL dialect through some options: ``--ieee=synopsys -fexplicit``. See section ':ref:`IEEE_library_pitfalls`', for more details.

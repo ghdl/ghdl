@@ -51,14 +51,14 @@ Here is a short comparison, so that you can choose the one you want to use:
    be replaced with direct execution of the binary. See section :ref:`USING:QuickStart`.
 
 After making your choice, you can jump to the corresponding section.
-However, we suggest you to read :ref:`BUILD:dir_structure` before, so that you
-know where the content is placed and which temporal files are expected to be
+However, we suggest you to read :ref:`BUILD:dir_structure` first, so that you
+know where the content will be placed and which files are expected to be
 created.
 
 .. HINT::
    Since GHDL is written in `Ada`, independently of the code generator you use,
    the `GNU Ada compiler`, `GNAT GPL`, is required, 2014 (or later) for ``x86``
-   (32 or 64 bits). `GNAT GPL` can be downloaded anonymously from `libre.adacore.com <http://libre.adacore.com/tools/gnat-gpl-edition/>`_.
+   (32 or 64 bit). `GNAT GPL` can be downloaded anonymously from `libre.adacore.com <http://libre.adacore.com/tools/gnat-gpl-edition/>`_.
    Then, untar and run the doinstall script. Alternatively, most GNU/Linux
    provide a package named ``gcc-ada`` or ``gcc-gnat``.
 

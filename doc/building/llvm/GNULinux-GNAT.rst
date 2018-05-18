@@ -3,7 +3,7 @@
 LLVM Backend on GNU/Linux with GCC/GNAT
 #######################################
 
-.. HINT:: You need to install LLVM (usually depends on ``libedit``, see :ghdlsharp:`29`). The supported versions are 3.5 till 5.0, but debugging is only supported with LLVM 3.5.
+.. HINT:: You need to install LLVM (usually depends on ``libedit``, see :ghdlsharp:`29`). The supported versions are 3.5 til 5.0, but debugging is only supported with LLVM 3.5.
 
 * First configure GHDL with the proper arg ``./configure --with-llvm-config``. If ``llvm-config`` is not in your path, you can specify it: ``./configure --with-llvm-config=LLVM_INSTALL/bin/llvm-config``.
 

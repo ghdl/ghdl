@@ -12,9 +12,9 @@ We try to follow the 'GNU Coding Standards' when possible: comments before
 declarations, two spaces at end of sentences, finish sentences with a dot.
 But: 3 spaces for indentation.
 
-No trailing spaces, not TAB (HT).
+No trailing spaces, no TAB (HT).
 
-Subprograms must have a comment before to describe it, like:
+Subprograms must have a comment before to describe them, like:
 
 .. code-block:: Ada
 	 
@@ -74,9 +74,9 @@ declaration).  Don't repeat the comment before the subprogram body.
            Loc : Iir)
           return O_Enode
   
-  7) If not possible, ask yourself what is wrong!  Shorten a name.
+  7. If not possible, ask yourself what is wrong!  Shorten a name.
 
-* Rule for the 'is': one a new line only if the declarative part is not empty:
+* Rule for the 'is': on a new line only if the declarative part is not empty:
 	
      .. code-block:: Ada
   
@@ -92,7 +92,7 @@ declaration).  Don't repeat the comment before the subprogram body.
         function Translate_Static_Range_Dir (Expr : Iir) return O_Cnode is
         begin
 
-  If the parametere line is too long with the 'is', put in on a separate line:
+  If the parameter line is too long with the 'is', put in on a separate line:
 	
      .. code-block:: Ada
   

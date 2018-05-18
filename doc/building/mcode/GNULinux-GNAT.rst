@@ -3,11 +3,11 @@
 mcode Backend on GNU/Linux with GCC/GNAT
 ########################################
 
-On Linux, GHDL is configured by ``configure`` and build by ``make``.
+On Linux, GHDL is configured by ``configure`` and built by ``make``.
 
 * First, GHDL needs to be configured. It is common to specify a ``PREFIX``
   (installation directory like ``/usr/local`` or ``/opt/ghdl``). Without any
-  other option, ``configure`` select `mcode` as backend.
+  other option, ``configure`` selects `mcode` as the backend.
 
 * Next, ``make`` starts the compilation process.
 

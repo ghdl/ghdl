@@ -15,7 +15,7 @@ standard method in VHDL to obtain the arguments or to set the exit
 status.
 
 In GHDL, it is impossible to pass parameters to your design.  A later version
-could do it through the generics interfaces of the top entity.
+could do it through the generic interfaces of the top entity.
 
 However, the GHDL runtime behaviour can be modified with some options; for
 example, it is possible to stop simulation after a certain time.
@@ -25,7 +25,7 @@ simulation completes, or ``EXIT_FAILURE`` (1) in case of error
 (assertion failure, overflow or any constraint error).
 
 Here is the list of the most useful options.  Some debugging options are
-also available, but not described here.  The :option:`--help` options lists
+also available, but not described here.  The :option:`--help` option lists
 all options available, including the debugging one.
 
 .. option:: --assert-level<=LEVEL>
@@ -43,17 +43,17 @@ all options available, including the debugging one.
   stop simulation, but the assertion violation at the ``note`` severity
   level would only display a message.
 
-  Option :option:`--assert-level=none` prevents any assertion violation to stop
+  Option :option:`--assert-level=none` prevents any assertion violation from stopping
   simulation.
 
 .. option:: --ieee-asserts<=POLICY>
 
   Select how the assertions from ``ieee`` units are
   handled. `POLICY` can be ``enable`` (the default),
-  ``disable`` which disables all assertion from ``ieee`` packages
-  and ``disable-at-0`` which disables only at start of simulation.
+  ``disable`` which disables all assertions from ``ieee`` packages
+  and ``disable-at-0`` which disables only at the start of simulation.
 
-  This option can be useful to avoid assertion message from
+  This option can be useful to avoid assertion messages from
   ``ieee.numeric_std`` (and other ``ieee`` packages).
 
 .. option:: --stop-time<=TIME>
@@ -98,17 +98,17 @@ all options available, including the debugging one.
   If the option contains a type of delay, that is ``min=``,
   ``typ=`` or ``max=``, the annotator use respectively minimum,
   typical or maximum values.  If the option does not contain a type of delay,
-  the annotator use the typical delay.
+  the annotator uses the typical delay.
 
   See section ':ref:`Backannotation`', for more details.
 
 .. option:: --vpi<=FILENAME>
 
-Load VPI module.
+  Load VPI module.
 
 .. option:: --vpi-trace<=FILE>
 
-Trace vpi calls to FILE.
+  Trace vpi calls to FILE.
 
 .. option:: --help
 
@@ -134,21 +134,21 @@ Export waveforms
      # Path format for signals in entities :
      /top/sub/clk
 
-     # Dumps every signals named reset in first level sub entities of top
+     # Dump every signal named reset in first level sub entities of top
      /top/*/reset
 
-     # Dumps every signals named reset in recursive sub entities of top
+     # Dump every signal named reset in recursive sub entities of top
      /top/**/reset
 
-     # Dump every signals of sub2 which could be anywhere in design except on
-     # top level
+     # Dump every signal of sub2 which could be anywhere in the design except
+     # on the top level
      /**/sub2/*
 
-     # Dump every signals of sub3 which must be a first level sub entity of the
+     # Dump every signal of sub3 which must be a first level sub entity of the
      # top level
      /*/sub3/*
 
-     # Dump every signals of the first level sub entities of sub3 (but not
+     # Dump every signal of the first level sub entities of sub3 (but not
      # those of sub3)
      /**/sub3/*/*
 
@@ -209,11 +209,11 @@ Export waveforms
 
 .. option:: --vcd-nodate
 
-  Do not write date in VCD file
+  Do not write date in the VCD file.
 
 .. option:: --fst<=FILENAME>
 
-  Write the waveforms into a `fst`, that can be displayed by
+  Write the waveforms into an `fst` file that can be displayed by
   `gtkwave`. The `fst` files are much smaller than VCD or
   `GHW` files, but it handles only the same signals as the VCD format.
 
@@ -239,17 +239,13 @@ Export hierarchy and references
   This may be useful to understand the structure of a complex
   design. `KIND` is optional, but if set must be one of:
 
-  * none
-    Do not display hierarchy.  Same as if the option was not present.
+  * ``none`` Do not display hierarchy.  Same as if the option was not present.
 
-  * inst
-    Display entities, architectures, instances, blocks and generates statements.
+  * ``inst`` Display entities, architectures, instances, blocks and generates statements.
 
-  * proc
-    Like ``inst`` but also display processes.
+  * ``proc`` Like ``inst`` but also display processes.
 
-  * port
-    Like ``proc`` but display ports and signals too.
+  * ``port`` Like ``proc`` but display ports and signals too.
     If `KIND` is not specified, the hierarchy is displayed with the
     ``port`` mode.
 
@@ -259,21 +255,21 @@ Export hierarchy and references
 
 .. option:: --xref-html <[options] file...>
 
-To easily navigate through your sources, you may generate cross-references. This command generates an html file for each ``file`` given in the command line, with syntax highlighting and full cross-reference: every identifier is a link to its declaration. Besides, an index of the files is created too.
+  To easily navigate through your sources, you may generate cross-references. This command generates an html file for each ``file`` given in the command line, with syntax highlighting and full cross-reference: every identifier is a link to its declaration. An index of the files is created too.
 
-The set of ``file`` are analyzed, and then, if the analysis is successful, html files are generated in the directory specified by the :option:`-o <dir>` option, or :file:`html/` directory by default.
+  The set of ``file`` are analyzed, and then, if the analysis is successful, html files are generated in the directory specified by the :option:`-o <dir>` option, or :file:`html/` directory by default.
 
-* If the option :option:`--format=html2` is specified, then the generated html files follow the HTML 2.0 standard, and colours are specified with `<FONT>` tags. However, colours are hard-coded.
+  * If the option :option:`--format=html2` is specified, then the generated html files follow the HTML 2.0 standard, and colours are specified with `<FONT>` tags. However, colours are hard-coded.
 
-* If the option :option:`--format=css` is specified, then the generated html files follow the HTML 4.0 standard, and use the CSS-1 file :file:`ghdl.css` to specify colours. This file is generated only if it does not already exist (it is never overwritten) and can be customized by the user to change colours or appearance. Refer to a generated file and its comments for more information.
+  * If the option :option:`--format=css` is specified, then the generated html files follow the HTML 4.0 standard, and use the CSS-1 file :file:`ghdl.css` to specify colours. This file is generated only if it does not already exist (it is never overwritten) and can be customized by the user to change colours or appearance. Refer to a generated file and its comments for more information.
 
 .. option:: --psl-report<=FILENAME>
 
-Write a report for PSL at the end of simulation. For each PSL cover and assert statements, the name, source location and whether it passed or failed is reported. The file is written using the JSON format, but still being human readable.
+  Write a report for PSL at the end of simulation. For each PSL cover and assert statements, the name, source location and whether it passed or failed is reported. The file is written using the JSON format, but is still human readable.
 
 .. option:: --file-to-xml
 
-Outputs an XML representation of the decorated syntax tree for the input file and its dependencies. It can be used for VHDL tooling using semantic information, like style checkers, documentation extraction, complexity estimation...
+  Outputs an XML representation of the decorated syntax tree for the input file and its dependencies. It can be used for VHDL tooling using semantic information, like style checkers, documentation extraction, complexity estimation, etc.
 
 .. WARNING::
    * The AST slightly changes from time to time (particularly when new nodes are added for new language features), so be liberal in what is allowed by your tool. Also, the XML can be quite large so consider it only during prototyping.
@@ -287,51 +283,51 @@ Debugging
 
 .. option:: --trace-signals
 
-Display signals after each cycle.
+  Display signals after each cycle.
 
 .. option:: --trace-processes
 
-Display process name before each cycle.
+  Display process name before each cycle.
 
 .. option:: --stats
 
-Display run-time statistics.
+  Display run-time statistics.
 
 .. option:: --disp-order
 
-Display signals order.
+  Display signals order.
 
 .. option:: --disp-sources
 
-Display sources while displaying signals.
+  Display sources while displaying signals.
 
 .. option:: --disp-sig-types
 
-Display signal types.
+  Display signal types.
 
 .. option:: --disp-signals-map
 
-Display map bw declared signals and internal signals.
+  Display map bw declared signals and internal signals.
 
 .. option:: --disp-signals-table
 
-Display internal signals.
+  Display internal signals.
 
 .. option:: --checks
 
-Do internal checks after each process run.
+  Do internal checks after each process run.
 
 .. option:: --activity<=LEVEL>
 
-Watch activity of LEVEL signals: LEVEL is all, min (default) or none (unsafe).
+  Watch activity of LEVEL signals: LEVEL is ``all``, ``min`` (default) or ``none`` (unsafe).
 
 .. option:: --dump-rti
 
-Dump Run Time Information (RTI).
+  Dump Run Time Information (RTI).
 
 .. option:: --bootstrap
 
-Allow ``--work=std``
+  Allow ``--work=std``
 
 GNU Debugger (GDB)
 ------------------
@@ -342,7 +338,7 @@ GNU Debugger (GDB)
 
 GDB is a general purpose debugger for programs compiled by GCC. Currently, there is no VHDL support for GDB. It may be difficult to inspect variables or signals in GDB. However, it is still able to display the stack frame in case of error or to set a breakpoint at a specified line.
 
-GDB can be useful to precisely catch a runtime error, such as indexing an array beyond its bounds. All error check subprograms call the ``__ghdl_fatal`` procedure. Therefore, to catch runtime error, set a breakpoint like this::
+GDB can be useful to catch a runtime error, such as indexing an array beyond its bounds. All error check subprograms call the ``__ghdl_fatal`` procedure. Therefore, to a catch runtime error, set a breakpoint like this::
 
   (gdb) break __ghdl_fatal
 

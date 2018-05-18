@@ -4,7 +4,7 @@
 Implementation of VHDL
 ***************************
 
-This chapter describes several implementation defined aspect of VHDL in GHDL.
+This chapter describes several implementation defined aspects of VHDL in GHDL.
 
 .. _VHDL_standards:
 
@@ -33,7 +33,7 @@ VHDL standards
 
 .. index:: v08
 
-This is very unfortunate, but there are many versions of the VHDL
+Unfortunately, there are many versions of the VHDL
 language, and they aren't backward compatible.
 
 The VHDL language was first standardized in 1987 by IEEE as IEEE 1076-1987, and
@@ -64,7 +64,7 @@ standard is not fully backward compatible with VHDL-93, since the type of a
 shared variable must now be a protected type (there was no such restriction
 before).
 
-Minors corrections were added by the 2002 revision of the VHDL standard.  This
+Minor corrections were added by the 2002 revision of the VHDL standard.  This
 revision is not fully backward compatible with VHDL-00 since, for example,
 the value of the `'instance_name` attribute has slightly changed.
 
@@ -96,12 +96,12 @@ table below:
   Select VHDL-2000 standard, which adds protected types.
 
 02
-  Select VHDL-2002 standard
+  Select VHDL-2002 standard.
 
 08
   Select VHDL-2008 standard (partially implemented).
 
-The 93, 93c, 00 and 02 standards are considered as compatible: you can
+The 93, 93c, 00 and 02 standards are considered compatible: you can
 elaborate a design mixing these standards.  However, 87, 93 and 08 are
 not compatible.
 
@@ -121,7 +121,7 @@ with the `psl` keyword.  The keyword must be followed (on the
 same line) by a PSL keyword such as `assert` or `default`.
 To continue a PSL statement on the next line, just start a new comment.
 
-A PSL statement is considered as a process.  So it is not allowed within
+A PSL statement is considered a process, so it's not allowed within
 a process.
 
 All PSL assertions must be clocked (GHDL doesn't support unclocked assertion).
@@ -135,7 +135,7 @@ You can either use a default clock like this:
     -- psl assert always
     --   a -> eventually! b;
 
-or use a clocked expression (note the use of parenthesis):
+or use a clocked expression (note the use of parentheses):
 
 .. code-block:: VHDL
 
@@ -150,7 +150,7 @@ Source representation
 =====================
 
 According to the VHDL standard, design units (i.e. entities,
-architectures, packages, package bodies and configurations) may be
+architectures, packages, package bodies, and configurations) may be
 independently analyzed.
 
 Several design units may be grouped into a design file.
@@ -164,9 +164,9 @@ GHDL does not impose any restriction on the name of a design file
 (except that the filename may not contain any control character or
 spaces).
 
-GHDL do not keep a binary representation of the design units analyzed like
+GHDL does not keep a binary representation of the design units analyzed like
 other VHDL analyzers.  The sources of the design units are re-read when
-needed (for example, an entity is re-read when one of its architecture is
+needed (for example, an entity is re-read when one of its architectures is
 analyzed).  Therefore, if you delete or modify a source file of a unit
 analyzed, GHDL will refuse to use it.
 
@@ -199,7 +199,7 @@ There are some restrictions on the entity being at the apex of a design
 hierarchy:
 
 * The generic must have a default value, and the value of a generic is its
-  default value;
+  default value.
 * The ports type must be constrained.
 
 Using vendor libraries
@@ -230,7 +230,7 @@ Interfacing to other languages
 Interfacing with foreign languages is possible only on GNU/Linux systems.
 
 You can define a subprogram in a foreign language (such as `C` or
-`Ada`) and import it in a VHDL design.
+`Ada`) and import it into a VHDL design.
 
 Foreign declarations
 --------------------
@@ -264,7 +264,7 @@ subprogram and must be after it.  This is a general rule for specifications.
 The value of the specification must be a locally static string.
 
 Even when a subprogram is foreign, its body must be present.  However, since
-it won't be called, you can made it empty or simply but an assertion.
+it won't be called, you can make it empty or simply put an assertion.
 
 The value of the attribute must start with ``VHPIDIRECT`` (an
 upper-case keyword followed by one or more blanks).  The linkage name of the
@@ -277,24 +277,24 @@ Restrictions on foreign declarations
 
 Any subprogram can be imported.  GHDL puts no restrictions on foreign
 subprograms.  However, the representation of a type or of an interface in a
-foreign language may be obscure.  Most of non-composite types are easily imported:
+foreign language may be obscure.  Most non-composite types are easily imported:
 
 
 *integer types*
-  They are represented on a 32 bits word.  This generally corresponds to
+  They are represented by a 32 bit word.  This generally corresponds to
   `int` for `C` or `Integer` for `Ada`.
 
 *physical types*
-  They are represented on a 64 bits word.  This generally corresponds to the
+  They are represented by a 64 bit word.  This generally corresponds to the
   `long long` for `C` or `Long_Long_Integer` for `Ada`.
 
 *floating point types*
-  They are represented on a 64 bits floating point word.  This generally
+  They are represented by a 64 bit floating point word.  This generally
   corresponds to `double` for `C` or `Long_Float` for `Ada`.
 
 *enumeration types*
-  They are represented on 8 bits or 32 bits word, if the number of literals is
-  greater than 256.  There is no corresponding C types, since arguments are
+  They are represented by an 8 bit word, or, if the number of literals is
+  greater than 256, by a 32 bit word.  There is no corresponding C type, since arguments are
   not promoted.
 
 Non-composite types are passed by value.  For the `in` mode, this
@@ -310,12 +310,12 @@ to subprograms.
 Arrays with static bounds are represented like a `C` array, whose
 length is the number of elements, and are passed by reference to subprograms.
 
-Unconstrained array are represented by a fat pointer.  Do not use unconstrained
+Unconstrained arrays are represented by a fat pointer.  Do not use unconstrained
 arrays in foreign subprograms.
 
-Accesses to an unconstrained array is a fat pointer.  Other accesses correspond to an address and are passed to a subprogram like other non-composite types.
+Accesses to an unconstrained array are fat pointers.  Other accesses correspond to an address and are passed to a subprogram like other non-composite types.
 
-Files are represented by a 32 bits word, which corresponds to an index
+Files are represented by a 32 bit word, which corresponds to an index
 in a table.
 
 .. _Linking_with_foreign_object_files:
@@ -324,7 +324,7 @@ Linking with foreign object files
 ---------------------------------
 
 You may add additional files or options during the link using the
-*-Wl,* of `GHDL`, as described in :ref:`Elaboration_command`.
+*-Wl,* of `GHDL`, as described in ':ref:`Elaboration:command`'.
 For example::
 
   ghdl -e -Wl,-lm math_tb
@@ -386,7 +386,7 @@ design apex is ``design``.
 
   $ ghdl --bind design
 
-Finally, compile, bind your `Ada` program at link it with your `VHDL`
+Finally, compile, bind your `Ada` program and link it with your `VHDL`
 design::
 
   $ gnatmake my_prog -largs `ghdl --list-link design`
@@ -396,9 +396,9 @@ Using GRT from Ada
 ------------------
 
 .. warning::
-  This topic is only for advanced users knowing how to use `Ada`
-  and `GNAT`.  This is provided only for reference, I have tested
-  this once before releasing `GHDL` 0.19 but this is not checked at
+  This topic is only for advanced users who know how to use `Ada`
+  and `GNAT`.  This is provided only for reference; I have tested
+  this once before releasing `GHDL` 0.19, but this is not checked at
   each release.
 
 The simulator kernel of `GHDL` named :dfn:`GRT` is written in
@@ -434,7 +434,7 @@ tested this step.
 
 You are now ready to use it.
 
-For example, here is an example, :file:`test_grt.adb` which displays the top
+Here is an example, :file:`test_grt.adb` which displays the top
 level design name.
 
 .. code-block:: Ada

@@ -11,7 +11,7 @@ Implementation of VITAL
 .. index:: 1076.4
 
 This chapter describes how VITAL is implemented in GHDL.  Support of VITAL is
-really in a preliminary stage.  Do not expect too much of it as now.
+really in a preliminary stage.  Do not expect too much of it as of right now.
 
 .. _vital_packages:
 
@@ -28,7 +28,7 @@ requirements of VITAL: VITAL 1995 requires the models follow the VHDL
 1987 standard, while VITAL 2000 requires the models follow VHDL 1993.
 
 The VITAL 2000 packages were slightly modified so that they conform to
-the VHDL 1993 standard (a few functions are made pure and a few one
+the VHDL 1993 standard (a few functions are made pure and a few 
 impure).
 
 .. _vhdl_restrictions_for_vital:
@@ -65,8 +65,8 @@ Backannotation
 information provided by an external files.
 
 The external files must be SDF (Standard Delay Format) files.  GHDL
-supports a tiny subset of SDF version 2.1, other version number can be
-used, provided no features added by the next version are used.
+supports a tiny subset of SDF version 2.1. Other version numbers can be
+used, provided no features added by later versions are used.
 
 Hierarchical instance names are not supported. However you can use a list of
 instances.  If there is no instance, the top entity will be annotated and
@@ -86,8 +86,8 @@ release.
 Negative constraint calculation
 ===============================
 
-Negative constraint delay adjustment are necessary to handle negative
-constraint such as a negative setup time.  This step is defined in the VITAL
+Negative constraint delay adjustments are necessary to handle negative
+constraints such as a negative setup time.  This step is defined in the VITAL
 standard and should occur after backannotation.
 
 GHDL does not do negative constraint calculation.  It fails to handle models
