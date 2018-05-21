@@ -375,7 +375,7 @@ install.libghdlsynth.static: libghdlsynth.a install.libghdlsynth.include
 	$(INSTALL_DATA) -p ghdlsynth.link $(DESTDIR)$(libdir)/
 
 install.libghdlsynth.shared: libghdlsynth$(SOEXT) install.libghdlsynth.include
-	$(INSTALL_DATA) -p libghdlsynth$(SOEXT) $(DESTDIR)$(libdir)/
+	$(INSTALL_PROGRAM) -p libghdlsynth$(SOEXT) $(DESTDIR)$(libdir)/
 
 ################ ghwdump #################################################
 
@@ -411,13 +411,13 @@ libghdlvpi$(SOEXT): vpi_thunk.o
 all.vpi: libghdlvpi$(SOEXT)
 
 install.vpi: all.vpi install.dirs
-	$(INSTALL_DATA) -p libghdlvpi$(SOEXT) $(DESTDIR)$(libdir)/
+	$(INSTALL_PROGRAM) -p libghdlvpi$(SOEXT) $(DESTDIR)$(libdir)/
 	$(INSTALL_DATA) -p $(GRTSRCDIR)/vpi_user.h $(DESTDIR)$(incdir)/
 
 install.vpi.local: all.vpi
 	$(MKDIR) -p include lib
 	$(INSTALL_DATA) -p $(GRTSRCDIR)/vpi_user.h include/
-	$(INSTALL_DATA) -p libghdlvpi$(SOEXT) lib/
+	$(INSTALL_PROGRAM) -p libghdlvpi$(SOEXT) lib/
 
 ################ Libraries ###############################################
 
