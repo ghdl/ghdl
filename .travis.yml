@@ -67,9 +67,10 @@ jobs:
       script: if echo "$TRAVIS_COMMIT_MESSAGE" | grep -F -q "[ci images]"; then ./dist/linux/create.sh; fi;
       deploy:
         - <<: *deploy-docker
-    # A single additional job is described in stage 'test' for the macos build.
+    # Additional jobs are described in stage 'test' for the macos build.
     # The constraints above are used, except explicitly overriden.
-    - stage: test
+    - &osx
+      stage: test
       os: osx
       language: c
       osx_image: xcode7.3
@@ -80,3 +81,7 @@ jobs:
       env: IMAGE=macosx+mcode
       deploy:
         - <<: *deploy-releases
+    - <<: *osx
+      osx_image: xcode8.3
+    - <<: *osx
+      osx_image: xcode9.3
