@@ -441,11 +441,11 @@ endif
 
 install.dirs:
 #	Use -p to create parents and to avoid error if existing.
-	-$(MKDIR) -p $(DESTDIR)$(prefix)
-	-$(MKDIR) -p $(DESTDIR)$(bindir)
-	-$(MKDIR) -p $(DESTDIR)$(libdir)
-	-$(MKDIR) -p $(DESTDIR)$(prefix)/$(libdirsuffix)
-	-$(MKDIR) -p $(DESTDIR)$(incdir)
+	$(MKDIR) -p $(DESTDIR)$(prefix)
+	$(MKDIR) -p $(DESTDIR)$(bindir)
+	$(MKDIR) -p $(DESTDIR)$(libdir)
+	$(MKDIR) -p $(DESTDIR)$(prefix)/$(libdirsuffix)
+	$(MKDIR) -p $(DESTDIR)$(incdir)
 
 install.vhdllib: install.dirs
 #	Libraries (only if not empty)
@@ -458,7 +458,7 @@ install.vhdllib: install.dirs
 	$(INSTALL_DATA) -p \
 	    $(srcdir)/dist/ansi_color.sh $(DESTDIR)$(VHDL_LIB_DIR)/;
 #	Vendors scripts
-	-$(MKDIR) -p $(DESTDIR)$(VHDL_LIB_DIR)/vendors
+	$(MKDIR) -p $(DESTDIR)$(VHDL_LIB_DIR)/vendors
 	$(INSTALL_DATA) -p \
 	    $(LIBSRC_DIR)/vendors/* $(DESTDIR)$(VHDL_LIB_DIR)/vendors/
 	$(INSTALL_PROGRAM) -p \
