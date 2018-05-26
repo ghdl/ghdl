@@ -1108,11 +1108,16 @@ package body Ortho_LLVM is
       Idx : constant ValueRefArray (1 .. 2) :=
         (ConstInt (Int32Type, 0, 0),
          Index.LLVM);
+      Tmp : ValueRef;
    begin
-      return O_Lnode'
-        (Direct => False,
-         LLVM => BuildGEP (Builder, Arr.LLVM, Idx, Idx'Length, Empty_Cstring),
-         Ltype => Arr.Ltype.Arr_El_Type);
+      if Unreach then
+         Tmp := Null_ValueRef;
+      else
+         Tmp := BuildGEP (Builder, Arr.LLVM, Idx, Idx'Length, Empty_Cstring);
+      end if;
+      return O_Lnode'(Direct => False,
+                      LLVM => Tmp,
+                      Ltype => Arr.Ltype.Arr_El_Type);
    end New_Indexed_Element;
 
    ---------------
@@ -2017,10 +2022,14 @@ package body Ortho_LLVM is
       pragma Unreferenced (Res);
    begin
       --  FIXME: check Unreach
-      Label := (Bb_Entry => AppendBasicBlock (Cur_Func, Empty_Cstring),
-                Bb_Exit => AppendBasicBlock (Cur_Func, Empty_Cstring));
-      Res := BuildBr (Builder, Label.Bb_Entry);
-      PositionBuilderAtEnd (Builder, Label.Bb_Entry);
+      if Unreach then
+         Label := (Null_BasicBlockRef, Null_BasicBlockRef);
+      else
+         Label := (Bb_Entry => AppendBasicBlock (Cur_Func, Empty_Cstring),
+                   Bb_Exit => AppendBasicBlock (Cur_Func, Empty_Cstring));
+         Res := BuildBr (Builder, Label.Bb_Entry);
+         PositionBuilderAtEnd (Builder, Label.Bb_Entry);
+      end if;
    end Start_Loop_Stmt;
 
    ----------------------
