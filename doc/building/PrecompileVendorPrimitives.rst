@@ -248,7 +248,7 @@ Selectable Options for the Bash Scripts:
      -n --no-warnings	     Don't show warnings. Report errors only.
      -s --skip-existing    Skip already compiled files (an *.o file exists).
      -S --skip-largefiles  Don't compile large entities like DSP and PCIe primitives.
-     -H --halt-on-error    Stop compiling if an error occured.
+     -H --halt-on-error    Stop compiling if an error occurred.
 
 * `compile-altera.sh`
 

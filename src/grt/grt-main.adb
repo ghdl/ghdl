@@ -194,7 +194,7 @@ package body Grt.Main is
       if Expect_Failure then
          if Status >= 0 then
             Expect_Failure := False;
-            Error ("error expected, but none occured");
+            Error ("error expected, but none occurred");
          end if;
       else
          if Status < 0 then

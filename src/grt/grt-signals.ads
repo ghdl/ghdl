@@ -282,7 +282,7 @@ package Grt.Signals is
       --  If set, the signal is dumped in a GHW file.
       Is_Dumped : Boolean;
 
-      --  Set when an event occured.
+      --  Set when an event occurred.
       --  Only reset by GHW file dumper.
       RO_Event : Boolean;
 

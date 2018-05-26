@@ -79,7 +79,7 @@ Implementing 9-bit wide adder: ARCH=pai, BLOCKING=desc[4,5], SKIPPING=ppn_ks
 Implementing 9-bit wide adder: ARCH=pai, BLOCKING=desc[4,5], SKIPPING=ppn_bk
 Implementing 9-bit wide adder: ARCH=pai, BLOCKING=desc[4,5], SKIPPING=ppn_bk
 
-******************** GHDL Bug occured ****************************
+******************** GHDL Bug occurred ****************************
 Please report this bug on https://github.com/tgingold/ghdl/issues
 GHDL release: GHDL 0.34dev (commit: 2016-01-20;  git branch: paebbels/llvm';  hash: 3a8fd5b) [Dunoon edition]
 Compiled with GNAT Version: GPL 2015 (20150428-49)
