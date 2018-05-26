@@ -37,6 +37,18 @@
    :target: https://github.com/ghdl/ghdl/issues/new
    :alt: Open new issue at GitHub
 
+.. |SHIELD:new-pr| image:: https://img.shields.io/badge/new-pull--request-yellowgreen.svg?style=flat
+   :target: https://github.com/ghdl/ghdl/compare/
+   :alt: Open new Pull Request (PR) at GitHub
+
+.. |SHIELD:bug-report| image:: https://img.shields.io/badge/new-bug--report-yellowgreen.svg?style=flat
+   :target: https://github.com/ghdl/ghdl/issues/new?template=bug_report.md
+   :alt: Open new bug report at GitHub
+
+.. |SHIELD:feature-request| image:: https://img.shields.io/badge/new-feature--request-yellowgreen.svg?style=flat
+   :target: https://github.com/ghdl/ghdl/issues/new?template=feature_request.md
+   :alt: Open new feature request at GitHub
+
 .. |SHIELD:issues-open| image:: https://img.shields.io/github/issues/ghdl/ghdl.svg
    :target: https://github.com/ghdl/ghdl/issues
    :alt: Open issues

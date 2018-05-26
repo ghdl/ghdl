@@ -36,7 +36,7 @@ Reporting bugs
    * If the executable created from your VHDL sources crashes, this may be a bug at runtime or the code itself may be wrong. However, since VHDL has a notion of pointers, an erroneous VHDL program (using invalid pointers for example) may crash.
    * If a compiler message is not clear enough, please tell us. The error messages can be improved, but we have not enough experience with them.
 
-Please, report issues of this kind through |SHIELD:issues-new|, as this allows us to categorize issues into groups and
+Please, report issues of this kind through |SHIELD:bug-report|, as this allows us to categorize issues into groups and
 assign developers to them. You can track the issue’s state and see how it’s getting solved.
 
 .. IMPORTANT::
@@ -65,7 +65,7 @@ assign developers to them. You can track the issue’s state and see how it’s 
 Requesting enhancements
 =======================
 
-|SHIELD:issues-new| |SHIELD:gitter|
+|SHIELD:feature-request| |SHIELD:gitter|
 
 All enhancements and feature requests are welcome. Please `open a new issue <https://github.com/ghdl/ghdl/issues/new>`_ to report any, so you can track the request's status and implementation. Depending on the complexity of the request, you may want to `chat on Gitter <https://gitter.im/ghdl/ghdl1>`_, to polish it before opening an issue.
 
@@ -85,7 +85,7 @@ Fork, modify and pull-request
 =============================
 
 .. TIP::
-   * Before starting any modification, you might want to have a look at |SHIELD:issues-pr| and |SHIELD:issues-pr-closed|, to check which other contributions are being made or have been made. If you observe that the modifications you are about to start might conflict with any other, please |SHIELD:gitter| or open a |SHIELD:issues-new| to coordinate.
+   * Before starting any modification, you might want to have a look at |SHIELD:issues-pr| and |SHIELD:issues-pr-closed|, to check which other contributions are being made or have been made. If you observe that the modifications you are about to start might conflict with any other, please |SHIELD:gitter| or open a |SHIELD:new-pr| to coordinate.
    * See section :ref:`BUILD:dir_structure` to faster find the location of the sources you need to modify, and/or to know where to place new ones.
 
 Contributing source code/documentation via `Git <https://git-scm.com/>`_ is very easy. Although we don't provide direct
