@@ -2021,7 +2021,6 @@ package body Ortho_LLVM is
       Res : ValueRef;
       pragma Unreferenced (Res);
    begin
-      --  FIXME: check Unreach
       if Unreach then
          Label := (Null_BasicBlockRef, Null_BasicBlockRef);
       else
