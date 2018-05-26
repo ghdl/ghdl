@@ -66,7 +66,7 @@ package body Bug is
       New_Line (Standard_Error);
       Put_Line
         (Standard_Error,
-         "******************** GHDL Bug occured ****************************");
+         "******************** GHDL Bug occurred ***************************");
       Put_Line
         (Standard_Error,
          "Please report this bug on https://github.com/ghdl/ghdl/issues");

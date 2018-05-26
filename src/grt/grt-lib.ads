@@ -61,7 +61,7 @@ package Grt.Lib is
    procedure Ghdl_Direction_Check_Failed (Filename : Ghdl_C_String;
                                           Line: Ghdl_I32);
 
-   --  Program error has occured:
+   --  Program error has occurred:
    --  * configuration of an already configured block.
    procedure Ghdl_Program_Error (Filename : Ghdl_C_String;
                                  Line : Ghdl_I32;

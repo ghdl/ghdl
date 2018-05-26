@@ -4773,7 +4773,7 @@ package body Sem_Expr is
          Res := Sem_Expression_Ov (Cond, Null_Iir);
 
          if Res = Null_Iir then
-            --  Error occured.
+            --  Error occurred.
             return Res;
          end if;
 

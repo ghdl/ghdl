@@ -3,7 +3,7 @@
 --	.\1_SecondaryUnit.vhd:19:42: can't match physical literal with type physical type "t_angel"
 --	are_trees_equal: cannot handle IIR_KIND_UNIT_DECLARATION (*std_standard*:1:1)
 --	
---	******************** GHDL Bug occured ****************************
+--	******************** GHDL Bug occurred ****************************
 --	Please report this bug on https://github.com/tgingold/ghdl/issues
 --	GHDL release: GHDL 0.34dev (commit: 2016-01-20;  git branch: paebbels/llvm';  hash: 3a8fd5b) [Dunoon edition]
 --	Compiled with GNAT Version: GPL 2015 (20150428-49)

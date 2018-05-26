@@ -931,8 +931,8 @@ package body Grt.Processes is
 
       --  f) The following actions occur in the indicated order:
       --     2) For each process P, if P is currently sensitive to a signal S
-      --        and if an event has occured on S in this simulation cycle, then
-      --        P resumes.
+      --        and if an event has occurred on S in this simulation cycle,
+      --        then P resumes.
       if Current_Time = Process_First_Timeout then
          --  There are processes to awake.
          Tn := Last_Time;
