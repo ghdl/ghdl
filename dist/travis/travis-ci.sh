@@ -23,12 +23,11 @@ build_img_ghdl() {
 
 set -e
 
-. dist/linux/travis-utils.sh
-. dist/ansi_color.sh
-#disable_color
-
 scriptdir=$(dirname $0)
 
+. "$scriptdir/travis-utils.sh"
+. "$scriptdir/../ansi_color.sh"
+#disable_color
 
 # Display env (to debug)
 
