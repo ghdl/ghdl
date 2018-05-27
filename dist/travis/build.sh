@@ -1,7 +1,9 @@
 #! /bin/bash
 
-. dist/linux/travis-utils.sh
-. dist/ansi_color.sh
+scriptdir=$(dirname $0)
+
+. "$scriptdir/travis-utils.sh"
+. "$scriptdir/../ansi_color.sh"
 disable_color
 
 echo "$0" "$@"
