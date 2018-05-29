@@ -33,6 +33,7 @@ architecture a of ent is
 begin
   process begin
     report "Hello world" severity note;
+    wait;
   end process;
 end;
 
