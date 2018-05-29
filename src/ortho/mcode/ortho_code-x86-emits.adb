@@ -1383,7 +1383,6 @@ package body Ortho_Code.X86.Emits is
 
    procedure Emit_Call (Stmt : O_Enode)
    is
-      use Ortho_Code.Decls;
       Subprg : constant O_Dnode := Get_Call_Subprg (Stmt);
       Sym : constant Symbol := Get_Decl_Symbol (Subprg);
       Mode : constant Mode_Type := Get_Expr_Mode (Stmt);
@@ -3098,7 +3097,6 @@ package body Ortho_Code.X86.Emits is
    procedure Emit_Var_Decl (Decl : O_Dnode)
    is
       use Decls;
-      use Types;
       Sym : Symbol;
    begin
       Sym := Create_Symbol (Get_Decl_Ident (Decl), False);
@@ -3125,7 +3123,6 @@ package body Ortho_Code.X86.Emits is
    procedure Emit_Const_Decl (Decl : O_Dnode)
    is
       use Decls;
-      use Types;
       Sym : Symbol;
    begin
       Set_Current_Section (Sect_Rodata);

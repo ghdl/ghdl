@@ -293,7 +293,6 @@ package body Ortho_Code.X86.Abi is
 
    procedure Disp_Irm_Code (Stmt : O_Enode)
    is
-      use Ortho_Code.Debug.Int32_IO;
       use Ada.Text_IO;
       Reg : O_Reg;
       Kind : OE_Kind;
@@ -640,8 +639,6 @@ package body Ortho_Code.X86.Abi is
 
    procedure Disp_Subprg (Subprg : O_Dnode)
    is
-      use Ada.Text_IO;
-
       Stmt : O_Enode;
    begin
       Disp_Subprg_Decl (Get_Body_Decl (Subprg));
