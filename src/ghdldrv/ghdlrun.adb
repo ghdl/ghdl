@@ -231,9 +231,6 @@ package body Ghdlrun is
 
    procedure Run
    is
-      use Interfaces;
-      --use Ortho_Code.Binary;
-
       function Conv is new Ada.Unchecked_Conversion
         (Source => Address, Target => Elaborate_Acc);
       Err : Boolean;

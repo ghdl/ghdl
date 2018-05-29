@@ -637,7 +637,6 @@ package body Ortho_Code.Decls is
    procedure Disp_Decl (Indent : Natural; Decl : O_Dnode)
    is
       use Ada.Text_IO;
-      use Ortho_Ident;
       use Ortho_Code.Debug.Int32_IO;
 
       procedure Disp_Decl_Type (Decl : O_Dnode)

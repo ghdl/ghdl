@@ -819,7 +819,6 @@ package body Ortho_Code.Dwarf is
 
    procedure Emit_Record_Type (Atype : O_Tnode; Decl : O_Dnode)
    is
-      use Ortho_Code.Types;
       procedure Finish_Gen_Abbrev is
       begin
          Gen_Abbrev_Tuple (DW_AT_Byte_Size, DW_FORM_Udata);
@@ -851,7 +850,6 @@ package body Ortho_Code.Dwarf is
 
    procedure Emit_Union_Type (Atype : O_Tnode; Decl : O_Dnode)
    is
-      use Ortho_Code.Types;
       procedure Finish_Gen_Abbrev is
       begin
          Gen_Abbrev_Tuple (DW_AT_Byte_Size, DW_FORM_Udata);
@@ -958,7 +956,6 @@ package body Ortho_Code.Dwarf is
    procedure Emit_Type (Atype : O_Tnode)
    is
       use Ortho_Code.Types;
-      use Ada.Text_IO;
       Kind : OT_Kind;
       Decl : O_Dnode;
    begin

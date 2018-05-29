@@ -23,7 +23,7 @@ with Ada.Text_IO;
 
 with Binary_File; use Binary_File;
 with Binary_File.Memory;
-with Ortho_Mcode; use Ortho_Mcode;
+with Ortho_Mcode;
 with Ortho_Mcode.Jit;
 with Ortho_Code.Flags; use Ortho_Code.Flags;
 with Ortho_Code.Debug;

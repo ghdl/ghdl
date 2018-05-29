@@ -1160,7 +1160,6 @@ package body Grt.Processes is
 
    function Simulation return Integer
    is
-      use Grt.Options;
       Status : Integer;
    begin
       Status := Simulation_Init;
