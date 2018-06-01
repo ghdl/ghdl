@@ -48,6 +48,8 @@ pragma Restrictions (No_Implicit_Heap_Allocations);
 pragma Restrictions (No_Initialize_Scalars);
 pragma Suppress (Overflow_Check);
 
+pragma Restrictions (No_Secondary_Stack);
+
 --  Too strong:
 -- pragma Restrictions (No_Elaboration_Code);
 
