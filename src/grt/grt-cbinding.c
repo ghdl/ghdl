@@ -114,4 +114,14 @@ __gnat_realloc (void *ptr, size_t size)
 {
   return realloc (ptr, size);
 }
+
+/* Unused imported symbols with gcc 8.1. */
+int __gnat_binder_ss_count = 0;
+size_t __gnat_default_ss_size = 0;
+void *__gnat_default_ss_pool = NULL;
+
+void
+system__secondary_stack__ss_stackIP (void *t, size_t size)
+{
+}
 #endif
