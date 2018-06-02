@@ -3,7 +3,7 @@
 Roadmap | Future Improvements
 #############################
 
-I have several axes for `GHDL` improvements:
+We have several axes for `GHDL` improvements:
 
 * Documentation
 * Better diagnostics messages (warning and error)

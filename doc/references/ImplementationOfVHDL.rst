@@ -397,7 +397,7 @@ Using GRT from Ada
 
 .. warning::
   This topic is only for advanced users who know how to use `Ada`
-  and `GNAT`.  This is provided only for reference; I have tested
+  and `GNAT`.  This is provided only for reference; we have tested
   this once before releasing `GHDL` 0.19, but this is not checked at
   each release.
 

@@ -63,7 +63,7 @@ General guidelines to edit the documentation
 Guidelines to edit section 'Building'
 *************************************
 
-I prefer a text block, which explains how a compilation works, what I can configure for that backend, etc. After that, I prefer a code block with e.g. bash instructions on how to compile a backend. A list of instructions with embedded bash lines is not helpful. An experienced, as well as novice user, would like to copy a set of instructions into the shell. But it should be stated what these instructions will do. Complex flows like for GCC, can be split into multiple shell code blocks. Moreover, I find it essential to demonstrate when and where to change directories.
+We prefer a text block, which explains how a compilation works, what we can configure for that backend, etc. After that, we prefer a code block with e.g. bash instructions on how to compile a backend. A list of instructions with embedded bash lines is not helpful. An experienced, as well as novice user, would like to copy a set of instructions into the shell. But it should be stated what these instructions will do. Complex flows like for GCC, can be split into multiple shell code blocks. Moreover, we find it essential to demonstrate when and where to change directories.
 
 We would like to see a list like:
 
