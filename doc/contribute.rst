@@ -40,7 +40,7 @@ Please, report issues of this kind through |SHIELD:bug-report|, as this allows u
 to assign developers to them. You can track the issue’s state and see how it’s getting solved.
 
 .. IMPORTANT::
-   To make it easier, please elaborate a `Minimum (non) Working Example` (`MWE <https://en.wikipedia.org/wiki/Minimal_Working_Example>`_) prior to sending the report, so that the possible bug source is isolated. Should the MWE compile and run, it would be a good idea to make it look like a test and to make an assert statement that will stop execution; a severity level `note` indicates success, while a severity level `failure` indicates failure.
+   To make it easier, please elaborate a `Minimal (non) Working Example` (`MWE <https://en.wikipedia.org/wiki/Minimal_Working_Example>`_) prior to sending the report, so that the possible bug source is isolated. Should the MWE compile and run, it would be a good idea to make it look like a test and to make an assert statement that will stop execution; a severity level `note` indicates success, while a severity level `failure` indicates failure.
 
    Also, please include enough information for the maintainers to reproduce the problem. This includes:
 
