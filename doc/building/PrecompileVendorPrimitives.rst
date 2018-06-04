@@ -240,12 +240,12 @@ Selectable Options for the Bash Scripts:
   
   .. code-block:: none
 
-     -h --help             Print the embedded help page(s).
-     -c --clean            Cleanup directory before analyzing.
-     -n --no-warnings      Don't show warnings. Report errors only.
-     -s --skip-existing    Skip already compiled files (an *.o file exists).
-     -S --skip-largefiles  Don't compile large entities like DSP and PCIe primitives.
-     -H --halt-on-error    Stop compiling if an error occurred.
+     --help, -h            Print the embedded help page(s).
+     --clean, -c           Cleanup directory before analyzing.
+     --no-warnings, -n     Don't show warnings. Report errors only.
+     --skip-existing, -s   Skip already compiled files (an *.o file exists).
+     --skip-largefiles, -S Don't compile large entities like DSP and PCIe primitives.
+     --halt-on-error, -H   Stop compiling if an error occurred.
 
 * `compile-altera.sh`
 
@@ -253,12 +253,12 @@ Selectable Options for the Bash Scripts:
   
   .. code-block:: none
 
-     -a --all              Compile all libraries, including common libraries, packages and device libraries.
-        --altera           Compile base libraries like 'altera' and 'altera_mf'
-        --max              Compile device libraries for Max CPLDs
-        --arria            Compile device libraries for Arria FPGAs
-        --cyclone          Compile device libraries for Cyclone FPGAs
-        --stratix          Compile device libraries for Stratix FPGAs
+     --all, -a             Compile all libraries, including common libraries, packages and device libraries.
+     --altera              Compile base libraries like 'altera' and 'altera_mf'
+     --max                 Compile device libraries for Max CPLDs
+     --arria               Compile device libraries for Arria FPGAs
+     --cyclone             Compile device libraries for Cyclone FPGAs
+     --stratix             Compile device libraries for Stratix FPGAs
 
   Compile options:
   
@@ -273,12 +273,12 @@ Selectable Options for the Bash Scripts:
   
   .. code-block:: none
 	
-     -a --all              Compile all libraries, including common libraries, packages and device libraries.
-        --unisim           Compile the unisim primitives
-        --unimacro         Compile the unimacro macros
-        --simprim          Compile the simprim primitives
-        --corelib          Compile the xilinxcorelib macros
-        --secureip         Compile the secureip primitives
+     --all, -a             Compile all libraries, including common libraries, packages and device libraries.
+     --unisim              Compile the unisim primitives
+     --unimacro            Compile the unimacro macros
+     --simprim             Compile the simprim primitives
+     --corelib             Compile the xilinxcorelib macros
+     --secureip            Compile the secureip primitives
 
   Compile options:
   
@@ -293,10 +293,10 @@ Selectable Options for the Bash Scripts:
   
   .. code-block:: none
 	
-     -a --all              Compile all libraries, including common libraries, packages and device libraries.
-        --unisim           Compile the unisim primitives
-        --unimacro         Compile the unimacro macros
-        --secureip         Compile the secureip primitives
+     --all, -a             Compile all libraries, including common libraries, packages and device libraries.
+     --unisim              Compile the unisim primitives
+     --unimacro            Compile the unimacro macros
+     --secureip            Compile the secureip primitives
 
   Compile options:
   
@@ -311,8 +311,8 @@ Selectable Options for the Bash Scripts:
   
   .. code-block:: none
 	
-     -a --all              Compile all.
-        --osvvm            Compile the OSVVM library.
+     --all, -a             Compile all.
+     --osvvm               Compile the OSVVM library.
 
 * `compile-uvvm.sh`
 
@@ -320,8 +320,8 @@ Selectable Options for the Bash Scripts:
   
   .. code-block:: none
 	
-     -a --all              Compile all.
-        --uvvm             Compile the UVVM libraries.
+     --all, -a             Compile all.
+     --uvvm                Compile the UVVM libraries.
 
 
 Selectable Options for the PowerShell Scripts:
