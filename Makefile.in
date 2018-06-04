@@ -217,7 +217,7 @@ copy-sources.gcc: version.ads
 	 5.*)      gcc_ortho_lang=ortho-lang-5.c ;; \
 	 6 | 6.*)  gcc_ortho_lang=ortho-lang-6.c ;; \
 	 7.*)      gcc_ortho_lang=ortho-lang-7.c ;; \
-	 8.*)      gcc_ortho_lang=ortho-lang-7.c ;; \
+	 8.*)      gcc_ortho_lang=ortho-lang-8.c ;; \
 	 *) echo "Mismatch gcc version from $(gcc_src_dir)"; \
 	    echo "Need gcc version 4.9.x, 5.x, 6.x, 7.x or 8.x"; \
 	    exit 1 ;; \
