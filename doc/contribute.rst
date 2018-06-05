@@ -40,9 +40,9 @@ Please, report issues of this kind through |SHIELD:bug-report|, as this allows u
 to assign developers to them. You can track the issue’s state and see how it’s getting solved.
 
 .. IMPORTANT::
-   To make it easier, please elaborate a `Minimal (non) Working Example` (`MWE <https://en.wikipedia.org/wiki/Minimal_Working_Example>`_) prior to sending the report, so that the possible bug source is isolated. Should the MWE compile and run, it would be a good idea to make it look like a test and to make an assert statement that will stop execution; a severity level `note` indicates success, while a severity level `failure` indicates failure.
+   As suggested in the bug report template, please elaborate a `Minimal (non) Working Example` (`MWE <https://en.wikipedia.org/wiki/Minimal_Working_Example>`_) prior to sending the report, so that the possible bug source is isolated. Should it fulfill the format requirements of `issue-runner <https://github.com/1138-4EB/issue-runner>`_, you would be able to test your bug with the latest GHDL version. Please do so in order to ensure that the bug is not solved already.
 
-   Also, please include enough information for the maintainers to reproduce the problem. This includes:
+   Also, please include enough information in the bug report, for the maintainers to reproduce the problem. The template includes:
 
    * Operating system and version of GHDL (you can get it with :samp:`ghdl --version`).
    * Whether you have built GHDL from sources (provide short SHA of the used commit) or used the binary distribution (note which release/tag).
