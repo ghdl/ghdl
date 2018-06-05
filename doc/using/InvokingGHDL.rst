@@ -39,7 +39,7 @@ Analysis [``-a``]
 
 Analyzes/compiles one or more files, and creates an object file for each source file. Any argument starting with a dash is an option, the others are filenames. No options are allowed after a filename argument. GHDL analyzes each filename in the given order, and stops the analysis in case of error (remaining files are not analyzed).
 
-See ':ref:`GHDL:options`', for details on the GHDL options. For example, to produce debugging information such as line numbers, use: ``ghdl -a -g my_design.vhdl``.
+See :ref:`GHDL:options`, for details on the GHDL options. For example, to produce debugging information such as line numbers, use: ``ghdl -a -g my_design.vhdl``.
 
 
 .. index:: cmd elaboration
@@ -59,7 +59,7 @@ Re-analyzes all the configurations, entities, architectures and package declarat
 	* an entity unit
 	* an entity unit followed by a name of an architecture unit
 
-Name of the units must be a simple name, without any dot.  You can select the name of the `WORK` library with the :option:`--work=NAME` option, as described in ':ref:`GHDL:options`'. See section ':ref:`Top_entity`', for the restrictions on the root design of a hierarchy.
+Name of the units must be a simple name, without any dot.  You can select the name of the `WORK` library with the :option:`--work=NAME` option, as described in :ref:`GHDL:options`. See section :ref:`Top_entity`, for the restrictions on the root design of a hierarchy.
 
 * If the GCC/LLVM backend was enabled during the compilation of GHDL, the elaboration command creates an executable containing the code of the VHDL sources, the elaboration code and simulation code to execute a design hierarchy. The executable is created in the current directory and the the filename is the name of the primary unit, or for the latter case, the concatenation of the name of the primary unit, a dash, and the name of the secondary unit (or architecture). Option :option:`-o` followed by a filename can override the default executable filename.
 
@@ -84,7 +84,7 @@ This command exists for three reasons:
 * It is coherent with the :option:`-a` and :option:`-e` commands.
 * It works with mcode implementation, where the executable code is generated in memory.
 
-See section ':ref:`USING:Simulation`', for details on options.
+See section :ref:`USING:Simulation`, for details on options.
 
 
 .. index:: cmd elaborate and run
@@ -232,7 +232,7 @@ Options
 
 .. option:: --std<=STD>
 
-  Specify the standard to use.  By default, the standard is ``93c``, which means VHDL-93 accepting VHDL-87 syntax.  For details on ``STD`` values see section ':ref:`VHDL_standards`'.
+  Specify the standard to use.  By default, the standard is ``93c``, which means VHDL-93 accepting VHDL-87 syntax.  For details on ``STD`` values see section :ref:`VHDL_standards`.
 
 .. option:: --ieee<=VER>
 
@@ -254,7 +254,7 @@ Options
     packages ``numeric_bit`` and ``numeric_std`` defined by IEEE
     1076.3, and the ``vital`` packages ``vital_timing`` and
     ``vital_primitives``, defined by IEEE 1076.4.  The version of these
-    packages is defined by the VHDL standard used.  See section ':ref:`VITAL_packages`',
+    packages is defined by the VHDL standard used.  See section :ref:`VITAL_packages`,
     for more details.
 
   synopsys
@@ -289,7 +289,7 @@ Options
 
   When two operators are overloaded, give preference to the explicit declaration.
   This may be used to avoid the most common pitfall of the ``std_logic_arith``
-  package.  See section ':ref:`IEEE_library_pitfalls`', for an example.
+  package.  See section :ref:`IEEE_library_pitfalls`, for an example.
 
 .. WARNING:: This option is not set by default. I don't think this option is a good feature, because it breaks the encapsulation rule.  When set, an operator can be silently overridden in another package.  You'd do better to fix your design and use the ``numeric_std`` package.
 
@@ -316,7 +316,7 @@ Options
 
 .. option:: -fpsl
 
-  Enable parsing of PSL assertions within comments.  See section ':ref:`PSL_implementation`' for more details.
+  Enable parsing of PSL assertions within comments.  See section :ref:`PSL_implementation` for more details.
 
 .. option:: --no-vital-checks
 .. option:: --vital-checks
@@ -325,7 +325,7 @@ Options
 
   Checks are performed only when a design unit is decorated by a VITAL attribute. The VITAL attributes are ``VITAL_Level0`` and ``VITAL_Level1``, both declared in the ``ieee.VITAL_Timing`` package.
 
-  Currently, VITAL checks are only partially implemented. See section ':ref:`VHDL_restrictions_for_VITAL`' for more details.
+  Currently, VITAL checks are only partially implemented. See section :ref:`VHDL_restrictions_for_VITAL` for more details.
 
 .. option:: --PREFIX<=PATH>
 
@@ -350,7 +350,7 @@ Some constructions are not erroneous but dubious. Warnings are diagnostic messag
 
 .. option:: --warn-default-binding
 
-  During analyze, warns if a component instantiation has neither configuration specification nor default binding.  This may be useful if you want to detect during analyze possibly unbound components if you don't use configuration. See section ':ref:`VHDL_standards`' for more details about default binding rules.
+  During analyze, warns if a component instantiation has neither configuration specification nor default binding.  This may be useful if you want to detect during analyze possibly unbound components if you don't use configuration. See section :ref:`VHDL_standards` for more details about default binding rules.
 
 .. option:: --warn-binding
 
@@ -632,7 +632,7 @@ Indeed, the `"="` operator is defined in both packages, and both are visible at 
 With some analysers, the explicit declaration has priority over the implicit declaration, and this design can be analyzed without error.  However, this is not the rule given by the VHDL LRM, and since GHDL follows these rules,
 it emits an error.
 
-You can force GHDL to use this rule with the *-fexplicit* option (see ':ref:`GHDL:options`' for further details). However it is easy to fix this error, by using a selected name:
+You can force GHDL to use this rule with the *-fexplicit* option (see :ref:`GHDL:options` for further details). However it is easy to fix this error, by using a selected name:
 
 .. code-block:: VHDL
 

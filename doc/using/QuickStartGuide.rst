@@ -168,11 +168,11 @@ Now, it is time to run the testbench, ``ghdl -r adder_tb``, and check the result
 
   adder_tb.vhdl:52:7:(assertion note): end of test
 
-If your design is rather complex, you'd like to inspect signals. Signal values can be dumped using multiple formats (see section ':ref:`export_waves`' for more information). The resulting file can be read with a wave viewer such as `GtkWave <http://gtkwave.sourceforge.net/>`_.
+If your design is rather complex, you'd like to inspect signals. Signal values can be dumped using multiple formats (see section :ref:`export_waves` for more information). The resulting file can be read with a wave viewer such as `GtkWave <http://gtkwave.sourceforge.net/>`_.
 
 As explained in the `manual <http://gtkwave.sourceforge.net/gtkwave.pdf>`_, GtkWave *'relies on a post-mortem approach through the use of dumpfiles'*. Therefore, you should first simulate your design and dump a waveform file, say VCD: ``ghdl -r adder_tb --vcd=adder.vcd``. Then, you can view the dump: ``gtkwave adder.vcd``.
 
-See section ':ref:`simulation_options`', for more details on other runtime options.
+See section :ref:`simulation_options`, for more details on other runtime options.
 
 Starting with a design
 ======================
@@ -215,4 +215,4 @@ Unless you are only studying VHDL, you will work with larger designs than the on
    * Remove the design library with the GHDL command ``ghdl --remove --workdir=work``. This removes the executable, all the object files and the library file. If you want to rebuild the design, you have to import the sources again and make the design.
    * Remove the :file:`work/` directory: ``rm -rf work``. Only the executable is kept. If you want to rebuild the design, create the :file:`work/` directory, import the sources, and make the design.
 
-.. WARNING:: Sometimes, a design does not fully follow the VHDL standards. For example it might use the badly engineered ``std_logic_unsigned`` package. GHDL supports this VHDL dialect through some options: ``--ieee=synopsys -fexplicit``. See section ':ref:`IEEE_library_pitfalls`', for more details.
+.. WARNING:: Sometimes, a design does not fully follow the VHDL standards. For example it might use the badly engineered ``std_logic_unsigned`` package. GHDL supports this VHDL dialect through some options: ``--ieee=synopsys -fexplicit``. See section :ref:`IEEE_library_pitfalls`, for more details.

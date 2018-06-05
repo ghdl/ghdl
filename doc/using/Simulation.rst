@@ -100,7 +100,7 @@ all options available, including the debugging one.
   typical or maximum values.  If the option does not contain a type of delay,
   the annotator uses the typical delay.
 
-  See section ':ref:`Backannotation`', for more details.
+  See section :ref:`Backannotation`, for more details.
 
 .. option:: --vpi<=FILENAME>
 

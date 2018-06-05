@@ -324,7 +324,7 @@ Linking with foreign object files
 ---------------------------------
 
 You may add additional files or options during the link using the
-*-Wl,* of `GHDL`, as described in ':ref:`Elaboration:command`'.
+*-Wl,* of `GHDL`, as described in :ref:`Elaboration:command`.
 For example::
 
   ghdl -e -Wl,-lm math_tb
