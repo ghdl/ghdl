@@ -10,11 +10,11 @@ Simulation options
 ==================
 
 In most system environments, it is possible to pass options while
-invoking a program.  Contrary to most programming languages, there is no
+invoking a program. Contrary to most programming languages, there is no
 standard method in VHDL to obtain the arguments or to set the exit
 status.
 
-In GHDL, it is impossible to pass parameters to your design.  A later version
+In GHDL, it is impossible to pass parameters to your design. A later version
 could do it through the generic interfaces of the top entity.
 
 However, the GHDL runtime behaviour can be modified with some options; for
@@ -24,14 +24,14 @@ The exit status of the simulation is ``EXIT_SUCCESS`` (0) if the
 simulation completes, or ``EXIT_FAILURE`` (1) in case of error
 (assertion failure, overflow or any constraint error).
 
-Here is the list of the most useful options.  Some debugging options are
-also available, but not described here.  The :option:`--help` option lists
+Here is the list of the most useful options. Some debugging options are
+also available, but not described here. The :option:`--help` option lists
 all options available, including the debugging one.
 
 .. option:: --assert-level<=LEVEL>
 
   Select the assertion level at which an assertion violation stops the
-  simulation.  `LEVEL` is the name from the `severity_level`
+  simulation. `LEVEL` is the name from the `severity_level`
   enumerated type defined in the `standard` package or the
   ``none`` name.
 
@@ -58,8 +58,8 @@ all options available, including the debugging one.
 
 .. option:: --stop-time<=TIME>
 
-  Stop the simulation after ``TIME``.  ``TIME`` is expressed as a time
-  value, *without* any space.  The time is the simulation time, not
+  Stop the simulation after ``TIME``. ``TIME`` is expressed as a time
+  value, *without* any space. The time is the simulation time, not
   the real clock time.
 
   For example::
@@ -86,8 +86,8 @@ all options available, including the debugging one.
   Do VITAL annotation on `PATH` with SDF file :file:`FILENAME`.
 
   `PATH` is a path of instances, separated with ``.`` or ``/``.
-  Any separator can be used.  Instances are component instantiation labels,
-  generate labels or block labels.  Currently, you cannot use an indexed name.
+  Any separator can be used. Instances are component instantiation labels,
+  generate labels or block labels. Currently, you cannot use an indexed name.
 
   Specifying a delay::
 
@@ -97,7 +97,7 @@ all options available, including the debugging one.
 
   If the option contains a type of delay, that is ``min=``,
   ``typ=`` or ``max=``, the annotator use respectively minimum,
-  typical or maximum values.  If the option does not contain a type of delay,
+  typical or maximum values. If the option does not contain a type of delay,
   the annotator uses the typical delay.
 
   See section :ref:`Backannotation`, for more details.
@@ -169,19 +169,19 @@ Export waveforms
   .. index:: dump of signals
 
   Option :option:`--vcd` dumps into the VCD file `FILENAME` the signal
-  values before each non-delta cycle.  If `FILENAME` is ``-``,
+  values before each non-delta cycle. If `FILENAME` is ``-``,
   then the standard output is used, otherwise a file is created or
   overwritten.
 
   The :option:`--vcdgz` option is the same as the *--vcd* option,
   but the output is compressed using the `zlib` (`gzip`
-  compression).  However, you can't use the ``-`` filename.
+  compression). However, you can't use the ``-`` filename.
   Furthermore, only one VCD file can be written.
 
   :dfn:`VCD` (value change dump) is a file format defined
   by the `verilog` standard and used by virtually any wave viewer.
 
-  Since it comes from `verilog`, only a few VHDL types can be dumped.  GHDL
+  Since it comes from `verilog`, only a few VHDL types can be dumped. GHDL
   dumps only signals whose base type is of the following:
 
   * types defined in the ``std.standard`` package:
@@ -204,7 +204,7 @@ Export waveforms
   dumped, which can generate big files.
 
   It is very unfortunate there is no standard or well-known wave file
-  format supporting VHDL types.  If you are aware of such a free format,
+  format supporting VHDL types. If you are aware of such a free format,
   please mail me (:ref:`Reporting_bugs`).
 
 .. option:: --vcd-nodate
@@ -219,12 +219,12 @@ Export waveforms
 
 .. option:: --wave<=FILENAME>
 
-  Write the waveforms into a `ghw` (GHdl Waveform) file.  Currently, all
+  Write the waveforms into a `ghw` (GHdl Waveform) file. Currently, all
   the signals are dumped into the waveform file, you cannot select a hierarchy
   of signals to be dumped.
 
   The format of this file was defined by myself and is not yet completely fixed.
-  It may change slightly.  The ``gtkwave`` tool can read the GHW files.
+  It may change slightly. The ``gtkwave`` tool can read the GHW files.
 
   Contrary to VCD files, any VHDL type can be dumped into a GHW file.
 
@@ -239,7 +239,7 @@ Export hierarchy and references
   This may be useful to understand the structure of a complex
   design. `KIND` is optional, but if set must be one of:
 
-  * ``none`` Do not display hierarchy.  Same as if the option was not present.
+  * ``none`` Do not display hierarchy. Same as if the option was not present.
 
   * ``inst`` Display entities, architectures, instances, blocks and generates statements.
 

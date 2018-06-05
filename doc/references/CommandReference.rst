@@ -24,7 +24,7 @@ Help [``-h``]
 .. option:: --help, -h
 
 Display (on the standard output) a short description of the all the commands
-available.  If the help switch is followed by a command switch, then options
+available. If the help switch is followed by a command switch, then options
 for that second command are displayed::
 
   ghdl --help
@@ -126,7 +126,7 @@ Bind [``--bind``]
 
 .. option:: --bind <[options] primary_unit [secondary_unit]>
 
-Performs only the first stage of the elaboration command; the list of object files is created but the executable is not built.  This command should be used only when the main entry point is not GHDL.
+Performs only the first stage of the elaboration command; the list of object files is created but the executable is not built. This command should be used only when the main entry point is not GHDL.
 
 .. index:: cmd GCC/LLVM linking
 
@@ -155,25 +155,25 @@ Allow multi-bytes chars in a comment.
 
 .. option:: --syn-binding
 
-Use synthesizer rules for component binding.  During elaboration, if a component is not bound to an entity using VHDL LRM rules, try to find in any known library an entity whose name is the same as the component name.
+Use synthesizer rules for component binding. During elaboration, if a component is not bound to an entity using VHDL LRM rules, try to find in any known library an entity whose name is the same as the component name.
 
 This rule is known as the synthesizer rule.
 
-There are two key points: normal VHDL LRM rules are tried first and entities are searched only in known libraries.  A known library is a library which has been named in your design.
+There are two key points: normal VHDL LRM rules are tried first and entities are searched only in known libraries. A known library is a library which has been named in your design.
 
 This option is only useful during elaboration.
 
 .. option:: --GHDL1<=COMMAND>
 
-Use ``COMMAND`` as the command name for the compiler.  If ``COMMAND`` is not a path, then it is searched in the path.
+Use ``COMMAND`` as the command name for the compiler. If ``COMMAND`` is not a path, then it is searched in the path.
 
 .. option:: --AS<=COMMAND>
 
-Use ``COMMAND`` as the command name for the assembler.  If ``COMMAND`` is not a path, then it is searched in the path.  The default is ``as``.
+Use ``COMMAND`` as the command name for the assembler. If ``COMMAND`` is not a path, then it is searched in the path. The default is ``as``.
 
 .. option:: --LINK<=COMMAND>
 
-Use ``COMMAND`` as the linker driver.  If ``COMMAND`` is not a path, then it is searched in the path.  The default is ``gcc``.
+Use ``COMMAND`` as the linker driver. If ``COMMAND`` is not a path, then it is searched in the path. The default is ``gcc``.
 
 Passing options to other programs
 =================================

@@ -4,12 +4,12 @@ Coding Style
 ############
 
 Ada subset: use only a simple (VHDL like) subset of Ada: no tasking, no
-controlled types...  VHDL users should easily understand that subset.
+controlled types... VHDL users should easily understand that subset.
 Allowed Ada95 features: the standard library, child packages.
 Use assertions.
 
 We try to follow the 'GNU Coding Standards' when possible: comments before
-declarations, two spaces at end of sentences, finish sentences with a dot.
+declarations, one space at the end of sentences, finish sentences with a dot.
 But: 2 spaces for indentation in code blocks.
 
 No trailing spaces, no TAB (HT).
@@ -22,7 +22,7 @@ Subprograms must have a comment before to describe them, like:
    procedure Sem_Concurrent_Statement_Chain (Parent : Iir);
 
 The line before the comment must be a blank line (unless this is the first
-declaration).  Don't repeat the comment before the subprogram body.
+declaration). Don't repeat the comment before the subprogram body.
 
 * For subprograms:
 
