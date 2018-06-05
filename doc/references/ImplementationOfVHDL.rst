@@ -355,7 +355,7 @@ in Ada:
   with System;
   ...
   function Ghdl_Main (Argc : Integer; Argv : System.Address)
-     return Integer;
+    return Integer;
   pragma import (C, Ghdl_Main, "ghdl_main");
 
 
@@ -445,26 +445,26 @@ level design name.
   with Ghdl_Main;
 
   procedure Test_Grt is
-     --  VHPI handle.
-     H : VhpiHandleT;
-     Status : Integer;
+    --  VHPI handle.
+    H : VhpiHandleT;
+    Status : Integer;
 
-     --  Name.
-     Name : String (1 .. 64);
-     Name_Len : Integer;
+    --  Name.
+    Name : String (1 .. 64);
+    Name_Len : Integer;
   begin
-     --  Elaborate and run the design.
-     Status := Ghdl_Main (0, Null_Address);
+    --  Elaborate and run the design.
+    Status := Ghdl_Main (0, Null_Address);
 
-     --  Display the status of the simulation.
-     Put_Line ("Status is " & Integer'Image (Status));
+    --  Display the status of the simulation.
+    Put_Line ("Status is " & Integer'Image (Status));
 
-     --  Get the root instance.
-     Get_Root_Inst(H);
+    --  Get the root instance.
+    Get_Root_Inst(H);
 
-     --  Disp its name using vhpi API.
-     Vhpi_Get_Str (VhpiNameP, H, Name, Name_Len);
-     Put_Line ("Root instance name: " & Name (1 .. Name_Len));
+    --  Disp its name using vhpi API.
+    Vhpi_Get_Str (VhpiNameP, H, Name, Name_Len);
+    Put_Line ("Root instance name: " & Name (1 .. Name_Len));
   end Test_Grt;
 
 

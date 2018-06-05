@@ -300,12 +300,12 @@ Options
   .. code-block:: VHDL
 
    package pkg1 is
-      type state is (state1, state2, state3);
+     type state is (state1, state2, state3);
    end pkg1;
 
    use work.pkg1.all;
    package pkg2 is
-      constant state1 : state := state1;
+     constant state1 : state := state1;
    end pkg2;
 
   Some code (such as Xilinx packages) have such constructs, which are valid.
@@ -580,38 +580,38 @@ When you use options :option:`--ieee=synopsys` or :option:`--ieee=mentor`, the `
 
 .. code-block:: VHDL
 
-   library ieee;
-   use ieee.std_logic_1164.all;
+  library ieee;
+  use ieee.std_logic_1164.all;
 
-   --  A counter from 0 to 10.
-   entity counter is
-      port (val : out std_logic_vector (3 downto 0);
-            ck : std_logic;
-            rst : std_logic);
-   end counter;
+  --  A counter from 0 to 10.
+  entity counter is
+    port (val : out std_logic_vector (3 downto 0);
+          ck : std_logic;
+          rst : std_logic);
+  end counter;
 
-   library ieee;
-   use ieee.std_logic_unsigned.all;
+  library ieee;
+  use ieee.std_logic_unsigned.all;
 
-   architecture bad of counter
-   is
-      signal v : std_logic_vector (3 downto 0);
-   begin
-      process (ck, rst)
-      begin
-        if rst = '1' then
-           v <= x"0";
-        elsif rising_edge (ck) then
-           if v = "1010" then -- Error
-              v <= x"0";
-           else
-              v <= v + 1;
-           end if;
+  architecture bad of counter
+  is
+    signal v : std_logic_vector (3 downto 0);
+  begin
+    process (ck, rst)
+    begin
+      if rst = '1' then
+        v <= x"0";
+      elsif rising_edge (ck) then
+        if v = "1010" then -- Error
+          v <= x"0";
+        else
+          v <= v + 1;
         end if;
-      end process;
+      end if;
+    end process;
 
-      val <= v;
-   end bad;
+    val <= v;
+  end bad;
 
 
 When you analyze this design, GHDL does not accept it (two long lines have been split for readability):
@@ -636,55 +636,55 @@ You can force GHDL to use this rule with the *-fexplicit* option (see ':ref:`GHD
 
 .. code-block:: VHDL
 
-   library ieee;
-   use ieee.std_logic_unsigned.all;
+  library ieee;
+  use ieee.std_logic_unsigned.all;
 
-   architecture fixed_bad of counter
-   is
-      signal v : std_logic_vector (3 downto 0);
-   begin
-      process (ck, rst)
-      begin
-         if rst = '1' then
-            v <= x"0";
-         elsif rising_edge (ck) then
-            if ieee.std_logic_unsigned."=" (v, "1010") then
-               v <= x"0";
-            else
-               v <= v + 1;
-            end if;
-         end if;
-      end process;
+  architecture fixed_bad of counter
+  is
+    signal v : std_logic_vector (3 downto 0);
+  begin
+    process (ck, rst)
+    begin
+      if rst = '1' then
+        v <= x"0";
+      elsif rising_edge (ck) then
+        if ieee.std_logic_unsigned."=" (v, "1010") then
+          v <= x"0";
+        else
+          v <= v + 1;
+        end if;
+      end if;
+    end process;
 
-      val <= v;
-   end fixed_bad;
+    val <= v;
+  end fixed_bad;
 
 It is better to only use the standard packages defined by IEEE, which provide the same functionalities:
 
 .. code-block:: VHDL
 
-   library ieee;
-   use ieee.numeric_std.all;
+  library ieee;
+  use ieee.numeric_std.all;
 
-   architecture good of counter
-   is
-      signal v : unsigned (3 downto 0);
-   begin
-      process (ck, rst)
-      begin
-         if rst = '1' then
-            v <= x"0";
-         elsif rising_edge (ck) then
-            if v = "1010" then
-               v <= x"0";
-            else
-               v <= v + 1;
-            end if;
-         end if;
-      end process;
+  architecture good of counter
+  is
+    signal v : unsigned (3 downto 0);
+  begin
+    process (ck, rst)
+    begin
+      if rst = '1' then
+        v <= x"0";
+      elsif rising_edge (ck) then
+        if v = "1010" then
+          v <= x"0";
+        else
+          v <= v + 1;
+        end if;
+      end if;
+    end process;
 
-      val <= std_logic_vector (v);
-   end good;
+    val <= std_logic_vector (v);
+  end good;
 
 .. index:: Math_Real
 

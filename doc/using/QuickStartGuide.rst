@@ -13,23 +13,23 @@ To illustrate the general purpose of `VHDL`, here is a commented `'Hello world'`
 
 .. code-block:: VHDL
 
-   --  Hello world program
-   use std.textio.all; -- Imports the standard textio package.
+  --  Hello world program
+  use std.textio.all; -- Imports the standard textio package.
 
-   --  Defines a design entity, without any ports.
-   entity hello_world is
-   end hello_world;
+  --  Defines a design entity, without any ports.
+  entity hello_world is
+  end hello_world;
 
-   architecture behaviour of hello_world is
-   begin
-      process
-         variable l : line;
-      begin
-         write (l, String'("Hello world!"));
-         writeline (output, l);
-         wait;
-      end process;
-   end behaviour;
+  architecture behaviour of hello_world is
+  begin
+    process
+      variable l : line;
+    begin
+      write (l, String'("Hello world!"));
+      writeline (output, l);
+      wait;
+    end process;
+  end behaviour;
 
 .. TIP::
 
@@ -42,7 +42,7 @@ To illustrate the general purpose of `VHDL`, here is a commented `'Hello world'`
 
 .. code-block:: shell
 
-   Hello world!
+  Hello world!
 
 .. HINT::
    If a GCC/LLVM variant of `GHDL` is used:
@@ -58,21 +58,21 @@ The `heartbeat` program
 
 .. code-block:: VHDL
 
-   entity hello_world is
-      port ( clk: out std_logic; )
-   end hearbeat;
+  entity hello_world is
+    port ( clk: out std_logic; )
+  end hearbeat;
 
-   architecture behaviour of hello_world is
-   begin
-      -- Clock process definition
-      clk_process: process
-      begin
-         clk <= '0';
-         wait for clk_period/2;
-         clk <= '1';
-         wait for clk_period/2;
-      end process;
-   end behaviour;
+  architecture behaviour of hello_world is
+  begin
+    -- Clock process definition
+    clk_process: process
+    begin
+      clk <= '0';
+      wait for clk_period/2;
+      clk <= '1';
+      wait for clk_period/2;
+    end process;
+  end behaviour;
 
 A full adder
 ============
@@ -81,82 +81,82 @@ VHDL is generally used for hardware design. This example starts with a `full add
 
 .. code-block:: VHDL
 
-   entity adder is
-      -- `i0`, `i1`, and the carry-in `ci` are inputs of the adder.
-      -- `s` is the sum output, `co` is the carry-out.
-      port (i0, i1 : in bit; ci : in bit; s : out bit; co : out bit);
-   end adder;
+  entity adder is
+    -- `i0`, `i1`, and the carry-in `ci` are inputs of the adder.
+    -- `s` is the sum output, `co` is the carry-out.
+    port (i0, i1 : in bit; ci : in bit; s : out bit; co : out bit);
+  end adder;
 
-   architecture rtl of adder is
-   begin
-      --  This full-adder architecture contains two concurrent assignments.
-      --  Compute the sum.
-      s <= i0 xor i1 xor ci;
-      --  Compute the carry.
-      co <= (i0 and i1) or (i0 and ci) or (i1 and ci);
-   end rtl;
+  architecture rtl of adder is
+  begin
+    --  This full-adder architecture contains two concurrent assignments.
+    --  Compute the sum.
+    s <= i0 xor i1 xor ci;
+    --  Compute the carry.
+    co <= (i0 and i1) or (i0 and ci) or (i1 and ci);
+  end rtl;
 
 You can analyze this design file, ``ghdl -a adder.vhdl``, and try to execute the `adder` design. But this is useless, since nothing externally visible will happen. In order to check this full adder, a :dfn:`testbench` has to be run. This testbench is very simple, since the adder is also simple: it checks exhaustively all inputs.  Note that only the behaviour is tested, timing constraints are not checked. A file named :file:`adder_tb.vhdl` contains the testbench for the adder:
 
 .. code-block:: VHDL
 
-   --  A testbench has no ports.
-   entity adder_tb is
-   end adder_tb;
+  --  A testbench has no ports.
+  entity adder_tb is
+  end adder_tb;
 
-   architecture behav of adder_tb is
-      --  Declaration of the component that will be instantiated.
-      component adder
-         port (i0, i1 : in bit; ci : in bit; s : out bit; co : out bit);
-      end component;
+  architecture behav of adder_tb is
+    --  Declaration of the component that will be instantiated.
+    component adder
+      port (i0, i1 : in bit; ci : in bit; s : out bit; co : out bit);
+    end component;
 
-      --  Specifies which entity is bound with the component.
-      for adder_0: adder use entity work.adder;
-      signal i0, i1, ci, s, co : bit;
-   begin
-      --  Component instantiation.
-      adder_0: adder port map (i0 => i0, i1 => i1, ci => ci,
-                               s => s, co => co);
+    --  Specifies which entity is bound with the component.
+    for adder_0: adder use entity work.adder;
+    signal i0, i1, ci, s, co : bit;
+  begin
+    --  Component instantiation.
+    adder_0: adder port map (i0 => i0, i1 => i1, ci => ci,
+                             s => s, co => co);
 
-      --  This process does the real job.
-      process
-         type pattern_type is record
-            --  The inputs of the adder.
-            i0, i1, ci : bit;
-            --  The expected outputs of the adder.
-            s, co : bit;
-         end record;
-         --  The patterns to apply.
-         type pattern_array is array (natural range <>) of pattern_type;
-         constant patterns : pattern_array :=
-            (('0', '0', '0', '0', '0'),
-             ('0', '0', '1', '1', '0'),
-             ('0', '1', '0', '1', '0'),
-             ('0', '1', '1', '0', '1'),
-             ('1', '0', '0', '1', '0'),
-             ('1', '0', '1', '0', '1'),
-             ('1', '1', '0', '0', '1'),
-             ('1', '1', '1', '1', '1'));
-      begin
-         --  Check each pattern.
-         for i in patterns'range loop
-            --  Set the inputs.
-            i0 <= patterns(i).i0;
-            i1 <= patterns(i).i1;
-            ci <= patterns(i).ci;
-            --  Wait for the results.
-            wait for 1 ns;
-            --  Check the outputs.
-            assert s = patterns(i).s
-               report "bad sum value" severity error;
-            assert co = patterns(i).co
-               report "bad carry out value" severity error;
-         end loop;
-         assert false report "end of test" severity note;
-         --  Wait forever; this will finish the simulation.
-         wait;
-      end process;
-   end behav;
+    --  This process does the real job.
+    process
+      type pattern_type is record
+        --  The inputs of the adder.
+        i0, i1, ci : bit;
+        --  The expected outputs of the adder.
+        s, co : bit;
+      end record;
+      --  The patterns to apply.
+      type pattern_array is array (natural range <>) of pattern_type;
+      constant patterns : pattern_array :=
+        (('0', '0', '0', '0', '0'),
+         ('0', '0', '1', '1', '0'),
+         ('0', '1', '0', '1', '0'),
+         ('0', '1', '1', '0', '1'),
+         ('1', '0', '0', '1', '0'),
+         ('1', '0', '1', '0', '1'),
+         ('1', '1', '0', '0', '1'),
+         ('1', '1', '1', '1', '1'));
+    begin
+      --  Check each pattern.
+      for i in patterns'range loop
+        --  Set the inputs.
+        i0 <= patterns(i).i0;
+        i1 <= patterns(i).i1;
+        ci <= patterns(i).ci;
+        --  Wait for the results.
+        wait for 1 ns;
+        --  Check the outputs.
+        assert s = patterns(i).s
+          report "bad sum value" severity error;
+        assert co = patterns(i).co
+          report "bad carry out value" severity error;
+      end loop;
+      assert false report "end of test" severity note;
+      --  Wait forever; this will finish the simulation.
+      wait;
+    end process;
+  end behav;
 
 
 As usual, you should analyze the design, ``ghdl -a adder_tb.vhdl``.

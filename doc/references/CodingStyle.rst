@@ -10,7 +10,7 @@ Use assertions.
 
 We try to follow the 'GNU Coding Standards' when possible: comments before
 declarations, two spaces at end of sentences, finish sentences with a dot.
-But: 3 spaces for indentation.
+But: 2 spaces for indentation in code blocks.
 
 No trailing spaces, no TAB (HT).
 
@@ -82,7 +82,7 @@ declaration).  Don't repeat the comment before the subprogram body.
   
         procedure Translate_Assign (Target : Mnode; Expr : Iir; Target_Type : Iir)
         is
-           Val : O_Enode;
+          Val : O_Enode;
         begin
 				
   vs.
@@ -130,9 +130,9 @@ declaration).  Don't repeat the comment before the subprogram body.
      .. code-block:: Ada
   
         is
-           N_Info : constant Iir := Get_Sub_Aggregate_Info (Info);
-           Assoc  : Iir;
-           Sub    : Iir;
+          N_Info : constant Iir := Get_Sub_Aggregate_Info (Info);
+          Assoc  : Iir;
+          Sub    : Iir;
         begin
 				
   If the initialization expression has a side effect (such as allocation), do
