@@ -48,7 +48,7 @@ To illustrate the large purpose of `VHDL`, here is a commented `'Hello world'` p
    If a GCC/LLVM variant of `GHDL` is used:
 
    * `Analysis` generates a file, :file:`hello.o`, which is the object file corresponding to your `VHDL` program.  This is not created with mcode.
-   * The elaboration step is compulsory after the analysis and prior to launching the simulation; This wil generate an executable binary named :file:`hello_world`.
+   * The elaboration step is compulsory after the analysis and prior to launching the simulation; This will generate an executable binary named :file:`hello_world`.
    * As a result, :option:`-r` is just a passthrough to the binary generated in the `elaboration`. Therefore, the executable can be run directly, ``./hello_world``. See :option:`-r` for more informartion.
 
 .. HINT:: :option:`-e` can be bypassed with mcode, since :option:`-r` actually elaborates the design and saves it on memory before running the simulation. But you can still use it to check for some elaboration problems.
