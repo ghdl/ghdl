@@ -24,8 +24,8 @@ Help [``-h``]
 .. option:: --help, -h
 
 Display (on the standard output) a short description of the all the commands
-available.  If the help switch is followed by a command switch, then options
-for this later command are displayed::
+available. If the help switch is followed by a command switch, then options
+for that second command are displayed::
 
   ghdl --help
   ghdl -h
@@ -57,7 +57,7 @@ Version [``--version``]
 
 .. option:: --version, -v
 
-Display the GHDL version and exit.
+Display the GHDL version.
 
 File commands
 =============
@@ -72,7 +72,7 @@ Pretty print [``--pp-html``]
 
 .. option:: --pp-html <[options] file...>
 
-The files are just scanned and an html file, with syntax highlighting is generated on standard output. Since the files are not even parsed, erroneous files or incomplete designs can be pretty printed.
+The files are just scanned and an html file with syntax highlighting is generated on standard output. Since the files are not even parsed, erroneous files or incomplete designs can be pretty printed.
 
 The style of the html file can be modified with the :option:`--format=` option:
 
@@ -86,7 +86,7 @@ Find [``-f``]
 
 .. option:: -f <file...>
 
-The files are scanned, parsed and the names of design units are displayed. Design units marked with two stars are candidate to be at the apex of a design hierarchy.
+The files are scanned, parsed and the names of design units are displayed. Design units marked with two stars are candidates to be at the apex of a design hierarchy.
 
 .. index:: cmd file chop
 
@@ -95,9 +95,9 @@ Chop [``--chop``]
 
 .. option:: --chop <files...>
 
-The provided files are read, and a file is written in the current directory for every design unit. Each filename is build according to the type:
+The provided files are read, and a file is written in the current directory for every design unit. Each filename is built according to the type:
 
-* For an entity declaration, a package declaration or a configuration the file name is :file:`NAME.vhdl`, where `NAME` is the name of the design unit.
+* For an entity declaration, a package declaration, or a configuration the file name is :file:`NAME.vhdl`, where `NAME` is the name of the design unit.
 * For a package body, the filename is :file:`NAME-body.vhdl`.
 * Finally, for an architecture `ARCH` of an entity `ENTITY`, the filename is :file:`ENTITY-ARCH.vhdl`.
 
@@ -105,7 +105,7 @@ Since the input files are parsed, this command aborts in case of syntax error. T
 
 Comments between design units are stored into the most adequate files.
 
-This command may be useful to split big files, if your computer has not enough memory to compile such files. The size of the executable is reduced too.
+This command may be useful to split big files, if your computer doesn't have enough memory to compile such files. The size of the executable is reduced too.
 
 .. index:: cmd file lines
 
@@ -126,7 +126,7 @@ Bind [``--bind``]
 
 .. option:: --bind <[options] primary_unit [secondary_unit]>
 
-Performs only the first stage of the elaboration command; the list of objects files is created but the executable is not built.  This command should be used only when the main entry point is not GHDL.
+Performs only the first stage of the elaboration command; the list of object files is created but the executable is not built. This command should be used only when the main entry point is not GHDL.
 
 .. index:: cmd GCC/LLVM linking
 
@@ -151,29 +151,29 @@ Options
 
 .. option:: --mb-comments, -C
 
-Allow multi-bytes chars in a comment
+Allow multi-bytes chars in a comment.
 
 .. option:: --syn-binding
 
-Use synthesizer rules for component binding.  During elaboration, if a component is not bound to an entity using VHDL LRM rules, try to find in any known library an entity whose name is the same as the component name.
+Use synthesizer rules for component binding. During elaboration, if a component is not bound to an entity using VHDL LRM rules, try to find in any known library an entity whose name is the same as the component name.
 
-This rule is known as synthesizer rule.
+This rule is known as the synthesizer rule.
 
-There are two key points: normal VHDL LRM rules are tried first and entities are searched only in known library.  A known library is a library which has been named in your design.
+There are two key points: normal VHDL LRM rules are tried first and entities are searched only in known libraries. A known library is a library which has been named in your design.
 
 This option is only useful during elaboration.
 
 .. option:: --GHDL1<=COMMAND>
 
-Use ``COMMAND`` as the command name for the compiler.  If ``COMMAND`` is not a path, then it is searched in the path.
+Use ``COMMAND`` as the command name for the compiler. If ``COMMAND`` is not a path, then it is searched in the path.
 
 .. option:: --AS<=COMMAND>
 
-Use ``COMMAND`` as the command name for the assembler.  If ``COMMAND`` is not a path, then it is searched in the path.  The default is ``as``.
+Use ``COMMAND`` as the command name for the assembler. If ``COMMAND`` is not a path, then it is searched in the path. The default is ``as``.
 
 .. option:: --LINK<=COMMAND>
 
-Use ``COMMAND`` as the linker driver.  If ``COMMAND`` is not a path, then it is searched in the path.  The default is ``gcc``.
+Use ``COMMAND`` as the linker driver. If ``COMMAND`` is not a path, then it is searched in the path. The default is ``gcc``.
 
 Passing options to other programs
 =================================

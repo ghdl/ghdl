@@ -4,7 +4,7 @@ Precompile Vendor Primitives
 ############################
 
 Vendors like Altera, Lattice and Xilinx have their own simulation libraries,
-especially for FPGA primitives, soft and hard macros. These libraries can not
+especially for FPGA primitives, soft and hard macros. These libraries cannot
 be shipped with *GHDL*, but we offer prepared compile scripts to pre-compile
 the vendor libraries, if the vendor tool is present on the computer. There are
 also popular simulation and verification libraries like OSVVM [#f1]_ or
@@ -29,7 +29,7 @@ Supported Vendors Libraries
   * `stratixiv`, `stratixiv_pcie_hip`
   * `stratixv`, `stratixv_pcie_hip`
   * `fiftyfivenm`, `twentynm`
-	
+
 * Lattice (3.6 or later):
 
   * `ec`
@@ -56,8 +56,8 @@ Supported Simulation and Verification Libraries
 
 * OSVVM (for VHDL-2008)
 
-    * osvvm
-
+  * osvvm
+  
 * UVVM (for VHDL-2008)
 
   * uvvm-utilities
@@ -77,9 +77,9 @@ Script Configuration
 ====================
 
 The vendor library compile scripts need to know where the used / latest vendor
-tool chain is installed. Therefore, the script implement a default installation
-directory search as well as environment variable checks. If a vendor tool could
-not be detected or the script choses the wrong vendor library source directory,
+tool chain is installed. Therefore, the scripts implement a default installation
+directory search as well as environment variable checks. If a vendor tool cannot
+be detected or the script chooses the wrong vendor library source directory,
 then it's possible to provide the path via `--source` or `-Source`.
 
 The generated output is stored relative to the current working directory. The
@@ -91,7 +91,7 @@ To compile all source files with GHDL, the simulator executable is searched in
 environment variable `GHDL` or by passing the parameter `--ghdl` or `-GHDL` to
 the scripts.
 
-If the vendor library compilation is used very often, we recommend to configure
+If the vendor library compilation is used very often, we recommend configuring
 these parameters in `config.sh` or `config.psm1`, so the command line can be
 shortened to the essential parts.
 
@@ -101,7 +101,7 @@ Compiling on Linux
 ==================
 
 * **Step 0 - Configure the scripts (optional)**
-    See next section for how to configure `config.sh`.
+    See the next section for how to configure `config.sh`.
 
 * **Step 1 - Browse to your simulation working directory**
     
@@ -149,8 +149,7 @@ Compiling on Windows
 ====================
 
 * **Step 0 - Configure the scripts (optional)**
-
-  See next section for how to configure `config.psm1`.
+    See the next section for how to configure `config.psm1`.
 
 * **Step 1 - Browse to your simulation working directory**
     
@@ -170,8 +169,8 @@ Compiling on Windows
      PS> <GHDL>\libraries\vendors\compile-uvvm.ps1 -All
 
 * **Step 3 - Viewing the result**
-  This creates vendor directories in your current working directory and
-  compiles the vendor files into them.
+    This creates vendor directories in your current working directory and
+    compiles the vendor files into them.
 
   .. code-block:: PowerShell
 
@@ -197,7 +196,7 @@ For Linux: `config.sh`
 ----------------------
 
 Please open the `config.sh` file and set the dictionary entries for the
-installed vendor tools to the appropriate directory to your tool's installation
+installed vendor tools to your tool's installation
 directories. Use an empty string `""` for not installed tools.
 
 `config.sh`:
@@ -217,7 +216,7 @@ For Windows: `config.psm1`
 --------------------------
 
 Please open the `config.psm1` file and set the dictionary entries for the
-installed vendor tools to the appropriate directory to your tool's installation
+installed vendor tools to your tool's installation
 folder. Use an empty string `""` for not installed tools.
 
 `config.psm1`:
@@ -237,95 +236,92 @@ folder. Use an empty string `""` for not installed tools.
 Selectable Options for the Bash Scripts:
 ----------------------------------------
 
-*First I should translate the scripts before writing the docu...*
-
 * Common parameters to most scripts:
   
-  .. code-block:: raw
-	
-     -h --help             Print the embedded help page(s).
-     -c --clean            Cleanup directory before analyzing.
-     -n --no-warnings	     Don't show warnings. Report errors only.
-     -s --skip-existing    Skip already compiled files (an *.o file exists).
-     -S --skip-largefiles  Don't compile large entities like DSP and PCIe primitives.
-     -H --halt-on-error    Stop compiling if an error occurred.
+  .. code-block:: none
+
+     --help, -h            Print the embedded help page(s).
+     --clean, -c           Cleanup directory before analyzing.
+     --no-warnings, -n     Don't show warnings. Report errors only.
+     --skip-existing, -s   Skip already compiled files (an *.o file exists).
+     --skip-largefiles, -S Don't compile large entities like DSP and PCIe primitives.
+     --halt-on-error, -H   Stop compiling if an error occurred.
 
 * `compile-altera.sh`
 
   Selectable libraries:
   
-  .. code-block:: raw
+  .. code-block:: none
 
-     -a --all              Compile all libraries, including common libraries, packages and device libraries.
-        --altera           Compile base libraries like 'altera' and 'altera_mf'
-        --max              Compile device libraries for Max CPLDs
-        --arria            Compile device libraries for Arria FPGAs
-        --cyclone          Compile device libraries for Cyclone FPGAs
-        --stratix          Compile device libraries for Stratix FPGAs
+     --all, -a             Compile all libraries, including common libraries, packages and device libraries.
+     --altera              Compile base libraries like 'altera' and 'altera_mf'
+     --max                 Compile device libraries for Max CPLDs
+     --arria               Compile device libraries for Arria FPGAs
+     --cyclone             Compile device libraries for Cyclone FPGAs
+     --stratix             Compile device libraries for Stratix FPGAs
 
-   Compile options:
+  Compile options:
   
-   .. code-block:: raw
+  .. code-block:: none
 	
-
-        --vhdl93           Compile selected libraries with VHDL-93 (default).
-        --vhdl2008         Compile selected libraries with VHDL-2008.
+     --vhdl93              Compile selected libraries with VHDL-93 (default).
+     --vhdl2008            Compile selected libraries with VHDL-2008.
 
 * `compile-xilinx-ise.sh`
 
   Selectable libraries:
   
-  .. code-block:: raw
+  .. code-block:: none
 	
-     -a --all              Compile all libraries, including common libraries, packages and device libraries.
-        --unisim           Compile the unisim primitives
-        --unimacro         Compile the unimacro macros
-        --simprim          Compile the simprim primitives
-        --corelib          Compile the xilinxcorelib macros
-        --secureip         Compile the secureip primitives
+     --all, -a             Compile all libraries, including common libraries, packages and device libraries.
+     --unisim              Compile the unisim primitives
+     --unimacro            Compile the unimacro macros
+     --simprim             Compile the simprim primitives
+     --corelib             Compile the xilinxcorelib macros
+     --secureip            Compile the secureip primitives
 
   Compile options:
   
-  .. code-block:: raw
+  .. code-block:: none
 	
-        --vhdl93           Compile selected libraries with VHDL-93 (default).
-        --vhdl2008         Compile selected libraries with VHDL-2008.
+     --vhdl93              Compile selected libraries with VHDL-93 (default).
+     --vhdl2008            Compile selected libraries with VHDL-2008.
 
 * `compile-xilinx-vivado.sh`
 
   Selectable libraries:
   
-  .. code-block:: raw
+  .. code-block:: none
 	
-     -a --all              Compile all libraries, including common libraries, packages and device libraries.
-        --unisim           Compile the unisim primitives
-        --unimacro         Compile the unimacro macros
-        --secureip         Compile the secureip primitives
+     --all, -a             Compile all libraries, including common libraries, packages and device libraries.
+     --unisim              Compile the unisim primitives
+     --unimacro            Compile the unimacro macros
+     --secureip            Compile the secureip primitives
 
   Compile options:
   
-  .. code-block:: raw
+  .. code-block:: none
 	
-        --vhdl93           Compile selected libraries with VHDL-93 (default).
-        --vhdl2008         Compile selected libraries with VHDL-2008.
+     --vhdl93              Compile selected libraries with VHDL-93 (default).
+     --vhdl2008            Compile selected libraries with VHDL-2008.
 
 * `compile-osvvm.sh`
 
   Selectable libraries:
   
-  .. code-block:: raw
+  .. code-block:: none
 	
-     -a --all              Compile all.
-        --osvvm            Compile the OSVVM library.
+     --all, -a             Compile all.
+     --osvvm               Compile the OSVVM library.
 
 * `compile-uvvm.sh`
 
   Selectable libraries:
   
-  .. code-block:: raw
+  .. code-block:: none
 	
-     -a --all              Compile all.
-        --uvvm             Compile the UVVM libraries.
+     --all, -a             Compile all.
+     --uvvm                Compile the UVVM libraries.
 
 
 Selectable Options for the PowerShell Scripts:
@@ -333,7 +329,7 @@ Selectable Options for the PowerShell Scripts:
 
 * Common parameters to all scripts:
   
-  .. code-block:: raw
+  .. code-block:: none
 	
      -Help                 Print the embedded help page(s).
      -Clean                Cleanup directory before analyzing.
@@ -343,7 +339,7 @@ Selectable Options for the PowerShell Scripts:
 
   Selectable libraries:
   
-  .. code-block:: raw
+  .. code-block:: none
 	
      -All                  Compile all libraries, including common libraries, packages and device libraries.
      -Altera               Compile base libraries like 'altera' and 'altera_mf'
@@ -354,7 +350,7 @@ Selectable Options for the PowerShell Scripts:
 
   Compile options:
 		
-  .. code-block:: raw
+  .. code-block:: none
 
      -VHDL93               Compile selected libraries with VHDL-93 (default).
      -VHDL2008             Compile selected libraries with VHDL-2008.
@@ -363,7 +359,7 @@ Selectable Options for the PowerShell Scripts:
 
   Selectable libraries:
   
-  .. code-block:: raw
+  .. code-block:: none
 
      -All                  Compile all libraries, including common libraries, packages and device libraries.
      -Unisim               Compile the unisim primitives
@@ -374,7 +370,7 @@ Selectable Options for the PowerShell Scripts:
 
   Compile options:
   
-  .. code-block:: raw
+  .. code-block:: none
 
      -VHDL93               Compile selected libraries with VHDL-93 (default).
      -VHDL2008             Compile selected libraries with VHDL-2008.
@@ -383,7 +379,7 @@ Selectable Options for the PowerShell Scripts:
 
   Selectable libraries:
   
-  .. code-block:: raw
+  .. code-block:: none
 
      -All                  Compile all libraries, including common libraries, packages and device libraries.
      -Unisim               Compile the unisim primitives
@@ -392,7 +388,7 @@ Selectable Options for the PowerShell Scripts:
 
   Compile options:
   
-  .. code-block:: raw
+  .. code-block:: none
 
      -VHDL93               Compile selected libraries with VHDL-93 (default).
      -VHDL2008             Compile selected libraries with VHDL-2008.
@@ -401,19 +397,19 @@ Selectable Options for the PowerShell Scripts:
 
   Selectable libraries:
   
-  .. code-block:: raw
+  .. code-block:: none
 
      -All                  Compile all.
-     -OSVVM  		           Compile the OSVVM library.
+     -OSVVM                Compile the OSVVM library.
 
 * `compile-uvvm.ps1`
 
   Selectable libraries:
   
-  .. code-block:: raw
+  .. code-block:: none
 
      -All                  Compile all.
-     -UVVM  		           Compile the UVVM libraries.
+     -UVVM                 Compile the UVVM libraries.
 
 --------------------------------------------------------------------------------
 

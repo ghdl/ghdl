@@ -3,8 +3,8 @@
 mcode Backend
 #############
 
-The mcode backend is available for all supported platforms and is also the most
-simplest procedure, because it requires the least dependencies and configuration
+The mcode backend is available for all supported platforms and is also the
+simplest procedure, because it requires the fewest dependencies and configuration
 options.
 
 

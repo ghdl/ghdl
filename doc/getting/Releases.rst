@@ -151,9 +151,9 @@ On Windows
 
    All Windows command line instructions are intended for :program:`Windows PowerShell`,
    if not marked otherwise. So executing the following instructions in Windows
-   Command Prompt (:program:`cmd.exe`) won't function or result in errors! See
-   the :ref:`Requirements section <GETTING:Require>` on where to
-   download or update PowerShell.
+   Command Prompt (:program:`cmd.exe`) won't function or will result in errors!
+   :program:`Windows PowerShell` can be installed or upgraded to v5.1 by installing the
+   `Windows Management Framework <https://docs.microsoft.com/en-us/powershell/wmf/5.1/install-configure>`_.
 
 Command line instructions to clone GHDL onto a Windows machine with HTTPS
 protocol:

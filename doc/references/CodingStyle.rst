@@ -4,17 +4,17 @@ Coding Style
 ############
 
 Ada subset: use only a simple (VHDL like) subset of Ada: no tasking, no
-controlled types...  VHDL users should easily understand that subset.
+controlled types... VHDL users should easily understand that subset.
 Allowed Ada95 features: the standard library, child packages.
 Use assertions.
 
 We try to follow the 'GNU Coding Standards' when possible: comments before
-declarations, two spaces at end of sentences, finish sentences with a dot.
-But: 3 spaces for indentation.
+declarations, one space at the end of sentences, finish sentences with a dot.
+But: 2 spaces for indentation in code blocks.
 
-No trailing spaces, not TAB (HT).
+No trailing spaces, no TAB (HT).
 
-Subprograms must have a comment before to describe it, like:
+Subprograms must have a comment before to describe them, like:
 
 .. code-block:: Ada
 	 
@@ -22,7 +22,7 @@ Subprograms must have a comment before to describe it, like:
    procedure Sem_Concurrent_Statement_Chain (Parent : Iir);
 
 The line before the comment must be a blank line (unless this is the first
-declaration).  Don't repeat the comment before the subprogram body.
+declaration). Don't repeat the comment before the subprogram body.
 
 * For subprograms:
 
@@ -74,15 +74,15 @@ declaration).  Don't repeat the comment before the subprogram body.
            Loc : Iir)
           return O_Enode
   
-  7) If not possible, ask yourself what is wrong!  Shorten a name.
+  7. If not possible, ask yourself what is wrong!  Shorten a name.
 
-* Rule for the 'is': one a new line only if the declarative part is not empty:
+* Rule for the 'is': on a new line only if the declarative part is not empty:
 	
      .. code-block:: Ada
   
         procedure Translate_Assign (Target : Mnode; Expr : Iir; Target_Type : Iir)
         is
-           Val : O_Enode;
+          Val : O_Enode;
         begin
 				
   vs.
@@ -92,7 +92,7 @@ declaration).  Don't repeat the comment before the subprogram body.
         function Translate_Static_Range_Dir (Expr : Iir) return O_Cnode is
         begin
 
-  If the parametere line is too long with the 'is', put in on a separate line:
+  If the parameter line is too long with the 'is', put in on a separate line:
 	
      .. code-block:: Ada
   
@@ -130,9 +130,9 @@ declaration).  Don't repeat the comment before the subprogram body.
      .. code-block:: Ada
   
         is
-           N_Info : constant Iir := Get_Sub_Aggregate_Info (Info);
-           Assoc  : Iir;
-           Sub    : Iir;
+          N_Info : constant Iir := Get_Sub_Aggregate_Info (Info);
+          Assoc  : Iir;
+          Sub    : Iir;
         begin
 				
   If the initialization expression has a side effect (such as allocation), do
