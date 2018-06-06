@@ -688,6 +688,36 @@ package body Evaluation is
          when Iir_Predefined_Integer_To_String =>
             return Eval_Integer_Image (Get_Value (Operand), Orig);
 
+         when Iir_Predefined_Array_Char_To_String =>
+            --  LRM08 5.7 String representation
+            --  - For a given value that is of a one-dimensional array type
+            --    whose element type is a character type that contains only
+            --    character literals, the string representation has the same
+            --    length as the given value.  Each element of the string
+            --    representation is the same character literal as the matching
+            --    element of the given value.
+            declare
+               Saggr : Iir;
+               Lits : Iir_Flist;
+               El : Iir;
+               C : Character;
+               String_Id : String8_Id;
+               Len : Natural;
+            begin
+               Saggr := Eval_String_Literal (Operand);
+               Lits := Get_Simple_Aggregate_List (Saggr);
+               Len := Get_Nbr_Elements (Lits);
+               String_Id := Str_Table.Create_String8;
+               for I in Flist_First .. Flist_Last (Lits) loop
+                  El := Get_Nth_Element (Lits, I);
+                  C := Get_Character (Get_Identifier (El));
+                  Str_Table.Append_String8_Char (C);
+               end loop;
+               Free_Eval_String_Literal (Saggr, Operand);
+
+               return Build_String (String_Id, Nat32 (Len), Orig);
+            end;
+
          when Iir_Predefined_Vector_Minimum
            | Iir_Predefined_Vector_Maximum =>
             --  LRM08 5.3.2.4 Predefined operations on array types
