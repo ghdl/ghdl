@@ -140,7 +140,10 @@ echo "travis_fold:end:configure"
 echo "travis_fold:start:make"
 travis_time_start
 printf "$ANSI_YELLOW[GHDL - build] Make $ANSI_NOCOLOR\n"
-make -j$(nproc)
+set +e
+make -j$(nproc) 2>make_err.log
+tail -1000 make_err.log
+set -e
 travis_time_finish
 echo "travis_fold:end:make"
 
