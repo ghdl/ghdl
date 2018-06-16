@@ -703,7 +703,9 @@ package body Parse is
    --  - in attribute name
    --  - in alias declaration
    --  - in entity designator
-   function Parse_Name_Suffix (Pfx : Iir; Allow_Indexes: Boolean := True)
+   function Parse_Name_Suffix (Pfx : Iir;
+                               Allow_Indexes: Boolean := True;
+                               Allow_Signature : Boolean := False)
      return Iir
    is
       Res: Iir;
@@ -806,6 +808,16 @@ package body Parse is
                end case;
                Scan;
             when others =>
+               if not Allow_Signature
+                 and then Get_Kind (Res) = Iir_Kind_Signature
+               then
+                  --  Not as a name.
+                  Error_Msg_Parse ("signature name not expected here");
+                  Prefix := Get_Signature_Prefix (Res);
+                  Set_Signature_Prefix (Res, Null_Iir);
+                  Free_Iir (Res);
+                  Res := Prefix;
+               end if;
                return Res;
          end case;
       end loop;
@@ -1026,7 +1038,8 @@ package body Parse is
    --   | slice_name
    --   | attribute_name
    --   | external_name
-   function Parse_Name (Allow_Indexes: Boolean := True) return Iir
+   function Parse_Any_Name
+     (Allow_Indexes: Boolean; Allow_Signature : Boolean) return Iir
    is
       Res: Iir;
    begin
@@ -1059,8 +1072,18 @@ package body Parse is
             raise Parse_Error;
       end case;
 
-      return Parse_Name_Suffix (Res, Allow_Indexes);
+      return Parse_Name_Suffix (Res, Allow_Indexes, Allow_Signature);
+   end Parse_Any_Name;
+
+   function Parse_Name (Allow_Indexes: Boolean := True) return Iir is
+   begin
+      return Parse_Any_Name (Allow_Indexes, False);
    end Parse_Name;
+
+   function Parse_Signature_Name return Iir is
+   begin
+      return Parse_Any_Name (True, True);
+   end Parse_Signature_Name;
 
    --  Emit an error message if MARK doesn't have the form of a type mark.
    procedure Check_Type_Mark (Mark : Iir) is
@@ -3597,7 +3620,7 @@ package body Parse is
       --  FIXME: nice message if token is ':=' ?
       Expect (Tok_Is);
       Scan;
-      Set_Name (Res, Parse_Name);
+      Set_Name (Res, Parse_Signature_Name);
 
       if Flag_Elocations then
          Create_Elocations (Res);
