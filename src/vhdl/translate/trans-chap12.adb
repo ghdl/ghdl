@@ -675,10 +675,12 @@ package body Trans.Chap12 is
 
          case Get_Kind (Lib_Unit) is
             when Iir_Kind_Configuration_Declaration =>
-               --  Always generate code for configuration.
-               --  Because default binding may be changed between analysis
-               --  and elaboration.
-               Translate (Unit, True);
+               if Get_Identifier (Lib_Unit) /= Null_Identifier then
+                  --  Always generate code for configuration.
+                  --  Because default binding may be changed between analysis
+                  --  and elaboration.
+                  Translate (Unit, True);
+               end if;
             when Iir_Kind_Entity_Declaration
               | Iir_Kind_Architecture_Body
               | Iir_Kind_Package_Declaration
@@ -696,6 +698,18 @@ package body Trans.Chap12 is
             when others =>
                Error_Kind ("elaborate", Lib_Unit);
          end case;
+      end loop;
+
+      for I in Design_Units.First .. Design_Units.Last loop
+         Unit := Design_Units.Table (I);
+         Lib_Unit := Get_Library_Unit (Unit);
+         if Get_Kind (Lib_Unit) = Iir_Kind_Configuration_Declaration
+           and then Get_Identifier (Lib_Unit) = Null_Identifier
+         then
+            --  Because of possible indirect recursion, translate default
+            --  configuration at the end.
+            Translate (Unit, True);
+         end if;
       end loop;
 
       --  Generate code to elaboration body-less package.

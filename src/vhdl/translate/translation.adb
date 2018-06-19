@@ -332,6 +332,7 @@ package body Translation is
                   Push_Identifier_Prefix (Mark_Arch, Get_Identifier (Arch));
                   Push_Identifier_Prefix
                     (Mark, Name_Table.Get_Identifier ("DEFAULT_CONFIG"));
+                  --  Spec is built during translation of architecture.
                   Chap1.Translate_Configuration_Declaration_Body (Lib_Unit);
                   Pop_Identifier_Prefix (Mark);
                   Pop_Identifier_Prefix (Mark_Arch);
