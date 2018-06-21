@@ -186,7 +186,7 @@ def read_kinds(filename):
             continue
         m = pat_comment.match(l)
         if not m:
-            raise ParseError(lr, 'Unknow line within kind declaration')
+            raise ParseError(lr, 'Unknown line within kind declaration')
 
     # Check subtypes
     pat_subtype = re.compile('   subtype ' + r'(\w+) is '
@@ -391,7 +391,7 @@ def read_nodes(filename, kinds, kinds_ranges, fields, funcs):
     while True:
         l = lr.get()
         if l == '   -- End of ' + type_name + '.\n':
-            return nodes
+            break
         if l == '\n':
             continue
         m = pat_decl.match(l)
@@ -428,6 +428,10 @@ def read_nodes(filename, kinds, kinds_ranges, fields, funcs):
         if pat_comment_line.match(l) or pat_comment_box.match(l):
             continue
         raise ParseError(lr, 'bad line in node description')
+
+    for k in kinds:
+        if k not in nodes:
+            raise ParseError(lr, 'no desription for "{}"'.format(k))
     return nodes
 
 
