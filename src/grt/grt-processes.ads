@@ -57,9 +57,9 @@ package Grt.Processes is
    Next_Time : Std_Time;
 
    --  Number of delta cycles.
-   Nbr_Delta_Cycles : Integer;
+   Nbr_Delta_Cycles : Ghdl_I64;
    --  Number of non-delta cycles.
-   Nbr_Cycles : Integer;
+   Nbr_Cycles : Ghdl_I64;
 
    type Process_Type is private;
    --  type Process_Acc is access all Process_Type;

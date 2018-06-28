@@ -305,7 +305,7 @@ package body Grt.Stats is
    --  Disp all statistics.
    procedure Disp_Stats
    is
-      N : Natural;
+      N : Ghdl_I64;
    begin
       Put (stdout, "total:          ");
       Put (stdout, Last_Time - Init_Time);
@@ -363,9 +363,7 @@ package body Grt.Stats is
       if N = 0 then
          Put (stdout, "-");
       else
-         Put_I64
-           (stdout,
-            Ghdl_I64 (Processes.Get_Nbr_Resumed_Processes) / Ghdl_I64 (N));
+         Put_I64 (stdout, Ghdl_I64 (Processes.Get_Nbr_Resumed_Processes) / N);
       end if;
       New_Line;
    end Disp_Stats;
