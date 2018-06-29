@@ -513,7 +513,63 @@ if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_ARRIA" == "TRUE" ] && [ $SKIP_LARGE_F
 
 	GHDLCompilePackages
 fi
+# compile Cyclone library
+if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_CYCLONE" == "TRUE" ]; then
+	Library="cyclone"
+	Files=(
+		cyclone_atoms.vhd
+		cyclone_components.vhd
+	)
 
+	# append absolute source path
+	SourceFiles=()
+	for File in ${Files[@]}; do
+		#Don't put nonexisting files.
+		if [ -f "$SourceDirectory/$File" ]; then
+			SourceFiles+=("$SourceDirectory/$File")
+		fi
+	done
+
+	GHDLCompilePackages
+fi
+# compile CycloneII library
+if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_CYCLONE" == "TRUE" ]; then
+	Library="cycloneii"
+	Files=(
+		cycloneii_atoms.vhd
+		cycloneii_components.vhd
+	)
+
+	# append absolute source path
+	SourceFiles=()
+	for File in ${Files[@]}; do
+		#Don't put nonexisting files.
+		if [ -f "$SourceDirectory/$File" ]; then
+			SourceFiles+=("$SourceDirectory/$File")
+		fi
+	done
+
+	GHDLCompilePackages
+fi
+# compile Cyclone IIIlibrary
+if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_CYCLONE" == "TRUE" ]; then
+	Library="cycloneiii"
+	Files=(
+		cycloneiii_atoms.vhd
+		cycloneiii_components.vhd
+	)
+
+	# append absolute source path
+	SourceFiles=()
+	for File in ${Files[@]}; do
+		#Don't put nonexisting files.
+		if [ -f "$SourceDirectory/$File" ]; then
+			SourceFiles+=("$SourceDirectory/$File")
+		fi
+	done
+
+	GHDLCompilePackages
+fi
 # compile CycloneIV library
 if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_CYCLONE" == "TRUE" ]; then
 	Library="cycloneiv"
@@ -583,7 +639,9 @@ if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_CYCLONE" == "TRUE" ]; then
 	# append absolute source path
 	SourceFiles=()
 	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
+		if [ -f "$SourceDirectory/$File" ]; then
+			SourceFiles+=("$SourceDirectory/$File")
+		fi
 	done
 
 	GHDLCompilePackages
