@@ -524,9 +524,12 @@ if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_CYCLONE" == "TRUE" ]; then
 	# append absolute source path
 	SourceFiles=()
 	for File in ${Files[@]}; do
+		FullPath="$SourceDirectory/$File"
 		#Don't put nonexisting files.
-		if [ -f "$SourceDirectory/$File" ]; then
-			SourceFiles+=("$SourceDirectory/$File")
+		if [ -f $FullPath ]; then
+			SourceFiles+=($FullPath)
+		elif [ $SUPPRESS_WARNINGS -eq 0 ] ; then
+			echo -e "${ANSI_YELLOW}File ${FullPath} not found.${ANSI_NOCOLOR}"
 		fi
 	done
 
@@ -543,15 +546,18 @@ if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_CYCLONE" == "TRUE" ]; then
 	# append absolute source path
 	SourceFiles=()
 	for File in ${Files[@]}; do
+		FullPath="$SourceDirectory/$File"
 		#Don't put nonexisting files.
-		if [ -f "$SourceDirectory/$File" ]; then
-			SourceFiles+=("$SourceDirectory/$File")
+		if [ -f $FullPath ]; then
+			SourceFiles+=($FullPath)
+		elif [ $SUPPRESS_WARNINGS -eq 0 ] ; then
+			echo -e "${ANSI_YELLOW}File ${FullPath} not found.${ANSI_NOCOLOR}"
 		fi
 	done
 
 	GHDLCompilePackages
 fi
-# compile Cyclone IIIlibrary
+# compile Cyclone III library
 if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_CYCLONE" == "TRUE" ]; then
 	Library="cycloneiii"
 	Files=(
@@ -562,9 +568,12 @@ if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_CYCLONE" == "TRUE" ]; then
 	# append absolute source path
 	SourceFiles=()
 	for File in ${Files[@]}; do
+		FullPath="$SourceDirectory/$File"
 		#Don't put nonexisting files.
-		if [ -f "$SourceDirectory/$File" ]; then
-			SourceFiles+=("$SourceDirectory/$File")
+		if [ -f $FullPath ]; then
+			SourceFiles+=($FullPath)
+		elif [ $SUPPRESS_WARNINGS -eq 0 ] ; then
+			echo -e "${ANSI_YELLOW}File ${FullPath} not found.${ANSI_NOCOLOR}"
 		fi
 	done
 
@@ -639,8 +648,12 @@ if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_CYCLONE" == "TRUE" ]; then
 	# append absolute source path
 	SourceFiles=()
 	for File in ${Files[@]}; do
-		if [ -f "$SourceDirectory/$File" ]; then
-			SourceFiles+=("$SourceDirectory/$File")
+		FullPath="$SourceDirectory/$File"
+		#Don't put nonexisting files.
+		if [ -f $FullPath ]; then
+			SourceFiles+=($FullPath)
+		elif [ $SUPPRESS_WARNINGS -eq 0 ] ; then
+			echo -e "${ANSI_YELLOW}File ${FullPath} not found.${ANSI_NOCOLOR}"
 		fi
 	done
 
