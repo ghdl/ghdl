@@ -2244,7 +2244,8 @@ package body Sem_Names is
            | Iir_Kind_Concurrent_Procedure_Call_Statement
            | Iir_Kind_Component_Instantiation_Statement
            | Iir_Kind_Slice_Name
-           | Iir_Kind_Procedure_Call_Statement =>
+           | Iir_Kind_Procedure_Call_Statement
+           | Iir_Kind_Attribute_Declaration =>
             if not Soft then
                Error_Msg_Sem
                  (+Prefix_Loc, "%n cannot be selected by name", +Prefix);
@@ -2751,7 +2752,8 @@ package body Sem_Names is
            | Iir_Kind_Component_Declaration
            | Iir_Kind_Type_Conversion
            | Iir_Kind_Unit_Declaration
-           | Iir_Kind_Enumeration_Literal =>
+           | Iir_Kind_Enumeration_Literal
+           | Iir_Kind_Attribute_Declaration =>
             Error_Msg_Sem (+Name, "%n cannot be indexed or sliced", +Prefix);
             Res := Null_Iir;
 
