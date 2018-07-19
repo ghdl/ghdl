@@ -1903,6 +1903,9 @@ package body Sem_Types is
             for I in Flist_First .. Flist_Last (Index_List) loop
                Index_El := Get_Nth_Element (Index_List, I);
                El := Reparse_As_Record_Element_Constraint (Index_El);
+               if El = Null_Iir then
+                  return Create_Error_Type (Type_Mark);
+               end if;
                Set_Nth_Element (El_List, I, El);
             end loop;
 
@@ -1945,8 +1948,8 @@ package body Sem_Types is
             if El_List /= Null_Iir_Flist then
                for I in Flist_First .. Flist_Last (El_List) loop
                   El := Get_Nth_Element (El_List, I);
-                  Tm_El :=
-                    Find_Name_In_Flist (Tm_El_List, Get_Identifier (El));
+                  Tm_El := Find_Name_In_Flist
+                    (Tm_El_List, Get_Identifier (El));
                   if Tm_El = Null_Iir then
                      --  Constraint element references an element name that
                      --  doesn't exist.
@@ -2324,7 +2327,9 @@ package body Sem_Types is
 
       Res := Sem_Subtype_Constraint
         (Def, Type_Mark, Get_Resolution_Indication (Def));
-      Set_Subtype_Type_Mark (Res, Type_Mark_Name);
+      if not Is_Error (Res) then
+         Set_Subtype_Type_Mark (Res, Type_Mark_Name);
+      end if;
       return Res;
    end Sem_Subtype_Indication;
 
