@@ -785,6 +785,8 @@ package body Ghdlcomp is
                  or else (Arg'Length > 6 and then Arg (1 .. 6) = "--std=")
                  or else (Arg'Length > 7 and then Arg (1 .. 7) = "--work=")
                  or else (Arg'Length > 2 and then Arg (1 .. 2) = "-P")
+                 or else (Arg'Length > 2 and then Arg (1 .. 2) = "-f")
+                 or else (Arg'Length > 6 and then Arg (1 .. 6) = "--std=")
                then
                   Put (" ");
                   Put (Arg);
