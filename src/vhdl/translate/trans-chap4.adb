@@ -531,11 +531,18 @@ package body Trans.Chap4 is
             begin
                Chap3.Create_Array_Subtype (Aggr_Type);
                Name_Node := Stabilize (Name);
-               New_Assign_Stmt
-                 (M2Lp (Chap3.Get_Composite_Bounds (Name_Node)),
-                  M2Addr (Chap3.Get_Array_Type_Bounds (Aggr_Type)));
-               Chap3.Allocate_Unbounded_Composite_Base
-                 (Alloc_Kind, Name_Node, Get_Base_Type (Aggr_Type));
+               if Alloc_Kind = Alloc_Stack then
+                  --  Short-cut: don't allocate bounds.
+                  New_Assign_Stmt
+                    (M2Lp (Chap3.Get_Composite_Bounds (Name_Node)),
+                     M2Addr (Chap3.Get_Array_Type_Bounds (Aggr_Type)));
+                  Chap3.Allocate_Unbounded_Composite_Base
+                    (Alloc_Kind, Name_Node, Get_Base_Type (Aggr_Type));
+               else
+                  Chap3.Translate_Object_Allocation
+                    (Name_Node, Alloc_Kind, Get_Base_Type (Aggr_Type),
+                     Chap3.Get_Array_Type_Bounds (Aggr_Type));
+               end if;
             end;
          else
             Name_Node := Name;
