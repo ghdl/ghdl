@@ -1980,7 +1980,8 @@ package body Scanner is
             --  literal.
             case Characters_Kind (Source (Pos)) is
                when Digit =>
-                  raise Internal_Error;
+                  --  Happen if d#ddd# is followed by a number.
+                  Error_Msg_Scan ("space is required between numbers");
                when Upper_Case_Letter
                  | Lower_Case_Letter =>
                   --  Could call Error_Separator, but use a clearer message
