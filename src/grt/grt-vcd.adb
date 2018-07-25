@@ -552,6 +552,11 @@ package body Grt.Vcd is
          return;
       end if;
 
+      Vcd_Put ("$scope module ");
+      Vcd_Put_Name (Inst);
+      Vcd_Putc (' ');
+      Vcd_Put_End;
+
       --  Extract signals.
       loop
          Vhpi_Scan (Decl_It, Decl, Error);
@@ -575,44 +580,38 @@ package body Grt.Vcd is
       end loop;
 
       --  Extract sub-scopes.
-      if Vhpi_Get_Kind (Inst) = VhpiPackInstK then
-         --  Except for packages
-         return;
-      end if;
-      Vhpi_Iterator (VhpiInternalRegions, Inst, Decl_It, Error);
-      if Error /= AvhpiErrorOk then
-         Avhpi_Error (Error);
-         return;
-      end if;
-
-      loop
-         Vhpi_Scan (Decl_It, Decl, Error);
-         exit when Error = AvhpiErrorIteratorEnd;
+      if Vhpi_Get_Kind (Inst) /= VhpiPackInstK then
+         Vhpi_Iterator (VhpiInternalRegions, Inst, Decl_It, Error);
          if Error /= AvhpiErrorOk then
             Avhpi_Error (Error);
             return;
          end if;
-         case Vhpi_Get_Kind (Decl) is
-            when VhpiIfGenerateK
-              | VhpiForGenerateK
-              | VhpiBlockStmtK
-              | VhpiCompInstStmtK =>
-               Match_List_Child := Get_Cursor
-                 (Match_List, Avhpi_Get_Base_Name (Decl));
-               if Is_Displayed (Match_List_Child) then
-                  Vcd_Put ("$scope module ");
-                  Vcd_Put_Name (Decl);
-                  Vcd_Putc (' ');
-                  Vcd_Put_End;
-                  Vcd_Put_Hierarchy (Decl, Match_List_Child);
-                  Vcd_Put ("$upscope ");
-                  Vcd_Put_End;
-               end if;
-            when others =>
-               null;
-         end case;
-      end loop;
 
+         loop
+            Vhpi_Scan (Decl_It, Decl, Error);
+            exit when Error = AvhpiErrorIteratorEnd;
+            if Error /= AvhpiErrorOk then
+               Avhpi_Error (Error);
+               return;
+            end if;
+            case Vhpi_Get_Kind (Decl) is
+               when VhpiIfGenerateK
+                 | VhpiForGenerateK
+                 | VhpiBlockStmtK
+                 | VhpiCompInstStmtK =>
+                  Match_List_Child := Get_Cursor
+                    (Match_List, Avhpi_Get_Base_Name (Decl));
+                  if Is_Displayed (Match_List_Child) then
+                     Vcd_Put_Hierarchy (Decl, Match_List_Child);
+                  end if;
+               when others =>
+                  null;
+            end case;
+         end loop;
+      end if;
+
+      Vcd_Put ("$upscope ");
+      Vcd_Put_End;
    end Vcd_Put_Hierarchy;
 
    procedure Vcd_Put_Bit (V : Ghdl_B1)
