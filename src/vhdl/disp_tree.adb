@@ -45,11 +45,12 @@ package body Disp_Tree is
       Put (Blanks);
    end Put_Indent;
 
-   procedure Disp_Iir_Number (Node: Iir)
+   procedure Disp_Int32 (Num : Int32)
    is
       Res : String (1 .. 10) := "         ]";
-      N : Int32 := Int32 (Node);
+      N : Int32;
    begin
+      N := Num;
       for I in reverse 2 .. 9 loop
          Res (I) := Character'Val (Character'Pos ('0') + (N mod 10));
          N := N / 10;
@@ -60,6 +61,11 @@ package body Disp_Tree is
          end if;
       end loop;
       Put (Res);
+   end Disp_Int32;
+
+   procedure Disp_Iir_Number (Node: Iir) is
+   begin
+      Disp_Int32 (Int32 (Node));
    end Disp_Iir_Number;
 
    -- For iir.
@@ -571,7 +577,10 @@ package body Disp_Tree is
                when Type_Token_Type =>
                   Put_Line (Image_Token_Type (Get_Token_Type (N, F)));
                when Type_Name_Id =>
-                  Put_Line (Image_Name_Id (Get_Name_Id (N, F)));
+                  Put (Image_Name_Id (Get_Name_Id (N, F)));
+                  Put (' ');
+                  Disp_Int32 (Int32 (Get_Name_Id (N, F)));
+                  New_Line;
             end case;
          end loop;
       end;
