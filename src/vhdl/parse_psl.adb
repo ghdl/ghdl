@@ -359,13 +359,26 @@ package body Parse_Psl is
          Error_Msg_Parse ("'(' expected around property");
          return Parse_FL_Property (Prio_Lowest);
       else
+         --  Skip '('.
          Scan;
+
          Res := Parse_FL_Property (Prio_Lowest);
-         if Current_Token /= Tok_Right_Paren then
+         if Current_Token = Tok_Right_Paren then
+            --  Skip ')'.
+            Scan;
+         else
             Error_Msg_Parse ("missing matching ')' for '(' at line "
                                & Image (Loc, False));
-         else
-            Scan;
+         end if;
+
+         if Get_Kind (Res) = N_HDL_Expr then
+            declare
+               N : Iirs.Iir;
+            begin
+               N := Psl_To_Vhdl (Res);
+               N := Parse.Parse_Binary_Expression (N, Parse.Prio_Expression);
+               Res := Vhdl_To_Psl (N);
+            end;
          end if;
          return Res;
       end if;
@@ -558,7 +571,8 @@ package body Parse_Psl is
                Res := Parse_Binary_FL_Property (N_And_Prop, Res, Prio_Seq_And);
             when Token_Relational_Operator_Type =>
                return Vhdl_To_Psl
-                 (Parse.Parse_Relation_Rhs (Psl_To_Vhdl (Res)));
+                 (Parse.Parse_Binary_Expression
+                    (Psl_To_Vhdl (Res), Parse.Prio_Relation));
             when Tok_Colon
               | Tok_Bar
               | Tok_Ampersand

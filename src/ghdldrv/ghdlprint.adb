@@ -378,23 +378,11 @@ package body Ghdlprint is
                      Disp_Text;
                      Put ("</tt>");
                end case;
-            when Tok_Access .. Tok_Elsif
-              | Tok_Entity .. Tok_With
-              | Tok_Mod .. Tok_Rem
-              | Tok_And .. Tok_Not =>
-               Disp_Reserved;
-            when Tok_End =>
+            when Tok_Mod .. Tok_Parameter =>
                Disp_Reserved;
             when Tok_Semi_Colon =>
                Disp_Spaces;
                Disp_Text;
-            when Tok_Xnor .. Tok_Ror =>
-               Disp_Reserved;
-            when Tok_Protected =>
-               Disp_Reserved;
-            when Tok_Context
-              | Tok_Parameter =>
-               Disp_Reserved;
             when Tok_Across .. Tok_Tolerance =>
                Disp_Reserved;
             when Tok_Psl_Default

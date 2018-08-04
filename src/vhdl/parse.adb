@@ -49,8 +49,6 @@ package body Parse is
 
    -- current_token must be valid.
    -- Leaves a token.
-   function Parse_Simple_Expression (Primary : Iir := Null_Iir)
-                                    return Iir_Expression;
    function Parse_Primary return Iir_Expression;
    function Parse_Use_Clause return Iir_Use_Clause;
 
@@ -299,7 +297,7 @@ package body Parse is
       --  Skip 'to' or 'downto'.
       Scan;
 
-      Set_Right_Limit_Expr (Res, Parse_Simple_Expression);
+      Set_Right_Limit_Expr (Res, Parse_Expression (Prio_Simple));
       return Res;
    end Parse_Range_Expression;
 
@@ -309,7 +307,7 @@ package body Parse is
    is
       Left: Iir;
    begin
-      Left := Parse_Simple_Expression;
+      Left := Parse_Expression (Prio_Simple);
 
       case Current_Token is
          when Tok_To
@@ -367,7 +365,7 @@ package body Parse is
    is
       Left: Iir;
    begin
-      Left := Parse_Simple_Expression;
+      Left := Parse_Expression (Prio_Simple);
 
       case Current_Token is
          when Tok_To
@@ -2014,7 +2012,7 @@ package body Parse is
 
          --  Parse a simple expression (for the range), which can also parse a
          --  name.
-         Type_Mark := Parse_Simple_Expression;
+         Type_Mark := Parse_Expression (Prio_Simple);
 
          case Current_Token is
             when Tok_Range =>
@@ -5255,7 +5253,7 @@ package body Parse is
            | Tok_Plus =>
             Error_Msg_Parse
               ("'-' and '+' are not allowed in primary, use parenthesis");
-            return Parse_Simple_Expression;
+            return Parse_Expression (Prio_Simple);
 
          when Tok_Comma
            | Tok_Semi_Colon
@@ -5272,80 +5270,118 @@ package body Parse is
       end case;
    end Parse_Primary;
 
-   --  precond : next token
-   --  postcond: next token
+   --  [ LRM08 9 Expressions ]
    --
-   --  [ LRM93 7.1 ]
-   --  factor ::= primary [ ** primary ]
-   --           | ABS primary
-   --           | NOT primary
-   --           | logical_operator primary  [ VHDL08 9.1 ]
-   function Build_Unary_Factor (Primary : Iir; Op : Iir_Kind) return Iir is
+   --  expression ::=
+   --      condition_operator primary
+   --    | logical_expression
+   --
+   --  logical_expression ::=
+   --      relation { and relation }
+   --    | relation { or relation }
+   --    | relation { xor relation }
+   --    | relation [ nand relation ]
+   --    | relation [ nor relation ]
+   --    | relation { xnor relation }
+   --
+   --  relation ::=
+   --    shift_expression [ relational_operator shift_expression ]
+   --
+   --  shift_expression ::=
+   --    simple_expression [ shift_operator simple_expression ]
+   --
+   --  simple_expression ::=
+   --    [ sign ] term { adding_operator term }
+   --
+   --  term ::=
+   --    factor { multiplying_operator factor }
+   --
+   --  factor ::=
+   --      primary [ ** primary ]
+   --    | abs primary
+   --    | not primary
+   --    | logical_operator primary
+   function Build_Unary_Factor (Op : Iir_Kind) return Iir
+   is
       Res : Iir;
    begin
-      if Primary /= Null_Iir then
-         return Primary;
-      end if;
       Res := Create_Iir (Op);
       Set_Location (Res);
+
+      --  Skip operator.
       Scan;
+
       Set_Operand (Res, Parse_Primary);
+
       return Res;
    end Build_Unary_Factor;
 
-   function Build_Unary_Factor_08 (Primary : Iir; Op : Iir_Kind) return Iir is
+   function Build_Unary_Simple (Op : Iir_Kind) return Iir
+   is
+      Res : Iir;
    begin
-      if Primary /= Null_Iir then
-         return Primary;
-      end if;
+      Res := Create_Iir (Op);
+      Set_Location (Res);
+
+      --  Skip operator.
+      Scan;
+
+      Set_Operand (Res, Parse_Expression (Prio_Term));
+
+      return Res;
+   end Build_Unary_Simple;
+
+   function Build_Unary_Factor_08 (Op : Iir_Kind) return Iir is
+   begin
       if Flags.Vhdl_Std < Vhdl_08 then
          Error_Msg_Parse ("missing left operand of logical expression");
+
          --  Skip operator
          Scan;
+
          return Parse_Primary;
       else
-         return Build_Unary_Factor (Primary, Op);
+         return Build_Unary_Factor (Op);
       end if;
    end Build_Unary_Factor_08;
 
-   function Parse_Factor (Primary : Iir := Null_Iir) return Iir_Expression is
-      Res, Left: Iir_Expression;
+   function Parse_Unary_Expression return Iir
+   is
+      Res, Left : Iir_Expression;
    begin
       case Current_Token is
+         when Tok_Plus =>
+            return Build_Unary_Simple (Iir_Kind_Identity_Operator);
+         when Tok_Minus =>
+            return Build_Unary_Simple (Iir_Kind_Negation_Operator);
+
          when Tok_Abs =>
-            return Build_Unary_Factor (Primary, Iir_Kind_Absolute_Operator);
+            return Build_Unary_Factor (Iir_Kind_Absolute_Operator);
          when Tok_Not =>
-            return Build_Unary_Factor (Primary, Iir_Kind_Not_Operator);
+            return Build_Unary_Factor (Iir_Kind_Not_Operator);
 
          when Tok_And =>
-            return Build_Unary_Factor_08
-              (Primary, Iir_Kind_Reduction_And_Operator);
+            return Build_Unary_Factor_08 (Iir_Kind_Reduction_And_Operator);
          when Tok_Or =>
-            return Build_Unary_Factor_08
-              (Primary, Iir_Kind_Reduction_Or_Operator);
+            return Build_Unary_Factor_08 (Iir_Kind_Reduction_Or_Operator);
          when Tok_Nand =>
-            return Build_Unary_Factor_08
-              (Primary, Iir_Kind_Reduction_Nand_Operator);
+            return Build_Unary_Factor_08 (Iir_Kind_Reduction_Nand_Operator);
          when Tok_Nor =>
-            return Build_Unary_Factor_08
-              (Primary, Iir_Kind_Reduction_Nor_Operator);
+            return Build_Unary_Factor_08 (Iir_Kind_Reduction_Nor_Operator);
          when Tok_Xor =>
-            return Build_Unary_Factor_08
-              (Primary, Iir_Kind_Reduction_Xor_Operator);
+            return Build_Unary_Factor_08 (Iir_Kind_Reduction_Xor_Operator);
          when Tok_Xnor =>
-            return Build_Unary_Factor_08
-              (Primary, Iir_Kind_Reduction_Xnor_Operator);
+            return Build_Unary_Factor_08 (Iir_Kind_Reduction_Xnor_Operator);
 
          when others =>
-            if Primary /= Null_Iir then
-               Left := Primary;
-            else
-               Left := Parse_Primary;
-            end if;
+            Left := Parse_Primary;
             if Current_Token = Tok_Double_Star then
                Res := Create_Iir (Iir_Kind_Exponentiation_Operator);
                Set_Location (Res);
+
+               --  Skip '**'.
                Scan;
+
                Set_Left (Res, Left);
                Set_Right (Res, Parse_Primary);
                return Res;
@@ -5353,272 +5389,135 @@ package body Parse is
                return Left;
             end if;
       end case;
-   end Parse_Factor;
+   end Parse_Unary_Expression;
 
-   --  precond : next token
-   --  postcond: next token
-   --
-   --  [ LRM93 7.1 ]
-   --  term ::= factor { multiplying_operator factor }
-   --
-   --  [ LRM93 7.2 ]
-   --  multiplying_operator ::= * | / | MOD | REM
-   function Parse_Term (Primary : Iir) return Iir_Expression is
-      Res, Tmp: Iir_Expression;
+   --  Example: When PRIO is Prio_Simple, a simple expression will be returned.
+   function Parse_Binary_Expression (Left : Iir; Prio : Prio_Type) return Iir
+   is
+      Res : Iir;
+      Expr : Iir;
+      Op : Iir_Kind;
+      Op_Prio : Prio_Type;
+      Op_Tok : Token_Type;
    begin
-      Res := Parse_Factor (Primary);
-      while Current_Token in Token_Multiplying_Operator_Type loop
-         case Current_Token is
+      Res := Left;
+      loop
+         Op_Tok := Current_Token;
+         case Op_Tok is
             when Tok_Star =>
-               Tmp := Create_Iir (Iir_Kind_Multiplication_Operator);
+               Op := Iir_Kind_Multiplication_Operator;
+               Op_Prio := Prio_Term;
             when Tok_Slash =>
-               Tmp := Create_Iir (Iir_Kind_Division_Operator);
+               Op := Iir_Kind_Division_Operator;
+               Op_Prio := Prio_Term;
             when Tok_Mod =>
-               Tmp := Create_Iir (Iir_Kind_Modulus_Operator);
+               Op := Iir_Kind_Modulus_Operator;
+               Op_Prio := Prio_Term;
             when Tok_Rem =>
-               Tmp := Create_Iir (Iir_Kind_Remainder_Operator);
-            when others =>
-               raise Program_Error;
-         end case;
-         Set_Location (Tmp);
-         Set_Left (Tmp, Res);
-         Scan;
-         Set_Right (Tmp, Parse_Factor);
-         Res := Tmp;
-      end loop;
-      return Res;
-   end Parse_Term;
+               Op := Iir_Kind_Remainder_Operator;
+               Op_Prio := Prio_Term;
 
-   --  precond : next token
-   --  postcond: next token
-   --
-   --  [ LRM93 7.1 ]
-   --  simple_expression ::= [ sign ] term { adding_operator term }
-   --
-   --  [ LRM93 7.2 ]
-   --  sign ::= + | -
-   --
-   --  [ LRM93 7.2 ]
-   --  adding_operator ::= + | - | &
-   function Parse_Simple_Expression (Primary : Iir := Null_Iir)
-                                    return Iir_Expression
-   is
-      Res, Tmp: Iir_Expression;
-   begin
-      if Current_Token in Token_Sign_Type
-        and then Primary = Null_Iir
-      then
-         case Current_Token is
             when Tok_Plus =>
-               Res := Create_Iir (Iir_Kind_Identity_Operator);
+               Op := Iir_Kind_Addition_Operator;
+               Op_Prio := Prio_Simple;
             when Tok_Minus =>
-               Res := Create_Iir (Iir_Kind_Negation_Operator);
-            when others =>
-               raise Program_Error;
-         end case;
-         Set_Location (Res);
-         Scan;
-         Set_Operand (Res, Parse_Term (Null_Iir));
-      else
-         Res := Parse_Term (Primary);
-      end if;
-      while Current_Token in Token_Adding_Operator_Type loop
-         case Current_Token is
-            when Tok_Plus =>
-               Tmp := Create_Iir (Iir_Kind_Addition_Operator);
-            when Tok_Minus =>
-               Tmp := Create_Iir (Iir_Kind_Substraction_Operator);
+               Op := Iir_Kind_Substraction_Operator;
+               Op_Prio := Prio_Simple;
             when Tok_Ampersand =>
-               Tmp := Create_Iir (Iir_Kind_Concatenation_Operator);
-            when others =>
-               raise Program_Error;
-         end case;
-         Set_Location (Tmp);
-         Scan;
-         Set_Left (Tmp, Res);
-         Set_Right (Tmp, Parse_Term (Null_Iir));
-         Res := Tmp;
-      end loop;
-      return Res;
-   end Parse_Simple_Expression;
+               Op := Iir_Kind_Concatenation_Operator;
+               Op_Prio := Prio_Simple;
 
-   --  precond : next token
-   --  postcond: next token
-   --
-   --  [ LRM93 7.1 ]
-   --  shift_expression ::=
-   --      simple_expression [ shift_operator simple_expression ]
-   --
-   --  [ LRM93 7.2 ]
-   --  shift_operator ::= SLL | SRL | SLA | SRA | ROL | ROR
-   function Parse_Shift_Expression return Iir_Expression is
-      Res, Tmp: Iir_Expression;
-   begin
-      Tmp := Parse_Simple_Expression;
-      if Current_Token not in Token_Shift_Operator_Type then
-         return Tmp;
-      elsif Flags.Vhdl_Std = Vhdl_87 then
-         Error_Msg_Parse ("shift operators not allowed in vhdl 87");
-      end if;
-      case Current_Token is
-         when Tok_Sll =>
-            Res := Create_Iir (Iir_Kind_Sll_Operator);
-         when Tok_Sla =>
-            Res := Create_Iir (Iir_Kind_Sla_Operator);
-         when Tok_Srl =>
-            Res := Create_Iir (Iir_Kind_Srl_Operator);
-         when Tok_Sra =>
-            Res := Create_Iir (Iir_Kind_Sra_Operator);
-         when Tok_Rol =>
-            Res := Create_Iir (Iir_Kind_Rol_Operator);
-         when Tok_Ror =>
-            Res := Create_Iir (Iir_Kind_Ror_Operator);
-         when others =>
-            raise Program_Error;
-      end case;
-      Set_Location (Res);
-      Scan;
-      Set_Left (Res, Tmp);
-      Set_Right (Res, Parse_Simple_Expression);
-      return Res;
-   end Parse_Shift_Expression;
+            when Tok_Sll =>
+               Op := Iir_Kind_Sll_Operator;
+               Op_Prio := Prio_Shift;
+            when Tok_Sla =>
+               Op := Iir_Kind_Sla_Operator;
+               Op_Prio := Prio_Shift;
+            when Tok_Srl =>
+               Op := Iir_Kind_Srl_Operator;
+               Op_Prio := Prio_Shift;
+            when Tok_Sra =>
+               Op := Iir_Kind_Sra_Operator;
+               Op_Prio := Prio_Shift;
+            when Tok_Rol =>
+               Op := Iir_Kind_Rol_Operator;
+               Op_Prio := Prio_Shift;
+            when Tok_Ror =>
+               Op := Iir_Kind_Ror_Operator;
+               Op_Prio := Prio_Shift;
 
-   --  precond : next token (relational_operator)
-   --  postcond: next token
-   --
-   --  [ LRM93 7.1 ]
-   --     relational_operator shift_expression
-   function Parse_Relation_Rhs (Left : Iir) return Iir
-   is
-      Res, Tmp: Iir_Expression;
-   begin
-      Tmp := Left;
-
-      --  This loop is just to handle errors such as a = b = c.
-      loop
-         case Current_Token is
             when Tok_Equal =>
-               Res := Create_Iir (Iir_Kind_Equality_Operator);
+               Op := Iir_Kind_Equality_Operator;
+               Op_Prio := Prio_Relation;
             when Tok_Not_Equal =>
-               Res := Create_Iir (Iir_Kind_Inequality_Operator);
+               Op := Iir_Kind_Inequality_Operator;
+               Op_Prio := Prio_Relation;
             when Tok_Less =>
-               Res := Create_Iir (Iir_Kind_Less_Than_Operator);
+               Op := Iir_Kind_Less_Than_Operator;
+               Op_Prio := Prio_Relation;
             when Tok_Less_Equal =>
-               Res := Create_Iir (Iir_Kind_Less_Than_Or_Equal_Operator);
+               Op := Iir_Kind_Less_Than_Or_Equal_Operator;
+               Op_Prio := Prio_Relation;
             when Tok_Greater =>
-               Res := Create_Iir (Iir_Kind_Greater_Than_Operator);
+               Op := Iir_Kind_Greater_Than_Operator;
+               Op_Prio := Prio_Relation;
             when Tok_Greater_Equal =>
-               Res := Create_Iir (Iir_Kind_Greater_Than_Or_Equal_Operator);
+               Op := Iir_Kind_Greater_Than_Or_Equal_Operator;
+               Op_Prio := Prio_Relation;
             when Tok_Match_Equal =>
-               Res := Create_Iir (Iir_Kind_Match_Equality_Operator);
+               Op := Iir_Kind_Match_Equality_Operator;
+               Op_Prio := Prio_Relation;
             when Tok_Match_Not_Equal =>
-               Res := Create_Iir (Iir_Kind_Match_Inequality_Operator);
+               Op := Iir_Kind_Match_Inequality_Operator;
+               Op_Prio := Prio_Relation;
             when Tok_Match_Less =>
-               Res := Create_Iir (Iir_Kind_Match_Less_Than_Operator);
+               Op := Iir_Kind_Match_Less_Than_Operator;
+               Op_Prio := Prio_Relation;
             when Tok_Match_Less_Equal =>
-               Res := Create_Iir (Iir_Kind_Match_Less_Than_Or_Equal_Operator);
+               Op := Iir_Kind_Match_Less_Than_Or_Equal_Operator;
+               Op_Prio := Prio_Relation;
             when Tok_Match_Greater =>
-               Res := Create_Iir (Iir_Kind_Match_Greater_Than_Operator);
+               Op := Iir_Kind_Match_Greater_Than_Operator;
+               Op_Prio := Prio_Relation;
             when Tok_Match_Greater_Equal =>
-               Res := Create_Iir
-                 (Iir_Kind_Match_Greater_Than_Or_Equal_Operator);
-            when others =>
-               raise Program_Error;
-         end case;
-         Set_Location (Res);
-         Scan;
-         Set_Left (Res, Tmp);
-         Set_Right (Res, Parse_Shift_Expression);
-         exit when Current_Token not in Token_Relational_Operator_Type;
-         Error_Msg_Parse
-           ("use parenthesis for consecutive relational expressions");
-         Tmp := Res;
-      end loop;
-      return Res;
-   end Parse_Relation_Rhs;
+               Op := Iir_Kind_Match_Greater_Than_Or_Equal_Operator;
+               Op_Prio := Prio_Relation;
 
-   --  precond : next token
-   --  postcond: next token
-   --
-   --  [ LRM93 7.1 ]
-   --  relation ::= shift_expression [ relational_operator shift_expression ]
-   --
-   --  [ LRM93 7.2 ]
-   --  relational_operator ::= = | /= | < | <= | > | >=
-   --                        | ?= | ?/= | ?< | ?<= | ?> | ?>=
-   function Parse_Relation return Iir
-   is
-      Tmp: Iir;
-   begin
-      Tmp := Parse_Shift_Expression;
-      if Current_Token not in Token_Relational_Operator_Type then
-         return Tmp;
-      end if;
-
-      return Parse_Relation_Rhs (Tmp);
-   end Parse_Relation;
-
-   --  precond : next token
-   --  postcond: next token
-   --
-   --  [ LRM93 7.1 ]
-   --  expression ::= relation { AND relation }
-   --               | relation { OR relation }
-   --               | relation { XOR relation }
-   --               | relation [ NAND relation }
-   --               | relation [ NOR relation }
-   --               | relation { XNOR relation }
-   function Parse_Expression_Rhs (Left : Iir) return Iir
-   is
-      Res, Tmp: Iir;
-
-      --  OP_TOKEN contains the operator combinaison.
-      Op_Token: Token_Type;
-   begin
-      Tmp := Left;
-      Op_Token := Tok_Invalid;
-      loop
-         case Current_Token is
             when Tok_And =>
-               Res := Create_Iir (Iir_Kind_And_Operator);
+               Op := Iir_Kind_And_Operator;
+               Op_Prio := Prio_Logical;
             when Tok_Or =>
-               Res := Create_Iir (Iir_Kind_Or_Operator);
+               Op := Iir_Kind_Or_Operator;
+               Op_Prio := Prio_Logical;
             when Tok_Xor =>
-               Res := Create_Iir (Iir_Kind_Xor_Operator);
+               Op := Iir_Kind_Xor_Operator;
+               Op_Prio := Prio_Logical;
             when Tok_Nand =>
-               Res := Create_Iir (Iir_Kind_Nand_Operator);
+               Op := Iir_Kind_Nand_Operator;
+               Op_Prio := Prio_Logical;
             when Tok_Nor =>
-               Res := Create_Iir (Iir_Kind_Nor_Operator);
+               Op := Iir_Kind_Nor_Operator;
+               Op_Prio := Prio_Logical;
             when Tok_Xnor =>
-               if Flags.Vhdl_Std = Vhdl_87 then
-                  Error_Msg_Parse ("'xnor' keyword not allowed in vhdl 87");
-               end if;
-               Res := Create_Iir (Iir_Kind_Xnor_Operator);
+               Op := Iir_Kind_Xnor_Operator;
+               Op_Prio := Prio_Logical;
+
             when others =>
-               return Tmp;
+               return Res;
          end case;
 
-         if Op_Token = Tok_Invalid then
-            Op_Token := Current_Token;
-         else
-            --  Check after the case, since current_token may not be an
-            --  operator...
-            --  TODO: avoid repetition of this message ?
-            if Op_Token = Tok_Nand or Op_Token = Tok_Nor then
-               Error_Msg_Parse
-                 ("sequence of 'nor' or 'nand' not allowed", Cont => True);
-               Error_Msg_Parse
-                 ("('nor' and 'nand' are not associative)");
-            end if;
-            if Op_Token /= Current_Token then
-               --  Expression is a sequence of relations, with the same
-               --  operator.
-               Error_Msg_Parse ("only one type of logical operators may be "
-                                & "used to combine relation");
-            end if;
+         --  If the OP_PRIO is less than PRIO, the binary operator will apply
+         --  to the whole expression.
+         --  eg: A * B + C
+         if Op_Prio < Prio then
+            return Res;
          end if;
 
-         Set_Location (Res);
+         Expr := Create_Iir (Op);
+         Set_Location (Expr);
+         Set_Left (Expr, Res);
+
+         --  Skip operator.
          Scan;
 
          --  Catch errors for Ada programmers.
@@ -5630,23 +5529,55 @@ package body Parse is
             Scan;
          end if;
 
-         Set_Left (Res, Tmp);
-         Set_Right (Res, Parse_Relation);
-         Tmp := Res;
-      end loop;
-   end Parse_Expression_Rhs;
+         if Op_Prio >= Prio_Simple and then Current_Token in Token_Sign_Type
+         then
+            Error_Msg_Parse ("'-'/'+' can only appear before the first term");
+         end if;
 
-   --  precond : next token
-   --  postcond: next token
-   --
-   --  LRM08 9.1 General
-   --  expression ::= condition_operator primary
-   --              |  logical_expression
-   function Parse_Expression return Iir_Expression
+         --  Left association: A + B + C is (A + B) + C
+         Set_Right (Expr, Parse_Expression (Prio_Type'Succ (Op_Prio)));
+         Res := Expr;
+
+         --  Only one relational_operator or shift_operator.
+         if Op_Prio = Prio_Relation then
+            if Current_Token in Token_Relational_Operator_Type then
+               Error_Msg_Parse
+                 ("use parenthesis for consecutive relational expressions");
+            end if;
+         elsif Op_Prio = Prio_Shift then
+            --  Only one shift_operator.
+            if Current_Token in Token_Shift_Operator_Type then
+               Error_Msg_Parse
+                 ("use parenthesis for consecutive shift expressions");
+            end if;
+         elsif Op_Prio = Prio_Logical then
+            if Current_Token = Op_Tok then
+               if Op_Tok = Tok_Nand or Op_Tok = Tok_Nor then
+                  Error_Msg_Parse
+                    ("sequence of 'nor' or 'nand' not allowed", Cont => True);
+                  Error_Msg_Parse
+                    ("('nor' and 'nand' are not associative)");
+               end if;
+            elsif Current_Token in Token_Logical_Type then
+               --  Expression is a sequence of relations, with the same
+               --  operator.
+               Error_Msg_Parse ("only one type of logical operators may be "
+                                & "used to combine relation");
+            end if;
+         end if;
+      end loop;
+   end Parse_Binary_Expression;
+
+   function Parse_Expression (Prio : Prio_Type := Prio_Expression) return Iir
    is
+      Left : Iir;
       Res : Iir;
    begin
       if Current_Token = Tok_Condition then
+         if Prio /= Prio_Expression then
+            Error_Msg_Parse
+              ("'??' must be the first operator of an expression");
+         end if;
          Res := Create_Iir (Iir_Kind_Condition_Operator);
          Set_Location (Res);
 
@@ -5655,7 +5586,8 @@ package body Parse is
 
          Set_Operand (Res, Parse_Primary);
       else
-         Res := Parse_Expression_Rhs (Parse_Relation);
+         Left := Parse_Unary_Expression;
+         Res := Parse_Binary_Expression (Left, Prio);
       end if;
 
       return Res;
@@ -8084,20 +8016,21 @@ package body Parse is
             -- or a simple simultaneous statement
             if AMS_Vhdl then
                Res := Create_Iir (Iir_Kind_Simple_Simultaneous_Statement);
-               Set_Simultaneous_Left (Res, Parse_Simple_Expression (Target));
+               Set_Simultaneous_Left
+                 (Res, Parse_Binary_Expression (Target, Prio_Simple));
                if Current_Token /= Tok_Equal_Equal then
                   Error_Msg_Parse ("'==' expected after expression");
                else
                   Set_Location (Res);
                   Scan;
                end if;
-               Set_Simultaneous_Right (Res, Parse_Simple_Expression);
+               Set_Simultaneous_Right (Res, Parse_Expression (Prio_Simple));
                Set_Tolerance (Res, Parse_Tolerance_Aspect_Opt);
                Expect (Tok_Semi_Colon);
                return Res;
             else
                return Parse_Concurrent_Conditional_Signal_Assignment
-                 (Parse_Simple_Expression (Target));
+                 (Parse_Binary_Expression (Target, Prio_Simple));
             end if;
       end case;
    end Parse_Concurrent_Assignment;

@@ -106,13 +106,6 @@ package Tokens is
        Tok_Mod,                 -- mod
        Tok_Rem,                 -- rem
 
-   -- relation token:
-       Tok_And,
-       Tok_Or,
-       Tok_Xor,
-       Tok_Nand,
-       Tok_Nor,
-
    --  miscellaneous operator
        Tok_Abs,
        Tok_Not,
@@ -209,8 +202,17 @@ package Tokens is
        Tok_While,
        Tok_With,
 
-   -- Tokens below this line are key words in vhdl93 but not in vhdl87
+   -- logical token:
+       Tok_And,
+       Tok_Or,
+       Tok_Xor,
+       Tok_Nand,
+       Tok_Nor,
+
+   --  Tokens below this line are key words in vhdl93 but not in vhdl87
+   --  Note: xnor is the first one, as it is a logical token.
        Tok_Xnor,
+
        Tok_Group,
        Tok_Impure,
        Tok_Inertial,
@@ -278,6 +280,9 @@ package Tokens is
 
    --  To ease interfacing
    pragma Convention (C, Token_Type);
+
+   subtype Token_Logical_Type is Token_Type range
+     Tok_And .. Tok_Xnor;
 
    subtype Token_Relational_Operator_Type is Token_Type range
      Tok_Equal .. Tok_Match_Greater_Equal;

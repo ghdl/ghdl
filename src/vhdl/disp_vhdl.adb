@@ -159,6 +159,7 @@ package body Disp_Vhdl is
       case Id is
          when Name_Id_Operators
            | Name_Word_Operators
+           | Name_Logical_Operators
            | Name_Xnor
            | Name_Shift_Operators =>
             Put ("""");

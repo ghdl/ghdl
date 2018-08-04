@@ -22,13 +22,21 @@ package Parse is
    --  If True, create nodes for parenthesis expressions.
    Flag_Parse_Parenthesis : Boolean := False;
 
+   type Prio_Type is
+     (
+      Prio_Expression,
+      Prio_Logical,
+      Prio_Relation,
+      Prio_Shift,
+      Prio_Simple,
+      Prio_Term,
+      Prio_Factor
+     );
+
    --  Parse an expression.
    --  (Used by PSL).
-   function Parse_Expression return Iir;
-   function Parse_Expression_Rhs (Left : Iir) return Iir;
-
-   --  Parse an relationnal operator and its rhs.
-   function Parse_Relation_Rhs (Left : Iir) return Iir;
+   function Parse_Expression (Prio : Prio_Type := Prio_Expression) return Iir;
+   function Parse_Binary_Expression (Left : Iir; Prio : Prio_Type) return Iir;
 
    --  Convert the STR (0 .. LEN - 1) into a operator symbol identifier.
    --  Emit an error message if the name is not an operator name.

@@ -31,12 +31,6 @@ package body Std_Names is
       Def ("mod", Name_Mod);
       Def ("rem", Name_Rem);
 
-      Def ("and", Name_And);
-      Def ("or", Name_Or);
-      Def ("xor", Name_Xor);
-      Def ("nand", Name_Nand);
-      Def ("nor", Name_Nor);
-
       Def ("abs", Name_Abs);
       Def ("not", Name_Not);
 
@@ -130,6 +124,12 @@ package body Std_Names is
       Def ("when", Name_When);
       Def ("while", Name_While);
       Def ("with", Name_With);
+
+      Def ("and", Name_And);
+      Def ("or", Name_Or);
+      Def ("xor", Name_Xor);
+      Def ("nand", Name_Nand);
+      Def ("nor", Name_Nor);
 
    -- VHDL93 reserved words.
       Def ("xnor", Name_Xnor);

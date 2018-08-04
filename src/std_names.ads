@@ -34,112 +34,113 @@ package Std_Names is
    Name_Mod :            constant Name_Id := Name_First_Keyword + 000;
    Name_Rem :            constant Name_Id := Name_First_Keyword + 001;
 
-   Name_And :            constant Name_Id := Name_First_Keyword + 002;
-   Name_Or :             constant Name_Id := Name_First_Keyword + 003;
-   Name_Xor :            constant Name_Id := Name_First_Keyword + 004;
-   Name_Nand :           constant Name_Id := Name_First_Keyword + 005;
-   Name_Nor :            constant Name_Id := Name_First_Keyword + 006;
+   Name_Abs :            constant Name_Id := Name_First_Keyword + 002;
+   Name_Not :            constant Name_Id := Name_First_Keyword + 003;
 
-   Name_Abs :            constant Name_Id := Name_First_Keyword + 007;
-   Name_Not :            constant Name_Id := Name_First_Keyword + 008;
-
-   subtype Name_Logical_Operators is Name_Id range Name_And .. Name_Nor;
    subtype Name_Word_Operators is Name_Id range Name_Mod .. Name_Not;
 
-   Name_Access :         constant Name_Id := Name_First_Keyword + 009;
-   Name_After :          constant Name_Id := Name_First_Keyword + 010;
-   Name_Alias :          constant Name_Id := Name_First_Keyword + 011;
-   Name_All :            constant Name_Id := Name_First_Keyword + 012;
-   Name_Architecture :   constant Name_Id := Name_First_Keyword + 013;
-   Name_Array :          constant Name_Id := Name_First_Keyword + 014;
-   Name_Assert :         constant Name_Id := Name_First_Keyword + 015;
-   Name_Attribute :      constant Name_Id := Name_First_Keyword + 016;
+   Name_Access :         constant Name_Id := Name_First_Keyword + 004;
+   Name_After :          constant Name_Id := Name_First_Keyword + 005;
+   Name_Alias :          constant Name_Id := Name_First_Keyword + 006;
+   Name_All :            constant Name_Id := Name_First_Keyword + 007;
+   Name_Architecture :   constant Name_Id := Name_First_Keyword + 008;
+   Name_Array :          constant Name_Id := Name_First_Keyword + 009;
+   Name_Assert :         constant Name_Id := Name_First_Keyword + 010;
+   Name_Attribute :      constant Name_Id := Name_First_Keyword + 011;
 
-   Name_Begin :          constant Name_Id := Name_First_Keyword + 017;
-   Name_Block :          constant Name_Id := Name_First_Keyword + 018;
-   Name_Body :           constant Name_Id := Name_First_Keyword + 019;
-   Name_Buffer :         constant Name_Id := Name_First_Keyword + 020;
-   Name_Bus :            constant Name_Id := Name_First_Keyword + 021;
+   Name_Begin :          constant Name_Id := Name_First_Keyword + 012;
+   Name_Block :          constant Name_Id := Name_First_Keyword + 013;
+   Name_Body :           constant Name_Id := Name_First_Keyword + 014;
+   Name_Buffer :         constant Name_Id := Name_First_Keyword + 015;
+   Name_Bus :            constant Name_Id := Name_First_Keyword + 016;
 
-   Name_Case :           constant Name_Id := Name_First_Keyword + 022;
-   Name_Component :      constant Name_Id := Name_First_Keyword + 023;
-   Name_Configuration :  constant Name_Id := Name_First_Keyword + 024;
-   Name_Constant :       constant Name_Id := Name_First_Keyword + 025;
+   Name_Case :           constant Name_Id := Name_First_Keyword + 017;
+   Name_Component :      constant Name_Id := Name_First_Keyword + 018;
+   Name_Configuration :  constant Name_Id := Name_First_Keyword + 019;
+   Name_Constant :       constant Name_Id := Name_First_Keyword + 020;
 
-   Name_Disconnect :     constant Name_Id := Name_First_Keyword + 026;
-   Name_Downto :         constant Name_Id := Name_First_Keyword + 027;
+   Name_Disconnect :     constant Name_Id := Name_First_Keyword + 021;
+   Name_Downto :         constant Name_Id := Name_First_Keyword + 022;
 
-   Name_Else :           constant Name_Id := Name_First_Keyword + 028;
-   Name_Elsif :          constant Name_Id := Name_First_Keyword + 029;
-   Name_End :            constant Name_Id := Name_First_Keyword + 030;
-   Name_Entity :         constant Name_Id := Name_First_Keyword + 031;
-   Name_Exit :           constant Name_Id := Name_First_Keyword + 032;
+   Name_Else :           constant Name_Id := Name_First_Keyword + 023;
+   Name_Elsif :          constant Name_Id := Name_First_Keyword + 024;
+   Name_End :            constant Name_Id := Name_First_Keyword + 025;
+   Name_Entity :         constant Name_Id := Name_First_Keyword + 026;
+   Name_Exit :           constant Name_Id := Name_First_Keyword + 027;
 
-   Name_File :           constant Name_Id := Name_First_Keyword + 033;
-   Name_For :            constant Name_Id := Name_First_Keyword + 034;
-   Name_Function :       constant Name_Id := Name_First_Keyword + 035;
+   Name_File :           constant Name_Id := Name_First_Keyword + 028;
+   Name_For :            constant Name_Id := Name_First_Keyword + 029;
+   Name_Function :       constant Name_Id := Name_First_Keyword + 030;
 
-   Name_Generate :       constant Name_Id := Name_First_Keyword + 036;
-   Name_Generic :        constant Name_Id := Name_First_Keyword + 037;
-   Name_Guarded :        constant Name_Id := Name_First_Keyword + 038;
+   Name_Generate :       constant Name_Id := Name_First_Keyword + 031;
+   Name_Generic :        constant Name_Id := Name_First_Keyword + 032;
+   Name_Guarded :        constant Name_Id := Name_First_Keyword + 033;
 
-   Name_If :             constant Name_Id := Name_First_Keyword + 039;
-   Name_In :             constant Name_Id := Name_First_Keyword + 040;
-   Name_Inout :          constant Name_Id := Name_First_Keyword + 041;
-   Name_Is :             constant Name_Id := Name_First_Keyword + 042;
+   Name_If :             constant Name_Id := Name_First_Keyword + 034;
+   Name_In :             constant Name_Id := Name_First_Keyword + 035;
+   Name_Inout :          constant Name_Id := Name_First_Keyword + 036;
+   Name_Is :             constant Name_Id := Name_First_Keyword + 037;
 
-   Name_Label :          constant Name_Id := Name_First_Keyword + 043;
-   Name_Library :        constant Name_Id := Name_First_Keyword + 044;
-   Name_Linkage :        constant Name_Id := Name_First_Keyword + 045;
-   Name_Loop :           constant Name_Id := Name_First_Keyword + 046;
+   Name_Label :          constant Name_Id := Name_First_Keyword + 038;
+   Name_Library :        constant Name_Id := Name_First_Keyword + 039;
+   Name_Linkage :        constant Name_Id := Name_First_Keyword + 040;
+   Name_Loop :           constant Name_Id := Name_First_Keyword + 041;
 
-   Name_Map :            constant Name_Id := Name_First_Keyword + 047;
+   Name_Map :            constant Name_Id := Name_First_Keyword + 042;
 
-   Name_New :            constant Name_Id := Name_First_Keyword + 048;
-   Name_Next :           constant Name_Id := Name_First_Keyword + 049;
-   Name_Null :           constant Name_Id := Name_First_Keyword + 050;
+   Name_New :            constant Name_Id := Name_First_Keyword + 043;
+   Name_Next :           constant Name_Id := Name_First_Keyword + 044;
+   Name_Null :           constant Name_Id := Name_First_Keyword + 045;
 
-   Name_Of :             constant Name_Id := Name_First_Keyword + 051;
-   Name_On :             constant Name_Id := Name_First_Keyword + 052;
-   Name_Open :           constant Name_Id := Name_First_Keyword + 053;
-   Name_Others :         constant Name_Id := Name_First_Keyword + 054;
-   Name_Out :            constant Name_Id := Name_First_Keyword + 055;
+   Name_Of :             constant Name_Id := Name_First_Keyword + 046;
+   Name_On :             constant Name_Id := Name_First_Keyword + 047;
+   Name_Open :           constant Name_Id := Name_First_Keyword + 048;
+   Name_Others :         constant Name_Id := Name_First_Keyword + 049;
+   Name_Out :            constant Name_Id := Name_First_Keyword + 050;
 
-   Name_Package :        constant Name_Id := Name_First_Keyword + 056;
-   Name_Port :           constant Name_Id := Name_First_Keyword + 057;
-   Name_Procedure :      constant Name_Id := Name_First_Keyword + 058;
-   Name_Process :        constant Name_Id := Name_First_Keyword + 059;
+   Name_Package :        constant Name_Id := Name_First_Keyword + 051;
+   Name_Port :           constant Name_Id := Name_First_Keyword + 052;
+   Name_Procedure :      constant Name_Id := Name_First_Keyword + 053;
+   Name_Process :        constant Name_Id := Name_First_Keyword + 054;
 
-   Name_Range :          constant Name_Id := Name_First_Keyword + 060;
-   Name_Record :         constant Name_Id := Name_First_Keyword + 061;
-   Name_Register :       constant Name_Id := Name_First_Keyword + 062;
-   Name_Report :         constant Name_Id := Name_First_Keyword + 063;
-   Name_Return :         constant Name_Id := Name_First_Keyword + 064;
+   Name_Range :          constant Name_Id := Name_First_Keyword + 055;
+   Name_Record :         constant Name_Id := Name_First_Keyword + 056;
+   Name_Register :       constant Name_Id := Name_First_Keyword + 057;
+   Name_Report :         constant Name_Id := Name_First_Keyword + 058;
+   Name_Return :         constant Name_Id := Name_First_Keyword + 059;
 
-   Name_Select :         constant Name_Id := Name_First_Keyword + 065;
-   Name_Severity :       constant Name_Id := Name_First_Keyword + 066;
-   Name_Signal :         constant Name_Id := Name_First_Keyword + 067;
-   Name_Subtype :        constant Name_Id := Name_First_Keyword + 068;
+   Name_Select :         constant Name_Id := Name_First_Keyword + 060;
+   Name_Severity :       constant Name_Id := Name_First_Keyword + 061;
+   Name_Signal :         constant Name_Id := Name_First_Keyword + 062;
+   Name_Subtype :        constant Name_Id := Name_First_Keyword + 063;
 
-   Name_Then :           constant Name_Id := Name_First_Keyword + 069;
-   Name_To :             constant Name_Id := Name_First_Keyword + 070;
-   Name_Transport :      constant Name_Id := Name_First_Keyword + 071;
-   Name_Type :           constant Name_Id := Name_First_Keyword + 072;
+   Name_Then :           constant Name_Id := Name_First_Keyword + 064;
+   Name_To :             constant Name_Id := Name_First_Keyword + 065;
+   Name_Transport :      constant Name_Id := Name_First_Keyword + 066;
+   Name_Type :           constant Name_Id := Name_First_Keyword + 067;
 
-   Name_Units :          constant Name_Id := Name_First_Keyword + 073;
-   Name_Until :          constant Name_Id := Name_First_Keyword + 074;
-   Name_Use :            constant Name_Id := Name_First_Keyword + 075;
+   Name_Units :          constant Name_Id := Name_First_Keyword + 068;
+   Name_Until :          constant Name_Id := Name_First_Keyword + 069;
+   Name_Use :            constant Name_Id := Name_First_Keyword + 070;
 
-   Name_Variable :       constant Name_Id := Name_First_Keyword + 076;
+   Name_Variable :       constant Name_Id := Name_First_Keyword + 071;
 
-   Name_Wait :           constant Name_Id := Name_First_Keyword + 077;
-   Name_When :           constant Name_Id := Name_First_Keyword + 078;
-   Name_While :          constant Name_Id := Name_First_Keyword + 079;
-   Name_With :           constant Name_Id := Name_First_Keyword + 080;
+   Name_Wait :           constant Name_Id := Name_First_Keyword + 072;
+   Name_When :           constant Name_Id := Name_First_Keyword + 073;
+   Name_While :          constant Name_Id := Name_First_Keyword + 074;
+   Name_With :           constant Name_Id := Name_First_Keyword + 075;
 
-   Name_Last_Vhdl87 :    constant Name_Id := Name_With;
+   Name_And :            constant Name_Id := Name_First_Keyword + 076;
+   Name_Or :             constant Name_Id := Name_First_Keyword + 077;
+   Name_Xor :            constant Name_Id := Name_First_Keyword + 078;
+   Name_Nand :           constant Name_Id := Name_First_Keyword + 079;
+   Name_Nor :            constant Name_Id := Name_First_Keyword + 080;
+
+   subtype Name_Logical_Operators is Name_Id range Name_And .. Name_Nor;
+
+   Name_Last_Vhdl87 :    constant Name_Id := Name_Nor;
    subtype Name_Id_Vhdl87_Reserved_Words is
-     Name_Id range Name_First_Keyword .. Name_With;
+     Name_Id range Name_First_Keyword .. Name_Nor;
 
    -- VHDL93 reserved words.
    Name_Xnor :           constant Name_Id := Name_First_Keyword + 081;
