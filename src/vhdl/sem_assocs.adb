@@ -1763,7 +1763,7 @@ package body Sem_Assocs is
 
       Set_Named_Entity (Actual, Res);
       Xrefs.Xref_Name (Actual);
-      Set_Use_Flag (Res, True);
+      Mark_Subprogram_Used (Res);
    end Sem_Association_Subprogram;
 
    --  Associate ASSOC with interface INTERFACE
