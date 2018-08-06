@@ -656,6 +656,9 @@ package body Trans.Chap2 is
 
       Chap4.Elab_Declaration_Chain (Subprg, Final);
 
+      if not Has_Suspend then
+         Stack2_Release;
+      end if;
       --  If finalization is required and if the subprogram is a function,
       --  create a variable for the result.
       if (Final or Is_Prot) and Is_Ortho_Func then

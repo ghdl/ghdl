@@ -2503,7 +2503,10 @@ package body Trans.Chap4 is
                --when Iir_Kind_Signal_Declaration =>
                --   Chap1.Elab_Signal (Decl);
             when Iir_Kind_Variable_Declaration
-               | Iir_Kind_Constant_Declaration =>
+              | Iir_Kind_Constant_Declaration =>
+               --  Do not call Open_Temp/Close_Temp, as objects may be created
+               --  using alloca (which has a scope life) or on the secondary
+               --  stack.
                Elab_Object (Decl);
                if Get_Kind (Get_Type (Decl))
                  = Iir_Kind_Protected_Type_Declaration
