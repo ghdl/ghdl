@@ -1541,10 +1541,13 @@ package body Ortho_LLVM is
       Decl : ValueRef;
    begin
       if Storage = O_Storage_Local then
-         Res := (Kind => ON_Local_Decl,
-                 LLVM => BuildAlloca
-                   (Decl_Builder, Get_LLVM_Type (Atype), Get_Cstring (Ident)),
-                 Dtype => Atype);
+         if Unreach then
+            Decl := Null_ValueRef;
+         else
+            Decl := BuildAlloca
+              (Decl_Builder, Get_LLVM_Type (Atype), Get_Cstring (Ident));
+         end if;
+         Res := (Kind => ON_Local_Decl, LLVM => Decl, Dtype => Atype);
       else
          if Storage = O_Storage_External then
             Decl := GetNamedGlobal (Module, Get_Cstring (Ident));
