@@ -393,6 +393,7 @@ package body Ortho_Front is
       Res : Iir_Design_File;
       Design : Iir_Design_Unit;
       Next_Design : Iir_Design_Unit;
+      Config : Iir;
    begin
       if Nbr_Parse = 0 then
          --  Initialize only once...
@@ -417,9 +418,13 @@ package body Ortho_Front is
                Error_Msg_Option ("missing -l for --elab");
                raise Option_Error;
             end if;
-            Translation.Elaborate
-              (Elab_Entity.all, Elab_Architecture.all,
-               Elab_Filelist.all, False);
+            Config := Configuration.Configure
+              (Elab_Entity.all, Elab_Architecture.all);
+            if Errorout.Nbr_Errors > 0 then
+               --  This may happen (bad entity for example).
+               raise Compilation_Error;
+            end if;
+            Translation.Elaborate (Config, Elab_Filelist.all, False);
 
             if Errorout.Nbr_Errors > 0 then
                --  This may happen (bad entity for example).
@@ -464,8 +469,9 @@ package body Ortho_Front is
 
             Flags.Flag_Elaborate := True;
             Flags.Flag_Only_Elab_Warnings := False;
-            Translation.Elaborate
-              (Elab_Entity.all, Elab_Architecture.all, "", True);
+            Config := Configuration.Configure
+              (Elab_Entity.all, Elab_Architecture.all);
+            Translation.Elaborate (Config, "", True);
 
             if Errorout.Nbr_Errors > 0 then
                --  This may happen (bad entity for example).

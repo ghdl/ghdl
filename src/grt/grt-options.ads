@@ -149,10 +149,6 @@ package Grt.Options is
    --  message and returns -1.
    function Parse_Time (Str : String) return Std_Time;
 
-   --  Set the time resolution.
-   --  Only call this subprogram if you are allowed to set the time resolution.
-   procedure Set_Time_Resolution (Res : Character);
-
    --  Simply linked list of generic override (option -gIDENT=VALUE).
    type Generic_Override_Type;
    type Generic_Override_Acc is access Generic_Override_Type;

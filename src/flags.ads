@@ -122,18 +122,6 @@ package Flags is
    --  If set, performs VITAL checks.
    Flag_Vital_Checks : Boolean := True;
 
-   -- --time-resolution=X
-   -- Where X corresponds to:
-   -- fs => 'f'
-   -- ps => 'p'
-   -- ns => 'n'
-   -- us => 'u'
-   -- ms => 'm'
-   -- sec => 's'
-   -- min => 'M'
-   -- hr => 'h'
-   Time_Resolution: Character := 'f';
-
    --  Integer and time types can be either 32 bits or 64 bits values.
    --  The default is 32 bits for Integer and 64 bits for Time.
    --  Be very careful: if you don't use the default sizes, you may have to

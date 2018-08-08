@@ -3831,9 +3831,7 @@ package body Simul.Execution is
    begin
       case Get_Identifier (Imp) is
          when Std_Names.Name_Get_Resolution_Limit =>
-            Res := Create_I64_Value
-              (Ghdl_I64
-                 (Evaluation.Get_Physical_Value (Std_Package.Time_Base)));
+            Res := Create_I64_Value (1);
          when Std_Names.Name_Textio_Read_Real =>
             Res := Create_F64_Value
               (File_Operation.Textio_Read_Real (Block.Objects (1)));

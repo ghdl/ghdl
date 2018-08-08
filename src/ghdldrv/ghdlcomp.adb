@@ -49,6 +49,7 @@ package body Ghdlcomp is
                             Arg : String;
                             Res : out Option_Res)
    is
+      pragma Assert (Option'First = 1);
    begin
       if Option = "--expect-failure" then
          Flag_Expect_Failure := True;
@@ -58,6 +59,31 @@ package body Ghdlcomp is
          Res := Option_Ok;
       elsif Hooks.Decode_Option.all (Option) then
          Res := Option_Ok;
+      elsif Option'Length > 18
+        and then Option (1 .. 18) = "--time-resolution="
+      then
+         Res := Option_Ok;
+         if Option (19 .. Option'Last) = "fs" then
+            Time_Resolution := 'f';
+         elsif Option (19 .. Option'Last) = "ps" then
+            Time_Resolution := 'p';
+         elsif Option (19 .. Option'Last) = "ns" then
+            Time_Resolution := 'n';
+         elsif Option (19 .. Option'Last) = "us" then
+            Time_Resolution := 'u';
+         elsif Option (19 .. Option'Last) = "ms" then
+            Time_Resolution := 'm';
+         elsif Option (19 .. Option'Last) = "sec" then
+            Time_Resolution := 's';
+         elsif Option (19 .. Option'Last) = "min" then
+            Time_Resolution := 'M';
+         elsif Option (19 .. Option'Last) = "hr" then
+            Time_Resolution := 'h';
+         elsif Option (19 .. Option'Last) = "auto" then
+            Time_Resolution := 'a';
+         else
+            Res := Option_Bad;
+         end if;
       else
          Decode_Option (Command_Lib (Cmd), Option, Arg, Res);
       end if;
@@ -71,6 +97,8 @@ package body Ghdlcomp is
       Disp_Long_Help (Command_Lib (Cmd));
       Hooks.Disp_Long_Help.all;
       Put_Line (" --expect-failure  Expect analysis/elaboration failure");
+      Put_Line (" --time-resolution=UNIT   Set the resolution of type time");
+      Put_Line ("            UNIT can be fs, ps, ns, us, ms, sec, min or hr");
    end Disp_Long_Help;
 
    --  Command -r
@@ -365,8 +393,6 @@ package body Ghdlcomp is
          Error ("no file to analyze");
          raise Compilation_Error;
       end if;
-
-      Setup_Libraries (True);
 
       Hooks.Compile_Init.all (True);
 

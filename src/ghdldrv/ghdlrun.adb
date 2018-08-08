@@ -15,26 +15,29 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+with System; use System;
+
+with Ada.Unchecked_Conversion;
+with Ada.Command_Line;
+with Ada.Text_IO;
+
+with Interfaces;
 with Interfaces.C;
 
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
 with GNAT.OS_Lib; use GNAT.OS_Lib;
 
-with Ada.Unchecked_Conversion;
-with Ada.Command_Line;
-with Ada.Text_IO;
-
 with Ortho_Jit;
 with Ortho_Nodes; use Ortho_Nodes;
-with Interfaces;
-with System; use System;
 with Trans_Decls;
 with Iirs; use Iirs;
+with Std_Package;
 with Flags;
 with Errorout; use Errorout;
 with Libraries;
 with Canon;
+with Configuration;
 with Trans_Be;
 with Translation;
 with Ieee.Std_Logic_1164;
@@ -61,7 +64,7 @@ with Grt.Std_Logic_1164;
 with Grt.Errors;
 with Grt.Backtraces.Jit;
 
-with Ghdlcomp;
+with Ghdlcomp; use Ghdlcomp;
 with Foreigns;
 with Grtlink;
 
@@ -84,6 +87,18 @@ package body Ghdlrun is
    procedure Compile_Init (Analyze_Only : Boolean) is
    begin
       if Analyze_Only then
+         Setup_Libraries (True);
+      else
+         Setup_Libraries (False);
+         Libraries.Load_Std_Library;
+         --  WORK library is not loaded.  FIXME: why ?
+      end if;
+
+      if Time_Resolution /= 'a' then
+         Std_Package.Set_Time_Resolution (Time_Resolution);
+      end if;
+
+      if Analyze_Only then
          return;
       end if;
 
@@ -94,9 +109,6 @@ package body Ghdlrun is
 
       --  The design is always analyzed in whole.
       Flags.Flag_Whole_Analyze := True;
-
-      Setup_Libraries (False);
-      Libraries.Load_Std_Library;
 
       Ortho_Jit.Init;
 
@@ -116,6 +128,7 @@ package body Ghdlrun is
    procedure Compile_Elab
      (Cmd_Name : String; Args : Argument_List; Opt_Arg : out Natural)
    is
+      Config : Iir;
    begin
       Extract_Elab_Unit (Cmd_Name, Args, Opt_Arg);
       if Sec_Name = null then
@@ -123,11 +136,44 @@ package body Ghdlrun is
       end if;
 
       Flags.Flag_Elaborate := True;
+
+      Config := Configuration.Configure (Prim_Name.all, Sec_Name.all);
+      if Config = Null_Iir then
+         raise Compilation_Error;
+      end if;
+
+      if Time_Resolution = 'a' then
+         Time_Resolution := Std_Package.Get_Minimal_Time_Resolution;
+         if Time_Resolution = '?' then
+            Time_Resolution := 'f';
+         end if;
+         if Flag_Verbose then
+            declare
+               use Ada.Text_IO;
+            begin
+               Put ("Time resolution is 1 ");
+               case Time_Resolution is
+                  when 'f' => Put ("fs");
+                  when 'p' => Put ("ps");
+                  when 'n' => Put ("ns");
+                  when 'u' => Put ("us");
+                  when 'm' => Put ("ms");
+                  when 's' => Put ("sec");
+                  when 'M' => Put ("min");
+                  when 'h' => Put ("hr");
+                  when others => Put ("??");
+               end case;
+               New_Line;
+            end;
+         end if;
+      end if;
+      Std_Package.Set_Time_Resolution (Time_Resolution);
+
       case Elab_Mode is
          when Elab_Static =>
             raise Program_Error;
          when Elab_Dynamic =>
-            Translation.Elaborate (Prim_Name.all, Sec_Name.all, "", True);
+            Translation.Elaborate (Config, "", True);
       end case;
 
       if Errorout.Nbr_Errors > 0 then

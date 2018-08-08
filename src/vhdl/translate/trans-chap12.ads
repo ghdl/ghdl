@@ -26,10 +26,8 @@ package Trans.Chap12 is
    --  Write to file FILELIST all the files that are needed to link the design.
    procedure Write_File_List (Filelist : String);
 
-   --  Primary unit + secondary unit (architecture name which may be null)
-   --  to elaborate.
-   procedure Elaborate (Primary : String;
-                        Secondary : String;
+   --  Generate elaboration code for CONFIG.
+   procedure Elaborate (Config : Iir_Design_Unit;
                         Filelist : String;
                         Whole : Boolean);
 end Trans.Chap12;

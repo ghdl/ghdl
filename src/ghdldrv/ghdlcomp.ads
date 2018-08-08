@@ -69,6 +69,18 @@ package Ghdlcomp is
    --  Output of --disp-config.
    procedure Disp_Config;
 
+   -- --time-resolution=X
+   -- Where X corresponds to:
+   -- fs => 'f'
+   -- ps => 'p'
+   -- ns => 'n'
+   -- us => 'u'
+   -- ms => 'm'
+   -- sec => 's'
+   -- min => 'M'
+   -- hr => 'h'
+   Time_Resolution: Character := 'f';
+
    --  Functionnal interface.
    --  Must be first initialized by Compile_Init
    procedure Compile_Analyze_Init (Load_Work : Boolean := True);

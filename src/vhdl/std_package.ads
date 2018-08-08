@@ -27,10 +27,6 @@ package Std_Package is
    -- Some well know values declared in the STANDARD package.
    -- These values (except time_base) *must* not be modified, and are set by
    -- create_std_standard_package.
-   -- Time_base is the base unit of time.  It is set during the creation of
-   -- all these nodes, and can be modified only *immediatly* after.
-
-   Time_Base: Iir_Unit_Declaration := Null_Iir;
 
    Std_Standard_File: Iir_Design_File := Null_Iir;
    Std_Standard_Unit : Iir_Design_Unit := Null_Iir;
@@ -181,6 +177,10 @@ package Std_Package is
    --  Create the node for the standard package.
    procedure Create_Std_Standard_Package (Parent : Iir_Library_Declaration);
 
+   procedure Set_Time_Resolution (Resolution : Character);
+
+   --  Return the minimal time resolution according to use of time units.
+   function Get_Minimal_Time_Resolution return Character;
 private
    --  For speed reasons, some often used nodes are hard-coded.
    Error_Mark : constant Iir := 2;

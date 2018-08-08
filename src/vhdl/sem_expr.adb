@@ -3593,10 +3593,20 @@ package body Sem_Expr is
       end case;
    end Sem_Aggregate;
 
-   -- Transform LIT into a physical_literal.
-   -- LIT can be either a not analyzed physical literal or
-   --  a simple name that is a physical unit.  In the later case, a physical
-   --  literal is created.
+   function Is_Physical_Literal_Zero (Lit : Iir) return Boolean is
+   begin
+      case Iir_Kinds_Physical_Literal (Get_Kind (Lit)) is
+         when Iir_Kind_Physical_Int_Literal =>
+            return Get_Value (Lit) = 0;
+         when Iir_Kind_Physical_Fp_Literal =>
+            return Get_Fp_Value (Lit) = 0.0;
+      end case;
+   end Is_Physical_Literal_Zero;
+
+   --  Transform LIT into a physical_literal.
+   --  LIT can be either a not analyzed physical literal or
+   --   a simple name that is a physical unit.  In the later case, a physical
+   --   literal is created.
    function Sem_Physical_Literal (Lit: Iir) return Iir
    is
       Unit_Name : Iir;
@@ -3625,17 +3635,36 @@ package body Sem_Expr is
             Error_Class_Match (Unit_Name, "unit");
          end if;
          Set_Named_Entity (Unit_Name, Create_Error_Name (Unit_Name));
+      else
+         --  Physical unit is used.
+         Set_Use_Flag (Unit, True);
+
+         if Get_Type (Unit) = Time_Type_Definition
+           and then Get_Value (Get_Physical_Literal (Unit)) = 0
+           and then not Is_Physical_Literal_Zero (Res)
+         then
+            --  LRM08 5.2.4.2 Predefined physical types
+            --  It is an error if a given unit of type TIME appears anywhere
+            --  within the design hierarchy defining a model to be elaborated,
+            --  and if the position number of that unit is less than that of
+            --  the secondary unit selected as the resolution limit for type
+            --  TIME during the elaboration of the model, unless that unit is
+            --  part of a physical literal whose abstract literal is either
+            --  the integer value zero or the floating-point value zero.
+            Error_Msg_Sem
+              (+Res, "physical unit %i is below the time resolution", +Unit);
+         end if;
       end if;
       Set_Unit_Name (Res, Unit_Name);
       Set_Physical_Unit (Res, Get_Named_Entity (Unit_Name));
       Unit_Type := Get_Type (Unit_Name);
       Set_Type (Res, Unit_Type);
 
-      -- LRM93 7.4.2
-      -- 1. a literal of type TIME.
+      --  LRM93 7.4.2
+      --  1. a literal of type TIME.
       --
-      -- LRM93 7.4.1
-      -- 1. a literal of any type other than type TIME;
+      --  LRM93 7.4.1
+      --  1. a literal of any type other than type TIME;
       Set_Expr_Staticness (Res, Get_Expr_Staticness (Unit_Name));
       --Eval_Check_Constraints (Res);
       return Res;

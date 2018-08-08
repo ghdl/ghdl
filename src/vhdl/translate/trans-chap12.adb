@@ -587,8 +587,7 @@ package body Trans.Chap12 is
       R := fclose (F);
    end Write_File_List;
 
-   procedure Elaborate (Primary : String;
-                        Secondary : String;
+   procedure Elaborate (Config : Iir_Design_Unit;
                         Filelist : String;
                         Whole : Boolean)
    is
@@ -596,17 +595,12 @@ package body Trans.Chap12 is
 
       Unit : Iir_Design_Unit;
       Lib_Unit : Iir;
-      Config : Iir_Design_Unit;
       Config_Lib : Iir_Configuration_Declaration;
       Entity : Iir_Entity_Declaration;
       Arch : Iir_Architecture_Body;
       Conf_Info : Config_Info_Acc;
       Last_Design_Unit : Natural;
    begin
-      Config := Configure (Primary, Secondary);
-      if Config = Null_Iir then
-         return;
-      end if;
       Config_Lib := Get_Library_Unit (Config);
       Entity := Get_Entity (Config_Lib);
       Arch := Strip_Denoting_Name

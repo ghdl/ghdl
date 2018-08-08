@@ -40,10 +40,9 @@ package Translation is
 
    procedure Gen_Filename (Design_File : Iir);
 
-   --  Primary unit + secondary unit (architecture name which may be null)
-   --  to elaborate.
-   procedure Elaborate (Primary : String;
-                        Secondary : String;
+   --  Generate elaboration code for CONFIG.  Also use units from Configure
+   --  package.
+   procedure Elaborate (Config : Iir;
                         Filelist : String;
                         Whole : Boolean);
 

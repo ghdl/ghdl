@@ -200,29 +200,6 @@ package body Options is
          Flag_Integer_64 := True;
       elsif Opt = "--ftime32" then
          Flag_Time_64 := False;
---       elsif Opt'Length > 17
---         and then Opt (Beg .. Beg + 17) = "--time-resolution="
---       then
---          Beg := Beg + 18;
---          if Opt (Beg .. Beg + 1) = "fs" then
---             Time_Resolution := 'f';
---          elsif Opt (Beg .. Beg + 1) = "ps" then
---             Time_Resolution := 'p';
---          elsif Opt (Beg .. Beg + 1) = "ns" then
---             Time_Resolution := 'n';
---          elsif Opt (Beg .. Beg + 1) = "us" then
---             Time_Resolution := 'u';
---          elsif Opt (Beg .. Beg + 1) = "ms" then
---             Time_Resolution := 'm';
---          elsif Opt (Beg .. Beg + 2) = "sec" then
---             Time_Resolution := 's';
---          elsif Opt (Beg .. Beg + 2) = "min" then
---             Time_Resolution := 'M';
---          elsif Opt (Beg .. Beg + 1) = "hr" then
---             Time_Resolution := 'h';
---          else
---             return False;
---          end if;
       elsif Back_End.Parse_Option /= null
         and then Back_End.Parse_Option.all (Opt)
       then
@@ -257,8 +234,6 @@ package body Options is
       P ("  -Wunused           warns if a subprogram is never used");
       P ("  -Werror            turns warnings into errors");
 --    P ("Simulation option:");
---    P ("  --time-resolution=UNIT   set the resolution of type time");
---    P ("            UNIT can be fs, ps, ns, us, ms, sec, min or hr");
 --    P ("  --assert-level=LEVEL     set the level which stop the");
 --    P ("           simulation.  LEVEL is note, warning, error,");
 --    P ("           failure or none");

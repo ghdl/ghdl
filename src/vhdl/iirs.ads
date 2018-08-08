@@ -2162,6 +2162,9 @@ package Iirs is
    --   Get/Set_Name_Staticness (State2)
    --
    --   Get/Set_Visible_Flag (Flag4)
+   --
+   --  Used for time literals, to compute minimal resolution.
+   --   Get/Set_Use_Flag (Flag6)
 
    --  LRM08 5.2 Scalar types
    --
@@ -4964,6 +4967,10 @@ package Iirs is
    --Iir_Kind_Null_Literal
    --Iir_Kind_String_Literal8
    --Iir_Kind_Physical_Int_Literal
+     Iir_Kind_Physical_Fp_Literal;
+
+   subtype Iir_Kinds_Physical_Literal is Iir_Kind range
+     Iir_Kind_Physical_Int_Literal ..
      Iir_Kind_Physical_Fp_Literal;
 
    subtype Iir_Kinds_Array_Type_Definition is Iir_Kind range

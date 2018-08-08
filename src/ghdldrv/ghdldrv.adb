@@ -677,6 +677,11 @@ package body Ghdldrv is
             Add_Argument (Compiler_Args, new String'(Opt));
          end if;
          Res := Option_Ok;
+      elsif Opt'Length > 18
+        and then Opt (1 .. 18) = "--time-resolution="
+      then
+         Error ("option --time-resolution not supported by back-end");
+         raise Option_Error;
       elsif Opt'Length >= 2
         and then (Opt (2) = 'O' or Opt (2) = 'f')
       then
