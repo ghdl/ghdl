@@ -2329,8 +2329,7 @@ package body Sem_Assocs is
                   if Finish then
                      Error_Msg_Sem
                        (+Assoc,
-                        "formal conversion allowed only for interface object",
-                        +Formal_Conv);
+                        "formal conversion allowed only for interface object");
                   end if;
                   Match := Not_Compatible;
                   exit;
