@@ -2309,8 +2309,7 @@ package body Sem_Assocs is
                  or else Get_Parent (Inter) /= Get_Parent (Interface_Chain)
                then
                   if Finish then
-                     Error_Msg_Sem
-                       (+Assoc, "formal %i is not an interface name", +Inter);
+                     Error_Msg_Sem (+Assoc, "formal is not an interface name");
                   end if;
                   Match := Not_Compatible;
                   exit;
