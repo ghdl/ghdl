@@ -1326,6 +1326,7 @@ package body Grt.Waves is
          Ctxt := Types_Table.Table (I).Context;
 
          if Rti.Kind = Ghdl_Rtik_Signal or Rti.Kind = Ghdl_Rtik_Port then
+            --  Declare types for unbounded objects.
             declare
                Obj_Rti : constant Ghdl_Rtin_Object_Acc :=
                  To_Ghdl_Rtin_Object_Acc (Rti);
@@ -1345,6 +1346,21 @@ package body Grt.Waves is
                           (Loc_To_Addr (Rti.Depth, Obj_Rti.Loc, Ctxt));
                         Bounds := Addr.Bounds;
                         Write_Array_Bounds (Arr, Bounds);
+                     end;
+                  when Ghdl_Rtik_Type_Unbounded_Record =>
+                     declare
+                        Rec : constant Ghdl_Rtin_Type_Record_Acc :=
+                          To_Ghdl_Rtin_Type_Record_Acc (Obj_Rti.Obj_Type);
+                        Addr : Ghdl_Uc_Array_Acc;
+                        Bounds : Address;
+                     begin
+                        Wave_Put_Byte (Ghw_Rtik'Pos (Ghw_Rtik_Subtype_Record));
+                        Write_String_Id (null);
+                        Write_Type_Id (Obj_Rti.Obj_Type, Ctxt);
+                        Addr := To_Ghdl_Uc_Array_Acc
+                          (Loc_To_Addr (Rti.Depth, Obj_Rti.Loc, Ctxt));
+                        Bounds := Addr.Bounds;
+                        Write_Record_Bounds (Rec, Bounds);
                      end;
                   when others =>
                      Internal_Error ("waves.write_types: unhandled obj kind");
