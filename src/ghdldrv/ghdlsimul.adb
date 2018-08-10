@@ -37,7 +37,7 @@ with Simul.Simulation.Main;
 with Simul.Debugger;
 with Simul.Execution;
 
-with Ghdlcomp;
+with Ghdlcomp; use Ghdlcomp;
 
 with Grt.Types;
 with Grt.Options;
@@ -53,13 +53,21 @@ package body Ghdlsimul is
    procedure Compile_Init (Analyze_Only : Boolean) is
    begin
       if Analyze_Only then
+         Setup_Libraries (True);
+      else
+         Setup_Libraries (False);
+         Libraries.Load_Std_Library;
+         --  WORK library is not loaded.  FIXME: why ?
+      end if;
+
+      if Time_Resolution /= 'a' then
+         Std_Package.Set_Time_Resolution (Time_Resolution);
+      end if;
+
+      if Analyze_Only then
          return;
       end if;
 
-      Setup_Libraries (False);
-      Libraries.Load_Std_Library;
-
-      -- Here, time_base can be set.
       Simul.Annotations.Annotate (Std_Package.Std_Standard_Unit);
 
       Canon.Canon_Flag_Add_Labels := True;
