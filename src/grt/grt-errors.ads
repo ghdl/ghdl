@@ -58,6 +58,10 @@ package Grt.Errors is
    procedure Error (Str : String);
    pragma No_Return (Error);
 
+   --  Complete error message with a call stack.  SKIP is the number of
+   --  frame to skip, 0 means the caller of this procedure is displayed.
+   procedure Error_Call_Stack (Str : String; Skip : Natural);
+
    procedure Error (Str : String;
                     Filename : Ghdl_C_String;
                     Line : Ghdl_I32);

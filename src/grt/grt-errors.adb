@@ -254,6 +254,15 @@ package body Grt.Errors is
       Fatal_Error;
    end Error;
 
+   procedure Error_Call_Stack (Str : String; Skip : Natural)
+   is
+      Bt : Backtrace_Addrs;
+   begin
+      Save_Backtrace (Bt, Skip + 1);
+      Error_C (Str);
+      Error_E_Call_Stack (Bt);
+   end Error_Call_Stack;
+
    procedure Error (Str : String;
                     Filename : Ghdl_C_String;
                     Line : Ghdl_I32) is
