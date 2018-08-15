@@ -174,6 +174,7 @@ package body Grt.Files is
    begin
       Stream := Get_File (File);
 
+      --  LRM93 3.4.1 File Operations
       --  LRM08 5.5.2 File Operations
       --  It is an error if ENDFILE is called on a file object that is not
       --  open.
@@ -181,6 +182,7 @@ package body Grt.Files is
          Error_Call_Stack ("endfile with a non-opened file", 1);
       end if;
 
+      --  LRM93 3.4.1 File Operations
       --  LRM08 5.5.2 File Operations
       --  Function ENDFILE always returns TRUE for an open file object whose
       --  access mode is write-only.
