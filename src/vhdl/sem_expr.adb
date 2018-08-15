@@ -530,8 +530,20 @@ package body Sem_Expr is
          Left := Sem_Expression_Ov (Left, Base_Type);
 
          if Left = Null_Iir or else Right = Null_Iir then
-            --  Error.
-            return Null_Iir;
+            if A_Type /= Null_Iir then
+               --  Can continue with the error.
+               if Left = Null_Iir then
+                  Left := Create_Error_Expr
+                    (Get_Left_Limit_Expr (Expr), A_Type);
+               end if;
+               if Right = Null_Iir then
+                  Right := Create_Error_Expr
+                    (Get_Right_Limit_Expr (Expr), A_Type);
+               end if;
+            else
+               --  Error.
+               return Null_Iir;
+            end if;
          end if;
 
          Left_Type := Get_Type (Left);
