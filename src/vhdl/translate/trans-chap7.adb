@@ -3037,8 +3037,7 @@ package body Trans.Chap7 is
          Open_Temp;
          --  Create a loop from left +- number of positionnals associations
          --   to/downto right.
-         Range_Type :=
-           Get_Base_Type (Get_Nth_Element (Index_List, Dim - 1));
+         Range_Type := Get_Base_Type (Get_Index_Type (Index_List, Dim - 1));
          Rtinfo := Get_Info (Range_Type);
          Var_Pos := Create_Temp (Rtinfo.Ortho_Type (Mode_Value));
          Range_Ptr := Stabilize
