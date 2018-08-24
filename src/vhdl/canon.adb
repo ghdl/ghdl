@@ -145,9 +145,8 @@ package body Canon is
                   Add_Element (Sensitivity_List, Expr);
                end if;
             else
-               Canon_Extract_Sensitivity (Get_Prefix (Expr),
-                                          Sensitivity_List,
-                                          Is_Target);
+               Canon_Extract_Sensitivity
+                 (Get_Prefix (Expr), Sensitivity_List, Is_Target);
             end if;
 
          when Iir_Kind_Indexed_Name =>
@@ -158,9 +157,8 @@ package body Canon is
                   Add_Element (Sensitivity_List, Expr);
                end if;
             else
-               Canon_Extract_Sensitivity (Get_Prefix (Expr),
-                                          Sensitivity_List,
-                                          Is_Target);
+               Canon_Extract_Sensitivity
+                 (Get_Prefix (Expr), Sensitivity_List, Is_Target);
                declare
                   Flist : constant Iir_Flist := Get_Index_List (Expr);
                   El : Iir;
@@ -196,6 +194,11 @@ package body Canon is
 
          when Iir_Kind_Allocator_By_Subtype =>
             null;
+
+         when Iir_Kind_Dereference
+           | Iir_Kind_Implicit_Dereference =>
+            Canon_Extract_Sensitivity
+              (Get_Prefix (Expr), Sensitivity_List, False);
 
          when Iir_Kind_External_Variable_Name
            | Iir_Kind_External_Constant_Name =>
