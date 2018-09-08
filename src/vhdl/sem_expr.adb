@@ -3058,6 +3058,55 @@ package body Sem_Expr is
 
    type Array_Aggr_Info_Arr is array (Natural range <>) of Array_Aggr_Info;
 
+   procedure Sem_Array_Aggregate_Elements
+     (Aggr : Iir;
+      A_Type : Iir;
+      Expr_Staticness : in out Iir_Staticness;
+      Info : in out Array_Aggr_Info)
+   is
+      Element_Type : constant Iir := Get_Element_Subtype (A_Type);
+      El : Iir;
+      Expr : Iir;
+      El_Staticness : Iir_Staticness;
+      Assoc_Chain : Iir;
+   begin
+      -- LRM93 7.3.2.2:
+      --   the expression of each element association must be of the
+      --   element type.
+      Assoc_Chain := Get_Association_Choices_Chain (Aggr);
+
+      El := Assoc_Chain;
+      while El /= Null_Iir loop
+         if not Get_Same_Alternative_Flag (El) then
+            Expr := Get_Associated_Expr (El);
+            Expr := Sem_Expression (Expr, Element_Type);
+            if Expr /= Null_Iir then
+               El_Staticness := Get_Expr_Staticness (Expr);
+               Expr := Eval_Expr_If_Static (Expr);
+               Set_Associated_Expr (El, Expr);
+
+               if not Is_Static_Construct (Expr) then
+                  Set_Aggregate_Expand_Flag (Aggr, False);
+               end if;
+
+               if not Eval_Is_In_Bound (Expr, Element_Type)
+               then
+                  Info.Has_Bound_Error := True;
+                  Warning_Msg_Sem (Warnid_Runtime_Error, +Expr,
+                                   "element is out of the bounds");
+               end if;
+
+               Expr_Staticness := Min (Expr_Staticness, El_Staticness);
+
+               Info.Nbr_Assocs := Info.Nbr_Assocs + 1;
+            else
+               Info.Error := True;
+            end if;
+         end if;
+         El := Get_Chain (El);
+      end loop;
+   end Sem_Array_Aggregate_Elements;
+
    --  Analyze an array aggregate AGGR of *base type* A_TYPE.
    --  The type of the array is computed into A_SUBTYPE.
    --  DIM is the dimension index in A_TYPE.
@@ -3366,52 +3415,12 @@ package body Sem_Expr is
       if Dim = Get_Nbr_Elements (Index_List) then
          --  A type has been found for AGGR, analyze AGGR as if it was
          --  an aggregate with a subtype (and not a string).
-
          if Get_Kind (Aggr) /= Iir_Kind_Aggregate then
             --  Nothing to do for a string.
             return;
+         else
+            Sem_Array_Aggregate_Elements (Aggr, A_Type, Expr_Staticness, Info);
          end if;
-
-         -- LRM93 7.3.2.2:
-         --   the expression of each element association must be of the
-         --   element type.
-         declare
-            Element_Type : constant Iir := Get_Element_Subtype (A_Type);
-            El : Iir;
-            Expr : Iir;
-            El_Staticness : Iir_Staticness;
-         begin
-            El := Assoc_Chain;
-            while El /= Null_Iir loop
-               if not Get_Same_Alternative_Flag (El) then
-                  Expr := Get_Associated_Expr (El);
-                  Expr := Sem_Expression (Expr, Element_Type);
-                  if Expr /= Null_Iir then
-                     El_Staticness := Get_Expr_Staticness (Expr);
-                     Expr := Eval_Expr_If_Static (Expr);
-                     Set_Associated_Expr (El, Expr);
-
-                     if not Is_Static_Construct (Expr) then
-                        Set_Aggregate_Expand_Flag (Aggr, False);
-                     end if;
-
-                     if not Eval_Is_In_Bound (Expr, Element_Type)
-                     then
-                        Info.Has_Bound_Error := True;
-                        Warning_Msg_Sem (Warnid_Runtime_Error, +Expr,
-                                         "element is out of the bounds");
-                     end if;
-
-                     Expr_Staticness := Min (Expr_Staticness, El_Staticness);
-
-                     Info.Nbr_Assocs := Info.Nbr_Assocs + 1;
-                  else
-                     Info.Error := True;
-                  end if;
-               end if;
-               El := Get_Chain (El);
-            end loop;
-         end;
       else
          --  A sub-aggregate: recurse.
          declare
