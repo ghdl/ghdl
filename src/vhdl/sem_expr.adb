@@ -3066,20 +3066,98 @@ package body Sem_Expr is
    is
       Element_Type : constant Iir := Get_Element_Subtype (A_Type);
       El : Iir;
+      El_Expr : Iir;
       Expr : Iir;
       El_Staticness : Iir_Staticness;
       Assoc_Chain : Iir;
+      Res_Type : Iir;
+
+      --  True if the type of the expression is the type of the aggregate.
+      Is_Array : Boolean;
+
+      --  Null_Iir if the type of aggregagte elements myst be of the element
+      --  type.
+      Elements_Types : Iir;
+      Elements_Types_List : Iir_List;
    begin
-      -- LRM93 7.3.2.2:
-      --   the expression of each element association must be of the
-      --   element type.
+      --  LRM93 7.3.2.2 Array aggregates
+      --  [...] the expression of each element association must be of the
+      --  element type.
+
+      --  LRM08 9.3.3.3 Array aggregates
+      --  For an aggregate of a one-dimensional array type, [each choice shall
+      --  specify values of the index type], and the expression of each element
+      --  association shall be of either the element type or the type of the
+      --  aggregate.
+      if Flags.Vhdl_Std >= Vhdl_08
+        and then Is_One_Dimensional_Array_Type (A_Type)
+      then
+         Elements_Types_List := Create_Iir_List;
+         Append_Element (Elements_Types_List, Element_Type);
+         Append_Element (Elements_Types_List, Get_Base_Type (A_Type));
+         Elements_Types := Create_Overload_List (Elements_Types_List);
+      else
+         Elements_Types := Null_Iir;
+      end if;
+
       Assoc_Chain := Get_Association_Choices_Chain (Aggr);
 
       El := Assoc_Chain;
       while El /= Null_Iir loop
          if not Get_Same_Alternative_Flag (El) then
-            Expr := Get_Associated_Expr (El);
-            Expr := Sem_Expression (Expr, Element_Type);
+            El_Expr := Get_Associated_Expr (El);
+            Is_Array := False;
+
+            --  Directly analyze the expression with the type of the element
+            --  if it cannot be the type of the aggregate.
+            --  In VHDL-2008, also do it when the expression is an aggregate.
+            --  This is not in the LRM, but otherwise this would create a lot
+            --  of ambiguities when the element type is a composite type.  Eg:
+            --
+            --    type time_unit is record
+            --      val : time;
+            --      name : string (1 to 3);
+            --    end record;
+            --    type time_names_type is array (1 to 2) of time_unit;
+            --    constant time_names : time_names_type :=
+            --      ((fs, "fs "), (ps, "ps "));
+            --
+            --  The type of the first sub-aggregate could be either time_unit
+            --  or time_names_type.  Because it's determined by the context,
+            --  it is ambiguous.  But there is no point in using aggregates
+            --  to specify a range of choices.
+            --  FIXME: fix LRM ?
+            if Elements_Types = Null_Iir
+              or else Get_Kind (El_Expr) = Iir_Kind_Aggregate
+            then
+               Expr := Sem_Expression (El_Expr, Element_Type);
+            else
+               Expr := Sem_Expression_Wildcard (El_Expr, Null_Iir);
+               if Expr /= Null_Iir then
+                  Res_Type := Compatible_Types_Intersect
+                    (Get_Type (Expr), Elements_Types);
+                  if Res_Type = Null_Iir then
+                     Error_Msg_Sem
+                       (+Get_Associated_Expr (El),
+                        "type of element not compatible with the "
+                          & "expected type");
+                     Set_Type (El_Expr, Error_Type);
+                     Expr := Null_Iir;
+                  elsif Is_Overload_List (Res_Type) then
+                     Error_Msg_Sem
+                       (+Expr, "type of element is ambiguous");
+                     Free_Overload_List (Res_Type);
+                     Set_Type (El_Expr, Error_Type);
+                     Expr := Null_Iir;
+                  else
+                     pragma Assert (Is_Defined_Type (Res_Type));
+                     Is_Array :=
+                       Get_Base_Type (Res_Type) = Get_Base_Type (A_Type);
+                     Expr := Sem_Expression_Wildcard (Expr, Res_Type);
+                  end if;
+               end if;
+            end if;
+
             if Expr /= Null_Iir then
                El_Staticness := Get_Expr_Staticness (Expr);
                Expr := Eval_Expr_If_Static (Expr);
@@ -3089,7 +3167,8 @@ package body Sem_Expr is
                   Set_Aggregate_Expand_Flag (Aggr, False);
                end if;
 
-               if not Eval_Is_In_Bound (Expr, Element_Type)
+               if not Is_Array
+                 and then not Eval_Is_In_Bound (Expr, Element_Type)
                then
                   Info.Has_Bound_Error := True;
                   Warning_Msg_Sem (Warnid_Runtime_Error, +Expr,
@@ -3103,8 +3182,33 @@ package body Sem_Expr is
                Info.Error := True;
             end if;
          end if;
+
+         if Is_Array then
+            --  LRM08 9.3.3.3 Array aggregates
+            --  If the type of the expression of an element association
+            --  is the type of the aggregate, then either the element
+            --  association shall be positional or the choice shall be
+            --  a discrete range.
+
+            --  GHDL: must be checked for all associations, so do it outside
+            --  the above 'if' statement.
+            case Get_Kind (El) is
+               when Iir_Kind_Choice_By_None
+                 | Iir_Kind_Choice_By_Range =>
+                  null;
+               when others =>
+                  Error_Msg_Sem
+                    (+El, "positional association or "
+                       & "discrete range choice required");
+            end case;
+         end if;
+
          El := Get_Chain (El);
       end loop;
+
+      if Elements_Types /= Null_Iir then
+         Free_Overload_List (Elements_Types);
+      end if;
    end Sem_Array_Aggregate_Elements;
 
    --  Analyze an array aggregate AGGR of *base type* A_TYPE.
