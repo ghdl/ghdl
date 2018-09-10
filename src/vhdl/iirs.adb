@@ -1602,6 +1602,22 @@ package body Iirs is
       Set_Flag1 (Target, Val);
    end Set_Same_Alternative_Flag;
 
+   function Get_Element_Type_Flag (Target : Iir) return Boolean is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Element_Type_Flag (Get_Kind (Target)),
+                     "no field Element_Type_Flag");
+      return Get_Flag2 (Target);
+   end Get_Element_Type_Flag;
+
+   procedure Set_Element_Type_Flag (Target : Iir; Val : Boolean) is
+   begin
+      pragma Assert (Target /= Null_Iir);
+      pragma Assert (Has_Element_Type_Flag (Get_Kind (Target)),
+                     "no field Element_Type_Flag");
+      Set_Flag2 (Target, Val);
+   end Set_Element_Type_Flag;
+
    function Get_Architecture (Target : Iir_Entity_Aspect_Entity) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);

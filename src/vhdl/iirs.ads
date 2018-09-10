@@ -561,6 +561,8 @@ package Iirs is
    --
    --   Get/Set_Same_Alternative_Flag (Flag1)
    --
+   --   Get/Set_Element_Type_Flag (Flag2)
+   --
    -- Only for Iir_Kind_Choice_By_Range:
    -- Only for Iir_Kind_Choice_By_Expression:
    --   Get/Set_Choice_Staticness (State1)
@@ -6158,6 +6160,12 @@ package Iirs is
    --  Field: Flag1
    function Get_Same_Alternative_Flag (Target : Iir) return Boolean;
    procedure Set_Same_Alternative_Flag (Target : Iir; Val : Boolean);
+
+   --  For one-dimensional aggregates: the value associated of the type of the
+   --  element (vs of the type of the aggregate).  Always true before vhdl-08.
+   --  Field: Flag2
+   function Get_Element_Type_Flag (Target : Iir) return Boolean;
+   procedure Set_Element_Type_Flag (Target : Iir; Val : Boolean);
 
    --  Field: Field3
    function Get_Architecture (Target : Iir_Entity_Aspect_Entity) return Iir;

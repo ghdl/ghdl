@@ -3158,6 +3158,8 @@ package body Sem_Expr is
                end if;
             end if;
 
+            Set_Element_Type_Flag (El, not Is_Array);
+
             if Expr /= Null_Iir then
                El_Staticness := Get_Expr_Staticness (Expr);
                Expr := Eval_Expr_If_Static (Expr);

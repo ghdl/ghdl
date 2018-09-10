@@ -123,6 +123,7 @@ package Nodes_Meta is
       Field_Choice_Expression,
       Field_Choice_Range,
       Field_Same_Alternative_Flag,
+      Field_Element_Type_Flag,
       Field_Architecture,
       Field_Block_Specification,
       Field_Prev_Block_Configuration,
@@ -650,6 +651,7 @@ package Nodes_Meta is
    function Has_Choice_Expression (K : Iir_Kind) return Boolean;
    function Has_Choice_Range (K : Iir_Kind) return Boolean;
    function Has_Same_Alternative_Flag (K : Iir_Kind) return Boolean;
+   function Has_Element_Type_Flag (K : Iir_Kind) return Boolean;
    function Has_Architecture (K : Iir_Kind) return Boolean;
    function Has_Block_Specification (K : Iir_Kind) return Boolean;
    function Has_Prev_Block_Configuration (K : Iir_Kind) return Boolean;
