@@ -2854,8 +2854,8 @@ package body Trans.Chap7 is
       Start_Loop_Stmt (Label);
       Gen_Exit_When
         (Label, New_Compare_Op (ON_Eq,
-         New_Obj_Value (It), New_Obj_Value (Len),
-         Ghdl_Bool_Type));
+                                New_Obj_Value (It), New_Obj_Value (Len),
+                                Ghdl_Bool_Type));
       El_Node := Chap3.Index_Base (Base_Ptr, Target_Type,
                                    New_Obj_Value (It));
       --New_Assign_Stmt (El_Node, Chap7.Translate_Expression (El));
@@ -2865,6 +2865,58 @@ package body Trans.Chap7 is
 
       Close_Temp;
    end Translate_Aggregate_Others;
+
+   procedure Translate_Array_Aggregate_Gen_String
+     (Base_Ptr   : Mnode;
+      Aggr       : Iir;
+      Aggr_Type  : Iir;
+      Var_Index  : O_Dnode)
+   is
+      Expr_Type  : constant Iir := Get_Element_Subtype (Aggr_Type);
+      Len : constant Nat32 := Get_String_Length (Aggr);
+
+      --  Type of the unconstrained array type.
+      Arr_Type : O_Tnode;
+
+      --  Type of the constrained array type.
+      Str_Type : O_Tnode;
+
+      Cst   : Var_Type;
+      Var_I : O_Dnode;
+      Label : O_Snode;
+   begin
+      --  FIXME: check length is matching ?
+
+      --  Create a constant for the string.
+      --  First, create its type, because the literal has no
+      --  type (subaggregate).
+      Arr_Type := New_Array_Type
+        (Get_Ortho_Type (Expr_Type, Mode_Value), Ghdl_Index_Type);
+      New_Type_Decl (Create_Uniq_Identifier, Arr_Type);
+      Str_Type := New_Constrained_Array_Type
+        (Arr_Type, New_Index_Lit (Unsigned_64 (Len)));
+      Cst := Create_String_Literal_Var_Inner (Aggr, Expr_Type, Str_Type);
+
+      --  Copy it.
+      Open_Temp;
+      Var_I := Create_Temp (Ghdl_Index_Type);
+      Init_Var (Var_I);
+      Start_Loop_Stmt (Label);
+      Gen_Exit_When (Label,
+                     New_Compare_Op (ON_Eq,
+                                     New_Obj_Value (Var_I),
+                                     New_Lit (New_Index_Lit (Nat32'Pos (Len))),
+                                     Ghdl_Bool_Type));
+      New_Assign_Stmt
+        (M2Lv (Chap3.Index_Base (Base_Ptr, Aggr_Type,
+                                 New_Obj_Value (Var_Index))),
+         New_Value (New_Indexed_Element (Get_Var (Cst),
+                                         New_Obj_Value (Var_I))));
+      Inc_Var (Var_I);
+      Inc_Var (Var_Index);
+      Finish_Loop_Stmt (Label);
+      Close_Temp;
+   end Translate_Array_Aggregate_Gen_String;
 
    procedure Translate_Array_Aggregate_Gen
      (Base_Ptr   : Mnode;
@@ -2883,7 +2935,7 @@ package body Trans.Chap7 is
       begin
          if Final then
             Translate_Assign (Chap3.Index_Base (Base_Ptr, Aggr_Type,
-                              New_Obj_Value (Var_Index)),
+                                                New_Obj_Value (Var_Index)),
                               Expr, Expr_Type);
             Inc_Var (Var_Index);
          else
@@ -2900,54 +2952,8 @@ package body Trans.Chap7 is
             --  Continue below.
             null;
          when Iir_Kind_String_Literal8 =>
-            declare
-               Len : constant Nat32 := Get_String_Length (Aggr);
-
-               --  Type of the unconstrained array type.
-               Arr_Type : O_Tnode;
-
-               --  Type of the constrained array type.
-               Str_Type : O_Tnode;
-
-               Cst   : Var_Type;
-               Var_I : O_Dnode;
-               Label : O_Snode;
-            begin
-               Expr_Type := Get_Element_Subtype (Aggr_Type);
-
-               --  Create a constant for the string.
-               --  First, create its type, because the literal has no
-               --  type (subaggregate).
-               Arr_Type := New_Array_Type
-                 (Get_Ortho_Type (Expr_Type, Mode_Value),
-                  Ghdl_Index_Type);
-               New_Type_Decl (Create_Uniq_Identifier, Arr_Type);
-               Str_Type := New_Constrained_Array_Type
-                 (Arr_Type, New_Index_Lit (Unsigned_64 (Len)));
-               Cst := Create_String_Literal_Var_Inner
-                 (Aggr, Expr_Type, Str_Type);
-
-               --  Copy it.
-               Open_Temp;
-               Var_I := Create_Temp (Ghdl_Index_Type);
-               Init_Var (Var_I);
-               Start_Loop_Stmt (Label);
-               Gen_Exit_When
-                 (Label,
-                  New_Compare_Op (ON_Eq,
-                    New_Obj_Value (Var_I),
-                    New_Lit (New_Index_Lit (Nat32'Pos (Len))),
-                    Ghdl_Bool_Type));
-               New_Assign_Stmt
-                 (M2Lv (Chap3.Index_Base (Base_Ptr, Aggr_Type,
-                  New_Obj_Value (Var_Index))),
-                  New_Value (New_Indexed_Element (Get_Var (Cst),
-                    New_Obj_Value (Var_I))));
-               Inc_Var (Var_I);
-               Inc_Var (Var_Index);
-               Finish_Loop_Stmt (Label);
-               Close_Temp;
-            end;
+            Translate_Array_Aggregate_Gen_String
+              (Base_Ptr, Aggr, Aggr_Type, Var_Index);
             return;
          when others =>
             raise Internal_Error;
@@ -3007,9 +3013,9 @@ package body Trans.Chap7 is
                   Start_Loop_Stmt (Label);
                   Gen_Exit_When (Label,
                                  New_Compare_Op (ON_Eq,
-                                   New_Obj_Value (Var_I),
-                                   New_Obj_Value (Var_Length),
-                                   Ghdl_Bool_Type));
+                                                 New_Obj_Value (Var_I),
+                                                 New_Obj_Value (Var_Length),
+                                                 Ghdl_Bool_Type));
                   Do_Assign (Get_Associated_Expr (El));
                   Inc_Var (Var_I);
                   Finish_Loop_Stmt (Label);
@@ -3049,9 +3055,9 @@ package body Trans.Chap7 is
             Start_If_Stmt
               (If_Blk,
                New_Compare_Op (ON_Eq,
-                 M2E (Chap3.Range_To_Dir (Range_Ptr)),
-                 New_Lit (Ghdl_Dir_To_Node),
-                 Ghdl_Bool_Type));
+                               M2E (Chap3.Range_To_Dir (Range_Ptr)),
+                               New_Lit (Ghdl_Dir_To_Node),
+                               Ghdl_Bool_Type));
             Chap8.Gen_Update_Iterator (Var_Pos, Iir_To, Unsigned_64 (P),
                                        Range_Type);
             New_Else_Stmt (If_Blk);
@@ -3066,7 +3072,7 @@ package body Trans.Chap7 is
               (ON_Sub_Ov,
                Len_Tmp,
                New_Lit (New_Unsigned_Literal (Ghdl_Index_Type,
-                 Unsigned_64 (P))));
+                                              Unsigned_64 (P))));
          end if;
          New_Assign_Stmt (New_Obj (Var_Len), Len_Tmp);
 
@@ -3076,9 +3082,9 @@ package body Trans.Chap7 is
          Gen_Exit_When
            (Label,
             New_Compare_Op (ON_Eq,
-              New_Obj_Value (Var_Len),
-              New_Lit (Ghdl_Index_0),
-              Ghdl_Bool_Type));
+                            New_Obj_Value (Var_Len),
+                            New_Lit (Ghdl_Index_0),
+                            Ghdl_Bool_Type));
 
          --  convert aggr into a case statement.
          Start_Case_Stmt (Case_Blk, New_Obj_Value (Var_Pos));
@@ -3099,9 +3105,9 @@ package body Trans.Chap7 is
          Start_If_Stmt
            (If_Blk,
             New_Compare_Op (ON_Eq,
-              M2E (Chap3.Range_To_Dir (Range_Ptr)),
-              New_Lit (Ghdl_Dir_To_Node),
-              Ghdl_Bool_Type));
+                            M2E (Chap3.Range_To_Dir (Range_Ptr)),
+                            New_Lit (Ghdl_Dir_To_Node),
+                            Ghdl_Bool_Type));
          Chap8.Gen_Update_Iterator (Var_Pos, Iir_To, Unsigned_64 (1),
                                     Range_Type);
          New_Else_Stmt (If_Blk);
@@ -3111,8 +3117,8 @@ package body Trans.Chap7 is
          New_Assign_Stmt
            (New_Obj (Var_Len),
             New_Dyadic_Op (ON_Sub_Ov,
-              New_Obj_Value (Var_Len),
-              New_Lit (Ghdl_Index_1)));
+                           New_Obj_Value (Var_Len),
+                           New_Lit (Ghdl_Index_1)));
          Finish_Loop_Stmt (Label);
          Close_Temp;
       end;
