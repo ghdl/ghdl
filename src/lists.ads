@@ -72,12 +72,13 @@ package Lists is
    --  Must be used to free the memory used by the lists.
    procedure Initialize;
 
-   --  Append ELEMENT to the list.
+   --  Append ELEMENT to the list.  It's an O(1) operation.
    procedure Append_Element (List : List_Type; Element : Node_Type);
 
    --  Return the first element of the list.
    function Get_First_Element (List : List_Type) return Node_Type;
 
+   --  Append EL if not already in LIST.  It's an O(n) operation.
    procedure Add_Element (List : List_Type; El : Node_Type);
 
    -- Return the number of elements in the list.
