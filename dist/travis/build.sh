@@ -123,6 +123,10 @@ case "$BLD" in
 	      CXX="clang++-5.0"
 	      config_opts="--with-llvm-config=llvm-config-5.0 CXX=$CXX"
     ;;
+    llvm-6.0)
+	      CXX="clang++-6.0"
+	      config_opts="--with-llvm-config=llvm-config-6.0 CXX=$CXX"
+    ;;
     *)
 	      echo "$ANSI_RED[GHDL - build] Unknown build $BLD $ANSI_NOCOLOR"
 	      exit 1;;
