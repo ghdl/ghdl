@@ -2930,8 +2930,7 @@ package body Trans.Chap7 is
       Expr_Type  : Iir;
       Final      : Boolean;
 
-      procedure Do_Assign (Expr : Iir)
-      is
+      procedure Do_Assign (Expr : Iir) is
       begin
          if Final then
             Translate_Assign (Chap3.Index_Base (Base_Ptr, Aggr_Type,
@@ -2944,20 +2943,191 @@ package body Trans.Chap7 is
          end if;
       end Do_Assign;
 
-      P  : Natural;
-      El : Iir;
+      procedure Translate_Array_Aggregate_Gen_Positional
+      is
+         P  : Natural;
+         El : Iir;
+      begin
+         --  First, assign positionnal association.
+         --  FIXME: count the number of positionnal association and generate
+         --   an error if there is more positionnal association than elements
+         --   in the array.
+         El := Get_Association_Choices_Chain (Aggr);
+         P := 0;
+         loop
+            if El = Null_Iir then
+               return;
+            end if;
+            exit when Get_Kind (El) /= Iir_Kind_Choice_By_None;
+            Do_Assign (Get_Associated_Expr (El));
+            P := P + 1;
+            El := Get_Chain (El);
+         end loop;
+
+         pragma Assert (Get_Kind (El) = Iir_Kind_Choice_By_Others);
+
+         --  Handle others.
+         declare
+            Var_Len    : O_Dnode;
+            Range_Ptr  : Mnode;
+            Label      : O_Snode;
+            Len_Tmp    : O_Enode;
+         begin
+            Open_Temp;
+            --  Create a loop from P to len.
+            Var_Len := Create_Temp (Ghdl_Index_Type);
+
+            Range_Ptr := Chap3.Bounds_To_Range (Bounds_Ptr, Aggr_Type, Dim);
+            Len_Tmp := M2E (Chap3.Range_To_Length (Range_Ptr));
+            if P /= 0 then
+               Len_Tmp := New_Dyadic_Op
+                 (ON_Sub_Ov,
+                  Len_Tmp, New_Lit (New_Index_Lit (Unsigned_64 (P))));
+            end if;
+            New_Assign_Stmt (New_Obj (Var_Len), Len_Tmp);
+
+            --  Start loop.
+            Start_Loop_Stmt (Label);
+            --  Check if end of loop.
+            Gen_Exit_When
+              (Label,
+               New_Compare_Op (ON_Eq,
+                               New_Obj_Value (Var_Len),
+                               New_Lit (Ghdl_Index_0),
+                               Ghdl_Bool_Type));
+
+            Do_Assign (Get_Associated_Expr (El));
+            Dec_Var (Var_Len);
+            Finish_Loop_Stmt (Label);
+            Close_Temp;
+         end;
+      end Translate_Array_Aggregate_Gen_Positional;
+
+      procedure Translate_Array_Aggregate_Gen_Named
+      is
+         El : Iir;
+      begin
+         El := Get_Association_Choices_Chain (Aggr);
+
+         --  Then, assign named or others association.
+         if Is_Chain_Length_One (El) then
+            --  There is only one choice
+            case Get_Kind (El) is
+               when Iir_Kind_Choice_By_Others =>
+                  --  falltrough...
+                  null;
+               when Iir_Kind_Choice_By_Expression =>
+                  Do_Assign (Get_Associated_Expr (El));
+                  return;
+               when Iir_Kind_Choice_By_Range =>
+                  declare
+                     Var_Length : O_Dnode;
+                     Var_I      : O_Dnode;
+                     Label      : O_Snode;
+                  begin
+                     Open_Temp;
+                     Var_Length := Create_Temp_Init
+                       (Ghdl_Index_Type,
+                        Chap7.Translate_Range_Length (Get_Choice_Range (El)));
+                     Var_I := Create_Temp (Ghdl_Index_Type);
+                     Init_Var (Var_I);
+                     Start_Loop_Stmt (Label);
+                     Gen_Exit_When (Label,
+                                    New_Compare_Op (ON_Eq,
+                                                    New_Obj_Value (Var_I),
+                                                    New_Obj_Value (Var_Length),
+                                                    Ghdl_Bool_Type));
+                     Do_Assign (Get_Associated_Expr (El));
+                     Inc_Var (Var_I);
+                     Finish_Loop_Stmt (Label);
+                     Close_Temp;
+                  end;
+                  return;
+               when others =>
+                  Error_Kind ("translate_array_aggregate_gen", El);
+            end case;
+         end if;
+
+         --  Several choices..
+         declare
+            Range_Type : Iir;
+            Var_Pos    : O_Dnode;
+            Var_Len    : O_Dnode;
+            Range_Ptr  : Mnode;
+            Rtinfo     : Type_Info_Acc;
+            If_Blk     : O_If_Block;
+            Case_Blk   : O_Case_Block;
+            Label      : O_Snode;
+            El_Assoc   : Iir;
+            Len_Tmp    : O_Enode;
+         begin
+            Open_Temp;
+            --  Create a loop from left +- number of positionnals associations
+            --   to/downto right.
+            Range_Type := Get_Base_Type (Get_Index_Type (Index_List, Dim - 1));
+            Rtinfo := Get_Info (Range_Type);
+            Var_Pos := Create_Temp (Rtinfo.Ortho_Type (Mode_Value));
+            Range_Ptr := Stabilize
+              (Chap3.Bounds_To_Range (Bounds_Ptr, Aggr_Type, Dim));
+            New_Assign_Stmt (New_Obj (Var_Pos),
+                             M2E (Chap3.Range_To_Left (Range_Ptr)));
+            Var_Len := Create_Temp (Ghdl_Index_Type);
+
+            Len_Tmp := M2E (Chap3.Range_To_Length (Range_Ptr));
+            New_Assign_Stmt (New_Obj (Var_Len), Len_Tmp);
+
+            --  Start loop.
+            Start_Loop_Stmt (Label);
+            --  Check if end of loop.
+            Gen_Exit_When
+              (Label,
+               New_Compare_Op (ON_Eq,
+                               New_Obj_Value (Var_Len),
+                               New_Lit (Ghdl_Index_0),
+                               Ghdl_Bool_Type));
+
+            --  convert aggr into a case statement.
+            Start_Case_Stmt (Case_Blk, New_Obj_Value (Var_Pos));
+            El_Assoc := Null_Iir;
+            while El /= Null_Iir loop
+               Start_Choice (Case_Blk);
+               Chap8.Translate_Case_Choice (El, Range_Type, Case_Blk);
+               if Get_Associated_Expr (El) /= Null_Iir then
+                  El_Assoc := Get_Associated_Expr (El);
+               end if;
+               Finish_Choice (Case_Blk);
+               Do_Assign (El_Assoc);
+               El := Get_Chain (El);
+            end loop;
+            Finish_Case_Stmt (Case_Blk);
+            --  Update var_pos
+            Start_If_Stmt
+              (If_Blk,
+               New_Compare_Op (ON_Eq,
+                               M2E (Chap3.Range_To_Dir (Range_Ptr)),
+                               New_Lit (Ghdl_Dir_To_Node),
+                               Ghdl_Bool_Type));
+            Chap8.Gen_Update_Iterator (Var_Pos, Iir_To, Unsigned_64 (1),
+                                       Range_Type);
+            New_Else_Stmt (If_Blk);
+            Chap8.Gen_Update_Iterator (Var_Pos, Iir_Downto, Unsigned_64 (1),
+                                       Range_Type);
+            Finish_If_Stmt (If_Blk);
+            Dec_Var (Var_Len);
+            Finish_Loop_Stmt (Label);
+            Close_Temp;
+         end;
+      end Translate_Array_Aggregate_Gen_Named;
+
+      Assocs : Iir;
    begin
-      case Get_Kind (Aggr) is
-         when Iir_Kind_Aggregate =>
-            --  Continue below.
-            null;
-         when Iir_Kind_String_Literal8 =>
-            Translate_Array_Aggregate_Gen_String
-              (Base_Ptr, Aggr, Aggr_Type, Var_Index);
-            return;
-         when others =>
-            raise Internal_Error;
-      end case;
+      if Get_Kind (Aggr) = Iir_Kind_String_Literal8 then
+         Translate_Array_Aggregate_Gen_String
+           (Base_Ptr, Aggr, Aggr_Type, Var_Index);
+         return;
+      end if;
+
+      pragma Assert (Get_Kind (Aggr) = Iir_Kind_Aggregate);
 
       Index_List := Get_Index_Subtype_List (Aggr_Type);
 
@@ -2970,158 +3140,15 @@ package body Trans.Chap7 is
          Final := False;
       end if;
 
-      El := Get_Association_Choices_Chain (Aggr);
+      Assocs := Get_Association_Choices_Chain (Aggr);
 
-      --  First, assign positionnal association.
-      --  FIXME: count the number of positionnal association and generate
-      --   an error if there is more positionnal association than elements
-      --   in the array.
-      P := 0;
-      loop
-         if El = Null_Iir then
-            --  There is only positionnal associations.
-            return;
-         end if;
-         exit when Get_Kind (El) /= Iir_Kind_Choice_By_None;
-         Do_Assign (Get_Associated_Expr (El));
-         P := P + 1;
-         El := Get_Chain (El);
-      end loop;
-
-      --  Then, assign named or others association.
-      if Get_Chain (El) = Null_Iir then
-         --  There is only one choice
-         case Get_Kind (El) is
-            when Iir_Kind_Choice_By_Others =>
-               --  falltrough...
-               null;
-            when Iir_Kind_Choice_By_Expression =>
-               Do_Assign (Get_Associated_Expr (El));
-               return;
-            when Iir_Kind_Choice_By_Range =>
-               declare
-                  Var_Length : O_Dnode;
-                  Var_I      : O_Dnode;
-                  Label      : O_Snode;
-               begin
-                  Open_Temp;
-                  Var_Length := Create_Temp_Init
-                    (Ghdl_Index_Type,
-                     Chap7.Translate_Range_Length (Get_Choice_Range (El)));
-                  Var_I := Create_Temp (Ghdl_Index_Type);
-                  Init_Var (Var_I);
-                  Start_Loop_Stmt (Label);
-                  Gen_Exit_When (Label,
-                                 New_Compare_Op (ON_Eq,
-                                                 New_Obj_Value (Var_I),
-                                                 New_Obj_Value (Var_Length),
-                                                 Ghdl_Bool_Type));
-                  Do_Assign (Get_Associated_Expr (El));
-                  Inc_Var (Var_I);
-                  Finish_Loop_Stmt (Label);
-                  Close_Temp;
-               end;
-               return;
-            when others =>
-               Error_Kind ("translate_array_aggregate_gen", El);
-         end case;
-      end if;
-
-      --  Several choices..
-      declare
-         Range_Type : Iir;
-         Var_Pos    : O_Dnode;
-         Var_Len    : O_Dnode;
-         Range_Ptr  : Mnode;
-         Rtinfo     : Type_Info_Acc;
-         If_Blk     : O_If_Block;
-         Case_Blk   : O_Case_Block;
-         Label      : O_Snode;
-         El_Assoc   : Iir;
-         Len_Tmp    : O_Enode;
-      begin
-         Open_Temp;
-         --  Create a loop from left +- number of positionnals associations
-         --   to/downto right.
-         Range_Type := Get_Base_Type (Get_Index_Type (Index_List, Dim - 1));
-         Rtinfo := Get_Info (Range_Type);
-         Var_Pos := Create_Temp (Rtinfo.Ortho_Type (Mode_Value));
-         Range_Ptr := Stabilize
-           (Chap3.Bounds_To_Range (Bounds_Ptr, Aggr_Type, Dim));
-         New_Assign_Stmt (New_Obj (Var_Pos),
-                          M2E (Chap3.Range_To_Left (Range_Ptr)));
-         Var_Len := Create_Temp (Ghdl_Index_Type);
-         if P /= 0 then
-            Start_If_Stmt
-              (If_Blk,
-               New_Compare_Op (ON_Eq,
-                               M2E (Chap3.Range_To_Dir (Range_Ptr)),
-                               New_Lit (Ghdl_Dir_To_Node),
-                               Ghdl_Bool_Type));
-            Chap8.Gen_Update_Iterator (Var_Pos, Iir_To, Unsigned_64 (P),
-                                       Range_Type);
-            New_Else_Stmt (If_Blk);
-            Chap8.Gen_Update_Iterator (Var_Pos, Iir_Downto, Unsigned_64 (P),
-                                       Range_Type);
-            Finish_If_Stmt (If_Blk);
-         end if;
-
-         Len_Tmp := M2E (Chap3.Range_To_Length (Range_Ptr));
-         if P /= 0 then
-            Len_Tmp := New_Dyadic_Op
-              (ON_Sub_Ov,
-               Len_Tmp,
-               New_Lit (New_Unsigned_Literal (Ghdl_Index_Type,
-                                              Unsigned_64 (P))));
-         end if;
-         New_Assign_Stmt (New_Obj (Var_Len), Len_Tmp);
-
-         --  Start loop.
-         Start_Loop_Stmt (Label);
-         --  Check if end of loop.
-         Gen_Exit_When
-           (Label,
-            New_Compare_Op (ON_Eq,
-                            New_Obj_Value (Var_Len),
-                            New_Lit (Ghdl_Index_0),
-                            Ghdl_Bool_Type));
-
-         --  convert aggr into a case statement.
-         Start_Case_Stmt (Case_Blk, New_Obj_Value (Var_Pos));
-         El_Assoc := Null_Iir;
-         while El /= Null_Iir loop
-            Start_Choice (Case_Blk);
-            Chap8.Translate_Case_Choice (El, Range_Type, Case_Blk);
-            if Get_Associated_Expr (El) /= Null_Iir then
-               El_Assoc := Get_Associated_Expr (El);
-            end if;
-            Finish_Choice (Case_Blk);
-            Do_Assign (El_Assoc);
-            P := P + 1;
-            El := Get_Chain (El);
-         end loop;
-         Finish_Case_Stmt (Case_Blk);
-         --  Update var_pos
-         Start_If_Stmt
-           (If_Blk,
-            New_Compare_Op (ON_Eq,
-                            M2E (Chap3.Range_To_Dir (Range_Ptr)),
-                            New_Lit (Ghdl_Dir_To_Node),
-                            Ghdl_Bool_Type));
-         Chap8.Gen_Update_Iterator (Var_Pos, Iir_To, Unsigned_64 (1),
-                                    Range_Type);
-         New_Else_Stmt (If_Blk);
-         Chap8.Gen_Update_Iterator (Var_Pos, Iir_Downto, Unsigned_64 (1),
-                                    Range_Type);
-         Finish_If_Stmt (If_Blk);
-         New_Assign_Stmt
-           (New_Obj (Var_Len),
-            New_Dyadic_Op (ON_Sub_Ov,
-                           New_Obj_Value (Var_Len),
-                           New_Lit (Ghdl_Index_1)));
-         Finish_Loop_Stmt (Label);
-         Close_Temp;
-      end;
+      case Get_Kind (Assocs) is
+         when Iir_Kind_Choice_By_None
+           | Iir_Kind_Choice_By_Others =>
+            Translate_Array_Aggregate_Gen_Positional;
+         when others =>
+            Translate_Array_Aggregate_Gen_Named;
+      end case;
    end Translate_Array_Aggregate_Gen;
 
    procedure Translate_Record_Aggregate (Target : Mnode; Aggr : Iir)

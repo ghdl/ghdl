@@ -516,6 +516,11 @@ package Iirs is
    -- Iir_Kind_Choice_By_Expression (Short)
    --  (Iir_Kinds_Choice)
    --
+   --  Used by:
+   --  Iir_Kind_Aggregate
+   --  Iir_Kind_Case_Statement
+   --  Iir_Kind_Case_Generate_Statement
+   --  Iir_Kind_Concurrent_Selected_Signal_Assignment
    --
    --  The location of the first alternative is set on:
    --  'when' for case statement, selected assignment and case generate,
@@ -527,9 +532,6 @@ package Iirs is
    --  For a list of choices, only the first one is associated, the following
    --  associations have the same_alternative_flag set.
    --   Get/Set_Chain (Field2)
-   --
-   --  These are elements of an choice chain, which is used for
-   --  case_statement, concurrent_selected_signal_assignment, aggregates.
    --
    --  Get/Set what is associated with the choice.  There are two different
    --  nodes, one for simple association and the other for chain association.
