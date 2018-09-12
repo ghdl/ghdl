@@ -3244,6 +3244,69 @@ package body Sem_Expr is
 
       Info : Array_Aggr_Info renames Infos (Dim);
    begin
+      --  Analyze aggregate elements.
+      if Constrained then
+         Expr_Staticness := Get_Type_Staticness (Index_Type);
+         if Expr_Staticness /= Locally then
+            --  Cannot be statically built as the bounds are not known and
+            --  must be checked at run-time.
+            Set_Aggregate_Expand_Flag (Aggr, False);
+         end if;
+      else
+         Expr_Staticness := Locally;
+      end if;
+
+      if Dim = Get_Nbr_Elements (Index_List) then
+         --  A type has been found for AGGR, analyze AGGR as if it was
+         --  an aggregate with a subtype (and not a string).
+         if Get_Kind (Aggr) = Iir_Kind_Aggregate then
+            Sem_Array_Aggregate_Elements (Aggr, A_Type, Expr_Staticness, Info);
+         else
+            --  Nothing to do for a string.
+            null;
+         end if;
+      else
+         --  A sub-aggregate: recurse.
+         declare
+            Sub_Aggr : Iir;
+         begin
+            --  Here we know that AGGR is an aggregate because:
+            --  * either this is the first call (ie DIM = 1) and therefore
+            --    AGGR is an aggregate (an aggregate is being analyzed).
+            --  * or DIM > 1 and the use of strings is checked (just bellow).
+            Assoc_Chain := Get_Association_Choices_Chain (Aggr);
+            Choice := Assoc_Chain;
+            while Choice /= Null_Iir loop
+               if not Get_Same_Alternative_Flag (Choice) then
+                  Sub_Aggr := Get_Associated_Expr (Choice);
+                  case Get_Kind (Sub_Aggr) is
+                     when Iir_Kind_Aggregate =>
+                        Sem_Array_Aggregate_Type_1
+                          (Sub_Aggr, A_Type, Infos, Constrained, Dim + 1);
+                        if not Get_Aggregate_Expand_Flag (Sub_Aggr) then
+                           Set_Aggregate_Expand_Flag (Aggr, False);
+                        end if;
+                     when Iir_Kind_String_Literal8 =>
+                        if Dim + 1 = Get_Nbr_Elements (Index_List) then
+                           Sem_Array_Aggregate_Type_1
+                             (Sub_Aggr, A_Type, Infos, Constrained, Dim + 1);
+                        else
+                           Error_Msg_Sem
+                             (+Sub_Aggr, "string literal not allowed here");
+                           Infos (Dim + 1).Error := True;
+                        end if;
+                     when others =>
+                        Error_Msg_Sem (+Sub_Aggr, "sub-aggregate expected");
+                        Infos (Dim + 1).Error := True;
+                  end case;
+               end if;
+               Choice := Get_Chain (Choice);
+            end loop;
+         end;
+      end if;
+      Set_Expr_Staticness
+        (Aggr, Min (Expr_Staticness, Get_Expr_Staticness (Aggr)));
+
       --  Analyze choices.
       case Get_Kind (Aggr) is
          when Iir_Kind_Aggregate =>
@@ -3502,63 +3565,7 @@ package body Sem_Expr is
          end if;
       end if;
 
-      --  Analyze aggregate elements.
-      if Constrained then
-         Expr_Staticness := Get_Type_Staticness (Index_Type);
-         if Expr_Staticness /= Locally then
-            --  Cannot be statically built as the bounds are not known and
-            --  must be checked at run-time.
-            Set_Aggregate_Expand_Flag (Aggr, False);
-         end if;
-      else
-         Expr_Staticness := Locally;
-      end if;
-
-      if Dim = Get_Nbr_Elements (Index_List) then
-         --  A type has been found for AGGR, analyze AGGR as if it was
-         --  an aggregate with a subtype (and not a string).
-         if Get_Kind (Aggr) = Iir_Kind_Aggregate then
-            Sem_Array_Aggregate_Elements (Aggr, A_Type, Expr_Staticness, Info);
-         else
-            --  Nothing to do for a string.
-            null;
-         end if;
-      else
-         --  A sub-aggregate: recurse.
-         declare
-            Sub_Aggr : Iir;
-         begin
-            Choice := Assoc_Chain;
-            while Choice /= Null_Iir loop
-               if not Get_Same_Alternative_Flag (Choice) then
-                  Sub_Aggr := Get_Associated_Expr (Choice);
-                  case Get_Kind (Sub_Aggr) is
-                     when Iir_Kind_Aggregate =>
-                        Sem_Array_Aggregate_Type_1
-                          (Sub_Aggr, A_Type, Infos, Constrained, Dim + 1);
-                        if not Get_Aggregate_Expand_Flag (Sub_Aggr) then
-                           Set_Aggregate_Expand_Flag (Aggr, False);
-                        end if;
-                     when Iir_Kind_String_Literal8 =>
-                        if Dim + 1 = Get_Nbr_Elements (Index_List) then
-                           Sem_Array_Aggregate_Type_1
-                             (Sub_Aggr, A_Type, Infos, Constrained, Dim + 1);
-                        else
-                           Error_Msg_Sem
-                             (+Sub_Aggr, "string literal not allowed here");
-                           Infos (Dim + 1).Error := True;
-                        end if;
-                     when others =>
-                        Error_Msg_Sem (+Sub_Aggr, "sub-aggregate expected");
-                        Infos (Dim + 1).Error := True;
-                  end case;
-               end if;
-               Choice := Get_Chain (Choice);
-            end loop;
-         end;
-      end if;
-      Expr_Staticness := Min (Get_Expr_Staticness (Aggr),
-                              Min (Expr_Staticness, Choice_Staticness));
+      Expr_Staticness := Min (Get_Expr_Staticness (Aggr), Choice_Staticness);
       Set_Expr_Staticness (Aggr, Expr_Staticness);
    end Sem_Array_Aggregate_Type_1;
 
