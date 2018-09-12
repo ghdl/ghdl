@@ -3028,7 +3028,6 @@ package body Sem_Expr is
 
       --  True if one sub-aggregate is by named/by position.
       Has_Named : Boolean := False;
-      Has_Positional : Boolean := False;
 
       --  True if one sub-aggregate is dynamic.
       Has_Dynamic : Boolean := False;
@@ -3338,9 +3337,6 @@ package body Sem_Expr is
             Error_Kind ("sem_array_aggregate_type_1", Aggr);
       end case;
 
-      if Is_Positional = True then
-         Info.Has_Positional := True;
-      end if;
       if Is_Positional = False then
          Info.Has_Named := True;
       end if;
@@ -3521,11 +3517,11 @@ package body Sem_Expr is
       if Dim = Get_Nbr_Elements (Index_List) then
          --  A type has been found for AGGR, analyze AGGR as if it was
          --  an aggregate with a subtype (and not a string).
-         if Get_Kind (Aggr) /= Iir_Kind_Aggregate then
-            --  Nothing to do for a string.
-            return;
-         else
+         if Get_Kind (Aggr) = Iir_Kind_Aggregate then
             Sem_Array_Aggregate_Elements (Aggr, A_Type, Expr_Staticness, Info);
+         else
+            --  Nothing to do for a string.
+            null;
          end if;
       else
          --  A sub-aggregate: recurse.
