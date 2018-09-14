@@ -3916,7 +3916,6 @@ package body Trans.Chap8 is
    begin
       El := Get_Association_Choices_Chain (Target);
       while El /= Null_Iir loop
-         case Get_Kind (El) is
             when Iir_Kind_Choice_By_None =>
                Sub_Aggr := Chap3.Index_Base
                  (Aggr, Target_Type, New_Obj_Value (Idx));

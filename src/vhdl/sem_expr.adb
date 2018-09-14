@@ -3157,8 +3157,6 @@ package body Sem_Expr is
                end if;
             end if;
 
-            Set_Element_Type_Flag (El, not Is_Array);
-
             if Expr /= Null_Iir then
                El_Staticness := Get_Expr_Staticness (Expr);
                Expr := Eval_Expr_If_Static (Expr);
@@ -3183,6 +3181,8 @@ package body Sem_Expr is
                Info.Error := True;
             end if;
          end if;
+
+         Set_Element_Type_Flag (El, not Is_Array);
 
          if Is_Array then
             --  LRM08 9.3.3.3 Array aggregates
@@ -3300,6 +3300,10 @@ package body Sem_Expr is
                         Infos (Dim + 1).Error := True;
                   end case;
                end if;
+
+               --  Always true for a sub-aggregate.
+               Set_Element_Type_Flag (Choice, True);
+
                Choice := Get_Chain (Choice);
             end loop;
          end;
@@ -3349,7 +3353,29 @@ package body Sem_Expr is
                      Len := Len + 1;
                   when Iir_Kind_Choice_By_None =>
                      Has_Positional_Choice := True;
-                     Len := Len + 1;
+                     if Get_Element_Type_Flag (Choice) then
+                        Len := Len + 1;
+                     else
+                        --  Extract length from associated expression.
+                        declare
+                           --  Always has an associated expr, as not named.
+                           Expr : constant Iir := Get_Associated_Expr (Choice);
+                           Expr_Type : constant Iir := Get_Type (Expr);
+                           Expr_Index : Iir;
+                        begin
+                           if not Is_Error (Expr_Type) then
+                              Expr_Index := Get_Index_Type (Expr_Type, 0);
+                              if Get_Type_Staticness (Expr_Index) = Locally
+                              then
+                                 Len := Len + Natural
+                                   (Eval_Discrete_Type_Length (Expr_Index));
+                              else
+                                 --  TODO: length is not locally static...
+                                 raise Internal_Error;
+                              end if;
+                           end if;
+                        end;
+                     end if;
                   when Iir_Kind_Choice_By_Others =>
                      if not Constrained then
                         Error_Msg_Sem (+Aggr, "'others' choice not allowed "
@@ -3447,7 +3473,8 @@ package body Sem_Expr is
             --  Create an index subtype.
             case Get_Kind (Index_Type) is
                when Iir_Kind_Integer_Subtype_Definition =>
-                  Info.Index_Subtype := Create_Iir (Get_Kind (Index_Type));
+                  Info.Index_Subtype :=
+                    Create_Iir (Iir_Kind_Integer_Subtype_Definition);
                when Iir_Kind_Enumeration_Type_Definition
                  | Iir_Kind_Enumeration_Subtype_Definition =>
                   Info.Index_Subtype :=
