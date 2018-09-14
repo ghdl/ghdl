@@ -98,7 +98,7 @@ MSYS2_ARG=MSYS2_ARG_CONV_EXCL="-aI;-gnatec"
 
 # Configuration pragmas.
 # -gnatdY is required to force the use of __gnat_last_chance_handler.
-GRT_PRAGMA_FLAG=-gnatec$(GRTSRCDIR)/grt.adc -gnat05 -gnatdY
+GRT_PRAGMA_FLAG=-gnatec$(GRTSRCDIR)/grt.adc -gnatdY
 
 # Rule to compile an Ada file.
 GRT_ADACOMPILE=$(GNATMAKE) -u -c $(GRT_FLAGS) $(GRT_PRAGMA_FLAG)

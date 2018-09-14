@@ -79,7 +79,7 @@ ifeq "$(build_mode)" "coverage"
 OPT_FLAGS+=-fprofile-arcs -ftest-coverage
 endif
 
-GNATFLAGS=-gnaty3befhkmr -gnatwa -gnatf -gnat05 $(OPT_FLAGS) $(ADA_FLAGS)
+GNATFLAGS=-gnaty3befhkmr -gnatwa -gnatf $(OPT_FLAGS) $(ADA_FLAGS)
 GRT_FLAGS=$(OPT_FLAGS)
 
 WARN_CFLAGS=-Wall
@@ -184,7 +184,7 @@ install.mcode: install.mcode.program install.vhdllib install.vpi
 oread-mcode$(EXEEXT): force
 	$(MAKE) -f $(srcdir)/src/ortho/mcode/Makefile \
 	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
-	 GNAT_FLAGS="-aI$(srcdir)/src/ortho/oread $(GNATFLAGS)" all
+	 GNATFLAGS="-aI$(srcdir)/src/ortho/oread $(GNATFLAGS)" all
 
 #################### For gcc backend ##############################
 
@@ -251,7 +251,7 @@ GHDL_GCC_INCFLAGS=$(GHDL_COMMON_INCFLAGS)
 ghdl1-gcc$(EXEEXT): version.ads force
 	$(MAKE) -f $(srcdir)/src/ortho/gcc/Makefile \
 	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
-	 GNAT_FLAGS="$(GHDL_GCC_INCFLAGS) $(GNATFLAGS)" all
+	 GNATFLAGS="$(GHDL_GCC_INCFLAGS) $(GNATFLAGS)" all
 
 ghdl_gcc$(EXEEXT): version.ads force
 	$(GNATMAKE) $(GHDL_GCC_INCFLAGS) -aI$(srcdir)/src/ghdldrv \
@@ -263,13 +263,13 @@ libs.vhdl.local_gcc: ghdl_gcc$(EXEEXT) ghdl1-gcc$(EXEEXT)
 ghdl1-debug$(EXEEXT): version.ads force
 	$(MAKE) -f $(srcdir)/src/ortho/debug/Makefile \
 	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
-	 GNAT_FLAGS="$(GHDL_GCC_INCFLAGS) $(GNATFLAGS)" \
+	 GNATFLAGS="$(GHDL_GCC_INCFLAGS) $(GNATFLAGS)" \
 	 GNATMAKE="$(GNATMAKE)" all
 
 oread-gcc$(EXEEXT): force
 	$(MAKE) -f $(srcdir)/src/ortho/gcc/Makefile \
 	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
-	 GNAT_FLAGS="-aI$(srcdir)/src/ortho/oread $(GNATFLAGS)" all
+	 GNATFLAGS="-aI$(srcdir)/src/ortho/oread $(GNATFLAGS)" all
 
 #################### For llvm backend ##############################
 
@@ -304,7 +304,7 @@ ghdl_llvm$(EXEEXT): version.ads force
 ghdl1-llvm$(EXEEXT): version.ads force
 	$(MAKE) -f $(srcdir)/src/ortho/$(llvm_be)/Makefile \
 	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
-	 GNAT_FLAGS="$(GHDL_LLVM_INCFLAGS) $(GNATFLAGS)" LDFLAGS="$(LDFLAGS)" \
+	 GNATFLAGS="$(GHDL_LLVM_INCFLAGS) $(GNATFLAGS)" LDFLAGS="$(LDFLAGS)" \
 	 LLVM_CONFIG="$(LLVM_CONFIG)" CXX="$(CXX)" GNATMAKE="$(GNATMAKE)" \
 	 all
 
@@ -312,7 +312,7 @@ oread-llvm$(EXEEXT): force
 	$(MAKE) -f $(srcdir)/src/ortho/$(llvm_be)/Makefile \
 	 ortho_srcdir=$(srcdir)/src/ortho ortho_exec=$@ \
 	 GNATMAKE="$(GNATMAKE)" \
-	 GNAT_FLAGS="-aI$(srcdir)/src/ortho/oread $(GNATFLAGS)" \
+	 GNATFLAGS="-aI$(srcdir)/src/ortho/oread $(GNATFLAGS)" \
 	 LLVM_CONFIG="$(LLVM_CONFIG)" CXX="$(CXX)"
 
 install.llvm.program: install.dirs ghdl1-llvm$(EXEEXT) ghdl_llvm$(EXEEXT)
@@ -344,7 +344,7 @@ LIBGHDL_INCFLAGS=$(GHDL_COMMON_INCFLAGS) -aI$(srcdir)/src/vhdl/python -aI$(srcdi
 libghdl_name=libghdl-$(libghdl_version)$(SOEXT)
 
 $(libghdl_name): $(GRT_SRC_DEPS) version.ads force
-	$(GNATMAKE) -I- -aI. -D pic -z libghdl -o $@ $(GNATFLAGS) $(PIC_FLAGS) -gnat05 $(LIBGHDL_INCFLAGS) -bargs -shared -Llibghdl_ -largs -shared $(SHLIB_FLAGS)
+	$(GNATMAKE) -I- -aI. -D pic -z libghdl -o $@ $(GNATFLAGS) $(PIC_FLAGS) $(LIBGHDL_INCFLAGS) -bargs -shared -Llibghdl_ -largs -shared $(SHLIB_FLAGS)
 
 all.libghdl.true: $(libghdl_name)
 all.libghdl.false:

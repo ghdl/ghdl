@@ -18,19 +18,19 @@
 
 BE=gcc
 ortho_srcdir=../ortho
-GNAT_FLAGS=-aI.. -aI../psl -gnaty3befhkmr -gnata -gnatf -gnatwael -gnat05
-#GNAT_FLAGS+=-O -gnatn
+GNATFLAGS=-aI.. -aI../psl -gnaty3befhkmr -gnata -gnatf -gnatwael
+#GNATFLAGS+=-O -gnatn
 LN=ln -s
 
 compiler: force # ortho_nodes.ads ortho_$(BE)_front.ads
 	$(MAKE) -f $(ortho_srcdir)/$(BE)/Makefile \
-	 ortho_srcdir=$(ortho_srcdir) GNAT_FLAGS="$(GNAT_FLAGS)" \
+	 ortho_srcdir=$(ortho_srcdir) GNATFLAGS="$(GNATFLAGS)" \
 	 ortho_exec=ghdl1-$(BE) all
 
 all:
 	[ -d lib ] || mkdir lib
 	$(MAKE) -f $(ortho_srcdir)/gcc/Makefile \
-	 ortho_srcdir=$(ortho_srcdir) GNAT_FLAGS="$(GNAT_FLAGS)" \
+	 ortho_srcdir=$(ortho_srcdir) GNATFLAGS="$(GNATFLAGS)" \
 	 ortho_exec=ghdl1-gcc all
 	$(MAKE) -C ghdldrv
 	$(MAKE) -C grt all libdir=`pwd`/lib
