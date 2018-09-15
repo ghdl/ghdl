@@ -3911,23 +3911,40 @@ package body Trans.Chap8 is
         Get_Index_Subtype_List (Target_Type);
       Nbr_Dim    : constant Natural := Get_Nbr_Elements (Index_List);
       Sub_Aggr   : Mnode;
+      Sub_Type   : Iir;
       El         : Iir;
       Expr       : Iir;
    begin
       El := Get_Association_Choices_Chain (Target);
       while El /= Null_Iir loop
+         Expr := Get_Associated_Expr (El);
+         case Get_Kind (El) is
             when Iir_Kind_Choice_By_None =>
-               Sub_Aggr := Chap3.Index_Base
-                 (Aggr, Target_Type, New_Obj_Value (Idx));
+               if Get_Element_Type_Flag (El) then
+                  Sub_Aggr := Chap3.Index_Base
+                    (Aggr, Target_Type, New_Obj_Value (Idx));
+                  Sub_Type := Get_Element_Subtype (Target_Type);
+               else
+                  Sub_Aggr := Chap3.Slice_Base
+                    (Aggr, Target_Type, New_Obj_Value (Idx));
+                  Sub_Type := Get_Type (Expr);
+               end if;
             when others =>
                Error_Kind ("translate_signal_target_array_aggr", El);
          end case;
-         Expr := Get_Associated_Expr (El);
          if Dim = Nbr_Dim then
-            Translate_Signal_Target_Aggr
-              (Sub_Aggr, Expr, Get_Element_Subtype (Target_Type));
+            Translate_Signal_Target_Aggr (Sub_Aggr, Expr, Sub_Type);
             if Get_Kind (El) = Iir_Kind_Choice_By_None then
-               Inc_Var (Idx);
+               if Get_Element_Type_Flag (El) then
+                  Inc_Var (Idx);
+               else
+                  New_Assign_Stmt
+                    (New_Obj (Idx),
+                     New_Dyadic_Op
+                       (ON_Add_Ov,
+                        New_Obj_Value (Idx),
+                        Chap3.Get_Array_Length (Sub_Aggr, Sub_Type)));
+               end if;
             else
                raise Internal_Error;
             end if;
