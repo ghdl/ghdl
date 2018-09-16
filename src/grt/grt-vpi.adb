@@ -1683,8 +1683,8 @@ package body Grt.Vpi is
                Filename (Filename'Last) := NUL;
                Trace_File := fopen (Filename'Address, Mode'Address);
                if Trace_File = NULL_Stream then
-                  Error_C ("cannot open vpi trace file '");
-                  Error_C (Opt (F + 12 .. Opt'Last));
+                  Error_S ("cannot open vpi trace file '");
+                  Diag_C (Opt (F + 12 .. Opt'Last));
                   Error_E ("'");
                   return False;
                end if;
@@ -1692,8 +1692,8 @@ package body Grt.Vpi is
          elsif Opt'Length = 11 then
             Trace_File := stdout;
          else
-            Error_C ("incorrect option '");
-            Error_C (Opt);
+            Error_S ("incorrect option '");
+            Diag_C (Opt);
             Error_E ("'");
             return False;
          end if;

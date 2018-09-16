@@ -129,8 +129,8 @@ package body Grt.Options is
       elsif Str'Last = Pos + 2 then
          Unit (3) := To_Lower (Str (Pos + 2));
       else
-         Error_C ("bad unit for '");
-         Error_C (Str);
+         Error_S ("bad unit for '");
+         Diag_C (Str);
          Error_E ("'");
          return -1;
       end if;
@@ -154,8 +154,8 @@ package body Grt.Options is
       elsif Unit = "hr " then
          Time := Time * (10 ** 15) * 3600;
       else
-         Error_C ("bad unit name for '");
-         Error_C (Str);
+         Error_S ("bad unit name for '");
+         Diag_C (Str);
          Error_E ("'");
          return -1;
       end if;
@@ -224,8 +224,8 @@ package body Grt.Options is
          begin
             Extract_Integer (Option (14 .. Len), Ok, Time, Pos);
             if not Ok or else Pos <= Len then
-               Error_C ("bad value in '");
-               Error_C (Option);
+               Error_S ("bad value in '");
+               Diag_C (Option);
                Error_E ("'");
             else
                if Time > Integer_64 (Integer'Last) then
@@ -283,8 +283,8 @@ package body Grt.Options is
          begin
             Extract_Integer (Option (11 .. Len), Ok, Val, Pos);
             if not Ok or else Pos <= Len then
-               Error_C ("bad value in '");
-               Error_C (Option);
+               Error_S ("bad value in '");
+               Diag_C (Option);
                Error_E ("'");
             else
                Nbr_Threads := Integer (Val);
@@ -292,8 +292,8 @@ package body Grt.Options is
          end;
       elsif Len > 4 and then Option (1 .. 2) = "-g" then
          if Option (3) = '=' then
-            Error_C ("missing generic name in '");
-            Error_C (Option);
+            Error_S ("missing generic name in '");
+            Diag_C (Option);
             Error_E ("'");
             return;
          end if;
@@ -315,8 +315,8 @@ package body Grt.Options is
                   end if;
                end loop;
                if Eq_Pos = 0 then
-                  Error_C ("missing '=' after generic name in '");
-                  Error_C (Option);
+                  Error_S ("missing '=' after generic name in '");
+                  Diag_C (Option);
                   Error_E ("'");
                end if;
                Name := new String (1 .. Eq_Pos - 3);
@@ -349,8 +349,8 @@ package body Grt.Options is
          Wave_Opt.File.Start
            (Option (18 .. Option'Last), To_Be_Created => True);
       elsif not Grt.Hooks.Call_Option_Hooks (Option) then
-         Error_C ("unknown option '");
-         Error_C (Option);
+         Error_S ("unknown option '");
+         Diag_C (Option);
          Error_E ("', try --help");
       end if;
    end Decode_Option;

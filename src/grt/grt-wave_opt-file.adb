@@ -197,11 +197,11 @@ package body Grt.Wave_Opt.File is
         or else Version.Minor > Current_Version.Minor
       then
          Print_Context (Line'First, Lineno, Error);
-         Error_C ("unsupported format version; it must be ");
+         Error_S ("unsupported format version; it must be ");
          if Current_Version.Minor /= 0 then
-            Error_C ("between ");
+            Diag_C ("between ");
             Print_Version (Version_Type'(Current_Version.Major, 0));
-            Error_C (" and ");
+            Diag_C (" and ");
          end if;
          Print_Version (Current_Version);
          Error_E;
@@ -417,22 +417,22 @@ package body Grt.Wave_Opt.File is
       if To_Be_Created then
          if Stream /= NULL_Stream then
             fclose (Stream);
-            Error_C ("'");
-            Error_C (Option_File);
+            Error_S ("'");
+            Diag_C (Option_File);
             Error_E ("' already exists and it won't be erased.");
          end if;
          State := Write_File;
          Stream := fopen (Option_File_C'Address, Write_Mode'Address);
          if Stream = NULL_Stream then
-            Error_C ("cannot create '");
-            Error_C (Option_File);
-            Error_E ("'.");
+            Error_S ("cannot create '");
+            Diag_C (Option_File);
+            Error_E ("'");
          end if;
          Write_Version (Stream);
       elsif Stream = NULL_Stream then
-         Error_C ("cannot read '");
-         Error_C (Option_File);
-         Error_E ("'.");
+         Error_S ("cannot read '");
+         Diag_C (Option_File);
+         Error_E ("'");
       end if;
 
       Initialize_Tree;

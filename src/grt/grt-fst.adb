@@ -91,7 +91,7 @@ package body Grt.Fst is
       Context := fstWriterCreate
         (To_Ghdl_C_String (Fst_Filename.all'Address), 1);
       if Context = Null_fstContext then
-         Error_C ("fst: cannot open ");
+         Error_S ("fst: cannot open ");
          Error_E (Fst_Filename (Fst_Filename'First .. Fst_Filename'Last - 1));
       end if;
       return True;

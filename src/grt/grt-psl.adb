@@ -161,7 +161,7 @@ package body Grt.Psl is
 
       F := fopen (Report_Filename.all'Address, Mode'Address);
       if F = NULL_Stream then
-         Error_C ("cannot open ");
+         Error_S ("cannot open ");
          Error_E (Report_Filename (Report_Filename'First
                                      .. Report_Filename'Last - 1));
          return;

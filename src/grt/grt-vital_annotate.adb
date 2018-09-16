@@ -447,7 +447,7 @@ package body Grt.Vital_Annotate is
             Ok := Write_Td_Delay_Generic (Context, Gen_El);
          end;
       else
-         Errors.Error_C ("vital: unhandled generic type for generic ");
+         Errors.Error_S ("vital: unhandled generic type for generic ");
          Errors.Error_E (Name);
       end if;
    end Sdf_Generic;
@@ -487,8 +487,8 @@ package body Grt.Vital_Annotate is
          if E - 1 >= S then
             Find_Instance (Sdf_Top, Sdf_Top, Arg (S .. E - 1), Ok);
             if not Ok then
-               Error_C ("cannot find instance '");
-               Error_C (Arg (S .. E - 1));
+               Error_S ("cannot find instance '");
+               Diag_C (Arg (S .. E - 1));
                Error_E ("' for sdf annotation");
                return;
             end if;
@@ -497,8 +497,8 @@ package body Grt.Vital_Annotate is
 
       --  start annotation.
       if E >= Arg'Last or else Arg (E) /= '=' then
-         Error_C ("no filename in sdf option '");
-         Error_C (Arg);
+         Error_S ("no filename in sdf option '");
+         Diag_C (Arg);
          Error_E ("'");
          return;
       end if;

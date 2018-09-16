@@ -34,13 +34,33 @@ package Grt.Errors is
    procedure Set_Error_Stream (Stream : Grt.Stdio.FILEs);
    function Get_Error_Stream return Grt.Stdio.FILEs;
 
+   --  Use of diagnostics:
+   --  Use Error_S/Report_S/Info_S to start a message.
+   --  Use Diag_C to continue the message (to display arguments)
+   --  Use Error_E/Report_E/Info_E to finish the message.
+   --
+   --  The XXX_S and XXX_E must match. Diag_C calls are optional.
+   --  'S' stands for start, 'C' for continue and 'E' for end.
+   --
+   --  Example:
+   --    Error_S ("option '");
+   --    Diag_C (Name);
+   --    Error_E ("' needs an argument");
+   --
+   --  The reason to have 3+ steps is that XXX_S display a different header
+   --  (like 'filename:error:'), while XXX_E may return or not.
+
+   --  Continue to display a message during a diagnostic.
+   procedure Diag_C (Str : String);
+   procedure Diag_C (C : Character);
+   procedure Diag_C (N : Integer);
+   procedure Diag_C (N : Ghdl_I32);
+   procedure Diag_C (Str : Ghdl_C_String);
+   procedure Diag_C_Std (Str : Std_String_Uncons);
+
    --  Multi-call error procedure.
    --  Start and continue with Error_C, finish by an Error_E.
-   procedure Error_C (Str : String);
-   procedure Error_C (N : Integer);
-   procedure Error_C (Str : Ghdl_C_String);
-   procedure Error_C_Std (Str : Std_String_Uncons);
-   --procedure Error_C (Inst : Ghdl_Instance_Name_Acc);
+   procedure Error_S (Str : String := "");
    procedure Error_E (Str : String := "");
    pragma No_Return (Error_E);
 
@@ -143,10 +163,10 @@ package Grt.Errors is
    Expect_Failure : Boolean := False;
 
    --  Internal subprograms, to be called only by the symbolizer.
-   procedure Put_Err (C : Character);
-   procedure Put_Err (Str : String);
-   procedure Put_Err (Str : Ghdl_C_String);
-   procedure Put_Err (N : Integer);
+   procedure Put_Err (C : Character) renames Diag_C;
+   procedure Put_Err (Str : String) renames Diag_C;
+   procedure Put_Err (Str : Ghdl_C_String) renames Diag_C;
+   procedure Put_Err (N : Integer) renames Diag_C;
    procedure Newline_Err;
 private
    pragma Export (C, Grt_Overflow_Error, "grt_overflow_error");

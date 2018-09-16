@@ -121,7 +121,7 @@ package body Grt.Vcd is
          else
             Stream := fopen (Vcd_Filename.all'Address, Mode'Address);
             if Stream = NULL_Stream then
-               Error_C ("cannot open ");
+               Error_S ("cannot open ");
                Error_E (Vcd_Filename (Vcd_Filename'First
                                       .. Vcd_Filename'Last - 1));
                return True;

@@ -310,7 +310,7 @@ package body Grt.Waves is
       else
          Wave_Stream := fopen (Wave_Filename.all'Address, Mode'Address);
          if Wave_Stream = NULL_Stream then
-            Error_C ("cannot open ");
+            Error_S ("cannot open ");
             Error_E (Wave_Filename (Wave_Filename'First
                                    .. Wave_Filename'Last - 1));
             return;

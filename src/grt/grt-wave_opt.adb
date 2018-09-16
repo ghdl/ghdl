@@ -34,7 +34,7 @@ package body Grt.Wave_Opt is
    begin
       case Severity is
          when Error =>
-            Error_C ("");
+            Error_S;
          when Warning =>
             Report_C ("warning: ");
       end case;

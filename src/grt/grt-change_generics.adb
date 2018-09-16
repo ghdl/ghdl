@@ -37,9 +37,9 @@ with Grt.Values;
 package body Grt.Change_Generics is
    procedure Error_Override (Msg : String; Over : Generic_Override_Acc) is
    begin
-      Error_C (Msg);
-      Error_C (" '");
-      Error_C (Over.Name.all);
+      Error_S (Msg);
+      Diag_C (" '");
+      Diag_C (Over.Name.all);
       Error_E ("'");
    end Error_Override;
 
@@ -364,8 +364,8 @@ package body Grt.Change_Generics is
                   Uc_Array := To_Ghdl_Uc_Array_Acc
                     (Loc_To_Addr (Obj_Rti.Common.Depth, Obj_Rti.Loc, Ctxt));
                   if Uc_Array.Base = Null_Address then
-                     Error_C ("top-level generic '");
-                     Error_C (Obj_Rti.Name);
+                     Error_S ("top-level generic '");
+                     Diag_C (Obj_Rti.Name);
                      Error_E ("' must be overriden (use -gGEN=VAL)");
                   end if;
                end;

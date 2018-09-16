@@ -85,25 +85,37 @@ package body Grt.Errors is
       end if;
    end Fatal_Error;
 
-   procedure Put_Err (Str : String) is
+   procedure Diag_C (Str : String) is
    begin
       Put (Error_Stream, Str);
-   end Put_Err;
+   end Diag_C;
 
-   procedure Put_Err (C : Character) is
-   begin
-      Put (Error_Stream, C);
-   end Put_Err;
-
-   procedure Put_Err (Str : Ghdl_C_String) is
-   begin
-      Put (Error_Stream, Str);
-   end Put_Err;
-
-   procedure Put_Err (N : Integer) is
+   procedure Diag_C (N : Integer) is
    begin
       Put_I32 (Error_Stream, Ghdl_I32 (N));
-   end Put_Err;
+   end Diag_C;
+
+   procedure Diag_C (N : Ghdl_I32) is
+   begin
+      Put_I32 (Error_Stream, N);
+   end Diag_C;
+
+   procedure Diag_C (Str : Ghdl_C_String) is
+   begin
+      Put (Error_Stream, Str);
+   end Diag_C;
+
+   procedure Diag_C_Std (Str : Std_String_Uncons)
+   is
+      subtype Str_Subtype is String (1 .. Str'Length);
+   begin
+      Put (Error_Stream, Str_Subtype (Str));
+   end Diag_C_Std;
+
+   procedure Diag_C (C : Character) is
+   begin
+      Put (Error_Stream, C);
+   end Diag_C;
 
    procedure Newline_Err is
    begin
@@ -171,42 +183,13 @@ package body Grt.Errors is
       Newline_Err;
    end Report_E;
 
-   procedure Error_H is
+   procedure Error_S (Str : String := "") is
    begin
       Put_Err (Progname);
       Put_Err (":error: ");
-   end Error_H;
 
-   Cont : Boolean := False;
-
-   procedure Error_C (Str : String) is
-   begin
-      if not Cont then
-         Error_H;
-         Cont := True;
-      end if;
-      Put_Err (Str);
-   end Error_C;
-
-   procedure Error_C (Str : Ghdl_C_String)
-   is
-      Len : constant Natural := strlen (Str);
-   begin
-      if not Cont then
-         Error_H;
-         Cont := True;
-      end if;
-      Put_Err (Str (1 .. Len));
-   end Error_C;
-
-   procedure Error_C (N : Integer) is
-   begin
-      if not Cont then
-         Error_H;
-         Cont := True;
-      end if;
-      Put_Err (N);
-   end Error_C;
+      Diag_C (Str);
+   end Error_S;
 
 --    procedure Error_C (Inst : Ghdl_Instance_Name_Acc)
 --    is
@@ -233,25 +216,15 @@ package body Grt.Errors is
 
    procedure Error_E (Str : String := "") is
    begin
-      Put_Err (Str);
+      Diag_C (Str);
       Newline_Err;
-      Cont := False;
       Fatal_Error;
    end Error_E;
 
-   procedure Error_C_Std (Str : Std_String_Uncons)
-   is
-      subtype Str_Subtype is String (1 .. Str'Length);
-   begin
-      Error_C (Str_Subtype (Str));
-   end Error_C_Std;
-
    procedure Error (Str : String) is
    begin
-      Error_H;
-      Put_Err (Str);
-      Newline_Err;
-      Fatal_Error;
+      Error_S (Str);
+      Error_E;
    end Error;
 
    procedure Error_Call_Stack (Str : String; Skip : Natural)
@@ -259,7 +232,7 @@ package body Grt.Errors is
       Bt : Backtrace_Addrs;
    begin
       Save_Backtrace (Bt, Skip + 1);
-      Error_C (Str);
+      Diag_C (Str);
       Error_E_Call_Stack (Bt);
    end Error_Call_Stack;
 
@@ -267,14 +240,12 @@ package body Grt.Errors is
                     Filename : Ghdl_C_String;
                     Line : Ghdl_I32) is
    begin
-      Error_H;
-      Put_Err (Str);
-      Put_Err (" at ");
-      Put_Err (Filename);
-      Put_Err (" line ");
-      Put_I32 (Error_Stream, Line);
-      Newline_Err;
-      Fatal_Error;
+      Error_S (Str);
+      Diag_C (" at ");
+      Diag_C (Filename);
+      Diag_C (" line ");
+      Diag_C (Line);
+      Error_E;
    end Error;
 
    procedure Info (Str : String) is
@@ -308,7 +279,7 @@ package body Grt.Errors is
 
       Grt.Backtraces.Put_Err_Backtrace (Bt);
 
-      Cont := False;
+      --  Should be able to call Error_E, but we don't want the newline.
       Fatal_Error;
    end Error_E_Call_Stack;
 
@@ -323,13 +294,13 @@ package body Grt.Errors is
 
    procedure Grt_Overflow_Error (Bt : Backtrace_Addrs_Acc) is
    begin
-      Error_C ("overflow detected");
+      Error_S ("overflow detected");
       Error_E_Call_Stack (Bt);
    end Grt_Overflow_Error;
 
    procedure Grt_Null_Access_Error (Bt : Backtrace_Addrs_Acc) is
    begin
-      Error_C ("NULL access dereferenced");
+      Error_S ("NULL access dereferenced");
       Error_E_Call_Stack (Bt);
    end Grt_Null_Access_Error;
 end Grt.Errors;

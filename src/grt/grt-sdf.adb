@@ -76,8 +76,8 @@ package body Grt.Sdf is
       N_Filename (N_Filename'Last) := ASCII.NUL;
       Sdf_Stream := fopen (N_Filename'Address, Mode'Address);
       if Sdf_Stream = NULL_Stream then
-         Error_C ("cannot open SDF file '");
-         Error_C (Filename);
+         Error_S ("cannot open SDF file '");
+         Diag_C (Filename);
          Error_E ("'");
          return False;
       end if;
@@ -127,8 +127,8 @@ package body Grt.Sdf is
    begin
       Len := Pos - Ident_Start;
       if Ident_Start = 1 or Len >= 1024 then
-         Error_C ("SDF line ");
-         Error_C (Sdf_Line);
+         Error_S ("SDF line ");
+         Diag_C (Sdf_Line);
          Error_E (" is too long");
          return;
       end if;
@@ -138,19 +138,19 @@ package body Grt.Sdf is
       Read_Sdf;
    end Read_Append;
 
-   procedure Error_Sdf_C is
+   procedure Error_S_Sdf is
    begin
-      Error_C (Sdf_Filename.all);
-      Error_C (":");
-      Error_C (Sdf_Line);
-      Error_C (":");
-      Error_C (Pos - Line_Start);
-      Error_C (": ");
-   end Error_Sdf_C;
+      Error_S (Sdf_Filename.all);
+      Diag_C (':');
+      Diag_C (Sdf_Line);
+      Diag_C (':');
+      Diag_C (Pos - Line_Start);
+      Diag_C (": ");
+   end Error_S_Sdf;
 
    procedure Error_Sdf (Msg : String) is
    begin
-      Error_Sdf_C;
+      Error_S_Sdf;
       Error_E (Msg);
    end Error_Sdf;
 
@@ -159,8 +159,7 @@ package body Grt.Sdf is
       Error_Sdf ("bad character in SDF file");
    end Error_Bad_Character;
 
-   procedure Scan_Identifier
-   is
+   procedure Scan_Identifier is
    begin
       Ident_Start := Pos;
       loop
@@ -993,8 +992,8 @@ package body Grt.Sdf is
       end if;
       Vital_Annotate.Sdf_Generic (Sdf_Context.all, Name (1 .. Len), Ok);
       if not Ok then
-         Error_Sdf_C;
-         Error_C ("could not annotate generic ");
+         Error_S_Sdf;
+         Diag_C ("could not annotate generic ");
          Error_E (Name (1 .. Len));
          return False;
       end if;

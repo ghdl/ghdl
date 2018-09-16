@@ -102,10 +102,10 @@ package body Grt.Values is
             return I;
          end if;
       end loop;
-      Error_C ("'value: '");
-      Error_C_Std (S (Pos .. L - 1));
-      Error_C ("' not in enumeration '");
-      Error_C (Enum_Rti.Name);
+      Error_S ("'value: '");
+      Diag_C_Std (S (Pos .. L - 1));
+      Diag_C ("' not in enumeration '");
+      Diag_C (Enum_Rti.Name);
       Error_E ("'");
    end Value_Enum;
 
@@ -612,10 +612,10 @@ package body Grt.Values is
          end if;
       end loop;
       if Multiple = null then
-         Error_C ("'value: unit '");
-         Error_C_Std (S (Unit_Pos .. Len - 1));
-         Error_C ("' not in physical type '");
-         Error_C (Phys_Rti.Name);
+         Error_S ("'value: unit '");
+         Diag_C_Std (S (Unit_Pos .. Len - 1));
+         Diag_C ("' not in physical type '");
+         Diag_C (Phys_Rti.Name);
          Error_E ("'");
       end if;
 

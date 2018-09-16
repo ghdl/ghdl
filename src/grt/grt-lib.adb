@@ -82,8 +82,8 @@ package body Grt.Lib is
       end if;
       if Level >= Grt.Options.Severity_Level then
          Save_Backtrace (Bt, 2);
-         Error_C (Msg);
-         Error_C (" failed");
+         Error_S (Msg);
+         Diag_C (" failed");
          Error_E_Call_Stack (Bt);
       end if;
    end Do_Report;
@@ -139,29 +139,29 @@ package body Grt.Lib is
 
    procedure Ghdl_Program_Error (Filename : Ghdl_C_String;
                                  Line : Ghdl_I32;
-                                 Code : Ghdl_Index_Type)
-   is
+                                 Code : Ghdl_Index_Type) is
    begin
+      Error_S;
       case Code is
          when 1 =>
-            Error_C ("missing return in function");
+            Diag_C ("missing return in function");
          when 2 =>
-            Error_C ("block already configured");
+            Diag_C ("block already configured");
          when 3 =>
-            Error_C ("bad configuration");
+            Diag_C ("bad configuration");
          when others =>
-            Error_C ("unknown error code ");
-            Error_C (Integer (Code));
+            Diag_C ("unknown error code ");
+            Diag_C (Integer (Code));
       end case;
-      Error_C (" at ");
+      Diag_C (" at ");
       if Filename = null then
-         Error_C ("*unknown*");
+         Diag_C ("*unknown*");
       else
-         Error_C (Filename);
+         Diag_C (Filename);
       end if;
-      Error_C (":");
-      Error_C (Integer(Line));
-      Error_E ("");
+      Diag_C (":");
+      Diag_C (Line);
+      Error_E;
    end Ghdl_Program_Error;
 
    procedure Ghdl_Bound_Check_Failed (Filename : Ghdl_C_String;
@@ -170,10 +170,10 @@ package body Grt.Lib is
       Bt : Backtrace_Addrs;
    begin
       Save_Backtrace (Bt, 1);
-      Error_C ("bound check failure at ");
-      Error_C (Filename);
-      Error_C (":");
-      Error_C (Integer (Line));
+      Error_S ("bound check failure at ");
+      Diag_C (Filename);
+      Diag_C (":");
+      Diag_C (Line);
       Error_E_Call_Stack (Bt);
    end Ghdl_Bound_Check_Failed;
 
@@ -183,10 +183,10 @@ package body Grt.Lib is
       Bt : Backtrace_Addrs;
    begin
       Save_Backtrace (Bt, 1);
-      Error_C ("slice direction doesn't match index direction at ");
-      Error_C (Filename);
-      Error_C (":");
-      Error_C (Integer (Line));
+      Error_S ("slice direction doesn't match index direction at ");
+      Diag_C (Filename);
+      Diag_C (":");
+      Diag_C (Line);
       Error_E_Call_Stack (Bt);
    end Ghdl_Direction_Check_Failed;
 

@@ -535,11 +535,11 @@ package body Grt.Signals is
 
    procedure Error_Trans_Error (Trans : Transaction_Acc) is
    begin
-      Error_C ("range check error on signal at ");
-      Error_C (Trans.File);
-      Error_C (":");
-      Error_C (Natural (Trans.Line));
-      Error_E ("");
+      Error_S ("range check error on signal at ");
+      Diag_C (Trans.File);
+      Diag_C (':');
+      Diag_C (Trans.Line);
+      Error_E;
    end Error_Trans_Error;
 
    function Find_Driver (Sig : Ghdl_Signal_Ptr) return Ghdl_Index_Type

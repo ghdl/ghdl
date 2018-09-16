@@ -317,22 +317,28 @@ package body Grt.Files is
       return Open_Ok;
    end File_Open;
 
+   procedure Error_Open (Str : Std_String_Ptr)
+   is
+      Bt : Backtrace_Addrs;
+   begin
+      Save_Backtrace (Bt, 2);
+      Error_S ("cannot open file """);
+      Diag_C_Std (Str.Base (0 .. Str.Bounds.Dim_1.Length - 1));
+      Diag_C ('"');
+      Error_E_Call_Stack (Bt);
+   end Error_Open;
+
    procedure Ghdl_Text_File_Open
      (File : Ghdl_File_Index; Mode : Ghdl_I32; Str : Std_String_Ptr)
    is
       Res : Ghdl_I32;
-      Bt : Backtrace_Addrs;
    begin
       Check_File_Mode (File, True);
 
       Res := File_Open (File, Mode, Str);
 
       if Res /= Open_Ok then
-         Save_Backtrace (Bt, 1);
-         Error_C ("cannot open text file """);
-         Error_C_Std (Str.Base (0 .. Str.Bounds.Dim_1.Length - 1));
-         Error_C ("""");
-         Error_E_Call_Stack (Bt);
+         Error_Open (Str);
       end if;
    end Ghdl_Text_File_Open;
 
@@ -340,18 +346,13 @@ package body Grt.Files is
      (File : Ghdl_File_Index; Mode : Ghdl_I32; Str : Std_String_Ptr)
    is
       Res : Ghdl_I32;
-      Bt : Backtrace_Addrs;
    begin
       Check_File_Mode (File, False);
 
       Res := File_Open (File, Mode, Str);
 
       if Res /= Open_Ok then
-         Save_Backtrace (Bt, 1);
-         Error_C ("cannot open file """);
-         Error_C_Std (Str.Base (0 .. Str.Bounds.Dim_1.Length - 1));
-         Error_C ("""");
-         Error_E_Call_Stack (Bt);
+         Error_Open (Str);
       end if;
    end Ghdl_File_Open;
 
