@@ -69,7 +69,8 @@ all options available, including the debugging one.
 
 .. option:: --stop-delta<=N>
 
-  Stop the simulation after `N` delta cycles in the same current time.
+  Stop the simulation after `N` delta cycles in the same current
+  time.  The default is 5000.
 
   .. index:: display time
 
