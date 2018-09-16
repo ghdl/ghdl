@@ -112,10 +112,24 @@ package body Grt.Errors is
       Put (Error_Stream, Str_Subtype (Str));
    end Diag_C_Std;
 
+   procedure Diag_C (Str : Std_String_Ptr)
+   is
+      subtype Ada_Str is String (1 .. Natural (Str.Bounds.Dim_1.Length));
+   begin
+      if Ada_Str'Length > 0 then
+         Diag_C (Ada_Str (Str.Base (0 .. Str.Bounds.Dim_1.Length - 1)));
+      end if;
+   end Diag_C;
+
    procedure Diag_C (C : Character) is
    begin
       Put (Error_Stream, C);
    end Diag_C;
+
+   procedure Diag_C_Now is
+   begin
+      Put_Time (Error_Stream, Grt.Types.Current_Time);
+   end Diag_C_Now;
 
    procedure Newline_Err is
    begin
@@ -136,52 +150,26 @@ package body Grt.Errors is
 --       end if;
 --    end Put_Err;
 
-   procedure Report_H (Str : String := "") is
+   procedure Report_S (Str : String := "") is
    begin
-      Put_Err (Str);
-   end Report_H;
+      Diag_C (Str);
+   end Report_S;
 
-   procedure Report_C (Str : String) is
+   procedure Report_E is
    begin
-      Put_Err (Str);
-   end Report_C;
-
-   procedure Report_C (Str : Ghdl_C_String)
-   is
-      Len : constant Natural := strlen (Str);
-   begin
-      Put_Err (Str (1 .. Len));
-   end Report_C;
-
-   procedure Report_C (N : Integer)
-     renames Put_Err;
-
-   procedure Report_Now_C is
-   begin
-      Put_Time (Error_Stream, Grt.Types.Current_Time);
-   end Report_Now_C;
-
-   procedure Report_E (Str : String) is
-   begin
-      Put_Err (Str);
       Newline_Err;
    end Report_E;
 
-   procedure Report_E (N : Integer) is
+   procedure Warning_S (Str : String := "") is
    begin
-      Put_Err (N);
-      Newline_Err;
-   end Report_E;
+      Diag_C ("warning: ");
+      Diag_C (Str);
+   end Warning_S;
 
-   procedure Report_E (Str : Std_String_Ptr)
-   is
-      subtype Ada_Str is String (1 .. Natural (Str.Bounds.Dim_1.Length));
+   procedure Warning_E is
    begin
-      if Ada_Str'Length > 0 then
-         Put_Err (Ada_Str (Str.Base (0 .. Str.Bounds.Dim_1.Length - 1)));
-      end if;
       Newline_Err;
-   end Report_E;
+   end Warning_E;
 
    procedure Error_S (Str : String := "") is
    begin
@@ -190,29 +178,6 @@ package body Grt.Errors is
 
       Diag_C (Str);
    end Error_S;
-
---    procedure Error_C (Inst : Ghdl_Instance_Name_Acc)
---    is
---    begin
---       if not Cont then
---          Error_H;
---          Cont := True;
---       end if;
---       if Inst.Parent /= null then
---          Error_C (Inst.Parent);
---          Put_Err (".");
---       end if;
---       case Inst.Kind is
---          when Ghdl_Name_Architecture =>
---             Put_Err ("(");
---             Put_Err (Inst.Name.all);
---             Put_Err (")");
---          when others =>
---             if Inst.Name /= null then
---                Put_Err (Inst.Name.all);
---             end if;
---       end case;
---    end Error_C;
 
    procedure Error_E (Str : String := "") is
    begin

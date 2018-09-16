@@ -51,35 +51,36 @@ package body Grt.Lib is
       Level : constant Integer := Severity mod 256;
       Bt : Backtrace_Addrs;
    begin
-      Report_H;
-      Report_C (Loc.Filename);
-      Report_C (":");
-      Report_C (Loc.Line);
-      Report_C (":");
-      Report_C (Loc.Col);
-      Report_C (":@");
-      Report_Now_C;
-      Report_C (":(");
-      Report_C (Msg);
-      Report_C (" ");
+      Report_S;
+      Diag_C (Loc.Filename);
+      Diag_C (':');
+      Diag_C (Loc.Line);
+      Diag_C (':');
+      Diag_C (Loc.Col);
+      Diag_C (":@");
+      Diag_C_Now;
+      Diag_C (":(");
+      Diag_C (Msg);
+      Diag_C (" ");
       case Level is
          when Note_Severity =>
-            Report_C ("note");
+            Diag_C ("note");
          when Warning_Severity =>
-            Report_C ("warning");
+            Diag_C ("warning");
          when Error_Severity =>
-            Report_C ("error");
+            Diag_C ("error");
          when Failure_Severity =>
-            Report_C ("failure");
+            Diag_C ("failure");
          when others =>
-            Report_C ("???");
+            Diag_C ("???");
       end case;
-      Report_C ("): ");
+      Diag_C ("): ");
       if Str /= null then
-         Report_E (Str);
+         Diag_C (Str);
       else
-         Report_E (Default_Str);
+         Diag_C (Default_Str);
       end if;
+      Report_E;
       if Level >= Grt.Options.Severity_Level then
          Save_Backtrace (Bt, 2);
          Error_S (Msg);
@@ -320,21 +321,21 @@ package body Grt.Lib is
    procedure Ghdl_Control_Simulation
      (Stop : Ghdl_B1; Has_Status : Ghdl_B1; Status : Std_Integer) is
    begin
-      Report_H;
+      Report_S;
       --  Report_C (Grt.Options.Progname);
-      Report_C ("simulation ");
+      Diag_C ("simulation ");
       if Stop then
-         Report_C ("stopped");
+         Diag_C ("stopped");
       else
-         Report_C ("finished");
+         Diag_C ("finished");
       end if;
-      Report_C (" @");
-      Report_Now_C;
+      Diag_C (" @");
+      Diag_C_Now;
       if Has_Status then
-         Report_C (" with status ");
-         Report_C (Integer (Status));
+         Diag_C (" with status ");
+         Diag_C (Integer (Status));
       end if;
-      Report_E ("");
+      Report_E;
       if Has_Status then
          Exit_Status := Integer (Status);
       end if;

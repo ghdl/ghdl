@@ -36,14 +36,14 @@ package body Grt.Wave_Opt is
          when Error =>
             Error_S;
          when Warning =>
-            Report_C ("warning: ");
+            Warning_S;
       end case;
-      Report_C (File_Path.all);
-      Report_C (":");
-      Report_C (Lineno);
-      Report_C (":");
-      Report_C (Column);
-      Report_C (": ");
+      Diag_C (File_Path.all);
+      Diag_C (':');
+      Diag_C (Lineno);
+      Diag_C (':');
+      Diag_C (Column);
+      Diag_C (": ");
    end Print_Context;
 
    procedure Print_Context (Element : Elem_Acc; Severity : Severity_Type) is
@@ -57,11 +57,12 @@ package body Grt.Wave_Opt is
                             Severity : Severity_Type := Error) is
    begin
       Print_Context (Lineno, Column, Severity);
+      Diag_C (Msg);
       case Severity is
          when Error =>
-            Error_E (Msg);
+            Error_E;
          when Warning =>
-            Report_E (Msg);
+            Warning_E;
       end case;
    end Error_Context;
 

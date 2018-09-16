@@ -56,23 +56,22 @@ package Grt.Errors is
    procedure Diag_C (N : Integer);
    procedure Diag_C (N : Ghdl_I32);
    procedure Diag_C (Str : Ghdl_C_String);
+   procedure Diag_C (Str : Std_String_Ptr);
    procedure Diag_C_Std (Str : Std_String_Uncons);
+   procedure Diag_C_Now;
 
-   --  Multi-call error procedure.
-   --  Start and continue with Error_C, finish by an Error_E.
+   --  Multi-call error diagnostic.
    procedure Error_S (Str : String := "");
    procedure Error_E (Str : String := "");
    pragma No_Return (Error_E);
 
-   --  Multi-call report procedure.  Do not exit at end.
-   procedure Report_H (Str : String := "");
-   procedure Report_C (Str : Ghdl_C_String);
-   procedure Report_C (Str : String);
-   procedure Report_C (N : Integer);
-   procedure Report_Now_C;
-   procedure Report_E (Str : String);
-   procedure Report_E (Str : Std_String_Ptr);
-   procedure Report_E (N : Integer);
+   --  Multi-call report diagnostic.  Do not exit at end.
+   procedure Report_S (Str : String := "");
+   procedure Report_E;
+
+   --  Multi-call warning diagnostic.  Do not exit at end.
+   procedure Warning_S (Str : String := "");
+   procedure Warning_E;
 
    --  Complete error message.
    procedure Error (Str : String);

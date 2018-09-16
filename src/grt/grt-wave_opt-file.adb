@@ -125,15 +125,16 @@ package body Grt.Wave_Opt.File is
       end loop;
 
       if Version.Major = -1 then
-         Report_C ("warning: version wasn't set at the beginning of the" &
+         Warning_S ("version wasn't set at the beginning of the" &
                    " file; currently supported version is ");
          Print_Version (Current_Version);
-         Report_E ("");
+         Warning_E;
       end if;
 
       if Tree_Is_Empty then
-         Report_E ("No signal path was found in the wave option file," &
-                   " then every signals will be displayed.");
+         Warning_S ("No signal path was found in the wave option file," &
+                      " then every signals will be displayed.");
+         Warning_E;
       end if;
 
       fclose (Stream);
@@ -211,9 +212,9 @@ package body Grt.Wave_Opt.File is
 
    procedure Print_Version (Version : Version_Type) is
    begin
-      Report_C (Version.Major);
-      Report_C (".");
-      Report_C (Version.Minor);
+      Diag_C (Version.Major);
+      Diag_C ('.');
+      Diag_C (Version.Minor);
    end Print_Version;
 
    procedure Initialize_Tree is
@@ -305,9 +306,10 @@ package body Grt.Wave_Opt.File is
             -- Then /top/a will supercede /top/a/b.
             if not Tree_Updated and Tree_Cursor.Next_Child /= null then
                Print_Context (Lineno, Line'First, Warning);
-               Report_C ("supercedes line ");
-               Report_C (Tree_Cursor.Lineno);
-               Report_E (" and possibly more lines in between");
+               Diag_C ("supercedes line ");
+               Diag_C (Tree_Cursor.Lineno);
+               Diag_C (" and possibly more lines in between");
+               Warning_E;
                -- TODO : destroy Tree_Cursor.Next_Child
                Tree_Cursor.Lineno := Lineno;
                Tree_Cursor.Next_Child := null;
@@ -358,8 +360,9 @@ package body Grt.Wave_Opt.File is
                -- line. Then /top/a will supercede /top/a/b.
                if Level > 1 and not Last_Updated then
                   Print_Context (Lineno, Elem_Expr'First, Warning);
-                  Report_C ("superceded by line ");
-                  Report_E (Cursor.Lineno);
+                  Diag_C ("superceded by line ");
+                  Diag_C (Cursor.Lineno);
+                  Warning_E;
                   return;
                   -- TODO : destroy Created_Elem
                end if;
