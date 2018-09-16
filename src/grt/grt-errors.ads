@@ -95,7 +95,8 @@ package Grt.Errors is
    pragma No_Return (Internal_Error);
 
    --  Display a message which is not an error.
-   procedure Info (Str : String);
+   procedure Info_S (Str : String := "");
+   procedure Info_E;
 
    --  Backtrace used to report call stack in case of error.
    --  Note: for simplicity we assume that a PC is enough to display the

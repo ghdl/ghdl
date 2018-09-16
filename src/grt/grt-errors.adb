@@ -162,7 +162,7 @@ package body Grt.Errors is
 
    procedure Warning_S (Str : String := "") is
    begin
-      Diag_C ("warning: ");
+      Put_Err ("warning: ");
       Diag_C (Str);
    end Warning_S;
 
@@ -213,13 +213,17 @@ package body Grt.Errors is
       Error_E;
    end Error;
 
-   procedure Info (Str : String) is
+   procedure Info_S (Str : String := "") is
    begin
       Put_Err (Progname);
       Put_Err (":info: ");
-      Put_Err (Str);
+      Diag_C (Str);
+   end Info_S;
+
+   procedure Info_E is
+   begin
       Newline_Err;
-   end Info;
+   end Info_E;
 
    procedure Warning (Str : String) is
    begin

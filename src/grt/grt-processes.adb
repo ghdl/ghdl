@@ -1109,10 +1109,16 @@ package body Grt.Processes is
          --  in 2 steps: an after_delay for the time and then a read_only
          --  to finish the current cycle.  Note that no message should be
          --  printed if the simulation is already finished at the stop time.
-         Info ("simulation stopped by --stop-time");
+         Info_S ("simulation stopped by --stop-time @");
+         Diag_C_Now;
+         Info_E;
          return True;
       elsif Current_Delta >= Stop_Delta then
-         Info ("simulation stopped by --stop-delta");
+         Info_S ("simulation stopped @");
+         Diag_C_Now;
+         Diag_C (" by --stop-delta=");
+         Diag_C (Stop_Delta);
+         Info_E;
          return True;
       else
          return False;
