@@ -70,15 +70,11 @@ private
 
    -- An error/warning message start with the context or the error/warning.
    -- This procedure print this context
-   procedure Print_Context
-     (Lineno, Column : Positive; Severity : Severity_Type);
-   procedure Print_Context (Element : Elem_Acc; Severity : Severity_Type);
+   procedure Diag_C_Context (Lineno, Column : Positive);
+   procedure Diag_C_Context (Element : Elem_Acc);
 
    -- Print an error/warning with it's context
-   procedure Error_Context (Msg : String;
-                            Lineno, Column : Positive;
-                            Severity : Severity_Type := Error);
-   procedure Error_Context
-     (Msg : String; Element : Elem_Acc; Severity : Severity_Type := Error);
+   procedure Error_Context (Msg : String; Lineno, Column : Positive);
+   procedure Error_Context (Msg : String; Element : Elem_Acc);
 
 end Grt.Wave_Opt;

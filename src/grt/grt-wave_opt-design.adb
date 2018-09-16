@@ -206,13 +206,15 @@ package body Grt.Wave_Opt.Design is
       Cursor := Previous_Cursor;
       while Cursor /= null loop
          if Cursor.Kind = Not_Found then
-            Print_Context (Cursor, Warning);
+            Warning_S;
+            Diag_C_Context (Cursor);
             Diag_C (Cursor.Expr.all);
             Diag_C (" : first element of the path not found in design.");
             Diag_C (" More references may follow");
             Warning_E;
          elsif Cursor.Next_Child = null and then Cursor.Kind = Pkg_Entity then
-            Print_Context (Cursor, Warning);
+            Warning_S;
+            Diag_C_Context (Cursor);
             Diag_C (Cursor.Expr.all);
             Diag_C (" is not a signal");
             Warning_E;
