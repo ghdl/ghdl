@@ -2,7 +2,7 @@
 
 . ../../testenv.sh
 
-analyze_failure --work=clock ent.vhdl
+analyze_failure --work=clock --warn-hide ent.vhdl
 
 clean
 
