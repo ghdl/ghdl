@@ -2589,6 +2589,9 @@ package body Sem_Decls is
          when Iir_Kind_Attribute_Declaration
            | Iir_Kind_Component_Declaration =>
             null;
+         when Iir_Kind_Library_Declaration =>
+            --  Not explicitly allowed before vhdl-08.
+            null;
          when Iir_Kind_Terminal_Declaration =>
             null;
          when Iir_Kind_Base_Attribute =>
