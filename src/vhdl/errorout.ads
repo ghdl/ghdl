@@ -103,6 +103,9 @@ package Errorout is
       --  Declaration of a shared variable with a non-protected type.
       Warnid_Shared,
 
+      --  A declaration hides a previous one.
+      Warnid_Hide,
+
       --  Emit a warning when a declaration is never used.
       --  FIXME: currently only subprograms are handled.
       Warnid_Unused,

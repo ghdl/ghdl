@@ -913,12 +913,15 @@ package body Sem_Scopes is
          end if;
       end if;
 
-      -- Homograph, not in the same scope.
-      -- LRM §10.3:
-      -- A declaration is said to be hidden within (part of) an inner
-      -- declarative region if the inner region contains an homograph
-      -- of this declaration; the outer declaration is the hidden
-      -- within the immediate scope of the inner homograph.
+      --  Homograph, not in the same scope.
+      --  LRM §10.3:
+      --  A declaration is said to be hidden within (part of) an inner
+      --  declarative region if the inner region contains an homograph
+      --  of this declaration; the outer declaration is the hidden
+      --  within the immediate scope of the inner homograph.
+      Warning_Msg_Sem (Warnid_Hide, +Decl,
+                       "declaration of %i hides %n", (+Decl, +Current_Decl));
+
       Add_New_Interpretation (True);
    end Add_Name;
 
