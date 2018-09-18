@@ -3203,6 +3203,18 @@ package body Trans.Chap3 is
                     Tinfo.B.Bounds_Ptr_Type));
    end Allocate_Unbounded_Composite_Bounds;
 
+   procedure Translate_Array_Subtype (Arr_Type : Iir) is
+   begin
+      Chap3.Translate_Subtype_Definition
+        (Arr_Type, Get_Base_Type (Arr_Type), False);
+      Chap3.Create_Composite_Subtype_Bounds_Var (Arr_Type, False);
+   end Translate_Array_Subtype;
+
+   procedure Elab_Array_Subtype (Arr_Type : Iir) is
+   begin
+      Chap3.Elab_Composite_Subtype_Bounds (Arr_Type);
+   end Elab_Array_Subtype;
+
    procedure Create_Array_Subtype (Sub_Type : Iir)
    is
       Mark : Id_Mark_Type;

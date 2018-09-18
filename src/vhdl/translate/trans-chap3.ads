@@ -265,6 +265,11 @@ package Trans.Chap3 is
       Res        : Mnode;
       Obj_Type   : Iir);
 
+   --  Used for alias: create the vars for the subtype of the name (when the
+   --  name is a slice).  The identifier prefix must have been set.
+   procedure Translate_Array_Subtype (Arr_Type : Iir);
+   procedure Elab_Array_Subtype (Arr_Type : Iir);
+
    --  Create the bounds for SUB_TYPE.
    --  SUB_TYPE is expected to be a non-static, anonymous array type.
    procedure Create_Array_Subtype (Sub_Type : Iir);

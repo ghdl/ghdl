@@ -1537,6 +1537,7 @@ package body Trans.Chap4 is
      (Decl : Iir_Object_Alias_Declaration)
    is
       Decl_Type : constant Iir := Get_Type (Decl);
+      Name      : constant Iir := Get_Name (Decl);
       Info      : Alias_Info_Acc;
       Tinfo     : Type_Info_Acc;
       Atype     : O_Tnode;
@@ -1583,6 +1584,24 @@ package body Trans.Chap4 is
          end if;
          Info.Alias_Var (Mode) := Create_Var (Id, Atype);
       end loop;
+
+      if Get_Kind (Name) = Iir_Kind_Slice_Name
+        and then Info.Alias_Kind = Mode_Signal
+      then
+         --  The name subtype will be evaluated once at elaboration, as it is
+         --  needed when direct drivers are used (in that case, the name is
+         --  evaluated once again).
+         declare
+            Name_Type : constant Iir := Get_Type (Name);
+            Mark1, Mark2 : Id_Mark_Type;
+         begin
+            Push_Identifier_Prefix (Mark1, Get_Identifier (Decl));
+            Push_Identifier_Prefix (Mark2, "AT");
+            Chap3.Translate_Array_Subtype (Name_Type);
+            Pop_Identifier_Prefix (Mark2);
+            Pop_Identifier_Prefix (Mark1);
+         end;
+      end if;
    end Translate_Object_Alias_Declaration;
 
    procedure Elab_Object_Alias_Declaration
@@ -1600,6 +1619,13 @@ package body Trans.Chap4 is
       Chap3.Elab_Object_Subtype (Decl_Type);
 
       Open_Temp;
+
+      if Get_Kind (Name) = Iir_Kind_Slice_Name
+        and then Alias_Info.Alias_Kind = Mode_Signal
+      then
+         --  See Translate_Object_Alias_Declaration.
+         Chap3.Elab_Array_Subtype (Name_Type);
+      end if;
 
       case Alias_Info.Alias_Kind is
          when Mode_Value =>
