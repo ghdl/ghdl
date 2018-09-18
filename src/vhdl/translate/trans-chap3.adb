@@ -36,7 +36,7 @@ package body Trans.Chap3 is
 
    function Create_Static_Type_Definition_Type_Range (Def : Iir)
                                                       return O_Cnode;
-   procedure Create_Scalar_Type_Range (Def : Iir; Target : O_Lnode);
+   procedure Elab_Scalar_Type_Range (Def : Iir; Target : O_Lnode);
 
    --  For scalar subtypes: creates info from the base type.
    procedure Create_Subtype_Info_From_Type (Def          : Iir;
@@ -625,7 +625,7 @@ package body Trans.Chap3 is
       return Res;
    end Create_Static_Composite_Subtype_Bounds;
 
-   procedure Create_Composite_Subtype_Bounds (Def : Iir; Target : O_Lnode)
+   procedure Elab_Composite_Subtype_Bounds (Def : Iir; Target : O_Lnode)
    is
       Info             : constant Type_Info_Acc := Get_Info (Def);
       Base_Type        : constant Iir := Get_Base_Type (Def);
@@ -684,7 +684,7 @@ package body Trans.Chap3 is
                   El := Get_Nth_Element (El_List, I);
                   El_Info := Get_Info (Get_Base_Element_Declaration (El));
                   if El_Info.Field_Bound /= O_Fnode_Null then
-                     Create_Composite_Subtype_Bounds
+                     Elab_Composite_Subtype_Bounds
                        (Get_Type (El),
                         New_Selected_Element (M2Lv (Targ),
                                               El_Info.Field_Bound));
@@ -693,21 +693,21 @@ package body Trans.Chap3 is
             end;
 
          when others =>
-            Error_Kind ("create_composite_subtype_bounds", Def);
+            Error_Kind ("elab_composite_subtype_bounds", Def);
       end case;
 
       Close_Temp;
-   end Create_Composite_Subtype_Bounds;
+   end Elab_Composite_Subtype_Bounds;
 
-   procedure Create_Composite_Subtype_Bounds (Def : Iir)
+   procedure Elab_Composite_Subtype_Bounds (Def : Iir)
    is
       Info : constant Type_Info_Acc := Get_Info (Def);
    begin
       if not Info.S.Static_Bounds then
-         Create_Composite_Subtype_Bounds
+         Elab_Composite_Subtype_Bounds
            (Def, Get_Var (Info.S.Composite_Bounds));
       end if;
-   end Create_Composite_Subtype_Bounds;
+   end Elab_Composite_Subtype_Bounds;
 
    --  Create a variable containing the bounds for array subtype DEF.
    procedure Create_Composite_Subtype_Bounds_Var
@@ -720,6 +720,7 @@ package body Trans.Chap3 is
       if Info.S.Composite_Bounds /= Null_Var then
          return;
       end if;
+
       Base_Info := Get_Info (Get_Base_Type (Def));
       if Are_Bounds_Locally_Static (Def) then
          Info.S.Static_Bounds := True;
@@ -739,7 +740,7 @@ package body Trans.Chap3 is
          Info.S.Composite_Bounds := Create_Var
            (Create_Var_Identifier ("STB"), Base_Info.B.Bounds_Type);
          if Elab_Now then
-            Create_Composite_Subtype_Bounds (Def);
+            Elab_Composite_Subtype_Bounds (Def);
          end if;
       end if;
    end Create_Composite_Subtype_Bounds_Var;
@@ -1848,7 +1849,7 @@ package body Trans.Chap3 is
    ---------------
 
    --  Create a type_range structure.
-   procedure Create_Scalar_Type_Range (Def : Iir; Target : O_Lnode)
+   procedure Elab_Scalar_Type_Range (Def : Iir; Target : O_Lnode)
    is
       T_Info    : constant Type_Info_Acc := Get_Info (Get_Base_Type (Def));
    begin
@@ -1856,7 +1857,7 @@ package body Trans.Chap3 is
         (Lv2M (Target, T_Info, Mode_Value,
                T_Info.B.Range_Type, T_Info.B.Range_Ptr_Type),
          Get_Range_Constraint (Def), Def);
-   end Create_Scalar_Type_Range;
+   end Elab_Scalar_Type_Range;
 
    function Create_Static_Scalar_Type_Range (Def : Iir) return O_Cnode is
    begin
@@ -1913,7 +1914,7 @@ package body Trans.Chap3 is
       end case;
    end Create_Static_Type_Definition_Type_Range;
 
-   procedure Create_Type_Definition_Type_Range (Def : Iir)
+   procedure Elab_Type_Definition_Type_Range (Def : Iir)
    is
       Target : O_Lnode;
       Info   : Type_Info_Acc;
@@ -1924,12 +1925,12 @@ package body Trans.Chap3 is
             Info := Get_Info (Def);
             if not Info.S.Same_Range then
                Target := Get_Var (Info.S.Range_Var);
-               Create_Scalar_Type_Range (Def, Target);
+               Elab_Scalar_Type_Range (Def, Target);
             end if;
 
          when Iir_Kind_Array_Subtype_Definition =>
             if Get_Constraint_State (Def) = Fully_Constrained then
-               Create_Composite_Subtype_Bounds (Def);
+               Elab_Composite_Subtype_Bounds (Def);
             end if;
 
          when Iir_Kind_Array_Type_Definition =>
@@ -1941,7 +1942,7 @@ package body Trans.Chap3 is
                for I in Flist_First .. Flist_Last (Index_List) loop
                   Index := Get_Index_Type (Index_List, I);
                   if Is_Anonymous_Type_Definition (Index) then
-                     Create_Type_Definition_Type_Range (Index);
+                     Elab_Type_Definition_Type_Range (Index);
                   end if;
                end loop;
             end;
@@ -1950,7 +1951,7 @@ package body Trans.Chap3 is
          when Iir_Kind_Record_Subtype_Definition =>
             Info := Get_Info (Def);
             if Info.S.Composite_Bounds /= Null_Var then
-               Create_Composite_Subtype_Bounds (Def);
+               Elab_Composite_Subtype_Bounds (Def);
             end if;
 
          when Iir_Kind_Access_Type_Definition
@@ -1961,9 +1962,9 @@ package body Trans.Chap3 is
             return;
 
          when others =>
-            Error_Kind ("create_type_definition_type_range", Def);
+            Error_Kind ("elab_type_definition_type_range", Def);
       end case;
-   end Create_Type_Definition_Type_Range;
+   end Elab_Type_Definition_Type_Range;
 
    --  Return TRUE iff LIT is equal to the high (IS_HI=TRUE) or low
    --  (IS_HI=false) limit of the base type of DEF.  MODE is the mode of
@@ -2110,9 +2111,9 @@ package body Trans.Chap3 is
       end if;
    end Create_Subtype_Info_From_Type;
 
-   procedure Create_Type_Definition_Size_Var (Def : Iir);
+   procedure Elab_Type_Definition_Size_Var (Def : Iir);
 
-   procedure Create_Record_Size_Var (Def : Iir; Kind : Object_Kind_Type)
+   procedure Elab_Record_Size_Var (Def : Iir; Kind : Object_Kind_Type)
    is
       Info        : constant Type_Info_Acc := Get_Info (Def);
       List        : constant Iir_Flist := Get_Elements_Declaration_List (Def);
@@ -2177,9 +2178,9 @@ package body Trans.Chap3 is
       end if;
       New_Assign_Stmt (Get_Var (Info.C (Kind).Size_Var), Res);
       Close_Temp;
-   end Create_Record_Size_Var;
+   end Elab_Record_Size_Var;
 
-   procedure Create_Array_Size_Var (Def : Iir; Kind : Object_Kind_Type)
+   procedure Elab_Array_Size_Var (Def : Iir; Kind : Object_Kind_Type)
    is
       Info    : constant Type_Info_Acc := Get_Info (Def);
       El_Type : constant Iir := Get_Element_Subtype (Def);
@@ -2190,9 +2191,9 @@ package body Trans.Chap3 is
          Get_Array_Type_Length (Def),
          Chap3.Get_Object_Size (T2M (El_Type, Kind), El_Type));
       New_Assign_Stmt (Get_Var (Info.C (Kind).Size_Var), Res);
-   end Create_Array_Size_Var;
+   end Elab_Array_Size_Var;
 
-   procedure Create_Type_Definition_Size_Var (Def : Iir)
+   procedure Elab_Type_Definition_Size_Var (Def : Iir)
    is
       Info : constant Type_Info_Acc := Get_Info (Def);
    begin
@@ -2214,13 +2215,13 @@ package body Trans.Chap3 is
                   --  No need to create a size var, the size is known.
                   raise Internal_Error;
                when Type_Mode_Complex_Record =>
-                  Create_Record_Size_Var (Def, Kind);
+                  Elab_Record_Size_Var (Def, Kind);
                when Type_Mode_Complex_Array =>
-                  Create_Array_Size_Var (Def, Kind);
+                  Elab_Array_Size_Var (Def, Kind);
             end case;
          end if;
       end loop;
-   end Create_Type_Definition_Size_Var;
+   end Elab_Type_Definition_Size_Var;
 
    procedure Create_Type_Range_Var (Def : Iir)
    is
@@ -2604,6 +2605,7 @@ package body Trans.Chap3 is
    --  Initialize the objects related to a type (type range and type
    --  descriptor).
    procedure Elab_Type_Definition (Def : Iir);
+
    procedure Elab_Type_Definition_Depend is new Handle_Anonymous_Subtypes
      (Handle_A_Subtype => Elab_Type_Definition);
    procedure Elab_Type_Definition (Def : Iir) is
@@ -2633,8 +2635,8 @@ package body Trans.Chap3 is
 
       Elab_Type_Definition_Depend (Def);
 
-      Create_Type_Definition_Type_Range (Def);
-      Create_Type_Definition_Size_Var (Def);
+      Elab_Type_Definition_Type_Range (Def);
+      Elab_Type_Definition_Size_Var (Def);
    end Elab_Type_Definition;
 
    procedure Translate_Subtype_Indication (Def : Iir; With_Vars : Boolean)
@@ -2666,8 +2668,7 @@ package body Trans.Chap3 is
          return;
       end if;
       Push_Identifier_Prefix_Uniq (Mark);
-      Chap3.Translate_Subtype_Definition
-        (Def, Get_Base_Type (Def), With_Vars);
+      Chap3.Translate_Subtype_Definition (Def, Get_Base_Type (Def), With_Vars);
       Pop_Identifier_Prefix (Mark);
    end Translate_Anonymous_Subtype_Definition;
 
@@ -3214,7 +3215,7 @@ package body Trans.Chap3 is
       end if;
       --  Force creation of variables.
       Chap3.Create_Composite_Subtype_Bounds_Var (Sub_Type, True);
-      Chap3.Create_Type_Definition_Size_Var (Sub_Type);
+      Chap3.Elab_Type_Definition_Size_Var (Sub_Type);
       Pop_Identifier_Prefix (Mark);
    end Create_Array_Subtype;
 

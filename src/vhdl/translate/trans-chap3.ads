@@ -43,7 +43,6 @@ package Trans.Chap3 is
    procedure Translate_Type_Subprograms
      (Decl : Iir; Kind : Subprg_Translate_Kind);
 
-   procedure Create_Type_Definition_Type_Range (Def : Iir);
    function Create_Static_Composite_Subtype_Bounds (Def : Iir) return O_Cnode;
 
    --  Same as Translate_type_definition only for std.standard.boolean and
@@ -72,7 +71,6 @@ package Trans.Chap3 is
    procedure Translate_Anonymous_Subtype_Definition
      (Def : Iir; With_Vars : Boolean);
 
-   --  Translate_type_definition_Elab do 4 and 6.
    --  It generates code to do type elaboration.
    procedure Elab_Type_Declaration (Decl : Iir);
    procedure Elab_Subtype_Declaration (Decl : Iir_Subtype_Declaration);

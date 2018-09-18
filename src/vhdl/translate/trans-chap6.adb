@@ -622,12 +622,10 @@ package body Trans.Chap6 is
       --  The bounds of a null slice may be out of range.  So DIFF cannot
       --  be computed by substraction.
       Start_If_Stmt
-        (If_Blk,
-         New_Compare_Op
-           (ON_Eq,
-            M2E (Chap3.Range_To_Length (Slice_Range)),
-            New_Lit (Ghdl_Index_0),
-            Ghdl_Bool_Type));
+        (If_Blk, New_Compare_Op (ON_Eq,
+                                 M2E (Chap3.Range_To_Length (Slice_Range)),
+                                 New_Lit (Ghdl_Index_0),
+                                 Ghdl_Bool_Type));
       New_Assign_Stmt (New_Obj (Unsigned_Diff), New_Lit (Ghdl_Index_0));
       New_Else_Stmt (If_Blk);
       Diff := Create_Temp (Index_Info.Ortho_Type (Mode_Value));
@@ -636,17 +634,17 @@ package body Trans.Chap6 is
       if not Static_Range then
          Start_If_Stmt
            (If_Blk1, New_Compare_Op (ON_Eq,
-            M2E (Chap3.Range_To_Dir (Slice_Range)),
-            New_Lit (Ghdl_Dir_To_Node),
-            Ghdl_Bool_Type));
+                                     M2E (Chap3.Range_To_Dir (Slice_Range)),
+                                     New_Lit (Ghdl_Dir_To_Node),
+                                     Ghdl_Bool_Type));
       end if;
       if not Static_Range or else Get_Direction (Expr_Range) = Iir_To then
          --  Diff = slice - bounds.
          New_Assign_Stmt
            (New_Obj (Diff),
             New_Dyadic_Op (ON_Sub_Ov,
-              M2E (Chap3.Range_To_Left (Slice_Range)),
-              M2E (Chap3.Range_To_Left (Prefix_Range))));
+                           M2E (Chap3.Range_To_Left (Slice_Range)),
+                           M2E (Chap3.Range_To_Left (Prefix_Range))));
       end if;
       if not Static_Range then
          New_Else_Stmt (If_Blk1);
@@ -657,8 +655,8 @@ package body Trans.Chap6 is
          New_Assign_Stmt
            (New_Obj (Diff),
             New_Dyadic_Op (ON_Sub_Ov,
-              M2E (Chap3.Range_To_Left (Prefix_Range)),
-              M2E (Chap3.Range_To_Left (Slice_Range))));
+                           M2E (Chap3.Range_To_Left (Prefix_Range)),
+                           M2E (Chap3.Range_To_Left (Slice_Range))));
       end if;
       if not Static_Range then
          Finish_If_Stmt (If_Blk1);
@@ -679,14 +677,14 @@ package body Trans.Chap6 is
            (ON_Lt,
             New_Obj_Value (Diff),
             New_Lit (New_Signed_Literal (Index_Info.Ortho_Type (Mode_Value),
-              0)),
+                                         0)),
             Ghdl_Bool_Type);
          --  Bounds error if right of slice is after right of prefix.
          Err_2 := New_Compare_Op
            (ON_Gt,
             New_Dyadic_Op (ON_Add_Ov,
-              New_Obj_Value (Unsigned_Diff),
-              M2E (Chap3.Range_To_Length (Slice_Range))),
+                           New_Obj_Value (Unsigned_Diff),
+                           M2E (Chap3.Range_To_Length (Slice_Range))),
             M2E (Chap3.Range_To_Length (Prefix_Range)),
             Ghdl_Bool_Type);
          Check_Bound_Error (New_Dyadic_Op (ON_Or, Err_1, Err_2), Expr, 1);
@@ -714,8 +712,7 @@ package body Trans.Chap6 is
    begin
       if Data.Is_Off then
          return Chap3.Slice_Base
-           (Prefix, Slice_Type, New_Lit (New_Unsigned_Literal
-            (Ghdl_Index_Type, Data.Off)));
+           (Prefix, Slice_Type, New_Lit (New_Index_Lit (Data.Off)));
       else
          --  Create the result (fat array) and assign the bounds field.
          case Slice_Info.Type_Mode is
@@ -727,11 +724,11 @@ package body Trans.Chap6 is
                   New_Value (M2Lp (Data.Slice_Range)));
                New_Assign_Stmt
                  (New_Selected_Element (New_Obj (Res_D),
-                  Slice_Info.B.Base_Field (Kind)),
+                                        Slice_Info.B.Base_Field (Kind)),
                   M2E (Chap3.Slice_Base
-                    (Chap3.Get_Composite_Base (Prefix),
-                         Slice_Type,
-                         New_Obj_Value (Data.Unsigned_Diff))));
+                         (Chap3.Get_Composite_Base (Prefix),
+                          Slice_Type,
+                          New_Obj_Value (Data.Unsigned_Diff))));
                return Dv2M (Res_D, Slice_Info, Kind);
             when Type_Mode_Bounded_Arrays =>
                return Chap3.Slice_Base
