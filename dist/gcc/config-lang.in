@@ -31,6 +31,8 @@ boot_language=no
 
 compilers="ghdl1\$(exeext)"
 
+target_libs=target-libbacktrace
+
 stagestuff="ghdl\$(exeext) ghdl1\$(exeext)"
 
 gtfiles="\$(srcdir)/vhdl/ortho-lang.c"

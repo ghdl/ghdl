@@ -47,7 +47,7 @@ endif
 GRT_ELF_OPTS:=-Wl,--version-script=@/grt.ver -Wl,--export-dynamic
 
 # Set target files.
-ifeq ($(filter-out mingw32 mingw64,$(osys)),)
+ifeq ($(filter-out mingw32 mingw32msvc mingw64,$(osys)),)
   GRT_TARGET_OBJS=win32.o clock.o
   GRT_EXTRA_LIB=-ldbghelp
 else

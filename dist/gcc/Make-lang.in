@@ -121,8 +121,6 @@ ghdl$(exeext): ghdl1$(exeext) vhdl/default_paths.ads force
 vhdl.all.build:
 
 vhdl.all.cross:
-	@echo "No support for building vhdl cross-compiler"
-	exit 1
 
 vhdl.start.encap:
 vhdl.rest.encap:
@@ -150,11 +148,15 @@ vhdl.install-normal:
 
 vhdl.install-plugin:
 
+
+GHDL_INSTALL_NAME = $(shell echo ghdl$(exeext) | \
+	sed '$(program_transform_name)')
+
 # Install the driver program as ghdl.
 vhdl.install-common: ghdl$(exeext) ghdl1$(exeext)
 	-mkdir $(DESTDIR)$(bindir)
 	-$(RM) $(DESTDIR)$(bindir)/ghdl$(exeext)
-	$(INSTALL_PROGRAM) ghdl$(exeext) $(DESTDIR)$(bindir)/ghdl$(exeext)
+	$(INSTALL_PROGRAM) ghdl$(exeext) $(DESTDIR)$(bindir)/$(GHDL_INSTALL_NAME)
 	-mkdir $(DESTDIR)$(libdir)
 	-mkdir $(DESTDIR)$(libdir)/ghdl
 	$(INSTALL_DATA) ../libbacktrace/.libs/libbacktrace.a $(DESTDIR)$(libdir)/ghdl
