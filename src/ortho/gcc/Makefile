@@ -17,7 +17,9 @@ AGCC_GCCOBJ_DIR:=$(HOME)/Projects/gcc4.9.2/build/
 
 # Supplied by main GCC Makefile, copied here for compatibility with same
 GMPLIBS = -L$(AGCC_GCCOBJ_DIR)./gmp/.libs -L$(AGCC_GCCOBJ_DIR)./mpfr/.libs \
-  -L$(AGCC_GCCOBJ_DIR)./mpc/src/.libs -lmpc -lmpfr -lgmp
+  -L$(AGCC_GCCOBJ_DIR)./isl/.libs \
+  -L$(AGCC_GCCOBJ_DIR)./mpfr/src/.libs \
+  -L$(AGCC_GCCOBJ_DIR)./mpc/src/.libs -lisl -lmpc -lmpfr -lgmp -ldl
 GMPINC = -I$(AGCC_GCCOBJ_DIR)./gmp -I$(AGCC_GCCSRC_DIR)/gmp \
   -I$(AGCC_GCCOBJ_DIR)./mpfr -I$(AGCC_GCCSRC_DIR)/mpfr \
   -I$(AGCC_GCCSRC_DIR)/mpc/src
