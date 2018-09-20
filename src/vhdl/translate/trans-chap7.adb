@@ -2858,7 +2858,6 @@ package body Trans.Chap7 is
                                 Ghdl_Bool_Type));
       El_Node := Chap3.Index_Base (Base_Ptr, Target_Type,
                                    New_Obj_Value (It));
-      --New_Assign_Stmt (El_Node, Chap7.Translate_Expression (El));
       Translate_Assign (El_Node, El, Get_Element_Subtype (Target_Type));
       Inc_Var (It);
       Finish_Loop_Stmt (Label);

@@ -533,6 +533,10 @@ package Iirs is
    --  associations have the same_alternative_flag set.
    --   Get/Set_Chain (Field2)
    --
+   --  Lexical order of appareance.  Choices are sorted during analysis.  This
+   --  field can be used to display the choices in the original order.
+   --   Get/Set_Choice_Position (Field1)
+   --
    --  Get/Set what is associated with the choice.  There are two different
    --  nodes, one for simple association and the other for chain association.
    --  They don't have the same properties (normal vs chain), so the right
@@ -6130,6 +6134,10 @@ package Iirs is
    --  Field: Field3
    function Get_Time (We : Iir_Waveform_Element) return Iir;
    procedure Set_Time (We : Iir_Waveform_Element; An_Iir : Iir);
+
+   --  Field: Field1 (pos)
+   function Get_Choice_Position (Choice : Iir) return Int32;
+   procedure Set_Choice_Position (Choice : Iir; Pos : Int32);
 
    --  Node associated with a choice.
    --  Field: Field3
