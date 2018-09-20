@@ -275,6 +275,12 @@ package body Sem_Inst is
                      end if;
                   when Attr_Chain =>
                      R := Instantiate_Iir_Chain (S);
+                  when Attr_Maybe_Ref_Chain =>
+                     if Get_Is_Ref (N) then
+                        R := Instantiate_Iir (S, True);
+                     else
+                        R := Instantiate_Iir_Chain (S);
+                     end if;
                   when Attr_Chain_Next =>
                      R := Null_Iir;
                   when Attr_Of_Ref | Attr_Of_Maybe_Ref =>
@@ -733,6 +739,10 @@ package body Sem_Inst is
                            end if;
                         when Attr_Chain =>
                            Set_Instance_On_Chain (S, S_Inst);
+                        when Attr_Maybe_Ref_Chain =>
+                           if not Get_Is_Ref (N) then
+                              Set_Instance_On_Chain (S, S_Inst);
+                           end if;
                         when Attr_Chain_Next =>
                            null;
                         when Attr_Of_Ref | Attr_Of_Maybe_Ref =>
@@ -1120,6 +1130,10 @@ package body Sem_Inst is
                               end if;
                            when Attr_Chain =>
                               Substitute_On_Chain (S, E, Rep);
+                           when Attr_Maybe_Ref_Chain =>
+                              if not Get_Is_Ref (N) then
+                                 Substitute_On_Chain (S, E, Rep);
+                              end if;
                            when Attr_Chain_Next =>
                               null;
                            when Attr_Of_Ref | Attr_Of_Maybe_Ref =>

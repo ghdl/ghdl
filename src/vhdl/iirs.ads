@@ -572,6 +572,8 @@ package Iirs is
    -- Only for Iir_Kind_Choice_By_Range:
    -- Only for Iir_Kind_Choice_By_Expression:
    --   Get/Set_Choice_Staticness (State1)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Entity_Aspect_Entity (Short)
    --
@@ -6140,17 +6142,19 @@ package Iirs is
    procedure Set_Choice_Position (Choice : Iir; Pos : Int32);
 
    --  Node associated with a choice.
-   --  Field: Field3
+   --  Field: Field3 Maybe_Ref
    function Get_Associated_Expr (Target : Iir) return Iir;
    procedure Set_Associated_Expr (Target : Iir; Associated : Iir);
 
    --  Node associated with a choice.
-   --  Field: Field3
+   --  Field: Field3 Maybe_Ref
    function Get_Associated_Block (Target : Iir) return Iir;
    procedure Set_Associated_Block (Target : Iir; Associated : Iir);
 
    --  Chain associated with a choice.
-   --  Field: Field4 Chain
+   --  A Maybe_Ref_Chain is a reference to a chain if Get_Is_Ref is True,
+   --  otherwise this is a normal chain.
+   --  Field: Field4 Maybe_Ref_Chain
    function Get_Associated_Chain (Target : Iir) return Iir;
    procedure Set_Associated_Chain (Target : Iir; Associated : Iir);
 

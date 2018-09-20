@@ -408,6 +408,7 @@ package Nodes_Meta is
       Attr_Forward_Ref,
       Attr_Maybe_Forward_Ref,
       Attr_Maybe_Ref,
+      Attr_Maybe_Ref_Chain,
       Attr_Of_Maybe_Ref,
       Attr_Of_Ref,
       Attr_Ref

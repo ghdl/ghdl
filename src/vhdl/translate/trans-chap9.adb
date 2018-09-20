@@ -1213,6 +1213,10 @@ package body Trans.Chap9 is
                         end if;
                      when Attr_Chain =>
                         Destroy_Types_In_Chain (Get_Iir (N, F));
+                     when Attr_Maybe_Ref_Chain =>
+                        if not Get_Is_Ref (N) then
+                           Destroy_Types_In_Chain (Get_Iir (N, F));
+                        end if;
                      when Attr_Chain_Next =>
                         null;
                      when Attr_Of_Ref | Attr_Of_Maybe_Ref =>

@@ -462,6 +462,12 @@ package body Disp_Tree is
                            Ndepth := Depth - 1;
                         end if;
                         Disp_Iir (Get_Iir (N, F), Sub_Indent, Ndepth);
+                     when Attr_Maybe_Ref_Chain =>
+                        if Get_Is_Ref (N) then
+                           Disp_Iir (Get_Iir (N, F), Sub_Indent, 0);
+                        else
+                           Disp_Chain (Get_Iir (N, F), Sub_Indent, Depth - 1);
+                        end if;
                      when Attr_Chain =>
                         Disp_Chain (Get_Iir (N, F), Sub_Indent, Depth - 1);
                      when Attr_Chain_Next =>

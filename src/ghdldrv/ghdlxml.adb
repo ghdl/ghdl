@@ -439,6 +439,12 @@ package body Ghdlxml is
                            end if;
                         when Attr_Chain =>
                            Disp_Iir_Chain (Img, V);
+                        when Attr_Maybe_Ref_Chain =>
+                           if Get_Is_Ref (N) then
+                              Disp_Iir_Ref (Img, V);
+                           else
+                              Disp_Iir_Chain (Img, V);
+                           end if;
                         when Attr_Chain_Next =>
                            null;
                         when Attr_Of_Ref | Attr_Of_Maybe_Ref =>
