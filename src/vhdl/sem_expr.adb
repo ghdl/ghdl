@@ -2427,13 +2427,13 @@ package body Sem_Expr is
       Disc_Heap_Sort (Info.Nbr_Choices);
    end Sort_Discrete_Choices;
 
-   procedure Sem_Check_Continuous_Choices
-     (Choice_Chain : Iir;
-      Sub_Type : Iir;
-      Is_Sub_Range : Boolean;
-      Loc : Location_Type;
-      Low : out Iir;
-      High : out Iir)
+   procedure Sem_Check_Continuous_Choices (Choice_Chain : in out Iir;
+                                           Choice_Type : Iir;
+                                           Low : out Iir;
+                                           High : out Iir;
+                                           Loc : Location_Type;
+                                           Is_Sub_Range : Boolean;
+                                           Reorder_Choices : Boolean)
    is
       --  Nodes that can appear.
       Info : Choice_Info_Type;
@@ -2441,7 +2441,7 @@ package body Sem_Expr is
       Type_Has_Bounds : Boolean;
    begin
       --  Set TYPE_HAS_BOUNDS
-      case Get_Kind (Sub_Type) is
+      case Get_Kind (Choice_Type) is
          when Iir_Kind_Enumeration_Type_Definition
            | Iir_Kind_Enumeration_Subtype_Definition
            | Iir_Kind_Integer_Subtype_Definition =>
@@ -2449,12 +2449,12 @@ package body Sem_Expr is
          when Iir_Kind_Integer_Type_Definition =>
             Type_Has_Bounds := False;
          when others =>
-            Error_Kind ("sem_check_continuous_choices(3)", Sub_Type);
+            Error_Kind ("sem_check_continuous_choices(3)", Choice_Type);
       end case;
 
       --  Check the choices are within the bounds.
       if Type_Has_Bounds
-        and then Get_Type_Staticness (Sub_Type) = Locally
+        and then Get_Type_Staticness (Choice_Type) = Locally
       then
          declare
             Choice : Iir;
@@ -2470,12 +2470,12 @@ package body Sem_Expr is
                   when Iir_Kind_Choice_By_Expression =>
                      Expr := Get_Choice_Expression (Choice);
                      if Get_Expr_Staticness (Expr) = Locally then
-                        Ok := Eval_Is_In_Bound (Expr, Sub_Type);
+                        Ok := Eval_Is_In_Bound (Expr, Choice_Type);
                      end if;
                   when Iir_Kind_Choice_By_Range =>
                      Expr := Get_Choice_Range (Choice);
                      if Get_Expr_Staticness (Expr) = Locally then
-                        Ok := Eval_Is_Range_In_Bound (Expr, Sub_Type, True);
+                        Ok := Eval_Is_Range_In_Bound (Expr, Choice_Type, True);
                      end if;
                   when Iir_Kind_Choice_By_Others =>
                      null;
@@ -2537,13 +2537,13 @@ package body Sem_Expr is
          Pos_Max : Iir_Int64;
          E_Pos : Iir_Int64;
 
-         Bt : constant Iir := Get_Base_Type (Sub_Type);
+         Bt : constant Iir := Get_Base_Type (Choice_Type);
       begin
          if not Is_Sub_Range
-           and then Get_Type_Staticness (Sub_Type) = Locally
+           and then Get_Type_Staticness (Choice_Type) = Locally
            and then Type_Has_Bounds
          then
-            Get_Low_High_Limit (Get_Range_Constraint (Sub_Type), Lb, Hb);
+            Get_Low_High_Limit (Get_Range_Constraint (Choice_Type), Lb, Hb);
          else
             Lb := Low;
             Hb := High;
@@ -2593,16 +2593,43 @@ package body Sem_Expr is
          end if;
       end;
 
+      if Reorder_Choices then
+         --  First, set Associated_Expr and Associated_Chain for nodes with
+         --  the same alternative.
+         declare
+            Assoc_Expr : Iir;
+            Assoc_Chain : Iir;
+            Assoc : Iir;
+         begin
+            Assoc := Choice_Chain;
+            Choice_Chain := Assoc; -- For the warning.
+            Assoc_Expr := Null_Iir;
+            Assoc_Chain := Null_Iir;
+            while Assoc /= Null_Iir loop
+               if Get_Same_Alternative_Flag (Assoc) then
+                  Set_Is_Ref (Assoc, True);
+                  Set_Associated_Expr (Assoc, Assoc_Expr);
+                  Set_Associated_Chain (Assoc, Assoc_Chain);
+               else
+                  Set_Is_Ref (Assoc, False);
+                  Assoc_Expr := Get_Associated_Expr (Assoc);
+                  Assoc_Chain := Get_Associated_Chain (Assoc);
+               end if;
+               Assoc := Get_Chain (Assoc);
+            end loop;
+         end;
+      end if;
+
       Free (Info.Arr);
    end Sem_Check_Continuous_Choices;
 
    procedure Sem_Choices_Range (Choice_Chain : in out Iir;
-                                Sub_Type : Iir;
-                                Is_Sub_Range : Boolean;
-                                Is_Case_Stmt : Boolean;
-                                Loc : Location_Type;
+                                Choice_Type : Iir;
                                 Low : out Iir;
-                                High : out Iir)
+                                High : out Iir;
+                                Loc : Location_Type;
+                                Is_Sub_Range : Boolean;
+                                Is_Case_Stmt : Boolean)
    is
       --  Number of positionnal choice.
       Nbr_Pos : Iir_Int64;
@@ -2631,8 +2658,9 @@ package body Sem_Expr is
          N_Choice : Iir;
          Name1 : Iir;
       begin
-         if Are_Types_Compatible (Range_Type, Sub_Type) = Not_Compatible then
-            Error_Not_Match (Name, Sub_Type);
+         if Are_Types_Compatible (Range_Type, Choice_Type) = Not_Compatible
+         then
+            Error_Not_Match (Name, Choice_Type);
             return False;
          end if;
 
@@ -2666,7 +2694,7 @@ package body Sem_Expr is
       begin
          if Get_Kind (El) = Iir_Kind_Choice_By_Range then
             Expr := Get_Choice_Range (El);
-            Expr := Sem_Discrete_Range_Expression (Expr, Sub_Type, True);
+            Expr := Sem_Discrete_Range_Expression (Expr, Choice_Type, True);
             if Expr = Null_Iir then
                return False;
             end if;
@@ -2701,10 +2729,11 @@ package body Sem_Expr is
                         return Replace_By_Range_Choice (Expr, Ent);
                      when others =>
                         Expr := Name_To_Expression
-                          (Expr, Get_Base_Type (Sub_Type));
+                          (Expr, Get_Base_Type (Choice_Type));
                   end case;
                when others =>
-                  Expr := Sem_Expression_Ov (Expr, Get_Base_Type (Sub_Type));
+                  Expr :=
+                    Sem_Expression_Ov (Expr, Get_Base_Type (Choice_Type));
             end case;
             if Expr = Null_Iir then
                return False;
@@ -2787,10 +2816,10 @@ package body Sem_Expr is
       --  For a positional aggregate.
       if Nbr_Pos > 0 then
          --  Check number of elements match, but only if it is possible.
-         if Get_Type_Staticness (Sub_Type) /= Locally then
+         if Get_Type_Staticness (Choice_Type) /= Locally then
             return;
          end if;
-         Pos_Max := Eval_Discrete_Type_Length (Sub_Type);
+         Pos_Max := Eval_Discrete_Type_Length (Choice_Type);
          if (not Has_Others and not Is_Sub_Range)
            and then Nbr_Pos < Pos_Max
          then
@@ -2825,8 +2854,8 @@ package body Sem_Expr is
          return;
       end if;
 
-      Sem_Check_Continuous_Choices
-        (Choice_Chain, Sub_Type, Is_Sub_Range, Loc, Low, High);
+      Sem_Check_Continuous_Choices (Choice_Chain, Choice_Type, Low, High, Loc,
+                                    Is_Sub_Range, not Is_Case_Stmt);
    end Sem_Choices_Range;
 
    -- Perform semantisation on a (sub)aggregate AGGR, which is of type
@@ -3315,8 +3344,8 @@ package body Sem_Expr is
       case Get_Kind (Aggr) is
          when Iir_Kind_Aggregate =>
             Assoc_Chain := Get_Association_Choices_Chain (Aggr);
-            Sem_Choices_Range (Assoc_Chain, Index_Type, not Constrained, False,
-                               Get_Location (Aggr), Low, High);
+            Sem_Choices_Range (Assoc_Chain, Index_Type, Low, High,
+                               Get_Location (Aggr), not Constrained, False);
             Set_Association_Choices_Chain (Aggr, Assoc_Chain);
 
             --  Update infos.

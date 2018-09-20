@@ -1067,7 +1067,7 @@ package body Sem_Stmts is
       case Get_Kind (Choice_Type) is
          when Iir_Kinds_Discrete_Type_Definition =>
             Sem_Choices_Range
-              (Chain, Choice_Type, False, True, Loc, Low, High);
+              (Chain, Choice_Type, Low, High, Loc, False, True);
          when Iir_Kind_Array_Subtype_Definition
            | Iir_Kind_Array_Type_Definition =>
             if not Is_One_Dimensional_Array_Type (Choice_Type) then
@@ -1119,7 +1119,9 @@ package body Sem_Stmts is
 
       El := Chain;
       while El /= Null_Iir loop
-         Sem_Sequential_Statements_Internal (Get_Associated_Chain (El));
+         if not Get_Same_Alternative_Flag (El) then
+            Sem_Sequential_Statements_Internal (Get_Associated_Chain (El));
+         end if;
          El := Get_Chain (El);
       end loop;
    end Sem_Case_Statement;

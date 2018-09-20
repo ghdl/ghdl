@@ -876,7 +876,7 @@ package body Sem_Assocs is
    begin
       Chain := Get_Individual_Association_Chain (Assoc);
       Sem_Check_Continuous_Choices
-        (Chain, Index_Type, False, Get_Location (Assoc), Low, High);
+        (Chain, Index_Type, Low, High, Get_Location (Assoc), False, False);
       Set_Individual_Association_Chain (Assoc, Chain);
       if Dim < Nbr_Dims then
          El := Chain;
@@ -909,7 +909,7 @@ package body Sem_Assocs is
       end if;
       Chain := Get_Individual_Association_Chain (Assoc);
       Sem_Choices_Range
-        (Chain, Base_Index, True, False, Get_Location (Assoc), Low, High);
+        (Chain, Base_Index, Low, High, Get_Location (Assoc), True, False);
       Set_Individual_Association_Chain (Assoc, Chain);
       if Actual_Index = Null_Iir then
          declare

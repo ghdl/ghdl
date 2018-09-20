@@ -191,27 +191,27 @@ package Sem_Expr is
    --  TODO:
    --  * be smarter if only positional choices (do not create the list).
    --  * smarter messages.
-   procedure Sem_Choices_Range
-     (Choice_Chain : in out Iir;
-      Sub_Type : Iir;
-      Is_Sub_Range : Boolean;
-      Is_Case_Stmt : Boolean;
-      Loc : Location_Type;
-      Low : out Iir;
-      High : out Iir);
+   procedure Sem_Choices_Range (Choice_Chain : in out Iir;
+                                Choice_Type : Iir;
+                                Low : out Iir;
+                                High : out Iir;
+                                Loc : Location_Type;
+                                Is_Sub_Range : Boolean;
+                                Is_Case_Stmt : Boolean);
 
    --  Check that the values of CHOICE_CHAIN are a continuous range, and
    --  extract the lower LOW and upper HIGH bound (useful to create the
    --  corresponding subtype).  The values must be of type SUB_TYPE, and if
    --  IS_SUB_RANGE True, they must be within SUB_TYPE.
    --  The choices must be locally static.
-   procedure Sem_Check_Continuous_Choices
-     (Choice_Chain : Iir;
-      Sub_Type : Iir;
-      Is_Sub_Range : Boolean;
-      Loc : Location_Type;
-      Low : out Iir;
-      High : out Iir);
+   --  If REORDER_CHOICES is true, CHOICE_CHAIN is ordered.
+   procedure Sem_Check_Continuous_Choices (Choice_Chain : in out Iir;
+                                           Choice_Type : Iir;
+                                           Low : out Iir;
+                                           High : out Iir;
+                                           Loc : Location_Type;
+                                           Is_Sub_Range : Boolean;
+                                           Reorder_Choices : Boolean);
 
    --  Analyze CHOICE_LIST when the choice expression SEL is of a
    --  one-dimensional character array type.
