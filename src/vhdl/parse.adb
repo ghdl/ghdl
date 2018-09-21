@@ -4754,8 +4754,10 @@ package body Parse is
    --  choices ::= choice { | choice }
    --
    -- Leave tok_double_arrow as current token.
-   function Parse_Choices
-     (Expr: Iir; First_Loc : Location_Type; Pos : in out Int32) return Iir
+   procedure Parse_Choices (Expr: Iir;
+                            First_Loc : Location_Type;
+                            Pos : in out Int32;
+                            Chain : out Iir)
    is
       First, Last : Iir;
       A_Choice: Iir;
@@ -4780,7 +4782,8 @@ package body Parse is
          Sub_Chain_Append (First, Last, A_Choice);
 
          if Current_Token /= Tok_Bar then
-            return First;
+            Chain := First;
+            return;
          end if;
          Loc := Get_Token_Location;
 
@@ -4902,7 +4905,7 @@ package body Parse is
                   Set_Choice_Position (Assoc, Pos);
                   Pos := Pos + 1;
                when others =>
-                  Assoc := Parse_Choices (Expr, Loc, Pos);
+                  Parse_Choices (Expr, Loc, Pos, Assoc);
                   Expect (Tok_Double_Arrow);
 
                   --  Eat '=>'.
@@ -5861,7 +5864,7 @@ package body Parse is
          --  Eat 'when'.
          Scan;
 
-         Assoc := Parse_Choices (Null_Iir, When_Loc, Pos);
+         Parse_Choices (Null_Iir, When_Loc, Pos, Assoc);
          Set_Associated_Chain (Assoc, Wf_Chain);
          Append_Subchain (Last, Res, Assoc);
          exit when Current_Token = Tok_Semi_Colon;
@@ -6409,7 +6412,7 @@ package body Parse is
             Set_Choice_Position (Assoc, Pos);
             Pos := Pos + 1;
          else
-            Assoc := Parse_Choices (Null_Iir, When_Loc, Pos);
+            Parse_Choices (Null_Iir, When_Loc, Pos, Assoc);
          end if;
 
          --  Skip '=>'.
@@ -7875,7 +7878,7 @@ package body Parse is
          Pos := Pos + 1;
       elsif Current_Token = Tok_Others then
          --  'others' is not an expression!
-         Assoc := Parse_Choices (Null_Iir, Loc, Pos);
+         Parse_Choices (Null_Iir, Loc, Pos, Assoc);
       else
          Expr := Parse_Expression;
 
@@ -7896,7 +7899,7 @@ package body Parse is
             Scan;
          end if;
 
-         Assoc := Parse_Choices (Expr, Loc, Pos);
+         Parse_Choices (Expr, Loc, Pos, Assoc);
       end if;
 
       --  Set location of label (if any, for xref) or location of 'when'.
