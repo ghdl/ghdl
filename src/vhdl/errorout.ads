@@ -113,6 +113,9 @@ package Errorout is
       --  Violation of pure rules.
       Warnid_Pure,
 
+      --  Violation of staticness rules
+      Warnid_Static,
+
       --  Any error
       Msgid_Error,
 
@@ -121,7 +124,7 @@ package Errorout is
 
    --  All specific warning messages.
    subtype Msgid_Warnings is Msgid_Type
-     range Warnid_Library .. Warnid_Pure;
+     range Warnid_Library .. Warnid_Static;
 
    --  Get the image of a warning.  This correspond the the identifier of ID,
    --  in lower case, without the Msgid_Warn_ prefix and with '_' replaced

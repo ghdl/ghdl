@@ -2929,6 +2929,8 @@ package body Trans.Chap7 is
       Expr_Type  : Iir;
       Final      : Boolean;
 
+      --  Assign EXPR to current position (defined by index VAR_INDEX), and
+      --  update VAR_INDEX.  Handles sub-aggregates.
       procedure Do_Assign (Expr : Iir) is
       begin
          if Final then
@@ -3013,8 +3015,8 @@ package body Trans.Chap7 is
             --  There is only one choice
             case Get_Kind (El) is
                when Iir_Kind_Choice_By_Others =>
-                  --  falltrough...
-                  null;
+                  --  Handled by positional.
+                  raise Internal_Error;
                when Iir_Kind_Choice_By_Expression =>
                   Do_Assign (Get_Associated_Expr (El));
                   return;

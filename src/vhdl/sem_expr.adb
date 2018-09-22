@@ -2597,6 +2597,18 @@ package body Sem_Expr is
          end if;
       end;
 
+      --  LRM93 7.3.2.2 Array aggregates
+      --  An others choice is locally static if the applicable index constraint
+      --  if locally static.
+      if Info.Nbr_Choices > 0
+        and then Info.Others_Choice /= Null_Iir
+        and then Get_Type_Staticness (Choice_Type) /= Locally
+      then
+         Warning_Msg_Sem
+           (Warnid_Static, +Info.Others_Choice,
+            "'others' choice allowed only if the index constraint is static");
+      end if;
+
       if Reorder_Choices then
          declare
             Ngroups : Int32;

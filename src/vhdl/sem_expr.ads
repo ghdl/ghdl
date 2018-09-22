@@ -156,7 +156,8 @@ package Sem_Expr is
       Annex_Arr : Annex_Array_Acc;
    end record;
 
-   --  Compute the number of locally static choices and set Has_Others.
+   --  Compute the number of locally static choices (excluding others) and
+   --  set Has_Others.
    procedure Count_Choices (Info : out Choice_Info_Type; Choice_Chain : Iir);
 
    --  Allocate and fill INFO.ARR.
