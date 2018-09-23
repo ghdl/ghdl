@@ -2931,7 +2931,9 @@ package body Trans.Chap7 is
 
       --  Assign EXPR to current position (defined by index VAR_INDEX), and
       --  update VAR_INDEX.  Handles sub-aggregates.
-      procedure Do_Assign (Expr : Iir) is
+      procedure Do_Assign (Assoc : Iir)
+      is
+         Expr : constant Iir := Get_Associated_Expr (Assoc);
       begin
          if Final then
             Translate_Assign (Chap3.Index_Base (Base_Ptr, Aggr_Type,
@@ -2960,7 +2962,7 @@ package body Trans.Chap7 is
                return;
             end if;
             exit when Get_Kind (El) /= Iir_Kind_Choice_By_None;
-            Do_Assign (Get_Associated_Expr (El));
+            Do_Assign (El);
             P := P + 1;
             El := Get_Chain (El);
          end loop;
@@ -2997,7 +2999,7 @@ package body Trans.Chap7 is
                                New_Lit (Ghdl_Index_0),
                                Ghdl_Bool_Type));
 
-            Do_Assign (Get_Associated_Expr (El));
+            Do_Assign (El);
             Dec_Var (Var_Len);
             Finish_Loop_Stmt (Label);
             Close_Temp;
@@ -3018,7 +3020,7 @@ package body Trans.Chap7 is
                   --  Handled by positional.
                   raise Internal_Error;
                when Iir_Kind_Choice_By_Expression =>
-                  Do_Assign (Get_Associated_Expr (El));
+                  Do_Assign (El);
                   return;
                when Iir_Kind_Choice_By_Range =>
                   declare
@@ -3038,7 +3040,7 @@ package body Trans.Chap7 is
                                                     New_Obj_Value (Var_I),
                                                     New_Obj_Value (Var_Length),
                                                     Ghdl_Bool_Type));
-                     Do_Assign (Get_Associated_Expr (El));
+                     Do_Assign (El);
                      Inc_Var (Var_I);
                      Finish_Loop_Stmt (Label);
                      Close_Temp;
@@ -3059,7 +3061,6 @@ package body Trans.Chap7 is
             If_Blk     : O_If_Block;
             Case_Blk   : O_Case_Block;
             Label      : O_Snode;
-            El_Assoc   : Iir;
             Len_Tmp    : O_Enode;
          begin
             Open_Temp;
@@ -3089,15 +3090,11 @@ package body Trans.Chap7 is
 
             --  convert aggr into a case statement.
             Start_Case_Stmt (Case_Blk, New_Obj_Value (Var_Pos));
-            El_Assoc := Null_Iir;
             while El /= Null_Iir loop
                Start_Choice (Case_Blk);
                Chap8.Translate_Case_Choice (El, Range_Type, Case_Blk);
-               if Get_Associated_Expr (El) /= Null_Iir then
-                  El_Assoc := Get_Associated_Expr (El);
-               end if;
                Finish_Choice (Case_Blk);
-               Do_Assign (El_Assoc);
+               Do_Assign (El);
                El := Get_Chain (El);
             end loop;
             Finish_Case_Stmt (Case_Blk);

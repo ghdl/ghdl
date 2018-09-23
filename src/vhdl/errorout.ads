@@ -110,6 +110,9 @@ package Errorout is
       --  FIXME: currently only subprograms are handled.
       Warnid_Unused,
 
+      --  Others choice is not needed, all values are already covered.
+      Warnid_Others,
+
       --  Violation of pure rules.
       Warnid_Pure,
 

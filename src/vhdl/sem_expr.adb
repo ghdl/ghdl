@@ -2519,8 +2519,7 @@ package body Sem_Expr is
          --  of index type BT at location LOC.
          procedure Error_No_Choice (Bt : Iir;
                                     L, H : Iir_Int64;
-                                    Loc : Location_Type)
-         is
+                                    Loc : Location_Type) is
          begin
             if L = H then
                Error_Msg_Sem (+Loc, "no choice for " & Disp_Discrete (Bt, L));
@@ -2536,6 +2535,8 @@ package body Sem_Expr is
          Pos : Iir_Int64;
          Pos_Max : Iir_Int64;
          E_Pos : Iir_Int64;
+         Choice : Iir;
+         Need_Others : Boolean;
 
          Bt : constant Iir := Get_Base_Type (Choice_Type);
       begin
@@ -2561,39 +2562,52 @@ package body Sem_Expr is
             Free (Info.Arr);
             return;
          end if;
+         Need_Others := False;
          for I in Info.Arr'Range loop
-            E_Pos := Eval_Pos (Get_Assoc_Low (Info.Arr (I)));
+            Choice := Info.Arr (I);
+            E_Pos := Eval_Pos (Get_Assoc_Low (Choice));
             if E_Pos > Pos_Max then
                --  Choice out of bound, already handled.
-               Error_No_Choice
-                 (Bt, Pos, Pos_Max, Get_Location (Info.Arr (I)));
+               Error_No_Choice (Bt, Pos, Pos_Max, Get_Location (Choice));
                --  Avoid other errors.
                Pos := Pos_Max + 1;
                exit;
             end if;
             if Pos < E_Pos then
+               Need_Others := True;
                if Info.Others_Choice = Null_Iir then
-                  Error_No_Choice
-                    (Bt, Pos, E_Pos - 1, Get_Location (Info.Arr (I)));
+                  Error_No_Choice (Bt, Pos, E_Pos - 1, Get_Location (Choice));
                end if;
             elsif Pos > E_Pos then
+               Need_Others := True;
                if Pos = E_Pos + 1 then
                   Error_Msg_Sem
-                    (+Info.Arr (I),
+                    (+Choice,
                      "duplicate choice for " & Disp_Discrete (Bt, E_Pos));
                else
                   Error_Msg_Sem
-                    (+Info.Arr (I), "duplicate choices for "
+                    (+Choice, "duplicate choices for "
                        & Disp_Discrete (Bt, E_Pos)
                        & " to " & Disp_Discrete (Bt, Pos));
                end if;
             end if;
-            Pos := Eval_Pos (Get_Assoc_High (Info.Arr (I))) + 1;
+
+            if Get_Kind (Choice) = Iir_Kind_Choice_By_Range then
+               Pos := Eval_Pos (Get_Assoc_High (Choice)) + 1;
+            else
+               Pos := E_Pos + 1;
+            end if;
          end loop;
          if Pos /= Pos_Max + 1 then
+            Need_Others := True;
             if Info.Others_Choice = Null_Iir then
                Error_No_Choice (Bt, Pos, Pos_Max, Loc);
             end if;
+         end if;
+
+         if not Need_Others and then Info.Others_Choice /= Null_Iir then
+            Warning_Msg_Sem (Warnid_Others, +Info.Others_Choice,
+                             "redundant 'others' choices");
          end if;
       end;
 
