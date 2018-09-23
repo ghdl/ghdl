@@ -2947,6 +2947,8 @@ package body Trans.Chap7 is
                Dest := Chap3.Slice_Base (Base_Ptr, Aggr_Type,
                                          New_Obj_Value (Var_Index));
                Translate_Assign (Dest, Expr, Get_Type (Expr));
+               --  FIXME: handle non-static expression type (at least for
+               --  choice by range).
                Len := Eval_Discrete_Type_Length
                  (Get_Index_Type (Get_Type (Expr), 0));
                New_Assign_Stmt
