@@ -27,7 +27,7 @@ package body textio is
   --  value 0 for the FIELD parameter has the effect of causing the string
   --  value to be contained in a field of exactly the right widteh (i.e., no
   --  additional leading or tailing spaces).  Parameter JUSTIFIED specified
-  --  wether the string value is to be right- or left-justified within the
+  --  whether the string value is to be right- or left-justified within the
   --  field; the default is right-justified.  If the FIELD parameter describes
   --  a field width larger than the number of characters in the string value,
   --  space characters are used to fill the remaining characters in the field.

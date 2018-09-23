@@ -5930,7 +5930,7 @@ package Iirs is
    function Get_Analysis_Checks_List (Unit : Iir) return Iir_List;
    procedure Set_Analysis_Checks_List (Unit : Iir; List : Iir_List);
 
-   --  Wether the unit is on disk, parsed or analyzed.
+   --  Whether the unit is on disk, parsed or analyzed.
    --  Field: State1 (pos)
    function Get_Date_State (Unit : Iir_Design_Unit) return Date_State_Type;
    procedure Set_Date_State (Unit : Iir_Design_Unit; State : Date_State_Type);
@@ -6778,7 +6778,7 @@ package Iirs is
    function Get_Wait_State (Proc : Iir) return Tri_State_Type;
    procedure Set_Wait_State (Proc : Iir; State : Tri_State_Type);
 
-   --  Get/Set wether the subprogram may be called by a sensitized process
+   --  Get/Set whether the subprogram may be called by a sensitized process
    --  whose sensitivity list is ALL.
    --  FALSE if declared in a package unit and reads a signal that is not
    --    one of its interface, or if it calls such a subprogram.

@@ -708,7 +708,7 @@ package body Trans.Chap12 is
 
       --  Generate code to elaboration body-less package.
       --
-      --  When a package is analyzed, we don't know wether there is body
+      --  When a package is analyzed, we don't know whether there is body
       --  or not.  Therefore, we assume there is always a body, and will
       --  elaborate the body (which elaborates its spec).  If a package
       --  has no body, create the body elaboration procedure.

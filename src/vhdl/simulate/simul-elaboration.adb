@@ -1493,7 +1493,7 @@ package body Simul.Elaboration is
         (Ninstance, Get_Concurrent_Statement_Chain (Block));
       --  Elaboration of a block statement may occur under the control of a
       --  configuration declaration.
-      --  In particular, a block configuration, wether implicit or explicit,
+      --  In particular, a block configuration, whether implicit or explicit,
       --  within a configuration declaration may supply a sequence of
       --  additionnal implicit configuration specification to be applied
       --  during the elaboration of the corresponding block statement.
@@ -1503,10 +1503,11 @@ package body Simul.Elaboration is
       --  is elaborated as part of the block declarative part, following all
       --  other declarative items in that part.
       --  The sequence of implicit configuration specifications supplied by a
-      --  block configuration, wether implicit or explicit, consists of each of
-      --  the configuration specifications implied by component configurations
-      --  occurring immediatly within the block configuration, and in the
-      --  order in which the component configurations themselves appear.
+      --  block configuration, whether implicit or explicit, consists of each
+      --  of the configuration specifications implied by component
+      --  configurations occurring immediatly within the block configuration,
+      --  and in the order in which the component configurations themselves
+      --  appear.
       -- FIXME.
    end Elaborate_Block_Statement;
 

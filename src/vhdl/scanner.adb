@@ -1670,7 +1670,7 @@ package body Scanner is
                --   A comment can appear on any line line of a VHDL
                --   description.
                --   The presence or absence of comments has no influence on
-               --   wether a description is legal or illegal.
+               --   whether a description is legal or illegal.
                --   Futhermore, comments do not influence the execution of a
                --   simulation module; their sole purpose is the enlightenment
                --   of the human reader.

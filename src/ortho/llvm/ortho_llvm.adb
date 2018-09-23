@@ -28,7 +28,7 @@ package body Ortho_LLVM is
    --  The current function node (needed for return type).
    Cur_Func_Decl : O_Dnode;
 
-   --  Wether the code is currently unreachable.  LLVM doesn't accept basic
+   --  Whether the code is currently unreachable.  LLVM doesn't accept basic
    --  blocks that cannot be reached (using trivial rules).  So we need to
    --  discard instructions after a return, a next or an exit statement.
    Unreach : Boolean;

@@ -630,7 +630,7 @@ package body Sem is
 
       --  LRM93 10.2
       --  In addition to the above rules, the scope of any declaration that
-      --  includes the end of the declarative part of a given block (wether
+      --  includes the end of the declarative part of a given block (whether
       --  it be an external block defined by a design entity or an internal
       --  block defined by a block statement) extends into a configuration
       --  declaration that configures the given block.

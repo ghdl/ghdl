@@ -1215,7 +1215,7 @@ package body Trans.Chap7 is
          procedure Walk_Concat (Imp : Iir; L, R : Iir);
 
          --  Call handlers for each leaf of E (an array expression).  First
-         --  check wether E is also a concatenation.
+         --  check whether E is also a concatenation.
          procedure Walk_Arr (E : Iir)
          is
             Imp : Iir;

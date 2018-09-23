@@ -2322,9 +2322,9 @@ package body Sem_Expr is
       --  LRM 8.8
       --
       --  If the expression is the name of an object whose subtype is locally
-      --  static, wether a scalar type or an array type, then each value of the
-      --  subtype must be represented once and only once in the set of choices
-      --  of the case statement and no other value is allowed; [...]
+      --  static, whether a scalar type or an array type, then each value of
+      --  the subtype must be represented once and only once in the set of
+      --  choices of the case statement and no other value is allowed; [...]
 
       -- 1. Allocate Arr, fill it and sort
       Count_Choices (Info, Choice_Chain);
