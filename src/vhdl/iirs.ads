@@ -537,6 +537,16 @@ package Iirs is
    --  field can be used to display the choices in the original order.
    --   Get/Set_Choice_Position (Field1)
    --
+   --  Should be a simple_name.
+   -- Only for Iir_Kind_Choice_By_Name:
+   --   Get/Set_Choice_Name (Field5)
+   --
+   -- Only for Iir_Kind_Choice_By_Expression:
+   --   Get/Set_Choice_Expression (Field5)
+   --
+   -- Only for Iir_Kind_Choice_By_Range:
+   --   Get/Set_Choice_Range (Field5)
+   --
    --  Get/Set what is associated with the choice.  There are two different
    --  nodes, one for simple association and the other for chain association.
    --  They don't have the same properties (normal vs chain), so the right
@@ -554,16 +564,6 @@ package Iirs is
    --  * a waveform_chain for a concurrent_selected_signal_assignment,
    --  * a sequential statement chain for a case_statement.
    --   Get/Set_Associated_Chain (Field4)
-   --
-   --  Should be a simple_name.
-   -- Only for Iir_Kind_Choice_By_Name:
-   --   Get/Set_Choice_Name (Field5)
-   --
-   -- Only for Iir_Kind_Choice_By_Expression:
-   --   Get/Set_Choice_Expression (Field5)
-   --
-   -- Only for Iir_Kind_Choice_By_Range:
-   --   Get/Set_Choice_Range (Field5)
    --
    --   Get/Set_Same_Alternative_Flag (Flag1)
    --

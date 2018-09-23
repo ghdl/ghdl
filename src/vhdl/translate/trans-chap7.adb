@@ -2934,12 +2934,27 @@ package body Trans.Chap7 is
       procedure Do_Assign (Assoc : Iir)
       is
          Expr : constant Iir := Get_Associated_Expr (Assoc);
+         Dest : Mnode;
+         Len : Iir_Int64;
       begin
          if Final then
-            Translate_Assign (Chap3.Index_Base (Base_Ptr, Aggr_Type,
-                                                New_Obj_Value (Var_Index)),
-                              Expr, Expr_Type);
-            Inc_Var (Var_Index);
+            if Get_Element_Type_Flag (Assoc) then
+               Dest := Chap3.Index_Base (Base_Ptr, Aggr_Type,
+                                         New_Obj_Value (Var_Index));
+               Translate_Assign (Dest, Expr, Expr_Type);
+               Inc_Var (Var_Index);
+            else
+               Dest := Chap3.Slice_Base (Base_Ptr, Aggr_Type,
+                                         New_Obj_Value (Var_Index));
+               Translate_Assign (Dest, Expr, Get_Type (Expr));
+               Len := Eval_Discrete_Type_Length
+                 (Get_Index_Type (Get_Type (Expr), 0));
+               New_Assign_Stmt
+                 (New_Obj (Var_Index),
+                  New_Dyadic_Op (ON_Add_Ov,
+                                 New_Obj_Value (Var_Index),
+                                 New_Lit (New_Index_Lit (Unsigned_64 (Len)))));
+            end if;
          else
             Translate_Array_Aggregate_Gen
               (Base_Ptr, Bounds_Ptr, Expr, Aggr_Type, Dim + 1, Var_Index);

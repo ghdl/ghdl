@@ -2394,9 +2394,9 @@ package body Nodes_Meta is
       Field_Choice_Staticness,
       Field_Parent,
       Field_Chain,
+      Field_Choice_Range,
       Field_Associated_Expr,
       Field_Associated_Chain,
-      Field_Choice_Range,
       --  Iir_Kind_Choice_By_Expression
       Field_Choice_Position,
       Field_Same_Alternative_Flag,
@@ -2405,9 +2405,9 @@ package body Nodes_Meta is
       Field_Choice_Staticness,
       Field_Parent,
       Field_Chain,
+      Field_Choice_Expression,
       Field_Associated_Expr,
       Field_Associated_Chain,
-      Field_Choice_Expression,
       --  Iir_Kind_Choice_By_Others
       Field_Choice_Position,
       Field_Same_Alternative_Flag,
@@ -2433,9 +2433,9 @@ package body Nodes_Meta is
       Field_Element_Type_Flag,
       Field_Parent,
       Field_Chain,
+      Field_Choice_Name,
       Field_Associated_Expr,
       Field_Associated_Chain,
-      Field_Choice_Name,
       --  Iir_Kind_Entity_Aspect_Entity
       Field_Entity_Name,
       Field_Architecture,
