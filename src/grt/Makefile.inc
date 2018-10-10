@@ -52,7 +52,7 @@ ifeq ($(filter-out mingw32 mingw64,$(osys)),)
   GRT_EXTRA_LIB=-ldbghelp
 else
   GRT_TARGET_OBJS=jumps.o times.o
-  ifeq ($(filter-out linux,$(osys)),)
+  ifeq ($(filter-out linux%,$(osys)),)
     GRT_EXTRA_LIB=-ldl -lm $(GRT_ELF_OPTS)
   endif
   ifeq ($(filter-out netbsd freebsd% dragonfly%,$(osys)),)
