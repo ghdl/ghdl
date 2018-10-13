@@ -133,7 +133,7 @@ travis_finish "configure" -notime
 
 travis_start "make" "$ANSI_YELLOW[GHDL - build] Make $ANSI_NOCOLOR"
 set +e
-make -j$(nproc) 2>make_err.log
+make LIB_CFLAGS="$LIB_CFLAGS" OPT_FLAGS="$OPT_FLAGS" -j$(nproc) 2>make_err.log
 tail -1000 make_err.log
 set -e
 travis_finish "make"
