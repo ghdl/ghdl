@@ -2491,7 +2491,7 @@ package body Sem is
                   if Emit_Warnings then
                      Warning_Msg_Sem
                        (Warnid_Delayed_Checks, +El,
-                        "can't assert that %n has not wait; "
+                        "can't assert that %n has no wait; "
                           & "will be checked at elaboration", +El);
                   end if;
                end if;
