@@ -30,6 +30,17 @@ package body Ortho_Gcc is
       return O_Lnode (Obj);
    end New_Obj;
 
+   function New_Global (Decl : O_Dnode) return O_Gnode is
+   begin
+      return O_Gnode (Decl);
+   end New_Global;
+
+   function New_Global_Selected_Element (Rec : O_Gnode; El : O_Fnode)
+                                        return O_Gnode is
+   begin
+      return O_Gnode (New_Selected_Element (O_Lnode (Rec), El));
+   end New_Global_Selected_Element;
+
    function New_Obj_Value (Obj : O_Dnode) return O_Enode is
    begin
       return O_Enode (Obj);

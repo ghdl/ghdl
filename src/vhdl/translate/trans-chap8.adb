@@ -2713,7 +2713,8 @@ package body Trans.Chap8 is
                      if Mode = Mode_Value then
                         if Get_Type_Staticness (Actual_Type) >= Globally then
                            Chap3.Create_Array_Subtype (Actual_Type);
-                           Bounds := Chap3.Get_Array_Type_Bounds (Actual_Type);
+                           Bounds :=
+                             Chap3.Get_Composite_Type_Bounds (Actual_Type);
                            Chap3.Translate_Object_Allocation
                              (Param, Alloc, Formal_Type, Bounds);
                         else
@@ -2877,7 +2878,7 @@ package body Trans.Chap8 is
                   Stabilize (Saved_Val (Pos));
 
                   Chap3.Copy_Bounds
-                    (Chap3.Bounds_To_Element_Bounds
+                    (Chap3.Record_Bounds_To_Element_Bounds
                        (Chap3.Get_Composite_Bounds
                           (Params (Last_Individual)),
                         Get_Selected_Element (Formal)),

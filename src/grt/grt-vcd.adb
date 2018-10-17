@@ -360,8 +360,9 @@ package body Grt.Vcd is
                  Get_Base_Type (Arr_Rti.Indexes (0));
             begin
                Kind := Rti_To_Vcd_Kind (Arr_Rti);
-               Bounds := Loc_To_Addr (St.Common.Depth, St.Bounds,
+               Bounds := Loc_To_Addr (St.Common.Depth, St.Layout,
                                       Avhpi_Get_Context (Sig));
+               Bounds := Array_Layout_To_Bounds (Bounds);
                Extract_Range (Bounds, Idx_Rti, Irange);
             end;
          when Ghdl_Rtik_Type_Array =>

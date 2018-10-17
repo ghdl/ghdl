@@ -38,6 +38,7 @@ private
    type O_Cnode is new Tree;
    type O_Enode is new Tree;
    type O_Lnode is new Tree;
+   type O_Gnode is new Tree;
    type O_Tnode is new Tree;
    type O_Fnode is new Tree;
    type O_Dnode is new Tree;
@@ -50,6 +51,7 @@ private
    O_Cnode_Null : constant O_Cnode := O_Cnode (NULL_TREE);
    O_Enode_Null : constant O_Enode := O_Enode (NULL_TREE);
    O_Lnode_Null : constant O_Lnode := O_Lnode (NULL_TREE);
+   O_Gnode_Null : constant O_Gnode := O_Gnode (NULL_TREE);
    O_Tnode_Null : constant O_Tnode := O_Tnode (NULL_TREE);
    O_Fnode_Null : constant O_Fnode := O_Fnode (NULL_TREE);
    O_Snode_Null : constant O_Snode := (NULL_TREE, NULL_TREE);

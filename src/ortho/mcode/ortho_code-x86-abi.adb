@@ -243,7 +243,7 @@ package body Ortho_Code.X86.Abi is
    is
       use Ada.Text_IO;
       use Ortho_Code.Debug.Int32_IO;
-      Obj : constant O_Dnode := Get_Addr_Object (Stmt);
+      Obj : constant O_Dnode := Get_Addr_Decl (Stmt);
       Frame : constant O_Enode := Get_Addrl_Frame (Stmt);
    begin
       if Frame = O_Enode_Null then
@@ -315,9 +315,9 @@ package body Ortho_Code.X86.Abi is
             case Kind is
                when OE_Const =>
                   Disp_Const (Stmt);
-               when OE_Addrg =>
+               when OE_Addrd =>
                   Put ("&");
-                  Disp_Decl_Name (Get_Addr_Object (Stmt));
+                  Disp_Decl_Name (Get_Addr_Decl (Stmt));
                when OE_Add =>
                   Disp_Irm_Code (Get_Expr_Left (Stmt));
                   Put ("+");
@@ -348,9 +348,9 @@ package body Ortho_Code.X86.Abi is
                   Disp_Irm_Code (Get_Expr_Left (Stmt));
                   Put (" + ");
                   Disp_Irm_Code (Get_Expr_Right (Stmt));
-               when OE_Addrg =>
+               when OE_Addrd =>
                   Put ("&");
-                  Disp_Decl_Name (Get_Addr_Object (Stmt));
+                  Disp_Decl_Name (Get_Addr_Decl (Stmt));
                when others =>
                   raise Program_Error;
             end case;
@@ -587,10 +587,10 @@ package body Ortho_Code.X86.Abi is
             Disp_Local (Stmt);
             Put (")");
             New_Line;
-         when OE_Addrg =>
-            Disp_Reg_Op_Name ("lea{addrg}");
+         when OE_Addrd =>
+            Disp_Reg_Op_Name ("lea{addrd}");
             Put ("&");
-            Disp_Decl_Name (Get_Addr_Object (Stmt));
+            Disp_Decl_Name (Get_Addr_Decl (Stmt));
             New_Line;
          when OE_Add =>
             Disp_Reg_Op_Name ("lea{add}");

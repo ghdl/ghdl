@@ -1024,8 +1024,7 @@ package body Trans.Chap2 is
             --  instantiated due to generate statements).
             Start_Association (Constr, Ghdl_Rti_Add_Package);
             New_Association
-              (Constr,
-               New_Lit (Rtis.New_Rti_Address (Info.Package_Rti_Const)));
+              (Constr, Rtis.New_Rti_Address (Info.Package_Rti_Const));
             New_Procedure_Call (Constr);
          end if;
 
@@ -1160,7 +1159,12 @@ package body Trans.Chap2 is
             null;
          when Kind_Type_Array
            | Kind_Type_Record =>
-            null;
+            B.Builder (Mode_Value).Builder_Instance :=
+              Instantiate_Subprg_Instance
+              (Orig.Builder (Mode_Value).Builder_Instance);
+            B.Builder (Mode_Signal).Builder_Instance :=
+              Instantiate_Subprg_Instance
+              (Orig.Builder (Mode_Signal).Builder_Instance);
          when Kind_Type_File =>
             null;
          when Kind_Type_Protected =>
@@ -1187,7 +1191,7 @@ package body Trans.Chap2 is
             Res.Range_Var := Instantiate_Var (Src.Range_Var);
          when Kind_Type_Array
            | Kind_Type_Record =>
-            Res.Composite_Bounds := Instantiate_Var (Src.Composite_Bounds);
+            Res.Composite_Layout := Instantiate_Var (Src.Composite_Layout);
          when Kind_Type_File =>
             null;
          when Kind_Type_Protected =>
@@ -1206,45 +1210,13 @@ package body Trans.Chap2 is
                          Type_Incomplete => Src.Type_Incomplete,
                          Type_Locally_Constrained =>
                             Src.Type_Locally_Constrained,
-                         C => null,
                          Ortho_Type => Src.Ortho_Type,
                          Ortho_Ptr_Type => Src.Ortho_Ptr_Type,
                          B => Src.B,
                          S => Copy_Info_Subtype (Src.S),
                          Type_Rti => Src.Type_Rti);
             Adjust_Info_Basetype (Dest.B'Unrestricted_Access,
-                                 Src.B'Unrestricted_Access);
-            if Src.C /= null then
-               Dest.C := new Complex_Type_Arr_Info'
-                 (Mode_Value =>
-                    (Mark => False,
-                     Size_Var => Instantiate_Var
-                       (Src.C (Mode_Value).Size_Var),
-                     Builder_Need_Func =>
-                       Src.C (Mode_Value).Builder_Need_Func,
-                     Builder_Instance => Instantiate_Subprg_Instance
-                       (Src.C (Mode_Value).Builder_Instance),
-                     Builder_Base_Param =>
-                       Src.C (Mode_Value).Builder_Base_Param,
-                     Builder_Bound_Param =>
-                       Src.C (Mode_Value).Builder_Bound_Param,
-                     Builder_Func =>
-                       Src.C (Mode_Value).Builder_Func),
-                  Mode_Signal =>
-                    (Mark => False,
-                     Size_Var => Instantiate_Var
-                       (Src.C (Mode_Signal).Size_Var),
-                     Builder_Need_Func =>
-                       Src.C (Mode_Signal).Builder_Need_Func,
-                     Builder_Instance => Instantiate_Subprg_Instance
-                       (Src.C (Mode_Signal).Builder_Instance),
-                     Builder_Base_Param =>
-                       Src.C (Mode_Signal).Builder_Base_Param,
-                     Builder_Bound_Param =>
-                       Src.C (Mode_Signal).Builder_Bound_Param,
-                     Builder_Func =>
-                       Src.C (Mode_Signal).Builder_Func));
-            end if;
+                                  Src.B'Unrestricted_Access);
          when Kind_Object =>
             Dest.all :=
               (Kind => Kind_Object,

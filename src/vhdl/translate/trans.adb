@@ -1133,6 +1133,24 @@ package body Trans is
       end Instantiate_Var_Scope;
    end Chap10;
 
+   function Align_Val (Algn : Alignment_Type) return O_Cnode is
+   begin
+      case Algn is
+         when Align_Undef =>
+            raise Internal_Error;
+         when Align_8 =>
+            return Ghdl_Index_1;
+         when Align_16 =>
+            return Ghdl_Index_2;
+         when Align_32 =>
+            return Ghdl_Index_4;
+         when Align_Ptr =>
+            return Ghdl_Index_Ptr_Align;
+         when Align_64 =>
+            return Ghdl_Index_8;
+      end case;
+   end Align_Val;
+
    function Get_Object_Kind (M : Mnode) return Object_Kind_Type is
    begin
       return M.M1.K;
@@ -1401,9 +1419,6 @@ package body Trans is
 
    procedure Free_Type_Info (Info : in out Type_Info_Acc) is
    begin
-      if Info.C /= null then
-         Free_Complex_Type_Info (Info.C);
-      end if;
       Unchecked_Deallocation (Info);
    end Free_Type_Info;
 
@@ -1433,7 +1448,26 @@ package body Trans is
 
    function Is_Complex_Type (Tinfo : Type_Info_Acc) return Boolean is
    begin
-      return Tinfo.C /= null;
+      case Tinfo.Type_Mode is
+         when Type_Mode_Non_Composite =>
+            return False;
+         when Type_Mode_Static_Record
+           | Type_Mode_Static_Array =>
+            return False;
+         when Type_Mode_Complex_Record
+           | Type_Mode_Complex_Array =>
+            return True;
+         when Type_Mode_Unbounded_Record
+           | Type_Mode_Unbounded_Array =>
+            return False;
+         when Type_Mode_Protected =>
+            --  Considered as a complex type, as its size is known only in
+            --  the body.
+            --  Shouldn't be used.
+            raise Internal_Error;
+         when Type_Mode_Unknown =>
+            return False;
+      end case;
    end Is_Complex_Type;
 
    function Is_Static_Type (Tinfo : Type_Info_Acc) return Boolean is
@@ -1480,13 +1514,6 @@ package body Trans is
                Clear_Info (I);
             else
                Info.Mark := True;
-               if Info.Kind = Kind_Type and then Info.C /= null then
-                  if Info.C (Mode_Value).Mark then
-                     Info.C := null;
-                  else
-                     Info.C (Mode_Value).Mark := True;
-                  end if;
-               end if;
             end if;
          end if;
       end loop;

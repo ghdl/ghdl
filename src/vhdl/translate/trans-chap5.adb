@@ -424,7 +424,7 @@ package body Trans.Chap5 is
                if Get_Info (Formal_Type).Type_Mode in Type_Mode_Composite then
                   New_Assign_Stmt
                     (M2Lp (Chap3.Get_Composite_Base (Formal_Val)),
-                     M2Addr (Chap3.Get_Composite_Base (Actual_Val)));
+                     M2Addr (Chap3.Get_Composite_Unbounded_Base (Actual_Val)));
                else
                   New_Assign_Stmt (M2Lp (Formal_Val), M2Addr (Actual_Val));
                end if;
@@ -537,11 +537,11 @@ package body Trans.Chap5 is
       begin
          if Is_Fully_Constrained_Type (Actual_Type) then
             Chap3.Create_Array_Subtype (Actual_Type);
-            Bounds := Chap3.Get_Array_Type_Bounds (Actual_Type);
+            Bounds := Chap3.Get_Composite_Type_Bounds (Actual_Type);
             Tinfo := Get_Info (Actual_Type);
             if Save
               and then
-              Get_Alloc_Kind_For_Var (Tinfo.S.Composite_Bounds) = Alloc_Stack
+              Get_Alloc_Kind_For_Var (Tinfo.S.Composite_Layout) = Alloc_Stack
             then
                --  We need a copy.
                Bounds_Copy := Alloc_Bounds (Actual_Type, Alloc_System);
@@ -575,7 +575,7 @@ package body Trans.Chap5 is
          In_Conv_Type := Get_Type (In_Conv);
          if Is_Fully_Constrained_Type (In_Conv_Type) then
             --  The 'in' conversion gives the type.
-            return Chap3.Get_Array_Type_Bounds (In_Conv_Type);
+            return Chap3.Get_Composite_Type_Bounds (In_Conv_Type);
          elsif Get_Kind (In_Conv) = Iir_Kind_Type_Conversion then
             --  Convert bounds of the actual.
             Can_Convert := True;
@@ -590,7 +590,7 @@ package body Trans.Chap5 is
             Param_Type := Get_Type (Get_Interface_Declaration_Chain
                                       (Get_Implementation (Out_Conv)));
             if Is_Fully_Constrained_Type (Param_Type) then
-               return Chap3.Get_Array_Type_Bounds (Param_Type);
+               return Chap3.Get_Composite_Type_Bounds (Param_Type);
             else
                pragma Assert (Can_Convert);
                null;
@@ -629,35 +629,33 @@ package body Trans.Chap5 is
                  Get_Type (Get_Default_Value (Port));
             begin
                Chap3.Create_Array_Subtype (Actual_Type);
-               Bounds := Chap3.Get_Array_Type_Bounds (Actual_Type);
+               Bounds := Chap3.Get_Composite_Type_Bounds (Actual_Type);
             end;
          when Iir_Kind_Association_Element_By_Individual =>
             declare
                Actual_Type : constant Iir := Get_Actual_Type (Assoc);
             begin
                Chap3.Create_Array_Subtype (Actual_Type);
-               Bounds := Chap3.Get_Array_Type_Bounds (Actual_Type);
+               Bounds := Chap3.Get_Composite_Type_Bounds (Actual_Type);
             end;
       end case;
 
       Stabilize (Bounds);
       for K in Object_Kind_Type loop
          Act_Node := Chap6.Translate_Name (Port, K);
-         New_Assign_Stmt
-           (--  Note: this works only because it is not stabilized, and
-            --  therefore the bounds field is returned and not a pointer to
-            --  the bounds.
-            M2Lp (Chap3.Get_Composite_Bounds (Act_Node)),
-            M2Addr (Bounds));
+         --  Note: this works only because it is not stabilized, and
+         --  therefore the bounds field is returned and not a pointer to
+         --  the bounds.
+         New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Bounds (Act_Node)),
+                          M2Addr (Bounds));
       end loop;
 
       --  Set bounds of init value (if present)
       Info := Get_Info (Port);
       if Info.Signal_Val /= Null_Var then
-         New_Assign_Stmt
-           (M2Lp (Chap3.Get_Composite_Bounds
-                    (Chap6.Get_Port_Init_Value (Port))),
-            M2Addr (Bounds));
+         New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Bounds
+                                  (Chap6.Get_Port_Init_Value (Port))),
+                          M2Addr (Bounds));
       end if;
       Close_Temp;
    end Elab_Unconstrained_Port_Bounds;
@@ -824,7 +822,7 @@ package body Trans.Chap5 is
                        (Formal_Type, Alloc_System, Formal_Node);
                   else
                      Chap3.Create_Array_Subtype (Obj_Type);
-                     Bounds := Chap3.Get_Array_Type_Bounds (Obj_Type);
+                     Bounds := Chap3.Get_Composite_Type_Bounds (Obj_Type);
                      Chap3.Translate_Object_Allocation
                        (Formal_Node, Alloc_System, Formal_Type, Bounds);
                   end if;

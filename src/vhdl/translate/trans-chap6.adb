@@ -412,7 +412,7 @@ package body Trans.Chap6 is
                   --  Manually extract range since there is no infos for
                   --   index subtype.
                   Range_Ptr := Chap3.Bounds_To_Range
-                    (Chap3.Get_Array_Type_Bounds (Prefix_Type),
+                    (Chap3.Get_Composite_Type_Bounds (Prefix_Type),
                      Prefix_Type, Dim);
                   Stabilize (Range_Ptr);
                   R := Translate_Index_To_Offset
@@ -596,7 +596,7 @@ package body Trans.Chap6 is
 
       --  Save slice bounds.
       Slice_Range := Stabilize
-        (Chap3.Bounds_To_Range (Chap3.Get_Array_Type_Bounds (Slice_Type),
+        (Chap3.Bounds_To_Range (Chap3.Get_Composite_Type_Bounds (Slice_Type),
          Slice_Type, 1));
 
       --  TRUE if the direction of the slice is known.
@@ -834,7 +834,10 @@ package body Trans.Chap6 is
       Kind          : constant Object_Kind_Type := Get_Object_Kind (Prefix);
       El_Info       : Field_Info_Acc;
       Base_Tinfo    : Type_Info_Acc;
-      Stable_Prefix, Base, Res, Fat_Res : Mnode;
+      Stable_Prefix : Mnode;
+      Base, Res, Fat_Res : Mnode;
+      Rec_Layout : Mnode;
+      El_Descr : Mnode;
       Box_Field : O_Fnode;
       B : O_Lnode;
    begin
@@ -856,26 +859,26 @@ package body Trans.Chap6 is
          Stable_Prefix := Stabilize (Prefix);
 
          --  Result is a fat pointer, create it and set bounds.
+         --  FIXME: layout for record, bounds for array!
          Fat_Res := Create_Temp (El_Tinfo, Kind);
-         New_Assign_Stmt
-           (M2Lp (Chap3.Get_Composite_Bounds (Fat_Res)),
-            New_Address
-              (New_Selected_Element
-                 (M2Lv (Chap3.Get_Composite_Bounds (Stable_Prefix)),
-                  El_Info.Field_Bound),
-               El_Tinfo.B.Bounds_Ptr_Type));
+         El_Descr := Chap3.Record_Layout_To_Element_Layout
+           (Chap3.Get_Composite_Bounds (Stable_Prefix), El);
+         case El_Tinfo.Type_Mode is
+            when Type_Mode_Unbounded_Record =>
+               null;
+            when Type_Mode_Unbounded_Array =>
+               El_Descr := Chap3.Layout_To_Bounds (El_Descr);
+            when others =>
+               raise Internal_Error;
+         end case;
+         New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Bounds (Fat_Res)),
+                          M2Addr (El_Descr));
       else
          Stable_Prefix := Prefix;
       end if;
 
-      if Get_Type_Info (Stable_Prefix).Type_Mode = Type_Mode_Unbounded_Record
-      then
-         --  Get the base.
-         Base := Chap3.Get_Composite_Base (Stable_Prefix);
-      else
-         --  Might be a boxed subtype; keep the box to optimize the access.
-         Base := Stable_Prefix;
-      end if;
+      --  Get the base.
+      Base := Chap3.Get_Composite_Base (Stable_Prefix);
       Base_Tinfo := Get_Type_Info (Base);
       Box_Field := Base_Tinfo.S.Box_Field (Kind);
 
@@ -895,6 +898,7 @@ package body Trans.Chap6 is
          end if;
 
          --  The element is complex: it's an offset.
+         Rec_Layout := Chap3.Get_Composite_Bounds (Stable_Prefix);
          Res := E2M
            (New_Unchecked_Address
               (New_Slice
@@ -902,8 +906,8 @@ package body Trans.Chap6 is
                         (New_Unchecked_Address (M2Lv (Base), Char_Ptr_Type)),
                     Chararray_Type,
                     New_Value
-                      (New_Selected_Element (B,
-                                             El_Info.Field_Node (Kind)))),
+                      (Chap3.Record_Layout_To_Element_Offset
+                         (Rec_Layout, El, Kind))),
                El_Tinfo.B.Base_Ptr_Type (Kind)),
             El_Tinfo, Kind);
       else

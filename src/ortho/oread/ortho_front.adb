@@ -1842,9 +1842,15 @@ package body Ortho_Front is
       end case;
    end Parse_Expression;
 
+   procedure Check_Selected_Prefix (N_Type : Node_Acc) is
+   begin
+      if N_Type.Kind /= Type_Record and N_Type.Kind /= Type_Union then
+         Parse_Error ("type of prefix is neither a record nor an union");
+      end if;
+   end Check_Selected_Prefix;
+
    --  Expect and leave: next token
-   procedure Parse_Lvalue (N : in out O_Lnode; N_Type : in out Node_Acc)
-   is
+   procedure Parse_Lvalue (N : in out O_Lnode; N_Type : in out Node_Acc) is
    begin
       loop
          case Tok is
@@ -1858,11 +1864,7 @@ package body Ortho_Front is
                   N_Type := N_Type.Access_Dtype;
                   Next_Token;
                elsif Tok = Tok_Ident then
-                  if N_Type.Kind /= Type_Record and N_Type.Kind /= Type_Union
-                  then
-                     Parse_Error
-                       ("type of prefix is neither a record nor an union");
-                  end if;
+                  Check_Selected_Prefix (N_Type);
                   declare
                      Field : Node_Acc;
                   begin
@@ -2501,12 +2503,50 @@ package body Ortho_Front is
       return Res;
    end Parse_Address;
 
+   procedure Parse_Global_Name (Prefix : Node_Acc;
+                                Name : out O_Gnode; N_Type : out Node_Acc)
+   is
+   begin
+      case Prefix.Kind is
+         when Node_Object =>
+            Name := New_Global (Prefix.Obj_Node);
+            N_Type := Prefix.Decl_Dtype;
+         when others =>
+            Parse_Error ("invalid name");
+      end case;
+
+      loop
+         case Tok is
+            when Tok_Dot =>
+               Next_Token;
+               if Tok = Tok_Ident then
+                  Check_Selected_Prefix (N_Type);
+                  declare
+                     Field : Node_Acc;
+                  begin
+                     Field := Find_Field_By_Name (N_Type);
+                     Name := New_Global_Selected_Element (Name,
+                                                          Field.Field_Fnode);
+                     N_Type := Field.Field_Type;
+                     Next_Token;
+                  end;
+               else
+                  Parse_Error ("'.' must be followed by a field name");
+               end if;
+            when others =>
+               return;
+         end case;
+      end loop;
+   end Parse_Global_Name;
+
    function Parse_Constant_Address (Prefix : Node_Acc) return O_Cnode
    is
       Pfx : Node_Acc;
       Res : O_Cnode;
       Attr : Syment_Acc;
       T : O_Tnode;
+      N : O_Gnode;
+      N_Type : Node_Acc;
    begin
       Attr := Token_Sym;
       Next_Expect (Tok_Left_Paren);
@@ -2523,10 +2563,11 @@ package body Ortho_Front is
          Next_Token;
       else
          Next_Token;
+         Parse_Global_Name (Pfx, N, N_Type);
          if Attr = Id_Address then
-            Res := New_Global_Address (Pfx.Obj_Node, T);
+            Res := New_Global_Address (N, T);
          elsif Attr = Id_Unchecked_Address then
-            Res := New_Global_Unchecked_Address (Pfx.Obj_Node, T);
+            Res := New_Global_Unchecked_Address (N, T);
          else
             Parse_Error ("address attribute expected");
          end if;

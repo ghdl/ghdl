@@ -1276,14 +1276,16 @@ package body Grt.Waves is
    end Write_Range;
 
    procedure Write_Array_Bounds (Arr : Ghdl_Rtin_Type_Array_Acc;
-                                 Bounds : in out Address)
+                                 Bounds : Address)
    is
       Rng : Ghdl_Range_Ptr;
       Index_Type : Ghdl_Rti_Access;
+      Bounds1 : Address;
    begin
+      Bounds1 := Bounds;
       for I in 0 .. Arr.Nbr_Dim - 1 loop
          Index_Type := Get_Base_Type (Arr.Indexes (I));
-         Extract_Range (Bounds, Index_Type, Rng);
+         Extract_Range (Bounds1, Index_Type, Rng);
          Write_Range (Index_Type, Rng);
       end loop;
    end Write_Array_Bounds;
@@ -1393,10 +1395,11 @@ package body Grt.Waves is
                      declare
                         Bt : constant Ghdl_Rtin_Type_Array_Acc :=
                           To_Ghdl_Rtin_Type_Array_Acc (Arr.Basetype);
-                        Bounds : Address;
+                        Layout : Address;
                      begin
-                        Bounds := Loc_To_Addr (Rti.Depth, Arr.Bounds, Ctxt);
-                        Write_Array_Bounds (Bt, Bounds);
+                        Layout := Loc_To_Addr (Rti.Depth, Arr.Layout, Ctxt);
+                        Write_Array_Bounds
+                          (Bt, Array_Layout_To_Bounds (Layout));
                      end;
                   end;
                when Ghdl_Rtik_Type_Array =>
@@ -1432,14 +1435,14 @@ package body Grt.Waves is
                        To_Ghdl_Rtin_Subtype_Composite_Acc (Rti);
                      Base : constant Ghdl_Rtin_Type_Record_Acc :=
                        To_Ghdl_Rtin_Type_Record_Acc (Rec.Basetype);
-                     Bounds : Address;
+                     Layout : Address;
                   begin
                      Write_String_Id (Rec.Name);
                      Write_Type_Id (Rec.Basetype, Ctxt);
                      if Base.Common.Kind = Ghdl_Rtik_Type_Unbounded_Record then
-                        Bounds := Loc_To_Addr
-                          (Rec.Common.Depth, Rec.Bounds, Ctxt);
-                        Write_Record_Bounds (Base, Bounds);
+                        Layout := Loc_To_Addr
+                          (Rec.Common.Depth, Rec.Layout, Ctxt);
+                        Write_Record_Bounds (Base, Layout);
                      end if;
                   end;
                when Ghdl_Rtik_Subtype_Scalar =>

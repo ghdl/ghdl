@@ -24,6 +24,8 @@ package Ortho_Code.Types is
                     --  Optionnal.
                     OT_Complete);
 
+   subtype OT_Kinds_Record_Union is OT_Kind range OT_Record .. OT_Union;
+
    --  Kind of ATYPE.
    function Get_Type_Kind (Atype : O_Tnode) return OT_Kind;
 
@@ -237,4 +239,3 @@ private
    end record;
 
 end Ortho_Code.Types;
-

@@ -19,24 +19,27 @@ with Ortho_Code.Abi;
 
 package Ortho_Code.Decls is
    --  Kind of a declaration.
-   type OD_Kind is (OD_Type,
-                    OD_Const,
+   type OD_Kind is
+     (
+      OD_Type,
+      OD_Const,
 
-                    --  Value of constant, initial value of variable.
-                    OD_Init_Val,
+      --  Value of constant, initial value of variable.
+      OD_Init_Val,
 
-                    --  Global and local variables.
-                    OD_Var, OD_Local,
+      --  Global and local variables.
+      OD_Var, OD_Local,
 
-                    --  Subprograms.
-                    OD_Function, OD_Procedure,
+      --  Subprograms.
+      OD_Function, OD_Procedure,
 
-                    --  Additional node for a subprogram.  Internal use only.
-                    OD_Subprg_Ext,
+      --  Additional node for a subprogram.  Internal use only.
+      OD_Subprg_Ext,
 
-                    OD_Interface,
-                    OD_Body,
-                    OD_Block);
+      OD_Interface,
+      OD_Body,
+      OD_Block
+     );
 
    --  Return the kind of declaration DECL.
    function Get_Decl_Kind (Decl : O_Dnode) return OD_Kind;
@@ -126,11 +129,10 @@ package Ortho_Code.Decls is
    --  This simply gives a name to a constant value or aggregate.
    --  A constant cannot be modified and its storage cannot be local.
    --  ATYPE must be constrained.
-   procedure New_Const_Decl
-     (Res : out O_Dnode;
-      Ident : O_Ident;
-      Storage : O_Storage;
-      Atype : O_Tnode);
+   procedure New_Const_Decl (Res : out O_Dnode;
+                             Ident : O_Ident;
+                             Storage : O_Storage;
+                             Atype : O_Tnode);
 
    --  Set the value to DECL.
    procedure New_Init_Value (Decl : O_Dnode; Val : O_Cnode);
@@ -138,11 +140,10 @@ package Ortho_Code.Decls is
    --  Create a variable declaration.
    --  A variable can be local only inside a function.
    --  ATYPE must be constrained.
-   procedure New_Var_Decl
-     (Res : out O_Dnode;
-      Ident : O_Ident;
-      Storage : O_Storage;
-      Atype : O_Tnode);
+   procedure New_Var_Decl (Res : out O_Dnode;
+                           Ident : O_Ident;
+                           Storage : O_Storage;
+                           Atype : O_Tnode);
 
    type O_Inter_List is limited private;
 
@@ -151,23 +152,20 @@ package Ortho_Code.Decls is
    --   be declared inside a subprograms.  It is not allowed to declare
    --   o_storage_external subprograms inside a subprograms.
    --  Return type and interfaces cannot be a composite type.
-   procedure Start_Function_Decl
-     (Interfaces : out O_Inter_List;
-      Ident : O_Ident;
-      Storage : O_Storage;
-      Rtype : O_Tnode);
+   procedure Start_Function_Decl (Interfaces : out O_Inter_List;
+                                  Ident : O_Ident;
+                                  Storage : O_Storage;
+                                  Rtype : O_Tnode);
    --  For a subprogram without return value.
-   procedure Start_Procedure_Decl
-     (Interfaces : out O_Inter_List;
-      Ident : O_Ident;
-      Storage : O_Storage);
+   procedure Start_Procedure_Decl (Interfaces : out O_Inter_List;
+                                   Ident : O_Ident;
+                                   Storage : O_Storage);
 
    --  Add an interface declaration to INTERFACES.
-   procedure New_Interface_Decl
-     (Interfaces : in out O_Inter_List;
-      Res : out O_Dnode;
-      Ident : O_Ident;
-      Atype : O_Tnode);
+   procedure New_Interface_Decl (Interfaces : in out O_Inter_List;
+                                 Res : out O_Dnode;
+                                 Ident : O_Ident;
+                                 Atype : O_Tnode);
    --  Finish the function declaration, get the node and a statement list.
    procedure Finish_Subprogram_Decl
      (Interfaces : in out O_Inter_List; Res : out O_Dnode);

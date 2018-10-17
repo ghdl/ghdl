@@ -179,9 +179,10 @@ private
             Aggr_Value : O_Cnode;
             Aggr_Next : O_Cnode;
          when OC_Address
-           | OC_Unchecked_Address
-           | OC_Subprogram_Address =>
-            Decl : O_Dnode;
+           | OC_Unchecked_Address =>
+            Addr_Global : O_Gnode;
+         when OC_Subprogram_Address =>
+            Addr_Decl : O_Dnode;
       end case;
    end record;
 
@@ -280,12 +281,6 @@ private
       OL_Slice,
       OL_Selected_Element,
       OL_Access_Element
-
-      --  Variable, constant, parameter reference.
-      --  This allows to read/write a declaration.
-      --OL_Var_Ref,
-      --OL_Const_Ref,
-      --OL_Param_Ref
       );
 
    type O_Lnode_Type (Kind : OL_Kind);
@@ -311,10 +306,30 @@ private
             Rec_El : O_Fnode;
          when OL_Access_Element =>
             Acc_Base : O_Enode;
---          when OL_Var_Ref
---            | OL_Const_Ref
---            | OL_Param_Ref =>
---             Decl : O_Dnode;
+      end case;
+   end record;
+
+   type OG_Kind is
+     (
+      OG_Decl,
+      OG_Selected_Element
+     );
+
+   type O_Gnode_Type (Kind : OG_Kind);
+   type O_Gnode is access O_Gnode_Type;
+   O_Gnode_Null : constant O_Gnode := null;
+
+   type O_Gnode_Type (Kind : OG_Kind) is record
+      --  Type of the result.
+      Rtype : O_Tnode;
+      --  True if referenced.
+      Ref : Boolean;
+      case Kind is
+         when OG_Decl =>
+            Decl : O_Dnode;
+         when OG_Selected_Element =>
+            Rec_Base : O_Gnode;
+            Rec_El : O_Fnode;
       end case;
    end record;
 

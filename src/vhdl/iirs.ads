@@ -1798,7 +1798,7 @@ package Iirs is
    --
    --   Get/Set_Type (Field1)
    --
-   --  Corresponding element_declaration.  FIXME: remove as supersided by
+   --  Corresponding element_declaration.  FIXME: remove as superseeded by
    --  element_position.
    --   Get/Set_Element_Declaration (Field5)
    --

@@ -85,11 +85,9 @@ package body Trans.Chap12 is
         (Assoc, New_Lit (New_Unsigned_Literal (Ghdl_Index_Type,
                                                Unsigned_64 (Elab_Nbr_Pkgs))));
       New_Association
-        (Assoc, New_Lit (New_Global_Address
-                           (Pkgs_Arr, Rtis.Ghdl_Rti_Arr_Acc)));
+        (Assoc, New_Address (New_Obj (Pkgs_Arr), Rtis.Ghdl_Rti_Arr_Acc));
       New_Association
-        (Assoc,
-         New_Lit (Rtis.New_Rti_Address (Get_Info (Arch).Block_Rti_Const)));
+        (Assoc, Rtis.New_Rti_Address (Get_Info (Arch).Block_Rti_Const));
       New_Association
         (Assoc, New_Convert_Ov (Arch_Instance, Ghdl_Ptr_Type));
       New_Procedure_Call (Assoc);
@@ -98,8 +96,7 @@ package body Trans.Chap12 is
       Start_Association (Assoc, Ghdl_Rti_Add_Package);
       New_Association
         (Assoc,
-         New_Lit (Rtis.New_Rti_Address
-                    (Get_Info (Standard_Package).Package_Rti_Const)));
+         Rtis.New_Rti_Address (Get_Info (Standard_Package).Package_Rti_Const));
       New_Procedure_Call (Assoc);
    end Call_Elab_Decls;
 

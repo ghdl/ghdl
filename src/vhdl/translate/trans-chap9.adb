@@ -925,7 +925,7 @@ package body Trans.Chap9 is
               (New_Selected_Element (Get_Instance_Ref (Ref_Scope),
                Comp_Field),
                Rtis.Ghdl_Component_Link_Stmt),
-            New_Lit (Rtis.Get_Context_Rti (Stmt)));
+            Rtis.Get_Context_Rti (Stmt));
       end Set_Component_Link;
 
       Info : constant Block_Info_Acc := Get_Info (Stmt);
@@ -2523,9 +2523,8 @@ package body Trans.Chap9 is
       New_Association
         (Assoc, New_Convert_Ov (New_Value (M2Lv (Targ)), Ghdl_Signal_Ptr));
       New_Association
-        (Assoc,
-         New_Lit (New_Global_Unchecked_Address
-                    (Get_Info (Sig).Signal_Rti, Rtis.Ghdl_Rti_Access)));
+        (Assoc, New_Unchecked_Address (New_Obj (Get_Info (Sig).Signal_Rti),
+                                       Rtis.Ghdl_Rti_Access));
       New_Procedure_Call (Assoc);
    end Merge_Signals_Rti_Non_Composite;
 

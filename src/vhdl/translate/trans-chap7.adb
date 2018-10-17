@@ -65,7 +65,7 @@ package body Trans.Chap7 is
       Val       : Var_Type;
       Res       : O_Cnode;
       List      : O_Record_Aggr_List;
-      Bound     : Var_Type;
+      Layout    : Var_Type;
    begin
       if Res_Type = Expr_Type then
          return Expr;
@@ -96,22 +96,24 @@ package body Trans.Chap7 is
       Val := Create_Global_Const
         (Create_Uniq_Identifier, Expr_Info.Ortho_Type (Mode_Value),
          O_Storage_Private, Expr);
-      Bound := Expr_Info.S.Composite_Bounds;
-      if Bound = Null_Var then
-         Bound := Create_Global_Const
-           (Create_Uniq_Identifier, Expr_Info.B.Bounds_Type,
+      Layout := Expr_Info.S.Composite_Layout;
+      if Layout = Null_Var then
+         Layout := Create_Global_Const
+           (Create_Uniq_Identifier, Expr_Info.B.Layout_Type,
             O_Storage_Private,
-            Chap3.Create_Static_Composite_Subtype_Bounds (Expr_Type));
-         Expr_Info.S.Composite_Bounds := Bound;
+            Chap3.Create_Static_Composite_Subtype_Layout (Expr_Type));
+         Expr_Info.S.Composite_Layout := Layout;
       end if;
 
       Start_Record_Aggr (List, Res_Info.Ortho_Type (Mode_Value));
       New_Record_Aggr_El
-        (List, New_Global_Address (Get_Var_Label (Val),
-         Res_Info.B.Base_Ptr_Type (Mode_Value)));
+        (List, New_Global_Address (New_Global (Get_Var_Label (Val)),
+                                   Res_Info.B.Base_Ptr_Type (Mode_Value)));
       New_Record_Aggr_El
-        (List, New_Global_Address (Get_Var_Label (Bound),
-         Expr_Info.B.Bounds_Ptr_Type));
+        (List, New_Global_Address (New_Global_Selected_Element
+                                     (New_Global (Get_Var_Label (Layout)),
+                                      Expr_Info.B.Layout_Bounds),
+                                   Expr_Info.B.Bounds_Ptr_Type));
       Finish_Record_Aggr (List, Res);
 
       return Res;
@@ -375,12 +377,12 @@ package body Trans.Chap7 is
          Start_Record_Aggr (Res_Aggr, Type_Info.Ortho_Type (Mode_Value));
          New_Record_Aggr_El
            (Res_Aggr,
-            New_Global_Address (Get_Var_Label (Val),
-              Type_Info.B.Base_Ptr_Type (Mode_Value)));
+            New_Global_Address (New_Global (Get_Var_Label (Val)),
+                                Type_Info.B.Base_Ptr_Type (Mode_Value)));
          New_Record_Aggr_El
            (Res_Aggr,
-            New_Global_Address (Get_Var_Label (Bound),
-              Type_Info.B.Bounds_Ptr_Type));
+            New_Global_Address (New_Global (Get_Var_Label (Bound)),
+                                Type_Info.B.Bounds_Ptr_Type));
          Finish_Record_Aggr (Res_Aggr, Res);
 
          Val := Create_Global_Const
@@ -818,7 +820,7 @@ package body Trans.Chap7 is
                   Atype_El_Type := Get_Type (Atype_El);
                   if Expr_El_Type /= Atype_El_Type then
                      Convert_To_Constrained_Check
-                       (Chap3.Bounds_To_Element_Bounds
+                       (Chap3.Record_Bounds_To_Element_Bounds
                           (Stable_Bounds, Expr_El),
                         Expr_El_Type, Atype_El_Type, Failure_Label);
                   end if;
@@ -2626,8 +2628,7 @@ package body Trans.Chap7 is
                return Translate_To_String
                  (Subprg, Res_Type, Expr,
                   New_Convert_Ov (Left_Tree, Conv),
-                  New_Lit (Rtis.New_Rti_Address
-                    (Get_Info (Left_Type).Type_Rti)));
+                  Rtis.New_Rti_Address (Get_Info (Left_Type).Type_Rti));
             end;
          when Iir_Predefined_Floating_To_String =>
             return Translate_To_String
@@ -2661,15 +2662,13 @@ package body Trans.Chap7 is
                return Translate_To_String
                  (Subprg, Res_Type, Expr,
                   New_Convert_Ov (Left_Tree, Conv),
-                  New_Lit (Rtis.New_Rti_Address
-                    (Get_Info (Left_Type).Type_Rti)));
+                  Rtis.New_Rti_Address (Get_Info (Left_Type).Type_Rti));
             end;
          when Iir_Predefined_Time_To_String_Unit =>
             return Translate_To_String
               (Ghdl_Time_To_String_Unit, Res_Type, Expr,
                Left_Tree, Right_Tree,
-               New_Lit (Rtis.New_Rti_Address
-                 (Get_Info (Left_Type).Type_Rti)));
+               Rtis.New_Rti_Address (Get_Info (Left_Type).Type_Rti));
          when Iir_Predefined_Bit_Vector_To_Ostring =>
             return Translate_Bv_To_String
               (Ghdl_BV_To_Ostring, Left_Tree, Left_Type, Res_Type, Expr);
@@ -2699,8 +2698,7 @@ package body Trans.Chap7 is
                   New_Convert_Ov (M2E (Chap3.Get_Composite_Base (Arg)),
                     Ghdl_Ptr_Type),
                   Chap3.Get_Array_Length (Arg, Left_Type),
-                  New_Lit (Rtis.New_Rti_Address
-                    (Get_Info (El_Type).Type_Rti)));
+                  Rtis.New_Rti_Address (Get_Info (El_Type).Type_Rti));
             end;
 
          when others =>
@@ -3551,7 +3549,7 @@ package body Trans.Chap7 is
                Val_Size := Create_Temp_Init
                  (Ghdl_Index_Type,
                   Chap3.Get_Subtype_Size
-                    (D_Type, Chap3.Get_Array_Type_Bounds (Sub_Type),
+                    (D_Type, Chap3.Get_Composite_Type_Bounds (Sub_Type),
                      Mode_Value));
 
                --  Size of the bounds.
@@ -3569,14 +3567,12 @@ package body Trans.Chap7 is
                              A_Info.Ortho_Type (Mode_Value)));
 
                --  Copy bounds.
-               Gen_Memcpy
-                 (New_Obj_Value (Ptr),
-                  M2Addr (Chap3.Get_Array_Type_Bounds (Sub_Type)),
-                  New_Lit (Bounds_Size));
+               Gen_Memcpy (New_Obj_Value (Ptr),
+                           M2Addr (Chap3.Get_Composite_Type_Bounds (Sub_Type)),
+                           New_Lit (Bounds_Size));
 
                --  Create a fat pointer to initialize the object.
                Res := Bounds_Acc_To_Fat_Pointer (Ptr, A_Type);
-               Chap3.Maybe_Call_Type_Builder (Res, D_Type);
                Chap4.Init_Object (Res, D_Type);
 
                return New_Obj_Value (Ptr);

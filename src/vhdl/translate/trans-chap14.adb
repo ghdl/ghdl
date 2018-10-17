@@ -809,8 +809,7 @@ package body Trans.Chap14 is
             | Type_Mode_E32
             | Type_Mode_P32
             | Type_Mode_P64 =>
-            New_Association
-              (Assoc, New_Lit (Rtis.New_Rti_Address (Pinfo.Type_Rti)));
+            New_Association (Assoc, Rtis.New_Rti_Address (Pinfo.Type_Rti));
          when Type_Mode_I32
            | Type_Mode_I64
            | Type_Mode_F64 =>
@@ -857,8 +856,7 @@ package body Trans.Chap14 is
             | Type_Mode_E32
             | Type_Mode_P32
             | Type_Mode_P64 =>
-            New_Association
-              (Assoc, New_Lit (Rtis.New_Rti_Address (Pinfo.Type_Rti)));
+            New_Association (Assoc, Rtis.New_Rti_Address (Pinfo.Type_Rti));
          when Type_Mode_I32
            | Type_Mode_I64
            | Type_Mode_F64 =>

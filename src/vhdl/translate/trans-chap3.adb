@@ -32,8 +32,6 @@ with Translation;
 package body Trans.Chap3 is
    use Trans.Helpers;
 
-   function Unbox_Record (Arr : Mnode) return Mnode;
-
    function Create_Static_Type_Definition_Type_Range (Def : Iir)
                                                       return O_Cnode;
    procedure Elab_Scalar_Type_Range (Def : Iir; Target : O_Lnode);
@@ -43,11 +41,114 @@ package body Trans.Chap3 is
                                             Base         : Iir;
                                             Subtype_Info : Type_Info_Acc);
 
+   function Get_Composite_Type_Layout (Info : Type_Info_Acc) return Mnode
+   is
+   begin
+      case Info.Type_Mode is
+         when Type_Mode_Unbounded =>
+            raise Internal_Error;
+         when Type_Mode_Bounded_Arrays
+           | Type_Mode_Bounded_Records =>
+            return Varv2M (Info.S.Composite_Layout,
+                           Info, Mode_Value,
+                           Info.B.Layout_Type,
+                           Info.B.Layout_Ptr_Type);
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Get_Composite_Type_Layout;
+
+   function Layout_To_Bounds (B : Mnode) return Mnode
+   is
+      Info : constant Type_Info_Acc := Get_Type_Info (B);
+   begin
+      case Info.Type_Mode is
+         when Type_Mode_Arrays =>
+            return Lv2M (New_Selected_Element (M2Lv (B), Info.B.Layout_Bounds),
+                         Info, Mode_Value,
+                         Info.B.Bounds_Type, Info.B.Bounds_Ptr_Type);
+         when Type_Mode_Records =>
+            return B;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Layout_To_Bounds;
+
+   function Layout_To_Sizes (B : Mnode) return O_Lnode
+   is
+      Info : constant Type_Info_Acc := Get_Type_Info (B);
+   begin
+      return New_Selected_Element (M2Lv (B), Info.B.Layout_Size);
+   end Layout_To_Sizes;
+
+   function Layout_To_Sizes (B : Mnode) return Mnode is
+   begin
+      return Lv2M (Layout_To_Sizes (B), Get_Type_Info (B), Mode_Value,
+                   Ghdl_Sizes_Type, Ghdl_Sizes_Ptr);
+   end Layout_To_Sizes;
+
+   function Sizes_To_Size (Sizes : O_Lnode; Kind : Object_Kind_Type)
+                          return O_Lnode
+   is
+      Field : O_Fnode;
+   begin
+      case Kind is
+         when Mode_Value =>
+            Field := Ghdl_Sizes_Val;
+         when Mode_Signal =>
+            Field := Ghdl_Sizes_Sig;
+      end case;
+      return New_Selected_Element (Sizes, Field);
+   end Sizes_To_Size;
+
+   function Layout_To_Size (Layout : Mnode; Kind : Object_Kind_Type)
+                           return O_Lnode is
+   begin
+      return Sizes_To_Size (M2Lv (Layout_To_Sizes (Layout)), Kind);
+   end Layout_To_Size;
+
+   function Record_Layout_To_Element_Layout (B : Mnode; El : Iir) return Mnode
+   is
+      El_Type : constant Iir := Get_Type (El);
+      El_Info : constant Field_Info_Acc := Get_Info (El);
+      El_Tinfo : constant Type_Info_Acc := Get_Info (El_Type);
+   begin
+      return Lv2M (New_Selected_Element (M2Lv (B),
+                                         El_Info.Field_Bound),
+                   El_Tinfo, Mode_Value,
+                   El_Tinfo.B.Layout_Type, El_Tinfo.B.Layout_Ptr_Type);
+   end Record_Layout_To_Element_Layout;
+
+   function Record_Layout_To_Element_Offset
+     (B : Mnode; El : Iir; Kind : Object_Kind_Type) return O_Lnode
+   is
+      El_Info : constant Field_Info_Acc := Get_Info (El);
+   begin
+      return New_Selected_Element (M2Lv (B), El_Info.Field_Node (Kind));
+   end Record_Layout_To_Element_Offset;
+
+   function Array_Bounds_To_Element_Layout (B : Mnode; Atype : Iir)
+                                           return Mnode
+   is
+      Arr_Tinfo : constant Type_Info_Acc := Get_Info (Atype);
+      El_Type : constant Iir := Get_Element_Subtype (Atype);
+      El_Tinfo : constant Type_Info_Acc := Get_Info (El_Type);
+   begin
+      return Lv2M (New_Selected_Element (M2Lv (B), Arr_Tinfo.B.Bounds_El),
+                   El_Tinfo, Mode_Value,
+                   El_Tinfo.B.Layout_Type, El_Tinfo.B.Layout_Ptr_Type);
+   end Array_Bounds_To_Element_Layout;
+
+   function Array_Layout_To_Element_Layout (B : Mnode; Arr_Type : Iir)
+                                           return Mnode is
+   begin
+      return Array_Bounds_To_Element_Layout (Layout_To_Bounds (B), Arr_Type);
+   end Array_Layout_To_Element_Layout;
+
    --  Finish a type definition: declare the type, define and declare a
    --   pointer to the type.
    procedure Finish_Type_Definition
-     (Info : Type_Info_Acc; Completion : Boolean := False)
-   is
+     (Info : Type_Info_Acc; Completion : Boolean := False) is
    begin
       --  Declare the type.
       if not Completion then
@@ -83,31 +184,6 @@ package body Trans.Chap3 is
       end if;
    end Finish_Type_Definition;
 
-   procedure Set_Complex_Type (Info : Type_Info_Acc; Need_Builder : Boolean) is
-   begin
-      pragma Assert (Info.C = null);
-      Info.C := new Complex_Type_Arr_Info;
-      --  No size variable for unconstrained array type.
-      for Mode in Object_Kind_Type loop
-         Info.C (Mode).Builder_Need_Func := Need_Builder;
-      end loop;
-   end Set_Complex_Type;
-
-   procedure Copy_Complex_Type (Dest : Type_Info_Acc; Src : Type_Info_Acc) is
-   begin
-      Dest.C := new Complex_Type_Arr_Info'(Src.C.all);
-   end Copy_Complex_Type;
-
-   procedure Create_Size_Var (Def : Iir; Info : Type_Info_Acc) is
-   begin
-      Info.C (Mode_Value).Size_Var := Create_Var
-        (Create_Var_Identifier ("SIZE"), Ghdl_Index_Type);
-      if Get_Has_Signal_Flag (Def) then
-         Info.C (Mode_Signal).Size_Var := Create_Var
-           (Create_Var_Identifier ("SIGSIZE"), Ghdl_Index_Type);
-      end if;
-   end Create_Size_Var;
-
    --  A builder set internal fields of object pointed by BASE_PTR, using
    --  memory from BASE_PTR and returns a pointer to the next memory byte
    --  to be used.
@@ -117,7 +193,6 @@ package body Trans.Chap3 is
    is
       Interface_List : O_Inter_List;
       Ident          : O_Ident;
-      Ptype          : O_Tnode;
    begin
       case Kind is
          when Mode_Value =>
@@ -126,63 +201,27 @@ package body Trans.Chap3 is
             Ident := Create_Identifier (Name, "_SIGBUILDER");
       end case;
       --  FIXME: return the same type as its first parameter ???
-      Start_Function_Decl
-        (Interface_List, Ident, Global_Storage, Ghdl_Index_Type);
+      Start_Procedure_Decl (Interface_List, Ident, Global_Storage);
       Subprgs.Add_Subprg_Instance_Interfaces
-        (Interface_List, Info.C (Kind).Builder_Instance);
-      case Info.Type_Mode is
-         when Type_Mode_Unbounded =>
-            Ptype := Info.B.Base_Ptr_Type (Kind);
-         when Type_Mode_Complex_Record =>
-            Ptype := Info.Ortho_Ptr_Type (Kind);
-         when others =>
-            raise Internal_Error;
-      end case;
+        (Interface_List, Info.B.Builder (Kind).Builder_Instance);
       New_Interface_Decl
-        (Interface_List, Info.C (Kind).Builder_Base_Param,
-         Get_Identifier ("base_ptr"), Ptype);
-      --  Add parameter for array bounds.
-      if Info.Type_Mode in Type_Mode_Unbounded then
-         New_Interface_Decl
-           (Interface_List, Info.C (Kind).Builder_Bound_Param,
-            Get_Identifier ("bound"), Info.B.Bounds_Ptr_Type);
-      end if;
-      Finish_Subprogram_Decl (Interface_List, Info.C (Kind).Builder_Func);
+        (Interface_List, Info.B.Builder (Kind).Builder_Layout_Param,
+         Get_Identifier ("layout_ptr"), Info.B.Layout_Ptr_Type);
+      Finish_Subprogram_Decl
+        (Interface_List, Info.B.Builder (Kind).Builder_Proc);
    end Create_Builder_Subprogram_Decl;
 
-   function Gen_Call_Type_Builder (Var : Mnode; Var_Type : Iir) return O_Enode
+   procedure Gen_Call_Type_Builder
+     (Layout : Mnode; Var_Type : Iir; Kind : Object_Kind_Type)
    is
-      Kind  : constant Object_Kind_Type := Get_Object_Kind (Var);
       Binfo : constant Type_Info_Acc := Get_Info (Get_Base_Type (Var_Type));
       Assoc : O_Assoc_List;
    begin
-      --  Build the field
-      Start_Association (Assoc, Binfo.C (Kind).Builder_Func);
+      Start_Association (Assoc, Binfo.B.Builder (Kind).Builder_Proc);
       Subprgs.Add_Subprg_Instance_Assoc
-        (Assoc, Binfo.C (Kind).Builder_Instance);
-
-      --  Note: a fat array can only be at the top of a complex type;
-      --  the bounds must have been set.
-      New_Association
-        (Assoc, M2Addr (Chap3.Get_Composite_Base (Var)));
-
-      if Binfo.Type_Mode in Type_Mode_Unbounded then
-         New_Association (Assoc, M2Addr (Chap3.Get_Composite_Bounds (Var)));
-      end if;
-
-      return New_Function_Call (Assoc);
-   end Gen_Call_Type_Builder;
-
-   procedure Gen_Call_Type_Builder (Var : Mnode; Var_Type : Iir)
-   is
-      Mem : O_Dnode;
-      V   : Mnode;
-   begin
-      Open_Temp;
-      V := Stabilize (Var);
-      Mem := Create_Temp (Ghdl_Index_Type);
-      New_Assign_Stmt (New_Obj (Mem), Gen_Call_Type_Builder (V, Var_Type));
-      Close_Temp;
+        (Assoc, Binfo.B.Builder (Kind).Builder_Instance);
+      New_Association (Assoc, M2Addr (Layout));
+      New_Procedure_Call (Assoc);
    end Gen_Call_Type_Builder;
 
    ------------------
@@ -246,8 +285,10 @@ package body Trans.Chap3 is
       Finish_Enum_Type (Constr, Info.Ortho_Type (Mode_Value));
       if Nbr <= 256 then
          Info.Type_Mode := Type_Mode_E8;
+         Info.B.Align := Align_8;
       else
          Info.Type_Mode := Type_Mode_E32;
+         Info.B.Align := Align_32;
       end if;
       --  Enumerations are always in their range.
       Info.S.Nocheck_Low := True;
@@ -275,6 +316,7 @@ package body Trans.Chap3 is
       Set_Ortho_Expr (True_Lit, True_Node);
       Info.S.Nocheck_Low := True;
       Info.S.Nocheck_Hi := True;
+      Info.B.Align := Align_8;
       Finish_Type_Definition (Info);
    end Translate_Bool_Type;
 
@@ -315,9 +357,11 @@ package body Trans.Chap3 is
          when Precision_32 =>
             Info.Ortho_Type (Mode_Value) := New_Signed_Type (32);
             Info.Type_Mode := Type_Mode_I32;
+            Info.B.Align := Align_32;
          when Precision_64 =>
             Info.Ortho_Type (Mode_Value) := New_Signed_Type (64);
             Info.Type_Mode := Type_Mode_I64;
+            Info.B.Align := Align_64;
       end case;
       --  Integers are always in their ranges.
       Info.S.Nocheck_Low := True;
@@ -336,6 +380,7 @@ package body Trans.Chap3 is
    begin
       --  FIXME: should check precision
       Info.Type_Mode := Type_Mode_F64;
+      Info.B.Align := Align_64;
       Info.Ortho_Type (Mode_Value) := New_Float_Type;
       --  Reals are always in their ranges.
       Info.S.Nocheck_Low := True;
@@ -356,9 +401,11 @@ package body Trans.Chap3 is
          when Precision_32 =>
             Info.Ortho_Type (Mode_Value) := New_Signed_Type (32);
             Info.Type_Mode := Type_Mode_P32;
+            Info.B.Align := Align_32;
          when Precision_64 =>
             Info.Ortho_Type (Mode_Value) := New_Signed_Type (64);
             Info.Type_Mode := Type_Mode_P64;
+            Info.B.Align := Align_64;
       end case;
       --  Physical types are always in their ranges.
       Info.S.Nocheck_Low := True;
@@ -394,6 +441,7 @@ package body Trans.Chap3 is
       Info.Ortho_Type (Mode_Value) := Ghdl_File_Index_Type;
       Info.Ortho_Ptr_Type (Mode_Value) := Ghdl_File_Index_Ptr_Type;
       Info.Type_Mode := Type_Mode_File;
+      Info.B.Align := Align_32;
    end Translate_File_Type;
 
    function Get_File_Signature_Length (Def : Iir) return Natural is
@@ -503,6 +551,7 @@ package body Trans.Chap3 is
    procedure Create_Unbounded_Type_Fat_Pointer (Info : Type_Info_Acc)
    is
       Constr : O_Element_List;
+      Bounds_Type : O_Tnode;
    begin
       for Kind in Object_Kind_Type loop
          exit when Info.B.Base_Type (Kind) = O_Tnode_Null;
@@ -511,9 +560,17 @@ package body Trans.Chap3 is
          New_Record_Field
            (Constr, Info.B.Base_Field (Kind), Wki_Base,
             Info.B.Base_Ptr_Type (Kind));
+         case Info.Type_Mode is
+            when Type_Mode_Unbounded_Array =>
+               Bounds_Type := Info.B.Bounds_Ptr_Type;
+            when Type_Mode_Unbounded_Record =>
+               Bounds_Type := Info.B.Layout_Ptr_Type;
+            when others =>
+               raise Internal_Error;
+         end case;
          New_Record_Field
            (Constr, Info.B.Bounds_Field (Kind), Wki_Bounds,
-            Info.B.Bounds_Ptr_Type);
+            Bounds_Type);
          Finish_Record_Type (Constr, Info.Ortho_Type (Kind));
       end loop;
    end Create_Unbounded_Type_Fat_Pointer;
@@ -550,89 +607,129 @@ package body Trans.Chap3 is
       New_Type_Decl (Create_Identifier ("BOUNDP"), Info.B.Bounds_Ptr_Type);
    end Finish_Unbounded_Type_Bounds;
 
-   function Create_Static_Composite_Subtype_Bounds (Def : Iir) return O_Cnode
+   function Create_Static_Composite_Subtype_Sizes (Def : Iir) return O_Cnode
    is
-      Binfo : constant Type_Info_Acc := Get_Info (Get_Base_Type (Def));
+      Info : constant Type_Info_Acc := Get_Info (Def);
+      Sz_List : O_Record_Aggr_List;
+      Sz : O_Cnode;
+      Sz_Res : O_Cnode;
+   begin
+      Start_Record_Aggr (Sz_List, Ghdl_Sizes_Type);
+      New_Record_Aggr_El
+        (Sz_List, New_Sizeof (Info.Ortho_Type (Mode_Value), Ghdl_Index_Type));
+      if Get_Has_Signal_Flag (Def) then
+         Sz := New_Sizeof (Info.Ortho_Type (Mode_Signal), Ghdl_Index_Type);
+      else
+         Sz := Ghdl_Index_0;
+      end if;
+      New_Record_Aggr_El (Sz_List, Sz);
+      Finish_Record_Aggr (Sz_List, Sz_Res);
+      return Sz_Res;
+   end Create_Static_Composite_Subtype_Sizes;
+
+   function Create_Static_Array_Subtype_Bounds (Def : Iir) return O_Cnode
+   is
+      Base_Type : constant Iir := Get_Base_Type (Def);
+      Binfo : constant Type_Info_Acc := Get_Info (Base_Type);
+      Indexes_List : constant Iir_Flist := Get_Index_Subtype_List (Def);
+      Index : Iir;
       List : O_Record_Aggr_List;
       Res : O_Cnode;
    begin
       Start_Record_Aggr (List, Binfo.B.Bounds_Type);
 
-      case Get_Kind (Def) is
-         when Iir_Kind_Array_Subtype_Definition =>
-            declare
-               Indexes_List : constant Iir_Flist :=
-                 Get_Index_Subtype_List (Def);
-               Index : Iir;
-            begin
-               for I in Flist_First .. Flist_Last (Indexes_List) loop
-                  Index := Get_Index_Type (Indexes_List, I);
-                  New_Record_Aggr_El
-                    (List, Create_Static_Type_Definition_Type_Range (Index));
-               end loop;
-            end;
-            if Binfo.B.El_Size /= O_Fnode_Null then
-               --  For arrays of unbounded type.
-               declare
-                  El_Type : constant Iir := Get_Element_Subtype (Def);
-                  El_Info : constant Type_Info_Acc := Get_Info (El_Type);
-                  Sz_List : O_Record_Aggr_List;
-                  Sz_Res : O_Cnode;
-               begin
-                  New_Record_Aggr_El
-                    (List, Create_Static_Composite_Subtype_Bounds (El_Type));
+      for I in Flist_First .. Flist_Last (Indexes_List) loop
+         Index := Get_Index_Type (Indexes_List, I);
+         New_Record_Aggr_El
+           (List, Create_Static_Type_Definition_Type_Range (Index));
+      end loop;
 
-                  Start_Record_Aggr (Sz_List, Ghdl_Sizes_Type);
-                  New_Record_Aggr_El
-                    (Sz_List, New_Sizeof (El_Info.Ortho_Type (Mode_Value),
-                                          Ghdl_Index_Type));
-                  New_Record_Aggr_El
-                    (Sz_List, New_Sizeof (El_Info.Ortho_Type (Mode_Signal),
-                                          Ghdl_Index_Type));
-                  Finish_Record_Aggr (Sz_List, Sz_Res);
-                  New_Record_Aggr_El (List, Sz_Res);
-               end;
-            end if;
-
-         when Iir_Kind_Record_Subtype_Definition =>
-            declare
-               El_List : constant Iir_Flist :=
-                 Get_Elements_Declaration_List (Def);
-               El_Blist : constant Iir_Flist :=
-                 Get_Elements_Declaration_List (Get_Base_Type (Def));
-               El : Iir;
-               Bel : Iir;
-               Bel_Info : Field_Info_Acc;
-            begin
-               for I in Flist_First .. Flist_Last (El_Blist) loop
-                  Bel := Get_Nth_Element (El_Blist, I);
-                  Bel_Info := Get_Info (Bel);
-                  if Bel_Info.Field_Bound /= O_Fnode_Null then
-                     El := Get_Nth_Element (El_List, I);
-                     New_Record_Aggr_El
-                       (List,
-                        Create_Static_Composite_Subtype_Bounds
-                          (Get_Type (El)));
-                  end if;
-               end loop;
-            end;
-
-         when others =>
-            Error_Kind ("create_static_composite_subtype_bounds", Def);
-      end case;
+      if Binfo.B.Bounds_El /= O_Fnode_Null then
+         --  For arrays of unbounded type.
+         New_Record_Aggr_El
+           (List, Create_Static_Composite_Subtype_Layout
+              (Get_Element_Subtype (Def)));
+      end if;
 
       Finish_Record_Aggr (List, Res);
       return Res;
-   end Create_Static_Composite_Subtype_Bounds;
+   end Create_Static_Array_Subtype_Bounds;
 
-   procedure Elab_Composite_Subtype_Bounds (Def : Iir; Target : O_Lnode)
+   function Create_Static_Record_Subtype_Bounds (Def : Iir) return O_Cnode
    is
-      Info             : constant Type_Info_Acc := Get_Info (Def);
-      Base_Type        : constant Iir := Get_Base_Type (Def);
-      Targ             : Mnode;
+      Base_Type : constant Iir := Get_Base_Type (Def);
+      Binfo : constant Type_Info_Acc := Get_Info (Base_Type);
+      El_List : constant Iir_Flist := Get_Elements_Declaration_List (Def);
+      El_Blist : constant Iir_Flist :=
+        Get_Elements_Declaration_List (Base_Type);
+      Info : constant Type_Info_Acc := Get_Info (Def);
+      List : O_Record_Aggr_List;
+      Res : O_Cnode;
+      El : Iir;
+      Bel : Iir;
+      Bel_Info : Field_Info_Acc;
+      El_Info : Field_Info_Acc;
+      Off : O_Cnode;
    begin
-      Targ := Lv2M (Target, null, Mode_Value,
-                    Info.B.Bounds_Type, Info.B.Bounds_Ptr_Type);
+      Start_Record_Aggr (List, Binfo.B.Bounds_Type);
+
+      New_Record_Aggr_El (List, Create_Static_Composite_Subtype_Sizes (Def));
+
+      for I in Flist_First .. Flist_Last (El_Blist) loop
+         Bel := Get_Nth_Element (El_Blist, I);
+         Bel_Info := Get_Info (Bel);
+         if Bel_Info.Field_Bound /= O_Fnode_Null then
+            El := Get_Nth_Element (El_List, I);
+            El_Info := Get_Info (El);
+            for Kind in Mode_Value .. Type_To_Last_Object_Kind (Base_Type)
+            loop
+               if Info.Ortho_Type (Kind) /= O_Tnode_Null then
+                  Off := New_Offsetof (Info.Ortho_Type (Kind),
+                                       El_Info.Field_Node (Kind),
+                                       Ghdl_Index_Type);
+               else
+                  Off := Ghdl_Index_0;
+               end if;
+               New_Record_Aggr_El (List, Off);
+            end loop;
+            New_Record_Aggr_El
+              (List, Create_Static_Composite_Subtype_Layout (Get_Type (El)));
+         end if;
+      end loop;
+
+      Finish_Record_Aggr (List, Res);
+      return Res;
+   end Create_Static_Record_Subtype_Bounds;
+
+   function Create_Static_Composite_Subtype_Layout (Def : Iir) return O_Cnode
+   is
+      Info : constant Type_Info_Acc := Get_Info (Def);
+   begin
+      case Info.Type_Mode is
+         when Type_Mode_Static_Record
+           | Type_Mode_Complex_Record =>
+            return Create_Static_Record_Subtype_Bounds (Def);
+         when Type_Mode_Static_Array
+           | Type_Mode_Complex_Array =>
+            declare
+               List : O_Record_Aggr_List;
+               Res : O_Cnode;
+            begin
+               Start_Record_Aggr (List, Info.B.Layout_Type);
+               New_Record_Aggr_El
+                 (List, Create_Static_Composite_Subtype_Sizes (Def));
+               New_Record_Aggr_El
+                 (List, Create_Static_Array_Subtype_Bounds (Def));
+               Finish_Record_Aggr (List, Res);
+               return Res;
+            end;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Create_Static_Composite_Subtype_Layout;
+
+   procedure Elab_Composite_Subtype_Layout (Def : Iir; Target : Mnode) is
+   begin
       Open_Temp;
 
       case Get_Kind (Def) is
@@ -640,110 +737,101 @@ package body Trans.Chap3 is
             declare
                Indexes_List : constant Iir_Flist :=
                  Get_Index_Subtype_List (Def);
-               Indexes_Def_List : constant Iir_Flist :=
-                 Get_Index_Subtype_Definition_List (Base_Type);
+               Targ : Mnode;
                Index : Iir;
             begin
+               Targ := Layout_To_Bounds (Target);
                if Get_Nbr_Elements (Indexes_List) > 1 then
                   Targ := Stabilize (Targ);
                end if;
                for I in Flist_First .. Flist_Last (Indexes_List) loop
                   Index := Get_Index_Type (Indexes_List, I);
-                  declare
-                     Index_Type : constant Iir := Get_Base_Type (Index);
-                     Index_Info : constant Type_Info_Acc :=
-                       Get_Info (Index_Type);
-                     Base_Index_Info : constant Index_Info_Acc :=
-                       Get_Info (Get_Nth_Element (Indexes_Def_List, I));
-                     D : O_Dnode;
-                  begin
-                     Open_Temp;
-                     D := Create_Temp_Ptr
-                       (Index_Info.B.Range_Ptr_Type,
-                        New_Selected_Element (M2Lv (Targ),
-                                              Base_Index_Info.Index_Field));
-                     Chap7.Translate_Discrete_Range
-                       (Dp2M (D, Index_Info, Mode_Value,
-                              Index_Info.B.Range_Type,
-                              Index_Info.B.Range_Ptr_Type),
-                        Index);
-                     Close_Temp;
-                  end;
+                  Open_Temp;
+                  Chap7.Translate_Discrete_Range
+                    (Bounds_To_Range (Targ, Def, I + 1), Index);
+                  Close_Temp;
                end loop;
+               --  FIXME: element ?
             end;
+
+         when Iir_Kind_Record_Type_Definition =>
+            null;
 
          when Iir_Kind_Record_Subtype_Definition =>
             declare
                El_List : constant Iir_Flist :=
                  Get_Elements_Declaration_List (Def);
+               Targ : Mnode;
                El : Iir;
-               El_Info : Field_Info_Acc;
+               Base_El : Iir;
             begin
-               Targ := Stabilize (Targ);
+               Targ := Stabilize (Target);
                for I in Flist_First .. Flist_Last (El_List) loop
                   El := Get_Nth_Element (El_List, I);
-                  El_Info := Get_Info (Get_Base_Element_Declaration (El));
-                  if El_Info.Field_Bound /= O_Fnode_Null then
-                     Elab_Composite_Subtype_Bounds
+                  Base_El := Get_Base_Element_Declaration (El);
+                  if Is_Unbounded_Type (Get_Info (Get_Type (Base_El))) then
+                     Elab_Composite_Subtype_Layout
                        (Get_Type (El),
-                        New_Selected_Element (M2Lv (Targ),
-                                              El_Info.Field_Bound));
+                        Record_Layout_To_Element_Layout (Targ, El));
                   end if;
                end loop;
             end;
 
          when others =>
-            Error_Kind ("elab_composite_subtype_bounds", Def);
+            Error_Kind ("elab_composite_subtype_layout", Def);
       end case;
 
       Close_Temp;
-   end Elab_Composite_Subtype_Bounds;
+   end Elab_Composite_Subtype_Layout;
 
-   procedure Elab_Composite_Subtype_Bounds (Def : Iir)
+   procedure Elab_Composite_Subtype_Layout (Def : Iir)
    is
       Info : constant Type_Info_Acc := Get_Info (Def);
    begin
-      if not Info.S.Static_Bounds then
-         Elab_Composite_Subtype_Bounds
-           (Def, Get_Var (Info.S.Composite_Bounds));
-      end if;
-   end Elab_Composite_Subtype_Bounds;
+      if Is_Complex_Type (Info) then
+         Elab_Composite_Subtype_Layout (Def, Get_Composite_Type_Layout (Info));
 
-   --  Create a variable containing the bounds for array subtype DEF.
-   procedure Create_Composite_Subtype_Bounds_Var
+         Gen_Call_Type_Builder
+           (Get_Composite_Type_Layout (Info), Def, Mode_Value);
+         if Get_Has_Signal_Flag (Def) then
+            Gen_Call_Type_Builder
+              (Get_Composite_Type_Layout (Info), Def, Mode_Signal);
+         end if;
+      end if;
+   end Elab_Composite_Subtype_Layout;
+
+   --  Create a variable containing the layout for composite subtype DEF.
+   procedure Create_Composite_Subtype_Layout_Var
      (Def : Iir; Elab_Now : Boolean)
    is
       Info      : constant Type_Info_Acc := Get_Info (Def);
-      Base_Info : Type_Info_Acc;
       Val       : O_Cnode;
    begin
-      if Info.S.Composite_Bounds /= Null_Var then
+      if Info.S.Composite_Layout /= Null_Var then
+         --  Already created.
          return;
       end if;
 
-      Base_Info := Get_Info (Get_Base_Type (Def));
       if Are_Bounds_Locally_Static (Def) then
-         Info.S.Static_Bounds := True;
          if Global_Storage = O_Storage_External then
             --  Do not create the value of the type desc, since it
             --  is never dereferenced in a static type desc.
             Val := O_Cnode_Null;
          else
-            Val := Create_Static_Composite_Subtype_Bounds (Def);
+            Val := Create_Static_Composite_Subtype_Layout (Def);
          end if;
-         Info.S.Composite_Bounds := Create_Global_Const
-           (Create_Identifier ("STB"),
-            Base_Info.B.Bounds_Type, Global_Storage, Val);
+         Info.S.Composite_Layout := Create_Global_Const
+           (Create_Identifier ("STL"),
+            Info.B.Layout_Type, Global_Storage, Val);
       else
          pragma Assert (Get_Type_Staticness (Def) /= Locally);
-         Info.S.Static_Bounds := False;
-         Info.S.Composite_Bounds := Create_Var
-           (Create_Var_Identifier ("STB"), Base_Info.B.Bounds_Type);
+         Info.S.Composite_Layout := Create_Var
+           (Create_Var_Identifier ("STL"), Info.B.Layout_Type);
          if Elab_Now then
-            Elab_Composite_Subtype_Bounds (Def);
+            Elab_Composite_Subtype_Layout (Def);
          end if;
       end if;
-   end Create_Composite_Subtype_Bounds_Var;
+   end Create_Composite_Subtype_Layout_Var;
 
    -------------
    --  Array  --
@@ -793,25 +881,50 @@ package body Trans.Chap3 is
       end loop;
 
       if Is_Unbounded_Type (El_Info) then
-         --  Bounds and size for element.
-         New_Record_Field (Constr, Info.B.El_Bounds,
-                           Get_Identifier ("el_bound"), El_Info.B.Bounds_Type);
-         New_Record_Field (Constr, Info.B.El_Size, Get_Identifier ("el_size"),
-                           Ghdl_Sizes_Type);
+         --  Add layout for the element.
+         New_Record_Field
+           (Constr, Info.B.Bounds_El,
+            Get_Identifier ("el_layout"), El_Info.B.Layout_Type);
       end if;
 
       Finish_Record_Type (Constr, Info.B.Bounds_Type);
       Finish_Unbounded_Type_Bounds (Info);
    end Translate_Array_Type_Bounds;
 
+   --  Create the layout type.
+   procedure Create_Array_Type_Layout_Type (Info : Type_Info_Acc)
+   is
+      Constr : O_Element_List;
+   begin
+      Start_Record_Type (Constr);
+      New_Record_Field (Constr, Info.B.Layout_Size,
+                        Get_Identifier ("size"), Ghdl_Sizes_Type);
+      New_Record_Field (Constr, Info.B.Layout_Bounds,
+                        Get_Identifier ("bounds"), Info.B.Bounds_Type);
+      Finish_Record_Type (Constr, Info.B.Layout_Type);
+
+      New_Type_Decl (Create_Identifier ("LAYOUT"), Info.B.Layout_Type);
+      Info.B.Layout_Ptr_Type := New_Access_Type (Info.B.Layout_Type);
+      New_Type_Decl (Create_Identifier ("LAYOUTP"), Info.B.Layout_Ptr_Type);
+   end Create_Array_Type_Layout_Type;
+
    procedure Translate_Array_Type_Base
-     (Def      : Iir_Array_Type_Definition;
-      Info     : Type_Info_Acc)
+     (Def  : Iir_Array_Type_Definition; Info : Type_Info_Acc)
    is
       El_Type   : constant Iir := Get_Element_Subtype (Def);
       El_Tinfo  : constant Type_Info_Acc := Get_Info (El_Type);
    begin
-      if Is_Complex_Type (El_Tinfo) or else Is_Unbounded_Type (El_Tinfo) then
+      Info.B.Align := El_Tinfo.B.Align;
+      if Is_Static_Type (El_Tinfo) then
+         --  Simple case: the array is really an array.
+         for Kind in Mode_Value .. Type_To_Last_Object_Kind (Def) loop
+            Info.B.Base_Type (Kind) :=
+              New_Array_Type (El_Tinfo.Ortho_Type (Kind), Ghdl_Index_Type);
+         end loop;
+
+         --  Declare the types.
+         Finish_Unbounded_Type_Base (Info);
+      else
          if El_Tinfo.Type_Mode in Type_Mode_Arrays then
             Info.B.Base_Type := El_Tinfo.B.Base_Ptr_Type;
             Info.B.Base_Ptr_Type := El_Tinfo.B.Base_Ptr_Type;
@@ -819,20 +932,13 @@ package body Trans.Chap3 is
             Info.B.Base_Type := El_Tinfo.Ortho_Ptr_Type;
             Info.B.Base_Ptr_Type := El_Tinfo.Ortho_Ptr_Type;
          end if;
-      else
-         for Kind in Mode_Value .. Type_To_Last_Object_Kind (Def) loop
-            Info.B.Base_Type (Kind) :=
-              New_Array_Type (El_Tinfo.Ortho_Type (Kind), Ghdl_Index_Type);
-         end loop;
-         Finish_Unbounded_Type_Base (Info);
+         pragma Assert (Info.B.Align /= Align_Undef);
       end if;
    end Translate_Array_Type_Base;
 
-   procedure Translate_Array_Type_Definition
-     (Def : Iir_Array_Type_Definition)
+   procedure Translate_Array_Type (Def : Iir_Array_Type_Definition)
    is
       Info       : constant Type_Info_Acc := Get_Info (Def);
-      El_Tinfo   : Type_Info_Acc;
    begin
       Info.Type_Mode := Type_Mode_Fat_Array;
       Info.B := Ortho_Info_Basetype_Array_Init;
@@ -843,14 +949,10 @@ package body Trans.Chap3 is
       Create_Unbounded_Type_Fat_Pointer (Info);
       Finish_Type_Definition (Info, False);
 
-      El_Tinfo := Get_Info (Get_Element_Subtype (Def));
-      if Is_Complex_Type (El_Tinfo) then
-         --  This is a complex type.
-         --  No size variable for unconstrained array type.
-         Set_Complex_Type (Info, El_Tinfo.C (Mode_Value).Builder_Need_Func);
-      end if;
+      Create_Array_Type_Layout_Type (Info);
+
       Info.Type_Incomplete := False;
-   end Translate_Array_Type_Definition;
+   end Translate_Array_Type;
 
    --  Get the length of DEF, ie the number of elements.
    --  If the length is not statically defined, returns -1.
@@ -942,7 +1044,7 @@ package body Trans.Chap3 is
       Info.Type_Locally_Constrained := (Len >= 0);
       Info.B := Pinfo.B;
       Info.S := Pinfo.S;
-      if Is_Complex_Type (Pinfo)
+      if Is_Complex_Type (Get_Info (Get_Element_Subtype (Parent_Type)))
         or else not Info.Type_Locally_Constrained
       then
          --  This is a complex type as the size is not known at compile
@@ -950,18 +1052,6 @@ package body Trans.Chap3 is
          Info.Type_Mode := Type_Mode_Complex_Array;
          Info.Ortho_Type := Pinfo.B.Base_Ptr_Type;
          Info.Ortho_Ptr_Type := Pinfo.B.Base_Ptr_Type;
-
-         --  If the base type need a builder, so does the subtype.
-         if Is_Complex_Type (Pinfo)
-           and then Pinfo.C (Mode_Value).Builder_Need_Func
-         then
-            Copy_Complex_Type (Info, Pinfo);
-         else
-            Set_Complex_Type (Info, False);
-         end if;
-
-         --  Type is bounded, but not statically.
-         Create_Size_Var (Def, Info);
       else
          --  Length is known.  Create a constrained array.
          El_Constrained := Get_Array_Element_Constraint (Def) /= Null_Iir;
@@ -1007,88 +1097,53 @@ package body Trans.Chap3 is
       Info.Type_Mode := Type_Mode_Unbounded_Array;
       Create_Array_For_Array_Subtype
         (Def, Info.B.Base_Type, Info.B.Base_Ptr_Type);
-
-      --  If the base type need a builder, so does the subtype.
-      if Is_Complex_Type (Pinfo) then
-         if Pinfo.C (Mode_Value).Builder_Need_Func then
-            Copy_Complex_Type (Info, Pinfo);
-         else
-            Set_Complex_Type (Info, False);
-         end if;
-      end if;
    end Translate_Array_Subtype_Definition_Constrained_Element;
 
    procedure Create_Array_Type_Builder
      (Def : Iir_Array_Type_Definition; Kind : Object_Kind_Type)
    is
+      El_Type    : constant Iir := Get_Element_Subtype (Def);
+      El_Info    : constant Type_Info_Acc := Get_Info (El_Type);
       Info       : constant Type_Info_Acc := Get_Info (Def);
-      Base       : constant O_Dnode := Info.C (Kind).Builder_Base_Param;
-      Bound      : constant O_Dnode := Info.C (Kind).Builder_Bound_Param;
-      Var_Off    : O_Dnode;
-      Var_Mem    : O_Dnode;
-      Var_Length : O_Dnode;
-      El_Type    : Iir;
-      El_Info    : Type_Info_Acc;
-      Label      : O_Snode;
+      Layout_Param : constant O_Dnode :=
+        Info.B.Builder (Kind).Builder_Layout_Param;
+      Layout     : Mnode;
+      El_Size    : O_Enode;
+      Size       : O_Enode;
    begin
-      Start_Subprogram_Body (Info.C (Kind).Builder_Func);
-      Subprgs.Start_Subprg_Instance_Use (Info.C (Kind).Builder_Instance);
+      Start_Subprogram_Body (Info.B.Builder (Kind).Builder_Proc);
+      Subprgs.Start_Subprg_Instance_Use
+        (Info.B.Builder (Kind).Builder_Instance);
+      Open_Local_Temp;
 
-      --  Compute length of the array.
-      New_Var_Decl (Var_Length, Wki_Length, O_Storage_Local,
-                    Ghdl_Index_Type);
-      New_Var_Decl (Var_Mem, Get_Identifier ("mem"), O_Storage_Local,
-                    Info.B.Base_Ptr_Type (Kind));
-      New_Var_Decl (Var_Off, Get_Identifier ("off"), O_Storage_Local,
-                    Ghdl_Index_Type);
+      Layout := Dp2M (Layout_Param, Info, Kind,
+                      Info.B.Layout_Type, Info.B.Layout_Ptr_Type);
 
-      El_Type := Get_Element_Subtype (Def);
-      El_Info := Get_Info (El_Type);
+      --  Call the builder to layout the element (only for unbounded elements)
+      if Is_Unbounded_Type (El_Info) then
+         Gen_Call_Type_Builder
+           (Array_Layout_To_Element_Layout (Layout, Def), El_Type, Kind);
 
-      New_Assign_Stmt
-        (New_Obj (Var_Length),
-         New_Dyadic_Op (ON_Mul_Ov,
-                        New_Value (Get_Var (El_Info.C (Kind).Size_Var)),
-                        Get_Bounds_Length (Dp2M (Bound, Info,
-                                                 Mode_Value,
-                                                 Info.B.Bounds_Type,
-                                                 Info.B.Bounds_Ptr_Type),
-                                           Def)));
+         El_Size := New_Value
+           (Layout_To_Size (Array_Layout_To_Element_Layout (Layout, Def),
+                            Kind));
+      else
+         El_Size := Get_Subtype_Size (El_Type, Mnode_Null, Kind);
+      end if;
 
-      --  Find the innermost non-array element.
-      while El_Info.Type_Mode = Type_Mode_Complex_Array loop
-         El_Type := Get_Element_Subtype (El_Type);
-         El_Info := Get_Info (El_Type);
-      end loop;
+      --  Compute size.
+      Size := New_Dyadic_Op
+        (ON_Mul_Ov,
+         El_Size,
+         Get_Bounds_Length (Layout_To_Bounds (Layout), Def));
 
-      --  Set each index of the array.
-      Init_Var (Var_Off);
-      Start_Loop_Stmt (Label);
-      Gen_Exit_When (Label, New_Compare_Op (ON_Eq,
-                                            New_Obj_Value (Var_Off),
-                                            New_Obj_Value (Var_Length),
-                                            Ghdl_Bool_Type));
+      --  Set size.
+      New_Assign_Stmt (Layout_To_Size (Layout, Kind), Size);
 
-      New_Assign_Stmt
-        (New_Obj (Var_Mem),
-         New_Unchecked_Address
-           (New_Slice (New_Access_Element
-                         (New_Convert_Ov (New_Obj_Value (Base),
-                                          Char_Ptr_Type)),
-                       Chararray_Type,
-                       New_Obj_Value (Var_Off)),
-            Info.B.Base_Ptr_Type (Kind)));
+      Close_Local_Temp;
 
-      New_Assign_Stmt
-        (New_Obj (Var_Off),
-         New_Dyadic_Op (ON_Add_Ov,
-           New_Obj_Value (Var_Off),
-           Gen_Call_Type_Builder (Dp2M (Var_Mem, El_Info, Kind), El_Type)));
-      Finish_Loop_Stmt (Label);
-
-      New_Return_Stmt (New_Obj_Value (Var_Off));
-
-      Subprgs.Finish_Subprg_Instance_Use (Info.C (Kind).Builder_Instance);
+      Subprgs.Finish_Subprg_Instance_Use
+        (Info.B.Builder (Kind).Builder_Instance);
       Finish_Subprogram_Body;
    end Create_Array_Type_Builder;
 
@@ -1097,81 +1152,30 @@ package body Trans.Chap3 is
    --------------
 
    --  Get the alignment mask for *ortho* type ATYPE.
-   function Get_Type_Alignmask (Atype : O_Tnode) return O_Enode is
+   function Get_Alignmask (Align : Alignment_Type) return O_Enode is
    begin
-      return New_Dyadic_Op
-        (ON_Sub_Ov,
-         New_Lit (New_Alignof (Atype, Ghdl_Index_Type)),
-         New_Lit (Ghdl_Index_1));
-   end Get_Type_Alignmask;
+      return New_Dyadic_Op (ON_Sub_Ov,
+                            New_Lit (Align_Val (Align)),
+                            New_Lit (Ghdl_Index_1));
+   end Get_Alignmask;
 
    --  Align VALUE (of unsigned type) for type ATYPE.
    --  The formulae is: (V + (A - 1)) and not (A - 1), where A is the
    --  alignment for ATYPE in bytes.
-   function Realign (Value : O_Enode; Atype : O_Tnode) return O_Enode is
+   function Realign (Value : O_Enode; Align : Alignment_Type) return O_Enode is
    begin
       return New_Dyadic_Op
         (ON_And,
-         New_Dyadic_Op (ON_Add_Ov, Value, Get_Type_Alignmask (Atype)),
-         New_Monadic_Op (ON_Not, Get_Type_Alignmask (Atype)));
+         New_Dyadic_Op (ON_Add_Ov, Value, Get_Alignmask (Align)),
+         New_Monadic_Op (ON_Not, Get_Alignmask (Align)));
    end Realign;
 
    function Realign (Value : O_Enode; Atype : Iir) return O_Enode
    is
       Tinfo : constant Type_Info_Acc := Get_Info (Atype);
-      Otype : O_Tnode;
    begin
-      if Is_Unbounded_Type (Tinfo) then
-         Otype := Tinfo.B.Base_Type (Mode_Value);
-      else
-         Otype := Tinfo.Ortho_Type (Mode_Value);
-      end if;
-      return Realign (Value, Otype);
+      return Realign (Value, Tinfo.B.Align);
    end Realign;
-
-   function Realign (Value : O_Enode; Mask : O_Dnode) return O_Enode is
-   begin
-      return New_Dyadic_Op
-        (ON_And,
-         New_Dyadic_Op (ON_Add_Ov, Value, New_Obj_Value (Mask)),
-         New_Monadic_Op (ON_Not, New_Obj_Value (Mask)));
-   end Realign;
-
-   --  Find the innermost non-array element.
-   function Get_Innermost_Non_Array_Element (Atype : Iir) return Iir
-   is
-      Res : Iir := Atype;
-   begin
-      while Get_Kind (Res) in Iir_Kinds_Array_Type_Definition loop
-         Res := Get_Element_Subtype (Res);
-      end loop;
-      return Res;
-   end Get_Innermost_Non_Array_Element;
-
-   --  Declare the bounds types for DEF.
-   procedure Translate_Record_Type_Bounds
-     (Def : Iir_Record_Type_Definition; Info : Type_Info_Acc)
-   is
-      List : constant Iir_Flist := Get_Elements_Declaration_List (Def);
-      El : Iir;
-      El_Tinfo : Type_Info_Acc;
-      El_Info : Field_Info_Acc;
-      Constr : O_Element_List;
-   begin
-      Start_Record_Type (Constr);
-      for I in Flist_First .. Flist_Last (List) loop
-         El := Get_Nth_Element (List, I);
-         El_Tinfo := Get_Info (Get_Type (El));
-         if Is_Unbounded_Type (El_Tinfo) then
-            El_Info := Get_Info (El);
-            New_Record_Field (Constr, El_Info.Field_Bound,
-                              Create_Identifier_Without_Prefix (El),
-                              El_Tinfo.B.Bounds_Type);
-         end if;
-      end loop;
-      Finish_Record_Type (Constr, Info.B.Bounds_Type);
-      Finish_Unbounded_Type_Bounds (Info);
-   end Translate_Record_Type_Bounds;
 
    procedure Translate_Record_Type (Def : Iir_Record_Type_Definition)
    is
@@ -1184,32 +1188,37 @@ package body Trans.Chap3 is
       Field_Info : Ortho_Info_Acc;
       El_Type    : Iir;
       El_Tinfo   : Type_Info_Acc;
-      El_Tnode   : O_Tnode;
+      Align      : Alignment_Type;
 
       --  True if a size variable will be created since the size of
       --  the record is not known at compile-time.
-      Need_Size : Boolean;
+      Is_Complex : Boolean;
 
       Mark : Id_Mark_Type;
    begin
-      Need_Size := False;
-
       --  First, translate the anonymous type of the elements.
+      Align := Align_8;
       for I in Flist_First .. Flist_Last (List) loop
          El := Get_Nth_Element (List, I);
          El_Type := Get_Type (El);
-         if Get_Info (El_Type) = null then
+         El_Tinfo := Get_Info (El_Type);
+         if El_Tinfo = null then
             Push_Identifier_Prefix (Mark, Get_Identifier (El));
             Translate_Subtype_Indication (El_Type, True);
             Pop_Identifier_Prefix (Mark);
+            El_Tinfo := Get_Info (El_Type);
          end if;
-         Need_Size := Need_Size or else Is_Complex_Type (Get_Info (El_Type));
          Field_Info := Add_Info (El, Kind_Field);
+
+         pragma Assert (El_Tinfo.B.Align /= Align_Undef);
+         Align := Alignment_Type'Max (Align, El_Tinfo.B.Align);
       end loop;
+      Info.B.Align := Align;
 
       --  Then create the record type.
       Info.S := Ortho_Info_Subtype_Record_Init;
       Info.Ortho_Type (Mode_Signal) := O_Tnode_Null;
+      Is_Complex := False;
       for Kind in Mode_Value .. Type_To_Last_Object_Kind (Def) loop
          Start_Record_Type (El_List);
          for I in Flist_First .. Flist_Last (List) loop
@@ -1219,31 +1228,65 @@ package body Trans.Chap3 is
             if Is_Complex_Type (El_Tinfo)
               or else Is_Unbounded_Type (El_Tinfo)
             then
-               --  Always use an offset for a complex type.
-               El_Tnode := Ghdl_Index_Type;
+               Is_Complex := True;
             else
-               El_Tnode := El_Tinfo.Ortho_Type (Kind);
+               New_Record_Field (El_List, Field_Info.Field_Node (Kind),
+                                 Create_Identifier_Without_Prefix (El),
+                                 El_Tinfo.Ortho_Type (Kind));
             end if;
 
-            New_Record_Field (El_List, Field_Info.Field_Node (Kind),
-                              Create_Identifier_Without_Prefix (El),
-                              El_Tnode);
          end loop;
          Finish_Record_Type (El_List, Info.B.Base_Type (Kind));
       end loop;
 
+      --  Create the bounds type
+      Info.B.Bounds_Type := O_Tnode_Null;
+      Start_Record_Type (El_List);
+      New_Record_Field (El_List, Info.B.Layout_Size,
+                        Get_Identifier ("size"), Ghdl_Sizes_Type);
+      for I in Flist_First .. Flist_Last (List) loop
+         declare
+            El         : constant Iir := Get_Nth_Element (List, I);
+            Field_Info : constant Field_Info_Acc := Get_Info (El);
+            El_Tinfo   : constant Type_Info_Acc := Get_Info (Get_Type (El));
+            Unbounded_El : constant Boolean := Is_Unbounded_Type (El_Tinfo);
+            Complex_El : constant Boolean := Is_Complex_Type (El_Tinfo);
+         begin
+            if Unbounded_El or Complex_El then
+               --  Offset
+               New_Record_Field
+                 (El_List, Field_Info.Field_Node (Mode_Value),
+                  Create_Identifier_Without_Prefix (El, "_OFF"),
+                  Ghdl_Index_Type);
+               if Get_Has_Signal_Flag (Def) then
+                  New_Record_Field
+                    (El_List, Field_Info.Field_Node (Mode_Signal),
+                     Create_Identifier_Without_Prefix (El, "_SIGOFF"),
+                     Ghdl_Index_Type);
+               end if;
+            end if;
+            if Unbounded_El then
+               New_Record_Field
+                 (El_List, Field_Info.Field_Bound,
+                  Create_Identifier_Without_Prefix (El, "_BND"),
+                  El_Tinfo.B.Layout_Type);
+            end if;
+         end;
+      end loop;
+      Finish_Record_Type (El_List, Info.B.Bounds_Type);
+      Finish_Unbounded_Type_Bounds (Info);
+
+      --  For records: layout == bounds.
+      Info.B.Layout_Type := Info.B.Bounds_Type;
+      Info.B.Layout_Ptr_Type := Info.B.Bounds_Ptr_Type;
+
       if Is_Unbounded then
          Info.Type_Mode := Type_Mode_Unbounded_Record;
          Finish_Unbounded_Type_Base (Info);
-         Translate_Record_Type_Bounds (Def, Info);
          Create_Unbounded_Type_Fat_Pointer (Info);
          Finish_Type_Definition (Info);
-
-         --  There are internal fields for unbounded records, so the objects
-         --  must be built.
-         Set_Complex_Type (Info, True);
       else
-         if Need_Size then
+         if Is_Complex then
             Info.Type_Mode := Type_Mode_Complex_Record;
          else
             Info.Type_Mode := Type_Mode_Static_Record;
@@ -1252,10 +1295,7 @@ package body Trans.Chap3 is
          Finish_Type_Definition (Info);
          Info.B.Base_Ptr_Type := Info.Ortho_Ptr_Type;
 
-         if Need_Size then
-            Set_Complex_Type (Info, True);
-            Create_Size_Var (Def, Info);
-         end if;
+         Create_Composite_Subtype_Layout_Var (Def, False);
       end if;
    end Translate_Record_Type;
 
@@ -1296,23 +1336,23 @@ package body Trans.Chap3 is
       for I in Flist_First .. Flist_Last (El_List) loop
          El := Get_Nth_Element (El_List, I);
          El_Type := Get_Type (El);
-         if Is_Fully_Constrained_Type (El) then
-            El_Btype := Get_Type (Get_Nth_Element (El_Tm_List, I));
-            if not Is_Fully_Constrained_Type (El_Btype) then
-               Has_New_Constraints := True;
-               if Get_Type_Staticness (El_Type) = Locally then
-                  Has_Boxed_Elements := True;
-               end if;
-               Push_Identifier_Prefix (Mark, Get_Identifier (El));
-               Translate_Subtype_Definition (El_Type, El_Btype, With_Vars);
-               Pop_Identifier_Prefix (Mark);
+         El_Btype := Get_Type (Get_Nth_Element (El_Tm_List, I));
+         if Is_Fully_Constrained_Type (El_Type)
+           and then not Is_Fully_Constrained_Type (El_Btype)
+         then
+            Has_New_Constraints := True;
+            if Get_Type_Staticness (El_Type) = Locally then
+               Has_Boxed_Elements := True;
             end if;
+            Push_Identifier_Prefix (Mark, Get_Identifier (El));
+            Translate_Subtype_Definition (El_Type, El_Btype, With_Vars);
+            Pop_Identifier_Prefix (Mark);
          end if;
       end loop;
 
       --  By default, use the same representation as the base type.
       Info.all := Base_Info.all;
-      Info.S := Ortho_Info_Subtype_Record_Init;
+      --  Info.S := Ortho_Info_Subtype_Record_Init;
       --  However, it is a different subtype which has its own rti.
       Info.Type_Rti := O_Dnode_Null;
 
@@ -1323,6 +1363,15 @@ package body Trans.Chap3 is
          --    create objects, so wait until it is completly constrained.
          --  The subtype is simply an alias.
          --  In both cases, use the same representation as its type mark.
+
+         for I in Flist_First .. Flist_Last (El_Blist) loop
+            B_El := Get_Nth_Element (El_Blist, I);
+            El := Get_Nth_Element (El_List, I);
+            if El /= B_El then
+               Set_Info (El, Get_Info (B_El));
+            end if;
+         end loop;
+
          return;
       end if;
 
@@ -1332,9 +1381,6 @@ package body Trans.Chap3 is
       else
          Info.Type_Mode := Type_Mode_Complex_Record;
       end if;
-
-      --  Base type is complex (unbounded record)
-      Copy_Complex_Type (Info, Base_Info);
 
       --  Then create the record type, containing the base record and the
       --  fields.
@@ -1350,7 +1396,7 @@ package body Trans.Chap3 is
 
                --  This element has been locally constrained.
                if Is_Unbounded_Type (Get_Info (Get_Type (B_El)))
-                 and then Get_Type_Staticness (Get_Type(El)) = Locally
+                 and then Get_Type_Staticness (Get_Type (El)) = Locally
                then
                   if Kind = Mode_Value then
                      Field_Info := Add_Info (El, Kind_Field);
@@ -1363,6 +1409,11 @@ package body Trans.Chap3 is
                   New_Record_Field (Rec, Field_Info.Field_Node (Kind),
                                     Create_Identifier_Without_Prefix (El),
                                     El_Tnode);
+                  Field_Info.Field_Bound := Get_Info (B_El).Field_Bound;
+               else
+                  if Kind = Mode_Value and then El /= B_El then
+                     Set_Info (El, Get_Info (B_El));
+                  end if;
                end if;
             end loop;
             Finish_Record_Type (Rec, Info.Ortho_Type (Kind));
@@ -1374,14 +1425,18 @@ package body Trans.Chap3 is
          --  time.
          Info.Ortho_Type := Base_Info.B.Base_Type;
          Info.Ortho_Ptr_Type := Base_Info.B.Base_Ptr_Type;
-      end if;
 
-      if Get_Type_Staticness (Def) /= Locally then
-         Create_Size_Var (Def, Info);
+         for I in Flist_First .. Flist_Last (El_Blist) loop
+            B_El := Get_Nth_Element (El_Blist, I);
+            El := Get_Nth_Element (El_List, I);
+            if El /= B_El then
+               Set_Info (El, Get_Info (B_El));
+            end if;
+         end loop;
       end if;
 
       if With_Vars then
-         Create_Composite_Subtype_Bounds_Var (Def, False);
+         Create_Composite_Subtype_Layout_Var (Def, False);
       end if;
    end Translate_Record_Subtype;
 
@@ -1389,20 +1444,20 @@ package body Trans.Chap3 is
      (Def : Iir_Record_Type_Definition; Kind : Object_Kind_Type)
    is
       Info : constant Type_Info_Acc := Get_Info (Def);
-      Base : constant O_Dnode := Info.C (Kind).Builder_Base_Param;
+      Layout_Param : constant O_Dnode :=
+        Info.B.Builder (Kind).Builder_Layout_Param;
       List : constant Iir_Flist := Get_Elements_Declaration_List (Def);
-      El   : Iir_Element_Declaration;
 
+      Layout : Mnode;
       Off_Var    : O_Dnode;
       Off_Val    : O_Enode;
-      El_Off     : O_Enode;
-      Sub_Bound  : Mnode;
-      El_Type    : Iir;
-      Inner_Type : Iir;
-      El_Tinfo   : Type_Info_Acc;
    begin
-      Start_Subprogram_Body (Info.C (Kind).Builder_Func);
-      Subprgs.Start_Subprg_Instance_Use (Info.C (Kind).Builder_Instance);
+      Start_Subprogram_Body (Info.B.Builder (Kind).Builder_Proc);
+      Subprgs.Start_Subprg_Instance_Use
+        (Info.B.Builder (Kind).Builder_Instance);
+
+      Layout := Dp2M (Layout_Param, Info, Kind,
+                      Info.B.Layout_Type, Info.B.Layout_Ptr_Type);
 
       --  Declare OFF, the offset variable
       New_Var_Decl (Off_Var, Get_Identifier ("off"), O_Storage_Local,
@@ -1410,93 +1465,58 @@ package body Trans.Chap3 is
 
       --  Reserve memory for the record, ie:
       --  OFF = SIZEOF (record).
-      --  Align for signals, as the base type may contain a single index.
       Off_Val := New_Lit
         (New_Sizeof (Info.B.Base_Type (Kind), Ghdl_Index_Type));
-      if Kind = Mode_Signal then
-         Off_Val := Realign (Off_Val, Ghdl_Signal_Ptr);
-      end if;
       New_Assign_Stmt (New_Obj (Off_Var), Off_Val);
 
       --  Set memory for each complex element.
       for I in Flist_First .. Flist_Last (List) loop
-         El := Get_Nth_Element (List, I);
-         El_Type := Get_Type (El);
-         El_Tinfo := Get_Info (El_Type);
-         if Is_Complex_Type (El_Tinfo)
-           or else Is_Unbounded_Type (El_Tinfo)
-         then
-            --  Complex or unbounded type.  Field is an offset.
-
-            --  Align on the innermost array element (which should be
-            --  a record) for Mode_Value.  No need to align for signals,
-            --  as all non-composite elements are accesses.
-            Inner_Type := Get_Innermost_Non_Array_Element (El_Type);
-            Off_Val := New_Obj_Value (Off_Var);
-            if Kind = Mode_Value then
-               Off_Val := Realign (Off_Val, Inner_Type);
+         declare
+            El : constant Iir := Get_Nth_Element (List, I);
+            El_Type : constant Iir := Get_Type (El);
+            El_Tinfo : constant Type_Info_Acc := Get_Info (El_Type);
+            El_Complex : constant Boolean := Is_Complex_Type (El_Tinfo);
+            El_Unbounded : constant Boolean := Is_Unbounded_Type (El_Tinfo);
+            El_Layout : Mnode;
+            El_Size : O_Enode;
+         begin
+            if El_Unbounded then
+               --  Set layout
+               El_Layout := Record_Layout_To_Element_Layout (Layout, El);
+               Gen_Call_Type_Builder (El_Layout, El_Type, Kind);
             end if;
-            New_Assign_Stmt (New_Obj (Off_Var), Off_Val);
 
-            --  Set the offset.
-            New_Assign_Stmt
-              (New_Selected_Element (New_Acc_Value (New_Obj (Base)),
-               Get_Info (El).Field_Node (Kind)),
-               New_Obj_Value (Off_Var));
+            if El_Unbounded or El_Complex then
+               --  Complex or unbounded type.  Field is an offset.
 
-            Open_Temp;
+               --  Align on the innermost array element (which should be
+               --  a record) for Mode_Value.  No need to align for signals,
+               --  as all non-composite elements are accesses.
+               Off_Val := New_Obj_Value (Off_Var);
+               if Kind = Mode_Value then
+                  Off_Val := Realign (Off_Val, El_Type);
+               end if;
+               New_Assign_Stmt (New_Obj (Off_Var), Off_Val);
 
-            if Is_Complex_Type (El_Tinfo)
-              and then El_Tinfo.C (Kind).Builder_Need_Func
-            then
-               --  This type needs a builder, call it.
-               declare
-                  Base2 : Mnode;
-                  Ptr_Var    : O_Dnode;
-               begin
-                  if Is_Unbounded_Type (Info) then
-                     Base2 := Create_Temp (Info, Kind);
-                     New_Assign_Stmt
-                       (M2Lp (Get_Composite_Bounds (Base2)),
-                        New_Obj_Value (Info.C (Kind).Builder_Bound_Param));
-                     New_Assign_Stmt
-                       (M2Lp (Get_Composite_Base (Base2)),
-                        New_Obj_Value (Info.C (Kind).Builder_Base_Param));
-                  else
-                     Base2 := Dp2M (Base, Info, Kind);
-                  end if;
+               --  Set the offset.
+               New_Assign_Stmt
+                 (Record_Layout_To_Element_Offset (Layout, El, Kind),
+                  New_Obj_Value (Off_Var));
 
-                  Ptr_Var := Create_Temp (El_Tinfo.Ortho_Ptr_Type (Kind));
-
-                  New_Assign_Stmt
-                    (New_Obj (Ptr_Var),
-                     M2E (Chap6.Translate_Selected_Element (Base2, El)));
-
-                  El_Off := Gen_Call_Type_Builder
-                    (Dp2M (Ptr_Var, El_Tinfo, Kind), El_Type);
-               end;
-            else
-               if Is_Unbounded_Type (El_Tinfo) then
-                  Sub_Bound := Bounds_To_Element_Bounds
-                    (Dp2M (Info.C (Kind).Builder_Bound_Param,
-                           Info, Mode_Value,
-                           Info.B.Bounds_Type, Info.B.Bounds_Ptr_Type),
-                     El);
+               if El_Unbounded then
+                  El_Layout := Record_Layout_To_Element_Layout (Layout, El);
+                  El_Size := New_Value
+                    (Sizes_To_Size (Layout_To_Sizes (El_Layout), Kind));
                else
-                  Sub_Bound := Mnode_Null;
+                  El_Size := Get_Subtype_Size (El_Type, El_Layout, Kind);
                end if;
 
-               --  Allocate memory.
-               El_Off := Get_Subtype_Size (El_Type, Sub_Bound, Kind);
+               New_Assign_Stmt (New_Obj (Off_Var),
+                                New_Dyadic_Op (ON_Add_Ov,
+                                               New_Obj_Value (Off_Var),
+                                               El_Size));
             end if;
-
-            New_Assign_Stmt
-              (New_Obj (Off_Var),
-               New_Dyadic_Op (ON_Add_Ov,
-                              New_Obj_Value (Off_Var), El_Off));
-
-            Close_Temp;
-         end if;
+         end;
       end loop;
 
       --  Align the size to the object alignment.
@@ -1505,9 +1525,11 @@ package body Trans.Chap3 is
          Off_Val := Realign (Off_Val, Def);
       end if;
 
-      New_Return_Stmt (Off_Val);
+      --  Set size.
+      New_Assign_Stmt (Layout_To_Size (Layout, Kind), Off_Val);
 
-      Subprgs.Finish_Subprg_Instance_Use (Info.C (Kind).Builder_Instance);
+      Subprgs.Finish_Subprg_Instance_Use
+        (Info.B.Builder (Kind).Builder_Instance);
       Finish_Subprogram_Body;
    end Create_Record_Type_Builder;
 
@@ -1555,6 +1577,7 @@ package body Trans.Chap3 is
          --  Otherwise, it is a thin pointer.
          Def_Info.Type_Mode := Type_Mode_Acc;
       end if;
+      Def_Info.B.Align := Align_Ptr;
 
       if D_Info.Kind = Kind_Incomplete_Type then
          --  Incomplete access.
@@ -1633,11 +1656,6 @@ package body Trans.Chap3 is
       Info.Ortho_Ptr_Type (Mode_Signal) := O_Tnode_Null;
 
       Info.Type_Mode := Type_Mode_Protected;
-
-      --  A protected type is a complex type, as its size is not known
-      --  at definition point (will be known at body declaration).
-      Info.C := new Complex_Type_Arr_Info;
-      Info.C (Mode_Value).Builder_Need_Func := False;
 
       --  This is just use to set overload number on subprograms, and to
       --  translate interfaces.
@@ -1904,7 +1922,7 @@ package body Trans.Chap3 is
             return Create_Static_Scalar_Type_Range (Def);
 
          when Iir_Kind_Array_Subtype_Definition =>
-            return Create_Static_Composite_Subtype_Bounds (Def);
+            return Create_Static_Array_Subtype_Bounds (Def);
 
          when Iir_Kind_Array_Type_Definition =>
             return O_Cnode_Null;
@@ -1930,7 +1948,7 @@ package body Trans.Chap3 is
 
          when Iir_Kind_Array_Subtype_Definition =>
             if Get_Constraint_State (Def) = Fully_Constrained then
-               Elab_Composite_Subtype_Bounds (Def);
+               Elab_Composite_Subtype_Layout (Def);
             end if;
 
          when Iir_Kind_Array_Type_Definition =>
@@ -1948,16 +1966,16 @@ package body Trans.Chap3 is
             end;
             return;
 
-         when Iir_Kind_Record_Subtype_Definition =>
+         when Iir_Kind_Record_Subtype_Definition
+           | Iir_Kind_Record_Type_Definition =>
             Info := Get_Info (Def);
-            if Info.S.Composite_Bounds /= Null_Var then
-               Elab_Composite_Subtype_Bounds (Def);
+            if Info.S.Composite_Layout /= Null_Var then
+               Elab_Composite_Subtype_Layout (Def);
             end if;
 
          when Iir_Kind_Access_Type_Definition
             | Iir_Kind_Access_Subtype_Definition
             | Iir_Kind_File_Type_Definition
-            | Iir_Kind_Record_Type_Definition
             | Iir_Kind_Protected_Type_Declaration =>
             return;
 
@@ -2110,118 +2128,6 @@ package body Trans.Chap3 is
            Is_Equal_Limit (Lo, False, Def, Base_Info.Type_Mode);
       end if;
    end Create_Subtype_Info_From_Type;
-
-   procedure Elab_Type_Definition_Size_Var (Def : Iir);
-
-   procedure Elab_Record_Size_Var (Def : Iir; Kind : Object_Kind_Type)
-   is
-      Info        : constant Type_Info_Acc := Get_Info (Def);
-      List        : constant Iir_Flist := Get_Elements_Declaration_List (Def);
-      El          : Iir_Element_Declaration;
-      El_Type     : Iir;
-      El_Tinfo    : Type_Info_Acc;
-      Inner_Type  : Iir;
-      Res         : O_Enode;
-      Align_Var   : O_Dnode;
-   begin
-      Open_Temp;
-
-      --  Start with the size of the 'base' record, that
-      --  contains all non-complex types and an offset for
-      --  each complex types.
-      Res := New_Lit (New_Sizeof (Info.Ortho_Type (Kind), Ghdl_Index_Type));
-
-      --  Start with alignment of the record.
-      --  ALIGN = ALIGNOF (record)
-      case Kind is
-         when Mode_Value =>
-            Align_Var := Create_Temp (Ghdl_Index_Type);
-            New_Assign_Stmt
-              (New_Obj (Align_Var),
-               Get_Type_Alignmask (Info.Ortho_Type (Kind)));
-         when Mode_Signal =>
-            Res := Realign (Res, Ghdl_Signal_Ptr);
-      end case;
-
-      for I in Flist_First .. Flist_Last (List) loop
-         El := Get_Nth_Element (List, I);
-         El_Type := Get_Type (El);
-         El_Tinfo := Get_Info (El_Type);
-         if Get_Type_Staticness (El_Type) /= Locally
-           and then
-           (Is_Complex_Type (El_Tinfo)
-              or else Get_Kind (El) = Iir_Kind_Record_Element_Constraint)
-         then
-            Inner_Type := Get_Innermost_Non_Array_Element (El_Type);
-
-            --  Align (only for Mode_Value) the size,
-            --  and add the size of the element.
-            if Kind = Mode_Value then
-               --  Largest alignment.
-               New_Assign_Stmt
-                 (New_Obj (Align_Var),
-                  New_Dyadic_Op
-                    (ON_Or,
-                     New_Obj_Value (Align_Var),
-                     Get_Type_Alignmask
-                       (Get_Ortho_Type (Inner_Type, Mode_Value))));
-               Res := Realign (Res, Inner_Type);
-            end if;
-
-            Res := New_Dyadic_Op
-              (ON_Add_Ov,
-               Res, New_Value (Get_Var (El_Tinfo.C (Kind).Size_Var)));
-         end if;
-      end loop;
-      if Kind = Mode_Value then
-         Res := Realign (Res, Align_Var);
-      end if;
-      New_Assign_Stmt (Get_Var (Info.C (Kind).Size_Var), Res);
-      Close_Temp;
-   end Elab_Record_Size_Var;
-
-   procedure Elab_Array_Size_Var (Def : Iir; Kind : Object_Kind_Type)
-   is
-      Info    : constant Type_Info_Acc := Get_Info (Def);
-      El_Type : constant Iir := Get_Element_Subtype (Def);
-      Res     : O_Enode;
-   begin
-      Res := New_Dyadic_Op
-        (ON_Mul_Ov,
-         Get_Array_Type_Length (Def),
-         Chap3.Get_Object_Size (T2M (El_Type, Kind), El_Type));
-      New_Assign_Stmt (Get_Var (Info.C (Kind).Size_Var), Res);
-   end Elab_Array_Size_Var;
-
-   procedure Elab_Type_Definition_Size_Var (Def : Iir)
-   is
-      Info : constant Type_Info_Acc := Get_Info (Def);
-   begin
-      if not Is_Complex_Type (Info) then
-         return;
-      end if;
-
-      for Kind in Mode_Value .. Type_To_Last_Object_Kind (Def) loop
-         if Info.C (Kind).Size_Var /= Null_Var then
-            case Info.Type_Mode is
-               when Type_Mode_Non_Composite
-                 | Type_Mode_Unbounded_Array
-                 | Type_Mode_Unbounded_Record
-                 | Type_Mode_Unknown
-                 | Type_Mode_Protected =>
-                  raise Internal_Error;
-               when Type_Mode_Static_Record
-                 | Type_Mode_Static_Array =>
-                  --  No need to create a size var, the size is known.
-                  raise Internal_Error;
-               when Type_Mode_Complex_Record =>
-                  Elab_Record_Size_Var (Def, Kind);
-               when Type_Mode_Complex_Array =>
-                  Elab_Array_Size_Var (Def, Kind);
-            end case;
-         end if;
-      end loop;
-   end Elab_Type_Definition_Size_Var;
 
    procedure Create_Type_Range_Var (Def : Iir)
    is
@@ -2388,7 +2294,7 @@ package body Trans.Chap3 is
 
          when Iir_Kind_Array_Type_Definition =>
             Translate_Array_Element_Definition (Def);
-            Translate_Array_Type_Definition (Def);
+            Translate_Array_Type (Def);
 
          when Iir_Kind_Record_Type_Definition =>
             Info.B := Ortho_Info_Basetype_Record_Init;
@@ -2480,13 +2386,13 @@ package body Trans.Chap3 is
             end if;
 
          when Iir_Kind_Array_Subtype_Definition =>
-            --  Handle element subtype.
             declare
                El_Type : constant Iir := Get_Element_Subtype (Def);
                Parent_El_Type : constant Iir :=
                  Get_Element_Subtype (Parent_Type);
                Mark : Id_Mark_Type;
             begin
+               --  Handle element subtype.
                if El_Type /= Parent_El_Type then
                   Push_Identifier_Prefix (Mark, "ET");
                   Translate_Subtype_Definition
@@ -2497,7 +2403,7 @@ package body Trans.Chap3 is
                if Get_Constraint_State (Def) = Fully_Constrained then
                   Translate_Array_Subtype_Definition (Def, Parent_Type);
                   if With_Vars then
-                     Create_Composite_Subtype_Bounds_Var (Def, False);
+                     Create_Composite_Subtype_Layout_Var (Def, False);
                   end if;
                elsif Is_Fully_Constrained_Type (El_Type)
                  and then not Is_Fully_Constrained_Type (Parent_El_Type)
@@ -2563,20 +2469,26 @@ package body Trans.Chap3 is
             raise Internal_Error;
       end case;
 
+      --  Create builder for arrays and non-static records
       Tinfo := Get_Info (Def);
-      if not Is_Complex_Type (Tinfo)
-        or else Tinfo.C (Mode_Value).Builder_Need_Func = False
-      then
-         return;
-      end if;
+      case Tinfo.Type_Mode is
+         when Type_Mode_Fat_Array
+           | Type_Mode_Unbounded_Record
+           | Type_Mode_Complex_Record =>
+            null;
+         when Type_Mode_Static_Record =>
+            return;
+         when others =>
+            --  Must have been filtered out above.
+            raise Internal_Error;
+      end case;
 
       if Kind in Subprg_Translate_Spec then
          --  Declare subprograms.
          Id := Get_Identifier (Decl);
-         Create_Builder_Subprogram_Decl (Tinfo, Id, Mode_Value);
-         if Get_Has_Signal_Flag (Def) then
-            Create_Builder_Subprogram_Decl (Tinfo, Id, Mode_Signal);
-         end if;
+         for Kind in Mode_Value .. Type_To_Last_Object_Kind (Def) loop
+            Create_Builder_Subprogram_Decl (Tinfo, Id, Kind);
+         end loop;
       end if;
 
       if Kind in Subprg_Translate_Body then
@@ -2587,15 +2499,13 @@ package body Trans.Chap3 is
          --  Define subprograms.
          case Get_Kind (Def) is
             when Iir_Kind_Array_Type_Definition =>
-               Create_Array_Type_Builder (Def, Mode_Value);
-               if Get_Has_Signal_Flag (Def) then
-                  Create_Array_Type_Builder (Def, Mode_Signal);
-               end if;
+               for Kind in Mode_Value .. Type_To_Last_Object_Kind (Def) loop
+                  Create_Array_Type_Builder (Def, Kind);
+               end loop;
             when Iir_Kind_Record_Type_Definition =>
-               Create_Record_Type_Builder (Def, Mode_Value);
-               if Get_Has_Signal_Flag (Def) then
-                  Create_Record_Type_Builder (Def, Mode_Signal);
-               end if;
+               for Kind in Mode_Value .. Type_To_Last_Object_Kind (Def) loop
+                  Create_Record_Type_Builder (Def, Kind);
+               end loop;
             when others =>
                Error_Kind ("translate_type_subprograms", Def);
          end case;
@@ -2636,7 +2546,6 @@ package body Trans.Chap3 is
       Elab_Type_Definition_Depend (Def);
 
       Elab_Type_Definition_Type_Range (Def);
-      Elab_Type_Definition_Size_Var (Def);
    end Elab_Type_Definition;
 
    procedure Translate_Subtype_Indication (Def : Iir; With_Vars : Boolean)
@@ -2753,48 +2662,23 @@ package body Trans.Chap3 is
                    Iinfo.B.Range_Type, Iinfo.B.Range_Ptr_Type);
    end Bounds_To_Range;
 
-   function Bounds_To_Element_Bounds (B : Mnode; El : Iir) return Mnode
-   is
-      El_Type : constant Iir := Get_Type (El);
-      El_Tinfo : constant Type_Info_Acc := Get_Info (El_Type);
-      Base_El : constant Iir := Get_Base_Element_Declaration (El);
+   function Record_Bounds_To_Element_Bounds (B : Mnode; El : Iir)
+                                            return Mnode is
    begin
-      return Lv2M
-        (New_Selected_Element (M2Lv (B),
-                               Get_Info (Base_El).Field_Bound),
-         El_Tinfo, Mode_Value,
-         El_Tinfo.B.Bounds_Type, El_Tinfo.B.Bounds_Ptr_Type);
-   end Bounds_To_Element_Bounds;
+      return Layout_To_Bounds (Record_Layout_To_Element_Layout (B, El));
+   end Record_Bounds_To_Element_Bounds;
 
    function Array_Bounds_To_Element_Bounds (B : Mnode; Atype : Iir)
-                                           return Mnode
-   is
-      Arr_Tinfo : constant Type_Info_Acc := Get_Info (Atype);
-      El_Type : constant Iir := Get_Element_Subtype (Atype);
-      El_Tinfo : constant Type_Info_Acc := Get_Info (El_Type);
+                                           return Mnode is
    begin
-      return Lv2M
-        (New_Selected_Element (M2Lv (B), Arr_Tinfo.B.El_Bounds),
-         El_Tinfo, Mode_Value,
-         El_Tinfo.B.Bounds_Type, El_Tinfo.B.Bounds_Ptr_Type);
+      return Layout_To_Bounds (Array_Bounds_To_Element_Layout (B, Atype));
    end Array_Bounds_To_Element_Bounds;
 
    function Array_Bounds_To_Element_Size (B : Mnode; Atype : Iir)
-                                           return O_Lnode
-   is
-      Arr_Tinfo : constant Type_Info_Acc := Get_Info (Atype);
-      Sizes : O_Lnode;
-      Field : O_Fnode;
+                                         return O_Lnode is
    begin
-      Sizes := New_Selected_Element (M2Lv (B), Arr_Tinfo.B.El_Size);
-      case Get_Object_Kind (B) is
-         when Mode_Value =>
-            Field := Ghdl_Sizes_Val;
-         when Mode_Signal =>
-            Field := Ghdl_Sizes_Sig;
-      end case;
-      Sizes := New_Selected_Element (Sizes, Field);
-      return Sizes;
+      return Layout_To_Size
+        (Array_Bounds_To_Element_Layout (B, Atype), Get_Object_Kind (B));
    end Array_Bounds_To_Element_Size;
 
    function Type_To_Range (Atype : Iir) return Mnode
@@ -2847,51 +2731,35 @@ package body Trans.Chap3 is
                    Mode_Value);
    end Range_To_Right;
 
-   function Get_Array_Type_Bounds (Info : Type_Info_Acc) return Mnode
-   is
+   function Get_Composite_Type_Bounds (Atype : Iir) return Mnode is
    begin
-      case Info.Type_Mode is
-         when Type_Mode_Unbounded =>
-            raise Internal_Error;
-         when Type_Mode_Bounded_Arrays
-           | Type_Mode_Bounded_Records =>
-            return Varv2M (Info.S.Composite_Bounds,
-                           Info, Mode_Value,
-                           Info.B.Bounds_Type,
-                           Info.B.Bounds_Ptr_Type);
-         when others =>
-            raise Internal_Error;
-      end case;
-   end Get_Array_Type_Bounds;
+      return Layout_To_Bounds (Get_Composite_Type_Layout (Get_Info (Atype)));
+   end Get_Composite_Type_Bounds;
 
-   function Get_Array_Type_Bounds (Atype : Iir) return Mnode is
-   begin
-      return Get_Array_Type_Bounds (Get_Info (Atype));
-   end Get_Array_Type_Bounds;
-
-   function Get_Composite_Bounds (Arr : Mnode) return Mnode
+   function Get_Composite_Bounds (Obj : Mnode) return Mnode
    is
-      Info : constant Type_Info_Acc := Get_Type_Info (Arr);
+      Info : constant Type_Info_Acc := Get_Type_Info (Obj);
    begin
       case Info.Type_Mode is
          when Type_Mode_Unbounded_Array
            | Type_Mode_Unbounded_Record =>
             declare
-               Kind : constant Object_Kind_Type := Get_Object_Kind (Arr);
+               Kind : constant Object_Kind_Type := Get_Object_Kind (Obj);
             begin
                return Lp2M
-                 (New_Selected_Element (M2Lv (Arr),
+                 (New_Selected_Element (M2Lv (Obj),
                                         Info.B.Bounds_Field (Kind)),
                   Info,
                   Mode_Value,
                   Info.B.Bounds_Type,
                   Info.B.Bounds_Ptr_Type);
             end;
-         when Type_Mode_Bounded_Arrays
-           | Type_Mode_Bounded_Records =>
-            return Get_Array_Type_Bounds (Info);
+         when Type_Mode_Bounded_Arrays =>
+            return Layout_To_Bounds (Get_Composite_Type_Layout (Info));
+         when Type_Mode_Bounded_Records =>
+            return Get_Composite_Type_Layout (Info);
          when Type_Mode_Bounds_Acc =>
-            return Lp2M (M2Lv (Arr), Info, Mode_Value);
+            return Lp2M (M2Lv (Obj), Info, Mode_Value);
          when others =>
             raise Internal_Error;
       end case;
@@ -2942,7 +2810,7 @@ package body Trans.Chap3 is
       if Type_Info.Type_Locally_Constrained then
          return New_Lit (Get_Thin_Array_Length (Atype));
       else
-         return Get_Bounds_Length (Get_Array_Type_Bounds (Atype), Atype);
+         return Get_Bounds_Length (Get_Composite_Type_Bounds (Atype), Atype);
       end if;
    end Get_Array_Type_Length;
 
@@ -2957,59 +2825,71 @@ package body Trans.Chap3 is
       end if;
    end Get_Array_Length;
 
-   function Get_Composite_Base (Arr : Mnode) return Mnode
+   --  Get the base part of a dope vector.
+   function Get_Unbounded_Base (Arr : Mnode) return Mnode
    is
       Info : constant Type_Info_Acc := Get_Type_Info (Arr);
+      Kind : constant Object_Kind_Type := Get_Object_Kind (Arr);
+   begin
+      pragma Assert (Info.Type_Mode in Type_Mode_Unbounded);
+      return Lp2M
+        (New_Selected_Element (M2Lv (Arr), Info.B.Base_Field (Kind)),
+         Info, Kind,
+         Info.B.Base_Type (Kind), Info.B.Base_Ptr_Type (Kind));
+   end Get_Unbounded_Base;
+
+   function Get_Composite_Base (Obj : Mnode) return Mnode
+   is
+      Info : constant Type_Info_Acc := Get_Type_Info (Obj);
    begin
       case Info.Type_Mode is
          when Type_Mode_Unbounded_Array
            | Type_Mode_Unbounded_Record =>
-            declare
-               Kind : constant Object_Kind_Type := Get_Object_Kind (Arr);
-            begin
-               return Lp2M
-                 (New_Selected_Element (M2Lv (Arr),
-                                        Info.B.Base_Field (Kind)),
-                  Info, Kind,
-                  Info.B.Base_Type (Kind), Info.B.Base_Ptr_Type (Kind));
-            end;
-         when Type_Mode_Bounded_Arrays =>
-            return Arr;
-         when Type_Mode_Bounded_Records =>
-            return Unbox_Record (Arr);
+            return Get_Unbounded_Base (Obj);
+         when Type_Mode_Bounded_Arrays
+           | Type_Mode_Bounded_Records =>
+            return Obj;
          when others =>
             raise Internal_Error;
       end case;
    end Get_Composite_Base;
 
-   function Unbox_Record (Arr : Mnode) return Mnode
+   function Unbox_Record (Obj : Mnode) return Mnode
    is
-      Info : constant Type_Info_Acc := Get_Type_Info (Arr);
+      Info : constant Type_Info_Acc := Get_Type_Info (Obj);
+      pragma Assert (Info.Type_Mode in Type_Mode_Bounded_Records);
+      Kind : constant Object_Kind_Type := Get_Object_Kind (Obj);
+      Box_Field : constant O_Fnode := Info.S.Box_Field (Kind);
+   begin
+      if Box_Field /= O_Fnode_Null then
+         --  Unbox the record.
+         return Lv2M (New_Selected_Element (M2Lv (Obj), Box_Field),
+                      Info, Kind,
+                      Info.B.Base_Type (Kind),
+                      Info.B.Base_Ptr_Type (Kind));
+      else
+         return Obj;
+      end if;
+   end Unbox_Record;
+
+   function Get_Composite_Unbounded_Base (Obj : Mnode) return Mnode
+   is
+      Info : constant Type_Info_Acc := Get_Type_Info (Obj);
    begin
       case Info.Type_Mode is
-         when Type_Mode_Arrays =>
-            return Arr;
-         when Type_Mode_Unbounded_Record =>
-            return Arr;
+         when Type_Mode_Unbounded_Array
+           | Type_Mode_Unbounded_Record =>
+            return Get_Unbounded_Base (Obj);
+         when Type_Mode_Bounded_Arrays =>
+            --  This works in ortho as an access to unconstrained array is
+            --  also an access to a constrained array.
+            return Obj;
          when Type_Mode_Bounded_Records =>
-            declare
-               Kind : constant Object_Kind_Type := Get_Object_Kind (Arr);
-               Box_Field : constant O_Fnode := Info.S.Box_Field (Kind);
-            begin
-               if Box_Field /= O_Fnode_Null then
-                  --  Unbox the record.
-                  return Lv2M (New_Selected_Element (M2Lv (Arr), Box_Field),
-                               Info, Kind,
-                               Info.B.Base_Type (Kind),
-                               Info.B.Base_Ptr_Type (Kind));
-               else
-                  return Arr;
-               end if;
-            end;
+            return Unbox_Record (Obj);
          when others =>
             raise Internal_Error;
       end case;
-   end Unbox_Record;
+   end Get_Composite_Unbounded_Base;
 
    function Create_Maybe_Fat_Array_Element (Arr : Mnode; Arr_Type : Iir)
                                            return Mnode
@@ -3072,13 +2952,12 @@ package body Trans.Chap3 is
       return Mnode
    is
       El_Type  : constant Iir := Get_Element_Subtype (Atype);
-      El_Tinfo : constant Type_Info_Acc := Get_Info (El_Type);
       Kind     : constant Object_Kind_Type := Get_Object_Kind (Base);
    begin
       return E2M (Reindex_Array
                     (Base, Atype,
                      Index,
-                     New_Value (Get_Var (El_Tinfo.C (Kind).Size_Var))),
+                     Get_Subtype_Size (El_Type, Mnode_Null, Kind)),
                   Res_Info, Kind);
    end Reindex_Complex_Array;
 
@@ -3151,22 +3030,6 @@ package body Trans.Chap3 is
       end if;
    end Slice_Base;
 
-   procedure Maybe_Call_Type_Builder (Obj : Mnode; Obj_Type : Iir)
-   is
-      Dinfo  : constant Type_Info_Acc :=
-        Get_Info (Get_Base_Type (Obj_Type));
-      Kind   : constant Object_Kind_Type := Get_Object_Kind (Obj);
-   begin
-      if Is_Complex_Type (Dinfo)
-        and then Dinfo.C (Kind).Builder_Need_Func
-      then
-         Open_Temp;
-         --  Build the type.
-         Chap3.Gen_Call_Type_Builder (Obj, Obj_Type);
-         Close_Temp;
-      end if;
-   end Maybe_Call_Type_Builder;
-
    procedure Allocate_Unbounded_Composite_Base (Alloc_Kind : Allocation_Kind;
                                                 Res        : Mnode;
                                                 Arr_Type   : Iir)
@@ -3182,8 +3045,6 @@ package body Trans.Chap3 is
       New_Assign_Stmt
         (M2Lp (Chap3.Get_Composite_Base (Res)),
          Gen_Alloc (Alloc_Kind, Length, Dinfo.B.Base_Ptr_Type (Kind)));
-
-      Maybe_Call_Type_Builder (Res, Arr_Type);
    end Allocate_Unbounded_Composite_Base;
 
    procedure Allocate_Unbounded_Composite_Bounds
@@ -3207,12 +3068,12 @@ package body Trans.Chap3 is
    begin
       Chap3.Translate_Subtype_Definition
         (Arr_Type, Get_Base_Type (Arr_Type), False);
-      Chap3.Create_Composite_Subtype_Bounds_Var (Arr_Type, False);
+      Chap3.Create_Composite_Subtype_Layout_Var (Arr_Type, False);
    end Translate_Array_Subtype;
 
    procedure Elab_Array_Subtype (Arr_Type : Iir) is
    begin
-      Chap3.Elab_Composite_Subtype_Bounds (Arr_Type);
+      Chap3.Elab_Composite_Subtype_Layout (Arr_Type);
    end Elab_Array_Subtype;
 
    procedure Create_Array_Subtype (Sub_Type : Iir)
@@ -3226,8 +3087,7 @@ package body Trans.Chap3 is
            (Sub_Type, Get_Base_Type (Sub_Type), False);
       end if;
       --  Force creation of variables.
-      Chap3.Create_Composite_Subtype_Bounds_Var (Sub_Type, True);
-      Chap3.Elab_Type_Definition_Size_Var (Sub_Type);
+      Chap3.Create_Composite_Subtype_Layout_Var (Sub_Type, True);
       Pop_Identifier_Prefix (Mark);
    end Create_Array_Subtype;
 
@@ -3271,66 +3131,30 @@ package body Trans.Chap3 is
       Type_Info : constant Type_Info_Acc := Get_Info (Atype);
    begin
       case Type_Info.Type_Mode is
-         when Type_Mode_Complex_Array
-           | Type_Mode_Complex_Record =>
-            --  The length is pre-computed for a complex bounded type.
-            if Type_Info.C (Kind).Size_Var /= Null_Var then
-               return New_Value (Get_Var (Type_Info.C (Kind).Size_Var));
-            else
-               raise Internal_Error;
-            end if;
          when Type_Mode_Non_Composite
             | Type_Mode_Static_Array
             | Type_Mode_Static_Record =>
             return New_Lit (New_Sizeof (Type_Info.Ortho_Type (Kind),
                                         Ghdl_Index_Type));
+         when Type_Mode_Complex_Array
+           | Type_Mode_Complex_Record =>
+            --  The length is pre-computed for a complex bounded type.
+            return New_Value
+              (Sizes_To_Size
+                 (Layout_To_Sizes
+                    (Get_Composite_Type_Layout (Type_Info)), Kind));
          when Type_Mode_Unbounded_Array =>
             declare
                El_Type  : constant Iir := Get_Element_Subtype (Atype);
                El_Sz    : O_Enode;
             begin
-               --  See create_array_size_var.
+               --  FIXME: unbounded elements ?
                El_Sz := Get_Subtype_Size (El_Type, Mnode_Null, Kind);
                return New_Dyadic_Op
                  (ON_Mul_Ov, Chap3.Get_Bounds_Length (Bounds, Atype), El_Sz);
             end;
          when Type_Mode_Unbounded_Record =>
-            declare
-               El_List : constant Iir_Flist :=
-                 Get_Elements_Declaration_List (Atype);
-               El : Iir;
-               El_Type : Iir;
-               El_Type_Info : Type_Info_Acc;
-               El_Bounds : Mnode;
-               Stable_Bounds : Mnode;
-               Res : O_Enode;
-            begin
-               Stable_Bounds := Stabilize (Bounds);
-
-               --  Size of base type
-               Res := New_Lit (New_Sizeof (Type_Info.B.Base_Type (Kind),
-                                           Ghdl_Index_Type));
-               for I in Flist_First .. Flist_Last (El_List) loop
-                  El := Get_Nth_Element (El_List, I);
-                  El_Type := Get_Type (El);
-                  El_Type_Info := Get_Info (El_Type);
-                  if El_Type_Info.Type_Mode in Type_Mode_Unbounded then
-                     --  Recurse
-                     Res := Realign (Res, El_Type);
-                     El_Bounds := Bounds_To_Element_Bounds (Stable_Bounds, El);
-                     Res := New_Dyadic_Op
-                       (ON_Add_Ov,
-                        Res, Get_Subtype_Size (El_Type, El_Bounds, Kind));
-                  elsif Is_Complex_Type (El_Type_Info) then
-                     --  Add supplement
-                     Res := Realign (Res, El_Type);
-                     Res := New_Dyadic_Op
-                       (ON_Add_Ov,
-                        Res, Get_Subtype_Size (El_Type, Mnode_Null, Kind));
-                  end if;
-               end loop;
-               return Res;
-            end;
+            return New_Value (Sizes_To_Size (Layout_To_Sizes (Bounds), Kind));
          when others =>
             raise Internal_Error;
       end case;
@@ -3385,8 +3209,6 @@ package body Trans.Chap3 is
             Gen_Alloc (Alloc_Kind,
                        Chap3.Get_Object_Size (T2M (Obj_Type, Kind), Obj_Type),
                        Tinfo.Ortho_Ptr_Type (Kind)));
-
-         Maybe_Call_Type_Builder (Res, Obj_Type);
       end if;
    end Translate_Object_Allocation;
 

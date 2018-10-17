@@ -63,9 +63,9 @@ package Ortho_Code.Exprs is
       --  ARG1 is object.
       --  ARG2 is the frame pointer or O_Enode_Null for current frame pointer.
       OE_Addrl,
-      --  Address of a global variable.
-      --  ARG1 is object.
-      OE_Addrg,
+      --  Address of a declaration.
+      --  ARG1 is the declaration.
+      OE_Addrd,
 
       --  Pointer dereference.
       --  ARG1 is operand.
@@ -214,7 +214,6 @@ package Ortho_Code.Exprs is
    subtype OE_Kind_Dyadic is OE_Kind range OE_Add_Ov .. OE_Xor;
    subtype OE_Kind_Cmp is OE_Kind range OE_Eq .. OE_Gt;
 
-
    --  BE representation of an instruction.
    type O_Insn is mod 256;
 
@@ -329,8 +328,11 @@ package Ortho_Code.Exprs is
    function Get_Jump_Label (Enode : O_Enode) return O_Enode;
    procedure Set_Jump_Label (Enode : O_Enode; Label : O_Enode);
 
-   --  Get the object of addrl,addrp,addrg
-   function Get_Addr_Object (Enode : O_Enode) return O_Dnode;
+   --  Get the declaration of addrl,addrp,addrs
+   function Get_Addr_Decl (Enode : O_Enode) return O_Dnode;
+
+   --  Get the object of addrg
+   function Get_Addr_Object (Enode : O_Enode) return O_Lnode;
 
    --  Get the computed frame for the object.
    --  If O_Enode_Null, then use current frame.

@@ -264,6 +264,7 @@ package body Ortho_Debug.Disp is
 
    procedure Disp_Enode (E : O_Enode; Etype : O_Tnode);
    procedure Disp_Lnode (Node : O_Lnode);
+   procedure Disp_Gnode (Node : O_Gnode);
    procedure Disp_Snode (First, Last : O_Snode);
    procedure Disp_Dnode (Decl : O_Dnode);
    procedure Disp_Tnode (Atype : O_Tnode; Full : Boolean);
@@ -556,17 +557,17 @@ package body Ortho_Debug.Disp is
          when OC_Address =>
             Disp_Tnode_Name (C.Ctype);
             Put ("'address (");
-            Disp_Dnode_Name (C.Decl);
+            Disp_Gnode (C.Addr_Global);
             Put (")");
          when OC_Unchecked_Address =>
             Disp_Tnode_Name (C.Ctype);
             Put ("'unchecked_address (");
-            Disp_Dnode_Name (C.Decl);
+            Disp_Gnode (C.Addr_Global);
             Put (")");
          when OC_Subprogram_Address =>
             Disp_Tnode_Name (C.Ctype);
             Put ("'subprg_addr (");
-            Disp_Dnode_Name (C.Decl);
+            Disp_Dnode_Name (C.Addr_Decl);
             Put (")");
       end case;
    end Disp_Cnode;
@@ -677,12 +678,20 @@ package body Ortho_Debug.Disp is
             Disp_Lnode (Node.Rec_Base);
             Put ('.');
             Disp_Ident (Node.Rec_El.Ident);
---          when OL_Var_Ref
---            | OL_Const_Ref
---            | OL_Param_Ref =>
---             Disp_Dnode_Name (Node.Decl);
       end case;
    end Disp_Lnode;
+
+   procedure Disp_Gnode (Node : O_Gnode) is
+   begin
+      case Node.Kind is
+         when OG_Decl =>
+            Disp_Dnode_Name (Node.Decl);
+         when OG_Selected_Element =>
+            Disp_Gnode (Node.Rec_Base);
+            Put ('.');
+            Disp_Ident (Node.Rec_El.Ident);
+      end case;
+   end Disp_Gnode;
 
    procedure Disp_Fnodes (First : O_Fnode)
    is
