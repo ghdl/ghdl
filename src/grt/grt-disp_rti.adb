@@ -327,9 +327,21 @@ package body Grt.Disp_Rti is
                Disp_Record_Value (Stream, Bt, Ctxt, Obj, Rec_Layout, Is_Sig);
             end;
          when Ghdl_Rtik_Type_Unbounded_Record =>
-            Disp_Record_Value
-              (Stream, To_Ghdl_Rtin_Type_Record_Acc (Rti), Ctxt,
-               Obj, Bounds, Is_Sig);
+            declare
+               Bt : constant Ghdl_Rtin_Type_Record_Acc :=
+                 To_Ghdl_Rtin_Type_Record_Acc (Rti);
+            begin
+               Disp_Record_Value (Stream, Bt, Ctxt, Obj, Bounds, Is_Sig);
+            end;
+         when Ghdl_Rtik_Subtype_Unbounded_Record =>
+            declare
+               St : constant Ghdl_Rtin_Subtype_Composite_Acc :=
+                 To_Ghdl_Rtin_Subtype_Composite_Acc (Rti);
+               Bt : constant Ghdl_Rtin_Type_Record_Acc :=
+                 To_Ghdl_Rtin_Type_Record_Acc (St.Basetype);
+            begin
+               Disp_Record_Value (Stream, Bt, Ctxt, Obj, Bounds, Is_Sig);
+            end;
          when Ghdl_Rtik_Subtype_Record =>
             declare
                St : constant Ghdl_Rtin_Subtype_Composite_Acc :=

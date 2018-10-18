@@ -445,6 +445,15 @@ package body Grt.Rtis_Utils is
             when Ghdl_Rtik_Type_Unbounded_Record =>
                --  Bounds (layout) must have been extracted.
                Handle_Record (To_Ghdl_Rtin_Type_Record_Acc (Rti));
+            when Ghdl_Rtik_Subtype_Unbounded_Record =>
+               declare
+                  St : constant Ghdl_Rtin_Subtype_Composite_Acc :=
+                    To_Ghdl_Rtin_Subtype_Composite_Acc (Rti);
+                  Bt : constant Ghdl_Rtin_Type_Record_Acc :=
+                    To_Ghdl_Rtin_Type_Record_Acc (St.Basetype);
+               begin
+                  Handle_Record (Bt);
+               end;
             when Ghdl_Rtik_Subtype_Record =>
                declare
                   St : constant Ghdl_Rtin_Subtype_Composite_Acc :=

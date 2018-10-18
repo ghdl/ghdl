@@ -48,6 +48,14 @@ package Grt.Ghw is
    type Ghw_Rtik is new Unsigned_8;
    Ghw_Rtik_Error : constant Ghw_Rtik := 0;
    Ghw_Rtik_Eos      : constant Ghw_Rtik := 15; --  End of scope.
+
+   Ghw_Rtik_Signal       : constant Ghw_Rtik := 16; --  Signal.
+   Ghw_Rtik_Port_In      : constant Ghw_Rtik := 17; --  Port
+   Ghw_Rtik_Port_Out     : constant Ghw_Rtik := 18; --  Port
+   Ghw_Rtik_Port_Inout   : constant Ghw_Rtik := 19; --  Port
+   Ghw_Rtik_Port_Buffer  : constant Ghw_Rtik := 20; --  Port
+   Ghw_Rtik_Port_Linkage : constant Ghw_Rtik := 21; --  Port
+
    Ghw_Rtik_Type_B2  : constant Ghw_Rtik := 22;
    Ghw_Rtik_Type_E8  : constant Ghw_Rtik := 23;
    Ghw_Rtik_Type_E32 : constant Ghw_Rtik := 24;  --  Not used in waves
@@ -71,12 +79,5 @@ package Grt.Ghw is
    Ghw_Rtik_Subtype_F64 : constant Ghw_Rtik := 46;
    Ghw_Rtik_Subtype_P32 : constant Ghw_Rtik := 47;
    Ghw_Rtik_Subtype_P64 : constant Ghw_Rtik := 48;
-
-   Ghw_Rtik_Signal       : constant Ghw_Rtik := 16; --  Signal.
-   Ghw_Rtik_Port_In      : constant Ghw_Rtik := 17; --  Port
-   Ghw_Rtik_Port_Out     : constant Ghw_Rtik := 18; --  Port
-   Ghw_Rtik_Port_Inout   : constant Ghw_Rtik := 19; --  Port
-   Ghw_Rtik_Port_Buffer  : constant Ghw_Rtik := 20; --  Port
-   Ghw_Rtik_Port_Linkage : constant Ghw_Rtik := 21; --  Port
 
 end Grt.Ghw;
