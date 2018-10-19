@@ -37,6 +37,8 @@ package Flags is
    --  Some flags (such as vhdl version) must be the same for every design
    --  units of a hierarchy.
    --  The Flag_String is a signature of all these flags.
+   --  Note: Flag_String (5) (time resolution) is directly overwritten in
+   --   ghdlrun.
    Flag_String : String (1 .. 5);
    procedure Create_Flag_String;
 

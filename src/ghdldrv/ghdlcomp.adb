@@ -75,14 +75,11 @@ package body Ghdlcomp is
             Time_Resolution := 'm';
          elsif Option (19 .. Option'Last) = "sec" then
             Time_Resolution := 's';
-         elsif Option (19 .. Option'Last) = "min" then
-            Time_Resolution := 'M';
-         elsif Option (19 .. Option'Last) = "hr" then
-            Time_Resolution := 'h';
          elsif Option (19 .. Option'Last) = "auto" then
             Time_Resolution := 'a';
          else
-            Res := Option_Bad;
+            Error ("unknown unit name for --time-resolution");
+            Res := Option_Err;
          end if;
       else
          Decode_Option (Command_Lib (Cmd), Option, Arg, Res);
@@ -98,7 +95,7 @@ package body Ghdlcomp is
       Hooks.Disp_Long_Help.all;
       Put_Line (" --expect-failure  Expect analysis/elaboration failure");
       Put_Line (" --time-resolution=UNIT   Set the resolution of type time");
-      Put_Line ("            UNIT can be fs, ps, ns, us, ms, sec, min or hr");
+      Put_Line ("            UNIT can be fs, ps, ns, us, ms, sec or auto");
    end Disp_Long_Help;
 
    --  Command -r

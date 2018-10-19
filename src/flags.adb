@@ -41,7 +41,7 @@ package body Flags is
          Flag_String (4) := 't';
       end if;
 
-      --  Time_Resolution is always fs.
+      --  Time_Resolution is always fs, maybe overwritten later.
       Flag_String (5) := '-';
    end Create_Flag_String;
 end Flags;

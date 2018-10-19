@@ -354,6 +354,8 @@ package body Ghdlmain is
                      Error ("unknown option '" & Arg.all & "' for command '"
                             & Cmd_Name.all & "'");
                      raise Option_Error;
+                  when Option_Err =>
+                     raise Option_Error;
                   when Option_Ok =>
                      Arg_Index := Arg_Index + 1;
                   when Option_Arg_Req =>

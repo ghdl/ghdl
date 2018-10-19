@@ -318,8 +318,7 @@ package body Grt.Waves is
       end if;
    end Wave_Init;
 
-   procedure Write_File_Header
-   is
+   procedure Write_File_Header is
    begin
       --  Magic, 9 bytes.
       Wave_Put ("GHDLwave" & Nl);
@@ -331,6 +330,8 @@ package body Grt.Waves is
       Wave_Put_Byte (1);
 
       Wave_Write_Size_Order;
+
+      --  TODO: add time resolution.
    end Write_File_Header;
 
    procedure Avhpi_Error (Err : AvhpiErrorT)

@@ -110,10 +110,6 @@ package body Ghdlrun is
       --  The design is always analyzed in whole.
       Flags.Flag_Whole_Analyze := True;
 
-      Ortho_Jit.Init;
-
-      Translation.Initialize;
-
       case Elab_Mode is
          when Elab_Static =>
             Canon.Canon_Flag_Add_Labels := True;
@@ -159,8 +155,6 @@ package body Ghdlrun is
                   when 'u' => Put ("us");
                   when 'm' => Put ("ms");
                   when 's' => Put ("sec");
-                  when 'M' => Put ("min");
-                  when 'h' => Put ("hr");
                   when others => Put ("??");
                end case;
                New_Line;
@@ -168,6 +162,13 @@ package body Ghdlrun is
          end if;
       end if;
       Std_Package.Set_Time_Resolution (Time_Resolution);
+
+      --  Overwrite time resolution in flag string.
+      Flags.Flag_String (5) := Time_Resolution;
+
+      Ortho_Jit.Init;
+
+      Translation.Initialize;
 
       case Elab_Mode is
          when Elab_Static =>

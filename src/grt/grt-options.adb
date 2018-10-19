@@ -117,6 +117,7 @@ package body Grt.Options is
       Pos : Natural;
       Time : Integer_64;
       Unit : String (1 .. 3);
+      Scale : Natural_Time_Scale;
    begin
       Extract_Integer (Str, Ok, Time, Pos);
       if not Ok then
@@ -138,27 +139,33 @@ package body Grt.Options is
       Unit (2) := To_Lower (Str (Pos + 1));
 
       if Unit = "fs " then
-         null;
+         Scale := 5;
       elsif Unit = "ps " then
-         Time := Time * (10 ** 3);
+         Scale := 4;
       elsif Unit = "ns " then
-         Time := Time * (10 ** 6);
+         Scale := 3;
       elsif Unit = "us " then
-         Time := Time * (10 ** 9);
+         Scale := 2;
       elsif Unit = "ms " then
-         Time := Time * (10 ** 12);
+         Scale := 1;
       elsif Unit = "sec" then
-         Time := Time * (10 ** 15);
-      elsif Unit = "min" then
-         Time := Time * (10 ** 15) * 60;
-      elsif Unit = "hr " then
-         Time := Time * (10 ** 15) * 3600;
+         Scale := 0;
       else
          Error_S ("bad unit name for '");
          Diag_C (Str);
          Error_E ("'");
          return -1;
       end if;
+      if Scale > Time_Resolution_Scale then
+         Error_S ("unit for '");
+         Diag_C (Str);
+         Error_E ("' is less than time resolution");
+         return -1;
+      end if;
+      while Scale < Time_Resolution_Scale loop
+         Time := Time * 1000;
+         Scale := Scale + 1;
+      end loop;
       return Std_Time (Time);
    end Parse_Time;
 
@@ -361,6 +368,23 @@ package body Grt.Options is
       Len : Natural;
       Status : Decode_Option_Status;
    begin
+      case Flag_String (5) is
+         when 'f' | '-' =>
+            Time_Resolution_Scale := 5;
+         when 'p' =>
+            Time_Resolution_Scale := 4;
+         when 'n' =>
+            Time_Resolution_Scale := 3;
+         when 'u' =>
+            Time_Resolution_Scale := 2;
+         when 'm' =>
+            Time_Resolution_Scale := 1;
+         when 's' =>
+            Time_Resolution_Scale := 0;
+         when others =>
+            Error ("unhandled time resolution");
+      end case;
+
       Stop := False;
       Last_Opt := Argc - 1;
       for I in 1 .. Argc - 1 loop
