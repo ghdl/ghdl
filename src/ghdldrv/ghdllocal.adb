@@ -873,6 +873,9 @@ package body Ghdllocal is
       begin
          Delete (Str & Obj_Suffix.all & Nul);
          Delete (Str & Asm_Suffix & Nul);
+         if Flag_Postprocess then
+            Delete (Str & Post_Suffix & Nul);
+         end if;
       end Delete_Asm_Obj;
 
       procedure Delete_Top_Unit (Str : String) is

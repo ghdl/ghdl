@@ -66,9 +66,6 @@ package body Ghdldrv is
    --  "-fpic" option.
    Dash_Fpic : constant String_Access := new String'("-fpic");
 
-   --  True if --post is present.
-   Flag_Postprocess : Boolean := False;
-
    --  If set, do not assmble
    Flag_Asm : Boolean;
 
