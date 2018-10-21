@@ -832,8 +832,7 @@ package body Ghdldrv is
          raise Option_Error;
       end if;
 
-      Set_Tools_Name;
-      Locate_Tools;
+      Setup_Compiler (False);
 
       Opt (1) := new String'("--compile-standard");
       Do_Compile (Opt, "std_standard.vhdl", True);

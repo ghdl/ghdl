@@ -353,6 +353,6 @@ $(STD93_DIR)/std_standard.o: $(GHDL) std.v93
 $(STD08_DIR)/std_standard.o: $(GHDL) std.v08
 	cd $(STD08_DIR); $(ANALYZE_STD) --std=08
 
-libs.vhdl.standard: $(STD93_DIR)/std_standard.o \
- $(STD87_DIR)/std_standard.o \
+libs.vhdl.standard: $(STD87_DIR)/std_standard.o \
+ $(STD93_DIR)/std_standard.o \
  $(STD08_DIR)/std_standard.o
