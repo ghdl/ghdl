@@ -1457,6 +1457,21 @@ package body Ortho_Front is
       return Res;
    end Parse_Alignof;
 
+   function Parse_Minus_Num (Atype : Node_Acc) return O_Cnode
+   is
+      Res : O_Cnode;
+      V : Integer_64;
+   begin
+      if Token_Number = Unsigned_64 (Integer_64'Last) + 1 then
+         V := Integer_64'First;
+      else
+         V := -Integer_64 (Token_Number);
+      end if;
+      Res := New_Signed_Literal (Atype.Type_Onode, V);
+      Next_Token;
+      return Res;
+   end Parse_Minus_Num;
+
    --  Parse a literal whose type is ATYPE.
    function Parse_Typed_Literal (Atype : Node_Acc) return O_Cnode
    is
@@ -1478,16 +1493,7 @@ package body Ortho_Front is
             Next_Token;
             case Tok is
                when Tok_Num =>
-                  declare
-                     V : Integer_64;
-                  begin
-                     if Token_Number = Unsigned_64 (Integer_64'Last) + 1 then
-                        V := Integer_64'First;
-                     else
-                        V := -Integer_64 (Token_Number);
-                     end if;
-                     Res := New_Signed_Literal (Atype.Type_Onode, V);
-                  end;
+                  return Parse_Minus_Num (Atype);
                when Tok_Float_Num =>
                   Res := New_Float_Literal (Atype.Type_Onode, -Token_Float);
                when others =>
@@ -1737,14 +1743,21 @@ package body Ortho_Front is
    --  Parse '-' EXPR, 'not' EXPR, 'abs' EXPR or EXPR.
    procedure Parse_Unary_Expression (Atype : Node_Acc;
                                      Res : out O_Enode;
-                                     Res_Type : out Node_Acc)
-   is
+                                     Res_Type : out Node_Acc) is
    begin
       case Tok is
          when Tok_Minus =>
             Next_Token;
-            Parse_Primary_Expression (Atype, Res, Res_Type);
-            Res := New_Monadic_Op (ON_Neg_Ov, Res);
+            if Tok = Tok_Num then
+               if Atype = null then
+                  Parse_Error ("numeric literal without type context");
+               end if;
+               Res := New_Lit (Parse_Minus_Num (Atype));
+               Res_Type := Atype;
+            else
+               Parse_Primary_Expression (Atype, Res, Res_Type);
+               Res := New_Monadic_Op (ON_Neg_Ov, Res);
+            end if;
          when Tok_Not =>
             Next_Token;
             Parse_Unary_Expression (Atype, Res, Res_Type);
