@@ -572,9 +572,32 @@ package body Ortho_Debug.Disp is
       end case;
    end Disp_Cnode;
 
-   --  Disp E whose expected type is ETYPE (may not be set).
-   procedure Disp_Enode (E : O_Enode; Etype : O_Tnode)
+   function Is_Neg_Neg (E : O_Enode) return Boolean
    is
+      Lit : O_Cnode;
+   begin
+      pragma Assert (E.Kind = OE_Neg_Ov);
+      case E.Operand.Kind is
+         when OE_Neg_Ov =>
+            return True;
+         when OE_Lit =>
+            Lit := E.Operand.Lit;
+            case Lit.Kind is
+               when OC_Signed_Lit =>
+                  return Lit.S_Val < 0;
+               when OC_Float_Lit =>
+                  return Lit.F_Val < 0.0;
+               when others =>
+                  null;
+            end case;
+         when others =>
+            null;
+      end case;
+      return False;
+   end Is_Neg_Neg;
+
+   --  Disp E whose expected type is ETYPE (may not be set).
+   procedure Disp_Enode (E : O_Enode; Etype : O_Tnode) is
    begin
       case E.Kind is
          when OE_Lit =>
@@ -620,7 +643,9 @@ package body Ortho_Debug.Disp is
                when others =>
                   Disp_Enode_Name (E.Kind);
             end case;
-            if E.Kind /= OE_Neg_Ov then
+            --  Don't print space after '-' unless the operand is also '-'.
+            --  (avoid to print --, which is a comment).
+            if E.Kind /= OE_Neg_Ov or else Is_Neg_Neg (E) then
                Put (' ');
             end if;
             Disp_Enode (E.Operand, Etype);

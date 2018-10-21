@@ -1755,7 +1755,7 @@ package body Ortho_Front is
                Res := New_Lit (Parse_Minus_Num (Atype));
                Res_Type := Atype;
             else
-               Parse_Primary_Expression (Atype, Res, Res_Type);
+               Parse_Unary_Expression (Atype, Res, Res_Type);
                Res := New_Monadic_Op (ON_Neg_Ov, Res);
             end if;
          when Tok_Not =>
