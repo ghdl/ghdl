@@ -297,6 +297,9 @@ libs.vhdl.llvmjit: ghdl_llvm_jit$(EXEEXT)
 libs.vhdl.llvm: ghdl_llvm$(EXEEXT) ghdl1-llvm$(EXEEXT)
 	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL=$(PWD)/ghdl_llvm$(EXEEXT) GHDL_FLAGS="--GHDL1=$(PWD)/ghdl1-llvm$(EXEEXT) $(LIB_CFLAGS)" vhdl.libs.all libs.vhdl.standard
 
+libs.vhdl.debug-llvm: ghdl_llvm$(EXEEXT) ghdl1-debug$(EXEEXT)
+	$(MAKE) -f $(srcdir)/libraries/Makefile.inc $(LIBVHDL_FLAGS_TO_PASS) GHDL=$(PWD)/ghdl_llvm$(EXEEXT) GHDL_FLAGS="--GHDL1=$(PWD)/ghdl1-debug$(EXEEXT) $(LIB_CFLAGS)" vhdl.libs.all libs.vhdl.standard
+
 ghdl_llvm$(EXEEXT): version.ads force
 	$(GNATMAKE) $(GHDL_LLVM_INCFLAGS) -aI$(srcdir)/src/ghdldrv $(GNATFLAGS)\
 	 ghdl_llvm $(GNAT_BARGS) -largs $(LDFLAGS) $(GNAT_LARGS)
