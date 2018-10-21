@@ -351,7 +351,7 @@ echo "Generate default_paths.ads"
 sed -e "s%@COMPILER_GCC@%ghdl1-gcc$EXEEXT%" \
     -e "s%@COMPILER_DEBUG@%ghdl1-debug$EXEEXT%" \
     -e "s%@COMPILER_MCODE@%ghdl1-mcode$EXEEXT%" \
-    -e "s%@COMPILER_LLVM@%bin/ghdl1-llvm$EXEEXT%" \
+    -e "s%@COMPILER_LLVM@%ghdl1-llvm$EXEEXT%" \
     -e "s%@POST_PROCESSOR@%oread-$backend%" \
     -e "s%@INSTALL_PREFIX@%$prefix%" \
     -e "s%@LIB_PREFIX@%$libdirsuffix%" \

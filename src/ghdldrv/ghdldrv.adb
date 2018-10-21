@@ -473,7 +473,9 @@ package body Ghdldrv is
             return new String'(Toolname);
          end if;
       else
-         --  Try from install prefix
+         --  Try from install prefix.  This is used at least with gcc when
+         --  ghdl1 is installed in a libexec subdirectory, and also during
+         --  development.
          if Exec_Prefix /= null then
             declare
                Path : constant String :=
@@ -485,7 +487,21 @@ package body Ghdldrv is
             end;
          end if;
 
-         --  Try configured prefix
+         --  Try from install prefix / bin.  This is used at least for
+         --  ghdl1-llvm.
+         if Exec_Prefix /= null then
+            declare
+               Path : constant String :=
+                 Exec_Prefix.all & Directory_Separator
+                 & "bin" & Directory_Separator & Toolname;
+            begin
+               if Is_Executable_File (Path) then
+                  return new String'(Path);
+               end if;
+            end;
+         end if;
+
+         --  Try configured prefix.
          declare
             Path : constant String :=
               Default_Paths.Install_Prefix & Directory_Separator & Toolname;
