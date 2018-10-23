@@ -428,8 +428,8 @@ package body Trans.Chap9 is
    procedure Create_Psl_Final_Proc
      (Stmt : Iir; Base : Block_Info_Acc; Instance : out O_Dnode)
    is
-      Inter_List : O_Inter_List;
       Info       : constant Psl_Info_Acc := Get_Info (Stmt);
+      Inter_List : O_Inter_List;
    begin
       Start_Procedure_Decl (Inter_List, Create_Identifier ("FINALPROC"),
                             O_Storage_Private);
@@ -438,15 +438,82 @@ package body Trans.Chap9 is
       Finish_Subprogram_Decl (Inter_List, Info.Psl_Proc_Final_Subprg);
    end Create_Psl_Final_Proc;
 
+   --  Create an independant procedure to report coverage, as it is needed
+   --  twice and the expression must not be translated twice.
+   procedure Translate_Psl_Report
+     (Stmt : Iir; Base : Block_Info_Acc; Proc : out O_Dnode)
+   is
+      Inter_List : O_Inter_List;
+      Instance   : O_Dnode;
+      Pass       : O_Dnode;
+      Loc        : O_Dnode;
+      Msg_Var    : O_Dnode;
+      Blk        : O_If_Block;
+      Expr       : Iir;
+      Assocs     : O_Assoc_List;
+   begin
+      Start_Procedure_Decl (Inter_List, Create_Identifier ("REPORTPROC"),
+                            O_Storage_Private);
+      New_Interface_Decl (Inter_List, Instance, Wki_Instance,
+                          Base.Block_Decls_Ptr_Type);
+      New_Interface_Decl (Inter_List, Pass, Get_Identifier ("pass_fail"),
+                          Ghdl_Bool_Type);
+      Finish_Subprogram_Decl (Inter_List, Proc);
+
+      Start_Subprogram_Body (Proc);
+      Push_Local_Factory;
+      --  Push scope for architecture declarations.
+      Set_Scope_Via_Param_Ptr (Base.Block_Scope, Instance);
+
+      Loc := Chap4.Get_Location (Stmt);
+      New_Var_Decl (Msg_Var, Get_Identifier ("msg"), O_Storage_Local,
+                    Std_String_Ptr_Node);
+      Expr := Get_Report_Expression (Stmt);
+      if Expr = Null_Iir then
+         New_Assign_Stmt (New_Obj (Msg_Var),
+                          New_Lit (New_Null_Access (Std_String_Ptr_Node)));
+      else
+         New_Assign_Stmt
+           (New_Obj (Msg_Var),
+            Chap7.Translate_Expression (Expr, String_Type_Definition));
+      end if;
+
+      Start_If_Stmt (Blk, New_Obj_Value (Pass));
+
+      Start_Association (Assocs, Ghdl_Psl_Cover);
+      New_Association (Assocs, New_Obj_Value (Msg_Var));
+      New_Association (Assocs, New_Lit (Get_Ortho_Expr (Severity_Level_Note)));
+      New_Association (Assocs, New_Address (New_Obj (Loc),
+                                            Ghdl_Location_Ptr_Node));
+      New_Procedure_Call (Assocs);
+
+      New_Else_Stmt (Blk);
+
+      Start_Association (Assocs, Ghdl_Psl_Cover_Failed);
+      New_Association (Assocs, New_Obj_Value (Msg_Var));
+      New_Association (Assocs,
+                       New_Lit (Get_Ortho_Expr (Severity_Level_Error)));
+      New_Association (Assocs,
+                       New_Address (New_Obj (Loc), Ghdl_Location_Ptr_Node));
+      New_Procedure_Call (Assocs);
+
+      Finish_If_Stmt (Blk);
+
+      Clear_Scope (Base.Block_Scope);
+      Pop_Local_Factory;
+      Finish_Subprogram_Body;
+   end Translate_Psl_Report;
+
    procedure Translate_Psl_Directive_Statement
      (Stmt : Iir; Base : Block_Info_Acc)
    is
       use PSL.NFAs;
+      Info       : constant Psl_Info_Acc := Get_Info (Stmt);
       Inter_List : O_Inter_List;
       Instance   : O_Dnode;
-      Info       : constant Psl_Info_Acc := Get_Info (Stmt);
       Var_I      : O_Dnode;
       Var_Nvec   : O_Dnode;
+      Report_Proc : O_Dnode;
       Label      : O_Snode;
       Clk_Blk    : O_If_Block;
       S_Blk      : O_If_Block;
@@ -458,7 +525,15 @@ package body Trans.Chap9 is
       Cond       : O_Enode;
       NFA        : PSL_NFA;
       D_Lit      : O_Cnode;
+      Assocs     : O_Assoc_List;
    begin
+      case Get_Kind (Stmt) is
+         when Iir_Kind_Psl_Cover_Statement =>
+            Translate_Psl_Report (Stmt, Base, Report_Proc);
+         when others =>
+            null;
+      end case;
+
       Start_Procedure_Decl (Inter_List, Create_Identifier ("PROC"),
                             O_Storage_Private);
       New_Interface_Decl (Inter_List, Instance, Wki_Instance,
@@ -571,8 +646,10 @@ package body Trans.Chap9 is
                  (Stmt, Ghdl_Psl_Assert_Failed, Severity_Level_Error);
             when Iir_Kind_Psl_Cover_Statement =>
                if Get_Report_Expression (Stmt) /= Null_Iir then
-                  Chap8.Translate_Report
-                     (Stmt, Ghdl_Psl_Cover, Severity_Level_Note);
+                  Start_Association (Assocs, Report_Proc);
+                  New_Association (Assocs, New_Obj_Value (Instance));
+                  New_Association (Assocs, New_Lit (Ghdl_Bool_True_Node));
+                  New_Procedure_Call (Assocs);
                end if;
             when others =>
                Error_Kind ("Translate_Psl_Directive_Statement", Stmt);
@@ -676,8 +753,10 @@ package body Trans.Chap9 is
                                New_Value (Get_Var (Info.Psl_Count_Var)),
                                New_Lit (Ghdl_Index_0),
                                Ghdl_Bool_Type));
-            Chap8.Translate_Report
-              (Stmt, Ghdl_Psl_Cover_Failed, Severity_Level_Error);
+            Start_Association (Assocs, Report_Proc);
+            New_Association (Assocs, New_Obj_Value (Instance));
+            New_Association (Assocs, New_Lit (Ghdl_Bool_False_Node));
+            New_Procedure_Call (Assocs);
             Finish_If_Stmt (S_Blk);
 
             Clear_Scope (Base.Block_Scope);
