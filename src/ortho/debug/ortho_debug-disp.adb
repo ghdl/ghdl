@@ -452,6 +452,81 @@ package body Ortho_Debug.Disp is
       end if;
    end Disp_Lit;
 
+   Xdigit : constant array (0 .. 15) of Character := "0123456789abcdef";
+
+   procedure Disp_Float_Lit
+     (Lit_Type : O_Tnode; Known : Boolean; Val : IEEE_Float_64)
+   is
+      pragma Assert (IEEE_Float_64'Machine_Radix = 2);
+      pragma Assert (IEEE_Float_64'Machine_Mantissa = 53);
+      Exp : Integer;
+      Man : Unsigned_64;
+      --  Res: sign(1) + 0x(2) + Man(53 / 3 ~= 18) + p(1) + sing(1) + exp(4)
+      Str : String (1 .. 1 + 2 + 18 + 1 + 1 + 4);
+      P : Natural;
+      Neg : Boolean;
+   begin
+      Exp := IEEE_Float_64'Exponent (Val) - 1;
+      Man := Unsigned_64 (abs (IEEE_Float_64'Fraction (Val)) * 2.0 ** 53);
+
+      --  Use decimal representation if there is no digit after the dot.
+      if Man = 0 then
+         Disp_Lit (Lit_Type, Known, "0.0");
+      else
+         pragma Assert (Shift_Right (Man, 52) = 1);
+
+         --  Remove hidden 1.
+         Man := Man and (2**52 - 1);
+
+         --  Remove trailing hex 0.
+         while Man /= 0 and (Man rem 16) = 0 loop
+            Man := Man / 16;
+         end loop;
+
+         --  Exponent.
+         P := Str'Last;
+         if Exp < 0 then
+            Neg := True;
+            Exp := -Exp;
+         else
+            Neg := False;
+         end if;
+         loop
+            Str (P) := Xdigit (Exp rem 10);
+            P := P - 1;
+            Exp := Exp / 10;
+            exit when Exp = 0;
+         end loop;
+         if Neg then
+            Str (P) := '-';
+            P := P - 1;
+         end if;
+         Str (P) := 'p';
+         P := P - 1;
+
+         --  Mantissa.
+         loop
+            Str (P) := Xdigit (Natural (Man and 15));
+            P := P - 1;
+            Man := Man / 16;
+            exit when Man = 0;
+         end loop;
+
+         P := P - 4;
+         Str (P + 1) := '0';
+         Str (P + 2) := 'x';
+         Str (P + 3) := '1';
+         Str (P + 4) := '.';
+
+         if Val < 0.0 then
+            Str (P) := '-';
+            P := P - 1;
+         end if;
+
+         Disp_Lit (Lit_Type, Known, Str (P + 1 .. Str'Last));
+      end if;
+   end Disp_Float_Lit;
+
    --  Display C. If CTYPE is set, this is the known type of C.
    procedure Disp_Cnode (C : O_Cnode; Ctype : O_Tnode)
    is
@@ -471,7 +546,7 @@ package body Ortho_Debug.Disp is
          when OC_Signed_Lit =>
             Disp_Lit (C.Ctype, Known, Integer_64'Image (C.S_Val));
          when OC_Float_Lit =>
-            Disp_Lit (C.Ctype, Known, IEEE_Float_64'Image (C.F_Val));
+            Disp_Float_Lit (C.Ctype, Known, C.F_Val);
          when OC_Boolean_Lit =>
             --  Always disp the type of boolean literals.
             Disp_Lit (C.Ctype, False, Get_String (C.B_Id));

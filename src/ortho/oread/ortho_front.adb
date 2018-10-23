@@ -432,42 +432,164 @@ package body Ortho_Front is
    --  Previous token.
    Tok_Previous : Token_Type;
 
-   function Scan_Number (First_Char : Character) return Token_Type
+   function To_Digit (C : Character) return Integer is
+   begin
+      case C is
+         when '0' .. '9' =>
+            return Character'Pos (C) - Character'Pos ('0');
+         when 'A' .. 'F' =>
+            return Character'Pos (C) - Character'Pos ('A') + 10;
+         when 'a' .. 'f' =>
+            return Character'Pos (C) - Character'Pos ('a') + 10;
+         when others =>
+            return -1;
+      end case;
+   end To_Digit;
+
+   function Is_Digit (C : Character) return Boolean is
+   begin
+      case C is
+         when '0' .. '9'
+           | 'A' .. 'F'
+           | 'a' .. 'f' =>
+            return True;
+         when others =>
+            return False;
+      end case;
+   end Is_Digit;
+
+   function Scan_Hex_Number return Token_Type
    is
-      function To_Digit (C : Character) return Integer is
-      begin
-         case C is
-            when '0' .. '9' =>
-               return Character'Pos (C) - Character'Pos ('0');
-            when 'A' .. 'F' =>
-               return Character'Pos (C) - Character'Pos ('A') + 10;
-            when 'a' .. 'f' =>
-               return Character'Pos (C) - Character'Pos ('a') + 10;
-            when others =>
-               return -1;
-         end case;
-      end To_Digit;
+      C : Character;
+      Exp : Integer;
+      Exp_Neg : Boolean;
+      After_Point : Natural;
+   begin
+      Token_Number := 0;
+      C := Get_Char;
+      if not Is_Digit (C) then
+         Scan_Error ("digit expected after '0x'");
+      end if;
+      loop
+         Token_Number := Token_Number * 16 + Unsigned_64 (To_Digit (C));
+         C := Get_Char;
+         exit when not Is_Digit (C);
+      end loop;
 
-      function Is_Digit (C : Character) return Boolean is
-      begin
-         case C is
-            when '0' .. '9'
-              | 'A' .. 'F'
-              | 'a' .. 'f' =>
-               return True;
-            when others =>
-               return False;
-         end case;
-      end Is_Digit;
+      After_Point := 0;
+      if C = '.' then
+         loop
+            C := Get_Char;
+            exit when not Is_Digit (C);
+            if Shift_Right (Token_Number, 60) = 0 then
+               Token_Number := Token_Number * 16 + Unsigned_64 (To_Digit (C));
+               After_Point := After_Point + 4;
+            end if;
+         end loop;
 
+         Exp := 0;
+         if C = 'p' or C = 'P' then
+            -- A real number.
+            C := Get_Char;
+            Exp_Neg := False;
+            if C = '-' then
+               Exp_Neg := True;
+               C := Get_Char;
+            elsif C = '+' then
+               C := Get_Char;
+            end if;
+            if not Is_Digit (C) then
+               Scan_Error ("digit expected after 'p'");
+            end if;
+            loop
+               Exp := Exp * 10 + To_Digit (C);
+               C := Get_Char;
+               exit when not Is_Digit (C);
+            end loop;
+            if Exp_Neg then
+               Exp := -Exp;
+            end if;
+         end if;
+         Exp := Exp - After_Point;
+         Unget_Char;
+         Token_Float :=
+           IEEE_Float_64'Scaling (IEEE_Float_64 (Token_Number), Exp);
+         return Tok_Float_Num;
+      else
+         Unget_Char;
+         return Tok_Num;
+      end if;
+   end Scan_Hex_Number;
+
+   function Scan_Fp_Number return Token_Type
+   is
       After_Point : Integer;
       C : Character;
       Exp : Integer;
       Exp_Neg : Boolean;
+   begin
+      -- A real number.
+      After_Point := 0;
+      Token_Float := IEEE_Float_64 (Token_Number);
+      loop
+         C := Get_Char;
+         exit when C not in '0' .. '9';
+         Token_Float := Token_Float * 10.0 + IEEE_Float_64 (To_Digit (C));
+         After_Point := After_Point + 1;
+      end loop;
+      if C = 'e' or C = 'E' then
+         Exp := 0;
+         C := Get_Char;
+         Exp_Neg := False;
+         if C = '-' then
+            Exp_Neg := True;
+            C := Get_Char;
+         elsif C = '+' then
+            C := Get_Char;
+         elsif not Is_Digit (C) then
+            Scan_Error ("digit expected");
+         end if;
+         while Is_Digit (C) loop
+            Exp := Exp * 10 + To_Digit (C);
+            C := Get_Char;
+         end loop;
+         if Exp_Neg then
+            Exp := -Exp;
+         end if;
+         Exp := Exp - After_Point;
+      else
+         Exp := - After_Point;
+      end if;
+      Unget_Char;
+      Token_Float := Token_Float * 10.0 ** Exp;
+      if Token_Float > IEEE_Float_64'Last then
+         Token_Float := IEEE_Float_64'Last;
+      end if;
+      return Tok_Float_Num;
+   end Scan_Fp_Number;
+
+   function Scan_Number (First_Char : Character) return Token_Type
+   is
+      C : Character;
       Base : Unsigned_64;
    begin
-      Token_Number := 0;
       C := First_Char;
+      Token_Number := 0;
+
+      --  Handle '0x' prefix.
+      if C = '0' then
+         --  '0' can be discarded.
+         C := Get_Char;
+         if C = 'x' or C = 'X' then
+            return Scan_Hex_Number;
+         elsif C = '.' then
+            return Scan_Fp_Number;
+         elsif not Is_Digit (C) then
+            Unget_Char;
+            return Tok_Num;
+         end if;
+      end if;
+
       loop
          Token_Number := Token_Number * 10 + Unsigned_64 (To_Digit (C));
          C := Get_Char;
@@ -488,44 +610,7 @@ package body Ortho_Front is
          return Tok_Num;
       end if;
       if C = '.' then
-         -- A real number.
-         After_Point := 0;
-         Token_Float := IEEE_Float_64 (Token_Number);
-         loop
-            C := Get_Char;
-            exit when C not in '0' .. '9';
-            Token_Float := Token_Float * 10.0 + IEEE_Float_64 (To_Digit (C));
-            After_Point := After_Point + 1;
-         end loop;
-         if C = 'e' or C = 'E' then
-            Exp := 0;
-            C := Get_Char;
-            Exp_Neg := False;
-            if C = '-' then
-               Exp_Neg := True;
-               C := Get_Char;
-            elsif C = '+' then
-               C := Get_Char;
-            elsif not Is_Digit (C) then
-               Scan_Error ("digit expected");
-            end if;
-            while Is_Digit (C) loop
-               Exp := Exp * 10 + To_Digit (C);
-               C := Get_Char;
-            end loop;
-            if Exp_Neg then
-               Exp := -Exp;
-            end if;
-            Exp := Exp - After_Point;
-         else
-            Exp := - After_Point;
-         end if;
-         Unget_Char;
-         Token_Float := Token_Float * 10.0 ** Exp;
-         if Token_Float > IEEE_Float_64'Last then
-            Token_Float := IEEE_Float_64'Last;
-         end if;
-         return Tok_Float_Num;
+         return Scan_Fp_Number;
       else
          Unget_Char;
          return Tok_Num;
