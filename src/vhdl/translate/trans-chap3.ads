@@ -126,6 +126,9 @@ package Trans.Chap3 is
    --    number of dimensions; these fields are a structure describing the
    --    range of the dimension.
 
+   procedure Gen_Call_Type_Builder
+     (Layout : Mnode; Var_Type : Iir; Kind : Object_Kind_Type);
+
    --  If the element subtype of ARR_TYPE is unbounded, create a fat pointer,
    --  set the bounds of it (from ARR), and return it.
    --  Otherwise, return a null mnode.

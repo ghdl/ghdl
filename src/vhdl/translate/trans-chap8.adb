@@ -2893,6 +2893,11 @@ package body Trans.Chap8 is
                  or else (Get_Interface_Of_Formal (Get_Formal (Next_Assoc))
                             /= Base_Formal)
                then
+                  --  * compute the size of the object
+                  Chap3.Gen_Call_Type_Builder
+                    (Chap3.Get_Composite_Bounds (Params (Last_Individual)),
+                     Get_Type (Base_Formal), Formal_Object_Kind);
+
                   --  * allocate base
                   Chap3.Allocate_Unbounded_Composite_Base
                     (Alloc, Saved_Val (Last_Individual),
