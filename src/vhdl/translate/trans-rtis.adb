@@ -1353,6 +1353,14 @@ package body Trans.Rtis is
 
       case Get_Kind (Atype) is
          when Iir_Kind_Access_Type_Definition =>
+            --  Don't bother with designated type.  This at least avoid
+            --  loops.
+            Base_Type := Null_Iir;
+            --  Set rti_max_depth before generating RTI for designated type,
+            --  as the designated type can reference this access type (and
+            --  therefore read the max depth).
+            Info.B.Rti_Max_Depth := 0;
+
             declare
                Mark : Id_Mark_Type;
             begin
@@ -1366,9 +1374,6 @@ package body Trans.Rtis is
             else
                Kind := Ghdl_Rtik_Type_Access;
             end if;
-            --  Don't bother with designated type.  This at least avoid
-            --  loops.
-            Base_Type := Null_Iir;
          when Iir_Kind_File_Type_Definition =>
             Base_Type := Get_Type (Get_File_Type_Mark (Atype));
             Base := Generate_Type_Definition (Base_Type);
