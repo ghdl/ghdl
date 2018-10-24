@@ -2896,7 +2896,12 @@ package body Trans.Chap8 is
                   --  * compute the size of the object
                   Chap3.Gen_Call_Type_Builder
                     (Chap3.Get_Composite_Bounds (Params (Last_Individual)),
-                     Get_Type (Base_Formal), Formal_Object_Kind);
+                     Get_Type (Base_Formal), Mode_Value);
+                  if Formal_Object_Kind = Mode_Signal then
+                     Chap3.Gen_Call_Type_Builder
+                       (Chap3.Get_Composite_Bounds (Params (Last_Individual)),
+                        Get_Type (Base_Formal), Mode_Signal);
+                  end if;
 
                   --  * allocate base
                   Chap3.Allocate_Unbounded_Composite_Base
