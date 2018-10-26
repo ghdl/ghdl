@@ -165,6 +165,7 @@ $UVVM_Util_Files = @(
 	"uvvm_util\src\adaptations_pkg.vhd",
 	"uvvm_util\src\string_methods_pkg.vhd",
 	"uvvm_util\src\protected_types_pkg.vhd",
+	"uvvm_util\src\global_signals_and_shared_variables_pkg.vhd",
 	"uvvm_util\src\hierarchy_linked_list_pkg.vhd",
 	"uvvm_util\src\alert_hierarchy_pkg.vhd",
 	"uvvm_util\src\license_pkg.vhd",
