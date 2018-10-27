@@ -8109,7 +8109,7 @@ package body Parse is
       --  Skip 'cover'
       Scan;
 
-      Set_Psl_Sequence (Res, Parse_Psl.Parse_Psl_Sequence);
+      Set_Psl_Sequence (Res, Parse_Psl.Parse_Psl_Sequence (True));
 
       --  No more PSL tokens after the property.
       Scanner.Flag_Psl := False;

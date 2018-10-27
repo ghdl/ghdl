@@ -20,7 +20,7 @@ with Types; use Types;
 with Tokens; use Tokens;
 
 package Parse_Psl is
-   function Parse_Psl_Sequence return PSL_Node;
+   function Parse_Psl_Sequence (Full_Hdl_Expr : Boolean) return PSL_Node;
    function Parse_Psl_Property return PSL_Node;
    function Parse_Psl_Boolean return PSL_Node;
    function Parse_Psl_Declaration (Tok : Token_Type) return PSL_Node;
