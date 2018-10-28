@@ -211,7 +211,7 @@ if ($Install)
 	[System.IO.File]::WriteAllBytes("$TempFilePath", $CompressedFileContentAsBytes)
 	
 	Write-Host "  Extracting ZIP file to: $InstallPath"
-	Expand-Archive "$TempFilePath" -DestinationPath $InstallPath -Force
+	Microsoft.PowerShell.Archive\Expand-Archive "$TempFilePath" -DestinationPath $InstallPath -Force
 
 	Remove-Item $TempFilePath
 	
