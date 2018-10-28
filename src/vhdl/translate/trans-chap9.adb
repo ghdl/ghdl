@@ -1257,6 +1257,15 @@ package body Trans.Chap9 is
          Fields    : constant Fields_Array := Get_Fields (Kind);
          F         : Fields_Enum;
       begin
+         case Kind is
+            when Iir_Kind_Object_Alias_Declaration =>
+               --  No types to free, don't try to recurse as the name can be
+               --  a slice (which will then be freed).
+               return;
+            when others =>
+               null;
+         end case;
+
          for I in Fields'Range loop
             F := Fields (I);
             case F is

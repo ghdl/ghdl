@@ -92,9 +92,46 @@ package body Parse_Psl is
    function Parse_Parenthesis_Boolean return Node;
    function Parse_Boolean (Parent_Prio : Priority) return Node;
 
-   function Parse_Unary_Boolean return Node is
+   function Parse_Unary_Boolean (Full_Hdl_Expr : Boolean) return Node
+   is
+      use Parse;
+      use Iirs;
+      Left, Expr : Iir;
+      Op : Iir_Kind;
    begin
-      return Vhdl_To_Psl (Parse.Parse_Expression);
+      if Full_Hdl_Expr then
+         Expr := Parse_Expression;
+      else
+         --  Boolean operators must be parse, *except* and/or that could be at
+         --  upper layers (FL).
+         Expr := Parse_Expression (Prio_Relation);
+         loop
+            case Current_Token is
+               when Tok_Xor =>
+                  Op := Iir_Kind_Xor_Operator;
+               when Tok_Nand =>
+                  Op := Iir_Kind_Nand_Operator;
+               when Tok_Nor =>
+                  Op := Iir_Kind_Nor_Operator;
+               when Tok_Xnor =>
+                  Op := Iir_Kind_Xnor_Operator;
+               when others =>
+                  exit;
+            end case;
+
+            Left := Expr;
+            Expr := Create_Iir (Op);
+            Set_Location (Expr, Get_Token_Location);
+            Set_Left (Expr, Left);
+
+            --  Skip operator.
+            Scan;
+
+            Set_Right (Expr, Parse_Expression (Prio_Relation));
+         end loop;
+      end if;
+
+      return Vhdl_To_Psl (Expr);
    end Parse_Unary_Boolean;
 
    function Parse_Boolean_Rhs (Parent_Prio : Priority; Left : Node) return Node
@@ -131,7 +168,7 @@ package body Parse_Psl is
    function Parse_Boolean (Parent_Prio : Priority) return Node
    is
    begin
-      return Parse_Boolean_Rhs (Parent_Prio, Parse_Unary_Boolean);
+      return Parse_Boolean_Rhs (Parent_Prio, Parse_Unary_Boolean (False));
    end Parse_Boolean;
 
    function Parse_Psl_Boolean return PSL_Node is
@@ -162,7 +199,7 @@ package body Parse_Psl is
       Kind : Nkind;
       Op_Prio : Priority;
    begin
-      Left := Parse_Psl_Sequence; --  FIXME: allow boolean;
+      Left := Parse_Psl_Sequence (True);
       loop
          case Current_Token is
             when Tok_Semi_Colon =>
@@ -283,7 +320,7 @@ package body Parse_Psl is
       end if;
    end Parse_Bracket_Number;
 
-   function Parse_Psl_Sequence return Node is
+   function Parse_Psl_Sequence (Full_Hdl_Expr : Boolean) return Node is
       Res, N : Node;
    begin
       case Current_Token is
@@ -314,7 +351,7 @@ package body Parse_Psl is
             return Res;
          when others =>
             --  Repeated_SERE
-            Res := Parse_Unary_Boolean;
+            Res := Parse_Unary_Boolean (Full_Hdl_Expr);
       end case;
       loop
          case Current_Token is
@@ -458,7 +495,7 @@ package body Parse_Psl is
          when Tok_Left_Paren =>
             return Parse_Parenthesis_FL_Property;
          when Tok_Left_Curly =>
-            Res := Parse_Psl_Sequence;
+            Res := Parse_Psl_Sequence (True);
             if Get_Kind (Res) = N_Braced_SERE
               and then Current_Token = Tok_Left_Paren
             then
@@ -470,7 +507,7 @@ package body Parse_Psl is
                Res := Tmp;
             end if;
          when others =>
-            Res := Parse_Psl_Sequence;
+            Res := Parse_Psl_Sequence (False);
       end case;
       return Res;
    end Parse_FL_Property_1;
@@ -692,7 +729,7 @@ package body Parse_Psl is
             Set_Property (Res, Parse_Psl_Property);
          when N_Sequence_Declaration
            | N_Endpoint_Declaration =>
-            Set_Sequence (Res, Parse_Psl_Sequence);
+            Set_Sequence (Res, Parse_Psl_Sequence (True));
          when others =>
             raise Internal_Error;
       end case;

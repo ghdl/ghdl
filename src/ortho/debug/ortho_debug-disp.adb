@@ -1108,7 +1108,10 @@ package body Ortho_Debug.Disp is
                Disp_Loop_Name (Stmt);
                Put_Line (":");
                Add_Tab;
-               Disp_Snode (Stmt.Next, Stmt.Loop_Last);
+               if Stmt.Loop_Last /= Stmt then
+                  --  Only if the loop is not empty.
+                  Disp_Snode (Stmt.Next, Stmt.Loop_Last);
+               end if;
                Stmt := Stmt.Loop_Last;
                Rem_Tab;
                Put_Keyword ("end");
