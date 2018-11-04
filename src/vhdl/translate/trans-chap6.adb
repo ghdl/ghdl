@@ -438,10 +438,10 @@ package body Trans.Chap6 is
             New_Assign_Stmt
               (New_Obj (Offset),
                New_Dyadic_Op (ON_Add_Ov,
-                 New_Dyadic_Op (ON_Mul_Ov,
-                   New_Obj_Value (Offset),
-                   Length),
-                 R));
+                              New_Dyadic_Op (ON_Mul_Ov,
+                                             New_Obj_Value (Offset),
+                                             Length),
+                              R));
          end if;
          Close_Temp;
       end loop;
@@ -453,18 +453,14 @@ package body Trans.Chap6 is
    end Translate_Indexed_Name_Init;
 
    function Translate_Indexed_Name_Finish
-     (Prefix : Mnode; Expr : Iir; Data : Indexed_Name_Data)
-         return Mnode
-   is
+     (Prefix : Mnode; Expr : Iir; Data : Indexed_Name_Data) return Mnode is
    begin
       return Chap3.Index_Base (Chap3.Get_Composite_Base (Prefix),
                                Get_Type (Get_Prefix (Expr)),
                                New_Obj_Value (Data.Offset));
    end Translate_Indexed_Name_Finish;
 
-   function Translate_Indexed_Name (Prefix : Mnode; Expr : Iir)
-                                       return Mnode
-   is
+   function Translate_Indexed_Name (Prefix : Mnode; Expr : Iir) return Mnode is
    begin
       return Translate_Indexed_Name_Init (Prefix, Expr).Res;
    end Translate_Indexed_Name;

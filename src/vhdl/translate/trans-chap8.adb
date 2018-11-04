@@ -3607,11 +3607,10 @@ package body Trans.Chap8 is
             Targ2  : O_Dnode;
          begin
             Open_Temp;
-            Val2 := Create_Temp_Init
-              (Type_Info.Ortho_Type (Mode_Value), Val);
+            Val2 := Create_Temp_Init (Type_Info.Ortho_Type (Mode_Value), Val);
             Targ2 := Create_Temp_Init
               (Ghdl_Signal_Ptr, New_Convert_Ov (New_Value (M2Lv (Targ)),
-               Ghdl_Signal_Ptr));
+                                                Ghdl_Signal_Ptr));
             Start_If_Stmt (If_Blk, Chap3.Not_In_Range (Val2, Targ_Type));
             Start_Association (Assoc, Ghdl_Signal_Simple_Assign_Error);
             New_Association (Assoc, New_Obj_Value (Targ2));
@@ -3620,8 +3619,8 @@ package body Trans.Chap8 is
             New_Else_Stmt (If_Blk);
             Start_Association (Assoc, Subprg);
             New_Association (Assoc, New_Obj_Value (Targ2));
-            New_Association
-              (Assoc, New_Convert_Ov (New_Obj_Value (Val2), Conv));
+            New_Association (Assoc,
+                             New_Convert_Ov (New_Obj_Value (Val2), Conv));
             New_Procedure_Call (Assoc);
             Finish_If_Stmt (If_Blk);
             Close_Temp;
@@ -4093,18 +4092,9 @@ package body Trans.Chap8 is
       Close_Temp;
    end Gen_Signal_Direct_Assign_Non_Composite;
 
-   function Gen_Signal_Direct_Prepare_Data_Composite
+   function Gen_Signal_Direct_Prepare_Data_Stabilize
      (Targ : Mnode; Targ_Type : Iir; Val : Signal_Direct_Assign_Data)
-         return Signal_Direct_Assign_Data
-   is
-      pragma Unreferenced (Targ, Targ_Type);
-   begin
-      return Val;
-   end Gen_Signal_Direct_Prepare_Data_Composite;
-
-   function Gen_Signal_Direct_Prepare_Data_Record
-     (Targ : Mnode; Targ_Type : Iir; Val : Signal_Direct_Assign_Data)
-         return Signal_Direct_Assign_Data
+     return Signal_Direct_Assign_Data
    is
       pragma Unreferenced (Targ, Targ_Type);
    begin
@@ -4112,20 +4102,31 @@ package body Trans.Chap8 is
         (Drv => Stabilize (Val.Drv),
          Expr => Stabilize (Val.Expr),
          Expr_Node => Val.Expr_Node);
-   end Gen_Signal_Direct_Prepare_Data_Record;
+   end Gen_Signal_Direct_Prepare_Data_Stabilize;
+
+   function Gen_Signal_Direct_Prepare_Data_Array
+     (Targ : Mnode; Targ_Type : Iir; Val : Signal_Direct_Assign_Data)
+     return Signal_Direct_Assign_Data is
+   begin
+      if Is_Unbounded_Type (Get_Info (Targ_Type)) then
+         return Gen_Signal_Direct_Prepare_Data_Stabilize
+           (Targ, Targ_Type, Val);
+      else
+         return Val;
+      end if;
+   end Gen_Signal_Direct_Prepare_Data_Array;
 
    function Gen_Signal_Direct_Update_Data_Array
      (Val       : Signal_Direct_Assign_Data;
       Targ_Type : Iir;
       Index     : O_Dnode)
-         return Signal_Direct_Assign_Data
-   is
+     return Signal_Direct_Assign_Data is
    begin
       return Signal_Direct_Assign_Data'
-        (Drv => Chap3.Index_Base (Chap3.Get_Composite_Base (Val.Drv),
-         Targ_Type, New_Obj_Value (Index)),
-         Expr => Chap3.Index_Base (Chap3.Get_Composite_Base (Val.Expr),
-           Targ_Type, New_Obj_Value (Index)),
+        (Drv => Chap3.Index_Array (Val.Drv, Targ_Type,
+                                   New_Obj_Value (Index)),
+         Expr => Chap3.Index_Array (Val.Expr, Targ_Type,
+                                    New_Obj_Value (Index)),
          Expr_Node => Val.Expr_Node);
    end Gen_Signal_Direct_Update_Data_Array;
 
@@ -4133,7 +4134,7 @@ package body Trans.Chap8 is
      (Val       : Signal_Direct_Assign_Data;
       Targ_Type : Iir;
       El        : Iir_Element_Declaration)
-         return Signal_Direct_Assign_Data
+     return Signal_Direct_Assign_Data
    is
       pragma Unreferenced (Targ_Type);
    begin
@@ -4147,22 +4148,34 @@ package body Trans.Chap8 is
      (Data_Type => Signal_Direct_Assign_Data,
       Composite_Data_Type => Signal_Direct_Assign_Data,
       Do_Non_Composite => Gen_Signal_Direct_Assign_Non_Composite,
-      Prepare_Data_Array => Gen_Signal_Direct_Prepare_Data_Composite,
+      Prepare_Data_Array => Gen_Signal_Direct_Prepare_Data_Array,
       Update_Data_Array => Gen_Signal_Direct_Update_Data_Array,
-      Prepare_Data_Record => Gen_Signal_Direct_Prepare_Data_Record,
+      Prepare_Data_Record => Gen_Signal_Direct_Prepare_Data_Stabilize,
       Update_Data_Record => Gen_Signal_Direct_Update_Data_Record);
 
    procedure Translate_Direct_Signal_Assignment
      (Target : Iir; Targ : Mnode; Drv : Mnode; We : Iir)
    is
-      Target_Type : constant Iir := Get_Type (Target);
-      Arg         : Signal_Direct_Assign_Data;
+      Target_Type  : constant Iir := Get_Type (Target);
+      Target_Tinfo : constant Type_Info_Acc := Get_Info (Target_Type);
+      Arg          : Signal_Direct_Assign_Data;
+      Expr         : Mnode;
+      Stable_Targ  : Mnode;
    begin
-      Arg.Drv := Drv;
-      Arg.Expr := E2M (Chap7.Translate_Expression (We, Target_Type),
-                       Get_Info (Target_Type), Mode_Value);
-      Arg.Expr_Node := We;
-      Gen_Signal_Direct_Assign (Targ, Target_Type, Arg);
+      Expr := E2M (Chap7.Translate_Expression (We, Target_Type),
+                   Target_Tinfo, Mode_Value);
+      if Is_Composite (Target_Tinfo) then
+         Stabilize (Expr);
+         Stable_Targ := Stabilize (Targ);
+         Chap3.Check_Array_Match
+           (Target_Type, Stable_Targ, Get_Type (We), Expr, We);
+      else
+         Stable_Targ := Targ;
+      end if;
+      Arg := (Drv => Drv,
+              Expr => Expr,
+              Expr_Node => We);
+      Gen_Signal_Direct_Assign (Stable_Targ, Target_Type, Arg);
    end Translate_Direct_Signal_Assignment;
 
    --  Return True iff signal assignment statement STMT has a delay mechanism:
@@ -4237,7 +4250,6 @@ package body Trans.Chap8 is
       Target      : constant Iir := Strip_Reference_Name (Get_Target (Stmt));
       Target_Type : constant Iir := Get_Type (Target);
       We          : Iir_Waveform_Element;
-      Val         : O_Enode;
       Value       : Iir;
    begin
       if Mechanism = Signal_Assignment_Direct then
@@ -4257,18 +4269,35 @@ package body Trans.Chap8 is
       Value := Get_We_Value (Wf_Chain);
       Signal_Assign_Line := Get_Line_Number (Value);
       if Mechanism = Signal_Assignment_Simple then
-         Val := Chap7.Translate_Expression (Value, Target_Type);
-         Gen_Simple_Signal_Assign (Targ, Target_Type, Val);
+         declare
+            Targ_Tinfo : constant Type_Info_Acc := Get_Info (Target_Type);
+            Val : O_Enode;
+            Stable_Val : Mnode;
+            Targ2 : Mnode;
+         begin
+            Open_Temp;
+            Val := Chap7.Translate_Expression (Value, Target_Type);
+            if Is_Composite (Targ_Tinfo) then
+               Stable_Val := Stabilize (E2M (Val, Targ_Tinfo, Mode_Value));
+               Targ2 := Stabilize (Targ);
+               Chap3.Check_Array_Match
+                 (Target_Type, Targ2, Get_Type (Value), Stable_Val, Wf_Chain);
+               Val := M2E (Stable_Val);
+            else
+               Targ2 := Targ;
+            end if;
+            Gen_Simple_Signal_Assign (Targ2, Target_Type, Val);
+            Close_Temp;
+         end;
          return;
       end if;
 
       --  General case.
       declare
+         Targ_Tinfo : constant Type_Info_Acc := Get_Info (Target_Type);
          Var_Targ   : Mnode;
-         Targ_Tinfo : Type_Info_Acc;
       begin
          Open_Temp;
-         Targ_Tinfo := Get_Info (Target_Type);
          Var_Targ := Stabilize (Targ, True);
 
          --  Translate the first waveform element.
@@ -4316,6 +4345,8 @@ package body Trans.Chap8 is
                Val := E2M (Chap7.Translate_Expression (Value, Target_Type),
                            Targ_Tinfo, Mode_Value);
                Val := Stabilize (Val);
+               Chap3.Check_Array_Match
+                 (Target_Type, Var_Targ, Get_Type (Value), Val, We);
             end if;
             Data := Signal_Assign_Data'(Expr => Val,
                                         Reject => Reject_Time,
@@ -4343,9 +4374,13 @@ package body Trans.Chap8 is
                if Get_Kind (Value) = Iir_Kind_Null_Literal then
                   Val := Mnode_Null;
                else
-                  Val :=
-                    E2M (Chap7.Translate_Expression (Value, Target_Type),
-                         Targ_Tinfo, Mode_Value);
+                  Val := E2M (Chap7.Translate_Expression (Value, Target_Type),
+                              Targ_Tinfo, Mode_Value);
+                  if Is_Composite (Targ_Tinfo) then
+                     Stabilize (Val);
+                     Chap3.Check_Array_Match
+                       (Target_Type, Var_Targ, Get_Type (Value), Val, We);
+                  end if;
                end if;
                Data := Signal_Assign_Data'(Expr => Val,
                                            Reject => O_Dnode_Null,

@@ -2969,8 +2969,8 @@ package body Trans.Chap3 is
       Kind     : constant Object_Kind_Type := Get_Object_Kind (Base);
    begin
       if Is_Unbounded_Type (El_Tinfo) then
-         --  return Reindex_Unbounded_Array (Base, Atype, Index, El_Tinfo);
-         --  TODO
+         --  It's not possible to index an unbounded array with only the base.
+         --  Index_Array must be used instead.
          raise Internal_Error;
       elsif Is_Complex_Type (El_Tinfo) then
          return Reindex_Complex_Array (Base, Atype, Index, El_Tinfo);
@@ -3411,6 +3411,9 @@ package body Trans.Chap3 is
       L_Tinfo : constant Type_Info_Acc := Get_Info (L_Type);
       R_Tinfo : constant Type_Info_Acc := Get_Info (R_Type);
    begin
+      if L_Tinfo.Type_Mode not in Type_Mode_Arrays then
+         return;
+      end if;
       --  FIXME: optimize for a statically bounded array of a complex type.
       if L_Tinfo.Type_Mode in Type_Mode_Arrays
         and then L_Tinfo.Type_Locally_Constrained
