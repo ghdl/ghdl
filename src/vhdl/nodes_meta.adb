@@ -3617,9 +3617,9 @@ package body Nodes_Meta is
       Field_Type,
       --  Iir_Kind_Qualified_Expression
       Field_Expr_Staticness,
-      Field_Type,
       Field_Type_Mark,
       Field_Expression,
+      Field_Type,
       --  Iir_Kind_Type_Conversion
       Field_Expr_Staticness,
       Field_Type,

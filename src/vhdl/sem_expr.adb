@@ -4078,6 +4078,19 @@ package body Sem_Expr is
       --  static expression with a non-locally static subtype.
       Set_Expr_Staticness (Expr, Min (Get_Expr_Staticness (Res),
                                       Get_Type_Staticness (N_Type)));
+
+      --  When possible, use the type of the expression as the type of the
+      --  qualified expression.
+      --  TODO: also handle unbounded subtypes, but only if this is a proper
+      --   subtype.
+      case Get_Kind (N_Type) is
+         when Iir_Kind_Array_Type_Definition
+           | Iir_Kind_Record_Type_Definition =>
+            Set_Type (Expr, Get_Type (Res));
+         when others =>
+            null;
+      end case;
+
       return Expr;
    end Sem_Qualified_Expression;
 

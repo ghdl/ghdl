@@ -3559,11 +3559,11 @@ package Iirs is
    --       type_mark ' ( expression )
    --     | type_mark ' aggregate
    --
-   --   Get/Set_Type (Field1)
-   --
    --   Get/Set_Type_Mark (Field4)
    --
    --   Get/Set_Expression (Field5)
+   --
+   --   Get/Set_Type (Field1)
    --
    --   Get/Set_Expr_Staticness (State1)
 
