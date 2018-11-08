@@ -1240,13 +1240,15 @@ package body Sem_Expr is
          A_Func := Get_Element (Imp_It);
 
          case Get_Kind (A_Func) is
-            when Iir_Kinds_Functions_And_Literals =>
+            when Iir_Kinds_Functions_And_Literals
+              | Iir_Kind_Interface_Function_Declaration =>
                if not Is_Func_Call then
                   --  The identifier of a function call must be a function or
                   --  an enumeration literal.
                   goto Continue;
                end if;
-            when Iir_Kind_Procedure_Declaration =>
+            when Iir_Kind_Procedure_Declaration
+              | Iir_Kind_Interface_Procedure_Declaration =>
                if Is_Func_Call then
                   --  The identifier of a procedure call must be a procedure.
                   goto Continue;
