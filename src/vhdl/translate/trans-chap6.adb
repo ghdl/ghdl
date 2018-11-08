@@ -361,21 +361,26 @@ package body Trans.Chap6 is
       end if;
    end Translate_Thin_Index_Offset;
 
-   --  Translate an indexed name.
-   type Indexed_Name_Data is record
-      Offset : O_Dnode;
-      Res    : Mnode;
-   end record;
+   function Stabilize_If_Unbounded (Val : Mnode) return Mnode is
+   begin
+      case Get_Type_Info (Val).Type_Mode is
+         when Type_Mode_Unbounded_Array
+           | Type_Mode_Unbounded_Record =>
+            return Stabilize (Val);
+         when others =>
+            return Val;
+      end case;
+   end Stabilize_If_Unbounded;
 
-   function Translate_Indexed_Name_Init (Prefix_Orig : Mnode; Expr : Iir)
-                                            return Indexed_Name_Data
+   --  Note: PREFIX must be stabilized if unbounded.
+   function Translate_Indexed_Name_Offset (Prefix : Mnode; Expr : Iir)
+                                          return O_Dnode
    is
       Prefix_Type : constant Iir := Get_Type (Get_Prefix (Expr));
       Prefix_Info : constant Type_Info_Acc := Get_Info (Prefix_Type);
       Index_List  : constant Iir_Flist := Get_Index_List (Expr);
       Type_List   : constant Iir_Flist := Get_Index_Subtype_List (Prefix_Type);
       Nbr_Dim     : constant Natural := Get_Nbr_Elements (Index_List);
-      Prefix      : Mnode;
       Index       : Iir;
       Offset      : O_Dnode;
       R           : O_Enode;
@@ -384,12 +389,6 @@ package body Trans.Chap6 is
       Ibasetype   : Iir;
       Range_Ptr   : Mnode;
    begin
-      case Type_Mode_Arrays (Prefix_Info.Type_Mode) is
-         when Type_Mode_Unbounded_Array =>
-            Prefix := Stabilize (Prefix_Orig);
-         when Type_Mode_Bounded_Arrays =>
-            Prefix := Prefix_Orig;
-      end case;
       Offset := Create_Temp (Ghdl_Index_Type);
       for Dim in 1 .. Nbr_Dim loop
          Index := Get_Nth_Element (Index_List, Dim - 1);
@@ -446,23 +445,25 @@ package body Trans.Chap6 is
          Close_Temp;
       end loop;
 
-      return (Offset => Offset,
-              Res => Chap3.Index_Base
-                (Chap3.Get_Composite_Base (Prefix), Prefix_Type,
-                 New_Obj_Value (Offset)));
-   end Translate_Indexed_Name_Init;
+      return Offset;
+   end Translate_Indexed_Name_Offset;
 
    function Translate_Indexed_Name_Finish
-     (Prefix : Mnode; Expr : Iir; Data : Indexed_Name_Data) return Mnode is
+     (Prefix : Mnode; Expr : Iir; Offset : O_Dnode) return Mnode is
    begin
       return Chap3.Index_Base (Chap3.Get_Composite_Base (Prefix),
                                Get_Type (Get_Prefix (Expr)),
-                               New_Obj_Value (Data.Offset));
+                               New_Obj_Value (Offset));
    end Translate_Indexed_Name_Finish;
 
-   function Translate_Indexed_Name (Prefix : Mnode; Expr : Iir) return Mnode is
+   function Translate_Indexed_Name (Prefix : Mnode; Expr : Iir) return Mnode
+   is
+      Offset : O_Dnode;
+      Stable_Prefix : Mnode;
    begin
-      return Translate_Indexed_Name_Init (Prefix, Expr).Res;
+      Stable_Prefix := Stabilize_If_Unbounded (Prefix);
+      Offset := Translate_Indexed_Name_Offset (Stable_Prefix, Expr);
+      return Translate_Indexed_Name_Finish (Stable_Prefix, Expr, Offset);
    end Translate_Indexed_Name;
 
    type Slice_Name_Data is record
@@ -1218,14 +1219,15 @@ package body Trans.Chap6 is
             end;
          when Iir_Kind_Indexed_Name =>
             declare
-               Data    : Indexed_Name_Data;
+               Offset  : O_Dnode;
                Pfx_Sig : Mnode;
                Pfx_Drv : Mnode;
             begin
                Translate_Signal (Get_Prefix (Name), Pfx_Sig, Pfx_Drv);
-               Data := Translate_Indexed_Name_Init (Pfx_Sig, Name);
-               Sig := Data.Res;
-               Drv := Translate_Indexed_Name_Finish (Pfx_Drv, Name, Data);
+               Pfx_Sig := Stabilize_If_Unbounded (Pfx_Sig);
+               Offset := Translate_Indexed_Name_Offset (Pfx_Sig, Name);
+               Sig := Translate_Indexed_Name_Finish (Pfx_Sig, Name, Offset);
+               Drv := Translate_Indexed_Name_Finish (Pfx_Drv, Name, Offset);
             end;
          when Iir_Kind_Selected_Element =>
             declare
