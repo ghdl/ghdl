@@ -4825,7 +4825,13 @@ package body Sem_Expr is
       if Expr = Null_Iir then
          return;
       end if;
-      Expr_Type := Get_Type (Expr);
+
+      --  Use the base type; EXPR may define its own subtype (like in
+      --  qualified expression with forwarding) which must not be referenced
+      --  above it.  In any case, that also makes sense: we need to deal with
+      --  types, not with subtypes.
+      Expr_Type := Get_Base_Type (Get_Type (Expr));
+
       pragma Assert (Expr_Type /= Null_Iir);
       Result_Type := Compatible_Types_Intersect (Atype, Expr_Type);
       if Atype /= Null_Iir and then Is_Overload_List (Atype) then
