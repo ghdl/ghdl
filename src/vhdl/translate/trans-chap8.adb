@@ -4123,10 +4123,10 @@ package body Trans.Chap8 is
      return Signal_Direct_Assign_Data is
    begin
       return Signal_Direct_Assign_Data'
-        (Drv => Chap3.Index_Array (Val.Drv, Targ_Type,
-                                   New_Obj_Value (Index)),
-         Expr => Chap3.Index_Array (Val.Expr, Targ_Type,
-                                    New_Obj_Value (Index)),
+        (Drv => Chap6.Translate_Indexed_Name_By_Offset
+           (Val.Drv, Targ_Type, Index),
+         Expr => Chap6.Translate_Indexed_Name_By_Offset
+           (Val.Expr, Targ_Type, Index),
          Expr_Node => Val.Expr_Node);
    end Gen_Signal_Direct_Update_Data_Array;
 

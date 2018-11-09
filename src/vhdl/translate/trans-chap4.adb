@@ -360,12 +360,11 @@ package body Trans.Chap4 is
       end if;
       Gen_Exit_When (Label,
                      New_Compare_Op (ON_Eq,
-                       New_Obj_Value (Index), Upper_Limit,
-                       Ghdl_Bool_Type));
-      Init_Object (Chap3.Index_Base (Chap3.Get_Composite_Base (Sobj),
-                   Obj_Type,
-                   New_Obj_Value (Index)),
-                   Get_Element_Subtype (Obj_Type));
+                                     New_Obj_Value (Index), Upper_Limit,
+                                     Ghdl_Bool_Type));
+      Init_Object
+        (Chap6.Translate_Indexed_Name_By_Offset (Sobj, Obj_Type, Index),
+         Get_Element_Subtype (Obj_Type));
       Inc_Var (Index);
       Finish_Loop_Stmt (Label);
 

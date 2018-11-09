@@ -2969,7 +2969,8 @@ package body Trans.Chap3 is
       Kind     : constant Object_Kind_Type := Get_Object_Kind (Base);
    begin
       if Is_Unbounded_Type (El_Tinfo) then
-         --  It's not possible to index an unbounded array with only the base.
+         --  It's not possible to index an unbounded array with only the base,
+         --  as the size of an element is not known.
          --  Index_Array must be used instead.
          raise Internal_Error;
       elsif Is_Complex_Type (El_Tinfo) then
@@ -2987,27 +2988,35 @@ package body Trans.Chap3 is
       El_Tinfo : constant Type_Info_Acc := Get_Info (El_Type);
       Kind     : constant Object_Kind_Type := Get_Object_Kind (Arr);
    begin
-      if Is_Unbounded_Type (El_Tinfo) then
-         return E2M
-           (Add_Pointer
-              (M2E (Get_Composite_Base (Arr)),
-               New_Dyadic_Op
-                 (ON_Mul_Ov,
-                  Index,
-                  New_Value (Array_Bounds_To_Element_Size
-                               (Get_Composite_Bounds (Arr), Atype))),
-               El_Tinfo.B.Base_Ptr_Type (Kind)),
-            El_Tinfo, Kind,
-            El_Tinfo.B.Base_Type (Kind),
-            El_Tinfo.B.Base_Ptr_Type (Kind));
-      elsif Is_Complex_Type (El_Tinfo) then
-         return Reindex_Complex_Array
-           (Get_Composite_Base (Arr), Atype, Index, El_Tinfo);
-      else
-         return Lv2M
-           (New_Indexed_Element (M2Lv (Get_Composite_Base (Arr)), Index),
-            El_Tinfo, Kind);
-      end if;
+      --  For indexing, we need to consider the size of elements.
+      case Type_Mode_Valid (El_Tinfo.Type_Mode) is
+         when Type_Mode_Unbounded_Array
+           | Type_Mode_Unbounded_Record =>
+            return E2M
+              (Add_Pointer
+                 (M2E (Get_Composite_Base (Arr)),
+                  New_Dyadic_Op
+                    (ON_Mul_Ov,
+                     Index,
+                     New_Value (Array_Bounds_To_Element_Size
+                                  (Get_Composite_Bounds (Arr), Atype))),
+                  El_Tinfo.B.Base_Ptr_Type (Kind)),
+               El_Tinfo, Kind,
+               El_Tinfo.B.Base_Type (Kind),
+               El_Tinfo.B.Base_Ptr_Type (Kind));
+         when Type_Mode_Complex_Array
+           | Type_Mode_Complex_Record =>
+            return Reindex_Complex_Array
+              (Get_Composite_Base (Arr), Atype, Index, El_Tinfo);
+         when Type_Mode_Thin
+           | Type_Mode_Static_Array
+           | Type_Mode_Static_Record =>
+            return Lv2M
+              (New_Indexed_Element (M2Lv (Get_Composite_Base (Arr)), Index),
+               El_Tinfo, Kind);
+         when Type_Mode_Protected =>
+            raise Internal_Error;
+      end case;
    end Index_Array;
 
    function Slice_Base (Base : Mnode; Atype : Iir; Index : O_Enode)
@@ -3140,18 +3149,26 @@ package body Trans.Chap3 is
            | Type_Mode_Complex_Record =>
             --  The length is pre-computed for a complex bounded type.
             return New_Value
-              (Sizes_To_Size
-                 (Layout_To_Sizes
-                    (Get_Composite_Type_Layout (Type_Info)), Kind));
+              (Layout_To_Size (Get_Composite_Type_Layout (Type_Info), Kind));
          when Type_Mode_Unbounded_Array =>
             declare
                El_Type  : constant Iir := Get_Element_Subtype (Atype);
+               El_Tinfo : constant Type_Info_Acc := Get_Info (El_Type);
                El_Sz    : O_Enode;
+               Bounds1  : Mnode;
             begin
-               --  FIXME: unbounded elements ?
-               El_Sz := Get_Subtype_Size (El_Type, Mnode_Null, Kind);
+               if El_Tinfo.Type_Mode in Type_Mode_Unbounded then
+                  Bounds1 := Stabilize (Bounds);
+                  El_Sz := New_Value
+                    (Layout_To_Size
+                       (Array_Bounds_To_Element_Layout (Bounds1, Atype),
+                        Kind));
+               else
+                  Bounds1 := Bounds;
+                  El_Sz := Get_Subtype_Size (El_Type, Mnode_Null, Kind);
+               end if;
                return New_Dyadic_Op
-                 (ON_Mul_Ov, Chap3.Get_Bounds_Length (Bounds, Atype), El_Sz);
+                 (ON_Mul_Ov, Chap3.Get_Bounds_Length (Bounds1, Atype), El_Sz);
             end;
          when Type_Mode_Unbounded_Record =>
             return New_Value (Sizes_To_Size (Layout_To_Sizes (Bounds), Kind));
@@ -3160,8 +3177,7 @@ package body Trans.Chap3 is
       end case;
    end Get_Subtype_Size;
 
-   function Get_Object_Size (Obj : Mnode; Obj_Type : Iir)
-                            return O_Enode
+   function Get_Object_Size (Obj : Mnode; Obj_Type : Iir) return O_Enode
    is
       Type_Info : constant Type_Info_Acc := Get_Type_Info (Obj);
       Kind      : constant Object_Kind_Type := Get_Object_Kind (Obj);

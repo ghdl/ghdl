@@ -1400,8 +1400,8 @@ package body Trans.Chap9 is
       if Val = Mnode_Null then
          return Mnode_Null;
       else
-         return Chap3.Index_Base (Chap3.Get_Composite_Base (Val),
-                                  Targ_Type, New_Obj_Value (Index));
+         return Chap6.Translate_Indexed_Name_By_Offset
+           (Chap6.Stabilize_If_Unbounded (Val), Targ_Type, Index);
       end if;
    end Foreach_Non_Composite_Update_Data_Array_Mnode;
 
