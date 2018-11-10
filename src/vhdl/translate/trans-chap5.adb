@@ -365,6 +365,7 @@ package body Trans.Chap5 is
       Formal_Type : constant Iir := Get_Type (Formal);
       Actual_Type : constant Iir := Get_Type (Actual);
       Port        : constant Iir := Get_Interface_Of_Formal (Formal);
+      Formal_Tinfo : Type_Info_Acc;
       Formal_Sig  : Mnode;
       Formal_Val  : Mnode;
       Actual_Sig  : Mnode;
@@ -421,10 +422,17 @@ package body Trans.Chap5 is
                Chap6.Translate_Signal_Name (Formal, Formal_Sig, Formal_Val);
 
                --  Copy pointer to the values.
-               if Get_Info (Formal_Type).Type_Mode in Type_Mode_Composite then
+               Formal_Tinfo := Get_Info (Formal_Type);
+               if Formal_Tinfo.Type_Mode in Type_Mode_Composite then
+                  --  Need to convert base, as you can assign a bounded type
+                  --  to an unbounded type (or the opposite).  Maybe convert
+                  --  only when needed ?  Subtype matching is checked below.
                   New_Assign_Stmt
                     (M2Lp (Chap3.Get_Composite_Base (Formal_Val)),
-                     M2Addr (Chap3.Get_Composite_Unbounded_Base (Actual_Val)));
+                     New_Convert_Ov
+                       (M2Addr
+                          (Chap3.Get_Composite_Unbounded_Base (Actual_Val)),
+                       Formal_Tinfo.B.Base_Ptr_Type (Mode_Value)));
                else
                   New_Assign_Stmt (M2Lp (Formal_Val), M2Addr (Actual_Val));
                end if;
