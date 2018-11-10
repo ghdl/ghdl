@@ -737,11 +737,15 @@ package body Trans.Chap3 is
             declare
                Indexes_List : constant Iir_Flist :=
                  Get_Index_Subtype_List (Def);
+               Tinfo : constant Type_Info_Acc := Get_Info (Def);
+               El_Tinfo : Type_Info_Acc;
                Targ : Mnode;
                Index : Iir;
             begin
                Targ := Layout_To_Bounds (Target);
-               if Get_Nbr_Elements (Indexes_List) > 1 then
+               if Tinfo.B.Bounds_El /= O_Fnode_Null
+                 or else Get_Nbr_Elements (Indexes_List) > 1
+               then
                   Targ := Stabilize (Targ);
                end if;
                for I in Flist_First .. Flist_Last (Indexes_List) loop
@@ -751,7 +755,17 @@ package body Trans.Chap3 is
                     (Bounds_To_Range (Targ, Def, I + 1), Index);
                   Close_Temp;
                end loop;
-               --  FIXME: element ?
+
+               --  Element.
+               if Tinfo.B.Bounds_El /= O_Fnode_Null then
+                  --  TODO: should be directly elaborated in place.
+                  El_Tinfo := Get_Info (Get_Element_Subtype (Def));
+                  Gen_Memcpy
+                    (M2Addr (Array_Bounds_To_Element_Layout (Targ, Def)),
+                     M2Addr (Get_Composite_Type_Layout (El_Tinfo)),
+                     New_Lit (New_Sizeof (El_Tinfo.B.Layout_Type,
+                                          Ghdl_Index_Type)));
+               end if;
             end;
 
          when Iir_Kind_Record_Type_Definition =>
@@ -2394,6 +2408,8 @@ package body Trans.Chap3 is
             begin
                --  Handle element subtype.
                if El_Type /= Parent_El_Type then
+                  --  TODO: do not create vars for element subtype, but use
+                  --  the layout field of the array vars.
                   Push_Identifier_Prefix (Mark, "ET");
                   Translate_Subtype_Definition
                     (El_Type, Parent_El_Type, With_Vars);
