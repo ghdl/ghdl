@@ -2587,8 +2587,8 @@ package body Sem_Names is
       Assoc_Chain := Get_Association_Chain (Name);
       Actual := Get_One_Actual (Assoc_Chain);
 
-      if Kind_In (Prefix, Iir_Kind_Type_Declaration,
-                  Iir_Kind_Subtype_Declaration)
+      if Kind_In (Prefix,
+                  Iir_Kind_Type_Declaration, Iir_Kind_Subtype_Declaration)
       then
          --  A type conversion.  The prefix is a type mark.
          declare

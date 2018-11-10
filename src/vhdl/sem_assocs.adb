@@ -1828,6 +1828,11 @@ package body Sem_Assocs is
                   null;
             end case;
 
+            if Actual = Null_Iir then
+               Match := Fully_Compatible;
+               return;
+            end if;
+
             --  There could be an ambiguity between a conversion and a normal
             --  actual expression.  Check if the new actual is an object and
             --  if the object is of the corresponding class.
