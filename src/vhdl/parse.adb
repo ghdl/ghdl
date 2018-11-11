@@ -1067,7 +1067,7 @@ package body Parse is
          when others =>
             Error_Msg_Parse ("name expected here, found %t",
                              +Current_Token);
-            raise Parse_Error;
+            return Null_Iir;
       end case;
 
       return Parse_Name_Suffix (Res, Allow_Indexes, Allow_Signature);
@@ -1111,6 +1111,10 @@ package body Parse is
       pragma Unreferenced (Old);
    begin
       Res := Parse_Name (Allow_Indexes => False);
+      if Res = Null_Iir then
+         return Null_Iir;
+      end if;
+
       Check_Type_Mark (Res);
       if Check_Paren and then Current_Token = Tok_Left_Paren then
          Error_Msg_Parse ("index constraint not allowed here");
@@ -2646,7 +2650,7 @@ package body Parse is
          return Def;
       else
          Error_Msg_Parse ("resolution indication expected");
-         raise Parse_Error;
+         return Null_Iir;
       end if;
    end Parse_Resolution_Indication;
 
@@ -2768,7 +2772,7 @@ package body Parse is
          end if;
          if Current_Token /= Tok_Identifier then
             Error_Msg_Parse ("type mark expected in a subtype indication");
-            raise Parse_Error;
+            return Null_Iir;
          end if;
          Type_Mark := Parse_Type_Mark (Check_Paren => False);
       end if;
@@ -2881,9 +2885,7 @@ package body Parse is
       Decl : Iir;
    begin
       -- The current token must be type.
-      if Current_Token /= Tok_Nature then
-         raise Program_Error;
-      end if;
+      pragma Assert (Current_Token = Tok_Nature);
 
       -- Get the identifier
       Scan_Expect (Tok_Identifier,
@@ -2970,12 +2972,13 @@ package body Parse is
    --
    --  nature_mark ::=
    --      nature_name | subnature_name
-   function Parse_Subnature_Indication return Iir is
+   function Parse_Subnature_Indication return Iir
+   is
       Nature_Mark : Iir;
    begin
       if Current_Token /= Tok_Identifier then
          Error_Msg_Parse ("nature mark expected in a subnature indication");
-         raise Parse_Error;
+         return Null_Iir;
       end if;
       Nature_Mark := Parse_Name (Allow_Indexes => False);
 
@@ -2983,13 +2986,12 @@ package body Parse is
          --  TODO
          Error_Msg_Parse
            ("index constraint not supported for subnature indication");
-         raise Parse_Error;
+         raise Internal_Error;
       end if;
 
       if Current_Token = Tok_Tolerance then
-         Error_Msg_Parse
-           ("tolerance not supported for subnature indication");
-         raise Parse_Error;
+         Error_Msg_Parse ("tolerance not supported for subnature indication");
+         raise Internal_Error;
       end if;
       return Nature_Mark;
    end Parse_Subnature_Indication;
@@ -3022,10 +3024,9 @@ package body Parse is
          Scan;
          exit when Current_Token = Tok_Colon;
          if Current_Token /= Tok_Comma then
-            Error_Msg_Parse
-              ("',' or ':' is expected after "
-                 & "identifier in terminal declaration");
-            raise Expect_Error;
+            Error_Msg_Parse ("',' or ':' is expected after "
+                               & "identifier in terminal declaration");
+            Scan;
          end if;
       end loop;
 
@@ -3140,7 +3141,7 @@ package body Parse is
                when others =>
                   Error_Msg_Parse ("'across' or 'through' expected here");
                   Eat_Tokens_Until_Semi_Colon;
-                  raise Expect_Error;
+                  return Null_Iir;
             end case;
 
             --  Eat across/through
@@ -3247,7 +3248,7 @@ package body Parse is
             Error_Msg_Parse ("missing type or across/throught aspect "
                                & "in quantity declaration");
             Eat_Tokens_Until_Semi_Colon;
-            raise Expect_Error;
+            return Null_Iir;
       end case;
       Expect (Tok_Semi_Colon);
       return First;
@@ -3369,8 +3370,9 @@ package body Parse is
                when others =>
                   Error_Msg_Parse
                     ("',' or ':' is expected after identifier in "
-                     & Disp_Name (Kind));
-                  raise Expect_Error;
+                       & Disp_Name (Kind));
+                  Eat_Tokens_Until_Semi_Colon;
+                  return Null_Iir;
             end case;
          end if;
          Set_Has_Identifier_List (Object, True);
@@ -3729,7 +3731,7 @@ package body Parse is
             Set_Identifier (Res, Scan_To_Operator_Name (Get_Token_Location));
          when others =>
             Error_Msg_Parse ("identifier, character or string expected");
-            raise Expect_Error;
+            return Null_Iir;
       end case;
       Scan;
       if Current_Token = Tok_Left_Bracket then
@@ -5885,21 +5887,26 @@ package body Parse is
    begin
       loop
          El := Parse_Name (Allow_Indexes => True);
-         case Get_Kind (El) is
-            when Iir_Kind_Simple_Name
-              | Iir_Kind_Parenthesis_Name
-              | Iir_Kind_Selected_Name
-              | Iir_Kind_Slice_Name
-              | Iir_Kind_Attribute_Name
-              | Iir_Kind_Selected_By_All_Name
-              | Iir_Kind_Indexed_Name =>
-               null;
-            when others =>
-               Error_Msg_Parse
-                 ("only names are allowed in a sensitivity list");
-         end case;
-         Append_Element (List, El);
+         if El /= Null_Iir then
+            case Get_Kind (El) is
+               when Iir_Kind_Simple_Name
+                 | Iir_Kind_Parenthesis_Name
+                 | Iir_Kind_Selected_Name
+                 | Iir_Kind_Slice_Name
+                 | Iir_Kind_Attribute_Name
+                 | Iir_Kind_Selected_By_All_Name
+                 | Iir_Kind_Indexed_Name =>
+                  null;
+               when others =>
+                  Error_Msg_Parse
+                    ("only names are allowed in a sensitivity list");
+            end case;
+            Append_Element (List, El);
+         end if;
+
          exit when Current_Token /= Tok_Comma;
+
+         --  Skip ','.
          Scan;
       end loop;
    end Parse_Sensitivity_List;
@@ -8797,12 +8804,12 @@ package body Parse is
                when others =>
                   Error_Msg_Parse
                     ("block_configuration or component_configuration "
-                     & "expected");
-                  raise Parse_Error;
+                       & "expected");
+                  return Null_Iir;
             end case;
          when others =>
             Error_Msg_Parse ("configuration item expected");
-            raise Parse_Error;
+            return Null_Iir;
       end case;
    end Parse_Configuration_Item;
 
@@ -9424,8 +9431,5 @@ package body Parse is
       end if;
 
       return Res;
-   exception
-      when Parse_Error =>
-         return Null_Iir;
    end Parse_Design_File;
 end Parse;

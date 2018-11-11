@@ -506,8 +506,7 @@ package body Ortho_Front is
          return True;
       end if;
    exception
-      when Compilation_Error
-        | Parse_Error =>
+      when Compilation_Error =>
          if Flag_Expect_Failure then
             --  Very brutal...
             GNAT.OS_Lib.OS_Exit (0);

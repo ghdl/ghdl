@@ -21,7 +21,6 @@ with Tokens;
 
 package Errorout is
    Option_Error: exception;
-   Parse_Error: exception;
    Compilation_Error: exception;
 
    --  Set the program name, used in error messages for options.  Not displayed
