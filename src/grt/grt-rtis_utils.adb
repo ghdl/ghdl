@@ -374,14 +374,13 @@ package body Grt.Rtis_Utils is
          Sizes : constant Ghdl_Indexes_Ptr :=
            To_Ghdl_Indexes_Ptr (Bounds);
          El : Ghdl_Rtin_Element_Acc;
-         El_Addr : Address;
          P : Natural;
       begin
          P := Length (Name);
          for I in 1 .. Rti.Nbrel loop
             El := To_Ghdl_Rtin_Element_Acc (Rti.Elements (I - 1));
             Record_To_Element
-              (Rec_Addr, El, Is_Sig, Rec_Bounds, El_Addr, Bounds);
+              (Rec_Addr, El, Is_Sig, Rec_Bounds, Addr, Bounds);
             Append (Name, '.');
             Append (Name, El.Name);
             Handle_Any (El.Eltype);
