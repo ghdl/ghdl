@@ -71,8 +71,6 @@ package body Parse is
    function Parse_Tolerance_Aspect_Opt return Iir;
    function Parse_Package (Parent : Iir) return Iir;
 
-   Expect_Error: exception;
-
    -- Copy the current location into an iir.
    procedure Set_Location (Node : Iir) is
    begin
@@ -90,28 +88,27 @@ package body Parse is
 --      Error_Msg_Parse ("unexpected end of file");
 --   end Unexpected_Eof;
 
+   procedure Expect_Error (Token: Token_Type; Msg: String) is
+   begin
+      if Msg'Length > 0 then
+         Error_Msg_Parse (Msg, Args => No_Eargs, Cont => True);
+         Error_Msg_Parse ("(found: %t)", +Current_Token);
+      elsif Current_Token = Tok_Identifier then
+         Error_Msg_Parse
+           ("%t is expected instead of %i", (+Token, +Current_Identifier));
+      else
+         Error_Msg_Parse
+           ("%t is expected instead of %t", (+Token, + Current_Token));
+      end if;
+   end Expect_Error;
+
    --  Emit an error if the current_token if different from TOKEN.
    --  Otherwise, accept the current_token (ie set it to tok_invalid, unless
    --  TOKEN is Tok_Identifier).
    procedure Expect (Token: Token_Type; Msg: String := "") is
    begin
       if Current_Token /= Token then
-         if Msg'Length > 0 then
-            Error_Msg_Parse (Msg, Args => No_Eargs, Cont => True);
-            Error_Msg_Parse ("(found: %t)", +Current_Token);
-         elsif Current_Token = Tok_Identifier then
-            Error_Msg_Parse
-              ("%t is expected instead of %i", (+Token, +Current_Identifier));
-         else
-            Error_Msg_Parse
-              ("%t is expected instead of %t", (+Token, + Current_Token));
-         end if;
-         raise Expect_Error;
-      end if;
-
-      -- Accept the current_token.
-      if Current_Token /= Tok_Identifier then
-         Invalidate_Current_Token;
+         Expect_Error (Token, Msg);
       end if;
    end Expect;
 
@@ -121,6 +118,15 @@ package body Parse is
       Scan;
       Expect (Token, Msg);
    end Scan_Expect;
+
+   procedure Expect_Scan (Token: Token_Type; Msg: String := "") is
+   begin
+      if Current_Token = Token then
+         Scan;
+      else
+         Expect_Error (Token, Msg);
+      end if;
+   end Expect_Scan;
 
    --  If the current_token is an identifier, it must be equal to name.
    --  In this case, a token is eaten.
@@ -1065,8 +1071,12 @@ package body Parse is
             end if;
             Res := Parse_External_Name;
          when others =>
-            Error_Msg_Parse ("name expected here, found %t",
-                             +Current_Token);
+            if Current_Token = Tok_Invalid then
+               Error_Msg_Parse ("name expected here");
+            else
+               Error_Msg_Parse
+                 ("name expected here, found %t", +Current_Token);
+            end if;
             return Null_Iir;
       end case;
 
@@ -1241,14 +1251,15 @@ package body Parse is
       Inter := First;
       Last := First;
       loop
-         if Current_Token /= Tok_Identifier then
+         if Current_Token = Tok_Identifier then
+            Set_Identifier (Inter, Current_Identifier);
+            Set_Location (Inter);
+
+            --  Skip identifier
+            Scan;
+         else
             Expect (Tok_Identifier);
          end if;
-         Set_Identifier (Inter, Current_Identifier);
-         Set_Location (Inter);
-
-         --  Skip identifier
-         Scan;
 
          exit when Current_Token = Tok_Colon;
          Expect (Tok_Comma, "',' or ':' expected after identifier");
@@ -1306,8 +1317,7 @@ package body Parse is
                N_Interface :=
                  Create_Iir (Iir_Kind_Interface_Variable_Declaration);
                Location_Copy (N_Interface, O_Interface);
-               Set_Identifier (N_Interface,
-                               Get_Identifier (O_Interface));
+               Set_Identifier (N_Interface, Get_Identifier (O_Interface));
 
                if Flag_Elocations then
                   Create_Elocations (N_Interface);
@@ -2297,7 +2307,9 @@ package body Parse is
       Scan_Expect (Tok_Of);
       Scan;
       Type_Mark := Parse_Type_Mark (Check_Paren => True);
-      if Get_Kind (Type_Mark) not in Iir_Kinds_Denoting_Name then
+      if Type_Mark = Null_Iir
+        or else Get_Kind (Type_Mark) not in Iir_Kinds_Denoting_Name
+      then
          Error_Msg_Parse ("type mark expected");
       else
          Set_File_Type_Mark (Res, Type_Mark);
@@ -5199,7 +5211,8 @@ package body Parse is
          when Tok_Identifier
            | Tok_Double_Less =>
             Res := Parse_Name (Allow_Indexes => True);
-            if Get_Kind (Res) = Iir_Kind_Signature then
+            if Res /= Null_Iir
+              and then Get_Kind (Res) = Iir_Kind_Signature then
                Error_Msg_Parse (+Res, "signature not allowed in expression");
                return Get_Signature_Prefix (Res);
             else
@@ -6140,6 +6153,11 @@ package body Parse is
       Prefix : Iir;
    begin
       Res := Create_Iir (Kind);
+      if Name = Null_Iir then
+         Set_Location (Res);
+         return Res;
+      end if;
+
       Location_Copy (Res, Name);
       Call := Create_Iir (Iir_Kind_Procedure_Call);
       Location_Copy (Call, Name);
@@ -7197,11 +7215,10 @@ package body Parse is
          end if;
 
          Sub_Chain_Append (Res, Last, El);
-         exit when Current_Token = Tok_Right_Paren;
+         exit when Current_Token /= Tok_Comma;
 
          -- Eat ','.
          Comma_Loc := Get_Token_Location;
-         Expect (Tok_Comma);
          Scan;
 
          if Current_Token = Tok_Right_Paren then
@@ -7229,8 +7246,12 @@ package body Parse is
 
       Res := Parse_Association_List;
 
-      --  Skip ')'
-      Scan;
+      if Current_Token = Tok_Right_Paren then
+         --  Skip ')'
+         Scan;
+      else
+         Expect (Tok_Right_Paren);
+      end if;
 
       return Res;
    end Parse_Association_List_In_Parenthesis;
@@ -8391,13 +8412,15 @@ package body Parse is
          end if;
          Last := Use_Clause;
 
-         exit when Current_Token = Tok_Semi_Colon;
-         Expect (Tok_Comma);
+         exit when Current_Token /= Tok_Comma;
          Loc := Get_Token_Location;
 
          --  Skip ','.
          Scan;
       end loop;
+
+      Expect (Tok_Semi_Colon, "';' expected at end of use clause");
+
       return First;
    end Parse_Use_Clause;
 
@@ -8557,10 +8580,19 @@ package body Parse is
 
       --  Optional architecture
       if Current_Token = Tok_Left_Paren then
-         Scan_Expect (Tok_Identifier);
-         Set_Architecture (Res, Current_Text);
-         Scan_Expect (Tok_Right_Paren);
+         --  Skip '('.
          Scan;
+
+         if Current_Token = Tok_Identifier then
+            Set_Architecture (Res, Current_Text);
+
+            --  Skip identifier.
+            Scan;
+         else
+            Expect (Tok_Identifier);
+         end if;
+
+         Expect_Scan (Tok_Right_Paren);
       end if;
 
       return Res;
@@ -8724,12 +8756,13 @@ package body Parse is
          Last : Iir;
       begin
          Build_Init (Last);
-         while Current_Token /= Tok_End loop
+         while Current_Token = Tok_For loop
             Append (Last, Res, Parse_Configuration_Item);
             --  Eat ';'.
             Scan;
          end loop;
       end;
+      Expect (Tok_End);
       Scan_Expect (Tok_For);
       Scan_Expect (Tok_Semi_Colon);
       return Res;
@@ -9395,9 +9428,6 @@ package body Parse is
       Set_Date (Res, Date_Parsed);
       Invalidate_Current_Token;
       return Res;
-   exception
-      when Expect_Error =>
-         raise Compilation_Error;
    end Parse_Design_Unit;
 
    --  [ LRM93 11.1 ]
