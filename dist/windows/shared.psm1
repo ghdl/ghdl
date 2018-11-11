@@ -12,7 +12,7 @@
 #	This PowerShell module provides CommandLets (CmdLets) to ...
 #
 # ==============================================================================
-#	Copyright (C) 2016-2017 Patrick Lehmann
+#	Copyright (C) 2016-2018 Patrick Lehmann
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -59,6 +59,76 @@ function Exit-CompileScript
 		Remove-Module targets -Verbose:$false -Debug:$false
 	}
 	exit $ExitCode
+}
+
+# GitHub user:            https://github.com/mkropat
+# Gist account at GitHub: https://gist.github.com/mkropat
+# Gist snippet URL:       https://gist.github.com/mkropat/c1226e0cc2ca941b23a9
+function Add-EnvPath
+{	param(
+		[Parameter(Mandatory=$true)]
+		[string] $Path,
+
+		[ValidateSet("Machine", "User", "Session")]
+		[string] $Container = "Session"
+	)
+
+	if ($Container -ne "Session")
+	{	$containerType =  $EnvPath_ContainerMapping[$Container]
+		$persistedPaths = [Environment]::GetEnvironmentVariable("Path", $containerType) -split ";"
+		if ($persistedPaths -notcontains $Path)
+		{	$persistedPaths = $persistedPaths + $Path | where { $_ }
+			[Environment]::SetEnvironmentVariable("Path", $persistedPaths -join ";", $containerType)
+		}
+	}
+
+	$envPaths = $env:Path -split ";"
+	if ($envPaths -notcontains $Path)
+	{	$envPaths = $envPaths + $Path | where { $_ }
+		$env:Path = $envPaths -join ";"
+	}
+}
+
+# GitHub user:            https://github.com/mkropat
+# Gist account at GitHub: https://gist.github.com/mkropat
+# Gist snippet URL:       https://gist.github.com/mkropat/c1226e0cc2ca941b23a9
+function Remove-EnvPath
+{	param (
+		[Parameter(Mandatory=$true)]
+		[string] $Path,
+
+		[ValidateSet("Machine", "User", "Session")]
+		[string] $Container = "Session"
+	)
+
+	if ($Container -ne "Session")
+	{	$containerType =  $EnvPath_ContainerMapping[$Container]
+		$persistedPaths = [Environment]::GetEnvironmentVariable("Path", $containerType) -split ";"
+		if ($persistedPaths -contains $Path)
+		{	$persistedPaths = $persistedPaths | where { $_ -and $_ -ne $Path }
+			[Environment]::SetEnvironmentVariable("Path", $persistedPaths -join ";", $containerType)
+		}
+	}
+
+	$envPaths = $env:Path -split ";"
+	if ($envPaths -contains $Path)
+	{	$envPaths = $envPaths | where { $_ -and $_ -ne $Path }
+		$env:Path = $envPaths -join ";"
+	}
+}
+
+# GitHub user:            https://github.com/mkropat
+# Gist account at GitHub: https://gist.github.com/mkropat
+# Gist snippet URL:       https://gist.github.com/mkropat/c1226e0cc2ca941b23a9
+function Get-EnvPath
+{	param (
+		[Parameter(Mandatory=$true)]
+		[ValidateSet("Machine", "User")]
+		[string] $Container
+	)
+
+	$containerType = $EnvPath_ContainerMapping[$Container]
+	[Environment]::GetEnvironmentVariable('Path', $containerType) -split ";" | where { $_ }
 }
 
 function New-LibraryDirectory
@@ -356,6 +426,10 @@ function Test-GitRepository
 
 # export functions
 Export-ModuleMember -Function 'Exit-CompileScript'
+
+Export-ModuleMember -Function 'Add-EnvPath'
+Export-ModuleMember -Function 'Remove-EnvPath'
+Export-ModuleMember -Function 'Get-EnvPath'
 
 Export-ModuleMember -Function 'New-LibraryDirectory'
 Export-ModuleMember -Function 'Format-VHDLSourceFile'

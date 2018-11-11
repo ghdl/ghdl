@@ -12,7 +12,7 @@
 #	This PowerShell module provides build targets for GHDL.
 #
 # ==============================================================================
-#	Copyright (C) 2016-2017 Patrick Lehmann
+#	Copyright (C) 2016-2018 Patrick Lehmann
 #
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -52,13 +52,70 @@ $WinMcodeSourceDirName =	"dist\windows\mcode"
 $VersionFileName_In =				"version.in"
 $VersionFileName_Ads =			"version.ads"
 
+# Library sources
+$LibrarySourceFiles = @{
+	"std" = @(
+		"textio",								"textio_body"
+	);
+	"ieee" = @(
+		"std_logic_1164",				"std_logic_1164_body",
+		"numeric_std",					"numeric_std-body",
+		"numeric_bit",					"numeric_bit-body"
+	);
+	"math" = @(
+		"math_real",						"math_real-body",
+		"math_complex",					"math_complex-body"
+	);
+	"std08" = @(
+		"textio",								"textio_body",
+		"env",									"env_body"
+	);
+	"ieee2008" = @(
+		"std_logic_1164",				"std_logic_1164-body",
+		"std_logic_textio",
+		"math_real",						"math_real-body",
+		"math_complex",					"math_complex-body",
+		"numeric_bit",					"numeric_bit-body",
+		"numeric_bit_unsigned",	"numeric_bit_unsigned-body",
+		"numeric_std",					"numeric_std-body",
+		"numeric_std_unsigned",	"numeric_std_unsigned-body",
+		"fixed_float_types",
+		"fixed_generic_pkg",		"fixed_generic_pkg-body",
+		"fixed_pkg",
+		"float_generic_pkg",		"float_generic_pkg-body",
+		"float_pkg",
+		"ieee_std_context",
+		"ieee_bit_context"
+	);
+	"vital95" = @(
+		"vital_timing",					"vital_timing_body",
+		"vital_primitives",			"vital_primitives_body"
+	);
+	"vital2000" = @(
+		"timing_p",							"timing_b",
+		"prmtvs_p",							"prmtvs_b",
+		"memory_p",							"memory_b"
+	);
+	"synopsys" = @(
+		"std_logic_arith",
+		"std_logic_unsigned",
+		"std_logic_signed"
+	);
+	"synopsys8793" = @(
+		"std_logic_textio",
+		"std_logic_misc",				"std_logic_misc-body"
+	);
+	"mentor" = @(
+		"std_logic_arith",			"std_logic_arith_body"
+	)
+}
 
-function Invoke-Clean
+function Invoke-CleanGHDL
 {	<#
 		.SYNOPSIS
-		This CommandLet removes all generated files.
+		This CommandLet removes all generated GHDL files.
 		.PARAMETER BuildDirectory
-		The directory where all generated files are stored.
+		The directory where all generated GHDL files are stored.
 		.PARAMETER Quiet
 		Disable outputs to the host console.
 	#>
@@ -68,21 +125,155 @@ function Invoke-Clean
 		[switch]	$Quiet = $false
 	)
 
-	$EnableDebug =		-not $Quiet -and (									$PSCmdlet.MyInvocation.BoundParameters["Debug"])
-	$EnableVerbose =	-not $Quiet -and ($EnableDebug	-or $PSCmdlet.MyInvocation.BoundParameters["Verbose"])
+	$EnableDebug =		-not $Quiet -and (                  $PSCmdlet.MyInvocation.BoundParameters["Debug"])
+	$EnableVerbose =	-not $Quiet -and ($EnableDebug  -or $PSCmdlet.MyInvocation.BoundParameters["Verbose"])
 
-	-not $Quiet			-and (Write-Host "Executing build target 'Clean' ..." -ForegroundColor Yellow)	| Out-Null
-	$EnableVerbose	-and (Write-Host "  Removing all created files and directories..."						)	| Out-Null
+	-not $Quiet			-and (Write-Host "Executing build target 'CleanGHDL' ..." -ForegroundColor DarkCyan)  | Out-Null
+	$EnableVerbose	-and (Write-Host "  Removing all created files and directories..."                 )  | Out-Null
 	if (Test-Path -Path $BuildDirectory)
-	{	$EnableDebug		-and (Write-Host "    rmdir $BuildDirectory"																	)	| Out-Null
+	{	$EnableDebug		-and (Write-Host "    rmdir $BuildDirectory"                                     )  | Out-Null
 		Remove-Item $BuildDirectory -Force -Recurse -ErrorAction SilentlyContinue
 		if ($? -eq $false)
 		{	Write-Host "[ERROR]: Cannot remove '$BuildDirectory'." -ForegroundColor Red
-			return $true
+			throw "Cannot remove '$BuildDirectory'."
 		}
 	}
-	return $false
-}	# Invoke-Clean
+	else
+	{	Write-Host "  [INFO] Directory '$BuildDirectory' does not exist." -ForegroundColor Yellow
+	}
+}	# Invoke-CleanGHDL
+
+function Invoke-CleanLibraries
+{	<#
+		.SYNOPSIS
+		This CommandLet removes all generated library files.
+		.PARAMETER LibraryDirectory
+		The directory where all generated library files are stored.
+		.PARAMETER Quiet
+		Disable outputs to the host console.
+	#>
+	[CmdletBinding()]
+	param(
+		[string]	$LibraryDirectory,
+		[switch]	$Quiet = $false
+	)
+
+	$EnableDebug =		-not $Quiet -and (                  $PSCmdlet.MyInvocation.BoundParameters["Debug"])
+	$EnableVerbose =	-not $Quiet -and ($EnableDebug  -or $PSCmdlet.MyInvocation.BoundParameters["Verbose"])
+
+	-not $Quiet			-and (Write-Host "Executing build target 'CleanLibraries' ..." -ForegroundColor DarkCyan) | Out-Null
+	$EnableVerbose	-and (Write-Host "  Removing all created library files and directories..."              ) | Out-Null
+	if (Test-Path -Path $LibraryDirectory)
+	{	$EnableDebug		-and (Write-Host "    rmdir $LibraryDirectory"                                        ) | Out-Null
+		Remove-Item $LibraryDirectory -Force -Recurse -ErrorAction SilentlyContinue
+		if ($? -eq $false)
+		{	Write-Host "[ERROR]: Cannot remove '$LibraryDirectory'." -ForegroundColor Red
+			throw "Cannot remove '$LibraryDirectory'."
+		}
+	}
+	else
+	{	Write-Host "  [INFO] Directory '$LibraryDirectory' does not exist." -ForegroundColor Yellow
+	}
+}	# Invoke-CleanLibraries
+
+function Invoke-CleanPackageZip
+{	<#
+		.SYNOPSIS
+		This CommandLet removes all generated package files.
+		.PARAMETER PackageDirectory
+		The directory where all files are stored for packaging.
+		.PARAMETER PackageFile
+		The package file.
+		.PARAMETER Quiet
+		Disable outputs to the host console.
+	#>
+	[CmdletBinding()]
+	param(
+		[string]	$PackageDirectory,
+		[string]	$PackageFile,
+		[switch]	$Quiet = $false
+	)
+
+	$EnableDebug =		-not $Quiet -and (                  $PSCmdlet.MyInvocation.BoundParameters["Debug"])
+	$EnableVerbose =	-not $Quiet -and ($EnableDebug  -or $PSCmdlet.MyInvocation.BoundParameters["Verbose"])
+
+	-not $Quiet			-and (Write-Host "Executing build target 'CleanPackageZip' ..." -ForegroundColor DarkCyan)  | Out-Null
+	$EnableVerbose	-and (Write-Host "  Removing all created files and directories..."                       )  | Out-Null
+	if (Test-Path -Path $PackageDirectory)
+	{	$EnableDebug		-and (Write-Host "    rmdir $PackageDirectory"                                         )  | Out-Null
+		Remove-Item $PackageDirectory -Force -Recurse -ErrorAction SilentlyContinue
+		if ($? -eq $false)
+		{	Write-Host "[ERROR]: Cannot remove '$PackageDirectory'." -ForegroundColor Red
+			throw "Cannot remove '$PackageDirectory'."
+		}
+	}
+	else
+	{	Write-Host "  [INFO] Directory '$PackageDirectory' does not exist." -ForegroundColor Yellow
+	}
+	
+	$EnableVerbose	-and (Write-Host "  Removing Zip file..."   ) | Out-Null
+	if (Test-Path -Path $PackageFile)
+	{	$EnableDebug		-and (Write-Host "    rmdir $PackageFile" ) | Out-Null
+		Remove-Item $PackageFile -Force -Recurse -ErrorAction SilentlyContinue
+		if ($? -eq $false)
+		{	Write-Host "[ERROR]: Cannot remove '$PackageFile'." -ForegroundColor Red
+			throw "Cannot remove '$PackageFile'."
+		}
+	}
+	else
+	{	Write-Host "  [INFO] Directory '$PackageFile' does not exist." -ForegroundColor Yellow
+	}
+}	# Invoke-CleanPackageZip
+
+function Invoke-CleanPackagePS1
+{	<#
+		.SYNOPSIS
+		This CommandLet removes all generated package files.
+		.PARAMETER PackageDirectory
+		The directory where all files are stored for packaging.
+		.PARAMETER PackageFile
+		The package file.
+		.PARAMETER Quiet
+		Disable outputs to the host console.
+	#>
+	[CmdletBinding()]
+	param(
+		# [string]	$PackageDirectory,
+		[string]	$PackageFile,
+		[switch]	$Quiet = $false
+	)
+
+	$EnableDebug =		-not $Quiet -and (                  $PSCmdlet.MyInvocation.BoundParameters["Debug"])
+	$EnableVerbose =	-not $Quiet -and ($EnableDebug  -or $PSCmdlet.MyInvocation.BoundParameters["Verbose"])
+
+	-not $Quiet			-and (Write-Host "Executing build target 'CleanPackagePS1' ..." -ForegroundColor DarkCyan) | Out-Null
+	# $EnableVerbose	-and (Write-Host "  Removing all created files and directories..."                        ) | Out-Null
+	# if (Test-Path -Path $PackageDirectory)
+	# {	$EnableDebug		-and (Write-Host "    rmdir $PackageDirectory"                                          ) | Out-Null
+		# Remove-Item $PackageDirectory -Force -Recurse -ErrorAction SilentlyContinue
+		# if ($? -eq $false)
+		# {	Write-Host "[ERROR]: Cannot remove '$PackageDirectory'." -ForegroundColor Red
+			# throw "Cannot remove '$PackageDirectory'."
+		# }
+	# }
+	# else
+	# {	Write-Host "  [INFO] Directory '$PackageDirectory' does not exist." -ForegroundColor Yellow
+	# }
+	
+	$EnableVerbose	-and (Write-Host "  Removing PS1 file..."   ) | Out-Null
+	if (Test-Path -Path $PackageFile)
+	{	$EnableDebug		-and (Write-Host "    rmdir $PackageFile" ) | Out-Null
+		Remove-Item $PackageFile -Force -Recurse -ErrorAction SilentlyContinue
+		if ($? -eq $false)
+		{	Write-Host "[ERROR]: Cannot remove '$PackageFile'." -ForegroundColor Red
+			throw "Cannot remove '$PackageFile'."
+		}
+	}
+	else
+	{	Write-Host "  [INFO] Directory '$PackageFile' does not exist." -ForegroundColor Yellow
+	}
+}	# Invoke-CleanPackagePS1
+
 
 function New-BuildDirectory
 {	<#
@@ -130,15 +321,15 @@ function Get-GHDLVersion
 
 	if (-not (Test-Path -Path $ConfigureFilePath -PathType Leaf))
 	{	Write-Host "[ERROR]: Version file '$ConfigureFilePath' does not exists." -ForegroundColor Red
-		return $true
+		Throw "File '$ConfigureFilePath' not found."
 	}
 	$FileContent = Get-Content -Path $ConfigureFilePath
 	foreach ($Line in $FileContent)
 	{	if ($Line -match 'ghdl_version=\"(.+?)\"')
-		{ return $Matches[2]	}
+		{ return $Matches[1]	}
 	}
 	Write-Host "[ERROR]: RegExp didn't match in '$ConfigureFilePath'." -ForegroundColor Red
-	return $true
+	Throw "'ghdl_version' not found in file Throw '$ConfigureFilePath'."
 }	# Get-GHDLVersion
 
 function Invoke-PatchVersionFile
@@ -404,11 +595,19 @@ function Test-GHDLVersion
 
 # export functions
 Export-ModuleMember -Function 'Get-GHDLVersion'
-Export-ModuleMember -Function 'Invoke-Clean'
+
+Export-ModuleMember -Function 'Invoke-CleanGHDL'
+Export-ModuleMember -Function 'Invoke-CleanLibraries'
+Export-ModuleMember -Function 'Invoke-CleanPackageZip'
+Export-ModuleMember -Function 'Invoke-CleanPackagePS1'
+
 Export-ModuleMember -Function 'New-BuildDirectory'
+
 Export-ModuleMember -Function 'Invoke-PatchVersionFile'
 Export-ModuleMember -Function 'Restore-PatchedVersionFile'
+
 Export-ModuleMember -Function 'Invoke-CompileCFiles'
 Export-ModuleMember -Function 'Invoke-CompileGHDLAdaFiles'
 Export-ModuleMember -Function 'Invoke-StripGHDLExecutable'
+
 Export-ModuleMember -Function 'Test-GHDLVersion'
