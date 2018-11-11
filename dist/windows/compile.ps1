@@ -168,6 +168,11 @@ Write-Host "====================================================================
 Write-Host "GHDL for Windows - GHDL compile and bundle script" -ForegroundColor Magenta
 Write-Host "================================================================================" -ForegroundColor Magenta
 
+if ([environment]::OSVersion.Platform -ne "WIN32NT")
+{	Write-Error "[ERROR] PowerShell based installer not supported on Linux/Unix/MacOS platforms."
+	Exit-Script -1
+}
+
 if ($Help)
 {	Get-Help $MYINVOCATION.InvocationName -Detailed
 	Exit-Script
