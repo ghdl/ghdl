@@ -2973,14 +2973,23 @@ package body Trans.Chap7 is
          El := Get_Association_Choices_Chain (Aggr);
          P := 0;
          loop
-            if El = Null_Iir then
-               return;
-            end if;
+            exit when El = Null_Iir;
             exit when Get_Kind (El) /= Iir_Kind_Choice_By_None;
             Do_Assign (El);
-            P := P + 1;
+            if not Final or else Get_Element_Type_Flag (El) then
+               P := P + 1;
+            else
+               P := P + Natural
+                 (Eval_Discrete_Type_Length
+                    (Get_Index_Type (Get_Type (Get_Associated_Expr (El)), 0)));
+            end if;
             El := Get_Chain (El);
          end loop;
+
+         --  End of chain.
+         if El = Null_Iir then
+            return;
+         end if;
 
          pragma Assert (Get_Kind (El) = Iir_Kind_Choice_By_Others);
 
