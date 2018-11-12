@@ -69,7 +69,7 @@ Param(
 	[switch]$Clean =              $false,
 		[switch]$CleanGHDL =        $false,
 		[switch]$CleanLibraries =   $false,
-		[switch]$CleanPackage =     $false,
+		[switch]$CleanPackages =    $false,
 	
 	# Compile GHDL and libraries
 	[switch]$Compile =            $false,
@@ -157,16 +157,30 @@ function Exit-Script
 # Display help if no command was selected
 $Help = $Help -or (-not (
 					$All -or 
-					$Clean -or $CleanGHDL -or $CleanLibraries -or $CleanPackage -or
+					$Clean -or $CleanGHDL -or $CleanLibraries -or $CleanPackages -or
 					$Compile -or $CompileGHDL -or $CompileLibraries -or
 					$Test -or $TestGHDL -or
 					$Package -or
 					$Install -or $Update -or $Uninstall
 				))
 
+$Git_IsGitRepo =						Test-GitRepository
+# gather git information
+if ($Git_IsGitRepo)
+{	$Git_Branch_Name =				& git rev-parse --abbrev-ref HEAD
+	$Git_Commit_DateString =	& git log -1 --format=%cd --date=short
+	$Git_Commit_ShortHash =		& git rev-parse --short HEAD
+}
+
 Write-Host "================================================================================" -ForegroundColor Magenta
 Write-Host "GHDL for Windows - GHDL compile and bundle script" -ForegroundColor Magenta
 Write-Host "================================================================================" -ForegroundColor Magenta
+Write-Host "  Version:    $GHDLVersion"
+Write-Host "  Release:    $BuildRelease"
+if ($Git_IsGitRepo)
+{	Write-Host "  Git branch: $Git_Branch_Name"
+	Write-Host "  Git commit: $Git_Commit_DateString ($Git_Commit_ShortHash)"
+}
 
 if ([environment]::OSVersion.Platform -ne "WIN32NT")
 {	Write-Error "[ERROR] PowerShell based installer not supported on Linux/Unix/MacOS platforms."
@@ -187,9 +201,9 @@ if ($All)
 if ($Clean)
 {	$CleanGHDL =          $true
 	$CleanLibraries =     $true
-	$CleanPackage =       $true
+	$CleanPackages =      $true
 }
-if ($CleanPackage)
+if ($CleanPackages)
 {	if (-not ($Zip -or $PS1))
 	{	$CleanPackageZip =  $true
 		$CleanPackagePS1 =  $true
@@ -204,9 +218,17 @@ if ($Compile)
 	$CompileLibraries =   $true
 }
 if ($CompileLibraries)
-{	$VHDL87 =             $true
-	$VHDL93 =             $true
-	$VHDL2008 =           $true
+{	if (-not($VHDL87 -or $VHDL93 -or $VHDL2008))
+	{	$CompileLibraryVHDL87 = $true
+		$CompileLibraryVHDL93 = $true
+		$CompileLibraryVHDL08 = $true
+	}
+	if ($VHDL87)
+	{	$CompileLibraryVHDL87 = $true }
+	if ($VHDL93)
+	{	$CompileLibraryVHDL93 = $true }
+	if ($VHDL2008)
+	{	$CompileLibraryVHDL08 = $true }
 }
 if ($Test)
 {	$TestGHDL =           $true
@@ -259,9 +281,13 @@ $InstallerTemplateFile =            "$GHDLWindowsDir\$InstallerTemplateFileName"
 $GHDLPS1PackageFile =               "$GHDLZipPackageDir\$PS1PackageFileName"
 
 if ($Release)
-{	$BuildDirectory =           $BinaryDestinationDirectory   }
+{	$BuildRelease =             "Release"
+	$BuildDirectory =           $BinaryDestinationDirectory
+}
 else
-{	$BuildDirectory =           $BinaryDestinationDirectory   }
+{	$BuildRelease =             "Development"
+	$BuildDirectory =           $BinaryDestinationDirectory
+}
 
 # construct executables
 $GHDLNewExecutable =					"$GHDLBuildDir\bin\ghdl.exe"
@@ -289,7 +315,8 @@ if ($Clean)
 {	Write-Host "Cleaning all created files and directories..." -ForegroundColor Cyan    }
 
 if ($CleanGHDL)
-{	try
+{	$Clean = $true
+	try
 	{	Invoke-CleanGHDL $BuildDirectory -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
 	catch
 	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
@@ -297,7 +324,8 @@ if ($CleanGHDL)
 	}
 }  # CleanGHDL
 if ($CleanLibraries)
-{	try
+{	$Clean = $true
+	try
 	{	if ($CleanGHDL)  { Write-Host }
 		Invoke-CleanLibraries $VHDLDestinationLibraryDirectory -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
 	catch
@@ -305,8 +333,9 @@ if ($CleanLibraries)
 		Exit-Script -1
 	}
 }  # CleanLibraries
-if ($CleanPackage)
-{	try
+if ($CleanPackages)
+{	$Clean = $true
+	try
 	{	if ($CleanGHDL -or $CleanLibraries) { Write-Host }
 		if ($CleanPackageZip)
 		{	Invoke-CleanPackageZip $GHDLZipPackageDir $GHDLZipPackageFile -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
@@ -319,87 +348,119 @@ if ($CleanPackage)
 	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
 		Exit-Script -1
 	}
-}
-if ($CleanGHDL -or $CleanLibraries -or $CleanPackage)
+}  # CleanPackages
+if ($Clean)
 {	Write-Host    
 	Write-Host "Clean " -NoNewline
 	Write-Host "[SUCCESSFUL]" -ForegroundColor Green
-	Write-Host
-}  # CleanPackage_Zip
+}
 
 # ============================================================================
 # Compile tasks
 # ============================================================================
 if ($CompileGHDL)
-{	if ($Clean)
+{	$Compile = $true
+	if ($Clean)
 	{	Write-Host    }
-		
-	$Script_Path =        $GHDLWindowsDir + "\compile-ghdl.ps1"
-	$Script_Parameters =  @()
-	$Script_Parameters =  @(
-		'-All',
-		'-Hosted',
-		'-Release:$Release',
-		'-Verbose:$EnableVerbose',
-		'-Debug:$EnableDebug'
-	)
 	
-	# Write-Host "Compiling GHDL $GHDLVersion for Windows..." -ForegroundColor DarkCyan
-	# Write-Host "--------------------------------------------------------------------------------" -ForegroundColor DarkCyan
-	
-	Write-Host
-	Write-Host "Running compile-ghdl.ps1 -All ..." -ForegroundColor DarkCyan
-	Write-Host "--------------------------------------------------------------------------------" -ForegroundColor DarkCyan
-	$InvokeExpr = "$Script_Path " + ($Script_Parameters -join " ")
-	Invoke-Expression $InvokeExpr
-	if ($LastExitCode -ne 0)
-	{	Write-Host "--------------------------------------------------------------------------------" -ForegroundColor DarkCyan
-		Write-Host "[ERROR]: While executing '$InvokeExpr'." -ForegroundColor Red
+	# create a build directory
+	try
+	{	New-BuildDirectory $BuildDirectory }
+	catch
+	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
 		Exit-Script -1
 	}
-	else
-	{	Write-Host "--------------------------------------------------------------------------------" -ForegroundColor DarkCyan
-		Write-Host "Completed compile-ghdl.ps1 " -NoNewline
-		Write-Host "[SUCCESSFUL]" -ForegroundColor Green
-		Write-Host
+	
+	# patch the version file if it's no release build
+	if (-not $Release -and $Git_IsGitRepo)
+	{	try
+		{	Invoke-PatchVersionFile $GHDLRootDir $Git_Branch_Name $Git_Commit_DateString $Git_Commit_ShortHash }
+		catch
+		{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
+			Exit-Script -1
+		}
 	}
-}  # CompileGHDL
-if ($CompileLibraries)
-{	if ($CompileGHDL)
-	{	Write-Host    }
 	
-	$Script_Path =        $GHDLWindowsDir + "\compile-libraries.ps1"
-	$Script_Parameters =  @()
-	$Script_Parameters =  @(
-		'-Compile',
-		'-Hosted',
-		'-Verbose:$EnableVerbose',
-		'-Debug:$EnableDebug'
-	)
-	
-	# Write-Host "Compiling GHDL's libraries ..." -ForegroundColor DarkCyan
-	# Write-Host "--------------------------------------------------------------------------------" -ForegroundColor DarkCyan
-	
-	$env:GHDL = "$GHDLBuildDir\ghdl.exe"
-	Write-Host ("Setting env:GHDL to '" + $env:GHDL + "'")
+	# build C source files
+	try
+	{	Write-Host
+		Invoke-CompileCFiles $GHDLRootDir $BinaryDestinationDirectory }
+	catch
+	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
+		Exit-Script -1
+	}
 
-	Write-Host
-	Write-Host "Running compile-libraries.ps1 -Compile ..." -ForegroundColor DarkCyan
-	Write-Host "--------------------------------------------------------------------------------" -ForegroundColor DarkCyan
-	$InvokeExpr = "$Script_Path " + ($Script_Parameters -join " ")
-	Invoke-Expression $InvokeExpr
-	if ($LastExitCode -ne 0)
-	{	Write-Host "--------------------------------------------------------------------------------" -ForegroundColor DarkCyan
-		Write-Host "[ERROR]: While executing '$InvokeExpr'." -ForegroundColor Red
+	
+	# build Ada source files
+	try
+	{	Write-Host
+		Invoke-CompileGHDLAdaFiles $GHDLRootDir $BinaryDestinationDirectory }
+	catch
+	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
 		Exit-Script -1
 	}
-	else
-	{	Write-Host "--------------------------------------------------------------------------------" -ForegroundColor DarkCyan
-		Write-Host "Completed compile-libraries.ps1 " -NoNewline
-		Write-Host "[SUCCESSFUL]" -ForegroundColor Green
-		Write-Host
+	
+	# strip result
+	try
+	{	Write-Host
+		Invoke-StripGHDLExecutable $BinaryDestinationDirectory }
+	catch
+	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
+		Exit-Script -1
 	}
+	
+	Write-Host    
+	Write-Host "Compile GHDL " -NoNewline
+	Write-Host "[SUCCESSFUL]" -ForegroundColor Green
 }  # CompileGHDL
+
+
+
+
+if ($CompileLibraries)
+{	if ($Clean -or $CompileGHDL)  { Write-Host }
+	Write-Host "Compiling all VHDL libraries..." -ForegroundColor Cyan
+}
+if ($CompileLibraryVHDL87 -or $CompileLibraryVHDL93 -or $CompileLibraryVHDL08)
+{$env:GHDL = "$GHDLBuildDir\ghdl.exe"
+	Write-Host ("  Setting env:GHDL to '" + $env:GHDL + "'")
+}
+
+if ($CompileLibraryVHDL87)
+{	$CompileLibraries = $true
+	try
+	{	Invoke-CompileLibraryVHDL87 $BuildDirectory -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
+	catch
+	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
+		Exit-Script -1
+	}
+}  # CompileLibraryVHDL87
+if ($CompileLibraryVHDL93)
+{	$CompileLibraries = $true
+	try
+	{	Invoke-CompileLibraryVHDL93 $BuildDirectory -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
+	catch
+	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
+		Exit-Script -1
+	}
+}  # CompileLibraryVHDL93
+if ($CompileLibraryVHDL08)
+{	$CompileLibraries = $true
+	try
+	{	Invoke-CompileLibraryVHDL08 $BuildDirectory -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
+	catch
+	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
+		Exit-Script -1
+	}
+}  # CompileLibraryVHDL93
+if ($CompileLibraries)
+{	Write-Host    
+	Write-Host "Compile Libraries " -NoNewline
+	Write-Host "[SUCCESSFUL]" -ForegroundColor Green
+}
+
+
+
 
 # ============================================================================
 # Package tasks

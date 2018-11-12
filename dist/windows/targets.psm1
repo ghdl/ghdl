@@ -290,19 +290,18 @@ function New-BuildDirectory
 		[switch]	$Quiet = $false
 	)
 
-	Write-Host "Executing build target 'BuildDirectory' ..." -ForegroundColor Yellow
+	Write-Host "Executing build target 'BuildDirectory' ..." -ForegroundColor DarkCyan
 	if (Test-Path -Path $BuildDirectory -PathType Container)
-	{	-not $Quiet -and (Write-Host "  Directory '$BuildDirectory' already exists."	) 	| Out-Null	}
+	{	-not $Quiet -and (Write-Host "  [INFO] Directory '$BuildDirectory' already exists." -ForegroundColor Yellow) 	| Out-Null	}
 	else
-	{	-not $Quiet -and (Write-Host "  Creating new directory '$BuildDirectory'."		) 	| Out-Null
-		New-Item -ItemType Directory -Path $BuildDirectory -ErrorAction SilentlyContinue	| Out-Null
+	{	-not $Quiet  -and (Write-Host "  Creating new directory '$BuildDirectory'."                                )  | Out-Null
+		$EnableDebug -and (Write-Host "    mkdir $BuildDirectory"                                                  )  | Out-Null
+		New-Item -ItemType Directory -Path $BuildDirectory -ErrorAction SilentlyContinue                              | Out-Null
 		if ($? -eq $false)
 		{	Write-Host "[ERROR]: Cannot create '$BuildDirectory'." -ForegroundColor Red
-			return $true
+			throw "Cannot create '$BuildDirectory'."
 		}
 	}
-
-	return $false
 }	# New-BuildDirectory
 
 function Get-GHDLVersion
@@ -360,31 +359,29 @@ function Invoke-PatchVersionFile
 	$VersionInputFilePath =		$SourceDirectory + "\" + $VersionFileName_In
 	$VersionFilePath =				$SourceDirectory + "\" + $VersionFileName_Ads
 
-	Write-Host "Executing build target 'PatchVersionFile' ..." -ForegroundColor Yellow
+	Write-Host "Executing build target 'PatchVersionFile' ..." -ForegroundColor DarkCyan
 
 	if (-not (Test-Path -Path $VersionInputFilePath -PathType Leaf))
 	{	Write-Host "[ERROR]: Version file '$VersionInputFilePath' does not exists." -ForegroundColor Red
-		return $true
+		throw "Version file '$VersionInputFilePath' does not exists."
 	}
 	-not $Quiet -and (Write-Host "  Patching '$VersionInputFilePath'.") | Out-Null
 	$FileContent = Get-Content -Path $VersionInputFilePath -Encoding Ascii
 	if ($? -eq $false)
 	{	Write-Host "[ERROR]: While opening '$VersionInputFilePath'." -ForegroundColor Red
-		return $true
+		throw "While opening '$VersionInputFilePath'."
 	}
-  $GHDLVersion =            Get-GHDLVersion $GHDLRootDir
-	$FileContent = $FileContent -Replace "\s@VER@\s", $GHDLVersion
-
-	$FileContent = $FileContent -Replace "\s\(tarball\)\s", " (commit: $GitCommitDataString;  git branch: $GitBranchName';  hash: $GitCommitHash) "
+	
+  $GHDLVersion = Get-GHDLVersion $GHDLRootDir
+	$FileContent = $FileContent -Replace "@VER@", $GHDLVersion
+	$FileContent = $FileContent -Replace "\(tarball\)", " (commit: $GitCommitDataString;  git branch: $GitBranchName';  hash: $GitCommitHash) "
 
 
 	$FileContent | Out-File $VersionFilePath -Encoding Ascii
 	if ($? -eq $false)
 	{	Write-Host "[ERROR]: While writing to '$VersionFilePath'." -ForegroundColor Red
-		return $true
+		throw "While writing to '$VersionFilePath'."
 	}
-
-	return $false
 }	# Invoke-PatchVersionFile
 
 
@@ -420,7 +417,7 @@ function Invoke-CompileCFiles
 	$SourceDirectory =					$GHDLRootDir + "\" + $CommonSourceDirName
 
 	Set-Location $BuildDirectory
-	Write-Host "Executing build target 'CompileCFiles' ..." -ForegroundColor Yellow
+	Write-Host "Executing build target 'CompileCFiles' ..." -ForegroundColor DarkCyan
 
 	# list all files to be compiled; add additional CFlags if needed
 	$SourceFiles = @()
@@ -446,11 +443,9 @@ function Invoke-CompileCFiles
 		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGCCLine -Indent "    "
 		if ($LastExitCode -ne 0)
 		{	Write-Host ("[ERROR]: While compiling '{0}'." -f $SourceFile.File) -ForegroundColor Red
-			return $true
+			throw "While compiling '{0}'."
 		}
 	}
-
-	return $false
 }	# Invoke-CompileCFiles
 
 
@@ -476,7 +471,7 @@ function Invoke-CompileGHDLAdaFiles
 	$WinMcodeSourceDirectory =			$GHDLRootDir + "\" + $WinMcodeSourceDirName
 
 	Set-Location $BuildDirectory
-	Write-Host "Executing build target 'CompileGHDLAdaFiles' ..." -ForegroundColor Yellow
+	Write-Host "Executing build target 'CompileGHDLAdaFiles' ..." -ForegroundColor DarkCyan
 
 	$Parameters = @()
 	$Parameters += Get-CFlags								# append common CFlags
@@ -519,9 +514,8 @@ function Invoke-CompileGHDLAdaFiles
 	$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGCCLine -Indent "    "
 	if ($LastExitCode -ne 0)
 	{	Write-Host "[ERROR]: While compiling '$GHDL_Mcode_Name'." -ForegroundColor Red
-		return $true
+		throw "While compiling '$GHDL_Mcode_Name'."
 	}
-	return $false
 }	# Invoke-CompileGHDLAdaFiles
 
 
@@ -541,7 +535,7 @@ function Invoke-StripGHDLExecutable
 	)
 
 	Set-Location $BuildDirectory
-	Write-Host "Executing build target 'StripGHDLExecutable' ..." -ForegroundColor Yellow
+	Write-Host "Executing build target 'StripGHDLExecutable' ..." -ForegroundColor DarkCyan
 
 	# call striping tool (strip)
 	Write-Host "  stripping '$GHDL_Mcode_Name'"
@@ -549,10 +543,108 @@ function Invoke-StripGHDLExecutable
 	& $Prog_Strip $GHDL_Mcode_Name
 	if ($LastExitCode -ne 0)
 	{	Write-Host "[ERROR]: While stripping '$GHDL_Mcode_Name'." -ForegroundColor Red
-		return $true
+		throw "While stripping '$GHDL_Mcode_Name'."
 	}
-	return $false
 }	# Invoke-StripGHDLExecutable
+
+function Invoke-CompileLibraryVHDL87
+{	<#
+		.SYNOPSIS
+		This CommandLet compiles the VHDL'87 library files.
+		.PARAMETER BuildDirectory
+		The directory where all analyzed VHDL files are stored.
+		.PARAMETER Quiet
+		Disable outputs to the host console.
+	#>
+	[CmdletBinding()]
+	param(
+		[string]	$BuildDirectory,
+		[switch]	$Quiet = $false
+	)
+
+	$EnableDebug =		-not $Quiet -and (                  $PSCmdlet.MyInvocation.BoundParameters["Debug"])
+	$EnableVerbose =	-not $Quiet -and ($EnableDebug  -or $PSCmdlet.MyInvocation.BoundParameters["Verbose"])
+
+	-not $Quiet			-and (Write-Host "Executing build target 'CompileLibraryVHDL87' ..." -ForegroundColor DarkCyan)  | Out-Null
+	# $EnableVerbose	-and (Write-Host "  Removing all created files and directories..."                 )  | Out-Null
+	# if (Test-Path -Path $BuildDirectory)
+	# {	$EnableDebug		-and (Write-Host "    rmdir $BuildDirectory"                                     )  | Out-Null
+		# Remove-Item $BuildDirectory -Force -Recurse -ErrorAction SilentlyContinue
+		# if ($? -eq $false)
+		# {	Write-Host "[ERROR]: Cannot remove '$BuildDirectory'." -ForegroundColor Red
+			# throw "Cannot remove '$BuildDirectory'."
+		# }
+	# }
+	# else
+	# {	Write-Host "  [INFO] Directory '$BuildDirectory' does not exist." -ForegroundColor Yellow
+	# }
+}	# Invoke-CompileLibraryVHDL87
+
+function Invoke-CompileLibraryVHDL93
+{	<#
+		.SYNOPSIS
+		This CommandLet compiles the VHDL'93 library files.
+		.PARAMETER BuildDirectory
+		The directory where all analyzed VHDL files are stored.
+		.PARAMETER Quiet
+		Disable outputs to the host console.
+	#>
+	[CmdletBinding()]
+	param(
+		[string]	$BuildDirectory,
+		[switch]	$Quiet = $false
+	)
+
+	$EnableDebug =		-not $Quiet -and (                  $PSCmdlet.MyInvocation.BoundParameters["Debug"])
+	$EnableVerbose =	-not $Quiet -and ($EnableDebug  -or $PSCmdlet.MyInvocation.BoundParameters["Verbose"])
+
+	-not $Quiet			-and (Write-Host "Executing build target 'CompileLibraryVHDL93' ..." -ForegroundColor DarkCyan)  | Out-Null
+	# $EnableVerbose	-and (Write-Host "  Removing all created files and directories..."                 )  | Out-Null
+	# if (Test-Path -Path $BuildDirectory)
+	# {	$EnableDebug		-and (Write-Host "    rmdir $BuildDirectory"                                     )  | Out-Null
+		# Remove-Item $BuildDirectory -Force -Recurse -ErrorAction SilentlyContinue
+		# if ($? -eq $false)
+		# {	Write-Host "[ERROR]: Cannot remove '$BuildDirectory'." -ForegroundColor Red
+			# throw "Cannot remove '$BuildDirectory'."
+		# }
+	# }
+	# else
+	# {	Write-Host "  [INFO] Directory '$BuildDirectory' does not exist." -ForegroundColor Yellow
+	# }
+}	# Invoke-CompileLibraryVHDL93
+
+function Invoke-CompileLibraryVHDL08
+{	<#
+		.SYNOPSIS
+		This CommandLet compiles the VHDL'08 library files.
+		.PARAMETER BuildDirectory
+		The directory where all analyzed VHDL files are stored.
+		.PARAMETER Quiet
+		Disable outputs to the host console.
+	#>
+	[CmdletBinding()]
+	param(
+		[string]	$BuildDirectory,
+		[switch]	$Quiet = $false
+	)
+
+	$EnableDebug =		-not $Quiet -and (                  $PSCmdlet.MyInvocation.BoundParameters["Debug"])
+	$EnableVerbose =	-not $Quiet -and ($EnableDebug  -or $PSCmdlet.MyInvocation.BoundParameters["Verbose"])
+
+	-not $Quiet			-and (Write-Host "Executing build target 'CompileLibraryVHDL08' ..." -ForegroundColor DarkCyan)  | Out-Null
+	# $EnableVerbose	-and (Write-Host "  Removing all created files and directories..."                 )  | Out-Null
+	# if (Test-Path -Path $BuildDirectory)
+	# {	$EnableDebug		-and (Write-Host "    rmdir $BuildDirectory"                                     )  | Out-Null
+		# Remove-Item $BuildDirectory -Force -Recurse -ErrorAction SilentlyContinue
+		# if ($? -eq $false)
+		# {	Write-Host "[ERROR]: Cannot remove '$BuildDirectory'." -ForegroundColor Red
+			# throw "Cannot remove '$BuildDirectory'."
+		# }
+	# }
+	# else
+	# {	Write-Host "  [INFO] Directory '$BuildDirectory' does not exist." -ForegroundColor Yellow
+	# }
+}	# Invoke-CompileLibraryVHDL08
 
 function Test-GHDLVersion
 {	<#
@@ -570,7 +662,7 @@ function Test-GHDLVersion
 	)
 
 	Set-Location $BuildDirectory
-	Write-Host "Executing build target 'GHDLVersion' ..." -ForegroundColor Yellow
+	Write-Host "Executing build target 'GHDLVersion' ..." -ForegroundColor DarkCyan
 
 	if (-not (Test-Path -Path $GHDL_Mcode_Name -PathType Leaf))
 	{	Write-Host "  GHDL executable '$GHDL_Mcode_Name' does not exists." -ForegroundColor Red
@@ -587,9 +679,8 @@ function Test-GHDLVersion
 	Write-Host "    ----------------------------------------"
 	if ($LastExitCode -ne 0)
 	{	Write-Host "[ERROR]: While executing '$GHDL_Mcode_Name'." -ForegroundColor Red
-		return $true
+		throw "While executing '$GHDL_Mcode_Name'."
 	}
-	return $false
 }	# Test-GHDLVersion
 
 
@@ -609,5 +700,9 @@ Export-ModuleMember -Function 'Restore-PatchedVersionFile'
 Export-ModuleMember -Function 'Invoke-CompileCFiles'
 Export-ModuleMember -Function 'Invoke-CompileGHDLAdaFiles'
 Export-ModuleMember -Function 'Invoke-StripGHDLExecutable'
+
+Export-ModuleMember -Function 'Invoke-CompileLibraryVHDL87'
+Export-ModuleMember -Function 'Invoke-CompileLibraryVHDL93'
+Export-ModuleMember -Function 'Invoke-CompileLibraryVHDL08'
 
 Export-ModuleMember -Function 'Test-GHDLVersion'
