@@ -288,9 +288,12 @@ package body Parse is
       Res : Iir;
    begin
       Res := Create_Iir (Iir_Kind_Range_Expression);
-      Set_Left_Limit_Expr (Res, Left);
 
-      Location_Copy (Res, Left);
+      if Left /= Null_Iir then
+         Set_Left_Limit_Expr (Res, Left);
+         Location_Copy (Res, Left);
+      end if;
+
       case Current_Token is
          when Tok_To =>
             Set_Direction (Res, Iir_To);
@@ -1261,8 +1264,7 @@ package body Parse is
             Expect (Tok_Identifier);
          end if;
 
-         exit when Current_Token = Tok_Colon;
-         Expect (Tok_Comma, "',' or ':' expected after identifier");
+         exit when Current_Token /= Tok_Comma;
 
          --  Skip ','
          Scan;
@@ -2704,18 +2706,16 @@ package body Parse is
             El := Parse_Discrete_Range;
             Append_Element (Index_List, El);
 
-            exit when Current_Token = Tok_Right_Paren;
+            exit when Current_Token /= Tok_Comma;
 
             --  Eat ','
-            Expect (Tok_Comma);
             Scan;
          end loop;
          Set_Index_Constraint_List (Def, List_To_Flist (Index_List));
       end if;
 
       --  Eat ')'
-      Expect (Tok_Right_Paren);
-      Scan;
+      Expect_Scan (Tok_Right_Paren);
 
       if Current_Token = Tok_Left_Paren then
          Set_Array_Element_Constraint (Def, Parse_Element_Constraint);
@@ -3994,10 +3994,9 @@ package body Parse is
             Res := Create_Iir_List;
             loop
                Append_Element (Res, Parse_Name);
-               exit when Current_Token = Tok_Colon;
+               exit when Current_Token /= Tok_Comma;
 
                --  Skip ','
-               Expect (Tok_Comma);
                Scan;
             end loop;
 
@@ -4963,7 +4962,9 @@ package body Parse is
       -- Accept 'new'.
       Scan;
       Expr := Parse_Name (Allow_Indexes => False);
-      if Get_Kind (Expr) /= Iir_Kind_Qualified_Expression then
+      if Expr /= Null_Iir
+        and then Get_Kind (Expr) /= Iir_Kind_Qualified_Expression
+      then
          -- This is a subtype_indication.
          Res := Create_Iir (Iir_Kind_Allocator_By_Subtype);
          Expr := Parse_Subtype_Indication (Expr);
@@ -5882,10 +5883,13 @@ package body Parse is
          Parse_Choices (Null_Iir, When_Loc, Pos, Assoc);
          Set_Associated_Chain (Assoc, Wf_Chain);
          Append_Subchain (Last, Res, Assoc);
-         exit when Current_Token = Tok_Semi_Colon;
-         Expect (Tok_Comma, "',' (comma) expected after choice");
+         exit when Current_Token /= Tok_Comma;
+         --  Skip ','.
          Scan;
       end loop;
+
+      Expect (Tok_Semi_Colon, "';' expected at end of statement");
+
       return Res;
    end Parse_Selected_Signal_Assignment;
 
@@ -6107,7 +6111,7 @@ package body Parse is
             Set_End_Location (Clause, End_Loc);
          end if;
 
-         exit when Current_Token = Tok_End;
+         exit when Current_Token /= Tok_Else and Current_Token /= Tok_Elsif;
 
          N_Clause := Create_Iir (Iir_Kind_Elsif);
          Start_Loc := Get_Token_Location;
@@ -6133,14 +6137,13 @@ package body Parse is
             --  Skip 'elsif'.
             Scan;
          else
-            Error_Msg_Parse ("'else' or 'elsif' expected");
+            raise Program_Error;
          end if;
       end loop;
-      Expect (Tok_End);
-      Scan_Expect (Tok_If);
 
-      --  Eat 'if'.
-      Scan;
+      --  Skip 'end' 'if'
+      Expect_Scan (Tok_End);
+      Expect_Scan (Tok_If);
 
       return Res;
    end Parse_If_Statement;
@@ -6181,6 +6184,8 @@ package body Parse is
          when Iir_Kind_String_Literal8 =>
             Error_Msg_Parse
               ("string or operator cannot be used as procedure call");
+         when Iir_Kind_Selected_By_All_Name =>
+            Error_Msg_Parse ("invalid procedure name or missing assignment");
          when others =>
             Error_Kind ("parenthesis_name_to_procedure_call", Name);
       end case;
@@ -8366,14 +8371,14 @@ package body Parse is
             Set_Start_Location (Library, Start_Loc);
          end if;
 
-         exit when Current_Token = Tok_Semi_Colon;
-         Expect (Tok_Comma);
+         exit when Current_Token /= Tok_Comma;
 
          Set_Has_Identifier_List (Library, True);
       end loop;
 
       --  Skip ';'.
-      Scan;
+      Expect_Scan (Tok_Semi_Colon, "';' at end of library clause");
+
       return First;
    end Parse_Library_Clause;
 
