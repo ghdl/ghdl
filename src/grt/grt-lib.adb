@@ -263,13 +263,17 @@ package body Grt.Lib is
 
    function Ghdl_I32_Exp_1 is new Gen_Ixx_Exp (Ghdl_I32, Mul_I32_Ovf);
 
-   function Ghdl_I32_Exp (V : Ghdl_I32; E : Std_Integer) return Ghdl_I32
-     renames Ghdl_I32_Exp_1;
+   function Ghdl_I32_Exp (V : Ghdl_I32; E : Std_Integer) return Ghdl_I32 is
+   begin
+      return Ghdl_I32_Exp_1 (V, E);
+   end Ghdl_I32_Exp;
 
    function Ghdl_I64_Exp_1 is new Gen_Ixx_Exp (Ghdl_I64, Mul_I64_Ovf);
 
-   function Ghdl_I64_Exp (V : Ghdl_I64; E : Std_Integer) return Ghdl_I64
-     renames Ghdl_I64_Exp_1;
+   function Ghdl_I64_Exp (V : Ghdl_I64; E : Std_Integer) return Ghdl_I64 is
+   begin
+      return Ghdl_I64_Exp_1 (V, E);
+   end Ghdl_I64_Exp;
 
    function C_Malloc (Size : Ghdl_Index_Type) return Ghdl_Ptr;
    pragma Import (C, C_Malloc, "malloc");
