@@ -6180,13 +6180,14 @@ package body Parse is
          when Iir_Kind_Simple_Name
            | Iir_Kind_Selected_Name =>
             Set_Prefix (Call, Name);
-         when Iir_Kind_Attribute_Name =>
-            Error_Msg_Parse ("attribute cannot be used as procedure call");
          when Iir_Kind_String_Literal8 =>
             Error_Msg_Parse
               ("string or operator cannot be used as procedure call");
-         when Iir_Kind_Selected_By_All_Name =>
-            Error_Msg_Parse ("invalid procedure name or missing assignment");
+         when Iir_Kind_Selected_By_All_Name
+           | Iir_Kind_Qualified_Expression
+           | Iir_Kind_Attribute_Name =>
+            Error_Msg_Parse
+              ("invalid name for a procedure call or missing assignment");
          when others =>
             Error_Kind ("parenthesis_name_to_procedure_call", Name);
       end case;
@@ -7327,10 +7328,20 @@ package body Parse is
 
             Set_Entity_Name (Res, Parse_Name (False));
             if Current_Token = Tok_Left_Paren then
-               Scan_Expect (Tok_Identifier);
-               Set_Architecture (Res, Current_Text);
-               Scan_Expect (Tok_Right_Paren);
+               --  Skip '('.
                Scan;
+
+               if Current_Token = Tok_Identifier then
+                  Set_Architecture (Res, Current_Text);
+
+                  --  Skip identifier.
+                  Scan;
+               else
+                  Expect (Tok_Identifier, "identifier for architecture");
+               end if;
+
+               --  Skip ')'.
+               Expect_Scan (Tok_Right_Paren);
             end if;
             return Res;
 
