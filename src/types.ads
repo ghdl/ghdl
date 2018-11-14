@@ -113,6 +113,22 @@ package Types is
    Location_Nil : constant Location_Type := 0;
    No_Location : constant Location_Type := 0;
 
+   --  Source coordinates.  An expanded form of location, almost ready to be
+   --  printed.
+   --  FILE is the reference to the source file.
+   --  LINE_POS is the position in the source file of the first character of
+   --   the line.  It usually comes for free but can be a little bit difficult
+   --   to compute if the line table is being built.
+   --  LINE is the line number; first line is 1 and 0 means unknown.
+   --  OFFSET is the index in the line; first character is 0, any character
+   --   (even tabulation) counts as 1 character.
+   type Source_Coord_Type is record
+      File : Source_File_Entry;
+      Line_Pos : Source_Ptr;
+      Line : Natural;
+      Offset : Natural;
+   end record;
+
    --  PSL Node.
    type PSL_Node is new Int32;
 
