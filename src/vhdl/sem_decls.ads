@@ -22,10 +22,6 @@ package Sem_Decls is
    procedure Sem_Interface_Chain (Interface_Chain: Iir;
                                   Interface_Kind : Interface_Kind_Type);
 
-   --  Create predefined operations for DECL.
-   procedure Create_Implicit_Operations
-     (Decl : Iir; Is_Std_Standard : Boolean := False);
-
    --  Analyze declarations of PARENT.
    procedure Sem_Declaration_Chain (Parent : Iir);
 

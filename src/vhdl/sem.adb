@@ -31,6 +31,7 @@ with Sem_Inst;
 with Iirs_Utils; use Iirs_Utils;
 with Flags; use Flags;
 with Str_Table;
+with Sem_Utils;
 with Sem_Stmts; use Sem_Stmts;
 with Iir_Chains;
 with Xrefs; use Xrefs;
@@ -1797,45 +1798,6 @@ package body Sem is
       end if;
    end Check_Operator_Requirements;
 
-   procedure Compute_Subprogram_Hash (Subprg : Iir)
-   is
-      type Hash_Type is mod 2**32;
-      function To_Hash is new Ada.Unchecked_Conversion
-        (Source => Iir, Target => Hash_Type);
-      function To_Int32 is new Ada.Unchecked_Conversion
-        (Source => Hash_Type, Target => Iir_Int32);
-
-      Kind : Iir_Kind;
-      Hash : Hash_Type;
-      Sig : Hash_Type;
-      Inter : Iir;
-      Itype : Iir;
-   begin
-      Kind := Get_Kind (Subprg);
-      if Kind = Iir_Kind_Function_Declaration
-        or else Kind = Iir_Kind_Enumeration_Literal
-      then
-         Itype := Get_Base_Type (Get_Return_Type (Subprg));
-         Hash := To_Hash (Itype);
-         Sig := 8;
-      else
-         Sig := 1;
-         Hash := 0;
-      end if;
-
-      if Kind /= Iir_Kind_Enumeration_Literal then
-         Inter := Get_Interface_Declaration_Chain (Subprg);
-         while Inter /= Null_Iir loop
-            Itype := Get_Base_Type (Get_Type (Inter));
-            Sig := Sig + 1;
-            Hash := Hash * 7 + To_Hash (Itype);
-            Hash := Hash + Hash / 2**28;
-            Inter := Get_Chain (Inter);
-         end loop;
-      end if;
-      Set_Subprogram_Hash (Subprg, To_Int32 (Hash + Sig));
-   end Compute_Subprogram_Hash;
-
    procedure Sem_Subprogram_Specification (Subprg: Iir)
    is
       Interface_Chain : Iir;
@@ -1940,7 +1902,7 @@ package body Sem is
 
       Check_Operator_Requirements (Get_Identifier (Subprg), Subprg);
 
-      Compute_Subprogram_Hash (Subprg);
+      Sem_Utils.Compute_Subprogram_Hash (Subprg);
 
       --  The specification has been analyzed, close the declarative region
       --  now.

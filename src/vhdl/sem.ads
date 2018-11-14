@@ -61,9 +61,6 @@ package Sem is
    --  This may adds use clauses to the chain.
    procedure Sem_Use_Clause (Clauses : Iir_Use_Clause);
 
-   --  Compute and set the hash profile of a subprogram or enumeration clause.
-   procedure Compute_Subprogram_Hash (Subprg : Iir);
-
    --  LRM 2.1  Subprogram Declarations.
    procedure Sem_Subprogram_Specification (Subprg: Iir);
    procedure Sem_Subprogram_Declaration (Subprg: Iir);

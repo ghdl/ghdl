@@ -21,6 +21,7 @@ with Types; use Types;
 with Errorout; use Errorout;
 with Evaluation; use Evaluation;
 with Sem;
+with Sem_Utils;
 with Sem_Expr; use Sem_Expr;
 with Sem_Scopes; use Sem_Scopes;
 with Sem_Names; use Sem_Names;
@@ -795,7 +796,7 @@ package body Sem_Types is
          Set_Expr_Staticness (El, Locally);
          Set_Name_Staticness (El, Locally);
          Set_Type (El, Def);
-         Sem.Compute_Subprogram_Hash (El);
+         Sem_Utils.Compute_Subprogram_Hash (El);
          Sem_Scopes.Add_Name (El);
          Name_Visible (El);
          Xref_Decl (El);
