@@ -26,6 +26,7 @@ with Name_Table;
 with Libraries;
 with Flags;
 with Sem;
+with Sem_Lib; use Sem_Lib;
 with Trans.Chap1;
 with Trans.Chap2;
 with Trans.Chap6;
@@ -360,7 +361,7 @@ package body Trans.Chap12 is
 
       Decl : Iir;
    begin
-      Libraries.Load_Design_Unit (Unit, Null_Iir);
+      Load_Design_Unit (Unit, Null_Iir);
       Pkg := Get_Library_Unit (Unit);
       Reset_Identifier_Prefix;
       Lib := Get_Library (Get_Design_File (Get_Design_Unit (Pkg)));
@@ -434,7 +435,7 @@ package body Trans.Chap12 is
          Lib_Unit : Iir;
       begin
          --  Load the unit in memory to compute the dependence list.
-         Libraries.Load_Design_Unit (Unit, Null_Iir);
+         Load_Design_Unit (Unit, Null_Iir);
          Update_Node_Infos;
 
          Set_Elab_Flag (Unit, True);

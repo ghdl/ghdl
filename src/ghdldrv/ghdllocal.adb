@@ -20,6 +20,7 @@ with Ada.Command_Line;
 with GNAT.Directory_Operations;
 with Types; use Types;
 with Libraries;
+with Sem_Lib;
 with Std_Package;
 with Flags;
 with Name_Table;
@@ -632,7 +633,7 @@ package body Ghdllocal is
 
       for I in Args'Range loop
          Id := Get_Identifier (Args (I).all);
-         Design_File := Libraries.Load_File (Id);
+         Design_File := Sem_Lib.Load_File (Id);
          if Design_File /= Null_Iir then
             Unit := Get_First_Design_Unit (Design_File);
             while Unit /= Null_Iir loop
@@ -693,7 +694,7 @@ package body Ghdllocal is
       --  Parse all files.
       for I in Args'Range loop
          Id := Name_Table.Get_Identifier (Args (I).all);
-         Design_File := Libraries.Load_File (Id);
+         Design_File := Sem_Lib.Load_File (Id);
          if Design_File /= Null_Iir then
             Unit := Get_First_Design_Unit (Design_File);
             while Unit /= Null_Iir loop
@@ -728,7 +729,7 @@ package body Ghdllocal is
                     | Date_Analyzed =>
                      null;
                   when Date_Parsed =>
-                     Libraries.Finish_Compilation (Unit, False);
+                     Sem_Lib.Finish_Compilation (Unit, False);
                   when others =>
                      raise Internal_Error;
                end case;
@@ -780,7 +781,7 @@ package body Ghdllocal is
          Put (File_Name);
          Put_Line (":");
       end if;
-      Design_File := Libraries.Load_File (Id);
+      Design_File := Sem_Lib.Load_File (Id);
       if Design_File = Null_Iir then
          raise Errorout.Compilation_Error;
       end if;
@@ -793,7 +794,7 @@ package body Ghdllocal is
             New_Line;
          end if;
          -- Sem, canon, annotate a design unit.
-         Libraries.Finish_Compilation (Unit, True);
+         Sem_Lib.Finish_Compilation (Unit, True);
 
          Next_Unit := Get_Chain (Unit);
          if Errorout.Nbr_Errors = 0 then
@@ -1224,14 +1225,14 @@ package body Ghdllocal is
                --    date.
                Unit := Get_First_Design_Unit (File);
                while Unit /= Null_Iir loop
-                  Load_Parse_Design_Unit (Unit, Null_Iir);
+                  Sem_Lib.Load_Parse_Design_Unit (Unit, Null_Iir);
                   Extract_Library_Clauses (Unit);
                   Unit := Get_Chain (Unit);
                end loop;
             else
                --  File has been modified.
                --  Parse it.
-               Design_File := Load_File (Fe);
+               Design_File := Sem_Lib.Load_File (Fe);
 
                --  Exit now in case of parse error.
                if Design_File = Null_Iir
@@ -1349,7 +1350,7 @@ package body Ghdllocal is
                                 Get_File_Checksum (File))
                   then
                      --  FILE has been modified.
-                     Design_File := Libraries.Load_File (Fe);
+                     Design_File := Sem_Lib.Load_File (Fe);
                      if Design_File /= Null_Iir then
                         Libraries.Add_Design_File_Into_Library (Design_File);
                      end if;

@@ -23,7 +23,6 @@ with Std_Names; use Std_Names;
 with Flags; use Flags;
 with Iirs_Utils;
 with Sem_Utils;
-with Sem_Decls;
 with Iir_Chains;
 
 package body Std_Package is

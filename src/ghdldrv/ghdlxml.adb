@@ -26,6 +26,7 @@ with Ghdlprint; use Ghdlprint;
 with Libraries;
 with Errorout; use Errorout;
 with Iirs; use Iirs;
+with Sem_Lib; use Sem_Lib;
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
 
@@ -561,7 +562,7 @@ package body Ghdlxml is
             return;
          end if;
          Files (I).Fe := File;
-         Files (I).Design_File := Libraries.Load_File (File);
+         Files (I).Design_File := Load_File (File);
          if Files (I).Design_File = Null_Iir then
             return;
          end if;

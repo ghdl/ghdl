@@ -24,6 +24,7 @@ with Parse;
 with Std_Names;
 with Sem_Names; use Sem_Names;
 with Sem_Types;
+with Sem_Decls;
 with Std_Package;
 with Sem_Scopes;
 with Iir_Chains; use Iir_Chains;
@@ -1776,7 +1777,7 @@ package body Sem_Assocs is
 
       Set_Named_Entity (Actual, Res);
       Xrefs.Xref_Name (Actual);
-      Mark_Subprogram_Used (Res);
+      Sem_Decls.Mark_Subprogram_Used (Res);
    end Sem_Association_Subprogram;
 
    --  Associate ASSOC with interface INTERFACE

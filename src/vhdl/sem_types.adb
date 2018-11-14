@@ -20,7 +20,6 @@ with Flags; use Flags;
 with Types; use Types;
 with Errorout; use Errorout;
 with Evaluation; use Evaluation;
-with Sem;
 with Sem_Utils;
 with Sem_Expr; use Sem_Expr;
 with Sem_Scopes; use Sem_Scopes;
@@ -1383,7 +1382,7 @@ package body Sem_Types is
            (+Atype, "no matching resolution function for %n", +Name);
       else
          Name1 := Finish_Sem_Name (Name);
-         Mark_Subprogram_Used (Res);
+         Sem_Decls.Mark_Subprogram_Used (Res);
          Set_Resolved_Flag (Atype, True);
          Set_Resolution_Indication (Atype, Name1);
       end if;

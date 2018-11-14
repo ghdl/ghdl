@@ -21,8 +21,6 @@ with Std_Names;
 with Tokens;
 with Flags; use Flags;
 with Std_Package; use Std_Package;
-with Ieee.Std_Logic_1164;
-with Iir_Chains;
 with Evaluation; use Evaluation;
 with Iirs_Utils; use Iirs_Utils;
 with Sem; use Sem;
@@ -35,7 +33,6 @@ with Sem_Types; use Sem_Types;
 with Sem_Psl;
 with Sem_Inst;
 with Xrefs; use Xrefs;
-use Iir_Chains;
 
 package body Sem_Decls is
    --  Region that can declare signals.  Used to add implicit declarations.
@@ -144,6 +141,20 @@ package body Sem_Decls is
          Current_Signals_Region.Last_Decl := Last_Decl;
       end if;
    end End_Of_Declarations_For_Implicit_Declarations;
+
+   procedure Mark_Subprogram_Used (Subprg : Iir)
+   is
+      N : Iir;
+   begin
+      N := Subprg;
+      loop
+         exit when Get_Use_Flag (N);
+         Set_Use_Flag (N, True);
+         N := Sem_Inst.Get_Origin (N);
+         --  The origin may also be an instance.
+         exit when N = Null_Iir;
+      end loop;
+   end Mark_Subprogram_Used;
 
    --  Emit an error if the type of DECL is a file type, access type,
    --  protected type or if a subelement of DECL is an access type.

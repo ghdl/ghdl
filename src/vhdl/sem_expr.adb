@@ -31,6 +31,7 @@ with Iir_Chains; use Iir_Chains;
 with Sem_Types;
 with Sem_Stmts; use Sem_Stmts;
 with Sem_Assocs; use Sem_Assocs;
+with Sem_Decls;
 with Xrefs; use Xrefs;
 
 package body Sem_Expr is
@@ -1173,7 +1174,7 @@ package body Sem_Expr is
       Subprg : constant Iir := Get_Current_Subprogram;
    begin
       Set_Function_Call_Staticness (Expr, Imp);
-      Mark_Subprogram_Used (Imp);
+      Sem_Decls.Mark_Subprogram_Used (Imp);
 
       --  Check purity/wait/passive.
 

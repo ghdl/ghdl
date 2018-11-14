@@ -52,6 +52,10 @@ package Sem_Decls is
    --  discrete ranges.
    procedure Sem_Object_Type_From_Value (Decl : Iir; Value : Iir);
 
+   --  Mark SUBPRG as used.  If SUBPRG is an instance, its generic is also
+   --  marked.
+   procedure Mark_Subprogram_Used (Subprg : Iir);
+
    --  The attribute signals ('stable, 'quiet and 'transaction) are
    --  implicitely declared.
    --  Note: guard signals are also implicitly declared but with a guard

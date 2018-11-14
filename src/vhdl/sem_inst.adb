@@ -21,7 +21,6 @@ with Types; use Types;
 with Files_Map;
 with Iirs_Utils; use Iirs_Utils;
 with Errorout; use Errorout;
-with Sem;
 with Sem_Utils;
 
 package body Sem_Inst is

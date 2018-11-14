@@ -33,6 +33,7 @@ with Parse;
 with Canon;
 with Version;
 with Xrefs;
+with Sem_Lib; use Sem_Lib;
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
 with Disp_Vhdl;
@@ -677,7 +678,7 @@ package body Ghdlprint is
       --  exist.
       for I in Args'Range loop
          Id := Get_Identifier (Args (I).all);
-         Design_File := Libraries.Load_File (Id);
+         Design_File := Load_File (Id);
          if Design_File = Null_Iir then
             raise Compile_Error;
          end if;
@@ -707,7 +708,7 @@ package body Ghdlprint is
       --  Second loop: do the real work.
       for I in Args'Range loop
          Id := Get_Identifier (Args (I).all);
-         Design_File := Libraries.Load_File (Id);
+         Design_File := Load_File (Id);
          Unit := Get_First_Design_Unit (Design_File);
          declare
             use Files_Map;
@@ -991,7 +992,7 @@ package body Ghdlprint is
       --  Parse all files.
       for I in Args'Range loop
          Id := Name_Table.Get_Identifier (Args (I).all);
-         Design_File := Libraries.Load_File (Id);
+         Design_File := Load_File (Id);
          if Design_File = Null_Iir then
             raise Errorout.Compilation_Error;
          end if;
@@ -999,7 +1000,7 @@ package body Ghdlprint is
          Unit := Get_First_Design_Unit (Design_File);
          while Unit /= Null_Iir loop
             --  Analyze the design unit.
-            Libraries.Finish_Compilation (Unit, True);
+            Sem_Lib.Finish_Compilation (Unit, True);
 
             Next_Unit := Get_Chain (Unit);
             if Errorout.Nbr_Errors = 0 then
@@ -1280,7 +1281,7 @@ package body Ghdlprint is
               | Date_Disk =>
                raise Internal_Error;
             when Date_Parse =>
-               Libraries.Load_Design_Unit (Unit, Null_Iir);
+               Sem_Lib.Load_Design_Unit (Unit, Null_Iir);
             when Date_Analyze =>
                null;
          end case;
@@ -1340,7 +1341,7 @@ package body Ghdlprint is
             return;
          end if;
          Files (I).Fe := File;
-         Files (I).Design_File := Libraries.Load_File (File);
+         Files (I).Design_File := Load_File (File);
          if Files (I).Design_File = Null_Iir then
             return;
          end if;
@@ -1573,7 +1574,7 @@ package body Ghdlprint is
             return;
          end if;
          Files (I).Fe := File;
-         Files (I).Design_File := Libraries.Load_File (File);
+         Files (I).Design_File := Load_File (File);
          if Files (I).Design_File = Null_Iir then
             return;
          end if;

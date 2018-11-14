@@ -144,10 +144,6 @@ package Iirs_Utils is
    function Get_Predefined_Function_Name (Func : Iir_Predefined_Functions)
      return String;
 
-   --  Mark SUBPRG as used.  If SUBPRG is an instance, its generic is also
-   --  marked.
-   procedure Mark_Subprogram_Used (Subprg : Iir);
-
    --  Create the range_constraint node for an enumeration type.
    procedure Create_Range_Constraint_For_Enumeration_Type
      (Def : Iir_Enumeration_Type_Definition);

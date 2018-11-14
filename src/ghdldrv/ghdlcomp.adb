@@ -25,6 +25,7 @@ with Ada.Text_IO;
 with Types;
 with Flags;
 with Sem;
+with Sem_Lib; use Sem_Lib;
 with Name_Table;
 with Errorout; use Errorout;
 with Libraries;
@@ -214,7 +215,7 @@ package body Ghdlcomp is
       Design : Iir;
       Next_Design : Iir;
    begin
-      Res := Libraries.Load_File (Name_Table.Get_Identifier (File));
+      Res := Load_File (Name_Table.Get_Identifier (File));
       if Errorout.Nbr_Errors > 0 then
          raise Compilation_Error;
       end if;
@@ -238,7 +239,7 @@ package body Ghdlcomp is
       Unit : Iir;
       Next_Unit : Iir;
    begin
-      Design_File := Libraries.Load_File (Id);
+      Design_File := Load_File (Id);
       if Design_File = Null_Iir or else Errorout.Nbr_Errors > 0 then
          --  Stop now in case of error (file not found or parse error).
          return Design_File;
@@ -246,7 +247,7 @@ package body Ghdlcomp is
 
       Unit := Get_First_Design_Unit (Design_File);
       while Unit /= Null_Iir loop
-         Libraries.Finish_Compilation (Unit, True);
+         Finish_Compilation (Unit, True);
 
          Next_Unit := Get_Chain (Unit);
 
@@ -396,7 +397,7 @@ package body Ghdlcomp is
       --  Parse all files.
       for I in Args'Range loop
          Id := Name_Table.Get_Identifier (Args (I).all);
-         Design_File := Libraries.Load_File (Id);
+         Design_File := Load_File (Id);
          if Errorout.Nbr_Errors > 0 then
             raise Compilation_Error;
          end if;
@@ -410,7 +411,7 @@ package body Ghdlcomp is
          if Design_File /= Null_Iir then
             Unit := Get_First_Design_Unit (Design_File);
             while Unit /= Null_Iir loop
-               Libraries.Finish_Compilation (Unit, True);
+               Finish_Compilation (Unit, True);
 
                Next_Unit := Get_Chain (Unit);
 
