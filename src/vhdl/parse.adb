@@ -2758,8 +2758,7 @@ package body Parse is
    --
    --  NAME is the type_mark when already parsed (in range expression or
    --   allocator by type).
-   function Parse_Subtype_Indication (Name : Iir := Null_Iir)
-     return Iir
+   function Parse_Subtype_Indication (Name : Iir := Null_Iir) return Iir
    is
       Type_Mark : Iir;
       Def: Iir;
@@ -2820,8 +2819,10 @@ package body Parse is
             then
                --  A subtype needs to be created.
                Def := Create_Iir (Iir_Kind_Subtype_Definition);
-               Location_Copy (Def, Type_Mark);
-               Set_Subtype_Type_Mark (Def, Type_Mark);
+               if Type_Mark /= Null_Iir then
+                  Location_Copy (Def, Type_Mark);
+                  Set_Subtype_Type_Mark (Def, Type_Mark);
+               end if;
                Set_Resolution_Indication (Def, Resolution_Indication);
                Set_Tolerance (Def, Tolerance);
             else
