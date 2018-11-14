@@ -24,7 +24,8 @@ package body Std_Names is
       begin
          if Name_Table.Get_Identifier (S) /= Id then
             Ada.Exceptions.Raise_Exception
-              (Program_Error'Identity, "wrong name_id for " & S);
+              (Program_Error'Identity,
+               "std_names.adb: wrong name_id for " & S);
          end if;
       end Def;
    begin
@@ -574,7 +575,6 @@ package body Std_Names is
       Def ("v",                     Name_V);
       Def ("external_name",         Name_External_Name);
       Def ("open_kind",             Name_Open_Kind);
-      Def ("status",                Name_Status);
       Def ("first",                 Name_First);
       Def ("last",                  Name_Last);
       Def ("textio",                Name_Textio);
@@ -747,5 +747,36 @@ package body Std_Names is
       Def ("whilenot",           Name_Whilenot);
       Def ("within",             Name_Within);
       Def ("x",                  Name_X);
+
+      Def ("edif",               Name_Edif);
+      Def ("edifversion",        Name_Edifversion);
+      Def ("ediflevel",          Name_Ediflevel);
+      Def ("keywordmap",         Name_Keywordmap);
+      Def ("status",             Name_Status);
+      Def ("written",            Name_Written);
+      Def ("external",           Name_External);
+      Def ("comment",            Name_Comment);
+      Def ("technology",         Name_Technology);
+      Def ("cell",               Name_Cell);
+      Def ("celltype",           Name_Celltype);
+      Def ("view",               Name_View);
+      Def ("viewtype",           Name_Viewtype);
+      Def ("direction",          Name_Direction);
+      Def ("contents",           Name_Contents);
+      Def ("net",                Name_Net);
+      Def ("viewref",            Name_Viewref);
+      Def ("cellref",            Name_Cellref);
+      Def ("libraryref",         Name_Libraryref);
+      Def ("portinstance",       Name_Portinstance);
+      Def ("joined",             Name_Joined);
+      Def ("portref",            Name_Portref);
+      Def ("instanceref",        Name_Instanceref);
+      Def ("design",             Name_Design);
+      Def ("designator",         Name_Designator);
+      Def ("owner",              Name_Owner);
+      Def ("member",             Name_Member);
+      Def ("number",             Name_Number);
+      Def ("rename",             Name_Rename);
+      Def ("userdata",           Name_Userdata);
    end Std_Names_Initialize;
 end Std_Names;
