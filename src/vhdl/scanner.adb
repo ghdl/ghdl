@@ -2017,9 +2017,9 @@ package body Scanner is
             return;
          when '#' =>
             Error_Msg_Scan ("'#' is used for based literals and "
-                            & "must be preceded by a base");
-            -- Cannot easily continue.
-            raise Compilation_Error;
+                              & "must be preceded by a base");
+            --  Skip.
+            Pos := Pos + 1;
          when '"' =>
             Scan_String;
             return;
