@@ -158,6 +158,9 @@ package Types is
    --  is detected.
    Internal_Error: exception;
 
+   --  Unrecoverable error.  Just exit() with an error status.
+   Fatal_Error : exception;
+
    --  In some case, a low level subprogram can't handle error
    --  (e.g eval_pos).  In this case it is easier to raise an exception and
    --  let upper level subprograms handle the case.
