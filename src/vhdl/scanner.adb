@@ -453,6 +453,13 @@ package body Scanner is
                Error_Msg_Scan ("format effector not allowed in a string");
                exit;
             when Invalid =>
+               if C = Files_Map.EOT
+                 and then Pos >= Current_Context.File_Len
+               then
+                  Error_Msg_Scan ("string not terminated at end of file");
+                  exit;
+               end if;
+
                Error_Msg_Scan
                  ("invalid character not allowed, even in a string");
             when Graphic_Character =>
