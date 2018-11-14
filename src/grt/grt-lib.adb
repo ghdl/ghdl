@@ -191,15 +191,52 @@ package body Grt.Lib is
       Error_E_Call_Stack (Bt);
    end Ghdl_Direction_Check_Failed;
 
-   function Ghdl_Integer_Exp (V : Ghdl_I32; E : Ghdl_I32)
-     return Ghdl_I32
-   is
-      pragma Suppress (Overflow_Check);
+   function Hi (V : Ghdl_I64) return Ghdl_U32 is
+   begin
+      return Ghdl_U32 (Shift_Right (To_Ghdl_U64 (V), 32) and 16#ffff_ffff#);
+   end Hi;
 
-      R : Ghdl_I32;
-      Res : Ghdl_I32;
-      P : Ghdl_I32;
+   function Lo (V : Ghdl_I64) return Ghdl_U32 is
+   begin
+      return Ghdl_U32 (To_Ghdl_U64 (V) and 16#ffff_ffff#);
+   end Lo;
+
+   procedure Mul_I32_Ovf (L, R : Ghdl_I32;
+                          Res : out Ghdl_I32;
+                          Ovf : out Boolean)
+   is
       T : Ghdl_I64;
+   begin
+      T := Ghdl_I64 (L) * Ghdl_I64 (R);
+      if Hi (T) /= Shift_Right_Arithmetic (Lo (T), 31) then
+         Ovf := True;
+      else
+         Ovf := False;
+         Res := Ghdl_I32 (T);
+      end if;
+   end Mul_I32_Ovf;
+
+   procedure Mul_I64_Ovf (L, R : Ghdl_I64;
+                          Res : out Ghdl_I64;
+                          Ovf : out Boolean) is
+   begin
+      --  TODO: check overflow.
+      Res := L * R;
+      Ovf := False;
+   end Mul_I64_Ovf;
+
+   generic
+      type T is range <>;
+      with procedure Mul_Ovf (L, R : T; Res : out T; Ovf : out Boolean);
+   function Gen_Ixx_Exp (V : T; E : Std_Integer) return T;
+   pragma Convention (C, Gen_Ixx_Exp);
+
+   function Gen_Ixx_Exp (V : T; E : Std_Integer) return T
+   is
+      R : Std_Integer;
+      Res : T;
+      P : T;
+      Ovf : Boolean;
    begin
       if E < 0 then
          Error ("negative exponent");
@@ -209,18 +246,30 @@ package body Grt.Lib is
       R := E;
       loop
          if R mod 2 = 1 then
-            T := Ghdl_I64 (Res) * Ghdl_I64 (P);
-            Res := Ghdl_I32 (T);
-            if Ghdl_I64 (Res) /= T then
+            Mul_Ovf (Res, P, Res, Ovf);
+            if Ovf then
                Error ("overflow in exponentiation");
             end if;
          end if;
          R := R / 2;
          exit when R = 0;
-         P := P * P;
+         Mul_Ovf (P, P, P, Ovf);
+         if Ovf then
+            Error ("overflow in exponentiation");
+         end if;
       end loop;
       return Res;
-   end Ghdl_Integer_Exp;
+   end Gen_Ixx_Exp;
+
+   function Ghdl_I32_Exp_1 is new Gen_Ixx_Exp (Ghdl_I32, Mul_I32_Ovf);
+
+   function Ghdl_I32_Exp (V : Ghdl_I32; E : Std_Integer) return Ghdl_I32
+     renames Ghdl_I32_Exp_1;
+
+   function Ghdl_I64_Exp_1 is new Gen_Ixx_Exp (Ghdl_I64, Mul_I64_Ovf);
+
+   function Ghdl_I64_Exp (V : Ghdl_I64; E : Std_Integer) return Ghdl_I64
+     renames Ghdl_I64_Exp_1;
 
    function C_Malloc (Size : Ghdl_Index_Type) return Ghdl_Ptr;
    pragma Import (C, C_Malloc, "malloc");

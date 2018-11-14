@@ -39,6 +39,9 @@ package Grt.Types is
    type Ghdl_U64 is new Unsigned_64;
    type Ghdl_F64 is new IEEE_Float_64;
 
+   function To_Ghdl_U64 is new Ada.Unchecked_Conversion
+     (Ghdl_I64, Ghdl_U64);
+
    type Ghdl_Ptr is new Address;
    type Ghdl_Index_Type is mod 2 ** 32;
    subtype Ghdl_Real is Ghdl_F64;

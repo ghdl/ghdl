@@ -1063,6 +1063,9 @@ package Trans is
    subtype Type_Mode_Scalar is Type_Mode_Type range
      Type_Mode_B1 .. Type_Mode_F64;
 
+   subtype Type_Mode_Integers is Type_Mode_Type range
+     Type_Mode_I32 .. Type_Mode_I64;
+
    --  Composite types, with the vhdl meaning: record and arrays.
    subtype Type_Mode_Composite is Type_Mode_Type range
      Type_Mode_Static_Record .. Type_Mode_Protected;

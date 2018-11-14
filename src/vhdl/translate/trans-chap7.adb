@@ -2456,11 +2456,24 @@ package body Trans.Chap7 is
                Right_Tree, Ghdl_Real_Exp);
             return New_Convert_Ov (Res, Res_Otype);
          when Iir_Predefined_Integer_Exp =>
-            Res := Translate_Lib_Operator
-              (New_Convert_Ov (Left_Tree, Std_Integer_Otype),
-               Right_Tree,
-               Ghdl_Integer_Exp);
-            return New_Convert_Ov (Res, Res_Otype);
+            declare
+               Left_Tinfo : constant Type_Info_Acc :=
+                 Get_Info (Get_Type (Left));
+               Opr : O_Dnode;
+               Etype : O_Tnode;
+            begin
+               case Type_Mode_Integers (Left_Tinfo.Type_Mode) is
+                  when Type_Mode_I32 =>
+                     Opr := Ghdl_I32_Exp;
+                     Etype := Ghdl_I32_Type;
+                  when Type_Mode_I64 =>
+                     Opr := Ghdl_I64_Exp;
+                     Etype := Ghdl_I64_Type;
+               end case;
+               Res := Translate_Lib_Operator
+                 (New_Convert_Ov (Left_Tree, Etype), Right_Tree, Opr);
+               return New_Convert_Ov (Res, Res_Otype);
+            end;
 
          when Iir_Predefined_Array_Inequality
             | Iir_Predefined_Record_Inequality =>

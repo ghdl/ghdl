@@ -67,8 +67,8 @@ package Grt.Lib is
                                  Line : Ghdl_I32;
                                  Code : Ghdl_Index_Type);
 
-   function Ghdl_Integer_Exp (V : Ghdl_I32; E : Ghdl_I32)
-     return Ghdl_I32;
+   function Ghdl_I32_Exp (V : Ghdl_I32; E : Std_Integer) return Ghdl_I32;
+   function Ghdl_I64_Exp (V : Ghdl_I64; E : Std_Integer) return Ghdl_I64;
 
    function Ghdl_Malloc (Size : Ghdl_Index_Type) return Ghdl_Ptr;
 
@@ -126,7 +126,8 @@ private
    pragma Export (C, Ghdl_Malloc0, "__ghdl_malloc0");
    pragma Export (C, Ghdl_Deallocate, "__ghdl_deallocate");
 
-   pragma Export (C, Ghdl_Integer_Exp, "__ghdl_integer_exp");
+   pragma Export (C, Ghdl_I32_Exp, "__ghdl_i32_exp");
+   pragma Export (C, Ghdl_I64_Exp, "__ghdl_i64_exp");
    pragma Export (C, Ghdl_Real_Exp, "__ghdl_real_exp");
 
    pragma Export (C, Ghdl_Std_Ulogic_To_Boolean_Array,

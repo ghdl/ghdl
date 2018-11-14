@@ -1139,16 +1139,25 @@ package body Translation is
                           Std_Integer_Otype);
       Finish_Subprogram_Decl (Interfaces, Ghdl_Real_Exp);
 
-      --  function __ghdl_integer_exp (left : std__standard__integer;
-      --                               right : std__standard__integer)
-      --   return std__standard__integer;
+      --  function __ghdl_i32_exp (left : ghdl_i32;
+      --                           right : std__standard__integer)
+      --   return ghdl_i32;
       Start_Function_Decl
-        (Interfaces, Get_Identifier ("__ghdl_integer_exp"), O_Storage_External,
-         Std_Integer_Otype);
-      New_Interface_Decl (Interfaces, Param, Wki_Left, Std_Integer_Otype);
+        (Interfaces, Get_Identifier ("__ghdl_i32_exp"), O_Storage_External,
+         Ghdl_I32_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Left, Ghdl_I32_Type);
       New_Interface_Decl (Interfaces, Param, Wki_Right, Std_Integer_Otype);
-      Finish_Subprogram_Decl (Interfaces, Ghdl_Integer_Exp);
+      Finish_Subprogram_Decl (Interfaces, Ghdl_I32_Exp);
 
+      --  function __ghdl_i64_exp (left : ghdl_i64;
+      --                           right : std__standard__integer)
+      --   return ghdl_i64;
+      Start_Function_Decl
+        (Interfaces, Get_Identifier ("__ghdl_i64_exp"), O_Storage_External,
+         Ghdl_I64_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Left, Ghdl_I64_Type);
+      New_Interface_Decl (Interfaces, Param, Wki_Right, Std_Integer_Otype);
+      Finish_Subprogram_Decl (Interfaces, Ghdl_I64_Exp);
 
       --  procedure __ghdl_image_b1 (res : std_string_ptr_node;
       --                             val : ghdl_bool_type;

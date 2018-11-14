@@ -3233,8 +3233,7 @@ package body Trans.Chap3 is
          Allocate_Unbounded_Composite_Bounds (Alloc_Kind, Res, Obj_Type);
          Copy_Bounds (Chap3.Get_Composite_Bounds (Res), Bounds, Obj_Type);
          --  Allocate base.
-         Allocate_Unbounded_Composite_Base
-           (Alloc_Kind, Res, Obj_Type);
+         Allocate_Unbounded_Composite_Base (Alloc_Kind, Res, Obj_Type);
       else
          New_Assign_Stmt
            (M2Lp (Res),
