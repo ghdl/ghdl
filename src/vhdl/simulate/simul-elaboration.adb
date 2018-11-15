@@ -26,6 +26,7 @@ with Libraries;
 with Name_Table;
 with Simul.File_Operation;
 with Iir_Chains; use Iir_Chains;
+with Sem_Lib; use Sem_Lib;
 with Simul.Annotations; use Simul.Annotations;
 with Simul.Elaboration.AMS; use Simul.Elaboration.AMS;
 with Areapools; use Areapools;
@@ -528,7 +529,7 @@ package body Simul.Elaboration is
                        (Get_Need_Body (Library_Unit)
                           or else Get_Date (Body_Design) /= Date_Obsolete)
                      then
-                        Libraries.Load_Design_Unit (Body_Design, Design_Unit);
+                        Load_Design_Unit (Body_Design, Design_Unit);
                      else
                         Body_Design := Null_Iir;
                      end if;
@@ -2087,7 +2088,7 @@ package body Simul.Elaboration is
             end if;
             Arch_Name := Get_Identifier (Arch);
          end if;
-         Arch_Design := Libraries.Load_Secondary_Unit
+         Arch_Design := Load_Secondary_Unit
            (Get_Design_Unit (Entity), Arch_Name, Stmt);
          if Arch_Design = Null_Iir then
             Error_Msg_Elab
