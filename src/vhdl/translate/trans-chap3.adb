@@ -826,7 +826,9 @@ package body Trans.Chap3 is
          return;
       end if;
 
-      if Are_Bounds_Locally_Static (Def) then
+      if Get_Constraint_State (Def) = Fully_Constrained
+        and then Are_Bounds_Locally_Static (Def)
+      then
          if Global_Storage = O_Storage_External then
             --  Do not create the value of the type desc, since it
             --  is never dereferenced in a static type desc.
@@ -1058,8 +1060,8 @@ package body Trans.Chap3 is
       Info.Type_Locally_Constrained := (Len >= 0);
       Info.B := Pinfo.B;
       Info.S := Pinfo.S;
-      if Is_Complex_Type (Get_Info (Get_Element_Subtype (Parent_Type)))
-        or else not Info.Type_Locally_Constrained
+      if not Info.Type_Locally_Constrained
+        or else not Is_Static_Type (Get_Info (Get_Element_Subtype (Def)))
       then
          --  This is a complex type as the size is not known at compile
          --  time.
