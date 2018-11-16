@@ -468,6 +468,10 @@ package body Sem_Inst is
                      Set_Index_Subtype_List (Res, List);
                   end;
 
+               when Field_Simple_Aggregate_List =>
+                  Set_Simple_Aggregate_List
+                    (Res, Get_Simple_Aggregate_List (N));
+
                when Field_Subprogram_Body =>
                   --  This is a forward reference.  Not yet solved.
                   Set_Subprogram_Body (Res, Null_Iir);
