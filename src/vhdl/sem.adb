@@ -204,7 +204,10 @@ package body Sem is
       if Vhdl_Std = Vhdl_02 then
          Open_Declarative_Region;
       end if;
+
+      Current_Psl_Default_Clock := Null_Iir;
       Sem_Block (Arch);
+
       if Vhdl_Std = Vhdl_02 then
          Close_Declarative_Region;
       end if;
