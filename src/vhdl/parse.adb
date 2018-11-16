@@ -3904,8 +3904,13 @@ package body Parse is
                Res := Create_Iir (Iir_Kind_Group_Template_Declaration);
                Set_Location (Res, Loc);
                Set_Identifier (Res, Ident);
-               Scan_Expect (Tok_Left_Paren);
+
+               --  Skip 'is'.
                Scan;
+
+               --  Skip '('.
+               Expect_Scan (Tok_Left_Paren);
+
                Build_Init (Last);
                loop
                   Append (Last, Res, Parse_Entity_Class_Entry);
@@ -3914,18 +3919,25 @@ package body Parse is
                      Set_Location (El);
                      Set_Entity_Class (El, Tok_Box);
                      Append (Last, Res, El);
+
+                     --  Skip '<>'.
                      Scan;
+
                      if Current_Token = Tok_Comma then
                         Error_Msg_Parse
                           ("'<>' is allowed only for the last "
                             & "entity class entry");
                      end if;
                   end if;
-                  exit when Current_Token = Tok_Right_Paren;
-                  Expect (Tok_Comma);
+                  exit when Current_Token /= Tok_Comma;
+
+                  --  Skip ','.
                   Scan;
                end loop;
-               Scan_Expect (Tok_Semi_Colon);
+
+               --  Skip ')' ';'
+               Expect_Scan (Tok_Right_Paren);
+               Expect (Tok_Semi_Colon);
                return Res;
             end;
          when Tok_Colon =>
@@ -3944,20 +3956,20 @@ package body Parse is
                  (Res, Parse_Name (Allow_Indexes => False));
 
                --  Skip '('.
-               Expect (Tok_Left_Paren);
-               Scan;
+               Expect_Scan (Tok_Left_Paren);
+
                List := Create_Iir_List;
                loop
                   Append_Element (List, Parse_Name (Allow_Indexes => False));
-                  exit when Current_Token = Tok_Right_Paren;
+                  exit when Current_Token /= Tok_Comma;
 
                   --  Skip ','.
-                  Expect (Tok_Comma);
                   Scan;
                end loop;
 
-               --  Skip ')'.
-               Scan_Expect (Tok_Semi_Colon);
+               --  Skip ')' ';'.
+               Expect_Scan (Tok_Right_Paren);
+               Expect (Tok_Semi_Colon);
 
                Set_Group_Constituent_List (Res, List_To_Flist (List));
                return Res;
@@ -8560,8 +8572,12 @@ package body Parse is
                exit when Current_Token /= Tok_Comma;
 
                --  Skip ','.
-               Expect (Tok_Comma);
                Scan;
+
+               if Current_Token /= Tok_Identifier then
+                  Expect (Tok_Identifier);
+                  exit;
+               end if;
             end loop;
             return List_To_Flist (Res);
 
