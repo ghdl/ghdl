@@ -6186,7 +6186,9 @@ package body Parse is
               ("string or operator cannot be used as procedure call");
          when Iir_Kind_Selected_By_All_Name
            | Iir_Kind_Qualified_Expression
-           | Iir_Kind_Attribute_Name =>
+           | Iir_Kind_Attribute_Name
+           | Iir_Kind_Operator_Symbol
+           | Iir_Kind_Signature =>
             Error_Msg_Parse
               ("invalid name for a procedure call or missing assignment");
          when others =>
@@ -6432,6 +6434,7 @@ package body Parse is
       Build_Init (Last_Assoc);
       Pos := 0;
       while Current_Token /= Tok_End loop
+         exit when Current_Token = Tok_Eof;
          Expect (Tok_When);
          When_Loc := Get_Token_Location;
 
@@ -6449,8 +6452,7 @@ package body Parse is
          end if;
 
          --  Skip '=>'.
-         Expect (Tok_Double_Arrow);
-         Scan;
+         Expect_Scan (Tok_Double_Arrow);
 
          Set_Associated_Chain (Assoc, Parse_Sequential_Statements (Stmt));
          Append_Subchain (Last_Assoc, Stmt, Assoc);
@@ -7100,7 +7102,13 @@ package body Parse is
          when Iir_Kind_Parenthesis_Name =>
             --  Could be an indexed name, so nothing to check within the
             --  parenthesis.
-            Set_In_Formal_Flag (Get_Association_Chain (Formal), True);
+            declare
+               Assoc : constant Iir := Get_Association_Chain (Formal);
+            begin
+               if Assoc /= Null_Iir then
+                  Set_In_Formal_Flag (Assoc, True);
+               end if;
+            end;
             return Formal;
          when Iir_Kind_String_Literal8 =>
             --  Operator designator
