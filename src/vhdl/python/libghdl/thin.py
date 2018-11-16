@@ -89,10 +89,15 @@ Get_File_Buffer = libghdl.files_map__get_file_buffer
 Get_File_Buffer.restype = c_void_p
 
 Get_File_Length = libghdl.files_map__get_file_length
+Set_File_Length = libghdl.files_map__set_file_length
 
 Read_Source_File = libghdl.files_map__read_source_file
 
+Reserve_Source_File = libghdl.files_map__reserve_source_file
+
 No_Source_File_Entry = 0
+
+EOT = b'\x04'
 
 No_Location = 0
 
@@ -196,7 +201,7 @@ Get_Libraries_Chain = libghdl.libraries__get_libraries_chain
 
 Add_Design_Unit_Into_Library = libghdl.libraries__add_design_unit_into_library
 
-Finish_Compilation = libghdl.libraries__finish_compilation
+Finish_Compilation = libghdl.sem_lib__finish_compilation
 
 # Use .value
 Library_Location = c_int32.in_dll(libghdl, "libraries__library_location")
