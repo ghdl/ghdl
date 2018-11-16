@@ -2463,13 +2463,7 @@ package body Parse is
          return Decl;
       end if;
 
-      if Current_Token /= Tok_Is then
-         Error_Msg_Parse ("'is' expected here");
-         --  Act as if IS token was forgotten.
-      else
-         --  Skip 'is'.
-         Scan;
-      end if;
+      Expect_Scan (Tok_Is, "'is' expected here");
 
       case Current_Token is
          when Tok_Left_Paren =>
@@ -2552,7 +2546,7 @@ package body Parse is
 
          when others =>
             Error_Msg_Parse
-              ("type definition starting with a keyword such as RANGE, ARRAY");
+              ("type definition starts with a keyword such as RANGE, ARRAY");
             Error_Msg_Parse
               (" FILE, RECORD or '(' is expected here");
             Eat_Tokens_Until_Semi_Colon;
