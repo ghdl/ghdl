@@ -159,7 +159,7 @@ package body Options is
          Bootstrap := True;
       elsif Opt = "-fexplicit" then
          Flag_Explicit := True;
-      elsif Opt = "-frelaxed-rules" then
+      elsif Opt = "-frelaxed-rules" or else Opt = "-frelaxed" then
          Flag_Relaxed_Rules := True;
       elsif Opt = "--syn-binding" then
          Flag_Syn_Binding := True;
