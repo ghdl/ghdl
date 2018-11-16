@@ -186,6 +186,16 @@ package Files_Map is
                                 Line : out Natural;
                                 Offset : out Natural);
 
+   --  Convert a physical column to a logical column.
+   --  A physical column is the offset in byte from the first byte of the line.
+   --  A logical column is the position of the character when displayed.
+   --  A HT (tabulation) moves the cursor to the next position multiple of the
+   --  tab stop.
+   --  The first character is at position 1 and at offset 0.
+   function Coord_To_Col (File : Source_File_Entry;
+                          Line_Pos : Source_Ptr;
+                          Offset : Natural) return Natural;
+
    --  Translate coordinate into logical position.
    --  NAME is the name of the file,
    --  COL is the column (first character is 1, tabulation are at every 8

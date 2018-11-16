@@ -22,6 +22,7 @@ with Version;
 with Bug;
 with Options;
 with Types; use Types;
+with Errorout.Console;
 
 package body Ghdlmain is
    procedure Init (Cmd : in out Command_Type)
@@ -271,7 +272,8 @@ package body Ghdlmain is
       First_Arg : Natural;
    begin
       --  Set program name for error message.
-      Errorout.Set_Program_Name (Command_Name);
+      Errorout.Console.Set_Program_Name (Command_Name);
+      Errorout.Console.Install_Handler;
 
       --  Handle case of no argument
       if Argument_Count = 0 then

@@ -27,6 +27,7 @@ with Translation;
 with Sem;
 with Sem_Lib; use Sem_Lib;
 with Errorout; use Errorout;
+with Errorout.Console;
 with GNAT.OS_Lib;
 with Bug;
 with Trans_Be;
@@ -73,6 +74,9 @@ package body Ortho_Front is
 
    procedure Init is
    begin
+      --  Set program name for error message.
+      Errorout.Console.Install_Handler;
+
       -- Initialize.
       Trans_Be.Register_Translation_Back_End;
 

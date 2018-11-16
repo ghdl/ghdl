@@ -243,31 +243,15 @@ package body Scanner is
       return Current_Context.Line_Number;
    end Get_Current_Line;
 
-   function Get_Current_Column return Natural
-   is
-      Col : Natural;
-      Name : Name_Id;
+   function Get_Current_Offset return Natural is
    begin
-      Coord_To_Position
-        (Current_Context.Source_File,
-         Current_Context.Line_Pos,
-         Integer (Current_Context.Pos - Current_Context.Line_Pos),
-         Name, Col);
-      return Col;
-   end Get_Current_Column;
+      return Natural (Current_Context.Pos - Current_Context.Line_Pos);
+   end Get_Current_Offset;
 
-   function Get_Token_Column return Natural
-   is
-      Col : Natural;
-      Name : Name_Id;
+   function Get_Token_Offset return Natural is
    begin
-      Coord_To_Position
-        (Current_Context.Source_File,
-         Current_Context.Line_Pos,
-         Integer (Current_Context.Token_Pos - Current_Context.Line_Pos),
-         Name, Col);
-      return Col;
-   end Get_Token_Column;
+      return Natural (Current_Context.Token_Pos - Current_Context.Line_Pos);
+   end Get_Token_Offset;
 
    function Get_Token_Position return Source_Ptr is
    begin

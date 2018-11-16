@@ -23,10 +23,6 @@ package Errorout is
    Option_Error: exception;
    Compilation_Error: exception;
 
-   --  Set the program name, used in error messages for options.  Not displayed
-   --  if not initialized.
-   procedure Set_Program_Name (Name : String);
-
    -- This kind can't be handled.
    --procedure Error_Kind (Msg: String; Kind: Iir_Kind);
    procedure Error_Kind (Msg: String; An_Iir: in Iir);
@@ -177,6 +173,27 @@ package Errorout is
    --  Pass that detected the error.
    type Report_Origin is
      (Option, Library, Scan, Parse, Semantic, Elaboration);
+
+   type Error_Record is record
+      Origin : Report_Origin;
+      File : Source_File_Entry;
+      Line : Natural;
+      Offset : Natural;
+      Id : Msgid_Type;
+      Cont : Boolean;
+   end record;
+
+   type Error_Start_Handler is access procedure (Err : Error_Record);
+   type Message_Handler is access procedure (Str : String);
+   type Message_End_Handler is access procedure;
+
+   type Report_Msg_Handler is record
+      Error_Start : Error_Start_Handler;
+      Message : Message_Handler;
+      Message_End : Message_End_Handler;
+   end record;
+
+   procedure Set_Report_Handler (Handler : Report_Msg_Handler);
 
    --  Generic report message.  LOC maybe No_Location.
    --  If ORIGIN is Option or Library, LOC must be No_Location and the program
@@ -357,4 +374,10 @@ private
         | Warnid_Pure | Warnid_Specs | Warnid_Hide
         | Warnid_Port    => (Enabled => True, Error => False),
       others             => (Enabled => False, Error => False));
+
+   --  Compute the column from Error_Record E.
+   function Get_Error_Col (E : Error_Record) return Natural;
+
+   --  Image of VAL, without the leading space.
+   function Natural_Image (Val: Natural) return String;
 end Errorout;
