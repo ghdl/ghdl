@@ -793,28 +793,43 @@ package body Parse is
                   Prefix := String_To_Operator_Symbol (Prefix);
                end if;
 
+               --  Skip '.'.
                Scan;
+
                case Current_Token is
                   when Tok_All =>
                      Res := Create_Iir (Iir_Kind_Selected_By_All_Name);
                      Set_Location (Res);
                      Set_Prefix (Res, Prefix);
+
+                     --  Skip 'all'.
+                     Scan;
+
                   when Tok_Identifier
                     | Tok_Character =>
                      Res := Create_Iir (Iir_Kind_Selected_Name);
                      Set_Location (Res);
                      Set_Prefix (Res, Prefix);
                      Set_Identifier (Res, Current_Identifier);
+
+                     --  Skip identifier/character.
+                     Scan;
+
                   when Tok_String =>
                      Res := Create_Iir (Iir_Kind_Selected_Name);
                      Set_Location (Res);
                      Set_Prefix (Res, Prefix);
                      Set_Identifier
                        (Res, Scan_To_Operator_Name (Get_Token_Location));
+
+                     --  Skip string.
+                     Scan;
+
                   when others =>
-                     Error_Msg_Parse ("an identifier or all is expected");
+                     Error_Msg_Parse
+                       ("identifier or all is expected after '.'");
                end case;
-               Scan;
+
             when others =>
                if not Allow_Signature
                  and then Get_Kind (Res) = Iir_Kind_Signature
