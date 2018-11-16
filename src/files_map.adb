@@ -685,8 +685,6 @@ package body Files_Map is
          Buffer (Source_Ptr_Org .. Source_Ptr_Org + Len - 1) :=
            File_Buffer (Content);
       end if;
-      Buffer (Source_Ptr_Org + Len) := EOT;
-      Buffer (Source_Ptr_Org + Len + 1) := EOT;
 
       --  Create entry.
       Res := Source_Files.Allocate;
@@ -698,7 +696,9 @@ package body Files_Map is
          Directory => Null_Identifier,
          Checksum => No_File_Checksum_Id,
          Source => Buffer,
-         File_Length => Natural (Len));
+         File_Length => 0);
+
+      Set_File_Length (Res, Len);
 
       Next_Location := Source_Files.Table (Res).Last_Location + 1;
 
@@ -784,6 +784,30 @@ package body Files_Map is
       end if;
    end Location_Instance_To_Location;
 
+   function Reserve_Source_File
+     (Directory : Name_Id; Name: Name_Id; Length : Source_Ptr)
+     return Source_File_Entry
+   is
+      Res : Source_File_Entry;
+
+      Buffer : File_Buffer_Acc;
+   begin
+      Res := Create_Source_File_Entry (Directory, Name);
+
+      Buffer :=
+        new File_Buffer (Source_Ptr_Org .. Source_Ptr_Org + Length - 1);
+
+      --  Read_Source_File call must follow its Create_Source_File.
+      pragma Assert (Source_Files.Table (Res).First_Location = Next_Location);
+
+      Source_Files.Table (Res).Last_Location :=
+        Next_Location + Location_Type (Length) + 1;
+      Next_Location := Source_Files.Table (Res).Last_Location + 1;
+      Source_Files.Table (Res).Source := Buffer;
+
+      return Res;
+   end Reserve_Source_File;
+
    --  Return an entry for a filename.
    --  Load the filename if necessary.
    function Read_Source_File (Directory : Name_Id; Name: Name_Id)
@@ -831,12 +855,15 @@ package body Files_Map is
          return No_Source_File_Entry;
       end if;
 
-      Res := Create_Source_File_Entry (Directory, Name);
-
       Length := Source_Ptr (Raw_Length);
 
-      Buffer :=
-        new File_Buffer (Source_Ptr_Org .. Source_Ptr_Org + Length + 1);
+      Res := Reserve_Source_File (Directory, Name, Length + 2);
+      if Res = No_Source_File_Entry then
+         Close (Fd);
+         return No_Source_File_Entry;
+      end if;
+
+      Buffer := Get_File_Source (Res);
 
       if Read (Fd, Buffer (Source_Ptr_Org)'Address, Integer (Length))
         /= Integer (Length)
@@ -844,12 +871,9 @@ package body Files_Map is
          Close (Fd);
          raise Internal_Error;
       end if;
-      Buffer (Source_Ptr_Org + Length) := EOT;
-      Buffer (Source_Ptr_Org + Length + 1) := EOT;
       Close (Fd);
 
-      --  Read_Source_File call must follow its Create_Source_File.
-      pragma Assert (Source_Files.Table (Res).First_Location = Next_Location);
+      Set_File_Length (Res, Length);
 
       --  Compute the SHA1.
       declare
@@ -872,12 +896,6 @@ package body Files_Map is
             Append_String8_Char (Buffer_Digest (I));
          end loop;
       end;
-
-      Source_Files.Table (Res).Last_Location :=
-        Next_Location + Location_Type (Length) + 1;
-      Next_Location := Source_Files.Table (Res).Last_Location + 1;
-      Source_Files.Table (Res).Source := Buffer;
-      Source_Files.Table (Res).File_Length := Integer (Length);
 
       return Res;
    end Read_Source_File;
@@ -934,6 +952,21 @@ package body Files_Map is
       return To_File_Buffer_Ptr
         (Source_Files.Table (File).Source (Source_Ptr_Org)'Address);
    end Get_File_Buffer;
+
+   procedure Set_File_Length (File : Source_File_Entry; Length : Source_Ptr) is
+   begin
+      Check_File (File);
+      declare
+         F : Source_File_Record renames Source_Files.Table (File);
+         Buffer : File_Buffer_Acc renames F.Source;
+      begin
+         pragma Assert (Length <= Buffer'Length - 2);
+
+         F.File_Length := Natural (Length);
+         Buffer (Source_Ptr_Org + Length) := EOT;
+         Buffer (Source_Ptr_Org + Length + 1) := EOT;
+      end;
+   end Set_File_Length;
 
    --  Return the length of the file (which is the size of the file buffer).
    function Get_File_Length (File: Source_File_Entry) return Source_Ptr is
