@@ -83,6 +83,13 @@ package Types is
 
    Null_String8 : constant String8_Id := 0;
 
+   --  The length of a string is not stored in the string table.  Create a
+   --  tuple that is meaningful.
+   type String8_Len_Type is record
+      Str : String8_Id;
+      Len : Nat32;
+   end record;
+
    --  Index type is the source file table.
    --  This table is defined in the files_map package.
    type Source_File_Entry is new Uns32;

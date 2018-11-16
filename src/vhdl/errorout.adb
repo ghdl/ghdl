@@ -26,6 +26,7 @@ with Ada.Strings.Unbounded;
 with Std_Names;
 with Flags; use Flags;
 with PSL.Nodes;
+with Str_Table;
 
 package body Errorout is
    --  Name of the program, used to report error message.
@@ -181,6 +182,11 @@ package body Errorout is
    function "+" (V : Character) return Earg_Type is
    begin
       return (Kind => Earg_Char, Val_Char => V);
+   end "+";
+
+   function "+" (V : String8_Len_Type) return Earg_Type is
+   begin
+      return (Kind => Earg_String8, Val_Str8 => V);
    end "+";
 
    function Get_Location_Safe (N : Iir) return Location_Type is
@@ -543,6 +549,22 @@ package body Errorout is
                               raise Internal_Error;
                         end case;
                      end;
+                  when 's' =>
+                     --  String
+                     declare
+                        Arg : Earg_Type renames Args (Argn);
+                     begin
+                        Put ('"');
+                        case Arg.Kind is
+                           when Earg_String8 =>
+                              Put (Str_Table.String_String8
+                                     (Arg.Val_Str8.Str, Arg.Val_Str8.Len));
+                           when others =>
+                              --  Invalid conversion to character.
+                              raise Internal_Error;
+                        end case;
+                        Put ('"');
+                     end;
                   when others =>
                      --  Unknown format.
                      raise Internal_Error;
@@ -680,9 +702,10 @@ package body Errorout is
       Report_Msg (Msgid_Error, Parse, No_Location, Msg);
    end Error_Msg_Parse_1;
 
-   procedure Error_Msg_Parse (Loc : Location_Type; Msg: String) is
+   procedure Error_Msg_Parse
+     (Loc : Location_Type; Msg: String; Args : Earg_Arr := No_Eargs) is
    begin
-      Report_Msg (Msgid_Error, Parse, Loc, Msg);
+      Report_Msg (Msgid_Error, Parse, Loc, Msg, Args);
    end Error_Msg_Parse;
 
    -- Disp a message during semantic analysis.

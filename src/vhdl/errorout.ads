@@ -161,12 +161,14 @@ package Errorout is
    --  %t: token
    --  %l: location
    --  %n: node name
-   --  TODO: %m: mode, %y: type of, %s: disp_subprg
+   --  %s: a string
+   --  TODO: %m: mode, %y: type of
    function "+" (V : Iir) return Earg_Type;
    function "+" (V : Location_Type) return Earg_Type;
    function "+" (V : Name_Id) return Earg_Type;
    function "+" (V : Tokens.Token_Type) return Earg_Type;
    function "+" (V : Character) return Earg_Type;
+   function "+" (V : String8_Len_Type) return Earg_Type;
 
    --  Convert location.
    function "+" (L : Iir) return Location_Type;
@@ -216,7 +218,8 @@ package Errorout is
    procedure Error_Msg_Parse (Msg: String; Arg1 : Earg_Type);
    procedure Error_Msg_Parse
      (Msg: String; Args : Earg_Arr := No_Eargs; Cont : Boolean := False);
-   procedure Error_Msg_Parse (Loc : Location_Type; Msg: String);
+   procedure Error_Msg_Parse
+     (Loc : Location_Type; Msg: String; Args : Earg_Arr := No_Eargs);
 
    -- Disp a message during semantic analysis.
    procedure Warning_Msg_Sem (Id : Msgid_Warnings;
@@ -319,7 +322,7 @@ package Errorout is
 private
    type Earg_Kind is
      (Earg_None,
-      Earg_Iir, Earg_Location, Earg_Id, Earg_Char, Earg_Token);
+      Earg_Iir, Earg_Location, Earg_Id, Earg_Char, Earg_Token, Earg_String8);
 
    type Earg_Type (Kind : Earg_Kind := Earg_None) is record
       case Kind is
@@ -335,6 +338,8 @@ private
             Val_Char : Character;
          when Earg_Token =>
             Val_Tok : Tokens.Token_Type;
+         when Earg_String8 =>
+            Val_Str8 : String8_Len_Type;
       end case;
    end record;
 

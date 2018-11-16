@@ -405,15 +405,16 @@ package body Parse is
 
       procedure Bad_Operator_Symbol is
       begin
-         Error_Msg_Parse (Loc, """" & Str_Table.String_String8 (Str_Id, Len)
-                          & """ is not an operator symbol");
+         Error_Msg_Parse
+           (+Loc, "%s is not an operator symbol", (1 => +((Str_Id, Len))));
       end Bad_Operator_Symbol;
 
       procedure Check_Vhdl93 is
       begin
          if Flags.Vhdl_Std = Vhdl_87 then
-            Error_Msg_Parse (Loc, """" & Str_Table.String_String8 (Str_Id, Len)
-                             & """ is not a vhdl87 operator symbol");
+            Error_Msg_Parse
+              (+Loc, "%s is not a vhdl87 operator symbol",
+               (1 => +((Str_Id, Len))));
          end if;
       end Check_Vhdl93;
 
