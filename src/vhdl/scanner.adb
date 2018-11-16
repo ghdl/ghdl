@@ -2038,6 +2038,7 @@ package body Scanner is
                               & "must be preceded by a base");
             --  Skip.
             Pos := Pos + 1;
+            goto Again;
          when '"' =>
             Scan_String;
             return;
