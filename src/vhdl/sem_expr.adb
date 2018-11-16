@@ -3850,8 +3850,24 @@ package body Sem_Expr is
 
    --  Analyze aggregate EXPR whose type is expected to be A_TYPE.
    --  A_TYPE cannot be null_iir (this case is handled in sem_expression_ov)
-   function Sem_Aggregate (Expr: Iir_Aggregate; A_Type: Iir)
-                          return Iir_Aggregate is
+   --  If FORCE_CONSTRAINED is true, the aggregate type is constrained by the
+   --  context, even if its type isn't.  This is to deal with cases like:
+   --    procedure set (v : out string) is
+   --    begin
+   --      v := (others => ' ');
+   --    end set;
+   --  but this is not allowed by:
+   --  LRM08 9.3.3.3 Array aggregates
+   --  e) As a value expression in an assignment statement, where the target
+   --     is a declared object (or member thereof), and either the subtype of
+   --     the target is a fully constrained array subtype or the target is a
+   --     slice name.
+   function Sem_Aggregate
+     (Expr: Iir_Aggregate; A_Type: Iir; Force_Constrained : Boolean)
+     return Iir_Aggregate
+   is
+      Force_Constrained2 : constant Boolean :=
+        Force_Constrained and Flag_Relaxed_Rules;
    begin
       pragma Assert (A_Type /= Null_Iir);
 
@@ -3868,9 +3884,10 @@ package body Sem_Expr is
       case Get_Kind (A_Type) is
          when Iir_Kind_Array_Subtype_Definition =>
             return Sem_Array_Aggregate_Type
-              (Expr, A_Type, Get_Index_Constraint_Flag (A_Type));
+              (Expr, A_Type,
+               Force_Constrained2 or else Get_Index_Constraint_Flag (A_Type));
          when Iir_Kind_Array_Type_Definition =>
-            return Sem_Array_Aggregate_Type (Expr, A_Type, False);
+            return Sem_Array_Aggregate_Type (Expr, A_Type, Force_Constrained2);
          when Iir_Kind_Record_Type_Definition
            | Iir_Kind_Record_Subtype_Definition =>
             if not Sem_Record_Aggregate (Expr, A_Type) then
@@ -4491,7 +4508,7 @@ package body Sem_Expr is
             if A_Type = Null_Iir then
                return Expr;
             else
-               return Sem_Aggregate (Expr, A_Type);
+               return Sem_Aggregate (Expr, A_Type, False);
             end if;
 
          when Iir_Kind_Parenthesis_Expression =>
@@ -4671,7 +4688,9 @@ package body Sem_Expr is
       end if;
    end Compatible_Types_Intersect;
 
-   function Sem_Expression_Wildcard (Expr : Iir; Atype : Iir) return Iir
+   function Sem_Expression_Wildcard
+     (Expr : Iir; Atype : Iir; Force_Constrained : Boolean := False)
+     return Iir
    is
       Expr_Type : constant Iir := Get_Type (Expr);
       Atype_Defined : constant Boolean := Is_Defined_Type (Atype);
@@ -4692,7 +4711,7 @@ package body Sem_Expr is
       case Get_Kind (Expr) is
          when Iir_Kind_Aggregate =>
             if Atype_Defined then
-               return Sem_Aggregate (Expr, Atype);
+               return Sem_Aggregate (Expr, Atype, Force_Constrained);
             else
                pragma Assert (Expr_Type = Null_Iir);
                Set_Type (Expr, Wildcard_Any_Aggregate_Type);
@@ -4888,7 +4907,7 @@ package body Sem_Expr is
 
       case Get_Kind (Expr) is
          when Iir_Kind_Aggregate =>
-            Res := Sem_Aggregate (Expr, A_Type);
+            Res := Sem_Aggregate (Expr, A_Type, False);
          when Iir_Kind_String_Literal8 =>
             if A_Type = Null_Iir then
                Res := Sem_Expression_Ov (Expr, Null_Iir);

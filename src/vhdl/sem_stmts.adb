@@ -493,7 +493,7 @@ package body Sem_Stmts is
             --  sem_check_waveform_list.
             null;
          else
-            Expr := Sem_Expression_Wildcard (Expr, Waveform_Type);
+            Expr := Sem_Expression_Wildcard (Expr, Waveform_Type, True);
 
             if Expr /= Null_Iir then
                if Is_Expr_Fully_Analyzed (Expr) then
@@ -785,7 +785,7 @@ package body Sem_Stmts is
       El := Cond_Expr;
       while El /= Null_Iir loop
          Expr := Get_Expression (El);
-         Expr := Sem_Expression_Wildcard (Expr, Atype);
+         Expr := Sem_Expression_Wildcard (Expr, Atype, True);
 
          if Expr /= Null_Iir then
             Set_Expression (El, Expr);
@@ -850,7 +850,7 @@ package body Sem_Stmts is
          case Iir_Kinds_Variable_Assignment_Statement (Get_Kind (Stmt)) is
             when Iir_Kind_Variable_Assignment_Statement =>
                Expr := Get_Expression (Stmt);
-               Expr := Sem_Expression_Wildcard (Expr, Stmt_Type);
+               Expr := Sem_Expression_Wildcard (Expr, Stmt_Type, True);
                if Expr /= Null_Iir then
                   if Is_Expr_Fully_Analyzed (Expr) then
                      Check_Read (Expr);

@@ -261,7 +261,9 @@ package Sem_Expr is
    --  type), EXPR will be fully analyzed (possibly with an error).
    --  If EXPR is partially or fully analyzed, ATYPE must not be null_iir and
    --  it is checked with the types of EXPR.  EXPR may become fully analyzed.
-   function Sem_Expression_Wildcard (Expr : Iir; Atype : Iir) return Iir;
+   function Sem_Expression_Wildcard
+     (Expr : Iir; Atype : Iir; Force_Constrained : Boolean := False)
+     return Iir;
 
    --  To be used after Sem_Expression_Wildcard to update list ATYPE of
    --  possible types.
