@@ -1281,7 +1281,7 @@ package body Ghdlprint is
               | Date_Disk =>
                raise Internal_Error;
             when Date_Parse =>
-               Sem_Lib.Load_Design_Unit (Unit, Null_Iir);
+               Sem_Lib.Load_Design_Unit (Unit, Unit);
             when Date_Analyze =>
                null;
          end case;
