@@ -425,12 +425,13 @@ package body Sem_Decls is
          return;
       end if;
 
-      Sem_Inst.Instantiate_Package_Declaration (Inter, Pkg);
-
       if Get_Generic_Map_Aspect_Chain (Inter) /= Null_Iir then
-         --  TODO
+         Sem_Generic_Association_Chain (Get_Package_Header (Pkg), Inter);
+         --  Not yet fully supported - need to check the instance.
          raise Internal_Error;
       end if;
+
+      Sem_Inst.Instantiate_Package_Declaration (Inter, Pkg);
 
       Sem_Scopes.Add_Name (Inter);
       Set_Is_Within_Flag (Inter, True);

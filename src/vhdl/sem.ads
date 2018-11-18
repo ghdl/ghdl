@@ -41,6 +41,11 @@ package Sem is
    procedure Sem_Generic_Port_Association_Chain
      (Inter_Parent : Iir; Assoc_Parent : Iir);
 
+   --  INTER_PARENT contains generics interfaces;
+   --  ASSOC_PARENT constains generic aspects.
+   procedure Sem_Generic_Association_Chain
+     (Inter_Parent : Iir; Assoc_Parent : Iir);
+
    --  Return TRUE iff the actual of ASSOC can be the formal FORMAL.
    --  ASSOC must be an association_element_by_expression.
    function Can_Collapse_Signals (Assoc : Iir; Formal : Iir) return Boolean;

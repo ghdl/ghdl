@@ -394,6 +394,7 @@ package body Sem is
          when Iir_Kind_Block_Header =>
             Miss := Missing_Generic;
          when Iir_Kind_Package_Instantiation_Declaration
+           | Iir_Kind_Interface_Package_Declaration
            | Iir_Kind_Package_Header =>
             --  LRM08 4.9
             --  Each formal generic (or member thereof) shall be associated
@@ -2099,6 +2100,28 @@ package body Sem is
       end if;
    end Sem_Subprogram_Body;
 
+   --  Return the subprogram body of SPEC.  If there is no body, and if SPEC
+   --  is an instance, returns the body of the generic specification but only
+   --  if known.
+   function Get_Subprogram_Body_Or_Generic (Spec : Iir) return Iir
+   is
+      Bod : Iir;
+      Orig : Iir;
+   begin
+      Bod := Get_Subprogram_Body (Spec);
+
+      if Bod /= Null_Iir then
+         return Bod;
+      end if;
+
+      Orig := Sem_Inst.Get_Origin (Spec);
+      if Orig = Null_Iir then
+         return Null_Iir;
+      end if;
+
+      return Get_Subprogram_Body (Orig);
+   end Get_Subprogram_Body_Or_Generic;
+
    --  Status of Update_And_Check_Pure_Wait.
    type Update_Pure_Status is
      (
@@ -2129,7 +2152,6 @@ package body Sem is
       Callees_List_Holder : Iir;
       Callees_It : List_Iterator;
       Callee : Iir;
-      Callee_Orig : Iir;
       Callee_Bod : Iir;
       Subprg_Depth : Iir_Int32;
       Subprg_Bod : Iir;
@@ -2143,7 +2165,10 @@ package body Sem is
       case Get_Kind (Subprg) is
          when Iir_Kind_Function_Declaration =>
             Kind := K_Function;
-            Subprg_Bod := Get_Subprogram_Body (Subprg);
+            Subprg_Bod := Get_Subprogram_Body_Or_Generic (Subprg);
+            if Subprg_Bod = Null_Iir then
+               return Update_Pure_Missing;
+            end if;
             Subprg_Depth := Get_Subprogram_Depth (Subprg);
             Callees_List_Holder := Subprg_Bod;
             if Get_Pure_Flag (Subprg) then
@@ -2154,7 +2179,10 @@ package body Sem is
 
          when Iir_Kind_Procedure_Declaration =>
             Kind := K_Procedure;
-            Subprg_Bod := Get_Subprogram_Body (Subprg);
+            Subprg_Bod := Get_Subprogram_Body_Or_Generic (Subprg);
+            if Subprg_Bod = Null_Iir then
+               return Update_Pure_Missing;
+            end if;
             if Get_Purity_State (Subprg) = Impure
               and then Get_Wait_State (Subprg) /= Unknown
               and then Get_All_Sensitized_State (Subprg) /= Unknown
@@ -2215,19 +2243,18 @@ package body Sem is
             --  Pure functions should not be in the list.
             --  Impure functions must have directly set Purity_State.
 
+            --  The body of subprograms may not be set for instances.
+            --  Use the body from the generic (if any).
+            --  This is meaningful for non macro-expanded package interface,
+            --  because there is no associated body and because the call
+            --  tree is known (if there were an interface subprogram, it
+            --  would have been macro-expanded).
+            --  Do not set the body, as it would trigger an assert during
+            --  macro-expansion (maybe this shouldn't be called for macro
+            --  expanded packages).
+            Callee_Bod := Get_Subprogram_Body_Or_Generic (Callee);
+
             --  Check pure.
-            Callee_Bod := Get_Subprogram_Body (Callee);
-
-            if Callee_Bod = Null_Iir then
-               --  The body of subprograms may not be set for instances.
-               --  Use the body from the generic (if any).
-               Callee_Orig := Sem_Inst.Get_Origin (Callee);
-               if Callee_Orig /= Null_Iir then
-                  Callee_Bod := Get_Subprogram_Body (Callee_Orig);
-                  Set_Subprogram_Body (Callee, Callee_Bod);
-               end if;
-            end if;
-
             if Callee_Bod = Null_Iir then
                --  No body yet for the subprogram called.
                --  Nothing can be extracted from it, postpone the checks until
