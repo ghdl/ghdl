@@ -3438,7 +3438,7 @@ package body Trans.Chap7 is
       Aggr_Type : constant Iir := Get_Type (Aggr);
       El        : Iir;
    begin
-      case Get_Kind (Aggr_Type) is
+      case Iir_Kinds_Composite_Type_Definition (Get_Kind (Aggr_Type)) is
          when Iir_Kind_Array_Subtype_Definition
             | Iir_Kind_Array_Type_Definition =>
             El := Is_Aggregate_Others (Aggr);
@@ -3450,8 +3450,6 @@ package body Trans.Chap7 is
          when Iir_Kind_Record_Type_Definition
             | Iir_Kind_Record_Subtype_Definition =>
             Translate_Record_Aggregate (Target, Aggr);
-         when others =>
-            Error_Kind ("translate_aggregate", Aggr_Type);
       end case;
    end Translate_Aggregate;
 
