@@ -16,6 +16,8 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Types; use Types;
+with Tables;
+with Dyn_Tables;
 with Nodes;
 
 --  Source file handling
@@ -228,6 +230,77 @@ package Files_Map is
    procedure Initialize;
 
 private
+   package Lines_Tables is new Dyn_Tables
+     (Table_Component_Type => Source_Ptr,
+      Table_Index_Type => Natural,
+      Table_Low_Bound => 1,
+      Table_Initial => 64);
+
+   --  There are several kinds of source file.
+   type Source_File_Kind is
+     (
+      --  A *real* source file, read from the filesystem.
+      Source_File_File,
+
+      --  A virtual source file, created from a string.
+      Source_File_String,
+
+      --  A duplicated source file (there is no copy however), created by
+      --  an instantiation.
+      Source_File_Instance
+     );
+
+   --  Data associed with a file.
+   type Source_File_Record (Kind : Source_File_Kind := Source_File_File) is
+      record
+      --  All location between first and last belong to this file.
+      First_Location : Location_Type;
+      Last_Location : Location_Type;
+
+      --  The name_id that identify this file.
+      --  FIXME: what about file aliasing (links) ?
+      File_Name : Name_Id;
+
+      Directory : Name_Id;
+
+      --  The buffer containing the file.
+      Source : File_Buffer_Acc;
+
+      --  Length of the file, which is less than the length of the buffer.
+      File_Length : Natural;
+
+      Checksum : File_Checksum_Id;
+
+      case Kind is
+         when Source_File_File =>
+            --  Line table
+
+            Lines : Lines_Tables.Instance;
+
+            --  Cache for line table.
+            Cache_Line : Natural;
+            Cache_Pos : Source_Ptr;
+
+         when Source_File_String =>
+            --  There is only one line.
+            null;
+
+         when Source_File_Instance =>
+            --  The instance was created from REF.
+            Ref : Source_File_Entry;
+            --  The ultimate non-instance is BASE.
+            Base : Source_File_Entry;
+
+            Instance_Loc : Location_Type;
+      end case;
+   end record;
+
+   package Source_Files is new Tables
+     (Table_Index_Type => Source_File_Entry,
+      Table_Component_Type => Source_File_Record,
+      Table_Low_Bound => No_Source_File_Entry + 1,
+      Table_Initial => 16);
+
    --  Debug procedures.
 
    --  Disp info about all source files
