@@ -594,9 +594,9 @@ package body Binary_File is
    begin
       if S_Local (Sym) then
          N := 10;
-         for I in 3 .. 8 loop
+         for I in 1 .. 8 loop
             if Get_Number (Sym) < N then
-               return I;
+               return I + 2;
             end if;
             N := N * 10;
          end loop;
