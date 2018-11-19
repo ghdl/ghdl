@@ -1173,32 +1173,31 @@ package body Trans.Chap8 is
       end if;
    end Translate_String_Case_Statement_Common;
 
+   type Choice_Id is new Integer;
+   No_Choice_Id : constant Choice_Id := -1;
+
+   type Choice_Info_Type is record
+      --  List of choices, used to sort them.
+      Choice_Chain  : Choice_Id;
+      --  Association index.
+      Choice_Assoc  : Natural;
+      --  Corresponding choice simple expression.
+      Choice_Expr   : Iir;
+      --  Corresponding choice.
+      Choice_Parent : Iir;
+   end record;
+
+   type Choice_Info_Arr is array (Choice_Id range <>) of Choice_Info_Type;
+
    --  Translate a string case statement using a dichotomy.
    --  NBR_CHOICES is the number of non-others choices.
    procedure Translate_String_Case_Statement_Dichotomy
      (Stmt : Iir;
       Choices_Chain : Iir;
       Nbr_Choices : Positive;
+      Choices_Info : in out Choice_Info_Arr;
       Handler : in out Case_Handler'Class)
    is
-      type Choice_Id is new Integer;
-      subtype Valid_Choice_Id is Choice_Id
-        range 0 .. Choice_Id (Nbr_Choices - 1);
-      No_Choice_Id : constant Choice_Id := -1;
-
-      type Choice_Info_Type is record
-         --  List of choices, used to sort them.
-         Choice_Chain  : Choice_Id;
-         --  Association index.
-         Choice_Assoc  : Natural;
-         --  Corresponding choice simple expression.
-         Choice_Expr   : Iir;
-         --  Corresponding choice.
-         Choice_Parent : Iir;
-      end record;
-
-      type Choice_Info_Arr is array (Valid_Choice_Id) of Choice_Info_Type;
-      Choices_Info : Choice_Info_Arr;
       First, Last : Choice_Id;
       El : Choice_Id;
 
@@ -1729,9 +1728,31 @@ package body Trans.Chap8 is
             --  Select the strategy according to the number of choices.
             if Nbr_Choices < 3 then
                Translate_String_Case_Statement_Linear (N, Choices, Handler);
+            elsif Nbr_Choices <= 512 then
+               --  Can allocate on the stack.
+               declare
+                  subtype Valid_Choice_Id is Choice_Id
+                    range 0 .. Choice_Id (Nbr_Choices - 1);
+                  Choices_Info : Choice_Info_Arr (Valid_Choice_Id);
+               begin
+                  Translate_String_Case_Statement_Dichotomy
+                    (N, Choices, Nbr_Choices, Choices_Info, Handler);
+               end;
             else
-               Translate_String_Case_Statement_Dichotomy
-                 (N, Choices, Nbr_Choices, Handler);
+               --  Allocate on the heap.
+               declare
+                  type Choice_Info_Arr_Acc is access Choice_Info_Arr;
+                  subtype Valid_Choice_Id is Choice_Id
+                    range 0 .. Choice_Id (Nbr_Choices - 1);
+                  Choices_Info : Choice_Info_Arr_Acc;
+                  procedure Free is new Ada.Unchecked_Deallocation
+                    (Choice_Info_Arr, Choice_Info_Arr_Acc);
+               begin
+                  Choices_Info := new Choice_Info_Arr (Valid_Choice_Id);
+                  Translate_String_Case_Statement_Dichotomy
+                    (N, Choices, Nbr_Choices, Choices_Info.all, Handler);
+                  Free (Choices_Info);
+               end;
             end if;
          end;
       else
