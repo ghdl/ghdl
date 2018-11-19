@@ -3,37 +3,37 @@
 # kate: tab-width 2; replace-tabs off; indent-width 2;
 # 
 # ==============================================================================
-#  Authors:            Patrick Lehmann  (ported batch file to PowerShell)
-#                      Brian Davis      (contributions to the batch file)
-#                      Tristan Gingold  (initial batch file for compilations on Windows)
+# Authors:            Patrick Lehmann  (ported batch file to PowerShell)
+#                     Brian Davis      (contributions to the batch file)
+#                     Tristan Gingold  (initial batch file for compilations on Windows)
 # 
-#  PowerShell Script:  Script to compile GHDL for Windows
+# PowerShell Script:  Script to compile GHDL for Windows
 # 
 # Description:
 # ------------------------------------
-#  This is a PowerShell script (executable) which:
-#    - compiles GHDL and GHDLFilter
-#    - analyses VHDL libraries
-#    - installs GHDL into a directory (xcopy deploiment)
+# This is a PowerShell script (executable) which:
+#   - compiles GHDL and GHDLFilter
+#   - analyses VHDL libraries
+#   - installs GHDL into a directory (xcopy deploiment)
 #
 # ==============================================================================
-#  Copyright (C) 2015-2018 Patrick Lehmann
-#  Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
+#	Copyright (C) 2015-2018 Patrick Lehmann - Boetzingen, Germany
+# Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
 #  
-#  GHDL is free software; you can redistribute it and/or modify it under
-#  the terms of the GNU General Public License as published by the Free
-#  Software Foundation; either version 2, or (at your option) any later
-#  version.
-#  
-#  GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
-#  WARRANTY; without even the implied warranty of MERCHANTABILITY or
-#  FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-#  for more details.
-#  
-#  You should have received a copy of the GNU General Public License
-#  along with GHDL; see the file COPYING.  If not, write to the Free
-#  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
-#  02111-1307, USA.
+# GHDL is free software; you can redistribute it and/or modify it under
+# the terms of the GNU General Public License as published by the Free
+# Software Foundation; either version 2, or (at your option) any later
+# version.
+# 
+# GHDL is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or
+# FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+# for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with GHDL; see the file COPYING.  If not, write to the Free
+# Software Foundation, 59 Temple Place - Suite 330, Boston, MA
+# 02111-1307, USA.
 # ==============================================================================
 
 # .SYNOPSIS 
@@ -133,13 +133,12 @@ $Script_WorkingDir =  Get-Location
 $GHDLRootDir =        Convert-Path (Resolve-Path ($PSScriptRoot + "\" + $RelPathToRoot))
 
 # set default values
-$Hosting =            $true
 $EnableDebug =        [bool]$PSCmdlet.MyInvocation.BoundParameters["Debug"]
 $EnableVerbose =      [bool]$PSCmdlet.MyInvocation.BoundParameters["Verbose"] -or $EnableDebug
 
 # load modules from GHDL's 'libraries' directory
-Import-Module $PSScriptRoot\shared.psm1  -Verbose:$false -Debug:$false -ArgumentList "$Script_WorkingDir", $Hosting
-Import-Module $PSScriptRoot\targets.psm1 -Verbose:$false -Debug:$false
+Import-Module $PSScriptRoot\shared.psm1   -Verbose:$false -Debug:$false -ArgumentList "$Script_WorkingDir", $true
+Import-Module $PSScriptRoot\targets.psm1  -Verbose:$false -Debug:$false
 
 # define a function to exit script and unload imported modules
 function Exit-Script
@@ -181,6 +180,8 @@ if ($Git_IsGitRepo)
 {	Write-Host "  Git branch: $Git_Branch_Name"
 	Write-Host "  Git commit: $Git_Commit_DateString ($Git_Commit_ShortHash)"
 }
+
+Write-Host
 
 if ([environment]::OSVersion.Platform -ne "WIN32NT")
 {	Write-Error "[ERROR] PowerShell based installer not supported on Linux/Unix/MacOS platforms."
@@ -271,10 +272,10 @@ $DefaultInstallPath =                    "C:\Program Files (x86)\GHDL"        # 
 $GHDLWindowsDir =                   "$GHDLRootDir\$WindowsDirName"
 $GHDLBuildDir =                     "$GHDLRootDir\$BuildBackendDirectoryName"
 $BinaryDestinationDirectory =       "$GHDLBuildDir"
-$VHDLSourceLibraryDirectory =       "$GHDLRootDir\$VHDLLibrariesSourceDirectoryName"
+$VHDLLibrarySourceDirectory =       "$GHDLRootDir\$VHDLLibrariesSourceDirectoryName"
 $GHDLVendorLibraryDir =             "$GHDLRootDir\$VHDLLibrariesSourceDirectoryName\vendors"
-$VHDLDestinationLibraryDirectory =  "$GHDLBuildDir\$VHDLLibrariesDestinationDirectoryName"
-$GHDLCompiledLibraryDir =           "$VHDLDestinationLibraryDirectory"
+$VHDLLibraryDestinationDirectory =  "$GHDLBuildDir\$VHDLLibrariesDestinationDirectoryName"
+$GHDLCompiledLibraryDir =           "$VHDLLibraryDestinationDirectory"
 $GHDLZipPackageDir =                "$GHDLRootDir\$PackageDirectoryName"
 $GHDLZipPackageFile =               "$GHDLZipPackageDir\$ZipPackageFileName"
 $InstallerTemplateFile =            "$GHDLWindowsDir\$InstallerTemplateFileName"
@@ -308,12 +309,14 @@ if ($Uninstall)
 	Exit-Script -1
 }  # Uninstall
 
-# ============================================================================
+# ==============================================================================
 # Clean tasks
-# ============================================================================
+# ==============================================================================
 if ($Clean)
-{	Write-Host "Cleaning all created files and directories..." -ForegroundColor Cyan    }
+{	Write-Host "Cleaning all created files and directories..." -ForegroundColor Cyan  }
 
+# Clean GHDL
+# ------------------------------------------------------------------------------
 if ($CleanGHDL)
 {	$Clean = $true
 	try
@@ -323,16 +326,22 @@ if ($CleanGHDL)
 		Exit-Script -1
 	}
 }  # CleanGHDL
+
+# Clean Libraries
+# ------------------------------------------------------------------------------
 if ($CleanLibraries)
 {	$Clean = $true
 	try
 	{	if ($CleanGHDL)  { Write-Host }
-		Invoke-CleanLibraries $VHDLDestinationLibraryDirectory -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
+		Invoke-CleanLibraries $VHDLLibraryDestinationDirectory -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
 	catch
 	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
 		Exit-Script -1
 	}
 }  # CleanLibraries
+
+# Clean Packages
+# ------------------------------------------------------------------------------
 if ($CleanPackages)
 {	$Clean = $true
 	try
@@ -355,17 +364,24 @@ if ($Clean)
 	Write-Host "[SUCCESSFUL]" -ForegroundColor Green
 }
 
-# ============================================================================
+# ==============================================================================
 # Compile tasks
-# ============================================================================
+# ==============================================================================
+if ($Compile)
+{	if ($Clean) { Write-Host  }
+	Write-Host "Compiling GHDL and Libraries..." -ForegroundColor Cyan
+}
+
+# Compile GHDL
+# ------------------------------------------------------------------------------
 if ($CompileGHDL)
 {	$Compile = $true
-	if ($Clean)
+	if ($Clean -and -not $Compile)
 	{	Write-Host    }
 	
 	# create a build directory
 	try
-	{	New-BuildDirectory $BuildDirectory }
+	{	New-BuildDirectory $BuildDirectory -Quiet:$Quiet  }
 	catch
 	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
 		Exit-Script -1
@@ -374,7 +390,7 @@ if ($CompileGHDL)
 	# patch the version file if it's no release build
 	if (-not $Release -and $Git_IsGitRepo)
 	{	try
-		{	Invoke-PatchVersionFile $GHDLRootDir $Git_Branch_Name $Git_Commit_DateString $Git_Commit_ShortHash }
+		{	Invoke-PatchVersionFile $GHDLRootDir $Git_Branch_Name $Git_Commit_DateString $Git_Commit_ShortHash -Quiet:$Quiet  }
 		catch
 		{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
 			Exit-Script -1
@@ -384,7 +400,7 @@ if ($CompileGHDL)
 	# build C source files
 	try
 	{	Write-Host
-		Invoke-CompileCFiles $GHDLRootDir $BinaryDestinationDirectory }
+		Invoke-CompileCFiles $GHDLRootDir $BinaryDestinationDirectory -Quiet:$Quiet }
 	catch
 	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
 		Exit-Script -1
@@ -394,7 +410,7 @@ if ($CompileGHDL)
 	# build Ada source files
 	try
 	{	Write-Host
-		Invoke-CompileGHDLAdaFiles $GHDLRootDir $BinaryDestinationDirectory }
+		Invoke-CompileGHDLAdaFiles $GHDLRootDir $BinaryDestinationDirectory -Quiet:$Quiet }
 	catch
 	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
 		Exit-Script -1
@@ -403,7 +419,7 @@ if ($CompileGHDL)
 	# strip result
 	try
 	{	Write-Host
-		Invoke-StripGHDLExecutable $BinaryDestinationDirectory }
+		Invoke-StripGHDLExecutable $BinaryDestinationDirectory -Quiet:$Quiet  }
 	catch
 	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
 		Exit-Script -1
@@ -416,20 +432,34 @@ if ($CompileGHDL)
 
 
 
-
+# Compile Libraries
+# ------------------------------------------------------------------------------
 if ($CompileLibraries)
-{	if ($Clean -or $CompileGHDL)  { Write-Host }
+{	if (($Clean -and -not $Compile) -or $CompileGHDL)  { Write-Host }
 	Write-Host "Compiling all VHDL libraries..." -ForegroundColor Cyan
 }
+
 if ($CompileLibraryVHDL87 -or $CompileLibraryVHDL93 -or $CompileLibraryVHDL08)
-{$env:GHDL = "$GHDLBuildDir\ghdl.exe"
-	Write-Host ("  Setting env:GHDL to '" + $env:GHDL + "'")
+{	$env:GHDL = "$GHDLBuildDir"
+	Write-Host ("  Setting `$env:GHDL to '" + $env:GHDL + "'")
+
+	Import-Module $PSScriptRoot\ghdl.psm1 -Verbose:$false -Debug:$false -ArgumentList "", $Script_WorkingDir
+	
+	try
+	{	Invoke-PrepareCompileLibrary $VHDLLibraryDestinationDirectory -Quiet:$Quiet }
+	catch
+	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
+		Exit-Script -1
+	}
+	
+	Write-Host
+	Write-Host "Start compilation..."
 }
 
 if ($CompileLibraryVHDL87)
 {	$CompileLibraries = $true
 	try
-	{	Invoke-CompileLibraryVHDL87 $BuildDirectory -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
+	{	Invoke-CompileLibrary $VHDLLibrarySourceDirectory $VHDLLibraryDestinationDirectory 1987 "ieee" -SuppressWarnings:$SuppressWarnings -HaltOnError:$HaltOnError -Indentation:"  " -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
 	catch
 	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
 		Exit-Script -1
@@ -438,7 +468,7 @@ if ($CompileLibraryVHDL87)
 if ($CompileLibraryVHDL93)
 {	$CompileLibraries = $true
 	try
-	{	Invoke-CompileLibraryVHDL93 $BuildDirectory -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
+	{	Invoke-CompileLibrary $VHDLLibrarySourceDirectory $VHDLLibraryDestinationDirectory 1993 "ieee" -SuppressWarnings:$SuppressWarnings -HaltOnError:$HaltOnError -Indentation:"  " -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
 	catch
 	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
 		Exit-Script -1
@@ -447,7 +477,7 @@ if ($CompileLibraryVHDL93)
 if ($CompileLibraryVHDL08)
 {	$CompileLibraries = $true
 	try
-	{	Invoke-CompileLibraryVHDL08 $BuildDirectory -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
+	{	Invoke-CompileLibrary $VHDLLibrarySourceDirectory $VHDLLibraryDestinationDirectory 2008 "ieee" -SuppressWarnings:$SuppressWarnings -HaltOnError:$HaltOnError -Indentation:"  " -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
 	catch
 	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
 		Exit-Script -1
@@ -462,9 +492,9 @@ if ($CompileLibraries)
 
 
 
-# ============================================================================
+# ==============================================================================
 # Package tasks
-# ============================================================================
+# ==============================================================================
 if ($Package)
 {	Write-Host "Creating an installation package for GHDL $GHDLVersion for Windows"
 	$Good = $false
@@ -511,7 +541,7 @@ if ($Package)
 		# pre-compile scripts
 		Copy-Item $GHDLVendorLibraryDir -Recurse      "$GHDLZipPackageDir\lib\vendors"  -ErrorAction SilentlyContinue
 		# pre-compiled libraries
-		Copy-Item $GHDLCompiledLibraryDir  -Recurse   "$GHDLZipPackageDir"              -ErrorAction SilentlyContinue
+		Copy-Item $GHDLCompiledLibraryDir -Recurse    "$GHDLZipPackageDir"              -ErrorAction SilentlyContinue
 
 		Write-Host "  Compressing all files into '$GHDLZipPackageFile'..."
 		$file = Get-ChildItem $GHDLZipPackageDir -Recurse | Write-Zip -IncludeEmptyDirectories -EntryPathRoot $GHDLZipPackageDir -OutputPath $GHDLZipPackageFile

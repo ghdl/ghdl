@@ -35,14 +35,15 @@
 
 [CmdletBinding()]
 param(
-	[Parameter(Mandatory=$true)][string]$VendorToolName,
+	[Parameter(Mandatory=$true)][string]$GHDLBinaryPath,
 	[Parameter(Mandatory=$true)][string]$WorkingDir
 )
 
-$Module_VendorToolName =	$VendorToolName
+# $Module_VendorToolName =	$VendorToolName
 $Module_WorkingDir =			$WorkingDir
 
-function Exit-CompileScript
+
+function Exit-GHDLModule
 {		<#
 		.SYNOPSIS
 		Undocumented
@@ -61,8 +62,7 @@ function Exit-CompileScript
 	cd $Module_WorkingDir
 	
 	# unload modules
-	Remove-Module config -Verbose:$false
-	Remove-Module shared -Verbose:$false
+	Remove-Module ghdl -Verbose:$false
 	
 	if ($ExitCode -eq 0)
 	{	exit 0	}
@@ -70,80 +70,6 @@ function Exit-CompileScript
 	{	Write-Host "[DEBUG]: HARD EXIT" -ForegroundColor Red
 		exit $ExitCode
 	}
-}
-
-function Get-SourceDirectory
-{	<#
-		.SYNOPSIS
-		Undocumented
-		
-		.DESCRIPTION
-		Undocumented
-		
-		.PARAMETER Source
-		Undocumented
-		.PARAMETER EnvSource
-		Undocumented
-	#>
-	[CmdletBinding()]
-	param(
-		[string]$Source,
-		[string]$EnvSource
-	)
-
-	$VendorToolInstallationDirectory =  Get-VendorToolInstallationDirectory
-	$VendorToolSourceDirectory =        Get-VendorToolSourceDirectory
-	
-	if ($Source -ne "")
-	{	$SourceDirectory = $Source.TrimEnd("\")		}
-	elseif ($EnvSource -ne "")
-	{	$SourceDirectory = $EnvSource							}
-	elseif ($VendorToolInstallationDirectory -ne "")
-	{	$SourceDirectory = $VendorToolInstallationDirectory + "\" + $VendorToolSourceDirectory	}
-	else
-	{	Write-Host "[ERROR]: $Module_VendorToolName is not configured in '$ScriptDir\config.psm1'." -ForegroundColor Red
-		Write-Host "  Use adv. options '-Source' and '-Output' or configure 'config.psm1'." -ForegroundColor Red
-		Exit-CompileScript -1
-	}
-	
-	if (-not (Test-Path $SourceDirectory -PathType Container))
-	{	Write-Host "[ERROR]: Path '$SourceDirectory' does not exist." -ForegroundColor Red
-		Exit-CompileScript -1
-	}
-	
-	return Convert-Path (Resolve-Path $SourceDirectory)
-}
-
-function Get-DestinationDirectory
-{	<#
-		.SYNOPSIS
-		Undocumented
-		
-		.DESCRIPTION
-		Undocumented
-		
-		.PARAMETER Output
-		Undocumented
-	#>
-	[CmdletBinding()]
-	param(
-		[string]$Output
-	)
-	if ($Output -ne "")
-	{	$DestinationDirectory = $Output.TrimEnd("\")								}
-	else
-	{	$DestinationDirectory = Get-VendorToolDestinationDirectory	}
-	
-	if ($DestinationDirectory -eq "")
-	{	Write-Host "[ERROR]: $Module_VendorToolName is not configured in '$ScriptDir\config.psm1'." -ForegroundColor Red
-		Write-Host "  Use adv. options '-Source' and '-Output' or configure 'config.psm1'." -ForegroundColor Red
-		Exit-CompileScript -1
-	}
-	
-	if (-not [System.IO.Path]::IsPathRooted($DestinationDirectory))
-	{	$DestinationDirectory = "$Module_WorkingDir\$DestinationDirectory"		}
-	
-	return $DestinationDirectory
 }
 
 function Get-GHDLBinary
@@ -155,7 +81,7 @@ function Get-GHDLBinary
 		Undocumented
 		
 		.PARAMETER GHDL
-		Undocumented
+		Path to GHDL's binary directory.
 	#>
 	[CmdletBinding()]
 	param(
@@ -170,52 +96,14 @@ function Get-GHDLBinary
 	{	$GHDLBinary = "ghdl.exe"														}
 	
 	if (-not (Test-Path $GHDLBinary -PathType Leaf))
-	{	Write-Host "Use adv. options '-GHDL' to set the GHDL executable." -ForegroundColor Red
-		Exit-CompileScript -1
-	}
+	{	throw "Use adv. options '-GHDL' to set the GHDL executable."  }
 	
 	return $GHDLBinary
 }
 
+$GHDLBinaryPath = Get-GHDLBinary $GHDLBinaryPath
 
-function Get-VHDLVariables
-{	<#
-		.SYNOPSIS
-		Undocumented
-		
-		.DESCRIPTION
-		Undocumented
-		
-		.PARAMETER VHDL93
-		Undocumented
-		.PARAMETER VHDL2008
-		Undocumented
-	#>
-	[CmdletBinding()]
-	param(
-		[bool]$VHDL93 =		$false,
-		[bool]$VHDL2008 = $true
-	)
-	
-	if ($VHDL93)
-	{	$VHDLVersion =	"v93"
-		$VHDLStandard =	"93c"
-		$VHDLFlavor =		"synopsys"
-	}
-	elseif ($VHDL2008)
-	{	$VHDLVersion =	"v08"
-		$VHDLStandard = "08"
-		$VHDLFlavor =		"synopsys"
-	}
-	else
-	{	$VHDLVersion =	"v93"
-		$VHDLStandard = "93c"
-		$VHDLFlavor =		"synopsys"
-	}
-	return $VHDLVersion,$VHDLStandard,$VHDLFlavor
-}
-
-function New-DestinationDirectory
+function Analyze-File
 {	<#
 		.SYNOPSIS
 		Undocumented
@@ -225,25 +113,45 @@ function New-DestinationDirectory
 		
 		.PARAMETER DestinationDirectory
 		Undocumented
+		.PARAMETER Library
+		Undocumented
+		.PARAMETER SourceFile
+		Undocumented
+		.PARAMETER VHDLVersion
+		Undocumented
+		.PARAMETER GHDLOptions
+		Undocumented
+		.PARAMETER SuppressWarnings
+		Undocumented
+		.PARAMETER Indentation
+		Undocumented
+		.PARAMETER Quiet
+		Undocumented
 	#>
 	[CmdletBinding()]
 	param(
-		[Parameter(Mandatory=$true)][string]$DestinationDirectory
+		[Parameter(Mandatory=$true)][string]$DestinationDirectory,
+		[Parameter(Mandatory=$true)][string]$Library,
+		[Parameter(Mandatory=$true)][string]$SourceFile,
+		[Parameter(Mandatory=$false)][string]$VHDLVersion = "08",
+		[Parameter(Mandatory=$false)][string[]]$GHDLOptions = @(),
+		[Parameter(Mandatory=$false)][bool]$SuppressWarnings = $false,
+		[Parameter(Mandatory=$false)][string]$Indentation = "",
+		[Parameter(Mandatory=$false)][switch]$Quiet = $false
 	)
 
-	if (Test-Path $DestinationDirectory -PathType Container)
-	{	Write-Host "Vendor directory '$DestinationDirectory' already exists." -ForegroundColor Yellow		}
-	elseif (Test-Path $DestinationDirectory -PathType Leaf)
-	{	Write-Host "[ERROR]: Vendor directory '$DestinationDirectory' already exists as a file." -ForegroundColor Red
-		Exit-CompileScript -1
-	}
-	else
-	{	Write-Host "Creating vendor directory: '$DestinationDirectory'." -ForegroundColor Yellow
-		mkdir "$DestinationDirectory" -ErrorAction SilentlyContinue | Out-Null
-	}
+	$EnableDebug =		-not $Quiet -and (                  $PSCmdlet.MyInvocation.BoundParameters["Debug"])
+	$EnableVerbose =	-not $Quiet -and ($EnableDebug  -or $PSCmdlet.MyInvocation.BoundParameters["Verbose"])
+	
+	$InvokeExpr = "& '$GHDLBinaryPath' -a " + ($GHDLOptions -join " ") + " --work=$Library --std=$VHDLVersion " + $SourceFile + " 2>&1"
+	$EnableDebug -and (Write-Host "${Indentation}Analyzing $SourceFile" -ForegroundColor Gray     ) | Out-Null
+	$EnableDebug -and (Write-Host "${Indentation}  $InvokeExpr"         -ForegroundColor DarkGray ) | Out-Null
+	$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "$Indentation    "
+	if (($LastExitCode -ne 0) -and $HaltOnError)
+	{	throw "Error while analyzing '$SourceFile'."  }
 }
 
-function Start-PackageCompilation
+function Analyze-Library
 {	<#
 		.SYNOPSIS
 		Undocumented
@@ -251,54 +159,64 @@ function Start-PackageCompilation
 		.DESCRIPTION
 		Undocumented
 		
-		.PARAMETER GHDLBinary
-		Undocumented
-		.PARAMETER GHDLOptions
+
+		.PARAMETER DestinationDirectory
 		Undocumented
 		.PARAMETER Library
 		Undocumented
 		.PARAMETER SourceFiles
 		Undocumented
+		.PARAMETER VHDLVersion
+		Undocumented
+		.PARAMETER GHDLOptions
+		Undocumented
+		.PARAMETER SuppressWarnings
+		Undocumented
 		.PARAMETER HaltOnError
+		Undocumented
+		.PARAMETER Indentation
+		Undocumented
+		.PARAMETER Quiet
 		Undocumented
 	#>
 	[CmdletBinding()]
 	param(
-		[Parameter(Mandatory=$true)][string]$GHDLBinary,
-		[Parameter(Mandatory=$true)][string[]]$GHDLOptions,
 		[Parameter(Mandatory=$true)][string]$DestinationDirectory,
 		[Parameter(Mandatory=$true)][string]$Library,
-		[Parameter(Mandatory=$true)][string]$VHDLVersion,
 		[Parameter(Mandatory=$true)][string[]]$SourceFiles,
-		[Parameter(Mandatory=$true)][bool]$SuppressWarnings,
-		[Parameter(Mandatory=$true)][bool]$HaltOnError
+		[Parameter(Mandatory=$false)][string]$VHDLVersion = "08",
+		[Parameter(Mandatory=$false)][string[]]$GHDLOptions = @(),
+		[Parameter(Mandatory=$false)][bool]$SuppressWarnings = $false,
+		[Parameter(Mandatory=$false)][bool]$HaltOnError = $true,
+		[Parameter(Mandatory=$false)][string]$Indentation = "",
+		[Parameter(Mandatory=$false)][switch]$Quiet = $false
 	)
-	# set default valuesvalues
-	$EnableDebug =		[bool]$PSCmdlet.MyInvocation.BoundParameters["Debug"]
-	$EnableVerbose =	[bool]$PSCmdlet.MyInvocation.BoundParameters["Verbose"] -or $EnableDebug
+
+	$EnableDebug =		-not $Quiet -and (                  $PSCmdlet.MyInvocation.BoundParameters["Debug"])
+	$EnableVerbose =	-not $Quiet -and ($EnableDebug  -or $PSCmdlet.MyInvocation.BoundParameters["Verbose"])
 	
-	Write-Host "Compiling library '$Library' ..." -ForegroundColor Yellow
-	$LibraryDirectory=	"$DestinationDirectory/$Library/$VHDLVersion"
-	$EnableVerbose -and (Write-Host "  Creating library $Library ..."	-ForegroundColor Gray	) | Out-Null
-	$EnableDebug -and   (Write-Host "    mkdir $LibraryDirectory"	-ForegroundColor DarkGray	) | Out-Null
-	mkdir $LibraryDirectory -ErrorAction SilentlyContinue | Out-Null
-	$EnableDebug -and		(Write-Host "    cd $LibraryDirectory"		-ForegroundColor DarkGray	) | Out-Null
-	cd $LibraryDirectory
+	Write-Host "${Indentation}Compiling library '$Library' ..." -ForegroundColor Yellow
+	$LibraryDirectory=	"$DestinationDirectory\$Library\$VHDLVersion"
+	$EnableVerbose -and (Write-Host "${Indentation}  Creating library $Library ..."	-ForegroundColor Gray	) | Out-Null
+	$EnableDebug -and   (Write-Host "${Indentation}    mkdir $LibraryDirectory"	-ForegroundColor DarkGray	) | Out-Null
+	mkdir $LibraryDirectory | Out-Null
+	# $EnableDebug -and		(Write-Host "${Indentation}    cd $LibraryDirectory"		-ForegroundColor DarkGray	) | Out-Null
+	# cd $LibraryDirectory
 	$ErrorCount = 0
 	foreach ($File in $SourceFiles)
-	{	Write-Host "  Analyzing package file '$File'" -ForegroundColor DarkCyan
-		$InvokeExpr = "& '$GHDLBinary' " + ($GHDLOptions -join " ") + " --work=$Library " + $File + " 2>&1"
-		$EnableDebug -and		(Write-Host "    $InvokeExpr" -ForegroundColor DarkGray	) | Out-Null
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "  "
-		if ($LastExitCode -ne 0)
+	{	try
+		{	Analyze-File $LibraryDirectory $Library $File $VHDLVersion $GHDLOptions $SuppressWarnings "$Indentation  " -Verbose:$EnableVerbose -Debug:$EnableDebug -Quiet:$Quiet  }
+		catch
 		{	$ErrorCount += 1
 			if ($HaltOnError)
-			{	break		}
+			{	throw $_ }
 		}
 	}
 	
+	if ($ErrorCount -gt 0)
+	{	throw "Detected $ErrorCount errors."  }
+	
 	cd $DestinationDirectory
-	# return $ErrorCount
 }
 
 function Start-PrimitiveCompilation
@@ -317,7 +235,13 @@ function Start-PrimitiveCompilation
 		Undocumented
 		.PARAMETER SourceFiles
 		Undocumented
+		.PARAMETER SuppressWarnings
+		Undocumented
 		.PARAMETER HaltOnError
+		Undocumented
+		.PARAMETER Indentation
+		Undocumented
+		.PARAMETER Quiet
 		Undocumented
 	#>
 	[CmdletBinding()]
@@ -328,8 +252,10 @@ function Start-PrimitiveCompilation
 		[Parameter(Mandatory=$true)][string]$Library,
 		[Parameter(Mandatory=$true)][string]$VHDLVersion,
 		[Parameter(Mandatory=$true)][string[]]$SourceFiles,
-		[Parameter(Mandatory=$true)][bool]$SuppressWarnings,
-		[Parameter(Mandatory=$true)][bool]$HaltOnError
+		[Parameter(Mandatory=$false)][bool]$SuppressWarnings = $false,
+		[Parameter(Mandatory=$false)][bool]$HaltOnError = $true,
+		[Parameter(Mandatory=$false)][string]$Indentation = "",
+		[Parameter(Mandatory=$false)][switch]$Quiet = $false
 	)
 	# set default values
 	$EnableDebug =		[bool]$PSCmdlet.MyInvocation.BoundParameters["Debug"]
@@ -468,17 +394,15 @@ function Write-ColoredGHDLLine
 	{	$ErrorRecordFound		}
 }
 
-Export-ModuleMember -Function 'Exit-CompileScript'
+Export-ModuleMember -Function 'Exit-GHDLModule'
 
-Export-ModuleMember -Function 'Get-SourceDirectory'
-Export-ModuleMember -Function 'Get-DestinationDirectory'
 Export-ModuleMember -Function 'Get-GHDLBinary'
 
-Export-ModuleMember -Function 'Get-VHDLVariables'
+Export-ModuleMember -Function 'Analyze-File'
+Export-ModuleMember -Function 'Analyze-Library'
 
-Export-ModuleMember -Function 'New-DestinationDirectory'
-Export-ModuleMember -Function 'Start-PackageCompilation'
-Export-ModuleMember -Function 'Start-PrimitiveCompilation'
+# Export-ModuleMember -Function 'Start-PackageCompilation'
+# Export-ModuleMember -Function 'Start-PrimitiveCompilation'
 
 
 Export-ModuleMember -Function 'Restore-NativeCommandStream'

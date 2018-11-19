@@ -12,7 +12,7 @@
 #	This PowerShell module provides build targets for GHDL.
 #
 # ==============================================================================
-#	Copyright (C) 2016-2018 Patrick Lehmann
+#	Copyright (C) 2016-2018 Patrick Lehmann - Boetzingen, Germany
 #
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -53,61 +53,69 @@ $VersionFileName_In =				"version.in"
 $VersionFileName_Ads =			"version.ads"
 
 # Library sources
-$LibrarySourceFiles = @{
+$LibrarySourceFiles = [ordered]@{
 	"std" = @(
-		"textio",								"textio_body"
+		@{"Dir" = "std"; "File" = "textio";                         "IncludedIn" = @(1987, 1993, 2008); "Flavor" = @("all")},
+		@{"Dir" = "std"; "File" = "textio-body";                    "IncludedIn" = @(1987, 1993, 2008); "Flavor" = @("all")},
+		@{"Dir" = "std"; "File" = "env";                            "IncludedIn" = @(            2008); "Flavor" = @("all")},
+		@{"Dir" = "std"; "File" = "env-body";                       "IncludedIn" = @(            2008); "Flavor" = @("all")}
 	);
 	"ieee" = @(
-		"std_logic_1164",				"std_logic_1164_body",
-		"numeric_std",					"numeric_std-body",
-		"numeric_bit",					"numeric_bit-body"
-	);
-	"math" = @(
-		"math_real",						"math_real-body",
-		"math_complex",					"math_complex-body"
-	);
-	"std08" = @(
-		"textio",								"textio_body",
-		"env",									"env_body"
-	);
-	"ieee2008" = @(
-		"std_logic_1164",				"std_logic_1164-body",
-		"std_logic_textio",
-		"math_real",						"math_real-body",
-		"math_complex",					"math_complex-body",
-		"numeric_bit",					"numeric_bit-body",
-		"numeric_bit_unsigned",	"numeric_bit_unsigned-body",
-		"numeric_std",					"numeric_std-body",
-		"numeric_std_unsigned",	"numeric_std_unsigned-body",
-		"fixed_float_types",
-		"fixed_generic_pkg",		"fixed_generic_pkg-body",
-		"fixed_pkg",
-		"float_generic_pkg",		"float_generic_pkg-body",
-		"float_pkg",
-		"ieee_std_context",
-		"ieee_bit_context"
-	);
-	"vital95" = @(
-		"vital_timing",					"vital_timing_body",
-		"vital_primitives",			"vital_primitives_body"
-	);
-	"vital2000" = @(
-		"timing_p",							"timing_b",
-		"prmtvs_p",							"prmtvs_b",
-		"memory_p",							"memory_b"
-	);
-	"synopsys" = @(
-		"std_logic_arith",
-		"std_logic_unsigned",
-		"std_logic_signed"
-	);
-	"synopsys8793" = @(
-		"std_logic_textio",
-		"std_logic_misc",				"std_logic_misc-body"
-	);
-	"mentor" = @(
-		"std_logic_arith",			"std_logic_arith_body"
-	)
+		@{"Dir" = "ieee";     "File" = "std_logic_1164";            "IncludedIn" = @(1987, 1993      ); "Flavor" = @("all")},
+		@{"Dir" = "ieee";     "File" = "std_logic_1164-body";       "IncludedIn" = @(1987, 1993      ); "Flavor" = @("all")},
+		@{"Dir" = "ieee2008"; "File" = "std_logic_1164";            "IncludedIn" = @(            2008); "Flavor" = @("all")},
+		@{"Dir" = "ieee2008"; "File" = "std_logic_1164-body";       "IncludedIn" = @(            2008); "Flavor" = @("all")},
+		@{"Dir" = "ieee2008"; "File" = "std_logic_textio";          "IncludedIn" = @(            2008); "Flavor" = @("ieee")}
+		@{"Dir" = "ieee";     "File" = "numeric_std";               "IncludedIn" = @(1987, 1993      ); "Flavor" = @("all")},
+		@{"Dir" = "ieee";     "File" = "numeric_std-body";          "IncludedIn" = @(1987, 1993      ); "Flavor" = @("all")},
+		@{"Dir" = "ieee2008"; "File" = "numeric_std";               "IncludedIn" = @(            2008); "Flavor" = @("all")},
+		@{"Dir" = "ieee2008"; "File" = "numeric_std-body";          "IncludedIn" = @(            2008); "Flavor" = @("all")},
+		@{"Dir" = "ieee2008"; "File" = "numeric_std_unsigned";      "IncludedIn" = @(            2008); "Flavor" = @("all")},
+		@{"Dir" = "ieee2008"; "File" = "numeric_std_unsigned-body"; "IncludedIn" = @(            2008); "Flavor" = @("all")},
+		@{"Dir" = "ieee";     "File" = "numeric_bit";               "IncludedIn" = @(1987, 1993      ); "Flavor" = @("all")},
+		@{"Dir" = "ieee";     "File" = "numeric_bit-body";          "IncludedIn" = @(1987, 1993      ); "Flavor" = @("all")},
+		@{"Dir" = "ieee2008"; "File" = "numeric_bit";               "IncludedIn" = @(            2008); "Flavor" = @("all")},
+		@{"Dir" = "ieee2008"; "File" = "numeric_bit-body";          "IncludedIn" = @(            2008); "Flavor" = @("all")},
+		@{"Dir" = "ieee2008"; "File" = "numeric_bit_unsigned";      "IncludedIn" = @(            2008); "Flavor" = @("all")},
+		@{"Dir" = "ieee2008"; "File" = "numeric_bit_unsigned-body"; "IncludedIn" = @(            2008); "Flavor" = @("all")},
+		@{"Dir" = "ieee2008"; "File" = "math_real";                 "IncludedIn" = @(            2008); "Flavor" = @("all")},
+		@{"Dir" = "ieee2008"; "File" = "math_real-body";            "IncludedIn" = @(            2008); "Flavor" = @("all")},
+		@{"Dir" = "ieee2008"; "File" = "math_complex";              "IncludedIn" = @(            2008); "Flavor" = @("all")},
+		@{"Dir" = "ieee2008"; "File" = "math_complex-body";         "IncludedIn" = @(            2008); "Flavor" = @("all")},
+		@{"Dir" = "ieee2008"; "File" = "fixed_float_types";         "IncludedIn" = @(            2008); "Flavor" = @("all")},
+		@{"Dir" = "ieee2008"; "File" = "fixed_generic_pkg";         "IncludedIn" = @(            2008); "Flavor" = @("all")},
+		@{"Dir" = "ieee2008"; "File" = "fixed_generic_pkg-body";    "IncludedIn" = @(            2008); "Flavor" = @("all")},
+		@{"Dir" = "ieee2008"; "File" = "fixed_pkg";                 "IncludedIn" = @(            2008); "Flavor" = @("all")},
+		@{"Dir" = "ieee2008"; "File" = "float_generic_pkg";         "IncludedIn" = @(            2008); "Flavor" = @("all")},
+		@{"Dir" = "ieee2008"; "File" = "float_generic_pkg-body";    "IncludedIn" = @(            2008); "Flavor" = @("all")},
+		@{"Dir" = "ieee2008"; "File" = "float_pkg";                 "IncludedIn" = @(            2008); "Flavor" = @("all")},
+		@{"Dir" = "ieee2008"; "File" = "ieee_std_context";          "IncludedIn" = @(            2008); "Flavor" = @("all")},
+		@{"Dir" = "ieee2008"; "File" = "ieee_bit_context";          "IncludedIn" = @(            2008); "Flavor" = @("all")},
+
+		@{"Dir" = "synopsys"; "File" = "std_logic_arith";           "IncludedIn" = @(1987, 1993, 2008); "Flavor" = @("synopsys")},
+		@{"Dir" = "synopsys"; "File" = "std_logic_unsigned";        "IncludedIn" = @(1987, 1993, 2008); "Flavor" = @("synopsys")},
+		@{"Dir" = "synopsys"; "File" = "std_logic_signed";          "IncludedIn" = @(1987, 1993, 2008); "Flavor" = @("synopsys")},
+		@{"Dir" = "synopsys"; "File" = "std_logic_textio";          "IncludedIn" = @(1987, 1993      ); "Flavor" = @("synopsys")},
+		@{"Dir" = "synopsys"; "File" = "std_logic_misc";            "IncludedIn" = @(1987, 1993      ); "Flavor" = @("synopsys")},
+		@{"Dir" = "synopsys"; "File" = "std_logic_misc-body";       "IncludedIn" = @(1987, 1993      ); "Flavor" = @("synopsys")},
+
+		@{"Dir" = "mentor";   "File" = "std_logic_arith";           "IncludedIn" = @(1987, 1993, 2008); "Flavor" = @("mentor")},
+		@{"Dir" = "mentor";   "File" = "std_logic_arith_body";      "IncludedIn" = @(1987, 1993, 2008); "Flavor" = @("mentor")}
+	) #;
+	# "vital95" = @(
+		# @{"File" = "vital_timing";                   "IncludedIn" = @(1987, 1993      )},
+		# @{"File" = "vital_timing_body";              "IncludedIn" = @(1987, 1993      )},
+		# @{"File" = "vital_primitives";               "IncludedIn" = @(1987, 1993      )},
+		# @{"File" = "vital_primitives_body";          "IncludedIn" = @(1987, 1993      )}
+	# );
+	# "vital2000" = @(
+		# @{"File" = "timing_p";                       "IncludedIn" = @(            2008)},
+		# @{"File" = "timing_b";                       "IncludedIn" = @(            2008)},
+		# @{"File" = "prmtvs_p";                       "IncludedIn" = @(            2008)},
+		# @{"File" = "prmtvs_b";                       "IncludedIn" = @(            2008)},
+		# @{"File" = "memory_p";                       "IncludedIn" = @(            2008)},
+		# @{"File" = "memory_b";                       "IncludedIn" = @(            2008)}
+	# )
 }
 
 function Invoke-CleanGHDL
@@ -547,104 +555,140 @@ function Invoke-StripGHDLExecutable
 	}
 }	# Invoke-StripGHDLExecutable
 
-function Invoke-CompileLibraryVHDL87
+function Invoke-PrepareCompileLibrary
+{	<#
+		.SYNOPSIS
+		This CommandLet prepares the target directories for the library compilation.
+		.PARAMETER DestinationDirectory
+		The directory where all analyzed artifacts will be staored stored.
+		.PARAMETER Quiet
+		Disable outputs to the host console.
+	#>
+	[CmdletBinding()]
+	param(
+		[string]	$DestinationDirectory,
+		[switch]	$Quiet = $false
+	)
+
+	$EnableDebug =		-not $Quiet -and (                  $PSCmdlet.MyInvocation.BoundParameters["Debug"])
+	$EnableVerbose =	-not $Quiet -and ($EnableDebug  -or $PSCmdlet.MyInvocation.BoundParameters["Verbose"])
+
+	-not $Quiet			-and (Write-Host "Executing build target 'PrepareCompileLibrary' ..." -ForegroundColor DarkCyan)  | Out-Null
+
+	# create lib directory if it does not exist
+	if (Test-Path -Path $DestinationDirectory)
+	{	$EnableVerbose	-and (Write-Host "  Directory '$DestinationDirectory' already exists.")	| Out-Null
+		
+		# change working directory to DestinationDirectory
+		$EnableVerbose	-and (Write-Host "  cd $DestinationDirectory")	| Out-Null
+		Set-Location $DestinationDirectory
+	
+		$EnableVerbose	-and (Write-Host "  Cleaning up directory...")	| Out-Null
+		Remove-Item ./* -Force -Recurse -ErrorAction SilentlyContinue
+	}
+	else
+	{	$EnableVerbose	-and (Write-Host "  Creating directory '$DestinationDirectory'.")	| Out-Null
+		New-Item -ItemType Directory -Path $DestinationDirectory -ErrorAction SilentlyContinue | Out-Null
+		if (-not $?)
+		{	Write-Host "[ERROR]: Cannot create destination directory '$DestinationDirectory'." -ForegroundColor Red
+			throw "Cannot create destination directory '$DestinationDirectory'."
+		}
+		
+		# change working directory to DestinationDirectory
+		$EnableVerbose	-and (Write-Host "  Change working directory to $DestinationDirectory")	| Out-Null
+		Set-Location $DestinationDirectory
+	}
+}
+
+function Invoke-CompileLibrary
 {	<#
 		.SYNOPSIS
 		This CommandLet compiles the VHDL'87 library files.
-		.PARAMETER BuildDirectory
-		The directory where all analyzed VHDL files are stored.
+		.PARAMETER VHDLLibrarySourceDirectory
+		Undocumented
+		.PARAMETER VHDLLibraryDestinationDirectory
+		Undocumented
+		.PARAMETER VHDLVersionYear
+		VHDL version
+		.PARAMETER VHDLFlavor
+		VHDL flavor
+		.PARAMETER SuppressWarnings
+		Undocumented
+		.PARAMETER HaltOnError
+		Undocumented
+		.PARAMETER Indentation
+		Undocumented
 		.PARAMETER Quiet
 		Disable outputs to the host console.
 	#>
 	[CmdletBinding()]
 	param(
-		[string]	$BuildDirectory,
-		[switch]	$Quiet = $false
+		[Parameter(Mandatory=$true)][string]$VHDLLibrarySourceDirectory,
+		[Parameter(Mandatory=$true)][string]$VHDLLibraryDestinationDirectory,
+		[Parameter(Mandatory=$true)][ValidateSet("1987", "1993", "2008")][string]$VHDLVersionYear,
+		[Parameter(Mandatory=$true)][ValidateSet("ieee", "synopsys", "mentor")][string]$VHDLFlavor,
+		[Parameter(Mandatory=$false)][bool]$SuppressWarnings = $false,
+		[Parameter(Mandatory=$false)][bool]$HaltOnError = $true,
+		[Parameter(Mandatory=$false)][string]$Indentation = "",
+		[Parameter(Mandatory=$false)][switch]$Quiet = $false
 	)
 
 	$EnableDebug =		-not $Quiet -and (                  $PSCmdlet.MyInvocation.BoundParameters["Debug"])
 	$EnableVerbose =	-not $Quiet -and ($EnableDebug  -or $PSCmdlet.MyInvocation.BoundParameters["Verbose"])
 
-	-not $Quiet			-and (Write-Host "Executing build target 'CompileLibraryVHDL87' ..." -ForegroundColor DarkCyan)  | Out-Null
-	# $EnableVerbose	-and (Write-Host "  Removing all created files and directories..."                 )  | Out-Null
-	# if (Test-Path -Path $BuildDirectory)
-	# {	$EnableDebug		-and (Write-Host "    rmdir $BuildDirectory"                                     )  | Out-Null
-		# Remove-Item $BuildDirectory -Force -Recurse -ErrorAction SilentlyContinue
-		# if ($? -eq $false)
-		# {	Write-Host "[ERROR]: Cannot remove '$BuildDirectory'." -ForegroundColor Red
-			# throw "Cannot remove '$BuildDirectory'."
-		# }
-	# }
-	# else
-	# {	Write-Host "  [INFO] Directory '$BuildDirectory' does not exist." -ForegroundColor Yellow
-	# }
-}	# Invoke-CompileLibraryVHDL87
+	-not $Quiet -and (Write-Host "Executing build target 'CompileLibrary' ..." -ForegroundColor DarkCyan) | Out-Null
 
-function Invoke-CompileLibraryVHDL93
-{	<#
-		.SYNOPSIS
-		This CommandLet compiles the VHDL'93 library files.
-		.PARAMETER BuildDirectory
-		The directory where all analyzed VHDL files are stored.
-		.PARAMETER Quiet
-		Disable outputs to the host console.
-	#>
-	[CmdletBinding()]
-	param(
-		[string]	$BuildDirectory,
-		[switch]	$Quiet = $false
-	)
+	$GHDLOptions = @("-C")
+	
+	$VHDLVersion = switch ($VHDLVersionYear)
+	{	"1987" { "87" }
+		"1993" { "93" }
+		"2008" { "08" }
+	}
+	
+	# Write-Host "Source: $VHDLLibrarySourceDirectory"
+	# Write-Host "Dest:   $VHDLLibraryDestinationDirectory"
+	
+	foreach ($Library in $LibrarySourceFiles.GetEnumerator())
+	{	$LibraryName = $Library.Name
+		$SourceFiles = @()
+		$Options = $GHDLOptions
 
-	$EnableDebug =		-not $Quiet -and (                  $PSCmdlet.MyInvocation.BoundParameters["Debug"])
-	$EnableVerbose =	-not $Quiet -and ($EnableDebug  -or $PSCmdlet.MyInvocation.BoundParameters["Verbose"])
+		if ($LibraryName -eq "std")
+		{$Options += "--bootstrap"  }
+		
+		Write-Host "${Indentation}Patching files for '$LibraryName' ..." -ForegroundColor Yellow
+		$EnableVerbose -and (Write-Host "${Indentation}  Creating library $LibraryName ..."	-ForegroundColor Gray	) | Out-Null
+		$EnableDebug -and   (Write-Host "${Indentation}    mkdir $VHDLLibraryDestinationDirectory\$LibraryName\v$VHDLVersion"	-ForegroundColor DarkGray	) | Out-Null
+		mkdir "$VHDLLibraryDestinationDirectory\$LibraryName\v$VHDLVersion" | Out-Null
+		
+		foreach ($FileEntry in $Library.Value)
+		{	if (($VHDLVersionYear -in $FileEntry["IncludedIn"]) -and (("all" -in $FileEntry["Flavor"]) -or ($VHDLFlavor -in $FileEntry["Flavor"])))
+			{	$SourceFile =      $FileEntry["File"]
+				$SourceDirectory = $FileEntry["Dir"]
+				Write-Host "$Indentation  Patching file '$SourceDirectory\$SourceFile.vhdl' for VHDL-$VHDLVersion to '$LibraryName\v$VHDLVersion\$SourceFile.v$VHDLVersion'"
+				$EnableDebug -and   (Write-Host "$Indentation    Get-Content `"$VHDLLibrarySourceDirectory\$SourceDirectory\$SourceFile.vhdl`" -Encoding Ascii ``"                       -ForegroundColor DarkGray  ) | Out-Null
+				$EnableDebug -and   (Write-Host "$Indentation      | Format-VHDLSourceFile -Version `"$VHDLVersion`" ``"                                                                 -ForegroundColor DarkGray  ) | Out-Null
+				$EnableDebug -and   (Write-Host "$Indentation      | Out-File `"$VHDLLibraryDestinationDirectory\$LibraryName\v$VHDLVersion\$SourceFile.v$VHDLVersion`" -Encoding Ascii" -ForegroundColor DarkGray  ) | Out-Null
+				# Patch file
+				Get-Content "$VHDLLibrarySourceDirectory\$SourceDirectory\$SourceFile.vhdl" -Encoding Ascii `
+					| Format-VHDLSourceFile -Version "$VHDLVersion" `
+					| Out-File "$VHDLLibraryDestinationDirectory\$LibraryName\v$VHDLVersion\$SourceFile.v$VHDLVersion" -Encoding Ascii
+			
+				$SourceFiles += "$VHDLLibraryDestinationDirectory\$LibraryName\v$VHDLVersion\$SourceFile.v$VHDLVersion"
+			}
+		}
+		
+		if ($SourceFiles.Count -eq 0)
+		{	throw "List of files in this library is empty." }
+		
+		try
+		{	Analyze-Library $VHDLLibraryDestinationDirectory $LibraryName $SourceFiles "$VHDLVersion" $Options $SuppressWarnings $HaltOnError $Indentation -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
+		catch
+		{	throw $_  }
+	}
+}	# Invoke-CompileLibrary
 
-	-not $Quiet			-and (Write-Host "Executing build target 'CompileLibraryVHDL93' ..." -ForegroundColor DarkCyan)  | Out-Null
-	# $EnableVerbose	-and (Write-Host "  Removing all created files and directories..."                 )  | Out-Null
-	# if (Test-Path -Path $BuildDirectory)
-	# {	$EnableDebug		-and (Write-Host "    rmdir $BuildDirectory"                                     )  | Out-Null
-		# Remove-Item $BuildDirectory -Force -Recurse -ErrorAction SilentlyContinue
-		# if ($? -eq $false)
-		# {	Write-Host "[ERROR]: Cannot remove '$BuildDirectory'." -ForegroundColor Red
-			# throw "Cannot remove '$BuildDirectory'."
-		# }
-	# }
-	# else
-	# {	Write-Host "  [INFO] Directory '$BuildDirectory' does not exist." -ForegroundColor Yellow
-	# }
-}	# Invoke-CompileLibraryVHDL93
-
-function Invoke-CompileLibraryVHDL08
-{	<#
-		.SYNOPSIS
-		This CommandLet compiles the VHDL'08 library files.
-		.PARAMETER BuildDirectory
-		The directory where all analyzed VHDL files are stored.
-		.PARAMETER Quiet
-		Disable outputs to the host console.
-	#>
-	[CmdletBinding()]
-	param(
-		[string]	$BuildDirectory,
-		[switch]	$Quiet = $false
-	)
-
-	$EnableDebug =		-not $Quiet -and (                  $PSCmdlet.MyInvocation.BoundParameters["Debug"])
-	$EnableVerbose =	-not $Quiet -and ($EnableDebug  -or $PSCmdlet.MyInvocation.BoundParameters["Verbose"])
-
-	-not $Quiet			-and (Write-Host "Executing build target 'CompileLibraryVHDL08' ..." -ForegroundColor DarkCyan)  | Out-Null
-	# $EnableVerbose	-and (Write-Host "  Removing all created files and directories..."                 )  | Out-Null
-	# if (Test-Path -Path $BuildDirectory)
-	# {	$EnableDebug		-and (Write-Host "    rmdir $BuildDirectory"                                     )  | Out-Null
-		# Remove-Item $BuildDirectory -Force -Recurse -ErrorAction SilentlyContinue
-		# if ($? -eq $false)
-		# {	Write-Host "[ERROR]: Cannot remove '$BuildDirectory'." -ForegroundColor Red
-			# throw "Cannot remove '$BuildDirectory'."
-		# }
-	# }
-	# else
-	# {	Write-Host "  [INFO] Directory '$BuildDirectory' does not exist." -ForegroundColor Yellow
-	# }
-}	# Invoke-CompileLibraryVHDL08
 
 function Test-GHDLVersion
 {	<#
@@ -701,8 +745,7 @@ Export-ModuleMember -Function 'Invoke-CompileCFiles'
 Export-ModuleMember -Function 'Invoke-CompileGHDLAdaFiles'
 Export-ModuleMember -Function 'Invoke-StripGHDLExecutable'
 
-Export-ModuleMember -Function 'Invoke-CompileLibraryVHDL87'
-Export-ModuleMember -Function 'Invoke-CompileLibraryVHDL93'
-Export-ModuleMember -Function 'Invoke-CompileLibraryVHDL08'
+Export-ModuleMember -Function 'Invoke-PrepareCompileLibrary'
+Export-ModuleMember -Function 'Invoke-CompileLibrary'
 
 Export-ModuleMember -Function 'Test-GHDLVersion'
