@@ -267,8 +267,8 @@ package body Errorout.Console is
 
    procedure Install_Handler is
    begin
-      Set_Report_Handler ((Errorout.Console.Console_Error_Start'Access,
-                           Errorout.Console.Console_Message'Access,
-                           Errorout.Console.Console_Message_End'Access));
+      Set_Report_Handler ((Console_Error_Start'Access,
+                           Console_Message'Access,
+                           Console_Message_End'Access));
    end Install_Handler;
 end Errorout.Console;

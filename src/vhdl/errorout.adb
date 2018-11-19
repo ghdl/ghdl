@@ -253,7 +253,7 @@ package body Errorout is
       end case;
 
       Report_Handler.Error_Start
-        (Err => (Origin, File, Line, Offset, Id, Cont));
+        (Err => (Origin, Id, Cont, File, Line, Offset));
 
       --  Display message.
       declare

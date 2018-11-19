@@ -1,5 +1,5 @@
 from libghdl import libghdl
-from ctypes import (c_char_p, c_int32, c_int, c_bool, sizeof, c_void_p,
+from ctypes import (c_char_p, c_int32, c_int, c_int8, c_bool, sizeof, c_void_p,
                     POINTER, Structure)
 import libghdl.iirs as iirs
 import libghdl.nodes_meta as nodes_meta
@@ -26,8 +26,15 @@ def analyze_file(filename):
     return _analyze_file(c_char_p(filename), len(filename))
 
 
-# Lists
+Null_Iir = 0
+Null_Iir_List = 0
+Iir_List_All = 1
 
+Null_Iir_Flist = 0
+Iir_Flist_Others = 1
+Iir_Flist_All = 2
+
+# Lists
 
 class Lists:
     List_Type = c_int32
@@ -156,7 +163,7 @@ class Scanner:
 
     Get_Current_Line = libghdl.scanner__get_current_line
 
-    Get_Token_Column = libghdl.scanner__get_token_column
+    Get_Token_Offset = libghdl.scanner__get_token_offset
 
     Get_Token_Position = libghdl.scanner__get_token_position
 
@@ -231,10 +238,29 @@ class Iirs_Utils:
     Get_Interface_Of_Formal = \
         libghdl.iirs_utils__get_interface_of_formal
 
-Null_Iir = 0
-Null_Iir_List = 0
-Iir_List_All = 1
+# Errorout
 
-Null_Iir_Flist = 0
-Iir_Flist_Others = 1
-Iir_Flist_All = 2
+class Errorout:
+    class Error_Record(Structure):
+        _fields_ = [("origin", c_int8),
+                    ("id", c_int8),
+                    ("cont", c_int8),
+                    ("file", c_int32),
+                    ("line", c_int32),
+                    ("offset", c_int32)]
+
+
+class Errorout_Memory:
+    Install_Handler = libghdl.errorout__memory__install_handler
+
+    Get_Nbr_Messages = libghdl.errorout__memory__get_nbr_messages
+
+    Get_Error_Record = libghdl.errorout__memory__get_error_record
+    Get_Error_Record.argstypes = [c_int32]
+    Get_Error_Record.restype = Errorout.Error_Record
+
+    Get_Error_Message = libghdl.errorout__memory__get_error_message_addr
+    Get_Error_Message.argstype = [c_int32]
+    Get_Error_Message.restype = c_char_p
+
+    Clear_Errors = libghdl.errorout__memory__clear_errors

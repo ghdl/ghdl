@@ -176,11 +176,11 @@ package Errorout is
 
    type Error_Record is record
       Origin : Report_Origin;
+      Id : Msgid_Type;
+      Cont : Boolean;
       File : Source_File_Entry;
       Line : Natural;
       Offset : Natural;
-      Id : Msgid_Type;
-      Cont : Boolean;
    end record;
 
    type Error_Start_Handler is access procedure (Err : Error_Record);
