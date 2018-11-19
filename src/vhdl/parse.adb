@@ -828,6 +828,7 @@ package body Parse is
                   when others =>
                      Error_Msg_Parse
                        ("identifier or all is expected after '.'");
+                     Res := Prefix;
                end case;
 
             when others =>
