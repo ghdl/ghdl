@@ -99,14 +99,14 @@ $LibrarySourceFiles = [ordered]@{
 		@{"Dir" = "synopsys"; "File" = "std_logic_misc";            "IncludedIn" = @(1987, 1993      ); "Flavor" = @("synopsys")},
 		@{"Dir" = "synopsys"; "File" = "std_logic_misc-body";       "IncludedIn" = @(1987, 1993      ); "Flavor" = @("synopsys")},
 
-		@{"Dir" = "mentor";   "File" = "std_logic_arith";           "IncludedIn" = @(1987, 1993, 2008); "Flavor" = @("mentor")},
-		@{"Dir" = "mentor";   "File" = "std_logic_arith_body";      "IncludedIn" = @(1987, 1993, 2008); "Flavor" = @("mentor")}
+		@{"Dir" = "mentor";   "File" = "std_logic_arith";           "IncludedIn" = @(      1993, 2008); "Flavor" = @("mentor")},
+		@{"Dir" = "mentor";   "File" = "std_logic_arith-body";      "IncludedIn" = @(      1993, 2008); "Flavor" = @("mentor")}
 	) #;
 	# "vital95" = @(
 		# @{"File" = "vital_timing";                   "IncludedIn" = @(1987, 1993      )},
-		# @{"File" = "vital_timing_body";              "IncludedIn" = @(1987, 1993      )},
+		# @{"File" = "vital_timing-body";              "IncludedIn" = @(1987, 1993      )},
 		# @{"File" = "vital_primitives";               "IncludedIn" = @(1987, 1993      )},
-		# @{"File" = "vital_primitives_body";          "IncludedIn" = @(1987, 1993      )}
+		# @{"File" = "vital_primitives-body";          "IncludedIn" = @(1987, 1993      )}
 	# );
 	# "vital2000" = @(
 		# @{"File" = "timing_p";                       "IncludedIn" = @(            2008)},
@@ -577,30 +577,112 @@ function Invoke-PrepareCompileLibrary
 
 	# create lib directory if it does not exist
 	if (Test-Path -Path $DestinationDirectory)
-	{	$EnableVerbose	-and (Write-Host "  Directory '$DestinationDirectory' already exists.")	| Out-Null
+	{	$EnableVerbose	-and (Write-Host "${Indentation}  Directory '$DestinationDirectory' already exists." -ForegroundColor Yellow )	| Out-Null
 		
 		# change working directory to DestinationDirectory
-		$EnableVerbose	-and (Write-Host "  cd $DestinationDirectory")	| Out-Null
+		$EnableVerbose  -and (Write-Host "${Indentation}  Changing working directory..." -ForegroundColor Gray    ) | Out-Null
+		$EnableDebug    -and (Write-Host "${Indentation}    cd $DestinationDirectory"    -ForegroundColor DarkGray) | Out-Null
 		Set-Location $DestinationDirectory
 	
-		$EnableVerbose	-and (Write-Host "  Cleaning up directory...")	| Out-Null
+		$EnableVerbose  -and (Write-Host "${Indentation}  Cleaning up directory..."                                         -ForegroundColor Gray     ) | Out-Null
+		$EnableDebug    -and (Write-Host "${Indentation}    Remove-Item ./* -Force -Recurse -ErrorAction SilentlyContinue"  -ForegroundColor DarkGray ) | Out-Null
 		Remove-Item ./* -Force -Recurse -ErrorAction SilentlyContinue
 	}
 	else
-	{	$EnableVerbose	-and (Write-Host "  Creating directory '$DestinationDirectory'.")	| Out-Null
-		New-Item -ItemType Directory -Path $DestinationDirectory -ErrorAction SilentlyContinue | Out-Null
-		if (-not $?)
-		{	Write-Host "[ERROR]: Cannot create destination directory '$DestinationDirectory'." -ForegroundColor Red
-			throw "Cannot create destination directory '$DestinationDirectory'."
-		}
+	{	$EnableVerbose	-and (Write-Host "${Indentation}  Creating directory '$DestinationDirectory'." -ForegroundColor Gray    ) | Out-Null
+		$EnableDebug    -and (Write-Host "${Indentation}    mkdir $DestinationDirectory"               -ForegroundColor DarkGray) | Out-Null
+		try
+		{	mkdir $DestinationDirectory | Out-Null  }
+		catch
+		{	throw "Cannot create destination directory '$DestinationDirectory'." }
 		
 		# change working directory to DestinationDirectory
-		$EnableVerbose	-and (Write-Host "  Change working directory to $DestinationDirectory")	| Out-Null
+		$EnableVerbose  -and (Write-Host "${Indentation}  Changing working directory..." -ForegroundColor Gray    ) | Out-Null
+		$EnableDebug    -and (Write-Host "${Indentation}    cd $DestinationDirectory"    -ForegroundColor DarkGray) | Out-Null
 		Set-Location $DestinationDirectory
 	}
 }
 
 function Invoke-CompileLibrary
+{	<#
+		.SYNOPSIS
+		This CommandLet compiles the VHDL'87 library files.
+		.PARAMETER VHDLLibrarySourceDirectory
+		Undocumented
+		.PARAMETER VHDLLibraryDestinationDirectory
+		Undocumented
+		.PARAMETER VHDLVersionYear
+		VHDL version
+		.PARAMETER SuppressWarnings
+		Undocumented
+		.PARAMETER HaltOnError
+		Undocumented
+		.PARAMETER Indentation
+		Undocumented
+		.PARAMETER Quiet
+		Disable outputs to the host console.
+	#>
+	[CmdletBinding()]
+	param(
+		[Parameter(Mandatory=$true)][string]$VHDLLibrarySourceDirectory,
+		[Parameter(Mandatory=$true)][string]$VHDLLibraryDestinationDirectory,
+		[Parameter(Mandatory=$true)][ValidateSet("1987", "1993", "2008")][string]$VHDLVersionYear,
+		[Parameter(Mandatory=$false)][bool]$SuppressWarnings = $false,
+		[Parameter(Mandatory=$false)][bool]$HaltOnError = $true,
+		[Parameter(Mandatory=$false)][string]$Indentation = "",
+		[Parameter(Mandatory=$false)][switch]$Quiet = $false
+	)
+
+	$EnableDebug =		-not $Quiet -and (                  $PSCmdlet.MyInvocation.BoundParameters["Debug"])
+	$EnableVerbose =	-not $Quiet -and ($EnableDebug  -or $PSCmdlet.MyInvocation.BoundParameters["Verbose"])
+
+	-not $Quiet -and (Write-Host "Executing build target 'CompileLibrary' ($VHDLVersionYear, "ieee") ..." -ForegroundColor DarkCyan) | Out-Null
+
+	$GHDLOptions = @("-C")
+	$VHDLVersion = switch ($VHDLVersionYear)
+	{	"1987" { "87" }
+		"1993" { "93" }
+		"2008" { "08" }
+	}
+	
+	foreach ($Library in $LibrarySourceFiles.GetEnumerator())
+	{	$LibraryName = $Library.Name
+		$SourceFiles = @()
+		$Options = $GHDLOptions
+
+		if ($LibraryName -eq "std")
+		{$Options += "--bootstrap"  }
+		
+		Write-Host "${Indentation}Patching files for '$LibraryName' ..." -ForegroundColor Yellow
+		$EnableVerbose -and (Write-Host "${Indentation}  Creating library $LibraryName in '$LibraryName' ..."	-ForegroundColor Gray	) | Out-Null
+		$EnableDebug -and   (Write-Host "${Indentation}    mkdir $VHDLLibraryDestinationDirectory\$LibraryName\v$VHDLVersion"	-ForegroundColor DarkGray	) | Out-Null
+		mkdir "$VHDLLibraryDestinationDirectory\$LibraryName\v$VHDLVersion" | Out-Null
+		
+		foreach ($FileEntry in $Library.Value)
+		{	if (($VHDLVersionYear -in $FileEntry["IncludedIn"]) -and (("all" -in $FileEntry["Flavor"]) -or ("ieee" -in $FileEntry["Flavor"])))
+			{	$SourceFile =      $FileEntry["File"]
+				$SourceDirectory = $FileEntry["Dir"]
+				Write-Host "$Indentation  Patching file '$SourceDirectory\$SourceFile.vhdl' for VHDL-$VHDLVersion to '$LibraryName\v$VHDLVersion\$SourceFile.v$VHDLVersion'" -ForegroundColor Gray
+				$EnableDebug -and   (Write-Host "$Indentation    Get-Content `"$VHDLLibrarySourceDirectory\$SourceDirectory\$SourceFile.vhdl`" -Encoding Ascii ``"                       -ForegroundColor DarkGray  ) | Out-Null
+				$EnableDebug -and   (Write-Host "$Indentation      | Format-VHDLSourceFile -Version `"$VHDLVersion`" ``"                                                                 -ForegroundColor DarkGray  ) | Out-Null
+				$EnableDebug -and   (Write-Host "$Indentation      | Out-File `"$VHDLLibraryDestinationDirectory\$LibraryName\v$VHDLVersion\$SourceFile.v$VHDLVersion`" -Encoding Ascii" -ForegroundColor DarkGray  ) | Out-Null
+				# Patch file
+				Get-Content "$VHDLLibrarySourceDirectory\$SourceDirectory\$SourceFile.vhdl" -Encoding Ascii `
+					| Format-VHDLSourceFile -Version "$VHDLVersion" `
+					| Out-File "$VHDLLibraryDestinationDirectory\$LibraryName\v$VHDLVersion\$SourceFile.v$VHDLVersion" -Encoding Ascii
+			
+				$SourceFiles += "$VHDLLibraryDestinationDirectory\$LibraryName\v$VHDLVersion\$SourceFile.v$VHDLVersion"
+			}
+		}
+		
+		try
+		{	Analyze-Library $VHDLLibraryDestinationDirectory $LibraryName $SourceFiles "$VHDLVersion" $Options -SuppressWarnings:$SuppressWarnings -HaltOnError:$HaltOnError -Indentation:$Indentation -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
+		catch
+		{	throw $_  }
+	}
+}	# Invoke-CompileLibrary
+
+function Invoke-CompileIEEELibraryFlavor
 {	<#
 		.SYNOPSIS
 		This CommandLet compiles the VHDL'87 library files.
@@ -636,58 +718,46 @@ function Invoke-CompileLibrary
 	$EnableDebug =		-not $Quiet -and (                  $PSCmdlet.MyInvocation.BoundParameters["Debug"])
 	$EnableVerbose =	-not $Quiet -and ($EnableDebug  -or $PSCmdlet.MyInvocation.BoundParameters["Verbose"])
 
-	-not $Quiet -and (Write-Host "Executing build target 'CompileLibrary' ..." -ForegroundColor DarkCyan) | Out-Null
+	-not $Quiet -and (Write-Host "Executing build target 'CompileLibrary' ($VHDLVersionYear, $VHDLFlavor) ..." -ForegroundColor DarkCyan) | Out-Null
 
 	$GHDLOptions = @("-C")
-	
 	$VHDLVersion = switch ($VHDLVersionYear)
 	{	"1987" { "87" }
 		"1993" { "93" }
 		"2008" { "08" }
 	}
 	
-	# Write-Host "Source: $VHDLLibrarySourceDirectory"
-	# Write-Host "Dest:   $VHDLLibraryDestinationDirectory"
+	$SourceFiles =  @()
+	$Options =      $GHDLOptions
+	$OutputDir =    $VHDLFlavor
 	
-	foreach ($Library in $LibrarySourceFiles.GetEnumerator())
-	{	$LibraryName = $Library.Name
-		$SourceFiles = @()
-		$Options = $GHDLOptions
-
-		if ($LibraryName -eq "std")
-		{$Options += "--bootstrap"  }
+	Write-Host "${Indentation}Patching files for 'ieee' ..." -ForegroundColor Yellow
+	$EnableVerbose -and (Write-Host "${Indentation}  Creating library ieee in '$VHDLFlavor' ..."	-ForegroundColor Gray	) | Out-Null
+	$EnableDebug -and   (Write-Host "${Indentation}    mkdir $VHDLLibraryDestinationDirectory\$OutputDir\v$VHDLVersion"	-ForegroundColor DarkGray	) | Out-Null
+	mkdir "$VHDLLibraryDestinationDirectory\$OutputDir\v$VHDLVersion" | Out-Null
+	
+	foreach ($FileEntry in $LibrarySourceFiles["ieee"])
+	{	if (($VHDLVersionYear -in $FileEntry["IncludedIn"]) -and (("all" -in $FileEntry["Flavor"]) -or ($VHDLFlavor -in $FileEntry["Flavor"])))
+		{	$SourceFile =      $FileEntry["File"]
+			$SourceDirectory = $FileEntry["Dir"]
+			Write-Host "$Indentation  Patching file '$SourceDirectory\$SourceFile.vhdl' for VHDL-$VHDLVersion to '$OutputDir\v$VHDLVersion\$SourceFile.v$VHDLVersion'"             -ForegroundColor Gray
+			$EnableDebug -and   (Write-Host "$Indentation    Get-Content `"$VHDLLibrarySourceDirectory\$SourceDirectory\$SourceFile.vhdl`" -Encoding Ascii ``"                     -ForegroundColor DarkGray  ) | Out-Null
+			$EnableDebug -and   (Write-Host "$Indentation      | Format-VHDLSourceFile -Version `"$VHDLVersion`" ``"                                                               -ForegroundColor DarkGray  ) | Out-Null
+			$EnableDebug -and   (Write-Host "$Indentation      | Out-File `"$VHDLLibraryDestinationDirectory\$OutputDir\v$VHDLVersion\$SourceFile.v$VHDLVersion`" -Encoding Ascii" -ForegroundColor DarkGray  ) | Out-Null
+			# Patch file
+			Get-Content "$VHDLLibrarySourceDirectory\$SourceDirectory\$SourceFile.vhdl" -Encoding Ascii `
+				| Format-VHDLSourceFile -Version "$VHDLVersion" `
+				| Out-File "$VHDLLibraryDestinationDirectory\$OutputDir\v$VHDLVersion\$SourceFile.v$VHDLVersion" -Encoding Ascii
 		
-		Write-Host "${Indentation}Patching files for '$LibraryName' ..." -ForegroundColor Yellow
-		$EnableVerbose -and (Write-Host "${Indentation}  Creating library $LibraryName ..."	-ForegroundColor Gray	) | Out-Null
-		$EnableDebug -and   (Write-Host "${Indentation}    mkdir $VHDLLibraryDestinationDirectory\$LibraryName\v$VHDLVersion"	-ForegroundColor DarkGray	) | Out-Null
-		mkdir "$VHDLLibraryDestinationDirectory\$LibraryName\v$VHDLVersion" | Out-Null
-		
-		foreach ($FileEntry in $Library.Value)
-		{	if (($VHDLVersionYear -in $FileEntry["IncludedIn"]) -and (("all" -in $FileEntry["Flavor"]) -or ($VHDLFlavor -in $FileEntry["Flavor"])))
-			{	$SourceFile =      $FileEntry["File"]
-				$SourceDirectory = $FileEntry["Dir"]
-				Write-Host "$Indentation  Patching file '$SourceDirectory\$SourceFile.vhdl' for VHDL-$VHDLVersion to '$LibraryName\v$VHDLVersion\$SourceFile.v$VHDLVersion'"
-				$EnableDebug -and   (Write-Host "$Indentation    Get-Content `"$VHDLLibrarySourceDirectory\$SourceDirectory\$SourceFile.vhdl`" -Encoding Ascii ``"                       -ForegroundColor DarkGray  ) | Out-Null
-				$EnableDebug -and   (Write-Host "$Indentation      | Format-VHDLSourceFile -Version `"$VHDLVersion`" ``"                                                                 -ForegroundColor DarkGray  ) | Out-Null
-				$EnableDebug -and   (Write-Host "$Indentation      | Out-File `"$VHDLLibraryDestinationDirectory\$LibraryName\v$VHDLVersion\$SourceFile.v$VHDLVersion`" -Encoding Ascii" -ForegroundColor DarkGray  ) | Out-Null
-				# Patch file
-				Get-Content "$VHDLLibrarySourceDirectory\$SourceDirectory\$SourceFile.vhdl" -Encoding Ascii `
-					| Format-VHDLSourceFile -Version "$VHDLVersion" `
-					| Out-File "$VHDLLibraryDestinationDirectory\$LibraryName\v$VHDLVersion\$SourceFile.v$VHDLVersion" -Encoding Ascii
-			
-				$SourceFiles += "$VHDLLibraryDestinationDirectory\$LibraryName\v$VHDLVersion\$SourceFile.v$VHDLVersion"
-			}
+			$SourceFiles += "$VHDLLibraryDestinationDirectory\$OutputDir\v$VHDLVersion\$SourceFile.v$VHDLVersion"
 		}
-		
-		if ($SourceFiles.Count -eq 0)
-		{	throw "List of files in this library is empty." }
-		
-		try
-		{	Analyze-Library $VHDLLibraryDestinationDirectory $LibraryName $SourceFiles "$VHDLVersion" $Options $SuppressWarnings $HaltOnError $Indentation -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
-		catch
-		{	throw $_  }
 	}
-}	# Invoke-CompileLibrary
+	
+	try
+	{	Analyze-Library $VHDLLibraryDestinationDirectory "ieee" $SourceFiles "$VHDLVersion" $Options -LibraryDirectory:$VHDLFlavor -SuppressWarnings:$SuppressWarnings -HaltOnError:$HaltOnError -Indentation:$Indentation -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
+	catch
+	{	throw $_  }
+}	# Invoke-CompileIEEELibraryFlavor
 
 
 function Test-GHDLVersion
@@ -747,5 +817,6 @@ Export-ModuleMember -Function 'Invoke-StripGHDLExecutable'
 
 Export-ModuleMember -Function 'Invoke-PrepareCompileLibrary'
 Export-ModuleMember -Function 'Invoke-CompileLibrary'
+Export-ModuleMember -Function 'Invoke-CompileIEEELibraryFlavor'
 
 Export-ModuleMember -Function 'Test-GHDLVersion'

@@ -142,11 +142,12 @@ function Analyze-File
 
 	$EnableDebug =		-not $Quiet -and (                  $PSCmdlet.MyInvocation.BoundParameters["Debug"])
 	$EnableVerbose =	-not $Quiet -and ($EnableDebug  -or $PSCmdlet.MyInvocation.BoundParameters["Verbose"])
+	$Indent =         if ($EnableDebug) { "$Indentation    " } else { if ($EnableVerbose) { "$Indentation  " } else { $Indentation }}
 	
 	$InvokeExpr = "& '$GHDLBinaryPath' -a " + ($GHDLOptions -join " ") + " --work=$Library --std=$VHDLVersion " + $SourceFile + " 2>&1"
 	$EnableDebug -and (Write-Host "${Indentation}Analyzing $SourceFile" -ForegroundColor Gray     ) | Out-Null
 	$EnableDebug -and (Write-Host "${Indentation}  $InvokeExpr"         -ForegroundColor DarkGray ) | Out-Null
-	$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "$Indentation    "
+	$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "$Indent"
 	if (($LastExitCode -ne 0) -and $HaltOnError)
 	{	throw "Error while analyzing '$SourceFile'."  }
 }
@@ -186,6 +187,7 @@ function Analyze-Library
 		[Parameter(Mandatory=$true)][string[]]$SourceFiles,
 		[Parameter(Mandatory=$false)][string]$VHDLVersion = "08",
 		[Parameter(Mandatory=$false)][string[]]$GHDLOptions = @(),
+		[Parameter(Mandatory=$false)][string]$LibraryDirectory = "",
 		[Parameter(Mandatory=$false)][bool]$SuppressWarnings = $false,
 		[Parameter(Mandatory=$false)][bool]$HaltOnError = $true,
 		[Parameter(Mandatory=$false)][string]$Indentation = "",
@@ -194,18 +196,27 @@ function Analyze-Library
 
 	$EnableDebug =		-not $Quiet -and (                  $PSCmdlet.MyInvocation.BoundParameters["Debug"])
 	$EnableVerbose =	-not $Quiet -and ($EnableDebug  -or $PSCmdlet.MyInvocation.BoundParameters["Verbose"])
+	$Indent =         if ($Debug) { "$Indentation  " } else { $Indentation }
 	
-	Write-Host "${Indentation}Compiling library '$Library' ..." -ForegroundColor Yellow
-	$LibraryDirectory=	"$DestinationDirectory\$Library\$VHDLVersion"
-	$EnableVerbose -and (Write-Host "${Indentation}  Creating library $Library ..."	-ForegroundColor Gray	) | Out-Null
-	$EnableDebug -and   (Write-Host "${Indentation}    mkdir $LibraryDirectory"	-ForegroundColor DarkGray	) | Out-Null
+	Write-Host "${Indent}Compiling library '$Library' ..." -ForegroundColor Yellow
+	
+	if ($LibraryDirectory -eq "")
+	{	$EnableVerbose -and (Write-Host "${Indent}  Creating library $Library in '$Library' ..."  -ForegroundColor Gray	      ) | Out-Null
+		$LibraryDirectory = "$DestinationDirectory\$Library\$VHDLVersion"
+	}
+	else
+	{	$EnableVerbose -and (Write-Host "${Indent}  Creating library $Library in '$LibraryDirectory'..." -ForegroundColor Gray) | Out-Null
+		$LibraryDirectory = "$DestinationDirectory\$LibraryDirectory\$VHDLVersion"
+	}
+	
+	# FIXME: test if directory exists
+	$EnableDebug -and   (Write-Host "${Indent}    mkdir $LibraryDirectory"	-ForegroundColor DarkGray	) | Out-Null
 	mkdir $LibraryDirectory | Out-Null
-	# $EnableDebug -and		(Write-Host "${Indentation}    cd $LibraryDirectory"		-ForegroundColor DarkGray	) | Out-Null
-	# cd $LibraryDirectory
+
 	$ErrorCount = 0
 	foreach ($File in $SourceFiles)
 	{	try
-		{	Analyze-File $LibraryDirectory $Library $File $VHDLVersion $GHDLOptions $SuppressWarnings "$Indentation  " -Verbose:$EnableVerbose -Debug:$EnableDebug -Quiet:$Quiet  }
+		{	Analyze-File $LibraryDirectory $Library $File $VHDLVersion $GHDLOptions -SuppressWarnings:$SuppressWarnings -Indentation:"$Indentation  " -Verbose:$EnableVerbose -Debug:$EnableDebug -Quiet:$Quiet  }
 		catch
 		{	$ErrorCount += 1
 			if ($HaltOnError)
@@ -217,72 +228,6 @@ function Analyze-Library
 	{	throw "Detected $ErrorCount errors."  }
 	
 	cd $DestinationDirectory
-}
-
-function Start-PrimitiveCompilation
-{	<#
-		.SYNOPSIS
-		Undocumented
-		
-		.DESCRIPTION
-		Undocumented
-		
-		.PARAMETER GHDLBinary
-		Undocumented
-		.PARAMETER GHDLOptions
-		Undocumented
-		.PARAMETER Library
-		Undocumented
-		.PARAMETER SourceFiles
-		Undocumented
-		.PARAMETER SuppressWarnings
-		Undocumented
-		.PARAMETER HaltOnError
-		Undocumented
-		.PARAMETER Indentation
-		Undocumented
-		.PARAMETER Quiet
-		Undocumented
-	#>
-	[CmdletBinding()]
-	param(
-		[Parameter(Mandatory=$true)][string]$GHDLBinary,
-		[Parameter(Mandatory=$true)][string[]]$GHDLOptions,
-		[Parameter(Mandatory=$true)][string]$DestinationDirectory,
-		[Parameter(Mandatory=$true)][string]$Library,
-		[Parameter(Mandatory=$true)][string]$VHDLVersion,
-		[Parameter(Mandatory=$true)][string[]]$SourceFiles,
-		[Parameter(Mandatory=$false)][bool]$SuppressWarnings = $false,
-		[Parameter(Mandatory=$false)][bool]$HaltOnError = $true,
-		[Parameter(Mandatory=$false)][string]$Indentation = "",
-		[Parameter(Mandatory=$false)][switch]$Quiet = $false
-	)
-	# set default values
-	$EnableDebug =		[bool]$PSCmdlet.MyInvocation.BoundParameters["Debug"]
-	$EnableVerbose =	[bool]$PSCmdlet.MyInvocation.BoundParameters["Verbose"] -or $EnableDebug
-	
-	Write-Host "Compiling library '$Library' ..." -ForegroundColor Yellow
-	$LibraryDirectory="$DestinationDirectory/$Library/$VHDLVersion"
-	$EnableVerbose -and (Write-Host "  Creating library $Library ..."	-ForegroundColor Gray	) | Out-Null
-	$EnableDebug -and		(Write-Host "    mkdir $LibraryDirectory"	-ForegroundColor DarkGray	) | Out-Null
-	mkdir $LibraryDirectory -ErrorAction SilentlyContinue | Out-Null
-	$EnableDebug -and		(Write-Host "    cd $LibraryDirectory"		-ForegroundColor DarkGray	) | Out-Null
-	cd $LibraryDirectory
-	$ErrorCount = 0
-	foreach ($File in $SourceFiles)
-	{	Write-Host "  Analyzing primitive file '$File'" -ForegroundColor DarkCyan
-		$InvokeExpr = "& '$GHDLBinary' " + ($GHDLOptions -join " ") + " --work=$Library " + $File + " 2>&1"
-		$EnableDebug -and		(Write-Host "    $InvokeExpr" -ForegroundColor DarkGray	) | Out-Null
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "  "
-		if ($LastExitCode -ne 0)
-		{	$ErrorCount += 1
-			if ($HaltOnError)
-			{	break		}
-		}
-	}
-	
-	cd $DestinationDirectory
-	# return $ErrorCount
 }
 
 
@@ -400,10 +345,6 @@ Export-ModuleMember -Function 'Get-GHDLBinary'
 
 Export-ModuleMember -Function 'Analyze-File'
 Export-ModuleMember -Function 'Analyze-Library'
-
-# Export-ModuleMember -Function 'Start-PackageCompilation'
-# Export-ModuleMember -Function 'Start-PrimitiveCompilation'
-
 
 Export-ModuleMember -Function 'Restore-NativeCommandStream'
 Export-ModuleMember -Function 'Write-ColoredGHDLLine'

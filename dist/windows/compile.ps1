@@ -257,6 +257,7 @@ catch
 
 # configure some variables: paths, executables, directory names, ...
 $Backend =                               "mcode"
+$Flavors =                               @("synopsys", "mentor")
 $WindowsDirName =                        "dist\windows"    #\$Backend"
 $BuildDirectoryName =                    "build"
 $BuildBackendDirectoryName =             "$BuildDirectoryName\$Backend"
@@ -381,7 +382,7 @@ if ($CompileGHDL)
 	
 	# create a build directory
 	try
-	{	New-BuildDirectory $BuildDirectory -Quiet:$Quiet  }
+	{	New-BuildDirectory $BuildDirectory -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
 	catch
 	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
 		Exit-Script -1
@@ -390,7 +391,7 @@ if ($CompileGHDL)
 	# patch the version file if it's no release build
 	if (-not $Release -and $Git_IsGitRepo)
 	{	try
-		{	Invoke-PatchVersionFile $GHDLRootDir $Git_Branch_Name $Git_Commit_DateString $Git_Commit_ShortHash -Quiet:$Quiet  }
+		{	Invoke-PatchVersionFile $GHDLRootDir $Git_Branch_Name $Git_Commit_DateString $Git_Commit_ShortHash -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
 		catch
 		{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
 			Exit-Script -1
@@ -400,7 +401,7 @@ if ($CompileGHDL)
 	# build C source files
 	try
 	{	Write-Host
-		Invoke-CompileCFiles $GHDLRootDir $BinaryDestinationDirectory -Quiet:$Quiet }
+		Invoke-CompileCFiles $GHDLRootDir $BinaryDestinationDirectory -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug }
 	catch
 	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
 		Exit-Script -1
@@ -410,7 +411,7 @@ if ($CompileGHDL)
 	# build Ada source files
 	try
 	{	Write-Host
-		Invoke-CompileGHDLAdaFiles $GHDLRootDir $BinaryDestinationDirectory -Quiet:$Quiet }
+		Invoke-CompileGHDLAdaFiles $GHDLRootDir $BinaryDestinationDirectory -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug }
 	catch
 	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
 		Exit-Script -1
@@ -419,7 +420,7 @@ if ($CompileGHDL)
 	# strip result
 	try
 	{	Write-Host
-		Invoke-StripGHDLExecutable $BinaryDestinationDirectory -Quiet:$Quiet  }
+		Invoke-StripGHDLExecutable $BinaryDestinationDirectory -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
 	catch
 	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
 		Exit-Script -1
@@ -443,10 +444,11 @@ if ($CompileLibraryVHDL87 -or $CompileLibraryVHDL93 -or $CompileLibraryVHDL08)
 {	$env:GHDL = "$GHDLBuildDir"
 	Write-Host ("  Setting `$env:GHDL to '" + $env:GHDL + "'")
 
-	Import-Module $PSScriptRoot\ghdl.psm1 -Verbose:$false -Debug:$false -ArgumentList "", $Script_WorkingDir
+	$EnableDebug -and (Write-Host "$Indentation    Import-Module ghdl ..." -ForegroundColor Yellow) | Out-Null
+	Import-Module $PSScriptRoot\ghdl.psm1 -Verbose:$false -Debug:$false -ArgumentList "", $Script_WorkingDir 3>$null
 	
 	try
-	{	Invoke-PrepareCompileLibrary $VHDLLibraryDestinationDirectory -Quiet:$Quiet }
+	{	Invoke-PrepareCompileLibrary $VHDLLibraryDestinationDirectory -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug }
 	catch
 	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
 		Exit-Script -1
@@ -459,7 +461,14 @@ if ($CompileLibraryVHDL87 -or $CompileLibraryVHDL93 -or $CompileLibraryVHDL08)
 if ($CompileLibraryVHDL87)
 {	$CompileLibraries = $true
 	try
-	{	Invoke-CompileLibrary $VHDLLibrarySourceDirectory $VHDLLibraryDestinationDirectory 1987 "ieee" -SuppressWarnings:$SuppressWarnings -HaltOnError:$HaltOnError -Indentation:"  " -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
+	{	Invoke-CompileLibrary $VHDLLibrarySourceDirectory $VHDLLibraryDestinationDirectory 1987 -SuppressWarnings:$SuppressWarnings -HaltOnError:$HaltOnError -Indentation:"  " -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
+	catch
+	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
+		Exit-Script -1
+	}
+
+	try
+	{	Invoke-CompileIEEELibraryFlavor $VHDLLibrarySourceDirectory $VHDLLibraryDestinationDirectory 1987 "synopsys" -SuppressWarnings:$SuppressWarnings -HaltOnError:$HaltOnError -Indentation:"  " -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
 	catch
 	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
 		Exit-Script -1
@@ -468,23 +477,44 @@ if ($CompileLibraryVHDL87)
 if ($CompileLibraryVHDL93)
 {	$CompileLibraries = $true
 	try
-	{	Invoke-CompileLibrary $VHDLLibrarySourceDirectory $VHDLLibraryDestinationDirectory 1993 "ieee" -SuppressWarnings:$SuppressWarnings -HaltOnError:$HaltOnError -Indentation:"  " -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
+	{	Invoke-CompileLibrary $VHDLLibrarySourceDirectory $VHDLLibraryDestinationDirectory 1993 -SuppressWarnings:$SuppressWarnings -HaltOnError:$HaltOnError -Indentation:"  " -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
 	catch
 	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
 		Exit-Script -1
+	}
+
+	foreach ($Flavor in $Flavors)
+	{	try
+		{	Invoke-CompileIEEELibraryFlavor $VHDLLibrarySourceDirectory $VHDLLibraryDestinationDirectory 1993 $Flavor -SuppressWarnings:$SuppressWarnings -HaltOnError:$HaltOnError -Indentation:"  " -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
+		catch
+		{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
+			Exit-Script -1
+		}
 	}
 }  # CompileLibraryVHDL93
 if ($CompileLibraryVHDL08)
 {	$CompileLibraries = $true
 	try
-	{	Invoke-CompileLibrary $VHDLLibrarySourceDirectory $VHDLLibraryDestinationDirectory 2008 "ieee" -SuppressWarnings:$SuppressWarnings -HaltOnError:$HaltOnError -Indentation:"  " -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
+	{	Invoke-CompileLibrary $VHDLLibrarySourceDirectory $VHDLLibraryDestinationDirectory 2008 -SuppressWarnings:$SuppressWarnings -HaltOnError:$HaltOnError -Indentation:"  " -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
 	catch
 	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
 		Exit-Script -1
 	}
+
+	foreach ($Flavor in $Flavors)
+	{	try
+		{	Invoke-CompileIEEELibraryFlavor $VHDLLibrarySourceDirectory $VHDLLibraryDestinationDirectory 2008 $Flavor -SuppressWarnings:$SuppressWarnings -HaltOnError:$HaltOnError -Indentation:"  " -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
+		catch
+		{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
+			Exit-Script -1
+		}
+	}
 }  # CompileLibraryVHDL93
 if ($CompileLibraries)
-{	Write-Host    
+{	$EnableDebug -and (Write-Host "$Indentation    Remove-Module ghdl ..." -ForegroundColor Yellow) | Out-Null
+	Remove-Module ghdl
+
+	Write-Host    
 	Write-Host "Compile Libraries " -NoNewline
 	Write-Host "[SUCCESSFUL]" -ForegroundColor Green
 }
