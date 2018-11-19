@@ -501,13 +501,11 @@ if ($CompileLibraryVHDL08)
 		Exit-Script -1
 	}
 
-	foreach ($Flavor in $Flavors)
-	{	try
-		{	Invoke-CompileIEEELibraryFlavor $VHDLLibrarySourceDirectory $VHDLLibraryDestinationDirectory 2008 $Flavor -SuppressWarnings:$SuppressWarnings -HaltOnError:$HaltOnError -Indentation:"  " -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
-		catch
-		{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
-			Exit-Script -1
-		}
+	try
+	{	Invoke-CompileIEEELibraryFlavor $VHDLLibrarySourceDirectory $VHDLLibraryDestinationDirectory 1987 "synopsys" -SuppressWarnings:$SuppressWarnings -HaltOnError:$HaltOnError -Indentation:"  " -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
+	catch
+	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
+		Exit-Script -1
 	}
 }  # CompileLibraryVHDL93
 if ($CompileLibraries)

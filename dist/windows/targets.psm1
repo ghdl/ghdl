@@ -655,8 +655,12 @@ function Invoke-CompileLibrary
 		
 		Write-Host "${Indentation}Patching files for '$LibraryName' ..." -ForegroundColor Yellow
 		$EnableVerbose -and (Write-Host "${Indentation}  Creating library $LibraryName in '$LibraryName' ..."	-ForegroundColor Gray	) | Out-Null
-		$EnableDebug -and   (Write-Host "${Indentation}    mkdir $VHDLLibraryDestinationDirectory\$LibraryName\v$VHDLVersion"	-ForegroundColor DarkGray	) | Out-Null
-		mkdir "$VHDLLibraryDestinationDirectory\$LibraryName\v$VHDLVersion" | Out-Null
+		if (Test-Path -Path "$VHDLLibraryDestinationDirectory\$LibraryName\v$VHDLVersion")
+		{ $EnableVerbose -and (Write-Host "${Indent}  [INFO] Library directory '$LibraryName' already exists." -ForegroundColor Yellow ) | Out-Null }
+		else
+		{	$EnableDebug -and   (Write-Host "${Indentation}    mkdir $VHDLLibraryDestinationDirectory\$LibraryName\v$VHDLVersion"	-ForegroundColor DarkGray	) | Out-Null
+			mkdir "$VHDLLibraryDestinationDirectory\$LibraryName\v$VHDLVersion" | Out-Null
+		}
 		
 		foreach ($FileEntry in $Library.Value)
 		{	if (($VHDLVersionYear -in $FileEntry["IncludedIn"]) -and (("all" -in $FileEntry["Flavor"]) -or ("ieee" -in $FileEntry["Flavor"])))
@@ -733,8 +737,12 @@ function Invoke-CompileIEEELibraryFlavor
 	
 	Write-Host "${Indentation}Patching files for 'ieee' ..." -ForegroundColor Yellow
 	$EnableVerbose -and (Write-Host "${Indentation}  Creating library ieee in '$VHDLFlavor' ..."	-ForegroundColor Gray	) | Out-Null
-	$EnableDebug -and   (Write-Host "${Indentation}    mkdir $VHDLLibraryDestinationDirectory\$OutputDir\v$VHDLVersion"	-ForegroundColor DarkGray	) | Out-Null
-	mkdir "$VHDLLibraryDestinationDirectory\$OutputDir\v$VHDLVersion" | Out-Null
+	if (Test-Path -Path "$VHDLLibraryDestinationDirectory\$OutputDir\v$VHDLVersion")
+	{ $EnableVerbose -and (Write-Host "${Indent}  [INFO] Library directory '$VHDLFlavor' already exists." -ForegroundColor Yellow ) | Out-Null }
+	else
+	{	$EnableDebug -and   (Write-Host "${Indentation}    mkdir $VHDLLibraryDestinationDirectory\$OutputDir\v$VHDLVersion"	-ForegroundColor DarkGray	) | Out-Null
+		mkdir "$VHDLLibraryDestinationDirectory\$OutputDir\v$VHDLVersion" | Out-Null
+	}
 	
 	foreach ($FileEntry in $LibrarySourceFiles["ieee"])
 	{	if (($VHDLVersionYear -in $FileEntry["IncludedIn"]) -and (("all" -in $FileEntry["Flavor"]) -or ($VHDLFlavor -in $FileEntry["Flavor"])))

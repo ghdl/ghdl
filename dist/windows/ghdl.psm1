@@ -144,7 +144,7 @@ function Analyze-File
 	$EnableVerbose =	-not $Quiet -and ($EnableDebug  -or $PSCmdlet.MyInvocation.BoundParameters["Verbose"])
 	$Indent =         if ($EnableDebug) { "$Indentation    " } else { if ($EnableVerbose) { "$Indentation  " } else { $Indentation }}
 	
-	$InvokeExpr = "& '$GHDLBinaryPath' -a " + ($GHDLOptions -join " ") + " --work=$Library --std=$VHDLVersion " + $SourceFile + " 2>&1"
+	$InvokeExpr = "& '$GHDLBinaryPath' -a " + ($GHDLOptions -join " ") + " `"--workdir=$DestinationDirectory`" --work=$Library --std=$VHDLVersion " + $SourceFile + " 2>&1"
 	$EnableDebug -and (Write-Host "${Indentation}Analyzing $SourceFile" -ForegroundColor Gray     ) | Out-Null
 	$EnableDebug -and (Write-Host "${Indentation}  $InvokeExpr"         -ForegroundColor DarkGray ) | Out-Null
 	$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "$Indent"
@@ -202,16 +202,20 @@ function Analyze-Library
 	
 	if ($LibraryDirectory -eq "")
 	{	$EnableVerbose -and (Write-Host "${Indent}  Creating library $Library in '$Library' ..."  -ForegroundColor Gray	      ) | Out-Null
-		$LibraryDirectory = "$DestinationDirectory\$Library\$VHDLVersion"
+		$LibraryDirectory = "$DestinationDirectory\$Library\v$VHDLVersion"
 	}
 	else
 	{	$EnableVerbose -and (Write-Host "${Indent}  Creating library $Library in '$LibraryDirectory'..." -ForegroundColor Gray) | Out-Null
-		$LibraryDirectory = "$DestinationDirectory\$LibraryDirectory\$VHDLVersion"
+		$LibraryDirectory = "$DestinationDirectory\$LibraryDirectory\v$VHDLVersion"
 	}
 	
 	# FIXME: test if directory exists
-	$EnableDebug -and   (Write-Host "${Indent}    mkdir $LibraryDirectory"	-ForegroundColor DarkGray	) | Out-Null
-	mkdir $LibraryDirectory | Out-Null
+	if (Test-Path -Path $LibraryDirectory)
+	{ $EnableVerbose -and (Write-Host "${Indent}  [INFO] Library directory '$LibraryDirectory' already exists." -ForegroundColor Yellow ) | Out-Null }
+	else
+	{	$EnableDebug -and   (Write-Host "${Indent}    mkdir $LibraryDirectory"	-ForegroundColor DarkGray	) | Out-Null
+		mkdir $LibraryDirectory | Out-Null
+	}
 
 	$ErrorCount = 0
 	foreach ($File in $SourceFiles)
