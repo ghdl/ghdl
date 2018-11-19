@@ -636,7 +636,7 @@ function Invoke-CompileLibrary
 	$EnableDebug =		-not $Quiet -and (                  $PSCmdlet.MyInvocation.BoundParameters["Debug"])
 	$EnableVerbose =	-not $Quiet -and ($EnableDebug  -or $PSCmdlet.MyInvocation.BoundParameters["Verbose"])
 
-	-not $Quiet -and (Write-Host "Executing build target 'CompileLibrary' ($VHDLVersionYear, "ieee") ..." -ForegroundColor DarkCyan) | Out-Null
+	-not $Quiet -and (Write-Host "Executing build target 'CompileLibrary' ($VHDLVersionYear, ieee) ..." -ForegroundColor DarkCyan) | Out-Null
 
 	$GHDLOptions = @("-C")
 	$VHDLVersion = switch ($VHDLVersionYear)
