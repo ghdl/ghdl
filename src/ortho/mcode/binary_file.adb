@@ -519,11 +519,19 @@ package body Binary_File is
       end case;
    end Gen_Data_32;
 
-   function To_Unsigned_32 (Off : Pc_Type) return Unsigned_32 is
+   function To_Unsigned_32 (Off : Pc_Type) return Unsigned_32
+   is
+      Hi : Pc_Type;
+
+      function Shift_Right_Arithmetic (Op : Pc_Type; Amount : Natural)
+                                      return Pc_Type;
+      pragma Import (Intrinsic, Shift_Right_Arithmetic);
    begin
-      --  if Off >= 16#8000_0000# and Off < 16#ffff_ffff_8000_0000# then
-      --     raise Constraint_Error;
-      --  end if;
+      --  Check for overflow.
+      Hi := Shift_Right_Arithmetic (Off, 31) and 16#ffff_ffff#;
+      if Hi /= 0 and Hi /= 16#ffff_ffff# then
+         raise Constraint_Error;
+      end if;
       return Unsigned_32 (Off and 16#ffff_ffff#);
    end To_Unsigned_32;
 
