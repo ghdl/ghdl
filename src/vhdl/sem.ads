@@ -67,17 +67,17 @@ package Sem is
    procedure Sem_Use_Clause (Clauses : Iir_Use_Clause);
 
    --  LRM 2.1  Subprogram Declarations.
-   procedure Sem_Subprogram_Specification (Subprg: Iir);
-   procedure Sem_Subprogram_Declaration (Subprg: Iir);
+   procedure Sem_Subprogram_Specification (Subprg : Iir);
+   procedure Sem_Subprogram_Declaration (Subprg : Iir);
 
    --  LRM 2.2  Subprogram Bodies.
-   procedure Sem_Subprogram_Body (Subprg: Iir);
+   procedure Sem_Subprogram_Body (Subprg : Iir);
 
    --  LRM 2.5  Package Declarations.
-   procedure Sem_Package_Declaration (Decl: Iir_Package_Declaration);
+   procedure Sem_Package_Declaration (Pkg : Iir_Package_Declaration);
 
    --  LRM 2.6  Package Bodies.
-   procedure Sem_Package_Body (Decl: Iir);
+   procedure Sem_Package_Body (Decl : Iir);
 
    --  LRM08 4.9  Package Instantiation Declaration
    procedure Sem_Package_Instantiation_Declaration (Decl : Iir);

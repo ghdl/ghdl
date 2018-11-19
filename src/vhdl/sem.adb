@@ -58,7 +58,7 @@ package body Sem is
    end Add_Dependence;
 
    --  LRM 1.1  Entity declaration.
-   procedure Sem_Entity_Declaration (Entity: Iir_Entity_Declaration) is
+   procedure Sem_Entity_Declaration (Entity : Iir_Entity_Declaration) is
    begin
       Xrefs.Xref_Decl (Entity);
       Sem_Scopes.Add_Name (Entity);
@@ -2638,22 +2638,24 @@ package body Sem is
    end Is_Package_Macro_Expanded;
 
    --  LRM 2.5  Package Declarations.
-   procedure Sem_Package_Declaration (Decl: Iir_Package_Declaration)
+   procedure Sem_Package_Declaration (Pkg : Iir_Package_Declaration)
    is
-      Unit : constant Iir_Design_Unit := Get_Design_Unit (Decl);
-      Header : constant Iir := Get_Package_Header (Decl);
+      Unit : constant Iir_Design_Unit := Get_Design_Unit (Pkg);
+      Header : constant Iir := Get_Package_Header (Pkg);
       Implicit : Implicit_Signal_Declaration_Type;
    begin
-      Sem_Scopes.Add_Name (Decl);
-      Set_Visible_Flag (Decl, True);
-      Xref_Decl (Decl);
+      Sem_Scopes.Add_Name (Pkg);
+      Set_Visible_Flag (Pkg, True);
+      Xref_Decl (Pkg);
+
+      Set_Is_Within_Flag (Pkg, True);
 
       --  Identify IEEE.Std_Logic_1164 for VHDL08.
-      if Get_Identifier (Decl) = Std_Names.Name_Std_Logic_1164
+      if Get_Identifier (Pkg) = Std_Names.Name_Std_Logic_1164
         and then (Get_Identifier (Get_Library (Get_Design_File (Unit)))
                     = Std_Names.Name_Ieee)
       then
-         Ieee.Std_Logic_1164.Std_Logic_1164_Pkg := Decl;
+         Ieee.Std_Logic_1164.Std_Logic_1164_Pkg := Pkg;
       end if;
 
       --  LRM93 10.1 Declarative Region
@@ -2661,7 +2663,7 @@ package body Sem is
       --     body (if any).
       Open_Declarative_Region;
 
-      Push_Signals_Declarative_Part (Implicit, Decl);
+      Push_Signals_Declarative_Part (Implicit, Pkg);
 
       if Header /= Null_Iir then
          declare
@@ -2676,7 +2678,7 @@ package body Sem is
 
             if Generic_Map /= Null_Iir then
                --  Generic-mapped packages are not macro-expanded.
-               Set_Macro_Expanded_Flag (Decl, False);
+               Set_Macro_Expanded_Flag (Pkg, False);
 
                if Sem_Generic_Association_Chain (Header, Header) then
                   --  For generic-mapped packages, use the actual type for
@@ -2700,25 +2702,26 @@ package body Sem is
             else
                --  Uninstantiated package.  Maybe macro expanded.
                Set_Macro_Expanded_Flag
-                 (Decl, Is_Package_Macro_Expanded (Decl));
+                 (Pkg, Is_Package_Macro_Expanded (Pkg));
             end if;
          end;
       else
          --  Simple packages are never expanded.
-         Set_Macro_Expanded_Flag (Decl, False);
+         Set_Macro_Expanded_Flag (Pkg, False);
       end if;
 
-      Sem_Declaration_Chain (Decl);
+      Sem_Declaration_Chain (Pkg);
       --  GHDL: subprogram bodies appear in package body.
 
       Pop_Signals_Declarative_Part (Implicit);
       Close_Declarative_Region;
+      Set_Is_Within_Flag (Pkg, False);
 
-      Set_Need_Body (Decl, Package_Need_Body_P (Decl));
+      Set_Need_Body (Pkg, Package_Need_Body_P (Pkg));
 
       if Vhdl_Std >= Vhdl_08 then
          Set_Need_Instance_Bodies
-           (Decl, Package_Need_Instance_Bodies_P (Decl));
+           (Pkg, Package_Need_Instance_Bodies_P (Pkg));
       end if;
    end Sem_Package_Declaration;
 
@@ -2791,6 +2794,7 @@ package body Sem is
       Set_Package (Decl, Package_Decl);
       Xref_Body (Decl, Package_Decl);
       Set_Package_Body (Package_Decl, Decl);
+      Set_Is_Within_Flag (Package_Decl, True);
 
       --  LRM93 10.1 Declarative Region
       --  4. A package declaration, together with the corresponding
@@ -2804,6 +2808,7 @@ package body Sem is
       Check_Full_Declaration (Package_Decl, Decl);
 
       Close_Declarative_Region;
+      Set_Is_Within_Flag (Package_Decl, False);
    end Sem_Package_Body;
 
    function Sem_Uninstantiated_Package_Name (Decl : Iir) return Iir

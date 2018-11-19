@@ -2195,7 +2195,7 @@ package body Sem_Names is
                     (+Name, "no declaration for %i in %n", (+Suffix, +Prefix));
                end if;
             else
-               --  LRM93 §6.3
+               --  LRM93 6.3
                --  This form of expanded name is only allowed within the
                --  construct itself.
                --  FIXME: LRM08 12.3 Visibility h)
@@ -2203,12 +2203,28 @@ package body Sem_Names is
                                Iir_Kind_Package_Declaration,
                                Iir_Kind_Package_Instantiation_Declaration)
                  and then not Get_Is_Within_Flag (Prefix)
-                 and then not Soft
                then
-                  Error_Msg_Sem
-                    (+Prefix_Loc,
-                     "an expanded name is only allowed within the construct");
+                  if not Soft then
+                     Error_Msg_Sem
+                       (+Prefix_Loc,
+                        "an expanded name is only allowed "
+                          & "within the construct");
+                  end if;
                   --  Hum, keep res.
+               elsif Get_Kind (Prefix) = Iir_Kind_Package_Declaration
+                 and then not Get_Is_Within_Flag (Prefix)
+                 and then Is_Uninstantiated_Package (Prefix)
+               then
+                  --  LRM08 12.3 f) Visibility
+                  --  For a declaration given in a package declaration, other
+                  --  than in a package declaration that defines an
+                  --  uninstantiated package: [...]
+                  if not Soft then
+                     Error_Msg_Sem
+                       (+Prefix_Loc,
+                        "cannot refer a declaration in an "
+                          & "uninstantiated package");
+                  end if;
                end if;
             end if;
          when Iir_Kind_Function_Declaration =>

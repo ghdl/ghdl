@@ -928,6 +928,8 @@ package Iirs is
    --  of their body.
    --   Get/Set_Need_Instance_Bodies (Flag3)
    --
+   --   Get/Set_Is_Within_Flag (Flag5)
+   --
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_End_Has_Reserved_Id (Flag8)
