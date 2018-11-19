@@ -92,6 +92,18 @@ $LibrarySourceFiles = [ordered]@{
 		@{"Dir" = "ieee2008"; "File" = "ieee_std_context";          "IncludedIn" = @(            2008); "Flavor" = @("all")},
 		@{"Dir" = "ieee2008"; "File" = "ieee_bit_context";          "IncludedIn" = @(            2008); "Flavor" = @("all")},
 
+		@{"Dir" = "vital95";  "File" = "vital_timing";              "IncludedIn" = @(1987            ); "Flavor" = @("all")},
+		@{"Dir" = "vital95";  "File" = "vital_timing-body";         "IncludedIn" = @(1987            ); "Flavor" = @("all")},
+		@{"Dir" = "vital95";  "File" = "vital_primitives";          "IncludedIn" = @(1987            ); "Flavor" = @("all")},
+		@{"Dir" = "vital95";  "File" = "vital_primitives-body";     "IncludedIn" = @(1987            ); "Flavor" = @("all")},
+		
+		@{"Dir" = "vital2000"; "File" = "timing_p";                 "IncludedIn" = @(      1993, 2008); "Flavor" = @("all")},
+		@{"Dir" = "vital2000"; "File" = "timing_b";                 "IncludedIn" = @(      1993, 2008); "Flavor" = @("all")},
+		@{"Dir" = "vital2000"; "File" = "prmtvs_p";                 "IncludedIn" = @(      1993, 2008); "Flavor" = @("all")},
+		@{"Dir" = "vital2000"; "File" = "prmtvs_b";                 "IncludedIn" = @(      1993, 2008); "Flavor" = @("all")},
+		@{"Dir" = "vital2000"; "File" = "memory_p";                 "IncludedIn" = @(      1993, 2008); "Flavor" = @("all")},
+		@{"Dir" = "vital2000"; "File" = "memory_b";                 "IncludedIn" = @(      1993, 2008); "Flavor" = @("all")},
+		
 		@{"Dir" = "synopsys"; "File" = "std_logic_arith";           "IncludedIn" = @(1987, 1993, 2008); "Flavor" = @("synopsys")},
 		@{"Dir" = "synopsys"; "File" = "std_logic_unsigned";        "IncludedIn" = @(1987, 1993, 2008); "Flavor" = @("synopsys")},
 		@{"Dir" = "synopsys"; "File" = "std_logic_signed";          "IncludedIn" = @(1987, 1993, 2008); "Flavor" = @("synopsys")},
@@ -101,21 +113,7 @@ $LibrarySourceFiles = [ordered]@{
 
 		@{"Dir" = "mentor";   "File" = "std_logic_arith";           "IncludedIn" = @(      1993, 2008); "Flavor" = @("mentor")},
 		@{"Dir" = "mentor";   "File" = "std_logic_arith-body";      "IncludedIn" = @(      1993, 2008); "Flavor" = @("mentor")}
-	) #;
-	# "vital95" = @(
-		# @{"File" = "vital_timing";                   "IncludedIn" = @(1987, 1993      )},
-		# @{"File" = "vital_timing-body";              "IncludedIn" = @(1987, 1993      )},
-		# @{"File" = "vital_primitives";               "IncludedIn" = @(1987, 1993      )},
-		# @{"File" = "vital_primitives-body";          "IncludedIn" = @(1987, 1993      )}
-	# );
-	# "vital2000" = @(
-		# @{"File" = "timing_p";                       "IncludedIn" = @(            2008)},
-		# @{"File" = "timing_b";                       "IncludedIn" = @(            2008)},
-		# @{"File" = "prmtvs_p";                       "IncludedIn" = @(            2008)},
-		# @{"File" = "prmtvs_b";                       "IncludedIn" = @(            2008)},
-		# @{"File" = "memory_p";                       "IncludedIn" = @(            2008)},
-		# @{"File" = "memory_b";                       "IncludedIn" = @(            2008)}
-	# )
+	)
 }
 
 function Invoke-CleanGHDL
@@ -638,7 +636,7 @@ function Invoke-CompileLibrary
 
 	-not $Quiet -and (Write-Host "Executing build target 'CompileLibrary' ($VHDLVersionYear, ieee) ..." -ForegroundColor DarkCyan) | Out-Null
 
-	$GHDLOptions = @("-C")
+	$GHDLOptions = @("-C", " -frelaxed-rules")
 	$VHDLVersion = switch ($VHDLVersionYear)
 	{	"1987" { "87" }
 		"1993" { "93" }
@@ -666,7 +664,7 @@ function Invoke-CompileLibrary
 		{	if (($VHDLVersionYear -in $FileEntry["IncludedIn"]) -and (("all" -in $FileEntry["Flavor"]) -or ("ieee" -in $FileEntry["Flavor"])))
 			{	$SourceFile =      $FileEntry["File"]
 				$SourceDirectory = $FileEntry["Dir"]
-				Write-Host "$Indentation  Patching file '$SourceDirectory\$SourceFile.vhdl' for VHDL-$VHDLVersion to '$LibraryName\v$VHDLVersion\$SourceFile.v$VHDLVersion'" -ForegroundColor Gray
+				Write-Host "$Indentation  Patching file '$SourceDirectory\$SourceFile.vhdl' for VHDL-$VHDLVersionYear to '$LibraryName\v$VHDLVersion\$SourceFile.v$VHDLVersion'" -ForegroundColor Gray
 				$EnableDebug -and   (Write-Host "$Indentation    Get-Content `"$VHDLLibrarySourceDirectory\$SourceDirectory\$SourceFile.vhdl`" -Encoding Ascii ``"                       -ForegroundColor DarkGray  ) | Out-Null
 				$EnableDebug -and   (Write-Host "$Indentation      | Format-VHDLSourceFile -Version `"$VHDLVersion`" ``"                                                                 -ForegroundColor DarkGray  ) | Out-Null
 				$EnableDebug -and   (Write-Host "$Indentation      | Out-File `"$VHDLLibraryDestinationDirectory\$LibraryName\v$VHDLVersion\$SourceFile.v$VHDLVersion`" -Encoding Ascii" -ForegroundColor DarkGray  ) | Out-Null
