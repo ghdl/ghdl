@@ -77,30 +77,96 @@ package body Binary_File.Memory is
       end if;
    end Write_Memory_Init;
 
+   type Segment_Kind is (Seg_Text, Seg_Ro, Seg_Data, Seg_None);
+
+   function Get_Segment (Sect : Section_Acc) return Segment_Kind is
+   begin
+      if Sect = Sect_Abs then
+         return Seg_None;
+      end if;
+      if (Sect.Flags and Section_Exec) /= 0 then
+         return Seg_Text;
+      elsif (Sect.Flags and Section_Write) /= 0 then
+         return Seg_Data;
+      elsif (Sect.Flags and Section_Read) /= 0 then
+         return Seg_Ro;
+      else
+         return Seg_None;
+      end if;
+   end Get_Segment;
+
    procedure Write_Memory_Relocate (Error : out Boolean)
    is
+      Log_Pagesize : constant := 12;
+      type Seg_Size_Array is array (Segment_Kind) of Pc_Type;
+      Seg_Size : Seg_Size_Array;
+      Seg_Offs : Seg_Size_Array;
+      Size : Pc_Type;
+      Program_Seg : Memsegs.Memseg_Type;
+      Program : Byte_Array_Acc;
       Sect : Section_Acc;
       Rel : Reloc_Acc;
       N_Rel : Reloc_Acc;
    begin
-      --  Relocate section in memory.
+      --  Compute sizes.
+      Seg_Size := (others => 0);
       Sect := Section_Chain;
       while Sect /= null loop
-         --  Allocate memory if needed (eg: .bss)
-         if Sect.Data = null then
-            if Sect.Pc > 0 then
-               Resize (Sect, Sect.Pc);
-               Sect.Data (0 .. Sect.Pc - 1) := (others => 0);
+         declare
+            Seg : constant Segment_Kind := Get_Segment (Sect);
+         begin
+            Seg_Size (Seg) :=
+              Pow_Align (Seg_Size (Seg), Sect.Align) + Sect.Pc;
+         end;
+         Sect := Sect.Next;
+      end loop;
+
+      --  Align.
+      for I in Seg_Text .. Seg_Data loop
+         Seg_Size (I) := Pow_Align (Seg_Size (I), Log_Pagesize);
+      end loop;
+
+      --  Whole size.
+      Size := 0;
+      for I in Seg_Text .. Seg_Data loop
+         Size := Size + Seg_Size (I);
+      end loop;
+
+      --  Allocate and copy.
+      Program_Seg := Memsegs.Create;
+      Memsegs.Resize (Program_Seg, Natural (Size));
+      Program := To_Byte_Array_Acc (Memsegs.Get_Address (Program_Seg));
+      Seg_Offs (Seg_Text) := 0;
+      Seg_Offs (Seg_Ro) := Seg_Size (Seg_Text);
+      Seg_Offs (Seg_Data) := Seg_Size (Seg_Text) + Seg_Size (Seg_Ro);
+
+      Sect := Section_Chain;
+      while Sect /= null loop
+         declare
+            Seg : constant Segment_Kind := Get_Segment (Sect);
+            Off : Pc_Type renames Seg_Offs (Seg);
+         begin
+            if Seg /= Seg_None then
+               if Sect.Pc > 0 then
+                  Off := Pow_Align (Off, Sect.Align);
+                  if Sect.Data = null then
+                     --  For bss.
+                     Program (Off .. Off + Sect.Pc - 1) := (others => 0);
+                  else
+                     Program (Off .. Off + Sect.Pc - 1) :=
+                       Sect.Data (0 .. Sect.Pc - 1);
+                     Memsegs.Delete (Sect.Seg);
+                  end if;
+
+                  Sect.Data := To_Byte_Array_Acc (Program (Off)'Address);
+
+                  --  Set virtual address.
+                  Sect.Vaddr := To_Pc_Type (Program (Off)'Address);
+
+                  Off := Off + Sect.Pc;
+               end if;
             end if;
-         end if;
-
-         --  Set virtual address.
-         if Sect.Pc > 0
-           and (Sect /= Sect_Abs and Sect.Flags /= Section_Debug)
-         then
-            Sect.Vaddr := To_Pc_Type (Sect.Data (0)'Address);
-         end if;
-
+         end;
          Sect := Sect.Next;
       end loop;
 
@@ -128,14 +194,12 @@ package body Binary_File.Memory is
          Sect.Last_Reloc := null;
          Sect.Nbr_Relocs := 0;
 
-         if (Sect.Flags and Section_Exec) /= 0
-           and (Sect.Flags and Section_Write) = 0
-         then
-            Memsegs.Set_Rx (Sect.Seg);
-         end if;
-
          Sect := Sect.Next;
       end loop;
+
+      if Seg_Size (Seg_Text) /= 0 then
+         Memsegs.Set_Rx (Program_Seg, 0, Natural (Seg_Size (Seg_Text)));
+      end if;
    end Write_Memory_Relocate;
 
    function Get_Section_Addr (Sect : Section_Acc) return System.Address is

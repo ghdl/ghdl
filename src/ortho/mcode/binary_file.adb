@@ -18,7 +18,6 @@
 with System.Storage_Elements;
 with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Characters.Latin_1;
-with Ada.Unchecked_Conversion;
 with Hex_Images; use Hex_Images;
 with Disassemble;
 
@@ -26,9 +25,6 @@ package body Binary_File is
    Cur_Sect : Section_Acc := null;
 
    HT : Character renames Ada.Characters.Latin_1.HT;
-
-   function To_Byte_Array_Acc is new Ada.Unchecked_Conversion
-     (Source => System.Address, Target => Byte_Array_Acc);
 
    --  Resize a section to SIZE bytes.
    procedure Resize (Sect : Section_Acc; Size : Pc_Type) is
@@ -182,7 +178,9 @@ package body Binary_File is
       Rel := Src.First_Reloc;
 
       if Rel /= null then
-         --  Move relocs.
+         --  Move internal relocs.
+         --  Note: external relocs are not modified, so they can still refer
+         --  to this SRC section.
          if Dest.Last_Reloc = null then
             Dest.First_Reloc := Rel;
             Dest.Last_Reloc := Rel;
@@ -192,7 +190,6 @@ package body Binary_File is
          end if;
          Dest.Nbr_Relocs := Dest.Nbr_Relocs + Src.Nbr_Relocs;
 
-
          --  Reloc reloc, since the pc has changed.
          while Rel /= null loop
             Rel.Addr := Rel.Addr + Dest.Pc;
@@ -201,6 +198,7 @@ package body Binary_File is
       end if;
 
       if Src.Pc > 0 then
+         --  Alignment is assumed to be compatible...
          Sect_Prealloc (Dest, Src.Pc);
          Dest.Data (Dest.Pc .. Dest.Pc + Src.Pc - 1) :=
            Src.Data (0 .. Src.Pc - 1);
@@ -618,10 +616,9 @@ package body Binary_File is
 
    function Pow_Align (V : Pc_Type; Align : Natural) return Pc_Type
    is
-      Tmp : Pc_Type;
+      Mask : constant Pc_Type := (2 ** Align) - 1;
    begin
-      Tmp := V + 2 ** Align - 1;
-      return Tmp - (Tmp mod Pc_Type (2 ** Align));
+      return (V + Mask) and not Mask;
    end Pow_Align;
 
    procedure Gen_Pow_Align (Align : Natural) is
