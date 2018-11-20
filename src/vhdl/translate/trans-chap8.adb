@@ -988,12 +988,37 @@ package body Trans.Chap8 is
       else
          Targ_Node := Chap6.Translate_Name (Target, Mode_Value);
          if Get_Kind (Expr) = Iir_Kind_Aggregate then
-            declare
-               E : O_Enode;
-            begin
-               E := Chap7.Translate_Expression (Expr, Targ_Type);
-               Chap3.Translate_Object_Copy (Targ_Node, E, Targ_Type);
-            end;
+            if Get_Constraint_State (Get_Type (Expr)) /= Fully_Constrained then
+               declare
+                  Expr_Type : constant Iir := Get_Type (Expr);
+                  Expr_Tinfo : constant Type_Info_Acc := Get_Info (Expr_Type);
+                  Val : Mnode;
+               begin
+                  --  Create a temp.
+                  Val := Create_Temp (Expr_Tinfo);
+                  --  Set bounds from target
+                  Stabilize (Targ_Node);
+                  New_Assign_Stmt
+                    (M2Lp (Chap3.Get_Composite_Bounds (Val)),
+                     M2Addr (Chap3.Get_Composite_Bounds (Targ_Node)));
+                  --  Allocate target
+                  Chap3.Allocate_Unbounded_Composite_Base
+                    (Alloc_Stack, Val, Get_Base_Type (Expr_Type));
+                  --  Translate aggregate
+                  Chap7.Translate_Aggregate (Val, Targ_Type, Expr);
+                  --  Assign
+                  Chap3.Translate_Object_Copy
+                    (Targ_Node, M2Addr (Val), Targ_Type);
+               end;
+            else
+               --  In case of overlap: be sure to use an intermediate variable.
+               declare
+                  E : O_Enode;
+               begin
+                  E := Chap7.Translate_Expression (Expr, Targ_Type);
+                  Chap3.Translate_Object_Copy (Targ_Node, E, Targ_Type);
+               end;
+            end if;
          else
             Chap7.Translate_Assign (Targ_Node, Expr, Targ_Type);
          end if;
