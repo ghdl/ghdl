@@ -1701,7 +1701,7 @@ package body Trans.Chap9 is
                      --  From the port default value.
                      if Is_Valid (Get_Default_Value (Base)) then
                         Chap3.Translate_Object_Copy
-                          (Drv_Node, M2E (Chap6.Get_Port_Init_Value (Base)),
+                          (Drv_Node, Chap6.Get_Port_Init_Value (Base),
                            Base_Type);
                      else
                         Chap4.Init_Object (Drv_Node, Base_Type);

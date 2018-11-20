@@ -1426,7 +1426,7 @@ package body Trans.Chap7 is
                                       New_Obj_Value (Var_Off))));
 
          --  Copy
-         Chap3.Translate_Object_Copy (Var_Sub_Arr, M2E (M), Expr_Type);
+         Chap3.Translate_Object_Copy (Var_Sub_Arr, M, Expr_Type);
 
          --  Increase offset
          New_Assign_Stmt
@@ -1764,7 +1764,7 @@ package body Trans.Chap7 is
 
       El := Create_Temp (Res_Otype);
       Arr := Stabilize (E2M (Translate_Expression (Left),
-                        Get_Info (Left_Type), Mode_Value));
+                             Get_Info (Left_Type), Mode_Value));
       Len := Create_Temp_Init
         (Ghdl_Index_Type,
          M2E (Chap3.Range_To_Length
@@ -2742,22 +2742,22 @@ package body Trans.Chap7 is
             declare
                T : Mnode;
                E : O_Dnode;
+               EM : Mnode;
             begin
                T := Stabilize (Target);
                E := Create_Temp_Init
                  (T_Info.Ortho_Ptr_Type (Mode_Value), Val);
+               EM := Dp2M (E, T_Info, Mode_Value);
                Chap3.Check_Array_Match
-                 (Target_Type, T,
-                  Get_Type (Expr), Dp2M (E, T_Info, Mode_Value), Loc);
-               Chap3.Translate_Object_Copy
-                 (T, New_Obj_Value (E), Target_Type);
+                 (Target_Type, T, Get_Type (Expr), EM, Loc);
+               Chap3.Translate_Object_Copy (T, EM, Target_Type);
             end;
-         when Type_Mode_Bounded_Arrays =>
+         when Type_Mode_Bounded_Arrays
+           | Type_Mode_Bounded_Records =>
             --  Source is of type TARGET_TYPE, so no length check is
             --  necessary.
-            Chap3.Translate_Object_Copy (Target, Val, Target_Type);
-         when Type_Mode_Bounded_Records =>
-            Chap3.Translate_Object_Copy (Target, Val, Target_Type);
+            Chap3.Translate_Object_Copy
+              (Target, E2M (Val, T_Info, Mode_Value), Target_Type);
          when Type_Mode_Unbounded_Record =>
             --  TODO
             raise Internal_Error;
@@ -3516,7 +3516,8 @@ package body Trans.Chap7 is
                        D_Info, Mode_Value);
             Chap3.Translate_Object_Allocation
               (R, Alloc_Heap, D_Type, Mnode_Null);
-            Chap3.Translate_Object_Copy (R, Val, D_Type);
+            Chap3.Translate_Object_Copy
+              (R, E2M (Val, D_Info, Mode_Value), D_Type);
             return New_Convert_Ov (M2Addr (R), A_Info.Ortho_Type (Mode_Value));
          when others =>
             raise Internal_Error;
@@ -3917,6 +3918,20 @@ package body Trans.Chap7 is
          return New_Obj_Value (L);
       end if;
    end Translate_Overflow_Literal;
+
+   function Translate_Expression (Expr : Iir; Rtype : Iir := Null_Iir)
+                                 return Mnode
+   is
+      Res_Type : Iir;
+   begin
+      if Rtype = Null_Iir then
+         Res_Type := Get_Type (Expr);
+      else
+         Res_Type := Rtype;
+      end if;
+      return E2M (Translate_Expression (Expr, Res_Type),
+                  Get_Info (Res_Type), Mode_Value);
+   end Translate_Expression;
 
    function Translate_Expression (Expr : Iir; Rtype : Iir := Null_Iir)
                                  return O_Enode

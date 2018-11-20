@@ -254,13 +254,11 @@ package body Trans.Chap8 is
             begin
                Area := Dp2M (Subprg_Info.Res_Interface,
                              Ret_Info, Mode_Value);
-               Val := Stabilize
-                 (E2M (Chap7.Translate_Expression (Expr, Ret_Type),
-                  Ret_Info, Mode_Value));
+               Val := Stabilize (Chap7.Translate_Expression (Expr, Ret_Type));
                Chap3.Translate_Object_Allocation
                  (Area, Alloc_Return, Ret_Type,
                   Chap3.Get_Composite_Bounds (Val));
-               Chap3.Translate_Object_Copy (Area, M2Addr (Val), Ret_Type);
+               Chap3.Translate_Object_Copy (Area, Val, Ret_Type);
                Gen_Return;
             end;
          when Type_Mode_Bounded_Records
@@ -955,7 +953,7 @@ package body Trans.Chap8 is
             Targ_Node : Mnode;
          begin
             Targ_Node := Chap6.Translate_Name (Targ, Mode_Value);
-            Chap3.Translate_Object_Copy (Targ_Node, M2E (Val), Targ_Type);
+            Chap3.Translate_Object_Copy (Targ_Node, Val, Targ_Type);
          end;
       end if;
    end Translate_Variable_Aggregate_Assignment;
@@ -970,7 +968,7 @@ package body Trans.Chap8 is
    begin
       if Get_Kind (Target) = Iir_Kind_Aggregate then
          declare
-            E    : O_Enode;
+            E    : Mnode;
             Temp : Mnode;
          begin
             Chap3.Translate_Anonymous_Subtype_Definition (Targ_Type, False);
@@ -1007,13 +1005,12 @@ package body Trans.Chap8 is
                   --  Translate aggregate
                   Chap7.Translate_Aggregate (Val, Targ_Type, Expr);
                   --  Assign
-                  Chap3.Translate_Object_Copy
-                    (Targ_Node, M2Addr (Val), Targ_Type);
+                  Chap3.Translate_Object_Copy (Targ_Node, Val, Targ_Type);
                end;
             else
                --  In case of overlap: be sure to use an intermediate variable.
                declare
-                  E : O_Enode;
+                  E : Mnode;
                begin
                   E := Chap7.Translate_Expression (Expr, Targ_Type);
                   Chap3.Translate_Object_Copy (Targ_Node, E, Targ_Type);
@@ -2631,8 +2628,7 @@ package body Trans.Chap8 is
 
       --  Individual association: assign the individual actual of
       --  the whole actual.
-      procedure Trans_Individual_Assign
-        (Assoc : Iir; Val : O_Enode; Sig : O_Enode)
+      procedure Trans_Individual_Assign (Assoc : Iir; Val : Mnode; Sig : Mnode)
       is
          Formal : constant Iir := Get_Formal (Assoc);
          Formal_Type : constant Iir := Get_Type (Formal);
@@ -2648,7 +2644,7 @@ package body Trans.Chap8 is
            (Formal, Formal_Info, Params (Last_Individual),
             Formal_Object_Kind);
          if Formal_Object_Kind = Mode_Value then
-            Chap7.Translate_Assign (Param, Val, Act, Formal_Type, Assoc);
+            Chap7.Translate_Assign (Param, M2E (Val), Act, Formal_Type, Assoc);
          else
             Chap3.Translate_Object_Copy (Param, Sig, Formal_Type);
             if Is_Suspendable then
@@ -2657,7 +2653,7 @@ package body Trans.Chap8 is
                Assoc_Info := Get_Info (Assoc);
                New_Assign_Stmt
                  (Get_Var (Assoc_Info.Call_Assoc_Value (Mode_Value)),
-                  Val);
+                  M2E (Val));
             else
                --  Assign the value to the whole object, as there is
                --  only one call.
@@ -2692,6 +2688,7 @@ package body Trans.Chap8 is
          Val : O_Enode;
          Sig : O_Enode;
          Mval : Mnode;
+         Msig : Mnode;
          Mode : Iir_Mode;
          Bounds : Mnode;
          Next_Assoc : Iir;
@@ -2965,11 +2962,10 @@ package body Trans.Chap8 is
                      Next_Assoc := Get_Chain (Next_Assoc);
                      if Formal_Object_Kind = Mode_Signal then
                         Trans_Individual_Assign
-                          (Next_Assoc,
-                           M2E (Saved_Val (I)), M2E (Saved_Sig (I)));
+                          (Next_Assoc, Saved_Val (I), Saved_Sig (I));
                      else
                         Trans_Individual_Assign
-                          (Next_Assoc, M2E (Saved_Val (I)), O_Enode_Null);
+                          (Next_Assoc, Saved_Val (I), Mnode_Null);
                      end if;
                   end loop;
 
@@ -2979,7 +2975,13 @@ package body Trans.Chap8 is
             else
                --  Individual association: assign the individual actual of
                --  the whole actual.
-               Trans_Individual_Assign (Assoc, Val, Sig);
+               if Sig = O_Enode_Null then
+                  Msig := Mnode_Null;
+               else
+                  Msig := E2M (Sig, Get_Info (Formal_Type), Mode_Signal);
+               end if;
+               Trans_Individual_Assign
+                 (Assoc, E2M (Val, Get_Info (Formal_Type), Mode_Value), Msig);
             end if;
          elsif Assoc_Info /= null then
             --  For suspendable caller, write the actual to the state
@@ -3060,8 +3062,7 @@ package body Trans.Chap8 is
                           (Formal_Type, Alloc_Return, Param);
                         Assign_Params_Field (M2Addr (Param), Mode);
                      end if;
-                     Chap3.Translate_Object_Copy
-                       (Param, M2E (Mval), Formal_Type);
+                     Chap3.Translate_Object_Copy (Param, Mval, Formal_Type);
                   end if;
                end;
             end loop;
@@ -3083,7 +3084,10 @@ package body Trans.Chap8 is
             --  Not for signals.
             pragma Assert (Sig = O_Enode_Null);
 
-            Chap3.Translate_Object_Copy (Inout_Params (Pos), Val, Formal_Type);
+            Chap3.Translate_Object_Copy
+              (Inout_Params (Pos),
+               E2M (Val, Get_Info (Formal_Type), Mode_Value),
+               Formal_Type);
             E_Params (Pos) := M2Addr (Inout_Params (Pos));
          else
             E_Params (Pos) := Val;
@@ -4070,7 +4074,7 @@ package body Trans.Chap8 is
          end;
       else
          Src := Chap6.Translate_Name (Target, Mode_Signal);
-         Chap3.Translate_Object_Copy (Aggr, M2E (Src), Target_Type);
+         Chap3.Translate_Object_Copy (Aggr, Src, Target_Type);
       end if;
    end Translate_Signal_Target_Aggr;
 

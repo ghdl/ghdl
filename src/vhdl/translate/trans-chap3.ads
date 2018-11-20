@@ -250,7 +250,7 @@ package Trans.Chap3 is
    --  Low level copy of SRC to DEST.  Both have the same type, OBJ_TYPE.
    --  There is no length check, so arrays must be of the same length.
    procedure Translate_Object_Copy
-     (Dest : Mnode; Src : O_Enode; Obj_Type : Iir);
+     (Dest : Mnode; Src : Mnode; Obj_Type : Iir);
 
    --  Get size (in bytes with type ghdl_index_type) of subtype ATYPE.
    --  For an unconstrained array, BOUNDS must be set, otherwise it may be a

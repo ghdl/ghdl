@@ -33,7 +33,9 @@ package Trans.Chap7 is
 
    --  Translate expression EXPR into ortho tree.
    function Translate_Expression (Expr : Iir; Rtype : Iir := Null_Iir)
-                                     return O_Enode;
+                                 return O_Enode;
+   function Translate_Expression (Expr : Iir; Rtype : Iir := Null_Iir)
+                                 return Mnode;
 
    --  Translate range and return an lvalue containing the range.
    --  The node returned can be used only one time.

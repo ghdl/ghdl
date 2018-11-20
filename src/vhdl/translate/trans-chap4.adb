@@ -542,8 +542,7 @@ package body Trans.Chap4 is
                   Chap3.Translate_Object_Allocation
                     (Name_Node, Alloc_Kind, Obj_Type,
                      Chap3.Get_Composite_Bounds (S));
-                  Chap3.Translate_Object_Copy
-                    (Name_Node, M2Addr (S), Obj_Type);
+                  Chap3.Translate_Object_Copy (Name_Node, S, Obj_Type);
                end if;
             end;
          else

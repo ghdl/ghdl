@@ -3121,11 +3121,10 @@ package body Trans.Chap3 is
    --  Copy SRC to DEST.
    --  Both have the same type, OTYPE.
    procedure Translate_Object_Copy (Dest     : Mnode;
-                                    Src      : O_Enode;
+                                    Src      : Mnode;
                                     Obj_Type : Iir)
    is
       Info : constant Type_Info_Acc := Get_Info (Obj_Type);
-      Kind : constant Object_Kind_Type := Get_Object_Kind (Dest);
       D    : Mnode;
    begin
       case Info.Type_Mode is
@@ -3134,18 +3133,19 @@ package body Trans.Chap3 is
            | Type_Mode_Bounds_Acc
            | Type_Mode_File =>
             --  Scalar or thin pointer.
-            New_Assign_Stmt (M2Lv (Dest), Src);
+            New_Assign_Stmt (M2Lv (Dest), M2E (Src));
          when Type_Mode_Unbounded_Array
            | Type_Mode_Unbounded_Record =>
             --  a fat array.
             D := Stabilize (Dest);
             Gen_Memcpy (M2Addr (Get_Composite_Base (D)),
-                        M2Addr (Get_Composite_Base (E2M (Src, Info, Kind))),
+                        M2Addr (Get_Composite_Base (Src)),
                         Get_Object_Size (D, Obj_Type));
          when Type_Mode_Bounded_Arrays
             | Type_Mode_Bounded_Records =>
             D := Stabilize (Dest);
-            Gen_Memcpy (M2Addr (D), Src, Get_Object_Size (D, Obj_Type));
+            Gen_Memcpy (M2Addr (D), M2Addr (Src),
+                        Get_Object_Size (D, Obj_Type));
          when Type_Mode_Unknown
             | Type_Mode_Protected =>
             raise Internal_Error;
