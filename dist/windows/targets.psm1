@@ -57,64 +57,64 @@ $VersionFileName_Ads =			"version.ads"
 # Library sources
 $LibrarySourceFiles = [ordered]@{
 	"std" = @(
-		@{"Dir" = "std"; "File" = "textio";                         "IncludedIn" = @(1987, 1993, 2008); "Flavor" = @("all")},
-		@{"Dir" = "std"; "File" = "textio-body";                    "IncludedIn" = @(1987, 1993, 2008); "Flavor" = @("all")},
-		@{"Dir" = "std"; "File" = "env";                            "IncludedIn" = @(            2008); "Flavor" = @("all")},
-		@{"Dir" = "std"; "File" = "env-body";                       "IncludedIn" = @(            2008); "Flavor" = @("all")}
+		@{"Dir" = "std"; "File" = "textio";                         "IncludedIn" = @(1987, 1993, 2008); "Flavor" = @("all");      Options=@("--bootstrap")},
+		@{"Dir" = "std"; "File" = "textio-body";                    "IncludedIn" = @(1987, 1993, 2008); "Flavor" = @("all");      Options=@("--bootstrap")},
+		@{"Dir" = "std"; "File" = "env";                            "IncludedIn" = @(            2008); "Flavor" = @("all");      Options=@("--bootstrap")},
+		@{"Dir" = "std"; "File" = "env-body";                       "IncludedIn" = @(            2008); "Flavor" = @("all");      Options=@("--bootstrap")}
 	);
 	"ieee" = @(
-		@{"Dir" = "ieee";     "File" = "std_logic_1164";            "IncludedIn" = @(1987, 1993      ); "Flavor" = @("all")},
-		@{"Dir" = "ieee";     "File" = "std_logic_1164-body";       "IncludedIn" = @(1987, 1993      ); "Flavor" = @("all")},
-		@{"Dir" = "ieee2008"; "File" = "std_logic_1164";            "IncludedIn" = @(            2008); "Flavor" = @("all")},
-		@{"Dir" = "ieee2008"; "File" = "std_logic_1164-body";       "IncludedIn" = @(            2008); "Flavor" = @("all")},
-		@{"Dir" = "ieee2008"; "File" = "std_logic_textio";          "IncludedIn" = @(            2008); "Flavor" = @("ieee")}
-		@{"Dir" = "ieee";     "File" = "numeric_std";               "IncludedIn" = @(1987, 1993      ); "Flavor" = @("all")},
-		@{"Dir" = "ieee";     "File" = "numeric_std-body";          "IncludedIn" = @(1987, 1993      ); "Flavor" = @("all")},
-		@{"Dir" = "ieee2008"; "File" = "numeric_std";               "IncludedIn" = @(            2008); "Flavor" = @("all")},
-		@{"Dir" = "ieee2008"; "File" = "numeric_std-body";          "IncludedIn" = @(            2008); "Flavor" = @("all")},
-		@{"Dir" = "ieee2008"; "File" = "numeric_std_unsigned";      "IncludedIn" = @(            2008); "Flavor" = @("all")},
-		@{"Dir" = "ieee2008"; "File" = "numeric_std_unsigned-body"; "IncludedIn" = @(            2008); "Flavor" = @("all")},
-		@{"Dir" = "ieee";     "File" = "numeric_bit";               "IncludedIn" = @(1987, 1993      ); "Flavor" = @("all")},
-		@{"Dir" = "ieee";     "File" = "numeric_bit-body";          "IncludedIn" = @(1987, 1993      ); "Flavor" = @("all")},
-		@{"Dir" = "ieee2008"; "File" = "numeric_bit";               "IncludedIn" = @(            2008); "Flavor" = @("all")},
-		@{"Dir" = "ieee2008"; "File" = "numeric_bit-body";          "IncludedIn" = @(            2008); "Flavor" = @("all")},
-		@{"Dir" = "ieee2008"; "File" = "numeric_bit_unsigned";      "IncludedIn" = @(            2008); "Flavor" = @("all")},
-		@{"Dir" = "ieee2008"; "File" = "numeric_bit_unsigned-body"; "IncludedIn" = @(            2008); "Flavor" = @("all")},
-		@{"Dir" = "ieee2008"; "File" = "math_real";                 "IncludedIn" = @(            2008); "Flavor" = @("all")},
-		@{"Dir" = "ieee2008"; "File" = "math_real-body";            "IncludedIn" = @(            2008); "Flavor" = @("all")},
-		@{"Dir" = "ieee2008"; "File" = "math_complex";              "IncludedIn" = @(            2008); "Flavor" = @("all")},
-		@{"Dir" = "ieee2008"; "File" = "math_complex-body";         "IncludedIn" = @(            2008); "Flavor" = @("all")},
-		@{"Dir" = "ieee2008"; "File" = "fixed_float_types";         "IncludedIn" = @(            2008); "Flavor" = @("all")},
-		@{"Dir" = "ieee2008"; "File" = "fixed_generic_pkg";         "IncludedIn" = @(            2008); "Flavor" = @("all")},
-		@{"Dir" = "ieee2008"; "File" = "fixed_generic_pkg-body";    "IncludedIn" = @(            2008); "Flavor" = @("all")},
-		@{"Dir" = "ieee2008"; "File" = "fixed_pkg";                 "IncludedIn" = @(            2008); "Flavor" = @("all")},
-		@{"Dir" = "ieee2008"; "File" = "float_generic_pkg";         "IncludedIn" = @(            2008); "Flavor" = @("all")},
-		@{"Dir" = "ieee2008"; "File" = "float_generic_pkg-body";    "IncludedIn" = @(            2008); "Flavor" = @("all")},
-		@{"Dir" = "ieee2008"; "File" = "float_pkg";                 "IncludedIn" = @(            2008); "Flavor" = @("all")},
-		@{"Dir" = "ieee2008"; "File" = "ieee_std_context";          "IncludedIn" = @(            2008); "Flavor" = @("all")},
-		@{"Dir" = "ieee2008"; "File" = "ieee_bit_context";          "IncludedIn" = @(            2008); "Flavor" = @("all")},
+		@{"Dir" = "ieee";     "File" = "std_logic_1164";            "IncludedIn" = @(1987, 1993      ); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "ieee";     "File" = "std_logic_1164-body";       "IncludedIn" = @(1987, 1993      ); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "ieee2008"; "File" = "std_logic_1164";            "IncludedIn" = @(            2008); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "ieee2008"; "File" = "std_logic_1164-body";       "IncludedIn" = @(            2008); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "ieee2008"; "File" = "std_logic_textio";          "IncludedIn" = @(            2008); "Flavor" = @("ieee");     Options=@()}
+		@{"Dir" = "ieee";     "File" = "numeric_std";               "IncludedIn" = @(1987, 1993      ); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "ieee";     "File" = "numeric_std-body";          "IncludedIn" = @(1987, 1993      ); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "ieee2008"; "File" = "numeric_std";               "IncludedIn" = @(            2008); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "ieee2008"; "File" = "numeric_std-body";          "IncludedIn" = @(            2008); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "ieee2008"; "File" = "numeric_std_unsigned";      "IncludedIn" = @(            2008); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "ieee2008"; "File" = "numeric_std_unsigned-body"; "IncludedIn" = @(            2008); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "ieee";     "File" = "numeric_bit";               "IncludedIn" = @(1987, 1993      ); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "ieee";     "File" = "numeric_bit-body";          "IncludedIn" = @(1987, 1993      ); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "ieee2008"; "File" = "numeric_bit";               "IncludedIn" = @(            2008); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "ieee2008"; "File" = "numeric_bit-body";          "IncludedIn" = @(            2008); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "ieee2008"; "File" = "numeric_bit_unsigned";      "IncludedIn" = @(            2008); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "ieee2008"; "File" = "numeric_bit_unsigned-body"; "IncludedIn" = @(            2008); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "ieee2008"; "File" = "math_real";                 "IncludedIn" = @(            2008); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "ieee2008"; "File" = "math_real-body";            "IncludedIn" = @(            2008); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "ieee2008"; "File" = "math_complex";              "IncludedIn" = @(            2008); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "ieee2008"; "File" = "math_complex-body";         "IncludedIn" = @(            2008); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "ieee2008"; "File" = "fixed_float_types";         "IncludedIn" = @(            2008); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "ieee2008"; "File" = "fixed_generic_pkg";         "IncludedIn" = @(            2008); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "ieee2008"; "File" = "fixed_generic_pkg-body";    "IncludedIn" = @(            2008); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "ieee2008"; "File" = "fixed_pkg";                 "IncludedIn" = @(            2008); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "ieee2008"; "File" = "float_generic_pkg";         "IncludedIn" = @(            2008); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "ieee2008"; "File" = "float_generic_pkg-body";    "IncludedIn" = @(            2008); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "ieee2008"; "File" = "float_pkg";                 "IncludedIn" = @(            2008); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "ieee2008"; "File" = "ieee_std_context";          "IncludedIn" = @(            2008); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "ieee2008"; "File" = "ieee_bit_context";          "IncludedIn" = @(            2008); "Flavor" = @("all");      Options=@()},
 
-		@{"Dir" = "vital95";  "File" = "vital_timing";              "IncludedIn" = @(1987            ); "Flavor" = @("all")},
-		@{"Dir" = "vital95";  "File" = "vital_timing-body";         "IncludedIn" = @(1987            ); "Flavor" = @("all")},
-		@{"Dir" = "vital95";  "File" = "vital_primitives";          "IncludedIn" = @(1987            ); "Flavor" = @("all")},
-		@{"Dir" = "vital95";  "File" = "vital_primitives-body";     "IncludedIn" = @(1987            ); "Flavor" = @("all")},
+		@{"Dir" = "vital95";  "File" = "vital_timing";              "IncludedIn" = @(1987            ); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "vital95";  "File" = "vital_timing-body";         "IncludedIn" = @(1987            ); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "vital95";  "File" = "vital_primitives";          "IncludedIn" = @(1987            ); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "vital95";  "File" = "vital_primitives-body";     "IncludedIn" = @(1987            ); "Flavor" = @("all");      Options=@()},
 		
-		@{"Dir" = "vital2000"; "File" = "timing_p";                 "IncludedIn" = @(      1993, 2008); "Flavor" = @("all")},
-		@{"Dir" = "vital2000"; "File" = "timing_b";                 "IncludedIn" = @(      1993, 2008); "Flavor" = @("all")},
-		@{"Dir" = "vital2000"; "File" = "prmtvs_p";                 "IncludedIn" = @(      1993, 2008); "Flavor" = @("all")},
-		@{"Dir" = "vital2000"; "File" = "prmtvs_b";                 "IncludedIn" = @(      1993, 2008); "Flavor" = @("all")},
-		@{"Dir" = "vital2000"; "File" = "memory_p";                 "IncludedIn" = @(      1993, 2008); "Flavor" = @("all")},
-		@{"Dir" = "vital2000"; "File" = "memory_b";                 "IncludedIn" = @(      1993, 2008); "Flavor" = @("all")},
-		
-		@{"Dir" = "synopsys"; "File" = "std_logic_arith";           "IncludedIn" = @(1987, 1993, 2008); "Flavor" = @("synopsys")},
-		@{"Dir" = "synopsys"; "File" = "std_logic_unsigned";        "IncludedIn" = @(1987, 1993, 2008); "Flavor" = @("synopsys")},
-		@{"Dir" = "synopsys"; "File" = "std_logic_signed";          "IncludedIn" = @(1987, 1993, 2008); "Flavor" = @("synopsys")},
-		@{"Dir" = "synopsys"; "File" = "std_logic_textio";          "IncludedIn" = @(1987, 1993      ); "Flavor" = @("synopsys")},
-		@{"Dir" = "synopsys"; "File" = "std_logic_misc";            "IncludedIn" = @(1987, 1993      ); "Flavor" = @("synopsys")},
-		@{"Dir" = "synopsys"; "File" = "std_logic_misc-body";       "IncludedIn" = @(1987, 1993      ); "Flavor" = @("synopsys")},
-
-		@{"Dir" = "mentor";   "File" = "std_logic_arith";           "IncludedIn" = @(      1993, 2008); "Flavor" = @("mentor")},
-		@{"Dir" = "mentor";   "File" = "std_logic_arith-body";      "IncludedIn" = @(      1993, 2008); "Flavor" = @("mentor")}
+		@{"Dir" = "vital2000"; "File" = "timing_p";                 "IncludedIn" = @(      1993, 2008); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "vital2000"; "File" = "timing_b";                 "IncludedIn" = @(      1993, 2008); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "vital2000"; "File" = "prmtvs_p";                 "IncludedIn" = @(      1993, 2008); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "vital2000"; "File" = "prmtvs_b";                 "IncludedIn" = @(      1993, 2008); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "vital2000"; "File" = "memory_p";                 "IncludedIn" = @(      1993, 2008); "Flavor" = @("all");      Options=@()},
+		@{"Dir" = "vital2000"; "File" = "memory_b";                 "IncludedIn" = @(      1993, 2008); "Flavor" = @("all");      Options=@()},
+		                                                                                                                          
+		@{"Dir" = "synopsys"; "File" = "std_logic_arith";           "IncludedIn" = @(1987, 1993, 2008); "Flavor" = @("synopsys"); Options=@()},
+		@{"Dir" = "synopsys"; "File" = "std_logic_unsigned";        "IncludedIn" = @(1987, 1993, 2008); "Flavor" = @("synopsys"); Options=@()},
+		@{"Dir" = "synopsys"; "File" = "std_logic_signed";          "IncludedIn" = @(1987, 1993, 2008); "Flavor" = @("synopsys"); Options=@()},
+		@{"Dir" = "synopsys"; "File" = "std_logic_textio";          "IncludedIn" = @(1987, 1993      ); "Flavor" = @("synopsys"); Options=@()},
+		@{"Dir" = "synopsys"; "File" = "std_logic_misc";            "IncludedIn" = @(1987, 1993      ); "Flavor" = @("synopsys"); Options=@()},
+		@{"Dir" = "synopsys"; "File" = "std_logic_misc-body";       "IncludedIn" = @(1987, 1993      ); "Flavor" = @("synopsys"); Options=@()},
+                                                                                                                              
+		@{"Dir" = "mentor";   "File" = "std_logic_arith";           "IncludedIn" = @(      1993, 2008); "Flavor" = @("mentor");   Options=@()},
+		@{"Dir" = "mentor";   "File" = "std_logic_arith-body";      "IncludedIn" = @(      1993, 2008); "Flavor" = @("mentor");   Options=@()}
 	)
 }
 
@@ -136,18 +136,16 @@ function Invoke-CleanGHDL
 	$EnableDebug =		-not $Quiet -and (                  $PSCmdlet.MyInvocation.BoundParameters["Debug"])
 	$EnableVerbose =	-not $Quiet -and ($EnableDebug  -or $PSCmdlet.MyInvocation.BoundParameters["Verbose"])
 
-	-not $Quiet			-and (Write-Host "Executing build target 'CleanGHDL' ..." -ForegroundColor DarkCyan)  | Out-Null
-	$EnableVerbose	-and (Write-Host "  Removing all created files and directories..."                 )  | Out-Null
+	-not $Quiet			-and (Write-Host "${Indentation}Executing build target 'CleanGHDL'..." -ForegroundColor DarkCyan)  | Out-Null
+	$EnableVerbose	-and (Write-Host "${Indentation}  Removing all created files and directories..."                 )  | Out-Null
 	if (Test-Path -Path $BuildDirectory)
-	{	$EnableDebug		-and (Write-Host "    rmdir $BuildDirectory"                                     )  | Out-Null
+	{	$EnableDebug		-and (Write-Host "${Indentation}    rmdir $BuildDirectory"                                     )  | Out-Null
 		Remove-Item $BuildDirectory -Force -Recurse -ErrorAction SilentlyContinue
 		if ($? -eq $false)
-		{	Write-Host "[ERROR]: Cannot remove '$BuildDirectory'." -ForegroundColor Red
-			throw "Cannot remove '$BuildDirectory'."
-		}
+		{	throw "Cannot remove '$BuildDirectory'."  }
 	}
 	else
-	{	Write-Host "  [INFO] Directory '$BuildDirectory' does not exist." -ForegroundColor Yellow
+	{	Write-Host "${Indentation}  [INFO] Directory '$BuildDirectory' does not exist." -ForegroundColor Yellow
 	}
 }	# Invoke-CleanGHDL
 
@@ -169,18 +167,16 @@ function Invoke-CleanLibraries
 	$EnableDebug =		-not $Quiet -and (                  $PSCmdlet.MyInvocation.BoundParameters["Debug"])
 	$EnableVerbose =	-not $Quiet -and ($EnableDebug  -or $PSCmdlet.MyInvocation.BoundParameters["Verbose"])
 
-	-not $Quiet			-and (Write-Host "Executing build target 'CleanLibraries' ..." -ForegroundColor DarkCyan) | Out-Null
-	$EnableVerbose	-and (Write-Host "  Removing all created library files and directories..."              ) | Out-Null
+	-not $Quiet			-and (Write-Host "${Indentation}Executing build target 'CleanLibraries'..." -ForegroundColor DarkCyan) | Out-Null
+	$EnableVerbose	-and (Write-Host "${Indentation}  Removing all created library files and directories..."              ) | Out-Null
 	if (Test-Path -Path $LibraryDirectory)
-	{	$EnableDebug		-and (Write-Host "    rmdir $LibraryDirectory"                                        ) | Out-Null
+	{	$EnableDebug		-and (Write-Host "${Indentation}    rmdir $LibraryDirectory"                                        ) | Out-Null
 		Remove-Item $LibraryDirectory -Force -Recurse -ErrorAction SilentlyContinue
 		if ($? -eq $false)
-		{	Write-Host "[ERROR]: Cannot remove '$LibraryDirectory'." -ForegroundColor Red
-			throw "Cannot remove '$LibraryDirectory'."
-		}
+		{	throw "Cannot remove '$LibraryDirectory'."  }
 	}
 	else
-	{	Write-Host "  [INFO] Directory '$LibraryDirectory' does not exist." -ForegroundColor Yellow
+	{	Write-Host "${Indentation}  [INFO] Directory '$LibraryDirectory' does not exist." -ForegroundColor Yellow
 	}
 }	# Invoke-CleanLibraries
 
@@ -205,31 +201,27 @@ function Invoke-CleanPackageZip
 	$EnableDebug =		-not $Quiet -and (                  $PSCmdlet.MyInvocation.BoundParameters["Debug"])
 	$EnableVerbose =	-not $Quiet -and ($EnableDebug  -or $PSCmdlet.MyInvocation.BoundParameters["Verbose"])
 
-	-not $Quiet			-and (Write-Host "Executing build target 'CleanPackageZip' ..." -ForegroundColor DarkCyan)  | Out-Null
-	$EnableVerbose	-and (Write-Host "  Removing all created files and directories..."                       )  | Out-Null
+	-not $Quiet			-and (Write-Host "${Indentation}Executing build target 'CleanPackageZip'..." -ForegroundColor DarkCyan)  | Out-Null
+	$EnableVerbose	-and (Write-Host "${Indentation}  Removing all created files and directories..."                       )  | Out-Null
 	if (Test-Path -Path $PackageDirectory)
-	{	$EnableDebug		-and (Write-Host "    rmdir $PackageDirectory"                                         )  | Out-Null
+	{	$EnableDebug		-and (Write-Host "${Indentation}    rmdir $PackageDirectory"                                         )  | Out-Null
 		Remove-Item $PackageDirectory -Force -Recurse -ErrorAction SilentlyContinue
 		if ($? -eq $false)
-		{	Write-Host "[ERROR]: Cannot remove '$PackageDirectory'." -ForegroundColor Red
-			throw "Cannot remove '$PackageDirectory'."
-		}
+		{	throw "Cannot remove '$PackageDirectory'."  }
 	}
 	else
-	{	Write-Host "  [INFO] Directory '$PackageDirectory' does not exist." -ForegroundColor Yellow
+	{	Write-Host "${Indentation}  [INFO] Directory '$PackageDirectory' does not exist." -ForegroundColor Yellow
 	}
 	
-	$EnableVerbose	-and (Write-Host "  Removing Zip file..."   ) | Out-Null
+	$EnableVerbose	-and (Write-Host "${Indentation}  Removing Zip file..."   ) | Out-Null
 	if (Test-Path -Path $PackageFile)
-	{	$EnableDebug		-and (Write-Host "    rmdir $PackageFile" ) | Out-Null
+	{	$EnableDebug		-and (Write-Host "${Indentation}    rmdir $PackageFile" ) | Out-Null
 		Remove-Item $PackageFile -Force -Recurse -ErrorAction SilentlyContinue
 		if ($? -eq $false)
-		{	Write-Host "[ERROR]: Cannot remove '$PackageFile'." -ForegroundColor Red
-			throw "Cannot remove '$PackageFile'."
-		}
+		{	throw "Cannot remove '$PackageFile'." }
 	}
 	else
-	{	Write-Host "  [INFO] Directory '$PackageFile' does not exist." -ForegroundColor Yellow
+	{	Write-Host "${Indentation}  [INFO] Directory '$PackageFile' does not exist." -ForegroundColor Yellow
 	}
 }	# Invoke-CleanPackageZip
 
@@ -254,7 +246,7 @@ function Invoke-CleanPackagePS1
 	$EnableDebug =		-not $Quiet -and (                  $PSCmdlet.MyInvocation.BoundParameters["Debug"])
 	$EnableVerbose =	-not $Quiet -and ($EnableDebug  -or $PSCmdlet.MyInvocation.BoundParameters["Verbose"])
 
-	-not $Quiet			-and (Write-Host "Executing build target 'CleanPackagePS1' ..." -ForegroundColor DarkCyan) | Out-Null
+	-not $Quiet			-and (Write-Host "${Indentation}Executing build target 'CleanPackagePS1'..." -ForegroundColor DarkCyan) | Out-Null
 	# $EnableVerbose	-and (Write-Host "  Removing all created files and directories..."                        ) | Out-Null
 	# if (Test-Path -Path $PackageDirectory)
 	# {	$EnableDebug		-and (Write-Host "    rmdir $PackageDirectory"                                          ) | Out-Null
@@ -268,17 +260,15 @@ function Invoke-CleanPackagePS1
 	# {	Write-Host "  [INFO] Directory '$PackageDirectory' does not exist." -ForegroundColor Yellow
 	# }
 	
-	$EnableVerbose	-and (Write-Host "  Removing PS1 file..."   ) | Out-Null
+	$EnableVerbose	-and (Write-Host "${Indentation}  Removing PS1 file..."   ) | Out-Null
 	if (Test-Path -Path $PackageFile)
-	{	$EnableDebug		-and (Write-Host "    rmdir $PackageFile" ) | Out-Null
+	{	$EnableDebug		-and (Write-Host "${Indentation}    rmdir $PackageFile" ) | Out-Null
 		Remove-Item $PackageFile -Force -Recurse -ErrorAction SilentlyContinue
 		if ($? -eq $false)
-		{	Write-Host "[ERROR]: Cannot remove '$PackageFile'." -ForegroundColor Red
-			throw "Cannot remove '$PackageFile'."
-		}
+		{	throw "Cannot remove '$PackageFile'." }
 	}
 	else
-	{	Write-Host "  [INFO] Directory '$PackageFile' does not exist." -ForegroundColor Yellow
+	{	Write-Host "${Indentation}  [INFO] Directory '$PackageFile' does not exist." -ForegroundColor Yellow
 	}
 }	# Invoke-CleanPackagePS1
 
@@ -298,17 +288,16 @@ function New-BuildDirectory
 		[switch]	$Quiet = $false
 	)
 
-	Write-Host "Executing build target 'BuildDirectory' ..." -ForegroundColor DarkCyan
+	# TODO: add quiet test
+	Write-Host "${Indentation}Executing build target 'BuildDirectory'..." -ForegroundColor DarkCyan
 	if (Test-Path -Path $BuildDirectory -PathType Container)
-	{	-not $Quiet -and (Write-Host "  [INFO] Directory '$BuildDirectory' already exists." -ForegroundColor Yellow) 	| Out-Null	}
+	{	-not $Quiet -and (Write-Host "${Indentation}  [INFO] Directory '$BuildDirectory' already exists." -ForegroundColor Yellow) 	| Out-Null	}
 	else
-	{	-not $Quiet  -and (Write-Host "  Creating new directory '$BuildDirectory'."                                )  | Out-Null
-		$EnableDebug -and (Write-Host "    mkdir $BuildDirectory"                                                  )  | Out-Null
-		New-Item -ItemType Directory -Path $BuildDirectory -ErrorAction SilentlyContinue                              | Out-Null
+	{	-not $Quiet  -and (Write-Host "${Indentation}  Creating new directory '$BuildDirectory'."                                )  | Out-Null
+		$EnableDebug -and (Write-Host "${Indentation}    mkdir $BuildDirectory"                                                  )  | Out-Null
+		New-Item -ItemType Directory -Path $BuildDirectory -ErrorAction SilentlyContinue                                            | Out-Null
 		if ($? -eq $false)
-		{	Write-Host "[ERROR]: Cannot create '$BuildDirectory'." -ForegroundColor Red
-			throw "Cannot create '$BuildDirectory'."
-		}
+		{	throw "Cannot create '$BuildDirectory'."  }
 	}
 }	# New-BuildDirectory
 
@@ -327,16 +316,13 @@ function Get-GHDLVersion
 	$ConfigureFilePath =		$GHDLRootDir + "\configure"
 
 	if (-not (Test-Path -Path $ConfigureFilePath -PathType Leaf))
-	{	Write-Host "[ERROR]: Version file '$ConfigureFilePath' does not exists." -ForegroundColor Red
-		Throw "File '$ConfigureFilePath' not found."
-	}
+	{	throw "Version file '$ConfigureFilePath' does not exist." }
 	$FileContent = Get-Content -Path $ConfigureFilePath
 	foreach ($Line in $FileContent)
 	{	if ($Line -match 'ghdl_version=\"(.+?)\"')
 		{ return $Matches[1]	}
 	}
-	Write-Host "[ERROR]: RegExp didn't match in '$ConfigureFilePath'." -ForegroundColor Red
-	Throw "'ghdl_version' not found in file Throw '$ConfigureFilePath'."
+	throw "RegExp didn't match in '$ConfigureFilePath'."
 }	# Get-GHDLVersion
 
 function Invoke-PatchVersionFile
@@ -367,18 +353,15 @@ function Invoke-PatchVersionFile
 	$VersionInputFilePath =		$SourceDirectory + "\" + $VersionFileName_In
 	$VersionFilePath =				$SourceDirectory + "\" + $VersionFileName_Ads
 
-	Write-Host "Executing build target 'PatchVersionFile' ..." -ForegroundColor DarkCyan
+	# TODO: add quiet test
+	Write-Host "${Indentation}Executing build target 'PatchVersionFile'..." -ForegroundColor DarkCyan
 
 	if (-not (Test-Path -Path $VersionInputFilePath -PathType Leaf))
-	{	Write-Host "[ERROR]: Version file '$VersionInputFilePath' does not exists." -ForegroundColor Red
-		throw "Version file '$VersionInputFilePath' does not exists."
-	}
-	-not $Quiet -and (Write-Host "  Patching '$VersionInputFilePath'.") | Out-Null
+	{	throw "Version file '$VersionInputFilePath' does not exists." }
+	-not $Quiet -and (Write-Host "${Indentation}  Patching '$VersionInputFilePath'.") | Out-Null
 	$FileContent = Get-Content -Path $VersionInputFilePath -Encoding Ascii
 	if ($? -eq $false)
-	{	Write-Host "[ERROR]: While opening '$VersionInputFilePath'." -ForegroundColor Red
-		throw "While opening '$VersionInputFilePath'."
-	}
+	{	throw "While opening '$VersionInputFilePath'."  }
 	
   $GHDLVersion = Get-GHDLVersion $GHDLRootDir
 	$FileContent = $FileContent -Replace "@VER@", $GHDLVersion
@@ -387,12 +370,10 @@ function Invoke-PatchVersionFile
 
 	$FileContent | Out-File $VersionFilePath -Encoding Ascii
 	if ($? -eq $false)
-	{	Write-Host "[ERROR]: While writing to '$VersionFilePath'." -ForegroundColor Red
-		throw "While writing to '$VersionFilePath'."
-	}
+	{	throw "While writing to '$VersionFilePath'."  }
 }	# Invoke-PatchVersionFile
 
-
+# TODO: review
 function Get-CFlags
 {	<#
 		.SYNOPSIS
@@ -425,7 +406,8 @@ function Invoke-CompileCFiles
 	$SourceDirectory =					$GHDLRootDir + "\" + $CommonSourceDirName
 
 	Set-Location $BuildDirectory
-	Write-Host "Executing build target 'CompileCFiles' ..." -ForegroundColor DarkCyan
+	# TODO: add quiet test
+	Write-Host "${Indentation}Executing build target 'CompileCFiles'..." -ForegroundColor DarkCyan
 
 	# list all files to be compiled; add additional CFlags if needed
 	$SourceFiles = @()
@@ -446,13 +428,12 @@ function Invoke-CompileCFiles
 		# call C compiler
 		$InvokeExpr = "$Prog_GCC " + ($Parameters -join " ") + " 2>&1"
 
-		Write-Host ("  compiling: " + $SourceFile.File)
-		Write-Debug	"    call: $InvokeExpr"
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGCCLine -Indent "    "
+		# TODO: add test
+		Write-Host ("${Indentation}  compiling: " + $SourceFile.File)
+		Write-Debug	"${Indentation}    call: $InvokeExpr"
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGCCLine -Indent "${Indentation}    "
 		if ($LastExitCode -ne 0)
-		{	Write-Host ("[ERROR]: While compiling '{0}'." -f $SourceFile.File) -ForegroundColor Red
-			throw "While compiling '{0}'."
-		}
+		{	throw ("While compiling '{0}'." -f $SourceFile.File)  }
 	}
 }	# Invoke-CompileCFiles
 
@@ -479,7 +460,8 @@ function Invoke-CompileGHDLAdaFiles
 	$WinMcodeSourceDirectory =			$GHDLRootDir + "\" + $WinMcodeSourceDirName
 
 	Set-Location $BuildDirectory
-	Write-Host "Executing build target 'CompileGHDLAdaFiles' ..." -ForegroundColor DarkCyan
+	# TODO: add quiet test
+	Write-Host "${Indentation}Executing build target 'CompileGHDLAdaFiles'..." -ForegroundColor DarkCyan
 
 	$Parameters = @()
 	$Parameters += Get-CFlags								# append common CFlags
@@ -517,13 +499,12 @@ function Invoke-CompileGHDLAdaFiles
 	# call Ada compiler (GNAT)
 	$InvokeExpr = "$Prog_GNATMake " + ($Parameters -join " ") + " 2>&1"
 
-	Write-Host "  compiling with GNAT"
-	Write-Debug "    call: $InvokeExpr"
-	$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGCCLine -Indent "    "
+	# TODO: add test
+	Write-Host "${Indentation}  compiling with GNAT"
+	Write-Debug "${Indentation}    call: $InvokeExpr"
+	$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGCCLine -Indent "${Indentation}    "
 	if ($LastExitCode -ne 0)
-	{	Write-Host "[ERROR]: While compiling '$GHDL_Mcode_Name'." -ForegroundColor Red
-		throw "While compiling '$GHDL_Mcode_Name'."
-	}
+	{	throw "While compiling '$GHDL_Mcode_Name'." }
 }	# Invoke-CompileGHDLAdaFiles
 
 
@@ -543,16 +524,16 @@ function Invoke-StripGHDLExecutable
 	)
 
 	Set-Location $BuildDirectory
-	Write-Host "Executing build target 'StripGHDLExecutable' ..." -ForegroundColor DarkCyan
+	# TODO: add quiet test
+	Write-Host "${Indentation}Executing build target 'StripGHDLExecutable'..." -ForegroundColor DarkCyan
 
 	# call striping tool (strip)
-	Write-Host "  stripping '$GHDL_Mcode_Name'"
-	Write-Debug "    call: $Prog_Strip $GHDL_Mcode_Name"
+	# TODO: add tests
+	Write-Host "${Indentation}  stripping '$GHDL_Mcode_Name'"
+	Write-Debug "${Indentation}    call: $Prog_Strip $GHDL_Mcode_Name"
 	& $Prog_Strip $GHDL_Mcode_Name
 	if ($LastExitCode -ne 0)
-	{	Write-Host "[ERROR]: While stripping '$GHDL_Mcode_Name'." -ForegroundColor Red
-		throw "While stripping '$GHDL_Mcode_Name'."
-	}
+	{	throw "While stripping '$GHDL_Mcode_Name'." }
 }	# Invoke-StripGHDLExecutable
 
 function Invoke-PrepareCompileLibrary
@@ -573,7 +554,7 @@ function Invoke-PrepareCompileLibrary
 	$EnableDebug =		-not $Quiet -and (                  $PSCmdlet.MyInvocation.BoundParameters["Debug"])
 	$EnableVerbose =	-not $Quiet -and ($EnableDebug  -or $PSCmdlet.MyInvocation.BoundParameters["Verbose"])
 
-	-not $Quiet			-and (Write-Host "Executing build target 'PrepareCompileLibrary' ..." -ForegroundColor DarkCyan)  | Out-Null
+	-not $Quiet			-and (Write-Host "${Indentation}Executing build target 'PrepareCompileLibrary'..." -ForegroundColor DarkCyan)  | Out-Null
 
 	# create lib directory if it does not exist
 	if (Test-Path -Path $DestinationDirectory)
@@ -636,7 +617,7 @@ function Invoke-CompileLibrary
 	$EnableDebug =		-not $Quiet -and (                  $PSCmdlet.MyInvocation.BoundParameters["Debug"])
 	$EnableVerbose =	-not $Quiet -and ($EnableDebug  -or $PSCmdlet.MyInvocation.BoundParameters["Verbose"])
 
-	-not $Quiet -and (Write-Host "Executing build target 'CompileLibrary' ($VHDLVersionYear, ieee) ..." -ForegroundColor DarkCyan) | Out-Null
+	-not $Quiet -and (Write-Host "${Indentation}Executing build target 'CompileLibrary' ($VHDLVersionYear, ieee)..." -ForegroundColor DarkCyan) | Out-Null
 
 	$GHDLOptions = @("-C", " -frelaxed-rules")
 	$VHDLVersion = switch ($VHDLVersionYear)
@@ -650,13 +631,12 @@ function Invoke-CompileLibrary
 		$SourceFiles = @()
 		$Options = $GHDLOptions
 
-		if ($LibraryName -eq "std")
-		{$Options += "--bootstrap"  }
 		
-		Write-Host "${Indentation}Patching files for '$LibraryName' ..." -ForegroundColor Yellow
-		$EnableVerbose -and (Write-Host "${Indentation}  Creating library $LibraryName in '$LibraryName' ..."	-ForegroundColor Gray	) | Out-Null
+		
+		Write-Host "${Indentation}Patching files for '$LibraryName'..."                                                         -ForegroundColor Yellow
+		$EnableVerbose -and (Write-Host "${Indentation}  Creating library $LibraryName in '$LibraryName'..."	                  -ForegroundColor Gray	    ) | Out-Null
 		if (Test-Path -Path "$VHDLLibraryDestinationDirectory\$LibraryName\v$VHDLVersion")
-		{ $EnableVerbose -and (Write-Host "${Indent}  [INFO] Library directory '$LibraryName' already exists." -ForegroundColor Yellow ) | Out-Null }
+		{ $EnableVerbose -and (Write-Host "${Indentation}  [INFO] Library directory '$LibraryName' already exists."             -ForegroundColor Yellow   ) | Out-Null }
 		else
 		{	$EnableDebug -and   (Write-Host "${Indentation}    mkdir $VHDLLibraryDestinationDirectory\$LibraryName\v$VHDLVersion"	-ForegroundColor DarkGray	) | Out-Null
 			mkdir "$VHDLLibraryDestinationDirectory\$LibraryName\v$VHDLVersion" | Out-Null
@@ -666,7 +646,7 @@ function Invoke-CompileLibrary
 		{	if (($VHDLVersionYear -in $FileEntry["IncludedIn"]) -and (("all" -in $FileEntry["Flavor"]) -or ("ieee" -in $FileEntry["Flavor"])))
 			{	$SourceFile =      $FileEntry["File"]
 				$SourceDirectory = $FileEntry["Dir"]
-				Write-Host "$Indentation  Patching file '$SourceDirectory\$SourceFile.vhdl' for VHDL-$VHDLVersionYear to '$LibraryName\v$VHDLVersion\$SourceFile.v$VHDLVersion'" -ForegroundColor Gray
+				Write-Host "$Indentation  Patching file '$SourceDirectory\$SourceFile.vhdl' for VHDL-$VHDLVersionYear to '$LibraryName\v$VHDLVersion\$SourceFile.v$VHDLVersion'"         -ForegroundColor Gray
 				$EnableDebug -and   (Write-Host "$Indentation    Get-Content `"$VHDLLibrarySourceDirectory\$SourceDirectory\$SourceFile.vhdl`" -Encoding Ascii ``"                       -ForegroundColor DarkGray  ) | Out-Null
 				$EnableDebug -and   (Write-Host "$Indentation      | Format-VHDLSourceFile -Version `"$VHDLVersion`" ``"                                                                 -ForegroundColor DarkGray  ) | Out-Null
 				$EnableDebug -and   (Write-Host "$Indentation      | Out-File `"$VHDLLibraryDestinationDirectory\$LibraryName\v$VHDLVersion\$SourceFile.v$VHDLVersion`" -Encoding Ascii" -ForegroundColor DarkGray  ) | Out-Null
@@ -680,7 +660,7 @@ function Invoke-CompileLibrary
 		}
 		
 		try
-		{	Analyze-Library $VHDLLibraryDestinationDirectory $LibraryName $SourceFiles "$VHDLVersion" $Options -SuppressWarnings:$SuppressWarnings -HaltOnError:$HaltOnError -Indentation:$Indentation -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
+		{	Analyze-Library $VHDLLibraryDestinationDirectory $LibraryName $SourceFiles "$VHDLVersion" ($Options + $FileEntry["Options"]) -SuppressWarnings:$SuppressWarnings -HaltOnError:$HaltOnError -Indentation:$Indentation -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
 		catch
 		{	throw $_  }
 	}
@@ -722,7 +702,7 @@ function Invoke-CompileIEEELibraryFlavor
 	$EnableDebug =		-not $Quiet -and (                  $PSCmdlet.MyInvocation.BoundParameters["Debug"])
 	$EnableVerbose =	-not $Quiet -and ($EnableDebug  -or $PSCmdlet.MyInvocation.BoundParameters["Verbose"])
 
-	-not $Quiet -and (Write-Host "Executing build target 'CompileLibrary' ($VHDLVersionYear, $VHDLFlavor) ..." -ForegroundColor DarkCyan) | Out-Null
+	-not $Quiet -and (Write-Host "${Indentation}Executing build target 'CompileLibrary' ($VHDLVersionYear, $VHDLFlavor)..." -ForegroundColor DarkCyan) | Out-Null
 
 	$GHDLOptions = @("-C")
 	$VHDLVersion = switch ($VHDLVersionYear)
@@ -735,10 +715,10 @@ function Invoke-CompileIEEELibraryFlavor
 	$Options =      $GHDLOptions
 	$OutputDir =    $VHDLFlavor
 	
-	Write-Host "${Indentation}Patching files for 'ieee' ..." -ForegroundColor Yellow
-	$EnableVerbose -and (Write-Host "${Indentation}  Creating library ieee in '$VHDLFlavor' ..."	-ForegroundColor Gray	) | Out-Null
+	Write-Host "${Indentation}Patching files for 'ieee'..."                                                               -ForegroundColor Yellow
+	$EnableVerbose -and (Write-Host "${Indentation}  Creating library ieee in '$VHDLFlavor'..."	                          -ForegroundColor Gray	    ) | Out-Null
 	if (Test-Path -Path "$VHDLLibraryDestinationDirectory\$OutputDir\v$VHDLVersion")
-	{ $EnableVerbose -and (Write-Host "${Indent}  [INFO] Library directory '$VHDLFlavor' already exists." -ForegroundColor Yellow ) | Out-Null }
+	{ $EnableVerbose -and (Write-Host "${Indent}  [INFO] Library directory '$VHDLFlavor' already exists."                 -ForegroundColor Yellow   ) | Out-Null }
 	else
 	{	$EnableDebug -and   (Write-Host "${Indentation}    mkdir $VHDLLibraryDestinationDirectory\$OutputDir\v$VHDLVersion"	-ForegroundColor DarkGray	) | Out-Null
 		mkdir "$VHDLLibraryDestinationDirectory\$OutputDir\v$VHDLVersion" | Out-Null
@@ -780,29 +760,28 @@ function Test-GHDLVersion
 	[CmdletBinding()]
 	param(
 		[string]	$BuildDirectory,
-		[switch]	$Quiet = $false
+		[Parameter(Mandatory=$false)][string]$Indentation = "",
+		[Parameter(Mandatory=$false)][switch]$Quiet = $false
 	)
 
-	Set-Location $BuildDirectory
-	Write-Host "Executing build target 'GHDLVersion' ..." -ForegroundColor DarkCyan
-
-	if (-not (Test-Path -Path $GHDL_Mcode_Name -PathType Leaf))
-	{	Write-Host "  GHDL executable '$GHDL_Mcode_Name' does not exists." -ForegroundColor Red
-		return $true
-	}
+	$EnableDebug =		-not $Quiet -and (                  $PSCmdlet.MyInvocation.BoundParameters["Debug"])
+	$EnableVerbose =	-not $Quiet -and ($EnableDebug  -or $PSCmdlet.MyInvocation.BoundParameters["Verbose"])
+	
+	-not $Quiet -and (Write-Host "${Indentation}Executing build target 'GHDLVersion'..." -ForegroundColor DarkCyan) | Out-Null
+	
+	if (-not (Test-Path -Path "$BuildDirectory\$GHDL_Mcode_Name" -PathType Leaf))
+	{	throw "GHDL executable '$GHDL_Mcode_Name' does not exists." }
 
 	# call ghdl
-	$InvokeExpr = "$GHDL_Mcode_Name --version 2>&1"
+	$InvokeExpr = "$BuildDirectory\$GHDL_Mcode_Name --version 2>&1"
 
-	Write-Host "  executing '$GHDL_Mcode_Name'"
-	Write-Host "    call: $InvokeExpr"
-	Write-Host "    ----------------------------------------"
-	Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-HostExtended "    "
-	Write-Host "    ----------------------------------------"
+	$EnableVerbose -and (Write-Host "$Indentation  executing '$GHDL_Mcode_Name'"                      -ForegroundColor Gray     ) | Out-Null
+	$EnableDebug -and   (Write-Host "$Indentation    call: $InvokeExpr"                               -ForegroundColor DarkGray ) | Out-Null
+	$EnableVerbose -and (Write-Host "$Indentation  ----------------------------------------"          -ForegroundColor Gray     ) | Out-Null
+	Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-HostExtended "$Indentation  " DarkGreen
+	$EnableVerbose -and (Write-Host "$Indentation  ----------------------------------------"          -ForegroundColor Gray     ) | Out-Null
 	if ($LastExitCode -ne 0)
-	{	Write-Host "[ERROR]: While executing '$GHDL_Mcode_Name'." -ForegroundColor Red
-		throw "While executing '$GHDL_Mcode_Name'."
-	}
+	{	throw "While executing '$GHDL_Mcode_Name'." }
 }	# Test-GHDLVersion
 
 
