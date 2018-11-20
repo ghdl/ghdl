@@ -17,7 +17,8 @@
 #   - installs GHDL into a directory (xcopy deploiment)
 #
 # ==============================================================================
-#	Copyright (C) 2015-2018 Patrick Lehmann - Boetzingen, Germany
+#	Copyright (C) 2017-2018 Patrick Lehmann - Boetzingen, Germany
+#	Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
 # Copyright (C) 2002, 2003, 2004, 2005 Tristan Gingold
 #  
 # GHDL is free software; you can redistribute it and/or modify it under
@@ -523,6 +524,14 @@ if ($CompileLibraries)
 # ==============================================================================
 # Package tasks
 # ==============================================================================
+if ($Package)
+{	if ($Clean -or $Compile) { Write-Host  }
+	Write-Host "Packaging GHDL and Libraries..." -ForegroundColor Cyan
+}
+
+
+
+
 if ($Package)
 {	Write-Host "Creating an installation package for GHDL $GHDLVersion for Windows"
 	$Good = $false
