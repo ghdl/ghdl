@@ -256,7 +256,7 @@ catch
 {	$GHDLVersion =              "unknown"
 }
 
-# configure some variables: paths, executables, directory names, ...
+# configure some variables: paths, executables, directory names,...
 $Backend =                               "mcode"
 $Flavors =                               @("synopsys", "mentor")
 $WindowsDirName =                        "dist\windows"    #\$Backend"
@@ -445,7 +445,7 @@ if ($CompileLibraryVHDL87 -or $CompileLibraryVHDL93 -or $CompileLibraryVHDL08)
 {	$env:GHDL = "$GHDLBuildDir"
 	Write-Host ("  Setting `$env:GHDL to '" + $env:GHDL + "'")
 
-	$EnableDebug -and (Write-Host "$Indentation    Import-Module ghdl ..." -ForegroundColor Yellow) | Out-Null
+	$EnableDebug -and (Write-Host "    Import-Module ghdl..." -ForegroundColor Yellow) | Out-Null
 	Import-Module $PSScriptRoot\ghdl.psm1 -Verbose:$false -Debug:$false -ArgumentList "", $Script_WorkingDir 3>$null
 	
 	try
@@ -462,14 +462,14 @@ if ($CompileLibraryVHDL87 -or $CompileLibraryVHDL93 -or $CompileLibraryVHDL08)
 if ($CompileLibraryVHDL87)
 {	$CompileLibraries = $true
 	try
-	{	Invoke-CompileLibrary $VHDLLibrarySourceDirectory $VHDLLibraryDestinationDirectory 1987 -SuppressWarnings:$SuppressWarnings -HaltOnError:$HaltOnError -Indentation:"  " -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
+	{	Invoke-CompileLibrary $VHDLLibrarySourceDirectory $VHDLLibraryDestinationDirectory 1987 -SuppressWarnings:$SuppressWarnings -HaltOnError:$HaltOnError -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
 	catch
 	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
 		Exit-Script -1
 	}
 
 	try
-	{	Invoke-CompileIEEELibraryFlavor $VHDLLibrarySourceDirectory $VHDLLibraryDestinationDirectory 1987 "synopsys" -SuppressWarnings:$SuppressWarnings -HaltOnError:$HaltOnError -Indentation:"  " -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
+	{	Invoke-CompileIEEELibraryFlavor $VHDLLibrarySourceDirectory $VHDLLibraryDestinationDirectory 1987 "synopsys" -SuppressWarnings:$SuppressWarnings -HaltOnError:$HaltOnError -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
 	catch
 	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
 		Exit-Script -1
@@ -478,7 +478,7 @@ if ($CompileLibraryVHDL87)
 if ($CompileLibraryVHDL93)
 {	$CompileLibraries = $true
 	try
-	{	Invoke-CompileLibrary $VHDLLibrarySourceDirectory $VHDLLibraryDestinationDirectory 1993 -SuppressWarnings:$SuppressWarnings -HaltOnError:$HaltOnError -Indentation:"  " -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
+	{	Invoke-CompileLibrary $VHDLLibrarySourceDirectory $VHDLLibraryDestinationDirectory 1993 -SuppressWarnings:$SuppressWarnings -HaltOnError:$HaltOnError -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
 	catch
 	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
 		Exit-Script -1
@@ -486,7 +486,7 @@ if ($CompileLibraryVHDL93)
 
 	foreach ($Flavor in $Flavors)
 	{	try
-		{	Invoke-CompileIEEELibraryFlavor $VHDLLibrarySourceDirectory $VHDLLibraryDestinationDirectory 1993 $Flavor -SuppressWarnings:$SuppressWarnings -HaltOnError:$HaltOnError -Indentation:"  " -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
+		{	Invoke-CompileIEEELibraryFlavor $VHDLLibrarySourceDirectory $VHDLLibraryDestinationDirectory 1993 $Flavor -SuppressWarnings:$SuppressWarnings -HaltOnError:$HaltOnError -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
 		catch
 		{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
 			Exit-Script -1
@@ -496,22 +496,24 @@ if ($CompileLibraryVHDL93)
 if ($CompileLibraryVHDL08)
 {	$CompileLibraries = $true
 	try
-	{	Invoke-CompileLibrary $VHDLLibrarySourceDirectory $VHDLLibraryDestinationDirectory 2008 -SuppressWarnings:$SuppressWarnings -HaltOnError:$HaltOnError -Indentation:"  " -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
+	{	Invoke-CompileLibrary $VHDLLibrarySourceDirectory $VHDLLibraryDestinationDirectory 2008 -SuppressWarnings:$SuppressWarnings -HaltOnError:$HaltOnError -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
 	catch
 	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
 		Exit-Script -1
 	}
 
 	try
-	{	Invoke-CompileIEEELibraryFlavor $VHDLLibrarySourceDirectory $VHDLLibraryDestinationDirectory 1987 "synopsys" -SuppressWarnings:$SuppressWarnings -HaltOnError:$HaltOnError -Indentation:"  " -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
+	{	Invoke-CompileIEEELibraryFlavor $VHDLLibrarySourceDirectory $VHDLLibraryDestinationDirectory 1987 "synopsys" -SuppressWarnings:$SuppressWarnings -HaltOnError:$HaltOnError -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
 	catch
 	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
 		Exit-Script -1
 	}
 }  # CompileLibraryVHDL93
 if ($CompileLibraries)
-{	$EnableDebug -and (Write-Host "$Indentation    Remove-Module ghdl ..." -ForegroundColor Yellow) | Out-Null
-	Remove-Module ghdl
+{	$Compile = $true
+
+	$EnableDebug -and (Write-Host "    Remove-Module ghdl..." -ForegroundColor Yellow) | Out-Null
+	Remove-Module ghdl -Verbose:$false
 
 	Write-Host    
 	Write-Host "Compile Libraries " -NoNewline
@@ -522,10 +524,48 @@ if ($CompileLibraries)
 
 
 # ==============================================================================
+# Test tasks
+# ==============================================================================
+if ($Test)
+{	if ($Clean -or $Compile) { Write-Host  }
+	Write-Host "Test GHDL..." -ForegroundColor Cyan
+}
+
+if ($TestGHDL)
+{	# $env:GHDL = "$GHDLBuildDir"
+	# Write-Host ("  Setting `$env:GHDL to '" + $env:GHDL + "'")
+
+	$EnableDebug -and (Write-Host "    Import-Module ghdl..." -ForegroundColor Yellow) | Out-Null
+	Import-Module $PSScriptRoot\ghdl.psm1 -Verbose:$false -Debug:$false -ArgumentList "", $Script_WorkingDir 3>$null
+	
+	Write-Host
+	Write-Host "Start testing..."
+}
+
+if ($TestGHDL)
+{	$Test = $true
+	try
+	{	Test-GHDLVersion $BuildDirectory -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
+	catch
+	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
+		Exit-Script -1
+	}
+}  # TestGHDL
+
+if ($Test)
+{	$EnableDebug -and (Write-Host "    Remove-Module ghdl..." -ForegroundColor Yellow) | Out-Null
+	Remove-Module ghdl -Verbose:$false
+
+	Write-Host    
+	Write-Host "Tests " -NoNewline
+	Write-Host "[SUCCESSFUL]" -ForegroundColor Green
+}
+
+# ==============================================================================
 # Package tasks
 # ==============================================================================
 if ($Package)
-{	if ($Clean -or $Compile) { Write-Host  }
+{	if ($Clean -or $Compile -or $Test) { Write-Host  }
 	Write-Host "Packaging GHDL and Libraries..." -ForegroundColor Cyan
 }
 
@@ -632,7 +672,7 @@ if ($Install)
 {	Write-Host "Installing GHDL $GHDLVersion for Windows..."
 	if ($InstallDir -eq "")
 	{	if (Test-Path $InstallDirFile -PathType Leaf)
-		{	Write-Host "  Reading installation path from '$InstallDirFile' ..."
+		{	Write-Host "  Reading installation path from '$InstallDirFile'..."
 			$InstallPath = Get-Content $InstallDirFile -Encoding Ascii
 		}
 		else
@@ -725,7 +765,7 @@ if ($Install)
 elseif ($Update)
 {	Write-Host "Updating GHDL $GHDLVersion for Windows..."
 	if (Test-Path $InstallDirFile -PathType Leaf)
-	{	Write-Host "  Reading installation path from '$InstallDirFile' ..."
+	{	Write-Host "  Reading installation path from '$InstallDirFile'..."
 		$InstallPath = Get-Content $InstallDirFile -Encoding Ascii
 	}
 	else
@@ -743,7 +783,7 @@ elseif ($Update)
 	}
 	
 	
-	Write-Host "  Creating directory sub-directories in '$InstallPath' ..."
+	Write-Host "  Creating directory sub-directories in '$InstallPath'..."
 	New-Item -ItemType directory -Path "$InstallPath\bin"        -ErrorAction SilentlyContinue  | Out-Null
 	New-Item -ItemType directory -Path "$InstallPath\include"    -ErrorAction SilentlyContinue  | Out-Null
 	New-Item -ItemType directory -Path "$InstallPath\lib"        -ErrorAction SilentlyContinue  | Out-Null
@@ -790,7 +830,7 @@ elseif ($Update)
 	{	$InstallInPath = "p"     }
 
 	if ($InstallInPath -ne "p")
-	{	Write-Host "  Removing GHDL from PATH variables in Machine, User, Session ..." -ForegroundColor Yellow
+	{	Write-Host "  Removing GHDL from PATH variables in Machine, User, Session..." -ForegroundColor Yellow
 		foreach ($container in @("Machine", "User"))
 		{	foreach ($entry in (Get-EnvPath -Container $container))
 			{	if ($entry.ToLower().Contains("ghdl"))
@@ -827,7 +867,7 @@ elseif ($Update)
 elseif ($Uninstall)
 {	Write-Host "Uninstalling GHDL $GHDLVersion for Windows..."
 	if (Test-Path $InstallDirFile -PathType Leaf)
-	{	Write-Host "  Reading installation path from '$InstallDirFile' ..."
+	{	Write-Host "  Reading installation path from '$InstallDirFile'..."
 		$InstallPath = Get-Content $InstallDirFile -Encoding Ascii
 	}
 	else
@@ -839,7 +879,7 @@ elseif ($Uninstall)
 		Remove-Item $InstallPath -Recurse -Force -ErrorAction SilentlyContinue
 	}
 	
-	Write-Host "  Removing GHDL from PATH variables in Machine, User, Session ..." -ForegroundColor Yellow
+	Write-Host "  Removing GHDL from PATH variables in Machine, User, Session..." -ForegroundColor Yellow
 	foreach ($container in @("Machine", "User"))
 	{	foreach ($entry in (Get-EnvPath -Container $container))
 		{	if ($entry.ToLower().Contains("ghdl"))

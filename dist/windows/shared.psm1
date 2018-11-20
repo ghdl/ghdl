@@ -325,96 +325,6 @@ function Write-ColoredGCCLine
 	{	$ErrorRecordFound		}
 }
 
-function Write-ColoredGHDLLine
-{	<#
-		.SYNOPSIS
-		This CmdLet colors GHDL output lines.
-		
-		.DESCRIPTION
-		This CmdLet colors GHDL output lines. Warnings are prefixed with 'WARNING: '
-		in yellow and errors are prefixed with 'ERROR: ' in red.
-		
-		.PARAMETER InputObject
-		A object stream is required as an input.
-		
-		.PARAMETER SuppressWarnings
-		Skip warning messages. (Show errors only.)
-	#>
-	[CmdletBinding()]
-	param(
-		[Parameter(ValueFromPipeline=$true)]
-		$InputObject,
-		
-		[Parameter(Position=1)]
-		[switch]$SuppressWarnings = $false,
-		[Parameter(Position=2)]
-		[string]$Indent = ""
-	)
-
-	begin
-	{	$ErrorRecordFound = $false	}
-	
-	process
-	{	if ($InputObject -is [String])
-		{	if ($InputObject -match ":\d+:\d+:warning:\s")
-			{	if (-not $SuppressWarnings)
-				{	Write-Host "${Indent}WARNING: "	-NoNewline -ForegroundColor Yellow
-					Write-Host $InputObject
-				}
-			}
-			elseif ($InputObject -match ":\d+:\d+:\s")
-			{	$ErrorRecordFound	= $true
-				Write-Host "${Indent}ERROR: "		-NoNewline -ForegroundColor Red
-				Write-Host $InputObject
-			}
-			else
-			{	Write-Host "${Indent}$InputObject"		}
-		}
-		else
-		{	Write-Host "Unsupported object in pipeline stream"		}
-	}
-
-	end
-	{	$ErrorRecordFound		}
-}
-
-function Write-HostExtended
-{	<#
-		.SYNOPSIS
-		This CmdLet colors GHDL output lines.
-		
-		.DESCRIPTION
-		This CmdLet colors GHDL output lines. Warnings are prefixed with 'WARNING: '
-		in yellow and errors are prefixed with 'ERROR: ' in red.
-		
-		.PARAMETER InputObject
-		A object stream is required as an input.
-		.PARAMETER Indent
-		Indentation string.
-	#>
-	[CmdletBinding()]
-	param(
-		[Parameter(ValueFromPipeline=$true)]
-		$InputObject,
-		
-		[Parameter(Position=1)]
-		[string]$Indent = ""
-	)
-
-	begin
-	{		}
-	
-	process
-	{	if ($InputObject -is [String])
-		{	Write-Host "${Indent}$InputObject"									}
-		else
-		{	Write-Host "Unsupported object in pipeline stream"	}
-	}
-
-	end
-	{		}
-}
-
 function Test-GitRepository
 {	<#
 		.SYNOPSIS
@@ -437,7 +347,5 @@ Export-ModuleMember -Function 'Format-VHDLSourceFile'
 
 Export-ModuleMember -Function 'Restore-NativeCommandStream'
 Export-ModuleMember -Function 'Write-ColoredGCCLine'
-Export-ModuleMember -Function 'Write-ColoredGHDLLine'
-Export-ModuleMember -Function 'Write-HostExtended'
 
 Export-ModuleMember -Function 'Test-GitRepository'

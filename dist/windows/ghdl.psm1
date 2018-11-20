@@ -240,11 +240,9 @@ function Restore-NativeCommandStream
 		.SYNOPSIS
 		This CmdLet gathers multiple ErrorRecord objects and reconstructs outputs
 		as a single line.
-		
 		.DESCRIPTION
 		This CmdLet collects multiple ErrorRecord objects and emits one String
 		object per line.
-		
 		.PARAMETER InputObject
 		A object stream is required as an input.
 	#>
@@ -259,7 +257,7 @@ function Restore-NativeCommandStream
 
 	process
 	{	if (-not $InputObject)
-		{	Write-Host "Empty pipeline!"	}
+		{	Write-Host "Empty pipeline!" -ForegroundColor Red	}
 		elseif ($InputObject -is [System.Management.Automation.ErrorRecord])
 		{	if ($InputObject.FullyQualifiedErrorId -eq "NativeCommandError")
 			{	Write-Output $InputObject.ToString()		}
@@ -275,7 +273,7 @@ function Restore-NativeCommandStream
 		elseif ($InputObject -is [String])
 		{	Write-Output $InputObject		}
 		else
-		{	Write-Host "Unsupported object in pipeline stream"		}
+		{	Write-Host "Unsupported object in pipeline stream" -ForegroundColor Red }
 	}
 
 	end
@@ -343,6 +341,47 @@ function Write-ColoredGHDLLine
 	{	$ErrorRecordFound		}
 }
 
+function Write-HostExtended
+{	<#
+		.SYNOPSIS
+		Indentation and coloring.
+		
+		.DESCRIPTION
+		This CmdLet indents and colors output lines.
+		
+		.PARAMETER InputObject
+		A object stream is required as an input.
+		.PARAMETER Indentation
+		Indentation string.
+		.PARAMETER Color
+		Forground color.
+	#>
+	[CmdletBinding()]
+	param(
+		[Parameter(ValueFromPipeline=$true)]
+		$InputObject,
+		
+		[Parameter(Position=1)]
+		[string]$Indentation = "",
+		
+		[Parameter(Position=2)]
+		[System.ConsoleColor]$Color = (Get-Host).ui.rawui.ForegroundColor
+	)
+
+	begin
+	{ }
+	
+	process
+	{	if ($InputObject -is [String])
+		{	Write-Host "${Indentation}$InputObject" -ForegroundColor $Color         }
+		else
+		{	Write-Host "Unsupported object in pipeline stream" -ForegroundColor Red }
+	}
+
+	end
+	{ }
+}
+
 Export-ModuleMember -Function 'Exit-GHDLModule'
 
 Export-ModuleMember -Function 'Get-GHDLBinary'
@@ -352,3 +391,4 @@ Export-ModuleMember -Function 'Analyze-Library'
 
 Export-ModuleMember -Function 'Restore-NativeCommandStream'
 Export-ModuleMember -Function 'Write-ColoredGHDLLine'
+Export-ModuleMember -Function 'Write-HostExtended'
