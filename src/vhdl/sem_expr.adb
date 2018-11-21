@@ -3772,6 +3772,8 @@ package body Sem_Expr is
       --  and statically match the subtype of the aggregate.
       if Aggr_Constrained then
          A_Subtype := Create_Array_Subtype (Base_Type, Get_Location (Aggr));
+         --  FIXME: extract element subtype ?
+         Set_Element_Subtype (A_Subtype, Get_Element_Subtype (Aggr_Type));
          Type_Staticness := Get_Type_Staticness (A_Subtype);
          for I in Infos'Range loop
             Set_Nth_Element (Get_Index_Subtype_List (A_Subtype), I - 1,
@@ -3781,6 +3783,7 @@ package body Sem_Expr is
          end loop;
          Set_Type_Staticness (A_Subtype, Type_Staticness);
          Set_Index_Constraint_Flag (A_Subtype, True);
+         --  FIXME: the element can be unconstrained.
          Set_Constraint_State (A_Subtype, Fully_Constrained);
          Set_Type (Aggr, A_Subtype);
          Set_Literal_Subtype (Aggr, A_Subtype);

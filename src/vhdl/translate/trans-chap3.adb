@@ -1045,6 +1045,7 @@ package body Trans.Chap3 is
    procedure Translate_Array_Subtype_Definition
      (Def : Iir_Array_Subtype_Definition; Parent_Type : Iir)
    is
+      El_Type   : constant Iir := Get_Element_Subtype (Def);
       Info      : constant Type_Info_Acc := Get_Info (Def);
       Pinfo     : constant Type_Info_Acc := Get_Info (Parent_Type);
 
@@ -1061,7 +1062,7 @@ package body Trans.Chap3 is
       Info.B := Pinfo.B;
       Info.S := Pinfo.S;
       if not Info.Type_Locally_Constrained
-        or else not Is_Static_Type (Get_Info (Get_Element_Subtype (Def)))
+        or else not Is_Static_Type (Get_Info (El_Type))
       then
          --  This is a complex type as the size is not known at compile
          --  time.
@@ -1070,7 +1071,10 @@ package body Trans.Chap3 is
          Info.Ortho_Ptr_Type := Pinfo.B.Base_Ptr_Type;
       else
          --  Length is known.  Create a constrained array.
-         El_Constrained := Get_Array_Element_Constraint (Def) /= Null_Iir;
+         --  True if this definition has constrained the element.
+         El_Constrained := Is_Fully_Constrained_Type (El_Type)
+           and then not Is_Fully_Constrained_Type (Get_Element_Subtype
+                                                     (Parent_Type));
          Info.Type_Mode := Type_Mode_Static_Array;
          Info.Ortho_Type (Mode_Signal) := O_Tnode_Null;
          Info.Ortho_Ptr_Type (Mode_Signal) := O_Tnode_Null;
