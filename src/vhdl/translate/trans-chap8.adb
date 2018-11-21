@@ -4205,26 +4205,54 @@ package body Trans.Chap8 is
       Prepare_Data_Record => Gen_Signal_Direct_Prepare_Data_Stabilize,
       Update_Data_Record => Gen_Signal_Direct_Update_Data_Record);
 
+   procedure Translate_Waveform_Expression
+     (Expr : Iir; Target_Type : Iir; Targ : in out Mnode; Res : out Mnode)
+   is
+      Expr_Type : constant Iir := Get_Type (Expr);
+   begin
+      if Get_Kind (Expr) = Iir_Kind_Aggregate
+        and then Get_Constraint_State (Expr_Type) /= Fully_Constrained
+      then
+         declare
+            Expr_Tinfo : constant Type_Info_Acc := Get_Info (Expr_Type);
+         begin
+            --  Create a temp.
+            Res := Create_Temp (Expr_Tinfo);
+            --  Set bounds from target
+            Stabilize (Targ);
+            New_Assign_Stmt
+              (M2Lp (Chap3.Get_Composite_Bounds (Res)),
+               M2Addr (Chap3.Get_Composite_Bounds (Targ)));
+            --  Allocate target
+            Chap3.Allocate_Unbounded_Composite_Base
+              (Alloc_Stack, Res, Get_Base_Type (Expr_Type));
+            --  Translate aggregate
+            Chap7.Translate_Aggregate (Res, Target_Type, Expr);
+         end;
+      else
+         Res := Chap7.Translate_Expression (Expr, Target_Type);
+      end if;
+   end Translate_Waveform_Expression;
+
    procedure Translate_Direct_Signal_Assignment
      (Target : Iir; Targ : Mnode; Drv : Mnode; We : Iir)
    is
       Target_Type  : constant Iir := Get_Type (Target);
       Target_Tinfo : constant Type_Info_Acc := Get_Info (Target_Type);
       Arg          : Signal_Direct_Assign_Data;
-      Expr         : Mnode;
+      Val          : Mnode;
       Stable_Targ  : Mnode;
    begin
-      Expr := Chap7.Translate_Expression (We, Target_Type);
+      Stable_Targ := Targ;
+      Translate_Waveform_Expression (We, Target_Type, Stable_Targ, Val);
       if Is_Composite (Target_Tinfo) then
-         Stabilize (Expr);
-         Stable_Targ := Stabilize (Targ);
+         Stabilize (Val);
+         Stabilize (Stable_Targ);
          Chap3.Check_Array_Match
-           (Target_Type, Stable_Targ, Get_Type (We), Expr, We);
-      else
-         Stable_Targ := Targ;
+           (Target_Type, Stable_Targ, Get_Type (We), Val, We);
       end if;
       Arg := (Drv => Drv,
-              Expr => Expr,
+              Expr => Val,
               Expr_Node => We);
       Gen_Signal_Direct_Assign (Stable_Targ, Target_Type, Arg);
    end Translate_Direct_Signal_Assignment;
@@ -4322,22 +4350,19 @@ package body Trans.Chap8 is
       if Mechanism = Signal_Assignment_Simple then
          declare
             Targ_Tinfo : constant Type_Info_Acc := Get_Info (Target_Type);
-            Val : O_Enode;
-            Stable_Val : Mnode;
+            Val : Mnode;
             Targ2 : Mnode;
          begin
             Open_Temp;
-            Val := Chap7.Translate_Expression (Value, Target_Type);
+            Targ2 := Targ;
+            Translate_Waveform_Expression (Value, Target_Type, Targ2, Val);
             if Is_Composite (Targ_Tinfo) then
-               Stable_Val := Stabilize (E2M (Val, Targ_Tinfo, Mode_Value));
-               Targ2 := Stabilize (Targ);
+               Stabilize (Targ2);
+               Stabilize (Val);
                Chap3.Check_Array_Match
-                 (Target_Type, Targ2, Get_Type (Value), Stable_Val, Wf_Chain);
-               Val := M2E (Stable_Val);
-            else
-               Targ2 := Targ;
+                 (Target_Type, Targ2, Get_Type (Value), Val, Wf_Chain);
             end if;
-            Gen_Simple_Signal_Assign (Targ2, Target_Type, Val);
+            Gen_Simple_Signal_Assign (Targ2, Target_Type, M2E (Val));
             Close_Temp;
          end;
          return;
@@ -4393,8 +4418,9 @@ package body Trans.Chap8 is
             if Get_Kind (Value) = Iir_Kind_Null_Literal then
                Val := Mnode_Null;
             else
-               Val := Chap7.Translate_Expression (Value, Target_Type);
-               Val := Stabilize (Val);
+               Translate_Waveform_Expression
+                 (Value, Target_Type, Var_Targ, Val);
+               Stabilize (Val);
                Chap3.Check_Array_Match
                  (Target_Type, Var_Targ, Get_Type (Value), Val, We);
             end if;
