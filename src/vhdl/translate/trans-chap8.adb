@@ -2976,10 +2976,12 @@ package body Trans.Chap8 is
                --  Individual association: assign the individual actual of
                --  the whole actual.
                if Sig = O_Enode_Null then
+                  --  Arghh..
                   Msig := Mnode_Null;
                else
                   Msig := E2M (Sig, Get_Info (Formal_Type), Mode_Signal);
                end if;
+               --  Note: Ftype_Info may be null (if the formal is a slice).
                Trans_Individual_Assign
                  (Assoc, E2M (Val, Get_Info (Formal_Type), Mode_Value), Msig);
             end if;
@@ -4212,8 +4214,7 @@ package body Trans.Chap8 is
       Expr         : Mnode;
       Stable_Targ  : Mnode;
    begin
-      Expr := E2M (Chap7.Translate_Expression (We, Target_Type),
-                   Target_Tinfo, Mode_Value);
+      Expr := Chap7.Translate_Expression (We, Target_Type);
       if Is_Composite (Target_Tinfo) then
          Stabilize (Expr);
          Stable_Targ := Stabilize (Targ);
@@ -4392,8 +4393,7 @@ package body Trans.Chap8 is
             if Get_Kind (Value) = Iir_Kind_Null_Literal then
                Val := Mnode_Null;
             else
-               Val := E2M (Chap7.Translate_Expression (Value, Target_Type),
-                           Targ_Tinfo, Mode_Value);
+               Val := Chap7.Translate_Expression (Value, Target_Type);
                Val := Stabilize (Val);
                Chap3.Check_Array_Match
                  (Target_Type, Var_Targ, Get_Type (Value), Val, We);
@@ -4424,8 +4424,7 @@ package body Trans.Chap8 is
                if Get_Kind (Value) = Iir_Kind_Null_Literal then
                   Val := Mnode_Null;
                else
-                  Val := E2M (Chap7.Translate_Expression (Value, Target_Type),
-                              Targ_Tinfo, Mode_Value);
+                  Val := Chap7.Translate_Expression (Value, Target_Type);
                   if Is_Composite (Targ_Tinfo) then
                      Stabilize (Val);
                      Chap3.Check_Array_Match

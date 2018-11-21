@@ -1158,9 +1158,7 @@ package body Trans.Chap4 is
             Data.Has_Val := False;
          else
             Data.Has_Val := True;
-            Data.Init_Val := E2M (Chap7.Translate_Expression (Value, Sig_Type),
-                                  Get_Info (Sig_Type),
-                                  Mode_Value);
+            Data.Init_Val := Chap7.Translate_Expression (Value, Sig_Type);
          end if;
       else
          --  Sub signal.

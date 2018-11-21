@@ -1170,8 +1170,7 @@ package body Trans.Chap6 is
             pragma Assert (Mode = Mode_Value);
             --  This can appear as a prefix of a name, therefore, the
             --  result is always a composite type or an access type.
-            return E2M (Chap7.Translate_Expression (Name),
-                        Type_Info, Mode_Value);
+            return Chap7.Translate_Expression (Name);
 
          when Iir_Kind_Image_Attribute =>
             pragma Assert (Mode = Mode_Value);
