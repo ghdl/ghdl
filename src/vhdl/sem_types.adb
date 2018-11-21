@@ -546,7 +546,8 @@ package body Sem_Types is
         and then not Is_Fully_Constrained_Type (El_Type)
       then
          Error_Msg_Sem
-           (+Def, "array element of unconstrained %n is not allowed",
+           (+Def,
+            "array element of unconstrained %n is not allowed before vhdl08",
             +El_Type);
       end if;
       Set_Resolved_Flag (Def, Get_Resolved_Flag (El_Type));
