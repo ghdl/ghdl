@@ -555,7 +555,9 @@ package body Files_Map is
                                    File_Length => 0,
                                    Lines => <>,
                                    Cache_Pos => Source_Ptr_Org,
-                                   Cache_Line => 1);
+                                   Cache_Line => 1,
+                                   Gap_Start => Source_Ptr_Last,
+                                   Gap_Last => Source_Ptr_Last);
       Lines_Tables.Init (Source_Files.Table (Res).Lines);
       File_Add_Line_Number (Res, 1, Source_Ptr_Org);
       return Res;
@@ -766,6 +768,12 @@ package body Files_Map is
 
       Set_File_Length (Res, Length);
 
+      --  Set the gap.
+      Source_Files.Table (Res).Gap_Start :=
+        Source_Ptr_Org + Length + 2;
+      Source_Files.Table (Res).Gap_Last :=
+        Source_Files.Table (Res).Source'Last;
+
       --  Compute the SHA1.
       declare
          use GNAT.SHA1;
@@ -817,6 +825,16 @@ package body Files_Map is
       Next_Location :=
         Source_Files.Table (Source_Files.Last).Last_Location + 1;
    end Unload_Last_Source_File;
+
+   procedure Skip_Gap (File : Source_File_Entry; Pos : in out Source_Ptr)
+   is
+      pragma Assert (File <= Source_Files.Last);
+      F : Source_File_Record renames Source_Files.Table (File);
+   begin
+      if Pos = F.Gap_Start then
+         Pos := F.Gap_Last + 1;
+      end if;
+   end Skip_Gap;
 
    --  Check validity of FILE.
    --  Raise an exception in case of error.

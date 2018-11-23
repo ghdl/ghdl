@@ -90,6 +90,10 @@ package Files_Map is
    function Location_Instance_To_Location
      (Loc : Location_Type) return Location_Type;
 
+   --  If POS points to the start of the gap of FILE, it will be updated
+   --  to the next character after the gap.
+   procedure Skip_Gap (File : Source_File_Entry; Pos : in out Source_Ptr);
+
    --  Return a buffer (access to the contents of the file) for a file entry.
    function Get_File_Source (File : Source_File_Entry) return File_Buffer_Acc;
 
@@ -280,6 +284,10 @@ private
             --  Cache for line table.
             Cache_Line : Positive;
             Cache_Pos : Source_Ptr;
+
+            --  Gap
+            Gap_Start : Source_Ptr;
+            Gap_Last : Source_Ptr;
 
          when Source_File_String =>
             --  There is only one line.

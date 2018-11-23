@@ -1595,6 +1595,7 @@ package body Scanner is
    --  Scan_LF_Newline.
    procedure Scan_Next_Line is
    begin
+      Files_Map.Skip_Gap (Current_Context.Source_File, Pos);
       Current_Context.Line_Number := Current_Context.Line_Number + 1;
       Current_Context.Line_Pos := Pos;
       File_Add_Line_Number
