@@ -15,6 +15,7 @@
 --  along with GCC; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
+with Interfaces; use Interfaces;
 with Ortho_Nodes; use Ortho_Nodes;
 with Ortho_Ident; use Ortho_Ident;
 with Flags; use Flags;
@@ -1078,6 +1079,20 @@ package body Translation is
                                Ghdl_Psl_Cover_Failed);
          Create_Report_Subprg ("__ghdl_report", Ghdl_Report);
       end;
+
+      --  procedure __ghdl_check_stack_allocation (size : __ghdl_index_type)
+      Start_Procedure_Decl
+        (Interfaces, Get_Identifier ("__ghdl_check_stack_allocation"),
+         O_Storage_External);
+      New_Interface_Decl (Interfaces, Param, Wki_Val, Ghdl_Index_Type);
+      Finish_Subprogram_Decl (Interfaces, Ghdl_Check_Stack_Allocation);
+
+      if Flag_Check_Stack_Allocation > 0 then
+         Check_Stack_Allocation_Threshold :=
+           New_Index_Lit (Unsigned_64 (Flag_Check_Stack_Allocation));
+      else
+         Check_Stack_Allocation_Threshold := O_Cnode_Null;
+      end if;
 
       --  procedure __ghdl_text_write (file : __ghdl_file_index;
       --                               str  : std_string_ptr);

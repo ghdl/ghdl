@@ -275,6 +275,19 @@ package body Grt.Lib is
       return Ghdl_I64_Exp_1 (V, E);
    end Ghdl_I64_Exp;
 
+   procedure Ghdl_Check_Stack_Allocation (Size : Ghdl_Index_Type)
+   is
+      Bt : Backtrace_Addrs;
+   begin
+      if Size >= Max_Stack_Allocation then
+         Save_Backtrace (Bt, 1);
+         Error_S ("declaration of a too large object (");
+         Diag_C (Natural (Size / 1024));
+         Diag_C (" KB)");
+         Error_E_Call_Stack (Bt);
+      end if;
+   end Ghdl_Check_Stack_Allocation;
+
    function C_Malloc (Size : Ghdl_Index_Type) return Ghdl_Ptr;
    pragma Import (C, C_Malloc, "malloc");
 

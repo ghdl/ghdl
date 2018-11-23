@@ -56,6 +56,7 @@ package body Grt.Options is
       P ("       X is expressed as a time value, without spaces: 1ns, ps...");
       P (" --stop-delta=X    stop the simulation cycle after X delta");
       P (" --expect-failure  invert exit status");
+      P (" --max-stack-alloc=X  error if variables are larger than X KB");
       P (" --no-run          do not simulate, only elaborate");
       P (" --unbuffered      disable buffering on stdout, stderr and");
       P ("                   files opened in write or append mode (TEXTIO).");
@@ -272,6 +273,21 @@ package body Grt.Options is
          Warning ("option --stack-size is deprecated");
       elsif Len >= 17 and then Option (1 .. 17) = "--stack-max-size=" then
          Warning ("option --stack-max-size is deprecated");
+      elsif Len >= 18 and then Option (1 .. 18) = "--max-stack-alloc=" then
+         declare
+            Ok : Boolean;
+            Pos : Natural;
+            Val : Integer_64;
+         begin
+            Extract_Integer (Option (19 .. Len), Ok, Val, Pos);
+            if not Ok or else Pos <= Len then
+               Error_S ("bad value in '");
+               Diag_C (Option);
+               Error_E ("'");
+            else
+               Lib.Max_Stack_Allocation := Ghdl_Index_Type (Val * 1024);
+            end if;
+         end;
       elsif Len >= 11 and then Option (1 .. 11) = "--activity=" then
          if Option (12 .. Len) = "none" then
             Flag_Activity := Activity_None;

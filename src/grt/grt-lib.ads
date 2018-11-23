@@ -70,6 +70,11 @@ package Grt.Lib is
    function Ghdl_I32_Exp (V : Ghdl_I32; E : Std_Integer) return Ghdl_I32;
    function Ghdl_I64_Exp (V : Ghdl_I64; E : Std_Integer) return Ghdl_I64;
 
+   --  Called before allocation of large (complex) objects.
+   procedure Ghdl_Check_Stack_Allocation (Size : Ghdl_Index_Type);
+
+   Max_Stack_Allocation : Ghdl_Index_Type := 128 * 1024;
+
    function Ghdl_Malloc (Size : Ghdl_Index_Type) return Ghdl_Ptr;
 
    --  Allocate and clear SIZE bytes.
@@ -121,6 +126,9 @@ private
    pragma Export (C, Ghdl_Direction_Check_Failed,
                   "__ghdl_direction_check_failed");
    pragma Export (C, Ghdl_Program_Error, "__ghdl_program_error");
+
+   pragma Export (C, Ghdl_Check_Stack_Allocation,
+                  "__ghdl_check_stack_allocation");
 
    pragma Export (C, Ghdl_Malloc, "__ghdl_malloc");
    pragma Export (C, Ghdl_Malloc0, "__ghdl_malloc0");

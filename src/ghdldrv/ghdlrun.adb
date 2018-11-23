@@ -322,6 +322,8 @@ package body Ghdlrun is
            Grt.Lib.Ghdl_I32_Exp'Address);
       Def (Trans_Decls.Ghdl_I64_Exp,
            Grt.Lib.Ghdl_I64_Exp'Address);
+      Def (Trans_Decls.Ghdl_Check_Stack_Allocation,
+           Grt.Lib.Ghdl_Check_Stack_Allocation'Address);
 
       Def (Trans_Decls.Ghdl_Sensitized_Process_Register,
            Grt.Processes.Ghdl_Sensitized_Process_Register'Address);

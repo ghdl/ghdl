@@ -447,6 +447,40 @@ package body Trans.Chap4 is
       end case;
    end Init_Object;
 
+   --  If SIZE is larger than the threshold, call __ghdl_check_stack_allocation
+   --  to raise an error if the size is too large.  There are two threshold:
+   --  one set at compile time (Check_Stack_Allocation_Threshold) and one set
+   --  at run-time.
+   --
+   --  Right now, this function is called only for allocation of a complex
+   --  object on the stack (constant or variable).  But there are more sources
+   --  of stack allocation (temporary aggregate, unbounded objects, individual
+   --  assocs...)
+   function Maybe_Check_Stack_Allocation (Size : O_Enode) return O_Enode
+   is
+      Val : O_Dnode;
+      If_Blk : O_If_Block;
+      Assoc : O_Assoc_List;
+   begin
+      if Flag_Check_Stack_Allocation = 0 then
+         return Size;
+      end if;
+
+      Val := Create_Temp_Init (Ghdl_Index_Type, Size);
+      Start_If_Stmt
+        (If_Blk,
+         New_Compare_Op (ON_Ge,
+                         New_Obj_Value (Val),
+                         New_Lit (Check_Stack_Allocation_Threshold),
+                         Ghdl_Bool_Type));
+      Start_Association (Assoc, Ghdl_Check_Stack_Allocation);
+      New_Association (Assoc, New_Obj_Value (Val));
+      New_Procedure_Call (Assoc);
+      Finish_If_Stmt (If_Blk);
+
+      return New_Obj_Value (Val);
+   end Maybe_Check_Stack_Allocation;
+
    procedure Elab_Object_Storage (Obj : Iir)
    is
       Obj_Type : constant Iir := Get_Type (Obj);
@@ -456,6 +490,7 @@ package body Trans.Chap4 is
 
       Type_Info  : Type_Info_Acc;
       Alloc_Kind : Allocation_Kind;
+      Size : O_Enode;
    begin
       --  Elaborate subtype.
       Chap3.Elab_Object_Subtype (Obj_Type);
@@ -476,7 +511,16 @@ package body Trans.Chap4 is
          --  the object is a constant
          Name_Node := Get_Var (Obj_Info.Object_Var, Type_Info, Mode_Value);
          Alloc_Kind := Get_Alloc_Kind_For_Var (Obj_Info.Object_Var);
-         Allocate_Complex_Object (Obj_Type, Alloc_Kind, Name_Node);
+         Size := Chap3.Get_Subtype_Size (Obj_Type, Mnode_Null, Mode_Value);
+         if Alloc_Kind = Alloc_Stack then
+            Size := Maybe_Check_Stack_Allocation (Size);
+         end if;
+         --  Was: Allocate_Complex_Object.
+         New_Assign_Stmt
+           (M2Lp (Name_Node),
+            Gen_Alloc (Alloc_Kind,
+                       Size,
+                       Type_Info.Ortho_Ptr_Type (Mode_Value)));
       end if;
    end Elab_Object_Storage;
 

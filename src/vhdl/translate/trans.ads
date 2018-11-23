@@ -138,6 +138,8 @@ package Trans is
    Ghdl_Signal_Ptr     : O_Tnode;
    Ghdl_Signal_Ptr_Ptr : O_Tnode;
 
+   Check_Stack_Allocation_Threshold : O_Cnode;
+
    type Object_Kind_Type is (Mode_Value, Mode_Signal);
 
    --  Well known identifiers.
