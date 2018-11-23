@@ -137,7 +137,7 @@ package Files_Map is
    --  Add a new entry in the lines_table.
    --  The new entry must be the next one after the last entry.
    procedure File_Add_Line_Number
-     (File : Source_File_Entry; Line : Natural; Pos : Source_Ptr);
+     (File : Source_File_Entry; Line : Positive; Pos : Source_Ptr);
 
    --  Convert LOCATION to a source file.  Return No_Source_File_Entry if
    --  LOCATION is incorrect.
@@ -150,11 +150,11 @@ package Files_Map is
 
    --  Convert LOCATION and FILE to a line number.
    function Location_File_To_Line
-     (Location : Location_Type; File : Source_File_Entry) return Natural;
+     (Location : Location_Type; File : Source_File_Entry) return Positive;
 
    --  Get logical column (with HT expanded) from LOC, FILE and LINE.
    function Location_File_Line_To_Col
-     (Loc : Location_Type; File : Source_File_Entry; Line : Natural)
+     (Loc : Location_Type; File : Source_File_Entry; Line : Positive)
      return Natural;
 
    --  Convert LOCATION into a source file FILE and an offset POS in the
@@ -173,7 +173,7 @@ package Files_Map is
 
    --  Convert a FILE+LINE into a position.
    --  Return Source_Ptr_Bad in case of error (LINE out of bounds).
-   function Line_To_Position (File : Source_File_Entry; Line : Natural)
+   function Line_To_Position (File : Source_File_Entry; Line : Positive)
                              return Source_Ptr;
 
    --  Translate LOCATION into coordinate (physical position).
@@ -185,7 +185,7 @@ package Files_Map is
    procedure Location_To_Coord (Location : Location_Type;
                                 File : out Source_File_Entry;
                                 Line_Pos : out Source_Ptr;
-                                Line : out Natural;
+                                Line : out Positive;
                                 Offset : out Natural);
 
    --  Convert a physical column to a logical column.
@@ -212,14 +212,14 @@ package Files_Map is
    --  It is like to two procedures above.
    procedure Location_To_Position (Location : Location_Type;
                                    Name : out Name_Id;
-                                   Line : out Natural;
+                                   Line : out Positive;
                                    Col : out Natural);
 
    --  Return the line LINE from FILE (without end of line).  The line is
    --  expanded: tabs are replaced by spaces according to Tab_Stop.  This
    --  function is slow.
    function Extract_Expanded_Line (File : Source_File_Entry;
-                                   Line : Natural) return String;
+                                   Line : Positive) return String;
 
    --  Return the image of LOC using the "FILENAME:LINE:COL" format or
    --  "LINE:COL" format if FILENAME is false;
@@ -267,7 +267,7 @@ private
       Source : File_Buffer_Acc;
 
       --  Length of the file, which is less than the length of the buffer.
-      File_Length : Natural;
+      File_Length : Source_Ptr;
 
       Checksum : File_Checksum_Id;
 
@@ -278,7 +278,7 @@ private
             Lines : Lines_Tables.Instance;
 
             --  Cache for line table.
-            Cache_Line : Natural;
+            Cache_Line : Positive;
             Cache_Pos : Source_Ptr;
 
          when Source_File_String =>
