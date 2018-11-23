@@ -2269,7 +2269,7 @@ package body Parse is
 
          First := Null_Iir;
          Scan_Semi_Colon ("element declaration");
-         exit when Current_Token = Tok_End;
+         exit when Current_Token /= Tok_Identifier;
       end loop;
 
       Set_Elements_Declaration_List (Res, List_To_Flist (El_List));
@@ -2280,11 +2280,9 @@ package body Parse is
       end if;
 
       --  Skip 'end'
-      Scan_Expect (Tok_Record);
+      Expect_Scan (Tok_End);
+      Expect_Scan (Tok_Record);
       Set_End_Has_Reserved_Id (Res, True);
-
-      --  Skip 'record'
-      Scan;
 
       return Res;
    end Parse_Record_Type_Definition;
