@@ -495,6 +495,13 @@ package body Ghdllocal is
          Lib := Get_Library (Name, Command_Line_Location);
       end if;
 
+      Put ("# Library ");
+      Put (Name_Table.Image (Get_Identifier (Lib)));
+      New_Line;
+      Put ("# Directory: ");
+      Put (Name_Table.Image (Get_Library_Directory (Lib)));
+      New_Line;
+
       --  Disp contents of files.
       File := Get_Design_File_Chain (Lib);
       while File /= Null_Iir loop
