@@ -129,6 +129,8 @@ begin
       C := Source (Pos);
       if C not in '0' .. '9' then
          Error_Msg_Scan ("a dot must be followed by a digit");
+         Current_Token := Tok_Real;
+         Current_Context.Fp64 := Fp64 (To_Float_64 (False, Res, Base, 0));
          return;
       end if;
       Scan_Integer;
