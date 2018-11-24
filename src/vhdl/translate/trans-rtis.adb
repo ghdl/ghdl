@@ -2930,6 +2930,7 @@ package body Trans.Rtis is
 
       Unit : Iir_Design_Unit;
       Lib  : Iir_Library_Declaration;
+      Lib_Unit : Iir;
       Prev : Rti_Block;
    begin
       Push_Rti_Node (Prev);
@@ -2943,10 +2944,20 @@ package body Trans.Rtis is
          Lib := Get_Library (Get_Design_File (Unit));
          Generate_Library (Lib, True);
 
-         if Get_Kind (Get_Library_Unit (Unit)) = Iir_Kind_Package_Declaration
-         then
-            Nbr_Pkgs := Nbr_Pkgs + 1;
-         end if;
+         --  Count the number of top-level packages.
+         Lib_Unit := Get_Library_Unit (Unit);
+         case Get_Kind (Lib_Unit) is
+            when Iir_Kind_Package_Declaration =>
+               Nbr_Pkgs := Nbr_Pkgs + 1;
+            when Iir_Kind_Package_Instantiation_Declaration =>
+               if Get_Macro_Expanded_Flag
+                 (Get_Uninstantiated_Package_Decl (Lib_Unit))
+               then
+                  Nbr_Pkgs := Nbr_Pkgs + 1;
+               end if;
+            when others =>
+               null;
+         end case;
       end loop;
 
       Pop_Rti_Node (Prev);
