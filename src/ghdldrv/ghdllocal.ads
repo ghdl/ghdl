@@ -56,6 +56,9 @@ package Ghdllocal is
    --  Set with -v option.
    Flag_Verbose : Boolean := False;
 
+   --  True if --post is present.
+   Flag_Postprocess : Boolean := False;
+
    --  Suffix for asm files.
    Asm_Suffix : constant String := ".s";
 

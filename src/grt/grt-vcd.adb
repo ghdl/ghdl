@@ -53,6 +53,7 @@ with Grt.Vstrings;
 with Grt.Wave_Opt; use Grt.Wave_Opt;
 with Grt.Wave_Opt.Design; use Grt.Wave_Opt.Design;
 with Grt.Fcvt;
+with Grt.Options;
 pragma Elaborate_All (Grt.Table);
 
 package body Grt.Vcd is
@@ -241,7 +242,20 @@ package body Grt.Vcd is
       Vcd_Putline ("  GHDL v0");
       Vcd_Put_End;
       Vcd_Putline ("$timescale");
-      Vcd_Putline ("  1 fs");
+      case Options.Time_Resolution_Scale is
+         when 5 =>
+            Vcd_Putline ("  1 fs");
+         when 4 =>
+            Vcd_Putline ("  1 ps");
+         when 3 =>
+            Vcd_Putline ("  1 ns");
+         when 2 =>
+            Vcd_Putline ("  1 us");
+         when 1 =>
+            Vcd_Putline ("  1 ms");
+         when 0 =>
+            Vcd_Putline ("  1 sec");
+      end case;
       Vcd_Put_End;
    end Vcd_Init;
 
@@ -360,8 +374,9 @@ package body Grt.Vcd is
                  Get_Base_Type (Arr_Rti.Indexes (0));
             begin
                Kind := Rti_To_Vcd_Kind (Arr_Rti);
-               Bounds := Loc_To_Addr (St.Common.Depth, St.Bounds,
+               Bounds := Loc_To_Addr (St.Common.Depth, St.Layout,
                                       Avhpi_Get_Context (Sig));
+               Bounds := Array_Layout_To_Bounds (Bounds);
                Extract_Range (Bounds, Idx_Rti, Irange);
             end;
          when Ghdl_Rtik_Type_Array =>

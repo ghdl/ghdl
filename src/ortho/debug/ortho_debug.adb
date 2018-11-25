@@ -288,6 +288,14 @@ package body Ortho_Debug is
       N.Ref := True;
    end Check_Ref;
 
+   procedure Check_Ref (N : O_Gnode) is
+   begin
+      if N.Ref then
+         raise Syntax_Error;
+      end if;
+      N.Ref := True;
+   end Check_Ref;
+
    procedure Check_Complete_Type (T : O_Tnode) is
    begin
       if not T.Complete then
@@ -928,7 +936,7 @@ package body Ortho_Debug is
            | ON_Interface_Decl =>
             null;
          when others =>
-            raise Program_Error;
+            raise Syntax_Error;
       end case;
       Check_Scope (Obj);
       return new O_Lnode_Obj'(Kind => OL_Obj,
@@ -937,8 +945,28 @@ package body Ortho_Debug is
                               Obj => Obj);
    end New_Obj;
 
+   function New_Global (Decl : O_Dnode) return O_Gnode
+   is
+      subtype O_Gnode_Decl is O_Gnode_Type (OG_Decl);
+   begin
+      case Decl.Kind is
+         when ON_Const_Decl
+           | ON_Var_Decl =>
+            null;
+         when others =>
+            raise Syntax_Error;
+      end case;
+      if Decl.Storage = O_Storage_Local then
+         raise Syntax_Error;
+      end if;
+      return new O_Gnode_Decl'(Kind => OG_Decl,
+                               Rtype => Decl.Dtype,
+                               Ref => False,
+                               Decl => Decl);
+   end New_Global;
+
    function New_Indexed_Element (Arr : O_Lnode; Index : O_Enode)
-     return O_Lnode
+                                return O_Lnode
    is
       subtype O_Lnode_Indexed is O_Lnode_Type (OL_Indexed_Element);
       Res : O_Lnode;
@@ -953,7 +981,7 @@ package body Ortho_Debug is
    end New_Indexed_Element;
 
    function New_Slice (Arr : O_Lnode; Res_Type : O_Tnode; Index : O_Enode)
-     return O_Lnode
+                      return O_Lnode
    is
       subtype O_Lnode_Slice is O_Lnode_Type (OL_Slice);
       Res : O_Lnode;
@@ -994,6 +1022,27 @@ package body Ortho_Debug is
                                            Rec_Base => Rec,
                                            Rec_El => El);
    end New_Selected_Element;
+
+   function New_Global_Selected_Element (Rec : O_Gnode; El : O_Fnode)
+                                        return O_Gnode
+   is
+      subtype O_Gnode_Selected_Element is O_Gnode_Type (OG_Selected_Element);
+   begin
+      if Rec.Rtype.Kind /= ON_Record_Type
+        and then Rec.Rtype.Kind /= ON_Union_Type
+      then
+         raise Type_Error;
+      end if;
+      if Rec.Rtype /= El.Parent then
+         raise Type_Error;
+      end if;
+      Check_Ref (Rec);
+      return new O_Gnode_Selected_Element'(Kind => OG_Selected_Element,
+                                           Rtype => El.Ftype,
+                                           Ref => False,
+                                           Rec_Base => Rec,
+                                           Rec_El => El);
+   end New_Global_Selected_Element;
 
    function New_Access_Element (Acc : O_Enode) return O_Lnode
    is
@@ -1086,12 +1135,13 @@ package body Ortho_Debug is
                                   Lvalue => Lvalue);
    end New_Address;
 
-   function New_Global_Unchecked_Address (Decl : O_Dnode; Atype : O_Tnode)
+   function New_Global_Unchecked_Address (Lvalue : O_Gnode; Atype : O_Tnode)
      return O_Cnode
    is
       subtype O_Cnode_Address is O_Cnode_Type (OC_Unchecked_Address);
    begin
-      Check_Scope (Decl);
+      --  FIXME: check Lvalue is a static object.
+      Check_Ref (Lvalue);
       if Atype.Kind /= ON_Access_Type then
          --  An address is of type access.
          raise Type_Error;
@@ -1099,25 +1149,27 @@ package body Ortho_Debug is
       return new O_Cnode_Address'(Kind => OC_Unchecked_Address,
                                   Ctype => Atype,
                                   Ref => False,
-                                  Decl => Decl);
+                                  Addr_Global => Lvalue);
    end New_Global_Unchecked_Address;
 
-   function New_Global_Address (Decl : O_Dnode; Atype : O_Tnode) return O_Cnode
+   function New_Global_Address (Lvalue : O_Gnode; Atype : O_Tnode)
+                               return O_Cnode
    is
       subtype O_Cnode_Address is O_Cnode_Type (OC_Address);
    begin
-      Check_Scope (Decl);
+      --  FIXME: check Lvalue is a static object.
+      Check_Ref (Lvalue);
       if Atype.Kind /= ON_Access_Type then
          --  An address is of type access.
          raise Type_Error;
       end if;
-      if Get_Base_Type (Decl.Dtype) /= Get_Base_Type (Atype.D_Type) then
+      if Get_Base_Type (Lvalue.Rtype) /= Get_Base_Type (Atype.D_Type) then
          raise Type_Error;
       end if;
       return new O_Cnode_Address'(Kind => OC_Address,
                                   Ctype => Atype,
                                   Ref => False,
-                                  Decl => Decl);
+                                  Addr_Global => Lvalue);
    end New_Global_Address;
 
    function New_Subprogram_Address (Subprg : O_Dnode; Atype : O_Tnode)
@@ -1132,7 +1184,7 @@ package body Ortho_Debug is
       return new O_Cnode_Subprg_Address'(Kind => OC_Subprogram_Address,
                                          Ctype => Atype,
                                          Ref => False,
-                                         Decl => Subprg);
+                                         Addr_Decl => Subprg);
    end New_Subprogram_Address;
 
    --  Raise TYPE_ERROR is ATYPE is a composite type.

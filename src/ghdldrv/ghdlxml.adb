@@ -26,6 +26,7 @@ with Ghdlprint; use Ghdlprint;
 with Libraries;
 with Errorout; use Errorout;
 with Iirs; use Iirs;
+with Sem_Lib; use Sem_Lib;
 with Ghdlmain; use Ghdlmain;
 with Ghdllocal; use Ghdllocal;
 
@@ -439,6 +440,12 @@ package body Ghdlxml is
                            end if;
                         when Attr_Chain =>
                            Disp_Iir_Chain (Img, V);
+                        when Attr_Maybe_Ref_Chain =>
+                           if Get_Is_Ref (N) then
+                              Disp_Iir_Ref (Img, V);
+                           else
+                              Disp_Iir_Chain (Img, V);
+                           end if;
                         when Attr_Chain_Next =>
                            null;
                         when Attr_Of_Ref | Attr_Of_Maybe_Ref =>
@@ -555,7 +562,7 @@ package body Ghdlxml is
             return;
          end if;
          Files (I).Fe := File;
-         Files (I).Design_File := Libraries.Load_File (File);
+         Files (I).Design_File := Load_File (File);
          if Files (I).Design_File = Null_Iir then
             return;
          end if;

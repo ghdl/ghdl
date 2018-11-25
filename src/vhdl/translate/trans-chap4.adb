@@ -301,8 +301,6 @@ package body Trans.Chap4 is
    is
       Type_Info : constant Type_Info_Acc := Get_Type_Info (Var);
       Kind      : constant Object_Kind_Type := Get_Object_Kind (Var);
-      Targ      : Mnode;
-      Has_Ref   : Boolean;
    begin
       --  Cannot allocate unconstrained object (since size is unknown).
       pragma Assert (Type_Info.Type_Mode not in Type_Mode_Unbounded);
@@ -312,34 +310,12 @@ package body Trans.Chap4 is
          return;
       end if;
 
-      Has_Ref := False;
-      Targ := Var;
-
-      if not Is_Static_Type (Type_Info) then
-         if Type_Info.C (Kind).Builder_Need_Func
-           and then not Is_Stable (Var)
-         then
-            --  Need a stable reference...
-            Targ := Create_Temp (Type_Info, Kind);
-            Has_Ref := True;
-         end if;
-
-         --  Allocate variable.
-         New_Assign_Stmt (M2Lp (Targ),
-                          Gen_Alloc (Alloc_Kind,
-                                     Chap3.Get_Object_Size (Var, Obj_Type),
-                                     Type_Info.Ortho_Ptr_Type (Kind)));
-      end if;
-
-      if Type_Info.C (Kind).Builder_Need_Func then
-         --  Build the type.
-         Chap3.Gen_Call_Type_Builder (Targ, Obj_Type);
-      end if;
-
-      if Has_Ref then
-         New_Assign_Stmt (M2Lp (Var), M2Addr (Targ));
-         Var := Targ;
-      end if;
+      --  Allocate variable.
+      New_Assign_Stmt
+        (M2Lp (Var),
+         Gen_Alloc (Alloc_Kind,
+                    Chap3.Get_Subtype_Size (Obj_Type, Mnode_Null, Kind),
+                    Type_Info.Ortho_Ptr_Type (Kind)));
    end Allocate_Complex_Object;
 
    --  Note : OBJ can be a tree.
@@ -384,12 +360,11 @@ package body Trans.Chap4 is
       end if;
       Gen_Exit_When (Label,
                      New_Compare_Op (ON_Eq,
-                       New_Obj_Value (Index), Upper_Limit,
-                       Ghdl_Bool_Type));
-      Init_Object (Chap3.Index_Base (Chap3.Get_Composite_Base (Sobj),
-                   Obj_Type,
-                   New_Obj_Value (Index)),
-                   Get_Element_Subtype (Obj_Type));
+                                     New_Obj_Value (Index), Upper_Limit,
+                                     Ghdl_Bool_Type));
+      Init_Object
+        (Chap6.Translate_Indexed_Name_By_Offset (Sobj, Obj_Type, Index),
+         Get_Element_Subtype (Obj_Type));
       Inc_Var (Index);
       Finish_Loop_Stmt (Label);
 
@@ -472,6 +447,40 @@ package body Trans.Chap4 is
       end case;
    end Init_Object;
 
+   --  If SIZE is larger than the threshold, call __ghdl_check_stack_allocation
+   --  to raise an error if the size is too large.  There are two threshold:
+   --  one set at compile time (Check_Stack_Allocation_Threshold) and one set
+   --  at run-time.
+   --
+   --  Right now, this function is called only for allocation of a complex
+   --  object on the stack (constant or variable).  But there are more sources
+   --  of stack allocation (temporary aggregate, unbounded objects, individual
+   --  assocs...)
+   function Maybe_Check_Stack_Allocation (Size : O_Enode) return O_Enode
+   is
+      Val : O_Dnode;
+      If_Blk : O_If_Block;
+      Assoc : O_Assoc_List;
+   begin
+      if Flag_Check_Stack_Allocation = 0 then
+         return Size;
+      end if;
+
+      Val := Create_Temp_Init (Ghdl_Index_Type, Size);
+      Start_If_Stmt
+        (If_Blk,
+         New_Compare_Op (ON_Ge,
+                         New_Obj_Value (Val),
+                         New_Lit (Check_Stack_Allocation_Threshold),
+                         Ghdl_Bool_Type));
+      Start_Association (Assoc, Ghdl_Check_Stack_Allocation);
+      New_Association (Assoc, New_Obj_Value (Val));
+      New_Procedure_Call (Assoc);
+      Finish_If_Stmt (If_Blk);
+
+      return New_Obj_Value (Val);
+   end Maybe_Check_Stack_Allocation;
+
    procedure Elab_Object_Storage (Obj : Iir)
    is
       Obj_Type : constant Iir := Get_Type (Obj);
@@ -481,6 +490,7 @@ package body Trans.Chap4 is
 
       Type_Info  : Type_Info_Acc;
       Alloc_Kind : Allocation_Kind;
+      Size : O_Enode;
    begin
       --  Elaborate subtype.
       Chap3.Elab_Object_Subtype (Obj_Type);
@@ -501,7 +511,16 @@ package body Trans.Chap4 is
          --  the object is a constant
          Name_Node := Get_Var (Obj_Info.Object_Var, Type_Info, Mode_Value);
          Alloc_Kind := Get_Alloc_Kind_For_Var (Obj_Info.Object_Var);
-         Allocate_Complex_Object (Obj_Type, Alloc_Kind, Name_Node);
+         Size := Chap3.Get_Subtype_Size (Obj_Type, Mnode_Null, Mode_Value);
+         if Alloc_Kind = Alloc_Stack then
+            Size := Maybe_Check_Stack_Allocation (Size);
+         end if;
+         --  Was: Allocate_Complex_Object.
+         New_Assign_Stmt
+           (M2Lp (Name_Node),
+            Gen_Alloc (Alloc_Kind,
+                       Size,
+                       Type_Info.Ortho_Ptr_Type (Mode_Value)));
       end if;
    end Elab_Object_Storage;
 
@@ -535,13 +554,13 @@ package body Trans.Chap4 is
                   --  Short-cut: don't allocate bounds.
                   New_Assign_Stmt
                     (M2Lp (Chap3.Get_Composite_Bounds (Name_Node)),
-                     M2Addr (Chap3.Get_Array_Type_Bounds (Aggr_Type)));
+                     M2Addr (Chap3.Get_Composite_Type_Bounds (Aggr_Type)));
                   Chap3.Allocate_Unbounded_Composite_Base
                     (Alloc_Kind, Name_Node, Get_Base_Type (Aggr_Type));
                else
                   Chap3.Translate_Object_Allocation
                     (Name_Node, Alloc_Kind, Get_Base_Type (Aggr_Type),
-                     Chap3.Get_Array_Type_Bounds (Aggr_Type));
+                     Chap3.Get_Composite_Type_Bounds (Aggr_Type));
                end if;
             end;
          else
@@ -567,8 +586,7 @@ package body Trans.Chap4 is
                   Chap3.Translate_Object_Allocation
                     (Name_Node, Alloc_Kind, Obj_Type,
                      Chap3.Get_Composite_Bounds (S));
-                  Chap3.Translate_Object_Copy
-                    (Name_Node, M2Addr (S), Obj_Type);
+                  Chap3.Translate_Object_Copy (Name_Node, S, Obj_Type);
                end if;
             end;
          else
@@ -642,23 +660,35 @@ package body Trans.Chap4 is
       Obj_Type  : constant Iir := Get_Type (Obj);
       Type_Info : constant Type_Info_Acc := Get_Info (Obj_Type);
    begin
-      if Type_Info.Type_Mode in Type_Mode_Unbounded then
-         declare
-            V : Mnode;
-         begin
-            Open_Temp;
-            V := Chap6.Translate_Name (Obj, Mode_Value);
-            Stabilize (V);
+      case Type_Mode_Valid (Type_Info.Type_Mode) is
+         when Type_Mode_Unbounded =>
+            declare
+               V : Mnode;
+            begin
+               Open_Temp;
+               V := Chap6.Translate_Name (Obj, Mode_Value);
+               Stabilize (V);
+               Chap3.Gen_Deallocate
+                 (New_Value (M2Lp (Chap3.Get_Composite_Bounds (V))));
+               Chap3.Gen_Deallocate
+                 (New_Value (M2Lp (Chap3.Get_Composite_Base (V))));
+               Close_Temp;
+            end;
+         when Type_Mode_Complex_Array
+           | Type_Mode_Complex_Record
+           | Type_Mode_Protected =>
             Chap3.Gen_Deallocate
-              (New_Value (M2Lp (Chap3.Get_Composite_Bounds (V))));
-            Chap3.Gen_Deallocate
-              (New_Value (M2Lp (Chap3.Get_Composite_Base (V))));
-            Close_Temp;
-         end;
-      elsif Is_Complex_Type (Type_Info) then
-         Chap3.Gen_Deallocate
-           (New_Value (M2Lp (Chap6.Translate_Name (Obj, Mode_Value))));
-      end if;
+              (New_Value (M2Lp (Chap6.Translate_Name (Obj, Mode_Value))));
+         when Type_Mode_Scalar
+           | Type_Mode_Static_Record
+           | Type_Mode_Static_Array
+           | Type_Mode_Acc
+           | Type_Mode_Bounds_Acc =>
+            null;
+         when Type_Mode_File =>
+            --  FIXME: free file ?
+            null;
+      end case;
    end Fini_Object;
 
    function Get_Nbr_Signals (Sig : Mnode; Sig_Type : Iir) return O_Enode
@@ -1152,9 +1182,9 @@ package body Trans.Chap4 is
       begin
          Start_Association (Assoc, Ghdl_Signal_Name_Rti);
          New_Association
-           (Assoc, New_Lit (New_Global_Unchecked_Address
-                              (Get_Info (Base_Decl).Signal_Rti,
-                               Rtis.Ghdl_Rti_Access)));
+           (Assoc,
+            New_Unchecked_Address (New_Obj (Get_Info (Base_Decl).Signal_Rti),
+                                   Rtis.Ghdl_Rti_Access));
          Rtis.Associate_Rti_Context (Assoc, Parent);
          New_Procedure_Call (Assoc);
       end;
@@ -1172,9 +1202,7 @@ package body Trans.Chap4 is
             Data.Has_Val := False;
          else
             Data.Has_Val := True;
-            Data.Init_Val := E2M (Chap7.Translate_Expression (Value, Sig_Type),
-                                  Get_Info (Sig_Type),
-                                  Mode_Value);
+            Data.Init_Val := Chap7.Translate_Expression (Value, Sig_Type);
          end if;
       else
          --  Sub signal.
@@ -3184,7 +3212,8 @@ package body Trans.Chap4 is
       Start_Init_Value (C);
       Start_Record_Aggr (Constr, Ghdl_Location_Type_Node);
       New_Record_Aggr_El
-        (Constr, New_Global_Address (Current_Filename_Node, Char_Ptr_Type));
+        (Constr, New_Global_Address (New_Global (Current_Filename_Node),
+                                     Char_Ptr_Type));
       New_Record_Aggr_El (Constr, New_Signed_Literal (Ghdl_I32_Type,
                           Integer_64 (Line)));
       New_Record_Aggr_El (Constr, New_Signed_Literal (Ghdl_I32_Type,

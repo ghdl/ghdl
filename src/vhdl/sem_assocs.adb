@@ -24,6 +24,7 @@ with Parse;
 with Std_Names;
 with Sem_Names; use Sem_Names;
 with Sem_Types;
+with Sem_Decls;
 with Std_Package;
 with Sem_Scopes;
 with Iir_Chains; use Iir_Chains;
@@ -876,7 +877,7 @@ package body Sem_Assocs is
    begin
       Chain := Get_Individual_Association_Chain (Assoc);
       Sem_Check_Continuous_Choices
-        (Chain, Index_Type, False, Get_Location (Assoc), Low, High);
+        (Chain, Index_Type, Low, High, Get_Location (Assoc), False, False);
       Set_Individual_Association_Chain (Assoc, Chain);
       if Dim < Nbr_Dims then
          El := Chain;
@@ -909,7 +910,7 @@ package body Sem_Assocs is
       end if;
       Chain := Get_Individual_Association_Chain (Assoc);
       Sem_Choices_Range
-        (Chain, Base_Index, True, False, Get_Location (Assoc), Low, High);
+        (Chain, Base_Index, Low, High, Get_Location (Assoc), True, False);
       Set_Individual_Association_Chain (Assoc, Chain);
       if Actual_Index = Null_Iir then
          declare
@@ -1012,6 +1013,8 @@ package body Sem_Assocs is
       if Get_Constraint_State (Atype) /= Fully_Constrained then
          --  Some (sub-)elements are unbounded, create a bounded subtype.
          declare
+            Inter : constant Iir :=
+              Get_Interface_Of_Formal (Get_Formal (Assoc));
             Ntype : Iir;
             Nel_List : Iir_Flist;
             Nrec_El : Iir;
@@ -1025,6 +1028,12 @@ package body Sem_Assocs is
                Set_Resolution_Indication
                  (Ntype, Get_Resolution_Indication (Atype));
             end if;
+            if Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration
+            then
+               --  The subtype is used for signals.
+               Set_Has_Signal_Flag (Ntype, True);
+            end if;
+
             Nel_List := Create_Iir_Flist (Nbr_El);
             Set_Elements_Declaration_List (Ntype, Nel_List);
 
@@ -1096,7 +1105,7 @@ package body Sem_Assocs is
    --  individual association ASSOC: compute bounds, detect missing elements.
    procedure Finish_Individual_Association (Assoc : Iir)
    is
-      Formal : Iir;
+      Inter : Iir;
       Atype : Iir;
    begin
       --  Guard.
@@ -1104,8 +1113,8 @@ package body Sem_Assocs is
          return;
       end if;
 
-      Formal := Get_Interface_Of_Formal (Get_Formal (Assoc));
-      Atype := Get_Type (Formal);
+      Inter := Get_Interface_Of_Formal (Get_Formal (Assoc));
+      Atype := Get_Type (Inter);
       Set_Whole_Association_Flag (Assoc, True);
 
       case Get_Kind (Atype) is
@@ -1118,6 +1127,11 @@ package body Sem_Assocs is
                Atype := Create_Array_Subtype (Atype, Get_Location (Assoc));
                Set_Index_Constraint_Flag (Atype, True);
                Set_Constraint_State (Atype, Fully_Constrained);
+               if Get_Kind (Inter) = Iir_Kind_Interface_Signal_Declaration
+               then
+                  --  The subtype is used for signals.
+                  Set_Has_Signal_Flag (Atype, True);
+               end if;
                Set_Actual_Type (Assoc, Atype);
                Set_Actual_Type_Definition (Assoc, Atype);
                Finish_Individual_Assoc_Array (Assoc, Assoc, 1);
@@ -1763,7 +1777,7 @@ package body Sem_Assocs is
 
       Set_Named_Entity (Actual, Res);
       Xrefs.Xref_Name (Actual);
-      Mark_Subprogram_Used (Res);
+      Sem_Decls.Mark_Subprogram_Used (Res);
    end Sem_Association_Subprogram;
 
    --  Associate ASSOC with interface INTERFACE
@@ -1814,6 +1828,11 @@ package body Sem_Assocs is
                when others =>
                   null;
             end case;
+
+            if Actual = Null_Iir then
+               Match := Fully_Compatible;
+               return;
+            end if;
 
             --  There could be an ambiguity between a conversion and a normal
             --  actual expression.  Check if the new actual is an object and

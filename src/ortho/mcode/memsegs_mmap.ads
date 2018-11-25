@@ -36,7 +36,8 @@ package Memsegs_Mmap is
    procedure Delete (Seg : in out Memseg_Type);
 
    --  Set the protection to read+execute.
-   procedure Set_Rx (Seg : in out Memseg_Type);
+   procedure Set_Rx (Seg : in out Memseg_Type;
+                     Offset : Natural; Size : Natural);
 
    pragma Inline (Create);
    pragma Inline (Get_Address);
@@ -46,4 +47,3 @@ private
       Size : Natural := 0;
    end record;
 end Memsegs_Mmap;
-

@@ -83,6 +83,13 @@ package Types is
 
    Null_String8 : constant String8_Id := 0;
 
+   --  The length of a string is not stored in the string table.  Create a
+   --  tuple that is meaningful.
+   type String8_Len_Type is record
+      Str : String8_Id;
+      Len : Nat32;
+   end record;
+
    --  Index type is the source file table.
    --  This table is defined in the files_map package.
    type Source_File_Entry is new Uns32;
@@ -113,6 +120,22 @@ package Types is
    Location_Nil : constant Location_Type := 0;
    No_Location : constant Location_Type := 0;
 
+   --  Source coordinates.  An expanded form of location, almost ready to be
+   --  printed.
+   --  FILE is the reference to the source file.
+   --  LINE_POS is the position in the source file of the first character of
+   --   the line.  It usually comes for free but can be a little bit difficult
+   --   to compute if the line table is being built.
+   --  LINE is the line number; first line is 1 and 0 means unknown.
+   --  OFFSET is the index in the line; first character is 0, any character
+   --   (even tabulation) counts as 1 character.
+   type Source_Coord_Type is record
+      File : Source_File_Entry;
+      Line_Pos : Source_Ptr;
+      Line : Natural;
+      Offset : Natural;
+   end record;
+
    --  PSL Node.
    type PSL_Node is new Int32;
 
@@ -141,6 +164,9 @@ package Types is
    --  Self-explaining: raised when an internal error (such as consistency)
    --  is detected.
    Internal_Error: exception;
+
+   --  Unrecoverable error.  Just exit() with an error status.
+   Fatal_Error : exception;
 
    --  In some case, a low level subprogram can't handle error
    --  (e.g eval_pos).  In this case it is easier to raise an exception and

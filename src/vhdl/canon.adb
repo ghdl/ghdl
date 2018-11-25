@@ -258,8 +258,9 @@ package body Canon is
             end;
 
          when Iir_Kind_Object_Alias_Declaration =>
-            Canon_Extract_Sensitivity
-              (Get_Name (Expr), Sensitivity_List, Is_Target);
+            if not Is_Target and then Is_Signal_Object (Expr) then
+               Add_Element (Sensitivity_List, Expr);
+            end if;
 
          when Iir_Kind_Constant_Declaration
            | Iir_Kind_Interface_Constant_Declaration

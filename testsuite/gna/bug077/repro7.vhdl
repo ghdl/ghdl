@@ -9,7 +9,7 @@ architecture behav of repro7 is
 
   procedure check (signal v : my_rec) is
   begin
-    assert v.a = '0' and v.w = "01";
+    assert v.a = '0' and v.w = "01" severity failure;
   end check;
 
   procedure pack (signal a : bit; signal w : bit_vector) is

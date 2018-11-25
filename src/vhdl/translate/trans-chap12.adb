@@ -26,6 +26,7 @@ with Name_Table;
 with Libraries;
 with Flags;
 with Sem;
+with Sem_Lib; use Sem_Lib;
 with Trans.Chap1;
 with Trans.Chap2;
 with Trans.Chap6;
@@ -85,11 +86,9 @@ package body Trans.Chap12 is
         (Assoc, New_Lit (New_Unsigned_Literal (Ghdl_Index_Type,
                                                Unsigned_64 (Elab_Nbr_Pkgs))));
       New_Association
-        (Assoc, New_Lit (New_Global_Address
-                           (Pkgs_Arr, Rtis.Ghdl_Rti_Arr_Acc)));
+        (Assoc, New_Address (New_Obj (Pkgs_Arr), Rtis.Ghdl_Rti_Arr_Acc));
       New_Association
-        (Assoc,
-         New_Lit (Rtis.New_Rti_Address (Get_Info (Arch).Block_Rti_Const)));
+        (Assoc, Rtis.New_Rti_Address (Get_Info (Arch).Block_Rti_Const));
       New_Association
         (Assoc, New_Convert_Ov (Arch_Instance, Ghdl_Ptr_Type));
       New_Procedure_Call (Assoc);
@@ -98,8 +97,7 @@ package body Trans.Chap12 is
       Start_Association (Assoc, Ghdl_Rti_Add_Package);
       New_Association
         (Assoc,
-         New_Lit (Rtis.New_Rti_Address
-                    (Get_Info (Standard_Package).Package_Rti_Const)));
+         Rtis.New_Rti_Address (Get_Info (Standard_Package).Package_Rti_Const));
       New_Procedure_Call (Assoc);
    end Call_Elab_Decls;
 
@@ -363,7 +361,7 @@ package body Trans.Chap12 is
 
       Decl : Iir;
    begin
-      Libraries.Load_Design_Unit (Unit, Null_Iir);
+      Load_Design_Unit (Unit, Null_Iir);
       Pkg := Get_Library_Unit (Unit);
       Reset_Identifier_Prefix;
       Lib := Get_Library (Get_Design_File (Get_Design_Unit (Pkg)));
@@ -437,7 +435,7 @@ package body Trans.Chap12 is
          Lib_Unit : Iir;
       begin
          --  Load the unit in memory to compute the dependence list.
-         Libraries.Load_Design_Unit (Unit, Null_Iir);
+         Load_Design_Unit (Unit, Null_Iir);
          Update_Node_Infos;
 
          Set_Elab_Flag (Unit, True);
@@ -708,7 +706,7 @@ package body Trans.Chap12 is
 
       --  Generate code to elaboration body-less package.
       --
-      --  When a package is analyzed, we don't know wether there is body
+      --  When a package is analyzed, we don't know whether there is body
       --  or not.  Therefore, we assume there is always a body, and will
       --  elaborate the body (which elaborates its spec).  If a package
       --  has no body, create the body elaboration procedure.

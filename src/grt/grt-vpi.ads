@@ -99,6 +99,7 @@ package Grt.Vpi is
 
    type struct_vpiHandle (<>) is private;
    type vpiHandle is access struct_vpiHandle;
+   pragma No_Strict_Aliasing (vpiHandle);
 
    -- typedef struct t_vpi_time {
    --   int type;

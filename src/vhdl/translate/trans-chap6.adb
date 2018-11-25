@@ -361,21 +361,26 @@ package body Trans.Chap6 is
       end if;
    end Translate_Thin_Index_Offset;
 
-   --  Translate an indexed name.
-   type Indexed_Name_Data is record
-      Offset : O_Dnode;
-      Res    : Mnode;
-   end record;
+   function Stabilize_If_Unbounded (Val : Mnode) return Mnode is
+   begin
+      case Get_Type_Info (Val).Type_Mode is
+         when Type_Mode_Unbounded_Array
+           | Type_Mode_Unbounded_Record =>
+            return Stabilize (Val);
+         when others =>
+            return Val;
+      end case;
+   end Stabilize_If_Unbounded;
 
-   function Translate_Indexed_Name_Init (Prefix_Orig : Mnode; Expr : Iir)
-                                            return Indexed_Name_Data
+   --  Note: PREFIX must be stabilized if unbounded.
+   function Translate_Indexed_Name_Offset (Prefix : Mnode; Expr : Iir)
+                                          return O_Dnode
    is
       Prefix_Type : constant Iir := Get_Type (Get_Prefix (Expr));
       Prefix_Info : constant Type_Info_Acc := Get_Info (Prefix_Type);
       Index_List  : constant Iir_Flist := Get_Index_List (Expr);
       Type_List   : constant Iir_Flist := Get_Index_Subtype_List (Prefix_Type);
       Nbr_Dim     : constant Natural := Get_Nbr_Elements (Index_List);
-      Prefix      : Mnode;
       Index       : Iir;
       Offset      : O_Dnode;
       R           : O_Enode;
@@ -384,12 +389,6 @@ package body Trans.Chap6 is
       Ibasetype   : Iir;
       Range_Ptr   : Mnode;
    begin
-      case Type_Mode_Arrays (Prefix_Info.Type_Mode) is
-         when Type_Mode_Unbounded_Array =>
-            Prefix := Stabilize (Prefix_Orig);
-         when Type_Mode_Bounded_Arrays =>
-            Prefix := Prefix_Orig;
-      end case;
       Offset := Create_Temp (Ghdl_Index_Type);
       for Dim in 1 .. Nbr_Dim loop
          Index := Get_Nth_Element (Index_List, Dim - 1);
@@ -412,7 +411,7 @@ package body Trans.Chap6 is
                   --  Manually extract range since there is no infos for
                   --   index subtype.
                   Range_Ptr := Chap3.Bounds_To_Range
-                    (Chap3.Get_Array_Type_Bounds (Prefix_Type),
+                    (Chap3.Get_Composite_Type_Bounds (Prefix_Type),
                      Prefix_Type, Dim);
                   Stabilize (Range_Ptr);
                   R := Translate_Index_To_Offset
@@ -438,35 +437,54 @@ package body Trans.Chap6 is
             New_Assign_Stmt
               (New_Obj (Offset),
                New_Dyadic_Op (ON_Add_Ov,
-                 New_Dyadic_Op (ON_Mul_Ov,
-                   New_Obj_Value (Offset),
-                   Length),
-                 R));
+                              New_Dyadic_Op (ON_Mul_Ov,
+                                             New_Obj_Value (Offset),
+                                             Length),
+                              R));
          end if;
          Close_Temp;
       end loop;
 
-      return (Offset => Offset,
-              Res => Chap3.Index_Base
-                (Chap3.Get_Composite_Base (Prefix), Prefix_Type,
-                 New_Obj_Value (Offset)));
-   end Translate_Indexed_Name_Init;
+      return Offset;
+   end Translate_Indexed_Name_Offset;
 
-   function Translate_Indexed_Name_Finish
-     (Prefix : Mnode; Expr : Iir; Data : Indexed_Name_Data)
-         return Mnode
+   function Translate_Indexed_Name_By_Offset
+     (Prefix : Mnode; Prefix_Type : Iir; Offset : O_Dnode) return Mnode
    is
+      El_Type  : constant Iir := Get_Element_Subtype (Prefix_Type);
+      El_Tinfo : constant Type_Info_Acc := Get_Info (El_Type);
+      Kind     : constant Object_Kind_Type := Get_Object_Kind (Prefix);
+      Fat_Res : Mnode;
+      Base : Mnode;
+      Bounds : Mnode;
    begin
-      return Chap3.Index_Base (Chap3.Get_Composite_Base (Prefix),
-                               Get_Type (Get_Prefix (Expr)),
-                               New_Obj_Value (Data.Offset));
-   end Translate_Indexed_Name_Finish;
+      Base := Chap3.Index_Array (Prefix, Prefix_Type, New_Obj_Value (Offset));
 
-   function Translate_Indexed_Name (Prefix : Mnode; Expr : Iir)
-                                       return Mnode
+      if Is_Unbounded_Type (El_Tinfo) then
+         Fat_Res := Create_Temp (El_Tinfo, Kind);
+         Bounds := Chap3.Get_Composite_Bounds (Prefix);
+         Bounds := Chap3.Array_Bounds_To_Element_Bounds (Bounds, Prefix_Type);
+
+         --  Assignment to M2Lp works as this is not a copy.
+         New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Bounds (Fat_Res)),
+                          M2Addr (Bounds));
+         New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Base (Fat_Res)),
+                          M2Addr (Base));
+         return Fat_Res;
+      else
+         return Base;
+      end if;
+   end Translate_Indexed_Name_By_Offset;
+
+   function Translate_Indexed_Name (Prefix : Mnode; Expr : Iir) return Mnode
    is
+      Offset : O_Dnode;
+      Stable_Prefix : Mnode;
    begin
-      return Translate_Indexed_Name_Init (Prefix, Expr).Res;
+      Stable_Prefix := Stabilize_If_Unbounded (Prefix);
+      Offset := Translate_Indexed_Name_Offset (Stable_Prefix, Expr);
+      return Translate_Indexed_Name_By_Offset
+        (Stable_Prefix, Get_Type (Get_Prefix (Expr)), Offset);
    end Translate_Indexed_Name;
 
    type Slice_Name_Data is record
@@ -596,7 +614,7 @@ package body Trans.Chap6 is
 
       --  Save slice bounds.
       Slice_Range := Stabilize
-        (Chap3.Bounds_To_Range (Chap3.Get_Array_Type_Bounds (Slice_Type),
+        (Chap3.Bounds_To_Range (Chap3.Get_Composite_Type_Bounds (Slice_Type),
          Slice_Type, 1));
 
       --  TRUE if the direction of the slice is known.
@@ -834,7 +852,10 @@ package body Trans.Chap6 is
       Kind          : constant Object_Kind_Type := Get_Object_Kind (Prefix);
       El_Info       : Field_Info_Acc;
       Base_Tinfo    : Type_Info_Acc;
-      Stable_Prefix, Base, Res, Fat_Res : Mnode;
+      Stable_Prefix : Mnode;
+      Base, Res, Fat_Res : Mnode;
+      Rec_Layout : Mnode;
+      El_Descr : Mnode;
       Box_Field : O_Fnode;
       B : O_Lnode;
    begin
@@ -856,26 +877,26 @@ package body Trans.Chap6 is
          Stable_Prefix := Stabilize (Prefix);
 
          --  Result is a fat pointer, create it and set bounds.
+         --  FIXME: layout for record, bounds for array!
          Fat_Res := Create_Temp (El_Tinfo, Kind);
-         New_Assign_Stmt
-           (M2Lp (Chap3.Get_Composite_Bounds (Fat_Res)),
-            New_Address
-              (New_Selected_Element
-                 (M2Lv (Chap3.Get_Composite_Bounds (Stable_Prefix)),
-                  El_Info.Field_Bound),
-               El_Tinfo.B.Bounds_Ptr_Type));
+         El_Descr := Chap3.Record_Layout_To_Element_Layout
+           (Chap3.Get_Composite_Bounds (Stable_Prefix), El);
+         case El_Tinfo.Type_Mode is
+            when Type_Mode_Unbounded_Record =>
+               null;
+            when Type_Mode_Unbounded_Array =>
+               El_Descr := Chap3.Layout_To_Bounds (El_Descr);
+            when others =>
+               raise Internal_Error;
+         end case;
+         New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Bounds (Fat_Res)),
+                          M2Addr (El_Descr));
       else
          Stable_Prefix := Prefix;
       end if;
 
-      if Get_Type_Info (Stable_Prefix).Type_Mode = Type_Mode_Unbounded_Record
-      then
-         --  Get the base.
-         Base := Chap3.Get_Composite_Base (Stable_Prefix);
-      else
-         --  Might be a boxed subtype; keep the box to optimize the access.
-         Base := Stable_Prefix;
-      end if;
+      --  Get the base.
+      Base := Chap3.Get_Composite_Base (Stable_Prefix);
       Base_Tinfo := Get_Type_Info (Base);
       Box_Field := Base_Tinfo.S.Box_Field (Kind);
 
@@ -895,6 +916,7 @@ package body Trans.Chap6 is
          end if;
 
          --  The element is complex: it's an offset.
+         Rec_Layout := Chap3.Get_Composite_Bounds (Stable_Prefix);
          Res := E2M
            (New_Unchecked_Address
               (New_Slice
@@ -902,8 +924,8 @@ package body Trans.Chap6 is
                         (New_Unchecked_Address (M2Lv (Base), Char_Ptr_Type)),
                     Chararray_Type,
                     New_Value
-                      (New_Selected_Element (B,
-                                             El_Info.Field_Node (Kind)))),
+                      (Chap3.Record_Layout_To_Element_Offset
+                         (Rec_Layout, El, Kind))),
                El_Tinfo.B.Base_Ptr_Type (Kind)),
             El_Tinfo, Kind);
       else
@@ -922,10 +944,9 @@ package body Trans.Chap6 is
       end if;
 
       if Is_Unbounded_Type (El_Tinfo) then
-         New_Assign_Stmt
-           (New_Selected_Element (M2Lv (Fat_Res),
-                                  El_Tinfo.B.Base_Field (Kind)),
-            M2Addr (Res));
+         --  Ok, we know that Get_Composite_Base doesn't return a copy.
+         New_Assign_Stmt (M2Lp (Chap3.Get_Composite_Base (Fat_Res)),
+                          M2Addr (Res));
          return Fat_Res;
       else
          return Res;
@@ -1149,8 +1170,7 @@ package body Trans.Chap6 is
             pragma Assert (Mode = Mode_Value);
             --  This can appear as a prefix of a name, therefore, the
             --  result is always a composite type or an access type.
-            return E2M (Chap7.Translate_Expression (Name),
-                        Type_Info, Mode_Value);
+            return Chap7.Translate_Expression (Name);
 
          when Iir_Kind_Image_Attribute =>
             pragma Assert (Mode = Mode_Value);
@@ -1218,14 +1238,19 @@ package body Trans.Chap6 is
             end;
          when Iir_Kind_Indexed_Name =>
             declare
-               Data    : Indexed_Name_Data;
+               Prefix  : constant Iir := Get_Prefix (Name);
+               Prefix_Type : constant Iir := Get_Type (Prefix);
+               Offset  : O_Dnode;
                Pfx_Sig : Mnode;
                Pfx_Drv : Mnode;
             begin
-               Translate_Signal (Get_Prefix (Name), Pfx_Sig, Pfx_Drv);
-               Data := Translate_Indexed_Name_Init (Pfx_Sig, Name);
-               Sig := Data.Res;
-               Drv := Translate_Indexed_Name_Finish (Pfx_Drv, Name, Data);
+               Translate_Signal (Prefix, Pfx_Sig, Pfx_Drv);
+               Pfx_Sig := Stabilize_If_Unbounded (Pfx_Sig);
+               Offset := Translate_Indexed_Name_Offset (Pfx_Sig, Name);
+               Sig := Translate_Indexed_Name_By_Offset
+                 (Pfx_Sig, Prefix_Type, Offset);
+               Drv := Translate_Indexed_Name_By_Offset
+                 (Pfx_Drv, Prefix_Type, Offset);
             end;
          when Iir_Kind_Selected_Element =>
             declare

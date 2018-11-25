@@ -25,7 +25,9 @@ with Flags;
 with Configuration;
 with Translation;
 with Sem;
+with Sem_Lib; use Sem_Lib;
 with Errorout; use Errorout;
+with Errorout.Console;
 with GNAT.OS_Lib;
 with Bug;
 with Trans_Be;
@@ -72,6 +74,9 @@ package body Ortho_Front is
 
    procedure Init is
    begin
+      --  Set program name for error message.
+      Errorout.Console.Install_Handler;
+
       -- Initialize.
       Trans_Be.Register_Translation_Back_End;
 
@@ -268,7 +273,7 @@ package body Ortho_Front is
       Flags.Flag_Elaborate := False;
 
       --  Read and parse the file.
-      Res := Libraries.Load_File (Vhdl_File);
+      Res := Load_File (Vhdl_File);
       if Errorout.Nbr_Errors > 0 then
          raise Compilation_Error;
       end if;
@@ -279,7 +284,7 @@ package body Ortho_Front is
       Design := Get_First_Design_Unit (Res);
       while Is_Valid (Design) loop
          --  Analyze and canon a design unit.
-         Libraries.Finish_Compilation (Design, True);
+         Finish_Compilation (Design, True);
 
          Next_Design := Get_Chain (Design);
          if Errorout.Nbr_Errors = 0 then
@@ -449,7 +454,7 @@ package body Ortho_Front is
                begin
                   L := Anaelab_Files;
                   while L /= null loop
-                     Res := Libraries.Load_File (L.Id);
+                     Res := Load_File (L.Id);
                      if Errorout.Nbr_Errors > 0 then
                         raise Compilation_Error;
                      end if;
@@ -506,8 +511,7 @@ package body Ortho_Front is
          return True;
       end if;
    exception
-      when Compilation_Error
-        | Parse_Error =>
+      when Compilation_Error =>
          if Flag_Expect_Failure then
             --  Very brutal...
             GNAT.OS_Lib.OS_Exit (0);

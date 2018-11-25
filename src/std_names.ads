@@ -655,24 +655,23 @@ package Std_Names is
    Name_V :                     constant Name_Id := Name_First_Misc + 015;
    Name_External_Name :         constant Name_Id := Name_First_Misc + 016;
    Name_Open_Kind :             constant Name_Id := Name_First_Misc + 017;
-   Name_Status :                constant Name_Id := Name_First_Misc + 018;
-   Name_First :                 constant Name_Id := Name_First_Misc + 019;
-   Name_Last :                  constant Name_Id := Name_First_Misc + 020;
-   Name_Textio :                constant Name_Id := Name_First_Misc + 021;
-   Name_Work :                  constant Name_Id := Name_First_Misc + 022;
-   Name_Text :                  constant Name_Id := Name_First_Misc + 023;
-   Name_To_String :             constant Name_Id := Name_First_Misc + 024;
-   Name_Minimum :               constant Name_Id := Name_First_Misc + 025;
-   Name_Maximum :               constant Name_Id := Name_First_Misc + 026;
-   Name_Untruncated_Text_Read : constant Name_Id := Name_First_Misc + 027;
-   Name_Textio_Read_Real :      constant Name_Id := Name_First_Misc + 028;
-   Name_Textio_Write_Real :     constant Name_Id := Name_First_Misc + 029;
-   Name_Get_Resolution_Limit :  constant Name_Id := Name_First_Misc + 030;
-   Name_Control_Simulation :    constant Name_Id := Name_First_Misc + 031;
-   Name_Step :                  constant Name_Id := Name_First_Misc + 032;
-   Name_Index :                 constant Name_Id := Name_First_Misc + 033;
-   Name_Uu_File_Uu :            constant Name_Id := Name_First_Misc + 034;
-   Name_Uu_Line_Uu :            constant Name_Id := Name_First_Misc + 035;
+   Name_First :                 constant Name_Id := Name_First_Misc + 018;
+   Name_Last :                  constant Name_Id := Name_First_Misc + 019;
+   Name_Textio :                constant Name_Id := Name_First_Misc + 020;
+   Name_Work :                  constant Name_Id := Name_First_Misc + 021;
+   Name_Text :                  constant Name_Id := Name_First_Misc + 022;
+   Name_To_String :             constant Name_Id := Name_First_Misc + 023;
+   Name_Minimum :               constant Name_Id := Name_First_Misc + 024;
+   Name_Maximum :               constant Name_Id := Name_First_Misc + 025;
+   Name_Untruncated_Text_Read : constant Name_Id := Name_First_Misc + 026;
+   Name_Textio_Read_Real :      constant Name_Id := Name_First_Misc + 027;
+   Name_Textio_Write_Real :     constant Name_Id := Name_First_Misc + 028;
+   Name_Get_Resolution_Limit :  constant Name_Id := Name_First_Misc + 029;
+   Name_Control_Simulation :    constant Name_Id := Name_First_Misc + 030;
+   Name_Step :                  constant Name_Id := Name_First_Misc + 031;
+   Name_Index :                 constant Name_Id := Name_First_Misc + 032;
+   Name_Uu_File_Uu :            constant Name_Id := Name_First_Misc + 033;
+   Name_Uu_Line_Uu :            constant Name_Id := Name_First_Misc + 034;
    Name_Last_Misc :             constant Name_Id := Name_Uu_Line_Uu;
 
    Name_First_Ieee         : constant Name_Id := Name_Last_Misc + 1;
@@ -890,6 +889,39 @@ package Std_Names is
 
    subtype Name_Id_PSL_Keywords is
      Name_Id range Name_First_PSL .. Name_Last_PSL;
+
+   Name_First_Edif :         constant Name_Id := Name_Last_PSL + 1;
+   Name_Edif :               constant Name_Id := Name_First_Edif +  0;
+   Name_Edifversion :        constant Name_Id := Name_First_Edif +  1;
+   Name_Ediflevel :          constant Name_Id := Name_First_Edif +  2;
+   Name_Keywordmap :         constant Name_Id := Name_First_Edif +  3;
+   Name_Status :             constant Name_Id := Name_First_Edif +  4;
+   Name_Written :            constant Name_Id := Name_First_Edif +  5;
+   Name_External :           constant Name_Id := Name_First_Edif +  6;
+   Name_Comment :            constant Name_Id := Name_First_Edif +  7;
+   Name_Technology :         constant Name_Id := Name_First_Edif +  8;
+   Name_Cell :               constant Name_Id := Name_First_Edif +  9;
+   Name_Celltype :           constant Name_Id := Name_First_Edif + 10;
+   Name_View :               constant Name_Id := Name_First_Edif + 11;
+   Name_Viewtype :           constant Name_Id := Name_First_Edif + 12;
+   Name_Direction :          constant Name_Id := Name_First_Edif + 13;
+   Name_Contents :           constant Name_Id := Name_First_Edif + 14;
+   Name_Net :                constant Name_Id := Name_First_Edif + 15;
+   Name_Viewref :            constant Name_Id := Name_First_Edif + 16;
+   Name_Cellref :            constant Name_Id := Name_First_Edif + 17;
+   Name_Libraryref :         constant Name_Id := Name_First_Edif + 18;
+   Name_Portinstance :       constant Name_Id := Name_First_Edif + 19;
+   Name_Joined :             constant Name_Id := Name_First_Edif + 20;
+   Name_Portref :            constant Name_Id := Name_First_Edif + 21;
+   Name_Instanceref :        constant Name_Id := Name_First_Edif + 22;
+   Name_Design :             constant Name_Id := Name_First_Edif + 23;
+   Name_Designator :         constant Name_Id := Name_First_Edif + 24;
+   Name_Owner :              constant Name_Id := Name_First_Edif + 25;
+   Name_Member :             constant Name_Id := Name_First_Edif + 26;
+   Name_Number :             constant Name_Id := Name_First_Edif + 27;
+   Name_Rename :             constant Name_Id := Name_First_Edif + 28;
+   Name_Userdata :           constant Name_Id := Name_First_Edif + 29;
+   Name_Last_Edif :          constant Name_Id := Name_Userdata;
 
    -- Initialize the name table with the values defined here.
    procedure Std_Names_Initialize;

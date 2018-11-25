@@ -112,7 +112,7 @@ package body Options is
       elsif Opt'Length > 7 and then Opt (1 .. 7) = "--warn-" then
          return Option_Warning (Opt (8 .. Opt'Last), True);
       elsif Opt'Length > 5 and then Opt (1 .. 5) = "-Wno-" then
-         --  Handle -Wno before -W!
+         --  Handle -Wno-xxx before -Wxxx
          return Option_Warning (Opt (6 .. Opt'Last), False);
       elsif Opt'Length > 2 and then Opt (1 .. 2) = "-W" then
          return Option_Warning (Opt (3 .. Opt'Last), True);
@@ -159,7 +159,7 @@ package body Options is
          Bootstrap := True;
       elsif Opt = "-fexplicit" then
          Flag_Explicit := True;
-      elsif Opt = "-frelaxed-rules" then
+      elsif Opt = "-frelaxed-rules" or else Opt = "-frelaxed" then
          Flag_Relaxed_Rules := True;
       elsif Opt = "--syn-binding" then
          Flag_Syn_Binding := True;

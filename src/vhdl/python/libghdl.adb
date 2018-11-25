@@ -19,6 +19,10 @@
 with GNAT.OS_Lib; use GNAT.OS_Lib;
 with Ghdllocal;
 with Ghdlcomp;
+with Errorout.Memory;
+with Files_Map.Editor;
+pragma Unreferenced (Errorout.Memory);  --  At least from Ada code.
+pragma Unreferenced (Files_Map.Editor);
 
 package body Libghdl is
    function Set_Option (Opt : Thin_String_Ptr; Len : Natural) return Integer is

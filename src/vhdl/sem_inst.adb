@@ -21,7 +21,7 @@ with Types; use Types;
 with Files_Map;
 with Iirs_Utils; use Iirs_Utils;
 with Errorout; use Errorout;
-with Sem;
+with Sem_Utils;
 
 package body Sem_Inst is
    --  Table of origin.  This is an extension of vhdl nodes to track the
@@ -275,6 +275,12 @@ package body Sem_Inst is
                      end if;
                   when Attr_Chain =>
                      R := Instantiate_Iir_Chain (S);
+                  when Attr_Maybe_Ref_Chain =>
+                     if Get_Is_Ref (N) then
+                        R := Instantiate_Iir (S, True);
+                     else
+                        R := Instantiate_Iir_Chain (S);
+                     end if;
                   when Attr_Chain_Next =>
                      R := Null_Iir;
                   when Attr_Of_Ref | Attr_Of_Maybe_Ref =>
@@ -461,6 +467,10 @@ package body Sem_Inst is
                      end case;
                      Set_Index_Subtype_List (Res, List);
                   end;
+
+               when Field_Simple_Aggregate_List =>
+                  Set_Simple_Aggregate_List
+                    (Res, Get_Simple_Aggregate_List (N));
 
                when Field_Subprogram_Body =>
                   --  This is a forward reference.  Not yet solved.
@@ -661,7 +671,7 @@ package body Sem_Inst is
             when Iir_Kind_Interface_Type_Declaration =>
                Set_Type (Res, Get_Type (Inter));
             when Iir_Kinds_Interface_Subprogram_Declaration =>
-               Sem.Compute_Subprogram_Hash (Res);
+               Sem_Utils.Compute_Subprogram_Hash (Res);
             when others =>
                Error_Kind ("instantiate_generic_chain", Res);
          end case;
@@ -733,6 +743,10 @@ package body Sem_Inst is
                            end if;
                         when Attr_Chain =>
                            Set_Instance_On_Chain (S, S_Inst);
+                        when Attr_Maybe_Ref_Chain =>
+                           if not Get_Is_Ref (N) then
+                              Set_Instance_On_Chain (S, S_Inst);
+                           end if;
                         when Attr_Chain_Next =>
                            null;
                         when Attr_Of_Ref | Attr_Of_Maybe_Ref =>
@@ -1120,6 +1134,10 @@ package body Sem_Inst is
                               end if;
                            when Attr_Chain =>
                               Substitute_On_Chain (S, E, Rep);
+                           when Attr_Maybe_Ref_Chain =>
+                              if not Get_Is_Ref (N) then
+                                 Substitute_On_Chain (S, E, Rep);
+                              end if;
                            when Attr_Chain_Next =>
                               null;
                            when Attr_Of_Ref | Attr_Of_Maybe_Ref =>

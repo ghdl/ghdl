@@ -81,7 +81,7 @@ package Sem_Names is
 
    --  Convert name NAME to an expression (ie, can create function call).
    --  A_TYPE is the expected type of the expression.
-   --  FIXME: it is unclear wether the result must be an expression or not
+   --  FIXME: it is unclear whether the result must be an expression or not
    --  (ie, it *must* have a type, but may be a range).
    function Name_To_Expression (Name : Iir; A_Type : Iir) return Iir;
 

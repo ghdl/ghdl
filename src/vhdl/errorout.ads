@@ -21,12 +21,7 @@ with Tokens;
 
 package Errorout is
    Option_Error: exception;
-   Parse_Error: exception;
    Compilation_Error: exception;
-
-   --  Set the program name, used in error messages for options.  Not displayed
-   --  if not initialized.
-   procedure Set_Program_Name (Name : String);
 
    -- This kind can't be handled.
    --procedure Error_Kind (Msg: String; Kind: Iir_Kind);
@@ -110,8 +105,14 @@ package Errorout is
       --  FIXME: currently only subprograms are handled.
       Warnid_Unused,
 
+      --  Others choice is not needed, all values are already covered.
+      Warnid_Others,
+
       --  Violation of pure rules.
       Warnid_Pure,
+
+      --  Violation of staticness rules
+      Warnid_Static,
 
       --  Any error
       Msgid_Error,
@@ -121,7 +122,7 @@ package Errorout is
 
    --  All specific warning messages.
    subtype Msgid_Warnings is Msgid_Type
-     range Warnid_Library .. Warnid_Pure;
+     range Warnid_Library .. Warnid_Static;
 
    --  Get the image of a warning.  This correspond the the identifier of ID,
    --  in lower case, without the Msgid_Warn_ prefix and with '_' replaced
@@ -156,12 +157,14 @@ package Errorout is
    --  %t: token
    --  %l: location
    --  %n: node name
-   --  TODO: %m: mode, %y: type of, %s: disp_subprg
+   --  %s: a string
+   --  TODO: %m: mode, %y: type of
    function "+" (V : Iir) return Earg_Type;
    function "+" (V : Location_Type) return Earg_Type;
    function "+" (V : Name_Id) return Earg_Type;
    function "+" (V : Tokens.Token_Type) return Earg_Type;
    function "+" (V : Character) return Earg_Type;
+   function "+" (V : String8_Len_Type) return Earg_Type;
 
    --  Convert location.
    function "+" (L : Iir) return Location_Type;
@@ -170,6 +173,27 @@ package Errorout is
    --  Pass that detected the error.
    type Report_Origin is
      (Option, Library, Scan, Parse, Semantic, Elaboration);
+
+   type Error_Record is record
+      Origin : Report_Origin;
+      Id : Msgid_Type;
+      Cont : Boolean;
+      File : Source_File_Entry;
+      Line : Natural;
+      Offset : Natural;
+   end record;
+
+   type Error_Start_Handler is access procedure (Err : Error_Record);
+   type Message_Handler is access procedure (Str : String);
+   type Message_End_Handler is access procedure;
+
+   type Report_Msg_Handler is record
+      Error_Start : Error_Start_Handler;
+      Message : Message_Handler;
+      Message_End : Message_End_Handler;
+   end record;
+
+   procedure Set_Report_Handler (Handler : Report_Msg_Handler);
 
    --  Generic report message.  LOC maybe No_Location.
    --  If ORIGIN is Option or Library, LOC must be No_Location and the program
@@ -211,7 +235,8 @@ package Errorout is
    procedure Error_Msg_Parse (Msg: String; Arg1 : Earg_Type);
    procedure Error_Msg_Parse
      (Msg: String; Args : Earg_Arr := No_Eargs; Cont : Boolean := False);
-   procedure Error_Msg_Parse (Loc : Location_Type; Msg: String);
+   procedure Error_Msg_Parse
+     (Loc : Location_Type; Msg: String; Args : Earg_Arr := No_Eargs);
 
    -- Disp a message during semantic analysis.
    procedure Warning_Msg_Sem (Id : Msgid_Warnings;
@@ -314,7 +339,7 @@ package Errorout is
 private
    type Earg_Kind is
      (Earg_None,
-      Earg_Iir, Earg_Location, Earg_Id, Earg_Char, Earg_Token);
+      Earg_Iir, Earg_Location, Earg_Id, Earg_Char, Earg_Token, Earg_String8);
 
    type Earg_Type (Kind : Earg_Kind := Earg_None) is record
       case Kind is
@@ -330,6 +355,8 @@ private
             Val_Char : Character;
          when Earg_Token =>
             Val_Tok : Tokens.Token_Type;
+         when Earg_String8 =>
+            Val_Str8 : String8_Len_Type;
       end case;
    end record;
 
@@ -347,4 +374,10 @@ private
         | Warnid_Pure | Warnid_Specs | Warnid_Hide
         | Warnid_Port    => (Enabled => True, Error => False),
       others             => (Enabled => False, Error => False));
+
+   --  Compute the column from Error_Record E.
+   function Get_Error_Col (E : Error_Record) return Natural;
+
+   --  Image of VAL, without the leading space.
+   function Natural_Image (Val: Natural) return String;
 end Errorout;

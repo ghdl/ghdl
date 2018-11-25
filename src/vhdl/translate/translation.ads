@@ -80,6 +80,10 @@ package Translation is
    --  support nested subprograms.
    Flag_Unnest_Subprograms : Boolean := False;
 
+   --  If > 0, emit a call for large dynamic allocation on the stack.  Large
+   --  defined by the value.
+   Flag_Check_Stack_Allocation : Natural := 32 * 1024;
+
    type Foreign_Kind_Type is (Foreign_Unknown,
                               Foreign_Vhpidirect,
                               Foreign_Intrinsic);

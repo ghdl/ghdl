@@ -15,7 +15,6 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Ada.Unchecked_Conversion;
 with Errorout; use Errorout;
 with Std_Package; use Std_Package;
 with Ieee.Std_Logic_1164;
@@ -28,9 +27,11 @@ with Sem_Specs; use Sem_Specs;
 with Sem_Decls; use Sem_Decls;
 with Sem_Assocs; use Sem_Assocs;
 with Sem_Inst;
+with Sem_Lib; use Sem_Lib;
 with Iirs_Utils; use Iirs_Utils;
 with Flags; use Flags;
 with Str_Table;
+with Sem_Utils;
 with Sem_Stmts; use Sem_Stmts;
 with Iir_Chains;
 with Xrefs; use Xrefs;
@@ -57,7 +58,7 @@ package body Sem is
    end Add_Dependence;
 
    --  LRM 1.1  Entity declaration.
-   procedure Sem_Entity_Declaration (Entity: Iir_Entity_Declaration) is
+   procedure Sem_Entity_Declaration (Entity : Iir_Entity_Declaration) is
    begin
       Xrefs.Xref_Decl (Entity);
       Sem_Scopes.Add_Name (Entity);
@@ -109,7 +110,7 @@ package body Sem is
          --  architecture body is in the declarative region of its entity,
          --  the entity name is directly visible.  But we cannot really use
          --  that rule as is, as we don't know which is the entity.
-         Entity := Libraries.Load_Primary_Unit
+         Entity := Load_Primary_Unit
            (Library, Get_Identifier (Name), Library_Unit);
          if Entity = Null_Iir then
             Error_Msg_Sem (+Library_Unit, "entity %n was not analysed", +Name);
@@ -203,7 +204,10 @@ package body Sem is
       if Vhdl_Std = Vhdl_02 then
          Open_Declarative_Region;
       end if;
+
+      Current_Psl_Default_Clock := Null_Iir;
       Sem_Block (Arch);
+
       if Vhdl_Std = Vhdl_02 then
          Close_Declarative_Region;
       end if;
@@ -390,6 +394,7 @@ package body Sem is
          when Iir_Kind_Block_Header =>
             Miss := Missing_Generic;
          when Iir_Kind_Package_Instantiation_Declaration
+           | Iir_Kind_Interface_Package_Declaration
            | Iir_Kind_Package_Header =>
             --  LRM08 4.9
             --  Each formal generic (or member thereof) shall be associated
@@ -630,7 +635,7 @@ package body Sem is
 
       --  LRM93 10.2
       --  In addition to the above rules, the scope of any declaration that
-      --  includes the end of the declarative part of a given block (wether
+      --  includes the end of the declarative part of a given block (whether
       --  it be an external block defined by a design entity or an internal
       --  block defined by a block statement) extends into a configuration
       --  declaration that configures the given block.
@@ -929,7 +934,7 @@ package body Sem is
                --  declaration: at the place of the block specification in a
                --  block configuration for an external block whose interface
                --  is defined by that entity declaration.
-               Design := Libraries.Load_Secondary_Unit
+               Design := Load_Secondary_Unit
                  (Get_Design_Unit (Get_Entity (Father)),
                   Get_Identifier (Block_Spec),
                   Block_Conf);
@@ -994,10 +999,9 @@ package body Sem is
                   return;
                end if;
 
-               Design := Libraries.Load_Secondary_Unit
-                 (Get_Design_Unit (Entity),
-                  Get_Identifier (Block_Spec),
-                  Block_Conf);
+               Design := Load_Secondary_Unit (Get_Design_Unit (Entity),
+                                              Get_Identifier (Block_Spec),
+                                              Block_Conf);
                if Design = Null_Iir then
                   Error_Msg_Sem
                     (+Block_Conf, "no architecture %i", +Block_Spec);
@@ -1797,45 +1801,6 @@ package body Sem is
       end if;
    end Check_Operator_Requirements;
 
-   procedure Compute_Subprogram_Hash (Subprg : Iir)
-   is
-      type Hash_Type is mod 2**32;
-      function To_Hash is new Ada.Unchecked_Conversion
-        (Source => Iir, Target => Hash_Type);
-      function To_Int32 is new Ada.Unchecked_Conversion
-        (Source => Hash_Type, Target => Iir_Int32);
-
-      Kind : Iir_Kind;
-      Hash : Hash_Type;
-      Sig : Hash_Type;
-      Inter : Iir;
-      Itype : Iir;
-   begin
-      Kind := Get_Kind (Subprg);
-      if Kind = Iir_Kind_Function_Declaration
-        or else Kind = Iir_Kind_Enumeration_Literal
-      then
-         Itype := Get_Base_Type (Get_Return_Type (Subprg));
-         Hash := To_Hash (Itype);
-         Sig := 8;
-      else
-         Sig := 1;
-         Hash := 0;
-      end if;
-
-      if Kind /= Iir_Kind_Enumeration_Literal then
-         Inter := Get_Interface_Declaration_Chain (Subprg);
-         while Inter /= Null_Iir loop
-            Itype := Get_Base_Type (Get_Type (Inter));
-            Sig := Sig + 1;
-            Hash := Hash * 7 + To_Hash (Itype);
-            Hash := Hash + Hash / 2**28;
-            Inter := Get_Chain (Inter);
-         end loop;
-      end if;
-      Set_Subprogram_Hash (Subprg, To_Int32 (Hash + Sig));
-   end Compute_Subprogram_Hash;
-
    procedure Sem_Subprogram_Specification (Subprg: Iir)
    is
       Interface_Chain : Iir;
@@ -1940,7 +1905,7 @@ package body Sem is
 
       Check_Operator_Requirements (Get_Identifier (Subprg), Subprg);
 
-      Compute_Subprogram_Hash (Subprg);
+      Sem_Utils.Compute_Subprogram_Hash (Subprg);
 
       --  The specification has been analyzed, close the declarative region
       --  now.
@@ -2135,6 +2100,28 @@ package body Sem is
       end if;
    end Sem_Subprogram_Body;
 
+   --  Return the subprogram body of SPEC.  If there is no body, and if SPEC
+   --  is an instance, returns the body of the generic specification but only
+   --  if known.
+   function Get_Subprogram_Body_Or_Generic (Spec : Iir) return Iir
+   is
+      Bod : Iir;
+      Orig : Iir;
+   begin
+      Bod := Get_Subprogram_Body (Spec);
+
+      if Bod /= Null_Iir then
+         return Bod;
+      end if;
+
+      Orig := Sem_Inst.Get_Origin (Spec);
+      if Orig = Null_Iir then
+         return Null_Iir;
+      end if;
+
+      return Get_Subprogram_Body (Orig);
+   end Get_Subprogram_Body_Or_Generic;
+
    --  Status of Update_And_Check_Pure_Wait.
    type Update_Pure_Status is
      (
@@ -2165,7 +2152,6 @@ package body Sem is
       Callees_List_Holder : Iir;
       Callees_It : List_Iterator;
       Callee : Iir;
-      Callee_Orig : Iir;
       Callee_Bod : Iir;
       Subprg_Depth : Iir_Int32;
       Subprg_Bod : Iir;
@@ -2179,7 +2165,10 @@ package body Sem is
       case Get_Kind (Subprg) is
          when Iir_Kind_Function_Declaration =>
             Kind := K_Function;
-            Subprg_Bod := Get_Subprogram_Body (Subprg);
+            Subprg_Bod := Get_Subprogram_Body_Or_Generic (Subprg);
+            if Subprg_Bod = Null_Iir then
+               return Update_Pure_Missing;
+            end if;
             Subprg_Depth := Get_Subprogram_Depth (Subprg);
             Callees_List_Holder := Subprg_Bod;
             if Get_Pure_Flag (Subprg) then
@@ -2190,7 +2179,10 @@ package body Sem is
 
          when Iir_Kind_Procedure_Declaration =>
             Kind := K_Procedure;
-            Subprg_Bod := Get_Subprogram_Body (Subprg);
+            Subprg_Bod := Get_Subprogram_Body_Or_Generic (Subprg);
+            if Subprg_Bod = Null_Iir then
+               return Update_Pure_Missing;
+            end if;
             if Get_Purity_State (Subprg) = Impure
               and then Get_Wait_State (Subprg) /= Unknown
               and then Get_All_Sensitized_State (Subprg) /= Unknown
@@ -2251,19 +2243,18 @@ package body Sem is
             --  Pure functions should not be in the list.
             --  Impure functions must have directly set Purity_State.
 
+            --  The body of subprograms may not be set for instances.
+            --  Use the body from the generic (if any).
+            --  This is meaningful for non macro-expanded package interface,
+            --  because there is no associated body and because the call
+            --  tree is known (if there were an interface subprogram, it
+            --  would have been macro-expanded).
+            --  Do not set the body, as it would trigger an assert during
+            --  macro-expansion (maybe this shouldn't be called for macro
+            --  expanded packages).
+            Callee_Bod := Get_Subprogram_Body_Or_Generic (Callee);
+
             --  Check pure.
-            Callee_Bod := Get_Subprogram_Body (Callee);
-
-            if Callee_Bod = Null_Iir then
-               --  The body of subprograms may not be set for instances.
-               --  Use the body from the generic (if any).
-               Callee_Orig := Sem_Inst.Get_Origin (Callee);
-               if Callee_Orig /= Null_Iir then
-                  Callee_Bod := Get_Subprogram_Body (Callee_Orig);
-                  Set_Subprogram_Body (Callee, Callee_Bod);
-               end if;
-            end if;
-
             if Callee_Bod = Null_Iir then
                --  No body yet for the subprogram called.
                --  Nothing can be extracted from it, postpone the checks until
@@ -2491,7 +2482,7 @@ package body Sem is
                   if Emit_Warnings then
                      Warning_Msg_Sem
                        (Warnid_Delayed_Checks, +El,
-                        "can't assert that %n has not wait; "
+                        "can't assert that %n has no wait; "
                           & "will be checked at elaboration", +El);
                   end if;
                end if;
@@ -2647,22 +2638,24 @@ package body Sem is
    end Is_Package_Macro_Expanded;
 
    --  LRM 2.5  Package Declarations.
-   procedure Sem_Package_Declaration (Decl: Iir_Package_Declaration)
+   procedure Sem_Package_Declaration (Pkg : Iir_Package_Declaration)
    is
-      Unit : constant Iir_Design_Unit := Get_Design_Unit (Decl);
-      Header : constant Iir := Get_Package_Header (Decl);
+      Unit : constant Iir_Design_Unit := Get_Design_Unit (Pkg);
+      Header : constant Iir := Get_Package_Header (Pkg);
       Implicit : Implicit_Signal_Declaration_Type;
    begin
-      Sem_Scopes.Add_Name (Decl);
-      Set_Visible_Flag (Decl, True);
-      Xref_Decl (Decl);
+      Sem_Scopes.Add_Name (Pkg);
+      Set_Visible_Flag (Pkg, True);
+      Xref_Decl (Pkg);
+
+      Set_Is_Within_Flag (Pkg, True);
 
       --  Identify IEEE.Std_Logic_1164 for VHDL08.
-      if Get_Identifier (Decl) = Std_Names.Name_Std_Logic_1164
+      if Get_Identifier (Pkg) = Std_Names.Name_Std_Logic_1164
         and then (Get_Identifier (Get_Library (Get_Design_File (Unit)))
                     = Std_Names.Name_Ieee)
       then
-         Ieee.Std_Logic_1164.Std_Logic_1164_Pkg := Decl;
+         Ieee.Std_Logic_1164.Std_Logic_1164_Pkg := Pkg;
       end if;
 
       --  LRM93 10.1 Declarative Region
@@ -2670,7 +2663,7 @@ package body Sem is
       --     body (if any).
       Open_Declarative_Region;
 
-      Push_Signals_Declarative_Part (Implicit, Decl);
+      Push_Signals_Declarative_Part (Implicit, Pkg);
 
       if Header /= Null_Iir then
          declare
@@ -2685,7 +2678,7 @@ package body Sem is
 
             if Generic_Map /= Null_Iir then
                --  Generic-mapped packages are not macro-expanded.
-               Set_Macro_Expanded_Flag (Decl, False);
+               Set_Macro_Expanded_Flag (Pkg, False);
 
                if Sem_Generic_Association_Chain (Header, Header) then
                   --  For generic-mapped packages, use the actual type for
@@ -2709,25 +2702,26 @@ package body Sem is
             else
                --  Uninstantiated package.  Maybe macro expanded.
                Set_Macro_Expanded_Flag
-                 (Decl, Is_Package_Macro_Expanded (Decl));
+                 (Pkg, Is_Package_Macro_Expanded (Pkg));
             end if;
          end;
       else
          --  Simple packages are never expanded.
-         Set_Macro_Expanded_Flag (Decl, False);
+         Set_Macro_Expanded_Flag (Pkg, False);
       end if;
 
-      Sem_Declaration_Chain (Decl);
+      Sem_Declaration_Chain (Pkg);
       --  GHDL: subprogram bodies appear in package body.
 
       Pop_Signals_Declarative_Part (Implicit);
       Close_Declarative_Region;
+      Set_Is_Within_Flag (Pkg, False);
 
-      Set_Need_Body (Decl, Package_Need_Body_P (Decl));
+      Set_Need_Body (Pkg, Package_Need_Body_P (Pkg));
 
       if Vhdl_Std >= Vhdl_08 then
          Set_Need_Instance_Bodies
-           (Decl, Package_Need_Instance_Bodies_P (Decl));
+           (Pkg, Package_Need_Instance_Bodies_P (Pkg));
       end if;
    end Sem_Package_Declaration;
 
@@ -2742,7 +2736,7 @@ package body Sem is
          declare
             Design_Unit: Iir_Design_Unit;
          begin
-            Design_Unit := Libraries.Load_Primary_Unit
+            Design_Unit := Load_Primary_Unit
               (Get_Library (Get_Design_File (Get_Current_Design_Unit)),
                Package_Ident, Decl);
             if Design_Unit = Null_Iir then
@@ -2800,6 +2794,7 @@ package body Sem is
       Set_Package (Decl, Package_Decl);
       Xref_Body (Decl, Package_Decl);
       Set_Package_Body (Package_Decl, Decl);
+      Set_Is_Within_Flag (Package_Decl, True);
 
       --  LRM93 10.1 Declarative Region
       --  4. A package declaration, together with the corresponding
@@ -2813,6 +2808,7 @@ package body Sem is
       Check_Full_Declaration (Package_Decl, Decl);
 
       Close_Declarative_Region;
+      Set_Is_Within_Flag (Package_Decl, False);
    end Sem_Package_Body;
 
    function Sem_Uninstantiated_Package_Name (Decl : Iir) return Iir
@@ -2878,7 +2874,7 @@ package body Sem is
       if Get_Need_Body (Pkg) and then not Is_Nested_Package (Pkg) then
          Bod := Get_Package_Body (Pkg);
          if Is_Null (Bod) then
-            Bod := Libraries.Load_Secondary_Unit
+            Bod := Load_Secondary_Unit
               (Get_Design_Unit (Pkg), Null_Identifier, Decl);
          else
             Bod := Get_Design_Unit (Bod);

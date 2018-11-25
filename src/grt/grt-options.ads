@@ -55,6 +55,16 @@ package Grt.Options is
    Flag_String : constant String (1 .. 5);
    pragma Import (C, Flag_String, "__ghdl_flag_string");
 
+   --  Time resolution extracted from Flag_String, in multiple of -3:
+   --  0: sec
+   --  1: ms
+   --  2: us
+   --  3: ns
+   --  4: ps
+   --  5: fs
+   subtype Natural_Time_Scale is Natural range 0 .. 5;
+   Time_Resolution_Scale : Natural_Time_Scale;
+
    --  Display options help.
    --  Should not be called directly.
    procedure Help;

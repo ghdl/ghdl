@@ -17,7 +17,6 @@
 --  02111-1307, USA.
 with Evaluation; use Evaluation;
 with Iirs_Utils; use Iirs_Utils;
-with Libraries;
 with Errorout; use Errorout;
 with Flags; use Flags;
 with Name_Table;
@@ -26,6 +25,7 @@ with Types; use Types;
 with Iir_Chains; use Iir_Chains;
 with Std_Names;
 with Sem;
+with Sem_Lib; use Sem_Lib;
 with Sem_Scopes; use Sem_Scopes;
 with Sem_Expr; use Sem_Expr;
 with Sem_Stmts; use Sem_Stmts;
@@ -1849,7 +1849,7 @@ package body Sem_Names is
          --  For a design unit, return the library unit
          if Get_Kind (Res) = Iir_Kind_Design_Unit then
             --  FIXME: should replace interpretation ?
-            Libraries.Load_Design_Unit (Res, Name);
+            Load_Design_Unit (Res, Name);
             Sem.Add_Dependence (Res);
             Res := Get_Library_Unit (Res);
          end if;
@@ -2150,7 +2150,7 @@ package body Sem_Names is
             --  An expanded name is not allowed for a secondary unit,
             --  particularly for an architecture body.
             --  GHDL: FIXME: error message more explicit
-            Res := Libraries.Load_Primary_Unit (Prefix, Suffix, Name);
+            Res := Load_Primary_Unit (Prefix, Suffix, Name);
             if Res /= Null_Iir then
                Sem.Add_Dependence (Res);
                Res := Get_Library_Unit (Res);
@@ -2178,7 +2178,7 @@ package body Sem_Names is
             --  literal, or operator symbol of an named entity whose
             --  declaration occurs immediatly within that construct.
             if Get_Kind (Prefix) = Iir_Kind_Design_Unit then
-               Libraries.Load_Design_Unit (Prefix, Name);
+               Load_Design_Unit (Prefix, Name);
                Sem.Add_Dependence (Prefix);
                Prefix := Get_Library_Unit (Prefix);
                --  Modified only for xrefs, since a design_unit points to
@@ -2195,7 +2195,7 @@ package body Sem_Names is
                     (+Name, "no declaration for %i in %n", (+Suffix, +Prefix));
                end if;
             else
-               --  LRM93 §6.3
+               --  LRM93 6.3
                --  This form of expanded name is only allowed within the
                --  construct itself.
                --  FIXME: LRM08 12.3 Visibility h)
@@ -2203,12 +2203,28 @@ package body Sem_Names is
                                Iir_Kind_Package_Declaration,
                                Iir_Kind_Package_Instantiation_Declaration)
                  and then not Get_Is_Within_Flag (Prefix)
-                 and then not Soft
                then
-                  Error_Msg_Sem
-                    (+Prefix_Loc,
-                     "an expanded name is only allowed within the construct");
+                  if not Soft then
+                     Error_Msg_Sem
+                       (+Prefix_Loc,
+                        "an expanded name is only allowed "
+                          & "within the construct");
+                  end if;
                   --  Hum, keep res.
+               elsif Get_Kind (Prefix) = Iir_Kind_Package_Declaration
+                 and then not Get_Is_Within_Flag (Prefix)
+                 and then Is_Uninstantiated_Package (Prefix)
+               then
+                  --  LRM08 12.3 f) Visibility
+                  --  For a declaration given in a package declaration, other
+                  --  than in a package declaration that defines an
+                  --  uninstantiated package: [...]
+                  if not Soft then
+                     Error_Msg_Sem
+                       (+Prefix_Loc,
+                        "cannot refer a declaration in an "
+                          & "uninstantiated package");
+                  end if;
                end if;
             end if;
          when Iir_Kind_Function_Declaration =>
@@ -2587,8 +2603,8 @@ package body Sem_Names is
       Assoc_Chain := Get_Association_Chain (Name);
       Actual := Get_One_Actual (Assoc_Chain);
 
-      if Kind_In (Prefix, Iir_Kind_Type_Declaration,
-                  Iir_Kind_Subtype_Declaration)
+      if Kind_In (Prefix,
+                  Iir_Kind_Type_Declaration, Iir_Kind_Subtype_Declaration)
       then
          --  A type conversion.  The prefix is a type mark.
          declare

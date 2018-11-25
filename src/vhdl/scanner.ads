@@ -111,14 +111,15 @@ package Scanner is
    --  False (used by PSL).
    function Scan_Underscore return Boolean;
 
-   -- Get the current location, or the location of the current token.
-   -- Since a token cannot spread over lines, file and line of the current
-   -- token are the same as those of the current position.
+   --  Get the current location, or the location of the current token.
+   --  Since a token cannot spread over lines, file and line of the current
+   --  token are the same as those of the current position.
+   --  The offset is the offset in the current line.
    function Get_Current_Source_File return Source_File_Entry;
    function Get_Current_Line return Natural;
-   function Get_Current_Column return Natural;
+   function Get_Current_Offset return Natural;
    function Get_Token_Location return Location_Type;
-   function Get_Token_Column return Natural;
+   function Get_Token_Offset return Natural;
    function Get_Token_Position return Source_Ptr;
    function Get_Position return Source_Ptr;
 

@@ -19,6 +19,7 @@ with Ada.Unchecked_Conversion;
 with Tables;
 with Ada.Text_IO;
 with Ortho_Code.Types; use Ortho_Code.Types;
+with Ortho_Code.Decls;
 with Ortho_Code.Debug;
 
 package body Ortho_Code.Consts is
@@ -59,6 +60,12 @@ package body Ortho_Code.Consts is
    end record;
    for Cnode_Addr'Size use 64;
 
+   type Cnode_Global is record
+      Obj : O_Gnode;
+      Pad : Int32;
+   end record;
+   for Cnode_Global'Size use 64;
+
    type Cnode_Aggr is record
       Els : Int32;
       Nbr : Int32;
@@ -83,10 +90,42 @@ package body Ortho_Code.Consts is
       Table_Low_Bound => 2,
       Table_Initial => 128);
 
+   type Gnode_Common is record
+      Kind : OG_Kind;
+      Ref : Int32;
+   end record;
+   for Gnode_Common use record
+      Kind at 0 range 0 .. 31;
+      Ref at 4 range 0 .. 31;
+   end record;
+   for Gnode_Common'Size use 64;
+
+   type Gnode_Record_Ref is record
+      Field : O_Fnode;
+      Off : Uns32;
+   end record;
+   for Gnode_Record_Ref'Size use 64;
+
+   function To_Gnode_Common is new Ada.Unchecked_Conversion
+     (Gnode_Record_Ref, Gnode_Common);
+   function To_Gnode_Record_Ref is new Ada.Unchecked_Conversion
+     (Gnode_Common, Gnode_Record_Ref);
+
+   package Gnodes is new Tables
+     (Table_Component_Type => Gnode_Common,
+      Table_Index_Type => O_Gnode,
+      Table_Low_Bound => 2,
+      Table_Initial => 64);
+
    function Get_Const_Kind (Cst : O_Cnode) return OC_Kind is
    begin
       return Cnodes.Table (Cst).Kind;
    end Get_Const_Kind;
+
+   function Get_Global_Kind (Cst : O_Gnode) return OG_Kind is
+   begin
+      return Gnodes.Table (Cst).Kind;
+   end Get_Global_Kind;
 
    function Get_Const_Type (Cst : O_Cnode) return O_Tnode is
    begin
@@ -227,12 +266,12 @@ package body Ortho_Code.Consts is
    end New_Default_Value;
 
    function To_Cnode_Common is new Ada.Unchecked_Conversion
-     (Source => Cnode_Addr, Target => Cnode_Common);
+     (Source => Cnode_Global, Target => Cnode_Common);
 
-   function To_Cnode_Addr is new Ada.Unchecked_Conversion
-     (Source => Cnode_Common, Target => Cnode_Addr);
+   function To_Cnode_Global is new Ada.Unchecked_Conversion
+     (Source => Cnode_Common, Target => Cnode_Global);
 
-   function New_Global_Unchecked_Address (Decl : O_Dnode; Atype : O_Tnode)
+   function New_Global_Unchecked_Address (Lvalue : O_Gnode; Atype : O_Tnode)
                                          return O_Cnode
    is
       Res : O_Cnode;
@@ -240,12 +279,12 @@ package body Ortho_Code.Consts is
       Cnodes.Append (Cnode_Common'(Kind => OC_Address,
                                    Lit_Type => Atype));
       Res := Cnodes.Last;
-      Cnodes.Append (To_Cnode_Common (Cnode_Addr'(Decl => Decl,
-                                                  Pad => 0)));
+      Cnodes.Append (To_Cnode_Common (Cnode_Global'(Obj => Lvalue,
+                                                    Pad => 0)));
       return Res;
    end New_Global_Unchecked_Address;
 
-   function New_Global_Address (Decl : O_Dnode; Atype : O_Tnode)
+   function New_Global_Address (Lvalue : O_Gnode; Atype : O_Tnode)
                                return O_Cnode
    is
       Res : O_Cnode;
@@ -253,10 +292,22 @@ package body Ortho_Code.Consts is
       Cnodes.Append (Cnode_Common'(Kind => OC_Address,
                                    Lit_Type => Atype));
       Res := Cnodes.Last;
-      Cnodes.Append (To_Cnode_Common (Cnode_Addr'(Decl => Decl,
-                                                  Pad => 0)));
+      Cnodes.Append (To_Cnode_Common (Cnode_Global'(Obj => Lvalue,
+                                                    Pad => 0)));
       return Res;
    end New_Global_Address;
+
+   function Get_Const_Global (Cst : O_Cnode) return O_Gnode is
+   begin
+      pragma Assert (Get_Const_Kind (Cst) = OC_Address);
+      return To_Cnode_Global (Cnodes.Table (Cst + 1)).Obj;
+   end Get_Const_Global;
+
+   function To_Cnode_Common is new Ada.Unchecked_Conversion
+     (Source => Cnode_Addr, Target => Cnode_Common);
+
+   function To_Cnode_Addr is new Ada.Unchecked_Conversion
+     (Source => Cnode_Common, Target => Cnode_Addr);
 
    function New_Subprogram_Address (Subprg : O_Dnode; Atype : O_Tnode)
                                    return O_Cnode
@@ -273,6 +324,7 @@ package body Ortho_Code.Consts is
 
    function Get_Const_Decl (Cst : O_Cnode) return O_Dnode is
    begin
+      pragma Assert (Get_Const_Kind (Cst) = OC_Subprg_Address);
       return To_Cnode_Addr (Cnodes.Table (Cst + 1)).Decl;
    end Get_Const_Decl;
 
@@ -511,6 +563,74 @@ package body Ortho_Code.Consts is
       return New_Unsigned_Literal
         (Rtype, Unsigned_64 (Get_Field_Offset (Field)));
    end New_Offsetof;
+
+   function Get_Global_Decl (Global : O_Gnode) return O_Dnode is
+   begin
+      pragma Assert (Get_Global_Kind (Global) = OG_Decl);
+      return O_Dnode (Gnodes.Table (Global).Ref);
+   end Get_Global_Decl;
+
+   function Get_Global_Field (Global : O_Gnode) return O_Fnode is
+   begin
+      pragma Assert (Get_Global_Kind (Global) = OG_Record_Ref);
+      return To_Gnode_Record_Ref (Gnodes.Table (Global + 1)).Field;
+   end Get_Global_Field;
+
+   function Get_Global_Ref (Global : O_Gnode) return O_Gnode is
+   begin
+      pragma Assert (Get_Global_Kind (Global) = OG_Record_Ref);
+      return O_Gnode (Gnodes.Table (Global).Ref);
+   end Get_Global_Ref;
+
+   function Get_Global_Type (Global : O_Gnode) return O_Tnode is
+   begin
+      case Get_Global_Kind (Global) is
+         when OG_Decl =>
+            return Decls.Get_Decl_Type (Get_Global_Decl (Global));
+         when OG_Record_Ref =>
+            return Get_Field_Type (Get_Global_Field (Global));
+      end case;
+   end Get_Global_Type;
+
+   function New_Global (Decl : O_Dnode) return O_Gnode is
+   begin
+      Gnodes.Append (Gnode_Common'(Kind => OG_Decl,
+                                   Ref => Int32 (Decl)));
+      return Gnodes.Last;
+   end New_Global;
+
+   function New_Global_Selected_Element (Rec : O_Gnode; El : O_Fnode)
+                                        return O_Gnode
+   is
+      Res : O_Gnode;
+   begin
+      --  TODO: Check Ref.
+
+      --  Check type.
+      pragma Assert
+        (Get_Type_Kind (Get_Global_Type (Rec)) in OT_Kinds_Record_Union);
+
+      Gnodes.Append (Gnode_Common'(Kind => OG_Record_Ref,
+                                   Ref => Int32 (Rec)));
+      Res := Gnodes.Last;
+      Gnodes.Append (To_Gnode_Common
+                       (Gnode_Record_Ref'(Field => El,
+                                          Off => Get_Field_Offset (El))));
+      return Res;
+   end New_Global_Selected_Element;
+
+   procedure Get_Global_Decl_Offset (Global : O_Gnode;
+                                     Decl : out O_Dnode; Off : out Uns32) is
+   begin
+      case Get_Global_Kind (Global) is
+         when OG_Decl =>
+            Decl := Get_Global_Decl (Global);
+            Off := 0;
+         when OG_Record_Ref =>
+            Get_Global_Decl_Offset (Get_Global_Ref (Global), Decl, Off);
+            Off := Off + Get_Field_Offset (Get_Global_Field (Global));
+      end case;
+   end Get_Global_Decl_Offset;
 
    procedure Get_Const_Bytes (Cst : O_Cnode; H, L : out Uns32) is
    begin

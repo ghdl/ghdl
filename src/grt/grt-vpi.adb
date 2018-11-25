@@ -325,7 +325,7 @@ package body Grt.Vpi is
          raise Program_Error;
       end if;
       Res := Std_Time (Unsigned_64 (V.mHigh) * 2 ** 32 + Unsigned_64 (V.mLow));
-      return Res * 1000;
+      return Res;
    end Vpi_Time_To_Time;
 
 -------------------------------------------------------------------------------
@@ -479,7 +479,7 @@ package body Grt.Vpi is
          when vpiType =>
             Res := Ref.mType;
          when vpiTimePrecision =>
-            Res := -12; -- In ps.
+            Res := -3 * Options.Time_Resolution_Scale;
          when vpiSize =>
             Res := Vpi_Get_Size (Ref);
          when vpiVector =>
@@ -1148,7 +1148,7 @@ package body Grt.Vpi is
 
       Res := Current_Time;
 
-      V := To_Unsigned_64 (Res) / 1000;
+      V := To_Unsigned_64 (Res);
       Time.mHigh := Unsigned_32 (V / 2 ** 32);
       Time.mLow  := Unsigned_32 (V mod 2 ** 32);
       Time.mReal := 0.0;

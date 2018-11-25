@@ -39,6 +39,9 @@ package Grt.Types is
    type Ghdl_U64 is new Unsigned_64;
    type Ghdl_F64 is new IEEE_Float_64;
 
+   function To_Ghdl_U64 is new Ada.Unchecked_Conversion
+     (Ghdl_I64, Ghdl_U64);
+
    type Ghdl_Ptr is new Address;
    type Ghdl_Index_Type is mod 2 ** 32;
    subtype Ghdl_Real is Ghdl_F64;
@@ -284,6 +287,16 @@ package Grt.Types is
      (Source => Address, Target => Ghdl_Range_Ptr);
 
    type Ghdl_Range_Array is array (Ghdl_Index_Type range <>) of Ghdl_Range_Ptr;
+
+   type Ghdl_Indexes_Type is record
+      Value : Ghdl_Index_Type;
+      Signal : Ghdl_Index_Type;
+   end record;
+
+   type Ghdl_Indexes_Ptr is access all Ghdl_Indexes_Type;
+
+   function To_Ghdl_Indexes_Ptr is new Ada.Unchecked_Conversion
+     (Source => Address, Target => Ghdl_Indexes_Ptr);
 
    --  For PSL counters.
    type Ghdl_Index_Ptr is access all Ghdl_Index_Type;

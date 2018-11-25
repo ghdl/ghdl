@@ -65,7 +65,7 @@ package body Trans.Chap7 is
       Val       : Var_Type;
       Res       : O_Cnode;
       List      : O_Record_Aggr_List;
-      Bound     : Var_Type;
+      Layout    : Var_Type;
    begin
       if Res_Type = Expr_Type then
          return Expr;
@@ -96,22 +96,24 @@ package body Trans.Chap7 is
       Val := Create_Global_Const
         (Create_Uniq_Identifier, Expr_Info.Ortho_Type (Mode_Value),
          O_Storage_Private, Expr);
-      Bound := Expr_Info.S.Composite_Bounds;
-      if Bound = Null_Var then
-         Bound := Create_Global_Const
-           (Create_Uniq_Identifier, Expr_Info.B.Bounds_Type,
+      Layout := Expr_Info.S.Composite_Layout;
+      if Layout = Null_Var then
+         Layout := Create_Global_Const
+           (Create_Uniq_Identifier, Expr_Info.B.Layout_Type,
             O_Storage_Private,
-            Chap3.Create_Static_Composite_Subtype_Bounds (Expr_Type));
-         Expr_Info.S.Composite_Bounds := Bound;
+            Chap3.Create_Static_Composite_Subtype_Layout (Expr_Type));
+         Expr_Info.S.Composite_Layout := Layout;
       end if;
 
       Start_Record_Aggr (List, Res_Info.Ortho_Type (Mode_Value));
       New_Record_Aggr_El
-        (List, New_Global_Address (Get_Var_Label (Val),
-         Res_Info.B.Base_Ptr_Type (Mode_Value)));
+        (List, New_Global_Address (New_Global (Get_Var_Label (Val)),
+                                   Res_Info.B.Base_Ptr_Type (Mode_Value)));
       New_Record_Aggr_El
-        (List, New_Global_Address (Get_Var_Label (Bound),
-         Expr_Info.B.Bounds_Ptr_Type));
+        (List, New_Global_Address (New_Global_Selected_Element
+                                     (New_Global (Get_Var_Label (Layout)),
+                                      Expr_Info.B.Layout_Bounds),
+                                   Expr_Info.B.Bounds_Ptr_Type));
       Finish_Record_Aggr (List, Res);
 
       return Res;
@@ -375,12 +377,12 @@ package body Trans.Chap7 is
          Start_Record_Aggr (Res_Aggr, Type_Info.Ortho_Type (Mode_Value));
          New_Record_Aggr_El
            (Res_Aggr,
-            New_Global_Address (Get_Var_Label (Val),
-              Type_Info.B.Base_Ptr_Type (Mode_Value)));
+            New_Global_Address (New_Global (Get_Var_Label (Val)),
+                                Type_Info.B.Base_Ptr_Type (Mode_Value)));
          New_Record_Aggr_El
            (Res_Aggr,
-            New_Global_Address (Get_Var_Label (Bound),
-              Type_Info.B.Bounds_Ptr_Type));
+            New_Global_Address (New_Global (Get_Var_Label (Bound)),
+                                Type_Info.B.Bounds_Ptr_Type));
          Finish_Record_Aggr (Res_Aggr, Res);
 
          Val := Create_Global_Const
@@ -818,7 +820,7 @@ package body Trans.Chap7 is
                   Atype_El_Type := Get_Type (Atype_El);
                   if Expr_El_Type /= Atype_El_Type then
                      Convert_To_Constrained_Check
-                       (Chap3.Bounds_To_Element_Bounds
+                       (Chap3.Record_Bounds_To_Element_Bounds
                           (Stable_Bounds, Expr_El),
                         Expr_El_Type, Atype_El_Type, Failure_Label);
                   end if;
@@ -1215,7 +1217,7 @@ package body Trans.Chap7 is
          procedure Walk_Concat (Imp : Iir; L, R : Iir);
 
          --  Call handlers for each leaf of E (an array expression).  First
-         --  check wether E is also a concatenation.
+         --  check whether E is also a concatenation.
          procedure Walk_Arr (E : Iir)
          is
             Imp : Iir;
@@ -1424,7 +1426,7 @@ package body Trans.Chap7 is
                                       New_Obj_Value (Var_Off))));
 
          --  Copy
-         Chap3.Translate_Object_Copy (Var_Sub_Arr, M2E (M), Expr_Type);
+         Chap3.Translate_Object_Copy (Var_Sub_Arr, M, Expr_Type);
 
          --  Increase offset
          New_Assign_Stmt
@@ -1762,7 +1764,7 @@ package body Trans.Chap7 is
 
       El := Create_Temp (Res_Otype);
       Arr := Stabilize (E2M (Translate_Expression (Left),
-                        Get_Info (Left_Type), Mode_Value));
+                             Get_Info (Left_Type), Mode_Value));
       Len := Create_Temp_Init
         (Ghdl_Index_Type,
          M2E (Chap3.Range_To_Length
@@ -2454,11 +2456,24 @@ package body Trans.Chap7 is
                Right_Tree, Ghdl_Real_Exp);
             return New_Convert_Ov (Res, Res_Otype);
          when Iir_Predefined_Integer_Exp =>
-            Res := Translate_Lib_Operator
-              (New_Convert_Ov (Left_Tree, Std_Integer_Otype),
-               Right_Tree,
-               Ghdl_Integer_Exp);
-            return New_Convert_Ov (Res, Res_Otype);
+            declare
+               Left_Tinfo : constant Type_Info_Acc :=
+                 Get_Info (Get_Type (Left));
+               Opr : O_Dnode;
+               Etype : O_Tnode;
+            begin
+               case Type_Mode_Integers (Left_Tinfo.Type_Mode) is
+                  when Type_Mode_I32 =>
+                     Opr := Ghdl_I32_Exp;
+                     Etype := Ghdl_I32_Type;
+                  when Type_Mode_I64 =>
+                     Opr := Ghdl_I64_Exp;
+                     Etype := Ghdl_I64_Type;
+               end case;
+               Res := Translate_Lib_Operator
+                 (New_Convert_Ov (Left_Tree, Etype), Right_Tree, Opr);
+               return New_Convert_Ov (Res, Res_Otype);
+            end;
 
          when Iir_Predefined_Array_Inequality
             | Iir_Predefined_Record_Inequality =>
@@ -2626,8 +2641,7 @@ package body Trans.Chap7 is
                return Translate_To_String
                  (Subprg, Res_Type, Expr,
                   New_Convert_Ov (Left_Tree, Conv),
-                  New_Lit (Rtis.New_Rti_Address
-                    (Get_Info (Left_Type).Type_Rti)));
+                  Rtis.New_Rti_Address (Get_Info (Left_Type).Type_Rti));
             end;
          when Iir_Predefined_Floating_To_String =>
             return Translate_To_String
@@ -2661,15 +2675,13 @@ package body Trans.Chap7 is
                return Translate_To_String
                  (Subprg, Res_Type, Expr,
                   New_Convert_Ov (Left_Tree, Conv),
-                  New_Lit (Rtis.New_Rti_Address
-                    (Get_Info (Left_Type).Type_Rti)));
+                  Rtis.New_Rti_Address (Get_Info (Left_Type).Type_Rti));
             end;
          when Iir_Predefined_Time_To_String_Unit =>
             return Translate_To_String
               (Ghdl_Time_To_String_Unit, Res_Type, Expr,
                Left_Tree, Right_Tree,
-               New_Lit (Rtis.New_Rti_Address
-                 (Get_Info (Left_Type).Type_Rti)));
+               Rtis.New_Rti_Address (Get_Info (Left_Type).Type_Rti));
          when Iir_Predefined_Bit_Vector_To_Ostring =>
             return Translate_Bv_To_String
               (Ghdl_BV_To_Ostring, Left_Tree, Left_Type, Res_Type, Expr);
@@ -2699,8 +2711,7 @@ package body Trans.Chap7 is
                   New_Convert_Ov (M2E (Chap3.Get_Composite_Base (Arg)),
                     Ghdl_Ptr_Type),
                   Chap3.Get_Array_Length (Arg, Left_Type),
-                  New_Lit (Rtis.New_Rti_Address
-                    (Get_Info (El_Type).Type_Rti)));
+                  Rtis.New_Rti_Address (Get_Info (El_Type).Type_Rti));
             end;
 
          when others =>
@@ -2731,22 +2742,22 @@ package body Trans.Chap7 is
             declare
                T : Mnode;
                E : O_Dnode;
+               EM : Mnode;
             begin
                T := Stabilize (Target);
                E := Create_Temp_Init
                  (T_Info.Ortho_Ptr_Type (Mode_Value), Val);
+               EM := Dp2M (E, T_Info, Mode_Value);
                Chap3.Check_Array_Match
-                 (Target_Type, T,
-                  Get_Type (Expr), Dp2M (E, T_Info, Mode_Value), Loc);
-               Chap3.Translate_Object_Copy
-                 (T, New_Obj_Value (E), Target_Type);
+                 (Target_Type, T, Get_Type (Expr), EM, Loc);
+               Chap3.Translate_Object_Copy (T, EM, Target_Type);
             end;
-         when Type_Mode_Bounded_Arrays =>
+         when Type_Mode_Bounded_Arrays
+           | Type_Mode_Bounded_Records =>
             --  Source is of type TARGET_TYPE, so no length check is
             --  necessary.
-            Chap3.Translate_Object_Copy (Target, Val, Target_Type);
-         when Type_Mode_Bounded_Records =>
-            Chap3.Translate_Object_Copy (Target, Val, Target_Type);
+            Chap3.Translate_Object_Copy
+              (Target, E2M (Val, T_Info, Mode_Value), Target_Type);
          when Type_Mode_Unbounded_Record =>
             --  TODO
             raise Internal_Error;
@@ -2858,7 +2869,6 @@ package body Trans.Chap7 is
                                 Ghdl_Bool_Type));
       El_Node := Chap3.Index_Base (Base_Ptr, Target_Type,
                                    New_Obj_Value (It));
-      --New_Assign_Stmt (El_Node, Chap7.Translate_Expression (El));
       Translate_Assign (El_Node, El, Get_Element_Subtype (Target_Type));
       Inc_Var (It);
       Finish_Loop_Stmt (Label);
@@ -2930,13 +2940,34 @@ package body Trans.Chap7 is
       Expr_Type  : Iir;
       Final      : Boolean;
 
-      procedure Do_Assign (Expr : Iir) is
+      --  Assign EXPR to current position (defined by index VAR_INDEX), and
+      --  update VAR_INDEX.  Handles sub-aggregates.
+      procedure Do_Assign (Assoc : Iir)
+      is
+         Expr : constant Iir := Get_Associated_Expr (Assoc);
+         Dest : Mnode;
+         Len : Iir_Int64;
       begin
          if Final then
-            Translate_Assign (Chap3.Index_Base (Base_Ptr, Aggr_Type,
-                                                New_Obj_Value (Var_Index)),
-                              Expr, Expr_Type);
-            Inc_Var (Var_Index);
+            if Get_Element_Type_Flag (Assoc) then
+               Dest := Chap3.Index_Base (Base_Ptr, Aggr_Type,
+                                         New_Obj_Value (Var_Index));
+               Translate_Assign (Dest, Expr, Expr_Type);
+               Inc_Var (Var_Index);
+            else
+               Dest := Chap3.Slice_Base (Base_Ptr, Aggr_Type,
+                                         New_Obj_Value (Var_Index));
+               Translate_Assign (Dest, Expr, Get_Type (Expr));
+               --  FIXME: handle non-static expression type (at least for
+               --  choice by range).
+               Len := Eval_Discrete_Type_Length
+                 (Get_Index_Type (Get_Type (Expr), 0));
+               New_Assign_Stmt
+                 (New_Obj (Var_Index),
+                  New_Dyadic_Op (ON_Add_Ov,
+                                 New_Obj_Value (Var_Index),
+                                 New_Lit (New_Index_Lit (Unsigned_64 (Len)))));
+            end if;
          else
             Translate_Array_Aggregate_Gen
               (Base_Ptr, Bounds_Ptr, Expr, Aggr_Type, Dim + 1, Var_Index);
@@ -2955,14 +2986,23 @@ package body Trans.Chap7 is
          El := Get_Association_Choices_Chain (Aggr);
          P := 0;
          loop
-            if El = Null_Iir then
-               return;
-            end if;
+            exit when El = Null_Iir;
             exit when Get_Kind (El) /= Iir_Kind_Choice_By_None;
-            Do_Assign (Get_Associated_Expr (El));
-            P := P + 1;
+            Do_Assign (El);
+            if not Final or else Get_Element_Type_Flag (El) then
+               P := P + 1;
+            else
+               P := P + Natural
+                 (Eval_Discrete_Type_Length
+                    (Get_Index_Type (Get_Type (Get_Associated_Expr (El)), 0)));
+            end if;
             El := Get_Chain (El);
          end loop;
+
+         --  End of chain.
+         if El = Null_Iir then
+            return;
+         end if;
 
          pragma Assert (Get_Kind (El) = Iir_Kind_Choice_By_Others);
 
@@ -2996,7 +3036,7 @@ package body Trans.Chap7 is
                                New_Lit (Ghdl_Index_0),
                                Ghdl_Bool_Type));
 
-            Do_Assign (Get_Associated_Expr (El));
+            Do_Assign (El);
             Dec_Var (Var_Len);
             Finish_Loop_Stmt (Label);
             Close_Temp;
@@ -3014,10 +3054,10 @@ package body Trans.Chap7 is
             --  There is only one choice
             case Get_Kind (El) is
                when Iir_Kind_Choice_By_Others =>
-                  --  falltrough...
-                  null;
+                  --  Handled by positional.
+                  raise Internal_Error;
                when Iir_Kind_Choice_By_Expression =>
-                  Do_Assign (Get_Associated_Expr (El));
+                  Do_Assign (El);
                   return;
                when Iir_Kind_Choice_By_Range =>
                   declare
@@ -3037,7 +3077,7 @@ package body Trans.Chap7 is
                                                     New_Obj_Value (Var_I),
                                                     New_Obj_Value (Var_Length),
                                                     Ghdl_Bool_Type));
-                     Do_Assign (Get_Associated_Expr (El));
+                     Do_Assign (El);
                      Inc_Var (Var_I);
                      Finish_Loop_Stmt (Label);
                      Close_Temp;
@@ -3058,7 +3098,6 @@ package body Trans.Chap7 is
             If_Blk     : O_If_Block;
             Case_Blk   : O_Case_Block;
             Label      : O_Snode;
-            El_Assoc   : Iir;
             Len_Tmp    : O_Enode;
          begin
             Open_Temp;
@@ -3088,15 +3127,11 @@ package body Trans.Chap7 is
 
             --  convert aggr into a case statement.
             Start_Case_Stmt (Case_Blk, New_Obj_Value (Var_Pos));
-            El_Assoc := Null_Iir;
             while El /= Null_Iir loop
                Start_Choice (Case_Blk);
                Chap8.Translate_Case_Choice (El, Range_Type, Case_Blk);
-               if Get_Associated_Expr (El) /= Null_Iir then
-                  El_Assoc := Get_Associated_Expr (El);
-               end if;
                Finish_Choice (Case_Blk);
-               Do_Assign (El_Assoc);
+               Do_Assign (El);
                El := Get_Chain (El);
             end loop;
             Finish_Case_Stmt (Case_Blk);
@@ -3403,7 +3438,7 @@ package body Trans.Chap7 is
       Aggr_Type : constant Iir := Get_Type (Aggr);
       El        : Iir;
    begin
-      case Get_Kind (Aggr_Type) is
+      case Iir_Kinds_Composite_Type_Definition (Get_Kind (Aggr_Type)) is
          when Iir_Kind_Array_Subtype_Definition
             | Iir_Kind_Array_Type_Definition =>
             El := Is_Aggregate_Others (Aggr);
@@ -3415,8 +3450,6 @@ package body Trans.Chap7 is
          when Iir_Kind_Record_Type_Definition
             | Iir_Kind_Record_Subtype_Definition =>
             Translate_Record_Aggregate (Target, Aggr);
-         when others =>
-            Error_Kind ("translate_aggregate", Aggr_Type);
       end case;
    end Translate_Aggregate;
 
@@ -3483,7 +3516,8 @@ package body Trans.Chap7 is
                        D_Info, Mode_Value);
             Chap3.Translate_Object_Allocation
               (R, Alloc_Heap, D_Type, Mnode_Null);
-            Chap3.Translate_Object_Copy (R, Val, D_Type);
+            Chap3.Translate_Object_Copy
+              (R, E2M (Val, D_Info, Mode_Value), D_Type);
             return New_Convert_Ov (M2Addr (R), A_Info.Ortho_Type (Mode_Value));
          when others =>
             raise Internal_Error;
@@ -3536,7 +3570,7 @@ package body Trans.Chap7 is
                Val_Size := Create_Temp_Init
                  (Ghdl_Index_Type,
                   Chap3.Get_Subtype_Size
-                    (D_Type, Chap3.Get_Array_Type_Bounds (Sub_Type),
+                    (D_Type, Chap3.Get_Composite_Type_Bounds (Sub_Type),
                      Mode_Value));
 
                --  Size of the bounds.
@@ -3554,14 +3588,12 @@ package body Trans.Chap7 is
                              A_Info.Ortho_Type (Mode_Value)));
 
                --  Copy bounds.
-               Gen_Memcpy
-                 (New_Obj_Value (Ptr),
-                  M2Addr (Chap3.Get_Array_Type_Bounds (Sub_Type)),
-                  New_Lit (Bounds_Size));
+               Gen_Memcpy (New_Obj_Value (Ptr),
+                           M2Addr (Chap3.Get_Composite_Type_Bounds (Sub_Type)),
+                           New_Lit (Bounds_Size));
 
                --  Create a fat pointer to initialize the object.
                Res := Bounds_Acc_To_Fat_Pointer (Ptr, A_Type);
-               Chap3.Maybe_Call_Type_Builder (Res, D_Type);
                Chap4.Init_Object (Res, D_Type);
 
                return New_Obj_Value (Ptr);
@@ -3886,6 +3918,20 @@ package body Trans.Chap7 is
          return New_Obj_Value (L);
       end if;
    end Translate_Overflow_Literal;
+
+   function Translate_Expression (Expr : Iir; Rtype : Iir := Null_Iir)
+                                 return Mnode
+   is
+      Res_Type : Iir;
+   begin
+      if Rtype = Null_Iir then
+         Res_Type := Get_Type (Expr);
+      else
+         Res_Type := Rtype;
+      end if;
+      return E2M (Translate_Expression (Expr, Res_Type),
+                  Get_Info (Res_Type), Mode_Value);
+   end Translate_Expression;
 
    function Translate_Expression (Expr : Iir; Rtype : Iir := Null_Iir)
                                  return O_Enode

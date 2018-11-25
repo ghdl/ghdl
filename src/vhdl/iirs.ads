@@ -533,6 +533,20 @@ package Iirs is
    --  associations have the same_alternative_flag set.
    --   Get/Set_Chain (Field2)
    --
+   --  Lexical order of appareance.  Choices are sorted during analysis.  This
+   --  field can be used to display the choices in the original order.
+   --   Get/Set_Choice_Position (Field1)
+   --
+   --  Should be a simple_name.
+   -- Only for Iir_Kind_Choice_By_Name:
+   --   Get/Set_Choice_Name (Field5)
+   --
+   -- Only for Iir_Kind_Choice_By_Expression:
+   --   Get/Set_Choice_Expression (Field5)
+   --
+   -- Only for Iir_Kind_Choice_By_Range:
+   --   Get/Set_Choice_Range (Field5)
+   --
    --  Get/Set what is associated with the choice.  There are two different
    --  nodes, one for simple association and the other for chain association.
    --  They don't have the same properties (normal vs chain), so the right
@@ -551,16 +565,6 @@ package Iirs is
    --  * a sequential statement chain for a case_statement.
    --   Get/Set_Associated_Chain (Field4)
    --
-   --  Should be a simple_name.
-   -- Only for Iir_Kind_Choice_By_Name:
-   --   Get/Set_Choice_Name (Field5)
-   --
-   -- Only for Iir_Kind_Choice_By_Expression:
-   --   Get/Set_Choice_Expression (Field5)
-   --
-   -- Only for Iir_Kind_Choice_By_Range:
-   --   Get/Set_Choice_Range (Field5)
-   --
    --   Get/Set_Same_Alternative_Flag (Flag1)
    --
    --   Get/Set_Element_Type_Flag (Flag2)
@@ -568,6 +572,8 @@ package Iirs is
    -- Only for Iir_Kind_Choice_By_Range:
    -- Only for Iir_Kind_Choice_By_Expression:
    --   Get/Set_Choice_Staticness (State1)
+   --
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Entity_Aspect_Entity (Short)
    --
@@ -921,6 +927,8 @@ package Iirs is
    --  macro-expansion.  In that case, the instantiation needs macro-expansion
    --  of their body.
    --   Get/Set_Need_Instance_Bodies (Flag3)
+   --
+   --   Get/Set_Is_Within_Flag (Flag5)
    --
    --   Get/Set_Visible_Flag (Flag4)
    --
@@ -1792,7 +1800,7 @@ package Iirs is
    --
    --   Get/Set_Type (Field1)
    --
-   --  Corresponding element_declaration.  FIXME: remove as supersided by
+   --  Corresponding element_declaration.  FIXME: remove as superseeded by
    --  element_position.
    --   Get/Set_Element_Declaration (Field5)
    --
@@ -3553,11 +3561,11 @@ package Iirs is
    --       type_mark ' ( expression )
    --     | type_mark ' aggregate
    --
-   --   Get/Set_Type (Field1)
-   --
    --   Get/Set_Type_Mark (Field4)
    --
    --   Get/Set_Expression (Field5)
+   --
+   --   Get/Set_Type (Field1)
    --
    --   Get/Set_Expr_Staticness (State1)
 
@@ -5924,7 +5932,7 @@ package Iirs is
    function Get_Analysis_Checks_List (Unit : Iir) return Iir_List;
    procedure Set_Analysis_Checks_List (Unit : Iir; List : Iir_List);
 
-   --  Wether the unit is on disk, parsed or analyzed.
+   --  Whether the unit is on disk, parsed or analyzed.
    --  Field: State1 (pos)
    function Get_Date_State (Unit : Iir_Design_Unit) return Date_State_Type;
    procedure Set_Date_State (Unit : Iir_Design_Unit; State : Date_State_Type);
@@ -6131,18 +6139,24 @@ package Iirs is
    function Get_Time (We : Iir_Waveform_Element) return Iir;
    procedure Set_Time (We : Iir_Waveform_Element; An_Iir : Iir);
 
+   --  Field: Field1 (pos)
+   function Get_Choice_Position (Choice : Iir) return Int32;
+   procedure Set_Choice_Position (Choice : Iir; Pos : Int32);
+
    --  Node associated with a choice.
-   --  Field: Field3
+   --  Field: Field3 Maybe_Ref
    function Get_Associated_Expr (Target : Iir) return Iir;
    procedure Set_Associated_Expr (Target : Iir; Associated : Iir);
 
    --  Node associated with a choice.
-   --  Field: Field3
+   --  Field: Field3 Maybe_Ref
    function Get_Associated_Block (Target : Iir) return Iir;
    procedure Set_Associated_Block (Target : Iir; Associated : Iir);
 
    --  Chain associated with a choice.
-   --  Field: Field4 Chain
+   --  A Maybe_Ref_Chain is a reference to a chain if Get_Is_Ref is True,
+   --  otherwise this is a normal chain.
+   --  Field: Field4 Maybe_Ref_Chain
    function Get_Associated_Chain (Target : Iir) return Iir;
    procedure Set_Associated_Chain (Target : Iir; Associated : Iir);
 
@@ -6766,7 +6780,7 @@ package Iirs is
    function Get_Wait_State (Proc : Iir) return Tri_State_Type;
    procedure Set_Wait_State (Proc : Iir; State : Tri_State_Type);
 
-   --  Get/Set wether the subprogram may be called by a sensitized process
+   --  Get/Set whether the subprogram may be called by a sensitized process
    --  whose sensitivity list is ALL.
    --  FALSE if declared in a package unit and reads a signal that is not
    --    one of its interface, or if it calls such a subprogram.

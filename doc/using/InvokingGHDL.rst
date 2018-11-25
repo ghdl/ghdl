@@ -184,7 +184,7 @@ This is not perfect, since the default architecture (the most recently analyzed 
 .. index:: cmd generate makefile
 
 Generate Makefile [``--gen-makefile``]
-------------------------------------------
+--------------------------------------
 
 .. option:: --gen-makefile <[options] primary [secondary]>
 
@@ -193,7 +193,7 @@ This command works like the make command (see :option:`-m`), but only a makefile
 .. index:: --gen-depends command
 
 Generate dependency file command [``--gen-depends``]
--------------------------
+----------------------------------------------------
 
 .. option:: --gen-depends <[options] primary [secondary]>
 
@@ -216,7 +216,7 @@ Options
 
 .. index:: WORK library
 
-.. option:: --work<=NAME>
+.. option:: --work=<NAME>
 
   Specify the name of the ``WORK`` library. Analyzed units are always placed in the library logically named ``WORK``. With this option, you can set its name. By default, the name is ``work``.
 
@@ -224,17 +224,17 @@ Options
 
   `VHDL` rules forbid you from adding units to the ``std`` library. Furthermore, you should not put units in the ``ieee`` library.
 
-.. option:: --workdir<=DIR>
+.. option:: --workdir=<DIR>
 
   Specify the directory where the ``WORK`` library is located. When this option is not present, the ``WORK`` library is in the current directory. The object files created by the compiler are always placed in the same directory as the ``WORK`` library.
 
   Use option :option:`-P` to specify where libraries other than ``WORK`` are placed.
 
-.. option:: --std<=STD>
+.. option:: --std=<STD>
 
   Specify the standard to use. By default, the standard is ``93c``, which means VHDL-93 accepting VHDL-87 syntax. For details on ``STD`` values see section :ref:`VHDL_standards`.
 
-.. option:: --ieee<=VER>
+.. option:: --ieee=<VER>
 
   .. index:: ieee library
   .. index:: synopsys library
@@ -344,9 +344,9 @@ Some constructions are not erroneous but dubious. Warnings are diagnostic messag
 .. HINT::
    You could disable a warning by using the ``--warn-no-XXX`` or ``-Wno-XXX`` instead of ``--warn-XXX`` or ``-WXXX``.
 
-.. option:: --warn-reserved
+.. option:: --warn-library
 
-  Emit a warning if an identifier is a reserved word in a later VHDL standard.
+  Warns if a design unit replaces another design unit with the same name.
 
 .. option:: --warn-default-binding
 
@@ -358,9 +358,17 @@ Some constructions are not erroneous but dubious. Warnings are diagnostic messag
 
   However, warnings are still emitted if a component instantiation is inside a generate statement. As a consequence, if you use the conditional generate statement to select a component according to the implementation, you will certainly get warnings.
 
-.. option:: --warn-library
+.. option:: --warn-reserved
 
-  Warns if a design unit replaces another design unit with the same name.
+  Emit a warning if an identifier is a reserved word in a later VHDL standard.
+
+.. option:: --warn-nested-comment
+
+  Emit a warning if a ``/*`` appears within a block comment (vhdl 2008).
+
+.. option:: --warn-parenthesis
+
+  Emit a warning in case of weird use of parentheses.
 
 .. option:: --warn-vital-generic
 
@@ -381,26 +389,42 @@ Some constructions are not erroneous but dubious. Warnings are diagnostic messag
 
   Emit a warning if an all or others specification does not apply.
 
-.. option:: --warn-unused
-
-  Emit a warning when a subprogram is never used.
-
-.. option:: --warn-error
-
-  When this option is set, warnings are considered as errors.
-
-.. option:: --warn-nested-comment
-
-  Emit a warning if a ``/*`` appears within a block comment (vhdl 2008).
-
-.. option:: --warn-parenthesis
-
-  Emit a warning in case of weird use of parentheses.
-
 .. option:: --warn-runtime-error
 
   Emit a warning in case of runtime error that is detected during
   analysis.
+
+.. option:: --warn-shared
+
+  Emit a warning when a shared variable is declared and its type it
+  not a protected type.
+
+.. option:: --warn-hide
+
+  Emit a warning when a declaration hides a previous hide.
+
+.. option:: --warn-unused
+
+  Emit a warning when a subprogram is never used.
+
+.. option:: --warn-others
+
+  Emit a warning is an `others` choice is not required because all the
+  choices have been explicitly covered.
+
+.. option:: --warn-pure
+
+  Emit a warning when a pure rules is violated (like declaring a pure
+  function with access parameters).
+
+.. option:: --warn-static
+
+  Emit a warning when a non-static expression is used at a place where
+  the standard requires a static expression.
+
+.. option:: --warn-error
+
+  When this option is set, warnings are considered as errors.
 
 
 Diagnostics Control
@@ -415,6 +439,12 @@ Diagnostics Control
 .. option:: -fno-diagnostics-show-option
 
   Control whether the warning option is displayed at the end of warning messages, so that the user can easily know how to disable it.
+
+.. option:: -fcaret-diagnostics
+.. option:: -fno-caret-diagnostics
+
+  Control whether the source line of the error is displayed with a
+  caret indicating the column of the error.
 
 
 Library commands

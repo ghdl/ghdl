@@ -49,20 +49,20 @@ package body Dyn_Tables is
       --  Check if need to reallocate.
       if T.Priv.Last_Pos < T.Priv.Length then
          return;
-      else
-         --  Double the length.
-         loop
-            New_Len := T.Priv.Length * 2;
-
-            --  Check overflow.
-            if New_Len < T.Priv.Length then
-               raise Constraint_Error;
-            end if;
-
-            T.Priv.Length := New_Len;
-            exit when New_Len > T.Priv.Last_Pos;
-         end loop;
       end if;
+
+      --  Double the length.
+      loop
+         New_Len := T.Priv.Length * 2;
+
+         --  Check overflow.
+         if New_Len < T.Priv.Length then
+            raise Constraint_Error;
+         end if;
+
+         T.Priv.Length := New_Len;
+         exit when New_Len > T.Priv.Last_Pos;
+      end loop;
 
       --  Realloc and check result.
       if size_t (T.Priv.Length) > size_t'Last / El_Size then

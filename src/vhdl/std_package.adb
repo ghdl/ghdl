@@ -22,8 +22,7 @@ with Str_Table;
 with Std_Names; use Std_Names;
 with Flags; use Flags;
 with Iirs_Utils;
-with Sem;
-with Sem_Decls;
+with Sem_Utils;
 with Iir_Chains;
 
 package body Std_Package is
@@ -176,7 +175,7 @@ package body Std_Package is
          Set_Expr_Staticness (Res, Locally);
          Set_Name_Staticness (Res, Locally);
          Set_Enum_Pos (Res, Iir_Int32 (Pos));
-         Sem.Compute_Subprogram_Hash (Res);
+         Sem_Utils.Compute_Subprogram_Hash (Res);
          Set_Nth_Element (List, Pos, Res);
          return Res;
       end Create_Std_Literal;
@@ -197,7 +196,7 @@ package body Std_Package is
       is
          Nxt : Iir;
       begin
-         Sem_Decls.Create_Implicit_Operations (Decl, True);
+         Sem_Utils.Create_Implicit_Operations (Decl, True);
 
          --  Update Last_Decl
          loop
@@ -361,7 +360,7 @@ package body Std_Package is
             Set_Chain (Inter, Inter2);
          end if;
 
-         Sem.Compute_Subprogram_Hash (Decl);
+         Sem_Utils.Compute_Subprogram_Hash (Decl);
          Add_Decl (Decl);
       end Create_To_String;
 
@@ -386,7 +385,7 @@ package body Std_Package is
          Set_Visible_Flag (Inter, True);
          Set_Interface_Declaration_Chain (Decl, Inter);
 
-         Sem.Compute_Subprogram_Hash (Decl);
+         Sem_Utils.Compute_Subprogram_Hash (Decl);
          Add_Decl (Decl);
       end Create_Edge_Function;
 
@@ -970,7 +969,7 @@ package body Std_Package is
             Set_Pure_Flag (Function_Now, False);
          end if;
          Set_Implicit_Definition (Function_Now, Iir_Predefined_Now_Function);
-         Sem.Compute_Subprogram_Hash (Function_Now);
+         Sem_Utils.Compute_Subprogram_Hash (Function_Now);
          Add_Decl (Function_Now);
       end;
 

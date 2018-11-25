@@ -243,31 +243,15 @@ package body Scanner is
       return Current_Context.Line_Number;
    end Get_Current_Line;
 
-   function Get_Current_Column return Natural
-   is
-      Col : Natural;
-      Name : Name_Id;
+   function Get_Current_Offset return Natural is
    begin
-      Coord_To_Position
-        (Current_Context.Source_File,
-         Current_Context.Line_Pos,
-         Integer (Current_Context.Pos - Current_Context.Line_Pos),
-         Name, Col);
-      return Col;
-   end Get_Current_Column;
+      return Natural (Current_Context.Pos - Current_Context.Line_Pos);
+   end Get_Current_Offset;
 
-   function Get_Token_Column return Natural
-   is
-      Col : Natural;
-      Name : Name_Id;
+   function Get_Token_Offset return Natural is
    begin
-      Coord_To_Position
-        (Current_Context.Source_File,
-         Current_Context.Line_Pos,
-         Integer (Current_Context.Token_Pos - Current_Context.Line_Pos),
-         Name, Col);
-      return Col;
-   end Get_Token_Column;
+      return Natural (Current_Context.Token_Pos - Current_Context.Line_Pos);
+   end Get_Token_Offset;
 
    function Get_Token_Position return Source_Ptr is
    begin
@@ -450,9 +434,21 @@ package body Scanner is
                   Pos := Current_Context.Token_Pos + 1;
                   return;
                end if;
-               Error_Msg_Scan ("format effector not allowed in a string");
+               if C = CR or C = LF then
+                  Error_Msg_Scan
+                    ("string cannot be multi-line, use concatenation");
+               else
+                  Error_Msg_Scan ("format effector not allowed in a string");
+               end if;
                exit;
             when Invalid =>
+               if C = Files_Map.EOT
+                 and then Pos >= Current_Context.File_Len
+               then
+                  Error_Msg_Scan ("string not terminated at end of file");
+                  exit;
+               end if;
+
                Error_Msg_Scan
                  ("invalid character not allowed, even in a string");
             when Graphic_Character =>
@@ -1244,65 +1240,78 @@ package body Scanner is
    --  LRM93 13.3.2
    --  EXTENDED_IDENTIFIER ::= \ GRAPHIC_CHARACTER { GRAPHIC_CHARACTER } \
    --
-   -- Create an (extended) indentifier.
-   -- Extended identifiers are stored as they appear (leading and tailing
-   -- backslashes, doubling backslashes inside).
+   --  Create an (extended) indentifier.
+   --  Extended identifiers are stored as they appear (leading and tailing
+   --  backslashes, doubling backslashes inside).
    procedure Scan_Extended_Identifier
    is
       use Name_Table;
       Buffer : String (1 .. Max_Name_Length);
       Len : Natural;
+      C : Character;
    begin
-      -- LRM93 13.3.2
-      --   Moreover, every extended identifiers is distinct from any basic
-      --   identifier.
-      -- This is satisfied by storing '\' in the name table.
+      --  LRM93 13.3.2
+      --  Moreover, every extended identifiers is distinct from any basic
+      --  identifier.
+      --  GHDL: This is satisfied by storing '\' in the name table.
       Len := 1;
       Buffer (1) := '\';
       loop
          --  Next character.
          Pos := Pos + 1;
+         C := Source (Pos);
 
-         if Source (Pos) = '\' then
-            -- LRM93 13.3.2
-            -- If a backslash is to be used as one of the graphic characters
-            -- of an extended literal, it must be doubled.
-            -- LRM93 13.3.2
-            -- (a doubled backslash couting as one character)
+         if C = '\' then
+            --  LRM93 13.3.2
+            --  If a backslash is to be used as one of the graphic characters
+            --  of an extended literal, it must be doubled.
+            --  LRM93 13.3.2
+            --  (a doubled backslash couting as one character)
             Len := Len + 1;
             Buffer (Len) := '\';
 
             Pos := Pos + 1;
+            C := Source (Pos);
 
-            exit when Source (Pos) /= '\';
+            exit when C /= '\';
          end if;
 
-         -- source (pos) is correct.
-         case Characters_Kind (Source (Pos)) is
+         case Characters_Kind (C) is
             when Format_Effector =>
                Error_Msg_Scan ("format effector in extended identifier");
                exit;
             when Graphic_Character =>
                null;
             when Invalid =>
-               Error_Msg_Scan ("invalid character in extended identifier");
+               if C = Files_Map.EOT
+                 and then Pos >= Current_Context.File_Len
+               then
+                  Error_Msg_Scan
+                    ("extended identifier not terminated at end of file");
+               elsif C = LF or C = CR then
+                  Error_Msg_Scan
+                    ("extended identifier not terminated at end of line");
+               else
+                  Error_Msg_Scan ("invalid character in extended identifier");
+               end if;
+               exit;
          end case;
          Len := Len + 1;
 
-         -- LRM93 13.3.2
-         -- Extended identifiers differing only in the use of corresponding
-         -- upper and lower case letters are distinct.
-         Buffer (Len) := Source (Pos);
+         --  LRM93 13.3.2
+         --  Extended identifiers differing only in the use of corresponding
+         --  upper and lower case letters are distinct.
+         Buffer (Len) := C;
       end loop;
 
       if Len <= 2 then
          Error_Msg_Scan ("empty extended identifier is not allowed");
       end if;
 
-      -- LRM93 13.2
-      -- At least one separator is required between an identifier or an
-      -- abstract literal and an adjacent identifier or abstract literal.
-      case Characters_Kind (Source (Pos)) is
+      --  LRM93 13.2
+      --  At least one separator is required between an identifier or an
+      --  abstract literal and an adjacent identifier or abstract literal.
+      case Characters_Kind (C) is
          when Digit
            | Upper_Case_Letter
            | Lower_Case_Letter =>
@@ -1586,6 +1595,7 @@ package body Scanner is
    --  Scan_LF_Newline.
    procedure Scan_Next_Line is
    begin
+      Files_Map.Skip_Gap (Current_Context.Source_File, Pos);
       Current_Context.Line_Number := Current_Context.Line_Number + 1;
       Current_Context.Line_Pos := Pos;
       File_Add_Line_Number
@@ -1670,7 +1680,7 @@ package body Scanner is
                --   A comment can appear on any line line of a VHDL
                --   description.
                --   The presence or absence of comments has no influence on
-               --   wether a description is legal or illegal.
+               --   whether a description is legal or illegal.
                --   Futhermore, comments do not influence the execution of a
                --   simulation module; their sole purpose is the enlightenment
                --   of the human reader.
@@ -2010,9 +2020,10 @@ package body Scanner is
             return;
          when '#' =>
             Error_Msg_Scan ("'#' is used for based literals and "
-                            & "must be preceded by a base");
-            -- Cannot easily continue.
-            raise Compilation_Error;
+                              & "must be preceded by a base");
+            --  Skip.
+            Pos := Pos + 1;
+            goto Again;
          when '"' =>
             Scan_String;
             return;

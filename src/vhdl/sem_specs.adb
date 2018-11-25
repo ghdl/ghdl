@@ -22,6 +22,7 @@ with Evaluation; use Evaluation;
 with Std_Package; use Std_Package;
 with Errorout; use Errorout;
 with Sem; use Sem;
+with Sem_Lib; use Sem_Lib;
 with Sem_Scopes; use Sem_Scopes;
 with Sem_Assocs; use Sem_Assocs;
 with Libraries;
@@ -249,7 +250,7 @@ package body Sem_Specs is
       --  a given named entity.
       --  LRM 5.1
       --  Similarly, it is an error if two different attributes with the
-      --  same simple name (wether predefined or user-defined) are both
+      --  same simple name (whether predefined or user-defined) are both
       --  associated with a given named entity.
       Attr_Chain_Parent := Get_Attribute_Value_Chain_Parent (Decl);
       El := Get_Attribute_Value_Chain (Attr_Chain_Parent);
@@ -1539,7 +1540,7 @@ package body Sem_Specs is
          null;
       end if;
 
-      Design_Unit := Libraries.Load_Primary_Unit
+      Design_Unit := Load_Primary_Unit
         (Get_Library (Get_Design_File (Entity_Unit)),
          Get_Identifier (Get_Library_Unit (Entity_Unit)),
          Parent);

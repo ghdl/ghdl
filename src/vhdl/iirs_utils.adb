@@ -24,7 +24,6 @@ with Std_Names; use Std_Names;
 with Std_Package;
 with Flags; use Flags;
 with PSL.Nodes;
-with Sem_Inst;
 
 package body Iirs_Utils is
    -- Transform the current token into an iir literal.
@@ -936,20 +935,6 @@ package body Iirs_Utils is
    begin
       return Iir_Predefined_Functions'Image (Func);
    end Get_Predefined_Function_Name;
-
-   procedure Mark_Subprogram_Used (Subprg : Iir)
-   is
-      N : Iir;
-   begin
-      N := Subprg;
-      loop
-         exit when Get_Use_Flag (N);
-         Set_Use_Flag (N, True);
-         N := Sem_Inst.Get_Origin (N);
-         --  The origin may also be an instance.
-         exit when N = Null_Iir;
-      end loop;
-   end Mark_Subprogram_Used;
 
    function Get_Callees_List_Holder (Subprg : Iir) return Iir is
    begin

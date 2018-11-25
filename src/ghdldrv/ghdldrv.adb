@@ -66,9 +66,6 @@ package body Ghdldrv is
    --  "-fpic" option.
    Dash_Fpic : constant String_Access := new String'("-fpic");
 
-   --  True if --post is present.
-   Flag_Postprocess : Boolean := False;
-
    --  If set, do not assmble
    Flag_Asm : Boolean;
 
@@ -473,7 +470,9 @@ package body Ghdldrv is
             return new String'(Toolname);
          end if;
       else
-         --  Try from install prefix
+         --  Try from install prefix.  This is used at least with gcc when
+         --  ghdl1 is installed in a libexec subdirectory, and also during
+         --  development.
          if Exec_Prefix /= null then
             declare
                Path : constant String :=
@@ -485,7 +484,21 @@ package body Ghdldrv is
             end;
          end if;
 
-         --  Try configured prefix
+         --  Try from install prefix / bin.  This is used at least for
+         --  ghdl1-llvm.
+         if Exec_Prefix /= null then
+            declare
+               Path : constant String :=
+                 Exec_Prefix.all & Directory_Separator
+                 & "bin" & Directory_Separator & Toolname;
+            begin
+               if Is_Executable_File (Path) then
+                  return new String'(Path);
+               end if;
+            end;
+         end if;
+
+         --  Try configured prefix.
          declare
             Path : constant String :=
               Default_Paths.Install_Prefix & Directory_Separator & Toolname;
@@ -832,8 +845,7 @@ package body Ghdldrv is
          raise Option_Error;
       end if;
 
-      Set_Tools_Name;
-      Locate_Tools;
+      Setup_Compiler (False);
 
       Opt (1) := new String'("--compile-standard");
       Do_Compile (Opt, "std_standard.vhdl", True);

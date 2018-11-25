@@ -22,10 +22,6 @@ package Sem_Decls is
    procedure Sem_Interface_Chain (Interface_Chain: Iir;
                                   Interface_Kind : Interface_Kind_Type);
 
-   --  Create predefined operations for DECL.
-   procedure Create_Implicit_Operations
-     (Decl : Iir; Is_Std_Standard : Boolean := False);
-
    --  Analyze declarations of PARENT.
    procedure Sem_Declaration_Chain (Parent : Iir);
 
@@ -55,6 +51,10 @@ package Sem_Decls is
    --  This is to apply rules of LRM93 3.2.1.1 Index constraints and
    --  discrete ranges.
    procedure Sem_Object_Type_From_Value (Decl : Iir; Value : Iir);
+
+   --  Mark SUBPRG as used.  If SUBPRG is an instance, its generic is also
+   --  marked.
+   procedure Mark_Subprogram_Used (Subprg : Iir);
 
    --  The attribute signals ('stable, 'quiet and 'transaction) are
    --  implicitely declared.

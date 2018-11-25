@@ -108,8 +108,8 @@ package body Trans.Helpers2 is
                                        Unsigned_64 (Str'Length));
       Start_Record_Aggr (List, Ghdl_Str_Len_Type_Node);
       New_Record_Aggr_El (List, Str_Len);
-      New_Record_Aggr_El (List, New_Global_Address (Str_Cst,
-                          Char_Ptr_Type));
+      New_Record_Aggr_El (List, New_Global_Address (New_Global (Str_Cst),
+                                                    Char_Ptr_Type));
       Finish_Record_Aggr (List, Res);
       return Res;
    end Create_String_Len;
@@ -283,10 +283,11 @@ package body Trans.Helpers2 is
    procedure Assoc_Filename_Line (Assoc : in out O_Assoc_List;
                                   Line  : Natural) is
    begin
-      New_Association (Assoc,
-                       New_Lit (New_Global_Address (Current_Filename_Node,
-                                                    Char_Ptr_Type)));
-      New_Association (Assoc, New_Lit (New_Signed_Literal
-                       (Ghdl_I32_Type, Integer_64 (Line))));
+      New_Association
+        (Assoc, New_Address (New_Obj (Current_Filename_Node),
+                             Char_Ptr_Type));
+      New_Association
+        (Assoc, New_Lit (New_Signed_Literal (Ghdl_I32_Type,
+                                             Integer_64 (Line))));
    end Assoc_Filename_Line;
 end Trans.Helpers2;

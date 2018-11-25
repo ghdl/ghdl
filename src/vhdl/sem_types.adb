@@ -20,7 +20,7 @@ with Flags; use Flags;
 with Types; use Types;
 with Errorout; use Errorout;
 with Evaluation; use Evaluation;
-with Sem;
+with Sem_Utils;
 with Sem_Expr; use Sem_Expr;
 with Sem_Scopes; use Sem_Scopes;
 with Sem_Names; use Sem_Names;
@@ -546,7 +546,8 @@ package body Sem_Types is
         and then not Is_Fully_Constrained_Type (El_Type)
       then
          Error_Msg_Sem
-           (+Def, "array element of unconstrained %n is not allowed",
+           (+Def,
+            "array element of unconstrained %n is not allowed before vhdl08",
             +El_Type);
       end if;
       Set_Resolved_Flag (Def, Get_Resolved_Flag (El_Type));
@@ -795,7 +796,7 @@ package body Sem_Types is
          Set_Expr_Staticness (El, Locally);
          Set_Name_Staticness (El, Locally);
          Set_Type (El, Def);
-         Sem.Compute_Subprogram_Hash (El);
+         Sem_Utils.Compute_Subprogram_Hash (El);
          Sem_Scopes.Add_Name (El);
          Name_Visible (El);
          Xref_Decl (El);
@@ -1382,7 +1383,7 @@ package body Sem_Types is
            (+Atype, "no matching resolution function for %n", +Name);
       else
          Name1 := Finish_Sem_Name (Name);
-         Mark_Subprogram_Used (Res);
+         Sem_Decls.Mark_Subprogram_Used (Res);
          Set_Resolved_Flag (Atype, True);
          Set_Resolution_Indication (Atype, Name1);
       end if;
@@ -1393,6 +1394,31 @@ package body Sem_Types is
    function Sem_Subtype_Constraint
      (Def : Iir; Type_Mark : Iir; Resolution : Iir)
      return Iir;
+
+   function Copy_Record_Element_Declaration (El : Iir; Parent : Iir) return Iir
+   is
+      New_El : Iir;
+   begin
+      case Get_Kind (El) is
+         when Iir_Kind_Element_Declaration =>
+            New_El := Create_Iir (Iir_Kind_Element_Declaration);
+            --  As this is a copy, it has no subtype indication.
+            Set_Subtype_Indication (New_El, Null_Iir);
+         when Iir_Kind_Record_Element_Constraint =>
+            New_El := Create_Iir (Iir_Kind_Record_Element_Constraint);
+            Set_Element_Declaration (New_El, Get_Element_Declaration (El));
+         when others =>
+            Error_Kind ("copy_record_element_declaration", El);
+      end case;
+      Location_Copy (New_El, El);
+      Set_Parent (New_El, Parent);
+      Set_Identifier (New_El, Get_Identifier (El));
+      Set_Type (New_El, Get_Type (El));
+      Set_Base_Element_Declaration
+        (New_El, Get_Base_Element_Declaration (El));
+      Set_Element_Position (New_El, Get_Element_Position (El));
+      return New_El;
+   end Copy_Record_Element_Declaration;
 
    --  Create a copy of elements_declaration_list of SRC and set it to DST.
    procedure Copy_Record_Elements_Declaration_List (Dst : Iir; Src : Iir)
@@ -1405,14 +1431,7 @@ package body Sem_Types is
       Set_Elements_Declaration_List (Dst, New_El_List);
       for I in Flist_First .. Flist_Last (El_List) loop
          El := Get_Nth_Element (El_List, I);
-         New_El := Create_Iir (Iir_Kind_Element_Declaration);
-         Location_Copy (New_El, El);
-         Set_Parent (New_El, Dst);
-         Set_Identifier (New_El, Get_Identifier (El));
-         Set_Type (New_El, Get_Type (El));
-         Set_Base_Element_Declaration (New_El,
-                                       Get_Base_Element_Declaration (El));
-         Set_Element_Position (New_El, Get_Element_Position (El));
+         New_El := Copy_Record_Element_Declaration (El, Dst);
          Set_Nth_Element (New_El_List, I, New_El);
       end loop;
    end Copy_Record_Elements_Declaration_List;
@@ -2030,7 +2049,7 @@ package body Sem_Types is
                if Els (I) = Null_Iir and Res_Els (I) = Null_Iir then
                   --  No new record element constraints.  Copy the element from
                   --  the type mark.
-                  El := Tm_El;
+                  El := Copy_Record_Element_Declaration (Tm_El, Res);
                   El_Type := Get_Type (El);
                else
                   if Els (I) = Null_Iir then

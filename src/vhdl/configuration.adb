@@ -24,6 +24,7 @@ with Flags;
 with Iirs_Utils; use Iirs_Utils;
 with Iirs_Walk;
 with Sem_Scopes;
+with Sem_Lib; use Sem_Lib;
 with Canon;
 
 package body Configuration is
@@ -103,7 +104,7 @@ package body Configuration is
       end if;
 
       if Flag_Load_All_Design_Units then
-         Libraries.Load_Design_Unit (Unit, From);
+         Load_Design_Unit (Unit, From);
       end if;
 
       --  Add packages from depend list.
@@ -140,7 +141,7 @@ package body Configuration is
          when Iir_Kind_Package_Declaration =>
             --  Analyze the package declaration, so that Set_Package below
             --  will set the full package (and not a stub).
-            Libraries.Load_Design_Unit (Unit, From);
+            Load_Design_Unit (Unit, From);
             Lib_Unit := Get_Library_Unit (Unit);
          when Iir_Kind_Package_Instantiation_Declaration =>
             --  The uninstantiated package is part of the dependency.
@@ -148,7 +149,7 @@ package body Configuration is
          when Iir_Kind_Configuration_Declaration =>
             --  Add entity and architecture.
             --  find all sub-configuration
-            Libraries.Load_Design_Unit (Unit, From);
+            Load_Design_Unit (Unit, From);
             Lib_Unit := Get_Library_Unit (Unit);
             Add_Design_Unit (Get_Design_Unit (Get_Entity (Lib_Unit)), Unit);
             declare
@@ -788,9 +789,9 @@ package body Configuration is
          case Iir_Kinds_Library_Unit (Kind) is
             when Iir_Kind_Architecture_Body
               | Iir_Kind_Configuration_Declaration =>
-               Libraries.Load_Design_Unit (Design, Null_Iir);
+               Load_Design_Unit (Design, Null_Iir);
             when Iir_Kind_Entity_Declaration =>
-               Libraries.Load_Design_Unit (Design, Null_Iir);
+               Load_Design_Unit (Design, Null_Iir);
                Sem_Scopes.Add_Name (Get_Library_Unit (Design));
             when Iir_Kind_Package_Declaration
               | Iir_Kind_Package_Instantiation_Declaration
