@@ -716,10 +716,10 @@ package body Files_Map is
 
       Buffer : File_Buffer_Acc;
    begin
-      --  If the file is already loaded, nothing to do!
+      --  The file is not supposed to be already loaded, but this could happen
+      --  if the same file is compiled in two libraries.
       Res := Find_Source_File (Directory, Name);
       if Res /= No_Source_File_Entry then
-         pragma Assert (Source_Files.Table (Res).Source /= null);
          return Res;
       end if;
 

@@ -53,6 +53,7 @@ package body Sem_Lib is
       if Res /= Null_Iir then
          Set_Parent (Res, Work_Library);
          Set_Design_File_Filename (Res, Files_Map.Get_File_Name (File));
+         Set_Design_File_Source (Res, File);
       end if;
       return Res;
    end Load_File;
@@ -159,41 +160,45 @@ package body Sem_Lib is
    procedure Load_Parse_Design_Unit (Design_Unit: Iir_Design_Unit; Loc : Iir)
    is
       use Scanner;
+      Design_File : constant Iir_Design_File := Get_Design_File (Design_Unit);
+      Fe : Source_File_Entry;
       Line, Off: Natural;
       Pos: Source_Ptr;
       Res: Iir;
-      Design_File : Iir_Design_File;
-      Fe : Source_File_Entry;
    begin
       --  The unit must not be loaded.
       pragma Assert (Get_Date_State (Design_Unit) = Date_Disk);
 
-      --  Load the file in memory.
-      Design_File := Get_Design_File (Design_Unit);
-      Fe := Files_Map.Read_Source_File
-        (Get_Design_File_Directory (Design_File),
-         Get_Design_File_Filename (Design_File));
+      Fe := Get_Design_File_Source (Design_File);
       if Fe = No_Source_File_Entry then
-         Error_Lib_Msg ("cannot load %n", +Get_Library_Unit (Design_Unit));
-         raise Compilation_Error;
-      end if;
-      Set_File (Fe);
+         --  Load the file in memory.
+         Fe := Files_Map.Read_Source_File
+           (Get_Design_File_Directory (Design_File),
+            Get_Design_File_Filename (Design_File));
+         if Fe = No_Source_File_Entry then
+            Error_Lib_Msg ("cannot load %n", +Get_Library_Unit (Design_Unit));
+            raise Compilation_Error;
+         end if;
+         Set_Design_File_Source (Design_File, Fe);
 
-      --  Check if the file has changed.
-      if not Files_Map.Is_Eq
-        (Files_Map.Get_File_Checksum (Get_Current_Source_File),
-         Get_File_Checksum (Design_File))
-      then
-         Error_Msg_Sem (+Loc, "file %i has changed and must be reanalysed",
-                        +Get_Design_File_Filename (Design_File));
-         raise Compilation_Error;
-      elsif Get_Date (Design_Unit) = Date_Obsolete then
+         --  Check if the file has changed.
+         if not Files_Map.Is_Eq
+           (Files_Map.Get_File_Checksum (Fe), Get_File_Checksum (Design_File))
+         then
+            Error_Msg_Sem (+Loc, "file %i has changed and must be reanalysed",
+                           +Get_Design_File_Filename (Design_File));
+            raise Compilation_Error;
+         end if;
+      end if;
+
+      if Get_Date (Design_Unit) = Date_Obsolete then
          Error_Msg_Sem (+Design_Unit, "%n has been obsoleted",
                         +Get_Library_Unit (Design_Unit));
          raise Compilation_Error;
       end if;
 
       --  Set the position of the lexer
+      Set_File (Fe);
       Pos := Get_Design_Unit_Source_Pos (Design_Unit);
       Line := Natural (Get_Design_Unit_Source_Line (Design_Unit));
       Off := Natural (Get_Design_Unit_Source_Col (Design_Unit));

@@ -603,6 +603,22 @@ package body Iirs is
       Set_Field3 (Design, Time_Stamp_Id_To_Iir (Stamp));
    end Set_Analysis_Time_Stamp;
 
+   function Get_Design_File_Source (Design : Iir) return Source_File_Entry is
+   begin
+      pragma Assert (Design /= Null_Iir);
+      pragma Assert (Has_Design_File_Source (Get_Kind (Design)),
+                     "no field Design_File_Source");
+      return Iir_To_Source_File_Entry (Get_Field7 (Design));
+   end Get_Design_File_Source;
+
+   procedure Set_Design_File_Source (Design : Iir; Sfe : Source_File_Entry) is
+   begin
+      pragma Assert (Design /= Null_Iir);
+      pragma Assert (Has_Design_File_Source (Get_Kind (Design)),
+                     "no field Design_File_Source");
+      Set_Field7 (Design, Source_File_Entry_To_Iir (Sfe));
+   end Set_Design_File_Source;
+
    function Get_Library (File : Iir_Design_File) return Iir is
    begin
       pragma Assert (File /= Null_Iir);

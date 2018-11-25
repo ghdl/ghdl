@@ -65,6 +65,7 @@ package Nodes_Meta is
       Field_Library_Declaration,
       Field_File_Checksum,
       Field_Analysis_Time_Stamp,
+      Field_Design_File_Source,
       Field_Library,
       Field_File_Dependence_List,
       Field_Design_File_Filename,
@@ -594,6 +595,7 @@ package Nodes_Meta is
    function Has_Library_Declaration (K : Iir_Kind) return Boolean;
    function Has_File_Checksum (K : Iir_Kind) return Boolean;
    function Has_Analysis_Time_Stamp (K : Iir_Kind) return Boolean;
+   function Has_Design_File_Source (K : Iir_Kind) return Boolean;
    function Has_Library (K : Iir_Kind) return Boolean;
    function Has_File_Dependence_List (K : Iir_Kind) return Boolean;
    function Has_Design_File_Filename (K : Iir_Kind) return Boolean;

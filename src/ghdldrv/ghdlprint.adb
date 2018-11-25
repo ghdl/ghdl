@@ -559,6 +559,8 @@ package body Ghdlprint is
       pragma Unreferenced (Cmd);
       use Ada.Characters.Latin_1;
 
+      Files : Iir_Array (Args'Range);
+
       function Build_File_Name_Length (Lib : Iir) return Natural
       is
          Id : constant Name_Id := Get_Identifier (Lib);
@@ -682,6 +684,7 @@ package body Ghdlprint is
          if Design_File = Null_Iir then
             raise Compile_Error;
          end if;
+         Files (I) := Design_File;
          Unit := Get_First_Design_Unit (Design_File);
          while Unit /= Null_Iir loop
             Lib := Get_Library_Unit (Unit);
@@ -707,8 +710,7 @@ package body Ghdlprint is
 
       --  Second loop: do the real work.
       for I in Args'Range loop
-         Id := Get_Identifier (Args (I).all);
-         Design_File := Load_File (Id);
+         Design_File := Files (I);
          Unit := Get_First_Design_Unit (Design_File);
          declare
             use Files_Map;

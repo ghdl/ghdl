@@ -204,6 +204,8 @@ package Iirs is
    --
    --   Get/Set_Last_Design_Unit (Field6)
    --
+   --   Get/Set_Design_File_Source (Field7)
+   --
    --  Identifier for the design file file name and dirname.
    --   Get/Set_Design_File_Filename (Field12)
    --   Get/Set_Design_File_Directory (Field11)
@@ -5870,6 +5872,10 @@ package Iirs is
    --  Field: Field3 (uc)
    function Get_Analysis_Time_Stamp (Design : Iir) return Time_Stamp_Id;
    procedure Set_Analysis_Time_Stamp (Design : Iir; Stamp : Time_Stamp_Id);
+
+   --  Field: Field7 (uc)
+   function Get_Design_File_Source (Design : Iir) return Source_File_Entry;
+   procedure Set_Design_File_Source (Design : Iir; Sfe : Source_File_Entry);
 
    --  The library which FILE belongs to.
    --  Field: Field0 Ref
