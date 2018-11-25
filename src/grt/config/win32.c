@@ -200,7 +200,7 @@ grt_save_backtrace (struct backtrace_addrs *bt, int skip)
 {
   CONTEXT ctxt;
 
-#ifndef __MINGW32__
+#ifndef NO_FULL_WINAPI_SUPPORT
   RtlCaptureContext (&ctxt);
   get_bt_from_context (bt, &ctxt, skip + 1);
 #else

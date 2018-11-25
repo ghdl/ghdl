@@ -31,7 +31,7 @@ boot_language=no
 
 compilers="ghdl1\$(exeext)"
 
-target_libs=target-libbacktrace
+target_libs="target-libbacktrace target-zlib"
 
 stagestuff="ghdl\$(exeext) ghdl1\$(exeext)"
 
