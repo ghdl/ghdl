@@ -2771,6 +2771,7 @@ package body Sem_Expr is
          Set_Same_Alternative_Flag (N_Choice, Get_Same_Alternative_Flag (El));
          Set_Choice_Range (N_Choice, Eval_Range_If_Static (Name1));
          Set_Choice_Staticness (N_Choice, Get_Type_Staticness (Range_Type));
+         Set_Element_Type_Flag (N_Choice, Get_Element_Type_Flag (El));
          Free_Iir (El);
 
          if Prev_El = Null_Iir then
