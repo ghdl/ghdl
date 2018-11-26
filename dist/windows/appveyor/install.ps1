@@ -12,7 +12,7 @@ if ($env:BUILD_MINGW -eq "mingw32")
 	{
 	}
 	elseif ($env:BUILD_BACKEND -eq "llvm")
-	{	C:\msys64\usr\bin\pacman -S mingw-w64-i686-llvm35 mingw-w64-i686-clang35 --noconfirm
+	{	C:\msys64\usr\bin\pacman -S mingw-w64-i686-llvm mingw-w64-i686-clang --noconfirm
 	}
 }
 elseif ($env:BUILD_MINGW -eq "mingw64")
@@ -21,7 +21,7 @@ elseif ($env:BUILD_MINGW -eq "mingw64")
 	{
 	}
 	elseif ($env:BUILD_BACKEND -eq "llvm")
-	{	C:\msys64\usr\bin\pacman -S mingw-w64-x86_64-llvm35 mingw-w64-x86_64-clang35 --noconfirm
+	{	C:\msys64\usr\bin\pacman -S mingw-w64-x86_64-llvm mingw-w64-x86_64-clang --noconfirm
 	}
 }
 
