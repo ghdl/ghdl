@@ -36,4 +36,9 @@ package Files_Map.Editor is
    procedure Set_Gap (File : Source_File_Entry;
                       First : Source_Ptr;
                       Last : Source_Ptr);
+
+   --  Check that content of FILE is STR[1 .. STR_LEN].
+   procedure Check_Buffer_Content (File : Source_File_Entry;
+                                   Str : Thin_String_Ptr;
+                                   Str_Len : Natural);
 end Files_Map.Editor;
