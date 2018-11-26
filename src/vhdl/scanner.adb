@@ -917,6 +917,12 @@ package body Scanner is
       --  Not a letter.
       others => NUL);
 
+   procedure Error_Too_Long is
+   begin
+      Error_Msg_Scan ("identifier is too long (>"
+                        & Natural'Image (Max_Name_Length - 1) & ")");
+   end Error_Too_Long;
+
    -- LRM93 13.3.1
    -- Basic Identifiers
    -- A basic identifier consists only of letters, digits, and underlines.
@@ -979,8 +985,19 @@ package body Scanner is
 
          --  Put character in name buffer.  FIXME: compute the hash at the same
          --  time ?
-         Len := Len + 1;
-         Buffer (Len) := C;
+         if Len >= Max_Name_Length - 1 then
+            if Len = Max_Name_Length -1 then
+               Error_Msg_Scan ("identifier is too long (>"
+                                 & Natural'Image (Max_Name_Length - 1) & ")");
+               --  Accept this last one character, so that no error for the
+               --  following characters.
+               Len := Len + 1;
+               Buffer (Len) := C;
+            end if;
+         else
+            Len := Len + 1;
+            Buffer (Len) := C;
+         end if;
 
          --  Next character.
          Pos := Pos + 1;
@@ -1267,8 +1284,17 @@ package body Scanner is
             --  of an extended literal, it must be doubled.
             --  LRM93 13.3.2
             --  (a doubled backslash couting as one character)
-            Len := Len + 1;
-            Buffer (Len) := '\';
+            if Len >= Max_Name_Length - 1 then
+               if Len = Max_Name_Length - 1 then
+                  Error_Too_Long;
+                  --  Accept this last one.
+                  Len := Len + 1;
+                  Buffer (Len) := C;
+               end if;
+            else
+               Len := Len + 1;
+               Buffer (Len) := C;
+            end if;
 
             Pos := Pos + 1;
             C := Source (Pos);
@@ -1296,12 +1322,21 @@ package body Scanner is
                end if;
                exit;
          end case;
-         Len := Len + 1;
 
          --  LRM93 13.3.2
          --  Extended identifiers differing only in the use of corresponding
          --  upper and lower case letters are distinct.
-         Buffer (Len) := C;
+         if Len >= Max_Name_Length - 1 then
+            if Len = Max_Name_Length - 1 then
+               Error_Too_Long;
+               --  Accept this last one.
+               Len := Len + 1;
+               Buffer (Len) := C;
+            end if;
+         else
+            Len := Len + 1;
+            Buffer (Len) := C;
+         end if;
       end loop;
 
       if Len <= 2 then
@@ -2223,6 +2258,7 @@ package body Scanner is
             end if;
             return;
       end case;
+      --  Not reachable: all case should use goto Again or return.
    end Scan;
 
    function Get_Token_Location return Location_Type is
