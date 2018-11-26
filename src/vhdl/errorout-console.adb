@@ -189,47 +189,34 @@ package body Errorout.Console is
       end if;
 
       --  Display level.
-      declare
-         Id_Level : Msgid_Type;
-      begin
-         if Flags.Warn_Error
-           and then (E.Id = Msgid_Warning or E.Id in Msgid_Warnings)
-         then
-            Id_Level := Msgid_Error;
-         else
-            Id_Level := E.Id;
-         end if;
-
-         case Id_Level is
-            when Msgid_Note =>
-               if Flag_Color_Diagnostics = On then
-                  Set_Color (Color_Note);
-               end if;
-               Put ("note:");
-            when Msgid_Warning | Msgid_Warnings =>
-               if Flag_Color_Diagnostics = On then
-                  Set_Color (Color_Warning);
-               end if;
-               Put ("warning:");
-            when Msgid_Error =>
-               Nbr_Errors := Nbr_Errors + 1;
-               if Flag_Color_Diagnostics = On then
-                  Set_Color (Color_Error);
-               end if;
-               if Msg_Len = 0
-                 or else Flag_Color_Diagnostics = On
-               then
-                  --  'error:' is displayed only if not location is present, or
-                  --  if messages are colored.
-                  Put ("error:");
-               end if;
-            when Msgid_Fatal =>
-               if Flag_Color_Diagnostics = On then
-                  Set_Color (Color_Fatal);
-               end if;
-               Put ("fatal:");
-         end case;
-      end;
+      case E.Id is
+         when Msgid_Note =>
+            if Flag_Color_Diagnostics = On then
+               Set_Color (Color_Note);
+            end if;
+            Put ("note:");
+         when Msgid_Warning | Msgid_Warnings =>
+            if Flag_Color_Diagnostics = On then
+               Set_Color (Color_Warning);
+            end if;
+            Put ("warning:");
+         when Msgid_Error =>
+            if Flag_Color_Diagnostics = On then
+               Set_Color (Color_Error);
+            end if;
+            if Msg_Len = 0
+              or else Flag_Color_Diagnostics = On
+            then
+               --  'error:' is displayed only if not location is present, or
+               --  if messages are colored.
+               Put ("error:");
+            end if;
+         when Msgid_Fatal =>
+            if Flag_Color_Diagnostics = On then
+               Set_Color (Color_Fatal);
+            end if;
+            Put ("fatal:");
+      end case;
 
       if Flag_Color_Diagnostics = On then
          Set_Color (Color_Message);

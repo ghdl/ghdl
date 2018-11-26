@@ -215,10 +215,30 @@ package body Errorout is
 
       File : Source_File_Entry;
       Line : Natural;
+      New_Id : Msgid_Type;
       Offset : Natural;
       Line_Pos : Source_Ptr;
       pragma Unreferenced (Line_Pos);
    begin
+      --  Reclassify warnings to errors if -Werror.
+      if Flags.Warn_Error
+        and then (Id = Msgid_Warning or Id in Msgid_Warnings)
+      then
+         New_Id := Msgid_Error;
+      else
+         New_Id := Id;
+      end if;
+      pragma Unreferenced (Id);
+
+      --  Limit the number of errors.
+      if not Cont and then New_Id = Msgid_Error then
+         Nbr_Errors := Nbr_Errors + 1;
+         if Nbr_Errors > Max_Nbr_Errors then
+            return;
+         end if;
+      end if;
+
+      --  Set error location.
       File := No_Source_File_Entry;
       Line := 0;
       Offset := 0;
@@ -253,7 +273,7 @@ package body Errorout is
       end case;
 
       Report_Handler.Error_Start
-        (Err => (Origin, Id, Cont, File, Line, Offset));
+        (Err => (Origin, New_Id, Cont, File, Line, Offset));
 
       --  Display message.
       declare
@@ -410,6 +430,17 @@ package body Errorout is
       end;
 
       Report_Handler.Message_End.all;
+
+      if not Cont
+        and then New_Id = Msgid_Error
+        and then Nbr_Errors = Max_Nbr_Errors
+      then
+         --  Limit reached.  Emit a message.
+         Report_Handler.Error_Start
+           (Err => (Origin, Msgid_Error, False, File, Line, Offset));
+         Report_Handler.Message ("error limit reached");
+         Report_Handler.Message_End.all;
+      end if;
    end Report_Msg;
 
    procedure Error_Msg_Option_NR (Msg: String) is
