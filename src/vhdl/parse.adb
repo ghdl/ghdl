@@ -2156,7 +2156,7 @@ package body Parse is
       Append (Last, Res, Unit);
 
       --  Parse secondary units.
-      while Current_Token /= Tok_End loop
+      while Current_Token = Tok_Identifier loop
          Unit := Create_Iir (Iir_Kind_Unit_Declaration);
          Set_Location (Unit);
          Set_Parent (Unit, Parent);
@@ -2170,29 +2170,30 @@ package body Parse is
 
          Multiplier := Parse_Primary;
          Set_Physical_Literal (Unit, Multiplier);
-         case Get_Kind (Multiplier) is
-            when Iir_Kind_Simple_Name
-              | Iir_Kind_Selected_Name
-              | Iir_Kind_Physical_Int_Literal =>
-               null;
-            when Iir_Kind_Physical_Fp_Literal =>
-               Error_Msg_Parse
-                 ("secondary units may only be defined with integer literals");
-            when others =>
-               Error_Msg_Parse ("a physical literal is expected here");
-         end case;
+         if Multiplier /= Null_Iir then
+            case Get_Kind (Multiplier) is
+               when Iir_Kind_Simple_Name
+                 | Iir_Kind_Selected_Name
+                 | Iir_Kind_Physical_Int_Literal =>
+                  null;
+               when Iir_Kind_Physical_Fp_Literal =>
+                  Error_Msg_Parse
+                    ("secondary units may only be defined by an integer");
+               when others =>
+                  Error_Msg_Parse ("a physical literal is expected here");
+            end case;
+         end if;
          Append (Last, Res, Unit);
          Scan_Semi_Colon ("secondary unit");
       end loop;
 
       --  Skip 'end'.
-      Scan;
-
-      Expect (Tok_Units);
-      Set_End_Has_Reserved_Id (Res, True);
+      Expect_Scan (Tok_End);
 
       --  Skip 'units'.
-      Scan;
+      Expect_Scan (Tok_Units);
+      Set_End_Has_Reserved_Id (Res, True);
+
       return Res;
    end Parse_Physical_Type_Definition;
 
