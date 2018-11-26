@@ -848,59 +848,60 @@ package body Sem_Scopes is
       --  The current interpretation and the new one aren't overloadable, ie
       --  they are homograph (well almost).
 
-      if Is_In_Current_Declarative_Region (Current_Inter) then
-         --  They are perhaps visible in the same declarative region.
-         if Is_Potentially_Visible (Current_Inter) then
-            if Potentially then
-               --  LRM93 10.4 2) / LRM08 12.4 c) Use clauses
-               --  Potentially visible declarations that have the same
-               --  designator are not made directly visible unless each of
-               --  them is either an enumeration literal specification or
-               --  the declaration of a subprogram.
-               if Decl = Get_Declaration (Current_Inter) then
-                  -- The rule applies only for distinct declaration.
-                  -- This handles 'use p.all; use P.all;'.
-                  -- FIXME: this should have been handled at the start of
-                  -- this subprogram.
-                  raise Internal_Error;
-                  return;
-               end if;
-
-               --  LRM08 12.3 Visibility
-               --  Each of two declarations is said to be a homograph of the
-               --  other if and only if both declarations have the same
-               --  designator; and they denote different named entities, [...]
-               if Flags.Vhdl_Std >= Vhdl_08 then
-                  if Strip_Non_Object_Alias (Decl)
-                    = Strip_Non_Object_Alias (Current_Decl)
-                  then
-                     return;
-                  end if;
-               end if;
-
-               --  Conflict.
-               Add_New_Interpretation (True, Null_Iir);
-               return;
-            else
-               --  LRM93 10.4 item #1
-               --  A potentially visible declaration is not made directly
-               --  visible if the place considered is within the immediate
-               --  scope of a homograph of the declaration.
-               --  GHDL: Could directly replace the previous interpretation
-               --  (added in same scope), but don't do that for entity
-               --  declarations, since it is used to find default binding.
-               Add_New_Interpretation (True);
+      if Is_Potentially_Visible (Current_Inter) then
+         if Potentially then
+            --  LRM93 10.4 2) / LRM08 12.4 c) Use clauses
+            --  Potentially visible declarations that have the same
+            --  designator are not made directly visible unless each of
+            --  them is either an enumeration literal specification or
+            --  the declaration of a subprogram.
+            if Decl = Get_Declaration (Current_Inter) then
+               -- The rule applies only for distinct declaration.
+               -- This handles 'use p.all; use P.all;'.
+               -- FIXME: this should have been handled at the start of
+               -- this subprogram.
+               raise Internal_Error;
                return;
             end if;
+
+            --  LRM08 12.3 Visibility
+            --  Each of two declarations is said to be a homograph of the
+            --  other if and only if both declarations have the same
+            --  designator; and they denote different named entities, [...]
+            if Flags.Vhdl_Std >= Vhdl_08 then
+               if Strip_Non_Object_Alias (Decl)
+                 = Strip_Non_Object_Alias (Current_Decl)
+               then
+                  return;
+               end if;
+            end if;
+
+            --  Conflict.
+            Add_New_Interpretation (True, Null_Iir);
+            return;
          else
-            --  There is already a declaration in the current scope.
-            if Potentially then
-               -- LRM93 §10.4 item #1
-               -- Discard the new and potentially visible declaration.
-               -- However, add the type.
-               -- FIXME: Add_In_Visible_List (Ident, Decl);
-               return;
-            else
+            --  LRM93 10.4 item #1
+            --  A potentially visible declaration is not made directly
+            --  visible if the place considered is within the immediate
+            --  scope of a homograph of the declaration.
+            --  GHDL: Could directly replace the previous interpretation
+            --  (added in same scope), but don't do that for entity
+            --  declarations, since it is used to find default binding.
+            Add_New_Interpretation (True);
+            return;
+         end if;
+      else
+         --  There is already a declaration in the current scope.
+         if Potentially then
+            -- LRM93 §10.4 item #1
+            -- Discard the new and potentially visible declaration.
+            -- However, add the type.
+            -- FIXME: Add_In_Visible_List (Ident, Decl);
+            return;
+         else
+            if Is_In_Current_Declarative_Region (Current_Inter) then
+               --  They are perhaps visible in the same declarative region.
+
                --  LRM93 11.2
                --  If two or more logical names having the same
                --  identifier appear in library clauses in the same
@@ -931,23 +932,24 @@ package body Sem_Scopes is
                Error_Msg_Sem
                  (+Current_Decl, "previous declaration: %n", +Current_Decl);
                return;
+            else
+               --  Homograph, not in the same scope.
+               --  LRM §10.3:
+               --  A declaration is said to be hidden within (part of) an inner
+               --  declarative region if the inner region contains an homograph
+               --  of this declaration; the outer declaration is the hidden
+               --  within the immediate scope of the inner homograph.
+               if Is_Warning_Enabled (Warnid_Hide)
+                 and then not Is_Potentially_Visible (Current_Inter)
+               then
+                  Warning_Hide (Decl, Current_Decl);
+               end if;
+
+               Add_New_Interpretation (True);
+               return;
             end if;
          end if;
       end if;
-
-      --  Homograph, not in the same scope.
-      --  LRM §10.3:
-      --  A declaration is said to be hidden within (part of) an inner
-      --  declarative region if the inner region contains an homograph
-      --  of this declaration; the outer declaration is the hidden
-      --  within the immediate scope of the inner homograph.
-      if Is_Warning_Enabled (Warnid_Hide)
-        and then not Is_Potentially_Visible (Current_Inter)
-      then
-         Warning_Hide (Decl, Current_Decl);
-      end if;
-
-      Add_New_Interpretation (True);
    end Add_Name;
 
    procedure Add_Name (Decl: Iir) is
