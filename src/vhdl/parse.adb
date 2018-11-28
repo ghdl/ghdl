@@ -356,8 +356,12 @@ package body Parse is
       Def : Iir;
    begin
       Def := Create_Iir (Iir_Kind_Subtype_Definition);
-      Location_Copy (Def, Type_Mark);
-      Set_Subtype_Type_Mark (Def, Type_Mark);
+      if Type_Mark /= Null_Iir then
+         Location_Copy (Def, Type_Mark);
+         Set_Subtype_Type_Mark (Def, Type_Mark);
+      else
+         Set_Location (Def);
+      end if;
       Set_Range_Constraint (Def, Parse_Range_Constraint);
       Set_Resolution_Indication (Def, Resolution_Indication);
       Set_Tolerance (Def, Parse_Tolerance_Aspect_Opt);
