@@ -118,10 +118,10 @@ package Scanner is
    function Get_Current_Source_File return Source_File_Entry;
    function Get_Current_Line return Natural;
    function Get_Current_Offset return Natural;
+   function Get_Position return Source_Ptr;
    function Get_Token_Location return Location_Type;
    function Get_Token_Offset return Natural;
    function Get_Token_Position return Source_Ptr;
-   function Get_Position return Source_Ptr;
 
    --  Convert (canonicalize) an identifier stored in name_buffer/name_length.
    --  Upper case letters are converted into lower case.

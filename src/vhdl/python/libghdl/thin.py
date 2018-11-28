@@ -253,7 +253,8 @@ class Errorout:
                     ("cont", c_int8),
                     ("file", c_int32),
                     ("line", c_int32),
-                    ("offset", c_int32)]
+                    ("offset", c_int32),
+                    ("length", c_int32)]
 
 
 class Errorout_Memory:

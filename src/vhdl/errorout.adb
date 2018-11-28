@@ -217,6 +217,7 @@ package body Errorout is
       Line : Natural;
       New_Id : Msgid_Type;
       Offset : Natural;
+      Loc_Length : Natural;
       Line_Pos : Source_Ptr;
       pragma Unreferenced (Line_Pos);
    begin
@@ -242,6 +243,7 @@ package body Errorout is
       File := No_Source_File_Entry;
       Line := 0;
       Offset := 0;
+      Loc_Length := 0;
 
       case Origin is
          when Option
@@ -262,10 +264,12 @@ package body Errorout is
                      File := Scanner.Get_Current_Source_File;
                      Line := Scanner.Get_Current_Line;
                      Offset  := Scanner.Get_Current_Offset;
+                     Loc_Length := 1;
                   when Parse =>
                      File := Scanner.Get_Current_Source_File;
                      Line := Scanner.Get_Current_Line;
                      Offset  := Scanner.Get_Token_Offset;
+                     Loc_Length := Scanner.Get_Current_Offset - Offset;
                   when Semantic =>
                      null;
                end case;
@@ -273,7 +277,7 @@ package body Errorout is
       end case;
 
       Report_Handler.Error_Start
-        (Err => (Origin, New_Id, Cont, File, Line, Offset));
+        (Err => (Origin, New_Id, Cont, File, Line, Offset, Loc_Length));
 
       --  Display message.
       declare
@@ -437,7 +441,7 @@ package body Errorout is
       then
          --  Limit reached.  Emit a message.
          Report_Handler.Error_Start
-           (Err => (Origin, Msgid_Error, False, File, Line, Offset));
+           (Err => (Option, Msgid_Error, False, File, Line, Offset, 0));
          Report_Handler.Message ("error limit reached");
          Report_Handler.Message_End.all;
       end if;

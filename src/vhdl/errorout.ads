@@ -181,8 +181,17 @@ package Errorout is
       Id : Msgid_Type;
       Cont : Boolean;
       File : Source_File_Entry;
+
+      --  The first line is line 1, 0 can be used when line number is not
+      --  relevant.
       Line : Natural;
+
+      --  Offset in the line.  The first character is at offset 0.
       Offset : Natural;
+
+      --  Length of the location (for a range).  It is assumed to be on the
+      --  same line; use 0 when unknown.
+      Length : Natural;
    end record;
 
    type Error_Start_Handler is access procedure (Err : Error_Record);
