@@ -4308,7 +4308,11 @@ package body Trans.Chap8 is
       if Get_Kind (Target) = Iir_Kind_Aggregate then
          Chap3.Translate_Anonymous_Subtype_Definition (Target_Type, False);
          Targ := Create_Temp (Get_Info (Target_Type), Mode_Signal);
-         Chap4.Allocate_Complex_Object (Target_Type, Alloc_Stack, Targ);
+         if Get_Constraint_State (Target_Type) /= Fully_Constrained then
+            raise Internal_Error;
+         else
+            Chap4.Allocate_Complex_Object (Target_Type, Alloc_Stack, Targ);
+         end if;
          Translate_Signal_Target_Aggr (Targ, Target, Target_Type);
       else
          if Mechanism = Signal_Assignment_Direct then

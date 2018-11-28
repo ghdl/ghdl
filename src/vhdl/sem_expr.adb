@@ -3376,6 +3376,7 @@ package body Sem_Expr is
       Index_Constraint : Iir_Range_Expression; -- FIXME: 'range.
       Dir : Iir_Direction;
       Choice_Staticness : Iir_Staticness;
+      Len_Staticness : Iir_Staticness;
       Expr_Staticness : Iir_Staticness;
 
       Info : Array_Aggr_Info renames Infos (Dim);
@@ -3448,6 +3449,7 @@ package body Sem_Expr is
         (Aggr, Min (Expr_Staticness, Get_Expr_Staticness (Aggr)));
 
       --  Analyze choices.
+      Len_Staticness := Locally;
       case Get_Kind (Aggr) is
          when Iir_Kind_Aggregate =>
             Assoc_Chain := Get_Association_Choices_Chain (Aggr);
@@ -3498,17 +3500,23 @@ package body Sem_Expr is
                            Expr : constant Iir := Get_Associated_Expr (Choice);
                            Expr_Type : constant Iir := Get_Type (Expr);
                            Expr_Index : Iir;
+                           Index_Staticness : Iir_Staticness;
                         begin
                            if not Is_Error (Expr_Type) then
                               Expr_Index := Get_Index_Type (Expr_Type, 0);
-                              if Get_Type_Staticness (Expr_Index) = Locally
-                              then
-                                 Len := Len + Natural
-                                   (Eval_Discrete_Type_Length (Expr_Index));
-                              else
-                                 --  TODO: length is not locally static...
-                                 raise Internal_Error;
-                              end if;
+                              Index_Staticness :=
+                                Get_Type_Staticness (Expr_Index);
+                              case Index_Staticness is
+                                 when Locally =>
+                                    Len := Len + Natural
+                                      (Eval_Discrete_Type_Length (Expr_Index));
+                                 when Globally | None =>
+                                    Len_Staticness := Iirs.Min
+                                      (Len_Staticness, Index_Staticness);
+                                 when Unknown =>
+                                    --  Must have been caught by Is_Error.
+                                    raise Internal_Error;
+                              end case;
                            end if;
                         end;
                      end if;
@@ -3601,7 +3609,9 @@ package body Sem_Expr is
             --  by S'LEFT where S is the index subtype of the base type of the
             --  array; [...] the rightmost bound is determined by the direction
             --  of the index subtype and the number of element.
-            if Get_Type_Staticness (Index_Type) = Locally then
+            if Get_Type_Staticness (Index_Type) = Locally
+              and then Len_Staticness = Locally
+            then
                Info.Index_Subtype := Create_Range_Subtype_By_Length
                  (Index_Type, Iir_Int64 (Len), Get_Location (Aggr));
             end if;
