@@ -636,10 +636,8 @@ package body Sem_Scopes is
                --  1. A potentially visible declaration is not made
                --     directly visible if the place considered is within the
                --     immediate scope of a homograph of the declaration.
-               if Is_In_Current_Declarative_Region (Homograph) then
-                  if not Is_Potentially_Visible (Homograph) then
-                     return;
-                  end if;
+               if not Is_Potentially_Visible (Homograph) then
+                  return;
                end if;
 
                --  LRM08 12.4 Use Clauses
