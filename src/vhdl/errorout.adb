@@ -440,8 +440,8 @@ package body Errorout is
         and then Nbr_Errors = Max_Nbr_Errors
       then
          --  Limit reached.  Emit a message.
-         Report_Handler.Error_Start
-           (Err => (Option, Msgid_Error, False, File, Line, Offset, 0));
+         Report_Handler.Error_Start (Err => (Option, Msgid_Error, False,
+                                             No_Source_File_Entry, 0, 0, 0));
          Report_Handler.Message ("error limit reached");
          Report_Handler.Message_End.all;
       end if;
