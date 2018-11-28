@@ -22,23 +22,29 @@ package Files_Map.Editor is
                            Start_Off  : Natural;
                            End_Line   : Positive;
                            End_Off    : Natural;
-                           Text : String);
+                           Text       : File_Buffer);
 
    procedure Replace_Text_Ptr (File : Source_File_Entry;
                                Start_Line : Positive;
                                Start_Off  : Natural;
                                End_Line   : Positive;
                                End_Off    : Natural;
-                               Str : Thin_String_Ptr;
-                               Str_Len : Natural);
+                               Text_Ptr   : File_Buffer_Ptr;
+                               Text_Len   : Source_Ptr);
 
    --  Set the position of the GAP in FILE.
    procedure Set_Gap (File : Source_File_Entry;
                       First : Source_Ptr;
                       Last : Source_Ptr);
 
+   --  Recompute lines number.
+   procedure Compute_Lines (File : Source_File_Entry);
+
+   --  Check lines of FILE are correct.
+   procedure Check_Buffer_Lines (File : Source_File_Entry);
+
    --  Check that content of FILE is STR[1 .. STR_LEN].
    procedure Check_Buffer_Content (File : Source_File_Entry;
-                                   Str : Thin_String_Ptr;
-                                   Str_Len : Natural);
+                                   Str : File_Buffer_Ptr;
+                                   Str_Len : Source_Ptr);
 end Files_Map.Editor;
