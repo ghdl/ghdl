@@ -4059,25 +4059,23 @@ package body Parse is
       return Res;
    end Parse_Disconnection_Specification;
 
-   function Parse_Psl_Default_Clock return Iir
+   --  Parse PSL clock_declaration at 'clock'.
+   function Parse_Psl_Default_Clock_Cont (Loc : Location_Type) return Iir
    is
       Res : Iir;
    begin
       Res := Create_Iir (Iir_Kind_Psl_Default_Clock);
-      Set_Location (Res);
+      Set_Location (Res, Loc);
+      Xrefs.Xref_Keyword (Get_Token_Location);
 
       --  Recognize PSL keywords.
       Scanner.Flag_Psl := True;
 
-      --  Skip 'default'.
-      Scan_Expect (Tok_Psl_Clock);
-      Xrefs.Xref_Keyword (Get_Token_Location);
-
       --  Skip 'clock'.
-      Scan_Expect (Tok_Is);
+      Expect_Scan (Tok_Psl_Clock);
 
       --  Skip 'is'.
-      Scan;
+      Expect_Scan (Tok_Is);
 
       Set_Psl_Boolean (Res, Parse_Psl.Parse_Psl_Boolean);
       Expect (Tok_Semi_Colon);
@@ -4086,6 +4084,23 @@ package body Parse is
       Scanner.Flag_Psl := False;
 
       return Res;
+   end Parse_Psl_Default_Clock_Cont;
+
+   --  1850-2005 A.4.2 PSL declarations
+   --  clock_declaration ::= DEFAULT CLOCK IS clock_expression ;
+   function Parse_Psl_Default_Clock return Iir
+   is
+      Loc : Location_Type;
+   begin
+      Loc := Get_Token_Location;
+
+      --  Recognize PSL keywords.
+      Scanner.Flag_Psl := True;
+
+      --  Skip 'default'.
+      Scan;
+
+      return Parse_Psl_Default_Clock_Cont (Loc);
    end Parse_Psl_Default_Clock;
 
    function Parse_Psl_Declaration return Iir
@@ -8106,6 +8121,21 @@ package body Parse is
             -- or a component instantiation.
             return Parse_Component_Instantiation (Target);
          when others =>
+            --  Catch PSL clock declaration.  Within comments, this is the
+            --  right place (and handled as a concurrent statement).  After
+            --  vhdl08, it is a declaration.
+            if Get_Kind (Target) = Iir_Kind_Simple_Name
+              and then Get_Identifier (Target) = Name_Default
+              and then Current_Token = Tok_Identifier
+              and then Current_Identifier = Name_Clock
+            then
+               Error_Msg_Parse (+Target, "PSL default clock is a declaration");
+
+               Current_Token := Tok_Psl_Clock;
+               Res := Parse_Psl_Default_Clock_Cont (Get_Location (Target));
+               return Res;
+            end if;
+
             -- or a simple simultaneous statement
             if AMS_Vhdl then
                Res := Create_Iir (Iir_Kind_Simple_Simultaneous_Statement);
