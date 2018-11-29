@@ -5859,16 +5859,16 @@ package body Parse is
       Loc := Get_Token_Location;
       case Current_Token is
          when Tok_Less_Equal =>
-            null;
+            --  Skip '<='.
+            Scan;
          when Tok_Assign =>
             Error_Msg_Parse ("':=' not allowed in concurrent statement, "
-                             & "replaced by '<='");
+                               & "replaced by '<='");
+            --  Skip ':='.
+            Scan;
          when others =>
             Expect (Tok_Less_Equal);
       end case;
-
-      --  Eat '<='.
-      Scan;
 
       --  Assume simple signal assignment.
       Res := Create_Iir (Iir_Kind_Concurrent_Simple_Signal_Assignment);
@@ -7334,17 +7334,12 @@ package body Parse is
       Res : Iir;
    begin
       --  Skip '('
-      Expect (Tok_Left_Paren);
-      Scan;
+      Expect_Scan (Tok_Left_Paren);
 
       Res := Parse_Association_List;
 
-      if Current_Token = Tok_Right_Paren then
-         --  Skip ')'
-         Scan;
-      else
-         Expect (Tok_Right_Paren);
-      end if;
+      --  Skip ')'
+      Expect_Scan (Tok_Right_Paren);
 
       return Res;
    end Parse_Association_List_In_Parenthesis;
@@ -7356,13 +7351,11 @@ package body Parse is
    --  generic_map_aspect ::= GENERIC MAP ( GENERIC_association_list )
    function Parse_Generic_Map_Aspect return Iir is
    begin
-      Expect (Tok_Generic);
-
       --  Skip 'generic'.
-      Scan_Expect (Tok_Map);
+      Expect_Scan (Tok_Generic);
 
       --  Skip 'map'.
-      Scan;
+      Expect_Scan (Tok_Map);
 
       return Parse_Association_List_In_Parenthesis;
    end Parse_Generic_Map_Aspect;
@@ -7374,9 +7367,12 @@ package body Parse is
    --  port_map_aspect ::= PORT MAP ( PORT_association_list )
    function Parse_Port_Map_Aspect return Iir is
    begin
-      Expect (Tok_Port);
-      Scan_Expect (Tok_Map);
-      Scan;
+      --  Skip 'port'.
+      Expect_Scan (Tok_Port);
+
+      --  Skip 'map'.
+      Expect_Scan (Tok_Map);
+
       return Parse_Association_List_In_Parenthesis;
    end Parse_Port_Map_Aspect;
 
@@ -8448,7 +8444,10 @@ package body Parse is
             Last_Stmt := Stmt;
          end if;
 
-         Scan;
+         if Current_Token = Tok_Semi_Colon then
+            --  Skip ';'.
+            Scan;
+         end if;
       end loop;
    end Parse_Concurrent_Statements;
 
@@ -8468,16 +8467,22 @@ package body Parse is
       loop
          Library := Create_Iir (Iir_Kind_Library_Clause);
          Start_Loc := Get_Token_Location;
-
-         --  Skip 'library' or ','.
-         Scan_Expect (Tok_Identifier);
-
-         Set_Identifier (Library, Current_Identifier);
-         Set_Location (Library);
          Sub_Chain_Append (First, Last, Library);
 
-         --  Skip identifier.
+         --  Skip 'library' or ','.
          Scan;
+
+         Set_Location (Library);
+
+         if Current_Token = Tok_Identifier then
+            Set_Identifier (Library, Current_Identifier);
+
+            --  Skip identifier.
+            Scan;
+         else
+            Error_Msg_Parse ("missing library name");
+         end if;
+
 
          if Flag_Elocations then
             Create_Elocations (Library);
@@ -8490,7 +8495,7 @@ package body Parse is
       end loop;
 
       --  Skip ';'.
-      Expect_Scan (Tok_Semi_Colon, "';' at end of library clause");
+      Expect_Scan (Tok_Semi_Colon);
 
       return First;
    end Parse_Library_Clause;
