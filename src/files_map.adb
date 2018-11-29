@@ -216,6 +216,10 @@ package body Files_Map is
 
       loop
          << Again >> null;
+         pragma Assert (Hi >= Low);
+         pragma Assert (Low >= 1);
+         pragma Assert (Hi <= Last (Source_File.Lines));
+
          Mid := (Hi + Low) / 2;
          if Lines_Table (Mid) = Source_Ptr_Bad then
             -- There is a hole: no position for this line.
