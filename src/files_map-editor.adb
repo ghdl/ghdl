@@ -55,9 +55,9 @@ package body Files_Map.Editor is
 
       L := 1;
       P := Source_Ptr_Org;
-      loop
+      Main_Loop: loop
          File_Add_Line_Number (File, L, P);
-         L := L + 1;
+         exit Main_Loop when P = F.File_Length;
 
          loop
             Nl := Is_Newline (F.Source.all, P);
@@ -67,12 +67,13 @@ package body Files_Map.Editor is
                P := P + Source_Ptr (Nl);
                exit;
             end if;
-            exit when P = F.Source'Last;
+            exit Main_Loop when P = F.File_Length;
          end loop;
 
          Skip_Gap (File, P);
-         exit when P = F.Source'Last;
-      end loop;
+
+         L := L + 1;
+      end loop Main_Loop;
    end Compute_Lines;
 
    procedure Check_Buffer_Lines (File : Source_File_Entry)
@@ -158,7 +159,7 @@ package body Files_Map.Editor is
             --  Already there.
             return;
          end if;
-         New_Start := F.Source'Last - F.Gap_Last + F.Gap_Start;
+         New_Start := F.File_Length + 2;
       else
          New_Start := Line_To_Position (File, Line + 1);
          if New_Start = F.Gap_Last + 1 then
@@ -193,6 +194,7 @@ package body Files_Map.Editor is
          --  The gap is moved toward the end of the file by DIFF bytes.
          --     |   [XXXX][A]    |
          --  => |   [B][XXXX]    |
+         New_Start := New_Start - Gap_Len;
          Diff := New_Start - F.Gap_Start;
          --  Move [A] to [B].
          F.Source (F.Gap_Start .. F.Gap_Start + Diff - 1) :=
@@ -338,6 +340,7 @@ package body Files_Map.Editor is
                else
                   P := P + Source_Ptr (Nl_Len);
                   F.Lines.Table (L) := Start_Pos + (P - Text'First);
+                  L := L + 1;
                end if;
             end loop;
 
