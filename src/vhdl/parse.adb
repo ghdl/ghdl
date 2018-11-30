@@ -7562,11 +7562,10 @@ package body Parse is
          Parse_Declarative_Part (Res);
       end if;
 
-      Expect (Tok_Begin);
       Begin_Loc := Get_Token_Location;
 
       --  Eat 'begin'.
-      Scan;
+      Expect_Scan (Tok_Begin);
 
       Parse_Concurrent_Statements (Res);
 
@@ -7696,8 +7695,7 @@ package body Parse is
 
       --  Skip 'end'
       End_Loc := Get_Token_Location;
-      Expect (Tok_End);
-      Scan;
+      Expect_Scan (Tok_End);
 
       if Vhdl_Std >= Vhdl_08 and then Current_Token /= Tok_Generate then
          --  This is the 'end' of the generate_statement_body.
@@ -7877,8 +7875,7 @@ package body Parse is
 
          --  Skip 'generate'
          Generate_Loc := Get_Token_Location;
-         Expect (Tok_Generate);
-         Scan;
+         Expect_Scan (Tok_Generate);
 
          Parse_Generate_Statement_Body (Res, Alt_Label, Bod, End_Loc);
 
@@ -7932,18 +7929,15 @@ package body Parse is
             --  Skip identifier
             Scan;
 
-            Expect (Tok_Colon);
-
             --  Skip ':'
-            Scan;
+            Expect_Scan (Tok_Colon);
          else
             Alt_Label := Null_Identifier;
          end if;
 
          --  Skip 'generate'
          Generate_Loc := Get_Token_Location;
-         Expect (Tok_Generate);
-         Scan;
+         Expect_Scan (Tok_Generate);
 
          Parse_Generate_Statement_Body (Res, Alt_Label, Bod, End_Loc);
          if Alt_Label /= Null_Identifier then
@@ -7963,11 +7957,9 @@ package body Parse is
          end if;
       end if;
 
-      Expect (Tok_Generate);
-      Set_End_Has_Reserved_Id (Res, True);
-
       --  Skip 'generate'
-      Scan;
+      Expect_Scan (Tok_Generate);
+      Set_End_Has_Reserved_Id (Res, True);
 
       --  LRM93 9.7
       --  If a label appears at the end of a generate statement, it must repeat
