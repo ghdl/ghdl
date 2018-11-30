@@ -501,7 +501,9 @@ package body PSL.Rewrites is
            | N_Goto_Repeat_Seq
            | N_Sequence_Instance
            | N_Endpoint_Instance
-           | N_Braced_SERE =>
+           | N_Braced_SERE
+           | N_And_Seq
+           | N_Or_Seq =>
             return Rewrite_SERE (N);
          when N_Imp_Seq
            | N_Overlap_Imp_Seq =>
