@@ -2205,6 +2205,8 @@ package body Sem_Assocs is
                if Finish then
                   --  FIXME: display the name of subprg or component/entity.
                   --  FIXME: fetch the interface (for parenthesis_name).
+                  --  FIXME: this is always a duplicate of a message from
+                  --     Sem_Name.
                   Error_Msg_Sem (+Assoc, "no interface for %n in association",
                                  +Get_Formal (Assoc));
                end if;
@@ -2338,7 +2340,8 @@ package body Sem_Assocs is
                  or else Get_Parent (Inter) /= Get_Parent (Interface_Chain)
                then
                   if Finish then
-                     Error_Msg_Sem (+Assoc, "formal is not an interface name");
+                     Error_Msg_Sem
+                       (+Assoc, "%n is not an interface name", +Inter);
                   end if;
                   Match := Not_Compatible;
                   exit;
