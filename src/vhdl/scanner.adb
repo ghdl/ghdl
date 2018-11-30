@@ -949,10 +949,11 @@ package body Scanner is
          --   an adjacent letter or digit.
          --   Basic identifiers differing only in the use of the corresponding
          --   upper and lower case letters are considered as the same.
-         -- This is achieved by converting all upper case letters into
-         -- equivalent lower case letters.
-         -- The opposite (converting in lower case letters) is not possible,
-         -- because two characters have no upper-case equivalent.
+         --
+         --  GHDL: This is achieved by converting all upper case letters into
+         --  equivalent lower case letters.
+         --  The opposite (converting to upper lower case letters) is not
+         --  possible because two characters have no upper-case equivalent.
          C := Source (Pos);
          case C is
             when 'A' .. 'Z' =>
@@ -1004,14 +1005,16 @@ package body Scanner is
       end loop;
 
       if Source (Pos - 1) = '_' then
-         if not Allow_PSL then
+         if Allow_PSL then
             --  Some PSL reserved words finish with '_'.  This case is handled
-            --  later.
-            Error_Msg_Scan ("identifier cannot finish with '_'");
+            --  later by Scan_Underscore and Scan_Exclam_Mark.
+            Pos := Pos - 1;
+            Len := Len - 1;
+            C := '_';
+         else
+            --  Eat the trailing underscore.
+            Error_Msg_Scan ("an identifier cannot finish with '_'");
          end if;
-         Pos := Pos - 1;
-         Len := Len - 1;
-         C := '_';
       end if;
 
       -- LRM93 13.2
@@ -1439,7 +1442,7 @@ package body Scanner is
                   if C = '_' then
                      if I = 1 then
                         Error_Msg_Option
-                          ("identifier cannot start with an underscore");
+                          ("an identifier cannot start with an underscore");
                         return;
                      end if;
                      if Id (I - 1) = '_' then
@@ -1449,7 +1452,7 @@ package body Scanner is
                      end if;
                      if I = Id'Last then
                         Error_Msg_Option
-                          ("identifier cannot finish with an underscore");
+                          ("an identifier cannot finish with an underscore");
                         return;
                      end if;
                   else
