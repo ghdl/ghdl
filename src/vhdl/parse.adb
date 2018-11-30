@@ -2869,12 +2869,12 @@ package body Parse is
    begin
       Decl := Create_Iir (Iir_Kind_Subtype_Declaration);
       Set_Parent (Decl, Parent);
-      Set_Location (Decl);
       Start_Loc := Get_Token_Location;
 
       --  Eat 'subtype'.
       Scan;
 
+      Set_Location (Decl);
       if Current_Token = Tok_Identifier then
          Set_Identifier (Decl, Current_Identifier);
 
