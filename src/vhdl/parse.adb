@@ -3634,21 +3634,24 @@ package body Parse is
       Set_Location (Res);
 
       case Current_Token is
-         when Tok_Identifier =>
+         when Tok_Identifier
+           | Tok_Character =>
             Ident := Current_Identifier;
-         when Tok_Character =>
-            Ident := Current_Identifier;
+
+            --  Skip identifier/character.
+            Scan;
          when Tok_String =>
             Ident := Scan_To_Operator_Name (Get_Token_Location);
+
+            --  Skip operator.
+            Scan;
             --  FIXME: vhdl87
             --  FIXME: operator symbol.
          when others =>
             Error_Msg_Parse ("alias designator expected");
+            Ident := Null_Identifier;
       end case;
-
-      --  Skip identifier.
       Set_Identifier (Res, Ident);
-      Scan;
 
       if Current_Token = Tok_Colon then
          --  Skip ':'.
