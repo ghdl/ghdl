@@ -71,7 +71,12 @@ package body Parse_Psl is
             Free_Node (N);
             return Res;
          when others =>
-            Error_Kind ("psl_to_vhdl", N);
+            Error_Msg_Parse
+              (+N, "PSL construct not allowed as VHDL expression");
+            Res := Create_Iir (Iir_Kind_Error);
+            Set_Location (Res, Get_Location (N));
+            Free_Node (N);
+            return Res;
       end case;
    end Psl_To_Vhdl;
 
