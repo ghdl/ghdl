@@ -40,6 +40,8 @@ MV = mv
 RM = rm -f
 
 
+AS_INSTALL_NAME = $(shell echo as|sed '$(program_transform_name)')
+
 # Extra flags to pass to recursive makes.
 GHDL_ADAFLAGS=-gnata -gnaty3befhkmr -gnatwae
 GNATBIND = gnatbind
@@ -101,6 +103,13 @@ vhdl/default_paths.ads: Makefile
 	echo "   Compiler_Debug : constant String := \"\";" >> tmp-dpaths.ads
 	echo "   Compiler_Mcode : constant String := \"\";" >> tmp-dpaths.ads
 	echo "   Compiler_Llvm  : constant String := \"\";" >> tmp-dpaths.ads
+
+	echo "   Assembler_Gcc  : constant String :=" >> tmp-dpaths.ads; \
+	echo "     \"$(AS_INSTALL_NAME)$(exeext)\";" >> tmp-dpaths.ads
+
+	echo "   Linker_Gcc     : constant String :=" >> tmp-dpaths.ads; \
+	echo "     \"$(GCC_INSTALL_NAME)$(exeext)\";" >> tmp-dpaths.ads
+
 	echo "   Post_Processor : constant String := \"\";" >> tmp-dpaths.ads
 	echo "   Lib_Prefix     : constant String :=">> tmp-dpaths.ads
 	echo "     \"lib/ghdl\";" >> tmp-dpaths.ads

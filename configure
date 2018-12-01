@@ -11,6 +11,7 @@
 ghdl_version="0.36-dev"
 
 backend=mcode
+GHDL_GCC=${GHDL_GCC:-ghdl1-gcc}
 CC=${CC:-gcc}
 AS=${AS:-as}
 CXX=${CXX:-clang++}
@@ -345,13 +346,20 @@ if test $backend = mcode; then
     } > elf_arch.ads
 fi
 
+BASENAME='s/.*\///'
+
+TARGET_CC=`echo ${CC} | sed $BASENAME`
+TARGET_AS=`echo ${AS} | sed $BASENAME`
+
 # Generate default_paths.ads
 # Also update dist/windows/mcode/default_paths.ads if you change this
 # template.
 echo "Generate default_paths.ads"
-sed -e "s%@COMPILER_GCC@%ghdl1-gcc$EXEEXT%" \
+sed -e "s%@COMPILER_GCC@%${GHDL_GCC}$EXEEXT%" \
     -e "s%@COMPILER_DEBUG@%ghdl1-debug$EXEEXT%" \
     -e "s%@COMPILER_MCODE@%ghdl1-mcode$EXEEXT%" \
+    -e "s%@ASSEMBLER_GCC@%${TARGET_AS}$EXEEXT%" \
+    -e "s%@LINKER_GCC@%${TARGET_CC}$EXEEXT%" \
     -e "s%@COMPILER_LLVM@%ghdl1-llvm$EXEEXT%" \
     -e "s%@POST_PROCESSOR@%oread-$backend%" \
     -e "s%@INSTALL_PREFIX@%$prefix%" \

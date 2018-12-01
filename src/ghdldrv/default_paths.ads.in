@@ -37,6 +37,11 @@ package Default_Paths is
    Post_Processor : constant String :=
      "@POST_PROCESSOR@";
 
+   Assembler_Gcc : constant String :=
+     "@ASSEMBLER_GCC@";
+   Linker_Gcc : constant String :=
+     "@LINKER_GCC@";
+
    Shared_Library_Extension : constant String := "@SOEXT@";
    Default_Pie : constant Boolean := "@default_pie@" = String'("yes");
 end Default_Paths;

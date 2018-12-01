@@ -200,12 +200,8 @@ grt_save_backtrace (struct backtrace_addrs *bt, int skip)
 {
   CONTEXT ctxt;
 
-#ifndef NO_FULL_WINAPI_SUPPORT
   RtlCaptureContext (&ctxt);
   get_bt_from_context (bt, &ctxt, skip + 1);
-#else
-  fprintf (stderr, "RtlCaptureContext currently not supported");
-#endif
 }
 
 #include <math.h>

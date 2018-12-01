@@ -456,10 +456,10 @@ package body Ghdldrv is
          Post_Processor_Cmd := new String'(Default_Paths.Post_Processor);
       end if;
       if Assembler_Cmd = null then
-         Assembler_Cmd := new String'("as");
+         Assembler_Cmd := new String'(Default_Paths.Assembler_Gcc);
       end if;
       if Linker_Cmd = null then
-         Linker_Cmd := new String'("gcc");
+         Linker_Cmd := new String'(Default_Paths.Linker_Gcc);
       end if;
    end Set_Tools_Name;
 
