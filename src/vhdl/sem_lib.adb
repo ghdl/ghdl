@@ -192,7 +192,7 @@ package body Sem_Lib is
       end if;
 
       if Get_Date (Design_Unit) = Date_Obsolete then
-         Error_Msg_Sem (+Design_Unit, "%n has been obsoleted",
+         Error_Msg_Sem (+Loc, "%n has been obsoleted",
                         +Get_Library_Unit (Design_Unit));
          raise Compilation_Error;
       end if;
