@@ -279,10 +279,15 @@ package body Grt.Lib is
    is
       Bt : Backtrace_Addrs;
    begin
-      if Size >= Max_Stack_Allocation then
+      if Max_Stack_Allocation = 0 then
+         return;
+      end if;
+      if Size > Max_Stack_Allocation then
          Save_Backtrace (Bt, 1);
          Error_S ("declaration of a too large object (");
          Diag_C (Natural (Size / 1024));
+         Diag_C (" > --max-stack-alloc=");
+         Diag_C (Natural (Max_Stack_Allocation / 1024));
          Diag_C (" KB)");
          Error_E_Call_Stack (Bt);
       end if;
