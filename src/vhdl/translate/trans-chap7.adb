@@ -3453,6 +3453,72 @@ package body Trans.Chap7 is
       end case;
    end Translate_Aggregate;
 
+   procedure Translate_Aggregate_Bounds (Bounds : Mnode; Aggr : Iir)
+   is
+      Aggr_Type : constant Iir := Get_Type (Aggr);
+      Assoc : Iir;
+      Static_Len : Iir_Int64;
+      Var_Len : O_Dnode;
+      Expr_Type : Iir;
+      Range_Type : Iir;
+   begin
+      Static_Len := 0;
+
+      --  First pass: static length.
+      Assoc := Get_Association_Choices_Chain (Aggr);
+      while Assoc /= Null_Iir loop
+         pragma Assert (Get_Kind (Assoc) = Iir_Kind_Choice_By_None);
+         if Get_Element_Type_Flag (Assoc) then
+            Static_Len := Static_Len + 1;
+         else
+            Expr_Type := Get_Type (Get_Associated_Expr (Assoc));
+            pragma Assert (Is_One_Dimensional_Array_Type (Expr_Type));
+            if Get_Constraint_State (Expr_Type) = Fully_Constrained then
+               Range_Type := Get_Index_Type (Expr_Type, 0);
+               if Get_Type_Staticness (Range_Type) = Locally then
+                  Static_Len :=
+                    Static_Len + Eval_Discrete_Type_Length (Range_Type);
+               end if;
+            end if;
+         end if;
+         Assoc := Get_Chain (Assoc);
+      end loop;
+
+      --  Second pass: non-static length.
+      Var_Len := Create_Temp (Ghdl_Index_Type);
+      New_Assign_Stmt (New_Obj (Var_Len),
+                       New_Lit (New_Index_Lit (Unsigned_64 (Static_Len))));
+      Assoc := Get_Association_Choices_Chain (Aggr);
+      while Assoc /= Null_Iir loop
+         pragma Assert (Get_Kind (Assoc) = Iir_Kind_Choice_By_None);
+         if not Get_Element_Type_Flag (Assoc) then
+            Expr_Type := Get_Type (Get_Associated_Expr (Assoc));
+            if Get_Constraint_State (Expr_Type) = Fully_Constrained then
+               Range_Type := Get_Index_Type (Expr_Type, 0);
+               if Get_Type_Staticness (Range_Type) /= Locally then
+                  declare
+                     Bnd : Mnode;
+                     L : Mnode;
+                  begin
+                     Bnd := Chap3.Get_Composite_Type_Bounds (Expr_Type);
+                     L := Chap3.Range_To_Length
+                       (Chap3.Bounds_To_Range (Bnd, Expr_Type, 1));
+                     New_Assign_Stmt
+                       (New_Obj (Var_Len),
+                        New_Dyadic_Op (ON_Add_Ov,
+                                       New_Obj_Value (Var_Len), M2E (L)));
+                  end;
+               end if;
+            end if;
+         end if;
+         Assoc := Get_Chain (Assoc);
+      end loop;
+
+      Chap3.Create_Range_From_Length
+        (Get_Index_Type (Aggr_Type, 0), Var_Len,
+         Chap3.Bounds_To_Range (Bounds, Aggr_Type, 1), Aggr);
+   end Translate_Aggregate_Bounds;
+
    function Translate_Allocator_By_Expression (Expr : Iir) return O_Enode
    is
       A_Type : constant Iir := Get_Type (Expr);

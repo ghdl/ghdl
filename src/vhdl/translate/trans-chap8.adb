@@ -3987,9 +3987,9 @@ package body Trans.Chap8 is
                     (Aggr, Target_Type, New_Obj_Value (Idx));
                   Sub_Type := Get_Element_Subtype (Target_Type);
                else
-                  Sub_Aggr := Chap3.Slice_Base
-                    (Aggr, Target_Type, New_Obj_Value (Idx));
                   Sub_Type := Get_Type (Expr);
+                  Sub_Aggr := Chap3.Slice_Base
+                    (Aggr, Sub_Type, New_Obj_Value (Idx));
                end if;
             when others =>
                Error_Kind ("translate_signal_target_array_aggr", El);
@@ -4304,16 +4304,33 @@ package body Trans.Chap8 is
       Drv : out Mnode)
    is
       Target_Type : constant Iir := Get_Type (Target);
+
+      Target_Tinfo : Type_Info_Acc;
+      Bounds : Mnode;
    begin
       if Get_Kind (Target) = Iir_Kind_Aggregate then
          Chap3.Translate_Anonymous_Subtype_Definition (Target_Type, False);
-         Targ := Create_Temp (Get_Info (Target_Type), Mode_Signal);
-         if Get_Constraint_State (Target_Type) /= Fully_Constrained then
-            raise Internal_Error;
+         Target_Tinfo := Get_Info (Target_Type);
+         Targ := Create_Temp (Target_Tinfo, Mode_Signal);
+         if Target_Tinfo.Type_Mode in Type_Mode_Unbounded then
+            Bounds := Dv2M (Create_Temp (Target_Tinfo.B.Bounds_Type),
+                            Target_Tinfo,
+                            Mode_Value,
+                            Target_Tinfo.B.Bounds_Type,
+                            Target_Tinfo.B.Bounds_Ptr_Type);
+            New_Assign_Stmt
+              (M2Lp (Chap3.Get_Composite_Bounds (Targ)),
+               M2Addr (Bounds));
+            --  Build bounds from aggregate.
+            Chap7.Translate_Aggregate_Bounds (Bounds, Target);
+            Chap3.Allocate_Unbounded_Composite_Base
+              (Alloc_Stack, Targ, Target_Type);
+            Translate_Signal_Target_Aggr
+              (Chap3.Get_Composite_Base (Targ), Target, Target_Type);
          else
             Chap4.Allocate_Complex_Object (Target_Type, Alloc_Stack, Targ);
+            Translate_Signal_Target_Aggr (Targ, Target, Target_Type);
          end if;
-         Translate_Signal_Target_Aggr (Targ, Target, Target_Type);
       else
          if Mechanism = Signal_Assignment_Direct then
             Chap6.Translate_Direct_Driver (Target, Targ, Drv);
