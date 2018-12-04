@@ -3779,25 +3779,37 @@ package body Sem_Expr is
       end loop;
       Base_Type := Get_Base_Type (Aggr_Type);
 
-      --  FIXME: should reuse AGGR_TYPE iff AGGR_TYPE is fully constrained
+      --  Reuse AGGR_TYPE iff AGGR_TYPE is fully constrained
       --  and statically match the subtype of the aggregate.
       if Aggr_Constrained then
-         A_Subtype := Create_Array_Subtype (Base_Type, Get_Location (Aggr));
-         --  FIXME: extract element subtype ?
-         Set_Element_Subtype (A_Subtype, Get_Element_Subtype (Aggr_Type));
-         Type_Staticness := Get_Type_Staticness (A_Subtype);
+         Type_Staticness := Locally;
          for I in Infos'Range loop
-            Set_Nth_Element (Get_Index_Subtype_List (A_Subtype), I - 1,
-                             Infos (I).Index_Subtype);
             Type_Staticness := Min
               (Type_Staticness, Get_Type_Staticness (Infos (I).Index_Subtype));
          end loop;
-         Set_Type_Staticness (A_Subtype, Type_Staticness);
-         Set_Index_Constraint_Flag (A_Subtype, True);
-         --  FIXME: the element can be unconstrained.
-         Set_Constraint_State (A_Subtype, Fully_Constrained);
-         Set_Type (Aggr, A_Subtype);
-         Set_Literal_Subtype (Aggr, A_Subtype);
+
+         if Get_Constraint_State (Aggr_Type) = Fully_Constrained
+           and then Get_Type_Staticness (Aggr_Type) = Locally
+           and then Type_Staticness = Locally
+         then
+            Set_Type (Aggr, Aggr_Type);
+         else
+            A_Subtype := Create_Array_Subtype (Base_Type, Get_Location (Aggr));
+            --  FIXME: extract element subtype ?
+            Set_Element_Subtype (A_Subtype, Get_Element_Subtype (Aggr_Type));
+            Type_Staticness := Min (Type_Staticness,
+                                    Get_Type_Staticness (A_Subtype));
+            for I in Infos'Range loop
+               Set_Nth_Element (Get_Index_Subtype_List (A_Subtype), I - 1,
+                                Infos (I).Index_Subtype);
+            end loop;
+            Set_Type_Staticness (A_Subtype, Type_Staticness);
+            Set_Index_Constraint_Flag (A_Subtype, True);
+            --  FIXME: the element can be unconstrained.
+            Set_Constraint_State (A_Subtype, Fully_Constrained);
+            Set_Type (Aggr, A_Subtype);
+            Set_Literal_Subtype (Aggr, A_Subtype);
+         end if;
          if Type_Staticness = Locally and then Get_Aggregate_Expand_Flag (Aggr)
          then
             --  Compute ratio of elements vs size of the aggregate to determine
