@@ -5335,6 +5335,10 @@ package Iirs is
    --Iir_Kind_Range_Array_Attribute
      Iir_Kind_Reverse_Range_Array_Attribute;
 
+   subtype Iir_Kinds_Range_Attribute is Iir_Kind range
+     Iir_Kind_Range_Array_Attribute ..
+     Iir_Kind_Reverse_Range_Array_Attribute;
+
    subtype Iir_Kinds_Signal_Attribute is Iir_Kind range
      Iir_Kind_Delayed_Attribute ..
    --Iir_Kind_Stable_Attribute

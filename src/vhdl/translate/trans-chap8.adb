@@ -444,6 +444,36 @@ package body Trans.Chap8 is
                        New_Dyadic_Op (Op, New_Value (Get_Var (Iterator)), V));
    end Gen_Update_Iterator;
 
+   function Is_For_Loop_Iterator_Stable (Iterator : Iir) return Boolean
+   is
+      Iter_Type : constant Iir := Get_Type (Iterator);
+      Constraint : constant Iir := Get_Range_Constraint (Iter_Type);
+      Name : Iir;
+   begin
+      --  A constraint is either a range expression or a range attribute name.
+      pragma Assert (Get_Kind (Constraint) in Iir_Kinds_Range_Attribute);
+
+      Name := Get_Prefix (Constraint);
+      Name := Get_Base_Name (Name);
+
+      case Get_Kind (Name) is
+         when Iir_Kind_Implicit_Dereference
+           | Iir_Kind_Dereference =>
+            return False;
+         when Iir_Kind_Function_Call =>
+            if not Is_Fully_Constrained_Type (Get_Type (Name)) then
+               return False;
+            end if;
+         when Iir_Kinds_Object_Declaration =>
+            null;
+         when Iir_Kind_Subtype_Declaration =>
+            null;
+         when others =>
+            Error_Kind ("is_for_loop_iterator_stable(2)", Name);
+      end case;
+      return True;
+   end Is_For_Loop_Iterator_Stable;
+
    function Get_Iterator_Range_Var (Iterator : Iir) return Mnode
    is
       Iter_Type : constant Iir := Get_Type (Iterator);
@@ -451,10 +481,17 @@ package body Trans.Chap8 is
         Get_Info (Get_Base_Type (Iter_Type));
       It_Info : constant Ortho_Info_Acc := Get_Info (Iterator);
    begin
-      return Lp2M (Get_Var (It_Info.Iterator_Range),
-                   Iter_Type_Info, Mode_Value,
-                   Iter_Type_Info.B.Range_Type,
-                   Iter_Type_Info.B.Range_Ptr_Type);
+      if It_Info.Iterator_Range_Copy then
+         return Lv2M (Get_Var (It_Info.Iterator_Range),
+                      Iter_Type_Info, Mode_Value,
+                      Iter_Type_Info.B.Range_Type,
+                      Iter_Type_Info.B.Range_Ptr_Type);
+      else
+         return Lp2M (Get_Var (It_Info.Iterator_Range),
+                      Iter_Type_Info, Mode_Value,
+                      Iter_Type_Info.B.Range_Type,
+                      Iter_Type_Info.B.Range_Ptr_Type);
+      end if;
    end Get_Iterator_Range_Var;
 
    procedure Translate_For_Loop_Statement_Declaration (Stmt : Iir)
@@ -465,6 +502,7 @@ package body Trans.Chap8 is
         Get_Info (Get_Base_Type (Iter_Type));
       Constraint     : constant Iir := Get_Range_Constraint (Iter_Type);
       It_Info : Ortho_Info_Acc;
+      Range_Type : O_Tnode;
    begin
       --  Iterator range.
       Chap3.Translate_Object_Subtype (Iterator, False);
@@ -482,10 +520,22 @@ package body Trans.Chap8 is
             Iter_Type_Info.Ortho_Type (Mode_Value),
             O_Storage_Local);
       else
+         --  The range must be copied if:
+         --  * the constraint is 'range or 'reverse_range, or 'subtype, or
+         --    'element (ie any attribute ?)
+         --  * the base name is a function_call returning an unbounded value,
+         --    or a dereference.
+         --  Note: in case of a dereference, the anonymous object can be
+         --  deallocated within the loop.
+         It_Info.Iterator_Range_Copy :=
+           not Is_For_Loop_Iterator_Stable (Iterator);
+         if It_Info.Iterator_Range_Copy then
+            Range_Type := Iter_Type_Info.B.Range_Type;
+         else
+            Range_Type := Iter_Type_Info.B.Range_Ptr_Type;
+         end if;
          It_Info.Iterator_Range := Create_Var
-           (Create_Var_Identifier ("IT_RANGE"),
-            Iter_Type_Info.B.Range_Ptr_Type,
-            O_Storage_Local);
+           (Create_Var_Identifier ("IT_RANGE"), Range_Type, O_Storage_Local);
       end if;
    end Translate_For_Loop_Statement_Declaration;
 
@@ -499,6 +549,7 @@ package body Trans.Chap8 is
       Constraint     : constant Iir := Get_Range_Constraint (Iter_Type);
       Dir            : Iir_Direction;
       Op             : ON_Op_Kind;
+      Rng            : O_Lnode;
    begin
       if Get_Kind (Constraint) = Iir_Kind_Range_Expression then
          New_Assign_Stmt
@@ -522,10 +573,17 @@ package body Trans.Chap8 is
             New_Value (Get_Var (It_Info.Iterator_Right)),
             Ghdl_Bool_Type);
       else
-         New_Assign_Stmt (Get_Var (It_Info.Iterator_Range),
-                          New_Address (Chap7.Translate_Range
-                                         (Constraint, Iter_Base_Type),
-                                       Iter_Type_Info.B.Range_Ptr_Type));
+         Rng := Chap7.Translate_Range (Constraint, Iter_Base_Type);
+         if It_Info.Iterator_Range_Copy then
+            Gen_Memcpy (M2Addr (Get_Iterator_Range_Var (Iterator)),
+                        New_Address (Rng, Iter_Type_Info.B.Range_Ptr_Type),
+                        New_Lit (New_Sizeof (Iter_Type_Info.B.Range_Type,
+                                             Ghdl_Index_Type)));
+         else
+            New_Assign_Stmt
+              (Get_Var (It_Info.Iterator_Range),
+               New_Address (Rng, Iter_Type_Info.B.Range_Ptr_Type));
+         end if;
          New_Assign_Stmt
            (Get_Var (It_Info.Iterator_Var),
             M2E (Chap3.Range_To_Left (Get_Iterator_Range_Var (Iterator))));

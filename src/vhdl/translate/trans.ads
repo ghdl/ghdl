@@ -1562,6 +1562,9 @@ package Trans is
             Alias_Kind : Object_Kind_Type;
 
          when Kind_Iterator =>
+            --  True if the range should be copied as it may change during
+            --  the loop.
+            Iterator_Range_Copy : Boolean;
             --  Iterator variable.
             Iterator_Var : Var_Type;
             --  Iterator right bound (used only if the iterator is a range
