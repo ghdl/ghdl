@@ -128,6 +128,7 @@ package body Parse is
    procedure Expect_Scan (Token: Token_Type; Msg: String := "") is
    begin
       if Current_Token = Token then
+         --  Skip token.
          Scan;
       else
          Expect_Error (Token, Msg);
@@ -208,6 +209,32 @@ package body Parse is
          end case;
       end loop;
    end Resync_To_End_Of_Statement;
+
+   procedure Resync_To_End_Of_Declaration is
+   begin
+      loop
+         case Current_Token is
+            when Tok_Eof
+              | Tok_Semi_Colon =>
+               exit;
+            when Tok_End
+              | Tok_Begin =>
+               --  End of current block.
+               exit;
+            when Tok_Signal
+              | Tok_Variable
+              | Tok_Constant
+              | Tok_File
+              | Tok_Alias
+              | Tok_Type
+              | Tok_Subtype =>
+               --  Start of a new declaration
+               exit;
+            when others =>
+               Scan;
+         end case;
+      end loop;
+   end Resync_To_End_Of_Declaration;
 
    --  Expect and scan ';' emit an error message using MSG if not present.
    procedure Scan_Semi_Colon (Msg : String) is
@@ -1980,10 +2007,7 @@ package body Parse is
          --  Skip identifier or character.
          Scan;
 
-         exit when Current_Token = Tok_Right_Paren;
-         if Current_Token /= Tok_Comma then
-            Error_Msg_Parse ("')' or ',' is expected after an enum literal");
-         end if;
+         exit when Current_Token /= Tok_Comma;
 
          --  Skip ','.
          Scan;
@@ -1995,7 +2019,7 @@ package body Parse is
       end loop;
 
       --  Skip ')'.
-      Scan;
+      Expect_Scan (Tok_Right_Paren, "')' expected at end of enumeration type");
 
       Set_Enumeration_Literal_List (Enum_Type, List_To_Flist (Enum_List));
 
@@ -3387,9 +3411,19 @@ package body Parse is
          end if;
 
          --  Eat class or ','.
-         Scan_Expect (Tok_Identifier);
-         Set_Identifier (Object, Current_Identifier);
+         Scan;
+
          Set_Location (Object);
+
+         if Current_Token = Tok_Identifier then
+            Set_Identifier (Object, Current_Identifier);
+
+            --  Eat identifier.
+            Scan;
+         else
+            Expect (Tok_Identifier);
+         end if;
+
          Set_Parent (Object, Parent);
 
          if Flag_Elocations then
@@ -3398,9 +3432,6 @@ package body Parse is
          end if;
 
          Sub_Chain_Append (First, Last, Object);
-
-         --  Eat identifier.
-         Scan;
 
          exit when Current_Token = Tok_Colon;
          if Current_Token /= Tok_Comma then
@@ -3412,8 +3443,8 @@ package body Parse is
                   Error_Msg_Parse
                     ("',' or ':' is expected after identifier in "
                        & Disp_Name (Kind));
-                  Eat_Tokens_Until_Semi_Colon;
-                  return Null_Iir;
+                  Resync_To_End_Of_Declaration;
+                  return Object;
             end case;
          end if;
          Set_Has_Identifier_List (Object, True);
