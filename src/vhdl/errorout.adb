@@ -532,28 +532,6 @@ package body Errorout is
       Report_Msg (Id, Scan, No_Location, Msg, (1 => Arg1), Cont);
    end Warning_Msg_Scan;
 
-   procedure Error_Msg_Parse (Msg: String; Arg1 : Earg_Type) is
-   begin
-      Report_Msg (Msgid_Error, Parse, No_Location, Msg, (1 => Arg1));
-   end Error_Msg_Parse;
-
-   procedure Error_Msg_Parse
-     (Msg: String; Args : Earg_Arr := No_Eargs; Cont : Boolean := False) is
-   begin
-      Report_Msg (Msgid_Error, Parse, No_Location, Msg, Args, Cont);
-   end Error_Msg_Parse;
-
-   procedure Error_Msg_Parse_1 (Msg: String) is
-   begin
-      Report_Msg (Msgid_Error, Parse, No_Location, Msg);
-   end Error_Msg_Parse_1;
-
-   procedure Error_Msg_Parse
-     (Loc : Location_Type; Msg: String; Args : Earg_Arr := No_Eargs) is
-   begin
-      Report_Msg (Msgid_Error, Parse, Loc, Msg, Args);
-   end Error_Msg_Parse;
-
    -- Disp a message during semantic analysis.
    -- LOC is used for location and current token.
    procedure Error_Msg_Sem (Msg: String; Loc: in Iir) is

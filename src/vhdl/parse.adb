@@ -83,16 +83,30 @@ package body Parse is
       Set_Location (Node, Get_Token_Location);
    end Set_Location;
 
+   -- Disp a message during parse
+   -- The location of the current token is automatically displayed before
+   -- the message.
+   procedure Error_Msg_Parse (Msg: String; Arg1 : Earg_Type) is
+   begin
+      Report_Msg (Msgid_Error, Errorout.Parse, No_Location, Msg, (1 => Arg1));
+   end Error_Msg_Parse;
+
+   procedure Error_Msg_Parse
+     (Msg: String; Args : Earg_Arr := No_Eargs; Cont : Boolean := False) is
+   begin
+      Report_Msg (Msgid_Error, Errorout.Parse, No_Location, Msg, Args, Cont);
+   end Error_Msg_Parse;
+
+   procedure Error_Msg_Parse
+     (Loc : Location_Type; Msg: String; Args : Earg_Arr := No_Eargs) is
+   begin
+      Report_Msg (Msgid_Error, Errorout.Parse, Loc, Msg, Args);
+   end Error_Msg_Parse;
+
    procedure Unexpected (Where: String) is
    begin
-      Error_Msg_Parse
-        ("unexpected token %t in a " & Where, +Current_Token);
+      Error_Msg_Parse ("unexpected token %t in a " & Where, +Current_Token);
    end Unexpected;
-
---   procedure Unexpected_Eof is
---   begin
---      Error_Msg_Parse ("unexpected end of file");
---   end Unexpected_Eof;
 
    procedure Expect_Error (Token: Token_Type; Msg: String) is
    begin

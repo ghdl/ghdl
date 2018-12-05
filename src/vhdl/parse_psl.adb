@@ -16,6 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
+with Errorout; use Errorout;
 with PSL.Nodes; use PSL.Nodes;
 with Iirs;
 with Scanner; use Scanner;
@@ -24,6 +25,17 @@ with PSL.Priorities; use PSL.Priorities;
 with Parse;
 
 package body Parse_Psl is
+   procedure Error_Msg_Parse (Msg: String) is
+   begin
+      Report_Msg (Msgid_Error, Errorout.Parse, No_Location, Msg);
+   end Error_Msg_Parse;
+
+   procedure Error_Msg_Parse
+     (Loc : Location_Type; Msg: String; Args : Earg_Arr := No_Eargs) is
+   begin
+      Report_Msg (Msgid_Error, Errorout.Parse, Loc, Msg, Args);
+   end Error_Msg_Parse;
+
    function Create_Node_Loc (K : Nkind) return Node is
       Res : Node;
    begin
