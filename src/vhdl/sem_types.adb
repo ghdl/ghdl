@@ -727,18 +727,18 @@ package body Sem_Types is
 
    --  Return the constraint state from CONST (the initial state) and EL_TYPE,
    --  as if ATYPE was a new element of a record.
-   function Update_Record_Constraint (Const : Iir_Constraint; El_Type : Iir)
-                                     return Iir_Constraint is
+   function Update_Record_Constraint
+     (Constraint : Iir_Constraint; El_Type : Iir) return Iir_Constraint is
    begin
       if Get_Kind (El_Type) not in Iir_Kinds_Composite_Type_Definition then
-         return Const;
+         return Constraint;
       end if;
 
-      case Const is
+      case Constraint is
          when Fully_Constrained
            | Unconstrained =>
-            if Get_Constraint_State (El_Type) = Const then
-               return Const;
+            if Get_Constraint_State (El_Type) = Constraint then
+               return Constraint;
             else
                return Partially_Constrained;
             end if;
@@ -1392,8 +1392,7 @@ package body Sem_Types is
    --  Analyze the constraint DEF + RESOLUTION for type TYPE_MARK.  The
    --  result is always a subtype definition.
    function Sem_Subtype_Constraint
-     (Def : Iir; Type_Mark : Iir; Resolution : Iir)
-     return Iir;
+     (Def : Iir; Type_Mark : Iir; Resolution : Iir) return Iir;
 
    function Copy_Record_Element_Declaration (El : Iir; Parent : Iir) return Iir
    is
