@@ -18,7 +18,7 @@
 
 --  Display trees in raw form.  Mainly used for debugging.
 
-with Ada.Text_IO; use Ada.Text_IO;
+with Logging; use Logging;
 with Name_Table;
 with Str_Table;
 with Files_Map;
@@ -42,7 +42,7 @@ package body Disp_Tree is
    procedure Put_Indent (Tab: Natural) is
       Blanks : constant String (1 .. 2 * Tab) := (others => ' ');
    begin
-      Put (Blanks);
+      Log (Blanks);
    end Put_Indent;
 
    procedure Disp_Int32 (Num : Int32)
@@ -56,11 +56,11 @@ package body Disp_Tree is
          N := N / 10;
          if N = 0 then
             Res (I - 1) := '[';
-            Put (Res (I - 1 .. Res'Last));
+            Log (Res (I - 1 .. Res'Last));
             return;
          end if;
       end loop;
-      Put (Res);
+      Log (Res);
    end Disp_Int32;
 
    procedure Disp_Iir_Number (Node: Iir) is
@@ -77,11 +77,11 @@ package body Disp_Tree is
    begin
       case Tree_List is
          when Null_Iir_List =>
-            Put_Line ("null-list");
+            Log_Line ("null-list");
          when Iir_List_All =>
-            Put_Line ("list-all");
+            Log_Line ("list-all");
          when others =>
-            New_Line;
+            Log_Line;
             It := List_Iterate (Tree_List);
             while Is_Valid (It) loop
                Put_Indent (Tab);
@@ -97,13 +97,13 @@ package body Disp_Tree is
       El: Iir;
    begin
       if Tree_Flist = Null_Iir_Flist then
-         Put_Line ("null-flist");
+         Log_Line ("null-flist");
       elsif Tree_Flist = Iir_Flist_All then
-         Put_Line ("flist-all");
+         Log_Line ("flist-all");
       elsif Tree_Flist = Iir_Flist_Others then
-         Put_Line ("flist-others");
+         Log_Line ("flist-others");
       else
-         New_Line;
+         Log_Line;
          for I in Flist_First .. Flist_Last (Tree_Flist) loop
             El := Get_Nth_Element (Tree_Flist, I);
             Put_Indent (Tab);
@@ -116,7 +116,7 @@ package body Disp_Tree is
    is
       El: Iir;
    begin
-      New_Line;
+      Log_Line;
       El := Tree_Chain;
       while El /= Null_Iir loop
          Put_Indent (Indent);
@@ -144,10 +144,10 @@ package body Disp_Tree is
       case Tree_List is
          when Null_Iir_List =>
             Put_Indent (Tab);
-            Put_Line (" null-list");
+            Log_Line (" null-list");
          when Iir_List_All =>
             Put_Indent (Tab);
-            Put_Line (" list-all");
+            Log_Line (" list-all");
          when others =>
             It := List_Iterate (Tree_List);
             while Is_Valid (It) loop
@@ -316,9 +316,9 @@ package body Disp_Tree is
       pragma Unreferenced (Indent);
    begin
       if N = 0 then
-         Put_Line ("*null*");
+         Log_Line ("*null*");
       else
-         Put_Line ("*??*");
+         Log_Line ("*??*");
       end if;
    end Disp_PSL_NFA;
 
@@ -370,8 +370,8 @@ package body Disp_Tree is
    procedure Header (Str : String; Indent : Natural) is
    begin
       Put_Indent (Indent);
-      Put (Str);
-      Put (": ");
+      Log (Str);
+      Log (": ");
    end Header;
 
    procedure Disp_Header (N : Iir)
@@ -380,18 +380,18 @@ package body Disp_Tree is
       K : Iir_Kind;
    begin
       if N = Null_Iir then
-         Put_Line ("*null*");
+         Log_Line ("*null*");
          return;
       end if;
 
       K := Get_Kind (N);
-      Put (Get_Iir_Image (K));
+      Log (Get_Iir_Image (K));
       if Has_Identifier (K) then
-         Put (' ');
-         Put (Image_Name_Id (Get_Identifier (N)));
+         Log (" ");
+         Log (Image_Name_Id (Get_Identifier (N)));
       end if;
 
-      Put (' ');
+      Log (" ");
       Disp_Iir_Number (N);
 
       --  Be nice: print type name for a type definition.
@@ -404,13 +404,13 @@ package body Disp_Tree is
             if Decl /= Null_Iir
               and then Get_Identifier (Decl) /= Null_Identifier
             then
-               Put (' ');
-               Put (Image_Name_Id (Get_Identifier (Decl)));
+               Log (" ");
+               Log (Image_Name_Id (Get_Identifier (Decl)));
             end if;
          end;
       end if;
 
-      New_Line;
+      Log_Line;
    end Disp_Header;
 
    procedure Disp_Iir (N : Iir; Indent : Natural; Depth : Natural)
@@ -430,12 +430,12 @@ package body Disp_Tree is
       begin
          L := Get_Location (N);
          loop
-            Put (Image_Location_Type (L));
+            Log (Image_Location_Type (L));
             L := Files_Map.Location_Instance_To_Location (L);
             exit when L = No_Location;
-            Put (" instantiated at ");
+            Log (" instantiated at ");
          end loop;
-         New_Line;
+         Log_Line;
       end;
 
       declare
@@ -472,7 +472,7 @@ package body Disp_Tree is
                         Disp_Chain (Get_Iir (N, F), Sub_Indent, Depth - 1);
                      when Attr_Chain_Next =>
                         Disp_Iir_Number (Get_Iir (N, F));
-                        New_Line;
+                        Log_Line;
                      when Attr_Of_Ref | Attr_Of_Maybe_Ref =>
                         raise Internal_Error;
                   end case;
@@ -515,78 +515,78 @@ package body Disp_Tree is
                when Type_PSL_NFA =>
                   Disp_PSL_NFA (Get_PSL_NFA (N, F), Sub_Indent);
                when Type_String8_Id =>
-                  Put_Line ("<string8>");
+                  Log_Line ("<string8>");
                when Type_PSL_Node =>
                   PSL.Dump_Tree.Disp_Tree
                     (Get_PSL_Node (N, F), Sub_Indent, Depth - 1);
                when Type_Source_Ptr =>
-                  Put_Line (Source_Ptr'Image (Get_Source_Ptr (N, F)));
+                  Log_Line (Source_Ptr'Image (Get_Source_Ptr (N, F)));
                when Type_Source_File_Entry =>
-                  Put_Line (Source_File_Entry'Image
+                  Log_Line (Source_File_Entry'Image
                               (Get_Source_File_Entry (N, F)));
                when Type_Date_Type =>
-                  Put_Line (Date_Type'Image (Get_Date_Type (N, F)));
+                  Log_Line (Date_Type'Image (Get_Date_Type (N, F)));
                when Type_Number_Base_Type =>
-                  Put_Line (Number_Base_Type'Image
+                  Log_Line (Number_Base_Type'Image
                               (Get_Number_Base_Type (N, F)));
                when Type_Iir_Constraint =>
-                  Put_Line (Image_Iir_Constraint
+                  Log_Line (Image_Iir_Constraint
                               (Get_Iir_Constraint (N, F)));
                when Type_Iir_Mode =>
-                  Put_Line (Image_Iir_Mode (Get_Iir_Mode (N, F)));
+                  Log_Line (Image_Iir_Mode (Get_Iir_Mode (N, F)));
                when Type_Iir_Index32 =>
-                  Put_Line (Iir_Index32'Image (Get_Iir_Index32 (N, F)));
+                  Log_Line (Iir_Index32'Image (Get_Iir_Index32 (N, F)));
                when Type_Iir_Int64 =>
-                  Put_Line (Iir_Int64'Image (Get_Iir_Int64 (N, F)));
+                  Log_Line (Iir_Int64'Image (Get_Iir_Int64 (N, F)));
                when Type_Boolean =>
-                  Put_Line (Image_Boolean
+                  Log_Line (Image_Boolean
                               (Get_Boolean (N, F)));
                when Type_Iir_Staticness =>
-                  Put_Line (Image_Iir_Staticness
+                  Log_Line (Image_Iir_Staticness
                               (Get_Iir_Staticness (N, F)));
                when Type_Date_State_Type =>
-                  Put_Line (Image_Date_State_Type
+                  Log_Line (Image_Date_State_Type
                               (Get_Date_State_Type (N, F)));
                when Type_Iir_All_Sensitized =>
-                  Put_Line (Image_Iir_All_Sensitized
+                  Log_Line (Image_Iir_All_Sensitized
                               (Get_Iir_All_Sensitized (N, F)));
                when Type_Iir_Signal_Kind =>
-                  Put_Line (Image_Iir_Signal_Kind
+                  Log_Line (Image_Iir_Signal_Kind
                               (Get_Iir_Signal_Kind (N, F)));
                when Type_Tri_State_Type =>
-                  Put_Line (Image_Tri_State_Type
+                  Log_Line (Image_Tri_State_Type
                               (Get_Tri_State_Type (N, F)));
                when Type_Iir_Pure_State =>
-                  Put_Line (Image_Iir_Pure_State
+                  Log_Line (Image_Iir_Pure_State
                               (Get_Iir_Pure_State (N, F)));
                when Type_Iir_Delay_Mechanism =>
-                  Put_Line (Image_Iir_Delay_Mechanism
+                  Log_Line (Image_Iir_Delay_Mechanism
                               (Get_Iir_Delay_Mechanism (N, F)));
                when Type_Iir_Predefined_Functions =>
-                  Put_Line (Image_Iir_Predefined_Functions
+                  Log_Line (Image_Iir_Predefined_Functions
                               (Get_Iir_Predefined_Functions (N, F)));
                when Type_Iir_Direction =>
-                  Put_Line (Image_Iir_Direction
+                  Log_Line (Image_Iir_Direction
                               (Get_Iir_Direction (N, F)));
                when Type_Iir_Int32 =>
-                  Put_Line (Iir_Int32'Image (Get_Iir_Int32 (N, F)));
+                  Log_Line (Iir_Int32'Image (Get_Iir_Int32 (N, F)));
                when Type_Int32 =>
-                  Put_Line (Int32'Image (Get_Int32 (N, F)));
+                  Log_Line (Int32'Image (Get_Int32 (N, F)));
                when Type_Iir_Fp64 =>
-                  Put_Line (Iir_Fp64'Image (Get_Iir_Fp64 (N, F)));
+                  Log_Line (Iir_Fp64'Image (Get_Iir_Fp64 (N, F)));
                when Type_Time_Stamp_Id =>
-                  Put_Line (Image_Time_Stamp_Id
+                  Log_Line (Image_Time_Stamp_Id
                               (Get_Time_Stamp_Id (N, F)));
                when Type_File_Checksum_Id =>
-                  Put_Line (Image_File_Checksum_Id
+                  Log_Line (Image_File_Checksum_Id
                               (Get_File_Checksum_Id (N, F)));
                when Type_Token_Type =>
-                  Put_Line (Image_Token_Type (Get_Token_Type (N, F)));
+                  Log_Line (Image_Token_Type (Get_Token_Type (N, F)));
                when Type_Name_Id =>
-                  Put (Image_Name_Id (Get_Name_Id (N, F)));
-                  Put (' ');
+                  Log (Image_Name_Id (Get_Name_Id (N, F)));
+                  Log (" ");
                   Disp_Int32 (Int32 (Get_Name_Id (N, F)));
-                  New_Line;
+                  Log_Line;
             end case;
          end loop;
       end;
