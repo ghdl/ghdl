@@ -141,22 +141,25 @@ package body Scanner is
    -- it can be used to push/pop a lexical analysis, to restart the
    -- scanner from a context marking a previous point.
    type Scan_Context is record
-      Source: File_Buffer_Acc;
-      Source_File: Source_File_Entry;
-      Line_Number: Natural;
-      Line_Pos: Source_Ptr;
-      Pos: Source_Ptr;
-      Token_Pos: Source_Ptr;
-      File_Len: Source_Ptr;
-      Token: Token_Type;
-      Prev_Token: Token_Type;
+      Source : File_Buffer_Acc;
+      Source_File : Source_File_Entry;
+      Line_Number : Natural;
+      Line_Pos : Source_Ptr;
+      Prev_Pos : Source_Ptr;
+      Token_Pos : Source_Ptr;
+      Pos : Source_Ptr;
+      File_Len : Source_Ptr;
+      Token : Token_Type;
+      Prev_Token : Token_Type;
+
+      --  Additional values for the current token.
       Bit_Str_Base : Character;
       Bit_Str_Sign : Character;
       Str_Id : String8_Id;
       Str_Len : Nat32;
       Identifier: Name_Id;
-      Int64: Iir_Int64;
-      Fp64: Iir_Fp64;
+      Int64 : Iir_Int64;
+      Fp64 : Iir_Fp64;
    end record;
    pragma Suppress_Initialization (Scan_Context);
 
@@ -199,6 +202,7 @@ package body Scanner is
                                      Line_Number => 0,
                                      Line_Pos => 0,
                                      Pos => 0,
+                                     Prev_Pos => 0,
                                      Token_Pos => 0,
                                      File_Len => 0,
                                      Token => Tok_Invalid,
@@ -295,6 +299,18 @@ package body Scanner is
       return Current_Context.Pos;
    end Get_Position;
 
+   function Get_Token_Location return Location_Type is
+   begin
+      return File_Pos_To_Location
+        (Current_Context.Source_File, Current_Context.Token_Pos);
+   end Get_Token_Location;
+
+   function Get_Prev_Location return Location_Type is
+   begin
+      return File_Pos_To_Location
+        (Current_Context.Source_File, Current_Context.Prev_Pos);
+   end Get_Prev_Location;
+
    procedure Set_File (Source_File : Source_File_Entry)
    is
       N_Source: File_Buffer_Acc;
@@ -306,6 +322,7 @@ package body Scanner is
                           Source_File => Source_File,
                           Line_Number => 1,
                           Line_Pos => 0,
+                          Prev_Pos => N_Source'First,
                           Pos => N_Source'First,
                           Token_Pos => 0, -- should be invalid,
                           File_Len => Get_File_Length (Source_File),
@@ -1703,6 +1720,8 @@ package body Scanner is
          Current_Context.Prev_Token := Current_Token;
       end if;
 
+      Current_Context.Prev_Pos := Pos;
+
       << Again >> null;
 
       --  Skip commonly used separators.
@@ -2295,12 +2314,6 @@ package body Scanner is
       end case;
       --  Not reachable: all case should use goto Again or return.
    end Scan;
-
-   function Get_Token_Location return Location_Type is
-   begin
-      return File_Pos_To_Location
-        (Current_Context.Source_File, Current_Context.Token_Pos);
-   end Get_Token_Location;
 
    function Is_Whitespace (C : Character) return Boolean is
    begin
