@@ -2963,9 +2963,7 @@ package body Sem_Expr is
    function Sem_Record_Aggregate (Aggr: Iir_Aggregate; A_Type: Iir)
      return boolean
    is
-      Base_Type : constant Iir := Get_Base_Type (A_Type);
-      El_List : constant Iir_Flist :=
-        Get_Elements_Declaration_List (Base_Type);
+      El_List : constant Iir_Flist := Get_Elements_Declaration_List (A_Type);
 
       --  Type of the element.
       El_Type : Iir;
