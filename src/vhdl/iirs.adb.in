@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Ada.Unchecked_Conversion;
-with Ada.Text_IO;
+with Logging; use Logging;
 with Nodes; use Nodes;
 with Lists; use Lists;
 with Nodes_Meta; use Nodes_Meta;
@@ -57,7 +57,6 @@ package body Iirs is
    --  Statistics.
    procedure Disp_Stats
    is
-      use Ada.Text_IO;
       type Num_Array is array (Iir_Kind) of Natural;
       Num : Num_Array := (others => 0);
       type Format_Array is array (Format_Type) of Natural;
@@ -77,17 +76,17 @@ package body Iirs is
          I := Next_Node (I);
       end loop;
 
-      Put_Line ("Stats per iir_kind:");
+      Log_Line ("Stats per iir_kind:");
       for J in Iir_Kind loop
          if Num (J) /= 0 then
-            Put_Line (' ' & Iir_Kind'Image (J) & ':'
-                      & Natural'Image (Num (J)));
+            Log_Line (' ' & Iir_Kind'Image (J) & ':'
+                        & Natural'Image (Num (J)));
          end if;
       end loop;
-      Put_Line ("Stats per formats:");
+      Log_Line ("Stats per formats:");
       for J in Format_Type loop
-         Put_Line (' ' & Format_Type'Image (J) & ':'
-                   & Natural'Image (Formats (J)));
+         Log_Line (' ' & Format_Type'Image (J) & ':'
+                     & Natural'Image (Formats (J)));
       end loop;
    end Disp_Stats;
 

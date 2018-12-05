@@ -15,11 +15,11 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Ada.Text_IO; use Ada.Text_IO;
-with Tables;
-with GNAT.OS_Lib;
 with Interfaces.C_Streams;
 with System;
+with GNAT.OS_Lib;
+with Logging; use Logging;
+with Tables;
 with Errorout; use Errorout;
 with Scanner;
 with Iirs_Utils; use Iirs_Utils;
@@ -380,7 +380,7 @@ package body Libraries is
       pragma Assert (Get_Design_File_Chain (Library) = Null_Iir);
 
       if Trace_Library_Load then
-         Ada.Text_IO.Put_Line ("Load library " & Image (Lib_Ident));
+         Log_Line ("Load library " & Image (Lib_Ident));
       end if;
 
       -- Try to open the library file map.
@@ -397,8 +397,7 @@ package body Libraries is
 
       File_Id := Get_Identifier (Library_To_File_Name (Library));
       if Trace_Library_Load then
-         Ada.Text_IO.Put_Line
-           ("  from " & Image (Dir) & Image (File_Id));
+         Log_Line ("  from " & Image (Dir) & Image (File_Id));
       end if;
 
       File := Files_Map.Read_Source_File (Dir, File_Id);
@@ -500,7 +499,7 @@ package body Libraries is
                     or else
                     Get_Kind (Library_Unit) /= Iir_Kind_Architecture_Body
                   then
-                     Put_Line ("load_library: invalid use of 'with'");
+                     Log_Line ("load_library: invalid use of 'with'");
                      raise Internal_Error;
                   end if;
                   Scan_Expect (Tok_Configuration);
@@ -512,7 +511,7 @@ package body Libraries is
                     Create_Iir (Iir_Kind_Context_Declaration);
                   Scan;
                when others =>
-                  Put_Line
+                  Log_Line
                     ("load_library: line must start with " &
                      "'architecture', 'entity', 'package' or 'configuration'");
                   raise Internal_Error;
@@ -558,8 +557,8 @@ package body Libraries is
             Scan;
 
             if False then
-               Put_Line ("line:" & Int32'Image (Line)
-                         & ", pos:" & Source_Ptr'Image (Pos));
+               Log_Line ("line:" & Int32'Image (Line)
+                           & ", pos:" & Source_Ptr'Image (Pos));
             end if;
 
             -- Keep the position of the design unit.
