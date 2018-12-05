@@ -112,6 +112,8 @@ class Files_Map_Editor:
     Set_Gap = libghdl.files_map__editor__set_gap
     Replace_Text = libghdl.files_map__editor__replace_text_ptr
 
+    Check_Buffer_Content = libghdl.files_map__editor__check_buffer_content
+
 # Names
 
 Get_Name_Length = libghdl.name_table__get_name_length
@@ -251,7 +253,8 @@ class Errorout:
                     ("cont", c_int8),
                     ("file", c_int32),
                     ("line", c_int32),
-                    ("offset", c_int32)]
+                    ("offset", c_int32),
+                    ("length", c_int32)]
 
 
 class Errorout_Memory:

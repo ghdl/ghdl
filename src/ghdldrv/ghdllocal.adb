@@ -1218,8 +1218,12 @@ package body Ghdllocal is
          File := Get_Design_File_Chain (Lib);
          while File /= Null_Iir loop
             Next_File := Get_Chain (File);
-            Fe := Read_Source_File (Get_Design_File_Directory (File),
-                                    Get_Design_File_Filename (File));
+            Fe := Get_Design_File_Source (File);
+            if Fe = No_Source_File_Entry then
+               Fe := Read_Source_File (Get_Design_File_Directory (File),
+                                       Get_Design_File_Filename (File));
+               Set_Design_File_Source (File, Fe);
+            end if;
             if Fe = No_Source_File_Entry then
                --  FIXME: should remove all the design file from the library.
                null;
@@ -1230,6 +1234,7 @@ package body Ghdllocal is
                --  Extract libraries.
                --  Note: we can't parse it only, since we need to keep the
                --    date.
+               Set_Design_File_Source (File, Fe);
                Unit := Get_First_Design_Unit (File);
                while Unit /= Null_Iir loop
                   Sem_Lib.Load_Parse_Design_Unit (Unit, Null_Iir);
@@ -1427,8 +1432,12 @@ package body Ghdllocal is
       Fe : Source_File_Entry;
    begin
       --  2) file has been modified.
-      Fe := Read_Source_File (Get_Design_File_Directory (File),
-                              Get_Design_File_Filename (File));
+      Fe := Get_Design_File_Source (File);
+      if Fe = No_Source_File_Entry then
+         Fe := Read_Source_File (Get_Design_File_Directory (File),
+                                 Get_Design_File_Filename (File));
+         Set_Design_File_Source (File, Fe);
+      end if;
       if not Is_Eq (Get_File_Checksum (Fe),
                     Get_File_Checksum (File))
       then

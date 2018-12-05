@@ -3044,7 +3044,7 @@ package body Trans.Chap3 is
    function Slice_Base (Base : Mnode; Atype : Iir; Index : O_Enode)
                         return Mnode
    is
-      T_Info   : constant Type_Info_Acc :=  Get_Info (Atype);
+      T_Info   : constant Type_Info_Acc := Get_Info (Atype);
       El_Type  : constant Iir := Get_Element_Subtype (Atype);
       El_Tinfo : constant Type_Info_Acc := Get_Info (El_Type);
       Kind     : constant Object_Kind_Type := Get_Object_Kind (Base);

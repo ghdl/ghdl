@@ -23,15 +23,17 @@ package Errorout is
    Option_Error: exception;
    Compilation_Error: exception;
 
-   -- This kind can't be handled.
-   --procedure Error_Kind (Msg: String; Kind: Iir_Kind);
+   --  This kind can't be handled.
    procedure Error_Kind (Msg: String; An_Iir: in Iir);
    procedure Error_Kind (Msg: String; Def : Iir_Predefined_Functions);
    procedure Error_Kind (Msg : String; N : PSL_Node);
    pragma No_Return (Error_Kind);
 
-   -- The number of errors (ie, number of calls to error_msg*).
-   Nbr_Errors: Natural := 0;
+   --  The number of errors (ie, number of calls to error_msg*).
+   Nbr_Errors : Natural := 0;
+
+   --  Maximum number of errors, before silent them.
+   Max_Nbr_Errors : constant Natural := 100;
 
    type Msgid_Type is
      (--  Any note
@@ -179,8 +181,17 @@ package Errorout is
       Id : Msgid_Type;
       Cont : Boolean;
       File : Source_File_Entry;
+
+      --  The first line is line 1, 0 can be used when line number is not
+      --  relevant.
       Line : Natural;
+
+      --  Offset in the line.  The first character is at offset 0.
       Offset : Natural;
+
+      --  Length of the location (for a range).  It is assumed to be on the
+      --  same line; use 0 when unknown.
+      Length : Natural;
    end record;
 
    type Error_Start_Handler is access procedure (Err : Error_Record);

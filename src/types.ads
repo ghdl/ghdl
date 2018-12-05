@@ -95,8 +95,9 @@ package Types is
    type Source_File_Entry is new Uns32;
    No_Source_File_Entry: constant Source_File_Entry := 0;
 
-   --  Index into a file buffer.
-   type Source_Ptr is new Uns32;
+   --  Index into a file buffer.  Use a signed integers, so that empty string
+   --  works correctly.
+   type Source_Ptr is new Int32 range 0 .. Int32'Last;
 
    --  Valid bounds of any file buffer.
    Source_Ptr_Org : constant Source_Ptr := 0;

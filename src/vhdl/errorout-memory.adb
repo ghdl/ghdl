@@ -73,6 +73,7 @@ package body Errorout.Memory is
    begin
       Errors.Init;
       Messages.Init;
+      Nbr_Errors := 0;
    end Clear_Errors;
 
    procedure Memory_Error_Start (E : Error_Record) is

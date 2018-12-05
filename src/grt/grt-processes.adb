@@ -104,6 +104,11 @@ package body Grt.Processes is
                                         Timeout_Chain_Next => null,
                                         Timeout_Chain_Prev => null);
       Set_Current_Process (Elab_Process);
+
+      --  LRM93 12.3 Elaboration of a declarative part
+      --  During static elaboration, the function STD.STANDARD.NOW (see 14.2)
+      --  returns the vallue 0 ns.
+      Current_Time := 0;
    end Init;
 
    function Get_Nbr_Processes return Natural is
@@ -823,7 +828,9 @@ package body Grt.Processes is
       --  LRM93 12.6.4
       --  At the beginning of initialization, the current time, Tc, is assumed
       --  to be 0 ns.
-      Current_Time := 0;
+      --
+      --  GHDL: already initialized before elaboration.
+      pragma Assert (Current_Time = 0);
 
       --  The initialization phase consists of the following steps:
       --  - The driving value and the effective value of each explicitly

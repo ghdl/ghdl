@@ -1901,6 +1901,8 @@ package body Ortho_Code.X86.Insns is
                when R_Any_Cc =>
                   Right := Gen_Insn (Right, R_Irm, Num);
                   Left := Gen_Insn (Left, R_Any8, Num);
+                  Left := Reload (Left, R_Irm, Num);
+                  Right := Reload (Right, R_Any8, Num);
                   Reg_Res := R_Ne;
                   Alloc_Cc (Stmt, Num);
                   Free_Insn_Regs (Left);

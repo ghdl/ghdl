@@ -917,6 +917,12 @@ package body Scanner is
       --  Not a letter.
       others => NUL);
 
+   procedure Error_Too_Long is
+   begin
+      Error_Msg_Scan ("identifier is too long (>"
+                        & Natural'Image (Max_Name_Length - 1) & ")");
+   end Error_Too_Long;
+
    -- LRM93 13.3.1
    -- Basic Identifiers
    -- A basic identifier consists only of letters, digits, and underlines.
@@ -943,10 +949,11 @@ package body Scanner is
          --   an adjacent letter or digit.
          --   Basic identifiers differing only in the use of the corresponding
          --   upper and lower case letters are considered as the same.
-         -- This is achieved by converting all upper case letters into
-         -- equivalent lower case letters.
-         -- The opposite (converting in lower case letters) is not possible,
-         -- because two characters have no upper-case equivalent.
+         --
+         --  GHDL: This is achieved by converting all upper case letters into
+         --  equivalent lower case letters.
+         --  The opposite (converting to upper lower case letters) is not
+         --  possible because two characters have no upper-case equivalent.
          C := Source (Pos);
          case C is
             when 'A' .. 'Z' =>
@@ -979,22 +986,35 @@ package body Scanner is
 
          --  Put character in name buffer.  FIXME: compute the hash at the same
          --  time ?
-         Len := Len + 1;
-         Buffer (Len) := C;
+         if Len >= Max_Name_Length - 1 then
+            if Len = Max_Name_Length -1 then
+               Error_Msg_Scan ("identifier is too long (>"
+                                 & Natural'Image (Max_Name_Length - 1) & ")");
+               --  Accept this last one character, so that no error for the
+               --  following characters.
+               Len := Len + 1;
+               Buffer (Len) := C;
+            end if;
+         else
+            Len := Len + 1;
+            Buffer (Len) := C;
+         end if;
 
          --  Next character.
          Pos := Pos + 1;
       end loop;
 
       if Source (Pos - 1) = '_' then
-         if not Allow_PSL then
+         if Allow_PSL then
             --  Some PSL reserved words finish with '_'.  This case is handled
-            --  later.
-            Error_Msg_Scan ("identifier cannot finish with '_'");
+            --  later by Scan_Underscore and Scan_Exclam_Mark.
+            Pos := Pos - 1;
+            Len := Len - 1;
+            C := '_';
+         else
+            --  Eat the trailing underscore.
+            Error_Msg_Scan ("an identifier cannot finish with '_'");
          end if;
-         Pos := Pos - 1;
-         Len := Len - 1;
-         C := '_';
       end if;
 
       -- LRM93 13.2
@@ -1267,8 +1287,17 @@ package body Scanner is
             --  of an extended literal, it must be doubled.
             --  LRM93 13.3.2
             --  (a doubled backslash couting as one character)
-            Len := Len + 1;
-            Buffer (Len) := '\';
+            if Len >= Max_Name_Length - 1 then
+               if Len = Max_Name_Length - 1 then
+                  Error_Too_Long;
+                  --  Accept this last one.
+                  Len := Len + 1;
+                  Buffer (Len) := C;
+               end if;
+            else
+               Len := Len + 1;
+               Buffer (Len) := C;
+            end if;
 
             Pos := Pos + 1;
             C := Source (Pos);
@@ -1296,12 +1325,21 @@ package body Scanner is
                end if;
                exit;
          end case;
-         Len := Len + 1;
 
          --  LRM93 13.3.2
          --  Extended identifiers differing only in the use of corresponding
          --  upper and lower case letters are distinct.
-         Buffer (Len) := C;
+         if Len >= Max_Name_Length - 1 then
+            if Len = Max_Name_Length - 1 then
+               Error_Too_Long;
+               --  Accept this last one.
+               Len := Len + 1;
+               Buffer (Len) := C;
+            end if;
+         else
+            Len := Len + 1;
+            Buffer (Len) := C;
+         end if;
       end loop;
 
       if Len <= 2 then
@@ -1404,7 +1442,7 @@ package body Scanner is
                   if C = '_' then
                      if I = 1 then
                         Error_Msg_Option
-                          ("identifier cannot start with an underscore");
+                          ("an identifier cannot start with an underscore");
                         return;
                      end if;
                      if Id (I - 1) = '_' then
@@ -1414,7 +1452,7 @@ package body Scanner is
                      end if;
                      if I = Id'Last then
                         Error_Msg_Option
-                          ("identifier cannot finish with an underscore");
+                          ("an identifier cannot finish with an underscore");
                         return;
                      end if;
                   else
@@ -2223,6 +2261,7 @@ package body Scanner is
             end if;
             return;
       end case;
+      --  Not reachable: all case should use goto Again or return.
    end Scan;
 
    function Get_Token_Location return Location_Type is

@@ -15,11 +15,11 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Ada.Text_IO; use Ada.Text_IO;
 with Ada.Unchecked_Deallocation;
 with GNAT.OS_Lib;
 with GNAT.SHA1;
 with GNAT.Directory_Operations;
+with Logging; use Logging;
 with Name_Table; use Name_Table;
 with Str_Table;
 with Ada.Calendar;
@@ -119,9 +119,9 @@ package body Files_Map is
 
       --  Debug trace.
       if False then
-         Put_Line ("file" & Source_File_Entry'Image (File)
-                   & " line" & Natural'Image (Line)
-                   & " at position" & Source_Ptr'Image (Pos));
+         Log_Line ("file" & Source_File_Entry'Image (File)
+                     & " line" & Natural'Image (Line)
+                     & " at position" & Source_Ptr'Image (Pos));
       end if;
 
       --  The position of the first line is well-known.
@@ -149,7 +149,7 @@ package body Files_Map is
       else
          --  If the line position is already known, it must be the same.
          if Pos /= Source_File.Lines.Table (Line) then
-            Put_Line ("file" & Source_File_Entry'Image (File)
+            Log_Line ("file" & Source_File_Entry'Image (File)
                         & " for line" & Natural'Image (Line)
                         & " pos =" & Source_Ptr'Image (Pos)
                         & ", lines_table = "
@@ -216,6 +216,10 @@ package body Files_Map is
 
       loop
          << Again >> null;
+         pragma Assert (Hi >= Low);
+         pragma Assert (Low >= 1);
+         pragma Assert (Hi <= Last (Source_File.Lines));
+
          Mid := (Hi + Low) / 2;
          if Lines_Table (Mid) = Source_Ptr_Bad then
             -- There is a hole: no position for this line.
@@ -716,10 +720,10 @@ package body Files_Map is
 
       Buffer : File_Buffer_Acc;
    begin
-      --  If the file is already loaded, nothing to do!
+      --  The file is not supposed to be already loaded, but this could happen
+      --  if the same file is compiled in two libraries.
       Res := Find_Source_File (Directory, Name);
       if Res /= No_Source_File_Entry then
-         pragma Assert (Source_Files.Table (Res).Source /= null);
          return Res;
       end if;
 
@@ -1096,7 +1100,7 @@ package body Files_Map is
       Offset : Natural;
    begin
       Location_To_Coord (Loc, File, Line_Pos, Line, Offset);
-      Put_Line (Extract_Expanded_Line (File, Line_Pos));
+      Log_Line (Extract_Expanded_Line (File, Line_Pos));
    end Debug_Source_Loc;
 
    --  Disp sources lines of a file.
@@ -1105,8 +1109,8 @@ package body Files_Map is
    begin
       Check_File (File);
       for I in Lines_Tables.First .. Lines_Tables.Last (Source_File.Lines) loop
-         Put_Line ("line" & Natural'Image (I) & " at offset"
-                   & Source_Ptr'Image (Source_File.Lines.Table (I)));
+         Log_Line ("line" & Natural'Image (I) & " at offset"
+                     & Source_Ptr'Image (Source_File.Lines.Table (I)));
       end loop;
    end Debug_Source_Lines;
 
@@ -1116,31 +1120,37 @@ package body Files_Map is
          declare
             F : Source_File_Record renames Source_Files.Table(I);
          begin
-            Put ('*');
-            Put (Source_File_Entry'Image (I));
-            Put (" name: " & Image (F.File_Name));
-            Put (" dir:" & Image (F.Directory));
-            Put (" length:" & Source_Ptr'Image (F.File_Length));
-            New_Line;
-            Put (" location:" & Location_Type'Image (F.First_Location)
+            Log ("*");
+            Log (Source_File_Entry'Image (I));
+            Log (" name: " & Image (F.File_Name));
+            Log (" dir:" & Image (F.Directory));
+            Log (" file length:" & Source_Ptr'Image (F.File_Length));
+            Log_Line;
+            Log (" location:" & Location_Type'Image (F.First_Location)
                    & " -" & Location_Type'Image (F.Last_Location));
-            New_Line;
+            Log_Line;
             if F.Checksum /= No_File_Checksum_Id then
-               Put (" checksum: " & Get_File_Checksum_String (F.Checksum));
-               New_Line;
+               Log (" checksum: " & Get_File_Checksum_String (F.Checksum));
+               Log_Line;
             end if;
             case F.Kind is
                when Source_File_File =>
-                  Put (" nbr lines:"
+                  Log (" buf:" & Source_Ptr'Image (F.Source'First)
+                         & " -" & Source_Ptr'Image (F.Source'Last));
+                  Log_Line;
+                  Log (" nbr lines:"
                          & Natural'Image (Lines_Tables.Last (F.Lines)));
-                  New_Line;
+                  Log_Line;
+                  Log (" Gap:" & Source_Ptr'Image (F.Gap_Start)
+                         & " -" & Source_Ptr'Image (F.Gap_Last));
+                  Log_Line;
                when Source_File_String =>
                   null;
                when Source_File_Instance =>
-                  Put (" instance from:" & Source_File_Entry'Image (F.Ref));
-                  Put (", base:" & Source_File_Entry'Image (F.Base));
-                  Put (", loc:" & Image (F.Instance_Loc));
-                  New_Line;
+                  Log (" instance from:" & Source_File_Entry'Image (F.Ref));
+                  Log (", base:" & Source_File_Entry'Image (F.Base));
+                  Log (", loc:" & Image (F.Instance_Loc));
+                  Log_Line;
             end case;
          end;
       end loop;

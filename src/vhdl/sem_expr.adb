@@ -2771,6 +2771,7 @@ package body Sem_Expr is
          Set_Same_Alternative_Flag (N_Choice, Get_Same_Alternative_Flag (El));
          Set_Choice_Range (N_Choice, Eval_Range_If_Static (Name1));
          Set_Choice_Staticness (N_Choice, Get_Type_Staticness (Range_Type));
+         Set_Element_Type_Flag (N_Choice, Get_Element_Type_Flag (El));
          Free_Iir (El);
 
          if Prev_El = Null_Iir then
@@ -3375,6 +3376,7 @@ package body Sem_Expr is
       Index_Constraint : Iir_Range_Expression; -- FIXME: 'range.
       Dir : Iir_Direction;
       Choice_Staticness : Iir_Staticness;
+      Len_Staticness : Iir_Staticness;
       Expr_Staticness : Iir_Staticness;
 
       Info : Array_Aggr_Info renames Infos (Dim);
@@ -3447,6 +3449,7 @@ package body Sem_Expr is
         (Aggr, Min (Expr_Staticness, Get_Expr_Staticness (Aggr)));
 
       --  Analyze choices.
+      Len_Staticness := Locally;
       case Get_Kind (Aggr) is
          when Iir_Kind_Aggregate =>
             Assoc_Chain := Get_Association_Choices_Chain (Aggr);
@@ -3497,17 +3500,23 @@ package body Sem_Expr is
                            Expr : constant Iir := Get_Associated_Expr (Choice);
                            Expr_Type : constant Iir := Get_Type (Expr);
                            Expr_Index : Iir;
+                           Index_Staticness : Iir_Staticness;
                         begin
                            if not Is_Error (Expr_Type) then
                               Expr_Index := Get_Index_Type (Expr_Type, 0);
-                              if Get_Type_Staticness (Expr_Index) = Locally
-                              then
-                                 Len := Len + Natural
-                                   (Eval_Discrete_Type_Length (Expr_Index));
-                              else
-                                 --  TODO: length is not locally static...
-                                 raise Internal_Error;
-                              end if;
+                              Index_Staticness :=
+                                Get_Type_Staticness (Expr_Index);
+                              case Index_Staticness is
+                                 when Locally =>
+                                    Len := Len + Natural
+                                      (Eval_Discrete_Type_Length (Expr_Index));
+                                 when Globally | None =>
+                                    Len_Staticness := Iirs.Min
+                                      (Len_Staticness, Index_Staticness);
+                                 when Unknown =>
+                                    --  Must have been caught by Is_Error.
+                                    raise Internal_Error;
+                              end case;
                            end if;
                         end;
                      end if;
@@ -3600,7 +3609,9 @@ package body Sem_Expr is
             --  by S'LEFT where S is the index subtype of the base type of the
             --  array; [...] the rightmost bound is determined by the direction
             --  of the index subtype and the number of element.
-            if Get_Type_Staticness (Index_Type) = Locally then
+            if Get_Type_Staticness (Index_Type) = Locally
+              and then Len_Staticness = Locally
+            then
                Info.Index_Subtype := Create_Range_Subtype_By_Length
                  (Index_Type, Iir_Int64 (Len), Get_Location (Aggr));
             end if;
@@ -3768,25 +3779,37 @@ package body Sem_Expr is
       end loop;
       Base_Type := Get_Base_Type (Aggr_Type);
 
-      --  FIXME: should reuse AGGR_TYPE iff AGGR_TYPE is fully constrained
+      --  Reuse AGGR_TYPE iff AGGR_TYPE is fully constrained
       --  and statically match the subtype of the aggregate.
       if Aggr_Constrained then
-         A_Subtype := Create_Array_Subtype (Base_Type, Get_Location (Aggr));
-         --  FIXME: extract element subtype ?
-         Set_Element_Subtype (A_Subtype, Get_Element_Subtype (Aggr_Type));
-         Type_Staticness := Get_Type_Staticness (A_Subtype);
+         Type_Staticness := Locally;
          for I in Infos'Range loop
-            Set_Nth_Element (Get_Index_Subtype_List (A_Subtype), I - 1,
-                             Infos (I).Index_Subtype);
             Type_Staticness := Min
               (Type_Staticness, Get_Type_Staticness (Infos (I).Index_Subtype));
          end loop;
-         Set_Type_Staticness (A_Subtype, Type_Staticness);
-         Set_Index_Constraint_Flag (A_Subtype, True);
-         --  FIXME: the element can be unconstrained.
-         Set_Constraint_State (A_Subtype, Fully_Constrained);
-         Set_Type (Aggr, A_Subtype);
-         Set_Literal_Subtype (Aggr, A_Subtype);
+
+         if Get_Constraint_State (Aggr_Type) = Fully_Constrained
+           and then Get_Type_Staticness (Aggr_Type) = Locally
+           and then Type_Staticness = Locally
+         then
+            Set_Type (Aggr, Aggr_Type);
+         else
+            A_Subtype := Create_Array_Subtype (Base_Type, Get_Location (Aggr));
+            --  FIXME: extract element subtype ?
+            Set_Element_Subtype (A_Subtype, Get_Element_Subtype (Aggr_Type));
+            Type_Staticness := Min (Type_Staticness,
+                                    Get_Type_Staticness (A_Subtype));
+            for I in Infos'Range loop
+               Set_Nth_Element (Get_Index_Subtype_List (A_Subtype), I - 1,
+                                Infos (I).Index_Subtype);
+            end loop;
+            Set_Type_Staticness (A_Subtype, Type_Staticness);
+            Set_Index_Constraint_Flag (A_Subtype, True);
+            --  FIXME: the element can be unconstrained.
+            Set_Constraint_State (A_Subtype, Fully_Constrained);
+            Set_Type (Aggr, A_Subtype);
+            Set_Literal_Subtype (Aggr, A_Subtype);
+         end if;
          if Type_Staticness = Locally and then Get_Aggregate_Expand_Flag (Aggr)
          then
             --  Compute ratio of elements vs size of the aggregate to determine

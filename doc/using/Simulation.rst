@@ -85,7 +85,7 @@ all options available, including the debugging one.
 .. option:: --max-stack-alloc<=N>
 
   Emit an error message in case of allocation on the stack of an
-  object larger than `N` KB.
+  object larger than `N` KB.  Use 0 to disable these checks.
 
 .. option:: --sdf<=PATH=FILENAME>
 

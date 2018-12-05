@@ -270,7 +270,8 @@ private
       --  The buffer containing the file.
       Source : File_Buffer_Acc;
 
-      --  Length of the file, which is less than the length of the buffer.
+      --  Position of the EOT character after the file.  Also the length of
+      --  the file + 1, unless there is a gap.
       File_Length : Source_Ptr;
 
       Checksum : File_Checksum_Id;
