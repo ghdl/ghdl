@@ -71,6 +71,12 @@ package body Parse is
    function Parse_Tolerance_Aspect_Opt return Iir;
    function Parse_Package (Parent : Iir) return Iir;
 
+   --  Maximum number of nested parenthesis, before generating an error.
+   Max_Parenthesis_Depth : constant Natural := 1000;
+
+   --  Current number of open parenthesis (in expressions).
+   Parenthesis_Depth : Natural := 0;
+
    -- Copy the current location into an iir.
    procedure Set_Location (Node : Iir) is
    begin
@@ -5212,6 +5218,41 @@ package body Parse is
       return Res;
    end Parse_Integer_Literal;
 
+   procedure Skip_Until_Closing_Parenthesis
+   is
+      Level : Natural;
+   begin
+      Level := 0;
+
+      --  Skip '('.
+      Scan;
+
+      loop
+         case Current_Token is
+            when Tok_Right_Paren =>
+               if Level = 0 then
+                  --  Skip ')'.
+                  Scan;
+                  exit;
+               end if;
+               Level := Level - 1;
+            when Tok_Left_Paren =>
+               Level := Level + 1;
+            when Tok_Eof
+              | Tok_Semi_Colon
+              | Tok_End
+              | Tok_Then
+              | Tok_Else
+              | Tok_Loop =>
+               exit;
+            when others =>
+               null;
+         end case;
+
+         Scan;
+      end loop;
+   end Skip_Until_Closing_Parenthesis;
+
    --  precond : next token
    --  postcond: next token
    --
@@ -5303,7 +5344,17 @@ package body Parse is
             end if;
             return Res;
          when Tok_Left_Paren =>
-            return Parse_Aggregate;
+            if Parenthesis_Depth = Max_Parenthesis_Depth then
+               Error_Msg_Parse
+                 ("too many open parenthesis, skip to the matching one");
+               Skip_Until_Closing_Parenthesis;
+               return Null_Iir;
+            else
+               Parenthesis_Depth := Parenthesis_Depth + 1;
+               Res := Parse_Aggregate;
+               Parenthesis_Depth := Parenthesis_Depth - 1;
+               return Res;
+            end if;
          when Tok_String =>
             return Parse_Name;
          when Tok_Null =>
@@ -9506,6 +9557,7 @@ package body Parse is
    begin
       --  Internal check: there must be no current_token.
       pragma Assert (Current_Token = Tok_Invalid);
+      pragma Assert (Parenthesis_Depth = 0);
 
       --  Read the first token.
       Scan;
