@@ -228,17 +228,6 @@ package Errorout is
    --  Warn about an option.
    procedure Warning_Msg_Option (Id : Msgid_Warnings; Msg: String);
 
-   -- Disp a message during scan.
-   -- The current location is automatically displayed before the message.
-   procedure Error_Msg_Scan (Msg: String);
-   procedure Error_Msg_Scan (Msg: String; Arg1 : Earg_Type);
-   procedure Error_Msg_Scan (Loc : Location_Type; Msg: String);
-   procedure Warning_Msg_Scan (Id : Msgid_Warnings; Msg: String);
-   procedure Warning_Msg_Scan (Id : Msgid_Warnings;
-                               Msg: String;
-                               Arg1 : Earg_Type;
-                               Cont : Boolean := False);
-
    -- Disp a message during semantic analysis.
    procedure Warning_Msg_Sem (Id : Msgid_Warnings;
                               Loc : Location_Type;

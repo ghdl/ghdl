@@ -160,6 +160,38 @@ package body Scanner is
    end record;
    pragma Suppress_Initialization (Scan_Context);
 
+   -- Disp a message during scan.
+   -- The current location is automatically displayed before the message.
+   -- Disp a message during scan.
+   procedure Error_Msg_Scan (Msg: String) is
+   begin
+      Report_Msg (Msgid_Error, Scan, No_Location, Msg);
+   end Error_Msg_Scan;
+
+   procedure Error_Msg_Scan (Loc : Location_Type; Msg: String) is
+   begin
+      Report_Msg (Msgid_Error, Scan, Loc, Msg);
+   end Error_Msg_Scan;
+
+   procedure Error_Msg_Scan (Msg: String; Arg1 : Earg_Type) is
+   begin
+      Report_Msg (Msgid_Error, Scan, No_Location, Msg, (1 => Arg1));
+   end Error_Msg_Scan;
+
+   -- Disp a message during scan.
+   procedure Warning_Msg_Scan (Id : Msgid_Warnings; Msg: String) is
+   begin
+      Report_Msg (Id, Scan, No_Location, Msg);
+   end Warning_Msg_Scan;
+
+   procedure Warning_Msg_Scan (Id : Msgid_Warnings;
+                               Msg: String;
+                               Arg1 : Earg_Type;
+                               Cont : Boolean := False) is
+   begin
+      Report_Msg (Id, Scan, No_Location, Msg, (1 => Arg1), Cont);
+   end Warning_Msg_Scan;
+
    -- The current context.
    -- Default value is an invalid context.
    Current_Context: Scan_Context := (Source => null,

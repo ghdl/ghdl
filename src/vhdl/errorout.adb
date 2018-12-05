@@ -502,36 +502,6 @@ package body Errorout is
       Report_Msg (Id, Elaboration, +Loc, Msg, Args, Cont);
    end Warning_Msg_Elab;
 
-   -- Disp a message during scan.
-   procedure Error_Msg_Scan (Msg: String) is
-   begin
-      Report_Msg (Msgid_Error, Scan, No_Location, Msg);
-   end Error_Msg_Scan;
-
-   procedure Error_Msg_Scan (Loc : Location_Type; Msg: String) is
-   begin
-      Report_Msg (Msgid_Error, Scan, Loc, Msg);
-   end Error_Msg_Scan;
-
-   procedure Error_Msg_Scan (Msg: String; Arg1 : Earg_Type) is
-   begin
-      Report_Msg (Msgid_Error, Scan, No_Location, Msg, (1 => Arg1));
-   end Error_Msg_Scan;
-
-   -- Disp a message during scan.
-   procedure Warning_Msg_Scan (Id : Msgid_Warnings; Msg: String) is
-   begin
-      Report_Msg (Id, Scan, No_Location, Msg);
-   end Warning_Msg_Scan;
-
-   procedure Warning_Msg_Scan (Id : Msgid_Warnings;
-                               Msg: String;
-                               Arg1 : Earg_Type;
-                               Cont : Boolean := False) is
-   begin
-      Report_Msg (Id, Scan, No_Location, Msg, (1 => Arg1), Cont);
-   end Warning_Msg_Scan;
-
    -- Disp a message during semantic analysis.
    -- LOC is used for location and current token.
    procedure Error_Msg_Sem (Msg: String; Loc: in Iir) is
