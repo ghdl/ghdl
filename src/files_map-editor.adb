@@ -113,6 +113,10 @@ package body Files_Map.Editor is
       if Lines_Tables.Last (F.Lines) /= L then
          Log_Line ("incorrect number of lines");
       end if;
+
+      if F.Lines.Table (F.Cache_Line) /= F.Cache_Pos then
+         Log_Line ("incorrect position of cache line");
+      end if;
    end Check_Buffer_Lines;
 
    --  Compute the number of character in FILE between [START_POS; END_POS)
@@ -216,6 +220,10 @@ package body Files_Map.Editor is
       --  Adjust gap.
       F.Gap_Start := New_Start;
       F.Gap_Last := New_Start + Gap_Len - 1;
+
+      --  Clear cache.
+      F.Cache_Line := 1;
+      F.Cache_Pos := Source_Ptr_Org;
    end Move_Gap;
 
    --  Count the number of newlines (LF, CR, LF+CR or CR+LF) in TEXT.
@@ -343,6 +351,10 @@ package body Files_Map.Editor is
                   L := L + 1;
                end if;
             end loop;
+
+            --  Clear cache.
+            F.Cache_Line := 1;
+            F.Cache_Pos := Source_Ptr_Org;
 
             Check_Buffer_Lines (File);
          end;
