@@ -4854,7 +4854,7 @@ package body Parse is
                else
                   Error_Msg_Parse
                     ("object class keyword such as 'variable' is expected");
-                  Eat_Tokens_Until_Semi_Colon;
+                  Resync_To_End_Of_Declaration;
                end if;
             when Tok_Semi_Colon =>
                Error_Msg_Parse ("';' (semi colon) not allowed alone");
@@ -6400,11 +6400,13 @@ package body Parse is
       Clause := Res;
       loop
          Set_Condition (Clause, Parse_Expression);
-         Expect (Tok_Then, "'then' is expected here");
          Then_Loc := Get_Token_Location;
-
-         --  Eat 'then'.
-         Scan;
+         if Current_Token = Tok_Then then
+            --  Eat 'then'.
+            Scan;
+         else
+            Expect_Error (Tok_Then, "'then' is expected here");
+         end if;
 
          Set_Sequential_Statement_Chain
            (Clause, Parse_Sequential_Statements (Res));
@@ -7081,7 +7083,18 @@ package body Parse is
                Set_Label (Stmt, Label);
             end if;
          end if;
-         Scan_Semi_Colon ("statement");
+
+         if Current_Token = Tok_Semi_Colon then
+            --  Skip ';'.
+            Scan;
+         else
+            Error_Missing_Semi_Colon ("statement");
+            Resync_To_End_Of_Statement;
+            if Current_Token = Tok_Semi_Colon then
+               --  Skip ';'.
+               Scan;
+            end if;
+         end if;
 
          --  Append it to the chain.
          if First_Stmt = Null_Iir then
