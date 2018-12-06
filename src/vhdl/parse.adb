@@ -146,13 +146,6 @@ package body Parse is
       end if;
    end Expect;
 
-   --  Scan a token and expect it.
-   procedure Scan_Expect (Token: Token_Type; Msg: String := "") is
-   begin
-      Scan;
-      Expect (Token, Msg);
-   end Scan_Expect;
-
    procedure Expect_Scan (Token: Token_Type; Msg: String := "") is
    begin
       if Current_Token = Token then
@@ -6783,11 +6776,10 @@ package body Parse is
 
       --  Skip 'end'
       End_Loc := Get_Token_Location;
-      Expect (Tok_End);
-      Scan_Expect (Tok_Loop);
+      Expect_Scan (Tok_End);
 
       --  Skip 'loop'
-      Scan;
+      Expect_Scan (Tok_Loop);
 
       Check_End_Name (Stmt);
 
@@ -6835,13 +6827,12 @@ package body Parse is
         (Stmt, Parse_Sequential_Statements (Stmt));
 
       End_Loc := Get_Token_Location;
-      Expect (Tok_End);
 
       --  Skip 'end'.
-      Scan_Expect (Tok_Loop);
+      Expect_Scan (Tok_End);
 
       --  Skip 'loop'.
-      Scan;
+      Expect_Scan (Tok_Loop);
 
       Check_End_Name (Stmt);
 
@@ -7641,7 +7632,11 @@ package body Parse is
          when Tok_Configuration =>
             Res := Create_Iir (Iir_Kind_Entity_Aspect_Configuration);
             Set_Location (Res);
-            Scan_Expect (Tok_Identifier);
+
+            --  Skip 'configuration.
+            Scan;
+
+            Expect (Tok_Identifier);
             Set_Configuration_Name (Res, Parse_Name (False));
             return Res;
 
@@ -8941,7 +8936,11 @@ package body Parse is
          when Tok_Configuration =>
             Res := Create_Iir (Iir_Kind_Entity_Aspect_Configuration);
             Set_Location (Res);
-            Scan_Expect (Tok_Identifier);
+
+            --  Skip 'configuration'.
+            Scan;
+
+            Expect (Tok_Identifier);
             Set_Configuration_Name (Res, Parse_Name (False));
          when Tok_Open =>
             Res := Create_Iir (Iir_Kind_Entity_Aspect_Open);
