@@ -206,6 +206,7 @@ package body Sem_Lib is
       Set_Current_Position (Pos + Source_Ptr (Off));
 
       --  Parse
+      Scan;
       Res := Parse.Parse_Design_Unit;
       Close_File;
       if Res = Null_Iir then

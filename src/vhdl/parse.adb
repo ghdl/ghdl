@@ -163,6 +163,20 @@ package body Parse is
       end if;
    end Expect_Scan;
 
+   --  Expect the identifier for node RES.
+   procedure Scan_Identifier (Res : Iir) is
+   begin
+      Set_Location (Res);
+      if Current_Token = Tok_Identifier then
+         Set_Identifier (Res, Current_Identifier);
+
+         --  Skip identifier.
+         Scan;
+      else
+         Expect (Tok_Identifier);
+      end if;
+   end Scan_Identifier;
+
    --  If the current_token is an identifier, it must be equal to name.
    --  In this case, a token is eaten.
    --  If the current_token is not an identifier, this is a noop.
@@ -308,8 +322,8 @@ package body Parse is
    procedure Scan_Semi_Colon_Unit (Msg : String) is
    begin
       if Current_Token = Tok_Semi_Colon then
-         --  ';' is not skipped.
-         null;
+         --  Skip ';'.
+         Scan;
       else
          Error_Missing_Semi_Colon (Msg);
 
@@ -319,7 +333,8 @@ package body Parse is
                when Tok_Eof =>
                   exit;
                when Tok_Semi_Colon =>
-                  --  ';' is not skipped.
+                  --  Skip ';'.
+                  Scan;
                   exit;
                when Tok_Library
                  | Tok_Use
@@ -1413,15 +1428,7 @@ package body Parse is
       Inter := First;
       Last := First;
       loop
-         if Current_Token = Tok_Identifier then
-            Set_Identifier (Inter, Current_Identifier);
-            Set_Location (Inter);
-
-            --  Skip identifier
-            Scan;
-         else
-            Expect (Tok_Identifier);
-         end if;
+         Scan_Identifier (Inter);
 
          exit when Current_Token /= Tok_Comma;
 
@@ -1603,32 +1610,26 @@ package body Parse is
       Inter := Create_Iir (Iir_Kind_Interface_Package_Declaration);
 
       --  Skip 'package'.
-      Scan_Expect (Tok_Identifier,
-                   "an identifier is expected after ""package""");
-      Set_Identifier (Inter, Current_Identifier);
-      Set_Location (Inter);
+      Scan;
 
-      --  Skip identifier.
-      Scan_Expect (Tok_Is);
+      Scan_Identifier (Inter);
 
       --  Skip 'is'.
-      Scan_Expect (Tok_New);
+      Expect_Scan (Tok_Is);
 
       --  Skip 'new'.
-      Scan;
+      Expect_Scan (Tok_New);
 
       Set_Uninstantiated_Package_Name (Inter, Parse_Name (False));
 
-      Expect (Tok_Generic);
-
       --  Skip 'generic'
-      Scan_Expect (Tok_Map);
+      Expect_Scan (Tok_Generic);
 
       --  Skip 'map'
-      Scan_Expect (Tok_Left_Paren);
+      Expect_Scan (Tok_Map);
 
       --  Skip '('
-      Scan;
+      Expect_Scan (Tok_Left_Paren);
 
       case Current_Token is
          when Tok_Box =>
@@ -1640,10 +1641,8 @@ package body Parse is
       end case;
       Set_Generic_Map_Aspect_Chain (Inter, Map);
 
-      Expect (Tok_Right_Paren);
-
       --  Skip ')'
-      Scan;
+      Expect_Scan (Tok_Right_Paren);
 
       return Inter;
    end Parse_Interface_Package_Declaration;
@@ -1658,6 +1657,9 @@ package body Parse is
       if Current_Token = Tok_Identifier then
          Set_Identifier (Subprg, Current_Identifier);
          Set_Location (Subprg);
+
+         --  Skip identifier.
+         Scan;
       elsif Current_Token = Tok_String then
          if Kind_In (Subprg, Iir_Kind_Procedure_Declaration,
                      Iir_Kind_Interface_Procedure_Declaration)
@@ -1671,13 +1673,13 @@ package body Parse is
          --  symbol.
          Set_Identifier (Subprg, Scan_To_Operator_Name (Get_Token_Location));
          Set_Location (Subprg);
+
+         --  Skip string.
+         Scan;
       else
          --  Just to display a parse error.
          Expect (Tok_Identifier);
       end if;
-
-      --  Eat designator (identifier or string).
-      Scan;
    end Parse_Subprogram_Designator;
 
    --  Precond: '(' or return or any
@@ -1867,13 +1869,11 @@ package body Parse is
                     ("type interface not allowed before vhdl 08");
                end if;
                Inters := Create_Iir (Iir_Kind_Interface_Type_Declaration);
-               Scan_Expect (Tok_Identifier,
-                            "an identifier is expected after 'type'");
-               Set_Identifier (Inters, Current_Identifier);
-               Set_Location (Inters);
 
-               --  Skip identifier
+               -- Skip 'type'.
                Scan;
+
+               Scan_Identifier (Inters);
             when Tok_Procedure
               | Tok_Pure
               | Tok_Impure
@@ -2281,16 +2281,9 @@ package body Parse is
 
       --  Parse primary unit.
       Unit := Create_Iir (Iir_Kind_Unit_Declaration);
-      Set_Location (Unit);
       Set_Parent (Unit, Parent);
-      if Current_Token = Tok_Identifier then
-         Set_Identifier (Unit, Current_Identifier);
 
-         --  Skip identifier
-         Scan;
-      else
-         Expect (Tok_Identifier);
-      end if;
+      Scan_Identifier (Unit);
 
       Scan_Semi_Colon ("primary physical unit");
 
@@ -2300,15 +2293,12 @@ package body Parse is
       --  Parse secondary units.
       while Current_Token = Tok_Identifier loop
          Unit := Create_Iir (Iir_Kind_Unit_Declaration);
-         Set_Location (Unit);
          Set_Parent (Unit, Parent);
-         Set_Identifier (Unit, Current_Identifier);
 
-         --  Skip identifier.
-         Scan_Expect (Tok_Equal);
+         Scan_Identifier (Unit);
 
          --  Skip '='.
-         Scan;
+         Expect_Scan (Tok_Equal);
 
          Multiplier := Parse_Primary;
          Set_Physical_Literal (Unit, Multiplier);
@@ -2376,17 +2366,11 @@ package body Parse is
          --  Parse identifier_list
          loop
             El := Create_Iir (Iir_Kind_Element_Declaration);
-            Set_Location (El);
+            Scan_Identifier (El);
+
             Set_Parent (El, Res);
             if First = Null_Iir then
                First := El;
-            end if;
-            if Current_Token = Tok_Identifier then
-               Set_Identifier (El, Current_Identifier);
-               --  Skip identifier
-               Scan;
-            else
-               Expect (Tok_Identifier);
             end if;
 
             Append_Element (El_List, El);
@@ -3007,15 +2991,7 @@ package body Parse is
       --  Eat 'subtype'.
       Scan;
 
-      Set_Location (Decl);
-      if Current_Token = Tok_Identifier then
-         Set_Identifier (Decl, Current_Identifier);
-
-         --  Skip identifier.
-         Scan;
-      else
-         Error_Msg_Parse ("identifier expected after 'type'");
-      end if;
+      Scan_Identifier (Decl);
 
       --  Skip 'is'.
       Expect_Scan (Tok_Is);
@@ -3057,12 +3033,13 @@ package body Parse is
       Ident : Name_Id;
       Decl : Iir;
    begin
-      -- The current token must be type.
+      --  Skip 'nature'.
       pragma Assert (Current_Token = Tok_Nature);
+      Scan;
 
       -- Get the identifier
-      Scan_Expect (Tok_Identifier,
-                   "an identifier is expected after 'nature'");
+      Expect (Tok_Identifier,
+              "an identifier is expected after 'nature'");
       Loc := Get_Token_Location;
       Ident := Current_Identifier;
 
@@ -3099,10 +3076,8 @@ package body Parse is
             end if;
             if Current_Token = Tok_Identifier then
                Ref := Create_Iir (Iir_Kind_Terminal_Declaration);
-               Set_Identifier (Ref, Current_Identifier);
-               Set_Location (Ref);
+               Scan_Identifier (Ref);
                Set_Reference (Def, Ref);
-               Scan;
                if Current_Token = Tok_Reference then
                   Scan;
                else
@@ -3179,27 +3154,27 @@ package body Parse is
    begin
       Sub_Chain_Init (First, Last);
 
+      --  Skip 'terminal'.
+      Scan;
+
       loop
          -- 'terminal' or "," was just scanned.
          Terminal := Create_Iir (Iir_Kind_Terminal_Declaration);
-         Scan_Expect (Tok_Identifier);
-         Set_Identifier (Terminal, Current_Identifier);
-         Set_Location (Terminal);
+
+         Scan_Identifier (Terminal);
+
          Set_Parent (Terminal, Parent);
 
          Sub_Chain_Append (First, Last, Terminal);
 
+         exit when Current_Token /= Tok_Comma;
+         --  Skip ','.
          Scan;
-         exit when Current_Token = Tok_Colon;
-         if Current_Token /= Tok_Comma then
-            Error_Msg_Parse ("',' or ':' is expected after "
-                               & "identifier in terminal declaration");
-            Scan;
-         end if;
       end loop;
 
-      -- The colon was parsed.
-      Scan;
+      --  Skip ':'.
+      Expect_Scan (Tok_Colon);
+
       Subnature := Parse_Subnature_Indication;
 
       Terminal := First;
@@ -3267,15 +3242,13 @@ package body Parse is
          --  declaration and will change to branch or source quantity if
          --  necessary.
          Object := Create_Iir (Iir_Kind_Free_Quantity_Declaration);
-         Expect (Tok_Identifier);
-         Set_Identifier (Object, Current_Identifier);
-         Set_Location (Object);
+
+         Scan_Identifier (Object);
+
          Set_Parent (Object, Parent);
 
          Sub_Chain_Append (First, Last, Object);
 
-         --  Eat identifier
-         Scan;
          exit when Current_Token /= Tok_Comma;
 
          --  Eat ','
@@ -3366,18 +3339,12 @@ package body Parse is
                      Set_Parent (Object, Parent);
                      Sub_Chain_Append (First, Last, Object);
                      exit when Current_Token /= Tok_Comma;
+                     --  Skip ','.
                      Scan;
 
                      Object := Create_Iir
                        (Iir_Kind_Through_Quantity_Declaration);
-                     Set_Location (Object);
-                     if Current_Token /= Tok_Identifier then
-                        Error_Msg_Parse
-                          ("identifier for quantity declaration expected");
-                     else
-                        Set_Identifier (Object, Current_Identifier);
-                        Scan;
-                     end if;
+                     Scan_Identifier (Object);
                      Set_Plus_Terminal (Object, Null_Iir);
 
                   end loop;
@@ -3539,16 +3506,7 @@ package body Parse is
             Set_Shared_Flag (Object, Shared);
          end if;
 
-         Set_Location (Object);
-
-         if Current_Token = Tok_Identifier then
-            Set_Identifier (Object, Current_Identifier);
-
-            --  Eat identifier.
-            Scan;
-         else
-            Expect (Tok_Identifier);
-         end if;
+         Scan_Identifier (Object);
 
          Set_Parent (Object, Parent);
 
@@ -3697,14 +3655,10 @@ package body Parse is
       end if;
 
       --  Eat 'component'.
-      Scan_Expect (Tok_Identifier,
-                   "an identifier is expected after 'component'");
-
-      Set_Identifier (Component, Current_Identifier);
-      Set_Location (Component);
-
-      --  Eat identifier.
+      pragma Assert (Current_Token = Tok_Component);
       Scan;
+
+      Scan_Identifier (Component);
 
       if Current_Token = Tok_Is then
          if Flags.Vhdl_Std = Vhdl_87 then
@@ -3791,8 +3745,10 @@ package body Parse is
       Ident : Name_Id;
       Start_Loc : Location_Type;
    begin
-      --  Skip 'alias'.
       Start_Loc := Get_Token_Location;
+
+      --  Skip 'alias'.
+      pragma Assert (Current_Token = Tok_Alias);
       Scan;
 
       Res := Create_Iir (Iir_Kind_Object_Alias_Declaration);
@@ -4014,17 +3970,22 @@ package body Parse is
       Designator : Iir;
       Loc, Start_Loc : Location_Type;
    begin
-      Expect (Tok_Attribute);
+      Start_Loc := Get_Token_Location;
 
       --  Eat 'attribute'.
-      Start_Loc := Get_Token_Location;
-      Scan_Expect (Tok_Identifier);
+      pragma Assert (Current_Token = Tok_Attribute);
+      Scan;
 
       Loc := Get_Token_Location;
-      Ident := Current_Identifier;
+      if Current_Token = Tok_Identifier then
+         Ident := Current_Identifier;
 
-      --  Skip identifier.
-      Scan;
+         --  Skip identifier.
+         Scan;
+      else
+         Expect (Tok_Identifier);
+         Ident := Null_Identifier;
+      end if;
 
       case Current_Token is
          when Tok_Colon =>
@@ -4085,13 +4046,20 @@ package body Parse is
       Loc : Location_Type;
       Ident : Name_Id;
    begin
-      Expect (Tok_Group);
-      Scan_Expect (Tok_Identifier);
-      Loc := Get_Token_Location;
-      Ident := Current_Identifier;
-
       --  Skip 'group'.
+      pragma Assert (Current_Token = Tok_Group);
       Scan;
+
+      Loc := Get_Token_Location;
+      if Current_Token = Tok_Identifier then
+         Ident := Current_Identifier;
+
+         --  Skip 'group'.
+         Scan;
+      else
+         Ident := Null_Identifier;
+         Expect (Tok_Identifier);
+      end if;
 
       case Current_Token is
          when Tok_Is =>
@@ -4869,7 +4837,7 @@ package body Parse is
    end Parse_Declarative_Part;
 
    --  precond : ENTITY
-   --  postcond: ';'.
+   --  postcond: next token.
    --
    --  [ LRM93 1.1 ]
    --  entity_declaration ::=
@@ -4900,13 +4868,14 @@ package body Parse is
          Set_Start_Location (Res, Start_Loc);
       end if;
 
-      --  Get identifier.
-      Scan_Expect (Tok_Identifier,
-                   "an identifier is expected after ""entity""");
-      Set_Identifier (Res, Current_Identifier);
-      Set_Location (Res);
+      --  Skip 'entity'.
+      pragma Assert (Current_Token = Tok_Entity);
       Scan;
 
+      --  Get identifier.
+      Scan_Identifier (Res);
+
+      --  Skip 'is'.
       Expect_Scan (Tok_Is);
 
       Parse_Generic_Port_Clauses (Res);
@@ -6515,17 +6484,13 @@ package body Parse is
       Decl : Iir_Iterator_Declaration;
    begin
       Decl := Create_Iir (Iir_Kind_Iterator_Declaration);
-      Set_Location (Decl);
       Set_Parent (Decl, Parent);
 
-      Expect (Tok_Identifier);
-      Set_Identifier (Decl, Current_Identifier);
-
       --  Skip identifier
-      Scan_Expect (Tok_In);
+      Scan_Identifier (Decl);
 
       --  Skip 'in'
-      Scan;
+      Expect_Scan (Tok_In);
 
       Set_Discrete_Range (Decl, Parse_Discrete_Range);
       return Decl;
@@ -6956,8 +6921,12 @@ package body Parse is
          Loc := Get_Token_Location;
          if Current_Token = Tok_Identifier then
             Label := Current_Identifier;
+
+            --  Skip identifier.
             Scan;
+
             if Current_Token = Tok_Colon then
+               --  Skip ':'.
                Scan;
             else
                Target := Create_Iir (Iir_Kind_Simple_Name);
@@ -8701,17 +8670,7 @@ package body Parse is
          --  Skip 'library' or ','.
          Scan;
 
-         Set_Location (Library);
-
-         if Current_Token = Tok_Identifier then
-            Set_Identifier (Library, Current_Identifier);
-
-            --  Skip identifier.
-            Scan;
-         else
-            Error_Msg_Parse ("missing library name");
-         end if;
-
+         Scan_Identifier (Library);
 
          if Flag_Elocations then
             Create_Elocations (Library);
@@ -8798,26 +8757,27 @@ package body Parse is
       Res := Create_Iir (Iir_Kind_Architecture_Body);
       Start_Loc := Get_Token_Location;
 
-      -- Get identifier.
-      Scan_Expect (Tok_Identifier);
-      Set_Identifier (Res, Current_Identifier);
-      Set_Location (Res);
-
-      --  Skip identifier.
+      --  Skip 'architecture'.
       Scan;
+
+      --  Identifier.
+      Scan_Identifier (Res);
+
       if Current_Token = Tok_Is then
          Error_Msg_Parse ("architecture identifier is missing");
-      else
-         Expect (Tok_Of);
 
-         --  Skip 'of'.
+         --  Skip 'is'.
          Scan;
+      else
+         --  Skip 'of'.
+         Expect_Scan (Tok_Of);
+
          Set_Entity_Name (Res, Parse_Name (False));
-         Expect (Tok_Is);
+
+         --  Skip 'is'.
+         Expect_Scan (Tok_Is);
       end if;
 
-      --  Skip 'is'.
-      Scan;
       Parse_Declarative_Part (Res);
 
       --  Skip 'begin'.
@@ -8916,13 +8876,19 @@ package body Parse is
    begin
       List := Parse_Instantiation_List;
       Set_Instantiation_List (Res, List);
-      Expect (Tok_Colon);
-      Scan_Expect (Tok_Identifier);
+
+      --  Skip ':'.
+      Expect_Scan (Tok_Colon);
+
+      Expect (Tok_Identifier);
       Set_Component_Name (Res, Parse_Name);
    end Parse_Component_Specification;
 
    --  precond : next token
    --  postcond: next token
+   --
+   --  [ LRM93 5.2.1.1 ]
+   --  entity_aspect ::= ENTITY ENTITY_name [ ( ARCHITECTURE_identifier ) ]
    function Parse_Entity_Aspect_Entity return Iir
    is
       Res : Iir;
@@ -9025,7 +8991,7 @@ package body Parse is
    end Parse_Binding_Indication;
 
    --  precond : ':' after instantiation_list.
-   --  postcond: ';'
+   --  postcond: next token.
    --
    --  [ LRM93 1.3.2 ]
    --  component_configuration ::=
@@ -9042,10 +9008,14 @@ package body Parse is
       Res := Create_Iir (Iir_Kind_Component_Configuration);
       Set_Location (Res, Loc);
 
+      --  Skip ':'.
+      pragma Assert (Current_Token = Tok_Colon);
+      Scan;
+
       --  Component specification.
       Set_Instantiation_List (Res, Inst_List);
-      Expect (Tok_Colon);
-      Scan_Expect (Tok_Identifier);
+
+      Expect (Tok_Identifier);
       Set_Component_Name (Res, Parse_Name);
 
       case Current_Token is
@@ -9059,17 +9029,15 @@ package body Parse is
       end case;
       if Current_Token = Tok_For then
          Set_Block_Configuration (Res, Parse_Block_Configuration);
-         --  Eat ';'.
-         Scan;
       end if;
       Expect_Scan (Tok_End);
       Expect_Scan (Tok_For);
-      Expect (Tok_Semi_Colon);
+      Expect_Scan (Tok_Semi_Colon);
       return Res;
    end Parse_Component_Configuration;
 
    --  precond : FOR
-   --  postcond: ';'
+   --  postcond: next token.
    --
    --  [ LRM93 1.3.1 ]
    --  block_configuration ::=
@@ -9116,13 +9084,11 @@ package body Parse is
          Build_Init (Last);
          while Current_Token = Tok_For loop
             Append (Last, Res, Parse_Configuration_Item);
-            --  Eat ';'.
-            Scan;
          end loop;
       end;
       Expect_Scan (Tok_End);
       Expect_Scan (Tok_For);
-      Expect (Tok_Semi_Colon);
+      Expect_Scan (Tok_Semi_Colon);
       return Res;
    end Parse_Block_Configuration_Suffix;
 
@@ -9131,15 +9097,15 @@ package body Parse is
       Loc : Location_Type;
    begin
       Loc := Get_Token_Location;
-      Expect (Tok_For);
 
-      --  Parse label.
-      Scan;
+      --  Skip 'for'.
+      Expect_Scan (Tok_For);
+
       return Parse_Block_Configuration_Suffix (Loc, Parse_Name);
    end Parse_Block_Configuration;
 
    --  precond : FOR
-   --  postcond: ';'
+   --  postcond: next token.
    --
    --  [ LRM93 1.3.1 ]
    --  configuration_item ::= block_configuration
@@ -9158,14 +9124,23 @@ package body Parse is
       --  Thus, the rule is a component_configuration.
       case Current_Token is
          when Tok_All =>
+            --  Skip 'all'.
             Scan;
+
             return Parse_Component_Configuration (Loc, Iir_Flist_All);
+
          when Tok_Others =>
+            --  Skip 'others'.
             Scan;
+
             return Parse_Component_Configuration (Loc, Iir_Flist_Others);
+
          when Tok_Identifier =>
             El := Current_Text;
+
+            --  Skip identifier.
             Scan;
+
             case Current_Token is
                when Tok_Colon =>
                   --  The identifier was a label from an instantiation list.
@@ -9260,7 +9235,7 @@ package body Parse is
    end Parse_Configuration_Declarative_Part;
 
    --  precond : CONFIGURATION
-   --  postcond: ';'.
+   --  postcond: next token.
    --
    --  [ LRM93 1.3 ]
    --  configuration_declaration ::=
@@ -9281,13 +9256,12 @@ package body Parse is
       Res := Create_Iir (Iir_Kind_Configuration_Declaration);
       Start_Loc := Get_Token_Location;
 
-      -- Get identifier.
-      Scan_Expect (Tok_Identifier);
-      Set_Identifier (Res, Current_Identifier);
-      Set_Location (Res);
-
-      --  Skip identifier.
+      --  Skip 'configuration'.
+      pragma Assert (Current_Token = Tok_Configuration);
       Scan;
+
+      --  Get identifier.
+      Scan_Identifier (Res);
 
       --  Skip 'of'.
       Expect_Scan (Tok_Of);
@@ -9301,11 +9275,9 @@ package body Parse is
 
       Set_Block_Configuration (Res, Parse_Block_Configuration);
 
-      Scan_Expect (Tok_End);
       End_Loc := Get_Token_Location;
-
       --  Skip 'end'.
-      Scan;
+      Expect_Scan (Tok_End);
 
       if Current_Token = Tok_Configuration then
          if Flags.Vhdl_Std = Vhdl_87 then
@@ -9356,7 +9328,7 @@ package body Parse is
    end Parse_Package_Header;
 
    --  precond : token (after 'IS')
-   --  postcond: ';'.
+   --  postcond: next token.
    --
    --  [ LRM93 2.5, LRM08 4.7 ]
    --  package_declaration ::=
@@ -9411,7 +9383,7 @@ package body Parse is
    end Parse_Package_Declaration;
 
    --  precond : BODY
-   --  postcond: ';'.
+   --  postcond: next token.
    --
    --  [ LRM93 2.6, LRM08 4.8 ]
    --  package_body ::=
@@ -9424,22 +9396,20 @@ package body Parse is
       End_Loc : Location_Type;
    begin
       Res := Create_Iir (Iir_Kind_Package_Body);
-      Set_Location (Res);
       Set_Parent (Res, Parent);
 
       -- Get identifier.
-      Expect (Tok_Identifier);
-      Set_Identifier (Res, Current_Identifier);
-      Scan_Expect (Tok_Is);
-      Scan;
+      Scan_Identifier (Res);
+
+      --  Skip 'is'.
+      Expect_Scan (Tok_Is);
 
       Parse_Declarative_Part (Res);
 
-      Expect (Tok_End);
       End_Loc := Get_Token_Location;
 
       --  Skip 'end'
-      Scan;
+      Expect_Scan (Tok_End);
 
       if Current_Token = Tok_Package then
          if Flags.Vhdl_Std = Vhdl_87 then
@@ -9510,7 +9480,7 @@ package body Parse is
    end Parse_Package_Instantiation_Declaration;
 
    --  precond : PACKAGE
-   --  postcond: ';'
+   --  postcond: next token.
    --
    --    package_declaration
    --  | package_body
@@ -9532,12 +9502,15 @@ package body Parse is
 
          Res := Parse_Package_Body (Parent);
       else
-         Expect (Tok_Identifier);
-         Id := Current_Identifier;
          Loc := Get_Token_Location;
+         if Current_Token = Tok_Identifier then
+            Id := Current_Identifier;
 
-         --  Skip identifier.
-         Scan;
+            --  Skip identifier.
+            Scan;
+         else
+            Expect (Tok_Identifier);
+         end if;
 
          --  Skip 'is'.
          Expect_Scan (Tok_Is);
@@ -9597,9 +9570,6 @@ package body Parse is
                   end if;
 
                   return;
-               else
-                  --  Skip ';'.
-                  Scan;
                end if;
             when Tok_With =>
                --  Be Ada friendly.
@@ -9654,7 +9624,7 @@ package body Parse is
    end Parse_Context_Declaration;
 
    --  Precond:  next token after selected_name.
-   --  Postcond: ;
+   --  Postcond: next token
    --
    --  [ LRM08 13.4 Context clauses ]
    --
@@ -9740,12 +9710,9 @@ package body Parse is
       Res: Iir_Design_Unit;
       Unit: Iir;
    begin
-      --  Internal check: there must be no current_token.
-      pragma Assert (Current_Token = Tok_Invalid);
       pragma Assert (Parenthesis_Depth = 0);
 
       --  Read the first token.
-      Scan;
       if Current_Token = Tok_Eof then
          return Null_Iir;
       end if;
@@ -9786,7 +9753,6 @@ package body Parse is
       Set_Design_Unit (Unit, Res);
       Set_Identifier (Res, Get_Identifier (Unit));
       Set_Date (Res, Date_Parsed);
-      Invalidate_Current_Token;
       return Res;
    end Parse_Design_Unit;
 
@@ -9797,12 +9763,16 @@ package body Parse is
       Res : Iir_Design_File;
       Design, Last_Design : Iir_Design_Unit;
    begin
+      --  The first token.
+      pragma Assert (Current_Token = Tok_Invalid);
+      Scan;
+
       Res := Create_Iir (Iir_Kind_Design_File);
       Set_Location (Res);
 
       Last_Design := Null_Iir;
       loop
-         Design := Parse.Parse_Design_Unit;
+         Design := Parse_Design_Unit;
          exit when Design = Null_Iir;
          Set_Design_File (Design, Res);
 
