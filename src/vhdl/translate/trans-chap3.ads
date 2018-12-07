@@ -285,8 +285,9 @@ package Trans.Chap3 is
    procedure Elab_Array_Subtype (Arr_Type : Iir);
 
    --  Create the bounds for SUB_TYPE.
-   --  SUB_TYPE is expected to be a non-static, anonymous array type.
-   procedure Create_Array_Subtype (Sub_Type : Iir);
+   --  SUB_TYPE is expected to be a non-static, anonymous array or record
+   --  subtype.
+   procedure Create_Composite_Subtype (Sub_Type : Iir);
 
    --  Return TRUE if VALUE is not is the range specified by ATYPE.
    --  VALUE must be stable.

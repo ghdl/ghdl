@@ -445,7 +445,7 @@ package body Trans.Chap7 is
       if Get_Constraint_State (Str_Type) = Fully_Constrained
         and then Are_Array_Indexes_Locally_Static (Str_Type)
       then
-         Chap3.Create_Array_Subtype (Str_Type);
+         Chap3.Create_Composite_Subtype (Str_Type);
          case Get_Kind (Str) is
             when Iir_Kind_String_Literal8 =>
                Res := Translate_Static_String_Literal8 (Str);
@@ -3628,7 +3628,7 @@ package body Trans.Chap7 is
             begin
                Sub_Type := Get_Subtype_Indication (Expr);
                Sub_Type := Get_Type_Of_Subtype_Indication (Sub_Type);
-               Chap3.Create_Array_Subtype (Sub_Type);
+               Chap3.Create_Composite_Subtype (Sub_Type);
 
                Ptr := Create_Temp (A_Info.Ortho_Type (Mode_Value));
 
@@ -4063,10 +4063,7 @@ package body Trans.Chap7 is
                      null;
                   end if;
 
-                  if Get_Kind (Aggr_Type) = Iir_Kind_Array_Subtype_Definition
-                  then
-                     Chap3.Create_Array_Subtype (Aggr_Type);
-                  end if;
+                  Chap3.Create_Composite_Subtype (Aggr_Type);
 
                   --  FIXME: this may be not necessary
                   Tinfo := Get_Info (Aggr_Type);

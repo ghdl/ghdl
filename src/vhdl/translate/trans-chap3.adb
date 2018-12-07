@@ -3107,7 +3107,7 @@ package body Trans.Chap3 is
       Chap3.Elab_Composite_Subtype_Layout (Arr_Type);
    end Elab_Array_Subtype;
 
-   procedure Create_Array_Subtype (Sub_Type : Iir)
+   procedure Create_Composite_Subtype (Sub_Type : Iir)
    is
       Mark : Id_Mark_Type;
    begin
@@ -3120,7 +3120,7 @@ package body Trans.Chap3 is
       --  Force creation of variables.
       Chap3.Create_Composite_Subtype_Layout_Var (Sub_Type, True);
       Pop_Identifier_Prefix (Mark);
-   end Create_Array_Subtype;
+   end Create_Composite_Subtype;
 
    --  Copy SRC to DEST.
    --  Both have the same type, OTYPE.

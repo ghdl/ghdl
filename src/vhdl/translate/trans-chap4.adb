@@ -548,7 +548,7 @@ package body Trans.Chap4 is
             declare
                Aggr_Type : constant Iir := Get_Type (Value);
             begin
-               Chap3.Create_Array_Subtype (Aggr_Type);
+               Chap3.Create_Composite_Subtype (Aggr_Type);
                Name_Node := Stabilize (Name);
                if Alloc_Kind = Alloc_Stack then
                   --  Short-cut: don't allocate bounds.

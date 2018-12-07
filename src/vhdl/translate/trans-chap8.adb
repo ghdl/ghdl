@@ -2811,7 +2811,7 @@ package body Trans.Chap8 is
                      --  FIXME: do not allocate bounds if static.
                      if Mode = Mode_Value then
                         if Get_Type_Staticness (Actual_Type) >= Globally then
-                           Chap3.Create_Array_Subtype (Actual_Type);
+                           Chap3.Create_Composite_Subtype (Actual_Type);
                            Bounds :=
                              Chap3.Get_Composite_Type_Bounds (Actual_Type);
                            Chap3.Translate_Object_Allocation

@@ -544,7 +544,7 @@ package body Trans.Chap5 is
          Bounds_Copy : Mnode;
       begin
          if Is_Fully_Constrained_Type (Actual_Type) then
-            Chap3.Create_Array_Subtype (Actual_Type);
+            Chap3.Create_Composite_Subtype (Actual_Type);
             Bounds := Chap3.Get_Composite_Type_Bounds (Actual_Type);
             Tinfo := Get_Info (Actual_Type);
             if Save
@@ -636,14 +636,14 @@ package body Trans.Chap5 is
                Actual_Type : constant Iir :=
                  Get_Type (Get_Default_Value (Port));
             begin
-               Chap3.Create_Array_Subtype (Actual_Type);
+               Chap3.Create_Composite_Subtype (Actual_Type);
                Bounds := Chap3.Get_Composite_Type_Bounds (Actual_Type);
             end;
          when Iir_Kind_Association_Element_By_Individual =>
             declare
                Actual_Type : constant Iir := Get_Actual_Type (Assoc);
             begin
-               Chap3.Create_Array_Subtype (Actual_Type);
+               Chap3.Create_Composite_Subtype (Actual_Type);
                Bounds := Chap3.Get_Composite_Type_Bounds (Actual_Type);
             end;
       end case;
@@ -829,7 +829,7 @@ package body Trans.Chap5 is
                      Chap4.Allocate_Complex_Object
                        (Formal_Type, Alloc_System, Formal_Node);
                   else
-                     Chap3.Create_Array_Subtype (Obj_Type);
+                     Chap3.Create_Composite_Subtype (Obj_Type);
                      Bounds := Chap3.Get_Composite_Type_Bounds (Obj_Type);
                      Chap3.Translate_Object_Allocation
                        (Formal_Node, Alloc_System, Formal_Type, Bounds);
