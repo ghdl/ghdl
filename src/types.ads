@@ -70,6 +70,7 @@ package Types is
 
    --  Null entry in the name table.
    --  It is sure that this entry is never allocated.
+   No_Name_Id : constant Name_Id := 0;
    Null_Identifier: constant Name_Id := 0;
 
    --  A String8_Id represents a string stored in a dedicated table.  Contrary
@@ -164,7 +165,7 @@ package Types is
 
    --  Self-explaining: raised when an internal error (such as consistency)
    --  is detected.
-   Internal_Error: exception;
+   Internal_Error : exception;
 
    --  Unrecoverable error.  Just exit() with an error status.
    Fatal_Error : exception;
@@ -176,4 +177,6 @@ package Types is
 
    --  Result of a comparaison of two numeric values.
    type Order_Type is (Less, Equal, Greater);
+
+   subtype Hash_Value_Type is Uns32;
 end Types;
