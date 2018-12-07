@@ -338,8 +338,9 @@ package Std_Names is
    Name_Typedef :        constant Name_Id := Name_First_SV3_0 + 33;
    Name_Union :          constant Name_Id := Name_First_SV3_0 + 34;
    Name_Unique :         constant Name_Id := Name_First_SV3_0 + 35;
-   Name_Void :           constant Name_Id := Name_First_SV3_0 + 36;
-   Name_Last_SV3_0 :     constant Name_Id := Name_First_SV3_0 + 36;
+   Name_Unique0 :        constant Name_Id := Name_First_SV3_0 + 36;
+   Name_Void :           constant Name_Id := Name_First_SV3_0 + 37;
+   Name_Last_SV3_0 :     constant Name_Id := Name_First_SV3_0 + 37;
 
    Name_First_SV3_1 :    constant Name_Id := Name_Last_SV3_0 + 1;
    Name_Chandle :        constant Name_Id := Name_First_SV3_1 + 0;
@@ -670,8 +671,9 @@ package Std_Names is
    Name_Control_Simulation :    constant Name_Id := Name_First_Misc + 030;
    Name_Step :                  constant Name_Id := Name_First_Misc + 031;
    Name_Index :                 constant Name_Id := Name_First_Misc + 032;
-   Name_Uu_File_Uu :            constant Name_Id := Name_First_Misc + 033;
-   Name_Uu_Line_Uu :            constant Name_Id := Name_First_Misc + 034;
+   Name_Item :                  constant Name_Id := Name_First_Misc + 033;
+   Name_Uu_File_Uu :            constant Name_Id := Name_First_Misc + 034;
+   Name_Uu_Line_Uu :            constant Name_Id := Name_First_Misc + 035;
    Name_Last_Misc :             constant Name_Id := Name_Uu_Line_Uu;
 
    Name_First_Ieee         : constant Name_Id := Name_Last_Misc + 1;
@@ -733,7 +735,16 @@ package Std_Names is
    Name_Len :               constant Name_Id := Name_First_SV_Method + 8;
    Name_Substr :            constant Name_Id := Name_First_SV_Method + 9;
    Name_Exists :            constant Name_Id := Name_First_SV_Method + 10;
-   Name_Last_SV_Method :    constant Name_Id := Name_Exists;
+   Name_Atoi :              constant Name_Id := Name_First_SV_Method + 11;
+   Name_Itoa :              constant Name_Id := Name_First_SV_Method + 12;
+   Name_Find :              constant Name_Id := Name_First_SV_Method + 13;
+   Name_Find_Index :        constant Name_Id := Name_First_SV_Method + 14;
+   Name_Find_First :        constant Name_Id := Name_First_SV_Method + 15;
+   Name_Find_First_Index :  constant Name_Id := Name_First_SV_Method + 16;
+   Name_Find_Last :         constant Name_Id := Name_First_SV_Method + 17;
+   Name_Find_Last_Index :   constant Name_Id := Name_First_SV_Method + 18;
+   Name_Num :               constant Name_Id := Name_First_SV_Method + 19;
+   Name_Last_SV_Method :    constant Name_Id := Name_Num;
 
    --  BSV names
    Name_First_BSV :         constant Name_Id := Name_Last_SV_Method + 1;
