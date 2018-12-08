@@ -739,22 +739,29 @@ package body Sem_Types is
    --  - [...]
    --  - It is a record subtype and each element subtype either is not a
    --    composite subtype or is a fully constrained composite subtype.
-   procedure Update_Record_Constraint
-     (Constraint : in out Iir_Constraint; El_Type : Iir) is
+   procedure Update_Record_Constraint (Constraint : in out Iir_Constraint;
+                                       Composite_Found : in out Boolean;
+                                       El_Type : Iir) is
    begin
       if Get_Kind (El_Type) not in Iir_Kinds_Composite_Type_Definition then
+         pragma Assert (Composite_Found or Constraint = Fully_Constrained);
          return;
       end if;
 
-      case Constraint is
-         when Fully_Constrained
-           | Unconstrained =>
-            if Get_Constraint_State (El_Type) /= Constraint then
+      if Composite_Found then
+         case Constraint is
+            when Fully_Constrained
+              | Unconstrained =>
+               if Get_Constraint_State (El_Type) /= Constraint then
+                  Constraint := Partially_Constrained;
+               end if;
+            when Partially_Constrained =>
                Constraint := Partially_Constrained;
-            end if;
-         when Partially_Constrained =>
-            Constraint := Partially_Constrained;
-      end case;
+         end case;
+      else
+         Composite_Found := True;
+         Constraint := Get_Constraint_State (El_Type);
+      end if;
    end Update_Record_Constraint;
 
    function Get_Array_Constraint (Def : Iir) return Iir_Constraint
@@ -847,6 +854,7 @@ package body Sem_Types is
       Resolved_Flag : Boolean;
       Type_Staticness : Iir_Staticness;
       Constraint : Iir_Constraint;
+      Composite_Found : Boolean;
    begin
       --  LRM 10.1
       --  5. A record type declaration,
@@ -856,6 +864,7 @@ package body Sem_Types is
       Last_Type := Null_Iir;
       Type_Staticness := Locally;
       Constraint := Fully_Constrained;
+      Composite_Found := False;
       Set_Signal_Type_Flag (Def, True);
 
       for I in Flist_First .. Flist_Last (El_List) loop
@@ -894,7 +903,7 @@ package body Sem_Types is
               Resolved_Flag and Get_Resolved_Flag (El_Type);
             Type_Staticness := Min (Type_Staticness,
                                     Get_Type_Staticness (El_Type));
-            Update_Record_Constraint (Constraint, El_Type);
+            Update_Record_Constraint (Constraint, Composite_Found, El_Type);
          else
             Type_Staticness := None;
          end if;
@@ -1970,6 +1979,7 @@ package body Sem_Types is
             Res_Els : Iir_Array (0 .. Nbr_Els - 1) := (others => Null_Iir);
             Pos : Natural;
             Constraint : Iir_Constraint;
+            Composite_Found : Boolean;
             Staticness : Iir_Staticness;
          begin
             --  Fill ELS with record constraints.
@@ -2052,6 +2062,7 @@ package body Sem_Types is
             El_List := Create_Iir_Flist (Nbr_Els);
             Set_Elements_Declaration_List (Res, El_List);
             Constraint := Fully_Constrained;
+            Composite_Found := False;
             Staticness := Locally;
             for I in Els'Range loop
                Tm_El := Get_Nth_Element (Tm_El_List, I);
@@ -2082,7 +2093,7 @@ package body Sem_Types is
                   Set_Element_Position (El, Get_Element_Position (Tm_El));
                end if;
                Set_Nth_Element (El_List, I, El);
-               Update_Record_Constraint (Constraint, El_Type);
+               Update_Record_Constraint (Constraint, Composite_Found, El_Type);
                Staticness := Min (Staticness, Get_Type_Staticness (El_Type));
             end loop;
             Set_Constraint_State (Res, Constraint);

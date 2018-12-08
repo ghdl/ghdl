@@ -3171,11 +3171,13 @@ package body Sem_Expr is
             Rec_El : Iir;
             Rec_El_Type : Iir;
             Constraint : Iir_Constraint;
+            Composite_Found : Boolean;
             Staticness : Iir_Staticness;
          begin
             Rec_Type := Sem_Types.Copy_Subtype_Indication (Get_Type (Aggr));
             Rec_El_List := Get_Elements_Declaration_List (Rec_Type);
             Constraint := Fully_Constrained;
+            Composite_Found := False;
             Staticness := Locally;
             for I in Flist_First .. Flist_Last (El_List) loop
                El := Matches (I);
@@ -3190,7 +3192,8 @@ package body Sem_Expr is
                end if;
                Staticness := Min (Staticness,
                                   Get_Type_Staticness (Rec_El_Type));
-               Sem_Types.Update_Record_Constraint (Constraint, Rec_El_Type);
+               Sem_Types.Update_Record_Constraint
+                 (Constraint, Composite_Found, Rec_El_Type);
             end loop;
             Set_Type_Staticness (Rec_Type, Staticness);
             Set_Constraint_State (Rec_Type, Constraint);
