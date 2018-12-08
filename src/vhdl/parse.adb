@@ -285,6 +285,32 @@ package body Parse is
       end loop;
    end Resync_To_End_Of_Declaration;
 
+   procedure Resync_To_Next_Unit is
+   begin
+      --  Resync.
+      loop
+         case Current_Token is
+            when Tok_Eof =>
+               exit;
+            when Tok_Semi_Colon =>
+               --  Skip ';'.
+               Scan;
+               exit;
+            when Tok_Library
+              | Tok_Use
+              | Tok_Architecture
+              | Tok_Entity
+              | Tok_Package
+              | Tok_Configuration
+              | Tok_Context =>
+               --  Possible start of a new unit.
+               exit;
+            when others =>
+               Scan;
+         end case;
+      end loop;
+   end Resync_To_Next_Unit;
+
    procedure Error_Missing_Semi_Colon (Msg : String) is
    begin
       Error_Msg_Parse (Get_Prev_Location, "missing "";"" at end of " & Msg);
@@ -319,29 +345,7 @@ package body Parse is
          Scan;
       else
          Error_Missing_Semi_Colon (Msg);
-
-         --  Resync.
-         loop
-            case Current_Token is
-               when Tok_Eof =>
-                  exit;
-               when Tok_Semi_Colon =>
-                  --  Skip ';'.
-                  Scan;
-                  exit;
-               when Tok_Library
-                 | Tok_Use
-                 | Tok_Architecture
-                 | Tok_Entity
-                 | Tok_Package
-                 | Tok_Configuration
-                 | Tok_Context =>
-                  --  Possible start of a new unit.
-                  exit;
-               when others =>
-                  Scan;
-            end case;
-         end loop;
+         Resync_To_Next_Unit;
       end if;
    end Scan_Semi_Colon_Unit;
 
@@ -9711,11 +9715,6 @@ package body Parse is
    begin
       pragma Assert (Parenthesis_Depth = 0);
 
-      --  Read the first token.
-      if Current_Token = Tok_Eof then
-         return Null_Iir;
-      end if;
-
       -- Create the design unit node.
       Res := Create_Iir (Iir_Kind_Design_Unit);
       Set_Location (Res);
@@ -9741,10 +9740,12 @@ package body Parse is
                else
                   Error_Empty;
                end if;
-               return Null_Iir;
+               Resync_To_Next_Unit;
+               return Res;
             when others =>
                Error_Empty;
-               return Null_Iir;
+               Resync_To_Next_Unit;
+               return Res;
          end case;
       end if;
 
@@ -9770,9 +9771,8 @@ package body Parse is
       Set_Location (Res);
 
       Last_Design := Null_Iir;
-      loop
+      while Current_Token /= Tok_Eof loop
          Design := Parse_Design_Unit;
-         exit when Design = Null_Iir;
          Set_Design_File (Design, Res);
 
          --  Append unit to the design file.
