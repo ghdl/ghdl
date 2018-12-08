@@ -58,8 +58,8 @@ package Sem_Types is
 
    --  Return the constraint state from CONST (the initial state) and EL_TYPE,
    --  as if ATYPE was a new element of a record.
-   function Update_Record_Constraint
-     (Constraint : Iir_Constraint; El_Type : Iir) return Iir_Constraint;
+   procedure Update_Record_Constraint
+     (Constraint : in out Iir_Constraint; El_Type : Iir);
 
    --  Although a nature is not a type, it is patterned like a type.
    function Sem_Subnature_Indication (Def: Iir) return Iir;

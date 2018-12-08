@@ -739,23 +739,21 @@ package body Sem_Types is
    --  - [...]
    --  - It is a record subtype and each element subtype either is not a
    --    composite subtype or is a fully constrained composite subtype.
-   function Update_Record_Constraint
-     (Constraint : Iir_Constraint; El_Type : Iir) return Iir_Constraint is
+   procedure Update_Record_Constraint
+     (Constraint : in out Iir_Constraint; El_Type : Iir) is
    begin
       if Get_Kind (El_Type) not in Iir_Kinds_Composite_Type_Definition then
-         return Constraint;
+         return;
       end if;
 
       case Constraint is
          when Fully_Constrained
            | Unconstrained =>
-            if Get_Constraint_State (El_Type) = Constraint then
-               return Constraint;
-            else
-               return Partially_Constrained;
+            if Get_Constraint_State (El_Type) /= Constraint then
+               Constraint := Partially_Constrained;
             end if;
          when Partially_Constrained =>
-            return Partially_Constrained;
+            Constraint := Partially_Constrained;
       end case;
    end Update_Record_Constraint;
 
@@ -896,7 +894,7 @@ package body Sem_Types is
               Resolved_Flag and Get_Resolved_Flag (El_Type);
             Type_Staticness := Min (Type_Staticness,
                                     Get_Type_Staticness (El_Type));
-            Constraint := Update_Record_Constraint (Constraint, El_Type);
+            Update_Record_Constraint (Constraint, El_Type);
          else
             Type_Staticness := None;
          end if;
@@ -2084,7 +2082,7 @@ package body Sem_Types is
                   Set_Element_Position (El, Get_Element_Position (Tm_El));
                end if;
                Set_Nth_Element (El_List, I, El);
-               Constraint := Update_Record_Constraint (Constraint, El_Type);
+               Update_Record_Constraint (Constraint, El_Type);
                Staticness := Min (Staticness, Get_Type_Staticness (El_Type));
             end loop;
             Set_Constraint_State (Res, Constraint);

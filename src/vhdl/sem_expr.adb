@@ -3190,8 +3190,7 @@ package body Sem_Expr is
                end if;
                Staticness := Min (Staticness,
                                   Get_Type_Staticness (Rec_El_Type));
-               Constraint := Sem_Types.Update_Record_Constraint (Constraint,
-                                                                 Rec_El_Type);
+               Sem_Types.Update_Record_Constraint (Constraint, Rec_El_Type);
             end loop;
             Set_Type_Staticness (Rec_Type, Staticness);
             Set_Constraint_State (Rec_Type, Constraint);
