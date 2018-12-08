@@ -3196,6 +3196,7 @@ package body Sem_Expr is
             Set_Type_Staticness (Rec_Type, Staticness);
             Set_Constraint_State (Rec_Type, Constraint);
             Set_Type (Aggr, Rec_Type);
+            Set_Literal_Subtype (Aggr, Rec_Type);
          end;
       end if;
 
