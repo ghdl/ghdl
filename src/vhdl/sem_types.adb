@@ -1424,7 +1424,6 @@ package body Sem_Types is
             Set_Subtype_Indication (New_El, Null_Iir);
          when Iir_Kind_Record_Element_Constraint =>
             New_El := Create_Iir (Iir_Kind_Record_Element_Constraint);
-            Set_Element_Declaration (New_El, Get_Element_Declaration (El));
          when others =>
             Error_Kind ("copy_record_element_declaration", El);
       end case;
@@ -1926,6 +1925,7 @@ package body Sem_Types is
 
       case Get_Kind (Def) is
          when Iir_Kind_Subtype_Definition =>
+            --  Just an alias, without new constraints.
             Free_Name (Def);
             Set_Signal_Type_Flag (Res, Get_Signal_Type_Flag (Type_Mark));
             Set_Constraint_State (Res, Get_Constraint_State (Type_Mark));
@@ -1954,6 +1954,7 @@ package body Sem_Types is
             Error_Kind ("sem_record_constraint", Def);
       end case;
 
+      --  Handle resolution.
       Res_List := Null_Iir_Flist;
       if Resolution /= Null_Iir then
          case Get_Kind (Resolution) is
@@ -1993,7 +1994,6 @@ package body Sem_Types is
                      --  doesn't exist.
                      Error_Msg_Sem (+El, "%n has no %n", (+Type_Mark, +El));
                   else
-                     Set_Element_Declaration (El, Tm_El);
                      Set_Base_Element_Declaration
                        (El, Get_Base_Element_Declaration (Tm_El));
                      Pos := Natural (Get_Element_Position (Tm_El));
@@ -2050,7 +2050,7 @@ package body Sem_Types is
                         Error_Msg_Sem
                           (+Els (Pos), " (location of previous constrained)");
                      else
-                        Res_Els (Pos) := Get_Element_Declaration (El);
+                        Res_Els (Pos) := Tm_El;
                      end if;
                   end if;
                   --Free_Iir (El);
@@ -2076,7 +2076,6 @@ package body Sem_Types is
                      --  Only a resolution constraint.
                      El := Create_Iir (Iir_Kind_Record_Element_Constraint);
                      Location_Copy (El, Tm_El);
-                     Set_Element_Declaration (El, Tm_El);
                      Set_Base_Element_Declaration
                        (El, Get_Base_Element_Declaration (Tm_El));
                      El_Type := Null_Iir;

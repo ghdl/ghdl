@@ -1802,10 +1802,6 @@ package Iirs is
    --
    --   Get/Set_Type (Field1)
    --
-   --  Corresponding element_declaration.  FIXME: remove as superseeded by
-   --  element_position.
-   --   Get/Set_Element_Declaration (Field5)
-   --
    --   Get/Set_Identifier (Field3)
    --
    --  Return the position of the element in the record, starting from 0 for
@@ -6481,10 +6477,6 @@ package Iirs is
    --  Field: Field2 Ref
    function Get_Base_Element_Declaration (Target : Iir) return Iir;
    procedure Set_Base_Element_Declaration (Target : Iir; El : Iir);
-
-   --  Field: Field5
-   function Get_Element_Declaration (Target : Iir) return Iir;
-   procedure Set_Element_Declaration (Target : Iir; El : Iir);
 
    --  Field: Field2 Ref
    function Get_Selected_Element (Target : Iir) return Iir;
