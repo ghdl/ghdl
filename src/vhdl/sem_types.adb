@@ -727,6 +727,18 @@ package body Sem_Types is
 
    --  Return the constraint state from CONST (the initial state) and EL_TYPE,
    --  as if ATYPE was a new element of a record.
+   --
+   --  LRM08 5 Types
+   --  A composite subtype is said to be unconstrained if:
+   --  - [...]
+   --  - It is a record subtype with at least one element of a composite
+   --    subtype and each element that is of a composite subtype is
+   --    unconstrained.
+   --
+   --  A composite subtype is said to be fully constrained if:
+   --  - [...]
+   --  - It is a record subtype and each element subtype either is not a
+   --    composite subtype or is a fully constrained composite subtype.
    function Update_Record_Constraint
      (Constraint : Iir_Constraint; El_Type : Iir) return Iir_Constraint is
    begin
