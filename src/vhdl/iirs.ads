@@ -1786,11 +1786,6 @@ package Iirs is
    --  present for uniformity (and speed).
    --   Get/Set_Type (Field1)
    --
-   --  The 'primary' element declaration, the one declared in the record type
-   --  definition.  Other element declarations might be created for new
-   --  constraints in record subtypes.
-   --   Get/Set_Base_Element_Declaration (Field2)
-   --
    --   Get/Set_Has_Identifier_List (Flag3)
    --
    --   Get/Set_Visible_Flag (Flag4)
@@ -1807,8 +1802,6 @@ package Iirs is
    --  Return the position of the element in the record, starting from 0 for
    --  the first record element, increasing by one for each successive element.
    --   Get/Set_Element_Position (Field4)
-   --
-   --   Get/Set_Base_Element_Declaration (Field2)
    --
    --   Get/Set_Visible_Flag (Flag4)
 
@@ -6473,10 +6466,6 @@ package Iirs is
    --  Field: Field4 (pos)
    function Get_Element_Position (Target : Iir) return Iir_Index32;
    procedure Set_Element_Position (Target : Iir; Pos : Iir_Index32);
-
-   --  Field: Field2 Ref
-   function Get_Base_Element_Declaration (Target : Iir) return Iir;
-   procedure Set_Base_Element_Declaration (Target : Iir; El : Iir);
 
    --  Field: Field2 Ref
    function Get_Selected_Element (Target : Iir) return Iir;

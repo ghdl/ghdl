@@ -1055,8 +1055,6 @@ package body Sem_Assocs is
                   Location_Copy (Nrec_El, Ch);
                   Set_Parent (Nrec_El, Ntype);
                   Set_Identifier (Nrec_El, Get_Identifier (Rec_El));
-                  Set_Base_Element_Declaration
-                    (Nrec_El, Get_Base_Element_Declaration (Rec_El));
                   Set_Element_Position
                     (Nrec_El, Get_Element_Position (Rec_El));
                   Ch := Get_Associated_Expr (Ch);

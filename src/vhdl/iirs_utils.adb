@@ -1179,6 +1179,16 @@ package body Iirs_Utils is
       end if;
    end Get_Denoted_Type_Mark;
 
+   function Get_Base_Element_Declaration (El : Iir) return Iir
+   is
+      Rec_Type : constant Iir := Get_Base_Type (Get_Parent (El));
+      Els_List : constant Iir_Flist :=
+        Get_Elements_Declaration_List (Rec_Type);
+   begin
+      return Get_Nth_Element
+        (Els_List, Natural (Get_Element_Position (El)));
+   end Get_Base_Element_Declaration;
+
    function Is_Second_Subprogram_Specification (Spec : Iir) return Boolean
    is
       Bod : constant Iir := Get_Chain (Spec);

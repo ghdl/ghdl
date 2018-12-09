@@ -244,6 +244,10 @@ package Iirs_Utils is
    --  Return the type or subtype definition of the SUBTYP type mark.
    function Get_Denoted_Type_Mark (Subtyp : Iir) return Iir;
 
+   --  From element declaration or element constraint EL, get the corresponding
+   --  element declaration in the base record type.
+   function Get_Base_Element_Declaration (El : Iir) return Iir;
+
    --  Return true iff L and R have the same profile.
    --  L and R must be subprograms specification (or spec_body).
    function Is_Same_Profile (L, R: Iir) return Boolean;

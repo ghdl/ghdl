@@ -2509,22 +2509,6 @@ package body Iirs is
       Set_Field4 (Target, Iir_Index32'Pos (Pos));
    end Set_Element_Position;
 
-   function Get_Base_Element_Declaration (Target : Iir) return Iir is
-   begin
-      pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_Base_Element_Declaration (Get_Kind (Target)),
-                     "no field Base_Element_Declaration");
-      return Get_Field2 (Target);
-   end Get_Base_Element_Declaration;
-
-   procedure Set_Base_Element_Declaration (Target : Iir; El : Iir) is
-   begin
-      pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_Base_Element_Declaration (Get_Kind (Target)),
-                     "no field Base_Element_Declaration");
-      Set_Field2 (Target, El);
-   end Set_Base_Element_Declaration;
-
    function Get_Selected_Element (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);

@@ -907,7 +907,6 @@ package body Sem_Types is
          else
             Type_Staticness := None;
          end if;
-         Set_Base_Element_Declaration (El, El);
          Sem_Scopes.Add_Name (El);
          Name_Visible (El);
          Xref_Decl (El);
@@ -1431,8 +1430,6 @@ package body Sem_Types is
       Set_Parent (New_El, Parent);
       Set_Identifier (New_El, Get_Identifier (El));
       Set_Type (New_El, Get_Type (El));
-      Set_Base_Element_Declaration
-        (New_El, Get_Base_Element_Declaration (El));
       Set_Element_Position (New_El, Get_Element_Position (El));
       return New_El;
    end Copy_Record_Element_Declaration;
@@ -1994,8 +1991,6 @@ package body Sem_Types is
                      --  doesn't exist.
                      Error_Msg_Sem (+El, "%n has no %n", (+Type_Mark, +El));
                   else
-                     Set_Base_Element_Declaration
-                       (El, Get_Base_Element_Declaration (Tm_El));
                      Pos := Natural (Get_Element_Position (Tm_El));
                      if Els (Pos) /= Null_Iir then
                         Error_Msg_Sem
@@ -2076,8 +2071,6 @@ package body Sem_Types is
                      --  Only a resolution constraint.
                      El := Create_Iir (Iir_Kind_Record_Element_Constraint);
                      Location_Copy (El, Tm_El);
-                     Set_Base_Element_Declaration
-                       (El, Get_Base_Element_Declaration (Tm_El));
                      El_Type := Null_Iir;
                   else
                      El := Els (I);
