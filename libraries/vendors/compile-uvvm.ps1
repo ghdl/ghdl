@@ -47,36 +47,36 @@ param(
 	[switch]$Help =               $false,
 	
 	# Compile all packages.
-	[switch]$All =                $true,
+	[switch]$All =                $false,
 	
 	# Compile all UVVM packages.
-	[switch]$UVVM =               $true,
+	[switch]$UVVM =               $false,
 	# Compile all UVVM Utility packages.
-	[switch]$UVVM_Utilities =     $true,
+	[switch]$UVVM_Utilities =     $false,
 	# Compile all UVVM VCC Framework packages.
-	[switch]$UVVM_VCC_Framework = $true,
+	[switch]$UVVM_VCC_Framework = $false,
 	# Compile all UVVM Verification IPs (VIPs).
-	[switch]$UVVM_VIP =                   $true,
+	[switch]$UVVM_VIP =                   $false,
 	  # Compile VIP: Avalon_MM
-	  [switch]$UVVM_VIP_Avalon_MM =       $true,
+	  [switch]$UVVM_VIP_Avalon_MM =       $false,
 	  # Compile VIP: AXI-Lite
-	  [switch]$UVVM_VIP_AXI_Lite =        $true,
+	  [switch]$UVVM_VIP_AXI_Lite =        $false,
 	  # Compile VIP: AXI-Stream
-	  [switch]$UVVM_VIP_AXI_Stream =      $true,
+	  [switch]$UVVM_VIP_AXI_Stream =      $false,
 	  # Compile VIP: Clock Generator
-	  [switch]$UVVM_VIP_Clock_Generator = $true,
+	  [switch]$UVVM_VIP_Clock_Generator = $false,
 	  # Compile VIP: GPIO
-	  [switch]$UVVM_VIP_GPIO =            $true,
+	  [switch]$UVVM_VIP_GPIO =            $false,
 	  # Compile VIP: I2C
-	  [switch]$UVVM_VIP_I2C =             $true,
+	  [switch]$UVVM_VIP_I2C =             $false,
 	  # Compile VIP: Scoreboard
-	  [switch]$UVVM_VIP_Scoreboard =      $true,
+	  [switch]$UVVM_VIP_Scoreboard =      $false,
 	  # Compile VIP: SBI (Simple Byte Interface)
-	  [switch]$UVVM_VIP_SBI =             $true,
+	  [switch]$UVVM_VIP_SBI =             $false,
 	  # Compile VIP: SPI
-	  [switch]$UVVM_VIP_SPI =             $true,
+	  [switch]$UVVM_VIP_SPI =             $false,
 	  # Compile VIP: UART
-	  [switch]$UVVM_VIP_UART =            $true,
+	  [switch]$UVVM_VIP_UART =            $false,
 	
 	# Clean up directory before analyzing.
 	[switch]$Clean =              $false,
@@ -108,10 +108,10 @@ Import-Module $PSScriptRoot\shared.psm1 -Verbose:$false -Debug:$false -ArgumentL
 
 # Display help if no command was selected
 if ($Help -or (-not ($All -or $Clean -or
-	                  ($UVVM -or      ($UVVM_Utilities -or $UVVM_VVC_Framework)) -or
-	                  ($UVVM_VIP -or  ($UVVM_VIP_Avalon_MM -or $UVVM_VIP_AXI_Lite -or $UVVM_VIP_AXI_Stream -or
-                     $UVVM_VIP_Clock_Generator -or $UVVM_VIP_GPIO -or $UVVM_VIP_I2C -or $UVVM_VIP_SBI -or
-                     $UVVM_VIP_Scoreboard -or $UVVM_VIP_SPI -or $UVVM_VIP_UART))    )))
+                    ($UVVM -or      ($UVVM_Utilities -or $UVVM_VVC_Framework)) -or
+                    ($UVVM_VIP -or  ($UVVM_VIP_Avalon_MM -or $UVVM_VIP_AXI_Lite -or $UVVM_VIP_AXI_Stream -or
+                                     $UVVM_VIP_Clock_Generator -or $UVVM_VIP_GPIO -or $UVVM_VIP_I2C -or $UVVM_VIP_SBI -or
+                                     $UVVM_VIP_Scoreboard -or $UVVM_VIP_SPI -or $UVVM_VIP_UART))    )))
 {	Get-Help $MYINVOCATION.InvocationName -Detailed
 	Exit-CompileScript
 }
@@ -263,10 +263,10 @@ if ((-not $StopCompiling) -and $UVVM_VCC_Framework)
 foreach ($vip in $VIP_Files.Keys)
 {	if ((-not $StopCompiling) -and (Get-Variable $VIP_Files[$vip]["Variable"] -ValueOnly))
 	{	$Library =      $VIP_Files[$vip]["Library"]
-	  $SourceFiles =  $VIP_Files[$vip]["Files"] #| % { "$SourceDirectory\$_" }
+		$SourceFiles =  $VIP_Files[$vip]["Files"] #| % { "$SourceDirectory\$_" }
 
-	  $ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
-	  $StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
+		$ErrorCount += Start-PackageCompilation $GHDLBinary $GHDLOptions $DestinationDirectory $Library $VHDLVersion $SourceFiles $SuppressWarnings $HaltOnError -Verbose:$EnableVerbose -Debug:$EnableDebug
+		$StopCompiling = $HaltOnError -and ($ErrorCount -ne 0)
 	}
 }
 
