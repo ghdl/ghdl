@@ -3182,6 +3182,22 @@ package body Iirs is
       Set_Field1 (Decl, Iir_Flist_To_Iir (List));
    end Set_Elements_Declaration_List;
 
+   function Get_Owned_Elements_Chain (Atype : Iir) return Iir is
+   begin
+      pragma Assert (Atype /= Null_Iir);
+      pragma Assert (Has_Owned_Elements_Chain (Get_Kind (Atype)),
+                     "no field Owned_Elements_Chain");
+      return Get_Field6 (Atype);
+   end Get_Owned_Elements_Chain;
+
+   procedure Set_Owned_Elements_Chain (Atype : Iir; Chain : Iir) is
+   begin
+      pragma Assert (Atype /= Null_Iir);
+      pragma Assert (Has_Owned_Elements_Chain (Get_Kind (Atype)),
+                     "no field Owned_Elements_Chain");
+      Set_Field6 (Atype, Chain);
+   end Set_Owned_Elements_Chain;
+
    function Get_Designated_Type (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);

@@ -1412,41 +1412,18 @@ package body Sem_Types is
    function Sem_Subtype_Constraint
      (Def : Iir; Type_Mark : Iir; Resolution : Iir) return Iir;
 
-   function Copy_Record_Element_Declaration (El : Iir; Parent : Iir) return Iir
-   is
-      New_El : Iir;
-   begin
-      case Get_Kind (El) is
-         when Iir_Kind_Element_Declaration =>
-            New_El := Create_Iir (Iir_Kind_Element_Declaration);
-            --  As this is a copy, it has no subtype indication.
-            Set_Subtype_Indication (New_El, Null_Iir);
-         when Iir_Kind_Record_Element_Constraint =>
-            New_El := Create_Iir (Iir_Kind_Record_Element_Constraint);
-         when others =>
-            Error_Kind ("copy_record_element_declaration", El);
-      end case;
-      Location_Copy (New_El, El);
-      Set_Parent (New_El, Parent);
-      Set_Identifier (New_El, Get_Identifier (El));
-      Set_Type (New_El, Get_Type (El));
-      Set_Element_Position (New_El, Get_Element_Position (El));
-      return New_El;
-   end Copy_Record_Element_Declaration;
-
    --  Create a copy of elements_declaration_list of SRC and set it to DST.
    procedure Copy_Record_Elements_Declaration_List (Dst : Iir; Src : Iir)
    is
       El_List : constant Iir_Flist := Get_Elements_Declaration_List (Src);
       New_El_List : Iir_Flist;
-      El, New_El : Iir;
+      El : Iir;
    begin
       New_El_List := Create_Iir_Flist (Get_Nbr_Elements (El_List));
       Set_Elements_Declaration_List (Dst, New_El_List);
       for I in Flist_First .. Flist_Last (El_List) loop
          El := Get_Nth_Element (El_List, I);
-         New_El := Copy_Record_Element_Declaration (El, Dst);
-         Set_Nth_Element (New_El_List, I, New_El);
+         Set_Nth_Element (New_El_List, I, El);
       end loop;
    end Copy_Record_Elements_Declaration_List;
 
@@ -1514,6 +1491,7 @@ package body Sem_Types is
          when Iir_Kind_Record_Type_Definition
            | Iir_Kind_Record_Subtype_Definition =>
             Res := Create_Iir (Iir_Kind_Record_Subtype_Definition);
+            Set_Is_Ref (Res, True);
             Set_Type_Staticness (Res, Get_Type_Staticness (Def));
             if Get_Kind (Def) = Iir_Kind_Record_Subtype_Definition then
                Set_Resolution_Indication
@@ -1819,6 +1797,7 @@ package body Sem_Types is
    begin
       pragma Assert (Get_Prefix (Def) = Null_Iir);
       Res := Create_Iir (Iir_Kind_Record_Subtype_Definition);
+      Set_Is_Ref (Res, True);
       Location_Copy (Res, Def);
       El_List := Create_Iir_List;
       Chain := Get_Association_Chain (Def);
@@ -1831,6 +1810,8 @@ package body Sem_Types is
             El := Reparse_As_Record_Element_Constraint (Get_Actual (Chain));
             if El /= Null_Iir then
                Append_Element (El_List, El);
+               Set_Parent (El, Res);
+               Append_Owned_Element_Constraint (Res, El);
             end if;
          end if;
          Chain := Get_Chain (Chain);
@@ -1913,6 +1894,7 @@ package body Sem_Types is
       Index_El : Iir;
    begin
       Res := Create_Iir (Iir_Kind_Record_Subtype_Definition);
+      Set_Is_Ref (Res, True);
       Location_Copy (Res, Def);
       Set_Base_Type (Res, Get_Base_Type (Type_Mark));
       if Get_Kind (Type_Mark) = Iir_Kind_Record_Subtype_Definition then
@@ -2064,14 +2046,16 @@ package body Sem_Types is
                if Els (I) = Null_Iir and Res_Els (I) = Null_Iir then
                   --  No new record element constraints.  Copy the element from
                   --  the type mark.
-                  El := Copy_Record_Element_Declaration (Tm_El, Res);
+                  El := Tm_El;
                   El_Type := Get_Type (El);
                else
                   if Els (I) = Null_Iir then
                      --  Only a resolution constraint.
                      El := Create_Iir (Iir_Kind_Record_Element_Constraint);
                      Location_Copy (El, Tm_El);
+                     Set_Parent (El, Res);
                      El_Type := Null_Iir;
+                     Append_Owned_Element_Constraint (Res, El);
                   else
                      El := Els (I);
                      El_Type := Get_Type (El);

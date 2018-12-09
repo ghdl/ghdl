@@ -1384,14 +1384,6 @@ package body Trans.Chap3 is
          --  The subtype is simply an alias.
          --  In both cases, use the same representation as its type mark.
 
-         for I in Flist_First .. Flist_Last (El_Blist) loop
-            B_El := Get_Nth_Element (El_Blist, I);
-            El := Get_Nth_Element (El_List, I);
-            if El /= B_El then
-               Set_Info (El, Get_Info (B_El));
-            end if;
-         end loop;
-
          return;
       end if;
 

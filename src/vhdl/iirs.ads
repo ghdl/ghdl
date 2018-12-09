@@ -1797,6 +1797,9 @@ package Iirs is
    --
    --   Get/Set_Type (Field1)
    --
+   --  For Owned_Elements_Chain, so that the node has an owner.
+   --   Get/Set_Chain (Field2)
+   --
    --   Get/Set_Identifier (Field3)
    --
    --  Return the position of the element in the record, starting from 0 for
@@ -2267,6 +2270,9 @@ package Iirs is
    --   Get/Set_End_Has_Reserved_Id (Flag8)
    --
    --   Get/Set_End_Has_Identifier (Flag9)
+   --
+   --  Always false for record type: elements are owned by this node.
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Access_Type_Definition (Short)
    --
@@ -2585,6 +2591,10 @@ package Iirs is
 
    -- Iir_Kind_Record_Subtype_Definition (Medium)
    --
+   --  Chain of new elements constraint.  Needed only for internal consistency
+   --  of the tree (ownership).
+   --   Get/Set_Owned_Elements_Chain (Field6)
+   --
    --   Get/Set_Elements_Declaration_List (Field1)
    --
    --   Get/Set_Subtype_Type_Mark (Field2)
@@ -2606,6 +2616,10 @@ package Iirs is
    --   Get/Set_Type_Staticness (State1)
    --
    --   Get/Set_Constraint_State (State2)
+   --
+   --  Always false for record type: elements are owned through
+   --  Owned_Elements_Chain
+   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Array_Subtype_Definition (Medium)
    --
@@ -6659,10 +6673,18 @@ package Iirs is
    function Get_Array_Element_Constraint (Def : Iir) return Iir;
    procedure Set_Array_Element_Constraint (Def : Iir; El : Iir);
 
-   --  Chains of elements of a record.
-   --  Field: Field1 (uc)
+   --  List of elements of a record.
+   --  For a record_type_definition: Is_Ref is false, as the elements
+   --   declaration are owned by the type definition.
+   --  For a record_subtype_definition: Is_Ref is false, as new constrained
+   --   elements are owned through the Owned_Elements_Chain list.
+   --  Field: Field1 Of_Maybe_Ref (uc)
    function Get_Elements_Declaration_List (Decl : Iir) return Iir_Flist;
    procedure Set_Elements_Declaration_List (Decl : Iir; List : Iir_Flist);
+
+   --  Field: Field6 Chain
+   function Get_Owned_Elements_Chain (Atype : Iir) return Iir;
+   procedure Set_Owned_Elements_Chain (Atype : Iir; Chain : Iir);
 
    --  Field: Field1 Forward_Ref
    function Get_Designated_Type (Target : Iir) return Iir;

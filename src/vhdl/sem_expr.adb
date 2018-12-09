@@ -3170,6 +3170,7 @@ package body Sem_Expr is
             Rec_El_List : Iir_Flist;
             Rec_El : Iir;
             Rec_El_Type : Iir;
+            New_Rec_El : Iir;
             Constraint : Iir_Constraint;
             Composite_Found : Boolean;
             Staticness : Iir_Staticness;
@@ -3188,7 +3189,16 @@ package body Sem_Expr is
                  and then not Is_Fully_Constrained_Type (Rec_El_Type)
                then
                   Rec_El_Type := El_Type;
-                  Set_Type (Rec_El, Rec_El_Type);
+                  New_Rec_El :=
+                    Create_Iir (Iir_Kind_Record_Element_Constraint);
+                  Location_Copy (New_Rec_El, Rec_El);
+                  Set_Parent (New_Rec_El, Rec_Type);
+                  Set_Identifier (New_Rec_El, Get_Identifier (Rec_El));
+                  pragma Assert (I = Natural (Get_Element_Position (Rec_El)));
+                  Set_Element_Position (New_Rec_El, Iir_Index32 (I));
+                  Set_Nth_Element (Rec_El_List, I, New_Rec_El);
+                  Set_Type (New_Rec_El, Rec_El_Type);
+                  Append_Owned_Element_Constraint (Rec_Type, New_Rec_El);
                end if;
                Staticness := Min (Staticness,
                                   Get_Type_Staticness (Rec_El_Type));
