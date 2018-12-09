@@ -64,12 +64,14 @@ function Exit-CompileScript
 	Remove-Module config -Verbose:$false
 	Remove-Module shared -Verbose:$false
 	
-	if ($ExitCode -eq 0)
-	{	exit 0	}
-	else
-	{	Write-Host "[DEBUG]: HARD EXIT" -ForegroundColor Red
-		exit $ExitCode
-	}
+	exit $ExitCode
+	
+	# if ($ExitCode -eq 0)
+	# {	exit 0	}
+	# else
+	# {	Write-Host "[DEBUG]: HARD EXIT" -ForegroundColor Red
+		# exit $ExitCode
+	# }
 }
 
 function Get-SourceDirectory
@@ -277,6 +279,13 @@ function Start-PackageCompilation
 	$EnableDebug =		[bool]$PSCmdlet.MyInvocation.BoundParameters["Debug"]
 	$EnableVerbose =	[bool]$PSCmdlet.MyInvocation.BoundParameters["Verbose"] -or $EnableDebug
 	
+	if ($EnableDebug)
+	{	$Indent = "      "  }
+	elseif ($EnableVerbose)
+	{	$Indent = "    "    }
+	else
+	{	$Indent = "    "    }
+	
 	Write-Host "Compiling library '$Library' ..." -ForegroundColor Yellow
 	$LibraryDirectory=	"$DestinationDirectory/$Library/$VHDLVersion"
 	$EnableVerbose -and (Write-Host "  Creating library $Library ..."	-ForegroundColor Gray	) | Out-Null
@@ -289,8 +298,8 @@ function Start-PackageCompilation
 	{	Write-Host "  Analyzing package file '$File'" -ForegroundColor DarkCyan
 		$InvokeExpr = "& '$GHDLBinary' " + ($GHDLOptions -join " ") + " --work=$Library " + $File + " 2>&1"
 		$EnableDebug -and		(Write-Host "    $InvokeExpr" -ForegroundColor DarkGray	) | Out-Null
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "  "
-		if ($LastExitCode -ne 0)
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings -Indent:"$Indent"
+		if (($LastExitCode -ne 0) -or $ErrorRecordFound)
 		{	$ErrorCount += 1
 			if ($HaltOnError)
 			{	break		}
@@ -298,7 +307,7 @@ function Start-PackageCompilation
 	}
 	
 	cd $DestinationDirectory
-	# return $ErrorCount
+	return $ErrorCount
 }
 
 function Start-PrimitiveCompilation
@@ -335,7 +344,14 @@ function Start-PrimitiveCompilation
 	$EnableDebug =		[bool]$PSCmdlet.MyInvocation.BoundParameters["Debug"]
 	$EnableVerbose =	[bool]$PSCmdlet.MyInvocation.BoundParameters["Verbose"] -or $EnableDebug
 	
-	Write-Host "Compiling library '$Library' ..." -ForegroundColor Yellow
+	if ($EnableDebug)
+	{	$Indent = "      "  }
+	elseif ($EnableVerbose)
+	{	$Indent = "    "    }
+	else
+	{	$Indent = "    "    }
+	
+	Write-Host "Compiling library '$Library' ..." -ForegroundColor Cyan
 	$LibraryDirectory="$DestinationDirectory/$Library/$VHDLVersion"
 	$EnableVerbose -and (Write-Host "  Creating library $Library ..."	-ForegroundColor Gray	) | Out-Null
 	$EnableDebug -and		(Write-Host "    mkdir $LibraryDirectory"	-ForegroundColor DarkGray	) | Out-Null
@@ -347,8 +363,8 @@ function Start-PrimitiveCompilation
 	{	Write-Host "  Analyzing primitive file '$File'" -ForegroundColor DarkCyan
 		$InvokeExpr = "& '$GHDLBinary' " + ($GHDLOptions -join " ") + " --work=$Library " + $File + " 2>&1"
 		$EnableDebug -and		(Write-Host "    $InvokeExpr" -ForegroundColor DarkGray	) | Out-Null
-		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings "  "
-		if ($LastExitCode -ne 0)
+		$ErrorRecordFound = Invoke-Expression $InvokeExpr | Restore-NativeCommandStream | Write-ColoredGHDLLine $SuppressWarnings -Indent:"$Indent"
+		if (($LastExitCode -ne 0) -or $ErrorRecordFound)
 		{	$ErrorCount += 1
 			if ($HaltOnError)
 			{	break		}
@@ -356,7 +372,7 @@ function Start-PrimitiveCompilation
 	}
 	
 	cd $DestinationDirectory
-	# return $ErrorCount
+	return $ErrorCount
 }
 
 
@@ -452,7 +468,21 @@ function Write-ColoredGHDLLine
 				Write-Host "${Indent}ERROR: "		-NoNewline -ForegroundColor Red
 				Write-Host $InputObject
 			}
+			elseif ($InputObject -match ":warning:\s")
+			{	Write-Host "${Indent}WARNING: "		-NoNewline -ForegroundColor Yellow
+				Write-Host $InputObject
+			}
 			elseif ($InputObject -match ":error:\s")
+			{	$ErrorRecordFound	= $true
+				Write-Host "${Indent}ERROR: "		-NoNewline -ForegroundColor Red
+				Write-Host $InputObject
+			}
+			elseif ($InputObject -match ": unknown option\s")
+			{	$ErrorRecordFound	= $true
+				Write-Host "${Indent}ERROR: "		-NoNewline -ForegroundColor Red
+				Write-Host $InputObject
+			}
+			elseif ($InputObject -match ": cannot open\s")
 			{	$ErrorRecordFound	= $true
 				Write-Host "${Indent}ERROR: "		-NoNewline -ForegroundColor Red
 				Write-Host $InputObject
