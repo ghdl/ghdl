@@ -330,8 +330,7 @@ package body Ghdllocal is
         & Name & Directory_Separator & Get_Version_Path & Directory_Separator;
    begin
       if not Is_Directory (Path) then
-         Warning
-           ("library " & Name & " does not exists for " & Get_Version_Path);
+         Warning ("ieee library directory '" & Path & "' not found");
       end if;
       Libraries.Add_Library_Path (Path);
    end Add_Library_Name;
