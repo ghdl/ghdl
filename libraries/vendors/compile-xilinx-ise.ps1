@@ -145,8 +145,8 @@ function Get-XilinxISEDirectory
 }
 	      
 $SourceDirectory =      Get-SourceDirectory $Source (Get-XilinxISEDirectory)
-$DestinationDirectory =  Get-DestinationDirectory $Output
-$GHDLBinary =            Get-GHDLBinary $GHDL
+$DestinationDirectory = Get-DestinationDirectory $Output
+$GHDLBinary =           Get-GHDLBinary $GHDL
 
 # create "Altera" directory and change to it
 New-DestinationDirectory $DestinationDirectory
@@ -159,7 +159,17 @@ if ($VHDL2008)
 $VHDLVersion,$VHDLStandard,$VHDLFlavor = Get-VHDLVariables $VHDL93 $VHDL2008
 
 # define global GHDL Options
-$GHDLOptions = @("-a", "-fexplicit", "-frelaxed-rules", "--mb-comments", "--warn-binding", "--ieee=$VHDLFlavor", "--no-vital-checks", "--std=$VHDLStandard", "-P$DestinationDirectory")
+$GHDLOptions = @(
+	"-a",
+	"-fexplicit",
+	"-frelaxed-rules",
+	"--mb-comments",
+	"--warn-binding",
+	"--ieee=$VHDLFlavor",
+	"--no-vital-checks",
+	"--std=$VHDLStandard",
+	"-P$DestinationDirectory"
+)
 
 # extract data from configuration
 # $SourceDir =      $InstallationDirectory["AlteraQuartus"] + "\quartus\eda\sim_lib"
@@ -283,7 +293,7 @@ if ((-not $StopCompiling) -and $CoreLib)
 	$AnalyzeOrder = Get-Content $AnalyzeFile -Encoding Ascii
 	$SourceFiles = @()
 	foreach ($line in $AnalyzeOrder)
-	{	if (-not $line.StartsWith("#"))
+	{	if (-not ($line.StartsWith("#") -or ($line -eq "")))
 		{	$SourceFiles += "$SourceDirectory\XilinxCoreLib\$line"	}
 	}
 	
