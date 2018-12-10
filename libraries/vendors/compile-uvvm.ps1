@@ -96,7 +96,7 @@ param(
 
 # ---------------------------------------------
 # save working directory
-$WorkingDir =    Get-Location
+$WorkingDir =     Get-Location
 
 # set default values
 $EnableDebug =    [bool]$PSCmdlet.MyInvocation.BoundParameters["Debug"]
@@ -165,7 +165,8 @@ $GHDLOptions = @(
 # extract data from configuration
 # $SourceDir =      $InstallationDirectory["AlteraQuartus"] + "\quartus\eda\sim_lib"
 
-$ErrorCount =      0
+$StopCompiling =  $false
+$ErrorCount =     0
 
 # Cleanup directories
 # ==============================================================================
@@ -237,7 +238,6 @@ foreach ($VIPDirectory in (Get-ChildItem -Path $SourceDirectory -Directory "*VIP
 	};
 }
 
-$ErrorCount = 0
 
 # UVVM packages
 # ==============================================================================

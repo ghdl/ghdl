@@ -84,7 +84,7 @@ param(
 
 # ---------------------------------------------
 # save working directory
-$WorkingDir =    Get-Location
+$WorkingDir =     Get-Location
 
 # set default values
 $EnableDebug =    [bool]$PSCmdlet.MyInvocation.BoundParameters["Debug"]
@@ -151,7 +151,7 @@ $GHDLOptions = @("-a", "-fexplicit", "-frelaxed-rules", "--mb-comments", "--warn
 # $SourceDir =      $InstallationDirectory["AlteraQuartus"] + "\quartus\eda\sim_lib"
 
 $StopCompiling =  $false
-$ErrorCount =      0
+$ErrorCount =     0
 
 
 # Cleanup directories
