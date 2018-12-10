@@ -115,11 +115,11 @@ if ($Help)
 	Exit-CompileScript
 }
 if ($All)
-{	$Unisim =          $true
-	$Simprim =        $true
-	$Unimacro =        $true
+{	$Unisim =   $true
+	$Simprim =  $true
+	$Unimacro = $true
 	$CoreLib =  $true
-	$SecureIP =        $true
+	$SecureIP = $true
 }
 
 function Get-XilinxISEDirectory
