@@ -340,7 +340,7 @@ package body Trans.Chap14 is
                Chap6.Check_Bound_Error
                  (New_Compare_Op (ON_Eq,
                   New_Obj_Value (L),
-                  New_Lit (Get_Ortho_Expr (Get_Nth_Element (List, Limit))),
+                  New_Lit (Get_Ortho_Literal (Get_Nth_Element (List, Limit))),
                   Ghdl_Bool_Type),
                   Attr, 0);
                return New_Convert_Ov

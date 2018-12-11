@@ -398,7 +398,7 @@ package body Trans.Chap8 is
                   raise Internal_Error;
                end if;
                V := New_Lit
-                 (Get_Ortho_Expr (Get_Nth_Element (List, Natural (Val))));
+                 (Get_Ortho_Literal (Get_Nth_Element (List, Natural (Val))));
             end;
 
          when others =>
@@ -1095,7 +1095,7 @@ package body Trans.Chap8 is
       end if;
       Expr := Get_Severity_Expression (Stmt);
       if Expr = Null_Iir then
-         Severity := New_Lit (Get_Ortho_Expr (Level));
+         Severity := New_Lit (Get_Ortho_Literal (Level));
       else
          Severity := Chap7.Translate_Expression (Expr);
       end if;

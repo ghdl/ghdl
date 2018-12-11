@@ -1422,18 +1422,10 @@ package body Trans is
       Unchecked_Deallocation (Info);
    end Free_Type_Info;
 
-   procedure Set_Ortho_Expr (Target : Iir; Expr : O_Cnode)
-   is
-      Info : Ortho_Info_Acc;
+   function Get_Ortho_Literal (Target : Iir) return O_Cnode is
    begin
-      Info := Add_Info (Target, Kind_Expr);
-      Info.Expr_Node := Expr;
-   end Set_Ortho_Expr;
-
-   function Get_Ortho_Expr (Target : Iir) return O_Cnode is
-   begin
-      return Get_Info (Target).Expr_Node;
-   end Get_Ortho_Expr;
+      return Get_Info (Target).Lit_Node;
+   end Get_Ortho_Literal;
 
    function Get_Ortho_Type (Target : Iir; Is_Sig : Object_Kind_Type)
                             return O_Tnode is

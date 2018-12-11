@@ -228,6 +228,14 @@ package body Trans.Chap3 is
    --  Enumeration --
    ------------------
 
+   procedure Set_Ortho_Literal (Target : Iir; Expr : O_Cnode)
+   is
+      Info : Ortho_Info_Acc;
+   begin
+      Info := Add_Info (Target, Kind_Enum_Lit);
+      Info.Lit_Node := Expr;
+   end Set_Ortho_Literal;
+
    function Translate_Enumeration_Literal (Lit : Iir_Enumeration_Literal)
                                            return O_Ident
    is
@@ -280,7 +288,7 @@ package body Trans.Chap3 is
 
          Lit_Name := Translate_Enumeration_Literal (El);
          New_Enum_Literal (Constr, Lit_Name, Val);
-         Set_Ortho_Expr (El, Val);
+         Set_Ortho_Literal (El, Val);
       end loop;
       Finish_Enum_Type (Constr, Info.Ortho_Type (Mode_Value));
       if Nbr <= 256 then
@@ -312,8 +320,8 @@ package body Trans.Chap3 is
          Translate_Enumeration_Literal (False_Lit), False_Node,
          Translate_Enumeration_Literal (True_Lit), True_Node);
       Info.Type_Mode := Type_Mode_B1;
-      Set_Ortho_Expr (False_Lit, False_Node);
-      Set_Ortho_Expr (True_Lit, True_Node);
+      Set_Ortho_Literal (False_Lit, False_Node);
+      Set_Ortho_Literal (True_Lit, True_Node);
       Info.S.Nocheck_Low := True;
       Info.S.Nocheck_Hi := True;
       Info.B.Align := Align_8;

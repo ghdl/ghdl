@@ -179,7 +179,7 @@ package body Trans.Chap7 is
       for I in 1 .. Len loop
          Lit := Get_Nth_Element
            (Literal_List, Natural (Str_Table.Element_String8 (Id, Pos32 (I))));
-         New_Array_Aggr_El (List, Get_Ortho_Expr (Lit));
+         New_Array_Aggr_El (List, Get_Ortho_Literal (Lit));
       end loop;
    end Translate_Static_String_Literal8_Inner;
 
@@ -424,7 +424,7 @@ package body Trans.Chap7 is
 
       for I in Img'Range loop
          Lit := Get_Nth_Element (Literal_List, Character'Pos (Img (I)));
-         New_Array_Aggr_El (List, Get_Ortho_Expr (Lit));
+         New_Array_Aggr_El (List, Get_Ortho_Literal (Lit));
       end loop;
 
       Finish_Array_Aggr (List, Res);
@@ -491,7 +491,7 @@ package body Trans.Chap7 is
         Get_Enumeration_Literal_List (Get_Base_Type (Atype));
       Enum : constant Iir := Get_Nth_Element (Lit_List, Pos);
    begin
-      return Get_Ortho_Expr (Enum);
+      return Get_Ortho_Literal (Enum);
    end Translate_Enumeration_Literal;
 
    function Translate_Numeric_Literal (Expr : Iir; Res_Type : O_Tnode)
@@ -1106,7 +1106,7 @@ package body Trans.Chap7 is
             raise Internal_Error;
       end case;
 
-      V := Get_Ortho_Expr
+      V := Get_Ortho_Literal
         (Get_Nth_Element (Get_Enumeration_Literal_List (Rtype), Val));
       Start_If_Stmt (If_Blk,
                      New_Compare_Op (ON_Eq,
@@ -1974,7 +1974,7 @@ package body Trans.Chap7 is
       end if;
 
       Res := Create_Temp_Init (Get_Ortho_Type (Res_Type, Mode_Value),
-                               New_Lit (Get_Ortho_Expr (Init_Enum)));
+                               New_Lit (Get_Ortho_Literal (Init_Enum)));
 
       Open_Temp;
       --  Translate the array.  Note that Translate_Expression may create
@@ -2074,7 +2074,7 @@ package body Trans.Chap7 is
          New_Compare_Op
            (ON_Eq,
             M2E (Val),
-            New_Lit (Get_Ortho_Expr
+            New_Lit (Get_Ortho_Literal
                        (Get_Nth_Element (Enums, Boolean'Pos (Is_Rising)))),
             Std_Boolean_Type_Node));
    end Translate_Predefined_TF_Edge;
@@ -2326,7 +2326,7 @@ package body Trans.Chap7 is
 
          when Iir_Predefined_Bit_Condition =>
             return New_Compare_Op
-              (ON_Eq, Left_Tree, New_Lit (Get_Ortho_Expr (Bit_1)),
+              (ON_Eq, Left_Tree, New_Lit (Get_Ortho_Literal (Bit_1)),
                Std_Boolean_Type_Node);
 
          when Iir_Predefined_Integer_Identity
@@ -5346,7 +5346,7 @@ package body Trans.Chap7 is
                     (Get_Base_Type (Get_Element_Subtype (Arr_Type)));
                begin
                   Tmp := New_Lit
-                    (Get_Ortho_Expr (Get_Nth_Element (Enum_List, 0)));
+                    (Get_Ortho_Literal (Get_Nth_Element (Enum_List, 0)));
                end;
             when Sh_Arith =>
                Tmp := New_Obj_Value (Var_E);

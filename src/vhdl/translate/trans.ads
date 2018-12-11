@@ -716,7 +716,7 @@ package Trans is
       Kind_Type,
       Kind_Incomplete_Type,
       Kind_Index,
-      Kind_Expr,
+      Kind_Enum_Lit,
       Kind_Subprg,
       Kind_Operator,
       Kind_Call,
@@ -1435,10 +1435,10 @@ package Trans is
             --  element (for unbounded element).
             Field_Bound : O_Fnode := O_Fnode_Null;
 
-         when Kind_Expr =>
+         when Kind_Enum_Lit =>
             --  Ortho tree which represents the expression, used for
             --  enumeration literals.
-            Expr_Node : O_Cnode;
+            Lit_Node : O_Cnode;
 
          when Kind_Subprg =>
             --  True if the function can return a value stored in the secondary
@@ -1852,9 +1852,7 @@ package Trans is
 
    procedure Free_Type_Info (Info : in out Type_Info_Acc);
 
-   procedure Set_Ortho_Expr (Target : Iir; Expr : O_Cnode);
-
-   function Get_Ortho_Expr (Target : Iir) return O_Cnode;
+   function Get_Ortho_Literal (Target : Iir) return O_Cnode;
 
    function Get_Ortho_Type (Target : Iir; Is_Sig : Object_Kind_Type)
                             return O_Tnode;
