@@ -139,6 +139,9 @@ package body Translation is
             if P > Length then
                Error_Msg_Sem
                  (+Spec, "missing subprogram/library name after VHPIDIRECT");
+               Info.Lib_Len := 0;
+               Info.Subprg_Len := 0;
+               return Info;
             end if;
             --  Extract library.
             Lf := P;
