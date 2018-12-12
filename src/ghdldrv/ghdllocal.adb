@@ -639,7 +639,7 @@ package body Ghdllocal is
 
       for I in Args'Range loop
          Id := Get_Identifier (Args (I).all);
-         Design_File := Sem_Lib.Load_File (Id);
+         Design_File := Sem_Lib.Load_File_Name (Id);
          if Design_File /= Null_Iir then
             Unit := Get_First_Design_Unit (Design_File);
             while Unit /= Null_Iir loop
@@ -700,7 +700,7 @@ package body Ghdllocal is
       --  Parse all files.
       for I in Args'Range loop
          Id := Name_Table.Get_Identifier (Args (I).all);
-         Design_File := Sem_Lib.Load_File (Id);
+         Design_File := Sem_Lib.Load_File_Name (Id);
          if Design_File /= Null_Iir then
             Unit := Get_First_Design_Unit (Design_File);
             while Unit /= Null_Iir loop
@@ -787,7 +787,7 @@ package body Ghdllocal is
          Put (File_Name);
          Put_Line (":");
       end if;
-      Design_File := Sem_Lib.Load_File (Id);
+      Design_File := Sem_Lib.Load_File_Name (Id);
       if Design_File = Null_Iir then
          raise Errorout.Compilation_Error;
       end if;

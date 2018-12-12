@@ -61,7 +61,7 @@ package body Sem_Lib is
    -- parse a file.
    -- Return a design_file without putting it into the library
    -- (because it was not analyzed).
-   function Load_File (File_Name: Name_Id) return Iir_Design_File
+   function Load_File_Name (File_Name: Name_Id) return Iir_Design_File
    is
       Fe : Source_File_Entry;
    begin
@@ -71,7 +71,7 @@ package body Sem_Lib is
          return Null_Iir;
       end if;
       return Load_File (Fe);
-   end Load_File;
+   end Load_File_Name;
 
    procedure Finish_Compilation
      (Unit : Iir_Design_Unit; Main : Boolean := False)

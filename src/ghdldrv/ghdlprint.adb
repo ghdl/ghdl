@@ -680,7 +680,7 @@ package body Ghdlprint is
       --  exist.
       for I in Args'Range loop
          Id := Get_Identifier (Args (I).all);
-         Design_File := Load_File (Id);
+         Design_File := Load_File_Name (Id);
          if Design_File = Null_Iir then
             raise Compile_Error;
          end if;
@@ -994,7 +994,7 @@ package body Ghdlprint is
       --  Parse all files.
       for I in Args'Range loop
          Id := Name_Table.Get_Identifier (Args (I).all);
-         Design_File := Load_File (Id);
+         Design_File := Load_File_Name (Id);
          if Design_File = Null_Iir then
             raise Errorout.Compilation_Error;
          end if;

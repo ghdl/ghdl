@@ -200,6 +200,9 @@ class Canon:
     Extract_Sequential_Statement_Chain_Sensitivity = \
         libghdl.canon__canon_extract_sequential_statement_chain_sensitivity
 
+class Sem_Lib:
+    Load_File = libghdl.sem_lib__load_file
+
 
 # std.standard
 
