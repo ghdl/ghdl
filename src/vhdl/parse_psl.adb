@@ -72,6 +72,21 @@ package body Parse_Psl is
       end if;
    end Parse_Count;
 
+   function Psl_To_Vhdl (N : Node) return Iirs.Iir;
+
+   function Binary_Psl_Operator_To_Vhdl (N : Node; Kind : Iirs.Iir_Kind)
+                                        return Iirs.Iir
+   is
+      use Iirs;
+      Res : Iir;
+   begin
+      Res := Create_Iir (Kind);
+      Set_Location (Res, Get_Location (N));
+      Set_Left (Res, Psl_To_Vhdl (Get_Left (N)));
+      Set_Right (Res, Psl_To_Vhdl (Get_Right (N)));
+      return Res;
+   end Binary_Psl_Operator_To_Vhdl;
+
    function Psl_To_Vhdl (N : Node) return Iirs.Iir
    is
       use Iirs;
@@ -80,16 +95,18 @@ package body Parse_Psl is
       case Get_Kind (N) is
          when N_HDL_Expr =>
             Res := Iirs.Iir (Get_HDL_Node (N));
-            Free_Node (N);
-            return Res;
+         when N_And_Prop =>
+            Res := Binary_Psl_Operator_To_Vhdl (N, Iir_Kind_And_Operator);
+         when N_Or_Prop =>
+            Res := Binary_Psl_Operator_To_Vhdl (N, Iir_Kind_Or_Operator);
          when others =>
             Error_Msg_Parse
               (+N, "PSL construct not allowed as VHDL expression");
             Res := Create_Iir (Iir_Kind_Error);
             Set_Location (Res, Get_Location (N));
-            Free_Node (N);
-            return Res;
       end case;
+      Free_Node (N);
+      return Res;
    end Psl_To_Vhdl;
 
    function Vhdl_To_Psl (N : Iirs.Iir) return Node
