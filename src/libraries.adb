@@ -1036,11 +1036,9 @@ package body Libraries is
 
       --  Set file time stamp.
       declare
-         File : Source_File_Entry;
-         Pos : Source_Ptr;
+         File : constant Source_File_Entry :=
+           Get_Design_File_Source (Get_Design_File (Unit));
       begin
-         Files_Map.Location_To_File_Pos (Get_Location (New_Library_Unit),
-                                         File, Pos);
          New_Lib_Checksum := Files_Map.Get_File_Checksum (File);
          File_Name := Files_Map.Get_File_Name (File);
          if GNAT.OS_Lib.Is_Absolute_Path (Image (File_Name)) then
