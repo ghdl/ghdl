@@ -311,6 +311,102 @@ package body Parse is
       end loop;
    end Resync_To_Next_Unit;
 
+   procedure Skip_Until_Closing_Parenthesis
+   is
+      Level : Natural;
+   begin
+      Level := 0;
+
+      --  Skip '('.
+      Scan;
+
+      loop
+         case Current_Token is
+            when Tok_Right_Paren =>
+               if Level = 0 then
+                  --  Skip ')'.
+                  Scan;
+                  exit;
+               end if;
+               Level := Level - 1;
+            when Tok_Left_Paren =>
+               Level := Level + 1;
+            when Tok_Eof
+              | Tok_Semi_Colon
+              | Tok_End
+              | Tok_Then
+              | Tok_Else
+              | Tok_Loop =>
+               exit;
+            when others =>
+               null;
+         end case;
+
+         Scan;
+      end loop;
+   end Skip_Until_Closing_Parenthesis;
+
+   --  Return True if at the end of the list, False if there is another
+   --  interface.
+   function Resync_To_End_Of_Interface return Boolean
+   is
+      Nested : Natural;
+   begin
+      Nested := 0;
+      loop
+         case Current_Token is
+            when Tok_End
+              | Tok_Port
+              | Tok_Is
+              | Tok_Begin
+              | Tok_Eof =>
+               --  Certainly comes after interface list.
+               return True;
+            when Tok_Left_Paren =>
+               Nested := Nested + 1;
+            when Tok_Right_Paren =>
+               if Nested = 0 then
+                  --  Skip ')'.
+                  Scan;
+
+                  return True;
+               end if;
+               Nested := Nested - 1;
+            when Tok_Semi_Colon =>
+               if Nested = 0 then
+                  --  Skip ';'.
+                  Scan;
+
+                  return False;
+               end if;
+            when Tok_Signal
+              | Tok_Variable
+              | Tok_Constant
+              | Tok_File
+              | Tok_Function
+              | Tok_Procedure
+              | Tok_Type
+              | Tok_Package =>
+               --  Next interface ?
+               return False;
+            when Tok_Colon
+              | Tok_Identifier
+              | Tok_In
+              | Tok_Out
+              | Tok_Inout
+              | Tok_Buffer
+              | Tok_Linkage =>
+               --  Certainly part of an interface.
+               null;
+            when others =>
+               null;
+         end case;
+
+         --  Skip token.
+         Scan;
+      end loop;
+   end Resync_To_End_Of_Interface;
+
    procedure Error_Missing_Semi_Colon (Msg : String) is
    begin
       Error_Msg_Parse (Get_Prev_Location, "missing "";"" at end of " & Msg);
@@ -1422,6 +1518,7 @@ package body Parse is
          Scan;
       end if;
 
+      --  Parse list of identifiers.
       Inter := First;
       Last := First;
       loop
@@ -1448,8 +1545,7 @@ package body Parse is
       end if;
 
       --  Skip ':'
-      Expect_Scan (Tok_Colon,
-                   "':' must follow the interface element identifier");
+      Expect_Scan (Tok_Colon, "':' expected after interface identifier");
 
       --  Parse mode.
       case Current_Token is
@@ -1652,11 +1748,8 @@ package body Parse is
    procedure Parse_Subprogram_Designator (Subprg : Iir) is
    begin
       if Current_Token = Tok_Identifier then
-         Set_Identifier (Subprg, Current_Identifier);
-         Set_Location (Subprg);
-
          --  Skip identifier.
-         Scan;
+         Scan_Identifier (Subprg);
       elsif Current_Token = Tok_String then
          if Kind_In (Subprg, Iir_Kind_Procedure_Declaration,
                      Iir_Kind_Interface_Procedure_Declaration)
@@ -1781,28 +1874,29 @@ package body Parse is
 
       case Current_Token is
          when Tok_Procedure =>
-            null;
+            --  Skip 'procedure'.
+            Scan;
          when Tok_Function =>
             --  LRM93 2.1
             --  A function is impure if its specification contains the
             --  reserved word IMPURE; otherwise it is said to be pure.
             Set_Pure_Flag (Subprg, True);
+
+            --  Skip 'function'.
+            Scan;
          when Tok_Pure
            | Tok_Impure =>
             Set_Pure_Flag (Subprg, Current_Token = Tok_Pure);
             Set_Has_Pure (Subprg, True);
-            --  FIXME: what to do in case of error ??
 
             --  Eat 'pure' or 'impure'.
             Scan;
 
-            Expect (Tok_Function, "'function' must follow 'pure' or 'impure'");
+            Expect_Scan
+              (Tok_Function, "'function' must follow 'pure' or 'impure'");
          when others =>
             raise Internal_Error;
       end case;
-
-      --  Eat 'procedure' or 'function'.
-      Scan;
 
       --  Designator.
       Parse_Subprogram_Designator (Subprg);
@@ -1830,16 +1924,14 @@ package body Parse is
       Next : Iir;
       Prev_Loc : Location_Type;
    begin
-      Expect (Tok_Left_Paren);
+      Prev_Loc := Get_Token_Location;
+
+      --  Skip '('.
+      Expect_Scan (Tok_Left_Paren);
 
       Res := Null_Iir;
       Last := Null_Iir;
       loop
-         Prev_Loc := Get_Token_Location;
-
-         --  Skip '(' or ';'
-         Scan;
-
          case Current_Token is
             when Tok_Identifier
               | Tok_Signal
@@ -1891,6 +1983,10 @@ package body Parse is
                   Error_Msg_Parse
                     (Prev_Loc, "extra ';' at end of interface list");
                end if;
+
+               --  Skip ')'.
+               Scan;
+
                exit;
             when others =>
                Error_Msg_Parse ("interface declaration expected");
@@ -1914,19 +2010,33 @@ package body Parse is
             Last := Next;
          end loop;
 
+         Prev_Loc := Get_Token_Location;
+
          case Current_Token is
             when Tok_Comma =>
                Error_Msg_Parse
                  ("interfaces must be separated by ';' (found ',')");
+
+               --  Skip ','.
+               Scan;
             when Tok_Semi_Colon =>
-               null;
-            when others =>
+               --  Skip ';'.
+               Scan;
+            when Tok_Right_Paren =>
+               --  Skip ')'.
+               Scan;
+
                exit;
+            when others =>
+               --  Try to resync; skip tokens until ';', ')'.  Handled nested
+               --  parenthesis.
+               Error_Msg_Parse ("';' or ')' expected after interface");
+
+               if Resync_To_End_Of_Interface then
+                  exit;
+               end if;
          end case;
       end loop;
-
-      --  Skip ')'
-      Expect_Scan (Tok_Right_Paren, "')' expected at end of interface list");
 
       return Res;
    end Parse_Interface_List;
@@ -5340,41 +5450,6 @@ package body Parse is
       Set_Value (Res, Val);
       return Res;
    end Parse_Integer_Literal;
-
-   procedure Skip_Until_Closing_Parenthesis
-   is
-      Level : Natural;
-   begin
-      Level := 0;
-
-      --  Skip '('.
-      Scan;
-
-      loop
-         case Current_Token is
-            when Tok_Right_Paren =>
-               if Level = 0 then
-                  --  Skip ')'.
-                  Scan;
-                  exit;
-               end if;
-               Level := Level - 1;
-            when Tok_Left_Paren =>
-               Level := Level + 1;
-            when Tok_Eof
-              | Tok_Semi_Colon
-              | Tok_End
-              | Tok_Then
-              | Tok_Else
-              | Tok_Loop =>
-               exit;
-            when others =>
-               null;
-         end case;
-
-         Scan;
-      end loop;
-   end Skip_Until_Closing_Parenthesis;
 
    --  precond : next token
    --  postcond: next token
