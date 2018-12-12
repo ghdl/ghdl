@@ -741,7 +741,8 @@ package Trans is
       Kind_Config,
       Kind_Assoc,
       Kind_Design_File,
-      Kind_Library
+      Kind_Library,
+      Kind_Expr_Eval
      );
 
    type Ortho_Info_Type_Kind is
@@ -1372,440 +1373,8 @@ package Trans is
    type Direct_Driver_Arr is array (Natural range <>) of Direct_Driver_Type;
    type Direct_Drivers_Acc is access Direct_Driver_Arr;
 
-   type Ortho_Info_Type;
+   type Ortho_Info_Type (Kind : Ortho_Info_Kind);
    type Ortho_Info_Acc is access Ortho_Info_Type;
-
-   type Ortho_Info_Type (Kind : Ortho_Info_Kind) is record
-      --  For a simple memory management: use mark and sweep to free all infos.
-      Mark : Boolean := False;
-
-      case Kind is
-         when Kind_Type =>
-            --  Mode of the type.
-            Type_Mode : Type_Mode_Type := Type_Mode_Unknown;
-
-            --  If true, the type is (still) incomplete.
-            Type_Incomplete : Boolean := False;
-
-            --  For array only.  True if the type is constrained with locally
-            --  static bounds.  May have non locally-static bounds in some
-            --  of its sub-element (ie being a complex type).
-            Type_Locally_Constrained : Boolean := False;
-
-            --  Ortho node which represents the type.
-            --  Type                             -> Ortho type
-            --   scalar                          ->  scalar
-            --   bounded record (complex or not) ->  record
-            --   constrained non-complex array   ->  constrained array
-            --   constrained complex array       ->  the element
-            --   unboubded array or record       ->  fat pointer
-            --   access to unconstrained array   ->  fat pointer
-            --   access (others)                 ->  access
-            --   file                            ->  file_index_type
-            --   protected                       ->  instance
-            Ortho_Type : O_Tnode_Array;
-
-            --  Ortho pointer to the type.  This is always an access to the
-            --  ortho_type.
-            Ortho_Ptr_Type : O_Tnode_Array;
-
-            --  More info according to the type.
-            B : Ortho_Info_Basetype_Type;
-            S : Ortho_Info_Subtype_Type;
-
-            --  Run-time information.
-            Type_Rti : O_Dnode := O_Dnode_Null;
-
-         when Kind_Incomplete_Type =>
-            --  The declaration of the incomplete type.
-            Incomplete_Type  : Iir;
-
-         when Kind_Index =>
-            --  For index_subtype_declaration, the field containing
-            --  the bounds of that index, in the array bounds record.
-            Index_Field : O_Fnode;
-
-         when Kind_Field =>
-            --  For element whose type is static: field in the record.
-            --  For element whose type is not static: offset field in the
-            --    bounds.
-            Field_Node : O_Fnode_Array := (O_Fnode_Null, O_Fnode_Null);
-
-            --  The field in the layout record for the layout of the
-            --  element (for unbounded element).
-            Field_Bound : O_Fnode := O_Fnode_Null;
-
-         when Kind_Enum_Lit =>
-            --  Ortho tree which represents the expression, used for
-            --  enumeration literals.
-            Lit_Node : O_Cnode;
-
-         when Kind_Subprg =>
-            --  True if the function can return a value stored in the secondary
-            --  stack.  In this case, the caller must deallocate the area
-            --  allocated by the callee when the value was used.
-            Use_Stack2 : Boolean := False;
-
-            --  Subprogram declaration node.
-            Subprg_Node : O_Dnode;
-
-            --  For a function:
-            --    If the return value is not composite, then this field
-            --      must be O_DNODE_NULL.
-            --    If the return value is a composite type, then the caller must
-            --    give to the callee an area to put the result.  This area is
-            --    given via an (hidden to the user) interface.  Furthermore,
-            --    the function is translated into a procedure.
-            --  For a procedure:
-            --    Interface for parameters.
-            Res_Interface : O_Dnode := O_Dnode_Null;
-
-            --  Field in the frame for a pointer to the PARAMS structure.  This
-            --  is necessary when nested subprograms need to access to
-            --  paramters. of this subprogram.
-            Subprg_Params_Var : Var_Type := Null_Var;
-
-            --  For a procedure, record containing the parameters.
-            Subprg_Params_Type : O_Tnode := O_Tnode_Null;
-            Subprg_Params_Ptr  : O_Tnode := O_Tnode_Null;
-
-            --  Field in the parameter struct for the suspend state. Also the
-            --  suspend state is not a parameter, it is initialized by the
-            --  caller.
-            Subprg_State_Field : O_Fnode := O_Fnode_Null;
-
-            --  Field in the parameter struct for local variables.
-            Subprg_Locvars_Field : O_Fnode := O_Fnode_Null;
-            Subprg_Locvars_Scope : aliased Var_Scope_Type;
-
-            --  Access to the declarations within this subprogram.
-            Subprg_Frame_Scope : aliased Var_Scope_Type;
-
-            --  Instances for the subprograms.
-            Subprg_Instance : Subprgs.Subprg_Instance_Type :=
-              Subprgs.Null_Subprg_Instance;
-
-            Subprg_Resolv : Subprg_Resolv_Info_Acc := null;
-
-            --  Local identifier number, set by spec, continued by body.
-            Subprg_Local_Id : Local_Identifier_Type;
-
-            --  If set, return should be converted into exit out of the
-            --  SUBPRG_EXIT loop and the value should be assigned to
-            --  SUBPRG_RESULT, if any.
-            Subprg_Exit   : O_Snode := O_Snode_Null;
-            Subprg_Result : O_Dnode := O_Dnode_Null;
-
-         when Kind_Operator =>
-            --  For an implicit subprogram like type operators or file
-            --  subprograms.
-
-            --  Use secondary stack (not referenced).
-            Operator_Stack2 : Boolean := False;
-
-            --  True if the body was generated.  Many operators share the same
-            --  subprogram.
-            Operator_Body : Boolean := False;
-
-            --  Subprogram declaration node.
-            Operator_Node : O_Dnode;
-
-            --  Instances for the subprograms.
-            Operator_Instance : Subprgs.Subprg_Instance_Type :=
-              Subprgs.Null_Subprg_Instance;
-
-            --  Parameters
-            Operator_Left, Operator_Right : O_Dnode;
-            Operator_Res : O_Dnode;
-
-         when Kind_Call =>
-            Call_State_Scope : aliased Var_Scope_Type;
-            Call_State_Mark : Var_Type := Null_Var;
-            Call_Params_Var : Var_Type := Null_Var;
-
-         when Kind_Call_Assoc =>
-            --  Variable containing a reference to the actual, for scalar
-            --  copyout.  The value is passed in the parameter.
-            Call_Assoc_Ref : Var_Type := Null_Var;
-
-            --  Variable containing the value, the bounds and the fat vector.
-            Call_Assoc_Value : Var_Type_Array := (others => Null_Var);
-            Call_Assoc_Bounds : Var_Type := Null_Var;
-            Call_Assoc_Fat : Var_Type_Array := (others => Null_Var);
-
-         when Kind_Object =>
-            --  For constants: set when the object is defined as a constant.
-            Object_Static   : Boolean;
-            --  The object itself.
-            Object_Var      : Var_Type;
-            --  RTI constant for the object.
-            Object_Rti      : O_Dnode := O_Dnode_Null;
-
-         when Kind_Signal =>
-            --  The current value of the signal.
-            --  Also the initial value of collapsed ports.
-            Signal_Val      : Var_Type := Null_Var;
-            --  Pointer to the value, for ports.
-            Signal_Valp     : Var_Type := Null_Var;
-            --  A pointer to the signal (contains meta data).
-            Signal_Sig      : Var_Type;
-            --  Direct driver for signal (if any).
-            Signal_Driver   : Var_Type := Null_Var;
-            --  RTI constant for the object.
-            Signal_Rti      : O_Dnode := O_Dnode_Null;
-            --  Function to compute the value of object (used for implicit
-            --   guard signal declaration).
-            Signal_Function : O_Dnode := O_Dnode_Null;
-
-         when Kind_Alias =>
-            Alias_Var  : Var_Type_Array;
-            Alias_Kind : Object_Kind_Type;
-
-         when Kind_Iterator =>
-            --  True if the range should be copied as it may change during
-            --  the loop.
-            Iterator_Range_Copy : Boolean;
-            --  Iterator variable.
-            Iterator_Var : Var_Type;
-            --  Iterator right bound (used only if the iterator is a range
-            --  expression).
-            Iterator_Right : Var_Type;
-            --  Iterator range pointer (used only if the iterator is not a
-            --  range expression).
-            Iterator_Range : Var_Type;
-
-         when Kind_Interface =>
-            --  Call mechanism (by copy or by address) for the interface.
-            Interface_Mechanism : Call_Mechanism_Array;
-
-            --  Ortho declaration for the interface. If not null, there is
-            --  a corresponding ortho parameter for the interface. While
-            --  translating nested subprograms (that are unnested),
-            --  Interface_Field may be set to the corresponding field in the
-            --  FRAME record. So:
-            --   Decl: not null, Field:     null: parameter
-            --   Decl: not null, Field: not null: parameter with a copy in
-            --                                    the FRAME record.
-            --   Decl: null,     Field:     null: not possible
-            --   Decl: null,     Field: not null: field in RESULT record
-            Interface_Decl  : O_Dnode_Array := (others => O_Dnode_Null);
-            --  Field of the PARAMS record for arguments of procedure.
-            --  In that case, Interface_Node must be null.
-            Interface_Field : O_Fnode_Array := (others => O_Fnode_Null);
-
-         when Kind_Disconnect =>
-            --  Variable which contains the time_expression of the
-            --  disconnection specification
-            Disconnect_Var : Var_Type;
-
-         when Kind_Process =>
-            Process_Scope : aliased Var_Scope_Type;
-
-            --  Subprogram for the process.
-            Process_Subprg : O_Dnode;
-
-            --  Variable (in the frame) containing the current state (a
-            --  number) used to resume the process.
-            Process_State : Var_Type := Null_Var;
-
-            --  Union containing local declarations for statements.
-            Process_Locvar_Scope : aliased Var_Scope_Type;
-
-            --  List of drivers if Flag_Direct_Drivers.
-            Process_Drivers : Direct_Drivers_Acc := null;
-
-            --  RTI for the process.
-            Process_Rti_Const : O_Dnode := O_Dnode_Null;
-
-         when Kind_Psl_Directive =>
-            Psl_Scope : aliased Var_Scope_Type;
-
-            --  Procedure for the state machine.
-            Psl_Proc_Subprg       : O_Dnode;
-            --  Procedure for finalization.  Handles EOS.
-            Psl_Proc_Final_Subprg : O_Dnode;
-
-            --  Type of the state vector.
-            Psl_Vect_Type : O_Tnode;
-
-            --  State vector variable.
-            Psl_Vect_Var : Var_Type;
-
-            --  Counter variable (nbr of failures or coverage)
-            Psl_Count_Var : Var_Type;
-
-            --  RTI for the process.
-            Psl_Rti_Const : O_Dnode := O_Dnode_Null;
-
-         when Kind_Loop =>
-            --  Labels for the loop.
-            --  Used for exit/next from while-loop, and to exit from for-loop.
-            Label_Exit : O_Snode;
-            --  Used to next from for-loop, with an exit statment.
-            Label_Next : O_Snode;
-
-         when Kind_Loop_State =>
-            --  Likewise but for a suspendable loop.
-            --  State next: evaluate condition for a while-loop, update
-            --  iterator for a for-loop.
-            Loop_State_Next : State_Type;
-            --  Body of a for-loop, not used for a while-loop.
-            Loop_State_Body: State_Type;
-            --  State after the loop.
-            Loop_State_Exit  : State_Type;
-            --  Access to declarations of the iterator.
-            Loop_State_Scope : aliased Var_Scope_Type;
-            Loop_Locvar_Scope : aliased Var_Scope_Type;
-
-         when Kind_Locvar_State =>
-            Locvar_Scope : aliased Var_Scope_Type;
-
-         when Kind_Block =>
-            --  Access to declarations of this block.
-            Block_Scope : aliased Var_Scope_Type;
-
-            --  Instance type (ortho record) for declarations contained in the
-            --  block/entity/architecture.
-            Block_Decls_Ptr_Type : O_Tnode;
-
-            --  For Entity: field in the instance type containing link to
-            --              parent.
-            --  For an instantiation: link in the parent block to the instance.
-            Block_Link_Field : O_Fnode;
-
-            --  For an entity: must be o_fnode_null.
-            --  For an architecture: the entity field.
-            --  For a block, a component or a generate block: field in the
-            --    parent instance which contains the declarations for this
-            --    block.
-            Block_Parent_Field : O_Fnode;
-
-            --  For a generate block: field in the block providing a chain to
-            --  the previous block (note: this may not be the parent, but
-            --  is a parent).
-            Block_Origin_Field     : O_Fnode;
-            --  For an iterative block: boolean field set when the block
-            --  is configured.  This is used to check if the block was already
-            --  configured since index and slice are not compelled to be
-            --  locally static.
-            Block_Configured_Field : O_Fnode;
-
-            --  For iterative generate block: array of instances.
-            Block_Decls_Array_Type     : O_Tnode;
-            Block_Decls_Array_Ptr_Type : O_Tnode;
-
-            --  For if-generate generate statement body: the identifier of the
-            --  body.  Used to know which block_configuration applies to the
-            --  block.
-            Block_Id : Nat32;
-
-            --  Subprogram which elaborates the block (for entity or arch).
-            Block_Elab_Subprg   : O_Dnode_Elab;
-
-            --  Size of the block instance.
-            Block_Instance_Size : O_Dnode;
-
-            --  Only for an entity: procedure that elaborate the packages this
-            --  units depend on.  That must be done before elaborating the
-            --  entity and before evaluating default expressions in generics.
-            Block_Elab_Pkg_Subprg : O_Dnode;
-
-            --  RTI constant for the block.
-            Block_Rti_Const : O_Dnode := O_Dnode_Null;
-
-         when Kind_Generate =>
-            --  Like Block_Parent_Field: field in the instance for the
-            --  sub-block.  Always a Ghdl_Ptr_Type, as there are many possible
-            --  types for the sub-block instance (if/case generate).
-            Generate_Parent_Field : O_Fnode;
-
-            --  Identifier number of the generate statement body.  Used for
-            --  configuring sub-block, and for grt to index the rti.
-            Generate_Body_Id : O_Fnode;
-
-            --  RTI for the generate statement.
-            Generate_Rti_Const : O_Dnode := O_Dnode_Null;
-
-         when Kind_Component =>
-            --  How to access to component interfaces.
-            Comp_Scope : aliased Var_Scope_Type;
-
-            --  Instance for the component.
-            Comp_Ptr_Type  : O_Tnode;
-            --  Field containing a pointer to the instance link.
-            Comp_Link      : O_Fnode;
-            --  RTI for the component.
-            Comp_Rti_Const : O_Dnode;
-
-         when Kind_Config =>
-            --  Subprogram that configure the block.
-            Config_Subprg : O_Dnode;
-            Config_Instance : O_Dnode;
-
-         when Kind_Package =>
-            --  Subprogram which elaborate the package spec/body.
-            --  External units should call the body elaborator.
-            --  The spec elaborator is called only from the body elaborator.
-            Package_Elab_Spec_Subprg : O_Dnode;
-            Package_Elab_Body_Subprg : O_Dnode;
-
-            --  Instance for the elaborators.
-            Package_Elab_Spec_Instance : Subprgs.Subprg_Instance_Type;
-            Package_Elab_Body_Instance : Subprgs.Subprg_Instance_Type;
-
-            --  Variable set to true when the package is elaborated.
-            Package_Elab_Var : Var_Type;
-
-            --  RTI constant for the package.
-            Package_Rti_Const : O_Dnode;
-
-            --  Access to declarations of the spec.
-            Package_Spec_Scope : aliased Var_Scope_Type;
-
-            --  Instance type for uninstantiated package
-            Package_Spec_Ptr_Type : O_Tnode;
-
-            Package_Body_Scope    : aliased Var_Scope_Type;
-            Package_Body_Ptr_Type : O_Tnode;
-
-            --  Field to the spec within the body.
-            Package_Spec_Field : O_Fnode;
-
-            --  Local id, set by package declaration, continued by package
-            --  body.
-            Package_Local_Id : Local_Identifier_Type;
-
-         when Kind_Package_Instance =>
-            --  The variables containing the instance.  There are two variables
-            --  for interface package: one for the spec, one for the body.
-            --  For package instantiation, only the variable for the body is
-            --  used.  The variable for spec is added so that packages with
-            --  package interfaces don't need to know the body of their
-            --  interfaces.
-            Package_Instance_Spec_Var : Var_Type;
-            Package_Instance_Body_Var : Var_Type;
-
-            --  Elaboration procedure for the instance.
-            Package_Instance_Elab_Subprg : O_Dnode;
-
-            Package_Instance_Spec_Scope : aliased Var_Scope_Type;
-            Package_Instance_Body_Scope : aliased Var_Scope_Type;
-
-         when Kind_Assoc =>
-            --  Association informations.
-            Assoc_In  : Assoc_Conv_Info;
-            Assoc_Out : Assoc_Conv_Info;
-
-         when Kind_Design_File =>
-            Design_Filename : O_Dnode;
-
-         when Kind_Library =>
-            Library_Rti_Const : O_Dnode;
-      end case;
-   end record;
-
-   procedure Unchecked_Deallocation is new Ada.Unchecked_Deallocation
-     (Name => Ortho_Info_Acc, Object => Ortho_Info_Type);
 
    subtype Type_Info_Acc is Ortho_Info_Acc (Kind_Type);
    subtype Incomplete_Type_Info_Acc is Ortho_Info_Acc (Kind_Incomplete_Type);
@@ -2089,6 +1658,442 @@ package Trans is
    function Lo2M (D : O_Dnode; Vtype : Type_Info_Acc; Mode : Object_Kind_Type)
                   return Mnode;
 
+   type Ortho_Info_Type (Kind : Ortho_Info_Kind) is record
+      --  For a simple memory management: use mark and sweep to free all infos.
+      Mark : Boolean := False;
+
+      case Kind is
+         when Kind_Type =>
+            --  Mode of the type.
+            Type_Mode : Type_Mode_Type := Type_Mode_Unknown;
+
+            --  If true, the type is (still) incomplete.
+            Type_Incomplete : Boolean := False;
+
+            --  For array only.  True if the type is constrained with locally
+            --  static bounds.  May have non locally-static bounds in some
+            --  of its sub-element (ie being a complex type).
+            Type_Locally_Constrained : Boolean := False;
+
+            --  Ortho node which represents the type.
+            --  Type                             -> Ortho type
+            --   scalar                          ->  scalar
+            --   bounded record (complex or not) ->  record
+            --   constrained non-complex array   ->  constrained array
+            --   constrained complex array       ->  the element
+            --   unboubded array or record       ->  fat pointer
+            --   access to unconstrained array   ->  fat pointer
+            --   access (others)                 ->  access
+            --   file                            ->  file_index_type
+            --   protected                       ->  instance
+            Ortho_Type : O_Tnode_Array;
+
+            --  Ortho pointer to the type.  This is always an access to the
+            --  ortho_type.
+            Ortho_Ptr_Type : O_Tnode_Array;
+
+            --  More info according to the type.
+            B : Ortho_Info_Basetype_Type;
+            S : Ortho_Info_Subtype_Type;
+
+            --  Run-time information.
+            Type_Rti : O_Dnode := O_Dnode_Null;
+
+         when Kind_Incomplete_Type =>
+            --  The declaration of the incomplete type.
+            Incomplete_Type  : Iir;
+
+         when Kind_Index =>
+            --  For index_subtype_declaration, the field containing
+            --  the bounds of that index, in the array bounds record.
+            Index_Field : O_Fnode;
+
+         when Kind_Field =>
+            --  For element whose type is static: field in the record.
+            --  For element whose type is not static: offset field in the
+            --    bounds.
+            Field_Node : O_Fnode_Array := (O_Fnode_Null, O_Fnode_Null);
+
+            --  The field in the layout record for the layout of the
+            --  element (for unbounded element).
+            Field_Bound : O_Fnode := O_Fnode_Null;
+
+         when Kind_Enum_Lit =>
+            --  Ortho tree which represents the expression, used for
+            --  enumeration literals.
+            Lit_Node : O_Cnode;
+
+         when Kind_Subprg =>
+            --  True if the function can return a value stored in the secondary
+            --  stack.  In this case, the caller must deallocate the area
+            --  allocated by the callee when the value was used.
+            Use_Stack2 : Boolean := False;
+
+            --  Subprogram declaration node.
+            Subprg_Node : O_Dnode;
+
+            --  For a function:
+            --    If the return value is not composite, then this field
+            --      must be O_DNODE_NULL.
+            --    If the return value is a composite type, then the caller must
+            --    give to the callee an area to put the result.  This area is
+            --    given via an (hidden to the user) interface.  Furthermore,
+            --    the function is translated into a procedure.
+            --  For a procedure:
+            --    Interface for parameters.
+            Res_Interface : O_Dnode := O_Dnode_Null;
+
+            --  Field in the frame for a pointer to the PARAMS structure.  This
+            --  is necessary when nested subprograms need to access to
+            --  paramters. of this subprogram.
+            Subprg_Params_Var : Var_Type := Null_Var;
+
+            --  For a procedure, record containing the parameters.
+            Subprg_Params_Type : O_Tnode := O_Tnode_Null;
+            Subprg_Params_Ptr  : O_Tnode := O_Tnode_Null;
+
+            --  Field in the parameter struct for the suspend state. Also the
+            --  suspend state is not a parameter, it is initialized by the
+            --  caller.
+            Subprg_State_Field : O_Fnode := O_Fnode_Null;
+
+            --  Field in the parameter struct for local variables.
+            Subprg_Locvars_Field : O_Fnode := O_Fnode_Null;
+            Subprg_Locvars_Scope : aliased Var_Scope_Type;
+
+            --  Access to the declarations within this subprogram.
+            Subprg_Frame_Scope : aliased Var_Scope_Type;
+
+            --  Instances for the subprograms.
+            Subprg_Instance : Subprgs.Subprg_Instance_Type :=
+              Subprgs.Null_Subprg_Instance;
+
+            Subprg_Resolv : Subprg_Resolv_Info_Acc := null;
+
+            --  Local identifier number, set by spec, continued by body.
+            Subprg_Local_Id : Local_Identifier_Type;
+
+            --  If set, return should be converted into exit out of the
+            --  SUBPRG_EXIT loop and the value should be assigned to
+            --  SUBPRG_RESULT, if any.
+            Subprg_Exit   : O_Snode := O_Snode_Null;
+            Subprg_Result : O_Dnode := O_Dnode_Null;
+
+         when Kind_Operator =>
+            --  For an implicit subprogram like type operators or file
+            --  subprograms.
+
+            --  Use secondary stack (not referenced).
+            Operator_Stack2 : Boolean := False;
+
+            --  True if the body was generated.  Many operators share the same
+            --  subprogram.
+            Operator_Body : Boolean := False;
+
+            --  Subprogram declaration node.
+            Operator_Node : O_Dnode;
+
+            --  Instances for the subprograms.
+            Operator_Instance : Subprgs.Subprg_Instance_Type :=
+              Subprgs.Null_Subprg_Instance;
+
+            --  Parameters
+            Operator_Left, Operator_Right : O_Dnode;
+            Operator_Res : O_Dnode;
+
+         when Kind_Call =>
+            Call_State_Scope : aliased Var_Scope_Type;
+            Call_State_Mark : Var_Type := Null_Var;
+            Call_Params_Var : Var_Type := Null_Var;
+
+         when Kind_Call_Assoc =>
+            --  Variable containing a reference to the actual, for scalar
+            --  copyout.  The value is passed in the parameter.
+            Call_Assoc_Ref : Var_Type := Null_Var;
+
+            --  Variable containing the value, the bounds and the fat vector.
+            Call_Assoc_Value : Var_Type_Array := (others => Null_Var);
+            Call_Assoc_Bounds : Var_Type := Null_Var;
+            Call_Assoc_Fat : Var_Type_Array := (others => Null_Var);
+
+         when Kind_Object =>
+            --  For constants: set when the object is defined as a constant.
+            Object_Static   : Boolean;
+            --  The object itself.
+            Object_Var      : Var_Type;
+            --  RTI constant for the object.
+            Object_Rti      : O_Dnode := O_Dnode_Null;
+
+         when Kind_Signal =>
+            --  The current value of the signal.
+            --  Also the initial value of collapsed ports.
+            Signal_Val      : Var_Type := Null_Var;
+            --  Pointer to the value, for ports.
+            Signal_Valp     : Var_Type := Null_Var;
+            --  A pointer to the signal (contains meta data).
+            Signal_Sig      : Var_Type;
+            --  Direct driver for signal (if any).
+            Signal_Driver   : Var_Type := Null_Var;
+            --  RTI constant for the object.
+            Signal_Rti      : O_Dnode := O_Dnode_Null;
+            --  Function to compute the value of object (used for implicit
+            --   guard signal declaration).
+            Signal_Function : O_Dnode := O_Dnode_Null;
+
+         when Kind_Alias =>
+            Alias_Var  : Var_Type_Array;
+            Alias_Kind : Object_Kind_Type;
+
+         when Kind_Iterator =>
+            --  True if the range should be copied as it may change during
+            --  the loop.
+            Iterator_Range_Copy : Boolean;
+            --  Iterator variable.
+            Iterator_Var : Var_Type;
+            --  Iterator right bound (used only if the iterator is a range
+            --  expression).
+            Iterator_Right : Var_Type;
+            --  Iterator range pointer (used only if the iterator is not a
+            --  range expression).
+            Iterator_Range : Var_Type;
+
+         when Kind_Interface =>
+            --  Call mechanism (by copy or by address) for the interface.
+            Interface_Mechanism : Call_Mechanism_Array;
+
+            --  Ortho declaration for the interface. If not null, there is
+            --  a corresponding ortho parameter for the interface. While
+            --  translating nested subprograms (that are unnested),
+            --  Interface_Field may be set to the corresponding field in the
+            --  FRAME record. So:
+            --   Decl: not null, Field:     null: parameter
+            --   Decl: not null, Field: not null: parameter with a copy in
+            --                                    the FRAME record.
+            --   Decl: null,     Field:     null: not possible
+            --   Decl: null,     Field: not null: field in RESULT record
+            Interface_Decl  : O_Dnode_Array := (others => O_Dnode_Null);
+            --  Field of the PARAMS record for arguments of procedure.
+            --  In that case, Interface_Node must be null.
+            Interface_Field : O_Fnode_Array := (others => O_Fnode_Null);
+
+         when Kind_Expr_Eval =>
+            --  Result of an evaluation.
+            Expr_Eval : Mnode;
+
+         when Kind_Disconnect =>
+            --  Variable which contains the time_expression of the
+            --  disconnection specification
+            Disconnect_Var : Var_Type;
+
+         when Kind_Process =>
+            Process_Scope : aliased Var_Scope_Type;
+
+            --  Subprogram for the process.
+            Process_Subprg : O_Dnode;
+
+            --  Variable (in the frame) containing the current state (a
+            --  number) used to resume the process.
+            Process_State : Var_Type := Null_Var;
+
+            --  Union containing local declarations for statements.
+            Process_Locvar_Scope : aliased Var_Scope_Type;
+
+            --  List of drivers if Flag_Direct_Drivers.
+            Process_Drivers : Direct_Drivers_Acc := null;
+
+            --  RTI for the process.
+            Process_Rti_Const : O_Dnode := O_Dnode_Null;
+
+         when Kind_Psl_Directive =>
+            Psl_Scope : aliased Var_Scope_Type;
+
+            --  Procedure for the state machine.
+            Psl_Proc_Subprg       : O_Dnode;
+            --  Procedure for finalization.  Handles EOS.
+            Psl_Proc_Final_Subprg : O_Dnode;
+
+            --  Type of the state vector.
+            Psl_Vect_Type : O_Tnode;
+
+            --  State vector variable.
+            Psl_Vect_Var : Var_Type;
+
+            --  Counter variable (nbr of failures or coverage)
+            Psl_Count_Var : Var_Type;
+
+            --  RTI for the process.
+            Psl_Rti_Const : O_Dnode := O_Dnode_Null;
+
+         when Kind_Loop =>
+            --  Labels for the loop.
+            --  Used for exit/next from while-loop, and to exit from for-loop.
+            Label_Exit : O_Snode;
+            --  Used to next from for-loop, with an exit statment.
+            Label_Next : O_Snode;
+
+         when Kind_Loop_State =>
+            --  Likewise but for a suspendable loop.
+            --  State next: evaluate condition for a while-loop, update
+            --  iterator for a for-loop.
+            Loop_State_Next : State_Type;
+            --  Body of a for-loop, not used for a while-loop.
+            Loop_State_Body: State_Type;
+            --  State after the loop.
+            Loop_State_Exit  : State_Type;
+            --  Access to declarations of the iterator.
+            Loop_State_Scope : aliased Var_Scope_Type;
+            Loop_Locvar_Scope : aliased Var_Scope_Type;
+
+         when Kind_Locvar_State =>
+            Locvar_Scope : aliased Var_Scope_Type;
+
+         when Kind_Block =>
+            --  Access to declarations of this block.
+            Block_Scope : aliased Var_Scope_Type;
+
+            --  Instance type (ortho record) for declarations contained in the
+            --  block/entity/architecture.
+            Block_Decls_Ptr_Type : O_Tnode;
+
+            --  For Entity: field in the instance type containing link to
+            --              parent.
+            --  For an instantiation: link in the parent block to the instance.
+            Block_Link_Field : O_Fnode;
+
+            --  For an entity: must be o_fnode_null.
+            --  For an architecture: the entity field.
+            --  For a block, a component or a generate block: field in the
+            --    parent instance which contains the declarations for this
+            --    block.
+            Block_Parent_Field : O_Fnode;
+
+            --  For a generate block: field in the block providing a chain to
+            --  the previous block (note: this may not be the parent, but
+            --  is a parent).
+            Block_Origin_Field     : O_Fnode;
+            --  For an iterative block: boolean field set when the block
+            --  is configured.  This is used to check if the block was already
+            --  configured since index and slice are not compelled to be
+            --  locally static.
+            Block_Configured_Field : O_Fnode;
+
+            --  For iterative generate block: array of instances.
+            Block_Decls_Array_Type     : O_Tnode;
+            Block_Decls_Array_Ptr_Type : O_Tnode;
+
+            --  For if-generate generate statement body: the identifier of the
+            --  body.  Used to know which block_configuration applies to the
+            --  block.
+            Block_Id : Nat32;
+
+            --  Subprogram which elaborates the block (for entity or arch).
+            Block_Elab_Subprg   : O_Dnode_Elab;
+
+            --  Size of the block instance.
+            Block_Instance_Size : O_Dnode;
+
+            --  Only for an entity: procedure that elaborate the packages this
+            --  units depend on.  That must be done before elaborating the
+            --  entity and before evaluating default expressions in generics.
+            Block_Elab_Pkg_Subprg : O_Dnode;
+
+            --  RTI constant for the block.
+            Block_Rti_Const : O_Dnode := O_Dnode_Null;
+
+         when Kind_Generate =>
+            --  Like Block_Parent_Field: field in the instance for the
+            --  sub-block.  Always a Ghdl_Ptr_Type, as there are many possible
+            --  types for the sub-block instance (if/case generate).
+            Generate_Parent_Field : O_Fnode;
+
+            --  Identifier number of the generate statement body.  Used for
+            --  configuring sub-block, and for grt to index the rti.
+            Generate_Body_Id : O_Fnode;
+
+            --  RTI for the generate statement.
+            Generate_Rti_Const : O_Dnode := O_Dnode_Null;
+
+         when Kind_Component =>
+            --  How to access to component interfaces.
+            Comp_Scope : aliased Var_Scope_Type;
+
+            --  Instance for the component.
+            Comp_Ptr_Type  : O_Tnode;
+            --  Field containing a pointer to the instance link.
+            Comp_Link      : O_Fnode;
+            --  RTI for the component.
+            Comp_Rti_Const : O_Dnode;
+
+         when Kind_Config =>
+            --  Subprogram that configure the block.
+            Config_Subprg : O_Dnode;
+            Config_Instance : O_Dnode;
+
+         when Kind_Package =>
+            --  Subprogram which elaborate the package spec/body.
+            --  External units should call the body elaborator.
+            --  The spec elaborator is called only from the body elaborator.
+            Package_Elab_Spec_Subprg : O_Dnode;
+            Package_Elab_Body_Subprg : O_Dnode;
+
+            --  Instance for the elaborators.
+            Package_Elab_Spec_Instance : Subprgs.Subprg_Instance_Type;
+            Package_Elab_Body_Instance : Subprgs.Subprg_Instance_Type;
+
+            --  Variable set to true when the package is elaborated.
+            Package_Elab_Var : Var_Type;
+
+            --  RTI constant for the package.
+            Package_Rti_Const : O_Dnode;
+
+            --  Access to declarations of the spec.
+            Package_Spec_Scope : aliased Var_Scope_Type;
+
+            --  Instance type for uninstantiated package
+            Package_Spec_Ptr_Type : O_Tnode;
+
+            Package_Body_Scope    : aliased Var_Scope_Type;
+            Package_Body_Ptr_Type : O_Tnode;
+
+            --  Field to the spec within the body.
+            Package_Spec_Field : O_Fnode;
+
+            --  Local id, set by package declaration, continued by package
+            --  body.
+            Package_Local_Id : Local_Identifier_Type;
+
+         when Kind_Package_Instance =>
+            --  The variables containing the instance.  There are two variables
+            --  for interface package: one for the spec, one for the body.
+            --  For package instantiation, only the variable for the body is
+            --  used.  The variable for spec is added so that packages with
+            --  package interfaces don't need to know the body of their
+            --  interfaces.
+            Package_Instance_Spec_Var : Var_Type;
+            Package_Instance_Body_Var : Var_Type;
+
+            --  Elaboration procedure for the instance.
+            Package_Instance_Elab_Subprg : O_Dnode;
+
+            Package_Instance_Spec_Scope : aliased Var_Scope_Type;
+            Package_Instance_Body_Scope : aliased Var_Scope_Type;
+
+         when Kind_Assoc =>
+            --  Association informations.
+            Assoc_In  : Assoc_Conv_Info;
+            Assoc_Out : Assoc_Conv_Info;
+
+         when Kind_Design_File =>
+            Design_Filename : O_Dnode;
+
+         when Kind_Library =>
+            Library_Rti_Const : O_Dnode;
+      end case;
+   end record;
+
+   procedure Unchecked_Deallocation is new Ada.Unchecked_Deallocation
+     (Name => Ortho_Info_Acc, Object => Ortho_Info_Type);
+
    package Helpers is
       --  Generate code to initialize a ghdl_index_type variable V to 0.
       procedure Init_Var (V : O_Dnode);
@@ -2126,7 +2131,10 @@ package Trans is
       --  Create a temporary variable of ATYPE and initialize it with the
       --  address of NAME.
       function Create_Temp_Ptr (Atype : O_Tnode; Name : O_Lnode)
-                                return O_Dnode;
+                               return O_Dnode;
+
+      function Create_Temp_Bounds (Tinfo : Type_Info_Acc) return Mnode;
+
       --  Create a mark in the temporary region for the stack2.
       --  FIXME: maybe a flag must be added to CLOSE_TEMP where it is known
       --   stack2 can be released.

@@ -227,6 +227,10 @@ package Trans.Chap3 is
    function Array_Bounds_To_Element_Bounds (B : Mnode; Atype : Iir)
                                            return Mnode;
 
+   --  From unbounded array bounds B, get the layout of the unbounded element.
+   function Array_Bounds_To_Element_Layout (B : Mnode; Atype : Iir)
+                                           return Mnode;
+
    --  Deallocate OBJ.
    procedure Gen_Deallocate (Obj : O_Enode);
 

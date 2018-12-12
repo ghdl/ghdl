@@ -2144,6 +2144,13 @@ package body Trans is
          return Create_Temp_Init (Atype, New_Address (Name, Atype));
       end Create_Temp_Ptr;
 
+      function Create_Temp_Bounds (Tinfo : Type_Info_Acc) return Mnode is
+      begin
+         return Dv2M (Create_Temp (Tinfo.B.Bounds_Type),
+                      Tinfo, Mode_Value,
+                      Tinfo.B.Bounds_Type, Tinfo.B.Bounds_Ptr_Type);
+      end Create_Temp_Bounds;
+
       --  Return a ghdl_index_type literal for NUM.
       function New_Index_Lit (Num : Unsigned_64) return O_Cnode is
       begin

@@ -3051,6 +3051,7 @@ package body Trans.Chap7 is
 
          --  Then, assign named or others association.
          if Is_Chain_Length_One (El) then
+            pragma Assert (Get_Info (El) = null);
             --  There is only one choice
             case Get_Kind (El) is
                when Iir_Kind_Choice_By_Others =>
@@ -3128,6 +3129,9 @@ package body Trans.Chap7 is
             --  convert aggr into a case statement.
             Start_Case_Stmt (Case_Blk, New_Obj_Value (Var_Pos));
             while El /= Null_Iir loop
+               --  No Expr_Eval.
+               pragma Assert (Get_Info (El) = null);
+
                Start_Choice (Case_Blk);
                Chap8.Translate_Case_Choice (El, Range_Type, Case_Blk);
                Finish_Choice (Case_Blk);
@@ -3205,16 +3209,26 @@ package body Trans.Chap7 is
 
       --  The expression associated.
       El_Expr : Iir;
+      Assoc     : Iir;
 
       --  Set an elements.
-      procedure Set_El (El : Iir_Element_Declaration) is
+      procedure Set_El (El : Iir_Element_Declaration)
+      is
+         Info : constant Ortho_Info_Acc := Get_Info (Assoc);
+         Dest : Mnode;
       begin
-         Translate_Assign (Chap6.Translate_Selected_Element (Targ, El),
-                           El_Expr, Get_Type (El));
+         Dest := Chap6.Translate_Selected_Element (Targ, El);
+         if Info /= null then
+            --  The expression was already evaluated to compute the bounds.
+            --  Just copy it.
+            Chap3.Translate_Object_Copy (Dest, Info.Expr_Eval, Get_Type (El));
+            Clear_Info (Assoc);
+         else
+            Translate_Assign (Dest, El_Expr, Get_Type (El));
+         end if;
          Set_Array (Natural (Get_Element_Position (El))) := True;
       end Set_El;
 
-      Assoc     : Iir;
       N_El_Expr : Iir;
    begin
       Open_Temp;
@@ -3453,7 +3467,9 @@ package body Trans.Chap7 is
       end case;
    end Translate_Aggregate;
 
-   procedure Translate_Aggregate_Bounds (Bounds : Mnode; Aggr : Iir)
+   procedure Translate_Aggregate_Sub_Bounds (Bounds : Mnode; Aggr : Iir);
+
+   procedure Translate_Array_Aggregate_Bounds (Bounds : Mnode; Aggr : Iir)
    is
       Aggr_Type : constant Iir := Get_Type (Aggr);
       Assoc : Iir;
@@ -3479,6 +3495,8 @@ package body Trans.Chap7 is
                   Static_Len :=
                     Static_Len + Eval_Discrete_Type_Length (Range_Type);
                end if;
+            else
+               raise Internal_Error;
             end if;
          end if;
          Assoc := Get_Chain (Assoc);
@@ -3509,6 +3527,8 @@ package body Trans.Chap7 is
                                        New_Obj_Value (Var_Len), M2E (L)));
                   end;
                end if;
+            else
+               raise Internal_Error;
             end if;
          end if;
          Assoc := Get_Chain (Assoc);
@@ -3517,6 +3537,125 @@ package body Trans.Chap7 is
       Chap3.Create_Range_From_Length
         (Get_Index_Type (Aggr_Type, 0), Var_Len,
          Chap3.Bounds_To_Range (Bounds, Aggr_Type, 1), Aggr);
+   end Translate_Array_Aggregate_Bounds;
+
+   procedure Translate_Record_Aggregate_Bounds (Bounds : Mnode; Aggr : Iir)
+   is
+      Stable_Bounds : Mnode;
+      Aggr_Type : constant Iir := Get_Type (Aggr);
+      Base_El_List : constant Iir_Flist :=
+        Get_Elements_Declaration_List (Get_Base_Type (Aggr_Type));
+
+      Pos : Natural;
+      Base_El : Iir;
+      Base_El_Type : Iir;
+
+      Others_Assoc : Iir;
+      Assoc : Iir;
+
+      Expr : Iir;
+      Expr_Type : Iir;
+      Val : Mnode;
+      Info : Ortho_Info_Acc;
+   begin
+      Stable_Bounds := Stabilize (Bounds);
+
+      Others_Assoc := Null_Iir;
+      Pos := 0;
+      Assoc := Get_Association_Choices_Chain (Aggr);
+      while Assoc /= Null_Iir loop
+         case Iir_Kinds_Record_Choice (Get_Kind (Assoc)) is
+            when Iir_Kind_Choice_By_Others =>
+               Others_Assoc := Assoc;
+               pragma Assert (Get_Chain (Assoc) = Null_Iir);
+               exit;
+            when Iir_Kind_Choice_By_None =>
+               null;
+            when Iir_Kind_Choice_By_Name =>
+               pragma Assert
+                 (Get_Element_Position
+                    (Get_Named_Entity
+                       (Get_Choice_Name (Assoc))) = Iir_Index32 (Pos));
+               null;
+         end case;
+         Base_El := Get_Nth_Element (Base_El_List, Pos);
+         Base_El_Type := Get_Type (Base_El);
+         if Is_Unbounded_Type (Get_Info (Base_El_Type)) then
+            --  There are corresponding bounds.
+            Expr := Get_Associated_Expr (Assoc);
+            Expr_Type := Get_Type (Expr);
+            if Get_Constraint_State (Expr_Type) = Fully_Constrained then
+               --  Translate subtype, and copy bounds.
+               raise Internal_Error;
+            else
+               if Get_Kind (Expr) = Iir_Kind_Aggregate then
+                  --  Just translate bounds.
+                  Translate_Aggregate_Sub_Bounds
+                    (Chap3.Record_Bounds_To_Element_Bounds
+                       (Stable_Bounds, Base_El),
+                     Expr);
+               else
+                  --  Eval expr
+                  Val := Translate_Expression (Expr);
+                  Val := Stabilize (Val);
+                  Info := Add_Info (Assoc, Kind_Expr_Eval);
+                  Info.Expr_Eval := Val;
+
+                  --  Copy bounds.
+                  Chap3.Copy_Bounds
+                    (Chap3.Record_Bounds_To_Element_Bounds
+                       (Stable_Bounds, Base_El),
+                     Chap3.Get_Composite_Bounds (Val), Expr_Type);
+               end if;
+            end if;
+         end if;
+
+         Pos := Pos + 1;
+         Assoc := Get_Chain (Assoc);
+      end loop;
+      pragma Assert (Others_Assoc = Null_Iir);  --  TODO
+   end Translate_Record_Aggregate_Bounds;
+
+   --  Just create the bounds from AGGR.
+   procedure Translate_Aggregate_Sub_Bounds (Bounds : Mnode; Aggr : Iir)
+   is
+      Aggr_Type : constant Iir := Get_Type (Aggr);
+   begin
+      case Iir_Kinds_Composite_Type_Definition (Get_Kind (Aggr_Type)) is
+         when Iir_Kind_Array_Type_Definition
+           | Iir_Kind_Array_Subtype_Definition =>
+            Translate_Array_Aggregate_Bounds (Bounds, Aggr);
+         when Iir_Kind_Record_Type_Definition
+           | Iir_Kind_Record_Subtype_Definition =>
+            Translate_Record_Aggregate_Bounds (Bounds, Aggr);
+      end case;
+   end Translate_Aggregate_Sub_Bounds;
+
+   --  Create the bounds and build the type (set size).
+   procedure Translate_Aggregate_Bounds (Bounds : Mnode; Aggr : Iir)
+   is
+      Aggr_Type : constant Iir := Get_Type (Aggr);
+   begin
+      case Iir_Kinds_Composite_Type_Definition (Get_Kind (Aggr_Type)) is
+         when Iir_Kind_Array_Type_Definition
+           | Iir_Kind_Array_Subtype_Definition =>
+            Translate_Array_Aggregate_Bounds (Bounds, Aggr);
+            declare
+               El_Type : constant Iir := Get_Element_Subtype (Aggr_Type);
+            begin
+               --  The array aggregate may be unbounded simply because the
+               --  indexes are not known but its element is bounded.
+               if Is_Unbounded_Type (Get_Info (El_Type)) then
+                  Chap3.Gen_Call_Type_Builder
+                    (Chap3.Array_Bounds_To_Element_Layout (Bounds, Aggr_Type),
+                     El_Type, Mode_Value);
+               end if;
+            end;
+         when Iir_Kind_Record_Type_Definition
+           | Iir_Kind_Record_Subtype_Definition =>
+            Translate_Record_Aggregate_Bounds (Bounds, Aggr);
+            Chap3.Gen_Call_Type_Builder (Bounds, Aggr_Type, Mode_Value);
+      end case;
    end Translate_Aggregate_Bounds;
 
    function Translate_Allocator_By_Expression (Expr : Iir) return O_Enode
@@ -4049,6 +4188,7 @@ package body Trans.Chap7 is
                declare
                   Aggr_Type : Iir;
                   Tinfo     : Type_Info_Acc;
+                  Bounds    : Mnode;
                   Mres      : Mnode;
                begin
                   --  Extract the type of the aggregate.  Use the type of the
@@ -4058,25 +4198,37 @@ package body Trans.Chap7 is
                     and then Is_Fully_Constrained_Type (Rtype)
                   then
                      Aggr_Type := Rtype;
-                  else
-                     pragma Assert (Is_Fully_Constrained_Type (Expr_Type));
-                     null;
                   end if;
 
-                  Chap3.Create_Composite_Subtype (Aggr_Type);
+                  if Get_Constraint_State (Aggr_Type) /= Fully_Constrained
+                  then
+                     Tinfo := Get_Info (Aggr_Type);
 
-                  --  FIXME: this may be not necessary
-                  Tinfo := Get_Info (Aggr_Type);
-
-                  --  The result area has to be created
-                  if Is_Complex_Type (Tinfo) then
                      Mres := Create_Temp (Tinfo);
-                     Chap4.Allocate_Complex_Object
-                       (Aggr_Type, Alloc_Stack, Mres);
+                     Bounds := Create_Temp_Bounds (Tinfo);
+                     New_Assign_Stmt
+                       (M2Lp (Chap3.Get_Composite_Bounds (Mres)),
+                        M2Addr (Bounds));
+                     --  Build bounds from aggregate.
+                     Chap7.Translate_Aggregate_Bounds (Bounds, Expr);
+                     Chap3.Allocate_Unbounded_Composite_Base
+                       (Alloc_Stack, Mres, Aggr_Type);
                   else
-                     --  if thin array/record:
-                     --    create result
-                     Mres := Create_Temp (Tinfo);
+                     Chap3.Create_Composite_Subtype (Aggr_Type);
+
+                     --  FIXME: this may be not necessary
+                     Tinfo := Get_Info (Aggr_Type);
+
+                     --  The result area has to be created
+                     if Is_Complex_Type (Tinfo) then
+                        Mres := Create_Temp (Tinfo);
+                        Chap4.Allocate_Complex_Object
+                          (Aggr_Type, Alloc_Stack, Mres);
+                     else
+                        --  if thin array/record:
+                        --    create result
+                        Mres := Create_Temp (Tinfo);
+                     end if;
                   end if;
 
                   Translate_Aggregate (Mres, Aggr_Type, Expr);
