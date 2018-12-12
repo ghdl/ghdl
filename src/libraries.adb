@@ -1168,6 +1168,7 @@ package body Libraries is
       end if;
 
       if Design_File /= Null_Iir
+        and then New_Lib_Checksum /= No_File_Checksum_Id
         and then not Files_Map.Is_Eq (New_Lib_Checksum,
                                       Get_File_Checksum (Design_File))
       then
