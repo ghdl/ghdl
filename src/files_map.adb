@@ -338,7 +338,7 @@ package body Files_Map is
       Offset := Natural (Pos - Line_Pos);
 
       --  Update cache.
-      Source_File.Cache_Pos := Pos;
+      Source_File.Cache_Pos := Line_Pos;
       Source_File.Cache_Line := Line;
    end Location_To_Coord;
 
