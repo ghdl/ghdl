@@ -216,3 +216,29 @@ Unless you are only studying VHDL, you will work with larger designs than the on
    * Remove the :file:`work/` directory: ``rm -rf work``. Only the executable is kept. If you want to rebuild the design, create the :file:`work/` directory, import the sources, and make the design.
 
 .. WARNING:: Sometimes, a design does not fully follow the VHDL standards. For example it might use the badly engineered ``std_logic_unsigned`` package. GHDL supports this VHDL dialect through some options: ``--ieee=synopsys -fexplicit``. See section :ref:`IEEE_library_pitfalls`, for more details.
+
+
+Starting with your design
+=========================
+
+Usually your design is more complex than the previous ones.  The main
+tips are:
+
+* Don't forget to select the VHDL standard you want to use.  The
+  default is ``--std=93c`` which means VHDL-93 with some relaxed
+  rules.  Use ``--std=08`` for VHDL-2008 (albeit not fully
+  implemented).  All the units must be analyzed with the same standard.
+
+* Use ``--work=NAME`` to analyze files into the ``NAME`` library.
+  If you analyze other files from a different directory, give the path
+  of the ``NAME`` library using ``-P/PATH/TO/NAME/DIRECTORY/``.
+
+* Use ``--ieee=synopsys`` if your design depends on the non-standard
+  ieee library.
+
+* Use ``-fexplicit`` if needed.
+
+* Use the same options for elaboration.
+
+So, to analyze a file: ``ghdl -a --std=08 --work=mylib myfile.vhdl``
+To elaborate and run: ``ghdl --elab-run --std=08 top``.
