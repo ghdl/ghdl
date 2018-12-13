@@ -36,11 +36,9 @@ package Errorout is
    Max_Nbr_Errors : constant Natural := 100;
 
    type Msgid_Type is
-     (--  Any note
+     (
+      --  Any note
       Msgid_Note,
-
-      --  Any warning
-      Msgid_Warning,
 
       --  Specific warnings
 
@@ -116,11 +114,15 @@ package Errorout is
       --  Violation of staticness rules
       Warnid_Static,
 
+      --  Any warning
+      Msgid_Warning,
+
       --  Any error
       Msgid_Error,
 
       --  Any fatal error
-      Msgid_Fatal);
+      Msgid_Fatal
+     );
 
    --  All specific warning messages.
    subtype Msgid_Warnings is Msgid_Type
