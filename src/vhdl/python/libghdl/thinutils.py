@@ -9,6 +9,8 @@ from libghdl.nodes_meta import (Attr, types)
 Null_Iir = 0
 Null_Iir_List = 0
 
+def name_image(nameid):
+    return thin.Get_Name_Ptr(nameid).decode('utf-8')
 
 def _build_enum_image(cls):
     d = [e for e in dir(cls) if e[0] != '_']
