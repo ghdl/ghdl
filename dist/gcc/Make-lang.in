@@ -88,6 +88,12 @@ else
   VHDL_SOEXT=.so
 endif
 
+ifneq ($(target),$(host))
+	TARGET_LIB_PREFIX = $(target_noncanonical)/
+else
+	TARGET_LIB_PREFIX =
+endif
+
 vhdl/default_paths.ads: Makefile
 	echo "--  DO NOT EDIT" > tmp-dpaths.ads
 	echo "--  This file is created by Makefile" >> tmp-dpaths.ads
@@ -112,7 +118,7 @@ vhdl/default_paths.ads: Makefile
 
 	echo "   Post_Processor : constant String := \"\";" >> tmp-dpaths.ads
 	echo "   Lib_Prefix     : constant String :=">> tmp-dpaths.ads
-	echo "     \"lib/ghdl\";" >> tmp-dpaths.ads
+	echo "     \"$(TARGET_LIB_PREFIX)lib/ghdl\";" >> tmp-dpaths.ads
 	echo "   Shared_Library_Extension : constant String :=">> tmp-dpaths.ads
 	echo "     \"$(VHDL_SOEXT)\";" >> tmp-dpaths.ads
 	echo "   Default_Pie : constant Boolean := False;" >> tmp-dpaths.ads
