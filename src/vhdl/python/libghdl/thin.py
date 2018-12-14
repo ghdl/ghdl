@@ -92,6 +92,12 @@ Location_File_Line_To_Offset = libghdl.files_map__location_file_line_to_offset
 
 Location_File_Line_To_Col = libghdl.files_map__location_file_line_to_col
 
+File_To_Location = libghdl.files_map__file_to_location
+
+File_Pos_To_Location = libghdl.files_map__file_pos_to_location
+
+File_Line_To_Position = libghdl.files_map__file_line_to_position
+
 Get_File_Name = libghdl.files_map__get_file_name
 
 Get_File_Buffer = libghdl.files_map__get_file_buffer

@@ -82,7 +82,7 @@ package body Std_Package is
       end Create_Known_Iir;
    begin
       Std_Filename := Name_Table.Get_Identifier ("*std_standard*");
-      Std_Location := Files_Map.Source_File_To_Location
+      Std_Location := Files_Map.File_To_Location
         (Files_Map.Create_Virtual_Source_File (Std_Filename));
 
       if Create_Iir_Error /= Error_Mark then

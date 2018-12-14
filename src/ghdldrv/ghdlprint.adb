@@ -909,7 +909,7 @@ package body Ghdlprint is
 
          Buf := Get_File_Source (File);
          for J in 1 .. Line loop
-            Ptr := Line_To_Position (File, J);
+            Ptr := File_Line_To_Position (File, J);
             exit when Ptr = Source_Ptr_Bad;
             exit when Buf (Ptr) = Files_Map.EOT;
 

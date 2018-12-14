@@ -93,13 +93,12 @@ package body Files_Map is
       return Source_Files.Table (File).First_Location + Location_Type (Pos);
    end File_Pos_To_Location;
 
-   function Source_File_To_Location (File : Source_File_Entry)
-                                    return Location_Type
+   function File_To_Location (File : Source_File_Entry) return Location_Type
    is
       pragma Assert (File <= Source_Files.Last);
    begin
       return Source_Files.Table (File).First_Location;
-   end Source_File_To_Location;
+   end File_To_Location;
 
    --  Add a new entry in the lines_table.
    --  The new entry must be the next one after the last entry.
@@ -279,7 +278,7 @@ package body Files_Map is
                          and then Pos < Lines_Table (Mid + 1))
               or else Pos = Lines_Table (Mid)
               or else (Hi <= Mid + 1
-                       and Lines_Table (Mid + 1) = Source_Ptr_Bad)
+                         and Lines_Table (Mid + 1) = Source_Ptr_Bad)
             then
                return Mid;
             end if;
@@ -534,7 +533,7 @@ package body Files_Map is
    --  Find a source_file by DIRECTORY and NAME.
    --  Return NO_SOURCE_FILE_ENTRY if not already opened.
    function Find_Source_File (Directory : Name_Id; Name: Name_Id)
-     return Source_File_Entry
+                             return Source_File_Entry
    is
    begin
       for I in Source_Files.First .. Source_Files.Last loop
@@ -550,7 +549,7 @@ package body Files_Map is
    --  Return an entry for a filename.
    --  The file is not loaded.
    function Create_Source_File_Entry (Directory : Name_Id; Name: Name_Id)
-     return Source_File_Entry
+                                     return Source_File_Entry
    is
       Res: Source_File_Entry;
    begin
@@ -719,7 +718,7 @@ package body Files_Map is
    --  Return an entry for a filename.
    --  Load the filename if necessary.
    function Read_Source_File (Directory : Name_Id; Name: Name_Id)
-                              return Source_File_Entry
+                             return Source_File_Entry
    is
       use GNAT.OS_Lib;
       Fd : File_Descriptor;
@@ -861,7 +860,7 @@ package body Files_Map is
 
    --  Return a buffer (access to the contents of the file) for a file entry.
    function Get_File_Source (File: Source_File_Entry)
-                             return File_Buffer_Acc is
+                            return File_Buffer_Acc is
    begin
       Check_File (File);
       return Source_Files.Table (File).Source;
@@ -911,14 +910,14 @@ package body Files_Map is
    end Get_File_Checksum;
 
    function Get_Source_File_Directory (File : Source_File_Entry)
-                                       return Name_Id is
+                                      return Name_Id is
    begin
       Check_File (File);
       return Source_Files.Table (File).Directory;
    end Get_Source_File_Directory;
 
-   function Line_To_Position (File : Source_File_Entry; Line : Positive)
-                             return Source_Ptr
+   function File_Line_To_Position (File : Source_File_Entry; Line : Positive)
+                                  return Source_Ptr
    is
       pragma Assert (File <= Source_Files.Last);
       Source_File: Source_File_Record renames Source_Files.Table (File);
@@ -937,9 +936,9 @@ package body Files_Map is
                return Source_Ptr_Org;
             end if;
          when Source_File_Instance =>
-            return Line_To_Position (Source_File.Base, Line);
+            return File_Line_To_Position (Source_File.Base, Line);
       end case;
-   end Line_To_Position;
+   end File_Line_To_Position;
 
    function Is_Eq (L : Time_Stamp_Id; R : Time_Stamp_Id) return Boolean
    is
@@ -1097,7 +1096,7 @@ package body Files_Map is
    function Extract_Expanded_Line (File : Source_File_Entry;
                                    Line : Positive) return String
    is
-      Start : constant Source_Ptr := Line_To_Position (File, Line);
+      Start : constant Source_Ptr := File_Line_To_Position (File, Line);
    begin
       return Extract_Expanded_Line (File, Start);
    end Extract_Expanded_Line;

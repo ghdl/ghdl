@@ -177,13 +177,12 @@ package Files_Map is
                                  return Location_Type;
 
    --  Convert a FILE into a location.
-   function Source_File_To_Location (File : Source_File_Entry)
-                                    return Location_Type;
+   function File_To_Location (File : Source_File_Entry) return Location_Type;
 
    --  Convert a FILE+LINE into a position.
    --  Return Source_Ptr_Bad in case of error (LINE out of bounds).
-   function Line_To_Position (File : Source_File_Entry; Line : Positive)
-                             return Source_Ptr;
+   function File_Line_To_Position (File : Source_File_Entry; Line : Positive)
+                                  return Source_Ptr;
 
    --  Translate LOCATION into coordinate (physical position).
    --  FILE identifies the filename.

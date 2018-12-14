@@ -165,7 +165,7 @@ package body Files_Map.Editor is
          end if;
          New_Start := F.File_Length + 2;
       else
-         New_Start := Line_To_Position (File, Line + 1);
+         New_Start := File_Line_To_Position (File, Line + 1);
          if New_Start = F.Gap_Last + 1 then
             --  No move (the gap is already at end of LINE).
             return;
@@ -265,9 +265,9 @@ package body Files_Map.Editor is
       --  The gap has moved, so every offset may have changed...
       declare
          Start_Pos : constant Source_Ptr :=
-           Line_To_Position (File, Start_Line) + Source_Ptr (Start_Off);
+           File_Line_To_Position (File, Start_Line) + Source_Ptr (Start_Off);
          End_Pos : constant Source_Ptr :=
-           Line_To_Position (File, End_Line) + Source_Ptr (End_Off);
+           File_Line_To_Position (File, End_Line) + Source_Ptr (End_Off);
          Text_Len : constant Source_Ptr := Text'Length;
          Gap_Size : constant Source_Ptr := F.Gap_Last - F.Gap_Start + 1;
          Range_Size : Source_Ptr;

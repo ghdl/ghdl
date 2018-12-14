@@ -1061,7 +1061,7 @@ package body Simul.Debugger is
          Line := 1;
       end if;
 
-      Pos := Line_To_Position (List_Current_File, Line);
+      Pos := File_Line_To_Position (List_Current_File, Line);
       Buf := Get_File_Source (List_Current_File);
 
       while Line < List_Current_Line + Radius loop
@@ -1121,7 +1121,7 @@ package body Simul.Debugger is
    begin
       Location_To_Coord (Loc, File, Line_Pos, Line, Offset);
       Buf := Get_File_Source (File);
-      Next_Line_Pos := Line_To_Position (File, Line + 1);
+      Next_Line_Pos := File_Line_To_Position (File, Line + 1);
       Put (String (Buf (Line_Pos .. Next_Line_Pos - 1)));
    end Disp_Source_Line;
 
