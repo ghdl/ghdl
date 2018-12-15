@@ -1285,6 +1285,9 @@ package body Ghdlprint is
                raise Internal_Error;
             when Date_Parse =>
                Sem_Lib.Load_Design_Unit (Unit, Unit);
+               if Errorout.Nbr_Errors /= 0 then
+                  raise Compilation_Error;
+               end if;
             when Date_Analyze =>
                null;
          end case;

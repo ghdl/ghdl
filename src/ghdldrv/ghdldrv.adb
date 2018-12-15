@@ -1503,6 +1503,10 @@ package body Ghdldrv is
       --  Create list of files.
       Files_List := Build_Dependence (Prim_Name, Sec_Name);
 
+      if Errorout.Nbr_Errors /= 0 then
+         raise Errorout.Compilation_Error;
+      end if;
+
       if Cmd.Flag_Depend_Unit then
          Put_Line ("Units analysis order:");
          for I in Design_Units.First .. Design_Units.Last loop

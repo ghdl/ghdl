@@ -99,7 +99,7 @@ package body Sem_Lib is
       end if;
 
       if Errorout.Nbr_Errors > 0 then
-         raise Compilation_Error;
+         return;
       end if;
 
       if (Main or Flags.List_All) and then Flags.List_Sem then
@@ -116,7 +116,7 @@ package body Sem_Lib is
       Post_Sems.Post_Sem_Checks (Unit);
 
       if Errorout.Nbr_Errors > 0 then
-         raise Compilation_Error;
+         return;
       end if;
 
       --  Canonalisation.
@@ -134,7 +134,7 @@ package body Sem_Lib is
       end if;
 
       if Errorout.Nbr_Errors > 0 then
-         raise Compilation_Error;
+         return;
       end if;
 
       if (Main or Flags.List_All) and then Flags.List_Canon then
