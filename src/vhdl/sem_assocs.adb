@@ -1055,12 +1055,11 @@ package body Sem_Assocs is
                   Location_Copy (Nrec_El, Ch);
                   Set_Parent (Nrec_El, Ntype);
                   Set_Identifier (Nrec_El, Get_Identifier (Rec_El));
-                  Set_Base_Element_Declaration
-                    (Nrec_El, Get_Base_Element_Declaration (Rec_El));
-                  Set_Element_Position
-                    (Nrec_El, Get_Element_Position (Rec_El));
+                  pragma Assert (I = Natural (Get_Element_Position (Rec_El)));
+                  Set_Element_Position (Nrec_El, Iir_Index32 (I));
                   Ch := Get_Associated_Expr (Ch);
                   Set_Type (Nrec_El, Get_Type (Get_Actual (Ch)));
+                  Append_Owned_Element_Constraint (Ntype, Nrec_El);
                end if;
                Staticness := Min (Staticness,
                                   Get_Type_Staticness (Get_Type (Nrec_El)));

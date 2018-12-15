@@ -36,11 +36,9 @@ package Errorout is
    Max_Nbr_Errors : constant Natural := 100;
 
    type Msgid_Type is
-     (--  Any note
+     (
+      --  Any note
       Msgid_Note,
-
-      --  Any warning
-      Msgid_Warning,
 
       --  Specific warnings
 
@@ -116,11 +114,15 @@ package Errorout is
       --  Violation of staticness rules
       Warnid_Static,
 
+      --  Any warning
+      Msgid_Warning,
+
       --  Any error
       Msgid_Error,
 
       --  Any fatal error
-      Msgid_Fatal);
+      Msgid_Fatal
+     );
 
    --  All specific warning messages.
    subtype Msgid_Warnings is Msgid_Type
@@ -227,27 +229,6 @@ package Errorout is
 
    --  Warn about an option.
    procedure Warning_Msg_Option (Id : Msgid_Warnings; Msg: String);
-
-   -- Disp a message during scan.
-   -- The current location is automatically displayed before the message.
-   procedure Error_Msg_Scan (Msg: String);
-   procedure Error_Msg_Scan (Msg: String; Arg1 : Earg_Type);
-   procedure Error_Msg_Scan (Loc : Location_Type; Msg: String);
-   procedure Warning_Msg_Scan (Id : Msgid_Warnings; Msg: String);
-   procedure Warning_Msg_Scan (Id : Msgid_Warnings;
-                               Msg: String;
-                               Arg1 : Earg_Type;
-                               Cont : Boolean := False);
-
-   -- Disp a message during parse
-   -- The location of the current token is automatically displayed before
-   -- the message.
-   procedure Error_Msg_Parse_1 (Msg: String);
-   procedure Error_Msg_Parse (Msg: String; Arg1 : Earg_Type);
-   procedure Error_Msg_Parse
-     (Msg: String; Args : Earg_Arr := No_Eargs; Cont : Boolean := False);
-   procedure Error_Msg_Parse
-     (Loc : Location_Type; Msg: String; Args : Earg_Arr := No_Eargs);
 
    -- Disp a message during semantic analysis.
    procedure Warning_Msg_Sem (Id : Msgid_Warnings;

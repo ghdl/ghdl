@@ -15,7 +15,7 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Ada.Text_IO;
+with Logging; use Logging;
 with Tables;
 with Flags; use Flags;
 with Name_Table; -- use Name_Table;
@@ -183,8 +183,7 @@ package body Sem_Scopes is
       for I in 0 .. Name_Table.Last_Name_Id loop
          Inter := Get_Interpretation (I);
          if Inter > Last then
-            Ada.Text_IO.Put_Line
-              ("bad interpretation for " & Name_Table.Image (I));
+            Log_Line ("bad interpretation for " & Name_Table.Image (I));
             Err := True;
          end if;
       end loop;
@@ -1520,98 +1519,90 @@ package body Sem_Scopes is
 
    procedure Disp_Detailed_Interpretations (Ident : Name_Id)
    is
-      use Ada.Text_IO;
-
       Inter: Name_Interpretation_Type;
       Decl : Iir;
    begin
-      Put (Name_Table.Image (Ident));
-      Put_Line (":");
+      Log (Name_Table.Image (Ident));
+      Log_Line (":");
 
       Inter := Get_Interpretation (Ident);
       while Valid_Interpretation (Inter) loop
-         Put (Name_Interpretation_Type'Image (Inter));
+         Log (Name_Interpretation_Type'Image (Inter));
          if Is_Potentially_Visible (Inter) then
-            Put (" (use)");
+            Log (" (use)");
          end if;
-         Put (":");
+         Log (":");
          Decl := Get_Declaration (Inter);
-         Put (Iir'Image (Decl));
-         Put (':');
-         Put (Iir_Kind'Image (Get_Kind (Decl)));
-         Put_Line (", loc: " & Image (Get_Location (Decl)));
+         Log (Iir'Image (Decl));
+         Log (":");
+         Log (Iir_Kind'Image (Get_Kind (Decl)));
+         Log_Line (", loc: " & Image (Get_Location (Decl)));
          if Get_Kind (Decl) in Iir_Kinds_Subprogram_Declaration then
-            Put_Line ("   " & Disp_Subprg (Decl));
+            Log_Line ("   " & Disp_Subprg (Decl));
          end if;
          Inter := Get_Next_Interpretation (Inter);
       end loop;
    end Disp_Detailed_Interpretations;
 
    procedure Disp_All_Interpretations
-     (Interpretation: Name_Interpretation_Type)
+     (Interpretation : Name_Interpretation_Type)
    is
-      use Ada.Text_IO;
       Inter: Name_Interpretation_Type;
    begin
       Inter := Interpretation;
       while Valid_Interpretation (Inter) loop
-         Put (Name_Interpretation_Type'Image (Inter));
-         Put ('.');
-         Put (Iir_Kind'Image (Get_Kind (Get_Declaration (Inter))));
+         Log (Name_Interpretation_Type'Image (Inter));
+         Log (".");
+         Log (Iir_Kind'Image (Get_Kind (Get_Declaration (Inter))));
          Inter := Get_Next_Interpretation (Inter);
       end loop;
-      New_Line;
+      Log_Line;
    end Disp_All_Interpretations;
 
    procedure Disp_All_Names
    is
-      use Ada.Text_IO;
       Inter: Name_Interpretation_Type;
    begin
       for I in 0 .. Name_Table.Last_Name_Id loop
          Inter := Get_Interpretation (I);
          if Valid_Interpretation (Inter) then
-            Put (Name_Table.Image (I));
-            Put (Name_Id'Image (I));
-            Put (':');
+            Log (Name_Table.Image (I));
+            Log (Name_Id'Image (I));
+            Log (":");
             Disp_All_Interpretations (Inter);
          end if;
       end loop;
-      Put_Line ("interprations.last = "
+      Log_Line ("interprations.last = "
                 & Name_Interpretation_Type'Image (Interpretations.Last));
-      Put_Line ("current_region_start ="
+      Log_Line ("current_region_start ="
                 & Name_Interpretation_Type'Image (Current_Region_Start));
    end Disp_All_Names;
 
    procedure Dump_Interpretation (Inter : Name_Interpretation_Type)
    is
-      use Ada.Text_IO;
-
       Decl : Iir;
    begin
-      Put (Name_Interpretation_Type'Image (Inter));
+      Log (Name_Interpretation_Type'Image (Inter));
       if Is_Potentially_Visible (Inter) then
-         Put (" (use)");
+         Log (" (use)");
       end if;
-      Put (": ");
+      Log (": ");
       Decl := Get_Declaration (Inter);
       if Decl = Null_Iir then
-         Put_Line ("null: conflict");
+         Log_Line ("null: conflict");
       else
-         Put (Iir_Kind'Image (Get_Kind (Decl)));
-         Put_Line (", loc: " & Image (Get_Location (Decl)));
+         Log (Iir_Kind'Image (Get_Kind (Decl)));
+         Log_Line (", loc: " & Image (Get_Location (Decl)));
          if Get_Kind (Decl) in Iir_Kinds_Subprogram_Declaration then
-            Put_Line ("   " & Disp_Subprg (Decl));
+            Log_Line ("   " & Disp_Subprg (Decl));
          end if;
       end if;
    end Dump_Interpretation;
 
-   procedure Dump_A_Scope (First, Last : Name_Interpretation_Type)
-   is
-      use Ada.Text_IO;
+   procedure Dump_A_Scope (First, Last : Name_Interpretation_Type) is
    begin
       if First > Last then
-         Put_Line ("scope is empty");
+         Log_Line ("scope is empty");
          return;
       end if;
 
@@ -1621,15 +1612,15 @@ package body Sem_Scopes is
          begin
             Dump_Interpretation (Inter);
             if Cell.Prev_Hidden then
-               Put ("  [prev:");
-               Put (Name_Interpretation_Type'Image (Cell.Prev));
+               Log ("  [prev:");
+               Log (Name_Interpretation_Type'Image (Cell.Prev));
                if Cell.Prev_Hidden then
-                  Put (" hidden");
+                  Log (" hidden");
                end if;
-               Put_Line ("]");
+               Log_Line ("]");
             else
                if Cell.Prev < First then
-                  Put_Line (" [last in scope]");
+                  Log_Line (" [last in scope]");
                end if;
             end if;
          end;
@@ -1641,9 +1632,7 @@ package body Sem_Scopes is
       Dump_A_Scope (Current_Region_Start, Interpretations.Last);
    end Dump_Current_Scope;
 
-   procedure Disp_Scopes
-   is
-      use Ada.Text_IO;
+   procedure Disp_Scopes is
    begin
       for I in reverse Scopes.First .. Scopes.Last loop
          declare
@@ -1651,11 +1640,11 @@ package body Sem_Scopes is
          begin
             case S.Kind is
                when Scope_Start =>
-                  Put ("scope_start at");
+                  Log ("scope_start at");
                when Scope_Region =>
-                  Put ("scope_region at");
+                  Log ("scope_region at");
             end case;
-            Put_Line (Name_Interpretation_Type'Image (S.Saved_Region_Start));
+            Log_Line (Name_Interpretation_Type'Image (S.Saved_Region_Start));
          end;
       end loop;
    end Disp_Scopes;

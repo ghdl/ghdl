@@ -387,7 +387,7 @@ package body Trans.Chap9 is
                   return New_Compare_Op
                     (ON_Eq,
                      Res,
-                     New_Lit (Get_Ortho_Expr (Bit_1)),
+                     New_Lit (Get_Ortho_Literal (Bit_1)),
                      Get_Ortho_Type (Boolean_Type_Definition, Mode_Value));
                elsif Rtype = Ieee.Std_Logic_1164.Std_Ulogic_Type then
                   return New_Value
@@ -482,7 +482,8 @@ package body Trans.Chap9 is
 
       Start_Association (Assocs, Ghdl_Psl_Cover);
       New_Association (Assocs, New_Obj_Value (Msg_Var));
-      New_Association (Assocs, New_Lit (Get_Ortho_Expr (Severity_Level_Note)));
+      New_Association (Assocs, New_Lit (Get_Ortho_Literal
+                                          (Severity_Level_Note)));
       New_Association (Assocs, New_Address (New_Obj (Loc),
                                             Ghdl_Location_Ptr_Node));
       New_Procedure_Call (Assocs);
@@ -491,10 +492,10 @@ package body Trans.Chap9 is
 
       Start_Association (Assocs, Ghdl_Psl_Cover_Failed);
       New_Association (Assocs, New_Obj_Value (Msg_Var));
-      New_Association (Assocs,
-                       New_Lit (Get_Ortho_Expr (Severity_Level_Error)));
-      New_Association (Assocs,
-                       New_Address (New_Obj (Loc), Ghdl_Location_Ptr_Node));
+      New_Association (Assocs, New_Lit (Get_Ortho_Literal
+                                          (Severity_Level_Error)));
+      New_Association (Assocs, New_Address (New_Obj (Loc),
+                                            Ghdl_Location_Ptr_Node));
       New_Procedure_Call (Assocs);
 
       Finish_If_Stmt (Blk);

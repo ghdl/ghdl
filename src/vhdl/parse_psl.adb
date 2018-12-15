@@ -16,6 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
+with Errorout; use Errorout;
 with PSL.Nodes; use PSL.Nodes;
 with Iirs;
 with Scanner; use Scanner;
@@ -24,6 +25,17 @@ with PSL.Priorities; use PSL.Priorities;
 with Parse;
 
 package body Parse_Psl is
+   procedure Error_Msg_Parse (Msg: String) is
+   begin
+      Report_Msg (Msgid_Error, Errorout.Parse, No_Location, Msg);
+   end Error_Msg_Parse;
+
+   procedure Error_Msg_Parse
+     (Loc : Location_Type; Msg: String; Args : Earg_Arr := No_Eargs) is
+   begin
+      Report_Msg (Msgid_Error, Errorout.Parse, Loc, Msg, Args);
+   end Error_Msg_Parse;
+
    function Create_Node_Loc (K : Nkind) return Node is
       Res : Node;
    begin
@@ -60,6 +72,21 @@ package body Parse_Psl is
       end if;
    end Parse_Count;
 
+   function Psl_To_Vhdl (N : Node) return Iirs.Iir;
+
+   function Binary_Psl_Operator_To_Vhdl (N : Node; Kind : Iirs.Iir_Kind)
+                                        return Iirs.Iir
+   is
+      use Iirs;
+      Res : Iir;
+   begin
+      Res := Create_Iir (Kind);
+      Set_Location (Res, Get_Location (N));
+      Set_Left (Res, Psl_To_Vhdl (Get_Left (N)));
+      Set_Right (Res, Psl_To_Vhdl (Get_Right (N)));
+      return Res;
+   end Binary_Psl_Operator_To_Vhdl;
+
    function Psl_To_Vhdl (N : Node) return Iirs.Iir
    is
       use Iirs;
@@ -68,16 +95,18 @@ package body Parse_Psl is
       case Get_Kind (N) is
          when N_HDL_Expr =>
             Res := Iirs.Iir (Get_HDL_Node (N));
-            Free_Node (N);
-            return Res;
+         when N_And_Prop =>
+            Res := Binary_Psl_Operator_To_Vhdl (N, Iir_Kind_And_Operator);
+         when N_Or_Prop =>
+            Res := Binary_Psl_Operator_To_Vhdl (N, Iir_Kind_Or_Operator);
          when others =>
             Error_Msg_Parse
               (+N, "PSL construct not allowed as VHDL expression");
             Res := Create_Iir (Iir_Kind_Error);
             Set_Location (Res, Get_Location (N));
-            Free_Node (N);
-            return Res;
       end case;
+      Free_Node (N);
+      return Res;
    end Psl_To_Vhdl;
 
    function Vhdl_To_Psl (N : Iirs.Iir) return Node

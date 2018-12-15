@@ -680,7 +680,7 @@ package body Ghdlprint is
       --  exist.
       for I in Args'Range loop
          Id := Get_Identifier (Args (I).all);
-         Design_File := Load_File (Id);
+         Design_File := Load_File_Name (Id);
          if Design_File = Null_Iir then
             raise Compile_Error;
          end if;
@@ -994,7 +994,7 @@ package body Ghdlprint is
       --  Parse all files.
       for I in Args'Range loop
          Id := Name_Table.Get_Identifier (Args (I).all);
-         Design_File := Load_File (Id);
+         Design_File := Load_File_Name (Id);
          if Design_File = Null_Iir then
             raise Errorout.Compilation_Error;
          end if;
@@ -1091,7 +1091,8 @@ package body Ghdlprint is
             loop
                Scan;
                if Ref_Tokens.Table (Tok_Idx) /= Current_Token then
-                  Error_Msg_Parse ("token mismatch");
+                  Report_Msg (Msgid_Error, Errorout.Parse, No_Location,
+                              "token mismatch");
                   exit;
                end if;
                case Current_Token is

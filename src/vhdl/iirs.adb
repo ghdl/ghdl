@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 with Ada.Unchecked_Conversion;
-with Ada.Text_IO;
+with Logging; use Logging;
 with Nodes; use Nodes;
 with Lists; use Lists;
 with Nodes_Meta; use Nodes_Meta;
@@ -57,7 +57,6 @@ package body Iirs is
    --  Statistics.
    procedure Disp_Stats
    is
-      use Ada.Text_IO;
       type Num_Array is array (Iir_Kind) of Natural;
       Num : Num_Array := (others => 0);
       type Format_Array is array (Format_Type) of Natural;
@@ -77,17 +76,17 @@ package body Iirs is
          I := Next_Node (I);
       end loop;
 
-      Put_Line ("Stats per iir_kind:");
+      Log_Line ("Stats per iir_kind:");
       for J in Iir_Kind loop
          if Num (J) /= 0 then
-            Put_Line (' ' & Iir_Kind'Image (J) & ':'
-                      & Natural'Image (Num (J)));
+            Log_Line (' ' & Iir_Kind'Image (J) & ':'
+                        & Natural'Image (Num (J)));
          end if;
       end loop;
-      Put_Line ("Stats per formats:");
+      Log_Line ("Stats per formats:");
       for J in Format_Type loop
-         Put_Line (' ' & Format_Type'Image (J) & ':'
-                   & Natural'Image (Formats (J)));
+         Log_Line (' ' & Format_Type'Image (J) & ':'
+                     & Natural'Image (Formats (J)));
       end loop;
    end Disp_Stats;
 
@@ -2510,38 +2509,6 @@ package body Iirs is
       Set_Field4 (Target, Iir_Index32'Pos (Pos));
    end Set_Element_Position;
 
-   function Get_Base_Element_Declaration (Target : Iir) return Iir is
-   begin
-      pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_Base_Element_Declaration (Get_Kind (Target)),
-                     "no field Base_Element_Declaration");
-      return Get_Field2 (Target);
-   end Get_Base_Element_Declaration;
-
-   procedure Set_Base_Element_Declaration (Target : Iir; El : Iir) is
-   begin
-      pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_Base_Element_Declaration (Get_Kind (Target)),
-                     "no field Base_Element_Declaration");
-      Set_Field2 (Target, El);
-   end Set_Base_Element_Declaration;
-
-   function Get_Element_Declaration (Target : Iir) return Iir is
-   begin
-      pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_Element_Declaration (Get_Kind (Target)),
-                     "no field Element_Declaration");
-      return Get_Field5 (Target);
-   end Get_Element_Declaration;
-
-   procedure Set_Element_Declaration (Target : Iir; El : Iir) is
-   begin
-      pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_Element_Declaration (Get_Kind (Target)),
-                     "no field Element_Declaration");
-      Set_Field5 (Target, El);
-   end Set_Element_Declaration;
-
    function Get_Selected_Element (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);
@@ -3214,6 +3181,22 @@ package body Iirs is
                      "no field Elements_Declaration_List");
       Set_Field1 (Decl, Iir_Flist_To_Iir (List));
    end Set_Elements_Declaration_List;
+
+   function Get_Owned_Elements_Chain (Atype : Iir) return Iir is
+   begin
+      pragma Assert (Atype /= Null_Iir);
+      pragma Assert (Has_Owned_Elements_Chain (Get_Kind (Atype)),
+                     "no field Owned_Elements_Chain");
+      return Get_Field6 (Atype);
+   end Get_Owned_Elements_Chain;
+
+   procedure Set_Owned_Elements_Chain (Atype : Iir; Chain : Iir) is
+   begin
+      pragma Assert (Atype /= Null_Iir);
+      pragma Assert (Has_Owned_Elements_Chain (Get_Kind (Atype)),
+                     "no field Owned_Elements_Chain");
+      Set_Field6 (Atype, Chain);
+   end Set_Owned_Elements_Chain;
 
    function Get_Designated_Type (Target : Iir) return Iir is
    begin

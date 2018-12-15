@@ -405,13 +405,17 @@ package body Sem_Names is
             declare
                Header : constant Iir := Get_Package_Header (Decl);
             begin
-               if Is_Valid (Header) then
+               if Is_Valid (Header)
+                 and then Get_Is_Within_Flag (Decl)
+               then
                   Iterator_Decl_Chain (Get_Generic_Chain (Header), Id);
                end if;
             end;
          when Iir_Kind_Package_Instantiation_Declaration
            | Iir_Kind_Interface_Package_Declaration =>
-            Iterator_Decl_Chain (Get_Generic_Chain (Decl), Id);
+            --  Generics are not visible in selected name.
+            null;
+            --  Iterator_Decl_Chain (Get_Generic_Chain (Decl), Id);
          when Iir_Kind_Block_Statement =>
             declare
                Header : constant Iir := Get_Block_Header (Decl);

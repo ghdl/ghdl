@@ -1283,10 +1283,10 @@ package body Trans.Chap2 is
             Dest.all := (Kind => Kind_Index,
                          Mark => False,
                          Index_Field => Src.Index_Field);
-         when Kind_Expr =>
-            Dest.all := (Kind => Kind_Expr,
+         when Kind_Enum_Lit =>
+            Dest.all := (Kind => Kind_Enum_Lit,
                          Mark => False,
-                         Expr_Node => Src.Expr_Node);
+                         Lit_Node => Src.Lit_Node);
          when Kind_Package_Instance =>
             Dest.all :=
               (Kind => Kind_Package_Instance,

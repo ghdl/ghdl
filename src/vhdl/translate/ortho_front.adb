@@ -273,7 +273,7 @@ package body Ortho_Front is
       Flags.Flag_Elaborate := False;
 
       --  Read and parse the file.
-      Res := Load_File (Vhdl_File);
+      Res := Load_File_Name (Vhdl_File);
       if Errorout.Nbr_Errors > 0 then
          raise Compilation_Error;
       end if;
@@ -454,7 +454,7 @@ package body Ortho_Front is
                begin
                   L := Anaelab_Files;
                   while L /= null loop
-                     Res := Load_File (L.Id);
+                     Res := Load_File_Name (L.Id);
                      if Errorout.Nbr_Errors > 0 then
                         raise Compilation_Error;
                      end if;

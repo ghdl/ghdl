@@ -311,4 +311,7 @@ begin
 exception
    when Constraint_Error =>
       Error_Msg_Scan ("literal overflow");
+
+      Current_Token := Tok_Integer;
+      Current_Context.Int64 := 0;
 end Scan_Literal;

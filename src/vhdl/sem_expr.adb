@@ -2963,9 +2963,7 @@ package body Sem_Expr is
    function Sem_Record_Aggregate (Aggr: Iir_Aggregate; A_Type: Iir)
      return boolean
    is
-      Base_Type : constant Iir := Get_Base_Type (A_Type);
-      El_List : constant Iir_Flist :=
-        Get_Elements_Declaration_List (Base_Type);
+      El_List : constant Iir_Flist := Get_Elements_Declaration_List (A_Type);
 
       --  Type of the element.
       El_Type : Iir;
@@ -3044,6 +3042,10 @@ package body Sem_Expr is
       Has_Named : Boolean;
       Rec_El_Index : Natural;
       Expr_Staticness : Iir_Staticness;
+
+      --  True if at least one element constrains the subtype.  For unbounded
+      --  records.
+      Add_Constraints : Boolean;
    begin
       --  Not yet handled.
       Set_Aggregate_Expand_Flag (Aggr, False);
@@ -3052,6 +3054,7 @@ package body Sem_Expr is
       Assoc_Chain := Get_Association_Choices_Chain (Aggr);
       Matches := (others => Null_Iir);
       Expr_Staticness := Locally;
+      Add_Constraints := False;
 
       El_Type := Null_Iir;
       Has_Named := False;
@@ -3118,11 +3121,18 @@ package body Sem_Expr is
          --  Analyze the expression associated.
          if not Get_Same_Alternative_Flag (El) then
             if El_Type /= Null_Iir then
+               --  Analyze the expression only if the choice is correct.
                Expr := Sem_Expression (Expr, El_Type);
                if Expr /= Null_Iir then
                   Set_Associated_Expr (El, Eval_Expr_If_Static (Expr));
                   Expr_Staticness := Min (Expr_Staticness,
                                           Get_Expr_Staticness (Expr));
+                  if not Add_Constraints
+                    and then Is_Fully_Constrained_Type (Get_Type (Expr))
+                    and then not Is_Fully_Constrained_Type (El_Type)
+                  then
+                     Add_Constraints := True;
+                  end if;
                else
                   Ok := False;
                end if;
@@ -3153,6 +3163,55 @@ package body Sem_Expr is
       end loop;
       Set_Expr_Staticness (Aggr, Min (Get_Expr_Staticness (Aggr),
                                       Expr_Staticness));
+
+      if Ok and Add_Constraints then
+         declare
+            Rec_Type : Iir;
+            Rec_El_List : Iir_Flist;
+            Rec_El : Iir;
+            Rec_El_Type : Iir;
+            New_Rec_El : Iir;
+            Constraint : Iir_Constraint;
+            Composite_Found : Boolean;
+            Staticness : Iir_Staticness;
+         begin
+            Rec_Type := Sem_Types.Copy_Subtype_Indication (Get_Type (Aggr));
+            Rec_El_List := Get_Elements_Declaration_List (Rec_Type);
+            Constraint := Fully_Constrained;
+            Composite_Found := False;
+            Staticness := Locally;
+            for I in Flist_First .. Flist_Last (El_List) loop
+               El := Matches (I);
+               El_Type := Get_Type (Get_Associated_Expr (El));
+               Rec_El := Get_Nth_Element (Rec_El_List, I);
+               Rec_El_Type := Get_Type (Rec_El);
+               if Is_Fully_Constrained_Type (El_Type)
+                 and then not Is_Fully_Constrained_Type (Rec_El_Type)
+               then
+                  Rec_El_Type := El_Type;
+                  New_Rec_El :=
+                    Create_Iir (Iir_Kind_Record_Element_Constraint);
+                  Location_Copy (New_Rec_El, Rec_El);
+                  Set_Parent (New_Rec_El, Rec_Type);
+                  Set_Identifier (New_Rec_El, Get_Identifier (Rec_El));
+                  pragma Assert (I = Natural (Get_Element_Position (Rec_El)));
+                  Set_Element_Position (New_Rec_El, Iir_Index32 (I));
+                  Set_Nth_Element (Rec_El_List, I, New_Rec_El);
+                  Set_Type (New_Rec_El, Rec_El_Type);
+                  Append_Owned_Element_Constraint (Rec_Type, New_Rec_El);
+               end if;
+               Staticness := Min (Staticness,
+                                  Get_Type_Staticness (Rec_El_Type));
+               Sem_Types.Update_Record_Constraint
+                 (Constraint, Composite_Found, Rec_El_Type);
+            end loop;
+            Set_Type_Staticness (Rec_Type, Staticness);
+            Set_Constraint_State (Rec_Type, Constraint);
+            Set_Type (Aggr, Rec_Type);
+            Set_Literal_Subtype (Aggr, Rec_Type);
+         end;
+      end if;
+
       return Ok;
    end Sem_Record_Aggregate;
 

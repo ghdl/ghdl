@@ -338,7 +338,7 @@ package body Files_Map is
       Offset := Natural (Pos - Line_Pos);
 
       --  Update cache.
-      Source_File.Cache_Pos := Pos;
+      Source_File.Cache_Pos := Line_Pos;
       Source_File.Cache_Line := Line;
    end Location_To_Coord;
 
@@ -414,6 +414,17 @@ package body Files_Map is
    begin
       return Coord_To_Col (File, Line_Pos, Natural (Pos - Line_Pos));
    end Location_File_Line_To_Col;
+
+   function Location_File_Line_To_Offset
+     (Loc : Location_Type; File : Source_File_Entry; Line : Positive)
+     return Natural
+   is
+      F : Source_File_Record renames Source_Files.Table (File);
+      Line_Pos : constant Source_Ptr := F.Lines.Table (Line);
+      Pos : constant Source_Ptr := Location_File_To_Pos (Loc, File);
+   begin
+      return Natural (Pos - Line_Pos);
+   end Location_File_Line_To_Offset;
 
    -- Convert the first digit of VAL into a character (base 10).
    function Digit_To_Char (Val: Natural) return Character is

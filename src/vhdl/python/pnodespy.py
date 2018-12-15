@@ -96,13 +96,19 @@ def do_class_fields():
     print_enum('fields', [f.name for f in pnodes.funcs])
 
 
-def read_spec_enum(type_name, prefix, class_name):
-    """Read an enumeration declaration from iirs.ads"""
+def read_enum(filename, type_name, prefix, class_name, g=lambda m:m.group(1)):
+    """Read an enumeration declaration from :param filename:"""
     pat_decl = re.compile(r'   type {0} is$'.format(type_name))
-    pat_enum = re.compile(r'      {0}(\w+),?(-- .*)?$'.format(prefix))
-    lr = pnodes.linereader(pnodes.kind_file)
+    pat_enum = re.compile(r'      {0}(\w+),?( *-- .*)?$'.format(prefix))
+    pat_comment = re.compile(r' *-- .*$')
+    lr = pnodes.linereader(filename)
     while not pat_decl.match(lr.get()):
         pass
+    line = lr.get()
+    if line != '     (\n':
+        raise pnodes.ParseError(
+            lr, "{}:{}: missing open parenthesis".format(
+                filename, lr.lineno))
     toks = []
     while True:
         line = lr.get()
@@ -110,8 +116,22 @@ def read_spec_enum(type_name, prefix, class_name):
             break
         m = pat_enum.match(line)
         if m:
-            toks.append(m.group(1))
+            toks.append(g(m))
+        elif pat_comment.match(line):
+            pass
+        elif line == '\n':
+            pass
+        else:
+            print(line, file=sys.stderr)
+            raise pnodes.ParseError(
+                lr, "{}:{}: incorrect line in enum {}".format(
+                    filename, lr.lineno, type_name))
     print_enum(class_name, toks)
+
+
+def read_spec_enum(type_name, prefix, class_name):
+    """Read an enumeration declaration from iirs.ads"""
+    read_enum(pnodes.kind_file, type_name, prefix, class_name)
 
 
 def do_libghdl_iirs():
@@ -197,17 +217,12 @@ def do_libghdl_names():
 
 
 def do_libghdl_tokens():
-    pat_token = re.compile(r'       Tok_(\w+),?\s*(--.*)?$')
-    lr = pnodes.linereader('tokens.ads')
-    toks = []
-    while True:
-        line = lr.get()
-        if line == '      );\n':
-            break
-        m = pat_token.match(line)
-        if m:
-            toks.append(m.group(1))
-    print_enum("Tok", toks)
+    read_enum("tokens.ads", "Token_Type", "Tok_", "Tok")
+
+
+def do_libghdl_errorout():
+    read_enum("errorout.ads", "Msgid_Type", "(Msgid|Warnid)_", "Msgid",
+              g=lambda m: m.group(1) + '_' + m.group(2))
 
 
 pnodes.actions.update({'class-kinds': do_class_kinds,
@@ -215,7 +230,8 @@ pnodes.actions.update({'class-kinds': do_class_kinds,
                        'libghdl-meta': do_libghdl_meta,
                        'libghdl-names': do_libghdl_names,
                        'libghdl-tokens': do_libghdl_tokens,
-                       'libghdl-elocs': do_libghdl_elocations})
+                       'libghdl-elocs': do_libghdl_elocations,
+                       'libghdl-errorout': do_libghdl_errorout})
 
 
 pnodes.main()

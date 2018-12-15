@@ -16,7 +16,7 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Ada.Text_IO;
+with Logging; use Logging;
 with Scanner;
 with Name_Table;
 with Iirs_Utils; use Iirs_Utils;
@@ -28,35 +28,26 @@ with PSL.Nodes;
 with Str_Table;
 
 package body Errorout is
-   procedure Error_Kind (Msg : String; An_Iir : Iir)
-   is
-      use Ada.Text_IO;
+   procedure Error_Kind (Msg : String; An_Iir : Iir) is
    begin
-      Put_Line
-        (Standard_Error,
-         Msg & ": cannot handle " & Iir_Kind'Image (Get_Kind (An_Iir))
+      Log_Line
+        (Msg & ": cannot handle " & Iir_Kind'Image (Get_Kind (An_Iir))
            & " (" & Disp_Location (An_Iir) & ')');
       raise Internal_Error;
    end Error_Kind;
 
-   procedure Error_Kind (Msg : String; Def : Iir_Predefined_Functions)
-   is
-      use Ada.Text_IO;
+   procedure Error_Kind (Msg : String; Def : Iir_Predefined_Functions) is
    begin
-      Put_Line
-        (Standard_Error,
-         Msg & ": cannot handle " & Iir_Predefined_Functions'Image (Def));
+      Log_Line
+        (Msg & ": cannot handle " & Iir_Predefined_Functions'Image (Def));
       raise Internal_Error;
    end Error_Kind;
 
-   procedure Error_Kind (Msg : String; N : PSL_Node)
-   is
-      use Ada.Text_IO;
+   procedure Error_Kind (Msg : String; N : PSL_Node) is
    begin
-      Put (Standard_Error, Msg);
-      Put (Standard_Error, ": cannot handle ");
-      Put_Line (Standard_Error,
-                PSL.Nodes.Nkind'Image (PSL.Nodes.Get_Kind (N)));
+      Log (Msg);
+      Log (": cannot handle ");
+      Log_Line (PSL.Nodes.Nkind'Image (PSL.Nodes.Get_Kind (N)));
       raise Internal_Error;
    end Error_Kind;
 
@@ -502,58 +493,6 @@ package body Errorout is
       Report_Msg (Id, Elaboration, +Loc, Msg, Args, Cont);
    end Warning_Msg_Elab;
 
-   -- Disp a message during scan.
-   procedure Error_Msg_Scan (Msg: String) is
-   begin
-      Report_Msg (Msgid_Error, Scan, No_Location, Msg);
-   end Error_Msg_Scan;
-
-   procedure Error_Msg_Scan (Loc : Location_Type; Msg: String) is
-   begin
-      Report_Msg (Msgid_Error, Scan, Loc, Msg);
-   end Error_Msg_Scan;
-
-   procedure Error_Msg_Scan (Msg: String; Arg1 : Earg_Type) is
-   begin
-      Report_Msg (Msgid_Error, Scan, No_Location, Msg, (1 => Arg1));
-   end Error_Msg_Scan;
-
-   -- Disp a message during scan.
-   procedure Warning_Msg_Scan (Id : Msgid_Warnings; Msg: String) is
-   begin
-      Report_Msg (Id, Scan, No_Location, Msg);
-   end Warning_Msg_Scan;
-
-   procedure Warning_Msg_Scan (Id : Msgid_Warnings;
-                               Msg: String;
-                               Arg1 : Earg_Type;
-                               Cont : Boolean := False) is
-   begin
-      Report_Msg (Id, Scan, No_Location, Msg, (1 => Arg1), Cont);
-   end Warning_Msg_Scan;
-
-   procedure Error_Msg_Parse (Msg: String; Arg1 : Earg_Type) is
-   begin
-      Report_Msg (Msgid_Error, Parse, No_Location, Msg, (1 => Arg1));
-   end Error_Msg_Parse;
-
-   procedure Error_Msg_Parse
-     (Msg: String; Args : Earg_Arr := No_Eargs; Cont : Boolean := False) is
-   begin
-      Report_Msg (Msgid_Error, Parse, No_Location, Msg, Args, Cont);
-   end Error_Msg_Parse;
-
-   procedure Error_Msg_Parse_1 (Msg: String) is
-   begin
-      Report_Msg (Msgid_Error, Parse, No_Location, Msg);
-   end Error_Msg_Parse_1;
-
-   procedure Error_Msg_Parse
-     (Loc : Location_Type; Msg: String; Args : Earg_Arr := No_Eargs) is
-   begin
-      Report_Msg (Msgid_Error, Parse, Loc, Msg, Args);
-   end Error_Msg_Parse;
-
    -- Disp a message during semantic analysis.
    -- LOC is used for location and current token.
    procedure Error_Msg_Sem (Msg: String; Loc: in Iir) is
@@ -643,11 +582,10 @@ package body Errorout is
    -- Disp a bug message.
    procedure Error_Internal (Expr: in Iir; Msg: String := "")
    is
-      use Ada.Text_IO;
       pragma Unreferenced (Expr);
    begin
-      Put (Standard_Error, "internal error: ");
-      Put_Line (Standard_Error, Msg);
+      Log ("internal error: ");
+      Log_Line (Msg);
       raise Internal_Error;
    end Error_Internal;
 

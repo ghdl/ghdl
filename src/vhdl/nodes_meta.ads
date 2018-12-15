@@ -178,8 +178,6 @@ package Nodes_Meta is
       Field_File_Logical_Name,
       Field_File_Open_Kind,
       Field_Element_Position,
-      Field_Base_Element_Declaration,
-      Field_Element_Declaration,
       Field_Selected_Element,
       Field_Use_Clause_Chain,
       Field_Context_Reference_Chain,
@@ -222,6 +220,7 @@ package Nodes_Meta is
       Field_Index_Constraint_List,
       Field_Array_Element_Constraint,
       Field_Elements_Declaration_List,
+      Field_Owned_Elements_Chain,
       Field_Designated_Type,
       Field_Designated_Subtype_Indication,
       Field_Index_List,
@@ -709,8 +708,6 @@ package Nodes_Meta is
    function Has_File_Logical_Name (K : Iir_Kind) return Boolean;
    function Has_File_Open_Kind (K : Iir_Kind) return Boolean;
    function Has_Element_Position (K : Iir_Kind) return Boolean;
-   function Has_Base_Element_Declaration (K : Iir_Kind) return Boolean;
-   function Has_Element_Declaration (K : Iir_Kind) return Boolean;
    function Has_Selected_Element (K : Iir_Kind) return Boolean;
    function Has_Use_Clause_Chain (K : Iir_Kind) return Boolean;
    function Has_Context_Reference_Chain (K : Iir_Kind) return Boolean;
@@ -755,6 +752,7 @@ package Nodes_Meta is
    function Has_Index_Constraint_List (K : Iir_Kind) return Boolean;
    function Has_Array_Element_Constraint (K : Iir_Kind) return Boolean;
    function Has_Elements_Declaration_List (K : Iir_Kind) return Boolean;
+   function Has_Owned_Elements_Chain (K : Iir_Kind) return Boolean;
    function Has_Designated_Type (K : Iir_Kind) return Boolean;
    function Has_Designated_Subtype_Indication (K : Iir_Kind)
       return Boolean;

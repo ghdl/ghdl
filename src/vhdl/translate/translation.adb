@@ -139,6 +139,9 @@ package body Translation is
             if P > Length then
                Error_Msg_Sem
                  (+Spec, "missing subprogram/library name after VHPIDIRECT");
+               Info.Lib_Len := 0;
+               Info.Subprg_Len := 0;
+               return Info;
             end if;
             --  Extract library.
             Lf := P;
@@ -2025,8 +2028,8 @@ package body Translation is
       --  We need this type very early, for predefined functions.
       Std_Boolean_Type_Node :=
         Get_Ortho_Type (Boolean_Type_Definition, Mode_Value);
-      Std_Boolean_True_Node := Get_Ortho_Expr (Boolean_True);
-      Std_Boolean_False_Node := Get_Ortho_Expr (Boolean_False);
+      Std_Boolean_True_Node := Get_Ortho_Literal (Boolean_True);
+      Std_Boolean_False_Node := Get_Ortho_Literal (Boolean_False);
 
       Std_Boolean_Array_Type :=
         New_Array_Type (Std_Boolean_Type_Node, Ghdl_Index_Type);

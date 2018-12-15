@@ -537,7 +537,7 @@ package body Trans.Chap6 is
       If_Blk, If_Blk1 : O_If_Block;
    begin
       --  Evaluate slice bounds.
-      Chap3.Create_Array_Subtype (Slice_Type);
+      Chap3.Create_Composite_Subtype (Slice_Type);
 
       --  The info may have just been created.
       Prefix_Info := Get_Info (Prefix_Type);
@@ -850,6 +850,7 @@ package body Trans.Chap6 is
       El_Type       : constant Iir := Get_Type (El);
       El_Tinfo      : constant Type_Info_Acc := Get_Info (El_Type);
       Kind          : constant Object_Kind_Type := Get_Object_Kind (Prefix);
+      Base_El       : constant Iir := Get_Base_Element_Declaration (El);
       El_Info       : Field_Info_Acc;
       Base_Tinfo    : Type_Info_Acc;
       Stable_Prefix : Mnode;
@@ -870,7 +871,7 @@ package body Trans.Chap6 is
       --  changed.
       El_Info := Get_Info (El);
       if El_Info = null then
-         El_Info := Get_Info (Get_Base_Element_Declaration (El));
+         El_Info := Get_Info (Base_El);
       end if;
 
       if Is_Unbounded_Type (El_Tinfo) then
@@ -933,7 +934,7 @@ package body Trans.Chap6 is
          B := M2Lv (Base);
 
          if Box_Field /= O_Fnode_Null
-           and then Get_Kind (El) = Iir_Kind_Element_Declaration
+           and then El_Type = Get_Type (Base_El)
          then
             --  Unbox.
             B := New_Selected_Element (B, Box_Field);

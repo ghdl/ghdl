@@ -227,6 +227,10 @@ package Trans.Chap3 is
    function Array_Bounds_To_Element_Bounds (B : Mnode; Atype : Iir)
                                            return Mnode;
 
+   --  From unbounded array bounds B, get the layout of the unbounded element.
+   function Array_Bounds_To_Element_Layout (B : Mnode; Atype : Iir)
+                                           return Mnode;
+
    --  Deallocate OBJ.
    procedure Gen_Deallocate (Obj : O_Enode);
 
@@ -285,8 +289,9 @@ package Trans.Chap3 is
    procedure Elab_Array_Subtype (Arr_Type : Iir);
 
    --  Create the bounds for SUB_TYPE.
-   --  SUB_TYPE is expected to be a non-static, anonymous array type.
-   procedure Create_Array_Subtype (Sub_Type : Iir);
+   --  SUB_TYPE is expected to be a non-static, anonymous array or record
+   --  subtype.
+   procedure Create_Composite_Subtype (Sub_Type : Iir);
 
    --  Return TRUE if VALUE is not is the range specified by ATYPE.
    --  VALUE must be stable.

@@ -123,6 +123,11 @@ package Scanner is
    function Get_Token_Offset return Natural;
    function Get_Token_Position return Source_Ptr;
 
+   --  Return the initial location before the current token (ie before all
+   --  the blanks, comments and newlines have been skipped).  Useful for the
+   --  location of a missing token.
+   function Get_Prev_Location return Location_Type;
+
    --  Convert (canonicalize) an identifier stored in name_buffer/name_length.
    --  Upper case letters are converted into lower case.
    --  Lexical checks are performed.

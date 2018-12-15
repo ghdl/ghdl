@@ -1147,7 +1147,7 @@ package body Ghdldrv is
            (Prim_Name.all & '-' & Sec_Name.all & Suffix.all);
       end if;
       if not Is_Regular_File (Base_Name.all & Nul) then
-         Error ("file '" & Base_Name.all & "' does not exists");
+         Error ("file '" & Base_Name.all & "' does not exist");
          Error ("Please elaborate your design.");
          raise Exec_Error;
       end if;

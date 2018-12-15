@@ -24,7 +24,7 @@ package Sem_Lib is
    --    absolute path).
    --  Emit an error if the file cannot be opened.
    --  Return NULL_IIR in case of parse error.
-   function Load_File (File_Name: Name_Id) return Iir_Design_File;
+   function Load_File_Name (File_Name: Name_Id) return Iir_Design_File;
    function Load_File (File : Source_File_Entry) return Iir_Design_File;
 
    --  Load, parse, analyze, back-end a design_unit if necessary.

@@ -156,6 +156,11 @@ package Files_Map is
    function Location_File_To_Line
      (Location : Location_Type; File : Source_File_Entry) return Positive;
 
+   --  Get the offset in the line LINE of LOC.
+   function Location_File_Line_To_Offset
+     (Loc : Location_Type; File : Source_File_Entry; Line : Positive)
+     return Natural;
+
    --  Get logical column (with HT expanded) from LOC, FILE and LINE.
    function Location_File_Line_To_Col
      (Loc : Location_Type; File : Source_File_Entry; Line : Positive)

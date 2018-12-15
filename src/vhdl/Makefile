@@ -29,7 +29,7 @@ GEN_FILES=iirs.adb nodes_meta.ads nodes_meta.adb \
   elocations.adb elocations_meta.ads elocations_meta.adb \
   python/libghdl/iirs.py python/libghdl/nodes_meta.py \
   python/libghdl/std_names.py python/libghdl/tokens.py \
-  python/libghdl/elocations.py
+  python/libghdl/elocations.py python/libghdl/errorout.py
 
 ELOCATIONS_FLAGS=--node-file=elocations.ads --field-file=elocations.adb.in \
   --template-file=elocations.adb.in --meta-basename=elocations_meta
@@ -89,6 +89,11 @@ python/libghdl/tokens.py: $(PNODESPY) tokens.ads
 python/libghdl/elocations.py: $(PNODESPY) elocations.ads
 	$(RM) $@
 	$(PNODESPY) $(ELOCATIONS_FLAGS) libghdl-elocs > $@
+	chmod -w $@
+
+python/libghdl/errorout.py: $(PNODESPY) errorout.ads
+	$(RM) $@
+	$(PNODESPY) $(ELOCATIONS_FLAGS) libghdl-errorout > $@
 	chmod -w $@
 
 clean:

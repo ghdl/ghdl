@@ -19,264 +19,264 @@ package Tokens is
    pragma Pure (Tokens);
 
    type Token_Type is
-      (
-       Tok_Invalid,     -- current_token is not valid.
+     (
+      Tok_Invalid,     -- current_token is not valid.
 
-       Tok_Left_Paren,          -- (
-       Tok_Right_Paren,         -- )
-       Tok_Left_Bracket,        -- [
-       Tok_Right_Bracket,       -- ]
-       Tok_Colon,               -- :
-       Tok_Semi_Colon,          -- ;
-       Tok_Comma,               -- ,
-       Tok_Double_Arrow,        -- =>
-       Tok_Tick,                -- '
-       Tok_Double_Star,         -- **
-       Tok_Assign,              -- :=
-       Tok_Bar,                 -- |
-       Tok_Box,                 -- <>
-       Tok_Dot,                 -- .
+      Tok_Left_Paren,          -- (
+      Tok_Right_Paren,         -- )
+      Tok_Left_Bracket,        -- [
+      Tok_Right_Bracket,       -- ]
+      Tok_Colon,               -- :
+      Tok_Semi_Colon,          -- ;
+      Tok_Comma,               -- ,
+      Tok_Double_Arrow,        -- =>
+      Tok_Tick,                -- '
+      Tok_Double_Star,         -- **
+      Tok_Assign,              -- :=
+      Tok_Bar,                 -- |
+      Tok_Box,                 -- <>
+      Tok_Dot,                 -- .
 
-       Tok_Equal_Equal,         -- == (AMS Vhdl)
+      Tok_Equal_Equal,         -- == (AMS Vhdl)
 
-       Tok_Eof,                 -- End of file.
-       Tok_Newline,
-       Tok_Comment,
-       Tok_Character,
-       Tok_Identifier,
-       Tok_Integer,
-       Tok_Real,
-       Tok_String,
+      Tok_Eof,                 -- End of file.
+      Tok_Newline,
+      Tok_Comment,
+      Tok_Character,
+      Tok_Identifier,
+      Tok_Integer,
+      Tok_Real,
+      Tok_String,
 
-       --  This token corresponds to a base specifier followed by bit_value.
-       --  The base specifier is stored in Name_Buffer/Name_Length like an
-       --  identifier (in lowercase), the String8_Id contains the expanded bit
-       --  value.
-       Tok_Bit_String,
+      --  This token corresponds to a base specifier followed by bit_value.
+      --  The base specifier is stored in Name_Buffer/Name_Length like an
+      --  identifier (in lowercase), the String8_Id contains the expanded bit
+      --  value.
+      Tok_Bit_String,
 
-       --  An integer immediately followed by a letter.  This is used by to
-       --  scan vhdl 2008 (and later) bit string with a length.
-       Tok_Integer_Letter,
+      --  An integer immediately followed by a letter.  This is used by to
+      --  scan vhdl 2008 (and later) bit string with a length.
+      Tok_Integer_Letter,
 
    -- relational_operator
-       Tok_Equal,               -- =
-       Tok_Not_Equal,           -- /=
-       Tok_Less,                -- <
-       Tok_Less_Equal,          -- <=
-       Tok_Greater,             -- >
-       Tok_Greater_Equal,       -- >=
+      Tok_Equal,               -- =
+      Tok_Not_Equal,           -- /=
+      Tok_Less,                -- <
+      Tok_Less_Equal,          -- <=
+      Tok_Greater,             -- >
+      Tok_Greater_Equal,       -- >=
 
-       Tok_Match_Equal,         -- ?=
-       Tok_Match_Not_Equal,     -- ?/=
-       Tok_Match_Less,          -- ?<
-       Tok_Match_Less_Equal,    -- ?<=
-       Tok_Match_Greater,       -- ?>
-       Tok_Match_Greater_Equal, -- ?>=
+      Tok_Match_Equal,         -- ?=
+      Tok_Match_Not_Equal,     -- ?/=
+      Tok_Match_Less,          -- ?<
+      Tok_Match_Less_Equal,    -- ?<=
+      Tok_Match_Greater,       -- ?>
+      Tok_Match_Greater_Equal, -- ?>=
 
    -- sign token
-       Tok_Plus,                -- +
-       Tok_Minus,               -- -
+      Tok_Plus,                -- +
+      Tok_Minus,               -- -
    -- and adding_operator
-       Tok_Ampersand,           -- &
+      Tok_Ampersand,           -- &
 
    --  VHDL 2008
-       Tok_Condition,           -- ??
-       Tok_Double_Less,         -- <<
-       Tok_Double_Greater,      -- >>
-       Tok_Caret,               -- ^
+      Tok_Condition,           -- ??
+      Tok_Double_Less,         -- <<
+      Tok_Double_Greater,      -- >>
+      Tok_Caret,               -- ^
 
    --  PSL
-       Tok_And_And,             -- &&
-       Tok_Bar_Bar,             -- ||
-       Tok_Left_Curly,          -- {
-       Tok_Right_Curly,         -- }
-       Tok_Exclam_Mark,         -- !
-       Tok_Brack_Star,          -- [*
-       Tok_Brack_Plus_Brack,    -- [+]
-       Tok_Brack_Arrow,         -- [->
-       Tok_Brack_Equal,         -- [=
-       Tok_Bar_Arrow,           -- |->
-       Tok_Bar_Double_Arrow,    -- |=>
-       Tok_Minus_Greater,       -- ->
-       Tok_Arobase,             -- @
+      Tok_And_And,             -- &&
+      Tok_Bar_Bar,             -- ||
+      Tok_Left_Curly,          -- {
+      Tok_Right_Curly,         -- }
+      Tok_Exclam_Mark,         -- !
+      Tok_Brack_Star,          -- [*
+      Tok_Brack_Plus_Brack,    -- [+]
+      Tok_Brack_Arrow,         -- [->
+      Tok_Brack_Equal,         -- [=
+      Tok_Bar_Arrow,           -- |->
+      Tok_Bar_Double_Arrow,    -- |=>
+      Tok_Minus_Greater,       -- ->
+      Tok_Arobase,             -- @
 
    -- multiplying operator
-       Tok_Star,                -- *
-       Tok_Slash,               -- /
-       Tok_Mod,                 -- mod
-       Tok_Rem,                 -- rem
+      Tok_Star,                -- *
+      Tok_Slash,               -- /
+      Tok_Mod,                 -- mod
+      Tok_Rem,                 -- rem
 
    --  miscellaneous operator
-       Tok_Abs,
-       Tok_Not,
+      Tok_Abs,
+      Tok_Not,
 
    -- Key words
-       Tok_Access,
-       Tok_After,
-       Tok_Alias,
-       Tok_All,
-       Tok_Architecture,
-       Tok_Array,
-       Tok_Assert,
-       Tok_Attribute,
+      Tok_Access,
+      Tok_After,
+      Tok_Alias,
+      Tok_All,
+      Tok_Architecture,
+      Tok_Array,
+      Tok_Assert,
+      Tok_Attribute,
 
-       Tok_Begin,
-       Tok_Block,
-       Tok_Body,
-       Tok_Buffer,
-       Tok_Bus,
+      Tok_Begin,
+      Tok_Block,
+      Tok_Body,
+      Tok_Buffer,
+      Tok_Bus,
 
-       Tok_Case,
-       Tok_Component,
-       Tok_Configuration,
-       Tok_Constant,
+      Tok_Case,
+      Tok_Component,
+      Tok_Configuration,
+      Tok_Constant,
 
-       Tok_Disconnect,
-       Tok_Downto,
+      Tok_Disconnect,
+      Tok_Downto,
 
-       Tok_Else,
-       Tok_Elsif,
-       Tok_End,
-       Tok_Entity,
-       Tok_Exit,
+      Tok_Else,
+      Tok_Elsif,
+      Tok_End,
+      Tok_Entity,
+      Tok_Exit,
 
-       Tok_File,
-       Tok_For,
-       Tok_Function,
+      Tok_File,
+      Tok_For,
+      Tok_Function,
 
-       Tok_Generate,
-       Tok_Generic,
-       Tok_Guarded,
+      Tok_Generate,
+      Tok_Generic,
+      Tok_Guarded,
 
-       Tok_If,
-       Tok_In,
-       Tok_Inout,
-       Tok_Is,
+      Tok_If,
+      Tok_In,
+      Tok_Inout,
+      Tok_Is,
 
-       Tok_Label,
-       Tok_Library,
-       Tok_Linkage,
-       Tok_Loop,
+      Tok_Label,
+      Tok_Library,
+      Tok_Linkage,
+      Tok_Loop,
 
-       Tok_Map,
+      Tok_Map,
 
-       Tok_New,
-       Tok_Next,
-       Tok_Null,
+      Tok_New,
+      Tok_Next,
+      Tok_Null,
 
-       Tok_Of,
-       Tok_On,
-       Tok_Open,
-       Tok_Others,
-       Tok_Out,
+      Tok_Of,
+      Tok_On,
+      Tok_Open,
+      Tok_Others,
+      Tok_Out,
 
-       Tok_Package,
-       Tok_Port,
-       Tok_Procedure,
-       Tok_Process,
+      Tok_Package,
+      Tok_Port,
+      Tok_Procedure,
+      Tok_Process,
 
-       Tok_Range,
-       Tok_Record,
-       Tok_Register,
-       Tok_Report,
-       Tok_Return,
+      Tok_Range,
+      Tok_Record,
+      Tok_Register,
+      Tok_Report,
+      Tok_Return,
 
-       Tok_Select,
-       Tok_Severity,
-       Tok_Signal,
-       Tok_Subtype,
+      Tok_Select,
+      Tok_Severity,
+      Tok_Signal,
+      Tok_Subtype,
 
-       Tok_Then,
-       Tok_To,
-       Tok_Transport,
-       Tok_Type,
+      Tok_Then,
+      Tok_To,
+      Tok_Transport,
+      Tok_Type,
 
-       Tok_Units,
-       Tok_Until,
-       Tok_Use,
+      Tok_Units,
+      Tok_Until,
+      Tok_Use,
 
-       Tok_Variable,
+      Tok_Variable,
 
-       Tok_Wait,
-       Tok_When,
-       Tok_While,
-       Tok_With,
+      Tok_Wait,
+      Tok_When,
+      Tok_While,
+      Tok_With,
 
    -- logical token:
-       Tok_And,
-       Tok_Or,
-       Tok_Xor,
-       Tok_Nand,
-       Tok_Nor,
+      Tok_And,
+      Tok_Or,
+      Tok_Xor,
+      Tok_Nand,
+      Tok_Nor,
 
    --  Tokens below this line are key words in vhdl93 but not in vhdl87
    --  Note: xnor is the first one, as it is a logical token.
-       Tok_Xnor,
+      Tok_Xnor,
 
-       Tok_Group,
-       Tok_Impure,
-       Tok_Inertial,
-       Tok_Literal,
-       Tok_Postponed,
-       Tok_Pure,
-       Tok_Reject,
-       Tok_Shared,
-       Tok_Unaffected,
+      Tok_Group,
+      Tok_Impure,
+      Tok_Inertial,
+      Tok_Literal,
+      Tok_Postponed,
+      Tok_Pure,
+      Tok_Reject,
+      Tok_Shared,
+      Tok_Unaffected,
 
    -- shift_operator
-       Tok_Sll,
-       Tok_Sla,
-       Tok_Sra,
-       Tok_Srl,
-       Tok_Rol,
-       Tok_Ror,
+      Tok_Sll,
+      Tok_Sla,
+      Tok_Sra,
+      Tok_Srl,
+      Tok_Rol,
+      Tok_Ror,
 
    --  Added by Vhdl 2000:
-       Tok_Protected,
+      Tok_Protected,
 
    --  Added by vhdl 2008:
-       Tok_Context,
-       Tok_Parameter,
+      Tok_Context,
+      Tok_Parameter,
 
    --  AMS reserved words
-       Tok_Across,
-       Tok_Break,
-       Tok_Limit,
-       Tok_Nature,
-       Tok_Noise,
-       Tok_Procedural,
-       Tok_Quantity,
-       Tok_Reference,
-       Tok_Spectrum,
-       Tok_Subnature,
-       Tok_Terminal,
-       Tok_Through,
-       Tok_Tolerance,
+      Tok_Across,
+      Tok_Break,
+      Tok_Limit,
+      Tok_Nature,
+      Tok_Noise,
+      Tok_Procedural,
+      Tok_Quantity,
+      Tok_Reference,
+      Tok_Spectrum,
+      Tok_Subnature,
+      Tok_Terminal,
+      Tok_Through,
+      Tok_Tolerance,
 
    -- PSL words
-       Tok_Psl_Default,
-       Tok_Psl_Clock,
-       Tok_Psl_Property,
-       Tok_Psl_Sequence,
-       Tok_Psl_Endpoint,
-       Tok_Psl_Cover,
+      Tok_Psl_Default,
+      Tok_Psl_Clock,
+      Tok_Psl_Property,
+      Tok_Psl_Sequence,
+      Tok_Psl_Endpoint,
+      Tok_Psl_Cover,
 
-       Tok_Psl_Const,
-       Tok_Psl_Boolean,
-       Tok_Inf,
+      Tok_Psl_Const,
+      Tok_Psl_Boolean,
+      Tok_Inf,
 
-       Tok_Within,
-       Tok_Abort,
-       Tok_Before,
-       Tok_Always,
-       Tok_Never,
-       Tok_Eventually,
-       Tok_Next_A,
-       Tok_Next_E,
-       Tok_Next_Event,
-       Tok_Next_Event_A,
-       Tok_Next_Event_E
-      );
+      Tok_Within,
+      Tok_Abort,
+      Tok_Before,
+      Tok_Always,
+      Tok_Never,
+      Tok_Eventually,
+      Tok_Next_A,
+      Tok_Next_E,
+      Tok_Next_Event,
+      Tok_Next_Event_A,
+      Tok_Next_Event_E
+     );
 
    --  To ease interfacing
    pragma Convention (C, Token_Type);

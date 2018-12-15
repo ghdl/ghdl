@@ -17,6 +17,7 @@
 --  02111-1307, USA.
 
 package Logging is
+   --  Crude: log on standard error.
    procedure Log (S : String);
    procedure Log_Line (S : String := "");
 end Logging;

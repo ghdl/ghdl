@@ -215,7 +215,7 @@ package body Ghdlcomp is
       Design : Iir;
       Next_Design : Iir;
    begin
-      Res := Load_File (Name_Table.Get_Identifier (File));
+      Res := Load_File_Name (Name_Table.Get_Identifier (File));
       if Errorout.Nbr_Errors > 0 then
          raise Compilation_Error;
       end if;
@@ -239,7 +239,7 @@ package body Ghdlcomp is
       Unit : Iir;
       Next_Unit : Iir;
    begin
-      Design_File := Load_File (Id);
+      Design_File := Load_File_Name (Id);
       if Design_File = Null_Iir or else Errorout.Nbr_Errors > 0 then
          --  Stop now in case of error (file not found or parse error).
          return Design_File;
@@ -397,7 +397,7 @@ package body Ghdlcomp is
       --  Parse all files.
       for I in Args'Range loop
          Id := Name_Table.Get_Identifier (Args (I).all);
-         Design_File := Load_File (Id);
+         Design_File := Load_File_Name (Id);
          if Errorout.Nbr_Errors > 0 then
             raise Compilation_Error;
          end if;

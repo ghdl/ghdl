@@ -16,9 +16,9 @@
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
 
-with Ada.Text_IO;
 with Ada.Unchecked_Deallocation;
 with Types; use Types;
+with Logging; use Logging;
 with Nodes;
 with Nodes_Meta; use Nodes_Meta;
 with Errorout; use Errorout;
@@ -38,22 +38,18 @@ package body Nodes_GC is
    procedure Free is new Ada.Unchecked_Deallocation
      (Marker_Array, Marker_Array_Acc);
 
-   procedure Report_Early_Reference (N : Iir; F : Nodes_Meta.Fields_Enum)
-   is
-      use Ada.Text_IO;
+   procedure Report_Early_Reference (N : Iir; F : Nodes_Meta.Fields_Enum) is
    begin
-      Put ("early reference to ");
-      Put (Nodes_Meta.Get_Field_Image (F));
-      Put (" in ");
+      Log ("early reference to ");
+      Log (Nodes_Meta.Get_Field_Image (F));
+      Log (" in ");
       Disp_Tree.Disp_Tree (N, True);
       Has_Error := True;
    end Report_Early_Reference;
 
-   procedure Report_Already_Marked (N : Iir)
-   is
-      use Ada.Text_IO;
+   procedure Report_Already_Marked (N : Iir) is
    begin
-      Put ("Already marked ");
+      Log ("Already marked ");
       Disp_Tree.Disp_Tree (N, True);
       Has_Error := True;
    end Report_Already_Marked;
@@ -488,7 +484,6 @@ package body Nodes_GC is
 
    procedure Report_Unreferenced
    is
-      use Ada.Text_IO;
       use Std_Package;
       El : Iir;
       Nbr_Unreferenced : Natural;
@@ -503,7 +498,7 @@ package body Nodes_GC is
       while El in Markers'Range loop
          if not Markers (El) and then Get_Kind (El) /= Iir_Kind_Unused then
             if Nbr_Unreferenced = 0 then
-               Put_Line ("** unreferenced nodes:");
+               Log_Line ("** unreferenced nodes:");
             end if;
             Nbr_Unreferenced := Nbr_Unreferenced + 1;
             Report_Unreferenced_Node (El);

@@ -300,6 +300,7 @@ package body Std_Names is
       Def ("typedef",             Name_Typedef);
       Def ("union",               Name_Union);
       Def ("unique",              Name_Unique);
+      Def ("unique0",             Name_Unique0);
       Def ("void",                Name_Void);
 
       --  SystemVerilog 3.1
@@ -590,6 +591,7 @@ package body Std_Names is
       Def ("control_simulation",    Name_Control_Simulation);
       Def ("step",                  Name_Step);
       Def ("index",                 Name_Index);
+      Def ("item",                  Name_Item);
       Def ("__FILE__",              Name_Uu_File_Uu);
       Def ("__LINE__",              Name_Uu_Line_Uu);
 
@@ -634,6 +636,28 @@ package body Std_Names is
       Def ("$unit",           Name_D_Unit);
 
       --  SV methods.
+      Def ("size",             Name_Size);
+      Def ("insert",           Name_Insert);
+      Def ("delete",           Name_Delete);
+      Def ("pop_front",        Name_Pop_Front);
+      Def ("pop_back",         Name_Pop_Back);
+      Def ("push_front",       Name_Push_Front);
+      Def ("push_back",        Name_Push_Back);
+      Def ("name",             Name_Name);
+      Def ("len",              Name_Len);
+      Def ("substr",           Name_Substr);
+      Def ("exists",           Name_Exists);
+      Def ("atoi",             Name_Atoi);
+      Def ("itoa",             Name_Itoa);
+      Def ("find",             Name_Find);
+      Def ("find_index",       Name_Find_Index);
+      Def ("find_first",       Name_Find_First);
+      Def ("find_first_index", Name_Find_First_Index);
+      Def ("find_last",        Name_Find_Last);
+      Def ("find_last_index",  Name_Find_Last_Index);
+      Def ("num",              Name_Num);
+
+      --  SV methods.
       Def ("size",           Name_Size);
       Def ("insert",         Name_Insert);
       Def ("delete",         Name_Delete);
@@ -642,9 +666,6 @@ package body Std_Names is
       Def ("push_front",     Name_Push_Front);
       Def ("push_back",      Name_Push_Back);
       Def ("name",           Name_Name);
-      Def ("len",            Name_Len);
-      Def ("substr",         Name_Substr);
-      Def ("exists",         Name_Exists);
 
       --  BSV keywords
       Def ("Action",         Name_uAction);
