@@ -31,6 +31,9 @@ package Iirs_Utils is
    function Is_Error (N : Iir) return Boolean;
    pragma Inline (Is_Error);
 
+   --  Return True iff N is not valid (Null_Iir or an error node).
+   function Is_Any_Error (N : Iir) return Boolean;
+
    --  Return True iff N is an overflow_literal node.
    function Is_Overflow_Literal (N : Iir) return Boolean;
    pragma Inline (Is_Overflow_Literal);

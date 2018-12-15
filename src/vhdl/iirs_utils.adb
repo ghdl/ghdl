@@ -51,6 +51,11 @@ package body Iirs_Utils is
       return Get_Kind (N) = Iir_Kind_Error;
    end Is_Error;
 
+   function Is_Any_Error (N : Iir) return Boolean is
+   begin
+      return N = Null_Iir or else Get_Kind (N) = Iir_Kind_Error;
+   end Is_Any_Error;
+
    function Is_Overflow_Literal (N : Iir) return Boolean is
    begin
       return Get_Kind (N) = Iir_Kind_Overflow_Literal;
