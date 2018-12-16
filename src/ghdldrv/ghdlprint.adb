@@ -536,7 +536,7 @@ package body Ghdlprint is
    function Decode_Command (Cmd : Command_Chop; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Chop) return String;
-   procedure Perform_Action (Cmd : in out Command_Chop;
+   procedure Perform_Action (Cmd : Command_Chop;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Chop; Name : String)
@@ -554,7 +554,7 @@ package body Ghdlprint is
       return "--chop [OPTS] FILEs  Chop FILEs";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : in out Command_Chop; Args : Argument_List)
+   procedure Perform_Action (Cmd : Command_Chop; Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
       use Ada.Characters.Latin_1;
@@ -834,7 +834,7 @@ package body Ghdlprint is
    function Decode_Command (Cmd : Command_Lines; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Lines) return String;
-   procedure Perform_Action (Cmd : in out Command_Lines;
+   procedure Perform_Action (Cmd : Command_Lines;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Lines; Name : String)
@@ -852,7 +852,7 @@ package body Ghdlprint is
       return "--lines FILEs      Precede line with its number";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : in out Command_Lines; Args : Argument_List)
+   procedure Perform_Action (Cmd : Command_Lines; Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
       use Scanner;
@@ -953,7 +953,7 @@ package body Ghdlprint is
    function Decode_Command (Cmd : Command_Reprint; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Reprint) return String;
-   procedure Perform_Action (Cmd : in out Command_Reprint;
+   procedure Perform_Action (Cmd : Command_Reprint;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Reprint; Name : String)
@@ -971,7 +971,7 @@ package body Ghdlprint is
       return "--reprint [OPTS] FILEs    Redisplay FILEs";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : in out Command_Reprint;
+   procedure Perform_Action (Cmd : Command_Reprint;
                              Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
@@ -1025,7 +1025,7 @@ package body Ghdlprint is
    function Decode_Command (Cmd : Command_Compare_Tokens; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Compare_Tokens) return String;
-   procedure Perform_Action (Cmd : in out Command_Compare_Tokens;
+   procedure Perform_Action (Cmd : Command_Compare_Tokens;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Compare_Tokens; Name : String)
@@ -1043,7 +1043,7 @@ package body Ghdlprint is
       return "--compare-tokens [OPTS] REF FILEs    Compare FILEs with REF";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : in out Command_Compare_Tokens;
+   procedure Perform_Action (Cmd : Command_Compare_Tokens;
                              Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
@@ -1153,7 +1153,7 @@ package body Ghdlprint is
    function Decode_Command (Cmd : Command_PP_Html; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_PP_Html) return String;
-   procedure Perform_Action (Cmd : in out Command_PP_Html;
+   procedure Perform_Action (Cmd : Command_PP_Html;
                              Files : Argument_List);
 
    function Decode_Command (Cmd : Command_PP_Html; Name : String)
@@ -1171,7 +1171,7 @@ package body Ghdlprint is
       return "--pp-html FILEs    Pretty-print FILEs in HTML";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : in out Command_PP_Html;
+   procedure Perform_Action (Cmd : Command_PP_Html;
                              Files : Argument_List)
    is
       pragma Unreferenced (Cmd);
@@ -1224,7 +1224,7 @@ package body Ghdlprint is
                             Res : out Option_Res);
    procedure Disp_Long_Help (Cmd : Command_Xref_Html);
 
-   procedure Perform_Action (Cmd : in out Command_Xref_Html;
+   procedure Perform_Action (Cmd : Command_Xref_Html;
                              Files_Name : Argument_List);
 
    function Decode_Command (Cmd : Command_Xref_Html; Name : String)
@@ -1296,7 +1296,7 @@ package body Ghdlprint is
    end Analyze_Design_File_Units;
 
    procedure Perform_Action
-     (Cmd : in out Command_Xref_Html; Files_Name : Argument_List)
+     (Cmd : Command_Xref_Html; Files_Name : Argument_List)
    is
       use GNAT.Directory_Operations;
 
@@ -1310,6 +1310,8 @@ package body Ghdlprint is
       end record;
       type File_Data_Array is array (Files_Name'Range) of File_Data;
 
+      Output_Dir : String_Access;
+
       Files : File_Data_Array;
       Output : File_Type;
    begin
@@ -1319,21 +1321,22 @@ package body Ghdlprint is
       --  Load work library.
       Setup_Libraries (True);
 
-      if Cmd.Output_Dir = null then
-         Cmd.Output_Dir := new String'("html");
-      elsif Cmd.Output_Dir.all = "-" then
-         Cmd.Output_Dir := null;
+      Output_Dir := Cmd.Output_Dir;
+      if Output_Dir = null then
+         Output_Dir := new String'("html");
+      elsif Output_Dir.all = "-" then
+         Output_Dir := null;
       end if;
 
       --  Try to create the directory.
-      if Cmd.Output_Dir /= null
-        and then not Is_Directory (Cmd.Output_Dir.all)
+      if Output_Dir /= null
+        and then not Is_Directory (Output_Dir.all)
       then
          begin
-            Make_Dir (Cmd.Output_Dir.all);
+            Make_Dir (Output_Dir.all);
          exception
             when Directory_Error =>
-               Error ("cannot create directory " & Cmd.Output_Dir.all);
+               Error ("cannot create directory " & Output_Dir.all);
                return;
          end;
       end if;
@@ -1419,9 +1422,9 @@ package body Ghdlprint is
       end loop;
 
       for I in Files'Range loop
-         if Cmd.Output_Dir /= null then
+         if Output_Dir /= null then
             Create (Output, Out_File,
-                    Cmd.Output_Dir.all & Directory_Separator
+                    Output_Dir.all & Directory_Separator
                     & Files (I).Output.all);
 
             Set_Output (Output);
@@ -1443,15 +1446,15 @@ package body Ghdlprint is
          PP_Html_File (Files (I).Fe);
          Put_Html_Foot;
 
-         if Cmd.Output_Dir /= null then
+         if Output_Dir /= null then
             Close (Output);
          end if;
       end loop;
 
       --  Create indexes.
-      if Cmd.Output_Dir /= null then
+      if Output_Dir /= null then
          Create (Output, Out_File,
-                 Cmd.Output_Dir.all & Directory_Separator & "index.html");
+                 Output_Dir.all & Directory_Separator & "index.html");
          Set_Output (Output);
 
          Put_Html_Header;
@@ -1497,11 +1500,11 @@ package body Ghdlprint is
       end if;
 
       if Html_Format = Html_Css
-        and then Cmd.Output_Dir /= null
+        and then Output_Dir /= null
       then
          declare
             Css_Filename : constant String :=
-              Cmd.Output_Dir.all & Directory_Separator & "ghdl.css";
+              Output_Dir.all & Directory_Separator & "ghdl.css";
          begin
             if not Is_Regular_File (Css_Filename & Nul) then
                Create (Output, Out_File, Css_Filename);
@@ -1529,7 +1532,7 @@ package body Ghdlprint is
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Xref) return String;
 
-   procedure Perform_Action (Cmd : in out Command_Xref;
+   procedure Perform_Action (Cmd : Command_Xref;
                              Files_Name : Argument_List);
 
    function Decode_Command (Cmd : Command_Xref; Name : String)
@@ -1548,7 +1551,7 @@ package body Ghdlprint is
    end Get_Short_Help;
 
    procedure Perform_Action
-     (Cmd : in out Command_Xref; Files_Name : Argument_List)
+     (Cmd : Command_Xref; Files_Name : Argument_List)
    is
       pragma Unreferenced (Cmd);
 

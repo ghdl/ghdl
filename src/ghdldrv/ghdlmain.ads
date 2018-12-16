@@ -59,7 +59,7 @@ package Ghdlmain is
    procedure Disp_Long_Help (Cmd : Command_Type);
 
    --  Perform the action.
-   procedure Perform_Action (Cmd : in out Command_Type; Args : Argument_List)
+   procedure Perform_Action (Cmd : Command_Type; Args : Argument_List)
      is abstract;
 
    --  Register a command.

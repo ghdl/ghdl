@@ -89,7 +89,7 @@ package body Ghdlmain is
                             Res : out Option_Res);
 
    function Get_Short_Help (Cmd : Command_Help) return String;
-   procedure Perform_Action (Cmd : in out Command_Help; Args : Argument_List);
+   procedure Perform_Action (Cmd : Command_Help; Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Help; Name : String) return Boolean
    is
@@ -117,7 +117,7 @@ package body Ghdlmain is
       return "-h or --help [CMD] Disp this help or [help on CMD]";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : in out Command_Help; Args : Argument_List)
+   procedure Perform_Action (Cmd : Command_Help; Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
 
@@ -165,7 +165,7 @@ package body Ghdlmain is
    function Decode_Command (Cmd : Command_Option_Help; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Option_Help) return String;
-   procedure Perform_Action (Cmd : in out Command_Option_Help;
+   procedure Perform_Action (Cmd : Command_Option_Help;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Option_Help; Name : String)
@@ -183,7 +183,7 @@ package body Ghdlmain is
       return "--options-help     Disp help for analyzer options";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : in out Command_Option_Help;
+   procedure Perform_Action (Cmd : Command_Option_Help;
                              Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
@@ -200,7 +200,7 @@ package body Ghdlmain is
    function Decode_Command (Cmd : Command_Version; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Version) return String;
-   procedure Perform_Action (Cmd : in out Command_Version;
+   procedure Perform_Action (Cmd : Command_Version;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Version; Name : String)
@@ -218,7 +218,7 @@ package body Ghdlmain is
       return "-v or --version    Disp ghdl version";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : in out Command_Version;
+   procedure Perform_Action (Cmd : Command_Version;
                              Args : Argument_List)
    is
       pragma Unreferenced (Cmd);

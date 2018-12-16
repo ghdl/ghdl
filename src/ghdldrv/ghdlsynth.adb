@@ -37,7 +37,7 @@ package body Ghdlsynth is
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Synth) return String;
 
-   procedure Perform_Action (Cmd : in out Command_Synth;
+   procedure Perform_Action (Cmd : Command_Synth;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Synth; Name : String)
@@ -101,7 +101,7 @@ package body Ghdlsynth is
       --  Hooks.Run.all;
    end Ghdl_Synth;
 
-   procedure Perform_Action (Cmd : in out Command_Synth;
+   procedure Perform_Action (Cmd : Command_Synth;
                              Args : Argument_List)
    is
       pragma Unreferenced (Cmd);

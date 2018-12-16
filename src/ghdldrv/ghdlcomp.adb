@@ -105,7 +105,7 @@ package body Ghdlcomp is
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Run) return String;
 
-   procedure Perform_Action (Cmd : in out Command_Run;
+   procedure Perform_Action (Cmd : Command_Run;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Run; Name : String)
@@ -124,7 +124,7 @@ package body Ghdlcomp is
    end Get_Short_Help;
 
 
-   procedure Perform_Action (Cmd : in out Command_Run;
+   procedure Perform_Action (Cmd : Command_Run;
                              Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
@@ -160,7 +160,7 @@ package body Ghdlcomp is
                             Option : String;
                             Arg : String;
                             Res : out Option_Res);
-   procedure Perform_Action (Cmd : in out Command_Compile;
+   procedure Perform_Action (Cmd : Command_Compile;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Compile; Name : String)
@@ -293,7 +293,7 @@ package body Ghdlcomp is
       Hooks.Run.all;
    end Compile_Run;
 
-   procedure Perform_Action (Cmd : in out Command_Compile;
+   procedure Perform_Action (Cmd : Command_Compile;
                              Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
@@ -358,7 +358,7 @@ package body Ghdlcomp is
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Analyze) return String;
 
-   procedure Perform_Action (Cmd : in out Command_Analyze;
+   procedure Perform_Action (Cmd : Command_Analyze;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Analyze; Name : String)
@@ -376,7 +376,7 @@ package body Ghdlcomp is
       return "-a [OPTS] FILEs    Analyze FILEs";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : in out Command_Analyze;
+   procedure Perform_Action (Cmd : Command_Analyze;
                              Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
@@ -469,7 +469,7 @@ package body Ghdlcomp is
                             Arg : String;
                             Res : out Option_Res);
 
-   procedure Perform_Action (Cmd : in out Command_Elab;
+   procedure Perform_Action (Cmd : Command_Elab;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Elab; Name : String)
@@ -513,7 +513,7 @@ package body Ghdlcomp is
       end if;
    end Decode_Option;
 
-   procedure Perform_Action (Cmd : in out Command_Elab;
+   procedure Perform_Action (Cmd : Command_Elab;
                              Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
@@ -546,7 +546,7 @@ package body Ghdlcomp is
    function Decode_Command (Cmd : Command_Dispconfig; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Dispconfig) return String;
-   procedure Perform_Action (Cmd : in out Command_Dispconfig;
+   procedure Perform_Action (Cmd : Command_Dispconfig;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Dispconfig; Name : String)
@@ -578,7 +578,7 @@ package body Ghdlcomp is
       end loop;
    end Disp_Config;
 
-   procedure Perform_Action (Cmd : in out Command_Dispconfig;
+   procedure Perform_Action (Cmd : Command_Dispconfig;
                              Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
@@ -598,7 +598,7 @@ package body Ghdlcomp is
    function Decode_Command (Cmd : Command_Make; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Make) return String;
-   procedure Perform_Action (Cmd : in out Command_Make;
+   procedure Perform_Action (Cmd : Command_Make;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Make; Name : String)
@@ -616,7 +616,7 @@ package body Ghdlcomp is
       return "-m [OPTS] UNIT [ARCH]  Make UNIT";
    end Get_Short_Help;
 
-   procedure Perform_Action (Cmd : in out Command_Make; Args : Argument_List)
+   procedure Perform_Action (Cmd : Command_Make; Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
       use Types;
@@ -724,7 +724,7 @@ package body Ghdlcomp is
    function Decode_Command (Cmd : Command_Gen_Makefile; Name : String)
                            return Boolean;
    function Get_Short_Help (Cmd : Command_Gen_Makefile) return String;
-   procedure Perform_Action (Cmd : in out Command_Gen_Makefile;
+   procedure Perform_Action (Cmd : Command_Gen_Makefile;
                              Args : Argument_List);
 
    function Decode_Command (Cmd : Command_Gen_Makefile; Name : String)
@@ -750,7 +750,7 @@ package body Ghdlcomp is
       return True;
    end Is_Makeable_File;
 
-   procedure Perform_Action (Cmd : in out Command_Gen_Makefile;
+   procedure Perform_Action (Cmd : Command_Gen_Makefile;
                              Args : Argument_List)
    is
       pragma Unreferenced (Cmd);
