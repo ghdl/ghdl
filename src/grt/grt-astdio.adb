@@ -23,7 +23,6 @@
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
 with Grt.C; use Grt.C;
-with Grt.Options;
 
 package body Grt.Astdio is
    procedure Put (Stream : FILEs; Str : String)
@@ -100,20 +99,6 @@ package body Grt.Astdio is
       Put (Str);
       New_Line;
    end Put_Line;
-
-   procedure Put_Str_Len (Stream : FILEs; Str : Ghdl_Str_Len_Type)
-   is
-      S : String (1 .. 3);
-   begin
-      if Str.Str = null then
-         S (1) := ''';
-         S (2) := Character'Val (Str.Len);
-         S (3) := ''';
-         Put (Stream, S);
-      else
-         Put (Stream, Str.Str (1 .. Str.Len));
-      end if;
-   end Put_Str_Len;
 
    generic
       type Ntype is range <>;
@@ -199,49 +184,5 @@ package body Grt.Astdio is
       end loop;
       Put (Stream, Res);
    end Put;
-
-   procedure Put_Dir (Stream : FILEs; Dir : Ghdl_Dir_Type) is
-   begin
-      case Dir is
-         when Dir_To =>
-            Put (Stream, " to ");
-         when Dir_Downto =>
-            Put (Stream, " downto ");
-      end case;
-   end Put_Dir;
-
-   procedure Put_Time (Stream : FILEs; Time : Std_Time)
-   is
-      use Grt.Options;
-      Unit : Natural_Time_Scale;
-      T : Std_Time;
-   begin
-      if Time = Std_Time'First then
-         Put (Stream, "-Inf");
-      else
-         --  Do not bother with sec, min, and hr.
-         Unit := Time_Resolution_Scale;
-         T := Time;
-         while Unit > 1 and then (T mod 1_000) = 0 loop
-            T := T / 1000;
-            Unit := Unit - 1;
-         end loop;
-         Put_I64 (Stream, Ghdl_I64 (T));
-         case Unit is
-            when 0 =>
-               Put (Stream, "sec");
-            when 1 =>
-               Put (Stream, "ms");
-            when 2 =>
-               Put (Stream, "us");
-            when 3 =>
-               Put (Stream, "ns");
-            when 4 =>
-               Put (Stream, "ps");
-            when 5 =>
-               Put (Stream, "fs");
-         end case;
-      end if;
-   end Put_Time;
 
 end Grt.Astdio;

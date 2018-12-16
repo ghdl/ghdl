@@ -50,6 +50,7 @@ with Grt.Processes;
 with Grt.Options;
 with Grt.Stdio; use Grt.Stdio;
 with Grt.Astdio; use Grt.Astdio;
+with Grt.Astdio.Vhdl; use Grt.Astdio.Vhdl;
 
 package body Simul.Debugger is
    --  This exception can be raised by a debugger command to directly return

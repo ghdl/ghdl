@@ -22,30 +22,17 @@
 --  covered by the GNU General Public License. This exception does not
 --  however invalidate any other reasons why the executable file might be
 --  covered by the GNU Public License.
-with System;
-with Grt.Types; use Grt.Types;
-with Grt.Stdio; use Grt.Stdio;
 
-package Grt.Astdio is
-   pragma Preelaborate (Grt.Astdio);
+package Grt.Astdio.Vhdl is
+   pragma Preelaborate (Grt.Astdio.Vhdl);
 
-   --  Procedures to disp on STREAM.
-   procedure Put (Stream : FILEs; Str : String);
-   procedure Put_Line (Stream : FILEs; Str : String);
-   procedure Put_I32 (Stream : FILEs; I32 : Ghdl_I32);
-   procedure Put_U32 (Stream : FILEs; U32 : Ghdl_U32);
-   procedure Put_I64 (Stream : FILEs; I64 : Ghdl_I64);
-   procedure Put_U64 (Stream : FILEs; U64 : Ghdl_U64);
-   procedure Put_F64 (Stream : FILEs; F64 : Ghdl_F64);
-   procedure Put (Stream : FILEs; Addr : System.Address);
-   procedure Put (Stream : FILEs; Str : Ghdl_C_String);
-   procedure Put (Stream : FILEs; C : Character);
-   procedure New_Line (Stream : FILEs);
+   --  Display time with unit, without space.
+   --  Eg: 10ns, 100ms, 97ps...
+   procedure Put_Time (Stream : FILEs; Time : Std_Time);
 
-   --  And on stdout.
-   procedure Put (Str : String);
-   procedure Put (C : Character);
-   procedure New_Line;
-   procedure Put_Line (Str : String);
-   procedure Put (Str : Ghdl_C_String);
-end Grt.Astdio;
+   --  Put STR using put procedures.
+   procedure Put_Str_Len (Stream : FILEs; Str : Ghdl_Str_Len_Type);
+
+   --  Put " to " or " downto ".
+   procedure Put_Dir (Stream : FILEs; Dir : Ghdl_Dir_Type);
+end Grt.Astdio.Vhdl;

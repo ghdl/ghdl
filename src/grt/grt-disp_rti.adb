@@ -24,6 +24,7 @@
 --  covered by the GNU Public License.
 
 with Grt.Astdio; use Grt.Astdio;
+with Grt.Astdio.Vhdl; use Grt.Astdio.Vhdl;
 with Grt.Errors; use Grt.Errors;
 with Grt.Hooks; use Grt.Hooks;
 with Grt.Rtis_Utils; use Grt.Rtis_Utils;

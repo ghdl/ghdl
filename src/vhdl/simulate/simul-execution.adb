@@ -34,7 +34,7 @@ with Str_Table;
 with Files_Map;
 with Iir_Chains; use Iir_Chains;
 with Simul.Simulation; use Simul.Simulation;
-with Grt.Astdio;
+with Grt.Astdio.Vhdl;
 with Grt.Stdio;
 with Grt.Options;
 with Grt.Vstrings;
@@ -4249,7 +4249,7 @@ package body Simul.Execution is
       Put (Standard_Output, Disp_Location (Stmt));
 
       Put (Standard_Output, ":@");
-      Grt.Astdio.Put_Time (Grt.Stdio.stdout, Current_Time);
+      Grt.Astdio.Vhdl.Put_Time (Grt.Stdio.stdout, Current_Time);
 
       -- 1: an indication that this message is from an assertion.
       Put (Standard_Output, ":(");
