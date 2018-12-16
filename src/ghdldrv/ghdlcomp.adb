@@ -38,7 +38,11 @@ package body Ghdlcomp is
    Flag_Expect_Failure : Boolean := False;
 
    --  Commands which use the mcode compiler.
-   type Command_Comp is abstract new Command_Lib with null record;
+   type Command_Comp is abstract new Command_Lib with record
+      --  If set, force semantic analysis even in case of parse error.
+      Flag_Force_Analysis : Boolean := False;
+   end record;
+
    procedure Decode_Option (Cmd : in out Command_Comp;
                             Option : String;
                             Arg : String;
@@ -57,6 +61,9 @@ package body Ghdlcomp is
          Res := Option_Ok;
       elsif Option = "--check-ast" then
          Flags.Check_Ast_Level := Flags.Check_Ast_Level + 1;
+         Res := Option_Ok;
+      elsif Option = "--force-analysis" then
+         Cmd.Flag_Force_Analysis := True;
          Res := Option_Ok;
       elsif Hooks.Decode_Option.all (Option) then
          Res := Option_Ok;
@@ -379,7 +386,6 @@ package body Ghdlcomp is
    procedure Perform_Action (Cmd : Command_Analyze;
                              Args : Argument_List)
    is
-      pragma Unreferenced (Cmd);
       use Types;
       Id : Name_Id;
       Design_File : Iir_Design_File;
@@ -397,10 +403,16 @@ package body Ghdlcomp is
       --  Parse all files.
       for I in Args'Range loop
          Id := Name_Table.Get_Identifier (Args (I).all);
+
+         --  Parse file.
          Design_File := Load_File_Name (Id);
-         if Errorout.Nbr_Errors > 0 then
+         if Errorout.Nbr_Errors > 0
+           and then not Cmd.Flag_Force_Analysis
+         then
             raise Compilation_Error;
          end if;
+
+         New_Design_File := Null_Iir;
 
          if False then
             --  Speed up analysis: remove all previous designs.
@@ -411,6 +423,7 @@ package body Ghdlcomp is
          if Design_File /= Null_Iir then
             Unit := Get_First_Design_Unit (Design_File);
             while Unit /= Null_Iir loop
+               --  Analyze unit.
                Finish_Compilation (Unit, True);
 
                Next_Unit := Get_Chain (Unit);
@@ -424,25 +437,35 @@ package body Ghdlcomp is
                Unit := Next_Unit;
             end loop;
 
-            if Errorout.Nbr_Errors > 0 then
+            if Errorout.Nbr_Errors > 0
+              and then not Cmd.Flag_Force_Analysis
+            then
                raise Compilation_Error;
             end if;
 
             Free_Iir (Design_File);
 
             --  Do late analysis checks.
-            Unit := Get_First_Design_Unit (New_Design_File);
-            while Unit /= Null_Iir loop
-               Sem.Sem_Analysis_Checks_List
-                 (Unit, Is_Warning_Enabled (Warnid_Delayed_Checks));
-               Unit := Get_Chain (Unit);
-            end loop;
+            if New_Design_File /= Null_Iir then
+               Unit := Get_First_Design_Unit (New_Design_File);
+               while Unit /= Null_Iir loop
+                  Sem.Sem_Analysis_Checks_List
+                    (Unit, Is_Warning_Enabled (Warnid_Delayed_Checks));
+                  Unit := Get_Chain (Unit);
+               end loop;
 
-            if Errorout.Nbr_Errors > 0 then
-               raise Compilation_Error;
+               if Errorout.Nbr_Errors > 0
+                 and then not Cmd.Flag_Force_Analysis
+               then
+                  raise Compilation_Error;
+               end if;
             end if;
          end if;
       end loop;
+
+      if Errorout.Nbr_Errors > 0 then
+         raise Compilation_Error;
+      end if;
 
       if Flag_Expect_Failure then
          raise Compilation_Error;
