@@ -76,5 +76,6 @@ def run():
     print('{} tests run'.format(num))
 
 
-run()
+if __name__ == '__main__':
+    run()
 
