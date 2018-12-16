@@ -34,9 +34,12 @@ def run():
     for d in DIRS:
         tests.extend(glob.glob(d))
 
+    start_time = time.time()
     jobs = []
     poll = []
-    num = 0
+    nbr_tests = len(tests)
+    nbr_run = 0
+    nbr_err = 0
     while len(tests) != 0 or len(jobs) != 0:
         # Start as many jobs as possible
         if len(tests) > 0 and len(jobs) < NUMJOBS:
@@ -70,10 +73,14 @@ def run():
                 code = j.wait()
                 if code != 0:
                     print('############### Error for {}'.format(j.dirname))
+                    nbr_err += 1
+                    tests = []
                 jobs.remove(j)
-                num += 1
+                nbr_run += 1
+    end_time = time.time()
 
-    print('{} tests run'.format(num))
+    print('{}/{} tests run in {} sec, {} failures'.format(
+        nbr_run, nbr_tests, end_time - start_time, nbr_err))
 
 
 if __name__ == '__main__':
