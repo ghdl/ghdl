@@ -1571,8 +1571,10 @@ package body Iirs_Utils is
       Res : Iir;
    begin
       Res := Create_Iir (Iir_Kind_Error);
-      Set_Error_Origin (Res, Orig);
-      Location_Copy (Res, Orig);
+      if Orig /= Null_Iir then
+         Set_Error_Origin (Res, Orig);
+         Location_Copy (Res, Orig);
+      end if;
       return Res;
    end Create_Error;
 
