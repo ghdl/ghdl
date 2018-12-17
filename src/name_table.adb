@@ -393,11 +393,14 @@ package body Name_Table is
       First : Str_Idx;
    begin
       Log_Line ("strings_table:");
-      First := 0;
-      for I in 0 .. Strings_Table.Last loop
+      First := Strings_Table.First;
+      for I in Strings_Table.First .. Strings_Table.Last loop
          if Strings_Table.Table(I) = NUL then
-            Log_Line (Str_Idx'Image (First) & ": "
-                      & String (Strings_Table.Table (First .. I - 1)));
+            if I > Strings_Table.First then
+               Log (Str_Idx'Image (First) & ": ");
+               Log (String (Strings_Table.Table (First .. I - 1)));
+               Log_Line;
+            end if;
             First := I + 1;
          end if;
       end loop;
