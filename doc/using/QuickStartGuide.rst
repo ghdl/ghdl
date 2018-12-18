@@ -58,11 +58,16 @@ The `heartbeat` program
 
 .. code-block:: VHDL
 
-  entity hello_world is
-    port ( clk: out std_logic; )
-  end hearbeat;
+  library ieee;
+  use ieee.std_logic_1164.all;
 
-  architecture behaviour of hello_world is
+  entity heartbeat is
+    port ( clk: out std_logic);
+  end heartbeat;
+
+  architecture behaviour of heartbeat
+  is
+    constant clk_period : time := 10 ns;
   begin
     -- Clock process definition
     clk_process: process
