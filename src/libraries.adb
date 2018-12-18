@@ -35,6 +35,9 @@ package body Libraries is
    Libraries_Chain : Iir_Library_Declaration := Null_Iir;
    Libraries_Chain_Last : Iir_Library_Declaration := Null_Iir;
 
+   --  Last design_file used.  Kept to speed-up operations.
+   Last_Design_File : Iir_Design_File := Null_Iir;
+
    --  Table of library paths.
    package Paths is new Tables
      (Table_Index_Type => Integer,
@@ -251,30 +254,38 @@ package body Libraries is
    begin
       File := Get_Design_File_Chain (Work_Library);
       Prev := Null_Iir;
-      while File /= Null_Iir loop
-         Next := Get_Chain (File);
-         if Get_Design_File_Filename (File) = File_Name
-           and then Get_Design_File_Directory (File) = Dir_Name
-         then
-            --  Remove from library.
-            if Prev = Null_Iir then
-               Set_Design_File_Chain (Work_Library, Next);
-            else
-               Set_Chain (Prev, Next);
-            end if;
-
-            --  Remove all units from unit hash table.
-            Unit := Get_First_Design_Unit (File);
-            while Unit /= Null_Iir loop
-               Remove_Unit_Hash (Unit);
-               Unit := Get_Chain (Unit);
-            end loop;
-
+      loop
+         if File = Null_Iir then
+            --  Not found ???
             return;
          end if;
+
+         Next := Get_Chain (File);
+         exit when Get_Design_File_Filename (File) = File_Name
+           and then Get_Design_File_Directory (File) = Dir_Name;
+
          Prev := File;
          File := Next;
       end loop;
+
+      --  Remove from library.
+      if Prev = Null_Iir then
+         Set_Design_File_Chain (Work_Library, Next);
+      else
+         Set_Chain (Prev, Next);
+      end if;
+
+      --  Remove all units from unit hash table.
+      Unit := Get_First_Design_Unit (File);
+      while Unit /= Null_Iir loop
+         Remove_Unit_Hash (Unit);
+         Unit := Get_Chain (Unit);
+      end loop;
+
+      --  Clear the Last_Design_File cache.
+      if Last_Design_File = Design_File then
+         Last_Design_File := Null_Iir;
+      end if;
    end Purge_Design_File;
 
    -- Load the contents of a library from a map file.
@@ -986,9 +997,6 @@ package body Libraries is
       --  Not found.
       raise Internal_Error;
    end Remove_Unit_From_File;
-
-   --  Last design_file used.  Kept to speed-up operations.
-   Last_Design_File : Iir_Design_File := Null_Iir;
 
    -- Add or replace a design unit in the working library.
    procedure Add_Design_Unit_Into_Library
