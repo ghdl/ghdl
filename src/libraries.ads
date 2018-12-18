@@ -105,8 +105,7 @@ package Libraries is
 
    -- Just return the design_unit for NAME, or NULL if not found.
    function Find_Primary_Unit
-     (Library: Iir_Library_Declaration; Name: Name_Id)
-     return Iir_Design_Unit;
+     (Library: Iir_Library_Declaration; Name: Name_Id) return Iir_Design_Unit;
 
    --  Get or create a library from an identifier.
    --  LOC is used only to report errors.

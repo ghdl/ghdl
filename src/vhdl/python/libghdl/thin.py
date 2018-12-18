@@ -118,7 +118,8 @@ class Files_Map:
 
     Reserve_Source_File = libghdl.files_map__reserve_source_file
 
-    Source_Files_Last = libghdl.files_map__source_files__last
+    Get_Last_Source_File_Entry = libghdl.files_map__get_last_source_file_entry
+
 
 class Files_Map_Editor:
     Set_Gap = libghdl.files_map__editor__set_gap
@@ -215,6 +216,7 @@ class Canon:
     Extract_Sequential_Statement_Chain_Sensitivity = \
         libghdl.canon__canon_extract_sequential_statement_chain_sensitivity
 
+
 class Sem_Lib:
     Load_File = libghdl.sem_lib__load_file
 
@@ -228,21 +230,24 @@ Standard_Package = c_int32.in_dll(libghdl, "std_package__standard_package")
 Character_Type_Definition = c_int32.in_dll(
     libghdl, "std_package__character_type_definition")
 
-# libraries
+class Libraries:
+    Get_Libraries_Chain = libghdl.libraries__get_libraries_chain
 
-Get_Libraries_Chain = libghdl.libraries__get_libraries_chain
+    Add_Design_Unit_Into_Library = \
+        libghdl.libraries__add_design_unit_into_library
 
-Add_Design_Unit_Into_Library = libghdl.libraries__add_design_unit_into_library
+    Finish_Compilation = libghdl.sem_lib__finish_compilation
 
-Finish_Compilation = libghdl.sem_lib__finish_compilation
+    # Use .value
+    Library_Location = c_int32.in_dll(libghdl, "libraries__library_location")
 
-# Use .value
-Library_Location = c_int32.in_dll(libghdl, "libraries__library_location")
+    # Use .value
+    Work_Library = c_int32.in_dll(libghdl, "libraries__work_library")
 
-# Use .value
-Work_Library = c_int32.in_dll(libghdl, "libraries__work_library")
+    Purge_Design_File = libghdl.libraries__purge_design_file
 
-Purge_Design_File = libghdl.libraries__purge_design_file
+    Find_Entity_For_Component = libghdl.libraries__find_entity_for_component
+
 
 # Disp_Tree
 
