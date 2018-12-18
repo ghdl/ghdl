@@ -15,7 +15,7 @@
 --  along with GHDL; see the file COPYING.  If not, write to the Free
 --  Software Foundation, 59 Temple Place - Suite 330, Boston, MA
 --  02111-1307, USA.
-with Types; use Types;
+
 with Files_Map;
 with Name_Table;
 with Str_Table;
@@ -32,7 +32,6 @@ package body Std_Package is
    High_Bound : constant Bound_Array := (False => (2 ** 31) - 1,
                                          True => (2 ** 63) - 1);
 
-   Std_Location: Location_Type := Location_Nil;
    Std_Filename : Name_Id := Null_Identifier;
 
    --  Could be public.
@@ -82,8 +81,8 @@ package body Std_Package is
       end Create_Known_Iir;
    begin
       Std_Filename := Name_Table.Get_Identifier ("*std_standard*");
-      Std_Location := Files_Map.File_To_Location
-        (Files_Map.Create_Virtual_Source_File (Std_Filename));
+      Std_Source_File := Files_Map.Create_Virtual_Source_File (Std_Filename);
+      Std_Location := Files_Map.File_To_Location (Std_Source_File);
 
       if Create_Iir_Error /= Error_Mark then
          raise Internal_Error;
