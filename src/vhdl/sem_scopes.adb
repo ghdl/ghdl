@@ -416,6 +416,11 @@ package body Sem_Scopes is
          return;
       end if;
 
+      if Get_Kind (Decl) = Iir_Kind_Element_Declaration then
+         --  Do not warn for record elements.  They are used by selection.
+         return;
+      end if;
+
       if Decl = Prev_Decl then
          --  Can happen in configuration.  No real hidding.
          return;
