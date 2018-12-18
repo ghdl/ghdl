@@ -954,65 +954,6 @@ package body Trans.Chap6 is
       end if;
    end Translate_Selected_Element;
 
-   --       function Translate_Formal_Interface_Name (Scope_Type : O_Tnode;
-   --                                                 Scope_Param : O_Lnode;
-   --                                                 Name : Iir;
-   --                                                 Kind : Object_Kind_Type)
-   --                                                return Mnode
-   --       is
-   --          Type_Info : Type_Info_Acc;
-   --          Info : Ortho_Info_Acc;
-   --          Res : Mnode;
-   --       begin
-   --          Type_Info := Get_Info (Get_Type (Name));
-   --          Info := Get_Info (Name);
-   --          Push_Scope_Soft (Scope_Type, Scope_Param);
-   --          Res := Get_Var (Info.Object_Var, Type_Info, Kind);
-   --          Clear_Scope_Soft (Scope_Type);
-   --          return Res;
-   --       end Translate_Formal_Interface_Name;
-
-   --       function Translate_Formal_Name (Scope_Type : O_Tnode;
-   --                                       Scope_Param : O_Lnode;
-   --                                       Name : Iir)
-   --                                      return Mnode
-   --       is
-   --          Prefix : Iir;
-   --          Prefix_Name : Mnode;
-   --       begin
-   --          case Get_Kind (Name) is
-   --             when Iir_Kind_Interface_Constant_Declaration =>
-   --                return Translate_Formal_Interface_Name
-   --                  (Scope_Type, Scope_Param, Name, Mode_Value);
-
-   --             when Iir_Kind_Interface_Signal_Declaration =>
-   --                return Translate_Formal_Interface_Name
-   --                  (Scope_Type, Scope_Param, Name, Mode_Signal);
-
-   --             when Iir_Kind_Indexed_Name =>
-   --                Prefix := Get_Prefix (Name);
-   --                Prefix_Name := Translate_Formal_Name
-   --                  (Scope_Type, Scope_Param, Prefix);
-   --                return Translate_Indexed_Name (Prefix_Name, Name);
-
-   --             when Iir_Kind_Slice_Name =>
-   --                Prefix := Get_Prefix (Name);
-   --                Prefix_Name := Translate_Formal_Name
-   --                  (Scope_Type, Scope_Param, Prefix);
-   --                return Translate_Slice_Name (Prefix_Name, Name);
-
-   --             when Iir_Kind_Selected_Element =>
-   --                Prefix := Get_Prefix (Name);
-   --                Prefix_Name := Translate_Formal_Name
-   --                  (Scope_Type, Scope_Param, Prefix);
-   --                return Translate_Selected_Element
-   --                  (Prefix_Name, Get_Selected_Element (Name));
-
-   --             when others =>
-   --                Error_Kind ("translate_generic_name", Name);
-   --          end case;
-   --       end Translate_Formal_Name;
-
    function Translate_Object_Alias_Name (Name : Iir; Mode : Object_Kind_Type)
                                         return Mnode
    is
@@ -1165,7 +1106,7 @@ package body Trans.Chap6 is
          when Iir_Kind_Selected_Element =>
             return Translate_Selected_Element
               (Translate_Name (Get_Prefix (Name), Mode),
-               Get_Selected_Element (Name));
+               Get_Named_Entity (Name));
 
          when Iir_Kind_Function_Call =>
             pragma Assert (Mode = Mode_Value);
@@ -1255,7 +1196,7 @@ package body Trans.Chap6 is
             end;
          when Iir_Kind_Selected_Element =>
             declare
-               El      : constant Iir := Get_Selected_Element (Name);
+               El      : constant Iir := Get_Named_Entity (Name);
                Pfx_Sig : Mnode;
                Pfx_Drv : Mnode;
             begin

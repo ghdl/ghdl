@@ -739,7 +739,7 @@ package body Sem_Assocs is
    procedure Add_Individual_Assoc_Selected_Name
      (Choice : out Iir; Sub_Assoc : Iir; Formal : Iir)
    is
-      Element : constant Iir := Get_Selected_Element (Formal);
+      Element : constant Iir := Get_Named_Entity (Formal);
       Last_Choice : Iir;
    begin
       --  Try to find the existing choice.

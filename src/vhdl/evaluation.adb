@@ -2253,7 +2253,7 @@ package body Evaluation is
 
    function Eval_Selected_Element (Expr : Iir) return Iir
    is
-      Selected_El : constant Iir := Get_Selected_Element (Expr);
+      Selected_El : constant Iir := Get_Named_Entity (Expr);
       El_Pos : constant Iir_Index32 := Get_Element_Position (Selected_El);
       Prefix : Iir;
       Cur_Pos : Iir_Index32;

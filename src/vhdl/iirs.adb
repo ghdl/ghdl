@@ -2509,22 +2509,6 @@ package body Iirs is
       Set_Field4 (Target, Iir_Index32'Pos (Pos));
    end Set_Element_Position;
 
-   function Get_Selected_Element (Target : Iir) return Iir is
-   begin
-      pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_Selected_Element (Get_Kind (Target)),
-                     "no field Selected_Element");
-      return Get_Field2 (Target);
-   end Get_Selected_Element;
-
-   procedure Set_Selected_Element (Target : Iir; El : Iir) is
-   begin
-      pragma Assert (Target /= Null_Iir);
-      pragma Assert (Has_Selected_Element (Get_Kind (Target)),
-                     "no field Selected_Element");
-      Set_Field2 (Target, El);
-   end Set_Selected_Element;
-
    function Get_Use_Clause_Chain (Target : Iir) return Iir is
    begin
       pragma Assert (Target /= Null_Iir);

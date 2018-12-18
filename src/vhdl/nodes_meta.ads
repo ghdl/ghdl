@@ -178,7 +178,6 @@ package Nodes_Meta is
       Field_File_Logical_Name,
       Field_File_Open_Kind,
       Field_Element_Position,
-      Field_Selected_Element,
       Field_Use_Clause_Chain,
       Field_Context_Reference_Chain,
       Field_Selected_Name,
@@ -708,7 +707,6 @@ package Nodes_Meta is
    function Has_File_Logical_Name (K : Iir_Kind) return Boolean;
    function Has_File_Open_Kind (K : Iir_Kind) return Boolean;
    function Has_Element_Position (K : Iir_Kind) return Boolean;
-   function Has_Selected_Element (K : Iir_Kind) return Boolean;
    function Has_Use_Clause_Chain (K : Iir_Kind) return Boolean;
    function Has_Context_Reference_Chain (K : Iir_Kind) return Boolean;
    function Has_Selected_Name (K : Iir_Kind) return Boolean;

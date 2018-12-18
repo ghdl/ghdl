@@ -2980,7 +2980,7 @@ package body Trans.Chap8 is
                     (Chap3.Record_Bounds_To_Element_Bounds
                        (Chap3.Get_Composite_Bounds
                           (Params (Last_Individual)),
-                        Get_Selected_Element (Formal)),
+                        Get_Named_Entity (Formal)),
                      Chap3.Get_Composite_Bounds (Saved_Val (Pos)),
                      Formal_Type);
                end if;

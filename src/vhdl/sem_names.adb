@@ -1777,7 +1777,7 @@ package body Sem_Names is
             Free_Parenthesis_Name (Name, Res);
          when Iir_Kind_Selected_Element =>
             pragma Assert (Get_Kind (Name) = Iir_Kind_Selected_Name);
-            Xref_Ref (Res, Get_Selected_Element (Res));
+            Xref_Ref (Res, Get_Named_Entity (Res));
             Set_Name_Staticness (Res, Get_Name_Staticness (Prefix));
             Set_Expr_Staticness (Res, Get_Expr_Staticness (Prefix));
             Set_Base_Name (Res, Get_Base_Name (Prefix));
@@ -1995,7 +1995,7 @@ package body Sem_Names is
          Set_Prefix (Se, R);
          Set_Type (Se, Get_Type (Rec_El));
          Set_Identifier (Se, Suffix);
-         Set_Selected_Element (Se, Rec_El);
+         Set_Named_Entity (Se, Rec_El);
          Set_Base_Name (Se, Get_Object_Prefix (R, False));
          Add_Result (Res, Se);
       end Sem_As_Selected_Element;

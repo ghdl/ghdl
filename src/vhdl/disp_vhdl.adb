@@ -2912,7 +2912,7 @@ package body Disp_Vhdl is
          when Iir_Kind_Selected_Element =>
             Disp_Expression (Get_Prefix (Expr));
             Put (".");
-            Disp_Name_Of (Get_Selected_Element (Expr));
+            Disp_Name_Of (Get_Named_Entity (Expr));
          when Iir_Kind_Implicit_Dereference =>
             Disp_Expression (Get_Prefix (Expr));
          when Iir_Kind_Dereference =>

@@ -137,7 +137,6 @@ package body Nodes_Meta is
       Field_File_Logical_Name => Type_Iir,
       Field_File_Open_Kind => Type_Iir,
       Field_Element_Position => Type_Iir_Index32,
-      Field_Selected_Element => Type_Iir,
       Field_Use_Clause_Chain => Type_Iir,
       Field_Context_Reference_Chain => Type_Iir,
       Field_Selected_Name => Type_Iir,
@@ -592,8 +591,6 @@ package body Nodes_Meta is
             return "file_open_kind";
          when Field_Element_Position =>
             return "element_position";
-         when Field_Selected_Element =>
-            return "selected_element";
          when Field_Use_Clause_Chain =>
             return "use_clause_chain";
          when Field_Context_Reference_Chain =>
@@ -1796,8 +1793,6 @@ package body Nodes_Meta is
             return Attr_None;
          when Field_Element_Position =>
             return Attr_None;
-         when Field_Selected_Element =>
-            return Attr_Ref;
          when Field_Use_Clause_Chain =>
             return Attr_None;
          when Field_Context_Reference_Chain =>
@@ -3642,11 +3637,12 @@ package body Nodes_Meta is
       Field_Allocator_Designated_Type,
       --  Iir_Kind_Selected_Element
       Field_Identifier,
+      Field_Is_Forward_Ref,
       Field_Expr_Staticness,
       Field_Name_Staticness,
       Field_Prefix,
       Field_Type,
-      Field_Selected_Element,
+      Field_Named_Entity,
       Field_Base_Name,
       --  Iir_Kind_Dereference
       Field_Expr_Staticness,
@@ -4597,103 +4593,103 @@ package body Nodes_Meta is
       Iir_Kind_Type_Conversion => 1239,
       Iir_Kind_Allocator_By_Expression => 1243,
       Iir_Kind_Allocator_By_Subtype => 1248,
-      Iir_Kind_Selected_Element => 1255,
-      Iir_Kind_Dereference => 1260,
-      Iir_Kind_Implicit_Dereference => 1265,
-      Iir_Kind_Slice_Name => 1272,
-      Iir_Kind_Indexed_Name => 1278,
-      Iir_Kind_Psl_Expression => 1280,
-      Iir_Kind_Sensitized_Process_Statement => 1301,
-      Iir_Kind_Process_Statement => 1321,
-      Iir_Kind_Concurrent_Simple_Signal_Assignment => 1333,
-      Iir_Kind_Concurrent_Conditional_Signal_Assignment => 1345,
-      Iir_Kind_Concurrent_Selected_Signal_Assignment => 1358,
-      Iir_Kind_Concurrent_Assertion_Statement => 1366,
-      Iir_Kind_Concurrent_Procedure_Call_Statement => 1373,
-      Iir_Kind_Psl_Assert_Statement => 1386,
-      Iir_Kind_Psl_Cover_Statement => 1399,
-      Iir_Kind_Block_Statement => 1412,
-      Iir_Kind_If_Generate_Statement => 1423,
-      Iir_Kind_Case_Generate_Statement => 1432,
-      Iir_Kind_For_Generate_Statement => 1441,
-      Iir_Kind_Component_Instantiation_Statement => 1452,
-      Iir_Kind_Psl_Default_Clock => 1456,
-      Iir_Kind_Simple_Simultaneous_Statement => 1463,
-      Iir_Kind_Generate_Statement_Body => 1474,
-      Iir_Kind_If_Generate_Else_Clause => 1480,
-      Iir_Kind_Simple_Signal_Assignment_Statement => 1490,
-      Iir_Kind_Conditional_Signal_Assignment_Statement => 1500,
-      Iir_Kind_Selected_Waveform_Assignment_Statement => 1511,
-      Iir_Kind_Null_Statement => 1515,
-      Iir_Kind_Assertion_Statement => 1522,
-      Iir_Kind_Report_Statement => 1528,
-      Iir_Kind_Wait_Statement => 1536,
-      Iir_Kind_Variable_Assignment_Statement => 1543,
-      Iir_Kind_Conditional_Variable_Assignment_Statement => 1550,
-      Iir_Kind_Return_Statement => 1556,
-      Iir_Kind_For_Loop_Statement => 1565,
-      Iir_Kind_While_Loop_Statement => 1574,
-      Iir_Kind_Next_Statement => 1581,
-      Iir_Kind_Exit_Statement => 1588,
-      Iir_Kind_Case_Statement => 1596,
-      Iir_Kind_Procedure_Call_Statement => 1602,
-      Iir_Kind_If_Statement => 1612,
-      Iir_Kind_Elsif => 1618,
-      Iir_Kind_Character_Literal => 1626,
-      Iir_Kind_Simple_Name => 1634,
-      Iir_Kind_Selected_Name => 1643,
-      Iir_Kind_Operator_Symbol => 1649,
-      Iir_Kind_Reference_Name => 1652,
-      Iir_Kind_External_Constant_Name => 1661,
-      Iir_Kind_External_Signal_Name => 1670,
-      Iir_Kind_External_Variable_Name => 1679,
-      Iir_Kind_Selected_By_All_Name => 1685,
-      Iir_Kind_Parenthesis_Name => 1690,
-      Iir_Kind_Package_Pathname => 1694,
-      Iir_Kind_Absolute_Pathname => 1695,
-      Iir_Kind_Relative_Pathname => 1696,
-      Iir_Kind_Pathname_Element => 1701,
-      Iir_Kind_Base_Attribute => 1703,
-      Iir_Kind_Subtype_Attribute => 1708,
-      Iir_Kind_Element_Attribute => 1713,
-      Iir_Kind_Left_Type_Attribute => 1718,
-      Iir_Kind_Right_Type_Attribute => 1723,
-      Iir_Kind_High_Type_Attribute => 1728,
-      Iir_Kind_Low_Type_Attribute => 1733,
-      Iir_Kind_Ascending_Type_Attribute => 1738,
-      Iir_Kind_Image_Attribute => 1744,
-      Iir_Kind_Value_Attribute => 1750,
-      Iir_Kind_Pos_Attribute => 1756,
-      Iir_Kind_Val_Attribute => 1762,
-      Iir_Kind_Succ_Attribute => 1768,
-      Iir_Kind_Pred_Attribute => 1774,
-      Iir_Kind_Leftof_Attribute => 1780,
-      Iir_Kind_Rightof_Attribute => 1786,
-      Iir_Kind_Delayed_Attribute => 1795,
-      Iir_Kind_Stable_Attribute => 1804,
-      Iir_Kind_Quiet_Attribute => 1813,
-      Iir_Kind_Transaction_Attribute => 1822,
-      Iir_Kind_Event_Attribute => 1826,
-      Iir_Kind_Active_Attribute => 1830,
-      Iir_Kind_Last_Event_Attribute => 1834,
-      Iir_Kind_Last_Active_Attribute => 1838,
-      Iir_Kind_Last_Value_Attribute => 1842,
-      Iir_Kind_Driving_Attribute => 1846,
-      Iir_Kind_Driving_Value_Attribute => 1850,
-      Iir_Kind_Behavior_Attribute => 1850,
-      Iir_Kind_Structure_Attribute => 1850,
-      Iir_Kind_Simple_Name_Attribute => 1857,
-      Iir_Kind_Instance_Name_Attribute => 1862,
-      Iir_Kind_Path_Name_Attribute => 1867,
-      Iir_Kind_Left_Array_Attribute => 1874,
-      Iir_Kind_Right_Array_Attribute => 1881,
-      Iir_Kind_High_Array_Attribute => 1888,
-      Iir_Kind_Low_Array_Attribute => 1895,
-      Iir_Kind_Length_Array_Attribute => 1902,
-      Iir_Kind_Ascending_Array_Attribute => 1909,
-      Iir_Kind_Range_Array_Attribute => 1916,
-      Iir_Kind_Reverse_Range_Array_Attribute => 1923,
-      Iir_Kind_Attribute_Name => 1932
+      Iir_Kind_Selected_Element => 1256,
+      Iir_Kind_Dereference => 1261,
+      Iir_Kind_Implicit_Dereference => 1266,
+      Iir_Kind_Slice_Name => 1273,
+      Iir_Kind_Indexed_Name => 1279,
+      Iir_Kind_Psl_Expression => 1281,
+      Iir_Kind_Sensitized_Process_Statement => 1302,
+      Iir_Kind_Process_Statement => 1322,
+      Iir_Kind_Concurrent_Simple_Signal_Assignment => 1334,
+      Iir_Kind_Concurrent_Conditional_Signal_Assignment => 1346,
+      Iir_Kind_Concurrent_Selected_Signal_Assignment => 1359,
+      Iir_Kind_Concurrent_Assertion_Statement => 1367,
+      Iir_Kind_Concurrent_Procedure_Call_Statement => 1374,
+      Iir_Kind_Psl_Assert_Statement => 1387,
+      Iir_Kind_Psl_Cover_Statement => 1400,
+      Iir_Kind_Block_Statement => 1413,
+      Iir_Kind_If_Generate_Statement => 1424,
+      Iir_Kind_Case_Generate_Statement => 1433,
+      Iir_Kind_For_Generate_Statement => 1442,
+      Iir_Kind_Component_Instantiation_Statement => 1453,
+      Iir_Kind_Psl_Default_Clock => 1457,
+      Iir_Kind_Simple_Simultaneous_Statement => 1464,
+      Iir_Kind_Generate_Statement_Body => 1475,
+      Iir_Kind_If_Generate_Else_Clause => 1481,
+      Iir_Kind_Simple_Signal_Assignment_Statement => 1491,
+      Iir_Kind_Conditional_Signal_Assignment_Statement => 1501,
+      Iir_Kind_Selected_Waveform_Assignment_Statement => 1512,
+      Iir_Kind_Null_Statement => 1516,
+      Iir_Kind_Assertion_Statement => 1523,
+      Iir_Kind_Report_Statement => 1529,
+      Iir_Kind_Wait_Statement => 1537,
+      Iir_Kind_Variable_Assignment_Statement => 1544,
+      Iir_Kind_Conditional_Variable_Assignment_Statement => 1551,
+      Iir_Kind_Return_Statement => 1557,
+      Iir_Kind_For_Loop_Statement => 1566,
+      Iir_Kind_While_Loop_Statement => 1575,
+      Iir_Kind_Next_Statement => 1582,
+      Iir_Kind_Exit_Statement => 1589,
+      Iir_Kind_Case_Statement => 1597,
+      Iir_Kind_Procedure_Call_Statement => 1603,
+      Iir_Kind_If_Statement => 1613,
+      Iir_Kind_Elsif => 1619,
+      Iir_Kind_Character_Literal => 1627,
+      Iir_Kind_Simple_Name => 1635,
+      Iir_Kind_Selected_Name => 1644,
+      Iir_Kind_Operator_Symbol => 1650,
+      Iir_Kind_Reference_Name => 1653,
+      Iir_Kind_External_Constant_Name => 1662,
+      Iir_Kind_External_Signal_Name => 1671,
+      Iir_Kind_External_Variable_Name => 1680,
+      Iir_Kind_Selected_By_All_Name => 1686,
+      Iir_Kind_Parenthesis_Name => 1691,
+      Iir_Kind_Package_Pathname => 1695,
+      Iir_Kind_Absolute_Pathname => 1696,
+      Iir_Kind_Relative_Pathname => 1697,
+      Iir_Kind_Pathname_Element => 1702,
+      Iir_Kind_Base_Attribute => 1704,
+      Iir_Kind_Subtype_Attribute => 1709,
+      Iir_Kind_Element_Attribute => 1714,
+      Iir_Kind_Left_Type_Attribute => 1719,
+      Iir_Kind_Right_Type_Attribute => 1724,
+      Iir_Kind_High_Type_Attribute => 1729,
+      Iir_Kind_Low_Type_Attribute => 1734,
+      Iir_Kind_Ascending_Type_Attribute => 1739,
+      Iir_Kind_Image_Attribute => 1745,
+      Iir_Kind_Value_Attribute => 1751,
+      Iir_Kind_Pos_Attribute => 1757,
+      Iir_Kind_Val_Attribute => 1763,
+      Iir_Kind_Succ_Attribute => 1769,
+      Iir_Kind_Pred_Attribute => 1775,
+      Iir_Kind_Leftof_Attribute => 1781,
+      Iir_Kind_Rightof_Attribute => 1787,
+      Iir_Kind_Delayed_Attribute => 1796,
+      Iir_Kind_Stable_Attribute => 1805,
+      Iir_Kind_Quiet_Attribute => 1814,
+      Iir_Kind_Transaction_Attribute => 1823,
+      Iir_Kind_Event_Attribute => 1827,
+      Iir_Kind_Active_Attribute => 1831,
+      Iir_Kind_Last_Event_Attribute => 1835,
+      Iir_Kind_Last_Active_Attribute => 1839,
+      Iir_Kind_Last_Value_Attribute => 1843,
+      Iir_Kind_Driving_Attribute => 1847,
+      Iir_Kind_Driving_Value_Attribute => 1851,
+      Iir_Kind_Behavior_Attribute => 1851,
+      Iir_Kind_Structure_Attribute => 1851,
+      Iir_Kind_Simple_Name_Attribute => 1858,
+      Iir_Kind_Instance_Name_Attribute => 1863,
+      Iir_Kind_Path_Name_Attribute => 1868,
+      Iir_Kind_Left_Array_Attribute => 1875,
+      Iir_Kind_Right_Array_Attribute => 1882,
+      Iir_Kind_High_Array_Attribute => 1889,
+      Iir_Kind_Low_Array_Attribute => 1896,
+      Iir_Kind_Length_Array_Attribute => 1903,
+      Iir_Kind_Ascending_Array_Attribute => 1910,
+      Iir_Kind_Range_Array_Attribute => 1917,
+      Iir_Kind_Reverse_Range_Array_Attribute => 1924,
+      Iir_Kind_Attribute_Name => 1933
      );
 
    function Get_Fields_First (K : Iir_Kind) return Fields_Index is
@@ -5204,8 +5200,6 @@ package body Nodes_Meta is
             return Get_File_Logical_Name (N);
          when Field_File_Open_Kind =>
             return Get_File_Open_Kind (N);
-         when Field_Selected_Element =>
-            return Get_Selected_Element (N);
          when Field_Use_Clause_Chain =>
             return Get_Use_Clause_Chain (N);
          when Field_Context_Reference_Chain =>
@@ -5600,8 +5594,6 @@ package body Nodes_Meta is
             Set_File_Logical_Name (N, V);
          when Field_File_Open_Kind =>
             Set_File_Open_Kind (N, V);
-         when Field_Selected_Element =>
-            Set_Selected_Element (N, V);
          when Field_Use_Clause_Chain =>
             Set_Use_Clause_Chain (N, V);
          when Field_Context_Reference_Chain =>
@@ -7965,11 +7957,6 @@ package body Nodes_Meta is
       end case;
    end Has_Element_Position;
 
-   function Has_Selected_Element (K : Iir_Kind) return Boolean is
-   begin
-      return K = Iir_Kind_Selected_Element;
-   end Has_Selected_Element;
-
    function Has_Use_Clause_Chain (K : Iir_Kind) return Boolean is
    begin
       return K = Iir_Kind_Use_Clause;
@@ -9435,7 +9422,8 @@ package body Nodes_Meta is
    function Has_Named_Entity (K : Iir_Kind) return Boolean is
    begin
       case K is
-         when Iir_Kind_Character_Literal
+         when Iir_Kind_Selected_Element
+           | Iir_Kind_Character_Literal
            | Iir_Kind_Simple_Name
            | Iir_Kind_Selected_Name
            | Iir_Kind_Operator_Symbol
@@ -10685,7 +10673,8 @@ package body Nodes_Meta is
    function Has_Is_Forward_Ref (K : Iir_Kind) return Boolean is
    begin
       case K is
-         when Iir_Kind_Character_Literal
+         when Iir_Kind_Selected_Element
+           | Iir_Kind_Character_Literal
            | Iir_Kind_Simple_Name
            | Iir_Kind_Selected_Name
            | Iir_Kind_Operator_Symbol

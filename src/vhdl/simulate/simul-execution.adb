@@ -2719,7 +2719,7 @@ package body Simul.Execution is
             begin
                Execute_Name_With_Base
                  (Block, Get_Prefix (Expr), Base, Prefix, Is_Sig);
-               Pos := Get_Element_Position (Get_Selected_Element (Expr));
+               Pos := Get_Element_Position (Get_Named_Entity (Expr));
                Res := Prefix.Val_Record.V (Pos + 1);
             end;
 
@@ -3581,7 +3581,7 @@ package body Simul.Execution is
                end loop;
             end;
          when Iir_Kind_Selected_Element =>
-            Pos := Get_Element_Position (Get_Selected_Element (Formal));
+            Pos := Get_Element_Position (Get_Named_Entity (Formal));
             Store (Pfx.Val_Record.V (Pos + 1), Actual);
          when others =>
             Error_Kind ("associate_by_reference", Formal);

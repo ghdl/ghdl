@@ -3803,15 +3803,19 @@ package Iirs is
    --
    --   Get/Set_Type (Field1)
    --
-   --   Get/Set_Selected_Element (Field2)
-   --
    --   Get/Set_Identifier (Field3)
+   --
+   -- The selected element.
+   --   Get/Set_Named_Entity (Field4)
    --
    --   Get/Set_Base_Name (Field5)
    --
    --   Get/Set_Expr_Staticness (State1)
    --
    --   Get/Set_Name_Staticness (State2)
+   --
+   --  Always false.
+   --   Get/Set_Is_Forward_Ref (Flag1)
 
    -- Iir_Kind_Implicit_Dereference (Short)
    -- Iir_Kind_Dereference (Short)
@@ -6480,10 +6484,6 @@ package Iirs is
    --  Field: Field4 (pos)
    function Get_Element_Position (Target : Iir) return Iir_Index32;
    procedure Set_Element_Position (Target : Iir; Pos : Iir_Index32);
-
-   --  Field: Field2 Ref
-   function Get_Selected_Element (Target : Iir) return Iir;
-   procedure Set_Selected_Element (Target : Iir; El : Iir);
 
    --  Selected names of an use_clause are chained.
    --  Field: Field3
