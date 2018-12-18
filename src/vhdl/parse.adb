@@ -238,6 +238,18 @@ package body Parse is
               | Tok_Semi_Colon
               | Tok_End =>
                exit;
+            when Tok_If
+              | Tok_For
+              | Tok_While
+              | Tok_Loop
+              | Tok_Wait
+              | Tok_Assert =>
+               --  Sequential statement.
+               exit;
+            when Tok_Process
+              | Tok_Block =>
+               --  Concurrent statement.
+               exit;
             when others =>
                Scan;
          end case;
@@ -8690,12 +8702,19 @@ package body Parse is
             when Tok_Psl_Cover =>
                Postponed_Not_Allowed;
                Stmt := Parse_Psl_Cover_Statement;
+            when Tok_Wait
+              | Tok_Loop
+              | Tok_While =>
+               Error_Msg_Parse
+                 ("sequential statement only allowed in processes");
+               Stmt := Parse_Sequential_Statements (Parent);
+               Stmt := Null_Iir;
             when others =>
                --  FIXME: improve message:
                --  instead of 'unexpected token 'signal' in conc stmt list'
                --  report: 'signal declarations are not allowed in conc stmt'
                Unexpected ("concurrent statement list");
-               Skip_Until_Semi_Colon;
+               Resync_To_End_Of_Statement;
                if Current_Token = Tok_Semi_Colon then
                   Scan;
                end if;
