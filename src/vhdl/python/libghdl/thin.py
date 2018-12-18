@@ -106,6 +106,8 @@ class Files_Map:
 
     Get_File_Name = libghdl.files_map__get_file_name
 
+    Get_Directory_Name = libghdl.files_map__get_directory_name
+
     Get_File_Buffer = libghdl.files_map__get_file_buffer
     Get_File_Buffer.restype = c_void_p
 

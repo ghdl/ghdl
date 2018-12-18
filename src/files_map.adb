@@ -909,12 +909,11 @@ package body Files_Map is
       return Source_Files.Table (File).Checksum;
    end Get_File_Checksum;
 
-   function Get_Source_File_Directory (File : Source_File_Entry)
-                                      return Name_Id is
+   function Get_Directory_Name (File : Source_File_Entry) return Name_Id is
    begin
       Check_File (File);
       return Source_Files.Table (File).Directory;
-   end Get_Source_File_Directory;
+   end Get_Directory_Name;
 
    function File_Line_To_Position (File : Source_File_Entry; Line : Positive)
                                   return Source_Ptr

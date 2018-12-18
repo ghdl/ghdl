@@ -109,8 +109,7 @@ package Files_Map is
    function Get_File_Name (File : Source_File_Entry) return Name_Id;
 
    --  Return the directory of the file.
-   function Get_Source_File_Directory (File : Source_File_Entry)
-                                      return Name_Id;
+   function Get_Directory_Name (File : Source_File_Entry) return Name_Id;
 
    --  Return the entry of the last known file.
    --  This allow the user to create a table of Source_File_Entry.

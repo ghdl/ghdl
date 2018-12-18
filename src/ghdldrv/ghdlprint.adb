@@ -1640,7 +1640,7 @@ package body Ghdlprint is
                if Loc_File /= Cur_File then
                   Cur_File := Loc_File;
                   Put ("XFILE: ");
-                  Dir := Get_Source_File_Directory (Cur_File);
+                  Dir := Get_Directory_Name (Cur_File);
                   if Dir /= Null_Identifier then
                      Put (Image (Dir));
                   end if;
