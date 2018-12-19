@@ -37,6 +37,7 @@ def run():
     start_time = time.time()
     jobs = []
     poll = []
+    failures = []
     nbr_tests = len(tests)
     nbr_run = 0
     nbr_err = 0
@@ -74,6 +75,7 @@ def run():
                 if code != 0:
                     print('############### Error for {}'.format(j.dirname))
                     nbr_err += 1
+                    failures.append(j.dirname)
                     tests = []
                 jobs.remove(j)
                 nbr_run += 1
@@ -81,6 +83,8 @@ def run():
 
     print('{}/{} tests run in {} sec, {} failures'.format(
         nbr_run, nbr_tests, end_time - start_time, nbr_err))
+    if failures:
+        print('Failure: {}'.format(failures))
 
 
 if __name__ == '__main__':
