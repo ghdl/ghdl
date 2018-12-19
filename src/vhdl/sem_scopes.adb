@@ -454,6 +454,8 @@ package body Sem_Scopes is
          Last_In_Region := Ident;
       end Add_New_Interpretation;
    begin
+      pragma Assert (Ident /= Null_Identifier);
+
       if not Valid_Interpretation (Raw_Inter) then
          --  Very simple: no hidding, no overloading.
          Add_New_Interpretation (True);
