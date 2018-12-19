@@ -2018,15 +2018,21 @@ package body Sem_Expr is
    begin
       for I in 1 .. Len loop
          Ch := Str_Table.Char_String8 (Id, I);
-         Res := Map (Ch);
-         if Res = No_Pos then
-            El := Find_Literal (El_Type, Ch);
-            if El = Null_Iir then
-               Res := 0;
-            else
+         if Ch not in Map'Range then
+            --  Invalid character.
+            pragma Assert (Flags.Flag_Force_Analysis);
+            Res := 0;
+         else
+            Res := Map (Ch);
+            if Res = No_Pos then
+               El := Find_Literal (El_Type, Ch);
+               if El = Null_Iir then
+                  Res := 0;
+               else
                Enum_Pos := Get_Enum_Pos (El);
                Res := Nat8 (Enum_Pos);
                Map (Ch) := Res;
+               end if;
             end if;
          end if;
          Str_Table.Set_Element_String8 (Id, I, Res);
@@ -4621,6 +4627,17 @@ package body Sem_Expr is
          when Iir_Kind_Procedure_Declaration =>
             Error_Msg_Sem (+Expr, "%n cannot be used as an expression", +Expr);
             return Null_Iir;
+
+         when Iir_Kind_Range_Expression =>
+            --  Can only happen in case of parse error, as a range is not an
+            --  expression.
+            pragma Assert (Flags.Flag_Force_Analysis);
+            declare
+               Res : Iir;
+            begin
+               Res := Sem_Simple_Range_Expression (Expr, A_Type, True);
+               return Create_Error_Expr (Res, A_Type);
+            end;
 
          when Iir_Kind_Error =>
             -- Always ok.

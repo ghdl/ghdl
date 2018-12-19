@@ -124,6 +124,11 @@ package Flags is
    --  If set, performs VITAL checks.
    Flag_Vital_Checks : Boolean := True;
 
+   --  Set if analysis is done even after parsing errors.  The analysis code
+   --  that handles and tolerates incorrect parse tree should check that this
+   --  flag is set.
+   Flag_Force_Analysis : Boolean := False;
+
    --  Integer and time types can be either 32 bits or 64 bits values.
    --  The default is 32 bits for Integer and 64 bits for Time.
    --  Be very careful: if you don't use the default sizes, you may have to
