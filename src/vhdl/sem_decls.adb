@@ -201,9 +201,14 @@ package body Sem_Decls is
       --  been freed.
       A_Type := Get_Subtype_Indication (Inter);
       if A_Type = Null_Iir then
-         pragma Assert (Last /= Null_Iir);
-         A_Type := Get_Type (Last);
-         Default_Value := Get_Default_Value (Last);
+         if Last = Null_Iir or else not Get_Has_Identifier_List (Last) then
+            --  Subtype indication was not parsed.
+            A_Type := Create_Error_Type (Null_Iir);
+            Set_Subtype_Indication (Inter, A_Type);
+         else
+            A_Type := Get_Type (Last);
+            Default_Value := Get_Default_Value (Last);
+         end if;
       else
          A_Type := Sem_Subtype_Indication (A_Type);
          Set_Subtype_Indication (Inter, A_Type);

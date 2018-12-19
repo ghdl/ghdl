@@ -51,6 +51,11 @@ package body Iirs_Utils is
       return Get_Kind (N) = Iir_Kind_Error;
    end Is_Error;
 
+   function Is_Any_Error (N : Iir) return Boolean is
+   begin
+      return N = Null_Iir or else Get_Kind (N) = Iir_Kind_Error;
+   end Is_Any_Error;
+
    function Is_Overflow_Literal (N : Iir) return Boolean is
    begin
       return Get_Kind (N) = Iir_Kind_Overflow_Literal;
@@ -1566,8 +1571,10 @@ package body Iirs_Utils is
       Res : Iir;
    begin
       Res := Create_Iir (Iir_Kind_Error);
-      Set_Error_Origin (Res, Orig);
-      Location_Copy (Res, Orig);
+      if Orig /= Null_Iir then
+         Set_Error_Origin (Res, Orig);
+         Location_Copy (Res, Orig);
+      end if;
       return Res;
    end Create_Error;
 

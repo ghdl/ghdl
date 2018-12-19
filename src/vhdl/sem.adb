@@ -2892,92 +2892,113 @@ package body Sem is
    end Sem_Package_Instantiation_Declaration;
 
    --  LRM 10.4  Use Clauses.
-   procedure Sem_Use_Clause (Clauses: Iir_Use_Clause)
+   procedure Sem_Use_Clause_Name (Clause : Iir)
    is
-      Clause : Iir_Use_Clause;
       Name: Iir;
       Prefix: Iir;
       Name_Prefix : Iir;
    begin
+      --  LRM93 10.4
+      --  A use clause achieves direct visibility of declarations that are
+      --  visible by selection.
+      --  Each selected name is a use clause identifies one or more
+      --  declarations that will potentialy become directly visible.
+
+      Name := Get_Selected_Name (Clause);
+      case Get_Kind (Name) is
+         when Iir_Kind_Selected_By_All_Name
+           | Iir_Kind_Selected_Name =>
+            Name_Prefix := Get_Prefix (Name);
+         when others =>
+            Error_Msg_Sem (+Name, "use clause allows only selected name");
+            return;
+      end case;
+
+      case Get_Kind (Name_Prefix) is
+         when Iir_Kind_Simple_Name
+           | Iir_Kind_Selected_Name =>
+            null;
+         when others =>
+            Error_Msg_Sem
+              (+Name_Prefix,
+               "use clause prefix must be a name or a selected name");
+            return;
+      end case;
+
+      Name_Prefix := Sem_Denoting_Name (Name_Prefix);
+      Set_Prefix (Name, Name_Prefix);
+      Prefix := Get_Named_Entity (Name_Prefix);
+      if Is_Error (Prefix) then
+         return;
+      end if;
+
+      --  LRM 10.4 Use Clauses
+      --
+      --  If the suffix of the selected name is [...], then the
+      --  selected name identifies only the declaration(s) of that
+      --  [...] contained within the package or library denoted by
+      --  the prefix of the selected name.
+      --
+      --  If the suffix is the reserved word ALL, then the selected name
+      --  identifies all declarations that are contained within the package
+      --  or library denoted by the prefix of the selected name.
+      --
+      --  GHDL: therefore, the suffix must be either a package or a library.
+      case Get_Kind (Prefix) is
+         when Iir_Kind_Library_Declaration =>
+            null;
+         when Iir_Kind_Package_Instantiation_Declaration
+           | Iir_Kind_Interface_Package_Declaration =>
+            null;
+         when Iir_Kind_Package_Declaration =>
+            --  LRM08 12.4 Use clauses
+            --  It is an error if the prefix of a selected name in a use
+            --  clause denotes an uninstantiated package.
+            if Is_Uninstantiated_Package (Prefix) then
+               Error_Msg_Sem
+                 (+Name_Prefix,
+                  "use of uninstantiated package is not allowed");
+               --  FIXME: is it ok from ownership POV ?
+               Set_Named_Entity (Name_Prefix, Create_Error (Prefix));
+               return;
+            end if;
+         when others =>
+            Error_Msg_Sem
+              (+Prefix, "prefix must designate a package or a library");
+            --  FIXME: is it ok from ownership POV ?
+            Set_Named_Entity (Name_Prefix, Create_Error (Prefix));
+            return;
+      end case;
+
+      case Get_Kind (Name) is
+         when Iir_Kind_Selected_Name =>
+            Sem_Name (Name, True);
+            case Get_Kind (Get_Named_Entity (Name)) is
+               when Iir_Kind_Error =>
+                  --  Continue in case of error.
+                  null;
+               when Iir_Kind_Overload_List =>
+                  --  Analyze is correct as is.
+                  null;
+               when others =>
+                  Name := Finish_Sem_Name (Name);
+                  Set_Selected_Name (Clause, Name);
+            end case;
+         when Iir_Kind_Selected_By_All_Name =>
+            null;
+         when others =>
+            raise Internal_Error;
+      end case;
+   end Sem_Use_Clause_Name;
+
+   --  LRM 10.4  Use Clauses.
+   procedure Sem_Use_Clause (Clauses: Iir_Use_Clause)
+   is
+      Clause : Iir_Use_Clause;
+   begin
       Clause := Clauses;
       loop
-         --  LRM93 10.4
-         --  A use clause achieves direct visibility of declarations that are
-         --  visible by selection.
-         --  Each selected name is a use clause identifies one or more
-         --  declarations that will potentialy become directly visible.
-
-         Name := Get_Selected_Name (Clause);
-         case Get_Kind (Name) is
-            when Iir_Kind_Selected_By_All_Name
-              | Iir_Kind_Selected_Name =>
-               Name_Prefix := Get_Prefix (Name);
-            when others =>
-               Error_Msg_Sem (+Name, "use clause allows only selected name");
-               return;
-         end case;
-
-         Name_Prefix := Sem_Denoting_Name (Name_Prefix);
-         Set_Prefix (Name, Name_Prefix);
-         Prefix := Get_Named_Entity (Name_Prefix);
-         if Is_Error (Prefix) then
-            --  FIXME: continue with the clauses
-            return;
-         end if;
-
-         --  LRM 10.4 Use Clauses
-         --
-         --  If the suffix of the selected name is [...], then the
-         --  selected name identifies only the declaration(s) of that
-         --  [...] contained within the package or library denoted by
-         --  the prefix of the selected name.
-         --
-         --  If the suffix is the reserved word ALL, then the selected name
-         --  identifies all declarations that are contained within the package
-         --  or library denoted by the prefix of the selected name.
-         --
-         --  GHDL: therefore, the suffix must be either a package or a library.
-         case Get_Kind (Prefix) is
-            when Iir_Kind_Library_Declaration =>
-               null;
-            when Iir_Kind_Package_Instantiation_Declaration
-              | Iir_Kind_Interface_Package_Declaration =>
-               null;
-            when Iir_Kind_Package_Declaration =>
-               --  LRM08 12.4 Use clauses
-               --  It is an error if the prefix of a selected name in a use
-               --  clause denotes an uninstantiated package.
-               if Is_Uninstantiated_Package (Prefix) then
-                  Error_Msg_Sem
-                    (+Name_Prefix,
-                     "use of uninstantiated package is not allowed");
-                  return;
-               end if;
-            when others =>
-               Error_Msg_Sem
-                 (+Prefix, "prefix must designate a package or a library");
-               return;
-         end case;
-
-         case Get_Kind (Name) is
-            when Iir_Kind_Selected_Name =>
-               Sem_Name (Name, True);
-               case Get_Kind (Get_Named_Entity (Name)) is
-                  when Iir_Kind_Error =>
-                     --  Continue in case of error.
-                     null;
-                  when Iir_Kind_Overload_List =>
-                     --  Analyze is correct as is.
-                     null;
-                  when others =>
-                     Name := Finish_Sem_Name (Name);
-                     Set_Selected_Name (Clause, Name);
-               end case;
-            when Iir_Kind_Selected_By_All_Name =>
-               null;
-            when others =>
-               raise Internal_Error;
-         end case;
+         Sem_Use_Clause_Name (Clause);
 
          Clause := Get_Use_Clause_Chain (Clause);
          exit when Clause = Null_Iir;

@@ -657,16 +657,6 @@ package body Std_Names is
       Def ("find_last_index",  Name_Find_Last_Index);
       Def ("num",              Name_Num);
 
-      --  SV methods.
-      Def ("size",           Name_Size);
-      Def ("insert",         Name_Insert);
-      Def ("delete",         Name_Delete);
-      Def ("pop_front",      Name_Pop_Front);
-      Def ("pop_back",       Name_Pop_Back);
-      Def ("push_front",     Name_Push_Front);
-      Def ("push_back",      Name_Push_Back);
-      Def ("name",           Name_Name);
-
       --  BSV keywords
       Def ("Action",         Name_uAction);
       Def ("ActionValue",    Name_uActionValue);

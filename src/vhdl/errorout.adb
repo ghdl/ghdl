@@ -62,7 +62,7 @@ package body Errorout is
    is
       Line_Pos : Source_Ptr;
    begin
-      Line_Pos := Line_To_Position (E.File, E.Line);
+      Line_Pos := File_Line_To_Position (E.File, E.Line);
       return Coord_To_Col (E.File, Line_Pos, E.Offset);
    end Get_Error_Col;
 

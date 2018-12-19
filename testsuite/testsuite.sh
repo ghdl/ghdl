@@ -14,20 +14,29 @@ for opt; do
   esac
 done
 
-if [ x$tests = x ]; then tests="gna vests"; fi
+if [ x$tests = x ]; then tests="sanity gna vests"; fi
 
 # The GNA testsuite: regression testsuite using reports/issues from gna.org
-do_gna() {
+do_gna()
+{
   cd gna
   ./testsuite.sh
   cd ..
 }
 
 # The VESTS testsuite: compliance testsuite, from: https://github.com/nickg/vests.git 388250486a
-do_vests() {
+do_vests()
+{
   cd vests
   ./testsuite.sh
   cd ..
+}
+
+do_sanity()
+{
+    cd sanity
+    ./testsuite.sh
+    cd ..
 }
 
 # Run a testsuite
@@ -35,6 +44,7 @@ do_test() {
   case $1 in
       gna) do_gna;;
       vests) do_vests;;
+      sanity) do_sanity;;
       *)
           echo "$0: test name '$1' is unknown"
           exit 1;;

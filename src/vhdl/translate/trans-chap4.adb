@@ -547,20 +547,34 @@ package body Trans.Chap4 is
             --  Allocate.
             declare
                Aggr_Type : constant Iir := Get_Type (Value);
+               Aggr_Base_Type : constant Iir := Get_Base_Type (Aggr_Type);
             begin
-               Chap3.Create_Composite_Subtype (Aggr_Type);
                Name_Node := Stabilize (Name);
-               if Alloc_Kind = Alloc_Stack then
-                  --  Short-cut: don't allocate bounds.
-                  New_Assign_Stmt
-                    (M2Lp (Chap3.Get_Composite_Bounds (Name_Node)),
-                     M2Addr (Chap3.Get_Composite_Type_Bounds (Aggr_Type)));
+               if Get_Constraint_State (Aggr_Type) /= Fully_Constrained then
+                  --  Allocate bounds
+                  Chap3.Allocate_Unbounded_Composite_Bounds
+                    (Alloc_Kind, Name_Node, Aggr_Base_Type);
+                  --  Translate bounds
+                  Chap7.Translate_Aggregate_Bounds
+                    (Stabilize (Chap3.Get_Composite_Bounds (Name_Node)),
+                     Value);
+                  --  Allocate base
                   Chap3.Allocate_Unbounded_Composite_Base
-                    (Alloc_Kind, Name_Node, Get_Base_Type (Aggr_Type));
+                    (Alloc_Kind, Name_Node, Aggr_Base_Type);
                else
-                  Chap3.Translate_Object_Allocation
-                    (Name_Node, Alloc_Kind, Get_Base_Type (Aggr_Type),
-                     Chap3.Get_Composite_Type_Bounds (Aggr_Type));
+                  Chap3.Create_Composite_Subtype (Aggr_Type);
+                  if Alloc_Kind = Alloc_Stack then
+                     --  Short-cut: don't allocate bounds.
+                     New_Assign_Stmt
+                       (M2Lp (Chap3.Get_Composite_Bounds (Name_Node)),
+                        M2Addr (Chap3.Get_Composite_Type_Bounds (Aggr_Type)));
+                     Chap3.Allocate_Unbounded_Composite_Base
+                       (Alloc_Kind, Name_Node, Aggr_Base_Type);
+                  else
+                     Chap3.Translate_Object_Allocation
+                       (Name_Node, Alloc_Kind, Aggr_Base_Type,
+                        Chap3.Get_Composite_Type_Bounds (Aggr_Type));
+                  end if;
                end if;
             end;
          else

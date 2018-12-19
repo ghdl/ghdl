@@ -608,8 +608,8 @@ package body Libraries is
         (Get_Identifier ("*libraries*"));
       Command_Source_File := Create_Virtual_Source_File
         (Get_Identifier ("*command line*"));
-      Command_Line_Location := Source_File_To_Location (Command_Source_File);
-      Library_Location := Source_File_To_Location (Library_Source_File);
+      Command_Line_Location := File_To_Location (Command_Source_File);
+      Library_Location := File_To_Location (Library_Source_File);
    end Create_Virtual_Locations;
 
    -- Note: the scanner shouldn't be in use, since this procedure uses it.

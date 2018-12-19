@@ -217,7 +217,7 @@ package body Parse is
       end if;
    end Check_End_Name;
 
-   procedure Eat_Tokens_Until_Semi_Colon is
+   procedure Skip_Until_Semi_Colon is
    begin
       loop
          case Current_Token is
@@ -228,7 +228,7 @@ package body Parse is
                Scan;
          end case;
       end loop;
-   end Eat_Tokens_Until_Semi_Colon;
+   end Skip_Until_Semi_Colon;
 
    procedure Resync_To_End_Of_Statement is
    begin
@@ -237,6 +237,18 @@ package body Parse is
             when Tok_Eof
               | Tok_Semi_Colon
               | Tok_End =>
+               exit;
+            when Tok_If
+              | Tok_For
+              | Tok_While
+              | Tok_Loop
+              | Tok_Wait
+              | Tok_Assert =>
+               --  Sequential statement.
+               exit;
+            when Tok_Process
+              | Tok_Block =>
+               --  Concurrent statement.
                exit;
             when others =>
                Scan;
@@ -2420,6 +2432,7 @@ package body Parse is
                     ("secondary units may only be defined by an integer");
                when others =>
                   Error_Msg_Parse ("a physical literal is expected here");
+                  Skip_Until_Semi_Colon;
             end case;
          end if;
          Append (Last, Res, Unit);
@@ -3160,12 +3173,12 @@ package body Parse is
             --  TODO
             Error_Msg_Parse ("array nature definition not supported");
             Def := Null_Iir;
-            Eat_Tokens_Until_Semi_Colon;
+            Skip_Until_Semi_Colon;
          when Tok_Record =>
             --  TODO
             Error_Msg_Parse ("record nature definition not supported");
             Def := Null_Iir;
-            Eat_Tokens_Until_Semi_Colon;
+            Skip_Until_Semi_Colon;
          when Tok_Identifier =>
             Def := Create_Iir (Iir_Kind_Scalar_Nature_Definition);
             Set_Location (Def, Loc);
@@ -3189,15 +3202,15 @@ package body Parse is
                   Scan;
                else
                   Expect (Tok_Reference, "'reference' expected");
-                  Eat_Tokens_Until_Semi_Colon;
+                  Skip_Until_Semi_Colon;
                end if;
             else
                Error_Msg_Parse ("reference identifier expected");
-               Eat_Tokens_Until_Semi_Colon;
+               Skip_Until_Semi_Colon;
             end if;
          when others =>
             Error_Msg_Parse ("nature definition expected here");
-            Eat_Tokens_Until_Semi_Colon;
+            Skip_Until_Semi_Colon;
       end case;
 
       Decl := Create_Iir (Iir_Kind_Nature_Declaration);
@@ -3391,7 +3404,7 @@ package body Parse is
                   Kind := Iir_Kind_Through_Quantity_Declaration;
                when others =>
                   Error_Msg_Parse ("'across' or 'through' expected here");
-                  Eat_Tokens_Until_Semi_Colon;
+                  Skip_Until_Semi_Colon;
                   return Null_Iir;
             end case;
 
@@ -3492,7 +3505,7 @@ package body Parse is
          when others =>
             Error_Msg_Parse ("missing type or across/throught aspect "
                                & "in quantity declaration");
-            Eat_Tokens_Until_Semi_Colon;
+            Skip_Until_Semi_Colon;
             return Null_Iir;
       end case;
 
@@ -8632,7 +8645,7 @@ package body Parse is
                   Stmt := Parse_Concurrent_Conditional_Signal_Assignment (Id);
                else
                   Error_Msg_Parse ("'<=' expected after aggregate");
-                  Eat_Tokens_Until_Semi_Colon;
+                  Skip_Until_Semi_Colon;
                end if;
             when Tok_Process =>
                Stmt := Parse_Process_Statement (Label, Loc, Postponed);
@@ -8689,12 +8702,19 @@ package body Parse is
             when Tok_Psl_Cover =>
                Postponed_Not_Allowed;
                Stmt := Parse_Psl_Cover_Statement;
+            when Tok_Wait
+              | Tok_Loop
+              | Tok_While =>
+               Error_Msg_Parse
+                 ("sequential statement only allowed in processes");
+               Stmt := Parse_Sequential_Statements (Parent);
+               Stmt := Null_Iir;
             when others =>
                --  FIXME: improve message:
                --  instead of 'unexpected token 'signal' in conc stmt list'
                --  report: 'signal declarations are not allowed in conc stmt'
                Unexpected ("concurrent statement list");
-               Eat_Tokens_Until_Semi_Colon;
+               Resync_To_End_Of_Statement;
                if Current_Token = Tok_Semi_Colon then
                   Scan;
                end if;

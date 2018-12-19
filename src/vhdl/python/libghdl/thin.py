@@ -25,6 +25,11 @@ def analyze_init():
 def analyze_file(filename):
     return _analyze_file(c_char_p(filename), len(filename))
 
+EOT = b'\x04'
+
+No_Source_File_Entry = 0
+
+No_Location = 0
 
 Null_Iir = 0
 Null_Iir_List = 0
@@ -81,34 +86,40 @@ class Flists:
 
 
 # Files
+class Files_Map:
+    Location_To_File = libghdl.files_map__location_to_file
 
-Location_To_File = libghdl.files_map__location_to_file
+    Location_File_To_Pos = libghdl.files_map__location_file_to_pos
 
-Location_File_To_Pos = libghdl.files_map__location_file_to_pos
+    Location_File_To_Line = libghdl.files_map__location_file_to_line
 
-Location_File_To_Line = libghdl.files_map__location_file_to_line
+    Location_File_Line_To_Offset = \
+        libghdl.files_map__location_file_line_to_offset
 
-Location_File_Line_To_Offset = libghdl.files_map__location_file_line_to_offset
+    Location_File_Line_To_Col = libghdl.files_map__location_file_line_to_col
 
-Location_File_Line_To_Col = libghdl.files_map__location_file_line_to_col
+    File_To_Location = libghdl.files_map__file_to_location
 
-Get_File_Name = libghdl.files_map__get_file_name
+    File_Pos_To_Location = libghdl.files_map__file_pos_to_location
 
-Get_File_Buffer = libghdl.files_map__get_file_buffer
-Get_File_Buffer.restype = c_void_p
+    File_Line_To_Position = libghdl.files_map__file_line_to_position
 
-Get_File_Length = libghdl.files_map__get_file_length
-Set_File_Length = libghdl.files_map__set_file_length
+    Get_File_Name = libghdl.files_map__get_file_name
 
-Read_Source_File = libghdl.files_map__read_source_file
+    Get_Directory_Name = libghdl.files_map__get_directory_name
 
-Reserve_Source_File = libghdl.files_map__reserve_source_file
+    Get_File_Buffer = libghdl.files_map__get_file_buffer
+    Get_File_Buffer.restype = c_void_p
 
-No_Source_File_Entry = 0
+    Get_File_Length = libghdl.files_map__get_file_length
+    Set_File_Length = libghdl.files_map__set_file_length
 
-EOT = b'\x04'
+    Read_Source_File = libghdl.files_map__read_source_file
 
-No_Location = 0
+    Reserve_Source_File = libghdl.files_map__reserve_source_file
+
+    Get_Last_Source_File_Entry = libghdl.files_map__get_last_source_file_entry
+
 
 class Files_Map_Editor:
     Set_Gap = libghdl.files_map__editor__set_gap
@@ -155,6 +166,11 @@ class Ieee:
 class Flags:
     Flag_Elocations = c_bool.in_dll(libghdl, "flags__flag_elocations")
 
+    Verbose = c_bool.in_dll(libghdl, "flags__verbose")
+
+    Flag_Elaborate_With_Outdated = c_bool.in_dll(
+        libghdl, "flags__flag_elaborate_with_outdated")
+
 
 # Scanner
 class Scanner:
@@ -200,6 +216,7 @@ class Canon:
     Extract_Sequential_Statement_Chain_Sensitivity = \
         libghdl.canon__canon_extract_sequential_statement_chain_sensitivity
 
+
 class Sem_Lib:
     Load_File = libghdl.sem_lib__load_file
 
@@ -213,21 +230,24 @@ Standard_Package = c_int32.in_dll(libghdl, "std_package__standard_package")
 Character_Type_Definition = c_int32.in_dll(
     libghdl, "std_package__character_type_definition")
 
-# libraries
+class Libraries:
+    Get_Libraries_Chain = libghdl.libraries__get_libraries_chain
 
-Get_Libraries_Chain = libghdl.libraries__get_libraries_chain
+    Add_Design_Unit_Into_Library = \
+        libghdl.libraries__add_design_unit_into_library
 
-Add_Design_Unit_Into_Library = libghdl.libraries__add_design_unit_into_library
+    Finish_Compilation = libghdl.sem_lib__finish_compilation
 
-Finish_Compilation = libghdl.sem_lib__finish_compilation
+    # Use .value
+    Library_Location = c_int32.in_dll(libghdl, "libraries__library_location")
 
-# Use .value
-Library_Location = c_int32.in_dll(libghdl, "libraries__library_location")
+    # Use .value
+    Work_Library = c_int32.in_dll(libghdl, "libraries__work_library")
 
-# Use .value
-Work_Library = c_int32.in_dll(libghdl, "libraries__work_library")
+    Purge_Design_File = libghdl.libraries__purge_design_file
 
-Purge_Design_File = libghdl.libraries__purge_design_file
+    Find_Entity_For_Component = libghdl.libraries__find_entity_for_component
+
 
 # Disp_Tree
 

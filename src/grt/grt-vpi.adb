@@ -45,6 +45,7 @@ with Grt.Stdio; use Grt.Stdio;
 with Grt.C; use Grt.C;
 with Grt.Signals; use Grt.Signals;
 with Grt.Astdio; use Grt.Astdio;
+with Grt.Astdio.Vhdl; use Grt.Astdio.Vhdl;
 with Grt.Strings; use Grt.Strings;
 with Grt.Hooks; use Grt.Hooks;
 with Grt.Options;

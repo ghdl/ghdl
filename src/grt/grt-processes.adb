@@ -28,6 +28,7 @@ with System.Storage_Elements; --  Work around GNAT bug.
 pragma Unreferenced (System.Storage_Elements);
 with Grt.Disp;
 with Grt.Astdio;
+with Grt.Astdio.Vhdl; use Grt.Astdio.Vhdl;
 with Grt.Errors; use Grt.Errors;
 with Grt.Options;
 with Grt.Rtis_Addr; use Grt.Rtis_Addr;
