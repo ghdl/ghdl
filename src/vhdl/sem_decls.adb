@@ -828,6 +828,8 @@ package body Sem_Decls is
       end if;
    end Sem_Object_Type_From_Value;
 
+   --  LAST_DECL is set only if DECL is part of a list of declarations (they
+   --  share the same type and the same default value).
    procedure Sem_Object_Declaration (Decl: Iir; Parent : Iir; Last_Decl : Iir)
    is
       Deferred_Const : constant Iir := Get_Deferred_Constant (Decl);
@@ -847,7 +849,7 @@ package body Sem_Decls is
 
       --  Analyze type and default value:
       Atype := Get_Subtype_Indication (Decl);
-      if Atype /= Null_Iir then
+      if Last_Decl = Null_Iir then
          Atype := Sem_Subtype_Indication (Atype);
          Set_Subtype_Indication (Decl, Atype);
          Atype := Get_Type_Of_Subtype_Indication (Atype);
@@ -866,6 +868,7 @@ package body Sem_Decls is
             Default_Value := Eval_Expr_Check_If_Static (Default_Value, Atype);
          end if;
       else
+         pragma Assert (Atype = Null_Iir);
          Default_Value := Get_Default_Value (Last_Decl);
          if Is_Valid (Default_Value) then
             Set_Is_Ref (Decl, True);
@@ -2013,6 +2016,7 @@ package body Sem_Decls is
    procedure Sem_Declaration_Chain (Parent : Iir)
    is
       Decl : Iir;
+      Kind : Iir_Kind;
       Attr_Spec_Chain : Iir;
 
       --  New declaration chain (declarations like implicit signals may be
@@ -2043,24 +2047,19 @@ package body Sem_Decls is
       Last_Obj_Decl := Null_Iir;
 
       while Decl /= Null_Iir loop
-         case Get_Kind (Decl) is
+         Kind := Get_Kind (Decl);
+         case Kind is
             when Iir_Kind_Type_Declaration
               | Iir_Kind_Anonymous_Type_Declaration =>
                Sem_Type_Declaration (Decl, Is_Global);
             when Iir_Kind_Subtype_Declaration =>
                Sem_Subtype_Declaration (Decl, Is_Global);
-            when Iir_Kind_Signal_Declaration =>
+            when Iir_Kind_Signal_Declaration
+              | Iir_Kind_Constant_Declaration
+              | Iir_Kind_Variable_Declaration =>
                Sem_Object_Declaration (Decl, Parent, Last_Obj_Decl);
-               Last_Obj_Decl := Decl;
-            when Iir_Kind_Constant_Declaration =>
-               Sem_Object_Declaration (Decl, Parent, Last_Obj_Decl);
-               Last_Obj_Decl := Decl;
-            when Iir_Kind_Variable_Declaration =>
-               Sem_Object_Declaration (Decl, Parent, Last_Obj_Decl);
-               Last_Obj_Decl := Decl;
             when Iir_Kind_File_Declaration =>
                Sem_File_Declaration (Decl, Last_Obj_Decl);
-               Last_Obj_Decl := Decl;
             when Iir_Kind_Attribute_Declaration =>
                Sem_Attribute_Declaration (Decl);
             when Iir_Kind_Attribute_Specification =>
@@ -2124,11 +2123,9 @@ package body Sem_Decls is
                Sem_Nature_Declaration (Decl);
             when Iir_Kind_Terminal_Declaration =>
                Sem_Terminal_Declaration (Decl, Last_Obj_Decl);
-               Last_Obj_Decl := Decl;
             when Iir_Kind_Across_Quantity_Declaration
               | Iir_Kind_Through_Quantity_Declaration =>
                Sem_Branch_Quantity_Declaration (Decl, Last_Obj_Decl);
-               Last_Obj_Decl := Decl;
 
             when Iir_Kind_Psl_Declaration =>
                Sem_Psl.Sem_Psl_Declaration (Decl);
@@ -2138,6 +2135,25 @@ package body Sem_Decls is
             when others =>
                Error_Kind ("sem_declaration_chain", Decl);
          end case;
+
+         --  For object declarations, set Last_Obj_Decl; otherwise clear it.
+         case Kind is
+            when Iir_Kind_Signal_Declaration
+              | Iir_Kind_Constant_Declaration
+              | Iir_Kind_Variable_Declaration
+              | Iir_Kind_File_Declaration
+              | Iir_Kind_Terminal_Declaration
+              | Iir_Kind_Across_Quantity_Declaration
+              | Iir_Kind_Through_Quantity_Declaration =>
+               if Get_Has_Identifier_List (Decl) then
+                  Last_Obj_Decl := Decl;
+               else
+                  Last_Obj_Decl := Null_Iir;
+               end if;
+            when others =>
+               Last_Obj_Decl := Null_Iir;
+         end case;
+
          if Attr_Spec_Chain /= Null_Iir then
             Check_Post_Attribute_Specification (Attr_Spec_Chain, Decl);
          end if;

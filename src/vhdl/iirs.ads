@@ -1931,6 +1931,8 @@ package Iirs is
    --   Get/Set_Visible_Flag (Flag4)
    --
    --   Get/Set_Use_Flag (Flag6)
+   --
+   --   Get/Set_Has_Identifier_List (Flag3)
 
    -- Iir_Kind_Free_Quantity_Declaration (Short)
    --
