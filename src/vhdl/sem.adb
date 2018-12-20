@@ -100,6 +100,11 @@ package body Sem is
       --  Resolve the name.
 
       Name := Get_Entity_Name (Library_Unit);
+      if Name = Null_Iir then
+         pragma Assert (Flags.Flag_Force_Analysis);
+         return Null_Iir;
+      end if;
+
       if Get_Kind (Name) = Iir_Kind_Simple_Name then
          --  LRM93 10.1 Declarative Region
          --  LRM08 12.1 Declarative Region
@@ -2570,7 +2575,8 @@ package body Sem is
             when Iir_Kind_Terminal_Declaration =>
                null;
             when others =>
-               Error_Kind ("package_need_body_p", El);
+               pragma Assert (Flags.Flag_Force_Analysis);
+               null;
          end case;
          El := Get_Chain (El);
       end loop;
@@ -2905,6 +2911,11 @@ package body Sem is
       --  declarations that will potentialy become directly visible.
 
       Name := Get_Selected_Name (Clause);
+      if Name = Null_Iir then
+         pragma Assert (Flags.Flag_Force_Analysis);
+         return;
+      end if;
+
       case Get_Kind (Name) is
          when Iir_Kind_Selected_By_All_Name
            | Iir_Kind_Selected_Name =>
@@ -3217,11 +3228,13 @@ package body Sem is
 
       --  If there is already a unit with the same name, mark it as being
       --  replaced.
-      if Get_Kind (Library_Unit) in Iir_Kinds_Primary_Unit then
-         Prev_Unit := Libraries.Find_Primary_Unit
-           (Library, Get_Identifier (Library_Unit));
-         if Is_Valid (Prev_Unit) and then Prev_Unit /= Design_Unit then
-            Set_Date (Prev_Unit, Date_Replacing);
+      if Library_Unit /= Null_Iir then
+         if Get_Kind (Library_Unit) in Iir_Kinds_Primary_Unit then
+            Prev_Unit := Libraries.Find_Primary_Unit
+              (Library, Get_Identifier (Library_Unit));
+            if Is_Valid (Prev_Unit) and then Prev_Unit /= Design_Unit then
+               Set_Date (Prev_Unit, Date_Replacing);
+            end if;
          end if;
       end if;
 
@@ -3262,22 +3275,27 @@ package body Sem is
       Sem_Context_Clauses (Design_Unit);
 
       --  Analyze the library unit.
-      case Iir_Kinds_Library_Unit (Get_Kind (Library_Unit)) is
-         when Iir_Kind_Entity_Declaration =>
-            Sem_Entity_Declaration (Library_Unit);
-         when Iir_Kind_Architecture_Body =>
-            Sem_Architecture_Body (Library_Unit);
-         when Iir_Kind_Package_Declaration =>
-            Sem_Package_Declaration (Library_Unit);
-         when Iir_Kind_Package_Body =>
-            Sem_Package_Body (Library_Unit);
-         when Iir_Kind_Configuration_Declaration =>
-            Sem_Configuration_Declaration (Library_Unit);
-         when Iir_Kind_Package_Instantiation_Declaration =>
-            Sem_Package_Instantiation_Declaration (Library_Unit);
-         when Iir_Kind_Context_Declaration =>
-            Sem_Context_Declaration (Library_Unit);
-      end case;
+      if Library_Unit /= Null_Iir then
+         case Iir_Kinds_Library_Unit (Get_Kind (Library_Unit)) is
+            when Iir_Kind_Entity_Declaration =>
+               Sem_Entity_Declaration (Library_Unit);
+            when Iir_Kind_Architecture_Body =>
+               Sem_Architecture_Body (Library_Unit);
+            when Iir_Kind_Package_Declaration =>
+               Sem_Package_Declaration (Library_Unit);
+            when Iir_Kind_Package_Body =>
+               Sem_Package_Body (Library_Unit);
+            when Iir_Kind_Configuration_Declaration =>
+               Sem_Configuration_Declaration (Library_Unit);
+            when Iir_Kind_Package_Instantiation_Declaration =>
+               Sem_Package_Instantiation_Declaration (Library_Unit);
+            when Iir_Kind_Context_Declaration =>
+               Sem_Context_Declaration (Library_Unit);
+         end case;
+      else
+         pragma Assert (Flags.Flag_Force_Analysis);
+         null;
+      end if;
 
       Close_Declarative_Region;
 

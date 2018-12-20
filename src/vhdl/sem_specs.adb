@@ -1359,7 +1359,12 @@ package body Sem_Specs is
       Inst_Unit : Iir;
    begin
       Primary_Entity_Aspect := Null_Iir;
-      Comp_Name := Sem_Denoting_Name (Get_Component_Name (Spec));
+      Comp_Name := Get_Component_Name (Spec);
+      if Comp_Name = Null_Iir then
+         pragma Assert (Flags.Flag_Force_Analysis);
+         return;
+      end if;
+      Comp_Name := Sem_Denoting_Name (Comp_Name);
       Set_Component_Name (Spec, Comp_Name);
       Comp := Get_Named_Entity (Comp_Name);
       if Get_Kind (Comp) /= Iir_Kind_Component_Declaration then
@@ -1461,7 +1466,12 @@ package body Sem_Specs is
       Component : Iir;
    begin
       Sem_Component_Specification (Parent_Stmts, Conf, Primary_Entity_Aspect);
-      Component := Get_Named_Entity (Get_Component_Name (Conf));
+      Component := Get_Component_Name (Conf);
+      if Component = Null_Iir then
+         pragma Assert (Flags.Flag_Force_Analysis);
+         return;
+      end if;
+      Component := Get_Named_Entity (Component);
 
       --  Return now in case of error.
       if Get_Kind (Component) /= Iir_Kind_Component_Declaration then

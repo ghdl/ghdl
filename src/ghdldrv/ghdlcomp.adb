@@ -432,7 +432,8 @@ package body Ghdlcomp is
                Next_Unit := Get_Chain (Unit);
 
                if Errorout.Nbr_Errors = 0
-                 or else Cmd.Flag_Force_Analysis
+                 or else (Cmd.Flag_Force_Analysis
+                            and then Get_Library_Unit (Unit) /= Null_Iir)
                then
                   Set_Chain (Unit, Null_Iir);
                   Libraries.Add_Design_Unit_Into_Library (Unit);

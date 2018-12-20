@@ -454,7 +454,11 @@ package body Sem_Scopes is
          Last_In_Region := Ident;
       end Add_New_Interpretation;
    begin
-      pragma Assert (Ident /= Null_Identifier);
+      if Ident = Null_Identifier then
+         --  Missing identifier can happen only in case of parse error.
+         pragma Assert (Flags.Flag_Force_Analysis);
+         return;
+      end if;
 
       if not Valid_Interpretation (Raw_Inter) then
          --  Very simple: no hidding, no overloading.
