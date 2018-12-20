@@ -1445,10 +1445,6 @@ package body Sem_Scopes is
    --  name.
    procedure Use_Selected_Name (Name : Iir) is
    begin
-      if Is_Any_Error (Name) then
-         return;
-      end if;
-
       case Get_Kind (Name) is
          when Iir_Kind_Overload_List =>
             Add_Declarations_List (Get_Overload_List (Name), True);
@@ -1475,10 +1471,6 @@ package body Sem_Scopes is
    --  library denotes by te prefix of the selected name.
    procedure Use_All_Names (Name: Iir) is
    begin
-      if Is_Any_Error (Name) then
-         return;
-      end if;
-
       case Get_Kind (Name) is
          when Iir_Kind_Library_Declaration =>
             Use_Library_All (Name);
@@ -1509,10 +1501,20 @@ package body Sem_Scopes is
       Cl := Clause;
       loop
          Name := Get_Selected_Name (Cl);
-         if Get_Kind (Name) = Iir_Kind_Selected_By_All_Name then
-            Use_All_Names (Get_Named_Entity (Get_Prefix (Name)));
+         if Name = Null_Iir then
+            pragma Assert (Flags.Flag_Force_Analysis);
+            null;
          else
-            Use_Selected_Name (Get_Named_Entity (Name));
+            if Get_Kind (Name) = Iir_Kind_Selected_By_All_Name then
+               Name := Get_Prefix (Name);
+               if not Is_Error (Name) then
+                  Use_All_Names (Get_Named_Entity (Name));
+               end if;
+            else
+               if not Is_Error (Name) then
+                  Use_Selected_Name (Get_Named_Entity (Name));
+               end if;
+            end if;
          end if;
          Cl := Get_Use_Clause_Chain (Cl);
          exit when Cl = Null_Iir;

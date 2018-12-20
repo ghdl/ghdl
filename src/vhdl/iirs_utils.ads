@@ -31,9 +31,6 @@ package Iirs_Utils is
    function Is_Error (N : Iir) return Boolean;
    pragma Inline (Is_Error);
 
-   --  Return True iff N is not valid (Null_Iir or an error node).
-   function Is_Any_Error (N : Iir) return Boolean;
-
    --  Return True iff N is an overflow_literal node.
    function Is_Overflow_Literal (N : Iir) return Boolean;
    pragma Inline (Is_Overflow_Literal);
@@ -345,6 +342,9 @@ package Iirs_Utils is
 
    --  Create an error node for node ORIG, which is supposed to be a type.
    function Create_Error_Type (Orig : Iir) return Iir;
+
+   --  Create an error node for a name.
+   function Create_Error_Name (Orig : Iir) return Iir;
 
    --  Extract the entity from ASPECT.
    --  Note: if ASPECT is a component declaration, returns ASPECT.

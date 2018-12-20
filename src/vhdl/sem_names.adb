@@ -2082,7 +2082,7 @@ package body Sem_Names is
          Sem_Name (Prefix_Name);
       end if;
       Prefix := Get_Named_Entity (Prefix_Name);
-      if Prefix = Error_Mark then
+      if Is_Error (Prefix) then
          Set_Named_Entity (Name, Prefix);
          return;
       end if;
@@ -4204,17 +4204,6 @@ package body Sem_Names is
             return Create_Error_Type (Name);
       end case;
    end Name_To_Type_Definition;
-
-   function Create_Error_Name (Orig : Iir) return Iir
-   is
-      Res : Iir;
-   begin
-      Res := Create_Iir (Iir_Kind_Error);
-      Set_Expr_Staticness (Res, None);
-      Set_Error_Origin (Res, Orig);
-      Location_Copy (Res, Orig);
-      return Res;
-   end Create_Error_Name;
 
    function Sem_Denoting_Name (Name: Iir) return Iir
    is

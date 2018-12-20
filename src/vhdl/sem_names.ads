@@ -156,7 +156,4 @@ package Sem_Names is
 
    --  Emit an error for NAME that doesn't match its class CLASS_NAME.
    procedure Error_Class_Match (Name : Iir; Class_Name : String);
-
-   --  Create an error node for name ORIG; set its expr staticness to none.
-   function Create_Error_Name (Orig : Iir) return Iir;
 end Sem_Names;

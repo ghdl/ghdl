@@ -2911,6 +2911,7 @@ package body Sem is
             Name_Prefix := Get_Prefix (Name);
          when others =>
             Error_Msg_Sem (+Name, "use clause allows only selected name");
+            Set_Selected_Name (Clause, Create_Error_Name (Name));
             return;
       end case;
 
@@ -2922,6 +2923,7 @@ package body Sem is
             Error_Msg_Sem
               (+Name_Prefix,
                "use clause prefix must be a name or a selected name");
+            Set_Selected_Name (Clause, Create_Error_Name (Name));
             return;
       end case;
 
@@ -2929,6 +2931,7 @@ package body Sem is
       Set_Prefix (Name, Name_Prefix);
       Prefix := Get_Named_Entity (Name_Prefix);
       if Is_Error (Prefix) then
+         Set_Selected_Name (Clause, Create_Error_Name (Name));
          return;
       end if;
 
@@ -2958,15 +2961,13 @@ package body Sem is
                Error_Msg_Sem
                  (+Name_Prefix,
                   "use of uninstantiated package is not allowed");
-               --  FIXME: is it ok from ownership POV ?
-               Set_Named_Entity (Name_Prefix, Create_Error (Prefix));
+               Set_Prefix (Name, Create_Error_Name (Name_Prefix));
                return;
             end if;
          when others =>
             Error_Msg_Sem
               (+Prefix, "prefix must designate a package or a library");
-            --  FIXME: is it ok from ownership POV ?
-            Set_Named_Entity (Name_Prefix, Create_Error (Prefix));
+            Set_Prefix (Name, Create_Error_Name (Name_Prefix));
             return;
       end case;
 
