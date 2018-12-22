@@ -357,6 +357,8 @@ package body Sem_Types is
          when Iir_Kind_Attribute_Name =>
             Sem_Name (Range_Expr);
             Range_Expr1 := Name_To_Range (Range_Expr);
+         when Iir_Kind_Error =>
+            Range_Expr1 := Null_Iir;
          when others =>
             Error_Kind ("sem_physical_type_definition", Range_Expr);
       end case;

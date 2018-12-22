@@ -587,7 +587,7 @@ package body Parse is
                end if;
                Error_Msg_Parse ("'to' or 'downto' expected");
             end if;
-            return Null_Iir;
+            return Create_Error (Left);
       end case;
    end Parse_Range;
 
@@ -2187,46 +2187,41 @@ package body Parse is
 
       if Current_Token = Tok_Right_Paren then
          Error_Msg_Parse ("at least one literal must be declared");
-         Scan;
-         return Enum_Type;
-      end if;
-      loop
-         if Current_Token /= Tok_Identifier
-           and then Current_Token /= Tok_Character
-         then
-            if Current_Token = Tok_Eof then
-               Error_Msg_Parse ("unexpected end of file");
-               return Enum_Type;
+      else
+         loop
+            if Current_Token = Tok_Identifier
+              or Current_Token = Tok_Character
+            then
+               Enum_Lit := Create_Iir (Iir_Kind_Enumeration_Literal);
+               Set_Identifier (Enum_Lit, Current_Identifier);
+               Set_Parent (Enum_Lit, Parent);
+               Set_Location (Enum_Lit);
+               Set_Enum_Pos (Enum_Lit, Pos);
+
+               --  LRM93 3.1.1
+               --  the position number for each additional enumeration literal
+               --  is one more than that if its predecessor in the list.
+               Pos := Pos + 1;
+
+               Append_Element (Enum_List, Enum_Lit);
+
+               --  Skip identifier or character.
+               Scan;
+            else
+               Error_Msg_Parse ("identifier or character expected");
             end if;
-            Error_Msg_Parse ("identifier or character expected");
-         end if;
 
-         Enum_Lit := Create_Iir (Iir_Kind_Enumeration_Literal);
-         Set_Identifier (Enum_Lit, Current_Identifier);
-         Set_Parent (Enum_Lit, Parent);
-         Set_Location (Enum_Lit);
-         Set_Enum_Pos (Enum_Lit, Pos);
+            exit when Current_Token /= Tok_Comma;
 
-         -- LRM93 3.1.1
-         -- the position number for each additional enumeration literal is
-         -- one more than that if its predecessor in the list.
-         Pos := Pos + 1;
+            --  Skip ','.
+            Scan;
 
-         Append_Element (Enum_List, Enum_Lit);
-
-         --  Skip identifier or character.
-         Scan;
-
-         exit when Current_Token /= Tok_Comma;
-
-         --  Skip ','.
-         Scan;
-
-         if Current_Token = Tok_Right_Paren then
-            Error_Msg_Parse ("extra ',' ignored");
-            exit;
-         end if;
-      end loop;
+            if Current_Token = Tok_Right_Paren then
+               Error_Msg_Parse ("extra ',' ignored");
+               exit;
+            end if;
+         end loop;
+      end if;
 
       --  Skip ')'.
       Expect_Scan (Tok_Right_Paren, "')' expected at end of enumeration type");
@@ -5622,7 +5617,7 @@ package body Parse is
            | Tok_End =>
             --  Token not to be skipped
             Error_Msg_Parse ("primary expression expected");
-            return Null_Iir;
+            return Create_Error (Null_Iir);
 
          when others =>
             Unexpected ("primary");

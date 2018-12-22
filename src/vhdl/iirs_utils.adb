@@ -774,18 +774,19 @@ package body Iirs_Utils is
    is
       Range_Expr : Iir_Range_Expression;
       Literal_List : constant Iir_Flist := Get_Enumeration_Literal_List (Def);
+      List_Len : constant Natural := Get_Nbr_Elements (Literal_List);
    begin
       --  Create a constraint.
       Range_Expr := Create_Iir (Iir_Kind_Range_Expression);
       Location_Copy (Range_Expr, Def);
       Set_Type (Range_Expr, Def);
       Set_Direction (Range_Expr, Iir_To);
-      Set_Left_Limit
-        (Range_Expr,
-         Get_Nth_Element (Literal_List, 0));
-      Set_Right_Limit
-        (Range_Expr,
-         Get_Nth_Element (Literal_List, Get_Nbr_Elements (Literal_List) - 1));
+      if List_Len >= 1 then
+         Set_Left_Limit
+           (Range_Expr, Get_Nth_Element (Literal_List, 0));
+         Set_Right_Limit
+           (Range_Expr, Get_Nth_Element (Literal_List, List_Len - 1));
+      end if;
       Set_Expr_Staticness (Range_Expr, Locally);
       Set_Range_Constraint (Def, Range_Expr);
    end Create_Range_Constraint_For_Enumeration_Type;
