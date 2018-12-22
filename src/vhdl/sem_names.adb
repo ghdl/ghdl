@@ -1319,13 +1319,14 @@ package body Sem_Names is
          return Conv;
       end if;
 
-      -- LRM93 7.3.5
-      -- Furthermore, the operand of a type conversion is not allowed to be
-      -- the literal null, an allocator, an aggregate, or a string literal.
+      --  LRM93 7.3.5
+      --  Furthermore, the operand of a type conversion is not allowed to be
+      --  the literal null, an allocator, an aggregate, or a string literal.
       case Get_Kind (Actual) is
          when Iir_Kind_Null_Literal
            | Iir_Kind_Aggregate
-           | Iir_Kind_String_Literal8 =>
+           | Iir_Kind_String_Literal8
+           | Iir_Kinds_Allocator =>
             Error_Msg_Sem
               (+Actual, "%n cannot be a type conversion operand", +Actual);
             return Conv;
@@ -1334,61 +1335,58 @@ package body Sem_Names is
             Error_Msg_Sem
               (+Actual, "subtype indication not allowed in an expression");
             return Conv;
+         when Iir_Kind_Error =>
+            return Conv;
          when others =>
-            -- LRM93 7.3.5
-            -- The type of the operand of a type conversion must be
-            -- determinable independent of the context (in particular,
-            -- independent of the target type).
-            Expr := Sem_Expression_Universal (Actual);
-            if Expr = Null_Iir then
-               return Conv;
-            end if;
-            if Get_Kind (Expr) in Iir_Kinds_Allocator then
-               Error_Msg_Sem
-                 (+Expr, "%n cannot be a type conversion operand", +Expr);
-            end if;
-            Set_Expression (Conv, Expr);
+            null;
       end case;
+
+      --  LRM93 7.3.5
+      --  The type of the operand of a type conversion must be
+      --  determinable independent of the context (in particular,
+      --  independent of the target type).
+      Expr := Sem_Expression_Universal (Actual);
+      if Expr = Null_Iir then
+         return Conv;
+      end if;
+      Set_Expression (Conv, Expr);
 
       --  LRM93 7.4.1 Locally Static Primaries.
       --  9. a type conversion whose expression is a locally static expression.
       --  LRM93 7.4.2 Globally Static Primaries.
       --  14. a type conversion whose expression is a globally static
       --      expression.
-      if Expr /= Null_Iir then
-         Staticness := Get_Expr_Staticness (Expr);
+      Staticness := Get_Expr_Staticness (Expr);
 
-         --  If the type mark is not locally static, the expression cannot
-         --  be locally static.  This was clarified in VHDL 08, but a type
-         --  mark that denotes an unconstrained array type, does not prevent
-         --  the expression from being static.
-         if Get_Kind (Conv_Type) not in Iir_Kinds_Array_Type_Definition
-           or else Get_Constraint_State (Conv_Type) = Fully_Constrained
-         then
-            Staticness := Min (Staticness, Get_Type_Staticness (Conv_Type));
-         end if;
+      --  If the type mark is not locally static, the expression cannot
+      --  be locally static.  This was clarified in VHDL 08, but a type
+      --  mark that denotes an unconstrained array type, does not prevent
+      --  the expression from being static.
+      if Get_Kind (Conv_Type) not in Iir_Kinds_Array_Type_Definition
+        or else Get_Constraint_State (Conv_Type) = Fully_Constrained
+      then
+         Staticness := Min (Staticness, Get_Type_Staticness (Conv_Type));
+      end if;
 
-         --  LRM87 7.4 Static Expressions
-         --  A type conversion is not a locally static expression.
-         if Flags.Vhdl_Std = Vhdl_87 then
-            Staticness := Min (Globally, Staticness);
-         end if;
-         Set_Expr_Staticness (Conv, Staticness);
+      --  LRM87 7.4 Static Expressions
+      --  A type conversion is not a locally static expression.
+      if Flags.Vhdl_Std = Vhdl_87 then
+         Staticness := Min (Globally, Staticness);
+      end if;
+      Set_Expr_Staticness (Conv, Staticness);
 
-         if not Are_Types_Closely_Related (Conv_Type, Get_Type (Expr))
-         then
-            --  FIXME: should explain why the types are not closely related.
-            Error_Msg_Sem
-              (+Conv,
-               "conversion not allowed between not closely related types");
-            --  Avoid error storm in evaluation.
-            Set_Expr_Staticness (Conv, None);
-         else
-            --  Unless the type conversion appears in the formal part of an
-            --  association, the expression must be readable.
-            if not In_Formal then
-               Check_Read (Expr);
-            end if;
+      if not Are_Types_Closely_Related (Conv_Type, Get_Type (Expr)) then
+         --  FIXME: should explain why the types are not closely related.
+         Error_Msg_Sem
+           (+Conv,
+            "conversion not allowed between not closely related types");
+         --  Avoid error storm in evaluation.
+         Set_Expr_Staticness (Conv, None);
+      else
+         --  Unless the type conversion appears in the formal part of an
+         --  association, the expression must be readable.
+         if not In_Formal then
+            Check_Read (Expr);
          end if;
       end if;
       return Conv;

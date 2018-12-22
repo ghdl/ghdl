@@ -47,7 +47,7 @@ package Sem_Expr is
    --  expression, and set its type, which is not necessary a base type.
    --  A_TYPE1 must be a base type.
    --
-   --  In case of error, it displays a message and return null.
+   --  In case of error, it displays a message and return null_iir.
    --  In case of success, it returns the analyzed expression, which can
    --  be different from EXPR (eg, a character literal is transformed into an
    --  enumeration literal).

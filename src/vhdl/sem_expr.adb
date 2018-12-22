@@ -5081,34 +5081,33 @@ package body Sem_Expr is
       end if;
    end Sem_Composite_Expression;
 
-   function Sem_Expression_Universal (Expr : Iir) return Iir
+   --  EXPR must be an expression with type is an overload list.
+   --  Extract and finish the analysis of the expression that is of universal
+   --  type, if there is one and if all types are either integer types or
+   --  floating point types.
+   --  This is used to get rid of implicit conversions.
+   function Sem_Favour_Universal_Type (Expr : Iir) return Iir
    is
-      Expr1 : Iir;
-      Expr_Type : Iir;
-      El : Iir;
+      Expr_Type : constant Iir := Get_Type (Expr);
+      Type_List : constant Iir_List := Get_Overload_List (Expr_Type);
+      --  Extract kind (from the first element).
+      First_El : constant Iir := Get_First_Element (Type_List);
+      Kind : constant Iir_Kind := Get_Kind (Get_Base_Type (First_El));
       Res : Iir;
-      List : Iir_List;
+      El : Iir;
+
       It : List_Iterator;
    begin
-      Expr1 := Sem_Expression_Ov (Expr, Null_Iir);
-      if Expr1 = Null_Iir then
-         return Null_Iir;
-      end if;
-      Expr_Type := Get_Type (Expr1);
-      if Expr_Type = Null_Iir then
-         --  FIXME: improve message
-         Error_Msg_Sem (+Expr, "bad expression for a scalar");
-         return Null_Iir;
-      end if;
-      if not Is_Overload_List (Expr_Type) then
-         return Expr1;
-      end if;
-
-      List := Get_Overload_List (Expr_Type);
       Res := Null_Iir;
-      It := List_Iterate (List);
+
+      It := List_Iterate (Type_List);
       while Is_Valid (It) loop
          El := Get_Element (It);
+         if Get_Kind (Get_Base_Type (El)) /= Kind then
+            --  Must be of the same kind.
+            Res := Null_Iir;
+            exit;
+         end if;
          if El = Universal_Integer_Type_Definition
            or El = Convertible_Integer_Type_Definition
            or El = Universal_Real_Type_Definition
@@ -5117,19 +5116,37 @@ package body Sem_Expr is
             if Res = Null_Iir then
                Res := El;
             else
-               Error_Overload (Expr1);
-               Disp_Overload_List (List, Expr1);
-               return Null_Iir;
+               Res := Null_Iir;
+               exit;
             end if;
          end if;
          Next (It);
       end loop;
+
       if Res = Null_Iir then
-         Error_Overload (Expr1);
-         Disp_Overload_List (List, Expr1);
+         Error_Overload (Expr);
+         Disp_Overload_List (Type_List, Expr);
          return Null_Iir;
       end if;
-      return Sem_Expression_Ov (Expr1, Res);
+
+      return Sem_Expression_Ov (Expr, Res);
+   end Sem_Favour_Universal_Type;
+
+   function Sem_Expression_Universal (Expr : Iir) return Iir
+   is
+      Expr1 : Iir;
+      Expr_Type : Iir;
+   begin
+      Expr1 := Sem_Expression_Wildcard (Expr, Wildcard_Any_Type);
+      Expr_Type := Get_Type (Expr1);
+      if Is_Error (Expr_Type) then
+         return Null_Iir;
+      end if;
+      if not Is_Overload_List (Expr_Type) then
+         return Expr1;
+      else
+         return Sem_Favour_Universal_Type (Expr1);
+      end if;
    end Sem_Expression_Universal;
 
    function Sem_Case_Expression (Expr : Iir) return Iir
