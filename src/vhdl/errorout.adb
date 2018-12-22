@@ -688,9 +688,10 @@ package body Errorout is
             return "overloaded name or expression";
 
          when Iir_Kind_Integer_Type_Definition
-           | Iir_Kind_Enumeration_Type_Definition
-           | Iir_Kind_Wildcard_Type_Definition =>
+           | Iir_Kind_Enumeration_Type_Definition =>
             return Image_Identifier (Get_Type_Declarator (Node));
+         when Iir_Kind_Wildcard_Type_Definition =>
+            return "<any>";
          when Iir_Kind_Array_Type_Definition =>
             return Disp_Type (Node, "array type");
          when Iir_Kind_Array_Subtype_Definition =>
