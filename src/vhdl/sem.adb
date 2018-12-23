@@ -100,7 +100,7 @@ package body Sem is
       --  Resolve the name.
 
       Name := Get_Entity_Name (Library_Unit);
-      if Name = Null_Iir then
+      if Is_Error (Name) then
          pragma Assert (Flags.Flag_Force_Analysis);
          return Null_Iir;
       end if;

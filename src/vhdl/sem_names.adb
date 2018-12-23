@@ -889,15 +889,13 @@ package body Sem_Names is
       Atype : Iir;
       Res : Iir;
    begin
-      if Name = Null_Iir then
-         pragma Assert (Flags.Flag_Force_Analysis);
-         Res := Create_Error_Type (Null_Iir);
-         Set_Type (Res, Res);
-         return Res;
-      end if;
-
       --  The name must not have been analyzed.
       pragma Assert (Get_Type (Name) = Null_Iir);
+
+      if Is_Error (Name) then
+         Set_Type (Name, Name);
+         return Name;
+      end if;
 
       --  Analyze the name (if not already done).
       Res := Get_Named_Entity (Name);

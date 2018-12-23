@@ -457,6 +457,17 @@ package body Parse is
       end if;
    end Scan_Semi_Colon_Unit;
 
+   function Create_Error_Node (Orig : Iir := Null_Iir) return Iir
+   is
+      Res : Iir;
+   begin
+      Res := Create_Error (Orig);
+      if Orig = Null_Iir then
+         Set_Location (Res);
+      end if;
+      return Res;
+   end Create_Error_Node;
+
    --  precond : next token
    --  postcond: next token.
    --
@@ -587,7 +598,7 @@ package body Parse is
                end if;
                Error_Msg_Parse ("'to' or 'downto' expected");
             end if;
-            return Create_Error (Left);
+            return Create_Error_Node (Left);
       end case;
    end Parse_Range;
 
@@ -1017,7 +1028,7 @@ package body Parse is
                then
                   Expect
                     (Tok_Identifier, "attribute identifier expected after '");
-                  return Null_Iir;
+                  return Res;
                end if;
                Res := Create_Iir (Iir_Kind_Attribute_Name);
                Set_Identifier (Res, Current_Identifier);
@@ -1359,7 +1370,7 @@ package body Parse is
                Error_Msg_Parse
                  ("name expected here, found %t", +Current_Token);
             end if;
-            return Null_Iir;
+            return Create_Error_Node;
       end case;
 
       return Parse_Name_Suffix (Res, Allow_Indexes, Allow_Signature);
@@ -1403,9 +1414,6 @@ package body Parse is
       pragma Unreferenced (Old);
    begin
       Res := Parse_Name (Allow_Indexes => False);
-      if Res = Null_Iir then
-         return Null_Iir;
-      end if;
 
       Check_Type_Mark (Res);
       if Check_Paren and then Current_Token = Tok_Left_Paren then
@@ -1838,6 +1846,7 @@ package body Parse is
       else
          if Is_Func then
             Error_Msg_Parse ("'return' expected");
+            Set_Return_Type_Mark (Subprg, Create_Error_Node);
          end if;
       end if;
    end Parse_Subprogram_Parameters_And_Return;
@@ -2258,7 +2267,7 @@ package body Parse is
    --   unbounded_array_definition ::=
    --      ARRAY ( index_subtype_definition { , index_subtype_definition } )
    --      OF element_subtype_indication
-   function Parse_Array_Definition return Iir
+   function Parse_Array_Type_Definition return Iir
    is
       Index_Constrained : Boolean;
       Array_Constrained : Boolean;
@@ -2360,7 +2369,7 @@ package body Parse is
       Set_Location (Res_Type, Loc);
 
       return Res_Type;
-   end Parse_Array_Definition;
+   end Parse_Array_Type_Definition;
 
    --  precond : UNITS
    --  postcond: next token
@@ -2754,7 +2763,7 @@ package body Parse is
             end if;
 
          when Tok_Array =>
-            Def := Parse_Array_Definition;
+            Def := Parse_Array_Type_Definition;
             Decl := Null_Iir;
 
          when Tok_Record =>
@@ -5246,10 +5255,9 @@ package body Parse is
          end if;
          Set_Associated_Expr (Assoc, Expr);
          Append_Subchain (Last, Res, Assoc);
-         exit when Current_Token = Tok_Right_Paren;
+         exit when Current_Token /= Tok_Comma;
 
          Loc := Get_Token_Location;
-         Expect (Tok_Comma);
 
          --  Eat ','
          Scan;
@@ -5258,7 +5266,7 @@ package body Parse is
       end loop;
 
       --  Eat ')'.
-      Scan;
+      Expect_Scan (Tok_Right_Paren);
       return Res;
    end Parse_Aggregate;
 
@@ -5617,11 +5625,11 @@ package body Parse is
            | Tok_End =>
             --  Token not to be skipped
             Error_Msg_Parse ("primary expression expected");
-            return Create_Error (Null_Iir);
+            return Create_Error_Node;
 
          when others =>
             Unexpected ("primary");
-            return Null_Iir;
+            return Create_Error_Node;
       end case;
    end Parse_Primary;
 

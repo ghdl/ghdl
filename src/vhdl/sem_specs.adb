@@ -1360,7 +1360,7 @@ package body Sem_Specs is
    begin
       Primary_Entity_Aspect := Null_Iir;
       Comp_Name := Get_Component_Name (Spec);
-      if Comp_Name = Null_Iir then
+      if Is_Error (Comp_Name) then
          pragma Assert (Flags.Flag_Force_Analysis);
          return;
       end if;
@@ -1467,7 +1467,7 @@ package body Sem_Specs is
    begin
       Sem_Component_Specification (Parent_Stmts, Conf, Primary_Entity_Aspect);
       Component := Get_Component_Name (Conf);
-      if Component = Null_Iir then
+      if Is_Error (Component) then
          pragma Assert (Flags.Flag_Force_Analysis);
          return;
       end if;
