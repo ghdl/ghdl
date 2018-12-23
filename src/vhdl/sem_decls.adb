@@ -1684,15 +1684,19 @@ package body Sem_Decls is
       Xref_Decl (Alias);
 
       Name := Get_Name (Alias);
-      if Get_Kind (Name) = Iir_Kind_Signature then
-         Sig := Name;
-         Name := Get_Signature_Prefix (Sig);
-         Sem_Name (Name);
-         Set_Signature_Prefix (Sig, Name);
-      else
-         Sem_Name (Name);
-         Sig := Null_Iir;
-      end if;
+      case Get_Kind (Name) is
+         when Iir_Kind_Signature =>
+            Sig := Name;
+            Name := Get_Signature_Prefix (Sig);
+            Sem_Name (Name);
+            Set_Signature_Prefix (Sig, Name);
+         when Iir_Kind_Error =>
+            pragma Assert (Flags.Flag_Force_Analysis);
+            return Alias;
+         when others =>
+            Sem_Name (Name);
+            Sig := Null_Iir;
+      end case;
 
       N_Entity := Get_Named_Entity (Name);
       if N_Entity = Error_Mark then

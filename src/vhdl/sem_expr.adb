@@ -4028,6 +4028,10 @@ package body Sem_Expr is
          when others =>
             Error_Kind ("sem_physical_literal", Lit);
       end case;
+      if Is_Error (Unit_Name) then
+         return Create_Error_Expr (Res, Error_Mark);
+      end if;
+
       Unit_Name := Sem_Denoting_Name (Unit_Name);
       Unit := Get_Named_Entity (Unit_Name);
       if Get_Kind (Unit) /= Iir_Kind_Unit_Declaration then
@@ -4944,7 +4948,7 @@ package body Sem_Expr is
       Result_Type : Iir;
       Expr_Type : Iir;
    begin
-      if Expr = Null_Iir then
+      if Is_Error (Expr) then
          return;
       end if;
 

@@ -1013,7 +1013,9 @@ package body Parse is
                   Prefix := String_To_Operator_Symbol (Prefix);
                end if;
 
+               --  Skip '''.
                Scan;
+
                if Current_Token = Tok_Left_Paren then
                   -- A qualified expression.
                   Res := Create_Iir (Iir_Kind_Qualified_Expression);
@@ -1028,7 +1030,7 @@ package body Parse is
                then
                   Expect
                     (Tok_Identifier, "attribute identifier expected after '");
-                  return Res;
+                  return Create_Error_Node (Prefix);
                end if;
                Res := Create_Iir (Iir_Kind_Attribute_Name);
                Set_Identifier (Res, Current_Identifier);
@@ -2334,8 +2336,6 @@ package body Parse is
                Def := Type_Mark;
          end case;
 
-         Append_Element (Index_List, Def);
-
          if First then
             Array_Constrained := Index_Constrained;
             First := False;
@@ -2343,9 +2343,15 @@ package body Parse is
             if Array_Constrained /= Index_Constrained then
                Error_Msg_Parse
                  ("cannot mix constrained and unconstrained index");
+               Def := Create_Error_Node (Def);
             end if;
          end if;
+
+         Append_Element (Index_List, Def);
+
          exit when Current_Token /= Tok_Comma;
+
+         --  Skip ','.
          Scan;
       end loop;
 
@@ -3046,7 +3052,7 @@ package body Parse is
          end if;
          if Current_Token /= Tok_Identifier then
             Error_Msg_Parse ("type mark expected in a subtype indication");
-            return Null_Iir;
+            return Create_Error_Node;
          end if;
          Type_Mark := Parse_Type_Mark (Check_Paren => False);
       end if;
@@ -3641,22 +3647,10 @@ package body Parse is
 
          Sub_Chain_Append (First, Last, Object);
 
-         exit when Current_Token = Tok_Colon;
-         if Current_Token /= Tok_Comma then
-            case Current_Token is
-               when Tok_Assign =>
-                  Error_Msg_Parse ("missing type in " & Disp_Name (Kind));
-                  exit;
-               when others =>
-                  Error_Msg_Parse
-                    ("',' or ':' is expected after identifier in "
-                       & Disp_Name (Kind));
-                  Resync_To_End_Of_Declaration;
-                  return Object;
-            end case;
-         else
-            Scan;
-         end if;
+         exit when Current_Token /= Tok_Comma;
+
+         --  Skip ','.
+         Scan;
          Set_Has_Identifier_List (Object, True);
       end loop;
 
@@ -4022,7 +4016,7 @@ package body Parse is
             Set_Identifier (Res, Scan_To_Operator_Name (Get_Token_Location));
          when others =>
             Error_Msg_Parse ("identifier, character or string expected");
-            return Null_Iir;
+            return Create_Error_Node;
       end case;
       Scan;
       if Current_Token = Tok_Left_Bracket then
@@ -4050,10 +4044,16 @@ package body Parse is
       case Current_Token is
          when Tok_All =>
             Flist := Iir_Flist_All;
+
+            --  Skip 'all'.
             Scan;
+
          when Tok_Others =>
             Flist := Iir_Flist_Others;
+
+            --  Skip 'others'.
             Scan;
+
          when others =>
             List := Create_Iir_List;
             loop
@@ -6254,6 +6254,7 @@ package body Parse is
                when others =>
                   Error_Msg_Parse
                     ("only names are allowed in a sensitivity list");
+                  El := Create_Error_Node (El);
             end case;
             Append_Element (List, El);
          end if;
@@ -6799,15 +6800,7 @@ package body Parse is
          --  Skip 'when'.
          Scan;
 
-         if Current_Token = Tok_Double_Arrow then
-            Error_Msg_Parse ("missing expression in alternative");
-            Assoc := Create_Iir (Iir_Kind_Choice_By_Expression);
-            Set_Location (Assoc, When_Loc);
-            Set_Choice_Position (Assoc, Pos);
-            Pos := Pos + 1;
-         else
-            Parse_Choices (Null_Iir, When_Loc, Pos, Assoc);
-         end if;
+         Parse_Choices (Null_Iir, When_Loc, Pos, Assoc);
 
          --  Skip '=>'.
          Expect_Scan (Tok_Double_Arrow);
@@ -8860,20 +8853,13 @@ package body Parse is
       --  Identifier.
       Scan_Identifier (Res);
 
-      if Current_Token = Tok_Is then
-         Error_Msg_Parse ("architecture identifier is missing");
+      --  Skip 'of'.
+      Expect_Scan (Tok_Of);
 
-         --  Skip 'is'.
-         Scan;
-      else
-         --  Skip 'of'.
-         Expect_Scan (Tok_Of);
+      Set_Entity_Name (Res, Parse_Name (False));
 
-         Set_Entity_Name (Res, Parse_Name (False));
-
-         --  Skip 'is'.
-         Expect_Scan (Tok_Is);
-      end if;
+      --  Skip 'is'.
+      Expect_Scan (Tok_Is);
 
       Parse_Declarative_Part (Res);
 

@@ -1143,9 +1143,15 @@ package body Sem_Stmts is
          -- El is an iir_identifier.
          El := Get_Element (It);
 
-         Sem_Name (El);
+         if Is_Error (El) then
+            pragma Assert (Flags.Flag_Force_Analysis);
+            Res := Error_Mark;
+         else
+            Sem_Name (El);
 
-         Res := Get_Named_Entity (El);
+            Res := Get_Named_Entity (El);
+         end if;
+
          if Res = Error_Mark then
             null;
          elsif Is_Overload_List (Res) or else not Is_Object_Name (Res) then

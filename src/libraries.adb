@@ -1056,6 +1056,11 @@ package body Libraries is
          end if;
       end;
 
+      if Unit_Id = Null_Identifier then
+         pragma Assert (Flags.Flag_Force_Analysis);
+         return;
+      end if;
+
       --  Try to find a design unit with the same name in the work library.
       Id := Get_Hash_Id_For_Unit (Unit);
       Design_Unit := Unit_Hash_Table (Id);

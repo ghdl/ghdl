@@ -449,7 +449,12 @@ package body Ghdlcomp is
                raise Compilation_Error;
             end if;
 
-            Free_Iir (Design_File);
+            if New_Design_File = Design_File then
+               pragma Assert (Flags.Flag_Force_Analysis);
+               null;
+            else
+               Free_Iir (Design_File);
+            end if;
 
             --  Do late analysis checks.
             if New_Design_File /= Null_Iir then

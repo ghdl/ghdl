@@ -2311,12 +2311,6 @@ package body Sem_Types is
       Type_Mark: Iir;
       Res : Iir;
    begin
-      if Def = Null_Iir then
-         --  Missing subtype indication.
-         pragma Assert (Flags.Flag_Force_Analysis);
-         return Create_Error_Type (Null_Iir);
-      end if;
-
       --  LRM08 6.3 Subtype declarations
       --
       --  If the subtype indication does not include a constraint, the subtype
@@ -2326,6 +2320,8 @@ package body Sem_Types is
            | Iir_Kind_Attribute_Name =>
             Type_Mark := Sem_Type_Mark (Def, Incomplete);
             return Type_Mark;
+         when Iir_Kind_Error =>
+            return Def;
          when others =>
             null;
       end case;
