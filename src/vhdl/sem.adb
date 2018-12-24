@@ -2084,7 +2084,7 @@ package body Sem is
                end;
             end if;
 
-            --  Do not add to Analysis_Check_List as procedures can't
+            --  Do not add to Analysis_Checks_List as procedures can't
             --  generate purity/wait/all-sensitized errors by themselves.
 
          when Iir_Kind_Function_Declaration =>

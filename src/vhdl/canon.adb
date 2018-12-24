@@ -513,6 +513,7 @@ package body Canon is
      (Callees_List : Iir_List; Sensitivity_List : Iir_List)
    is
       Callee : Iir;
+      Orig_Callee : Iir;
       It : List_Iterator;
       Bod : Iir;
    begin
@@ -529,6 +530,15 @@ package body Canon is
       It := List_Iterate (Callees_List);
       while Is_Valid (It) loop
          Callee := Get_Element (It);
+
+         --  For subprograms of instantiated packages, refer to the
+         --  uninstantiated subprogram.
+         --  FIXME: not for macro-expanded packages
+         Orig_Callee := Sem_Inst.Get_Origin (Callee);
+         if Orig_Callee /= Null_Iir then
+            Callee := Orig_Callee;
+         end if;
+
          if not Get_Seen_Flag (Callee) then
             Set_Seen_Flag (Callee, True);
             case Get_All_Sensitized_State (Callee) is
@@ -547,8 +557,25 @@ package body Canon is
                when No_Signal =>
                   null;
 
-               when Unknown | Invalid_Signal =>
+               when Invalid_Signal =>
+                  --  Cannot be here.  The error must have been detected.
                   raise Internal_Error;
+
+               when Unknown =>
+                  --  Must be a subprogram declared in a different design unit.
+                  --  Only a package can apply to this case.
+                  --  Will be checked at elaboration.
+                  pragma Assert (not Flags.Flag_Elaborate);
+                  declare
+                     Parent : Iir;
+                  begin
+                     Parent := Get_Parent (Callee);
+                     pragma Assert
+                       (Get_Kind (Parent) = Iir_Kind_Package_Declaration);
+                     Parent := Get_Parent (Parent);
+                     pragma Assert
+                       (Get_Kind (Parent) = Iir_Kind_Design_Unit);
+                  end;
             end case;
          end if;
          Next (It);
