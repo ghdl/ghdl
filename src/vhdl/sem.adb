@@ -1991,6 +1991,7 @@ package body Sem is
    procedure Sem_Subprogram_Body (Subprg : Iir)
    is
       Spec : constant Iir := Get_Subprogram_Specification (Subprg);
+      Warn_Hide_Enabled : constant Boolean := Is_Warning_Enabled (Warnid_Hide);
       El : Iir;
    begin
       Set_Impure_Depth (Subprg, Iir_Depth_Pure);
@@ -2001,7 +2002,10 @@ package body Sem is
       Open_Declarative_Region;
       Set_Is_Within_Flag (Spec, True);
 
-      -- Add the interface names into the current declarative region.
+      --  Add the interface names into the current declarative region.
+      --  (Do not emit warnings for hiding, they were already emitted during
+      --   analysis of the subprogram spec).
+      Enable_Warning (Warnid_Hide, False);
       El := Get_Interface_Declaration_Chain (Spec);
       while El /= Null_Iir loop
          Add_Name (El, Get_Identifier (El), False);
@@ -2010,6 +2014,7 @@ package body Sem is
          end if;
          El := Get_Chain (El);
       end loop;
+      Enable_Warning (Warnid_Hide, Warn_Hide_Enabled);
 
       Sem_Sequential_Statements (Spec, Subprg);
 
