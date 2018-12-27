@@ -569,6 +569,7 @@ package Iirs is
    --
    --   Get/Set_Same_Alternative_Flag (Flag1)
    --
+   --  For aggregates: if True, associated expression is for one element.
    --   Get/Set_Element_Type_Flag (Flag2)
    --
    -- Only for Iir_Kind_Choice_By_Range:
