@@ -20,6 +20,11 @@
 import re
 import sys
 
+# Supported versions
+V87=0
+V93=1
+V08=2
+
 binary_funcs = [ "and", "nand", "or", "nor", "xor" ]
 
 # Python modelisation of std_ulogic type.
@@ -101,14 +106,14 @@ def gen_log_table1(name, func):
         w(func (b))
     w('";\n')
 
-def disp_tables():
+def disp_tables(version):
     "Generate logic tables"
     gen_log_table2("and", sl_and)
     gen_log_table2("nand", lambda a,b : sl_not(sl_and(a, b)))
     gen_log_table2("or", sl_or)
     gen_log_table2("nor", lambda a,b : sl_not(sl_or(a,b)))
     gen_log_table2("xor", sl_xor)
-    if "xnor" in binary_funcs:
+    if version >= V93:
         gen_log_table2("xnor", lambda a,b : sl_not(sl_xor(a,b)))
     gen_log_table1("not", sl_not)
 
@@ -167,7 +172,7 @@ def disp_vec_unary(func, typ):
     return res;
   end "{0}";\n""".format(func, typ))
 
-def disp_all_log_funcs():
+def disp_all_log_funcs(version):
     "Generate all function bodies for logic operators"
     for f in binary_funcs:
         disp_scalar_binary(f)
@@ -228,7 +233,7 @@ def disp_sv_to_sv_conv(s,d):
     return res_type (s);
   end to_std{1}vector;\n""".format(s,d))
 
-def disp_all_conv_funcs():
+def disp_all_conv_funcs(version):
     "Generate conversion function bodies"
     for v in vec_types:
         disp_sv_to_bv_conv(v)
@@ -287,7 +292,7 @@ def disp_conv_b_t(typ):
     return bit_to_x01 (b);
   end to_{1};\n""".format(typ, utyp))
 
-def disp_all_norm_funcs():
+def disp_all_norm_funcs(version):
     "Generate all function bodies for conversion"
     for typ in [ "x01", "x01z", "ux01" ]:
         for v in vec_types:
@@ -297,7 +302,7 @@ def disp_all_norm_funcs():
             disp_conv_bv_vec(typ, v)
         disp_conv_b_t(typ)
 
-def disp_all_isx_funcs():
+def disp_all_isx_funcs(version):
     "Generate all function bodies for isx functions"
     for v in vec_types:
         w("""
@@ -328,34 +333,48 @@ pats = {'  @TAB\n' : disp_tables,
 spec_file='std_logic_1164.vhdl'
 proto_file='std_logic_1164-body.proto'
 
-def gen_body():
+def gen_body(filename, version):
+    global out
+    out = open(filename, 'w')
     w('--  This -*- vhdl -*- file was generated from ' + proto_file + '\n')
     for line in open(proto_file):
         if line in pats:
-            pats[line]()
+            pats[line](version)
             continue
         w(line)
+    out.close()
+
+VDICT={'--V87':  lambda x: x == V87,
+       '--!V87': lambda x: x != V87,
+       '--V93':  lambda x: x == V93,
+       '--V08':  lambda x: x == V08,
+       '--!V08': lambda x: x != V08}
+
+def preprocess_line(line, version):
+    for p in VDICT:
+        pos = line.find(p)
+        if pos >= 0:
+            if not VDICT[p](version):
+                return None
+            l = line[:pos].rstrip() + '\n'
+            return l
+    return line
+
+def copy_spec(dest, version):
+    out=open(dest, 'w')
+    for line in open(spec_file):
+        l = preprocess_line(line, version)
+        if l is not None:
+            out.write(l)
+    out.close()
 
 # Copy spec
-out=open('std_logic_1164.v87', 'w')
-for line in open(spec_file):
-    if '"xnor"' in line:
-        w("--" + line[2:])
-    else:
-        w(line)
-out.close()
-
-out=open('std_logic_1164.v93', 'w')
-for line in open(spec_file):
-    w(line)
-out.close()
+copy_spec('std_logic_1164.v87', V87)
+copy_spec('std_logic_1164.v93', V93)
+copy_spec('std_logic_1164.v08', V08)
 
 # Generate bodies
-out=open('std_logic_1164-body.v87', 'w')
-gen_body()
-out.close()
+gen_body('std_logic_1164-body.v87', V87)
 
 binary_funcs.append("xnor")
-out=open('std_logic_1164-body.v93', 'w')
-gen_body()
-out.close()
+gen_body('std_logic_1164-body.v93', V93)

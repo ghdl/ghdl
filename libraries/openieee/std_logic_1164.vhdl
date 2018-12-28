@@ -16,14 +16,12 @@
 --  along with GCC; see the file COPYING2.  If not see
 --  <http://www.gnu.org/licenses/>.
 
---  This package is valid for VHDL version until but not including 2008.
---  For VHDL87, the functions xnor should be removed.
-
 package std_logic_1164 is
 
   --  Unresolved logic state.
   type std_ulogic is
-    ('U',  --  Uninitialized, this is also the default value.
+    (
+     'U',  --  Uninitialized, this is also the default value.
      'X',  --  Unknown / conflict value (forcing level).
      '0',  --  0 (forcing level).
      '1',  --  1 (forcing level).
@@ -32,7 +30,7 @@ package std_logic_1164 is
      'L',  --  0 (weak level).
      'H',  --  1 (weak level).
      '-'   --  Don't care.
-     );
+    );
 
   --  Vector of logic state.
   type std_ulogic_vector is array (natural range <>) of std_ulogic;
@@ -52,7 +50,8 @@ package std_logic_1164 is
   subtype std_logic is resolved std_ulogic;
 
   --  Vector of std_logic.
-  type std_logic_vector is array (natural range <>) of std_logic;
+  type std_logic_vector is array (natural range <>) of std_logic; --!V08
+  subtype std_logic_vector is (resolved) std_ulogic_vector;       --V08
 
   --  Subtypes of std_ulogic.  The names give the values.
   subtype X01   is resolved std_ulogic range 'X' to '1';
@@ -70,34 +69,75 @@ package std_logic_1164 is
   function "or"   (l : std_ulogic; r : std_ulogic) return UX01;
   function "nor"  (l : std_ulogic; r : std_ulogic) return UX01;
   function "xor"  (l : std_ulogic; r : std_ulogic) return UX01;
-  function "xnor" (l : std_ulogic; r : std_ulogic) return UX01;
+  function "xnor" (l : std_ulogic; r : std_ulogic) return UX01;  --!V87
   function "not"  (l : std_ulogic) return UX01;
 
   --  Logical operators for vectors.
   --  An assertion of severity failure fails if the length of L and R aren't
   --  equal.  The result range is 1 to L'Length.
-  function "and"  (l, r : std_logic_vector) return std_logic_vector;
-  function "nand" (l, r : std_logic_vector) return std_logic_vector;
-  function "or"   (l, r : std_logic_vector) return std_logic_vector;
-  function "nor"  (l, r : std_logic_vector) return std_logic_vector;
-  function "xor"  (l, r : std_logic_vector) return std_logic_vector;
-  function "xnor" (l, r : std_logic_vector) return std_logic_vector;
-  function "not"  (l : std_logic_vector) return std_logic_vector;
+  function "and"  (l, r : std_logic_vector) return std_logic_vector; --!V08
+  function "nand" (l, r : std_logic_vector) return std_logic_vector; --!V08
+  function "or"   (l, r : std_logic_vector) return std_logic_vector; --!V08
+  function "nor"  (l, r : std_logic_vector) return std_logic_vector; --!V08
+  function "xor"  (l, r : std_logic_vector) return std_logic_vector; --!V08
+  function "xnor" (l, r : std_logic_vector) return std_logic_vector; --V93
+  function "not"  (l : std_logic_vector) return std_logic_vector;    --!V08
 
   function "and"  (l, r : std_ulogic_vector) return std_ulogic_vector;
   function "nand" (l, r : std_ulogic_vector) return std_ulogic_vector;
   function "or"   (l, r : std_ulogic_vector) return std_ulogic_vector;
   function "nor"  (l, r : std_ulogic_vector) return std_ulogic_vector;
   function "xor"  (l, r : std_ulogic_vector) return std_ulogic_vector;
-  function "xnor" (l, r : std_ulogic_vector) return std_ulogic_vector;
+  function "xnor" (l, r : std_ulogic_vector) return std_ulogic_vector; --!V87
   function "not"  (l : std_ulogic_vector) return std_ulogic_vector;
+                                                                  --V08
+  function "and"  (l : std_ulogic_vector; r : std_ulogic       )  --V08
+    return std_ulogic_vector;                                     --V08
+  function "and"  (l : std_ulogic;        r : std_ulogic_vector)  --V08
+    return std_ulogic_vector;                                     --V08
+  function "nand" (l : std_ulogic_vector; r : std_ulogic       )  --V08
+    return std_ulogic_vector;                                     --V08
+  function "nand" (l : std_ulogic;        r : std_ulogic_vector)  --V08
+    return std_ulogic_vector;                                     --V08
+  function "or"   (l : std_ulogic_vector; r : std_ulogic       )  --V08
+    return std_ulogic_vector;                                     --V08
+  function "or"   (l : std_ulogic;        r : std_ulogic_vector)  --V08
+    return std_ulogic_vector;                                     --V08
+  function "nor"  (l : std_ulogic_vector; r : std_ulogic       )  --V08
+    return std_ulogic_vector;                                     --V08
+  function "nor"  (l : std_ulogic;        r : std_ulogic_vector)  --V08
+    return std_ulogic_vector;                                     --V08
+  function "xor"  (l : std_ulogic_vector; r : std_ulogic       )  --V08
+    return std_ulogic_vector;                                     --V08
+  function "xor"  (l : std_ulogic;        r : std_ulogic_vector)  --V08
+    return std_ulogic_vector;                                     --V08
+  function "xnor" (l : std_ulogic_vector; r : std_ulogic       )  --V08
+    return std_ulogic_vector;                                     --V08
+  function "xnor" (l : std_ulogic;        r : std_ulogic_vector)  --V08
+    return std_ulogic_vector;                                     --V08
+                                                                  --V08
+  function "and"  (l : std_ulogic_vector) return std_ulogic;      --V08
+  function "nand" (l : std_ulogic_vector) return std_ulogic;      --V08
+  function "or"   (l : std_ulogic_vector) return std_ulogic;      --V08
+  function "nor"  (l : std_ulogic_vector) return std_ulogic;      --V08
+  function "xor"  (l : std_ulogic_vector) return std_ulogic;      --V08
+  function "xnor" (l : std_ulogic_vector) return std_ulogic;      --V08
+                                                                  --V08
+  function "sll"  (l : std_ulogic_vector; r : integer)            --V08
+    return std_ulogic_vector;                                     --V08
+  function "srl"  (l : std_ulogic_vector; r : integer)            --V08
+    return std_ulogic_vector;                                     --V08
+  function "rol"  (l : std_ulogic_vector; r : integer)            --V08
+    return std_ulogic_vector;                                     --V08
+  function "ror"  (l : std_ulogic_vector; r : integer)            --V08
+    return std_ulogic_vector;                                     --V08
 
   --  Conversion functions.
   --  The result range (for vectors) is S'Length - 1 downto 0.
   --  XMAP is return for values not in '0', '1', 'L', 'H'.
   function to_bit (s : std_ulogic; xmap : bit := '0') return bit;
-  function to_bitvector (s : std_logic_vector; xmap : bit := '0')
-    return bit_vector;
+  function to_bitvector (s : std_logic_vector; xmap : bit := '0')   --!V08
+    return bit_vector;                                              --!V08
   function to_bitvector (s : std_ulogic_vector; xmap : bit := '0')
     return bit_vector;
 
@@ -107,29 +147,65 @@ package std_logic_1164 is
   function to_stdulogicvector (b : bit_vector) return std_ulogic_vector;
   function to_stdulogicvector (s : std_logic_vector) return std_ulogic_vector;
 
+  alias to_bit_vector is                                              --V08
+    to_bitvector[std_ulogic_vector, bit return bit_vector];           --V08
+  alias to_bv is                                                      --V08
+    to_bitvector[std_ulogic_vector, bit return bit_vector];           --V08
+                                                                      --V08
+  alias to_std_logic_vector is                                        --V08
+    to_stdlogicvector[bit_vector return std_logic_vector];            --V08
+  alias to_slv is                                                     --V08
+    to_stdlogicvector[bit_vector return std_logic_vector];            --V08
+                                                                      --V08
+  alias to_std_logic_vector is                                        --V08
+    to_stdlogicvector[std_ulogic_vector return std_logic_vector];     --V08
+  alias to_slv is                                                     --V08
+    to_stdlogicvector[std_ulogic_vector return std_logic_vector];     --V08
+                                                                      --V08
+  alias to_std_ulogic_vector is                                       --V08
+    to_stdulogicvector[bit_vector return std_ulogic_vector];          --V08
+  alias to_sulv is                                                    --V08
+    to_stdulogicvector[bit_vector return std_ulogic_vector];          --V08
+                                                                      --V08
+  alias to_std_ulogic_vector is                                       --V08
+    to_stdulogicvector[std_logic_vector return std_ulogic_vector];    --V08
+  alias to_sulv is                                                    --V08
+    to_stdulogicvector[std_logic_vector return std_ulogic_vector];    --V08
+                                                                      --V08
   --  Normalization.
   --  The result range (for vectors) is 1 to S'Length.
-  function to_X01 (s : std_logic_vector) return std_logic_vector;
+  function to_01  (s : std_ulogic_vector; xmap : std_ulogic := '0')   --V08
+    return std_ulogic_vector;                                         --V08
+  function to_01  (s : std_ulogic;        xmap : std_ulogic := '0')   --V08
+    return std_ulogic;                                                --V08
+  function to_01  (s : bit_vector;        xmap : std_ulogic := '0')   --V08
+    return std_ulogic_vector;                                         --V08
+  function to_01  (s : bit;               xmap : std_ulogic := '0')   --V08
+    return std_ulogic;                                                --V08
+                                                                      --V08
+  function to_X01 (s : std_logic_vector) return std_logic_vector;     --!V08
   function to_X01 (s : std_ulogic_vector) return std_ulogic_vector;
   function to_X01 (s : std_ulogic) return X01;
-  function to_X01 (b : bit_vector) return std_logic_vector;
+  function to_X01 (b : bit_vector) return std_logic_vector;           --!V08
   function to_X01 (b : bit_vector) return std_ulogic_vector;
   function to_X01 (b : bit) return X01;
 
-  function to_X01Z (s : std_logic_vector) return std_logic_vector;
+  function to_X01Z (s : std_logic_vector) return std_logic_vector;    --!V08
   function to_X01Z (s : std_ulogic_vector) return std_ulogic_vector;
   function to_X01Z (s : std_ulogic) return X01Z;
-  function to_X01Z (b : bit_vector) return std_logic_vector;
+  function to_X01Z (b : bit_vector) return std_logic_vector;          --!V08
   function to_X01Z (b : bit_vector) return std_ulogic_vector;
   function to_X01Z (b : bit) return X01Z;
 
-  function to_UX01 (s : std_logic_vector) return std_logic_vector;
+  function to_UX01 (s : std_logic_vector) return std_logic_vector;    --!V08
   function to_UX01 (s : std_ulogic_vector) return std_ulogic_vector;
   function to_UX01 (s : std_ulogic) return UX01;
-  function to_UX01 (b : bit_vector) return std_logic_vector;
+  function to_UX01 (b : bit_vector) return std_logic_vector;          --!V08
   function to_UX01 (b : bit_vector) return std_ulogic_vector;
   function to_UX01 (b : bit) return UX01;
 
+  function "??" (l : std_ulogic) return boolean;                      --V08
+                                                                      --V08
   --  Edge detection.
   --  An edge is detected in case of event on s, and X01 normalized value
   --  rises from 0 to 1 or falls from 1 to 0.
@@ -138,6 +214,6 @@ package std_logic_1164 is
 
   --  Test for unknown.  Only 0, 1, L and H are known values.
   function is_X (s : std_ulogic_vector) return boolean;
-  function is_X (s : std_logic_vector) return boolean;
+  function is_X (s : std_logic_vector) return boolean;                --!V08
   function is_X (s : std_ulogic) return boolean;
 end std_logic_1164;
