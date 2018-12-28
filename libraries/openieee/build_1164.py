@@ -172,6 +172,52 @@ def disp_vec_unary(func, typ):
     return res;
   end "{0}";\n""".format(func, typ))
 
+def disp_scal_vec_binary(func, typ):
+    "Generate scalar-vector binary function body"
+    w("""
+  function "{0}" (l : std_{1}_vector; r : std_{1})
+    return std_{1}_vector
+  is
+    subtype res_type is std_{1}_vector (1 to l'length);
+    alias la : res_type is l;
+    variable res : res_type;
+  begin
+    for I in res_type'range loop
+      res (I) := {0}_table (la (I), r);
+    end loop;
+    return res;
+  end "{0}";\n""".format(func, typ))
+
+def disp_vec_scal_binary(func, typ):
+    "Generate vector-scalar binary function body"
+    w("""
+  function "{0}" (l : std_{1}; r : std_{1}_vector)
+    return std_{1}_vector
+  is
+    subtype res_type is std_{1}_vector (1 to r'length);
+    alias ra : res_type is r;
+    variable res : res_type;
+  begin
+    for I in res_type'range loop
+      res (I) := {0}_table (l, ra (I));
+    end loop;
+    return res;
+  end "{0}";\n""".format(func, typ))
+
+def disp_vec_reduction(func, typ):
+    "Generate reduction function body"
+    init = '1' if func in ['and', 'nand'] else '0'
+    w("""
+  function "{0}" (l : std_{1}_vector) return std_{1}
+  is
+    variable res : std_{1} := '{2}';
+  begin
+    for I in l'range loop
+      res := {0}_table (l(I), res);
+    end loop;
+    return res;
+  end "{0}";\n""".format(func, typ, init))
+
 def disp_all_log_funcs(version):
     "Generate all function bodies for logic operators"
     for f in binary_funcs:
@@ -182,6 +228,12 @@ def disp_all_log_funcs(version):
         for f in binary_funcs:
             disp_vec_binary(f, v)
         disp_vec_unary("not", v)
+        if version >= V08:
+            for f in binary_funcs:
+                disp_scal_vec_binary(f, v)
+                disp_vec_scal_binary(f, v)
+            for f in binary_funcs:
+                disp_vec_reduction(f, v)
 
 def disp_sv_to_bv_conv(typ):
     "Generate logic vector to bit vector function body"
@@ -378,3 +430,6 @@ gen_body('std_logic_1164-body.v87', V87)
 
 binary_funcs.append("xnor")
 gen_body('std_logic_1164-body.v93', V93)
+
+vec_types = ['ulogic']
+gen_body('std_logic_1164-body.v08', V08)
