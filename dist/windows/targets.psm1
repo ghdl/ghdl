@@ -704,7 +704,7 @@ function Invoke-CompileIEEELibraryFlavor
 
 	-not $Quiet -and (Write-Host "${Indentation}Executing build target 'CompileLibrary' ($VHDLVersionYear, $VHDLFlavor)..." -ForegroundColor DarkCyan) | Out-Null
 
-	$GHDLOptions = @("-C")
+	$GHDLOptions = @("-C", " -frelaxed-rules")
 	$VHDLVersion = switch ($VHDLVersionYear)
 	{	"1987" { "87" }
 		"1993" { "93" }

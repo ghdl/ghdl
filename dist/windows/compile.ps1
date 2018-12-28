@@ -503,7 +503,7 @@ if ($CompileLibraryVHDL08)
 	}
 
 	try
-	{	Invoke-CompileIEEELibraryFlavor $VHDLLibrarySourceDirectory $VHDLLibraryDestinationDirectory 1987 "synopsys" -SuppressWarnings:$SuppressWarnings -HaltOnError:$HaltOnError -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
+	{	Invoke-CompileIEEELibraryFlavor $VHDLLibrarySourceDirectory $VHDLLibraryDestinationDirectory 2008 "synopsys" -SuppressWarnings:$SuppressWarnings -HaltOnError:$HaltOnError -Quiet:$Quiet -Verbose:$EnableVerbose -Debug:$EnableDebug  }
 	catch
 	{	Write-Host "  [ERROR] $_"	-ForegroundColor Red
 		Exit-Script -1
