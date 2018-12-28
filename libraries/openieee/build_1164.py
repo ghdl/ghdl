@@ -344,8 +344,61 @@ def disp_conv_b_t(typ):
     return bit_to_x01 (b);
   end to_{1};\n""".format(typ, utyp))
 
+def disp_conv_01():
+    "Generate to_01 bodies"
+    w("""
+  function to_01 (s : std_{0}_vector; xmap : std_ulogic := '0')
+    return std_{0}_vector
+  is
+    subtype res_type is std_{0}_vector (s'length - 1 downto 0);
+    alias sa : res_type is s;
+    variable res : res_type;
+  begin
+    for i in res_type'range loop
+      case sa(i) is
+        when '0' | 'L' => res (i) := '0';
+        when '1' | 'H' => res (i) := '1';
+        when others    => return res_type'(others => xmap);
+      end case;
+    end loop;
+    return res;
+  end to_01;\n""".format("ulogic"))
+    w("")
+    w("""
+  function to_01 (s : std_{0}; xmap : std_ulogic := '0')
+    return std_{0} is
+  begin
+    case s is
+      when '0' | 'L' => return '0';
+      when '1' | 'H' => return '1';
+      when others    => return xmap;
+    end case;
+  end to_01;\n""".format("ulogic"))
+    w("")
+    w("""
+  function to_01 (s : bit_vector; xmap : std_ulogic := '0')
+    return std_{0}_vector
+  is
+    alias sa : bit_vector(s'length - 1 downto 0) is s;
+    variable res : std_{0}_vector (s'length - 1 downto 0);
+  begin
+    for i in sa'range loop
+      res (i) := bit_to_std (sa (i));
+    end loop;
+    return res;
+  end to_01;\n""".format("ulogic"))
+    w("")
+    w("""
+  function to_01 (s : bit; xmap : std_ulogic := '0')
+    return std_{0} is
+  begin
+    return bit_to_std(s);
+  end to_01;\n""".format("ulogic"))
+
 def disp_all_norm_funcs(version):
     "Generate all function bodies for conversion"
+    if version >= V08:
+        disp_conv_01()
     for typ in [ "x01", "x01z", "ux01" ]:
         for v in vec_types:
             disp_conv_vec_vec(typ, v)
