@@ -218,6 +218,59 @@ def disp_vec_reduction(func, typ):
     return res;
   end "{0}";\n""".format(func, typ, init))
 
+def gen_shift(is_left, plus, minus):
+    if is_left:
+        s = "res (1 to l'length {1} r) := la (r {0} 1 to res'right);"
+    else:
+        s = "res (1 {0} r to res'right) := la (1 to l'length {1} r);"
+    w("      " + s.format(plus, minus))
+
+def disp_shift_funcs(func, typ):
+    "Generate shift functions"
+    w("""
+  function "{0}" (l : std_{1}_vector; r : integer)
+    return std_{1}_vector
+  is
+    subtype res_type is std_{1}_vector (1 to l'length);
+    alias la : res_type is l;
+    variable res : res_type := (others => '0');
+  begin
+    if r >= 0 then""".format(func, typ))
+    gen_shift(func == "sll", '+', '-')
+    w("    else")
+    gen_shift(func != "sll", '-', '+')
+    w("""    end if;
+    return res;
+  end "{0}";\n""".format(func, typ))
+
+def gen_rot(is_left, plus, minus):
+    if is_left:
+        s =  "   res (1 to res'right {1} rm) := la (rm {0} 1 to la'right);\n"
+        s += "   res (res'right {1} rm + 1 to res'right) := la (1 to rm);"
+    else:
+        s =  "   res (1 {0} rm to res'right) := la (1 to la'right {1} r);]n"
+        s += "   res (1 to rm) := la (la'right {1} rm + 1 to la'right);"
+    w("      " + s.format(plus, minus))
+
+def disp_rot_funcs(func, typ):
+    "Generate rotation functions"
+    w("""
+  function "{0}" (l : std_{1}_vector; r : integer)
+    return std_{1}_vector
+  is
+    subtype res_type is std_{1}_vector (1 to l'length);
+    alias la : res_type is l;
+    variable res : res_type;
+    constant rm : integer := r mod l'length;
+  begin
+    if r >= 0 then""".format(func, typ))
+    gen_shift(func == "rol", '+', '-')
+    w("    else")
+    gen_shift(func != "rol", '-', '+')
+    w("""    end if;
+    return res;
+  end "{0}";\n""".format(func, typ))
+
 def disp_all_log_funcs(version):
     "Generate all function bodies for logic operators"
     for f in binary_funcs:
@@ -234,6 +287,10 @@ def disp_all_log_funcs(version):
                 disp_vec_scal_binary(f, v)
             for f in binary_funcs:
                 disp_vec_reduction(f, v)
+            disp_shift_funcs("sll", v)
+            disp_shift_funcs("srl", v)
+            disp_rot_funcs("rol", v)
+            disp_rot_funcs("ror", v)
 
 def disp_sv_to_bv_conv(typ):
     "Generate logic vector to bit vector function body"
@@ -291,6 +348,8 @@ def disp_all_conv_funcs(version):
         disp_sv_to_bv_conv(v)
     for v in vec_types:
         disp_bv_to_sv_conv(v)
+    if version >= V08:
+        disp_bv_to_sv_conv('logic')
     disp_sv_to_sv_conv('logic', 'ulogic')
     disp_sv_to_sv_conv('ulogic', 'logic')
 
@@ -395,6 +454,13 @@ def disp_conv_01():
     return bit_to_std(s);
   end to_01;\n""".format("ulogic"))
 
+def disp_cond():
+    w("""
+  function "??" (l : std_ulogic) return boolean is
+  begin
+    return l = '1' or l = 'H';
+  end "??";\n""")
+
 def disp_all_norm_funcs(version):
     "Generate all function bodies for conversion"
     if version >= V08:
@@ -406,6 +472,8 @@ def disp_all_norm_funcs(version):
         for v in vec_types:
             disp_conv_bv_vec(typ, v)
         disp_conv_b_t(typ)
+    if version >= V08:
+        disp_cond()
 
 def disp_all_isx_funcs(version):
     "Generate all function bodies for isx functions"
