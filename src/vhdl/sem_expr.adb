@@ -3396,10 +3396,14 @@ package body Sem_Expr is
 
             --  GHDL: must be checked for all associations, so do it outside
             --  the above 'if' statement.
+            --  GHDL: improve error message.
             case Get_Kind (El) is
                when Iir_Kind_Choice_By_None
                  | Iir_Kind_Choice_By_Range =>
                   null;
+               when Iir_Kind_Choice_By_Others =>
+                  Error_Msg_Sem
+                    (+El, "expression for 'others' must be an element");
                when others =>
                   Error_Msg_Sem
                     (+El, "positional association or "
