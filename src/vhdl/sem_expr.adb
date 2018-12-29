@@ -2291,6 +2291,8 @@ package body Sem_Expr is
             Error_Msg_Sem (+Sel, "array type must be locally static");
             return;
          end if;
+         --  Use the base type so that the subtype of the choices is computed.
+         Sel_Type := Get_Base_Type (Sel_Type);
       end if;
       Sel_El_Type := Get_Element_Subtype (Sel_Type);
       Sel_El_Length := Eval_Discrete_Type_Length (Sel_El_Type);
