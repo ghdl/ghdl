@@ -482,7 +482,8 @@ package body Parse is
             Scan;
             if Current_Token = Tok_Out then
                --  Nice message for Ada users...
-               Error_Msg_Parse ("typo error, in out must be 'inout' in vhdl");
+               Error_Msg_Parse
+                 ("typo error, 'in out' must be 'inout' in vhdl");
                Scan;
                return Iir_Inout_Mode;
             end if;
