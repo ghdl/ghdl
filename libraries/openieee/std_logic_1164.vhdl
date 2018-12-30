@@ -1,5 +1,5 @@
---  This is an implementation of ieee.std_logic_1164 based only on the
---  specifications.  This file is part of GHDL.
+--  This is an implementation of -*- vhdl -*- ieee.std_logic_1164 based only
+--  on the specifications.  This file is part of GHDL.
 --  Copyright (C) 2015 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under
@@ -16,6 +16,8 @@
 --  along with GCC; see the file COPYING2.  If not see
 --  <http://www.gnu.org/licenses/>.
 
+use std.textio.all;   --V08
+                      --V08
 package std_logic_1164 is
 
   --  Unresolved logic state.
@@ -216,4 +218,57 @@ package std_logic_1164 is
   function is_X (s : std_ulogic_vector) return boolean;
   function is_X (s : std_logic_vector) return boolean;                --!V08
   function is_X (s : std_ulogic) return boolean;
+                                                                         --V08
+  --  String conversion                                                  --V08
+                                                                         --V08
+  alias to_bstring is to_string [std_ulogic_vector return string];       --V08
+  alias to_binary_string is to_string [std_ulogic_vector return string]; --V08
+                                                                         --V08
+  function to_ostring (value : std_ulogic_vector) return string;         --V08
+  alias to_octal_string is to_ostring [std_ulogic_vector return string]; --V08
+                                                                         --V08
+  function to_hstring (value : std_ulogic_vector) return string;         --V08
+  alias to_hex_string is to_hstring [std_ulogic_vector return string];   --V08
+                                                                         --V08
+  --  Input/output                                                       --V08
+                                                                         --V08
+  procedure write (l : inout line; value : std_ulogic;                   --V08
+                   justified : side := right; field : width := 0);       --V08
+                                                                         --V08
+  procedure write (l : inout line; value : std_ulogic_vector;            --V08
+                   justified : side := right; field : width := 0);       --V08
+  alias bwrite is write [line, std_ulogic_vector, side, width];          --V08
+  alias binary_write is write [line, std_ulogic_vector, side, width];    --V08
+                                                                         --V08
+  procedure owrite (l : inout line; value : std_ulogic_vector;           --V08
+                    justified : side := right; field : width := 0);      --V08
+  alias octal_write is owrite [line, std_ulogic_vector, side, width];    --V08
+                                                                         --V08
+  procedure hwrite (l : inout line; value : std_ulogic_vector;           --V08
+                    justified : side := right; field : width := 0);      --V08
+  alias hex_write is hwrite [line, std_ulogic_vector, side, width];      --V08
+                                                                         --V08
+  procedure read (l : inout line;                                        --V08
+                  value : out std_ulogic; good : out boolean);           --V08
+  procedure read (l : inout line; value : out std_ulogic);               --V08
+                                                                         --V08
+  procedure read (l : inout line;                                        --V08
+                  value : out std_ulogic_vector; good : out boolean);    --V08
+  procedure read (l : inout line; value : out std_ulogic_vector);        --V08
+  alias bread is read [line, std_ulogic_vector, boolean];                --V08
+  alias bread is read [line, std_ulogic_vector];                         --V08
+  alias binary_read is read [line, std_ulogic_vector, boolean];          --V08
+  alias binary_read is read [line, std_ulogic_vector];                   --V08
+                                                                         --V08
+  procedure hread (l : inout line;                                       --V08
+                   value : out std_ulogic_vector; good : out boolean);   --V08
+  procedure hread (l : inout line; value : out std_ulogic_vector);       --V08
+  alias hex_read is read [line, std_ulogic_vector, boolean];             --V08
+  alias hex_read is read [line, std_ulogic_vector];                      --V08
+                                                                         --V08
+  procedure oread (l : inout line;                                       --V08
+                   value : out std_ulogic_vector; good : out boolean);   --V08
+  procedure oread (l : inout line; value : out std_ulogic_vector);       --V08
+  alias octal_read is read [line, std_ulogic_vector, boolean];           --V08
+  alias octal_read is read [line, std_ulogic_vector];                    --V08
 end std_logic_1164;

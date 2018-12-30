@@ -1,5 +1,5 @@
---  This is an implementation of ieee.std_logic_1164 based only on the
---  specifications.  This file is part of GHDL.
+--  This is an implementation of -*- vhdl -*- ieee.std_logic_1164 based only
+--  on the specifications.  This file is part of GHDL.
 --  Copyright (C) 2015 Tristan Gingold
 --
 --  GHDL is free software; you can redistribute it and/or modify it under

@@ -220,9 +220,9 @@ def disp_vec_reduction(func, typ):
 
 def gen_shift(is_left, plus, minus):
     if is_left:
-        s = "res (1 to l'length {1} r) := la (r {0} 1 to res'right);"
+        s = "res (1 to l'length {1} r) := la (r {0} 1 to res'right);\n"
     else:
-        s = "res (1 {0} r to res'right) := la (1 to l'length {1} r);"
+        s = "res (1 {0} r to res'right) := la (1 to l'length {1} r);\n"
     w("      " + s.format(plus, minus))
 
 def disp_shift_funcs(func, typ):
@@ -235,9 +235,9 @@ def disp_shift_funcs(func, typ):
     alias la : res_type is l;
     variable res : res_type := (others => '0');
   begin
-    if r >= 0 then""".format(func, typ))
+    if r >= 0 then\n""".format(func, typ))
     gen_shift(func == "sll", '+', '-')
-    w("    else")
+    w("    else\n")
     gen_shift(func != "sll", '-', '+')
     w("""    end if;
     return res;
@@ -245,12 +245,15 @@ def disp_shift_funcs(func, typ):
 
 def gen_rot(is_left, plus, minus):
     if is_left:
-        s =  "   res (1 to res'right {1} rm) := la (rm {0} 1 to la'right);\n"
-        s += "   res (res'right {1} rm + 1 to res'right) := la (1 to rm);"
+        t = ["res (1 to res'right {1} rm) := la (rm {0} 1 to la'right);",
+             "res (res'right {1} rm + 1 to res'right) := la (1 to rm);"]
     else:
-        s =  "   res (1 {0} rm to res'right) := la (1 to la'right {1} r);]n"
-        s += "   res (1 to rm) := la (la'right {1} rm + 1 to la'right);"
-    w("      " + s.format(plus, minus))
+        t = ["res (1 {0} rm to res'right) := la (1 to la'right {1} r);",
+             "res (1 to rm) := la (la'right {1} rm + 1 to la'right);"]
+    for s in t:
+        w("      ")
+        w(s.format(plus, minus))
+        w('\n')
 
 def disp_rot_funcs(func, typ):
     "Generate rotation functions"
@@ -263,10 +266,10 @@ def disp_rot_funcs(func, typ):
     variable res : res_type;
     constant rm : integer := r mod l'length;
   begin
-    if r >= 0 then""".format(func, typ))
-    gen_shift(func == "rol", '+', '-')
-    w("    else")
-    gen_shift(func != "rol", '-', '+')
+    if r >= 0 then\n""".format(func, typ))
+    gen_rot(func == "rol", '+', '-')
+    w("    else\n")
+    gen_rot(func != "rol", '-', '+')
     w("""    end if;
     return res;
   end "{0}";\n""".format(func, typ))
@@ -510,11 +513,19 @@ def gen_body(filename, version):
     global out
     out = open(filename, 'w')
     w('--  This -*- vhdl -*- file was generated from ' + proto_file + '\n')
+    keep = True
     for line in open(proto_file):
         if line in pats:
             pats[line](version)
             continue
-        w(line)
+        if line == '  @BEG V08\n':
+            keep = (version == V08)
+            continue
+        if line == '  @END V08\n':
+            keep = True
+            continue
+        if keep:
+            w(line)
     out.close()
 
 VDICT={'--V87':  lambda x: x == V87,
