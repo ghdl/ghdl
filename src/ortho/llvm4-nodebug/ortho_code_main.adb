@@ -33,6 +33,10 @@ with Interfaces;
 with Interfaces.C; use Interfaces.C;
 
 procedure Ortho_Code_Main is
+   function GetDefaultNormalizedTargetTriple return Cstring;
+   pragma Import (C, GetDefaultNormalizedTargetTriple,
+                  "LLVMGetDefaultNormalizedTargetTriple");
+
    --  Name of the output filename (given by option '-o').
    Output : String_Acc := null;
 
@@ -192,7 +196,7 @@ begin
    Module := ModuleCreateWithName (Module_Name'Address);
 
    --  Extract target triple
-   Triple := GetDefaultTargetTriple;
+   Triple := GetDefaultNormalizedTargetTriple;
    SetTarget (Module, Triple);
 
    --  Get Target

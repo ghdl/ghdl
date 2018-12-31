@@ -18,6 +18,9 @@
 #include "llvm-c/Target.h"
 #include "llvm/IR/Type.h"
 #include "llvm/IR/LLVMContext.h"
+#include "llvm/Config/llvm-config.h"
+#include "llvm-c/TargetMachine.h"
+#include "llvm-c/Core.h"
 
 using namespace llvm;
 
@@ -33,6 +36,24 @@ void
 LLVMInitializeNativeAsmPrinter_noinline (void)
 {
   LLVMInitializeNativeAsmPrinter();
+}
+
+char *
+LLVMGetDefaultNormalizedTargetTriple(void)
+{
+  char *triple;
+  triple = LLVMGetDefaultTargetTriple();
+
+#if LLVM_VERSION_MAJOR >= 7
+  {
+    char *res;
+    res = LLVMNormalizeTargetTriple(triple);
+    LLVMDisposeMessage(triple);
+    return res;
+  }
+#else
+  return triple;
+#endif
 }
 
 }
