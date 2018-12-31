@@ -57,9 +57,11 @@ COMPILE_UVVM_VIP=0
 COMPILE_UVVM_VIP_AVALON_MM=0
 COMPILE_UVVM_VIP_AXILITE=0
 COMPILE_UVVM_VIP_AXISTREAM=0
+COMPILE_UVVM_VIP_CLOCK_GENERATOR=0
 COMPILE_UVVM_VIP_GPIO=0
 COMPILE_UVVM_VIP_I2C=0
 COMPILE_UVVM_VIP_SBI=0
+COMPILE_UVVM_VIP_SCOREBOARD=0
 COMPILE_UVVM_VIP_SPI=0
 COMPILE_UVVM_VIP_UART=0
 VERBOSE=0
@@ -108,6 +110,10 @@ while [[ $# > 0 ]]; do
 			COMMAND=3
 			COMPILE_UVVM_VIP_AXISTREAM=1
 			;;
+		--uvvm-vip-clock)
+			COMMAND=3
+			COMPILE_UVVM_VIP_CLOCK_GENERATOR=1
+			;;
 		--uvvm-vip-gpio)
 			COMMAND=3
 			COMPILE_UVVM_VIP_GPIO=1
@@ -123,6 +129,10 @@ while [[ $# > 0 ]]; do
 		--uvvm-vip-spi)
 			COMMAND=3
 			COMPILE_UVVM_VIP_SPI=1
+			;;
+		--uvvm-vip-scoreboard)
+			COMMAND=3
+			COMPILE_UVVM_VIP_SCOREBOARD=1
 			;;
 		--uvvm-vip-uart)
 			COMMAND=3
@@ -200,9 +210,11 @@ if [ $COMMAND -le 1 ]; then
 	echo "     --uvvm-vip-avalon_mm  Altera/Intel Avalon Memory Mapped"
 	echo "     --uvvm-vip-axi_lite   ARM AMBA AXI4 Lite"
 	echo "     --uvvm-vip-axi_stream ARM AMBA AXI4 Stream"
+	echo "     --uvvm-vip-clock      Clock generator"
 	echo "     --uvvm-vip-gpio       General Purpose Input/Output (GPIO)"
 	echo "     --uvvm-vip-i2c        Inter-Integrated Circuit (I²C)"
 	echo "     --uvvm-vip-sbi        Simple Bus Interface"
+	echo "     --uvvm-vip-scoreboard Scoreboard"
 	echo "     --uvvm-vip-spi        Serial Peripheral Interface"
 	echo "     --uvvm-vip-uart       Universal Asynchronous Receiver Transmitter (UART)"
 	echo ""
@@ -235,9 +247,11 @@ if [[ $COMPILE_UVVM_VIP -eq 1 ]]; then
 	COMPILE_UVVM_VIP_AVALON_MM=1
 	COMPILE_UVVM_VIP_AXILITE=1
 	COMPILE_UVVM_VIP_AXISTREAM=1
+	COMPILE_UVVM_VIP_CLOCK_GENERATOR=1
 	COMPILE_UVVM_VIP_GPIO=1
 	COMPILE_UVVM_VIP_I2C=1
 	COMPILE_UVVM_VIP_SBI=1
+	COMPILE_UVVM_VIP_SCOREBOARD=1
 	COMPILE_UVVM_VIP_SPI=1
 	COMPILE_UVVM_VIP_UART=1
 fi
@@ -393,8 +407,6 @@ if [[ $COMPILE_UVVM_UTILITIES -eq 1 ]]; then
 	Libraries="UVVM_UTIL $Libraries"
 fi	
 
-echo ${VIPNames[*]}
-
 for VIPName in ${VIPNames[*]}; do
 	VarName="COMPILE_UVVM_${VIPName}"
 	if [[ ${!VarName} -eq 1 ]]; then
@@ -402,15 +414,14 @@ for VIPName in ${VIPNames[*]}; do
 	fi
 done
 
-echo "$Libraries"
-
-Compile "$SourceDirectory" "$Libraries"
-
+if [[ $Libraries != "" ]]; then
+	Compile "$SourceDirectory" "$Libraries"
 	
-echo "--------------------------------------------------------------------------------"
-echo -n "Compiling UVVM packages "
-if [[ $ERRORCOUNT -gt 0 ]]; then
-	echo -e $COLORED_FAILED
-else
-	echo -e $COLORED_SUCCESSFUL
+	echo "--------------------------------------------------------------------------------"
+	echo -n "Compiling UVVM packages "
+	if [[ $ERRORCOUNT -gt 0 ]]; then
+		echo -e $COLORED_FAILED
+	else
+		echo -e $COLORED_SUCCESSFUL
+	fi
 fi
