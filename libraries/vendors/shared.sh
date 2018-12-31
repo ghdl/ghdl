@@ -186,7 +186,7 @@ GHDLCompilePackages() {
 
 test $VERBOSE -eq 1 && echo -e "  Declaring Bash functions for GHDL..."
 
-GHDL="ghdl"
+GHDL=${GHDL:-"ghdl"}
 
 Analyze_Filter=GHDL/filter.analyze.sh
 Analyze_Parameters=(
@@ -195,42 +195,42 @@ Analyze_Parameters=(
 	--mb-comments
 )
 
-test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}function CreateVHDLLibrary( <LibraryName> <DirectoryName> )${ANSI_NOCOLOR}"
+declare -A GHDLLibraryMapping
+
+test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}function CreateVHDLLibrary( <LibraryName> <DirectoryName> <VHDLVersion> )${ANSI_NOCOLOR}"
 # CreateVHDLLibrary
 # -> $LibraryName
 # -> $DirectoryName
+# -> $VHDLVersion
 CreateVHDLLibrary() {
 	local LibraryName=$1
 	local DirectoryName=$2
-
-	if [[ $DEBUG -eq 1 ]]; then
-		local Filter_Parameters=(
-			-d
-		)
-		local Filter_Indent="      "
-	elif [[ $VERBOSE -eq 1 ]]; then
-		local Filter_Parameters=(
-			-v
-		)
-		local Filter_Indent="    "
-	else
-		local Filter_Parameters=()
-		local Filter_Indent="  "
-	fi
+	local VHDLVersion=${3:-"v08"}
 
 	echo -e "${ANSI_YELLOW}Creating VHDL Library '$LibraryName'...${ANSI_NOCOLOR}"
+	
+	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}mkdir -p \"$DirectoryName/$VHDLVersion\"${ANSI_NOCOLOR}"
+	mkdir -p "$DirectoryName/$VHDLVersion"
+	
+	LibraryDir="$(pwd)/$DirectoryName/$VHDLVersion"
+	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Mapped library $LibraryName to '$LibraryDir'.${ANSI_NOCOLOR}"
+	GHDLLibraryMapping[$LibraryName]=$LibraryDir
 }
 
-test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}function AnalyzeVHDL( <LibraryName> <File> )${ANSI_NOCOLOR}"
+test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}function AnalyzeVHDL( <LibraryName> <SourceDirectory> <LibraryPath> <File> )${ANSI_NOCOLOR}"
 # AnalyzeVHDL
 # -> $LibraryName
+# -> $SourceDirectory
+# -> $LibraryPath
 # -> $File
 AnalyzeVHDL() {
 	local LibraryName=$1
-	local RootDir=$2
+	local SourceDirectory=$2
 	local LibraryPath=$3
 	local File=$4
 
+	local DestinationDirectory=${GHDLLibraryMapping[$LibraryName]}
+	
 	if [[ $DEBUG -eq 1 ]]; then
 		local Parameters=(
 			-v
@@ -251,20 +251,18 @@ AnalyzeVHDL() {
 		local Filter_Indent="  "
 	fi
 
-	echo "spam"
-	
 	if [[ $FILTERING -eq 0 ]]; then
-		test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}$GHDL -a ${Analyze_Parameters[*]} ${Parameters[*]} --work=$LibraryName \"$RootDir/$LibraryPath/$File\"${ANSI_NOCOLOR}"
-		$GHDL -a ${Analyze_Parameters[@]} ${Parameters[@]} --work=$LibraryName "$RootDir/$LibraryPath/$File"
+		test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}$GHDL -a ${Analyze_Parameters[*]} ${Parameters[*]} --work=$LibraryName \"$SourceDirectory/$LibraryPath/$File\"${ANSI_NOCOLOR}"
+		$GHDL -a ${Analyze_Parameters[@]} ${Parameters[@]} --work=$LibraryName --workdir=$DestinationDirectory "$SourceDirectory/$LibraryPath/$File"
 		ExitCode=$?
 		if [ $ExitCode -ne 0 ]; then
 			echo 1>&2 -e "${COLORED_ERROR} While analyzing '$File'. ExitCode: $ExitCode${ANSI_NOCOLOR}"
 			exit 1;
 		fi
 	else
-		test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}$GHDL -a ${Analyze_Parameters[*]} ${Parameters[*]} --work=$LibraryName \"$RootDir/$LibraryPath/$File\" | \\\\${ANSI_NOCOLOR}"
+		test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}$GHDL -a ${Analyze_Parameters[*]} ${Parameters[*]} --work=$LibraryName \"$SourceDirectory/$LibraryPath/$File\" | \\\\${ANSI_NOCOLOR}"
 		test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}$GHDLScriptDir/$Analyze_Filter ${Filter_Parameters[*]} -i \"$Filter_Indent\"${ANSI_NOCOLOR}"
-		$GHDL -a ${Analyze_Parameters[@]} ${Parameters[@]} --work=$LibraryName "$RootDir/$LibraryPath/$File" 2>&1 | $GHDLScriptDir/$Analyze_Filter ${Filter_Parameters[@]} -i "$Filter_Indent"
+		$GHDL -a ${Analyze_Parameters[@]} ${Parameters[@]} --work=$LibraryName "$SourceDirectory/$LibraryPath/$File" 2>&1 | $GHDLScriptDir/$Analyze_Filter ${Filter_Parameters[@]} -i "$Filter_Indent"
 		local PiplineStatus=("${PIPESTATUS[@]}")
 		if [[ ${PiplineStatus[0]}  -ne 0 ]]; then
 			echo 1>&2 -e "${COLORED_ERROR} While analyzing '$File'. ExitCode: ${PiplineStatus[0]}${ANSI_NOCOLOR}"
@@ -281,14 +279,16 @@ AnalyzeVHDL() {
 }
 
 
-test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}function AnalyzeLibrary( <Library> )${ANSI_NOCOLOR}"
+test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}function AnalyzeLibrary( <LibraryName> <SourceDirectory> <LibraryPath> <Files[*]> )${ANSI_NOCOLOR}"
 # AnalyzeLibrary
 # -> LibraryName
+# -> SourceDirectory
 # -> LibraryPath
 # -> Files[*]
 AnalyzeLibrary() {
-	local LibraryName=$1; shift
-	local LibraryPath=$1; shift
+	local LibraryName=$1;     shift
+	local SourceDirectory=$1; shift
+	local LibraryPath=$1;     shift
 	local Files=$@
 
 	echo -e "${ANSI_YELLOW}Analyzing files into library '$LibraryName'...${ANSI_NOCOLOR}"
@@ -296,24 +296,26 @@ AnalyzeLibrary() {
 	for File in $Files; do
 		test $VERBOSE -eq 1 && echo -e "  Analyzing '$File'"
 	
-		AnalyzeVHDL $LibraryName "$RootDir" "$LibraryPath" "$File"
+		AnalyzeVHDL $LibraryName "$SourceDirectory" "$LibraryPath" "$File"
 	done
 }
 
-test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}function Compile( <Libraries> )${ANSI_NOCOLOR}"
+test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}function Compile( <SourceDirectory> <Libraries> )${ANSI_NOCOLOR}"
 # Compile
+# -> SourceDirectory
 # -> VHDLLibraries
 Compile() {
-	local VHDLLibraries=$1
+	local SourceDirectory=$1
+	local VHDLLibraries=$2
 
 	for VHDLLibrary in $VHDLLibraries; do
-		local LibraryName="${VHDLLibrary}_LibraryName"; LibraryName=${!LibraryName}
-		local LibraryPath="${VHDLLibrary}_LibraryPath"; LibraryPath=${!LibraryPath}
-		local Files="${VHDLLibrary}_Files[*]";          Files=${!Files}
+		local LibraryName="${VHDLLibrary}_LibraryName"; local LibraryName=${!LibraryName}
+		local LibraryPath="${VHDLLibrary}_LibraryPath"; local LibraryPath=${!LibraryPath}
+		local Files="${VHDLLibrary}_Files[*]";          local Files=${!Files}
 
 		echo -e "${ANSI_LIGHT_CYAN}Analyzing library '$LibraryName'...${ANSI_NOCOLOR}"
 
 		CreateVHDLLibrary $LibraryName $LibraryName
-		AnalyzeLibrary $LibraryName "$LibraryPath" "$Files"
+		AnalyzeLibrary $LibraryName "$SourceDirectory" "$LibraryPath" "$Files"
 	done
 }

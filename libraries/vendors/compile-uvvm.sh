@@ -302,7 +302,7 @@ if [[ $COMPILE_UVVM_UTILITIES -eq 1 ]]; then
 				UVVM_UTIL_LibraryName=${File:10:-1}
 			fi
 		else
-			UVVM_UTIL_Files+=("${File:0:-1}")
+			UVVM_UTIL_Files+=("${File:3:-1}")
 		fi
 	done < <(cat "$SourceDirectory/$UVVM_UTIL_LibraryPath/script/compile_order.txt")
 	
@@ -325,10 +325,10 @@ if [[ $COMPILE_UVVM_VVC_FRAMEWORK -eq 1 ]]; then
 	while IFS= read -r File; do
 		if [[ ${File:0:2} == "# " ]]; then
 			if [[ ${File:2:7} == "library" ]]; then
-				UVVM_VVC_FRAMEWORK_LibraryName=${File:10}
+				UVVM_VVC_FRAMEWORK_LibraryName=${File:10:-1}
 			fi
 		else
-			UVVM_VVC_FRAMEWORK_Files+=("$File")
+			UVVM_VVC_FRAMEWORK_Files+=("${File:3:-1}")
 		fi
 	done < <(cat "$SourceDirectory/$UVVM_VVC_FRAMEWORK_LibraryPath/script/compile_order.txt")
 	
@@ -343,20 +343,27 @@ fi
 
 # Verification IPs
 # ==============================================================================
+VIPNames=()
+
 while IFS= read -r VIPDirectory; do
-	VIPName=$(basename "$VIPDirectory")
-	LibraryPath="$VIPName"
+	LibraryPath=$(basename "$VIPDirectory")
+	x="${LibraryPath%%_*}"
+	pos=${#x}+1
+	l=${LibraryPath:$pos}
+	VIPName=${l^^}
 	
-	test $VERBOSE -eq 1 && echo -e "  ${ANSI_GRAY}Found VIP in '$LibraryPath'.${ANSI_NOCOLOR}"
+	test $VERBOSE -eq 1 && echo -e "  ${ANSI_GRAY}Found VIP '$VIPName' in '$LibraryPath'.${ANSI_NOCOLOR}"
 	test $DEBUG -eq 1   && echo -e "    ${ANSI_DARK_GRAY}Reading compile order from '$SourceDirectory/$LibraryPath/script/compile_order.txt'${ANSI_NOCOLOR}"
 
+	Files=()
+	
 	while IFS= read -r File; do
 		if [[ ${File:0:2} == "# " ]]; then
 			if [[ ${File:2:7} == "library" ]]; then
-				LibraryName=${File:10}
+				LibraryName=${File:10:-1}
 			fi
 		else
-			Files+=("$File")
+			Files+=("${File:3:-1}")
 		fi
 	done < <(cat "$SourceDirectory/$LibraryPath/script/compile_order.txt")
 	
@@ -371,7 +378,11 @@ while IFS= read -r VIPDirectory; do
 	declare "${VIPName}_VHDLVersion"="v08"
 	declare "${VIPName}_LibraryName"=$LibraryName
 	declare "${VIPName}_LibraryPath"=$LibraryPath
-	declare -a "${VIPName}_Files"=Files
+	
+	declare -n FilesRef="${VIPName}_Files"
+	FilesRef=( "${Files[@]}" )
+	
+	VIPNames+=("$VIPName")
 done < <(find $SourceDirectory/*vip* -type d -prune)
 
 
@@ -382,7 +393,18 @@ if [[ $COMPILE_UVVM_UTILITIES -eq 1 ]]; then
 	Libraries="UVVM_UTIL $Libraries"
 fi	
 
-Compile $Libraries
+echo ${VIPNames[*]}
+
+for VIPName in ${VIPNames[*]}; do
+	VarName="COMPILE_UVVM_${VIPName}"
+	if [[ ${!VarName} -eq 1 ]]; then
+		Libraries="$Libraries $VIPName"
+	fi
+done
+
+echo "$Libraries"
+
+Compile "$SourceDirectory" "$Libraries"
 
 	
 echo "--------------------------------------------------------------------------------"

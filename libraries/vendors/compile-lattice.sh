@@ -17,6 +17,7 @@
 #		- compiles all Lattice Diamond simulation libraries and packages
 #
 # ==============================================================================
+#	Copyright (C) 2017-2019 Patrick Lehmann - Boetzingen, Germany
 #	Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
 #	Copyright (C) 2015-2016 Markus Koch
 #	
