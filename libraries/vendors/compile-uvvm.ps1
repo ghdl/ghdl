@@ -14,7 +14,7 @@
 # - compiles all UVVM packages 
 #
 # ==============================================================================
-# Copyright (C) 2017-2018 Patrick Lehmann - Boetzingen, Germany
+# Copyright (C) 2017-2019 Patrick Lehmann - Boetzingen, Germany
 # Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
 # 
 # GHDL is free software; you can redistribute it and/or modify it under
@@ -225,10 +225,10 @@ foreach ($VIPDirectory in (Get-ChildItem -Path $SourceDirectory -Directory "*VIP
 		}
 	}
 	
-	$EnableDebug -and (Write-Host "    VHDL Library name: $VIPName"    -ForegroundColor DarkGray                                                    ) | Out-Null
-	
 	if ($EnableDebug)
-	{	foreach ($File in $VIPFiles)
+	{	Write-Host "    VHDL Library name: $VIPName"    -ForegroundColor DarkGray
+
+		foreach ($File in $VIPFiles)
 	  {	Write-Host "      $File" -ForegroundColor DarkGray }
 	}
 	$VIP_Files[$VIPName] = @{

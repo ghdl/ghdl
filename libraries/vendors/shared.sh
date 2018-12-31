@@ -12,6 +12,7 @@
 #		TODO
 #
 # ==============================================================================
+#	Copyright (C) 2017-2019 Patrick Lehmann - Boetzingen, Germany
 #	Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
@@ -30,13 +31,6 @@
 #	02111-1307, USA.
 # ==============================================================================
 
-# red texts
-COLORED_ERROR="$ANSI_RED[ERROR]$ANSI_NOCOLOR"
-COLORED_FAILED="$ANSI_RED[FAILED]$ANSI_NOCOLOR"
-
-# green texts
-COLORED_DONE="$ANSI_GREEN[DONE]$ANSI_NOCOLOR"
-COLORED_SUCCESSFUL="$ANSI_GREEN[SUCCESSFUL]$ANSI_NOCOLOR"
 
 # set bash options
 set -o pipefail
@@ -69,10 +63,10 @@ SetupDirectories() {
 	if [ -z $SourceDirectory ] || [ -z $DestinationDirectory ]; then
 		echo 1>&2 -e "${COLORED_ERROR} $Name is not configured in '$ScriptDir/config.sh'.${ANSI_NOCOLOR}"
 		echo 1>&2 -e "  Use adv. options '--src' and '--out' or configure 'config.sh'."
-		exit -1
+		exit 1
 	elif [ ! -d $SourceDirectory ]; then
 		echo 1>&2 -e "${COLORED_ERROR} Path '$SourceDirectory' does not exist.${ANSI_NOCOLOR}"
-		exit -1
+		exit 1
 	fi
 
 	# Resolve paths to an absolute paths
@@ -87,12 +81,12 @@ SetupDirectories() {
 		GHDLBinary=${GHDLBinDir%/}/ghdl		# remove trailing slashes
 		if [[ ! -x "$GHDLBinary" ]]; then
 			echo 1>&2 -e "${COLORED_ERROR} GHDL not found or is not executable.${ANSI_NOCOLOR}"
-			exit -1
+			exit 1
 		fi
 	elif [ ! -z "$GHDL" ]; then
 		if [ ! \( -f "$GHDL" -a -x "$GHDL" \) ]; then
 			echo 1>&2 -e "${COLORED_ERROR} Found GHDL environment variable, but '$GHDL' is not executable.${ANSI_NOCOLOR}"
-			exit -1
+			exit 1
 		fi
 		GHDLBinary=$GHDL
 	else	# fall back to GHDL found via PATH
@@ -100,7 +94,7 @@ SetupDirectories() {
 		if [ $? -ne 0 ]; then
 			echo 1>&2 -e "${COLORED_ERROR} GHDL not found in PATH.${ANSI_NOCOLOR}"
 			echo 1>&2 -e "  Use adv. options '--ghdl' to set the GHDL binary directory."
-			exit -1
+			exit 1
 		fi
 	fi
 }
@@ -121,7 +115,7 @@ CreateDestinationDirectory() {
 		echo -e "${ANSI_YELLOW}Vendor directory '$DestinationDirectory' already exists.${ANSI_NOCOLOR}"
 	elif [ -f "$DestinationDirectory" ]; then
 		echo 1>&2 -e "${COLORED_ERROR} Vendor directory '$DestinationDirectory' already exists as a file.${ANSI_NOCOLOR}"
-		exit -1
+		exit 1
 	else
 		echo -e "${ANSI_YELLOW}Creating vendor directory: '$DestinationDirectory'.${ANSI_NOCOLOR}"
 		mkdir -p "$DestinationDirectory"
