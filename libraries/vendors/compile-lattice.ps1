@@ -15,7 +15,7 @@
 #   - compiles all Lattice Diamond simulation libraries and packages
 #
 # ==============================================================================
-# Copyright (C) 2017-2018 Patrick Lehmann - Boetzingen, Germany
+# Copyright (C) 2017-2019 Patrick Lehmann - Boetzingen, Germany
 # Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
 #  
 # GHDL is free software; you can redistribute it and/or modify it under

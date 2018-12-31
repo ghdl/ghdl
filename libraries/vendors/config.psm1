@@ -13,8 +13,8 @@
 #	environment.
 #
 # ==============================================================================
+#	Copyright (C) 2017-2019 Patrick Lehmann - Boetzingen, Germany
 #	Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
-#	Copyright (C) 2017-2018 Patrick Lehmann - Freiburg, Germany
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
@@ -48,22 +48,22 @@ $Settings = @{
 		"DestinationDirectory" =  "altera"
 	};
 	"IntelQuartus" =		@{
-		"InstallationDirectory" = "";								# "C:\IntelFPGA\17.1\quartus";
+		"InstallationDirectory" = "";								# "C:\IntelFPGA\18.1\quartus";
 		"SourceDirectory" =       "eda\sim_lib";
 		"DestinationDirectory" =  "intel"
 	};
 	"LatticeDiamond" =	@{
-		"InstallationDirectory" = "";								# "C:\Lattice\Diamond\3.8_x64";
+		"InstallationDirectory" = "";								# "C:\Lattice\Diamond\3.10_x64";
 		"SourceDirectory" =       "cae_library\simulation\vhdl";
 		"DestinationDirectory" =  "lattice"
 	};
 	"OSVVM" =						@{
-		"InstallationDirectory" = "";								# "C:\git\GitHub\osvvm";
+		"InstallationDirectory" = "";								# "C:\git\GitHub\OSVVM";
 		"SourceDirectory" =       ".";
 		"DestinationDirectory" =  "."
 	};
 	"UVVM" =						@{
-		"InstallationDirectory" = "";								# "C:\git\GitHub\uvvm_alls";
+		"InstallationDirectory" = "";								# "C:\git\GitHub\UVVM";
 		"SourceDirectory" =       ".";
 		"DestinationDirectory" =  "."
 	};
@@ -73,7 +73,7 @@ $Settings = @{
 		"DestinationDirectory" =  "xilinx-ise"
 	};
 	"XilinxVivado" =		@{
-		"InstallationDirectory" = "";								# "C:\Xilinx\Vivado\2017.4";
+		"InstallationDirectory" = "";								# "C:\Xilinx\Vivado\2018.3";
 		"SourceDirectory" =       "data\vhdl\src";
 		"DestinationDirectory" =  "xilinx-vivado"
 	}

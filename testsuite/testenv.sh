@@ -1,13 +1,13 @@
 # Testsuite environment
 #
-# This file defines the shell functions to analyse a file, elaborate or run
+# This file defines the shell functions to analyze a file, elaborate or run
 # a design. There are version for expected success and expected failure.
 #
 # Every test should source and use this file.
 
 # Note: the executable must be set in the GHDL environment variable
 
-# User defined variables (can be set to run the testsuite in some
+# User defined variables (can be set to run the test suite in some
 #  configuration, such as optimization or debugging):
 # GHDL_STD_FLAG
 # GHDL_FLAGS

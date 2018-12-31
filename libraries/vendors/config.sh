@@ -13,8 +13,8 @@
 #	This Bash file exports variables containing the users local tool environment.
 #
 # ==============================================================================
+#	Copyright (C) 2017-2019 Patrick Lehmann - Boetzingen, Germany
 #	Copyright (C) 2015-2016 Patrick Lehmann - Dresden, Germany
-#	Copyright (C) 2017-2018 Patrick Lehmann - Freiburg, Germany
 #	
 #	GHDL is free software; you can redistribute it and/or modify it under
 #	the terms of the GNU General Public License as published by the Free
