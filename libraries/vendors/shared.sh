@@ -183,3 +183,137 @@ GHDLCompilePackages() {
 	return 0
 }
 
+
+test $VERBOSE -eq 1 && echo -e "  Declaring Bash functions for GHDL..."
+
+GHDL="ghdl"
+
+Analyze_Filter=GHDL/filter.analyze.sh
+Analyze_Parameters=(
+	--std=08
+	-frelaxed-rules
+	--mb-comments
+)
+
+test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}function CreateVHDLLibrary( <LibraryName> <DirectoryName> )${ANSI_NOCOLOR}"
+# CreateVHDLLibrary
+# -> $LibraryName
+# -> $DirectoryName
+CreateVHDLLibrary() {
+	local LibraryName=$1
+	local DirectoryName=$2
+
+	if [[ $DEBUG -eq 1 ]]; then
+		local Filter_Parameters=(
+			-d
+		)
+		local Filter_Indent="      "
+	elif [[ $VERBOSE -eq 1 ]]; then
+		local Filter_Parameters=(
+			-v
+		)
+		local Filter_Indent="    "
+	else
+		local Filter_Parameters=()
+		local Filter_Indent="  "
+	fi
+
+	echo -e "${ANSI_YELLOW}Creating VHDL Library '$LibraryName'...${ANSI_NOCOLOR}"
+}
+
+test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}function AnalyzeVHDL( <LibraryName> <File> )${ANSI_NOCOLOR}"
+# AnalyzeVHDL
+# -> $LibraryName
+# -> $File
+AnalyzeVHDL() {
+	local LibraryName=$1
+	local RootDir=$2
+	local LibraryPath=$3
+	local File=$4
+
+	if [[ $DEBUG -eq 1 ]]; then
+		local Parameters=(
+			-v
+		)
+		local Filter_Parameters=(
+			-d
+		)
+		local Filter_Indent="      "
+	elif [[ $VERBOSE -eq 1 ]]; then
+		local Parameters=()
+		local Filter_Parameters=(
+			-v
+		)
+		local Filter_Indent="    "
+	else
+		local Parameters=()
+		local Filter_Parameters=()
+		local Filter_Indent="  "
+	fi
+
+	echo "spam"
+	
+	if [[ $FILTERING -eq 0 ]]; then
+		test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}$GHDL -a ${Analyze_Parameters[*]} ${Parameters[*]} --work=$LibraryName \"$RootDir/$LibraryPath/$File\"${ANSI_NOCOLOR}"
+		$GHDL -a ${Analyze_Parameters[@]} ${Parameters[@]} --work=$LibraryName "$RootDir/$LibraryPath/$File"
+		ExitCode=$?
+		if [ $ExitCode -ne 0 ]; then
+			echo 1>&2 -e "${COLORED_ERROR} While analyzing '$File'. ExitCode: $ExitCode${ANSI_NOCOLOR}"
+			exit 1;
+		fi
+	else
+		test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}$GHDL -a ${Analyze_Parameters[*]} ${Parameters[*]} --work=$LibraryName \"$RootDir/$LibraryPath/$File\" | \\\\${ANSI_NOCOLOR}"
+		test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}$GHDLScriptDir/$Analyze_Filter ${Filter_Parameters[*]} -i \"$Filter_Indent\"${ANSI_NOCOLOR}"
+		$GHDL -a ${Analyze_Parameters[@]} ${Parameters[@]} --work=$LibraryName "$RootDir/$LibraryPath/$File" 2>&1 | $GHDLScriptDir/$Analyze_Filter ${Filter_Parameters[@]} -i "$Filter_Indent"
+		local PiplineStatus=("${PIPESTATUS[@]}")
+		if [[ ${PiplineStatus[0]}  -ne 0 ]]; then
+			echo 1>&2 -e "${COLORED_ERROR} While analyzing '$File'. ExitCode: ${PiplineStatus[0]}${ANSI_NOCOLOR}"
+			exit 1;
+		elif [[ ${PiplineStatus[1]}  -ne 0 ]]; then
+			case $(( ${PiplineStatus[1]} % 4 )) in
+				3) echo 1>&2 -e "$Filter_Indent${ANSI_RED}Fatal errors detected by filtering script. ExitCode: ${PiplineStatus[1]}${ANSI_NOCOLOR}"; exit 1 ;;
+				2) echo 1>&2 -e "$Filter_Indent${ANSI_RED}Errors detected by filtering script. ExitCode: ${PiplineStatus[1]}${ANSI_NOCOLOR}"; exit 1 ;;
+				1) echo 1>&2 -e "$Filter_Indent${ANSI_YELLOW}Warnings detected by filtering script.${ANSI_NOCOLOR}" ;;
+				0) test $DEBUG -eq 1 && echo 1>&2 -e "$Filter_Indent${ANSI_YELLOW}Warnings detected by filtering script.${ANSI_NOCOLOR}" ;;
+			esac
+		fi
+	fi
+}
+
+
+test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}function AnalyzeLibrary( <Library> )${ANSI_NOCOLOR}"
+# AnalyzeLibrary
+# -> LibraryName
+# -> LibraryPath
+# -> Files[*]
+AnalyzeLibrary() {
+	local LibraryName=$1; shift
+	local LibraryPath=$1; shift
+	local Files=$@
+
+	echo -e "${ANSI_YELLOW}Analyzing files into library '$LibraryName'...${ANSI_NOCOLOR}"
+	
+	for File in $Files; do
+		test $VERBOSE -eq 1 && echo -e "  Analyzing '$File'"
+	
+		AnalyzeVHDL $LibraryName "$RootDir" "$LibraryPath" "$File"
+	done
+}
+
+test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}function Compile( <Libraries> )${ANSI_NOCOLOR}"
+# Compile
+# -> VHDLLibraries
+Compile() {
+	local VHDLLibraries=$1
+
+	for VHDLLibrary in $VHDLLibraries; do
+		local LibraryName="${VHDLLibrary}_LibraryName"; LibraryName=${!LibraryName}
+		local LibraryPath="${VHDLLibrary}_LibraryPath"; LibraryPath=${!LibraryPath}
+		local Files="${VHDLLibrary}_Files[*]";          Files=${!Files}
+
+		echo -e "${ANSI_LIGHT_CYAN}Analyzing library '$LibraryName'...${ANSI_NOCOLOR}"
+
+		CreateVHDLLibrary $LibraryName $LibraryName
+		AnalyzeLibrary $LibraryName "$LibraryPath" "$Files"
+	done
+}

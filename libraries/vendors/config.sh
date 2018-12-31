@@ -38,36 +38,52 @@
 # - library root directories
 # in the following dictionary.
 # 
-# These values are used if no command line argument (--src) is passed to a
-# compile script. Empty strings means not configured.
-declare -A InstallationDirectories
-InstallationDirectories[AlteraQuartus]=""     # "/opt/altera/16.0/quartus"
-InstallationDirectories[IntelQuartus]=""      # "/opt/intelFPGA/17.1/quartus"
-InstallationDirectories[LatticeDiamond]=""    # "/usr/local/diamond/3.7_x64"
-InstallationDirectories[OSVVM]=""	   					# "~/git/github/osvvm"
-InstallationDirectories[UVVM]=""	   					# "~/git/github/uvvm_all"
-InstallationDirectories[XilinxISE]=""	  		  # "/opt/Xilinx/14.7/ISE_DS/ISE"
-InstallationDirectories[XilinxVivado]=""      # "/opt/Xilinx/Vivado/2017.4"
+# These values are used if no command line argument (--src, --dest) is passed to
+# a compile script. An empty 'InstallationDirectory' string means not configured.
+# Declare source directories depending on the installation paths.
+# Configure preferred output directories for each library set.
+declare -A Altera_Quartus_Settings=(
+  ["InstallationDirectory"]="" # "/opt/altera/16.0/quartus"
+	["SourceDirectory"]="eda/sim_lib"
+	["DestinationDirectory"]="altera"
+)
 
-# Configure preferred output directories for each library set:
-declare -A DestinationDirectories
-DestinationDirectories[AlteraQuartus]="altera"
-DestinationDirectories[IntelQuartus]="intel"
-DestinationDirectories[LatticeDiamond]="lattice"
-DestinationDirectories[OSVVM]="."										# "osvvm"
-DestinationDirectories[UVVM]="."
-DestinationDirectories[XilinxISE]="xilinx-ise"
-DestinationDirectories[XilinxVivado]="xilinx-vivado"
+declare -A Intel_Quartus_Settings=(
+  ["InstallationDirectory"]="" # "/opt/intelFPGA/18.1/quartus"
+	["SourceDirectory"]="eda/sim_lib"
+	["DestinationDirectory"]="intel"
+)
 
-# Declare source directories depending on the installation paths:
-declare -A SourceDirectories
-SourceDirectories[AlteraQuartus]="eda/sim_lib"
-SourceDirectories[IntelQuartus]="eda/sim_lib"
-SourceDirectories[LatticeDiamond]="cae_library/simulation/vhdl"
-SourceDirectories[OSVVM]="."
-SourceDirectories[UVVM]="."
-SourceDirectories[XilinxISE]="vhdl/src"
-SourceDirectories[XilinxVivado]="data/vhdl/src"
+declare -A Lattice_Diamond_Settings=(
+  ["InstallationDirectory"]="" # "/usr/local/diamond/3.10_x64"
+	["SourceDirectory"]="cae_library/simulation/vhdl"
+	["DestinationDirectory"]="lattice"
+)
+
+declare -A OSVVM_Settings=(
+  ["InstallationDirectory"]="" # "~/git/github/OSVVM"
+	["SourceDirectory"]="."
+	["DestinationDirectory"]="."
+)
+
+declare -A UVVM_Settings=(
+  ["InstallationDirectory"]="" # "~/git/github/UVVM"
+	["SourceDirectory"]="."
+	["DestinationDirectory"]="."
+)
+
+declare -A Xilinx_ISE_Settings=(
+  ["InstallationDirectory"]="" # "/opt/Xilinx/14.7/ISE_DS/ISE"
+	["SourceDirectory"]="eda/sim_lib"
+	["DestinationDirectory"]="vhdl/src"
+)
+
+declare -A Xilinx_Vivado_Settings=(
+  ["InstallationDirectory"]="" # "/opt/Xilinx/Vivado/2018.3"
+	["SourceDirectory"]="eda/sim_lib"
+	["DestinationDirectory"]="data/vhdl/src"
+)
+
 
 # input files greater than $LARGE_FILESIZE are skipped if '--skip-largefiles' is set
 LARGE_FILESIZE=125000
