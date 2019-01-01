@@ -33,6 +33,9 @@ GCC Backend
     AGCC_GCCSRC_DIR=/path/to/gcc/sources
     AGCC_GCCOBJ_DIR=/path/to/gcc/build
 
+  If your system gcc was built with ``--enable-default-pie``, add
+  ``-no-pie`` option for linking.
+
 .. HINT :: For ppc64 (and AIX ?) platform, the object file format contains an identifier for the source language. Because gcc doesn't know about VHDL, gcc crashes very early. This could be fixed with a very simple change in ``gcc/config/rs6000/rs6000.c``, ``function rs6000_output_function_epilogue`` (as of gcc 4.8):
 
 	  .. CODE:: C
