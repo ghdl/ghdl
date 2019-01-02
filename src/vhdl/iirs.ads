@@ -567,6 +567,7 @@ package Iirs is
    --  * a sequential statement chain for a case_statement.
    --   Get/Set_Associated_Chain (Field4)
    --
+   --  Set when share the same association as the previous one.
    --   Get/Set_Same_Alternative_Flag (Flag1)
    --
    --  For aggregates: if True, associated expression is for one element.

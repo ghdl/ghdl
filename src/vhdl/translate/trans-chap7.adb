@@ -2942,9 +2942,8 @@ package body Trans.Chap7 is
 
       --  Assign EXPR to current position (defined by index VAR_INDEX), and
       --  update VAR_INDEX.  Handles sub-aggregates.
-      procedure Do_Assign (Assoc : Iir)
+      procedure Do_Assign (Assoc : Iir; Expr : Iir)
       is
-         Expr : constant Iir := Get_Associated_Expr (Assoc);
          Dest : Mnode;
          Len : Iir_Int64;
       begin
@@ -2988,7 +2987,7 @@ package body Trans.Chap7 is
          loop
             exit when El = Null_Iir;
             exit when Get_Kind (El) /= Iir_Kind_Choice_By_None;
-            Do_Assign (El);
+            Do_Assign (El, Get_Associated_Expr (El));
             if not Final or else Get_Element_Type_Flag (El) then
                P := P + 1;
             else
@@ -3036,7 +3035,7 @@ package body Trans.Chap7 is
                                New_Lit (Ghdl_Index_0),
                                Ghdl_Bool_Type));
 
-            Do_Assign (El);
+            Do_Assign (El, Get_Associated_Expr (El));
             Dec_Var (Var_Len);
             Finish_Loop_Stmt (Label);
             Close_Temp;
@@ -3058,7 +3057,7 @@ package body Trans.Chap7 is
                   --  Handled by positional.
                   raise Internal_Error;
                when Iir_Kind_Choice_By_Expression =>
-                  Do_Assign (El);
+                  Do_Assign (El, Get_Associated_Expr (El));
                   return;
                when Iir_Kind_Choice_By_Range =>
                   declare
@@ -3078,7 +3077,7 @@ package body Trans.Chap7 is
                                                     New_Obj_Value (Var_I),
                                                     New_Obj_Value (Var_Length),
                                                     Ghdl_Bool_Type));
-                     Do_Assign (El);
+                     Do_Assign (El, Get_Associated_Expr (El));
                      Inc_Var (Var_I);
                      Finish_Loop_Stmt (Label);
                      Close_Temp;
@@ -3100,6 +3099,7 @@ package body Trans.Chap7 is
             Case_Blk   : O_Case_Block;
             Label      : O_Snode;
             Len_Tmp    : O_Enode;
+            Expr       : Iir;
          begin
             Open_Temp;
             --  Create a loop from left +- number of positionnals associations
@@ -3135,7 +3135,10 @@ package body Trans.Chap7 is
                Start_Choice (Case_Blk);
                Chap8.Translate_Case_Choice (El, Range_Type, Case_Blk);
                Finish_Choice (Case_Blk);
-               Do_Assign (El);
+               if not Get_Same_Alternative_Flag (El) then
+                  Expr := Get_Associated_Expr (El);
+               end if;
+               Do_Assign (El, Expr);
                El := Get_Chain (El);
             end loop;
             Finish_Case_Stmt (Case_Blk);

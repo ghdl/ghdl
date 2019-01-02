@@ -2575,28 +2575,6 @@ package body Disp_Vhdl is
       end loop;
    end Disp_Choice;
 
-   --  Build an array of lexical appareance of choices in CHAIN.
-   --  (They have been re-ordered during analysis).
-   procedure Build_Choice_Order (Chain : Iir; Arr : out Iir_Array_Acc)
-   is
-      Count : Natural;
-      Assoc : Iir;
-   begin
-      Assoc := Chain;
-      Count := 0;
-      while Assoc /= Null_Iir loop
-         Count := Count + 1;
-         Assoc := Get_Chain (Assoc);
-      end loop;
-      Arr := new Iir_Array (0 .. Count - 1);
-
-      Assoc := Chain;
-      while Assoc /= Null_Iir loop
-         Arr (Natural (Get_Choice_Position (Assoc))) := Assoc;
-         Assoc := Get_Chain (Assoc);
-      end loop;
-   end Build_Choice_Order;
-
    --  EL_TYPE is Null_Iir for record aggregates.
    procedure Disp_Aggregate_1
      (Aggr: Iir_Aggregate; Index : Positive; El_Type : Iir)
@@ -2604,8 +2582,7 @@ package body Disp_Vhdl is
       Indent : Count;
       Assoc : Iir;
       Expr : Iir;
-      Prev_Expr : Iir;
-      Choices : Iir_Array_Acc;
+      Is_First : Boolean;
    begin
       Indent := Col + 1;
       if Indent > Line_Length - 10 then
@@ -2613,44 +2590,44 @@ package body Disp_Vhdl is
       end if;
       Put ("(");
       Assoc := Get_Association_Choices_Chain (Aggr);
-      Build_Choice_Order (Assoc, Choices);
-      Prev_Expr := Null_Iir;
-      for I in Choices'Range loop
-         Assoc := Choices (I);
-         Expr := Get_Associated_Expr (Assoc);
-         pragma Assert (Expr /= Null_Iir);
-         if Expr = Prev_Expr then
-            Put (" | ");
-         elsif I /= Choices'First then
+      Is_First := True;
+      while Assoc /= Null_Iir loop
+         if Is_First then
+            Is_First := False;
+         else
             Put (", ");
          end if;
+         pragma Assert (not Get_Same_Alternative_Flag (Assoc));
+         Expr := Get_Associated_Expr (Assoc);
          Disp_A_Choice (Assoc);
-         if I = Choices'Last
-           or else Expr /= Get_Associated_Expr (Choices (I + 1))
-         then
-            if Get_Kind (Assoc) /= Iir_Kind_Choice_By_None then
-               Put (" => ");
-            end if;
-
-            if Index > 1 then
-               Set_Col (Indent);
-               if Get_Kind (Expr) = Iir_Kind_String_Literal8 then
-                  Disp_String_Literal (Expr, El_Type);
-               else
-                  Disp_Aggregate_1 (Expr, Index - 1, El_Type);
-               end if;
-            else
-               if Get_Kind (Expr) = Iir_Kind_Aggregate then
-                  Set_Col (Indent);
-               end if;
-               Disp_Expression (Expr);
-            end if;
+         if Get_Kind (Assoc) /= Iir_Kind_Choice_By_None then
+            Assoc := Get_Chain (Assoc);
+            while Assoc /= Null_Iir
+              and then Get_Same_Alternative_Flag (Assoc)
+            loop
+               Put (" | ");
+               Disp_A_Choice (Assoc);
+               Assoc := Get_Chain (Assoc);
+            end loop;
+            Put (" => ");
+         else
+            Assoc := Get_Chain (Assoc);
          end if;
-         Prev_Expr := Expr;
+         if Index > 1 then
+            Set_Col (Indent);
+            if Get_Kind (Expr) = Iir_Kind_String_Literal8 then
+               Disp_String_Literal (Expr, El_Type);
+            else
+               Disp_Aggregate_1 (Expr, Index - 1, El_Type);
+            end if;
+         else
+            if Get_Kind (Expr) = Iir_Kind_Aggregate then
+               Set_Col (Indent);
+            end if;
+            Disp_Expression (Expr);
+         end if;
       end loop;
       Put (")");
-
-      Free (Choices);
    end Disp_Aggregate_1;
 
    procedure Disp_Aggregate (Aggr: Iir_Aggregate)

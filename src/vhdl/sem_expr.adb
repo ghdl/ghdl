@@ -2962,7 +2962,7 @@ package body Sem_Expr is
       end if;
 
       Sem_Check_Continuous_Choices (Choice_Chain, Choice_Type, Low, High, Loc,
-                                    Is_Sub_Range, not Is_Case_Stmt);
+                                    Is_Sub_Range, False); -- not Is_Case_Stmt);
    end Sem_Choices_Range;
 
    -- Perform semantisation on a (sub)aggregate AGGR, which is of type
