@@ -206,13 +206,12 @@ package Sem_Expr is
    --  IS_SUB_RANGE True, they must be within SUB_TYPE.
    --  The choices must be locally static.
    --  If REORDER_CHOICES is true, CHOICE_CHAIN is ordered.
-   procedure Sem_Check_Continuous_Choices (Choice_Chain : in out Iir;
+   procedure Sem_Check_Continuous_Choices (Choice_Chain : Iir;
                                            Choice_Type : Iir;
                                            Low : out Iir;
                                            High : out Iir;
                                            Loc : Location_Type;
-                                           Is_Sub_Range : Boolean;
-                                           Reorder_Choices : Boolean);
+                                           Is_Sub_Range : Boolean);
 
    --  Analyze CHOICE_LIST when the choice expression SEL is of a
    --  one-dimensional character array type.

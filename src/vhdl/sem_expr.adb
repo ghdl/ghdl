@@ -2438,13 +2438,12 @@ package body Sem_Expr is
       Disc_Heap_Sort (Info.Nbr_Choices);
    end Sort_Discrete_Choices;
 
-   procedure Sem_Check_Continuous_Choices (Choice_Chain : in out Iir;
+   procedure Sem_Check_Continuous_Choices (Choice_Chain : Iir;
                                            Choice_Type : Iir;
                                            Low : out Iir;
                                            High : out Iir;
                                            Loc : Location_Type;
-                                           Is_Sub_Range : Boolean;
-                                           Reorder_Choices : Boolean)
+                                           Is_Sub_Range : Boolean)
    is
       --  Nodes that can appear.
       Info : Choice_Info_Type;
@@ -2512,6 +2511,10 @@ package body Sem_Expr is
       Count_Choices (Info, Choice_Chain);
       Fill_Choices_Array (Info, Choice_Chain);
       Sort_Discrete_Choices (Info);
+
+      for I in Info.Arr'Range loop
+         Set_Choice_Order (Info.Arr (I), Int32 (I));
+      end loop;
 
       --  Set low and high bounds.
       if Info.Nbr_Choices > 0 then
@@ -2632,98 +2635,6 @@ package body Sem_Expr is
          Warning_Msg_Sem
            (Warnid_Static, +Info.Others_Choice,
             "'others' choice allowed only if the index constraint is static");
-      end if;
-
-      if Reorder_Choices then
-         declare
-            Ngroups : Int32;
-         begin
-
-            --  First, set Associated_Expr and Associated_Chain for nodes with
-            --  the same alternative.
-            declare
-               Assoc_Expr : Iir;
-               Assoc_Chain : Iir;
-               Assoc : Iir;
-            begin
-               Assoc := Choice_Chain;
-               Assoc_Expr := Null_Iir;
-               Assoc_Chain := Null_Iir;
-               Ngroups := 0;
-               while Assoc /= Null_Iir loop
-                  if Get_Same_Alternative_Flag (Assoc) then
-                     Set_Is_Ref (Assoc, True);
-                     Set_Associated_Expr (Assoc, Assoc_Expr);
-                     Set_Associated_Chain (Assoc, Assoc_Chain);
-                     Set_Same_Alternative_Flag (Assoc, False);
-                  else
-                     Set_Is_Ref (Assoc, False);
-                     Assoc_Expr := Get_Associated_Expr (Assoc);
-                     Assoc_Chain := Get_Associated_Chain (Assoc);
-                     Ngroups := Ngroups + 1;
-                  end if;
-
-                  --  The choice position is now a group id.
-                  Set_Choice_Position (Assoc, Ngroups);
-                  Assoc := Get_Chain (Assoc);
-               end loop;
-            end;
-
-            --  Then set Is_Ref on the first alternative.
-            declare
-               type Group_Array is array (1 .. Ngroups) of Boolean;
-               type Group_Acc is access Group_Array;
-               procedure Free is new Ada.Unchecked_Deallocation
-                 (Group_Array, Group_Acc);
-               Groups : Group_Acc;
-               Gid : Int32;
-               Pos : Int32;
-               Assoc : Iir;
-            begin
-               Groups := new Group_Array'(others => False);
-               for I in Info.Arr'Range loop
-                  Gid := Get_Choice_Position (Info.Arr (I));
-                  if Groups (Gid) then
-                     --  Already handled.
-                     Set_Is_Ref (Info.Arr (I), True);
-                  else
-                     Groups (Gid) := True;
-                     Set_Is_Ref (Info.Arr (I), False);
-                  end if;
-               end loop;
-
-               Free (Groups);
-
-               --  Restore Choice_Position.
-               Assoc := Choice_Chain;
-               Pos := 0;
-               while Assoc /= Null_Iir loop
-                  Set_Choice_Position (Assoc, Pos);
-                  Pos := Pos + 1;
-                  Assoc := Get_Chain (Assoc);
-               end loop;
-            end;
-
-            --  Then reorder.
-            declare
-               Assoc : Iir;
-               Assoc1 : Iir;
-            begin
-               Choice_Chain := Info.Arr (Info.Arr'First);
-               Assoc := Choice_Chain;
-               for I in Info.Arr'First + 1 .. Info.Arr'Last loop
-                  Assoc1 := Info.Arr (I);
-                  Set_Chain (Assoc, Assoc1);
-                  Assoc := Assoc1;
-               end loop;
-               Assoc1 := Info.Others_Choice;
-               if Assoc1 /= Null_Iir then
-                  Set_Chain (Assoc, Assoc1);
-                  Assoc := Assoc1;
-               end if;
-               Set_Chain (Assoc, Null_Iir);
-            end;
-         end;
       end if;
 
       Free (Info.Arr);
@@ -2961,8 +2872,8 @@ package body Sem_Expr is
          return;
       end if;
 
-      Sem_Check_Continuous_Choices (Choice_Chain, Choice_Type, Low, High, Loc,
-                                    Is_Sub_Range, False); -- not Is_Case_Stmt);
+      Sem_Check_Continuous_Choices
+        (Choice_Chain, Choice_Type, Low, High, Loc, Is_Sub_Range);
    end Sem_Choices_Range;
 
    -- Perform semantisation on a (sub)aggregate AGGR, which is of type
@@ -3037,7 +2948,6 @@ package body Sem_Expr is
          Set_Associated_Chain (N_El, Get_Associated_Chain (Ass));
          Set_Chain (N_El, Get_Chain (Ass));
          Set_Same_Alternative_Flag (N_El, Get_Same_Alternative_Flag (Ass));
-         Set_Choice_Position (N_El, Get_Choice_Position (Ass));
 
          Free_Iir (Ass);
          Add_Match (N_El, Aggr_El);
@@ -3149,12 +3059,6 @@ package body Sem_Expr is
                pragma Assert (not Ok);
                null;
             end if;
-         else
-            --  Always set associated expression.
-            pragma Assert (Expr = Null_Iir);
-            pragma Assert (Prev_El /= Null_Iir);
-            Set_Associated_Expr (El, Get_Associated_Expr (Prev_El));
-            Set_Is_Ref (El, True);
          end if;
 
          Prev_El := El;

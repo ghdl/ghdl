@@ -1405,10 +1405,6 @@ package body Trans.Chap2 is
                         end if;
                      when Attr_Chain =>
                         Instantiate_Iir_Chain_Info (Get_Iir (N, F));
-                     when Attr_Maybe_Ref_Chain =>
-                        if not Get_Is_Ref (N) then
-                           Instantiate_Iir_Chain_Info (Get_Iir (N, F));
-                        end if;
                      when Attr_Chain_Next =>
                         null;
                      when Attr_Of_Ref | Attr_Of_Maybe_Ref =>

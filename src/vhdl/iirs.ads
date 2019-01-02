@@ -535,9 +535,8 @@ package Iirs is
    --  associations have the same_alternative_flag set.
    --   Get/Set_Chain (Field2)
    --
-   --  Lexical order of appareance.  Choices are sorted during analysis.  This
-   --  field can be used to display the choices in the original order.
-   --   Get/Set_Choice_Position (Field1)
+   --  Ordered position of the choice from 1 to N.  0 is reserved for others.
+   --   Get/Set_Choice_Order (Field1)
    --
    --  Should be a simple_name.
    -- Only for Iir_Kind_Choice_By_Name:
@@ -576,8 +575,6 @@ package Iirs is
    -- Only for Iir_Kind_Choice_By_Range:
    -- Only for Iir_Kind_Choice_By_Expression:
    --   Get/Set_Choice_Staticness (State1)
-   --
-   --   Get/Set_Is_Ref (Flag12)
 
    -- Iir_Kind_Entity_Aspect_Entity (Short)
    --
@@ -6161,23 +6158,21 @@ package Iirs is
    procedure Set_Time (We : Iir_Waveform_Element; An_Iir : Iir);
 
    --  Field: Field1 (pos)
-   function Get_Choice_Position (Choice : Iir) return Int32;
-   procedure Set_Choice_Position (Choice : Iir; Pos : Int32);
+   function Get_Choice_Order (Choice : Iir) return Int32;
+   procedure Set_Choice_Order (Choice : Iir; Pos : Int32);
 
    --  Node associated with a choice.
-   --  Field: Field3 Maybe_Ref
+   --  Field: Field3
    function Get_Associated_Expr (Target : Iir) return Iir;
    procedure Set_Associated_Expr (Target : Iir; Associated : Iir);
 
    --  Node associated with a choice.
-   --  Field: Field3 Maybe_Ref
+   --  Field: Field3
    function Get_Associated_Block (Target : Iir) return Iir;
    procedure Set_Associated_Block (Target : Iir; Associated : Iir);
 
    --  Chain associated with a choice.
-   --  A Maybe_Ref_Chain is a reference to a chain if Get_Is_Ref is True,
-   --  otherwise this is a normal chain.
-   --  Field: Field4 Maybe_Ref_Chain
+   --  Field: Field4 Chain
    function Get_Associated_Chain (Target : Iir) return Iir;
    procedure Set_Associated_Chain (Target : Iir; Associated : Iir);
 

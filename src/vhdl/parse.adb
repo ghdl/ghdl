@@ -5096,7 +5096,6 @@ package body Parse is
    -- Leave tok_double_arrow as current token.
    procedure Parse_Choices (Expr: Iir;
                             First_Loc : Location_Type;
-                            Pos : in out Int32;
                             Chain : out Iir)
    is
       First, Last : Iir;
@@ -5109,9 +5108,6 @@ package body Parse is
       Loc := First_Loc;
       loop
          A_Choice := Parse_A_Choice (Expr1, Loc);
-         Set_Choice_Position (A_Choice, Pos);
-         Pos := Pos + 1;
-
          if First /= Null_Iir then
             Set_Same_Alternative_Flag (A_Choice, True);
             if Get_Kind (A_Choice) = Iir_Kind_Choice_By_Others then
@@ -5152,7 +5148,6 @@ package body Parse is
       Last : Iir;
       Assoc: Iir;
       Loc, Right_Loc : Location_Type;
-      Pos : Int32;
    begin
       Loc := Get_Token_Location;
 
@@ -5216,12 +5211,9 @@ package body Parse is
       Res := Create_Iir (Iir_Kind_Aggregate);
       Set_Location (Res, Loc);
       Build_Init (Last);
-      Pos := 0;
       loop
          if Current_Token = Tok_Others then
             Assoc := Parse_A_Choice (Null_Iir, Loc);
-            Set_Choice_Position (Assoc, Pos);
-            Pos := Pos + 1;
             Expect (Tok_Double_Arrow);
 
             --  Eat '=>'
@@ -5242,10 +5234,8 @@ package body Parse is
                  | Tok_Right_Paren =>
                   Assoc := Create_Iir (Iir_Kind_Choice_By_None);
                   Set_Location (Assoc, Loc);
-                  Set_Choice_Position (Assoc, Pos);
-                  Pos := Pos + 1;
                when others =>
-                  Parse_Choices (Expr, Loc, Pos, Assoc);
+                  Parse_Choices (Expr, Loc, Assoc);
                   Expect (Tok_Double_Arrow);
 
                   --  Eat '=>'.
@@ -6187,7 +6177,6 @@ package body Parse is
       Target : Iir;
       Last : Iir;
       When_Loc : Location_Type;
-      Pos : Int32;
    begin
       --  Skip 'with'.
       Scan;
@@ -6209,7 +6198,6 @@ package body Parse is
       Parse_Options (Res);
 
       Build_Init (Last);
-      Pos := 0;
       loop
          Wf_Chain := Parse_Waveform;
          Expect (Tok_When, "'when' expected after waveform");
@@ -6218,7 +6206,7 @@ package body Parse is
          --  Eat 'when'.
          Scan;
 
-         Parse_Choices (Null_Iir, When_Loc, Pos, Assoc);
+         Parse_Choices (Null_Iir, When_Loc, Assoc);
          Set_Associated_Chain (Assoc, Wf_Chain);
          Append_Subchain (Last, Res, Assoc);
          exit when Current_Token /= Tok_Comma;
@@ -6774,7 +6762,6 @@ package body Parse is
       Assoc: Iir;
       Last_Assoc : Iir;
       When_Loc : Location_Type;
-      Pos : Int32;
    begin
       Stmt := Create_Iir (Iir_Kind_Case_Statement);
       Set_Label (Stmt, Label);
@@ -6794,14 +6781,13 @@ package body Parse is
       end if;
 
       Build_Init (Last_Assoc);
-      Pos := 0;
       while Current_Token = Tok_When loop
          When_Loc := Get_Token_Location;
 
          --  Skip 'when'.
          Scan;
 
-         Parse_Choices (Null_Iir, When_Loc, Pos, Assoc);
+         Parse_Choices (Null_Iir, When_Loc, Assoc);
 
          --  Skip '=>'.
          Expect_Scan (Tok_Double_Arrow);
@@ -8268,8 +8254,7 @@ package body Parse is
    --  case_generate_alternative ::=
    --     WHEN [ /alternative/_label : ] choices =>
    --        generate_statement_body
-   procedure Parse_Case_Generate_Alternative
-     (Parent : Iir; Assoc : out Iir; Pos : in out Int32)
+   procedure Parse_Case_Generate_Alternative (Parent : Iir; Assoc : out Iir)
    is
       Loc : Location_Type;
       Alt_Label : Name_Id;
@@ -8288,11 +8273,9 @@ package body Parse is
          Error_Msg_Parse ("missing expression in alternative");
          Assoc := Create_Iir (Iir_Kind_Choice_By_Expression);
          Set_Location (Assoc);
-         Set_Choice_Position (Assoc, Pos);
-         Pos := Pos + 1;
       elsif Current_Token = Tok_Others then
          --  'others' is not an expression!
-         Parse_Choices (Null_Iir, Loc, Pos, Assoc);
+         Parse_Choices (Null_Iir, Loc, Assoc);
       else
          Expr := Parse_Expression;
 
@@ -8313,7 +8296,7 @@ package body Parse is
             Scan;
          end if;
 
-         Parse_Choices (Expr, Loc, Pos, Assoc);
+         Parse_Choices (Expr, Loc, Assoc);
       end if;
 
       --  Set location of label (if any, for xref) or location of 'when'.
@@ -8346,7 +8329,6 @@ package body Parse is
       Res : Iir;
       Alt : Iir;
       Last_Alt : Iir;
-      Pos : Int32;
    begin
       if Label = Null_Identifier then
          Error_Msg_Parse ("a generate statement must have a label");
@@ -8368,9 +8350,8 @@ package body Parse is
       end if;
 
       Last_Alt := Null_Iir;
-      Pos := 0;
       while Current_Token = Tok_When loop
-         Parse_Case_Generate_Alternative (Res, Alt, Pos);
+         Parse_Case_Generate_Alternative (Res, Alt);
          if Last_Alt = Null_Iir then
             Set_Case_Statement_Alternative_Chain (Res, Alt);
          else
