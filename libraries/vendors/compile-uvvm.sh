@@ -145,6 +145,7 @@ while [[ $# > 0 ]]; do
 			;;
 		-h|--help)
 			COMMAND=0
+			break
 			;;
 		-n|--no-filter)
 			FILTERING=0

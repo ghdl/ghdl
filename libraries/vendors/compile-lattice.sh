@@ -50,10 +50,15 @@ source $ScriptDir/../../dist/ansi_color.sh
 if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading Bash utilities.${ANSI_NOCOLOR}"    ; exit 1; fi
 
 
+DeviceList="EC ECP ECP2 ECP3 ECP5U LPTM LPTM2 MACHXO MACHXO2 MACHXO3L SC SCM XP XP2"
+for Device in $DeviceList; do
+	declare "DEV_${Device}_Enable"=0
+done
+
+	
 # Command line argument processing
 COMMAND=1
 CLEAN=0
-DeviceList="ec ecp ecp2 ecp3 ecp5u lptm lptm2 machxo machxo2 machxo3l sc scm xp xp2"
 VERBOSE=0
 DEBUG=0
 FILTERING=0  # TODO: 1
@@ -71,11 +76,6 @@ while [[ $# > 0 ]]; do
 			;;
 		-a|--all)
 			COMMAND=2
-			;;
-		-d|--device)
-			DeviceList="$2"
-			shift
-			COMMAND=3
 			;;
 		-s|--skip-existing)
 			SKIP_EXISTING_FILES=1
@@ -95,6 +95,7 @@ while [[ $# > 0 ]]; do
 			;;
 		-h|--help)
 			COMMAND=0
+			break
 			;;
 		-n|--no-filter)
 			FILTERING=0
@@ -118,14 +119,30 @@ while [[ $# > 0 ]]; do
 			shift						# skip argument
 			;;
 		*)		# unknown option
-			echo 1>&2 -e "${COLORED_ERROR} Unknown command line option '$1'.${ANSI_NOCOLOR}"
-			exit 1
+			FOUND=0
+			if [[ "${1:0:2}" == "--" ]]; then
+				key=${1:2}; key=${key,,}
+				for Device in $DeviceList; do
+					if [[ $key == ${Device,,} ]]; then
+						declare "DEV_${Device}_Enable"=1
+						COMMAND=3
+						FOUND=1
+						break
+					fi
+				done
+			fi
+			if [[ $FOUND -eq 0 ]]; then
+				echo ""
+				echo 1>&2 -e "${COLORED_ERROR} Unknown command line option '$1'.${ANSI_NOCOLOR}"
+				COMMAND=1
+			fi
 			;;
 	esac
 	shift # parsed argument or value
 done
 
 ERRORCOUNT=0
+Libraries=()
 
 if [[ $COMMAND -le 1 ]]; then
 	test $COMMAND -eq 1 && echo 1>&2 -e "\n${COLORED_ERROR} No command selected.${ANSI_NOCOLOR}"
@@ -146,8 +163,9 @@ if [[ $COMMAND -le 1 ]]; then
 	echo ""
 	echo "Libraries:"
 	echo "  -a --all                 Compile all Lattice simulation libraries."
-	echo "  -d --device <list>       Compile only the specified device libraries. Device can be:"
-  echo "                           \"$deviceList\""
+	for Device in $DeviceList; do
+	  printf "     --%-19s Device primitives for '%s'.\n" "${Device,,}" "$Device"
+	done
 	echo ""
 	echo "Library compile options:"
 	echo "     --vhdl93              Compile the libraries with VHDL-93."
@@ -169,6 +187,12 @@ if [[ $COMMAND -le 1 ]]; then
 	exit $COMMAND
 fi
 
+if [[ $COMMAND -eq 2 ]]; then
+	for Device in $DeviceList; do
+		declare "DEV_${Device}_Enable"=1
+	done
+fi
+
 if [[ $VHDLStandard -eq 2008 ]]; then
 	echo -e "${ANSI_RED}Not all Lattice packages are VHDL-2008 compatible! Setting HALT_ON_ERROR to FALSE.${ANSI_NOCOLOR}"
 	HALT_ON_ERROR=0
@@ -180,7 +204,7 @@ if [ ! -z $LSC_DIAMOND ]; then
 else
 	for DefaultDir in ${DefaultDirectories[@]}; do
 		for Major in 3; do
-			for Minor in 8 7 6 5; do
+			for Minor in 12 11 10 9 8 7 6 5; do
 				Dir=$DefaultDir/${Major}.${Minor}_x64
 				if [ -d $Dir ]; then
 					EnvSourceDir=$Dir/${SourceDirectories[LatticeDiamond]}
@@ -216,29 +240,25 @@ cd $DestinationDirectory
 # <= $GRC_COMMAND
 SetupGRCat
 
-
 # -> $VHDLStandard
 # <= $VHDLVersion
 # <= $VHDLStandard
 # <= $VHDLFlavor
 GHDLSetup
 
-
-# Define global GHDL Options
-GHDL_OPTIONS=(
+# Extend global GHDL Options
+Analyze_Parameters+=(
 	-fexplicit
-	-frelaxed-rules
 	--no-vital-checks
 	-Wbinding
-	--mb-comments
+	-Wno-hide
+	-Wno-others
+	-Wno-parenthesis
+	--ieee=$VHDLFlavor
+	--std=$VHDLStandard
+	-P$DestinationDirectory
 )
 
-# Create a set of GHDL parameters
-GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard -P$DestinationDirectory)
-
-
-STOPCOMPILING=0
 
 # Cleanup directory
 # ==============================================================================
@@ -250,49 +270,323 @@ if [[ $CLEAN -eq 1 ]]; then
 	rm *.cf 2> /dev/null
 fi
 
+# Excluded: pmi
+#
 # Lattice device libraries
 # ==============================================================================
-# Excluded: pmi
-declare -A FileLists
-FileLists[ec]="ORCA_CMB.vhd ORCA_SEQ.vhd ORCACOMP.vhd ORCA_LUT.vhd ORCA_MISC.vhd ORCA_CNT.vhd ORCA_IO.vhd ORCA_MEM.vhd"
-FileLists[ecp]="ORCA_CMB.vhd ORCA_SEQ.vhd ORCACOMP.vhd ORCA_LUT.vhd ORCA_MISC.vhd ORCA_CNT.vhd ORCA_IO.vhd ORCA_MEM.vhd"
-FileLists[ecp2]="ECP2_CMB.vhd ECP2_SEQ.vhd ECP2COMP.vhd ECP2_CNT.vhd ECP2_IO.vhd ECP2_LUT.vhd ECP2_MEM.vhd ECP2_MISC.vhd ECP2_MULT.vhd ECP2_SL.vhd"
-FileLists[ecp3]="ECP3_CMB.vhd ECP3_SEQ.vhd ECP3COMP.vhd ECP3_CNT.vhd ECP3_IO.vhd ECP3_LUT.vhd ECP3_MEM.vhd ECP3_MISC.vhd ECP3_MULT.vhd ECP3_SL.vhd"
-FileLists[ecp5u]="ECP5U_CMB.vhd ECP5U_SEQ.vhd ECP5UCOMP.vhd ECP5U_IO.vhd ECP5U_LUT.vhd ECP5U_MEM.vhd ECP5U_MISC.vhd ECP5U_SL.vhd gsr_pur_assign.vhd"
-FileLists[lptm]="MACHXO_CMB.vhd MACHXO_SEQ.vhd MACHXOCOMP.vhd MACHXO_CNT.vhd MACHXO_IO.vhd MACHXO_LUT.vhd MACHXO_MEM.vhd MACHXO_MISC.vhd"
-FileLists[lptm2]="MACHXO2_CMB.vhd MACHXO2_SEQ.vhd MACHXO2COMP.vhd gsr_pur_assign.vhd MACHXO2_CNT.vhd MACHXO2_IO.vhd MACHXO2_LUT.vhd MACHXO2_MEM.vhd MACHXO2_MISC.vhd"
-FileLists[machxo]="MACHXO_CMB.vhd MACHXO_SEQ.vhd MACHXOCOMP.vhd MACHXO_CNT.vhd MACHXO_IO.vhd MACHXO_LUT.vhd MACHXO_MEM.vhd MACHXO_MISC.vhd"
-FileLists[machxo2]="MACHXO2_CMB.vhd MACHXO2_SEQ.vhd MACHXO2COMP.vhd MACHXO2_CNT.vhd gsr_pur_assign.vhd MACHXO2_IO.vhd MACHXO2_LUT.vhd MACHXO2_MEM.vhd MACHXO2_MISC.vhd"
-FileLists[machxo3l]="MACHXO3L_CMB.vhd MACHXO3L_SEQ.vhd MACHXO3LCOMP.vhd gsr_pur_assign.vhd MACHXO3L_CNT.vhd MACHXO3L_IO.vhd MACHXO3L_LUT.vhd MACHXO3L_MEM.vhd MACHXO3L_MISC.vhd"
-FileLists[sc]="ORCA_CMB.vhd ORCA_SEQ.vhd ORCACOMP.vhd ORCA_CNT.vhd ORCA_IO.vhd ORCA_MEM.vhd ORCA_MIS.vhd ORCA_SL.vhd"
-FileLists[scm]="ORCA_CMB.vhd ORCA_SEQ.vhd ORCACOMP.vhd ORCA_CNT.vhd ORCA_IO.vhd ORCA_MEM.vhd ORCA_MIS.vhd ORCA_SL.vhd"
-FileLists[xp]="ORCA_CMB.vhd ORCA_SEQ.vhd ORCACOMP.vhd ORCA_LUT.vhd ORCA_MISC.vhd ORCA_CNT.vhd ORCA_IO.vhd ORCA_MEM.vhd"
-FileLists[xp2]="XP2_CMB.vhd XP2_SEQ.vhd XP2COMP.vhd XP2_CNT.vhd XP2_IO.vhd XP2_LUT.vhd XP2_MEM.vhd XP2_MISC.vhd XP2_MULT.vhd XP2_SL.vhd"
+# EC devices
+StructName="EC"
+SourceDir="ec/src"
+Files=(
+	ORCA_CMB.vhd
+	ORCA_SEQ.vhd
+	ORCACOMP.vhd
+	ORCA_LUT.vhd
+	ORCA_MISC.vhd
+	ORCA_CNT.vhd
+	ORCA_IO.vhd
+	ORCA_MEM.vhd
+)
+if [[ -f "$SourceDirectory/$SourceDir/$Files" ]]; then
+	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'EC'.${ANSI_NOCOLOR}"
+	CreateLibraryStruct $StructName "ec" $SourceDir $VHDLVersion "${Files[@]}"
+	
+	VarName="DEV_${StructName}_Enable"
+	test ${!VarName} -eq 1 && Libraries+=($StructName)
+else
+	echo "not found: $SourceDirectory/$Files"
 
-for device in $DeviceList; do
-	Library=$device
-	LibraryDirectory=$DestinationDirectory/$Library/$VHDLVersion
-	mkdir -p $LibraryDirectory
-	cd $LibraryDirectory
-	echo -e "${ANSI_YELLOW}Compiling library '$Library'...${ANSI_NOCOLOR}"
+fi
 
-	DeviceSourceDirectory="$SourceDirectory/$device/src"
-	for File in ${FileLists[$device]}; do
-		File="$DeviceSourceDirectory/$File"
-		FileName=$(basename "$File")
-		FileName="${device}_$FileName"
-		if [ $SKIP_EXISTING_FILES -eq 1 ] && [ -e "${FileName%.*}.o" ]; then
-			echo -e "${ANSI_CYAN}Skipping file '$File'${ANSI_NOCOLOR}"
-		else
-			echo -e "${ANSI_CYAN}Analyzing file '$File'${ANSI_NOCOLOR}"
-			$GHDLBinary -a ${GHDL_PARAMS[@]} --work=$Library "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
-				let ERRORCOUNT++
-				test $HALT_ON_ERROR -eq 1 && break 2
-			fi
-		fi
-	done
-done
+# ECP devices
+StructName="ECP"
+SourceDir="ecp/src"
+Files=(
+	ORCA_CMB.vhd
+	ORCA_SEQ.vhd
+	ORCACOMP.vhd
+	ORCA_LUT.vhd
+	ORCA_MISC.vhd
+	ORCA_CNT.vhd
+	ORCA_IO.vhd
+	ORCA_MEM.vhd
+)
+if [[ -f "$SourceDirectory/$SourceDir/$Files" ]]; then
+	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'ECP'.${ANSI_NOCOLOR}"
+	CreateLibraryStruct $StructName "ecp" $SourceDir $VHDLVersion "${Files[@]}"
+	
+	VarName="DEV_${StructName}_Enable"
+	test ${!VarName} -eq 1 && Libraries+=($StructName)
+fi
+
+
+# ECP2 devices
+StructName="ECP2"
+SourceDir="ecp2/src"
+Files=(
+	ECP2_CMB.vhd
+	ECP2_SEQ.vhd
+	ECP2COMP.vhd
+	ECP2_CNT.vhd
+	ECP2_IO.vhd
+	ECP2_LUT.vhd
+	ECP2_MEM.vhd
+	ECP2_MISC.vhd
+	ECP2_MULT.vhd
+	ECP2_SL.vhd
+)
+if [[ -f "$SourceDirectory/$SourceDir/$Files" ]]; then
+	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'ECP2'.${ANSI_NOCOLOR}"
+	CreateLibraryStruct $StructName "ecp2" $SourceDir $VHDLVersion "${Files[@]}"
+	
+	VarName="DEV_${StructName}_Enable"
+	test ${!VarName} -eq 1 && Libraries+=($StructName)
+fi
+
+# ECP3 devices
+StructName="ECP3"
+SourceDir="ecp3/src"
+Files=(
+	ECP3_CMB.vhd
+	ECP3_SEQ.vhd
+	ECP3COMP.vhd
+	ECP3_CNT.vhd
+	ECP3_IO.vhd
+	ECP3_LUT.vhd
+	ECP3_MEM.vhd
+	ECP3_MISC.vhd
+	ECP3_MULT.vhd
+	ECP3_SL.vhd
+)
+if [[ -f "$SourceDirectory/$SourceDir/$Files" ]]; then
+	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'ECP3'.${ANSI_NOCOLOR}"
+	CreateLibraryStruct $StructName "ecp3" $SourceDir $VHDLVersion "${Files[@]}"
+	
+	VarName="DEV_${StructName}_Enable"
+	test ${!VarName} -eq 1 && Libraries+=($StructName)
+fi
+
+# ECP5U devices
+StructName="ECP5U"
+SourceDir="ecp5u/src"
+Files=(
+	ECP5U_CMB.vhd
+	ECP5U_SEQ.vhd
+	ECP5UCOMP.vhd
+	ECP5U_IO.vhd
+	ECP5U_LUT.vhd
+	ECP5U_MEM.vhd
+	ECP5U_MISC.vhd
+	ECP5U_SL.vhd
+	gsr_pur_assign.vhd
+)
+if [[ -f "$SourceDirectory/$SourceDir/$Files" ]]; then
+	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'ECP5U'.${ANSI_NOCOLOR}"
+	CreateLibraryStruct $StructName "ecp5u" $SourceDir $VHDLVersion "${Files[@]}"
+	
+	VarName="DEV_${StructName}_Enable"
+	test ${!VarName} -eq 1 && Libraries+=($StructName)
+fi
+
+# LPTM devices
+StructName="LPTM"
+SourceDir="lptm/src"
+Files=(
+	MACHXO_CMB.vhd
+	MACHXO_SEQ.vhd
+	MACHXOCOMP.vhd
+	MACHXO_CNT.vhd
+	MACHXO_IO.vhd
+	MACHXO_LUT.vhd
+	MACHXO_MEM.vhd
+	MACHXO_MISC.vhd
+)
+if [[ -f "$SourceDirectory/$SourceDir/$Files" ]]; then
+	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'LPTM'.${ANSI_NOCOLOR}"
+	CreateLibraryStruct $StructName "lptm" $SourceDir $VHDLVersion "${Files[@]}"
+	
+	VarName="DEV_${StructName}_Enable"
+	test ${!VarName} -eq 1 && Libraries+=($StructName)
+fi
+
+# LPTM2 devices
+StructName="LPTM2"
+SourceDir="lptm2/src"
+Files=(
+	MACHXO2_CMB.vhd
+	MACHXO2_SEQ.vhd
+	MACHXO2COMP.vhd
+	gsr_pur_assign.vhd
+	MACHXO2_CNT.vhd
+	MACHXO2_IO.vhd
+	MACHXO2_LUT.vhd
+	MACHXO2_MEM.vhd
+	MACHXO2_MISC.vhd
+)
+if [[ -f "$SourceDirectory/$SourceDir/$Files" ]]; then
+	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'LPTM2'.${ANSI_NOCOLOR}"
+	CreateLibraryStruct $StructName "lptm2" $SourceDir $VHDLVersion "${Files[@]}"
+	
+	VarName="DEV_${StructName}_Enable"
+	test ${!VarName} -eq 1 && Libraries+=($StructName)
+fi
+
+# MachXO devices
+StructName="MACHXO"
+SourceDir="machxo/src"
+Files=(
+	MACHXO_CMB.vhd
+	MACHXO_SEQ.vhd
+	MACHXOCOMP.vhd
+	MACHXO_CNT.vhd
+	MACHXO_IO.vhd
+	MACHXO_LUT.vhd
+	MACHXO_MEM.vhd
+	MACHXO_MISC.vhd
+)
+if [[ -f "$SourceDirectory/$SourceDir/$Files" ]]; then
+	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'MachXO'.${ANSI_NOCOLOR}"
+	CreateLibraryStruct $StructName "machxo" $SourceDir $VHDLVersion "${Files[@]}"
+	
+	VarName="DEV_${StructName}_Enable"
+	test ${!VarName} -eq 1 && Libraries+=($StructName)
+fi
+
+# MachXO2 devices
+StructName="MACHXO2"
+SourceDir="machxo2/src"
+Files=(
+	MACHXO2_CMB.vhd
+	MACHXO2_SEQ.vhd
+	MACHXO2COMP.vhd
+	MACHXO2_CNT.vhd
+	gsr_pur_assign.vhd
+	MACHXO2_IO.vhd
+	MACHXO2_LUT.vhd
+	MACHXO2_MEM.vhd
+	MACHXO2_MISC.vhd
+)
+if [[ -f "$SourceDirectory/$SourceDir/$Files" ]]; then
+	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'MachXO2'.${ANSI_NOCOLOR}"
+	CreateLibraryStruct $StructName "machxo2" $SourceDir $VHDLVersion "${Files[@]}"
+	
+	VarName="DEV_${StructName}_Enable"
+	test ${!VarName} -eq 1 && Libraries+=($StructName)
+fi
+
+# MachXO3L devices
+StructName="MACHXO3L"
+SourceDir="machxo3l/src"
+Files=(
+	MACHXO3L_CMB.vhd
+	MACHXO3L_SEQ.vhd
+	MACHXO3LCOMP.vhd
+	gsr_pur_assign.vhd
+	MACHXO3L_CNT.vhd
+	MACHXO3L_IO.vhd
+	MACHXO3L_LUT.vhd
+	MACHXO3L_MEM.vhd
+	MACHXO3L_MISC.vhd
+)
+if [[ -f "$SourceDirectory/$SourceDir/$Files" ]]; then
+	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'MachXO3L'.${ANSI_NOCOLOR}"
+	CreateLibraryStruct $StructName "machxo3l" $SourceDir $VHDLVersion "${Files[@]}"
+	
+	VarName="DEV_${StructName}_Enable"
+	test ${!VarName} -eq 1 && Libraries+=($StructName)
+fi
+
+# SC devices
+StructName="SC"
+SourceDir="sc/src"
+Files=(
+	ORCA_CMB.vhd
+	ORCA_SEQ.vhd
+	ORCACOMP.vhd
+	ORCA_CNT.vhd
+	ORCA_IO.vhd
+	ORCA_MEM.vhd
+	ORCA_MIS.vhd
+	ORCA_SL.vhd
+)
+if [[ -f "$SourceDirectory/$SourceDir/$Files" ]]; then
+	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'SC'.${ANSI_NOCOLOR}"
+	CreateLibraryStruct $StructName "sc" $SourceDir $VHDLVersion "${Files[@]}"
+	
+	VarName="DEV_${StructName}_Enable"
+	test ${!VarName} -eq 1 && Libraries+=($StructName)
+fi
+
+# SCM devices
+StructName="SCM"
+SourceDir="scm/src"
+Files=(
+	ORCA_CMB.vhd
+	ORCA_SEQ.vhd
+	ORCACOMP.vhd
+	ORCA_CNT.vhd
+	ORCA_IO.vhd
+	ORCA_MEM.vhd
+	ORCA_MIS.vhd
+	ORCA_SL.vhd
+)
+if [[ -f "$SourceDirectory/$SourceDir/$Files" ]]; then
+	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'SCM'.${ANSI_NOCOLOR}"
+	CreateLibraryStruct $StructName "scm" $SourceDir $VHDLVersion "${Files[@]}"
+	
+	VarName="DEV_${StructName}_Enable"
+	test ${!VarName} -eq 1 && Libraries+=($StructName)
+fi
+
+# XP devices
+StructName="XP"
+SourceDir="xp/src"
+Files=(
+	ORCA_CMB.vhd
+	ORCA_SEQ.vhd
+	ORCACOMP.vhd
+	ORCA_LUT.vhd
+	ORCA_MISC.vhd
+	ORCA_CNT.vhd
+	ORCA_IO.vhd
+	ORCA_MEM.vhd
+)
+if [[ -f "$SourceDirectory/$SourceDir/$Files" ]]; then
+	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'XP'.${ANSI_NOCOLOR}"
+	CreateLibraryStruct $StructName "xp" $SourceDir $VHDLVersion "${Files[@]}"
+	
+	VarName="DEV_${StructName}_Enable"
+	test ${!VarName} -eq 1 && Libraries+=($StructName)
+fi
+
+# XP2 devices
+StructName="XP2"
+SourceDir="xp2/src"
+Files=(
+	XP2_CMB.vhd
+	XP2_SEQ.vhd
+	XP2COMP.vhd
+	XP2_CNT.vhd
+	XP2_IO.vhd
+	XP2_LUT.vhd
+	XP2_MEM.vhd
+	XP2_MISC.vhd
+	XP2_MULT.vhd
+	XP2_SL.vhd
+)
+if [[ -f "$SourceDirectory/$SourceDir/$Files" ]]; then
+	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'XP2'.${ANSI_NOCOLOR}"
+	CreateLibraryStruct $StructName "xp2" $SourceDir $VHDLVersion "${Files[@]}"
+	
+	VarName="DEV_${StructName}_Enable"
+	test ${!VarName} -eq 1 && Libraries+=($StructName)
+fi
+
+# if [[ $DEBUG -eq 1 ]]; then
+	# for StructName in ${Libraries[*]}; do
+		# PrintLibraryStruct $StructName "    "
+	# done
+# fi
 
 # Compile libraries
 if [[ "$Libraries" != "" ]]; then
