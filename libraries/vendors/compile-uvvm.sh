@@ -69,7 +69,6 @@ DEBUG=0
 FILTERING=0  # TODO: 1
 SUPPRESS_WARNINGS=0
 HALT_ON_ERROR=0
-GHDLBinDir=""
 DestDir=""
 SrcDir=""
 while [[ $# > 0 ]]; do
@@ -158,7 +157,7 @@ while [[ $# > 0 ]]; do
 			HALT_ON_ERROR=1
 			;;
 		--ghdl)
-			GHDLBinDir="$2"
+			GHDL="$2"				# overwrite a potentially existing GHDL environment variable
 			shift						# skip argument
 			;;
 		--src)
@@ -222,7 +221,7 @@ if [ $COMMAND -le 1 ]; then
 	echo "  -H --halt-on-error        Halt on error(s)."
 	echo ""
 	echo "Advanced options:"
-	echo "     --ghdl <GHDL bin dir>  Path to GHDL's binary directory, e.g. /usr/local/bin"
+	echo "     --ghdl <GHDL binary>   Path to GHDL's executable, e.g. /usr/local/bin/ghdl"
 	echo "     --out <dir name>       Name of the output directory, e.g. uvvm_util"
 	echo "     --src <Path to UVVM>   Path to the sources."
 	echo ""
@@ -255,6 +254,7 @@ if [[ $COMPILE_UVVM_VIP -eq 1 ]]; then
 	COMPILE_UVVM_VIP_SPI=1
 	COMPILE_UVVM_VIP_UART=1
 fi
+
 
 # source configuration file from GHDL's 'vendors' library directory
 source $ScriptDir/config.sh

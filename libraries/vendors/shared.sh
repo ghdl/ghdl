@@ -35,9 +35,27 @@
 # set bash options
 set -o pipefail
 
+if [[ -n "$GHDL" ]]; then
+	if [[ ! -f "$GHDL" ]]; then
+		echo 1>&2 -e "${COLORED_ERROR} Found GHDL environment variable, but '$GHDL' is not a file.${ANSI_NOCOLOR}"
+		exit 1
+	elif [[ ! -x "$GHDL" ]]; then
+		echo 1>&2 -e "${COLORED_ERROR} Found GHDL environment variable, but '$GHDL' is not executable.${ANSI_NOCOLOR}"
+		exit 1
+	fi
+else	# fall back to GHDL found via PATH
+	GHDL=$(which ghdl 2>/dev/null)
+	if [[ $? -ne 0 ]]; then
+		echo 1>&2 -e "${COLORED_ERROR} GHDL not found in PATH.${ANSI_NOCOLOR}"
+		echo 1>&2 -e "  Use adv. options '--ghdl' to set the GHDL binary directory."
+		exit 1
+	fi
+fi
+
+
 SetupDirectories() {
-	Index=$1
-	Name=$2
+	local Index=$1
+	local Name=$2
 
 	# source directory
 	# ----------------------
@@ -74,28 +92,6 @@ SetupDirectories() {
 	SourceDirectory=$($READLINK -f $SourceDirectory)
 	if [[ ! "$DestinationDirectory" = /* ]]; then
 		DestinationDirectory=$WorkingDir/$DestinationDirectory
-	fi
-
-	# Use GHDL binary directory from command line argument, if set
-	if [ ! -z "$GHDLBinDir" ]; then
-		GHDLBinary=${GHDLBinDir%/}/ghdl		# remove trailing slashes
-		if [[ ! -x "$GHDLBinary" ]]; then
-			echo 1>&2 -e "${COLORED_ERROR} GHDL not found or is not executable.${ANSI_NOCOLOR}"
-			exit 1
-		fi
-	elif [ ! -z "$GHDL" ]; then
-		if [ ! \( -f "$GHDL" -a -x "$GHDL" \) ]; then
-			echo 1>&2 -e "${COLORED_ERROR} Found GHDL environment variable, but '$GHDL' is not executable.${ANSI_NOCOLOR}"
-			exit 1
-		fi
-		GHDLBinary=$GHDL
-	else	# fall back to GHDL found via PATH
-		GHDLBinary=$(which ghdl 2>/dev/null)
-		if [ $? -ne 0 ]; then
-			echo 1>&2 -e "${COLORED_ERROR} GHDL not found in PATH.${ANSI_NOCOLOR}"
-			echo 1>&2 -e "  Use adv. options '--ghdl' to set the GHDL binary directory."
-			exit 1
-		fi
 	fi
 }
 
