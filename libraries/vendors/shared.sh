@@ -58,6 +58,14 @@ Analyze_Parameters=(
 	--mb-comments
 )
 
+test $VERBOSE -eq 1 && echo -e "  Declaring Bash functions for GHDL..."
+
+test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}function SetupDirectories( <Index> <Name> )${ANSI_NOCOLOR}"
+# SetupDirectories
+# -> $Index
+# -> $Name
+# <= $SourceDirectory
+# <= $DestinationDirectory
 SetupDirectories() {
 	local Index=$1
 	local Name=$2
@@ -100,6 +108,9 @@ SetupDirectories() {
 	fi
 }
 
+test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}function SetupGRCat( undocumented )${ANSI_NOCOLOR}"
+# SetupGRCat
+# -> undocumented
 SetupGRCat() {
 	if [ -z "$(which grcat 2>/dev/null)" ]; then
 		# if grcat (generic colourizer) is not installed, use a dummy pipe command like 'cat'
@@ -111,6 +122,9 @@ SetupGRCat() {
 	fi
 }
 
+test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}function CreateDestinationDirectory( undocumented )${ANSI_NOCOLOR}"
+# CreateDestinationDirectory
+# -> undocumented
 CreateDestinationDirectory() {
 	if [ -d "$DestinationDirectory" ]; then
 		echo -e "${ANSI_YELLOW}Vendor directory '$DestinationDirectory' already exists.${ANSI_NOCOLOR}"
@@ -123,6 +137,12 @@ CreateDestinationDirectory() {
 	fi
 }
 
+test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}function GHDLSetup( <VHDLStandard> )${ANSI_NOCOLOR}"
+# GHDLSetup
+# -> $VHDLStandard     # FIXME: make it a real parameter
+# <= $VHDLVersion
+# <= $VHDLStandard
+# <= $VHDLFlavor
 GHDLSetup() {
 	if [ $VHDLStandard -eq 93 ]; then
 		VHDLVersion="v93"
@@ -135,6 +155,13 @@ GHDLSetup() {
 	fi
 }
 
+test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}function CreateVHDLLibrary( <StructName> <LibraryName> <LibraryPath> <VHDLVersion> <Files[*]> )${ANSI_NOCOLOR}"
+# CreateLibraryStruct
+# -> $StructName
+# -> $LibraryName
+# -> $LibraryPath
+# -> $VHDLVersion
+# -> $Files[*]
 CreateLibraryStruct() {
 	local StructName=$1; shift
 
@@ -146,6 +173,9 @@ CreateLibraryStruct() {
 	FilesRef=( "$*" )
 }
 
+test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}function DeleteLibraryStruct( <StructName> )${ANSI_NOCOLOR}"
+# DeleteLibraryStruct
+# -> $StructName
 DeleteLibraryStruct() {
 	local StructName=$1
 	
@@ -155,6 +185,9 @@ DeleteLibraryStruct() {
 	unset "${StructName}_Files"
 }
 
+test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}function PrintLibraryStruct( <StructName> )${ANSI_NOCOLOR}"
+# PrintLibraryStruct
+# -> $StructName
 PrintLibraryStruct() {
 	local StructName=$1
 	local Indentation=${2:-"    "}
@@ -168,57 +201,6 @@ PrintLibraryStruct() {
 	done
 }
 
-GHDLCompileLibrary() {
-	# assembling output directory
-	LibraryDirectory=$DestinationDirectory/$Library/$VHDLVersion
-	mkdir -p $LibraryDirectory
-	cd $LibraryDirectory
-	echo -e "${ANSI_YELLOW}Compiling library '$Library'...${ANSI_NOCOLOR}"
-
-	for File in ${SourceFiles[@]}; do
-		FileName=$(basename "$File")
-		FileSize=($(wc -c $File))
-		if [ $SKIP_EXISTING_FILES -eq 1 ] && [ -e "${FileName%.*}.o" ]; then
-			echo -e "${ANSI_CYAN}Skipping existing file '$File'${ANSI_NOCOLOR}"
-		elif [ $SKIP_LARGE_FILES -eq 1 ] && [ ${FileSize[0]} -gt $LARGE_FILESIZE ]; then
-			echo -e "${ANSI_CYAN}Skipping large file '$File'${ANSI_NOCOLOR}"
-		else
-			echo -e "${ANSI_DARKCYAN}Analyzing file '$File'${ANSI_NOCOLOR}"
-			$GHDLBinary -a ${GHDL_PARAMS[@]} --work=$Library "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
-				let ERRORCOUNT++
-				test $HALT_ON_ERROR -eq 1 && return 1
-			fi
-		fi
-	done
-	return 0
-}
-
-GHDLCompilePackages() {
-	# assembling output directory
-	LibraryDirectory=$DestinationDirectory/$Library/$VHDLVersion
-	mkdir -p $LibraryDirectory
-	cd $LibraryDirectory
-	echo -e "${ANSI_YELLOW}Compiling library '$Library'...${ANSI_NOCOLOR}"
-
-	for File in ${SourceFiles[@]}; do
-		FileName=$(basename "$File")
-		if [ $SKIP_EXISTING_FILES -eq 1 ] && [ -e "${FileName%.*}.o" ]; then
-			echo -e "${ANSI_CYAN}Skipping existing package '$File'${ANSI_NOCOLOR}"
-		else
-			echo -e "${ANSI_DARKCYAN}Analyzing package '$File'${ANSI_NOCOLOR}"
-			$GHDLBinary -a ${GHDL_PARAMS[@]} --work=$Library "$File" 2>&1 | $GRC_COMMAND
-			if [ $? -ne 0 ]; then
-				let ERRORCOUNT++
-				test $HALT_ON_ERROR -eq 1 && return 1
-			fi
-		fi
-	done
-	return 0
-}
-
-
-test $VERBOSE -eq 1 && echo -e "  Declaring Bash functions for GHDL..."
 
 declare -A GHDLLibraryMapping
 
