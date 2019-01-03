@@ -140,8 +140,9 @@ while [[ $# > 0 ]]; do
 			shift						# skip argument
 			;;
 		*)		# unknown option
-			echo 1>&2 -e "${COLORED_ERROR} Unknown command line option '$1'.${ANSI_NOCOLOR}"
-			exit 1
+			echo 1>&2 -e "\n${COLORED_ERROR} Unknown command line option '$1'.${ANSI_NOCOLOR}"
+			COMMAND=0
+			break
 			;;
 	esac
 	shift # parsed argument or value

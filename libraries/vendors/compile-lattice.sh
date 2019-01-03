@@ -132,9 +132,9 @@ while [[ $# > 0 ]]; do
 				done
 			fi
 			if [[ $FOUND -eq 0 ]]; then
-				echo ""
-				echo 1>&2 -e "${COLORED_ERROR} Unknown command line option '$1'.${ANSI_NOCOLOR}"
-				COMMAND=1
+				echo 1>&2 -e "\n${COLORED_ERROR} Unknown command line option '$1'.${ANSI_NOCOLOR}"
+				COMMAND=0
+				break
 			fi
 			;;
 	esac
