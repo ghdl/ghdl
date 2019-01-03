@@ -152,6 +152,7 @@ while [[ $# > 0 ]]; do
 done
 
 ERRORCOUNT=0
+Libraries=()
 
 if [[ $COMMAND -le 1 ]]; then
 	test $COMMAND -eq 1 && echo 1>&2 -e "\n${COLORED_ERROR} No command selected.${ANSI_NOCOLOR}"
@@ -219,8 +220,8 @@ if [ ! -z $QUARTUS_ROOTDIR ]; then
 	EnvSourceDir=$QUARTUS_ROOTDIR/${SourceDirectories[AlteraQuartus]}
 else
 	for DefaultDir in ${DefaultDirectories[@]}; do
-		for Major in 17 16 15 14 13; do
-			for Minor in 3 2 1 0; do
+		for Major in 15 14 13; do
+			for Minor in 1 0; do
 				Dir=$DefaultDir/${Major}.${Minor}/quartus
 				if [ -d $Dir ]; then
 					EnvSourceDir=$Dir/${SourceDirectories[AlteraQuartus]}
@@ -250,11 +251,9 @@ SetupDirectories AlteraQuartus "Altera Quartus"
 CreateDestinationDirectory
 cd $DestinationDirectory
 
-
 # => $SUPPRESS_WARNINGS
 # <= $GRC_COMMAND
 SetupGRCat
-
 
 # -> $VHDLStandard
 # <= $VHDLVersion
@@ -289,52 +288,50 @@ fi
 
 # Altera standard libraries
 # ==============================================================================
-if [[ $COMPILE_ALTERA -eq 1 ]]; then
-	Files=(
-		220pack.vhd
-		220model.vhd
-	)
-	CreateLibraryStruct "LPM" "lpm" "." $VHDLVersion "${Files[@]}"
-	
+StructName="LPM"
+Files=(
+	220pack.vhd
+	220model.vhd
+)
+CreateLibraryStruct $StructName "lpm" "." $VHDLVersion "${Files[@]}"
+test $COMPILE_ALTERA -eq 1 && Libraries+=($StructName)
 
-	Files=(
-		sgate_pack.vhd
-		sgate.vhd
-	)
-	CreateLibraryStruct "SGATE" "sgate" "." $VHDLVersion "${Files[@]}"
-	
-	
-	Files=(
-		altera_europa_support_lib.vhd
-		altera_primitives_components.vhd
-		altera_primitives.vhd
-		altera_standard_functions.vhd
-		altera_syn_attributes.vhd
-		alt_dspbuilder_package.vhd
-	)
-	CreateLibraryStruct "ALTERA" "altera" "." $VHDLVersion "${Files[@]}"
-	
-	Files=(
-		altera_mf_components.vhd
-		altera_mf.vhd
-	)
-	CreateLibraryStruct "ALTERA_MF" "altera_mf" "." $VHDLVersion "${Files[@]}"
-	
-	
-	Files=(
-		altera_lnsim_components.vhd
-	)
-	CreateLibraryStruct "ALTERA_LNSIM" "altera_lnsim" "." $VHDLVersion "${Files[@]}"
-	
-	
-	Libraries=(LPM SGATE ALTERA ALTERA_MF ALTERA_LNSIM)
-	
-	if [[ $DEBUG -eq 1 ]]; then
-		for StructName in ${Libraries[*]}; do
-			PrintLibraryStruct $StructName "    "
-		done
-	fi
-fi
+StructName="SGATE"
+Files=(
+	sgate_pack.vhd
+	sgate.vhd
+)
+CreateLibraryStruct $StructName "sgate" "." $VHDLVersion "${Files[@]}"
+test $COMPILE_ALTERA -eq 1 && Libraries+=($StructName)
+
+StructName="ALTERA"
+Files=(
+	altera_europa_support_lib.vhd
+	altera_primitives_components.vhd
+	altera_primitives.vhd
+	altera_standard_functions.vhd
+	altera_syn_attributes.vhd
+	alt_dspbuilder_package.vhd
+)
+CreateLibraryStruct $StructName "altera" "." $VHDLVersion "${Files[@]}"
+test $COMPILE_ALTERA -eq 1 && Libraries+=($StructName)
+
+StructName="ALTERA_MF"
+Files=(
+	altera_mf_components.vhd
+	altera_mf.vhd
+)
+CreateLibraryStruct $StructName "altera_mf" "." $VHDLVersion "${Files[@]}"
+test $COMPILE_ALTERA -eq 1 && Libraries+=($StructName)
+
+
+StructName="ALTERA_LNSIM"
+Files=(
+	altera_lnsim_components.vhd
+)
+CreateLibraryStruct $StructName "altera_lnsim" "." $VHDLVersion "${Files[@]}"
+test $COMPILE_ALTERA -eq 1 && Libraries+=($StructName)
+
 
 # Altera device libraries
 # ==============================================================================
@@ -691,6 +688,11 @@ if [[ -f "$SourceDirectory/$Files" ]]; then
 	test $COMPILE_NM -eq 1 && Libraries+=($StructName)
 fi
 
+# if [[ $DEBUG -eq 1 ]]; then
+	# for StructName in ${Libraries[*]}; do
+		# PrintLibraryStruct $StructName "    "
+	# done
+# fi
 
 # Compile libraries
 if [[ "$Libraries" != "" ]]; then

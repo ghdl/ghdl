@@ -152,6 +152,7 @@ while [[ $# > 0 ]]; do
 done
 
 ERRORCOUNT=0
+Libraries=()
 
 if [[ $COMMAND -le 1 ]]; then
 	test $COMMAND -eq 1 && echo 1>&2 -e "\n${COLORED_ERROR} No command selected.${ANSI_NOCOLOR}"
@@ -214,12 +215,12 @@ if [[ $VHDLStandard -eq 2008 ]]; then
 	HALT_ON_ERROR=0
 fi
 
-DefaultDirectories=("/opt/Altera" "/opt/altera")
+DefaultDirectories=("/opt/IntelFPGA" "/opt/intelfpga" "/opt/Intel" "/opt/intel" "/opt/Altera" "/opt/altera")
 if [ ! -z $QUARTUS_ROOTDIR ]; then
 	EnvSourceDir=$QUARTUS_ROOTDIR/${SourceDirectories[AlteraQuartus]}
 else
 	for DefaultDir in ${DefaultDirectories[@]}; do
-		for Major in 17 16 15 14 13; do
+		for Major in 19 18 17 16; do
 			for Minor in 3 2 1 0; do
 				Dir=$DefaultDir/${Major}.${Minor}/quartus
 				if [ -d $Dir ]; then
@@ -250,11 +251,9 @@ SetupDirectories AlteraQuartus "Intel Quartus"
 CreateDestinationDirectory
 cd $DestinationDirectory
 
-
 # => $SUPPRESS_WARNINGS
 # <= $GRC_COMMAND
 SetupGRCat
-
 
 # -> $VHDLStandard
 # <= $VHDLVersion
@@ -262,20 +261,18 @@ SetupGRCat
 # <= $VHDLFlavor
 GHDLSetup
 
-# Define global GHDL Options
-GHDL_OPTIONS=(
+# Extend global GHDL Options
+Analyze_Parameters+=(
 	-fexplicit
-	-frelaxed-rules
 	--no-vital-checks
 	--warn-binding
-	--mb-comments
+	-Wno-hide
+	-Wno-others
+	-Wno-parenthesis
+	--ieee=$VHDLFlavor
+	--std=$VHDLStandard
+	-P$DestinationDirectory
 )
-
-# Create a set of GHDL parameters
-GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard -P$DestinationDirectory)
-
-STOPCOMPILING=0
 
 # Cleanup directories
 # ==============================================================================
@@ -290,421 +287,374 @@ fi
 
 # Intel standard libraries
 # ==============================================================================
-if [[ $COMPILE_ALTERA -eq 1 ]]; then
-	LPM_VHDLVersion=$VHDLVersion
-	LPM_LibraryName="lpm"
-	LPM_LibraryPath="."
-	LPM_Files=(
-		220pack.vhd
-		220model.vhd
-	)
-	
-	SGATE_VHDLVersion=$VHDLVersion
-	SGATE_LibraryName="sgate"
-	SGATE_LibraryPath="."
-	SGATE_Files=(
-		sgate_pack.vhd
-		sgate.vhd
-	)
-	
-	ALTERA_VHDLVersion=$VHDLVersion
-	ALTERA_LibraryName="altera"
-	ALTERA_LibraryPath="."
-	ALTERA_Files=(
-		altera_europa_support_lib.vhd
-		altera_primitives_components.vhd
-		altera_primitives.vhd
-		altera_standard_functions.vhd
-		altera_syn_attributes.vhd
-		alt_dspbuilder_package.vhd
-	)
-	
-	ALTERA_MF_VHDLVersion=$VHDLVersion
-	ALTERA_MF_LibraryName="altera_mf"
-	ALTERA_MF_LibraryPath="."
-	ALTERA_MF_Files=(
-		altera_mf_components.vhd
-		altera_mf.vhd
-	)
-	
-	ALTERA_LNSIM_VHDLVersion=$VHDLVersion
-	ALTERA_LNSIM_LibraryName="altera_lnsim"
-	ALTERA_LNSIM_LibraryPath="."
-	ALTERA_LNSIM_Files=(
-		altera_lnsim_components.vhd
-	)
-	
-	if [[ $DEBUG -eq 1 ]]; then
-		for VHDLLibrary in "LPM SGATE ALTERA ALTERA_MF ALTERA_LNSIM"; do
-			LibraryName="${VHDLLibrary}_LibraryName"; local LibraryName=${!LibraryName}
-			Files="${VHDLLibrary}_Files[*]";          local Files=${!Files}
-			
-			echo -e "    ${ANSI_DARK_GRAY}VHDL Library name: $LibraryName${ANSI_NOCOLOR}"
-			for File in ${Files[*]}; do
-				echo -e "      ${ANSI_DARK_GRAY}$File${ANSI_NOCOLOR}"
-			done
-		done
-	fi
-fi
+StructName="LPM"
+Files=(
+	220pack.vhd
+	220model.vhd
+)
+CreateLibraryStruct $StructName "lpm" "." $VHDLVersion "${Files[@]}"
+test $COMPILE_ALTERA -eq 1 && Libraries+=($StructName)
 
-# Altera device libraries
+StructName="SGATE"
+Files=(
+	sgate_pack.vhd
+	sgate.vhd
+)
+CreateLibraryStruct $StructName "sgate" "." $VHDLVersion "${Files[@]}"
+test $COMPILE_ALTERA -eq 1 && Libraries+=($StructName)
+
+StructName="ALTERA"
+Files=(
+	altera_europa_support_lib.vhd
+	altera_primitives_components.vhd
+	altera_primitives.vhd
+	altera_standard_functions.vhd
+	altera_syn_attributes.vhd
+	alt_dspbuilder_package.vhd
+)
+CreateLibraryStruct $StructName "altera" "." $VHDLVersion "${Files[@]}"
+test $COMPILE_ALTERA -eq 1 && Libraries+=($StructName)
+
+StructName="ALTERA_MF"
+Files=(
+	altera_mf_components.vhd
+	altera_mf.vhd
+)
+CreateLibraryStruct $StructName "altera_mf" "." $VHDLVersion "${Files[@]}"
+test $COMPILE_ALTERA -eq 1 && Libraries+=($StructName)
+
+
+StructName="ALTERA_LNSIM"
+Files=(
+	altera_lnsim_components.vhd
+)
+CreateLibraryStruct $StructName "altera_lnsim" "." $VHDLVersion "${Files[@]}"
+test $COMPILE_ALTERA -eq 1 && Libraries+=($StructName)
+
+# Intel device libraries
 # ==============================================================================
-# compile Max library
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_MAX" == "TRUE" ]; then
-	Library="max"
-	Files=(
-		max_atoms.vhd
-		max_components.vhd
-	)
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
+test $VERBOSE -eq 1 && echo -e "  Searching available devices ..."
 
-	GHDLCompilePackages
+# Max library
+StructName="MAX"
+Files=(
+	max_atoms.vhd
+	max_components.vhd
+)
+if [[ -f "$SourceDirectory/$Files" ]]; then
+	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Max'.${ANSI_NOCOLOR}"
+	CreateLibraryStruct $StructName "max" "." $VHDLVersion "${Files[@]}"
+	
+	test $COMPILE_MAX -eq 1 && Libraries+=($StructName)
 fi
 
-# compile MaxII library
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_MAX" == "TRUE" ]; then
-	Library="maxii"
-	Files=(
-		maxii_atoms.vhd
-		maxii_components.vhd
-	)
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
+# Max II library
+StructName="MAX_II"
+Files=(
+	maxii_atoms.vhd
+	maxii_components.vhd
+)
+if [[ -f "$SourceDirectory/$Files" ]]; then
+	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Max II'.${ANSI_NOCOLOR}"
+	CreateLibraryStruct $StructName "maxii" "." $VHDLVersion "${Files[@]}"
+	
+	test $COMPILE_MAX -eq 1 && Libraries+=($StructName)
+fi
+	
+# Max V library
+StructName="MAX_V"
+Files=(
+	maxv_atoms.vhd
+	maxv_components.vhd
+)
+if [[ -f "$SourceDirectory/$Files" ]]; then
+	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Max V'.${ANSI_NOCOLOR}"
+	CreateLibraryStruct $StructName "maxv" "." $VHDLVersion "${Files[@]}"
+	
+	test $COMPILE_MAX -eq 1 && Libraries+=($StructName)
 fi
 
-# compile MaxV library
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_MAX" == "TRUE" ]; then
-	Library="maxv"
-	Files=(
-		maxv_atoms.vhd
-		maxv_components.vhd
+# Arria II library
+StructName="ARRIA_II"
+Files=(
+	arriaii_atoms.vhd
+	arriaii_components.vhd
+)
+if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
+	Files+=(
+		arriaii_hssi_components.vhd
+		arriaii_hssi_atoms.vhd
 	)
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
 fi
-
-# compile ArriaII library
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_ARRIA" == "TRUE" ]; then
-	Library="arriaii"
-	Files=(
-		arriaii_atoms.vhd
-		arriaii_components.vhd
-	)
-	if [ $SKIP_LARGE_FILES -eq 0 ]; then
-		Files+=(
-			arriaii_hssi_components.vhd
-			arriaii_hssi_atoms.vhd
-		)
-	fi
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
+if [[ -f "$SourceDirectory/$Files" ]]; then
+	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Arria II'.${ANSI_NOCOLOR}"
+	CreateLibraryStruct $StructName "arriaii" "." $VHDLVersion "${Files[@]}"
+	
+	test $COMPILE_ARRIA -eq 1 && Libraries+=($StructName)
 fi
-
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_ARRIA" == "TRUE" ] && [ $SKIP_LARGE_FILES -eq 0 ]; then
-	Library="arriaii_pcie_hip"
+	
+# Arria II (PCIe) library
+if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
+	StructName="ARRIA_II_PCIe"
 	Files=(
 		arriaii_pcie_hip_components.vhd
 		arriaii_pcie_hip_atoms.vhd
 	)
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
-fi
-
-# compile ArriaIIGZ library
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_ARRIA" == "TRUE" ]; then
-	Library="arriaiigz"
-	Files=(
-		arriaiigz_atoms.vhd
-		arriaiigz_components.vhd
-	)
-	if [ $SKIP_LARGE_FILES -eq 0 ]; then
-		Files+=(
-			arriaiigz_hssi_components.vhd
-		)
+	if [[ -f "$SourceDirectory/$Files" ]]; then
+		test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Arria II (PCIe)'.${ANSI_NOCOLOR}"
+		CreateLibraryStruct $StructName "arriaii_pcie_hip" "." $VHDLVersion "${Files[@]}"
+		
+		test $COMPILE_ARRIA -eq 1 && Libraries+=($StructName)
 	fi
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
 fi
 
-# compile ArriaV library
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_ARRIA" == "TRUE" ]; then
-	Library="arriav"
-	Files=(
-		arriav_atoms.vhd
-		arriav_components.vhd
+# ArriaII GZ library
+StructName="ARRIA_II_GZ"
+Files=(
+	arriaiigz_atoms.vhd
+	arriaiigz_components.vhd
+)
+if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
+	Files+=(
+		arriaiigz_hssi_components.vhd
 	)
-	if [ $SKIP_LARGE_FILES -eq 0 ]; then
-		Files+=(
-			arriav_hssi_components.vhd
-			arriav_hssi_atoms.vhd
-		)
-	fi
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
+fi
+if [[ -f "$SourceDirectory/$Files" ]]; then
+	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Arria II GZ'.${ANSI_NOCOLOR}"
+	CreateLibraryStruct $StructName "arriaiigz" "." $VHDLVersion "${Files[@]}"
+	
+	test $COMPILE_ARRIA -eq 1 && Libraries+=($StructName)
 fi
 
-# compile ArriaVGZ library
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_ARRIA" == "TRUE" ]; then
-	Library="arriavgz"
-	Files=(
-		arriavgz_atoms.vhd
-		arriavgz_components.vhd
+# ArriaV library
+StructName="ARRIA_V"
+Files=(
+	arriav_atoms.vhd
+	arriav_components.vhd
+)
+if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
+	Files+=(
+		arriav_hssi_components.vhd
+		arriav_hssi_atoms.vhd
 	)
-	if [ $SKIP_LARGE_FILES -eq 0 ]; then
-		Files+=(
-			arriavgz_hssi_components.vhd
-			arriavgz_hssi_atoms.vhd
-		)
-	fi
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
+fi
+if [[ -f "$SourceDirectory/$Files" ]]; then
+	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Arria V'.${ANSI_NOCOLOR}"
+	CreateLibraryStruct $StructName "arriav" "." $VHDLVersion "${Files[@]}"
+	
+	test $COMPILE_ARRIA -eq 1 && Libraries+=($StructName)
 fi
 
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_ARRIA" == "TRUE" ] && [ $SKIP_LARGE_FILES -eq 0 ]; then
-	Library="arriavgz_pcie_hip"
+# Arria V GZ library
+StructName="ARRIA_V_GZ"
+Files=(
+	arriavgz_atoms.vhd
+	arriavgz_components.vhd
+)
+if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
+	Files+=(
+		arriavgz_hssi_components.vhd
+		arriavgz_hssi_atoms.vhd
+	)
+fi
+if [[ -f "$SourceDirectory/$Files" ]]; then
+	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Arria V GZ'.${ANSI_NOCOLOR}"
+	CreateLibraryStruct $StructName "arriavgz" "." $VHDLVersion "${Files[@]}"
+	
+	test $COMPILE_ARRIA -eq 1 && Libraries+=($StructName)
+fi
+
+# Arria V GZ (PCIe) library
+if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
+	StructName="ARRIA_V_GZ_PCIe"
 	Files=(
 		arriavgz_pcie_hip_components.vhd
 		arriavgz_pcie_hip_atoms.vhd
 	)
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
-fi
-
-# compile CycloneIV library
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_CYCLONE" == "TRUE" ]; then
-	Library="cycloneiv"
-	Files=(
-		cycloneiv_atoms.vhd
-		cycloneiv_components.vhd
-	)
-	if [ $SKIP_LARGE_FILES -eq 0 ]; then
-		Files+=(
-			cycloneiv_hssi_components.vhd
-			cycloneiv_hssi_atoms.vhd
-		)
+	if [[ -f "$SourceDirectory/$Files" ]]; then
+		test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Arria V GZ (PCIe)'.${ANSI_NOCOLOR}"
+		CreateLibraryStruct $StructName "arriavgz_pcie_hip" "." $VHDLVersion "${Files[@]}"
+		
+		test $COMPILE_ARRIA -eq 1 && Libraries+=($StructName)
 	fi
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
 fi
 
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_CYCLONE" == "TRUE" ] && [ $SKIP_LARGE_FILES -eq 0 ]; then
-	Library="cycloneiv_pcie_hip"
+# Cyclone IV library
+StructName="CYCLONE_IV"
+Files=(
+	cycloneiv_atoms.vhd
+	cycloneiv_components.vhd
+)
+if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
+	Files+=(
+		cycloneiv_hssi_components.vhd
+		cycloneiv_hssi_atoms.vhd
+	)
+fi
+if [[ -f "$SourceDirectory/$Files" ]]; then
+	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Cyclone IV'.${ANSI_NOCOLOR}"
+	CreateLibraryStruct $StructName "cycloneiv" "." $VHDLVersion "${Files[@]}"
+	
+	test $COMPILE_CYCLONE -eq 1 && Libraries+=($StructName)
+fi
+
+# Cyclone IV (PCIe) library
+if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
+	StructName="CYCLONE_IV_PCIe"
 	Files=(
 		cycloneiv_pcie_hip_components.vhd
 		cycloneiv_pcie_hip_atoms.vhd
 	)
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
-fi
-
-# compile CycloneIVE library
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_CYCLONE" == "TRUE" ]; then
-	Library="cycloneive"
-	Files=(
-		cycloneive_atoms.vhd
-		cycloneive_components.vhd
-	)
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
-fi
-
-# compile CycloneV library
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_CYCLONE" == "TRUE" ]; then
-	Library="cyclonev"
-	Files=(
-		cyclonev_atoms.vhd
-		cyclonev_components.vhd
-	)
-	if [ $SKIP_LARGE_FILES -eq 0 ]; then
-		Files+=(
-			cyclonev_hssi_components.vhd
-			cyclonev_hssi_atoms.vhd
-		)
+	if [[ -f "$SourceDirectory/$Files" ]]; then
+		test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Cyclone IV (PCIe)'.${ANSI_NOCOLOR}"
+		CreateLibraryStruct $StructName "cycloneiv_pcie_hip" "." $VHDLVersion "${Files[@]}"
+		
+		test $COMPILE_CYCLONE -eq 1 && Libraries+=($StructName)
 	fi
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
 fi
 
-# compile StratixIV library
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_STRATIX" == "TRUE" ]; then
-	Library="stratixiv"
-	Files=(
-		stratixiv_atoms.vhd
-		stratixiv_components.vhd
+# Cyclone IV E library
+StructName="CYCLONE_IV_E"
+Files=(
+	cycloneive_atoms.vhd
+	cycloneive_components.vhd
+)
+if [[ -f "$SourceDirectory/$Files" ]]; then
+	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Cyclone IV E'.${ANSI_NOCOLOR}"
+	CreateLibraryStruct $StructName "cycloneive" "." $VHDLVersion "${Files[@]}"
+	
+	test $COMPILE_CYCLONE -eq 1 && Libraries+=($StructName)
+fi
+
+# Cyclone V library
+StructName="CYCLONE_V"
+Files=(
+	cyclonev_atoms.vhd
+	cyclonev_components.vhd
+)
+if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
+	Files+=(
+		cyclonev_hssi_components.vhd
+		cyclonev_hssi_atoms.vhd
 	)
-	if [ $SKIP_LARGE_FILES -eq 0 ]; then
-		Files+=(
-			stratixiv_hssi_components.vhd
-			stratixiv_hssi_atoms.vhd
-		)
-	fi
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
+fi
+if [[ -f "$SourceDirectory/$Files" ]]; then
+	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Cyclone V'.${ANSI_NOCOLOR}"
+	CreateLibraryStruct $StructName "cyclonev" "." $VHDLVersion "${Files[@]}"
+	
+	test $COMPILE_CYCLONE -eq 1 && Libraries+=($StructName)
 fi
 
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_STRATIX" == "TRUE" ] && [ $SKIP_LARGE_FILES -eq 0 ]; then
-	Library="stratixiv_pcie_hip"
+# Stratix IV library
+StructName="STRATIX_IV"
+Files=(
+	stratixiv_atoms.vhd
+	stratixiv_components.vhd
+)
+if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
+	Files+=(
+		stratixiv_hssi_components.vhd
+		stratixiv_hssi_atoms.vhd
+	)
+fi
+if [[ -f "$SourceDirectory/$Files" ]]; then
+	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Stratix IV'.${ANSI_NOCOLOR}"
+	CreateLibraryStruct $StructName "stratixiv" "." $VHDLVersion "${Files[@]}"
+	
+	test $COMPILE_STRATIX -eq 1 && Libraries+=($StructName)
+fi
+
+# Stratix IV (PCIe) library
+if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
+	StructName="STRATIX_IV_PCIe"
 	Files=(
 		stratixiv_pcie_hip_components.vhd
 		stratixiv_pcie_hip_atoms.vhd
 	)
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
-fi
-
-# compile StratixV library
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_STRATIX" == "TRUE" ]; then
-	Library="stratixv"
-	Files=(
-		stratixv_atoms.vhd
-		stratixv_components.vhd
-	)
-	if [ $SKIP_LARGE_FILES -eq 0 ]; then
-		Files+=(
-			stratixv_hssi_components.vhd
-			stratixv_hssi_atoms.vhd
-		)
+	if [[ -f "$SourceDirectory/$Files" ]]; then
+		test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Stratix IV (PCIe)'.${ANSI_NOCOLOR}"
+		CreateLibraryStruct $StructName "stratixiv_pcie_hip" "." $VHDLVersion "${Files[@]}"
+		
+		test $COMPILE_STRATIX -eq 1 && Libraries+=($StructName)
 	fi
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
 fi
 
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_STRATIX" == "TRUE" ] && [ $SKIP_LARGE_FILES -eq 0 ]; then
-	Library="stratixv_pcie_hip"
+# Stratix V library
+StructName="STRATIX_V"
+Files=(
+	stratixv_atoms.vhd
+	stratixv_components.vhd
+)
+if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
+	Files+=(
+		stratixv_hssi_components.vhd
+		stratixv_hssi_atoms.vhd
+	)
+fi
+if [[ -f "$SourceDirectory/$Files" ]]; then
+	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Stratix V'.${ANSI_NOCOLOR}"
+	CreateLibraryStruct $StructName "stratixv" "." $VHDLVersion "${Files[@]}"
+	
+	test $COMPILE_STRATIX -eq 1 && Libraries+=($StructName)
+fi
+
+# Stratix V (PCIe) library
+if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
+	StructName="STRATIX_V_PCIe"
 	Files=(
 		stratixv_pcie_hip_components.vhd
 		stratixv_pcie_hip_atoms.vhd
 	)
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
-fi
-
-# compile fiftyfivenm library
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_NM" == "TRUE" ]; then
-	Library="fiftyfivenm"
-	Files=(
-		fiftyfivenm_atoms.vhd
-		fiftyfivenm_components.vhd
-	)
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
-fi
-
-# compile twentynm library
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_NM" == "TRUE" ]; then
-	Library="twentynm"
-	Files=(
-		twentynm_atoms.vhd
-		twentynm_components.vhd
-	)
-	if [ $SKIP_LARGE_FILES -eq 0 ]; then
-		Files+=(
-			twentynm_hip_components.vhd
-			twentynm_hip_atoms.vhd
-			twentynm_hssi_components.vhd
-			twentynm_hssi_atoms.vhd
-		)
+	if [[ -f "$SourceDirectory/$Files" ]]; then
+		test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device 'Stratix V (PCIe)'.${ANSI_NOCOLOR}"
+		CreateLibraryStruct $StructName "stratixv_pcie_hip" "." $VHDLVersion "${Files[@]}"
+		
+		test $COMPILE_STRATIX -eq 1 && Libraries+=($StructName)
 	fi
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
 fi
+
+# 55 nm library
+StructName="NM_55"
+Files=(
+	fiftyfivenm_atoms.vhd
+	fiftyfivenm_components.vhd
+)
+if [[ -f "$SourceDirectory/$Files" ]]; then
+	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device '55 nm'.${ANSI_NOCOLOR}"
+	CreateLibraryStruct $StructName "fiftyfivenm" "." $VHDLVersion "${Files[@]}"
+	
+	test $COMPILE_NM -eq 1 && Libraries+=($StructName)
+fi
+
+# 20 nm library
+StructName="NM_20"
+Files=(
+	twentynm_atoms.vhd
+	twentynm_components.vhd
+)
+if [[ $SKIP_LARGE_FILES -eq 0 ]]; then
+	Files+=(
+		twentynm_hip_components.vhd
+		twentynm_hip_atoms.vhd
+		twentynm_hssi_components.vhd
+		twentynm_hssi_atoms.vhd
+	)
+fi
+if [[ -f "$SourceDirectory/$Files" ]]; then
+	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Found device '20 nm'.${ANSI_NOCOLOR}"
+	CreateLibraryStruct $StructName "twentynm" "." $VHDLVersion "${Files[@]}"
+	
+	test $COMPILE_NM -eq 1 && Libraries+=($StructName)
+fi
+
+# if [[ $DEBUG -eq 1 ]]; then
+	# for StructName in ${Libraries[*]}; do
+		# PrintLibraryStruct $StructName "    "
+	# done
+# fi
 
 if [[ $Libraries != "" ]]; then
-	Compile "$SourceDirectory" "$Libraries"
+	Compile "$SourceDirectory" "${Libraries[*]}"
 	
 	echo "--------------------------------------------------------------------------------"
 	echo -e "Compiling Intel Quartus packages and device libraries $(test $ERRORCOUNT -eq 0 && echo $COLORED_SUCCESSFUL || echo $COLORED_FAILED)"
