@@ -112,6 +112,7 @@ done
 
 SKIP_EXISTING_FILES=0  # Makes no sense to enable it for OSVVM
 ERRORCOUNT=0
+Libraries=()
 
 if [[ $COMMAND -le 1 ]]; then
 	test $COMMAND -eq 1 && echo 1>&2 -e "\n${COLORED_ERROR} No command selected.${ANSI_NOCOLOR}"
@@ -189,18 +190,17 @@ cd $DestinationDirectory
 SetupGRCat
 
 
-# Define global GHDL Options
-GHDL_OPTIONS=(
+# Extend global GHDL Options
+Analyze_Parameters+=(
 	-fexplicit
-	-frelaxed-rules
 	--no-vital-checks
-	--warn-binding
-	--mb-comments
+	-Wbinding
+	-Wno-hide
+	-Wno-others
+	-Wno-static
+	--std=08
+	-P$DestinationDirectory
 )
-
-# Create a set of GHDL parameters
-GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-GHDL_PARAMS+=(--std=08 -P$DestinationDirectory)
 VHDLVersion="v08"
 
 
@@ -215,43 +215,29 @@ fi
 
 # Library osvvm
 # ==============================================================================
-# Compile osvvm packages
-if [[ $COMPILE_OSVVM -eq 1 ]]; then
-	OSVVM_VHDLVersion=$VHDLVersion
-	OSVVM_LibraryName="osvvm"
-	OSVVM_LibraryPath="."
-	OSVVM_Files=(
-		NamePkg.vhd
-		OsvvmGlobalPkg.vhd
-		VendorCovApiPkg.vhd
-		TranscriptPkg.vhd
-		TextUtilPkg.vhd
-		AlertLogPkg.vhd
-		MessagePkg.vhd
-		SortListPkg_int.vhd
-		RandomBasePkg.vhd
-		RandomPkg.vhd
-		CoveragePkg.vhd
-		MemoryPkg.vhd
-		ScoreboardGenericPkg.vhd
-		ScoreboardPkg_slv.vhd
-		ScoreboardPkg_int.vhd
-		ResolutionPkg.vhd
-		TbUtilPkg.vhd
-		OsvvmContext.vhd
-	)
-
-	if [[ $DEBUG -eq 1 ]]; then
-		echo -e "    ${ANSI_DARK_GRAY}VHDL Library name: $OSVVM_LibraryName${ANSI_NOCOLOR}"
-		for File in ${OSVVM_Files[*]}; do
-			echo -e "      ${ANSI_DARK_GRAY}$File${ANSI_NOCOLOR}"
-		done
-	fi
-fi
-
-if [[ $COMPILE_OSVVM -eq 1 ]]; then
-	Libraries="OSVVM $Libraries"
-fi	
+StructName="OSVVM"
+Files=(
+	NamePkg.vhd
+	OsvvmGlobalPkg.vhd
+	VendorCovApiPkg.vhd
+	TranscriptPkg.vhd
+	TextUtilPkg.vhd
+	AlertLogPkg.vhd
+	MessagePkg.vhd
+	SortListPkg_int.vhd
+	RandomBasePkg.vhd
+	RandomPkg.vhd
+	CoveragePkg.vhd
+	MemoryPkg.vhd
+	ScoreboardGenericPkg.vhd
+	ScoreboardPkg_slv.vhd
+	ScoreboardPkg_int.vhd
+	ResolutionPkg.vhd
+	TbUtilPkg.vhd
+	OsvvmContext.vhd
+)
+CreateLibraryStruct $StructName "osvvm" "." $VHDLVersion "${Files[@]}"
+test $COMPILE_OSVVM -eq 1 && Libraries+=($StructName)
 
 # for VIPName in ${VIPNames[*]}; do
 	# VarName="COMPILE_OSVVM_${VIPName}"
@@ -260,8 +246,9 @@ fi
 	# fi
 # done
 
-if [[ $Libraries != "" ]]; then
-	Compile "$SourceDirectory" "$Libraries"
+# Compile libraries
+if [[ "$Libraries" != "" ]]; then
+	Compile "$SourceDirectory" "${Libraries[*]}"
 	
 	echo "--------------------------------------------------------------------------------"
 	echo -e "Compiling OSVVM packages and VIPs $(test $ERRORCOUNT -eq 0 && echo $COLORED_SUCCESSFUL || echo $COLORED_FAILED)"

@@ -262,7 +262,7 @@ GHDL_OPTIONS=(
 	-fexplicit
 	-frelaxed-rules
 	--no-vital-checks
-	--warn-binding
+	-Wbinding
 	--mb-comments
 )
 

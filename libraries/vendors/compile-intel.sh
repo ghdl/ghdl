@@ -265,7 +265,7 @@ GHDLSetup
 Analyze_Parameters+=(
 	-fexplicit
 	--no-vital-checks
-	--warn-binding
+	-Wbinding
 	-Wno-hide
 	-Wno-others
 	-Wno-parenthesis

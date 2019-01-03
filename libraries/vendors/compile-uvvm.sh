@@ -289,11 +289,15 @@ SetupGRCat
 Analyze_Parameters+=(
 	-fexplicit
 	--no-vital-checks
-	--warn-binding
+	-Wbinding
+	-Wno-hide
+	-Wno-shared
+	-Wno-body
 	--std=08
 	-P$DestinationDirectory
 )
 VHDLVersion="v08"
+
 
 # Cleanup directory
 # ==============================================================================
@@ -307,58 +311,45 @@ fi
 # UVVM libraries
 # ==============================================================================
 test $VERBOSE -eq 1 && echo -e "  ${ANSI_GRAY}Reading compile order files...${ANSI_NOCOLOR}"
-	
-# Compile uvvm_util packages
-if [[ $COMPILE_UVVM_UTILITIES -eq 1 ]]; then
-	UVVM_UTIL_VHDLVersion=$VHDLVersion
-	UVVM_UTIL_LibraryPath="uvvm_util"
-	UVVM_UTIL_Files=()
-	
-	test $DEBUG -eq 1   && echo -e "    ${ANSI_DARK_GRAY}Reading compile order from '$SourceDirectory/$UVVM_UTIL_LibraryPath/script/compile_order.txt'${ANSI_NOCOLOR}"
 
-	while IFS= read -r File; do
-		if [[ ${File:0:2} == "# " ]]; then
-			if [[ ${File:2:7} == "library" ]]; then
-				UVVM_UTIL_LibraryName=${File:10:-1}
-			fi
-		else
-			UVVM_UTIL_Files+=("${File:3:-1}")
+# Read uvvm_util library files
+StructName="UVVM_UTIL"
+LibraryPath="uvvm_util"
+Files=()
+test $DEBUG -eq 1   && echo -e "    ${ANSI_DARK_GRAY}Reading compile order from '$SourceDirectory/$LibraryPath/script/compile_order.txt'${ANSI_NOCOLOR}"
+while IFS= read -r File; do
+	if [[ ${File:0:2} == "# " ]]; then
+		if [[ ${File:2:7} == "library" ]]; then
+			LibraryName=${File:10:-1}
 		fi
-	done < <(cat "$SourceDirectory/$UVVM_UTIL_LibraryPath/script/compile_order.txt")
-	
-	if [[ $DEBUG -eq 1 ]]; then
-		echo -e "    ${ANSI_DARK_GRAY}VHDL Library name: $UVVM_UTIL_LibraryName${ANSI_NOCOLOR}"
-		for File in ${UVVM_UTIL_Files[*]}; do
-			echo -e "      ${ANSI_DARK_GRAY}$File${ANSI_NOCOLOR}"
-		done
+	else
+		Files+=("${File:3:-1}")
 	fi
-fi
+done < <(cat "$SourceDirectory/$LibraryPath/script/compile_order.txt")
 
-# Compile uvvm_vvc_framework packages
-if [[ $COMPILE_UVVM_VVC_FRAMEWORK -eq 1 ]]; then
-	UVVM_VVC_FRAMEWORK_VHDLVersion=$VHDLVersion
-	UVVM_VVC_FRAMEWORK_LibraryPath="uvvm_vvc_framework"
-	UVVM_VVC_FRAMEWORK_Files=()
+CreateLibraryStruct $StructName $LibraryName $LibraryPath $VHDLVersion "${Files[@]}"
 
-	test $DEBUG -eq 1   && echo -e "    ${ANSI_DARK_GRAY}Reading compile order from '$SourceDirectory/$UVVM_UTIL_LibraryPath/script/compile_order.txt'${ANSI_NOCOLOR}"
+test $COMPILE_UVVM_UTILITIES -eq 1 && Libraries+=($StructName)
 
-	while IFS= read -r File; do
-		if [[ ${File:0:2} == "# " ]]; then
-			if [[ ${File:2:7} == "library" ]]; then
-				UVVM_VVC_FRAMEWORK_LibraryName=${File:10:-1}
-			fi
-		else
-			UVVM_VVC_FRAMEWORK_Files+=("${File:3:-1}")
+
+# Reading uvvm_vvc_framework library files
+StructName="UVVM_VVC_FRAMEWORK"
+LibraryPath="uvvm_vvc_framework"
+Files=()
+test $DEBUG -eq 1   && echo -e "    ${ANSI_DARK_GRAY}Reading compile order from '$SourceDirectory/$LibraryPath/script/compile_order.txt'${ANSI_NOCOLOR}"
+while IFS= read -r File; do
+	if [[ ${File:0:2} == "# " ]]; then
+		if [[ ${File:2:7} == "library" ]]; then
+			LibraryName=${File:10:-1}
 		fi
-	done < <(cat "$SourceDirectory/$UVVM_VVC_FRAMEWORK_LibraryPath/script/compile_order.txt")
-	
-	if [[ $DEBUG -eq 1 ]]; then
-		echo -e "    ${ANSI_DARK_GRAY}VHDL Library name: $UVVM_VVC_FRAMEWORK_LibraryName${ANSI_NOCOLOR}"
-		for File in ${UVVM_VVC_FRAMEWORK_Files[*]}; do
-			echo -e "      ${ANSI_DARK_GRAY}$File${ANSI_NOCOLOR}"
-		done
+	else
+		Files+=("${File:3:-1}")
 	fi
-fi
+done < <(cat "$SourceDirectory/$LibraryPath/script/compile_order.txt")
+
+CreateLibraryStruct $StructName $LibraryName $LibraryPath $VHDLVersion "${Files[@]}"
+
+test $COMPILE_UVVM_VVC_FRAMEWORK -eq 1 && Libraries+=($StructName)
 
 
 # Verification IPs
@@ -375,6 +366,8 @@ while IFS= read -r VIPDirectory; do
 	test $VERBOSE -eq 1 && echo -e "  ${ANSI_GRAY}Found VIP '$VIPName' in '$LibraryPath'.${ANSI_NOCOLOR}"
 	test $DEBUG -eq 1   && echo -e "    ${ANSI_DARK_GRAY}Reading compile order from '$SourceDirectory/$LibraryPath/script/compile_order.txt'${ANSI_NOCOLOR}"
 
+	# Reading uvvm_vvc_framework library files
+	StructName=$VIPName
 	Files=()
 	
 	while IFS= read -r File; do
@@ -387,41 +380,20 @@ while IFS= read -r VIPDirectory; do
 		fi
 	done < <(cat "$SourceDirectory/$LibraryPath/script/compile_order.txt")
 	
-	if [[ $DEBUG -eq 1 ]]; then
-		echo -e "    ${ANSI_DARK_GRAY}VHDL Library name: $LibraryName${ANSI_NOCOLOR}"
-		
-		for File in ${Files[*]}; do
-			echo -e "      ${ANSI_DARK_GRAY}$File${ANSI_NOCOLOR}"
-		done
-	fi
-	
-	declare "${VIPName}_VHDLVersion"=$VHDLVersion
-	declare "${VIPName}_LibraryName"=$LibraryName
-	declare "${VIPName}_LibraryPath"=$LibraryPath
-	
-	declare -n FilesRef="${VIPName}_Files"
-	FilesRef=( "${Files[@]}" )
-	
-	VIPNames+=("$VIPName")
+	CreateLibraryStruct $StructName $LibraryName $LibraryPath $VHDLVersion "${Files[@]}"
+
+	VarName="COMPILE_UVVM_${VIPName}"
+	test ${!VarName} -eq 1 && Libraries+=($StructName)
 done < <(find $SourceDirectory/*vip* -type d -prune)
 
-
-if [[ $COMPILE_UVVM_VVC_FRAMEWORK -eq 1 ]]; then
-	Libraries="UVVM_VVC_FRAMEWORK $Libraries"
-fi
-if [[ $COMPILE_UVVM_UTILITIES -eq 1 ]]; then
-	Libraries="UVVM_UTIL $Libraries"
-fi	
-
-for VIPName in ${VIPNames[*]}; do
-	VarName="COMPILE_UVVM_${VIPName}"
-	if [[ ${!VarName} -eq 1 ]]; then
-		Libraries="$Libraries $VIPName"
-	fi
-done
+# if [[ $DEBUG -eq 1 ]]; then
+	# for StructName in ${Libraries[*]}; do
+		# PrintLibraryStruct $StructName "    "
+	# done
+# fi
 
 if [[ $Libraries != "" ]]; then
-	Compile "$SourceDirectory" "$Libraries"
+	Compile "$SourceDirectory" "${Libraries[*]}"
 	
 	echo "--------------------------------------------------------------------------------"
 	echo -e "Compiling UVVM packages and VIPs $(test $ERRORCOUNT -eq 0 && echo $COLORED_SUCCESSFUL || echo $COLORED_FAILED)"
