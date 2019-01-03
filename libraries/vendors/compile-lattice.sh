@@ -62,7 +62,6 @@ CLEAN=0
 VERBOSE=0
 DEBUG=0
 FILTERING=0  # TODO: 1
-SKIP_EXISTING_FILES=0
 SUPPRESS_WARNINGS=0
 HALT_ON_ERROR=0
 VHDLStandard=93
@@ -76,9 +75,6 @@ while [[ $# > 0 ]]; do
 			;;
 		-a|--all)
 			COMMAND=2
-			;;
-		-s|--skip-existing)
-			SKIP_EXISTING_FILES=1
 			;;
 		--vhdl93)
 			VHDLStandard=93
@@ -170,7 +166,6 @@ if [[ $COMMAND -le 1 ]]; then
 	echo "Library compile options:"
 	echo "     --vhdl93              Compile the libraries with VHDL-93."
 	echo "     --vhdl2008            Compile the libraries with VHDL-2008."
-	echo "  -s --skip-existing       Skip already compiled files (an *.o file exists)."
 	echo "  -H --halt-on-error       Halt on error(s)."
 	echo ""
 	echo "Advanced options:"

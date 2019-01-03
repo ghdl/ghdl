@@ -58,7 +58,6 @@ COMPILE_SECUREIP=0
 VERBOSE=0
 DEBUG=0
 FILTERING=0  # TODO: 1
-SKIP_EXISTING_FILES=0
 SKIP_LARGE_FILES=0
 SUPPRESS_WARNINGS=0
 HALT_ON_ERROR=0
@@ -89,9 +88,6 @@ while [[ $# > 0 ]]; do
 			;;
 		--with-secureip)
 			COMPILE_SECUREIP=1
-			;;
-		-s|--skip-existing)
-			SKIP_EXISTING_FILES=1
 			;;
 		-S|--skip-largefiles)
 			SKIP_LARGE_FILES=1
@@ -172,7 +168,6 @@ if [[ $COMMAND -le 1 ]]; then
 	echo "Library compile options:"  
 	echo "     --vhdl93              Compile the libraries with VHDL-93."
 	echo "     --vhdl2008            Compile the libraries with VHDL-2008."
-	echo "  -s --skip-existing       Skip already compiled files (an *.o file exists)."
 	echo "  -S --skip-largefiles     Don't compile large files. Exclude *HSSI* and *HIP* files."
 	echo "  -H --halt-on-error       Halt on error(s)."
 	echo ""

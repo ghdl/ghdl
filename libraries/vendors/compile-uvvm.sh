@@ -177,7 +177,6 @@ while [[ $# > 0 ]]; do
 	shift # parsed argument or value
 done
 
-SKIP_EXISTING_FILES=0  # Makes no sense to enable it for UVVM
 ERRORCOUNT=0
 
 if [[ $COMMAND -le 1 ]]; then
