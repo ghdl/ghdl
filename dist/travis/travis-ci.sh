@@ -29,6 +29,7 @@ scriptdir=$(dirname $0)
 . "$scriptdir/../ansi_color.sh"
 #disable_color
 
+
 # Display env (to debug)
 
 echo -en "travis_fold:start:travis_env\r"
@@ -47,7 +48,6 @@ echo "travis_fold:start:fetch"
 # The command 'git describe' (used for version) needs the history. Get it.
 # But the following command fails if the repository is complete.
 git fetch --unshallow || true
-
 echo "travis_fold:end:fetch"
 
 
