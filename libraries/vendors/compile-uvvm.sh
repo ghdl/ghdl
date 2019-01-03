@@ -35,19 +35,20 @@
 # ==============================================================================
 
 # ---------------------------------------------
-# work around for Darwin (Mac OS)
+# Work around for Darwin (Mac OS)
 READLINK=readlink; if [[ $(uname) == "Darwin" ]]; then READLINK=greadlink; fi
 
-# save working directory
+# Save working directory
 WorkingDir=$(pwd)
 ScriptDir="$(dirname $0)"
 ScriptDir="$($READLINK -f $ScriptDir)"
 
+# Source Bash utilities
 source $ScriptDir/../../dist/ansi_color.sh
 if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading Bash utilities.${ANSI_NOCOLOR}"    ; exit 1; fi
 
 
-# command line argument processing
+# Command line argument processing
 COMMAND=1
 CLEAN=0
 COMPILE_UVVM=0
@@ -72,8 +73,7 @@ HALT_ON_ERROR=0
 DestDir=""
 SrcDir=""
 while [[ $# > 0 ]]; do
-	key="$1"
-	case $key in
+	case "$1" in
 		-c|--clean)
 			COMMAND=3
 			CLEAN=1
@@ -169,17 +169,17 @@ while [[ $# > 0 ]]; do
 			shift						# skip argument
 			;;
 		*)		# unknown option
-			echo 1>&2 -e "${COLORED_ERROR} Unknown command line option '$key'.${ANSI_NOCOLOR}"
+			echo 1>&2 -e "${COLORED_ERROR} Unknown command line option '$1'.${ANSI_NOCOLOR}"
 			exit 1
 			;;
 	esac
 	shift # parsed argument or value
 done
 
-# makes no sense to enable it for UVVM
+# Makes no sense to enable it for UVVM
 SKIP_EXISTING_FILES=0
 
-if [ $COMMAND -le 1 ]; then
+if [[ $COMMAND -le 1 ]]; then
 	test $COMMAND -eq 1 && echo 1>&2 -e "\n${COLORED_ERROR} No command selected.${ANSI_NOCOLOR}"
 	echo ""
 	echo "Synopsis:"
@@ -256,7 +256,7 @@ if [[ $COMPILE_UVVM_VIP -eq 1 ]]; then
 fi
 
 
-# source configuration file from GHDL's 'vendors' library directory
+# Source configuration file from GHDL's 'vendors' library directory
 source $ScriptDir/config.sh
 if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading configuration.${ANSI_NOCOLOR}"     ; exit 1; fi
 source $ScriptDir/shared.sh
@@ -266,13 +266,11 @@ if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading further pro
 # -> $DestinationDirectories
 # -> $SrcDir
 # -> $DestDir
-# -> $GHDLBinDir
 # <= $SourceDirectory
 # <= $DestinationDirectory
-# <= $GHDLBinary
 SetupDirectories UVVM "UVVM"
 
-# create "uvvm_util" directory and change to it
+# Create "uvvm_util" directory and change to it
 # => $DestinationDirectory
 CreateDestinationDirectory
 cd $DestinationDirectory
@@ -284,11 +282,18 @@ SetupGRCat
 
 
 # define global GHDL Options
-GHDL_OPTIONS=(-fexplicit -frelaxed-rules --no-vital-checks --warn-binding --mb-comments)
+GHDL_OPTIONS=(
+	-fexplicit
+	-frelaxed-rules
+	--no-vital-checks
+	--warn-binding
+	--mb-comments
+)
 
-# create a set of GHDL parameters
+# Create a set of GHDL parameters
 GHDL_PARAMS=(${GHDL_OPTIONS[@]})
 GHDL_PARAMS+=(--std=08 -P$DestinationDirectory)
+VHDLVersion="v08"
 
 # Cleanup directory
 # ==============================================================================
@@ -298,13 +303,14 @@ if [[ $CLEAN -eq 1 ]]; then
 	rm *.cf 2> /dev/null
 fi
 
+
 # UVVM libraries
 # ==============================================================================
 test $VERBOSE -eq 1 && echo -e "  ${ANSI_GRAY}Reading compile order files...${ANSI_NOCOLOR}"
 	
-# compile uvvm_util packages
+# Compile uvvm_util packages
 if [[ $COMPILE_UVVM_UTILITIES -eq 1 ]]; then
-	UVVM_UTIL_VHDLVersion="v08"
+	UVVM_UTIL_VHDLVersion=$VHDLVersion
 	UVVM_UTIL_LibraryPath="uvvm_util"
 	UVVM_UTIL_Files=()
 	
@@ -328,9 +334,9 @@ if [[ $COMPILE_UVVM_UTILITIES -eq 1 ]]; then
 	fi
 fi
 
-# compile uvvm_vvc_framework packages
+# Compile uvvm_vvc_framework packages
 if [[ $COMPILE_UVVM_VVC_FRAMEWORK -eq 1 ]]; then
-	UVVM_VVC_FRAMEWORK_VHDLVersion="v08"
+	UVVM_VVC_FRAMEWORK_VHDLVersion=$VHDLVersion
 	UVVM_VVC_FRAMEWORK_LibraryPath="uvvm_vvc_framework"
 	UVVM_VVC_FRAMEWORK_Files=()
 
@@ -389,7 +395,7 @@ while IFS= read -r VIPDirectory; do
 		done
 	fi
 	
-	declare "${VIPName}_VHDLVersion"="v08"
+	declare "${VIPName}_VHDLVersion"=$VHDLVersion
 	declare "${VIPName}_LibraryName"=$LibraryName
 	declare "${VIPName}_LibraryPath"=$LibraryPath
 	

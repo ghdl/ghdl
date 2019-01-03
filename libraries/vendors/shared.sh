@@ -209,7 +209,7 @@ CreateVHDLLibrary() {
 	mkdir -p "$DirectoryName/$VHDLVersion"
 	
 	LibraryDir="$(pwd)/$DirectoryName/$VHDLVersion"
-	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Mapped library $LibraryName to '$LibraryDir'.${ANSI_NOCOLOR}"
+	test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}Mapping library $LibraryName to '$LibraryDir'.${ANSI_NOCOLOR}"
 	GHDLLibraryMapping[$LibraryName]=$LibraryDir
 }
 
