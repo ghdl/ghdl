@@ -6,14 +6,14 @@
 # ==============================================================================
 #	Authors:						Patrick Lehmann
 # 
-#	Bash Script:				Script to compile the simulation libraries from Altera
+#	Bash Script:				Script to compile the simulation libraries from Intel
 #											Quartus for GHDL on Linux
 # 
 # Description:
 # ------------------------------------
 #	This is a Bash script (executable) which:
 #		- creates a subdirectory in the current working directory
-#		- compiles all Altera Quartus-II simulation libraries and packages
+#		- compiles all Intel Quartus Prime simulation libraries and packages
 #
 # ==============================================================================
 #	Copyright (C) 2017-2019 Patrick Lehmann - Boetzingen, Germany
@@ -35,165 +35,181 @@
 #	02111-1307, USA.
 # ==============================================================================
 
-# ---------------------------------------------
-# work around for Darwin (Mac OS)
+# Work around for Darwin (Mac OS)
 READLINK=readlink; if [[ $(uname) == "Darwin" ]]; then READLINK=greadlink; fi
 
-# save working directory
+# Save working directory
 WorkingDir=$(pwd)
 ScriptDir="$(dirname $0)"
 ScriptDir="$($READLINK -f $ScriptDir)"
 
-# source configuration file from GHDL's 'vendors' library directory
-. $ScriptDir/../ansi_color.sh
-. $ScriptDir/config.sh
-. $ScriptDir/shared.sh
+# Source Bash utilities
+source $ScriptDir/../../dist/ansi_color.sh
+if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading Bash utilities.${ANSI_NOCOLOR}"    ; exit 1; fi
 
-# command line argument processing
-NO_COMMAND=1
+
+# Command line argument processing
+COMMAND=1
+CLEAN=0
+COMPILE_ALTERA=0
+COMPILE_MAX=0
+COMPILE_CYCLONE=0
+COMPILE_ARRIA=0
+COMPILE_STRATIX=0
+COMPILE_NM=0
+VERBOSE=0
+DEBUG=0
+FILTERING=0  # TODO: 1
 SKIP_EXISTING_FILES=0
 SKIP_LARGE_FILES=0
 SUPPRESS_WARNINGS=0
 HALT_ON_ERROR=0
 VHDLStandard=93
-GHDLBinDir=""
 DestDir=""
 SrcDir=""
 while [[ $# > 0 ]]; do
-	key="$1"
-	case $key in
+	case "$1" in
 		-c|--clean)
-		CLEAN=TRUE
-		NO_COMMAND=0
-		;;
+			COMMAND=3
+			CLEAN=1
+			;;
 		-a|--all)
-		COMPILE_ALL=TRUE
-		NO_COMMAND=0
-		;;
+			COMMAND=2
+			;;
 		--altera)
-		COMPILE_ALTERA=TRUE
-		NO_COMMAND=0
-		;;
+			COMMAND=3
+			COMPILE_ALTERA=1
+			;;
 		--max)
-		COMPILE_MAX=TRUE
-		NO_COMMAND=0
-		;;
+			COMMAND=3
+			COMPILE_MAX=1
+			;;
 		--cyclone)
-		COMPILE_CYCLONE=TRUE
-		NO_COMMAND=0
-		;;
+			COMMAND=3
+			COMPILE_CYCLONE=1
+			;;
 		--arria)
-		COMPILE_ARRIA=TRUE
-		NO_COMMAND=0
-		;;
+			COMMAND=3
+			COMPILE_ARRIA=1
+			;;
 		--stratix)
-		COMPILE_STRATIX=TRUE
-		NO_COMMAND=0
-		;;
+			COMMAND=3
+			COMPILE_STRATIX=1
+			;;
 		--nanometer)
-		COMPILE_NM=TRUE
-		NO_COMMAND=0
-		;;
-		-h|--help)
-		HELP=TRUE
-		NO_COMMAND=0
-		;;
+			COMMAND=3
+			COMPILE_NM=1
+			;;
 		-s|--skip-existing)
-		SKIP_EXISTING_FILES=1
-		;;
+			SKIP_EXISTING_FILES=1
+			;;
 		-S|--skip-largefiles)
-		SKIP_LARGE_FILES=1
-		;;
-		-n|--no-warnings)
-		SUPPRESS_WARNINGS=1
-		;;
-		-H|--halt-on-error)
-		HALT_ON_ERROR=1
-		;;
+			SKIP_LARGE_FILES=1
+			;;
 		--vhdl93)
-		VHDLStandard=93
-		;;
+			VHDLStandard=93
+			;;
 		--vhdl2008)
-		VHDLStandard=2008
-		;;
+			VHDLStandard=2008
+			;;
+		-v|--verbose)
+			VERBOSE=1
+			;;
+		-d|--debug)
+			VERBOSE=1
+			DEBUG=1
+			;;
+		-h|--help)
+			COMMAND=0
+			;;
+		-n|--no-filter)
+			FILTERING=0
+			;;
+		-N|--no-warnings)
+			SUPPRESS_WARNINGS=1
+			;;
+		-H|--halt-on-error)
+			HALT_ON_ERROR=1
+			;;
 		--ghdl)
-		GHDLBinDir="$2"
-		shift						# skip argument
-		;;
+			GHDL="$2"				# overwrite a potentially existing GHDL environment variable
+			shift						# skip argument
+			;;
 		--src)
-		SrcDir="$2"
-		shift						# skip argument
-		;;
+			SrcDir="$2"
+			shift						# skip argument
+			;;
 		--out)
-		DestDir="$2"
-		shift						# skip argument
-		;;
+			DestDir="$2"
+			shift						# skip argument
+			;;
 		*)		# unknown option
-		echo 1>&2 -e "${COLORED_ERROR} Unknown command line option '$key'.${ANSI_NOCOLOR}"
-		exit -1
-		;;
+			echo 1>&2 -e "${COLORED_ERROR} Unknown command line option '$1'.${ANSI_NOCOLOR}"
+			exit 1
+			;;
 	esac
-	shift # past argument or value
+	shift # parsed argument or value
 done
 
-if [ $NO_COMMAND -eq 1 ]; then
-	HELP=TRUE
-fi
+ERRORCOUNT=0
 
-if [ "$HELP" == "TRUE" ]; then
-	test $NO_COMMAND -eq 1 && echo 1>&2 -e "\n${COLORED_ERROR} No command selected."
+if [[ $COMMAND -le 1 ]]; then
+	test $COMMAND -eq 1 && echo 1>&2 -e "\n${COLORED_ERROR} No command selected.${ANSI_NOCOLOR}"
 	echo ""
 	echo "Synopsis:"
-	echo "  A script to compile the Altera Quartus simulation libraries for GHDL on Linux."
+	echo "  A script to compile the Intel Quartus Prime simulation libraries for GHDL on Linux."
 	echo "  One library folder 'lib/v??' per VHDL library will be created relative to the current"
 	echo "  working directory."
 	echo ""
 	echo "  Use the adv. options or edit 'config.sh' to supply paths and default params."
 	echo ""
 	echo "Usage:"
-	echo "  compile-altera.sh <common command>|<library> [<options>] [<adv. options>]"
+	echo "  compile-intel.sh [<verbosity>] <common command>|<library> [<options>] [<adv. options>]"
 	echo ""
 	echo "Common commands:"
-	echo "  -h --help             Print this help page"
-	echo "  -c --clean            Remove all generated files"
+	echo "  -h --help                Print this help page"
+	echo "  -c --clean               Remove all generated files"
 	echo ""
 	echo "Libraries:"
-	echo "  -a --all              Compile all Altera simulation libraries."
-	echo "     --altera           Compile the Altera standard libraries: lpm, sgate, altera, altera_mf, altera_lnsim."
-	echo "     --max              Compile the Altera Max device libraries."
-	echo "     --cyclone          Compile the Altera Cyclone device libraries."
-	echo "     --arria            Compile the Altera Arria device libraries."
-	echo "     --stratix          Compile the Altera Stratix device libraries."
-	echo "     --nanometer        Unknown device library."
+	echo "  -a --all                 Compile all Intel simulation libraries."
+	echo "     --intel               Compile the Altera standard libraries: lpm, sgate, altera, altera_mf, altera_lnsim."
+	echo "     --max                 Compile the Intel Max device libraries."
+	echo "     --cyclone             Compile the Intel Cyclone device libraries."
+	echo "     --arria               Compile the Intel Arria device libraries."
+	echo "     --stratix             Compile the Intel Stratix device libraries."
+	echo "     --nanometer           Unknown device library."
 	echo ""
 	echo "Library compile options:"
-	echo "     --vhdl93           Compile the libraries with VHDL-93."
-	echo "     --vhdl2008         Compile the libraries with VHDL-2008."
-	echo "  -s --skip-existing    Skip already compiled files (an *.o file exists)."
-	echo "  -S --skip-largefiles  Don't compile large files. Exclude *HSSI* and *HIP* files."
-	echo "  -H --halt-on-error    Halt on error(s)."
+	echo "     --vhdl93              Compile the libraries with VHDL-93."
+	echo "     --vhdl2008            Compile the libraries with VHDL-2008."
+	echo "  -s --skip-existing       Skip already compiled files (an *.o file exists)."
+	echo "  -S --skip-largefiles     Don't compile large files. Exclude *HSSI* and *HIP* files."
+	echo "  -H --halt-on-error       Halt on error(s)."
 	echo ""
 	echo "Advanced options:"
-	echo "  --ghdl <GHDL bin dir> Path to GHDL's binary directory, e.g. /usr/local/bin"
-	echo "  --out <dir name>      Name of the output directory, e.g. xilinx-vivado"
-	echo "  --src <Path to lib>   Path to the sources, e.g. /opt/altera/16.0/quartus/eda/sim_lib"
+	echo "     --ghdl <GHDL binary>  Path to GHDL's executable, e.g. /usr/local/bin/ghdl"
+	echo "     --out <dir name>      Name of the output directory, e.g. uvvm_util"
+	echo "     --src <Path to UVVM>  Path to the sources."
 	echo ""
 	echo "Verbosity:"
-	echo "  -n --no-warnings      Suppress all warnings. Show only error messages."
+	echo "  -v --verbose             Print verbose messages."
+	echo "  -d --debug               Print debug messages."
+#	echo "  -n --no-filter           Disable output filtering scripts."
+	echo "  -N --no-warnings         Suppress all warnings. Show only error messages."
 	echo ""
-	exit 0
+	exit $COMMAND
 fi
 
-if [ "$COMPILE_ALL" == "TRUE" ]; then
-	COMPILE_ALTERA=TRUE
-	COMPILE_MAX=TRUE
-	COMPILE_CYCLONE=TRUE
-	COMPILE_ARRIA=TRUE
-	COMPILE_STRATIX=TRUE
-	COMPILE_NM=TRUE
+if [[ $COMMAND -eq 2 ]]; then
+	COMPILE_ALTERA=1
+	COMPILE_MAX=1
+	COMPILE_CYCLONE=1
+	COMPILE_ARRIA=1
+	COMPILE_STRATIX=1
+	COMPILE_NM=1
 fi
 
-if [ $VHDLStandard -eq 2008 ]; then
+if [[ $VHDLStandard -eq 2008 ]]; then
 	echo -e "${ANSI_RED}Not all Altera packages are VHDL-2008 compatible! Setting HALT_ON_ERROR to FALSE.${ANSI_NOCOLOR}"
 	HALT_ON_ERROR=0
 fi
@@ -215,15 +231,19 @@ else
 	done
 fi
 
+# Source configuration file from GHDL's 'vendors' library directory
+source $ScriptDir/config.sh
+if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading configuration.${ANSI_NOCOLOR}"     ; exit 1; fi
+source $ScriptDir/shared.sh
+if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading further procedures.${ANSI_NOCOLOR}"; exit 1; fi
+
 # -> $SourceDirectories
 # -> $DestinationDirectories
 # -> $SrcDir
 # -> $DestDir
-# -> $GHDLBinDir
 # <= $SourceDirectory
 # <= $DestinationDirectory
-# <= $GHDLBinary
-SetupDirectories AlteraQuartus "Altera Quartus"
+SetupDirectories AlteraQuartus "Intel Quartus"
 
 # create "osvvm" directory and change to it
 # => $DestinationDirectory
@@ -242,65 +262,55 @@ SetupGRCat
 # <= $VHDLFlavor
 GHDLSetup
 
-# define global GHDL Options
-GHDL_OPTIONS=(-fexplicit -frelaxed-rules --no-vital-checks --warn-binding --mb-comments)
+# Define global GHDL Options
+GHDL_OPTIONS=(
+	-fexplicit
+	-frelaxed-rules
+	--no-vital-checks
+	--warn-binding
+	--mb-comments
+)
 
-
+# Create a set of GHDL parameters
 GHDL_PARAMS=(${GHDL_OPTIONS[@]})
 GHDL_PARAMS+=(--ieee=$VHDLFlavor --std=$VHDLStandard -P$DestinationDirectory)
 
 STOPCOMPILING=0
-ERRORCOUNT=0
 
 # Cleanup directories
 # ==============================================================================
-if [ "$CLEAN" == "TRUE" ]; then
+if [[ $CLEAN -eq 1 ]]; then
 	echo 1>&2 -e "${COLORED_ERROR} '--clean' is not implemented!"
-	exit -1
+	exit 1
 	echo -e "${ANSI_YELLOW}Cleaning up vendor directory ...${ANSI_NOCOLOR}"
 	rm *.o 2> /dev/null
 	rm *.cf 2> /dev/null
 fi
 
 
-# Altera standard libraries
+# Intel standard libraries
 # ==============================================================================
-# compile lpm library
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_ALTERA" == "TRUE" ]; then
-	Library="lpm"
-	Files=(
+if [[ $COMPILE_ALTERA -eq 1 ]]; then
+	LPM_VHDLVersion=$VHDLVersion
+	LPM_LibraryName="lpm"
+	LPM_LibraryPath="."
+	LPM_Files=(
 		220pack.vhd
 		220model.vhd
 	)
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
-fi
-
-# compile sgate library
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_ALTERA" == "TRUE" ]; then
-	Library="sgate"
-	Files=(
+	
+	SGATE_VHDLVersion=$VHDLVersion
+	SGATE_LibraryName="sgate"
+	SGATE_LibraryPath="."
+	SGATE_Files=(
 		sgate_pack.vhd
 		sgate.vhd
 	)
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
-fi
-
-# compile altera library
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_ALTERA" == "TRUE" ]; then
-	Library="altera"
-	Files=(
+	
+	ALTERA_VHDLVersion=$VHDLVersion
+	ALTERA_LibraryName="altera"
+	ALTERA_LibraryPath="."
+	ALTERA_Files=(
 		altera_europa_support_lib.vhd
 		altera_primitives_components.vhd
 		altera_primitives.vhd
@@ -308,44 +318,33 @@ if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_ALTERA" == "TRUE" ]; then
 		altera_syn_attributes.vhd
 		alt_dspbuilder_package.vhd
 	)
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
-fi
-
-# compile altera_mf library
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_ALTERA" == "TRUE" ]; then
-	Library="altera_mf"
-	Files=(
+	
+	ALTERA_MF_VHDLVersion=$VHDLVersion
+	ALTERA_MF_LibraryName="altera_mf"
+	ALTERA_MF_LibraryPath="."
+	ALTERA_MF_Files=(
 		altera_mf_components.vhd
 		altera_mf.vhd
 	)
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
-fi
-
-# compile altera_lnsim library
-if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_ALTERA" == "TRUE" ]; then
-	Library="altera_lnsim"
-	Files=(
+	
+	ALTERA_LNSIM_VHDLVersion=$VHDLVersion
+	ALTERA_LNSIM_LibraryName="altera_lnsim"
+	ALTERA_LNSIM_LibraryPath="."
+	ALTERA_LNSIM_Files=(
 		altera_lnsim_components.vhd
 	)
-	# append absolute source path
-	SourceFiles=()
-	for File in ${Files[@]}; do
-		SourceFiles+=("$SourceDirectory/$File")
-	done
-
-	GHDLCompilePackages
+	
+	if [[ $DEBUG -eq 1 ]]; then
+		for VHDLLibrary in "LPM SGATE ALTERA ALTERA_MF ALTERA_LNSIM"; do
+			LibraryName="${VHDLLibrary}_LibraryName"; local LibraryName=${!LibraryName}
+			Files="${VHDLLibrary}_Files[*]";          local Files=${!Files}
+			
+			echo -e "    ${ANSI_DARK_GRAY}VHDL Library name: $LibraryName${ANSI_NOCOLOR}"
+			for File in ${Files[*]}; do
+				echo -e "      ${ANSI_DARK_GRAY}$File${ANSI_NOCOLOR}"
+			done
+		done
+	fi
 fi
 
 # Altera device libraries
@@ -704,10 +703,11 @@ if [ $STOPCOMPILING -eq 0 ] && [ "$COMPILE_NM" == "TRUE" ]; then
 	GHDLCompilePackages
 fi
 
-echo "--------------------------------------------------------------------------------"
-echo -n "Compiling Altera Quartus libraries "
-if [ $ERRORCOUNT -gt 0 ]; then
-	echo -e $COLORED_FAILED
+if [[ $Libraries != "" ]]; then
+	Compile "$SourceDirectory" "$Libraries"
+	
+	echo "--------------------------------------------------------------------------------"
+	echo -e "Compiling Intel Quartus packages and device libraries $(test $ERRORCOUNT -eq 0 && echo $COLORED_SUCCESSFUL || echo $COLORED_FAILED)"
 else
-	echo -e $COLORED_SUCCESSFUL
+	echo -e "${ANSI_RED}Neither Intel Quartus packages nor device libraries selected.${ANSI_NOCOLOR}"
 fi

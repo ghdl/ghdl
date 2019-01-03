@@ -34,7 +34,6 @@
 #	02111-1307, USA.
 # ==============================================================================
 
-# ---------------------------------------------
 # Work around for Darwin (Mac OS)
 READLINK=readlink; if [[ $(uname) == "Darwin" ]]; then READLINK=greadlink; fi
 
@@ -176,8 +175,8 @@ while [[ $# > 0 ]]; do
 	shift # parsed argument or value
 done
 
-# Makes no sense to enable it for UVVM
-SKIP_EXISTING_FILES=0
+SKIP_EXISTING_FILES=0  # Makes no sense to enable it for UVVM
+ERRORCOUNT=0
 
 if [[ $COMMAND -le 1 ]]; then
 	test $COMMAND -eq 1 && echo 1>&2 -e "\n${COLORED_ERROR} No command selected.${ANSI_NOCOLOR}"
@@ -193,13 +192,13 @@ if [[ $COMMAND -le 1 ]]; then
 	echo "  compile-uvvm.sh [<verbosity>] <common command>|<library> [<options>] [<adv. options>]"
 	echo ""
 	echo "Common commands:"
-	echo "  -h --help                 Print this help page"
-	echo "  -c --clean                Remove all generated files"
+	echo "  -h --help                Print this help page"
+	echo "  -c --clean               Remove all generated files"
 	echo ""
 	echo "Libraries:"
-	echo "  -a --all                  Compile all libraries."
-	echo "     --uvvm                 Compile UVVM library packages."
-	echo "     --uvvm-vip             Compile UVVM Verification IPs (VIPs)."
+	echo "  -a --all                 Compile all libraries."
+	echo "     --uvvm                Compile UVVM library packages."
+	echo "     --uvvm-vip            Compile UVVM Verification IPs (VIPs)."
 	echo ""
 	echo "Common Packages:"
 	echo "     --uvvm-utilities      UVVM utilities."
@@ -270,7 +269,7 @@ if [[ $? -ne 0 ]]; then echo 1>&2 -e "${COLORED_ERROR} While loading further pro
 # <= $DestinationDirectory
 SetupDirectories UVVM "UVVM"
 
-# Create "uvvm_util" directory and change to it
+# Create "uvvm" directory and change to it
 # => $DestinationDirectory
 CreateDestinationDirectory
 cd $DestinationDirectory
@@ -280,19 +279,20 @@ cd $DestinationDirectory
 # <= $GRC_COMMAND
 SetupGRCat
 
+# -> $VHDLStandard
+# <= $VHDLVersion
+# <= $VHDLStandard
+# <= $VHDLFlavor
+# GHDLSetup
 
-# define global GHDL Options
-GHDL_OPTIONS=(
+# Extend global GHDL Options
+Analyze_Parameters+=(
 	-fexplicit
-	-frelaxed-rules
 	--no-vital-checks
 	--warn-binding
-	--mb-comments
+	--std=08
+	-P$DestinationDirectory
 )
-
-# Create a set of GHDL parameters
-GHDL_PARAMS=(${GHDL_OPTIONS[@]})
-GHDL_PARAMS+=(--std=08 -P$DestinationDirectory)
 VHDLVersion="v08"
 
 # Cleanup directory
@@ -424,10 +424,7 @@ if [[ $Libraries != "" ]]; then
 	Compile "$SourceDirectory" "$Libraries"
 	
 	echo "--------------------------------------------------------------------------------"
-	echo -n "Compiling UVVM packages "
-	if [[ $ERRORCOUNT -gt 0 ]]; then
-		echo -e $COLORED_FAILED
-	else
-		echo -e $COLORED_SUCCESSFUL
-	fi
+	echo -e "Compiling UVVM packages and VIPs $(test $ERRORCOUNT -eq 0 && echo $COLORED_SUCCESSFUL || echo $COLORED_FAILED)"
+else
+	echo -e "${ANSI_RED}Neither UVVM packages nor VIPs selected.${ANSI_NOCOLOR}"
 fi

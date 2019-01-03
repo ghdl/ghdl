@@ -34,7 +34,6 @@
 #	02111-1307, USA.
 # ==============================================================================
 
-# ---------------------------------------------
 # Work around for Darwin (Mac OS)
 READLINK=readlink; if [[ $(uname) == "Darwin" ]]; then READLINK=greadlink; fi
 
@@ -111,9 +110,8 @@ while [[ $# > 0 ]]; do
 	shift # parsed argument or value
 done
 
-# Makes no sense to enable it for OSVVM
-SKIP_EXISTING_FILES=0
-
+SKIP_EXISTING_FILES=0  # Makes no sense to enable it for OSVVM
+ERRORCOUNT=0
 
 if [[ $COMMAND -le 1 ]]; then
 	test $COMMAND -eq 1 && echo 1>&2 -e "\n${COLORED_ERROR} No command selected.${ANSI_NOCOLOR}"
@@ -129,30 +127,30 @@ if [[ $COMMAND -le 1 ]]; then
 	echo "  compile-osvvm.sh [<verbosity>] <common command>|<library> [<options>] [<adv. options>]"
 	echo ""
 	echo "Common commands:"
-	echo "  -h --help             Print this help page"
-	echo "  -c --clean            Remove all generated files"
+	echo "  -h --help                Print this help page"
+	echo "  -c --clean               Remove all generated files"
 	echo ""
 	echo "Libraries:"
-	echo "  -a --all              Compile all libraries."
-	echo "     --osvvm            Compile library osvvm."
-	# echo "     --osvvm-vip        Compile OSVVM Verification IPs (VIPs)."
+	echo "  -a --all                 Compile all libraries."
+	echo "     --osvvm               Compile library osvvm."
+	# echo "     --osvvm-vip           Compile OSVVM Verification IPs (VIPs)."
 	# echo ""
 	# echo "Verification IPs:"
-	# echo "     --osvvm-vip-axi    ARM AMBA AXI4"
+	# echo "     --osvvm-vip-axi       ARM AMBA AXI4"
 	echo ""
 	echo "Library compile options:"
-	echo "  -H --halt-on-error    Halt on error(s)."
+	echo "  -H --halt-on-error       Halt on error(s)."
 	echo ""
 	echo "Advanced options:"
-	echo "     --ghdl <GHDL binary>   Path to GHDL's executable, e.g. /usr/local/bin/ghdl"
-	echo "     --out <dir name>       Name of the output directory, e.g. osvvm"
-	echo "     --src <Path to OSVVM>  Path to the sources."
+	echo "     --ghdl <GHDL binary>  Path to GHDL's executable, e.g. /usr/local/bin/ghdl"
+	echo "     --out <dir name>      Name of the output directory, e.g. osvvm"
+	echo "     --src <Path to OSVVM> Path to the sources."
 	echo ""
 	echo "Verbosity:"
-	echo "  -v --verbose              Print verbose messages."
-	echo "  -d --debug                Print debug messages."
-#	echo "  -n --no-filter            Disable output filtering scripts."
-	echo "  -N --no-warnings          Suppress all warnings. Show only error messages."
+	echo "  -v --verbose             Print verbose messages."
+	echo "  -d --debug               Print debug messages."
+#	echo "  -n --no-filter           Disable output filtering scripts."
+	echo "  -N --no-warnings         Suppress all warnings. Show only error messages."
 	echo ""
 	exit $COMMAND
 fi
@@ -191,7 +189,7 @@ cd $DestinationDirectory
 SetupGRCat
 
 
-# define global GHDL Options
+# Define global GHDL Options
 GHDL_OPTIONS=(
 	-fexplicit
 	-frelaxed-rules
@@ -266,10 +264,7 @@ if [[ $Libraries != "" ]]; then
 	Compile "$SourceDirectory" "$Libraries"
 	
 	echo "--------------------------------------------------------------------------------"
-	echo -n "Compiling OSVVM packages "
-	if [[ $ERRORCOUNT -gt 0 ]]; then
-		echo -e $COLORED_FAILED
-	else
-		echo -e $COLORED_SUCCESSFUL
-	fi
+	echo -e "Compiling OSVVM packages and VIPs $(test $ERRORCOUNT -eq 0 && echo $COLORED_SUCCESSFUL || echo $COLORED_FAILED)"
+else
+	echo -e "${ANSI_RED}Neither OSVVM packages nor VIPs selected.${ANSI_NOCOLOR}"
 fi

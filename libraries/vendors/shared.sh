@@ -52,6 +52,11 @@ else	# fall back to GHDL found via PATH
 	fi
 fi
 
+# Analyze_Filter=GHDL/filter.analyze.sh
+Analyze_Parameters=(
+	-frelaxed-rules
+	--mb-comments
+)
 
 SetupDirectories() {
 	local Index=$1
@@ -130,6 +135,39 @@ GHDLSetup() {
 	fi
 }
 
+CreateLibraryStruct() {
+	local StructName=$1; shift
+
+	declare -g "${StructName}_LibraryName"=$1; shift
+	declare -g "${StructName}_LibraryPath"=$1; shift
+	declare -g "${StructName}_VHDLVersion"=$1; shift
+
+	declare -n FilesRef="${StructName}_Files"
+	FilesRef=( "$*" )
+}
+
+DeleteLibraryStruct() {
+	local StructName=$1
+	
+	unset "${StructName}_VHDLVersion"
+	unset "${StructName}_LibraryName"
+	unset "${StructName}_LibraryPath"
+	unset "${StructName}_Files"
+}
+
+PrintLibraryStruct() {
+	local StructName=$1
+	local Indentation=${2:-"    "}
+	
+	local LibraryName="${StructName}_LibraryName"; local LibraryName=${!LibraryName}
+	local Files="${StructName}_Files[*]";          local Files=${!Files}
+			
+	echo -e "$Indentation${ANSI_DARK_GRAY}VHDL Library name: $LibraryName${ANSI_NOCOLOR}"
+	for File in ${Files[*]}; do
+		echo -e "$Indentation  ${ANSI_DARK_GRAY}$File${ANSI_NOCOLOR}"
+	done
+}
+
 GHDLCompileLibrary() {
 	# assembling output directory
 	LibraryDirectory=$DestinationDirectory/$Library/$VHDLVersion
@@ -181,15 +219,6 @@ GHDLCompilePackages() {
 
 
 test $VERBOSE -eq 1 && echo -e "  Declaring Bash functions for GHDL..."
-
-GHDL=${GHDL:-"ghdl"}
-
-Analyze_Filter=GHDL/filter.analyze.sh
-Analyze_Parameters=(
-	--std=08
-	-frelaxed-rules
-	--mb-comments
-)
 
 declare -A GHDLLibraryMapping
 
@@ -255,22 +284,22 @@ AnalyzeVHDL() {
 			echo 1>&2 -e "${COLORED_ERROR} While analyzing '$File'. ExitCode: $ExitCode${ANSI_NOCOLOR}"
 			exit 1;
 		fi
-	else
-		test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}$GHDL -a ${Analyze_Parameters[*]} ${Parameters[*]} --work=$LibraryName \"$SourceDirectory/$LibraryPath/$File\" | \\\\${ANSI_NOCOLOR}"
-		test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}$GHDLScriptDir/$Analyze_Filter ${Filter_Parameters[*]} -i \"$Filter_Indent\"${ANSI_NOCOLOR}"
-		$GHDL -a ${Analyze_Parameters[@]} ${Parameters[@]} --work=$LibraryName "$SourceDirectory/$LibraryPath/$File" 2>&1 | $GHDLScriptDir/$Analyze_Filter ${Filter_Parameters[@]} -i "$Filter_Indent"
-		local PiplineStatus=("${PIPESTATUS[@]}")
-		if [[ ${PiplineStatus[0]}  -ne 0 ]]; then
-			echo 1>&2 -e "${COLORED_ERROR} While analyzing '$File'. ExitCode: ${PiplineStatus[0]}${ANSI_NOCOLOR}"
-			exit 1;
-		elif [[ ${PiplineStatus[1]}  -ne 0 ]]; then
-			case $(( ${PiplineStatus[1]} % 4 )) in
-				3) echo 1>&2 -e "$Filter_Indent${ANSI_RED}Fatal errors detected by filtering script. ExitCode: ${PiplineStatus[1]}${ANSI_NOCOLOR}"; exit 1 ;;
-				2) echo 1>&2 -e "$Filter_Indent${ANSI_RED}Errors detected by filtering script. ExitCode: ${PiplineStatus[1]}${ANSI_NOCOLOR}"; exit 1 ;;
-				1) echo 1>&2 -e "$Filter_Indent${ANSI_YELLOW}Warnings detected by filtering script.${ANSI_NOCOLOR}" ;;
-				0) test $DEBUG -eq 1 && echo 1>&2 -e "$Filter_Indent${ANSI_YELLOW}Warnings detected by filtering script.${ANSI_NOCOLOR}" ;;
-			esac
-		fi
+	# else
+		# test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}$GHDL -a ${Analyze_Parameters[*]} ${Parameters[*]} --work=$LibraryName \"$SourceDirectory/$LibraryPath/$File\" | \\\\${ANSI_NOCOLOR}"
+		# test $DEBUG -eq 1 && echo -e "    ${ANSI_DARK_GRAY}$GHDLScriptDir/$Analyze_Filter ${Filter_Parameters[*]} -i \"$Filter_Indent\"${ANSI_NOCOLOR}"
+		# $GHDL -a ${Analyze_Parameters[@]} ${Parameters[@]} --work=$LibraryName "$SourceDirectory/$LibraryPath/$File" 2>&1 | $GHDLScriptDir/$Analyze_Filter ${Filter_Parameters[@]} -i "$Filter_Indent"
+		# local PiplineStatus=("${PIPESTATUS[@]}")
+		# if [[ ${PiplineStatus[0]}  -ne 0 ]]; then
+			# echo 1>&2 -e "${COLORED_ERROR} While analyzing '$File'. ExitCode: ${PiplineStatus[0]}${ANSI_NOCOLOR}"
+			# exit 1;
+		# elif [[ ${PiplineStatus[1]}  -ne 0 ]]; then
+			# case $(( ${PiplineStatus[1]} % 4 )) in
+				# 3) echo 1>&2 -e "$Filter_Indent${ANSI_RED}Fatal errors detected by filtering script. ExitCode: ${PiplineStatus[1]}${ANSI_NOCOLOR}"; exit 1 ;;
+				# 2) echo 1>&2 -e "$Filter_Indent${ANSI_RED}Errors detected by filtering script. ExitCode: ${PiplineStatus[1]}${ANSI_NOCOLOR}"; exit 1 ;;
+				# 1) echo 1>&2 -e "$Filter_Indent${ANSI_YELLOW}Warnings detected by filtering script.${ANSI_NOCOLOR}" ;;
+				# 0) test $DEBUG -eq 1 && echo 1>&2 -e "$Filter_Indent${ANSI_YELLOW}Warnings detected by filtering script.${ANSI_NOCOLOR}" ;;
+			# esac
+		# fi
 	fi
 }
 
@@ -307,11 +336,12 @@ Compile() {
 	for VHDLLibrary in $VHDLLibraries; do
 		local LibraryName="${VHDLLibrary}_LibraryName"; local LibraryName=${!LibraryName}
 		local LibraryPath="${VHDLLibrary}_LibraryPath"; local LibraryPath=${!LibraryPath}
+		local VHDLVersion="${VHDLLibrary}_VHDLVersion"; local VHDLVersion=${!VHDLVersion}
 		local Files="${VHDLLibrary}_Files[*]";          local Files=${!Files}
 
 		echo -e "${ANSI_LIGHT_CYAN}Analyzing library '$LibraryName'...${ANSI_NOCOLOR}"
 
-		CreateVHDLLibrary $LibraryName $LibraryName
+		CreateVHDLLibrary $LibraryName $LibraryName $VHDLVersion
 		AnalyzeLibrary $LibraryName "$SourceDirectory" "$LibraryPath" "$Files"
 	done
 }
