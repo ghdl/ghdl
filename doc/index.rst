@@ -27,10 +27,10 @@ LRM) is a plus.
    every contributor to update the remote URLs in their local clones.
 
    14.12.2017 - `GHDL 0.35 was released <https://github.com/ghdl/ghdl/milestone/3?closed=1>`_.
-   ====================================
+   ===========================================================================================
 
    15.08.2017 - `GHDL 0.34 was released <https://github.com/ghdl/ghdl/milestone/1?closed=1>`_.
-   ====================================
+   ===========================================================================================
 
    23.10.2015 - GHDL 0.33 was released.
    ====================================
