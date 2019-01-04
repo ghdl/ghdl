@@ -212,6 +212,11 @@ package body Errorout is
       Line_Pos : Source_Ptr;
       pragma Unreferenced (Line_Pos);
    begin
+      --  Discard warnings that aren't enabled.
+      if Id in Msgid_Warnings and then not Is_Warning_Enabled (Id) then
+         return;
+      end if;
+
       --  Reclassify warnings to errors if -Werror.
       if Flags.Warn_Error
         and then (Id = Msgid_Warning or Id in Msgid_Warnings)

@@ -221,11 +221,16 @@ package body Ortho_Front is
          Flag_Expect_Failure := True;
          return 1;
       elsif Opt'Length > 7 and then Opt (1 .. 7) = "--ghdl-" then
-         if Options.Parse_Option (Opt (7 .. Opt'Last)) then
-            return 1;
-         else
-            return 0;
-         end if;
+         declare
+            subtype Str_Type is String (1 .. Opt'Last - 6);
+         begin
+            --  The option paraeter must be normalized (starts at index 1).
+            if Options.Parse_Option (Str_Type (Opt (7 .. Opt'Last))) then
+               return 1;
+            else
+               return 0;
+            end if;
+         end;
       elsif Options.Parse_Option (Opt.all) then
          return 1;
       else

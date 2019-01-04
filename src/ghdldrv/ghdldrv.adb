@@ -603,8 +603,8 @@ package body Ghdldrv is
                             Arg : String;
                             Res : out Option_Res)
    is
-      Str : String_Access;
       Opt : constant String (1 .. Option'Length) := Option;
+      Str : String_Access;
    begin
       Res := Option_Bad;
       if Opt = "-v" and then Flag_Verbose = False then
@@ -687,7 +687,14 @@ package body Ghdldrv is
             --  compiler_args.
             null;
          else
-            Add_Argument (Compiler_Args, new String'(Opt));
+            if Backend = Backend_Gcc then
+               --  Prefix options for gcc so that lang.opt does need to be
+               --  updated when a new option is added.
+               Str := new String'("--ghdl" & Opt);
+            else
+               Str := new String'(Opt);
+            end if;
+            Add_Argument (Compiler_Args, Str);
          end if;
          Res := Option_Ok;
       elsif Opt'Length > 18
