@@ -22,7 +22,7 @@ architecture bench of test_bench is
     signal s_clk      : std_logic := '1';
 
 begin
-    s_rst <= '1' after 50 ns;
+    s_rst <= '0' after 50 ns;
     s_clk <= not s_clk after 10 ns;
 
     write_result : process (s_rst, s_clk) is
