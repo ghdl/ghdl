@@ -354,12 +354,14 @@ package body Grt.Rtis_Utils is
 
          Cur_Bounds := Bounds;
          for I in 1 .. Len loop
-            Bounds := Cur_Bounds;
             Pos_To_Vstring (Name, Base_Type, Rng, I - 1);
             if Index = Last_Index then
+               --  FIXME: not always needed.
+               Bounds := Array_Layout_To_Bounds (Cur_Bounds);
                Append (Name, ')');
                Handle_Any (El_Rti);
             else
+               Bounds := Cur_Bounds;
                Handle_Array_1 (Arr_Rti, Index + 1);
             end if;
             Truncate (Name, P + 1);

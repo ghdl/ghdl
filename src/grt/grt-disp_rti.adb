@@ -226,13 +226,16 @@ package body Grt.Disp_Rti is
          --  FIXME: need to update bounds.
       else
          for I in 1 .. Length loop
-            Bounds2 := Bounds;
             if I /= 1 then
                Put (Stream, ", ");
             end if;
             if Index = Last_Idx then
+               --  Humm, not always an array, and BOUNDS may not be followed
+               --  by subelement bounds.
+               Bounds2 := Array_Layout_To_Bounds (Bounds);
                Disp_Value (Stream, El_Rti, Ctxt, Obj, Bounds2, Is_Sig);
             else
+               Bounds2 := Bounds;
                Disp_Array_Value_1
                  (Stream, Arr_Rti, Ctxt, Index + 1, Obj, Bounds2, Is_Sig);
             end if;
