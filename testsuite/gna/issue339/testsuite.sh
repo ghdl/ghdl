@@ -5,7 +5,7 @@
 export GHDL_STD_FLAGS=--std=08
 analyze test_pkg.vhdl test_bench.vhdl
 elab test_bench
-if false && ghdl_has_feature test_bench ghw; then
+if ghdl_has_feature test_bench ghw; then
   simulate test_bench --stop-time=700ns --wave=w.ghw
 else
   simulate test_bench --stop-time=700ns
